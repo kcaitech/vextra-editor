@@ -7,7 +7,7 @@ import PageViewContextMenuItems from '@/components/Document/Menu/PageViewContext
 import Selector, { SelectorFrame } from './Selection/Selector.vue';
 import CommentInput from './Content/CommentInput.vue';
 import CommentView from './Content/CommentView.vue';
-import { Matrix, Shape, Page, ShapeFrame, AsyncCreator, ShapeType, Color, Artboard } from '@kcdesign/data';
+import { Matrix, Shape, Page, ShapeFrame, AsyncCreator, ShapeType, Color, Artboard, getHorizontalAngle } from '@kcdesign/data';
 import { Context } from '@/context';
 import { PageXY, ClientXY, ClientXYRaw } from '@/context/selection';
 import { KeyboardKeys, Perm, WorkSpace } from '@/context/workspace';
@@ -18,8 +18,8 @@ import { debounce } from 'lodash';
 import { useI18n } from 'vue-i18n';
 import { v4 as uuid } from "uuid";
 import { fourWayWheel, Wheel, EffectType } from '@/utils/wheel';
-import { _updateRoot, getName, init_shape, init_insert_shape, is_drag, drop, right_select, adapt_page, list2Tree, flattenShapes, get_menu_items, selectShapes, color2string, init_insert_shape2 } from '@/utils/content';
-import { paster } from '@/utils/clipaboard';
+import { _updateRoot, init_shape, init_insert_shape, is_drag, drop, right_select, adapt_page, list2Tree, flattenShapes, get_menu_items, selectShapes, color2string, init_insert_table, init_insert_shape2 } from '@/utils/content';
+import { paster } from '@/utils/clipboard';
 import { collect, insertFrameTemplate } from '@/utils/artboardFn';
 import { searchCommentShape } from '@/utils/comment';
 import * as comment_api from '@/apis/comment';
@@ -27,10 +27,12 @@ import { Comment } from '@/context/comment';
 import Placement from './Menu/Placement.vue';
 import TextSelection from './Selection/TextSelection.vue';
 import { Cursor } from "@/context/cursor";
-import { Action } from "@/context/tool";
+import { Action, Tool } from "@/context/tool";
 import { initpal } from './initpal';
 import UsersSelection from './Selection/TeamWork/UsersSelection.vue';
-
+import CellSetting from '@/components/Document/Menu/TableMenu/CellSetting.vue';
+import { get_direction } from '@/utils/controllerFn';
+// import Overview from './Content/Overview.vue';
 interface Props {
     context: Context
     page: Page
@@ -77,6 +79,10 @@ const commentInput = ref(false);
 const resizeObserver = new ResizeObserver(frame_watcher);
 const background_color = ref<string>('rgba(239,239,239,1)');
 const avatarVisi = ref(props.context.menu.isUserCursorVisible);
+const cellSetting = ref(false);
+const cellStatus = ref()
+// const overview = ref<boolean>(false);
+
 let stickedX: boolean = false;
 let stickedY: boolean = false;
 let sticked_x_v: number = 0;
@@ -140,15 +146,19 @@ function onMouseWheel(e: WheelEvent) { // 滚轮、触摸板事件
     search_once(e) // 滚动过程进行常规图形检索
 }
 function onKeyDown(e: KeyboardEvent) { // 键盘监听
+    if (e.target instanceof HTMLInputElement) return;
     if (e.code === KeyboardKeys.Space) {
         if (workspace.value.select || spacePressed.value) return;
+        // overview.value = true;
         preToDragPage();
     } else if (e.code === 'MetaLeft' || e.code === 'ControlLeft') {
         _search(true); // 根据鼠标当前位置进行一次穿透式图形检索
     }
 }
 function onKeyUp(e: KeyboardEvent) {
+    if (e.target instanceof HTMLInputElement) return;
     if (spacePressed.value && e.code === KeyboardKeys.Space) {
+        // overview.value = false;
         endDragPage();
     } else if (e.code === 'MetaLeft' || e.code === 'ControlLeft') {
         _search(false);// 根据鼠标当前位置进行一次冒泡式图形检索
@@ -192,27 +202,7 @@ function contentEditOnMoving(e: MouseEvent) { // 编辑page内容
                 if (e.shiftKey) {
                     er_frame(asyncCreator, x, y);
                 } else {
-                    const stickness = props.context.assist.stickness + 1;
-                    const target = props.context.assist.create_match({ x, y });
-                    if (target) {
-                        if (stickedX) {
-                            if (Math.abs(x - sticked_x_v) > stickness) stickedX = false;
-                            else x = sticked_x_v;
-                        } else if (target.sticked_by_x) {
-                            x = target.x;
-                            sticked_x_v = x;
-                            stickedX = true;
-                        }
-                        if (stickedY) {
-                            if (Math.abs(y - sticked_y_v) > stickness) stickedY = false;
-                            else y = sticked_y_v;
-                        } else if (target.sticked_by_y) {
-                            y = target.y;
-                            sticked_y_v = y;
-                            stickedY = true;
-                        }
-                    }
-                    asyncCreator.setFrame({ x, y });
+                    asyncCreator.setFrame(correct_xy(x, y));
                 }
             }
         }
@@ -230,14 +220,61 @@ function contentEditOnMoving(e: MouseEvent) { // 编辑page内容
         }
     }
 }
+function correct_xy(x: number, y: number) {
+    const stickness = props.context.assist.stickness + 1;
+    const target = props.context.assist.create_match({ x, y });
+    if (target) {
+        if (stickedX) {
+            if (Math.abs(x - sticked_x_v) > stickness) stickedX = false;
+            else x = sticked_x_v;
+        } else if (target.sticked_by_x) {
+            x = target.x;
+            sticked_x_v = x;
+            stickedX = true;
+        }
+        if (stickedY) {
+            if (Math.abs(y - sticked_y_v) > stickness) stickedY = false;
+            else y = sticked_y_v;
+        } else if (target.sticked_by_y) {
+            y = target.y;
+            sticked_y_v = y;
+            stickedY = true;
+        }
+    }
+    return { x, y };
+}
 function er_frame(asyncCreator: AsyncCreator, x: number, y: number) {
-    const del = x - mousedownOnPageXY.x;
-    y = mousedownOnPageXY.y + del;
-    asyncCreator.setFrame({ x, y });
+    if (newShape && newShape.type === ShapeType.Line) {
+        const p2 = { x, y };
+        const m = newShape.matrix2Root(), lt = m.computeCoord2(0, 0);
+        const type_d = get_direction(Math.floor(getHorizontalAngle(lt, p2)));
+        if (type_d === 0) p2.y = lt.y;
+        else if (type_d === 45) {
+            const len = Math.hypot(p2.x - lt.x, p2.y - lt.y);
+            p2.x = lt.x + len * Math.cos(0.25 * Math.PI), p2.y = lt.y + len * Math.sin(0.25 * Math.PI);
+        } else if (type_d === 90) p2.x = lt.x;
+        else if (type_d === 135) {
+            const len = Math.hypot(p2.x - lt.x, p2.y - lt.y);
+            p2.x = lt.x - len * Math.cos(0.25 * Math.PI), p2.y = lt.y + len * Math.sin(0.25 * Math.PI);
+        } else if (type_d === 180) p2.y = lt.y;
+        else if (type_d === 225) {
+            const len = Math.hypot(p2.x - lt.x, p2.y - lt.y);
+            p2.x = lt.x - len * Math.cos(0.25 * Math.PI), p2.y = lt.y - len * Math.sin(0.25 * Math.PI);
+        } else if (type_d === 270) p2.x = lt.x;
+        else if (type_d === 315) {
+            const len = Math.hypot(p2.x - lt.x, p2.y - lt.y);
+            p2.x = lt.x + len * Math.cos(0.25 * Math.PI), p2.y = lt.y - len * Math.sin(0.25 * Math.PI);
+        }
+        asyncCreator.setFrame(correct_xy(p2.x, p2.y));
+    } else {
+        const del = x - mousedownOnPageXY.x;
+        y = mousedownOnPageXY.y + del;
+        asyncCreator.setFrame(correct_xy(x, y));
+    }
+
 }
 function workspace_watcher(type?: number, param?: string | MouseEvent | Color) {
     if (type === WorkSpace.MATRIX_TRANSFORMATION) matrix.reset(workspace.value.matrix);
-    else if (type === WorkSpace.INSERT_FRAME) insertFrame();
     else if (type === WorkSpace.PASTE) paster(props.context, t);
     else if (type === WorkSpace.PASTE_RIGHT) paster(props.context, t, mousedownOnPageXY);
     else if (type === WorkSpace.COPY) props.context.workspace.clipboard.write_html();
@@ -251,17 +288,23 @@ function comment_watcher(type?: number) {
         documentCommentList.value = props.context.comment.pageCommentList
     }
 }
-function menu_watcher(type?: number) {
+function menu_watcher(type?: number, mount?: string) {
     if (type === Menu.SHUTDOWN_MENU) contextMenuUnmount();
     if (type === Menu.CHANGE_USER_CURSOR) {
         avatarVisi.value = props.context.menu.isUserCursorVisible;
+    } else if (type === Menu.OPEN_SPLIT_CELL) {
+        cellStatus.value = mount;
+        cellSetting.value = true;
     }
 }
-function insertFrame() {
-    const brothers = props.context.selection.selectedPage?.childs || [];
-    const name = getName(ShapeType.Artboard, brothers, t);
-    insertFrameTemplate(props.context, name);
+function tool_watcher(type: number) {
+    if (type === Tool.INSERT_FRAME) insertFrame();
+    else if (type === Tool.INSERT_TABLE) init_insert_table(props.context, t);
 }
+function insertFrame() {
+    insertFrameTemplate(props.context);
+}
+
 function _search(auto: boolean) { // 支持阻止子元素冒泡的图形检索
     const { x, y } = workspace.value.root;
     const { x: mx, y: my } = mouseOnClient;
@@ -308,25 +351,27 @@ function pageViewDragEnd() {
     props.context.cursor.setType('grab-0')
 }
 function contextMenuMount(e: MouseEvent) {
-    const workspace = props.context.workspace;
-    const selection = props.context.selection;
-    const menu = props.context.menu;
+    const workspace = props.context.workspace, selection = props.context.selection, menu = props.context.menu;
     menu.menuMount();
     selection.unHoverShape();
-    site.x = e.clientX
-    site.y = e.clientY
-    const { x, y } = workspace.root;
-    contextMenuPosition.x = e.clientX - x;
-    contextMenuPosition.y = e.clientY - y;
+    site.x = e.clientX, site.y = e.clientY;
+    const root = workspace.root;
+    contextMenuPosition.x = e.clientX - root.x, contextMenuPosition.y = e.clientY - root.y;
     setMousedownXY(e); // 更新鼠标定位
     contextMenuItems = [];
     const area = right_select(e, mousedownOnPageXY, props.context); // 判断点击环境
     contextMenuItems = get_menu_items(props.context, area); // 根据点击环境确定菜单选项
     const shapes = selection.getLayers(mousedownOnPageXY);
-    if (shapes.length > 1 && area !== 'text-selection') {
-        shapesContainsMousedownOnPageXY.length = 0;
+    if (shapes.length > 1 && (area !== 'text-selection' && area !== 'table_cell')) {
         shapesContainsMousedownOnPageXY = shapes;
         contextMenuItems.push('layers');
+    }
+    if (area === 'table_cell') {
+        const table = props.context.tableSelection;
+        if (table.tableRowStart === table.tableRowEnd && table.tableColStart === table.tableColEnd) {
+            contextMenuItems.push('split_cell');
+            contextMenuItems = contextMenuItems.filter(item => item !== 'merge_cell');
+        }
     }
     contextMenu.value = true; // 数据准备就绪之后打开菜单
     menu.menuMount('content');
@@ -393,13 +438,14 @@ function updateMouse(e: MouseEvent) {
 function onMouseDown(e: MouseEvent) {
     if (workspace.value.transforming) return; // 当图形变换过程中不再接收新的鼠标点击事件
     if (e.button == 0) { // 左键按下
+        const action = props.context.tool.action;
+        if (action === Action.AddTable) return;
         setMousedownXY(e); // 记录鼠标点下的位置（相对于page）
         if (spacePressed.value) {
             pageViewDragStart(e); // 空格键press，准备拖动页面
         } else {
             wheelSetup();
             isMouseLeftPress = true;
-            const action = props.context.tool.action;
             if (action !== Action.AddComment) {
                 if (commentInput.value) {
                     commentInput.value = false;
@@ -689,6 +735,11 @@ const getDocumentComment = async () => {
         console.log(err);
     }
 }
+//表格
+const closeModal = () => {
+    cellSetting.value = false
+}
+
 function frame_watcher() {
     if (!root.value) return;
     _updateRoot(props.context, root.value);
@@ -732,6 +783,7 @@ onMounted(() => {
     props.context.menu.watch(menu_watcher);
     props.context.cursor.watch(cursor_watcher);
     props.context.cursor.init();
+    props.context.tool.watch(tool_watcher);
     props.page.watch(page_watcher);
     props.context.assist.init();
     rootRegister(true);
@@ -755,6 +807,7 @@ onUnmounted(() => {
     props.context.comment.unwatch(comment_watcher);
     props.context.menu.unwatch(menu_watcher);
     props.context.cursor.unwatch(cursor_watcher);
+    props.context.tool.unwatch(tool_watcher);
     props.page.unwatch(page_watcher);
     resizeObserver.disconnect();
     document.removeEventListener('keydown', onKeyDown);
@@ -778,6 +831,7 @@ onUnmounted(() => {
                 :context="props.context" @close="contextMenuUnmount" :site="site">
             </PageViewContextMenuItems>
         </ContextMenu>
+        <CellSetting v-if="cellSetting" :context="context" @close="closeModal" :addOrDivision="cellStatus"></CellSetting>
         <Placement v-if="contextMenu" :x="contextMenuPosition.x" :y="contextMenuPosition.y" :context="props.context">
         </Placement>
         <Selector v-if="selector_mount" :selector-frame="selectorFrame" :context="props.context"></Selector>
@@ -787,5 +841,6 @@ onUnmounted(() => {
             @completed="completed" :posi="posi"></CommentInput>
         <CommentView :context="props.context" :pageId="page.id" :page="page" :root="root" :cursorClass="cursor">
         </CommentView>
+        <!-- <Overview :context="props.context" v-if="overview" :matrix="matrix.toArray()"></Overview> -->
     </div>
-</template>@/components/Document/initpal
+</template>

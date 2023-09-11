@@ -8,6 +8,7 @@ import { PageXY } from '@/context/selection';
 import { Media, getName } from '@/utils/content';
 import { message } from './message';
 import { Action } from '@/context/tool';
+import { XYsBounding2, is_box_outer_view, is_box_outer_view2 } from './common';
 interface SystemClipboardItem {
     type: ShapeType
     contentType: string
@@ -48,23 +49,23 @@ export class Clipboard {
             const shapes = this.context.selection.selectedShapes;
             if (!shapes.length) return false;
             // 记录相对root位置
-            const position_map: Map<string, ShapeFrame> = new Map();
-            for (let i = 0; i < shapes.length; i++) {
-                position_map.set(shapes[i].id, shapes[i].frame2Root());
+            const position_map: Map<string, PageXY> = new Map();
+            for (let i = 0, len = shapes.length; i < len; i++) {
+                const shape = shapes[i];
+                position_map.set(shape.id, shape.matrix2Root().computeCoord2(0, 0));
             }
             const content = this.clipboard_write_shapes(shapes);
             if (!content) return false;
-            for (let i = 0; i < content.length; i++) {
-                const shape = content[i].content;
+            for (let i = 0, len = content.length; i < len; i++) {
+                const shape = content[i];
                 const root_frame = position_map.get(shape.id);
-                if (root_frame) shape.frame = root_frame;
+                if (!root_frame) continue;
+                shape.frame.x = root_frame.x, shape.frame.y = root_frame.y;
             }
             if (navigator.clipboard && ClipboardItem) {
                 const h = encode_html(identity, content);
                 const blob = new Blob([h || ''], { type: 'text/html' });
-                const item: any = {
-                    'text/html': blob
-                }
+                const item: any = { 'text/html': blob };
                 if (shapes.length === 1 && shapes[0].type === ShapeType.Text) {
                     // todo 直接复制图层里面的文本
                 }
@@ -106,7 +107,7 @@ export async function paster_inner_shape(context: Context, editor: TextShapeEdit
                 const val = await _d.getType('text/plain');
                 const text = await val.text();
                 if (!(text && typeof text === 'string')) throw new Error('invalid text');
-                const selection = context.selection;
+                const selection = context.textSelection;
                 const start = selection.cursorStart;
                 const end = selection.cursorEnd;
                 const s = Math.min(start, end);
@@ -141,7 +142,7 @@ async function paster_html_or_plain_inner_shape(_d: any, context: Context, edito
             paster_plain_inner_shape(_d, context, editor, only_text);
             return false;
         }
-        const selection = context.selection;
+        const selection = context.textSelection;
         const start = selection.cursorStart;
         const end = selection.cursorEnd;
         const s = Math.min(start, end);
@@ -153,7 +154,7 @@ async function paster_html_or_plain_inner_shape(_d: any, context: Context, edito
     return true;
 }
 async function paster_plain_inner_shape(_d: any, context: Context, editor: TextShapeEditor, only_text?: boolean) {
-    const selection = context.selection;
+    const selection = context.textSelection;
     const start = selection.cursorStart;
     const end = selection.cursorEnd;
     const s = Math.min(start, end);
@@ -275,11 +276,10 @@ function decode_html(html: string): string {
     document.body.removeChild(d);
     return result;
 }
-function get_content_from_beta() { }
 /**
  * @description 从剪切板拿出图形数据并插入文档
  * @param data 剪切板拿出的数据
- * @param xy 插入位置
+ * @param xy 插入位置, 没有插入位置时将分配一个位置
  */
 async function clipboard_text_html(context: Context, data: any, xy?: PageXY) {
     try {
@@ -309,39 +309,26 @@ async function clipboard_text_html(context: Context, data: any, xy?: PageXY) {
             if (r) context.selection.selectShape(r);
         } else if (is_shape) { // 内部图层
             const source = JSON.parse(text_html.split(identity)[1]);
+            if (!source) throw new Error('invalid source');
             const shapes = import_shape(context.data, source);
-            const result: Shape[] = [];
             if (!shapes.length) throw new Error('invalid source');
-            const lt_shape_xy = { x: shapes[0].frame.x, y: shapes[0].frame.y };
-            if (xy) {
-                for (let i = 0; i < shapes.length; i++) {
-                    const frame = shapes[i].frame;
-                    if (frame.x < lt_shape_xy.x) lt_shape_xy.x = frame.x;
-                    if (frame.y < lt_shape_xy.y) lt_shape_xy.y = frame.y;
+            if (xy) { // 指定复制位置
+                modify_frame_by_xy(xy, shapes); // 以新的起点为基准，重新计算每个图形位置
+            } else { // 未指定复制位置
+                if (is_box_outer_view2(shapes, context)) { // 图形将脱离视野，需要重新寻找新的定位
+                    modify_frame_by_xy(context.workspace.center_on_page, shapes);
+                } else { // 图形不会脱离视野，原位偏移后粘贴
+                    for (let i = 0, len = shapes.length; i < len; i++) {
+                        const frame = shapes[i].frame;
+                        frame.x += 10, frame.y += 10;
+                    }
                 }
             }
-            const deltas = [];
-            if (xy) {
-                for (let i = 0; i < shapes.length; i++) {
-                    const frame = shapes[i].frame;
-                    deltas.push({ x: frame.x - lt_shape_xy.x, y: frame.y - lt_shape_xy.y });
-                }
-            }
-            for (let i = 0; i < shapes.length; i++) {
-                const shape = shapes[i];
-                if (xy) {
-                    shape.frame.x = xy.x + deltas[i].x;
-                    shape.frame.y = xy.y + deltas[i].y;
-                }
-                const page = context.selection.selectedPage;
-                if (page) {
-                    const editor = context.editor.editor4Page(page);
-                    const r = editor.insert(page, page.childs.length, shape);
-                    if (r) result.push(r);
-                }
-            }
-            if (result.length) {
-                context.selection.rangeSelectShape(result);
+            const page = context.selection.selectedPage;
+            if (page) {
+                const editor = context.editor.editor4Page(page);
+                const r = editor.insertShapes1(page, shapes);
+                if (r && r.length) context.selection.rangeSelectShape(r);
             }
         } else {
             message('info', context.workspace.t('clipboard.invalid_data'));
@@ -349,6 +336,18 @@ async function clipboard_text_html(context: Context, data: any, xy?: PageXY) {
     } catch (error) {
         console.log(error);
         message('info', context.workspace.t('clipboard.invalid_data'));
+    }
+}
+function modify_frame_by_xy(xy: PageXY, shapes: Shape[]) {
+    const lt_shape_xy = { x: shapes[0].frame.x, y: shapes[0].frame.y };
+    for (let i = 0, len = shapes.length; i < len; i++) { // 寻找图形群体的起点
+        const frame = shapes[i].frame;
+        if (frame.x < lt_shape_xy.x) lt_shape_xy.x = frame.x;
+        if (frame.y < lt_shape_xy.y) lt_shape_xy.y = frame.y;
+    }
+    for (let i = 0, len = shapes.length; i < len; i++) {
+        let shape = shapes[i];
+        shape.frame.x += xy.x - lt_shape_xy.x, shape.frame.y += xy.y - lt_shape_xy.y;
     }
 }
 /**
@@ -440,12 +439,9 @@ async function clipboard_text_plain(context: Context, data: any, _xy?: PageXY) {
  * @returns { {x: number,y: number} } 位置
  */
 function adjust_content_xy(context: Context, m: { width: number, height: number }) {
-    const workspace = context.workspace;
-    const root = workspace.root;
-    const matrix = workspace.matrix;
+    const workspace = context.workspace, root = workspace.root, matrix = workspace.matrix;
     const ratio_wh = m.width / m.height;
-    const page_height = root.height / matrix.m00;
-    const page_width = root.width / matrix.m00;
+    const page_height = root.height / matrix.m00, page_width = root.width / matrix.m00;
     if (m.height >= m.width) {
         if (m.height > page_height * 0.95) {
             m.height = page_height * 0.95;
@@ -512,20 +508,31 @@ function paster_text(context: Context, mousedownOnPageXY: PageXY, content: strin
 }
 // 不经过剪切板，直接复制(Shape[])
 export function paster_short(context: Context, shapes: Shape[]): Shape[] {
-    const source = export_shape(shapes);
-    const new_source = import_shape(context.data, source);
-    const page = context.selection.selectedPage;
-    const result: Shape[] = [];
-    if (page) {
-        for (let i = 0; i < new_source.length; i++) {
-            const _s = new_source[i];
-            const editor = context.editor4Page(page);
-            const r = editor.insert(page, source[i].index + 1, _s, true);
-            if (r) { result.push(r) }
+    const pre_shapes: Shape[] = [], actions: { parent: GroupShape, index: number }[] = [];
+    for (let i = 0, len = shapes.length; i < len; i++) {
+        const s = shapes[i], p = s.parent;
+        if (!p) continue;
+        const childs = (p as GroupShape).childs;
+        for (let j = 0, len2 = childs.length; j < len2; j++) {
+            if (s.id === childs[j].id) {
+                pre_shapes.push(s);
+                actions.push({ parent: p as GroupShape, index: j + 1 });
+                break;
+            }
         }
     }
-    if (result.length) {
-        context.selection.rangeSelectShape(result);
+    const source = export_shape(pre_shapes), new_source = import_shape(context.data, source);
+    const page = context.selection.selectedPage;
+    let result: Shape[] = [];
+    if (page) {
+        const editor = context.editor4Page(page);
+        if (new_source.length !== actions.length) {
+            console.log('error io');
+            return [];
+        }
+        const _r = editor.insertShapes2(new_source, actions);
+        _r && _r.length && (result = _r);
     }
+    result.length && context.selection.rangeSelectShape(result);
     return result;
 }

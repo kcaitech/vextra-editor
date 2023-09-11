@@ -1,9 +1,10 @@
-import { Watchable } from "@kcdesign/data";
+import { ShapeType, TableShape, Watchable } from "@kcdesign/data";
 import { Matrix } from '@kcdesign/data';
 import { Context } from "./index";
 import { Root } from "@/utils/content";
-import { Clipboard } from "@/utils/clipaboard";
+import { Clipboard } from "@/utils/clipboard";
 import { adapt_page } from "@/utils/content";
+import { PageXY } from "./selection";
 interface Point {
     x: number
     y: number
@@ -58,8 +59,6 @@ export enum Perm {
     isEdit = 3
 }
 export class WorkSpace extends Watchable(Object) {
-    static P_ESC_EVENT: any = null; // 用于存储esc事件的指针
-    static INSERT_FRAME = 1; // notify类型：插入容器模版、更新光标、重置光标、矩阵变换
     static MATRIX_TRANSFORMATION = 4;
     static SELECTING = 5;
     static TEXT_FORMAT = 6;
@@ -84,9 +83,9 @@ export class WorkSpace extends Watchable(Object) {
     static DELETE_LINE = 31;
     static INIT_EDITOR = 32;
     static CHANGE_NAVI = 33;
+    static PRE_EDIT = 34;
     private context: Context;
     private m_matrix: Matrix = new Matrix();
-    private m_frame_size: { width: number, height: number } = { width: 100, height: 100 }; // 容器模版frame
     private m_scaling: boolean = false; // 编辑器是否正在缩放图形
     private m_rotating: boolean = false; // 编辑器是否正在旋转图形
     private m_translating: boolean = false; // 编辑器是否正在移动图形
@@ -113,6 +112,14 @@ export class WorkSpace extends Watchable(Object) {
         this.context = context;
         this.m_clipboard = new Clipboard(context);
     }
+    test() {
+        const s = this.context.selection.selectedShapes[0];
+        if (!s) return console.log('选择元素');
+        const m = s.matrix2Root();
+        m.multiAtLeft(this.m_matrix);
+        const lt = m.computeCoord2(0, 0);
+        return 'frame lt:' + lt.x + ',' + lt.y
+    }
     get matrix() {
         return this.m_matrix;
     }
@@ -136,11 +143,13 @@ export class WorkSpace extends Watchable(Object) {
             return root;
         }
     }
+    get center_on_page(): PageXY {
+        const { x, right, y, bottom } = this.root;
+        return this.matrix.inverseCoord({ x: (right - x) / 2, y: (bottom - y) / 2 });
+    }
     get pageView() {//return pageView HTMLElement
         const pageView: any = document.querySelector(`[data-area="${this.m_pageViewId}"]`);
-        if (pageView) {
-            return pageView as Element;
-        }
+        if (pageView) return pageView as Element;
     }
     get documentPerm() {
         return this.m_document_perm;
@@ -150,9 +159,6 @@ export class WorkSpace extends Watchable(Object) {
     }
     get startPoint() {
         return this.m_mousedown_on_page;
-    }
-    get frameSize() {
-        return this.m_frame_size;
     }
     get transforming() {
         return this.m_scaling || this.m_rotating || this.m_translating || this.m_creating || this.m_setting;
@@ -223,6 +229,7 @@ export class WorkSpace extends Watchable(Object) {
     }
     contentEdit(v: boolean) {
         this.m_content_editing = v;
+        this.notify(WorkSpace.PRE_EDIT);
     }
     pageDragging(v: boolean) {
         this.m_page_dragging = v;
@@ -282,13 +289,6 @@ export class WorkSpace extends Watchable(Object) {
             if (ctrlKey || metaKey) adapt_page(this.context);
         }
     }
-    setFrameSize(size: { width: number, height: number }) {
-        this.m_frame_size = size
-        this.notify(WorkSpace.INSERT_FRAME);
-    }
-    setFrame(size: { width: number, height: number }) {
-        this.m_frame_size = size
-    }
     scaling(v: boolean) {
         this.m_scaling = v;
     }
@@ -310,34 +310,35 @@ export class WorkSpace extends Watchable(Object) {
         this.m_setting = v;
     }
     keydown_v(ctrlKey: boolean, metaKey: boolean) {
-        if (ctrlKey || metaKey) {
-            this.notify(WorkSpace.PASTE);
-        }
+        if (ctrlKey || metaKey) this.notify(WorkSpace.PASTE);
     }
     keydown_a(ctrlKey: boolean, metaKey: boolean) {
         if (ctrlKey || metaKey) {
-            const selection = this.context.selection;
-            if (selection.selectedShapes.length) {
-                const p_map = new Map();
-                selection.selectedShapes.forEach(s => { if (s.parent) p_map.set(s.parent.id, s.parent) });
-                if (p_map.size > 1) {
-                    const page = selection.selectedPage;
-                    if (page) selection.rangeSelectShape(page.childs);
+            const selection = this.context.selection, selected = selection.selectedShapes;
+            if (selected.length) {
+                if (selected.length === 1 && selected[0].type === ShapeType.Table) {
+                    const table: TableShape = selected[0] as TableShape;
+                    const ts = this.context.tableSelection;
+                    const grid = table.getLayout().grid;
+                    ts.selectTableCellRange(0, grid.rowCount - 1, 0, grid.colCount - 1, true);
                 } else {
-                    selection.rangeSelectShape(Array.from(p_map.values())[0].childs);
+                    const p_map = new Map();
+                    selected.forEach(s => { if (s.parent) p_map.set(s.parent.id, s.parent) });
+                    if (p_map.size > 1) {
+                        const page = selection.selectedPage;
+                        if (page) selection.rangeSelectShape(page.childs);
+                    } else {
+                        selection.rangeSelectShape(Array.from(p_map.values())[0].childs);
+                    }
                 }
             } else {
                 const page = selection.selectedPage;
-                if (page) {
-                    selection.rangeSelectShape(page.childs);
-                }
+                if (page) selection.rangeSelectShape(page.childs);
             }
         }
     }
     keydown_i(ctrl: boolean, meta: boolean) {
-        if (ctrl || meta) {
-            this.notify(WorkSpace.ITALIC);
-        }
+        if (ctrl || meta) this.notify(WorkSpace.ITALIC);
     }
     keydown_z(context: Context, ctrl?: boolean, shift?: boolean, meta?: boolean) {
         const repo = context.repo;
@@ -351,20 +352,14 @@ export class WorkSpace extends Watchable(Object) {
                 if (shapes.length) {
                     for (let i = 0; i < shapes.length; i++) {
                         const item = shapes[i];
-                        if (!flat.get(item.id)) {
-                            selection.unSelectShape(item);
-                        }
+                        if (!flat.get(item.id)) selection.unSelectShape(item);
                     }
                 }
             }
-            if (this.context.selection.selectedShapes.length > 1) {
-                this.notify(WorkSpace.CLAC_ATTRI);
-            }
+            if (this.context.selection.selectedShapes.length > 1) this.notify(WorkSpace.CLAC_ATTRI);
         } else if ((ctrl || meta) && shift) {
             repo.canRedo() && repo.redo();
-            if (this.context.selection.selectedShapes.length > 1) {
-                this.notify(WorkSpace.CLAC_ATTRI);
-            }
+            if (this.context.selection.selectedShapes.length > 1) this.notify(WorkSpace.CLAC_ATTRI);
         }
     }
     keydown_c(ctrlKey?: boolean, metaKey?: boolean, shift?: boolean) {
@@ -385,18 +380,12 @@ export class WorkSpace extends Watchable(Object) {
         }
     }
     keydown_b(ctrl: boolean, meta: boolean) {
-        if (ctrl || meta) {
-            this.notify(WorkSpace.BOLD);
-        }
+        if (ctrl || meta) this.notify(WorkSpace.BOLD);
     }
     keydown_u(ctrl: boolean, meta: boolean) {
-        if (ctrl || meta) {
-            this.notify(WorkSpace.UNDER_LINE);
-        }
+        if (ctrl || meta) this.notify(WorkSpace.UNDER_LINE);
     }
     keydown_x(ctrl: boolean, meta: boolean, shift: boolean) {
-        if ((ctrl || meta) && shift) {
-            this.notify(WorkSpace.DELETE_LINE)
-        }
+        if ((ctrl || meta) && shift) this.notify(WorkSpace.DELETE_LINE);
     }
 }

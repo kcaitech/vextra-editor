@@ -169,10 +169,6 @@ onUnmounted(() => {
     shape = undefined;
   }
 })
-onBeforeUpdate(() => {
-  setupWatcher();
-  controllerInit();
-})
 </script>
 
 <template>
@@ -226,6 +222,7 @@ onBeforeUpdate(() => {
   >.popover {
     width: 22px;
     height: 22px;
+
     .trigger {
       width: 100%;
       height: 100%;

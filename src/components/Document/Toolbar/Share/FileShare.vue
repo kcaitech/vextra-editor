@@ -545,7 +545,6 @@ onUnmounted(() => {
   width: 100px;
   justify-content: space-around;
   box-shadow: 2px 2px 5px rgba(0, 0, 0, 0.2);
-
   >div {
     padding: var(--default-margin-quarter) var(--default-padding-half);
   }

@@ -78,8 +78,8 @@ onUnmounted(() => {
         xmlns:xhtml="http://www.w3.org/1999/xhtml" preserveAspectRatio="xMinYMin meet" :width="width + 'px'"
         :height="height + 'px'" :viewBox='"0 0 " + width + " " + height' overflow="visible"
         :reflush="reflush !== 0 ? reflush : undefined" :transform="matrixWithFrame.toString()" :data-area="rootId">
-        <component v-for="c in renderItems" :key="c.id" :is="comsMap.get(c.type) ?? comsMap.get(ShapeType.Rectangle)"
-            :data="c" />
+        <component :is="comsMap.get(c.type) ?? comsMap.get(ShapeType.Rectangle)" v-for="c in renderItems" :key="c.id"
+            :data="c" :context="props.context" />
     </svg>
     <ShapeTitles v-if="show_t" :context="props.context" :data="data" :matrix="matrixWithFrame.toArray()"></ShapeTitles>
 </template>

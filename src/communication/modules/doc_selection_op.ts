@@ -46,7 +46,7 @@ export class DocSelectionOp extends Communication {
     }
 
     private _onMessage(data: any) {
-        console.log("document selection op receive", data)
+        // console.log("document selection op receive", data)
         for (const onMessage of this.onMessageList) onMessage(data);
     }
 

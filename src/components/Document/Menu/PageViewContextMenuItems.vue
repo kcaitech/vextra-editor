@@ -4,16 +4,17 @@ import { useI18n } from 'vue-i18n';
 import ContextMenu from '@/components/common/ContextMenu.vue';
 import Key from '@/components/common/Key.vue';
 import { XY } from '@/context/selection';
-import { Artboard, GroupShape, Shape, ShapeType, TextShape } from "@kcdesign/data";
+import { Artboard, GroupShape, Shape, ShapeType, TableCellType, TextShape } from "@kcdesign/data";
 import Layers from './Layers.vue';
 import { Context } from '@/context';
 import { WorkSpace } from '@/context/workspace';
 import { Selection } from '@/context/selection';
 import { adapt_page, getName } from '@/utils/content';
 import { message } from '@/utils/message';
-import { paster, paster_inner_shape, replace, identity, paras } from '@/utils/clipaboard';
+import { paster, paster_inner_shape, replace, identity, paras } from '@/utils/clipboard';
 import { sort_by_layer } from '@/utils/group_ungroup';
 import { Menu } from '@/context/menu';
+import TableMenu from "./TableMenu/TableMenu.vue"
 const { t } = useI18n();
 interface Props {
   context: Context,
@@ -40,36 +41,46 @@ function showLayerSubMenu(e: MouseEvent) {
 function is_inner_textshape() {
   const selected = props.context.selection.selectedShapes;
   const isEditing = props.context.workspace.isEditing;
-  return (selected.length === 1 && selected[0].type === ShapeType.Text && isEditing);
+  if (selected.length === 1 && selected[0].type === ShapeType.Text && selected[0].text && isEditing) {
+    return selected[0];
+  }
+  if (selected.length === 1 && selected[0].type === ShapeType.Table) {
+    const tableSelection = props.context.tableSelection;
+    if (tableSelection.editingCell && tableSelection.editingCell.cell && tableSelection.editingCell.cell.cellType === TableCellType.Text) {
+      return tableSelection.editingCell.cell
+    }
+  }
+  return false;
 }
 function copy() {
-  if (is_inner_textshape()) {
-    const selection = props.context.selection;
+  const textlike = is_inner_textshape();
+  if (textlike) {
+    const selection = props.context.textSelection;
     const start = selection.cursorStart;
     const end = selection.cursorEnd;
     const s = Math.min(start, end);
     const len = Math.abs(start - end);
     if (s === end) return emit('close');
-    const text = selection.selectedShapes[0].text.getTextWithFormat(s, len);
-    props.context.workspace.clipboard.write_html(text);
+    const t = textlike.text.getTextWithFormat(s, len);
+    props.context.workspace.clipboard.write_html(t);
   } else {
     props.context.workspace.clipboard.write_html();
   }
   emit('close');
 }
 async function cut() {
-  if (is_inner_textshape()) {
-    const selection = props.context.selection;
+  const textlike = is_inner_textshape();
+  if (textlike) {
+    const selection = props.context.textSelection;
     const start = selection.cursorStart;
     const end = selection.cursorEnd;
     if (start === end) return emit('close');
-    const shape = selection.selectedShapes[0];
-    const text = shape.text.getTextWithFormat(Math.min(start, end), Math.abs(start - end));
-    const copy_result = await props.context.workspace.clipboard.write_html(text);
+    const t = textlike.text.getTextWithFormat(Math.min(start, end), Math.abs(start - end));
+    const copy_result = await props.context.workspace.clipboard.write_html(t);
     if (copy_result) {
-      const editor = props.context.editor4TextShape(shape as TextShape);
+      const editor = props.context.editor4TextShape(textlike as TextShape);
       if (editor.deleteText(Math.min(start, end), Math.abs(start - end))) {
-        selection.setCursor(Math.min(start, end), false);
+        selection.setCursor(Math.min(start, end), false, textlike.text);
       }
     }
   }
@@ -77,9 +88,9 @@ async function cut() {
 }
 function paste() {
   if (invalid_items.value.includes('paste')) return;
-  if (is_inner_textshape()) {
-    const shape = props.context.selection.selectedShapes[0];
-    const editor = props.context.editor4TextShape(shape as TextShape);
+  const textlike = is_inner_textshape();
+  if (textlike) {
+    const editor = props.context.editor4TextShape(textlike as TextShape);
     paster_inner_shape(props.context, editor);
   } else {
     paster(props.context, t);
@@ -88,9 +99,9 @@ function paste() {
 }
 function paste_text() {
   if (invalid_items.value.includes('paste-text')) return;
-  if (is_inner_textshape()) {
-    const shape = props.context.selection.selectedShapes[0];
-    const editor = props.context.editor4TextShape(shape as TextShape);
+  const textlike = is_inner_textshape();
+  if (textlike) {
+    const editor = props.context.editor4TextShape(textlike as TextShape);
     paster_inner_shape(props.context, editor, true);
   }
   emit('close');
@@ -110,10 +121,11 @@ function _replace() {
   emit('close');
 }
 function selectAll() {
-  if (is_inner_textshape()) {
-    const selection = props.context.selection;
-    const end = selection.selectedShapes[0].text.length;
-    selection.selectText(0, end);
+  const textlike = is_inner_textshape();
+  if (textlike) {
+    const text = textlike.text;
+    const end = text.length;
+    props.context.textSelection.selectText(0, end, text);
   } else {
     props.context.workspace.keydown_a(true, true);
   }
@@ -165,7 +177,7 @@ function canvas() {
   adapt_page(props.context);
   emit('close');
 }
-function cursor() { 
+function cursor() {
   const status = props.context.menu.isUserCursorVisible;
   isCursor.value = !status;
   props.context.menu.setVisibleCursor(isCursor.value);
@@ -560,6 +572,7 @@ onUnmounted(() => {
       <div class="choose" v-show="isTitle"></div>
       <span>{{ t('system.artboart_title_visible') }}</span>
     </div>
+    <TableMenu :context="context" :layers="layers" :items="items" :site="site" @close="emit('close')"></TableMenu>
   </div>
 </template>
 <style lang='scss' scoped>

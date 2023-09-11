@@ -48,7 +48,8 @@ const A2R = new Map([
     [Action.AddFrame, ShapeType.Artboard],
     [Action.AddText, ShapeType.Text],
     [Action.AddImage, ShapeType.Image],
-    [Action.AddArrow, ShapeType.Line]
+    [Action.AddArrow, ShapeType.Line],
+    [Action.AddTable, ShapeType.Table]
 ]);
 
 export const ResultByAction = (action: Action): ShapeType | undefined => A2R.get(action); // 参数action状态下新增图形会得到的图形类型
@@ -58,10 +59,15 @@ export class Tool extends Watchable(Object) {
     static GROUP = 2;
     static UNGROUP = 3;
     static COMPS = 4;
-    static TITILE_VISIBLE = 5
+    static TITILE_VISIBLE = 5;
+    static INSERT_FRAME = 6;
+    static INSERT_TABLE = 7;
     private m_current_action: Action = Action.AutoV;
     private m_context: Context;
     private m_show_title: boolean = true;
+    private m_frame_size: { width: number, height: number } = { width: 100, height: 100 }; // 容器模版frame
+    private m_frame_name: string = ''; // 容器模版名称
+    private m_table_size: { row: number, col: number } = { row: 3, col: 3 };
     constructor(context: Context) {
         super();
         this.m_context = context;
@@ -163,5 +169,20 @@ export class Tool extends Watchable(Object) {
     setTitleVisibale(val: boolean) {
         this.m_show_title = val;
         this.notify(Tool.TITILE_VISIBLE);
+    }
+    get frameSize(): { size: { width: number, height: number }, name: string } {
+        return { size: this.m_frame_size, name: this.m_frame_name };
+    }
+    setArtboardTemp(width: number, height: number, name: string) {
+        this.m_frame_size = { width, height };
+        this.m_frame_name = name;
+        this.notify(Tool.INSERT_FRAME);
+    }
+    get tableSize() {
+        return this.m_table_size;
+    }
+    insertTable(size: { row: number, col: number }) {
+        this.m_table_size = size
+        this.notify(Tool.INSERT_TABLE);
     }
 }

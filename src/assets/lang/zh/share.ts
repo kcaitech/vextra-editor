@@ -21,7 +21,10 @@ export const share = {
     founder: '创建者',
     document_permission: '文档权限',
     reviewable: '可评论'
+}
 
+export const permission = {
+    no_authority_to_rename: '没有对当前文档进行重命名的权限'
 }
 
 export const apply = {

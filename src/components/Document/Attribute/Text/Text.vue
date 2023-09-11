@@ -5,7 +5,7 @@ import SelectFont from './SelectFont.vue';
 import { onMounted, ref, onUnmounted, watchEffect, watch } from 'vue';
 import TextAdvancedSettings from './TextAdvancedSettings.vue'
 import { Context } from '@/context';
-import { TextShape, AttrGetter } from "@kcdesign/data";
+import { TextShape, AttrGetter, TableShape } from "@kcdesign/data";
 import Tooltip from '@/components/common/Tooltip.vue';
 import { TextVerAlign, TextHorAlign, Color, UnderlineType, StrikethroughType } from "@kcdesign/data";
 import ColorPicker from '@/components/common/ColorPicker/index.vue';
@@ -42,7 +42,7 @@ const highlight = ref<Color>()
 const textSize = ref<HTMLInputElement>()
 const higlightColor = ref<HTMLInputElement>()
 const higlighAlpha = ref<HTMLInputElement>()
-const selection = ref(props.context.selection) 
+// const selection = ref(props.context.selection) 
 
 function toHex(r: number, g: number, b: number) {
     const hex = (n: number) => n.toString(16).toUpperCase().length === 1 ? `0${n.toString(16).toUpperCase()}` : n.toString(16).toUpperCase();
@@ -88,10 +88,10 @@ const onBold = () => {
     isBold.value = !isBold.value
     const { textIndex, selectLength } = getTextIndexAndLen()
     const editor = props.context.editor4TextShape(props.shape)
-    if(isSelectText()) {
+    if (isSelectText()) {
         editor.setTextBold(isBold.value, 0, Infinity)
-    }else {
-        editor.setTextBold(isBold.value, textIndex,selectLength)
+    } else {
+        editor.setTextBold(isBold.value, textIndex, selectLength)
         textFormat()
     }
 }
@@ -100,10 +100,10 @@ const onTilt = () => {
     isTilt.value = !isTilt.value
     const { textIndex, selectLength } = getTextIndexAndLen()
     const editor = props.context.editor4TextShape(props.shape)
-    if(isSelectText()) {
+    if (isSelectText()) {
         editor.setTextItalic(isTilt.value, 0, Infinity)
-    }else {
-        editor.setTextItalic(isTilt.value, textIndex,selectLength)
+    } else {
+        editor.setTextItalic(isTilt.value, textIndex, selectLength)
         textFormat()
     }
 }
@@ -112,10 +112,10 @@ const onUnderlint = () => {
     isUnderline.value = !isUnderline.value
     const { textIndex, selectLength } = getTextIndexAndLen()
     const editor = props.context.editor4TextShape(props.shape)
-    if(isSelectText()) {
+    if (isSelectText()) {
         editor.setTextUnderline(isUnderline.value, 0, Infinity)
-    }else {
-        editor.setTextUnderline(isUnderline.value, textIndex,selectLength)
+    } else {
+        editor.setTextUnderline(isUnderline.value, textIndex, selectLength)
         textFormat()
     }
 }
@@ -124,10 +124,10 @@ const onDeleteline = () => {
     isDeleteline.value = !isDeleteline.value
     const { textIndex, selectLength } = getTextIndexAndLen()
     const editor = props.context.editor4TextShape(props.shape)
-    if(isSelectText()) {
-        editor.setTextStrikethrough(isDeleteline.value, 0,Infinity)
-    }else {
-        editor.setTextStrikethrough(isDeleteline.value, textIndex,selectLength)
+    if (isSelectText()) {
+        editor.setTextStrikethrough(isDeleteline.value, 0, Infinity)
+    } else {
+        editor.setTextStrikethrough(isDeleteline.value, textIndex, selectLength)
         textFormat()
     }
 }
@@ -136,7 +136,7 @@ const onSelectLevel = (icon: TextHorAlign) => {
     selectLevel.value = icon
     const { textIndex, selectLength } = getTextIndexAndLen()
     const editor = props.context.editor4TextShape(props.shape)
-    if(isSelectText()) {
+    if (isSelectText()) {
         editor.setTextHorAlign(icon, 0, Infinity)
     } else {
         editor.setTextHorAlign(icon, textIndex, selectLength)
@@ -156,9 +156,9 @@ const changeTextSize = (size: number) => {
     showSize.value = false;
     const editor = props.context.editor4TextShape(props.shape)
     const { textIndex, selectLength } = getTextIndexAndLen()
-    if(isSelectText()) {
+    if (isSelectText()) {
         editor.setTextFontSize(0, Infinity, size)
-    }else {
+    } else {
         editor.setTextFontSize(textIndex, selectLength, size)
         textFormat()
     }
@@ -169,9 +169,9 @@ const setFont = (font: string) => {
     showFont.value = false;
     const editor = props.context.editor4TextShape(props.shape)
     const { textIndex, selectLength } = getTextIndexAndLen()
-    if(isSelectText()) {
+    if (isSelectText()) {
         editor.setTextFontName(0, Infinity, font)
-    }else {
+    } else {
         editor.setTextFontName(textIndex, selectLength, font)
         textFormat()
     }
@@ -179,15 +179,17 @@ const setFont = (font: string) => {
 
 //获取选中字体的长度和开始下标
 const getTextIndexAndLen = () => {
-    const textIndex = Math.min(selection.value.cursorEnd, selection.value.cursorStart)
-    const selectLength = Math.abs(selection.value.cursorEnd - selection.value.cursorStart)
+    const selection = props.context.textSelection;
+    const textIndex = Math.min(selection.cursorEnd, selection.cursorStart)
+    const selectLength = Math.abs(selection.cursorEnd - selection.cursorStart)
     return { textIndex, selectLength }
 }
 //判断是否选择文本框还是光标聚焦了
 const isSelectText = () => {
-    if((selection.value.cursorEnd !== -1) && (selection.value.cursorStart !== -1)) {
+    const selection = props.context.textSelection;
+    if ((selection.cursorEnd !== -1) && (selection.cursorStart !== -1)) {
         return false
-    }else {
+    } else {
         return true
     }
 }
@@ -201,7 +203,7 @@ const setTextSize = () => {
     if (!isNaN(Number(fonstSize.value))) {
         changeTextSize(fonstSize.value)
         textFormat()
-    }else {
+    } else {
         textFormat()
     }
 
@@ -214,13 +216,13 @@ const shapeWatch = watch(() => props.shape, (value, old) => {
 
 // 获取当前文字格式
 const textFormat = () => {
-    if(!props.shape || !props.shape.text) return
+    if (!props.shape || !props.shape.text) return
     const { textIndex, selectLength } = getTextIndexAndLen();
     const editor = props.context.editor4TextShape(props.shape)
     let format: AttrGetter
     if (textIndex === -1) {
         format = props.shape.text.getTextFormat(0, Infinity, editor.getCachedSpanAttr())
-    }else {
+    } else {
         format = props.shape.text.getTextFormat(textIndex, selectLength, editor.getCachedSpanAttr())
     }
     colorIsMulti.value = format.colorIsMulti
@@ -231,39 +233,38 @@ const textFormat = () => {
     fonstSize.value = format.fontSize || 14
     isUnderline.value = format.underline && format.underline !== UnderlineType.None || false;
     isDeleteline.value = format.strikethrough && format.strikethrough !== StrikethroughType.None || false;
-    textColor.value = format.color 
+    textColor.value = format.color
     highlight.value = format.highlight
     isBold.value = format.bold || false
     isTilt.value = format.italic || false
-    if(format.italicIsMulti) isTilt.value = false
-    if(format.boldIsMulti) isBold.value= false
-    if(colorIsMulti.value) mixed.value = true;
-    if(highlightIsMulti.value) higMixed.value = true;
-    if(format.fontNameIsMulti) fontName.value = `${t('attr.more_value')}`
-    if(format.fontSizeIsMulti) fonstSize.value = `${t('attr.more_value')}`
-    if(format.underlineIsMulti) isUnderline.value = false
-    if(format.strikethroughIsMulti) isDeleteline.value = false
+    if (format.italicIsMulti) isTilt.value = false
+    if (format.boldIsMulti) isBold.value = false
+    if (colorIsMulti.value) mixed.value = true;
+    if (highlightIsMulti.value) higMixed.value = true;
+    if (format.fontNameIsMulti) fontName.value = `${t('attr.more_value')}`
+    if (format.fontSizeIsMulti) fonstSize.value = `${t('attr.more_value')}`
+    if (format.underlineIsMulti) isUnderline.value = false
+    if (format.strikethroughIsMulti) isDeleteline.value = false
     props.context.workspace.focusText()
-    
 }
 
 function selection_wather(t: number) {
-    if(t === Selection.CHANGE_TEXT) {
+    if (t === Selection.CHANGE_TEXT) {
         textFormat()
-    }else if(t === Selection.CHANGE_SHAPE) {
+    } else if (t === Selection.CHANGE_SHAPE) {
         textFormat()
     }
 }
 function workspace_wather(t: number) {
-    if(t === WorkSpace.BOLD) {
+    if (t === WorkSpace.BOLD) {
         onBold()
-    }else if(t === WorkSpace.UNDER_LINE) {
+    } else if (t === WorkSpace.UNDER_LINE) {
         onUnderlint()
-    }else if(t === WorkSpace.DELETE_LINE) {
+    } else if (t === WorkSpace.DELETE_LINE) {
         onDeleteline()
-    }else if(t === WorkSpace.ITALIC) {
+    } else if (t === WorkSpace.ITALIC) {
         onTilt()
-    }else if (t === WorkSpace.SELECTION_VIEW_UPDATE) {
+    } else if (t === WorkSpace.SELECTION_VIEW_UPDATE) {
         textFormat()
     }
 }
@@ -277,12 +278,12 @@ function onAlphaChange(e: Event, type: string) {
             }
             value = value.toFixed(2) / 100
             let color
-            if(type === 'color') {
+            if (type === 'color') {
                 color = textColor.value
-            }else {
+            } else {
                 color = highlight.value
             }
-            if(!color) return
+            if (!color) return
             let clr = toHex(color.red, color.green, color.blue);
             if (clr.slice(0, 1) !== '#') {
                 clr = "#" + clr
@@ -291,9 +292,9 @@ function onAlphaChange(e: Event, type: string) {
             return
         } else {
             message('danger', t('system.illegal_input'));
-            if(type === 'color') {
+            if (type === 'color') {
                 return (e.target as HTMLInputElement).value = (textColor.value!.alpha * 100) + '%'
-            }else {
+            } else {
                 return (e.target as HTMLInputElement).value = (highlight.value!.alpha * 100) + '%'
             }
         }
@@ -304,12 +305,12 @@ function onAlphaChange(e: Event, type: string) {
             }
             value = Number((Number(value)).toFixed(2)) / 100
             let color
-            if(type === 'color') {
+            if (type === 'color') {
                 color = textColor.value
-            }else {
+            } else {
                 color = highlight.value
             }
-            if(!color) return
+            if (!color) return
             let clr = toHex(color.red, color.green, color.blue);
             if (clr.slice(0, 1) !== '#') {
                 clr = "#" + clr
@@ -318,17 +319,17 @@ function onAlphaChange(e: Event, type: string) {
             return
         } else {
             message('danger', t('system.illegal_input'));
-            if(type === 'color') {
+            if (type === 'color') {
                 return (e.target as HTMLInputElement).value = (textColor.value!.alpha * 100) + '%'
-            }else {
+            } else {
                 return (e.target as HTMLInputElement).value = (highlight.value!.alpha * 100) + '%'
             }
         }
     } else {
         message('danger', t('system.illegal_input'));
-        if(type === 'color') {
+        if (type === 'color') {
             return (e.target as HTMLInputElement).value = (textColor.value!.alpha * 100) + '%'
-        }else {
+        } else {
             return (e.target as HTMLInputElement).value = (highlight.value!.alpha * 100) + '%'
         }
     }
@@ -340,15 +341,15 @@ function onColorChange(e: Event, type: string) {
     }
     if (value.length === 4) value = `#${value.slice(1).split('').map(i => `${i}${i}`).join('')}`;
     if (value.length === 2) value = `#${value.slice(1).split('').map(i => `${i}${i}${i}${i}${i}${i}`).join('')}`;
-    if(type === 'color') {
+    if (type === 'color') {
         if (Reg_HEX.test(value)) {
             const alpha = textColor.value!.alpha;
             setColor(0, value, alpha, type);
         } else {
             message('danger', t('system.illegal_input'));
-            return (e.target as HTMLInputElement).value = toHex(textColor.value!.red,textColor.value!.green, textColor.value!.blue);
+            return (e.target as HTMLInputElement).value = toHex(textColor.value!.red, textColor.value!.green, textColor.value!.blue);
         }
-    }else {
+    } else {
         if (Reg_HEX.test(value)) {
             const alpha = highlight.value!.alpha;
             setColor(0, value, alpha, type);
@@ -361,16 +362,16 @@ function onColorChange(e: Event, type: string) {
 function getColorFromPicker(color: Color, type: string) {
     const editor = props.context.editor4TextShape(props.shape)
     const { textIndex, selectLength } = getTextIndexAndLen();
-    if(isSelectText()) {
-        if(type === 'color') {
+    if (isSelectText()) {
+        if (type === 'color') {
             editor.setTextColor(0, Infinity, color)
-        }else {
+        } else {
             editor.setTextHighlightColor(0, Infinity, color)
         }
-    }else {
-        if(type === 'color') {
+    } else {
+        if (type === 'color') {
             editor.setTextColor(textIndex, selectLength, color)
-        }else {
+        } else {
             editor.setTextHighlightColor(textIndex, selectLength, color)
         }
     }
@@ -389,16 +390,16 @@ function setColor(idx: number, clr: string, alpha: number, type: string) {
     const b = Number.parseInt(res[3], 16);
     const { textIndex, selectLength } = getTextIndexAndLen();
     const editor = props.context.editor4TextShape(props.shape)
-    if(isSelectText()) {
-        if(type === 'color') {
+    if (isSelectText()) {
+        if (type === 'color') {
             editor.setTextColor(0, Infinity, new Color(alpha, r, g, b))
-        }else {
+        } else {
             editor.setTextHighlightColor(0, Infinity, new Color(alpha, r, g, b))
         }
-    }else {
-        if(type === 'color') {
+    } else {
+        if (type === 'color') {
             editor.setTextColor(textIndex, selectLength, new Color(alpha, r, g, b))
-        }else {
+        } else {
             editor.setTextHighlightColor(textIndex, selectLength, new Color(alpha, r, g, b))
         }
     }
@@ -409,9 +410,9 @@ function setColor(idx: number, clr: string, alpha: number, type: string) {
 const deleteHighlight = () => {
     const { textIndex, selectLength } = getTextIndexAndLen();
     const editor = props.context.editor4TextShape(props.shape)
-    if(isSelectText()) {
+    if (isSelectText()) {
         editor.setTextHighlightColor(0, Infinity, undefined)
-    }else {
+    } else {
         editor.setTextHighlightColor(textIndex, selectLength, undefined)
     }
     textFormat()
@@ -420,9 +421,9 @@ const deleteHighlight = () => {
 const addHighlight = () => {
     const { textIndex, selectLength } = getTextIndexAndLen();
     const editor = props.context.editor4TextShape(props.shape)
-    if(isSelectText()) {
+    if (isSelectText()) {
         editor.setTextHighlightColor(0, Infinity, new Color(1, 216, 216, 216))
-    }else {
+    } else {
         editor.setTextHighlightColor(textIndex, selectLength, new Color(1, 216, 216, 216))
     }
     textFormat()
@@ -430,9 +431,9 @@ const addHighlight = () => {
 const addTextColor = () => {
     const { textIndex, selectLength } = getTextIndexAndLen();
     const editor = props.context.editor4TextShape(props.shape)
-    if(isSelectText()) {
+    if (isSelectText()) {
         editor.setTextColor(0, Infinity, new Color(1, 6, 6, 6))
-    }else {
+    } else {
         editor.setTextColor(textIndex, selectLength, new Color(1, 6, 6, 6))
     }
     textFormat()
@@ -499,7 +500,8 @@ onUnmounted(() => {
             <div class="text-middle">
                 <div class="text-middle-size">
                     <div class="text-size jointly-text">
-                        <input type="text" v-model="fonstSize" ref="textSize" class="input" @change="setTextSize" @focus="selectSizeValue">
+                        <input type="text" v-model="fonstSize" ref="textSize" class="input" @change="setTextSize"
+                            @focus="selectSizeValue">
                         <svg-icon icon-class="down" @click="onShowSize"></svg-icon>
                         <div class="font-size-list" ref="sizeList" v-if="showSize">
                             <div @click="changeTextSize(10)">10</div>
@@ -589,27 +591,31 @@ onUnmounted(() => {
             </div>
             <!-- 字体颜色 -->
             <div class="text-color" v-if="!colorIsMulti && textColor" style="margin-bottom: 10px;">
-                <div>{{t('attr.font_color')}}</div>
+                <div>{{ t('attr.font_color') }}</div>
                 <div class="color">
-                    <ColorPicker :color="textColor!" :context="props.context" :late="40" @change="c => getColorFromPicker(c, 'color')">
+                    <ColorPicker :color="textColor!" :context="props.context" :late="40"
+                        @change="c => getColorFromPicker(c, 'color')">
                     </ColorPicker>
-                    <input ref="sizeColor" @focus="selectColorValue" :spellcheck="false" :value="toHex(textColor!.red, textColor!.green, textColor!.blue)" @change="(e) => onColorChange(e, 'color')"/>
-                    <input ref="alphaFill" @focus="selectAlphaValue" style="text-align: center;" :value="filterAlpha(textColor!.alpha * 100) + '%'"  @change="(e) => onAlphaChange(e, 'color')"/>
+                    <input ref="sizeColor" @focus="selectColorValue" :spellcheck="false"
+                        :value="toHex(textColor!.red, textColor!.green, textColor!.blue)"
+                        @change="(e) => onColorChange(e, 'color')" />
+                    <input ref="alphaFill" @focus="selectAlphaValue" style="text-align: center;"
+                        :value="(textColor!.alpha * 100) + '%'" @change="(e) => onAlphaChange(e, 'color')" />
                 </div>
                 <div class="perch"></div>
             </div>
             <div class="text-colors" v-else-if="colorIsMulti" style="margin-bottom: 10px;">
                 <div class="color-title">
-                    <div>{{t('attr.font_color')}}</div>
+                    <div>{{ t('attr.font_color') }}</div>
                     <div class="add" @click="addTextColor">
                         <svg-icon icon-class="add"></svg-icon>
                     </div>
                 </div>
-                <div class="color-text">{{t('attr.multiple_colors')}}</div>
+                <div class="color-text">{{ t('attr.multiple_colors') }}</div>
             </div>
             <div class="text-colors" v-else-if="!colorIsMulti && !textColor" style="margin-bottom: 10px;">
                 <div class="color-title">
-                    <div>{{t('attr.font_color')}}</div>
+                    <div>{{ t('attr.font_color') }}</div>
                     <div class="add" @click="addTextColor">
                         <svg-icon icon-class="add"></svg-icon>
                     </div>
@@ -617,12 +623,16 @@ onUnmounted(() => {
             </div>
             <!-- 高亮颜色 -->
             <div class="text-color" v-if="!highlightIsMulti && highlight">
-                <div>{{t('attr.highlight_color')}}</div>
+                <div>{{ t('attr.highlight_color') }}</div>
                 <div class="color">
-                    <ColorPicker :color="highlight!" :context="props.context" :late="40" @change="c => getColorFromPicker(c, 'highlight')">
+                    <ColorPicker :color="highlight!" :context="props.context" :late="40"
+                        @change="c => getColorFromPicker(c, 'highlight')">
                     </ColorPicker>
-                    <input ref="higlightColor" @focus="selectHiglightColor" :spellcheck="false" :value="toHex(highlight!.red, highlight!.green, highlight!.blue)" @change="(e) => onColorChange(e, 'highlight')"/>
-                    <input ref="higlighAlpha" @focus="selectHiglighAlpha" style="text-align: center;" :value="filterAlpha(highlight.alpha * 100) + '%'"  @change="(e) => onAlphaChange(e, 'highlight')"/>
+                    <input ref="higlightColor" @focus="selectHiglightColor" :spellcheck="false"
+                        :value="toHex(highlight!.red, highlight!.green, highlight!.blue)"
+                        @change="(e) => onColorChange(e, 'highlight')" />
+                    <input ref="higlighAlpha" @focus="selectHiglighAlpha" style="text-align: center;"
+                        :value="(highlight!.alpha * 100) + '%'" @change="(e) => onAlphaChange(e, 'highlight')" />
                 </div>
                 <div class="perch" @click="deleteHighlight">
                     <svg-icon class="svg" icon-class="delete"></svg-icon>
@@ -630,16 +640,16 @@ onUnmounted(() => {
             </div>
             <div class="text-colors" v-else-if="highlightIsMulti">
                 <div class="color-title">
-                    <div>{{t('attr.highlight_color')}}</div>
+                    <div>{{ t('attr.highlight_color') }}</div>
                     <div class="add" @click="addHighlight">
                         <svg-icon icon-class="add"></svg-icon>
                     </div>
                 </div>
-                <div class="color-text">{{t('attr.multiple_colors')}}</div>
+                <div class="color-text">{{ t('attr.multiple_colors') }}</div>
             </div>
             <div class="text-colors" v-else-if="!highlightIsMulti && !highlight">
                 <div class="color-title">
-                    <div>{{t('attr.highlight_color')}}</div>
+                    <div>{{ t('attr.highlight_color') }}</div>
                     <div class="color_border"></div>
                     <div class="add" @click="addHighlight">
                         <svg-icon icon-class="add"></svg-icon>
@@ -785,6 +795,7 @@ onUnmounted(() => {
             align-items: center;
             justify-content: space-between;
             margin-bottom: 10px;
+
             .text-bottom-align {
                 display: flex;
                 align-items: center;
@@ -809,9 +820,11 @@ onUnmounted(() => {
                 justify-content: center;
             }
         }
+
         .text-color {
             display: flex;
             align-items: center;
+
             .color {
                 background-color: rgba(#D8D8D8, 0.4);
                 height: 25px;
@@ -835,22 +848,14 @@ onUnmounted(() => {
                 }
             }
         }
+
         .text-colors {
             .color-title {
                 display: flex;
                 justify-content: space-between;
                 align-items: center;
                 margin-bottom: 5px;
-                .color_border {
-                    flex: 1;
-                    background-color: rgba(216, 216, 216, 0.4);
-                    height: 25px;
-                    padding: 0px 3px;
-                    margin-left: 3px;
-                    margin-right: 3px;
-                    border-radius: 3px;
-                    box-sizing: border-box;
-                }
+
                 .add {
                     width: 22px;
                     height: 22px;
@@ -866,17 +871,20 @@ onUnmounted(() => {
                     transition: .2s;
                 }
             }
+
             .color-text {
                 color: rgba(0, 0, 0, 0.5);
                 text-align: center;
             }
         }
+
         .perch {
             display: flex;
             justify-content: center;
             align-items: center;
             width: 22px;
             height: 22px;
+
             >svg {
                 height: 70%;
                 width: 70%;

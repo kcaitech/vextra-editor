@@ -19,12 +19,14 @@ export class DocUpload extends Communication {
     private promise?: Promise<Response>
     private resolve?: (value: Response) => void
 
-    private constructor() {
-        super(TunnelType.DocUpload)
+    private constructor(projectId: string) {
+        super(TunnelType.DocUpload, {
+            project_id: projectId,
+        })
     }
 
-    public static Make(token: string): DocUpload {
-        const docUpload = new DocUpload()
+    public static Make(token: string, projectId: string): DocUpload {
+        const docUpload = new DocUpload(projectId)
         docUpload.token = token
         docUpload.onMessage = docUpload._onMessage.bind(docUpload)
         return docUpload

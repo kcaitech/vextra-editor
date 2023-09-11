@@ -1,6 +1,6 @@
 <script setup lang="ts">
+import { Context } from '@/context';
 import { } from 'vue';
-import { WorkSpace } from "@/context/workspace";
 
 
 const props = defineProps<{
@@ -8,24 +8,25 @@ const props = defineProps<{
   top: number,
   left: number,
   framesChild: string[][],
-  workspace: WorkSpace
+  context: Context
 }>();
 const emit = defineEmits<{
   (e: "closeFrame"): void;
 }>();
 
-const addFrame = (size: string) => {
-  const width = Number(size.split('×')[0])
-  const height = Number(size.split('×')[1])
-  emit('closeFrame')
-  props.workspace.setFrameSize({ width: width, height: height })
-
+const addFrame = (t: string[]) => {
+  if (t.length === 2) {
+    const width = Number(t[1].split('×')[0])
+    const height = Number(t[1].split('×')[1])
+    emit('closeFrame')
+    props.context.tool.setArtboardTemp(width, height, t[0]);
+  }
 }
 
 </script>
 <template>
   <div class="child" v-if="childFrame" :style="{ top: top + 'px', left: props.left + 'px' }">
-    <div class="item" v-for="(item, i) in props.framesChild" :key="i" @click="addFrame(item[1])">
+    <div class="item" v-for="(item, i) in props.framesChild" :key="i" @click="addFrame(item)">
       <span>{{ item[0] }}</span>
       <span>{{ item[1] }}</span>
     </div>

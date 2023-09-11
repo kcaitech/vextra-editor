@@ -1,11 +1,13 @@
-import { ISave4Restore, SpanAttr, Watchable } from "@kcdesign/data";
+import { ISave4Restore, Matrix, TableShape, Watchable } from "@kcdesign/data";
 import { Document } from "@kcdesign/data";
 import { Page } from "@kcdesign/data";
-import { Shape, TextShape } from "@kcdesign/data";
+import { Shape, Text } from "@kcdesign/data";
 import { cloneDeep } from "lodash";
 import { scout, Scout, finder, finder_layers, artboardFinder } from "@/utils/scout";
 import { Artboard } from "@kcdesign/data";
 import { Context } from ".";
+import { TextSelection } from "./textselection";
+import { TableSelection } from "./tableselection";
 interface Saved {
     page: Page | undefined,
     shapes: Shape[],
@@ -36,16 +38,9 @@ export interface ShapeXY { // 图形自身坐标系的xy
     x: number,
     y: number
 }
-
-interface TextLocate {
-    index: number
-    before: boolean
-    placeholder: boolean
-    attr: SpanAttr | undefined
-}
-
+type TextShapeLike = Shape & { text: Text }
 export type ActionType = 'translate' | 'scale' | 'rotate';
-
+export type TableArea = 'invalid' | 'body' | 'content' | 'hover';
 export class Selection extends Watchable(Object) implements ISave4Restore {
 
     static CHANGE_PAGE = 1;
@@ -62,26 +57,27 @@ export class Selection extends Watchable(Object) implements ISave4Restore {
     static PAGE_SORT = 12;
     static ABOUT_ME = 13;
     static EXTEND = 14;
-    
+
     private m_selectPage?: Page;
     private m_selectShapes: Shape[] = [];
     private m_hoverShape?: Shape;
     private m_document: Document;
     private m_scout: Scout | undefined;
-    // todo
-    private m_cursorStart: number = -1;
-    private m_cursorAtBefore: boolean = false;
-    private m_cursorEnd: number = -1;
+
     private m_comment_id: string = '';
     private m_comment_status: boolean = false;
     private m_comment_page_id: string | undefined;
     private m_select_comment: boolean = false;
     private m_comment_page_sort: boolean = false;
     private m_comment_about_me: boolean = false;
+    private m_table_area: { id: TableArea, area: string }[] = [];
+    private m_context: Context;
 
-    constructor(document: Document) {
+
+    constructor(document: Document, context: Context) {
         super();
         this.m_document = document;
+        this.m_context = context;
     }
     get scout(): Scout | undefined {
         return this.m_scout;
@@ -93,18 +89,7 @@ export class Selection extends Watchable(Object) implements ISave4Restore {
         const abs = Array.from(this.m_artboart_list.values());
         return abs;
     }
-    get cursorStart() {
-        return this.m_cursorStart;
-    }
-    get cursorAtBefore() {
-        return this.m_cursorAtBefore;
-    }
-    get cursorEnd() {
-        return this.m_cursorEnd;
-    }
-    get isSelectText() {
-        return this.selectedShapes.length === 1 && this.selectedShapes[0] instanceof TextShape;
-    }
+
     get commentId() {
         return this.m_comment_id;
     }
@@ -155,8 +140,6 @@ export class Selection extends Watchable(Object) implements ISave4Restore {
         }
         this.m_selectPage = p;
         this.m_selectShapes.length = 0;
-        this.m_cursorStart = -1;
-        this.m_cursorEnd = -1;
         this.notify(Selection.CHANGE_PAGE);
     }
     async deletePage(id: string, index: number) {
@@ -230,18 +213,15 @@ export class Selection extends Watchable(Object) implements ISave4Restore {
     }
 
     selectShape(shape?: Shape) {
-        if (!shape) { // 取消所有已经选择的图形
+        if (!shape) {
             this.resetSelectShapes();
         } else {
             if (shape.isLocked) return;
             this.m_selectShapes.length = 0;
             this.m_selectShapes.push(shape);
-            this.m_cursorStart = -1;
-            this.m_cursorEnd = -1;
             this.m_hoverShape = undefined;
             this.notify(Selection.CHANGE_SHAPE);
         }
-
     }
     unSelectShape(shape: Shape) {
         const index = this.m_selectShapes.findIndex((s: Shape) => s.id === shape.id);
@@ -254,8 +234,6 @@ export class Selection extends Watchable(Object) implements ISave4Restore {
     rangeSelectShape(shapes: Shape[]) {
         this.m_selectShapes.length = 0;
         this.m_selectShapes.push(...shapes);
-        this.m_cursorStart = -1;
-        this.m_cursorEnd = -1;
         this.m_hoverShape = undefined;
         this.notify(Selection.CHANGE_SHAPE);
     }
@@ -266,15 +244,11 @@ export class Selection extends Watchable(Object) implements ISave4Restore {
             return;
         }
         this.m_selectShapes.push(shape);
-        this.m_cursorStart = -1;
-        this.m_cursorEnd = -1;
         this.notify(Selection.CHANGE_SHAPE);
     }
 
     resetSelectShapes() {
         this.m_selectShapes.length = 0;
-        this.m_cursorStart = -1;
-        this.m_cursorEnd = -1;
         this.notify(Selection.CHANGE_SHAPE);
     }
 
@@ -317,132 +291,39 @@ export class Selection extends Watchable(Object) implements ISave4Restore {
         }
         return shape;
     }
-
-    /**
-     *
-     * @param x page坐标系
-     * @param y
-     */
-    locateText(x: number, y: number): TextLocate {
-        if (!(this.m_selectShapes.length === 1 && this.m_selectShapes[0] instanceof TextShape)) {
-            return { index: -1, before: false, placeholder: false, attr: undefined };
+    getArea(p: ClientXY): TableArea {
+        let area: TableArea = 'invalid';
+        if (this.hoveredShape) {
+            let m = this.hoveredShape.matrix2Root(), wm = this.m_context.workspace.matrix;
+            m.multiAtLeft(wm);
+            let path = this.hoveredShape.getPath();
+            path.transform(m);
+            if (this.m_scout!.isPointInPath(path.toString(), p)) return 'hover';
         }
-        const shape = this.m_selectShapes[0] as TextShape;
-        // translate x,y
-        const matrix = shape.matrix2Root();
-        const xy = matrix.inverseCoord(x, y);
-        x = xy.x;
-        y = xy.y;
-
-        return shape.text.locateText(x, y);
+        for (let i = 0, len = this.m_table_area.length; i < len; i++) {
+            const a = this.m_table_area[i];
+            if (this.m_scout!.isPointInPath(a.area, p)) {
+                area = a.id; return area;
+            }
+        }
+        return area;
     }
-
-    setCursor(index: number, before: boolean) {
-        if (!(this.m_selectShapes.length === 1 && this.m_selectShapes[0] instanceof TextShape)) {
-            return;
-        }
-        if (index < 0) index = 0;
-        const shape = this.m_selectShapes[0];
-
-        const span = shape.text.spanAt(index);
-        if (span?.placeholder && span.length === 1) index++;
-
-        const length = shape.text.length;
-        if (index >= length) {
-            index = length - 1;
-            before = false;
-        }
-        if (index !== this.m_cursorStart || index !== this.m_cursorEnd || before !== this.m_cursorAtBefore) {
-            this.m_cursorStart = index;
-            this.m_cursorEnd = index;
-            this.m_cursorAtBefore = before;
-            this.notify(Selection.CHANGE_TEXT);
-        }
+    setArea(table_area: { id: TableArea, area: string }[]) {
+        this.m_table_area = table_area;
     }
+    // text
+    // private m_textSelection?: TextSelection;
+    // getTextSelection(shape: TextShapeLike) {
+    //     if (!this.m_textSelection || this.m_textSelection.shape.id !== shape.id) {
+    //         this.m_textSelection = new TextSelection(shape, this);
+    //     }
+    //     return this.m_textSelection;
+    // }
 
-    selectText(start: number, end: number, before?: boolean) {
-        if (!(this.m_selectShapes.length === 1 && this.m_selectShapes[0] instanceof TextShape)) {
-            return;
-        }
-        // 不只选择'\n'
-        const shape = this.m_selectShapes[0];
-        if (Math.abs(start - end) === 1 && shape.text.charAt(Math.min(start, end)) === '\n') {
-            // this.setCursor(end, !!before);
-            // return;
-            if (end > start) {
-                start++;
-                end++;
-            }
-            else {
-                start--;
-                end--;
-            }
-        }
-
-        const length = shape.text.length;
-        if (start < 0) start = 0;
-        else if (start >= length) {
-            start = length - 1;
-        }
-        if (end < 0) end = 0;
-        else if (end >= length) {
-            end = length - 1;
-        }
-        if (start !== this.m_cursorStart || end !== this.m_cursorEnd) {
-            this.m_cursorStart = start;
-            this.m_cursorEnd = end;
-            this.m_cursorAtBefore = false;
-            this.notify(Selection.CHANGE_TEXT);
-        }
+    save() {
+        throw new Error("Method not implemented.");
     }
-
-    save(): Saved {
-        const saved = {
-            page: this.m_selectPage,
-            shapes: this.m_selectShapes.slice(0),
-            cursorStart: this.m_cursorStart,
-            cursorEnd: this.m_cursorEnd,
-        }
-        return saved;
-    }
-    restore(saved: Saved) {
-        if (this.m_selectPage !== saved.page) {
-            this.m_selectPage = saved.page;
-            this.m_selectShapes = saved.shapes;
-            this.m_cursorStart = saved.cursorStart;
-            this.m_cursorEnd = saved.cursorEnd;
-            // todo
-            this.notify(Selection.CHANGE_PAGE);
-            this.notify(Selection.CHANGE_SHAPE);
-        }
-        else {
-            const diff = (lhs: Shape[], rhs: Shape[]): boolean => {
-                if (lhs.length !== rhs.length) {
-                    return true;
-                }
-                for (let i = 0, len = lhs.length; i < len; i++) {
-                    if (lhs[i] !== rhs[i]) {
-                        return true;
-                    }
-                }
-                return false;
-            }
-            if (diff(this.m_selectShapes, saved.shapes)) {
-                this.m_selectShapes = saved.shapes;
-                this.m_cursorStart = saved.cursorStart;
-                this.m_cursorEnd = saved.cursorEnd;
-                this.notify(Selection.CHANGE_SHAPE);
-            }
-            else if (this.m_cursorStart !== saved.cursorStart ||
-                this.m_cursorEnd !== saved.cursorEnd) {
-                this.m_cursorStart = saved.cursorStart;
-                this.m_cursorEnd = saved.cursorEnd;
-                // todo notify
-            }
-        }
-        if (this.m_hoverShape !== undefined) {
-            this.m_hoverShape = undefined;
-            this.notify(Selection.CHANGE_SHAPE_HOVER);
-        }
+    restore(saved: any): void {
+        throw new Error("Method not implemented.");
     }
 }

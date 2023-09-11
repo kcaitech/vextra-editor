@@ -1,11 +1,11 @@
 import { Context } from "@/context";
 import { message } from "./message";
-import { replace } from "./clipaboard";
+import { replace } from "./clipboard";
 import { is_parent_locked, is_parent_unvisible } from "@/utils/shapelist";
 import { permIsEdit } from "./content";
 import { Action } from "@/context/tool";
-import { Shape } from "@kcdesign/data";
-import { PageXY } from "@/context/selection";
+import { Shape, ShapeType, TableShape } from "@kcdesign/data";
+import { PageXY, Selection } from "@/context/selection";
 
 export function keyboardHandle(e: KeyboardEvent, context: Context, t: Function) {
     if (!permIsEdit(context) || context.tool.action === Action.AddComment) return;
@@ -76,11 +76,26 @@ export function keyboardHandle(e: KeyboardEvent, context: Context, t: Function) 
                 const editor = context.editor4Page(page);
                 editor.delete_batch(shapes);
             }
-        } else {
-            const editor = context.editor4Shape(shapes[0]);
-            editor.delete();
+            context.selection.resetSelectShapes();
+        } else if (shapes.length === 1) {
+            const shape = shapes[0];
+            if (shape.type === ShapeType.Table) {
+                const ts = context.tableSelection;
+                const editor = context.editor4Table(shape as TableShape);
+                if (ts.tableRowStart > -1 || ts.tableColStart > -1) {
+                    editor.resetCells(ts.tableRowStart, ts.tableRowEnd, ts.tableColStart, ts.tableColEnd);
+                    ts.resetSelection();
+                } else {
+                    const editor = context.editor4Shape(shape);
+                    editor.delete();
+                    context.selection.resetSelectShapes();
+                }
+            } else {
+                const editor = context.editor4Shape(shape);
+                editor.delete();
+                context.selection.resetSelectShapes();
+            }
         }
-        context.selection.resetSelectShapes();
     } else if (e.code === 'Escape') {
         context.selection.resetSelectShapes();
     } else if (e.code === 'KeyR') {
@@ -95,7 +110,6 @@ export function keyboardHandle(e: KeyboardEvent, context: Context, t: Function) 
                 context.selection.resetSelectShapes();
             }
         })
-
     } else if (e.code === 'KeyH') {
         if (shiftKey && (ctrlKey || metaKey)) {
             let shapes = context.selection.selectedShapes;
@@ -146,4 +160,34 @@ export function getDelta(s: Shape, p: PageXY) {
 }
 export function get_speed(e1: MouseEvent, e2: MouseEvent) {
     return Math.hypot(Math.abs(e2.clientX - e1.clientX), Math.abs(e2.clientY - e1.clientY));
+}
+export function get_range(index1: { row: number, col: number }, index2: { row: number, col: number }) {
+    const t1 = index1.row > index2.row;
+    const t2 = index1.col > index2.col;
+    return {
+        rows: t1 ? index2.row : index1.row,
+        rowe: t1 ? index1.row : index2.row,
+        cols: t2 ? index2.col : index1.col,
+        cole: t2 ? index1.col : index2.col,
+    }
+}
+/**
+ *          7
+ *      6        8
+ *  5       .        1 
+ *      4        2
+ *          3
+ */
+export type ActionDirection = 1 | 2 | 3 | 4 | 5 | 6 | 7 | 8;
+export function get_direction(rotation: number) {
+    if (rotation >= 0 && rotation < 22) return 0;
+    else if (rotation >= 22 && rotation < 77) return 45;
+    else if (rotation >= 77 && rotation < 113) return 90;
+    else if (rotation >= 113 && rotation < 157) return 135;
+    else if (rotation >= 157 && rotation < 200) return 180;
+    else if (rotation >= 200 && rotation < 245) return 225;
+    else if (rotation >= 245 && rotation < 293) return 270;
+    else if (rotation >= 293 && rotation < 338) return 315;
+    else if (rotation >= 338 && rotation <= 360) return 0;
+    else return 0;
 }

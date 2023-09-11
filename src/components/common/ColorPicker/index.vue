@@ -17,6 +17,7 @@ interface Props {
   context: Context
   color: Color
   late?: number
+  top?: number
 }
 interface Data {
   rgba: RGBA
@@ -167,7 +168,11 @@ function colorPickerMount() {
     if (popoverEl.value && block.value) {
       let el = popoverEl.value
       let top = Math.min(document.documentElement.clientHeight - 76 - block.value.offsetTop - el.offsetHeight, 0);
-      el.style.top = top + 'px';
+      if (props.top) {
+        el.style.top = (top + props.top) + 'px';
+      } else {
+        el.style.top = top + 'px';
+      }
       if (props.late) {
         el.style.left = -(36 + el.offsetWidth + props.late) + 'px';
       } else {

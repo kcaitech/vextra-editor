@@ -8,6 +8,7 @@ import { update_dot3 } from './common';
 import { Point } from "../../SelectionView.vue";
 import { Action } from '@/context/tool';
 import { PointType } from '@/context/assist';
+import { get_direction } from '@/utils/controllerFn';
 
 interface Props {
     matrix: number[]
@@ -40,6 +41,7 @@ let sticked_x_v: number = 0;
 let sticked_y_v: number = 0;
 const dragActiveDis = 3;
 let cur_ctrl_type: CtrlElementType = CtrlElementType.RectLT;
+let clear_stick = false
 function update() {
     matrix.reset(props.matrix);
     update_dot_path();
@@ -88,12 +90,16 @@ function point_mousemove(event: MouseEvent) {
             asyncBaseAction.executeRotate(deg);
         } else {
             const action = props.context.tool.action;
-            const p1: PageXY = submatrix.computeCoord2(startPosition.x, startPosition.y);
             let p2: PageXY = submatrix.computeCoord2(mouseOnClient.x, mouseOnClient.y);
+            clear_stick = false;
             if (event.shiftKey || props.shape.constrainerProportions || action === Action.AutoK) {
-                p2 = get_t(cur_ctrl_type, p1, p2);
-                asyncBaseAction.executeScale(cur_ctrl_type, p2);
-            } else scale(asyncBaseAction, p2);
+                p2 = get_t(cur_ctrl_type, p2);
+            }
+            if (clear_stick) {
+                scale2(asyncBaseAction, p2);
+            } else {
+                scale(asyncBaseAction, p2);
+            }
         }
         startPosition = { ...mouseOnClient };
         setCursor(cur_ctrl_type, true);
@@ -107,39 +113,58 @@ function point_mousemove(event: MouseEvent) {
         }
     }
 }
-function get_t(cct: CtrlElementType, p1: PageXY, p2: PageXY): PageXY {
+function get_t(cct: CtrlElementType, p2: PageXY): PageXY {
     if (cct === CtrlElementType.RectLT) {
-        const m = props.shape.matrix2Root();
-        p1 = m.inverseCoord(p1.x, p1.y);
-        p2 = m.inverseCoord(p2.x, p2.y);
-        const pre_delta = { x: p2.x - p1.x, y: p2.y - p1.y };
-        const f = props.shape.frame;
-        const r = f.width / f.height;
-        return m.computeCoord2(pre_delta.x, pre_delta.x * (1 / r));
-    } else if (cct === CtrlElementType.RectRT) {
-        const m = props.shape.matrix2Root();
-        p1 = m.inverseCoord(p1.x, p1.y);
-        p2 = m.inverseCoord(p2.x, p2.y);
-        const pre_delta = { x: p2.x - p1.x, y: p2.y - p1.y };
-        const f = props.shape.frame;
-        const r = f.width / f.height;
-        return m.computeCoord2(f.width + pre_delta.x, -pre_delta.x * (1 / r));
+        const m = props.shape.matrix2Root(), f = props.shape.frame
+        const rb = m.computeCoord2(f.width, f.height);
+        const type_d = get_direction(Math.floor(getHorizontalAngle(rb, p2)));
+        if (type_d === 0) p2.y = rb.y;
+        else if (type_d === 45) {
+            const len = Math.hypot(p2.x - rb.x, p2.y - rb.y);
+            p2.x = rb.x + len * Math.cos(0.25 * Math.PI), p2.y = rb.y + len * Math.sin(0.25 * Math.PI);
+            clear_stick = true;
+        } else if (type_d === 90) p2.x = rb.x;
+        else if (type_d === 135) {
+            const len = Math.hypot(p2.x - rb.x, p2.y - rb.y);
+            p2.x = rb.x - len * Math.cos(0.25 * Math.PI), p2.y = rb.y + len * Math.sin(0.25 * Math.PI);
+            clear_stick = true;
+        } else if (type_d === 180) p2.y = rb.y;
+        else if (type_d === 225) {
+            const len = Math.hypot(p2.x - rb.x, p2.y - rb.y);
+            p2.x = rb.x - len * Math.cos(0.25 * Math.PI), p2.y = rb.y - len * Math.sin(0.25 * Math.PI);
+            clear_stick = true;
+        } else if (type_d === 270) p2.x = rb.x;
+        else if (type_d === 315) {
+            const len = Math.hypot(p2.x - rb.x, p2.y - rb.y);
+            p2.x = rb.x + len * Math.cos(0.25 * Math.PI), p2.y = rb.y - len * Math.sin(0.25 * Math.PI);
+            clear_stick = true;
+        }
+        return p2;
     } else if (cct === CtrlElementType.RectRB) {
-        const m = props.shape.matrix2Root();
-        p1 = m.inverseCoord(p1.x, p1.y);
-        p2 = m.inverseCoord(p2.x, p2.y);
-        const pre_delta = { x: p2.x - p1.x, y: p2.y - p1.y };
-        const f = props.shape.frame;
-        const r = f.width / f.height;
-        return m.computeCoord2(f.width + pre_delta.x, f.height + pre_delta.x * (1 / r));
-    } else if (cct === CtrlElementType.RectLB) {
-        const m = props.shape.matrix2Root();
-        p1 = m.inverseCoord(p1.x, p1.y);
-        p2 = m.inverseCoord(p2.x, p2.y);
-        const pre_delta = { x: p2.x - p1.x, y: p2.y - p1.y };
-        const f = props.shape.frame;
-        const r = f.width / f.height;
-        return m.computeCoord2(pre_delta.x, f.height - pre_delta.x * (1 / r));
+        const m = props.shape.matrix2Root(), lt = m.computeCoord2(0, 0);
+        const type_d = get_direction(Math.floor(getHorizontalAngle(lt, p2)));
+        if (type_d === 0) p2.y = lt.y;
+        else if (type_d === 45) {
+            const len = Math.hypot(p2.x - lt.x, p2.y - lt.y);
+            p2.x = lt.x + len * Math.cos(0.25 * Math.PI), p2.y = lt.y + len * Math.sin(0.25 * Math.PI);
+            clear_stick = true;
+        } else if (type_d === 90) p2.x = lt.x;
+        else if (type_d === 135) {
+            const len = Math.hypot(p2.x - lt.x, p2.y - lt.y);
+            p2.x = lt.x - len * Math.cos(0.25 * Math.PI), p2.y = lt.y + len * Math.sin(0.25 * Math.PI);
+            clear_stick = true;
+        } else if (type_d === 180) p2.y = lt.y;
+        else if (type_d === 225) {
+            const len = Math.hypot(p2.x - lt.x, p2.y - lt.y);
+            p2.x = lt.x - len * Math.cos(0.25 * Math.PI), p2.y = lt.y - len * Math.sin(0.25 * Math.PI);
+            clear_stick = true;
+        } else if (type_d === 270) p2.x = lt.x;
+        else if (type_d === 315) {
+            const len = Math.hypot(p2.x - lt.x, p2.y - lt.y);
+            p2.x = lt.x + len * Math.cos(0.25 * Math.PI), p2.y = lt.y - len * Math.sin(0.25 * Math.PI);
+            clear_stick = true;
+        }
+        return p2;
     } else return p2
 }
 function scale(asyncBaseAction: AsyncBaseAction, p2: PageXY) {
@@ -163,6 +188,10 @@ function scale(asyncBaseAction: AsyncBaseAction, p2: PageXY) {
             stickedY = true;
         }
     }
+    asyncBaseAction.executeScale(cur_ctrl_type, p2);
+}
+function scale2(asyncBaseAction: AsyncBaseAction, p2: PageXY) {
+    props.context.assist.point_match(props.shape, pointType);
     asyncBaseAction.executeScale(cur_ctrl_type, p2);
 }
 function point_mouseup(event: MouseEvent) {
