@@ -210,3 +210,22 @@ export function moveDocumentAPI(params = {}, ops = {}) {
         ...ops
     })
 }
+
+// 获取项目的申请通知信息
+export function getProjectNoticeAPI(params = {}, ops = {}) {
+    return httpRequest({
+        url: '/documents/team/project/self_apply',
+        method: 'get',
+        params: params,
+        ...ops
+    })
+}
+
+export function getTeamNoticeAPI(params = {}, ops = {}) {
+    return httpRequest({
+        url: '/documents/team/self_apply',
+        method: 'get',
+        params: params,
+        ...ops
+    })
+}

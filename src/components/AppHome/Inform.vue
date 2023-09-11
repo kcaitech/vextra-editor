@@ -112,7 +112,16 @@ const hideFillTooltip = () => {
 const scrollFill = () => {
   tooltipTillVisible.value = false;
 }
-
+const getAvatar = () => {
+  return localStorage.getItem('avatar');
+}
+const getName = (user: any) => {
+  if(user) {
+    return user.nickname;
+  }else {
+    return localStorage.getItem('nickname');
+  }
+}
 </script>
 
 <template>
@@ -180,37 +189,42 @@ const scrollFill = () => {
         <div class="contain" v-if="activeName === 'team'">
           <el-scrollbar height="400px" style="padding-right: 10px;" @scroll="scrollFill">
             <div class="inform-item" v-for="(item, i) in props.teamApplyList" :key="i">
-              <div class="avatar"><img :src="item.user.avatar" alt=""></div>
+              <div class="avatar"><img :src="item.user ? item.user.avatar : getAvatar()" alt=""></div>
               <div class="item-container">
                 <div class="item-title">
-                  <span class="name">{{ item.user.nickname }}</span>
+                  <span class="name">{{ getName(item.user) }}</span>
                   <span class="date">{{ formatDate(item.request.created_at) }}</span>
                 </div>
                 <el-tooltip class="box-item" :enterable="false" effect="light" placement="bottom-end" :visible="hoveredFillIndex === i && tooltipTillVisible">
                   <template #content>
-                    <div class="custom-tooltip" v-if="item.team">
+                    <div class="custom-tooltip" v-if="item.team && item.user">
                       {{ t('apply.apply_team') }}"{{ item.team.name }}"，{{ t('apply.authority') }}：{{
                         permissionTeam[item.request.perm_type] }}
                     </div>
-                    <div class="custom-tooltip" v-if="item.project">
+                    <div class="custom-tooltip" v-else-if="item.project && item.user">
                       {{ t('apply.apply_project') }}"{{ item.project.name }}"，{{ t('apply.authority') }}：{{
                         permission[item.request.perm_type] }}
                     </div>
                   </template>
-                  <div class="item-text" v-if="item.team" @mouseenter.stop="showFillTooltip(i)" @mouseleave.stop="hideFillTooltip">
+                  <div class="item-text" v-if="item.team && item.user" @mouseenter.stop="showFillTooltip(i)" @mouseleave.stop="hideFillTooltip">
                     {{ t('apply.apply_team') }}"{{ item.team.name }}"，{{ t('apply.authority') }}：{{
                       permissionTeam[item.request.perm_type] }}</div>
-                  <div class="item-text" v-if="item.project" @mouseenter.stop="showFillTooltip(i)" @mouseleave.stop="hideFillTooltip">
+                  <div class="item-text"  v-else-if="item.project && item.user" @mouseenter.stop="showFillTooltip(i)" @mouseleave.stop="hideFillTooltip">
                     {{ t('apply.apply_project') }}"{{ item.project.name }}"，{{ t('apply.authority') }}：{{
                       permission[item.request.perm_type] }}</div>
+                      <div class="item-text"  v-else-if="!item.user && item.request.status === 1">
+                    欢迎加入{{ item.project ? '项目组' : '团队' }}: {{ item.project ? item.project.name : item.team.name }}</div>
+                    <div class="item-text"  v-else-if="!item.user && item.request.status === 2">
+                    申请加入{{ item.project ? '项目组' : '团队' }}"{{ item.project ? item.project.name : item.team.name }}"被拒绝，如有疑问，请联系项目组管理员</div>
                 </el-tooltip>
               </div>
-              <div class="botton" v-if="item.request.status === 0">
+              <div class="botton" v-if="item.request.status === 0 && item.user">
                 <el-button color="#0d99ff" size="small" @click="consentTeam(item.request.id, i, item)">{{ t('apply.agree')
                 }}</el-button>
                 <el-button plain size="small" style="margin-top: 5px;" @click="refuseTeam(item.request.id, i, item)">{{
                   t('apply.refuse') }}</el-button>
               </div>
+              <div class="botton" v-else-if="!item.user"></div>
               <div class="botton" v-else>
                 <p v-if="item.request.status === 1">{{ t('apply.have_agreed') }}</p>
                 <p v-else-if="item.request.status === 2">{{ t('apply.rejected') }}</p>

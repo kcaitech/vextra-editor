@@ -1,7 +1,7 @@
 
 <template>
     <tablelist :data="lists" :iconlist="iconlists" @share="Sharefile" @deletefile="Deletefile" @dbclickopen="openDocument" :type="currentProject.self_perm_type > 2 ? 'project' : ''"
-        @updatestar="Starfile" @rightMeun="rightmenu" :noNetwork="noNetwork" @refreshDoc="refreshDoc" />
+        @updatestar="Starfile" @rightMeun="rightmenu" :noNetwork="noNetwork" @refreshDoc="refreshDoc" @newProjectFill="newProjectFill"/>
 
     <listrightmenu :items="items" :data="mydata" @get-doucment="getDoucment" @r-starfile="Starfile" @r-sharefile="Sharefile"
         @r-removefile="Deletefile" @ropen="openDocument" @moveFillAddress="moveFillAddress"/>
@@ -9,7 +9,7 @@
     <div v-if="showFileShare" class="overlay"></div>
     <FileShare v-if="showFileShare" @close="closeShare" :docId="docId" :selectValue="selectValue" :userInfo="userInfo"
         :docUserId="docUserId" @select-type="onSelectType" @switch-state="onSwitch" :shareSwitch="shareSwitch"
-        :pageHeight="pageHeight" :project="true">
+        :pageHeight="pageHeight" :project="is_project">
     </FileShare>
     <MoveProjectFill :title="'移动文件位置'" :confirm-btn="'移动'"  :projectItem="projectItem" :doc="mydata" :projectVisible="moveVisible" @clodeDialog="clodeDialog" @moveFillSeccess="moveFillSeccess"></MoveProjectFill>
 </template>
@@ -26,6 +26,9 @@ import tablelist from '@/components/AppHome/tablelist.vue'
 import { UserInfo } from '@/context/user';
 import listrightmenu from "@/components/AppHome/listrightmenu.vue"
 import MoveProjectFill from '../MoveProjectFill.vue';
+import { Repository, CoopRepository, Document } from '@kcdesign/data';
+import { createDocument } from '@kcdesign/data';
+import { DocEditor } from '@kcdesign/data';
 
 interface data {
     document: {
@@ -33,6 +36,7 @@ interface data {
         name: string
         doc_type: number
         user_id: string
+        project_id: string
     }
     document_favorites: {
         is_favorite: boolean
@@ -59,7 +63,7 @@ const userInfo = ref<UserInfo | undefined>()
 const iconlists = ref(['star', 'share', 'delete']);
 const moveVisible = ref(false);
 const projectItem = ref<any>({});
-
+const is_project = ref(false);
 //获取服务器我的文件列表
 async function getDoucment() {
     isLoading.value = true
@@ -94,6 +98,20 @@ const { projectList, saveProjectData, is_favor, favoriteList, updateFavor, is_te
 
 const refreshDoc = () => {
     getDoucment()
+}
+
+const newProjectFill = () => {
+    localStorage.setItem('project_id', props.currentProject.project.id);
+    const repo = new Repository();
+    const nd = createDocument(t('system.new_file'), repo);
+    const coopRepo = new CoopRepository(nd, repo)
+    const editor = new DocEditor(nd, coopRepo);
+    const page = editor.create(t('system.page1'));
+    editor.insert(0, page);
+    window.document.title = nd.name;
+    (window as any).skrepo = coopRepo;
+    (window as any).sketchDocument = nd;
+    router.push({ name: 'document'});
 }
 
 const moveFillAddress = (data: any) => {
@@ -161,6 +179,11 @@ const Sharefile = (data: data) => {
     if (showFileShare.value) {
         showFileShare.value = false
         return
+    }
+    if(data.document.project_id && data.document.project_id !== '0') {
+        is_project.value = true;
+    }else {
+        is_project.value = false;
     }
     docUserId.value = data.document.user_id
     docId.value = data.document.id

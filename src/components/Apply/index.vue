@@ -55,6 +55,7 @@ const getDocumentAuthority = async () => {
         const { data } = await share_api.getDocumentAuthorityAPI({ doc_id: route.query.id })
         if(data) {
             permType = data.perm_type
+            console.log(data,'datadatadata');
             if(permType !== 0) {
                 router.push({
                     name: 'document',

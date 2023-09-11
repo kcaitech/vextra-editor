@@ -14,7 +14,7 @@
                     <template #empty>
                         <div v-if="props.type === 'project'" class="datanull">
                             <p>项目没有任何文件</p>
-                            <button type="button" >新建文件</button>
+                            <button type="button" @click="newProjectFill">新建文件</button>
                         </div>
                         <div v-else-if="empty" class="flex items-center justify-center h-100%">
                             <el-empty :style="{ 'height': height - 50 + 'px' }" :description="t('home.table_empty_tips')" />
@@ -82,7 +82,8 @@ const emits = defineEmits([
     'ndelete',
     'exit_share',
     'dbclickopen',
-    'refreshDoc'
+    'refreshDoc',
+    'newProjectFill'
 ])
 
 const selectedId = ref(-1)
@@ -90,6 +91,9 @@ const scrolltop = ref(0)
 
 const refreshDoc = () => {
     emits('refreshDoc')
+}
+const newProjectFill = () => {
+    emits('newProjectFill');
 }
 
 const rightmenu = (e: any) => {

@@ -136,6 +136,9 @@ const picker = new FilePicker('.sketch', (file) => {
 });
 
 function newFile() {
+    if(route.name === 'ProjectPage') {
+        localStorage.setItem('project_id', route.params.id as string);
+    }
     const repo = new Repository();
     const nd = createDocument(t('system.new_file'), repo);
     const coopRepo = new CoopRepository(nd, repo)
@@ -150,6 +153,7 @@ function newFile() {
 
 function Setindex(a: any, b: any) {
     sessionStorage.setItem('index', a);
+    x.value = String(a);
     if(a == 3) {
         emits('settitle', b, true);
     }else {
@@ -157,7 +161,7 @@ function Setindex(a: any, b: any) {
     }
 }
 
-const x = sessionStorage.getItem('index')
+const x = ref(sessionStorage.getItem('index'));
 
 const showteamcard = () => {
     showoverlay.value = true
@@ -171,7 +175,17 @@ const showprojectcard = (id: string) => {
 }
 
 const newProjectFile = (id: string) => {
-    console.log(id, 'id');
+    localStorage.setItem('project_id', id);
+    const repo = new Repository();
+    const nd = createDocument(t('system.new_file'), repo);
+    const coopRepo = new CoopRepository(nd, repo)
+    const editor = new DocEditor(nd, coopRepo);
+    const page = editor.create(t('system.page1'));
+    editor.insert(0, page);
+    window.document.title = nd.name;
+    (window as any).skrepo = coopRepo;
+    (window as any).sketchDocument = nd;
+    router.push({ name: 'document'});
 }
 
 const GetteamList = async () => {
@@ -225,10 +239,14 @@ watch(is_team_upodate, () => {
 
 const torouter = (id: string) => {
     router.push({ path: '/apphome/teams/' + id });
+    sessionStorage.setItem('index', '6');
+    x.value = '6';
 }
 
 const skipProject = (item: any, e: MouseEvent) => {
     router.push({ path: '/apphome/project/' + item.project.id });
+    sessionStorage.setItem('index', '7');
+    x.value = '7';
 }
 const top = ref(0); const left = ref(0);
 const rightMenu = (item: any, e: MouseEvent) => {
@@ -487,25 +505,25 @@ onUnmounted(() => {
             </div>
             <el-menu :default-active="x ? x : '1'" active-text-color="#ffd04b" class="el-menu-vertical-demo"
                 text-color="#000000">
-                <router-link to="/apphome/recently"><el-menu-item index="1" @click="Setindex(1, t('home.recently_opened'))">
+                <router-link to="/apphome/recently"><el-menu-item index="1" :style="{backgroundColor: x === '1'? '#e5dbff': '#fff', color: x === '1'? '#9775fa': '#000', fontWeight: x === '1'? '600': '400'}" @click="Setindex(1, t('home.recently_opened'))">
                         <el-icon>
                             <Clock />
                         </el-icon>
                         <span>{{ t('home.recently_opened') }}</span>
                     </el-menu-item></router-link>
-                <router-link to="/apphome/starfile"><el-menu-item index="2" @click="Setindex(2, t('home.star_file'))">
+                <router-link to="/apphome/starfile"><el-menu-item index="2" :style="{backgroundColor: x === '2'? '#e5dbff': '#fff', color: x === '2'? '#9775fa': '#000', fontWeight: x === '2'? '600': '400'}" @click="Setindex(2, t('home.star_file'))">
                         <el-icon>
                             <Star />
                         </el-icon>
                         <span>{{ t('home.star_file') }}</span>
                     </el-menu-item></router-link>
-                <router-link to="/apphome/meshare"><el-menu-item index="3" @click="Setindex(3, t('home.file_shared'))">
+                <router-link to="/apphome/meshare"><el-menu-item index="3" :style="{backgroundColor: x === '3'? '#e5dbff': '#fff', color: x === '3'? '#9775fa': '#000', fontWeight: x === '3'? '600': '400'}" @click="Setindex(3, t('home.file_shared'))">
                         <el-icon>
                             <Folder />
                         </el-icon>
                         <span>{{ t('home.file_shared') }}</span>
                     </el-menu-item></router-link>
-                <router-link to="/apphome/shareme"><el-menu-item index="4"
+                <router-link to="/apphome/shareme"><el-menu-item index="4" :style="{backgroundColor: x === '4'? '#e5dbff': '#fff', color: x === '4'? '#9775fa': '#000', fontWeight: x === '4'? '600': '400'}"
                         @click="Setindex(4, t('home.shared_file_received'))">
                         <el-icon>
                             <BottomLeft />
@@ -880,11 +898,6 @@ a {
                     color: #9775fa;
                 }
 
-                &.is-active {
-                    font-weight: 600;
-                    color: #9775fa;
-                    background-color: #e5dbff;
-                }
             }
         }
 

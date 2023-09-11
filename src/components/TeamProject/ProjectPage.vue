@@ -108,7 +108,7 @@ const showProjecrMenu = ref(false);
 const delVisible = ref(false);
 const memberLen = ref(0);
 const exitVisible = ref(false);
-let menuItem: string[] = ['del_porject', 'visit'];
+let menuItem: string[] = ['visit'];
 const projectOptions = [
     {
         value: 0,
@@ -236,12 +236,9 @@ const delProject = async (id: string) => {
 }
 
 const projectMenu = (project: any, e: MouseEvent) => {
-    menuItem = ['visit'];
+    menuItem = ['visit', 'perm'];
     if (project.self_perm_type === 5 || project.self_perm_type === 4) {
         menuItem.push('rename', 'del');
-        if (memberLen.value > 1) {
-            menuItem.push('perm');
-        }
     }
     if (project.is_favor) {
         menuItem.push('no_fixed');
@@ -254,9 +251,6 @@ const projectMenu = (project: any, e: MouseEvent) => {
     showProjecrMenu.value = true;
 }
 
-const memberLength = (len: number) => {
-    memberLen.value = len;
-}
 
 const projectSetting = () => {
     projectSettingDialog.value = true;

@@ -583,7 +583,4 @@ onUnmounted(() => {
 .box-card {
   width: 400px;
 }
-:deep(.el-button) {
-  background-color: #9775fa;
-}
 </style>

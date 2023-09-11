@@ -2,7 +2,7 @@
         <tablelist :data="lists" :iconlist="iconlists" @share="Sharefile" @dbclickopen="openDocument" @updatestar="Starfile" :address="true"
             @rightMeun="rightmenu" :noNetwork="noNetwork" @refreshDoc="refreshDoc"/>
         <listrightmenu :items="items" :data="mydata" @ropen="openDocument" @r-sharefile="Sharefile" @r-starfile="Starfile"/>
-        <FileShare v-if=" showFileShare " @close=" closeShare " :docId=" docId " :selectValue=" selectValue " :userInfo="userInfo"
+        <FileShare v-if=" showFileShare " @close=" closeShare " :docId=" docId " :selectValue=" selectValue " :userInfo="userInfo" :project="is_project"
             @select-type=" onSelectType " @switch-state=" onSwitch " :shareSwitch=" shareSwitch " :pageHeight=" pageHeight"  :docUserId="docUserId">
         </FileShare>
         <div v-if="showFileShare" class="overlay"></div>
@@ -32,6 +32,7 @@ const mydata = ref()
 const docUserId = ref('')
 const noNetwork = ref(false)
 const iconlists = ref(['star', 'share'])
+const is_project = ref(false);
 const emits = defineEmits<{
     (e: 'dataUpdate', list: any, title: string): void
 }>();
@@ -48,6 +49,7 @@ interface data {
         name: string
         doc_type: number
         user_id: string
+        project_id: string
     }
     document_favorites: {
         is_favorite: boolean
@@ -131,6 +133,11 @@ const Sharefile = (data: data) => {
     if (showFileShare.value) {
         showFileShare.value = false
         return
+    }
+    if(data.document.project_id && data.document.project_id !== '0') {
+        is_project.value = true;
+    }else {
+        is_project.value = false;
     }
     docUserId.value = data.document.user_id
     userInfo.value = userData.value

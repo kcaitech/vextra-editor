@@ -442,7 +442,9 @@ function init_doc() {
             getUserInfo();
             context.selection.watch(selectionWatcher);
             context.workspace.watch(workspaceWatcher);
-            upload("");
+            const project_id = localStorage.getItem('project_id') || '';
+            upload(project_id);
+            localStorage.setItem('project_id', '');
             switchPage(((window as any).sketchDocument as Document).pagesList[0]?.id);
             document.addEventListener('keydown', keyboardEventHandler);
         } else {
