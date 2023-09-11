@@ -2,8 +2,8 @@
 import { onMounted, onUnmounted, ref, reactive } from 'vue'
 import { Shape, ShapeType, RectShape, GroupShape, PathShape, PathShape2 } from '@kcdesign/data';
 import IconText from '@/components/common/IconText.vue';
-import Position from './PopoverMenu/Position.vue';
-import RadiusForIos from './PopoverMenu/RadiusForIos.vue';
+import Position from '../PopoverMenu/Position.vue';
+import RadiusForIos from '../PopoverMenu/RadiusForIos.vue';
 import { debounce } from 'lodash';
 import { useI18n } from 'vue-i18n';
 import { Context } from '@/context';
@@ -31,13 +31,22 @@ interface LayoutOptions {
     s_radius: boolean
     s_length: boolean
 }
+interface ModelState {
+    x: boolean
+    y: boolean
+    width: boolean
+    height: boolean
+    rotation: boolean
+    flipHorizontal: boolean
+    filpVertical: boolean
+    radius: boolean
+}
 const props = defineProps<Props>();
 const { t } = useI18n();
 const x = ref<number | string>(0);
 const y = ref<number | string>(0);
 const w = ref<number | string>(0);
 const h = ref<number | string>(0);
-const line_length = ref<number | string>(0);
 const rotate = ref<number | string>(0);
 const isLock = ref<boolean>(false);
 const isMoreForRadius = ref<boolean>(false);
@@ -47,9 +56,9 @@ const radius = ref<{ lt: number | string, rt: number, rb: number, lb: number }>(
 const multiRadius = ref(false)
 const multipleValues = ref<boolean>(false)
 const mixed = t('attr.mixed');
-const flip = ref(false)
 const watchedShapes = new Map();
 const layout_options: LayoutOptions = reactive({ s_flip: true, s_radius: false, s_adapt: false, s_length: false });
+const model_disable_state: ModelState = reactive({ x: false, y: false, width: false, height: false, rotation: false, flipHorizontal: false, filpVertical: false, radius: false });
 let { s_flip, s_adapt, s_radius, s_length } = layout_options;
 const reflush = ref<number>(0);
 function watch_shapes() {
@@ -92,7 +101,10 @@ function calc_attri() {
     }
 }
 function _update_view() {
-    if (props.context.selection.selectedShapes.length) layout();
+    if (props.context.selection.selectedShapes.length) {
+        layout();
+        check_model_state();
+    }
     if (props.context.selection.selectedShapes.length > 1) check_mixed();
 }
 const update_view = debounce(_update_view, 200);
@@ -261,6 +273,7 @@ function radiusToggle() {
     }
 }
 function fliph() {
+    if (model_disable_state.flipHorizontal) return;
     const selected = props.context.selection.selectedShapes;
     if (selected.length === 1) {
         const e = props.context.editor4Shape(selected[0]);
@@ -275,6 +288,7 @@ function fliph() {
     }
 }
 function flipv() {
+    if (model_disable_state.filpVertical) return;
     const selected = props.context.selection.selectedShapes;
     if (selected.length === 1) {
         const e = props.context.editor4Shape(selected[0]);
@@ -376,11 +390,34 @@ function layout() {
             getRectShapeAttr(shape);
         }
         if (shape.type === ShapeType.Table) s_flip = false;
-        if (shape.type === ShapeType.Line) s_length = true;
+        if (shape.type === ShapeType.Line || shape.type === ShapeType.Contact) s_length = true;
     } else {
         if (selected.find(i => i instanceof RectShape)) s_radius = true;
     }
     reflush.value++;
+}
+function check_model_state() {
+    reset_model_state();
+    const shapes = props.context.selection.selectedShapes;
+    if (shapes.length !== 1) return;
+    const shape = shapes[0];
+    if (shape.type === ShapeType.Contact) {
+        model_disable_state.x = true, model_disable_state.y = true;
+        model_disable_state.width = true, model_disable_state.height = true;
+        model_disable_state.rotation = true;
+        model_disable_state.filpVertical = true, model_disable_state.flipHorizontal = true;
+        model_disable_state.radius = false;
+    }
+    if (shape.type === ShapeType.Line) {
+        model_disable_state.height = true;
+    }
+}
+function reset_model_state() {
+    model_disable_state.x = false, model_disable_state.y = false;
+    model_disable_state.width = false, model_disable_state.height = false;
+    model_disable_state.rotation = false;
+    model_disable_state.filpVertical = false, model_disable_state.flipHorizontal = false;
+    model_disable_state.radius = false;
 }
 function workspace_watcher(t?: any) {
     if (t === WorkSpace.CLAC_ATTRI) check_mixed();
@@ -412,20 +449,20 @@ onUnmounted(() => {
     <div class="table">
         <div class="tr">
             <IconText class="td positon" ticon="X" :text="typeof (x) === 'number' ? x.toFixed(fix) : x"
-                @onchange="onChangeX" />
+                @onchange="onChangeX" :disabled="model_disable_state.x" />
             <div class="space"></div>
             <IconText class="td positon" ticon="Y" :text="typeof (y) === 'number' ? y.toFixed(fix) : y"
-                @onchange="onChangeY" />
+                @onchange="onChangeY" :disabled="model_disable_state.y" />
             <Position :context="props.context" :shape="props.context.selection.selectedShapes[0]"></Position>
         </div>
         <div class="tr" :reflush="reflush">
-            <IconText class="td frame" ticon="W" :text="typeof (w) === 'number' ? w.toFixed(fix) : w"
-                @onchange="onChangeW" />
+            <IconText class="td frame" ticon="W" :text="typeof (w) === 'number' ? w.toFixed(fix) : w" @onchange="onChangeW"
+                :disabled="model_disable_state.width" />
             <div class="lock" @click="lockToggle">
                 <svg-icon v-if="!s_length" :icon-class="isLock ? 'lock' : 'unlock'"></svg-icon>
             </div>
             <IconText class="td frame" ticon="H" :text="typeof (h) === 'number' ? h.toFixed(fix) : h" @onchange="onChangeH"
-                :disabled="s_length" />
+                :disabled="model_disable_state.height" />
             <div class="adapt" v-if="s_adapt" :title="t('attr.adapt')" @click="adapt">
                 <svg-icon icon-class="adapt"></svg-icon>
             </div>
@@ -433,15 +470,16 @@ onUnmounted(() => {
         </div>
         <div class="tr" :reflush="reflush">
             <IconText class="td angle" svgicon="angle" :text="`${rotate}` + '°'" @onchange="onChangeRotate"
-                :frame="{ width: 14, height: 14 }" />
+                :frame="{ width: 14, height: 14 }" :disabled="model_disable_state.rotation" />
             <Tooltip v-if="s_flip" :content="t('attr.flip_h')" :offset="15">
-
-                <div class="flip ml-24" @click="fliph">
+                <div :class="{ flip: !model_disable_state.filpVertical, 'flip-disable': model_disable_state.filpVertical, 'ml-24': true }"
+                    @click="fliph">
                     <svg-icon icon-class="fliph"></svg-icon>
                 </div>
             </Tooltip>
             <Tooltip v-if="s_flip" :content="t('attr.flip_v')" :offset="15">
-                <div class="flip ml-12" @click="flipv">
+                <div :class="{ flip: !model_disable_state.filpVertical, 'flip-disable': model_disable_state.filpVertical, 'ml-12': true }"
+                    @click="flipv">
                     <svg-icon icon-class="flipv"></svg-icon>
                 </div>
             </Tooltip>
@@ -449,7 +487,8 @@ onUnmounted(() => {
         </div>
         <div class="tr" v-if="s_radius" :reflush="reflush">
             <IconText class="td frame" svgicon="radius" :multipleValues="multipleValues" :text="radius?.lt || 0"
-                :frame="{ width: 12, height: 12 }" @onchange="e => onChangeRadian(e, 'lt')" />
+                :frame="{ width: 12, height: 12 }" @onchange="e => onChangeRadian(e, 'lt')"
+                :disabled="model_disable_state.radius" />
             <div class="td frame ml-24" v-if="!isMoreForRadius"></div>
             <IconText v-if="isMoreForRadius" class="td frame ml-24" svgicon="radius" :text="radius?.rt || 0"
                 :frame="{ width: 12, height: 12, rotate: 90 }" @onchange="e => onChangeRadian(e, 'rt')" />
@@ -558,6 +597,23 @@ onUnmounted(() => {
         }
 
         .flip {
+            background-color: rgba(#D8D8D8, 0.4);
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            width: 45px;
+            height: 30px;
+            border-radius: var(--default-radius);
+
+            >svg {
+                color: var(--coco-grey);
+                width: 40%;
+                height: 40%;
+            }
+        }
+
+        .flip-disable {
+            opacity: 0.4;
             background-color: rgba(#D8D8D8, 0.4);
             display: flex;
             justify-content: center;
