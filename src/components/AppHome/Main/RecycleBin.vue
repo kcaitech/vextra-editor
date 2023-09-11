@@ -1,22 +1,24 @@
 <template>
-    <tablelist :data="lists" :iconlist="iconlists" @restore="Restorefile" @ndelete="Deletefile" @rightMeun="rightmenu"
-        :noNetwork="noNetwork" @refreshDoc="refreshDoc" />
-    <!-- 右键菜单 -->
-    <listrightmenu :items="items" :data="mydata" @getrecycle-lists="GetrecycleLists" @r-deletefile="Deletefile"
-        @r-restorefile="Restorefile" />
-    <!-- 确认删除弹框 -->
-    <el-dialog v-model="dialogVisible" :title="t('home.completely_delete')" width="500" align-center
-        @keyup.enter="Qdeletefile(docId)">
-        <span>{{ t('home.delete_tips') }}</span>
-        <template #footer>
-            <span class="dialog-footer">
-                <el-button type="primary" :disabled="false" @click=" Qdeletefile(docId)" style="background-color: none;">
-                    {{ t('home.delete_ok') }}
-                </el-button>
-                <el-button @click=" dialogVisible = false">{{ t('home.cancel') }}</el-button>
-            </span>
-        </template>
-    </el-dialog>
+    <div>
+        <tablelist :data="lists" :iconlist="iconlists" @restore="Restorefile" @ndelete="Deletefile" @rightMeun="rightmenu"
+            :noNetwork="noNetwork" @refreshDoc="refreshDoc" />
+        <!-- 右键菜单 -->
+        <listrightmenu :items="items" :data="mydata" @getrecycle-lists="GetrecycleLists" @r-deletefile="Deletefile"
+            @r-restorefile="Restorefile" />
+        <!-- 确认删除弹框 -->
+        <el-dialog v-model="dialogVisible" :title="t('home.completely_delete')" width="500" align-center
+            @keyup.enter="Qdeletefile(docId)">
+            <span>{{ t('home.delete_tips') }}</span>
+            <template #footer>
+                <span class="dialog-footer">
+                    <el-button type="primary" :disabled="false" @click=" Qdeletefile(docId)" style="background-color: none;">
+                        {{ t('home.delete_ok') }}
+                    </el-button>
+                    <el-button @click=" dialogVisible = false">{{ t('home.cancel') }}</el-button>
+                </span>
+            </template>
+        </el-dialog>
+    </div>
 </template>
 <script setup lang="ts">
 import * as user_api from '@/apis/users'
@@ -36,9 +38,8 @@ const mydata = ref()
 const noNetwork = ref(false)
 let lists = ref<any[]>([])
 const iconlists = ref(['restore', 'Delete'])
-// const emits = defineEmits(['data-update'])
 const emits = defineEmits<{
-    (e: 'data-update', list: any[], title: string): void
+    (e: 'dataUpdate', list: any[], title: string): void
 }>()
 interface data {
     document: {
@@ -163,7 +164,7 @@ const rightmenu = (e: MouseEvent, data: data) => {
 }
 
 watch(lists, (Nlist) => {
-    emits('data-update', Nlist, t('home.delete_file_time'))
+    emits('dataUpdate', Nlist, t('home.delete_file_time'))
 }, { deep: true })
 
 onMounted(() => {

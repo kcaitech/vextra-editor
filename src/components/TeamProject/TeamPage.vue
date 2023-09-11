@@ -1,59 +1,61 @@
 
 <template>
-    <div class="team">
-        <div class="team-avatar">
-            <div v-if="avatar.length > 4" class="img">
-                <img :src="avatar" alt="team avatar">
+    <div>
+        <div class="team">
+            <div class="team-avatar">
+                <div v-if="avatar.length > 4" class="img">
+                    <img :src="avatar" alt="team avatar">
+                </div>
+                <div v-else class="text">
+                    <span>{{ avatar }}</span>
+                </div>
             </div>
-            <div v-else class="text">
-                <span>{{ avatar }}</span>
+            <div class="team-info">
+                <div class="team-name">{{ teamName }}</div>
+                <div class="team-description">{{ teamDescription }}</div>
             </div>
         </div>
-        <div class="team-info">
-            <div class="team-name">{{ teamName }}</div>
-            <div class="team-description">{{ teamDescription }}</div>
+        <div class="team-header">
+            <ul class="menu">
+                <li class="item" :class="{ 'activate': itemid === index }" v-for="(item, index) in items" :key="index"
+                    @click.stop="clickEvent(index)">
+                    {{ item }}
+                </li>
+            </ul>
+            <div class="addandsearch">
+                <button type="button" v-if="itemid === 0" @click.stop="showoverlay = true">新建项目</button>
+                <button type="button" v-if="itemid === 1" @click.stop="showoverlay = true">邀请成员</button>
+                <el-input v-if="itemid != 2" ref="inputRef" size="large" v-model="search"
+                    :placeholder="itemid === 0 ? '搜索项目/创建者' : '搜索成员'">
+                    <template #prefix>
+                        <el-icon size="18">
+                            <Search />
+                        </el-icon>
+                    </template>
+                    <template #suffix>
+                        <el-icon v-if="search != ''" class="close" size="18" @click.stop="search = ''">
+                            <Close />
+                        </el-icon>
+                    </template>
+                </el-input>
+            </div>
         </div>
+        <KeepAlive>
+            <ProjectList v-if="itemid === 0" :searchvalue="search" @addproject="showoverlay = true" />
+        </KeepAlive>
+        <KeepAlive>
+            <TeamMember v-if="itemid === 1" :searchvalue="search" />
+        </KeepAlive>
+        <KeepAlive>
+            <TeamSetting v-if="itemid === 2" />
+        </KeepAlive>
+        <transition name="nested" :duration="550">
+            <div v-if="showoverlay" class="overlay">
+                <addProject v-if="itemid === 0" class="inner" :teamid="teamID" @close="showoverlay = false" />
+                <InviteMember v-if="itemid === 1" class="inner" :teamid="teamID" @close="showoverlay = false" />
+            </div>
+        </transition>
     </div>
-    <div class="team-header">
-        <ul class="menu">
-            <li class="item" :class="{ 'activate': itemid === index }" v-for="(item, index) in items" :key="index"
-                @click.stop="clickEvent(index)">
-                {{ item }}
-            </li>
-        </ul>
-        <div class="addandsearch">
-            <button type="button" v-if="itemid === 0" @click.stop="showoverlay = true">新建项目</button>
-            <button type="button" v-if="itemid === 1" @click.stop="showoverlay = true">邀请成员</button>
-            <el-input v-if="itemid != 2" ref="inputRef" size="large" v-model="search"
-                :placeholder="itemid === 0 ? '搜索项目/创建者' : '搜索成员'">
-                <template #prefix>
-                    <el-icon size="18">
-                        <Search />
-                    </el-icon>
-                </template>
-                <template #suffix>
-                    <el-icon v-if="search != ''" class="close" size="18" @click.stop="search = ''">
-                        <Close />
-                    </el-icon>
-                </template>
-            </el-input>
-        </div>
-    </div>
-    <KeepAlive>
-        <ProjectList v-if="itemid === 0" :searchvalue="search" @addproject="showoverlay = true" />
-    </KeepAlive>
-    <KeepAlive>
-        <TeamMember v-if="itemid === 1" :searchvalue="search" />
-    </KeepAlive>
-    <KeepAlive>
-        <TeamSetting v-if="itemid === 2" />
-    </KeepAlive>
-    <transition name="nested" :duration="550">
-        <div v-if="showoverlay" class="overlay">
-            <addProject v-if="itemid === 0" class="inner" :teamid="teamID" @close="showoverlay = false" />
-            <InviteMember v-if="itemid === 1" class="inner" :teamid="teamID" @close="showoverlay = false" />
-        </div>
-    </transition>
 </template>
 <script setup lang="ts">
 import { Ref, computed, inject, ref, onMounted, watch, onUnmounted } from 'vue'

@@ -1,13 +1,15 @@
 
 <template>
-    <tablelist :data="lists" :iconlist="iconlists" @share="Sharefile" @remove="Removefile" @dbclickopen="openDocument"
-        @updatestar="Starfile" @rightMeun="rightmenu" :noNetwork="noNetwork" @refreshDoc="refreshDoc"/>
-    <listrightmenu :items="items" :data="mydata" @get-userdata="getUserdata" @r-starfile="Starfile" @r-sharefile="Sharefile"
-        @r-removehistory="Removefile" @ropen="openDocument"/>
-    <FileShare v-if="showFileShare" @close="closeShare" :docId="docId" @switch-state="onSwitch" :userInfo="userInfo"  :docUserId="docUserId"
-        :selectValue="selectValue" @select-type="onSelectType" :shareSwitch="shareSwitch" :pageHeight="pageHeight">
-    </FileShare>
-    <div v-if="showFileShare" class="overlay"></div>
+    <div>
+        <tablelist :data="lists" :iconlist="iconlists" @share="Sharefile" @remove="Removefile" @dbclickopen="openDocument"
+            @updatestar="Starfile" @rightMeun="rightmenu" :noNetwork="noNetwork" @refreshDoc="refreshDoc"/>
+        <listrightmenu :items="items" :data="mydata" @get-userdata="getUserdata" @r-starfile="Starfile" @r-sharefile="Sharefile"
+            @r-removehistory="Removefile" @ropen="openDocument"/>
+        <FileShare v-if="showFileShare" @close="closeShare" :docId="docId" @switch-state="onSwitch" :userInfo="userInfo"  :docUserId="docUserId"
+            :selectValue="selectValue" @select-type="onSelectType" :shareSwitch="shareSwitch" :pageHeight="pageHeight">
+        </FileShare>
+        <div v-if="showFileShare" class="overlay"></div>
+    </div>
 </template>
 
 <script setup lang="ts">
@@ -35,9 +37,8 @@ const docUserId = ref('')
 const mydata = ref()
 const noNetwork = ref(false)
 const iconlists = ref(['star', 'share', 'remove'])
-// const emits = defineEmits(['data-update'])
 const emits = defineEmits<{
-    (e: 'data-update', list: any[], title: string): void
+    (e: 'dataUpdate', list: any[], title: string): void
 }>()
 
 interface data {
@@ -215,7 +216,7 @@ const onSelectType = (type: number) => {
 }
 
 watch(lists, (Nlist) => {
-    emits('data-update', Nlist, t('home.modification_time'))
+    emits('dataUpdate', Nlist, t('home.modification_time'))
 }, { deep: true })
 
 onMounted(() => {

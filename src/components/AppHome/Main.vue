@@ -6,27 +6,28 @@ interface Props {
 
 const props = defineProps<Props>();
 
-// const emits = defineEmits(['data-update'])
 const emits = defineEmits<{
-    (e: 'data-update', list: any[], title: string): void
+    (e: 'dataUpdate', list: any[], title: string): void
 }>();
 //===>Apphome组件接收
 const update = (data: any, searchtitle: string) => {
     //main目录下传过来的lists和title
-    emits('data-update', data, searchtitle)
+    emits('dataUpdate', data, searchtitle)
 }
 
 </script>
 
 <template>
-    <div v-if="props.title != '' && $route.name != 'TeamPage' && $route.name != 'ProjectPage' && $route.name != 'ProjectShare'"
-        class="title">
-        <span>{{ props.title }}</span>
-    </div>
-    <el-divider
-        v-if="props.title != '' && $route.name != 'TeamPage' && $route.name != 'ProjectPage' && $route.name != 'ProjectShare'" />
-    <div class="main">
-        <RouterView @data-update="update" />
+    <div>
+        <div v-if="props.title != '' && $route.name != 'TeamPage' && $route.name != 'ProjectPage' && $route.name != 'ProjectShare'"
+            class="title">
+            <span>{{ props.title }}</span>
+        </div>
+        <el-divider
+            v-if="props.title != '' && $route.name != 'TeamPage' && $route.name != 'ProjectPage' && $route.name != 'ProjectShare'" />
+        <div class="main">
+            <RouterView @dataUpdate="update" />
+        </div>
     </div>
 </template>
 

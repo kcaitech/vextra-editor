@@ -1,15 +1,17 @@
 
 <template>
-    <tablelist :data="lists" :iconlist="iconlists" @share="Sharefile" @deletefile="Deletefile" @dbclickopen="openDocument"
-        @updatestar="Starfile" @rightMeun="rightmenu" :noNetwork="noNetwork" @refreshDoc="refreshDoc" />
-
-    <listrightmenu :items="items" :data="mydata" @get-doucment="getDoucment" @r-starfile="Starfile" @r-sharefile="Sharefile"
-        @r-removefile="Deletefile" @ropen="openDocument" />
-
-    <div v-if="showFileShare" class="overlay"></div>
-    <FileShare v-if="showFileShare" @close="closeShare" :docId="docId" :selectValue="selectValue" :userInfo="userInfo" :docUserId="docUserId"
-        @select-type="onSelectType" @switch-state="onSwitch" :shareSwitch="shareSwitch" :pageHeight="pageHeight">
-    </FileShare>
+    <div>
+        <tablelist :data="lists" :iconlist="iconlists" @share="Sharefile" @deletefile="Deletefile" @dbclickopen="openDocument"
+            @updatestar="Starfile" @rightMeun="rightmenu" :noNetwork="noNetwork" @refreshDoc="refreshDoc" />
+    
+        <listrightmenu :items="items" :data="mydata" @get-doucment="getDoucment" @r-starfile="Starfile" @r-sharefile="Sharefile"
+            @r-removefile="Deletefile" @ropen="openDocument" />
+    
+        <div v-if="showFileShare" class="overlay"></div>
+        <FileShare v-if="showFileShare" @close="closeShare" :docId="docId" :selectValue="selectValue" :userInfo="userInfo" :docUserId="docUserId"
+            @select-type="onSelectType" @switch-state="onSwitch" :shareSwitch="shareSwitch" :pageHeight="pageHeight">
+        </FileShare>
+    </div>
 </template>
 
 <script setup lang="ts">
@@ -37,9 +39,8 @@ interface data {
 }
 
 const items = ['open', 'newtabopen', 'share', 'target_star', 'rename', 'copyfile', 'deletefile']
-// const emits = defineEmits(['data-update'])
 const emits = defineEmits<{
-    (e: 'data-update', list: any[], title: string): void
+    (e: 'dataUpdate', list: any[], title: string): void
 }>();
 const { t } = useI18n()
 const isLoading = ref(false)
@@ -207,7 +208,7 @@ const onSelectType = (type: number) => {
 }
 
 watch(lists, (Nlist) => {
-    emits('data-update', Nlist, t('home.modification_time'))
+    emits('dataUpdate', Nlist, t('home.modification_time'))
 }, { deep: true, immediate: true })
 
 onMounted(() => {

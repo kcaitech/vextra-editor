@@ -9,7 +9,7 @@
           <Aside @settitle="setTitle" />
         </el-aside>
         <el-main>
-          <Main :title="title" @data-update="update" />
+          <Main :title="title" @dataUpdate="update" />
         </el-main>
       </el-container>
     </el-container>
