@@ -1,5 +1,5 @@
 <template>
-        <tablelist :data="lists" :iconlist="iconlists" @share="Sharefile" @dbclickopen="openDocument" @updatestar="Starfile"
+        <tablelist :data="lists" :iconlist="iconlists" @share="Sharefile" @dbclickopen="openDocument" @updatestar="Starfile" :address="true"
             @rightMeun="rightmenu" :noNetwork="noNetwork" @refreshDoc="refreshDoc"/>
         <listrightmenu :items="items" :data="mydata" @ropen="openDocument" @r-sharefile="Sharefile" @r-starfile="Starfile"/>
         <FileShare v-if=" showFileShare " @close=" closeShare " :docId=" docId " :selectValue=" selectValue " :userInfo="userInfo"

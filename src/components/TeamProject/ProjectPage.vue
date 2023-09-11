@@ -70,7 +70,6 @@
             @clode-dialog="closeDelVisible" @confirm="DelProject"></ProjectDialog>
         <ProjectDialog :projectVisible="exitVisible" context="退出项目后，无法再访问项目中的文件，或使用项目中的资源。" :title="'退出项目'"
             :confirm-btn="'任然退出'" @clode-dialog="closeExitVisible" @confirm="ExitProject"></ProjectDialog>
-        <MoveProjectFill :title="'移动文件位置'" :confirm-btn="'移动'" :projectVisible="moveVisible"></MoveProjectFill>
     </div>
 </template>
 <script setup lang="ts">
@@ -88,7 +87,6 @@ import ProjectMemberg from './ProjectFill/ProjectMemberg.vue';
 import TeamProjectMenu from './TeamProjectMenu.vue';
 import { ElMessage } from 'element-plus';
 import ProjectDialog from './ProjectDialog.vue';
-import MoveProjectFill from './MoveProjectFill.vue';
 
 const { t } = useI18n()
 const itemid = ref(0)
@@ -110,7 +108,6 @@ const showProjecrMenu = ref(false);
 const delVisible = ref(false);
 const memberLen = ref(0);
 const exitVisible = ref(false);
-const moveVisible = ref(false);
 let menuItem: string[] = ['del_porject', 'visit'];
 const projectOptions = [
     {

@@ -51,7 +51,8 @@ const emits = defineEmits([
     'getDoucment',
     'getUserdata',
     'GetrecycleLists',
-    'showMembergDialog'
+    'showMembergDialog',
+    'moveFillAddress'
 ])
 
 enum rightmenuitem {
@@ -71,7 +72,8 @@ enum rightmenuitem {
     memberset = 'memberset',
     setfixed = 'setfixed',
     cancelfixed = 'cancelfixed',
-    deleteproject = 'deleteproject'
+    deleteproject = 'deleteproject',
+    movefill = 'movefill'
 }
 
 const itemcontent = (item: string) => {
@@ -98,6 +100,8 @@ const itemcontent = (item: string) => {
             return t('homerightmenu.restore')
         case rightmenuitem.completely_delete:
             return t('homerightmenu.completely_delete')
+        case rightmenuitem.movefill:
+            return '移动文件位置'
         case rightmenuitem.projectrename:
             return '重命名'
         case rightmenuitem.projectset:
@@ -119,41 +123,47 @@ const EventHandler = (item: string) => {
     if (item === rightmenuitem.open) {
         emits('ropen', props.data.id) //右键打开 
     }
-    if (item === rightmenuitem.newtabopen) {
+    else if (item === rightmenuitem.newtabopen) {
         openNewWindowDocument(props.data.id) //右键新窗口打开
     }
-    if (item === rightmenuitem.share) {
+    else if (item === rightmenuitem.share) {
         rSharefile(props.data) //右键分享
     }
-    if (item === rightmenuitem.target_star) {
+    else if (item === rightmenuitem.target_star) {
         rStarfile(props.data) //右键标星
     }
-    if (item === rightmenuitem.rename) {
+    else if (item === rightmenuitem.rename) {
         rrename(props.data.name) //右键重命名
     }
-    if (item === rightmenuitem.copyfile) {
+    else if (item === rightmenuitem.copyfile) {
         rcopyfile(props.data.id) //右键创建副本
     }
-    if (item === rightmenuitem.deletefile) {
+    else if (item === rightmenuitem.deletefile) {
         rRemovefile(props.data) //右键删除文件
     }
-    if (item === rightmenuitem.removefile) {
+    else if (item === rightmenuitem.removefile) {
         rRemovehistory(props.data) //右键移除记录
     }
-    if (item === rightmenuitem.exit_share) {
+    else if (item === rightmenuitem.exit_share) {
         rExitshare(props.data)//右键退出共享
     }
-    if (item === rightmenuitem.restore) {
+    else if (item === rightmenuitem.restore) {
         rRestorefile(props.data) //右键恢复删除文件
     }
-    if (item === rightmenuitem.completely_delete) {
+    else if (item === rightmenuitem.completely_delete) {
         rDeletefile(props.data)//右键彻底删除文件
     }
-    if (item === rightmenuitem.memberset) {
+    else if (item === rightmenuitem.memberset) {
         if (menu.value) {
             menu.value.style.display = 'none'
         }
         emits('showMembergDialog')
+    }
+    else if(item === rightmenuitem.movefill) {
+        if (menu.value) {
+            menu.value.style.display = 'none'
+        }
+        emits('moveFillAddress', props.data);
     }
 }
 

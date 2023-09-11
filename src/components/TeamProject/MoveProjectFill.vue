@@ -2,10 +2,24 @@
 import { watch, ref, Ref, inject, watchEffect, computed } from 'vue';
 import { Folder } from '@element-plus/icons-vue';
 import * as team_api from '@/apis/team';
+interface data {
+    document: {
+        id: string
+        name: string
+        doc_type: number
+        user_id: string
+    }
+    document_favorites: {
+        is_favorite: boolean
+    }
+}
+
 const props = defineProps<{
     projectVisible: boolean
     title: string
     confirmBtn: string
+    projectItem: any
+    doc: data | undefined
 }>();
 const isshow = ref(false);
 const active = ref('');
@@ -17,6 +31,7 @@ watch(() => props.projectVisible, (newvalue) => {
 const emit = defineEmits<{
     (e: 'clodeDialog'): void;
     (e: 'confirm'): void;
+    (e: 'moveFillSeccess'): void;
 }>()
 const handleClose = () => {
     emit('clodeDialog')
@@ -29,7 +44,13 @@ const { teamData, projectList } = inject('shareData') as {
 }
 const activeNames = ref();
 const pList = computed(() => {
-    return projectList.value.filter(item => item.project.team_id === activeNames.value);
+    return projectList.value.filter(item => item.project.team_id === activeNames.value && item.self_perm_type >= 3);
+})
+const teamName = computed(() => {
+    return teamData.value.filter(item => item.team.id === props.projectItem.project.team_id)[0].team.name
+})
+const shareProject = computed(() => {
+    return projectList.value.filter(item => !item.is_in_team);
 })
 
 const curProject = ref<any>({});
@@ -40,23 +61,27 @@ const targetProject = (project: any) => {
 watch(activeNames, () => {
     active.value = '';
 })
-const moveProjectTarget = async(params: any) => {
+const moveProjectTarget = async (params: any) => {
     try {
         await team_api.moveDocumentAPI(params)
-    }catch(err) {
+    } catch (err) {
         console.log(err);
-        
+
     }
 }
 const quitProject = () => {
     emit('confirm');
     const params = {
-        document_id: '',
-        source_project_id: '',
+        document_id: props.doc!.document.id,
+        source_project_id: props.projectItem.project.id,
         target_project_id: curProject.value.project.id
     }
     moveProjectTarget(params);
-    emit('clodeDialog')
+    emit('moveFillSeccess')
+}
+
+const onactiveNames = (id: string) => {
+    activeNames.value = id;
 }
 </script>
 
@@ -66,39 +91,49 @@ const quitProject = () => {
         <div class="context">
             <div class="name">
                 <span>文件名称:</span>
-                <span style="font-weight: bold; margin-left: 5px;">好热情啊和人</span>
+                <span style="font-weight: bold; margin-left: 5px;">{{ props.doc!.document.name }}</span>
             </div>
             <div class="name">
                 <span>当前位置:</span>
-                <span style="font-weight: bold;margin-left: 5px;">各位各位改革任务</span>
+                <span style="font-weight: bold;margin-left: 5px;">{{ teamName + ' / ' + projectItem.project.name }}</span>
             </div>
             <div>
                 移动文件至:
             </div>
             <div class="conteiner">
                 <div class="target_fill">
-                    <el-collapse v-model="activeNames" accordion>
-                        <el-collapse-item v-for="(data) in teamData" :key="data.team.id" :name="data.team.id">
-                            <template #title>
-                                <div class="team-title" :class="{ 'is_active': activeNames === data.team.id }">
-                                    <div class="left">
-                                        <div class="team-avatar">
-                                            <div v-if="data.team.avatar.includes('http')" class="img">
-                                                <img :src="data.team.avatar" alt="team avatar">
-                                            </div>
-                                            <div v-else class="text">
-                                                <span>{{ data.team.name.slice(0, 1) }}</span>
-                                            </div>
-                                        </div>
-                                        <div class="name">{{ data.team.name }}</div>
+                    <template v-for="(data) in teamData" :key="data.team.id">
+                        <div class="team-title" :class="{ 'is_active': activeNames === data.team.id }"
+                            @click="onactiveNames(data.team.id)">
+                            <div class="left">
+                                <div class="team-avatar">
+                                    <div v-if="data.team.avatar.includes('http')" class="img">
+                                        <img :src="data.team.avatar" alt="team avatar">
+                                    </div>
+                                    <div v-else class="text">
+                                        <span>{{ data.team.name.slice(0, 1) }}</span>
                                     </div>
                                 </div>
-                            </template>
-                        </el-collapse-item>
-                    </el-collapse>
+                                <div class="name">{{ data.team.name }}</div>
+                            </div>
+                        </div>
+                    </template>
+                    <template>
+                        <div class="team-title" :class="{ 'is_active': activeNames === '1' }"
+                            @click="onactiveNames('1')">
+                            <div class="left">
+                                <div class="team-avatar">
+                                    <div class="img">
+                                        <img src="" alt="team avatar">
+                                    </div>
+                                </div>
+                                <div class="name">收到的共享项目</div>
+                            </div>
+                        </div>
+                    </template>
                 </div>
                 <div class="target_project">
-                    <div class="project" :class="{ 'is_active': item.project.id === active }" v-for="(item, i) in pList"
+                    <div class="project" :class="{ 'is_active': item.project.id === active }" v-for="(item, i) in pList || shareProject"
                         :key="i" @click="targetProject(item)">
                         <div>
                             <el-icon style="margin-right: 10px;">
@@ -157,8 +192,9 @@ const quitProject = () => {
     color: #000;
     padding-right: 10px;
 
-    .name {
+    >.name {
         display: flex;
+        align-items: center;
         margin-bottom: 10px;
     }
 
@@ -171,7 +207,7 @@ const quitProject = () => {
         border-radius: 4px;
 
         .target_fill {
-            padding: 3px 0px;
+            padding: 5px 10px;
             width: 40%;
             border-right: 1px solid rgba(0, 0, 0, .5);
         }
@@ -261,6 +297,8 @@ const quitProject = () => {
         }
 
         .name {
+            display: flex;
+            align-items: center;
             overflow: hidden;
             text-overflow: ellipsis;
             white-space: nowrap;
