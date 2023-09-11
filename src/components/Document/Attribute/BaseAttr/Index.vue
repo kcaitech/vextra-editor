@@ -17,7 +17,6 @@ import {
     get_actions_constrainer_proportions,
     get_actions_frame_x, get_actions_frame_y,
     get_actions_frame_w, get_actions_frame_h,
-    get_actions_rotate,
     get_actions_flip_h,
     get_actions_flip_v,
     get_straight_line_length
@@ -433,8 +432,7 @@ function selection_wather(t: any) {
 // hooks
 onMounted(() => {
     watch_shapes();
-    if (props.context.selection.selectedShapes.length > 1) check_mixed();
-    layout();
+    update_view();
     calc_attri();
     props.context.selection.watch(selection_wather);
     props.context.workspace.watch(workspace_watcher);

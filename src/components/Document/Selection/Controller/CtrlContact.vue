@@ -7,6 +7,7 @@ import { Point } from "../SelectionView.vue";
 import { Selection } from "@/context/selection";
 import { useController } from "./controller4contact";
 import ContactApex from "./Points/ContactApex.vue";
+import BarsContainer from "./Bars/BarsContainerForContact.vue";
 
 interface Props {
     context: Context
@@ -86,6 +87,8 @@ watchEffect(updateControllerView);
         :style="{ transform: `translate(${bounds.left}px,${bounds.top}px)`, left: 0, top: 0, position: 'absolute' }">
         <ContactApex :context="props.context" :matrix="submatrix.toArray()" :shape="props.shape"
             :c-frame="props.controllerFrame"></ContactApex>
+        <BarsContainer :context="props.context" :matrix="submatrix.toArray()" :shape="props.shape"
+            :c-frame="props.controllerFrame"></BarsContainer>
     </svg>
 </template>
 <style lang='scss' scoped></style>
