@@ -29,7 +29,7 @@ import TeamProjectMenu from '../TeamProject/TeamProjectMenu.vue';
 import ProjectDialog from '../TeamProject/ProjectDialog.vue';
 
 interface Emits {
-    (e: 'settitle', title: string): void;
+    (e: 'settitle', title: string, recycle: boolean): void;
 }
 
 const emits = defineEmits<Emits>();
@@ -149,7 +149,12 @@ function newFile() {
 }
 
 function Setindex(a: any, b: any) {
-    sessionStorage.setItem('index', a)
+    sessionStorage.setItem('index', a);
+    if(a == 3) {
+        emits('settitle', b, true);
+    }else {
+        emits('settitle', b, false);
+    }
 }
 
 const x = sessionStorage.getItem('index')
@@ -507,13 +512,13 @@ onUnmounted(() => {
                         </el-icon>
                         <span>{{ t('home.shared_file_received') }}</span>
                     </el-menu-item></router-link>
-                <router-link to="/apphome/recyclebin"><el-menu-item index="5"
+                <!-- <router-link to="/apphome/recyclebin"><el-menu-item index="5"
                         @click="Setindex(5, t('home.recycling_station'))">
                         <el-icon>
                             <Delete />
                         </el-icon>
                         <span>{{ t('home.recycling_station') }}</span>
-                    </el-menu-item></router-link>
+                    </el-menu-item></router-link> -->
             </el-menu>
             <div class="teamlists" :reflush="reflush !== 0 ? reflush : undefined">
                 <div class="demo-collapse">
@@ -887,7 +892,7 @@ a {
             width: 100%;
             position: absolute;
             bottom: 60px;
-            top: 400px;
+            top: 340px;
             overflow-y: auto;
 
             &::-webkit-scrollbar {

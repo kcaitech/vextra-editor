@@ -1,6 +1,5 @@
 
 <template>
-    <div>
         <tablelist :data="lists" :iconlist="iconlists" @share="Sharefile" @remove="Removefile" @dbclickopen="openDocument"
             @updatestar="Starfile" @rightMeun="rightmenu" :noNetwork="noNetwork" @refreshDoc="refreshDoc"/>
         <listrightmenu :items="items" :data="mydata" @get-userdata="getUserdata" @r-starfile="Starfile" @r-sharefile="Sharefile"
@@ -9,7 +8,6 @@
             :selectValue="selectValue" @select-type="onSelectType" :shareSwitch="shareSwitch" :pageHeight="pageHeight">
         </FileShare>
         <div v-if="showFileShare" class="overlay"></div>
-    </div>
 </template>
 
 <script setup lang="ts">

@@ -1,5 +1,4 @@
 <template>
-    <div>
         <tablelist :data="lists" :iconlist="iconlists" @restore="Restorefile" @ndelete="Deletefile" @rightMeun="rightmenu"
             :noNetwork="noNetwork" @refreshDoc="refreshDoc" />
         <!-- 右键菜单 -->
@@ -18,7 +17,6 @@
                 </span>
             </template>
         </el-dialog>
-    </div>
 </template>
 <script setup lang="ts">
 import * as user_api from '@/apis/users'

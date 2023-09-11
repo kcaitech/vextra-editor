@@ -1,5 +1,4 @@
 <template>
-    <div>
         <tablelist :data="lists" :iconlist="iconlists" @share="Sharefile" @exit_share="Exitshar" @dbclickopen="openDocument"
             @updatestar="Starfile" @rightMeun="rightmenu" :noNetwork="noNetwork" @refreshDoc="refreshDoc"/>
         <listrightmenu :items="items" :data="mydata" @ropen="openDocument" @r-sharefile="Sharefile" @r-starfile="Starfile"
@@ -9,7 +8,6 @@
             :pageHeight="pageHeight">
         </FileShare>
         <div v-if="showFileShare" class="overlay"></div>
-    </div>
 </template>
 <script setup lang="ts">
 import * as user_api from '@/apis/users'

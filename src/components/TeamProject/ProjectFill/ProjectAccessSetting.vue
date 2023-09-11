@@ -168,6 +168,12 @@ watch(() => currentProject.value, () => {
         checked.value = currentProject.value[0].project.need_approval;
     }
 }, { deep: true });
+const is_qrcode = ref(false);
+const qrCodeLink = ref('')
+const produceQrcode = () => {
+    qrCodeLink.value = sharelink.value;
+    is_qrcode.value = true;
+}
 
 
 watchEffect(() => {
@@ -222,7 +228,9 @@ onMounted(() => {
                     </div>
                     <div class="link" v-if="linkSwitch">
                         <el-input :value="sharelink" :readonly="true" />
-                        <div class="qrcode"><svg-icon icon-class="qrcode"></svg-icon></div>
+                        <div class="qrcode" @click="produceQrcode"><svg-icon icon-class="qrcode"></svg-icon></div>
+                    </div>
+                    <div class="qrcode-box" v-if="!is_qrcode">
                     </div>
                     <div class="checked" v-if="linkSwitch"
                         :style="{ opacity: currentProject[0].self_perm_type === 4 || currentProject[0].self_perm_type === 5 ? '1' : '.5' }">
@@ -322,6 +330,17 @@ onMounted(() => {
     :deep(.el-input__inner) {
         height: 30px;
         font-size: 14px;
+    }
+}
+.qrcode-box {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    margin: 10px 0;
+    div {
+        width: 150px;
+        height: 150px;
+        background-color: aquamarine;
     }
 }
 

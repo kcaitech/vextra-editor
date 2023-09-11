@@ -9,7 +9,7 @@
           <Aside @settitle="setTitle" />
         </el-aside>
         <el-main>
-          <Main :title="title" @dataUpdate="update" />
+          <Main :title="title" :recycle="recycle"  @dataUpdate="update" />
         </el-main>
       </el-container>
     </el-container>
@@ -48,6 +48,7 @@ const is_favor = ref<boolean>();
 const is_team_upodate = ref<boolean>(false);
 const activeNames = ref<any[]>([-1])
 const targetItem = ref<any[]>([])
+const recycle = ref(sessionStorage.getItem('index') === '3');
 
 const updateShareData = (id: string, name: string, avatar: string, description: string, selfpermtype: number) => {
   teamID.value = id
@@ -155,9 +156,9 @@ provide('shareData', {
   addTargetItem,
   updateProject
 })
-
-function setTitle(t: string) {
+function setTitle(t: string, tyep: boolean) {
   title.value = t;
+  recycle.value = tyep;
   sessionStorage.setItem('title', title.value)
 }
 
