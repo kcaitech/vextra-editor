@@ -8,7 +8,7 @@
                 <div class="project-item" :class="{ 'selected': selectid === item.project.id }"
                     v-for="(item, index) in searchvalue === '' ? teamprojectlist : SearchList" :key="item.project.id"
                     @click.stop="selectid = item.project.id" @dblclick.stop="skipProject(item.project.id)"
-                    @contextmenu="rightmenu($event, item)">
+                    @contextmenu="rightmenu($event, item,index)">
                     <div class="project-name">{{ item.project.name }}</div>
                     <div class="project-description">{{ item.project.description }}</div>
                     <div class="project-creator">{{ item.creator.nickname }}</div>
@@ -40,53 +40,16 @@
         </div>
     </div>
     <NetworkError v-else @refresh-doc="GetprojectLists"></NetworkError>
-    <listrightmenu :items="updateitems" :data="mydata" />
     <ProjectDialog :projectVisible="innerVisible" context="退出项目后，无法再访问项目中的文件，或使用项目中的资源。" :title="'退出项目'"
         :confirm-btn="'任然退出'" @clode-dialog="handleClose" @confirm="quitProject"></ProjectDialog>
-        <ProjectDialog :projectVisible="delVisible" context="删除项目后，将删除项目及项目中所有文件、资料。" :title="'删除项目'"
-        :confirm-btn="'任然删除'" @clode-dialog="closeDelVisible" @confirm="DelProject"></ProjectDialog>
-    <listrightmenu :items="updateitems" :data="mydata" @showMembergDialog="showMembergDialog" />
-    <!-- <ProjectAccessSetting title="邀请项目成员" :dialog-visible="projectSettingDialog" width="500px"
-        @clodeDialog="projectSettingDialog = false">
-        <div class="project_type" v-if="currentProject[0]">
-            <p>项目类型</p>
-            <el-select v-model="projectType" class="m-2" style="width: 230px;" size="large"
-                :disabled="!(currentProject[0].self_perm_type === 4 || currentProject[0].self_perm_type === 5)">
-                <el-option v-for="item in projectOptions" :key="item.value" :label="item.label" :value="item.label" />
-            </el-select>
-        </div>
-        <div class="project_type" v-if="currentProject[0]">
-            <p>权限</p>
-            <el-select v-model="projectPerm" class="m-2" style="width: 230px;" size="large"
-                :disabled="!(currentProject[0].self_perm_type === 4 || currentProject[0].self_perm_type === 5)">
-                <el-option v-for="item in projectPerms" :key="item.value" :label="item.label" :value="item.label" />
-            </el-select>
-        </div>
-        <div v-if="currentProject[0] && projectType === projectOptions[1].label">
-            <div>点击链接或扫描二维码申请加入</div>
-            <div class="share-switch"
-                :style="{ opacity: currentProject[0].self_perm_type === 4 || currentProject[0].self_perm_type === 5 ? '1' : '.5' }">
-                <span>邀请链接开关:</span>
-                <el-switch class="switch" size="small" v-model="linkSwitch" @click="onLinkSwitch"
-                    :disabled="!(currentProject[0].self_perm_type === 4 || currentProject[0].self_perm_type === 5)" />
-            </div>
-            <div class="link" v-if="linkSwitch">
-                <el-input :value="sharelink" :readonly="true" />
-                <div class="qrcode"><svg-icon icon-class="qrcode"></svg-icon></div>
-            </div>
-            <div class="checked" v-if="linkSwitch"
-                :style="{ opacity: currentProject[0].self_perm_type === 4 || currentProject[0].self_perm_type === 5 ? '1' : '.5' }">
-                <el-checkbox v-model="checked"
-                    :disabled="!(currentProject[0].self_perm_type === 4 || currentProject[0].self_perm_type === 5)"></el-checkbox><span>申请后需管理员审批确认</span>
-            </div>
-            <div class="button" :style="{ opacity: linkSwitch ? '1' : '.5' }" @click="copyLink"><button>复制链接</button></div>
-        </div>
-        <div v-else>
-            <div class="button" @click="projectSettingDialog = false"><button>确定</button></div>
-        </div>
-    </ProjectAccessSetting> -->
-    <ProjectMemberg v-if="projectMembergDialog" :projectMembergDialog="projectMembergDialog"
-        :currentProject="mydata" @closeDialog="closeDialog" @exitProject="exitProject"/>
+    <ProjectDialog :projectVisible="delVisible" context="删除项目后，将删除项目及项目中所有文件、资料。" :title="'删除项目'" :confirm-btn="'任然删除'"
+        @clode-dialog="closeDelVisible" @confirm="DelProject"></ProjectDialog>
+    <listrightmenu :items="updateitems" :data="mydata" @showMembergDialog="showMembergDialog"
+        @projectrename="setProjectInfo" @showSettingDialog="showSettingDialog" @cancelFixed="cancelFixed(mydata.project.id,mydata.is_favor,mydataindex)"/>
+    <ProjectAccessSetting v-if="projectSettingDialog" title="邀请项目成员" :data="mydata" width="500px"
+        @clodeDialog="projectSettingDialog = false" />
+    <ProjectMemberg v-if="projectMembergDialog" :projectMembergDialog="projectMembergDialog" :currentProject="mydata"
+        @closeDialog="closeDialog" @exitProject="exitProject" />
 </template>
 <script setup lang="ts">
 import { Ref, computed, inject, watchEffect, onMounted, ref, watch, nextTick } from 'vue';
@@ -109,6 +72,7 @@ interface Props {
 const items = ref(['rename', 'projectset', 'memberset', 'setfixed', 'cancelfixed', 'deleteproject'])
 const updateitems = ref(items.value)
 const mydata = ref()
+const mydataindex=ref()
 const route = useRoute()
 const showbutton = ref(false)
 const noNetwork = ref(false)
@@ -120,6 +84,7 @@ const teamprojectlist = ref<any[]>([])
 const innerVisible = ref(false);
 const project_item = ref<any>({});
 const projectMembergDialog = ref(false)
+const projectSettingDialog = ref(false)
 const emits = defineEmits<{
     (e: 'addproject'): void
 }>()
@@ -162,6 +127,10 @@ const onAddproject = () => {
 
 const showMembergDialog = () => {
     projectMembergDialog.value = true
+}
+
+const showSettingDialog=()=>{
+    projectSettingDialog.value=true
 }
 
 const closeDialog = () => {
@@ -254,16 +223,29 @@ const handleClose = () => {
 
 const onExitProject = (row: any) => {
     project_item.value = row;
-    if(row.self_perm_type === 5) {
+    if (row.self_perm_type === 5) {
         delVisible.value = true;
-    }else {
+    } else {
         innerVisible.value = true;
     }
 }
 
+const setProjectInfo = async (params: any) => {
+    try {
+        const { code, message } = await team_api.setProjectInfoAPI(params)
+        if (code === 0) {
+            const index = teamprojectlist.value.findIndex(item => item.project.id === params.project_id)
+            teamprojectlist.value[index].project.name = params.name
+        } else {
+            ElMessage.error(message)
+        }
+    } catch (err) {
+        console.log(err);
+    }
+}
 
 //右键菜单入口
-const rightmenu = (e: MouseEvent, data: any) => {
+const rightmenu = (e: MouseEvent, data: any,index?:number) => {
     const viewportWidth = window.innerWidth || document.documentElement.clientWidth
     const viewportHeight = window.innerHeight || document.documentElement.clientHeight
     const rightmenu: any = document.querySelector('.rightmenu')
@@ -281,8 +263,7 @@ const rightmenu = (e: MouseEvent, data: any) => {
     }
     updateitems.value = updateItemsBasedOnFavor(data, items.value);
     mydata.value = data
-    console.log(data);
-    
+    mydataindex.value=index
     selectid.value = data.project.id
 }
 

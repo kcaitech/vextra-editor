@@ -14,7 +14,8 @@
                             @exitProject="onExitProject">
                         </TeamProjectMenu>
                     </div>
-                    <div style="padding-top: 3px;" @click="back(currentProject[0].project, currentProject[0].is_in_team)">
+                    <div style="padding-top: 3px;"
+                        @click.stop="back(currentProject[0].project, currentProject[0].is_in_team)">
                         <svg-icon icon-class="back"></svg-icon>
                     </div>
                 </div>
@@ -110,40 +111,6 @@ const memberLen = ref(0);
 const exitVisible = ref(false);
 const moveVisible = ref(false);
 let menuItem: string[] = ['del_porject', 'visit'];
-const projectOptions = [
-    {
-        value: 0,
-        label: '公开: 团队全部成员可访问',
-    },
-    {
-        value: 1,
-        label: '非公开: 仅通过链接申请访问',
-    }
-]
-const projectType = ref(projectOptions[1].label);
-const projectPerms = [
-    {
-        value: 1,
-        label: '仅阅读',
-    },
-    {
-        value: 2,
-        label: '可评论',
-    },
-    {
-        value: 3,
-        label: '可编辑',
-    }
-]
-const projectPerm = ref(projectPerms[0].label);
-const params = {
-    project_id: '',
-    public_switch: false,
-    perm_type: 0,
-    invited_switch: false,
-    need_approval: false
-}
-
 
 const { projectList, saveProjectData, is_favor, favoriteList, updateFavor, is_team_upodate, teamUpdate } = inject('shareData') as {
     projectList: Ref<any[]>;
@@ -164,7 +131,7 @@ const closeMenu = () => {
 
 const back = (project: any, isTeam: boolean) => {
     if (isTeam) {
-        router.push({ path: '/apphome/teams/' + project.id });
+        router.push({ path: '/apphome/teams/' + project.team_id });
     } else {
         router.push('/apphome/project_share');
     }
@@ -327,7 +294,6 @@ const GetprojectLists = async () => {
                 }
             })
         }
-
         const project = favoriteProjectList(data, favoriteList.value)
         saveProjectData(project)
         currentProject.value = projectList.value.filter((item) => item.project.id === route.params.id);
@@ -384,14 +350,23 @@ function enter_desc(e: KeyboardEvent) {
 }
 
 function blur() {
-    if (projectName.value.trim().length < 1) return;
-    projectName.value = projectName.value.trim();
     const project = currentProject.value[0].project
+    projectName.value = projectName.value.trim();
+    if (projectName.value.trim().length < 1){
+        cusname.value = false
+        return
+    } 
+    if (projectName.value === project.name.trim()) {
+        cusname.value = false
+        return
+    }
     const params = {
         project_id: project.id,
         name: projectName.value
     }
     const favorite = favoriteList.value.findIndex((item) => item.project.id === route.params.id);
+    console.log(favoriteList.value);
+    
     if (favorite !== -1) {
         favoriteList.value[favorite].project.name = projectName.value;
         teamUpdate(!is_team_upodate.value);
@@ -403,9 +378,16 @@ function blur() {
 }
 
 function blur_desc() {
-    if (projectDesc.value.trim().length < 1) return;
-    projectDesc.value = projectDesc.value.trim();
     const project = currentProject.value[0].project
+    projectDesc.value = projectDesc.value.trim();
+    if (projectDesc.value.trim().length < 1){
+        cusdesc.value = false;
+        return
+    } 
+    if (projectDesc.value === project.description.trim()) {
+        cusdesc.value = false;
+        return
+    }
     const params = {
         project_id: project.id,
         description: projectDesc.value
