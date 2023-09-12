@@ -29,6 +29,7 @@ let contactEditor: AsyncContactEditor | undefined;
 let move: any;
 let search: boolean = false;
 let drag_type: 'ver' | 'hor' = 'ver';
+let drag_index: number = -1;
 const dragActiveDis = 3;
 function update() {
     matrix.reset(props.matrix);
@@ -51,6 +52,7 @@ function update_slice_path() {
     slices.hor.length = 0;
     let index = 0;
     for (let i = 1, len = view_points.length; i < len; i++) {
+        index++;
         const pre = view_points[i - 1];
         const cur = view_points[i];
         if (!pre || !cur) continue;
@@ -61,13 +63,9 @@ function update_slice_path() {
         const d = dir(r_p1, r_p2);
         if (!d) continue;
         const bar_settle = get_locate(pre, cur);
-        slices[d].push({ sliceIndex: index, type: d, bar: bar_settle });
-        index++;
+        slices[d].push({ sliceIndex: index - 1, type: d, bar: bar_settle });
     }
     show.value = true;
-}
-function isPathEdited(shape: Shape): boolean {
-    return shape.points.length > 2;
 }
 function point_mousedown(event: MouseEvent, slice: Slice) {
     if (event.button !== 0) return;
@@ -78,6 +76,7 @@ function point_mousedown(event: MouseEvent, slice: Slice) {
     const root = workspace.root;
     startPosition = { x: event.clientX - root.x, y: event.clientY - root.y };
     drag_type = slice.type;
+    drag_index = slice.sliceIndex;
     document.addEventListener('mousemove', point_mousemove);
     document.addEventListener('mouseup', point_mouseup);
     move = point_mousemove;
@@ -87,8 +86,18 @@ function point_mousemove(event: MouseEvent) {
     const root = workspace.root;
     const mouseOnClient: ClientXY = { x: event.clientX - root.x, y: event.clientY - root.y };
     if (isDragging && contactEditor) {
+        const p1 = submatrix.computeCoord3(startPosition);
+        const p2 = submatrix.computeCoord3(mouseOnClient);
+        let delta = 0;
+        const _idx = drag_index === 0 ? drag_index + 2 : drag_index;
+        if (drag_type === 'hor') {
+            delta = p2.y - p1.y;
+            contactEditor.modify_sides(_idx, 0, delta);
+        } else if (drag_type === 'ver') {
+            delta = p2.x - p1.x;
+            contactEditor.modify_sides(_idx, delta, 0);
+        }
         startPosition.x = mouseOnClient.x, startPosition.y = mouseOnClient.y;
-        const p = submatrix.computeCoord3(mouseOnClient);
     } else {
         const { x: sx, y: sy } = startPosition;
         const { x: mx, y: my } = mouseOnClient;
@@ -96,8 +105,11 @@ function point_mousemove(event: MouseEvent) {
             isDragging = true;
             submatrix.reset(workspace.matrix.inverse);
             const page = props.context.selection.selectedPage;
+            const editor = props.context.editor4Shape(props.shape);
+            editor.pre_modify_side(drag_index);
+            editor.modify_edit_state(true);
+            editor.modify_frame_by_points();
             contactEditor = props.context.editor.controller().asyncContactEditor(props.shape, page!);
-            console.log('do sth');
         }
     }
 }
@@ -123,8 +135,6 @@ function point_mouseup(event: MouseEvent) {
     workspace.rotating(false);
     workspace.setCtrl('page');
 }
-
-
 function window_blur() {
     const workspace = props.context.workspace;
     if (isDragging) {
@@ -164,16 +174,10 @@ onUnmounted(() => {
 })
 </script>
 <template>
-    <!-- hor -->
-    <g>
-        <rect v-for="(item, idx) in slices.hor" :key="idx" :x="item.bar.x - 10" :y="item.bar.y - 4" class="bar-h" rx="4"
-            ry="4" @mousedown="(e: MouseEvent) => point_mousedown(e, item)"></rect>
-    </g>
-    <!-- ver -->
-    <g>
-        <rect v-for="(item, idx) in slices.ver" :key="idx" :x="item.bar.x - 4" :y="item.bar.y - 10" class="bar-v" rx="4"
-            ry="4" @mousedown="(e: MouseEvent) => point_mousedown(e, item)"></rect>
-    </g>
+    <rect v-for="(item, idx) in slices.hor" :key="idx" :x="item.bar.x - 10" :y="item.bar.y - 4" class="bar-h" rx="4" ry="4"
+        @mousedown="(e: MouseEvent) => point_mousedown(e, item)"></rect>
+    <rect v-for="(item, idx) in slices.ver" :key="idx" :x="item.bar.x - 4" :y="item.bar.y - 10" class="bar-v" rx="4" ry="4"
+        @mousedown="(e: MouseEvent) => point_mousedown(e, item)"></rect>
 </template>
 <style lang='scss' scoped>
 .bar-h {
