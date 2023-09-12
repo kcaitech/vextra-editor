@@ -115,6 +115,8 @@ const rowHandleClick = ({
     },
     oncontextmenu: ({ event, rowData }: any) => {
         selectedId.value = rowData.document.id
+        console.log(rowData);
+        
         emits('rightMeun', event, rowData)
     },
 })

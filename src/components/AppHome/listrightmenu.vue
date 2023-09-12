@@ -129,10 +129,15 @@ const itemcontent = (item: string) => {
 
 const EventHandler = (item: string) => {
     if (item === rightmenuitem.open) {
-        emits('ropen', props.data.id) //右键打开 
+        if (props.data.document != undefined) {
+            emits('ropen', props.data.document.id) //右键打开 
+        }
     }
     else if (item === rightmenuitem.newtabopen) {
-        openNewWindowDocument(props.data.id) //右键新窗口打开
+        if (props.data.document != undefined) {
+            openNewWindowDocument(props.data.document.id) //右键新窗口打开
+        }
+
     }
     else if (item === rightmenuitem.share) {
         rSharefile(props.data) //右键分享
@@ -141,17 +146,19 @@ const EventHandler = (item: string) => {
         rStarfile(props.data) //右键标星
     }
     else if (item === rightmenuitem.rename) {
-        if (props.data.name) {
-            rrename(props.data.name) //右键重命名
+        if (props.data.document != undefined) {
+            rrename(props.data.document.name) //右键重命名
             return
         }
-        if (props.data.project.name) {
+        if (props.data.project.name != undefined) {
             rrename(props.data.project.name)
             return
         }
     }
     else if (item === rightmenuitem.copyfile) {
-        rcopyfile(props.data.id) //右键创建副本
+        if (props.data.document != undefined) {
+            rcopyfile(props.data.document.id) //右键创建副本
+        }
     }
     else if (item === rightmenuitem.deletefile) {
         rRemovefile(props.data) //右键删除文件
@@ -248,7 +255,7 @@ const rrename = (name: string) => {
 
 //重命名
 const rename1 = async () => {
-    if (props.data.project.name) {
+    if (props.data.project != undefined) {
         const { id, name } = props.data.project
         if (newname.value != name) {
             const data = {
@@ -257,8 +264,10 @@ const rename1 = async () => {
             }
             emits('projectrename', data)
         }
-    } else {
-        const { document: { id, name } } = props.data
+
+    }
+    if (props.data.document != undefined) {
+        const { id, name } = props.data.document
         newname.value = renameinput.value?.value
         if (newname.value != name)
             try {
@@ -277,7 +286,6 @@ const rename1 = async () => {
                 ElMessage.error({ duration: 1500, message: t('home.other_tips') })
             }
     }
-
     dialogVisible.value = false
 }
 

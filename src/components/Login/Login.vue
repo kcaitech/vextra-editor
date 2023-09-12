@@ -45,6 +45,8 @@ async function getlogin(code: string, invite_code: string = '', id: string = '')
                     const params = new URLSearchParams(perRoute.split('?')[1]);
                     const path = perRoute.split('?')[0].replace('/', '');
                     const id = params.get('id');
+                    console.log(path);
+                    console.log(id);
                     router.push({
                         name: path,
                         query: {

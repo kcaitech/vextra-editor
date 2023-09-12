@@ -205,10 +205,17 @@ const Deletefile = async (data: data) => {
     }
 }
 
+function filterItemsByIndexes(sourceArray: any, indexesToDelete: any) {
+    return sourceArray.filter((_: any, index: number) => !indexesToDelete.includes(index));
+}
+
 //右键菜单入口
 const rightmenu = (e: MouseEvent, data: data) => {
-    const el = document.querySelector('.target_star')!
-    const { document: { id }, document_favorites: { is_favorite } } = data
+    const el = document.querySelector('.target_star')! as HTMLElement
+    const elrename = document.querySelector('.rename')! as HTMLElement
+    const elcopyfile = document.querySelector('.copyfile')! as HTMLElement
+    const eldeletefile = document.querySelector('.deletefile')! as HTMLElement
+    const { document: { id,user_id,project_id }, document_favorites: { is_favorite } } = data
     const viewportWidth = window.innerWidth || document.documentElement.clientWidth
     const viewportHeight = window.innerHeight || document.documentElement.clientHeight
     const rightmenu: any = document.querySelector('.rightmenu')
@@ -224,12 +231,20 @@ const rightmenu = (e: MouseEvent, data: data) => {
     if ((e.target as HTMLElement).closest('.el-table-v2__row')) {
         rightmenu.style.display = 'block'
     }
-
     nextTick(() => {
         if (is_favorite == true) {
             el.innerHTML = t('homerightmenu.unstar')
         } else {
             el.innerHTML = t('homerightmenu.target_star')
+        }
+        if (user_id != localStorage.getItem('userId')) {
+            elrename.style.display = "none"
+            elcopyfile.style.display = "none"
+            eldeletefile.style.display="none"
+        } else {
+            elrename.style.display = "block"
+            elcopyfile.style.display = "block"
+            eldeletefile.style.display="block"
         }
     })
     docId.value = id
