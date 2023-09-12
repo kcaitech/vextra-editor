@@ -18,9 +18,10 @@
 import * as user_api from '@/apis/users'
 import * as team_api from '@/apis/team'
 import { ElMessage } from 'element-plus'
-import { onMounted, ref, onUnmounted, nextTick, Ref, inject } from "vue"
+import { onMounted, ref, onUnmounted, nextTick, Ref, inject, watch } from "vue"
 import { useI18n } from 'vue-i18n'
-import { router } from '@/router'
+import { router } from '@/router';
+import { useRoute } from 'vue-router'
 import FileShare from '@/components/Document/Toolbar/Share/FileShare.vue'
 import tablelist from '@/components/AppHome/tablelist.vue'
 import { UserInfo } from '@/context/user';
@@ -49,6 +50,7 @@ const props = defineProps<{
     currentProject: any
 }>()
 const { t } = useI18n()
+const route = useRoute();
 const isLoading = ref(false)
 const showFileShare = ref<boolean>(false)
 const shareSwitch = ref(true)
@@ -65,10 +67,14 @@ const moveVisible = ref(false);
 const projectItem = ref<any>({});
 const is_project = ref(false);
 //获取服务器我的文件列表
-async function getDoucment() {
+async function getDoucment(id: string) {
+    let projectId = id
+    if(!id || id === '0') {
+        projectId = route.params.id as string
+    }
     isLoading.value = true
     try {
-        const { data } = await team_api.getDoucmentListAPI({project_id: props.currentProject.project.id})
+        const { data } = await team_api.getDoucmentListAPI({project_id: projectId})
         if (data == null) {
             noNetwork.value = true
         } else {
@@ -97,7 +103,7 @@ const { projectList, saveProjectData, is_favor, favoriteList, updateFavor, is_te
 };
 
 const refreshDoc = () => {
-    getDoucment()
+    getDoucment(props.currentProject.project.id)
 }
 
 const newProjectFill = () => {
@@ -256,12 +262,13 @@ const onSelectType = (type: number) => {
     selectValue.value = type
 }
 
-// watch(lists, (Nlist) => {
-//     emits('data-update', Nlist, t('home.modification_time'))
-// }, { deep: true })
+watch(() => route.params, (v) => {
+    getDoucment(v.id as string);
+})
 
 onMounted(() => {
-    getDoucment()
+    const id = props.currentProject.project.id
+    getDoucment(id)
     getPageHeight()
     window.addEventListener('resize', getPageHeight)
 })

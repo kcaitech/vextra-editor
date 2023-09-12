@@ -44,7 +44,7 @@ const { teamData, projectList } = inject('shareData') as {
 }
 const activeNames = ref();
 const pList = computed(() => {
-    return projectList.value.filter(item => item.project.team_id === activeNames.value && item.self_perm_type >= 3);
+    return projectList.value.filter(item => item.project.team_id === activeNames.value && item.self_perm_type >= 3 && item.project.id !== props.projectItem.project.id);
 })
 const teamName = computed(() => {
     return teamData.value.filter(item => item.team.id === props.projectItem.project.team_id)[0].team.name

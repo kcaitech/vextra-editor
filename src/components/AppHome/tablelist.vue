@@ -144,14 +144,20 @@ const columns: Column<any>[] = [
         width: 500,
         minWidth: 150,
         align: 'center',
-        cellRenderer: ({ rowData: { document: { deleted_at }, document_access_record: { last_access_time } } }) => {
+        cellRenderer: ({ rowData: { document: { deleted_at, created_at }, document_access_record: { last_access_time, id } } }) => {
             let displayContent;
+            console.log(props.data,'document');
+            
             if (props.iconlist.includes('restore')) {
                 displayContent = <span>{deleted_at}</span>;
             } else {
-                displayContent = <span>{last_access_time}</span>;
+                if(id === '0') {
+                    let time = created_at.split('.')[0]
+                    displayContent = <span>{time}</span>;
+                }else {
+                    displayContent = <span>{last_access_time}</span>;
+                }
             }
-
             return (
                 <>
                     {displayContent}

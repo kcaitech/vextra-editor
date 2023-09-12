@@ -131,9 +131,11 @@ watch(projectType, (v) => {
     if (v === projectOptions[0].label) {
         params.public_switch = true;
         projectList.value[index].project.public_switch = true;
+        currentProject.value[0].project.public_switch = true;
     } else {
         params.public_switch = false;
         projectList.value[index].project.public_switch = false;
+        currentProject.value[0].project.public_switch = false;
     }
     setProjectInvitedInfo();
 })
@@ -229,7 +231,7 @@ onMounted(() => {
                     </div>
                     <div class="link" v-if="linkSwitch">
                         <el-input :value="sharelink" :readonly="true" />
-                        <div class="qrcode" @click="produceQrcode"><svg-icon icon-class="qrcode"></svg-icon></div>
+                        <!-- <div class="qrcode" @click="produceQrcode"><svg-icon icon-class="qrcode"></svg-icon></div> -->
                     </div>
                     <div class="qrcode-box" v-if="!is_qrcode">
                     </div>
