@@ -1,13 +1,14 @@
 <script setup lang='ts'>
 import { Context } from '@/context';
-import { TextShape } from '@kcdesign/data';
+import { Shape, Text } from '@kcdesign/data';
 import { Matrix } from '@kcdesign/data';
 import { ref, reactive, onMounted, onUnmounted, watch } from 'vue';
 import { Selection } from '@/context/selection';
 import { genRectPath } from '../../common';
 import { WorkSpace } from '@/context/workspace';
+import { throttle } from '../../common';
 const props = defineProps<{
-    shape: TextShape,
+    shape: Shape & { text: Text },
     matrix: number[],
     context: Context
 }>();
@@ -19,12 +20,11 @@ const selectPath = ref("");
 const boundrectPath = ref("");
 const bounds = reactive({ left: 0, top: 0, right: 0, bottom: 0 }); // viewbox
 let cursor_points: { x: number, y: number }[] = [];
-
-function update() {
+const update = throttle(_update, 5);
+function _update() {
+    if (!props.context.workspace.shouldSelectionViewUpdate) return;
+    // if (!props.shape.text) return;
     const selection = props.context.selection;
-    // const m2p = props.shape.matrix2Root();
-    // matrix.reset(m2p);
-    // matrix.multiAtLeft(props.matrix);
     matrix.reset(props.matrix);
     const frame = props.shape.frame;
     const points = [
@@ -49,55 +49,39 @@ function update() {
         else if (point.y > bounds.bottom) bounds.bottom = point.y;
         return bounds;
     }, bounds)
-
-    if (selection.cursorStart !== selection.cursorEnd) {
+    const text_selection = props.context.textSelection;
+    if (text_selection.cursorStart !== text_selection.cursorEnd) {
         isCursor.value = false;
         // selected range
-        const start = selection.cursorStart;
-        const end = selection.cursorEnd;
+        const start = text_selection.cursorStart;
+        const end = text_selection.cursorEnd;
         selectPath.value = genRectPath(props.shape.text.locateRange(start, end).map((point) => matrix.computeCoord2(point.x, point.y)));
     } else {
         isCursor.value = true;
         // cursor
-        const cursorAtBefore = selection.cursorAtBefore;
-        const index = selection.cursorStart;
+        const cursorAtBefore = text_selection.cursorAtBefore;
+        const index = text_selection.cursorStart;
         const cursor = props.shape.text.locateCursor(index, cursorAtBefore);
         if (!cursor) {
             cursor_points = [];
             cursorPath.value = "";
         } else {
-            cursor_points = cursor.cursorPoints.map((point) => matrix.computeCoord2(point.x, point.y))
+            cursor_points = cursor.cursorPoints.map((point) => matrix.computeCoord2(point.x, point.y));
             cursorPath.value = genCursorPath(cursor_points);
         }
     }
 }
-function selectionWatcher(...args: any[]) {
-    if (args.indexOf(Selection.CHANGE_TEXT) >= 0) {
+function selectionWatcher(t: number) {
+    if (t === Selection.CHANGE_TEXT) {
         update();
         cursor_tracking(cursor_points);
+    } else if (t === Selection.CHANGE_SHAPE || t === Selection.CHANGE_PAGE) {
+        const text_selection = props.context.textSelection;
+        text_selection.reset();
+        cursorPath.value = "";
+        selectPath.value = "";
     }
-    if (args.indexOf(Selection.CHANGE_SHAPE) >= 0) update();
 }
-watch(() => props.matrix, update);
-watch(() => props.shape, (value, old) => {
-    old.unwatch(update);
-    value.watch(update);
-    update();
-})
-
-onMounted(() => {
-    const selection = props.context.selection;
-    props.shape.watch(update);
-    selection.watch(selectionWatcher);
-    update();
-})
-
-onUnmounted(() => {
-    const selection = props.context.selection;
-    props.shape.unwatch(update);
-    selection.unwatch(selectionWatcher);
-})
-
 function genCursorPath(cursor: { x: number, y: number }[]): string {
     if (cursor.length !== 2) return "";
     const p0 = cursor[0];
@@ -128,6 +112,23 @@ function cursor_tracking(ps: { x: number, y: number }[]) {
         workspace.notify(WorkSpace.MATRIX_TRANSFORMATION);
     }
 }
+watch(() => props.matrix, update);
+watch(() => props.shape, (value, old) => {
+    old.unwatch(update);
+    value.watch(update);
+    update();
+})
+onMounted(() => {
+    const selection = props.context.selection;
+    props.shape.watch(update);
+    selection.watch(selectionWatcher);
+    update();
+})
+onUnmounted(() => {
+    const selection = props.context.selection;
+    props.shape.unwatch(update);
+    selection.unwatch(selectionWatcher);
+})
 </script>
 <template>
     <path v-if="isCursor" :d="cursorPath" fill="none" stroke='#865dff' stroke-width="2.5px" class="scan">

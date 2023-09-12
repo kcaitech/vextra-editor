@@ -1,7 +1,6 @@
 import { Context } from "@/context";
-import { PageXY } from "@/context/selection";
+import { PageXY, XY } from "@/context/selection";
 import { GroupShape, Shape, ShapeType } from "@kcdesign/data";
-import { bool } from "aws-sdk/clients/signer";
 import { v4 as uuid } from "uuid";
 interface Scout {
     path: SVGPathElement
@@ -40,12 +39,12 @@ function scout(context: Context): Scout {
         return result;
     }
 
-    function isPointInPath(d: string, point: PageXY): boolean {
+    function isPointInPath(d: string, point: XY): boolean {
         SVGPoint.x = point.x, SVGPoint.y = point.y; // 根据鼠标位置确定point所处位置
         path.setAttributeNS(null, 'd', d);
         return (path as SVGGeometryElement).isPointInFill(SVGPoint);
     }
-    function isPointInStroke(d: string, point: PageXY): boolean {
+    function isPointInStroke(d: string, point: XY): boolean {
         SVGPoint.x = point.x, SVGPoint.y = point.y;
         path.setAttributeNS(null, 'd', d);
         path.setAttributeNS(null, 'stroke-width', '14');
@@ -232,7 +231,7 @@ function forGroupHover(scout: Scout, g: Shape[], position: PageXY, selected: Sha
 // 判断一个编组中是否已经有子元素被选中
 function isPartSelect(shape: Shape, selected: Shape): boolean {
     let result: boolean = false;
-    const c = (shape as GroupShape).childs;
+    const c = shape instanceof GroupShape ? shape.childs : undefined;
     if (c) {
         for (let i = 0; i < c.length; i++) {
             if (c[i].id == selected.id) {

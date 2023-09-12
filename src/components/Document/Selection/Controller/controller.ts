@@ -11,15 +11,16 @@ import { WorkSpace } from "@/context/workspace";
 import { Action } from "@/context/tool";
 import { AsyncTransfer } from "@kcdesign/data";
 import { debounce } from "lodash";
-import { paster_short } from '@/utils/clipaboard';
+import { paster_short } from '@/utils/clipboard';
 import { sort_by_layer } from '@/utils/group_ungroup';
 import { Comment } from '@/context/comment';
 import { useI18n } from 'vue-i18n';
 import { permIsEdit } from '@/utils/content';
-import { distance2apex, distance2apex2, get_frame, update_pg_1, get_pg_by_frame, update_pg_2 } from '@/utils/assist';
+import { distance2apex, distance2apex2, get_frame, get_pg_by_frame, update_pg_2 } from '@/utils/assist';
 import { Asssit } from '@/context/assist';
 import { Menu } from '@/context/menu';
-export function useController(context: Context) {
+
+export function useControllerCustom(context: Context, i18nT: Function) {
     const workspace = computed(() => context.workspace);
     const matrix = new Matrix();
     const dragActiveDis = 3;
@@ -38,7 +39,7 @@ export function useController(context: Context) {
     let stickedY: boolean = false;
     let t_e: MouseEvent | undefined;
     let speed: number = 0;
-    const { t } = useI18n();
+
     function _migrate(shapes: Shape[], start: ClientXY, end: ClientXY) {
         if (shapes.length) {
             const ps: PageXY = matrix.computeCoord(start.x, start.y);
@@ -50,6 +51,7 @@ export function useController(context: Context) {
             if (m && asyncTransfer) {
                 shapes = sort_by_layer(context, shapes);
                 asyncTransfer.migrate(targetParent as GroupShape);
+                context.assist.set_collect_target([targetParent as GroupShape], true);
             }
         }
     }
@@ -94,7 +96,15 @@ export function useController(context: Context) {
             if (!scout) return;
             const target = groupPassthrough(scout, scope, startPositionOnPage);
             if (target) context.selection.selectShape(target);
-        } else editing = !editing;
+        } else {
+            editing = !editing;
+            context.workspace.contentEdit(editing);
+            if (editing) {
+                console.log('进入编辑状态！');
+            } else {
+                console.log('取消编辑状态！');
+            }
+        }
     }
     function isMouseOnContent(e: MouseEvent): boolean {
         return (e.target as Element)?.closest(`#content`) ? true : false;
@@ -102,22 +112,22 @@ export function useController(context: Context) {
     function mousedown(e: MouseEvent) {
         if (context.workspace.isEditing) {
             if (isMouseOnContent(e)) {
-                const selected = context.selection.selectedShapes;
-                if (selected.length === 1 && selected[0].type === ShapeType.Text) {
-                    const len = (selected[0] as TextShape).text.length;
-                    const t = (selected[0] as TextShape).text.getText(0, len).replaceAll('\n', '');
+                shapes = context.selection.selectedShapes;
+                if (shapes.length === 1 && shapes[0].type === ShapeType.Text) {
+                    const len = (shapes[0] as TextShape).text.length;
+                    const t = (shapes[0] as TextShape).text.getText(0, len).replaceAll('\n', '');
                     if (t.length) {
-                        const save = selected.slice(0, 1);
+                        const save = shapes.slice(0, 1);
                         context.selection.resetSelectShapes();
                         context.selection.rangeSelectShape(save);
                     } else {
-                        const editor = context.editor4Shape(selected[0]);
+                        const editor = context.editor4Shape(shapes[0]);
                         editor.delete();
                         context.selection.resetSelectShapes();
                     }
+                    return;
                 }
             }
-            return;
         }
         if (context.workspace.isPageDragging) return;
         if (isElement(e)) {
@@ -128,13 +138,8 @@ export function useController(context: Context) {
             preTodo(e);
         } else if (isMouseOnContent(e)) {
             const selection = context.selection;
-            const selected = selection.selectedShapes;
             const h = selection.hoveredShape;
-            if (!h) {
-                selection.resetSelectShapes();
-            } else {
-                e.shiftKey ? selection.rangeSelectShape([...selected, h]) : selection.selectShape(h);
-            }
+            if (!h) selection.resetSelectShapes();
         }
     }
     function mousemove(e: MouseEvent) {
@@ -317,10 +322,12 @@ export function useController(context: Context) {
         }
     }
     function keyboardHandle(e: KeyboardEvent) {
-        handle(e, context, t);
+        handle(e, context, i18nT);
     }
     function selection_watcher(t?: number) {
         if (t === Selection.CHANGE_SHAPE) { // 选中的图形发生改变，初始化控件
+            const selected = context.selection.selectedShapes;
+            if (selected.length === 1 && selected[0].type === ShapeType.Table) return dispose();
             initController();
             editing = false;
             context.workspace.contentEdit(false);
@@ -342,7 +349,8 @@ export function useController(context: Context) {
         timerClear();
         context.cursor.cursor_freeze(false);
     }
-    onMounted(() => {
+    function init() {
+        shapes = context.selection.selectedShapes;
         context.workspace.watch(workspace_watcher);
         context.selection.watch(selection_watcher);
         window.addEventListener('blur', windowBlur);
@@ -351,14 +359,27 @@ export function useController(context: Context) {
         checkStatus();
         initController();
         context.workspace.contentEdit(false);
-    })
-    onUnmounted(() => {
+    }
+    function dispose() {
         context.workspace.unwatch(workspace_watcher);
         context.selection.unwatch(selection_watcher);
         window.removeEventListener('blur', windowBlur);
         document.removeEventListener('keydown', keyboardHandle);
         document.removeEventListener('mousedown', mousedown);
         timerClear();
+    }
+    return { isDblClick, isEditing, isDrag, init, dispose };
+}
+
+export function useController(context: Context) {
+    const { t } = useI18n();
+
+    const ctrl = useControllerCustom(context, t);
+    onMounted(() => {
+        ctrl.init();
     })
-    return { isDblClick, isEditing, isDrag };
+    onUnmounted(() => {
+        ctrl.dispose();
+    })
+    return ctrl;
 }

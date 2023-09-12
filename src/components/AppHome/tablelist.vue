@@ -14,7 +14,7 @@
                     <template #empty>
                         <div v-if="props.type === 'project'" class="datanull">
                             <p>项目没有任何文件</p>
-                            <button type="button" >新建文件</button>
+                            <button type="button" @click="newProjectFill">新建文件</button>
                         </div>
                         <div v-else-if="empty" class="flex items-center justify-center h-100%">
                             <el-empty :style="{ 'height': height - 50 + 'px' }" :description="t('home.table_empty_tips')" />
@@ -29,7 +29,7 @@
     </div>
 </template>
 <script setup lang="tsx">
-import { ref } from 'vue'
+import { ref, watchEffect } from 'vue'
 import { Share, Delete, Remove, Loading as LoadingIcon } from '@element-plus/icons-vue'
 import type { Column, RowClassNameGetter } from 'element-plus'
 import { useI18n } from 'vue-i18n'
@@ -47,6 +47,7 @@ const props = defineProps<{
     iconlist: any
     noNetwork: boolean
     type?: string
+    address?: boolean
 }>()
 
 watch(() => props.data, () => {
@@ -81,7 +82,8 @@ const emits = defineEmits([
     'ndelete',
     'exit_share',
     'dbclickopen',
-    'refreshDoc'
+    'refreshDoc',
+    'newProjectFill'
 ])
 
 const selectedId = ref(-1)
@@ -89,6 +91,9 @@ const scrolltop = ref(0)
 
 const refreshDoc = () => {
     emits('refreshDoc')
+}
+const newProjectFill = () => {
+    emits('newProjectFill');
 }
 
 const rightmenu = (e: any) => {
@@ -287,6 +292,20 @@ const columns: Column<any>[] = [
 
     },
 ]
+
+watchEffect(() => {
+    if(props.address) {
+        columns.splice(3, 0, {
+            key: 'address',
+            dataKey: 'document',
+            title: `文件位置`,
+            width: 500,
+            minWidth: 150,
+            align: 'center',
+            cellRenderer: ({ cellData: { size } }) => <span>我的文件</span>,
+        },)
+    }
+})
 
 </script>
 <style lang="scss" scoped>

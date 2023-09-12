@@ -104,7 +104,7 @@ const selectShape = (e: MouseEvent) => {
 <template>
     <div class="container-name" @mouseenter="hoverShape" @mouseleave="unHoverShape" @mousedown.stop="selectShape"
         @mousemove.stop data-area="controller">
-        <div class="name" :class="{ selected: selected, active: hover }" :style="{ maxWidth: props.maxWidth + 'px' }"
+        <div class="name" :class="{ selected, active: hover }" :style="{ maxWidth: props.maxWidth + 'px' }"
             @dblclick="onRename">{{ props.name }}</div>
         <input v-if="isInput" type="text" :style="{ maxWidth: props.maxWidth + 'px', width: inputWidth + 'px' }"
             ref="nameInput" class="rename" @input="onInputName" @change="ChangeReName">
@@ -121,6 +121,7 @@ const selectShape = (e: MouseEvent) => {
         overflow: hidden;
         padding-left: 2px;
         background-color: transparent;
+        color: #bbb;
     }
 
     .rename {

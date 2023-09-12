@@ -26,6 +26,9 @@ const teamnum = ref(0);
 const showInForm = ref(false);
 const applyList = ref<any[]>([]);
 const teamApplyList = ref<any>([]);
+const projectApplyList = ref<any>([]);
+const notifyPApplyList = ref<any>([]);
+const notifyTApplyList = ref<any>([]);
 const search = ref('');
 const SearchList = ref<any[]>([]);
 const showSearchHistory = ref(false);
@@ -60,7 +63,8 @@ const getProjectApplyList = async () => {
     try {
         const { data } = await team_api.getTeamProjectApplyAPI();
         if (data) {
-            totalList.value = [...data, ...teamApplyList.value];
+            projectApplyList.value = data;
+            totalList.value = [...data, ...teamApplyList.value, ...notifyPApplyList.value, ...notifyTApplyList.value];
             totalList.value.sort((a: any, b: any) => {
                 const timeA = new Date(a.request.created_at).getTime();
                 const timeB = new Date(b.request.created_at).getTime();
@@ -79,18 +83,61 @@ const getTeamApply = async () => {
         const { data } = await team_api.getTeamApplyAPI();
         if (data) {
             teamApplyList.value = data;
+            totalList.value = [...data, ...projectApplyList.value, ...notifyPApplyList.value, ...notifyTApplyList.value];
+            totalList.value.sort((a: any, b: any) => {
+                const timeA = new Date(a.request.created_at).getTime();
+                const timeB = new Date(b.request.created_at).getTime();
+                // 返回结果以实现降序排序
+                return timeB - timeA;
+            });
+            teamnum.value = totalList.value.filter((item: any) => item.request.status === 0).length;
             getProjectApplyList();
         }
     } catch (err) {
         console.log(err);
     }
 }
+const getProjectNotice = async () => {
+    try {
+        const { data } = await team_api.getProjectNoticeAPI();
+        if (data) {
+            notifyPApplyList.value = data;
+            totalList.value = [...data, ...projectApplyList.value, ...teamApplyList.value, ...notifyTApplyList.value];
+            totalList.value.sort((a: any, b: any) => {
+                const timeA = new Date(a.request.created_at).getTime();
+                const timeB = new Date(b.request.created_at).getTime();
+                // 返回结果以实现降序排序
+                return timeB - timeA;
+            });
+        }
+    } catch (err) {
+        console.log(err);
+    }
+}
+const getTeamNotice = async () => {
+    try {
+        const { data } = await team_api.getTeamNoticeAPI();
+        if (data) {
+            notifyTApplyList.value = data;
+            totalList.value = [...data, ...projectApplyList.value, ...notifyPApplyList.value, ...teamApplyList.value];
+            totalList.value.sort((a: any, b: any) => {
+                const timeA = new Date(a.request.created_at).getTime();
+                const timeB = new Date(b.request.created_at).getTime();
+                // 返回结果以实现降序排序
+                return timeB - timeA;
+            });
+        }
+    } catch (err) {
+        console.log(err);
+    }
+}
+
 watch(totalList, () => {
     teamnum.value = totalList.value.filter((item: any) => item.request.status === 0).length;
-}, {deep: true})
+}, { deep: true })
 watch(applyList, () => {
     applynum.value = applyList.value.filter(item => item.apply.status === 0).length;
-}, {deep: true})
+}, { deep: true })
 
 const handleClickOutside = (event: MouseEvent) => {
     const e = event.target as HTMLElement
@@ -183,10 +230,16 @@ const itemClick = (e: MouseEvent) => {
 let timer: any = null
 getApplyList();
 getTeamApply();
+getProjectNotice();
+getTeamNotice();
+getProjectApplyList();
 onMounted(() => {
     timer = setInterval(() => {
         getApplyList();
         getTeamApply();
+        getProjectNotice();
+        getTeamNotice();
+        getProjectApplyList();
     }, 60000)
     document.addEventListener('mousedown', handleClickOutside)
     const searchList = localStorage.getItem('searchlist')

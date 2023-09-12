@@ -1,29 +1,34 @@
 
 <template>
     <tablelist :data="lists" :iconlist="iconlists" @share="Sharefile" @deletefile="Deletefile" @dbclickopen="openDocument" :type="currentProject.self_perm_type > 2 ? 'project' : ''"
-        @updatestar="Starfile" @rightMeun="rightmenu" :noNetwork="noNetwork" @refreshDoc="refreshDoc" />
+        @updatestar="Starfile" @rightMeun="rightmenu" :noNetwork="noNetwork" @refreshDoc="refreshDoc" @newProjectFill="newProjectFill"/>
 
     <listrightmenu :items="items" :data="mydata" @get-doucment="getDoucment" @r-starfile="Starfile" @r-sharefile="Sharefile"
-        @r-removefile="Deletefile" @ropen="openDocument" />
+        @r-removefile="Deletefile" @ropen="openDocument" @moveFillAddress="moveFillAddress"/>
 
     <div v-if="showFileShare" class="overlay"></div>
     <FileShare v-if="showFileShare" @close="closeShare" :docId="docId" :selectValue="selectValue" :userInfo="userInfo"
         :docUserId="docUserId" @select-type="onSelectType" @switch-state="onSwitch" :shareSwitch="shareSwitch"
-        :pageHeight="pageHeight" :project="true">
+        :pageHeight="pageHeight" :project="is_project">
     </FileShare>
+    <MoveProjectFill :title="'移动文件位置'" :confirm-btn="'移动'"  :projectItem="projectItem" :doc="mydata" :projectVisible="moveVisible" @clodeDialog="clodeDialog" @moveFillSeccess="moveFillSeccess"></MoveProjectFill>
 </template>
 
 <script setup lang="ts">
 import * as user_api from '@/apis/users'
 import * as team_api from '@/apis/team'
 import { ElMessage } from 'element-plus'
-import { onMounted, ref, onUnmounted, nextTick, watch } from "vue"
+import { onMounted, ref, onUnmounted, nextTick, Ref, inject } from "vue"
 import { useI18n } from 'vue-i18n'
 import { router } from '@/router'
 import FileShare from '@/components/Document/Toolbar/Share/FileShare.vue'
 import tablelist from '@/components/AppHome/tablelist.vue'
 import { UserInfo } from '@/context/user';
 import listrightmenu from "@/components/AppHome/listrightmenu.vue"
+import MoveProjectFill from '../MoveProjectFill.vue';
+import { Repository, CoopRepository, Document } from '@kcdesign/data';
+import { createDocument } from '@kcdesign/data';
+import { DocEditor } from '@kcdesign/data';
 
 interface data {
     document: {
@@ -31,13 +36,14 @@ interface data {
         name: string
         doc_type: number
         user_id: string
+        project_id: string
     }
     document_favorites: {
         is_favorite: boolean
     }
 }
 
-const items = ['open', 'newtabopen', 'share', 'target_star', 'rename', 'copyfile', 'deletefile']
+const items = ['open', 'newtabopen', 'share', 'target_star', 'movefill', 'rename', 'copyfile', 'deletefile']
 
 const props = defineProps<{
     currentProject: any
@@ -55,7 +61,9 @@ const noNetwork = ref(false)
 const lists = ref<any[]>([])
 const userInfo = ref<UserInfo | undefined>()
 const iconlists = ref(['star', 'share', 'delete']);
-
+const moveVisible = ref(false);
+const projectItem = ref<any>({});
+const is_project = ref(false);
 //获取服务器我的文件列表
 async function getDoucment() {
     isLoading.value = true
@@ -78,8 +86,49 @@ async function getDoucment() {
     isLoading.value = false
 }
 
+const { projectList, saveProjectData, is_favor, favoriteList, updateFavor, is_team_upodate, teamUpdate } = inject('shareData') as {
+    projectList: Ref<any[]>;
+    favoriteList: Ref<any[]>;
+    saveProjectData: (data: any[]) => void;
+    is_favor: Ref<boolean>;
+    updateFavor: (b: boolean) => void;
+    is_team_upodate: Ref<boolean>;
+    teamUpdate: (b: boolean) => void;
+};
+
 const refreshDoc = () => {
     getDoucment()
+}
+
+const newProjectFill = () => {
+    localStorage.setItem('project_id', props.currentProject.project.id);
+    const repo = new Repository();
+    const nd = createDocument(t('system.new_file'), repo);
+    const coopRepo = new CoopRepository(nd, repo)
+    const editor = new DocEditor(nd, coopRepo);
+    const page = editor.create(t('system.page1'));
+    editor.insert(0, page);
+    window.document.title = nd.name;
+    (window as any).skrepo = coopRepo;
+    (window as any).sketchDocument = nd;
+    router.push({ name: 'document'});
+}
+
+const moveFillAddress = (data: any) => {
+    console.log(data,'data');
+
+    moveVisible.value = true;
+}
+
+const clodeDialog = () => {
+    moveVisible.value = false;
+}
+const moveFillSeccess = () => {
+    clodeDialog();
+    const tiemr = setTimeout(() => {
+        refreshDoc();
+        clearTimeout(tiemr);
+    }, 300)
 }
 
 //转换文件大小格式
@@ -131,8 +180,11 @@ const Sharefile = (data: data) => {
         showFileShare.value = false
         return
     }
-    console.log(data,'data');
-    
+    if(data.document.project_id && data.document.project_id !== '0') {
+        is_project.value = true;
+    }else {
+        is_project.value = false;
+    }
     docUserId.value = data.document.user_id
     docId.value = data.document.id
     selectValue.value = data.document.doc_type !== 0 ? data.document.doc_type : data.document.doc_type
@@ -184,6 +236,7 @@ const rightmenu = (e: MouseEvent, data: data) => {
     })
     docId.value = id
     mydata.value = data
+    projectItem.value = projectList.value.filter(item => item.project.id === '175189024317652992')[0];
 }
 
 const userData = ref({

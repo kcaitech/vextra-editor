@@ -1,13 +1,13 @@
 
 <template>
-    <tablelist :data="lists" :iconlist="iconlists" @share="Sharefile" @remove="Removefile" @dbclickopen="openDocument"
-        @updatestar="Starfile" @rightMeun="rightmenu" :noNetwork="noNetwork" @refreshDoc="refreshDoc"/>
-    <listrightmenu :items="items" :data="mydata" @get-userdata="getUserdata" @r-starfile="Starfile" @r-sharefile="Sharefile"
-        @r-removehistory="Removefile" @ropen="openDocument"/>
-    <FileShare v-if="showFileShare" @close="closeShare" :docId="docId" @switch-state="onSwitch" :userInfo="userInfo"  :docUserId="docUserId"
-        :selectValue="selectValue" @select-type="onSelectType" :shareSwitch="shareSwitch" :pageHeight="pageHeight">
-    </FileShare>
-    <div v-if="showFileShare" class="overlay"></div>
+        <tablelist :data="lists" :iconlist="iconlists" @share="Sharefile" @remove="Removefile" @dbclickopen="openDocument" :address="true"
+            @updatestar="Starfile" @rightMeun="rightmenu" :noNetwork="noNetwork" @refreshDoc="refreshDoc"/>
+        <listrightmenu :items="items" :data="mydata" @get-userdata="getUserdata" @r-starfile="Starfile" @r-sharefile="Sharefile"
+            @r-removehistory="Removefile" @ropen="openDocument"/>
+        <FileShare v-if="showFileShare" @close="closeShare" :docId="docId" @switch-state="onSwitch" :userInfo="userInfo"  :docUserId="docUserId" :project="is_project"
+            :selectValue="selectValue" @select-type="onSelectType" :shareSwitch="shareSwitch" :pageHeight="pageHeight">
+        </FileShare>
+        <div v-if="showFileShare" class="overlay"></div>
 </template>
 
 <script setup lang="ts">
@@ -35,9 +35,9 @@ const docUserId = ref('')
 const mydata = ref()
 const noNetwork = ref(false)
 const iconlists = ref(['star', 'share', 'remove'])
-// const emits = defineEmits(['data-update'])
+const is_project = ref(false);
 const emits = defineEmits<{
-    (e: 'data-update', list: any[], title: string): void
+    (e: 'dataUpdate', list: any[], title: string): void
 }>()
 
 interface data {
@@ -46,6 +46,7 @@ interface data {
         name: string
         doc_type: number
         user_id: string
+        project_id: string
     }
     document_favorites: {
         is_favorite: boolean
@@ -139,6 +140,11 @@ const Sharefile = (data: data) => {
         showFileShare.value = false
         return
     }
+    if(data.document.project_id && data.document.project_id !== '0') {
+        is_project.value = true;
+    }else {
+        is_project.value = false;
+    }
     docUserId.value = data.document.user_id
     userInfo.value = userData.value
     docId.value = data.document.id
@@ -215,7 +221,7 @@ const onSelectType = (type: number) => {
 }
 
 watch(lists, (Nlist) => {
-    emits('data-update', Nlist, t('home.modification_time'))
+    emits('dataUpdate', Nlist, t('home.modification_time'))
 }, { deep: true })
 
 onMounted(() => {

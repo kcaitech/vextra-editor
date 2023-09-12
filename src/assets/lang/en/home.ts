@@ -222,6 +222,7 @@ export const attr: any = {
     'adapt': 'Resize to fit',
     'mixed': 'Mixed',
     'mixed_lang': 'Click + to replace mixed content.',
+    'mixed_cell_lang': 'There are cell Settings, click + set centrally',
     text_advanced_settings: "Text Advanced Settings",
     word_space: 'Word space',
     row_height: 'Line height',
@@ -265,7 +266,10 @@ export const attr: any = {
     unfold: 'Unfold',
     packup: 'Pack up',
     'flip_v': '垂直翻转',
-    'flip_h': '水平翻转'
+    'flip_h': '水平翻转',
+    full_border: 'Full border',
+    outer_border: 'border',
+    inner_border: 'Inner border'
 }
 
 export const login = {

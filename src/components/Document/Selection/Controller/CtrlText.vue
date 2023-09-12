@@ -20,7 +20,7 @@ const props = defineProps<{
     controllerFrame: Point[],
     rotate: number,
     matrix: Matrix,
-    shape: Shape
+    shape: TextShape
 }>();
 
 watch(() => props.shape, (value, old) => {
@@ -35,9 +35,10 @@ const matrix = new Matrix();
 const submatrix = reactive(new Matrix());
 const boundrectPath = ref("");
 const bounds = reactive({ left: 0, top: 0, right: 0, bottom: 0 }); // viewbox
-let editing: boolean = false;
+const editing = ref<boolean>(false); // 是否进入路径编辑状态
 const visible = ref<boolean>(true);
 function update() {
+    if (!props.context.workspace.shouldSelectionViewUpdate) return;
     const m2p = props.shape.matrix2Root();
     matrix.reset(m2p);
     matrix.multiAtLeft(props.matrix);
@@ -86,16 +87,16 @@ function onMouseDown(e: MouseEvent) {
     if (e.button === 0) {
         const workspace = props.context.workspace;
         props.context.menu.menuMount();
-        if (!editing && isDblClick()) {
+        if (!editing.value && isDblClick()) {
             if (props.context.navi.focusText) {
                 props.context.navi.set_focus_text();
             }
-            editing = true;
-            workspace.contentEdit(editing);
+            editing.value = true;
+            workspace.contentEdit(editing.value);
             props.context.cursor.setType('scan-0');
         }
-        if (!editing) return;
-        const selection = props.context.selection;
+        if (!editing.value) return;
+        const selection = props.context.textSelection;
         workspace.setCtrl('controller');
         const root = workspace.root
         matrix.reset(props.matrix);
@@ -112,9 +113,9 @@ function onMouseDown(e: MouseEvent) {
 }
 function be_editor(index?: number) {
     const workspace = props.context.workspace;
-    const selection = props.context.selection;
-    editing = true;
-    workspace.contentEdit(editing);
+    const selection = props.context.textSelection;
+    editing.value = true;
+    workspace.contentEdit(editing.value);
     props.context.cursor.setType('scan-0');
     if (index !== undefined) {
         downIndex = { index, before: true };
@@ -123,10 +124,10 @@ function be_editor(index?: number) {
 }
 function onMouseUp(e: MouseEvent) {
     e.stopPropagation();
-    if (!editing) return;
+    if (!editing.value) return;
     document.removeEventListener("mousemove", onMouseMove);
     document.removeEventListener("mouseup", onMouseUp);
-    const selection = props.context.selection;
+    const selection = props.context.textSelection;
     const workspace = props.context.workspace;
     const { clientX, clientY } = e;
     const root = workspace.root;
@@ -134,35 +135,35 @@ function onMouseUp(e: MouseEvent) {
     const xy = matrix.inverseCoord(clientX - root.x, clientY - root.y);
     const locate = selection.locateText(xy.x, xy.y);
     if (downIndex.index === locate.index) {
-        if (locate.placeholder) selection.setCursor(locate.index + 1, false);
-        else selection.setCursor(locate.index, locate.before);
+        if (locate.placeholder) selection.setCursor(locate.index + 1, false, props.shape.text);
+        else selection.setCursor(locate.index, locate.before, props.shape.text);
     }
     else {
-        selection.selectText(downIndex.index, locate.index, locate.before);
+        selection.selectText(downIndex.index, locate.index, props.shape.text);
     }
     props.context.workspace.setCtrl('page');
 }
 
 function onMouseMove(e: MouseEvent) {
     e.stopPropagation();
-    if (!editing) return;
+    if (!editing.value) return;
     const workspace = props.context.workspace;
-    const selection = props.context.selection;
+    const selection = props.context.textSelection;
     const { clientX, clientY } = e;
     const root = workspace.root;
     matrix.reset(props.matrix);
     const xy = matrix.inverseCoord(clientX - root.x, clientY - root.y);
     const locate = selection.locateText(xy.x, xy.y);
     if (downIndex.index === locate.index) {
-        if (locate.placeholder) selection.setCursor(locate.index + 1, false);
-        else selection.setCursor(locate.index, locate.before);
+        if (locate.placeholder) selection.setCursor(locate.index + 1, false, props.shape.text);
+        else selection.setCursor(locate.index, locate.before, props.shape.text);
     }
     else {
-        selection.selectText(downIndex.index, locate.index, locate.before);
+        selection.selectText(downIndex.index, locate.index, props.shape.text);
     }
 }
 function mouseenter() {
-    if (editing) props.context.cursor.setType('scan-0');
+    if (editing.value) props.context.cursor.setType('scan-0');
 }
 function mouseleave() {
     props.context.cursor.reset();
@@ -173,10 +174,13 @@ function genViewBox(bounds: { left: number, top: number, right: number, bottom: 
 function workspace_watcher(t?: number) {
     if (t === WorkSpace.TRANSLATING) visible.value = !props.context.workspace.isTranslating;
     else if (t === WorkSpace.INIT_EDITOR) be_editor(0);
+    else if (t === WorkSpace.SELECTION_VIEW_UPDATE) update();
 }
 function selectionWatcher(...args: any[]) {
     if (args.indexOf(Selection.CHANGE_TEXT) >= 0) update();
-    if (args.indexOf(Selection.CHANGE_SHAPE) >= 0) editing = false;
+    if (args.indexOf(Selection.CHANGE_SHAPE) >= 0) {
+        editing.value = false;
+    }
 }
 watch(() => props.matrix, update, { deep: true })
 onMounted(() => {

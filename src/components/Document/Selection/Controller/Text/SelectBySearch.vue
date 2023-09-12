@@ -1,11 +1,11 @@
 <script setup lang='ts'>
 import { Context } from '@/context';
-import { TextShape } from '@kcdesign/data';
+import { Text, Shape } from '@kcdesign/data';
 import { Matrix } from '@kcdesign/data';
 import { ref, onMounted, onUnmounted, watch } from 'vue';
 import { genRectPath } from '../../common';
 const props = defineProps<{
-  shape: TextShape
+  shape: Shape & { text: Text },
   matrix: number[]
   context: Context
 }>();

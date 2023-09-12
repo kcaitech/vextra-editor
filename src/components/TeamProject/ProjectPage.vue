@@ -1,4 +1,5 @@
 <template>
+<<<<<<< HEAD
     <div class="title" v-if="currentProject[0]">
         <div class="left">
             <div class="p">
@@ -17,60 +18,80 @@
                     <div style="padding-top: 3px;"
                         @click.stop="back(currentProject[0].project, currentProject[0].is_in_team)">
                         <svg-icon icon-class="back"></svg-icon>
+=======
+    <div>
+        <div class="title" v-if="currentProject[0]">
+            <div class="left">
+                <div class="p">
+                    <div class="title-p" v-if="!cusname">
+                        <p @dblclick="input_cusname">{{ currentProject[0].project.name }}</p>
+                        <div class="setting" @click="(e) => projectMenu(currentProject[0], e)"><el-icon
+                                style="transform: rotate(90deg); margin-right: 5px;">
+                                <MoreFilled />
+                            </el-icon>
+                            <TeamProjectMenu v-if="showProjecrMenu" :items="menuItem" :data="currentProject[0]" :top="20"
+                                :left="0" @cancelFixed="cancelFixed" @close="closeMenu" @projectSetting="projectSetting"
+                                @reName="input_cusname" @showMembergDialog="showMembergDialog" @delProject="onDelProject"
+                                @exitProject="onExitProject">
+                            </TeamProjectMenu>
+                        </div>
+                        <div style="padding-top: 3px;" @click="back(currentProject[0].project, currentProject[0].is_in_team)">
+                            <svg-icon icon-class="back"></svg-icon>
+                        </div>
+>>>>>>> ff3233035a3d0973f659c65ba58ad7a4b82d150c
                     </div>
+                    <input v-if="cusname" type="text" @input="updateInputNameWidth" v-model="projectName" ref="input"
+                        :style="{ width: inputNameLength + 'px' }">
                 </div>
-                <input v-if="cusname" type="text" @input="updateInputNameWidth" v-model="projectName" ref="input"
-                    :style="{ width: inputNameLength + 'px' }">
+                <div class="span">
+                    <span v-if="!cusdesc" @click="input_cusdesc">{{ currentProject[0].project.description }}</span>
+                    <input v-if="cusdesc" type="text" ref="input" @input="updateInputDescWidth" v-model="projectDesc"
+                        :style="{ width: inputDescLength + 'px' }">
+                </div>
             </div>
-            <div class="span">
-                <span v-if="!cusdesc" @click="input_cusdesc">{{ currentProject[0].project.description }}</span>
-                <input v-if="cusdesc" type="text" ref="input" @input="updateInputDescWidth" v-model="projectDesc"
-                    :style="{ width: inputDescLength + 'px' }">
+            <div class="right">
+                <div @click="cancelFixed">
+                    <svg t="1693476333821" class="icon" viewBox="0 0 1024 1024" version="1.1" xmlns="http://www.w3.org/2000/svg"
+                        p-id="15755" width="24" height="24">
+                        <path d="M0 0m256 0l512 0q256 0 256 256l0 512q0 256-256 256l-512 0q-256 0-256-256l0-512q0-256 256-256Z"
+                            :fill="currentProject[0].is_favor ? '#9775fa' : '#999'" p-id="15756"
+                            data-spm-anchor-id="a313x.search_index.0.i11.6fa73a817d52QG" class="">
+                        </path>
+                        <path
+                            d="M256 767.6416l202.9568-160.9216 80.9728 86.1184s33.792 9.216 35.8656-16.384l-2.0736-87.1424 119.936-138.368 52.2496-3.0464s41.0112-8.2432 11.2896-44.0832l-146.5856-147.584s-39.936-5.12-36.8896 31.744v39.9872l-136.2944 115.8912-84.0192 5.0688s-30.7712 10.24-19.5072 36.9152l78.9504 77.9008L256 767.6416z"
+                            fill="#FFFFFF" p-id="15757" data-spm-anchor-id="a313x.search_index.0.i10.6fa73a817d52QG" class="">
+                        </path>
+                    </svg>
+                </div>
+                <div class="setting" @click="projectSetting"><svg-icon icon-class="gear"></svg-icon></div>
+                <div @click="showMembergDialog"><el-icon>
+                        <User />
+                    </el-icon></div>
             </div>
         </div>
-        <div class="right">
-            <div @click="cancelFixed">
-                <svg t="1693476333821" class="icon" viewBox="0 0 1024 1024" version="1.1" xmlns="http://www.w3.org/2000/svg"
-                    p-id="15755" width="24" height="24">
-                    <path d="M0 0m256 0l512 0q256 0 256 256l0 512q0 256-256 256l-512 0q-256 0-256-256l0-512q0-256 256-256Z"
-                        :fill="currentProject[0].is_favor ? '#9775fa' : '#999'" p-id="15756"
-                        data-spm-anchor-id="a313x.search_index.0.i11.6fa73a817d52QG" class="">
-                    </path>
-                    <path
-                        d="M256 767.6416l202.9568-160.9216 80.9728 86.1184s33.792 9.216 35.8656-16.384l-2.0736-87.1424 119.936-138.368 52.2496-3.0464s41.0112-8.2432 11.2896-44.0832l-146.5856-147.584s-39.936-5.12-36.8896 31.744v39.9872l-136.2944 115.8912-84.0192 5.0688s-30.7712 10.24-19.5072 36.9152l78.9504 77.9008L256 767.6416z"
-                        fill="#FFFFFF" p-id="15757" data-spm-anchor-id="a313x.search_index.0.i10.6fa73a817d52QG" class="">
-                    </path>
-                </svg>
-            </div>
-            <div class="setting" @click="projectSetting"><svg-icon icon-class="gear"></svg-icon></div>
-            <div @click="showMembergDialog"><el-icon>
-                    <User />
-                </el-icon></div>
+        <div class="team-header" v-if="currentProject[0]">
+            <ul class="menu">
+                <template v-for="(item, index) in items" :key="index">
+                    <li class="item" :class="{ 'activate': itemid === index }" @click.stop="clickEvent(index)"
+                        v-if="(index === 0) || (index === 1 && currentProject[0].self_perm_type === 5 || currentProject[0].self_perm_type === 4 || currentProject[0].self_perm_type === 3)">
+                        {{ item }}
+                    </li>
+                </template>
+            </ul>
         </div>
+        <ProjectFillList v-if="itemid === 0 && currentProject[0]" :currentProject="currentProject[0]"></ProjectFillList>
+        <ProjectRecycleBin v-if="itemid === 1 && currentProject[0]" :currentProject="currentProject[0]"></ProjectRecycleBin>
+        <ProjectAccessSetting v-if="projectSettingDialog" title="邀请项目成员" :data="currentProject[0]" width="500px"
+            @clodeDialog="projectSettingDialog = false" />
+        <div :reflush="reflush !== 0 ? reflush : undefined">
+            <ProjectMemberg v-if="projectMembergDialog" :projectMembergDialog="projectMembergDialog"
+                :currentProject="currentProject[0]" @closeDialog="closeDialog" @exitProject="exitProject"></ProjectMemberg>
+        </div>
+        <ProjectDialog :projectVisible="delVisible" context="删除项目后，将删除项目及项目中所有文件、资料。" :title="'删除项目'" :confirm-btn="'任然删除'"
+            @clode-dialog="closeDelVisible" @confirm="DelProject"></ProjectDialog>
+        <ProjectDialog :projectVisible="exitVisible" context="退出项目后，无法再访问项目中的文件，或使用项目中的资源。" :title="'退出项目'"
+            :confirm-btn="'任然退出'" @clode-dialog="closeExitVisible" @confirm="ExitProject"></ProjectDialog>
     </div>
-    <div class="team-header" v-if="currentProject[0]">
-        <ul class="menu">
-            <template v-for="(item, index) in items" :key="index">
-                <li class="item" :class="{ 'activate': itemid === index }" @click.stop="clickEvent(index)"
-                    v-if="(index === 0) || (index === 1 && currentProject[0].self_perm_type === 5 || currentProject[0].self_perm_type === 4 || currentProject[0].self_perm_type === 3)">
-                    {{ item }}
-                </li>
-            </template>
-        </ul>
-    </div>
-    <ProjectFillList v-if="itemid === 0 && currentProject[0]" :currentProject="currentProject[0]"></ProjectFillList>
-    <ProjectRecycleBin v-if="itemid === 1 && currentProject[0]" :currentProject="currentProject[0]"></ProjectRecycleBin>
-    <ProjectAccessSetting v-if="projectSettingDialog" title="邀请项目成员" :data="currentProject[0]" width="500px"
-        @clodeDialog="projectSettingDialog = false" />
-    <div :reflush="reflush !== 0 ? reflush : undefined">
-        <ProjectMemberg v-if="projectMembergDialog" :projectMembergDialog="projectMembergDialog"
-            :currentProject="currentProject[0]" @closeDialog="closeDialog" @exitProject="exitProject"></ProjectMemberg>
-    </div>
-    <ProjectDialog :projectVisible="delVisible" context="删除项目后，将删除项目及项目中所有文件、资料。" :title="'删除项目'" :confirm-btn="'任然删除'"
-        @clode-dialog="closeDelVisible" @confirm="DelProject"></ProjectDialog>
-    <ProjectDialog :projectVisible="exitVisible" context="退出项目后，无法再访问项目中的文件，或使用项目中的资源。" :title="'退出项目'"
-        :confirm-btn="'任然退出'" @clode-dialog="closeExitVisible" @confirm="ExitProject"></ProjectDialog>
-    <MoveProjectFill :title="'移动文件位置'" :confirm-btn="'移动'" :projectVisible="moveVisible"></MoveProjectFill>
 </template>
 <script setup lang="ts">
 import { Ref, nextTick, inject, ref, onMounted, watch, watchEffect } from 'vue'
@@ -87,7 +108,6 @@ import ProjectMemberg from './ProjectFill/ProjectMemberg.vue';
 import TeamProjectMenu from './TeamProjectMenu.vue';
 import { ElMessage } from 'element-plus';
 import ProjectDialog from './ProjectDialog.vue';
-import MoveProjectFill from './MoveProjectFill.vue';
 
 const { t } = useI18n()
 const itemid = ref(0)
@@ -109,8 +129,46 @@ const showProjecrMenu = ref(false);
 const delVisible = ref(false);
 const memberLen = ref(0);
 const exitVisible = ref(false);
+<<<<<<< HEAD
 const moveVisible = ref(false);
 let menuItem: string[] = ['del_porject', 'visit'];
+=======
+let menuItem: string[] = ['visit'];
+const projectOptions = [
+    {
+        value: 0,
+        label: '公开: 团队全部成员可访问',
+    },
+    {
+        value: 1,
+        label: '非公开: 仅通过链接申请访问',
+    }
+]
+const projectType = ref(projectOptions[1].label);
+const projectPerms = [
+    {
+        value: 1,
+        label: '仅阅读',
+    },
+    {
+        value: 2,
+        label: '可评论',
+    },
+    {
+        value: 3,
+        label: '可编辑',
+    }
+]
+const projectPerm = ref(projectPerms[0].label);
+const params = {
+    project_id: '',
+    public_switch: false,
+    perm_type: 0,
+    invited_switch: false,
+    need_approval: false
+}
+
+>>>>>>> ff3233035a3d0973f659c65ba58ad7a4b82d150c
 
 const { projectList, saveProjectData, is_favor, favoriteList, updateFavor, is_team_upodate, teamUpdate } = inject('shareData') as {
     projectList: Ref<any[]>;
@@ -204,12 +262,9 @@ const delProject = async (id: string) => {
 }
 
 const projectMenu = (project: any, e: MouseEvent) => {
-    menuItem = ['visit'];
+    menuItem = ['visit', 'perm'];
     if (project.self_perm_type === 5 || project.self_perm_type === 4) {
         menuItem.push('rename', 'del');
-        if (memberLen.value > 1) {
-            menuItem.push('perm');
-        }
     }
     if (project.is_favor) {
         menuItem.push('no_fixed');
@@ -222,9 +277,6 @@ const projectMenu = (project: any, e: MouseEvent) => {
     showProjecrMenu.value = true;
 }
 
-const memberLength = (len: number) => {
-    memberLen.value = len;
-}
 
 const projectSetting = () => {
     projectSettingDialog.value = true;

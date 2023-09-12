@@ -1,32 +1,45 @@
 <script setup lang="ts">
 import { RouterView } from 'vue-router';
+import { ref } from 'vue';
 interface Props {
     title: string,
+    recycle: boolean
 }
-
+const active = ref(true);
 const props = defineProps<Props>();
-
-// const emits = defineEmits(['data-update'])
 const emits = defineEmits<{
-    (e: 'data-update', list: any[], title: string): void
+    (e: 'dataUpdate', list: any[], title: string): void
 }>();
 //===>Apphome组件接收
 const update = (data: any, searchtitle: string) => {
     //main目录下传过来的lists和title
-    emits('data-update', data, searchtitle)
+    emits('dataUpdate', data, searchtitle)
 }
 
+const highlight = (state: boolean) => {
+    active.value = state;
+}
 </script>
 
 <template>
     <div v-if="props.title != '' && $route.name != 'TeamPage' && $route.name != 'ProjectPage' && $route.name != 'ProjectShare'"
         class="title">
-        <span>{{ props.title }}</span>
+        <span v-if="recycle">
+            <router-link to="/apphome/meshare">
+                <span @click="highlight(true)" :style="{opacity: active ? '1' : '0.5', fontSize: active ? '18px' : '16px'}">{{ props.title }}</span>
+            </router-link>
+        </span>
+        <span v-else>{{ props.title }}</span>
+        <span v-if="recycle" style="margin-left: 20px;">
+            <router-link to="/apphome/recyclebin">
+                <span @click="highlight(false)" :style="{opacity: active ? '0.5' : '1', fontSize: active ? '16px' : '18px'}">回收站</span>
+            </router-link>
+        </span>
     </div>
     <el-divider
         v-if="props.title != '' && $route.name != 'TeamPage' && $route.name != 'ProjectPage' && $route.name != 'ProjectShare'" />
     <div class="main">
-        <RouterView @data-update="update" />
+        <RouterView @dataUpdate="update" />
     </div>
 </template>
 
@@ -36,9 +49,6 @@ const update = (data: any, searchtitle: string) => {
 }
 
 .title {
-    display: flex;
-    flex-direction: row;
-    justify-content: space-between;
     margin-top: 20px;
 
     span {
@@ -49,6 +59,12 @@ const update = (data: any, searchtitle: string) => {
         overflow: hidden;
         white-space: nowrap;
         text-overflow: ellipsis;
+        color: #000;
+
+        a {
+            text-decoration: none;
+
+        }
     }
 }
 </style>

@@ -54,6 +54,10 @@ function onTableBlur(e: MouseEvent) {
   }
 }
 
+const closeInsert = () => {
+  popoverVisible.value = false
+}
+
 var timer: any = null;
 const onMouseenter = () => {
   timer = setTimeout(() => {
@@ -70,7 +74,7 @@ const onMouseleave = () => {
 <template>
     <div ref="popover" class="popover" tabindex="-1" v-if="popoverVisible">
     <!-- <div ref="popover" class="popover" tabindex="-1"> -->
-        <CreateTable></CreateTable>
+        <CreateTable :context="context" @close="closeInsert"></CreateTable>
     </div>
     <Tooltip :content="`${t('table.table')}`">
         <ToolButton ref="button" :selected="props.active" 

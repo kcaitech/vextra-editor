@@ -45,7 +45,7 @@ export class DocSelectionOp extends Watchable(Object) {
             cursor_end: this.context.selection.cursorEnd,
             cursor_at_before: this.context.selection.cursorAtBefore,
             previous_cmd_id: this.context.communication.docOp.lastServerCmdId ?? this.context.data.lastCmdId,
-        }).catch(err => {})
+        }).catch(err => { })
     }
 
     private _textSelectionTransform(cmd: Cmd) {
@@ -56,7 +56,7 @@ export class DocSelectionOp extends Watchable(Object) {
 
         if (!(shape0 instanceof TextShape) || !(shape0 instanceof TableCell)) return;
 
-        const selection = _selection.getTextSelection(shape0)
+        const selection = this.context.textSelection
         if (selection.cursorStart === -1 || this.context.selection.cursorEnd === -1) return;
         if (cmd.serverId === undefined && !(cmd as any).isUndo) return;
         if (!this.docSelectionOpUpdate) this.docSelectionOpUpdate = throttle(this.update, 1000).bind(this);
@@ -90,8 +90,8 @@ export class DocSelectionOp extends Watchable(Object) {
         }
         if (cursorStart === originalCursorStart && cursorEnd === originalCursorEnd) return;
         this.previousTextSelectionAfterTransform = { cursorStart: cursorStart, cursorEnd: cursorEnd, cursorAtBefore: this.context.selection.cursorAtBefore }
-        if (cursorStart === cursorEnd) this.context.selection.setCursor(cursorStart, this.context.selection.cursorAtBefore);
-        else this.context.selection.selectText(cursorStart, cursorEnd, this.context.selection.cursorAtBefore);
+        if (cursorStart === cursorEnd) this.context.selection.setCursor(cursorStart, this.context.selection.cursorAtBefore, (shape0 as TextShape).text);
+        else this.context.selection.selectText(cursorStart, cursorEnd, (shape0 as TextShape).text);
     }
 
     public async start(token: string, documentId: string, context: Context): Promise<boolean> {

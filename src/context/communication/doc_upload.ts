@@ -11,10 +11,10 @@ export class DocUpload extends Watchable(Object) {
     private startResolve?: (value: boolean) => void
     private isClosed: boolean = false
 
-    public async start(token: string): Promise<boolean> {
+    public async start(token: string, projectId: string): Promise<boolean> {
         if (this.docUpload) return true;
         if (this.startPromise) return await this.startPromise;
-        const documentUpload = _DocUpload.Make(token)
+        const documentUpload = _DocUpload.Make(token, projectId)
         this.startPromise = new Promise<boolean>(resolve => this.startResolve = resolve)
         try {
             if (!await documentUpload.start()) {
