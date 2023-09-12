@@ -1,11 +1,13 @@
 
 <template>
-    <div class="team">
-        <div class="team-info">
-            <div class="team-name">收到的分享项目</div>
+    <div>
+        <div class="team">
+            <div class="team-info">
+                <div class="team-name">收到的分享项目</div>
+            </div>
         </div>
+        <ProjectShareList />
     </div>
-    <ProjectShareList />
 </template>
 <script setup lang="ts">
 import { Ref, computed, inject, ref, onMounted, watch, onUnmounted } from 'vue'
