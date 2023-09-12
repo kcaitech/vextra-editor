@@ -135,6 +135,11 @@ function point_mouseup(event: MouseEvent) {
     workspace.rotating(false);
     workspace.setCtrl('page');
 }
+// 重置路径
+function reset_path() {
+    const editor = props.context.editor4Shape(props.shape);
+    editor.modify_edit_state(false);
+}
 function window_blur() {
     const workspace = props.context.workspace;
     if (isDragging) {
@@ -175,9 +180,9 @@ onUnmounted(() => {
 </script>
 <template>
     <rect v-for="(item, idx) in slices.hor" :key="idx" :x="item.bar.x - 10" :y="item.bar.y - 4" class="bar-h" rx="4" ry="4"
-        @mousedown="(e: MouseEvent) => point_mousedown(e, item)"></rect>
+        @mousedown="(e: MouseEvent) => point_mousedown(e, item)" @dblclick="reset_path"></rect>
     <rect v-for="(item, idx) in slices.ver" :key="idx" :x="item.bar.x - 4" :y="item.bar.y - 10" class="bar-v" rx="4" ry="4"
-        @mousedown="(e: MouseEvent) => point_mousedown(e, item)"></rect>
+        @mousedown="(e: MouseEvent) => point_mousedown(e, item)" @dblclick="reset_path"></rect>
 </template>
 <style lang='scss' scoped>
 .bar-h {
