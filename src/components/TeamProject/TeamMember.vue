@@ -49,6 +49,12 @@
         </div>
     </div>
     <NetworkError v-else @refresh-doc="GetteamMember"></NetworkError>
+    <ProjectDialog :projectVisible="transferCreator" :context="'转让创建者权限后，您将不再拥有该团队，后续作为管理员留在项目中。'" :title="'转移创建者权限'"
+        :confirm-btn="'确定转移'" @clode-dialog="closetransferCreator" @confirm="confirmTransferCreator"></ProjectDialog>
+    <ProjectDialog :projectVisible="outTeamDialog" :context="'移出团队后，该成员无法再访问团中的项目及资源。'" :title="'移出团队'"
+        :confirm-btn="'确认移出'" @clode-dialog="closeOutTeamDialog" @confirm="confirmOutTeamDialog"></ProjectDialog>
+    <ProjectDialog :projectVisible="exitTeamDialog" :context="'退出团队后，团队中的所有项目，文件及资源，将无法再进行访问。'" :title="'离开团队'"
+        :confirm-btn="'确认离开'" @clode-dialog="closeExitTeamDialog" @confirm="confirmExitTeamDialog"></ProjectDialog>
 </template>
 <script setup lang="ts">
 import { onMounted, onUnmounted, ref, inject, Ref, watch, computed } from 'vue';
@@ -58,6 +64,7 @@ import { ElMessage } from 'element-plus'
 import { useI18n } from 'vue-i18n'
 import { router } from '@/router';
 import { all } from 'axios';
+import ProjectDialog from './ProjectDialog.vue';
 
 interface Props {
     searchvalue?: string
@@ -80,6 +87,10 @@ const folds = ref(false)
 const fontName = ref(4)
 const menu = ref<HTMLElement>()
 const listmenu = ref()
+const transferCreator = ref(false);
+const outTeamDialog = ref(false);
+const exitTeamDialog = ref(false);
+const dialogData = ref<any>({})
 const { teamID, teamData, upDateTeamData, is_team_upodate, teamUpdate } = inject('shareData') as {
     teamID: Ref<string>;
     teamData: Ref<[{
@@ -134,6 +145,29 @@ const typeitems = (num: number) => {
         default:
             return null
     }
+}
+
+const closetransferCreator = () => {
+    transferCreator.value = false;
+}
+const confirmTransferCreator = () => {
+    transferCreator.value = false;
+    setcreator(dialogData.value.team_id, dialogData.value.user_id, dialogData.value.name)
+}
+
+const closeOutTeamDialog = () => {
+    outTeamDialog.value = false;
+}
+const confirmOutTeamDialog = () => {
+    outTeamDialog.value = false;
+    deletemember(dialogData.value.team_id, dialogData.value.user_id)
+}
+const closeExitTeamDialog = () => {
+    exitTeamDialog.value = false;
+}
+const confirmExitTeamDialog = () => {
+    exitTeamDialog.value = false;
+    outteam(dialogData.value.team_id)
 }
 
 const GetteamMember = async () => {
@@ -257,6 +291,7 @@ const outteam = async (T: string) => {
         if (code === 0) {
             ElMessage.success(message)
             router.push({ path: '/apphome' })
+            sessionStorage.setItem('index', '1');
             upDateTeamData(teamData.value.filter(item => item.team.id != T))
             teamUpdate(!is_team_upodate.value)
         } else {
@@ -284,15 +319,27 @@ const itemEvent = (item: string, teamid: string, userid: string, perm_type: numb
             })()
         case '转移创建者':
             return (() => {
-                setcreator(teamid, userid, name)
+                transferCreator.value = true;
+                dialogData.value = {
+                    team_id: teamid,
+                    user_id: userid,
+                    name
+                }
             })()
         case '移出团队':
             return (() => {
-                deletemember(teamid, userid)
+                outTeamDialog.value = true;
+                dialogData.value = {
+                    team_id: teamid,
+                    user_id: userid,
+                }
             })()
         case '离开团队':
             return (() => {
-                outteam(teamid)
+                exitTeamDialog.value = true;
+                dialogData.value = {
+                    team_id: teamid,
+                }
             })()
         default:
             break

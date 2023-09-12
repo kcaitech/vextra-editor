@@ -52,6 +52,7 @@ const tohome = (() => {
         time.value -= 1
         if (time.value === 0) {
             router.push({ name: "apphome" })
+            sessionStorage.setItem('index', '1');
             clearInterval(timer)
         }
     }, 1000)
@@ -59,6 +60,7 @@ const tohome = (() => {
 
 const backHome = (() => {
     router.push({ name: "apphome" })
+    sessionStorage.setItem('index', '1');
 })
 
 const appluJoinProject = () => {

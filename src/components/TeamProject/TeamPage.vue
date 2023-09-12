@@ -119,6 +119,7 @@ watch(teamData, (newvalue) => {
         return
     } else {
         router.push({ path: '/apphome' })
+        sessionStorage.setItem('index', '1');
     }
 })
 

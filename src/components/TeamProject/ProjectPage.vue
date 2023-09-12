@@ -4,48 +4,68 @@
             <div class="left">
                 <div class="p">
                     <div class="title-p" v-if="!cusname">
-                        <p @dblclick="input_cusname">{{ currentProject[0].project.name }}</p>
-                        <div class="setting" @click="(e) => projectMenu(currentProject[0], e)"><el-icon
-                                style="transform: rotate(90deg); margin-right: 5px;">
-                                <MoreFilled />
-                            </el-icon>
-                            <TeamProjectMenu v-if="showProjecrMenu" :items="menuItem" :data="currentProject[0]" :top="20"
-                                :left="0" @cancelFixed="cancelFixed" @close="closeMenu" @projectSetting="projectSetting"
-                                @reName="input_cusname" @showMembergDialog="showMembergDialog" @delProject="onDelProject"
-                                @exitProject="onExitProject">
-                            </TeamProjectMenu>
-                        </div>
-                        <div style="padding-top: 3px;" @click="back(currentProject[0].project, currentProject[0].is_in_team)">
-                            <svg-icon icon-class="back"></svg-icon>
-                        </div>
+                        <p @click="input_cusname(currentProject[0])"
+                            :class="{ edit: currentProject[0].self_perm_type === 5 || currentProject[0].self_perm_type === 4 }">
+                            {{ currentProject[0].project.name }}</p>
+                        <Tooltip :content="'项目菜单'" :offset="5">
+                            <div class="setting" @click="(e) => projectMenu(currentProject[0], e)">
+                                <el-icon style="transform: rotate(90deg); margin-right: 5px;">
+                                    <MoreFilled />
+                                </el-icon>
+                                <TeamProjectMenu v-if="showProjecrMenu" :items="menuItem" :data="currentProject[0]"
+                                    :top="20" :left="0" @cancelFixed="cancelFixed" @close="closeMenu"
+                                    @projectSetting="projectSetting" @reName="input_cusname"
+                                    @showMembergDialog="showMembergDialog" @delProject="onDelProject"
+                                    @exitProject="onExitProject">
+                                </TeamProjectMenu>
+                            </div>
+                        </Tooltip>
+                        <Tooltip :content="'回到上一级'" :offset="5">
+                            <div style="padding-top: 3px;"
+                                @click="back(currentProject[0].project, currentProject[0].is_in_team)">
+                                <svg-icon icon-class="back"></svg-icon>
+                            </div>
+                        </Tooltip>
                     </div>
                     <input v-if="cusname" type="text" @input="updateInputNameWidth" v-model="projectName" ref="input"
                         :style="{ width: inputNameLength + 'px' }">
                 </div>
                 <div class="span">
-                    <span v-if="!cusdesc" @click="input_cusdesc">{{ currentProject[0].project.description }}</span>
+                    <span v-if="!cusdesc" @click="input_cusdesc(currentProject[0])"
+                        :class="{ edit: currentProject[0].self_perm_type === 5 || currentProject[0].self_perm_type === 4 }">{{
+                            currentProject[0].project.description.trim().length === 0 ? '点击输入项目描述…' :
+                            currentProject[0].project.description }}</span>
                     <input v-if="cusdesc" type="text" ref="input" @input="updateInputDescWidth" v-model="projectDesc"
                         :style="{ width: inputDescLength + 'px' }">
                 </div>
             </div>
             <div class="right">
-                <div @click="cancelFixed">
-                    <svg t="1693476333821" class="icon" viewBox="0 0 1024 1024" version="1.1" xmlns="http://www.w3.org/2000/svg"
-                        p-id="15755" width="24" height="24">
-                        <path d="M0 0m256 0l512 0q256 0 256 256l0 512q0 256-256 256l-512 0q-256 0-256-256l0-512q0-256 256-256Z"
-                            :fill="currentProject[0].is_favor ? '#9775fa' : '#999'" p-id="15756"
-                            data-spm-anchor-id="a313x.search_index.0.i11.6fa73a817d52QG" class="">
-                        </path>
-                        <path
-                            d="M256 767.6416l202.9568-160.9216 80.9728 86.1184s33.792 9.216 35.8656-16.384l-2.0736-87.1424 119.936-138.368 52.2496-3.0464s41.0112-8.2432 11.2896-44.0832l-146.5856-147.584s-39.936-5.12-36.8896 31.744v39.9872l-136.2944 115.8912-84.0192 5.0688s-30.7712 10.24-19.5072 36.9152l78.9504 77.9008L256 767.6416z"
-                            fill="#FFFFFF" p-id="15757" data-spm-anchor-id="a313x.search_index.0.i10.6fa73a817d52QG" class="">
-                        </path>
-                    </svg>
-                </div>
-                <div class="setting" @click="projectSetting"><svg-icon icon-class="gear"></svg-icon></div>
-                <div @click="showMembergDialog"><el-icon>
-                        <User />
-                    </el-icon></div>
+                <el-tooltip class="box-item" effect="dark" :content="currentProject[0].is_favor ? `取消固定` : `固定项目`"
+                    placement="bottom" :show-after="500" :offset="10" :hide-after="0">
+                    <div @click="cancelFixed">
+                        <svg t="1693476333821" class="icon" viewBox="0 0 1024 1024" version="1.1"
+                            xmlns="http://www.w3.org/2000/svg" p-id="15755" width="24" height="24">
+                            <path
+                                d="M0 0m256 0l512 0q256 0 256 256l0 512q0 256-256 256l-512 0q-256 0-256-256l0-512q0-256 256-256Z"
+                                :fill="currentProject[0].is_favor ? '#9775fa' : '#999'" p-id="15756"
+                                data-spm-anchor-id="a313x.search_index.0.i11.6fa73a817d52QG" class="">
+                            </path>
+                            <path
+                                d="M256 767.6416l202.9568-160.9216 80.9728 86.1184s33.792 9.216 35.8656-16.384l-2.0736-87.1424 119.936-138.368 52.2496-3.0464s41.0112-8.2432 11.2896-44.0832l-146.5856-147.584s-39.936-5.12-36.8896 31.744v39.9872l-136.2944 115.8912-84.0192 5.0688s-30.7712 10.24-19.5072 36.9152l78.9504 77.9008L256 767.6416z"
+                                fill="#FFFFFF" p-id="15757" data-spm-anchor-id="a313x.search_index.0.i10.6fa73a817d52QG"
+                                class="">
+                            </path>
+                        </svg>
+                    </div>
+                </el-tooltip>
+                <Tooltip :content="'邀请项目成员'" :offset="10">
+                    <div class="setting" @click="projectSetting"><svg-icon icon-class="gear"></svg-icon></div>
+                </Tooltip>
+                <Tooltip :content="'成员权限'" :offset="10">
+                    <div @click="showMembergDialog"><el-icon>
+                            <User />
+                        </el-icon></div>
+                </Tooltip>
             </div>
         </div>
         <div class="team-header" v-if="currentProject[0]">
@@ -87,6 +107,7 @@ import ProjectMemberg from './ProjectFill/ProjectMemberg.vue';
 import TeamProjectMenu from './TeamProjectMenu.vue';
 import { ElMessage } from 'element-plus';
 import ProjectDialog from './ProjectDialog.vue';
+import Tooltip from '../common/Tooltip.vue'
 
 const { t } = useI18n()
 const itemid = ref(0)
@@ -196,6 +217,7 @@ const ExitProject = () => {
         router.push('/apphome/project_share');
     } else {
         router.push({ name: "apphome" });
+        sessionStorage.setItem('index', '1');
     }
 }
 
@@ -222,6 +244,7 @@ const DelProject = () => {
             router.push('/apphome/project_share');
         } else {
             router.push({ name: "apphome" });
+            sessionStorage.setItem('index', '1');
         }
     }
     delProject(project.project.id);
@@ -276,6 +299,7 @@ const exitProject = (id: string, isTeam: boolean) => {
         router.push({ path: '/apphome/teams/' + id });
     } else {
         router.push({ name: "apphome" })
+        sessionStorage.setItem('index', '1');
     }
 }
 
@@ -338,8 +362,9 @@ const favoriteProjectList = (arr1: any[], arr2: any[]) => {
     return projectList;
 }
 
-function input_cusname() {
-    projectName.value = currentProject.value[0].project.name;
+function input_cusname(project: any) {
+    if (project.self_perm_type < 4) return;
+    projectName.value = project.project.name;
     cusname.value = !cusname.value;
     nextTick(() => {
         if (input.value) {
@@ -351,8 +376,9 @@ function input_cusname() {
     })
 }
 
-function input_cusdesc() {
-    projectDesc.value = currentProject.value[0].project.description;
+function input_cusdesc(project: any) {
+    if (project.self_perm_type < 4) return;
+    projectDesc.value = project.project.description;
     cusdesc.value = !cusdesc.value;
     nextTick(() => {
         if (input.value) {
@@ -377,14 +403,14 @@ function enter_desc(e: KeyboardEvent) {
 }
 
 function blur() {
-    if(!currentProject.value[0]) return cusname.value = false;
+    if (!currentProject.value[0]) return cusname.value = false;
     const project = currentProject.value[0].project
     projectName.value = projectName.value.trim();
     document.removeEventListener('keydown', enter);
-    if (projectName.value.trim().length < 1){
+    if (projectName.value.trim().length < 1) {
         cusname.value = false
         return
-    } 
+    }
     if (projectName.value === project.name.trim()) {
         cusname.value = false
         return
@@ -404,14 +430,14 @@ function blur() {
 }
 
 function blur_desc() {
-    if(!currentProject.value[0]) return cusdesc.value = false;
+    if (!currentProject.value[0]) return cusdesc.value = false;
     const project = currentProject.value[0].project
     projectDesc.value = projectDesc.value.trim();
     document.removeEventListener('keydown', enter);
-    if (projectDesc.value.trim().length < 1){
+    if (projectDesc.value.trim().length < 1) {
         cusdesc.value = false;
         return
-    } 
+    }
     if (projectDesc.value === project.description.trim()) {
         cusdesc.value = false;
         return
@@ -461,7 +487,7 @@ const setProjectInfo = async (params: any) => {
 }
 
 watch(() => currentProject.value, (n) => {
-    currentProject.value = n;
+    // currentProject.value = n;
     if (currentProject.value[0]) {
         reflush.value++;
     }
@@ -632,6 +658,12 @@ onMounted(() => {
             }
         }
 
+        .edit {
+            &:hover {
+                border: 2px solid #9775fa;
+            }
+        }
+
         p {
             width: fit-content;
             font-size: 18px;
@@ -642,10 +674,6 @@ onMounted(() => {
             overflow: hidden;
             text-overflow: ellipsis;
             white-space: nowrap;
-
-            &:hover {
-                border: 2px solid #9775fa;
-            }
         }
 
         .span {
@@ -674,10 +702,6 @@ onMounted(() => {
             overflow: hidden;
             text-overflow: ellipsis;
             white-space: nowrap;
-
-            &:hover {
-                border: 2px solid #9775fa;
-            }
         }
     }
 

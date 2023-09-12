@@ -29,7 +29,7 @@
     </div>
 </template>
 <script setup lang="tsx">
-import { ref, watchEffect } from 'vue'
+import { ref, watchEffect,Ref, inject } from 'vue'
 import { Share, Delete, Remove, Loading as LoadingIcon } from '@element-plus/icons-vue'
 import type { Column, RowClassNameGetter } from 'element-plus'
 import { useI18n } from 'vue-i18n'
@@ -48,12 +48,23 @@ const props = defineProps<{
     noNetwork: boolean
     type?: string
     address?: boolean
+    creator?: boolean
 }>()
 
 watch(() => props.data, () => {
     loading.value = false
     empty.value = true
 });
+
+const { projectList, saveProjectData, is_favor, favoriteList, updateFavor, is_team_upodate, teamUpdate } = inject('shareData') as {
+    projectList: Ref<any[]>;
+    favoriteList: Ref<any[]>;
+    saveProjectData: (data: any[]) => void;
+    is_favor: Ref<boolean>;
+    updateFavor: (b: boolean) => void;
+    is_team_upodate: Ref<boolean>;
+    teamUpdate: (b: boolean) => void;
+};
 
 watch(() => props.noNetwork, (newV) => {
     if (newV) {
@@ -146,8 +157,6 @@ const columns: Column<any>[] = [
         align: 'center',
         cellRenderer: ({ rowData: { document: { deleted_at, created_at }, document_access_record: { last_access_time, id } } }) => {
             let displayContent;
-            console.log(props.data,'document');
-            
             if (props.iconlist.includes('restore')) {
                 displayContent = <span>{deleted_at}</span>;
             } else {
@@ -308,7 +317,28 @@ watchEffect(() => {
             width: 500,
             minWidth: 150,
             align: 'center',
-            cellRenderer: ({ cellData: { size } }) => <span>我的文件</span>,
+            cellRenderer: ({ rowData: { document: { project_id } } }) => {
+                // const project = projectList.value.filter(item => item.project.id === project_id)[0];
+                return (
+                    <span>{111}</span>
+            );
+            },
+        },)
+    }
+    if(props.creator) {
+        columns.splice(3, 0, {
+            key: 'creator',
+            dataKey: 'document',
+            title: `创建者`,
+            width: 500,
+            minWidth: 150,
+            align: 'center',
+            cellRenderer: ({ rowData: { document: { project_id } } }) => {
+                const project = projectList.value.filter(item => item.project.id === project_id)[0];
+                return (
+                    <span>{project.creator.nickname}</span>
+            );
+            },
         },)
     }
 })

@@ -389,9 +389,9 @@ onMounted(() => {
         .project-description,
         .project-creator,
         .other {
-            flex: 1;
+            width: 25%;
             display: flex;
-
+            
             svg {
                 width: 16px;
                 height: 16px;
@@ -400,6 +400,29 @@ onMounted(() => {
             >div {
                 margin-right: 10px;
             }
+        }
+        .project-name {
+            display: inline-block;
+            overflow: hidden;
+            text-overflow: ellipsis;
+            white-space: nowrap;
+            padding-right: 20px;
+            box-sizing: border-box;
+            margin-left: 5px;
+        }
+        .project-description {
+            display: inline-block;
+            overflow: hidden;
+            text-overflow: ellipsis;
+            white-space: nowrap;
+            padding-right: 20px;
+        }
+        .project-creator {
+            display: inline-block;
+            overflow: hidden;
+            text-overflow: ellipsis;
+            white-space: nowrap;
+            padding-right: 20px;
         }
     }
 }

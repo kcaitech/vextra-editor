@@ -27,6 +27,7 @@ import addProject from '../TeamProject/addProject.vue';
 import { ElMessage } from 'element-plus';
 import TeamProjectMenu from '../TeamProject/TeamProjectMenu.vue';
 import ProjectDialog from '../TeamProject/ProjectDialog.vue';
+import Tooltip from '@/components/common/Tooltip.vue'
 
 interface Emits {
     (e: 'settitle', title: string, recycle: boolean): void;
@@ -136,9 +137,9 @@ const picker = new FilePicker('.sketch', (file) => {
 });
 
 function newFile() {
-    if(route.name === 'ProjectPage') {
+    if (route.name === 'ProjectPage') {
         const perm = projectList.value.filter(item => item.project.id === route.params.id)[0].self_perm_type;
-        if(perm > 2) {
+        if (perm > 2) {
             localStorage.setItem('project_id', route.params.id as string);
         }
     }
@@ -157,9 +158,9 @@ function newFile() {
 function Setindex(a: any, b: any) {
     sessionStorage.setItem('index', a);
     x.value = String(a);
-    if(a == 3) {
+    if (a == 3) {
         emits('settitle', b, true);
-    }else {
+    } else {
         emits('settitle', b, false);
     }
 }
@@ -188,7 +189,7 @@ const newProjectFile = (id: string) => {
     window.document.title = nd.name;
     (window as any).skrepo = coopRepo;
     (window as any).sketchDocument = nd;
-    router.push({ name: 'document'});
+    router.push({ name: 'document' });
 }
 
 const GetteamList = async () => {
@@ -298,6 +299,7 @@ const DelProject = () => {
             router.push('/apphome/project_share');
         } else {
             router.push({ name: "apphome" });
+            sessionStorage.setItem('index', '1');
         }
     }
     delProject(project.project.id);
@@ -332,6 +334,7 @@ const ExitProject = () => {
         router.push('/apphome/project_share');
     } else {
         router.push({ name: "apphome" });
+        sessionStorage.setItem('index', '1');
     }
 }
 const exitProjectApi = async (id: string) => {
@@ -348,6 +351,8 @@ const inputCusname = (data: any) => {
     nextTick(() => {
         if (Input.value) {
             project_item.value = data;
+            console.log(data, 'data');
+
             document.addEventListener('keydown', enter);
         }
     })
@@ -366,8 +371,10 @@ const onblur = () => {
         name: proname.value
     }
     const index = projectList.value.findIndex(item => item.project.id === project.id);
-    const favorite = favoriteList.value.findIndex((item) => item.project.id === route.params.id);
+    const favorite = favoriteList.value.findIndex((item) => item.project.id === project.id);
     projectList.value[index].project.name = proname.value;
+    console.log(favoriteList.value[favorite], favorite, ' favoriteList.value[favorite]');
+
     favoriteList.value[favorite].project.name = proname.value;
     project.name = proname.value;
     setProjectInfo(params)
@@ -508,25 +515,32 @@ onUnmounted(() => {
             </div>
             <el-menu :default-active="x ? x : '1'" active-text-color="#ffd04b" class="el-menu-vertical-demo"
                 text-color="#000000">
-                <router-link to="/apphome/recently"><el-menu-item index="1" :style="{backgroundColor: x === '1'? '#e5dbff': '#fff', color: x === '1'? '#9775fa': '#000', fontWeight: x === '1'? '600': '400'}" @click="Setindex(1, t('home.recently_opened'))">
+                <router-link to="/apphome/recently"><el-menu-item index="1"
+                        :style="{ backgroundColor: x === '1' ? '#e5dbff' : '#fff', color: x === '1' ? '#9775fa' : '#000', fontWeight: x === '1' ? '600' : '400' }"
+                        @click="Setindex(1, t('home.recently_opened'))">
                         <el-icon>
                             <Clock />
                         </el-icon>
                         <span>{{ t('home.recently_opened') }}</span>
                     </el-menu-item></router-link>
-                <router-link to="/apphome/starfile"><el-menu-item index="2" :style="{backgroundColor: x === '2'? '#e5dbff': '#fff', color: x === '2'? '#9775fa': '#000', fontWeight: x === '2'? '600': '400'}" @click="Setindex(2, t('home.star_file'))">
+                <router-link to="/apphome/starfile"><el-menu-item index="2"
+                        :style="{ backgroundColor: x === '2' ? '#e5dbff' : '#fff', color: x === '2' ? '#9775fa' : '#000', fontWeight: x === '2' ? '600' : '400' }"
+                        @click="Setindex(2, t('home.star_file'))">
                         <el-icon>
                             <Star />
                         </el-icon>
                         <span>{{ t('home.star_file') }}</span>
                     </el-menu-item></router-link>
-                <router-link to="/apphome/meshare"><el-menu-item index="3" :style="{backgroundColor: x === '3'? '#e5dbff': '#fff', color: x === '3'? '#9775fa': '#000', fontWeight: x === '3'? '600': '400'}" @click="Setindex(3, t('home.file_shared'))">
+                <router-link to="/apphome/meshare"><el-menu-item index="3"
+                        :style="{ backgroundColor: x === '3' ? '#e5dbff' : '#fff', color: x === '3' ? '#9775fa' : '#000', fontWeight: x === '3' ? '600' : '400' }"
+                        @click="Setindex(3, t('home.file_shared'))">
                         <el-icon>
                             <Folder />
                         </el-icon>
                         <span>{{ t('home.file_shared') }}</span>
                     </el-menu-item></router-link>
-                <router-link to="/apphome/shareme"><el-menu-item index="4" :style="{backgroundColor: x === '4'? '#e5dbff': '#fff', color: x === '4'? '#9775fa': '#000', fontWeight: x === '4'? '600': '400'}"
+                <router-link to="/apphome/shareme"><el-menu-item index="4"
+                        :style="{ backgroundColor: x === '4' ? '#e5dbff' : '#fff', color: x === '4' ? '#9775fa' : '#000', fontWeight: x === '4' ? '600' : '400' }"
                         @click="Setindex(4, t('home.shared_file_received'))">
                         <el-icon>
                             <BottomLeft />
@@ -542,132 +556,144 @@ onUnmounted(() => {
                     </el-menu-item></router-link> -->
             </el-menu>
             <div class="teamlists" :reflush="reflush !== 0 ? reflush : undefined">
-                <div class="demo-collapse">
-                    <el-collapse v-model="activeShare" v-if="showShare">
-                        <el-collapse-item @click.stop="skipProjecrShare">
-                            <template #title>
-                                <div class="team-title" :class="{ 'is_active': is_share }">
-                                    <div class="left">
-                                        <div class="down"
-                                            :style="{ transform: activeShare.includes(1) ? 'rotate(0deg)' : 'rotate(-90deg)', visibility: projectShareList.length > 0 ? 'visible' : 'hidden' }">
-                                            <svg-icon icon-class="down" />
-                                        </div>
-                                        <div class="team-avatar">
-                                            <div class="img">
-                                                <img src="" alt="team avatar">
+                <el-scrollbar height="100%">
+                    <div class="demo-collapse">
+                        <el-collapse v-model="activeShare" v-if="showShare">
+                            <el-collapse-item @click.stop="skipProjecrShare">
+                                <template #title>
+                                    <div class="team-title" :class="{ 'is_active': is_share }">
+                                        <div class="left">
+                                            <div class="down"
+                                                :style="{ transform: activeShare.includes(1) ? 'rotate(0deg)' : 'rotate(-90deg)', visibility: projectShareList.length > 0 ? 'visible' : 'hidden' }">
+                                                <svg-icon icon-class="down" />
                                             </div>
+                                            <div class="team-avatar">
+                                                <div class="img">
+                                                    <img src="" alt="team avatar">
+                                                </div>
+                                            </div>
+                                            <div class="name">收到的分享项目</div>
                                         </div>
-                                        <div class="name">收到的分享项目</div>
-                                    </div>
-                                    <div class="right">
-                                    </div>
-                                </div>
-                            </template>
-                            <template v-for="(item, i) in projectShareList" :key="i">
-                                <div class="project" @click.stop="(e) => skipProject(item, e)"
-                                    @mousedown.stop="(e) => rightMenu(item, e)"
-                                    :class="{ 'is_active': isProjectActive(item.project.id) }">
-                                    <div>
-                                        <div>{{ item.project.name }}</div>
                                         <div class="right">
-                                            <div @click="shareFixed(i, item.project.id)">
-                                                <svg t="1693476333821" class="icon" viewBox="0 0 1024 1024" version="1.1"
-                                                    xmlns="http://www.w3.org/2000/svg" p-id="15755" width="20" height="20">
-                                                    <path
-                                                        d="M0 0m256 0l512 0q256 0 256 256l0 512q0 256-256 256l-512 0q-256 0-256-256l0-512q0-256 256-256Z"
-                                                        fill="#9775fa" p-id="15756"
-                                                        data-spm-anchor-id="a313x.search_index.0.i11.6fa73a817d52QG"
-                                                        class=""></path>
-                                                    <path
-                                                        d="M256 767.6416l202.9568-160.9216 80.9728 86.1184s33.792 9.216 35.8656-16.384l-2.0736-87.1424 119.936-138.368 52.2496-3.0464s41.0112-8.2432 11.2896-44.0832l-146.5856-147.584s-39.936-5.12-36.8896 31.744v39.9872l-136.2944 115.8912-84.0192 5.0688s-30.7712 10.24-19.5072 36.9152l78.9504 77.9008L256 767.6416z"
-                                                        fill="#FFFFFF" p-id="15757"
-                                                        data-spm-anchor-id="a313x.search_index.0.i10.6fa73a817d52QG"
-                                                        class=""></path>
-                                                </svg>
-                                            </div>
-                                            <svg-icon icon-class="close" @click.stop="newProjectFile(item.project.id)" v-if="item.self_perm_type > 2"
-                                                style="transform: rotate(45deg); margin-left: 5px; width: 16px; height: 16px;" />
                                         </div>
                                     </div>
-                                </div>
-                            </template>
-                        </el-collapse-item>
-                    </el-collapse>
-                    <el-collapse v-model="activeNames">
-                        <el-collapse-item v-for="(data, index) in teamList" :key="data.team.id" :name="index"
-                            @click.stop="torouter(data.team.id)">
-                            <template #title>
-                                <div class="team-title"
-                                    :class="{ 'is_active': isActive(data.team.id, data.team.name, data.team.avatar, data.team.description, data.self_perm_type) }">
-                                    <div class="left">
-                                        <div class="down"
-                                            :style="{ transform: activeNames.includes(index) ? 'rotate(0deg)' : 'rotate(-90deg)', visibility: showicon(data) ? 'visible' : 'hidden' }">
-                                            <svg-icon icon-class="down" />
-                                        </div>
-                                        <div class="team-avatar">
-                                            <div v-if="data.team.avatar.includes('http')" class="img">
-                                                <img :src="data.team.avatar" alt="team avatar">
-                                            </div>
-                                            <div v-else class="text">
-                                                <span>{{ data.team.name.slice(0, 1) }}</span>
-                                            </div>
-                                        </div>
-                                        <div class="name">{{ data.team.name }}</div>
-                                    </div>
-                                    <div class="right" @click.stop="showprojectcard(data.team.id)">
-                                        <svg-icon icon-class="close" />
-                                    </div>
-                                </div>
-                            </template>
-                            <template v-for="(item, i) in data.children" :key="i">
-                                <div class="project" @click.stop="(e) => skipProject(item, e)"
-                                    @mousedown.stop="(e) => rightMenu(item, e)"
-                                    :class="{ 'is_active': isProjectActive(item.project.id) }">
-                                    <el-input v-if="reName === item.project.id" v-model="proname" ref="Input" autofocus @blur="onblur" />
-                                    <div v-else>
-                                        <div>{{ item.project.name }}</div>
-                                        <div class="right">
-                                            <div @click="cancelFixed(index, i, item.project.id)">
-                                                <svg t="1693476333821" class="icon" viewBox="0 0 1024 1024" version="1.1"
-                                                    xmlns="http://www.w3.org/2000/svg" p-id="15755" width="20" height="20">
-                                                    <path
-                                                        d="M0 0m256 0l512 0q256 0 256 256l0 512q0 256-256 256l-512 0q-256 0-256-256l0-512q0-256 256-256Z"
-                                                        fill="#9775fa" p-id="15756"
-                                                        data-spm-anchor-id="a313x.search_index.0.i11.6fa73a817d52QG"
-                                                        class=""></path>
-                                                    <path
-                                                        d="M256 767.6416l202.9568-160.9216 80.9728 86.1184s33.792 9.216 35.8656-16.384l-2.0736-87.1424 119.936-138.368 52.2496-3.0464s41.0112-8.2432 11.2896-44.0832l-146.5856-147.584s-39.936-5.12-36.8896 31.744v39.9872l-136.2944 115.8912-84.0192 5.0688s-30.7712 10.24-19.5072 36.9152l78.9504 77.9008L256 767.6416z"
-                                                        fill="#FFFFFF" p-id="15757"
-                                                        data-spm-anchor-id="a313x.search_index.0.i10.6fa73a817d52QG"
-                                                        class=""></path>
-                                                </svg>
-                                            </div>
-                                            <svg-icon icon-class="close" @click.stop="newProjectFile(item.project.id)" v-if="item.self_perm_type > 2"
-                                                style="transform: rotate(45deg); margin-left: 5px; width: 16px; height: 16px;" />
-                                        </div>
-                                    </div>
-                                </div>
-                            </template>
-                            <template v-for="(target, n) in targetItem" :key="n">
-                                <transition name="el-zoom-in-top">
-                                    <div v-if="(target.project.team_id === data.team.id) && !listss.includes(target.project.id)"
-                                        class="project" @click.stop="(e) => skipProject(target, e)"
-                                        @mousedown.stop="(e) => rightMenu(target, e)"
-                                        :class="{ 'is_active': isProjectActive(target.project.id) }">
-                                        <div>
-                                            <div>{{ target.project.name }}</div>
-                                            <div class="right" @click.stop="newProjectFile(target.project.id)" v-if="target.self_perm_type > 2">
-                                                <svg-icon icon-class="close"
+                                </template>
+                                <template v-for="(item, i) in projectShareList" :key="i">
+                                    <div class="project" @click.stop="(e) => skipProject(item, e)"
+                                        @mousedown.stop="(e) => rightMenu(item, e)"
+                                        :class="{ 'is_active': isProjectActive(item.project.id) }">
+                                        <div style="box-sizing: border-box;">
+                                            <div class="project_name">{{ item.project.name }}</div>
+                                            <div class="right">
+                                                <Tooltip :content="'取消固定'" :offset="10">
+                                                    <div @click="shareFixed(i, item.project.id)">
+                                                        <svg t="1693476333821" class="icon" viewBox="0 0 1024 1024"
+                                                            version="1.1" xmlns="http://www.w3.org/2000/svg" p-id="15755"
+                                                            width="20" height="20">
+                                                            <path
+                                                                d="M0 0m256 0l512 0q256 0 256 256l0 512q0 256-256 256l-512 0q-256 0-256-256l0-512q0-256 256-256Z"
+                                                                fill="#9775fa" p-id="15756"
+                                                                data-spm-anchor-id="a313x.search_index.0.i11.6fa73a817d52QG"
+                                                                class=""></path>
+                                                            <path
+                                                                d="M256 767.6416l202.9568-160.9216 80.9728 86.1184s33.792 9.216 35.8656-16.384l-2.0736-87.1424 119.936-138.368 52.2496-3.0464s41.0112-8.2432 11.2896-44.0832l-146.5856-147.584s-39.936-5.12-36.8896 31.744v39.9872l-136.2944 115.8912-84.0192 5.0688s-30.7712 10.24-19.5072 36.9152l78.9504 77.9008L256 767.6416z"
+                                                                fill="#FFFFFF" p-id="15757"
+                                                                data-spm-anchor-id="a313x.search_index.0.i10.6fa73a817d52QG"
+                                                                class=""></path>
+                                                        </svg>
+                                                    </div>
+                                                </Tooltip>
+                                                <svg-icon icon-class="close" @click.stop="newProjectFile(item.project.id)"
+                                                    v-if="item.self_perm_type > 2"
                                                     style="transform: rotate(45deg); margin-left: 5px; width: 16px; height: 16px;" />
                                             </div>
                                         </div>
                                     </div>
-                                </transition>
-                            </template>
+                                </template>
+                            </el-collapse-item>
+                        </el-collapse>
+                        <el-collapse v-model="activeNames">
+                            <el-collapse-item v-for="(data, index) in teamList" :key="data.team.id" :name="index"
+                                @click.stop="torouter(data.team.id)">
+                                <template #title>
+                                    <div class="team-title"
+                                        :class="{ 'is_active': isActive(data.team.id, data.team.name, data.team.avatar, data.team.description, data.self_perm_type) }">
+                                        <div class="left">
+                                            <div class="down"
+                                                :style="{ transform: activeNames.includes(index) ? 'rotate(0deg)' : 'rotate(-90deg)', visibility: showicon(data) ? 'visible' : 'hidden' }">
+                                                <svg-icon icon-class="down" />
+                                            </div>
+                                            <div class="team-avatar">
+                                                <div v-if="data.team.avatar.includes('http')" class="img">
+                                                    <img :src="data.team.avatar" alt="team avatar">
+                                                </div>
+                                                <div v-else class="text">
+                                                    <span>{{ data.team.name.slice(0, 1) }}</span>
+                                                </div>
+                                            </div>
+                                            <div class="name">{{ data.team.name }}</div>
+                                        </div>
+                                        <div class="right" @click.stop="showprojectcard(data.team.id)">
+                                            <svg-icon icon-class="close" />
+                                        </div>
+                                    </div>
+                                </template>
+                                <template v-for="(item, i) in data.children" :key="i">
+                                    <div class="project" @click.stop="(e) => skipProject(item, e)"
+                                        @mousedown.stop="(e) => rightMenu(item, e)"
+                                        :class="{ 'is_active': isProjectActive(item.project.id) }">
+                                        <el-input v-if="reName === item.project.id" v-model="proname" ref="Input" autofocus
+                                            @blur="onblur" />
+                                        <div v-else style="box-sizing: border-box;">
+                                            <div class="project_name">{{ item.project.name }}</div>
+                                            <div class="right">
+                                                <Tooltip :content="'取消固定'" :offset="10">
+                                                    <div @click="cancelFixed(index, i, item.project.id)">
+                                                        <svg t="1693476333821" class="icon" viewBox="0 0 1024 1024"
+                                                            version="1.1" xmlns="http://www.w3.org/2000/svg" p-id="15755"
+                                                            width="20" height="20">
+                                                            <path
+                                                                d="M0 0m256 0l512 0q256 0 256 256l0 512q0 256-256 256l-512 0q-256 0-256-256l0-512q0-256 256-256Z"
+                                                                fill="#9775fa" p-id="15756"
+                                                                data-spm-anchor-id="a313x.search_index.0.i11.6fa73a817d52QG"
+                                                                class=""></path>
+                                                            <path
+                                                                d="M256 767.6416l202.9568-160.9216 80.9728 86.1184s33.792 9.216 35.8656-16.384l-2.0736-87.1424 119.936-138.368 52.2496-3.0464s41.0112-8.2432 11.2896-44.0832l-146.5856-147.584s-39.936-5.12-36.8896 31.744v39.9872l-136.2944 115.8912-84.0192 5.0688s-30.7712 10.24-19.5072 36.9152l78.9504 77.9008L256 767.6416z"
+                                                                fill="#FFFFFF" p-id="15757"
+                                                                data-spm-anchor-id="a313x.search_index.0.i10.6fa73a817d52QG"
+                                                                class=""></path>
+                                                        </svg>
+                                                    </div>
+                                                </Tooltip>
+                                                <svg-icon icon-class="close" @click.stop="newProjectFile(item.project.id)"
+                                                    v-if="item.self_perm_type > 2"
+                                                    style="transform: rotate(45deg); margin-left: 5px; width: 16px; height: 16px;" />
+                                            </div>
+                                        </div>
+                                    </div>
+                                </template>
+                                <template v-for="(target, n) in targetItem" :key="n">
+                                    <transition name="el-zoom-in-top">
+                                        <div v-if="(target.project.team_id === data.team.id) && !listss.includes(target.project.id)"
+                                            class="project" @click.stop="(e) => skipProject(target, e)"
+                                            @mousedown.stop="(e) => rightMenu(target, e)"
+                                            :class="{ 'is_active': isProjectActive(target.project.id) }">
+                                            <div>
+                                                <div class="project_name">{{ target.project.name }}</div>
+                                                <div class="right" @click.stop="newProjectFile(target.project.id)"
+                                                    v-if="target.self_perm_type > 2">
+                                                    <svg-icon icon-class="close"
+                                                        style="transform: rotate(45deg); margin-left: 5px; width: 16px; height: 16px;" />
+                                                </div>
+                                            </div>
+                                        </div>
+                                    </transition>
+                                </template>
 
-                        </el-collapse-item>
-                    </el-collapse>
-                </div>
+                            </el-collapse-item>
+                        </el-collapse>
+                    </div>
+                </el-scrollbar>
             </div>
             <div class=" team-container">
                 <button class="newteam" @click.stop="showteamcard">
@@ -687,8 +713,8 @@ onUnmounted(() => {
     <TeamProjectMenu v-if="showProjecrMenu" :items="menuItem" :data="projectItem" :top="top" :left="left" @close="closeMenu"
         @delProject="onDelProject" @exitProject="onExitProject" @cancelFixed="menucancelFixed" @reName="inputCusname">
     </TeamProjectMenu>
-    <ProjectDialog :projectVisible="delVisible" context="删除项目后，将删除项目及项目中所有文件、资料。" :title="'删除项目'"
-        :confirm-btn="'任然删除'" @clode-dialog="closeDelVisible" @confirm="DelProject"></ProjectDialog>
+    <ProjectDialog :projectVisible="delVisible" context="删除项目后，将删除项目及项目中所有文件、资料。" :title="'删除项目'" :confirm-btn="'任然删除'"
+        @clode-dialog="closeDelVisible" @confirm="DelProject"></ProjectDialog>
     <ProjectDialog :projectVisible="exitVisible" context="退出项目后，无法再访问项目中的文件，或使用项目中的资源。" :title="'退出项目'"
         :confirm-btn="'任然退出'" @clode-dialog="closeExitVisible" @confirm="ExitProject"></ProjectDialog>
 </template>
@@ -909,13 +935,6 @@ a {
             position: absolute;
             bottom: 60px;
             top: 340px;
-            overflow-y: auto;
-
-            &::-webkit-scrollbar {
-                height: 0;
-                width: 0;
-            }
-
             .demo-collapse {
                 .team-title {
                     width: 100%;
@@ -1020,6 +1039,15 @@ a {
                     justify-content: space-between;
                     border-radius: 4px;
                     cursor: pointer;
+
+                    .project_name {
+                        display: inline-block;
+                        overflow: hidden;
+                        text-overflow: ellipsis;
+                        white-space: nowrap;
+                        margin-right: 10px;
+                    }
+
                     .el-input {
                         height: 35px;
                         border: none;
@@ -1030,7 +1058,7 @@ a {
                         background-color: #f3f0ff;
 
                         .right {
-                            visibility: visible;
+                            display: flex;
                         }
                     }
 
@@ -1050,9 +1078,9 @@ a {
                                 align-items: center;
                             }
 
-                            display: flex;
+                            display: none;
+                            
                             align-items: center;
-                            visibility: hidden;
                             height: 100%;
                             padding-right: 10px;
 
@@ -1100,6 +1128,7 @@ a {
 :deep(.el-collapse-item__content) {
     padding: 0;
 }
+
 :deep(.el-input__wrapper) {
     height: 80%;
     outline: none;
@@ -1111,9 +1140,11 @@ a {
     border-bottom: 1px solid #9775fa;
     background-color: transparent;
 }
+
 :deep(.el-input__wrapper:hover) {
     box-shadow: none;
 }
+
 .is_active {
     font-weight: 600;
     color: #9775fa;

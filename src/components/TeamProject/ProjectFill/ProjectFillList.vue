@@ -1,7 +1,7 @@
 
 <template>
     <tablelist :data="lists" :iconlist="iconlists" @share="Sharefile" @deletefile="Deletefile" @dbclickopen="openDocument" :type="currentProject.self_perm_type > 2 ? 'project' : ''"
-        @updatestar="Starfile" @rightMeun="rightmenu" :noNetwork="noNetwork" @refreshDoc="refreshDoc" @newProjectFill="newProjectFill"/>
+        @updatestar="Starfile" @rightMeun="rightmenu" :noNetwork="noNetwork" @refreshDoc="refreshDoc" @newProjectFill="newProjectFill" :creator="true"/>
 
     <listrightmenu :items="items" :data="mydata" @get-doucment="getDoucment" @r-starfile="Starfile" @r-sharefile="Sharefile"
         @r-removefile="Deletefile" @ropen="openDocument" @moveFillAddress="moveFillAddress"/>

@@ -75,6 +75,8 @@
             </div>
         </div>
     </div>
+    <ProjectDialog :projectVisible="showDialog" :context="contenttext" :title="titlevalue"
+            :confirm-btn="teamSelfPermType === 3 ? '解散' : '离开'" @clode-dialog="closeDisband" @confirm="confirmQuit"></ProjectDialog>
 </template>
 <script setup lang="ts">
 import { Ref, computed, inject, nextTick, ref, watch } from 'vue';
@@ -82,6 +84,7 @@ import { useI18n } from 'vue-i18n';
 import * as user_api from '@/apis/users'
 import { router } from '@/router';
 import { ElMessage } from 'element-plus';
+import ProjectDialog from './ProjectDialog.vue';
 
 const { t } = useI18n();
 const titlevalue = ref('')
@@ -91,6 +94,8 @@ const showoverlay = ref(false)
 const textareaValue = ref('')
 const textareashow = ref(true)
 const maxvalue = ref(0)
+const contenttext = ref('')
+const showDialog = ref(false)
 
 const { teamID, teamName, teamDescription, teamSelfPermType, teamData, upDateTeamData, is_team_upodate, teamUpdate } = inject('shareData') as {
     teamID: Ref<string>;
@@ -130,6 +135,17 @@ const el = () => {
     el.focus()
     el.select()
 }
+//关闭弹窗
+const closeDisband = () => {
+    showDialog.value = false;
+}
+const confirmQuit = () => {
+    if(titlevalue.value === '解散团队') {
+        disband(teamID.value)
+    }else {
+        leave(teamID.value)
+    }
+}
 
 //将修改的新值替换到teamData数组，返回修改后的新数组，重新渲染
 const midDateTeamData = (teamData: Array<teamDataType>, id: string, updates: Partial<TeamData>) => {
@@ -141,7 +157,6 @@ const midDateTeamData = (teamData: Array<teamDataType>, id: string, updates: Par
     })
     return newTeamData
 }
-
 
 //修改团队名称
 const midNameRequest = async () => {
@@ -268,15 +283,17 @@ const middescription = () => {
 }
 
 const dissolveteam = () => {
-    showoverlay.value = true
+    showDialog.value = true
     textareashow.value = false
     titlevalue.value = '解散团队'
+    contenttext.value = '解散团队后，将彻底删除团队中包含的全部项目资料，且不可恢复。'
 }
 
 const leaveteam = () => {
-    showoverlay.value = true
+    showDialog.value = true
     textareashow.value = false
     titlevalue.value = '离开团队'
+    contenttext.value = '离开团队后，将无法再查看团队项目及资源。'
 }
 
 const confirm = () => {

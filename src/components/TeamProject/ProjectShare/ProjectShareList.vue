@@ -71,6 +71,7 @@ const quitProject = () => {
         router.push('/apphome/project_share');
     } else {
         router.push({ name: "apphome" });
+        sessionStorage.setItem('index', '1');
     }
 }
 
