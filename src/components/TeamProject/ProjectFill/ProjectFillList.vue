@@ -115,8 +115,6 @@ const newProjectFill = () => {
 }
 
 const moveFillAddress = (data: any) => {
-    console.log(data,'data');
-
     moveVisible.value = true;
 }
 
@@ -236,7 +234,7 @@ const rightmenu = (e: MouseEvent, data: data) => {
     })
     docId.value = id
     mydata.value = data
-    projectItem.value = projectList.value.filter(item => item.project.id === '175189024317652992')[0];
+    projectItem.value = projectList.value.filter(item => item.project.id === data.document.project_id)[0];
 }
 
 const userData = ref({

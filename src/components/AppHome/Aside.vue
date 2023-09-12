@@ -137,7 +137,10 @@ const picker = new FilePicker('.sketch', (file) => {
 
 function newFile() {
     if(route.name === 'ProjectPage') {
-        localStorage.setItem('project_id', route.params.id as string);
+        const perm = projectList.value.filter(item => item.project.id === route.params.id)[0].self_perm_type;
+        if(perm > 2) {
+            localStorage.setItem('project_id', route.params.id as string);
+        }
     }
     const repo = new Repository();
     const nd = createDocument(t('system.new_file'), repo);
@@ -566,7 +569,7 @@ onUnmounted(() => {
                                     :class="{ 'is_active': isProjectActive(item.project.id) }">
                                     <div>
                                         <div>{{ item.project.name }}</div>
-                                        <div class="right" @click.stop="newProjectFile(item.project.id)">
+                                        <div class="right">
                                             <div @click="shareFixed(i, item.project.id)">
                                                 <svg t="1693476333821" class="icon" viewBox="0 0 1024 1024" version="1.1"
                                                     xmlns="http://www.w3.org/2000/svg" p-id="15755" width="20" height="20">
@@ -582,7 +585,7 @@ onUnmounted(() => {
                                                         class=""></path>
                                                 </svg>
                                             </div>
-                                            <svg-icon icon-class="close"
+                                            <svg-icon icon-class="close" @click.stop="newProjectFile(item.project.id)" v-if="item.self_perm_type > 2"
                                                 style="transform: rotate(45deg); margin-left: 5px; width: 16px; height: 16px;" />
                                         </div>
                                     </div>
@@ -623,7 +626,7 @@ onUnmounted(() => {
                                     <el-input v-if="reName === item.project.id" v-model="proname" ref="Input" autofocus @blur="onblur" />
                                     <div v-else>
                                         <div>{{ item.project.name }}</div>
-                                        <div class="right" @click.stop="newProjectFile(item.project.id)">
+                                        <div class="right">
                                             <div @click="cancelFixed(index, i, item.project.id)">
                                                 <svg t="1693476333821" class="icon" viewBox="0 0 1024 1024" version="1.1"
                                                     xmlns="http://www.w3.org/2000/svg" p-id="15755" width="20" height="20">
@@ -639,7 +642,7 @@ onUnmounted(() => {
                                                         class=""></path>
                                                 </svg>
                                             </div>
-                                            <svg-icon icon-class="close"
+                                            <svg-icon icon-class="close" @click.stop="newProjectFile(item.project.id)" v-if="item.self_perm_type > 2"
                                                 style="transform: rotate(45deg); margin-left: 5px; width: 16px; height: 16px;" />
                                         </div>
                                     </div>
@@ -653,7 +656,7 @@ onUnmounted(() => {
                                         :class="{ 'is_active': isProjectActive(target.project.id) }">
                                         <div>
                                             <div>{{ target.project.name }}</div>
-                                            <div class="right" @click.stop="newProjectFile(target.project.id)">
+                                            <div class="right" @click.stop="newProjectFile(target.project.id)" v-if="target.self_perm_type > 2">
                                                 <svg-icon icon-class="close"
                                                     style="transform: rotate(45deg); margin-left: 5px; width: 16px; height: 16px;" />
                                             </div>
