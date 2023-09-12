@@ -51,17 +51,13 @@ const emits = defineEmits([
     'getDoucment',
     'getUserdata',
     'GetrecycleLists',
-<<<<<<< HEAD
     'projectrename',
     'showSettingDialog',
     'showMembergDialog',
     'cancelFixed',
-    
     'exitproject',
-=======
     'showMembergDialog',
     'moveFillAddress'
->>>>>>> ff3233035a3d0973f659c65ba58ad7a4b82d150c
 ])
 
 enum rightmenuitem {
@@ -81,13 +77,9 @@ enum rightmenuitem {
     memberset = 'memberset',
     setfixed = 'setfixed',
     cancelfixed = 'cancelfixed',
-<<<<<<< HEAD
-    exitproject='exitproject',
-    deleteproject = 'deleteproject'
-=======
+    exitproject = 'exitproject',
     deleteproject = 'deleteproject',
     movefill = 'movefill'
->>>>>>> ff3233035a3d0973f659c65ba58ad7a4b82d150c
 }
 
 const itemcontent = (item: string) => {
@@ -146,7 +138,6 @@ const EventHandler = (item: string) => {
     else if (item === rightmenuitem.target_star) {
         rStarfile(props.data) //右键标星
     }
-<<<<<<< HEAD
     if (item === rightmenuitem.rename) {
         if (props.data.name) {
             rrename(props.data.name) //右键重命名
@@ -156,10 +147,6 @@ const EventHandler = (item: string) => {
             rrename(props.data.project.name)
             return
         }
-=======
-    else if (item === rightmenuitem.rename) {
-        rrename(props.data.name) //右键重命名
->>>>>>> ff3233035a3d0973f659c65ba58ad7a4b82d150c
     }
     else if (item === rightmenuitem.copyfile) {
         rcopyfile(props.data.id) //右键创建副本
@@ -179,35 +166,28 @@ const EventHandler = (item: string) => {
     else if (item === rightmenuitem.completely_delete) {
         rDeletefile(props.data)//右键彻底删除文件
     }
-<<<<<<< HEAD
-    if(item===rightmenuitem.projectset){
+    if (item === rightmenuitem.projectset) {
         if (menu.value) {
             menu.value.style.display = 'none'
         }
         emits('showSettingDialog')
     }
-    if (item === rightmenuitem.memberset) {
-=======
     else if (item === rightmenuitem.memberset) {
->>>>>>> ff3233035a3d0973f659c65ba58ad7a4b82d150c
         if (menu.value) {
             menu.value.style.display = 'none'
         }
         emits('showMembergDialog')
     }
-<<<<<<< HEAD
-    if(item===rightmenuitem.setfixed||item===rightmenuitem.cancelfixed){
+    if (item === rightmenuitem.setfixed || item === rightmenuitem.cancelfixed) {
         if (menu.value) {
             menu.value.style.display = 'none'
         }
         emits('cancelFixed')
-=======
-    else if(item === rightmenuitem.movefill) {
+    } else if (item === rightmenuitem.movefill) {
         if (menu.value) {
             menu.value.style.display = 'none'
         }
         emits('moveFillAddress', props.data);
->>>>>>> ff3233035a3d0973f659c65ba58ad7a4b82d150c
     }
 }
 

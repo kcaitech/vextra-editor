@@ -1,24 +1,4 @@
 <template>
-<<<<<<< HEAD
-    <div class="title" v-if="currentProject[0]">
-        <div class="left">
-            <div class="p">
-                <div class="title-p" v-if="!cusname">
-                    <p @dblclick="input_cusname">{{ currentProject[0].project.name }}</p>
-                    <div class="setting" @click="(e) => projectMenu(currentProject[0], e)"><el-icon
-                            style="transform: rotate(90deg); margin-right: 5px;">
-                            <MoreFilled />
-                        </el-icon>
-                        <TeamProjectMenu v-if="showProjecrMenu" :items="menuItem" :data="currentProject[0]" :top="20"
-                            :left="0" @cancelFixed="cancelFixed" @close="closeMenu" @projectSetting="projectSetting"
-                            @reName="input_cusname" @showMembergDialog="showMembergDialog" @delProject="onDelProject"
-                            @exitProject="onExitProject">
-                        </TeamProjectMenu>
-                    </div>
-                    <div style="padding-top: 3px;"
-                        @click.stop="back(currentProject[0].project, currentProject[0].is_in_team)">
-                        <svg-icon icon-class="back"></svg-icon>
-=======
     <div>
         <div class="title" v-if="currentProject[0]">
             <div class="left">
@@ -38,7 +18,6 @@
                         <div style="padding-top: 3px;" @click="back(currentProject[0].project, currentProject[0].is_in_team)">
                             <svg-icon icon-class="back"></svg-icon>
                         </div>
->>>>>>> ff3233035a3d0973f659c65ba58ad7a4b82d150c
                     </div>
                     <input v-if="cusname" type="text" @input="updateInputNameWidth" v-model="projectName" ref="input"
                         :style="{ width: inputNameLength + 'px' }">
@@ -129,10 +108,7 @@ const showProjecrMenu = ref(false);
 const delVisible = ref(false);
 const memberLen = ref(0);
 const exitVisible = ref(false);
-<<<<<<< HEAD
 const moveVisible = ref(false);
-let menuItem: string[] = ['del_porject', 'visit'];
-=======
 let menuItem: string[] = ['visit'];
 const projectOptions = [
     {
@@ -168,7 +144,6 @@ const params = {
     need_approval: false
 }
 
->>>>>>> ff3233035a3d0973f659c65ba58ad7a4b82d150c
 
 const { projectList, saveProjectData, is_favor, favoriteList, updateFavor, is_team_upodate, teamUpdate } = inject('shareData') as {
     projectList: Ref<any[]>;
