@@ -55,7 +55,7 @@ const emits = defineEmits([
     'showSettingDialog',
     'showMembergDialog',
     'cancelFixed',
-    'exitproject',
+    'exitordelproject',
     'showMembergDialog',
     'moveFillAddress'
 ])
@@ -118,6 +118,8 @@ const itemcontent = (item: string) => {
             return '固定项目'
         case rightmenuitem.cancelfixed:
             return '取消固定'
+        case rightmenuitem.exitproject:
+            return '退出项目'
         case rightmenuitem.deleteproject:
             return '删除项目'
         default:
@@ -138,7 +140,7 @@ const EventHandler = (item: string) => {
     else if (item === rightmenuitem.target_star) {
         rStarfile(props.data) //右键标星
     }
-    if (item === rightmenuitem.rename) {
+    else if (item === rightmenuitem.rename) {
         if (props.data.name) {
             rrename(props.data.name) //右键重命名
             return
@@ -166,7 +168,7 @@ const EventHandler = (item: string) => {
     else if (item === rightmenuitem.completely_delete) {
         rDeletefile(props.data)//右键彻底删除文件
     }
-    if (item === rightmenuitem.projectset) {
+    else if (item === rightmenuitem.projectset) {
         if (menu.value) {
             menu.value.style.display = 'none'
         }
@@ -178,12 +180,19 @@ const EventHandler = (item: string) => {
         }
         emits('showMembergDialog')
     }
-    if (item === rightmenuitem.setfixed || item === rightmenuitem.cancelfixed) {
+    else if (item === rightmenuitem.setfixed || item === rightmenuitem.cancelfixed) {
         if (menu.value) {
             menu.value.style.display = 'none'
         }
         emits('cancelFixed')
-    } else if (item === rightmenuitem.movefill) {
+    }
+    else if (item === rightmenuitem.exitproject || item === rightmenuitem.deleteproject) {
+        if (menu.value) {
+            menu.value.style.display = 'none'
+        }
+        emits('exitordelproject')
+    }
+    else if (item === rightmenuitem.movefill) {
         if (menu.value) {
             menu.value.style.display = 'none'
         }
