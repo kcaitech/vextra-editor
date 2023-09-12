@@ -101,6 +101,8 @@ const checktype = (type: any) => {
 
 onMounted(() => {
     if (typeof route.query.teamid === 'string') {
+        console.log('1111');
+        
         Getteaminfo(route.query.teamid)
     }
 })
