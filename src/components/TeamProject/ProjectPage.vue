@@ -108,6 +108,7 @@ const showProjecrMenu = ref(false);
 const delVisible = ref(false);
 const memberLen = ref(0);
 const exitVisible = ref(false);
+const moveVisible = ref(false);
 let menuItem: string[] = ['visit'];
 const projectOptions = [
     {
@@ -163,7 +164,7 @@ const closeMenu = () => {
 
 const back = (project: any, isTeam: boolean) => {
     if (isTeam) {
-        router.push({ path: '/apphome/teams/' + project.id });
+        router.push({ path: '/apphome/teams/' + project.team_id });
     } else {
         router.push('/apphome/project_share');
     }
@@ -320,7 +321,6 @@ const GetprojectLists = async () => {
                 }
             })
         }
-
         const project = favoriteProjectList(data, favoriteList.value)
         saveProjectData(project)
         currentProject.value = projectList.value.filter((item) => item.project.id === route.params.id);
@@ -377,14 +377,23 @@ function enter_desc(e: KeyboardEvent) {
 }
 
 function blur() {
-    if (projectName.value.trim().length < 1) return;
-    projectName.value = projectName.value.trim();
     const project = currentProject.value[0].project
+    projectName.value = projectName.value.trim();
+    if (projectName.value.trim().length < 1){
+        cusname.value = false
+        return
+    } 
+    if (projectName.value === project.name.trim()) {
+        cusname.value = false
+        return
+    }
     const params = {
         project_id: project.id,
         name: projectName.value
     }
     const favorite = favoriteList.value.findIndex((item) => item.project.id === route.params.id);
+    console.log(favoriteList.value);
+    
     if (favorite !== -1) {
         favoriteList.value[favorite].project.name = projectName.value;
         teamUpdate(!is_team_upodate.value);
@@ -396,9 +405,16 @@ function blur() {
 }
 
 function blur_desc() {
-    if (projectDesc.value.trim().length < 1) return;
-    projectDesc.value = projectDesc.value.trim();
     const project = currentProject.value[0].project
+    projectDesc.value = projectDesc.value.trim();
+    if (projectDesc.value.trim().length < 1){
+        cusdesc.value = false;
+        return
+    } 
+    if (projectDesc.value === project.description.trim()) {
+        cusdesc.value = false;
+        return
+    }
     const params = {
         project_id: project.id,
         description: projectDesc.value

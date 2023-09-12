@@ -12,8 +12,8 @@
         <input class="newname" type="text" v-model="newname" ref="renameinput" @keydown.enter="rename1" />
         <template #footer>
             <span class="dialog-footer">
-                <el-button type="primary" style="background-color: none;" @click="rename1"
-                    :disabled="newname == '' ? true : false">
+                <el-button type="primary" style="background-color: none;" @click.stop="rename1"
+                    :disabled="newname.trim() == '' ? true : false">
                     {{ t('home.rename_ok') }}
                 </el-button>
                 <el-button @click="dialogVisible = false">{{ t('home.cancel') }}</el-button>
@@ -51,6 +51,11 @@ const emits = defineEmits([
     'getDoucment',
     'getUserdata',
     'GetrecycleLists',
+    'projectrename',
+    'showSettingDialog',
+    'showMembergDialog',
+    'cancelFixed',
+    'exitproject',
     'showMembergDialog',
     'moveFillAddress'
 ])
@@ -72,6 +77,7 @@ enum rightmenuitem {
     memberset = 'memberset',
     setfixed = 'setfixed',
     cancelfixed = 'cancelfixed',
+    exitproject = 'exitproject',
     deleteproject = 'deleteproject',
     movefill = 'movefill'
 }
@@ -132,8 +138,15 @@ const EventHandler = (item: string) => {
     else if (item === rightmenuitem.target_star) {
         rStarfile(props.data) //右键标星
     }
-    else if (item === rightmenuitem.rename) {
-        rrename(props.data.name) //右键重命名
+    if (item === rightmenuitem.rename) {
+        if (props.data.name) {
+            rrename(props.data.name) //右键重命名
+            return
+        }
+        if (props.data.project.name) {
+            rrename(props.data.project.name)
+            return
+        }
     }
     else if (item === rightmenuitem.copyfile) {
         rcopyfile(props.data.id) //右键创建副本
@@ -153,13 +166,24 @@ const EventHandler = (item: string) => {
     else if (item === rightmenuitem.completely_delete) {
         rDeletefile(props.data)//右键彻底删除文件
     }
+    if (item === rightmenuitem.projectset) {
+        if (menu.value) {
+            menu.value.style.display = 'none'
+        }
+        emits('showSettingDialog')
+    }
     else if (item === rightmenuitem.memberset) {
         if (menu.value) {
             menu.value.style.display = 'none'
         }
         emits('showMembergDialog')
     }
-    else if(item === rightmenuitem.movefill) {
+    if (item === rightmenuitem.setfixed || item === rightmenuitem.cancelfixed) {
+        if (menu.value) {
+            menu.value.style.display = 'none'
+        }
+        emits('cancelFixed')
+    } else if (item === rightmenuitem.movefill) {
         if (menu.value) {
             menu.value.style.display = 'none'
         }
@@ -215,26 +239,36 @@ const rrename = (name: string) => {
 
 //重命名
 const rename1 = async () => {
-    if (!props.data) return;
-    const { document: { id, name } } = props.data
-    newname.value = renameinput.value?.value
-    if (newname.value == '') return
-    if (newname.value != name)
-        try {
-            const { code } = await user_api.Setfilename({ doc_id: id, name: newname.value })
-            if (code === 0) {
-                ElMessage.closeAll('success')
-                ElMessage.success({ duration: 1500, message: t('percenter.successtips') })
-                emits('getDoucment')
-                emits('getUserdata')
-            } else {
-                ElMessage.closeAll('error')
-                ElMessage.error({ duration: 1500, message: t('percenter.errortips1') })
+    if (props.data.project.name) {
+        const { id, name } = props.data.project
+        if (newname.value != name) {
+            const data = {
+                project_id: id,
+                name: newname.value
             }
-        } catch (error) {
-            ElMessage.closeAll('error')
-            ElMessage.error({ duration: 1500, message: t('home.other_tips') })
+            emits('projectrename', data)
         }
+    } else {
+        const { document: { id, name } } = props.data
+        newname.value = renameinput.value?.value
+        if (newname.value != name)
+            try {
+                const { code } = await user_api.Setfilename({ doc_id: id, name: newname.value })
+                if (code === 0) {
+                    ElMessage.closeAll('success')
+                    ElMessage.success({ duration: 1500, message: t('percenter.successtips') })
+                    emits('getDoucment')
+                    emits('getUserdata')
+                } else {
+                    ElMessage.closeAll('error')
+                    ElMessage.error({ duration: 1500, message: t('percenter.errortips1') })
+                }
+            } catch (error) {
+                ElMessage.closeAll('error')
+                ElMessage.error({ duration: 1500, message: t('home.other_tips') })
+            }
+    }
+
     dialogVisible.value = false
 }
 
