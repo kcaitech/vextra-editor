@@ -8,7 +8,7 @@
                 <div class="project-item" :class="{ 'selected': selectid === item.project.id }"
                     v-for="(item, index) in searchvalue === '' ? teamprojectlist : SearchList" :key="item.project.id"
                     @click.stop="selectid = item.project.id" @dblclick.stop="skipProject(item.project.id)"
-                    @contextmenu="rightmenu($event, item,index)">
+                    @contextmenu="rightmenu($event, item, index)">
                     <div class="project-name">{{ item.project.name }}</div>
                     <div class="project-description">{{ item.project.description }}</div>
                     <div class="project-creator">{{ item.creator.nickname }}</div>
@@ -45,7 +45,9 @@
     <ProjectDialog :projectVisible="delVisible" context="删除项目后，将删除项目及项目中所有文件、资料。" :title="'删除项目'" :confirm-btn="'任然删除'"
         @clode-dialog="closeDelVisible" @confirm="DelProject"></ProjectDialog>
     <listrightmenu :items="updateitems" :data="mydata" @showMembergDialog="showMembergDialog"
-        @projectrename="setProjectInfo" @showSettingDialog="showSettingDialog" @cancelFixed="cancelFixed(mydata.project.id,mydata.is_favor,mydataindex)"/>
+        @projectrename="setProjectInfo" @showSettingDialog="showSettingDialog"
+        @cancelFixed="cancelFixed(mydata.project.id, mydata.is_favor, mydataindex)"
+        @exitordelproject="onExitProject(mydata)" />
     <ProjectAccessSetting v-if="projectSettingDialog" title="邀请项目成员" :data="mydata" width="500px"
         @clodeDialog="projectSettingDialog = false" />
     <ProjectMemberg v-if="projectMembergDialog" :projectMembergDialog="projectMembergDialog" :currentProject="mydata"
@@ -69,10 +71,10 @@ interface Props {
     searchvalue?: string
 }
 
-const items = ref(['rename', 'projectset', 'memberset', 'setfixed', 'cancelfixed', 'deleteproject'])
+const items = ref(['rename', 'projectset', 'memberset', 'setfixed', 'cancelfixed', 'exitproject', 'deleteproject'])
 const updateitems = ref(items.value)
 const mydata = ref()
-const mydataindex=ref()
+const mydataindex = ref()
 const route = useRoute()
 const showbutton = ref(false)
 const noNetwork = ref(false)
@@ -129,8 +131,8 @@ const showMembergDialog = () => {
     projectMembergDialog.value = true
 }
 
-const showSettingDialog=()=>{
-    projectSettingDialog.value=true
+const showSettingDialog = () => {
+    projectSettingDialog.value = true
 }
 
 const closeDialog = () => {
@@ -166,8 +168,18 @@ function updateItemsBasedOnFavor(data: any, sourceItems: any) {
     let updateItems = [...sourceItems]
     if (data.is_favor) {
         updateItems = filterItemsByIndexes(updateItems, [3]);
+        if (data.self_perm_type === 5) {
+            updateItems = filterItemsByIndexes(updateItems, [4]);
+        } else {
+            updateItems = filterItemsByIndexes(updateItems, [5]);
+        }
     } else {
         updateItems = filterItemsByIndexes(updateItems, [4]);
+        if (data.self_perm_type === 5) {
+            updateItems = filterItemsByIndexes(updateItems, [4]);
+        } else {
+            updateItems = filterItemsByIndexes(updateItems, [5]);
+        }
     }
 
     if (data.self_perm_type < 4) {
@@ -245,7 +257,7 @@ const setProjectInfo = async (params: any) => {
 }
 
 //右键菜单入口
-const rightmenu = (e: MouseEvent, data: any,index?:number) => {
+const rightmenu = (e: MouseEvent, data: any, index?: number) => {
     const viewportWidth = window.innerWidth || document.documentElement.clientWidth
     const viewportHeight = window.innerHeight || document.documentElement.clientHeight
     const rightmenu: any = document.querySelector('.rightmenu')
@@ -263,7 +275,7 @@ const rightmenu = (e: MouseEvent, data: any,index?:number) => {
     }
     updateitems.value = updateItemsBasedOnFavor(data, items.value);
     mydata.value = data
-    mydataindex.value=index
+    mydataindex.value = index
     selectid.value = data.project.id
 }
 
