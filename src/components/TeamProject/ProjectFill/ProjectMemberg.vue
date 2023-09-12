@@ -291,7 +291,7 @@ watch(innerVisible, (v) => {
             </el-scrollbar>
         </div>
         <div class="project_perm">
-            <div v-if="props.currentProject.public_switch">项目权限:公开，所有团队成员均可访问</div>
+            <div v-if="props.currentProject.project.public_switch">项目权限:公开，所有团队成员均可访问</div>
             <div v-else>项目权限:非公开，仅通过链接邀请成员可访问</div>
         </div>
         <div v-if="props.currentProject.self_perm_type !== 5">

@@ -335,7 +335,7 @@ const getDocumentInfo = async () => {
         }
         permType.value = dataInfo.data.document_permission.perm_type;
         //获取文档类型是否为私有文档且有无权限
-        console.log(dataInfo.data,'dataInfo.data');
+        console.log(dataInfo.data,'文档信息');
         
         if (docInfo.value.document_permission.perm_type === 0) {
             router.push({

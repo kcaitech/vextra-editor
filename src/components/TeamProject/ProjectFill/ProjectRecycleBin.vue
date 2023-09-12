@@ -25,7 +25,7 @@ import { ref, onMounted, onUnmounted, nextTick, watch } from 'vue'
 import { useI18n } from 'vue-i18n'
 import tablelist from '@/components/AppHome/tablelist.vue'
 import listrightmenu from "@/components/AppHome/listrightmenu.vue"
-
+import { useRoute } from 'vue-router'
 const items = ['restore', 'completely_delete']
 const { t } = useI18n()
 const isLoading = ref(false)
@@ -35,7 +35,7 @@ const mydata = ref<data>()
 const noNetwork = ref(false)
 let lists = ref<any[]>([])
 const iconlists = ref(['restore', 'Delete'])
-
+const route = useRoute();
 const props = defineProps<{
     currentProject: any
 }>();
@@ -52,10 +52,14 @@ interface data {
 }
 
 //获取回收站文件列表
-async function GetrecycleLists() {
+async function GetrecycleLists(id: string) {
+    let projectId = id
+    if(!id || id === '0') {
+        projectId = route.params.id as string
+    }
     isLoading.value = true
     try {
-        const { data } = await team_api.GetrecycleList({project_id: props.currentProject.project.id})
+        const { data } = await team_api.GetrecycleList({project_id: projectId})
         if (data == null) {
             noNetwork.value = true
         } else {
@@ -63,7 +67,7 @@ async function GetrecycleLists() {
             for (let i = 0; i < data.length; i++) {
                 let { document: { size, deleted_at } } = data[i]
                 data[i].document.size = sizeTostr(size)
-                data[i].document.deleted_at = deleted_at.slice(0, 19).split('T')[0] + ' ' + deleted_at.slice(0, 19).split('T')[1]
+                data[i].document.deleted_at = deleted_at.split('.')[0]
             }
         }
         lists.value = Object.values(data)
@@ -74,7 +78,7 @@ async function GetrecycleLists() {
 }
 
 const refreshDoc = () => {
-    GetrecycleLists()
+    GetrecycleLists(props.currentProject.project.id)
 }
 
 //转换文件大小
@@ -162,7 +166,7 @@ const rightmenu = (e: MouseEvent, data: data) => {
 // }, { deep: true })
 
 onMounted(() => {
-    GetrecycleLists()
+    GetrecycleLists(props.currentProject.project.id)
 })
 
 onUnmounted(() => {

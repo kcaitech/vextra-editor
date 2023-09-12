@@ -377,8 +377,10 @@ function enter_desc(e: KeyboardEvent) {
 }
 
 function blur() {
+    if(!currentProject.value[0]) return cusname.value = false;
     const project = currentProject.value[0].project
     projectName.value = projectName.value.trim();
+    document.removeEventListener('keydown', enter);
     if (projectName.value.trim().length < 1){
         cusname.value = false
         return
@@ -392,8 +394,6 @@ function blur() {
         name: projectName.value
     }
     const favorite = favoriteList.value.findIndex((item) => item.project.id === route.params.id);
-    console.log(favoriteList.value);
-    
     if (favorite !== -1) {
         favoriteList.value[favorite].project.name = projectName.value;
         teamUpdate(!is_team_upodate.value);
@@ -401,12 +401,13 @@ function blur() {
     project.name = projectName.value;
     setProjectInfo(params)
     cusname.value = false;
-    document.removeEventListener('keydown', enter);
 }
 
 function blur_desc() {
+    if(!currentProject.value[0]) return cusdesc.value = false;
     const project = currentProject.value[0].project
     projectDesc.value = projectDesc.value.trim();
+    document.removeEventListener('keydown', enter);
     if (projectDesc.value.trim().length < 1){
         cusdesc.value = false;
         return
@@ -427,7 +428,6 @@ function blur_desc() {
     project.description = projectDesc.value;
     setProjectInfo(params)
     cusdesc.value = false;
-    document.removeEventListener('keydown', enter);
 }
 
 function updateInputNameWidth() {
@@ -637,7 +637,6 @@ onMounted(() => {
             font-size: 18px;
             font-weight: bold;
             margin: 0;
-            margin-bottom: 5px;
             padding: 5px;
             border: 2px solid transparent;
             overflow: hidden;
