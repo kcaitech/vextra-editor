@@ -102,6 +102,7 @@ function point_mousemove(event: MouseEvent) {
             search = true;
             const page = props.context.selection.selectedPage;
             contactEditor = props.context.editor.controller().asyncContactEditor(props.shape, page!);
+            contactEditor.pre();
         }
     }
 }

@@ -138,8 +138,7 @@ function point_mouseup(event: MouseEvent) {
 // 重置路径
 function reset_path() {
     const editor = props.context.editor4Shape(props.shape);
-    editor.modify_edit_state(false);
-    editor.modify_frame_by_points();
+    editor.reset_contact_path();
 }
 function window_blur() {
     const workspace = props.context.workspace;
