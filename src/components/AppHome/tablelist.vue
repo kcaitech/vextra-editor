@@ -56,14 +56,21 @@ watch(() => props.data, () => {
     empty.value = true
 });
 
-const { projectList, saveProjectData, is_favor, favoriteList, updateFavor, is_team_upodate, teamUpdate } = inject('shareData') as {
+const { projectList, saveProjectData, is_favor, favoriteList, updateFavor, is_team_upodate, teamData } = inject('shareData') as {
     projectList: Ref<any[]>;
     favoriteList: Ref<any[]>;
     saveProjectData: (data: any[]) => void;
     is_favor: Ref<boolean>;
     updateFavor: (b: boolean) => void;
     is_team_upodate: Ref<boolean>;
-    teamUpdate: (b: boolean) => void;
+    teamData: Ref<[{
+        team: {
+            id: string,
+            name: string,
+            avatar: string,
+            description: string
+        }
+    }]>;
 };
 
 watch(() => props.noNetwork, (newV) => {
@@ -143,8 +150,8 @@ const columns: Column<any>[] = [
     {
         key: 'name',
         title: `${t('home.file_name')}`,
-        width: 500,
-        minWidth: 150,
+        width: 400,
+        minWidth: 100,
         dataKey: 'document',
         align: 'left',
         cellRenderer: ({ cellData: { name } }) => <span>{name}</span>
@@ -154,9 +161,9 @@ const columns: Column<any>[] = [
         key: 'time',
         title: `${props.iconlist.includes('restore') ? t('home.delete_file_time') : t('home.modification_time')}`,
         dataKey: 'document',
-        width: 500,
-        minWidth: 150,
-        align: 'center',
+        width: 400,
+        minWidth: 100,
+        align: 'left',
         cellRenderer: ({ rowData: { document: { deleted_at, created_at }, document_access_record: { last_access_time, id } } }) => {
             let displayContent;
             if (props.iconlist.includes('restore')) {
@@ -182,17 +189,17 @@ const columns: Column<any>[] = [
         key: 'size',
         dataKey: 'document',
         title: `${t('home.size')}`,
-        width: 500,
-        minWidth: 150,
-        align: 'center',
+        width: 400,
+        minWidth: 100,
+        align: 'left',
         cellRenderer: ({ cellData: { size } }) => <span>{size}</span>,
     },
     {
         key: 'operations',
         title: `${t('home.operation')}`,
         dataKey: 'document',
-        width: 500,
-        minWidth: 150,
+        width: 400,
+        minWidth: 100,
         align: 'left',
         cellRenderer: ({ rowData }) => (
             <>
@@ -310,19 +317,39 @@ const columns: Column<any>[] = [
     },
 ]
 
+const getFillAddress = (id: string, project: any, team: any) => {
+    const user_id = localStorage.getItem('userId');
+    let address = '';
+    if(project) {
+        const p_Info = projectList.value.filter(item => item.project.id === project.id)[0];
+        if(p_Info && p_Info.is_in_team) {
+            address = team.name + ' / ' + project.name;
+        }else if(p_Info) {
+            address = '收到的分享项目 / ' + project.name;
+        }
+        return address;
+    }else {
+        if(user_id === id) {
+            address = '我的文件';
+        }else {
+            address = '收到的共享文件';
+        }
+        return address;
+    }
+}
+
 watchEffect(() => {
     if(props.address) {
         columns.splice(3, 0, {
             key: 'address',
             dataKey: 'document',
             title: `文件位置`,
-            width: 500,
-            minWidth: 150,
-            align: 'center',
-            cellRenderer: ({ rowData: { document: { project_id } } }) => {
-                // const project = projectList.value.filter(item => item.project.id === project_id)[0];
+            width: 400,
+            minWidth: 100,
+            cellRenderer: ({ rowData: { document: { user_id }, project, team } }) => {
+                const address = getFillAddress(user_id, project, team);
                 return (
-                    <span>{111}</span>
+                    <span>{address}</span>
             );
             },
         },)
@@ -332,13 +359,12 @@ watchEffect(() => {
             key: 'creator',
             dataKey: 'document',
             title: `创建者`,
-            width: 500,
-            minWidth: 150,
-            align: 'center',
-            cellRenderer: ({ rowData: { document: { project_id } } }) => {
-                const project = projectList.value.filter(item => item.project.id === project_id)[0];
+            width: 400,
+            minWidth: 100,
+            align: 'left',
+            cellRenderer: ({ rowData: { user: { nickname } } }) => {
                 return (
-                    <span>{project.creator.nickname}</span>
+                    <span>{nickname}</span>
             );
             },
         },)
@@ -355,6 +381,14 @@ watchEffect(() => {
     .table {
         height: calc(100vh - 125px);
     }
+}
+:deep(.el-table-v2__row) {
+    display: flex;
+    justify-content: space-between;
+}
+:deep(.el-table-v2__header-row) {
+    display: flex;
+    justify-content: space-between;
 }
 
 :deep(.el-table-v2__row:hover) {

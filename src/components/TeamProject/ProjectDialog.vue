@@ -35,7 +35,7 @@ const quitProject = () => {
         <template #footer>
             <div class="dialog-footer">
                 <el-button class="quit" @click="quitProject" style="background-color: #9775fa; color: #fff;">{{ confirmBtn }}</el-button>
-                <el-button class="quit" style="background-color: #9775fa; color: #fff;" @click="handleClose">
+                <el-button class="quit" style="background-color: #fff; color: #000;" @click="handleClose">
                     取消
                 </el-button>
             </div>

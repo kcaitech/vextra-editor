@@ -43,7 +43,7 @@ const Getteaminfo = async (teamid: string) => {
     try {
         const { code, data } = await user_api.Getteaminfo({ team_id: teamid })
         if (code === 0) {
-            if(data.self_perm_type >= data.invited_perm_type) {
+            if(data.self_perm_type === data.invited_perm_type || data.self_perm_type && data.self_perm_type > data.invited_perm_type) {
                 return router.push({ path: '/apphome/teams/' + teamid });
             }
             teaminfo.value = data
@@ -101,8 +101,6 @@ const checktype = (type: any) => {
 
 onMounted(() => {
     if (typeof route.query.teamid === 'string') {
-        console.log('1111');
-        
         Getteaminfo(route.query.teamid)
     }
 })

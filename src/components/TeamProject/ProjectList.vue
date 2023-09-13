@@ -1,6 +1,6 @@
 <template>
     <div v-if="!noNetwork">
-        <div v-if="!showbutton" class="container">
+        <div v-if="teamprojectlist.length > 0 || SearchList.length > 0" class="container">
             <div class="hearder-container">
                 <div class="title" v-for="(item, index) in titles" :key="index">{{ item }}</div>
             </div>
@@ -8,11 +8,12 @@
                 <div class="project-item" :class="{ 'selected': selectid === item.project.id }"
                     v-for="(item, index) in searchvalue === '' ? teamprojectlist : SearchList" :key="item.project.id"
                     @click.stop="selectid = item.project.id" @dblclick.stop="skipProject(item.project.id)"
-                    @contextmenu="rightmenu($event, item, index)">
+                    @contextmenu="rightmenu($event, item, index)" @mouseenter="showOther(item.project.id)"
+                    @mouseleave="hiddOther">
                     <div class="project-name">{{ item.project.name }}</div>
                     <div class="project-description">{{ item.project.description }}</div>
                     <div class="project-creator">{{ item.creator.nickname }}</div>
-                    <div class="other">
+                    <div class="other" v-if="selectid === item.project.id || showother && hoverId === item.project.id">
                         <div @click="cancelFixed(item.project.id, item.is_favor, index)">
                             <svg t="1693476333821" class="icon" viewBox="0 0 1024 1024" version="1.1"
                                 xmlns="http://www.w3.org/2000/svg" p-id="15755" width="24" height="24">
@@ -31,12 +32,30 @@
                         <div @click.stop="skipProject(item.project.id)"><svg-icon icon-class="drag"></svg-icon></div>
                         <div @click="onExitProject(item)"><svg-icon icon-class="pattern-ellipse"></svg-icon></div>
                     </div>
+                    <div class="other" v-else-if="item.is_favor">
+                        <div @click="cancelFixed(item.project.id, item.is_favor, index)">
+                            <svg t="1693476333821" class="icon" viewBox="0 0 1024 1024" version="1.1"
+                                xmlns="http://www.w3.org/2000/svg" p-id="15755" width="24" height="24">
+                                <path
+                                    d="M0 0m256 0l512 0q256 0 256 256l0 512q0 256-256 256l-512 0q-256 0-256-256l0-512q0-256 256-256Z"
+                                    :fill="item.is_favor ? '#9775fa' : '#999'" p-id="15756"
+                                    data-spm-anchor-id="a313x.search_index.0.i11.6fa73a817d52QG" class="">
+                                </path>
+                                <path
+                                    d="M256 767.6416l202.9568-160.9216 80.9728 86.1184s33.792 9.216 35.8656-16.384l-2.0736-87.1424 119.936-138.368 52.2496-3.0464s41.0112-8.2432 11.2896-44.0832l-146.5856-147.584s-39.936-5.12-36.8896 31.744v39.9872l-136.2944 115.8912-84.0192 5.0688s-30.7712 10.24-19.5072 36.9152l78.9504 77.9008L256 767.6416z"
+                                    fill="#FFFFFF" p-id="15757" data-spm-anchor-id="a313x.search_index.0.i10.6fa73a817d52QG"
+                                    class="">
+                                </path>
+                            </svg>
+                        </div>
+                    </div>
+                    <div class="other" v-else></div>
                 </div>
             </div>
         </div>
         <div v-else class="datanull">
             <p>未加入任何项目</p>
-            <button type="button" @click.stop="onAddproject">新建项目</button>
+            <button type="button" @click.stop="onAddproject" v-if="teamSelfPermType > 0">新建项目</button>
         </div>
     </div>
     <NetworkError v-else @refresh-doc="GetprojectLists"></NetworkError>
@@ -87,6 +106,8 @@ const innerVisible = ref(false);
 const project_item = ref<any>({});
 const projectMembergDialog = ref(false)
 const projectSettingDialog = ref(false)
+const showother = ref(false)
+const hoverId = ref('')
 const emits = defineEmits<{
     (e: 'addproject'): void
 }>()
@@ -95,10 +116,11 @@ const props = withDefaults(defineProps<Props>(), {
     searchvalue: ''
 })
 
-const { teamID, teamData, updateprojectlist, updateprojectliststate, projectList, saveProjectData, is_favor, favoriteList, updateFavor, updateActiveNames, addTargetItem } = inject('shareData') as {
+const { teamID, teamData, updateprojectlist, updateprojectliststate, projectList, saveProjectData, is_favor, favoriteList, updateFavor, updateActiveNames, addTargetItem, teamSelfPermType } = inject('shareData') as {
     updateprojectlist: Ref<boolean>;
     updateprojectliststate: (b: boolean) => void;
     teamID: Ref<string>;
+    teamSelfPermType: Ref<number>;
     projectList: Ref<any[]>;
     favoriteList: Ref<any[]>;
     saveProjectData: (data: any[]) => void;
@@ -125,6 +147,14 @@ const favoriteProjectList = (arr1: any[], arr2: any[]) => {
 }
 const onAddproject = () => {
     emits('addproject');
+}
+const showOther = (id: string) => {
+    showother.value = true;
+    hoverId.value = id;
+}
+const hiddOther = () => {
+    showother.value = false;
+    hoverId.value = '';
 }
 
 const showMembergDialog = () => {
@@ -358,7 +388,7 @@ onMounted(() => {
 </script>
 <style lang="scss" scoped>
 .selected {
-    background-color: #e5dbff;
+    background-color: #e5dbff !important;
 }
 
 .container {
@@ -391,7 +421,7 @@ onMounted(() => {
         .other {
             width: 25%;
             display: flex;
-            
+
             svg {
                 width: 16px;
                 height: 16px;
@@ -401,6 +431,7 @@ onMounted(() => {
                 margin-right: 10px;
             }
         }
+
         .project-name {
             display: inline-block;
             overflow: hidden;
@@ -410,6 +441,7 @@ onMounted(() => {
             box-sizing: border-box;
             margin-left: 5px;
         }
+
         .project-description {
             display: inline-block;
             overflow: hidden;
@@ -417,6 +449,7 @@ onMounted(() => {
             white-space: nowrap;
             padding-right: 20px;
         }
+
         .project-creator {
             display: inline-block;
             overflow: hidden;

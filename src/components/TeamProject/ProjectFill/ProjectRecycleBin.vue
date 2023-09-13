@@ -71,6 +71,8 @@ async function GetrecycleLists(id: string) {
             }
         }
         lists.value = Object.values(data)
+        console.log(lists.value,'lists.value');
+        
     } catch (error) {
         noNetwork.value = true
     }

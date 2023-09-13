@@ -44,10 +44,15 @@ const { teamData, projectList } = inject('shareData') as {
 }
 const activeNames = ref();
 const pList = computed(() => {
-    return projectList.value.filter(item => item.project.team_id === activeNames.value && item.self_perm_type >= 3 && item.project.id !== props.projectItem.project.id);
+    return projectList.value.filter(item => item.project.team_id === activeNames.value && item.self_perm_type >= 3);
 })
 const teamName = computed(() => {
-    return teamData.value.filter(item => item.team.id === props.projectItem.project.team_id)[0].team.name
+    const team = teamData.value.filter(item => item.team.id === props.projectItem.project.team_id)[0]
+    if (team) {
+        return team.team.name
+    } else {
+        return ''
+    }
 })
 const shareProject = computed(() => {
     return projectList.value.filter(item => !item.is_in_team);
@@ -70,14 +75,22 @@ const moveProjectTarget = async (params: any) => {
     }
 }
 const quitProject = () => {
+    let params
     emit('confirm');
-    const params = {
-        document_id: props.doc!.document.id,
-        source_project_id: props.projectItem.project.id,
-        target_project_id: curProject.value.project.id
+    if (activeNames.value === '2') {
+        params = {
+            document_id: props.doc!.document.id
+        }
+    } else {
+        params = {
+            document_id: props.doc!.document.id,
+            source_project_id: props.projectItem.project.id,
+            target_project_id: curProject.value.project.id
+        }
     }
+    if (props.projectItem.project.id === curProject.value.project.id) return emit('moveFillSeccess');
     moveProjectTarget(params);
-    emit('moveFillSeccess')
+    emit('moveFillSeccess');
 }
 
 const onactiveNames = (id: string) => {
@@ -102,26 +115,32 @@ const onactiveNames = (id: string) => {
             </div>
             <div class="conteiner">
                 <div class="target_fill">
-                    <template v-for="(data) in teamData" :key="data.team.id">
-                        <div class="team-title" :class="{ 'is_active': activeNames === data.team.id }"
-                            @click="onactiveNames(data.team.id)">
-                            <div class="left">
-                                <div class="team-avatar">
-                                    <div v-if="data.team.avatar.includes('http')" class="img">
-                                        <img :src="data.team.avatar" alt="team avatar">
-                                    </div>
-                                    <div v-else class="text">
-                                        <span>{{ data.team.name.slice(0, 1) }}</span>
-                                    </div>
-                                </div>
-                                <div class="name">{{ data.team.name }}</div>
+                    <el-scrollbar height="290px">
+                        <div class="team-title" @click="onactiveNames('2')" v-if="projectItem.self_perm_type === 5">
+                            <div class="left" :class="{ 'is_active': activeNames === '2' }">
+                                <el-icon style="margin-right: 10px;">
+                                    <Folder />
+                                </el-icon>
+                                <div class="name">我的文件</div>
                             </div>
                         </div>
-                    </template>
-                    <template>
-                        <div class="team-title" :class="{ 'is_active': activeNames === '1' }"
-                            @click="onactiveNames('1')">
-                            <div class="left">
+                        <template v-for="(data) in teamData" :key="data.team.id">
+                            <div class="team-title" @click="onactiveNames(data.team.id)" v-if="data.self_perm_type > 0">
+                                <div class="left" :class="{ 'is_active': activeNames === data.team.id }">
+                                    <div class="team-avatar">
+                                        <div v-if="data.team.avatar.includes('http')" class="img">
+                                            <img :src="data.team.avatar" alt="team avatar">
+                                        </div>
+                                        <div v-else class="text">
+                                            <span>{{ data.team.name.slice(0, 1) }}</span>
+                                        </div>
+                                    </div>
+                                    <div class="name">{{ data.team.name }}</div>
+                                </div>
+                            </div>
+                        </template>
+                        <div class="team-title" @click="onactiveNames('1')" v-if="shareProject.length > 0">
+                            <div class="left" :class="{ 'is_active': activeNames === '1' }">
                                 <div class="team-avatar">
                                     <div class="img">
                                         <img src="" alt="team avatar">
@@ -130,18 +149,37 @@ const onactiveNames = (id: string) => {
                                 <div class="name">收到的共享项目</div>
                             </div>
                         </div>
-                    </template>
+                    </el-scrollbar>
                 </div>
                 <div class="target_project">
-                    <div class="project" :class="{ 'is_active': item.project.id === active }" v-for="(item, i) in pList || shareProject"
-                        :key="i" @click="targetProject(item)">
-                        <div>
-                            <el-icon style="margin-right: 10px;">
-                                <Folder />
-                            </el-icon>
-                            <div>{{ item.project.name }}</div>
+                    <el-scrollbar height="290px">
+                        <div class="project" v-for="(item, i) in pList" :key="i" @click="targetProject(item)">
+                            <div :class="{ 'is_active': item.project.id === active }">
+                                <el-icon style="margin-right: 10px;">
+                                    <Folder />
+                                </el-icon>
+                                <div class="name">{{ item.project.name }}</div>
+                            </div>
                         </div>
-                    </div>
+                        <div class="project" v-if="activeNames === '2'">
+                            <div :class="{ 'is_active': activeNames === '2' }">
+                                <el-icon style="margin-right: 10px;">
+                                    <Folder />
+                                </el-icon>
+                                <div>移动到我的文件，文件改为个人文件</div>
+                            </div>
+                        </div>
+                        <template v-for="(item, i) in shareProject" :key="i">
+                            <div class="project" v-if="activeNames === '1'" @click="targetProject(item)">
+                                <div :class="{ 'is_active': item.project.id === active }">
+                                    <el-icon style="margin-right: 10px;">
+                                        <Folder />
+                                    </el-icon>
+                                    <div class="name">{{ item.project.name }}</div>
+                                </div>
+                            </div>
+                        </template>
+                    </el-scrollbar>
                 </div>
             </div>
         </div>
@@ -187,6 +225,10 @@ const onactiveNames = (id: string) => {
     border: none;
 }
 
+:deep(.el-scrollbar) {
+    margin-right: -10px;
+}
+
 .context {
     font-size: 14px;
     color: #000;
@@ -210,11 +252,13 @@ const onactiveNames = (id: string) => {
             padding: 5px 10px;
             width: 40%;
             border-right: 1px solid rgba(0, 0, 0, .5);
+            box-sizing: border-box;
         }
 
         .target_project {
-            flex: 1;
+            width: 60%;;
             padding: 5px 10px;
+            box-sizing: border-box;
         }
     }
 }
@@ -228,20 +272,22 @@ const onactiveNames = (id: string) => {
     border-radius: 4px;
     margin-bottom: 5px;
 
-    &:hover {
-        background-color: #f3f0ff;
-
-        .right {
-            visibility: visible;
-        }
-    }
-
     .left {
         display: flex;
         align-items: center;
         width: 100%;
-        margin-left: 8px;
+        padding-left: 8px;
+        margin-right: 10px;
+        border-radius: 4px;
         height: 100%;
+
+        &:hover {
+            background-color: #f3f0ff;
+
+            .right {
+                visibility: visible;
+            }
+        }
 
         .down {
             display: flex;
@@ -316,10 +362,7 @@ const onactiveNames = (id: string) => {
     box-sizing: border-box;
     cursor: pointer;
     margin-bottom: 5px;
-
-    &:hover {
-        background-color: #f3f0ff;
-    }
+    padding-right: 10px;
 
     >div {
         box-sizing: border-box;
@@ -329,6 +372,18 @@ const onactiveNames = (id: string) => {
         height: 35px;
         border-radius: 4px;
         padding-left: 10px;
+        margin-right: 10px;
+
+        &:hover {
+            background-color: #f3f0ff;
+        }
+    }
+
+    .name {
+        display: inline-block;
+        overflow: hidden;
+        text-overflow: ellipsis;
+        white-space: nowrap;
     }
 }
 

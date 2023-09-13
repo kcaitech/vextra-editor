@@ -391,6 +391,7 @@ const setProjectInfo = async (params: any) => {
 
 const skipProjecrShare = () => {
     router.push('/apphome/project_share');
+    sessionStorage.setItem('index', '9');
 }
 
 const isActive = (id: string, name: string, avatar: string, description: string, self_perm_type: number) => {
@@ -634,7 +635,7 @@ onUnmounted(() => {
                                             <div class="name">{{ data.team.name }}</div>
                                         </div>
                                         <div class="right" @click.stop="showprojectcard(data.team.id)">
-                                            <svg-icon icon-class="close" />
+                                            <svg-icon icon-class="close" v-if="data.self_perm_type > 0"/>
                                         </div>
                                     </div>
                                 </template>

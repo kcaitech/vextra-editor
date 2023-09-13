@@ -23,7 +23,7 @@
                 </li>
             </ul>
             <div class="addandsearch">
-                <button type="button" v-if="itemid === 0" @click.stop="showoverlay = true">新建项目</button>
+                <button type="button" v-if="itemid === 0 && teamSelfPermType > 0" @click.stop="showoverlay = true">新建项目</button>
                 <button type="button" v-if="itemid === 1" @click.stop="showoverlay = true">邀请成员</button>
                 <el-input v-if="itemid != 2" ref="inputRef" size="large" v-model="search"
                     :placeholder="itemid === 0 ? '搜索项目/创建者' : '搜索成员'">
@@ -85,7 +85,7 @@ interface data {
     }
 }
 
-const { teamData, teamID, teamName, teamAvatar, teamDescription } = inject('shareData') as {
+const { teamData, teamID, teamName, teamAvatar, teamDescription, teamSelfPermType } = inject('shareData') as {
     teamData: Ref<[{
         team: {
             id: string,
@@ -98,6 +98,7 @@ const { teamData, teamID, teamName, teamAvatar, teamDescription } = inject('shar
     teamName: Ref<string>;
     teamAvatar: Ref<string>;
     teamDescription: Ref<string>;
+    teamSelfPermType: Ref<number>;
 }
 
 const avatar = computed(() => {

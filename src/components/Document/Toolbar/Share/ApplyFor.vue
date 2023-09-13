@@ -17,7 +17,7 @@ enum Audit {
 }
 const timestamp = Date.now()
 const permission = ref([`${t('share.no_authority')}`, `${t('share.readOnly')}`, `${t('share.reviewable')}`, `${t('share.editable')}`]);
-const teamPermission = ref([`${t('share.no_authority')}`, `${t('share.readOnly')}`, `${t('share.editable')}`]);
+const teamPermission = ref([`${t('share.readOnly')}`, `${t('share.editable')}`]);
 const getApplyList = async (time?: number) => {
   const { data } = await share_api.getApplyListAPI({ doc_id: route.query.id, start_time: time })
   applyList.value = [...applyList.value, ...data]
@@ -142,7 +142,7 @@ onUnmounted(() => {
       <!-- 标题 -->
       <template #header>
         <div class="card-header">
-          <span>{{ t('apply.team_apply') }}</span>
+          <span>{{ t('apply.project_apply') }}</span>
           <el-button class="button" text @click="close(index, 'project')">
             <div class="close"> X </div>
           </el-button>
@@ -180,7 +180,7 @@ onUnmounted(() => {
       <!-- 标题 -->
       <template #header>
         <div class="card-header">
-          <span>{{ t('apply.project_apply') }}</span>
+          <span>{{ t('apply.team_apply') }}</span>
           <el-button class="button" text @click="close(index, 'team')">
             <div class="close"> X </div>
           </el-button>

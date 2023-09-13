@@ -35,11 +35,17 @@ const { t } = useI18n()
 const permission = ref([`${t('share.no_authority')}`, `${t('share.readOnly')}`, `${t('share.reviewable')}`, `${t('share.editable')}`])
 const getProjectInvitedInfo = async () => {
     try {
-        const { data } = await team_api.getProjectInvitedInfoAPI({ project_id: route.query.id });
-        projectInfo.value = data;
-        switchstate.value = data.invited_switch;
-        if (data.self_perm_type >= data.invited_perm_type) {
-            router.push({ path: '/apphome/project/' + route.query.id });
+        const { data, message, code } = await team_api.getProjectInvitedInfoAPI({ project_id: route.query.id });
+        if(message === '项目邀请已关闭' && code === -1) {
+            switchstate.value = false;
+        }else {
+            switchstate.value = true;
+        }
+        projectInfo.value = data || '项目邀请已关闭';
+        if(data) {
+            if (data.self_perm_type >= data.invited_perm_type) {
+                router.push({ path: '/apphome/project/' + route.query.id });
+            }
         }
     } catch (error) {
         console.log(error);

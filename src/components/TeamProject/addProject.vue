@@ -49,13 +49,14 @@ const { updateprojectliststate } = inject('shareData') as {
 
 const createProject = async () => {
     try {
-        const { code, message } = await user_api.CreateProject({ team_id: props.teamid, name: inputValue.value, description: textareaValue.value })
+        const { code, message, data } = await user_api.CreateProject({ team_id: props.teamid, name: inputValue.value, description: textareaValue.value })
         if (code === 0) {
             emits('close')
             updateprojectliststate(true)
             ElMessage.success('成功添加项目')
-            if (route.params.id === props.teamid) return
-            router.push({ path: '/apphome/teams/' + props.teamid })
+            nextTick(() => {
+                router.push({ path: '/apphome/project/' + data.id });
+            })
         } else {
             ElMessage.error(message)
         }

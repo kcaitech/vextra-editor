@@ -256,7 +256,7 @@ watch(innerVisible, (v) => {
                 <div class="member-item" v-for="(item, index) in memberList" :key="index">
                     <div class="name">{{ item.user.nickname }}</div>
                     <el-dropdown trigger="click" @command="handleCommandPerm"
-                        :disabled="item.perm_type === 5 || item.perm_type === 4">
+                        :disabled="item.perm_type === 5 || (item.perm_type === 4 && props.currentProject.self_perm_type !== 5)">
                         <span class="el-dropdown-link">
                             {{ permission[item.perm_type] }}<el-icon class="el-icon--right"><arrow-down
                                     v-if="(props.currentProject.self_perm_type === 5 && item.perm_type !== 5) || (props.currentProject.self_perm_type === 4 && (item.perm_type !== 4 && item.perm_type !== 5))" /></el-icon>
