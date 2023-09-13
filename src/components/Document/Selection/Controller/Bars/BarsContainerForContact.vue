@@ -139,6 +139,7 @@ function point_mouseup(event: MouseEvent) {
 function reset_path() {
     const editor = props.context.editor4Shape(props.shape);
     editor.modify_edit_state(false);
+    editor.modify_frame_by_points();
 }
 function window_blur() {
     const workspace = props.context.workspace;
