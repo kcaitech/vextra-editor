@@ -320,16 +320,11 @@ watch(updateprojectlist, () => {
 //获取当前用户所有项目列表,然后用计算属性筛选出当前团队的项目
 watchEffect(() => {
     teamprojectlist.value = projectList.value.filter((item) => item.project.team_id === teamID.value)
-})
-
-watch(teamprojectlist, () => {
-    setTimeout(() => {
-        if (teamprojectlist.value.length === 0) {
-            showbutton.value = true
-        } else {
-            showbutton.value = false
-        }
-    }, 300);
+    if (teamprojectlist.value.length === 0) {
+        showbutton.value = true
+    } else {
+        showbutton.value = false
+    }
 })
 
 watch(is_favor, () => {
@@ -481,5 +476,4 @@ onMounted(() => {
             background-color: rgba(150, 117, 250, 0.862745098);
         }
     }
-}
-</style>
+}</style>

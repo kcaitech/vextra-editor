@@ -329,7 +329,11 @@ const GetprojectLists = async () => {
     try {
         const { data } = await user_api.GetprojectLists()
         const pros = data.filter((item: any) => item.project.id === route.params.id);
+        console.log(pros.value);
+        
         if (!pros.length) {
+            console.log('1111');
+            
             router.push({
                 name: 'projectApply',
                 query: {
@@ -338,6 +342,7 @@ const GetprojectLists = async () => {
             })
         }
         if (pros[0].perm_type === 0) {
+            console.log('22222');
             router.push({
                 name: 'projectApply',
                 query: {
