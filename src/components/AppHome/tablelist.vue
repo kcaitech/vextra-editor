@@ -6,9 +6,7 @@
                     :row-event-handlers="rowHandleClick" @scroll="rightmenu">
                     <template #overlay v-if="loading">
                         <div class="el-loading-mask" style="display: flex; align-items: center; justify-content: center">
-                            <el-icon class="is-loading" color="var(--active-color)" :size="26" style="display:block">
-                                <loading-icon />
-                            </el-icon>
+                            <Loading :size="20"/>
                         </div>
                     </template>
                     <template #empty>
@@ -29,12 +27,13 @@
     </div>
 </template>
 <script setup lang="tsx">
-import { ref, watchEffect,Ref, inject } from 'vue'
-import { Share, Delete, Remove, Loading as LoadingIcon } from '@element-plus/icons-vue'
+import { ref, watchEffect, Ref, inject } from 'vue'
+import { Share, Delete, Remove } from '@element-plus/icons-vue'
 import type { Column, RowClassNameGetter } from 'element-plus'
 import { useI18n } from 'vue-i18n'
 import { watch, nextTick } from 'vue';
 import NetworkError from '@/components/NetworkError.vue'
+import Loading from '../common/Loading.vue';
 
 const { t } = useI18n()
 
@@ -127,7 +126,7 @@ const rowHandleClick = ({
     oncontextmenu: ({ event, rowData }: any) => {
         selectedId.value = rowData.document.id
         console.log(rowData);
-        
+
         emits('rightMeun', event, rowData)
     },
 })
@@ -162,10 +161,10 @@ const columns: Column<any>[] = [
             if (props.iconlist.includes('restore')) {
                 displayContent = <span>{deleted_at}</span>;
             } else {
-                if(id === '0') {
+                if (id === '0') {
                     let time = created_at.split('.')[0]
                     displayContent = <span>{time}</span>;
-                }else {
+                } else {
                     displayContent = <span>{last_access_time}</span>;
                 }
             }
@@ -311,7 +310,7 @@ const columns: Column<any>[] = [
 ]
 
 watchEffect(() => {
-    if(props.address) {
+    if (props.address) {
         columns.splice(3, 0, {
             key: 'address',
             dataKey: 'document',
@@ -323,11 +322,11 @@ watchEffect(() => {
                 // const project = projectList.value.filter(item => item.project.id === project_id)[0];
                 return (
                     <span>{111}</span>
-            );
+                );
             },
         },)
     }
-    if(props.creator) {
+    if (props.creator) {
         columns.splice(3, 0, {
             key: 'creator',
             dataKey: 'document',
@@ -339,7 +338,7 @@ watchEffect(() => {
                 const project = projectList.value.filter(item => item.project.id === project_id)[0];
                 return (
                     <span>{project.creator.nickname}</span>
-            );
+                );
             },
         },)
     }

@@ -1,12 +1,13 @@
 <script setup lang="ts">
-import { onMounted, reactive, toRefs, ref, onUnmounted, computed, nextTick, watch } from 'vue'
-import { Search, User, SwitchButton, Close, Bell, Loading } from '@element-plus/icons-vue'
+import { onMounted, reactive, toRefs, ref, onUnmounted, computed, watch } from 'vue'
+import { Search, User, SwitchButton, Close, Bell } from '@element-plus/icons-vue'
 import Inform from './Inform.vue'
 import * as share_api from '@/apis/share';
 import * as team_api from '@/apis/team';
 import { useI18n } from 'vue-i18n'
 import { router } from '@/router'
 import avatar from '@/assets/pd-logo-svg.svg';
+import Loading from '../common/Loading.vue';
 interface Props {
     items?: Array<object>,
     title?: string | undefined
@@ -285,7 +286,7 @@ const textHighLight = (text: string) => {
                 @focus="showSearchHistory = true" @input="screenout">
                 <template #prefix>
                     <el-icon v-if="isLoading" class="is-loading" size="18">
-                        <Loading />
+                        <Loading :size="18"/>
                     </el-icon>
                     <el-icon v-else size="18">
                         <Search />

@@ -290,16 +290,11 @@ watch(updateprojectlist, () => {
 //获取当前用户所有项目列表,然后用计算属性筛选出当前团队的项目
 watchEffect(() => {
     teamprojectlist.value = projectList.value.filter((item) => item.project.team_id === teamID.value)
-})
-
-watch(teamprojectlist, () => {
-    setTimeout(() => {
-        if (teamprojectlist.value.length === 0) {
-            showbutton.value = true
-        } else {
-            showbutton.value = false
-        }
-    }, 300);
+    if (teamprojectlist.value.length === 0) {
+        showbutton.value = true
+    } else {
+        showbutton.value = false
+    }
 })
 
 watch(is_favor, () => {
@@ -391,7 +386,7 @@ onMounted(() => {
         .other {
             width: 25%;
             display: flex;
-            
+
             svg {
                 width: 16px;
                 height: 16px;
@@ -401,6 +396,7 @@ onMounted(() => {
                 margin-right: 10px;
             }
         }
+
         .project-name {
             display: inline-block;
             overflow: hidden;
@@ -410,6 +406,7 @@ onMounted(() => {
             box-sizing: border-box;
             margin-left: 5px;
         }
+
         .project-description {
             display: inline-block;
             overflow: hidden;
@@ -417,6 +414,7 @@ onMounted(() => {
             white-space: nowrap;
             padding-right: 20px;
         }
+
         .project-creator {
             display: inline-block;
             overflow: hidden;
@@ -448,5 +446,4 @@ onMounted(() => {
             background-color: rgba(150, 117, 250, 0.862745098);
         }
     }
-}
-</style>
+}</style>

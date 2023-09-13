@@ -42,7 +42,6 @@ const emits = defineEmits<{
     (e: 'dataUpdate', list: any[], title: string): void
 }>();
 const { t } = useI18n()
-const isLoading = ref(false)
 const showFileShare = ref<boolean>(false)
 const shareSwitch = ref(true)
 const pageHeight = ref(0)
@@ -57,7 +56,6 @@ const iconlists = ref(['star', 'share', 'delete'])
 
 //获取服务器我的文件列表
 async function getDoucment() {
-    isLoading.value = true
     try {
         const { data } = await share_api.getDoucmentListAPI() as any
         if (data == null) {
@@ -78,7 +76,6 @@ async function getDoucment() {
         ElMessage.closeAll('error')
         ElMessage.error({ duration: 1500, message: t('home.failed_list_tips') })
     }
-    isLoading.value = false
 }
 
 const refreshDoc = () => {

@@ -43,8 +43,10 @@ const Getteaminfo = async (teamid: string) => {
     try {
         const { code, data } = await user_api.Getteaminfo({ team_id: teamid })
         if (code === 0) {
-            if(data.self_perm_type >= data.invited_perm_type) {
-                return router.push({ path: '/apphome/teams/' + teamid });
+            if (data.self_perm_type != null) {
+                if (data.self_perm_type >= data.invited_perm_type) {
+                    return router.push({ path: '/apphome/teams/' + teamid });
+                }
             }
             teaminfo.value = data
             switchstate.value = teaminfo.value?.invited_switch
@@ -71,7 +73,7 @@ const tohome = (() => {
 
 const joinTeam = async (id: any, notes?: any) => {
     try {
-        const { code, message, data } = await user_api.JoinTeam({ team_id: id, applicant_notes: notes })      
+        const { code, message, data } = await user_api.JoinTeam({ team_id: id, applicant_notes: notes })
         if (code === 0) {
             showjoinbnt.value = false
             tohome()
@@ -101,8 +103,6 @@ const checktype = (type: any) => {
 
 onMounted(() => {
     if (typeof route.query.teamid === 'string') {
-        console.log('1111');
-        
         Getteaminfo(route.query.teamid)
     }
 })
