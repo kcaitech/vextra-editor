@@ -1,14 +1,17 @@
 <script setup lang="ts">
-import { OverridesGetter, Shape } from '@kcdesign/data';
+import { OverrideShape, Shape, SymbolRefShape } from '@kcdesign/data';
 import { h } from 'vue';
 import { renderLine as r } from "@kcdesign/data";
 import { initCommonShape } from './common';
 
-const props = defineProps<{ data: Shape, overrides?: OverridesGetter  }>();
-const init = initCommonShape(props);
+const props = defineProps<{ data: Shape, overrides?: SymbolRefShape[] }>();
+const common = initCommonShape(props);
 
 function render() {
-    return r(h, props.data, init.override, init.reflush);
+    const consumes: OverrideShape[] = [];
+    const ret = r(h, props.data, props.overrides, consumes, common.reflush);
+    common.updateComsumeOverride(consumes);
+    return ret;
 }
 </script>
 

@@ -1,4 +1,4 @@
-import { OverridesGetter, Shape } from "@kcdesign/data";
+import { OverrideShape, OverridesGetter, Shape, SymbolRefShape } from "@kcdesign/data";
 import { onMounted, onUnmounted, ref, watch } from "vue";
 
 export function makeReflush(props: { data: Shape }) {
@@ -22,17 +22,65 @@ export function makeReflush(props: { data: Shape }) {
     return reflush;
 }
 
-export function initCommonShape(props: { data: Shape, overrides?: OverridesGetter }) {
-    const reflush = ref(0);
-    const ret: any = {
+export function initCommonShape(props: { data: Shape, overrides?: SymbolRefShape[] }) {
+    const _reflush = ref(0);
+    const watcher = () => {
+        _reflush.value++;
+    }
+
+    const _consumeOverride: OverrideShape[] = [];
+    const ret = {
         get reflush() {
-            return reflush.value !== 0 ? reflush.value : undefined;
+            return _reflush.value !== 0 ? _reflush.value : undefined;
         },
+        set reflush(val: number | undefined) {
+            _reflush.value = val ?? 0;
+        },
+
         incReflush() {
-            reflush.value++;
+            _reflush.value++;
+        },
+        updateComsumeOverride(consumeOverride: OverrideShape[]) {
+            if (consumeOverride.length === 0 && _consumeOverride.length === 0) return;
+            // 去重
+            const added = new Set<string>();
+            consumeOverride = consumeOverride.reduce((result: OverrideShape[], o) => {
+                if (added.has(o.id)) return result;
+                added.add(o.id);
+                result.push(o);
+                return result;
+            }, []);
+
+            // compare and watch
+            if (consumeOverride.length < _consumeOverride.length) {
+                for (let i = consumeOverride.length, len = _consumeOverride.length; i < len; i++) {
+                    _consumeOverride[i].unwatch(watcher);
+                }
+            }
+
+            _consumeOverride.length = consumeOverride.length; // 阶段或者扩张长度，元素可能为undefined
+            for (let i = 0, len = _consumeOverride.length; i < len; i++) {
+                const s0 = consumeOverride[i];
+                const s = _consumeOverride[i]; // 可能undefined
+                if (s && s.id == s0.id) {
+                    continue;
+                }
+                if (s) s.unwatch(watcher);
+                s0.watch(watcher);
+                _consumeOverride[i] = s0;
+            }
         }
     };
-    ret.override = props.overrides?.getOverrid(props.data.id);
+
+    const unwatchConsumeOverride = () => {
+        for (let i = 0, len = _consumeOverride.length; i < len; ++i) {
+            _consumeOverride[i].unwatch(watcher);
+        }
+        _consumeOverride.length = 0;
+    }
+
+
+
     // 需要watch的数据
     // 1. props的data,可能切换对象
     // 2. props的overrides,同上
@@ -40,46 +88,37 @@ export function initCommonShape(props: { data: Shape, overrides?: OverridesGette
     // 4. props.overrides, 同上
     // 5. override, 如果存在也要监听
 
-    const overridesWatcher = () => {
-        if (!ret.override) {
-            ret.override = props.overrides?.getOverrid(props.data.id);
-            if (ret.override) {
-                ret.override.watch(watcher);
-            }
-        }
-    }
-
+    // 第一个symbolref需要监听,是否有新的override
+    let _symRef: SymbolRefShape | undefined;
     watch(() => props.overrides, (val, old) => {
-        if (ret.override) {
-            ret.override.unwatch(watcher);
+        // unwatchConsumeOverride();
+        const symRef: SymbolRefShape | undefined = val && val[0];
+        if (symRef === _symRef) { // undefined
+            // bouth undefined
         }
-        ret.override = undefined;
-        if (old) old.unwatch(overridesWatcher);
-        if (val) {
-            val.watch(overridesWatcher);
-            ret.override = val.getOverrid(props.data.id);
-            if (ret.override) {
-                ret.override.watch(watcher);
-            }
+        else if (symRef === undefined || _symRef === undefined) {
+            if (_symRef) _symRef.unwatch(watcher);
+            _symRef = symRef;
+            if (_symRef) _symRef.watch(watcher);
         }
-    })
+        else if (symRef.id !== _symRef.id) {
+            _symRef.unwatch(watcher);
+            _symRef = symRef;
+            _symRef.watch(watcher);
+        }
+    }, { immediate: true })
 
-    const watcher = () => {
-        reflush.value++;
-    }
     watch(() => props.data, (value, old) => {
         old.unwatch(watcher);
         value.watch(watcher);
     })
     onMounted(() => {
-        if (ret.override) ret.override.watch(watcher);
-        if (props.overrides) props.overrides.watch(overridesWatcher);
         props.data.watch(watcher);
     })
     onUnmounted(() => {
         props.data.unwatch(watcher);
-        if (ret.override) ret.override.unwatch(watcher);
-        if (props.overrides) props.overrides.unwatch(overridesWatcher);
+        unwatchConsumeOverride();
+        if (_symRef) _symRef.unwatch(watcher);
     })
 
     return ret;

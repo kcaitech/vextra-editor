@@ -1,16 +1,16 @@
 <script setup lang="ts">
 import { h, onUnmounted, watch } from 'vue';
-import { Shape, GroupShape, OverridesGetter } from "@kcdesign/data";
+import { Shape, GroupShape, SymbolRefShape, OverrideShape } from "@kcdesign/data";
 import { renderBoolOpShape as opr } from "@kcdesign/data";
 import { renderGroup as normalR } from "@kcdesign/data";
 import comsMap from './comsmap';
 import { initCommonShape } from './common';
 
-const props = defineProps<{ data: GroupShape, overrides?: OverridesGetter  }>();
-const init = initCommonShape(props);
+const props = defineProps<{ data: GroupShape, overrides?: SymbolRefShape[] }>();
+const common = initCommonShape(props);
 const consumed: Array<Shape> = [];
 const watcher = () => {
-    init.incReflush();
+    common.incReflush();
 }
 
 watch(() => props.data, (value, old) => {
@@ -32,9 +32,11 @@ function render() {
 
     const isBoolOpShape = props.data.isBoolOpShape;
 
+    const consumesOverride: OverrideShape[] = [];
     const ret = isBoolOpShape ?
-        opr(h, props.data, init.override, init.reflush, consumed0) :
-        normalR(h, props.data, comsMap, props.overrides, init.override, init.reflush);
+        opr(h, props.data, props.overrides, consumesOverride, common.reflush, consumed0) :
+        normalR(h, props.data, comsMap, props.overrides, consumesOverride, common.reflush);
+    common.updateComsumeOverride(consumesOverride);
 
     if (consumed0.length < consumed.length) {
         for (let i = consumed0.length, len = consumed.length; i < len; i++) {
