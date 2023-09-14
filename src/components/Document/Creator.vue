@@ -16,6 +16,7 @@ import { useRoute } from 'vue-router';
 import { searchCommentShape } from '@/utils/comment';
 import * as comment_api from '@/apis/comment';
 import ContactInit from './Toolbar/ContactInit.vue';
+import { get_contact_environment } from '@/utils/contact';
 
 interface Props {
     context: Context
@@ -269,7 +270,14 @@ function contact_init(e: MouseEvent, apex?: ContactForm, p2?: PageXY) {
 function modify_contact_to(e: MouseEvent, ac: AsyncCreator) {
     const root = props.context.workspace.root;
     const p = matrix1.computeCoord2(e.clientX - root.x, e.clientY - root.y);
+
     ac.contact_to(p);
+    const points = newShape!.getPoints();
+    const environment = get_contact_environment(props.context, newShape!, points);
+    if (newShape!.parent?.id !== environment.id) {
+        asyncCreator
+    }
+    ac.migrate(environment);
 }
 // #endregion
 function modify_page_xy_1(e: MouseEvent) {
