@@ -7,8 +7,9 @@
                         <p @click="input_cusname(currentProject[0])"
                             :class="{ edit: currentProject[0].self_perm_type === 5 || currentProject[0].self_perm_type === 4 }">
                             {{ currentProject[0].project.name }}</p>
-                        <Tooltip :content="'项目菜单'" :offset="5">
-                            <div class="setting" @click="(e) => projectMenu(currentProject[0], e)">
+                        <Tooltip :content="'项目菜单'" :offset="5" :visible="showProjecrMenu ? false : visible">
+                            <div class="setting" @mousedown.stop="(e) => projectMenu(currentProject[0], e)"
+                                @mouseenter.stop="onMouseenter" @mouseleave.stop="onMouseleave">
                                 <el-icon style="transform: rotate(90deg); margin-right: 5px;">
                                     <MoreFilled />
                                 </el-icon>
@@ -62,7 +63,7 @@
                     <div class="setting" @click="projectSetting"><svg-icon icon-class="gear"></svg-icon></div>
                 </Tooltip>
                 <Tooltip :content="'成员权限'" :offset="10">
-                    <div @click="showMembergDialog"><el-icon>
+                    <div @click="showMembergDialog" v-if="currentProject[0].is_invited"><el-icon>
                             <User />
                         </el-icon></div>
                 </Tooltip>
@@ -131,6 +132,7 @@ const memberLen = ref(0);
 const exitVisible = ref(false);
 const moveVisible = ref(false);
 let menuItem: string[] = ['visit'];
+const visible = ref(false);
 const projectOptions = [
     {
         value: 0,
@@ -166,14 +168,17 @@ const params = {
 }
 
 
-const { projectList, saveProjectData, is_favor, favoriteList, updateFavor, is_team_upodate, teamUpdate } = inject('shareData') as {
+const { projectList, saveProjectData, is_favor, favoriteList, updateFavor, is_team_upodate, teamUpdate, setMenuVisi, menuState } = inject('shareData') as {
     projectList: Ref<any[]>;
     favoriteList: Ref<any[]>;
     saveProjectData: (data: any[]) => void;
     is_favor: Ref<boolean>;
+    menuState: Ref<boolean>;
     updateFavor: (b: boolean) => void;
     is_team_upodate: Ref<boolean>;
     teamUpdate: (b: boolean) => void;
+    setMenuVisi: (b: boolean) => void;
+
 };
 
 const clickEvent = (index: number) => {
@@ -181,6 +186,7 @@ const clickEvent = (index: number) => {
 }
 const closeMenu = () => {
     showProjecrMenu.value = false;
+    setMenuVisi(false);
 }
 
 const back = (project: any, isTeam: boolean) => {
@@ -221,6 +227,18 @@ const ExitProject = () => {
     }
 }
 
+var timer: any = null
+const onMouseenter = () => {
+    timer = setTimeout(() => {
+        visible.value = true
+        clearTimeout(timer)
+    }, 600)
+}
+const onMouseleave = () => {
+    clearTimeout(timer)
+    visible.value = false
+}
+
 const exitProjectApi = async (id: string) => {
     try {
         await team_api.exitProjectAPI({ project_id: id })
@@ -259,10 +277,21 @@ const delProject = async (id: string) => {
     }
 }
 
+watch(menuState, (v) => {
+    if(!v) {
+        console.log(v,'vvv');
+        showProjecrMenu.value = false;
+    }
+})
+
 const projectMenu = (project: any, e: MouseEvent) => {
-    menuItem = ['visit', 'perm'];
+    menuItem = ['visit'];
+    setMenuVisi(false);
     if (project.self_perm_type === 5 || project.self_perm_type === 4) {
         menuItem.push('rename', 'del');
+    }
+    if (project.is_invited || project.self_perm_type === 5) {
+        menuItem.push('perm');
     }
     if (project.is_favor) {
         menuItem.push('no_fixed');
@@ -272,7 +301,10 @@ const projectMenu = (project: any, e: MouseEvent) => {
     if (!project.is_in_team) {
         menuItem.push('exit');
     }
-    showProjecrMenu.value = true;
+    nextTick(() => {
+        setMenuVisi(true);
+        showProjecrMenu.value = true;
+    })
 }
 
 
@@ -329,11 +361,7 @@ const GetprojectLists = async () => {
     try {
         const { data } = await user_api.GetprojectLists()
         const pros = data.filter((item: any) => item.project.id === route.params.id);
-        console.log(pros.value);
-        
         if (!pros.length) {
-            console.log('1111');
-            
             router.push({
                 name: 'projectApply',
                 query: {
@@ -342,7 +370,6 @@ const GetprojectLists = async () => {
             })
         }
         if (pros[0].perm_type === 0) {
-            console.log('22222');
             router.push({
                 name: 'projectApply',
                 query: {
@@ -500,7 +527,7 @@ watch(() => currentProject.value, (n) => {
 
 
 watchEffect(() => {
-    route.params.id
+    route.params.id;
     currentProject.value = projectList.value.filter((item) => item.project.id === route.params.id);
 })
 

@@ -47,6 +47,7 @@ const pList = computed(() => {
     return projectList.value.filter(item => item.project.team_id === activeNames.value && item.self_perm_type >= 3);
 })
 const teamName = computed(() => {
+    if (!props.projectItem || !teamData.value) return ''
     const team = teamData.value.filter(item => item.team.id === props.projectItem.project.team_id)[0]
     if (team) {
         return team.team.name
@@ -77,18 +78,29 @@ const moveProjectTarget = async (params: any) => {
 const quitProject = () => {
     let params
     emit('confirm');
-    if (activeNames.value === '2') {
-        params = {
-            document_id: props.doc!.document.id
+    if (props.projectItem) {
+        if (activeNames.value === '2') {
+            params = {
+                document_id: props.doc!.document.id,
+                source_project_id: props.projectItem.project.id
+            }
+        } else {
+            params = {
+                document_id: props.doc!.document.id,
+                source_project_id: props.projectItem.project.id,
+                target_project_id: curProject.value.project.id
+            }
+            if (props.projectItem.project.id === curProject.value.project.id) return emit('moveFillSeccess');
         }
     } else {
+        if (activeNames.value === '2') {
+            return emit('moveFillSeccess');
+        }
         params = {
             document_id: props.doc!.document.id,
-            source_project_id: props.projectItem.project.id,
             target_project_id: curProject.value.project.id
         }
     }
-    if (props.projectItem.project.id === curProject.value.project.id) return emit('moveFillSeccess');
     moveProjectTarget(params);
     emit('moveFillSeccess');
 }
@@ -108,7 +120,9 @@ const onactiveNames = (id: string) => {
             </div>
             <div class="name">
                 <span>当前位置:</span>
-                <span style="font-weight: bold;margin-left: 5px;">{{ teamName + ' / ' + projectItem.project.name }}</span>
+                <span v-if="projectItem" style="font-weight: bold;margin-left: 5px;">{{ teamName + ' / ' +
+                    projectItem.project.name }}</span>
+                <span v-else style="font-weight: bold;margin-left: 5px;">我的文件</span>
             </div>
             <div>
                 移动文件至:
@@ -116,7 +130,8 @@ const onactiveNames = (id: string) => {
             <div class="conteiner">
                 <div class="target_fill">
                     <el-scrollbar height="290px">
-                        <div class="team-title" @click="onactiveNames('2')" v-if="projectItem.self_perm_type === 5">
+                        <div class="team-title" @click="onactiveNames('2')"
+                            v-if="!projectItem || projectItem && projectItem.self_perm_type === 5">
                             <div class="left" :class="{ 'is_active': activeNames === '2' }">
                                 <el-icon style="margin-right: 10px;">
                                     <Folder />
@@ -256,7 +271,8 @@ const onactiveNames = (id: string) => {
         }
 
         .target_project {
-            width: 60%;;
+            width: 60%;
+            ;
             padding: 5px 10px;
             box-sizing: border-box;
         }

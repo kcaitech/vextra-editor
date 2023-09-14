@@ -49,6 +49,7 @@ const is_team_upodate = ref<boolean>(false);
 const activeNames = ref<any[]>([-1])
 const targetItem = ref<any[]>([])
 const recycle = ref(sessionStorage.getItem('index') === '3');
+const menuState = ref(false);
 
 const updateShareData = (id: string, name: string, avatar: string, description: string, selfpermtype: number) => {
   teamID.value = id
@@ -56,6 +57,10 @@ const updateShareData = (id: string, name: string, avatar: string, description: 
   teamAvatar.value = avatar
   teamDescription.value = description
   teamSelfPermType.value = selfpermtype
+}
+
+const setMenuVisi = (state: boolean) => {
+  menuState.value = state;
 }
 
 //添加targetitem的值
@@ -154,7 +159,9 @@ provide('shareData', {
   //
   targetItem,
   addTargetItem,
-  updateProject
+  updateProject,
+  setMenuVisi,
+  menuState
 })
 function setTitle(t: string, tyep: boolean) {
   title.value = t;

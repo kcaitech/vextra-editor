@@ -26,7 +26,7 @@ import { useI18n } from 'vue-i18n'
 import { router } from '@/router'
 import * as user_api from '@/apis/users'
 import { ElMessage } from 'element-plus'
-import { onMounted, ref, onUnmounted } from 'vue';
+import { onMounted, ref, onUnmounted, Ref, inject, watch } from 'vue';
 
 const dialogVisible = ref(false)
 const newname = ref()
@@ -81,6 +81,10 @@ enum rightmenuitem {
     exitproject = 'exitproject',
     deleteproject = 'deleteproject',
     movefill = 'movefill'
+}
+
+const { menuState } = inject('shareData') as {
+    menuState: Ref<boolean>;
 }
 
 const itemcontent = (item: string) => {
@@ -352,7 +356,13 @@ const rDeletefile = (data: any) => {
     }
     emits('rDeletefile', data)
 }
-
+watch(menuState, (v) => {
+    if (v) {
+        if (menu.value) {
+            menu.value.style.display = 'none'
+        }
+    }
+})
 
 //监听页面点击事件，
 const handleClickOutside = (event: MouseEvent) => {

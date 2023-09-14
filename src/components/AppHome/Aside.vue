@@ -27,7 +27,9 @@ import addProject from '../TeamProject/addProject.vue';
 import { ElMessage } from 'element-plus';
 import TeamProjectMenu from '../TeamProject/TeamProjectMenu.vue';
 import ProjectDialog from '../TeamProject/ProjectDialog.vue';
-import Tooltip from '@/components/common/Tooltip.vue'
+import Tooltip from '@/components/common/Tooltip.vue';
+import ProjectAccessSetting from '../TeamProject/ProjectFill/ProjectAccessSetting.vue';
+import ProjectMemberg from '../TeamProject/ProjectFill/ProjectMemberg.vue';
 
 interface Emits {
     (e: 'settitle', title: string, recycle: boolean): void;
@@ -52,13 +54,16 @@ const showProjecrMenu = ref(false);
 let menuItem: string[] = [];
 const projectItem = ref<any>({});
 const proname = ref('');
+const projectMembergDialog = ref(false)
+const projectSettingDialog = ref(false)
 const Input = ref<HTMLInputElement>();
 
 const { updatestate, is_favor, projectList, is_team_upodate, teamData, activeNames, targetItem, favoriteList, updateActiveNames,
-    updateShareData, upDateTeamData, state, saveProjectData, favoriteListsData, updateFavor, addTargetItem } = inject('shareData') as {
+    updateShareData, upDateTeamData, state, saveProjectData, favoriteListsData, updateFavor, addTargetItem, setMenuVisi, menuState } = inject('shareData') as {
         updatestate: Ref<boolean>;
         is_favor: Ref<boolean>;
         is_team_upodate: Ref<boolean>;
+        menuState: Ref<boolean>;
         updateShareData: (id: string, name: string, avatar: string, description: string, self_perm_type: number) => void;
         upDateTeamData: (data: any[]) => void;
         state: (b: boolean) => void;
@@ -80,8 +85,25 @@ const { updatestate, is_favor, projectList, is_team_upodate, teamData, activeNam
         updateActiveNames: (n: number) => void;
         targetItem: Ref<any[]>;
         addTargetItem: (data: any[]) => void;
+        setMenuVisi: (b: boolean) => void;
     }
 
+
+const showMembergDialog = () => {
+    projectMembergDialog.value = true
+}
+
+const showSettingDialog = () => {
+    projectSettingDialog.value = true
+}
+
+const closeDialog = () => {
+    projectMembergDialog.value = false;
+}
+
+const exitProject = () => {
+    projectMembergDialog.value = false;
+}
 function addChildToParent(parent: { children: any[]; }, child: any) {
     if (!parent.children) {
         parent.children = [];
@@ -253,12 +275,15 @@ const skipProject = (item: any, e: MouseEvent) => {
     x.value = '7';
 }
 const top = ref(0); const left = ref(0);
+const menuData = ref<any>({})
 const rightMenu = (item: any, e: MouseEvent) => {
     if (e.button === 2) {
+        setMenuVisi(false);
+        menuData.value = item;
         top.value = e.clientY;
         left.value = e.clientX;
         projectItem.value = item;
-        menuItem = [];
+        menuItem = ['visit'];
         if (item.self_perm_type === 5 || item.self_perm_type === 4) {
             menuItem.push('rename', 'del');
         }
@@ -266,13 +291,28 @@ const rightMenu = (item: any, e: MouseEvent) => {
         if (!item.is_in_team) {
             menuItem.push('exit');
         }
-        showProjecrMenu.value = true;
+        if (item.is_invited || item.self_perm_type === 5) {
+            menuItem.push('perm');
+        }
+        nextTick(() => {
+            showProjecrMenu.value = true;
+            setMenuVisi(true);
+        })
     } else {
         showProjecrMenu.value = false;
+        setMenuVisi(false);
     }
 }
+
+watch(menuState, (v) => {
+    if(!v) {
+        showProjecrMenu.value = false;
+    }
+})
+
 const closeMenu = () => {
     showProjecrMenu.value = false;
+    setMenuVisi(false);
 }
 const delVisible = ref(false);
 const project_item = ref<any>({})
@@ -635,7 +675,7 @@ onUnmounted(() => {
                                             <div class="name">{{ data.team.name }}</div>
                                         </div>
                                         <div class="right" @click.stop="showprojectcard(data.team.id)">
-                                            <svg-icon icon-class="close" v-if="data.self_perm_type > 0"/>
+                                            <svg-icon icon-class="close" v-if="data.self_perm_type > 0" />
                                         </div>
                                     </div>
                                 </template>
@@ -712,12 +752,17 @@ onUnmounted(() => {
         </div>
     </transition>
     <TeamProjectMenu v-if="showProjecrMenu" :items="menuItem" :data="projectItem" :top="top" :left="left" @close="closeMenu"
-        @delProject="onDelProject" @exitProject="onExitProject" @cancelFixed="menucancelFixed" @reName="inputCusname">
+        @delProject="onDelProject" @exitProject="onExitProject" @cancelFixed="menucancelFixed" @reName="inputCusname"
+        @showMembergDialog="showMembergDialog" @projectSetting="showSettingDialog">
     </TeamProjectMenu>
     <ProjectDialog :projectVisible="delVisible" context="删除项目后，将删除项目及项目中所有文件、资料。" :title="'删除项目'" :confirm-btn="'任然删除'"
         @clode-dialog="closeDelVisible" @confirm="DelProject"></ProjectDialog>
     <ProjectDialog :projectVisible="exitVisible" context="退出项目后，无法再访问项目中的文件，或使用项目中的资源。" :title="'退出项目'"
         :confirm-btn="'任然退出'" @clode-dialog="closeExitVisible" @confirm="ExitProject"></ProjectDialog>
+    <ProjectAccessSetting v-if="projectSettingDialog" title="邀请项目成员" :data="menuData" width="500px"
+        @clodeDialog="projectSettingDialog = false" />
+    <ProjectMemberg v-if="projectMembergDialog" :projectMembergDialog="projectMembergDialog" :currentProject="menuData"
+        @closeDialog="closeDialog" @exitProject="exitProject" />
 </template>
 
 <style lang="scss" scoped>
@@ -936,6 +981,7 @@ a {
             position: absolute;
             bottom: 60px;
             top: 340px;
+
             .demo-collapse {
                 .team-title {
                     width: 100%;
@@ -1080,7 +1126,7 @@ a {
                             }
 
                             display: none;
-                            
+
                             align-items: center;
                             height: 100%;
                             padding-right: 10px;
@@ -1130,7 +1176,7 @@ a {
     padding: 0;
 }
 
-:deep(.el-input__wrapper) {
+:deep(.el-collapse-item__content .el-input__wrapper) {
     height: 80%;
     outline: none;
     border: none;
@@ -1144,6 +1190,10 @@ a {
 
 :deep(.el-input__wrapper:hover) {
     box-shadow: none;
+}
+
+:deep(.el-checkbox__input.is-checked .el-checkbox__inner) {
+    background-color: #9775fa;
 }
 
 .is_active {

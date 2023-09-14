@@ -92,14 +92,8 @@ async function getDoucment(id: string) {
     isLoading.value = false
 }
 
-const { projectList, saveProjectData, is_favor, favoriteList, updateFavor, is_team_upodate, teamUpdate } = inject('shareData') as {
+const { projectList } = inject('shareData') as {
     projectList: Ref<any[]>;
-    favoriteList: Ref<any[]>;
-    saveProjectData: (data: any[]) => void;
-    is_favor: Ref<boolean>;
-    updateFavor: (b: boolean) => void;
-    is_team_upodate: Ref<boolean>;
-    teamUpdate: (b: boolean) => void;
 };
 
 const refreshDoc = () => {
