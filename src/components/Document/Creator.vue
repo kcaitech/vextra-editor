@@ -438,7 +438,7 @@ onUnmounted(() => {
 </template>
 <style scoped lang="scss">
 .creator {
-    background-color: rgba($color: #006600, $alpha: 0.2);
+    // background-color: rgba($color: #006600, $alpha: 0.2);
     width: 100%;
     height: 100%;
     position: absolute;
