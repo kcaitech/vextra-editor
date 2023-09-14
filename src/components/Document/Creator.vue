@@ -8,7 +8,7 @@ import { getHorizontalAngle } from '@/utils/common';
 import { flattenShapes, init_contact_shape, init_insert_shape, init_shape, list2Tree } from '@/utils/content';
 import { get_direction } from '@/utils/controllerFn';
 import { EffectType, Wheel, fourWayWheel } from '@/utils/wheel';
-import { Artboard, AsyncCreator, ContactForm, Matrix, Shape, ShapeFrame, ShapeType } from '@kcdesign/data';
+import { Artboard, AsyncCreator, ContactForm, GroupShape, Matrix, Shape, ShapeFrame, ShapeType } from '@kcdesign/data';
 import { onMounted, onUnmounted, reactive, ref } from 'vue';
 import { useI18n } from 'vue-i18n';
 import CommentInput from './Content/CommentInput.vue';
@@ -277,7 +277,7 @@ function modify_contact_to(e: MouseEvent, ac: AsyncCreator) {
     if (newShape!.parent?.id !== environment.id) {
         asyncCreator
     }
-    ac.migrate(environment);
+    ac.migrate(environment as GroupShape);
 }
 // #endregion
 function modify_page_xy_1(e: MouseEvent) {
