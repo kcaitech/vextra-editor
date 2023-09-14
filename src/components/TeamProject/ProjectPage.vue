@@ -8,13 +8,13 @@
                             :class="{ edit: currentProject[0].self_perm_type === 5 || currentProject[0].self_perm_type === 4 }">
                             {{ currentProject[0].project.name }}</p>
                         <Tooltip :content="'项目菜单'" :offset="5" :visible="showProjecrMenu ? false : visible">
-                            <div class="setting" @mousedown.stop="(e) => projectMenu(currentProject[0], e)"
+                            <div class="setting hover" @mousedown.stop="(e) => projectMenu(currentProject[0], e)"
                                 @mouseenter.stop="onMouseenter" @mouseleave.stop="onMouseleave">
                                 <el-icon style="transform: rotate(90deg); margin-right: 5px;">
                                     <MoreFilled />
                                 </el-icon>
-                                <TeamProjectMenu v-if="showProjecrMenu" :items="menuItem" :data="currentProject[0]"
-                                    :top="20" :left="0" @cancelFixed="cancelFixed" @close="closeMenu"
+                                <TeamProjectMenu v-if="showProjecrMenu" :items="menuItem" :data="currentProject[0]" @mousedown.stop
+                                    :top="23" :left="0" @cancelFixed="cancelFixed" @close="closeMenu"
                                     @projectSetting="projectSetting" @reName="input_cusname"
                                     @showMembergDialog="showMembergDialog" @delProject="onDelProject"
                                     @exitProject="onExitProject">
@@ -22,7 +22,7 @@
                             </div>
                         </Tooltip>
                         <Tooltip :content="'回到上一级'" :offset="5">
-                            <div style="padding-top: 3px;"
+                            <div style="padding-top: 3px;" class="back"
                                 @click="back(currentProject[0].project, currentProject[0].is_in_team)">
                                 <svg-icon icon-class="back"></svg-icon>
                             </div>
@@ -87,10 +87,10 @@
             <ProjectMemberg v-if="projectMembergDialog" :projectMembergDialog="projectMembergDialog"
                 :currentProject="currentProject[0]" @closeDialog="closeDialog" @exitProject="exitProject"></ProjectMemberg>
         </div>
-        <ProjectDialog :projectVisible="delVisible" context="删除项目后，将删除项目及项目中所有文件、资料。" :title="'删除项目'" :confirm-btn="'任然删除'"
+        <ProjectDialog :projectVisible="delVisible" context="删除项目后，将删除项目及项目中所有文件、资料。" :title="'删除项目'" :confirm-btn="'仍然删除'"
             @clode-dialog="closeDelVisible" @confirm="DelProject"></ProjectDialog>
         <ProjectDialog :projectVisible="exitVisible" context="退出项目后，无法再访问项目中的文件，或使用项目中的资源。" :title="'退出项目'"
-            :confirm-btn="'任然退出'" @clode-dialog="closeExitVisible" @confirm="ExitProject"></ProjectDialog>
+            :confirm-btn="'仍然退出'" @clode-dialog="closeExitVisible" @confirm="ExitProject"></ProjectDialog>
     </div>
 </template>
 <script setup lang="ts">
@@ -208,6 +208,7 @@ const onExitProject = () => {
 
 const onDelProject = () => {
     delVisible.value = true;
+    visible.value = false;
 }
 
 const ExitProject = () => {
@@ -310,10 +311,12 @@ const projectMenu = (project: any, e: MouseEvent) => {
 
 const projectSetting = () => {
     projectSettingDialog.value = true;
+    visible.value = false;
 }
 
 const showMembergDialog = () => {
     projectMembergDialog.value = true;
+    visible.value = false;
 }
 
 const closeDialog = () => {
@@ -395,7 +398,11 @@ const favoriteProjectList = (arr1: any[], arr2: any[]) => {
 }
 
 function input_cusname(project: any) {
+    console.log('重命名1');
+
     if (project.self_perm_type < 4) return;
+    console.log('重命名2');
+    
     projectName.value = project.project.name;
     cusname.value = !cusname.value;
     nextTick(() => {
@@ -519,7 +526,7 @@ const setProjectInfo = async (params: any) => {
 }
 
 watch(() => currentProject.value, (n) => {
-    // currentProject.value = n;
+    currentProject.value = n;
     if (currentProject.value[0]) {
         reflush.value++;
     }
@@ -658,6 +665,7 @@ onMounted(() => {
         flex: 1;
 
         .p {
+            box-sizing: border-box;
             .title-p {
                 width: fit-content;
                 display: flex;
@@ -672,6 +680,9 @@ onMounted(() => {
                 .setting {
                     position: relative;
                 }
+                >div {
+                    margin-top: 5px;
+                }
             }
 
             input {
@@ -680,13 +691,15 @@ onMounted(() => {
                 outline: none;
                 border: none;
                 width: auto;
-                height: 32px;
+                height: 28px;
                 border: 2px solid #9775fa;
                 border-radius: 0%;
                 overflow: hidden;
                 text-overflow: ellipsis;
                 white-space: nowrap;
                 margin-bottom: 10px;
+                padding-left: 5px;
+                padding-top: 5px;
             }
         }
 
@@ -850,6 +863,31 @@ onMounted(() => {
         color: #fff;
         border: 1px solid var(--active-color-beta);
         border-radius: 4px;
+    }
+}
+.hover {
+    display: flex;
+    width: 20px;
+    height: 20px;
+    border-radius: 4px;
+    justify-content: center;
+    align-items: center;
+    padding: 2px 0;
+    padding-left: 5px;
+    &:hover {
+        background-color: #e5dbff;
+    }
+}
+.back {
+    display: flex;
+    width: 20px;
+    height: 20px;
+    border-radius: 4px;
+    justify-content: center;
+    align-items: center;
+    padding: 0 3px 2px 3px;
+    &:hover {
+        background-color: #e5dbff;
     }
 }
 

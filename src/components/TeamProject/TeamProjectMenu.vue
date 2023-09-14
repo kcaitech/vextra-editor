@@ -9,6 +9,9 @@ const props = defineProps<{
     top: number,
     left: number
 }>()
+const menu = ref<HTMLDivElement>();
+
+defineExpose({ menu });
 const emit = defineEmits<{
     (e: 'cancelFixed', data: any): void;
     (e: 'projectSetting', data: any): void;

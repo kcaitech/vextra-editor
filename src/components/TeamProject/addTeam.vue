@@ -71,8 +71,10 @@ const createTeam = async () => {
             state(true)  //改变updatestate的值为TRUE
             if (route.params.id) {
                 router.push({ path: `/apphome/teams/${data.id}` })
+                sessionStorage.setItem('index', '6')
             } else {
                 router.push({ path: `teams/${data.id}` })
+                sessionStorage.setItem('index', '6')
             }
 
         } else {

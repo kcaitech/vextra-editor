@@ -1,5 +1,5 @@
 <template>
-    <tablelist :data="lists" :iconlist="iconlists" @restore="Restorefile" @ndelete="Deletefile" @rightMeun="rightmenu" :noNetwork="noNetwork" @refreshDoc="refreshDoc" />
+    <tablelist :data="lists" :iconlist="iconlists" @restore="Restorefile" @ndelete="Deletefile" @rightMeun="rightmenu" :noNetwork="noNetwork" @refreshDoc="refreshDoc" :deleter="true"/>
     <!-- 右键菜单 -->
     <listrightmenu :items="items" :data="mydata" @getrecycle-lists="GetrecycleLists" @r-deletefile="Deletefile"
         @r-restorefile="Restorefile" />
@@ -71,8 +71,10 @@ async function GetrecycleLists(id: string) {
             }
         }
         lists.value = Object.values(data)
-        console.log(lists.value,'lists.value');
-        
+        const user_id = localStorage.getItem('userId');
+        if(props.currentProject.self_perm_type === 3) {
+            lists.value = lists.value.filter(item => item.document.user_id === user_id);
+        }
     } catch (error) {
         noNetwork.value = true
     }

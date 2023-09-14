@@ -1,11 +1,12 @@
 <script setup lang="ts">
-import { onMounted, ref, onUnmounted, watch } from 'vue';
+import { onMounted, ref, onUnmounted, watch, watchEffect } from 'vue';
 import FileShare from './FileShare.vue';
 import { Context } from '@/context';
 import { useI18n } from 'vue-i18n';
 import { useRoute } from 'vue-router';
 import { UserInfo, DocInfo } from '@/context/user';
 import * as share_api from '@/apis/share';
+import * as team_api from '@/apis/team'
 
 const { t } = useI18n()
 interface Props {
@@ -20,18 +21,17 @@ const shareSwitch = ref(true)
 const selectValue = ref(1)
 const userInfo = ref<UserInfo | undefined>()
 const docInfo = ref<DocInfo>()
+const projectPerm = ref()
+const perm = ref(false)
 const onShare = () => {
   if (showFileShare.value) {
     showFileShare.value = false
     return
   }
-  documentInfo(route.query.id).then((data) => {
-    docInfo.value = data
-    if(docInfo.value) {
-      userInfo.value = props.context.comment.isUserInfo
-      showFileShare.value = true
-    }
-  })
+  if (docInfo.value && perm.value) {
+    userInfo.value = props.context.comment.isUserInfo
+    showFileShare.value = true
+  }
 }
 
 const closeShare = () => {
@@ -48,6 +48,12 @@ async function documentInfo(id: any) {
   try {
     if (id) {
       const { data } = await share_api.getDocumentInfoAPI({ doc_id: id })
+      docInfo.value = data;
+      if(data.project) {
+        GetprojectLists(data.project.id);
+      }else {
+        perm.value = true;
+      }
       return data
     } else {
       console.log('没有该文档');
@@ -68,9 +74,26 @@ const getSelectValue = (val: string) => {
     }
   })
 }
-watch(() => route.query.id, (val) => {
-  getSelectValue((val as string))
+watchEffect(() => {
+  route.query.id;
+  if(route.query.id) {
+    getSelectValue((route.query.id as string))
+  }
 })
+
+const GetprojectLists = async (id: string) => {
+  try {
+    const { data } = await team_api.GetprojectLists()
+    if (data) {
+      perm.value = true;
+      const project = data.filter((item: any) => item.project.id === id)[0];
+      projectPerm.value = project.self_perm_type;
+    }
+
+  } catch (err) {
+    console.log(err);
+  }
+}
 
 onMounted(() => {
   getPageHeight()
@@ -87,8 +110,9 @@ onUnmounted(() => {
     <div class="share" @click.stop="onShare">
       <svg-icon class="svg" icon-class="share"></svg-icon>
     </div>
-    <FileShare v-if="showFileShare" @close="closeShare" :shareSwitch="shareSwitch" :selectValue="selectValue" :docInfo="docInfo"
-      @select-type="onSelectType" @switch-state="onSwitch" :pageHeight="pageHeight" :context="props.context" :userInfo="userInfo"></FileShare>
+    <FileShare v-if="showFileShare" @close="closeShare" :shareSwitch="shareSwitch" :selectValue="selectValue"
+      :docInfo="docInfo" :projectPerm="projectPerm" @select-type="onSelectType" @switch-state="onSwitch"
+      :pageHeight="pageHeight" :context="props.context" :userInfo="userInfo"></FileShare>
   </div>
 </template>
 

@@ -44,6 +44,10 @@ interface Permission {
     id: string
     perm_type: number
 }
+interface Project {
+    id: string
+    name: string
+}
 interface DocInfo {
     document: Document
     user:DocUser
@@ -51,6 +55,7 @@ interface DocInfo {
     document_permission: Permission
     shares_count: number
     application_count: number
+    project: Project
 }
 export class DocumentInfo extends Watchable(Object) {
     private m_document_info: DocInfo;

@@ -239,6 +239,7 @@ const disband = async (id: string) => {
             upDateTeamData(teamData.value.filter(item => item.team.id != id))
             teamUpdate(!is_team_upodate.value)
             router.push({ name: 'recently' })
+            sessionStorage.setItem('index', '1')
         } else {
             ElMessage({ type: 'error', message: message })
         }
@@ -253,6 +254,7 @@ const leave = async (id: string) => {
         const { code, message } = await user_api.Leaveteam({ team_id: id })
         if (code === 0) {
             router.push({ name: 'recently' })
+            sessionStorage.setItem('index', '1')
             upDateTeamData(teamData.value.filter(item => item.team.id != id))
             teamUpdate(!is_team_upodate.value)
         } else {

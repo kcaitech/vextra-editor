@@ -19,7 +19,7 @@
 import * as share_api from "@/apis/share"
 import * as user_api from '@/apis/users'
 import { ElMessage } from 'element-plus'
-import { onMounted, ref, onUnmounted, nextTick, watch, inject, Ref } from "vue"
+import { onMounted, ref, onUnmounted, nextTick, watch, inject, Ref, watchEffect } from "vue"
 import { useI18n } from 'vue-i18n'
 import { router } from '@/router'
 import FileShare from '@/components/Document/Toolbar/Share/FileShare.vue'
@@ -27,7 +27,8 @@ import tablelist from '@/components/AppHome/tablelist.vue'
 import { UserInfo } from '@/context/user';
 import listrightmenu from "../listrightmenu.vue";
 import MoveProjectFill from "@/components/TeamProject/MoveProjectFill.vue";
-
+import { useRoute } from 'vue-router'
+const route = useRoute();
 interface data {
     document: {
         id: string
@@ -59,7 +60,6 @@ const userInfo = ref<UserInfo | undefined>()
 const iconlists = ref(['star', 'share', 'delete'])
 const projectItem = ref<any>({});
 const moveVisible = ref(false);
-
 const { projectList } = inject('shareData') as {
     projectList: Ref<any[]>;
 };
@@ -232,7 +232,7 @@ watch(lists, (Nlist) => {
 }, { deep: true, immediate: true })
 
 onMounted(() => {
-    getDoucment()
+    getDoucment();
     getPageHeight()
     window.addEventListener('resize', getPageHeight)
 })

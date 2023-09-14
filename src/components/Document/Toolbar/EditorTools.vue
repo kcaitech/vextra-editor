@@ -47,6 +47,8 @@ function tool_watcher(t?: number) {
 //获取文档权限
 const hangdlePerm = () => {
     const perm = props.context.workspace.documentPerm
+    console.log(perm,'perm');
+    
     if (perm === Perm.isRead) {
         isread.value = true
     } else if (perm === Perm.isComment) {

@@ -48,7 +48,7 @@ const teamDataList = ref<any[]>([]);
 const projectDataList = ref<any[]>([]);
 const reflush = ref(0);
 const projectShareList = ref<any[]>([]);
-const activeShare = ref([0]);
+const activeShare = ref(0);
 const is_share = ref(false);
 const showProjecrMenu = ref(false);
 let menuItem: string[] = [];
@@ -276,6 +276,8 @@ const skipProject = (item: any, e: MouseEvent) => {
 }
 const top = ref(0); const left = ref(0);
 const menuData = ref<any>({})
+type TeamProjectMenuEl = InstanceType<typeof TeamProjectMenu>;
+const rightMenuEl = ref<TeamProjectMenuEl>();
 const rightMenu = (item: any, e: MouseEvent) => {
     if (e.button === 2) {
         setMenuVisi(false);
@@ -294,8 +296,19 @@ const rightMenu = (item: any, e: MouseEvent) => {
         if (item.is_invited || item.self_perm_type === 5) {
             menuItem.push('perm');
         }
+        const h = document.querySelector('body')?.clientHeight
         nextTick(() => {
             showProjecrMenu.value = true;
+            nextTick(() => {
+                if (rightMenuEl.value) {
+                    const el = rightMenuEl.value.menu;
+                    if (el && h) {
+                        if (el.clientHeight + e.clientY > h) {
+                            top.value = h - el.clientHeight;
+                        }
+                    }
+                }
+            })
             setMenuVisi(true);
         })
     } else {
@@ -305,7 +318,7 @@ const rightMenu = (item: any, e: MouseEvent) => {
 }
 
 watch(menuState, (v) => {
-    if(!v) {
+    if (!v) {
         showProjecrMenu.value = false;
     }
 })
@@ -391,8 +404,6 @@ const inputCusname = (data: any) => {
     nextTick(() => {
         if (Input.value) {
             project_item.value = data;
-            console.log(data, 'data');
-
             document.addEventListener('keydown', enter);
         }
     })
@@ -413,7 +424,6 @@ const onblur = () => {
     const index = projectList.value.findIndex(item => item.project.id === project.id);
     const favorite = favoriteList.value.findIndex((item) => item.project.id === project.id);
     projectList.value[index].project.name = proname.value;
-    console.log(favoriteList.value[favorite], favorite, ' favoriteList.value[favorite]');
 
     favoriteList.value[favorite].project.name = proname.value;
     project.name = proname.value;
@@ -509,7 +519,8 @@ watch(route, (v) => {
             addTargetItem([])
         }
     }
-}, { deep: true })
+    x.value = sessionStorage.getItem('index');
+}, { deep: true})
 
 const listss = ref<any[]>([])
 
@@ -530,6 +541,12 @@ watchEffect(() => {
         updateActiveNames(teamData.value.findIndex(item => item.team.id === index[0]))
         addTargetItem(projectList.value.filter(item => item.project.id === route.params.id));
     }
+    nextTick(() => {
+        const index = projectShareList.value.findIndex(item => item.project.id === route.params.id);
+        if(index !== -1) {
+            activeShare.value = 1
+        }
+    })
 })
 
 onMounted(() => {
@@ -600,18 +617,16 @@ onUnmounted(() => {
                 <el-scrollbar height="100%">
                     <div class="demo-collapse">
                         <el-collapse v-model="activeShare" v-if="showShare">
-                            <el-collapse-item @click.stop="skipProjecrShare">
+                            <el-collapse-item @click.stop="skipProjecrShare" :name="1">
                                 <template #title>
                                     <div class="team-title" :class="{ 'is_active': is_share }">
                                         <div class="left">
                                             <div class="down"
-                                                :style="{ transform: activeShare.includes(1) ? 'rotate(0deg)' : 'rotate(-90deg)', visibility: projectShareList.length > 0 ? 'visible' : 'hidden' }">
+                                                :style="{ transform: activeShare === 1 ? 'rotate(0deg)' : 'rotate(-90deg)', visibility: projectShareList.length > 0 ? 'visible' : 'hidden' }">
                                                 <svg-icon icon-class="down" />
                                             </div>
-                                            <div class="team-avatar">
-                                                <div class="img">
-                                                    <img src="" alt="team avatar">
-                                                </div>
+                                            <div class="receive">
+                                                <svg-icon icon-class="receive-fill" />
                                             </div>
                                             <div class="name">收到的分享项目</div>
                                         </div>
@@ -719,7 +734,7 @@ onUnmounted(() => {
                                             class="project" @click.stop="(e) => skipProject(target, e)"
                                             @mousedown.stop="(e) => rightMenu(target, e)"
                                             :class="{ 'is_active': isProjectActive(target.project.id) }">
-                                            <div>
+                                            <div style="box-sizing: border-box;">
                                                 <div class="project_name">{{ target.project.name }}</div>
                                                 <div class="right" @click.stop="newProjectFile(target.project.id)"
                                                     v-if="target.self_perm_type > 2">
@@ -752,13 +767,13 @@ onUnmounted(() => {
         </div>
     </transition>
     <TeamProjectMenu v-if="showProjecrMenu" :items="menuItem" :data="projectItem" :top="top" :left="left" @close="closeMenu"
-        @delProject="onDelProject" @exitProject="onExitProject" @cancelFixed="menucancelFixed" @reName="inputCusname"
-        @showMembergDialog="showMembergDialog" @projectSetting="showSettingDialog">
+        ref="rightMenuEl" @delProject="onDelProject" @exitProject="onExitProject" @cancelFixed="menucancelFixed"
+        @reName="inputCusname" @showMembergDialog="showMembergDialog" @projectSetting="showSettingDialog">
     </TeamProjectMenu>
-    <ProjectDialog :projectVisible="delVisible" context="删除项目后，将删除项目及项目中所有文件、资料。" :title="'删除项目'" :confirm-btn="'任然删除'"
+    <ProjectDialog :projectVisible="delVisible" context="删除项目后，将删除项目及项目中所有文件、资料。" :title="'删除项目'" :confirm-btn="'仍然删除'"
         @clode-dialog="closeDelVisible" @confirm="DelProject"></ProjectDialog>
     <ProjectDialog :projectVisible="exitVisible" context="退出项目后，无法再访问项目中的文件，或使用项目中的资源。" :title="'退出项目'"
-        :confirm-btn="'任然退出'" @clode-dialog="closeExitVisible" @confirm="ExitProject"></ProjectDialog>
+        :confirm-btn="'仍然退出'" @clode-dialog="closeExitVisible" @confirm="ExitProject"></ProjectDialog>
     <ProjectAccessSetting v-if="projectSettingDialog" title="邀请项目成员" :data="menuData" width="500px"
         @clodeDialog="projectSettingDialog = false" />
     <ProjectMemberg v-if="projectMembergDialog" :projectMembergDialog="projectMembergDialog" :currentProject="menuData"
@@ -1087,14 +1102,6 @@ a {
                     border-radius: 4px;
                     cursor: pointer;
 
-                    .project_name {
-                        display: inline-block;
-                        overflow: hidden;
-                        text-overflow: ellipsis;
-                        white-space: nowrap;
-                        margin-right: 10px;
-                    }
-
                     .el-input {
                         height: 35px;
                         border: none;
@@ -1170,7 +1177,25 @@ a {
     }
 }
 
-
+.project_name {
+    display: inline-block;
+    overflow: hidden;
+    text-overflow: ellipsis;
+    white-space: nowrap;
+    margin-right: 10px;
+}
+.receive {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    margin: 0 5px;
+    width: 20px;
+    height: 100%;
+    >svg {
+        width: 16px;
+        height: 16px;
+    }
+}
 
 :deep(.el-collapse-item__content) {
     padding: 0;

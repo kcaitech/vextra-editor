@@ -335,8 +335,6 @@ const getDocumentInfo = async () => {
         }
         permType.value = dataInfo.data.document_permission.perm_type;
         //获取文档类型是否为私有文档且有无权限
-        console.log(dataInfo.data,'文档信息');
-        
         if (docInfo.value.document_permission.perm_type === 0) {
             router.push({
                 name: 'apply',
@@ -365,8 +363,10 @@ const getDocumentInfo = async () => {
             const file_name = docInfo.value.document?.name || document.name;
             window.document.title = file_name.length > 8 ? `${file_name.slice(0, 8)}... - ProtoDesign` : `${file_name} - ProtoDesign`;
             context = new Context(document, coopRepo);
+            context.workspace.setDocumentPerm(dataInfo.data.document_permission.perm_type)
             getDocumentAuthority();
             getUserInfo()
+            
             context.comment.setDocumentInfo(dataInfo.data)
             null_context.value = false;
             context.selection.watch(selectionWatcher);

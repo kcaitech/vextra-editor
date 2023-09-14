@@ -5,7 +5,7 @@
         <listrightmenu :items="items" :data="mydata" @get-userdata="getUserdata" @r-starfile="Starfile" @r-sharefile="Sharefile"
             @r-removehistory="Removefile" @ropen="openDocument"/>
         <FileShare v-if="showFileShare" @close="closeShare" :docId="docId" @switch-state="onSwitch" :userInfo="userInfo"  :docUserId="docUserId" :project="is_project"
-            :selectValue="selectValue" @select-type="onSelectType" :shareSwitch="shareSwitch" :pageHeight="pageHeight">
+            :selectValue="selectValue" @select-type="onSelectType" :shareSwitch="shareSwitch" :pageHeight="pageHeight" :projectPerm="projectPerm">
         </FileShare>
         <div v-if="showFileShare" class="overlay"></div>
 </template>
@@ -13,7 +13,7 @@
 <script setup lang="ts">
 import * as user_api from '@/apis/users'
 import { ElMessage } from 'element-plus'
-import { ref, onMounted, onUnmounted, nextTick, watch } from 'vue'
+import { ref, onMounted, onUnmounted, nextTick, watch, inject, Ref } from 'vue'
 import { useI18n } from 'vue-i18n'
 import { router } from '@/router'
 import FileShare from '@/components/Document/Toolbar/Share/FileShare.vue'
@@ -39,6 +39,10 @@ const is_project = ref(false);
 const emits = defineEmits<{
     (e: 'dataUpdate', list: any[], title: string): void
 }>()
+const projectPerm = ref()
+const { projectList } = inject('shareData') as {
+    projectList: Ref<any[]>;
+};
 
 interface data {
     document: {
@@ -54,6 +58,7 @@ interface data {
     document_access_record: {
         id: string
     }
+    project_perm: number
 }
 
 //获取服务器我的文件列表
@@ -68,9 +73,13 @@ async function getUserdata() {
         } else {
             noNetwork.value = false
             for (let i = 0; i < data.length; i++) {
+                data[i].project_perm = undefined;
                 let { document: { size }, document_access_record: { last_access_time } } = data[i]
                 data[i].document.size = sizeTostr(size)
                 data[i].document_access_record.last_access_time = last_access_time.slice(0, 19)
+                if(data[i].project) {
+                    data[i].project_perm = projectList.value.filter(item => item.project.id === data[i].project.id)[0].self_perm_type;
+                }
             }
         }
         lists.value = Object.values(data)
@@ -149,6 +158,7 @@ const Sharefile = (data: data) => {
     userInfo.value = userData.value
     docId.value = data.document.id
     selectValue.value = data.document.doc_type !== 0 ? data.document.doc_type : data.document.doc_type
+    projectPerm.value = data.project_perm;
     showFileShare.value = true
 }
 

@@ -1,7 +1,7 @@
 
 <template>
     <tablelist :data="lists" :iconlist="iconlists" @share="Sharefile" @deletefile="Deletefile" @dbclickopen="openDocument" :type="currentProject.self_perm_type > 2 ? 'project' : ''"
-        @updatestar="Starfile" @rightMeun="rightmenu" :noNetwork="noNetwork" @refreshDoc="refreshDoc" @newProjectFill="newProjectFill" :creator="true"/>
+        @updatestar="Starfile" @rightMeun="rightmenu" :noNetwork="noNetwork" @refreshDoc="refreshDoc" @newProjectFill="newProjectFill" :creator="true" :perm="currentProject.self_perm_type"/>
 
     <listrightmenu :items="items" :data="mydata" @get-doucment="getDoucment" @r-starfile="Starfile" @r-sharefile="Sharefile"
         @r-removefile="Deletefile" @ropen="openDocument" @moveFillAddress="moveFillAddress"/>
@@ -9,7 +9,7 @@
     <div v-if="showFileShare" class="overlay"></div>
     <FileShare v-if="showFileShare" @close="closeShare" :docId="docId" :selectValue="selectValue" :userInfo="userInfo"
         :docUserId="docUserId" @select-type="onSelectType" @switch-state="onSwitch" :shareSwitch="shareSwitch"
-        :pageHeight="pageHeight" :project="is_project">
+        :pageHeight="pageHeight" :project="is_project" :projectPerm="currentProject.self_perm_type">
     </FileShare>
     <MoveProjectFill :title="'移动文件位置'" :confirm-btn="'移动'"  :projectItem="projectItem" :doc="mydata" :projectVisible="moveVisible" @clodeDialog="clodeDialog" @moveFillSeccess="moveFillSeccess"></MoveProjectFill>
 </template>
@@ -44,7 +44,7 @@ interface data {
     }
 }
 
-const items = ['open', 'newtabopen', 'share', 'target_star', 'movefill', 'rename', 'copyfile', 'deletefile']
+let items = ['open', 'newtabopen', 'share', 'target_star']
 
 const props = defineProps<{
     currentProject: any
@@ -62,7 +62,7 @@ const docUserId = ref('')
 const noNetwork = ref(false)
 const lists = ref<any[]>([])
 const userInfo = ref<UserInfo | undefined>()
-const iconlists = ref(['star', 'share', 'delete']);
+const iconlists = ref(['star', 'share', 'delete_p']);
 const moveVisible = ref(false);
 const projectItem = ref<any>({});
 const is_project = ref(false);
@@ -212,9 +212,6 @@ function filterItemsByIndexes(sourceArray: any, indexesToDelete: any) {
 //右键菜单入口
 const rightmenu = (e: MouseEvent, data: data) => {
     const el = document.querySelector('.target_star')! as HTMLElement
-    const elrename = document.querySelector('.rename')! as HTMLElement
-    const elcopyfile = document.querySelector('.copyfile')! as HTMLElement
-    const eldeletefile = document.querySelector('.deletefile')! as HTMLElement
     const { document: { id,user_id,project_id }, document_favorites: { is_favorite } } = data
     const viewportWidth = window.innerWidth || document.documentElement.clientWidth
     const viewportHeight = window.innerHeight || document.documentElement.clientHeight
@@ -237,19 +234,19 @@ const rightmenu = (e: MouseEvent, data: data) => {
         } else {
             el.innerHTML = t('homerightmenu.target_star')
         }
-        if (user_id != localStorage.getItem('userId')) {
-            elrename.style.display = "none"
-            elcopyfile.style.display = "none"
-            eldeletefile.style.display="none"
-        } else {
-            elrename.style.display = "block"
-            elcopyfile.style.display = "block"
-            eldeletefile.style.display="block"
-        }
     })
+    items = ['open', 'newtabopen', 'share', 'target_star']
+    const userId = localStorage.getItem('userId');
+    if(props.currentProject.self_perm_type > 3) {
+        items.push('movefill', 'rename', 'copyfile', 'deletefile');
+    }else if (props.currentProject.self_perm_type === 3) {
+        if(user_id === userId) {
+            items.push('movefill', 'rename', 'copyfile', 'deletefile')
+        }
+    }
     docId.value = id
     mydata.value = data
-    projectItem.value = projectList.value.filter(item => item.project.id === data.document.project_id)[0];
+    projectItem.value = projectList.value.filter(item => item.project.id === project_id)[0];
 }
 
 const userData = ref({

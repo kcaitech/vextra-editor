@@ -10,7 +10,7 @@
                         </div>
                     </template>
                     <template #empty>
-                        <div v-if="props.type === 'project'" class="datanull">
+                        <div v-if="props.type === 'project' && !loading" class="datanull">
                             <p>项目没有任何文件</p>
                             <button type="button" @click="newProjectFill">新建文件</button>
                         </div>
@@ -48,8 +48,10 @@ const props = defineProps<{
     type?: string
     address?: boolean
     creator?: boolean
+    deleter?: boolean
+    perm?: number
 }>()
-
+const user_id = localStorage.getItem('userId');
 watch(() => props.data, () => {
     loading.value = false
     empty.value = true
@@ -236,7 +238,6 @@ const columns: Column<any>[] = [
                         onClick={(event: MouseEvent) => {
                             event.stopPropagation()
                             emits('share', rowData)
-                            console.log(rowData);
                         }}>
                         <el-tooltip content={t('home.share')} show-after={1000} hide-after={0}>
                             <Share />
@@ -244,7 +245,19 @@ const columns: Column<any>[] = [
                     </el-icon>
                 )}
 
-                {props.iconlist.includes('delete') && (
+                {(props.iconlist.includes('delete_p') && props.perm! > 3 || props.perm! === 3 && rowData.document.user_id === user_id) && (
+                    <el-icon size={20}
+                        onDblclick={(event: MouseEvent) => event.stopPropagation()}
+                        onClick={(event: MouseEvent) => {
+                            event.stopPropagation()
+                            emits('deletefile', rowData)
+                        }}>
+                        <el-tooltip content={t('home.delete')} show-after={1000} hide-after={0}>
+                            <Delete />
+                        </el-tooltip>
+                    </el-icon>
+                )}
+                {(props.iconlist.includes('delete')) && (
                     <el-icon size={20}
                         onDblclick={(event: MouseEvent) => event.stopPropagation()}
                         onClick={(event: MouseEvent) => {
@@ -364,6 +377,20 @@ watchEffect(() => {
             cellRenderer: ({ rowData: { user: { nickname } } }) => {
                 return (
                     <span>{nickname}</span>
+            );
+            },
+        },)
+    }
+    if(props.deleter) {
+        columns.splice(3, 0, {
+            key: 'deleter',
+            dataKey: 'document',
+            title: `删除人`,
+            width: 400,
+            minWidth: 100,
+            cellRenderer: ({ rowData: { document: { user_id }, project, team } }) => {
+                return (
+                    <span>{'大啊啊'}</span>
             );
             },
         },)

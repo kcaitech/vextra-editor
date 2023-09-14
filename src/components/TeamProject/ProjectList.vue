@@ -60,8 +60,8 @@
     </div>
     <NetworkError v-else @refresh-doc="GetprojectLists"></NetworkError>
     <ProjectDialog :projectVisible="innerVisible" context="退出项目后，无法再访问项目中的文件，或使用项目中的资源。" :title="'退出项目'"
-        :confirm-btn="'任然退出'" @clode-dialog="handleClose" @confirm="quitProject"></ProjectDialog>
-    <ProjectDialog :projectVisible="delVisible" context="删除项目后，将删除项目及项目中所有文件、资料。" :title="'删除项目'" :confirm-btn="'任然删除'"
+        :confirm-btn="'仍然退出'" @clode-dialog="handleClose" @confirm="quitProject"></ProjectDialog>
+    <ProjectDialog :projectVisible="delVisible" context="删除项目后，将删除项目及项目中所有文件、资料。" :title="'删除项目'" :confirm-btn="'仍然删除'"
         @clode-dialog="closeDelVisible" @confirm="DelProject"></ProjectDialog>
     <listrightmenu :items="updateitems" :data="mydata" @showMembergDialog="showMembergDialog"
         @projectrename="setProjectInfo" @showSettingDialog="showSettingDialog"

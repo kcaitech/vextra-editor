@@ -1,5 +1,5 @@
 <script lang="ts" setup>
-import { watch, ref, Ref, inject, watchEffect, computed } from 'vue';
+import { watch, ref, Ref, inject, watchEffect, computed, nextTick } from 'vue';
 import { Folder } from '@element-plus/icons-vue';
 import * as team_api from '@/apis/team';
 interface data {
@@ -42,7 +42,7 @@ const { teamData, projectList } = inject('shareData') as {
     projectList: Ref<any[]>;
     updateProject: () => void;
 }
-const activeNames = ref();
+const activeNames = ref('2');
 const pList = computed(() => {
     return projectList.value.filter(item => item.project.team_id === activeNames.value && item.self_perm_type >= 3);
 })
@@ -64,7 +64,7 @@ const targetProject = (project: any) => {
     active.value = project.project.id;
     curProject.value = project;
 }
-watch(activeNames, () => {
+watch(activeNames, (v) => {
     active.value = '';
 })
 const moveProjectTarget = async (params: any) => {
@@ -76,6 +76,7 @@ const moveProjectTarget = async (params: any) => {
     }
 }
 const quitProject = () => {
+    if (!active.value && activeNames.value !== '2') return;
     let params
     emit('confirm');
     if (props.projectItem) {
@@ -107,6 +108,17 @@ const quitProject = () => {
 
 const onactiveNames = (id: string) => {
     activeNames.value = id;
+    if (id === '1') {
+        nextTick(() => {
+            active.value = shareProject.value[0].project.id;
+        })
+    } else if (id !== '2') {
+        nextTick(() => {
+            if (pList.value.length > 0) {
+                active.value = pList.value[0].project.id;
+            }
+        })
+    }
 }
 </script>
 
@@ -130,13 +142,20 @@ const onactiveNames = (id: string) => {
             <div class="conteiner">
                 <div class="target_fill">
                     <el-scrollbar height="290px">
-                        <div class="team-title" @click="onactiveNames('2')"
-                            v-if="!projectItem || projectItem && projectItem.self_perm_type === 5">
+                        <div class="team-title" @click="onactiveNames('2')">
                             <div class="left" :class="{ 'is_active': activeNames === '2' }">
                                 <el-icon style="margin-right: 10px;">
                                     <Folder />
                                 </el-icon>
                                 <div class="name">我的文件</div>
+                            </div>
+                        </div>
+                        <div class="team-title" @click="onactiveNames('1')" v-if="shareProject.length > 0">
+                            <div class="left" :class="{ 'is_active': activeNames === '1' }">
+                                <div class="receive">
+                                    <svg-icon icon-class="receive-fill" />
+                                </div>
+                                <div class="name">收到的共享项目</div>
                             </div>
                         </div>
                         <template v-for="(data) in teamData" :key="data.team.id">
@@ -154,16 +173,6 @@ const onactiveNames = (id: string) => {
                                 </div>
                             </div>
                         </template>
-                        <div class="team-title" @click="onactiveNames('1')" v-if="shareProject.length > 0">
-                            <div class="left" :class="{ 'is_active': activeNames === '1' }">
-                                <div class="team-avatar">
-                                    <div class="img">
-                                        <img src="" alt="team avatar">
-                                    </div>
-                                </div>
-                                <div class="name">收到的共享项目</div>
-                            </div>
-                        </div>
                     </el-scrollbar>
                 </div>
                 <div class="target_project">
@@ -181,7 +190,7 @@ const onactiveNames = (id: string) => {
                                 <el-icon style="margin-right: 10px;">
                                     <Folder />
                                 </el-icon>
-                                <div>移动到我的文件，文件改为个人文件</div>
+                                <div>设为私有文件</div>
                             </div>
                         </div>
                         <template v-for="(item, i) in shareProject" :key="i">
@@ -200,9 +209,10 @@ const onactiveNames = (id: string) => {
         </div>
         <template #footer>
             <div class="dialog-footer">
-                <el-button class="quit" @click="quitProject" style="background-color: #9775fa; color: #fff;">{{ confirmBtn
-                }}</el-button>
-                <el-button class="quit" style="background-color: #9775fa; color: #fff;" @click="handleClose">
+                <el-button class="quit" :class="{ opacity: !active && activeNames !== '2'}" @click="quitProject"
+                    style="background-color: #9775fa; color: #fff;">{{ confirmBtn
+                    }}</el-button>
+                <el-button class="quit" style="background-color: #fff; color: #000;" @click="handleClose">
                     取消
                 </el-button>
             </div>
@@ -243,7 +253,12 @@ const onactiveNames = (id: string) => {
 :deep(.el-scrollbar) {
     margin-right: -10px;
 }
-
+h6 {
+    width: 100%;
+    display: flex;
+    justify-content: center;
+    margin-right: 10px;
+}
 .context {
     font-size: 14px;
     color: #000;
@@ -403,6 +418,23 @@ const onactiveNames = (id: string) => {
     }
 }
 
+.receive {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    margin: 0 5px;
+    width: 20px;
+    height: 100%;
+
+    >svg {
+        width: 16px;
+        height: 16px;
+    }
+}
+
+.opacity {
+    opacity: .5;
+}
 
 .dialog-footer {
     display: flex;

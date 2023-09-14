@@ -20,12 +20,18 @@ const input = ref<HTMLInputElement>();
 const name = ref<string>('');
 const { t } = useI18n();
 function home() {
-    if (props.context.communication.docOp.hasPendingSyncCmd()) return hasPendingSyncCmd()
+    if (props.context.communication.docOp.hasPendingSyncCmd()) return hasPendingSyncCmd();
     window.document.title = t('product.name');
     (window as any).sketchDocument = undefined;
     (window as any).skrepo = undefined;
-    router.push({ name: 'recently' });
-    sessionStorage.setItem('index', '1')
+    console.log(props.context.comment.isDocumentInfo);
+    if (props.context.comment.isDocumentInfo?.project) {
+        
+        router.push({ path: '/apphome/project/' + props.context.comment.isDocumentInfo.project.id });
+    } else {
+        router.push({ name: 'meshare' });
+        sessionStorage.setItem('index', '3')
+    }
 }
 
 const hasPendingSyncCmd = () => {
@@ -41,8 +47,12 @@ const hasPendingSyncCmd = () => {
             window.document.title = t('product.name');
             (window as any).sketchDocument = undefined;
             (window as any).skrepo = undefined;
-            router.push({ name: 'recently' });
-            sessionStorage.setItem('index', '1')
+            if (props.context.comment.isDocumentInfo?.project) {
+                router.push({ path: '/apphome/project/' + props.context.comment.isDocumentInfo.project.id });
+            } else {
+                router.push({ name: 'meshare' });
+                sessionStorage.setItem('index', '3')
+            }
         })
         .catch(() => {
             return
