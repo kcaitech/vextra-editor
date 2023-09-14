@@ -1,5 +1,6 @@
-import { OverrideShape, OverridesGetter, Shape, SymbolRefShape } from "@kcdesign/data";
+import { Matrix, OverrideShape, OverridesGetter, Shape, SymbolRefShape } from "@kcdesign/data";
 import { onMounted, onUnmounted, ref, watch } from "vue";
+import { onBeforeRouteUpdate } from "vue-router";
 
 export function makeReflush(props: { data: Shape }) {
     const reflush = ref(0);
@@ -22,19 +23,23 @@ export function makeReflush(props: { data: Shape }) {
     return reflush;
 }
 
-export function initCommonShape(props: { data: Shape, overrides?: SymbolRefShape[] }) {
+export function initCommonShape(props: { data: Shape, overrides?: SymbolRefShape[], matrix?: Matrix }) {
     const _reflush = ref(0);
     const watcher = () => {
         _reflush.value++;
     }
 
     const _consumeOverride: OverrideShape[] = [];
+    let _matrix: Matrix | undefined;
     const ret = {
         get reflush() {
             return _reflush.value !== 0 ? _reflush.value : undefined;
         },
         set reflush(val: number | undefined) {
             _reflush.value = val ?? 0;
+        },
+        get matrix() {
+            return _matrix;
         },
 
         incReflush() {
@@ -79,8 +84,6 @@ export function initCommonShape(props: { data: Shape, overrides?: SymbolRefShape
         _consumeOverride.length = 0;
     }
 
-
-
     // 需要watch的数据
     // 1. props的data,可能切换对象
     // 2. props的overrides,同上
@@ -120,6 +123,19 @@ export function initCommonShape(props: { data: Shape, overrides?: SymbolRefShape
         unwatchConsumeOverride();
         if (_symRef) _symRef.unwatch(watcher);
     })
+
+    const updateMatrix = () => {
+        if (props.matrix) {
+            const m = props.data.matrix2Parent();
+            const inverse = m.inverse;
+            m.multiAtLeft(props.matrix);
+            m.multiAtLeft(inverse);
+            _matrix = m;
+        }
+    }
+    updateMatrix();
+
+    onBeforeRouteUpdate(updateMatrix)
 
     return ret;
 }

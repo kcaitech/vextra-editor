@@ -1,11 +1,11 @@
 <script setup lang="ts">
 import { h, watch } from 'vue';
 import comsMap from './comsmap'
-import { OverrideShape, renderSymbolRef as r } from "@kcdesign/data"
+import { Matrix, OverrideShape, renderSymbolRef as r } from "@kcdesign/data"
 import { SymbolRefShape } from '@kcdesign/data';
 import { initCommonShape } from './common';
 
-const props = defineProps<{ data: SymbolRefShape, overrides?: SymbolRefShape[] }>();
+const props = defineProps<{ data: SymbolRefShape, overrides?: SymbolRefShape[], matrix?: Matrix }>();
 const common = initCommonShape(props);
 props.data.loadSymbol();
 
@@ -15,7 +15,7 @@ watch(() => props.data, (value, old) => {
 
 function render() {
     const consumes: OverrideShape[] = [];
-    const ret = r(h, props.data, comsMap, props.overrides, consumes, common.reflush);
+    const ret = r(h, props.data, comsMap, props.overrides, consumes, common.matrix, common.reflush);
     common.updateComsumeOverride(consumes);
     return ret;
 }

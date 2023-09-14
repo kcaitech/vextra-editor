@@ -47,25 +47,25 @@ comsMap.set(ShapeType.Artboard, (data: Shape, overrides?: SymbolRefShape[]) => {
     return art(h, data as Artboard, comsMap);
 });
 comsMap.set(ShapeType.Group, (data: Shape, overrides?: SymbolRefShape[]) => {
-    return group(h, data as GroupShape, comsMap, overrides, undefined);
+    return group(h, data as GroupShape, comsMap, overrides, undefined, undefined);
 });
 // comsMap.set(ShapeType.FlattenShape, (data: Shape, overrides?: SymbolRefShape[]) => {
 //     return shapegroup(h, data as FlattenShape);
 // });
 comsMap.set(ShapeType.Image, (data: Shape, overrides?: SymbolRefShape[]) => {
-    return image(h, data as ImageShape, "", overrides, undefined);
+    return image(h, data as ImageShape, "", overrides, undefined, undefined);
 });
 comsMap.set(ShapeType.Page, (data: Shape, overrides?: SymbolRefShape[]) => {
-    return group(h, data as GroupShape, comsMap, undefined, undefined);
+    return group(h, data as GroupShape, comsMap, undefined, undefined, undefined);
 });
 comsMap.set(ShapeType.Path, (data: Shape, overrides?: SymbolRefShape[]) => {
     return path(h, data as PathShape, overrides, undefined);
 });
 comsMap.set(ShapeType.Rectangle, (data: Shape, overrides?: SymbolRefShape[]) => {
-    return rect(h, data, overrides, undefined);
+    return rect(h, data, overrides, undefined, undefined);
 });
 comsMap.set(ShapeType.Text, (data: Shape, overrides?: SymbolRefShape[]) => {
-    return text(h, data as TextShape, overrides, undefined);
+    return text(h, data as TextShape, overrides, undefined, undefined);
 });
 // comsMap.set(ShapeType.Boolean, (data: Shape, path: string) => { // todo
 //     return bool(h, data, path);
@@ -74,7 +74,7 @@ comsMap.set(ShapeType.Text, (data: Shape, overrides?: SymbolRefShape[]) => {
 //     return group(h, data as GroupShape, comsMap, overrides);
 // });
 comsMap.set(ShapeType.SymbolRef, (data: Shape, overrides?: SymbolRefShape[]) => {
-    return symref(h, data as SymbolRefShape, comsMap, overrides, undefined);
+    return symref(h, data as SymbolRefShape, comsMap, overrides, undefined, undefined);
 });
 
 export function exportSvg(shape: Shape): string {

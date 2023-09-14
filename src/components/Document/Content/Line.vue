@@ -1,10 +1,10 @@
 <script setup lang="ts">
-import { OverrideShape, Shape, SymbolRefShape } from '@kcdesign/data';
+import { Matrix, OverrideShape, Shape, SymbolRefShape } from '@kcdesign/data';
 import { h } from 'vue';
 import { renderLine as r } from "@kcdesign/data";
 import { initCommonShape } from './common';
 
-const props = defineProps<{ data: Shape, overrides?: SymbolRefShape[] }>();
+const props = defineProps<{ data: Shape, overrides?: SymbolRefShape[], matrix?: Matrix }>();
 const common = initCommonShape(props);
 
 function render() {

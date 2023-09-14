@@ -1,11 +1,11 @@
 <script setup lang="ts">
 import { h, onUnmounted, watch } from 'vue';
-import { OverrideShape, Shape, SymbolRefShape, TableShape } from "@kcdesign/data";
+import { Matrix, OverrideShape, Shape, SymbolRefShape, TableShape } from "@kcdesign/data";
 import { renderTable as r } from "@kcdesign/data";
 import { initCommonShape } from './common';
 import comsMap from './comsmap';
 
-const props = defineProps<{ data: TableShape, overrides?: SymbolRefShape[] }>();
+const props = defineProps<{ data: TableShape, overrides?: SymbolRefShape[], matrix?: Matrix }>();
 const common = initCommonShape(props);
 const watcher = (...args: any[]) => {
     if (args.indexOf('borders') >= 0) common.incReflush();

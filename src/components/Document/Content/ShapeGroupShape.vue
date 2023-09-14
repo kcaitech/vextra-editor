@@ -1,12 +1,12 @@
 <script setup lang="ts">
 import { h, onUnmounted, watch } from 'vue';
-import { Shape, GroupShape, SymbolRefShape, OverrideShape } from "@kcdesign/data";
+import { Shape, GroupShape, SymbolRefShape, OverrideShape, Matrix } from "@kcdesign/data";
 import { renderBoolOpShape as opr } from "@kcdesign/data";
 import { renderGroup as normalR } from "@kcdesign/data";
 import comsMap from './comsmap';
 import { initCommonShape } from './common';
 
-const props = defineProps<{ data: GroupShape, overrides?: SymbolRefShape[] }>();
+const props = defineProps<{ data: GroupShape, overrides?: SymbolRefShape[], matrix?: Matrix }>();
 const common = initCommonShape(props);
 const consumed: Array<Shape> = [];
 const watcher = () => {
@@ -34,8 +34,8 @@ function render() {
 
     const consumesOverride: OverrideShape[] = [];
     const ret = isBoolOpShape ?
-        opr(h, props.data, props.overrides, consumesOverride, common.reflush, consumed0) :
-        normalR(h, props.data, comsMap, props.overrides, consumesOverride, common.reflush);
+        opr(h, props.data, props.overrides, consumesOverride, common.matrix, common.reflush, consumed0) :
+        normalR(h, props.data, comsMap, props.overrides, consumesOverride, common.matrix, common.reflush);
     common.updateComsumeOverride(consumesOverride);
 
     if (consumed0.length < consumed.length) {
