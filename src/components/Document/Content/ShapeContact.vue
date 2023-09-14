@@ -1,60 +1,76 @@
 <script setup lang="ts">
-import { ContactForm, ContactShape, Shape } from '@kcdesign/data';
+import { ContactForm, ContactShape, Shape, ShapeType } from '@kcdesign/data';
 import { h, onMounted, onUnmounted, ref, watch } from 'vue';
 import { renderContact as r } from "@kcdesign/data";
-import { Context } from '@/context';
-
-const props = defineProps<{ data: Shape, context: Context }>();
+const props = defineProps<{ data: Shape }>();
 const reflush = ref(0);
 let path = props.data.getPath2().toString();
 let stop1: any, stop2: any;
 let from: undefined | Shape, to: undefined | Shape;
 const watcher = () => {
     updateApex()
-    path = props.data.getPath2().toString();
+    path = props.data.getPath().toString();
     reflush.value++;
 }
 const stopWatch = watch(() => props.data, (value, old) => {
     old.unwatch(watcher);
     value.watch(watcher);
 })
+function wathcer_sides(t: any) {
+    if (t === 'shape-frame') {
+        updateApex();
+        path = props.data.getPath().toString();
+        reflush.value++;
+    }
+}
+function setParent(shape: Shape) {
+    let p = shape.parent;
+    while (p && p.type !== ShapeType.Page) {
+        p.watch(wathcer_sides);
+        p = p.parent;
+    }
+}
 function updateApex() {
     const self: ContactShape = props.data as ContactShape;
-    const page = props.context.selection.selectedPage!;
+    const page = props.data.page();
     if (self.from) {
         const nf = page.getShape((self.from as ContactForm).shapeId);
-        if (from && nf) {
-            if (from.id !== nf.id) {
-                from.unwatch(watcher);
-                stop1 = nf.watch(watcher);
+        if (nf) {
+            if (from) {
+                if (from.id !== nf.id) {
+                    from.unwatch(wathcer_sides);
+                    stop1 = nf.watch(wathcer_sides);
+                }
+            } else {
+                stop1 = nf.watch(wathcer_sides);
             }
-        }
-        if (!from && nf) {
-            stop1 = nf.watch(watcher);
+            setParent(nf);
         }
         from = nf;
     } else {
         if (from) {
-            from.unwatch(watcher);
+            from.unwatch(wathcer_sides);
             stop1 = undefined;
         }
         from = undefined;
     }
     if (self.to) {
         const nt = page.getShape((self.to as ContactForm).shapeId);
-        if (to && nt) {
-            if (to.id !== nt.id) {
-                to.unwatch(watcher);
-                stop2 = nt.watch(watcher);
+        if (nt) {
+            if (to) {
+                if (to.id !== nt.id) {
+                    to.unwatch(wathcer_sides);
+                    stop2 = nt.watch(wathcer_sides);
+                }
+            } else {
+                stop2 = nt.watch(wathcer_sides);
             }
-        }
-        if (!to && nt) {
-            stop2 = nt.watch(watcher);
+            setParent(nt);
         }
         to = nt;
     } else {
         if (to) {
-            to.unwatch(watcher);
+            to.unwatch(wathcer_sides);
             stop2 = undefined;
         }
         to = undefined;
@@ -64,10 +80,10 @@ onMounted(() => {
     props.data.watch(watcher);
     updateApex();
     if (from) {
-        stop1 = from.watch(watcher);
+        stop1 = from.watch(wathcer_sides);
     }
     if (to) {
-        stop2 = to.watch(watcher);
+        stop2 = to.watch(wathcer_sides);
     }
 })
 onUnmounted(() => {
