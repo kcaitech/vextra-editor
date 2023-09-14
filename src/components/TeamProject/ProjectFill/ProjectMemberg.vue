@@ -1,5 +1,5 @@
 <script setup lang="ts">
-import { ref, watch, nextTick } from 'vue';
+import { ref, watch, nextTick, onMounted } from 'vue';
 import { ArrowDown, Check } from '@element-plus/icons-vue';
 import * as team_api from '@/apis/team';
 import { useI18n } from 'vue-i18n';
@@ -41,7 +41,6 @@ const getProjectMemberList = async () => {
         console.log(err);
     }
 }
-getProjectMemberList();
 
 const getTeamMemberList = async () => {
     try {
@@ -67,11 +66,11 @@ watch(() => memberList2.value.length, (v) => {
     emit('memberLength', v)
 })
 
-watch(() => route.params.id, () => {
-    nextTick(() => {
-        getProjectMemberList();
-    })
-}, { immediate: true })
+// watch(() => route.params.id, () => {
+//     nextTick(() => {
+//         getProjectMemberList();
+//     })
+// }, { immediate: true })
 
 const handleCommand = (command: number) => {
     permFilter.value = command;
@@ -225,6 +224,10 @@ watch(innerVisible, (v) => {
     if(!v) {
         document.removeEventListener('keydown', escClose);
     }
+})
+
+onMounted(()=>{
+    getProjectMemberList();
 })
 </script>
 

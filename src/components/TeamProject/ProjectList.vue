@@ -65,8 +65,8 @@
         @clode-dialog="closeDelVisible" @confirm="DelProject"></ProjectDialog>
     <listrightmenu :items="updateitems" :data="mydata" @showMembergDialog="showMembergDialog"
         @projectrename="setProjectInfo" @showSettingDialog="showSettingDialog"
-        @cancelFixed="cancelFixed(mydata.project.id, mydata.is_favor, mydataindex)"
-        @exitordelproject="onExitProject(mydata)" />
+        @cancelFixed="cancelFixed(mydata.project.id, mydata.is_favor, mydataindex)" @exitproject="rexitProject"
+        @delproject="rdelProject" />
     <ProjectAccessSetting v-if="projectSettingDialog" title="邀请项目成员" :data="mydata" width="500px"
         @clodeDialog="projectSettingDialog = false" />
     <ProjectMemberg v-if="projectMembergDialog" :projectMembergDialog="projectMembergDialog" :currentProject="mydata"
@@ -198,26 +198,25 @@ function updateItemsBasedOnFavor(data: any, sourceItems: any) {
     let updateItems = [...sourceItems]
     if (data.is_favor) {
         updateItems = filterItemsByIndexes(updateItems, [3]);
+        if (data.self_perm_type < 4) {
+            updateItems = filterItemsByIndexes(updateItems, [0, 5])
+
+        }
         if (data.self_perm_type === 5) {
-            updateItems = filterItemsByIndexes(updateItems, [4]);
-        } else {
-            updateItems = filterItemsByIndexes(updateItems, [5]);
+            updateItems = filterItemsByIndexes(updateItems, [4])
         }
     } else {
         updateItems = filterItemsByIndexes(updateItems, [4]);
+        if (data.self_perm_type < 4) {
+            updateItems = filterItemsByIndexes(updateItems, [0, 5])
+        }
         if (data.self_perm_type === 5) {
-            updateItems = filterItemsByIndexes(updateItems, [4]);
-        } else {
-            updateItems = filterItemsByIndexes(updateItems, [5]);
+            updateItems = filterItemsByIndexes(updateItems, [4])
         }
     }
-
-    if (data.self_perm_type < 4) {
-        updateItems = filterItemsByIndexes(updateItems, [0, 1, 2]);
-    }
-
-    return updateItems;
+    return updateItems
 }
+
 const delVisible = ref(false);
 
 const closeDelVisible = () => {
@@ -272,6 +271,17 @@ const onExitProject = (row: any) => {
     }
 }
 
+const rexitProject = (data: any) => {
+    project_item.value = data;
+    innerVisible.value = true;
+
+}
+
+const rdelProject = (data: any) => {
+    project_item.value = data;
+    delVisible.value = true
+}
+
 const setProjectInfo = async (params: any) => {
     try {
         const { code, message } = await team_api.setProjectInfoAPI(params)
@@ -288,6 +298,8 @@ const setProjectInfo = async (params: any) => {
 
 //右键菜单入口
 const rightmenu = (e: MouseEvent, data: any, index?: number) => {
+    console.log(data);
+
     const viewportWidth = window.innerWidth || document.documentElement.clientWidth
     const viewportHeight = window.innerHeight || document.documentElement.clientHeight
     const rightmenu: any = document.querySelector('.rightmenu')
@@ -476,4 +488,5 @@ onMounted(() => {
             background-color: rgba(150, 117, 250, 0.862745098);
         }
     }
-}</style>
+}
+</style>
