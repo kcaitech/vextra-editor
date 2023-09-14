@@ -55,7 +55,8 @@ const emits = defineEmits([
     'showSettingDialog',
     'showMembergDialog',
     'cancelFixed',
-    'exitordelproject',
+    'delproject',
+    'exitproject',
     'showMembergDialog',
     'moveFillAddress'
 ])
@@ -193,11 +194,17 @@ const EventHandler = (item: string) => {
         }
         emits('cancelFixed')
     }
-    else if (item === rightmenuitem.exitproject || item === rightmenuitem.deleteproject) {
+    else if (item === rightmenuitem.exitproject) {
         if (menu.value) {
             menu.value.style.display = 'none'
         }
-        emits('exitordelproject')
+        emits('exitproject',props.data)
+    }
+    else if ( item === rightmenuitem.deleteproject) {
+        if (menu.value) {
+            menu.value.style.display = 'none'
+        }
+        emits('delproject', props.data);
     }
     else if (item === rightmenuitem.movefill) {
         if (menu.value) {

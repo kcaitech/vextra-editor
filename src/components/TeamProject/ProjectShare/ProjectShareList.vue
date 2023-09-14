@@ -1,16 +1,28 @@
 <script setup lang="ts">
-import { Ref, nextTick, inject, ref, onMounted, watch, watchEffect, computed } from 'vue';
+import { Ref, inject, ref, watch, computed, nextTick } from 'vue'
 import { useI18n } from 'vue-i18n'
-const { t } = useI18n();
 import { useRoute } from 'vue-router'
 import { router } from '@/router'
-import * as team_api from '@/apis/team';
-import ProjectDialog from '../ProjectDialog.vue';
+import * as team_api from '@/apis/team'
+import ProjectDialog from '../ProjectDialog.vue'
+import listrightmenu from '@/components/AppHome/listrightmenu.vue'
+import ProjectMemberg from '@/components/TeamProject/ProjectFill/ProjectMemberg.vue'
+import ProjectAccessSetting from '@/components/TeamProject/ProjectFill/ProjectAccessSetting.vue'
+import { ElMessage } from 'element-plus'
+
+const { t } = useI18n();
 const tableData = computed(() => {
     return projectList.value.filter(item => !item.is_in_team);
 });
 const route = useRoute();
 const innerVisible = ref(false);
+const delVisible = ref(false);
+const items = ref(['rename', 'projectset', 'memberset', 'setfixed', 'cancelfixed', 'exitproject', 'deleteproject'])
+const updateitems = ref(items.value)
+const mydata = ref()
+const mydataindex = ref()
+const projectMembergDialog = ref(false)
+const projectSettingDialog = ref(false)
 const { projectList, saveProjectData, is_favor, favoriteList, updateFavor, is_team_upodate, teamUpdate } = inject('shareData') as {
     projectList: Ref<any[]>;
     favoriteList: Ref<any[]>;
@@ -42,23 +54,46 @@ const dblclickskipProject = (row: any) => {
 const handleClose = () => {
     innerVisible.value = false;
 }
+const closeDelVisible = () => {
+    delVisible.value = false;
+}
 
 const project_item = ref<any>({});
 const project_index = ref<number>(-1);
-const onExitProject = (row: any, index: number) => {
+
+const onExitProject = (row: any, index: number,) => {
     project_item.value = row;
     project_index.value = index;
     innerVisible.value = true;
     document.addEventListener('keydown', escClose);
 }
-const escClose = () => {
-    innerVisible.value = false;
+
+const rexitProject = (data: any) => {
+    project_item.value = data;
+    project_index.value = mydataindex.value;
+    innerVisible.value = true;
+    document.addEventListener('keydown', escClose);
 }
-watch(innerVisible, (v) => {
-    if (!v) {
-        document.removeEventListener('keydown', escClose);
+
+const rdelProject = (data: any) => {
+    project_item.value = data;
+    project_index.value = mydataindex.value;
+    delVisible.value = true
+    document.addEventListener('keydown', escClose);
+}
+
+const escClose = () => {
+    console.log('1111');
+    
+    if (innerVisible.value) {
+        innerVisible.value = false;
     }
-})
+    if (delVisible.value) {
+        delVisible.value = false
+    }
+    document.removeEventListener('keydown', escClose);
+}
+
 const quitProject = () => {
     innerVisible.value = false;
     exitProject(project_item.value.project.id);
@@ -83,10 +118,105 @@ const exitProject = async (id: string) => {
     }
 }
 
+const DelProject = () => {
+    delVisible.value = false;
+    const project = project_item.value;
+    const index = projectList.value.findIndex(item => item.project.id === project.project.id);
+    const f_index = favoriteList.value.findIndex(item => item.project.id === project.project.id);
+    favoriteList.value.splice(f_index, 1);
+    projectList.value.splice(index, 1);
+    delProject(project.project.id);
+}
+
+const delProject = async (id: string) => {
+    try {
+        await team_api.delProjectAPI({ project_id: id })
+    } catch (err) {
+        console.log(err);
+
+    }
+}
+
+function filterItemsByIndexes(sourceArray: any, indexesToDelete: any) {
+    return sourceArray.filter((_: any, index: number) => !indexesToDelete.includes(index));
+}
+
+function updateItemsBasedOnFavor(data: any, sourceItems: any) {
+    let updateItems = [...sourceItems]
+    if (data.is_favor) {
+        updateItems = filterItemsByIndexes(updateItems, [3]);
+        if (data.self_perm_type < 4) {
+            updateItems = filterItemsByIndexes(updateItems, [0, 5])
+
+        }
+        if (data.self_perm_type === 5) {
+            updateItems = filterItemsByIndexes(updateItems, [4])
+        }
+    } else {
+        updateItems = filterItemsByIndexes(updateItems, [4]);
+        if (data.self_perm_type < 4) {
+            updateItems = filterItemsByIndexes(updateItems, [0, 5])
+        }
+        if (data.self_perm_type === 5) {
+            updateItems = filterItemsByIndexes(updateItems, [4])
+        }
+    }
+    return updateItems
+}
+
+//右键菜单入口
+const rightmenu = (row: any, _: any, e: MouseEvent) => {
+    const index = tableData.value.indexOf(row)
+    const viewportWidth = window.innerWidth || document.documentElement.clientWidth
+    const viewportHeight = window.innerHeight || document.documentElement.clientHeight
+    const rightmenu: any = document.querySelector('.rightmenu')
+    const top = e.pageY
+    const left = e.pageX
+    nextTick(() => {
+        const width = rightmenu.clientWidth
+        const height = rightmenu.clientHeight
+        rightmenu.style.left = left + width > viewportWidth ? (viewportWidth - width) + "px" : left + 'px'
+        rightmenu.style.top = top + height > viewportHeight ? (viewportHeight - height) + 'px' : top + 'px'
+    })
+    if ((e.target as HTMLElement).closest('.el-table__row')) {
+        rightmenu.style.display = 'block'
+    }
+    updateitems.value = updateItemsBasedOnFavor(row, items.value);
+    mydata.value = row
+    mydataindex.value = index
+}
+
+const showMembergDialog = () => {
+    projectMembergDialog.value = true
+}
+
+const showSettingDialog = () => {
+    projectSettingDialog.value = true
+}
+
+const closeDialog = () => {
+    projectMembergDialog.value = false;
+}
+
+const setProjectInfo = async (params: any) => {
+    try {
+        const { code, message } = await team_api.setProjectInfoAPI(params)
+        if (code === 0) {
+            const index = tableData.value.findIndex(item => item.project.id === params.project_id)
+            tableData.value[index].project.name = params.name
+        } else {
+            ElMessage.error(message)
+        }
+    } catch (err) {
+        console.log(err);
+    }
+}
+
 </script>
 
 <template>
-    <el-table :data="tableData" height="100%" style="width: 100%" :border="false" @row-dblclick="dblclickskipProject" highlight-current-row>
+    <el-table :data="tableData" height="100%" style="width: 100%" :border="false" @row-dblclick="dblclickskipProject"
+        @row-contextmenu="rightmenu" highlight-current-row>
         <el-table-column prop="project" label="项目名称">
             <template #default="scope">
                 <span class="description">{{ scope.row.project.name }}</span>
@@ -105,7 +235,7 @@ const exitProject = async (id: string) => {
         <el-table-column prop="project" label="操作">
             <template #default="scope">
                 <div class="other1" v-if="scope.row.is_favor">
-                    <div @click="cancelFixed(scope.row)" >
+                    <div @click="cancelFixed(scope.row)">
                         <svg t="1693476333821" class="icon" viewBox="0 0 1024 1024" version="1.1"
                             xmlns="http://www.w3.org/2000/svg" p-id="15755" width="24" height="24">
                             <path
@@ -122,7 +252,7 @@ const exitProject = async (id: string) => {
                     </div>
                 </div>
                 <div class="other">
-                    <div @click="cancelFixed(scope.row)" >
+                    <div @click="cancelFixed(scope.row)">
                         <svg t="1693476333821" class="icon" viewBox="0 0 1024 1024" version="1.1"
                             xmlns="http://www.w3.org/2000/svg" p-id="15755" width="24" height="24">
                             <path
@@ -146,11 +276,21 @@ const exitProject = async (id: string) => {
     </el-table>
     <ProjectDialog :projectVisible="innerVisible" context="退出项目后，无法再访问项目中的文件，或使用项目中的资源。" :title="'退出项目'"
         :confirm-btn="'仍然退出'" @clode-dialog="handleClose" @confirm="quitProject"></ProjectDialog>
+    <ProjectDialog :projectVisible="delVisible" context="删除项目后，将删除项目及项目中所有文件、资料。" :title="'删除项目'" :confirm-btn="'任然删除'"
+        @clode-dialog="closeDelVisible" @confirm="DelProject"></ProjectDialog>
+    <listrightmenu :items="updateitems" :data="mydata" @showMembergDialog="showMembergDialog"
+        @projectrename="setProjectInfo" @showSettingDialog="showSettingDialog" @cancelFixed="cancelFixed(mydata)"
+        @exitproject="rexitProject" @delproject="rdelProject" />
+    <ProjectAccessSetting v-if="projectSettingDialog" title="邀请项目成员" :data="mydata" width="500px"
+        @clodeDialog="projectSettingDialog = false" />
+    <ProjectMemberg v-if="projectMembergDialog" :projectMembergDialog="projectMembergDialog" :currentProject="mydata"
+        @closeDialog="closeDialog" @exitProject="exitProject" />
 </template>
 
 <style scoped lang="scss">
 .other {
     display: none;
+
     svg {
         width: 16px;
         height: 16px;
@@ -160,8 +300,10 @@ const exitProject = async (id: string) => {
         margin-right: 10px;
     }
 }
+
 .other1 {
     display: flex;
+
     svg {
         width: 16px;
         height: 16px;
@@ -198,27 +340,34 @@ const exitProject = async (id: string) => {
     text-overflow: ellipsis;
     white-space: nowrap;
 }
+
 :deep(.el-table__body tr.current-row>td.el-table__cell) {
     background-color: #e5dbff;
+
     .other {
         display: flex;
     }
+
     .other1 {
         display: none;
     }
 }
+
 :deep(.el-table--enable-row-hover .el-table__body tr:hover > td.el-table__cell) {
     .other {
         display: flex;
     }
+
     .other1 {
         display: none;
     }
 }
+
 :deep(.el-table__row:hover) {
     .other {
         display: flex;
     }
+
     .other1 {
         display: none;
     }

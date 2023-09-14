@@ -10,14 +10,9 @@
     </div>
 </template>
 <script setup lang="ts">
-import { Ref, computed, inject, ref, onMounted, watch, onUnmounted } from 'vue'
-import { useRoute } from 'vue-router'
-import { router } from '@/router'
+import { Ref, inject, onMounted, onUnmounted } from 'vue'
 import ProjectShareList from './ProjectShareList.vue'
-const showoverlay = ref(false)
-const itemid = ref(0)
-const route = useRoute()
-const search = ref<string>('')
+
 
 interface data {
     team: {
