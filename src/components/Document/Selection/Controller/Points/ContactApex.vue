@@ -1,11 +1,12 @@
 <script setup lang='ts'>
 import { Context } from '@/context';
-import { AsyncContactEditor, ContactForm, ContactShape, ContactType, Matrix, Shape } from '@kcdesign/data';
+import { AsyncContactEditor, ContactForm, ContactShape, ContactType, GroupShape, Matrix, Shape } from '@kcdesign/data';
 import { onMounted, onUnmounted, watch, reactive, ref } from 'vue';
 import { ClientXY, PageXY } from '@/context/selection';
 import { Point } from "../../SelectionView.vue";
 import { get_apexs } from './common';
 import { Tool } from '@/context/tool';
+import { get_contact_environment } from '@/utils/contact';
 
 interface Props {
     matrix: number[]
@@ -93,6 +94,7 @@ function point_mousemove(event: MouseEvent) {
         } else if (move_type === 'to') {
             contactEditor.modify_contact_to(p, clear_target);
         }
+        migrate(props.shape);
     } else {
         const { x: sx, y: sy } = startPosition;
         const { x: mx, y: my } = mouseOnClient;
@@ -104,6 +106,13 @@ function point_mousemove(event: MouseEvent) {
             contactEditor = props.context.editor.controller().asyncContactEditor(props.shape, page!);
             contactEditor.pre();
         }
+    }
+}
+function migrate(shape: Shape) {
+    const points = shape.getPoints();
+    const environment = get_contact_environment(props.context, shape, points);
+    if (shape.parent?.id !== environment.id && contactEditor) {
+        contactEditor.migrate(environment as GroupShape);
     }
 }
 function point_mouseup(event: MouseEvent) {

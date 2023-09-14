@@ -270,7 +270,6 @@ function contact_init(e: MouseEvent, apex?: ContactForm, p2?: PageXY) {
 function modify_contact_to(e: MouseEvent, ac: AsyncCreator) {
     const root = props.context.workspace.root;
     const p = matrix1.computeCoord2(e.clientX - root.x, e.clientY - root.y);
-
     ac.contact_to(p);
     const points = newShape!.getPoints();
     const environment = get_contact_environment(props.context, newShape!, points);
