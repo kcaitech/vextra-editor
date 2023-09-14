@@ -17,11 +17,9 @@ const stopWatch = watch(() => props.data, (value, old) => {
     value.watch(watcher);
 })
 function wathcer_sides(t: any) {
-    if (t === 'shape-frame') {
-        updateApex();
-        path = props.data.getPath().toString();
-        reflush.value++;
-    }
+    updateApex();
+    path = props.data.getPath().toString();
+    reflush.value++;
 }
 function setParent(shape: Shape) {
     let p = shape.parent;
