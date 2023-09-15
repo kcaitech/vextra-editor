@@ -43,15 +43,11 @@ if (props.site) {
 
 onMounted(() => {
   props.context.menu.watch(menu_watcher)
-  document.addEventListener('mousedown', handleClickOutside);
-  console.log('mount');
-  
+  document.addEventListener('mousedown', handleClickOutside);  
 })
 onUnmounted(() => {
   props.context.menu.unwatch(menu_watcher);
-  document.removeEventListener('mousedown', handleClickOutside);
-  console.log('unmount');
-  
+  document.removeEventListener('mousedown', handleClickOutside);  
 })
 </script>
 <template>

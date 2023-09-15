@@ -19,6 +19,7 @@ import { permIsEdit } from '@/utils/content';
 import { distance2apex, distance2apex2, get_frame, get_pg_by_frame, update_pg_2 } from '@/utils/assist';
 import { Asssit } from '@/context/assist';
 import { Menu } from '@/context/menu';
+import { TaskType } from '@/context/escstack';
 
 export function useControllerCustom(context: Context, i18nT: Function) {
     const matrix = new Matrix();
@@ -317,6 +318,11 @@ export function useControllerCustom(context: Context, i18nT: Function) {
             return Boolean(selection.scout?.isPointInPath(workspace.ctrlPath, { x: e.clientX - root.x, y: e.clientY - root.y }));
         }
     }
+    function exit() {
+        const len = context.selection.selectedShapes.length;
+        context.selection.resetSelectShapes();
+        return Boolean(len);
+    }
     function keyboardHandle(e: KeyboardEvent) {
         handle(e, context, i18nT);
     }
@@ -358,6 +364,7 @@ export function useControllerCustom(context: Context, i18nT: Function) {
         checkStatus();
         initController();
         workspace.contentEdit(false);
+        context.esctask.push(TaskType.SELECTION, exit);
     }
     function dispose() {
         workspace.unwatch(workspace_watcher);

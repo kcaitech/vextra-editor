@@ -214,18 +214,6 @@ function search(e: MouseEvent) { // 常规图形检索
     const shapes = props.context.selection.getShapesByXY(xy, metaKey || ctrlKey); // xy: PageXY
     selectShapes(props.context, shapes);
 }
-function search_apex(e: MouseEvent) {
-    if (props.context.workspace.transforming) return;
-    const { x, y } = workspace.value.root;
-    const xy = matrix_inverse.computeCoord2(e.clientX - x, e.clientY - y);
-    const shapes = props.context.selection.getShapesByXY(xy, true); // xy: PageXY
-    if (shapes.length) {
-        props.context.tool.setContactApex(shapes[0]);
-    } else {
-        props.context.tool.resetContactApex();
-    }
-}
-
 const search_once = debounce(search, 50) // 连续操作结尾处调用
 function pageViewDragStart(e: MouseEvent) {
     state = STATE_CHECKMOVE;
