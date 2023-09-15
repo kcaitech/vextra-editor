@@ -63,7 +63,7 @@
         :confirm-btn="'仍然退出'" @clode-dialog="handleClose" @confirm="quitProject"></ProjectDialog>
     <ProjectDialog :projectVisible="delVisible" context="删除项目后，将删除项目及项目中所有文件、资料。" :title="'删除项目'" :confirm-btn="'仍然删除'"
         @clode-dialog="closeDelVisible" @confirm="DelProject"></ProjectDialog>
-    <listrightmenu :items="updateitems" :data="mydata" @showMembergDialog="showMembergDialog"
+    <listrightmenu v-show="rightmenushow" :items="updateitems" :data="mydata" @showMembergDialog="showMembergDialog"
         @projectrename="setProjectInfo" @showSettingDialog="showSettingDialog"
         @cancelFixed="cancelFixed(mydata.project.id, mydata.is_favor, mydataindex)" @exitproject="rexitProject"
         @delproject="rdelProject" />
@@ -97,6 +97,7 @@ const mydataindex = ref()
 const route = useRoute()
 const showbutton = ref(false)
 const noNetwork = ref(false)
+const rightmenushow=ref(false)
 const { t } = useI18n()
 const titles = ['项目名称', '项目描述', '创建者', '操作',]
 const selectid = ref(0)
@@ -200,10 +201,12 @@ function updateItemsBasedOnFavor(data: any, sourceItems: any) {
         updateItems = filterItemsByIndexes(updateItems, [3]);
         if (data.self_perm_type < 4) {
             updateItems = filterItemsByIndexes(updateItems, [0, 5])
-
         }
         if (data.self_perm_type === 5) {
             updateItems = filterItemsByIndexes(updateItems, [4])
+        }
+        if (data.self_perm_type != 5 && data.is_invited != true) {
+            updateItems = filterItemsByIndexes(updateItems, [1,3])
         }
     } else {
         updateItems = filterItemsByIndexes(updateItems, [4]);
@@ -212,6 +215,12 @@ function updateItemsBasedOnFavor(data: any, sourceItems: any) {
         }
         if (data.self_perm_type === 5) {
             updateItems = filterItemsByIndexes(updateItems, [4])
+            console.log(updateItems);
+        }
+        if (data.self_perm_type != 5 && data.is_invited != true) {
+            updateItems = filterItemsByIndexes(updateItems, [1,3])
+            console.log(updateItems);
+            
         }
     }
     return updateItems
@@ -298,8 +307,6 @@ const setProjectInfo = async (params: any) => {
 
 //右键菜单入口
 const rightmenu = (e: MouseEvent, data: any, index?: number) => {
-    console.log(data);
-
     const viewportWidth = window.innerWidth || document.documentElement.clientWidth
     const viewportHeight = window.innerHeight || document.documentElement.clientHeight
     const rightmenu: any = document.querySelector('.rightmenu')

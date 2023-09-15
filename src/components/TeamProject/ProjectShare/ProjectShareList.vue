@@ -147,10 +147,12 @@ function updateItemsBasedOnFavor(data: any, sourceItems: any) {
         updateItems = filterItemsByIndexes(updateItems, [3]);
         if (data.self_perm_type < 4) {
             updateItems = filterItemsByIndexes(updateItems, [0, 5])
-
         }
         if (data.self_perm_type === 5) {
             updateItems = filterItemsByIndexes(updateItems, [4])
+        }
+        if (data.self_perm_type != 5 && data.is_invited != true) {
+            updateItems = filterItemsByIndexes(updateItems, [1,3])
         }
     } else {
         updateItems = filterItemsByIndexes(updateItems, [4]);
@@ -159,6 +161,12 @@ function updateItemsBasedOnFavor(data: any, sourceItems: any) {
         }
         if (data.self_perm_type === 5) {
             updateItems = filterItemsByIndexes(updateItems, [4])
+            console.log(updateItems);
+        }
+        if (data.self_perm_type != 5 && data.is_invited != true) {
+            updateItems = filterItemsByIndexes(updateItems, [1,3])
+            console.log(updateItems);
+            
         }
     }
     return updateItems
