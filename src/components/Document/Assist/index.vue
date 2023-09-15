@@ -26,10 +26,10 @@ let { lineX, nodesX, lineY, nodesY, exLineX, exLineY, exNodesX, exNodesY } = dat
 let ax = 0, ay = 0;
 function assist_watcher(t: number, params?: number) {
     if (t === Asssit.UPDATE_ASSIST) render(params);
-    if (t === Asssit.UPDATE_MAIN_LINE) update_main_line(1);
+    if (t === Asssit.UPDATE_MAIN_LINE) update_main_line();
     if (t === Asssit.CLEAR && assist.value) clear();
 }
-function update_main_line(direction: number) {
+function update_main_line() {
     // const s1 = Date.now();
     const cpg = props.context.assist.CPG;
     if (!cpg) return;
@@ -38,12 +38,12 @@ function update_main_line(direction: number) {
     const ns_y = minus_nodes_y(props.context.assist.nodes_y);
     if (ns_x.length) { // 绘制x轴线
         ax = ns_x[0].x;
-        nodesX = ns_x.concat(get_p_form_pg_by_x(cpg, ax)).map(n => matrix.value.computeCoord2(n.x, n.y));
+        nodesX = ns_x.concat(get_p_form_pg_by_x(cpg, ax)).map(n => matrix.value.computeCoord3(n));
         lineX = render_line_x(nodesX);
     }
     if (ns_y.length) { // 绘制y轴线
         ay = ns_y[0].y;
-        nodesY = ns_y.concat(get_p_form_pg_by_y(cpg, ay)).map(n => matrix.value.computeCoord2(n.x, n.y));
+        nodesY = ns_y.concat(get_p_form_pg_by_y(cpg, ay)).map(n => matrix.value.computeCoord3(n));
         lineY = render_line_y(nodesY);
     }
     // console.log('更新主辅助线:', Date.now() - s1);
@@ -55,13 +55,13 @@ function render(multi?: number) {
     const ns_y = minus_nodes_y(props.context.assist.nodes_y);
     if (ns_x.length) { // 绘制x轴线
         ax = ns_x[0].x;
-        nodesX = ns_x.map(n => matrix.value.computeCoord2(n.x, n.y));
+        nodesX = ns_x.map(n => matrix.value.computeCoord3(n));
         lineX = render_line_x(nodesX);
         assist.value = true;
     }
     if (ns_y.length) { // 绘制y轴线
         ay = ns_y[0].y;
-        nodesY = ns_y.map(n => matrix.value.computeCoord2(n.x, n.y));
+        nodesY = ns_y.map(n => matrix.value.computeCoord3(n));
         lineY = render_line_y(nodesY);
         assist.value = true;
     }
@@ -84,7 +84,7 @@ function getExLineX() {
         let t = minus_nodes_x(xAxis.get(left) || []);
         if (t.length) {
             t = t.concat(get_p_form_pg_by_x(cpg, left));
-            t = t.map(n => matrix.value.computeCoord2(n.x, n.y));
+            t = t.map(n => matrix.value.computeCoord3(n));
             if (t.length) {
                 exNodesX.push(...t);
                 exLineX.push(render_line_x(t));
@@ -95,7 +95,7 @@ function getExLineX() {
         let t = minus_nodes_x(xAxis.get(cx) || []);
         if (t.length) {
             t = t.concat(get_p_form_pg_by_x(cpg, cx));
-            t = t.map(n => matrix.value.computeCoord2(n.x, n.y));
+            t = t.map(n => matrix.value.computeCoord3(n));
             if (t.length) {
                 exNodesX.push(...t);
                 exLineX.push(render_line_x(t));
@@ -107,7 +107,7 @@ function getExLineX() {
         let t = minus_nodes_x(xAxis.get(right) || []);
         if (t.length) {
             t = t.concat(get_p_form_pg_by_x(cpg, right));
-            t = t.map(n => matrix.value.computeCoord2(n.x, n.y));
+            t = t.map(n => matrix.value.computeCoord3(n));
             if (t.length) {
                 exNodesX.push(...t);
                 exLineX.push(render_line_x(t));
@@ -124,7 +124,7 @@ function getExLineY() {
         let t = minus_nodes_y(yAxis.get(top) || []);
         if (t.length) {
             t = t.concat(get_p_form_pg_by_y(cpg, top));
-            t = t.map(n => matrix.value.computeCoord2(n.x, n.y));
+            t = t.map(n => matrix.value.computeCoord3(n));
             if (t.length) {
                 exNodesY.push(...t);
                 exLineY.push(render_line_y(t));
@@ -135,7 +135,7 @@ function getExLineY() {
         let t = minus_nodes_y(yAxis.get(cy) || []);
         if (t.length) {
             t = t.concat(get_p_form_pg_by_y(cpg, cy));
-            t = t.map(n => matrix.value.computeCoord2(n.x, n.y));
+            t = t.map(n => matrix.value.computeCoord3(n));
             if (t.length) {
                 exNodesY.push(...t);
                 exLineY.push(render_line_y(t));
@@ -146,7 +146,7 @@ function getExLineY() {
         let t = minus_nodes_y(yAxis.get(bottom) || []);
         if (t.length) {
             t = t.concat(get_p_form_pg_by_y(cpg, bottom));
-            t = t.map(n => matrix.value.computeCoord2(n.x, n.y));
+            t = t.map(n => matrix.value.computeCoord3(n));
             if (t.length) {
                 exNodesY.push(...t);
                 exLineY.push(render_line_y(t));
@@ -201,7 +201,7 @@ function minus_nodes_y(nodes: PageXY2[]): PageXY[] {
 function render_line_x(nodes: PageXY[]) {
     nodes = sort_nodes_x(nodes);
     let d = `M ${nodes[0].x} ${nodes[0].y}`
-    for (let i = 1; i < nodes.length; i++) {
+    for (let i = 1, len = nodes.length; i < len; i++) {
         const n = nodes[i];
         d += `L${n.x} ${n.y}`
     }
@@ -214,7 +214,7 @@ function render_line_x(nodes: PageXY[]) {
 function render_line_y(nodes: PageXY[]) {
     nodes = sort_nodes_y(nodes);
     let d = `M ${nodes[0].x} ${nodes[0].y}`
-    for (let i = 1; i < nodes.length; i++) {
+    for (let i = 1, len = nodes.length; i < len; i++) {
         const n = nodes[i];
         d += `L${n.x} ${n.y}`
     }

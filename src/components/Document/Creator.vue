@@ -363,7 +363,7 @@ function gen_new_shape(e: MouseEvent) {
         if (result) {
             asyncCreator = result.asyncCreator;
             newShape = result.new_shape;
-            props.context.assist.setTransTarget([newShape!]);
+            props.context.assist.set_trans_target([newShape!]);
         }
     }
 }

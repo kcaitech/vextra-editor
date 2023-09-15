@@ -158,7 +158,7 @@ export function useControllerCustom(context: Context, i18nT: Function) {
             selection.unHoverShape();
             workspace.setSelectionViewUpdater(false);
             workspace.translating(true);
-            context.assist.setTransTarget(shapes);
+            context.assist.set_trans_target(shapes);
             isDragging = true;
         }
     }
@@ -186,6 +186,7 @@ export function useControllerCustom(context: Context, i18nT: Function) {
         const len = shapes.length;
         const shape = shapes[0];
         const target = len === 1 ? context.assist.trans_match(shape) : context.assist.trans_match_multi(shapes);
+        let inverse_matrix: Matrix | undefined;
         if (!target) return update_type;
         if (stickedX) {
             if (Math.abs(pe.x - ps.x) > stickness) stickedX = false;
@@ -196,7 +197,10 @@ export function useControllerCustom(context: Context, i18nT: Function) {
             const distance = len === 1 ? distance2apex(shape, target.alignX) : distance2apex2(workspace.controllerFrame, target.alignX);
             const trans_x = target.x - distance;
             stick.dx = trans_x, stick.sticked_x = true, stick.dy = pe.y - ps.y, pe.x = ps.x + trans_x;
-            const t = matrix.inverseCoord(pe);
+            if (!inverse_matrix) {
+                inverse_matrix = new Matrix(matrix.inverse);
+            }
+            const t = inverse_matrix.computeCoord3(pe);
             startPosition.x = t.x, update_type -= 1, stickedX = true, need_multi += 1;
         }
         if (stickedY) {
@@ -209,7 +213,10 @@ export function useControllerCustom(context: Context, i18nT: Function) {
             const trans_y = target.y - distance;
             stick.dy = trans_y, stick.sticked_y = true, pe.y = ps.y + trans_y;
             if (!stick.sticked_x) stick.dx = pe.x - ps.x;
-            const t = matrix.inverseCoord(pe);
+            if (!inverse_matrix) {
+                inverse_matrix = new Matrix(matrix.inverse);
+            }
+            const t = inverse_matrix.computeCoord3(pe);
             startPosition.y = t.y, update_type -= 2, stickedY = true, need_multi += 2;
         }
         if (stick.sticked_x || stick.sticked_y) {
