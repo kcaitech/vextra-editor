@@ -1,7 +1,7 @@
 <script setup lang='ts'>
 import { Context } from '@/context';
 import { AsyncBaseAction, CtrlElementType, Matrix, Shape } from '@kcdesign/data';
-import { onMounted, onUnmounted, watch, reactive, ref } from 'vue';
+import { onMounted, onUnmounted, watch, reactive } from 'vue';
 import { ClientXY, PageXY } from '@/context/selection';
 import { getAngle } from '@/utils/common';
 import { update_dot } from './common';
