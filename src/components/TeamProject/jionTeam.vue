@@ -1,7 +1,7 @@
 <template>
     <div class="container">
         <Header :switch="false" />
-        <div class="content">
+        <div class="content" v-if="teaminfo">
             <div class="img" style="width: 400px;height: 400px;background-color: silver;border-radius: 4px;"></div>
             <div v-if="switchstate" class="join">
                 <p>

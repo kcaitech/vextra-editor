@@ -718,6 +718,8 @@ onUnmounted(() => {
     top: 45px;
     right: 10px;
     z-index: 999;
+    overflow: hidden;
+    height: calc(100% - 45px);
 }
 
 #center {

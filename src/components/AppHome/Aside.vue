@@ -48,7 +48,7 @@ const teamDataList = ref<any[]>([]);
 const projectDataList = ref<any[]>([]);
 const reflush = ref(0);
 const projectShareList = ref<any[]>([]);
-const activeShare = ref(0);
+const activeShare = ref<number[]>([]);
 const is_share = ref(false);
 const showProjecrMenu = ref(false);
 let menuItem: string[] = [];
@@ -544,7 +544,7 @@ watchEffect(() => {
     nextTick(() => {
         const index = projectShareList.value.findIndex(item => item.project.id === route.params.id);
         if(index !== -1) {
-            activeShare.value = 1
+            activeShare.value = [1]
         }
     })
 })
@@ -622,7 +622,7 @@ onUnmounted(() => {
                                     <div class="team-title" :class="{ 'is_active': is_share }">
                                         <div class="left">
                                             <div class="down"
-                                                :style="{ transform: activeShare === 1 ? 'rotate(0deg)' : 'rotate(-90deg)', visibility: projectShareList.length > 0 ? 'visible' : 'hidden' }">
+                                                :style="{ transform: activeShare[0] === 1 ? 'rotate(0deg)' : 'rotate(-90deg)', visibility: projectShareList.length > 0 ? 'visible' : 'hidden' }">
                                                 <svg-icon icon-class="down" />
                                             </div>
                                             <div class="receive">
