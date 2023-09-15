@@ -1,5 +1,5 @@
 import { Shape, ShapeType, GroupShape, TextShape } from '@kcdesign/data';
-import { computed, onMounted, onUnmounted } from "vue";
+import { onMounted, onUnmounted } from "vue";
 import { Context } from "@/context";
 import { Matrix } from '@kcdesign/data';
 import { ClientXY, PageXY } from "@/context/selection";

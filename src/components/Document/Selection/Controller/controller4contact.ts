@@ -5,7 +5,6 @@ import { Selection } from "@/context/selection";
 import { useI18n } from 'vue-i18n';
 
 export function useControllerCustom(context: Context, i18nT: Function) {
-    const workspace = computed(() => context.workspace);
     let timer: any;
     const duration: number = 250; // 双击判定时长 ms 
     let isDragging = false;
@@ -24,7 +23,12 @@ export function useControllerCustom(context: Context, i18nT: Function) {
             initTimer();
         } else if (isMouseOnContent(e)) {
             const selection = context.selection;
-            if (!selection.hoveredShape) selection.resetSelectShapes();
+            if (!selection.hoveredShape) {
+                selection.resetSelectShapes();
+            } else {
+                selection.selectShape(selection.hoveredShape);
+                context.workspace.preToTranslating(e);
+            }
         }
     }
 
@@ -68,7 +72,7 @@ export function useControllerCustom(context: Context, i18nT: Function) {
         }
     }
     function windowBlur() {
-        workspace.value.setCtrl('page');
+        context.workspace.setCtrl('page');
         timerClear();
         context.cursor.cursor_freeze(false);
     }

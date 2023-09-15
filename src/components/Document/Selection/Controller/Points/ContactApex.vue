@@ -99,6 +99,7 @@ function point_mousemove(event: MouseEvent) {
         const { x: sx, y: sy } = startPosition;
         const { x: mx, y: my } = mouseOnClient;
         if (Math.hypot(mx - sx, my - sy) > dragActiveDis) {
+            clear_target = undefined;
             isDragging = true;
             submatrix.reset(workspace.matrix.inverse);
             search = true;
