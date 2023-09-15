@@ -606,6 +606,7 @@ onUnmounted(() => {
                         </el-icon>
                         <span>{{ t('home.shared_file_received') }}</span>
                     </el-menu-item></router-link>
+                    <div class="line"></div>
                 <!-- <router-link to="/apphome/recyclebin"><el-menu-item index="5"
                         @click="Setindex(5, t('home.recycling_station'))">
                         <el-icon>
@@ -907,7 +908,7 @@ a {
     width: 100%;
     height: calc(100vh - 56px);
     overflow: hidden;
-    overflow-y: auto;
+    // overflow-y: auto;
     background-color: white;
 
     .el-col {
@@ -996,7 +997,7 @@ a {
             width: 100%;
             position: absolute;
             bottom: 60px;
-            top: 340px;
+            top: 350px;
 
             .demo-collapse {
                 .team-title {
@@ -1176,6 +1177,14 @@ a {
 
         }
     }
+}
+
+.line {
+    width: 100%;
+    height: 0.1px;
+    border: 1px solid transparent;
+    background-color: rgba($color: #ccc, $alpha: 0.3);
+    box-sizing: border-box;
 }
 
 .project_name {

@@ -67,4 +67,7 @@ const highlight = (state: boolean) => {
         }
     }
 }
+.main {
+    overflow: hidden;
+}
 </style>
