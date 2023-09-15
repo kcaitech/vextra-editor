@@ -19,7 +19,6 @@ window.ResizeObserver = class ResizeObserver extends _ResizeObserver{
 html,body {
     margin: 0;
     padding: 0;
-
     >body {
         font-family: var(--font-family);
         height: 100vh;

@@ -280,7 +280,6 @@ const delProject = async (id: string) => {
 
 watch(menuState, (v) => {
     if (!v) {
-        console.log(v, 'vvv');
         showProjecrMenu.value = false;
     }
 })
@@ -303,8 +302,8 @@ const projectMenu = (project: any, e: MouseEvent) => {
         menuItem.push('exit');
     }
     nextTick(() => {
-        setMenuVisi(true);
         showProjecrMenu.value = true;
+        setMenuVisi(true);
     })
 }
 
@@ -412,7 +411,7 @@ function input_cusname(project: any) {
 }
 
 function input_cusdesc(project: any) {
-    if (project.self_perm_type < 4) return;
+    if (project.self_perm_type < 4) return ElMessage.error('无权限设置项目描述');
     projectDesc.value = project.project.description;
     cusdesc.value = !cusdesc.value;
     nextTick(() => {
@@ -668,7 +667,6 @@ onMounted(() => {
                 display: flex;
                 align-items: center;
                 margin-bottom: 10px;
-                overflow: hidden;
                 text-overflow: ellipsis;
                 white-space: nowrap;
                 max-width: 100%;
@@ -695,7 +693,7 @@ onMounted(() => {
                 border: none;
                 width: auto;
                 max-width: 100%;
-                height: 28px;
+                height: 38px;
                 border: 2px solid #9775fa;
                 border-radius: 0%;
                 overflow: hidden;
@@ -703,7 +701,9 @@ onMounted(() => {
                 white-space: nowrap;
                 margin-bottom: 10px;
                 padding-left: 5px;
-                padding-top: 5px;
+                padding-top: 3px;
+                padding-bottom: 3px;
+                box-sizing: border-box;
             }
         }
 
@@ -954,4 +954,5 @@ onMounted(() => {
 
 :deep(.el-switch.is-disabled .el-switch__core, .el-switch.is-disabled .el-switch__label) {
     cursor: pointer;
-}</style>
+}
+</style>
