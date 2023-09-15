@@ -243,10 +243,14 @@ const rightmenu = (e: MouseEvent, data: data) => {
         if(user_id === userId) {
             items.push('movefill', 'rename', 'copyfile', 'deletefile')
         }
+    }else {
+        if(user_id === userId) {
+            items.push('movefill', 'rename', 'copyfile', 'deletefile')
+        }
     }
     docId.value = id
     mydata.value = data
-    projectItem.value = projectList.value.filter(item => item.project.id === project_id)[0];
+    projectItem.value = projectList.value.filter(item => item.project.id === project_id)[0];    
 }
 
 const userData = ref({

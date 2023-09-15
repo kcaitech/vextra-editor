@@ -72,7 +72,7 @@ async function GetrecycleLists(id: string) {
         }
         lists.value = Object.values(data)
         const user_id = localStorage.getItem('userId');
-        if(props.currentProject.self_perm_type === 3) {
+        if(props.currentProject.self_perm_type < 4) {
             lists.value = lists.value.filter(item => item.document.user_id === user_id);
         }
     } catch (error) {
