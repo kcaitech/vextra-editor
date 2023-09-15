@@ -44,8 +44,8 @@ const m_x = ref<number>(0), m_y = ref<number>(0);
 const col_dash = ref<boolean>(false), row_dash = ref<boolean>(false);
 let x_checked: boolean = false, y_checked: boolean = false;
 let x1: number, x2: number, y1: number, y2: number;
-let m_col: number = 0, down_x: number = 0, t_height: number = 0, t_x: number = 0;
-let m_row: number = 0, down_y: number = 0, t_width: number = 0, t_y: number = 0;
+let m_col: number = 0, down_x: number = 0;
+let m_row: number = 0, down_y: number = 0;
 let layout: TableLayout;
 let submatrix_inverse: Matrix;
 function update() {

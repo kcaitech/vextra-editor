@@ -163,7 +163,6 @@ function endDragPage() { // 编辑器完成拖动页面
     workspace.value.pageDragging(false);
     props.context.cursor.reset();
 }
-
 function workspace_watcher(type?: number, param?: string | MouseEvent | Color) {
     if (type === WorkSpace.MATRIX_TRANSFORMATION) matrix.reset(workspace.value.matrix);
     else if (type === WorkSpace.PASTE) paster(props.context, t);

@@ -526,6 +526,10 @@ export function paster_short(context: Context, shapes: Shape[]): Shape[] {
     let result: Shape[] = [];
     if (page) {
         const editor = context.editor4Page(page);
+        if (new_source.length !== actions.length) {
+            console.log('error io');
+            return [];
+        }
         const _r = editor.insertShapes2(new_source, actions);
         _r && _r.length && (result = _r);
     }
