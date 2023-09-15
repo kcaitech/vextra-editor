@@ -521,7 +521,7 @@ watch(route, (v) => {
         }
     }
     x.value = sessionStorage.getItem('index');
-}, { deep: true, immediate: true})
+}, { deep: true, immediate: true })
 
 const listss = ref<any[]>([])
 
@@ -544,7 +544,7 @@ watchEffect(() => {
     }
     nextTick(() => {
         const index = projectShareList.value.findIndex(item => item.project.id === route.params.id);
-        if(index !== -1) {
+        if (index !== -1) {
             activeShare.value = [1]
         }
     })
@@ -1185,6 +1185,7 @@ a {
     white-space: nowrap;
     margin-right: 10px;
 }
+
 .receive {
     display: flex;
     align-items: center;
@@ -1192,6 +1193,7 @@ a {
     margin: 0 5px;
     width: 20px;
     height: 100%;
+
     >svg {
         width: 16px;
         height: 16px;
@@ -1253,5 +1255,45 @@ a {
         font-size: 32px;
     }
 
-}
-</style>
+    .project_name {
+        display: none;
+    }
+
+    .team-title {
+        .left {
+            display: flex;
+            justify-content: center;
+            margin-left: 0 !important;
+
+            .down {
+                display: none !important;
+            }
+
+            .team-avatar {
+                margin-right: 0 !important;
+
+                .text {
+                    display: flex;
+
+                    span {
+                        display: inline;
+                        font-size: 12px;
+                        font-weight: 600;
+                        color: white;
+                    }
+                }
+            }
+        }
+
+        .name {
+            display: none;
+        }
+
+        .right {
+            display: none;
+        }
+    }
+    .project {
+        display: none !important;
+    }
+}</style>
