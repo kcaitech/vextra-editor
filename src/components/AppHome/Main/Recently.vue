@@ -68,9 +68,12 @@ async function getUserdata() {
     try {
         const { data } = await user_api.GetDocumentsList() as any
         if (data == null) {
+            console.log('1111');
+            
             noNetwork.value = true
             ElMessage.error(t('home.failed_list_tips'))
         } else {
+            //data = data.filter((docItem: any) => !docItem.project || !!projectList.value.find(projectItem => projectItem.project.id === docItem.project.id))
             noNetwork.value = false
             for (let i = 0; i < data.length; i++) {
                 data[i].project_perm = undefined;
@@ -84,6 +87,8 @@ async function getUserdata() {
         }
         lists.value = Object.values(data)
     } catch (error) {
+        console.log(error);
+        
         noNetwork.value = true
         ElMessage.closeAll('error')
         ElMessage.error({ duration: 1500, message: t('home.failed_list_tips') })
