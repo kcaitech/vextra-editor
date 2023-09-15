@@ -77,8 +77,12 @@ async function getUserdata() {
                 let { document: { size }, document_access_record: { last_access_time } } = data[i]
                 data[i].document.size = sizeTostr(size)
                 data[i].document_access_record.last_access_time = last_access_time.slice(0, 19)
+                
                 if(data[i].project) {
-                    data[i].project_perm = projectList.value.filter(item => item.project.id === data[i].project.id)[0].self_perm_type;
+                    const project = projectList.value.filter(item => item.project.id === data[i].project.id)[0];
+                    if(project) {
+                        data[i].project_perm = project.self_perm_type;
+                    }
                 }
             }
         }

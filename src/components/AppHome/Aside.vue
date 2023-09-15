@@ -511,6 +511,7 @@ const showicon = (data: any) => {
 watch(route, (v) => {
     if (v.name === 'ProjectShare') {
         is_share.value = true;
+        activeShare.value = [1]
     } else {
         is_share.value = false;
     }
@@ -520,7 +521,7 @@ watch(route, (v) => {
         }
     }
     x.value = sessionStorage.getItem('index');
-}, { deep: true})
+}, { deep: true, immediate: true})
 
 const listss = ref<any[]>([])
 
