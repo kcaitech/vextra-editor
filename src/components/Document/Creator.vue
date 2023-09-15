@@ -412,7 +412,6 @@ function removeCreator() {
         props.context.cursor.setType("auto-0");
     }
 }
-
 function windowBlur() {
     shapeCreateEnd();
     removeWheel();
