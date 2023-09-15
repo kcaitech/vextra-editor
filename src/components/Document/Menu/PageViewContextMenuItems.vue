@@ -11,7 +11,7 @@ import { WorkSpace } from '@/context/workspace';
 import { Selection } from '@/context/selection';
 import { adapt_page, getName } from '@/utils/content';
 import { message } from '@/utils/message';
-import { paster, paster_inner_shape, replace, identity, paras } from '@/utils/clipboard';
+import { paster, paster_inner_shape, replace  } from '@/utils/clipboard';
 import { sort_by_layer } from '@/utils/group_ungroup';
 import { Menu } from '@/context/menu';
 import TableMenu from "./TableMenu/TableMenu.vue"

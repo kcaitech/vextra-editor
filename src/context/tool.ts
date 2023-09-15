@@ -1,6 +1,7 @@
 import { Shape, ShapeType, Watchable } from "@kcdesign/data";
 import { Context } from ".";
 import { Comment } from "./comment";
+import { TaskType } from "./escstack";
 export enum Action {
     Auto = 'auto',
     AutoV = 'drag',
@@ -116,6 +117,7 @@ export class Tool extends Watchable(Object) {
     setAction(action: Action) {
         this.m_current_action = action;
         if (action.startsWith('add')) {
+            this.m_context.esctask.push(TaskType.TOOL, this.reset.bind(this));
             this.m_context.selection.resetSelectShapes(); // 插入图形默认取消已选图形
             if (action === Action.AddComment) {
                 if (this.m_context.workspace.documentPerm === 1) return;
@@ -123,8 +125,19 @@ export class Tool extends Watchable(Object) {
                 this.m_context.comment.notify(Comment.SELECT_LIST_TAB);
                 this.m_context.cursor.setType('comment-0');
             } else this.m_context.cursor.setType('cross-0');
+
         } else this.m_context.cursor.setType('auto-0');
         this.notify(Tool.CHANGE_ACTION);
+    }
+    reset() {
+        let exe_result: boolean = false;
+        if (this.m_current_action.startsWith('add')) {
+            exe_result = true;
+        }
+        this.m_current_action = Action.AutoV;
+        this.m_context.cursor.setType('auto-0');
+        this.notify(Tool.CHANGE_ACTION);
+        return exe_result;
     }
     keydown_r(ctrl: boolean, shift: boolean, meta: boolean) {
         if (ctrl || shift || meta) return;
