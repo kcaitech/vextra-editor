@@ -269,7 +269,6 @@ function contextMenuMount(e: MouseEvent) {
     }
     contextMenu.value = true; // 数据准备就绪之后打开菜单
     menu.menuMount('content');
-    props.context.esctask.push(TaskType.MENU, contextMenuUnmount); // 将关闭菜单事件加入到esc任务队列
     // 打开菜单之后调整菜单位置
     nextTick(() => {
         if (contextMenuEl.value) {
@@ -287,6 +286,7 @@ function contextMenuMount(e: MouseEvent) {
                     el.style.top = contextMenuPosition.y + surplusY.value - height + 'px';
                 }
             }
+            props.context.esctask.push(TaskType.MENU, contextMenuUnmount); // 将关闭菜单事件加入到esc任务队列
         }
     })
 }

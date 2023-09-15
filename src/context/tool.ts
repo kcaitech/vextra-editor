@@ -118,7 +118,6 @@ export class Tool extends Watchable(Object) {
         this.m_current_action = action;
         if (action.startsWith('add')) {
             this.m_context.esctask.push(TaskType.TOOL, this.reset.bind(this));
-            this.m_context.selection.resetSelectShapes(); // 插入图形默认取消已选图形
             if (action === Action.AddComment) {
                 if (this.m_context.workspace.documentPerm === 1) return;
                 this.m_context.comment.commentInput(false);
