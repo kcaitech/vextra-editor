@@ -4,6 +4,7 @@ import { Context } from '@/context';
 import { WorkSpace } from '@/context/workspace';
 import { Tool } from '@/context/tool';
 import { Menu } from '@/context/menu';
+import { TaskType } from '@/context/escstack';
 const props = defineProps<{
   title?: string,
   top?: number,
@@ -34,7 +35,6 @@ function show() {
     popoverVisible.value = true;
     props.context.menu.setPopoverVisible(true);
     container.value.focus();
-    container.value.addEventListener('keyup', esc);
     document.addEventListener('mousedown', handleClickOutside);
     nextTick(() => { // popver 挂载之后计算其布局位置
       if (popover.value) {
@@ -46,6 +46,7 @@ function show() {
         const T = Math.min(document.documentElement.clientHeight - buffer - (top + height), 0);
         popover.value.style.left = Math.min(propsLeft, L) + 'px';
         popover.value.style.top = Math.min(propsTop, T) + 'px';
+        props.context.esctask.push(TaskType.WINDOW, popoverClose);
       }
     })
   }
@@ -53,14 +54,15 @@ function show() {
 function handleClickOutside(event: MouseEvent) {
   event.target instanceof Element && !event.target.closest('.__popover-container') && popoverClose();
 }
-function esc(e: KeyboardEvent) {
-  if (e.code === 'Escape') popoverClose();
-}
 function popoverClose() {
+  let exe_result: boolean = false;
+  if (popoverVisible.value) {
+    exe_result = true;
+  }
   popoverVisible.value = false;
   props.context.workspace.focusText();
-  container.value?.removeEventListener('keyup', esc);
   document.removeEventListener('click', handleClickOutside);
+  return exe_result;
 }
 function menu_watcher(t?: number) {
   if (t === Menu.SHUTDOWN_POPOVER) popoverClose();

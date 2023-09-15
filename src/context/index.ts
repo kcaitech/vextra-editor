@@ -73,7 +73,7 @@ export class Context extends Watchable(Object) {
         this.m_selection = new Selection(data, this); //选区相关
         this.m_workspace = new WorkSpace(this); // 编辑器状态
         this.m_comment = new Comment(); // 评论相关
-        this.m_menu = new Menu(); // 菜单相关
+        this.m_menu = new Menu(this); // 菜单相关
         this.m_tool = new Tool(this); // 工具栏相关
         this.m_navi = new Navi(); // 导航栏相关
         this.m_editor = new Editor(this.m_data, this.m_coopRepo, this.m_selection);
