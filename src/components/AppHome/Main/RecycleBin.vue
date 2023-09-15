@@ -1,22 +1,22 @@
 <template>
-        <tablelist :data="lists" :iconlist="iconlists" @restore="Restorefile" @ndelete="Deletefile" @rightMeun="rightmenu"
-            :noNetwork="noNetwork" @refreshDoc="refreshDoc" />
-        <!-- 右键菜单 -->
-        <listrightmenu :items="items" :data="mydata" @getrecycle-lists="GetrecycleLists" @r-deletefile="Deletefile"
-            @r-restorefile="Restorefile" />
-        <!-- 确认删除弹框 -->
-        <el-dialog v-model="dialogVisible" :title="t('home.completely_delete')" width="500" align-center
-            @keyup.enter="Qdeletefile(docId)">
-            <span>{{ t('home.delete_tips') }}</span>
-            <template #footer>
-                <span class="dialog-footer">
-                    <el-button type="primary" :disabled="false" @click=" Qdeletefile(docId)" style="background-color: none;">
-                        {{ t('home.delete_ok') }}
-                    </el-button>
-                    <el-button @click=" dialogVisible = false">{{ t('home.cancel') }}</el-button>
-                </span>
-            </template>
-        </el-dialog>
+    <tablelist :data="lists" :iconlist="iconlists" @restore="Restorefile" @ndelete="Deletefile" @rightMeun="rightmenu"
+        :noNetwork="noNetwork" @refreshDoc="refreshDoc" />
+    <!-- 右键菜单 -->
+    <listrightmenu :items="items" :data="mydata" @getrecycle-lists="GetrecycleLists" @r-deletefile="Deletefile"
+        @r-restorefile="Restorefile" />
+    <!-- 确认删除弹框 -->
+    <el-dialog v-model="dialogVisible" :title="t('home.completely_delete')" width="500" align-center
+        @keyup.enter="Qdeletefile(docId)">
+        <span>{{ t('home.delete_tips') }}</span>
+        <template #footer>
+            <span class="dialog-footer">
+                <el-button type="primary" :disabled="false" @click=" Qdeletefile(docId)" style="background-color: none;">
+                    {{ t('home.delete_ok') }}
+                </el-button>
+                <el-button @click=" dialogVisible = false">{{ t('home.cancel') }}</el-button>
+            </span>
+        </template>
+    </el-dialog>
 </template>
 <script setup lang="ts">
 import * as user_api from '@/apis/users'
@@ -181,7 +181,8 @@ main {
 
 .dialog-footer>.el-button {
     &:hover {
-        background-color: rgba(208, 208, 208, 0.167);
+        background-color: #fff;
+        color: #000;
     }
 
     &:active {
@@ -195,8 +196,9 @@ main {
     border-color: #9775fa;
 
     &:hover {
-        background: #9675fa91;
-        border-color: #9675fa91;
+        background-color: #9775fa;
+        color: white;
+        border-color: #9675fa91 !important;
     }
 
     &:active {

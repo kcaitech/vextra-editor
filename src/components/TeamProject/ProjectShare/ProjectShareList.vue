@@ -84,7 +84,7 @@ const rdelProject = (data: any) => {
 
 const escClose = () => {
     console.log('1111');
-    
+
     if (innerVisible.value) {
         innerVisible.value = false;
     }
@@ -152,7 +152,7 @@ function updateItemsBasedOnFavor(data: any, sourceItems: any) {
             updateItems = filterItemsByIndexes(updateItems, [4])
         }
         if (data.self_perm_type != 5 && data.is_invited != true) {
-            updateItems = filterItemsByIndexes(updateItems, [1,3])
+            updateItems = filterItemsByIndexes(updateItems, [1, 3])
         }
     } else {
         updateItems = filterItemsByIndexes(updateItems, [4]);
@@ -164,9 +164,9 @@ function updateItemsBasedOnFavor(data: any, sourceItems: any) {
             console.log(updateItems);
         }
         if (data.self_perm_type != 5 && data.is_invited != true) {
-            updateItems = filterItemsByIndexes(updateItems, [1,3])
+            updateItems = filterItemsByIndexes(updateItems, [1, 3])
             console.log(updateItems);
-            
+
         }
     }
     return updateItems
