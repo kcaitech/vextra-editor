@@ -12,11 +12,11 @@
         <input class="newname" type="text" v-model="newname" ref="renameinput" @keydown.enter="rename1" />
         <template #footer>
             <span class="dialog-footer">
-                <el-button type="primary" style="background-color: none;" @click.stop="rename1"
+                <el-button class="confirm" type="primary" @click.stop="rename1"
                     :disabled="newname.trim() == '' ? true : false">
                     {{ t('home.rename_ok') }}
                 </el-button>
-                <el-button @click="dialogVisible = false">{{ t('home.cancel') }}</el-button>
+                <el-button class="cancel" type="button" @click="dialogVisible = false">{{ t('home.cancel') }}</el-button>
             </span>
         </template>
     </el-dialog>
@@ -202,9 +202,9 @@ const EventHandler = (item: string) => {
         if (menu.value) {
             menu.value.style.display = 'none'
         }
-        emits('exitproject',props.data)
+        emits('exitproject', props.data)
     }
-    else if ( item === rightmenuitem.deleteproject) {
+    else if (item === rightmenuitem.deleteproject) {
         if (menu.value) {
             menu.value.style.display = 'none'
         }
@@ -438,19 +438,7 @@ onUnmounted(() => {
     }
 
 }
-
-
-.dialog-footer>.el-button {
-    &:hover {
-        background-color: rgba(208, 208, 208, 0.167);
-    }
-
-    &:active {
-        background-color: white;
-    }
-}
-
-.dialog-footer>.el-button--primary {
+.confirm {
     background-color: #9775fa;
     color: white;
     border-color: #9775fa;
@@ -462,6 +450,7 @@ onUnmounted(() => {
 
     &:active {
         background-color: #9775fa;
+        border-color: #9775fa;
     }
 
     &[disabled] {
@@ -469,4 +458,23 @@ onUnmounted(() => {
         border: 1px #e5dbff solid;
     }
 }
+
+.cancel {
+   
+    &:hover {
+        background-color: #ffffff;
+        color: #9775fa;
+        border-color: #9775fa;
+    }
+
+    &:active {
+        background-color: #ffffff;
+    }
+    &:focus{
+        background-color:white;
+        color: #9775fa;
+        border-color: #9775fa;
+    }
+}
+
 </style>

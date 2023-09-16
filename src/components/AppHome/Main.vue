@@ -1,10 +1,14 @@
 <script setup lang="ts">
 import { RouterView } from 'vue-router';
-import { ref } from 'vue';
+import { onMounted, ref, watch } from 'vue';
+import { useRoute } from 'vue-router'
+import { roleTypes } from 'element-plus';
 interface Props {
     title: string,
     recycle: boolean
 }
+
+const route = useRoute()
 const active = ref(true);
 const props = defineProps<Props>();
 const emits = defineEmits<{
@@ -19,6 +23,31 @@ const update = (data: any, searchtitle: string) => {
 const highlight = (state: boolean) => {
     active.value = state;
 }
+watch(() => route.name, () => {
+    if (route.name === "recyclebin") {
+        sessionStorage.setItem('index', '3')
+        highlight(false)
+    }
+    if (route.name === "meshare") {
+        sessionStorage.setItem('index', '3')
+        highlight(true)
+    }
+    if (route.name === "recently") {
+        sessionStorage.setItem('index', '1')
+    }
+    if (route.name === "starfile") {
+        sessionStorage.setItem('index', '2')
+    }
+    if (route.name === "shareme") {
+        sessionStorage.setItem('index', '4')
+    }
+})
+
+onMounted(() => {
+    if (route.name === "recyclebin") {
+        highlight(false)
+    }
+})
 </script>
 
 <template>
@@ -26,13 +55,15 @@ const highlight = (state: boolean) => {
         class="title">
         <span v-if="recycle">
             <router-link to="/apphome/meshare">
-                <span @click="highlight(true)" :style="{opacity: active ? '1' : '0.5', fontSize: active ? '18px' : '16px'}">{{ props.title }}</span>
+                <span @click="highlight(true)"
+                    :style="{ opacity: active ? '1' : '0.5', fontSize: active ? '18px' : '16px' }">{{ props.title }}</span>
             </router-link>
         </span>
         <span v-else>{{ props.title }}</span>
         <span v-if="recycle" style="margin-left: 20px;">
             <router-link to="/apphome/recyclebin">
-                <span @click="highlight(false)" :style="{opacity: active ? '0.5' : '1', fontSize: active ? '16px' : '18px'}">回收站</span>
+                <span @click="highlight(false)"
+                    :style="{ opacity: active ? '0.5' : '1', fontSize: active ? '16px' : '18px' }">回收站</span>
             </router-link>
         </span>
     </div>

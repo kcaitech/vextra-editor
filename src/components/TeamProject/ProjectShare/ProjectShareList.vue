@@ -1,5 +1,5 @@
 <script setup lang="ts">
-import { Ref, inject, ref, watch, computed, nextTick } from 'vue'
+import { Ref, inject, ref, watch, computed, nextTick, onMounted } from 'vue'
 import { useI18n } from 'vue-i18n'
 import { useRoute } from 'vue-router'
 import { router } from '@/router'
@@ -84,7 +84,7 @@ const rdelProject = (data: any) => {
 
 const escClose = () => {
     console.log('1111');
-    
+
     if (innerVisible.value) {
         innerVisible.value = false;
     }
@@ -152,7 +152,7 @@ function updateItemsBasedOnFavor(data: any, sourceItems: any) {
             updateItems = filterItemsByIndexes(updateItems, [4])
         }
         if (data.self_perm_type != 5 && data.is_invited != true) {
-            updateItems = filterItemsByIndexes(updateItems, [1,3])
+            updateItems = filterItemsByIndexes(updateItems, [1, 3])
         }
     } else {
         updateItems = filterItemsByIndexes(updateItems, [4]);
@@ -164,13 +164,15 @@ function updateItemsBasedOnFavor(data: any, sourceItems: any) {
             console.log(updateItems);
         }
         if (data.self_perm_type != 5 && data.is_invited != true) {
-            updateItems = filterItemsByIndexes(updateItems, [1,3])
+            updateItems = filterItemsByIndexes(updateItems, [1, 3])
             console.log(updateItems);
-            
+
         }
     }
     return updateItems
 }
+
+const table = ref()
 
 //右键菜单入口
 const rightmenu = (row: any, _: any, e: MouseEvent) => {
@@ -188,6 +190,7 @@ const rightmenu = (row: any, _: any, e: MouseEvent) => {
     })
     if ((e.target as HTMLElement).closest('.el-table__row')) {
         rightmenu.style.display = 'block'
+        table.value.setCurrentRow(row)
     }
     updateitems.value = updateItemsBasedOnFavor(row, items.value);
     mydata.value = row
@@ -223,8 +226,8 @@ const setProjectInfo = async (params: any) => {
 </script>
 
 <template>
-    <el-table :data="tableData" height="100%" style="width: 100%" :border="false" @row-dblclick="dblclickskipProject"
-        @row-contextmenu="rightmenu" highlight-current-row>
+    <el-table :data="tableData" ref="table" height="100%" style="width: 100%" :border="false"
+        @row-dblclick="dblclickskipProject" @row-contextmenu="rightmenu" highlight-current-row>
         <el-table-column prop="project" label="项目名称">
             <template #default="scope">
                 <span class="description">{{ scope.row.project.name }}</span>

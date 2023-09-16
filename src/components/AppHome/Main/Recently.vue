@@ -23,7 +23,6 @@ import listrightmenu from "../listrightmenu.vue"
 
 const { t } = useI18n()
 const items = ['open', 'newtabopen', 'share', 'target_star', 'rename', 'copyfile', 'removefile']
-const isLoading = ref(false)
 const showFileShare = ref<boolean>(false);
 const shareSwitch = ref(true)
 const pageHeight = ref(0)
@@ -63,13 +62,9 @@ interface data {
 
 //获取服务器我的文件列表
 async function getUserdata() {
-    // loading
-    isLoading.value = true
     try {
         const { data } = await user_api.GetDocumentsList() as any
         if (data == null) {
-            console.log('1111');
-            
             noNetwork.value = true
             ElMessage.error(t('home.failed_list_tips'))
         } else {
@@ -80,7 +75,7 @@ async function getUserdata() {
                 let { document: { size }, document_access_record: { last_access_time } } = data[i]
                 data[i].document.size = sizeTostr(size)
                 data[i].document_access_record.last_access_time = last_access_time.slice(0, 19)
-                
+
                 if(data[i].project) {
                     const project = projectList.value.filter(item => item.project.id === data[i].project.id)[0];
                     if(project) {
@@ -97,8 +92,6 @@ async function getUserdata() {
         ElMessage.closeAll('error')
         ElMessage.error({ duration: 1500, message: t('home.failed_list_tips') })
     }
-    // unloading  
-    isLoading.value = false;
 }
 const refreshDoc = () => {
     getUserdata()

@@ -159,7 +159,6 @@ watch(checked, (val) => {
     const index = projectList.value.findIndex((item) => item.project.id === currentProject.value[0].project.id);
     params.need_approval = val;
     projectList.value[index].project.need_approval = val;
-    console.log(projectList.value[index].project.need_approval);
     setProjectInvitedInfo();
 })
 

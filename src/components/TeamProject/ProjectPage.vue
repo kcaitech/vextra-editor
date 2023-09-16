@@ -280,7 +280,6 @@ const delProject = async (id: string) => {
 
 watch(menuState, (v) => {
     if(!v) {
-        console.log(v,'vvv');
         showProjecrMenu.value = false;
     }
 })

@@ -177,13 +177,13 @@ function newFile() {
     router.push({ name: 'document' });
 }
 
-function Setindex(a: any, b: any) {
-    sessionStorage.setItem('index', a);
-    x.value = String(a);
-    if (a == 3) {
-        emits('settitle', b, true);
+function Setindex(index: any, title: any) {
+    sessionStorage.setItem('index', index);
+    x.value = String(index);
+    if (index == 3) {
+        emits('settitle', title, true);
     } else {
-        emits('settitle', b, false);
+        emits('settitle', title, false);
     }
 }
 
@@ -520,6 +520,8 @@ watch(route, (v) => {
             addTargetItem([])
         }
     }
+    console.log('111');
+    
     x.value = sessionStorage.getItem('index');
 }, { deep: true, immediate: true})
 
