@@ -23,25 +23,7 @@ const update = (data: any, searchtitle: string) => {
 const highlight = (state: boolean) => {
     active.value = state;
 }
-watch(() => route.name, () => {
-    if (route.name === "recyclebin") {
-        sessionStorage.setItem('index', '3')
-        highlight(false)
-    }
-    if (route.name === "meshare") {
-        sessionStorage.setItem('index', '3')
-        highlight(true)
-    }
-    if (route.name === "recently") {
-        sessionStorage.setItem('index', '1')
-    }
-    if (route.name === "starfile") {
-        sessionStorage.setItem('index', '2')
-    }
-    if (route.name === "shareme") {
-        sessionStorage.setItem('index', '4')
-    }
-})
+
 
 onMounted(() => {
     if (route.name === "recyclebin") {

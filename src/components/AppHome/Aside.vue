@@ -177,6 +177,7 @@ function newFile() {
     (window as any).sketchDocument = nd;
     router.push({ name: 'document' });
 }
+const x = ref('0');
 
 function Setindex(index: any, title: any) {
     sessionStorage.setItem('index', index);
@@ -188,7 +189,7 @@ function Setindex(index: any, title: any) {
     }
 }
 
-const x = ref(sessionStorage.getItem('index'));
+
 
 const showteamcard = () => {
     showoverlay.value = true
@@ -521,9 +522,19 @@ watch(route, (v) => {
             addTargetItem([])
         }
     }
-    console.log('111');
-    
-    x.value = sessionStorage.getItem('index');
+    if (route.name === "meshare") {
+        x.value='3'
+    }
+    if (v.name === "recently") {
+        x.value='1'
+    }
+    if (v.name === "starfile") {
+        x.value='2'
+    }
+    if (v.name === "shareme") {
+        x.value='4'
+    }
+   
 }, { deep: true, immediate: true })
 
 const listss = ref<any[]>([])
@@ -577,7 +588,7 @@ onUnmounted(() => {
                                 <FolderOpened />
                             </el-icon><span>{{ t('home.open_local_file') }}</span></button>
                     </div>
-                    <el-menu :default-active="x ? x : '1'" active-text-color="#ffd04b" class="el-menu-vertical-demo"
+                    <el-menu :default-active="x" active-text-color="#ffd04b" class="el-menu-vertical-demo"
                         text-color="#000000">
                         <router-link to="/apphome/recently"><el-menu-item index="1"
                                 :style="{ backgroundColor: x === '1' ? '#e5dbff' : hover ==='1'? '#f3f0ff': '#fff', color: x === '1' ? '#9775fa' : '#000', fontWeight: x === '1' ? '600' : '400' }"
