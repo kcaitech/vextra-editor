@@ -190,7 +190,8 @@ main {
 
 .dialog-footer>.el-button {
     &:hover {
-        background-color: rgba(208, 208, 208, 0.167);
+        background-color: #fff;
+        color: #000;
     }
 
     &:active {
@@ -204,8 +205,9 @@ main {
     border-color: #9775fa;
 
     &:hover {
-        background: #9675fa91;
+        background-color: #9775fa;
         border-color: #9675fa91;
+        color: #fff;
     }
 
     &:active {

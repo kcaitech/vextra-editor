@@ -201,6 +201,7 @@ onUnmounted(() => {
         color: #666;
 
         .item {
+            white-space: nowrap;
             margin-right: 32px;
             font-size: 18px;
             font-weight: 600;

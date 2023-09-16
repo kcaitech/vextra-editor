@@ -98,4 +98,7 @@ onMounted(() => {
         }
     }
 }
+.main {
+    overflow: hidden;
+}
 </style>

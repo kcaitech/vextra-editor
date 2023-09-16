@@ -13,8 +13,8 @@
                                 <el-icon style="transform: rotate(90deg); margin-right: 5px;">
                                     <MoreFilled />
                                 </el-icon>
-                                <TeamProjectMenu v-if="showProjecrMenu" :items="menuItem" :data="currentProject[0]" @mousedown.stop
-                                    :top="23" :left="0" @cancelFixed="cancelFixed" @close="closeMenu"
+                                <TeamProjectMenu v-if="showProjecrMenu" :items="menuItem" :data="currentProject[0]"
+                                    @mousedown.stop :top="23" :left="0" @cancelFixed="cancelFixed" @close="closeMenu"
                                     @projectSetting="projectSetting" @reName="input_cusname"
                                     @showMembergDialog="showMembergDialog" @delProject="onDelProject"
                                     @exitProject="onExitProject">
@@ -279,7 +279,11 @@ const delProject = async (id: string) => {
 }
 
 watch(menuState, (v) => {
+<<<<<<< HEAD
     if(!v) {
+=======
+    if (!v) {
+>>>>>>> 75f3bdbb750e344019d8ccbd81484602da2b919f
         showProjecrMenu.value = false;
     }
 })
@@ -302,8 +306,8 @@ const projectMenu = (project: any, e: MouseEvent) => {
         menuItem.push('exit');
     }
     nextTick(() => {
-        setMenuVisi(true);
         showProjecrMenu.value = true;
+        setMenuVisi(true);
     })
 }
 
@@ -397,11 +401,7 @@ const favoriteProjectList = (arr1: any[], arr2: any[]) => {
 }
 
 function input_cusname(project: any) {
-    console.log('重命名1');
-
     if (project.self_perm_type < 4) return;
-    console.log('重命名2');
-    
     projectName.value = project.project.name;
     cusname.value = !cusname.value;
     nextTick(() => {
@@ -415,7 +415,7 @@ function input_cusname(project: any) {
 }
 
 function input_cusdesc(project: any) {
-    if (project.self_perm_type < 4) return;
+    if (project.self_perm_type < 4) return ElMessage.error('无权限设置项目描述');
     projectDesc.value = project.project.description;
     cusdesc.value = !cusdesc.value;
     nextTick(() => {
@@ -471,7 +471,7 @@ function blur_desc() {
     if (!currentProject.value[0]) return cusdesc.value = false;
     const project = currentProject.value[0].project
     projectDesc.value = projectDesc.value.trim();
-    document.removeEventListener('keydown', enter);
+    document.removeEventListener('keydown', enter_desc);
     if (projectDesc.value.trim().length < 1) {
         cusdesc.value = false;
         return
@@ -661,15 +661,20 @@ onMounted(() => {
     box-sizing: border-box;
 
     .left {
-        flex: 1;
+        width: calc(100% - 140px);
 
         .p {
             box-sizing: border-box;
+
             .title-p {
                 width: fit-content;
                 display: flex;
                 align-items: center;
                 margin-bottom: 10px;
+                text-overflow: ellipsis;
+                white-space: nowrap;
+                max-width: 100%;
+                padding-right: 10px;
 
                 svg {
                     width: 16px;
@@ -679,6 +684,7 @@ onMounted(() => {
                 .setting {
                     position: relative;
                 }
+
                 >div {
                     margin-top: 5px;
                 }
@@ -690,7 +696,8 @@ onMounted(() => {
                 outline: none;
                 border: none;
                 width: auto;
-                height: 28px;
+                max-width: 100%;
+                height: 38px;
                 border: 2px solid #9775fa;
                 border-radius: 0%;
                 overflow: hidden;
@@ -698,7 +705,9 @@ onMounted(() => {
                 white-space: nowrap;
                 margin-bottom: 10px;
                 padding-left: 5px;
-                padding-top: 5px;
+                padding-top: 3px;
+                padding-bottom: 3px;
+                box-sizing: border-box;
             }
         }
 
@@ -709,7 +718,7 @@ onMounted(() => {
         }
 
         p {
-            width: fit-content;
+            display: list-item;
             font-size: 18px;
             font-weight: bold;
             margin: 0;
@@ -721,11 +730,19 @@ onMounted(() => {
         }
 
         .span {
+            overflow: hidden;
+            text-overflow: ellipsis;
+            white-space: nowrap;
+            display: inline-block;
+            max-width: 100%;
+            padding-right: 10px;
+
             input {
                 font-size: 10px;
                 outline: none;
                 border: none;
                 width: auto;
+                max-width: 100%;
                 height: 24px;
                 border: 2px solid #9775fa;
                 border-radius: 0%;
@@ -736,8 +753,8 @@ onMounted(() => {
         }
 
         span {
-            display: flex;
-            width: fit-content;
+            display: list-item;
+            width: auto;
             font-size: 10px;
             color: rgba(0, 0, 0, 0.7);
             padding: 5px;
@@ -751,7 +768,7 @@ onMounted(() => {
 
     .right {
         display: flex;
-        width: auto;
+        width: 90px;
         height: 30px;
         margin-left: 50px;
 
@@ -762,7 +779,8 @@ onMounted(() => {
 
 
         >div {
-            margin-right: 10px;
+            margin-right: 5px;
+            padding: 0 4px;
             width: 25px;
             height: 25px;
             display: flex;
@@ -864,6 +882,7 @@ onMounted(() => {
         border-radius: 4px;
     }
 }
+
 .hover {
     display: flex;
     width: 20px;
@@ -873,10 +892,12 @@ onMounted(() => {
     align-items: center;
     padding: 2px 0;
     padding-left: 5px;
+
     &:hover {
         background-color: #e5dbff;
     }
 }
+
 .back {
     display: flex;
     width: 20px;
@@ -885,6 +906,7 @@ onMounted(() => {
     justify-content: center;
     align-items: center;
     padding: 0 3px 2px 3px;
+
     &:hover {
         background-color: #e5dbff;
     }

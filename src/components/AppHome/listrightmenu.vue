@@ -1,25 +1,27 @@
 <template>
     <!-- 右键菜单 -->
-    <div class="rightmenu" ref="menu">
-        <ul>
-            <li v-for="item in props.items " :key="item" @click.stop="EventHandler(item)" :class="item">
-                {{ itemcontent(item) }}
-            </li>
-        </ul>
+    <div>
+        <div class="rightmenu" ref="menu">
+            <ul>
+                <li v-for="item in props.items " :key="item" @click.stop="EventHandler(item)" :class="item">
+                    {{ itemcontent(item) }}
+                </li>
+            </ul>
+        </div>
+        <!-- 重命名弹框 -->
+        <el-dialog v-model="dialogVisible" :title="t('home.rename')" width="500" align-center>
+            <input class="newname" type="text" v-model="newname" ref="renameinput" @keydown.enter="rename1" />
+            <template #footer>
+                <span class="dialog-footer">
+                    <el-button type="primary" style="background-color: none;" @click.stop="rename1"
+                        :disabled="newname.trim() == '' ? true : false">
+                        {{ t('home.rename_ok') }}
+                    </el-button>
+                    <el-button @click="dialogVisible = false">{{ t('home.cancel') }}</el-button>
+                </span>
+            </template>
+        </el-dialog>
     </div>
-    <!-- 重命名弹框 -->
-    <el-dialog v-model="dialogVisible" :title="t('home.rename')" width="500" align-center>
-        <input class="newname" type="text" v-model="newname" ref="renameinput" @keydown.enter="rename1" />
-        <template #footer>
-            <span class="dialog-footer">
-                <el-button class="confirm" type="primary" @click.stop="rename1"
-                    :disabled="newname.trim() == '' ? true : false">
-                    {{ t('home.rename_ok') }}
-                </el-button>
-                <el-button class="cancel" type="button" @click="dialogVisible = false">{{ t('home.cancel') }}</el-button>
-            </span>
-        </template>
-    </el-dialog>
 </template>
 <script setup lang="ts">
 import { useI18n } from 'vue-i18n'
