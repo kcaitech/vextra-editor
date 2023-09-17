@@ -43,6 +43,7 @@ const teamcard = ref(false);
 const projectcard = ref(false);
 const teamid = ref('');
 // const activeNames = ref([-1]);
+const x = ref('0');
 const teamList = ref<any>([]);
 const teamDataList = ref<any[]>([]);
 const projectDataList = ref<any[]>([]);
@@ -177,7 +178,6 @@ function newFile() {
     (window as any).sketchDocument = nd;
     router.push({ name: 'document' });
 }
-const x = ref('0');
 
 function Setindex(index: any, title: any) {
     sessionStorage.setItem('index', index);
@@ -188,8 +188,6 @@ function Setindex(index: any, title: any) {
         emits('settitle', title, false);
     }
 }
-
-
 
 const showteamcard = () => {
     showoverlay.value = true
@@ -511,6 +509,7 @@ const showicon = (data: any) => {
 
 
 watch(route, (v) => {
+    if (x.value != '0') x.value = ''
     if (v.name === 'ProjectShare') {
         is_share.value = true;
         activeShare.value = [1]
@@ -522,19 +521,19 @@ watch(route, (v) => {
             addTargetItem([])
         }
     }
-    if (route.name === "meshare") {
-        x.value='3'
+    if (route.name === "recently") {
+        x.value = '1'
     }
-    if (v.name === "recently") {
-        x.value='1'
+    if (route.name === "starfile") {
+        x.value = '2'
     }
-    if (v.name === "starfile") {
-        x.value='2'
+    if (route.name === "meshare" || route.name === "recyclebin") {
+        x.value = '3'
     }
-    if (v.name === "shareme") {
-        x.value='4'
+    if (route.name === "shareme") {
+        x.value = '4'
     }
-   
+
 }, { deep: true, immediate: true })
 
 const listss = ref<any[]>([])
@@ -591,32 +590,36 @@ onUnmounted(() => {
                     <el-menu :default-active="x" active-text-color="#ffd04b" class="el-menu-vertical-demo"
                         text-color="#000000">
                         <router-link to="/apphome/recently"><el-menu-item index="1"
-                                :style="{ backgroundColor: x === '1' ? '#e5dbff' : hover ==='1'? '#f3f0ff': '#fff', color: x === '1' ? '#9775fa' : '#000', fontWeight: x === '1' ? '600' : '400' }"
-                                @click="Setindex(1, t('home.recently_opened'))" @mouseenter="hover = '1'" @mouseleave="hover=''">
+                                :style="{ backgroundColor: x === '1' ? '#e5dbff' : hover === '1' ? '#f3f0ff' : '#fff', color: x === '1' ? '#9775fa' : '#000', fontWeight: x === '1' ? '600' : '400' }"
+                                @click="Setindex(1, t('home.recently_opened'))" @mouseenter="hover = '1'"
+                                @mouseleave="hover = ''">
                                 <el-icon>
                                     <Clock />
                                 </el-icon>
                                 <span>{{ t('home.recently_opened') }}</span>
                             </el-menu-item></router-link>
                         <router-link to="/apphome/starfile"><el-menu-item index="2"
-                                :style="{ backgroundColor: x === '2' ? '#e5dbff' : hover ==='2'? '#f3f0ff': '#fff', color: x === '2' ? '#9775fa' : '#000', fontWeight: x === '2' ? '600' : '400' }"
-                                @click="Setindex(2, t('home.star_file'))" @mouseenter="hover = '2'" @mouseleave="hover=''">
+                                :style="{ backgroundColor: x === '2' ? '#e5dbff' : hover === '2' ? '#f3f0ff' : '#fff', color: x === '2' ? '#9775fa' : '#000', fontWeight: x === '2' ? '600' : '400' }"
+                                @click="Setindex(2, t('home.star_file'))" @mouseenter="hover = '2'"
+                                @mouseleave="hover = ''">
                                 <el-icon>
                                     <Star />
                                 </el-icon>
                                 <span>{{ t('home.star_file') }}</span>
                             </el-menu-item></router-link>
                         <router-link to="/apphome/meshare"><el-menu-item index="3"
-                                :style="{ backgroundColor: x === '3' ? '#e5dbff' : hover ==='3'? '#f3f0ff': '#fff', color: x === '3' ? '#9775fa' : '#000', fontWeight: x === '3' ? '600' : '400' }"
-                                @click="Setindex(3, t('home.file_shared'))" @mouseenter="hover = '3'" @mouseleave="hover=''">
+                                :style="{ backgroundColor: x === '3' ? '#e5dbff' : hover === '3' ? '#f3f0ff' : '#fff', color: x === '3' ? '#9775fa' : '#000', fontWeight: x === '3' ? '600' : '400' }"
+                                @click="Setindex(3, t('home.file_shared'))" @mouseenter="hover = '3'"
+                                @mouseleave="hover = ''">
                                 <el-icon>
                                     <Folder />
                                 </el-icon>
                                 <span>{{ t('home.file_shared') }}</span>
                             </el-menu-item></router-link>
                         <router-link to="/apphome/shareme"><el-menu-item index="4"
-                                :style="{ backgroundColor: x === '4' ? '#e5dbff' : hover ==='4'? '#f3f0ff': '#fff', color: x === '4' ? '#9775fa' : '#000', fontWeight: x === '4' ? '600' : '400' }"
-                                @click="Setindex(4, t('home.shared_file_received'))" @mouseenter="hover = '4'" @mouseleave="hover=''">
+                                :style="{ backgroundColor: x === '4' ? '#e5dbff' : hover === '4' ? '#f3f0ff' : '#fff', color: x === '4' ? '#9775fa' : '#000', fontWeight: x === '4' ? '600' : '400' }"
+                                @click="Setindex(4, t('home.shared_file_received'))" @mouseenter="hover = '4'"
+                                @mouseleave="hover = ''">
                                 <el-icon>
                                     <BottomLeft />
                                 </el-icon>
@@ -1330,4 +1333,5 @@ a {
     .project {
         display: none !important;
     }
-}</style>
+}
+</style>
