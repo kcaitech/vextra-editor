@@ -286,7 +286,8 @@ function contextMenuMount(e: MouseEvent) {
                     el.style.top = contextMenuPosition.y + surplusY.value - height + 'px';
                 }
             }
-            props.context.esctask.push(TaskType.MENU, contextMenuUnmount); // 将关闭菜单事件加入到esc任务队列
+            // eslint-disable-next-line
+            props.context.esctask.save(TaskType.MENU, contextMenuUnmount); // 将关闭菜单事件加入到esc任务队列
         }
     })
 }

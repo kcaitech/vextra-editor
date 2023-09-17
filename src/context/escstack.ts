@@ -27,7 +27,7 @@ export class EscStack extends Watchable(Object) {
     }
   }
 
-  push(task: TaskType, call: Function) {
+  save(task: TaskType, call: Function) {
     if (this.m_stack_map.get(task)) { // 先删后加，保持先来的后出
       this.m_stack_map.delete(task);
     }

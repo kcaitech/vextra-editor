@@ -371,7 +371,7 @@ export function useControllerCustom(context: Context, i18nT: Function) {
         checkStatus();
         initController();
         workspace.contentEdit(false);
-        context.esctask.push(TaskType.SELECTION, exit);
+        context.esctask.save(TaskType.SELECTION, exit);
     }
     function dispose() {
         workspace.unwatch(workspace_watcher);

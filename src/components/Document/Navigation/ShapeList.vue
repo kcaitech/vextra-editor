@@ -373,7 +373,7 @@ const chartMenuMount = (e: MouseEvent) => {
                 el.style.borderRadius = 4 + 'px'
                 el.style.width = 200 + 'px'
             }
-            props.context.esctask.push(TaskType.MENU, close);
+            props.context.esctask.save(TaskType.MENU, close);
         }
     })
 }

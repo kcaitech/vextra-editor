@@ -46,7 +46,7 @@ function show() {
         const T = Math.min(document.documentElement.clientHeight - buffer - (top + height), 0);
         popover.value.style.left = Math.min(propsLeft, L) + 'px';
         popover.value.style.top = Math.min(propsTop, T) + 'px';
-        props.context.esctask.push(TaskType.WINDOW, popoverClose);
+        props.context.esctask.save(TaskType.WINDOW, popoverClose);
       }
     })
   }
