@@ -1,7 +1,7 @@
 import { Context } from "@/context";
 import { Text, Shape } from "@kcdesign/data";
 import { TextShapeEditor } from "@kcdesign/data";
-import { paster_inner_shape } from "@/utils/clipaboard";
+import { paster_inner_shape } from "@/utils/clipboard";
 
 type TextShape = Shape & { text: Text };
 
@@ -19,7 +19,7 @@ function throttle2<T extends (...args: any[]) => void>(func: T, delay: number): 
 
 const enterNewLine = throttle2((e: KeyboardEvent, context: Context, shape: TextShape, editor: TextShapeEditor) => {
     e.preventDefault();
-    const selection = context.selection.getTextSelection(shape);
+    const selection = context.textSelection;
     let index = selection.cursorStart;
     let end = selection.cursorEnd;
     if (index > end) {
@@ -30,22 +30,22 @@ const enterNewLine = throttle2((e: KeyboardEvent, context: Context, shape: TextS
 
     const count = editor.insertTextForNewLine(index, end - index);
     if (count !== 0) {
-        selection.setCursor(index + count, false);
+        selection.setCursor(index + count, false, shape.text);
     }
 }, keydelays);
 
 const enterArrowLeft = throttle2((e: KeyboardEvent, context: Context, shape: TextShape, editor: TextShapeEditor) => {
     e.preventDefault();
-    const selection = context.selection.getTextSelection(shape);
+    const selection = context.textSelection;
     let start = selection.cursorStart;
     let end = selection.cursorEnd;
     if (e.shiftKey) {
         if (start === end - 1) {
             const span = shape.text.spanAt(start);
             if (span?.placeholder && span.length === 1) start--;
-            selection.setCursor(start, false);
+            selection.setCursor(start, false, shape.text);
         } else {
-            selection.selectText(start, end - 1);
+            selection.selectText(start, end - 1, shape.text);
         }
     } else {
         const span = shape.text.spanAt(end - 1);
@@ -53,32 +53,32 @@ const enterArrowLeft = throttle2((e: KeyboardEvent, context: Context, shape: Tex
             if (end - 1 <= 0) end = 2;
             else end--;
         }
-        selection.setCursor(end - 1, false);
+        selection.setCursor(end - 1, false, shape.text);
     }
 }, keydelays);
 const enterArrowRight = throttle2((e: KeyboardEvent, context: Context, shape: TextShape, editor: TextShapeEditor) => {
     e.preventDefault();
-    const selection = context.selection.getTextSelection(shape);
+    const selection = context.textSelection;
     let start = selection.cursorStart;
     let end = selection.cursorEnd;
     if (e.shiftKey) {
         if (start === end + 1) {
             const span = shape.text.spanAt(start);
             if (span?.placeholder && span.length === 1) start++;
-            selection.setCursor(start, false);
+            selection.setCursor(start, false, shape.text);
         } else {
-            selection.selectText(start, end + 1);
+            selection.selectText(start, end + 1, shape.text);
         }
     } else {
         const span = shape.text.spanAt(end + 1);
         if (span?.placeholder && span.length === 1) end++;
-        selection.setCursor(end + 1, false);
+        selection.setCursor(end + 1, false, shape.text);
     }
 }, keydelays);
 const enterArrowUp = throttle2((e: KeyboardEvent, context: Context, shape: TextShape, editor: TextShapeEditor) => {
     e.preventDefault();
     const text = shape.text;
-    const selection = context.selection.getTextSelection(shape);
+    const selection = context.textSelection;
     const start = selection.cursorStart;
     const end = selection.cursorEnd;
     const cursorAtBefore = start === end && selection.cursorAtBefore;
@@ -88,17 +88,17 @@ const enterArrowUp = throttle2((e: KeyboardEvent, context: Context, shape: TextS
     const y = cursor.preLineY + (cursor.preLineHeight) / 2;
     const locate = text.locateText(x, y);
     if (e.shiftKey) {
-        selection.selectText(start, locate.index, locate.before);
+        selection.selectText(start, locate.index, text);
     }
     else {
-        if (locate.placeholder) selection.setCursor(locate.index + 1, false);
-        else selection.setCursor(locate.index, locate.before);
+        if (locate.placeholder) selection.setCursor(locate.index + 1, false, shape.text);
+        else selection.setCursor(locate.index, locate.before, shape.text);
     }
 }, keydelays);
 const enterArrowDown = throttle2((e: KeyboardEvent, context: Context, shape: TextShape, editor: TextShapeEditor) => {
     e.preventDefault();
     const text = shape.text;
-    const selection = context.selection.getTextSelection(shape);
+    const selection = context.textSelection;
     const start = selection.cursorStart;
     const end = selection.cursorEnd;
     const cursorAtBefore = start === end && selection.cursorAtBefore;
@@ -108,17 +108,17 @@ const enterArrowDown = throttle2((e: KeyboardEvent, context: Context, shape: Tex
     const y = cursor.nextLineY + (cursor.nextLineHeight) / 2;
     const locate = text.locateText(x, y);
     if (e.shiftKey) {
-        selection.selectText(start, locate.index, locate.before);
+        selection.selectText(start, locate.index, text);
     }
     else {
-        if (locate.placeholder) selection.setCursor(locate.index + 1, false);
-        else selection.setCursor(locate.index, locate.before);
+        if (locate.placeholder) selection.setCursor(locate.index + 1, false, shape.text);
+        else selection.setCursor(locate.index, locate.before, shape.text);
     }
 }, keydelays);
 
 const enterBackspace = throttle2((e: KeyboardEvent, context: Context, shape: TextShape, editor: TextShapeEditor) => {
     e.preventDefault();
-    const selection = context.selection.getTextSelection(shape);
+    const selection = context.textSelection;
     const start = selection.cursorStart;
     const end = selection.cursorEnd;
     if (start === end) {
@@ -128,44 +128,44 @@ const enterBackspace = throttle2((e: KeyboardEvent, context: Context, shape: Tex
                 if (editor.deleteText(start, 1)) {
                     const index = start;
                     const preChar = shape.text.charAt(index - 1);
-                    selection.setCursor(index, preChar !== '\n');
+                    selection.setCursor(index, preChar !== '\n', shape.text);
                 }
             }
         }
         else if (editor.deleteText(start - 1, 1)) {
             const index = start - 1;
             const preChar = shape.text.charAt(index - 1);
-            selection.setCursor(index, preChar !== '\n');
+            selection.setCursor(index, preChar !== '\n', shape.text);
         }
     }
     else {
         if (editor.deleteText(Math.min(start, end), Math.abs(start - end))) {
             const index = Math.min(start, end);
             const preChar = shape.text.charAt(index - 1);
-            selection.setCursor(index, preChar !== '\n');
+            selection.setCursor(index, preChar !== '\n', shape.text);
         }
     }
 }, keydelays);
 const enterDelete = throttle2((e: KeyboardEvent, context: Context, shape: TextShape, editor: TextShapeEditor) => {
     e.preventDefault();
-    const selection = context.selection.getTextSelection(shape);
+    const selection = context.textSelection;
     const start = selection.cursorStart;
     const end = selection.cursorEnd;
     if (start === end) {
         if (editor.deleteText(start, 1)) {
-            selection.setCursor(start, false);
+            selection.setCursor(start, false, shape.text);
         }
     }
     else {
         if (editor.deleteText(Math.min(start, end), Math.abs(start - end))) {
-            selection.setCursor(Math.min(start, end), false);
+            selection.setCursor(Math.min(start, end), false, shape.text);
         }
     }
 }, keydelays);
 
 const escape = throttle2((e: KeyboardEvent, context: Context, shape: TextShape, editor: TextShapeEditor) => {
     e.preventDefault();
-    const selection = context.selection.getTextSelection(shape);
+    const selection = context.textSelection;
     if (selection.cursorStart > -1) {
         context.selection.resetSelectShapes();
         const timer = setTimeout(() => {
@@ -180,9 +180,10 @@ const escape = throttle2((e: KeyboardEvent, context: Context, shape: TextShape, 
 function copy(e: KeyboardEvent, context: Context, shape: TextShape) {
     if (e.ctrlKey || e.metaKey) {
         e.preventDefault();
-        const selection = context.selection.getTextSelection(shape);
+        const selection = context.textSelection;
         const start = selection.cursorStart;
         const end = selection.cursorEnd;
+        if (start === end) return;
         const s = Math.min(start, end);
         const len = Math.abs(start - end)
         const text = shape.text.getTextWithFormat(s, len);
@@ -193,7 +194,7 @@ function copy(e: KeyboardEvent, context: Context, shape: TextShape) {
 async function cut(e: KeyboardEvent, context: Context, shape: TextShape, editor: TextShapeEditor) {
     if (e.ctrlKey || e.metaKey) {
         e.preventDefault();
-        const selection = context.selection.getTextSelection(shape);
+        const selection = context.textSelection;
         const start = selection.cursorStart;
         const end = selection.cursorEnd;
         if (start === end) return;
@@ -201,7 +202,7 @@ async function cut(e: KeyboardEvent, context: Context, shape: TextShape, editor:
         const copy_result = await context.workspace.clipboard.write_html(text);
         if (copy_result) {
             if (editor.deleteText(Math.min(start, end), Math.abs(start - end))) {
-                selection.setCursor(Math.min(start, end), false);
+                selection.setCursor(Math.min(start, end), false, shape.text);
             }
         }
         context.menu.menuMount();
@@ -217,9 +218,9 @@ function paster(e: KeyboardEvent, context: Context, shape: TextShape, editor: Te
 function select_all(e: KeyboardEvent, context: Context, shape: TextShape) {
     if (e.ctrlKey || e.metaKey) {
         e.preventDefault();
-        const selection = context.selection.getTextSelection(shape);
+        const selection = context.textSelection;
         const end = shape.text.length;
-        selection.selectText(0, end);
+        selection.selectText(0, end, shape.text);
         context.menu.menuMount();
     }
 }
@@ -233,16 +234,16 @@ function undo_redo(e: KeyboardEvent, context: Context, shape: TextShape) {
         } else {
             repo.canUndo() && repo.undo();
         }
-        const selection = context.selection.getTextSelection(shape);
+        const selection = context.textSelection;
         const len = shape.text.length;
         if (selection.cursorEnd >= len) {
-            selection.setCursor(len - 1, false);
+            selection.setCursor(len - 1, false, shape.text);
         }
     }
 }
 
 const enterTab = throttle2((e: KeyboardEvent, context: Context, shape: TextShape, editor: TextShapeEditor) => {
-    const selection = context.selection.getTextSelection(shape);
+    const selection = context.textSelection;
     const start = Math.min(selection.cursorStart, selection.cursorEnd);
     const end = Math.max(selection.cursorStart, selection.cursorEnd);
     const offset = e.shiftKey ? -1 : 1;

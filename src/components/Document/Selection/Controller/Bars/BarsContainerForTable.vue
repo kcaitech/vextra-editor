@@ -1,6 +1,6 @@
 <script setup lang='ts'>
 import { Context } from '@/context';
-import { AsyncBaseAction, CtrlElementType, Matrix, Shape } from '@kcdesign/data';
+import { AsyncBaseAction, CtrlElementType, Matrix, Shape, TableShape } from '@kcdesign/data';
 import { onMounted, onUnmounted, watch, reactive } from 'vue';
 import { ClientXY, PageXY } from '@/context/selection';
 import { Action } from '@/context/tool';
@@ -60,6 +60,9 @@ function bar_mousedown(event: MouseEvent, ele: CtrlElementType) {
         props.context.menu.menuMount()
         event.stopPropagation();
         props.context.menu.menuMount()
+        const table_selection = props.context.tableSelection;
+        table_selection.setEditingCell();
+        table_selection.resetSelection();
         cur_ctrl_type = ele;
         pointType = ct2pt(cur_ctrl_type);
         const workspace = props.context.workspace;

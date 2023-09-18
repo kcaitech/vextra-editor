@@ -1,6 +1,6 @@
 <script lang="ts" setup>
 import Popover from '@/components/common/Popover.vue';
-import { ref, onMounted, onUnmounted, watch } from 'vue';
+import { ref, onMounted, onUnmounted, watch, watchEffect } from 'vue';
 import { useI18n } from 'vue-i18n';
 import { Context } from '@/context';
 import Tooltip from '@/components/common/Tooltip.vue';
@@ -27,7 +27,7 @@ const paraSpacing = ref<HTMLInputElement>()
 
 //获取选中字体的长度和下标
 const getTextIndexAndLen = () => {
-    const selection = props.context.selection.getTextSelection(props.textShape);
+    const selection = props.context.textSelection;
   const textIndex = Math.min(selection.cursorEnd, selection.cursorStart)
   const selectLength = Math.abs(selection.cursorEnd - selection.cursorStart)
   return { textIndex, selectLength }
@@ -122,7 +122,7 @@ const setParagraphSpace = () => {
 
 //判断是否选择文本框还是光标聚焦了
 const isSelectText = () => {
-    const selection = props.context.selection.getTextSelection(props.textShape);
+    const selection = props.context.textSelection;
   if ((selection.cursorEnd !== -1) && (selection.cursorStart !== -1)) {
     return false
   } else {
@@ -175,8 +175,11 @@ function selection_wather(t: any) {
   }
 }
 
+watchEffect(() => {
+    textFormat()
+})
+
 onMounted(() => {
-  textFormat()
   props.textShape.watch(textFormat)
   props.context.selection.watch(selection_wather);
 })

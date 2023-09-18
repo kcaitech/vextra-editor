@@ -55,7 +55,6 @@ const selector = (active: Action) => {
 
 function onMenuBlur(e: MouseEvent) {
   if (e.target instanceof Element && !e.target.closest('.popover') && !e.target.closest('.menu')) {
-    if (e.target.closest('.popover')) return;
     var timer = setTimeout(() => {
       popoverVisible.value = false;
       clearTimeout(timer)
@@ -95,18 +94,18 @@ onUpdated(() => {
     </template>
   </div>
   <el-tooltip class="box-item" effect="dark"
-    :content="props.d === Action.AutoV ? `${t('home.object_selector')} &nbsp;&nbsp; V` : `${t('home.scale')} &nbsp;&nbsp; K`"
+    :content="selects === 'drag' ? `${t('home.object_selector')} &nbsp;&nbsp; V` : `${t('home.scale')} &nbsp;&nbsp; K`"
     placement="bottom" :show-after="600" :offset="10" :hide-after="0" :visible="popoverVisible ? false : visible">
-      <ToolButton ref="button" @click="() => { select(selects) }" :selected="props.active" @mouseenter.stop="onMouseenter"
-        @mouseleave.stop="onMouseleave">
-        <div class="svg-container">
-          <svg-icon :icon-class="props.d === selected ? props.d : selects"></svg-icon>
-        </div>
-        <div class="menu" @click="showMenu">
-          <svg-icon icon-class="down"></svg-icon>
-        </div>
-      </ToolButton>
-    </el-tooltip>
+    <ToolButton ref="button" @click="() => { select(selects) }" :selected="props.active" @mouseenter.stop="onMouseenter"
+      @mouseleave.stop="onMouseleave">
+      <div class="svg-container">
+        <svg-icon :icon-class="props.d === selected ? props.d : selects"></svg-icon>
+      </div>
+      <div class="menu" @click="showMenu">
+        <svg-icon icon-class="down"></svg-icon>
+      </div>
+    </ToolButton>
+  </el-tooltip>
 </template>
 
 <style scoped lang="scss">

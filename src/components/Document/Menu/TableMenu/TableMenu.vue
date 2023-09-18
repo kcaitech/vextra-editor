@@ -2,9 +2,10 @@
 import { reactive, ref } from 'vue';
 import { useI18n } from 'vue-i18n';
 import ContextMenu from '@/components/common/ContextMenu.vue';
-import { XY } from '@/context/selection';
-import {Shape, TableShape } from "@kcdesign/data";
+import { XY, Selection } from '@/context/selection';
+import { Shape, TableShape } from "@kcdesign/data";
 import { Context } from '@/context';
+import { TableSelection } from '@/context/tableselection';
 
 const { t } = useI18n();
 interface Props {
@@ -18,29 +19,46 @@ const emit = defineEmits<{
   (e: 'close'): void;
 }>();
 const layerSubMenuPosition: XY = reactive({ x: 0, y: 0 });
-const layerSubMenuVisiable = ref<boolean>(false);
+const isDeleteColumn = ref<boolean>(false);
+const isSplitCell = ref<boolean>(false);
 const splitCellOpen = ref(false);
-function showLayerSubMenu(e: MouseEvent) {
+function showLayerSubMenu(e: MouseEvent, show: string) {
+  e.stopPropagation();
   const targetWidth = (e.target as Element).getBoundingClientRect().width;
   layerSubMenuPosition.x = targetWidth;
   layerSubMenuPosition.y = -4;
-  layerSubMenuVisiable.value = true;
+  if (show === 'split') {
+    isSplitCell.value = true;
+  } else {
+    isDeleteColumn.value = true;
+  }
 }
 
 const splitCell = (column: string) => {
   const shape = props.context.selection.selectedShapes[0]
-  const table = props.context.selection.getTableSelection(shape as TableShape, props.context);
+  const table = props.context.tableSelection;
+  const editor = props.context.editor4Table(shape as TableShape)
   if (table.tableColEnd !== -1 && table.tableRowEnd !== -1) {
-    const cell = (Array.from(table.getSelectedCells()))[0]
-    const editor = props.context.editor4Table(shape as TableShape)
     if (column === 'row') {
-      editor.horSplitCell(cell)
+      editor.horSplitCell(table.tableRowStart, table.tableColStart);
     } else {
-      editor.verSplitCell(cell)
+      editor.verSplitCell(table.tableRowStart, table.tableColStart);
+    }
+  } else if (table.editingCell) {
+    if (column === 'row') {
+      editor.horSplitCell(table.editingCell.index.row, table.editingCell.index.col);
+    } else {
+      editor.verSplitCell(table.editingCell.index.row, table.editingCell.index.col);
     }
   }
+  reset(table, props.context);
   emit('close');
 };
+
+function reset(table: TableSelection, context: Context) {
+  table.resetSelection();
+  table.setEditingCell();
+}
 const openInsertCell = (value: string) => {
   splitCellOpen.value = true;
   props.context.menu.setSplitCell(value);
@@ -49,54 +67,68 @@ const openInsertCell = (value: string) => {
 
 const mergeCell = () => {
   const shape = props.context.selection.selectedShapes[0]
-  const table = props.context.selection.getTableSelection(shape as TableShape, props.context);
-  if(table.tableColEnd !== -1 && table.tableRowEnd !== -1) {
-      const editor = props.context.editor4Table(shape as TableShape)
-      editor.mergeCells(table.tableRowStart, table.tableRowEnd, table.tableColStart, table.tableColEnd)
+  const table = props.context.tableSelection;
+  if (table.tableColEnd !== -1 && table.tableRowEnd !== -1) {
+    const editor = props.context.editor4Table(shape as TableShape)
+    editor.mergeCells(table.tableRowStart, table.tableRowEnd, table.tableColStart, table.tableColEnd)
   }
+  reset(table, props.context);
   emit('close');
 }
 const spliceRow = () => {
-  const shape = props.context.selection.selectedShapes[0]
-  const table = props.context.selection.getTableSelection(shape as TableShape, props.context);
-  if(table.tableColEnd === table.tableColStart && table.tableColStart !== -1) {
-      const editor = props.context.editor4Table(shape as TableShape)
-      editor.removeRow(table.tableRowStart)
+  const shape = props.context.selection.selectedShapes[0];
+  const table = props.context.tableSelection;
+  const editor = props.context.editor4Table(shape as TableShape);
+  let result: any = 0;
+  if (table.editingCell) {
+    result = editor.removeRow(table.editingCell.index.row);
+  } else {
+    result = editor.removeRow(table.tableRowStart, table.tableRowEnd);
   }
+  if (result === 1) props.context.selection.resetSelectShapes();
+  reset(table, props.context);
   emit('close');
 }
 
 const spliceCol = () => {
-  const shape = props.context.selection.selectedShapes[0]
-  const table = props.context.selection.getTableSelection(shape as TableShape, props.context);
-  if(table.tableColEnd === table.tableColStart && table.tableColStart !== -1) {
-      const editor = props.context.editor4Table(shape as TableShape)
-      editor.removeCol(table.tableColEnd)
+  const shape = props.context.selection.selectedShapes[0];
+  const table = props.context.tableSelection;
+  const editor = props.context.editor4Table(shape as TableShape);
+  let result: any = 0;
+  if (table.editingCell) {
+    result = editor.removeCol(table.editingCell.index.col);
+  } else {
+    result = editor.removeCol(table.tableColStart, table.tableColEnd);
   }
+  if (result === 1) props.context.selection.resetSelectShapes();
+  reset(table, props.context);
   emit('close');
 }
 
 const deleteTable = () => {
   const shape = props.context.selection.selectedShapes[0]
-  const table = props.context.selection.getTableSelection(shape as TableShape, props.context);
+  const editor = props.context.editor4Shape(shape);
+  editor.delete();
+  props.context.selection.resetSelectShapes();
+  emit('close');
 }
 
 // /**
 //  * 关闭图层菜单 
 //  */
 function closeLayerSubMenu() {
-  layerSubMenuVisiable.value = false;
+  isDeleteColumn.value = false;
 }
 
 </script>
 <template>
   <div class="line" v-if="props.items.includes('delete_column') && props.items.includes('only_text')"></div>
   <div v-if="props.items.includes('delete_column')" class="item layer-select"
-    @mouseenter="(e: MouseEvent) => showLayerSubMenu(e)" @mouseleave="closeLayerSubMenu">
+    @mouseenter="(e: MouseEvent) => showLayerSubMenu(e, 'delete')" @mouseleave="isDeleteColumn = false">
     <span>{{ t('table.del_column') }}</span>
-    <div class="triangle"></div>
-    <ContextMenu v-if="layerSubMenuVisiable" :x="layerSubMenuPosition.x" :y="layerSubMenuPosition.y" :width="180"
-      :site="site" :context="props.context">
+    <div class="layer-icon"><svg-icon icon-class="down"></svg-icon></div>
+    <ContextMenu v-if="isDeleteColumn" :x="layerSubMenuPosition.x" :y="layerSubMenuPosition.y" :width="180" :site="site"
+      :context="props.context">
       <div class="item" @click="spliceRow">
         <span>{{ t('table.del_select_row') }}</span>
         <span></span>
@@ -111,11 +143,12 @@ function closeLayerSubMenu() {
       </div>
     </ContextMenu>
   </div>
-  <div class="item" v-if="props.items.includes('split_cell')">
+  <div class="item layer-select" v-if="props.items.includes('split_cell')"
+    @mouseenter="(e: MouseEvent) => showLayerSubMenu(e, 'split')" @mouseleave="isSplitCell = false">
     <span>{{ t('table.split_cell') }}</span>
-    <div class="triangle"></div>
-    <ContextMenu v-if="layerSubMenuVisiable" :x="layerSubMenuPosition.x" :y="layerSubMenuPosition.y" :width="180"
-      :site="site" :context="props.context">
+    <div class="layer-icon"><svg-icon icon-class="down"></svg-icon></div>
+    <ContextMenu v-if="isSplitCell" :x="layerSubMenuPosition.x" :y="layerSubMenuPosition.y" :width="180" :site="site"
+      :context="props.context">
       <div class="item" @click="splitCell('row')">
         <span>{{ t('table.split_towrow') }}</span>
         <span></span>
@@ -130,8 +163,7 @@ function closeLayerSubMenu() {
     <span>{{ t('table.insert_column') }}</span>
     <span></span>
   </div>
-  <!-- <div class="item" v-if="props.items.includes('merge_cell')"> -->
-  <div class="item" v-if="props.items.includes('insert_column')" @click="mergeCell">
+  <div class="item" v-if="props.items.includes('merge_cell')" @click="mergeCell">
     <span>{{ t('table.merge_cell') }}</span>
     <span></span>
   </div>
@@ -182,6 +214,21 @@ function closeLayerSubMenu() {
     border-left: 6px solid var(--theme-color-anti);
     transform: rotate(90deg);
   }
+
+}
+
+.layer-icon {
+  svg {
+    width: 12px;
+    height: 12px;
+  }
+
+  transform: rotate(270deg);
+}
+
+.layer-select {
+  display: flex;
+  justify-content: space-between;
 }
 
 .invalid {

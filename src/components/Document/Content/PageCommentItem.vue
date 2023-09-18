@@ -93,7 +93,7 @@ const showAboutMe = () => {
 const hoverComment = () => {
     if (!showScale.value) {
         props.context.comment.hoverComment(false);
-        if(props.context.workspace.isTranslating) return;
+        if (props.context.workspace.isTranslating) return;
         commentScale.value = 1;
         props.context.comment.hoverComment(true);
     }
@@ -110,7 +110,9 @@ const unHoverComment = () => {
     markScale.value = 1
 }
 const showComment = (e: MouseEvent) => {
+    if(ShowComment.value) return;
     if (props.context.comment.isCommentMove) return
+    documentCommentList.value = [];
     const commentX = props.commentInfo.shape_frame.x1
     const commentY = props.commentInfo.shape_frame.y1
     const workspace = props.context.workspace;
@@ -128,9 +130,10 @@ const showComment = (e: MouseEvent) => {
     commentScale.value = 0
     rootHeight.value = comment.value!.parentElement!.clientHeight
     rootWidth.value = comment.value!.parentElement!.clientWidth
-    getDocumentComment()
-    ShowComment.value = true
-    showScale.value = true
+    getDocumentComment().then(() => {
+        ShowComment.value = true
+        showScale.value = true
+    })
 }
 
 const unHover = (e: MouseEvent) => {
@@ -174,15 +177,16 @@ const recover = (index?: number) => {
     emit('recover')
     if (index) {
         documentCommentList.value.splice(index, 1)
-    } else {
-        const timer = setTimeout(() => {
-            getDocumentComment()
-            nextTick(() => {
-                props.context.comment.notify(Comment.UPDATE_COMMENT_CHILD)
-            })
-            clearTimeout(timer)
-        }, 100);
     }
+}
+const addComment = (info: any) => {
+    props.context.comment.editTabComment();
+    emit('recover');
+    documentCommentList.value.push(info);
+    const timer = setTimeout(() => {
+        getDocumentComment();
+        clearTimeout(timer);
+    }, 100);
 }
 
 const editComment = (index: number, text: string) => {
@@ -249,11 +253,12 @@ function setOrigin() { // 这个动作是让container与页面坐标系重合
 const getDocumentComment = async () => {
     try {
         const { data } = await comment_api.getDocumentCommentAPI({ doc_id: props.commentInfo.doc_id, root_id: props.commentInfo.id })
-        documentCommentList.value = data.map((item: any) => {
+        const list = data.map((item: any) => {
             item.content = item.content.replaceAll("\r\n", "<br/>").replaceAll("\n", "<br/>").replaceAll(" ", "&nbsp;")
             return item
         })
-        documentCommentList.value = documentCommentList.value.reverse()
+        documentCommentList.value = [];
+        documentCommentList.value = list.reverse();
     } catch (err) {
         console.log(err);
     }
@@ -302,12 +307,13 @@ const docComment = (comment: DocCommentOpData) => {
         }
     } else if (comment.type === DocCommentOpType.Add) {
         if (comment.comment.root_id) {
-            documentCommentList.value.push(comment.comment)
-            props.context.comment.sendComment()
-            documentCommentList.value = [...documentCommentList.value]
+            documentCommentList.value.push(comment.comment);
+            props.context.comment.sendComment();
+            const list = documentCommentList.value.filter(item => item.id !== '1');
+            documentCommentList.value = [...list];
         }
     }
-    props.context.comment.notify(Comment.COMMENT_HANDLE_INPUT)
+    props.context.comment.notify(Comment.UPDATE_COMMENT_CHILD);
 }
 
 const pageSkipComment = () => {
@@ -441,7 +447,7 @@ watchEffect(watcher)
             :index="props.index" @resolve="resolve" @delete="deleteComment" @recover="recover" @editComment="editComment"
             @editCommentChild="editCommentChild" :documentCommentList="documentCommentList"
             @previousArticle="previousArticle" @next-article="nextArticle" :reply="reply"
-            @moveCommentPopup.stop="moveCommentPopup"></CommentPopup>
+            @moveCommentPopup.stop="moveCommentPopup" @addComment="addComment"></CommentPopup>
     </div>
 </template>
 

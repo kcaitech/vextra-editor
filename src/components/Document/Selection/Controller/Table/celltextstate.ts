@@ -26,10 +26,9 @@ export function textState(props: {
                 props.context.cursor.setType('scan-0');
             }
             if (!editing.value) return;
-            // const selection = props.context.selection;
             workspace.setCtrl('controller');
             const root = workspace.root
-            matrix.reset(props.matrix); // parent坐标系？
+            matrix.reset(props.matrix);
             const xy = matrix.inverseCoord(e.clientX - root.x, e.clientY - root.y);
             downIndex = props.shape.text!.locateText(xy.x, xy.y);
             e.stopPropagation();
@@ -41,23 +40,18 @@ export function textState(props: {
             }
         }
     }
-    function be_editor(index?: number) {
+    function be_editor() {
         const workspace = props.context.workspace;
-        const selection = props.context.selection.getTextSelection(props.shape as any);
         editing.value = true;
         workspace.contentEdit(editing.value);
         props.context.cursor.setType('scan-0');
-        if (index !== undefined) {
-            downIndex = { index, before: true };
-            selection.setCursor(index, true);
-        }
     }
     function onMouseUp(e: MouseEvent) {
         e.stopPropagation();
         if (!editing.value) return;
         document.removeEventListener("mousemove", onMouseMove);
         document.removeEventListener("mouseup", onMouseUp);
-        const selection = props.context.selection.getTextSelection(props.shape as any);
+        const selection = props.context.textSelection;
         const workspace = props.context.workspace;
         const { clientX, clientY } = e;
         const root = workspace.root;
@@ -65,11 +59,11 @@ export function textState(props: {
         const xy = matrix.inverseCoord(clientX - root.x, clientY - root.y);
         const locate = props.shape.text!.locateText(xy.x, xy.y);
         if (downIndex.index === locate.index) {
-            if (locate.placeholder) selection.setCursor(locate.index + 1, false);
-            else selection.setCursor(locate.index, locate.before);
+            if (locate.placeholder) selection.setCursor(locate.index + 1, false, props.shape.text);
+            else selection.setCursor(locate.index, locate.before, props.shape.text);
         }
         else {
-            selection.selectText(downIndex.index, locate.index, locate.before);
+            selection.selectText(downIndex.index, locate.index, props.shape.text);
         }
         props.context.workspace.setCtrl('page');
     }
@@ -78,18 +72,18 @@ export function textState(props: {
         e.stopPropagation();
         if (!editing.value) return;
         const workspace = props.context.workspace;
-        const selection = props.context.selection.getTextSelection(props.shape as any);
+        const selection = props.context.textSelection;
         const { clientX, clientY } = e;
         const root = workspace.root;
         matrix.reset(props.matrix);
         const xy = matrix.inverseCoord(clientX - root.x, clientY - root.y);
         const locate = props.shape.text!.locateText(xy.x, xy.y);
         if (downIndex.index === locate.index) {
-            if (locate.placeholder) selection.setCursor(locate.index + 1, false);
-            else selection.setCursor(locate.index, locate.before);
+            if (locate.placeholder) selection.setCursor(locate.index + 1, false, props.shape.text);
+            else selection.setCursor(locate.index, locate.before, props.shape.text);
         }
         else {
-            selection.selectText(downIndex.index, locate.index, locate.before);
+            selection.selectText(downIndex.index, locate.index, props.shape.text);
         }
     }
     function onMouseEnter() {

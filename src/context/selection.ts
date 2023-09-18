@@ -1,4 +1,4 @@
-import { ISave4Restore, TableCell, TableShape, Watchable } from "@kcdesign/data";
+import { ISave4Restore, Matrix, TableShape, Watchable } from "@kcdesign/data";
 import { Document } from "@kcdesign/data";
 import { Page } from "@kcdesign/data";
 import { Shape, Text } from "@kcdesign/data";
@@ -40,7 +40,7 @@ export interface ShapeXY { // 图形自身坐标系的xy
 }
 type TextShapeLike = Shape & { text: Text }
 export type ActionType = 'translate' | 'scale' | 'rotate';
-
+export type TableArea = 'invalid' | 'body' | 'content' | 'hover';
 export class Selection extends Watchable(Object) implements ISave4Restore {
 
     static CHANGE_PAGE = 1;
@@ -57,7 +57,6 @@ export class Selection extends Watchable(Object) implements ISave4Restore {
     static PAGE_SORT = 12;
     static ABOUT_ME = 13;
     static EXTEND = 14;
-    static CHANGE_TABLE_CELL = 15;
 
     private m_selectPage?: Page;
     private m_selectShapes: Shape[] = [];
@@ -71,10 +70,14 @@ export class Selection extends Watchable(Object) implements ISave4Restore {
     private m_select_comment: boolean = false;
     private m_comment_page_sort: boolean = false;
     private m_comment_about_me: boolean = false;
+    private m_table_area: { id: TableArea, area: string }[] = [];
+    private m_context: Context;
 
-    constructor(document: Document) {
+
+    constructor(document: Document, context: Context) {
         super();
         this.m_document = document;
+        this.m_context = context;
     }
     get scout(): Scout | undefined {
         return this.m_scout;
@@ -288,30 +291,35 @@ export class Selection extends Watchable(Object) implements ISave4Restore {
         }
         return shape;
     }
-
+    getArea(p: ClientXY): TableArea {
+        let area: TableArea = 'invalid';
+        if (this.hoveredShape) {
+            let m = this.hoveredShape.matrix2Root(), wm = this.m_context.workspace.matrix;
+            m.multiAtLeft(wm);
+            let path = this.hoveredShape.getPath();
+            path.transform(m);
+            if (this.m_scout!.isPointInPath(path.toString(), p)) return 'hover';
+        }
+        for (let i = 0, len = this.m_table_area.length; i < len; i++) {
+            const a = this.m_table_area[i];
+            if (this.m_scout!.isPointInPath(a.area, p)) {
+                area = a.id; return area;
+            }
+        }
+        return area;
+    }
+    setArea(table_area: { id: TableArea, area: string }[]) {
+        this.m_table_area = table_area;
+    }
     // text
-    private m_textSelection?: TextSelection;
-    getTextSelection(shape: TextShapeLike) {
-        if (!this.m_textSelection || this.m_textSelection.shape.id !== shape.id) {
-            this.m_textSelection = new TextSelection(shape, this);
-        }
-        return this.m_textSelection;
-    }
+    // private m_textSelection?: TextSelection;
+    // getTextSelection(shape: TextShapeLike) {
+    //     if (!this.m_textSelection || this.m_textSelection.shape.id !== shape.id) {
+    //         this.m_textSelection = new TextSelection(shape, this);
+    //     }
+    //     return this.m_textSelection;
+    // }
 
-    // table
-    private m_tableSelection?: TableSelection;
-    private m_tablecell: TableCell[] = [];
-    getTableSelection(shape: TableShape, context: Context) {
-        if (!this.m_tableSelection || this.m_tableSelection.shape.id !== shape.id) {
-            this.m_tableSelection = new TableSelection(shape, context, this);
-        }
-        return this.m_tableSelection;
-    }
-    selectTableCell(cell: TableCell | TableCell[]) {
-        this.m_tablecell = [];
-        this.m_tablecell.concat(cell);
-        this.notify(Selection.CHANGE_TABLE_CELL);
-    }
     save() {
         throw new Error("Method not implemented.");
     }

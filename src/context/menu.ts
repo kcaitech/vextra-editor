@@ -1,5 +1,9 @@
 import { Watchable } from "@kcdesign/data";
-
+export enum CellMenu {
+  MultiSelect = 'multiCells', //多选单元格时
+  SelectRow = 'row', //选中整行单元格
+  selectCol = 'col' //选中整列单元格
+}
 export class Menu extends Watchable(Object) {
   static SHUTDOWN_MENU = 1;
   static SHUTDOWN_POPOVER = 2;
@@ -47,9 +51,9 @@ export class Menu extends Watchable(Object) {
     this.m_user_cursor_visible = visible;
     this.notify(Menu.CHANGE_USER_CURSOR);
   }
-  setSplitCell (mount?: string) {
+  setSplitCell(mount?: string) {
     this.m_split_cell = mount || '';
-    if(mount) {
+    if (mount) {
       this.notify(Menu.OPEN_SPLIT_CELL, mount);
     }
   }

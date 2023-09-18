@@ -52,7 +52,6 @@ const setPosition = () => {
     if (!page) return;
     for (let i = 0; i < userSelectionInfo.value.length; i++) {
         const userSelectInfo = userSelectionInfo.value[i];
-        const hoveredShape: Shape | undefined = props.context.selection.hoveredShape;
         const selection: Shape[] = props.context.selection.selectedShapes;
         if (page.id !== userSelectInfo.select_page_id) continue;
         const shapes: Shape[] = [];
@@ -62,9 +61,9 @@ const setPosition = () => {
             if (shape) shapes.push(shape);
         }
         if (shapes.length === 1) {
-            // if (hoveredShape && hoveredShape.id === shapes[0].id || selection.length > 0 && selection[0].id === shapes[0].id) continue
-            // const s = selection.find(v => v.id === shapes[0].id);
-            // if (s) continue;
+            if (selection.length > 0 && selection[0].id === shapes[0].id && props.context.workspace.isTranslating) continue
+            const s = selection.find(v => v.id === shapes[0].id);
+            if (s && props.context.workspace.isTranslating) continue;
             const shape = (shapes[0] as Shape)
             const m = shape.matrix2Root()
             const frame = shape.frame;
@@ -93,7 +92,7 @@ const setPosition = () => {
             const avatar = userSelectInfo.avatar
             avatars.value.push({ x: anchor.x, y: anchor.y, avatar, shape: shape, rotate, userSelectInfo })
         } else if (shapes.length > 1) {
-            // if (arraysOfObjectsWithIdAreEqual(shapes, selection)) continue;
+            if (arraysOfObjectsWithIdAreEqual(shapes, selection) && props.context.workspace.isTranslating) continue;
             const points: { x: number, y: number }[] = [];
             for (let index = 0; index < shapes.length; index++) {
                 const s = shapes[index];
@@ -170,27 +169,13 @@ const selectionWatcher = (t: number) => {
         setPosition();
     }
 }
-// let isthrottle = true;
-// let timer: any = null;
-// const watcher = () => {
-//     if(isthrottle) {
-//         isthrottle = false;
-//     setOrigin();
-//     setPosition();
-//         timer = setTimeout(() => {
-//             isthrottle = true;
-//             clearTimeout(timer);
-//         }, 300);
-//     }
-// }
 const set_position = throttle(() => {
     setOrigin();
     setPosition();
-}, 50)
+}, 20)
 const watcher = () => {
     set_position()
 }
-
 const watchedShapes = new Map();
 function watchShapes() { // 监听相关shape的变化
     const needWatchShapes = new Map();

@@ -38,6 +38,7 @@ const bounds = reactive({ left: 0, top: 0, right: 0, bottom: 0 }); // viewbox
 const editing = ref<boolean>(false); // 是否进入路径编辑状态
 const visible = ref<boolean>(true);
 function update() {
+    if (!props.context.workspace.shouldSelectionViewUpdate) return;
     const m2p = props.shape.matrix2Root();
     matrix.reset(m2p);
     matrix.multiAtLeft(props.matrix);
@@ -95,7 +96,7 @@ function onMouseDown(e: MouseEvent) {
             props.context.cursor.setType('scan-0');
         }
         if (!editing.value) return;
-        const selection = props.context.selection.getTextSelection(props.shape);
+        const selection = props.context.textSelection;
         workspace.setCtrl('controller');
         const root = workspace.root
         matrix.reset(props.matrix);
@@ -112,7 +113,7 @@ function onMouseDown(e: MouseEvent) {
 }
 function be_editor(index?: number) {
     const workspace = props.context.workspace;
-    const selection = props.context.selection.getTextSelection(props.shape);
+    const selection = props.context.textSelection;
     editing.value = true;
     workspace.contentEdit(editing.value);
     props.context.cursor.setType('scan-0');
@@ -126,7 +127,7 @@ function onMouseUp(e: MouseEvent) {
     if (!editing.value) return;
     document.removeEventListener("mousemove", onMouseMove);
     document.removeEventListener("mouseup", onMouseUp);
-    const selection = props.context.selection.getTextSelection(props.shape);
+    const selection = props.context.textSelection;
     const workspace = props.context.workspace;
     const { clientX, clientY } = e;
     const root = workspace.root;
@@ -134,11 +135,11 @@ function onMouseUp(e: MouseEvent) {
     const xy = matrix.inverseCoord(clientX - root.x, clientY - root.y);
     const locate = selection.locateText(xy.x, xy.y);
     if (downIndex.index === locate.index) {
-        if (locate.placeholder) selection.setCursor(locate.index + 1, false);
-        else selection.setCursor(locate.index, locate.before);
+        if (locate.placeholder) selection.setCursor(locate.index + 1, false, props.shape.text);
+        else selection.setCursor(locate.index, locate.before, props.shape.text);
     }
     else {
-        selection.selectText(downIndex.index, locate.index, locate.before);
+        selection.selectText(downIndex.index, locate.index, props.shape.text);
     }
     props.context.workspace.setCtrl('page');
 }
@@ -147,18 +148,18 @@ function onMouseMove(e: MouseEvent) {
     e.stopPropagation();
     if (!editing.value) return;
     const workspace = props.context.workspace;
-    const selection = props.context.selection.getTextSelection(props.shape);
+    const selection = props.context.textSelection;
     const { clientX, clientY } = e;
     const root = workspace.root;
     matrix.reset(props.matrix);
     const xy = matrix.inverseCoord(clientX - root.x, clientY - root.y);
     const locate = selection.locateText(xy.x, xy.y);
     if (downIndex.index === locate.index) {
-        if (locate.placeholder) selection.setCursor(locate.index + 1, false);
-        else selection.setCursor(locate.index, locate.before);
+        if (locate.placeholder) selection.setCursor(locate.index + 1, false, props.shape.text);
+        else selection.setCursor(locate.index, locate.before, props.shape.text);
     }
     else {
-        selection.selectText(downIndex.index, locate.index, locate.before);
+        selection.selectText(downIndex.index, locate.index, props.shape.text);
     }
 }
 function mouseenter() {
@@ -173,6 +174,7 @@ function genViewBox(bounds: { left: number, top: number, right: number, bottom: 
 function workspace_watcher(t?: number) {
     if (t === WorkSpace.TRANSLATING) visible.value = !props.context.workspace.isTranslating;
     else if (t === WorkSpace.INIT_EDITOR) be_editor(0);
+    else if (t === WorkSpace.SELECTION_VIEW_UPDATE) update();
 }
 function selectionWatcher(...args: any[]) {
     if (args.indexOf(Selection.CHANGE_TEXT) >= 0) update();

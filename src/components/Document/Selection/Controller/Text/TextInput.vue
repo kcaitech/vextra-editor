@@ -1,7 +1,7 @@
 <script setup lang='ts'>
 import { Context } from '@/context';
 import { Matrix, TableShape } from '@kcdesign/data';
-import { Shape, Text} from '@kcdesign/data';
+import { Shape, Text } from '@kcdesign/data';
 import { onUnmounted, ref, watch, onMounted } from 'vue';
 import { Selection } from '@/context/selection';
 import { throttle } from '../../common';
@@ -35,7 +35,7 @@ const updateInputPos = throttle(_updateInputPos, 5);
 function _updateInputPos() {
     if (!inputel.value || !props.shape.text) return;
     // inputel.value.hidden = false;
-    const selection = props.context.selection.getTextSelection(props.shape);
+    const selection = props.context.textSelection;
     // const m2p = props.shape.matrix2Root();
     // matrix.reset(m2p);
     // matrix.multiAtLeft(props.matrix);
@@ -96,11 +96,11 @@ function committext() {
     const text = inputel.value.value;
     if (text.length === 0) return;
 
-    const selection = props.context.selection.getTextSelection(props.shape);
+    const selection = props.context.textSelection;
 
     if (editor.isInComposingInput()) {
         if (editor.composingInputEnd(text)) {
-            selection.setCursor(composingStartIndex + text.length, true);
+            selection.setCursor(composingStartIndex + text.length, true, props.shape.text);
         }
     }
     else {
@@ -113,7 +113,7 @@ function committext() {
         }
         const count = editor.insertText2(text, index, end - index);
         if (count !== 0) {
-            selection.setCursor(index + count, true);
+            selection.setCursor(index + count, true, props.shape.text);
         }
     }
     inputel.value.value = ''
@@ -125,8 +125,8 @@ function oninput(e: Event) {
         if (!inputel.value) return;
         const text = inputel.value.value;
         if (editor.composingInputUpdate(text)) {
-            const selection = props.context.selection.getTextSelection(props.shape);
-            selection.setCursor(composingStartIndex + text.length, true);             
+            const selection = props.context.textSelection;
+            selection.setCursor(composingStartIndex + text.length, true, props.shape.text);
         }
     } else {
         committext();
@@ -136,7 +136,7 @@ function oninput(e: Event) {
 let composingStartIndex = 0;
 function compositionstart(e: Event) {
     if (!inputel.value) return;
-    const selection = props.context.selection.getTextSelection(props.shape);
+    const selection = props.context.textSelection;
     let index = selection.cursorStart;
     let end = selection.cursorEnd;
     if (index > end) {
@@ -152,8 +152,8 @@ function compositionend(e: Event) {
     if (!inputel.value) return;
     const text = inputel.value.value;
     if (editor.composingInputEnd(text)) {
-        const selection = props.context.selection.getTextSelection(props.shape);
-        selection.setCursor(composingStartIndex + text.length, true);
+        const selection = props.context.textSelection;
+        selection.setCursor(composingStartIndex + text.length, true, props.shape.text);
     }
     inputel.value.value = ''
 }

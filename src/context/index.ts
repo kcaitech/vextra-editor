@@ -15,6 +15,8 @@ import { Cursor } from "./cursor";
 import { EscStack } from "./escstack";
 import { Asssit } from "./assist";
 import { TeamWork } from "./teamwork";
+import { TableSelection } from "./tableselection";
+import { TextSelection } from "./textselection";
 // 仅暴露必要的方法
 export class RepoWraper {
     private m_repo: CoopRepository;
@@ -60,7 +62,7 @@ export class Context extends Watchable(Object) {
     private m_escstack: EscStack;
     private m_assist: Asssit;
     private m_teamwork: TeamWork;
-
+    private m_tableselection: TableSelection;
     constructor(data: Document, repo: CoopRepository) {
         super();
         (window as any).__context = this;
@@ -68,7 +70,7 @@ export class Context extends Watchable(Object) {
         this.m_coopRepo = repo;
         this.m_repo = new RepoWraper(this.m_coopRepo);
         this.m_taskMgr = new TaskMgr();
-        this.m_selection = new Selection(data);
+        this.m_selection = new Selection(data, this);
         this.m_workspace = new WorkSpace(this);
         this.m_comment = new Comment();
         this.m_menu = new Menu();
@@ -80,6 +82,8 @@ export class Context extends Watchable(Object) {
         this.m_escstack = new EscStack();
         this.m_assist = new Asssit(this);
         this.m_teamwork = new TeamWork();
+        this.m_tableselection = new TableSelection(this);
+        this.m_textselection = new TextSelection(this.m_selection);
         const pagelist = data.pagesList.slice(0);
         this.m_taskMgr.add(new class implements Task { // page auto loader
             isValid(): boolean {
@@ -133,6 +137,11 @@ export class Context extends Watchable(Object) {
         this.m_textEditor = this.editor.editor4TextShape(shape);
         return this.m_textEditor;
     }
+    peekEditor4TextShape(shape: Shape & { text: Text }): TextShapeEditor | undefined {
+        if (this.m_textEditor && this.m_textEditor.shape.id === shape.id) {
+            return this.m_textEditor;
+        }
+    }
     editor4Table(shape: TableShape): TableEditor {
         return this.editor.editor4Table(shape);
     }
@@ -184,5 +193,11 @@ export class Context extends Watchable(Object) {
     }
     get teamwork() {
         return this.m_teamwork;
+    }
+    get tableSelection() {
+        return this.m_tableselection;
+    }
+    get textSelection() {
+        return this.m_textselection;
     }
 }

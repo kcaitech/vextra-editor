@@ -179,14 +179,14 @@ const setFont = (font: string) => {
 
 //获取选中字体的长度和开始下标
 const getTextIndexAndLen = () => {
-    const selection = props.context.selection.getTextSelection(props.shape);
+    const selection = props.context.textSelection;
     const textIndex = Math.min(selection.cursorEnd, selection.cursorStart)
     const selectLength = Math.abs(selection.cursorEnd - selection.cursorStart)
     return { textIndex, selectLength }
 }
 //判断是否选择文本框还是光标聚焦了
 const isSelectText = () => {
-    const selection = props.context.selection.getTextSelection(props.shape);
+    const selection = props.context.textSelection;
     if ((selection.cursorEnd !== -1) && (selection.cursorStart !== -1)) {
         return false
     } else {
@@ -453,6 +453,18 @@ const selectHiglightColor = () => {
 const selectHiglighAlpha = () => {
     higlighAlpha.value && higlighAlpha.value.select()
 }
+
+const filterAlpha = (a: number) => {
+    let alpha = Math.round(a * 100) / 100;
+    if (Number.isInteger(alpha)) {
+        return alpha.toFixed(0); // 返回整数形式
+    } else if (Math.abs(alpha * 10 - Math.round(alpha * 10)) < Number.EPSILON) {
+        return alpha.toFixed(1); // 保留一位小数
+    } else {
+        return alpha.toFixed(2); // 保留两位小数
+    }
+}
+
 watchEffect(() => {
     textFormat()
 })

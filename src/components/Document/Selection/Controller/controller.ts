@@ -11,7 +11,7 @@ import { WorkSpace } from "@/context/workspace";
 import { Action } from "@/context/tool";
 import { AsyncTransfer } from "@kcdesign/data";
 import { debounce } from "lodash";
-import { paster_short } from '@/utils/clipaboard';
+import { paster_short } from '@/utils/clipboard';
 import { sort_by_layer } from '@/utils/group_ungroup';
 import { Comment } from '@/context/comment';
 import { useI18n } from 'vue-i18n';
@@ -51,6 +51,7 @@ export function useControllerCustom(context: Context, i18nT: Function) {
             if (m && asyncTransfer) {
                 shapes = sort_by_layer(context, shapes);
                 asyncTransfer.migrate(targetParent as GroupShape);
+                context.assist.set_collect_target([targetParent as GroupShape], true);
             }
         }
     }
@@ -95,7 +96,15 @@ export function useControllerCustom(context: Context, i18nT: Function) {
             if (!scout) return;
             const target = groupPassthrough(scout, scope, startPositionOnPage);
             if (target) context.selection.selectShape(target);
-        } else editing = !editing;
+        } else {
+            editing = !editing;
+            context.workspace.contentEdit(editing);
+            if (editing) {
+                console.log('进入编辑状态！');
+            } else {
+                console.log('取消编辑状态！');
+            }
+        }
     }
     function isMouseOnContent(e: MouseEvent): boolean {
         return (e.target as Element)?.closest(`#content`) ? true : false;
@@ -103,22 +112,22 @@ export function useControllerCustom(context: Context, i18nT: Function) {
     function mousedown(e: MouseEvent) {
         if (context.workspace.isEditing) {
             if (isMouseOnContent(e)) {
-                const selected = context.selection.selectedShapes;
-                if (selected.length === 1 && selected[0].type === ShapeType.Text) {
-                    const len = (selected[0] as TextShape).text.length;
-                    const t = (selected[0] as TextShape).text.getText(0, len).replaceAll('\n', '');
+                shapes = context.selection.selectedShapes;
+                if (shapes.length === 1 && shapes[0].type === ShapeType.Text) {
+                    const len = (shapes[0] as TextShape).text.length;
+                    const t = (shapes[0] as TextShape).text.getText(0, len).replaceAll('\n', '');
                     if (t.length) {
-                        const save = selected.slice(0, 1);
+                        const save = shapes.slice(0, 1);
                         context.selection.resetSelectShapes();
                         context.selection.rangeSelectShape(save);
                     } else {
-                        const editor = context.editor4Shape(selected[0]);
+                        const editor = context.editor4Shape(shapes[0]);
                         editor.delete();
                         context.selection.resetSelectShapes();
                     }
+                    return;
                 }
             }
-            return;
         }
         if (context.workspace.isPageDragging) return;
         if (isElement(e)) {
@@ -317,6 +326,8 @@ export function useControllerCustom(context: Context, i18nT: Function) {
     }
     function selection_watcher(t?: number) {
         if (t === Selection.CHANGE_SHAPE) { // 选中的图形发生改变，初始化控件
+            const selected = context.selection.selectedShapes;
+            if (selected.length === 1 && selected[0].type === ShapeType.Table) return dispose();
             initController();
             editing = false;
             context.workspace.contentEdit(false);
@@ -339,6 +350,7 @@ export function useControllerCustom(context: Context, i18nT: Function) {
         context.cursor.cursor_freeze(false);
     }
     function init() {
+        shapes = context.selection.selectedShapes;
         context.workspace.watch(workspace_watcher);
         context.selection.watch(selection_watcher);
         window.addEventListener('blur', windowBlur);

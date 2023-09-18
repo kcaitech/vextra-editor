@@ -2,7 +2,7 @@ import { XY, PageXY } from '@/context/selection';
 import { Matrix, ShapeFrame, Shape, ShapeType } from '@kcdesign/data';
 import { isTarget } from './common';
 import { Context } from '@/context';
-import { Action } from '@/context/tool';
+import { Action, Tool } from '@/context/tool';
 import { sort_by_layer } from './group_ungroup';
 import { WorkSpace } from '@/context/workspace';
 // 寻找一块空白的区域；
@@ -39,10 +39,8 @@ export function landFinderOnPage(pageMatrix: Matrix, context: Context, frame: Sh
                 { x: w, y: h },
                 { x: 0, y: h },
                 { x: 0, y: 0 },
-            ].map(p => m.computeCoord(p.x, p.y));
-            if (isTarget(selectorPoints, ps)) {
-                pure = false; // 存在🍌，不是净土！
-            }
+            ].map(p => m.computeCoord2(p.x, p.y));
+            if (isTarget(selectorPoints, ps) || isTarget(ps as [XY, XY, XY, XY, XY], selectorPoints)) pure = false; // 存在🍌，不是净土！
         }
         !pure && (start.x += offset); // 不是净土，挪一下，再找。
         max++;
@@ -67,6 +65,7 @@ export function scrollToContentView(shape: Shape, context: Context) {
     if (transX || transY) {
         selection.unHoverShape();
         selection.selectShape();
+        context.tool.setTitleVisibale(false);
         const pageViewEl = workspace.pageView;
         if (pageViewEl) {
             pageViewEl.classList.add('transition-400');
@@ -86,6 +85,7 @@ export function scrollToContentView(shape: Shape, context: Context) {
             workspace.matrix.reset(m);
             const timer = setTimeout(() => {
                 selection.selectShape(shape);
+                context.tool.setTitleVisibale(true);
                 pageViewEl.classList.remove('transition-400');
                 clearTimeout(timer);
             }, 400);
@@ -96,19 +96,17 @@ export function scrollToContentView(shape: Shape, context: Context) {
     }
 }
 
-export function insertFrameTemplate(context: Context, name: string) {
-    const selection = context.selection, workspace = context.workspace;
+export function insertFrameTemplate(context: Context) {
+    const selection = context.selection, workspace = context.workspace, tool = context.tool;
     const shapes: Shape[] = selection.selectedPage?.childs || [];
     const type = ShapeType.Artboard;
     const parent = selection.selectedPage;
     if (parent) {
-        const editor = context.editor.editor4Page(parent);
-        const { width, height } = workspace.frameSize;
-        const matrix = workspace.matrix;
-        const frame = new ShapeFrame(0, 0, width, height);
+        const editor = context.editor.editor4Page(parent), tf = tool.frameSize, matrix = workspace.matrix;
+        const frame = new ShapeFrame(0, 0, tf.size.width, tf.size.height);
         const { x, y } = landFinderOnPage(matrix, context, frame);
         frame.x = x, frame.y = y;
-        let artboard: Shape | false = editor.create(type, name, frame);
+        let artboard: Shape | false = editor.create(type, tf.name, frame);
         artboard = editor.insert(parent, shapes.length, artboard);
         if (artboard) {
             const timer = setTimeout(() => {

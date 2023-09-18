@@ -3,9 +3,8 @@ import TypeHeader from '../TypeHeader.vue';
 import { useI18n } from 'vue-i18n';
 import SelectFont from '../Text/SelectFont.vue';
 import { onMounted, ref, onUnmounted, watchEffect, watch } from 'vue';
-import TextAdvancedSettings from '../Text/TextAdvancedSettings.vue'
 import { Context } from '@/context';
-import { TextShape, AttrGetter, TableShape, TableCell, Shape, Text } from "@kcdesign/data";
+import { AttrGetter, TableShape, TableCell, Text } from "@kcdesign/data";
 import Tooltip from '@/components/common/Tooltip.vue';
 import { TextVerAlign, TextHorAlign, Color, UnderlineType, StrikethroughType } from "@kcdesign/data";
 import ColorPicker from '@/components/common/ColorPicker/index.vue';
@@ -14,6 +13,7 @@ import { Selection } from '@/context/selection';
 import { WorkSpace } from '@/context/workspace';
 import { message } from "@/utils/message";
 import TableTextSetting from './TableTextSetting.vue';
+import { TableSelection } from '@/context/tableselection';
 interface Props {
     context: Context
     shape: TableShape
@@ -41,7 +41,7 @@ const highlight = ref<Color>()
 const textSize = ref<HTMLInputElement>()
 const higlightColor = ref<HTMLInputElement>()
 const higlighAlpha = ref<HTMLInputElement>()
-const shape = ref()
+const shape = ref<TableCell & { text: Text; }>()
 // const selection = ref(props.context.selection) 
 
 function toHex(r: number, g: number, b: number) {
@@ -83,6 +83,9 @@ const onShowSizeBlur = (e: Event) => {
         }, 10)
     }
 }
+const cellSelect = (table: TableSelection) => {
+    return { rowStart: table.tableRowStart, rowEnd: table.tableRowEnd, colStart: table.tableColStart, colEnd: table.tableColEnd }
+}
 // 设置加粗
 const onBold = () => {
     isBold.value = !isBold.value
@@ -96,8 +99,14 @@ const onBold = () => {
         }
     } else {
         const table = props.shape;
+        const table_Selection = props.context.tableSelection;
         const editor = props.context.editor4Table(table)
-        editor.setTextBold(isBold.value);
+        if (table_Selection.tableRowStart < 0 || table_Selection.tableColStart < 0) {
+            editor.setTextBold(isBold.value);
+        } else {
+            const cell_selection = cellSelect(table_Selection)
+            editor.setTextBold(isBold.value, cell_selection);
+        }
     }
     textFormat();
 }
@@ -114,8 +123,14 @@ const onTilt = () => {
         }
     } else {
         const table = props.shape;
+        const table_Selection = props.context.tableSelection;
         const editor = props.context.editor4Table(table)
-        editor.setTextItalic(isTilt.value);
+        if (table_Selection.tableRowStart < 0 || table_Selection.tableColStart < 0) {
+            editor.setTextItalic(isTilt.value);
+        } else {
+            const cell_selection = cellSelect(table_Selection)
+            editor.setTextItalic(isTilt.value, cell_selection);
+        }
     }
     textFormat();
 }
@@ -132,8 +147,14 @@ const onUnderlint = () => {
         }
     } else {
         const table = props.shape;
+        const table_Selection = props.context.tableSelection;
         const editor = props.context.editor4Table(table)
-        editor.setTextUnderline(isUnderline.value);
+        if (table_Selection.tableRowStart < 0 || table_Selection.tableColStart < 0) {
+            editor.setTextUnderline(isUnderline.value);
+        } else {
+            const cell_selection = cellSelect(table_Selection)
+            editor.setTextUnderline(isUnderline.value, cell_selection);
+        }
     }
     textFormat();
 }
@@ -150,8 +171,14 @@ const onDeleteline = () => {
         }
     } else {
         const table = props.shape;
+        const table_Selection = props.context.tableSelection;
         const editor = props.context.editor4Table(table)
-        editor.setTextStrikethrough(isDeleteline.value);
+        if (table_Selection.tableRowStart < 0 || table_Selection.tableColStart < 0) {
+            editor.setTextStrikethrough(isDeleteline.value);
+        } else {
+            const cell_selection = cellSelect(table_Selection)
+            editor.setTextStrikethrough(isDeleteline.value, cell_selection);
+        }
     }
     textFormat();
 }
@@ -168,8 +195,14 @@ const onSelectLevel = (icon: TextHorAlign) => {
         }
     } else {
         const table = props.shape;
+        const table_Selection = props.context.tableSelection;
         const editor = props.context.editor4Table(table)
-        editor.setTextHorAlign(icon);
+        if (table_Selection.tableRowStart < 0 || table_Selection.tableColStart < 0) {
+            editor.setTextHorAlign(icon);
+        } else {
+            const cell_selection = cellSelect(table_Selection)
+            editor.setTextHorAlign(icon, cell_selection);
+        }
     }
     textFormat();
 }
@@ -181,8 +214,14 @@ const onSelectVertical = (icon: TextVerAlign) => {
         editor.setTextVerAlign(icon)
     } else {
         const table = props.shape;
+        const table_Selection = props.context.tableSelection;
         const editor = props.context.editor4Table(table)
-        editor.setTextVerAlign(icon);
+        if (table_Selection.tableRowStart < 0 || table_Selection.tableColStart < 0) {
+            editor.setTextVerAlign(icon);
+        } else {
+            const cell_selection = cellSelect(table_Selection)
+            editor.setTextVerAlign(icon, cell_selection);
+        }
     }
     textFormat();
 }
@@ -200,8 +239,14 @@ const changeTextSize = (size: number) => {
         }
     } else {
         const table = props.shape;
+        const table_Selection = props.context.tableSelection;
         const editor = props.context.editor4Table(table)
-        editor.setTextFontSize(size);
+        if (table_Selection.tableRowStart < 0 || table_Selection.tableColStart < 0) {
+            editor.setTextFontSize(size);
+        } else {
+            const cell_selection = cellSelect(table_Selection)
+            editor.setTextFontSize(size, cell_selection);
+        }
     }
     textFormat();
 }
@@ -219,15 +264,21 @@ const setFont = (font: string) => {
         }
     } else {
         const table = props.shape;
+        const table_Selection = props.context.tableSelection;
         const editor = props.context.editor4Table(table)
-        editor.setTextFontName(font)
+        if (table_Selection.tableRowStart < 0 || table_Selection.tableColStart < 0) {
+            editor.setTextFontName(font);
+        } else {
+            const cell_selection = cellSelect(table_Selection)
+            editor.setTextFontName(font, cell_selection);
+        }
     }
     textFormat();
 }
 
 //获取选中字体的长度和开始下标
 const getTextIndexAndLen = () => {
-    const selection = props.context.selection.getTextSelection(shape.value!);
+    const selection = props.context.textSelection;
     const textIndex = Math.min(selection.cursorEnd, selection.cursorStart);
     const selectLength = Math.abs(selection.cursorEnd - selection.cursorStart);
     return { textIndex, selectLength };
@@ -235,7 +286,7 @@ const getTextIndexAndLen = () => {
 //判断是否选择文本框还是光标聚焦了
 const isSelectText = () => {
     if (shape.value) {
-        const selection = props.context.selection.getTextSelection(shape.value);
+        const selection = props.context.textSelection;
         if ((selection.cursorEnd !== -1) && (selection.cursorStart !== -1)) {
             return false;
         } else {
@@ -265,10 +316,10 @@ const shapeWatch = watch(() => props.shape, (value, old) => {
 
 // 获取当前文字格式
 const textFormat = () => {
-    const table = props.context.selection.getTableSelection(props.shape, props.context);
-    if((table.tableColEnd === table.tableRowEnd) && table.tableRowEnd !== -1) {
+    const table = props.context.tableSelection;
+    if (table.editingCell) {
+        shape.value = table.editingCell?.cell as TableCell & { text: Text; };
         // 拿到某个单元格
-        shape.value = (Array.from(table.getSelectedCells()))[0];
         if (!shape.value || !shape.value.text) return;
         const { textIndex, selectLength } = getTextIndexAndLen();
         const editor = props.context.editor4TextShape(shape.value);
@@ -298,13 +349,17 @@ const textFormat = () => {
         if (format.strikethroughIsMulti) isDeleteline.value = false;
         props.context.workspace.focusText();
     } else {
+        let cells: (TableCell | undefined)[] = []
+        if (table.tableRowStart < 0 || table.tableColStart < 0) {
+            cells = props.shape.childs
+        } else {
+            cells = table.getSelectedCells(true).map(item => item.cell);
+        }
         shape.value = undefined
-        const shapeTable = props.shape;
-        const cells = Array.from(shapeTable.childs);
         const formats: any[] = [];
         for (let i = 0; i < cells.length; i++) {
             const cell = cells[i];
-            if (cell.text) {
+            if (cell && cell.text) {
                 const editor = props.context.editor4TextShape(cell as any);
                 const forma = (cell.text as Text).getTextFormat(0, Infinity, editor.getCachedSpanAttr());
                 formats.push(forma);
@@ -372,8 +427,8 @@ function selection_wather(t: number) {
 }
 function workspace_wather(t: number) {
     if (t === WorkSpace.BOLD) {
-        onBold();
     } else if (t === WorkSpace.UNDER_LINE) {
+        onBold();
         onUnderlint();
     } else if (t === WorkSpace.DELETE_LINE) {
         onDeleteline();
@@ -382,6 +437,9 @@ function workspace_wather(t: number) {
     } else if (t === WorkSpace.SELECTION_VIEW_UPDATE) {
         textFormat();
     }
+}
+function table_selection_watcher(t: number) {
+    if (t === TableSelection.CHANGE_EDITING_CELL || TableSelection.CHANGE_TABLE_CELL) textFormat();
 }
 function onAlphaChange(e: Event, type: string) {
     let value = (e.currentTarget as any)['value'];
@@ -475,6 +533,8 @@ function onColorChange(e: Event, type: string) {
     }
 }
 function getColorFromPicker(color: Color, type: string) {
+    console.log(shape.value, 'shape.value');
+
     if (shape.value) {
         const editor = props.context.editor4TextShape(shape.value);
         const { textIndex, selectLength } = getTextIndexAndLen();
@@ -492,12 +552,24 @@ function getColorFromPicker(color: Color, type: string) {
             }
         }
     } else {
+        console.log(11);
+
         const table = props.shape;
+        const table_Selection = props.context.tableSelection;
         const editor = props.context.editor4Table(table)
-        if (type === 'color') {
-            editor.setTextColor(color);
+        if (table_Selection.tableRowStart < 0 || table_Selection.tableColStart < 0) {
+            if (type === 'color') {
+                editor.setTextColor(color);
+            } else {
+                editor.setTextHighlightColor(color);
+            }
         } else {
-            editor.setTextHighlightColor(color);
+            const cell_selection = cellSelect(table_Selection)
+            if (type === 'color') {
+                editor.setTextColor(color, cell_selection);
+            } else {
+                editor.setTextHighlightColor(color, cell_selection);
+            }
         }
     }
     textFormat();
@@ -530,11 +602,21 @@ function setColor(idx: number, clr: string, alpha: number, type: string) {
         }
     } else {
         const table = props.shape;
+        const table_Selection = props.context.tableSelection;
         const editor = props.context.editor4Table(table)
-        if (type === 'color') {
-            editor.setTextColor(new Color(alpha, r, g, b))
+        if (table_Selection.tableRowStart < 0 || table_Selection.tableColStart < 0) {
+            if (type === 'color') {
+                editor.setTextColor(new Color(alpha, r, g, b))
+            } else {
+                editor.setTextHighlightColor(new Color(alpha, r, g, b));
+            }
         } else {
-            editor.setTextHighlightColor(new Color(alpha, r, g, b));
+            const cell_selection = cellSelect(table_Selection)
+            if (type === 'color') {
+                editor.setTextColor(new Color(alpha, r, g, b), cell_selection)
+            } else {
+                editor.setTextHighlightColor(new Color(alpha, r, g, b), cell_selection);
+            }
         }
     }
     textFormat();
@@ -551,8 +633,14 @@ const deleteHighlight = () => {
         }
     } else {
         const table = props.shape;
+        const table_Selection = props.context.tableSelection;
         const editor = props.context.editor4Table(table)
-        editor.setTextHighlightColor(undefined)
+        if (table_Selection.tableRowStart < 0 || table_Selection.tableColStart < 0) {
+            editor.setTextHighlightColor(undefined);
+        } else {
+            const cell_selection = cellSelect(table_Selection)
+            editor.setTextHighlightColor(undefined, cell_selection);
+        }
     }
     textFormat();
 }
@@ -568,8 +656,14 @@ const addHighlight = () => {
         }
     } else {
         const table = props.shape;
+        const table_Selection = props.context.tableSelection;
         const editor = props.context.editor4Table(table)
-        editor.setTextHighlightColor(new Color(1, 216, 216, 216))
+        if (table_Selection.tableRowStart < 0 || table_Selection.tableColStart < 0) {
+            editor.setTextHighlightColor(new Color(1, 216, 216, 216));
+        } else {
+            const cell_selection = cellSelect(table_Selection)
+            editor.setTextHighlightColor(new Color(1, 216, 216, 216), cell_selection);
+        }
     }
     textFormat();
 }
@@ -584,9 +678,16 @@ const addTextColor = () => {
         }
     } else {
         const table = props.shape;
+        const table_Selection = props.context.tableSelection;
         const editor = props.context.editor4Table(table)
-        editor.setTextColor(new Color(1, 6, 6, 6))
+        if (table_Selection.tableRowStart < 0 || table_Selection.tableColStart < 0) {
+            editor.setTextColor(new Color(1, 6, 6, 6));
+        } else {
+            const cell_selection = cellSelect(table_Selection)
+            editor.setTextColor(new Color(1, 6, 6, 6), cell_selection);
+        }
     }
+    textFormat();
 }
 const selectSizeValue = () => {
     textSize.value && textSize.value.select();
@@ -610,11 +711,13 @@ onMounted(() => {
     props.shape.watch(textFormat);
     props.context.selection.watch(selection_wather);
     props.context.workspace.watch(workspace_wather);
+    props.context.tableSelection.watch(table_selection_watcher);
 })
 onUnmounted(() => {
     props.context.selection.unwatch(selection_wather);
     props.context.workspace.unwatch(workspace_wather);
     props.shape.unwatch(textFormat);
+    props.context.tableSelection.unwatch(table_selection_watcher);
     shapeWatch();
 })
 </script>

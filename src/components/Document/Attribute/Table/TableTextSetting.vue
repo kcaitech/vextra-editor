@@ -4,8 +4,9 @@ import { ref, onMounted, onUnmounted, watch } from 'vue';
 import { useI18n } from 'vue-i18n';
 import { Context } from '@/context';
 import Tooltip from '@/components/common/Tooltip.vue';
-import { AttrGetter, TextShape, TextTransformType, TextBehaviour, TableShape, BulletNumbersType, TableCell } from "@kcdesign/data";
+import { AttrGetter, TextTransformType, TableShape, TableCell } from "@kcdesign/data";
 import { Selection } from '@/context/selection';
+import { TableSelection } from '@/context/tableselection';
 const { t } = useI18n();
 interface Props {
   context: Context,
@@ -21,12 +22,12 @@ const paragraphSpace = ref()
 const charSpacing = ref<HTMLInputElement>()
 const lineHeight = ref<HTMLInputElement>()
 const paraSpacing = ref<HTMLInputElement>()
-const shape = ref()
+const shape = ref<TableCell & { text: Text; }>()
 // const selection = ref(props.context.selection)
 
 //获取选中字体的长度和下标
 const getTextIndexAndLen = () => {
-  const selection = props.context.selection.getTextSelection(shape.value!);
+  const selection = props.context.textSelection;
   const textIndex = Math.min(selection.cursorEnd, selection.cursorStart)
   const selectLength = Math.abs(selection.cursorEnd - selection.cursorStart)
   return { textIndex, selectLength }
@@ -35,6 +36,10 @@ const getTextIndexAndLen = () => {
 function showMenu() {
   popover.value.show();
   props.context.workspace.focusText()
+}
+
+const cellSelect = (table: TableSelection) => {
+  return { rowStart: table.tableRowStart, rowEnd: table.tableRowEnd, colStart: table.tableColStart, colEnd: table.tableColEnd }
 }
 
 const onSelectCase = (icon: TextTransformType) => {
@@ -49,8 +54,14 @@ const onSelectCase = (icon: TextTransformType) => {
     }
   } else {
     const table = props.textShape;
-    const editor = props.context.editor4Table(table);
-    editor.setTextTransform(icon);
+    const table_Selection = props.context.tableSelection;
+    const editor = props.context.editor4Table(table)
+    if (table_Selection.tableRowStart < 0 || table_Selection.tableColStart < 0) {
+      editor.setTextTransform(icon);
+    } else {
+      const cell_selection = cellSelect(table_Selection)
+      editor.setTextTransform(icon, cell_selection);
+    }
   }
   props.context.workspace.focusText();
 }
@@ -75,8 +86,14 @@ const setRowHeight = () => {
   } else {
     if (!isNaN(Number(rowHeight.value))) {
       const table = props.textShape;
-      const editor = props.context.editor4Table(table);
-      editor.setLineHeight(Number(rowHeight.value));
+      const table_Selection = props.context.tableSelection;
+      const editor = props.context.editor4Table(table)
+      if (table_Selection.tableRowStart < 0 || table_Selection.tableColStart < 0) {
+        editor.setLineHeight(Number(rowHeight.value));
+      } else {
+        const cell_selection = cellSelect(table_Selection)
+        editor.setLineHeight(Number(rowHeight.value), cell_selection);
+      }
     } else {
       textFormat();
     }
@@ -104,8 +121,14 @@ const setWordSpace = () => {
   } else {
     if (!isNaN(Number(wordSpace.value))) {
       const table = props.textShape;
-      const editor = props.context.editor4Table(table);
-      editor.setCharSpacing(Number(wordSpace.value));
+      const table_Selection = props.context.tableSelection;
+      const editor = props.context.editor4Table(table)
+      if (table_Selection.tableRowStart < 0 || table_Selection.tableColStart < 0) {
+        editor.setCharSpacing(Number(wordSpace.value));
+      } else {
+        const cell_selection = cellSelect(table_Selection)
+        editor.setCharSpacing(Number(wordSpace.value), cell_selection);
+      }
     } else {
       textFormat();
     }
@@ -129,8 +152,14 @@ const setParagraphSpace = () => {
   } else {
     if (!isNaN(Number(paragraphSpace.value))) {
       const table = props.textShape;
-      const editor = props.context.editor4Table(table);
-      editor.setParaSpacing(Number(paragraphSpace.value));
+      const table_Selection = props.context.tableSelection;
+      const editor = props.context.editor4Table(table)
+      if (table_Selection.tableRowStart < 0 || table_Selection.tableColStart < 0) {
+        editor.setParaSpacing(Number(paragraphSpace.value));
+      } else {
+        const cell_selection = cellSelect(table_Selection)
+        editor.setParaSpacing(Number(paragraphSpace.value), cell_selection);
+      }
     } else {
       textFormat();
     }
@@ -140,7 +169,7 @@ const setParagraphSpace = () => {
 //判断是否选择文本框还是光标聚焦了
 const isSelectText = () => {
   if (shape.value) {
-    const selection = props.context.selection.getTextSelection(shape.value);
+    const selection = props.context.textSelection;
     if ((selection.cursorEnd !== -1) && (selection.cursorStart !== -1)) {
       return false
     } else {
@@ -165,9 +194,10 @@ const shapeWatch = watch(() => props.textShape, (value, old) => {
 })
 
 const textFormat = () => {
-  const table = props.context.selection.getTableSelection(props.textShape, props.context);
-  if ((table.tableColEnd === table.tableRowEnd) && table.tableRowEnd !== -1) {
-    shape.value = (Array.from(table.getSelectedCells()))[0];
+  const table = props.context.tableSelection;
+  if (table.editingCell) {
+    shape.value = table.editingCell?.cell as TableCell & { text: Text; };
+    // 拿到某个单元格
     if (!shape.value || !shape.value.text) return;
     const { textIndex, selectLength } = getTextIndexAndLen();
     const editor = props.context.editor4TextShape(shape.value);
@@ -186,12 +216,17 @@ const textFormat = () => {
     if (format.paraSpacingIsMulti) paragraphSpace.value = `${t('attr.more_value')}`;
     if (format.transformIsMulti) selectCase.value = '';
   } else {
-    const shape = props.textShape;
-    const cells = Array.from(shape.childs);
+    let cells: (TableCell | undefined)[] = []
+    if (table.tableRowStart < 0 || table.tableColStart < 0) {
+      cells = props.textShape.childs
+    } else {
+      cells = table.getSelectedCells(true).map(item => item.cell);
+    }
+    shape.value = undefined
     const formats: any[] = [];
     for (let i = 0; i < cells.length; i++) {
       const cell = cells[i];
-      if (cell.text) {
+      if (cell && cell.text) {
         const editor = props.context.editor4TextShape(cell as any);
         const forma = cell.text.getTextFormat(0, Infinity, editor.getCachedSpanAttr());
         formats.push(forma);
@@ -233,26 +268,30 @@ const textFormat = () => {
 function selection_wather(t: any) {
   if (t === Selection.CHANGE_TEXT) {
     textFormat();
-  }
-  if (t === Selection.CHANGE_SHAPE) {
+  } else if (t === Selection.CHANGE_SHAPE) {
     textFormat();
   }
+}
+function table_selection_watcher(t: any) {
+  if (t === TableSelection.CHANGE_EDITING_CELL || TableSelection.CHANGE_TABLE_CELL) textFormat();
 }
 
 onMounted(() => {
   textFormat();
   props.textShape.watch(textFormat);
   props.context.selection.watch(selection_wather);
+  props.context.tableSelection.watch(table_selection_watcher);
 })
 onUnmounted(() => {
   props.context.selection.unwatch(selection_wather);
   props.textShape.unwatch(textFormat);
+  props.context.tableSelection.unwatch(table_selection_watcher);
   shapeWatch();
 })
 </script>
 
 <template>
-  <div class="text-detail-container">
+  <div class="text-detail-container" @click.stop @mousedown.stop>
     <Popover :context="props.context" class="popover" ref="popover" :width="220" height="auto" :left="-450"
       :title="t('attr.text_advanced_settings')">
       <template #trigger>

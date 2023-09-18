@@ -6,7 +6,7 @@ import { Action, ResultByAction } from "@/context/tool";
 import { Perm, WorkSpace } from '@/context/workspace';
 import { XYsBounding } from '@/utils/common';
 import { searchCommentShape as finder } from '@/utils/comment'
-import { paster_image } from "./clipaboard";
+import { paster_image } from "./clipboard";
 import { landFinderOnPage, scrollToContentView } from './artboardFn'
 export interface Media {
   name: string
@@ -169,7 +169,7 @@ export function init_insert_shape2(context: Context, mousedownOnPageXY: PageXY, 
 function init_insert_table(context: Context, t: Function, land?: Shape, _t?: ShapeType) {
   const tool = context.tool;
   const action = tool.action;
-  const table = context.workspace.tableSize;
+  const table = context.tool.tableSize;
   const matrix = context.workspace.matrix;
   const frame = new ShapeFrame(0, 0, table.col * 80, table.row * 30);
   const { x, y } = landFinderOnPage(matrix, context, frame)
@@ -220,13 +220,13 @@ function init_insert_textshape(context: Context, mousedownOnPageXY: PageXY, cont
   if (asyncCreator && new_shape) {
     asyncCreator = asyncCreator.close();
     selection.selectShape(page!.getShape(new_shape.id));
-    selection.getTextSelection(new_shape as TextShape).selectText(0, (new_shape as TextShape).text.length);
+    context.textSelection.selectText(0, (new_shape as TextShape).text.length, (new_shape as TextShape).text);
   }
   workspace.creating(false);
   context.tool.setAction(Action.AutoV);
   context.cursor.setType('auto-0');
 }
-// 图片从init到inset一气呵成
+// 图片从init到insert
 function init_insert_image(context: Context, mousedownOnPageXY: PageXY, t: Function, media: Media) {
   const selection = context.selection;
   const page = selection.selectedPage;
@@ -420,11 +420,12 @@ function page_scale(context: Context, scale: number) {
 function right_select(e: MouseEvent, p: PageXY, context: Context): 'text-selection' | 'controller' | 'group' | 'artboard' | 'null' | 'normal' | 'table' | 'table_cell' {
   const is_edting = context.workspace.isEditing;
   const area_0 = finder(context, p);
-  if(area_0.length && area_0[0].type === ShapeType.Table) {
-    const table = context.selection.getTableSelection(area_0[0] as TableShape, context);
-    if ((e.target as Element).closest('#text-selection') && is_edting) {
+  if (area_0.length && area_0[0].type === ShapeType.Table) {
+    const table = context.tableSelection;
+    if (table.editingCell) {
+      console.log('table进来的');
       return 'table';
-    }else if (table.tableRowEnd > -1) {
+    } else if (table.tableRowEnd > -1) {
       return 'table_cell';
     }
   }
@@ -544,13 +545,24 @@ function get_menu_items(context: Context, area: "controller" | "text-selection" 
     }
   } else if (area === 'text-selection') {
     if (permIsEdit(context)) {
-      contextMenuItems = ['all', 'copy', 'cut', 'paste', 'only_text'];
+      const selection = context.textSelection;
+      if (selection.cursorStart === selection.cursorEnd) {
+        contextMenuItems = ['all', 'paste', 'only_text'];
+      } else {
+        contextMenuItems = ['all', 'copy', 'cut', 'paste', 'only_text'];
+      }
     } else {
       contextMenuItems = ['all', 'copy'];
     }
   } else if (area === 'table') {
     if (permIsEdit(context)) {
-      contextMenuItems = ['all', 'copy', 'cut', 'paste', 'only_text', 'insert_column', 'delete_column', 'split_cell'];
+      const selection = context.textSelection;
+      if (selection.cursorStart === selection.cursorEnd) {
+        contextMenuItems = ['all', 'paste', 'only_text', 'insert_column', 'delete_column', 'split_cell'];
+
+      } else {
+        contextMenuItems = ['all', 'copy', 'cut', 'paste', 'only_text', 'insert_column', 'delete_column', 'split_cell'];
+      }
     } else {
       contextMenuItems = ['all', 'copy'];
     }
@@ -562,11 +574,11 @@ function get_menu_items(context: Context, area: "controller" | "text-selection" 
     }
   } else {
     if (permIsEdit(context)) {
-      // contextMenuItems = ['all', 'paste-here', 'half', 'hundred', 'double', 'canvas', 'operation', 'comment', 'title'];
-      contextMenuItems = ['all', 'paste-here', 'half', 'hundred', 'double', 'canvas', 'operation', 'comment', 'cursor'];
+      contextMenuItems = ['all', 'paste-here', 'half', 'hundred', 'double', 'canvas', 'operation', 'comment', 'cursor', 'title'];
+      // contextMenuItems = ['all', 'paste-here', 'half', 'hundred', 'double', 'canvas', 'operation', 'comment', 'cursor'];
     } else {
-      // contextMenuItems = ['all', 'half', 'hundred', 'double', 'canvas', 'operation', 'comment', 'title'];
-      contextMenuItems = ['all', 'half', 'hundred', 'double', 'canvas', 'operation', 'comment', 'cursor'];
+      contextMenuItems = ['all', 'half', 'hundred', 'double', 'canvas', 'operation', 'comment', 'cursor', 'title'];
+      // contextMenuItems = ['all', 'half', 'hundred', 'double', 'canvas', 'operation', 'comment', 'cursor'];
     }
   }
   return contextMenuItems;
