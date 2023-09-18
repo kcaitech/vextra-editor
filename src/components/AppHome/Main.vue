@@ -24,6 +24,13 @@ const highlight = (state: boolean) => {
     active.value = state;
 }
 
+watch(() => route.name, () => {
+    if (route.name === "recyclebin") {
+        highlight(false)
+    } else {
+        highlight(true)
+    }
+})
 
 onMounted(() => {
     if (route.name === "recyclebin") {
@@ -80,6 +87,7 @@ onMounted(() => {
         }
     }
 }
+
 .main {
     overflow: hidden;
 }
