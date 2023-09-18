@@ -286,30 +286,51 @@ function get_t(p1: PageXY, p2: PageXY): PageXY {
     const pre_delta = { x: p2.x - p1.x, y: p2.y - p1.y }, f = props.shape.frame, r = f.width / f.height;
     return m.computeCoord(f.width + pre_delta.x, f.height + pre_delta.x * (1 / r));
 }
+let pre_target_x: number, pre_target_y: number;
 function scale(asyncBaseAction: AsyncBaseAction, p2: PageXY) {
     const stickness = props.context.assist.stickness;
-    const target = props.context.assist.point_match(props.shape, pointType);
-    if (target) {
-        if (stickedX2) {
-            if (Math.abs(p2.x - sticked_x_v) > stickness) stickedX2 = false;
-            else p2.x = sticked_x_v;
-        } else if (target.sticked_by_x) {
-            p2.x = target.x;
-            sticked_x_v = p2.x;
-            stickedX2 = true;
+    const target = props.context.assist.point_match(p2);
+    if (!target) return asyncBaseAction.executeScale(CtrlElementType.RectRB, p2);
+    if (stickedX) {
+        if (Math.abs(p2.x - sticked_x_v) > stickness) {
+            stickedX = false
+        } else {
+            if (pre_target_x === target.x) {
+                p2.x = sticked_x_v;
+            } else {
+                modify_fix_x(p2, target.x);
+            }
         }
-        if (stickedY2) {
-            if (Math.abs(p2.y - sticked_y_v) > stickness) stickedY2 = false;
-            else p2.y = sticked_y_v;
-        } else if (target.sticked_by_y) {
-            p2.y = target.y;
-            sticked_y_v = p2.y;
-            stickedY2 = true;
+    } else if (target.sticked_by_x) {
+        modify_fix_x(p2, target.x);
+    }
+    if (stickedY) {
+        if (Math.abs(p2.y - sticked_y_v) > stickness) {
+            stickedY = false;
+        } else {
+            if (pre_target_y === target.x) {
+                p2.y = sticked_y_v;
+            } else {
+                modify_fix_y(p2, target.y);
+            }
         }
+    } else if (target.sticked_by_y) {
+        modify_fix_y(p2, target.y);
     }
     asyncBaseAction.executeScale(CtrlElementType.RectRB, p2);
 }
-
+function modify_fix_x(p2: PageXY, fix: number) {
+    p2.x = fix;
+    sticked_x_v = p2.x;
+    stickedX = true;
+    pre_target_x = fix;
+}
+function modify_fix_y(p2: PageXY, fix: number) {
+    p2.y = fix;
+    sticked_y_v = p2.y;
+    stickedY = true;
+    pre_target_y = fix;
+}
 function window_blur() {
     const workspace = props.context.workspace;
     if (isDragging) {
