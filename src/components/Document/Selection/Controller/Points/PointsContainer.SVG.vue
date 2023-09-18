@@ -155,7 +155,7 @@ function scale(asyncBaseAction: AsyncBaseAction, p2: PageXY) {
   const target = props.context.assist.point_match(p2);
   if (!target) return asyncBaseAction.executeScale(cur_ctrl_type, p2);
   if (stickedX) {
-    if (Math.abs(p2.x - sticked_x_v) > stickness) {
+    if (Math.abs(p2.x - sticked_x_v) >= stickness) {
       stickedX = false
     } else {
       if (pre_target_x === target.x) {
@@ -168,7 +168,7 @@ function scale(asyncBaseAction: AsyncBaseAction, p2: PageXY) {
     modify_fix_x(p2, target.x);
   }
   if (stickedY) {
-    if (Math.abs(p2.y - sticked_y_v) > stickness) {
+    if (Math.abs(p2.y - sticked_y_v) >= stickness) {
       stickedY = false;
     } else {
       if (pre_target_y === target.x) {

@@ -101,7 +101,7 @@ export function is_equal(a: number, b: number) {
 /**
  * @description 收集时使用
  */
-export function update_pg_1(host: Shape): PointGroup1 {
+export function colloct_point_group(host: Shape): PointGroup1 {
     const m = host.matrix2Root(), f = host.frame;
     const lt = m.computeCoord2(0, 0);
     const rb = m.computeCoord2(f.width, f.height);
@@ -130,13 +130,34 @@ export function update_pg_1(host: Shape): PointGroup1 {
 /**
  * @description 比对时使用
  */
-export function update_pg_2(host: Shape, multi?: boolean): PointGroup2 {
+export function gen_match_points(host: Shape, multi?: boolean): PointGroup2 {
     const m = host.matrix2Root(), f = host.frame;
     const lt = m.computeCoord2(0, 0);
     const rb = m.computeCoord2(f.width, f.height);
     const pivot = m.computeCoord2(f.width / 2, f.height / 2);
     const rt = m.computeCoord2(f.width, 0);
     const lb = m.computeCoord2(0, f.height);
+    const apexX = [lt.x, rt.x, rb.x, lb.x, pivot.x];
+    const apexY = [lt.y, rt.y, rb.y, lb.y, pivot.y];
+    const pg: PointGroup2 = { lt, rt, rb, lb, pivot };
+    if (multi) {
+        pg.top = Math.min(...apexY), pg.right = Math.max(...apexX), pg.bottom = Math.max(...apexY), pg.left = Math.min(...apexX), pg.cy = pivot.y, pg.cx = pivot.x;
+    }
+    return pg;
+}
+export interface PointsOffset {
+    lt: PageXY
+    rb: PageXY
+    pivot: PageXY
+    rt: PageXY
+    lb: PageXY
+}
+export function gen_match_points_by_map(offset: PointsOffset, p: PageXY, multi?: boolean) {
+    const lt = { x: p.x + offset.lt.x, y: p.y + offset.lt.y };
+    const rb = { x: p.x + offset.rb.x, y: p.y + offset.rb.y };
+    const pivot = { x: p.x + offset.pivot.x, y: p.y + offset.pivot.y };
+    const rt = { x: p.x + offset.rt.x, y: p.y + offset.rt.y };
+    const lb = { x: p.x + offset.lb.x, y: p.y + offset.lb.y };
     const apexX = [lt.x, rt.x, rb.x, lb.x, pivot.x];
     const apexY = [lt.y, rt.y, rb.y, lb.y, pivot.y];
     const pg: PointGroup2 = { lt, rt, rb, lb, pivot };
@@ -161,7 +182,7 @@ export function finder(context: Context, scope: GroupShape, all_pg: Map<string, 
     let result: Shape[] = [];
     if (scope.type === ShapeType.Artboard) {
         result.push(scope);
-        const pg = update_pg_1(scope);
+        const pg = colloct_point_group(scope);
         all_pg.set(scope.id, pg);
         const pvs = Object.values(pg);
         for (let i = 0, len = pvs.length; i < len; i++) {
@@ -177,7 +198,7 @@ export function finder(context: Context, scope: GroupShape, all_pg: Map<string, 
         const c = cs[i];
         if (isShapeOut(context, c) || c.type === ShapeType.Contact) continue;
         result.push(c);
-        const pg = update_pg_1(c);
+        const pg = colloct_point_group(c);
         all_pg.set(c.id, pg);
         const pvs = Object.values(pg);
         for (let i = 0, len = pvs.length; i < len; i++) {

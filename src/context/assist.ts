@@ -1,7 +1,7 @@
 import { GroupShape, Shape, Watchable } from "@kcdesign/data";
 import { PageXY, Selection } from "./selection";
 import { Context } from ".";
-import { finder, getClosestAB, get_frame, get_pg_by_frame, get_tree, modify_pt_x, modify_pt_x4create, modify_pt_x4p, modify_pt_y, modify_pt_y4create, modify_pt_y4p, update_pg_2 } from "@/utils/assist";
+import { finder, getClosestAB, get_frame, get_pg_by_frame, get_tree, modify_pt_x, modify_pt_x4create, modify_pt_x4p, modify_pt_y, modify_pt_y4create, modify_pt_y4p, gen_match_points, gen_match_points_by_map, PointsOffset } from "@/utils/assist";
 export interface PointGroup1 {
     lt: PageXY
     rb: PageXY
@@ -172,12 +172,12 @@ export class Asssit extends Watchable(Object) {
             for (let i = 0, len = shapes.length; i < len; i++) get_tree(shapes[i], this.m_except);
         }
     }
-    trans_match(s: Shape) {
+    trans_match(offsetMap: PointsOffset, p: PageXY) {
         // const st = Date.now();
         if (!this.m_except.size) return;
         this.m_nodes_x = [];
         this.m_nodes_y = [];
-        this.m_current_pg = update_pg_2(s);
+        this.m_current_pg = gen_match_points_by_map(offsetMap, p);
         const target = { x: 0, y: 0, sticked_by_x: false, sticked_by_y: false, alignX: Align.LT_X, alignY: Align.LT_Y };
         const pre_target1: PT1 = { x: 0, sy: 0, align: Align.LT_X, delta: undefined };
         const pre_target2: PT2 = { y: 0, sx: 0, align: Align.LT_Y, delta: undefined };
@@ -238,7 +238,7 @@ export class Asssit extends Watchable(Object) {
         if (!this.m_except.size) return;
         this.m_nodes_x = [];
         this.m_nodes_y = [];
-        // this.m_current_pg = update_pg_2(s);  // *
+        // this.m_current_pg = gen_match_points(s);  // *
         const target = { x: 0, y: 0, sticked_by_x: false, sticked_by_y: false };
         const pre_target1: PT4P1 = { x: 0, sy: 0, delta: undefined };
         const pre_target2: PT4P2 = { y: 0, sx: 0, delta: undefined };
