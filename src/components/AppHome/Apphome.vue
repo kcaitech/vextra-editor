@@ -9,7 +9,7 @@
           <Aside @settitle="setTitle" />
         </el-aside>
         <el-main>
-          <Main  @dataUpdate="update" />
+          <Main @dataUpdate="update" />
         </el-main>
       </el-container>
     </el-container>
@@ -48,7 +48,7 @@ const is_favor = ref<boolean>();
 const is_team_upodate = ref<boolean>(false);
 const activeNames = ref<any[]>([-1])
 const targetItem = ref<any[]>([])
-const recycle = ref(sessionStorage.getItem('index') === '3');
+const recycle = ref();
 const menuState = ref(false);
 
 const updateShareData = (id: string, name: string, avatar: string, description: string, selfpermtype: number) => {

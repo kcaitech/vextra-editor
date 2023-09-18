@@ -97,7 +97,7 @@ const mydataindex = ref()
 const route = useRoute()
 const showbutton = ref(false)
 const noNetwork = ref(false)
-const rightmenushow=ref(false)
+const rightmenushow = ref(false)
 const { t } = useI18n()
 const titles = ['项目名称', '项目描述', '创建者', '操作',]
 const selectid = ref(0)
@@ -117,7 +117,7 @@ const props = withDefaults(defineProps<Props>(), {
     searchvalue: ''
 })
 
-const { teamID, teamData, updateprojectlist, updateprojectliststate, projectList, saveProjectData, is_favor, favoriteList, updateFavor, updateActiveNames, addTargetItem, teamSelfPermType } = inject('shareData') as {
+const { teamID, teamData, updateprojectlist, updateprojectliststate, projectList, saveProjectData, is_favor, favoriteList, updateFavor, activeNames, updateActiveNames, addTargetItem, teamSelfPermType } = inject('shareData') as {
     updateprojectlist: Ref<boolean>;
     updateprojectliststate: (b: boolean) => void;
     teamID: Ref<string>;
@@ -127,6 +127,7 @@ const { teamID, teamData, updateprojectlist, updateprojectliststate, projectList
     saveProjectData: (data: any[]) => void;
     is_favor: Ref<boolean>;
     updateFavor: (b: boolean) => void;
+    activeNames: Ref<number[]>;
     updateActiveNames: (n: number) => void;
     teamData: Ref<[{
         team: {
@@ -206,7 +207,7 @@ function updateItemsBasedOnFavor(data: any, sourceItems: any) {
             updateItems = filterItemsByIndexes(updateItems, [4])
         }
         if (data.self_perm_type != 5 && data.is_invited != true) {
-            updateItems = filterItemsByIndexes(updateItems, [1,3])
+            updateItems = filterItemsByIndexes(updateItems, [1, 3])
         }
     } else {
         updateItems = filterItemsByIndexes(updateItems, [4]);
@@ -218,9 +219,9 @@ function updateItemsBasedOnFavor(data: any, sourceItems: any) {
             console.log(updateItems);
         }
         if (data.self_perm_type != 5 && data.is_invited != true) {
-            updateItems = filterItemsByIndexes(updateItems, [1,3])
+            updateItems = filterItemsByIndexes(updateItems, [1, 3])
             console.log(updateItems);
-            
+
         }
     }
     return updateItems
@@ -365,8 +366,18 @@ const SearchList = computed(() => {
 const skipProject = (id: string) => {
     teamData.value.find((item, index) => {
         if (item.team.id === route.params.id) {
+            if (favoriteList.value.length > 0) {
+                const foundObject = favoriteList.value.find(item => item.project.id === id)
+                if (foundObject) {
+                    addTargetItem([])
+                } else {
+                    addTargetItem(teamprojectlist.value.filter((item) => item.project.id === id))
+                }
+            } else {
+                addTargetItem(teamprojectlist.value.filter((item) => item.project.id === id))
+            }
+            if (activeNames.value.includes(index)) return
             updateActiveNames(index)
-            addTargetItem(teamprojectlist.value.filter((item) => item.project.id === id))
             return
         }
     })
