@@ -1,5 +1,6 @@
 <template>
-    <tablelist :data="lists" :iconlist="iconlists" @restore="Restorefile" @ndelete="Deletefile" @rightMeun="rightmenu" :noNetwork="noNetwork" @refreshDoc="refreshDoc" :deleter="true"/>
+    <tablelist :data="lists" :iconlist="iconlists" @restore="Restorefile" @ndelete="Deletefile" @rightMeun="rightmenu"
+        :noNetwork="noNetwork" @refreshDoc="refreshDoc" :deleter="true" />
     <!-- 右键菜单 -->
     <listrightmenu :items="items" :data="mydata" @getrecycle-lists="GetrecycleLists" @r-deletefile="Deletefile"
         @r-restorefile="Restorefile" />
@@ -28,7 +29,6 @@ import listrightmenu from "@/components/AppHome/listrightmenu.vue"
 import { useRoute } from 'vue-router'
 const items = ['restore', 'completely_delete']
 const { t } = useI18n()
-const isLoading = ref(false)
 const dialogVisible = ref(false)
 const docId = ref('')
 const mydata = ref<data>()
@@ -54,12 +54,12 @@ interface data {
 //获取回收站文件列表
 async function GetrecycleLists(id: string) {
     let projectId = id
-    if(!id || id === '0') {
+    if (!id || id === '0') {
         projectId = route.params.id as string
     }
-    isLoading.value = true
+
     try {
-        const { data } = await team_api.GetrecycleList({project_id: projectId})
+        const { data } = await team_api.GetrecycleList({ project_id: projectId })
         if (data == null) {
             noNetwork.value = true
         } else {
@@ -72,13 +72,13 @@ async function GetrecycleLists(id: string) {
         }
         lists.value = Object.values(data)
         const user_id = localStorage.getItem('userId');
-        if(props.currentProject.self_perm_type < 4) {
+        if (props.currentProject.self_perm_type < 4) {
             lists.value = lists.value.filter(item => item.document.user_id === user_id);
         }
     } catch (error) {
         noNetwork.value = true
     }
-    isLoading.value = false;
+
 }
 
 const refreshDoc = () => {
@@ -160,10 +160,15 @@ const rightmenu = (e: MouseEvent, data: data) => {
     if ((e.target as HTMLElement).closest('.el-table-v2__row')) {
         rightmenu.style.display = 'block'
     }
-    
+
     docId.value = id
     mydata.value = data
 }
+watch(() => route.params.id, (newid) => {
+    if (newid != undefined) {
+        GetrecycleLists(newid.toString())
+    }
+})
 
 // watch(lists, (Nlist) => {
 //     emits('data-update', Nlist, t('home.delete_file_time'))

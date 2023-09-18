@@ -1,5 +1,5 @@
 <script setup lang="ts">
-import { Ref, inject, ref, watch, computed, nextTick } from 'vue'
+import { Ref, inject, ref, watch, computed, nextTick, onMounted } from 'vue'
 import { useI18n } from 'vue-i18n'
 import { useRoute } from 'vue-router'
 import { router } from '@/router'
@@ -172,6 +172,8 @@ function updateItemsBasedOnFavor(data: any, sourceItems: any) {
     return updateItems
 }
 
+const table = ref()
+
 //右键菜单入口
 const rightmenu = (row: any, _: any, e: MouseEvent) => {
     const index = tableData.value.indexOf(row)
@@ -188,6 +190,7 @@ const rightmenu = (row: any, _: any, e: MouseEvent) => {
     })
     if ((e.target as HTMLElement).closest('.el-table__row')) {
         rightmenu.style.display = 'block'
+        table.value.setCurrentRow(row)
     }
     updateitems.value = updateItemsBasedOnFavor(row, items.value);
     mydata.value = row
@@ -223,8 +226,8 @@ const setProjectInfo = async (params: any) => {
 </script>
 
 <template>
-    <el-table :data="tableData" height="100%" style="width: 100%" :border="false" @row-dblclick="dblclickskipProject"
-        @row-contextmenu="rightmenu" highlight-current-row>
+    <el-table :data="tableData" ref="table" height="100%" style="width: 100%" :border="false"
+        @row-dblclick="dblclickskipProject" @row-contextmenu="rightmenu" highlight-current-row>
         <el-table-column prop="project" label="项目名称">
             <template #default="scope">
                 <span class="description">{{ scope.row.project.name }}</span>

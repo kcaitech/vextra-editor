@@ -49,11 +49,11 @@
             </div>
         </div>
     </div>
-    <div v-if="showoverlay" class="overlay">
+    <div v-if="showoverlay" class="overlay" @keyup.esc="showoverlay = false">
         <div class="card-container">
             <div class="heard">
                 <div class="title" v-text="titlevalue"></div>
-                <div class="close" @click.stop="showoverlay = false">
+                <div class="close"  @click.stop="showoverlay = false">
                     <svg-icon icon-class="close"></svg-icon>
                 </div>
             </div>
@@ -312,8 +312,6 @@ const confirm = () => {
             return
     }
 }
-
-
 
 </script>
 <style lang="scss" scoped>

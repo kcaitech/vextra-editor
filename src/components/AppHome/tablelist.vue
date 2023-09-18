@@ -4,7 +4,7 @@
             <template #default="{ height, width }">
                 <el-table-v2 :columns="columns" :data=props.data :width="width" :height="height" :row-class="rowClass"
                     :row-event-handlers="rowHandleClick" @scroll="rightmenu">
-                    <template #overlay v-if="loading">
+                    <template v-if="loading && height!=0" #overlay >
                         <div class="el-loading-mask" style="display: flex; align-items: center; justify-content: center">
                             <Loading :size="20"/>
                         </div>
