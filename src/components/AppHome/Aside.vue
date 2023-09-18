@@ -575,6 +575,11 @@ watch(() => teamList.value, (newvalue) => {
     })
 }, { deep: true })
 
+setInterval(() => {
+    GetteamList();
+    getProjectFavoriteLists();
+}, 60000);
+
 onMounted(() => {
     GetteamList();
     getProjectFavoriteLists();

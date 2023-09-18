@@ -22,14 +22,16 @@
                             </div>
                         </Tooltip>
                         <Tooltip :content="'回到上一级'" :offset="5">
-                            <div style="padding-top: 3px;" class="back"
+                            <div class="back"
                                 @click="back(currentProject[0].project, currentProject[0].is_in_team)">
                                 <svg-icon icon-class="back"></svg-icon>
                             </div>
                         </Tooltip>
                     </div>
-                    <input v-if="cusname" type="text" @input="updateInputNameWidth" v-model="projectName" ref="input"
-                        :style="{ width: inputNameLength + 'px' }">
+                    <div style="height: 38px;" v-if="cusname">
+                        <input type="text" @input="updateInputNameWidth" v-model="projectName" ref="input"
+                            :style="{ width: inputNameLength + 'px' }">
+                    </div>
                 </div>
                 <div class="span">
                     <span v-if="!cusdesc" @click="input_cusdesc(currentProject[0])"
@@ -397,6 +399,7 @@ const favoriteProjectList = (arr1: any[], arr2: any[]) => {
 }
 
 function input_cusname(project: any) {
+    visible.value = false;
     if (project.self_perm_type < 4) return;
     projectName.value = project.project.name;
     cusname.value = !cusname.value;
@@ -652,38 +655,36 @@ onMounted(() => {
     align-items: center;
     height: 80px;
     margin-top: 30px;
-    padding: 12px;
+    padding: 0 12px;
     margin: 32px 0 8px 0;
     box-sizing: border-box;
 
     .left {
         width: calc(100% - 140px);
-
+        height: 100%;
         .p {
             box-sizing: border-box;
-
+            margin-bottom: 10px;
+            height: 38px;
             .title-p {
                 width: fit-content;
                 display: flex;
                 align-items: center;
-                margin-bottom: 10px;
                 text-overflow: ellipsis;
                 white-space: nowrap;
                 max-width: 100%;
                 padding-right: 10px;
-
+                height: 100%;
                 svg {
                     width: 16px;
                     height: 16px;
                 }
 
                 .setting {
+                    margin-top: 2px;
                     position: relative;
                 }
 
-                >div {
-                    margin-top: 5px;
-                }
             }
 
             input {
@@ -699,7 +700,6 @@ onMounted(() => {
                 overflow: hidden;
                 text-overflow: ellipsis;
                 white-space: nowrap;
-                margin-bottom: 10px;
                 padding-left: 5px;
                 padding-top: 3px;
                 padding-bottom: 3px;
@@ -708,6 +708,8 @@ onMounted(() => {
         }
 
         .edit {
+            height: 100%;
+            box-sizing: border-box;
             &:hover {
                 border: 2px solid #9775fa;
             }
@@ -745,6 +747,7 @@ onMounted(() => {
                 overflow: hidden;
                 text-overflow: ellipsis;
                 white-space: nowrap;
+                padding-left: 5px;
             }
         }
 
@@ -886,7 +889,7 @@ onMounted(() => {
     border-radius: 4px;
     justify-content: center;
     align-items: center;
-    padding: 2px 0;
+    padding: 3px 0;
     padding-left: 5px;
 
     &:hover {
@@ -901,8 +904,8 @@ onMounted(() => {
     border-radius: 4px;
     justify-content: center;
     align-items: center;
-    padding: 0 3px 2px 3px;
-
+    padding: 3px;
+    margin-top: 2px;
     &:hover {
         background-color: #e5dbff;
     }

@@ -327,6 +327,7 @@ const rightmenu = (e: MouseEvent, data: any, index?: number) => {
     mydata.value = data
     mydataindex.value = index
     selectid.value = data.project.id
+    rightmenushow.value = true;
 }
 
 //监听updateprojectlist的值，为true的时候，重新获取列表，然后调用updateprojectliststate重新设为false
@@ -405,9 +406,7 @@ const cancelFixed = (id: string, state: boolean, index: number) => {
 }
 
 onMounted(() => {
-    if (!teamprojectlist.value) {
-        GetprojectLists();
-    }
+    GetprojectLists();
 })
 
 </script>
