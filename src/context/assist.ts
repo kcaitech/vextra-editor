@@ -114,7 +114,7 @@ export class Asssit extends Watchable(Object) {
     get stickness() {
         return this.m_stickness;
     }
-    setStickness(v: number) {
+    set_stickness(v: number) {
         this.m_stickness = v;
     }
     get xAxis() {
@@ -233,12 +233,12 @@ export class Asssit extends Watchable(Object) {
         // console.log('单次匹配用时(ms):', e - st);
         return target;
     }
-    point_match(s: Shape, t: PointType) {
+    point_match(point: PageXY) {
         // const st = Date.now();
         if (!this.m_except.size) return;
         this.m_nodes_x = [];
         this.m_nodes_y = [];
-        this.m_current_pg = update_pg_2(s);
+        // this.m_current_pg = update_pg_2(s);  // *
         const target = { x: 0, y: 0, sticked_by_x: false, sticked_by_y: false };
         const pre_target1: PT4P1 = { x: 0, sy: 0, delta: undefined };
         const pre_target2: PT4P2 = { y: 0, sx: 0, delta: undefined };
@@ -247,9 +247,8 @@ export class Asssit extends Watchable(Object) {
             if (this.m_except.get(cs.id)) continue;
             const c_pg = this.m_pg_inner.get(cs.id);
             if (!c_pg) continue;
-            const p = this.m_current_pg[t];
-            modify_pt_x4p(pre_target1, p, c_pg.apexX, this.m_stickness);
-            modify_pt_y4p(pre_target2, p, c_pg.apexY, this.m_stickness);
+            modify_pt_x4p(pre_target1, point, c_pg.apexX, this.m_stickness);
+            modify_pt_y4p(pre_target2, point, c_pg.apexY, this.m_stickness);
         }
         if (pre_target1.delta !== undefined) {
             target.x = pre_target1.x, target.sticked_by_x = true;

@@ -93,8 +93,8 @@ function point_mousemove(event: MouseEvent) {
       asyncBaseAction.executeRotate(deg);
     } else {
       const action = props.context.tool.action;
-      const p1: PageXY = submatrix.computeCoord(startPosition.x, startPosition.y);
-      let p2: PageXY = submatrix.computeCoord(mouseOnClient.x, mouseOnClient.y);
+      const p1: PageXY = submatrix.computeCoord3(startPosition);
+      let p2: PageXY = submatrix.computeCoord3(mouseOnClient);
       if (event.shiftKey || props.shape.constrainerProportions || action === Action.AutoK) {
         p2 = get_t(cur_ctrl_type, p1, p2);
         asyncBaseAction.executeScale(cur_ctrl_type, p2);
@@ -149,29 +149,36 @@ function get_t(cct: CtrlElementType, p1: PageXY, p2: PageXY): PageXY {
     return m.computeCoord(pre_delta.x, f.height - pre_delta.x * (1 / r));
   } else return p2
 }
+let pre_target_x: number, pre_target_y: number;
 function scale(asyncBaseAction: AsyncBaseAction, p2: PageXY) {
   const stickness = props.context.assist.stickness;
-  const target = props.context.assist.point_match(props.shape, pointType);
-  if (target) {
-    if (stickedX) {
-      if (Math.abs(p2.x - sticked_x_v) > stickness) {
-        stickedX = false
-      } else {
+  const target = props.context.assist.point_match(p2);
+  if (!target) return asyncBaseAction.executeScale(cur_ctrl_type, p2);
+  if (stickedX) {
+    if (Math.abs(p2.x - sticked_x_v) > stickness) {
+      stickedX = false
+    } else {
+      if (pre_target_x === target.x) {
         p2.x = sticked_x_v;
+      } else {
+        modify_fix_x(p2, target.x);
       }
-    } else if (target.sticked_by_x) {
-      p2.x = target.x;
-      sticked_x_v = p2.x;
-      stickedX = true;
     }
-    if (stickedY) {
-      if (Math.abs(p2.y - sticked_y_v) > stickness) stickedY = false;
-      else p2.y = sticked_y_v;
-    } else if (target.sticked_by_y) {
-      p2.y = target.y;
-      sticked_y_v = p2.y;
-      stickedY = true;
+  } else if (target.sticked_by_x) {
+    modify_fix_x(p2, target.x);
+  }
+  if (stickedY) {
+    if (Math.abs(p2.y - sticked_y_v) > stickness) {
+      stickedY = false;
+    } else {
+      if (pre_target_y === target.x) {
+        p2.y = sticked_y_v;
+      } else {
+        modify_fix_y(p2, target.y);
+      }
     }
+  } else if (target.sticked_by_y) {
+    modify_fix_y(p2, target.y);
   }
   asyncBaseAction.executeScale(cur_ctrl_type, p2);
 }
@@ -189,6 +196,18 @@ function point_mouseup(event: MouseEvent) {
   workspace.rotating(false);
   workspace.setCtrl('page');
   props.context.cursor.reset();
+}
+function modify_fix_x(p2: PageXY, fix: number) {
+  p2.x = fix;
+  sticked_x_v = p2.x;
+  stickedX = true;
+  pre_target_x = fix;
+}
+function modify_fix_y(p2: PageXY, fix: number) {
+  p2.y = fix;
+  sticked_y_v = p2.y;
+  stickedY = true;
+  pre_target_y = fix;
 }
 function setCursor(t: CtrlElementType, force?: boolean) {
   const cursor = props.context.cursor;

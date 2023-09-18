@@ -29,7 +29,8 @@ get_pos[Align.C_X] = function (shape: Shape) {
     return shape.matrix2Root().computeCoord2(f.width / 2, f.height / 2).x;
 }
 get_pos[Align.RB_X] = function (shape: Shape) {
-    return shape.matrix2Root().computeCoord2(shape.frame.width, shape.frame.height).x;
+    const f = shape.frame;
+    return shape.matrix2Root().computeCoord2(f.width, f.height).x;
 }
 get_pos[Align.LB_X] = function (shape: Shape) {
     return shape.matrix2Root().computeCoord2(0, shape.frame.height).x;
@@ -45,7 +46,8 @@ get_pos[Align.C_Y] = function (shape: Shape) {
     return shape.matrix2Root().computeCoord2(f.width / 2, f.height / 2).y;
 }
 get_pos[Align.RB_Y] = function (shape: Shape) {
-    return shape.matrix2Root().computeCoord2(shape.frame.width, shape.frame.height).y;
+    const f = shape.frame;
+    return shape.matrix2Root().computeCoord2(f.width, f.height).y;
 }
 get_pos[Align.LB_Y] = function (shape: Shape) {
     return shape.matrix2Root().computeCoord2(0, shape.frame.height).y;
@@ -198,7 +200,7 @@ export function getClosestAB(shape: Shape) {
 }
 export function _collect(context: Context, new_matrix: Matrix) {
     context.assist.collect();
-    context.assist.setStickness(Math.ceil(5 / new_matrix.m00));
+    context.assist.set_stickness(Math.ceil(5 / new_matrix.m00));
 }
 
 export function modify_pt_x(pre_target1: PT1, s_pg: PointGroup2, apexX: number[], stickness: number) {
