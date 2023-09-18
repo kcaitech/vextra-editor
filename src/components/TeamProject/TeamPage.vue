@@ -1,6 +1,6 @@
 
 <template>
-    <div>
+    <div style="height: 100%; display: flex; flex-direction: column;">
         <div class="team">
             <div class="team-avatar">
                 <div v-if="avatar.length > 4" class="img">
@@ -40,15 +40,9 @@
                 </el-input>
             </div>
         </div>
-        <KeepAlive>
             <ProjectList v-if="itemid === 0" :searchvalue="search" @addproject="showoverlay = true" />
-        </KeepAlive>
-        <KeepAlive>
             <TeamMember v-if="itemid === 1" :searchvalue="search" />
-        </KeepAlive>
-        <KeepAlive>
             <TeamSetting v-if="itemid === 2" />
-        </KeepAlive>
         <transition name="nested" :duration="550">
             <div v-if="showoverlay" class="overlay">
                 <addProject v-if="itemid === 0" class="inner" :teamid="teamID" @close="showoverlay = false" />

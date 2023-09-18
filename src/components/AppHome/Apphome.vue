@@ -9,7 +9,7 @@
           <Aside @settitle="setTitle" />
         </el-aside>
         <el-main>
-          <Main  @dataUpdate="update" />
+          <Main @dataUpdate="update" />
         </el-main>
       </el-container>
     </el-container>
@@ -27,7 +27,7 @@ import { NetworkStatus } from '@/communication/modules/network_status'
 import { insertNetworkInfo } from "@/utils/message"
 import * as user_api from '@/apis/users'
 import * as team_api from '@/apis/users'
- 
+
 const { t } = useI18n();
 const title = ref<any>(sessionStorage.getItem('title') ? sessionStorage.getItem('title') : t('home.recently_opened'));
 const searchtitle = ref('')
@@ -117,6 +117,10 @@ const GetprojectLists = async () => {
   }
 }
 GetprojectLists();
+
+setInterval(() => {
+  GetprojectLists();
+}, 60000);
 const favoriteProjectList = (arr1: any[], arr2: any[]) => {
   const projectList = arr1.map(item => {
     item.is_favor = arr2.some(value => value.project.id === item.project.id)

@@ -563,6 +563,11 @@ watchEffect(() => {
     })
 })
 
+setInterval(() => {
+    GetteamList();
+    getProjectFavoriteLists();
+}, 60000);
+
 onMounted(() => {
     GetteamList();
     getProjectFavoriteLists();

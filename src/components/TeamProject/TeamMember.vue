@@ -186,7 +186,6 @@ const GetteamMember = async () => {
         ElMessage.closeAll('error')
         ElMessage.error({ duration: 1500, message: t('home.failed_list_tips') })
     }
-
 }
 
 const membertype = (num: number) => {
@@ -539,5 +538,13 @@ onUnmounted(() => {
 
 
     }
+}
+.container {
+    display: flex;
+    flex-direction: column;
+    flex: 1;
+}
+.main {
+    flex: 1;
 }
 </style>

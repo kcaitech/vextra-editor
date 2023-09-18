@@ -427,7 +427,6 @@ onUnmounted(() => {
     height: 30px;
     width: 460px;
     box-sizing: border-box;
-
     &:hover {
         border-radius: 2px;
         border: 2px #f3f0ff solid;
@@ -477,6 +476,10 @@ onUnmounted(() => {
         color: #9775fa;
         border-color: #9775fa;
     }
+}
+
+:deep(.el-button--primary) {
+    background-color: #9775fa;
 }
 
 </style>
