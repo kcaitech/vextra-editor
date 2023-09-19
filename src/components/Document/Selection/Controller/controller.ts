@@ -211,7 +211,7 @@ export function useControllerCustom(context: Context, i18nT: Function) {
             else {
                 if (pre_target_x === target.x) {
                     pe.x = ps.x, update_type -= 1, need_multi += 1;
-                } else {
+                } else if (target.sticked_by_x) {
                     modify_fix_x(target);
                 }
             }
@@ -224,7 +224,7 @@ export function useControllerCustom(context: Context, i18nT: Function) {
             } else {
                 if (pre_target_y === target.y) { // 还是原先的吸附点
                     pe.y = ps.y, stick.dy = 0, update_type -= 2, need_multi += 2;
-                } else { // 需要转移到另一个吸附点
+                } else if (target.sticked_by_y) { // 需要转移到另一个吸附点
                     modify_fix_y(target);
                 }
             }
@@ -237,7 +237,6 @@ export function useControllerCustom(context: Context, i18nT: Function) {
         } else {
             asyncTransfer.trans(ps, pe);
         }
-
         if (need_multi) {
             if (len === 1) {
                 context.assist.setCPG(gen_match_points(shape, true));

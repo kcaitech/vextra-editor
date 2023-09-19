@@ -67,16 +67,16 @@ export interface PT4P2 {
     delta: number | undefined
 }
 enum Align {
-    LT_X,
-    RT_X,
-    C_X,
-    RB_X,
-    LB_X,
-    LT_Y,
-    RT_Y,
-    C_Y,
-    RB_Y,
-    LB_Y
+    LT_X = 'lt_x',
+    RT_X = 'rt_x',
+    C_X = 'c_x',
+    RB_X = 'rb_x',
+    LB_X = 'lb_x',
+    LT_Y = 'lt_y',
+    RT_Y = 'rt_y',
+    C_Y = 'c_y',
+    RB_Y = 'rb_y',
+    LB_Y = 'lb_y'
 }
 export interface PageXY2 {
     id: string
@@ -199,6 +199,10 @@ export class Asssit extends Watchable(Object) {
         }
         this.notify(Asssit.UPDATE_ASSIST);
         // console.log('单次匹配辅助点位(ms):', Date.now() - st);
+        if (target.y === 0) {
+            console.log('pre_target2.delta:', pre_target2.delta);
+        }
+
         return target;
     }
     trans_match_multi(shapes: Shape[]) {

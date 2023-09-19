@@ -6,16 +6,16 @@ import { debounce } from "lodash";
 import { XYsBounding } from "./common";
 
 enum Align {
-    LT_X,
-    RT_X,
-    C_X,
-    RB_X,
-    LB_X,
-    LT_Y,
-    RT_Y,
-    C_Y,
-    RB_Y,
-    LB_Y
+    LT_X = 'lt_x',
+    RT_X = 'rt_x',
+    C_X = 'c_x',
+    RB_X = 'rb_x',
+    LB_X = 'lb_x',
+    LT_Y = 'lt_y',
+    RT_Y = 'rt_y',
+    C_Y = 'c_y',
+    RB_Y = 'rb_y',
+    LB_Y = 'lb_y'
 }
 const get_pos: { [key: string]: (shape: Shape) => number } = {};
 get_pos[Align.LT_X] = function (shape: Shape) {
@@ -273,8 +273,7 @@ export function modify_pt_y(pre_target2: PT2, s_pg: PointGroup2, apexY: number[]
             pre_target2.delta = delta5, pre_target2.y = y, pre_target2.sx = s_pg.rt.x, pre_target2.align = Align.RT_Y;
         }
     }
-    if (pre_target2.delta && pre_target2.y === 0) console.log('weird');
-
+    if (pre_target2.delta && pre_target2.y === 0) debugger
 }
 export function modify_pt_x4p(pre_target1: PT4P1, p: PageXY, apexX: number[], stickness: number) {
     for (let i = 0, len = apexX.length; i < len; i++) {

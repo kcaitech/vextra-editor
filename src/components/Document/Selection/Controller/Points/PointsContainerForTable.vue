@@ -242,7 +242,7 @@ function trans(asyncTransfer: AsyncTransfer, ps: PageXY, pe: PageXY): number {
         else {
             if (pre_target_x2 === target.x) {
                 pe.x = ps.x, update_type -= 1, need_multi += 1;
-            } else {
+            } else if (target.sticked_by_x) {
                 modify_fix_x(target);
             }
         }
@@ -254,7 +254,7 @@ function trans(asyncTransfer: AsyncTransfer, ps: PageXY, pe: PageXY): number {
         else {
             if (pre_target_y2 === target.y) {
                 pe.y = ps.y, stick.dy = 0, update_type -= 2, need_multi += 2;
-            } else {
+            } else if (target.sticked_by_y) {
                 modify_fix_y(target);
             }
         }
@@ -340,7 +340,7 @@ function scale(asyncBaseAction: AsyncBaseAction, p2: PageXY) {
         } else {
             if (pre_target_x === target.x) {
                 p2.x = sticked_x_v;
-            } else {
+            } else if (target.sticked_by_x) {
                 modify_fix_x(p2, target.x);
             }
         }
@@ -353,7 +353,7 @@ function scale(asyncBaseAction: AsyncBaseAction, p2: PageXY) {
         } else {
             if (pre_target_y === target.x) {
                 p2.y = sticked_y_v;
-            } else {
+            } else if (target.sticked_by_y) {
                 modify_fix_y(p2, target.y);
             }
         }
