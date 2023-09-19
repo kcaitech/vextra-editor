@@ -89,6 +89,14 @@ export function distance2apex2(frame: Point[], align: Align): number {
     return get_pos2[align](frame);
 }
 /**
+ * @description 判断两数是否相等
+ * @param a 
+ * @param b 
+ */
+export function is_equal(a: number, b: number) {
+    return Math.abs(a - b) < 0.001;
+}
+/**
  * @description 收集时使用
  */
 export function update_pg_1(host: Shape): PointGroup1 {
@@ -165,7 +173,7 @@ export function finder(context: Context, scope: GroupShape, all_pg: Map<string, 
     const cs = scope.childs;
     for (let i = 0; i < cs.length; i++) {
         const c = cs[i];
-        if (isShapeOut(context, c)) continue;
+        if (isShapeOut(context, c) || c.type === ShapeType.Contact) continue;
         result.push(c);
         const pg = update_pg_1(c);
         all_pg.set(c.id, pg);
@@ -325,19 +333,19 @@ export function get_frame(selection: Shape[]): Point[] {
 }
 export function get_p_form_pg_by_x(pg: PointGroup2, x: number): PageXY[] {
     const result: PageXY[] = [];
-    if (Math.abs(pg.lt.x - x) < 0.001) result.push(pg.lt);
-    if (Math.abs(pg.rt.x - x) < 0.001) result.push(pg.rt);
-    if (Math.abs(pg.rb.x - x) < 0.001) result.push(pg.rb);
-    if (Math.abs(pg.lb.x - x) < 0.001) result.push(pg.lb);
-    if (Math.abs(pg.pivot.x - x) < 0.001) result.push(pg.pivot);
+    if (is_equal(pg.lt.x, x)) result.push(pg.lt);
+    if (is_equal(pg.rt.x, x)) result.push(pg.rt);
+    if (is_equal(pg.rb.x, x)) result.push(pg.rb);
+    if (is_equal(pg.lb.x, x)) result.push(pg.lb);
+    if (is_equal(pg.pivot.x, x)) result.push(pg.pivot);
     return result;
 }
 export function get_p_form_pg_by_y(pg: PointGroup2, y: number): PageXY[] {
     const result: PageXY[] = [];
-    if (Math.abs(pg.lt.y - y) < 0.001) result.push(pg.lt);
-    if (Math.abs(pg.rt.y - y) < 0.001) result.push(pg.rt);
-    if (Math.abs(pg.rb.y - y) < 0.001) result.push(pg.rb);
-    if (Math.abs(pg.lb.y - y) < 0.001) result.push(pg.lb);
-    if (Math.abs(pg.pivot.y - y) < 0.001) result.push(pg.pivot);
+    if (is_equal(pg.lt.y, y)) result.push(pg.lt);
+    if (is_equal(pg.rt.y, y)) result.push(pg.rt);
+    if (is_equal(pg.rb.y, y)) result.push(pg.rb);
+    if (is_equal(pg.lb.y, y)) result.push(pg.lb);
+    if (is_equal(pg.pivot.y, y)) result.push(pg.pivot);
     return result;
 }

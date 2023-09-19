@@ -173,3 +173,32 @@ function finder(context: Context, childs: Shape[], Points: [XY, XY, XY, XY, XY])
     }
     return sort_by_layer(context, Array.from(selectedShapes.values()));
 }
+export function get_artboard_list_by_point(context: Context, range: Shape[], point: PageXY, init?: Shape[]) {
+    let result: Shape[] = init || [context.selection.selectedPage!];
+    const scout = context.selection.scout!;
+    for (let i = 0, len = range.length; i < len; i++) {
+        const s = range[i];
+        if (s.type !== ShapeType.Artboard) continue;
+        if (scout.isPointInShape(s, point)) {
+            result.push(s);
+            if (s.childs && s.childs.length) {
+                result = get_artboard_list_by_point(context, s.childs, point, result);
+            }
+        }
+    }
+    return result;
+}
+export function get_common_environment(shapes1: Shape[], shapes2: Shape[]) {
+    let longer = shapes1.length > shapes2.length ? shapes1 : shapes2;
+    const anther = longer === shapes1 ? shapes2 : shapes1;
+    longer = longer.slice(0, anther.length);
+    let result: Shape | undefined;
+    for (let i = longer.length - 1; i > -1; i--) {
+        const a1 = longer[i], a2 = anther[i];
+        if (a1.id === a2.id) {
+            result = a1;
+            break;
+        }
+    }
+    return result;
+}

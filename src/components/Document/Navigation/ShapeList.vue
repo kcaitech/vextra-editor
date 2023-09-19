@@ -19,6 +19,7 @@ import { is_shape_in_selection, selection_types, fit } from "@/utils/shapelist";
 import { Navi } from "@/context/navigate";
 import { Perm, WorkSpace } from "@/context/workspace"
 import ShapeTypes from "./Search/ShapeTypes.vue";
+import { TaskType } from "@/context/escstack";
 type List = InstanceType<typeof ListView>;
 type ContextMenuEl = InstanceType<typeof ContextMenu>;
 class Iter implements IDataIter<ItemData> {
@@ -359,7 +360,6 @@ const chartMenuMount = (e: MouseEvent) => {
     chartMenuPosition.value.y = e.clientY - props.pageHeight - listBody.value!.offsetTop - 12
     chartMenu.value = true;
     props.context.menu.menuMount('shapelist');
-    document.addEventListener('keydown', menu_unmount);
     nextTick(() => {
         if (contextMenuEl.value) {
             const el = contextMenuEl.value.menu;
@@ -373,6 +373,7 @@ const chartMenuMount = (e: MouseEvent) => {
                 el.style.borderRadius = 4 + 'px'
                 el.style.width = 200 + 'px'
             }
+            props.context.esctask.save(TaskType.MENU, close);
         }
     })
 }
@@ -393,14 +394,11 @@ function menu_watcher(t: number) {
         close();
     }
 }
-function menu_unmount(e: KeyboardEvent) {
-    if (e.code === 'Escape') {
-        close();
-    }
-}
 function close() {
-    document.removeEventListener('keydown', menu_unmount);
+    let exe_result: boolean = false;
+    if (chartMenu.value) exe_result = true;
     chartMenu.value = false;
+    return exe_result;
 }
 function reset_selection() {
     props.context.selection.resetSelectShapes();

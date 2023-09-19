@@ -317,11 +317,6 @@ async function clipboard_text_html(context: Context, data: any, xy?: PageXY) {
             } else { // 未指定复制位置
                 if (is_box_outer_view2(shapes, context)) { // 图形将脱离视野，需要重新寻找新的定位
                     modify_frame_by_xy(context.workspace.center_on_page, shapes);
-                } else { // 图形不会脱离视野，原位偏移后粘贴
-                    for (let i = 0, len = shapes.length; i < len; i++) {
-                        const frame = shapes[i].frame;
-                        frame.x += 10, frame.y += 10;
-                    }
                 }
             }
             const page = context.selection.selectedPage;

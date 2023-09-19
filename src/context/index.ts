@@ -1,4 +1,4 @@
-import { CoopRepository, TaskMgr, Task, Watchable, TaskPriority, TableShape, TableEditor, Text } from "@kcdesign/data";
+import { CoopRepository, TaskMgr, Task, Watchable, TaskPriority, TableShape, TableEditor, Text, GroupShape } from "@kcdesign/data";
 import { Document } from "@kcdesign/data";
 import { Page } from "@kcdesign/data";
 import { Shape, TextShape } from "@kcdesign/data";
@@ -70,22 +70,23 @@ export class Context extends Watchable(Object) {
         this.m_coopRepo = repo;
         this.m_repo = new RepoWraper(this.m_coopRepo);
         this.m_taskMgr = new TaskMgr();
-        this.m_selection = new Selection(data, this);
-        this.m_workspace = new WorkSpace(this);
-        this.m_comment = new Comment();
-        this.m_menu = new Menu();
-        this.m_tool = new Tool(this);
-        this.m_navi = new Navi();
+        this.m_selection = new Selection(data, this); //选区相关
+        this.m_workspace = new WorkSpace(this); // 编辑器状态
+        this.m_comment = new Comment(); // 评论相关
+        this.m_menu = new Menu(this); // 菜单相关
+        this.m_tool = new Tool(this); // 工具栏相关
+        this.m_navi = new Navi(); // 导航栏相关
         this.m_editor = new Editor(this.m_data, this.m_coopRepo, this.m_selection);
         this.m_communication = new Communication();
-        this.m_cursor = new Cursor(this);
-        this.m_escstack = new EscStack();
-        this.m_assist = new Asssit(this);
+        this.m_cursor = new Cursor(this); // 光标变换
+        this.m_escstack = new EscStack(); // esc任务队列
+        this.m_assist = new Asssit(this); // 辅助线相关
         this.m_teamwork = new TeamWork();
-        this.m_tableselection = new TableSelection(this);
-        this.m_textselection = new TextSelection(this.m_selection);
+        this.m_tableselection = new TableSelection(this); // 表格选区
+        this.m_textselection = new TextSelection(this.m_selection); // 文字选区
         const pagelist = data.pagesList.slice(0);
-        this.m_taskMgr.add(new class implements Task { // page auto loader
+        const checkSymLoaded: (() => boolean)[] = [];
+        const pageloadTask = new class implements Task { // page auto loader
             isValid(): boolean {
                 return !this.isDone();
             }
@@ -107,11 +108,33 @@ export class Context extends Watchable(Object) {
                 if (id) {
                     await data.pagesMgr.get(id);
                     pagelist.splice(0, 1);
+                    for (let i = 0; i < checkSymLoaded.length;) {
+                        if (checkSymLoaded[i]()) {
+                            checkSymLoaded.splice(i, 1);
+                        }
+                        else {
+                            ++i;
+                        }
+                    }
                 }
             }
-        }, TaskPriority.normal);
+        }
 
+        this.m_taskMgr.add(pageloadTask, TaskPriority.normal);
         this.m_taskMgr.startLoop();
+
+        // symbol loader
+        data.symbolsMgr.setLoader(async (id: string): Promise<GroupShape> => {
+            return new Promise((resolve, reject) => {
+                checkSymLoaded.push(() => {
+                    const sym = data.symbolsMgr.getSync(id);
+                    if (sym) resolve(sym);
+                    else if (pageloadTask.isDone()) reject();
+                    else return false;
+                    return true;
+                })
+            })
+        })
     }
 
     get editor(): Editor {
@@ -199,5 +222,8 @@ export class Context extends Watchable(Object) {
     }
     get textSelection() {
         return this.m_textselection;
+    }
+    get esctask() {
+        return this.m_escstack;
     }
 }

@@ -30,7 +30,7 @@ function _updater(t?: number) {
             isBoolGroup.value = false
         } else if (shapes.length === 1) {
             const type = shapes[0].type;
-            if (type === ShapeType.FlattenShape || type === ShapeType.Group) {
+            if (type === ShapeType.Group) {
                 isBoolGroup.value = true
             } else {
                 isBoolGroup.value = false

@@ -1,7 +1,7 @@
 import { debounce } from "lodash";
 import { Context } from "@/context";
 import { ClientXY, PageXY } from "@/context/selection";
-import { AsyncCreator, Shape, ShapeFrame, ShapeType, GroupShape, TextShape, Matrix, Color, TableShape } from "@kcdesign/data";
+import { AsyncCreator, Shape, ShapeFrame, ShapeType, GroupShape, TextShape, Matrix, Color, TableShape, ContactForm } from "@kcdesign/data";
 import { Action, ResultByAction } from "@/context/tool";
 import { Perm, WorkSpace } from '@/context/workspace';
 import { XYsBounding } from '@/utils/common';
@@ -102,7 +102,26 @@ function init_shape(context: Context, frame: ShapeFrame, mousedownOnPageXY: Page
     } else {
       new_shape = asyncCreator.init(page, (parent as GroupShape), type, name, frame);
     }
-
+  }
+  if (asyncCreator && new_shape) {
+    selection.selectShape(new_shape);
+    workspace.creating(true);
+    return { asyncCreator, new_shape };
+  }
+}
+export function init_contact_shape(context: Context, frame: ShapeFrame, mousedownOnPageXY: PageXY, t: Function, apex?: ContactForm, p2?: PageXY) {
+  const selection = context.selection, workspace = context.workspace;
+  const page = selection.selectedPage;
+  let asyncCreator: AsyncCreator | undefined, new_shape: Shape | undefined;
+  if (page) {
+    const editor = context.editor.controller();
+    const name = getName(ShapeType.Contact, page.childs, t);
+    if (apex && p2) {
+      frame.x = p2.x, frame.y = p2.y;
+      mousedownOnPageXY.x = p2.x, mousedownOnPageXY.y = p2.y;
+    }
+    asyncCreator = editor.asyncCreator(mousedownOnPageXY);
+    new_shape = asyncCreator.init_contact(page, page, frame, name, apex);
   }
   if (asyncCreator && new_shape) {
     selection.selectShape(new_shape);
