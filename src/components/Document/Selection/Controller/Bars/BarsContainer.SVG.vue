@@ -99,7 +99,7 @@ function bar_mousemove(event: MouseEvent) {
             submatrix.reset(workspace.matrix.inverse);
             setCursor(cur_ctrl_type, true);
             workspace.scaling(true);
-            props.context.assist.setTransTarget([props.shape]);
+            props.context.assist.set_trans_target([props.shape]);
         }
     }
 }

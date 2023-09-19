@@ -99,7 +99,7 @@ function point_mousemove(event: MouseEvent) {
         if (Math.hypot(mx - sx, my - sy) > dragActiveDis) {
             submatrix.reset(workspace.matrix.inverse);
             asyncBaseAction = props.context.editor.controller().asyncRectEditor(props.shape, props.context.selection.selectedPage!);
-            props.context.assist.setTransTarget([props.shape]);
+            props.context.assist.set_trans_target([props.shape]);
             isDragging = true;
         }
     }
@@ -170,7 +170,7 @@ function mousemove4trans(e: MouseEvent) {
         selection.unHoverShape();
         workspace.setSelectionViewUpdater(false);
         workspace.translating(true);
-        props.context.assist.setTransTarget(shapes);
+        props.context.assist.set_trans_target(shapes);
         submatrix2 = new Matrix(props.context.workspace.matrix.inverse);
         isDragging = true;
     }

@@ -1,13 +1,13 @@
 <script setup lang='ts'>
 import { Context } from '@/context';
 import { AsyncBaseAction, CtrlElementType, Matrix, Shape } from '@kcdesign/data';
-import { onMounted, onUnmounted, watch, reactive, ref } from 'vue';
+import { onMounted, onUnmounted, watch, reactive } from 'vue';
 import { ClientXY, PageXY } from '@/context/selection';
 import { getAngle } from '@/utils/common';
 import { update_dot } from './common';
 import { Point } from "../../SelectionView.vue";
 import { Action } from '@/context/tool';
-import { Asssit, PointType } from '@/context/assist';
+import { PointType } from '@/context/assist';
 
 interface Props {
   matrix: number[]
@@ -110,7 +110,7 @@ function point_mousemove(event: MouseEvent) {
       submatrix.reset(workspace.matrix.inverse);
       cur_ctrl_type.endsWith('rotate') ? workspace.rotating(true) : workspace.scaling(true);
       asyncBaseAction = props.context.editor.controller().asyncRectEditor(props.shape, props.context.selection.selectedPage!);
-      props.context.assist.setTransTarget([props.shape]);
+      props.context.assist.set_trans_target([props.shape]);
     }
   }
 }
@@ -154,8 +154,11 @@ function scale(asyncBaseAction: AsyncBaseAction, p2: PageXY) {
   const target = props.context.assist.point_match(props.shape, pointType);
   if (target) {
     if (stickedX) {
-      if (Math.abs(p2.x - sticked_x_v) > stickness) stickedX = false;
-      else p2.x = sticked_x_v;
+      if (Math.abs(p2.x - sticked_x_v) > stickness) {
+        stickedX = false
+      } else {
+        p2.x = sticked_x_v;
+      }
     } else if (target.sticked_by_x) {
       p2.x = target.x;
       sticked_x_v = p2.x;
@@ -267,7 +270,7 @@ onUnmounted(() => {
 })
 </script>
 <template>
-  <g >
+  <g>
     <g v-for="(p, i) in dots" :key="i" :style="`transform: ${p.r.transform};`">
       <path :d="p.r.p" fill="transparent" stroke="none" @mousedown.stop="(e) => point_mousedown(e, p.type2)"
         @mouseenter="() => setCursor(p.type2)" @mouseleave="point_mouseleave">

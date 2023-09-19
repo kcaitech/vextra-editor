@@ -109,7 +109,7 @@ function point_mousemove(event: MouseEvent) {
             submatrix.reset(workspace.matrix.inverse);
             cur_ctrl_type.endsWith('rotate') ? workspace.rotating(true) : workspace.scaling(true);
             asyncBaseAction = props.context.editor.controller().asyncRectEditor(props.shape, props.context.selection.selectedPage!);
-            props.context.assist.setTransTarget([props.shape]);
+            props.context.assist.set_trans_target([props.shape]);
         }
     }
 }

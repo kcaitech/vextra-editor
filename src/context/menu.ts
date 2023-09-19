@@ -1,4 +1,6 @@
 import { Watchable } from "@kcdesign/data";
+import { Context } from ".";
+import { TaskType } from "./escstack";
 export enum CellMenu {
   MultiSelect = 'multiCells', //多选单元格时
   SelectRow = 'row', //选中整行单元格
@@ -12,11 +14,15 @@ export class Menu extends Watchable(Object) {
   static HIDE_PLACEMENT = 5;
   static CHANGE_USER_CURSOR = 6;
   static OPEN_SPLIT_CELL = 7;
-
   private m_menu_mounted: string = '';
   private m_popover: boolean = false;
   private m_color_picker: string | undefined; // 编辑器是否已经有调色板🎨
   private m_user_cursor_visible: boolean = true;
+  private m_context: Context;
+  constructor(context: Context) {
+    super();
+    this.m_context = context;
+  }
   get isMenuMount() {
     return this.m_menu_mounted;
   }
@@ -38,14 +44,16 @@ export class Menu extends Watchable(Object) {
   }
   setupColorPicker(id: string) {
     this.m_color_picker = id;
+    this.m_context.esctask.save(TaskType.COLOR, this.removeColorPicker.bind(this));
   }
   clearColorPickerId() {
     this.m_color_picker = undefined;
   }
   removeColorPicker() {
-    if (!this.m_color_picker) return;
+    if (!this.m_color_picker) return false;
     this.notify(Menu.REMOVE_COLOR_PICKER, this.m_color_picker);
     this.m_color_picker = undefined;
+    return true;
   }
   setVisibleCursor(visible: boolean) {
     this.m_user_cursor_visible = visible;

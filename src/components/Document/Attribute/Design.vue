@@ -4,7 +4,7 @@ import { Selection } from '@/context/selection';
 import { onMounted, onUnmounted, shallowRef, ref, computed } from 'vue';
 import { ShapeType, Shape, TextShape, TableShape } from "@kcdesign/data"
 import Arrange from './Arrange.vue';
-import ShapeBaseAttr from './BaseAttr.vue';
+import ShapeBaseAttr from './BaseAttr/Index.vue';
 import Fill from './Fill/Fill.vue';
 import Border from './Border/Border.vue';
 import PageBackgorund from './PageBackgorund.vue';
@@ -44,7 +44,9 @@ const WITH_BORDER = [
     ShapeType.Table,
     ShapeType.TableCell,
     ShapeType.Text,
-    ShapeType.Line];
+    ShapeType.Line,
+    ShapeType.Contact
+];
 const WITH_TABLE = [ShapeType.Table];
 const shapeType = ref();
 const reflush = ref<number>(0);

@@ -163,7 +163,7 @@ export class Asssit extends Watchable(Object) {
         // const e = Date.now();
         // console.log('点位收集用时(ms):', e - s);
     }
-    setTransTarget(shapes: Shape[]) {
+    set_trans_target(shapes: Shape[]) {
         this.collect();
         this.m_except.clear();
         if (shapes.length === 1) {
@@ -234,7 +234,7 @@ export class Asssit extends Watchable(Object) {
         return target;
     }
     point_match(s: Shape, t: PointType) {
-        const st = Date.now();
+        // const st = Date.now();
         if (!this.m_except.size) return;
         this.m_nodes_x = [];
         this.m_nodes_y = [];
@@ -260,7 +260,7 @@ export class Asssit extends Watchable(Object) {
             this.m_nodes_y = (this.m_y_axis.get(target.y) || []).concat([{ p: { x: pre_target2.sx, y: target.y }, id: 'ex' }]);
         }
         this.notify(Asssit.UPDATE_ASSIST);
-        const e = Date.now();
+        // const e = Date.now();
         // console.log('单次匹配用时(ms):', e - st);
         return target;
     }

@@ -43,7 +43,8 @@ function selection_watcher(t?: number) {
 }
 function update_paths(shapes: Shape[]) {
     // const s = Date.now();
-    if (!props.context.workspace.shouldSelectionViewUpdate) return;
+    const workspace = props.context.workspace;
+    if (!workspace.shouldSelectionViewUpdate) return;
     paths.value.length = 0;
     for (let i = 0; i < shapes.length; i++) {
         const shape = shapes[i];
@@ -52,6 +53,9 @@ function update_paths(shapes: Shape[]) {
         m2r.multiAtLeft(props.matrix);
         path.transform(m2r);
         paths.value.push(path.toString());
+    }
+    if (shapes.length === 1 && paths.value.length === 1) {
+        workspace.setCtrlPath(paths.value[0]);
     }
     // const e = Date.now();
     // console.log('描边绘制用时(ms):', e - s);
@@ -70,6 +74,9 @@ function passive_update() {
         m2r.multiAtLeft(props.matrix);
         path.transform(m2r);
         paths.value.push(path.toString());
+    }
+    if (shapes.length === 1 && paths.value.length === 1) {
+        props.context.workspace.setCtrlPath(paths.value[0]);
     }
 }
 watch(() => props.matrix, update, { deep: true })
