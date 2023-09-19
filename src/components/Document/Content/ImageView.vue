@@ -1,16 +1,14 @@
 <script setup lang="ts">
-import { ImageShape, Matrix, OverrideShape, SymbolRefShape } from '@kcdesign/data';
+import { ImageShape } from '@kcdesign/data';
 import { h } from 'vue';
 import { renderImage as r } from "@kcdesign/data"
 import { IMAGE_DEFAULT, initCommonShape } from './common';
 
-const props = defineProps<{ data: ImageShape, overrides?: SymbolRefShape[], matrix?: Matrix }>();
+const props = defineProps<{ data: ImageShape }>();
 const common = initCommonShape(props);
 
 const render = () => {
-    const consumes: OverrideShape[] = [];
-    const ret = r(h, props.data, IMAGE_DEFAULT, props.overrides, consumes, common.reflush);
-    common.updateComsumeOverride(consumes);
+    const ret = r(h, props.data, IMAGE_DEFAULT, common.reflush);
     return ret;
 }
 
