@@ -203,7 +203,7 @@ export function finder_contact(scout: Scout, g: Shape[], position: PageXY, selec
     for (let i = g.length - 1; i > -1; i--) {
         if (!canBeTarget(g[i]) || g[i].type === ShapeType.Contact) continue;
         const item = g[i];
-        if ([ShapeType.Group, ShapeType.FlattenShape, ShapeType.Artboard].includes(item.type)) {
+        if ([ShapeType.Group, ShapeType.Artboard].includes(item.type)) {
             const isItemIsTarget = isTarget2(scout, item, position);
             if (!isItemIsTarget) continue;
             const c = item.childs as Shape[];
@@ -220,7 +220,7 @@ export function finder_contact(scout: Scout, g: Shape[], position: PageXY, selec
                     result.push(item);
                     return result;
                 }
-            } else if ([ShapeType.Group, ShapeType.FlattenShape].includes(item.type)) { // 如果是编组，不用向下走了，让子元素往上走
+            } else if ([ShapeType.Group].includes(item.type)) { // 如果是编组，不用向下走了，让子元素往上走
                 const g = forGroupHover(scout, item.childs, position, selected, true);
                 if (g) {
                     result.push(g);
