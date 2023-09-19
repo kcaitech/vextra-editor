@@ -111,9 +111,11 @@ function isTarget2(scout: Scout, shape: Shape, p: PageXY): boolean {
 // 扁平化一个编组的树结构
 function delayering(groupshape: Shape, flat?: Shape[]): Shape[] {
     let f: Shape[] = flat || [];
-    for (let i = 0; i < groupshape.childs.length; i++) {
-        const item = groupshape.childs[i];
-        if (item.type === ShapeType.Group) {
+    let childs: any = groupshape.childs;
+    if (groupshape.type === ShapeType.SymbolRef) childs = groupshape.naviChilds;
+    for (let i = 0, len = childs; i < len; i++) {
+        const item = childs[i];
+        if (item.type === ShapeType.Group || item.type === ShapeType.SymbolRef) {
             f = f.concat(delayering(item, f));
         } else {
             f.push(item);
@@ -127,7 +129,7 @@ function groupPassthrough(scout: Scout, scope: Shape[], position: PageXY): Shape
     // scope 编组子元素
     let shape: Shape | undefined;
     for (let i = scope.length - 1; i > -1; i--) {
-        if ([ShapeType.Group].includes(scope[i].type)) {
+        if ([ShapeType.Group, ShapeType.SymbolRef].includes(scope[i].type)) {
             const items: Shape[] = delayering(scope[i]); // 扁平一个编组的树结构
             for (let j = items.length - 1; j > -1; j--) {
                 if (isTarget(scout, items[j], position)) {

@@ -1,4 +1,4 @@
-import { Shape, ShapeType, GroupShape, TextShape } from '@kcdesign/data';
+import { Shape, ShapeType, GroupShape, TextShape, PathShape } from '@kcdesign/data';
 import { onMounted, onUnmounted } from "vue";
 import { Context } from "@/context";
 import { Matrix } from '@kcdesign/data';
@@ -92,13 +92,13 @@ export function useControllerCustom(context: Context, i18nT: Function) {
         const selected = selection.selectedShapes;
         if (selected.length !== 1) return;
         const shape = selected[0];
-        if ([ShapeType.Group].includes(shape.type)) {
-            const scope = (shape as GroupShape).childs;
+        if ([ShapeType.Group, ShapeType.SymbolRef].includes(shape.type)) {
+            const scope: any = shape.type === ShapeType.SymbolRef ? shape.naviChilds : (shape as GroupShape).childs;
             const scout = selection.scout;
             if (!scout) return;
             const target = groupPassthrough(scout, scope, startPositionOnPage);
             if (target) selection.selectShape(target);
-        } else {
+        } else if (shape instanceof PathShape) {
             editing = !editing;
             workspace.contentEdit(editing);
         }
