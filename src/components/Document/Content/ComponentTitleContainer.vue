@@ -46,7 +46,7 @@ const setPosition = () => {
         titles.length = 0;
         for (let i = 0; i < len; i++) {
             const compo = components[i];
-            if (compo.type === ShapeType.SymbolRef && compo.parent?.type === ShapeType.Page && compo.isVisible) { // 只给页面的直接子元素上标题
+            if (compo.type === ShapeType.SymbolRef && compo.parent?.type === ShapeType.Page && compo.isVisible) {
                 const shapes = props.context.selection.selectedShapes;
                 const hovered = props.context.selection.hoveredShape;
                 let selected = false
@@ -60,12 +60,12 @@ const setPosition = () => {
                 const m = compo.matrix2Root(); // 图形到页面的转换矩阵
                 const f2p = compo.frame2Root();
                 const frame = compo.frame;
-                const matrix = props.context.workspace.matrix; // 页面坐标系转换矩阵
-                let anchor = { x: 0, y: 0 }; // 锚点，其所在坐标系是page坐标系
+                const matrix = props.context.workspace.matrix;
+                let anchor = { x: 0, y: 0 };
                 let rotate = compo.rotation || 0;
-                rotate = rotate < 0 ? rotate + 360 : rotate; // 这些关于角度的计算把图画出来就会比较清楚
+                rotate = rotate < 0 ? rotate + 360 : rotate;
                 if (rotate < 135 && rotate >= 45) {
-                    anchor = m.computeCoord2(0, frame.height); // 将 [图形坐标系] 的锚点通过 [图形到页面的转换矩阵] 转换到 [页面坐标系]，下面的也是
+                    anchor = m.computeCoord2(0, frame.height);
                     rotate -= 90;
                 } else if (rotate < 225 && rotate >= 135) {
                     anchor = m.computeCoord2(frame.width, frame.height);
