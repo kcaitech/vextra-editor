@@ -127,7 +127,7 @@ function groupPassthrough(scout: Scout, scope: Shape[], position: PageXY): Shape
     // scope 编组子元素
     let shape: Shape | undefined;
     for (let i = scope.length - 1; i > -1; i--) {
-        if ([ShapeType.Group, ShapeType.FlattenShape].includes(scope[i].type)) {
+        if ([ShapeType.Group].includes(scope[i].type)) {
             const items: Shape[] = delayering(scope[i]); // 扁平一个编组的树结构
             for (let j = items.length - 1; j > -1; j--) {
                 if (isTarget(scout, items[j], position)) {
@@ -162,7 +162,7 @@ function finder(scout: Scout, g: Shape[], position: PageXY, selected: Shape, isC
         if (!canBeTarget(g[i])) continue;
         const item = g[i];
         // 特殊处理的三类图形：容器、编组、flatten
-        if ([ShapeType.Group, ShapeType.FlattenShape, ShapeType.Artboard].includes(item.type)) { // 如果是容器或者编组
+        if ([ShapeType.Group, ShapeType.Artboard].includes(item.type)) { // 如果是容器或者编组
             const isItemIsTarget = isTarget(scout, item, position);
             if (!isItemIsTarget) continue; // 如果整个容器和编组都不是目标元素，则不需要向下遍历
             const c = item.childs as Shape[];
@@ -181,7 +181,7 @@ function finder(scout: Scout, g: Shape[], position: PageXY, selected: Shape, isC
                     result.push(item);
                     return result;
                 }
-            } else if ([ShapeType.Group, ShapeType.FlattenShape].includes(item.type)) { // 如果是编组，不用向下走了，让子元素往上走
+            } else if ([ShapeType.Group].includes(item.type)) { // 如果是编组，不用向下走了，让子元素往上走
                 const g = forGroupHover(scout, item.childs, position, selected, isCtrl);
                 if (g) {
                     result.push(g);
@@ -248,7 +248,7 @@ function finder_layers(scout: Scout, g: Shape[], position: PageXY): Shape[] {
         if (canBeTarget(g[i])) { // 只要是!isVisible，force与否都不可以选中
             const item = g[i];
             // 特殊处理的三类图形：容器、编组、flatten
-            if ([ShapeType.Group, ShapeType.FlattenShape, ShapeType.Artboard].includes(item.type)) {
+            if ([ShapeType.Group, ShapeType.Artboard].includes(item.type)) {
                 const isItemIsTarget = isTarget(scout, item, position);
                 if (!isItemIsTarget) continue; // 如果整个容器和编组都不是目标元素，则不需要向下遍历
                 const c = item.childs as Shape[];
@@ -272,7 +272,7 @@ function forGroupHover(scout: Scout, g: Shape[], position: PageXY, selected: Sha
     for (let j = g.length - 1; j > -1; j--) { // 从最子集往父级冒泡
         const shape = g[j];
         if (!shape.isVisible || !isTarget(scout, shape, position)) continue;
-        if ([ShapeType.Group, ShapeType.FlattenShape].includes(shape.type)) {
+        if ([ShapeType.Group].includes(shape.type)) {
             const c: Shape[] = (shape as GroupShape).childs;
             const res = forGroupHover(scout, c, position, selected, isCtrl);
             if (res) return res;
@@ -280,7 +280,7 @@ function forGroupHover(scout: Scout, g: Shape[], position: PageXY, selected: Sha
             //如果Ctrl键被按下，不冒泡
             if (isCtrl) return shape;
             let target = shape;
-            while (target.parent && [ShapeType.Group, ShapeType.FlattenShape].includes(target.parent?.type)) {
+            while (target.parent && [ShapeType.Group].includes(target.parent?.type)) {
                 if (selected) {
                     const isBroSelected: boolean = isPartSelect(target.parent, selected);
                     if (isBroSelected) break;
