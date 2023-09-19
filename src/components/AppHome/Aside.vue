@@ -545,35 +545,38 @@ watch(() => teamList.value, (newvalue) => {
         if (activeNames.value.includes(teamData.value.findIndex(item => item.team.id === teamid.value))) return
         updateActiveNames(teamData.value.findIndex(item => item.team.id === teamid.value))
     }
-    if (newvalue) {
-        newvalue.filter((item: any) => {
-            if (item.team.id === teamid.value) {
-                if (item.children) {
-                    const foundObject = item.children.find((item: any) => item.project.id === route.params.id)
-                    if (foundObject) {
-                        console.log('11111');
-                        addTargetItem([])
+    nextTick(() => {
+        if (newvalue) {
+            newvalue.filter((item: any) => {
+                if (item.team.id === teamid.value) {
+                    if (item.children) {
+                        const foundObject = item.children.find((item: any) => item.project.id === route.params.id)
+                        if (foundObject) {
+                            console.log('11111');
+                            addTargetItem([])
+                        } else {
+                            console.log('22222');
+                            addTargetItem(projectList.value.filter(item => item.project.id === route.params.id));
+                        }
                     } else {
-                        console.log('22222');
+                        console.log('33333');
                         addTargetItem(projectList.value.filter(item => item.project.id === route.params.id));
                     }
-                } else {
-                    console.log('33333');
-                    addTargetItem(projectList.value.filter(item => item.project.id === route.params.id));
                 }
+
             }
 
+            )
         }
+    })
 
-        )
-    }
     nextTick(() => {
         const index = projectShareList.value.findIndex(item => item.project.id === route.params.id);
         if (index !== -1) {
             activeShare.value = [1]
         }
     })
-}, { deep: true })
+}, { deep: true,immediate:true })
 
 setInterval(() => {
     GetteamList();
