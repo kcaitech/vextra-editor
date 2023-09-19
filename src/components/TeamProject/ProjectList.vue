@@ -449,6 +449,10 @@ onMounted(() => {
             svg {
                 width: 16px;
                 height: 16px;
+                transition: .3s;
+                &:hover {
+                    transform: scale(1.2);
+                }
             }
 
             >div {
