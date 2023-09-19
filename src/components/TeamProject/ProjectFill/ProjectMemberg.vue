@@ -1,25 +1,27 @@
 <script setup lang="ts">
-import { ref, watch, nextTick, onMounted } from 'vue';
+import { ref, watch, onMounted } from 'vue';
 import { ArrowDown, Check } from '@element-plus/icons-vue';
 import * as team_api from '@/apis/team';
 import { useI18n } from 'vue-i18n';
-import { useRoute } from 'vue-router'
-const { t } = useI18n();
+
 const props = defineProps<{
     projectMembergDialog: boolean
     currentProject: any
 }>();
+
 const emit = defineEmits<{
     (e: 'closeDialog'): void;
     (e: 'exitProject', id: string, state: boolean): void;
     (e: 'memberLength', num: number): void;
 }>();
-const route = useRoute();
+
+
+const { t } = useI18n();
 const innerVisible = ref(false)
 const isshow = ref(true)
 const memberList = ref<any[]>([]);
 const permission = ref([`${t('share.no_authority')}`, `${t('share.readOnly')}`, `${t('share.reviewable')}`, `${t('share.editable')}`, '管理员', '创建者'])
-const permList = ref(['全部', '创建者', '管理员', `${t('share.editable')}`, `${t('share.reviewable')}`, `${t('share.readOnly')}`])
+const permList = ref([`${t('Createteam.all')}`, `${t('Createteam.creator')}`, `${t('Createteam.manager')}`, `${t('share.editable')}`, `${t('share.reviewable')}`, `${t('share.readOnly')}`])
 const permFilter = ref(0);
 const memberList2 = ref<any[]>([]);
 const transferVisible = ref(false);
@@ -65,12 +67,6 @@ const getTeamMemberList = async () => {
 watch(() => memberList2.value.length, (v) => {
     emit('memberLength', v)
 })
-
-// watch(() => route.params.id, () => {
-//     nextTick(() => {
-//         getProjectMemberList();
-//     })
-// }, { immediate: true })
 
 const handleCommand = (command: number) => {
     permFilter.value = command;
@@ -162,7 +158,7 @@ const quitProject = () => {
     const user_id = localStorage.getItem('userId');
     let state = false;
     memberList2.value.forEach(item => {
-        if(user_id === item.user.id) {
+        if (user_id === item.user.id) {
             state = item.isTeam;
             return;
         }
@@ -214,31 +210,30 @@ const escClose = () => {
 }
 
 watch(transferVisible, (v) => {
-    if(!v) {
+    if (!v) {
         document.removeEventListener('keydown', escClose);
     }
 })
-console.log(props.currentProject,'dddddddd');
 
 watch(innerVisible, (v) => {
-    if(!v) {
+    if (!v) {
         document.removeEventListener('keydown', escClose);
     }
 })
 
-onMounted(()=>{
+onMounted(() => {
     getProjectMemberList();
 })
 </script>
 
 <template>
-        <el-dialog v-model="isshow" title="已加入项目成员"  width="350px" align-center :close-on-click-modal="false"
-            :before-close="close">
+    <el-dialog v-model="isshow" :title="t('Createteam.membersed')" width="350px" align-center :close-on-click-modal="false"
+        :before-close="close">
         <div class="perm_title">
-            <div class="name">用户名</div>
+            <div class="name">{{ t('Createteam.username') }}</div>
             <el-dropdown trigger="click" :hide-on-click="false" @command="handleCommand">
                 <span class="el-dropdown-link">
-                    权限<el-icon class="el-icon--right"><arrow-down /></el-icon>
+                    {{ t('Createteam.jurisdiction') }}<el-icon class="el-icon--right"><arrow-down /></el-icon>
                 </span>
                 <template #dropdown>
                     <el-dropdown-menu>
@@ -267,25 +262,25 @@ onMounted(()=>{
                         <template #dropdown>
                             <el-dropdown-menu>
                                 <el-dropdown-item :command="{ member: item, perm: 4, command: 1, index }"
-                                    v-if="props.currentProject.self_perm_type === 5">
-                                    <div style="padding: 0 16px;">管理员</div>
+                                    v-if="props.currentProject.self_perm_type === 5 && item.perm_type != 4">
+                                    <div style="padding: 0 16px;">{{ t('Createteam.manager') }}</div>
                                 </el-dropdown-item>
                                 <el-dropdown-item :command="{ member: item, perm: 3, command: 1, index }">
-                                    <div style="padding: 0 16px;">可编辑</div>
+                                    <div style="padding: 0 16px;">{{ t('Createteam.editable') }}</div>
                                 </el-dropdown-item>
                                 <el-dropdown-item :command="{ member: item, perm: 2, command: 1, index }">
-                                    <div style="padding: 0 16px;">可评论</div>
+                                    <div style="padding: 0 16px;">{{ t('Createteam.reviewed') }}</div>
                                 </el-dropdown-item>
                                 <el-dropdown-item :command="{ member: item, perm: 1, command: 1, index }">
-                                    <div style="padding: 0 16px;">仅阅读</div>
+                                    <div style="padding: 0 16px;">{{ t('Createteam.Readonly') }}</div>
                                 </el-dropdown-item>
                                 <div style="width: 120px; height: 1px; background-color: #ccc; margin: 5px 0;"></div>
                                 <el-dropdown-item :command="{ member: item, perm: 0, command: 2, index }"
                                     v-if="props.currentProject.self_perm_type === 5 && item.isTeam">
-                                    <div style="padding: 0 16px;">转让创建者</div>
+                                    <div style="padding: 0 16px;">{{ t('Createteam.transferor') }}</div>
                                 </el-dropdown-item>
                                 <el-dropdown-item :command="{ member: item, perm: 0, command: 3, index }">
-                                    <div style="padding: 0 16px;">移出项目组</div>
+                                    <div style="padding: 0 16px;">{{ t('Createteam.moveoutproject') }}</div>
                                 </el-dropdown-item>
                             </el-dropdown-menu>
                         </template>
@@ -294,36 +289,36 @@ onMounted(()=>{
             </el-scrollbar>
         </div>
         <div class="project_perm">
-            <div v-if="props.currentProject.project.public_switch">项目权限:公开，所有团队成员均可访问</div>
-            <div v-else>项目权限:非公开，仅通过链接邀请成员可访问</div>
+            <div v-if="props.currentProject.project.public_switch">{{ t('Createteam.pertipsA') }}</div>
+            <div v-else>{{ t('Createteam.pertipsB') }}</div>
         </div>
         <div v-if="props.currentProject.self_perm_type !== 5">
-            <div class="button"><button @click="onExitProject">退出项目组</button></div>
+            <div class="button"><button @click="onExitProject">{{ t('Createteam.projectexittitle') }}</button></div>
         </div>
-        <el-dialog v-model="innerVisible" width="250px" title="退出项目" append-to-body align-center
-            :close-on-click-modal="false" :before-close="handleClose">
+        <el-dialog v-model="innerVisible" width="250px" :title="t('Createteam.projectexittitle')" append-to-body
+            align-center :close-on-click-modal="false" :before-close="handleClose">
             <div class="context">
-                退出项目后，无法再访问项目中的文件，或使用项目中的资源。
+                {{ t('Createteam.projectexitcontext') }}
             </div>
             <template #footer>
                 <div class="dialog-footer">
-                    <el-button class="quit" @click="quitProject">仍然退出</el-button>
+                    <el-button class="quit" @click="quitProject">{{ t('Createteam.ok_exit') }}</el-button>
                     <el-button class="quit" @click="innerVisible = false">
-                        取消
+                        {{ t('Createteam.cancel') }}
                     </el-button>
                 </div>
             </template>
         </el-dialog>
-        <el-dialog v-model="transferVisible" width="250px" title="退出项目" append-to-body align-center
-            :close-on-click-modal="false" :before-close="transferClose">
+        <el-dialog v-model="transferVisible" width="250px" :title="t('Createteam.projectexittitle')" append-to-body
+            align-center :close-on-click-modal="false" :before-close="transferClose">
             <div class="context">
-                转让创建者权限后，您将不再拥有该项目，后续作为管理员留在项目中。
+                {{ t('Createteam.Transfertips') }}
             </div>
             <template #footer>
                 <div class="dialog-footer">
-                    <el-button class="quit" @click="transferProject">确定转让</el-button>
+                    <el-button class="quit" @click="transferProject">{{ t('Createteam.confirmTransfer') }}</el-button>
                     <el-button class="quit" @click="transferVisible = false">
-                        取消
+                        {{ t('Createteam.cancel') }}
                     </el-button>
                 </div>
             </template>

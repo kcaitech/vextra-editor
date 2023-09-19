@@ -114,21 +114,21 @@ const itemcontent = (item: string) => {
         case rightmenuitem.completely_delete:
             return t('homerightmenu.completely_delete')
         case rightmenuitem.movefill:
-            return '移动文件位置'
+            return t('Createteam.movetip')
         case rightmenuitem.projectrename:
-            return '重命名'
+            return t('homerightmenu.rename')
         case rightmenuitem.projectset:
-            return '项目访问设置'
+            return t('Createteam.projectsetting')
         case rightmenuitem.memberset:
-            return '成员权限设置'
+            return t('Createteam.membersetting')
         case rightmenuitem.setfixed:
-            return '固定项目'
+            return t('Createteam.fixed')
         case rightmenuitem.cancelfixed:
-            return '取消固定'
+            return t('Createteam.cancelFixed')
         case rightmenuitem.exitproject:
-            return '退出项目'
+            return t('Createteam.projectexittitle')
         case rightmenuitem.deleteproject:
-            return '删除项目'
+            return t('Createteam.projectdeltitle')
         default:
             return ''
     }

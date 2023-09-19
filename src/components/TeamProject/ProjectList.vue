@@ -128,7 +128,10 @@ const { teamID, teamData, updateprojectlist, updateprojectliststate, projectList
     is_favor: Ref<boolean>;
     updateFavor: (b: boolean) => void;
     activeNames: Ref<number[]>;
-    updateActiveNames: (n: number) => void;
+    updateActiveNames: {
+        add: (n: number) => void;
+        del: (n: number) => void;
+    };
     teamData: Ref<[{
         team: {
             id: string,
@@ -365,23 +368,23 @@ const SearchList = computed(() => {
 })
 
 const skipProject = (id: string) => {
-    teamData.value.find((item, index) => {
-        if (item.team.id === route.params.id) {
-            if (favoriteList.value.length > 0) {
-                const foundObject = favoriteList.value.find(item => item.project.id === id)
-                if (foundObject) {
-                    addTargetItem([])
-                } else {
-                    addTargetItem(teamprojectlist.value.filter((item) => item.project.id === id))
-                }
-            } else {
-                addTargetItem(teamprojectlist.value.filter((item) => item.project.id === id))
-            }
-            if (activeNames.value.includes(index)) return
-            updateActiveNames(index)
-            return
-        }
-    })
+    // teamData.value.find((item, index) => {
+    //     if (item.team.id === route.params.id) {
+    //         if (favoriteList.value.length > 0) {
+    //             const foundObject = favoriteList.value.find(item => item.project.id === id)
+    //             if (foundObject) {
+    //                 addTargetItem([])
+    //             } else {
+    //                 addTargetItem(teamprojectlist.value.filter((item) => item.project.id === id))
+    //             }
+    //         } else {
+    //             addTargetItem(teamprojectlist.value.filter((item) => item.project.id === id))
+    //         }
+    //         if (activeNames.value.includes(index)) return
+    //         updateActiveNames.add(index)
+    //         return
+    //     }
+    // })
     router.push({ path: '/apphome/project/' + id });
 }
 
@@ -450,6 +453,7 @@ onMounted(() => {
                 width: 16px;
                 height: 16px;
                 transition: .3s;
+
                 &:hover {
                     transform: scale(1.2);
                 }

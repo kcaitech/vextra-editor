@@ -11,7 +11,7 @@
         :docUserId="docUserId" @select-type="onSelectType" @switch-state="onSwitch" :shareSwitch="shareSwitch"
         :pageHeight="pageHeight" :project="is_project" :projectPerm="currentProject.self_perm_type">
     </FileShare>
-    <MoveProjectFill :title="'移动文件位置'" :confirm-btn="'移动'"  :projectItem="projectItem" :doc="mydata" :projectVisible="moveVisible" @clodeDialog="clodeDialog" @moveFillSeccess="moveFillSeccess"></MoveProjectFill>
+    <MoveProjectFill :title="t('Createteam.movetip')" :confirm-btn="t('Createteam.move')"  :projectItem="projectItem" :doc="mydata" :projectVisible="moveVisible" @clodeDialog="clodeDialog" @moveFillSeccess="moveFillSeccess"></MoveProjectFill>
 </template>
 
 <script setup lang="ts">

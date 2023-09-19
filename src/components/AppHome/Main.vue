@@ -134,6 +134,6 @@ onMounted(() => {
 
 .main {
     overflow: hidden;
-    height: 100%;
+    height: calc(100% - 56px);
 }
 </style>

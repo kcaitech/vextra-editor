@@ -84,7 +84,10 @@ const { updatestate, is_favor, projectList, is_team_upodate, teamData, activeNam
             }
         }]>;
         activeNames: Ref<number[]>;
-        updateActiveNames: (n: number) => void;
+        updateActiveNames: {
+            add: (n: number) => void;
+            del: (n: number) => void;
+        };
         targetItem: Ref<any[]>;
         addTargetItem: (data: any[]) => void;
         setMenuVisi: (b: boolean) => void;
@@ -446,7 +449,7 @@ const skipProjecrShare = () => {
 
 const isActive = (id: string, name: string, avatar: string, description: string, self_perm_type: number) => {
     if (route.params.id === id) {
-        updateShareData(id, name, avatar, description != '' ? description : '你还没有填写团队描述，快去填写吧。', self_perm_type)
+        updateShareData(id, name, avatar, description != '' ? description : t('Createteam.description'), self_perm_type)
     }
     return route.params.id === id
 }
@@ -481,16 +484,6 @@ const shareFixed = (i: number, id: string) => {
     updateFavor(!is_favor.value);
 }
 
-// const test1 = ref(true)
-
-// watch(targetItem, () => {
-//     if (targetItem.value.length < 1) {
-//         test1.value = false
-//     } else {
-//         test1.value = true
-//     }
-// })
-
 const showicon = (data: any) => {
     if (data.children) {
         return true
@@ -508,6 +501,7 @@ const showicon = (data: any) => {
 }
 
 
+const actionindex = ref()
 watch(route, (v) => {
     if (x.value != '0') x.value = ''
     if (v.name === 'ProjectShare') {
@@ -518,8 +512,15 @@ watch(route, (v) => {
     }
     if (targetItem.value.length > 0) {
         if (v.params.id != targetItem.value[0].project.id) {
-            addTargetItem([])
+            const timer = setTimeout(() => {
+                addTargetItem([])
+                clearTimeout(timer)
+            }, 300);
         }
+    }
+    if (actionindex.value != undefined) {
+        updateActiveNames.del(actionindex.value)
+        actionindex.value = undefined
     }
     if (route.name === "recently") {
         x.value = '1'
@@ -536,6 +537,7 @@ watch(route, (v) => {
 
 }, { deep: true, immediate: true })
 
+
 watchEffect(() => {
     const teamid = ref()
     if (route.name === 'ProjectPage') {
@@ -544,7 +546,8 @@ watchEffect(() => {
         const index = teamData.value.findIndex(item => item.team.id === teamid.value);
 
         if (index !== -1 && !activeNames.value.includes(index)) {
-            updateActiveNames(teamData.value.findIndex(item => item.team.id === teamid.value))
+            actionindex.value = teamData.value.findIndex(item => item.team.id === teamid.value)
+            updateActiveNames.add(teamData.value.findIndex(item => item.team.id === teamid.value))
         }
 
         teamList.value.filter((item: any) => {
@@ -663,7 +666,7 @@ onUnmounted(() => {
                                             <div class="receive">
                                                 <svg-icon icon-class="receive-fill" />
                                             </div>
-                                            <div class="name">收到的分享项目</div>
+                                            <div class="name">{{t('Createteam.sharetip')}}</div>
                                         </div>
                                         <div class="right">
                                         </div>
@@ -738,7 +741,7 @@ onUnmounted(() => {
                                         <div v-else style="box-sizing: border-box;">
                                             <div class="project_name">{{ item.project.name }}</div>
                                             <div class="right">
-                                                <Tooltip :content="'取消固定'" :offset="10">
+                                                <Tooltip :content="t('Createteam.cancelFixed')" :offset="10">
                                                     <div @click="cancelFixed(index, i, item.project.id)">
                                                         <svg t="1693476333821" class="icon" viewBox="0 0 1024 1024"
                                                             version="1.1" xmlns="http://www.w3.org/2000/svg" p-id="15755"
@@ -764,23 +767,20 @@ onUnmounted(() => {
                                     </div>
                                 </template>
                                 <template v-for="(target, n) in targetItem" :key="n">
-                                    <transition name="el-zoom-in-top">
-                                        <div v-if="target.project.team_id === data.team.id" class="project"
-                                            @click.stop="(e) => skipProject(target, e)"
-                                            @mousedown.stop="(e) => rightMenu(target, e)"
-                                            :class="{ 'is_active': isProjectActive(target.project.id) }">
-                                            <div style="box-sizing: border-box;">
-                                                <div class="project_name">{{ target.project.name }}</div>
-                                                <div class="right" @click.stop="newProjectFile(target.project.id)"
-                                                    v-if="target.self_perm_type > 2">
-                                                    <svg-icon icon-class="close"
-                                                        style="transform: rotate(45deg); margin-left: 5px; width: 16px; height: 16px;" />
-                                                </div>
+                                    <div v-if="target.project.team_id === data.team.id" class="project"
+                                        @click.stop="(e) => skipProject(target, e)"
+                                        @mousedown.stop="(e) => rightMenu(target, e)"
+                                        :class="{ 'is_active': isProjectActive(target.project.id) }">
+                                        <div style="box-sizing: border-box;">
+                                            <div class="project_name">{{ target.project.name }}</div>
+                                            <div class="right" @click.stop="newProjectFile(target.project.id)"
+                                                v-if="target.self_perm_type > 2">
+                                                <svg-icon icon-class="close"
+                                                    style="transform: rotate(45deg); margin-left: 5px; width: 16px; height: 16px;" />
                                             </div>
                                         </div>
-                                    </transition>
+                                    </div>
                                 </template>
-
                             </el-collapse-item>
                         </el-collapse>
                     </div>
@@ -805,11 +805,11 @@ onUnmounted(() => {
         ref="rightMenuEl" @delProject="onDelProject" @exitProject="onExitProject" @cancelFixed="menucancelFixed"
         @reName="inputCusname" @showMembergDialog="showMembergDialog" @projectSetting="showSettingDialog">
     </TeamProjectMenu>
-    <ProjectDialog :projectVisible="delVisible" context="删除项目后，将删除项目及项目中所有文件、资料。" :title="'删除项目'" :confirm-btn="'仍然删除'"
+    <ProjectDialog :projectVisible="delVisible" :context="t('Createteam.projectdelcontext')" :title="t('Createteam.projectdeltitle')" :confirm-btn="t('Createteam.ok_delete')"
         @clode-dialog="closeDelVisible" @confirm="DelProject"></ProjectDialog>
-    <ProjectDialog :projectVisible="exitVisible" context="退出项目后，无法再访问项目中的文件，或使用项目中的资源。" :title="'退出项目'"
-        :confirm-btn="'仍然退出'" @clode-dialog="closeExitVisible" @confirm="ExitProject"></ProjectDialog>
-    <ProjectAccessSetting v-if="projectSettingDialog" title="邀请项目成员" :data="menuData" width="500px"
+    <ProjectDialog :projectVisible="exitVisible" :context="t('Createteam.projectexitcontext')" :title="t('Createteam.projectexittitle')"
+        :confirm-btn="t('Createteam.ok_exit')" @clode-dialog="closeExitVisible" @confirm="ExitProject"></ProjectDialog>
+    <ProjectAccessSetting v-if="projectSettingDialog" :title="t('Createteam.membertip')" :data="menuData" width="500px"
         @clodeDialog="projectSettingDialog = false" />
     <ProjectMemberg v-if="projectMembergDialog" :projectMembergDialog="projectMembergDialog" :currentProject="menuData"
         @closeDialog="closeDialog" @exitProject="exitProject" />

@@ -11,8 +11,8 @@
                     </template>
                     <template #empty>
                         <div v-if="props.type === 'project' && !loading" class="datanull">
-                            <p>项目没有任何文件</p>
-                            <button type="button" @click="newProjectFill">新建文件</button>
+                            <p>{{t('Createteam.projectfilenull')}}</p>
+                            <button type="button" @click="newProjectFill">{{t('home.new_file')}}</button>
                         </div>
                         <div v-else-if="empty" class="flex items-center justify-center h-100%">
                             <el-empty :style="{ 'height': height - 50 + 'px' }" :description="t('home.table_empty_tips')" />
@@ -335,14 +335,14 @@ const getFillAddress = (id: string, project: any, team: any) => {
         if(p_Info && p_Info.is_in_team) {
             address = team.name + ' / ' + project.name;
         }else if(p_Info) {
-            address = '收到的分享项目 / ' + project.name;
+            address = `${t('Createteam.sharetip')} / '` + project.name;
         }
         return address;
     }else {
         if(user_id === id) {
-            address = '我的文件';
+            address = t('home.file_shared');
         }else {
-            address = '收到的共享文件';
+            address = t('home.shared_file_received');
         }
         return address;
     }
@@ -353,7 +353,7 @@ watchEffect(() => {
         columns.splice(3, 0, {
             key: 'address',
             dataKey: 'document',
-            title: `文件位置`,
+            title: t('home.filelocation'),
             width: 400,
             minWidth: 100,
             cellRenderer: ({ rowData: { document: { user_id }, project, team } }) => {
@@ -368,7 +368,7 @@ watchEffect(() => {
         columns.splice(3, 0, {
             key: 'creator',
             dataKey: 'document',
-            title: `创建者`,
+            title: t('home.creator'),
             width: 400,
             minWidth: 100,
             align: 'left',
@@ -383,7 +383,7 @@ watchEffect(() => {
         columns.splice(3, 0, {
             key: 'deleter',
             dataKey: 'document',
-            title: `删除人`,
+            title: t('home.deleter'),
             width: 400,
             minWidth: 100,
             cellRenderer: ({ rowData: { delete_user: { nickname } } }) => {

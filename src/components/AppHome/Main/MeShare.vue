@@ -4,14 +4,14 @@
         @updatestar="Starfile" @rightMeun="rightmenu" :noNetwork="noNetwork" @refreshDoc="refreshDoc" />
 
     <listrightmenu :items="items" :data="mydata" @get-doucment="getDoucment" @r-starfile="Starfile" @r-sharefile="Sharefile"
-        @r-removefile="Deletefile" @ropen="openDocument" @moveFillAddress="moveFillAddress"/>
+        @r-removefile="Deletefile" @ropen="openDocument" @moveFillAddress="moveFillAddress" />
 
     <div v-if="showFileShare" class="overlay"></div>
     <FileShare v-if="showFileShare" @close="closeShare" :docId="docId" :selectValue="selectValue" :userInfo="userInfo"
         :docUserId="docUserId" @select-type="onSelectType" @switch-state="onSwitch" :shareSwitch="shareSwitch"
         :pageHeight="pageHeight">
     </FileShare>
-    <MoveProjectFill :title="'移动文件位置'" :confirm-btn="'移动'" :projectItem="projectItem" :doc="mydata"
+    <MoveProjectFill :title="t('Createteam.movetip')" :confirm-btn="t('Createteam.move')" :projectItem="projectItem" :doc="mydata"
         :projectVisible="moveVisible" @clodeDialog="clodeDialog" @moveFillSeccess="moveFillSeccess"></MoveProjectFill>
 </template>
 

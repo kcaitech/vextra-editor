@@ -25,11 +25,11 @@ const { t } = useI18n()
 const projectOptions = [
     {
         value: 0,
-        label: '公开: 团队全部成员可访问',
+        label: t('Createteam.projectOptionsA'),
     },
     {
         value: 1,
-        label: '非公开: 仅通过链接申请访问',
+        label: t('Createteam.projectOptionsB'),
     }
 ]
 const projectType = ref(projectOptions[1].label);
@@ -37,15 +37,15 @@ const projectType = ref(projectOptions[1].label);
 const projectPerms = [
     {
         value: 1,
-        label: '仅阅读',
+        label: t('Createteam.projectPermsA'),
     },
     {
         value: 2,
-        label: '可评论',
+        label: t('Createteam.projectPermsB'),
     },
     {
         value: 3,
-        label: '可编辑',
+        label: t('Createteam.projectPermsC'),
     }
 ]
 const projectPerm = ref(projectPerms[0].label);
@@ -195,7 +195,7 @@ onMounted(() => {
     params.invited_switch = project.invited_switch;
     params.need_approval = project.need_approval;
     params.perm_type = project.perm_type;
-    sharelink.value = `https://test.protodesign.cn/zbb/#/apphome/project/${project.id}`
+    sharelink.value = `https://protodesign.cn/#/apphome/project/${project.id}`
 })
 
 </script>
@@ -206,7 +206,7 @@ onMounted(() => {
             :before-close="handleClose">
             <div class="body">
                 <div class="project_type">
-                    <p>项目类型</p>
+                    <p>{{t('Createteam.projecttype')}}</p>
                     <el-select v-model="projectType" class="m-2" style="width: 230px;" size="large"
                         :disabled="!(currentProject[0].self_perm_type === 4 || currentProject[0].self_perm_type === 5)">
                         <el-option v-for="item in projectOptions" :key="item.value" :label="item.label"
@@ -214,17 +214,17 @@ onMounted(() => {
                     </el-select>
                 </div>
                 <div class="project_type" v-if="currentProject[0]">
-                    <p>权限</p>
+                    <p>{{t('Createteam.jurisdiction')}}</p>
                     <el-select v-model="projectPerm" class="m-2" style="width: 230px;" size="large"
                         :disabled="!(currentProject[0].self_perm_type === 4 || currentProject[0].self_perm_type === 5)">
                         <el-option v-for="item in projectPerms" :key="item.value" :label="item.label" :value="item.label" />
                     </el-select>
                 </div>
                 <div v-if="currentProject[0] && projectType === projectOptions[1].label">
-                    <div>点击链接或扫描二维码申请加入</div>
+                    <div>{{t('Createteam.jointips')}}</div>
                     <div class="share-switch"
                         :style="{ opacity: currentProject[0].self_perm_type === 4 || currentProject[0].self_perm_type === 5 ? '1' : '.5' }">
-                        <span>邀请链接开关:</span>
+                        <span>{{t('Createteam.invitation_switch')}}:</span>
                         <el-switch class="switch" size="small" v-model="linkSwitch" @click="onLinkSwitch"
                             :disabled="!(currentProject[0].self_perm_type === 4 || currentProject[0].self_perm_type === 5)" />
                     </div>
@@ -240,11 +240,11 @@ onMounted(() => {
                             :disabled="!(currentProject[0].self_perm_type === 4 || currentProject[0].self_perm_type === 5)"></el-checkbox><span>申请后需管理员审批确认</span>
                     </div>
                     <div class="button" :style="{ opacity: linkSwitch ? '1' : '.5' }" @click="copyLink">
-                        <button>复制链接</button>
+                        <button>{{t('Createteam.copylink')}}</button>
                     </div>
                 </div>
                 <div v-else>
-                    <div class="button" @click.stop="handleClose"><button>确定</button></div>
+                    <div class="button" @click.stop="handleClose"><button>{{t('Createteam.confirm')}}</button></div>
                 </div>
             </div>
         </el-dialog>

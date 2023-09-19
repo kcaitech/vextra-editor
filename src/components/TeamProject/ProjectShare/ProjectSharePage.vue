@@ -3,7 +3,7 @@
     <div>
         <div class="team">
             <div class="team-info">
-                <div class="team-name">收到的分享项目</div>
+                <div class="team-name">{{t('Createteam.sharetip')}}</div>
             </div>
         </div>
         <ProjectShareList />
@@ -12,7 +12,8 @@
 <script setup lang="ts">
 import { Ref, inject, onMounted, onUnmounted } from 'vue'
 import ProjectShareList from './ProjectShareList.vue'
-
+import { useI18n } from 'vue-i18n'
+const { t } = useI18n();
 
 interface data {
     team: {

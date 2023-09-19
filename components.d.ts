@@ -140,7 +140,6 @@ declare module '@vue/runtime-core' {
     ProjectRecycleBin: typeof import('./src/components/TeamProject/ProjectFill/ProjectRecycleBin.vue')['default']
     ProjectShareList: typeof import('./src/components/TeamProject/ProjectShare/ProjectShareList.vue')['default']
     ProjectSharePage: typeof import('./src/components/TeamProject/ProjectShare/ProjectSharePage.vue')['default']
-    Radius: typeof import('./src/components/Document/Attribute/Radius.vue')['default']
     Radius: typeof import('./src/components/Document/Attribute/BaseAttr/Radius.vue')['default']
     RadiusForIos: typeof import('./src/components/Document/Attribute/PopoverMenu/RadiusForIos.vue')['default']
     Readonly: typeof import('./src/components/Document/Selection/Controller/Readonly.vue')['default']

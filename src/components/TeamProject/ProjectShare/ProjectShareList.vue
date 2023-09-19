@@ -228,22 +228,22 @@ const setProjectInfo = async (params: any) => {
 <template>
     <el-table :data="tableData" ref="table" height="100%" style="width: 100%" :border="false"
         @row-dblclick="dblclickskipProject" @row-contextmenu="rightmenu" highlight-current-row>
-        <el-table-column prop="project" label="项目名称">
+        <el-table-column prop="project" :label="t('Createteam.project_name')">
             <template #default="scope">
                 <span class="description">{{ scope.row.project.name }}</span>
             </template>
         </el-table-column>
-        <el-table-column prop="project" label="项目描述">
+        <el-table-column prop="project" :label="t('Createteam.project_name')">
             <template #default="scope">
                 <span class="description">{{ scope.row.project.description }}</span>
             </template>
         </el-table-column>
-        <el-table-column prop="creator" label="创建者">
+        <el-table-column prop="creator" :label="t('Createteam.creator')">
             <template #default="scope">
                 <span class="description"> {{ scope.row.creator.nickname }}</span>
             </template>
         </el-table-column>
-        <el-table-column prop="project" label="操作">
+        <el-table-column prop="project" :label="t('home.operation')">
             <template #default="scope">
                 <div class="other1" v-if="scope.row.is_favor">
                     <div @click="cancelFixed(scope.row)">
@@ -285,14 +285,14 @@ const setProjectInfo = async (params: any) => {
             </template>
         </el-table-column>
     </el-table>
-    <ProjectDialog :projectVisible="innerVisible" context="退出项目后，无法再访问项目中的文件，或使用项目中的资源。" :title="'退出项目'"
-        :confirm-btn="'仍然退出'" @clode-dialog="handleClose" @confirm="quitProject"></ProjectDialog>
-    <ProjectDialog :projectVisible="delVisible" context="删除项目后，将删除项目及项目中所有文件、资料。" :title="'删除项目'" :confirm-btn="'任然删除'"
+    <ProjectDialog :projectVisible="innerVisible" :context="t('Createteam.projectexitcontext')" :title="t('Createteam.projectexittitle')"
+        :confirm-btn="t('Createteam.ok_exit')" @clode-dialog="handleClose" @confirm="quitProject"></ProjectDialog>
+    <ProjectDialog :projectVisible="delVisible" :context="t('Createteam.projectdelcontext')" :title="t('Createteam.projectdeltitle')" :confirm-btn="t('Createteam.ok_delete')"
         @clode-dialog="closeDelVisible" @confirm="DelProject"></ProjectDialog>
     <listrightmenu :items="updateitems" :data="mydata" @showMembergDialog="showMembergDialog"
         @projectrename="setProjectInfo" @showSettingDialog="showSettingDialog" @cancelFixed="cancelFixed(mydata)"
         @exitproject="rexitProject" @delproject="rdelProject" />
-    <ProjectAccessSetting v-if="projectSettingDialog" title="邀请项目成员" :data="mydata" width="500px"
+    <ProjectAccessSetting v-if="projectSettingDialog" :title="t('Createteam.membertip')" :data="mydata" width="500px"
         @clodeDialog="projectSettingDialog = false" />
     <ProjectMemberg v-if="projectMembergDialog" :projectMembergDialog="projectMembergDialog" :currentProject="mydata"
         @closeDialog="closeDialog" @exitProject="exitProject" />

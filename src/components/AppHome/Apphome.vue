@@ -69,8 +69,9 @@ const addTargetItem = (data: any[]) => {
 }
 
 //用户改变activeNames的值
-const updateActiveNames = (n: number) => {
-  activeNames.value.push(n)
+const updateActiveNames = {
+  add: (n: number) => activeNames.value.push(n),
+  del: (n: number) => activeNames.value = activeNames.value.filter(item => item != n)
 }
 
 
