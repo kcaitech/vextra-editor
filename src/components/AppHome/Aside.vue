@@ -536,47 +536,40 @@ watch(route, (v) => {
 
 }, { deep: true, immediate: true })
 
-watch(() => teamList.value, (newvalue) => {
+watchEffect(() => {
     const teamid = ref()
-
     if (route.name === 'ProjectPage') {
         const [teamids] = projectList.value.filter(item => item.project.id === route.params.id).map(obj => obj.project.team_id)
         teamid.value = teamids
-        if (activeNames.value.includes(teamData.value.findIndex(item => item.team.id === teamid.value))) return
-        updateActiveNames(teamData.value.findIndex(item => item.team.id === teamid.value))
-    }
-    nextTick(() => {
-        if (newvalue) {
-            newvalue.filter((item: any) => {
-                if (item.team.id === teamid.value) {
-                    if (item.children) {
-                        const foundObject = item.children.find((item: any) => item.project.id === route.params.id)
-                        if (foundObject) {
-                            console.log('11111');
-                            addTargetItem([])
-                        } else {
-                            console.log('22222');
-                            addTargetItem(projectList.value.filter(item => item.project.id === route.params.id));
-                        }
+        const index = teamData.value.findIndex(item => item.team.id === teamid.value);
+
+        if (index !== -1 && !activeNames.value.includes(index)) {
+            updateActiveNames(teamData.value.findIndex(item => item.team.id === teamid.value))
+        }
+
+        teamList.value.filter((item: any) => {
+            if (item.team.id === teamid.value) {
+                if (item.children) {
+                    const foundObject = item.children.find((item: any) => item.project.id === route.params.id)
+                    if (foundObject) {
+                        addTargetItem([])
                     } else {
-                        console.log('33333');
                         addTargetItem(projectList.value.filter(item => item.project.id === route.params.id));
                     }
+                } else {
+                    addTargetItem(projectList.value.filter(item => item.project.id === route.params.id));
                 }
-
             }
-
-            )
         }
-    })
-
+        )
+    }
     nextTick(() => {
         const index = projectShareList.value.findIndex(item => item.project.id === route.params.id);
         if (index !== -1) {
             activeShare.value = [1]
         }
     })
-}, { deep: true,immediate:true })
+})
 
 setInterval(() => {
     GetteamList();
@@ -586,7 +579,6 @@ setInterval(() => {
 onMounted(() => {
     GetteamList();
     getProjectFavoriteLists();
-
 })
 
 onUnmounted(() => {
