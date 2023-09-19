@@ -211,7 +211,7 @@ export class Selection extends Watchable(Object) implements ISave4Restore {
         return shapes;
     }
 
-    getClosetArtboard(position: PageXY, except?: Shape, scope?: Shape[]): Shape {
+    getClosetArtboard(position: PageXY, except?: Map<string, Shape>, scope?: Shape[]): Shape {
         let result: Shape = this.selectedPage!; // 任何一个元素,至少在一个容器内
         const range: Shape[] = scope || this.m_selectPage?.artboardList.filter((ab: Artboard) => !ab.isLocked && ab.isVisible) || [];
         const artboard = artboardFinder(this.scout!, range, position, except);

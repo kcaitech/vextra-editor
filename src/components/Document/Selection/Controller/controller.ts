@@ -15,7 +15,7 @@ import { paster_short } from '@/utils/clipboard';
 import { sort_by_layer } from '@/utils/group_ungroup';
 import { Comment } from '@/context/comment';
 import { useI18n } from 'vue-i18n';
-import { permIsEdit } from '@/utils/content';
+import { map_from_shapes, permIsEdit } from '@/utils/content';
 import { distance2apex, distance2apex2, get_frame, get_pg_by_frame, gen_match_points, PointsOffset } from '@/utils/assist';
 import { Asssit } from '@/context/assist';
 import { Menu } from '@/context/menu';
@@ -59,12 +59,11 @@ export function useControllerCustom(context: Context, i18nT: Function) {
     }
     function _migrate(shapes: Shape[], start: ClientXY, end: ClientXY) {
         if (shapes.length) {
-            const ps: PageXY = matrix.computeCoord(start.x, start.y);
-            const pe: PageXY = matrix.computeCoord(end.x, end.y);
-            const artboardOnStart = selection.getClosetArtboard(ps, undefined, shapes);
-            const targetParent = (artboardOnStart && artboardOnStart.type !== ShapeType.Page) ? selection.getClosetArtboard(pe, artboardOnStart) : selection.getClosetArtboard(pe);
-            const m = getCloesetContainer(shapes[0]).id !== targetParent.id;
-            if (m && asyncTransfer) {
+            const pe: PageXY = matrix.computeCoord3(end);
+            const map = map_from_shapes(shapes);
+            const targetParent = selection.getClosetArtboard(pe, map);
+            const emit_migrate = getCloesetContainer(shapes[0]).id !== targetParent.id;
+            if (emit_migrate && asyncTransfer) {
                 shapes = sort_by_layer(context, shapes);
                 asyncTransfer.migrate(targetParent as GroupShape);
                 context.assist.set_collect_target([targetParent as GroupShape], true);
@@ -76,7 +75,7 @@ export function useControllerCustom(context: Context, i18nT: Function) {
         let result = selection.selectedPage!
         let p = shape.parent;
         while (p) {
-            if (p.type == ShapeType.Artboard) {
+            if (p.type === ShapeType.Artboard) {
                 result = p as any;
                 break;
             }
@@ -290,6 +289,8 @@ export function useControllerCustom(context: Context, i18nT: Function) {
                 if (asyncTransfer) {
                     const { clientX, clientY } = e;
                     const mousePosition: ClientXY = { x: clientX - root.x, y: clientY - root.y };
+                    console.log('startPosition', JSON.parse(JSON.stringify(startPosition)));
+                    console.log('mousePosition', JSON.parse(JSON.stringify(mousePosition)));
                     _migrate(shapes, startPosition, mousePosition);
                     asyncTransfer = asyncTransfer.close();
                 }
