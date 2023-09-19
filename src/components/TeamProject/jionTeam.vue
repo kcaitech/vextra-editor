@@ -5,15 +5,15 @@
             <div class="img" style="width: 400px;height: 400px;background-color: silver;border-radius: 4px;"></div>
             <div v-if="switchstate" class="join">
                 <p>
-                    申请加入团队：<strong>{{ teaminfo?.name }}</strong>
-                    <span>（权限：<strong>{{ checktype(teaminfo?.invited_perm_type) }}</strong>）</span>
+                    {{t('joinTeam.jointeamtipsA')}}<strong>{{ teaminfo?.name }}</strong>
+                    <span>（{{t('Createteam.jurisdiction')}}：<strong>{{ checktype(teaminfo?.invited_perm_type) }}</strong>）</span>
                 </p>
-                <p>加入团队后，可访问该团队中的项目、文件、资源</p>
-                <button v-if="showjoinbnt" type="button" @click.stop="joinTeam(teaminfo?.id, undefined)">申请加入</button>
-                <p v-else style="font-size: 18px;">已发送申请，{{ time }}s即将进入应用首页，待审批通过后，可查看该团队内容</p>
+                <p>{{ t('joinTeam.jurisdiction') }}</p>
+                <button v-if="showjoinbnt" type="button" @click.stop="joinTeam(teaminfo?.id, undefined)">{{t('joinTeam.jointeamtipsB')}}</button>
+                <p v-else style="font-size: 18px;">{{t('joinTeam.jointeamtipsC')}}{{ time }}s{{t('joinTeam.jointeamtipsC1')}}</p>
             </div>
             <div v-else class="offtips">
-                <p style="font-size: 18px;">团队邀请已关闭，如需加入团队，请联系团队管理员处理。</p>
+                <p style="font-size: 18px;">{{ t('joinTeam.jointeamtipsD') }}</p>
             </div>
         </div>
     </div>
@@ -25,7 +25,9 @@ import { useRoute } from 'vue-router';
 import * as user_api from '@/apis/users'
 import { ElMessage } from 'element-plus';
 import { router } from '@/router';
+import { useI18n } from 'vue-i18n';
 
+const { t } = useI18n()
 interface teaminfotype {
     id: string,
     name: string,
@@ -93,9 +95,9 @@ const joinTeam = async (id: any, notes?: any) => {
 const checktype = (type: any) => {
     switch (type) {
         case 0:
-            return '阅读'
+            return t('joinTeam.read')
         case 1:
-            return '编辑'
+            return t('joinTeam.edit')
         default:
             break
     }

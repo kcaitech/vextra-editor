@@ -2,7 +2,7 @@
     <div class="card-container">
         <div class="heard">
             <div class="title">
-                新建项目
+                {{t('Createteam.add_project')}}
             </div>
             <div class="close" @click.stop="close">
                 <svg-icon icon-class="close"></svg-icon>
@@ -10,12 +10,12 @@
         </div>
         <div class="centent">
             <div class="project-name">
-                <div class="title">项目名称<span>{{ t('Createteam.required') }}</span></div>
-                <input ref="projectinput" type="text" placeholder="输入项目名称" v-model="inputValue" maxlength="20" required>
+                <div class="title">{{t('Createteam.project_name')}}<span>{{ t('Createteam.required') }}</span></div>
+                <input ref="projectinput" type="text" :placeholder="t('Createteam.project_name_tips')" v-model="inputValue" maxlength="20" required>
             </div>
             <div class="project-description">
-                <div class="title">项目描述<span>{{ t('Createteam.optional') }}</span></div>
-                <textarea name="" id="" cols="30" rows="10" placeholder="输入项目描述" v-model="textareaValue" maxlength="120" />
+                <div class="title">{{t('Createteam.project_description')}}<span>{{ t('Createteam.optional') }}</span></div>
+                <textarea name="" id="" cols="30" rows="10" :placeholder="t('Createteam.project_description_tips')" v-model="textareaValue" maxlength="120" />
             </div>
         </div>
         <div class="addproject">
@@ -29,7 +29,6 @@ import { useI18n } from 'vue-i18n';
 import * as user_api from '@/apis/users'
 import { ElMessage } from 'element-plus'
 import { router } from '@/router';
-import { useRoute } from 'vue-router';
 const { t } = useI18n();
 const emits = defineEmits<{
     (e: 'close'): void
@@ -39,7 +38,6 @@ const props = defineProps<{
 }>()
 
 const projectinput=ref()
-const route = useRoute()
 const inputValue = ref('')
 const textareaValue = ref('')
 const isDisabled = computed(() => inputValue.value.trim() === '')
@@ -53,7 +51,6 @@ const createProject = async () => {
         if (code === 0) {
             emits('close')
             updateprojectliststate(true)
-            ElMessage.success('成功添加项目')
             nextTick(() => {
                 router.push({ path: '/apphome/project/' + data.id });
             })

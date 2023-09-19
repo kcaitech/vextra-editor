@@ -36,7 +36,7 @@
 </template>
 <script setup lang="ts">
 import { ElMessage } from 'element-plus';
-import { Ref, computed, inject, nextTick, ref } from 'vue';
+import { computed, inject, nextTick, ref } from 'vue';
 import { useI18n } from 'vue-i18n';
 import * as user_api from '@/apis/users'
 import { useRoute } from 'vue-router'
@@ -67,7 +67,6 @@ const createTeam = async () => {
         const { code, message, data } = await user_api.CreateTeam(formData)
         if (code === 0) {
             emits('close')
-            ElMessage.success('成功添加团队')
             state(true)  //改变updatestate的值为TRUE
             if (route.params.id) {
                 router.push({ path: `/apphome/teams/${data.id}` })
