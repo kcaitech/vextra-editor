@@ -386,9 +386,9 @@ watchEffect(() => {
             title: `删除人`,
             width: 400,
             minWidth: 100,
-            cellRenderer: ({ rowData: { document: { user_id }, project, team } }) => {
+            cellRenderer: ({ rowData: { delete_user: { nickname } } }) => {
                 return (
-                    <span>{'大啊啊'}</span>
+                    <span>{nickname}</span>
             );
             },
         },)
