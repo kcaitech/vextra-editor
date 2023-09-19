@@ -305,6 +305,10 @@ const setProjectInfo = async (params: any) => {
     svg {
         width: 16px;
         height: 16px;
+        transition: 0.3s;
+        &:hover {
+            transform: scale(1.2);
+        }
     }
 
     >div {

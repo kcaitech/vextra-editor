@@ -60,16 +60,14 @@ async function GetrecycleLists(id: string) {
 
     try {
         const { data } = await team_api.GetrecycleList({ project_id: projectId })
-        if (data == null) {
-            noNetwork.value = true
-        } else {
-            noNetwork.value = false
+        if (data) {
             for (let i = 0; i < data.length; i++) {
                 let { document: { size, deleted_at } } = data[i]
                 data[i].document.size = sizeTostr(size)
                 data[i].document.deleted_at = deleted_at.split('.')[0]
             }
         }
+        noNetwork.value = false
         lists.value = Object.values(data)
         const user_id = localStorage.getItem('userId');
         if (props.currentProject.self_perm_type < 4) {
