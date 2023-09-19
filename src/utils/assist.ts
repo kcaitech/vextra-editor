@@ -273,6 +273,8 @@ export function modify_pt_y(pre_target2: PT2, s_pg: PointGroup2, apexY: number[]
             pre_target2.delta = delta5, pre_target2.y = y, pre_target2.sx = s_pg.rt.x, pre_target2.align = Align.RT_Y;
         }
     }
+    if (pre_target2.delta && pre_target2.y === 0) console.log('weird');
+
 }
 export function modify_pt_x4p(pre_target1: PT4P1, p: PageXY, apexX: number[], stickness: number) {
     for (let i = 0, len = apexX.length; i < len; i++) {
