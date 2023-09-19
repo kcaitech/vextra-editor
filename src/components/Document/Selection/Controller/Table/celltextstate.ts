@@ -51,7 +51,7 @@ export function textState(props: {
         if (!editing.value) return;
         document.removeEventListener("mousemove", onMouseMove);
         document.removeEventListener("mouseup", onMouseUp);
-        const selection = props.context.selection.getTextSelection(props.shape as any);
+        const selection = props.context.textSelection;
         const workspace = props.context.workspace;
         const { clientX, clientY } = e;
         const root = workspace.root;
@@ -59,11 +59,11 @@ export function textState(props: {
         const xy = matrix.inverseCoord(clientX - root.x, clientY - root.y);
         const locate = props.shape.text!.locateText(xy.x, xy.y);
         if (downIndex.index === locate.index) {
-            if (locate.placeholder) selection.setCursor(locate.index + 1, false);
-            else selection.setCursor(locate.index, locate.before);
+            if (locate.placeholder) selection.setCursor(locate.index + 1, false, props.shape.text);
+            else selection.setCursor(locate.index, locate.before, props.shape.text);
         }
         else {
-            selection.selectText(downIndex.index, locate.index, locate.before);
+            selection.selectText(downIndex.index, locate.index, props.shape.text);
         }
         props.context.workspace.setCtrl('page');
     }
@@ -72,18 +72,18 @@ export function textState(props: {
         e.stopPropagation();
         if (!editing.value) return;
         const workspace = props.context.workspace;
-        const selection = props.context.selection.getTextSelection(props.shape as any);
+        const selection = props.context.textSelection;
         const { clientX, clientY } = e;
         const root = workspace.root;
         matrix.reset(props.matrix);
         const xy = matrix.inverseCoord(clientX - root.x, clientY - root.y);
         const locate = props.shape.text!.locateText(xy.x, xy.y);
         if (downIndex.index === locate.index) {
-            if (locate.placeholder) selection.setCursor(locate.index + 1, false);
-            else selection.setCursor(locate.index, locate.before);
+            if (locate.placeholder) selection.setCursor(locate.index + 1, false, props.shape.text);
+            else selection.setCursor(locate.index, locate.before, props.shape.text);
         }
         else {
-            selection.selectText(downIndex.index, locate.index, locate.before);
+            selection.selectText(downIndex.index, locate.index, props.shape.text);
         }
     }
     function onMouseEnter() {

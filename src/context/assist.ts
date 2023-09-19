@@ -147,18 +147,24 @@ export class Asssit extends Watchable(Object) {
         }
     }
     init() { this.m_context.selection.watch(this.selection_watcher.bind(this)) }
+    set_collect_target(groups: GroupShape[], collect?: boolean) {
+        this.m_collect_target = groups;
+        if (collect) this.collect();
+    }
     collect() {
         // const s = Date.now();
         const page = this.m_context.selection.selectedPage;
-        if (!page) return;
-        this.clear();
-        let target: GroupShape = page;
-        if (this.m_collect_target.length) target = this.m_collect_target[0] || page;
-        this.m_shape_inner = finder(this.m_context, target, this.m_pg_inner, this.m_x_axis, this.m_y_axis);
+        if (page) {
+            this.clear();
+            let target: GroupShape = page;
+            if (this.m_collect_target.length) target = this.m_collect_target[0] || page;
+            this.m_shape_inner = finder(this.m_context, target, this.m_pg_inner, this.m_x_axis, this.m_y_axis);
+        }
         // const e = Date.now();
         // console.log('点位收集用时(ms):', e - s);
     }
-    setTransTarget(shapes: Shape[]) {
+    set_trans_target(shapes: Shape[]) {
+        this.collect();
         this.m_except.clear();
         if (shapes.length === 1) {
             get_tree(shapes[0], this.m_except);
@@ -228,7 +234,7 @@ export class Asssit extends Watchable(Object) {
         return target;
     }
     point_match(s: Shape, t: PointType) {
-        const st = Date.now();
+        // const st = Date.now();
         if (!this.m_except.size) return;
         this.m_nodes_x = [];
         this.m_nodes_y = [];
@@ -254,7 +260,7 @@ export class Asssit extends Watchable(Object) {
             this.m_nodes_y = (this.m_y_axis.get(target.y) || []).concat([{ p: { x: pre_target2.sx, y: target.y }, id: 'ex' }]);
         }
         this.notify(Asssit.UPDATE_ASSIST);
-        const e = Date.now();
+        // const e = Date.now();
         // console.log('单次匹配用时(ms):', e - st);
         return target;
     }

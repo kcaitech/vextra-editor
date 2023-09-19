@@ -1,6 +1,9 @@
 import { XY } from '@/context/selection';
 import { v4 as uuid } from "uuid";
 import { debounce } from 'lodash';
+import { Shape } from '@kcdesign/data';
+import { Context } from '@/context';
+import { ro } from 'element-plus/es/locale';
 // 打印
 function _debounceLog(mes: any, flag?: string) {
   console.log(flag ? `${flag} ${mes}` : mes);
@@ -141,6 +144,43 @@ export function XYsBounding(points: XY[]) {
   const right = Math.max(...xs);
   return { top, bottom, left, right };
 }
+// 寻找群体shape在屏幕坐标系上的边界
+export function XYsBounding2(shapes: Shape[], context: Context) {
+  if (!shapes.length) return false;
+  const wm = context.workspace.matrix;
+  const fs = shapes[0], fbox = fs.boundingBox(), fsp = fs.parent;
+  if (!fsp) return false;
+  const fspm2r = fsp.matrix2Root();
+  fspm2r.multiAtLeft(wm);
+  const xy1 = fspm2r.computeCoord2(fbox.x, fbox.y), xy2 = fspm2r.computeCoord2(fbox.x + fbox.width, fbox.y + fbox.height);
+  let top = xy1.y, bottom = xy2.y, left = xy1.y, right = xy2.x;
+  if (shapes.length < 2) return { top, bottom, left, right };
+  for (let i = 1, len = shapes.length; i < len; i++) {
+    const s = shapes[i], m2r = s.matrix2Root(), f = s.frame;
+    m2r.multiAtLeft(wm);
+    const points = [m2r.computeCoord2(0, 0), m2r.computeCoord2(f.width, 0), m2r.computeCoord2(f.width, f.height), m2r.computeCoord2(0, f.height)];
+    for (let i = 0; i < 4; i++) {
+      const p = points[i];
+      if (p.x < left) left = p.x; else if (p.x > right) right = p.x;
+      if (p.y < top) top = p.y; else if (p.y > bottom) bottom = p.y;
+    }
+  }
+  return { top, bottom, left, right };
+}
+export function is_box_outer_view(box: { top: number, bottom: number, left: number, right: number }, context: Context) {
+  const { x, right, y, bottom } = context.workspace.root;
+  return (box.right > right - x) || (box.left < 0) || (box.top < 0) || (box.bottom > bottom - y);
+}
+export function is_box_outer_view2(shapes: Shape[], context: Context) {
+  const wm = context.workspace.matrix, { x, right, y, bottom } = context.workspace.root;
+  for (let i = 0, len = shapes.length; i < len; i++) {
+    const f = shapes[i].frame, p = wm.computeCoord2(f.x, f.y);
+    if ((p.x > right - x) || (p.x < 0) || (p.y < 0) || (p.y > bottom - y)) return true;
+  }
+  return false;
+}
+
+
 
 // 判断线段p1q1与线段p2q2是否🍌
 export function isIntersect(p1: XY, q1: XY, p2: XY, q2: XY): boolean {
@@ -149,37 +189,20 @@ export function isIntersect(p1: XY, q1: XY, p2: XY, q2: XY): boolean {
   const orientation3 = pointOrientation(p2, q2, p1);
   const orientation4 = pointOrientation(p2, q2, q1);
 
-  if (orientation1 !== orientation2 && orientation3 !== orientation4) {
-    return true;
-  }
-  if (orientation1 === 0 && isOnSegment(p1, p2, q1)) {
-    return true;
-  }
-  if (orientation2 === 0 && isOnSegment(p1, q2, q1)) {
-    return true;
-  }
-  if (orientation3 === 0 && isOnSegment(p2, p1, q2)) {
-    return true;
-  }
-  if (orientation4 === 0 && isOnSegment(p2, q1, q2)) {
-    return true;
-  }
+  if (orientation1 !== orientation2 && orientation3 !== orientation4) return true;
+  if (orientation1 === 0 && isOnSegment(p1, p2, q1)) return true;
+  if (orientation2 === 0 && isOnSegment(p1, q2, q1)) return true;
+  if (orientation3 === 0 && isOnSegment(p2, p1, q2)) return true;
+  if (orientation4 === 0 && isOnSegment(p2, q1, q2)) return true;
   return false;
 
   function pointOrientation(p1: XY, p2: XY, p3: XY) {
     const val = (p2.y - p1.y) * (p3.x - p2.x) - (p2.x - p1.x) * (p3.y - p2.y);
-    if (val == 0) {
-      return 0;
-    }
+    if (val === 0) return 0;
     return (val > 0) ? 1 : 2;
-
   }
   function isOnSegment(p: XY, q: XY, r: XY) {
-    if (q.x <= Math.max(p.x, r.x) && q.x >= Math.min(p.x, r.x) &&
-      q.y <= Math.max(p.y, r.y) && q.y >= Math.min(p.y, r.y)) {
-      return true;
-    }
-    return false;
+    return (q.x <= Math.max(p.x, r.x) && q.x >= Math.min(p.x, r.x) && q.y <= Math.max(p.y, r.y) && q.y >= Math.min(p.y, r.y));
   }
 }
 

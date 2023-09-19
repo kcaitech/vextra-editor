@@ -2,8 +2,9 @@ import { ShapeType, TableShape, Watchable } from "@kcdesign/data";
 import { Matrix } from '@kcdesign/data';
 import { Context } from "./index";
 import { Root } from "@/utils/content";
-import { Clipboard } from "@/utils/clipaboard";
+import { Clipboard } from "@/utils/clipboard";
 import { adapt_page } from "@/utils/content";
+import { PageXY } from "./selection";
 interface Point {
     x: number
     y: number
@@ -82,6 +83,7 @@ export class WorkSpace extends Watchable(Object) {
     static DELETE_LINE = 31;
     static INIT_EDITOR = 32;
     static CHANGE_NAVI = 33;
+    static PRE_EDIT = 34;
     private context: Context;
     private m_matrix: Matrix = new Matrix();
     private m_scaling: boolean = false; // 编辑器是否正在缩放图形
@@ -140,6 +142,10 @@ export class WorkSpace extends Watchable(Object) {
             }
             return root;
         }
+    }
+    get center_on_page(): PageXY {
+        const { x, right, y, bottom } = this.root;
+        return this.matrix.inverseCoord({ x: (right - x) / 2, y: (bottom - y) / 2 });
     }
     get pageView() {//return pageView HTMLElement
         const pageView: any = document.querySelector(`[data-area="${this.m_pageViewId}"]`);
@@ -223,6 +229,7 @@ export class WorkSpace extends Watchable(Object) {
     }
     contentEdit(v: boolean) {
         this.m_content_editing = v;
+        this.notify(WorkSpace.PRE_EDIT);
     }
     pageDragging(v: boolean) {
         this.m_page_dragging = v;

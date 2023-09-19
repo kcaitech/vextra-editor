@@ -42,7 +42,7 @@ function useControllerCustom(context: Context, i18nT: Function) {
         shapes = context.selection.selectedShapes;
         root = context.workspace.root;
         area = context.selection.getArea({ x: e.clientX - root.x, y: e.clientY - root.y });
-        console.log('click-area', area);
+        // console.log('click-area', area);
         if (area === 'body') {
             workspace.value.setCtrl('controller');
             down4body(e);
@@ -116,7 +116,7 @@ function useControllerCustom(context: Context, i18nT: Function) {
                     const text = editingCell.cell.text;
                     if (!text) return;
                     const m_index = text.locateText(xy.x, xy.y);
-                    text_selection.selectText(down_index.index, m_index.index);
+                    text_selection.selectText(down_index.index, m_index.index, text);
                 }
             } else {
                 if (m_item.cell?.id === down_item.cell?.id) {
@@ -143,7 +143,7 @@ function useControllerCustom(context: Context, i18nT: Function) {
         editor.initTextCell(cell.index.row, cell.index.col)
     }
     function down(e: MouseEvent) {
-        console.log('单击 cell:', down_item);
+        // console.log('单击 cell:', down_item);
         table_selection.resetSelection();
         set_position(e);
         if (down_item) {
@@ -156,8 +156,8 @@ function useControllerCustom(context: Context, i18nT: Function) {
                     const text = down_item.cell.text;
                     if (!text) return;
                     down_index = text.locateText(xy.x, xy.y);
-                    text_selection = context.selection.getTextSelection(down_item.cell as TextShape);
-                    text_selection.setCursor(down_index.index, down_index.before);
+                    text_selection = context.textSelection;
+                    text_selection.setCursor(down_index.index, down_index.before, text);
                 } else if (down_item.cell.cellType === TableCellType.Image) {
                     // console.log('点到imagecell');
                     table_selection.setEditingCell();
@@ -165,7 +165,7 @@ function useControllerCustom(context: Context, i18nT: Function) {
                 } else {
                     // console.log('unexcept');
                     init_text_cell(down_item);
-                    text_selection = context.selection.getTextSelection(down_item.cell as TextShape);
+                    text_selection = context.textSelection;
                     text_selection.setCursor(0, false);
                     table_selection.setEditingCell(down_item);
                 }
@@ -177,8 +177,9 @@ function useControllerCustom(context: Context, i18nT: Function) {
                 // @ts-ignore
                 down_index = down_item.cell.text!.locateText(0, 0);
                 // @ts-ignore
-                text_selection = context.selection.getTextSelection(down_item.cell);
-                text_selection.setCursor(down_index.index, down_index.before);
+                text_selection = context.textSelection;
+                // @ts-ignore
+                text_selection.setCursor(down_index.index, down_index.before, down_item.cell.text);
             }
         }
         document.addEventListener('mousemove', mousemove4body);
@@ -186,11 +187,11 @@ function useControllerCustom(context: Context, i18nT: Function) {
         move = mousemove4body, up = mouseup4body;
     }
     function dbldown() {
-        console.log('双击');
+        // console.log('双击');
         if (down_item && down_item.cell && down_item.cell.cellType === TableCellType.Text) {
             const text = down_item.cell.text, len: number = text?.length!;
             if (text && len !== 1) {
-                text_selection.selectText(0, len);
+                text_selection.selectText(0, len, text);
             } else {
                 table_selection.setEditingCell();
                 table_selection.selectTableCell(down_item.index.row, down_item.index.col);
@@ -201,7 +202,7 @@ function useControllerCustom(context: Context, i18nT: Function) {
     }
     function multidown() {
         init_down_timer();
-        console.log('三次点击');
+        // console.log('三次点击');
         if (down_item && down_item.cell && down_item.cell.cellType === TableCellType.Text) {
             table_selection.setEditingCell();
             table_selection.selectTableCell(down_item.index.row, down_item.index.col);
@@ -279,7 +280,7 @@ function useControllerCustom(context: Context, i18nT: Function) {
         document.removeEventListener('mousedown', mousedown);
         table.unwatch(get_matrix4table);
         is_diposed = true;
-        console.log('dispose');
+        // console.log('dispose');
     }
     function m4table() {
         return matrix4table;

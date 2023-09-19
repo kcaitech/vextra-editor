@@ -96,7 +96,7 @@ function onMouseDown(e: MouseEvent) {
             props.context.cursor.setType('scan-0');
         }
         if (!editing.value) return;
-        const selection = props.context.selection.getTextSelection(props.shape);
+        const selection = props.context.textSelection;
         workspace.setCtrl('controller');
         const root = workspace.root
         matrix.reset(props.matrix);
@@ -113,7 +113,7 @@ function onMouseDown(e: MouseEvent) {
 }
 function be_editor(index?: number) {
     const workspace = props.context.workspace;
-    const selection = props.context.selection.getTextSelection(props.shape);
+    const selection = props.context.textSelection;
     editing.value = true;
     workspace.contentEdit(editing.value);
     props.context.cursor.setType('scan-0');
@@ -127,7 +127,7 @@ function onMouseUp(e: MouseEvent) {
     if (!editing.value) return;
     document.removeEventListener("mousemove", onMouseMove);
     document.removeEventListener("mouseup", onMouseUp);
-    const selection = props.context.selection.getTextSelection(props.shape);
+    const selection = props.context.textSelection;
     const workspace = props.context.workspace;
     const { clientX, clientY } = e;
     const root = workspace.root;
@@ -135,11 +135,11 @@ function onMouseUp(e: MouseEvent) {
     const xy = matrix.inverseCoord(clientX - root.x, clientY - root.y);
     const locate = selection.locateText(xy.x, xy.y);
     if (downIndex.index === locate.index) {
-        if (locate.placeholder) selection.setCursor(locate.index + 1, false);
-        else selection.setCursor(locate.index, locate.before);
+        if (locate.placeholder) selection.setCursor(locate.index + 1, false, props.shape.text);
+        else selection.setCursor(locate.index, locate.before, props.shape.text);
     }
     else {
-        selection.selectText(downIndex.index, locate.index, locate.before);
+        selection.selectText(downIndex.index, locate.index, props.shape.text);
     }
     props.context.workspace.setCtrl('page');
 }
@@ -148,18 +148,18 @@ function onMouseMove(e: MouseEvent) {
     e.stopPropagation();
     if (!editing.value) return;
     const workspace = props.context.workspace;
-    const selection = props.context.selection.getTextSelection(props.shape);
+    const selection = props.context.textSelection;
     const { clientX, clientY } = e;
     const root = workspace.root;
     matrix.reset(props.matrix);
     const xy = matrix.inverseCoord(clientX - root.x, clientY - root.y);
     const locate = selection.locateText(xy.x, xy.y);
     if (downIndex.index === locate.index) {
-        if (locate.placeholder) selection.setCursor(locate.index + 1, false);
-        else selection.setCursor(locate.index, locate.before);
+        if (locate.placeholder) selection.setCursor(locate.index + 1, false, props.shape.text);
+        else selection.setCursor(locate.index, locate.before, props.shape.text);
     }
     else {
-        selection.selectText(downIndex.index, locate.index, locate.before);
+        selection.selectText(downIndex.index, locate.index, props.shape.text);
     }
 }
 function mouseenter() {

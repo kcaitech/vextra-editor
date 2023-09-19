@@ -14,6 +14,7 @@ import { distance2apex, update_pg_2 } from '@/utils/assist';
 import { Comment } from '@/context/comment';
 import { permIsEdit } from '@/utils/content';
 import { Menu } from '@/context/menu';
+import { paster_short } from '@/utils/clipboard';
 interface Props {
     matrix: number[]
     context: Context
@@ -98,7 +99,7 @@ function point_mousemove(event: MouseEvent) {
         if (Math.hypot(mx - sx, my - sy) > dragActiveDis) {
             submatrix.reset(workspace.matrix.inverse);
             asyncBaseAction = props.context.editor.controller().asyncRectEditor(props.shape, props.context.selection.selectedPage!);
-            props.context.assist.setTransTarget([props.shape]);
+            props.context.assist.set_trans_target([props.shape]);
             isDragging = true;
         }
     }
@@ -143,7 +144,6 @@ function down(e: MouseEvent) {
             table_selection.setEditingCell();
             table_selection.resetSelection();
             startPosition = { x: e.clientX - root.x, y: e.clientY - root.y };
-
             wheel = fourWayWheel(context, undefined, submatrix2.computeCoord(startPosition));
             document.addEventListener('mousemove', mousemove4trans);
             document.addEventListener('mouseup', mouseup4trans);
@@ -165,34 +165,30 @@ function mousemove4trans(e: MouseEvent) {
         else if (update_type === 1) startPosition.x = mousePosition.x;
     } else if (Math.hypot(mousePosition.x - startPosition.x, mousePosition.y - startPosition.y) > dragActiveDis) {
         shapes = selection.selectedShapes;
+        if (e.altKey) shapes = paster_short(props.context, shapes);
         asyncTransfer = props.context.editor.controller().asyncTransfer(shapes, selection.selectedPage!);
         selection.unHoverShape();
         workspace.setSelectionViewUpdater(false);
         workspace.translating(true);
-        props.context.assist.setTransTarget(shapes);
+        props.context.assist.set_trans_target(shapes);
         submatrix2 = new Matrix(props.context.workspace.matrix.inverse);
         isDragging = true;
     }
 }
-function _migrate(start: ClientXY, end: ClientXY) {
+function _migrate() {
     if (!shapes.length) return;
-    const ps: PageXY = matrix.computeCoord(start.x, start.y);
-    const pe: PageXY = matrix.computeCoord(end.x, end.y);
-    const selection = props.context.selection;
-    const artboardOnStart = selection.getClosetArtboard(ps, undefined, shapes);
-    const targetParent = (artboardOnStart && artboardOnStart.type !== ShapeType.Page) ? selection.getClosetArtboard(pe, artboardOnStart) : selection.getClosetArtboard(pe);
+    const p = props.shape.matrix2Root().computeCoord2(4, 4);
+    const targetParent = props.context.selection.getClosetArtboard(p);
     const m = getCloesetContainer(props.shape).id !== targetParent.id;
+    if (targetParent.id === props.shape.id) return;
     if (m && asyncTransfer) asyncTransfer.migrate(targetParent as GroupShape);
 }
-const migrate: (start: ClientXY, end: ClientXY) => void = debounce(_migrate, 100);
+const migrate: () => void = debounce(_migrate, 100);
 function getCloesetContainer(shape: Shape): Shape {
     let result = props.context.selection.selectedPage!
     let p = shape.parent;
     while (p) {
-        if (p.type == ShapeType.Artboard) {
-            result = p as any;
-            return result;
-        }
+        if (p.type == ShapeType.Artboard) return p;
         p = p.parent;
     }
     return result
@@ -203,7 +199,7 @@ function transform_f(start: ClientXY, end: ClientXY) {
     let update_type = 0;
     if (asyncTransfer) {
         update_type = trans(asyncTransfer, ps, pe);
-        migrate(start, end);
+        migrate();
     }
     return update_type;
 }
@@ -264,8 +260,7 @@ function mouseup4trans(e: MouseEvent) {
     if (e.button === 0) {
         if (isDragging) {
             if (asyncTransfer) {
-                const mousePosition: ClientXY = { x: e.clientX - root.x, y: e.clientY - root.y };
-                _migrate(startPosition, mousePosition);
+                _migrate();
                 asyncTransfer = asyncTransfer.close();
             }
             workspace.translating(false);

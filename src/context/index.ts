@@ -16,6 +16,7 @@ import { EscStack } from "./escstack";
 import { Asssit } from "./assist";
 import { TeamWork } from "./teamwork";
 import { TableSelection } from "./tableselection";
+import { TextSelection } from "./textselection";
 // 仅暴露必要的方法
 export class RepoWraper {
     private m_repo: CoopRepository;
@@ -69,20 +70,20 @@ export class Context extends Watchable(Object) {
         this.m_coopRepo = repo;
         this.m_repo = new RepoWraper(this.m_coopRepo);
         this.m_taskMgr = new TaskMgr();
-        this.m_selection = new Selection(data, this);
-        this.m_workspace = new WorkSpace(this);
-        this.m_comment = new Comment();
-        this.m_menu = new Menu();
-        this.m_tool = new Tool(this);
-        this.m_navi = new Navi();
+        this.m_selection = new Selection(data, this); //选区相关
+        this.m_workspace = new WorkSpace(this); // 编辑器状态
+        this.m_comment = new Comment(); // 评论相关
+        this.m_menu = new Menu(this); // 菜单相关
+        this.m_tool = new Tool(this); // 工具栏相关
+        this.m_navi = new Navi(); // 导航栏相关
         this.m_editor = new Editor(this.m_data, this.m_coopRepo, this.m_selection);
         this.m_communication = new Communication();
-        this.m_cursor = new Cursor(this);
-        this.m_escstack = new EscStack();
-        this.m_assist = new Asssit(this);
+        this.m_cursor = new Cursor(this); // 光标变换
+        this.m_escstack = new EscStack(); // esc任务队列
+        this.m_assist = new Asssit(this); // 辅助线相关
         this.m_teamwork = new TeamWork();
-        this.m_tableselection = new TableSelection(this);
-
+        this.m_tableselection = new TableSelection(this); // 表格选区
+        this.m_textselection = new TextSelection(this.m_selection); // 文字选区
         const pagelist = data.pagesList.slice(0);
         const checkSymLoaded: (() => boolean)[] = [];
         const pageloadTask = new class implements Task { // page auto loader
@@ -218,5 +219,11 @@ export class Context extends Watchable(Object) {
     }
     get tableSelection() {
         return this.m_tableselection;
+    }
+    get textSelection() {
+        return this.m_textselection;
+    }
+    get esctask() {
+        return this.m_escstack;
     }
 }

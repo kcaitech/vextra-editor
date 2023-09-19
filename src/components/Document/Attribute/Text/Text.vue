@@ -179,14 +179,14 @@ const setFont = (font: string) => {
 
 //获取选中字体的长度和开始下标
 const getTextIndexAndLen = () => {
-    const selection = props.context.selection.getTextSelection(props.shape);
+    const selection = props.context.textSelection;
     const textIndex = Math.min(selection.cursorEnd, selection.cursorStart)
     const selectLength = Math.abs(selection.cursorEnd - selection.cursorStart)
     return { textIndex, selectLength }
 }
 //判断是否选择文本框还是光标聚焦了
 const isSelectText = () => {
-    const selection = props.context.selection.getTextSelection(props.shape);
+    const selection = props.context.textSelection;
     if ((selection.cursorEnd !== -1) && (selection.cursorStart !== -1)) {
         return false
     } else {

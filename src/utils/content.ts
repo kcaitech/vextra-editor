@@ -1,12 +1,12 @@
 import { debounce } from "lodash";
 import { Context } from "@/context";
 import { ClientXY, PageXY } from "@/context/selection";
-import { AsyncCreator, Shape, ShapeFrame, ShapeType, GroupShape, TextShape, Matrix, Color, TableShape } from "@kcdesign/data";
+import { AsyncCreator, Shape, ShapeFrame, ShapeType, GroupShape, TextShape, Matrix, Color, TableShape, ContactForm } from "@kcdesign/data";
 import { Action, ResultByAction } from "@/context/tool";
 import { Perm, WorkSpace } from '@/context/workspace';
 import { XYsBounding } from '@/utils/common';
 import { searchCommentShape as finder } from '@/utils/comment'
-import { paster_image } from "./clipaboard";
+import { paster_image } from "./clipboard";
 import { landFinderOnPage, scrollToContentView } from './artboardFn'
 export interface Media {
   name: string
@@ -102,7 +102,26 @@ function init_shape(context: Context, frame: ShapeFrame, mousedownOnPageXY: Page
     } else {
       new_shape = asyncCreator.init(page, (parent as GroupShape), type, name, frame);
     }
-
+  }
+  if (asyncCreator && new_shape) {
+    selection.selectShape(new_shape);
+    workspace.creating(true);
+    return { asyncCreator, new_shape };
+  }
+}
+export function init_contact_shape(context: Context, frame: ShapeFrame, mousedownOnPageXY: PageXY, t: Function, apex?: ContactForm, p2?: PageXY) {
+  const selection = context.selection, workspace = context.workspace;
+  const page = selection.selectedPage;
+  let asyncCreator: AsyncCreator | undefined, new_shape: Shape | undefined;
+  if (page) {
+    const editor = context.editor.controller();
+    const name = getName(ShapeType.Contact, page.childs, t);
+    if (apex && p2) {
+      frame.x = p2.x, frame.y = p2.y;
+      mousedownOnPageXY.x = p2.x, mousedownOnPageXY.y = p2.y;
+    }
+    asyncCreator = editor.asyncCreator(mousedownOnPageXY);
+    new_shape = asyncCreator.init_contact(page, page, frame, name, apex);
   }
   if (asyncCreator && new_shape) {
     selection.selectShape(new_shape);
@@ -220,13 +239,13 @@ function init_insert_textshape(context: Context, mousedownOnPageXY: PageXY, cont
   if (asyncCreator && new_shape) {
     asyncCreator = asyncCreator.close();
     selection.selectShape(page!.getShape(new_shape.id));
-    selection.getTextSelection(new_shape as TextShape).selectText(0, (new_shape as TextShape).text.length);
+    context.textSelection.selectText(0, (new_shape as TextShape).text.length, (new_shape as TextShape).text);
   }
   workspace.creating(false);
   context.tool.setAction(Action.AutoV);
   context.cursor.setType('auto-0');
 }
-// 图片从init到inset一气呵成
+// 图片从init到insert
 function init_insert_image(context: Context, mousedownOnPageXY: PageXY, t: Function, media: Media) {
   const selection = context.selection;
   const page = selection.selectedPage;
@@ -545,13 +564,24 @@ function get_menu_items(context: Context, area: "controller" | "text-selection" 
     }
   } else if (area === 'text-selection') {
     if (permIsEdit(context)) {
-      contextMenuItems = ['all', 'copy', 'cut', 'paste', 'only_text'];
+      const selection = context.textSelection;
+      if (selection.cursorStart === selection.cursorEnd) {
+        contextMenuItems = ['all', 'paste', 'only_text'];
+      } else {
+        contextMenuItems = ['all', 'copy', 'cut', 'paste', 'only_text'];
+      }
     } else {
       contextMenuItems = ['all', 'copy'];
     }
   } else if (area === 'table') {
     if (permIsEdit(context)) {
-      contextMenuItems = ['all', 'copy', 'cut', 'paste', 'only_text', 'insert_column', 'delete_column', 'split_cell'];
+      const selection = context.textSelection;
+      if (selection.cursorStart === selection.cursorEnd) {
+        contextMenuItems = ['all', 'paste', 'only_text', 'insert_column', 'delete_column', 'split_cell'];
+
+      } else {
+        contextMenuItems = ['all', 'copy', 'cut', 'paste', 'only_text', 'insert_column', 'delete_column', 'split_cell'];
+      }
     } else {
       contextMenuItems = ['all', 'copy'];
     }
@@ -563,11 +593,11 @@ function get_menu_items(context: Context, area: "controller" | "text-selection" 
     }
   } else {
     if (permIsEdit(context)) {
-      // contextMenuItems = ['all', 'paste-here', 'half', 'hundred', 'double', 'canvas', 'operation', 'comment', 'title'];
-      contextMenuItems = ['all', 'paste-here', 'half', 'hundred', 'double', 'canvas', 'operation', 'comment', 'cursor'];
+      contextMenuItems = ['all', 'paste-here', 'half', 'hundred', 'double', 'canvas', 'operation', 'comment', 'cursor', 'title'];
+      // contextMenuItems = ['all', 'paste-here', 'half', 'hundred', 'double', 'canvas', 'operation', 'comment', 'cursor'];
     } else {
-      // contextMenuItems = ['all', 'half', 'hundred', 'double', 'canvas', 'operation', 'comment', 'title'];
-      contextMenuItems = ['all', 'half', 'hundred', 'double', 'canvas', 'operation', 'comment', 'cursor'];
+      contextMenuItems = ['all', 'half', 'hundred', 'double', 'canvas', 'operation', 'comment', 'cursor', 'title'];
+      // contextMenuItems = ['all', 'half', 'hundred', 'double', 'canvas', 'operation', 'comment', 'cursor'];
     }
   }
   return contextMenuItems;

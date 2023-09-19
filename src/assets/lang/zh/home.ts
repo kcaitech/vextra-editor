@@ -59,9 +59,9 @@ export const system = {
     'dissolution': '取消容器',
     'content_includes': '文本包含',
     'title_includes': '标题包含',
-    'license_key':'粤ICP备2023042416号',
-    'phonetips':'移动端暂不支持登录，请在电脑端进行登录！',
-    'btn_login':'登录',
+    'license_key': '粤ICP备2023042416号',
+    'phonetips': '移动端暂不支持登录，请在电脑端进行登录！',
+    'btn_login': '登录',
     'artboart_title_visible': '显示容器标题'
 }
 
@@ -143,7 +143,8 @@ export const home = {
     'distribute_h': '左右等距分布',
     'distribute_v': '上下等距分布',
     people_are_visiting: '正在访问的人:',
-    permissions: '权限:'
+    permissions: '权限:',
+    contact: '连接线'
 }
 
 export const search = {

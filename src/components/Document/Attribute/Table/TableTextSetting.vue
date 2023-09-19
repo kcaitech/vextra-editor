@@ -27,7 +27,7 @@ const shape = ref<TableCell & { text: Text; }>()
 
 //获取选中字体的长度和下标
 const getTextIndexAndLen = () => {
-  const selection = props.context.selection.getTextSelection(shape.value!);
+  const selection = props.context.textSelection;
   const textIndex = Math.min(selection.cursorEnd, selection.cursorStart)
   const selectLength = Math.abs(selection.cursorEnd - selection.cursorStart)
   return { textIndex, selectLength }
@@ -169,7 +169,7 @@ const setParagraphSpace = () => {
 //判断是否选择文本框还是光标聚焦了
 const isSelectText = () => {
   if (shape.value) {
-    const selection = props.context.selection.getTextSelection(shape.value);
+    const selection = props.context.textSelection;
     if ((selection.cursorEnd !== -1) && (selection.cursorStart !== -1)) {
       return false
     } else {

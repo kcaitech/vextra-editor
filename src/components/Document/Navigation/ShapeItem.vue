@@ -1,11 +1,9 @@
 <script setup lang="ts">
 import { ref, computed, nextTick, InputHTMLAttributes, watch, onUnmounted, onMounted } from "vue";
-import { Shape, GroupShape, ShapeType, PathShape, RectShape, Matrix } from '@kcdesign/data';
+import { Shape, ShapeType } from '@kcdesign/data';
 import { Context } from "@/context";
 import { is_parent_locked, is_parent_unvisible } from "@/utils/shapelist";
-import Abbrevition from "./Abbreviation.vue";
 import { Perm } from "@/context/workspace";
-import { XYsBounding } from "@/utils/common";
 export interface ItemData {
     id: string
     shape: Shape
@@ -28,7 +26,6 @@ const isread = ref(false)
 const canComment = ref(false)
 const isEdit = ref(false)
 const ph_width = computed(() => (props.data.level - 1) * 10);
-const d = ref<string>('');
 const emit = defineEmits<{
     (e: "toggleexpand", shape: Shape): void;
     (e: "selectshape", shape: Shape, ctrl: boolean, meta: boolean, shift: boolean): void;
@@ -70,7 +67,7 @@ function updater(t?: any) {
     if (t === 'shape-frame') return;
     let shape = props.data.shape;
     const naviChilds = shape.naviChilds;
-    showTriangle.value = naviChilds && naviChilds.length > 0;
+    showTriangle.value = Boolean(naviChilds && naviChilds.length > 0);
     lock_status.value = props.data.shape.isLocked ? 1 : 0;
     visible_status.value = props.data.shape.isVisible ? 0 : 1;
     if (is_parent_locked(props.data.shape)) lock_status.value = 2;
@@ -174,6 +171,15 @@ const selectedChild = () => {
     }
     return child
 }
+function is_component() {
+    let s: any = props.data.shape;
+    while (s) {
+        if (s.type === ShapeType.Page) break;
+        if (s.type === ShapeType.SymbolRef) return true;
+        s = s.parent;
+    }
+    return false;
+}
 const mousedown = (e: MouseEvent) => {
     e.stopPropagation();
     emit('item-mousedown', e, props.data.shape)
@@ -197,7 +203,6 @@ const hangdlePerm = () => {
 onMounted(() => {
     hangdlePerm()
     updater();
-    // init_d();
 })
 onUnmounted(() => {
     stop();
@@ -205,16 +210,14 @@ onUnmounted(() => {
 </script>
 
 <template>
-    <div :class="{ container: true, selected: props.data.selected, selectedChild: selectedChild() }" @click="selectShape"
-        @mousemove="hoverShape" @mouseleave="unHoverShape" @mousedown="mousedown">
+    <div :class="{ container: true, selected: props.data.selected, selectedChild: selectedChild(), component: is_component() }"
+        @click="selectShape" @mousemove="hoverShape" @mouseleave="unHoverShape" @mousedown="mousedown">
         <div class="ph" :style="{ width: `${ph_width}px`, height: '100%', minWidth: `${ph_width}px` }"></div>
         <div :class="{ triangle: showTriangle, slot: !showTriangle }" @click="toggleExpand">
             <div v-if="showTriangle" :class="{ 'triangle-right': !props.data.expand, 'triangle-down': props.data.expand }">
             </div>
         </div>
         <div class="container-svg" @dblclick="toggleContainer">
-            <!-- <Abbrevition v-if="d" :d="d"></Abbrevition>
-            <svg-icon v-else class="svg" :icon-class="`pattern-${props.data.shape.type}`"></svg-icon> -->
             <svg-icon class="svg" :icon-class="`pattern-${props.data.shape.type}`"></svg-icon>
         </div>
         <div class="text" :style="{ opacity: !visible_status ? 1 : .3, display: isInput ? 'none' : '' }">
@@ -243,6 +246,15 @@ onUnmounted(() => {
 </template>
 
 <style scoped lang="scss">
+.component {
+    color: var(--component-color);
+
+    &>.text>.txt,
+    &>.text>.tool_icon {
+        color: var(--component-color);
+    }
+}
+
 .container {
     display: flex;
     flex-flow: row;
@@ -252,7 +264,6 @@ onUnmounted(() => {
     width: calc(100% - 12px);
     height: 30px;
     box-sizing: border-box;
-    transition: 0.08s;
 
     >.ph {
         margin-left: 6px;

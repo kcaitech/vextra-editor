@@ -9,7 +9,7 @@ import Saving from './Saving.vue';
 import { useRoute } from 'vue-router';
 import { WorkSpace, Perm } from '@/context/workspace';
 import { message } from '@/utils/message';
-import { ElMessage, ElMessageBox } from 'element-plus'
+import { ElMessageBox } from 'element-plus'
 const route = useRoute();
 interface Props {
     context: Context
@@ -20,12 +20,12 @@ const input = ref<HTMLInputElement>();
 const name = ref<string>('');
 const { t } = useI18n();
 function home() {
-    if(props.context.communication.docOp.hasPendingSyncCmd()) return hasPendingSyncCmd()
+    if (props.context.communication.docOp.hasPendingSyncCmd()) return hasPendingSyncCmd()
     window.document.title = t('product.name');
     (window as any).sketchDocument = undefined;
     (window as any).skrepo = undefined;
     router.push({ name: 'recently' });
-    sessionStorage.setItem('index','1')
+    sessionStorage.setItem('index', '1')
 }
 
 const hasPendingSyncCmd = () => {
@@ -33,24 +33,24 @@ const hasPendingSyncCmd = () => {
         `${t('message.unuploaded_msg')}`,
         `${t('message.back_home')}`,
         {
-        confirmButtonText: `${t('message.exit_document')}`,
-        cancelButtonText: `${t('message.cancel')}`,
+            confirmButtonText: `${t('message.exit_document')}`,
+            cancelButtonText: `${t('message.cancel')}`,
         }
     )
-    .then(() => {
-        window.document.title = t('product.name');
-        (window as any).sketchDocument = undefined;
-        (window as any).skrepo = undefined;
-        router.push({ name: 'recently' });
-        sessionStorage.setItem('index','1')
-    })
-    .catch(() => {
-        return
-    })
+        .then(() => {
+            window.document.title = t('product.name');
+            (window as any).sketchDocument = undefined;
+            (window as any).skrepo = undefined;
+            router.push({ name: 'recently' });
+            sessionStorage.setItem('index', '1')
+        })
+        .catch(() => {
+            return
+        })
 }
 
 function rename() {
-    if(props.context.workspace.documentPerm !== Perm.isEdit) return
+    if (props.context.workspace.documentPerm !== Perm.isEdit) return
     ele.value = 2;
     nextTick(() => {
         if (input.value) {
@@ -63,9 +63,7 @@ function rename() {
 
 }
 function enter(e: KeyboardEvent) {
-    if (e.code === 'Enter' || e.code === 'NumpadEnter') {
-        blur();
-    }
+    if (e.code === 'Enter' || e.code === 'NumpadEnter') blur();
 }
 async function blur() {
     if (input.value) {
@@ -87,6 +85,9 @@ async function blur() {
             document.removeEventListener('keydown', enter);
         } catch (error) {
             console.log(error);
+            if ((error as any)?.data?.code == '403') {
+                message('info', props.context.workspace.t('permission.no_authority_to_rename'));
+            }
         } finally {
             ele.value = 1;
         }
@@ -173,5 +174,4 @@ onUnmounted(() => {
         height: 8px;
     }
 }
-
 </style>
