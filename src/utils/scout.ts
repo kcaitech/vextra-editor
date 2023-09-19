@@ -316,14 +316,13 @@ function artboardFinder(scout: Scout, g: Shape[], position: PageXY, except?: Map
         const item = g[i];
         if (except && except.get(item.id)) continue;
         if (item.type === ShapeType.Artboard) {
-            const isItemIsTarget = isTarget(scout, item, position);
-            if (isItemIsTarget) {
+            if (isTarget(scout, item, position)) {
                 const c = (item as GroupShape)?.childs || [], length = c.length;
                 if (length) {
                     result = artboardFinder(scout, c, position, except);
-                } else {
-                    result = item;
+                    if (result) break;
                 }
+                result = item;
                 if (result) break;
             }
         }

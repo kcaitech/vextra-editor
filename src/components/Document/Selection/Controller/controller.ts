@@ -72,16 +72,16 @@ export function useControllerCustom(context: Context, i18nT: Function) {
     }
     const migrate: (shapes: Shape[], start: ClientXY, end: ClientXY) => void = debounce(_migrate, 100);
     function getCloesetContainer(shape: Shape): Shape {
-        let result = selection.selectedPage!
+        let result: any = selection.selectedPage!
         let p = shape.parent;
         while (p) {
             if (p.type === ShapeType.Artboard) {
-                result = p as any;
+                result = p;
                 break;
             }
             p = p.parent;
         }
-        return result
+        return result;
     }
     function pre2do(e: MouseEvent) { // 移动之前做的准备
         const action = context.tool.action;
@@ -289,8 +289,6 @@ export function useControllerCustom(context: Context, i18nT: Function) {
                 if (asyncTransfer) {
                     const { clientX, clientY } = e;
                     const mousePosition: ClientXY = { x: clientX - root.x, y: clientY - root.y };
-                    console.log('startPosition', JSON.parse(JSON.stringify(startPosition)));
-                    console.log('mousePosition', JSON.parse(JSON.stringify(mousePosition)));
                     _migrate(shapes, startPosition, mousePosition);
                     asyncTransfer = asyncTransfer.close();
                 }
