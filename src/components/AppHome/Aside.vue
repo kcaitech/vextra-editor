@@ -263,7 +263,7 @@ watch(is_team_upodate, () => {
 
 })
 
-const torouter = (id: string) => {
+const torouter = (id: string, index: number) => {
     router.push({ path: '/apphome/teams/' + id });
     sessionStorage.setItem('index', '6');
     x.value = '6';
@@ -536,24 +536,36 @@ watch(route, (v) => {
 
 }, { deep: true, immediate: true })
 
-const listss = ref<any[]>([])
+watch(() => teamList.value, (newvalue) => {
+    const teamid = ref()
 
-watchEffect(() => {
-    listss.value = []
-    for (let i = 0; i < favoriteList.value.length; i++) {
-        listss.value.push(favoriteList.value[i].project.id)
-    }
-})
-
-watchEffect(() => {
     if (route.name === 'ProjectPage') {
-        const index = projectList.value.filter(item => {
-            if (item.project.id === route.params.id) {
-                return item.project.team_id
+        const [teamids] = projectList.value.filter(item => item.project.id === route.params.id).map(obj => obj.project.team_id)
+        teamid.value = teamids
+        if (activeNames.value.includes(teamData.value.findIndex(item => item.team.id === teamid.value))) return
+        updateActiveNames(teamData.value.findIndex(item => item.team.id === teamid.value))
+    }
+    if (newvalue) {
+        newvalue.filter((item: any) => {
+            if (item.team.id === teamid.value) {
+                if (item.children) {
+                    const foundObject = item.children.find((item: any) => item.project.id === route.params.id)
+                    if (foundObject) {
+                        console.log('11111');
+                        addTargetItem([])
+                    } else {
+                        console.log('22222');
+                        addTargetItem(projectList.value.filter(item => item.project.id === route.params.id));
+                    }
+                } else {
+                    console.log('33333');
+                    addTargetItem(projectList.value.filter(item => item.project.id === route.params.id));
+                }
             }
-        }).map(obj => obj.project.team_id)
-        updateActiveNames(teamData.value.findIndex(item => item.team.id === index[0]))
-        addTargetItem(projectList.value.filter(item => item.project.id === route.params.id));
+
+        }
+
+        )
     }
     nextTick(() => {
         const index = projectShareList.value.findIndex(item => item.project.id === route.params.id);
@@ -561,7 +573,7 @@ watchEffect(() => {
             activeShare.value = [1]
         }
     })
-})
+}, { deep: true })
 
 setInterval(() => {
     GetteamList();
@@ -698,7 +710,7 @@ onUnmounted(() => {
                         </el-collapse>
                         <el-collapse v-model="activeNames">
                             <el-collapse-item v-for="(data, index) in teamList" :key="data.team.id" :name="index"
-                                @click.stop="torouter(data.team.id)">
+                                @click.stop="torouter(data.team.id, index)">
                                 <template #title>
                                     <div class="team-title"
                                         :class="{ 'is_active': isActive(data.team.id, data.team.name, data.team.avatar, data.team.description, data.self_perm_type) }">
@@ -758,8 +770,8 @@ onUnmounted(() => {
                                 </template>
                                 <template v-for="(target, n) in targetItem" :key="n">
                                     <transition name="el-zoom-in-top">
-                                        <div v-if="(target.project.team_id === data.team.id) && !listss.includes(target.project.id)"
-                                            class="project" @click.stop="(e) => skipProject(target, e)"
+                                        <div v-if="target.project.team_id === data.team.id" class="project"
+                                            @click.stop="(e) => skipProject(target, e)"
                                             @mousedown.stop="(e) => rightMenu(target, e)"
                                             :class="{ 'is_active': isProjectActive(target.project.id) }">
                                             <div style="box-sizing: border-box;">
