@@ -7,7 +7,6 @@ interface Props {
     index: number
     maxWidth: number
     shape: Shape
-    selected: boolean
     context: Context
 }
 interface Emits {

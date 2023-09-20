@@ -1,9 +1,8 @@
 <script lang="ts" setup>
-import { watchEffect, onMounted, onUnmounted, reactive } from "vue";
+import { watchEffect, onMounted, onUnmounted, reactive, watch, nextTick } from "vue";
 import { Context } from "@/context";
 import { Matrix, Page, Shape, ShapeType } from "@kcdesign/data";
-import { WorkSpace } from "@/context/workspace";
-import { ClientXY, PageXY } from "@/context/selection";
+import { ClientXY, Selection } from "@/context/selection";
 import ComponentTitle from "./ComponentTitle.vue"
 const props = defineProps<{
     context: Context
@@ -19,108 +18,81 @@ interface Title {
     shape: Shape
     rotate: number
     maxWidth: number
-    selected: boolean
 }
 const matrix = new Matrix(props.matrix);
 const titles: Title[] = reactive([]);
 const origin: ClientXY = { x: 0, y: 0 };
-const watcher = () => {
-    updater();
-}
-
 function updater() {
-    watchShapes();
     setOrigin();
     setPosition();
 }
-function handleWorkspaceUpdate(t: any) {
-    if (t === WorkSpace.MATRIX_TRANSFORMATION) {
-        setOrigin();
-        setPosition();
-    }
-}
 const setPosition = () => {
-    const components: Shape[] = props.context.selection.selectedPage!.childs;
+    titles.length = 0;
+    const components: Shape[] = props.data.childs;
     const len = components.length;
     if (len) {
-        titles.length = 0;
         for (let i = 0; i < len; i++) {
             const compo = components[i];
             if (compo.type === ShapeType.SymbolRef && compo.parent?.type === ShapeType.Page && compo.isVisible) {
-                const shapes = props.context.selection.selectedShapes;
-                const hovered = props.context.selection.hoveredShape;
-                let selected = false;
-                if (shapes[0] && compo.id === shapes[0].id) {
-                    selected = true;
-                } else if (hovered && compo.id === hovered.id) {
-                    selected = true;
-                } else {
-                    selected = false;
-                }
-                const m = compo.matrix2Root();
-                const f2p = compo.frame2Root();
                 const frame = compo.frame;
                 const matrix = props.context.workspace.matrix;
-                let anchor = { x: 0, y: 0 };
-                let rotate = compo.rotation || 0;
-                rotate = rotate < 0 ? rotate + 360 : rotate;
-                if (rotate < 135 && rotate >= 45) {
-                    anchor = m.computeCoord2(0, frame.height);
-                } else if (rotate < 225 && rotate >= 135) {
-                    anchor = m.computeCoord2(frame.width, frame.height);
-                } else if (rotate < 315 && rotate >= 225) {
-                    anchor = m.computeCoord2(frame.width, 0);
-                } else if (rotate < 360 && rotate > 315) {
-                    anchor = m.computeCoord2(0, 0);
-                } else if (rotate < 45 && rotate >= 0) {
-                    anchor = m.computeCoord2(0, 0);
-                }
-                rotate = modify_rotate(compo, rotate);
+                let anchor = modify_anchor(compo);
                 anchor = matrix.computeCoord3(anchor);
                 anchor.y = anchor.y - origin.y - 16;
                 anchor.x -= origin.x;
-                const width = f2p.width;
-                const maxWidth = frame.width
-                titles.push({ id: compo.id, content: compo.name, x: anchor.x, y: anchor.y, width, shape: compo, rotate, maxWidth, selected });
+                const width = frame.width;
+                const maxWidth = frame.width;
+                titles.push({
+                    id: compo.id,
+                    content: compo.name,
+                    x: anchor.x, y: anchor.y,
+                    width, maxWidth,
+                    shape: compo,
+                    rotate: modify_rotate(compo)
+                });
             }
         }
-    } else {
-        titles.length = 0;
     }
 }
-function modify_anchor(rotate: number, shape: Shape, anchor: PageXY) {
+function pre_modify_anchor(shape: Shape) {
+    let rotate = shape.rotation || 0;
+    if (shape.isFlippedHorizontal) rotate = rotate + 270;
+    if (shape.isFlippedVertical) {
+        rotate = shape.isFlippedHorizontal ? rotate -= 90 : rotate += 90;
+    }
+    rotate = (rotate < 0 ? rotate + 360 : rotate) % 360;
+    return rotate;
+}
+function modify_anchor(shape: Shape) {
+    const rotate = pre_modify_anchor(shape);
     const m = shape.matrix2Root(), frame = shape.frame;
-    if (rotate < 135 && rotate >= 45) {
-        anchor = m.computeCoord2(0, frame.height);
-    } else if (rotate < 225 && rotate >= 135) {
-        anchor = m.computeCoord2(frame.width, frame.height);
-    } else if (rotate < 315 && rotate >= 225) {
-        anchor = m.computeCoord2(frame.width, 0);
-    } else if (rotate < 360 && rotate > 315) {
+    let anchor = { x: 0, y: 0 };
+    if (rotate >= 0 && rotate < 45) {
         anchor = m.computeCoord2(0, 0);
-    } else if (rotate < 45 && rotate >= 0) {
+    } else if (rotate >= 45 && rotate < 135) {
+        anchor = m.computeCoord2(0, frame.height);
+    } else if (rotate >= 135 && rotate < 225) {
+        anchor = m.computeCoord2(frame.width, frame.height);
+    } else if (rotate >= 225 && rotate < 315) {
+        anchor = m.computeCoord2(frame.width, 0);
+    } else if (rotate >= 315 && rotate <= 360) {
         anchor = m.computeCoord2(0, 0);
     }
+    return anchor;
 }
-function modify_rotate(shape: Shape, rotate: number) {
-    if (rotate < 135 && rotate >= 45) {
+function modify_rotate(shape: Shape) {
+    let rotate = shape.rotation || 0;
+    if (shape.isFlippedHorizontal) rotate = 180 - rotate;
+    if (shape.isFlippedVertical) rotate = 360 - rotate;
+    rotate = (rotate < 0 ? rotate + 360 : rotate) % 360;
+    if (rotate >= 0 && rotate < 45) {
+    } else if (rotate >= 45 && rotate < 135) {
         rotate -= 90;
-        if (shape.isFlippedHorizontal) rotate = 180 - rotate;
-        if (shape.isFlippedVertical) rotate = 360 - rotate;
-    } else if (rotate < 225 && rotate >= 135) {
+    } else if (rotate >= 135 && rotate < 225) {
         rotate -= 180;
-        if (shape.isFlippedHorizontal) rotate = 180 - rotate;
-        if (shape.isFlippedVertical) rotate = 360 - rotate;
-    } else if (rotate < 315 && rotate >= 225) {
+    } else if (rotate >= 225 && rotate < 315) {
         rotate += 90;
-        if (shape.isFlippedHorizontal) rotate = 180 - rotate;
-        if (shape.isFlippedVertical) rotate = 360 - rotate;
-    } else if (rotate < 360 && rotate > 315) {
-        if (shape.isFlippedHorizontal) rotate = 180 - rotate;
-        if (shape.isFlippedVertical) rotate = 360 - rotate;
-    } else if (rotate < 45 && rotate >= 0) {
-        if (shape.isFlippedHorizontal) rotate = 180 - rotate;
-        if (shape.isFlippedVertical) rotate = 360 - rotate;
+    } else if (rotate > 315 && rotate <= 360) {
     }
     return rotate;
 }
@@ -141,12 +113,12 @@ function watchShapes() { // 监听相关shape的变化
     }
     watchedShapes.forEach((v, k) => {
         if (needWatchShapes.has(k)) return;
-        v.unwatch(watcher);
+        v.unwatch(updater);
         watchedShapes.delete(k);
     })
     needWatchShapes.forEach((v, k) => {
         if (watchedShapes.has(k)) return;
-        v.watch(watcher);
+        v.watch(updater);
         watchedShapes.set(k, v);
     })
 }
@@ -155,7 +127,6 @@ const rename = (value: string, shape: Shape) => {
     editor.setName(value)
     props.context.selection.rename();
 }
-
 function hover(shape: Shape) {
     const s = props.context.selection.selectedPage!.shapes.get(shape.id);
     if (s) props.context.selection.hoverShape(s);
@@ -163,17 +134,16 @@ function hover(shape: Shape) {
 function leave() {
     props.context.selection.unHoverShape();
 }
+function selection_watcher(t: number) {
+    if (t === Selection.CHANGE_SHAPE) watchShapes();
+}
+watch(() => props.matrix, updater);
 onMounted(() => {
-    props.context.workspace.watch(handleWorkspaceUpdate)
-    props.context.selection.watch(updater);
-    props.data.watch(watcher);
+    props.context.selection.watch(selection_watcher);
 })
 onUnmounted(() => {
-    props.context.workspace.unwatch(handleWorkspaceUpdate);
-    props.data.unwatch(watcher);
-    props.context.selection.unwatch(updater);
+    props.context.selection.unwatch(selection_watcher);
 })
-watchEffect(() => updater());
 </script>
 <template>
     <!-- 组件标题 -->
@@ -181,7 +151,7 @@ watchEffect(() => updater());
         <div class="title-container" v-for="(t, index) in titles" :key="index"
             :style="{ top: `${t.y}px`, left: `${t.x}px`, 'max-width': `${t.maxWidth}px`, transform: `rotate(${t.rotate}deg)` }">
             <ComponentTitle :context="props.context" :name="t.content" :index="index" :maxWidth="t.maxWidth"
-                @rename="rename" @hover="hover" @leave="leave" :shape="t.shape" :selected="t.selected"></ComponentTitle>
+                @rename="rename" @hover="hover" @leave="leave" :shape="t.shape"></ComponentTitle>
         </div>
     </div>
 </template>
