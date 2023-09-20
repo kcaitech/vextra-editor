@@ -31,7 +31,7 @@
     </div>
 </template>
 <script setup lang="ts">
-import { Ref, computed, inject, onMounted, ref } from 'vue';
+import { Ref, computed, inject, onMounted, ref, watch } from 'vue';
 import { useI18n } from 'vue-i18n';
 import * as user_api from '@/apis/users'
 import { ElMessage } from 'element-plus'
@@ -52,7 +52,7 @@ const { teamID } = inject('shareData') as {
 }
 
 const teamInvitePermission = ref<any>(1)
-const options = [{ id: 1, label: t('Createteam.editable') }, { id: 0, label:  t('Createteam.Readonly') }]
+const options = [{ id: 1, label: t('Createteam.projectPermsC') }, { id: 0, label: t('Createteam.projectPermsA') }]
 const teamInviteSwitch = ref(false)
 const teaminfo = ref<teaminfotype>()
 
@@ -64,7 +64,7 @@ const setTeamInvitePermission = async (value: number) => {
     try {
         const { code } = await user_api.Setteaminviteinfo({ team_id: teamID.value, invited_perm_type: value })
         if (code === 0) {
-            return
+            ElMessage.success(value?.toString())
         } else {
             ElMessage.error('error')
         }
@@ -77,7 +77,7 @@ const setTeamInviteSwitch = async (value: boolean) => {
     try {
         const { code } = await user_api.Setteaminviteinfo({ team_id: teamID.value, invited_switch: value })
         if (code === 0) {
-            return
+            ElMessage.success(value?.toString())
         } else {
             ElMessage.error('error')
         }
@@ -111,10 +111,10 @@ async function copyText() {
     try {
         await navigator.clipboard.writeText(teaminviteinfo.value);
         ElMessage.closeAll();
-        ElMessage.success(t('share.copy_success'));
+        ElMessage.success("复制成功");
     } catch (error) {
         ElMessage.closeAll();
-        ElMessage.error(t('share.copy_failure'));
+        ElMessage.error("复制失败");
     }
 }
 
