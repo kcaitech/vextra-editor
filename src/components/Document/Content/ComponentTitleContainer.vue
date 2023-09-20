@@ -1,5 +1,5 @@
 <script lang="ts" setup>
-import { watchEffect, onMounted, onUnmounted, reactive, watch, nextTick } from "vue";
+import { onMounted, onUnmounted, reactive, watch } from "vue";
 import { Context } from "@/context";
 import { Matrix, Page, Shape, ShapeType } from "@kcdesign/data";
 import { ClientXY, Selection } from "@/context/selection";
@@ -33,7 +33,7 @@ const setPosition = () => {
     if (len) {
         for (let i = 0; i < len; i++) {
             const compo = components[i];
-            if (compo.type === ShapeType.SymbolRef && compo.parent?.type === ShapeType.Page && compo.isVisible) {
+            if (compo.type === ShapeType.Group && compo.isSymbolShape && compo.parent?.type === ShapeType.Page && compo.isVisible) {
                 const frame = compo.frame;
                 const matrix = props.context.workspace.matrix;
                 let anchor = modify_anchor(compo);

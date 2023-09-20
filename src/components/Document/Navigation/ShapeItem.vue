@@ -174,11 +174,11 @@ const selectedChild = () => {
 function is_component() {
     let s: any = props.data.shape();
     while (s) {
-        if (s.type === ShapeType.Page) break;
+        if (s.type === ShapeType.Page) return false;
         if (s.type === ShapeType.SymbolRef) return true;
+        if (s.type === ShapeType.Group && s.isSymbolShape) return true;
         s = s.parent;
     }
-    return false;
 }
 const mousedown = (e: MouseEvent) => {
     e.stopPropagation();
@@ -200,6 +200,14 @@ const hangdlePerm = () => {
         isEdit.value = true
     }
 }
+function icon_class() {
+    const shape = props.data.shape();
+    if (shape.type === ShapeType.Group && shape.isSymbolShape) {
+        return 'pattern-component';
+    } else {
+        return `pattern-${shape.type}`;
+    }
+}
 onMounted(() => {
     hangdlePerm()
     updater();
@@ -218,7 +226,7 @@ onUnmounted(() => {
             </div>
         </div>
         <div class="container-svg" @dblclick="toggleContainer">
-            <svg-icon class="svg" :icon-class="`pattern-${props.data.shape().type}`"></svg-icon>
+            <svg-icon class="svg" :icon-class="icon_class()"></svg-icon>
         </div>
         <div class="text" :style="{ opacity: !visible_status ? 1 : .3, display: isInput ? 'none' : '' }">
             <div class="txt" @dblclick="onRename">{{ props.data.shape().name }}</div>
@@ -246,15 +254,6 @@ onUnmounted(() => {
 </template>
 
 <style scoped lang="scss">
-.component {
-    color: var(--component-color);
-
-    &>.text>.txt,
-    &>.text>.tool_icon {
-        color: var(--component-color);
-    }
-}
-
 .container {
     display: flex;
     flex-flow: row;
@@ -435,5 +434,14 @@ onUnmounted(() => {
     z-index: 1;
     border-radius: 0px !important;
     background-color: rgba($color: #865dff, $alpha: 0.4) !important;
+}
+
+.component {
+    color: var(--component-color);
+
+    &>.text>.txt,
+    &>.text>.tool_icon {
+        color: var(--component-color);
+    }
 }
 </style>
