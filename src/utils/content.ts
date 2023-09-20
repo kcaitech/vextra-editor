@@ -660,6 +660,17 @@ function skipUserSelectShapes(context: Context, shapes: Shape[]) {
     context.workspace.matrixTransformation();
   }
 }
+export function map_from_shapes(shapes: Shape[], init?: Map<string, Shape>) {
+  const map: Map<string, Shape> = init || new Map();
+  for (let i = 0, len = shapes.length; i < len; i++) {
+    const shape = shapes[i];
+    map.set(shape.id, shape);
+    if (shape.childs && shape.childs.length) {
+      map_from_shapes(shape.childs, map);
+    }
+  }
+  return map;
+}
 export {
   Root, updateRoot, _updateRoot,
   getName, get_image_name, get_selected_types, init_insert_table,

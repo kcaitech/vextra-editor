@@ -103,31 +103,54 @@ function bar_mousemove(event: MouseEvent) {
         }
     }
 }
+let pre_target_x: number, pre_target_y: number;
 function scale(asyncBaseAction: AsyncBaseAction, p2: PageXY) {
     if (props.shape.rotation) {
         asyncBaseAction.executeScale(cur_ctrl_type, p2);
     } else {
         const stickness = props.context.assist.stickness;
-        const target = props.context.assist.point_match(props.shape, pointType);
+        const target = props.context.assist.point_match(p2);
         if (!target) return;
         if (stickedX) {
-            if (Math.abs(p2.x - sticked_x_v) > stickness) stickedX = false;
-            else p2.x = sticked_x_v;
+            if (Math.abs(p2.x - sticked_x_v) >= stickness) {
+                stickedX = false;
+            } else {
+                if (pre_target_x === target.x) {
+                    p2.x = sticked_x_v;
+                } else if (target.sticked_by_x) {
+                    modify_fix_x(p2, target.x);
+                }
+            }
         } else if (target.sticked_by_x) {
-            p2.x = target.x;
-            sticked_x_v = p2.x;
-            stickedX = true;
+            modify_fix_x(p2, target.x);
         }
         if (stickedY) {
-            if (Math.abs(p2.y - sticked_y_v) > stickness) stickedY = false;
-            else p2.y = sticked_y_v;
+            if (Math.abs(p2.y - sticked_y_v) >= stickness) {
+                stickedY = false;
+            } else {
+                if (pre_target_y === target.y) {
+                    p2.y = sticked_y_v;
+                } else if (target.sticked_by_y) {
+                    modify_fix_y(p2, target.y);
+                }
+            }
         } else if (target.sticked_by_y) {
-            p2.y = target.y;
-            sticked_y_v = p2.y;
-            stickedY = true;
+            modify_fix_y(p2, target.y);
         }
         asyncBaseAction.executeScale(cur_ctrl_type, p2);
     }
+}
+function modify_fix_x(p2: PageXY, fix: number) {
+    p2.x = fix;
+    sticked_x_v = p2.x;
+    stickedX = true;
+    pre_target_x = fix;
+}
+function modify_fix_y(p2: PageXY, fix: number) {
+    p2.y = fix;
+    sticked_y_v = p2.y;
+    stickedY = true;
+    pre_target_y = fix;
 }
 function getScale(type: CtrlElementType, shape: Shape, start: ClientXY, end: ClientXY): number {
     const m = new Matrix(shape.matrix2Root().inverse);
