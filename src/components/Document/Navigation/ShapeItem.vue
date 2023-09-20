@@ -6,7 +6,7 @@ import { is_parent_locked, is_parent_unvisible } from "@/utils/shapelist";
 import { Perm } from "@/context/workspace";
 export interface ItemData {
     id: string
-    shape: Shape
+    shape: () => Shape // 作用function，防止vue对shape内部数据进行proxy
     selected: boolean
     expand: boolean
     level: number
@@ -41,7 +41,7 @@ let showTriangle = ref<boolean>(false);
 const watchedShapes = new Map();
 function watchShapes() {
     const needWatchShapes = new Map();
-    let shape = props.data.shape;
+    let shape = props.data.shape();
     let p = shape.parent;
     while (p && p.type !== ShapeType.Page) {
         needWatchShapes.set(p.id, p);
@@ -58,43 +58,43 @@ function watchShapes() {
         watchedShapes.set(k, v);
     })
 }
-const stop = watch(() => props.data.shape, (value, old) => {
+const stop = watch(() => props.data.shape(), (value, old) => {
     old && old.unwatch(updater);
     value.watch(updater);
     watchShapes();
 }, { immediate: true })
 function updater(t?: any) {
     if (t === 'shape-frame') return;
-    let shape = props.data.shape;
+    const shape = props.data.shape();
     const naviChilds = shape.naviChilds;
     showTriangle.value = Boolean(naviChilds && naviChilds.length > 0);
-    lock_status.value = props.data.shape.isLocked ? 1 : 0;
-    visible_status.value = props.data.shape.isVisible ? 0 : 1;
-    if (is_parent_locked(props.data.shape)) lock_status.value = 2;
-    if (is_parent_unvisible(props.data.shape)) visible_status.value = 2;
+    lock_status.value = shape.isLocked ? 1 : 0;
+    visible_status.value = shape.isVisible ? 0 : 1;
+    if (is_parent_locked(shape)) lock_status.value = 2;
+    if (is_parent_unvisible(shape)) visible_status.value = 2;
 }
 
 function toggleExpand(e: Event) {
     if (!showTriangle.value) return;
     e.stopPropagation();
-    emit("toggleexpand", props.data.shape);
+    emit("toggleexpand", props.data.shape());
 }
 
 const toggleContainer = (e: MouseEvent) => {
     e.stopPropagation()
-    emit('scrolltoview', props.data.shape);
+    emit('scrolltoview', props.data.shape());
 }
 
 function selectShape(e: MouseEvent) {
     e.stopPropagation();
     const { ctrlKey, metaKey, shiftKey } = e;
-    emit("selectshape", props.data.shape, ctrlKey, metaKey, shiftKey);
+    emit("selectshape", props.data.shape(), ctrlKey, metaKey, shiftKey);
 }
 
 function hoverShape(e: MouseEvent) {
     const working = !props.data.context.workspace.isTranslating;
     if (working) {
-        emit("hovershape", props.data.shape);
+        emit("hovershape", props.data.shape());
         is_tool_visible.value = true;
     }
 }
@@ -106,19 +106,19 @@ function unHoverShape(e: MouseEvent) {
 const setLock = (e: MouseEvent) => {
     if (lock_status.value === 2) return; // 继承锁
     e.stopPropagation();
-    emit('set-lock', props.data.shape)
+    emit('set-lock', props.data.shape())
 }
 const setVisible = (e: MouseEvent) => {
     if (visible_status.value === 2) return; // 继承隐藏
     e.stopPropagation();
-    emit('set-visible', Boolean(visible_status.value < 0), props.data.shape)
+    emit('set-visible', Boolean(visible_status.value < 0), props.data.shape())
 }
 const onRename = () => {
     if (!isEdit.value) return
     isInput.value = true
     nextTick(() => {
         if (nameInput.value) {
-            (nameInput.value as HTMLInputElement).value = props.data.shape.name.trim();
+            (nameInput.value as HTMLInputElement).value = props.data.shape().name.trim();
             nameInput.value.focus();
             nameInput.value.select();
             nameInput.value?.addEventListener('blur', stopInput);
@@ -131,7 +131,7 @@ const onChangeName = (e: Event) => {
     const value = (e.target as InputHTMLAttributes).value
     if (esc.value) return
     if (value.length === 0 || value.length > 40 || value.trim().length === 0) return
-    emit('rename', value, props.data.shape);
+    emit('rename', value, props.data.shape());
 }
 
 const stopInput = () => {
@@ -159,7 +159,7 @@ const onInputBlur = (e: MouseEvent) => {
     }
 }
 const selectedChild = () => {
-    let parent = props.data.shape.parent
+    let parent = props.data.shape().parent
     let child
     while (parent) {
         if (parent.type === 'page') break
@@ -172,7 +172,7 @@ const selectedChild = () => {
     return child
 }
 function is_component() {
-    let s: any = props.data.shape;
+    let s: any = props.data.shape();
     while (s) {
         if (s.type === ShapeType.Page) break;
         if (s.type === ShapeType.SymbolRef) return true;
@@ -182,7 +182,7 @@ function is_component() {
 }
 const mousedown = (e: MouseEvent) => {
     e.stopPropagation();
-    emit('item-mousedown', e, props.data.shape)
+    emit('item-mousedown', e, props.data.shape())
     selectedChild();
 }
 
@@ -218,10 +218,10 @@ onUnmounted(() => {
             </div>
         </div>
         <div class="container-svg" @dblclick="toggleContainer">
-            <svg-icon class="svg" :icon-class="`pattern-${props.data.shape.type}`"></svg-icon>
+            <svg-icon class="svg" :icon-class="`pattern-${props.data.shape().type}`"></svg-icon>
         </div>
         <div class="text" :style="{ opacity: !visible_status ? 1 : .3, display: isInput ? 'none' : '' }">
-            <div class="txt" @dblclick="onRename">{{ props.data.shape.name }}</div>
+            <div class="txt" @dblclick="onRename">{{ props.data.shape().name }}</div>
             <div class="tool_icon"
                 :style="{ visibility: `${is_tool_visible ? 'visible' : 'hidden'}`, width: `${is_tool_visible ? 66 + 'px' : lock_status || visible_status ? 66 + 'px' : 0}` }">
                 <div class="tool_lock tool" :class="{ 'visible': lock_status }" @click="(e: MouseEvent) => setLock(e)"
