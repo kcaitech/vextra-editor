@@ -233,7 +233,7 @@ const setProjectInfo = async (params: any) => {
                 <span class="description">{{ scope.row.project.name }}</span>
             </template>
         </el-table-column>
-        <el-table-column prop="project" :label="t('Createteam.project_name')">
+        <el-table-column prop="project" :label="t('Createteam.project_description')">
             <template #default="scope">
                 <span class="description">{{ scope.row.project.description }}</span>
             </template>
