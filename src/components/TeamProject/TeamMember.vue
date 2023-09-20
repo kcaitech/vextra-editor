@@ -49,12 +49,15 @@
         </div>
     </div>
     <NetworkError v-else @refresh-doc="GetteamMember"></NetworkError>
-    <ProjectDialog :projectVisible="transferCreator" :context="'转让创建者权限后，您将不再拥有该团队，后续作为管理员留在项目中。'" :title="'转移创建者权限'"
-        :confirm-btn="'确定转移'" @clode-dialog="closetransferCreator" @confirm="confirmTransferCreator"></ProjectDialog>
-    <ProjectDialog :projectVisible="outTeamDialog" :context="'移出团队后，该成员无法再访问团中的项目及资源。'" :title="'移出团队'"
-        :confirm-btn="'确认移出'" @clode-dialog="closeOutTeamDialog" @confirm="confirmOutTeamDialog"></ProjectDialog>
-    <ProjectDialog :projectVisible="exitTeamDialog" :context="'退出团队后，团队中的所有项目，文件及资源，将无法再进行访问。'" :title="'离开团队'"
-        :confirm-btn="'确认离开'" @clode-dialog="closeExitTeamDialog" @confirm="confirmExitTeamDialog"></ProjectDialog>
+    <ProjectDialog :projectVisible="transferCreator" :context="t('teammember.transferCreator_context')"
+        :title="t('teammember.transferCreator_title')" :confirm-btn="t('teammember.transferCreator_confirm')"
+        @clode-dialog="closetransferCreator" @confirm="confirmTransferCreator"></ProjectDialog>
+    <ProjectDialog :projectVisible="outTeamDialog" :context="t('teammember.outTeamDialog_context')"
+        :title="t('teammember.outTeamDialog_title')" :confirm-btn="t('teammember.outTeamDialog_confirm')"
+        @clode-dialog="closeOutTeamDialog" @confirm="confirmOutTeamDialog"></ProjectDialog>
+    <ProjectDialog :projectVisible="exitTeamDialog" :context="t('teammember.exitTeamDialog_context')"
+        :title="t('teammember.exitTeamDialog_title')" :confirm-btn="t('teammember.exitTeamDialog_confirm')"
+        @clode-dialog="closeExitTeamDialog" @confirm="confirmExitTeamDialog"></ProjectDialog>
 </template>
 <script setup lang="ts">
 import { onMounted, onUnmounted, ref, inject, Ref, watch, computed } from 'vue';
@@ -63,7 +66,6 @@ import * as user_api from '@/apis/users'
 import { ElMessage } from 'element-plus'
 import { useI18n } from 'vue-i18n'
 import { router } from '@/router';
-import { all } from 'axios';
 import ProjectDialog from './ProjectDialog.vue';
 
 interface Props {
@@ -77,9 +79,8 @@ const props = withDefaults(defineProps<Props>(), {
 const userID = ref(localStorage.getItem('userId'))
 const userid = ref()
 const { t } = useI18n()
-const titles = ['姓名', '团队权限']
-const filteritems = ['仅阅读', '可编辑', '管理员', '创建者', '全部']
-
+const titles = [t('teammember.name'), t('teammember.team_permission')]
+const filteritems = [t('teammember.Readonly'), t('teammember.editable'), t('teammember.manager'), t('teammember.creator'), t('teammember.all')]
 const noNetwork = ref(false)
 const teammemberdata = ref<any[]>([])
 const fold = ref(false)
@@ -135,13 +136,13 @@ const usertype = (p: number, id: string) => {
 const typeitems = (num: number) => {
     switch (num) {
         case 0:
-            return ['离开团队']
+            return [t('teammember.leave_team')]
         case 1:
-            return ['离开团队']
+            return [t('teammember.leave_team')]
         case 2:
-            return ['可编辑', '仅阅读', '移出团队']
+            return [t('teammember.editable'), t('teammember.Readonly'), t('teammember.leave_team')]
         case 3:
-            return ['管理员', '可编辑', '仅阅读', '转移创建者', '移出团队']
+            return [t('teammember.manager'), t('teammember.editable'), t('teammember.Readonly'), t('teammember.transfer_creator'), t('teammember.move_team')]
         default:
             return null
     }
@@ -191,13 +192,13 @@ const GetteamMember = async () => {
 const membertype = (num: number) => {
     switch (num) {
         case 0:
-            return '仅阅读'
+            return t('teammember.Readonly')
         case 1:
-            return '可编辑'
+            return t('teammember.editable')
         case 2:
-            return '管理员'
+            return t('teammember.manager')
         case 3:
-            return '创建者'
+            return t('teammember.creator')
         default:
             return null
     }
@@ -240,7 +241,7 @@ const setPerm = async (T: string, U: string, P: number) => {
         const { code, message } = await user_api.Setteammemberperm({ team_id: T, user_id: U, perm_type: P })
         if (code === 0) {
             ElMessage.closeAll()
-            ElMessage.success(`已设为：${membertype(P)}`)
+            ElMessage.success(`${t('teammember.permission_tips') + membertype(P)}`)
             teammemberdata.value.map(item => multiplyArrayElement(item, P, U))
         } else {
             ElMessage.error(message)
@@ -256,7 +257,7 @@ const setcreator = async (T: string, U: string, N: string) => {
         const { code, message } = await user_api.Setteamcreator({ team_id: T, user_id: U })
         if (code === 0) {
             ElMessage.closeAll()
-            ElMessage.success(`已转让给：${N}`)
+            ElMessage.success(`${t('teammember.transfer_tips') + N} `)
             GetteamMember()
         } else {
             ElMessage.error(message)
@@ -304,19 +305,19 @@ const outteam = async (T: string) => {
 const itemEvent = (item: string, teamid: string, userid: string, perm_type: number, name: string) => {
     folds.value = false
     switch (item) {
-        case '管理员':
+        case t('teammember.manager'):
             return (() => {
                 if (perm_type != 2) setPerm(teamid, userid, 2);
             })()
-        case '可编辑':
+        case t('teammember.editable'):
             return (() => {
                 if (perm_type != 1) setPerm(teamid, userid, 1);
             })()
-        case '仅阅读':
+        case t('teammember.Readonly'):
             return (() => {
                 if (perm_type != 0) setPerm(teamid, userid, 0);
             })()
-        case '转移创建者':
+        case t('teammember.transfer_creator'):
             return (() => {
                 transferCreator.value = true;
                 dialogData.value = {
@@ -325,7 +326,7 @@ const itemEvent = (item: string, teamid: string, userid: string, perm_type: numb
                     name
                 }
             })()
-        case '移出团队':
+        case t('teammember.move_team'):
             return (() => {
                 outTeamDialog.value = true;
                 dialogData.value = {
@@ -333,7 +334,7 @@ const itemEvent = (item: string, teamid: string, userid: string, perm_type: numb
                     user_id: userid,
                 }
             })()
-        case '离开团队':
+        case t('teammember.leave_team'):
             return (() => {
                 exitTeamDialog.value = true;
                 dialogData.value = {
@@ -539,11 +540,13 @@ onUnmounted(() => {
 
     }
 }
+
 .container {
     display: flex;
     flex-direction: column;
     flex: 1;
 }
+
 .main {
     flex: 1;
 }

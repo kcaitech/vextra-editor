@@ -7,7 +7,7 @@
                         <p @click="input_cusname(currentProject[0])"
                             :class="{ edit: currentProject[0].self_perm_type === 5 || currentProject[0].self_perm_type === 4 }">
                             {{ currentProject[0].project.name }}</p>
-                        <Tooltip :content="'项目菜单'" :offset="5" :visible="showProjecrMenu ? false : visible">
+                        <Tooltip :content="t('projectpage.menu')" :offset="5" :visible="showProjecrMenu ? false : visible">
                             <div class="setting hover" @mousedown.stop="(e) => projectMenu(currentProject[0], e)"
                                 @mouseenter.stop="onMouseenter" @mouseleave.stop="onMouseleave">
                                 <el-icon style="transform: rotate(90deg); margin-right: 5px;">
@@ -21,9 +21,8 @@
                                 </TeamProjectMenu>
                             </div>
                         </Tooltip>
-                        <Tooltip :content="'回到上一级'" :offset="5">
-                            <div class="back"
-                                @click="back(currentProject[0].project, currentProject[0].is_in_team)">
+                        <Tooltip :content="t('projectpage.back')" :offset="5">
+                            <div class="back" @click="back(currentProject[0].project, currentProject[0].is_in_team)">
                                 <svg-icon icon-class="back"></svg-icon>
                             </div>
                         </Tooltip>
@@ -36,14 +35,15 @@
                 <div class="span">
                     <span v-if="!cusdesc" @click="input_cusdesc(currentProject[0])"
                         :class="{ edit: currentProject[0].self_perm_type === 5 || currentProject[0].self_perm_type === 4 }">{{
-                            currentProject[0].project.description.trim().length === 0 ? '点击输入项目描述…' :
+                            currentProject[0].project.description.trim().length === 0 ? t('projectpage.input_tips') :
                             currentProject[0].project.description }}</span>
                     <input v-if="cusdesc" type="text" ref="input" @input="updateInputDescWidth" v-model="projectDesc"
                         :style="{ width: inputDescLength + 'px' }">
                 </div>
             </div>
             <div class="right">
-                <el-tooltip class="box-item" effect="dark" :content="currentProject[0].is_favor ? `取消固定` : `固定项目`"
+                <el-tooltip class="box-item" effect="dark"
+                    :content="currentProject[0].is_favor ? t('projectpage.unpin') : t('projectpage.fixed_items')"
                     placement="bottom" :show-after="500" :offset="10" :hide-after="0">
                     <div @click="cancelFixed">
                         <svg t="1693476333821" class="icon" viewBox="0 0 1024 1024" version="1.1"
@@ -61,10 +61,10 @@
                         </svg>
                     </div>
                 </el-tooltip>
-                <Tooltip :content="'邀请项目成员'" :offset="10">
+                <Tooltip :content="t('projectpage.member')" :offset="10">
                     <div class="setting" @click="projectSetting"><svg-icon icon-class="gear"></svg-icon></div>
                 </Tooltip>
-                <Tooltip :content="'成员权限'" :offset="10">
+                <Tooltip :content="t('projectpage.permission')" :offset="10">
                     <div @click="showMembergDialog" v-if="currentProject[0].is_invited"><el-icon>
                             <User />
                         </el-icon></div>
@@ -83,16 +83,18 @@
         </div>
         <ProjectFillList v-if="itemid === 0 && currentProject[0]" :currentProject="currentProject[0]"></ProjectFillList>
         <ProjectRecycleBin v-if="itemid === 1 && currentProject[0]" :currentProject="currentProject[0]"></ProjectRecycleBin>
-        <ProjectAccessSetting v-if="projectSettingDialog" title="邀请项目成员" :data="currentProject[0]" width="500px"
-            @clodeDialog="projectSettingDialog = false" />
+        <ProjectAccessSetting v-if="projectSettingDialog" :title="t('Createteam.membertip')" :data="currentProject[0]"
+            width="500px" @clodeDialog="projectSettingDialog = false" />
         <div :reflush="reflush !== 0 ? reflush : undefined">
             <ProjectMemberg v-if="projectMembergDialog" :projectMembergDialog="projectMembergDialog"
                 :currentProject="currentProject[0]" @closeDialog="closeDialog" @exitProject="exitProject"></ProjectMemberg>
         </div>
-        <ProjectDialog :projectVisible="delVisible" context="删除项目后，将删除项目及项目中所有文件、资料。" :title="'删除项目'" :confirm-btn="'仍然删除'"
+        <ProjectDialog :projectVisible="delVisible" :context="t('Createteam.projectdelcontext')"
+            :title="t('Createteam.projectdeltitle')" :confirm-btn="t('Createteam.ok_delete')"
             @clode-dialog="closeDelVisible" @confirm="DelProject"></ProjectDialog>
-        <ProjectDialog :projectVisible="exitVisible" context="退出项目后，无法再访问项目中的文件，或使用项目中的资源。" :title="'退出项目'"
-            :confirm-btn="'仍然退出'" @clode-dialog="closeExitVisible" @confirm="ExitProject"></ProjectDialog>
+        <ProjectDialog :projectVisible="exitVisible" :context="t('Createteam.projectexitcontext')"
+            :title="t('Createteam.projectexittitle')" :confirm-btn="t('Createteam.ok_exit')"
+            @clode-dialog="closeExitVisible" @confirm="ExitProject"></ProjectDialog>
     </div>
 </template>
 <script setup lang="ts">
@@ -114,7 +116,7 @@ import Tooltip from '../common/Tooltip.vue'
 
 const { t } = useI18n()
 const itemid = ref(0)
-const items = ['文件', '回收站',]
+const items = [t('projectpage.file'), t('projectpage.recycle_bin'),]
 const route = useRoute();
 const reflush = ref(0);
 const currentProject = ref<any[]>([]);
@@ -127,47 +129,11 @@ const inputNameLength = ref(0)
 const inputDescLength = ref(0)
 const projectSettingDialog = ref(false);
 const projectMembergDialog = ref(false);
-const sharelink = ref(``);
 const showProjecrMenu = ref(false);
 const delVisible = ref(false);
-const memberLen = ref(0);
 const exitVisible = ref(false);
-const moveVisible = ref(false);
-let menuItem: string[] = ['visit'];
 const visible = ref(false);
-const projectOptions = [
-    {
-        value: 0,
-        label: '公开: 团队全部成员可访问',
-    },
-    {
-        value: 1,
-        label: '非公开: 仅通过链接申请访问',
-    }
-]
-const projectType = ref(projectOptions[1].label);
-const projectPerms = [
-    {
-        value: 1,
-        label: '仅阅读',
-    },
-    {
-        value: 2,
-        label: '可评论',
-    },
-    {
-        value: 3,
-        label: '可编辑',
-    }
-]
-const projectPerm = ref(projectPerms[0].label);
-const params = {
-    project_id: '',
-    public_switch: false,
-    perm_type: 0,
-    invited_switch: false,
-    need_approval: false
-}
+let menuItem: string[] = ['visit'];
 
 
 const { projectList, saveProjectData, is_favor, favoriteList, updateFavor, is_team_upodate, teamUpdate, setMenuVisi, menuState } = inject('shareData') as {
@@ -289,8 +255,11 @@ watch(menuState, (v) => {
 const projectMenu = (project: any, e: MouseEvent) => {
     menuItem = ['visit'];
     setMenuVisi(false);
-    if (project.self_perm_type === 5 || project.self_perm_type === 4) {
+    if (project.self_perm_type === 5) {
         menuItem.push('rename', 'del');
+    }
+    if (project.self_perm_type === 4) {
+        menuItem.push('rename', 'del', 'exit');
     }
     if (project.is_invited || project.self_perm_type === 5) {
         menuItem.push('perm');
@@ -662,10 +631,12 @@ onMounted(() => {
     .left {
         width: calc(100% - 140px);
         height: 100%;
+
         .p {
             box-sizing: border-box;
             margin-bottom: 10px;
             height: 38px;
+
             .title-p {
                 width: fit-content;
                 display: flex;
@@ -675,6 +646,7 @@ onMounted(() => {
                 max-width: 100%;
                 padding-right: 10px;
                 height: 100%;
+
                 svg {
                     width: 16px;
                     height: 16px;
@@ -710,6 +682,7 @@ onMounted(() => {
         .edit {
             height: 100%;
             box-sizing: border-box;
+
             &:hover {
                 border: 2px solid #9775fa;
             }
@@ -906,6 +879,7 @@ onMounted(() => {
     align-items: center;
     padding: 3px;
     margin-top: 2px;
+
     &:hover {
         background-color: #e5dbff;
     }

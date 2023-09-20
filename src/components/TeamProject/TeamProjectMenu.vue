@@ -68,13 +68,13 @@ onUnmounted(() => {
     <!-- 右键菜单 -->
     <div class="rightmenu" ref="menu" :style="{ top: top + 'px', left: left + 'px' }">
         <ul>
-            <li v-if="props.items.includes('rename')" @click.stop="reName">重命名</li>
-            <li v-if="props.items.includes('visit')" @click.stop="projectSetting">项目访问设置</li>
-            <li v-if="props.items.includes('perm')" @click.stop="showMembergDialog">成员权限设置</li>
-            <li v-if="props.items.includes('fixed')" @click.stop="cancelFixed">固定显示</li>
-            <li v-if="props.items.includes('no_fixed')" @click.stop="cancelFixed">取消固定</li>
-            <li v-if="props.items.includes('exit')" @click.stop="exitProject">退出项目组</li>
-            <li v-if="props.items.includes('del')" @click.stop="delProject">删除项目</li>
+            <li v-if="props.items.includes('rename')" @click.stop="reName">{{t('teamprojectmenu.rename')}}</li>
+            <li v-if="props.items.includes('visit')" @click.stop="projectSetting">{{t('teamprojectmenu.projectsetting')}}</li>
+            <li v-if="props.items.includes('perm')" @click.stop="showMembergDialog">{{t('teamprojectmenu.membersetting')}}</li>
+            <li v-if="props.items.includes('fixed')" @click.stop="cancelFixed">{{t('teamprojectmenu.fixed')}}</li>
+            <li v-if="props.items.includes('no_fixed')" @click.stop="cancelFixed">{{t('teamprojectmenu.cancelFixed')}}</li>
+            <li v-if="props.items.includes('exit')" @click.stop="exitProject">{{t('teamprojectmenu.projectexittitle')}}</li>
+            <li v-if="props.items.includes('del')" @click.stop="delProject">{{t('teamprojectmenu.projectdeltitle')}}</li>
         </ul>
     </div>
 </template>

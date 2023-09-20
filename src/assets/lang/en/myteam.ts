@@ -76,13 +76,107 @@ export const inviteMember = {
     permission_tipsA: 'After colleagues apply, they need to be confirmed by the administrator before they can join.',
 }
 
-export const joinTeam={
-    jointeamtipsA:'Apply to join the team: ',
+export const joinTeam = {
+    jointeamtipsA: 'Apply to join the team: ',
     jurisdiction: 'After joining a team, you can access the projects, files, and resources in the team',
-    jointeamtipsB:'Applications for Membership',
-    jointeamtipsC:'Application has been sent,',
-    jointeamtipsC1:"You will soon enter the application homepage. After approval, you can view the team's content.",
-    jointeamtipsD:'Team invitation has been closed. If you want to join the team, please contact the team administrator.',
+    jointeamtipsB: 'Applications for Membership',
+    jointeamtipsC: 'Application has been sent,',
+    jointeamtipsC1: "You will soon enter the application homepage. After approval, you can view the team's content.",
+    jointeamtipsD: 'Team invitation has been closed. If you want to join the team, please contact the team administrator.',
     read: 'Read',
     edit: 'Edit',
+}
+
+export const moveprojectfill = {
+    name: 'File name: ',
+    location: 'Current position: ',
+    my_file: 'My file',
+    move_to: 'Move files to: ',
+    private_file: 'Set to private file',
+    share_Project: 'Shared items received',
+    cancel: 'cancel',
+}
+
+export const projectlist = {
+    datanull: 'No project is added',
+    addproject: 'New project',
+    project_name: 'Project name',
+    project_description: 'Project description',
+    creator: 'Creator',
+    operation: 'Operation'
+}
+
+export const projectpage = {
+    menu: 'Project menu',
+    back: 'Return to previous level',
+    input_tips: 'Click to enter a project description…',
+    unpin: 'Unpin',
+    fixed_items: 'Fixed items',
+    member: 'Invite project members',
+    permission: 'Member permissions',
+    file: 'Flie',
+    recycle_bin: 'recycle bin',
+}
+
+export const teammember = {
+    transferCreator_context: 'After transferring creator rights, you will no longer own the team and will remain in the project as an administrator.',
+    transferCreator_title: 'Transfer creator rights',
+    transferCreator_confirm: 'Confirm transfer',
+    outTeamDialog_context: 'After being removed from the team, the member can no longer access the projects and resources in the team.',
+    outTeamDialog_title: 'Move out of team',
+    outTeamDialog_confirm: 'Confirm removal',
+    exitTeamDialog_context: 'After leaving the team, all projects, files and resources in the team will no longer be accessible.',
+    exitTeamDialog_title: 'Leave the team',
+    exitTeamDialog_confirm: 'Confirm to leave',
+    name: 'Name',
+    team_permission: 'Team permissions',
+    all: 'All',
+    creator: 'Creator',
+    manager: 'Manager',
+    editable: 'Editable',
+    Readonly: 'Read only',
+    leave_team: 'Leave the team',
+    move_team: 'Move out of team',
+    transfer_creator: 'Transfer creator',
+    permission_tips: 'Already set to: ',
+    transfer_tips: 'Transferred to: ',
+}
+
+export const teampage = {
+    addproject: 'New Project',
+    addmember: 'Invite members',
+    search_default_tipsA: 'Search projects/creators',
+    search_default_tipsB: 'Search members',
+    project: 'Project',
+    members: 'Members',
+    team_set: 'Team settings',
+}
+
+export const teamprojectmenu = {
+    rename: 'Rename',
+    projectsetting: 'Project access settings',
+    membersetting: 'Member permission settings',
+    fixed: 'Fixed',
+    cancelFixed: 'Cancel fixed',
+    projectexittitle: 'Exit project',
+    projectdeltitle: 'Delete project',
+}
+
+export const teamsetting = {
+    team_name: 'Team name',
+    edit_name:'Edit name',
+    team_description: 'Team description',
+    edit_description:'Edit description',
+    team_avatar: 'Team avatar',
+    edit_avatar:'Edit avatar',
+    avatar_restriction: 'Upload images in PNG or JPG format less than 2M',
+    disband_team:'Disband the team',
+    disband_team_tips:'Disband the team and delete team files, which cannot be recovered.',
+    leave_team:'Leave the team',
+    leave_team_tips:'After leaving the team, you will no longer be able to view team projects and resources',
+    disband_team_tipsB:'After the team is disbanded, all project data contained in the team will be completely deleted and cannot be recovered.',
+    leave:'Leave',
+    disband:'Disband',
+    confirm:'Confirm',
+    cancel:'Cancel', 
 }

@@ -10,40 +10,10 @@
     </div>
 </template>
 <script setup lang="ts">
-import { Ref, inject, onMounted, onUnmounted } from 'vue'
 import ProjectShareList from './ProjectShareList.vue'
 import { useI18n } from 'vue-i18n'
 const { t } = useI18n();
 
-interface data {
-    team: {
-        id: string,
-        name: string,
-        avatar: string,
-        description: string
-    }
-}
-
-const { teamData, teamID, teamName, teamAvatar, teamDescription } = inject('shareData') as {
-    teamData: Ref<[{
-        team: {
-            id: string,
-            name: string,
-            avatar: string,
-            description: string
-        }
-    }]>;
-    teamID: Ref<string>;
-    teamName: Ref<string>;
-    teamAvatar: Ref<string>;
-    teamDescription: Ref<string>;
-}
-
-onMounted(() => {
-})
-
-onUnmounted(() => {
-})
 </script>
 <style lang="scss" scoped>
 .nested-enter-active,

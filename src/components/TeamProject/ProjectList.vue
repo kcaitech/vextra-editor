@@ -54,20 +54,20 @@
             </div>
         </div>
         <div v-else class="datanull">
-            <p>未加入任何项目</p>
-            <button type="button" @click.stop="onAddproject" v-if="teamSelfPermType > 0">新建项目</button>
+            <p>{{t('projectlist.datanull')}}</p>
+            <button type="button" @click.stop="onAddproject" v-if="teamSelfPermType > 0">{{t('projectlist.addproject')}}</button>
         </div>
     </div>
     <NetworkError v-else @refresh-doc="GetprojectLists"></NetworkError>
-    <ProjectDialog :projectVisible="innerVisible" context="退出项目后，无法再访问项目中的文件，或使用项目中的资源。" :title="'退出项目'"
-        :confirm-btn="'仍然退出'" @clode-dialog="handleClose" @confirm="quitProject"></ProjectDialog>
-    <ProjectDialog :projectVisible="delVisible" context="删除项目后，将删除项目及项目中所有文件、资料。" :title="'删除项目'" :confirm-btn="'仍然删除'"
+    <ProjectDialog :projectVisible="innerVisible" :context="t('Createteam.projectexitcontext')" :title="t('Createteam.projectexittitle')"
+        :confirm-btn="t('Createteam.ok_exit')" @clode-dialog="handleClose" @confirm="quitProject"></ProjectDialog>
+    <ProjectDialog :projectVisible="delVisible" :context="t('Createteam.projectdelcontext')" :title="t('Createteam.projectdeltitle')" :confirm-btn="t('Createteam.ok_delete')"
         @clode-dialog="closeDelVisible" @confirm="DelProject"></ProjectDialog>
     <listrightmenu v-show="rightmenushow" :items="updateitems" :data="mydata" @showMembergDialog="showMembergDialog"
         @projectrename="setProjectInfo" @showSettingDialog="showSettingDialog"
         @cancelFixed="cancelFixed(mydata.project.id, mydata.is_favor, mydataindex)" @exitproject="rexitProject"
         @delproject="rdelProject" />
-    <ProjectAccessSetting v-if="projectSettingDialog" title="邀请项目成员" :data="mydata" width="500px"
+    <ProjectAccessSetting v-if="projectSettingDialog" :title="t('Createteam.membertip')" :data="mydata" width="500px"
         @clodeDialog="projectSettingDialog = false" />
     <ProjectMemberg v-if="projectMembergDialog" :projectMembergDialog="projectMembergDialog" :currentProject="mydata"
         @closeDialog="closeDialog" @exitProject="exitProject" />
@@ -78,7 +78,6 @@ import * as user_api from '@/apis/users'
 import { ElMessage } from 'element-plus'
 import { useI18n } from 'vue-i18n'
 import NetworkError from '@/components/NetworkError.vue'
-import { useRoute } from 'vue-router'
 import { router } from '@/router'
 import * as team_api from '@/apis/team'
 import ProjectDialog from './ProjectDialog.vue';
@@ -94,12 +93,11 @@ const items = ref(['rename', 'projectset', 'memberset', 'setfixed', 'cancelfixed
 const updateitems = ref(items.value)
 const mydata = ref()
 const mydataindex = ref()
-const route = useRoute()
 const showbutton = ref(false)
 const noNetwork = ref(false)
 const rightmenushow = ref(false)
 const { t } = useI18n()
-const titles = ['项目名称', '项目描述', '创建者', '操作',]
+const titles = [t('projectlist.project_name'), t('projectlist.project_description'), t('projectlist.creator'), t('projectlist.operation'),]
 const selectid = ref(0)
 const projectLists = ref<any[]>([])
 const teamprojectlist = ref<any[]>([])
@@ -117,7 +115,7 @@ const props = withDefaults(defineProps<Props>(), {
     searchvalue: ''
 })
 
-const { teamID, teamData, updateprojectlist, updateprojectliststate, projectList, saveProjectData, is_favor, favoriteList, updateFavor, activeNames, updateActiveNames, addTargetItem, teamSelfPermType } = inject('shareData') as {
+const { teamID, updateprojectlist, updateprojectliststate, projectList, saveProjectData, is_favor, favoriteList, updateFavor, teamSelfPermType } = inject('shareData') as {
     updateprojectlist: Ref<boolean>;
     updateprojectliststate: (b: boolean) => void;
     teamID: Ref<string>;
@@ -127,20 +125,6 @@ const { teamID, teamData, updateprojectlist, updateprojectliststate, projectList
     saveProjectData: (data: any[]) => void;
     is_favor: Ref<boolean>;
     updateFavor: (b: boolean) => void;
-    activeNames: Ref<number[]>;
-    updateActiveNames: {
-        add: (n: number) => void;
-        del: (n: number) => void;
-    };
-    teamData: Ref<[{
-        team: {
-            id: string,
-            name: string,
-            avatar: string,
-            description: string
-        }
-    }]>;
-    addTargetItem: (data: any[]) => void;
 };
 
 const favoriteProjectList = (arr1: any[], arr2: any[]) => {
@@ -219,12 +203,9 @@ function updateItemsBasedOnFavor(data: any, sourceItems: any) {
         }
         if (data.self_perm_type === 5) {
             updateItems = filterItemsByIndexes(updateItems, [4])
-            console.log(updateItems);
         }
         if (data.self_perm_type != 5 && data.is_invited != true) {
             updateItems = filterItemsByIndexes(updateItems, [1, 3])
-            console.log(updateItems);
-
         }
     }
     return updateItems
@@ -368,23 +349,6 @@ const SearchList = computed(() => {
 })
 
 const skipProject = (id: string) => {
-    // teamData.value.find((item, index) => {
-    //     if (item.team.id === route.params.id) {
-    //         if (favoriteList.value.length > 0) {
-    //             const foundObject = favoriteList.value.find(item => item.project.id === id)
-    //             if (foundObject) {
-    //                 addTargetItem([])
-    //             } else {
-    //                 addTargetItem(teamprojectlist.value.filter((item) => item.project.id === id))
-    //             }
-    //         } else {
-    //             addTargetItem(teamprojectlist.value.filter((item) => item.project.id === id))
-    //         }
-    //         if (activeNames.value.includes(index)) return
-    //         updateActiveNames.add(index)
-    //         return
-    //     }
-    // })
     router.push({ path: '/apphome/project/' + id });
 }
 

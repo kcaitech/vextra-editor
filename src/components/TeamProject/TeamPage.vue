@@ -23,10 +23,10 @@
                 </li>
             </ul>
             <div class="addandsearch">
-                <button type="button" v-if="itemid === 0 && teamSelfPermType > 0" @click.stop="showoverlay = true">新建项目</button>
-                <button type="button" v-if="itemid === 1" @click.stop="showoverlay = true">邀请成员</button>
+                <button type="button" v-if="itemid === 0 && teamSelfPermType > 0" @click.stop="showoverlay = true">{{t('teampage.addproject')}}</button>
+                <button type="button" v-if="itemid === 1" @click.stop="showoverlay = true">{{t('teampage.addmember')}}</button>
                 <el-input v-if="itemid != 2" ref="inputRef" size="large" v-model="search"
-                    :placeholder="itemid === 0 ? '搜索项目/创建者' : '搜索成员'">
+                    :placeholder="itemid === 0 ? t('teampage.search_default_tipsA') : t('teampage.search_default_tipsB')">
                     <template #prefix>
                         <el-icon size="18">
                             <Search />
@@ -61,10 +61,12 @@ import TeamMember from './TeamMember.vue'
 import InviteMember from './InviteMember.vue'
 import TeamSetting from './TeamSetting.vue'
 import { router } from '@/router'
+import { useI18n } from 'vue-i18n'
 
+const {t}=useI18n()
 const showoverlay = ref(false)
 const itemid = ref(0)
-const items = ['项目', '成员', '团队设置']
+const items = [t('teampage.project'), t('teampage.members'), t('teampage.team_set')]
 const img = ref(false)
 const search = ref<string>('')
 const route = useRoute()

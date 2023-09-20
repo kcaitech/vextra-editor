@@ -1,7 +1,9 @@
 <script lang="ts" setup>
-import { watch, ref, Ref, inject, watchEffect, computed, nextTick } from 'vue';
+import { watch, ref, Ref, inject, computed, nextTick } from 'vue';
 import { Folder } from '@element-plus/icons-vue';
 import * as team_api from '@/apis/team';
+import { useI18n } from 'vue-i18n';
+
 interface data {
     document: {
         id: string
@@ -21,6 +23,14 @@ const props = defineProps<{
     projectItem: any
     doc: data | undefined
 }>();
+
+const emit = defineEmits<{
+    (e: 'clodeDialog'): void;
+    (e: 'confirm'): void;
+    (e: 'moveFillSeccess'): void;
+}>()
+
+const { t } = useI18n()
 const isshow = ref(false);
 const active = ref('');
 
@@ -28,11 +38,6 @@ watch(() => props.projectVisible, (newvalue) => {
     isshow.value = newvalue
 })
 
-const emit = defineEmits<{
-    (e: 'clodeDialog'): void;
-    (e: 'confirm'): void;
-    (e: 'moveFillSeccess'): void;
-}>()
 const handleClose = () => {
     emit('clodeDialog')
 }
@@ -127,17 +132,17 @@ const onactiveNames = (id: string) => {
         :before-close="handleClose">
         <div class="context">
             <div class="name">
-                <span>文件名称:</span>
+                <span>{{ t('moveprojectfill.name') }}</span>
                 <span style="font-weight: bold; margin-left: 5px;">{{ props.doc!.document.name }}</span>
             </div>
             <div class="name">
-                <span>当前位置:</span>
+                <span>{{ t('moveprojectfill.location') }}</span>
                 <span v-if="projectItem" style="font-weight: bold;margin-left: 5px;">{{ teamName + ' / ' +
                     projectItem.project.name }}</span>
-                <span v-else style="font-weight: bold;margin-left: 5px;">我的文件</span>
+                <span v-else style="font-weight: bold;margin-left: 5px;">{{ t('moveprojectfill.my_file') }}</span>
             </div>
             <div>
-                移动文件至:
+                {{ t('moveprojectfill.move_to') }}
             </div>
             <div class="conteiner">
                 <div class="target_fill">
@@ -147,7 +152,7 @@ const onactiveNames = (id: string) => {
                                 <el-icon style="margin-right: 10px;">
                                     <Folder />
                                 </el-icon>
-                                <div class="name">我的文件</div>
+                                <div class="name">{{ t('moveprojectfill.my_file') }}</div>
                             </div>
                         </div>
                         <div class="team-title" @click="onactiveNames('1')" v-if="shareProject.length > 0">
@@ -155,7 +160,7 @@ const onactiveNames = (id: string) => {
                                 <div class="receive">
                                     <svg-icon icon-class="receive-fill" />
                                 </div>
-                                <div class="name">收到的共享项目</div>
+                                <div class="name">{{ t('moveprojectfill.share_Project') }}</div>
                             </div>
                         </div>
                         <template v-for="(data) in teamData" :key="data.team.id">
@@ -190,7 +195,7 @@ const onactiveNames = (id: string) => {
                                 <el-icon style="margin-right: 10px;">
                                     <Folder />
                                 </el-icon>
-                                <div>设为私有文件</div>
+                                <div>{{ t('moveprojectfill.private_file') }}</div>
                             </div>
                         </div>
                         <template v-for="(item, i) in shareProject" :key="i">
@@ -209,11 +214,11 @@ const onactiveNames = (id: string) => {
         </div>
         <template #footer>
             <div class="dialog-footer">
-                <el-button class="quit" :class="{ opacity: !active && activeNames !== '2'}" @click="quitProject"
+                <el-button class="quit" :class="{ opacity: !active && activeNames !== '2' }" @click="quitProject"
                     style="background-color: #9775fa; color: #fff;">{{ confirmBtn
                     }}</el-button>
                 <el-button class="quit" style="background-color: #fff; color: #000;" @click="handleClose">
-                    取消
+                    {{ t('moveprojectfill.cancel') }}
                 </el-button>
             </div>
         </template>
@@ -253,12 +258,14 @@ const onactiveNames = (id: string) => {
 :deep(.el-scrollbar) {
     margin-right: -10px;
 }
+
 h6 {
     width: 100%;
     display: flex;
     justify-content: center;
     margin-right: 10px;
 }
+
 .context {
     font-size: 14px;
     color: #000;

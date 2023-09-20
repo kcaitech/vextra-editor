@@ -1,6 +1,7 @@
 <script setup lang="ts">
 import { watch, ref } from 'vue';
-
+import { useI18n } from 'vue-i18n';
+const { t } = useI18n()
 const props = defineProps<{
     projectVisible: boolean
     title: string
@@ -34,9 +35,10 @@ const quitProject = () => {
         </div>
         <template #footer>
             <div class="dialog-footer">
-                <el-button class="quit" @click="quitProject" style="background-color: #9775fa; color: #fff;">{{ confirmBtn }}</el-button>
+                <el-button class="quit" @click="quitProject" style="background-color: #9775fa; color: #fff;">{{ confirmBtn
+                }}</el-button>
                 <el-button class="quit" style="background-color: #fff; color: #000;" @click="handleClose">
-                    取消
+                    {{ t('Createteam.cancel') }}
                 </el-button>
             </div>
         </template>

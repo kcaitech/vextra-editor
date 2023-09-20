@@ -2,50 +2,53 @@
     <div class="set-container">
         <div class="name-container">
             <div class="left">
-                <div class="title">团队名称</div>
+                <div class="title">{{ t('teamsetting.team_name') }}</div>
                 <div class="text">{{ teamName }}</div>
             </div>
             <div class="right">
-                <button type="button" :disabled="isDisabled.state" @click.stop="midname">修改名称</button>
+                <button type="button" :disabled="isDisabled.state"
+                    @click.stop="midname">{{ t('teamsetting.edit_name') }}</button>
             </div>
         </div>
         <div class="description-container">
             <div class="left">
-                <div class="title">团队描述</div>
+                <div class="title">{{ t('teamsetting.team_description') }}</div>
                 <div class="text">{{ teamDescription }}</div>
             </div>
             <div class="right">
-                <button type="button" :disabled="isDisabled.state" @click.stop="middescription">修改描述</button>
+                <button type="button" :disabled="isDisabled.state"
+                    @click.stop="middescription">{{ t('teamsetting.edit_description') }}</button>
             </div>
 
         </div>
         <div class="avatar-container">
             <div class="left">
-                <div class="title">团队头像</div>
-                <div class="text">{{ t('Createteam.avatar_restriction') }}</div>
+                <div class="title">{{ t('teamsetting.team_avatar') }}</div>
+                <div class="text">{{ t('teamsetting.avatar_restriction') }}</div>
             </div>
             <div class="right">
-                <label class="modify" :style="{ backgroundColor: isDisabled.color }" for="image_uploads">修改头像</label>
+                <label class="modify" :style="{ backgroundColor: isDisabled.color }"
+                    for="image_uploads">{{ t('teamsetting.edit_avatar') }}</label>
                 <input type="file" id="image_uploads" name="image_uploads" accept=".jpg,.png" style="display: none;"
                     @change="midAvatarRequest($event)" :disabled="isDisabled.state" />
             </div>
         </div>
         <div v-if="teamSelfPermType === 3" class="dissolve-container">
             <div class="left">
-                <div class="title">解散团队</div>
-                <div class="text">解散团队，删除团队文件，不可恢复</div>
+                <div class="title">{{ t('teamsetting.disband_team') }}</div>
+                <div class="text">{{ t('teamsetting.disband_team_tips') }}</div>
             </div>
             <div class="right">
-                <button class="disband" type="button" @click.stop="dissolveteam">解散团队</button>
+                <button class="disband" type="button" @click.stop="dissolveteam">{{ t('teamsetting.disband_team') }}</button>
             </div>
         </div>
         <div v-else class="leave-container">
             <div class="left">
-                <div class="title">离开团队</div>
-                <div class="text">离开团队后，将无法再查看团队项目及资源</div>
+                <div class="title">{{ t('teamsetting.leave_team') }}</div>
+                <div class="text">{{ t('teamsetting.leave_team_tips') }}</div>
             </div>
             <div class="right">
-                <button class="disband" type="button" @click.stop="leaveteam">离开团队</button>
+                <button class="disband" type="button" @click.stop="leaveteam">{{ t('teamsetting.leave_team') }}</button>
             </div>
         </div>
     </div>
@@ -53,7 +56,7 @@
         <div class="card-container">
             <div class="heard">
                 <div class="title" v-text="titlevalue"></div>
-                <div class="close"  @click.stop="showoverlay = false">
+                <div class="close" @click.stop="showoverlay = false">
                     <svg-icon icon-class="close"></svg-icon>
                 </div>
             </div>
@@ -62,24 +65,26 @@
                     <textarea v-if="textareashow" class="text-textarea" name="" id="" cols="30" rows="10"
                         :placeholder="placeholdervalue" v-model="textareaValue" :maxlength="maxvalue" />
                     <div v-else class="disbandtips">
-                        <p v-if="teamSelfPermType === 3">解散团队后，将彻底删除团队中包含的全部项目资料，且不可恢复。</p>
-                        <p v-else>离开团队后，将无法再查看团队项目及资源。</p>
+                        <p v-if="teamSelfPermType === 3">{{ t('teamsetting.disband_team_tipsB') }}</p>
+                        <p v-else>{{ t('teamsetting.leave_team_tips') }}</p>
                     </div>
                 </div>
             </div>
             <div class="addproject">
                 <button class="bnt_confirm" type="submit" @click.stop="confirm">
-                    {{ teamSelfPermType === 3 ? '确定' : '离开' }}
+                    {{ teamSelfPermType === 3 ? t('teamsetting.confirm') : t('teamsetting.leave') }}
                 </button>
-                <button class="bnt_cancel" type="submit" @click.stop.once="showoverlay = false">取消</button>
+                <button class="bnt_cancel" type="submit"
+                    @click.stop.once="showoverlay = false">{{ t('teamsetting.cancel') }}</button>
             </div>
         </div>
     </div>
     <ProjectDialog :projectVisible="showDialog" :context="contenttext" :title="titlevalue"
-            :confirm-btn="teamSelfPermType === 3 ? '解散' : '离开'" @clode-dialog="closeDisband" @confirm="confirmQuit"></ProjectDialog>
+        :confirm-btn="teamSelfPermType === 3 ? t('teamsetting.disband') : t('teamsetting.leave')"
+        @clode-dialog="closeDisband" @confirm="confirmQuit"></ProjectDialog>
 </template>
 <script setup lang="ts">
-import { Ref, computed, inject, nextTick, ref, watch } from 'vue';
+import { Ref, computed, inject, nextTick, ref } from 'vue';
 import { useI18n } from 'vue-i18n';
 import * as user_api from '@/apis/users'
 import { router } from '@/router';
@@ -140,9 +145,9 @@ const closeDisband = () => {
     showDialog.value = false;
 }
 const confirmQuit = () => {
-    if(titlevalue.value === '解散团队') {
+    if (titlevalue.value === '解散团队') {
         disband(teamID.value)
-    }else {
+    } else {
         leave(teamID.value)
     }
 }
@@ -170,7 +175,6 @@ const midNameRequest = async () => {
             upDateTeamData(midDateTeamData(teamData.value, teamID.value, { name: textareaValue.value }))
             teamUpdate(!is_team_upodate.value)
             showoverlay.value = false
-            ElMessage.success('已修改团队描述')
         } else {
             ElMessage.success(message)
         }
@@ -196,7 +200,6 @@ const midAvatarRequest = async (e: any) => {
                 if (code === 0) {
                     upDateTeamData(midDateTeamData(teamData.value, teamID.value, { avatar: data.avatar }))
                     teamUpdate(!is_team_upodate.value)
-                    ElMessage.success('已修改头像')
                 } else {
                     ElMessage.error(message)
                 }
@@ -222,7 +225,6 @@ const midDescriptionRequest = async () => {
             upDateTeamData(midDateTeamData(teamData.value, teamID.value, { description: textareaValue.value }))
             teamUpdate(!is_team_upodate.value)
             showoverlay.value = false
-            ElMessage.success('已修改团队描述')
         } else {
             ElMessage.success(message)
         }
@@ -505,5 +507,4 @@ const confirm = () => {
         }
     }
 
-}
-</style>
+}</style>
