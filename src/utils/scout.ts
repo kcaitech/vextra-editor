@@ -312,27 +312,20 @@ function isPartSelect(shape: Shape, selected: Shape): boolean {
     return result;
 }
 // 寻找到最近的层级较高的那个容器
-function artboardFinder(scout: Scout, g: Shape[], position: PageXY, except?: Shape): Shape | undefined {
+function artboardFinder(scout: Scout, g: Shape[], position: PageXY, except?: Map<string, Shape>): Shape | undefined {
     let result: Shape | undefined = undefined;
     for (let i = g.length - 1; i > -1; i--) {
         const item = g[i];
+        if (except && except.get(item.id)) continue;
         if (item.type === ShapeType.Artboard) {
-            const isItemIsTarget = isTarget(scout, item, position);
-            if (isItemIsTarget) {
-                if (except) {
-                    if (item.id != except.id) {
-                        result = item;
-                        break;
-                    }
-                } else {
-                    result = item;
-                    break;
-                }
+            if (isTarget(scout, item, position)) {
                 const c = (item as GroupShape)?.childs || [], length = c.length;
                 if (length) {
                     result = artboardFinder(scout, c, position, except);
                     if (result) break;
                 }
+                result = item;
+                if (result) break;
             }
         }
     }
