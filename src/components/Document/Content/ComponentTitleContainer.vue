@@ -1,9 +1,9 @@
 <script lang="ts" setup>
-import { watchEffect, onMounted, onUnmounted, computed, reactive } from "vue";
+import { watchEffect, onMounted, onUnmounted, reactive } from "vue";
 import { Context } from "@/context";
 import { Matrix, Page, Shape, ShapeType } from "@kcdesign/data";
 import { WorkSpace } from "@/context/workspace";
-import { ClientXY } from "@/context/selection";
+import { ClientXY, PageXY } from "@/context/selection";
 import ComponentTitle from "./ComponentTitle.vue"
 const props = defineProps<{
     context: Context
@@ -49,13 +49,13 @@ const setPosition = () => {
             if (compo.type === ShapeType.SymbolRef && compo.parent?.type === ShapeType.Page && compo.isVisible) {
                 const shapes = props.context.selection.selectedShapes;
                 const hovered = props.context.selection.hoveredShape;
-                let selected = false
+                let selected = false;
                 if (shapes[0] && compo.id === shapes[0].id) {
-                    selected = true
+                    selected = true;
                 } else if (hovered && compo.id === hovered.id) {
-                    selected = true
+                    selected = true;
                 } else {
-                    selected = false
+                    selected = false;
                 }
                 const m = compo.matrix2Root();
                 const f2p = compo.frame2Root();
@@ -63,23 +63,19 @@ const setPosition = () => {
                 const matrix = props.context.workspace.matrix;
                 let anchor = { x: 0, y: 0 };
                 let rotate = compo.rotation || 0;
-                if (compo.isFlippedHorizontal) rotate = 180 - rotate;
-                if (compo.isFlippedVertical) rotate = 360 - rotate;
                 rotate = rotate < 0 ? rotate + 360 : rotate;
                 if (rotate < 135 && rotate >= 45) {
                     anchor = m.computeCoord2(0, frame.height);
-                    rotate -= 90;
                 } else if (rotate < 225 && rotate >= 135) {
                     anchor = m.computeCoord2(frame.width, frame.height);
-                    rotate -= 180;
                 } else if (rotate < 315 && rotate >= 225) {
                     anchor = m.computeCoord2(frame.width, 0);
-                    rotate += 90;
                 } else if (rotate < 360 && rotate > 315) {
                     anchor = m.computeCoord2(0, 0);
                 } else if (rotate < 45 && rotate >= 0) {
                     anchor = m.computeCoord2(0, 0);
                 }
+                rotate = modify_rotate(compo, rotate);
                 anchor = matrix.computeCoord3(anchor);
                 anchor.y = anchor.y - origin.y - 16;
                 anchor.x -= origin.x;
@@ -92,13 +88,48 @@ const setPosition = () => {
         titles.length = 0;
     }
 }
+function modify_anchor(rotate: number, shape: Shape, anchor: PageXY) {
+    const m = shape.matrix2Root(), frame = shape.frame;
+    if (rotate < 135 && rotate >= 45) {
+        anchor = m.computeCoord2(0, frame.height);
+    } else if (rotate < 225 && rotate >= 135) {
+        anchor = m.computeCoord2(frame.width, frame.height);
+    } else if (rotate < 315 && rotate >= 225) {
+        anchor = m.computeCoord2(frame.width, 0);
+    } else if (rotate < 360 && rotate > 315) {
+        anchor = m.computeCoord2(0, 0);
+    } else if (rotate < 45 && rotate >= 0) {
+        anchor = m.computeCoord2(0, 0);
+    }
+}
+function modify_rotate(shape: Shape, rotate: number) {
+    if (rotate < 135 && rotate >= 45) {
+        rotate -= 90;
+        if (shape.isFlippedHorizontal) rotate = 180 - rotate;
+        if (shape.isFlippedVertical) rotate = 360 - rotate;
+    } else if (rotate < 225 && rotate >= 135) {
+        rotate -= 180;
+        if (shape.isFlippedHorizontal) rotate = 180 - rotate;
+        if (shape.isFlippedVertical) rotate = 360 - rotate;
+    } else if (rotate < 315 && rotate >= 225) {
+        rotate += 90;
+        if (shape.isFlippedHorizontal) rotate = 180 - rotate;
+        if (shape.isFlippedVertical) rotate = 360 - rotate;
+    } else if (rotate < 360 && rotate > 315) {
+        if (shape.isFlippedHorizontal) rotate = 180 - rotate;
+        if (shape.isFlippedVertical) rotate = 360 - rotate;
+    } else if (rotate < 45 && rotate >= 0) {
+        if (shape.isFlippedHorizontal) rotate = 180 - rotate;
+        if (shape.isFlippedVertical) rotate = 360 - rotate;
+    }
+    return rotate;
+}
 function setOrigin() { // 这个动作是让container与页面坐标系重合
     matrix.reset(props.context.workspace.matrix);
     matrix.preTrans(props.data.frame.x, props.data.frame.y);
     origin.x = matrix.m02;
     origin.y = matrix.m12;
 }
-
 const watchedShapes = new Map();
 function watchShapes() { // 监听相关shape的变化
     const needWatchShapes = new Map();
@@ -119,20 +150,15 @@ function watchShapes() { // 监听相关shape的变化
         watchedShapes.set(k, v);
     })
 }
-
 const rename = (value: string, shape: Shape) => {
-    const editor = computed(() => {
-        return props.context.editor4Shape(shape);
-    });
-    editor.value.setName(value)
+    const editor = props.context.editor4Shape(shape);
+    editor.setName(value)
     props.context.selection.rename();
 }
 
 function hover(shape: Shape) {
     const s = props.context.selection.selectedPage!.shapes.get(shape.id);
-    if (s) {
-        props.context.selection.hoverShape(s);
-    }
+    if (s) props.context.selection.hoverShape(s);
 }
 function leave() {
     props.context.selection.unHoverShape();
