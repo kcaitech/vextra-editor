@@ -9,7 +9,7 @@ import { renderTextShape as text } from "@kcdesign/data";
 import { renderSymbolRef as symref } from "@kcdesign/data";
 import { ShapeType, BoolOp } from "@kcdesign/data";
 
-type ComType = (data: Shape, overrides?: SymbolRefShape[]) => string;
+type ComType = (data: Shape) => string;
 const comsMap: Map<ShapeType, ComType> = new Map();
 
 function h(com: ComType, attrs?: any): string;
@@ -21,7 +21,7 @@ function h(...args: any[]): string {
         }
         const com = args[0];
         const attrs = args[1];
-        return com(attrs.data, attrs.overrides); // todo
+        return com(attrs.data); // todo
     }
     else if (typeof args[0] === 'string') {
         const tag = args[0];
@@ -43,29 +43,29 @@ function h(...args: any[]): string {
     }
 }
 
-comsMap.set(ShapeType.Artboard, (data: Shape, overrides?: SymbolRefShape[]) => {
+comsMap.set(ShapeType.Artboard, (data: Shape) => {
     return art(h, data as Artboard, comsMap);
 });
-comsMap.set(ShapeType.Group, (data: Shape, overrides?: SymbolRefShape[]) => {
-    return group(h, data as GroupShape, comsMap, overrides, undefined, undefined);
+comsMap.set(ShapeType.Group, (data: Shape) => {
+    return group(h, data as GroupShape, comsMap);
 });
 // comsMap.set(ShapeType.FlattenShape, (data: Shape, overrides?: SymbolRefShape[]) => {
 //     return shapegroup(h, data as FlattenShape);
 // });
-comsMap.set(ShapeType.Image, (data: Shape, overrides?: SymbolRefShape[]) => {
-    return image(h, data as ImageShape, "", overrides, undefined, undefined);
+comsMap.set(ShapeType.Image, (data: Shape) => {
+    return image(h, data as ImageShape, "");
 });
-comsMap.set(ShapeType.Page, (data: Shape, overrides?: SymbolRefShape[]) => {
-    return group(h, data as GroupShape, comsMap, undefined, undefined, undefined);
+comsMap.set(ShapeType.Page, (data: Shape) => {
+    return group(h, data as GroupShape, comsMap);
 });
-comsMap.set(ShapeType.Path, (data: Shape, overrides?: SymbolRefShape[]) => {
-    return path(h, data as PathShape, overrides, undefined);
+comsMap.set(ShapeType.Path, (data: Shape) => {
+    return path(h, data as PathShape);
 });
-comsMap.set(ShapeType.Rectangle, (data: Shape, overrides?: SymbolRefShape[]) => {
-    return rect(h, data, overrides, undefined, undefined);
+comsMap.set(ShapeType.Rectangle, (data: Shape) => {
+    return rect(h, data);
 });
-comsMap.set(ShapeType.Text, (data: Shape, overrides?: SymbolRefShape[]) => {
-    return text(h, data as TextShape, overrides, undefined, undefined);
+comsMap.set(ShapeType.Text, (data: Shape) => {
+    return text(h, data as TextShape);
 });
 // comsMap.set(ShapeType.Boolean, (data: Shape, path: string) => { // todo
 //     return bool(h, data, path);
@@ -73,8 +73,8 @@ comsMap.set(ShapeType.Text, (data: Shape, overrides?: SymbolRefShape[]) => {
 // comsMap.set(ShapeType.Symbol, (data: Shape, overrides?: SymbolRefShape[]) => {
 //     return group(h, data as GroupShape, comsMap, overrides);
 // });
-comsMap.set(ShapeType.SymbolRef, (data: Shape, overrides?: SymbolRefShape[]) => {
-    return symref(h, data as SymbolRefShape, comsMap, overrides, undefined, undefined);
+comsMap.set(ShapeType.SymbolRef, (data: Shape) => {
+    return symref(h, data as SymbolRefShape, comsMap);
 });
 
 export function exportSvg(shape: Shape): string {

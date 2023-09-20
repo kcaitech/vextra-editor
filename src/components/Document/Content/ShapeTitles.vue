@@ -41,7 +41,7 @@ function handleWorkspaceUpdate(t: any) {
     }
 }
 const setPosition = () => {
-    const artboards: Shape[] = props.context.selection.selectedPage!.artboardList; // 只要遍历容器就可以了，直接拿这个，这个数组里面有全部容器，如果拿childs，会存在多余的遍历
+    const artboards: Shape[] = props.data.artboardList; // 只要遍历容器就可以了，直接拿这个，这个数组里面有全部容器，如果拿childs，会存在多余的遍历
     const len = artboards.length;
     if (len) {
         titles.length = 0;
@@ -57,7 +57,7 @@ const setPosition = () => {
                     selected = true
                 } else {
                     selected = false
-                }                
+                }
                 const m = artboard.matrix2Root(); // 图形到页面的转换矩阵
                 const f2p = artboard.frame2Root(); // 
                 const frame = artboard.frame;
@@ -85,7 +85,7 @@ const setPosition = () => {
                 anchor.y -= 16; // 顶上去16像素
                 const width = f2p.width;
                 const maxWidth = frame.width
-                titles.push({ id: artboard.id, content: artboard.name, x: anchor.x, y: anchor.y, width, shape: artboard, rotate, maxWidth, selected});
+                titles.push({ id: artboard.id, content: artboard.name, x: anchor.x, y: anchor.y, width, shape: artboard, rotate, maxWidth, selected });
             }
         }
     } else {

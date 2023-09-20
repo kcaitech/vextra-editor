@@ -1,11 +1,11 @@
 <script setup lang="ts">
 import { h, onUnmounted, watch } from 'vue';
-import { Matrix, OverrideShape, Shape, SymbolRefShape, TableShape } from "@kcdesign/data";
+import { Shape, TableShape } from "@kcdesign/data";
 import { renderTable as r } from "@kcdesign/data";
 import { initCommonShape } from './common';
 import comsMap from './comsmap';
 
-const props = defineProps<{ data: TableShape, overrides?: SymbolRefShape[], matrix?: Matrix }>();
+const props = defineProps<{ data: TableShape }>();
 const common = initCommonShape(props);
 const watcher = (...args: any[]) => {
     if (args.indexOf('borders') >= 0) common.incReflush();
@@ -32,14 +32,12 @@ onUnmounted(() => {
 function render() {
     const consumed0 = props.data.datas;
 
-    const consumesOverride: OverrideShape[] = [];
-    const ret = r(h, props.data, comsMap, props.overrides, consumesOverride, common.reflush)
-    common.updateComsumeOverride(consumesOverride);
+    const ret = r(h, props.data, comsMap, common.reflush);
 
     if (consumed0.length < consumed.length) {
         for (let i = consumed0.length, len = consumed.length; i < len; i++) {
             const cell = consumed[i];
-        if (cell) cell.unwatch(watcher);
+            if (cell) cell.unwatch(watcher);
         }
     }
     consumed.length = consumed0.length;

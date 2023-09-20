@@ -24,6 +24,9 @@ type List = InstanceType<typeof ListView>;
 type ContextMenuEl = InstanceType<typeof ContextMenu>;
 class Iter implements IDataIter<ItemData> {
     private __it: ShapeDirListIter | undefined;
+    // 优化下level
+    private __preShape?: Shape;
+    private __preLevel?: number;
     constructor(it: ShapeDirListIter | undefined) {
         this.__it = it;
     }
@@ -35,13 +38,21 @@ class Iter implements IDataIter<ItemData> {
         const shape = data.data;
         let level = 0; // todo
         let p = shape.parent;
-        while (p) {
-            level++
-            p = p.parent;
+        const prep = this.__preShape?.parent;
+        if (prep === p || (prep && p && prep.id === p.id)) {
+            level = this.__preLevel!;
+        }
+        else {
+            while (p) {
+                level++
+                p = p.parent;
+            }
+            this.__preShape = shape;
+            this.__preLevel = level;
         }
         const item = {
             id: shape.id,
-            shape,
+            shape: () => { return shape },
             selected: props.context.selection.isSelectedShape(shape),
             expand: !data.fold,
             level,
@@ -216,7 +227,7 @@ function getShapeRange(start: number, end: number): Shape[] {
     const range: Map<string, Shape> = new Map();
     const it = listviewSource.iterAt(from);
     for (let i = from; i <= to && it.hasNext(); i++) {
-        const shape = it.next().shape;
+        const shape = it.next().shape();
         const childs = shape.childs;
         if (childs && childs.length) {
             for (let c_i = 0; c_i < childs.length; c_i++) {

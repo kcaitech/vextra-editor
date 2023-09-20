@@ -10,7 +10,7 @@ import { WorkSpace } from '@/context/workspace';
 import { EffectType, Wheel, fourWayWheel } from '@/utils/wheel';
 import { get_speed } from '@/utils/controllerFn';
 import { debounce } from 'lodash';
-import { distance2apex, update_pg_2 } from '@/utils/assist';
+import { PointsOffset, distance2apex, gen_match_points } from '@/utils/assist';
 import { Comment } from '@/context/comment';
 import { permIsEdit } from '@/utils/content';
 import { Menu } from '@/context/menu';
@@ -27,7 +27,6 @@ const submatrix = new Matrix();
 let startPosition: ClientXY = { x: 0, y: 0 };
 let isDragging = false;
 let asyncBaseAction: AsyncBaseAction | undefined = undefined;
-let pointType: PointType = 'rb';
 let stickedX: boolean = false;
 let stickedY: boolean = false;
 let sticked_x_v: number = 0;
@@ -130,6 +129,22 @@ let speed: number = 0;
 let shapes: Shape[] = [];
 let need_update_comment = false;
 let submatrix2 = new Matrix();
+let offset_map: PointsOffset | undefined;
+function gen_offset_map(shape: Shape, down: PageXY) {
+    const m = shape.matrix2Root(), f = shape.frame;
+    const lt = m.computeCoord2(0, 0);
+    const rb = m.computeCoord2(f.width, f.height);
+    const pivot = m.computeCoord2(f.width / 2, f.height / 2);
+    const rt = m.computeCoord2(f.width, 0);
+    const lb = m.computeCoord2(0, f.height);
+    return {
+        lt: { x: lt.x - down.x, y: lt.y - down.y },
+        rb: { x: rb.x - down.x, y: rb.y - down.y },
+        pivot: { x: pivot.x - down.x, y: pivot.y - down.y },
+        rt: { x: rt.x - down.x, y: rt.y - down.y },
+        lb: { x: lb.x - down.x, y: lb.y - down.y }
+    }
+}
 function down(e: MouseEvent) {
     const context = props.context;
     const action = context.tool.action;
@@ -173,6 +188,8 @@ function mousemove4trans(e: MouseEvent) {
         props.context.assist.set_trans_target(shapes);
         submatrix2 = new Matrix(props.context.workspace.matrix.inverse);
         isDragging = true;
+        const pe = submatrix2.computeCoord3(startPosition);
+        offset_map = gen_offset_map(shapes[0], pe);
     }
 }
 function _migrate() {
@@ -203,6 +220,7 @@ function transform_f(start: ClientXY, end: ClientXY) {
     }
     return update_type;
 }
+let pre_target_x2: number, pre_target_y2: number;
 function trans(asyncTransfer: AsyncTransfer, ps: PageXY, pe: PageXY): number {
     const assist = props.context.assist;
     if (speed > 5) {
@@ -210,38 +228,38 @@ function trans(asyncTransfer: AsyncTransfer, ps: PageXY, pe: PageXY): number {
         assist.notify(Asssit.CLEAR);
         return 3;
     }
+    if (!offset_map) return 3;
     const table = shapes[0];
     if (!table) return 3;
     let need_multi = 0;
     let update_type = 3;
     const stick = { dx: 0, dy: 0, sticked_x: false, sticked_y: false };
-    const stickness = assist.stickness + 1;
-    const target = assist.trans_match(table);
+    const stickness = assist.stickness;
+    const target = assist.trans_match(offset_map, pe);
     if (!target) return update_type;
     if (stickedX2) {
-        if (Math.abs(pe.x - ps.x) > stickness) stickedX2 = false;
+        if (Math.abs(pe.x - ps.x) >= stickness) stickedX2 = false;
         else {
-            pe.x = ps.x, update_type -= 1, need_multi += 1;
+            if (pre_target_x2 === target.x) {
+                pe.x = ps.x, update_type -= 1, need_multi += 1;
+            } else if (target.sticked_by_x) {
+                modify_fix_x(target);
+            }
         }
     } else if (target.sticked_by_x) {
-        const distance = distance2apex(table, target.alignX);
-        const trans_x = target.x - distance;
-        stick.dx = trans_x, stick.sticked_x = true, stick.dy = pe.y - ps.y, pe.x = ps.x + trans_x;
-        const t = submatrix2.inverseCoord(pe);
-        startPosition.x = t.x, update_type -= 1, stickedX2 = true, need_multi += 1;
+        modify_fix_x(target);
     }
     if (stickedY2) {
-        if (Math.abs(pe.y - ps.y) > stickness) stickedY2 = false;
+        if (Math.abs(pe.y - ps.y) >= stickness) stickedY2 = false;
         else {
-            pe.y = ps.y, stick.dy = 0, update_type -= 2, need_multi += 2;
+            if (pre_target_y2 === target.y) {
+                pe.y = ps.y, stick.dy = 0, update_type -= 2, need_multi += 2;
+            } else if (target.sticked_by_y) {
+                modify_fix_y(target);
+            }
         }
     } else if (target.sticked_by_y) {
-        const distance = distance2apex(table, target.alignY);
-        const trans_y = target.y - distance;
-        stick.dy = trans_y, stick.sticked_y = true, pe.y = ps.y + trans_y;
-        if (!stick.sticked_x) stick.dx = pe.x - ps.x;
-        const t = submatrix2.inverseCoord(pe);
-        startPosition.y = t.y, update_type -= 2, stickedY2 = true, need_multi += 2;
+        modify_fix_y(target);
     }
     if (stick.sticked_x || stick.sticked_y) {
         asyncTransfer.stick(stick.dx, stick.dy);
@@ -249,11 +267,36 @@ function trans(asyncTransfer: AsyncTransfer, ps: PageXY, pe: PageXY): number {
         asyncTransfer.trans(ps, pe);
     }
     if (need_multi) {
-        assist.setCPG(update_pg_2(table, true));
+        assist.setCPG(gen_match_points(table, true));
         assist.notify(Asssit.UPDATE_ASSIST, need_multi);
         assist.notify(Asssit.UPDATE_MAIN_LINE);
     }
     return update_type;
+    function modify_fix_x(target: any) {
+        pre_target_x2 = target.x;
+        const distance = distance2apex(table, target.alignX);
+        const trans_x = target.x - distance;
+        stick.dx = trans_x, stick.sticked_x = true, stick.dy = pe.y - ps.y;
+        pe.x = ps.x + trans_x;
+        const t = submatrix2.inverseCoord(pe);
+        startPosition.x = t.x;
+        update_type -= 1;
+        stickedX = true;
+        need_multi += 1;
+    }
+    function modify_fix_y(target: any) {
+        pre_target_y2 = target.y;
+        const distance = distance2apex(table, target.alignY);
+        const trans_y = target.y - distance;
+        stick.dy = trans_y, stick.sticked_y = true;
+        pe.y = ps.y + trans_y;
+        if (!stick.sticked_x) stick.dx = pe.x - ps.x;
+        const t = submatrix2.inverseCoord(pe);
+        startPosition.y = t.y;
+        update_type -= 2;
+        stickedY = true;
+        need_multi += 2;
+    }
 }
 function mouseup4trans(e: MouseEvent) {
     const workspace = props.context.workspace;
@@ -286,30 +329,51 @@ function get_t(p1: PageXY, p2: PageXY): PageXY {
     const pre_delta = { x: p2.x - p1.x, y: p2.y - p1.y }, f = props.shape.frame, r = f.width / f.height;
     return m.computeCoord(f.width + pre_delta.x, f.height + pre_delta.x * (1 / r));
 }
+let pre_target_x: number, pre_target_y: number;
 function scale(asyncBaseAction: AsyncBaseAction, p2: PageXY) {
     const stickness = props.context.assist.stickness;
-    const target = props.context.assist.point_match(props.shape, pointType);
-    if (target) {
-        if (stickedX2) {
-            if (Math.abs(p2.x - sticked_x_v) > stickness) stickedX2 = false;
-            else p2.x = sticked_x_v;
-        } else if (target.sticked_by_x) {
-            p2.x = target.x;
-            sticked_x_v = p2.x;
-            stickedX2 = true;
+    const target = props.context.assist.point_match(p2);
+    if (!target) return asyncBaseAction.executeScale(CtrlElementType.RectRB, p2);
+    if (stickedX) {
+        if (Math.abs(p2.x - sticked_x_v) > stickness) {
+            stickedX = false
+        } else {
+            if (pre_target_x === target.x) {
+                p2.x = sticked_x_v;
+            } else if (target.sticked_by_x) {
+                modify_fix_x(p2, target.x);
+            }
         }
-        if (stickedY2) {
-            if (Math.abs(p2.y - sticked_y_v) > stickness) stickedY2 = false;
-            else p2.y = sticked_y_v;
-        } else if (target.sticked_by_y) {
-            p2.y = target.y;
-            sticked_y_v = p2.y;
-            stickedY2 = true;
+    } else if (target.sticked_by_x) {
+        modify_fix_x(p2, target.x);
+    }
+    if (stickedY) {
+        if (Math.abs(p2.y - sticked_y_v) > stickness) {
+            stickedY = false;
+        } else {
+            if (pre_target_y === target.x) {
+                p2.y = sticked_y_v;
+            } else if (target.sticked_by_y) {
+                modify_fix_y(p2, target.y);
+            }
         }
+    } else if (target.sticked_by_y) {
+        modify_fix_y(p2, target.y);
     }
     asyncBaseAction.executeScale(CtrlElementType.RectRB, p2);
 }
-
+function modify_fix_x(p2: PageXY, fix: number) {
+    p2.x = fix;
+    sticked_x_v = p2.x;
+    stickedX = true;
+    pre_target_x = fix;
+}
+function modify_fix_y(p2: PageXY, fix: number) {
+    p2.y = fix;
+    sticked_y_v = p2.y;
+    stickedY = true;
+    pre_target_y = fix;
+}
 function window_blur() {
     const workspace = props.context.workspace;
     if (isDragging) {

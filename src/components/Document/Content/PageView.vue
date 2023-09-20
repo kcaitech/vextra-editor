@@ -6,6 +6,7 @@ import { onMounted, onUnmounted, ref, watch, watchEffect } from 'vue';
 import comsMap from './comsmap';
 import { v4 } from "uuid";
 import ShapeTitles from './ShapeTitles.vue';
+import ComponentTitleContainer from './ComponentTitleContainer.vue';
 import { debounce } from 'lodash';
 const props = defineProps<{
     context: Context,
@@ -34,7 +35,7 @@ function pageViewRegister(mount: boolean) {
 function _collect(t?: any) {
     if (typeof t === 'string' && t === 'collect') props.context.assist.collect();
 }
-const collect = debounce(_collect, 15);
+const collect = debounce(_collect, 100);
 watchEffect(() => {
     matrixWithFrame.reset(props.matrix);
     matrixWithFrame.preTrans(props.data.frame.x, props.data.frame.y);
@@ -79,9 +80,13 @@ onUnmounted(() => {
         :height="height + 'px'" :viewBox='"0 0 " + width + " " + height' overflow="visible"
         :reflush="reflush !== 0 ? reflush : undefined" :transform="matrixWithFrame.toString()" :data-area="rootId">
         <component :is="comsMap.get(c.type) ?? comsMap.get(ShapeType.Rectangle)" v-for="c in renderItems" :key="c.id"
-            :data="c"  />
+            :data="c" />
     </svg>
+    <!-- 容器标题 -->
     <ShapeTitles v-if="show_t" :context="props.context" :data="data" :matrix="matrixWithFrame.toArray()"></ShapeTitles>
+    <!-- 组件标题 -->
+    <ComponentTitleContainer :context="props.context" :data="data" :matrix="matrixWithFrame.toArray()">
+    </ComponentTitleContainer>
 </template>
 
 <style scoped>

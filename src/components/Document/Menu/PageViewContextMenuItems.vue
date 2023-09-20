@@ -11,7 +11,7 @@ import { WorkSpace } from '@/context/workspace';
 import { Selection } from '@/context/selection';
 import { adapt_page, getName } from '@/utils/content';
 import { message } from '@/utils/message';
-import { paster, paster_inner_shape, replace  } from '@/utils/clipboard';
+import { paster, paster_inner_shape, replace } from '@/utils/clipboard';
 import { sort_by_layer } from '@/utils/group_ungroup';
 import { Menu } from '@/context/menu';
 import TableMenu from "./TableMenu/TableMenu.vue"
@@ -437,7 +437,7 @@ onUnmounted(() => {
       @click="_replace">
       <span>{{ t('system.replace') }}</span>
       <span class="shortkey">
-        <Key code="Ctrl Shift R"></Key>
+        <Key code="Shift Ctrl R"></Key>
       </span>
     </div>
 
@@ -528,13 +528,13 @@ onUnmounted(() => {
     <div class="item" v-if="props.items.includes('un_group')" @click="unGroup">
       <span>{{ t('system.un_group') }}</span>
       <span class="shortkey">
-        <Key code="Ctrl Shift G"></Key>
+        <Key code="Shift Ctrl G"></Key>
       </span>
     </div>
     <div class="item" v-if="props.items.includes('dissolution')" @click="dissolution_container">
       <span>{{ t('system.dissolution') }}</span>
       <span class="shortkey">
-        <Key code="Ctrl Shift G"></Key>
+        <Key code="Shift Ctrl G"></Key>
       </span>
     </div>
     <!-- 组件操作 -->
@@ -559,13 +559,13 @@ onUnmounted(() => {
     <div class="item" v-if="props.items.includes('visible')" @click="visible">
       <span>{{ t('system.visible') }}</span>
       <span class="shortkey">
-        <Key code="Ctrl Shift H"></Key>
+        <Key code="Shift Ctrl H"></Key>
       </span>
     </div>
     <div class="item" v-if="props.items.includes('lock')" @click="lock">
       <span>{{ t('system.Lock') }}</span>
       <span class="shortkey">
-        <Key code="Ctrl Shift L"></Key>
+        <Key code="Shift Ctrl L"></Key>
       </span>
     </div>
     <div class="item" v-if="props.items.includes('title')" @click="toggle_title">
