@@ -199,10 +199,6 @@ export class Asssit extends Watchable(Object) {
         }
         this.notify(Asssit.UPDATE_ASSIST);
         // console.log('单次匹配辅助点位(ms):', Date.now() - st);
-        if (target.y === 0) {
-            console.log('pre_target2.delta:', pre_target2.delta);
-        }
-
         return target;
     }
     trans_match_multi(shapes: Shape[]) {

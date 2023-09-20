@@ -310,15 +310,15 @@ async function clipboard_text_html(context: Context, data: any, xy?: PageXY) {
         } else if (is_shape) { // 内部图层
             const source = JSON.parse(text_html.split(identity)[1]);
             if (!source) throw new Error('invalid source');
+            if (xy) { // 指定复制位置
+                modify_frame_by_xy(xy, source); // 以新的起点为基准，重新计算每个图形位置
+            }
+            // else if (is_box_outer_view2(source, context)) { // 图形将脱离视野，需要重新寻找新的定位
+            //     modify_frame_by_xy(context.workspace.center_on_page, source);
+            // }
             const shapes = import_shape(context.data, source);
             if (!shapes.length) throw new Error('invalid source');
-            if (xy) { // 指定复制位置
-                modify_frame_by_xy(xy, shapes); // 以新的起点为基准，重新计算每个图形位置
-            } else { // 未指定复制位置
-                if (is_box_outer_view2(shapes, context)) { // 图形将脱离视野，需要重新寻找新的定位
-                    modify_frame_by_xy(context.workspace.center_on_page, shapes);
-                }
-            }
+
             const page = context.selection.selectedPage;
             if (page) {
                 const editor = context.editor.editor4Page(page);

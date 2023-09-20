@@ -10,6 +10,7 @@ import Border from './Border/Border.vue';
 import PageBackgorund from './PageBackgorund.vue';
 import Text from './Text/Text.vue';
 import { throttle } from 'lodash';
+import Module from './Module/Module.vue'
 import TableText from './Table/TableText.vue'
 import { TableSelection } from '@/context/tableselection';
 import TableStyle from './Table/TableStyle.vue'
@@ -118,6 +119,7 @@ onUnmounted(() => {
         <Arrange v-if="len > 1" :context="props.context" :shapes="shapes"></Arrange>
         <div v-if="len" :reflush="reflush" @mousedown.stop>
             <ShapeBaseAttr v-if="baseAttr" :context="props.context"></ShapeBaseAttr>
+            <Module :context="props.context"></Module>
             <Fill v-if="WITH_FILL.includes(shapeType)" :shapes="shapes" :context="props.context"></Fill>
             <Border v-if="WITH_BORDER.includes(shapeType)" :shapes="shapes" :context="props.context"></Border>
             <Text v-if="WITH_TEXT.includes(shapeType)" :shape="(shapes[0] as TextShape)" :context="props.context"></Text>

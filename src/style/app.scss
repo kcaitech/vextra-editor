@@ -95,26 +95,21 @@
     background-color: var(--active-color-beta) !important;
   }
 }
-
-.el-dialog__body {
-  padding: 10px;
-  /* 修改内边距 */
-  padding-left: 20px;
+.el-select-dropdown__item {
+  font-size: 10px;
 }
-
-.el-table__row:hover {
-  background-color: #f3f0ff !important;
-  /* 修改悬停时的背景颜色 */
+.el-select-dropdown__item.selected {
+  color: #865dff;
 }
-
-.el-table--enable-row-hover .el-table__body tr:hover>td.el-table__cell {
-  background-color: #f3f0ff;
+.el-input.is-disabled {
+  cursor: pointer;
 }
-
-.el-button:focus,
-.el-button:hover {
-  background-color: #9775fa;
-  border-color: #9775fa;
-  color: #fff;
-  outline: none;
+.el-input.is-disabled .el-input__inner {
+  cursor: pointer;
+}
+.el-input.is-disabled .el-input__icon {
+  cursor: pointer;
+}
+.el-input.is-disabled .el-input__wrapper {
+  background-color: #fff;
 }
