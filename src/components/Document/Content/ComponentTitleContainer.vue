@@ -57,12 +57,14 @@ const setPosition = () => {
                 } else {
                     selected = false
                 }
-                const m = compo.matrix2Root(); // 图形到页面的转换矩阵
+                const m = compo.matrix2Root();
                 const f2p = compo.frame2Root();
                 const frame = compo.frame;
                 const matrix = props.context.workspace.matrix;
                 let anchor = { x: 0, y: 0 };
                 let rotate = compo.rotation || 0;
+                if (compo.isFlippedHorizontal) rotate = 180 - rotate;
+                if (compo.isFlippedVertical) rotate = 360 - rotate;
                 rotate = rotate < 0 ? rotate + 360 : rotate;
                 if (rotate < 135 && rotate >= 45) {
                     anchor = m.computeCoord2(0, frame.height);
