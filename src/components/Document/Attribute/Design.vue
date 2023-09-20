@@ -119,12 +119,12 @@ onUnmounted(() => {
         <Arrange v-if="len > 1" :context="props.context" :shapes="shapes"></Arrange>
         <div v-if="len" :reflush="reflush" @mousedown.stop>
             <ShapeBaseAttr v-if="baseAttr" :context="props.context"></ShapeBaseAttr>
+            <Module :context="props.context"></Module>
             <Fill v-if="WITH_FILL.includes(shapeType)" :shapes="shapes" :context="props.context"></Fill>
             <Border v-if="WITH_BORDER.includes(shapeType)" :shapes="shapes" :context="props.context"></Border>
             <Text v-if="WITH_TEXT.includes(shapeType)" :shape="(shapes[0] as TextShape)" :context="props.context"></Text>
             <TableText v-if="WITH_TABLE.includes(shapeType)" :shape="(shapes[0] as TableShape)" :context="props.context">
             </TableText>
-            <Module :context="props.context"></Module>
         </div>
     </section>
 </template>

@@ -89,3 +89,21 @@
     background-color: var(--active-color-beta) !important;
   }
 }
+.el-select-dropdown__item {
+  font-size: 10px;
+}
+.el-select-dropdown__item.selected {
+  color: #865dff;
+}
+.el-input.is-disabled {
+  cursor: pointer;
+}
+.el-input.is-disabled .el-input__inner {
+  cursor: pointer;
+}
+.el-input.is-disabled .el-input__icon {
+  cursor: pointer;
+}
+.el-input.is-disabled .el-input__wrapper {
+  background-color: #fff;
+}

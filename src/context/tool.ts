@@ -15,7 +15,8 @@ export enum Action {
     AddComment = 'add-comment',
     AddImage = 'add-image',
     AddTable = 'add-table',
-    AddContact = 'add-contact'
+    AddContact = 'add-contact',
+    AddComponent = 'component'
 }
 export enum KeyboardKeys { // 键盘按键类型
     Space = 'Space',
@@ -112,6 +113,9 @@ export class Tool extends Watchable(Object) {
         } else if (code === 'KeyX') {
             e.preventDefault();
             this.keydown_x(ctrlKey, shiftKey, metaKey);
+        } else if (code === KeyboardKeys.I) {
+            e.preventDefault();
+            this.keydown_i(ctrlKey, metaKey, shiftKey);
         }
     }
     setAction(action: Action) {
@@ -184,6 +188,9 @@ export class Tool extends Watchable(Object) {
     }
     keydown_i(ctrl: boolean, meta: boolean, shift: boolean) {
         // todo
+        if(shift) {
+            this.setAction(Action.AddComponent);
+        }
     }
     keydown_x(ctrl: boolean, meta: boolean, shift: boolean) {
         if (ctrl || meta || shift) return;

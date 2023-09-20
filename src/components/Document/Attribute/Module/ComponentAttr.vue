@@ -12,10 +12,20 @@ const compsType = ref(false)
 const selectComps = ref<HTMLDivElement>()
 const attrInput = ref('属性1')
 const showRename = ref(false)
-const isLayerShow = ref(false)
+const isaddStateDialog = ref(false)
+const iseditLayerShow = ref(false)
 const moduleStates = ref<any[]>([])
 const showStates = ref<any[]>([])
+const textStates = ref<any[]>([])
+const toggleStates = ref<any[]>([])
 const stateIndex = ref(-1)
+const layerIndex = ref(-1)
+const textIndex = ref(-1)
+const iseditText = ref(false)
+const toggleIndex = ref(-1)
+const iseditToggle = ref(false)
+const dislogTitle = ref('');
+const addType = ref<'Show' | 'Text' | 'toggle'>('Show')
 
 const selectCompsType = () => {
     if (compsType.value) {
@@ -45,6 +55,10 @@ const onRename = (index: number) => {
 
 }
 
+const selectAllText = (event: FocusEvent) => {
+    (event.target as HTMLInputElement).select(); // 选择输入框内的文本
+};
+
 const closeInput = () => {
     if (attrInput.value.trim().length === 0) return showRename.value = false
     showRename.value = false
@@ -58,11 +72,9 @@ const editName = (e: KeyboardEvent) => {
 }
 
 const layerIsShow = () => {
-    isLayerShow.value = true
-}
-
-const closeLayerShowPopup = () => {
-    isLayerShow.value = false
+    dislogTitle.value = '图层是否显示';
+    addType.value = 'Show';
+    isaddStateDialog.value = true;
 }
 
 const addModuleState = () => {
@@ -74,10 +86,63 @@ const addModuleState = () => {
     moduleStates.value.push(state);
 }
 
-const selectAllText = (event: FocusEvent) => {
-    (event.target as HTMLInputElement).select(); // 选择输入框内的文本
-};
+const addAttrSate = (data: any, type: 'Show' | 'Text' | 'toggle' | '') => {
+    if(type === 'Show') {
+        const state = {
+            attrName: data.name,
+            visi: data.visi
+        }
+        showStates.value.push(state);
+    }else if (type === 'Text') {
+        const state = {
+            attrName: data.name,
+            text: data.text
+        }
+        textStates.value.push(state);
+    }else if (type === 'toggle') {
+        const state = {
+            attrName: data.name,
+            value: '默认'
+        }
+        toggleStates.value.push(state);
+    }
+    isaddStateDialog.value = false;
+}
+const editLayer = (index: number) => {
+    iseditLayerShow.value = true;
+    layerIndex.value = index;
+}
+const saveLayerShow = () => {
+    iseditLayerShow.value = false;
+}
 
+//文本属性
+const addTextDialog = () => {
+    dislogTitle.value = '文本内容';
+    addType.value = 'Text';
+    isaddStateDialog.value = true;
+}
+const editText = (index: number) => {
+    iseditText.value = true;
+    textIndex.value = index;
+}
+const saveTextContext = () => {
+    iseditText.value = false;
+}
+
+//实例切换
+const examplesToggle = () => {
+    dislogTitle.value = '实例切换';
+    addType.value = 'toggle';
+    isaddStateDialog.value = true;
+}
+const editToggle = (index: number) => {
+    iseditToggle.value = true;
+    toggleIndex.value = index;
+}
+const saveExamplesToggle = () => {
+    iseditToggle.value = false;
+}
 </script>
 
 <template>
@@ -96,11 +161,11 @@ const selectAllText = (event: FocusEvent) => {
                             <svg-icon icon-class="eye-open"></svg-icon>
                             <span>显示状态</span>
                         </div>
-                        <div class="status">
+                        <div class="status" @click="examplesToggle">
                             <svg-icon icon-class="pattern-rectangle"></svg-icon>
                             <span>实例切换</span>
                         </div>
-                        <div class="status">
+                        <div class="status" @click="addTextDialog">
                             <svg-icon icon-class="text"></svg-icon>
                             <span>文本内容</span>
                         </div>
@@ -108,7 +173,7 @@ const selectAllText = (event: FocusEvent) => {
                 </div>
             </template>
         </TypeHeader>
-        <CompLayerShow :context="context" v-if="isLayerShow" @close-dialog="closeLayerShowPopup" right="250px" :width="260" :title="`图层是否显示`"></CompLayerShow>
+        <CompLayerShow :context="context" v-if="isaddStateDialog" @close-dialog="isaddStateDialog = false" right="250px" :width="260" :addType="addType" :title="dislogTitle" @save-layer-show="addAttrSate"></CompLayerShow>
         <div class="module_container">
             <template v-for="(item, index) in moduleStates" :key="index">
                 <div class="module_attr_item">
@@ -134,22 +199,52 @@ const selectAllText = (event: FocusEvent) => {
             <template v-for="(item, index) in showStates" :key="index">
                 <div class="module_attr_item">
                     <div class="attr_con">
-                        <div class="module_input" v-if="showRename && stateIndex === index"><el-input v-model="attrInput"
-                                @focus="selectAllText" class="input" :data-area="'show-' + index" @blur="closeInput"
-                                @keydown="editName" />
-                        </div>
-                        <div class="module_item_left" @dblclick="onRename(index)" v-else>
+                        <div class="module_item_left" @click="editLayer(index)">
                             <div class="module_name">
                                 <svg-icon icon-class="eye-open"></svg-icon>
                                 <span>{{ item.attrName }}</span>
                             </div>
-                            <div><span>{{ item.attrValue }}</span></div>
+                            <div><span>{{ item.visi }}</span></div>
                         </div>
                         <div class="delete">
                             <svg-icon icon-class="delete"></svg-icon>
                         </div>
                     </div>
-                    <div class="warn" v-if="false">名称重复，请重新输入</div>
+                    <CompLayerShow :context="context" v-if="iseditLayerShow && layerIndex === index" @close-dialog="iseditLayerShow = false" right="250px" :width="260" :add-type="'Show'" :title="`图层是否显示`" @save-layer-show="saveLayerShow"></CompLayerShow>
+                </div>
+            </template>
+            <template v-for="(item, index) in textStates" :key="index">
+                <div class="module_attr_item">
+                    <div class="attr_con">
+                        <div class="module_item_left" @click="editText(index)">
+                            <div class="module_name">
+                                <svg-icon icon-class="text"></svg-icon>
+                                <span>{{ item.attrName }}</span>
+                            </div>
+                            <div><span>{{ item.text }}</span></div>
+                        </div>
+                        <div class="delete">
+                            <svg-icon icon-class="delete"></svg-icon>
+                        </div>
+                    </div>
+                    <CompLayerShow :context="context" v-if="iseditText && textIndex === index" @close-dialog="iseditText = false" right="250px" :width="260" :add-type="''" :title="`图层是否显示`" @save-layer-show="saveTextContext"></CompLayerShow>
+                </div>
+            </template>
+            <template v-for="(item, index) in toggleStates" :key="index">
+                <div class="module_attr_item">
+                    <div class="attr_con">
+                        <div class="module_item_left" @click="editToggle(index)">
+                            <div class="module_name">
+                                <svg-icon icon-class="pattern-rectangle"></svg-icon>
+                                <span>{{ item.attrName }}</span>
+                            </div>
+                            <div><span>{{ item.value }}</span></div>
+                        </div>
+                        <div class="delete">
+                            <svg-icon icon-class="delete"></svg-icon>
+                        </div>
+                    </div>
+                    <CompLayerShow :context="context" v-if="iseditToggle && toggleIndex === index" @close-dialog="iseditToggle = false" right="250px" :width="260" :add-type="'toggle'" :title="`图层是否显示`" @save-layer-show="saveExamplesToggle"></CompLayerShow>
                 </div>
             </template>
         </div>
@@ -214,6 +309,7 @@ const selectAllText = (event: FocusEvent) => {
     margin-bottom: 10px;
 
     .module_attr_item {
+        position: relative;
         display: flex;
         flex-direction: column;
         margin-bottom: 5px;

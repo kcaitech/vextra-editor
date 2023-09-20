@@ -98,7 +98,7 @@ const onEditAttrValue = (e: KeyboardEvent) => {
             height: 30px;
             .el-input {
                 font-size: 10px;
-                height: 25px;
+                height: 30px;
             }
         }
         .warn {
@@ -116,5 +116,11 @@ const onEditAttrValue = (e: KeyboardEvent) => {
     }
 }
     
+:deep(.el-input__inner) {
+    --el-input-inner-height: 100%;
+}
 
+:deep(.el-input__wrapper.is-focus) {
+    box-shadow: 0 0 0 1px var(--active-color) inset;
+}
 </style>

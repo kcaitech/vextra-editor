@@ -411,6 +411,8 @@ async function upload() {
         // todo 上传失败处理
         return;
     }
+    console.log(result,'文档上传');
+    
     const doc_id = result!.data.doc_id;
     router.replace({
         path: '/document',
