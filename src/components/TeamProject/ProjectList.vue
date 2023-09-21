@@ -368,7 +368,7 @@ const cancelFixed = (id: string, state: boolean, index: number) => {
     }
     const i = projectList.value.findIndex(item => item.project.id === id);
     projectList.value[i].is_favor = !state;
-    setProjectIsFavorite(id, !state);
+        setProjectIsFavorite(id, !state);
     updateFavor(!is_favor.value);
 }
 
