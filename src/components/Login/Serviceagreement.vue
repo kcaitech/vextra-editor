@@ -5,7 +5,7 @@
 import { htmlContent } from "@/utils/showmarkdown";
 import Markdowncontent from "@/assets/serviceagreement.md";
 </script>
-<style lang="scss">
+<style lang="scss" scoped>
 
 .content {
     color: #333333;

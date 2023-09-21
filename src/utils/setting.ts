@@ -9,7 +9,7 @@ export const SKIP_LOGIN = false; // 跳过登录过程，直接进入个人首�
 
 
 
-const production = true //提交时要改为true
+const production = false //提交时要改为true
 export const BASE_SCHEME = production ? "https" : "https";
 export const BASE_HOST = production ? "protodesign.cn" : "protodesign.cn";
 export const BASE_PATH = `${BASE_SCHEME}://${BASE_HOST}`;

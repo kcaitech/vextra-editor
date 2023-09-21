@@ -6,7 +6,7 @@ import { htmlContent } from "@/utils/showmarkdown";
 import Markdowncontent from "@/assets/privacypolicy.md"
 </script>
 
-<style lang="scss">
+<style lang="scss" scoped>
 .content {
     color: #333333;
     max-width: 880px;
