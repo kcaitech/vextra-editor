@@ -93,6 +93,5 @@ onUnmounted(() => {
 svg {
     position: absolute;
     transform-origin: top left;
-    background-color: rgba(22, 22, 22, 0.3);
 }
 </style>
