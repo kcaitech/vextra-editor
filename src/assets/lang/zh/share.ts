@@ -50,5 +50,12 @@ export const apply = {
     rejected: '已拒绝',
     no_message_received: '未收到任何消息',
     link_not: '链接不存在',
-    not_passed: '申请未通过，请修改信息或联系创建者后重新申请'
+    not_passed: '申请未通过，请修改信息或联系创建者后重新申请',
+    project_apply: '加入项目申请',
+    project: '项目',
+    team: '团队',
+    team_apply: '加入团队申请',
+    fill: '文件',
+    apply_team: '申请加入团队',
+    apply_project: '申请加入项目'
 }

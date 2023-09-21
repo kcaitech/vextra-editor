@@ -1,5 +1,6 @@
 <template>
-    <tablelist :data="lists" :iconlist="iconlists" @restore="Restorefile" @ndelete="Deletefile" @rightMeun="rightmenu" :noNetwork="noNetwork" @refreshDoc="refreshDoc"/>
+    <tablelist :data="lists" :iconlist="iconlists" @restore="Restorefile" @ndelete="Deletefile" @rightMeun="rightmenu"
+        :noNetwork="noNetwork" @refreshDoc="refreshDoc" />
     <!-- 右键菜单 -->
     <listrightmenu :items="items" :data="mydata" @getrecycle-lists="GetrecycleLists" @r-deletefile="Deletefile"
         @r-restorefile="Restorefile" />
@@ -35,8 +36,9 @@ const mydata = ref()
 const noNetwork = ref(false)
 let lists = ref<any[]>([])
 const iconlists = ref(['restore', 'Delete'])
-const emits = defineEmits(['data-update'])
-
+const emits = defineEmits<{
+    (e: 'dataUpdate', list: any[], title: string): void
+}>()
 interface data {
     document: {
         id: string
@@ -62,7 +64,7 @@ async function GetrecycleLists() {
             for (let i = 0; i < data.length; i++) {
                 let { document: { size, deleted_at } } = data[i]
                 data[i].document.size = sizeTostr(size)
-                data[i].document.deleted_at = deleted_at.slice(0, 19).split('T')[0] + ' ' + deleted_at.slice(0, 19).split('T')[1]
+                data[i].document.deleted_at = deleted_at.slice(0, 19)
             }
         }
         lists.value = Object.values(data)
@@ -154,13 +156,13 @@ const rightmenu = (e: MouseEvent, data: data) => {
     if ((e.target as HTMLElement).closest('.el-table-v2__row')) {
         rightmenu.style.display = 'block'
     }
-    
+
     docId.value = id
     mydata.value = data
 }
 
 watch(lists, (Nlist) => {
-    emits('data-update', Nlist, t('home.delete_file_time'))
+    emits('dataUpdate', Nlist, t('home.delete_file_time'))
 }, { deep: true })
 
 onMounted(() => {
@@ -179,7 +181,8 @@ main {
 
 .dialog-footer>.el-button {
     &:hover {
-        background-color: rgba(208, 208, 208, 0.167);
+        background-color: #fff;
+        color: #000;
     }
 
     &:active {
@@ -193,8 +196,9 @@ main {
     border-color: #9775fa;
 
     &:hover {
-        background: #9675fa91;
-        border-color: #9675fa91;
+        background-color: #9775fa;
+        color: white;
+        border-color: #9675fa91 !important;
     }
 
     &:active {

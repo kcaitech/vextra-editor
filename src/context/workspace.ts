@@ -5,6 +5,7 @@ import { Root } from "@/utils/content";
 import { Clipboard } from "@/utils/clipboard";
 import { adapt_page } from "@/utils/content";
 import { PageXY } from "./selection";
+import { Menu } from "./menu";
 interface Point {
     x: number
     y: number

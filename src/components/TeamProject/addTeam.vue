@@ -11,8 +11,8 @@
         <div class="centent">
             <div class="team-name">
                 <div class="title">{{ t('Createteam.team_name') }}<span>{{ t('Createteam.required') }}</span></div>
-                <input type="text" :placeholder="t('Createteam.team_name_tips')" v-model="inputValue" maxlength="20"
-                    required>
+                <input ref="inputteam" type="text" :placeholder="t('Createteam.team_name_tips')" v-model="inputValue"
+                    maxlength="20" required>
             </div>
             <div class="team-description">
                 <div class="title">{{ t('Createteam.team_description') }}<span>{{ t('Createteam.optional') }}</span></div>
@@ -30,18 +30,23 @@
             </div>
         </div>
         <div class="addteam">
-            <button type="submit" :disabled=isDisabled @click.stop="createTeam">{{ t('Createteam.add_team') }}</button>
+            <button type="submit" :disabled=isDisabled @click.stop.once="createTeam">{{ t('Createteam.add_team') }}</button>
         </div>
     </div>
 </template>
 <script setup lang="ts">
 import { ElMessage } from 'element-plus';
-import { computed, nextTick, ref } from 'vue';
+import { computed, inject, nextTick, ref } from 'vue';
 import { useI18n } from 'vue-i18n';
 import * as user_api from '@/apis/users'
-
+import { useRoute } from 'vue-router'
+import { router } from '@/router';
 const { t } = useI18n();
-const emits = defineEmits(['close'])
+const route = useRoute()
+const emits = defineEmits<{
+    (e: 'close'): void
+}>()
+const inputteam = ref()
 const inputValue = ref('')
 const textareaValue = ref('')
 const isDisabled = computed(() => inputValue.value.trim() === '')
@@ -49,16 +54,28 @@ const imgsrc = ref('')
 const isshow = ref(true)
 const formData = new FormData()
 
+const { state } = inject('shareData') as {
+    state: (b: boolean) => void;
+}
+
 const createTeam = async () => {
     formData.append('name', inputValue.value)
     if (textareaValue.value != '') {
         formData.append('description', textareaValue.value)
     }
     try {
-        const { code, message } = await user_api.CreateTeam(formData)
+        const { code, message, data } = await user_api.CreateTeam(formData)
         if (code === 0) {
             emits('close')
-            ElMessage.success(t('percenter.successtips'))
+            state(true)  //改变updatestate的值为TRUE
+            if (route.params.id) {
+                router.push({ path: `/apphome/teams/${data.id}` })
+                sessionStorage.setItem('index', '6')
+            } else {
+                router.push({ path: `teams/${data.id}` })
+                sessionStorage.setItem('index', '6')
+            }
+
         } else {
             ElMessage.error(message)
         }
@@ -68,20 +85,27 @@ const createTeam = async () => {
 }
 
 const selectimg = (e: any) => {
-    const file = e.target.files[0]
-    const fileName = file.name
-    const fileExtension = fileName.substring(fileName.lastIndexOf('.')).toLowerCase()
-    const maxSizeInBytes = 2 * 1024 * 1024; // 2MB
-    if (file && file.size <= maxSizeInBytes && e.target.accept.includes(fileExtension)) {
-        isshow.value = false
-        nextTick(() => {
-            imgsrc.value = URL.createObjectURL(file)
-            formData.append('avatar', file)
-        })
-    } else {
-        ElMessage.error(t('percenter.errortips'))
+    if (e.target.files.length > 0) {
+        const file = e.target.files[0]
+        const fileName = file.name
+        const fileExtension = fileName.substring(fileName.lastIndexOf('.')).toLowerCase()
+        const maxSizeInBytes = 2 * 1024 * 1024; // 2MB
+        if (file && file.size <= maxSizeInBytes && e.target.accept.includes(fileExtension)) {
+            isshow.value = false
+            nextTick(() => {
+                imgsrc.value = URL.createObjectURL(file)
+                formData.delete('avatar')
+                formData.append('avatar', file)
+            })
+        } else {
+            ElMessage.error(t('percenter.errortips'))
+        }
     }
 }
+
+nextTick(() => {
+    inputteam.value.focus()
+})
 
 const close = () => {
     emits('close')

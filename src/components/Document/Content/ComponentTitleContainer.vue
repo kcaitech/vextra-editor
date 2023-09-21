@@ -4,6 +4,7 @@ import { Context } from "@/context";
 import { Matrix, Page, Shape, ShapeType } from "@kcdesign/data";
 import { ClientXY, Selection } from "@/context/selection";
 import ComponentTitle from "./ComponentTitle.vue"
+import { is_shape_out, is_need_skip_to_render, top_side } from "@/utils/content";
 const props = defineProps<{
     context: Context
     data: Page,
@@ -14,7 +15,6 @@ interface Title {
     content: string
     x: number
     y: number
-    width: number
     shape: Shape
     rotate: number
     maxWidth: number
@@ -27,6 +27,7 @@ function updater() {
     setPosition();
 }
 const setPosition = () => {
+    const st = Date.now();
     titles.length = 0;
     const components: Shape[] = props.data.childs;
     const len = components.length;
@@ -34,25 +35,30 @@ const setPosition = () => {
         for (let i = 0; i < len; i++) {
             const compo = components[i];
             if (compo.type === ShapeType.Group && compo.isSymbolShape && compo.parent?.type === ShapeType.Page && compo.isVisible) {
-                const frame = compo.frame;
-                const matrix = props.context.workspace.matrix;
-                let anchor = modify_anchor(compo);
-                anchor = matrix.computeCoord3(anchor);
+                const matrix_compo_root = compo.matrix2Root();
+                const matrix_page_client = props.context.workspace.matrix;
+                const matrix_compo = new Matrix(matrix_compo_root);
+                matrix_compo.multiAtLeft(matrix_page_client);
+                if (is_shape_out(props.context, compo, matrix_compo)) continue;
+                const top_side_l = top_side(compo, matrix_compo);
+                if (top_side_l < 72) continue;
+                let anchor = modify_anchor(compo, matrix_compo_root);
+                anchor = matrix_page_client.computeCoord3(anchor);
                 anchor.y = anchor.y - origin.y - 16;
                 anchor.x -= origin.x;
-                const width = frame.width;
-                const maxWidth = frame.width;
+                const maxWidth = top_side_l;
                 titles.push({
                     id: compo.id,
                     content: compo.name,
                     x: anchor.x, y: anchor.y,
-                    width, maxWidth,
+                    maxWidth,
                     shape: compo,
                     rotate: modify_rotate(compo)
                 });
             }
         }
     }
+    console.log('计算位置：(ms)', Date.now() - st);
 }
 function pre_modify_anchor(shape: Shape) {
     let rotate = shape.rotation || 0;
@@ -63,20 +69,20 @@ function pre_modify_anchor(shape: Shape) {
     rotate = (rotate < 0 ? rotate + 360 : rotate) % 360;
     return rotate;
 }
-function modify_anchor(shape: Shape) {
+function modify_anchor(shape: Shape, m2r: Matrix) {
     const rotate = pre_modify_anchor(shape);
-    const m = shape.matrix2Root(), frame = shape.frame;
+    const frame = shape.frame;
     let anchor = { x: 0, y: 0 };
     if (rotate >= 0 && rotate < 45) {
-        anchor = m.computeCoord2(0, 0);
+        anchor = m2r.computeCoord2(0, 0);
     } else if (rotate >= 45 && rotate < 135) {
-        anchor = m.computeCoord2(0, frame.height);
+        anchor = m2r.computeCoord2(0, frame.height);
     } else if (rotate >= 135 && rotate < 225) {
-        anchor = m.computeCoord2(frame.width, frame.height);
+        anchor = m2r.computeCoord2(frame.width, frame.height);
     } else if (rotate >= 225 && rotate < 315) {
-        anchor = m.computeCoord2(frame.width, 0);
+        anchor = m2r.computeCoord2(frame.width, 0);
     } else if (rotate >= 315 && rotate <= 360) {
-        anchor = m.computeCoord2(0, 0);
+        anchor = m2r.computeCoord2(0, 0);
     }
     return anchor;
 }
@@ -105,11 +111,10 @@ function setOrigin() { // 这个动作是让container与页面坐标系重合
 const watchedShapes = new Map();
 function watchShapes() { // 监听相关shape的变化
     const needWatchShapes = new Map();
-    const selection = props.context.selection.selectedPage?.childs;
-    if (selection) {
-        selection.forEach((v) => {
-            needWatchShapes.set(v.id, v);
-        })
+    const childs_of_page = props.data.childs;
+    for (let i = 0, len = childs_of_page.length; i < len; i++) {
+        const compo = childs_of_page[i];
+        if (compo.type === ShapeType.Group && compo.isSymbolShape && compo.isVisible) needWatchShapes.set(compo.id, compo);
     }
     watchedShapes.forEach((v, k) => {
         if (needWatchShapes.has(k)) return;

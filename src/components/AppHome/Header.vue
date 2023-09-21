@@ -1,51 +1,144 @@
 <script setup lang="ts">
-import { onMounted, reactive, toRefs, ref, onUnmounted, computed } from 'vue'
-import { Search, User, SwitchButton, Close, Bell, Loading } from '@element-plus/icons-vue'
+import { onMounted, reactive, toRefs, ref, onUnmounted, computed, watch } from 'vue'
+import { Search, User, SwitchButton, Close, Bell } from '@element-plus/icons-vue'
 import Inform from './Inform.vue'
-import * as share_api from '@/apis/share'
+import * as share_api from '@/apis/share';
+import * as team_api from '@/apis/team';
 import { useI18n } from 'vue-i18n'
 import { router } from '@/router'
 import avatar from '@/assets/pd-logo-svg.svg';
+import Loading from '../common/Loading.vue';
 interface Props {
-    items: Array<object>
-    title: string | undefined
+    items?: Array<object>,
+    title?: string | undefined
+    switch?: boolean
 }
-const props = defineProps<Props>()
-
-const { t } = useI18n()
+const props = withDefaults(defineProps<Props>(), {
+    switch: true
+})
+const { t } = useI18n();
 const state = reactive({
     circleUrl: localStorage.getItem('avatar'),
     userName: localStorage.getItem('nickname')
+});
+const { circleUrl, userName } = toRefs(state);
+const applynum = ref(0);
+const teamnum = ref(0);
+const showInForm = ref(false);
+const applyList = ref<any[]>([]);
+const teamApplyList = ref<any>([]);
+const projectApplyList = ref<any>([]);
+const notifyPApplyList = ref<any>([]);
+const notifyTApplyList = ref<any>([]);
+const search = ref('');
+const SearchList = ref<any[]>([]);
+const showSearchHistory = ref(false);
+const historyList = ref<any[]>([]);
+const menuAbout = ref(false);
+const menuUser = ref(false);
+const isLoading = ref(false);
+const inputRef = ref<HTMLElement>();
+const totalList = ref<any[]>([])
+const total = computed(() => {
+    return applynum.value + teamnum.value;
 })
-const { circleUrl, userName } = toRefs(state)
-const num = ref(0)
-const showInForm = ref(false)
-const applyList = ref<any[]>([])
-const search = ref('')
-const SearchList = ref<any[]>([])
-const showSearchHistory = ref(false)
-const historyList = ref<any[]>([])
-const menuAbout = ref(false)
-const menuUser = ref(false)
-const isLoading = ref(false)
-const inputRef = ref<HTMLElement>()
 
-const errorHandler = () => true
+const errorHandler = () => true;
 const closeInForm = () => {
-    showInForm.value = false
+    showInForm.value = false;
 }
 
 const getApplyList = async () => {
     try {
-        const { data } = await share_api.getApplyListAPI()
+        const { data } = await share_api.getApplyListAPI();
         if (data) {
-            applyList.value = data
-            num.value = applyList.value.filter(item => item.apply.status === 0).length
+            applyList.value = data;
+            applynum.value = applyList.value.filter(item => item.apply.status === 0).length;
         }
     } catch (err) {
-        console.log(err)
+        console.log(err);
     }
 }
+
+const getProjectApplyList = async () => {
+    try {
+        const { data } = await team_api.getTeamProjectApplyAPI();
+        if (data) {
+            projectApplyList.value = data;
+            totalList.value = [...data, ...teamApplyList.value, ...notifyPApplyList.value, ...notifyTApplyList.value];
+            totalList.value.sort((a: any, b: any) => {
+                const timeA = new Date(a.request.created_at).getTime();
+                const timeB = new Date(b.request.created_at).getTime();
+                // 返回结果以实现降序排序
+                return timeB - timeA;
+            });
+            teamnum.value = totalList.value.filter((item: any) => item.request.status === 0).length;
+        }
+    } catch (err) {
+        console.log(err);
+    }
+}
+
+const getTeamApply = async () => {
+    try {
+        const { data } = await team_api.getTeamApplyAPI();
+        if (data) {
+            teamApplyList.value = data;
+            totalList.value = [...data, ...projectApplyList.value, ...notifyPApplyList.value, ...notifyTApplyList.value];
+            totalList.value.sort((a: any, b: any) => {
+                const timeA = new Date(a.request.created_at).getTime();
+                const timeB = new Date(b.request.created_at).getTime();
+                // 返回结果以实现降序排序
+                return timeB - timeA;
+            });
+            teamnum.value = totalList.value.filter((item: any) => item.request.status === 0).length;
+            getProjectApplyList();
+        }
+    } catch (err) {
+        console.log(err);
+    }
+}
+const getProjectNotice = async () => {
+    try {
+        const { data } = await team_api.getProjectNoticeAPI();
+        if (data) {
+            notifyPApplyList.value = data;
+            totalList.value = [...data, ...projectApplyList.value, ...teamApplyList.value, ...notifyTApplyList.value];
+            totalList.value.sort((a: any, b: any) => {
+                const timeA = new Date(a.request.created_at).getTime();
+                const timeB = new Date(b.request.created_at).getTime();
+                // 返回结果以实现降序排序
+                return timeB - timeA;
+            });
+        }
+    } catch (err) {
+        console.log(err);
+    }
+}
+const getTeamNotice = async () => {
+    try {
+        const { data } = await team_api.getTeamNoticeAPI();
+        if (data) {
+            notifyTApplyList.value = data;
+            totalList.value = [...data, ...projectApplyList.value, ...notifyPApplyList.value, ...teamApplyList.value];
+            totalList.value.sort((a: any, b: any) => {
+                const timeA = new Date(a.request.created_at).getTime();
+                const timeB = new Date(b.request.created_at).getTime();
+                // 返回结果以实现降序排序
+                return timeB - timeA;
+            });
+        }
+    } catch (err) {
+        console.log(err);
+    }
+}
+
+watch(totalList, () => {
+    teamnum.value = totalList.value.filter((item: any) => item.request.status === 0).length;
+}, { deep: true })
+watch(applyList, () => {
+    applynum.value = applyList.value.filter(item => item.apply.status === 0).length;
+}, { deep: true })
 
 const handleClickOutside = (event: MouseEvent) => {
     const e = event.target as HTMLElement
@@ -76,7 +169,8 @@ const screenout = async () => {
     isLoading.value = true
     SearchList.value = []
     await new Promise((resolve) => setTimeout(resolve, 200));
-    SearchList.value = props.items.filter((el: any) => el.document.name.toLowerCase().includes(search.value.toLowerCase()))
+    if (props.items)
+        SearchList.value = props.items.filter((el: any) => el.document.name.toLowerCase().includes(search.value.toLowerCase()))
     isLoading.value = false;
 }
 
@@ -91,7 +185,9 @@ function loginout() {
 }
 
 const reviewed = () => {
-    getApplyList()
+    getApplyList();
+    getTeamApply();
+    getProjectApplyList();
 }
 
 const toDocument = (row: any, column: any) => {
@@ -133,10 +229,18 @@ const itemClick = (e: MouseEvent) => {
 }
 
 let timer: any = null
-getApplyList()
+getApplyList();
+getTeamApply();
+getProjectNotice();
+getTeamNotice();
+getProjectApplyList();
 onMounted(() => {
     timer = setInterval(() => {
-        getApplyList()
+        getApplyList();
+        getTeamApply();
+        getProjectNotice();
+        getTeamNotice();
+        getProjectApplyList();
     }, 60000)
     document.addEventListener('mousedown', handleClickOutside)
     const searchList = localStorage.getItem('searchlist')
@@ -177,12 +281,12 @@ const textHighLight = (text: string) => {
             <img class="logo-image" :src="avatar" alt="ProtoDesign" />
             <div class="logo-text">ProtoDesign</div>
         </div>
-        <div class="search">
+        <div v-if="props.switch" class="search">
             <el-input ref="inputRef" v-model="search" size="large" :placeholder="`${t('system.placeholder')}`"
                 @focus="showSearchHistory = true" @input="screenout">
                 <template #prefix>
                     <el-icon v-if="isLoading" class="is-loading" size="18">
-                        <Loading />
+                        <Loading :size="18"/>
                     </el-icon>
                     <el-icon v-else size="18">
                         <Search />
@@ -244,14 +348,14 @@ const textHighLight = (text: string) => {
             </transition>
         </div>
         <div class="content">
-            <div class="bell">
+            <div v-if="props.switch" class="bell">
                 <div class="notice" :class="{ 'menu-select': showInForm, 'menu-hover': !showInForm }"
                     @click="showInForm = !showInForm">
                     <el-icon size="24">
                         <Bell />
                     </el-icon>
-                    <div class="num" v-if="num > 0" :class="{ after: num > 99 }"
-                        :style="{ paddingRight: num > 99 ? 9 + 'px' : 4 + 'px' }">{{ num > 99 ? 99 : num }}</div>
+                    <div class="num" v-if="total > 0" :class="{ after: total > 99 }"
+                        :style="{ paddingRight: total > 99 ? 9 + 'px' : 4 + 'px' }">{{ total > 99 ? 99 : total }}</div>
                 </div>
             </div>
             <div class="menu" :class="{ 'menu-select': menuAbout, 'menu-hover': !menuAbout }"
@@ -284,7 +388,8 @@ const textHighLight = (text: string) => {
                 </div>
             </div>
         </div>
-        <Inform class="inform" @close="closeInForm" v-if="showInForm" :applyList="applyList" @reviewed="reviewed"></Inform>
+        <Inform class="inform" @close="closeInForm" v-if="showInForm" :applyList="applyList" :teamApplyList="totalList"
+            @reviewed="reviewed"></Inform>
     </div>
 </template>
 <style lang="scss" scoped>

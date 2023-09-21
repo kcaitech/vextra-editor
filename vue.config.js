@@ -113,17 +113,19 @@ var configureWebpack = (config) => {
         ...config.plugins,
     ]
 
-    config.watchOptions = {
-        ignored: [
-            "node_modules\\/(?!(@kcdesign)\\/)",
-            "communication\\/node_modules\\/)",
-        ],
-        poll: 1500,
-    }
+    // config.watchOptions = {
+    //     ignored: [
+    //         "node_modules\\/(?!(@kcdesign)\\/)",
+    //         "communication\\/node_modules\\/)",
+    //     ],
+    //     poll: 1500,
+    // }
 }
 
 var exports = defineConfig({
     transpileDependencies: true,
+    // publicPath: '/tjs',
+    // publicPath: '/zbb',
     publicPath: './',
     configureWebpack,
 

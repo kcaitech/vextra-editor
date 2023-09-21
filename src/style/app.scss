@@ -42,48 +42,54 @@
   border-radius: 4px;
 
   .loading-spinner {
-      >div {
-        border: 2px solid transparent;
-        border-top: 2px solid #000;
-        border-left: 2px solid #000;
-        border-bottom: 2px solid #000;
-        border-radius: 50%;
-          width: 12px;
-          height: 12px;
-          color: #000;
-      }
+    >div {
+      border: 2px solid transparent;
+      border-top: 2px solid #000;
+      border-left: 2px solid #000;
+      border-bottom: 2px solid #000;
+      border-radius: 50%;
+      width: 12px;
+      height: 12px;
+      color: #000;
+    }
 
-      animation: spin 1s linear infinite;
+    animation: spin 1s linear infinite;
   }
 
   @keyframes spin {
-      0% {
-          transform: rotate(0deg);
-      }
+    0% {
+      transform: rotate(0deg);
+    }
 
-      100% {
-          transform: rotate(360deg);
-      }
+    100% {
+      transform: rotate(360deg);
+    }
   }
 }
+
 .is-message-box {
   .el-message-box__title {
     span {
-        font-size: 15px;
+      font-size: 15px;
     }
   }
+
   .el-message-box__message {
     font-size: 10px;
   }
+
   .el-button span {
     font-size: 10px;
   }
+
   .el-message-box {
     width: 370px;
   }
+
   .el-button {
     height: 28px !important;
   }
+
   .el-message-box .el-button--primary {
     border: none !important;
     background-color: var(--active-color-beta) !important;

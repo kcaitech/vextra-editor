@@ -1,32 +1,34 @@
 <template>
     <!-- 右键菜单 -->
-    <div class="rightmenu" ref="menu">
-        <ul>
-            <li v-for="item in props.items " :key="item" @click.stop="EventHandler(item)" :class="item">
-                {{ itemcontent(item) }}
-            </li>
-        </ul>
+    <div>
+        <div class="rightmenu" ref="menu">
+            <ul>
+                <li v-for="item in props.items " :key="item" @click.stop="EventHandler(item)" :class="item">
+                    {{ itemcontent(item) }}
+                </li>
+            </ul>
+        </div>
+        <!-- 重命名弹框 -->
+        <el-dialog v-model="dialogVisible" :title="t('home.rename')" width="500" align-center>
+            <input class="newname" type="text" v-model="newname" ref="renameinput" @keydown.enter="rename1" />
+            <template #footer>
+                <span class="dialog-footer">
+                    <el-button type="primary" style="background-color: none;" @click.stop="rename1"
+                        :disabled="newname.trim() == '' ? true : false">
+                        {{ t('home.rename_ok') }}
+                    </el-button>
+                    <el-button @click="dialogVisible = false">{{ t('home.cancel') }}</el-button>
+                </span>
+            </template>
+        </el-dialog>
     </div>
-    <!-- 重命名弹框 -->
-    <el-dialog v-model="dialogVisible" :title="t('home.rename')" width="500" align-center>
-        <input class="newname" type="text" v-model="newname" ref="renameinput" @keydown.enter="rename1" />
-        <template #footer>
-            <span class="dialog-footer">
-                <el-button type="primary" style="background-color: none;" @click="rename1"
-                    :disabled="newname == '' ? true : false">
-                    {{ t('home.rename_ok') }}
-                </el-button>
-                <el-button @click="dialogVisible = false">{{ t('home.cancel') }}</el-button>
-            </span>
-        </template>
-    </el-dialog>
 </template>
 <script setup lang="ts">
 import { useI18n } from 'vue-i18n'
 import { router } from '@/router'
 import * as user_api from '@/apis/users'
 import { ElMessage } from 'element-plus'
-import { onMounted, ref, onUnmounted } from 'vue';
+import { onMounted, ref, onUnmounted, Ref, inject, watch } from 'vue';
 
 const dialogVisible = ref(false)
 const newname = ref()
@@ -34,20 +36,9 @@ const renameinput = ref<HTMLInputElement>()
 const menu = ref<HTMLElement>()
 const { t } = useI18n()
 
-interface data {
-    document: {
-        id: string
-        name: string
-        doc_type: number
-    }
-    document_favorites: {
-        is_favorite: boolean
-    }
-}
-
 const props = defineProps<{
     items: string[],
-    data: data,
+    data: any,
 }>()
 
 const emits = defineEmits([
@@ -61,7 +52,15 @@ const emits = defineEmits([
     'rDeletefile',
     'getDoucment',
     'getUserdata',
-    'GetrecycleLists'
+    'GetrecycleLists',
+    'projectrename',
+    'showSettingDialog',
+    'showMembergDialog',
+    'cancelFixed',
+    'delproject',
+    'exitproject',
+    'showMembergDialog',
+    'moveFillAddress'
 ])
 
 enum rightmenuitem {
@@ -75,8 +74,19 @@ enum rightmenuitem {
     removefile = 'removefile',
     exit_share = 'exit_share',
     completely_delete = 'completely_delete',
-    restore = 'restore'
+    restore = 'restore',
+    projectrename = 'projectrename',
+    projectset = 'projectset',
+    memberset = 'memberset',
+    setfixed = 'setfixed',
+    cancelfixed = 'cancelfixed',
+    exitproject = 'exitproject',
+    deleteproject = 'deleteproject',
+    movefill = 'movefill'
+}
 
+const { menuState } = inject('shareData') as {
+    menuState: Ref<boolean>;
 }
 
 const itemcontent = (item: string) => {
@@ -103,45 +113,110 @@ const itemcontent = (item: string) => {
             return t('homerightmenu.restore')
         case rightmenuitem.completely_delete:
             return t('homerightmenu.completely_delete')
+        case rightmenuitem.movefill:
+            return t('Createteam.movetip')
+        case rightmenuitem.projectrename:
+            return t('homerightmenu.rename')
+        case rightmenuitem.projectset:
+            return t('Createteam.projectsetting')
+        case rightmenuitem.memberset:
+            return t('Createteam.membersetting')
+        case rightmenuitem.setfixed:
+            return t('Createteam.fixed')
+        case rightmenuitem.cancelfixed:
+            return t('Createteam.cancelFixed')
+        case rightmenuitem.exitproject:
+            return t('Createteam.projectexittitle')
+        case rightmenuitem.deleteproject:
+            return t('Createteam.projectdeltitle')
         default:
             return ''
     }
 }
 
 const EventHandler = (item: string) => {
-    const { document: { id, name } } = props.data
     if (item === rightmenuitem.open) {
-        emits('ropen', id) //右键打开 
+        if (props.data.document != undefined) {
+            emits('ropen', props.data.document.id) //右键打开 
+        }
     }
-    if (item === rightmenuitem.newtabopen) {
-        openNewWindowDocument(id) //右键新窗口打开
+    else if (item === rightmenuitem.newtabopen) {
+        if (props.data.document != undefined) {
+            openNewWindowDocument(props.data.document.id) //右键新窗口打开
+        }
+
     }
-    if (item === rightmenuitem.share) {
+    else if (item === rightmenuitem.share) {
         rSharefile(props.data) //右键分享
     }
-    if (item === rightmenuitem.target_star) {
+    else if (item === rightmenuitem.target_star) {
         rStarfile(props.data) //右键标星
     }
-    if (item === rightmenuitem.rename) {
-        rrename(name) //右键重命名
+    else if (item === rightmenuitem.rename) {
+        if (props.data.document != undefined) {
+            rrename(props.data.document.name) //右键重命名
+            return
+        }
+        if (props.data.project.name != undefined) {
+            rrename(props.data.project.name)
+            return
+        }
     }
-    if (item === rightmenuitem.copyfile) {
-        rcopyfile(id) //右键创建副本
+    else if (item === rightmenuitem.copyfile) {
+        if (props.data.document != undefined) {
+            rcopyfile(props.data.document.id) //右键创建副本
+        }
     }
-    if (item === rightmenuitem.deletefile) {
+    else if (item === rightmenuitem.deletefile) {
         rRemovefile(props.data) //右键删除文件
     }
-    if (item === rightmenuitem.removefile) {
+    else if (item === rightmenuitem.removefile) {
         rRemovehistory(props.data) //右键移除记录
     }
-    if (item === rightmenuitem.exit_share) {
+    else if (item === rightmenuitem.exit_share) {
         rExitshare(props.data)//右键退出共享
     }
-    if (item === rightmenuitem.restore) {
+    else if (item === rightmenuitem.restore) {
         rRestorefile(props.data) //右键恢复删除文件
     }
-    if (item === rightmenuitem.completely_delete) {
+    else if (item === rightmenuitem.completely_delete) {
         rDeletefile(props.data)//右键彻底删除文件
+    }
+    else if (item === rightmenuitem.projectset) {
+        if (menu.value) {
+            menu.value.style.display = 'none'
+        }
+        emits('showSettingDialog')
+    }
+    else if (item === rightmenuitem.memberset) {
+        if (menu.value) {
+            menu.value.style.display = 'none'
+        }
+        emits('showMembergDialog')
+    }
+    else if (item === rightmenuitem.setfixed || item === rightmenuitem.cancelfixed) {
+        if (menu.value) {
+            menu.value.style.display = 'none'
+        }
+        emits('cancelFixed')
+    }
+    else if (item === rightmenuitem.exitproject) {
+        if (menu.value) {
+            menu.value.style.display = 'none'
+        }
+        emits('exitproject', props.data)
+    }
+    else if (item === rightmenuitem.deleteproject) {
+        if (menu.value) {
+            menu.value.style.display = 'none'
+        }
+        emits('delproject', props.data);
+    }
+    else if (item === rightmenuitem.movefill) {
+        if (menu.value) {
+            menu.value.style.display = 'none'
+        }
+        emits('moveFillAddress', props.data);
     }
 }
 
@@ -157,7 +232,7 @@ const openNewWindowDocument = (id: string) => {
 }
 
 //右键分享
-const rSharefile = (data: data) => {
+const rSharefile = (data: any) => {
     if (menu.value) {
         menu.value.style.display = 'none'
     }
@@ -165,7 +240,7 @@ const rSharefile = (data: data) => {
 }
 
 //右键标星
-const rStarfile = (data: data) => {
+const rStarfile = (data: any) => {
     if (menu.value) {
         menu.value.style.display = 'none'
     }
@@ -193,25 +268,37 @@ const rrename = (name: string) => {
 
 //重命名
 const rename1 = async () => {
-    const { document: { id, name } } = props.data
-    newname.value = renameinput.value?.value
-    if (newname.value == '') return
-    if (newname.value != name)
-        try {
-            const { code } = await user_api.Setfilename({ doc_id: id, name: newname.value })
-            if (code === 0) {
-                ElMessage.closeAll('success')
-                ElMessage.success({ duration: 1500, message: t('percenter.successtips') })
-                emits('getDoucment')
-                emits('getUserdata')
-            } else {
-                ElMessage.closeAll('error')
-                ElMessage.error({ duration: 1500, message: t('percenter.errortips1') })
+    if (props.data.project != undefined) {
+        const { id, name } = props.data.project
+        if (newname.value != name) {
+            const data = {
+                project_id: id,
+                name: newname.value
             }
-        } catch (error) {
-            ElMessage.closeAll('error')
-            ElMessage.error({ duration: 1500, message: t('home.other_tips') })
+            emits('projectrename', data)
         }
+
+    }
+    if (props.data.document != undefined) {
+        const { id, name } = props.data.document
+        newname.value = renameinput.value?.value
+        if (newname.value != name)
+            try {
+                const { code } = await user_api.Setfilename({ doc_id: id, name: newname.value })
+                if (code === 0) {
+                    ElMessage.closeAll('success')
+                    ElMessage.success({ duration: 1500, message: t('percenter.successtips') })
+                    emits('getDoucment')
+                    emits('getUserdata')
+                } else {
+                    ElMessage.closeAll('error')
+                    ElMessage.error({ duration: 1500, message: t('percenter.errortips1') })
+                }
+            } catch (error) {
+                ElMessage.closeAll('error')
+                ElMessage.error({ duration: 1500, message: t('home.other_tips') })
+            }
+    }
     dialogVisible.value = false
 }
 
@@ -233,7 +320,7 @@ const rcopyfile = async (id: string) => {
 }
 
 //右键删除
-const rRemovefile = (data: data) => {
+const rRemovefile = (data: any) => {
     if (menu.value) {
         menu.value.style.display = 'none'
     }
@@ -241,7 +328,7 @@ const rRemovefile = (data: data) => {
 }
 
 //右键移除历史记录
-const rRemovehistory = (data: data) => {
+const rRemovehistory = (data: any) => {
     if (menu.value) {
         menu.value.style.display = 'none'
     }
@@ -249,15 +336,15 @@ const rRemovehistory = (data: data) => {
 }
 
 //右键退出共享
-const rExitshare=(data:data)=>{
+const rExitshare = (data: any) => {
     if (menu.value) {
         menu.value.style.display = 'none'
     }
-    emits('rExitshare',data)
+    emits('rExitshare', data)
 }
 
 //右键还原对应文件
-const rRestorefile = (data: data) => {
+const rRestorefile = (data: any) => {
     if (menu.value) {
         menu.value.style.display = 'none'
     }
@@ -265,12 +352,19 @@ const rRestorefile = (data: data) => {
 }
 
 //右键删除对应文件
-const rDeletefile = (data:data) => {
+const rDeletefile = (data: any) => {
     if (menu.value) {
         menu.value.style.display = 'none'
     }
     emits('rDeletefile', data)
 }
+watch(menuState, (v) => {
+    if (v) {
+        if (menu.value) {
+            menu.value.style.display = 'none'
+        }
+    }
+})
 
 //监听页面点击事件，
 const handleClickOutside = (event: MouseEvent) => {
@@ -333,7 +427,6 @@ onUnmounted(() => {
     height: 30px;
     width: 460px;
     box-sizing: border-box;
-
     &:hover {
         border-radius: 2px;
         border: 2px #f3f0ff solid;
@@ -346,19 +439,7 @@ onUnmounted(() => {
     }
 
 }
-
-
-.dialog-footer>.el-button {
-    &:hover {
-        background-color: rgba(208, 208, 208, 0.167);
-    }
-
-    &:active {
-        background-color: white;
-    }
-}
-
-.dialog-footer>.el-button--primary {
+.confirm {
     background-color: #9775fa;
     color: white;
     border-color: #9775fa;
@@ -370,6 +451,7 @@ onUnmounted(() => {
 
     &:active {
         background-color: #9775fa;
+        border-color: #9775fa;
     }
 
     &[disabled] {
@@ -377,4 +459,27 @@ onUnmounted(() => {
         border: 1px #e5dbff solid;
     }
 }
+
+.cancel {
+   
+    &:hover {
+        background-color: #ffffff;
+        color: #9775fa;
+        border-color: #9775fa;
+    }
+
+    &:active {
+        background-color: #ffffff;
+    }
+    &:focus{
+        background-color:white;
+        color: #9775fa;
+        border-color: #9775fa;
+    }
+}
+
+:deep(.el-button--primary) {
+    background-color: #9775fa;
+}
+
 </style>
