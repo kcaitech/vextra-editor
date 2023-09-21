@@ -14,7 +14,7 @@
                     <div class="project-description">{{ item.project.description }}</div>
                     <div class="project-creator">{{ item.creator.nickname }}</div>
                     <div class="other" v-if="showother && hoverId === item.project.id">
-                        <div @click="cancelFixed(item.project.id, item.is_favor, index)">
+                        <div @click="cancelFixed(item.project.id, item.is_favor, index)" @dblclick.stop>
                             <svg t="1693476333821" class="icon" viewBox="0 0 1024 1024" version="1.1"
                                 xmlns="http://www.w3.org/2000/svg" p-id="15755" width="24" height="24">
                                 <path
@@ -33,7 +33,7 @@
                         <div @click="onExitProject(item)"><svg-icon icon-class="pattern-ellipse"></svg-icon></div>
                     </div>
                     <div class="other" v-else-if="item.is_favor">
-                        <div @click="cancelFixed(item.project.id, item.is_favor, index)">
+                        <div @click="cancelFixed(item.project.id, item.is_favor, index)" @dblclick.stop>
                             <svg t="1693476333821" class="icon" viewBox="0 0 1024 1024" version="1.1"
                                 xmlns="http://www.w3.org/2000/svg" p-id="15755" width="24" height="24">
                                 <path
@@ -54,15 +54,18 @@
             </div>
         </div>
         <div v-else class="datanull">
-            <p>{{t('projectlist.datanull')}}</p>
-            <button type="button" @click.stop="onAddproject" v-if="teamSelfPermType > 0">{{t('projectlist.addproject')}}</button>
+            <p>{{ t('projectlist.datanull') }}</p>
+            <button type="button" @click.stop="onAddproject"
+                v-if="teamSelfPermType > 0">{{ t('projectlist.addproject') }}</button>
         </div>
     </div>
     <NetworkError v-else @refresh-doc="GetprojectLists"></NetworkError>
-    <ProjectDialog :projectVisible="innerVisible" :context="t('Createteam.projectexitcontext')" :title="t('Createteam.projectexittitle')"
-        :confirm-btn="t('Createteam.ok_exit')" @clode-dialog="handleClose" @confirm="quitProject"></ProjectDialog>
-    <ProjectDialog :projectVisible="delVisible" :context="t('Createteam.projectdelcontext')" :title="t('Createteam.projectdeltitle')" :confirm-btn="t('Createteam.ok_delete')"
-        @clode-dialog="closeDelVisible" @confirm="DelProject"></ProjectDialog>
+    <ProjectDialog :projectVisible="innerVisible" :context="t('Createteam.projectexitcontext')"
+        :title="t('Createteam.projectexittitle')" :confirm-btn="t('Createteam.ok_exit')" @clode-dialog="handleClose"
+        @confirm="quitProject"></ProjectDialog>
+    <ProjectDialog :projectVisible="delVisible" :context="t('Createteam.projectdelcontext')"
+        :title="t('Createteam.projectdeltitle')" :confirm-btn="t('Createteam.ok_delete')" @clode-dialog="closeDelVisible"
+        @confirm="DelProject"></ProjectDialog>
     <listrightmenu v-show="rightmenushow" :items="updateitems" :data="mydata" @showMembergDialog="showMembergDialog"
         @projectrename="setProjectInfo" @showSettingDialog="showSettingDialog"
         @cancelFixed="cancelFixed(mydata.project.id, mydata.is_favor, mydataindex)" @exitproject="rexitProject"
@@ -84,6 +87,7 @@ import ProjectDialog from './ProjectDialog.vue';
 import listrightmenu from "@/components/AppHome/listrightmenu.vue"
 import ProjectMemberg from '../TeamProject/ProjectFill/ProjectMemberg.vue'
 import ProjectAccessSetting from '../TeamProject/ProjectFill/ProjectAccessSetting.vue'
+import { debounce } from 'lodash';
 
 interface Props {
     searchvalue?: string
@@ -333,10 +337,7 @@ watchEffect(() => {
 })
 
 watch(is_favor, () => {
-    const timer = setTimeout(() => {
-        teamprojectlist.value = projectList.value.filter((item) => item.project.team_id === teamID.value)
-        clearTimeout(timer)
-    }, 300)
+    teamprojectlist.value = projectList.value.filter((item) => item.project.team_id === teamID.value)
 })
 
 //通过计算属性，筛选出与搜索匹配的项目
@@ -360,7 +361,7 @@ const setProjectIsFavorite = async (id: string, state: boolean) => {
     }
 }
 
-const cancelFixed = (id: string, state: boolean, index: number) => {
+const _cancelFixed = (id: string, state: boolean, index: number) => {
     if (props.searchvalue === '') {
         teamprojectlist.value[index].is_favor = !state;
     } else {
@@ -368,9 +369,16 @@ const cancelFixed = (id: string, state: boolean, index: number) => {
     }
     const i = projectList.value.findIndex(item => item.project.id === id);
     projectList.value[i].is_favor = !state;
+    if(!state) {
+        favoriteList.value.push(projectList.value[i])
+    }else {
+        const index = favoriteList.value.findIndex(item => item.project.id === projectList.value[i].project.id)
+        favoriteList.value.splice(index, 1)
+    }
     setProjectIsFavorite(id, !state);
     updateFavor(!is_favor.value);
 }
+const cancelFixed = debounce(_cancelFixed, 200);
 
 onMounted(() => {
     GetprojectLists();
@@ -477,5 +485,4 @@ onMounted(() => {
             background-color: rgba(150, 117, 250, 0.862745098);
         }
     }
-}
-</style>
+}</style>
