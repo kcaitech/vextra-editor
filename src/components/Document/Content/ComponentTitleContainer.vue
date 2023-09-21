@@ -4,7 +4,7 @@ import { Context } from "@/context";
 import { Matrix, Page, Shape, ShapeType } from "@kcdesign/data";
 import { ClientXY, Selection } from "@/context/selection";
 import ComponentTitle from "./ComponentTitle.vue"
-import { is_shape_out, is_need_skip_to_render, top_side } from "@/utils/content";
+import { is_shape_out, top_side } from "@/utils/content";
 const props = defineProps<{
     context: Context
     data: Page,
@@ -27,7 +27,7 @@ function updater() {
     setPosition();
 }
 const setPosition = () => {
-    const st = Date.now();
+    // const st = Date.now();
     titles.length = 0;
     const components: Shape[] = props.data.childs;
     const len = components.length;
@@ -58,7 +58,7 @@ const setPosition = () => {
             }
         }
     }
-    console.log('计算位置：(ms)', Date.now() - st);
+    // console.log('计算位置：(ms)', Date.now() - st);
 }
 function pre_modify_anchor(shape: Shape) {
     let rotate = shape.rotation || 0;
@@ -151,7 +151,6 @@ onUnmounted(() => {
 })
 </script>
 <template>
-    <!-- 组件标题 -->
     <div class="container" :style="{ top: `${origin.y}px`, left: `${origin.x}px` }">
         <div class="title-container" v-for="(t, index) in titles" :key="index"
             :style="{ top: `${t.y}px`, left: `${t.x}px`, 'max-width': `${t.maxWidth}px`, transform: `rotate(${t.rotate}deg)` }">
