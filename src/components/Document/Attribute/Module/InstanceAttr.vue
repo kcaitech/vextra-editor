@@ -13,6 +13,7 @@ const resetMenu = ref(false)
 const openName = ref(false)
 const openClose = ref(false)
 const showCompsDialog = ref(false)
+const textValue = ref('文本内容')
 const options = [
     {
         value: '默认',
@@ -40,6 +41,9 @@ const closeResetMenu = (e: MouseEvent) => {
 const closeDialog = () => {
     showCompsDialog.value = false;
 }
+const compsDialog = () => {
+    showCompsDialog.value = true;
+}
 </script>
 
 <template>
@@ -65,7 +69,7 @@ const closeDialog = () => {
     <div class="module_container">
         <div class="module_state_item">
             <div class="state_item">
-                <div class="state_name">属性1</div>
+                <div class="state_name"><span>属性1</span></div>
                 <div class="state_value" style="padding: 0;">
                     <el-select v-model="attrValue" class="m-2" placeholder="Select">
                         <el-option v-for="item in options" :key="item.value" :label="item.label" :value="item.value" />
@@ -76,20 +80,21 @@ const closeDialog = () => {
         </div>
         <div class="module_state_item">
             <div class="state_item">
-                <div class="state_name">实例1</div>
-                <div class="state_value border" @click="showCompsDialog = true">
-                    <span>默认</span>
-                    <svg-icon icon-class="down"></svg-icon>
+                <div class="state_name"><span>实例1</span></div>
+                <div class="state_value border" @click="compsDialog">
+                    <span style="color: #606266;">默认</span>
+                    <svg-icon icon-class="down" style="color: #a8abb2;"></svg-icon>
                 </div>
             </div>
             <div class="delete"></div>
-            <ComponentDialog v-if="showCompsDialog" :context="context" right="250px" top="0" @closeDialog="closeDialog"></ComponentDialog>
+            <ComponentDialog v-if="showCompsDialog" :context="context" right="250px" top="0" @closeDialog="closeDialog">
+            </ComponentDialog>
         </div>
         <div class="module_state_item">
             <div class="state_item">
-                <div class="state_name">文本</div>
-                <div class="state_value border">
-                    <span>文本内容</span>
+                <div class="state_name"><span>文本</span></div>
+                <div class="state_value" style="padding: 0;">
+                    <el-input v-model="textValue" />
                 </div>
             </div>
             <div class="delete"></div>
@@ -98,7 +103,7 @@ const closeDialog = () => {
             <div>
                 <span class="title">图层显示:</span>
                 <div>
-                    <span>名称1</span>
+                    <span class="name">名称1</span>
                     <el-switch v-model="openName" size="small" style="margin-left: 10px;--el-switch-on-color: #9775fa" />
                 </div>
             </div>
@@ -213,6 +218,11 @@ const closeDialog = () => {
                 align-items: center;
                 width: 30%;
                 height: 100%;
+                span {
+                    overflow: hidden;
+                    text-overflow: ellipsis;
+                    white-space: nowrap;
+                }
             }
 
             .state_value {
@@ -246,9 +256,38 @@ const closeDialog = () => {
                         height: 30px;
                         font-size: 10px;
                         background-color: var(--grey-light);
+                        box-shadow: none;
+                        &:hover {
+                            border-color: var(--grey-light);
+                            box-shadow: none;
+                        }
+                    }
+                }
+
+                .el-input {
+                    width: 100%;
+                    height: 30px;
+                    font-size: 10px;
+
+                    :deep(.el-input__inner) {
+                        --el-input-inner-height: 100%;
+                    }
+                    :deep(.el-input__wrapper) {
+                        background-color: var(--grey-light);
+                        border-color: var(--grey-light);
+                        box-shadow: none;
+                        &:hover {
+                            border-color: var(--grey-light);
+                            box-shadow: none;
+                        }
+                    }
+
+                    :deep(.el-input__wrapper.is-focus) {
+                        box-shadow: 0 0 0 1px var(--active-color) inset;
                     }
                 }
             }
+
             .border {
                 background-color: var(--grey-light);
             }
@@ -275,6 +314,11 @@ const closeDialog = () => {
                 margin-right: 5px;
                 padding-top: 2px;
             }
+            .name {
+                overflow: hidden;
+                text-overflow: ellipsis;
+                white-space: nowrap;
+            }
 
             >div {
                 flex: 1;
@@ -282,10 +326,12 @@ const closeDialog = () => {
         }
     }
 }
+
 :deep(.el-select-dropdown__item.selected) {
     color: #9775fa !important;
     font-size: 10px;
 }
+
 :deep(.el-select .el-input.is-focus .el-input__wrapper) {
     box-shadow: 0 0 0 1px var(--active-color) inset !important;
     background-color: var(--grey-light);
@@ -293,5 +339,4 @@ const closeDialog = () => {
 
 :deep(.el-select .el-input__wrapper.is-focus) {
     box-shadow: 0 0 0 1px var(--active-color) inset !important;
-}
-</style>
+}</style>

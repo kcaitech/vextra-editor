@@ -87,19 +87,19 @@ const addModuleState = () => {
 }
 
 const addAttrSate = (data: any, type: 'Show' | 'Text' | 'toggle' | '') => {
-    if(type === 'Show') {
+    if (type === 'Show') {
         const state = {
             attrName: data.name,
             visi: data.visi
         }
         showStates.value.push(state);
-    }else if (type === 'Text') {
+    } else if (type === 'Text') {
         const state = {
             attrName: data.name,
             text: data.text
         }
         textStates.value.push(state);
-    }else if (type === 'toggle') {
+    } else if (type === 'toggle') {
         const state = {
             attrName: data.name,
             value: '默认'
@@ -173,7 +173,8 @@ const saveExamplesToggle = () => {
                 </div>
             </template>
         </TypeHeader>
-        <CompLayerShow :context="context" v-if="isaddStateDialog" @close-dialog="isaddStateDialog = false" right="250px" :width="260" :addType="addType" :title="dislogTitle" @save-layer-show="addAttrSate"></CompLayerShow>
+        <CompLayerShow :context="context" v-if="isaddStateDialog" @close-dialog="isaddStateDialog = false" right="250px"
+            :width="260" :addType="addType" :title="dislogTitle" @save-layer-show="addAttrSate"></CompLayerShow>
         <div class="module_container">
             <template v-for="(item, index) in moduleStates" :key="index">
                 <div class="module_attr_item">
@@ -185,9 +186,9 @@ const saveExamplesToggle = () => {
                         <div class="module_item_left" @dblclick="onRename(index)" v-else>
                             <div class="module_name">
                                 <svg-icon icon-class="pattern-arrow"></svg-icon>
-                                <span>{{ item.attrName }}</span>
+                                <span class="name">{{ item.attrName }}</span>
                             </div>
-                            <div><span>{{ item.attrValue }}</span></div>
+                            <div><span class="name">{{ item.attrValue }}</span></div>
                         </div>
                         <div class="delete">
                             <svg-icon icon-class="delete"></svg-icon>
@@ -202,15 +203,17 @@ const saveExamplesToggle = () => {
                         <div class="module_item_left" @click="editLayer(index)">
                             <div class="module_name">
                                 <svg-icon icon-class="eye-open"></svg-icon>
-                                <span>{{ item.attrName }}</span>
+                                <span class="name">{{ item.attrName }}</span>
                             </div>
-                            <div><span>{{ item.visi }}</span></div>
+                            <div><span class="name">{{ item.visi }}</span></div>
                         </div>
                         <div class="delete">
                             <svg-icon icon-class="delete"></svg-icon>
                         </div>
                     </div>
-                    <CompLayerShow :context="context" v-if="iseditLayerShow && layerIndex === index" @close-dialog="iseditLayerShow = false" right="250px" :width="260" :add-type="'Show'" :title="`图层是否显示`" @save-layer-show="saveLayerShow"></CompLayerShow>
+                    <CompLayerShow :context="context" v-if="iseditLayerShow && layerIndex === index"
+                        @close-dialog="iseditLayerShow = false" right="250px" :width="260" :add-type="'Show'"
+                        :title="`图层是否显示`" @save-layer-show="saveLayerShow"></CompLayerShow>
                 </div>
             </template>
             <template v-for="(item, index) in textStates" :key="index">
@@ -219,15 +222,17 @@ const saveExamplesToggle = () => {
                         <div class="module_item_left" @click="editText(index)">
                             <div class="module_name">
                                 <svg-icon icon-class="text"></svg-icon>
-                                <span>{{ item.attrName }}</span>
+                                <span class="name">{{ item.attrName }}</span>
                             </div>
-                            <div><span>{{ item.text }}</span></div>
+                            <div><span class="name">{{ item.text }}</span></div>
                         </div>
                         <div class="delete">
                             <svg-icon icon-class="delete"></svg-icon>
                         </div>
                     </div>
-                    <CompLayerShow :context="context" v-if="iseditText && textIndex === index" @close-dialog="iseditText = false" right="250px" :width="260" :add-type="''" :title="`图层是否显示`" @save-layer-show="saveTextContext"></CompLayerShow>
+                    <CompLayerShow :context="context" v-if="iseditText && textIndex === index"
+                        @close-dialog="iseditText = false" right="250px" :width="260" :add-type="''" :title="`图层是否显示`"
+                        @save-layer-show="saveTextContext"></CompLayerShow>
                 </div>
             </template>
             <template v-for="(item, index) in toggleStates" :key="index">
@@ -236,15 +241,17 @@ const saveExamplesToggle = () => {
                         <div class="module_item_left" @click="editToggle(index)">
                             <div class="module_name">
                                 <svg-icon icon-class="pattern-rectangle"></svg-icon>
-                                <span>{{ item.attrName }}</span>
+                                <span class="name">{{ item.attrName }}</span>
                             </div>
-                            <div><span>{{ item.value }}</span></div>
+                            <div><span class="name">{{ item.value }}</span></div>
                         </div>
                         <div class="delete">
                             <svg-icon icon-class="delete"></svg-icon>
                         </div>
                     </div>
-                    <CompLayerShow :context="context" v-if="iseditToggle && toggleIndex === index" @close-dialog="iseditToggle = false" right="250px" :width="260" :add-type="'toggle'" :title="`图层是否显示`" @save-layer-show="saveExamplesToggle"></CompLayerShow>
+                    <CompLayerShow :context="context" v-if="iseditToggle && toggleIndex === index"
+                        @close-dialog="iseditToggle = false" right="250px" :width="260" :add-type="'toggle'"
+                        :title="`图层是否显示`" @save-layer-show="saveExamplesToggle"></CompLayerShow>
                 </div>
             </template>
         </div>
@@ -323,7 +330,8 @@ const saveExamplesToggle = () => {
         .module_item_left {
             display: flex;
             align-items: center;
-            background-color: #ccc;
+            border-radius: 4px;
+            background-color: var(--grey-light);
             width: 100%;
             height: 30px;
 
@@ -335,6 +343,12 @@ const saveExamplesToggle = () => {
                     height: 10px;
                     margin: 0 10px;
                 }
+            }
+
+            .name {
+                overflow: hidden;
+                text-overflow: ellipsis;
+                white-space: nowrap;
             }
         }
 
@@ -379,4 +393,5 @@ const saveExamplesToggle = () => {
 
 :deep(.el-input__wrapper.is-focus) {
     box-shadow: 0 0 0 1px var(--active-color) inset;
-}</style>
+}
+</style>

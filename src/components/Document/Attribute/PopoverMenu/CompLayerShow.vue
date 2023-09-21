@@ -67,7 +67,16 @@ const save = () => {
     }
     emit('saveLayerShow',data, props.addType)
 }
+const comps = ref<HTMLDivElement>()
+const cur_top = ref(0)
 onMounted(() => {
+    if (comps.value) {
+        const body_h = document.body.clientHeight;
+        const comps_y = comps.value.getBoundingClientRect().y;
+        const comps_h = comps.value.clientHeight + 10;
+        const surplus = body_h - comps_y;
+        cur_top.value = surplus - comps_h;
+    }
     document.addEventListener('keyup', esc);
 })
 onUnmounted(() => {
@@ -76,10 +85,10 @@ onUnmounted(() => {
 </script>
 
 <template>
-    <div class="dialog_box" :style="{
+    <div class="dialog_box" ref="comps" :style="{
         width: `${props.width ? props.width : 360}px`,
         right: props.right,
-        top: props.top
+        top: cur_top > 0 ? props.top : cur_top + 'px'
     }">
         <div class="header">
             <span class="title">{{ props.title }}</span>
