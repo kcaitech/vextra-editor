@@ -15,11 +15,10 @@ const props = defineProps<{
     context: Context
 }>()
 
+const checkList = ref([])
 const emit = defineEmits<{
     (e: 'close'): void;
 }>()
-const activeNames = ref(['1'])
-const isList = ref('list');
 const close = (e: MouseEvent) => {
     e.stopPropagation();
     emit('close');
@@ -27,7 +26,26 @@ const close = (e: MouseEvent) => {
 function handleClickOutside(event: MouseEvent) {
     event.target instanceof Element && !event.target.closest('.select_layerbox') && close(event);
 }
+const top = ref(33);
+const popover = ref<HTMLDivElement>();
 onMounted(() => {
+    if(popover.value) {
+        const body_h = document.body.clientHeight;
+        const popover_y = popover.value.getBoundingClientRect().y;
+        const popover_h = popover.value.clientHeight + 5;
+        const surplus = body_h - popover_y;
+        const height = surplus - popover_h;
+        if(height > 0) {
+            top.value = 33;
+        }else {
+            if(popover_y > popover_h) {
+                top.value = -popover_h
+            }else {
+                const s = popover_h - popover_y;
+                top.value = -(popover_y - s) - 20
+            }
+        }
+    }
     document.addEventListener('click', handleClickOutside);
 })
 onUnmounted(() => {
@@ -36,14 +54,12 @@ onUnmounted(() => {
 </script>
 
 <template>
-    <div class="select_layerbox">
+    <div class="select_layerbox" ref="popover" :style="{top: top + 'px'}">
         <div class="heard">
             <span class="title">{{ props.type === 'toggle' ? '组件实例' : '选择图层' }}</span>
             <div class="close">
                 <div class="toggle_list">
-                    <svg-icon v-if="isList === 'card'" icon-class="resource" @click.stop="isList = 'list'"></svg-icon>
-                    <svg-icon v-if="isList === 'list'" icon-class="text-bulleted-list"
-                        @click.stop="isList = 'card'"></svg-icon>
+                    <svg-icon icon-class="close" @click.stop="emit('close');"></svg-icon>
                 </div>
             </div>
         </div>
@@ -52,15 +68,36 @@ onUnmounted(() => {
             <div style="height: 100%;" v-if="props.type === 'toggle'">
                 <el-scrollbar>
                     <div class="demo-collapse">
-                        <el-collapse v-model="activeNames">
-                            <ComponentPageList v-if="isList === 'list'" :context="context" samll="samll"></ComponentPageList>
-                            <ComponentPageCard v-if="isList === 'card'" :context="context"></ComponentPageCard>
-                        </el-collapse>
+                        <div class="list">
+                            <el-checkbox-group v-model="checkList">
+                                <template v-for="item in 10" :key="item">
+                                    <el-checkbox :label="item">
+                                        <ComponentPageList :context="context" samll="samll">
+                                        </ComponentPageList>
+                                    </el-checkbox>
+                                </template>
+                            </el-checkbox-group>
+                        </div>
                     </div>
                 </el-scrollbar>
+                <div class="button"><el-button>确认</el-button></div>
             </div>
-            <!-- 是否显示 -->
             <div style="height: 100%;" v-else>
+                <el-scrollbar>
+                    <div class="demo-collapse">
+                        <div class="list">
+                            <el-checkbox-group v-model="checkList">
+                                <template v-for="item in 10" :key="item">
+                                    <el-checkbox :label="item">
+                                        <ComponentPageList :context="context" samll="samll">
+                                        </ComponentPageList>
+                                    </el-checkbox>
+                                </template>
+                            </el-checkbox-group>
+                        </div>
+                    </div>
+                </el-scrollbar>
+                <div class="button"><el-button>确认</el-button></div>
             </div>
             <!-- <div class="null" v-if="dataSource.length === 0 && props.type === 'Text' || props.type === ''">文本图层为空</div>
             <div class="null" v-if="dataSource.length === 0 && props.type === 'toggle'">组件实例为空</div> -->
@@ -74,7 +111,7 @@ onUnmounted(() => {
     display: flex;
     flex-direction: column;
     left: 0;
-    top: 33px;
+    bottom: 0;
     width: 230px;
     height: 450px;
     background-color: #fff;
@@ -93,9 +130,6 @@ onUnmounted(() => {
         align-items: center;
         justify-content: space-between;
         padding-right: 5px;
-
-        margin-bottom: 10px;
-
         .title {
             line-height: 32px;
             font-weight: var(--font-default-bold);
@@ -133,9 +167,46 @@ onUnmounted(() => {
 
         .el-scrollbar {
             padding-right: 10px;
+            height: calc(100% - 40px);
 
             .el-collapse {
                 --el-collapse-border-color: none;
+            }
+        }
+        .button {
+            height: 40px;
+            width: 100%;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            .el-button {
+                height: 30px;
+                box-sizing: border-box;
+                background-color:var(--active-color);
+                border-color: var(--active-color);
+            }
+        }
+        .list {
+            .el-checkbox {
+                width: 100%;
+                display: flex;
+                margin: 5px 0;
+                :deep(.el-checkbox__label) {
+                    height: 100%;
+                    flex: 1;
+                }
+                :deep(.el-checkbox__input) {
+                    height: 100%;
+                    display: flex;
+                    align-items: center;
+                }
+                :deep(.el-checkbox__input.is-checked .el-checkbox__inner) {
+                    border-color: var(--active-color);
+                    background-color: var(--active-color);
+                }
+                :deep(.el-checkbox__input.is-checked+.el-checkbox__label) {
+                    color: var(--active-color);
+                }
             }
         }
 

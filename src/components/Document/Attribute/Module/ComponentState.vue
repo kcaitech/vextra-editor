@@ -45,13 +45,13 @@ const onEditAttrValue = (e: KeyboardEvent) => {
         <div class="module_state_item">
             <div class="module_con">
                 <div class="state_item">
-                    <div class="state_name">属性1</div>
-                    <div class="state_value" v-if="!editAttrValue" @dblclick="onRevalue">默认</div>
+                    <div class="state_name"><span>属性1</span></div>
+                    <div class="state_value" v-if="!editAttrValue" @dblclick="onRevalue"><span>默认</span></div>
                     <div class="module_input" v-if="editAttrValue"><el-input v-model="attrValueInput" ref="revalueInput" @blur="closeValueInput" @keydown="onEditAttrValue"/></div>
                 </div>
                 <div class="delete"></div>
             </div>
-            <div class="warn" v-if="editAttrValue">属性值重复，请重新输入</div>
+            <!-- <div class="warn" v-if="editAttrValue">属性值重复，请重新输入</div> -->
         </div>
     </div>
 </template>
@@ -80,14 +80,25 @@ const onEditAttrValue = (e: KeyboardEvent) => {
                 align-items: center;
                 width: 30%;
                 height: 100%;
+                span {
+                    overflow: hidden;
+                    text-overflow: ellipsis;
+                    white-space: nowrap;
+                }
             }
             .state_value {
                 display: flex;
                 align-items: center;
                 padding-left: 10px;
+                border-radius: 4px;
                 flex: 1;
                 height: 100%;
-                background-color: #ccc;
+                background-color: var(--grey-light);
+                span {
+                    overflow: hidden;
+                    text-overflow: ellipsis;
+                    white-space: nowrap;
+                }
             }
         }
         .module_input {

@@ -274,7 +274,7 @@ function modify_speed(e: MouseEvent) {
 <template>
     <div class="container-name" @mouseenter="hoverShape" @mouseleave="unHoverShape" @mousedown.stop="down"
         data-area="controller">
-        <div class="name" :style="{ maxWidth: props.maxWidth + 'px' }" @dblclick="onRename">
+        <div class="name-wrap" :style="{ maxWidth: props.maxWidth + 'px' }" @dblclick="onRename">
             <svg width="305" height="305" viewBox="0 0 305 305" fill="none" xmlns="http://www.w3.org/2000/svg">
                 <rect x="7.07106" y="152.895" width="90" height="90" transform="rotate(-45.0629 7.07106 152.895)"
                     fill="#5607F6" stroke="#5607F6" stroke-width="10" />
@@ -285,7 +285,9 @@ function modify_speed(e: MouseEvent) {
                 <rect x="169.704" y="151.302" width="90" height="90" transform="rotate(-45.0629 169.704 151.302)"
                     fill="#5607F6" stroke="#5607F6" stroke-width="10" />
             </svg>
-            {{ props.name }}
+            <div class="content">
+                {{ props.name }}
+            </div>
         </div>
         <input v-if="isInput" type="text" :style="{ maxWidth: props.maxWidth + 'px', width: inputWidth + 'px' }"
             ref="nameInput" class="rename" @input="onInputName" @change="ChangeReName">
@@ -295,21 +297,24 @@ function modify_speed(e: MouseEvent) {
 
 <style scoped lang="scss">
 .container-name {
-    .name {
-        width: 100%;
-        text-overflow: ellipsis;
-        white-space: nowrap;
-        overflow: hidden;
-        padding-left: 2px;
-        background-color: transparent;
-        color: var(--component-color);
-        display: inline-flex;
+    .name-wrap {
+        display: flex;
         align-items: center;
 
         >svg {
             width: 10px;
             height: 10px;
             padding: 0 2px 0 0;
+        }
+
+        .content {
+            width: calc(100% - 12px);
+            text-overflow: ellipsis;
+            white-space: nowrap;
+            overflow: hidden;
+            padding-left: 2px;
+            background-color: transparent;
+            color: var(--component-color);
         }
     }
 
