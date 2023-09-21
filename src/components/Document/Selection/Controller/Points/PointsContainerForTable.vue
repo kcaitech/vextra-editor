@@ -148,7 +148,7 @@ function gen_offset_map(shape: Shape, down: PageXY) {
 function down(e: MouseEvent) {
     const context = props.context;
     const action = context.tool.action;
-    if (!permIsEdit(context) || action === Action.AddComment) return;
+    if (!permIsEdit(context)) return;
     if (e.button === 0) { // 当前组件只处理左键事件，右键事件冒泡出去由父节点处理
         context.cursor.cursor_freeze(true);
         context.menu.menuMount(); // 取消右键事件
@@ -414,7 +414,7 @@ onUnmounted(() => {
 })
 </script>
 <template>
-    <g :style="{ transform }" @mousedown.stop="(e) => down(e)">
+    <g :style="{ transform }" @mousedown.stop="(e: MouseEvent) => down(e)">
         <rect x="0" y="0" width="18px" height="18px" rx="2" ry="2" fill="#865dff" fill-opacity="0.45" stroke="none">
         </rect>
         <svg viewBox="0 0 1024 1024" version="1.1" xmlns="http://www.w3.org/2000/svg" width="12" height="12" x="3px"
@@ -424,7 +424,7 @@ onUnmounted(() => {
                 fill="#865dff"></path>
         </svg>
     </g>
-    <g :style="{ transform: transform2 }" :class="{ hidden }" @mousedown.stop="(e) => point_mousedown(e)">
+    <g :style="{ transform: transform2 }" :class="{ hidden }" @mousedown.stop="(e: MouseEvent) => point_mousedown(e)">
         <rect x="0" y="0" width="18px" height="18px" rx="2" ry="2" fill="#865dff" fill-opacity="0.45" stroke="none">
         </rect>
         <svg viewBox="0 0 1024 1024" version="1.1" xmlns="http://www.w3.org/2000/svg" width="12" height="12" x="3" y="3">
