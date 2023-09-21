@@ -23,8 +23,16 @@ function esc(e: KeyboardEvent) {
     if (e.code === 'Escape') popoverClose();
     else e.stopPropagation();
 }
-
+const comps = ref<HTMLDivElement>()
+const cur_top = ref(0)
 onMounted(() => {
+    if (comps.value) {
+        const body_h = document.body.clientHeight;
+        const comps_y = comps.value.getBoundingClientRect().y;
+        const comps_h = comps.value.clientHeight + 10;
+        const surplus = body_h - comps_y;
+        cur_top.value = surplus - comps_h;
+    }
     document.addEventListener('keyup', esc);
 })
 onUnmounted(() => {
@@ -33,19 +41,29 @@ onUnmounted(() => {
 </script>
 
 <template>
-    <div class="dialog_box" :style="{
+    <div class="dialog_box" ref="comps" :style="{
         right: props.right,
-        top: props.top
+        top: cur_top > 0 ? props.top : cur_top + 'px'
     }">
         <ComponentList v-slot="type" :heard="true" @close="popoverClose">
             <el-scrollbar>
                 <div class="demo-collapse">
                     <el-collapse v-model="activeNames">
                         <el-collapse-item title="页面1" name="1">
-                            <ComponentPageList v-if="type.type === 'list'" :context="context"></ComponentPageList>
-                            <ComponentPageCard v-if="type.type === 'card'" :context="context"></ComponentPageCard>
+                            <div class="list" v-if="type.type === 'list'">
+                                <ComponentPageList :context="context" v-for="item in 10" :key="item"></ComponentPageList>
+                            </div>
+                            <div class="card" v-if="type.type === 'card'">
+                                <ComponentPageCard :context="context" v-for="item in 10" :key="item"></ComponentPageCard>
+                            </div>
                         </el-collapse-item>
                         <el-collapse-item title="页面2" name="2">
+                            <div class="list" v-if="type.type === 'list'">
+                                <ComponentPageList :context="context" v-for="item in 10" :key="item"></ComponentPageList>
+                            </div>
+                            <div class="card" v-if="type.type === 'card'">
+                                <ComponentPageCard :context="context" v-for="item in 10" :key="item"></ComponentPageCard>
+                            </div>
                         </el-collapse-item>
                     </el-collapse>
                 </div>
@@ -74,6 +92,14 @@ onUnmounted(() => {
 
         .demo-collapse {
             box-sizing: border-box;
+
+            .card {
+                display: flex;
+                align-items: center;
+                flex-wrap: wrap;
+                width: 100%;
+                box-sizing: border-box;
+            }
         }
 
         .el-collapse {
@@ -108,4 +134,5 @@ onUnmounted(() => {
     height: 100%;
     z-index: 10003;
     background-color: transparent;
-}</style>
+}
+</style>

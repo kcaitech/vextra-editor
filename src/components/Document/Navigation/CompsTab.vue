@@ -24,11 +24,20 @@ const activeNames = ref(['1'])
                 <div class="demo-collapse">
                     <el-collapse v-model="activeNames">
                         <el-collapse-item title="页面1" name="1">
-                            <ComponentPageList v-if="type.type === 'list'" :context="context"></ComponentPageList>
-                            <ComponentPageCardVue v-if="type.type === 'card'" :context="context"></ComponentPageCardVue>
+                            <div class="list" v-if="type.type === 'list'">
+                                <ComponentPageList :context="context" v-for="item in 10" :key="item"></ComponentPageList>
+                            </div>
+                            <div class="card" v-if="type.type === 'card'">
+                                <ComponentPageCardVue :context="context" v-for="item in 10" :key="item"></ComponentPageCardVue>
+                            </div>
                         </el-collapse-item>
                         <el-collapse-item title="页面2" name="2">
-                      
+                            <div class="list" v-if="type.type === 'list'">
+                                <ComponentPageList :context="context" v-for="item in 10" :key="item"></ComponentPageList>
+                            </div>
+                            <div class="card" v-if="type.type === 'card'">
+                                <ComponentPageCardVue :context="context" v-for="item in 10" :key="item"></ComponentPageCardVue>
+                            </div>
                         </el-collapse-item>
                     </el-collapse>
                 </div>
@@ -52,26 +61,39 @@ const activeNames = ref(['1'])
 
     .el-scrollbar {
         padding-right: 10px;
+
         .demo-collapse {
             box-sizing: border-box;
+
+            .card {
+                display: flex;
+                align-items: center;
+                flex-wrap: wrap;
+                width: 100%;
+                box-sizing: border-box;
+            }
         }
+
         .el-collapse {
             --el-collapse-border-color: none;
+
             :deep(.el-collapse-item__content) {
                 padding-bottom: 10px;
             }
         }
 
     }
+
     :deep(.el-collapse-item__header) {
         height: 35px;
         font-size: 10px;
-        border-bottom-color:transparent;
+        border-bottom-color: transparent;
         border-radius: 4px;
+
         &:hover {
             background-color: var(--grey-light);
         }
+
         padding-left: 4px;
     }
-}
-</style>
+}</style>
