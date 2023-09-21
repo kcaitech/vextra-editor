@@ -112,6 +112,7 @@ onUnmounted(() => {
 </script>
 <template>
     <section>
+        <!-- <el-scrollbar></el-scrollbar> -->
         <div v-if="len === 0">
             <PageBackgorund :context="props.context" v-if="props.context.selection.selectedPage"
                 :page="props.context.selection.selectedPage"></PageBackgorund>
@@ -134,5 +135,6 @@ section {
     width: 100%;
     height: 100%;
     font-size: var(--font-default-fontsize);
+    box-sizing: border-box;
 }
 </style>
