@@ -28,7 +28,7 @@ function updater() {
     setPosition();
 }
 const setPosition = () => {
-    // const st = Date.now();
+    const st = Date.now();
     titles.length = 0;
     const components: Shape[] = props.data.childs;
     const len = components.length;
@@ -57,7 +57,7 @@ const setPosition = () => {
             }
         }
     }
-    // console.log('计算位置：(ms)', Date.now() - st, ' inner:', inner_compo);
+    console.log('计算位置：(ms)', Date.now() - st);
 
 }
 function pre_modify_anchor(shape: Shape) {
