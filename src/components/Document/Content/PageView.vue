@@ -52,7 +52,7 @@ const stopWatchPage = watch(() => props.data, (value, old) => {
     page_watcher();
     renderItems = props.data.childs;
 })
-const stop_watch_matrix = watch(() => props.matrix, page_watcher, { deep: true })
+const stop_watch_matrix = watch(() => props.matrix, page_watcher, { deep: true });
 function tool_watcher(t?: number) {
     if (t === Tool.TITILE_VISIBLE) show_t.value = props.context.tool.isShowTitle;
 }
