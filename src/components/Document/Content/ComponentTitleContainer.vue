@@ -4,6 +4,7 @@ import { Context } from "@/context";
 import { Matrix, Page, Shape, ShapeType } from "@kcdesign/data";
 import { ClientXY, Selection } from "@/context/selection";
 import ComponentTitle from "./ComponentTitle.vue"
+import { is_shape_out } from "@/utils/content";
 const props = defineProps<{
     context: Context
     data: Page,
@@ -27,6 +28,7 @@ function updater() {
     setPosition();
 }
 const setPosition = () => {
+    // const st = Date.now();
     titles.length = 0;
     const components: Shape[] = props.data.childs;
     const len = components.length;
@@ -34,6 +36,8 @@ const setPosition = () => {
         for (let i = 0; i < len; i++) {
             const compo = components[i];
             if (compo.type === ShapeType.Group && compo.isSymbolShape && compo.parent?.type === ShapeType.Page && compo.isVisible) {
+                const m2r = compo.matrix2Root();
+                if (is_shape_out(props.context, compo, m2r)) continue;
                 const frame = compo.frame;
                 const matrix = props.context.workspace.matrix;
                 let anchor = modify_anchor(compo);
@@ -53,6 +57,8 @@ const setPosition = () => {
             }
         }
     }
+    // console.log('计算位置：(ms)', Date.now() - st, ' inner:', inner_compo);
+
 }
 function pre_modify_anchor(shape: Shape) {
     let rotate = shape.rotation || 0;

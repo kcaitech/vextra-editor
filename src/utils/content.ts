@@ -671,6 +671,17 @@ export function map_from_shapes(shapes: Shape[], init?: Map<string, Shape>) {
   }
   return map;
 }
+export function is_shape_out(context: Context, shape: Shape, matrix: Matrix) {
+  const { x, y, bottom, right } = context.workspace.root;
+  const { width, height } = shape.frame;
+  matrix.multiAtLeft(context.workspace.matrix);
+  let point: { x: number, y: number }[] = [{ x: 0, y: 0 }, { x: width, y: 0 }, { x: width, y: height }, { x: 0, y: height }];
+  for (let i = 0; i < 4; i++) point[i] = matrix.computeCoord3(point[i]);
+  return Math.min(point[0].x, point[1].x, point[2].x, point[3].x) > right - x ||
+    Math.max(point[0].x, point[1].x, point[2].x, point[3].x) < 0 ||
+    Math.max(point[0].y, point[1].y, point[2].y, point[3].y) < 0 ||
+    Math.min(point[0].y, point[1].y, point[2].y, point[3].y) > bottom - y;
+}
 export {
   Root, updateRoot, _updateRoot,
   getName, get_image_name, get_selected_types, init_insert_table,
