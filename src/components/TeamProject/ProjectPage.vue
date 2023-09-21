@@ -113,6 +113,7 @@ import TeamProjectMenu from './TeamProjectMenu.vue';
 import { ElMessage } from 'element-plus';
 import ProjectDialog from './ProjectDialog.vue';
 import Tooltip from '../common/Tooltip.vue'
+import { debounce } from 'lodash'
 
 const { t } = useI18n()
 const itemid = ref(0)
@@ -316,20 +317,23 @@ const setProjectIsFavorite = async (id: string, state: boolean) => {
     }
 }
 
-watch(is_favor, () => {
-    const timer = setTimeout(() => {
-        currentProject.value = projectList.value.filter((item) => item.project.id === route.params.id);
-        clearTimeout(timer)
-    }, 300)
+watch(is_favor, (v) => {
+    currentProject.value = projectList.value.filter((item) => item.project.id === route.params.id);
 })
 
-const cancelFixed = () => {
+const _cancelFixed = () => {
     const project = currentProject.value[0];
     project.is_favor = !project.is_favor;
+    if(project.is_favor) {
+        favoriteList.value.push(project)
+    }else {
+        const index = favoriteList.value.findIndex(item => item.project.id === project.project.id)
+        favoriteList.value.splice(index, 1)
+    }
     setProjectIsFavorite(project.project.id, project.is_favor);
     updateFavor(!is_favor.value);
 }
-
+const cancelFixed = debounce(_cancelFixed, 200);
 const GetprojectLists = async () => {
     try {
         const { data } = await user_api.GetprojectLists()
@@ -500,8 +504,11 @@ watch(() => currentProject.value, (n) => {
 }, { deep: true });
 
 
-watchEffect(() => {
-    route.params.id;
+// watchEffect(() => {
+//     route.params.id;
+//     currentProject.value = projectList.value.filter((item) => item.project.id === route.params.id);
+// })
+watch(() => route.params.id, () => {
     currentProject.value = projectList.value.filter((item) => item.project.id === route.params.id);
 })
 

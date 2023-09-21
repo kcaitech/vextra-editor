@@ -126,8 +126,8 @@ function mergeArrays(parentArray: any[], childArray: any[]) {
     });
     return mergedArray;
 }
-
 // 使用合并函数将两个数组合并成一个数组
+
 const favoriteProjectList = (arr1: any[], arr2: any[]) => {
     const projectList = arr1.map(item => {
         item.is_favor = arr2.some(value => value.project.id === item.project.id)
@@ -249,10 +249,8 @@ watch(() => favoriteList.value.length, (n, v) => {
 })
 
 watch(is_favor, () => {
-    const timer = setTimeout(() => {
-        getProjectFavoriteLists();
-        clearTimeout(timer)
-    }, 200)
+    teamList.value = mergeArrays(teamDataList.value, favoriteList.value);
+    projectShareList.value = favoriteList.value.filter((item: any) => !item.is_in_team);
 })
 
 const showShare = computed(() => {
@@ -460,7 +458,7 @@ const isProjectActive = (id: string) => {
 const setProjectIsFavorite = async (id: string, state: boolean) => {
     try {
         await team_api.setProjectIsFavoriteAPI({ project_id: id, is_favor: state });
-        getProjectFavoriteLists()
+        getProjectFavoriteLists();
     } catch (err) {
         console.log(err);
     }
@@ -468,20 +466,24 @@ const setProjectIsFavorite = async (id: string, state: boolean) => {
 
 const cancelFixed = (index: number, i: number, id: string) => {
     teamList.value[index].children.splice(i, 1);
+    const p_index = projectList.value.findIndex(item => item.project.id === id);
+    projectList.value[p_index].is_favor = false;
     setProjectIsFavorite(id, false);
-    updateFavor(!is_favor.value);
 }
 const menucancelFixed = (data: any) => {
     const f_index = favoriteList.value.findIndex(item => item.project.id === data.project.id);
     favoriteList.value.splice(f_index, 1);
+    const p_index = projectList.value.findIndex(item => item.project.id === data.project.id);
+    projectList.value[p_index].is_favor = false;
     setProjectIsFavorite(data.project.id, false);
-    updateFavor(!is_favor.value);
 }
 
 const shareFixed = (i: number, id: string) => {
     projectShareList.value.splice(i, 1);
     setProjectIsFavorite(id, false);
-    updateFavor(!is_favor.value);
+    const p_index = projectList.value.findIndex(item => item.project.id === id);
+    projectList.value[p_index].is_favor = false;
+    // updateFavor(!is_favor.value);
 }
 
 const showicon = (data: any) => {
@@ -680,7 +682,7 @@ onUnmounted(() => {
                                             <div class="project_name">{{ item.project.name }}</div>
                                             <div class="right">
                                                 <Tooltip :content="'取消固定'" :offset="10">
-                                                    <div @click="shareFixed(i, item.project.id)">
+                                                    <div @click.stop="shareFixed(i, item.project.id)">
                                                         <svg t="1693476333821" class="icon" viewBox="0 0 1024 1024"
                                                             version="1.1" xmlns="http://www.w3.org/2000/svg" p-id="15755"
                                                             width="20" height="20">
@@ -742,7 +744,7 @@ onUnmounted(() => {
                                             <div class="project_name">{{ item.project.name }}</div>
                                             <div class="right">
                                                 <Tooltip :content="t('Createteam.cancelFixed')" :offset="10">
-                                                    <div @click="cancelFixed(index, i, item.project.id)">
+                                                    <div @click.stop="cancelFixed(index, i, item.project.id)">
                                                         <svg t="1693476333821" class="icon" viewBox="0 0 1024 1024"
                                                             version="1.1" xmlns="http://www.w3.org/2000/svg" p-id="15755"
                                                             width="20" height="20">
