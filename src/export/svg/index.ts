@@ -1,8 +1,7 @@
-import { GroupShape, ImageShape, PathShape, Shape, FlattenShape, SymbolRefShape, TextShape } from "@kcdesign/data";
+import { GroupShape, ImageShape, PathShape, Shape, SymbolRefShape, TextShape } from "@kcdesign/data";
 import { Artboard } from "@kcdesign/data";
 import { renderArtboard as art } from "@kcdesign/data";
 import { renderGroup as group } from "@kcdesign/data";
-import { renderBoolOpShape as shapegroup } from "@kcdesign/data";
 import { renderImage as image } from "@kcdesign/data";
 import { renderPathShape as path } from "@kcdesign/data";
 import { renderRecShape as rect } from "@kcdesign/data";
@@ -10,9 +9,10 @@ import { renderTextShape as text } from "@kcdesign/data";
 import { renderSymbolRef as symref } from "@kcdesign/data";
 import { ShapeType, BoolOp } from "@kcdesign/data";
 
-const comsMap: Map<ShapeType, any> = new Map();
+type ComType = (data: Shape) => string;
+const comsMap: Map<ShapeType, ComType> = new Map();
 
-function h(com: Function, attrs?: any): string;
+function h(com: ComType, attrs?: any): string;
 function h(tag: string, attrs?: any, childs?: Array<string>): string;
 function h(...args: any[]): string {
     if (typeof args[0] === 'function') {
@@ -21,7 +21,7 @@ function h(...args: any[]): string {
         }
         const com = args[0];
         const attrs = args[1];
-        return com(attrs.data, attrs.boolop, attrs.path); // todo
+        return com(attrs.data); // todo
     }
     else if (typeof args[0] === 'string') {
         const tag = args[0];
@@ -49,13 +49,11 @@ comsMap.set(ShapeType.Artboard, (data: Shape) => {
 comsMap.set(ShapeType.Group, (data: Shape) => {
     return group(h, data as GroupShape, comsMap);
 });
-comsMap.set(ShapeType.FlattenShape, (data: Shape) => {
-    return shapegroup(h, data as FlattenShape);
-});
+// comsMap.set(ShapeType.FlattenShape, (data: Shape, overrides?: SymbolRefShape[]) => {
+//     return shapegroup(h, data as FlattenShape);
+// });
 comsMap.set(ShapeType.Image, (data: Shape) => {
-    const s = data as ImageShape;
-    const url = s.peekImage() || "";
-    return image(h, s, url);
+    return image(h, data as ImageShape, "");
 });
 comsMap.set(ShapeType.Page, (data: Shape) => {
     return group(h, data as GroupShape, comsMap);
@@ -72,9 +70,9 @@ comsMap.set(ShapeType.Text, (data: Shape) => {
 // comsMap.set(ShapeType.Boolean, (data: Shape, path: string) => { // todo
 //     return bool(h, data, path);
 // });
-comsMap.set(ShapeType.Symbol, (data: Shape) => {
-    return group(h, data as GroupShape, comsMap);
-});
+// comsMap.set(ShapeType.Symbol, (data: Shape, overrides?: SymbolRefShape[]) => {
+//     return group(h, data as GroupShape, comsMap, overrides);
+// });
 comsMap.set(ShapeType.SymbolRef, (data: Shape) => {
     return symref(h, data as SymbolRefShape, comsMap);
 });
@@ -82,5 +80,6 @@ comsMap.set(ShapeType.SymbolRef, (data: Shape) => {
 export function exportSvg(shape: Shape): string {
     // todo svg head
     const com = comsMap.get(shape.type);
+    if (!com) throw new Error("export svg, unknow shape type : " + shape.type)
     return h(com, { data: shape, boolop: BoolOp.None });
 }

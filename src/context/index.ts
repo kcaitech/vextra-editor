@@ -1,4 +1,4 @@
-import { CoopRepository, TaskMgr, Task, Watchable, TaskPriority, TableShape, TableEditor, Text } from "@kcdesign/data";
+import { CoopRepository, TaskMgr, Task, Watchable, TaskPriority, TableShape, TableEditor, Text, GroupShape } from "@kcdesign/data";
 import { Document } from "@kcdesign/data";
 import { Page } from "@kcdesign/data";
 import { Shape, TextShape } from "@kcdesign/data";
@@ -85,7 +85,8 @@ export class Context extends Watchable(Object) {
         this.m_tableselection = new TableSelection(this); // 表格选区
         this.m_textselection = new TextSelection(this.m_selection); // 文字选区
         const pagelist = data.pagesList.slice(0);
-        this.m_taskMgr.add(new class implements Task { // page auto loader
+        const checkSymLoaded: (() => boolean)[] = [];
+        const pageloadTask = new class implements Task { // page auto loader
             isValid(): boolean {
                 return !this.isDone();
             }
@@ -107,11 +108,33 @@ export class Context extends Watchable(Object) {
                 if (id) {
                     await data.pagesMgr.get(id);
                     pagelist.splice(0, 1);
+                    for (let i = 0; i < checkSymLoaded.length;) {
+                        if (checkSymLoaded[i]()) {
+                            checkSymLoaded.splice(i, 1);
+                        }
+                        else {
+                            ++i;
+                        }
+                    }
                 }
             }
-        }, TaskPriority.normal);
+        }
 
+        this.m_taskMgr.add(pageloadTask, TaskPriority.normal);
         this.m_taskMgr.startLoop();
+
+        // symbol loader
+        data.symbolsMgr.setLoader(async (id: string): Promise<GroupShape> => {
+            return new Promise((resolve, reject) => {
+                checkSymLoaded.push(() => {
+                    const sym = data.symbolsMgr.getSync(id);
+                    if (sym) resolve(sym);
+                    else if (pageloadTask.isDone()) reject();
+                    else return false;
+                    return true;
+                })
+            })
+        })
     }
 
     get editor(): Editor {

@@ -59,7 +59,7 @@ function updateProgress(x: number) {
       :title="t('attr.corner_smoothing')" class="popover">
       <template #trigger>
         <div class="trigger">
-          <svg-icon icon-class="gear" @click="showMenu"></svg-icon>
+          <svg-icon icon-class="gear"></svg-icon>
         </div>
       </template>
       <template #body>
