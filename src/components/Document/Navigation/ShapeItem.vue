@@ -176,7 +176,7 @@ function is_component() {
     while (s) {
         if (s.type === ShapeType.Page) return false;
         if (s.type === ShapeType.SymbolRef) return true;
-        if (s.type === ShapeType.Group && s.isSymbolShape) return true;
+        if (s.type === ShapeType.Symbol) return true;
         s = s.parent;
     }
 }
@@ -202,7 +202,7 @@ const hangdlePerm = () => {
 }
 function icon_class() {
     const shape = props.data.shape();
-    if (shape.type === ShapeType.Group && shape.isSymbolShape) {
+    if (shape.type === ShapeType.Symbol) {
         return 'pattern-component';
     } else {
         return `pattern-${shape.type}`;

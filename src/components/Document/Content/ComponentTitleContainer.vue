@@ -33,7 +33,7 @@ const setPosition = () => {
     if (len) {
         for (let i = 0; i < len; i++) {
             const compo = components[i];
-            if (compo.type === ShapeType.Group && compo.isSymbolShape && compo.parent?.type === ShapeType.Page && compo.isVisible) {
+            if (compo.type === ShapeType.Symbol && compo.parent?.type === ShapeType.Page && compo.isVisible) {
                 const frame = compo.frame;
                 const matrix = props.context.workspace.matrix;
                 let anchor = modify_anchor(compo);
