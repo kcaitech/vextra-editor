@@ -681,11 +681,17 @@ export function is_shape_out(context: Context, shape: Shape, matrix: Matrix) {
     Math.max(point[0].y, point[1].y, point[2].y, point[3].y) < 0 ||
     Math.min(point[0].y, point[1].y, point[2].y, point[3].y) > bottom - y;
 }
-export function is_need_skip_to_render(shape: Shape, matrix: Matrix) {
+export function is_need_skip_to_render(shape: Shape, matrix: Matrix) { // 不是准确的方法，但是综合效果最好
   const f = shape.frame;
   const lt = matrix.computeCoord2(0, 0);
-  const rb = matrix.computeCoord2(f.width, f.height);
-  return Math.hypot(rb.x - lt.x, rb.y - lt.y) < 72;
+  const rt = matrix.computeCoord2(f.width, f.height);
+  return Math.hypot(rt.x - lt.x, rt.y - lt.y) < 72;
+}
+export function top_side(shape: Shape, matrix: Matrix) {
+  const f = shape.frame;
+  const lt = matrix.computeCoord2(0, 0);
+  const rt = matrix.computeCoord2(f.width, f.height);
+  return Math.hypot(rt.x - lt.x, rt.y - lt.y)
 }
 export {
   Root, updateRoot, _updateRoot,

@@ -4,7 +4,7 @@ import { Context } from "@/context";
 import { Matrix, Page, Shape, ShapeType } from "@kcdesign/data";
 import { ClientXY, Selection } from "@/context/selection";
 import ComponentTitle from "./ComponentTitle.vue"
-import { is_shape_out, is_need_skip_to_render } from "@/utils/content";
+import { is_shape_out, is_need_skip_to_render, top_side } from "@/utils/content";
 const props = defineProps<{
     context: Context
     data: Page,
@@ -15,7 +15,6 @@ interface Title {
     content: string
     x: number
     y: number
-    width: number
     shape: Shape
     rotate: number
     maxWidth: number
@@ -41,19 +40,18 @@ const setPosition = () => {
                 const matrix_compo = new Matrix(matrix_compo_root);
                 matrix_compo.multiAtLeft(matrix_page_client);
                 if (is_shape_out(props.context, compo, matrix_compo)) continue;
-                if (is_need_skip_to_render(compo, matrix_compo)) continue;
-                const frame = compo.frame;
+                const top_side_l = top_side(compo, matrix_compo);
+                if (top_side_l < 72) continue;
                 let anchor = modify_anchor(compo, matrix_compo_root);
                 anchor = matrix_page_client.computeCoord3(anchor);
                 anchor.y = anchor.y - origin.y - 16;
                 anchor.x -= origin.x;
-                const width = frame.width;
-                const maxWidth = frame.width;
+                const maxWidth = top_side_l;
                 titles.push({
                     id: compo.id,
                     content: compo.name,
                     x: anchor.x, y: anchor.y,
-                    width, maxWidth,
+                    maxWidth,
                     shape: compo,
                     rotate: modify_rotate(compo)
                 });
@@ -61,7 +59,6 @@ const setPosition = () => {
         }
     }
     console.log('计算位置：(ms)', Date.now() - st);
-
 }
 function pre_modify_anchor(shape: Shape) {
     let rotate = shape.rotation || 0;
