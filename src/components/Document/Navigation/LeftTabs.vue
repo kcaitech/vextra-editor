@@ -7,6 +7,7 @@ import CommentTab from "./Comment/CommentTab.vue";
 import { useI18n } from 'vue-i18n';
 import { Page } from "@kcdesign/data";
 import { Comment } from "@/context/comment";
+import { Action, Tool } from "@/context/tool";
 const { t } = useI18n();
 
 const props = defineProps<{ context: Context, page: Page, leftTriggleVisible: boolean, showLeft: boolean }>();
@@ -36,11 +37,20 @@ function toggle(id: Tab) {
 const showHiddenLeft = () => {
     emit('showNavigation')
 }
+const tool_watch = (t: number) => {
+    if(t === Tool.CHANGE_ACTION) {
+        if(props.context.tool.action === Action.AddComponent) {
+            currentTab.value = 'Comps';
+        }
+    }
+}
 onMounted(() => {
     props.context.comment.watch(update);
+    props.context.tool.watch(tool_watch);
 });
 onUnmounted(() => {
     props.context.comment.unwatch(update);
+    props.context.tool.watch(tool_watch);
 })
 </script>
 

@@ -34,7 +34,7 @@ const setPosition = () => {
     if (len) {
         for (let i = 0; i < len; i++) {
             const compo = components[i];
-            if (compo.type === ShapeType.Group && compo.isSymbolShape && compo.isVisible) {
+            if (compo.type === ShapeType.Symbol && compo.isVisible) {
                 const matrix_compo_root = compo.matrix2Root();
                 const matrix_page_client = props.context.workspace.matrix;
                 const matrix_compo = new Matrix(matrix_compo_root);
