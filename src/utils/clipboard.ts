@@ -1,7 +1,7 @@
 import {
     export_shape, import_shape,
     Shape, ShapeType, AsyncCreator, ShapeFrame, GroupShape, TextShape, Text,
-    export_text, import_text, TextShapeEditor
+    export_text, import_text, TextShapeEditor, symbol2ref, SymbolShape
 } from '@kcdesign/data';
 import { Context } from '@/context';
 import { PageXY } from '@/context/selection';
@@ -316,10 +316,13 @@ async function clipboard_text_html(context: Context, data: any, xy?: PageXY) {
             // else if (is_box_outer_view2(source, context)) { // 图形将脱离视野，需要重新寻找新的定位
             //     modify_frame_by_xy(context.workspace.center_on_page, source);
             // }
+            const page = context.selection.selectedPage;
+            if (page) {
+                modify_frame_by_parent(page, source);
+            }
+            await _symbol2ref(context, source);
             const shapes = import_shape(context.data, source);
             if (!shapes.length) throw new Error('invalid source');
-
-            const page = context.selection.selectedPage;
             if (page) {
                 const editor = context.editor.editor4Page(page);
                 const r = editor.insertShapes1(page, shapes);
@@ -334,7 +337,7 @@ async function clipboard_text_html(context: Context, data: any, xy?: PageXY) {
     }
 }
 function modify_frame_by_xy(xy: PageXY, shapes: Shape[]) {
-    const lt_shape_xy = { x: shapes[0].frame.x, y: shapes[0].frame.y };
+    const lt_shape_xy = { x: Infinity, y: Infinity };
     for (let i = 0, len = shapes.length; i < len; i++) { // 寻找图形群体的起点
         const frame = shapes[i].frame;
         if (frame.x < lt_shape_xy.x) lt_shape_xy.x = frame.x;
@@ -343,6 +346,21 @@ function modify_frame_by_xy(xy: PageXY, shapes: Shape[]) {
     for (let i = 0, len = shapes.length; i < len; i++) {
         let shape = shapes[i];
         shape.frame.x += xy.x - lt_shape_xy.x, shape.frame.y += xy.y - lt_shape_xy.y;
+    }
+}
+function modify_frame_by_parent(parent: GroupShape, shapes: Shape[]) {
+    const pp = parent.matrix2Root().computeCoord2(0, 0);
+    for (let i = 0, len = shapes.length; i < len; i++) {
+        const shape = shapes[i];
+        shape.frame.x -= pp.x;
+        shape.frame.y -= pp.y;
+    }
+}
+async function _symbol2ref(context: Context, source: Shape[]) {
+    for (let i = 0, len = source.length; i < len; i++) {
+        const symbol = source[i];
+        if (symbol.type !== ShapeType.Symbol) continue;
+        source[i] = await symbol2ref(context.data, symbol as SymbolShape)
     }
 }
 /**
