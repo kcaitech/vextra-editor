@@ -4,6 +4,7 @@ import { Context } from '@/context';
 import SelectLayer from "./SelectLayer.vue";
 import { ArrowDown } from '@element-plus/icons-vue'
 import { add } from 'lodash';
+import { ShapeType, SymbolShape } from '@kcdesign/data';
 const props = defineProps<{
     title?: string,
     top?: string,
@@ -37,7 +38,7 @@ const options = [
 ]
 const defaultValue = ref(options[0].value);
 const textDefaultValue = ref('');
-
+const selectList = ref<any[]>([])
 function esc(e: KeyboardEvent) {
     if (e.code === 'Escape') popoverClose();
     else e.stopPropagation();
@@ -45,27 +46,40 @@ function esc(e: KeyboardEvent) {
 
 const showSelectLayer = (e: MouseEvent) => {
     e.stopPropagation();
-    if(isselectLayer.value && e.target instanceof Element && e.target.closest('.input')) return isselectLayer.value = false;
+    if (isselectLayer.value && e.target instanceof Element && e.target.closest('.input')) return isselectLayer.value = false;
+    const shapes = props.context.selection.selectedShapes;
+    if (shapes.length === 1) {
+        const symbol = shapes[0] as SymbolShape
+        console.log(symbol, 'symbol');
+        if (props.addType === 'Show') {
+            selectList.value = symbol.childs;
+        } else if (props.addType === 'Text' || props.addType === '') {
+            selectList.value = symbol.childs.filter(item => item.type === ShapeType.Text)
+        } else if (props.addType === 'toggle') {
+            selectList.value = symbol.childs;
+        }
+        
+    }
     isselectLayer.value = true;
 }
 const save = () => {
     let data
-    if(props.addType ==='Show') {
+    if (props.addType === 'Show') {
         data = {
-             name: attrName.value,
-             visi: defaultValue.value
-         }
-    }else if(props.addType ==='Text') {
+            name: attrName.value,
+            visi: defaultValue.value
+        }
+    } else if (props.addType === 'Text') {
         data = {
-             name: attrName.value,
-             text: textDefaultValue.value
-         }
-    }else if (props.addType === 'toggle') {
+            name: attrName.value,
+            text: textDefaultValue.value
+        }
+    } else if (props.addType === 'toggle') {
         data = {
-             name: attrName.value,
-         } 
+            name: attrName.value,
+        }
     }
-    emit('saveLayerShow',data, props.addType)
+    emit('saveLayerShow', data, props.addType)
 }
 const comps = ref<HTMLDivElement>()
 const cur_top = ref(0)
@@ -98,15 +112,18 @@ onUnmounted(() => {
         </div>
         <div class="body">
             <div>
-                <span>{{addType === 'toggle' ? '组件实例' : '选择图层'}}</span>
+                <span>{{ addType === 'toggle' ? '组件实例' : '选择图层' }}</span>
                 <div class="select-layer" @mouseup="showSelectLayer" @click.stop>
                     <div class="input">
                         <span v-if="selectLayer"></span>
                         <span v-else style="opacity: 0.5">{{ addType === 'toggle' ? '请选择组件实例' : '请选择图层' }}</span>
-                        <el-icon><ArrowDown /></el-icon>
+                        <el-icon>
+                            <ArrowDown />
+                        </el-icon>
                     </div>
                     <!-- <el-input class="input" v-model="selectLayer" :placeholder="addType === 'toggle' ? '请选择组件实例' : '请选择图层'" disabled :suffix-icon="ArrowDown"/> -->
-                    <SelectLayer v-if="isselectLayer" @close="isselectLayer = false" :type="props.addType" :context="context"></SelectLayer>
+                    <SelectLayer v-if="isselectLayer" @close="isselectLayer = false" :type="props.addType"
+                        :context="context" :selectList="selectList"></SelectLayer>
                 </div>
             </div>
             <div>
@@ -114,7 +131,7 @@ onUnmounted(() => {
                 <div><el-input v-model="attrName" placeholder="请输入属性名称" /></div>
             </div>
             <p class="warn" v-if="false">名称重复，请重新输入</p>
-            <div v-if="props.addType !== 'toggle' && props.addType ">
+            <div v-if="props.addType !== 'toggle' && props.addType">
                 <span>默认值</span>
                 <div v-if="props.addType === 'Show'">
                     <el-select v-model="defaultValue" class="m-2" placeholder="Select">
@@ -128,7 +145,7 @@ onUnmounted(() => {
             <el-button style="background-color: #9775fa;" @click="save">确认</el-button>
         </div>
     </div>
-    <div class="overlay" @click.stop="isselectLayer= false" @mousedown.stop @wheel.stop></div>
+    <div class="overlay" @click.stop="isselectLayer = false" @mousedown.stop @wheel.stop></div>
 </template>
 
 <style scoped lang="scss">
@@ -181,6 +198,7 @@ onUnmounted(() => {
         .select-layer {
             position: relative;
             z-index: 1;
+
             .input {
                 width: 100%;
                 height: 30px;
@@ -190,9 +208,11 @@ onUnmounted(() => {
                 box-sizing: border-box;
                 display: flex;
                 align-items: center;
+
                 span {
                     flex: 1;
                 }
+
                 .el-icon {
                     width: 30px;
                     height: 30px;
@@ -202,6 +222,7 @@ onUnmounted(() => {
                 }
             }
         }
+
         .warn {
             padding: 0;
             color: red;
@@ -299,5 +320,4 @@ onUnmounted(() => {
     height: 100%;
     z-index: 10003;
     background-color: rgba(0, 0, 0, 0.3);
-}
-</style>
+}</style>

@@ -1,11 +1,15 @@
 <script setup lang="ts">
 import { Context } from '@/context';
-import { ref } from 'vue';
+import { ShapeType } from '@kcdesign/data';
+import { ref, watch } from 'vue';
 
 const props = defineProps<{
     context: Context
     samll?: string
     contents: any[]
+}>();
+const emit = defineEmits<{
+    (e: 'handleCheck', list: any[]): void;
 }>();
 const checkList = ref([])
 const thumbnail_bgc = ref<any>('rgba(1, 239, 239, 239)');
@@ -23,16 +27,27 @@ function getThumbnailBgc() {
         thumbnail_bgc.value = `rgba(${r}, ${g}, ${b}, ${a})`
     }
 }
+watch(checkList, (v) => {
+    emit('handleCheck', v)
+})
 getThumbnailBgc()
+function icon_class(type: ShapeType) {
+    if (type === ShapeType.Symbol) {
+        return 'pattern-component';
+    } else {
+        return `pattern-${type}`;
+    }
+}
 </script>
 <template>
     <div class="container" v-for="(item, index) in contents" :key="index">
         <el-checkbox-group v-model="checkList">
-            <el-checkbox :label="index">
+            <el-checkbox :label="item.id">
                 <div class="component" :style="{ height: samll === 'samll' ? '30px' : '50px' }">
                     <div class="thumbnail"
                         :style="{ 'background-color': thumbnail_bgc ? thumbnail_bgc : 'rgba(1, 239, 239, 239)', width: samll === 'samll' ? '30px' : '50px' }">
                     </div>
+                    <svg-icon class="svg" :icon-class="icon_class(item.type)"></svg-icon>
                     <span class="name">{{ item.name }}</span>
                 </div>
             </el-checkbox>
@@ -87,6 +102,12 @@ getThumbnailBgc()
         }
     }
 
+    .svg {
+        width: 10px;
+        height: 10px;
+        margin-right: 5px;
+    }
+
     .thumbnail {
         border-radius: 4px;
         height: 100%;
@@ -94,6 +115,7 @@ getThumbnailBgc()
     }
 
     .name {
+        font-size: var(--font-default-fontsize);
         overflow: hidden;
         text-overflow: ellipsis;
         white-space: nowrap;
