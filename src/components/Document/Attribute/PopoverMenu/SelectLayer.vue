@@ -2,8 +2,8 @@
 import { ref, nextTick, onMounted, onUnmounted } from 'vue';
 import { CaretBottom } from '@element-plus/icons-vue'
 import { Context } from '@/context';
-import ComponentPageCard from '../../Navigation/Component/ComponentPageCard.vue';
 import ComponentPageList from '../../Navigation/Component/ComponentPageList.vue';
+import CompoSelectList from './CompoSelectList.vue';
 interface Tree {
     id: number
     label: string
@@ -28,19 +28,25 @@ function handleClickOutside(event: MouseEvent) {
 }
 const top = ref(33);
 const popover = ref<HTMLDivElement>();
+const contents = [
+    { name: '矩形1' },
+    { name: '矩形2' },
+    { name: '矩形3' },
+    { name: '矩形4' }
+]
 onMounted(() => {
-    if(popover.value) {
+    if (popover.value) {
         const body_h = document.body.clientHeight;
         const popover_y = popover.value.getBoundingClientRect().y;
         const popover_h = popover.value.clientHeight + 5;
         const surplus = body_h - popover_y;
         const height = surplus - popover_h;
-        if(height > 0) {
+        if (height > 0) {
             top.value = 33;
-        }else {
-            if(popover_y > popover_h) {
+        } else {
+            if (popover_y > popover_h) {
                 top.value = -popover_h
-            }else {
+            } else {
                 const s = popover_h - popover_y;
                 top.value = -(popover_y - s) - 20
             }
@@ -54,7 +60,7 @@ onUnmounted(() => {
 </script>
 
 <template>
-    <div class="select_layerbox" ref="popover" :style="{top: top + 'px'}">
+    <div class="select_layerbox" ref="popover" :style="{ top: top + 'px' }">
         <div class="heard">
             <span class="title">{{ props.type === 'toggle' ? '组件实例' : '选择图层' }}</span>
             <div class="close">
@@ -68,16 +74,8 @@ onUnmounted(() => {
             <div style="height: 100%;" v-if="props.type === 'toggle'">
                 <el-scrollbar>
                     <div class="demo-collapse">
-                        <div class="list">
-                            <el-checkbox-group v-model="checkList">
-                                <template v-for="item in 10" :key="item">
-                                    <el-checkbox :label="item">
-                                        <ComponentPageList :context="context" samll="samll">
-                                        </ComponentPageList>
-                                    </el-checkbox>
-                                </template>
-                            </el-checkbox-group>
-                        </div>
+                        <CompoSelectList :context="context" :contents="contents" samll="samll">
+                        </CompoSelectList>
                     </div>
                 </el-scrollbar>
                 <div class="button"><el-button>确认</el-button></div>
@@ -85,16 +83,8 @@ onUnmounted(() => {
             <div style="height: 100%;" v-else>
                 <el-scrollbar>
                     <div class="demo-collapse">
-                        <div class="list">
-                            <el-checkbox-group v-model="checkList">
-                                <template v-for="item in 10" :key="item">
-                                    <el-checkbox :label="item">
-                                        <ComponentPageList :context="context" samll="samll">
-                                        </ComponentPageList>
-                                    </el-checkbox>
-                                </template>
-                            </el-checkbox-group>
-                        </div>
+                        <CompoSelectList :context="context" :contents="contents" samll="samll">
+                        </CompoSelectList>
                     </div>
                 </el-scrollbar>
                 <div class="button"><el-button>确认</el-button></div>
@@ -130,6 +120,7 @@ onUnmounted(() => {
         align-items: center;
         justify-content: space-between;
         padding-right: 5px;
+
         .title {
             line-height: 32px;
             font-weight: var(--font-default-bold);
@@ -173,40 +164,19 @@ onUnmounted(() => {
                 --el-collapse-border-color: none;
             }
         }
+
         .button {
             height: 40px;
             width: 100%;
             display: flex;
             align-items: center;
             justify-content: center;
+
             .el-button {
                 height: 30px;
                 box-sizing: border-box;
-                background-color:var(--active-color);
+                background-color: var(--active-color);
                 border-color: var(--active-color);
-            }
-        }
-        .list {
-            .el-checkbox {
-                width: 100%;
-                display: flex;
-                margin: 5px 0;
-                :deep(.el-checkbox__label) {
-                    height: 100%;
-                    flex: 1;
-                }
-                :deep(.el-checkbox__input) {
-                    height: 100%;
-                    display: flex;
-                    align-items: center;
-                }
-                :deep(.el-checkbox__input.is-checked .el-checkbox__inner) {
-                    border-color: var(--active-color);
-                    background-color: var(--active-color);
-                }
-                :deep(.el-checkbox__input.is-checked+.el-checkbox__label) {
-                    color: var(--active-color);
-                }
             }
         }
 

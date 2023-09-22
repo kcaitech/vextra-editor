@@ -6,7 +6,7 @@ import ContextMenu from '../common/ContextMenu.vue';
 import PageViewContextMenuItems from '@/components/Document/Menu/PageViewContextMenuItems.vue';
 import Selector, { SelectorFrame } from './Selection/Selector.vue';
 import CommentView from './Content/CommentView.vue';
-import { Matrix, Shape, Page, Color } from '@kcdesign/data';
+import { Matrix, Shape, Page, Color, ShapeType } from '@kcdesign/data';
 import { Context } from '@/context';
 import { PageXY, ClientXY, ClientXYRaw } from '@/context/selection';
 import { KeyboardKeys, WorkSpace } from '@/context/workspace';
@@ -259,6 +259,9 @@ function contextMenuMount(e: MouseEvent) {
     if (shapes.length > 1 && (area !== 'text-selection' && area !== 'table_cell')) {
         shapesContainsMousedownOnPageXY = shapes;
         contextMenuItems.push('layers');
+    }
+    if(selection.selectedShapes[0].type === ShapeType.SymbolRef) {
+        contextMenuItems.push('instance');
     }
     if (area === 'table_cell') {
         const table = props.context.tableSelection;

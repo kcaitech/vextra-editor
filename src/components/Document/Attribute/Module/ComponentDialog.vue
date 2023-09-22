@@ -3,18 +3,47 @@ import { ref, nextTick, onMounted, onUnmounted } from 'vue';
 import { Context } from '@/context';
 import { ArrowDown } from '@element-plus/icons-vue';
 import ComponentList from "@/components/common/ComponentList.vue";
-import ComponentPageCard from '../../Navigation/Component/ComponentPageCard.vue';
-import ComponentPageList from '../../Navigation/Component/ComponentPageList.vue';
+import ComponentCollapse from '../../Navigation/Component/ComponentCollapse.vue';
 const props = defineProps<{
     top?: string,
     right?: string,
     context: Context;
 }>();
+const contents = [
+    { name: '矩形1' },
+    { name: '矩形2' },
+    { name: '矩形3' },
+    { name: '矩形4' }
+]
 const emit = defineEmits<{
     (e: 'closeDialog'): void;
     (e: 'saveLayerShow', data: any, type: 'Text' | 'Show' | 'toggle' | ''): void;
 }>()
-const activeNames = ref(['1'])
+const list = [{
+    name: ['页面1'],
+    contents: [
+        { name: '矩形1' },
+        { name: '矩形2' },
+        { name: '矩形3' },
+        { name: '矩形4' }
+    ],
+    children: []
+}, {
+    name: ['页面2'],
+    contents: [],
+    children: [
+        {
+            name: ['容器'],
+            contents: [
+                { name: '矩形1' },
+                { name: '矩形2' },
+                { name: '矩形3' },
+                { name: '矩形4' }
+            ],
+            children: []
+        },
+    ]
+}]
 function popoverClose() {
     emit('closeDialog');
 }
@@ -48,24 +77,10 @@ onUnmounted(() => {
         <ComponentList v-slot="type" :heard="true" @close="popoverClose">
             <el-scrollbar>
                 <div class="demo-collapse">
-                    <el-collapse v-model="activeNames">
-                        <el-collapse-item title="页面1" name="1">
-                            <div class="list" v-if="type.type === 'list'">
-                                <ComponentPageList :context="context" v-for="item in 10" :key="item"></ComponentPageList>
-                            </div>
-                            <div class="card" v-if="type.type === 'card'">
-                                <ComponentPageCard :context="context" v-for="item in 10" :key="item"></ComponentPageCard>
-                            </div>
-                        </el-collapse-item>
-                        <el-collapse-item title="页面2" name="2">
-                            <div class="list" v-if="type.type === 'list'">
-                                <ComponentPageList :context="context" v-for="item in 10" :key="item"></ComponentPageList>
-                            </div>
-                            <div class="card" v-if="type.type === 'card'">
-                                <ComponentPageCard :context="context" v-for="item in 10" :key="item"></ComponentPageCard>
-                            </div>
-                        </el-collapse-item>
-                    </el-collapse>
+                    <div class="demo-collapse" v-for="(item, index) in list" :key="index">
+                        <ComponentCollapse :context="context" :type="type.type" :item="item" :index="index">
+                        </ComponentCollapse>
+                    </div>
                 </div>
             </el-scrollbar>
         </ComponentList>
@@ -92,14 +107,6 @@ onUnmounted(() => {
 
         .demo-collapse {
             box-sizing: border-box;
-
-            .card {
-                display: flex;
-                align-items: center;
-                flex-wrap: wrap;
-                width: 100%;
-                box-sizing: border-box;
-            }
         }
 
         .el-collapse {

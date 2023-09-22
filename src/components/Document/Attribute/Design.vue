@@ -56,6 +56,8 @@ const getShapeType = () => {
     if (props.context.selection.selectedShapes.length === 1) {
         shapes.value = new Array(...props.context.selection.selectedShapes);
         shapeType.value = shapes.value[0].type;
+        console.log(shapes.value,'shapes.value ');
+        
     } else if (props.context.selection.selectedShapes.length > 1) {
         shapes.value = new Array(...props.context.selection.selectedShapes);
     } else {

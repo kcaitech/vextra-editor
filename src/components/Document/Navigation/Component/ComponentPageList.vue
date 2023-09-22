@@ -4,7 +4,7 @@ import { ref } from 'vue';
 
 const props = defineProps<{
     context: Context
-    samll?: string
+    contents:any[]
 }>();
 const thumbnail_bgc = ref<any>('rgba(1, 239, 239, 239)');
 function getThumbnailBgc() {
@@ -24,12 +24,12 @@ function getThumbnailBgc() {
 getThumbnailBgc()
 </script>
 <template>
-    <div class="container">
-        <div class="component" :style="{ height: samll === 'samll' ? '30px' : '50px' }">
+    <div class="container" v-for="(item,index) in contents" :key="index">
+        <div class="component" :style="{ height: '50px' }">
             <div class="thumbnail"
-                :style="{ 'background-color': thumbnail_bgc ? thumbnail_bgc : 'rgba(1, 239, 239, 239)', width: samll === 'samll' ? '30px' : '50px' }">
+                :style="{ 'background-color': thumbnail_bgc ? thumbnail_bgc : 'rgba(1, 239, 239, 239)', width: '50px' }">
             </div>
-            <span class="name">设置图标</span>
+            <span class="name">{{item.name}}</span>
         </div>
     </div>
 </template>

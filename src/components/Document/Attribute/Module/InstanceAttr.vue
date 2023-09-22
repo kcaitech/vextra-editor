@@ -243,7 +243,6 @@ const compsDialog = () => {
                     width: 100%;
                     height: 30px;
                     font-size: 10px;
-
                     >div {
                         height: 100%;
                     }

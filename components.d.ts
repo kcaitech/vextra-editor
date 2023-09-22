@@ -50,7 +50,9 @@ declare module '@vue/runtime-core' {
     CommentTab: typeof import('./src/components/Document/Navigation/Comment/CommentTab.vue')['default']
     CommentView: typeof import('./src/components/Document/Content/CommentView.vue')['default']
     CompLayerShow: typeof import('./src/components/Document/Attribute/PopoverMenu/CompLayerShow.vue')['default']
+    ComponentAll: typeof import('./src/components/Document/Navigation/Component/ComponentAll.vue')['default']
     ComponentAttr: typeof import('./src/components/Document/Attribute/Module/ComponentAttr.vue')['default']
+    ComponentCollapse: typeof import('./src/components/Document/Navigation/Component/ComponentCollapse.vue')['default']
     ComponentDialog: typeof import('./src/components/Document/Attribute/Module/ComponentDialog.vue')['default']
     ComponentList: typeof import('./src/components/common/ComponentList.vue')['default']
     ComponentPageCard: typeof import('./src/components/Document/Navigation/Component/ComponentPageCard.vue')['default']
@@ -58,6 +60,7 @@ declare module '@vue/runtime-core' {
     ComponentState: typeof import('./src/components/Document/Attribute/Module/ComponentState.vue')['default']
     ComponentTitle: typeof import('./src/components/Document/Content/ComponentTitle.vue')['default']
     ComponentTitleContainer: typeof import('./src/components/Document/Content/ComponentTitleContainer.vue')['default']
+    CompoSelectList: typeof import('./src/components/Document/Attribute/PopoverMenu/CompoSelectList.vue')['default']
     CompsTab: typeof import('./src/components/Document/Navigation/CompsTab.vue')['default']
     ContactApex: typeof import('./src/components/Document/Selection/Controller/Points/ContactApex.vue')['default']
     ContactInit: typeof import('./src/components/Document/Toolbar/ContactInit.vue')['default']
@@ -230,5 +233,6 @@ declare module '@vue/runtime-core' {
     UserAvatar: typeof import('./src/components/Document/Toolbar/UserAvatar.vue')['default']
     UserInfo: typeof import('./src/components/Document/Toolbar/UserInfo.vue')['default']
     UsersSelection: typeof import('./src/components/Document/Selection/TeamWork/UsersSelection.vue')['default']
+    W: typeof import('./src/components/Document/Navigation/Component/W.vue')['default']
   }
 }

@@ -442,7 +442,6 @@ function right_select(e: MouseEvent, p: PageXY, context: Context): 'text-selecti
   if (area_0.length && area_0[0].type === ShapeType.Table) {
     const table = context.tableSelection;
     if (table.editingCell) {
-      console.log('table进来的');
       return 'table';
     } else if (table.tableRowEnd > -1) {
       return 'table_cell';
@@ -524,19 +523,19 @@ function get_menu_items(context: Context, area: "controller" | "text-selection" 
   let contextMenuItems = []
   if (area === 'artboard') { // 点击在容器上
     if (permIsEdit(context)) {
-      contextMenuItems = ['all', 'copy', 'paste-here', 'replace', 'visible', 'lock', 'forward', 'back', 'top', 'bottom', 'groups', 'container', 'dissolution'];
+      contextMenuItems = ['all', 'copy', 'paste-here', 'replace', 'visible','component', 'lock', 'forward', 'back', 'top', 'bottom', 'groups', 'container', 'dissolution'];
     } else {
       contextMenuItems = ['all', 'copy'];
     }
   } else if (area === 'group') { // 点击在编组上
     if (permIsEdit(context)) {
-      contextMenuItems = ['all', 'copy', 'paste-here', 'replace', 'visible', 'lock', 'forward', 'back', 'top', 'bottom', 'groups', 'container', 'un_group'];
+      contextMenuItems = ['all', 'copy', 'paste-here', 'replace', 'visible','component', 'lock', 'forward', 'back', 'top', 'bottom', 'groups', 'container', 'un_group'];
     } else {
       contextMenuItems = ['all', 'copy'];
     }
   } else if (area === 'controller') { // 点击在选区上
     if (permIsEdit(context)) {
-      contextMenuItems = ['all', 'copy', 'paste-here', 'replace', 'visible', 'lock', 'groups', 'container'];
+      contextMenuItems = ['all', 'copy', 'paste-here', 'replace','component', 'visible', 'lock', 'groups', 'container'];
     } else {
       contextMenuItems = ['all', 'copy'];
     }
@@ -558,7 +557,7 @@ function get_menu_items(context: Context, area: "controller" | "text-selection" 
     }
   } else if (area === 'normal') { // 点击除了容器、编组以外的其他图形
     if (permIsEdit(context)) {
-      contextMenuItems = ['all', 'copy', 'paste-here', 'replace', 'visible', 'lock', 'forward', 'back', 'top', 'bottom', 'groups', 'container'];
+      contextMenuItems = ['all', 'copy', 'paste-here', 'replace', 'visible', 'lock','component', 'forward', 'back', 'top', 'bottom', 'groups', 'container'];
     } else {
       contextMenuItems = ['all', 'copy'];
     }

@@ -4,7 +4,7 @@ import { useI18n } from 'vue-i18n';
 import ContextMenu from '@/components/common/ContextMenu.vue';
 import Key from '@/components/common/Key.vue';
 import { XY } from '@/context/selection';
-import { Artboard, GroupShape, Shape, ShapeType, TableCellType, TextShape } from "@kcdesign/data";
+import { Artboard, GroupShape, Shape, ShapeType, SymbolRefShape, TableCellType, TextShape } from "@kcdesign/data";
 import Layers from './Layers.vue';
 import { Context } from '@/context';
 import { WorkSpace } from '@/context/workspace';
@@ -327,10 +327,27 @@ function unGroup() {
   emit('close');
 }
 function component() {
-
+  const selection = props.context.selection;
+  const page = selection.selectedPage;
+  if (page) {
+    const editor = props.context.editor4Page(page);
+    const shape = editor.makeSymbol(selection.selectedShapes, '组件');
+    if (shape) {
+      selection.selectShape(shape);
+    }
+  }
+  emit('close');
 }
 function instance() {
-
+  const selection = props.context.selection;
+  const page = selection.selectedPage;
+  if (page) {
+    const editor = props.context.editor4Page(page);
+    const shapes = editor.extractSymbol(selection.selectedShapes[0] as SymbolRefShape);
+    if (shapes) {
+      // selection.rangeSelectShape(shapes);
+    }
+  }
 }
 function reset() {
 

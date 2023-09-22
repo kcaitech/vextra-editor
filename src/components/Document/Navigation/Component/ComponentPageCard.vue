@@ -1,7 +1,7 @@
 <script setup lang="ts">
 import { Context } from '@/context';
 import Tooltip from '@/components/common/Tooltip.vue';
-const props = defineProps<{ context: Context }>();
+const props = defineProps<{ context: Context, contents:any[] }>();
 import { ref } from 'vue';
 const thumbnail_bgc = ref<any>();
 function getThumbnailBgc() {
@@ -21,15 +21,25 @@ function getThumbnailBgc() {
 getThumbnailBgc()
 </script>
 <template>
-    <div class="component">
-        <Tooltip :content="`组件1`">
-            <div class="thumbnail"
-                :style="{ 'background-color': thumbnail_bgc ? thumbnail_bgc : 'rgba(1, 239, 239, 239)' }"></div>
-        </Tooltip>
+    <div class="card">
+        <div class="component" v-for="(item, index) in contents" :key="index">
+            <Tooltip :content="`${item.name}`">
+                <div class="thumbnail"
+                    :style="{ 'background-color': thumbnail_bgc ? thumbnail_bgc : 'rgba(1, 239, 239, 239)' }"></div>
+            </Tooltip>
+        </div>
     </div>
 </template>
 
 <style lang="scss" scoped>
+.card {
+    display: flex;
+    align-items: center;
+    flex-wrap: wrap;
+    width: 100%;
+    box-sizing: border-box;
+}
+
 .component {
     width: 100px;
     height: 100px;
@@ -43,6 +53,7 @@ getThumbnailBgc()
         height: 100%;
         border-radius: 4px;
         box-sizing: border-box;
+
         &:hover {
             border: 2px solid var(--active-color);
         }
