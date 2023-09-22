@@ -61,6 +61,8 @@ export class Clipboard {
                 const root_frame = position_map.get(shape.id);
                 if (!root_frame) continue;
                 shape.frame.x = root_frame.x, shape.frame.y = root_frame.y;
+                console.log('copy-frame: ', shape.frame);
+
             }
             if (navigator.clipboard && ClipboardItem) {
                 const h = encode_html(identity, content);
@@ -316,10 +318,12 @@ async function clipboard_text_html(context: Context, data: any, xy?: PageXY) {
             // else if (is_box_outer_view2(source, context)) { // 图形将脱离视野，需要重新寻找新的定位
             //     modify_frame_by_xy(context.workspace.center_on_page, source);
             // }
+            const page = context.selection.selectedPage; 
+            if (page) {
+
+            }
             const shapes = import_shape(context.data, source);
             if (!shapes.length) throw new Error('invalid source');
-
-            const page = context.selection.selectedPage;
             if (page) {
                 const editor = context.editor.editor4Page(page);
                 const r = editor.insertShapes1(page, shapes);
@@ -334,7 +338,7 @@ async function clipboard_text_html(context: Context, data: any, xy?: PageXY) {
     }
 }
 function modify_frame_by_xy(xy: PageXY, shapes: Shape[]) {
-    const lt_shape_xy = { x: shapes[0].frame.x, y: shapes[0].frame.y };
+    const lt_shape_xy = { x: Infinity, y: Infinity };
     for (let i = 0, len = shapes.length; i < len; i++) { // 寻找图形群体的起点
         const frame = shapes[i].frame;
         if (frame.x < lt_shape_xy.x) lt_shape_xy.x = frame.x;
@@ -344,6 +348,10 @@ function modify_frame_by_xy(xy: PageXY, shapes: Shape[]) {
         let shape = shapes[i];
         shape.frame.x += xy.x - lt_shape_xy.x, shape.frame.y += xy.y - lt_shape_xy.y;
     }
+}
+function modify_frame_by_parent(parent: GroupShape, shapes: Shape[]) {
+    const pp = parent.matrix2Root().computeCoord2(0, 0);
+    
 }
 /**
  * @description 从剪切板拿出图形数据并替换掉src中的内容
