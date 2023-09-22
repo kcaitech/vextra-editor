@@ -114,7 +114,7 @@ function watchShapes() { // 监听相关shape的变化
     const childs_of_page = props.data.childs;
     for (let i = 0, len = childs_of_page.length; i < len; i++) {
         const compo = childs_of_page[i];
-        if (compo.type === ShapeType.Group && compo.isSymbolShape && compo.isVisible) needWatchShapes.set(compo.id, compo);
+        if (compo.type === ShapeType.Symbol && compo.isVisible) needWatchShapes.set(compo.id, compo);
     }
     watchedShapes.forEach((v, k) => {
         if (needWatchShapes.has(k)) return;

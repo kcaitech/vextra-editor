@@ -1,7 +1,7 @@
 import {
     export_shape, import_shape,
     Shape, ShapeType, AsyncCreator, ShapeFrame, GroupShape, TextShape, Text,
-    export_text, import_text, TextShapeEditor
+    export_text, import_text, TextShapeEditor, symbol2ref, SymbolShape
 } from '@kcdesign/data';
 import { Context } from '@/context';
 import { PageXY } from '@/context/selection';
@@ -61,8 +61,6 @@ export class Clipboard {
                 const root_frame = position_map.get(shape.id);
                 if (!root_frame) continue;
                 shape.frame.x = root_frame.x, shape.frame.y = root_frame.y;
-                console.log('copy-frame: ', shape.frame);
-
             }
             if (navigator.clipboard && ClipboardItem) {
                 const h = encode_html(identity, content);
@@ -322,6 +320,7 @@ async function clipboard_text_html(context: Context, data: any, xy?: PageXY) {
             if (page) {
                 modify_frame_by_parent(page, source);
             }
+            await _symbol2ref(context, source);
             const shapes = import_shape(context.data, source);
             if (!shapes.length) throw new Error('invalid source');
             if (page) {
@@ -357,10 +356,12 @@ function modify_frame_by_parent(parent: GroupShape, shapes: Shape[]) {
         shape.frame.y -= pp.y;
     }
 }
-function modify_frame_by_parent2(parent: GroupShape, shape: Shape) {
-    const pp = parent.matrix2Root().computeCoord2(0, 0);
-    shape.frame.x -= pp.x;
-    shape.frame.y -= pp.y;
+async function _symbol2ref(context: Context, source: Shape[]) {
+    for (let i = 0, len = source.length; i < len; i++) {
+        const symbol = source[i];
+        if (symbol.type !== ShapeType.Symbol) continue;
+        source[i] = await symbol2ref(context.data, symbol as SymbolShape)
+    }
 }
 /**
  * @description 从剪切板拿出图形数据并替换掉src中的内容
