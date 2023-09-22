@@ -13,9 +13,10 @@ interface Tree {
 const props = defineProps<{
     type: 'Text' | 'Show' | 'toggle' | ''
     context: Context
+    selectList: any[]
 }>()
 
-const checkList = ref([])
+const checkList = ref<string[]>([])
 const emit = defineEmits<{
     (e: 'close'): void;
 }>()
@@ -28,12 +29,15 @@ function handleClickOutside(event: MouseEvent) {
 }
 const top = ref(33);
 const popover = ref<HTMLDivElement>();
-const contents = [
-    { name: '矩形1' },
-    { name: '矩形2' },
-    { name: '矩形3' },
-    { name: '矩形4' }
-]
+
+const confirmSelect = () => {
+    if(checkList.value.length === 0) return;
+    emit('close');
+}
+const handleCheck = (v: string[]) => {
+    // 选中对象的id
+    checkList.value = v
+}
 onMounted(() => {
     if (popover.value) {
         const body_h = document.body.clientHeight;
@@ -69,12 +73,12 @@ onUnmounted(() => {
                 </div>
             </div>
         </div>
-        <div class="container">
+        <div class="container" v-if="selectList.length">
             <!-- 组件实例 -->
             <div style="height: 100%;" v-if="props.type === 'toggle'">
                 <el-scrollbar>
                     <div class="demo-collapse">
-                        <CompoSelectList :context="context" :contents="contents" samll="samll">
+                        <CompoSelectList :context="context" :contents="selectList" samll="samll" @handleCheck="handleCheck">
                         </CompoSelectList>
                     </div>
                 </el-scrollbar>
@@ -83,15 +87,15 @@ onUnmounted(() => {
             <div style="height: 100%;" v-else>
                 <el-scrollbar>
                     <div class="demo-collapse">
-                        <CompoSelectList :context="context" :contents="contents" samll="samll">
+                        <CompoSelectList :context="context" :contents="selectList" samll="samll" @handleCheck="handleCheck">
                         </CompoSelectList>
                     </div>
                 </el-scrollbar>
-                <div class="button"><el-button>确认</el-button></div>
+                <div class="button" :style="{opacity: checkList.length > 0 ? 1 : 0.5}"><el-button @click.stop="confirmSelect">确认</el-button></div>
             </div>
-            <!-- <div class="null" v-if="dataSource.length === 0 && props.type === 'Text' || props.type === ''">文本图层为空</div>
-            <div class="null" v-if="dataSource.length === 0 && props.type === 'toggle'">组件实例为空</div> -->
         </div>
+        <div class="null" v-if="selectList.length === 0 && props.type === 'Text' || props.type === ''">文本图层为空</div>
+        <div class="null" v-if="selectList.length === 0 && props.type === 'toggle'">组件实例为空</div>
     </div>
 </template>
 
@@ -146,16 +150,6 @@ onUnmounted(() => {
         flex: 1;
         height: calc(100% - 42px);
 
-        .null {
-            font-size: 10px;
-            color: rgba(0, 0, 0, 0.5);
-            width: 100%;
-            height: 100%;
-            display: flex;
-            align-items: center;
-            justify-content: center;
-        }
-
         .el-scrollbar {
             padding-right: 10px;
             height: calc(100% - 40px);
@@ -192,6 +186,17 @@ onUnmounted(() => {
 
             padding-left: 4px;
         }
+    }
+
+    .null {
+        font-size: 10px;
+        color: rgba(0, 0, 0, 0.5);
+        width: 100%;
+        height: 100%;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        padding-bottom: 20px;
     }
 }
 </style>
