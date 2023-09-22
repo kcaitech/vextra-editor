@@ -318,9 +318,9 @@ async function clipboard_text_html(context: Context, data: any, xy?: PageXY) {
             // else if (is_box_outer_view2(source, context)) { // 图形将脱离视野，需要重新寻找新的定位
             //     modify_frame_by_xy(context.workspace.center_on_page, source);
             // }
-            const page = context.selection.selectedPage; 
+            const page = context.selection.selectedPage;
             if (page) {
-
+                modify_frame_by_parent(page, source);
             }
             const shapes = import_shape(context.data, source);
             if (!shapes.length) throw new Error('invalid source');
@@ -351,7 +351,16 @@ function modify_frame_by_xy(xy: PageXY, shapes: Shape[]) {
 }
 function modify_frame_by_parent(parent: GroupShape, shapes: Shape[]) {
     const pp = parent.matrix2Root().computeCoord2(0, 0);
-    
+    for (let i = 0, len = shapes.length; i < len; i++) {
+        const shape = shapes[i];
+        shape.frame.x -= pp.x;
+        shape.frame.y -= pp.y;
+    }
+}
+function modify_frame_by_parent2(parent: GroupShape, shape: Shape) {
+    const pp = parent.matrix2Root().computeCoord2(0, 0);
+    shape.frame.x -= pp.x;
+    shape.frame.y -= pp.y;
 }
 /**
  * @description 从剪切板拿出图形数据并替换掉src中的内容
