@@ -52,6 +52,7 @@ declare module '@vue/runtime-core' {
     CompLayerShow: typeof import('./src/components/Document/Attribute/PopoverMenu/CompLayerShow.vue')['default']
     ComponentAll: typeof import('./src/components/Document/Navigation/Component/ComponentAll.vue')['default']
     ComponentAttr: typeof import('./src/components/Document/Attribute/Module/ComponentAttr.vue')['default']
+    ComponentCard: typeof import('./src/components/Document/Content/ComponentCard.vue')['default']
     ComponentCollapse: typeof import('./src/components/Document/Navigation/Component/ComponentCollapse.vue')['default']
     ComponentDialog: typeof import('./src/components/Document/Attribute/Module/ComponentDialog.vue')['default']
     ComponentList: typeof import('./src/components/common/ComponentList.vue')['default']

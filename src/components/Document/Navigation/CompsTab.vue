@@ -1,12 +1,16 @@
 <script setup lang="ts">
-import { ref } from "vue";
+import { onMounted, onUnmounted, ref } from "vue";
 import { Context } from "@/context";
-import developing from "@/assets/development.svg"
 import { useI18n } from 'vue-i18n';
 import ShowHiddenLeft from "./ShowHiddenLeft.vue";
 import ComponentList from "@/components/common/ComponentList.vue";
 import ComponentCollapse from "./Component/ComponentCollapse.vue";
-const props = defineProps<{ context: Context, leftTriggleVisible: boolean, showLeft: boolean }>();
+interface Props {
+    context: Context
+    leftTriggleVisible: boolean
+    showLeft: boolean
+}
+const props = defineProps<Props>();
 const { t } = useI18n();
 const emit = defineEmits<{ (e: 'showNavigation'): void }>()
 const showHiddenLeft = () => {
@@ -26,7 +30,7 @@ const list = [{
         { name: '矩形1' },
         { name: '矩形2' },
         { name: '矩形3' },
-        { name: '矩形4' }
+        { name: '矩形4' },
     ],
     children: []
 }, {
@@ -73,6 +77,23 @@ function set_parent(parent: CompoItem, range: CompoItem[]) {
         }
     }
 }
+function pages_mgr_watcher(t: any) {
+    console.log('pages-data-change-by: ', t);
+    symbol_loader();
+}
+function symbol_loader() {
+    const mgr = props.context.data.symbolsMgr;
+    const list = mgr.resource;
+    console.log('update list: ', list);
+
+}
+onMounted(() => {
+    props.context.data.pagesMgr.watch(pages_mgr_watcher);
+    symbol_loader();
+})
+onUnmounted(() => {
+    props.context.data.pagesMgr.unwatch(pages_mgr_watcher);
+})
 </script>
 
 <template>
