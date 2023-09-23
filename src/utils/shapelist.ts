@@ -119,3 +119,35 @@ export function fit(context: Context, shape: Shape) {
         }
     }
 }
+export function fit_no_transform(context: Context, shape: Shape) {
+    const m = shape.matrix2Root(), f = shape.frame, matrix = context.workspace.matrix, root = context.workspace.root;
+    m.multiAtLeft(matrix);
+    const points: { x: number, y: number }[] = [{ x: 0, y: 0 }, { x: f.width, y: 0 }, { x: f.width, y: f.height }, { x: 0, y: f.height }];
+    const box = XYsBounding(points.map(p => m.computeCoord2(p.x, p.y)));
+    const width = box.right - box.left, height = box.bottom - box.top;
+    const w_max = root.width, h_max = root.height;
+    const ratio_w = width / w_max * 1.06, ratio_h = height / h_max * 1.12;
+    const ratio = Math.max(ratio_h, ratio_w);
+    if (ratio !== 1) {
+        context.selection.selectShape(shape);
+        const p_center = { x: box.left + width / 2, y: box.top + height / 2 };
+        const del = { x: root.center.x - p_center.x, y: root.center.y - p_center.y };
+        matrix.trans(del.x, del.y);
+        matrix.trans(-root.width / 2, -root.height / 2);
+        if (matrix.m00 * 1 / ratio > 0.02 && matrix.m00 * 1 / ratio < 7.2) matrix.scale(1 / ratio);
+        else {
+            if (matrix.m00 * 1 / ratio <= 0.02) matrix.scale(0.02 / matrix.m00);
+            else if (matrix.m00 * 1 / ratio >= 7.2) matrix.scale(7.2 / matrix.m00);
+        }
+        matrix.trans(root.width / 2, root.height / 2);
+        context.workspace.notify(WorkSpace.MATRIX_TRANSFORMATION);
+    } else {
+        context.selection.selectShape(shape);
+        const p_center = { x: box.left + width / 2, y: box.top + height / 2 };
+        const del = { x: root.center.x - p_center.x, y: root.center.y - p_center.y };
+        if (del.x || del.y) {
+            matrix.trans(del.x, del.y);
+            context.workspace.notify(WorkSpace.MATRIX_TRANSFORMATION);
+        }
+    }
+}

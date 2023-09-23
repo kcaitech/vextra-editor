@@ -49,7 +49,7 @@ const spacePressed = ref<boolean>(false);
 const contextMenu = ref<boolean>(false);
 const contextMenuPosition: ClientXY = reactive({ x: 0, y: 0 });
 let state = STATE_NONE;
-const dragActiveDis = 4; // 拖动 3px 后开始触发移动
+const dragActiveDis = 4; // 拖动 4px 后开始触发移动
 const prePt: { x: number, y: number } = { x: 0, y: 0 };
 const matrix: Matrix = reactive(props.context.workspace.matrix as any);
 const matrixMap = new Map<string, { m: Matrix, x: number, y: number }>();
@@ -260,9 +260,9 @@ function contextMenuMount(e: MouseEvent) {
         shapesContainsMousedownOnPageXY = shapes;
         contextMenuItems.push('layers');
     }
-    if(selection.selectedShapes[0].type === ShapeType.SymbolRef) {
-        contextMenuItems.push('instance');
-    }
+    // if(selection.selectedShapes[0].type === ShapeType.SymbolRef) {
+    //     contextMenuItems.push('instance');
+    // }
     if (area === 'table_cell') {
         const table = props.context.tableSelection;
         if (table.tableRowStart === table.tableRowEnd && table.tableColStart === table.tableColEnd) {

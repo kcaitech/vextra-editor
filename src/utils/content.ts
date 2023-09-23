@@ -1,13 +1,14 @@
 import { debounce } from "lodash";
 import { Context } from "@/context";
 import { ClientXY, PageXY } from "@/context/selection";
-import { AsyncCreator, Shape, ShapeFrame, ShapeType, GroupShape, TextShape, Matrix, Color, TableShape, ContactForm } from "@kcdesign/data";
+import { AsyncCreator, Shape, ShapeFrame, ShapeType, GroupShape, TextShape, Matrix, Color, TableShape, ContactForm, Page } from "@kcdesign/data";
 import { Action, ResultByAction } from "@/context/tool";
 import { Perm, WorkSpace } from '@/context/workspace';
 import { XYsBounding } from '@/utils/common';
 import { searchCommentShape as finder } from '@/utils/comment'
 import { paster_image } from "./clipboard";
 import { landFinderOnPage, scrollToContentView } from './artboardFn'
+import { fit_no_transform } from "./shapelist";
 export interface Media {
   name: string
   frame: { width: number, height: number }
@@ -19,7 +20,7 @@ interface SystemClipboardItem {
   contentType: string
   content: Media | string
 }
-interface Root {
+export interface Root {
   init: boolean
   x: number
   y: number
@@ -30,8 +31,9 @@ interface Root {
   element: any
   center: ClientXY
 }
+export type Area = 'text-selection' | 'controller' | 'group' | 'artboard' | 'null' | 'normal' | 'table' | 'table_cell' | 'component';
 const updateRootTime = 300;
-function _updateRoot(context: Context, element: HTMLElement) {
+export function _updateRoot(context: Context, element: HTMLElement) {
   const { x, y, right, bottom } = element.getBoundingClientRect();
   const root: Root = {
     init: true, x, y, right, bottom, element,
@@ -41,16 +43,16 @@ function _updateRoot(context: Context, element: HTMLElement) {
   }
   context.workspace.updateRoot(root);
 }
-const updateRoot = debounce(_updateRoot, updateRootTime);
+export const updateRoot = debounce(_updateRoot, updateRootTime);
 
 // 根据类型给图形命名
-function getName(type: ShapeType, brothers: Shape[], t: Function): string {
+export function getName(type: ShapeType, brothers: Shape[], t: Function): string {
   const name = t(`shape.${type}`);
   const renamebrothers = brothers.filter((item: Shape) => item.type === type);
   const repeats: number = renamebrothers.length;
   return repeats ? `${name} ${repeats + 1}` : name;
 }
-function get_image_name(brothers: Shape[], name: string) {
+export function get_image_name(brothers: Shape[], name: string) {
   name = name.trim();
   const renamebrothers = brothers.filter((item: Shape) => {
     const _n: any = item.name.split(' ');
@@ -60,7 +62,7 @@ function get_image_name(brothers: Shape[], name: string) {
   return repeats ? `${name} ${repeats + 1}` : name;
 }
 // 判断图形是否在可视区域内
-function isInner(context: Context, shape: Shape) {
+export function isInner(context: Context, shape: Shape) {
   const pMatrix = context.workspace.matrix;
   const { x: rx, y: ry, bottom, right } = context.workspace.root;
   const s2pMatirx = shape.matrix2Root();
@@ -84,7 +86,7 @@ function isInner(context: Context, shape: Shape) {
     return true;
   }
 }
-function init_shape(context: Context, frame: ShapeFrame, mousedownOnPageXY: PageXY, t: Function) {
+export function init_shape(context: Context, frame: ShapeFrame, mousedownOnPageXY: PageXY, t: Function) {
   const selection = context.selection;
   const workspace = context.workspace;
   const action = context.tool.action;
@@ -130,7 +132,7 @@ export function init_contact_shape(context: Context, frame: ShapeFrame, mousedow
   }
 }
 // 图形从init到insert
-function init_insert_shape(context: Context, mousedownOnPageXY: PageXY, t: Function, land?: Shape, _t?: ShapeType) {
+export function init_insert_shape(context: Context, mousedownOnPageXY: PageXY, t: Function, land?: Shape, _t?: ShapeType) {
   const tool = context.tool;
   const action = tool.action;
   if (action === Action.AddText) return init_insert_textshape(context, mousedownOnPageXY, t('shape.input_text'));
@@ -185,7 +187,7 @@ export function init_insert_shape2(context: Context, mousedownOnPageXY: PageXY, 
   context.cursor.setType('auto-0');
 }
 //插入表格
-function init_insert_table(context: Context, t: Function, land?: Shape, _t?: ShapeType) {
+export function init_insert_table(context: Context, t: Function, land?: Shape, _t?: ShapeType) {
   const tool = context.tool;
   const action = tool.action;
   const table = context.tool.tableSize;
@@ -222,7 +224,7 @@ function init_insert_table(context: Context, t: Function, land?: Shape, _t?: Sha
   context.cursor.setType('auto-0');
 }
 // 插入文本框
-function init_insert_textshape(context: Context, mousedownOnPageXY: PageXY, content: string, land?: Shape, _t?: ShapeType) {
+export function init_insert_textshape(context: Context, mousedownOnPageXY: PageXY, content: string, land?: Shape, _t?: ShapeType) {
   const selection = context.selection;
   const workspace = context.workspace;
   const type = _t || ResultByAction(context.tool.action);
@@ -246,7 +248,7 @@ function init_insert_textshape(context: Context, mousedownOnPageXY: PageXY, cont
   context.cursor.setType('auto-0');
 }
 // 图片从init到insert
-function init_insert_image(context: Context, mousedownOnPageXY: PageXY, t: Function, media: Media) {
+export function init_insert_image(context: Context, mousedownOnPageXY: PageXY, t: Function, media: Media) {
   const selection = context.selection;
   const page = selection.selectedPage;
   let asyncCreator: AsyncCreator | undefined;
@@ -276,7 +278,7 @@ function init_insert_image(context: Context, mousedownOnPageXY: PageXY, t: Funct
     return new_shape;
   }
 }
-async function insert_imgs(context: Context, t: Function, media: Media[]) {
+export async function insert_imgs(context: Context, t: Function, media: Media[]) {
   const selection = context.selection;
   const new_shapes: Shape[] = [];
   if (media && media.length) {
@@ -292,13 +294,13 @@ async function insert_imgs(context: Context, t: Function, media: Media[]) {
   }
   context.workspace.setFreezeStatus(false);
 }
-function is_drag(context: Context, e: MouseEvent, start: ClientXY, threshold?: number) {
+export function is_drag(context: Context, e: MouseEvent, start: ClientXY, threshold?: number) {
   const root = context.workspace.root;
   const dragActiveDis = threshold || 4;
   const diff = Math.hypot(e.clientX - root.x - start.x, e.clientY - root.y - start.y);
   return Boolean(diff > dragActiveDis);
 }
-function adjust_content_xy(context: Context, m: Media) {
+export function adjust_content_xy(context: Context, m: Media) {
   const workspace = context.workspace;
   const root = workspace.root;
   const matrix = workspace.matrix;
@@ -319,7 +321,7 @@ function adjust_content_xy(context: Context, m: Media) {
   const page_center = matrix.inverseCoord(root.center);
   return { x: page_center.x - m.frame.width / 2, y: page_center.y - m.frame.height / 2 };
 }
-function drop(e: DragEvent, context: Context, t: Function) {
+export function drop(e: DragEvent, context: Context, t: Function) {
   e.preventDefault();
   const data = e?.dataTransfer?.files;
   if (data && data[0].type.indexOf('image') !== -1) {
@@ -370,7 +372,7 @@ function drop(e: DragEvent, context: Context, t: Function) {
  * 使page全部内容都在可视区，并居中
  * @param context 
  */
-function adapt_page(context: Context, initPage = false) {
+export function adapt_page(context: Context, initPage = false) {
   const childs = context.selection.selectedPage?.childs || [];
   if (!childs.length) return new Matrix();
   const matrix = context.workspace.matrix;
@@ -418,7 +420,7 @@ function adapt_page(context: Context, initPage = false) {
   }
   return matrix;
 }
-function page_scale(context: Context, scale: number) {
+export function page_scale(context: Context, scale: number) {
   const workspace = context.workspace;
   const root = workspace.root;
   const matrix = workspace.matrix;
@@ -434,9 +436,9 @@ function page_scale(context: Context, scale: number) {
  * @param p 点击位置在页面中所处的位置
  * @param context 
  * @param pre_shapes 预选图形
- * @param { 'text-selection' | 'controller' | 'group'| 'artboard'| 'null' | 'normal' | 'table' | 'table_cell' } area
+ * @param Area area
  */
-function right_select(e: MouseEvent, p: PageXY, context: Context): 'text-selection' | 'controller' | 'group' | 'artboard' | 'null' | 'normal' | 'table' | 'table_cell' {
+export function right_select(e: MouseEvent, p: PageXY, context: Context): Area {
   const is_edting = context.workspace.isEditing;
   const area_0 = finder(context, p);
   if (area_0.length && area_0[0].type === ShapeType.Table) {
@@ -459,6 +461,9 @@ function right_select(e: MouseEvent, p: PageXY, context: Context): 'text-selecti
     if (area_1[0].type === ShapeType.Group) {
       selection.selectShape(area_1[0]);
       return 'group';
+    } else if (area_1[0].type === ShapeType.SymbolRef) {
+      selection.selectShape(area_1[0]);
+      return 'component';
     }
   }
   const area_2 = finder(context, p);
@@ -478,7 +483,7 @@ function right_select(e: MouseEvent, p: PageXY, context: Context): 'text-selecti
  * @param context
  * @returns { number } 只判断了两种图形 两位二进制 00 
  */
-function get_selected_types(context: Context): number {
+export function get_selected_types(context: Context): number {
   let result = 0;
   const shapes = context.selection.selectedShapes;
   for (let i = shapes.length - 1; i > -1; i--) {
@@ -492,7 +497,7 @@ function get_selected_types(context: Context): number {
   return result;
 }
 // 列表转树
-const list2Tree = (list: any, rootValue: string) => {
+export const list2Tree = (list: any, rootValue: string) => {
   const arr: any = []
   list.forEach((item: any) => {
     if (item.parent_id === rootValue) {
@@ -505,7 +510,7 @@ const list2Tree = (list: any, rootValue: string) => {
   })
   return arr
 }
-function flattenShapes(shapes: any) {
+export function flattenShapes(shapes: any) {
   return shapes.reduce((result: any, item: Shape) => {
     if (Array.isArray(item.childs)) {
       // 如果当前项有子级数组，则递归调用flattenArray函数处理子级数组
@@ -516,26 +521,32 @@ function flattenShapes(shapes: any) {
 }
 /**
  * 右键菜单打开之前根据点击的区域整理应该显示的菜单项
- * @param { "controller" | "text-selection" | "group" | "artboard" | "null" | "normal" | "table" | "table_cell"  } area 点击的区域
+ * @param { "controller" | "text-selection" | "group" | "artboard" | "component" | "null" | "normal" | "table" | "table_cell"  } area 点击的区域
  * @returns 
  */
-function get_menu_items(context: Context, area: "controller" | "text-selection" | "group" | "artboard" | "null" | "normal" | "table" | "table_cell"): string[] {
+export function get_menu_items(context: Context, area: "controller" | "text-selection" | "group" | "artboard" | "component" | "null" | "normal" | "table" | "table_cell"): string[] {
   let contextMenuItems = []
   if (area === 'artboard') { // 点击在容器上
     if (permIsEdit(context)) {
-      contextMenuItems = ['all', 'copy', 'paste-here', 'replace', 'visible','component', 'lock', 'forward', 'back', 'top', 'bottom', 'groups', 'container', 'dissolution'];
+      contextMenuItems = ['all', 'copy', 'paste-here', 'replace', 'visible', 'component', 'lock', 'forward', 'back', 'top', 'bottom', 'groups', 'container', 'dissolution'];
     } else {
       contextMenuItems = ['all', 'copy'];
     }
   } else if (area === 'group') { // 点击在编组上
     if (permIsEdit(context)) {
-      contextMenuItems = ['all', 'copy', 'paste-here', 'replace', 'visible','component', 'lock', 'forward', 'back', 'top', 'bottom', 'groups', 'container', 'un_group'];
+      contextMenuItems = ['all', 'copy', 'paste-here', 'replace', 'visible', 'component', 'lock', 'forward', 'back', 'top', 'bottom', 'groups', 'container', 'un_group'];
+    } else {
+      contextMenuItems = ['all', 'copy'];
+    }
+  } else if (area === 'component') {
+    if (permIsEdit(context)) {
+      contextMenuItems = ['all', 'copy', 'paste-here', 'replace', 'visible', 'component', 'lock', 'forward', 'back', 'top', 'bottom', 'groups', 'container', 'instance'];
     } else {
       contextMenuItems = ['all', 'copy'];
     }
   } else if (area === 'controller') { // 点击在选区上
     if (permIsEdit(context)) {
-      contextMenuItems = ['all', 'copy', 'paste-here', 'replace','component', 'visible', 'lock', 'groups', 'container'];
+      contextMenuItems = ['all', 'copy', 'paste-here', 'replace', 'component', 'visible', 'lock', 'groups', 'container'];
     } else {
       contextMenuItems = ['all', 'copy'];
     }
@@ -557,7 +568,7 @@ function get_menu_items(context: Context, area: "controller" | "text-selection" 
     }
   } else if (area === 'normal') { // 点击除了容器、编组以外的其他图形
     if (permIsEdit(context)) {
-      contextMenuItems = ['all', 'copy', 'paste-here', 'replace', 'visible', 'lock','component', 'forward', 'back', 'top', 'bottom', 'groups', 'container'];
+      contextMenuItems = ['all', 'copy', 'paste-here', 'replace', 'visible', 'lock', 'component', 'forward', 'back', 'top', 'bottom', 'groups', 'container'];
     } else {
       contextMenuItems = ['all', 'copy'];
     }
@@ -593,19 +604,17 @@ function get_menu_items(context: Context, area: "controller" | "text-selection" 
   } else {
     if (permIsEdit(context)) {
       contextMenuItems = ['all', 'paste-here', 'half', 'hundred', 'double', 'canvas', 'operation', 'comment', 'cursor', 'title'];
-      // contextMenuItems = ['all', 'paste-here', 'half', 'hundred', 'double', 'canvas', 'operation', 'comment', 'cursor'];
     } else {
       contextMenuItems = ['all', 'half', 'hundred', 'double', 'canvas', 'operation', 'comment', 'cursor', 'title'];
-      // contextMenuItems = ['all', 'half', 'hundred', 'double', 'canvas', 'operation', 'comment', 'cursor'];
     }
   }
   return contextMenuItems;
 }
-function color2string(color: Color, t?: number) {
+export function color2string(color: Color, t?: number) {
   const { red, green, blue, alpha } = color;
   return `rgba(${red}, ${green}, ${blue}, ${alpha})`;
 }
-function selectShapes(context: Context, shapes: Shape[]) {
+export function selectShapes(context: Context, shapes: Shape[]) {
   const hoveredShape = shapes[0], selection = context.selection;
   if (hoveredShape) {
     const selected = selection.selectedShapes;
@@ -637,7 +646,7 @@ export const hasRadiusShape = (shape: Shape, type: ShapeType[]) => {
   return true;
 }
 
-function skipUserSelectShapes(context: Context, shapes: Shape[]) {
+export function skipUserSelectShapes(context: Context, shapes: Shape[]) {
   if (!shapes.length) return new Matrix();
   const matrix = context.workspace.matrix;
   const points: ClientXY[] = [];
@@ -692,12 +701,48 @@ export function top_side(shape: Shape, matrix: Matrix) {
   const rt = matrix.computeCoord2(f.width, f.height);
   return Math.hypot(rt.x - lt.x, rt.y - lt.y)
 }
-export {
-  Root, updateRoot, _updateRoot,
-  getName, get_image_name, get_selected_types, init_insert_table,
-  isInner, is_drag,
-  init_shape, init_insert_shape, init_insert_textshape,
-  insert_imgs, drop, adapt_page, page_scale, right_select,
-  list2Tree, flattenShapes,
-  get_menu_items, color2string, selectShapes, skipUserSelectShapes
-};
+/**
+ * @description 图形追踪，可跨页面
+ * @param context 
+ * @param shape 
+ */
+export function shape_track(context: Context, shape: Shape) {
+  const page = shape.getPage();
+  if (!page) return;
+  const target = page.getShape(shape.id);
+  if (!target) return;
+  const selection = context.selection;
+  const selectedPage = selection.selectedPage;
+  if (!selectedPage) return;
+  let need_change_page = selectedPage.id !== page.id;
+  if (need_change_page) selection.selectPage(page as Page);
+  selection.selectShape(target);
+
+  need_change_page ? setTimeout(track, 10) : track();
+
+  function track() {
+    fit_no_transform(context, shape);
+  }
+}
+export function is_content(context: Context, e: MouseEvent) {
+  const root = context.workspace.root;
+  return e.clientX > root.x && e.clientX < root.right && e.clientY > root.y && e.clientY < root.bottom;
+}
+export function ref_symbol(context: Context, position: PageXY, name: string, symbol: Shape) {
+  const selection = context.selection, workspace = context.workspace;
+  const shapes: Shape[] = selection.selectedPage?.childs || [];
+  const parent = selection.selectedPage;
+  if (parent) {
+    const editor = context.editor.editor4Page(parent), matrix = workspace.matrix;
+    const frame = new ShapeFrame(0, 0, symbol.frame.width, symbol.frame.height);
+    frame.x = position.x, frame.y = position.y;
+    let ref: Shape | false = editor.refSymbol(context.data, name, frame, symbol.id);
+    ref = editor.insert(parent, shapes.length, ref);
+    // if (artboard) {
+    //   const timer = setTimeout(() => {
+    //     artboard && scrollToContentView(artboard, context);
+    //     clearTimeout(timer);
+    //   }, 100)
+    // }
+  }
+}

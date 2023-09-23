@@ -1,10 +1,8 @@
 <script setup lang="ts">
-import { onMounted, onUnmounted, ref } from "vue";
 import { Context } from "@/context";
 import { useI18n } from 'vue-i18n';
 import ShowHiddenLeft from "./ShowHiddenLeft.vue";
-import ComponentList from "@/components/common/ComponentList.vue";
-import ComponentCollapse from "./Component/ComponentCollapse.vue";
+import ComponentList from "./Component/ComponentList.vue";
 interface Props {
     context: Context
     leftTriggleVisible: boolean
@@ -25,29 +23,11 @@ interface CompoItem {
     parent: string | undefined
 }
 const list = [{
-    name: ['页面1'],
+    name: ['本地'],
     contents: [
-        { name: '矩形1' },
-        { name: '矩形2' },
-        { name: '矩形3' },
-        { name: '矩形4' },
+        { name: '矩形1' }
     ],
     children: []
-}, {
-    name: ['页面2'],
-    contents: [],
-    children: [
-        {
-            name: ['容器'],
-            contents: [
-                { name: '矩形1' },
-                { name: '矩形2' },
-                { name: '矩形3' },
-                { name: '矩形4' }
-            ],
-            children: []
-        },
-    ]
 }]
 function gen_tree(list: CompoItem[]) {
     const map: Map<string, CompoItem> = new Map();
@@ -77,33 +57,17 @@ function set_parent(parent: CompoItem, range: CompoItem[]) {
         }
     }
 }
-function pages_mgr_watcher(t: any) {
-    console.log('pages-data-change-by: ', t);
-    symbol_loader();
-}
-function symbol_loader() {
-    const mgr = props.context.data.symbolsMgr;
-    const list = mgr.resource;
-    console.log('update list: ', list);
-
-}
-onMounted(() => {
-    props.context.data.pagesMgr.watch(pages_mgr_watcher);
-    symbol_loader();
-})
-onUnmounted(() => {
-    props.context.data.pagesMgr.unwatch(pages_mgr_watcher);
-})
 </script>
 
 <template>
     <div class="comps-container">
-        <ComponentList v-slot="type">
-            <el-scrollbar>
+        <ComponentList :context="props.context">
+            <!-- <el-scrollbar>
                 <div class="demo-collapse" v-for="(item, index) in list" :key="index">
                     <ComponentCollapse :context="context" :type="type.type" :item="item" :index="index"></ComponentCollapse>
                 </div>
-            </el-scrollbar>
+            </el-scrollbar> -->
+
         </ComponentList>
         <ShowHiddenLeft :showLeft="showLeft" :leftTriggleVisible="leftTriggleVisible" @showNavigation="showHiddenLeft">
         </ShowHiddenLeft>
@@ -151,5 +115,7 @@ onUnmounted(() => {
 
         padding-left: 4px;
     }
+
+
 }
 </style>

@@ -1,8 +1,8 @@
 <script setup lang="ts">
 import { onMounted, ref } from 'vue';
 const props = defineProps<{
-    content: string,
-    offset?: number
+  content: string,
+  offset?: number
 }>();
 const render_code = ref<string>(props.content);
 function is_mac() {
@@ -23,10 +23,10 @@ onMounted(() => {
 </script>
 
 <template>
-    <el-tooltip class="box-item" effect="dark" :content="render_code" placement="bottom"
-    :show-after="500" :offset="offset || 10" :hide-after="0">
-        <slot />
-    </el-tooltip>
+  <el-tooltip class="box-item" effect="dark" :content="render_code" placement="bottom" :show-after="500"
+    :offset="offset || 10" :hide-after="0">
+    <slot />
+  </el-tooltip>
 </template>
 
 <style scoped lang="scss"></style>
