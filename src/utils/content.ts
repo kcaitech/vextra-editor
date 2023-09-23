@@ -735,14 +735,9 @@ export function ref_symbol(context: Context, position: PageXY, name: string, sym
   if (parent) {
     const editor = context.editor.editor4Page(parent), matrix = workspace.matrix;
     const frame = new ShapeFrame(0, 0, symbol.frame.width, symbol.frame.height);
-    frame.x = position.x, frame.y = position.y;
+    frame.x = position.x - symbol.frame.width / 2, frame.y = position.y - symbol.frame.height / 2;
     let ref: Shape | false = editor.refSymbol(context.data, name, frame, symbol.id);
     ref = editor.insert(parent, shapes.length, ref);
-    // if (artboard) {
-    //   const timer = setTimeout(() => {
-    //     artboard && scrollToContentView(artboard, context);
-    //     clearTimeout(timer);
-    //   }, 100)
-    // }
+    if (ref) selection.selectShape(ref);
   }
 }
