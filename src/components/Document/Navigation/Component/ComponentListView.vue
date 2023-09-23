@@ -20,7 +20,7 @@ function pages_mgr_watcher(t: any) {
 function loader_view() {
     compos.value.length = 0;
     const mgr = props.context.data.symbolsMgr;
-    compos.value = mgr.resource.slice(0, 30);
+    compos.value = mgr.resource;
 }
 function down(e: MouseEvent, shape: Shape) {
     compo = shape;
