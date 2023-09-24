@@ -25,12 +25,12 @@ import { insertNetworkInfo } from "@/utils/message"
 import { S3Storage, StorageOptions } from "@/utils/storage";
 import { NetworkStatus } from '@/communication/modules/network_status'
 import { Comment } from '@/context/comment';
-import { DocSelectionOp } from "@/context/communication/doc_selection_op";
-import { throttle } from "@/utils/timing_util";
 import { DocSelectionOpData, DocSelectionOpType } from "@/communication/modules/doc_selection_op";
 import { debounce } from '@/utils/timing_util';
 import { NetworkStatusType } from "@/communication/types";
 import { _updateRoot } from '@/utils/content';
+import Bridge from "@/components/Document/Bridge.vue";
+import { Component } from '@/context/component';
 
 const { t } = useI18n();
 const curPage = shallowRef<Page | undefined>(undefined);
@@ -56,9 +56,10 @@ let timeForRight: any;
 const loading = ref<boolean>(false);
 const sub_loading = ref<boolean>(false);
 const null_context = ref<boolean>(true);
-const isRead = ref(false)
-const canComment = ref(false)
-const isEdit = ref(true)
+const isRead = ref(false);
+const canComment = ref(false);
+const isEdit = ref(true);
+const bridge = ref<boolean>(false);
 function screenSetting() {
     const element = document.documentElement;
     const isFullScreen = document.fullscreenElement;
@@ -367,12 +368,12 @@ const getDocumentInfo = async () => {
             context.workspace.setDocumentPerm(dataInfo.data.document_permission.perm_type)
             getDocumentAuthority();
             getUserInfo()
-            
+
             context.comment.setDocumentInfo(dataInfo.data)
             null_context.value = false;
             context.selection.watch(selectionWatcher);
             context.workspace.watch(workspaceWatcher);
-
+            context.component.watch(component_watcher);
             const docId = route.query.id as string;
             const token = localStorage.getItem("token") || "";
             if (await context.communication.docOp.start(token, docId, document, context.coopRepo, dataInfo.data.document.version_id ?? "")) {
@@ -413,8 +414,8 @@ async function upload(projectId: string) {
         // todo 上传失败处理
         return;
     }
-    console.log(result,'文档上传');
-    
+    console.log(result, '文档上传');
+
     const doc_id = result!.data.doc_id;
     router.replace({
         path: '/document',
@@ -447,6 +448,7 @@ function init_doc() {
             getUserInfo();
             context.selection.watch(selectionWatcher);
             context.workspace.watch(workspaceWatcher);
+            context.component.watch(component_watcher);
             const project_id = localStorage.getItem('project_id') || '';
             upload(project_id);
             localStorage.setItem('project_id', '');
@@ -604,6 +606,10 @@ const teamSelectionModifi = (docCommentOpData: DocSelectionOpData) => {
         }
     }
 }
+function component_watcher(t: number) {
+    if (!context) return;
+    if (t === Component.BRIDGE_CHANGE) bridge.value = context.component.bridge;
+}
 
 onMounted(() => {
     window.addEventListener('beforeunload', onBeforeUnload);
@@ -630,6 +636,7 @@ onUnmounted(() => {
     clearInterval(loopNet);
     clearInterval(netErr);
     networkStatus.close();
+    context?.component.unwatch(component_watcher);
 })
 </script>
 
@@ -679,6 +686,7 @@ onUnmounted(() => {
             <span class="text" v-if="permissionChange === PermissionChange.delete">{{ t('home.delete_file') }}</span>
             <span style="color: #0d99ff;" v-if="countdown > 0">{{ countdown }}</span>
         </div>
+        <Bridge v-if="bridge" :context="context!"></Bridge>
     </div>
 </template>
 <style>

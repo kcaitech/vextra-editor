@@ -1,0 +1,47 @@
+<script setup lang="ts">
+import { h } from 'vue';
+import comsMap from '@/components/Document/Content/comsmap';
+import { GroupShape } from "@kcdesign/data";
+import { renderSymbolPreview as r } from "@kcdesign/data";
+import { initCommonShape } from "@/components/Document/Content/common";
+import Tooltip from '@/components/common/Tooltip.vue';
+
+interface Props {
+    data: GroupShape
+}
+const props = defineProps<Props>();
+const common = initCommonShape(props);
+function gen_view_box() {
+    const frame = props.data.frame;
+    return `0 0 ${frame.width} ${frame.height}`;
+}
+function render() {
+    const ret = r(h, props.data, comsMap, common.reflush);
+    return ret;
+}
+</script>
+<template>
+    <div class="compo-preview-container">
+        <Tooltip :content="`${props.data.name}`">
+            <svg version="1.1" xmlns="http://www.w3.org/2000/svg" xmlns:xlink="http://www.w3.org/1999/xlink"
+                xmlns:xhtml="http://www.w3.org/1999/xhtml" preserveAspectRatio="xMinYMin meet" width="96px" height="96px"
+                :viewBox='gen_view_box()' overflow="visible" class="render-wrap">
+                <render></render>
+            </svg>
+        </Tooltip>
+    </div>
+</template>
+<style scoped lang="scss">
+.compo-preview-container {
+    width: 100px;
+    height: 100px;
+    background-color: var(--grey-light);
+    border-radius: 4px;
+    border: 2px solid var(--grey-dark);
+
+    .render-wrap {
+        margin-top: 2px;
+        margin-left: 2px;
+    }
+}
+</style>

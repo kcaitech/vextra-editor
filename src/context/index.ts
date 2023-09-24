@@ -17,6 +17,7 @@ import { Asssit } from "./assist";
 import { TeamWork } from "./teamwork";
 import { TableSelection } from "./tableselection";
 import { TextSelection } from "./textselection";
+import { Component } from "./component";
 // 仅暴露必要的方法
 export class RepoWraper {
     private m_repo: CoopRepository;
@@ -63,6 +64,7 @@ export class Context extends Watchable(Object) {
     private m_assist: Asssit;
     private m_teamwork: TeamWork;
     private m_tableselection: TableSelection;
+    private m_component: Component;
     constructor(data: Document, repo: CoopRepository) {
         super();
         (window as any).__context = this;
@@ -84,6 +86,7 @@ export class Context extends Watchable(Object) {
         this.m_teamwork = new TeamWork();
         this.m_tableselection = new TableSelection(this); // 表格选区
         this.m_textselection = new TextSelection(this.m_selection); // 文字选区
+        this.m_component = new Component(this);
         const pagelist = data.pagesList.slice(0);
         const checkSymLoaded: (() => boolean)[] = [];
         const pageloadTask = new class implements Task { // page auto loader
@@ -225,5 +228,8 @@ export class Context extends Watchable(Object) {
     }
     get esctask() {
         return this.m_escstack;
+    }
+    get component() {
+        return this.m_component;
     }
 }

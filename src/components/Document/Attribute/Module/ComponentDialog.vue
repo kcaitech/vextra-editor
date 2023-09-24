@@ -2,7 +2,7 @@
 import { ref, nextTick, onMounted, onUnmounted } from 'vue';
 import { Context } from '@/context';
 import { ArrowDown } from '@element-plus/icons-vue';
-import ComponentList from "@/components/common/ComponentList.vue";
+import ComponentList from "../../Navigation/Component/ComponentList.vue";
 import ComponentCollapse from '../../Navigation/Component/ComponentCollapse.vue';
 const props = defineProps<{
     top?: string,

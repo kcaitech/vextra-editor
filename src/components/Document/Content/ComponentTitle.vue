@@ -2,7 +2,7 @@
 import { ref, nextTick } from 'vue'
 import { AsyncTransfer, Matrix, Shape } from "@kcdesign/data";
 import { Context } from "@/context";
-import { Root, permIsEdit } from '@/utils/content';
+import { permIsEdit } from '@/utils/content';
 import { ClientXY, PageXY } from '@/context/selection';
 import { EffectType, Wheel, fourWayWheel } from '@/utils/wheel';
 import { check_status, end_transalte, gen_offset_map, get_speed, migrate, migrate_immediate, modify_mouse_position_by_type, pre_translate } from '@/utils/controllerFn';
@@ -93,12 +93,14 @@ const ChangeReName = (e: Event) => {
 
 const hoverShape = () => {
     if (isDragging) return;
+    if (props.context.workspace.isPageDragging) return;
     emit('hover', props.shape)
     hover.value = true
 }
 
 const unHoverShape = () => {
     if (isDragging) return;
+    if (props.context.workspace.isPageDragging) return;
     emit('leave')
     hover.value = false;
 }
@@ -117,6 +119,8 @@ let offset_map: PointsOffset | undefined;
 // 鼠标按下
 function down(e: MouseEvent) {
     const context = props.context; // 组件通信中心，里面包含负责各种功能的通信模组
+    if (context.workspace.isPageDragging) return;
+    e.stopPropagation();
     if (!permIsEdit(context)) return; // 检查是否有权限编辑文档， 没有则return；
     if (!check_status(context)) return; // 检查当前文档状态是否可以编辑；
     if (e.button === 0) { // 只允许左键进行拖动
@@ -269,10 +273,13 @@ function modify_speed(e: MouseEvent) {
     t_e = e;
 }
 // #endregion
+function move2(e: MouseEvent) {
+    if (e.buttons === 0) e.stopPropagation();
+}
 </script>
 
 <template>
-    <div class="container-name" @mouseenter="hoverShape" @mouseleave="unHoverShape" @mousedown.stop="down"
+    <div class="container-name" @mouseenter="hoverShape" @mouseleave="unHoverShape" @mousedown="down" @mousemove="move2"
         data-area="controller">
         <div class="name-wrap" :style="{ maxWidth: props.maxWidth + 'px' }" @dblclick="onRename">
             <svg width="305" height="305" viewBox="0 0 305 305" fill="none" xmlns="http://www.w3.org/2000/svg">
