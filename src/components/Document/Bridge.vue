@@ -31,7 +31,6 @@ function move(e: MouseEvent) {
 function up(e: MouseEvent) {
     if (is_content(props.context, e)) {
         const locate = get_position_on_page(e);
-        console.log('组件成功降落pos: ', locate);
         ref_symbol(props.context, locate, '成功降落', wonder.value!);
     } else {
         console.log('区外');
