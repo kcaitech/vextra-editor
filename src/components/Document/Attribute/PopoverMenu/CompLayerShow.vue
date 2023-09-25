@@ -47,6 +47,7 @@ function esc(e: KeyboardEvent) {
 
 const showSelectLayer = (e: MouseEvent) => {
     e.stopPropagation();
+    selectoption.value = false;
     if (isselectLayer.value && e.target instanceof Element && e.target.closest('.input')) return isselectLayer.value = false;
     const shapes = props.context.selection.selectedShapes;
     if (shapes.length === 1) {
@@ -149,13 +150,13 @@ onUnmounted(() => {
             <div v-if="props.addType !== 'toggle' && props.addType">
                 <span>默认值</span>
                 <div v-if="props.addType === 'Show'" class="show">
-                    <div class="input" @click="showMenu">
+                    <div class="input" @click.stop="showMenu">
                         <span>{{ defaultValue }}</span>
                         <el-icon>
                             <ArrowDown
                                 :style="{ transform: selectoption ? 'rotate(180deg)' : 'rotate(0deg)', transition: '0.3s' }" />
                         </el-icon>
-                        <SelectMenu v-if="selectoption" :top="33" width="100%" :menuItems="menuItems" @select-index="handleShow"></SelectMenu>
+                        <SelectMenu v-if="selectoption" :top="33" width="100%" :menuItems="menuItems" @select-index="handleShow" @close="selectoption = false"></SelectMenu>
                     </div>
                     <!-- <el-select v-model="defaultValue" class="m-2" placeholder="Select">
                         <el-option v-for="item in options" :key="item.value" :label="item.label" :value="item.value" />

@@ -1,5 +1,5 @@
 <script  setup lang="ts">
-import { ref } from 'vue';
+import { onMounted, onUnmounted, ref } from 'vue';
 const props = defineProps<{
     width: string
     top: number
@@ -7,10 +7,23 @@ const props = defineProps<{
 }>()
 const emit = defineEmits<{
     (e: 'selectIndex', index: number): void
+    (e: 'close'): void
 }>()
 const clickItem = (index: number) => {
     emit('selectIndex', index)
 }
+const close = (e: MouseEvent) => {
+    e.stopPropagation();
+    if (e.target instanceof Element && !e.target.closest('.select_menu')) {
+        emit('close');
+    }
+}
+onMounted(() => {
+    document.addEventListener('click', close);
+})
+onUnmounted(() => {
+    document.removeEventListener('click', close);
+})
 </script>
 
 <template>

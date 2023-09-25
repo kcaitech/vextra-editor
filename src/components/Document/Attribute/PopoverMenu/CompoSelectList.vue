@@ -115,6 +115,7 @@ function icon_class(type: ShapeType) {
     }
 
     .name {
+        width: 125px;
         font-size: var(--font-default-fontsize);
         overflow: hidden;
         text-overflow: ellipsis;
