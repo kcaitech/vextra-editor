@@ -559,6 +559,9 @@ onUnmounted(() => {
     <div class="line" v-if="props.items.includes('component')"></div>
     <div class="item" v-if="props.items.includes('component')" @click="component">
       <span>{{ t('system.create_component') }}</span>
+      <span class="shortkey">
+        <Key code="Ctrl Alt K"></Key>
+      </span>
     </div>
     <div class="item" v-if="props.items.includes('instance')" @click="instance">
       <span>{{ t('system.unbind_instance') }}</span>

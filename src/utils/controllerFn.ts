@@ -12,7 +12,7 @@ import { Menu } from "@/context/menu";
 
 export function keyboardHandle(e: KeyboardEvent, context: Context, t: Function) {
     if (!permIsEdit(context) || context.tool.action === Action.AddComment) return;
-    const { target, shiftKey, ctrlKey, metaKey } = e;
+    const { target, shiftKey, ctrlKey, metaKey, altKey } = e;
     if (target instanceof HTMLInputElement) return;
     const shapes = context.selection.selectedShapes;
     if (!shapes.length) return;
@@ -131,6 +131,18 @@ export function keyboardHandle(e: KeyboardEvent, context: Context, t: Function) 
             const editor = context.editor4Page(page);
             editor.toggleShapesLock(shapes);
             context.selection.resetSelectShapes();
+        }
+    } else if (e.code === 'KeyK') {
+        if (altKey && (ctrlKey || metaKey)) {
+            const selection = context.selection;
+            const page = selection.selectedPage;
+            if (page) {
+                const editor = context.editor4Page(page);
+                const shape = editor.makeSymbol(context.data, selection.selectedShapes, '组件');
+                if (shape) {
+                    selection.selectShape(shape as unknown as Shape);
+                }
+            }
         }
     }
     if (transform) {
