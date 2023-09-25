@@ -10,7 +10,8 @@ export const shape: any = {
     image: '图片',
     input_text: '输入文本',
     table: '表格',
-    contact: '连接线'
+    contact: '连接线',
+    symbol: '组件'
 }
 shape[ShapeType.Rectangle] = '矩形';
 
