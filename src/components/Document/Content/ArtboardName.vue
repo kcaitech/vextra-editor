@@ -259,10 +259,13 @@ function modify_speed(e: MouseEvent) {
     speed = get_speed(t_e || e, e);
     t_e = e;
 }
+function move2(e: MouseEvent) {
+    if (e.buttons === 0) e.stopPropagation();
+}
 </script>
 
 <template>
-    <div class="container-name" @mouseenter="hoverShape" @mouseleave="unHoverShape" @mousedown.stop="down" @mousemove.stop
+    <div class="container-name" @mouseenter="hoverShape" @mouseleave="unHoverShape" @mousedown.stop="down" @mousemove="move2"
         data-area="controller">
         <div class="name" :class="{ selected, active: hover }" :style="{ maxWidth: props.maxWidth + 'px' }"
             @dblclick="onRename">{{ props.name }}</div>
