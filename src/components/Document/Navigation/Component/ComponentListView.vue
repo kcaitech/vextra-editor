@@ -1,12 +1,13 @@
 <script setup lang="ts">
 import { Context } from '@/context';
 import ComponentCard from './ComponentCard.vue';
-import { onMounted, onUnmounted, ref } from 'vue';
+import { computed, onMounted, onUnmounted, ref, watch } from 'vue';
 import { GroupShape, Shape } from '@kcdesign/data';
 import { shape_track } from '@/utils/content';
 import { ClientXY } from '@/context/selection';
 interface Props {
     context: Context
+    search: string
 }
 const props = defineProps<Props>();
 const compos = ref<Shape[]>([]);
@@ -56,6 +57,19 @@ const observer = new ResizeObserver(() => { reflush.value++; });
 function init() {
     list_container.value && observer.observe(list_container.value);
 }
+
+const escapeRegExp = (text: string) => {
+    return text.replace(/[-[\]{}()*+?.,\\^$|#\s]/g, '\\$&');
+}
+const filterCompos = ref<Shape[]>([]);
+
+watch(() => props.search, (v) => {
+    if(v.length < 1) return;
+    const pattern = new RegExp(escapeRegExp(v), 'i');
+    const filteritem = compos.value.filter(item => pattern.test(item.name));
+    console.log(filteritem);
+    filterCompos.value = filteritem;
+})
 onMounted(() => {
     props.context.data.pagesMgr.watch(loader_view);
     props.context.data.symbolsMgr.watch(loader_view);

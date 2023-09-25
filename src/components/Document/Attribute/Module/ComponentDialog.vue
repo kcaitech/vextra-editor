@@ -9,12 +9,7 @@ const props = defineProps<{
     right?: string,
     context: Context;
 }>();
-const contents = [
-    { name: '矩形1' },
-    { name: '矩形2' },
-    { name: '矩形3' },
-    { name: '矩形4' }
-]
+
 const emit = defineEmits<{
     (e: 'closeDialog'): void;
     (e: 'saveLayerShow', data: any, type: 'Text' | 'Show' | 'toggle' | ''): void;
@@ -75,14 +70,14 @@ onUnmounted(() => {
         top: cur_top > 0 ? props.top : cur_top + 'px'
     }">
         <ComponentList v-slot="type" :heard="true" @close="popoverClose" :context="context">
-            <el-scrollbar>
+            <!-- <el-scrollbar>
                 <div class="demo-collapse">
                     <div class="demo-collapse" v-for="(item, index) in list" :key="index">
                         <ComponentCollapse :context="context" :type="type.type" :item="item" :index="index">
                         </ComponentCollapse>
                     </div>
                 </div>
-            </el-scrollbar>
+            </el-scrollbar> -->
         </ComponentList>
     </div>
     <div class="overlay" @click.stop="popoverClose" @mousedown.stop @wheel.stop></div>
