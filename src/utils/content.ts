@@ -61,6 +61,11 @@ export function get_image_name(brothers: Shape[], name: string) {
   const repeats: number = renamebrothers.length;
   return repeats ? `${name} ${repeats + 1}` : name;
 }
+export function get_symbol_ref_name(symbolName: string, brothers: Shape[], t: Function) {
+  for (let i = 0, len = brothers.length; i < len; i++) {
+
+  }
+}
 // 判断图形是否在可视区域内
 export function isInner(context: Context, shape: Shape) {
   const pMatrix = context.workspace.matrix;
@@ -729,6 +734,14 @@ export function shape_track(context: Context, shape: Shape) {
 
   function track() {
     fit_no_transform(context, shape);
+  }
+}
+export function get_shape_within_document(context: Context, id: string) {
+  const pages = context.data.pagesMgr.resource;
+  for (let i = 0, len = pages.length; i < len; i++) {
+    const p = pages[i];
+    const t = p.getShape(id);
+    if (t) return t;
   }
 }
 export function is_content(context: Context, e: MouseEvent) {

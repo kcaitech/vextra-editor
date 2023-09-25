@@ -331,7 +331,8 @@ function component() {
   const page = selection.selectedPage;
   if (page) {
     const editor = props.context.editor4Page(page);
-    const shape = editor.makeSymbol(props.context.data, selection.selectedShapes, '组件');
+    const name = getName(ShapeType.Symbol, props.context.data.symbolsMgr.resource, t);
+    const shape = editor.makeSymbol(props.context.data, selection.selectedShapes, name);
     if (shape) {
       selection.selectShape(shape as unknown as Shape);
     }

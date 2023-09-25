@@ -2,7 +2,7 @@ import { Context } from "@/context";
 import { message } from "./message";
 import { replace } from "./clipboard";
 import { is_parent_locked, is_parent_unvisible } from "@/utils/shapelist";
-import { permIsEdit } from "./content";
+import { getName, permIsEdit } from "./content";
 import { Action } from "@/context/tool";
 import { AsyncTransfer, GroupShape, Shape, ShapeType, TableShape } from "@kcdesign/data";
 import { ClientXY, PageXY } from "@/context/selection";
@@ -138,7 +138,8 @@ export function keyboardHandle(e: KeyboardEvent, context: Context, t: Function) 
             const page = selection.selectedPage;
             if (page) {
                 const editor = context.editor4Page(page);
-                const shape = editor.makeSymbol(context.data, selection.selectedShapes, '组件');
+                const name = getName(ShapeType.Symbol, context.data.symbolsMgr.resource, t);
+                const shape = editor.makeSymbol(context.data, selection.selectedShapes, name);
                 if (shape) {
                     selection.selectShape(shape as unknown as Shape);
                 }
