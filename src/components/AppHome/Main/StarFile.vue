@@ -1,16 +1,16 @@
 <template>
-    <tablelist :data="lists" :iconlist="iconlists" @share="Sharefile" @dbclickopen="openDocument" @updatestar="Starfile"
-        @rightMeun="rightmenu" :noNetwork="noNetwork" @refreshDoc="refreshDoc"/>
-    <listrightmenu :items="items" :data="mydata" @ropen="openDocument" @r-sharefile="Sharefile" @r-starfile="Starfile"/>
-    <FileShare v-if=" showFileShare " @close=" closeShare " :docId=" docId " :selectValue=" selectValue " :userInfo="userInfo"
-        @select-type=" onSelectType " @switch-state=" onSwitch " :shareSwitch=" shareSwitch " :pageHeight=" pageHeight"  :docUserId="docUserId">
-    </FileShare>
-    <div v-if="showFileShare" class="overlay"></div>
+        <tablelist :data="lists" :iconlist="iconlists" @share="Sharefile" @dbclickopen="openDocument" @updatestar="Starfile" :address="true"
+            @rightMeun="rightmenu" :noNetwork="noNetwork" @refreshDoc="refreshDoc"/>
+        <listrightmenu :items="items" :data="mydata" @ropen="openDocument" @r-sharefile="Sharefile" @r-starfile="Starfile"/>
+        <FileShare v-if=" showFileShare " @close=" closeShare " :docId=" docId " :selectValue=" selectValue " :userInfo="userInfo" :project="is_project"
+            @select-type=" onSelectType " @switch-state=" onSwitch " :shareSwitch=" shareSwitch " :pageHeight=" pageHeight"  :docUserId="docUserId" :projectPerm="projectPerm">
+        </FileShare>
+        <div v-if="showFileShare" class="overlay"></div>
 </template>
 <script setup lang="ts">
 import * as user_api from '@/apis/users'
 import { ElMessage } from 'element-plus'
-import { ref, onMounted, onUnmounted, nextTick, watch } from 'vue'
+import { ref, onMounted, onUnmounted, nextTick, watch, inject, Ref } from 'vue'
 import { useI18n } from 'vue-i18n'
 import { router } from '@/router'
 import FileShare from '@/components/Document/Toolbar/Share/FileShare.vue'
@@ -32,7 +32,14 @@ const mydata = ref()
 const docUserId = ref('')
 const noNetwork = ref(false)
 const iconlists = ref(['star', 'share'])
-const emits = defineEmits(['data-update'])
+const is_project = ref(false);
+const emits = defineEmits<{
+    (e: 'dataUpdate', list: any, title: string): void
+}>();
+const projectPerm = ref()
+const { projectList } = inject('shareData') as {
+    projectList: Ref<any[]>;
+};
 
 const userData = ref({
     avatar: localStorage.getItem('avatar') || '',
@@ -46,10 +53,12 @@ interface data {
         name: string
         doc_type: number
         user_id: string
+        project_id: string
     }
     document_favorites: {
         is_favorite: boolean
     }
+    project_perm: number
 }
 
 async function getUserdata() {
@@ -63,9 +72,16 @@ async function getUserdata() {
         } else {
             noNetwork.value = false
             for (let i = 0; i < data.length; i++) {
+                data[i].project_perm = undefined;
                 let { document: { size }, document_access_record: { last_access_time } } = data[i]
                 data[i].document.size = sizeTostr(size)
                 data[i].document_access_record.last_access_time = last_access_time.slice(0, 19)
+                if(data[i].project) {
+                    const project = projectList.value.filter(item => item.project.id === data[i].project.id)[0];
+                    if(project) {
+                        data[i].project_perm = project.self_perm_type;
+                    }
+                }
             }
         }
         lists.value = Object.values(data)
@@ -130,10 +146,16 @@ const Sharefile = (data: data) => {
         showFileShare.value = false
         return
     }
+    if(data.document.project_id && data.document.project_id !== '0') {
+        is_project.value = true;
+    }else {
+        is_project.value = false;
+    }
     docUserId.value = data.document.user_id
     userInfo.value = userData.value
     docId.value = data.document.id
     selectValue.value = data.document.doc_type !== 0 ? data.document.doc_type : data.document.doc_type
+    projectPerm.value = data.project_perm;
     showFileShare.value = true
 }
 
@@ -188,7 +210,7 @@ const onSelectType = (type: number) => {
 }
 
 watch(lists, (Nlist) => {
-    emits('data-update', Nlist, t('home.modification_time'))
+    emits('dataUpdate', Nlist, t('home.modification_time'))
 }, { deep: true })
 
 onMounted(() => {

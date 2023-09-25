@@ -30,7 +30,7 @@ export function GetDocumentsList(params = {}, ops = {}) {
     return httpRequest({
         url: 'documents/access_records',
         method: 'get',
-        params:params,
+        params: params,
         ...ops
     })
 }
@@ -41,7 +41,7 @@ export function DeleteList(params = {}, ops = {}) {
     return httpRequest({
         url: 'documents/access_record',
         method: 'delete',
-        params:params,
+        params: params,
         ...ops
     })
 }
@@ -51,7 +51,7 @@ export function GetfavoritesList(params = {}, ops = {}) {
     return httpRequest({
         url: 'documents/favorites',
         method: 'get',
-        params:params,
+        params: params,
         ...ops
     })
 }
@@ -62,7 +62,7 @@ export function SetfavoriteStatus(data = {}, ops = {}) {
     return httpRequest({
         url: 'documents/favorites',
         method: 'put',
-        data:data,
+        data: data,
         ...ops
     })
 }
@@ -72,7 +72,7 @@ export function GetrecycleList(params = {}, ops = {}) {
     return httpRequest({
         url: 'documents/recycle_bin',
         method: 'get',
-        params:params,
+        params: params,
         ...ops
     })
 }
@@ -82,7 +82,7 @@ export function RecoverFile(data = {}, ops = {}) {
     return httpRequest({
         url: 'documents/recycle_bin',
         method: 'put',
-        data:data,
+        data: data,
         ...ops
     })
 }
@@ -92,7 +92,7 @@ export function DeleteFile(params = {}, ops = {}) {
     return httpRequest({
         url: 'documents/recycle_bin',
         method: 'delete',
-        params:params,
+        params: params,
         ...ops
     })
 }
@@ -102,7 +102,7 @@ export function ExitSharing(params = {}, ops = {}) {
     return httpRequest({
         url: 'documents/share',
         method: 'delete',
-        params:params,
+        params: params,
         ...ops
     })
 }
@@ -112,7 +112,7 @@ export function MoveFile(params = {}, ops = {}) {
     return httpRequest({
         url: 'documents/',
         method: 'delete',
-        params:params,
+        params: params,
         ...ops
     })
 }
@@ -122,7 +122,7 @@ export function ShareLists(params = {}, ops = {}) {
     return httpRequest({
         url: 'documents/shares',
         method: 'get',
-        params:params,
+        params: params,
         ...ops
     })
 }
@@ -132,7 +132,7 @@ export function Setusericon(data = {}, ops = {}) {
     return httpRequest({
         url: '/users/info/avatar',
         method: 'put',
-        data:data,
+        data: data,
         ...ops
     })
 }
@@ -142,7 +142,7 @@ export function Setusernickname(data = {}, ops = {}) {
     return httpRequest({
         url: '/users/info/nickname',
         method: 'put',
-        data:data,
+        data: data,
         ...ops
     })
 }
@@ -152,7 +152,7 @@ export function Setfilename(data = {}, ops = {}) {
     return httpRequest({
         url: '/documents/name',
         method: 'put',
-        data:data,
+        data: data,
         ...ops
     })
 }
@@ -162,7 +162,7 @@ export function Copyfile(data = {}, ops = {}) {
     return httpRequest({
         url: '/documents/copy',
         method: 'post',
-        data:data,
+        data: data,
         ...ops
     })
 }
@@ -172,7 +172,151 @@ export function CreateTeam(data = {}, ops = {}) {
     return httpRequest({
         url: '/documents/team',
         method: 'post',
-        data:data,
+        data: data,
         ...ops
     })
 }
+
+//获取团队列表
+export function GetteamList(params = {}, ops = {}) {
+    return httpRequest({
+        url: '/documents/team/list',
+        method: 'get',
+        params: params,
+        ...ops
+    })
+}
+
+//获取团队成员
+export function GetteamMember(params = {}, ops = {}) {
+    return httpRequest({
+        url: '/documents/team/member/list',
+        method: 'get',
+        params: params,
+        ...ops
+    })
+}
+
+
+//设置团队信息
+export function Setteaminfo(data = {}, ops = {}) {
+    return httpRequest({
+        url: '/documents/team/info',
+        method: 'put',
+        data: data,
+        ...ops
+    })
+}
+
+//设置团队邀请选项
+export function Setteaminviteinfo(data = {}, ops = {}) {
+    return httpRequest({
+        url: '/documents/team/invited',
+        method: 'put',
+        data: data,
+        ...ops
+    })
+}
+
+//设置团队成员权限
+export function Setteammemberperm(data = {}, ops = {}) {
+    return httpRequest({
+        url: '/documents/team/member/perm',
+        method: 'put',
+        data: data,
+        ...ops
+    })
+}
+
+//转移团队创建者
+export function Setteamcreator(data = {}, ops = {}) {
+    return httpRequest({
+        url: '/documents/team/creator',
+        method: 'put',
+        data: data,
+        ...ops
+    })
+}
+
+//获取团队信息
+export function Getteaminfo(params = {}, ops = {}) {
+    return httpRequest({
+        url: '/documents/team/info/invited',
+        method: 'get',
+        params: params,
+        ...ops
+    })
+}
+
+//申请加入团队
+export function JoinTeam(data = {}, ops = {}) {
+    return httpRequest({
+        url: '/documents/team/apply',
+        method: 'post',
+        data: data,
+        ...ops
+    })
+}
+
+//获取团队信息
+export function Getjoinlist(params = {}, ops = {}) {
+    return httpRequest({
+        url: '/documents/team/apply',
+        method: 'get',
+        params: params,
+        ...ops
+    })
+}
+
+//离开团队
+export function Leaveteam(data = {}, ops = {}) {
+    return httpRequest({
+        url: '/documents/team/exit',
+        method: 'post',
+        data: data,
+        ...ops
+    })
+}
+
+//移除团队成员
+export function Deletteamemember(params = {}, ops = {}) {
+    return httpRequest({
+        url: '/documents/team/member',
+        method: 'delete',
+        params: params,
+        ...ops
+    })
+}
+
+//解散团队
+export function Disbandteam(params = {}, ops = {}) {
+    return httpRequest({
+        url: '/documents/team',
+        method: 'delete',
+        params: params,
+        ...ops
+    })
+}
+
+//获取项目列表
+export function GetprojectLists(params = {}, ops = {}) {
+    return httpRequest({
+        url: '/documents/team/project/list',
+        method: 'get',
+        params: params,
+        ...ops
+    })
+}
+
+//创建项目
+export function CreateProject(data = {}, ops = {}) {
+    return httpRequest({
+        url: '/documents/team/project',
+        method: 'post',
+        data: data,
+        ...ops
+    })
+}
+
+
+

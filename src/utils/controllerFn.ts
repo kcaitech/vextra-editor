@@ -4,8 +4,11 @@ import { replace } from "./clipboard";
 import { is_parent_locked, is_parent_unvisible } from "@/utils/shapelist";
 import { permIsEdit } from "./content";
 import { Action } from "@/context/tool";
-import { Shape, ShapeType, TableShape } from "@kcdesign/data";
-import { PageXY } from "@/context/selection";
+import { AsyncTransfer, GroupShape, Shape, ShapeType, TableShape } from "@kcdesign/data";
+import { ClientXY, PageXY } from "@/context/selection";
+import { debounce } from "lodash";
+import { WorkSpace } from "@/context/workspace";
+import { Menu } from "@/context/menu";
 
 export function keyboardHandle(e: KeyboardEvent, context: Context, t: Function) {
     if (!permIsEdit(context) || context.tool.action === Action.AddComment) return;
@@ -189,4 +192,65 @@ export function get_direction(rotation: number) {
     else if (rotation >= 293 && rotation < 338) return 315;
     else if (rotation >= 338 && rotation <= 360) return 0;
     else return 0;
+}
+export function gen_offset_map(shape: Shape, down: PageXY) {
+    const m = shape.matrix2Root(), f = shape.frame;
+    const lt = m.computeCoord2(0, 0);
+    const rb = m.computeCoord2(f.width, f.height);
+    const pivot = m.computeCoord2(f.width / 2, f.height / 2);
+    const rt = m.computeCoord2(f.width, 0);
+    const lb = m.computeCoord2(0, f.height);
+    return {
+        lt: { x: lt.x - down.x, y: lt.y - down.y },
+        rb: { x: rb.x - down.x, y: rb.y - down.y },
+        pivot: { x: pivot.x - down.x, y: pivot.y - down.y },
+        rt: { x: rt.x - down.x, y: rt.y - down.y },
+        lb: { x: lb.x - down.x, y: lb.y - down.y }
+    }
+}
+export function pre_translate(context: Context, shapes: Shape[]) {
+    context.selection.unHoverShape();
+    context.workspace.setSelectionViewUpdater(false);
+    context.workspace.translating(true);
+    context.assist.set_trans_target(shapes);
+    context.cursor.cursor_freeze(true); // 拖动过程中禁止鼠标光标切换
+}
+export function modify_mouse_position_by_type(update_type: number, startPosition: ClientXY, mousePosition: ClientXY,) {
+    if (update_type === 3) startPosition.x = mousePosition.x, startPosition.y = mousePosition.y;
+    else if (update_type === 2) startPosition.y = mousePosition.y;
+    else if (update_type === 1) startPosition.x = mousePosition.x;
+}
+export function migrate_immediate(context: Context, asyncTransfer: AsyncTransfer, shapes: Shape[], shape: Shape) {
+    if (!shapes.length) return;
+    const p = shape.matrix2Root().computeCoord2(4, 4);
+    const targetParent = context.selection.getClosetArtboard(p);
+    const m = getCloesetContainer(context, shape).id !== targetParent.id;
+    if (targetParent.id === shape.id) return;
+    if (m && asyncTransfer) asyncTransfer.migrate(targetParent as GroupShape);
+}
+// 判断当前所处的wrap
+function getCloesetContainer(context: Context, shape: Shape): Shape {
+    let result = context.selection.selectedPage!
+    let p = shape.parent;
+    while (p) {
+        if (p.type == ShapeType.Artboard) return p;
+        p = p.parent;
+    }
+    return result
+}
+// 迁移
+export const migrate = debounce(migrate_immediate, 100);
+export function end_transalte(context: Context) {
+    context.workspace.translating(false);
+    context.workspace.setSelectionViewUpdater(true);
+    context.workspace.notify(WorkSpace.SELECTION_VIEW_UPDATE);
+    context.assist.reset();
+    context.workspace.setCtrl('page');
+    context.cursor.cursor_freeze(false);
+}
+export function check_status(context: Context) {
+    context.menu.menuMount(); // 关闭可能已经打开的右键菜单
+    context.menu.notify(Menu.SHUTDOWN_POPOVER); // 关闭可能已经打开的弹窗
+    const action = context.tool.action;
+    return action === Action.AutoV || action === Action.AutoK;
 }

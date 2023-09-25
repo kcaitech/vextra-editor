@@ -1,6 +1,6 @@
 <script setup lang="ts">
 import { onMounted, onUnmounted, ref, reactive } from 'vue'
-import { Shape, ShapeType, RectShape, GroupShape, PathShape, PathShape2 } from '@kcdesign/data';
+import { Shape, ShapeType, RectShape, GroupShape, PathShape, PathShape2, TextShape } from '@kcdesign/data';
 import IconText from '@/components/common/IconText.vue';
 import Position from '../PopoverMenu/Position.vue';
 import RadiusForIos from '../PopoverMenu/RadiusForIos.vue';
@@ -133,21 +133,15 @@ function getRectShapeAttr(shape: Shape) {
             multipleValues.value = true
             radius.value.lt = mixed
         }
-    } else if (shape instanceof GroupShape) {
-        radius.value.lt = (shape as GroupShape).fixedRadius || 0
-        radius.value.lb = (shape as GroupShape).fixedRadius || 0
-        radius.value.rt = (shape as GroupShape).fixedRadius || 0
-        radius.value.rb = (shape as GroupShape).fixedRadius || 0
-    } else if (shape instanceof PathShape) {
-        radius.value.lt = (shape as PathShape).fixedRadius || 0
-        radius.value.lb = (shape as PathShape).fixedRadius || 0
-        radius.value.rt = (shape as PathShape).fixedRadius || 0
-        radius.value.rb = (shape as PathShape).fixedRadius || 0
-    } else if (shape instanceof PathShape2) {
-        radius.value.lt = (shape as PathShape2).fixedRadius || 0
-        radius.value.lb = (shape as PathShape2).fixedRadius || 0
-        radius.value.rt = (shape as PathShape2).fixedRadius || 0
-        radius.value.rb = (shape as PathShape2).fixedRadius || 0
+    } else if (shape instanceof GroupShape ||
+        shape instanceof PathShape ||
+        shape instanceof PathShape2 ||
+        shape instanceof TextShape) {
+        const fixedRadius = shape.fixedRadius ?? 0;
+        radius.value.lt = fixedRadius;
+        radius.value.lb = fixedRadius;
+        radius.value.rt = fixedRadius;
+        radius.value.rb = fixedRadius;
     }
 }
 function onChangeX(value: string) {
@@ -375,7 +369,8 @@ function adapt() {
 const RADIUS_SETTING = [
     ShapeType.Rectangle, ShapeType.Artboard,
     ShapeType.Image, ShapeType.Group,
-    ShapeType.Path, ShapeType.Path2, ShapeType.Contact
+    ShapeType.Path, ShapeType.Path2, ShapeType.Contact,
+    ShapeType.Text
 ];
 const MULTI_RADIUS = [ShapeType.Rectangle, ShapeType.Artboard, ShapeType.Image];
 function layout() {

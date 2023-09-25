@@ -1,29 +1,16 @@
 <script setup lang="ts">
-import { h, onMounted, onUnmounted, ref, watch } from 'vue';
+import { h } from 'vue';
 import comsMap from './comsmap'
 import { renderSymbolRef as r } from "@kcdesign/data"
 import { SymbolRefShape } from '@kcdesign/data';
+import { initCommonShape } from './common';
 
 const props = defineProps<{ data: SymbolRefShape }>();
+const common = initCommonShape(props);
 
-const reflush = ref(0);
-function watcher() {
-    reflush.value++;
-}
-const stopWatch = watch(() => props.data, (value, old) => {
-    old.unwatch(watcher);
-    value.watch(watcher);
-})
-onMounted(() => {
-    props.data.loadSymbol();
-    props.data.watch(watcher);
-})
-onUnmounted(() => {
-    props.data.unwatch(watcher);
-    stopWatch();
-})
 function render() {
-    return r(h, props.data, comsMap, reflush.value !== 0 ? reflush.value : undefined);
+    const ret = r(h, props.data, comsMap, common.reflush);
+    return ret;
 }
 
 </script>
@@ -32,6 +19,4 @@ function render() {
     <render />
 </template>
 
-<style scoped>
-
-</style>
+<style scoped></style>

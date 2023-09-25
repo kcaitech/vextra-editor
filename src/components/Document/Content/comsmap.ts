@@ -10,6 +10,8 @@ import ShapeGroupShape from "./ShapeGroupShape.vue"
 import Line from "./Line.vue";
 import ShapeTable from "./ShapeTable.vue";
 import ShapeContact from "./ShapeContact.vue";
+import ShapeTableCell from "./ShapeTableCell.vue";
+
 const comsMap: Map<ShapeType, any> = new Map();
 
 comsMap.set(ShapeType.Artboard, ArtboardView);
@@ -21,10 +23,11 @@ comsMap.set(ShapeType.Path, ShapePath);
 comsMap.set(ShapeType.Path2, ShapePath);
 comsMap.set(ShapeType.Rectangle, Rectangle);
 comsMap.set(ShapeType.Text, TextView);
-comsMap.set(ShapeType.Symbol, ShapeGroup);
+// comsMap.set(ShapeType.Symbol, ShapeGroup);
 comsMap.set(ShapeType.SymbolRef, SymbolRef);
 comsMap.set(ShapeType.Line, Line);
 comsMap.set(ShapeType.Table, ShapeTable);
 comsMap.set(ShapeType.Contact, ShapeContact);
+comsMap.set(ShapeType.TableCell, ShapeTableCell);
 
 export default comsMap;

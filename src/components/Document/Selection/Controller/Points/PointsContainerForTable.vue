@@ -10,7 +10,7 @@ import { WorkSpace } from '@/context/workspace';
 import { EffectType, Wheel, fourWayWheel } from '@/utils/wheel';
 import { get_speed } from '@/utils/controllerFn';
 import { debounce } from 'lodash';
-import { distance2apex, update_pg_2 } from '@/utils/assist';
+import { PointsOffset, distance2apex, gen_match_points } from '@/utils/assist';
 import { Comment } from '@/context/comment';
 import { permIsEdit } from '@/utils/content';
 import { Menu } from '@/context/menu';
@@ -27,7 +27,6 @@ const submatrix = new Matrix();
 let startPosition: ClientXY = { x: 0, y: 0 };
 let isDragging = false;
 let asyncBaseAction: AsyncBaseAction | undefined = undefined;
-let pointType: PointType = 'rb';
 let stickedX: boolean = false;
 let stickedY: boolean = false;
 let sticked_x_v: number = 0;
@@ -130,21 +129,38 @@ let speed: number = 0;
 let shapes: Shape[] = [];
 let need_update_comment = false;
 let submatrix2 = new Matrix();
+let offset_map: PointsOffset | undefined;
+function gen_offset_map(shape: Shape, down: PageXY) {
+    const m = shape.matrix2Root(), f = shape.frame;
+    const lt = m.computeCoord2(0, 0);
+    const rb = m.computeCoord2(f.width, f.height);
+    const pivot = m.computeCoord2(f.width / 2, f.height / 2);
+    const rt = m.computeCoord2(f.width, 0);
+    const lb = m.computeCoord2(0, f.height);
+    return {
+        lt: { x: lt.x - down.x, y: lt.y - down.y },
+        rb: { x: rb.x - down.x, y: rb.y - down.y },
+        pivot: { x: pivot.x - down.x, y: pivot.y - down.y },
+        rt: { x: rt.x - down.x, y: rt.y - down.y },
+        lb: { x: lb.x - down.x, y: lb.y - down.y }
+    }
+}
+// #region trans
 function down(e: MouseEvent) {
     const context = props.context;
     const action = context.tool.action;
-    if (!permIsEdit(context) || action === Action.AddComment) return;
+    if (!permIsEdit(context)) return;
     if (e.button === 0) { // 当前组件只处理左键事件，右键事件冒泡出去由父节点处理
         context.cursor.cursor_freeze(true);
         context.menu.menuMount(); // 取消右键事件
         context.menu.notify(Menu.SHUTDOWN_POPOVER);
-        if (action == Action.AutoV || action == Action.AutoK) {
+        if (action == Action.AutoV || action == Action.AutoK) { 
             context.workspace.setCtrl('controller');
             const table_selection = props.context.tableSelection;
             table_selection.setEditingCell();
             table_selection.resetSelection();
             startPosition = { x: e.clientX - root.x, y: e.clientY - root.y };
-            wheel = fourWayWheel(context, undefined, submatrix2.computeCoord(startPosition));
+            wheel = fourWayWheel(context, undefined, submatrix2.computeCoord(startPosition));           // mark: wheel等于什么
             document.addEventListener('mousemove', mousemove4trans);
             document.addEventListener('mouseup', mouseup4trans);
             move = mousemove4trans, up = mouseup4trans;
@@ -160,19 +176,21 @@ function mousemove4trans(e: MouseEvent) {
         let update_type = 0;
         const isOut = wheel.moving(e, { type: EffectType.TRANS, effect: asyncTransfer.transByWheel });
         if (!isOut) update_type = transform_f(startPosition, mousePosition);
-        if (update_type === 3) startPosition = { ...mousePosition };
+        if (update_type === 3) startPosition = { ...mousePosition };        // mark：update_type不同的值对应的情况是什么
         else if (update_type === 2) startPosition.y = mousePosition.y;
         else if (update_type === 1) startPosition.x = mousePosition.x;
-    } else if (Math.hypot(mousePosition.x - startPosition.x, mousePosition.y - startPosition.y) > dragActiveDis) {
-        shapes = selection.selectedShapes;
+    } else if (Math.hypot(mousePosition.x - startPosition.x, mousePosition.y - startPosition.y) > dragActiveDis) {   // mark：dragActiveDis是什么
+        shapes = selection.selectedShapes; 
         if (e.altKey) shapes = paster_short(props.context, shapes);
-        asyncTransfer = props.context.editor.controller().asyncTransfer(shapes, selection.selectedPage!);
-        selection.unHoverShape();
+        asyncTransfer = props.context.editor.controller().asyncTransfer(shapes, selection.selectedPage!);  // mark：asyncTransfer是什么
+        selection.unHoverShape();  
         workspace.setSelectionViewUpdater(false);
-        workspace.translating(true);
+        workspace.translating(true);  // mark：workspace.translating(true)的作用是什么
         props.context.assist.set_trans_target(shapes);
         submatrix2 = new Matrix(props.context.workspace.matrix.inverse);
         isDragging = true;
+        const pe = submatrix2.computeCoord3(startPosition);
+        offset_map = gen_offset_map(shapes[0], pe);  
     }
 }
 function _migrate() {
@@ -203,6 +221,7 @@ function transform_f(start: ClientXY, end: ClientXY) {
     }
     return update_type;
 }
+let pre_target_x2: number, pre_target_y2: number;
 function trans(asyncTransfer: AsyncTransfer, ps: PageXY, pe: PageXY): number {
     const assist = props.context.assist;
     if (speed > 5) {
@@ -210,38 +229,38 @@ function trans(asyncTransfer: AsyncTransfer, ps: PageXY, pe: PageXY): number {
         assist.notify(Asssit.CLEAR);
         return 3;
     }
+    if (!offset_map) return 3;
     const table = shapes[0];
     if (!table) return 3;
     let need_multi = 0;
     let update_type = 3;
     const stick = { dx: 0, dy: 0, sticked_x: false, sticked_y: false };
-    const stickness = assist.stickness + 1;
-    const target = assist.trans_match(table);
+    const stickness = assist.stickness;
+    const target = assist.trans_match(offset_map, pe);
     if (!target) return update_type;
     if (stickedX2) {
-        if (Math.abs(pe.x - ps.x) > stickness) stickedX2 = false;
+        if (Math.abs(pe.x - ps.x) >= stickness) stickedX2 = false;
         else {
-            pe.x = ps.x, update_type -= 1, need_multi += 1;
+            if (pre_target_x2 === target.x) {
+                pe.x = ps.x, update_type -= 1, need_multi += 1;
+            } else if (target.sticked_by_x) {
+                modify_fix_x(target);
+            }
         }
     } else if (target.sticked_by_x) {
-        const distance = distance2apex(table, target.alignX);
-        const trans_x = target.x - distance;
-        stick.dx = trans_x, stick.sticked_x = true, stick.dy = pe.y - ps.y, pe.x = ps.x + trans_x;
-        const t = submatrix2.inverseCoord(pe);
-        startPosition.x = t.x, update_type -= 1, stickedX2 = true, need_multi += 1;
+        modify_fix_x(target);
     }
     if (stickedY2) {
-        if (Math.abs(pe.y - ps.y) > stickness) stickedY2 = false;
+        if (Math.abs(pe.y - ps.y) >= stickness) stickedY2 = false;
         else {
-            pe.y = ps.y, stick.dy = 0, update_type -= 2, need_multi += 2;
+            if (pre_target_y2 === target.y) {
+                pe.y = ps.y, stick.dy = 0, update_type -= 2, need_multi += 2;
+            } else if (target.sticked_by_y) {
+                modify_fix_y(target);
+            }
         }
     } else if (target.sticked_by_y) {
-        const distance = distance2apex(table, target.alignY);
-        const trans_y = target.y - distance;
-        stick.dy = trans_y, stick.sticked_y = true, pe.y = ps.y + trans_y;
-        if (!stick.sticked_x) stick.dx = pe.x - ps.x;
-        const t = submatrix2.inverseCoord(pe);
-        startPosition.y = t.y, update_type -= 2, stickedY2 = true, need_multi += 2;
+        modify_fix_y(target);
     }
     if (stick.sticked_x || stick.sticked_y) {
         asyncTransfer.stick(stick.dx, stick.dy);
@@ -249,11 +268,36 @@ function trans(asyncTransfer: AsyncTransfer, ps: PageXY, pe: PageXY): number {
         asyncTransfer.trans(ps, pe);
     }
     if (need_multi) {
-        assist.setCPG(update_pg_2(table, true));
+        assist.setCPG(gen_match_points(table, true));
         assist.notify(Asssit.UPDATE_ASSIST, need_multi);
         assist.notify(Asssit.UPDATE_MAIN_LINE);
     }
     return update_type;
+    function modify_fix_x(target: any) {
+        pre_target_x2 = target.x;
+        const distance = distance2apex(table, target.alignX);
+        const trans_x = target.x - distance;
+        stick.dx = trans_x, stick.sticked_x = true, stick.dy = pe.y - ps.y;
+        pe.x = ps.x + trans_x;
+        const t = submatrix2.inverseCoord(pe);
+        startPosition.x = t.x;
+        update_type -= 1;
+        stickedX = true;
+        need_multi += 1;
+    }
+    function modify_fix_y(target: any) {
+        pre_target_y2 = target.y;
+        const distance = distance2apex(table, target.alignY);
+        const trans_y = target.y - distance;
+        stick.dy = trans_y, stick.sticked_y = true;
+        pe.y = ps.y + trans_y;
+        if (!stick.sticked_x) stick.dx = pe.x - ps.x;
+        const t = submatrix2.inverseCoord(pe);
+        startPosition.y = t.y;
+        update_type -= 2;
+        stickedY = true;
+        need_multi += 2;
+    }
 }
 function mouseup4trans(e: MouseEvent) {
     const workspace = props.context.workspace;
@@ -286,29 +330,52 @@ function get_t(p1: PageXY, p2: PageXY): PageXY {
     const pre_delta = { x: p2.x - p1.x, y: p2.y - p1.y }, f = props.shape.frame, r = f.width / f.height;
     return m.computeCoord(f.width + pre_delta.x, f.height + pre_delta.x * (1 / r));
 }
+let pre_target_x: number, pre_target_y: number;
 function scale(asyncBaseAction: AsyncBaseAction, p2: PageXY) {
     const stickness = props.context.assist.stickness;
-    const target = props.context.assist.point_match(props.shape, pointType);
-    if (target) {
-        if (stickedX2) {
-            if (Math.abs(p2.x - sticked_x_v) > stickness) stickedX2 = false;
-            else p2.x = sticked_x_v;
-        } else if (target.sticked_by_x) {
-            p2.x = target.x;
-            sticked_x_v = p2.x;
-            stickedX2 = true;
+    const target = props.context.assist.point_match(p2);
+    if (!target) return asyncBaseAction.executeScale(CtrlElementType.RectRB, p2);
+    if (stickedX) {
+        if (Math.abs(p2.x - sticked_x_v) > stickness) {
+            stickedX = false
+        } else {
+            if (pre_target_x === target.x) {
+                p2.x = sticked_x_v;
+            } else if (target.sticked_by_x) {
+                modify_fix_x(p2, target.x);
+            }
         }
-        if (stickedY2) {
-            if (Math.abs(p2.y - sticked_y_v) > stickness) stickedY2 = false;
-            else p2.y = sticked_y_v;
-        } else if (target.sticked_by_y) {
-            p2.y = target.y;
-            sticked_y_v = p2.y;
-            stickedY2 = true;
+    } else if (target.sticked_by_x) {
+        modify_fix_x(p2, target.x);
+    }
+    if (stickedY) {
+        if (Math.abs(p2.y - sticked_y_v) > stickness) {
+            stickedY = false;
+        } else {
+            if (pre_target_y === target.x) {
+                p2.y = sticked_y_v;
+            } else if (target.sticked_by_y) {
+                modify_fix_y(p2, target.y);
+            }
         }
+    } else if (target.sticked_by_y) {
+        modify_fix_y(p2, target.y);
     }
     asyncBaseAction.executeScale(CtrlElementType.RectRB, p2);
 }
+function modify_fix_x(p2: PageXY, fix: number) {
+    p2.x = fix;
+    sticked_x_v = p2.x;
+    stickedX = true;
+    pre_target_x = fix;
+}
+function modify_fix_y(p2: PageXY, fix: number) {
+    p2.y = fix;
+    sticked_y_v = p2.y;
+    stickedY = true;
+    pre_target_y = fix;
+}
+// #endregion
 
 function window_blur() {
     const workspace = props.context.workspace;
@@ -350,7 +417,7 @@ onUnmounted(() => {
 })
 </script>
 <template>
-    <g :style="{ transform }" @mousedown.stop="(e) => down(e)">
+    <g :style="{ transform }" @mousedown.stop="(e: MouseEvent) => down(e)">
         <rect x="0" y="0" width="18px" height="18px" rx="2" ry="2" fill="#865dff" fill-opacity="0.45" stroke="none">
         </rect>
         <svg viewBox="0 0 1024 1024" version="1.1" xmlns="http://www.w3.org/2000/svg" width="12" height="12" x="3px"
@@ -360,7 +427,7 @@ onUnmounted(() => {
                 fill="#865dff"></path>
         </svg>
     </g>
-    <g :style="{ transform: transform2 }" :class="{ hidden }" @mousedown.stop="(e) => point_mousedown(e)">
+    <g :style="{ transform: transform2 }" :class="{ hidden }" @mousedown.stop="(e: MouseEvent) => point_mousedown(e)">
         <rect x="0" y="0" width="18px" height="18px" rx="2" ry="2" fill="#865dff" fill-opacity="0.45" stroke="none">
         </rect>
         <svg viewBox="0 0 1024 1024" version="1.1" xmlns="http://www.w3.org/2000/svg" width="12" height="12" x="3" y="3">

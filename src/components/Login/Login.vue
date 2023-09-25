@@ -8,6 +8,7 @@ import { useI18n } from 'vue-i18n';
 import { ElMessage } from 'element-plus'
 import avatar from '@/assets/pd-logo-svg.svg';
 import { User } from '@/context/user'
+import { Path } from '@kcdesign/data'
 
 const { t } = useI18n()
 const isLoading = ref(false)
@@ -42,16 +43,34 @@ async function getlogin(code: string, invite_code: string = '', id: string = '')
                 isLoading.value = false
                 const perRoute = localStorage.getItem('perRoute') || ''
                 if (perRoute) {
-                    const params = new URLSearchParams(perRoute.split('?')[1]);
-                    const path = perRoute.split('?')[0].replace('/', '');
-                    const id = params.get('id');
-                    router.push({
-                        name: path,
-                        query: {
-                            id: id
+                    if (perRoute.includes('?')) {
+                        const params = new URLSearchParams(perRoute.split('?')[1]);
+                        const path = perRoute.split('?')[0].replace('/', '');
+                        if (params.get('id') != null) {
+                            const id = params.get('id');
+                            router.push({
+                                name: path,
+                                query: {
+                                    id: id
+                                }
+                            })
                         }
-                    })
-                } else {
+                        if (params.get('teamid') != null) {
+                            const key = params.get('key')
+                            const id = params.get('teamid')
+                            router.push({
+                                name: path,
+                                query: {
+                                    key: key,
+                                    teamid: id
+                                }
+                            })
+                        }
+                    } else {
+                        router.push({ path: perRoute })
+                    }
+                }
+                else {
                     router.push({ name: 'apphome' })
                 }
             } else if (linfo.code === 400) {
@@ -313,7 +332,7 @@ const mobileKeywords = [
     input {
         min-width: 20%;
         height: 60px;
-        font-size: 48px;
+        font-size: 36px;
         color: rgba(0, 0, 0, 0.8);
         text-align: center;
         border-radius: 10px;

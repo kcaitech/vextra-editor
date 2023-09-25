@@ -288,11 +288,11 @@ function modify_client_xy_1(e: MouseEvent) {
     client_xy_1.x = e.clientX, client_xy_1.y = e.clientY;
 }
 function correct_page_xy(x: number, y: number) {
-    const stickness = props.context.assist.stickness + 1;
+    const stickness = props.context.assist.stickness;
     const target = props.context.assist.create_match({ x, y });
     if (target) {
         if (stickedX) {
-            if (Math.abs(x - sticked_x_v) > stickness) stickedX = false;
+            if (Math.abs(x - sticked_x_v) >= stickness) stickedX = false;
             else x = sticked_x_v;
         } else if (target.sticked_by_x) {
             x = target.x;
@@ -300,7 +300,7 @@ function correct_page_xy(x: number, y: number) {
             stickedX = true;
         }
         if (stickedY) {
-            if (Math.abs(y - sticked_y_v) > stickness) stickedY = false;
+            if (Math.abs(y - sticked_y_v) >= stickness) stickedY = false;
             else y = sticked_y_v;
         } else if (target.sticked_by_y) {
             y = target.y;

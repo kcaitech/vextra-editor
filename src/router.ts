@@ -15,7 +15,12 @@ const per_center = () => import('@/components/Userinfo/per_center.vue')
 const Privacypolicy = () => import("@/components/Login/Privacypolicy.vue");
 const Serviceagreement = () => import("@/components/Login/Serviceagreement.vue");
 const KChome = () => import("@/components/Home/KChome.vue");
-const HomeContent = () => import("@/components/Home/HomeContent.vue")
+const HomeContent = () => import("@/components/Home/HomeContent.vue");
+const TeamPage=()=>import("@/components/TeamProject/TeamPage.vue");
+const joinTeam=()=>import("@/components/TeamProject/jionTeam.vue");
+const ProjectPage = () => import("@/components/TeamProject/ProjectPage.vue");
+const projectApply = () => import("@/components/TeamProject/ProjectFill/ProjectApply.vue");
+const ProjectShare = () => import('@/components/TeamProject/ProjectShare/ProjectSharePage.vue')
 const routes = [
     {
         path: '/',
@@ -91,8 +96,34 @@ const routes = [
                 path: 'recyclebin',
                 name: 'recyclebin',
                 component: RecycleBin
-            }
+            },
+            {
+                path: 'teams/:id',
+                name: 'TeamPage',
+                component: TeamPage
+            },
+            {
+                path: 'project_share',
+                name: 'ProjectShare',
+                component: ProjectShare
+            },
+            {
+                path: 'project/:id',
+                name: 'ProjectPage',
+                component: ProjectPage,
+                meta: {
+                    requireAuth: true
+                }
+            },
         ]
+    },
+    {
+        path: "/join",
+        name: "join",
+        component: joinTeam,
+        meta: {
+            requireAuth: true
+        }
     },
     {
         path: "/apply",
@@ -103,15 +134,21 @@ const routes = [
         }
     },
     {
+        path: "/projectApply",
+        name: "projectApply",
+        component: projectApply,
+        meta: {
+            requireAuth: true
+        }
+    },
+    {
         path: "/pcenter",
         name: "per_center",
         component: per_center
     },
-
     {
         path: '/:catchAll(.*)',
         redirect: '/',
-
     },
 ]
 

@@ -16,7 +16,9 @@ const props = defineProps<{
   docUserId?: string,
   context?: Context,
   userInfo: UserInfo | undefined,
-  docInfo?: DocInfo
+  docInfo?: DocInfo,
+  project?: boolean,
+  projectPerm?: number | undefined
 }>()
 const emit = defineEmits<{
   (e: 'close'): void,
@@ -138,6 +140,8 @@ const getShareList = async () => {
     const { data } = await share_api.getShareListAPI({ doc_id: docID })
     if (data) {
       shareList.value = data
+      console.log(shareList.value + '11111');
+
     }
   } catch (err) {
     console.log(err);
@@ -208,22 +212,53 @@ watch(value1, (nVal, oVal) => {
 })
 
 watchEffect(() => {
+  props.projectPerm;
   if (route.query.id) {
     const userId = props.userInfo?.id
-    if (props.docUserId) {
-      props.docUserId != userId ? founder.value = true : founder.value = false
-    } else if (props.docInfo) {
-      props.docInfo.user.id != userId ? founder.value = true : founder.value = false
+    if (props.projectPerm) {
+      if (props.projectPerm > 3) {
+        return founder.value = false;
+      } else if (props.projectPerm === 3) {
+        if (props.docInfo && props.docInfo.user.id === userId) {
+          return founder.value = false;
+        }else {
+          return founder.value = true;
+        }
+      } else {
+        return founder.value = true;
+      }
+    } else {
+      if (props.docUserId) {
+        props.docUserId != userId ? founder.value = true : founder.value = false
+      } else if (props.docInfo) {
+        props.docInfo.user.id != userId ? founder.value = true : founder.value = false
+      }
     }
-  }else {
+  } else {
     const userId = props.userInfo?.id
-    if (props.docUserId) {
-      props.docUserId != userId ? founder.value = true : founder.value = false
-    } else if (props.docInfo) {
-      props.docInfo.user.id != userId ? founder.value = true : founder.value = false
+    if (props.projectPerm) {
+      if (props.projectPerm > 3) {
+        return founder.value = false;
+      } else if (props.projectPerm === 3) {
+        if (props.docUserId && props.docUserId === userId) {
+          return founder.value = false;
+        }else {
+          return founder.value = true;
+        }
+      } else {
+        return founder.value = true;
+      }
+    }else {
+      if (props.docUserId) {
+        props.docUserId != userId ? founder.value = true : founder.value = false
+      } else if (props.docInfo) {
+        props.docInfo.user.id != userId ? founder.value = true : founder.value = false
+      }
     }
   }
 })
+
+
 
 const copyLink = async () => {
   if (navigator.clipboard && window.isSecureContext) {
@@ -327,7 +362,7 @@ onUnmounted(() => {
             <el-option style="font-size: 10px;" class="option" v-for="item in options" :key="item.value"
               :label="item.label" :value="item.label" />
           </el-select>
-          <el-button color="#0d99ff" size="small" @click="copyLink">{{ t('share.copy_link') }}</el-button>
+          <el-button color="#9775fa" @click="copyLink">{{ t('share.copy_link') }}</el-button>
         </div>
         <!-- 分享人 -->
         <div>
@@ -361,6 +396,7 @@ onUnmounted(() => {
               </div>
             </div>
           </el-scrollbar>
+          <div class="project" v-if="project || props.docInfo?.project">项目中所有成员均可访问</div>
         </div>
       </div>
     </el-card>
@@ -391,9 +427,10 @@ onUnmounted(() => {
           <span>{{ t('share.document_permission') }}:</span>
           <p class="name">{{ DocType[docInfo.document.doc_type] }}</p>
         </div>
+        <div class="project" v-if="project || props.docInfo?.project">项目中所有成员均可访问</div>
         <!-- 链接按钮 -->
         <div class="button bottom">
-          <el-button color="#0d99ff" size="small" @click="copyLink">{{ t('share.copy_link') }}</el-button>
+          <el-button color="#9775fa" @click="copyLink">{{ t('share.copy_link') }}</el-button>
         </div>
       </div>
     </el-card>
@@ -401,6 +438,13 @@ onUnmounted(() => {
 </template>
   
 <style scoped lang="scss">
+.project {
+  opacity: .5;
+  display: flex;
+  justify-content: center;
+  margin-bottom: 5px;
+}
+
 .card-header {
   display: flex;
   justify-content: space-between;
@@ -534,6 +578,7 @@ onUnmounted(() => {
   width: 100px;
   justify-content: space-around;
   box-shadow: 2px 2px 5px rgba(0, 0, 0, 0.2);
+
   >div {
     padding: var(--default-margin-quarter) var(--default-padding-half);
   }
@@ -572,4 +617,7 @@ onUnmounted(() => {
 .box-card {
   width: 400px;
 }
-</style>
+
+:deep(.el-button) {
+  color: #fff;
+}</style>

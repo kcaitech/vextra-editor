@@ -15,6 +15,7 @@ import CreateImage from "./Buttons/CreateImage.vue";
 import Table from "./Buttons/Table/index.vue"
 import Comment from "./Buttons/Comment.vue"
 import Contact from "./Buttons/CreateContact.vue";
+import CreateComps from "./Buttons/CreateComps.vue";
 import { WorkSpace, Perm } from "@/context/workspace";
 import { Action, Tool } from "@/context/tool";
 import { useI18n } from 'vue-i18n'
@@ -39,15 +40,15 @@ function select(action: Action) {
         })
     }
 }
-function selectComps() {
-    message('feature', t('navi.development'));
-}
+
 function tool_watcher(t?: number) {
     if (t === Tool.CHANGE_ACTION) selected.value = props.context.tool.action;
 }
 //获取文档权限
 const hangdlePerm = () => {
     const perm = props.context.workspace.documentPerm
+    console.log(perm,'perm');
+    
     if (perm === Perm.isRead) {
         isread.value = true
     } else if (perm === Perm.isComment) {
@@ -84,14 +85,7 @@ onUnmounted(() => {
         <Table @select="select" :active="selected === Action.AddTable" :context="props.context"></Table>
         <Contact @select="select" :active="selected === Action.AddContact" :context="props.context"></Contact>
         <div class="vertical-line" />
-        <el-tooltip class="box-item" effect="dark" :content="string_by_sys(`${t('navi.comps')} &nbsp;&nbsp; Shift I`)"
-            placement="bottom" :show-after="500" :offset="10" :hide-after="0">
-            <ToolButton>
-                <div class="temp" @click="selectComps">
-                    <svg-icon icon-class="resource"></svg-icon>
-                </div>
-            </ToolButton>
-        </el-tooltip>
+        <CreateComps @select="select" :active="selected === Action.AddComponent" :context="props.context"></CreateComps>
         <Comment @select="select" :active="selected === Action.AddComment" :workspace="workspace"></Comment>
         <GroupUngroup :context="props.context" :selection="props.selection"></GroupUngroup>
     </div>

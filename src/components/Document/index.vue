@@ -364,8 +364,10 @@ const getDocumentInfo = async () => {
             const file_name = docInfo.value.document?.name || document.name;
             window.document.title = file_name.length > 8 ? `${file_name.slice(0, 8)}... - ProtoDesign` : `${file_name} - ProtoDesign`;
             context = new Context(document, coopRepo);
+            context.workspace.setDocumentPerm(dataInfo.data.document_permission.perm_type)
             getDocumentAuthority();
             getUserInfo()
+            
             context.comment.setDocumentInfo(dataInfo.data)
             null_context.value = false;
             context.selection.watch(selectionWatcher);
@@ -393,10 +395,10 @@ const getDocumentInfo = async () => {
     }
 }
 
-async function upload() {
+async function upload(projectId: string) {
     const token = localStorage.getItem("token");
     if (!token || !context || !context.data) return;
-    if (!await context.communication.docUpload.start(token)) {
+    if (!await context.communication.docUpload.start(token, projectId)) {
         // todo 上传通道开启失败处理
         return;
     }
@@ -411,6 +413,8 @@ async function upload() {
         // todo 上传失败处理
         return;
     }
+    console.log(result,'文档上传');
+    
     const doc_id = result!.data.doc_id;
     router.replace({
         path: '/document',
@@ -443,7 +447,9 @@ function init_doc() {
             getUserInfo();
             context.selection.watch(selectionWatcher);
             context.workspace.watch(workspaceWatcher);
-            upload();
+            const project_id = localStorage.getItem('project_id') || '';
+            upload(project_id);
+            localStorage.setItem('project_id', '');
             switchPage(((window as any).sketchDocument as Document).pagesList[0]?.id);
             document.addEventListener('keydown', keyboardEventHandler);
         } else {
@@ -715,6 +721,8 @@ onUnmounted(() => {
     top: 45px;
     right: 10px;
     z-index: 999;
+    overflow: hidden;
+    height: calc(100% - 45px);
 }
 
 #center {

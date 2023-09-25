@@ -660,6 +660,39 @@ function skipUserSelectShapes(context: Context, shapes: Shape[]) {
     context.workspace.matrixTransformation();
   }
 }
+export function map_from_shapes(shapes: Shape[], init?: Map<string, Shape>) {
+  const map: Map<string, Shape> = init || new Map();
+  for (let i = 0, len = shapes.length; i < len; i++) {
+    const shape = shapes[i];
+    map.set(shape.id, shape);
+    if (shape.childs && shape.childs.length) {
+      map_from_shapes(shape.childs, map);
+    }
+  }
+  return map;
+}
+export function is_shape_out(context: Context, shape: Shape, matrix: Matrix) {
+  const { x, y, bottom, right } = context.workspace.root;
+  const { width, height } = shape.frame;
+  let point: { x: number, y: number }[] = [{ x: 0, y: 0 }, { x: width, y: 0 }, { x: width, y: height }, { x: 0, y: height }];
+  for (let i = 0; i < 4; i++) point[i] = matrix.computeCoord3(point[i]);
+  return Math.min(point[0].x, point[1].x, point[2].x, point[3].x) > right - x ||
+    Math.max(point[0].x, point[1].x, point[2].x, point[3].x) < 0 ||
+    Math.max(point[0].y, point[1].y, point[2].y, point[3].y) < 0 ||
+    Math.min(point[0].y, point[1].y, point[2].y, point[3].y) > bottom - y;
+}
+export function is_need_skip_to_render(shape: Shape, matrix: Matrix) { // 不是准确的方法，但是综合效果最好
+  const f = shape.frame;
+  const lt = matrix.computeCoord2(0, 0);
+  const rt = matrix.computeCoord2(f.width, f.height);
+  return Math.hypot(rt.x - lt.x, rt.y - lt.y) < 72;
+}
+export function top_side(shape: Shape, matrix: Matrix) {
+  const f = shape.frame;
+  const lt = matrix.computeCoord2(0, 0);
+  const rt = matrix.computeCoord2(f.width, f.height);
+  return Math.hypot(rt.x - lt.x, rt.y - lt.y)
+}
 export {
   Root, updateRoot, _updateRoot,
   getName, get_image_name, get_selected_types, init_insert_table,
