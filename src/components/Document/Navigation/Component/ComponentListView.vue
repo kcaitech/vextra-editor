@@ -14,6 +14,8 @@ const dragActiveDis = 4; // 拖动 4px 后开始触发移动
 let compo: Shape;
 let down_position: ClientXY = { x: 0, y: 0 };
 let is_drag: boolean = false;
+const reflush = ref<number>(0);
+const list_container = ref<HTMLDivElement>();
 function loader_view() {
     compos.value.length = 0;
     const mgr = props.context.data.symbolsMgr;
@@ -46,18 +48,28 @@ function up() {
     document.removeEventListener('mousemove', move);
     document.removeEventListener('mouseup', up);
 }
+function gen_columns() {
+    const repeat = Math.floor(((props.context.workspace.root.x - 16) / 106));
+    return `repeat(${repeat}, 100px)`;
+}
+const observer = new ResizeObserver(() => { reflush.value++; });
+function init() {
+    list_container.value && observer.observe(list_container.value);
+}
 onMounted(() => {
     props.context.data.pagesMgr.watch(loader_view);
     props.context.data.symbolsMgr.watch(loader_view);
     loader_view();
+    init();
 })
 onUnmounted(() => {
     props.context.data.pagesMgr.unwatch(loader_view);
     props.context.data.symbolsMgr.unwatch(loader_view);
+    observer && observer.disconnect();
 })
 </script>
 <template>
-    <div class="list-contianer">
+    <div class="list-contianer" ref="list_container" :style="{ 'grid-template-columns': gen_columns() }" :reflush="reflush">
         <ComponentCard v-for="(item, index) in compos" :key="index" :data="(item as GroupShape)"
             @mousedown="(e: MouseEvent) => down(e, item as unknown as Shape)">
         </ComponentCard>
@@ -70,7 +82,6 @@ onUnmounted(() => {
     overflow: auto;
     display: grid;
     grid-gap: 8px;
-    grid-template-columns: 100px 100px;
     grid-auto-rows: 100px;
 
     &::-webkit-scrollbar {
