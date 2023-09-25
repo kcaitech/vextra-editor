@@ -333,7 +333,7 @@ function component() {
     const editor = props.context.editor4Page(page);
     const shape = editor.makeSymbol(props.context.data, selection.selectedShapes, '组件');
     if (shape) {
-      selection.selectShape(shape);
+      selection.selectShape(shape as unknown as Shape);
     }
   }
   emit('close');
@@ -345,7 +345,8 @@ function instance() {
     const editor = props.context.editor4Page(page);
     const shapes = editor.extractSymbol(selection.selectedShapes[0] as SymbolRefShape);
     if (shapes) {
-      // selection.rangeSelectShape(shapes);
+      selection.selectShape(shapes);
+      emit('close');
     }
   }
 }

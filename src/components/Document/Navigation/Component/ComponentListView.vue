@@ -14,9 +14,6 @@ const dragActiveDis = 4; // 拖动 4px 后开始触发移动
 let compo: Shape;
 let down_position: ClientXY = { x: 0, y: 0 };
 let is_drag: boolean = false;
-function pages_mgr_watcher(t: any) {
-    loader_view();
-}
 function loader_view() {
     compos.value.length = 0;
     const mgr = props.context.data.symbolsMgr;
@@ -44,18 +41,19 @@ function up() {
     if (is_drag) {
         is_drag = false;
     } else {
-        console.log('just-click: tracking');
         shape_track(props.context, compo);
     }
     document.removeEventListener('mousemove', move);
     document.removeEventListener('mouseup', up);
 }
 onMounted(() => {
-    props.context.data.pagesMgr.watch(pages_mgr_watcher);
+    props.context.data.pagesMgr.watch(loader_view);
+    props.context.data.symbolsMgr.watch(loader_view);
     loader_view();
 })
 onUnmounted(() => {
-    props.context.data.pagesMgr.unwatch(pages_mgr_watcher);
+    props.context.data.pagesMgr.unwatch(loader_view);
+    props.context.data.symbolsMgr.unwatch(loader_view);
 })
 </script>
 <template>

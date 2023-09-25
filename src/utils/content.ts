@@ -491,8 +491,10 @@ export function get_selected_types(context: Context): number {
       result = result | 1;
     } else if (shapes[i].type === ShapeType.Group) {
       result = result | 2;
+    } else if (shapes[i].type === ShapeType.SymbolRef) {
+      result = result | 4;
     }
-    if (result >= 3) return result; // 已经得到了最多类型，不可能再有新的类型，不需要继续判断
+    if (result >= 7) return result; // 已经得到了最多类型，不可能再有新的类型，不需要继续判断
   }
   return result;
 }
@@ -559,6 +561,11 @@ export function get_menu_items(context: Context, area: "controller" | "text-sele
     if (types & 2) { // 存在编组
       if (permIsEdit(context)) {
         contextMenuItems.push('un_group');
+      }
+    }
+    if (types & 4) { // 存在组件
+      if (permIsEdit(context)) {
+        contextMenuItems.push('instance');
       }
     }
     if (context.selection.selectedShapes.length <= 1) { // 当选区长度为1时，提供移动图层选项
