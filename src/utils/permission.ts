@@ -19,7 +19,7 @@ router.beforeEach((to, from, next) => {
             }else if(to.name==='serviceagreement'){
                 document.title='服务协议'
             }else{
-                document.title='protodesign'
+                document.title='ProtoDesign'
             }
             next()
         } else {
