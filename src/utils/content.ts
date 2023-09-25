@@ -68,7 +68,7 @@ export function get_symbol_ref_name(symbolname: string, symbolref: string, broth
     if (shape.type !== ShapeType.SymbolRef) continue;
     if (shape.refId === symbolref) repeats++;
   }
-  return repeats > 1 ? `${symbolname}-Ref-${repeats}` : `${symbolname}-Ref`;
+  return repeats > 1 ? `Ref-${symbolname}-${repeats}` : `Ref-${symbolname}`;
 }
 // 判断图形是否在可视区域内
 export function isInner(context: Context, shape: Shape) {
