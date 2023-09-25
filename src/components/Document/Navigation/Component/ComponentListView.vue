@@ -19,7 +19,7 @@ const list_container = ref<HTMLDivElement>();
 function loader_view() {
     compos.value.length = 0;
     const mgr = props.context.data.symbolsMgr;
-    compos.value = mgr.resource;
+    compos.value = mgr.resource.slice(0, 30);
 }
 function down(e: MouseEvent, shape: Shape) {
     compo = shape;
