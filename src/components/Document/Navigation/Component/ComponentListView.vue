@@ -50,7 +50,7 @@ function up() {
 }
 function gen_columns() {
     const repeat = Math.floor(((props.context.workspace.root.x - 16) / 106));
-    return `repeat(${repeat}, 100px)`;
+    return `repeat(${repeat},100px)`;
 }
 const observer = new ResizeObserver(() => { reflush.value++; });
 function init() {
