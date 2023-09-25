@@ -332,7 +332,7 @@ const mobileKeywords = [
     input {
         min-width: 20%;
         height: 60px;
-        font-size: 48px;
+        font-size: 36px;
         color: rgba(0, 0, 0, 0.8);
         text-align: center;
         border-radius: 10px;
