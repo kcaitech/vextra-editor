@@ -196,6 +196,7 @@ declare module '@vue/runtime-core' {
     ShapeList: typeof import('./src/components/Document/Navigation/ShapeList.vue')['default']
     ShapePath: typeof import('./src/components/Document/Content/ShapePath.vue')['default']
     ShapesStrokeContainer: typeof import('./src/components/Document/Selection/Controller/ShapeStroke/ShapesStrokeContainer.vue')['default']
+    ShapeSymbol: typeof import('./src/components/Document/Content/ShapeSymbol.vue')['default']
     ShapeTab: typeof import('./src/components/Document/Navigation/ShapeTab.vue')['default']
     ShapeTable: typeof import('./src/components/Document/Content/ShapeTable.vue')['default']
     ShapeTableCell: typeof import('./src/components/Document/Content/ShapeTableCell.vue')['default']
