@@ -4,7 +4,7 @@ import { useI18n } from 'vue-i18n';
 import ContextMenu from '@/components/common/ContextMenu.vue';
 import Key from '@/components/common/Key.vue';
 import { XY } from '@/context/selection';
-import { Artboard, GroupShape, Shape, ShapeType, SymbolRefShape, TableCellType, TextShape } from "@kcdesign/data";
+import { Artboard, GroupShape, Shape, ShapeType, SymbolRefShape, SymbolShape, TableCellType, TextShape } from "@kcdesign/data";
 import Layers from './Layers.vue';
 import { Context } from '@/context';
 import { WorkSpace } from '@/context/workspace';
@@ -403,6 +403,18 @@ function toggle_title() {
 function menu_watcher() {
   // check();
 }
+function make_symbol_union() {
+  const shape = props.context.selection.selectedShapes[0];
+  const page = props.context.selection.selectedPage;
+  if (shape && shape.type === ShapeType.Symbol && !shape.isUnionSymbolShape && page) {
+    const editor = props.context.editor4Page(page);
+    const make_result = editor.makeSymbolUnion(shape as SymbolShape, t('shape.default'));
+    if (make_result) {
+      props.context.selection.selectShape(make_result);
+      emit('close');
+    }
+  }
+}
 const stop = watch(() => props.items, menu_watcher, { deep: true, immediate: true })
 onUnmounted(() => {
   stop();
@@ -598,6 +610,9 @@ onUnmounted(() => {
     <div class="item" v-if="props.items.includes('title')" @click="toggle_title">
       <div class="choose" v-show="isTitle"></div>
       <span>{{ t('system.artboart_title_visible') }}</span>
+    </div>
+    <div class="item" v-if="props.items.includes('visible')" @click="make_symbol_union">
+      <span>组件状态</span>
     </div>
     <TableMenu :context="context" :layers="layers" :items="items" :site="site" @close="emit('close')"></TableMenu>
   </div>
