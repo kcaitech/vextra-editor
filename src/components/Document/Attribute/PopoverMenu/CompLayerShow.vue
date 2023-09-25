@@ -5,6 +5,7 @@ import SelectLayer from "./SelectLayer.vue";
 import { ArrowDown } from '@element-plus/icons-vue'
 import { add } from 'lodash';
 import { ShapeType, SymbolShape } from '@kcdesign/data';
+import SelectMenu from './SelectMenu.vue';
 const props = defineProps<{
     title?: string,
     top?: string,
@@ -36,7 +37,7 @@ const options = [
         label: '隐藏',
     }
 ]
-const defaultValue = ref(options[0].value);
+const defaultValue = ref('显示');
 const textDefaultValue = ref('');
 const selectList = ref<any[]>([])
 function esc(e: KeyboardEvent) {
@@ -49,16 +50,18 @@ const showSelectLayer = (e: MouseEvent) => {
     if (isselectLayer.value && e.target instanceof Element && e.target.closest('.input')) return isselectLayer.value = false;
     const shapes = props.context.selection.selectedShapes;
     if (shapes.length === 1) {
-        const symbol = shapes[0] as SymbolShape
-        console.log(symbol, 'symbol');
-        if (props.addType === 'Show') {
-            selectList.value = symbol.childs;
-        } else if (props.addType === 'Text' || props.addType === '') {
-            selectList.value = symbol.childs.filter(item => item.type === ShapeType.Text)
-        } else if (props.addType === 'toggle') {
-            selectList.value = symbol.childs;
+        if (shapes[0].type === ShapeType.Symbol) {
+            const symbol = shapes[0] as SymbolShape
+            if (props.addType === 'Show') {
+                selectList.value = symbol.childs;
+            } else if (props.addType === 'Text' || props.addType === '') {
+                selectList.value = symbol.childs.filter(item => item.type === ShapeType.Text)
+            } else if (props.addType === 'toggle') {
+                selectList.value = symbol.childs.filter(item => item.type === ShapeType.SymbolRef)
+            }
+        } else {
+            return;
         }
-        
     }
     isselectLayer.value = true;
 }
@@ -81,6 +84,17 @@ const save = () => {
     }
     emit('saveLayerShow', data, props.addType)
 }
+
+const selectoption = ref(false)
+const menuItems = ['显示', '隐藏']
+const showMenu = () => {
+    if (selectoption.value) return selectoption.value = false
+    selectoption.value = true;
+}
+const handleShow = (index: number) => {
+    defaultValue.value = menuItems[index];
+}
+
 const comps = ref<HTMLDivElement>()
 const cur_top = ref(0)
 onMounted(() => {
@@ -114,7 +128,8 @@ onUnmounted(() => {
             <div>
                 <span>{{ addType === 'toggle' ? '组件实例' : '选择图层' }}</span>
                 <div class="select-layer" @mouseup="showSelectLayer" @click.stop>
-                    <div class="input">
+                    <div class="input"
+                        :style="{ opacity: context.selection.selectedShapes[0].type !== ShapeType.Symbol ? '0.5' : '1' }">
                         <span v-if="selectLayer"></span>
                         <span v-else style="opacity: 0.5">{{ addType === 'toggle' ? '请选择组件实例' : '请选择图层' }}</span>
                         <el-icon>
@@ -133,10 +148,18 @@ onUnmounted(() => {
             <p class="warn" v-if="false">名称重复，请重新输入</p>
             <div v-if="props.addType !== 'toggle' && props.addType">
                 <span>默认值</span>
-                <div v-if="props.addType === 'Show'">
-                    <el-select v-model="defaultValue" class="m-2" placeholder="Select">
+                <div v-if="props.addType === 'Show'" class="show">
+                    <div class="input" @click="showMenu">
+                        <span>{{ defaultValue }}</span>
+                        <el-icon>
+                            <ArrowDown
+                                :style="{ transform: selectoption ? 'rotate(180deg)' : 'rotate(0deg)', transition: '0.3s' }" />
+                        </el-icon>
+                        <SelectMenu v-if="selectoption" :top="33" width="100%" :menuItems="menuItems" @select-index="handleShow"></SelectMenu>
+                    </div>
+                    <!-- <el-select v-model="defaultValue" class="m-2" placeholder="Select">
                         <el-option v-for="item in options" :key="item.value" :label="item.label" :value="item.value" />
-                    </el-select>
+                    </el-select> -->
                 </div>
                 <div v-if="props.addType === 'Text'"><el-input v-model="textDefaultValue" placeholder="请输入默认文本" /></div>
             </div>
@@ -203,7 +226,7 @@ onUnmounted(() => {
                 width: 100%;
                 height: 30px;
                 border-radius: 4px;
-                border: 1px solid #dcdfe6;
+                background-color: var(--grey-light);
                 padding-left: 10px;
                 box-sizing: border-box;
                 display: flex;
@@ -252,6 +275,15 @@ onUnmounted(() => {
                 width: 100%;
                 height: 30px;
                 font-size: 10px;
+
+                :deep(.el-input__wrapper) {
+                    background-color: var(--grey-light);
+                    box-shadow: none;
+                }
+
+                :deep(.el-input__wrapper.is-focus) {
+                    box-shadow: 0 0 0 1px var(--active-color) inset;
+                }
             }
 
             .el-select {
@@ -270,6 +302,14 @@ onUnmounted(() => {
                 :deep(.el-input__wrapper) {
                     height: 30px;
                     font-size: 10px;
+                    background-color: var(--grey-light);
+                    box-shadow: none;
+
+                    .el-icon svg {
+                        width: 10px;
+                        height: 10px;
+                        color: black;
+                    }
                 }
             }
         }
@@ -281,6 +321,33 @@ onUnmounted(() => {
         align-items: center;
         justify-content: center;
         margin: 10px 0;
+    }
+}
+
+.show {
+    .input {
+        position: relative;
+        width: 100%;
+        height: 30px;
+        border-radius: 4px;
+        border: 1px solid #dcdfe6;
+        padding-left: 11px;
+        box-sizing: border-box;
+        display: flex;
+        align-items: center;
+        background-color: var(--grey-light);
+
+        span {
+            flex: 1;
+        }
+
+        .el-icon {
+            width: 30px;
+            height: 30px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+        }
     }
 }
 

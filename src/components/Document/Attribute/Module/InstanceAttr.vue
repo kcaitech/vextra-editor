@@ -2,11 +2,16 @@
 import { useI18n } from 'vue-i18n';
 import { Context } from '@/context';
 import TypeHeader from '../TypeHeader.vue';
-import { ref, nextTick } from 'vue'
+import { ref, nextTick, onUnmounted } from 'vue'
 import ComponentDialog from './ComponentDialog.vue';
+import { shape_track, get_shape_within_document } from '@/utils/content';
+import { Shape, SymbolRefShape } from '@kcdesign/data';
+import { ArrowDown, MoreFilled } from '@element-plus/icons-vue';
+import SelectMenu from '../PopoverMenu/SelectMenu.vue';
 const { t } = useI18n();
 const props = defineProps<{
     context: Context
+    shapes: Shape[]
 }>()
 
 const resetMenu = ref(false)
@@ -14,28 +19,20 @@ const openName = ref(false)
 const openClose = ref(false)
 const showCompsDialog = ref(false)
 const textValue = ref('文本内容')
-const options = [
-    {
-        value: '默认',
-        label: '默认',
-    },
-    {
-        value: '状态1',
-        label: '状态1',
-    }
-]
+const menuItems = ['默认']
+
 const attrValue = ref('默认')
 const selectReset = (e: MouseEvent) => {
     if (resetMenu.value) return resetMenu.value = false
     resetMenu.value = true
-    document.addEventListener('mousedown', closeResetMenu)
+    document.addEventListener('click', closeResetMenu)
 }
 
 const closeResetMenu = (e: MouseEvent) => {
     if (e.target instanceof Element && !e.target.closest('.reset_svg')) {
         resetMenu.value = false
     }
-    document.removeEventListener('mousedown', closeResetMenu)
+    document.removeEventListener('click', closeResetMenu)
 }
 
 const closeDialog = () => {
@@ -44,23 +41,51 @@ const closeDialog = () => {
 const compsDialog = () => {
     showCompsDialog.value = true;
 }
+
+const editComps = () => {
+    const refId = props.context.selection.selectedShapes[0].refId;
+    const shape = get_shape_within_document(props.context, refId)
+    if (shape) {
+        shape_track(props.context, shape)
+    }
+}
+const untie = () => {
+    const selection = props.context.selection;
+    const page = selection.selectedPage;
+    if (page) {
+        const editor = props.context.editor4Page(page);
+        const shapes = editor.extractSymbol(props.shapes[0] as SymbolRefShape);
+        if (shapes) {
+            selection.selectShape(shapes);
+            resetMenu.value = false;
+        }
+    }
+}
+const selectoption = ref(false)
+const showMenu = () => {
+    if (selectoption.value) return selectoption.value = false
+    selectoption.value = true;
+}
+onUnmounted(() => {
+    document.removeEventListener('click', closeResetMenu)
+})
 </script>
 
 <template>
     <TypeHeader :title="'实例属性'" class="mt-24">
         <template #tool>
             <div class="edit-comps">
-                <div class="edit_svg">
-                    <svg-icon icon-class="add"></svg-icon>
+                <div class="edit_svg" @click.stop="editComps">
+                    <svg-icon icon-class="edit-comp"></svg-icon>
                 </div>
-                <div class="reset_svg" @click="selectReset">
-                    <svg-icon icon-class="add"></svg-icon>
+                <div class="reset_svg" @click.stop="selectReset">
+                    <el-icon><MoreFilled /></el-icon>
                     <div class="reset_menu" v-if="resetMenu">
-                        <div class="untie">
+                        <div class="untie" @click="untie">
                             <span>解绑</span>
                             <span>快捷键</span>
                         </div>
-                        <div class="reset">重置全部属性</div>
+                        <div class="untie">重置全部属性</div>
                     </div>
                 </div>
             </div>
@@ -71,9 +96,14 @@ const compsDialog = () => {
             <div class="state_item">
                 <div class="state_name"><span>属性1</span></div>
                 <div class="state_value" style="padding: 0;">
-                    <el-select v-model="attrValue" class="m-2" placeholder="Select">
-                        <el-option v-for="item in options" :key="item.value" :label="item.label" :value="item.value" />
-                    </el-select>
+                    <div class="input" @click="showMenu">
+                        <span>{{ attrValue }}</span>
+                        <el-icon>
+                            <ArrowDown
+                                :style="{ transform: selectoption ? 'rotate(180deg)' : 'rotate(0deg)', transition: '0.3s' }" />
+                        </el-icon>
+                        <SelectMenu v-if="selectoption" :top="33" width="100%" :menuItems="menuItems"></SelectMenu>
+                    </div>
                 </div>
             </div>
             <div class="delete"></div>
@@ -156,34 +186,19 @@ const compsDialog = () => {
             top: 25px;
             right: 0;
             width: 150px;
-            padding: 5px 0;
+            padding: 10px 0;
             background-color: #fff;
-            border: 1px solid #ccc;
-            border-radius: 4px;
-            box-shadow: 2px 2px 10px rgba(0, 0, 0, 0.2);
+            border-radius: 2px;
+            box-shadow: 1px 1px 5px rgba(0, 0, 0, 0.2);
             z-index: 100;
 
             .untie {
-                height: 25px;
+                height: 30px;
                 width: 100%;
                 display: flex;
                 align-items: center;
                 justify-content: space-between;
-                padding: 0 10px;
-                box-sizing: border-box;
-
-                &:hover {
-                    background-color: var(--active-color);
-                    color: #fff;
-                }
-            }
-
-            .reset {
-                height: 25px;
-                width: 100%;
-                display: flex;
-                align-items: center;
-                padding: 0 10px;
+                padding: 0 16px;
                 box-sizing: border-box;
 
                 &:hover {
@@ -218,6 +233,7 @@ const compsDialog = () => {
                 align-items: center;
                 width: 30%;
                 height: 100%;
+
                 span {
                     overflow: hidden;
                     text-overflow: ellipsis;
@@ -229,20 +245,46 @@ const compsDialog = () => {
                 display: flex;
                 align-items: center;
                 justify-content: space-between;
-                padding: 0 10px;
+                padding: 0 11px;
                 flex: 1;
                 height: 100%;
                 border-radius: 4px;
 
                 >svg {
-                    width: 12px;
-                    height: 12px;
+                    width: 10px;
+                    height: 10px;
+                }
+
+                .input {
+                    position: relative;
+                    width: 100%;
+                    height: 30px;
+                    border-radius: 4px;
+                    border: 1px solid #dcdfe6;
+                    padding-left: 11px;
+                    box-sizing: border-box;
+                    display: flex;
+                    align-items: center;
+                    background-color: var(--grey-light);
+
+                    span {
+                        flex: 1;
+                    }
+
+                    .el-icon {
+                        width: 30px;
+                        height: 30px;
+                        display: flex;
+                        align-items: center;
+                        justify-content: center;
+                    }
                 }
 
                 .el-select {
                     width: 100%;
                     height: 30px;
                     font-size: 10px;
+
                     >div {
                         height: 100%;
                     }
@@ -256,6 +298,7 @@ const compsDialog = () => {
                         font-size: 10px;
                         background-color: var(--grey-light);
                         box-shadow: none;
+
                         &:hover {
                             border-color: var(--grey-light);
                             box-shadow: none;
@@ -271,10 +314,12 @@ const compsDialog = () => {
                     :deep(.el-input__inner) {
                         --el-input-inner-height: 100%;
                     }
+
                     :deep(.el-input__wrapper) {
                         background-color: var(--grey-light);
                         border-color: var(--grey-light);
                         box-shadow: none;
+
                         &:hover {
                             border-color: var(--grey-light);
                             box-shadow: none;
@@ -313,6 +358,7 @@ const compsDialog = () => {
                 margin-right: 5px;
                 padding-top: 2px;
             }
+
             .name {
                 overflow: hidden;
                 text-overflow: ellipsis;
@@ -338,4 +384,5 @@ const compsDialog = () => {
 
 :deep(.el-select .el-input__wrapper.is-focus) {
     box-shadow: 0 0 0 1px var(--active-color) inset !important;
-}</style>
+}
+</style>

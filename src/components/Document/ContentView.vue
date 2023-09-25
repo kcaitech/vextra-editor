@@ -260,9 +260,10 @@ function contextMenuMount(e: MouseEvent) {
         shapesContainsMousedownOnPageXY = shapes;
         contextMenuItems.push('layers');
     }
-    // if(selection.selectedShapes[0].type === ShapeType.SymbolRef) {
-    //     contextMenuItems.push('instance');
-    // }
+    const _shapes = selection.selectedShapes
+    if(_shapes.length === 1 && _shapes[0].type === ShapeType.SymbolRef) {
+        contextMenuItems.push('edit');
+    }
     if (area === 'table_cell') {
         const table = props.context.tableSelection;
         if (table.tableRowStart === table.tableRowEnd && table.tableColStart === table.tableColEnd) {

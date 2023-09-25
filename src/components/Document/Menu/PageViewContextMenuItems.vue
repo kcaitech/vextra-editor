@@ -9,7 +9,7 @@ import Layers from './Layers.vue';
 import { Context } from '@/context';
 import { WorkSpace } from '@/context/workspace';
 import { Selection } from '@/context/selection';
-import { adapt_page, getName } from '@/utils/content';
+import { adapt_page, getName, get_shape_within_document, shape_track } from '@/utils/content';
 import { message } from '@/utils/message';
 import { paster, paster_inner_shape, replace } from '@/utils/clipboard';
 import { sort_by_layer } from '@/utils/group_ungroup';
@@ -355,7 +355,12 @@ function reset() {
 
 }
 function edit() {
-
+  const refId = props.context.selection.selectedShapes[0].refId;
+  const shape = get_shape_within_document(props.context, refId)
+  if (shape) {
+    shape_track(props.context, shape)
+    emit('close');
+  }
 }
 /**
  * 隐藏图层

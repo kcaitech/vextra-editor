@@ -74,7 +74,7 @@ onUnmounted(() => {
         right: props.right,
         top: cur_top > 0 ? props.top : cur_top + 'px'
     }">
-        <ComponentList v-slot="type" :heard="true" @close="popoverClose">
+        <ComponentList v-slot="type" :heard="true" @close="popoverClose" :context="context">
             <el-scrollbar>
                 <div class="demo-collapse">
                     <div class="demo-collapse" v-for="(item, index) in list" :key="index">

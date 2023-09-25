@@ -154,19 +154,28 @@ const saveExamplesToggle = () => {
                     <div class="selectType" v-if="compsType" ref="selectComps">
                         <div class="type-title">请选择属性类型:</div>
                         <div class="status" @click="addModuleState">
-                            <svg-icon icon-class="pattern-arrow"></svg-icon>
+                            <div>
+                                <svg-icon icon-class="comp-state"></svg-icon>
+                            </div>
                             <span>组件状态</span>
                         </div>
                         <div class="status" @click="layerIsShow">
-                            <svg-icon icon-class="eye-open"></svg-icon>
+                            <div>
+                                <svg-icon icon-class="eye-open"></svg-icon>
+                            </div>
                             <span>显示状态</span>
                         </div>
                         <div class="status" @click="examplesToggle">
-                            <svg-icon icon-class="pattern-rectangle"></svg-icon>
+                            <div>
+                                <svg-icon icon-class="pattern-rectangle"
+                                    style="transform: rotate(45deg);width: 10px; height: 10px;"></svg-icon>
+                            </div>
                             <span>实例切换</span>
                         </div>
                         <div class="status" @click="addTextDialog">
-                            <svg-icon icon-class="text"></svg-icon>
+                            <div>
+                                <svg-icon icon-class="text" style="width: 10px; height: 10px;"></svg-icon>
+                            </div>
                             <span>文本内容</span>
                         </div>
                     </div>
@@ -185,7 +194,7 @@ const saveExamplesToggle = () => {
                         </div>
                         <div class="module_item_left" @dblclick="onRename(index)" v-else>
                             <div class="module_name">
-                                <svg-icon icon-class="pattern-arrow"></svg-icon>
+                                <svg-icon icon-class="comp-state"></svg-icon>
                                 <span class="name">{{ item.attrName }}</span>
                             </div>
                             <div><span class="name">{{ item.attrValue }}</span></div>
@@ -221,7 +230,7 @@ const saveExamplesToggle = () => {
                     <div class="attr_con">
                         <div class="module_item_left" @click="editText(index)">
                             <div class="module_name">
-                                <svg-icon icon-class="text"></svg-icon>
+                                <svg-icon icon-class="text" style="width: 10px; height: 10px;"></svg-icon>
                                 <span class="name">{{ item.attrName }}</span>
                             </div>
                             <div><span class="name">{{ item.text }}</span></div>
@@ -231,7 +240,7 @@ const saveExamplesToggle = () => {
                         </div>
                     </div>
                     <CompLayerShow :context="context" v-if="iseditText && textIndex === index"
-                        @close-dialog="iseditText = false" right="250px" :width="260" :add-type="''" :title="`图层是否显示`"
+                        @close-dialog="iseditText = false" right="250px" :width="260" :add-type="''" :title="`文本内容`"
                         @save-layer-show="saveTextContext"></CompLayerShow>
                 </div>
             </template>
@@ -240,7 +249,8 @@ const saveExamplesToggle = () => {
                     <div class="attr_con">
                         <div class="module_item_left" @click="editToggle(index)">
                             <div class="module_name">
-                                <svg-icon icon-class="pattern-rectangle"></svg-icon>
+                                <svg-icon icon-class="pattern-rectangle"
+                                    style="width: 10px; height: 10px; transform: rotate(45deg); margin-top: 0;"></svg-icon>
                                 <span class="name">{{ item.attrName }}</span>
                             </div>
                             <div><span class="name">{{ item.value }}</span></div>
@@ -250,8 +260,8 @@ const saveExamplesToggle = () => {
                         </div>
                     </div>
                     <CompLayerShow :context="context" v-if="iseditToggle && toggleIndex === index"
-                        @close-dialog="iseditToggle = false" right="250px" :width="260" :add-type="'toggle'"
-                        :title="`图层是否显示`" @save-layer-show="saveExamplesToggle"></CompLayerShow>
+                        @close-dialog="iseditToggle = false" right="250px" :width="260" :add-type="'toggle'" :title="`实例切换`"
+                        @save-layer-show="saveExamplesToggle"></CompLayerShow>
                 </div>
             </template>
         </div>
@@ -296,11 +306,17 @@ const saveExamplesToggle = () => {
             align-items: center;
             height: 25px;
             padding: 2px 10px;
-
-            >svg {
+            div {
+                width: 20px;
+                height: 100%;
+                display: flex;
+                align-items: center;
+                justify-content: center;
+                margin-right: 5px;
+            }
+            svg {
                 width: 14px;
                 height: 14px;
-                margin-right: 10px;
             }
 
             &:hover {
@@ -339,9 +355,9 @@ const saveExamplesToggle = () => {
                 width: 45%;
 
                 >svg {
-                    width: 10px;
-                    height: 10px;
-                    margin: 0 10px;
+                    width: 14px;
+                    height: 14px;
+                    margin: -2px 10px;
                 }
             }
 
