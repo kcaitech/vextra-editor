@@ -4,7 +4,7 @@ import { Context } from "@/context";
 import { Matrix, Page, Shape, ShapeType } from "@kcdesign/data";
 import { ClientXY, Selection } from "@/context/selection";
 import ComponentTitle from "./ComponentTitle.vue"
-import { is_shape_out, is_need_skip_to_render, top_side } from "@/utils/content";
+import { is_shape_out, top_side } from "@/utils/content";
 const props = defineProps<{
     context: Context
     data: Page,
@@ -59,7 +59,6 @@ const setPosition = () => {
             }
         }
     }
-    console.log('计算位置：(ms)', Date.now() - st);
 }
 function pre_modify_anchor(shape: Shape) {
     let rotate = shape.rotation || 0;
