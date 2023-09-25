@@ -26,6 +26,7 @@ function updater() {
     setOrigin();
     setPosition();
 }
+// 代码样例
 const setPosition = () => {
     const st = Date.now();
     titles.length = 0;
@@ -102,6 +103,7 @@ function modify_rotate(shape: Shape) {
     }
     return rotate;
 }
+// ↑
 function setOrigin() { // 这个动作是让container与页面坐标系重合
     matrix.reset(props.context.workspace.matrix);
     matrix.preTrans(props.data.frame.x, props.data.frame.y);
