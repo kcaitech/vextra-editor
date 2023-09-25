@@ -746,8 +746,7 @@ export function shape_track(context: Context, shape: Shape) {
 export function get_shape_within_document(context: Context, id: string) {
   const pages = context.data.pagesMgr.resource;
   for (let i = 0, len = pages.length; i < len; i++) {
-    const p = pages[i];
-    const t = p.getShape(id);
+    const t = pages[i].getShape(id);
     if (t) return t;
   }
 }
