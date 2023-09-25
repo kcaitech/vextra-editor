@@ -49,9 +49,9 @@ comsMap.set(ShapeType.Artboard, (data: Shape) => {
 comsMap.set(ShapeType.Group, (data: Shape) => {
     return group(h, data as GroupShape, comsMap);
 });
-comsMap.set(ShapeType.FlattenShape, (data: Shape) => {
-    return shapegroup(h, data as FlattenShape);
-});
+// comsMap.set(ShapeType.FlattenShape, (data: Shape) => {
+//     return shapegroup(h, data as FlattenShape);
+// });
 comsMap.set(ShapeType.Image, (data: Shape) => {
     const s = data as ImageShape;
     const url = s.peekImage() || "";
