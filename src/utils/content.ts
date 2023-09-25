@@ -31,7 +31,7 @@ export interface Root {
   element: any
   center: ClientXY
 }
-export type Area = 'text-selection' | 'controller' | 'group' | 'artboard' | 'null' | 'normal' | 'table' | 'table_cell' | 'component';
+export type Area = 'text-selection' | 'controller' | 'group' | 'artboard' | 'null' | 'normal' | 'table' | 'table_cell' | 'component' | 'instance';
 const updateRootTime = 300;
 export function _updateRoot(context: Context, element: HTMLElement) {
   const { x, y, right, bottom } = element.getBoundingClientRect();
@@ -425,6 +425,29 @@ export function adapt_page(context: Context, initPage = false) {
   }
   return matrix;
 }
+// 列表转树
+export const list2Tree = (list: any, rootValue: string) => {
+  const arr: any = []
+  list.forEach((item: any) => {
+    if (item.parent_id === rootValue) {
+      const children = list2Tree(list, item.id)
+      if (children.length) {
+        item.children = children
+      }
+      arr.push(item)
+    }
+  })
+  return arr
+}
+export function flattenShapes(shapes: any) {
+  return shapes.reduce((result: any, item: Shape) => {
+    if (Array.isArray(item.childs)) {
+      // 如果当前项有子级数组，则递归调用flattenArray函数处理子级数组
+      result = result.concat(flattenShapes(item.childs));
+    }
+    return result.concat(item);
+  }, []);
+}
 export function page_scale(context: Context, scale: number) {
   const workspace = context.workspace;
   const root = workspace.root;
@@ -466,9 +489,12 @@ export function right_select(e: MouseEvent, p: PageXY, context: Context): Area {
     if (area_1[0].type === ShapeType.Group) {
       selection.selectShape(area_1[0]);
       return 'group';
-    } else if (area_1[0].type === ShapeType.SymbolRef) {
+    } else if (area_1[0].type === ShapeType.Symbol) {
       selection.selectShape(area_1[0]);
       return 'component';
+    } else if (area_1[0].type === ShapeType.SymbolRef) {
+      selection.selectShape(area_1[0]);
+      return 'instance';
     }
   }
   const area_2 = finder(context, p);
@@ -498,40 +524,19 @@ export function get_selected_types(context: Context): number {
       result = result | 2;
     } else if (shapes[i].type === ShapeType.SymbolRef) {
       result = result | 4;
+    } else if (shapes[i].type === ShapeType.Symbol) {
+      result = result | 8;
     }
-    if (result >= 7) return result; // 已经得到了最多类型，不可能再有新的类型，不需要继续判断
+    if (result >= 15) return result; // 已经得到了最多类型，不可能再有新的类型，不需要继续判断
   }
   return result;
 }
-// 列表转树
-export const list2Tree = (list: any, rootValue: string) => {
-  const arr: any = []
-  list.forEach((item: any) => {
-    if (item.parent_id === rootValue) {
-      const children = list2Tree(list, item.id)
-      if (children.length) {
-        item.children = children
-      }
-      arr.push(item)
-    }
-  })
-  return arr
-}
-export function flattenShapes(shapes: any) {
-  return shapes.reduce((result: any, item: Shape) => {
-    if (Array.isArray(item.childs)) {
-      // 如果当前项有子级数组，则递归调用flattenArray函数处理子级数组
-      result = result.concat(flattenShapes(item.childs));
-    }
-    return result.concat(item);
-  }, []);
-}
 /**
  * 右键菜单打开之前根据点击的区域整理应该显示的菜单项
- * @param { "controller" | "text-selection" | "group" | "artboard" | "component" | "null" | "normal" | "table" | "table_cell"  } area 点击的区域
+ * @param { "controller" | "text-selection" | "group" | "artboard" | "component" | "null" | "normal" | "table" | "table_cell" | "instance" } area 点击的区域
  * @returns 
  */
-export function get_menu_items(context: Context, area: "controller" | "text-selection" | "group" | "artboard" | "component" | "null" | "normal" | "table" | "table_cell"): string[] {
+export function get_menu_items(context: Context, area: "controller" | "text-selection" | "group" | "artboard" | "component" | "null" | "normal" | "table" | "table_cell" | "instance"): string[] {
   let contextMenuItems = []
   if (area === 'artboard') { // 点击在容器上
     if (permIsEdit(context)) {
@@ -547,7 +552,13 @@ export function get_menu_items(context: Context, area: "controller" | "text-sele
     }
   } else if (area === 'component') {
     if (permIsEdit(context)) {
-      contextMenuItems = ['all', 'copy', 'paste-here', 'replace', 'visible', 'component', 'lock', 'forward', 'back', 'top', 'bottom', 'groups', 'container', 'instance'];
+      contextMenuItems = ['all', 'copy', 'paste-here', 'replace', 'visible', 'lock', 'forward', 'back', 'top', 'bottom', 'groups', 'container'];
+    } else {
+      contextMenuItems = ['all', 'copy'];
+    }
+  }else if (area === 'instance') {
+    if (permIsEdit(context)) {
+      contextMenuItems = ['all', 'copy', 'paste-here', 'replace', 'visible', 'lock', 'forward', 'back', 'top', 'bottom', 'groups', 'container', 'instance', 'component'];
     } else {
       contextMenuItems = ['all', 'copy'];
     }
@@ -568,9 +579,15 @@ export function get_menu_items(context: Context, area: "controller" | "text-sele
         contextMenuItems.push('un_group');
       }
     }
-    if (types & 4) { // 存在组件
+    if (types & 4) { // 存在实例
       if (permIsEdit(context)) {
         contextMenuItems.push('instance');
+      }
+    }
+    if (types & 8) { // 存在组件
+      if (permIsEdit(context)) {
+        const index = contextMenuItems.findIndex((item) => item === 'component');
+        contextMenuItems.splice(index, 1);
       }
     }
     if (context.selection.selectedShapes.length <= 1) { // 当选区长度为1时，提供移动图层选项

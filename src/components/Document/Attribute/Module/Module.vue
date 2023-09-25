@@ -1,28 +1,55 @@
 <script lang="ts" setup>
 import { useI18n } from 'vue-i18n';
 import { Context } from '@/context';
-import { ref, nextTick } from 'vue'
+import { ref, nextTick, onMounted, computed } from 'vue'
 import ComponentAttr from './ComponentAttr.vue';
 import ComponentState from './ComponentState.vue';
 import InstanceAttr from './InstanceAttr.vue';
 import LayerShow from './LayerShow.vue';
 import TextContent from './TextContent.vue';
-import { ShapeType } from '@kcdesign/data';
+import ComponentInstance from './ComponentInstance.vue';
+import { Shape, ShapeType } from '@kcdesign/data';
 const props = defineProps<{
     context: Context
     shapeType: string
+    shapes: Shape[]
 }>()
 const { t } = useI18n();
 
+const p_symble = computed(() => {
+    let isSymble = false;
+    if (props.shapes.length === 1) {
+        const shape = props.shapes[0]
+        let p = shape.parent;
+        if(p && p.type === ShapeType.Symbol) {
+            isSymble = true;
+        }
+        while (p && p.type !== ShapeType.Page) {
+            if (p.type === ShapeType.Symbol) {
+                isSymble = true;
+            }
+            p = p.parent;
+        }
+    }else {
+        isSymble = false
+    }
+    return isSymble
+})
+
+
+onMounted(() => {
+
+})
 </script>
 
 <template>
     <div class="module-panel">
         <ComponentAttr :context="context" v-if="shapeType === ShapeType.Symbol"></ComponentAttr>
-        <ComponentState :context="context" v-if="shapeType === ShapeType.SymbolRef"></ComponentState>
-        <InstanceAttr :context="context" v-if="shapeType === ShapeType.SymbolRef"></InstanceAttr>
-        <LayerShow :context="context" v-if="shapeType === ShapeType.SymbolRef"></LayerShow>
-        <TextContent :context="context" v-if="shapeType === ShapeType.SymbolRef"></TextContent>
+        <ComponentState :context="context" v-if="p_symble"></ComponentState>
+        <InstanceAttr :context="context" v-if="shapeType === ShapeType.SymbolRef" :shapes="shapes"></InstanceAttr>
+        <LayerShow :context="context" v-if="p_symble"></LayerShow>
+        <TextContent :context="context" v-if="p_symble && shapeType === ShapeType.Text"></TextContent>
+        <ComponentInstance :context="context" :shapes="shapes" v-if="p_symble && shapeType === ShapeType.SymbolRef"></ComponentInstance>
     </div>
 </template>
 

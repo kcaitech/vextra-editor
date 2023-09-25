@@ -3,7 +3,9 @@ import { useI18n } from 'vue-i18n';
 import { Context } from '@/context';
 import TypeHeader from '../TypeHeader.vue';
 import { ref, nextTick } from 'vue'
+import { ArrowDown } from '@element-plus/icons-vue';
 import ComponentAttr from './ComponentAttr.vue';
+import SelectMenu from '../PopoverMenu/SelectMenu.vue';
 const props = defineProps<{
     context: Context
 }>()
@@ -15,7 +17,7 @@ const revalueInput = ref<HTMLInputElement>()
 const onRevalue = () => {
     editAttrValue.value = true
     nextTick(() => {
-        if(revalueInput.value) {
+        if (revalueInput.value) {
             revalueInput.value?.focus()
             revalueInput.value?.select()
         }
@@ -23,16 +25,24 @@ const onRevalue = () => {
 }
 
 const closeValueInput = () => {
-    if(attrValueInput.value.trim().length === 0) return editAttrValue.value = false
+    if (attrValueInput.value.trim().length === 0) return editAttrValue.value = false
     editAttrValue.value = false
 }
 
 const onEditAttrValue = (e: KeyboardEvent) => {
-    if(attrValueInput.value.trim().length === 0) return editAttrValue.value = false
-    if(e.code === 'Enter' || e.code === 'NumpadEnter') {
+    if (attrValueInput.value.trim().length === 0) return editAttrValue.value = false
+    if (e.code === 'Enter' || e.code === 'NumpadEnter') {
         editAttrValue.value = false
     }
 }
+const attrValue = ref('默认')
+const selectoption = ref(false)
+const menuItems = ['默认']
+const showMenu = () => {
+    if(selectoption.value) return selectoption.value = false
+    selectoption.value = true;
+}
+
 </script>
 
 <template>
@@ -46,8 +56,18 @@ const onEditAttrValue = (e: KeyboardEvent) => {
             <div class="module_con">
                 <div class="state_item">
                     <div class="state_name"><span>属性1</span></div>
-                    <div class="state_value" v-if="!editAttrValue" @dblclick="onRevalue"><span>默认</span></div>
-                    <div class="module_input" v-if="editAttrValue"><el-input v-model="attrValueInput" ref="revalueInput" @blur="closeValueInput" @keydown="onEditAttrValue"/></div>
+                    <div class="state_value" v-if="!editAttrValue" @dblclick="onRevalue">
+                        <div class="input" @click="showMenu">
+                            <span>{{ attrValue }}</span>
+                            <el-icon>
+                                <ArrowDown
+                                    :style="{ transform: selectoption ? 'rotate(180deg)' : 'rotate(0deg)', transition: '0.3s' }" />
+                            </el-icon>
+                            <SelectMenu v-if="selectoption" :top="33" width="100%" :menuItems="menuItems"></SelectMenu>
+                        </div>
+                    </div>
+                    <div class="module_input" v-if="editAttrValue"><el-input v-model="attrValueInput" ref="revalueInput"
+                            @blur="closeValueInput" @keydown="onEditAttrValue" /></div>
                 </div>
                 <div class="delete"></div>
             </div>
@@ -60,32 +80,38 @@ const onEditAttrValue = (e: KeyboardEvent) => {
 .module_container {
     font-size: var(--font-default-fontsize);
     margin-bottom: 10px;
+
     .module_state_item {
         display: flex;
         flex-direction: column;
         margin-bottom: 3px;
+
         .module_con {
             display: flex;
             align-items: center;
             justify-content: space-between;
             height: 30px;
         }
+
         .state_item {
             display: flex;
             align-items: center;
             width: 100%;
             height: 30px;
+
             .state_name {
                 display: flex;
                 align-items: center;
                 width: 30%;
                 height: 100%;
+
                 span {
                     overflow: hidden;
                     text-overflow: ellipsis;
                     white-space: nowrap;
                 }
             }
+
             .state_value {
                 display: flex;
                 align-items: center;
@@ -94,28 +120,59 @@ const onEditAttrValue = (e: KeyboardEvent) => {
                 flex: 1;
                 height: 100%;
                 background-color: var(--grey-light);
+                >svg {
+                    width: 10px;
+                    height: 10px;
+                }
                 span {
                     overflow: hidden;
                     text-overflow: ellipsis;
                     white-space: nowrap;
                 }
+                .input {
+                    position: relative;
+                    width: 100%;
+                    height: 30px;
+                    border-radius: 4px;
+                    border: 1px solid #dcdfe6;
+                    padding-left: 11px;
+                    box-sizing: border-box;
+                    display: flex;
+                    align-items: center;
+                    background-color: var(--grey-light);
+                    span {
+                        flex: 1;
+                    }
+
+                    .el-icon {
+                        width: 30px;
+                        height: 30px;
+                        display: flex;
+                        align-items: center;
+                        justify-content: center;
+                    }
+                }
             }
         }
+
         .module_input {
             display: flex;
             align-items: center;
             padding-left: 10px;
             width: 100%;
             height: 30px;
+
             .el-input {
                 font-size: 10px;
                 height: 30px;
             }
         }
+
         .warn {
             margin-left: 30%;
             color: red;
         }
+
         .delete {
             flex: 0 0 22px;
             display: flex;
@@ -126,12 +183,11 @@ const onEditAttrValue = (e: KeyboardEvent) => {
         }
     }
 }
-    
+
 :deep(.el-input__inner) {
     --el-input-inner-height: 100%;
 }
 
 :deep(.el-input__wrapper.is-focus) {
     box-shadow: 0 0 0 1px var(--active-color) inset;
-}
-</style>
+}</style>

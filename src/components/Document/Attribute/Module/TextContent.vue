@@ -22,7 +22,7 @@ const textDialog = () => {
             <template #tool>
                 <div class="edit-comps">
                     <div class="edit_svg" @click="textDialog">
-                        <svg-icon icon-class="add"></svg-icon>
+                        <svg-icon icon-class="relevance"></svg-icon>
                     </div>
                 </div>
             </template>
@@ -45,8 +45,8 @@ const textDialog = () => {
         justify-content: center;
 
         >svg {
-            width: 50%;
-            height: 50%;
+            width: 70%;
+            height: 70%;
         }
     }
 }</style>
