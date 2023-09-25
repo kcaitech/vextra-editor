@@ -61,10 +61,14 @@ export function get_image_name(brothers: Shape[], name: string) {
   const repeats: number = renamebrothers.length;
   return repeats ? `${name} ${repeats + 1}` : name;
 }
-export function get_symbol_ref_name(symbolName: string, brothers: Shape[], t: Function) {
+export function get_symbol_ref_name(symbolname: string, symbolref: string, brothers: Shape[]) {
+  let repeats = 1;
   for (let i = 0, len = brothers.length; i < len; i++) {
-
+    const shape = brothers[i];
+    if (shape.type !== ShapeType.SymbolRef) continue;
+    if (shape.refId === symbolref) repeats++;
   }
+  return repeats > 1 ? `Ref-${symbolname}-${repeats}` : `Ref-${symbolname}`;
 }
 // 判断图形是否在可视区域内
 export function isInner(context: Context, shape: Shape) {
@@ -753,11 +757,13 @@ export function shape_track(context: Context, shape: Shape) {
     fit_no_transform(context, shape);
   }
 }
+/**
+ * @description 文档范围内通过id读取shape
+ */
 export function get_shape_within_document(context: Context, id: string) {
   const pages = context.data.pagesMgr.resource;
   for (let i = 0, len = pages.length; i < len; i++) {
-    const p = pages[i];
-    const t = p.getShape(id);
+    const t = pages[i].getShape(id);
     if (t) return t;
   }
 }

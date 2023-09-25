@@ -203,7 +203,11 @@ const hangdlePerm = () => {
 function icon_class() {
     const shape = props.data.shape();
     if (shape.type === ShapeType.Symbol) {
-        return 'pattern-component';
+        if (shape.isUnionSymbolShape) {
+            return 'pattern-symbol-union';
+        } else {
+            return 'pattern-component';
+        }
     } else {
         return `pattern-${shape.type}`;
     }

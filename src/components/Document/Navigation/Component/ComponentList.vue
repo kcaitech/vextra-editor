@@ -35,6 +35,7 @@ const close = () => {
             </div>
         </div>
         <div class="body" :style="{ height: heard ? 'calc(100% - 80px)' : 'calc(100% - 35px)' }">
+            
             <ComponentListView :context="props.context"></ComponentListView>
         </div>
     </div>
