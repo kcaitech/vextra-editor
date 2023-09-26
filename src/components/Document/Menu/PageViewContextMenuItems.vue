@@ -415,6 +415,18 @@ function make_symbol_union() {
     }
   }
 }
+function make_state() {
+  const shape = props.context.selection.selectedShapes[0];
+  const page = props.context.selection.selectedPage;
+  if (shape && shape.type === ShapeType.Symbol && shape.isUnionSymbolShape && page) {
+    const editor = props.context.editor4Page(page);
+    const make_result = editor.makeStateAt(shape as SymbolShape);
+    if (make_result) {
+      props.context.selection.selectShape(make_result);
+      emit('close');
+    }
+  }
+}
 const stop = watch(() => props.items, menu_watcher, { deep: true, immediate: true })
 onUnmounted(() => {
   stop();
@@ -613,6 +625,9 @@ onUnmounted(() => {
     </div>
     <div class="item" v-if="props.items.includes('visible')" @click="make_symbol_union">
       <span>组件状态</span>
+    </div>
+    <div class="item" v-if="props.items.includes('visible')" @click="make_state">
+      <span>添加可变组件</span>
     </div>
     <TableMenu :context="context" :layers="layers" :items="items" :site="site" @close="emit('close')"></TableMenu>
   </div>
