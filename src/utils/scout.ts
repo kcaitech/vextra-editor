@@ -158,13 +158,13 @@ function groupPassthrough(scout: Scout, scope: Shape[], position: PageXY): Shape
 function finder(scout: Scout, g: Shape[], position: PageXY, selected: Shape, isCtrl: boolean): Shape | undefined {
     let result: Shape | undefined;
     for (let i = g.length - 1; i > -1; i--) { // 从最上层开始往下找(z-index：大 -> 小)
-        if (!canBeTarget(g[i])) continue;
         const item = g[i];
+        if (!canBeTarget(item)) continue;
         const isItemIsTarget = isTarget(scout, item, position);
         if (!isItemIsTarget) continue;
-        if (item.type === ShapeType.Artboard) { // 如果是容器，有子元素时不可以被hover    
+        if (item.type === ShapeType.Artboard) {
             result = finder_artboard(scout, item as GroupShape, position, selected, isCtrl);
-        } else if (item.type === ShapeType.Group) { // 如果是编组，不用向下走了，让子元素往上走
+        } else if (item.type === ShapeType.Group) {
             result = forGroupHover(scout, item.childs, position, selected, isCtrl);
         } else if (item.type === ShapeType.Symbol && item.isUnionSymbolShape) {
             result = finder_symbol_union(scout, item as GroupShape, position, selected, isCtrl);
