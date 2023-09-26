@@ -163,8 +163,10 @@ export function finder(scout: Scout, g: Shape[], position: PageXY, selected: Sha
             result = finder_artboard(scout, item as GroupShape, position, selected, isCtrl);
         } else if (item.type === ShapeType.Group) {
             result = forGroupHover(scout, item.childs, position, selected, isCtrl);
-        } else if (item.type === ShapeType.Symbol && item.isUnionSymbolShape) {
-            result = finder_symbol_union(scout, item as GroupShape, position, selected, isCtrl);
+        } else if (item.type === ShapeType.Symbol) {
+            if (item.isUnionSymbolShape) {
+                result = finder_symbol_union(scout, item as GroupShape, position, selected, isCtrl);
+            }
         } else {
             result = item;
         }
