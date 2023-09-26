@@ -1,5 +1,5 @@
 <script setup lang="ts">
-import { ref, nextTick } from 'vue'
+import { ref, nextTick, onMounted, onUnmounted } from 'vue'
 import { AsyncTransfer, Matrix, Shape } from "@kcdesign/data";
 import { Context } from "@/context";
 import { permIsEdit } from '@/utils/content';
@@ -30,7 +30,8 @@ const esc = ref<boolean>(false)
 const inputWidth = ref(5)
 const hover = ref(false)
 let isDragging: boolean = false;
-
+const reflush = ref<number>(0);
+const watcher = (t: any) => { if (t !== 'shape-frame') reflush.value++; };
 const onRename = () => {
     isInput.value = true
     nextTick(() => {
@@ -276,13 +277,31 @@ function modify_speed(e: MouseEvent) {
 function move2(e: MouseEvent) {
     if (e.buttons === 0) e.stopPropagation();
 }
+onMounted(() => {
+    props.shape.watch(watcher);
+})
+onUnmounted(() => {
+    props.shape.unwatch(watcher);
+})
 </script>
 
 <template>
-    <div class="container-name" @mouseenter="hoverShape" @mouseleave="unHoverShape" @mousedown="down" @mousemove="move2"
-        data-area="controller">
+    <div :reflush="reflush" class="container-name" @mouseenter="hoverShape" @mouseleave="unHoverShape" @mousedown="down"
+        @mousemove="move2" data-area="controller">
         <div class="name-wrap" :style="{ maxWidth: props.maxWidth + 'px' }" @dblclick="onRename">
-            <svg width="305" height="305" viewBox="0 0 305 305" fill="none" xmlns="http://www.w3.org/2000/svg">
+            <svg width="306" height="306" viewBox="0 0 306 306" fill="none" xmlns="http://www.w3.org/2000/svg"
+                v-if="props.shape.isUnionSymbolShape">
+                <rect x="8.07106" y="153.895" width="90" height="90" transform="rotate(-45.0629 8.07106 153.895)"
+                    fill="#5607F6" stroke="#5607F6" stroke-width="10" />
+                <rect x="90.0054" y="71.7804" width="90" height="90" transform="rotate(-45.0629 90.0054 71.7804)"
+                    fill="#5607F6" stroke="#5607F6" stroke-width="10" />
+                <rect x="88.7697" y="234.416" width="90" height="90" transform="rotate(-45.0629 88.7697 234.416)"
+                    fill="#5607F6" stroke="#5607F6" stroke-width="10" />
+                <rect x="170.704" y="152.302" width="90" height="90" transform="rotate(-45.0629 170.704 152.302)"
+                    fill="#5607F6" stroke="#5607F6" stroke-width="10" />
+                <rect x="15" y="15" width="274" height="274" stroke="#5607F6" stroke-width="30" stroke-dasharray="50 50" />
+            </svg>
+            <svg width="305" height="305" viewBox="0 0 305 305" fill="none" xmlns="http://www.w3.org/2000/svg" v-else>
                 <rect x="7.07106" y="152.895" width="90" height="90" transform="rotate(-45.0629 7.07106 152.895)"
                     fill="#5607F6" stroke="#5607F6" stroke-width="10" />
                 <rect x="89.0054" y="70.7804" width="90" height="90" transform="rotate(-45.0629 89.0054 70.7804)"
