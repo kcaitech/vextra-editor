@@ -25,6 +25,10 @@ const iseditText = ref(false)
 const toggleIndex = ref(-1)
 const iseditToggle = ref(false)
 const dislogTitle = ref('');
+const atrrdialog = ref<HTMLDivElement>();
+const layer_show = ref<any>([]);
+const text_dia = ref<any>([]);
+const module_dia = ref<any>([]);
 const addType = ref<'Show' | 'Text' | 'toggle'>('Show')
 
 const selectCompsType = () => {
@@ -74,6 +78,7 @@ const editName = (e: KeyboardEvent) => {
 const layerIsShow = () => {
     dislogTitle.value = '图层是否显示';
     addType.value = 'Show';
+    getDialogPosi(atrrdialog.value);
     isaddStateDialog.value = true;
 }
 
@@ -109,6 +114,7 @@ const addAttrSate = (data: any, type: 'Show' | 'Text' | 'toggle' | '') => {
     isaddStateDialog.value = false;
 }
 const editLayer = (index: number) => {
+    getDialogPosi(layer_show.value[index]);
     iseditLayerShow.value = true;
     layerIndex.value = index;
 }
@@ -120,9 +126,11 @@ const saveLayerShow = () => {
 const addTextDialog = () => {
     dislogTitle.value = '文本内容';
     addType.value = 'Text';
+    getDialogPosi(atrrdialog.value);
     isaddStateDialog.value = true;
 }
 const editText = (index: number) => {
+    getDialogPosi(text_dia.value[index]);
     iseditText.value = true;
     textIndex.value = index;
 }
@@ -134,19 +142,30 @@ const saveTextContext = () => {
 const examplesToggle = () => {
     dislogTitle.value = '实例切换';
     addType.value = 'toggle';
+    getDialogPosi(atrrdialog.value);
     isaddStateDialog.value = true;
 }
 const editToggle = (index: number) => {
+    getDialogPosi(module_dia.value[index]);
     iseditToggle.value = true;
     toggleIndex.value = index;
 }
 const saveExamplesToggle = () => {
     iseditToggle.value = false;
 }
+
+const dialog_posi = ref({ x: 0, y: 0 });
+const getDialogPosi = (div: HTMLDivElement | undefined) => {
+    if (div) {
+        const el = div.getBoundingClientRect();
+        dialog_posi.value.x = el.x - (el.width + 32);
+        dialog_posi.value.y = el.y;
+    }
+}
 </script>
 
 <template>
-    <div style="position: relative;">
+    <div style="position: relative;" ref="atrrdialog">
         <TypeHeader :title="'组件属性'" class="mt-24">
             <template #tool>
                 <div class="add-comps" @click="selectCompsType">
@@ -183,7 +202,7 @@ const saveExamplesToggle = () => {
             </template>
         </TypeHeader>
         <CompLayerShow :context="context" v-if="isaddStateDialog" @close-dialog="isaddStateDialog = false" right="250px"
-            :width="260" :addType="addType" :title="dislogTitle" @save-layer-show="addAttrSate"></CompLayerShow>
+            :width="260" :addType="addType" :title="dislogTitle" @save-layer-show="addAttrSate" :dialog_posi="dialog_posi"></CompLayerShow>
         <div class="module_container">
             <template v-for="(item, index) in moduleStates" :key="index">
                 <div class="module_attr_item">
@@ -207,7 +226,7 @@ const saveExamplesToggle = () => {
                 </div>
             </template>
             <template v-for="(item, index) in showStates" :key="index">
-                <div class="module_attr_item">
+                <div class="module_attr_item" ref="layer_show">
                     <div class="attr_con">
                         <div class="module_item_left" @click="editLayer(index)">
                             <div class="module_name">
@@ -222,11 +241,11 @@ const saveExamplesToggle = () => {
                     </div>
                     <CompLayerShow :context="context" v-if="iseditLayerShow && layerIndex === index"
                         @close-dialog="iseditLayerShow = false" right="250px" :width="260" :add-type="'Show'"
-                        :title="`图层是否显示`" @save-layer-show="saveLayerShow"></CompLayerShow>
+                        :title="`图层是否显示`" @save-layer-show="saveLayerShow" :dialog_posi="dialog_posi"></CompLayerShow>
                 </div>
             </template>
             <template v-for="(item, index) in textStates" :key="index">
-                <div class="module_attr_item">
+                <div class="module_attr_item" ref="text_dia">
                     <div class="attr_con">
                         <div class="module_item_left" @click="editText(index)">
                             <div class="module_name">
@@ -241,11 +260,11 @@ const saveExamplesToggle = () => {
                     </div>
                     <CompLayerShow :context="context" v-if="iseditText && textIndex === index"
                         @close-dialog="iseditText = false" right="250px" :width="260" :add-type="''" :title="`文本内容`"
-                        @save-layer-show="saveTextContext"></CompLayerShow>
+                        @save-layer-show="saveTextContext" :dialog_posi="dialog_posi"></CompLayerShow>
                 </div>
             </template>
             <template v-for="(item, index) in toggleStates" :key="index">
-                <div class="module_attr_item">
+                <div class="module_attr_item" ref="module_dia">
                     <div class="attr_con">
                         <div class="module_item_left" @click="editToggle(index)">
                             <div class="module_name">
@@ -261,7 +280,7 @@ const saveExamplesToggle = () => {
                     </div>
                     <CompLayerShow :context="context" v-if="iseditToggle && toggleIndex === index"
                         @close-dialog="iseditToggle = false" right="250px" :width="260" :add-type="'toggle'" :title="`实例切换`"
-                        @save-layer-show="saveExamplesToggle"></CompLayerShow>
+                        @save-layer-show="saveExamplesToggle" :dialog_posi="dialog_posi"></CompLayerShow>
                 </div>
             </template>
         </div>
@@ -306,6 +325,7 @@ const saveExamplesToggle = () => {
             align-items: center;
             height: 25px;
             padding: 2px 10px;
+
             div {
                 width: 20px;
                 height: 100%;
@@ -314,6 +334,7 @@ const saveExamplesToggle = () => {
                 justify-content: center;
                 margin-right: 5px;
             }
+
             svg {
                 width: 14px;
                 height: 14px;

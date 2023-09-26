@@ -192,7 +192,7 @@ onUnmounted(() => {
 
 <template>
   <div class="text-detail-container">
-    <Popover :context="props.context" class="popover" ref="popover" :width="220" height="auto" :left="-450"
+    <Popover :context="props.context" class="popover" ref="popover" :width="220" height="auto" :left="440"
       :title="t('attr.text_advanced_settings')">
       <template #trigger>
         <div class="trigger">

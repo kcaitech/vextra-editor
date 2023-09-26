@@ -8,6 +8,7 @@ const props = defineProps<{
     top?: string,
     right?: string,
     context: Context;
+    comps_posi?: {x: number, y: number};
 }>();
 
 const emit = defineEmits<{
@@ -49,13 +50,22 @@ function esc(e: KeyboardEvent) {
 }
 const comps = ref<HTMLDivElement>()
 const cur_top = ref(0)
+const cur_p = ref(0)
 onMounted(() => {
     if (comps.value) {
         const body_h = document.body.clientHeight;
-        const comps_y = comps.value.getBoundingClientRect().y;
-        const comps_h = comps.value.clientHeight + 10;
-        const surplus = body_h - comps_y;
-        cur_top.value = surplus - comps_h;
+        const { y, height } = comps.value.getBoundingClientRect();
+        const su = body_h - y;
+        const cur_t = su - height;
+        cur_p.value = cur_t;
+        if(cur_t > 0) {
+            cur_top.value = props.comps_posi!.y;
+        }else {
+            cur_top.value = props.comps_posi!.y - Math.abs(cur_t - 10);
+        }
+        if(cur_top.value - 40 < 0) {
+            cur_top.value = 40
+        }
     }
     document.addEventListener('keyup', esc);
 })
@@ -66,8 +76,8 @@ onUnmounted(() => {
 
 <template>
     <div class="dialog_box" ref="comps" :style="{
-        right: props.right,
-        top: cur_top > 0 ? props.top : cur_top + 'px'
+        left: props.comps_posi!.x + 'px',
+        top: cur_p === 0 ? props.comps_posi!.y + 10 + 'px' : cur_top + 'px'
     }">
         <ComponentList :heard="true" @close="popoverClose" :context="context">
             <!-- <el-scrollbar>
@@ -87,7 +97,7 @@ onUnmounted(() => {
 .dialog_box {
     display: flex;
     flex-direction: column;
-    position: absolute;
+    position: fixed;
     outline: none;
     width: 250px;
     height: 450px;

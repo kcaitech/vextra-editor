@@ -113,22 +113,23 @@ onUnmounted(() => {
 })
 </script>
 <template>
-    <section>
-        <!-- <el-scrollbar></el-scrollbar> -->
-        <div v-if="len === 0">
-            <PageBackgorund :context="props.context" v-if="props.context.selection.selectedPage"
-                :page="props.context.selection.selectedPage"></PageBackgorund>
-        </div>
-        <Arrange v-if="len > 1" :context="props.context" :shapes="shapes"></Arrange>
-        <div v-if="len" :reflush="reflush" @mousedown.stop>
-            <ShapeBaseAttr v-if="baseAttr" :context="props.context"></ShapeBaseAttr>
-            <Module :context="props.context" :shapeType="shapeType" :shapes="shapes"></Module>
-            <Fill v-if="WITH_FILL.includes(shapeType)" :shapes="shapes" :context="props.context"></Fill>
-            <Border v-if="WITH_BORDER.includes(shapeType)" :shapes="shapes" :context="props.context"></Border>
-            <Text v-if="WITH_TEXT.includes(shapeType)" :shape="(shapes[0] as TextShape)" :context="props.context"></Text>
-            <TableText v-if="WITH_TABLE.includes(shapeType)" :shape="(shapes[0] as TableShape)" :context="props.context">
-            </TableText>
-        </div>
+    <section id="Design">
+        <el-scrollbar>
+            <div v-if="len === 0">
+                <PageBackgorund :context="props.context" v-if="props.context.selection.selectedPage"
+                    :page="props.context.selection.selectedPage"></PageBackgorund>
+            </div>
+            <Arrange v-if="len > 1" :context="props.context" :shapes="shapes"></Arrange>
+            <div v-if="len" :reflush="reflush" @mousedown.stop>
+                <ShapeBaseAttr v-if="baseAttr" :context="props.context"></ShapeBaseAttr>
+                <Module :context="props.context" :shapeType="shapeType" :shapes="shapes"></Module>
+                <Fill v-if="WITH_FILL.includes(shapeType)" :shapes="shapes" :context="props.context"></Fill>
+                <Border v-if="WITH_BORDER.includes(shapeType)" :shapes="shapes" :context="props.context"></Border>
+                <Text v-if="WITH_TEXT.includes(shapeType)" :shape="(shapes[0] as TextShape)" :context="props.context"></Text>
+                <TableText v-if="WITH_TABLE.includes(shapeType)" :shape="(shapes[0] as TableShape)" :context="props.context">
+                </TableText>
+            </div>
+        </el-scrollbar>
     </section>
 </template>
 

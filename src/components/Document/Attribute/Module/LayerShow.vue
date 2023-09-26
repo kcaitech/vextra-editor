@@ -13,11 +13,21 @@ const closeLayerShowPopup = () => {
     isLayerShow.value = false
 }
 const layerIsShow = () => {
+    getDialogPosi();
     isLayerShow.value = true
+}
+const atrrdialog = ref<HTMLDivElement>();
+const dialog_posi = ref({ x: 0, y: 0 });
+const getDialogPosi = () => {
+    if (atrrdialog.value) {
+        const el = atrrdialog.value.getBoundingClientRect();
+        dialog_posi.value.x = el.x - (el.width + 32);
+        dialog_posi.value.y = el.y;
+    }
 }
 </script>
 <template>
-    <div style="position: relative;">
+    <div style="position: relative;" ref="atrrdialog">
         <TypeHeader :title="'图层是否显示'" class="mt-24">
             <template #tool>
                 <div class="edit-comps">
@@ -27,7 +37,7 @@ const layerIsShow = () => {
                 </div>
             </template>
         </TypeHeader>
-        <CompLayerShow :context="context" v-if="isLayerShow" @close-dialog="closeLayerShowPopup" right="250px" :add-type="'Show'" :width="260" :title="`图层是否显示`"></CompLayerShow>
+        <CompLayerShow :context="context" v-if="isLayerShow" @close-dialog="closeLayerShowPopup" right="250px" :add-type="'Show'" :width="260" :title="`图层是否显示`" :dialog_posi="dialog_posi"></CompLayerShow>
     </div>
 </template>
 <style lang="scss" scoped>

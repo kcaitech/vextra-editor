@@ -17,6 +17,7 @@ const saveExamplesToggle = () => {
     isInstanceShow.value = false
 }
 const layerIsShow = () => {
+    getDialogPosi();
     isInstanceShow.value = true
 }
 
@@ -51,17 +52,27 @@ const closeResetMenu = (e: MouseEvent) => {
     }
     document.removeEventListener('click', closeResetMenu)
 }
+
+const atrrdialog = ref<HTMLDivElement>();
+const dialog_posi = ref({ x: 0, y: 0 });
+const getDialogPosi = () => {
+    if (atrrdialog.value) {
+        const el = atrrdialog.value.getBoundingClientRect();
+        dialog_posi.value.x = el.x - (el.width + 32);
+        dialog_posi.value.y = el.y;
+    }
+}
 onUnmounted(() => {
     document.removeEventListener('click', closeResetMenu)
 })
 </script>
 
 <template>
-    <div style="position: relative;">
+    <div style="position: relative;" ref="atrrdialog">
         <TypeHeader :title="'组件实例'" class="mt-24">
             <template #tool>
                 <div class="edit-comps">
-                    <div class="rele_svg" @click="isInstanceShow = true">
+                    <div class="rele_svg" @click="layerIsShow">
                         <svg-icon icon-class="relevance"></svg-icon>
                     </div>
                     <div class="edit_svg" @click.stop="editComps">
@@ -81,7 +92,7 @@ onUnmounted(() => {
             </template>
         </TypeHeader>
         <CompLayerShow :context="context" v-if="isInstanceShow" @close-dialog="saveExamplesToggle" right="250px"
-            :add-type="'toggle'" :width="260" :title="`实例切换`"></CompLayerShow>
+            :add-type="'toggle'" :width="260" :title="`实例切换`" :dialog_posi="dialog_posi"></CompLayerShow>
     </div>
 </template>
 
