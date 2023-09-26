@@ -73,6 +73,10 @@ const showMenu = () => {
     if (selectoption.value) return selectoption.value = false
     selectoption.value = true;
 }
+const inputRef = ref<any>()
+const selectAllText = () => {
+    inputRef.value.select()
+}
 
 onUnmounted(() => {
     document.removeEventListener('click', closeResetMenu)
@@ -80,7 +84,7 @@ onUnmounted(() => {
 </script>
 
 <template>
-    <TypeHeader :title="'实例属性'" class="mt-24">
+    <TypeHeader :title="t('compos.instance_attr')" class="mt-24">
         <template #tool>
             <div class="edit-comps">
                 <div class="edit_svg" @click.stop="editComps">
@@ -90,10 +94,10 @@ onUnmounted(() => {
                     <el-icon><MoreFilled /></el-icon>
                     <div class="reset_menu" v-if="resetMenu">
                         <div class="untie" @click="untie">
-                            <span>解绑</span>
+                            <span>{{t('compos.untie')}}</span>
                             <span>快捷键</span>
                         </div>
-                        <div class="untie">重置全部属性</div>
+                        <div class="untie">{{t('compos.reset_all_attr')}}</div>
                     </div>
                 </div>
             </div>
@@ -132,14 +136,14 @@ onUnmounted(() => {
             <div class="state_item">
                 <div class="state_name"><span>文本</span></div>
                 <div class="state_value" style="padding: 0;">
-                    <el-input v-model="textValue" />
+                    <el-input ref="inputRef" v-model="textValue" @focus="selectAllText"/>
                 </div>
             </div>
             <div class="delete"></div>
         </div>
         <div class="open">
             <div>
-                <span class="title">图层显示:</span>
+                <span class="title">{{t('compos.layer_show')}}:</span>
                 <div>
                     <span class="name">名称1</span>
                     <el-switch v-model="openName" size="small" style="margin-left: 10px;--el-switch-on-color: #9775fa" />
@@ -148,7 +152,7 @@ onUnmounted(() => {
             <div>
                 <span class="title"></span>
                 <div>
-                    <span>关闭图标</span>
+                    <span>{{t('compos.close_icon')}}</span>
                     <el-switch v-model="openClose" size="small" style="margin-left: 10px;--el-switch-on-color: #9775fa" />
                 </div>
             </div>

@@ -8,7 +8,7 @@ import InstanceAttr from './InstanceAttr.vue';
 import LayerShow from './LayerShow.vue';
 import TextContent from './TextContent.vue';
 import ComponentInstance from './ComponentInstance.vue';
-import { Shape, ShapeType } from '@kcdesign/data';
+import { Shape, ShapeType, SymbolShape } from '@kcdesign/data';
 const props = defineProps<{
     context: Context
     shapeType: string
@@ -44,7 +44,7 @@ onMounted(() => {
 
 <template>
     <div class="module-panel">
-        <ComponentAttr :context="context" v-if="shapeType === ShapeType.Symbol"></ComponentAttr>
+        <ComponentAttr :context="context" v-if="shapeType === ShapeType.Symbol" :shape="(shapes[0] as SymbolShape)"></ComponentAttr>
         <ComponentState :context="context" v-if="p_symble"></ComponentState>
         <InstanceAttr :context="context" v-if="shapeType === ShapeType.SymbolRef" :shapes="shapes"></InstanceAttr>
         <LayerShow :context="context" v-if="p_symble"></LayerShow>

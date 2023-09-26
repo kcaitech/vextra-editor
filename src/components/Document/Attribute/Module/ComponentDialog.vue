@@ -1,5 +1,5 @@
 <script setup lang="ts">
-import { ref, nextTick, onMounted, onUnmounted } from 'vue';
+import { ref, onMounted, onUnmounted } from 'vue';
 import { Context } from '@/context';
 import { ArrowDown } from '@element-plus/icons-vue';
 import ComponentList from "../../Navigation/Component/ComponentList.vue";

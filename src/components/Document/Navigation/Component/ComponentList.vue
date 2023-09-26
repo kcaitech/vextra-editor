@@ -3,6 +3,8 @@ import { ref } from 'vue';
 import { Search } from '@element-plus/icons-vue';
 import ComponentListView from './ComponentListView.vue';
 import { Context } from '@/context';
+import { useI18n } from 'vue-i18n';
+const { t } = useI18n();
 interface Props {
     context: Context
     heard?: boolean
@@ -22,20 +24,20 @@ const close = () => {
 <template>
     <div class="container">
         <div class="header" v-if="heard">
-            <span class="title">组件</span>
+            <span class="title">{{ t('compos.compos') }}</span>
             <div class="close">
                 <svg-icon icon-class="close" @click.stop="close"></svg-icon>
             </div>
         </div>
         <div class="search_togger">
-            <el-input v-model="search" class="w-50 m-2" placeholder="搜索组件" :prefix-icon="Search" />
+            <el-input v-model="search" class="w-50 m-2" :placeholder="t('compos.search_compos')" :prefix-icon="Search" />
             <div class="toggle_list">
                 <svg-icon v-if="isList === 'card'" icon-class="resource" @click.stop="isList = 'list'"></svg-icon>
                 <svg-icon v-if="isList === 'list'" icon-class="text-bulleted-list" @click.stop="isList = 'card'"></svg-icon>
             </div>
         </div>
         <div class="body" :style="{ height: heard ? 'calc(100% - 80px)' : 'calc(100% - 35px)' }">
-            
+
             <ComponentListView :context="props.context" :search="search"></ComponentListView>
         </div>
     </div>
