@@ -108,9 +108,7 @@ export function useControllerCustom(context: Context, i18nT: Function) {
         const shape = selected[0];
         if ([ShapeType.Group, ShapeType.Symbol, ShapeType.SymbolRef].includes(shape.type)) {
             const scope: any = shape.type === ShapeType.SymbolRef ? shape.naviChilds : (shape as GroupShape).childs;
-            const scout = selection.scout;
-            if (!scout) return;
-            const target = groupPassthrough(scout, scope, startPositionOnPage);
+            const target = groupPassthrough(selection.scout!, scope, startPositionOnPage);
             if (target) selection.selectShape(target);
         } else if (shape instanceof PathShape) {
             editing = !editing;
@@ -118,7 +116,7 @@ export function useControllerCustom(context: Context, i18nT: Function) {
         }
     }
     function isMouseOnContent(e: MouseEvent): boolean {
-        return (e.target as Element)?.closest(`#content`) ? true : false;
+        return Boolean((e.target as Element)?.closest(`#content`));
     }
     function mousedown(e: MouseEvent) {
         if (workspace.isEditing) {

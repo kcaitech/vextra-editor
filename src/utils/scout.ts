@@ -2,7 +2,7 @@ import { Context } from "@/context";
 import { PageXY, XY } from "@/context/selection";
 import { GroupShape, Matrix, Shape, ShapeType } from "@kcdesign/data";
 import { v4 as uuid } from "uuid";
-interface Scout {
+export interface Scout {
     path: SVGPathElement
     remove: () => void
     isPointInShape: (shape: Shape, point: PageXY) => boolean
@@ -12,7 +12,7 @@ interface Scout {
 }
 // Ver.SVGGeometryElement，基于SVGGeometryElement的图形检索
 // 动态修改path路径对象的d属性。返回一个Scout对象， scout.isPointInShape(d, SVGPoint)用于判断一个点(SVGPoint)是否在一条路径(d)上
-function scout(context: Context): Scout {
+export function scout(context: Context): Scout {
     const scoutId = (uuid().split('-').at(-1)) || 'scout';
     const pathId = (uuid().split('-').at(-1)) || 'path';
     const ele: SVGElement = createSVGGeometryElement(scoutId);
@@ -77,7 +77,7 @@ function createPath(path: string, id: string): SVGPathElement {
     p.setAttributeNS(null, 'd', path);
     return p;
 }
-function getPathOnPageString(shape: Shape): string { // path坐标系：页面
+export function getPathOnPageString(shape: Shape): string { // path坐标系：页面
     const path = shape.getPath();
     const m2page = shape.matrix2Root();
     path.transform(m2page);
@@ -101,22 +101,21 @@ function getBoxPath(transformMatrix: Matrix) {
     return `M ${p1.x} ${p1.y} L ${p2.x} ${p2.y} L ${p3.x} ${p3.y} L ${p4.x} ${p4.y} z`;
 }
 // 判定点是否在图形内
-function isTarget(scout: Scout, shape: Shape, p: PageXY): boolean {
+export function isTarget(scout: Scout, shape: Shape, p: PageXY): boolean {
     return scout.isPointInShape(shape, p);
 }
 function isTarget2(scout: Scout, shape: Shape, p: PageXY): boolean {
     return scout.isPointInShape2(shape, p);
 }
 
-// 扁平化一个编组的树结构
-function delayering(groupshape: Shape, flat?: Shape[]): Shape[] {
-    let f: Shape[] = flat || [];
-    let childs: any = groupshape.childs;
-    if (groupshape.type === ShapeType.SymbolRef) childs = groupshape.naviChilds;
-    for (let i = 0, len = childs; i < len; i++) {
+// 扁平化一个编组的树结构 tree -> list
+export function delayering(groupshape: Shape, flat?: Shape[]): Shape[] {
+    const f: Shape[] = flat || [];
+    const childs: Shape[] = groupshape.type === ShapeType.SymbolRef ? groupshape.naviChilds : groupshape.childs;
+    for (let i = 0, len = childs.length; i < len; i++) {
         const item = childs[i];
-        if (item.type === ShapeType.Group || item.type === ShapeType.Symbol) {
-            f = f.concat(delayering(item, f));
+        if (item.type === ShapeType.Group || item.type === ShapeType.Symbol || item.type === ShapeType.SymbolRef) {
+            f.push(...delayering(item, f));
         } else {
             f.push(item);
         }
@@ -125,25 +124,22 @@ function delayering(groupshape: Shape, flat?: Shape[]): Shape[] {
 }
 
 // 编组穿透
-function groupPassthrough(scout: Scout, scope: Shape[], position: PageXY): Shape | undefined {
+export function groupPassthrough(scout: Scout, scope: Shape[], position: PageXY): Shape | undefined {
     // scope 编组子元素
     let shape: Shape | undefined;
     for (let i = scope.length - 1; i > -1; i--) {
         if ([ShapeType.Group, ShapeType.Symbol, ShapeType.SymbolRef].includes(scope[i].type)) {
-            const items: Shape[] = delayering(scope[i]); // 扁平一个编组的树结构
+            const items: Shape[] = delayering(scope[i]);
             for (let j = items.length - 1; j > -1; j--) {
                 if (isTarget(scout, items[j], position)) {
                     shape = scope[i];
                     break;
                 }
             }
-            if (shape) break;
         } else {
-            if (isTarget(scout, scope[i], position)) {
-                shape = scope[i];
-                break;
-            }
+            if (isTarget(scout, scope[i], position)) shape = scope[i];
         }
+        if (shape) break;
     }
     return shape;
 }
@@ -156,7 +152,7 @@ function groupPassthrough(scout: Scout, scope: Shape[], position: PageXY): Shape
  * @param { Shape[] } init 在下次一递归开始时需要继承的结果
  * @returns { Shape[] } 返回符合检索条件的图形
  */
-function finder(scout: Scout, g: Shape[], position: PageXY, selected: Shape, isCtrl: boolean): Shape | undefined {
+export function finder(scout: Scout, g: Shape[], position: PageXY, selected: Shape, isCtrl: boolean): Shape | undefined {
     let result: Shape | undefined;
     for (let i = g.length - 1; i > -1; i--) { // 从最上层开始往下找(z-index：大 -> 小)
         const item = g[i];
@@ -245,7 +241,7 @@ export function finder_contact(scout: Scout, g: Shape[], position: PageXY, selec
  * @param { Shape[] } g 检索的范围，只会在该范围内进行上述匹配
  * @param { PageXY } position 一个点，在页面坐标系上的点
  */
-function finder_layers(scout: Scout, g: Shape[], position: PageXY): Shape[] {
+export function finder_layers(scout: Scout, g: Shape[], position: PageXY): Shape[] {
     const result = [];
     for (let i = g.length - 1; i > -1; i--) { // 从最上层开始往下找(z-index：大 -> 小)
         if (canBeTarget(g[i])) { // 只要是!isVisible，force与否都不可以选中
@@ -270,7 +266,7 @@ function finder_layers(scout: Scout, g: Shape[], position: PageXY): Shape[] {
 }
 // 编组：如果光标在一个编组A内，当光标在子元素(包括所有后代元素)上时，有且只有编组A被认为是target。
 // 注：在没有任何元素选中的情况下，子元素如果也是编组(编组B(编组C(编组D...)))的话都要冒泡到编组A上，如果已经有元素被选中，则只冒泡到同一层级兄弟元素
-function forGroupHover(scout: Scout, g: Shape[], position: PageXY, selected: Shape, isCtrl: boolean): Shape | undefined {
+export function forGroupHover(scout: Scout, g: Shape[], position: PageXY, selected: Shape, isCtrl: boolean): Shape | undefined {
     let result: Shape | undefined;
     for (let j = g.length - 1; j > -1; j--) { // 从最子集往父级冒泡
         const shape = g[j];
@@ -313,7 +309,7 @@ function isPartSelect(shape: Shape, selected: Shape): boolean {
     return result;
 }
 // 寻找到最近的层级较高的那个容器
-function artboardFinder(scout: Scout, g: Shape[], position: PageXY, except?: Map<string, Shape>): Shape | undefined {
+export function artboardFinder(scout: Scout, g: Shape[], position: PageXY, except?: Map<string, Shape>): Shape | undefined {
     let result: Shape | undefined = undefined;
     for (let i = g.length - 1; i > -1; i--) {
         const item = g[i];
@@ -333,11 +329,10 @@ function artboardFinder(scout: Scout, g: Shape[], position: PageXY, except?: Map
     return result
 }
 
-function canBeTarget(shape: Shape): boolean { // 可以被判定为检索结果的前提是没有被锁定和isVisible可视
+export function canBeTarget(shape: Shape): boolean { // 可以被判定为检索结果的前提是没有被锁定和isVisible可视
     if (shape.isVisible != undefined && shape.isLocked != undefined) {
         return shape.isVisible && !shape.isLocked;
     } else {
         return false;
     }
 }
-export { Scout, scout, isTarget, getPathOnPageString, delayering, groupPassthrough, forGroupHover, finder, finder_layers, artboardFinder, canBeTarget }
