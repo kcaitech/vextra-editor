@@ -106,7 +106,7 @@ export function useControllerCustom(context: Context, i18nT: Function) {
         const selected = selection.selectedShapes;
         if (selected.length !== 1) return;
         const shape = selected[0];
-        if ([ShapeType.Group, ShapeType.Symbol].includes(shape.type)) {
+        if ([ShapeType.Group, ShapeType.Symbol, ShapeType.SymbolRef].includes(shape.type)) {
             const scope: any = (shape as GroupShape).childs;
             const scout = selection.scout;
             if (!scout) return;

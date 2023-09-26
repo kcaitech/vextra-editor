@@ -128,7 +128,7 @@ function groupPassthrough(scout: Scout, scope: Shape[], position: PageXY): Shape
     // scope 编组子元素
     let shape: Shape | undefined;
     for (let i = scope.length - 1; i > -1; i--) {
-        if ([ShapeType.Group, ShapeType.Symbol].includes(scope[i].type)) {
+        if ([ShapeType.Group, ShapeType.Symbol, ShapeType.SymbolRef].includes(scope[i].type)) {
             const items: Shape[] = delayering(scope[i]); // 扁平一个编组的树结构
             for (let j = items.length - 1; j > -1; j--) {
                 if (isTarget(scout, items[j], position)) {
