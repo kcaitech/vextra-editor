@@ -55,7 +55,7 @@ function updateProgress(x: number) {
 
 <template>
   <div class="radius-for-ios-container">
-    <Popover :context="props.context" :left="-472" :width="240" :height="100" ref="popover"
+    <Popover :context="props.context" :left="450" :width="240" :height="100" ref="popover"
       :title="t('attr.corner_smoothing')" class="popover">
       <template #trigger>
         <div class="trigger">

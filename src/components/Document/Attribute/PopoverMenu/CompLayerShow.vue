@@ -12,8 +12,9 @@ const props = defineProps<{
     right?: string,
     width?: number,
     height?: string | number,
-    context: Context;
-    addType: 'Text' | 'Show' | 'toggle' | ''
+    context: Context,
+    addType: 'Text' | 'Show' | 'toggle' | '',
+    dialog_posi: {x: number, y: number}
 }>();
 const emit = defineEmits<{
     (e: 'closeDialog'): void;
@@ -98,13 +99,22 @@ const handleShow = (index: number) => {
 
 const comps = ref<HTMLDivElement>()
 const cur_top = ref(0)
+const cur_p = ref(0)
 onMounted(() => {
     if (comps.value) {
         const body_h = document.body.clientHeight;
-        const comps_y = comps.value.getBoundingClientRect().y;
-        const comps_h = comps.value.clientHeight + 10;
-        const surplus = body_h - comps_y;
-        cur_top.value = surplus - comps_h;
+        const { y, height } = comps.value.getBoundingClientRect();
+        const su = body_h - y;
+        const cur_t = su - height;
+        cur_p.value = cur_t;
+        if(cur_t > 0) {
+            cur_top.value = props.dialog_posi!.y;
+        }else {
+            cur_top.value = props.dialog_posi!.y - Math.abs(cur_t);
+        }
+        if(cur_top.value - 40 < 0) {
+            cur_top.value = 40
+        }
     }
     document.addEventListener('keyup', esc);
 })
@@ -116,8 +126,8 @@ onUnmounted(() => {
 <template>
     <div class="dialog_box" ref="comps" :style="{
         width: `${props.width ? props.width : 360}px`,
-        right: props.right,
-        top: cur_top > 0 ? props.top : cur_top + 'px'
+        left: props.dialog_posi.x - 10 + 'px',
+        top: cur_p === 0 ? props.dialog_posi!.y + 10 + 'px' : cur_top + 'px'
     }">
         <div class="header">
             <span class="title">{{ props.title }}</span>
@@ -174,7 +184,7 @@ onUnmounted(() => {
 
 <style scoped lang="scss">
 .dialog_box {
-    position: absolute;
+    position: fixed;
     outline: none;
     box-shadow: 0px 2px 10px rgba(0, 0, 0, 0.2);
     background-color: #ffffff;

@@ -8,7 +8,7 @@ import { TaskType } from '@/context/escstack';
 const props = defineProps<{
   title?: string,
   top?: number,
-  left?: number,
+  left: number,
   width?: number,
   height?: string | number,
   context: Context;
@@ -38,14 +38,24 @@ function show() {
     document.addEventListener('mousedown', handleClickOutside);
     nextTick(() => { // popver 挂载之后计算其布局位置
       if (popover.value) {
-        const buffer = 10;
-        const { top, left, width, height } = popover.value.getBoundingClientRect();
-        const propsLeft = (props.left || 0);
-        const propsTop = (props.top || 0);
-        const L = Math.min(document.documentElement.clientWidth - buffer - (left + width), 0);
-        const T = Math.min(document.documentElement.clientHeight - buffer - (top + height), 0);
-        popover.value.style.left = Math.min(propsLeft, L) + 'px';
-        popover.value.style.top = Math.min(propsTop, T) + 'px';
+        const body_h = document.body.clientHeight;
+        const { height } = popover.value.getBoundingClientRect();
+        const { y: top, left, width } = container.value!.getBoundingClientRect();
+        let propsTop = top
+        const su = body_h - top;
+        const cur_t = su - height;
+
+        const propsLeft = left - width - props.left;
+        if(cur_t > 0) {
+          propsTop = top;
+        }else {
+          propsTop = top - Math.abs(cur_t - 10);
+        }
+        if(propsTop - 40 < 0) {
+          propsTop = 40
+        }
+        popover.value.style.left = propsLeft + 'px';
+        popover.value.style.top = propsTop + 'px';
         props.context.esctask.save(TaskType.WINDOW, popoverClose);
       }
     })
@@ -102,7 +112,7 @@ onUnmounted(() => {
   z-index: 99;
 
   >.popover {
-    position: absolute;
+    position: fixed;
     outline: none;
     box-shadow: 0px 2px 10px rgba(0, 0, 0, 0.2);
     background-color: #ffffff;

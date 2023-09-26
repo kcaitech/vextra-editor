@@ -22,6 +22,8 @@ const textValue = ref('文本内容')
 const menuItems = ['默认']
 
 const attrValue = ref('默认')
+const comps = ref<HTMLDivElement>();
+const comps_posi = ref({x: 0, y: 0});
 const selectReset = (e: MouseEvent) => {
     if (resetMenu.value) return resetMenu.value = false
     resetMenu.value = true
@@ -39,6 +41,11 @@ const closeDialog = () => {
     showCompsDialog.value = false;
 }
 const compsDialog = () => {
+    if(comps.value) {
+        const el = comps.value.getBoundingClientRect();
+        comps_posi.value.x = el.x - (el.width + 32);
+        comps_posi.value.y = el.y;
+    }
     showCompsDialog.value = true;
 }
 
@@ -66,6 +73,7 @@ const showMenu = () => {
     if (selectoption.value) return selectoption.value = false
     selectoption.value = true;
 }
+
 onUnmounted(() => {
     document.removeEventListener('click', closeResetMenu)
 })
@@ -108,7 +116,7 @@ onUnmounted(() => {
             </div>
             <div class="delete"></div>
         </div>
-        <div class="module_state_item">
+        <div class="module_state_item" ref="comps">
             <div class="state_item">
                 <div class="state_name"><span>实例1</span></div>
                 <div class="state_value border" @click="compsDialog">
@@ -117,7 +125,7 @@ onUnmounted(() => {
                 </div>
             </div>
             <div class="delete"></div>
-            <ComponentDialog v-if="showCompsDialog" :context="context" right="250px" top="0" @closeDialog="closeDialog">
+            <ComponentDialog v-if="showCompsDialog" :context="context" right="250px" top="0" @closeDialog="closeDialog" :comps_posi="comps_posi">
             </ComponentDialog>
         </div>
         <div class="module_state_item">

@@ -593,7 +593,7 @@ onUnmounted(() => {
             <div class="text-color" v-if="!colorIsMulti && textColor" style="margin-bottom: 10px;">
                 <div>{{ t('attr.font_color') }}</div>
                 <div class="color">
-                    <ColorPicker :color="textColor!" :context="props.context" :late="40"
+                    <ColorPicker :color="textColor!" :context="props.context" :late="30"
                         @change="c => getColorFromPicker(c, 'color')">
                     </ColorPicker>
                     <input ref="sizeColor" @focus="selectColorValue" :spellcheck="false"
@@ -625,7 +625,7 @@ onUnmounted(() => {
             <div class="text-color" v-if="!highlightIsMulti && highlight">
                 <div>{{ t('attr.highlight_color') }}</div>
                 <div class="color">
-                    <ColorPicker :color="highlight!" :context="props.context" :late="40"
+                    <ColorPicker :color="highlight!" :context="props.context" :late="30"
                         @change="c => getColorFromPicker(c, 'highlight')">
                     </ColorPicker>
                     <input ref="higlightColor" @focus="selectHiglightColor" :spellcheck="false"
