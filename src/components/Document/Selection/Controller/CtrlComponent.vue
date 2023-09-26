@@ -8,11 +8,9 @@ import { ClientXY, Selection } from "@/context/selection";
 import { useController } from "./controller";
 import { genRectPath } from "../common";
 import { Shape } from "@kcdesign/data";
-import ShapesStrokeContainer from "./ShapeStroke/ShapesStrokeContainer.vue";
-import BarsContainer from "./Bars/BarsContainer.SVG.vue";
-import PointsContainer from "./Points/PointsContainer.SVG.vue";
+import BarsContainer from "./Bars/BarsContainerForSym.vue";
+import PointsContainer from "./Points/PointsContainerForSym.vue";
 import { getAxle } from "@/utils/common";
-import PathEdit from './Points/PathEdit.vue';
 interface Props {
   context: Context
   controllerFrame: Point[]
@@ -110,19 +108,11 @@ watchEffect(updateControllerView);
     xmlns:xhtml="http://www.w3.org/1999/xhtml" preserveAspectRatio="xMinYMin meet" :viewBox="viewBox" :width="width"
     :height="height" :class="{ 'un-visible': !visible }" @mousedown="mousedown" overflow="visible"
     :style="{ transform: `translate(${bounds.left}px,${bounds.top}px)`, left: 0, top: 0, position: 'absolute' }">
-    <g v-if="!editing">
-      <ShapesStrokeContainer :context="props.context" :matrix="props.matrix">
-      </ShapesStrokeContainer>
-      <BarsContainer :context="props.context" :matrix="submatrix.toArray()" :shape="props.shape"
-        :c-frame="props.controllerFrame"></BarsContainer>
-      <PointsContainer :context="props.context" :matrix="submatrix.toArray()" :shape="props.shape" :axle="axle"
-        :c-frame="props.controllerFrame">
-      </PointsContainer>
-    </g>
-    <g v-else>
-      <PathEdit :context="props.context" :matrix="submatrix.toArray()" :shape="props.shape" :axle="axle"
-        :c-frame="props.controllerFrame"></PathEdit>
-    </g>
+    <BarsContainer :context="props.context" :matrix="submatrix.toArray()" :shape="props.shape"
+      :c-frame="props.controllerFrame"></BarsContainer>
+    <PointsContainer :context="props.context" :matrix="submatrix.toArray()" :shape="props.shape" :axle="axle"
+      :c-frame="props.controllerFrame">
+    </PointsContainer>
   </svg>
 </template>
 <style lang='scss' scoped>
