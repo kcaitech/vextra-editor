@@ -153,7 +153,7 @@ function createController() { // 计算控件点位以及类型判定
             } else if (s.type === ShapeType.Contact) {
                 controllerType.value = ControllerType.Contact;
                 rotate.value = getHorizontalAngle(points[0], points[1]);
-            } else if (s.type === ShapeType.Symbol) {
+            } else if (s.type === ShapeType.Symbol || s.type === ShapeType.SymbolRef) {
                 controllerType.value = ControllerType.Symbol;
                 rotate.value = getHorizontalAngle(points[0], points[1]);
             } else {
