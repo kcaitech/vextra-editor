@@ -191,14 +191,16 @@ export class Selection extends Watchable(Object) implements ISave4Restore {
      * @param scope 在scope范围内进行检索，如果没有限定范围则在全域(page)下寻找
      * @returns 符合检索条件的图形
      */
-    getShapesByXY(position: PageXY, isCtrl: boolean, scope?: Shape[]): Shape[] {
-        const shapes: Shape[] = [];
+    getShapesByXY(position: PageXY, isCtrl: boolean, scope?: Shape[]): Shape | undefined {
+        const s = Date.now();
+        let shape: Shape | undefined;
         if (this.scout) {
             const page = this.m_selectPage!;
             const childs: Shape[] = scope || page.childs;
-            shapes.push(...finder(this.scout, childs, position, this.selectedShapes[0], isCtrl));
+            shape = finder(this.scout, childs, position, this.selectedShapes[0], isCtrl)
         }
-        return shapes;
+        console.log('search: (ms)', Date.now() - s);
+        return shape;
     }
 
     getContactByXY(position: PageXY, scope?: Shape[]): Shape[] {
@@ -214,7 +216,7 @@ export class Selection extends Watchable(Object) implements ISave4Restore {
     getClosetArtboard(position: PageXY, except?: Map<string, Shape>, scope?: Shape[]): Shape {
         let result: Shape = this.selectedPage!; // 任何一个元素,至少在一个容器内
         const range: Shape[] = scope || this.m_selectPage?.artboardList.filter((ab: Artboard) => !ab.isLocked && ab.isVisible) || [];
-        const artboard = artboardFinder(this.scout!, range, position, except);        
+        const artboard = artboardFinder(this.scout!, range, position, except);
         if (artboard) {
             result = artboard;
         }
@@ -276,7 +278,7 @@ export class Selection extends Watchable(Object) implements ISave4Restore {
         return this.m_hoverShape;
     }
 
-    hoverShape(shape: Shape) {        
+    hoverShape(shape: Shape) {
         if (shape.id !== this.hoveredShape?.id) {
             this.m_hoverShape = shape;
             this.notify(Selection.CHANGE_SHAPE_HOVER);

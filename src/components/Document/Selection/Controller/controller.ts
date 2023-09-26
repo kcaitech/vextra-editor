@@ -316,7 +316,7 @@ export function useControllerCustom(context: Context, i18nT: Function) {
         if (hoveredShape) {
             e.shiftKey ? selection.rangeSelectShape([...selected, hoveredShape]) : selection.selectShape(hoveredShape);
         } else {
-            if (!selection.getShapesByXY(startPositionOnPage, e.metaKey || e.ctrlKey, selected).length) selection.resetSelectShapes();
+            if (!selection.getShapesByXY(startPositionOnPage, e.metaKey || e.ctrlKey, selected)) selection.resetSelectShapes();
         }
     }
     function checkStatus() {

@@ -489,15 +489,15 @@ export function right_select(e: MouseEvent, p: PageXY, context: Context): Area {
   }
   const selection = context.selection;
   const area_1 = context.selection.getShapesByXY(p, false);
-  if (area_1.length) {
-    if (area_1[0].type === ShapeType.Group) {
-      selection.selectShape(area_1[0]);
+  if (area_1) {
+    if (area_1.type === ShapeType.Group) {
+      selection.selectShape(area_1);
       return 'group';
     } else if (area_1[0].type === ShapeType.Symbol) {
-      selection.selectShape(area_1[0]);
+      selection.selectShape(area_1);
       return 'component';
     } else if (area_1[0].type === ShapeType.SymbolRef) {
-      selection.selectShape(area_1[0]);
+      selection.selectShape(area_1);
       return 'instance';
     }
   }
@@ -647,8 +647,8 @@ export function color2string(color: Color, t?: number) {
   const { red, green, blue, alpha } = color;
   return `rgba(${red}, ${green}, ${blue}, ${alpha})`;
 }
-export function selectShapes(context: Context, shapes: Shape[]) {
-  const hoveredShape = shapes[0], selection = context.selection;
+export function selectShapes(context: Context, shapes: Shape | undefined) {
+  const hoveredShape = shapes, selection = context.selection;
   if (hoveredShape) {
     const selected = selection.selectedShapes;
     if (selected.length) {

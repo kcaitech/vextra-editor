@@ -156,48 +156,49 @@ function groupPassthrough(scout: Scout, scope: Shape[], position: PageXY): Shape
  * @param { Shape[] } init 在下次一递归开始时需要继承的结果
  * @returns { Shape[] } 返回符合检索条件的图形
  */
-function finder(scout: Scout, g: Shape[], position: PageXY, selected: Shape, isCtrl: boolean, init?: Shape[]): Shape[] {
-    // 找到点上的所有图形，否则找到一个就不再寻找
-    // O(n + dk)
-    const result = init || [];
+function finder(scout: Scout, g: Shape[], position: PageXY, selected: Shape, isCtrl: boolean): Shape | undefined {
+    let result: Shape | undefined;
     for (let i = g.length - 1; i > -1; i--) { // 从最上层开始往下找(z-index：大 -> 小)
         if (!canBeTarget(g[i])) continue;
         const item = g[i];
-        // 特殊处理的三类图形：容器、编组、flatten
-        if ([ShapeType.Group, ShapeType.Artboard].includes(item.type)) { // 如果是容器或者编组
-            const isItemIsTarget = isTarget(scout, item, position);
-            if (!isItemIsTarget) continue; // 如果整个容器和编组都不是目标元素，则不需要向下遍历
-            const c = item.childs as Shape[];
-            if (item.type === ShapeType.Artboard) { // 如果是容器，有子元素时不可以被hover    
-                if (c.length) {
-                    result.push(...finder(scout, c, position, selected, isCtrl, result));
-                    if (result.length) {
-                        return result;
-                    } else { // 在一个容器拥有子元素的情况下，需要isCtrl才可以被hover
-                        if (isCtrl) {
-                            result.push(item);
-                            return result;
-                        }
-                    }
-                } else {
-                    result.push(item);
-                    return result;
-                }
-            } else if ([ShapeType.Group].includes(item.type)) { // 如果是编组，不用向下走了，让子元素往上走
-                const g = forGroupHover(scout, item.childs, position, selected, isCtrl);
-                if (g) {
-                    result.push(g);
-                    return result;
-                }
-            }
+        const isItemIsTarget = isTarget(scout, item, position);
+        if (!isItemIsTarget) continue;
+        if (item.type === ShapeType.Artboard) { // 如果是容器，有子元素时不可以被hover    
+            result = finder_artboard(scout, item as GroupShape, position, selected, isCtrl);
+        } else if (item.type === ShapeType.Group) { // 如果是编组，不用向下走了，让子元素往上走
+            result = forGroupHover(scout, item.childs, position, selected, isCtrl);
+        } else if (item.type === ShapeType.Symbol) {
+            result = finder_symbol_union(scout, item as GroupShape, position, selected, isCtrl);
         } else {
-            if (isTarget(scout, item, position)) {
-                result.push(item);
-                return result;
-            }
+            result = item;
         }
+        if (result) break;
     }
     return result;
+}
+
+function finder_artboard(scout: Scout, artboard: GroupShape, position: PageXY, selected: Shape, isCtrl: boolean) {
+    const childs = artboard.childs;
+    let result: Shape | undefined;
+    if (childs.length) {
+        result = finder(scout, childs, position, selected, isCtrl);
+        if (result) return result;
+        else if (isCtrl) return artboard;
+    } else {
+        return artboard;
+    }
+}
+
+function finder_symbol_union(scout: Scout, union: GroupShape, position: PageXY, selected: Shape, isCtrl: boolean) {
+    const childs = union.childs;
+    let result: Shape | undefined;
+    if (childs.length) {
+        result = finder(scout, childs, position, selected, isCtrl);
+        if (result) return result;
+        else if (isCtrl) return union;
+    } else {
+        return union;
+    }
 }
 
 export function finder_contact(scout: Scout, g: Shape[], position: PageXY, selected: Shape, init?: Shape[]): Shape[] {
