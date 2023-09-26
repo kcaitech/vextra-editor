@@ -112,6 +112,7 @@ function isTarget2(scout: Scout, shape: Shape, p: PageXY): boolean {
 function delayering(groupshape: Shape, flat?: Shape[]): Shape[] {
     let f: Shape[] = flat || [];
     let childs: any = groupshape.childs;
+    if (groupshape.type === ShapeType.SymbolRef) childs = groupshape.naviChilds;
     for (let i = 0, len = childs; i < len; i++) {
         const item = childs[i];
         if (item.type === ShapeType.Group || item.type === ShapeType.Symbol) {

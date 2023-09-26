@@ -9,7 +9,7 @@ import Layers from './Layers.vue';
 import { Context } from '@/context';
 import { WorkSpace } from '@/context/workspace';
 import { Selection } from '@/context/selection';
-import { adapt_page, getName, get_shape_within_document, shape_track } from '@/utils/content';
+import { adapt_page, getName, get_component_state_name, get_shape_within_document, shape_track } from '@/utils/content';
 import { message } from '@/utils/message';
 import { paster, paster_inner_shape, replace } from '@/utils/clipboard';
 import { sort_by_layer } from '@/utils/group_ungroup';
@@ -420,8 +420,10 @@ function make_state() {
   const page = props.context.selection.selectedPage;
   if (shape && shape.type === ShapeType.Symbol && shape.isUnionSymbolShape && page) {
     const editor = props.context.editor4Page(page);
-    const make_result = editor.makeStateAt(shape as SymbolShape);
+    const name = get_component_state_name(shape as SymbolShape, t);
+    const make_result = editor.makeStateAt(shape as SymbolShape, name);
     if (make_result) {
+
       props.context.selection.selectShape(make_result);
       emit('close');
     }

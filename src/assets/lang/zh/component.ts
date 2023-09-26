@@ -25,5 +25,6 @@ export const compos: any = {
     display_state: '显示状态',
     search_compos: '搜索组件',
     compos: '组件',
-    attr_name: '属性名称'
+    attr_name: '属性名称',
+    state: '状态'
 }

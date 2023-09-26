@@ -107,7 +107,7 @@ export function useControllerCustom(context: Context, i18nT: Function) {
         if (selected.length !== 1) return;
         const shape = selected[0];
         if ([ShapeType.Group, ShapeType.Symbol, ShapeType.SymbolRef].includes(shape.type)) {
-            const scope: any = (shape as GroupShape).childs;
+            const scope: any = shape.type === ShapeType.SymbolRef ? shape.naviChilds : (shape as GroupShape).childs;
             const scout = selection.scout;
             if (!scout) return;
             const target = groupPassthrough(scout, scope, startPositionOnPage);

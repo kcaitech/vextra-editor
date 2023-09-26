@@ -24,5 +24,6 @@ export const compos = {
     delect_attr_type: 'Select the attribute type',
     display_state: 'Display status',
     search_compos: 'Search component',
-    attr_name: 'Attribute name'
+    attr_name: 'Attribute name',
+    state: "状态"
 }

@@ -1,7 +1,7 @@
 import { debounce } from "lodash";
 import { Context } from "@/context";
 import { ClientXY, PageXY } from "@/context/selection";
-import { AsyncCreator, Shape, ShapeFrame, ShapeType, GroupShape, TextShape, Matrix, Color, TableShape, ContactForm, Page } from "@kcdesign/data";
+import { AsyncCreator, Shape, ShapeFrame, ShapeType, GroupShape, TextShape, Matrix, Color, TableShape, ContactForm, Page, SymbolShape } from "@kcdesign/data";
 import { Action, ResultByAction } from "@/context/tool";
 import { Perm, WorkSpace } from '@/context/workspace';
 import { XYsBounding } from '@/utils/common';
@@ -69,6 +69,11 @@ export function get_symbol_ref_name(symbolname: string, symbolref: string, broth
     if (shape.refId === symbolref) repeats++;
   }
   return repeats > 1 ? `Ref-${symbolname}-${repeats}` : `Ref-${symbolname}`;
+}
+export function get_component_state_name(union: SymbolShape, t: Function) {
+  if (!union.isUnionSymbolShape) return '';
+  if (union.childs.length === 0) return t('shape.default');
+  return t('compos.state') + (union.childs.length + 1);
 }
 // 判断图形是否在可视区域内
 export function isInner(context: Context, shape: Shape) {
@@ -560,7 +565,7 @@ export function get_menu_items(context: Context, area: "controller" | "text-sele
     } else {
       contextMenuItems = ['all', 'copy'];
     }
-  }else if (area === 'instance') {
+  } else if (area === 'instance') {
     if (permIsEdit(context)) {
       contextMenuItems = ['all', 'copy', 'paste-here', 'replace', 'visible', 'lock', 'forward', 'back', 'top', 'bottom', 'groups', 'container', 'instance', 'component'];
     } else {
