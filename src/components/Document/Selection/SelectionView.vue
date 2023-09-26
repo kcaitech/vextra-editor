@@ -36,6 +36,7 @@ const controllerFrame = ref<Point[]>([]);
 const controller = ref<boolean>(false);
 const rotate = ref<number>(0);
 const tracing = ref<boolean>(false);
+const tracingStroke = ref<string>('#865dff');
 const traceEle = ref<Element>();
 const altKey = ref<boolean>(false);
 const watchedShapes = new Map();
@@ -115,6 +116,11 @@ function createShapeTracing() { // 描边
             const h = bottom - y;
             tracingFrame.value = { height: h, width: w, viewBox: `${0} ${0} ${w} ${h}`, path: path.toString() };
             tracing.value = true;
+            if (hoveredShape.type === ShapeType.Symbol || hoveredShape.type === ShapeType.SymbolRef) {
+                tracingStroke.value = '#ff9900';
+            } else {
+                tracingStroke.value = '#865dff';
+            }
         }
     }
 }
@@ -243,7 +249,7 @@ onUnmounted(() => {
         xmlns:xhtml="http://www.w3.org/1999/xhtml" preserveAspectRatio="xMinYMin meet" overflow="visible"
         :width="tracingFrame.width" :height="tracingFrame.height" :viewBox="tracingFrame.viewBox"
         @mousedown="(e: MouseEvent) => pathMousedown(e)" style="transform: translate(0px, 0px); position: absolute;">
-        <path :d="tracingFrame.path" style="fill: transparent; stroke: #865dff; stroke-width: 1.5;">
+        <path :d="tracingFrame.path" class="tracing" :style="{ stroke: tracingStroke }">
         </path>
     </svg>
     <!-- 控制 -->
@@ -254,4 +260,9 @@ onUnmounted(() => {
     <!-- 辅助 -->
     <Assist :context="props.context" :controller-frame="controllerFrame"></Assist>
 </template>
-<style lang="scss"></style>
+<style lang="scss">
+.tracing {
+    fill: transparent;
+    stroke-width: 1.5px;
+}
+</style>
