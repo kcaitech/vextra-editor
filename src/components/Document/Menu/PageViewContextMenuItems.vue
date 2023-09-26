@@ -332,9 +332,10 @@ function component() {
   if (page) {
     const editor = props.context.editor4Page(page);
     const name = getName(ShapeType.Symbol, props.context.data.symbolsMgr.resource, t);
-    const shape = editor.makeSymbol(props.context.data, selection.selectedShapes, name);
-    if (shape) {
-      selection.selectShape(shape as unknown as Shape);
+    const shapes = sort_by_layer(props.context, selection.selectedShapes);
+    const symbol = editor.makeSymbol(props.context.data, shapes, name);
+    if (symbol) {
+      selection.selectShape(symbol as unknown as Shape);
     }
   }
   emit('close');

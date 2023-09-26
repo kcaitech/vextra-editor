@@ -9,6 +9,7 @@ import { ClientXY, PageXY } from "@/context/selection";
 import { debounce } from "lodash";
 import { WorkSpace } from "@/context/workspace";
 import { Menu } from "@/context/menu";
+import { sort_by_layer } from "./group_ungroup";
 
 export function keyboardHandle(e: KeyboardEvent, context: Context, t: Function) {
     if (!permIsEdit(context) || context.tool.action === Action.AddComment) return;
@@ -139,9 +140,10 @@ export function keyboardHandle(e: KeyboardEvent, context: Context, t: Function) 
             if (page) {
                 const editor = context.editor4Page(page);
                 const name = getName(ShapeType.Symbol, context.data.symbolsMgr.resource, t);
-                const shape = editor.makeSymbol(context.data, selection.selectedShapes, name);
-                if (shape) {
-                    selection.selectShape(shape as unknown as Shape);
+                const shapes = sort_by_layer(context, selection.selectedShapes);
+                const symbol = editor.makeSymbol(context.data, shapes, name);
+                if (symbol) {
+                    selection.selectShape(symbol as unknown as Shape);
                 }
             }
         }
