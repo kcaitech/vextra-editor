@@ -112,10 +112,9 @@ function isTarget2(scout: Scout, shape: Shape, p: PageXY): boolean {
 function delayering(groupshape: Shape, flat?: Shape[]): Shape[] {
     let f: Shape[] = flat || [];
     let childs: any = groupshape.childs;
-    if (groupshape.type === ShapeType.SymbolRef) childs = groupshape.naviChilds;
     for (let i = 0, len = childs; i < len; i++) {
         const item = childs[i];
-        if (item.type === ShapeType.Group || item.type === ShapeType.SymbolRef) {
+        if (item.type === ShapeType.Group || item.type === ShapeType.Symbol) {
             f = f.concat(delayering(item, f));
         } else {
             f.push(item);
@@ -129,7 +128,7 @@ function groupPassthrough(scout: Scout, scope: Shape[], position: PageXY): Shape
     // scope 编组子元素
     let shape: Shape | undefined;
     for (let i = scope.length - 1; i > -1; i--) {
-        if ([ShapeType.Group, ShapeType.SymbolRef].includes(scope[i].type)) {
+        if ([ShapeType.Group, ShapeType.Symbol].includes(scope[i].type)) {
             const items: Shape[] = delayering(scope[i]); // 扁平一个编组的树结构
             for (let j = items.length - 1; j > -1; j--) {
                 if (isTarget(scout, items[j], position)) {
@@ -167,7 +166,7 @@ function finder(scout: Scout, g: Shape[], position: PageXY, selected: Shape, isC
             result = finder_artboard(scout, item as GroupShape, position, selected, isCtrl);
         } else if (item.type === ShapeType.Group) { // 如果是编组，不用向下走了，让子元素往上走
             result = forGroupHover(scout, item.childs, position, selected, isCtrl);
-        } else if (item.type === ShapeType.Symbol) {
+        } else if (item.type === ShapeType.Symbol && item.isUnionSymbolShape) {
             result = finder_symbol_union(scout, item as GroupShape, position, selected, isCtrl);
         } else {
             result = item;

@@ -493,10 +493,10 @@ export function right_select(e: MouseEvent, p: PageXY, context: Context): Area {
     if (area_1.type === ShapeType.Group) {
       selection.selectShape(area_1);
       return 'group';
-    } else if (area_1[0].type === ShapeType.Symbol) {
+    } else if (area_1.type === ShapeType.Symbol) {
       selection.selectShape(area_1);
       return 'component';
-    } else if (area_1[0].type === ShapeType.SymbolRef) {
+    } else if (area_1.type === ShapeType.SymbolRef) {
       selection.selectShape(area_1);
       return 'instance';
     }
