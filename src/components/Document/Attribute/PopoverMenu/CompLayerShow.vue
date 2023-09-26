@@ -6,6 +6,8 @@ import { ArrowDown } from '@element-plus/icons-vue'
 import { add } from 'lodash';
 import { ShapeType, SymbolShape } from '@kcdesign/data';
 import SelectMenu from './SelectMenu.vue';
+import { useI18n } from 'vue-i18n';
+const { t } = useI18n();
 const props = defineProps<{
     title?: string,
     top?: string,
@@ -14,7 +16,7 @@ const props = defineProps<{
     height?: string | number,
     context: Context,
     addType: 'Text' | 'Show' | 'toggle' | '',
-    dialog_posi: {x: number, y: number}
+    dialog_posi: { x: number, y: number }
 }>();
 const emit = defineEmits<{
     (e: 'closeDialog'): void;
@@ -107,12 +109,12 @@ onMounted(() => {
         const su = body_h - y;
         const cur_t = su - height;
         cur_p.value = cur_t;
-        if(cur_t > 0) {
+        if (cur_t > 0) {
             cur_top.value = props.dialog_posi!.y;
-        }else {
+        } else {
             cur_top.value = props.dialog_posi!.y - Math.abs(cur_t);
         }
-        if(cur_top.value - 40 < 0) {
+        if (cur_top.value - 40 < 0) {
             cur_top.value = 40
         }
     }
@@ -137,26 +139,26 @@ onUnmounted(() => {
         </div>
         <div class="body">
             <div>
-                <span>{{ addType === 'toggle' ? '组件实例' : '选择图层' }}</span>
+                <span>{{ addType === 'toggle' ? `${t('compos.compos_instance')}` : `${t('compos.select_layer')}` }}</span>
                 <div class="select-layer" @mouseup="showSelectLayer" @click.stop>
                     <div class="input"
                         :style="{ opacity: context.selection.selectedShapes[0].type !== ShapeType.Symbol ? '0.5' : '1' }">
                         <span v-if="selectLayer"></span>
-                        <span v-else style="opacity: 0.5">{{ addType === 'toggle' ? '请选择组件实例' : '请选择图层' }}</span>
+                        <span v-else style="opacity: 0.5">{{ addType === 'toggle' ? `${t('compos.place_select_instance')}` :
+                            `${t('compos.place_select_layer')}` }}</span>
                         <el-icon>
                             <ArrowDown />
                         </el-icon>
                     </div>
-                    <!-- <el-input class="input" v-model="selectLayer" :placeholder="addType === 'toggle' ? '请选择组件实例' : '请选择图层'" disabled :suffix-icon="ArrowDown"/> -->
                     <SelectLayer v-if="isselectLayer" @close="isselectLayer = false" :type="props.addType"
                         :context="context" :selectList="selectList"></SelectLayer>
                 </div>
             </div>
             <div>
-                <span>属性名称</span>
-                <div><el-input v-model="attrName" placeholder="请输入属性名称" /></div>
+                <span>{{ t('compos.attr_name') }}</span>
+                <div><el-input v-model="attrName" :placeholder="t('compos.attr_name_input')" /></div>
             </div>
-            <p class="warn" v-if="false">名称重复，请重新输入</p>
+            <p class="warn" v-if="false">{{ t('compos.duplicate_name') }}</p>
             <div v-if="props.addType !== 'toggle' && props.addType">
                 <span>默认值</span>
                 <div v-if="props.addType === 'Show'" class="show">
@@ -166,13 +168,12 @@ onUnmounted(() => {
                             <ArrowDown
                                 :style="{ transform: selectoption ? 'rotate(180deg)' : 'rotate(0deg)', transition: '0.3s' }" />
                         </el-icon>
-                        <SelectMenu v-if="selectoption" :top="33" width="100%" :menuItems="menuItems" @select-index="handleShow" @close="selectoption = false"></SelectMenu>
+                        <SelectMenu v-if="selectoption" :top="33" width="100%" :menuItems="menuItems"
+                            @select-index="handleShow" @close="selectoption = false"></SelectMenu>
                     </div>
-                    <!-- <el-select v-model="defaultValue" class="m-2" placeholder="Select">
-                        <el-option v-for="item in options" :key="item.value" :label="item.label" :value="item.value" />
-                    </el-select> -->
                 </div>
-                <div v-if="props.addType === 'Text'"><el-input v-model="textDefaultValue" placeholder="请输入默认文本" /></div>
+                <div v-if="props.addType === 'Text'"><el-input v-model="textDefaultValue"
+                        :placeholder="t('compos.default_text_input')" /></div>
             </div>
         </div>
         <div class="footer">

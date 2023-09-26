@@ -46,7 +46,7 @@ const showMenu = () => {
 </script>
 
 <template>
-    <TypeHeader :title="'组件状态'" class="mt-24">
+    <TypeHeader :title="t('compos.compos_state')" class="mt-24">
         <template #tool>
             <div style="height: 22px;"></div>
         </template>

@@ -29,7 +29,7 @@ const getDialogPosi = () => {
 </script>
 <template>
     <div style="position: relative;" ref="atrrdialog">
-        <TypeHeader :title="'文本内容'" class="mt-24">
+        <TypeHeader :title="t('compos.text_content')" class="mt-24">
             <template #tool>
                 <div class="edit-comps">
                     <div class="edit_svg" @click="textDialog">
@@ -38,7 +38,8 @@ const getDialogPosi = () => {
                 </div>
             </template>
         </TypeHeader>
-        <CompLayerShow :context="context" v-if="isTextShow" @close-dialog="closeLayerShowPopup" right="250px" :add-type="''" :width="260" :title="`文本内容`" :dialog_posi="dialog_posi"></CompLayerShow>
+        <CompLayerShow :context="context" v-if="isTextShow" @close-dialog="closeLayerShowPopup" right="250px" :add-type="''"
+            :width="260" :title="t('compos.text_content')" :dialog_posi="dialog_posi"></CompLayerShow>
     </div>
 </template>
 <style lang="scss" scoped>
@@ -60,4 +61,5 @@ const getDialogPosi = () => {
             height: 70%;
         }
     }
-}</style>
+}
+</style>

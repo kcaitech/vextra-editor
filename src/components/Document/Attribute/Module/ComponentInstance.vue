@@ -69,7 +69,7 @@ onUnmounted(() => {
 
 <template>
     <div style="position: relative;" ref="atrrdialog">
-        <TypeHeader :title="'组件实例'" class="mt-24">
+        <TypeHeader :title="t('compos.compos_instance')" class="mt-24">
             <template #tool>
                 <div class="edit-comps">
                     <div class="rele_svg" @click="layerIsShow">
@@ -82,17 +82,17 @@ onUnmounted(() => {
                         <el-icon><MoreFilled /></el-icon>
                         <div class="reset_menu" v-if="resetMenu">
                             <div class="untie" @click="untie">
-                                <span>解绑</span>
+                                <span>{{t('compos.untie')}}</span>
                                 <span>快捷键</span>
                             </div>
-                            <div class="untie">重置全部属性</div>
+                            <div class="untie">{{t('compos.reset_all_attr')}}</div>
                         </div>
                     </div>
                 </div>
             </template>
         </TypeHeader>
         <CompLayerShow :context="context" v-if="isInstanceShow" @close-dialog="saveExamplesToggle" right="250px"
-            :add-type="'toggle'" :width="260" :title="`实例切换`" :dialog_posi="dialog_posi"></CompLayerShow>
+            :add-type="'toggle'" :width="260" :title="t('compos.instance_toggle')" :dialog_posi="dialog_posi"></CompLayerShow>
     </div>
 </template>
 

@@ -4,9 +4,11 @@ import { Context } from '@/context';
 import TypeHeader from '../TypeHeader.vue';
 import { ref, nextTick } from 'vue'
 import CompLayerShow from '../PopoverMenu/CompLayerShow.vue';
+import { ShapeType, SymbolShape } from '@kcdesign/data';
 const { t } = useI18n();
 const props = defineProps<{
     context: Context
+    shape: SymbolShape
 }>()
 const compsType = ref(false)
 const selectComps = ref<HTMLDivElement>()
@@ -76,13 +78,22 @@ const editName = (e: KeyboardEvent) => {
 }
 
 const layerIsShow = () => {
-    dislogTitle.value = '图层是否显示';
+    dislogTitle.value = t('compos.layer_isShow');
     addType.value = 'Show';
     getDialogPosi(atrrdialog.value);
     isaddStateDialog.value = true;
 }
 
 const addModuleState = () => {
+    const page = props.context.selection.selectedPage;
+    const shape = props.shape;
+    if (shape && shape.type === ShapeType.Symbol && !shape.isUnionSymbolShape && page) {
+        const editor = props.context.editor4Page(page);
+        const make_result = editor.makeSymbolUnion(shape, t('shape.default'))
+        if (make_result) {
+            props.context.selection.selectShape(make_result);
+        }
+    }
     const len = moduleStates.value.length + 1;
     const state = {
         attrName: '属性' + len,
@@ -124,7 +135,7 @@ const saveLayerShow = () => {
 
 //文本属性
 const addTextDialog = () => {
-    dislogTitle.value = '文本内容';
+    dislogTitle.value = t('compos.text_content');
     addType.value = 'Text';
     getDialogPosi(atrrdialog.value);
     isaddStateDialog.value = true;
@@ -140,7 +151,7 @@ const saveTextContext = () => {
 
 //实例切换
 const examplesToggle = () => {
-    dislogTitle.value = '实例切换';
+    dislogTitle.value = t('compos.instance_toggle');
     addType.value = 'toggle';
     getDialogPosi(atrrdialog.value);
     isaddStateDialog.value = true;
@@ -166,43 +177,44 @@ const getDialogPosi = (div: HTMLDivElement | undefined) => {
 
 <template>
     <div style="position: relative;" ref="atrrdialog">
-        <TypeHeader :title="'组件属性'" class="mt-24">
+        <TypeHeader :title="t('compos.compos_attr')" class="mt-24">
             <template #tool>
                 <div class="add-comps" @click="selectCompsType">
                     <svg-icon icon-class="add"></svg-icon>
                     <div class="selectType" v-if="compsType" ref="selectComps">
-                        <div class="type-title">请选择属性类型:</div>
+                        <div class="type-title">{{ t('compos.delect_attr_type') }}:</div>
                         <div class="status" @click="addModuleState">
                             <div>
                                 <svg-icon icon-class="comp-state"></svg-icon>
                             </div>
-                            <span>组件状态</span>
+                            <span>{{ t('compos.compos_state') }}</span>
                         </div>
                         <div class="status" @click="layerIsShow">
                             <div>
                                 <svg-icon icon-class="eye-open"></svg-icon>
                             </div>
-                            <span>显示状态</span>
+                            <span>{{ t('compos.display_state') }}</span>
                         </div>
                         <div class="status" @click="examplesToggle">
                             <div>
                                 <svg-icon icon-class="pattern-rectangle"
                                     style="transform: rotate(45deg);width: 10px; height: 10px;"></svg-icon>
                             </div>
-                            <span>实例切换</span>
+                            <span>{{ t('compos.instance_toggle') }}</span>
                         </div>
                         <div class="status" @click="addTextDialog">
                             <div>
                                 <svg-icon icon-class="text" style="width: 10px; height: 10px;"></svg-icon>
                             </div>
-                            <span>文本内容</span>
+                            <span>{{ t('compos.text_content') }}</span>
                         </div>
                     </div>
                 </div>
             </template>
         </TypeHeader>
         <CompLayerShow :context="context" v-if="isaddStateDialog" @close-dialog="isaddStateDialog = false" right="250px"
-            :width="260" :addType="addType" :title="dislogTitle" @save-layer-show="addAttrSate" :dialog_posi="dialog_posi"></CompLayerShow>
+            :width="260" :addType="addType" :title="dislogTitle" @save-layer-show="addAttrSate" :dialog_posi="dialog_posi">
+        </CompLayerShow>
         <div class="module_container">
             <template v-for="(item, index) in moduleStates" :key="index">
                 <div class="module_attr_item">
@@ -222,7 +234,7 @@ const getDialogPosi = (div: HTMLDivElement | undefined) => {
                             <svg-icon icon-class="delete"></svg-icon>
                         </div>
                     </div>
-                    <div class="warn" v-if="false">名称重复，请重新输入</div>
+                    <div class="warn" v-if="false">{{ t('compos.duplicate_name') }}</div>
                 </div>
             </template>
             <template v-for="(item, index) in showStates" :key="index">
@@ -241,7 +253,8 @@ const getDialogPosi = (div: HTMLDivElement | undefined) => {
                     </div>
                     <CompLayerShow :context="context" v-if="iseditLayerShow && layerIndex === index"
                         @close-dialog="iseditLayerShow = false" right="250px" :width="260" :add-type="'Show'"
-                        :title="`图层是否显示`" @save-layer-show="saveLayerShow" :dialog_posi="dialog_posi"></CompLayerShow>
+                        :title="t('compos.layer_isShow')" @save-layer-show="saveLayerShow" :dialog_posi="dialog_posi">
+                    </CompLayerShow>
                 </div>
             </template>
             <template v-for="(item, index) in textStates" :key="index">
@@ -259,8 +272,9 @@ const getDialogPosi = (div: HTMLDivElement | undefined) => {
                         </div>
                     </div>
                     <CompLayerShow :context="context" v-if="iseditText && textIndex === index"
-                        @close-dialog="iseditText = false" right="250px" :width="260" :add-type="''" :title="`文本内容`"
-                        @save-layer-show="saveTextContext" :dialog_posi="dialog_posi"></CompLayerShow>
+                        @close-dialog="iseditText = false" right="250px" :width="260" :add-type="''"
+                        :title="t('compos.text_content')" @save-layer-show="saveTextContext" :dialog_posi="dialog_posi">
+                    </CompLayerShow>
                 </div>
             </template>
             <template v-for="(item, index) in toggleStates" :key="index">
@@ -279,8 +293,9 @@ const getDialogPosi = (div: HTMLDivElement | undefined) => {
                         </div>
                     </div>
                     <CompLayerShow :context="context" v-if="iseditToggle && toggleIndex === index"
-                        @close-dialog="iseditToggle = false" right="250px" :width="260" :add-type="'toggle'" :title="`实例切换`"
-                        @save-layer-show="saveExamplesToggle" :dialog_posi="dialog_posi"></CompLayerShow>
+                        @close-dialog="iseditToggle = false" right="250px" :width="260" :add-type="'toggle'"
+                        :title="t('compos.instance_toggle')" @save-layer-show="saveExamplesToggle"
+                        :dialog_posi="dialog_posi"></CompLayerShow>
                 </div>
             </template>
         </div>
@@ -430,5 +445,4 @@ const getDialogPosi = (div: HTMLDivElement | undefined) => {
 
 :deep(.el-input__wrapper.is-focus) {
     box-shadow: 0 0 0 1px var(--active-color) inset;
-}
-</style>
+}</style>

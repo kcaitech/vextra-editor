@@ -18,6 +18,10 @@ const close = (e: MouseEvent) => {
         emit('close');
     }
 }
+const isActive = ref(0);
+const hoverColor = (index: number) => {
+    isActive.value = index;
+}
 onMounted(() => {
     document.addEventListener('click', close);
 })
@@ -27,8 +31,9 @@ onUnmounted(() => {
 </script>
 
 <template>
-    <div class="select_menu" :style="{width: width, top: top + 'px'}">
-        <div class="untie" @click="clickItem(index)" v-for="(item, index) in menuItems" :key="index">
+    <div class="select_menu" :style="{ width: width, top: top + 'px' }">
+        <div class="untie" @click="clickItem(index)" v-for="(item, index) in menuItems" :key="index"
+            @mouseleave="hoverColor(index)" :class="{ active: isActive === index }">
             <span>{{ item }}</span>
         </div>
     </div>
@@ -53,10 +58,15 @@ onUnmounted(() => {
         padding: 0 16px;
         box-sizing: border-box;
 
-        &:hover {
-            background-color: var(--active-color);
-            color: #fff;
-        }
+        // &:hover {
+        //     background-color: var(--active-color);
+        //     color: #fff;
+        // }
     }
+}
+
+.active {
+    background-color: var(--active-color);
+    color: #fff;
 }
 </style>
