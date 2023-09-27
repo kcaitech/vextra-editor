@@ -82,9 +82,7 @@ onUnmounted(() => {
         <component :is="comsMap.get(c.type) ?? comsMap.get(ShapeType.Rectangle)" v-for="c in renderItems" :key="c.id"
             :data="c" />
     </svg>
-    <!-- 容器标题 -->
     <ShapeTitles v-if="show_t" :context="props.context" :data="data" :matrix="matrixWithFrame.toArray()"></ShapeTitles>
-    <!-- 组件标题 -->
     <ComponentTitleContainer :context="props.context" :data="data" :matrix="matrixWithFrame.toArray()">
     </ComponentTitleContainer>
 </template>

@@ -135,9 +135,9 @@ function onMouseWheel(e: WheelEvent) { // 滚轮、触摸板事件
 }
 function onKeyDown(e: KeyboardEvent) { // 键盘监听
     if (e.target instanceof HTMLInputElement) return;
+    if (e.repeat) return;
     if (e.code === KeyboardKeys.Space) {
         if (workspace.value.select || spacePressed.value) return;
-        // overview.value = true;
         preToDragPage();
     } else if (e.code === 'MetaLeft' || e.code === 'ControlLeft') {
         _search(true); // 根据鼠标当前位置进行一次穿透式图形检索
@@ -214,7 +214,7 @@ function search(e: MouseEvent) { // 常规图形检索
     const shapes = props.context.selection.getShapesByXY(xy, metaKey || ctrlKey); // xy: PageXY
     selectShapes(props.context, shapes);
 }
-const search_once = debounce(search, 50) // 连续操作结尾处调用
+const search_once = debounce(search, 350) // 连续操作结尾处调用
 function pageViewDragStart(e: MouseEvent) {
     state = STATE_CHECKMOVE;
     prePt.x = e.screenX;
@@ -261,7 +261,7 @@ function contextMenuMount(e: MouseEvent) {
         contextMenuItems.push('layers');
     }
     const _shapes = selection.selectedShapes
-    if(_shapes.length === 1 && _shapes[0].type === ShapeType.SymbolRef) {
+    if (_shapes.length === 1 && _shapes[0].type === ShapeType.SymbolRef) {
         contextMenuItems.push('edit');
     }
     if (area === 'table_cell') {

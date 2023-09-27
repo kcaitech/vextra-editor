@@ -1,7 +1,7 @@
 <script setup lang='ts'>
-import { computed, onMounted, onUnmounted, watchEffect, ref, reactive } from "vue";
+import { computed, onMounted, onUnmounted, watchEffect, ref, reactive, watch } from "vue";
 import { Context } from "@/context";
-import { Matrix } from '@kcdesign/data';
+import { Matrix, ShapeType } from '@kcdesign/data';
 import { WorkSpace } from "@/context/workspace";
 import { Point } from "../SelectionView.vue";
 import { ClientXY, Selection } from "@/context/selection";
@@ -11,12 +11,19 @@ import { Shape } from "@kcdesign/data";
 import BarsContainer from "./Bars/BarsContainerForSym.vue";
 import PointsContainer from "./Points/PointsContainerForSym.vue";
 import { getAxle } from "@/utils/common";
+import AddState from "./Symbol/AddState.vue";
 interface Props {
   context: Context
   controllerFrame: Point[]
   rotate: number
   matrix: Matrix
   shape: Shape
+}
+enum SymbolType {
+  Symbol = 'symbol',
+  Union = 'union',
+  State = 'state',
+  Ref = 'ref'
 }
 const props = defineProps<Props>();
 const { isDrag } = useController(props.context);
@@ -26,6 +33,7 @@ const boundrectPath = ref("");
 const bounds = reactive({ left: 0, top: 0, right: 0, bottom: 0 });
 const matrix = new Matrix();
 const submatrix = reactive(new Matrix());
+const symbol_type = ref<SymbolType>(SymbolType.Symbol);
 let viewBox = '';
 const axle = computed<ClientXY>(() => {
   const [lt, rt, rb, lb] = props.controllerFrame;
@@ -67,7 +75,7 @@ function updateControllerView() {
 }
 // #endregion
 function selection_watcher(t: number) {
-  if (t == Selection.CHANGE_SHAPE) editing.value = false;
+  if (t === Selection.CHANGE_SHAPE) editing.value = false;
 }
 function workspace_watcher(t: number) {
   if (t === WorkSpace.TRANSLATING) visible.value = !props.context.workspace.isTranslating;
@@ -90,16 +98,41 @@ function windowBlur() {
   document.removeEventListener('mousemove', mousemove);
   document.removeEventListener('mouseup', mouseup);
 }
+function modify_symbol_type() {
+  const shape = props.shape;
+  if (shape.type === ShapeType.Symbol) {
+    if (shape.isUnionSymbolShape) {
+      symbol_type.value = SymbolType.Union;
+    } else {
+      if (shape.parent && shape.parent.isUnionSymbolShape) {
+        symbol_type.value = SymbolType.State;
+      } else {
+        symbol_type.value = SymbolType.Symbol;
+      }
+    }
+  } else if (shape.type === ShapeType.SymbolRef) {
+    symbol_type.value = SymbolType.Ref;
+  }
+}
+const stop_shape_watch = watch(() => props.shape, (n, o) => {
+  n.watch(modify_symbol_type);
+  o.unwatch(modify_symbol_type);
+  modify_symbol_type();
+});
 onMounted(() => {
   props.context.selection.watch(selection_watcher);
   props.context.workspace.watch(workspace_watcher);
+  props.shape.watch(modify_symbol_type);
   window.addEventListener('blur', windowBlur);
+  modify_symbol_type();
 })
 onUnmounted(() => {
   props.context.selection.unwatch(selection_watcher);
   props.context.workspace.unwatch(workspace_watcher);
   window.removeEventListener('blur', windowBlur);
   props.context.cursor.reset();
+  stop_shape_watch();
+  props.shape.unwatch(modify_symbol_type);
 })
 watchEffect(updateControllerView);
 </script>
@@ -113,6 +146,9 @@ watchEffect(updateControllerView);
     <PointsContainer :context="props.context" :matrix="submatrix.toArray()" :shape="props.shape" :axle="axle"
       :c-frame="props.controllerFrame">
     </PointsContainer>
+    <AddState v-if="symbol_type === SymbolType.State || symbol_type === SymbolType.Union" :context="props.context"
+      :matrix="submatrix.toArray()" :shape="props.shape" :symbol-type="symbol_type" @checkout="modify_symbol_type">
+    </AddState>
   </svg>
 </template>
 <style lang='scss' scoped>

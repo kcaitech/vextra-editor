@@ -1,6 +1,6 @@
 import { Context } from "@/context";
 import { PageXY, XY } from "@/context/selection";
-import { GroupShape, Matrix, Shape, ShapeType } from "@kcdesign/data";
+import { GroupShape, Matrix, Shape, ShapeType, SymbolRefShape, SymbolShape } from "@kcdesign/data";
 import { v4 as uuid } from "uuid";
 export interface Scout {
     path: SVGPathElement
@@ -152,19 +152,27 @@ export function groupPassthrough(scout: Scout, scope: Shape[], position: PageXY)
  * @param { Shape[] } init 在下次一递归开始时需要继承的结果
  * @returns { Shape[] } 返回符合检索条件的图形
  */
-export function finder(scout: Scout, g: Shape[], position: PageXY, selected: Shape, isCtrl: boolean): Shape | undefined {
+export function finder(context: Context, scout: Scout, g: Shape[], position: PageXY, selected: Shape, isCtrl: boolean): Shape | undefined {
     let result: Shape | undefined;
     for (let i = g.length - 1; i > -1; i--) { // 从最上层开始往下找(z-index：大 -> 小)
         const item = g[i];
         if (!canBeTarget(item)) continue;
+        if (item.type === ShapeType.Symbol && item.isUnionSymbolShape) {
+            // if (!context.assist.is_shape_in_view(item)) continue;
+
+            result = finder_symbol_union(context, scout, item as GroupShape, position, selected, isCtrl);
+        } else if (item.type === ShapeType.Symbol || item.type === ShapeType.SymbolRef) {
+            // if (!context.assist.is_shape_in_view(item)) continue;
+
+            result = finder_symbol(context, scout, item as SymbolShape, position, selected, isCtrl);
+        }
+        if (result) break;
         const isItemIsTarget = isTarget(scout, item, position);
-        if (!isItemIsTarget) continue;
+        if (!isItemIsTarget) continue; // 以下图形类型自身不在感应区域内，则不再检索子节点
         if (item.type === ShapeType.Artboard) {
-            result = finder_artboard(scout, item as GroupShape, position, selected, isCtrl);
+            result = finder_artboard(context, scout, item as GroupShape, position, selected, isCtrl);
         } else if (item.type === ShapeType.Group) {
-            result = forGroupHover(scout, item.childs, position, selected, isCtrl);
-        } else if (item.type === ShapeType.Symbol && item.isUnionSymbolShape) {
-            result = finder_symbol_union(scout, item as GroupShape, position, selected, isCtrl);
+            result = finder_group(scout, item.childs, position, selected, isCtrl);
         } else {
             result = item;
         }
@@ -173,28 +181,61 @@ export function finder(scout: Scout, g: Shape[], position: PageXY, selected: Sha
     return result;
 }
 
-function finder_artboard(scout: Scout, artboard: GroupShape, position: PageXY, selected: Shape, isCtrl: boolean) {
+function finder_artboard(context: Context, scout: Scout, artboard: GroupShape, position: PageXY, selected: Shape, isCtrl: boolean) {
     const childs = artboard.childs;
     let result: Shape | undefined;
     if (childs.length) {
-        result = finder(scout, childs, position, selected, isCtrl);
+        result = finder(context, scout, childs, position, selected, isCtrl);
         if (result) return result;
         else if (isCtrl) return artboard;
     } else {
         return artboard;
     }
 }
-
-function finder_symbol_union(scout: Scout, union: GroupShape, position: PageXY, selected: Shape, isCtrl: boolean) {
+// 编组：如果光标在一个编组A内，当光标在子元素(包括所有后代元素)上时，有且只有编组A被认为是target。
+// 注：在没有任何元素选中的情况下，子元素如果也是编组(编组B(编组C(编组D...)))的话都要冒泡到编组A上，如果已经有元素被选中，则只冒泡到同一层级兄弟元素
+export function finder_group(scout: Scout, g: Shape[], position: PageXY, selected: Shape, isCtrl: boolean): Shape | undefined {
+    let result: Shape | undefined;
+    for (let j = g.length - 1; j > -1; j--) { // 从最子集往父级冒泡
+        const shape = g[j];
+        if (!shape.isVisible || shape.isLocked || !isTarget(scout, shape, position)) continue;
+        if (ShapeType.Group === shape.type) {
+            const c: Shape[] = (shape as GroupShape).childs;
+            result = finder_group(scout, c, position, selected, isCtrl);
+            if (result) return result;
+        } else {
+            //如果Ctrl键被按下，不冒泡
+            if (isCtrl) return shape;
+            let target = shape;
+            while (target.parent && ShapeType.Group === target.parent.type) {
+                if (selected && isPartSelect(target.parent, selected)) break;
+                target = target.parent;
+            }
+            result = target!;
+            return result;
+        }
+    }
+    return result;
+}
+function finder_symbol_union(context: Context, scout: Scout, union: GroupShape, position: PageXY, selected: Shape, isCtrl: boolean) {
     const childs = union.childs;
     let result: Shape | undefined;
     if (childs.length) {
-        result = finder(scout, childs, position, selected, isCtrl);
+        result = finder(context, scout, childs, position, selected, isCtrl);
         if (result) return result;
-        else if (isCtrl) return union;
-    } else {
-        return union;
+        else if (isCtrl && isTarget(scout, union, position)) return union;
     }
+}
+
+function finder_symbol(context: Context, scout: Scout, symbol: SymbolShape | SymbolRefShape, position: PageXY, selected: Shape, isCtrl: boolean) {
+    let result: Shape | undefined;
+    if (isTarget(scout, symbol, position)) {
+        return symbol;
+    } else {
+        const childs = symbol.type === ShapeType.Symbol ? symbol.childs : symbol.naviChilds;
+        result = finder(context, scout, childs, position, selected, isCtrl);
+    }
+    return result;
 }
 
 export function finder_contact(scout: Scout, g: Shape[], position: PageXY, selected: Shape, init?: Shape[]): Shape[] {
@@ -220,7 +261,7 @@ export function finder_contact(scout: Scout, g: Shape[], position: PageXY, selec
                     return result;
                 }
             } else if ([ShapeType.Group].includes(item.type)) { // 如果是编组，不用向下走了，让子元素往上走
-                const g = forGroupHover(scout, item.childs, position, selected, true);
+                const g = finder_group(scout, item.childs, position, selected, true);
                 if (g) {
                     result.push(g);
                     return result;
@@ -264,48 +305,23 @@ export function finder_layers(scout: Scout, g: Shape[], position: PageXY): Shape
     }
     return result;
 }
-// 编组：如果光标在一个编组A内，当光标在子元素(包括所有后代元素)上时，有且只有编组A被认为是target。
-// 注：在没有任何元素选中的情况下，子元素如果也是编组(编组B(编组C(编组D...)))的话都要冒泡到编组A上，如果已经有元素被选中，则只冒泡到同一层级兄弟元素
-export function forGroupHover(scout: Scout, g: Shape[], position: PageXY, selected: Shape, isCtrl: boolean): Shape | undefined {
-    let result: Shape | undefined;
-    for (let j = g.length - 1; j > -1; j--) { // 从最子集往父级冒泡
-        const shape = g[j];
-        if (!shape.isVisible || !isTarget(scout, shape, position)) continue;
-        if ([ShapeType.Group].includes(shape.type)) {
-            const c: Shape[] = (shape as GroupShape).childs;
-            const res = forGroupHover(scout, c, position, selected, isCtrl);
-            if (res) return res;
-        } else {
-            //如果Ctrl键被按下，不冒泡
-            if (isCtrl) return shape;
-            let target = shape;
-            while (target.parent && [ShapeType.Group].includes(target.parent?.type)) {
-                if (selected) {
-                    const isBroSelected: boolean = isPartSelect(target.parent, selected);
-                    if (isBroSelected) break;
-                }
-                target = target.parent;
-            }
-            result = target!;
-            break;
-        }
-    }
-    return result;
-}
 // 判断一个编组中是否已经有子元素被选中
 function isPartSelect(shape: Shape, selected: Shape): boolean {
     let result: boolean = false;
     const c = shape instanceof GroupShape ? shape.childs : undefined;
-    if (c) {
-        for (let i = 0; i < c.length; i++) {
-            if (c[i].id == selected.id) {
-                return result = true;
-            }
-            if (c[i]?.childs?.length) {
-                result = isPartSelect(c[i], selected);
-            }
+    if (c && c.length) {
+        for (let i = 0, len = c.length; i < len; i++) {
+            const cur = c[i];
+            if (cur.id === selected.id) return true;
+            if (cur?.childs?.length) result = isPartSelect(c[i], selected);
+            if (result) return true;
         }
     }
+    return false;
+}
+function is_part_select_for_symbol(shape: Shape, selected: Shape): boolean {
+    let result: boolean = false;
+
     return result;
 }
 // 寻找到最近的层级较高的那个容器

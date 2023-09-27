@@ -129,6 +129,12 @@ export class Asssit extends Watchable(Object) {
     get nodes_y() {
         return this.m_nodes_y;
     }
+    get shape_in_view() {
+        return this.m_shape_inner;
+    }
+    is_shape_in_view(shape: Shape) {
+        return !!this.m_pg_inner.get(shape.id);
+    }
     private clear() {
         this.m_shape_inner.length = 0;
         this.m_pg_inner.clear();
