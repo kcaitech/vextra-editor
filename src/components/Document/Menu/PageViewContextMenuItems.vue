@@ -1,5 +1,5 @@
 <script setup lang='ts'>
-import { onMounted, onUnmounted, reactive, ref, watch } from 'vue';
+import { onUnmounted, reactive, ref, watch } from 'vue';
 import { useI18n } from 'vue-i18n';
 import ContextMenu from '@/components/common/ContextMenu.vue';
 import Key from '@/components/common/Key.vue';
@@ -15,6 +15,7 @@ import { paster, paster_inner_shape, replace } from '@/utils/clipboard';
 import { sort_by_layer } from '@/utils/group_ungroup';
 import { Menu } from '@/context/menu';
 import TableMenu from "./TableMenu/TableMenu.vue"
+import { make_union } from '@/utils/symbol';
 const { t } = useI18n();
 interface Props {
   context: Context,
@@ -405,31 +406,13 @@ function menu_watcher() {
   // check();
 }
 function make_symbol_union() {
-  const shape = props.context.selection.selectedShapes[0];
-  const page = props.context.selection.selectedPage;
-  if (shape && shape.type === ShapeType.Symbol && !shape.isUnionSymbolShape && page) {
-    const editor = props.context.editor4Page(page);
-    const make_result = editor.makeSymbolUnion(shape as SymbolShape, t('shape.default'));
-    if (make_result) {
-      props.context.selection.selectShape(make_result);
-      emit('close');
-    }
+  const make_result = make_union(props.context, t);
+  if (make_result) {
+    props.context.selection.selectShape(make_result);
+    emit('close');
   }
 }
-function make_state() {
-  const shape = props.context.selection.selectedShapes[0];
-  const page = props.context.selection.selectedPage;
-  if (shape && shape.type === ShapeType.Symbol && shape.isUnionSymbolShape && page) {
-    const editor = props.context.editor4Page(page);
-    const name = get_component_state_name(shape as SymbolShape, t);
-    const make_result = editor.makeStateAt(shape as SymbolShape, name);
-    if (make_result) {
 
-      props.context.selection.selectShape(make_result);
-      emit('close');
-    }
-  }
-}
 const stop = watch(() => props.items, menu_watcher, { deep: true, immediate: true })
 onUnmounted(() => {
   stop();
@@ -628,9 +611,6 @@ onUnmounted(() => {
     </div>
     <div class="item" v-if="props.items.includes('visible')" @click="make_symbol_union">
       <span>组件状态</span>
-    </div>
-    <div class="item" v-if="props.items.includes('visible')" @click="make_state">
-      <span>添加可变组件</span>
     </div>
     <TableMenu :context="context" :layers="layers" :items="items" :site="site" @close="emit('close')"></TableMenu>
   </div>

@@ -11,6 +11,7 @@ declare module '@vue/runtime-core' {
   export interface GlobalComponents {
     Abbreviation: typeof import('./src/components/Document/Navigation/Abbreviation.vue')['default']
     AddProject: typeof import('./src/components/TeamProject/addProject.vue')['default']
+    AddState: typeof import('./src/components/Document/Selection/Controller/Symbol/AddState.vue')['default']
     AddTeam: typeof import('./src/components/TeamProject/addTeam.vue')['default']
     AgreementBaseComponent: typeof import('./src/components/Login/AgreementBaseComponent.vue')['default']
     Apex: typeof import('./src/components/Document/Attribute/Border/Apex.vue')['default']
