@@ -159,11 +159,9 @@ export function finder(context: Context, scout: Scout, g: Shape[], position: Pag
         if (!canBeTarget(item)) continue;
         if (item.type === ShapeType.Symbol && item.isUnionSymbolShape) {
             // if (!context.assist.is_shape_in_view(item)) continue;
-
             result = finder_symbol_union(context, scout, item as GroupShape, position, selected, isCtrl);
         } else if (item.type === ShapeType.Symbol || item.type === ShapeType.SymbolRef) {
             // if (!context.assist.is_shape_in_view(item)) continue;
-
             result = finder_symbol(context, scout, item as SymbolShape, position, selected, isCtrl);
         }
         if (result) break;
@@ -218,8 +216,8 @@ export function finder_group(scout: Scout, g: Shape[], position: PageXY, selecte
     return result;
 }
 function finder_symbol_union(context: Context, scout: Scout, union: GroupShape, position: PageXY, selected: Shape, isCtrl: boolean) {
-    const childs = union.childs;
     let result: Shape | undefined;
+    const childs = union.childs;
     if (childs.length) {
         result = finder(context, scout, childs, position, selected, isCtrl);
         if (result) return result;
