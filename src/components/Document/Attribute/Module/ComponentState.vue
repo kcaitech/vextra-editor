@@ -56,18 +56,18 @@ const showMenu = () => {
             <div class="module_con">
                 <div class="state_item">
                     <div class="state_name"><span>属性1</span></div>
-                    <div class="state_value" v-if="!editAttrValue" @dblclick="onRevalue">
-                        <div class="input" @click="showMenu">
+                    <div class="state_value" v-if="!editAttrValue" @dblclick.stop="onRevalue">
+                        <div class="input" @click.stop="showMenu">
                             <span>{{ attrValue }}</span>
                             <el-icon>
                                 <ArrowDown
                                     :style="{ transform: selectoption ? 'rotate(180deg)' : 'rotate(0deg)', transition: '0.3s' }" />
                             </el-icon>
-                            <SelectMenu v-if="selectoption" :top="33" width="100%" :menuItems="menuItems"></SelectMenu>
+                            <SelectMenu v-if="selectoption" :top="33" width="100%" :menuItems="menuItems" @close="selectoption = false"></SelectMenu>
                         </div>
                     </div>
                     <div class="module_input" v-if="editAttrValue"><el-input v-model="attrValueInput" ref="revalueInput"
-                            @blur="closeValueInput" @keydown="onEditAttrValue" /></div>
+                            @blur="closeValueInput" @keydown="onEditAttrValue"/></div>
                 </div>
                 <div class="delete"></div>
             </div>
@@ -102,7 +102,7 @@ const showMenu = () => {
             .state_name {
                 display: flex;
                 align-items: center;
-                width: 30%;
+                width: 40%;
                 height: 100%;
 
                 span {
@@ -115,7 +115,6 @@ const showMenu = () => {
             .state_value {
                 display: flex;
                 align-items: center;
-                padding-left: 10px;
                 border-radius: 4px;
                 flex: 1;
                 height: 100%;
@@ -134,7 +133,6 @@ const showMenu = () => {
                     width: 100%;
                     height: 30px;
                     border-radius: 4px;
-                    border: 1px solid #dcdfe6;
                     padding-left: 11px;
                     box-sizing: border-box;
                     display: flex;

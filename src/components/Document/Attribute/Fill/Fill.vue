@@ -430,6 +430,7 @@ onMounted(() => {
 onUnmounted(() => {
     stop();
     props.context.tableSelection.unwatch(table_selection_watcher);
+    watchedShapes.forEach(v => { v.unwatch(watcher) });
 })
 </script>
 

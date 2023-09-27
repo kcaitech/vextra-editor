@@ -43,7 +43,7 @@ onUnmounted(() => {
 .select_menu {
     position: absolute;
     right: 0;
-    padding: 10px 0;
+    padding: 8px 0;
     background-color: #fff;
     border-radius: 2px;
     box-shadow: 1px 1px 5px rgba(0, 0, 0, 0.2);
