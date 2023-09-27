@@ -2,28 +2,28 @@
 import { useI18n } from 'vue-i18n';
 import { Context } from '@/context';
 import TypeHeader from '../TypeHeader.vue';
-import { ref, nextTick, onUnmounted } from 'vue'
+import { ref, nextTick, onUnmounted, watch, onMounted, computed } from 'vue'
 import ComponentDialog from './ComponentDialog.vue';
 import { shape_track, get_shape_within_document } from '@/utils/content';
-import { Shape, SymbolRefShape } from '@kcdesign/data';
+import { Shape, SymbolRefShape, Variable, VariableType } from '@kcdesign/data';
 import { ArrowDown, MoreFilled } from '@element-plus/icons-vue';
 import SelectMenu from '../PopoverMenu/SelectMenu.vue';
+import { tr } from 'element-plus/es/locale';
 const { t } = useI18n();
 const props = defineProps<{
     context: Context
-    shapes: Shape[]
+    shape: SymbolRefShape
 }>()
 
 const resetMenu = ref(false)
-const openName = ref(false)
 const openClose = ref(false)
 const showCompsDialog = ref(false)
 const textValue = ref('文本内容')
 const menuItems = ['默认']
-
 const attrValue = ref('默认')
 const comps = ref<HTMLDivElement>();
-const comps_posi = ref({x: 0, y: 0});
+const comps_posi = ref({ x: 0, y: 0 });
+const reflush = ref(0);
 const selectReset = (e: MouseEvent) => {
     if (resetMenu.value) return resetMenu.value = false
     resetMenu.value = true
@@ -41,7 +41,7 @@ const closeDialog = () => {
     showCompsDialog.value = false;
 }
 const compsDialog = () => {
-    if(comps.value) {
+    if (comps.value) {
         const el = comps.value.getBoundingClientRect();
         comps_posi.value.x = el.x - (el.width + 32);
         comps_posi.value.y = el.y;
@@ -61,7 +61,7 @@ const untie = () => {
     const page = selection.selectedPage;
     if (page) {
         const editor = props.context.editor4Page(page);
-        const shapes = editor.extractSymbol(props.shapes[0] as SymbolRefShape);
+        const shapes = editor.extractSymbol(props.shape);
         if (shapes) {
             selection.selectShape(shapes);
             resetMenu.value = false;
@@ -77,8 +77,48 @@ const inputRef = ref<any>()
 const selectAllText = () => {
     inputRef.value.select()
 }
+const variables = ref<Variable[]>([]);
+const visibles = ref<Variable[]>([]);
+const textContents = ref<Variable[]>([]);
+const instances = ref<Variable[]>([]);
+const attrStates = ref<Variable[]>([]);
 
+const watchShape = () => {
+    varUnwatch(variables.value as Variable[])
+    variables.value = props.shape.variables;
+    updateData();
+    varWatch(variables.value as Variable[])
+}
+
+const updateData = () => {
+    visibles.value = variables.value.filter(item => item.type === VariableType.Visible) || [];
+    instances.value = variables.value.filter(item => item.type === VariableType.Instance) || [];
+    textContents.value = variables.value.filter(item => item.type === VariableType.Text) || [];
+    attrStates.value = variables.value.filter(item => item.type === VariableType.Status) || [];
+}
+
+const varWatch = (variables: Variable[]) => {
+    variables.forEach(item => {
+        item.watch(updateData)
+    })
+}
+const varUnwatch = (variables: Variable[]) => {
+    variables.forEach(item => {
+        item.unwatch(updateData)
+    })
+}
+
+
+onMounted(() => {
+    watchShape();
+    props.shape.watch(watchShape)
+    watch(() => props.shape, (nVal, oVal) => {
+        oVal.unwatch(watchShape);
+        nVal.watch(watchShape);
+    })
+})
 onUnmounted(() => {
+    props.shape.unwatch(watchShape)
     document.removeEventListener('click', closeResetMenu)
 })
 </script>
@@ -91,22 +131,24 @@ onUnmounted(() => {
                     <svg-icon icon-class="edit-comp"></svg-icon>
                 </div>
                 <div class="reset_svg" @click.stop="selectReset">
-                    <el-icon><MoreFilled /></el-icon>
+                    <el-icon>
+                        <MoreFilled />
+                    </el-icon>
                     <div class="reset_menu" v-if="resetMenu">
                         <div class="untie" @click="untie">
-                            <span>{{t('compos.untie')}}</span>
+                            <span>{{ t('compos.untie') }}</span>
                             <span>快捷键</span>
                         </div>
-                        <div class="untie">{{t('compos.reset_all_attr')}}</div>
+                        <div class="untie">{{ t('compos.reset_all_attr') }}</div>
                     </div>
                 </div>
             </div>
         </template>
     </TypeHeader>
-    <div class="module_container">
-        <div class="module_state_item">
+    <div class="module_container" :reflush="reflush !== 0 ? reflush : undefined">
+        <div class="module_state_item" v-for="(item, index) in attrStates" :key="index">
             <div class="state_item">
-                <div class="state_name"><span>属性1</span></div>
+                <div class="state_name"><span>{{ item.name }}</span></div>
                 <div class="state_value" style="padding: 0;">
                     <div class="input" @click="showMenu">
                         <span>{{ attrValue }}</span>
@@ -120,40 +162,37 @@ onUnmounted(() => {
             </div>
             <div class="delete"></div>
         </div>
-        <div class="module_state_item" ref="comps">
+        <div class="module_state_item" ref="comps" v-for="(item, index) in instances" :key="index">
             <div class="state_item">
-                <div class="state_name"><span>实例1</span></div>
+                <div class="state_name"><span>{{ item.name }}</span></div>
                 <div class="state_value border" @click="compsDialog">
                     <span style="color: #606266;">默认</span>
                     <svg-icon icon-class="down" style="color: #a8abb2;"></svg-icon>
                 </div>
             </div>
             <div class="delete"></div>
-            <ComponentDialog v-if="showCompsDialog" :context="context" right="250px" top="0" @closeDialog="closeDialog" :comps_posi="comps_posi">
+            <ComponentDialog v-if="showCompsDialog" :context="context" right="250px" top="0" @closeDialog="closeDialog"
+                :comps_posi="comps_posi">
             </ComponentDialog>
         </div>
-        <div class="module_state_item">
+        <div class="module_state_item" v-for="(item, index) in textContents" :key="index">
             <div class="state_item">
-                <div class="state_name"><span>文本</span></div>
+                <div class="state_name"><span>{{ item.name }}</span></div>
                 <div class="state_value" style="padding: 0;">
-                    <el-input ref="inputRef" v-model="textValue" @focus="selectAllText"/>
+                    <el-input ref="inputRef" v-model="textValue" @focus="selectAllText" />
                 </div>
             </div>
             <div class="delete"></div>
         </div>
-        <div class="open">
+        <div class="open" v-if="visibles.length > 0">
             <div>
-                <span class="title">{{t('compos.layer_show')}}:</span>
-                <div>
-                    <span class="name">名称1</span>
-                    <el-switch v-model="openName" size="small" style="margin-left: 10px;--el-switch-on-color: #9775fa" />
-                </div>
-            </div>
-            <div>
-                <span class="title"></span>
-                <div>
-                    <span>{{t('compos.close_icon')}}</span>
-                    <el-switch v-model="openClose" size="small" style="margin-left: 10px;--el-switch-on-color: #9775fa" />
+                <span class="title">{{ t('compos.layer_show') }}:</span>
+                <div class="switch">
+                    <div v-for="(item, index) in visibles" :key="index">
+                        <span class="name">{{ item.name }}</span>
+                        <el-switch v-model="item.value" size="small"
+                            style="margin-left: 10px;--el-switch-on-color: #9775fa" />
+                    </div>
                 </div>
             </div>
         </div>
@@ -371,7 +410,16 @@ onUnmounted(() => {
                 padding-top: 2px;
             }
 
+            .switch {
+                >div {
+                    display: flex;
+                    align-items: center;
+                }
+            }
+
             .name {
+                width: 60px;
+                margin-right: 5px;
                 overflow: hidden;
                 text-overflow: ellipsis;
                 white-space: nowrap;
