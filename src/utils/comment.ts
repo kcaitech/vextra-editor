@@ -1,5 +1,5 @@
 import { Context } from "@/context";
-import { canBeTarget, isTarget, forGroupHover, Scout } from "./scout";
+import { canBeTarget, isTarget, finder_group, Scout } from "./scout";
 import { PageXY } from "@/context/selection";
 import { Shape, ShapeType } from "@kcdesign/data";
 export function searchCommentShape(context: Context, position: PageXY) {
@@ -31,7 +31,7 @@ export function finder(scout: Scout, g: Shape[], position: PageXY, selected: Sha
                         return result;
                     }
                 } else if ([ShapeType.Group].includes(item.type)) {
-                    const g = forGroupHover(scout, item.childs, position, selected, true);
+                    const g = finder_group(scout, item.childs, position, selected, true);
                     if (g) {
                         result.push(g);
                         return result;
