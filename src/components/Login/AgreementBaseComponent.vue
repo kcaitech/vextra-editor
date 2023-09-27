@@ -63,8 +63,7 @@ onUnmounted(() => {
     box-shadow: 0 2px 2px 0 rgba(0, 0, 0, .1);
     display: flex;
     justify-content: center;
-    position: sticky;
-    top: 0;
+    position: fixed;
     z-index: 999;
 
     .kc-header {
@@ -108,6 +107,8 @@ onUnmounted(() => {
 }
 
 .content-container {
+    position: relative;
+    top: 80px;
     display: flex;
     justify-content: center;
 }
@@ -119,6 +120,8 @@ onUnmounted(() => {
     align-items: flex-end;
     justify-content: center;
     height: 160px;
+    position: relative;
+    top: 80px;
     background-color: #9775fa;
 
     .footer {

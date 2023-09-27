@@ -5,7 +5,7 @@
 import { htmlContent } from "@/utils/showmarkdown";
 import Markdowncontent from "@/assets/serviceagreement.md";
 </script>
-<style lang="scss">
+<style lang="scss" scoped>
 
 .content {
     color: #333333;
@@ -14,8 +14,8 @@ import Markdowncontent from "@/assets/serviceagreement.md";
     overflow: hidden;
     padding: 0 12px;
 
-    h1 {
-        text-align: center;
+    .title {
+        text-align: center !important;
     }
 
     .update,
