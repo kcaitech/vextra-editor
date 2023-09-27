@@ -10,6 +10,7 @@ interface Props {
     menu: string
     context: Context
     cells: TableCell[]
+    selectIcon: string
 }
 const props = defineProps<Props>();
 const emit = defineEmits<{
@@ -41,25 +42,25 @@ const onSelectVertical = (icon: TextVerAlign, svg: string) => {
 <template>
     <div class="text-bottom-align">
         <div class="level-aligning jointly-text" v-if="menu === 'hor'">
-            <i class="jointly-text font-posi" :class="{ selected_bgc: selectLevel === 'left' }"
+            <i class="jointly-text font-posi" :class="{ selected_bgc: selectIcon === 'text-left' }"
                 @click.stop="onSelectLevel(TextHorAlign.Left, 'text-left')">
                 <Tooltip :content="t('attr.align_left')" :offset="15">
                     <svg-icon icon-class="text-left"></svg-icon>
                 </Tooltip>
             </i>
-            <i class="jointly-text font-posi" :class="{ selected_bgc: selectLevel === 'centered' }"
+            <i class="jointly-text font-posi" :class="{ selected_bgc: selectIcon === 'text-center' }"
                 @click.stop="onSelectLevel(TextHorAlign.Centered, 'text-center')">
                 <Tooltip :content="t('attr.align_center')" :offset="15">
                     <svg-icon icon-class="text-center"></svg-icon>
                 </Tooltip>
             </i>
-            <i class="jointly-text font-posi" :class="{ selected_bgc: selectLevel === 'right' }"
+            <i class="jointly-text font-posi" :class="{ selected_bgc: selectIcon === 'text-right' }"
                 @click.stop="onSelectLevel(TextHorAlign.Right, 'text-right')">
                 <Tooltip :content="t('attr.align_right')" :offset="15">
                     <svg-icon icon-class="text-right"></svg-icon>
                 </Tooltip>
             </i>
-            <i class="jointly-text font-posi" :class="{ selected_bgc: selectLevel === 'natural' }"
+            <i class="jointly-text font-posi" :class="{ selected_bgc: selectIcon === 'text-justify' }"
                 @click.stop="onSelectLevel(TextHorAlign.Natural, 'text-justify')">
                 <Tooltip :content="t('attr.align_the_sides')" :offset="15">
                     <svg-icon icon-class="text-justify"></svg-icon>
@@ -67,19 +68,19 @@ const onSelectVertical = (icon: TextVerAlign, svg: string) => {
             </i>
         </div>
         <div class="vertical-aligning jointly-text" v-if="menu === 'ver'">
-            <i class="jointly-text font-posi" :class="{ selected_bgc: selectVertical === 'top' }"
+            <i class="jointly-text font-posi" :class="{ selected_bgc: selectIcon === 'align-top' }"
                 @click.stop="onSelectVertical(TextVerAlign.Top, 'align-top')">
                 <Tooltip :content="t('attr.align_top')" :offset="15">
                     <svg-icon icon-class="align-top"></svg-icon>
                 </Tooltip>
             </i>
-            <i class="jointly-text font-posi" :class="{ selected_bgc: selectVertical === 'middle' }"
+            <i class="jointly-text font-posi" :class="{ selected_bgc: selectIcon === 'align-middle' }"
                 @click.stop="onSelectVertical(TextVerAlign.Middle, 'align-middle')">
                 <Tooltip :content="t('attr.align_middle')" :offset="15">
                     <svg-icon icon-class="align-middle"></svg-icon>
                 </Tooltip>
             </i>
-            <i class="jointly-text font-posi" :class="{ selected_bgc: selectVertical === 'bottom' }"
+            <i class="jointly-text font-posi" :class="{ selected_bgc: selectIcon === 'align-bottom' }"
                 @click.stop="onSelectVertical(TextVerAlign.Bottom, 'align-bottom')">
                 <Tooltip :content="t('attr.align_bottom')" :offset="15">
                     <svg-icon icon-class="align-bottom"></svg-icon>
@@ -124,6 +125,10 @@ const onSelectVertical = (icon: TextVerAlign, svg: string) => {
     height: 25px;
     display: flex;
     justify-content: center;
+    &:hover {
+        background-color: var(--active-color) !important;
+        color: #fff;
+    }
 }
 
 .selected_bgc {
@@ -133,4 +138,5 @@ const onSelectVertical = (icon: TextVerAlign, svg: string) => {
 
 :deep(.el-tooltip__trigger:focus) {
     outline: none !important;
-}</style>
+}
+</style>

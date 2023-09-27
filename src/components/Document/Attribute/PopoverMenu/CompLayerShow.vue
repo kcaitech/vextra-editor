@@ -57,11 +57,11 @@ const showSelectLayer = (e: MouseEvent) => {
         if (shapes[0].type === ShapeType.Symbol) {
             const symbol = shapes[0] as SymbolShape
             if (props.addType === 'Show') {
-                selectList.value = symbol.childs;
+                selectList.value = symbol.childs.filter(item => item.type !== ShapeType.Symbol);
             } else if (props.addType === 'Text' || props.addType === '') {
-                selectList.value = symbol.childs.filter(item => item.type === ShapeType.Text)
+                selectList.value = symbol.childs.filter(item => item.type === ShapeType.Text);
             } else if (props.addType === 'toggle') {
-                selectList.value = symbol.childs.filter(item => item.type === ShapeType.SymbolRef)
+                selectList.value = symbol.childs.filter(item => item.type === ShapeType.SymbolRef);
             }
         } else {
             return;

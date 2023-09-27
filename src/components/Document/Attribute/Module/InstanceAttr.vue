@@ -8,7 +8,6 @@ import { shape_track, get_shape_within_document } from '@/utils/content';
 import { Shape, SymbolRefShape, Variable, VariableType } from '@kcdesign/data';
 import { ArrowDown, MoreFilled } from '@element-plus/icons-vue';
 import SelectMenu from '../PopoverMenu/SelectMenu.vue';
-import { tr } from 'element-plus/es/locale';
 const { t } = useI18n();
 const props = defineProps<{
     context: Context
@@ -16,14 +15,12 @@ const props = defineProps<{
 }>()
 
 const resetMenu = ref(false)
-const openClose = ref(false)
 const showCompsDialog = ref(false)
 const textValue = ref('文本内容')
 const menuItems = ['默认']
 const attrValue = ref('默认')
 const comps = ref<HTMLDivElement>();
 const comps_posi = ref({ x: 0, y: 0 });
-const reflush = ref(0);
 const selectReset = (e: MouseEvent) => {
     if (resetMenu.value) return resetMenu.value = false
     resetMenu.value = true
@@ -108,7 +105,6 @@ const varUnwatch = (variables: Variable[]) => {
     })
 }
 
-
 onMounted(() => {
     watchShape();
     props.shape.watch(watchShape)
@@ -145,7 +141,7 @@ onUnmounted(() => {
             </div>
         </template>
     </TypeHeader>
-    <div class="module_container" :reflush="reflush !== 0 ? reflush : undefined">
+    <div class="module_container">
         <div class="module_state_item" v-for="(item, index) in attrStates" :key="index">
             <div class="state_item">
                 <div class="state_name"><span>{{ item.name }}</span></div>
@@ -237,7 +233,7 @@ onUnmounted(() => {
             top: 25px;
             right: 0;
             width: 150px;
-            padding: 10px 0;
+            padding: 8px 0;
             background-color: #fff;
             border-radius: 2px;
             box-shadow: 1px 1px 5px rgba(0, 0, 0, 0.2);
@@ -282,7 +278,7 @@ onUnmounted(() => {
             .state_name {
                 display: flex;
                 align-items: center;
-                width: 30%;
+                width: 40%;
                 height: 100%;
 
                 span {
@@ -311,7 +307,6 @@ onUnmounted(() => {
                     width: 100%;
                     height: 30px;
                     border-radius: 4px;
-                    border: 1px solid #dcdfe6;
                     padding-left: 11px;
                     box-sizing: border-box;
                     display: flex;
