@@ -346,9 +346,7 @@ function instance() {
     }
   }
 }
-function reset() {
-
-}
+function reset() { }
 function edit() {
   const refId = props.context.selection.selectedShapes[0].refId;
   const shape = get_shape_within_document(props.context, refId)
@@ -398,14 +396,6 @@ function toggle_title() {
 function menu_watcher() {
   // check();
 }
-function make_symbol_union() {
-  const make_result = make_union(props.context, t);
-  if (make_result) {
-    props.context.selection.selectShape(make_result);
-    emit('close');
-  }
-}
-
 const stop = watch(() => props.items, menu_watcher, { deep: true, immediate: true })
 onUnmounted(() => {
   stop();
@@ -601,9 +591,6 @@ onUnmounted(() => {
     <div class="item" v-if="props.items.includes('title')" @click="toggle_title">
       <div class="choose" v-show="isTitle"></div>
       <span>{{ t('system.artboart_title_visible') }}</span>
-    </div>
-    <div class="item" v-if="props.items.includes('visible')" @click="make_symbol_union">
-      <span>组件状态</span>
     </div>
     <TableMenu :context="context" :layers="layers" :items="items" :site="site" @close="emit('close')"></TableMenu>
   </div>
