@@ -2,6 +2,7 @@ import { Context } from "@/context";
 import { PageXY, XY } from "@/context/selection";
 import { GroupShape, Matrix, Shape, ShapeType, SymbolRefShape, SymbolShape } from "@kcdesign/data";
 import { v4 as uuid } from "uuid";
+import { isShapeOut } from "./assist";
 export interface Scout {
     path: SVGPathElement
     remove: () => void
@@ -157,11 +158,10 @@ export function finder(context: Context, scout: Scout, g: Shape[], position: Pag
     for (let i = g.length - 1; i > -1; i--) { // 从最上层开始往下找(z-index：大 -> 小)
         const item = g[i];
         if (!canBeTarget(item)) continue;
+        if (isShapeOut(context, item)) continue;
         if (item.type === ShapeType.Symbol && item.isUnionSymbolShape) {
-            // if (!context.assist.is_shape_in_view(item)) continue;
             result = finder_symbol_union(context, scout, item as GroupShape, position, selected, isCtrl);
         } else if (item.type === ShapeType.Symbol || item.type === ShapeType.SymbolRef) {
-            // if (!context.assist.is_shape_in_view(item)) continue;
             result = finder_symbol(context, scout, item as SymbolShape, position, selected, isCtrl);
         }
         if (result) break;
@@ -344,9 +344,5 @@ export function artboardFinder(scout: Scout, g: Shape[], position: PageXY, excep
 }
 
 export function canBeTarget(shape: Shape): boolean { // 可以被判定为检索结果的前提是没有被锁定和isVisible可视
-    if (shape.isVisible != undefined && shape.isLocked != undefined) {
-        return shape.isVisible && !shape.isLocked;
-    } else {
-        return false;
-    }
+    return !!(shape.isVisible && !shape.isLocked);
 }

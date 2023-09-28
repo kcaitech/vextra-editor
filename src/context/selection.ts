@@ -184,7 +184,7 @@ export class Selection extends Watchable(Object) implements ISave4Restore {
         }
         return result;
     }
-    // private m_count = 0;
+    private m_count = 0;
     /**
      * @description 基于SVGGeometryElement的图形检索，与getLayers相比，getShapesByXY返回的结果长度最多为1，而这里可以大于1
      * @param position 点位置，坐标系时page

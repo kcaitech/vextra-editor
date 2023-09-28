@@ -16,8 +16,8 @@ const Privacypolicy = () => import("@/components/Login/Privacypolicy.vue");
 const Serviceagreement = () => import("@/components/Login/Serviceagreement.vue");
 const KChome = () => import("@/components/Home/KChome.vue");
 const HomeContent = () => import("@/components/Home/HomeContent.vue");
-const TeamPage=()=>import("@/components/TeamProject/TeamPage.vue");
-const joinTeam=()=>import("@/components/TeamProject/jionTeam.vue");
+const TeamPage = () => import("@/components/TeamProject/TeamPage.vue");
+const joinTeam = () => import("@/components/TeamProject/jionTeam.vue");
 const ProjectPage = () => import("@/components/TeamProject/ProjectPage.vue");
 const projectApply = () => import("@/components/TeamProject/ProjectFill/ProjectApply.vue");
 const ProjectShare = () => import('@/components/TeamProject/ProjectShare/ProjectSharePage.vue')
@@ -153,15 +153,14 @@ const routes = [
 ]
 
 export const router = createRouter({
-    // history: createWebHistory(),
     history: createWebHashHistory(),
-    scrollBehavior(to,from,savedPosition){
-        if(savedPosition){
+    scrollBehavior(to, from, savedPosition) {
+        if (savedPosition) {
             return savedPosition
         }
-        return{
-            top:0,
-            behavior:'smooth'
+        return {
+            top: 0,
+            behavior: 'smooth'
         }
     },
     routes: routes

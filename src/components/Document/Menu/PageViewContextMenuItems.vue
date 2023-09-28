@@ -15,7 +15,7 @@ import { paster, paster_inner_shape, replace } from '@/utils/clipboard';
 import { sort_by_layer } from '@/utils/group_ungroup';
 import { Menu } from '@/context/menu';
 import TableMenu from "./TableMenu/TableMenu.vue"
-import { make_union } from '@/utils/symbol';
+import { make_symbol, make_union } from '@/utils/symbol';
 const { t } = useI18n();
 interface Props {
   context: Context,
@@ -328,16 +328,9 @@ function unGroup() {
   emit('close');
 }
 function component() {
-  const selection = props.context.selection;
-  const page = selection.selectedPage;
-  if (page) {
-    const editor = props.context.editor4Page(page);
-    const name = getName(ShapeType.Symbol, props.context.data.symbolsMgr.resource, t);
-    const shapes = sort_by_layer(props.context, selection.selectedShapes);
-    const symbol = editor.makeSymbol(props.context.data, shapes, name);
-    if (symbol) {
-      selection.selectShape(symbol as unknown as Shape);
-    }
+  const symbol = make_symbol(props.context, t);
+  if (symbol) {
+    props.context.selection.selectShape(symbol as unknown as Shape);
   }
   emit('close');
 }
@@ -353,9 +346,7 @@ function instance() {
     }
   }
 }
-function reset() {
-
-}
+function reset() { }
 function edit() {
   const refId = props.context.selection.selectedShapes[0].refId;
   const shape = get_shape_within_document(props.context, refId)
@@ -405,14 +396,6 @@ function toggle_title() {
 function menu_watcher() {
   // check();
 }
-function make_symbol_union() {
-  const make_result = make_union(props.context, t);
-  if (make_result) {
-    props.context.selection.selectShape(make_result);
-    emit('close');
-  }
-}
-
 const stop = watch(() => props.items, menu_watcher, { deep: true, immediate: true })
 onUnmounted(() => {
   stop();
@@ -608,9 +591,6 @@ onUnmounted(() => {
     <div class="item" v-if="props.items.includes('title')" @click="toggle_title">
       <div class="choose" v-show="isTitle"></div>
       <span>{{ t('system.artboart_title_visible') }}</span>
-    </div>
-    <div class="item" v-if="props.items.includes('visible')" @click="make_symbol_union">
-      <span>组件状态</span>
     </div>
     <TableMenu :context="context" :layers="layers" :items="items" :site="site" @close="emit('close')"></TableMenu>
   </div>
