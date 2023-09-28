@@ -1,6 +1,6 @@
 <script lang="ts" setup>
 import Popover from '@/components/common/Popover.vue';
-import { ref, onMounted, onUnmounted, watch, watchEffect } from 'vue';
+import { ref, onMounted, onUnmounted, watch, watchEffect, computed } from 'vue';
 import { useI18n } from 'vue-i18n';
 import { Context } from '@/context';
 import Tooltip from '@/components/common/Tooltip.vue';
@@ -9,7 +9,8 @@ import { Selection } from '@/context/selection';
 const { t } = useI18n();
 interface Props {
   context: Context,
-  textShape: TextShape
+  textShape: TextShape,
+  textShapes: TextShape[]
 }
 const popover = ref();
 const props = defineProps<Props>();
@@ -27,7 +28,7 @@ const paraSpacing = ref<HTMLInputElement>()
 
 //获取选中字体的长度和下标
 const getTextIndexAndLen = () => {
-    const selection = props.context.textSelection;
+  const selection = props.context.textSelection;
   const textIndex = Math.min(selection.cursorEnd, selection.cursorStart)
   const selectLength = Math.abs(selection.cursorEnd - selection.cursorStart)
   return { textIndex, selectLength }
@@ -37,92 +38,131 @@ function showMenu() {
   popover.value.show();
   props.context.workspace.focusText()
 }
+const length = computed(() => {
+  return props.textShapes.length === 1;
+})
 
 const onSelectId = (icon: BulletNumbersType) => {
-  selectId.value = icon
-  const { textIndex, selectLength } = getTextIndexAndLen();
+  selectId.value = icon;
   const editor = props.context.editor4TextShape(props.textShape)
-  if (isSelectText()) {
-    editor.setTextBulletNumbers(icon, 0, Infinity)
+  if (length.value) {
+    const { textIndex, selectLength } = getTextIndexAndLen();
+    if (isSelectText()) {
+      editor.setTextBulletNumbers(icon, 0, Infinity)
+    } else {
+      editor.setTextBulletNumbers(icon, textIndex, selectLength)
+    }
   } else {
-    editor.setTextBulletNumbers(icon, textIndex, selectLength)
+    editor.setTextBulletNumbersMulti(props.textShapes, icon);
   }
 }
 
 const onSelectText = (icon: TextBehaviour) => {
-  selectText.value = icon
+  selectText.value = icon;
   const editor = props.context.editor4TextShape(props.textShape)
-  editor.setTextBehaviour(icon)
+  if (length.value) {
+    editor.setTextBehaviour(icon)
+  } else {
+    editor.setTextBehaviourMulti(props.textShapes, icon);
+  }
 }
 const onSelectCase = (icon: TextTransformType) => {
-  selectCase.value = icon
-  const { textIndex, selectLength } = getTextIndexAndLen();
+  selectCase.value = icon;
   const editor = props.context.editor4TextShape(props.textShape)
-  if (isSelectText()) {
-    editor.setTextTransform(icon, 0, Infinity)
+  if (length.value) {
+    const { textIndex, selectLength } = getTextIndexAndLen();
+    if (isSelectText()) {
+      editor.setTextTransform(icon, 0, Infinity)
+    } else {
+      editor.setTextTransform(icon, textIndex, selectLength)
+    }
+    props.context.workspace.focusText()
   } else {
-    editor.setTextTransform(icon, textIndex, selectLength)
+    editor.setTextTransformMulti(props.textShapes, icon);
   }
-  props.context.workspace.focusText()
 }
 
 const setRowHeight = () => {
-  const { textIndex, selectLength } = getTextIndexAndLen();
   const editor = props.context.editor4TextShape(props.textShape)
   rowHeight.value = rowHeight.value.trim()
   if (rowHeight.value.length < 1) {
     rowHeight.value = 1
   }
-  if (!isNaN(Number(rowHeight.value))) {
-    if (isSelectText()) {
-      editor.setLineHeight(Number(rowHeight.value), 0, Infinity)
+  if (length.value) {
+    const { textIndex, selectLength } = getTextIndexAndLen();
+    if (!isNaN(Number(rowHeight.value))) {
+      if (isSelectText()) {
+        editor.setLineHeight(Number(rowHeight.value), 0, Infinity)
+      } else {
+        editor.setLineHeight(Number(rowHeight.value), textIndex, selectLength)
+      }
     } else {
-      editor.setLineHeight(Number(rowHeight.value), textIndex, selectLength)
+      textFormat()
     }
   } else {
-    textFormat()
+    if (!isNaN(Number(rowHeight.value))) {
+      editor.setLineHeightMulit(props.textShapes, Number(rowHeight.value));
+    } else {
+      textFormat()
+    }
   }
 }
 
 const setWordSpace = () => {
-  const { textIndex, selectLength } = getTextIndexAndLen();
   const editor = props.context.editor4TextShape(props.textShape)
   wordSpace.value = wordSpace.value.trim()
-  // if (wordSpace.value.slice(-1) === '%') {
-  //     wordSpace.value = Number(wordSpace.value.slice(0, -1))
-  // }
   if (wordSpace.value.length < 1) {
     wordSpace.value = 0
   }
-  if (!isNaN(Number(wordSpace.value))) {
-    if (isSelectText()) {
-      editor.setCharSpacing(Number(wordSpace.value), 0, Infinity)
+  if (length.value) {
+    const { textIndex, selectLength } = getTextIndexAndLen();
+    // if (wordSpace.value.slice(-1) === '%') {
+    //     wordSpace.value = Number(wordSpace.value.slice(0, -1))
+    // }
+    if (!isNaN(Number(wordSpace.value))) {
+      if (isSelectText()) {
+        editor.setCharSpacing(Number(wordSpace.value), 0, Infinity)
+      } else {
+        editor.setCharSpacing(Number(wordSpace.value), textIndex, selectLength)
+      }
     } else {
-      editor.setCharSpacing(Number(wordSpace.value), textIndex, selectLength)
+      textFormat()
     }
   } else {
-    textFormat()
+    if (!isNaN(Number(wordSpace.value))) {
+      editor.setCharSpacingMulit(props.textShapes, Number(wordSpace.value))
+    } else {
+      textFormat()
+    }
   }
 }
 
 const setParagraphSpace = () => {
-  const { textIndex, selectLength } = getTextIndexAndLen();
   const editor = props.context.editor4TextShape(props.textShape)
   paragraphSpace.value = paragraphSpace.value.trim()
-  if (!isNaN(Number(paragraphSpace.value))) {
-    if (isSelectText()) {
-      editor.setParaSpacing(Number(paragraphSpace.value), 0, Infinity)
+  if (length.value) {
+    const { textIndex, selectLength } = getTextIndexAndLen();
+    if (!isNaN(Number(paragraphSpace.value))) {
+      if (isSelectText()) {
+        editor.setParaSpacing(Number(paragraphSpace.value), 0, Infinity)
+      } else {
+        editor.setParaSpacing(Number(paragraphSpace.value), textIndex, selectLength)
+      }
     } else {
-      editor.setParaSpacing(Number(paragraphSpace.value), textIndex, selectLength)
+      textFormat()
     }
   } else {
-    textFormat()
+    if (!isNaN(Number(paragraphSpace.value))) {
+      editor.setParaSpacingMulit(props.textShapes, Number(paragraphSpace.value));
+    } else {
+      textFormat()
+    }
   }
 }
 
 //判断是否选择文本框还是光标聚焦了
 const isSelectText = () => {
-    const selection = props.context.textSelection;
+  const selection = props.context.textSelection;
   if ((selection.cursorEnd !== -1) && (selection.cursorStart !== -1)) {
     return false
   } else {
@@ -147,24 +187,73 @@ const shapeWatch = watch(() => props.textShape, (value, old) => {
 
 const textFormat = () => {
   if (!props.textShape || !props.textShape.text) return
-  const { textIndex, selectLength } = getTextIndexAndLen();
-  const editor = props.context.editor4TextShape(props.textShape)
-  let format: AttrGetter
-  if (textIndex === -1) {
-    format = props.textShape.text.getTextFormat(0, Infinity, editor.getCachedSpanAttr())
+  if (length.value) {
+    const { textIndex, selectLength } = getTextIndexAndLen();
+    const editor = props.context.editor4TextShape(props.textShape)
+    let format: AttrGetter
+    if (textIndex === -1) {
+      format = props.textShape.text.getTextFormat(0, Infinity, editor.getCachedSpanAttr())
+    } else {
+      format = props.textShape.text.getTextFormat(textIndex, selectLength, editor.getCachedSpanAttr())
+    }
+    wordSpace.value = format.kerning || 0
+    selectText.value = format.textBehaviour || 'flexible'
+    rowHeight.value = format.minimumLineHeight || ''
+    paragraphSpace.value = format.paraSpacing || 0
+    selectCase.value = format.transform
+    selectId.value = format.bulletNumbers?.type || ''
+    if (format.minimumLineHeightIsMulti) rowHeight.value = `${t('attr.more_value')}`
+    if (format.kerningIsMulti) wordSpace.value = `${t('attr.more_value')}`
+    if (format.paraSpacingIsMulti) paragraphSpace.value = `${t('attr.more_value')}`
+    if (format.transformIsMulti) selectCase.value = ''
   } else {
-    format = props.textShape.text.getTextFormat(textIndex, selectLength, editor.getCachedSpanAttr())
+    let formats: any[] = [];
+    let format: any = {};
+    for (let i = 0; i < props.textShapes.length; i++) {
+      const text = props.textShapes[i];
+      const editor = props.context.editor4TextShape(text);
+      const format = text.text.getTextFormat(0, Infinity, editor.getCachedSpanAttr());
+      formats.push(format)
+    }
+    const referenceKeys = Object.keys(formats[0]);
+    for (const key of referenceKeys) {
+      const referenceValue = formats[0][key];
+      let foundEqual = true;
+      for (let i = 1; i < formats.length; i++) {
+        if (key === 'bulletNumbers' && formats[i][key] && referenceValue) {
+          const { type: bullet1 } = formats[i][key];
+          const { type: bullet2 } = referenceValue;
+          if (bullet1 !== bullet2) {
+            foundEqual = false;
+            break;
+          }
+        } else if (formats[i][key] !== referenceValue) {
+          foundEqual = false;
+          break;
+        }
+      }
+      if (foundEqual) {
+        format[key] = referenceValue;
+      } else {
+        format[key] = `unlikeness`;
+      }
+    }
+    wordSpace.value = format.kerning || 0;
+    rowHeight.value = format.minimumLineHeight || ''
+    paragraphSpace.value = format.paraSpacing || 0;
+    selectCase.value = format.transform;
+    selectText.value = format.textBehaviour;
+    selectId.value = format.bulletNumbers?.type || '';
+    if (format.minimumLineHeight === 'unlikeness') rowHeight.value = `${t('attr.more_value')}`;
+    if (format.minimumLineHeightIsMulti === 'unlikeness') rowHeight.value = `${t('attr.more_value')}`;
+    if (format.kerningIsMulti === 'unlikeness') wordSpace.value = `${t('attr.more_value')}`;
+    if (format.kerning === 'unlikeness') wordSpace.value = `${t('attr.more_value')}`;
+    if (format.paraSpacingIsMulti === 'unlikeness') paragraphSpace.value = `${t('attr.more_value')}`;
+    if (format.paraSpacing === 'unlikeness') paragraphSpace.value = `${t('attr.more_value')}`;
+    if (format.transformIsMulti === 'unlikeness') selectCase.value = '';
+    if (format.transform === 'unlikeness') selectCase.value = '';
+    if (format.textBehaviour === 'unlikeness') selectText.value = '';
   }
-  wordSpace.value = format.kerning || 0
-  selectText.value = format.textBehaviour || 'flexible'
-  rowHeight.value = format.minimumLineHeight || ''
-  paragraphSpace.value = format.paraSpacing || 0
-  selectCase.value = format.transform
-  selectId.value = format.bulletNumbers?.type || ''
-  if (format.minimumLineHeightIsMulti) rowHeight.value = `${t('attr.more_value')}`
-  if (format.kerningIsMulti) wordSpace.value = `${t('attr.more_value')}`
-  if (format.paraSpacingIsMulti) paragraphSpace.value = `${t('attr.more_value')}`
-  if (format.transformIsMulti) selectCase.value = ''
 }
 function selection_wather(t: any) {
   if (t === Selection.CHANGE_TEXT) {
@@ -176,7 +265,7 @@ function selection_wather(t: any) {
 }
 
 watchEffect(() => {
-    textFormat()
+  textFormat()
 })
 
 onMounted(() => {
@@ -408,4 +497,5 @@ onUnmounted(() => {
 
 :deep(.el-tooltip__trigger:focus) {
   outline: none !important;
-}</style>
+}
+</style>

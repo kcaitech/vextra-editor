@@ -93,10 +93,16 @@ function calc_attri() {
         const shape = props.context.selection.selectedShapes[0];
         const lt = shape.matrix2Root().computeCoord2(0, 0);
         const frame = shape.frame;
+
+        const isMixed = is_mixed(props.context.selection.selectedShapes);
         if (x.value !== mixed) x.value = lt.x;
         if (y.value !== mixed) y.value = lt.y;
         if (w.value !== mixed) w.value = Math.max(frame.width, 1);
-        if (h.value !== mixed) h.value = Math.max(frame.height, 1);
+        if (isMixed.type === 'mixed') {
+            if (h.value !== mixed) h.value = Math.max(frame.height, 1);
+        } else {
+            h.value = 0;
+        }
     }
 }
 function _update_view() {
@@ -113,9 +119,14 @@ function check_mixed() {
     isMixed.x === 'mixed' ? x.value = mixed : x.value = isMixed.x;
     isMixed.y === 'mixed' ? y.value = mixed : y.value = isMixed.y;
     isMixed.w === 'mixed' ? w.value = mixed : w.value = isMixed.w;
-    isMixed.h === 'mixed' ? h.value = mixed : h.value = isMixed.h;
     isMixed.rotate === 'mixed' ? rotate.value = mixed : rotate.value = isMixed.rotate;
-    isMixed.constrainerProportions === 'mixed' ? isLock.value = true : isLock.value = (isMixed.constrainerProportions as boolean)!
+    isMixed.constrainerProportions === 'mixed' ? isLock.value = true : isLock.value = (isMixed.constrainerProportions as boolean)!;
+    if (isMixed.type === 'mixed') {
+        isMixed.h === 'mixed' ? h.value = mixed : h.value = isMixed.h;
+    } else {
+        h.value = 0;
+        model_disable_state.height = true;
+    }
 }
 
 function radiusValuesMixed(radius: any) {
@@ -494,7 +505,8 @@ onUnmounted(() => {
                 :frame="{ width: 12, height: 12, rotate: 270 }" @onchange="e => onChangeRadian(e, 'lb')" />
             <IconText class="td frame ml-24" svgicon="radius" :text="radius?.rb || 0"
                 :frame="{ width: 12, height: 12, rotate: 180 }" @onchange="e => onChangeRadian(e, 'rb')" />
-            <RadiusForIos :context="props.context"></RadiusForIos>
+            <!-- <RadiusForIos :context="props.context"></RadiusForIos> -->
+            <div style="width: 22px;height: 22px;"></div>
         </div>
     </div>
 </template>

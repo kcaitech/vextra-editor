@@ -51,23 +51,27 @@ const WITH_BORDER = [
 const WITH_TABLE = [ShapeType.Table];
 const shapeType = ref();
 const reflush = ref<number>(0);
-
+const textShapes = ref<Shape[]>([]);
 const getShapeType = () => {
     if (props.context.selection.selectedShapes.length === 1) {
         shapes.value = new Array(...props.context.selection.selectedShapes);
         shapeType.value = shapes.value[0].type;
-        console.log(shapes.value,'shapes.value ');
-        
+        if(shapeType.value === ShapeType.Text) {
+            textShapes.value = shapes.value;
+        }
     } else if (props.context.selection.selectedShapes.length > 1) {
         shapes.value = new Array(...props.context.selection.selectedShapes);
+        textShapes.value = shapes.value.filter(item => item.type === ShapeType.Text);
     } else {
         shapes.value = new Array();
+        textShapes.value = new Array();
     }
 }
 
 function _change(t: number) {
     if (t === Selection.CHANGE_PAGE) {
         shapes.value = new Array();
+        textShapes.value = new Array();
     } else if (t === Selection.CHANGE_SHAPE) {
         getShapeType();
         baseAttr.value = true;
@@ -125,7 +129,7 @@ onUnmounted(() => {
                 <Module :context="props.context" :shapeType="shapeType" :shapes="shapes"></Module>
                 <Fill v-if="WITH_FILL.includes(shapeType)" :shapes="shapes" :context="props.context"></Fill>
                 <Border v-if="WITH_BORDER.includes(shapeType)" :shapes="shapes" :context="props.context"></Border>
-                <Text v-if="WITH_TEXT.includes(shapeType)" :shape="(shapes[0] as TextShape)" :context="props.context"></Text>
+                <Text v-if="WITH_TEXT.includes(shapeType)" :shape="(shapes[0] as TextShape)" :textShapes="(textShapes as TextShape[])" :context="props.context"></Text>
                 <TableText v-if="WITH_TABLE.includes(shapeType)" :shape="(shapes[0] as TableShape)" :context="props.context">
                 </TableText>
             </div>

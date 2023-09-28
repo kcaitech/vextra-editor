@@ -12,26 +12,31 @@ export function is_mixed(shapes: Shape[]) {
     h: number | string,
     rotate: number | string,
     constrainerProportions: boolean | string,
+    type:  boolean | string,
   } = {
     x: frame0.x,
     y: frame0.y,
     w: frame.width,
     h: frame.height,
     rotate: shapes[0].rotation || 0,
-    constrainerProportions: Boolean(shapes[0].constrainerProportions)
+    constrainerProportions: Boolean(shapes[0].constrainerProportions),
+    type: shapes[0].type === ShapeType.Line,
   }
   for (let i = 1; i < shapes.length; i++) {
     const shape = shapes[i];
     const frame_i = shape.frame2Root();
     const frame = shape.frame;
+    const type_line = shape.type === ShapeType.Line;
     if (frame_i.x !== result.x) result.x = 'mixed';
     if (frame_i.y !== result.y) result.y = 'mixed';
     if (frame.width !== result.w) result.w = 'mixed';
     if (frame.height !== result.h) result.h = 'mixed';
     if ((shape.rotation || 0) !== result.rotate) result.rotate = 'mixed';
     if (shape.constrainerProportions !== result.constrainerProportions) result.constrainerProportions = 'mixed';
+    if(type_line !== result.type) result.type = 'mixed';
     if (Object.values(result).every(v => v === 'mixed')) return result;
   }
+  
   if (result.rotate !== 'mixed') result.rotate = Number((result.rotate as number).toFixed(2));
   return result;
 }

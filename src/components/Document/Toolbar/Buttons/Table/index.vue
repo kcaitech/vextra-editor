@@ -24,7 +24,6 @@ function select(action: Action) {
 }
 
 function showTable(e: MouseEvent) {
-  e.stopPropagation()
   if (button.value?.toolButtonEl) {
     select(Action.AddTable);
     const el = button.value?.toolButtonEl;
@@ -44,8 +43,10 @@ function showTable(e: MouseEvent) {
 function onTableBlur(e: MouseEvent) {
   if (e.target instanceof Element && !e.target.closest('.popover-t') && !e.target.closest('.svg-table')) {
     if (e.target.closest('.popover-t')) return;
-    var timer = setTimeout(() => {
+    if (e.target instanceof Element && (!e.target.closest('.tool-button') || e.target.closest('.group'))) {
       select(Action.AutoV);
+    }
+    var timer = setTimeout(() => {
       popoverVisible.value = false;
       clearTimeout(timer);
       document.removeEventListener('click', onTableBlur);
@@ -78,7 +79,7 @@ const onMouseleave = () => {
   <el-tooltip class="box-item" effect="dark" :content="`${t('table.table')}`" placement="bottom" :show-after="600"
     :offset="10" :hide-after="0" :visible="popoverVisible ? false : visible">
     <ToolButton ref="button" :selected="props.active" @mouseenter.stop="onMouseenter" @mouseleave.stop="onMouseleave">
-      <div class="svg-table" @click.stop="showTable">
+      <div class="svg-table" @click="showTable">
         <svg-icon icon-class="pattern-table"></svg-icon>
       </div>
     </ToolButton>
