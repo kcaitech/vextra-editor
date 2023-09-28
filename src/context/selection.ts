@@ -193,18 +193,18 @@ export class Selection extends Watchable(Object) implements ISave4Restore {
      * @returns 符合检索条件的图形
      */
     getShapesByXY(position: PageXY, isCtrl: boolean, scope?: Shape[]): Shape | undefined {
-        const s = Date.now();
+        // const s = Date.now();
         let shape: Shape | undefined;
         if (this.scout) {
             const page = this.m_selectPage!;
             const childs: Shape[] = scope || page.childs;
             shape = finder(this.m_context, this.scout, childs, position, this.selectedShapes[0], isCtrl)
         }
-        this.m_count++;
-        if (this.m_count > 100) {
-            console.log('computing: ', Date.now() - s);
-            this.m_count = 0;
-        }
+        // this.m_count++;
+        // if (this.m_count > 100) {
+        //     console.log('computing: ', Date.now() - s);
+        //     this.m_count = 0;
+        // }
         return shape;
     }
 
