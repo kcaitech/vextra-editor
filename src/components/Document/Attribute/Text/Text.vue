@@ -2,7 +2,7 @@
 import TypeHeader from '../TypeHeader.vue';
 import { useI18n } from 'vue-i18n';
 import SelectFont from './SelectFont.vue';
-import { onMounted, ref, onUnmounted, watchEffect, watch } from 'vue';
+import { onMounted, ref, onUnmounted, watchEffect, watch, computed } from 'vue';
 import TextAdvancedSettings from './TextAdvancedSettings.vue'
 import { Context } from '@/context';
 import { TextShape, AttrGetter, TableShape } from "@kcdesign/data";
@@ -16,6 +16,7 @@ import { message } from "@/utils/message";
 interface Props {
     context: Context
     shape: TextShape
+    textShapes: TextShape[]
 }
 
 const props = defineProps<Props>();
@@ -43,7 +44,6 @@ const textSize = ref<HTMLInputElement>()
 const higlightColor = ref<HTMLInputElement>()
 const higlighAlpha = ref<HTMLInputElement>()
 // const selection = ref(props.context.selection) 
-
 function toHex(r: number, g: number, b: number) {
     const hex = (n: number) => n.toString(16).toUpperCase().length === 1 ? `0${n.toString(16).toUpperCase()}` : n.toString(16).toUpperCase();
     return '#' + hex(r) + hex(g) + hex(b);
@@ -83,84 +83,115 @@ const onShowSizeBlur = (e: Event) => {
         }, 10)
     }
 }
+const length = computed(() => {
+    return props.textShapes.length === 1;
+})
 // 设置加粗
 const onBold = () => {
     isBold.value = !isBold.value
-    const { textIndex, selectLength } = getTextIndexAndLen()
     const editor = props.context.editor4TextShape(props.shape)
-    if (isSelectText()) {
-        editor.setTextBold(isBold.value, 0, Infinity)
+    if (length.value) {
+        const { textIndex, selectLength } = getTextIndexAndLen()
+        if (isSelectText()) {
+            editor.setTextBold(isBold.value, 0, Infinity)
+        } else {
+            editor.setTextBold(isBold.value, textIndex, selectLength)
+            textFormat()
+        }
     } else {
-        editor.setTextBold(isBold.value, textIndex, selectLength)
-        textFormat()
+        editor.setTextBoldMulti(props.textShapes, isBold.value);
     }
 }
 // 设置文本倾斜
 const onTilt = () => {
-    isTilt.value = !isTilt.value
-    const { textIndex, selectLength } = getTextIndexAndLen()
+    isTilt.value = !isTilt.value;
     const editor = props.context.editor4TextShape(props.shape)
-    if (isSelectText()) {
-        editor.setTextItalic(isTilt.value, 0, Infinity)
+    if (length.value) {
+        const { textIndex, selectLength } = getTextIndexAndLen()
+        if (isSelectText()) {
+            editor.setTextItalic(isTilt.value, 0, Infinity)
+        } else {
+            editor.setTextItalic(isTilt.value, textIndex, selectLength)
+            textFormat()
+        }
     } else {
-        editor.setTextItalic(isTilt.value, textIndex, selectLength)
-        textFormat()
+        editor.setTextItalicMulti(props.textShapes, isTilt.value);
     }
 }
 //设置下划线
 const onUnderlint = () => {
-    isUnderline.value = !isUnderline.value
-    const { textIndex, selectLength } = getTextIndexAndLen()
+    isUnderline.value = !isUnderline.value;
     const editor = props.context.editor4TextShape(props.shape)
-    if (isSelectText()) {
-        editor.setTextUnderline(isUnderline.value, 0, Infinity)
+    if (length.value) {
+        const { textIndex, selectLength } = getTextIndexAndLen()
+        if (isSelectText()) {
+            editor.setTextUnderline(isUnderline.value, 0, Infinity)
+        } else {
+            editor.setTextUnderline(isUnderline.value, textIndex, selectLength)
+            textFormat()
+        }
     } else {
-        editor.setTextUnderline(isUnderline.value, textIndex, selectLength)
-        textFormat()
+        editor.setTextUnderlineMulti(props.textShapes, isUnderline.value);
     }
 }
 // 设置删除线
 const onDeleteline = () => {
-    isDeleteline.value = !isDeleteline.value
-    const { textIndex, selectLength } = getTextIndexAndLen()
+    isDeleteline.value = !isDeleteline.value;
     const editor = props.context.editor4TextShape(props.shape)
-    if (isSelectText()) {
-        editor.setTextStrikethrough(isDeleteline.value, 0, Infinity)
+    if (length.value) {
+        const { textIndex, selectLength } = getTextIndexAndLen()
+        if (isSelectText()) {
+            editor.setTextStrikethrough(isDeleteline.value, 0, Infinity)
+        } else {
+            editor.setTextStrikethrough(isDeleteline.value, textIndex, selectLength)
+            textFormat()
+        }
     } else {
-        editor.setTextStrikethrough(isDeleteline.value, textIndex, selectLength)
-        textFormat()
+        editor.setTextStrikethroughMulti(props.textShapes, isDeleteline.value);
     }
 }
 // 设置水平对齐
 const onSelectLevel = (icon: TextHorAlign) => {
-    selectLevel.value = icon
-    const { textIndex, selectLength } = getTextIndexAndLen()
+    selectLevel.value = icon;
     const editor = props.context.editor4TextShape(props.shape)
-    if (isSelectText()) {
-        editor.setTextHorAlign(icon, 0, Infinity)
+    if (length.value) {
+        const { textIndex, selectLength } = getTextIndexAndLen()
+        if (isSelectText()) {
+            editor.setTextHorAlign(icon, 0, Infinity)
+        } else {
+            editor.setTextHorAlign(icon, textIndex, selectLength)
+            textFormat()
+        }
     } else {
-        editor.setTextHorAlign(icon, textIndex, selectLength)
-        textFormat()
+        editor.setTextHorAlignMulti(props.textShapes, icon);
     }
 }
 //设置垂直对齐
 const onSelectVertical = (icon: TextVerAlign) => {
-    selectVertical.value = icon
+    selectVertical.value = icon;
     const editor = props.context.editor4TextShape(props.shape)
-    editor.setTextVerAlign(icon)
-    textFormat()
+    if (length.value) {
+        editor.setTextVerAlign(icon)
+        textFormat()
+    } else {
+        editor.setTextVerAlignMulti(props.textShapes, icon);
+    }
 }
 //设置字体大小
 const changeTextSize = (size: number) => {
     fonstSize.value = size
     showSize.value = false;
     const editor = props.context.editor4TextShape(props.shape)
-    const { textIndex, selectLength } = getTextIndexAndLen()
-    if (isSelectText()) {
-        editor.setTextFontSize(0, Infinity, size)
+    if (length.value) {
+        const { textIndex, selectLength } = getTextIndexAndLen()
+        if (isSelectText()) {
+            editor.setTextFontSize(0, Infinity, size)
+        } else {
+            editor.setTextFontSize(textIndex, selectLength, size)
+            textFormat()
+        }
     } else {
-        editor.setTextFontSize(textIndex, selectLength, size)
-        textFormat()
+        editor.setTextFontSizeMulti(props.textShapes, size);
     }
 }
 //设置字体
@@ -168,12 +199,16 @@ const setFont = (font: string) => {
     fontName.value = font
     showFont.value = false;
     const editor = props.context.editor4TextShape(props.shape)
-    const { textIndex, selectLength } = getTextIndexAndLen()
-    if (isSelectText()) {
-        editor.setTextFontName(0, Infinity, font)
+    if (length.value) {
+        const { textIndex, selectLength } = getTextIndexAndLen()
+        if (isSelectText()) {
+            editor.setTextFontName(0, Infinity, font)
+        } else {
+            editor.setTextFontName(textIndex, selectLength, font)
+            textFormat()
+        }
     } else {
-        editor.setTextFontName(textIndex, selectLength, font)
-        textFormat()
+        editor.setTextFontNameMulti(props.textShapes, font);
     }
 }
 
@@ -200,7 +235,7 @@ const setTextSize = () => {
     if (fonstSize.value.length < 1) {
         fonstSize.value = 1
     }
-    if (!isNaN(Number(fonstSize.value))) {
+    if (!isNaN(Number(fonstSize.value)) && Number(fonstSize.value > 0)) {
         changeTextSize(fonstSize.value)
         textFormat()
     } else {
@@ -217,35 +252,93 @@ const shapeWatch = watch(() => props.shape, (value, old) => {
 // 获取当前文字格式
 const textFormat = () => {
     if (!props.shape || !props.shape.text) return
-    const { textIndex, selectLength } = getTextIndexAndLen();
-    const editor = props.context.editor4TextShape(props.shape)
-    let format: AttrGetter
-    if (textIndex === -1) {
-        format = props.shape.text.getTextFormat(0, Infinity, editor.getCachedSpanAttr())
+    if (length.value) {
+        const { textIndex, selectLength } = getTextIndexAndLen();
+        const editor = props.context.editor4TextShape(props.shape)
+        let format: AttrGetter
+        if (textIndex === -1) {
+            format = props.shape.text.getTextFormat(0, Infinity, editor.getCachedSpanAttr())
+        } else {
+            format = props.shape.text.getTextFormat(textIndex, selectLength, editor.getCachedSpanAttr())
+        }
+        colorIsMulti.value = format.colorIsMulti
+        highlightIsMulti.value = format.highlightIsMulti
+        selectLevel.value = format.alignment || 'left'
+        selectVertical.value = format.verAlign || 'top'
+        fontName.value = format.fontName || 'PingFangSC-Regular'
+        fonstSize.value = format.fontSize || 14
+        isUnderline.value = format.underline && format.underline !== UnderlineType.None || false;
+        isDeleteline.value = format.strikethrough && format.strikethrough !== StrikethroughType.None || false;
+        textColor.value = format.color
+        highlight.value = format.highlight
+        isBold.value = format.bold || false
+        isTilt.value = format.italic || false
+        if (format.italicIsMulti) isTilt.value = false
+        if (format.boldIsMulti) isBold.value = false
+        if (colorIsMulti.value) mixed.value = true;
+        if (highlightIsMulti.value) higMixed.value = true;
+        if (format.fontNameIsMulti) fontName.value = `${t('attr.more_value')}`
+        if (format.fontSizeIsMulti) fonstSize.value = `${t('attr.more_value')}`
+        if (format.underlineIsMulti) isUnderline.value = false
+        if (format.strikethroughIsMulti) isDeleteline.value = false
+        props.context.workspace.focusText()
     } else {
-        format = props.shape.text.getTextFormat(textIndex, selectLength, editor.getCachedSpanAttr())
+        let formats: any[] = [];
+        let format: any = {};
+        for (let i = 0; i < props.textShapes.length; i++) {
+            const text = props.textShapes[i];
+            const editor = props.context.editor4TextShape(text);
+            const format = text.text.getTextFormat(0, Infinity, editor.getCachedSpanAttr());
+            formats.push(format)
+        }
+        const referenceKeys = Object.keys(formats[0]);
+        for (const key of referenceKeys) {
+            const referenceValue = formats[0][key];
+            let foundEqual = true;
+            for (let i = 1; i < formats.length; i++) {
+                if (key === 'color' || key === 'highlight' && formats[i][key] && referenceValue) {
+                    const { alpha: alpha1, blue: blue1, green: green1, red: red1 } = formats[i][key];
+                    const { alpha: alpha2, blue: blue2, green: green2, red: red2 } = referenceValue;
+                    if (alpha1 !== alpha2 || blue1 !== blue2 || green1 !== green2 || red1 !== red2) {
+                        foundEqual = false;
+                        break;
+                    }
+                } else if (formats[i][key] !== referenceValue) {
+                    foundEqual = false;
+                    break;
+                }
+            }
+            if (foundEqual) {
+                format[key] = referenceValue;
+            } else {
+                format[key] = `unlikeness`;
+            }
+        }
+        colorIsMulti.value = format.colorIsMulti;
+        highlightIsMulti.value = format.highlightIsMulti;
+        selectLevel.value = format.alignment || 'left';
+        selectVertical.value = format.verAlign || 'top';
+        fontName.value = format.fontName || 'PingFangSC-Regular';
+        fonstSize.value = format.fontSize || 14;
+        isUnderline.value = format.underline && format.underline !== UnderlineType.None || false;
+        isDeleteline.value = format.strikethrough && format.strikethrough !== StrikethroughType.None || false;
+        highlight.value = format.highlight;
+        isBold.value = format.bold || false;
+        isTilt.value = format.italic || false;
+        textColor.value = format.color;
+        if (format.fontName === 'unlikeness') fontName.value = `${t('attr.more_value')}`;
+        if (format.fontSize === 'unlikeness') fonstSize.value = `${t('attr.more_value')}`;
+        if (format.alignment === 'unlikeness') selectLevel.value = '';
+        if (format.verAlign === 'unlikeness') selectVertical.value = '';
+        if (format.color === 'unlikeness') colorIsMulti.value = true;
+        if (format.highlight === 'unlikeness') highlightIsMulti.value = true;
+        if (format.bold === 'unlikeness') isBold.value = false;
+        if (format.italic === 'unlikeness') isTilt.value = false;
+        if (format.underline === 'unlikeness') isUnderline.value = false;
+        if (format.strikethrough === 'unlikeness') isDeleteline.value = false;
+        if (format.colorIsMulti === 'unlikeness') colorIsMulti.value = true;
+        if (format.highlightIsMulti === 'unlikeness') highlightIsMulti.value = true;
     }
-    colorIsMulti.value = format.colorIsMulti
-    highlightIsMulti.value = format.highlightIsMulti
-    selectLevel.value = format.alignment || 'left'
-    selectVertical.value = format.verAlign || 'top'
-    fontName.value = format.fontName || 'PingFangSC-Regular'
-    fonstSize.value = format.fontSize || 14
-    isUnderline.value = format.underline && format.underline !== UnderlineType.None || false;
-    isDeleteline.value = format.strikethrough && format.strikethrough !== StrikethroughType.None || false;
-    textColor.value = format.color
-    highlight.value = format.highlight
-    isBold.value = format.bold || false
-    isTilt.value = format.italic || false
-    if (format.italicIsMulti) isTilt.value = false
-    if (format.boldIsMulti) isBold.value = false
-    if (colorIsMulti.value) mixed.value = true;
-    if (highlightIsMulti.value) higMixed.value = true;
-    if (format.fontNameIsMulti) fontName.value = `${t('attr.more_value')}`
-    if (format.fontSizeIsMulti) fonstSize.value = `${t('attr.more_value')}`
-    if (format.underlineIsMulti) isUnderline.value = false
-    if (format.strikethroughIsMulti) isDeleteline.value = false
-    props.context.workspace.focusText()
 }
 
 function selection_wather(t: number) {
@@ -361,22 +454,29 @@ function onColorChange(e: Event, type: string) {
 }
 function getColorFromPicker(color: Color, type: string) {
     const editor = props.context.editor4TextShape(props.shape)
-    const { textIndex, selectLength } = getTextIndexAndLen();
-    if (isSelectText()) {
-        if (type === 'color') {
-            editor.setTextColor(0, Infinity, color)
+    if (length.value) {
+        const { textIndex, selectLength } = getTextIndexAndLen();
+        if (isSelectText()) {
+            if (type === 'color') {
+                editor.setTextColor(0, Infinity, color)
+            } else {
+                editor.setTextHighlightColor(0, Infinity, color)
+            }
         } else {
-            editor.setTextHighlightColor(0, Infinity, color)
+            if (type === 'color') {
+                editor.setTextColor(textIndex, selectLength, color)
+            } else {
+                editor.setTextHighlightColor(textIndex, selectLength, color)
+            }
         }
+        textFormat()
     } else {
         if (type === 'color') {
-            editor.setTextColor(textIndex, selectLength, color)
+            editor.setTextColorMulti(props.textShapes, color)
         } else {
-            editor.setTextHighlightColor(textIndex, selectLength, color)
+            editor.setTextHighlightColorMulti(props.textShapes, color)
         }
     }
-    textFormat()
-
 }
 
 function setColor(idx: number, clr: string, alpha: number, type: string) {
@@ -388,55 +488,74 @@ function setColor(idx: number, clr: string, alpha: number, type: string) {
     const r = Number.parseInt(res[1], 16);
     const g = Number.parseInt(res[2], 16);
     const b = Number.parseInt(res[3], 16);
-    const { textIndex, selectLength } = getTextIndexAndLen();
     const editor = props.context.editor4TextShape(props.shape)
-    if (isSelectText()) {
-        if (type === 'color') {
-            editor.setTextColor(0, Infinity, new Color(alpha, r, g, b))
+    if (length.value) {
+        const { textIndex, selectLength } = getTextIndexAndLen();
+        if (isSelectText()) {
+            if (type === 'color') {
+                editor.setTextColor(0, Infinity, new Color(alpha, r, g, b))
+            } else {
+                editor.setTextHighlightColor(0, Infinity, new Color(alpha, r, g, b))
+            }
         } else {
-            editor.setTextHighlightColor(0, Infinity, new Color(alpha, r, g, b))
+            if (type === 'color') {
+                editor.setTextColor(textIndex, selectLength, new Color(alpha, r, g, b))
+            } else {
+                editor.setTextHighlightColor(textIndex, selectLength, new Color(alpha, r, g, b))
+            }
         }
+        textFormat()
     } else {
         if (type === 'color') {
-            editor.setTextColor(textIndex, selectLength, new Color(alpha, r, g, b))
+            editor.setTextColorMulti(props.textShapes, new Color(alpha, r, g, b))
         } else {
-            editor.setTextHighlightColor(textIndex, selectLength, new Color(alpha, r, g, b))
+            editor.setTextHighlightColorMulti(props.textShapes, new Color(alpha, r, g, b))
         }
     }
-    textFormat()
-
 }
 
 const deleteHighlight = () => {
-    const { textIndex, selectLength } = getTextIndexAndLen();
     const editor = props.context.editor4TextShape(props.shape)
-    if (isSelectText()) {
-        editor.setTextHighlightColor(0, Infinity, undefined)
+    if (length.value) {
+        const { textIndex, selectLength } = getTextIndexAndLen();
+        if (isSelectText()) {
+            editor.setTextHighlightColor(0, Infinity, undefined)
+        } else {
+            editor.setTextHighlightColor(textIndex, selectLength, undefined)
+        }
+        textFormat()
     } else {
-        editor.setTextHighlightColor(textIndex, selectLength, undefined)
+        editor.setTextHighlightColorMulti(props.textShapes, undefined);
     }
-    textFormat()
 }
 
 const addHighlight = () => {
-    const { textIndex, selectLength } = getTextIndexAndLen();
     const editor = props.context.editor4TextShape(props.shape)
-    if (isSelectText()) {
-        editor.setTextHighlightColor(0, Infinity, new Color(1, 216, 216, 216))
+    if (length.value) {
+        const { textIndex, selectLength } = getTextIndexAndLen();
+        if (isSelectText()) {
+            editor.setTextHighlightColor(0, Infinity, new Color(1, 216, 216, 216))
+        } else {
+            editor.setTextHighlightColor(textIndex, selectLength, new Color(1, 216, 216, 216))
+        }
+        textFormat()
     } else {
-        editor.setTextHighlightColor(textIndex, selectLength, new Color(1, 216, 216, 216))
+        editor.setTextHighlightColorMulti(props.textShapes, new Color(1, 216, 216, 216))
     }
-    textFormat()
 }
 const addTextColor = () => {
-    const { textIndex, selectLength } = getTextIndexAndLen();
     const editor = props.context.editor4TextShape(props.shape)
-    if (isSelectText()) {
-        editor.setTextColor(0, Infinity, new Color(1, 6, 6, 6))
+    if (length.value) {
+        const { textIndex, selectLength } = getTextIndexAndLen();
+        if (isSelectText()) {
+            editor.setTextColor(0, Infinity, new Color(1, 6, 6, 6))
+        } else {
+            editor.setTextColor(textIndex, selectLength, new Color(1, 6, 6, 6))
+        }
+        textFormat()
     } else {
-        editor.setTextColor(textIndex, selectLength, new Color(1, 6, 6, 6))
+        editor.setTextColorMulti(props.textShapes, new Color(1, 6, 6, 6))
     }
-    textFormat()
 }
 const selectSizeValue = () => {
     textSize.value && textSize.value.select()
@@ -465,10 +584,11 @@ const filterAlpha = (a: number) => {
     }
 }
 
-watchEffect(() => {
-    textFormat()
-})
+// watchEffect(() => {
+//     textFormat()
+// })
 onMounted(() => {
+    textFormat();
     props.shape.watch(textFormat)
     props.context.selection.watch(selection_wather);
     props.context.workspace.watch(workspace_wather);
@@ -485,7 +605,8 @@ onUnmounted(() => {
     <div class="text-panel">
         <TypeHeader :title="t('attr.text')" class="mt-24">
             <template #tool>
-                <TextAdvancedSettings :context="props.context" :textShape="shape"></TextAdvancedSettings>
+                <TextAdvancedSettings :context="props.context" :textShape="shape" :textShapes="props.textShapes">
+                </TextAdvancedSettings>
             </template>
         </TypeHeader>
         <div class="text-container">
@@ -901,4 +1022,5 @@ onUnmounted(() => {
 
 :deep(.el-tooltip__trigger:focus) {
     outline: none !important;
-}</style>
+}
+</style>

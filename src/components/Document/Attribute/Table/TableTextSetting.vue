@@ -258,7 +258,7 @@ const textFormat = () => {
     if (format.minimumLineHeight === 'unlikeness') rowHeight.value = `${t('attr.more_value')}`;
     if (format.minimumLineHeightIsMulti === 'unlikeness') rowHeight.value = `${t('attr.more_value')}`;
     if (format.kerningIsMulti === 'unlikeness') wordSpace.value = `${t('attr.more_value')}`;
-    if (format.wordSpace === 'unlikeness') wordSpace.value = `${t('attr.more_value')}`;
+    if (format.kerning === 'unlikeness') wordSpace.value = `${t('attr.more_value')}`;
     if (format.paraSpacingIsMulti === 'unlikeness') paragraphSpace.value = `${t('attr.more_value')}`;
     if (format.paraSpacing === 'unlikeness') paragraphSpace.value = `${t('attr.more_value')}`;
     if (format.transformIsMulti === 'unlikeness') selectCase.value = '';

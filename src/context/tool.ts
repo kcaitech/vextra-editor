@@ -14,7 +14,7 @@ export enum Action {
     AddText = 'add-text',
     AddComment = 'add-comment',
     AddImage = 'add-image',
-    AddTable = 'add-table',
+    AddTable = 'table',
     AddContact = 'add-contact',
     AddComponent = 'component'
 }

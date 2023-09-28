@@ -107,7 +107,7 @@ export function keyboardHandle(e: KeyboardEvent, context: Context, t: Function) 
             if (selected.length) replace(context, t, selected);
         }
     } else if (e.code === 'KeyX') {
-        if (!(ctrlKey || metaKey)) return;
+        if (!(ctrlKey || metaKey) || shiftKey) return;
         context.workspace.clipboard.cut().then((res) => {
             if (res) {
                 context.selection.resetSelectShapes();
