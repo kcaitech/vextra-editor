@@ -1,4 +1,4 @@
-import { ISave4Restore, Matrix, TableShape, Watchable } from "@kcdesign/data";
+import { ISave4Restore, Matrix, TableShape, Watchable, ShapeType, SymbolRefShape } from "@kcdesign/data";
 import { Document } from "@kcdesign/data";
 import { Page } from "@kcdesign/data";
 import { Shape, Text } from "@kcdesign/data";
@@ -193,18 +193,18 @@ export class Selection extends Watchable(Object) implements ISave4Restore {
      * @returns 符合检索条件的图形
      */
     getShapesByXY(position: PageXY, isCtrl: boolean, scope?: Shape[]): Shape | undefined {
-        // const s = Date.now();
+        const s = Date.now();
         let shape: Shape | undefined;
         if (this.scout) {
             const page = this.m_selectPage!;
             const childs: Shape[] = scope || page.childs;
             shape = finder(this.m_context, this.scout, childs, position, this.selectedShapes[0], isCtrl)
         }
-        // this.m_count++;
-        // if (this.m_count > 100) {
-        //     console.log('computing: ', Date.now() - s);
-        //     this.m_count = 0;
-        // }
+        this.m_count++;
+        if (this.m_count > 100) {
+            console.log('computing: ', Date.now() - s);
+            this.m_count = 0;
+        }
         return shape;
     }
 
@@ -341,4 +341,53 @@ export class Selection extends Watchable(Object) implements ISave4Restore {
     restore(saved: any): void {
         throw new Error("Method not implemented.");
     }
+    test() {
+        is_circular_ref(this.m_selectShapes[0], this.m_selectShapes[1] as SymbolRefShape);
+    }
+}
+export function is_circular_ref(symbol: Shape, ref: SymbolRefShape): boolean {
+    let deps: { shape: string, ref: string }[] = [...get_topology_map(symbol), { shape: symbol.id, ref: ref.id }];
+    if (deps.length < 2) return false;
+    // 过滤左侧
+    deps = filter_deps(deps, 'shape', 'ref');
+    // 过滤右侧
+    deps = filter_deps(deps, 'ref', 'shape');
+    return !!deps.length;
+}
+function get_topology_map(shape: Shape, init?: { shape: string, ref: string }[]) {
+    let deps: { shape: string, ref: string }[] = init || [];
+    const childs = shape.type === ShapeType.SymbolRef ? shape.naviChilds : shape.childs;
+    if (!childs || childs.length === 0) return [];
+    for (let i = 0, len = childs.length; i < len; i++) {
+        const child = childs[i];
+        deps.push({ shape: shape.id, ref: childs[i].id });
+        const c_childs = child.type === ShapeType.SymbolRef ? child.naviChilds : child.childs;
+        if (c_childs && c_childs.length) deps = [...get_topology_map(child, deps)];
+    }
+    return deps;
+}
+
+function filter_deps(deps: { shape: string, ref: string }[], key1: 'shape' | 'ref', key2: 'shape' | 'ref') {
+    const result: { shape: string, ref: string }[] = [];
+    const _checked: Map<string, 1> = new Map();
+    const _checked_invalid: Map<string, 1> = new Map();
+    for (let i = 0, len = deps.length; i < len; i++) {
+        const d = deps[i];
+        if (_checked.get(d[key1])) {
+            result.push(d);
+            continue;
+        }
+        if (_checked_invalid.get(d[key1])) continue;
+        let invalid: boolean = true;
+        for (let j = 0, len = deps.length; j < len; j++) {
+            if (deps[j][key2] === d[key1]) {
+                result.push(d);
+                _checked.set(d[key1], 1);
+                invalid = false;
+                break;
+            }
+        }
+        if (invalid) _checked_invalid.set(d[key1], 1);
+    }
+    return result;
 }
