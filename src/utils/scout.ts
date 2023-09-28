@@ -160,10 +160,8 @@ export function finder(context: Context, scout: Scout, g: Shape[], position: Pag
         if (!canBeTarget(item)) continue;
         if (isShapeOut(context, item)) continue;
         if (item.type === ShapeType.Symbol && item.isUnionSymbolShape) {
-            // if (!context.assist.is_shape_in_view(item)) continue;
             result = finder_symbol_union(context, scout, item as GroupShape, position, selected, isCtrl);
         } else if (item.type === ShapeType.Symbol || item.type === ShapeType.SymbolRef) {
-            // if (!context.assist.is_shape_in_view(item)) continue;
             result = finder_symbol(context, scout, item as SymbolShape, position, selected, isCtrl);
         }
         if (result) break;
