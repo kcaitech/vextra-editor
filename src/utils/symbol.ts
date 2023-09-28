@@ -1,6 +1,17 @@
 import { Context } from "@/context";
-import { Shape, ShapeType, SymbolShape } from "@kcdesign/data";
-import { get_component_state_name } from "./content";
+import { GroupShape, Shape, ShapeType, SymbolShape } from "@kcdesign/data";
+import { getName, get_component_state_name } from "./content";
+import { sort_by_layer } from "./group_ungroup";
+
+export function make_symbol(context: Context, t: Function) {
+    const selected = context.selection.selectedShapes;
+    const page = context.selection.selectedPage;
+    if (!page || !selected.length) return false;
+    const editor = context.editor4Page(page);
+    const name = getName(ShapeType.Symbol, context.data.symbolsMgr.resource, t);
+    const shapes: Shape[] = sort_by_layer(context, selected);
+    return editor.makeSymbol(context.data, shapes, name);
+}
 
 export function make_union(context: Context, t: Function) {
     const selected = context.selection.selectedShapes;

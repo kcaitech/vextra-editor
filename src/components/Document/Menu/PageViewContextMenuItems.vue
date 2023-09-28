@@ -15,7 +15,7 @@ import { paster, paster_inner_shape, replace } from '@/utils/clipboard';
 import { sort_by_layer } from '@/utils/group_ungroup';
 import { Menu } from '@/context/menu';
 import TableMenu from "./TableMenu/TableMenu.vue"
-import { make_union } from '@/utils/symbol';
+import { make_symbol, make_union } from '@/utils/symbol';
 const { t } = useI18n();
 interface Props {
   context: Context,
@@ -328,16 +328,9 @@ function unGroup() {
   emit('close');
 }
 function component() {
-  const selection = props.context.selection;
-  const page = selection.selectedPage;
-  if (page) {
-    const editor = props.context.editor4Page(page);
-    const name = getName(ShapeType.Symbol, props.context.data.symbolsMgr.resource, t);
-    const shapes = sort_by_layer(props.context, selection.selectedShapes);
-    const symbol = editor.makeSymbol(props.context.data, shapes, name);
-    if (symbol) {
-      selection.selectShape(symbol as unknown as Shape);
-    }
+  const symbol = make_symbol(props.context, t);
+  if (symbol) {
+    props.context.selection.selectShape(symbol as unknown as Shape);
   }
   emit('close');
 }

@@ -10,6 +10,7 @@ import { debounce } from "lodash";
 import { WorkSpace } from "@/context/workspace";
 import { Menu } from "@/context/menu";
 import { sort_by_layer } from "./group_ungroup";
+import { make_symbol } from "./symbol";
 
 export function keyboardHandle(e: KeyboardEvent, context: Context, t: Function) {
     if (!permIsEdit(context) || context.tool.action === Action.AddComment) return;
@@ -135,16 +136,9 @@ export function keyboardHandle(e: KeyboardEvent, context: Context, t: Function) 
         }
     } else if (e.code === 'KeyK') {
         if (altKey && (ctrlKey || metaKey)) {
-            const selection = context.selection;
-            const page = selection.selectedPage;
-            if (page) {
-                const editor = context.editor4Page(page);
-                const name = getName(ShapeType.Symbol, context.data.symbolsMgr.resource, t);
-                const shapes = sort_by_layer(context, selection.selectedShapes);
-                const symbol = editor.makeSymbol(context.data, shapes, name);
-                if (symbol) {
-                    selection.selectShape(symbol as unknown as Shape);
-                }
+            const symbol = make_symbol(context, t);
+            if (symbol) {
+                context.selection.selectShape(symbol as unknown as Shape);
             }
         }
     }
