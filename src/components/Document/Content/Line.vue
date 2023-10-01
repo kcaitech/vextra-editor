@@ -27,9 +27,3 @@ function render() {
 <template>
     <render></render>
 </template>
-
-<style scoped>
-/* rect {
-    background-color: aqua;
-} */
-</style>

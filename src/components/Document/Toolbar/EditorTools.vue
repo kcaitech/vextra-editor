@@ -14,6 +14,7 @@ import CreateText from "./Buttons/CreateText.vue";
 import CreateImage from "./Buttons/CreateImage.vue";
 import Table from "./Buttons/Table/index.vue"
 import Comment from "./Buttons/Comment.vue"
+import Contact from "./Buttons/CreateContact.vue";
 import { WorkSpace, Perm } from "@/context/workspace";
 import { Action, Tool } from "@/context/tool";
 import { useI18n } from 'vue-i18n'
@@ -47,6 +48,8 @@ function tool_watcher(t?: number) {
 //获取文档权限
 const hangdlePerm = () => {
     const perm = props.context.workspace.documentPerm
+    console.log(perm,'perm');
+    
     if (perm === Perm.isRead) {
         isread.value = true
     } else if (perm === Perm.isComment) {
@@ -81,6 +84,7 @@ onUnmounted(() => {
         <CreateText @select="select" :active="selected === Action.AddText"></CreateText>
         <CreateImage :active="selected === Action.AddImage" :context="props.context"></CreateImage>
         <Table @select="select" :active="selected === Action.AddTable" :context="props.context"></Table>
+        <Contact @select="select" :active="selected === Action.AddContact" :context="props.context"></Contact>
         <div class="vertical-line" />
         <el-tooltip class="box-item" effect="dark" :content="string_by_sys(`${t('navi.comps')} &nbsp;&nbsp; Shift I`)"
             placement="bottom" :show-after="500" :offset="10" :hide-after="0">

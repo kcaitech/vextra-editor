@@ -1,5 +1,5 @@
 <script setup lang="ts">
-import { onMounted, onUnmounted, shallowRef, ref, watchEffect, nextTick } from 'vue';
+import { onMounted, onUnmounted, shallowRef, ref, watchEffect } from 'vue';
 import ContentView from "./ContentView.vue";
 import { Context } from '@/context';
 import Navigation from './Navigation/index.vue';
@@ -143,11 +143,12 @@ function keyboardEventHandler(event: KeyboardEvent) {
                 shiftKey ? keyToggleTB() : keyToggleLR();
             }
         }
-        if (context && context.workspace.documentPerm !== Perm.isEdit) {
+        if (context.workspace.documentPerm !== Perm.isEdit) {
             if (permKeyBoard(event)) {
                 context.workspace.keyboardHandle(event); // 只读可评论的键盘事件
             }
         } else {
+            context.esctask.keyboardHandle(event);
             context.workspace.keyboardHandle(event); // 编辑器相关的键盘事件
             context.tool.keyhandle(event);
         }
@@ -176,7 +177,7 @@ const showHiddenRight = () => {
 }
 const showHiddenLeft = () => {
     if (!context) return;
-    const w = context.workspace;    
+    const w = context.workspace;
     if (showLeft.value) {
         Left.value.leftMin = 0
         Left.value.leftWidth = 0
@@ -216,9 +217,9 @@ function keyToggleTB() {
     showHiddenRight();
     showBottom.value = !showBottom.value;
     showTop.value = showBottom.value;
-    if(showTop.value) {
+    if (showTop.value) {
         context.workspace.matrix.trans(0, -40);
-    }else {
+    } else {
         context.workspace.matrix.trans(0, 40);
     }
     context.workspace.notify(WorkSpace.MATRIX_TRANSFORMATION);
@@ -363,8 +364,10 @@ const getDocumentInfo = async () => {
             const file_name = docInfo.value.document?.name || document.name;
             window.document.title = file_name.length > 8 ? `${file_name.slice(0, 8)}... - ProtoDesign` : `${file_name} - ProtoDesign`;
             context = new Context(document, coopRepo);
+            context.workspace.setDocumentPerm(dataInfo.data.document_permission.perm_type)
             getDocumentAuthority();
             getUserInfo()
+            
             context.comment.setDocumentInfo(dataInfo.data)
             null_context.value = false;
             context.selection.watch(selectionWatcher);
@@ -442,7 +445,9 @@ function init_doc() {
             getUserInfo();
             context.selection.watch(selectionWatcher);
             context.workspace.watch(workspaceWatcher);
-            upload("");
+            const project_id = localStorage.getItem('project_id') || '';
+            upload(project_id);
+            localStorage.setItem('project_id', '');
             switchPage(((window as any).sketchDocument as Document).pagesList[0]?.id);
             document.addEventListener('keydown', keyboardEventHandler);
         } else {
@@ -635,8 +640,8 @@ onUnmounted(() => {
         <div id="visit">
             <ApplyFor></ApplyFor>
         </div>
-        <ColSplitView id="center" :style="{height: showTop ? 'calc(100% - 40px)' : '100%'}" v-if="!loading && !null_context"
-            :left="{ width: Left.leftWidth, minWidth: Left.leftMinWidth, maxWidth: 0.5 }"
+        <ColSplitView id="center" :style="{ height: showTop ? 'calc(100% - 40px)' : '100%' }"
+            v-if="!loading && !null_context" :left="{ width: Left.leftWidth, minWidth: Left.leftMinWidth, maxWidth: 0.5 }"
             :middle="{ width: middleWidth, minWidth: middleMinWidth, maxWidth: middleWidth }"
             :right="{ width: Right.rightWidth, minWidth: Right.rightMinWidth, maxWidth: 0.5 }"
             :right-min-width-in-px="Right.rightMin" :left-min-width-in-px="Left.leftMin" :context="context!">
@@ -714,6 +719,8 @@ onUnmounted(() => {
     top: 45px;
     right: 10px;
     z-index: 999;
+    overflow: hidden;
+    height: calc(100% - 45px);
 }
 
 #center {

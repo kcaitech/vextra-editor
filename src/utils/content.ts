@@ -1,7 +1,7 @@
 import { debounce } from "lodash";
 import { Context } from "@/context";
 import { ClientXY, PageXY } from "@/context/selection";
-import { AsyncCreator, Shape, ShapeFrame, ShapeType, GroupShape, TextShape, Matrix, Color, TableShape } from "@kcdesign/data";
+import { AsyncCreator, Shape, ShapeFrame, ShapeType, GroupShape, TextShape, Matrix, Color, TableShape, ContactForm } from "@kcdesign/data";
 import { Action, ResultByAction } from "@/context/tool";
 import { Perm, WorkSpace } from '@/context/workspace';
 import { XYsBounding } from '@/utils/common';
@@ -102,7 +102,26 @@ function init_shape(context: Context, frame: ShapeFrame, mousedownOnPageXY: Page
     } else {
       new_shape = asyncCreator.init(page, (parent as GroupShape), type, name, frame);
     }
-
+  }
+  if (asyncCreator && new_shape) {
+    selection.selectShape(new_shape);
+    workspace.creating(true);
+    return { asyncCreator, new_shape };
+  }
+}
+export function init_contact_shape(context: Context, frame: ShapeFrame, mousedownOnPageXY: PageXY, t: Function, apex?: ContactForm, p2?: PageXY) {
+  const selection = context.selection, workspace = context.workspace;
+  const page = selection.selectedPage;
+  let asyncCreator: AsyncCreator | undefined, new_shape: Shape | undefined;
+  if (page) {
+    const editor = context.editor.controller();
+    const name = getName(ShapeType.Contact, page.childs, t);
+    if (apex && p2) {
+      frame.x = p2.x, frame.y = p2.y;
+      mousedownOnPageXY.x = p2.x, mousedownOnPageXY.y = p2.y;
+    }
+    asyncCreator = editor.asyncCreator(mousedownOnPageXY);
+    new_shape = asyncCreator.init_contact(page, page, frame, name, apex);
   }
   if (asyncCreator && new_shape) {
     selection.selectShape(new_shape);
@@ -640,6 +659,17 @@ function skipUserSelectShapes(context: Context, shapes: Shape[]) {
     matrix.trans(del.x, del.y);
     context.workspace.matrixTransformation();
   }
+}
+export function map_from_shapes(shapes: Shape[], init?: Map<string, Shape>) {
+  const map: Map<string, Shape> = init || new Map();
+  for (let i = 0, len = shapes.length; i < len; i++) {
+    const shape = shapes[i];
+    map.set(shape.id, shape);
+    if (shape.childs && shape.childs.length) {
+      map_from_shapes(shape.childs, map);
+    }
+  }
+  return map;
 }
 export {
   Root, updateRoot, _updateRoot,

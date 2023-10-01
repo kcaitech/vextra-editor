@@ -102,18 +102,19 @@ function line_leave() {
   show_index.value = -1;
 }
 function n_point_down(event: MouseEvent) {
-  if (event.button !== 0) return;
-  props.context.menu.menuMount();
-  const workspace = props.context.workspace;
-  workspace.setCtrl('controller');
-  const root = workspace.root;
-  startPosition = { x: event.clientX - root.x, y: event.clientY - root.y };
-  cur_new_node = lines[show_index.value - 1];
-  down_index = show_index.value;
-  document.addEventListener('mousemove', n_point_mousemove);
-  document.addEventListener('mouseup', point_mouseup);
-  move = n_point_mousemove;
-  event.stopPropagation();
+  return;
+  // if (event.button !== 0) return;
+  // props.context.menu.menuMount();
+  // const workspace = props.context.workspace;
+  // workspace.setCtrl('controller');
+  // const root = workspace.root;
+  // startPosition = { x: event.clientX - root.x, y: event.clientY - root.y };
+  // cur_new_node = lines[show_index.value - 1];
+  // down_index = show_index.value;
+  // document.addEventListener('mousemove', n_point_mousemove);
+  // document.addEventListener('mouseup', point_mouseup);
+  // move = n_point_mousemove;
+  // event.stopPropagation();
 }
 function n_point_mousemove(event: MouseEvent) {
   const workspace = props.context.workspace;

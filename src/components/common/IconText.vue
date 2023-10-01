@@ -93,7 +93,6 @@ const onMouseDown = (e: MouseEvent) => {
     document.addEventListener('mouseup', onMouseUp)
 
 }
-let posi = 0
 const onMouseMove = (e: MouseEvent) => {
     //鼠标移动的距离
     let mx = e.screenX - curpt.x
@@ -104,41 +103,6 @@ const onMouseMove = (e: MouseEvent) => {
     scale.value.axleX = Number((mx).toFixed(2))
     //角度移动的大小
     scale.value.degX = Number((mx / 5).toFixed(2))
-
-    // if(isDrag.value) {
-    //      //鼠标移动的距离
-    //     let mx = e.clientX - curpt.x
-    //     if (isDrag.value && mx > 4 || mx < -4) {
-    //         curpt.x = e.clientX
-    //     }
-    //     if(mx > 0) {
-    //         posi === 5 ? posi = 6 : posi = 5
-    //          //坐标移动的大小
-    //         scale.value.axleX = Number((posi).toFixed(2))
-    //         //角度移动的大小
-    //         scale.value.degX = Number((posi / 5).toFixed(2))
-    //     }else if (mx < 0) {
-    //         posi === -6 ? posi = -5 : posi = -6
-    //         //坐标移动的大小
-    //         scale.value.axleX = Number((posi).toFixed(2))
-    //         //角度移动的大小
-    //         scale.value.degX = Number((posi / 5).toFixed(2))
-    //     } else if (mx === 0 && e.clientX <= 0 || e.clientX >= (screenWidth.value - 2)) {
-    //         if(e.clientX > 0) {
-    //             posi === 6 ? posi = 5 : posi = 6
-    //          //坐标移动的大小
-    //             scale.value.axleX = Number((posi).toFixed(2))
-    //             //角度移动的大小
-    //             scale.value.degX = Number((posi / 5).toFixed(2))
-    //         }else {
-    //             posi === -6 ? posi = -5 : posi = -6
-    //             //坐标移动的大小
-    //             scale.value.axleX = Number((posi).toFixed(2))
-    //             //角度移动的大小
-    //             scale.value.degX = Number((posi / 5).toFixed(2))
-    //         }
-    //     }
-    // }
 }
 const onMouseUp = (e: MouseEvent) => {
     isDrag.value = false

@@ -9,7 +9,7 @@
           <Aside @settitle="setTitle" />
         </el-aside>
         <el-main>
-          <Main :title="title" @data-update="update" />
+          <Main @dataUpdate="update" />
         </el-main>
       </el-container>
     </el-container>
@@ -21,63 +21,200 @@
 import Aside from './Aside.vue';
 import Header from './Header.vue';
 import Main from './Main.vue';
-import { ref, onMounted, onUnmounted } from 'vue';
+import { ref, onUnmounted, provide } from 'vue';
 import { useI18n } from 'vue-i18n';
 import { NetworkStatus } from '@/communication/modules/network_status'
 import { insertNetworkInfo } from "@/utils/message"
+import * as user_api from '@/apis/users'
+import * as team_api from '@/apis/users'
+
 const { t } = useI18n();
 const title = ref<any>(sessionStorage.getItem('title') ? sessionStorage.getItem('title') : t('home.recently_opened'));
 const searchtitle = ref('')
 let items = ref<any[]>([])
 const link_success = t('message.link_success')
 const network_anomaly = t('message.network_anomaly')
+const teamID = ref('')
+const teamName = ref('')
+const teamAvatar = ref('')
+const teamDescription = ref('')
+const teamSelfPermType = ref<number>()
+const teamData = ref<any[]>([]) //储存团队列表
+const updatestate = ref(false) //控制aside组件中的团队列表请求
+const updateprojectlist = ref(false)  //控制projectlist组件中的项目列表请求
+const projectList = ref<any[]>([]);
+const favoriteList = ref<any[]>([]);
+const is_favor = ref<boolean>();
+const is_team_upodate = ref<boolean>(false);
+const activeNames = ref<any[]>([-1])
+const targetItem = ref<any[]>([])
+const recycle = ref();
+const menuState = ref(false);
 
-function setTitle(t: string) {
+const updateShareData = (id: string, name: string, avatar: string, description: string, selfpermtype: number) => {
+  teamID.value = id
+  teamName.value = name
+  teamAvatar.value = avatar
+  teamDescription.value = description
+  teamSelfPermType.value = selfpermtype
+}
+
+const setMenuVisi = (state: boolean) => {
+  menuState.value = state;
+}
+
+//添加targetitem的值
+const addTargetItem = (data: any[]) => {
+  targetItem.value = data
+}
+
+//用户改变activeNames的值
+const updateActiveNames = {
+  add: (n: number) => activeNames.value.push(n),
+  del: (n: number) => activeNames.value = activeNames.value.filter(item => item != n)
+}
+
+
+//用于改变updatestate的值
+const state = (b: boolean) => {
+  updatestate.value = b
+}
+
+const updateFavor = (s: boolean) => {
+  is_favor.value = s
+}
+const teamUpdate = (b: boolean) => {
+  is_team_upodate.value = b
+}
+
+//将获取的团队列表保存在到teamData
+const upDateTeamData = (data: any[]) => {
+  teamData.value = data
+}
+
+const saveProjectData = (data: any[]) => {
+  projectList.value = data
+}
+
+const favoriteListsData = (data: any[]) => {
+  favoriteList.value = data
+}
+
+const updateProject = () => {
+  GetprojectLists();
+}
+
+//用于改变updateprojectlist的值
+const updateprojectliststate = (b: boolean) => {
+  updateprojectlist.value = b
+}
+const GetprojectLists = async () => {
+  try {
+    const { data } = await user_api.GetprojectLists()
+    const project = favoriteProjectList(data, favoriteList.value)
+    saveProjectData(project)
+  } catch (error) {
+    console.log(error);
+  }
+}
+GetprojectLists();
+
+setInterval(() => {
+  GetprojectLists();
+}, 60000);
+const favoriteProjectList = (arr1: any[], arr2: any[]) => {
+  const projectList = arr1.map(item => {
+    item.is_favor = arr2.some(value => value.project.id === item.project.id)
+    return item;
+  })
+  return projectList;
+}
+
+provide('shareData', {
+  teamID,
+  teamName,
+  teamAvatar,
+  teamDescription,
+  teamSelfPermType,
+  updateShareData,
+  //
+  updatestate,
+  state,
+  //
+  teamData,
+  upDateTeamData,
+  //
+  updateprojectlist,
+  updateprojectliststate,
+  //
+  projectList,
+  saveProjectData,
+  //
+  favoriteList,
+  favoriteListsData,
+  //
+  is_favor,
+  updateFavor,
+  //
+  is_team_upodate,
+  teamUpdate,
+  //
+  activeNames,
+  updateActiveNames,
+  //
+  targetItem,
+  addTargetItem,
+  updateProject,
+  setMenuVisi,
+  menuState
+})
+function setTitle(t: string, tyep: boolean) {
   title.value = t;
+  recycle.value = tyep;
   sessionStorage.setItem('title', title.value)
 }
 
 //===>接收到最新的lists,props传给Headher组件
 const update = (data: any, title: any) => {
   //main组件传过来的lists和title
-  items.value = data
+  items.value = data || []
   searchtitle.value = title
 }
 
 //网络连接成功message信息
 const networkLinkSuccess = () => {
-    insertNetworkInfo('netError', false, network_anomaly)
-    insertNetworkInfo('networkSuccess', true, link_success)
-    const timer = setTimeout(() => {
-        insertNetworkInfo('networkSuccess', false, link_success)
-        clearTimeout(timer)
-    }, 3000)
+  insertNetworkInfo('netError', false, network_anomaly)
+  insertNetworkInfo('networkSuccess', true, link_success)
+  const timer = setTimeout(() => {
+    insertNetworkInfo('networkSuccess', false, link_success)
+    clearTimeout(timer)
+  }, 3000)
 }
 // 网络断开连接提示信息
 const networkLinkError = () => {
-    insertNetworkInfo('networkSuccess', false, link_success)
-    insertNetworkInfo('netError', true, network_anomaly)
-    const timer = setTimeout(() => {
-        insertNetworkInfo('netError', false, network_anomaly)
-        clearTimeout(timer)
-    }, 3000)
+  insertNetworkInfo('networkSuccess', false, link_success)
+  insertNetworkInfo('netError', true, network_anomaly)
+  const timer = setTimeout(() => {
+    insertNetworkInfo('netError', false, network_anomaly)
+    clearTimeout(timer)
+  }, 3000)
 }
 const token = localStorage.getItem("token") || "";
 const networkStatus = NetworkStatus.Make(token);
 networkStatus.addOnChange((status: any) => {
-    const s = (status.status)as any
-    if(s === 1) {
-      // 网络断开连接
-      networkLinkError()
-    }else {
-      // 网络连接成功
-      networkLinkSuccess()
-    }
+  const s = (status.status) as any
+  if (s === 1) {
+    // 网络断开连接
+    networkLinkError()
+  } else {
+    // 网络连接成功
+    networkLinkSuccess()
+  }
 })
 
 const closeNetMsg = () => {
-    insertNetworkInfo('netError', false, network_anomaly)
-    insertNetworkInfo('networkSuccess', false, link_success)
+  insertNetworkInfo('netError', false, network_anomaly)
+  insertNetworkInfo('networkSuccess', false, link_success)
 }
 
 onUnmounted(() => {
@@ -88,16 +225,19 @@ onUnmounted(() => {
 </script>
 
 <style lang="scss" scoped>
-.common-layout{
+.common-layout {
   height: 100vh;
   overflow: hidden;
 }
-.el-header{
+
+.el-header {
   margin-top: 8px;
 }
-.el-main{
+
+.el-main {
   padding-top: 0;
 }
+
 .el-aside {
   border-right: rgba(239, 239, 239, 0.838) solid 1px;
   transition: all .3s ease-in-out;
@@ -105,7 +245,7 @@ onUnmounted(() => {
 
 @media screen and (max-width:1000px) {
   .el-aside {
-    width:60px;
+    width: 60px;
   }
 
 }

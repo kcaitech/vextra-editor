@@ -3,7 +3,7 @@ import { Document } from "@kcdesign/data";
 import { Page } from "@kcdesign/data";
 import { Shape, Text } from "@kcdesign/data";
 import { cloneDeep } from "lodash";
-import { scout, Scout, finder, finder_layers, artboardFinder } from "@/utils/scout";
+import { scout, Scout, finder, finder_layers, artboardFinder, finder_contact } from "@/utils/scout";
 import { Artboard } from "@kcdesign/data";
 import { Context } from ".";
 import { TextSelection } from "./textselection";
@@ -194,7 +194,6 @@ export class Selection extends Watchable(Object) implements ISave4Restore {
     getShapesByXY(position: PageXY, isCtrl: boolean, scope?: Shape[]): Shape[] {
         const shapes: Shape[] = [];
         if (this.scout) {
-            position = cloneDeep(position);
             const page = this.m_selectPage!;
             const childs: Shape[] = scope || page.childs;
             shapes.push(...finder(this.scout, childs, position, this.selectedShapes[0], isCtrl));
@@ -202,10 +201,20 @@ export class Selection extends Watchable(Object) implements ISave4Restore {
         return shapes;
     }
 
-    getClosetArtboard(position: PageXY, except?: Shape, scope?: Shape[]): Shape {
+    getContactByXY(position: PageXY, scope?: Shape[]): Shape[] {
+        const shapes: Shape[] = [];
+        if (this.scout) {
+            const page = this.m_selectPage!;
+            const childs: Shape[] = scope || page.childs;
+            shapes.push(...finder_contact(this.scout, childs, position, this.selectedShapes[0]));
+        }
+        return shapes;
+    }
+
+    getClosetArtboard(position: PageXY, except?: Map<string, Shape>, scope?: Shape[]): Shape {
         let result: Shape = this.selectedPage!; // 任何一个元素,至少在一个容器内
         const range: Shape[] = scope || this.m_selectPage?.artboardList.filter((ab: Artboard) => !ab.isLocked && ab.isVisible) || [];
-        const artboard = artboardFinder(this.scout!, range, position, except);
+        const artboard = artboardFinder(this.scout!, range, position, except);        
         if (artboard) {
             result = artboard;
         }
@@ -269,14 +278,13 @@ export class Selection extends Watchable(Object) implements ISave4Restore {
 
     hoverShape(shape: Shape) {
         if (shape.id !== this.hoveredShape?.id) {
-            this.m_hoverShape = undefined;
             this.m_hoverShape = shape;
             this.notify(Selection.CHANGE_SHAPE_HOVER);
         }
     }
 
     unHoverShape() {
-        const needNotify = this.m_hoverShape ? true : false; // 时机很重要
+        const needNotify = this.m_hoverShape ? true : false;
         this.m_hoverShape = undefined;
         if (needNotify) {
             this.notify(Selection.CHANGE_SHAPE_HOVER);

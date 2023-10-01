@@ -16,9 +16,10 @@ router.beforeEach((to, from, next) => {
         })) {
             if(to.name==='privacypolicy'){
                 document.title='隐私协议'
-            }
-            if(to.name==='serviceagreement'){
+            }else if(to.name==='serviceagreement'){
                 document.title='服务协议'
+            }else{
+                document.title='protodesign'
             }
             next()
         } else {

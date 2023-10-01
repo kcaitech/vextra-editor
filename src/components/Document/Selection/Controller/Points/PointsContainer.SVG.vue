@@ -1,13 +1,13 @@
 <script setup lang='ts'>
 import { Context } from '@/context';
 import { AsyncBaseAction, CtrlElementType, Matrix, Shape } from '@kcdesign/data';
-import { onMounted, onUnmounted, watch, reactive, ref } from 'vue';
+import { onMounted, onUnmounted, watch, reactive } from 'vue';
 import { ClientXY, PageXY } from '@/context/selection';
 import { getAngle } from '@/utils/common';
 import { update_dot } from './common';
 import { Point } from "../../SelectionView.vue";
 import { Action } from '@/context/tool';
-import { Asssit, PointType } from '@/context/assist';
+import { PointType } from '@/context/assist';
 
 interface Props {
   matrix: number[]
@@ -93,8 +93,8 @@ function point_mousemove(event: MouseEvent) {
       asyncBaseAction.executeRotate(deg);
     } else {
       const action = props.context.tool.action;
-      const p1: PageXY = submatrix.computeCoord(startPosition.x, startPosition.y);
-      let p2: PageXY = submatrix.computeCoord(mouseOnClient.x, mouseOnClient.y);
+      const p1: PageXY = submatrix.computeCoord3(startPosition);
+      let p2: PageXY = submatrix.computeCoord3(mouseOnClient);
       if (event.shiftKey || props.shape.constrainerProportions || action === Action.AutoK) {
         p2 = get_t(cur_ctrl_type, p1, p2);
         asyncBaseAction.executeScale(cur_ctrl_type, p2);
@@ -110,7 +110,7 @@ function point_mousemove(event: MouseEvent) {
       submatrix.reset(workspace.matrix.inverse);
       cur_ctrl_type.endsWith('rotate') ? workspace.rotating(true) : workspace.scaling(true);
       asyncBaseAction = props.context.editor.controller().asyncRectEditor(props.shape, props.context.selection.selectedPage!);
-      props.context.assist.setTransTarget([props.shape]);
+      props.context.assist.set_trans_target([props.shape]);
     }
   }
 }
@@ -149,26 +149,36 @@ function get_t(cct: CtrlElementType, p1: PageXY, p2: PageXY): PageXY {
     return m.computeCoord(pre_delta.x, f.height - pre_delta.x * (1 / r));
   } else return p2
 }
+let pre_target_x: number, pre_target_y: number;
 function scale(asyncBaseAction: AsyncBaseAction, p2: PageXY) {
   const stickness = props.context.assist.stickness;
-  const target = props.context.assist.point_match(props.shape, pointType);
-  if (target) {
-    if (stickedX) {
-      if (Math.abs(p2.x - sticked_x_v) > stickness) stickedX = false;
-      else p2.x = sticked_x_v;
-    } else if (target.sticked_by_x) {
-      p2.x = target.x;
-      sticked_x_v = p2.x;
-      stickedX = true;
+  const target = props.context.assist.point_match(p2);
+  if (!target) return asyncBaseAction.executeScale(cur_ctrl_type, p2);
+  if (stickedX) {
+    if (Math.abs(p2.x - sticked_x_v) >= stickness) {
+      stickedX = false
+    } else {
+      if (pre_target_x === target.x) {
+        p2.x = sticked_x_v;
+      } else if (target.sticked_by_x) {
+        modify_fix_x(p2, target.x);
+      }
     }
-    if (stickedY) {
-      if (Math.abs(p2.y - sticked_y_v) > stickness) stickedY = false;
-      else p2.y = sticked_y_v;
-    } else if (target.sticked_by_y) {
-      p2.y = target.y;
-      sticked_y_v = p2.y;
-      stickedY = true;
+  } else if (target.sticked_by_x) {
+    modify_fix_x(p2, target.x);
+  }
+  if (stickedY) {
+    if (Math.abs(p2.y - sticked_y_v) >= stickness) {
+      stickedY = false;
+    } else {
+      if (pre_target_y === target.x) {
+        p2.y = sticked_y_v;
+      } else if (target.sticked_by_y) {
+        modify_fix_y(p2, target.y);
+      }
     }
+  } else if (target.sticked_by_y) {
+    modify_fix_y(p2, target.y);
   }
   asyncBaseAction.executeScale(cur_ctrl_type, p2);
 }
@@ -186,6 +196,18 @@ function point_mouseup(event: MouseEvent) {
   workspace.rotating(false);
   workspace.setCtrl('page');
   props.context.cursor.reset();
+}
+function modify_fix_x(p2: PageXY, fix: number) {
+  p2.x = fix;
+  sticked_x_v = p2.x;
+  stickedX = true;
+  pre_target_x = fix;
+}
+function modify_fix_y(p2: PageXY, fix: number) {
+  p2.y = fix;
+  sticked_y_v = p2.y;
+  stickedY = true;
+  pre_target_y = fix;
 }
 function setCursor(t: CtrlElementType, force?: boolean) {
   const cursor = props.context.cursor;
@@ -267,7 +289,7 @@ onUnmounted(() => {
 })
 </script>
 <template>
-  <g >
+  <g>
     <g v-for="(p, i) in dots" :key="i" :style="`transform: ${p.r.transform};`">
       <path :d="p.r.p" fill="transparent" stroke="none" @mousedown.stop="(e) => point_mousedown(e, p.type2)"
         @mouseenter="() => setCursor(p.type2)" @mouseleave="point_mouseleave">

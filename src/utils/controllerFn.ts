@@ -5,7 +5,7 @@ import { is_parent_locked, is_parent_unvisible } from "@/utils/shapelist";
 import { permIsEdit } from "./content";
 import { Action } from "@/context/tool";
 import { Shape, ShapeType, TableShape } from "@kcdesign/data";
-import { PageXY, Selection } from "@/context/selection";
+import { PageXY } from "@/context/selection";
 
 export function keyboardHandle(e: KeyboardEvent, context: Context, t: Function) {
     if (!permIsEdit(context) || context.tool.action === Action.AddComment) return;
@@ -96,8 +96,6 @@ export function keyboardHandle(e: KeyboardEvent, context: Context, t: Function) 
                 context.selection.resetSelectShapes();
             }
         }
-    } else if (e.code === 'Escape') {
-        context.selection.resetSelectShapes();
     } else if (e.code === 'KeyR') {
         if (shiftKey && (ctrlKey || metaKey)) {
             e.preventDefault();
@@ -105,6 +103,7 @@ export function keyboardHandle(e: KeyboardEvent, context: Context, t: Function) 
             if (selected.length) replace(context, t, selected);
         }
     } else if (e.code === 'KeyX') {
+        if (!(ctrlKey || metaKey)) return;
         context.workspace.clipboard.cut().then((res) => {
             if (res) {
                 context.selection.resetSelectShapes();

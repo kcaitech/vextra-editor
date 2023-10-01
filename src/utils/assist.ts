@@ -6,16 +6,16 @@ import { debounce } from "lodash";
 import { XYsBounding } from "./common";
 
 enum Align {
-    LT_X,
-    RT_X,
-    C_X,
-    RB_X,
-    LB_X,
-    LT_Y,
-    RT_Y,
-    C_Y,
-    RB_Y,
-    LB_Y
+    LT_X = 'lt_x',
+    RT_X = 'rt_x',
+    C_X = 'c_x',
+    RB_X = 'rb_x',
+    LB_X = 'lb_x',
+    LT_Y = 'lt_y',
+    RT_Y = 'rt_y',
+    C_Y = 'c_y',
+    RB_Y = 'rb_y',
+    LB_Y = 'lb_y'
 }
 const get_pos: { [key: string]: (shape: Shape) => number } = {};
 get_pos[Align.LT_X] = function (shape: Shape) {
@@ -29,7 +29,8 @@ get_pos[Align.C_X] = function (shape: Shape) {
     return shape.matrix2Root().computeCoord2(f.width / 2, f.height / 2).x;
 }
 get_pos[Align.RB_X] = function (shape: Shape) {
-    return shape.matrix2Root().computeCoord2(shape.frame.width, shape.frame.height).x;
+    const f = shape.frame;
+    return shape.matrix2Root().computeCoord2(f.width, f.height).x;
 }
 get_pos[Align.LB_X] = function (shape: Shape) {
     return shape.matrix2Root().computeCoord2(0, shape.frame.height).x;
@@ -45,7 +46,8 @@ get_pos[Align.C_Y] = function (shape: Shape) {
     return shape.matrix2Root().computeCoord2(f.width / 2, f.height / 2).y;
 }
 get_pos[Align.RB_Y] = function (shape: Shape) {
-    return shape.matrix2Root().computeCoord2(shape.frame.width, shape.frame.height).y;
+    const f = shape.frame;
+    return shape.matrix2Root().computeCoord2(f.width, f.height).y;
 }
 get_pos[Align.LB_Y] = function (shape: Shape) {
     return shape.matrix2Root().computeCoord2(0, shape.frame.height).y;
@@ -89,9 +91,17 @@ export function distance2apex2(frame: Point[], align: Align): number {
     return get_pos2[align](frame);
 }
 /**
+ * @description 判断两数是否相等
+ * @param a 
+ * @param b 
+ */
+export function is_equal(a: number, b: number) {
+    return Math.abs(a - b) < 0.001;
+}
+/**
  * @description 收集时使用
  */
-export function update_pg_1(host: Shape): PointGroup1 {
+export function colloct_point_group(host: Shape): PointGroup1 {
     const m = host.matrix2Root(), f = host.frame;
     const lt = m.computeCoord2(0, 0);
     const rb = m.computeCoord2(f.width, f.height);
@@ -120,13 +130,34 @@ export function update_pg_1(host: Shape): PointGroup1 {
 /**
  * @description 比对时使用
  */
-export function update_pg_2(host: Shape, multi?: boolean): PointGroup2 {
+export function gen_match_points(host: Shape, multi?: boolean): PointGroup2 {
     const m = host.matrix2Root(), f = host.frame;
     const lt = m.computeCoord2(0, 0);
     const rb = m.computeCoord2(f.width, f.height);
     const pivot = m.computeCoord2(f.width / 2, f.height / 2);
     const rt = m.computeCoord2(f.width, 0);
     const lb = m.computeCoord2(0, f.height);
+    const apexX = [lt.x, rt.x, rb.x, lb.x, pivot.x];
+    const apexY = [lt.y, rt.y, rb.y, lb.y, pivot.y];
+    const pg: PointGroup2 = { lt, rt, rb, lb, pivot };
+    if (multi) {
+        pg.top = Math.min(...apexY), pg.right = Math.max(...apexX), pg.bottom = Math.max(...apexY), pg.left = Math.min(...apexX), pg.cy = pivot.y, pg.cx = pivot.x;
+    }
+    return pg;
+}
+export interface PointsOffset {
+    lt: PageXY
+    rb: PageXY
+    pivot: PageXY
+    rt: PageXY
+    lb: PageXY
+}
+export function gen_match_points_by_map(offset: PointsOffset, p: PageXY, multi?: boolean) {
+    const lt = { x: p.x + offset.lt.x, y: p.y + offset.lt.y };
+    const rb = { x: p.x + offset.rb.x, y: p.y + offset.rb.y };
+    const pivot = { x: p.x + offset.pivot.x, y: p.y + offset.pivot.y };
+    const rt = { x: p.x + offset.rt.x, y: p.y + offset.rt.y };
+    const lb = { x: p.x + offset.lb.x, y: p.y + offset.lb.y };
     const apexX = [lt.x, rt.x, rb.x, lb.x, pivot.x];
     const apexY = [lt.y, rt.y, rb.y, lb.y, pivot.y];
     const pg: PointGroup2 = { lt, rt, rb, lb, pivot };
@@ -151,7 +182,7 @@ export function finder(context: Context, scope: GroupShape, all_pg: Map<string, 
     let result: Shape[] = [];
     if (scope.type === ShapeType.Artboard) {
         result.push(scope);
-        const pg = update_pg_1(scope);
+        const pg = colloct_point_group(scope);
         all_pg.set(scope.id, pg);
         const pvs = Object.values(pg);
         for (let i = 0, len = pvs.length; i < len; i++) {
@@ -165,9 +196,9 @@ export function finder(context: Context, scope: GroupShape, all_pg: Map<string, 
     const cs = scope.childs;
     for (let i = 0; i < cs.length; i++) {
         const c = cs[i];
-        if (isShapeOut(context, c)) continue;
+        if (isShapeOut(context, c) || c.type === ShapeType.Contact) continue;
         result.push(c);
-        const pg = update_pg_1(c);
+        const pg = colloct_point_group(c);
         all_pg.set(c.id, pg);
         const pvs = Object.values(pg);
         for (let i = 0, len = pvs.length; i < len; i++) {
@@ -190,7 +221,7 @@ export function getClosestAB(shape: Shape) {
 }
 export function _collect(context: Context, new_matrix: Matrix) {
     context.assist.collect();
-    context.assist.setStickness(Math.ceil(5 / new_matrix.m00));
+    context.assist.set_stickness(Math.ceil(5 / new_matrix.m00));
 }
 
 export function modify_pt_x(pre_target1: PT1, s_pg: PointGroup2, apexX: number[], stickness: number) {
@@ -242,6 +273,7 @@ export function modify_pt_y(pre_target2: PT2, s_pg: PointGroup2, apexY: number[]
             pre_target2.delta = delta5, pre_target2.y = y, pre_target2.sx = s_pg.rt.x, pre_target2.align = Align.RT_Y;
         }
     }
+    if (pre_target2.delta && pre_target2.y === 0) debugger
 }
 export function modify_pt_x4p(pre_target1: PT4P1, p: PageXY, apexX: number[], stickness: number) {
     for (let i = 0, len = apexX.length; i < len; i++) {
@@ -325,19 +357,19 @@ export function get_frame(selection: Shape[]): Point[] {
 }
 export function get_p_form_pg_by_x(pg: PointGroup2, x: number): PageXY[] {
     const result: PageXY[] = [];
-    if (Math.abs(pg.lt.x - x) < 0.001) result.push(pg.lt);
-    if (Math.abs(pg.rt.x - x) < 0.001) result.push(pg.rt);
-    if (Math.abs(pg.rb.x - x) < 0.001) result.push(pg.rb);
-    if (Math.abs(pg.lb.x - x) < 0.001) result.push(pg.lb);
-    if (Math.abs(pg.pivot.x - x) < 0.001) result.push(pg.pivot);
+    if (is_equal(pg.lt.x, x)) result.push(pg.lt);
+    if (is_equal(pg.rt.x, x)) result.push(pg.rt);
+    if (is_equal(pg.rb.x, x)) result.push(pg.rb);
+    if (is_equal(pg.lb.x, x)) result.push(pg.lb);
+    if (is_equal(pg.pivot.x, x)) result.push(pg.pivot);
     return result;
 }
 export function get_p_form_pg_by_y(pg: PointGroup2, y: number): PageXY[] {
     const result: PageXY[] = [];
-    if (Math.abs(pg.lt.y - y) < 0.001) result.push(pg.lt);
-    if (Math.abs(pg.rt.y - y) < 0.001) result.push(pg.rt);
-    if (Math.abs(pg.rb.y - y) < 0.001) result.push(pg.rb);
-    if (Math.abs(pg.lb.y - y) < 0.001) result.push(pg.lb);
-    if (Math.abs(pg.pivot.y - y) < 0.001) result.push(pg.pivot);
+    if (is_equal(pg.lt.y, y)) result.push(pg.lt);
+    if (is_equal(pg.rt.y, y)) result.push(pg.rt);
+    if (is_equal(pg.rb.y, y)) result.push(pg.rb);
+    if (is_equal(pg.lb.y, y)) result.push(pg.lb);
+    if (is_equal(pg.pivot.y, y)) result.push(pg.pivot);
     return result;
 }

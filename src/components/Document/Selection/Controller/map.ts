@@ -1,9 +1,10 @@
 import CtrlRect from "./CtrlRect.SVG.vue";
 import CtrlRectMulti from "./CtrlRect.SVG.Multi.vue";
-import CtrlText from "./CtrlText.vue"
-import CtrlLine from "./CtrlLine.SVG.vue"
-import Readonly from "./Readonly.vue"
-import CtrlTable from "./CtrlTable.vue"
+import CtrlText from "./CtrlText.vue";
+import CtrlLine from "./CtrlLine.SVG.vue";
+import Readonly from "./Readonly.vue";
+import CtrlTable from "./CtrlTable.vue";
+import CtrlContact from "./CtrlContact.vue";
 export enum ControllerType { // 控件类型
     Rect = 'rect',
     RectMulti = 'rect_multi',
@@ -11,6 +12,7 @@ export enum ControllerType { // 控件类型
     Text = 'text',
     Readonly = 'Readonly',
     Table = 'table',
+    Contact = 'contact'
 }
 export const ctrlMap = new Map<ControllerType, any>([
     [ControllerType.Rect, CtrlRect],
@@ -19,4 +21,5 @@ export const ctrlMap = new Map<ControllerType, any>([
     [ControllerType.Text, CtrlText],
     [ControllerType.Readonly, Readonly],
     [ControllerType.Table, CtrlTable],
+    [ControllerType.Contact, CtrlContact],
 ]);

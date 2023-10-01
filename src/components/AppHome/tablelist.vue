@@ -4,15 +4,17 @@
             <template #default="{ height, width }">
                 <el-table-v2 :columns="columns" :data=props.data :width="width" :height="height" :row-class="rowClass"
                     :row-event-handlers="rowHandleClick" @scroll="rightmenu">
-                    <template #overlay v-if="loading">
+                    <template v-if="loading && height!=0" #overlay >
                         <div class="el-loading-mask" style="display: flex; align-items: center; justify-content: center">
-                            <el-icon class="is-loading" color="var(--active-color)" :size="26" style="display:block">
-                                <loading-icon />
-                            </el-icon>
+                            <Loading :size="20"/>
                         </div>
                     </template>
                     <template #empty>
-                        <div v-if="empty" class="flex items-center justify-center h-100%">
+                        <div v-if="props.type === 'project' && !loading" class="datanull">
+                            <p>{{t('Createteam.projectfilenull')}}</p>
+                            <button type="button" @click="newProjectFill">{{t('home.new_file')}}</button>
+                        </div>
+                        <div v-else-if="empty" class="flex items-center justify-center h-100%">
                             <el-empty :style="{ 'height': height - 50 + 'px' }" :description="t('home.table_empty_tips')" />
                         </div>
                         <div v-else-if="noNetwork" ref="net" class="flex items-center justify-center h-100%">
@@ -25,12 +27,13 @@
     </div>
 </template>
 <script setup lang="tsx">
-import { ref } from 'vue'
-import { Share, Delete, Remove, Loading as LoadingIcon } from '@element-plus/icons-vue'
+import { ref, watchEffect, Ref, inject } from 'vue'
+import { Share, Delete, Remove } from '@element-plus/icons-vue'
 import type { Column, RowClassNameGetter } from 'element-plus'
 import { useI18n } from 'vue-i18n'
 import { watch, nextTick } from 'vue';
 import NetworkError from '@/components/NetworkError.vue'
+import Loading from '../common/Loading.vue';
 
 const { t } = useI18n()
 
@@ -42,21 +45,43 @@ const props = defineProps<{
     data: any
     iconlist: any
     noNetwork: boolean
+    type?: string
+    address?: boolean
+    creator?: boolean
+    deleter?: boolean
+    perm?: number
 }>()
-
+const user_id = localStorage.getItem('userId');
 watch(() => props.data, () => {
     loading.value = false
     empty.value = true
 });
 
-watch(() => props.noNetwork,(newV) => {
-    if(newV) {
+const { projectList, saveProjectData, is_favor, favoriteList, updateFavor, is_team_upodate, teamData } = inject('shareData') as {
+    projectList: Ref<any[]>;
+    favoriteList: Ref<any[]>;
+    saveProjectData: (data: any[]) => void;
+    is_favor: Ref<boolean>;
+    updateFavor: (b: boolean) => void;
+    is_team_upodate: Ref<boolean>;
+    teamData: Ref<[{
+        team: {
+            id: string,
+            name: string,
+            avatar: string,
+            description: string
+        }
+    }]>;
+};
+
+watch(() => props.noNetwork, (newV) => {
+    if (newV) {
         nextTick(() => {
-            if(net.value) {
+            if (net.value) {
                 loading.value = false
                 const el = net.value.parentElement
                 nextTick(() => {
-                    if(el) {
+                    if (el) {
                         el.style.top = '50%'
                     }
                 })
@@ -76,7 +101,8 @@ const emits = defineEmits([
     'ndelete',
     'exit_share',
     'dbclickopen',
-    'refreshDoc'
+    'refreshDoc',
+    'newProjectFill'
 ])
 
 const selectedId = ref(-1)
@@ -84,6 +110,9 @@ const scrolltop = ref(0)
 
 const refreshDoc = () => {
     emits('refreshDoc')
+}
+const newProjectFill = () => {
+    emits('newProjectFill');
 }
 
 const rightmenu = (e: any) => {
@@ -120,8 +149,8 @@ const columns: Column<any>[] = [
     {
         key: 'name',
         title: `${t('home.file_name')}`,
-        width: 500,
-        minWidth: 150,
+        width: 400,
+        minWidth: 100,
         dataKey: 'document',
         align: 'left',
         cellRenderer: ({ cellData: { name } }) => <span>{name}</span>
@@ -131,17 +160,21 @@ const columns: Column<any>[] = [
         key: 'time',
         title: `${props.iconlist.includes('restore') ? t('home.delete_file_time') : t('home.modification_time')}`,
         dataKey: 'document',
-        width: 500,
-        minWidth: 150,
-        align: 'center',
-        cellRenderer: ({ rowData: { document: { deleted_at }, document_access_record: { last_access_time } } }) => {
+        width: 400,
+        minWidth: 100,
+        align: 'left',
+        cellRenderer: ({ rowData: { document: { deleted_at, created_at }, document_access_record: { last_access_time, id } } }) => {
             let displayContent;
             if (props.iconlist.includes('restore')) {
                 displayContent = <span>{deleted_at}</span>;
             } else {
-                displayContent = <span>{last_access_time}</span>;
+                if (id === '0') {
+                    let time = created_at.split('.')[0]
+                    displayContent = <span>{time}</span>;
+                } else {
+                    displayContent = <span>{last_access_time}</span>;
+                }
             }
-
             return (
                 <>
                     {displayContent}
@@ -155,17 +188,17 @@ const columns: Column<any>[] = [
         key: 'size',
         dataKey: 'document',
         title: `${t('home.size')}`,
-        width: 500,
-        minWidth: 150,
-        align: 'center',
+        width: 400,
+        minWidth: 100,
+        align: 'left',
         cellRenderer: ({ cellData: { size } }) => <span>{size}</span>,
     },
     {
         key: 'operations',
         title: `${t('home.operation')}`,
         dataKey: 'document',
-        width: 500,
-        minWidth: 150,
+        width: 400,
+        minWidth: 100,
         align: 'left',
         cellRenderer: ({ rowData }) => (
             <>
@@ -210,7 +243,19 @@ const columns: Column<any>[] = [
                     </el-icon>
                 )}
 
-                {props.iconlist.includes('delete') && (
+                {(props.iconlist.includes('delete_p') && props.perm! > 3 || props.perm! === 3 && rowData.document.user_id === user_id) && (
+                    <el-icon size={20}
+                        onDblclick={(event: MouseEvent) => event.stopPropagation()}
+                        onClick={(event: MouseEvent) => {
+                            event.stopPropagation()
+                            emits('deletefile', rowData)
+                        }}>
+                        <el-tooltip content={t('home.delete')} show-after={1000} hide-after={0}>
+                            <Delete />
+                        </el-tooltip>
+                    </el-icon>
+                )}
+                {(props.iconlist.includes('delete')) && (
                     <el-icon size={20}
                         onDblclick={(event: MouseEvent) => event.stopPropagation()}
                         onClick={(event: MouseEvent) => {
@@ -282,6 +327,74 @@ const columns: Column<any>[] = [
     },
 ]
 
+const getFillAddress = (id: string, project: any, team: any) => {
+    const user_id = localStorage.getItem('userId');
+    let address = '';
+    if(project) {
+        const p_Info = projectList.value.filter(item => item.project.id === project.id)[0];
+        if(p_Info && p_Info.is_in_team) {
+            address = team.name + ' / ' + project.name;
+        }else if(p_Info) {
+            address = `${t('Createteam.sharetip')} / '` + project.name;
+        }
+        return address;
+    }else {
+        if(user_id === id) {
+            address = t('home.file_shared');
+        }else {
+            address = t('home.shared_file_received');
+        }
+        return address;
+    }
+}
+
+watchEffect(() => {
+    if (props.address) {
+        columns.splice(3, 0, {
+            key: 'address',
+            dataKey: 'document',
+            title: t('home.filelocation'),
+            width: 400,
+            minWidth: 100,
+            cellRenderer: ({ rowData: { document: { user_id }, project, team } }) => {
+                const address = getFillAddress(user_id, project, team);
+                return (
+                    <span>{address}</span>
+            );
+            },
+        },)
+    }
+    if (props.creator) {
+        columns.splice(3, 0, {
+            key: 'creator',
+            dataKey: 'document',
+            title: t('home.creator'),
+            width: 400,
+            minWidth: 100,
+            align: 'left',
+            cellRenderer: ({ rowData: { user: { nickname } } }) => {
+                return (
+                    <span>{nickname}</span>
+            );
+            },
+        },)
+    }
+    if(props.deleter) {
+        columns.splice(3, 0, {
+            key: 'deleter',
+            dataKey: 'document',
+            title: t('home.deleter'),
+            width: 400,
+            minWidth: 100,
+            cellRenderer: ({ rowData: { delete_user: { nickname } } }) => {
+                return (
+                    <span>{nickname}</span>
+            );
+            },
+        },)
+    }
+})
+
 </script>
 <style lang="scss" scoped>
 .table {
@@ -292,6 +405,14 @@ const columns: Column<any>[] = [
     .table {
         height: calc(100vh - 125px);
     }
+}
+:deep(.el-table-v2__row) {
+    display: flex;
+    justify-content: space-between;
+}
+:deep(.el-table-v2__header-row) {
+    display: flex;
+    justify-content: space-between;
 }
 
 :deep(.el-table-v2__row:hover) {
@@ -350,6 +471,29 @@ const columns: Column<any>[] = [
 
     100% {
         transform: scale(1.2);
+    }
+}
+
+.datanull {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    margin-top: 240px;
+
+    button {
+        cursor: pointer;
+        border: none;
+        width: 120px;
+        height: 40px;
+        border-radius: 4px;
+        background-color: #9775fa;
+        box-sizing: border-box;
+        transition: all 0.5s ease-out;
+        color: white;
+
+        &:hover {
+            background-color: rgba(150, 117, 250, 0.862745098);
+        }
     }
 }
 </style>

@@ -638,13 +638,13 @@ onMounted(() => {
   props.context.menu.watch(menu_watcher);
   init();
   window.addEventListener('blur', window_blur);
-});
+})
 onUnmounted(() => {
   eyeDropper.destroy();
   blockUnmount();
   props.context.selection.unwatch(selectionWatcher);
   props.context.menu.unwatch(menu_watcher);
-  window.removeEventListener('blur', window_blur)
+  window.removeEventListener('blur', window_blur);
 })
 </script>
 

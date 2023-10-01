@@ -1,5 +1,5 @@
 <script setup lang="ts">
-import { onMounted, onUnmounted, ref, nextTick, watch } from "vue";
+import { onMounted, onUnmounted, ref, watch } from "vue";
 import { Context } from "@/context";
 import { Selection } from "@/context/selection";
 import { Shape, ShapeType, Matrix } from "@kcdesign/data";
@@ -9,7 +9,7 @@ import { Action } from "@/context/tool";
 import { getHorizontalAngle, XYsBounding } from "@/utils/common";
 import { WorkSpace } from "@/context/workspace";
 import { permIsEdit } from "@/utils/content";
-import Assist from "@/components/Document/Assist/index.vue"
+import Assist from "@/components/Document/Assist/index.vue";
 export interface Point {
     x: number
     y: number
@@ -101,6 +101,7 @@ function selectionWatcher(t?: any) { // selection的部分动作可触发更新
 }
 function createShapeTracing() { // 描边  
     const hoveredShape: Shape | undefined = props.context.selection.hoveredShape;
+    tracing.value = false;
     if (hoveredShape) {
         if (props.context.selection.selectedShapes.includes(hoveredShape)) {
             tracing.value = false;
@@ -114,10 +115,7 @@ function createShapeTracing() { // 描边
             const h = bottom - y;
             tracingFrame.value = { height: h, width: w, viewBox: `${0} ${0} ${w} ${h}`, path: path.toString() };
             tracing.value = true;
-            if (altKey.value) nextTick(() => { if (traceEle.value) traceEle.value.classList.add('cursor-copy') });
         }
-    } else {
-        tracing.value = false;
     }
 }
 function createController() { // 计算控件点位以及类型判定
@@ -146,21 +144,23 @@ function createController() { // 计算控件点位以及类型判定
             } else if (s.type === ShapeType.Table) {
                 controllerType.value = ControllerType.Table;
                 rotate.value = getHorizontalAngle(points[0], points[1]);
+            } else if (s.type === ShapeType.Contact) {
+                controllerType.value = ControllerType.Contact;
+                rotate.value = getHorizontalAngle(points[0], points[1]);
             } else {
                 controllerType.value = ControllerType.Rect;
                 rotate.value = getHorizontalAngle(points[0], points[1]);
             }
         } else {
-            let points: { x: number, y: number }[] = [];
+            const points: { x: number, y: number }[] = [];
             for (let i = 0; i < selection.length; i++) {
-                const s = selection[i], m = s.matrix2Root(), f = s.frame;
+                const s = selection[i];
+                if (s.type === ShapeType.Contact) continue;
+                const m = s.matrix2Root(), f = s.frame;
                 m.multiAtLeft(matrix);
                 const ps: { x: number, y: number }[] = [{ x: 0, y: 0 }, { x: f.width, y: 0 }, { x: f.width, y: f.height }, { x: 0, y: f.height }];
-                for (let j = 0; j < 4; j++) {
-                    const p = ps[j];
-                    ps[j] = m.computeCoord2(p.x, p.y);
-                }
-                points = points.concat(ps);
+                for (let j = 0; j < 4; j++) ps[j] = m.computeCoord3(ps[j]);
+                points.push(...ps);
             }
             const b = XYsBounding(points);
             controllerFrame.value = [{ x: b.left, y: b.top }, { x: b.right, y: b.top }, { x: b.right, y: b.bottom }, { x: b.left, y: b.bottom }];
@@ -189,8 +189,9 @@ function pathMousedown(e: MouseEvent) { // 点击图形描边以及描边内部�
                 if (e.shiftKey) {
                     selection.rangeSelectShape(selection.selectedShapes.concat(hoveredShape));
                 } else {
+                    const workspace = props.context.workspace;
                     selection.selectShape(hoveredShape);
-                    props.context.workspace.preToTranslating(e);
+                    workspace.preToTranslating(e);
                 }
             }
         }
@@ -237,11 +238,6 @@ onUnmounted(() => {
 })
 </script>
 <template>
-    <!-- 控制 -->
-    <component v-if="controller" :is="ctrlMap.get(controllerType) ?? ctrlMap.get(ControllerType.Rect)"
-        :context="props.context" :controller-frame="controllerFrame" :rotate="rotate" :matrix="props.matrix"
-        :shape="context.selection.selectedShapes[0]">
-    </component>
     <!-- 描边 -->
     <svg v-if="tracing" version="1.1" xmlns="http://www.w3.org/2000/svg" xmlns:xlink="http://www.w3.org/1999/xlink"
         xmlns:xhtml="http://www.w3.org/1999/xhtml" preserveAspectRatio="xMinYMin meet" overflow="visible"
@@ -250,6 +246,11 @@ onUnmounted(() => {
         <path :d="tracingFrame.path" style="fill: transparent; stroke: #865dff; stroke-width: 1.5;">
         </path>
     </svg>
+    <!-- 控制 -->
+    <component v-if="controller" :is="ctrlMap.get(controllerType) ?? ctrlMap.get(ControllerType.Rect)"
+        :context="props.context" :controller-frame="controllerFrame" :rotate="rotate" :matrix="props.matrix"
+        :shape="context.selection.selectedShapes[0]">
+    </component>
     <!-- 辅助 -->
     <Assist :context="props.context" :controller-frame="controllerFrame"></Assist>
 </template>
