@@ -118,7 +118,7 @@ var configureWebpack = (config) => {
             "node_modules\\/(?!(@kcdesign)\\/)",
             "communication\\/node_modules\\/)",
         ],
-        poll: 1500,
+        poll: 3000,
     }
 }
 
