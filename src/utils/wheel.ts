@@ -80,8 +80,10 @@ function fourWayWheel(context: Context, effects?: Effects, setupPoint?: PageXY):
             timer = null;
             if (np !== 'inner') {
                 const { dx, dy } = getTxybyNp(np, step);
+                const scale = context.workspace.matrix.toArray()[0];
                 timer = setInterval(() => {
-                    workspace.matrix.trans(dx, dy); // 这里的dx,dy呢，固定单位为 1 * px
+                    console.log(dx * scale, dy * scale, '滚动的距离');
+                    workspace.matrix.trans(dx * scale, dy * scale); // 这里的dx,dy呢，固定单位为 1 * px
                     workspace.notify(WorkSpace.MATRIX_TRANSFORMATION);
                     curPoint = workspace.matrix.inverseCoord(clientX - wx, clientY - wy); // 这边还有一点问题，先放一下！！！！！！！！！！！！！！！！！！！！！！！！！！！！！！！！！！
                     // #region 这个区域为动态副作用区域：滚动是一定要滚动的，至于滚动要伴随什么变化，交给传进来的effects?.rolling
