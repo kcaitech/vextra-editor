@@ -82,7 +82,6 @@ function fourWayWheel(context: Context, effects?: Effects, setupPoint?: PageXY):
                 const { dx, dy } = getTxybyNp(np, step);
                 const scale = context.workspace.matrix.toArray()[0];
                 timer = setInterval(() => {
-                    console.log(dx * scale, dy * scale, '滚动的距离');
                     workspace.matrix.trans(dx * scale, dy * scale); // 这里的dx,dy呢，固定单位为 1 * px
                     workspace.notify(WorkSpace.MATRIX_TRANSFORMATION);
                     curPoint = workspace.matrix.inverseCoord(clientX - wx, clientY - wy); // 这边还有一点问题，先放一下！！！！！！！！！！！！！！！！！！！！！！！！！！！！！！！！！！
