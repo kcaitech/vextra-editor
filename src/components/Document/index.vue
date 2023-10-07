@@ -22,7 +22,7 @@ import { Perm, WorkSpace } from '@/context/workspace';
 import NetWorkError from '@/components/NetworkError.vue'
 import { ResponseStatus } from "@/communication/modules/doc_upload";
 import { insertNetworkInfo } from "@/utils/message"
-import { S3Storage, StorageOptions } from "@/utils/storage";
+import { OssStorage, S3Storage, StorageOptions } from "@/utils/storage";
 import { NetworkStatus } from '@/communication/modules/network_status'
 import { Comment } from '@/context/comment';
 import { DocSelectionOp } from "@/context/communication/doc_selection_op";
@@ -351,14 +351,14 @@ const getDocumentInfo = async () => {
         const repo = new Repository();
         const importDocumentParams: StorageOptions = {
             endPoint: STORAGE_URL,
-            region: "zhuhai-1",
+            region: "cn-hangzhou",
             accessKey: data.access_key,
             secretKey: data.secret_access_key,
             sessionToken: data.session_token,
-            bucketName: "document"
+            bucketName: "protodesign-document"
         }
         const path = docInfo.value.document.path;
-        const document = await importDocument(new S3Storage(importDocumentParams), path, "", dataInfo.data.document.version_id ?? "", repo)
+        const document = await importDocument(new OssStorage(importDocumentParams), path, "", dataInfo.data.document.version_id ?? "", repo)
         if (document) {
             const coopRepo = new CoopRepository(document, repo)
             const file_name = docInfo.value.document?.name || document.name;
