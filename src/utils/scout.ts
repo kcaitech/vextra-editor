@@ -151,18 +151,18 @@ export function groupPassthrough(scout: Scout, scope: Shape[], position: PageXY)
  * @param { Shape[] } g 检索的范围，只会在该范围内进行上述匹配
  * @param { PageXY } position 一个点，在页面坐标系上的点
  * @param { boolean } isCtrl 是否把容器、编组元素当作普通图形判定，不为真的时候会有特殊判定，比如编组子元素会冒泡的编组、存在子元素容器无法被判定为目标...
- * @param { Shape[] } init 在下次一递归开始时需要继承的结果
  * @returns { Shape[] } 返回符合检索条件的图形
  */
 export function finder(context: Context, scout: Scout, g: Shape[], position: PageXY, selected: Shape, isCtrl: boolean): Shape | undefined {
     let result: Shape | undefined;
     for (let i = g.length - 1; i > -1; i--) { // 从最上层开始往下找(z-index：大 -> 小)
         const item = g[i];
-        if (!canBeTarget(item)) continue;
-        if (isShapeOut(context, item)) continue;
-        if (item.type === ShapeType.Symbol && item.isUnionSymbolShape) {
+        if (!canBeTarget(item)) continue; // 隐藏图层或已锁定
+        if (isShapeOut(context, item)) continue; // 屏幕外图形，这里会判断每个图形是否在屏幕内，本身消耗较小，另外可以避免后面的部分不必要的更大消耗
+        if (item.isUnionSymbolShape) { // 组件状态集合
             result = finder_symbol_union(context, scout, item as GroupShape, position, selected, isCtrl);
-        } else if (item.type === ShapeType.Symbol || item.type === ShapeType.SymbolRef) {
+            if (isTarget(scout, item, position)) break; // 只要进入集合，有无子元素选中都应该break
+        } else if (item.type === ShapeType.Symbol || item.type === ShapeType.SymbolRef) { // 组件或引用
             result = finder_symbol(context, scout, item as SymbolShape, position, selected, isCtrl);
         }
         if (result) break;
@@ -219,15 +219,18 @@ export function finder_group(scout: Scout, g: Shape[], position: PageXY, selecte
 function finder_symbol_union(context: Context, scout: Scout, union: GroupShape, position: PageXY, selected: Shape, isCtrl: boolean) {
     let result: Shape | undefined;
     const childs = union.childs;
-    if (childs.length) {
-        result = finder(context, scout, childs, position, selected, isCtrl);
-        if (result) return result;
-        else if (isCtrl && isTarget(scout, union, position)) return union;
+    if (!childs.length) return;
+    result = finder(context, scout, childs, position, selected, isCtrl);
+    if (result) {
+        return result;
+    } else if (isCtrl && isTarget(scout, union, position)) {
+        return union;
     }
 }
 
 function finder_symbol(context: Context, scout: Scout, symbol: SymbolShape | SymbolRefShape, position: PageXY, selected: Shape, isCtrl: boolean) {
     let result: Shape | undefined;
+
     if (isTarget(scout, symbol, position)) {
         return symbol;
     } else {
@@ -320,7 +323,7 @@ function isPartSelect(shape: Shape, selected: Shape): boolean {
 }
 function is_part_select_for_symbol(shape: Shape, selected: Shape): boolean {
     let result: boolean = false;
-
+ const c = shape instanceof GroupShape ? shape.childs : undefined;
     return result;
 }
 // 寻找到最近的层级较高的那个容器

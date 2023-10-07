@@ -172,7 +172,8 @@ export function isShapeOut(context: Context, shape: Shape) {
     const { width, height } = shape.frame;
     const m = shape.matrix2Root();
     m.multiAtLeft(context.workspace.matrix);
-    const point: { x: number, y: number }[] = [{ x: 0, y: 0 }, { x: width, y: 0 }, { x: width, y: height }, { x: 0, y: height }].map(p => m.computeCoord2(p.x, p.y));
+    const point: { x: number, y: number }[] = [{ x: 0, y: 0 }, { x: width, y: 0 }, { x: width, y: height }, { x: 0, y: height }];
+    for (let i = 0; i < 4; i++) point[i] = m.computeCoord3(point[i]);
     return Math.min(point[0].x, point[1].x, point[2].x, point[3].x) > right - x ||
         Math.max(point[0].x, point[1].x, point[2].x, point[3].x) < 0 ||
         Math.max(point[0].y, point[1].y, point[2].y, point[3].y) < 0 ||
