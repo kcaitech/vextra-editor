@@ -73,7 +73,6 @@ export class Selection extends Watchable(Object) implements ISave4Restore {
     private m_table_area: { id: TableArea, area: string }[] = [];
     private m_context: Context;
 
-
     constructor(document: Document, context: Context) {
         super();
         this.m_document = document;
@@ -184,7 +183,8 @@ export class Selection extends Watchable(Object) implements ISave4Restore {
         }
         return result;
     }
-    private m_count = 0;
+    // private m_count = 0;
+    // private m_total = 0;
     /**
      * @description 基于SVGGeometryElement的图形检索，与getLayers相比，getShapesByXY返回的结果长度最多为1，而这里可以大于1
      * @param position 点位置，坐标系时page
@@ -200,11 +200,13 @@ export class Selection extends Watchable(Object) implements ISave4Restore {
             const childs: Shape[] = scope || page.childs;
             shape = finder(this.m_context, this.scout, childs, position, this.selectedShapes[0], isCtrl)
         }
-        this.m_count++;
-        if (this.m_count > 100) {
-            console.log('computing: ', Date.now() - s);
-            this.m_count = 0;
-        }
+        // this.m_count++;
+        // this.m_total += Date.now() - s;
+        // if (this.m_count > 100) {
+        //     console.log('computing: ', this.m_total / 100);
+        //     this.m_count = 0;
+        //     this.m_total = 0;
+        // }
         return shape;
     }
 
