@@ -18,6 +18,7 @@ export class Navi extends Watchable(Object) {
   private m_shapelist_freeze: boolean = false;
   private m_accurate: boolean = false;
   private m_phase1: string = '';
+  private m_component_container: HTMLDivElement | undefined = undefined;
   constructor() {
     super();
   }
@@ -57,5 +58,11 @@ export class Navi extends Watchable(Object) {
   }
   setMode(isAcc: boolean) {
     this.m_accurate = isAcc;
+  }
+  get component_container() {
+    return this.m_component_container;
+  }
+  init_component_container() {
+    
   }
 }

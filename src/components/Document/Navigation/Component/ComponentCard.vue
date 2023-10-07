@@ -4,7 +4,6 @@ import comsMap from '@/components/Document/Content/comsmap';
 import { GroupShape } from "@kcdesign/data";
 import { renderSymbolPreview as r } from "@kcdesign/data";
 import { initCommonShape } from "@/components/Document/Content/common";
-import Tooltip from '@/components/common/Tooltip.vue';
 
 interface Props {
     data: GroupShape
@@ -22,13 +21,11 @@ function render() {
 </script>
 <template>
     <div class="compo-preview-container">
-        <Tooltip :content="`${props.data.name}`">
-            <svg version="1.1" xmlns="http://www.w3.org/2000/svg" xmlns:xlink="http://www.w3.org/1999/xlink"
-                xmlns:xhtml="http://www.w3.org/1999/xhtml" preserveAspectRatio="xMinYMin meet" width="96px" height="96px"
-                :viewBox='gen_view_box()' overflow="visible" class="render-wrap">
-                <render></render>
-            </svg>
-        </Tooltip>
+        <svg version="1.1" xmlns="http://www.w3.org/2000/svg" xmlns:xlink="http://www.w3.org/1999/xlink"
+            xmlns:xhtml="http://www.w3.org/1999/xhtml" preserveAspectRatio="xMinYMin meet" width="96px" height="96px"
+            :viewBox='gen_view_box()' overflow="visible" class="render-wrap">
+            <!-- <render></render> -->
+        </svg>
     </div>
 </template>
 <style scoped lang="scss">

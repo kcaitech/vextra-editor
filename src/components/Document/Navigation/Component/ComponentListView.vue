@@ -1,10 +1,11 @@
 <script setup lang="ts">
 import { Context } from '@/context';
 import ComponentCard from './ComponentCard.vue';
-import { computed, onMounted, onUnmounted, ref, watch } from 'vue';
+import { onMounted, onUnmounted, ref, watch } from 'vue';
 import { GroupShape, Shape } from '@kcdesign/data';
 import { shape_track } from '@/utils/content';
 import { ClientXY } from '@/context/selection';
+import { debounce } from 'lodash';
 interface Props {
     context: Context
     search: string
@@ -17,11 +18,20 @@ let down_position: ClientXY = { x: 0, y: 0 };
 let is_drag: boolean = false;
 const reflush = ref<number>(0);
 const list_container = ref<HTMLDivElement>();
-function loader_view() {
+function _loader_view() {
     compos.value.length = 0;
     const mgr = props.context.data.symbolsMgr;
-    compos.value = mgr.resource.slice(0, 30);
+    for (let i = 0, len = mgr.resource.length; i < len; i++) {
+        const item = mgr.resource[i];
+        if (item.isUnionSymbolShape && item.childs.length) {
+            compos.value.push(item.childs[0]);
+        } else {
+            compos.value.push(item);
+        }
+    }
+    console.log('compos loader: %d', compos.value.length);
 }
+const loader_view = debounce(_loader_view, 300);
 function down(e: MouseEvent, shape: Shape) {
     compo = shape;
     const root = props.context.workspace.root;
@@ -64,7 +74,7 @@ const escapeRegExp = (text: string) => {
 const filterCompos = ref<Shape[]>([]);
 
 watch(() => props.search, (v) => {
-    if(v.length < 1) return;
+    if (v.length < 1) return;
     const pattern = new RegExp(escapeRegExp(v), 'i');
     const filteritem = compos.value.filter(item => pattern.test(item.name));
     console.log(filteritem);
