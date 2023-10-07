@@ -1,5 +1,5 @@
 <script setup lang="ts">
-import { ref, computed, onMounted, onUnmounted } from "vue";
+import { ref, onMounted, onUnmounted } from "vue";
 import { Context } from "@/context";
 import ShapeTab from "@/components/Document/Navigation/ShapeTab.vue";
 import CompsTab from "@/components/Document/Navigation/CompsTab.vue";
@@ -38,10 +38,8 @@ const showHiddenLeft = () => {
     emit('showNavigation')
 }
 const tool_watch = (t: number) => {
-    if(t === Tool.CHANGE_ACTION) {
-        if(props.context.tool.action === Action.AddComponent) {
-            currentTab.value = 'Comps';
-        }
+    if (t === Tool.CHANGE_ACTION && props.context.tool.action === Action.AddComponent) {
+        currentTab.value = 'Comps';
     }
 }
 onMounted(() => {
@@ -61,11 +59,11 @@ onUnmounted(() => {
                 @click="toggle(i.id)">{{ i.title }}</div>
         </div>
         <div class="body">
-            <ShapeTab :context="props.context" v-if="currentTab === 'Shape'" v-bind="$attrs" :page="page"
+            <ShapeTab :context="props.context" v-show="currentTab === 'Shape'" v-bind="$attrs" :page="page"
                 :showLeft="showLeft" :leftTriggleVisible="leftTriggleVisible" @showNavigation="showHiddenLeft"></ShapeTab>
-            <CompsTab :context="props.context" v-if="currentTab === 'Comps'" :showLeft="showLeft"
+            <CompsTab :context="props.context" v-show="currentTab === 'Comps'" :showLeft="showLeft"
                 :leftTriggleVisible="leftTriggleVisible" @showNavigation="showHiddenLeft"></CompsTab>
-            <CommentTab :context="props.context" v-if="currentTab === 'Comment'" :showLeft="showLeft"
+            <CommentTab :context="props.context" v-show="currentTab === 'Comment'" :showLeft="showLeft"
                 :leftTriggleVisible="leftTriggleVisible" @showNavigation="showHiddenLeft"></CommentTab>
         </div>
     </div>

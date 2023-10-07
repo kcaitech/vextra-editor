@@ -33,7 +33,7 @@ function onMouseDown(e: MouseEvent) {
 }
 
 const onRename = () => {
-    if(props.data.context.workspace.documentPerm !== Perm.isEdit) return
+    if (props.data.context.workspace.documentPerm !== Perm.isEdit) return
     isInput.value = true
     nextTick(() => {
         if (nameInput.value) {
@@ -88,7 +88,6 @@ onUnmounted(() => {
 </script>
 
 <template>
-    <!-- pageItem匹配listview拖拽线条 -->
     <div class="pageItem"
         :class="{ container: true, 'right-target': props.data.rightTarget && !props.data.selected, selected: props.data.selected }"
         @mousedown="onMouseDown">
@@ -122,6 +121,7 @@ onUnmounted(() => {
         align-items: center;
         width: 100%;
         position: relative;
+
         >.title {
             width: 100%;
             height: 100%;
