@@ -98,7 +98,7 @@ function calc_attri() {
         if (x.value !== mixed) x.value = lt.x;
         if (y.value !== mixed) y.value = lt.y;
         if (w.value !== mixed) w.value = Math.max(frame.width, 1);
-        if (isMixed.type === 'mixed') {
+        if (isMixed.type === 'mixed' || !isMixed.type) {
             if (h.value !== mixed) h.value = Math.max(frame.height, 1);
         } else {
             h.value = 0;
@@ -121,7 +121,7 @@ function check_mixed() {
     isMixed.w === 'mixed' ? w.value = mixed : w.value = isMixed.w;
     isMixed.rotate === 'mixed' ? rotate.value = mixed : rotate.value = isMixed.rotate;
     isMixed.constrainerProportions === 'mixed' ? isLock.value = true : isLock.value = (isMixed.constrainerProportions as boolean)!;
-    if (isMixed.type === 'mixed') {
+    if (isMixed.type === 'mixed' || !isMixed.type) {
         isMixed.h === 'mixed' ? h.value = mixed : h.value = isMixed.h;
     } else {
         h.value = 0;

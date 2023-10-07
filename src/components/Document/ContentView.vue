@@ -318,8 +318,8 @@ function createSelector(e: MouseEvent) { // 创建一个selector框选器
     const right = Math.max(mx, sx);
     const top = Math.min(my, sy);
     const bottom = Math.max(my, sy);
-    const p = matrix_inverse.inverseCoord({x: left, y: top})
-    const s = matrix_inverse.inverseCoord({x: right, y: bottom})
+    const p = matrix_inverse.inverseCoord({ x: left, y: top })
+    const s = matrix_inverse.inverseCoord({ x: right, y: bottom })
     selectorFrame.value.top = Math.min(p.y, s.y);
     selectorFrame.value.left = Math.min(p.x, s.x);
     selectorFrame.value.width = Math.max(p.x, s.x) - Math.min(p.x, s.x);
@@ -355,25 +355,32 @@ function onMouseDown(e: MouseEvent) {
     }
 }
 // mousemove(target：document)
+let timer: any = null;
 function onMouseMove(e: MouseEvent) {
     if (workspace.value.controller == 'page') {
         if (e.buttons == 1 && spacePressed.value) pageViewDragging(e); // 拖拽页面
+        if (isDragging && wheel) {
+            wheel.moving(e);
+            clearInterval(timer);
+            timer = null;
+            timer = setInterval(() => {
+                createSelector(e);
+            }, 6);
+            createSelector(e);
+        } else {
+            isDragging = true;
+        }
     }
 }
 // mousemove(target：contentview) 
 let isDragging: boolean = false;
-let wheel: Wheel | undefined = undefined; 
+let wheel: Wheel | undefined = undefined;
 function onMouseMove_CV(e: MouseEvent) {
     if (workspace.value.controller === 'page') {
         if (!spacePressed.value) {
             const action = props.context.tool.action;
             if (e.buttons === 1) {
                 if (action === Action.AutoV && isMouseLeftPress) select(e);
-                if (isDragging && wheel) {
-                    wheel.moving(e);
-                }else {
-                    isDragging = true;
-                }
             } else if (e.buttons === 0) {
                 if (action === Action.AutoV || action === Action.AutoK) search(e); // 图形检索(hover)
             }
@@ -395,6 +402,8 @@ function onMouseUp(e: MouseEvent) {
         }
         if (wheel) wheel = wheel.remove();
         isDragging = false;
+        clearInterval(timer);
+        timer = null;
         document.removeEventListener('mousemove', onMouseMove);
         document.removeEventListener('mouseup', onMouseUp);
     }
