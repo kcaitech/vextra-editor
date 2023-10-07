@@ -205,10 +205,6 @@ const Deletefile = async (data: data) => {
     }
 }
 
-function filterItemsByIndexes(sourceArray: any, indexesToDelete: any) {
-    return sourceArray.filter((_: any, index: number) => !indexesToDelete.includes(index));
-}
-
 //右键菜单入口
 const rightmenu = (e: MouseEvent, data: data) => {
     const el = document.querySelector('.target_star')! as HTMLElement

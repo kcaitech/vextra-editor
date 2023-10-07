@@ -19,7 +19,7 @@
 import * as share_api from "@/apis/share"
 import * as user_api from '@/apis/users'
 import { ElMessage } from 'element-plus'
-import { onMounted, ref, onUnmounted, nextTick, watch, inject, Ref, watchEffect } from "vue"
+import { onMounted, ref, onUnmounted, nextTick, watch, inject, Ref } from "vue"
 import { useI18n } from 'vue-i18n'
 import { router } from '@/router'
 import FileShare from '@/components/Document/Toolbar/Share/FileShare.vue'
@@ -27,8 +27,7 @@ import tablelist from '@/components/AppHome/tablelist.vue'
 import { UserInfo } from '@/context/user';
 import listrightmenu from "../listrightmenu.vue";
 import MoveProjectFill from "@/components/TeamProject/MoveProjectFill.vue";
-import { useRoute } from 'vue-router'
-const route = useRoute();
+
 interface data {
     document: {
         id: string
@@ -240,10 +239,6 @@ onMounted(() => {
 onUnmounted(() => {
     window.removeEventListener('resize', getPageHeight)
 })
-
-function emit(arg0: string) {
-    throw new Error("Function not implemented.")
-}
 
 </script>
 <style lang="scss" scoped>

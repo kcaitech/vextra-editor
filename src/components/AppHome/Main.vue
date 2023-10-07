@@ -1,18 +1,12 @@
 <script setup lang="ts">
 import { RouterView } from 'vue-router';
-import { computed, onMounted, ref, watch } from 'vue';
+import { onMounted, ref, watch } from 'vue';
 import { useRoute } from 'vue-router'
 import { useI18n } from 'vue-i18n';
-
-// interface Props {
-//     // title?: string,
-//     // recycle?: boolean
-// }
 
 const { t } = useI18n();
 const route = useRoute()
 const active = ref(true);
-// const props = defineProps<Props>();
 const title = ref('')
 const recycle = ref(false)
 

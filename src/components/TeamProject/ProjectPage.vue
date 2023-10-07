@@ -98,7 +98,7 @@
     </div>
 </template>
 <script setup lang="ts">
-import { Ref, nextTick, inject, ref, onMounted, watch, watchEffect } from 'vue'
+import { Ref, nextTick, inject, ref, onMounted, watch } from 'vue'
 import { useRoute } from 'vue-router'
 import { useI18n } from 'vue-i18n'
 import { router } from '@/router'

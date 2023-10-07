@@ -23,7 +23,6 @@ import * as user_api from '@/apis/users'
 import { ElMessage } from 'element-plus'
 import { ref, onMounted, onUnmounted, nextTick, watch } from 'vue'
 import { useI18n } from 'vue-i18n'
-import listsitem from '@/components/AppHome/listsitem.vue'
 import tablelist from '@/components/AppHome/tablelist.vue'
 import listrightmenu from "../listrightmenu.vue"
 

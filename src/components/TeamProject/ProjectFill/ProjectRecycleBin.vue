@@ -168,10 +168,6 @@ watch(() => route.params.id, (newid) => {
     }
 })
 
-// watch(lists, (Nlist) => {
-//     emits('data-update', Nlist, t('home.delete_file_time'))
-// }, { deep: true })
-
 onMounted(() => {
     GetrecycleLists(props.currentProject.project.id)
 })

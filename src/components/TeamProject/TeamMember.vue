@@ -22,8 +22,12 @@
         </div>
         <div class="main">
             <div class="member-item"
-                v-for=" { user: { nickname, id }, perm_type }  in  searchvalue === '' ? ListData : SearchList " :key="id">
-                <div class="member-name">{{ nickname }}</div>
+                v-for=" { user: { nickname, id, avatar }, perm_type }  in  searchvalue === '' ? ListData : SearchList "
+                :key="id">
+                <div class="member-name">
+                    <img :src="avatar" alt="icon" style="width: 20px;height: 20px;;border-radius: 50%;margin-right: 4px;">
+                    {{ nickname }}
+                </div>
                 <div class="member-jurisdiction">
                     <div class="member-jurisdiction-container">
                         {{ membertype(perm_type) }}
@@ -140,7 +144,7 @@ const typeitems = (num: number) => {
         case 1:
             return [t('teammember.leave_team')]
         case 2:
-            return [t('teammember.editable'), t('teammember.Readonly'), t('teammember.leave_team')]
+            return [t('teammember.editable'), t('teammember.Readonly'), t('teammember.move_team')]
         case 3:
             return [t('teammember.manager'), t('teammember.editable'), t('teammember.Readonly'), t('teammember.transfer_creator'), t('teammember.move_team')]
         default:
