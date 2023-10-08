@@ -80,14 +80,7 @@ onUnmounted(() => {
         top: cur_p === 0 ? props.comps_posi!.y + 10 + 'px' : cur_top + 'px'
     }">
         <ComponentList :heard="true" @close="popoverClose" :context="context">
-            <!-- <el-scrollbar>
-                <div class="demo-collapse">
-                    <div class="demo-collapse" v-for="(item, index) in list" :key="index">
-                        <ComponentCollapse :context="context" :type="type.type" :item="item" :index="index">
-                        </ComponentCollapse>
-                    </div>
-                </div>
-            </el-scrollbar> -->
+         
         </ComponentList>
     </div>
     <div class="overlay" @click.stop="popoverClose" @mousedown.stop @wheel.stop></div>

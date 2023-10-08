@@ -14,7 +14,7 @@ const props = defineProps<{ context: Context, page: Page, leftTriggleVisible: bo
 const emit = defineEmits<{ (e: 'showNavigation'): void }>()
 type Tab = "Shape" | "Comps" | "Resource" | "Comment"
 
-const currentTab = ref<Tab>("Shape");
+const currentTab = ref<Tab>("Comps");
 const tabs: { title: string, id: Tab }[] = [
     {
         title: t('navi.shape'),

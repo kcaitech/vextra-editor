@@ -2,6 +2,7 @@
 import { ref } from 'vue';
 import { Search } from '@element-plus/icons-vue';
 import ComponentListView from './ComponentListView.vue';
+import ComponentContainer from './ComponentContainer.vue';
 import { Context } from '@/context';
 import { useI18n } from 'vue-i18n';
 const { t } = useI18n();
@@ -37,8 +38,7 @@ const close = () => {
             </div>
         </div>
         <div class="body" :style="{ height: heard ? 'calc(100% - 80px)' : 'calc(100% - 35px)' }">
-
-            <ComponentListView :context="props.context" :search="search"></ComponentListView>
+            <ComponentContainer :context="context" :search="search"></ComponentContainer>
         </div>
     </div>
 </template>

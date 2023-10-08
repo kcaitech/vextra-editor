@@ -85,6 +85,7 @@ onMounted(() => {
     props.context.data.symbolsMgr.watch(loader_view);
     loader_view();
     init();
+    console.log('componentlist mount');
 })
 onUnmounted(() => {
     props.context.data.pagesMgr.unwatch(loader_view);
@@ -102,30 +103,8 @@ onUnmounted(() => {
 <style scoped lang="scss">
 .list-contianer {
     width: 100%;
-    height: 100%;
-    overflow: auto;
     display: grid;
     grid-gap: 8px;
     grid-auto-rows: 100px;
-
-    &::-webkit-scrollbar {
-        width: 0px;
-    }
-
-    &::-webkit-scrollbar-track {
-        background-color: none;
-    }
-
-    &::-webkit-scrollbar-thumb {
-        background-color: none;
-    }
-
-    &::-webkit-scrollbar-thumb:hover {
-        background-color: none;
-    }
-
-    &::-webkit-scrollbar-thumb:active {
-        background-color: none;
-    }
 }
 </style>
