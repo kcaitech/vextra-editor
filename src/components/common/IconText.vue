@@ -1,4 +1,6 @@
 <script setup lang="ts">
+import { Context } from "@/context";
+import { get_rotation } from "@/utils/attri_setting";
 import { watch, ref, onMounted } from "vue";
 type Scale = { axleX: number, degX: number }
 const props = defineProps<{
@@ -9,6 +11,7 @@ const props = defineProps<{
     frame?: { width: number, height: number, rotate?: number },
     multipleValues?: boolean
     disabled?: boolean
+    context: Context
 }>();
 const emit = defineEmits<{
     (e: "onchange", value: string): void;
@@ -105,7 +108,8 @@ const onMouseMove = (e: MouseEvent) => {
     scale.value.degX = Number((mx / 5).toFixed(2))
 }
 const onMouseUp = (e: MouseEvent) => {
-    isDrag.value = false
+    isDrag.value = false;
+    emit("onchange", String());
     document.removeEventListener('mousemove', onMouseMove)
     document.removeEventListener('mouseup', onMouseUp)
 
@@ -120,26 +124,65 @@ const selectValue = () => {
 watch(scale, () => {
     //input的值加上鼠标移动后的大小等于最终改变的值
     if (props.ticon) {
-        input.value!.value = String(Number(input.value!.value) + scale.value.axleX)
-        if (props.ticon === 'W' || props.ticon === 'H') {
-            if (Number(input.value!.value) <= 1) {
-                input.value!.value = '1'
+        const shapes = props.context.selection.selectedShapes;
+        if(shapes.length === 1) {
+            const lt = shapes[0].matrix2Root().computeCoord2(0, 0);
+            const frame = shapes[0].frame
+            let result = 0;
+            if(props.ticon === 'X') {
+                result = lt.x;
+            }else if(props.ticon === 'Y') {
+                result = lt.y;
+            }else if(props.ticon === 'W') {
+                result = Math.max(frame.width, 1);
+            }else if(props.ticon === 'H') {
+                result = Math.max(frame.height, 1);
             }
+            result = result + scale.value.axleX;
+            if (props.ticon === 'W' || props.ticon === 'H') {
+                if (Number(input.value!.value) < 1) {
+                    result = 1;
+                }
+            }
+            emit("onchange", String(result));
+        }else if(shapes.length > 1) {
+            const lt = shapes[0].matrix2Root().computeCoord2(0, 0);
+            const frame = shapes[0].frame
+            let result = 0;
+            if(props.ticon === 'X') {
+                result = lt.x;
+            }else if(props.ticon === 'Y') {
+                result = lt.y;
+            }else if(props.ticon === 'W') {
+                result = Math.max(frame.width, 1);
+            }else if(props.ticon === 'H') {
+                result = Math.max(frame.height, 1);
+            }
+            result = result + scale.value.axleX;
+            if (props.ticon === 'W' || props.ticon === 'H') {
+                if (Number(input.value!.value) < 1) {
+                    result = 1;
+                }
+            }
+            emit("onchange", String(result));
         }
-        emit("onchange", input.value!.value);
     } else {
+        const shapes = props.context.selection.selectedShapes;
+        let result;
         if (props.svgicon === 'angle') {
             if (input.value!.value.slice(-1) && input.value!.value.slice(-1) === '°') {
-                input.value!.value = input.value!.value.slice(0, -1)
+                const rotate = get_rotation(shapes[0]);
+                result = (rotate + scale.value.degX).toFixed(2)
             }
         }
-        input.value!.value = (Number(input.value!.value) + scale.value.degX).toFixed(2)
         if (props.svgicon === 'radius') {
-            if (Number(input.value!.value) <= 0) {
-                input.value!.value = '0'
+            const radius = (Number(input.value!.value) + scale.value.degX).toFixed(2);
+            result = (+radius + scale.value.degX).toFixed(2)
+            if (Number(input.value!.value) < 0) {
+                result = '0'
             }
         }
-        emit("onchange", Number(input.value!.value).toFixed(2))
+        emit("onchange", result!)
     }
 }, { deep: true });
 

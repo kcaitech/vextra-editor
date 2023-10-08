@@ -244,11 +244,11 @@ onUnmounted(() => {
         </div>
         <div class="content">
             <div class="item-title">
-                <div class="item_heard">
+                <div class="item_heard" :style="{width: hoverIcon ? 'calc(100% - 73px)' : 'calc(100% - 3px)'}">
                     <div class="name" :style="{opacity: props.commentItem.status === 0 ? 1 : 0.5}">{{props.commentItem.user.nickname}} </div>&nbsp;&nbsp;
                     <div class="date">{{ formatDate(props.commentItem.record_created_at) }}</div>
                 </div>
-                <div class="icon"  :style="{visibility: hoverIcon ? 'visible' : 'hidden'}">
+                <div class="icon"  :style="{display: hoverIcon ? 'flex' : 'none'}">
                     <el-button-group class="ml-4">
                         <el-tooltip class="box-item" effect="dark" :content="`${t('comment.reply')}`"
                             placement="bottom" :show-after="1000" :offset="10" :hide-after="0">
