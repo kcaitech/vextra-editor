@@ -1,7 +1,8 @@
 import { Context } from "@/context";
-import { GroupShape, Shape, ShapeType, SymbolShape } from "@kcdesign/data";
+import { Artboard, GroupShape, Page, Shape, ShapeType, SymbolShape } from "@kcdesign/data";
 import { getName, get_component_state_name } from "./content";
 import { sort_by_layer } from "./group_ungroup";
+import { v4 } from "uuid";
 
 export function make_symbol(context: Context, t: Function) {
     const selected = context.selection.selectedShapes;
@@ -55,4 +56,118 @@ export function make_state(context: Context, t: Function) {
         const make_result = editor.makeStateAt(shape.parent as SymbolShape, name, index);
         return make_result;
     }
+}
+export interface SymbolListItem {
+    id: string
+    title: string
+    isFolder: boolean
+    extend: boolean
+    symbols: SymbolShape[]
+    childs: SymbolListItem[]
+}
+export function classification_level_page(pages: Page[]) { // 页面这一层比较特殊
+    const result: SymbolListItem[] = [];
+    for (let i = 0; i < pages.length; i++) {
+        const page = pages[i];
+        if (page.__symbolshapes.size) {
+            const item = {
+                id: page.id,
+                title: page.name,
+                isFolder: true,
+                extend: false,
+                symbols: [],
+                childs: classification_level_artboard(page)
+            }
+            result.push(item);
+        }
+    }
+    return result.length > 1 ? result : result.length === 1 ? result[0].childs : [];
+}
+function get_symbol_level_under(group: GroupShape) {
+    const symbols: SymbolShape[] = [];
+    const childs = group.childs;
+    for (let i = 0, len = childs.length; i < len; i++) {
+        const item = childs[i];
+        if (item.isUnionSymbolShape) {
+            symbols.push(item.childs[0]);
+        } else if (item.type === ShapeType.Symbol) {
+            symbols.push(item as SymbolShape);
+        }
+    }
+    return symbols;
+}
+export function classification_level_artboard(page: Page) { // 以名称为标识
+    const artboards = page.artboardList;
+    const result: SymbolListItem[] = [];
+    const symbols_under_page = get_symbol_level_under(page);
+    console.log('symbols_under_page: ', symbols_under_page);
+
+    if (symbols_under_page.length) {
+        const item: SymbolListItem = {
+            id: v4(),
+            title: '',
+            isFolder: false,
+            extend: false,
+            symbols: symbols_under_page,
+            childs: []
+        }
+        result.push(item);
+    }
+    const artboard_map: Map<string, SymbolListItem> = new Map();
+    for (let i = 0, len = artboards.length; i < len; i++) {
+        const artboard = artboards[i];
+        if (artboard.parent?.type !== ShapeType.Page) continue;
+        const symbols = check_symbol_level_artboard(artboard);
+        if (!symbols.length) continue;
+        const already = artboard_map.get(artboard.name);
+        if (already) {
+            already.childs[0].symbols.push(...symbols);
+            continue;
+        }
+        const item: SymbolListItem = {
+            id: artboard.name,
+            title: artboard.name,
+            isFolder: true,
+            extend: false,
+            symbols: [],
+            childs: []
+        }
+        const child: SymbolListItem = {
+            id: v4(),
+            title: '',
+            isFolder: false,
+            extend: false,
+            symbols: symbols,
+            childs: []
+        }
+        item.childs.push(child);
+        result.push(item);
+        artboard_map.set(item.id, item);
+    }
+    return result;
+}
+function check_symbol_level_artboard(artboard: GroupShape, init?: SymbolShape[]) {
+    const symbols: SymbolShape[] = init || [];
+    const childs = artboard.childs;
+    for (let i = 0, len = childs.length; i < len; i++) {
+        const item = childs[i];
+        if (item.isUnionSymbolShape) {
+            symbols.push(item.childs[0]);
+        } else if (item.type === ShapeType.Symbol) {
+            symbols.push(item as SymbolShape);
+        }
+        if (item.type === ShapeType.Artboard) check_symbol_level_artboard(item as Artboard, symbols);
+    }
+    return symbols;
+}
+export function list_layout(list: SymbolListItem[], extend_set: Set<string>, init?: SymbolListItem[]) {
+    const result: SymbolListItem[] = init || [];
+    for (let i = 0, len = list.length; i < len; i++) {
+        const item = list[i];
+        result.push(item);
+        if (extend_set.has(item.id)) {
+            list_layout(item.childs, extend_set, result);
+        }
+    }
+    return result;
 }

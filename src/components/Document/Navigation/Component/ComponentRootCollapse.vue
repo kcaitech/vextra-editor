@@ -1,28 +1,35 @@
 <script setup lang="ts">
-import { ref } from 'vue';
-type CollapseType = 'navi' | 'branch';
+import { onMounted, ref } from 'vue';
+import ComponentCollapseItem from './ComponentCollapseItem.vue';
+import { Context } from '@/context';
+import { SymbolListItem } from '@/utils/symbol';
 interface Props {
+    context: Context
     title: string
-    collapseType: CollapseType
+    data: SymbolListItem[]
+    extend: boolean
 }
 const fold = ref<boolean>(true);
 const props = defineProps<Props>();
 function toggle() {
     fold.value = !fold.value;
 }
+onMounted(() => {
+    if (props.extend) toggle();
+})
 </script>
 <template>
     <div class="component-lib-collapse" @click="toggle">
         <div class="component-lib-collapse-title">
             <span>{{ props.title }}</span>
-            <div class="shrink" @click.stop="toggle">
+            <div class="shrink">
                 <svg-icon icon-class="down" :style="{ transform: fold ? 'rotate(-90deg)' : 'rotate(0deg)' }"></svg-icon>
             </div>
         </div>
         <div class="component-lib-collapse-content" v-show="!fold">
-            <div class="temp"></div>
-            <div class="temp"></div>
-            <div class="temp"></div>
+            <ComponentCollapseItem v-for="(item, index) in props.data" :title="item.title" :data="item" :key="index"
+                :context="props.context">
+            </ComponentCollapseItem>
         </div>
     </div>
 </template>

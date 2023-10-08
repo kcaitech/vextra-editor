@@ -1,14 +1,13 @@
 <script setup lang="ts">
 import { Context } from '@/context';
 import ComponentCard from './ComponentCard.vue';
-import { onMounted, onUnmounted, ref, watch } from 'vue';
-import { GroupShape, Shape } from '@kcdesign/data';
+import { onMounted, onUnmounted, ref } from 'vue';
+import { GroupShape, Shape, SymbolShape } from '@kcdesign/data';
 import { shape_track } from '@/utils/content';
 import { ClientXY } from '@/context/selection';
-import { debounce } from 'lodash';
 interface Props {
     context: Context
-    search: string
+    data: SymbolShape[]
 }
 const props = defineProps<Props>();
 const compos = ref<Shape[]>([]);
@@ -18,20 +17,6 @@ let down_position: ClientXY = { x: 0, y: 0 };
 let is_drag: boolean = false;
 const reflush = ref<number>(0);
 const list_container = ref<HTMLDivElement>();
-function _loader_view() {
-    compos.value.length = 0;
-    const mgr = props.context.data.symbolsMgr;
-    for (let i = 0, len = mgr.resource.length; i < len; i++) {
-        const item = mgr.resource[i];
-        if (item.isUnionSymbolShape && item.childs.length) {
-            compos.value.push(item.childs[0]);
-        } else {
-            compos.value.push(item);
-        }
-    }
-    console.log('compos loader: %d', compos.value.length);
-}
-const loader_view = debounce(_loader_view, 300);
 function down(e: MouseEvent, shape: Shape) {
     compo = shape;
     const root = props.context.workspace.root;
@@ -68,34 +53,16 @@ function init() {
     list_container.value && observer.observe(list_container.value);
 }
 
-const escapeRegExp = (text: string) => {
-    return text.replace(/[-[\]{}()*+?.,\\^$|#\s]/g, '\\$&');
-}
-const filterCompos = ref<Shape[]>([]);
-
-watch(() => props.search, (v) => {
-    if (v.length < 1) return;
-    const pattern = new RegExp(escapeRegExp(v), 'i');
-    const filteritem = compos.value.filter(item => pattern.test(item.name));
-    console.log(filteritem);
-    filterCompos.value = filteritem;
-})
 onMounted(() => {
-    props.context.data.pagesMgr.watch(loader_view);
-    props.context.data.symbolsMgr.watch(loader_view);
-    loader_view();
     init();
-    console.log('componentlist mount');
 })
 onUnmounted(() => {
-    props.context.data.pagesMgr.unwatch(loader_view);
-    props.context.data.symbolsMgr.unwatch(loader_view);
     observer && observer.disconnect();
 })
 </script>
 <template>
     <div class="list-contianer" ref="list_container" :style="{ 'grid-template-columns': gen_columns() }" :reflush="reflush">
-        <ComponentCard v-for="(item, index) in compos" :key="index" :data="(item as GroupShape)"
+        <ComponentCard v-for="(item, index) in props.data" :key="index" :data="(item as GroupShape)"
             @mousedown="(e: MouseEvent) => down(e, item as unknown as Shape)">
         </ComponentCard>
     </div>
@@ -106,5 +73,7 @@ onUnmounted(() => {
     display: grid;
     grid-gap: 8px;
     grid-auto-rows: 100px;
+    padding: 4px 0px 8px 0px;
+    box-sizing: border-box;
 }
 </style>
