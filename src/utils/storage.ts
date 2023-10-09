@@ -104,10 +104,8 @@ export class OssStorage implements IStorage {
 
     public async get(uri: string, versionId?: string): Promise<Uint8Array> {
         try {
-            console.log("1")
             return await this._get(uri, versionId)
         } catch (err) {
-            console.log("2")
             return await this._get(uri)
         }
     }
