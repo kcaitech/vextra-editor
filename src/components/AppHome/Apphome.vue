@@ -225,7 +225,7 @@ onUnmounted(() => {
 
 <style lang="scss" scoped>
 .common-layout {
-  height: 100vh;
+  height: 100%;
   overflow: hidden;
 }
 
@@ -234,10 +234,12 @@ onUnmounted(() => {
 }
 
 .el-main {
-  padding-top: 0;
+  height: calc(100% - 56px);
+  padding: 0 20px;
 }
 
 .el-aside {
+  height: calc(100% - 56px);
   border-right: rgba(239, 239, 239, 0.838) solid 1px;
   transition: all .3s ease-in-out;
 }

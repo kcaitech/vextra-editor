@@ -1,11 +1,14 @@
 <template>
-        <tablelist :data="lists" :iconlist="iconlists" @share="Sharefile" @dbclickopen="openDocument" @updatestar="Starfile" :address="true"
-            @rightMeun="rightmenu" :noNetwork="noNetwork" @refreshDoc="refreshDoc"/>
-        <listrightmenu :items="items" :data="mydata" @ropen="openDocument" @r-sharefile="Sharefile" @r-starfile="Starfile"/>
-        <FileShare v-if=" showFileShare " @close=" closeShare " :docId=" docId " :selectValue=" selectValue " :userInfo="userInfo" :project="is_project"
-            @select-type=" onSelectType " @switch-state=" onSwitch " :shareSwitch=" shareSwitch " :pageHeight=" pageHeight"  :docUserId="docUserId" :projectPerm="projectPerm">
-        </FileShare>
-        <div v-if="showFileShare" class="overlay"></div>
+    <div class="tatle" style="height: calc(100vh - 120px);">
+        <tablelist :data="lists" :iconlist="iconlists" @share="Sharefile" @dbclickopen="openDocument" @updatestar="Starfile"
+            :address="true" @rightMeun="rightmenu" :noNetwork="noNetwork" @refreshDoc="refreshDoc" />
+    </div>
+    <listrightmenu :items="items" :data="mydata" @ropen="openDocument" @r-sharefile="Sharefile" @r-starfile="Starfile" />
+    <FileShare v-if="showFileShare" @close="closeShare" :docId="docId" :selectValue="selectValue"
+        :userInfo="userInfo" :project="is_project" @select-type="onSelectType" @switch-state="onSwitch"
+        :shareSwitch="shareSwitch" :pageHeight="pageHeight" :docUserId="docUserId" :projectPerm="projectPerm">
+    </FileShare>
+    <div v-if="showFileShare" class="overlay"></div>
 </template>
 <script setup lang="ts">
 import * as user_api from '@/apis/users'
@@ -19,7 +22,7 @@ import { UserInfo } from '@/context/user';
 import listrightmenu from "../listrightmenu.vue"
 const { t } = useI18n()
 
-const items=['open','newtabopen','share','target_star','rename']
+const items = ['open', 'newtabopen', 'share', 'target_star', 'rename']
 const isLoading = ref(false);
 const showFileShare = ref<boolean>(false);
 const shareSwitch = ref(true)
@@ -76,9 +79,9 @@ async function getUserdata() {
                 let { document: { size }, document_access_record: { last_access_time } } = data[i]
                 data[i].document.size = sizeTostr(size)
                 data[i].document_access_record.last_access_time = last_access_time.slice(0, 19)
-                if(data[i].project) {
+                if (data[i].project) {
                     const project = projectList.value.filter(item => item.project.id === data[i].project.id)[0];
-                    if(project) {
+                    if (project) {
                         data[i].project_perm = project.self_perm_type;
                     }
                 }
@@ -146,9 +149,9 @@ const Sharefile = (data: data) => {
         showFileShare.value = false
         return
     }
-    if(data.document.project_id && data.document.project_id !== '0') {
+    if (data.document.project_id && data.document.project_id !== '0') {
         is_project.value = true;
-    }else {
+    } else {
         is_project.value = false;
     }
     docUserId.value = data.document.user_id
@@ -224,7 +227,6 @@ onUnmounted(() => {
 })
 </script>
 <style lang="scss" scoped>
-
 .overlay {
     position: absolute;
     top: 0;

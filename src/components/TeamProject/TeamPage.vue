@@ -23,8 +23,10 @@
                 </li>
             </ul>
             <div class="addandsearch">
-                <button type="button" v-if="itemid === 0 && teamSelfPermType > 0" @click.stop="showoverlay = true">{{t('teampage.addproject')}}</button>
-                <button type="button" v-if="itemid === 1" @click.stop="showoverlay = true">{{t('teampage.addmember')}}</button>
+                <button type="button" v-if="itemid === 0 && teamSelfPermType > 0"
+                    @click.stop="showoverlay = true">{{ t('teampage.addproject') }}</button>
+                <button type="button" v-if="itemid === 1"
+                    @click.stop="showoverlay = true">{{ t('teampage.addmember') }}</button>
                 <el-input v-if="itemid != 2" ref="inputRef" size="large" v-model="search"
                     :placeholder="itemid === 0 ? t('teampage.search_default_tipsA') : t('teampage.search_default_tipsB')">
                     <template #prefix>
@@ -40,9 +42,9 @@
                 </el-input>
             </div>
         </div>
-            <ProjectList v-if="itemid === 0" :searchvalue="search" @addproject="showoverlay = true" />
-            <TeamMember v-if="itemid === 1" :searchvalue="search" />
-            <TeamSetting v-if="itemid === 2" />
+        <ProjectList v-if="itemid === 0" :searchvalue="search" @addproject="showoverlay = true" />
+        <TeamMember v-if="itemid === 1" :searchvalue="search" />
+        <TeamSetting v-if="itemid === 2" />
         <transition name="nested" :duration="550">
             <div v-if="showoverlay" class="overlay">
                 <addProject v-if="itemid === 0" class="inner" :teamid="teamID" @close="showoverlay = false" />
@@ -63,7 +65,7 @@ import TeamSetting from './TeamSetting.vue'
 import { router } from '@/router'
 import { useI18n } from 'vue-i18n'
 
-const {t}=useI18n()
+const { t } = useI18n()
 const showoverlay = ref(false)
 const itemid = ref(0)
 const items = [t('teampage.project'), t('teampage.members'), t('teampage.team_set')]
@@ -138,7 +140,7 @@ onUnmounted(() => {
 }
 
 .nested-leave-active {
-    transition-delay: 0.25s;
+    transition-delay: 0.1s;
 }
 
 .nested-enter-from,
@@ -152,15 +154,15 @@ onUnmounted(() => {
 }
 
 .nested-enter-active .inner {
-    transition-delay: 0.25s;
+    transition-delay: 0.1s;
 }
 
 .nested-enter-from .inner,
 .nested-leave-to .inner {
-    top: 50%;
-    left: 50%;
-    transform: translate(-50%, -50%) scale(0.8);
-    opacity: 0.001;
+    top:calc(50% - 50px);
+    // left: 50%;
+    // transform: translate(-50%, -50%) scale(0.8);
+    opacity: 0.5;
 }
 
 .overlay {
@@ -183,8 +185,7 @@ onUnmounted(() => {
     display: flex;
     justify-content: space-between;
     align-items: center;
-    margin: 0px 0px 8px 0px;
-    padding: 12px 0px;
+    margin: 8px 0;
     border-bottom: 1px solid #c4c4c4cf;
 
     .menu {
@@ -207,12 +208,12 @@ onUnmounted(() => {
 
     .addandsearch {
         display: flex;
-
+        align-items: center;
         button {
             cursor: pointer;
             border: none;
-            width: 120px;
-            height: 40px;
+            width: 80px;
+            height: 32px;
             border-radius: 4px;
             background-color: #9775fa;
             box-sizing: border-box;
@@ -227,7 +228,7 @@ onUnmounted(() => {
 
         .el-input {
             width: 280px;
-            height: 40px;
+            height: 32px;
             font-size: 12px;
             --el-input-border-color: #f3f0ff;
             --el-input-hover-border-color: #e5dbff;
@@ -249,13 +250,13 @@ onUnmounted(() => {
 
 .team {
     display: flex;
-    margin: 16px 0px;
+    margin: 16px 0px 0px;
     align-items: center;
-
+    height: 80px;
     .team-avatar {
-        width: 64px;
-        height: 64px;
-        min-width: 64px;
+        width: 56px;
+        height:56px;
+        min-width: 56px;
         background-color: #9775fa;
         text-align: center;
         border-radius: 50%;
@@ -282,7 +283,7 @@ onUnmounted(() => {
             span {
                 width: 100%;
                 height: 100%;
-                font-size: 24px;
+                font-size: 18px;
                 font-weight: 600;
                 color: white;
             }
@@ -296,7 +297,7 @@ onUnmounted(() => {
         margin: 0 12px;
 
         .team-name {
-            font-size: 24px;
+            font-size: 18px;
             font-weight: 600;
             margin-bottom: 8px;
         }

@@ -857,7 +857,7 @@ a {
 }
 
 .nested-leave-active {
-    transition-delay: 0.25s;
+    transition-delay: 0.1s;
 }
 
 .nested-enter-from,
@@ -871,15 +871,15 @@ a {
 }
 
 .nested-enter-active .inner {
-    transition-delay: 0.25s;
+    transition-delay: 0.1s;
 }
 
 .nested-enter-from .inner,
 .nested-leave-to .inner {
-    top: 50%;
-    left: 50%;
-    transform: translate(-50%, -50%) scale(0.8);
-    opacity: 0.001;
+    top: calc(50% - 50px);
+    // left: 50%;
+    // transform: translate(-50%, -50%) scale(0.8);
+    opacity: 0.5;
 }
 
 .overlay {

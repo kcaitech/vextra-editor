@@ -13,7 +13,7 @@
                     <div class="project-name">{{ item.project.name }}</div>
                     <div class="project-description">{{ item.project.description }}</div>
                     <div class="project-creator">{{ item.creator.nickname }}</div>
-                    <div class="other" v-if="true">
+                    <div class="other" v-if="showother && hoverId === item.project.id">
                         <div @click="cancelFixed(item.project.id, item.is_favor, index)" @dblclick.stop>
                             <!-- <svg t="1693476333821" class="icon" viewBox="0 0 1024 1024" version="1.1"
                                 xmlns="http://www.w3.org/2000/svg" p-id="15755" width="24" height="24">
@@ -28,21 +28,27 @@
                                     class="">
                                 </path>
                             </svg> -->
-
-                            <div v-if="!item.is_favor">
-                                <Tooltip :content="'固定项目'" :offset="10">
+                            <Tooltip v-if="!item.is_favor" :content="'固定项目'">
+                                <div>
                                     <svg-icon icon-class="fixed"></svg-icon>
-                                </Tooltip>
-                            </div>
-
-                            <div v-else>
-                                <!-- <Tooltip :content="'取消固定'" :offset="10"> -->
-                                <svg-icon icon-class="fixed-cancel"></svg-icon>
-                            <!-- </Tooltip> -->
-                            </div>
+                                </div>
+                            </Tooltip>
+                            <Tooltip v-else :content="'取消固定'">
+                                <div>
+                                    <svg-icon icon-class="fixed-cancel"></svg-icon>
+                                </div>
+                            </Tooltip>
                         </div>
-                        <div @click.stop="skipProject(item.project.id)"><svg-icon icon-class="entrance"></svg-icon></div>
-                        <div @click="onExitProject(item)"><svg-icon icon-class="exit-project"></svg-icon></div>
+                        <Tooltip :content="'进入项目'">
+                            <div @click.stop="skipProject(item.project.id)"><svg-icon icon-class="entrance"></svg-icon>
+                            </div>
+                        </Tooltip>
+                        <Tooltip :content="item.self_perm_type === 5 ? '删除项目' : '退出项目'">
+                            <div @click="onExitProject(item)">
+                                <svg-icon v-if="item.self_perm_type != 5" icon-class="exit-project"></svg-icon>
+                                <svg-icon v-else icon-class="delete-project"></svg-icon>
+                            </div>
+                        </Tooltip>
                     </div>
                     <div class="other" v-else-if="item.is_favor">
                         <div @click="cancelFixed(item.project.id, item.is_favor, index)" @dblclick.stop>
@@ -59,18 +65,7 @@
                                     class="">
                                 </path>
                             </svg> -->
-                            <svg width="16" height="16" viewBox="0 0 16 16" fill="none" stroke-width="1.5">
-                                <g id="group-0" stroke="currentColor" fill="currentColor">
-                                    <path
-                                        d="M11.9861 7.49764C12.6051 6.42541 13.3032 6.57884 13.7716 6.80569C13.9207 6.87791 14.1021 6.8326 14.1849 6.68912L14.4101 6.29912C14.8243 5.58169 14.5785 4.66425 13.8611 4.25004L9.09794 1.50004C8.3805 1.08583 7.46311 1.33164 7.0489 2.04908L6.8239 2.43879C6.74106 2.58228 6.7923 2.7623 6.9294 2.85533C7.36006 3.14755 7.84199 3.67541 7.22294 4.74764C6.47294 6.04667 6.03992 5.79667 5.35691 5.97969C4.7085 6.15343 2.82896 6.65705 1.7846 8.18956C1.6913 8.32647 1.73835 8.50931 1.88184 8.59215L8.16645 12.2206M6.6039 11.3184L4.60451 14.7829"
-                                        stroke-linecap="round" stroke-linejoin="miter" fill="none"
-                                        vector-effect="non-scaling-stroke"></path>
-                                </g>
-                                <g id="group-1" stroke="currentColor" fill="currentColor">
-                                    <path d="M11.25 10.75L14.75 14.25M14.75 10.75L11.25 14.25" stroke-linecap="round"
-                                        stroke-linejoin="miter" fill="none" vector-effect="non-scaling-stroke"></path>
-                                </g>
-                            </svg>
+                            <svg-icon icon-class="fixed-cancel"></svg-icon>
                         </div>
                     </div>
                     <div class="other" v-else></div>
@@ -422,6 +417,7 @@ onMounted(() => {
 
         .title {
             flex: 1;
+            font-size: 14px;
             font-weight: 600;
         }
     }
@@ -430,10 +426,9 @@ onMounted(() => {
         display: flex;
         align-items: center;
         font-size: 14px;
-        height: 40px;
+        height: 50px;
         border-radius: 4px;
         margin: 6px 0;
-        padding: 0 6px;
 
         &:hover {
             background-color: #f3f0ff;
@@ -443,49 +438,31 @@ onMounted(() => {
         .project-description,
         .project-creator,
         .other {
-            width: 25%;
+            white-space: nowrap;
+            text-overflow: ellipsis;
+            overflow: hidden;
+            flex: 1;
+        }
+
+        .other {
             display: flex;
+            align-items: center;
 
             svg {
+                display: flex;
                 width: 20px;
                 height: 20px;
                 color: #9775fa;
+                margin-right: 6px;
+                padding: 2px;
                 transition: .3s;
 
                 &:hover {
+                    cursor: pointer;
                     transform: scale(1.2);
                 }
             }
 
-            >div {
-                margin-right: 10px;
-            }
-        }
-
-        .project-name {
-            display: inline-block;
-            overflow: hidden;
-            text-overflow: ellipsis;
-            white-space: nowrap;
-            padding-right: 20px;
-            box-sizing: border-box;
-            margin-left: 5px;
-        }
-
-        .project-description {
-            display: inline-block;
-            overflow: hidden;
-            text-overflow: ellipsis;
-            white-space: nowrap;
-            padding-right: 20px;
-        }
-
-        .project-creator {
-            display: inline-block;
-            overflow: hidden;
-            text-overflow: ellipsis;
-            white-space: nowrap;
-            padding-right: 20px;
         }
     }
 }
@@ -495,17 +472,19 @@ onMounted(() => {
     flex-direction: column;
     align-items: center;
     margin-top: 240px;
+    font-size: 14px;
 
     button {
         cursor: pointer;
         border: none;
-        width: 120px;
-        height: 40px;
+        width: 80px;
+        height: 32px;
         border-radius: 4px;
         background-color: #9775fa;
         box-sizing: border-box;
         transition: all 0.5s ease-out;
         color: white;
+        box-shadow: 1px 1px 3px #b1b1b1, -1px -1px 3px #b1b1b1;
 
         &:hover {
             background-color: rgba(150, 117, 250, 0.862745098);

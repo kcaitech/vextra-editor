@@ -6,8 +6,8 @@
                 <div class="text">{{ teamName }}</div>
             </div>
             <div class="right">
-                <button type="button" :disabled="isDisabled.state"
-                    @click.stop="midname">{{ t('teamsetting.edit_name') }}</button>
+                <button type="button" :disabled="isDisabled.state" @click.stop="midname">{{ t('teamsetting.edit_name')
+                }}</button>
             </div>
         </div>
         <div class="description-container">
@@ -16,8 +16,8 @@
                 <div class="text">{{ teamDescription }}</div>
             </div>
             <div class="right">
-                <button type="button" :disabled="isDisabled.state"
-                    @click.stop="middescription">{{ t('teamsetting.edit_description') }}</button>
+                <button type="button" :disabled="isDisabled.state" @click.stop="middescription">{{
+                    t('teamsetting.edit_description') }}</button>
             </div>
 
         </div>
@@ -27,8 +27,8 @@
                 <div class="text">{{ t('teamsetting.avatar_restriction') }}</div>
             </div>
             <div class="right">
-                <label class="modify" :style="{ backgroundColor: isDisabled.color }"
-                    for="image_uploads">{{ t('teamsetting.edit_avatar') }}</label>
+                <label class="modify" :style="{ backgroundColor: isDisabled.color }" for="image_uploads">{{
+                    t('teamsetting.edit_avatar') }}</label>
                 <input type="file" id="image_uploads" name="image_uploads" accept=".jpg,.png" style="display: none;"
                     @change="midAvatarRequest($event)" :disabled="isDisabled.state" />
             </div>
@@ -39,7 +39,8 @@
                 <div class="text">{{ t('teamsetting.disband_team_tips') }}</div>
             </div>
             <div class="right">
-                <button class="disband" type="button" @click.stop="dissolveteam">{{ t('teamsetting.disband_team') }}</button>
+                <button class="disband" type="button" @click.stop="dissolveteam">{{ t('teamsetting.disband_team')
+                }}</button>
             </div>
         </div>
         <div v-else class="leave-container">
@@ -74,8 +75,8 @@
                 <button class="bnt_confirm" type="submit" @click.stop="confirm">
                     {{ teamSelfPermType === 3 ? t('teamsetting.confirm') : t('teamsetting.leave') }}
                 </button>
-                <button class="bnt_cancel" type="submit"
-                    @click.stop.once="showoverlay = false">{{ t('teamsetting.cancel') }}</button>
+                <button class="bnt_cancel" type="submit" @click.stop.once="showoverlay = false">{{ t('teamsetting.cancel')
+                }}</button>
             </div>
         </div>
     </div>
@@ -330,15 +331,15 @@ const confirm = () => {
 .card-container {
     position: absolute;
     background-color: white;
-    width: 480px;
-    height: 240px;
+    width: 420px;
     border-radius: 5px;
     top: 50%;
     left: 50%;
     transform: translate(-50%, -50%);
-    padding: 16px 24px;
+    padding: 12px;
     z-index: 1000;
     box-shadow: 0px 2px 5px 0px rgba(0, 0, 0, 0.3);
+    box-sizing: border-box;
 
     .heard {
         display: flex;
@@ -346,14 +347,14 @@ const confirm = () => {
         justify-content: space-between;
 
         .title {
-            font-size: 24px;
+            font-size: 18px;
             font-weight: 600;
             color: #3D3D3D
         }
 
         .close {
-            width: 24px;
-            height: 24px;
+            width: 18px;
+            height: 18px;
             padding: 4px;
 
             &:hover {
@@ -378,23 +379,32 @@ const confirm = () => {
     }
 
     .centent {
-        margin-top: 12px;
+        margin-top: 14px;
 
         .textarea-container {
-            margin-top: 16px;
+            margin-top: 12px;
             color: #3D3D3D;
 
             .text-textarea {
-                padding: 6px 12px;
-                width: calc(100% - 24px);
+                padding: 6px;
+                width: 100%;
                 height: 120px;
                 border: none;
                 outline-style: none;
-                box-shadow: inset 0px 0px 3px 0px rgba(0, 0, 0, 0.3);
+                border: 1px solid silver;
                 border-radius: 3px;
                 resize: none;
                 font-size: 14px;
                 font-family: none;
+                box-sizing: border-box;
+
+                &:hover {
+                    border: 1px solid #e5dbff;
+                }
+
+                &:focus {
+                    border: 1px solid #9775fa;
+                }
             }
 
             .disbandtips {
@@ -411,10 +421,10 @@ const confirm = () => {
 
         button {
             cursor: pointer;
-            font-size: 18px;
-            letter-spacing: 2px;
-            width: 96px;
-            height: 40px;
+            font-size: 14px;
+            letter-spacing: 1px;
+            width: 80px;
+            height: 32px;
             border: none;
             border-radius: 4px;
             transition: all 0.2s ease-in-out;
@@ -461,13 +471,14 @@ const confirm = () => {
         display: flex;
         align-items: center;
         justify-content: space-between;
-        margin: 0 0 40px 0;
+        margin: 0 0 24px 0;
 
         .left {
+            font-size: 14px;
 
             .title {
                 font-weight: 600;
-                margin-bottom: 12px;
+                margin-bottom: 8px;
             }
 
             .text {
@@ -481,7 +492,6 @@ const confirm = () => {
             cursor: pointer;
             color: white;
             font-size: 12px;
-            font-weight: 600;
             letter-spacing: 1px;
             width: 80px;
             height: 32px;

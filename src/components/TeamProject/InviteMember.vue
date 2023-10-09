@@ -2,7 +2,7 @@
     <div class="card-container">
         <div class="heard">
             <div class="title">
-                {{t('inviteMember.title')}}
+                {{ t('inviteMember.title') }}
             </div>
             <div class="close" @click.stop="close">
                 <svg-icon icon-class="close"></svg-icon>
@@ -10,23 +10,24 @@
         </div>
         <div class="centent">
             <div class="permission-setting">
-                <span>{{t('inviteMember.permission_set')}}</span>
+                <span>{{ t('inviteMember.permission_set') }}</span>
                 <el-select class="select" v-model="teamInvitePermission" :disabled="disabled" value-key="id"
                     @change="setTeamInvitePermission(teamInvitePermission)" style="width: 120px;">
                     <el-option v-for="{ id, label } in options" :key="id" :value="id" :label="label" />
                 </el-select>
             </div>
-            <div class="permission-text">{{t('inviteMember.permission_tips')}}</div>
+            <div class="permission-text">{{ t('inviteMember.permission_tips') }}</div>
             <div class="permission-text">
-                <span> {{t('inviteMember.permission_switch')}}</span>
+                <span> {{ t('inviteMember.permission_switch') }}</span>
                 <el-switch v-model="teamInviteSwitch" class="ml-2" style="--el-switch-on-color: #9775fa" size="small"
                     @change="setTeamInviteSwitch(teamInviteSwitch)" :disabled="disabled" />
             </div>
             <input class="switch" v-if="teamInviteSwitch" type="text" v-model="teaminviteinfo" :disabled="disabled">
-            <div class="permission-text" style="color: #666;">{{t('inviteMember.permission_tipsA')}}</div>
+            <div class="permission-text" style="color: #666;">{{ t('inviteMember.permission_tipsA') }}</div>
         </div>
         <div class="invitemember">
-            <button type="submit" :disabled="!teamInviteSwitch" @click.stop="copyText">{{t('Createteam.copylink')}}</button>
+            <button type="submit" :disabled="!teamInviteSwitch" @click.stop="copyText">{{ t('Createteam.copylink')
+            }}</button>
         </div>
     </div>
 </template>
@@ -62,12 +63,8 @@ const disabled = computed(() => {
 
 const setTeamInvitePermission = async (value: number) => {
     try {
-        const { code } = await user_api.Setteaminviteinfo({ team_id: teamID.value, invited_perm_type: value })
-        if (code === 0) {
-            ElMessage.success(value?.toString())
-        } else {
-            ElMessage.error('error')
-        }
+        const { code, message } = await user_api.Setteaminviteinfo({ team_id: teamID.value, invited_perm_type: value })
+        if (code != 0) ElMessage.error(message)
     } catch (error) {
 
     }
@@ -75,12 +72,8 @@ const setTeamInvitePermission = async (value: number) => {
 
 const setTeamInviteSwitch = async (value: boolean) => {
     try {
-        const { code } = await user_api.Setteaminviteinfo({ team_id: teamID.value, invited_switch: value })
-        if (code === 0) {
-            ElMessage.success(value?.toString())
-        } else {
-            ElMessage.error('error')
-        }
+        const { code, message } = await user_api.Setteaminviteinfo({ team_id: teamID.value, invited_switch: value })
+        if (code != 0) ElMessage.error(message)
     } catch (error) {
 
     }
@@ -88,7 +81,7 @@ const setTeamInviteSwitch = async (value: boolean) => {
 
 const Getteaminfo = async () => {
     try {
-        const { code, data } = await user_api.Getteaminfo({ team_id: teamID.value })
+        const { code, data, message } = await user_api.Getteaminfo({ team_id: teamID.value })
         if (code === 0) {
             teaminfo.value = data
             if (teaminfo.value) {
@@ -96,7 +89,7 @@ const Getteaminfo = async () => {
                 teamInviteSwitch.value = teaminfo.value.invited_switch
             }
         } else {
-            ElMessage.error('获取失败')
+            ElMessage.error(message)
         }
     } catch (error) {
 
@@ -131,15 +124,15 @@ onMounted(() => {
 .card-container {
     position: absolute;
     background-color: white;
-    width: 480px;
-    height: auto;
+    width: 420px;
     border-radius: 5px;
     top: 50%;
     left: 50%;
     transform: translate(-50%, -50%);
-    padding: 16px 24px;
+    padding: 12px;
     z-index: 1000;
     box-shadow: 0px 2px 5px 0px rgba(0, 0, 0, 0.3);
+    box-sizing: border-box;
 
     .heard {
         display: flex;
@@ -147,14 +140,14 @@ onMounted(() => {
         justify-content: space-between;
 
         .title {
-            font-size: 24px;
+            font-size: 18px;
             font-weight: 600;
             color: #3D3D3D
         }
 
         .close {
-            width: 24px;
-            height: 24px;
+            width: 18px;
+            height: 18px;
             padding: 4px;
 
             &:hover {
@@ -179,11 +172,11 @@ onMounted(() => {
     }
 
     .centent {
-        margin-top: 12px;
+        margin-top: 14px;
         font-size: 14px;
 
         .permission-setting {
-            margin-top: 16px;
+            margin-top: 12px;
             margin-bottom: 12px;
             display: flex;
             align-items: center;
@@ -210,23 +203,24 @@ onMounted(() => {
             outline-style: none;
             border: 1px solid #9775fa;
             height: 24px;
-            width: 80%;
+            width: 100%;
             border-radius: 2px;
             line-height: 24px;
+            box-sizing: border-box;
         }
     }
 
     .invitemember {
         text-align: center;
-        margin-top: 24px;
+        margin-top: 12px;
 
         button {
             cursor: pointer;
             color: white;
-            font-size: 18px;
-            letter-spacing: 2px;
-            width: 120px;
-            height: 48px;
+            font-size: 14px;
+            letter-spacing: 1px;
+            width: 80px;
+            height:32px;
             border: none;
             background-color: #9775fa;
             border-radius: 4px;

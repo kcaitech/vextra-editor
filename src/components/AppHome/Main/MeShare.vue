@@ -1,7 +1,11 @@
 
 <template>
-    <tablelist :data="lists" :iconlist="iconlists" @share="Sharefile" @deletefile="Deletefile" @dbclickopen="openDocument"
-        @updatestar="Starfile" @rightMeun="rightmenu" :noNetwork="noNetwork" @refreshDoc="refreshDoc" />
+    <div class="tatle" style="height: calc(100vh - 120px);">
+        <tablelist :data="lists" :iconlist="iconlists" @share="Sharefile" @deletefile="Deletefile"
+            @dbclickopen="openDocument" @updatestar="Starfile" @rightMeun="rightmenu" :noNetwork="noNetwork"
+            @refreshDoc="refreshDoc" />
+    </div>
+
 
     <listrightmenu :items="items" :data="mydata" @get-doucment="getDoucment" @r-starfile="Starfile" @r-sharefile="Sharefile"
         @r-removefile="Deletefile" @ropen="openDocument" @moveFillAddress="moveFillAddress" />
@@ -11,8 +15,9 @@
         :docUserId="docUserId" @select-type="onSelectType" @switch-state="onSwitch" :shareSwitch="shareSwitch"
         :pageHeight="pageHeight">
     </FileShare>
-    <MoveProjectFill :title="t('Createteam.movetip')" :confirm-btn="t('Createteam.move')" :projectItem="projectItem" :doc="mydata"
-        :projectVisible="moveVisible" @clodeDialog="clodeDialog" @moveFillSeccess="moveFillSeccess"></MoveProjectFill>
+    <MoveProjectFill :title="t('Createteam.movetip')" :confirm-btn="t('Createteam.move')" :projectItem="projectItem"
+        :doc="mydata" :projectVisible="moveVisible" @clodeDialog="clodeDialog" @moveFillSeccess="moveFillSeccess">
+    </MoveProjectFill>
 </template>
 
 <script setup lang="ts">
@@ -242,10 +247,6 @@ onUnmounted(() => {
 
 </script>
 <style lang="scss" scoped>
-main {
-    height: auto;
-}
-
 .overlay {
     position: absolute;
     top: 0;

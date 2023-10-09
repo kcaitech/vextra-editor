@@ -65,6 +65,8 @@ const createTeam = async () => {
     }
     try {
         const { code, message, data } = await user_api.CreateTeam(formData)
+        console.log(formData);
+        
         if (code === 0) {
             emits('close')
             state(true)  //改变updatestate的值为TRUE
@@ -116,14 +118,15 @@ const close = () => {
 .card-container {
     position: absolute;
     background-color: white;
-    width: 480px;
-    height: 560px;
+    width: 420px;
     border-radius: 5px;
     top: 50%;
     left: 50%;
     transform: translate(-50%, -50%);
-    padding: 16px 24px;
+    font-size: 14px;
+    padding: 12px;
     z-index: 1000;
+    box-sizing: border-box;
     box-shadow: 0px 2px 5px 0px rgba(0, 0, 0, 0.3);
 
     .heard {
@@ -132,14 +135,14 @@ const close = () => {
         justify-content: space-between;
 
         .title {
-            font-size: 24px;
+            font-size: 18px;
             font-weight: 600;
             color: #3D3D3D
         }
 
         .close {
-            width: 24px;
-            height: 24px;
+            width: 18px;
+            height: 18px;
             padding: 4px;
 
             &:hover {
@@ -164,12 +167,12 @@ const close = () => {
     }
 
     .centent {
-        margin-top: 12px;
+        margin-top: 16px;
 
         .team-name,
         .team-description,
         .team-avatar {
-            margin-top: 16px;
+            margin-top: 12px;
             color: #3D3D3D;
 
             .title {
@@ -183,27 +186,45 @@ const close = () => {
             }
 
             input {
-                padding: 6px 12px;
-                width: calc(100% - 24px);
-                height: 24px;
+                padding: 0 6px;
+                width: 100%;
+                height: 32px;
                 border: none;
                 outline-style: none;
-                box-shadow: 0px 2px 5px 0px rgba(0, 0, 0, 0.3);
+                border: 1px solid silver;
                 border-radius: 3px;
                 font-size: 14px;
+                box-sizing: border-box;
+
+                &:hover {
+                    border: 1px solid #e5dbff;
+                }
+
+                &:focus {
+                    border: 1px solid #9775fa;
+                }
             }
 
             textarea {
-                padding: 6px 12px;
-                width: calc(100% - 24px);
+                padding:6px;
+                width: 100%;
                 height: 120px;
                 border: none;
                 outline-style: none;
-                box-shadow: 0px 2px 5px 0px rgba(0, 0, 0, 0.3);
+                border: 1px solid silver;
                 border-radius: 3px;
                 resize: none;
                 font-size: 14px;
                 font-family: none;
+                box-sizing: border-box;
+
+                &:hover {
+                    border: 1px solid #e5dbff;
+                }
+
+                &:focus {
+                    border: 1px solid #9775fa;
+                }
             }
 
             .avatar-content {
@@ -213,8 +234,13 @@ const close = () => {
                 flex-direction: column;
                 align-items: center;
                 justify-content: center;
-                box-shadow: 0px 2px 5px 0px rgba(0, 0, 0, 0.3);
+                border: 1px solid silver;
                 border-radius: 3px;
+                box-sizing: border-box;
+
+                &:hover {
+                    border: 1px solid #e5dbff;
+                }
 
                 svg {
                     width: 32px;
@@ -232,8 +258,10 @@ const close = () => {
                     position: absolute;
                     width: 100%;
                     height: 130px;
+                    box-sizing: border-box;
                     opacity: 0;
                     z-index: 999;
+
 
                     &:hover {
                         cursor: pointer;
@@ -255,19 +283,19 @@ const close = () => {
 
     .addteam {
         text-align: center;
-        margin-top: 40px;
+        margin-top: 12px;
 
         button {
             cursor: pointer;
             color: white;
-            font-size: 18px;
-            letter-spacing: 2px;
-            width: 120px;
-            height: 48px;
+            font-size: 14px;
+            letter-spacing: 1px;
+            width: 80px;
+            height: 32px;
             border: none;
             background-color: #9775fa;
             border-radius: 4px;
-            box-shadow: 1px 1px 3px rgb(0, 0, 0);
+            // box-shadow: 1px 1px 3px rgb(0, 0, 0);
 
             &:hover {
                 background-color: rgba(150, 117, 250, 0.862745098);
@@ -282,5 +310,4 @@ const close = () => {
             }
         }
     }
-}
-</style>
+}</style>

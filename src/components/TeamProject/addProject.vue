@@ -2,7 +2,7 @@
     <div class="card-container">
         <div class="heard">
             <div class="title">
-                {{t('Createteam.add_project')}}
+                {{ t('Createteam.add_project') }}
             </div>
             <div class="close" @click.stop="close">
                 <svg-icon icon-class="close"></svg-icon>
@@ -10,12 +10,15 @@
         </div>
         <div class="centent">
             <div class="project-name">
-                <div class="title">{{t('Createteam.project_name')}}<span>{{ t('Createteam.required') }}</span></div>
-                <input ref="projectinput" type="text" :placeholder="t('Createteam.project_name_tips')" v-model="inputValue" maxlength="20" required>
+                <div class="title">{{ t('Createteam.project_name') }}<span>{{ t('Createteam.required') }}</span></div>
+                <input ref="projectinput" type="text" :placeholder="t('Createteam.project_name_tips')" v-model="inputValue"
+                    maxlength="20" required>
             </div>
             <div class="project-description">
-                <div class="title">{{t('Createteam.project_description')}}<span>{{ t('Createteam.optional') }}</span></div>
-                <textarea name="" id="" cols="30" rows="10" :placeholder="t('Createteam.project_description_tips')" v-model="textareaValue" maxlength="120" />
+                <div class="title">{{ t('Createteam.project_description') }}<span>{{ t('Createteam.optional') }}</span>
+                </div>
+                <textarea name="" id="" cols="30" rows="10" :placeholder="t('Createteam.project_description_tips')"
+                    v-model="textareaValue" maxlength="120" />
             </div>
         </div>
         <div class="addproject">
@@ -37,7 +40,7 @@ const props = defineProps<{
     teamid: string
 }>()
 
-const projectinput=ref()
+const projectinput = ref()
 const inputValue = ref('')
 const textareaValue = ref('')
 const isDisabled = computed(() => inputValue.value.trim() === '')
@@ -62,7 +65,7 @@ const createProject = async () => {
     }
 }
 
-nextTick(()=>{
+nextTick(() => {
     projectinput.value.focus()
 })
 
@@ -75,15 +78,16 @@ const close = () => {
 .card-container {
     position: absolute;
     background-color: white;
-    width: 480px;
-    height: 400px;
+    width: 420px;
     border-radius: 5px;
     top: 50%;
     left: 50%;
     transform: translate(-50%, -50%);
-    padding: 16px 24px;
+    padding: 12px;
+    font-size: 14px;
     z-index: 1000;
     box-shadow: 0px 2px 5px 0px rgba(0, 0, 0, 0.3);
+    box-sizing: border-box;
 
     .heard {
         display: flex;
@@ -91,14 +95,14 @@ const close = () => {
         justify-content: space-between;
 
         .title {
-            font-size: 24px;
+            font-size: 18px;
             font-weight: 600;
             color: #3D3D3D
         }
 
         .close {
-            width: 24px;
-            height: 24px;
+            width: 18px;
+            height: 18px;
             padding: 4px;
 
             &:hover {
@@ -123,11 +127,11 @@ const close = () => {
     }
 
     .centent {
-        margin-top: 12px;
+        margin-top: 16px;
 
         .project-name,
         .project-description {
-            margin-top: 16px;
+            margin-top: 12px;
             color: #3D3D3D;
 
             .title {
@@ -141,46 +145,61 @@ const close = () => {
             }
 
             input {
-                padding: 6px 12px;
-                width: calc(100% - 24px);
-                height: 24px;
+                padding: 0 6px;
+                width: 100%;
+                height: 32px;
                 border: none;
                 outline-style: none;
-                box-shadow: 0px 2px 5px 0px rgba(0, 0, 0, 0.3);
+                border: 1px solid silver;
                 border-radius: 3px;
-                font-size: 14px;
+                box-sizing: border-box;
+
+                &:hover {
+                    border: 1px solid #e5dbff;
+                }
+
+                &:focus {
+                    border: 1px solid #9775fa;
+                }
             }
 
             textarea {
-                padding: 6px 12px;
-                width: calc(100% - 24px);
+                padding: 6px;
+                width: 100%;
                 height: 120px;
-                border: none;
                 outline-style: none;
-                box-shadow: 0px 2px 5px 0px rgba(0, 0, 0, 0.3);
-                border-radius: 3px;
                 resize: none;
-                font-size: 14px;
                 font-family: none;
+                border: 1px solid silver;
+                border-radius: 3px;
+                box-sizing: border-box;
+
+                &:hover {
+                    border: 1px solid #e5dbff;
+                }
+
+                &:focus {
+                    border: 1px solid #9775fa;
+                }
             }
         }
     }
 
     .addproject {
         text-align: center;
-        margin-top: 40px;
+        margin-top: 12px;
 
         button {
             cursor: pointer;
             color: white;
-            font-size: 18px;
-            letter-spacing: 2px;
-            width: 120px;
-            height: 48px;
+            font-size: 14px;
+            letter-spacing: 1px;
+            width: 80px;
+            height: 32px;
             border: none;
             background-color: #9775fa;
             border-radius: 4px;
-            box-shadow: 1px 1px 3px rgb(0, 0, 0);
+            // box-shadow: 1px 1px 3px rgb(0, 0, 0);
 
             &:hover {
                 background-color: rgba(150, 117, 250, 0.862745098);
@@ -195,5 +214,4 @@ const close = () => {
             }
         }
     }
-}
-</style>
+}</style>
