@@ -234,8 +234,9 @@ onUnmounted(() => {
 }
 
 .el-main {
-  height: calc(100% - 56px);
+  height: calc(100vh - 56px);
   padding: 0 20px;
+  overflow: hidden;
 }
 
 .el-aside {

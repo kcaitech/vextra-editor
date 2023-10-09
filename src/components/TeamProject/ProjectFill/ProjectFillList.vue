@@ -294,7 +294,6 @@ function emit(arg0: string) {
 
 </script>
 <style lang="scss" scoped>
-
 .overlay {
     position: absolute;
     top: 0;

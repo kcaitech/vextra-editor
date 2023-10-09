@@ -481,10 +481,11 @@ watchEffect(() => {
     button {
         cursor: pointer;
         border: none;
-        width: 120px;
-        height: 40px;
+        width: 80px;
+        height: 32px;
         border-radius: 4px;
         background-color: #9775fa;
+        box-shadow: 1px 1px 3px #b1b1b1, -1px -1px 3px #b1b1b1;
         box-sizing: border-box;
         transition: all 0.5s ease-out;
         color: white;

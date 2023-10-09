@@ -294,6 +294,7 @@ const close = () => {
             height: 32px;
             border: none;
             background-color: #9775fa;
+            box-shadow: 1px 1px 3px #b1b1b1, -1px -1px 3px #b1b1b1;
             border-radius: 4px;
             // box-shadow: 1px 1px 3px rgb(0, 0, 0);
 
@@ -307,6 +308,7 @@ const close = () => {
 
             &:disabled {
                 background-color: rgba(98, 67, 237, 0.3);
+                box-shadow:none;
             }
         }
     }

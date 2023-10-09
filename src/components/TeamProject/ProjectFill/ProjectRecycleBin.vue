@@ -1,6 +1,8 @@
 <template>
-    <tablelist :data="lists" :iconlist="iconlists" @restore="Restorefile" @ndelete="Deletefile" @rightMeun="rightmenu"
-        :noNetwork="noNetwork" @refreshDoc="refreshDoc" :deleter="true" />
+    <div class="tatle" style="height: calc(100vh - 56px - 96px - 56px);">
+        <tablelist :data="lists" :iconlist="iconlists" @restore="Restorefile" @ndelete="Deletefile" @rightMeun="rightmenu"
+            :noNetwork="noNetwork" @refreshDoc="refreshDoc" :deleter="true" />
+    </div>
     <!-- 右键菜单 -->
     <listrightmenu :items="items" :data="mydata" @getrecycle-lists="GetrecycleLists" @r-deletefile="Deletefile"
         @r-restorefile="Restorefile" />

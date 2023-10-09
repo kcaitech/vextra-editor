@@ -27,7 +27,7 @@
                 <div class="text">{{ t('teamsetting.avatar_restriction') }}</div>
             </div>
             <div class="right">
-                <label class="modify" :style="{ backgroundColor: isDisabled.color }" for="image_uploads">{{
+                <label class="modify" :style="{ backgroundColor: isDisabled.color,boxShadow:isDisabled.shadow }" for="image_uploads">{{
                     t('teamsetting.edit_avatar') }}</label>
                 <input type="file" id="image_uploads" name="image_uploads" accept=".jpg,.png" style="display: none;"
                     @change="midAvatarRequest($event)" :disabled="isDisabled.state" />
@@ -132,7 +132,7 @@ interface teamDataType {
 }
 
 const isDisabled: any = computed(() => {
-    return teamSelfPermType.value === 0 || teamSelfPermType.value === 1 ? { state: true, color: 'rgba(98, 67, 237, 0.3)' } : false
+    return teamSelfPermType.value === 0 || teamSelfPermType.value === 1 ? { state: true, color: 'rgba(98, 67, 237, 0.3)',shadow:'none' } : false
 })
 
 //获取元素，设置焦点并全选内容
@@ -488,7 +488,6 @@ const confirm = () => {
 
         .right button,
         .modify {
-            display: block;
             cursor: pointer;
             color: white;
             font-size: 12px;
@@ -497,6 +496,8 @@ const confirm = () => {
             height: 32px;
             border: none;
             background-color: #9775fa;
+            box-shadow: 1px 1px 3px #b1b1b1, -1px -1px 3px #b1b1b1;
+            margin-right: 8px;
             border-radius: 4px;
             display: flex;
             align-items: center;
@@ -513,6 +514,7 @@ const confirm = () => {
 
             &:disabled {
                 background-color: rgba(98, 67, 237, 0.3);
+                box-shadow: none;
             }
         }
     }

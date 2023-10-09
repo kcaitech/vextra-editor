@@ -5,6 +5,7 @@
                 <div class="title" v-for="(item, index) in titles" :key="index">{{ item }}</div>
             </div>
             <div class="main">
+                <el-scrollbar height="100%">
                 <div class="project-item" :class="{ 'selected': selectid === item.project.id }"
                     v-for="(item, index) in searchvalue === '' ? teamprojectlist : SearchList" :key="item.project.id"
                     @click.stop="selectid = item.project.id" @dblclick.stop="skipProject(item.project.id)"
@@ -70,6 +71,7 @@
                     </div>
                     <div class="other" v-else></div>
                 </div>
+            </el-scrollbar>
             </div>
         </div>
         <div v-else class="datanull">
@@ -409,7 +411,9 @@ onMounted(() => {
 .selected {
     background-color: #e5dbff !important;
 }
-
+.main{
+    height: calc(100vh - 96px - 56px - 56px - 20px);
+}
 .container {
 
     .hearder-container {
@@ -484,6 +488,7 @@ onMounted(() => {
         box-sizing: border-box;
         transition: all 0.5s ease-out;
         color: white;
+        margin-bottom: 10px;
         box-shadow: 1px 1px 3px #b1b1b1, -1px -1px 3px #b1b1b1;
 
         &:hover {

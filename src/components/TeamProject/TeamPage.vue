@@ -1,6 +1,5 @@
 
 <template>
-    <div style="height: 100%; display: flex; flex-direction: column;">
         <div class="team">
             <div class="team-avatar">
                 <div v-if="avatar.length > 4" class="img">
@@ -51,7 +50,6 @@
                 <InviteMember v-if="itemid === 1" class="inner" :teamid="teamID" @close="showoverlay = false" />
             </div>
         </transition>
-    </div>
 </template>
 <script setup lang="ts">
 import { Ref, computed, inject, ref, onMounted, watch, onUnmounted } from 'vue'
@@ -220,6 +218,7 @@ onUnmounted(() => {
             margin-right: 12px;
             transition: all 0.5s ease-out;
             color: white;
+            box-shadow: 1px 1px 3px #b1b1b1, -1px -1px 3px #b1b1b1;
 
             &:hover {
                 background-color: rgba(150, 117, 250, 0.862745098);

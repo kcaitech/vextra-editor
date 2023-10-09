@@ -988,6 +988,7 @@ a {
                 justify-content: center;
                 align-items: center;
                 background: #9775fa;
+                box-shadow: 1px 1px 3px #b1b1b1, -1px -1px 3px #b1b1b1;
                 color: #ffffff;
 
                 &:hover {
@@ -1001,6 +1002,7 @@ a {
 
             .openfile {
                 background-color: #f3f0ff;
+                box-shadow: 1px 1px 3px #b1b1b1, -1px -1px 3px #b1b1b1;
                 color: #9775fa;
 
                 &:hover {

@@ -21,35 +21,38 @@
             </div>
         </div>
         <div class="main">
-            <div class="member-item"
-                v-for=" { user: { nickname, id, avatar }, perm_type }  in  searchvalue === '' ? ListData : SearchList "
-                :key="id">
-                <div class="member-name">
-                    <img :src="avatar" alt="icon" style="width: 20px;height: 20px;;border-radius: 50%;margin-right: 4px;">
-                    {{ nickname }}
-                </div>
-                <div class="member-jurisdiction">
-                    <div class="member-jurisdiction-container">
-                        {{ membertype(perm_type) }}
-                        <div v-if="usertype(perm_type, id)" class="shrink" @click.stop="handleEventitem(id)">
-                            <svg-icon icon-class="down"
-                                :style="{ transform: folds && userid === id ? 'rotate(-180deg)' : 'rotate(0deg)' }"></svg-icon>
-                            <transition name="el-zoom-in-top">
-                                <ul class="filterlist" v-if="userid === id && folds" ref="listmenu">
-                                    <li class="item"
-                                        v-for="(item, index) in  typeitems((userperm === 2 && userID === id) ? 1 : userperm) "
-                                        :key="index" @click.stop="itemEvent(item, teamID, id, perm_type, nickname)">
-                                        <div v-if="true" class="choose"
-                                            :style="{ visibility: item === membertype(perm_type) ? 'visible' : 'hidden' }">
-                                        </div>
-                                        {{ item }}
-                                    </li>
-                                </ul>
-                            </transition>
+            <el-scrollbar height="100%">
+                <div class="member-item"
+                    v-for=" { user: { nickname, id, avatar }, perm_type }  in  searchvalue === '' ? ListData : SearchList "
+                    :key="id">
+                    <div class="member-name">
+                        <img :src="avatar" alt="icon"
+                            style="width: 20px;height: 20px;;border-radius: 50%;margin-right: 4px;">
+                        {{ nickname }}
+                    </div>
+                    <div class="member-jurisdiction">
+                        <div class="member-jurisdiction-container">
+                            {{ membertype(perm_type) }}
+                            <div v-if="usertype(perm_type, id)" class="shrink" @click.stop="handleEventitem(id)">
+                                <svg-icon icon-class="down"
+                                    :style="{ transform: folds && userid === id ? 'rotate(-180deg)' : 'rotate(0deg)' }"></svg-icon>
+                                <transition name="el-zoom-in-top">
+                                    <ul class="filterlist" v-if="userid === id && folds" ref="listmenu">
+                                        <li class="item"
+                                            v-for="(item, index) in  typeitems((userperm === 2 && userID === id) ? 1 : userperm) "
+                                            :key="index" @click.stop="itemEvent(item, teamID, id, perm_type, nickname)">
+                                            <div v-if="true" class="choose"
+                                                :style="{ visibility: item === membertype(perm_type) ? 'visible' : 'hidden' }">
+                                            </div>
+                                            {{ item }}
+                                        </li>
+                                    </ul>
+                                </transition>
+                            </div>
                         </div>
                     </div>
                 </div>
-            </div>
+            </el-scrollbar>
         </div>
     </div>
     <NetworkError v-else @refresh-doc="GetteamMember"></NetworkError>
@@ -553,6 +556,6 @@ onUnmounted(() => {
 }
 
 .main {
-    flex: 1;
+    height: calc(100vh - 96px - 56px - 56px - 20px);
 }
 </style>
