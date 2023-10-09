@@ -1,13 +1,17 @@
 import { Shape, Watchable } from "@kcdesign/data";
 import { Context } from ".";
+import { SymbolListItem } from '@/utils/symbol';
 export class Component extends Watchable(Object) {
     static BRIDGE_CHANGE = 1;
     static WONDER_CHANGE = 2;
     static EXTEND_FOLDER = 3;
+    static CONTAINER_INIT = 4;
     private m_context: Context;
     private m_bridge: boolean = false;
     private m_wonder: Shape | undefined;
-    private m_list_action_target: string = '';
+    private m_component_list_status_set: Set<string> = new Set();
+    private m_component_container: Element | null = null;
+
     constructor(context: Context) {
         super();
         this.m_context = context;
@@ -30,11 +34,28 @@ export class Component extends Watchable(Object) {
         this.m_wonder = undefined;
         this.notify(Component.WONDER_CHANGE);
     }
-    get list_action_target() {
-        return this.m_list_action_target;
-    }
-    set_list_action_target(v: string) {
-        this.m_list_action_target = v;
+    set_list_status(v: string) {
+        if (this.m_component_list_status_set.has(v)) {
+            this.m_component_list_status_set.delete(v);
+        } else {
+            this.m_component_list_status_set.add(v);
+        }
         this.notify(Component.EXTEND_FOLDER);
+    }
+    isExtend(item: SymbolListItem) {
+        return this.m_component_list_status_set.has(item.id);
+    }
+    get list_status() {
+        return this.m_component_list_status_set;
+    }
+    reset_list_status() {
+        this.m_component_list_status_set.clear();
+    }
+    get component_container() {
+        return this.m_component_container;
+    }
+    init_component_container() {
+        this.m_component_container = document.querySelector('.component-container-level-1 > .el-scrollbar > .el-scrollbar__wrap');
+        console.log('component container dom registered');
     }
 }

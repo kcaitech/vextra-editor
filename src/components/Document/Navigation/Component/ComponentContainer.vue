@@ -4,37 +4,31 @@ import { Component } from '@/context/component';
 import ComponentRootCollapse from './ComponentRootCollapse.vue';
 import { onMounted, onUnmounted, ref } from 'vue';
 import { debounce } from 'lodash';
-import { SymbolListItem, list_layout, classification_level_page } from '@/utils/symbol';
+import { SymbolListItem, list_layout, classification_level_page, modify_parent } from '@/utils/symbol';
 interface Props {
     context: Context
     search: string
 }
 const props = defineProps<Props>();
 const local_data = ref<SymbolListItem[]>([]);
-const extend_set: Set<string> = new Set();
 function _list_loader() {
-    local_data.value = list_layout(classification_level_page(props.context.data.pagesMgr.resource), extend_set);
-    
+    const status = props.context.component.list_status;
+    local_data.value = list_layout(classification_level_page(props.context.data.pagesMgr.resource), status);
+    modify_parent(local_data.value as SymbolListItem[]);
+    console.log('list loader result: ', local_data.value);
 }
 const list_loader = debounce(_list_loader, 300);
 function component_watcher(t: number) {
-    if (t === Component.EXTEND_FOLDER) update_by_context_component();
-}
-function update_by_context_component() {
-    const target = props.context.component.list_action_target;
-    if (extend_set.has(target)) {
-        extend_set.delete(target);
-    } else {
-        extend_set.add(target);
-    }
-    _list_loader();
+    if (t === Component.EXTEND_FOLDER) _list_loader();
 }
 onMounted(() => {
     props.context.data.pagesMgr.watch(list_loader);
     props.context.data.symbolsMgr.watch(list_loader);
     props.context.component.watch(component_watcher);
+    props.context.component.reset_list_status();
+    props.context.component.init_component_container();
     _list_loader();
-    console.log('mount');
+    console.log('container mounted');
 })
 onUnmounted(() => {
     props.context.data.pagesMgr.unwatch(list_loader);

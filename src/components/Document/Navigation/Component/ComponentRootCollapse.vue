@@ -26,9 +26,9 @@ onMounted(() => {
                 <svg-icon icon-class="down" :style="{ transform: fold ? 'rotate(-90deg)' : 'rotate(0deg)' }"></svg-icon>
             </div>
         </div>
-        <div class="component-lib-collapse-content" v-show="!fold">
-            <ComponentCollapseItem v-for="(item, index) in props.data" :title="item.title" :data="item" :key="index"
-                :context="props.context">
+        <div class="component-lib-collapse-content" v-show="!fold" @click.stop>
+            <ComponentCollapseItem v-for="(item, index) in props.data" :title="item.title" :data="item"
+                :key="`${item.id}${index}`" :context="props.context">
             </ComponentCollapseItem>
         </div>
     </div>

@@ -58,6 +58,7 @@ declare module '@vue/runtime-core' {
     ComponentCard: typeof import('./src/components/Document/Navigation/Component/ComponentCard.vue')['default']
     ComponentCollapse: typeof import('./src/components/Document/Navigation/Component/ComponentCollapse.vue')['default']
     ComponentCollapseItem: typeof import('./src/components/Document/Navigation/Component/ComponentCollapseItem.vue')['default']
+    ComponentCollapseItemTitle: typeof import('./src/components/Document/Navigation/Component/ComponentCollapseItemTitle.vue')['default']
     ComponentContainer: typeof import('./src/components/Document/Navigation/Component/ComponentContainer.vue')['default']
     ComponentDialog: typeof import('./src/components/Document/Attribute/Module/ComponentDialog.vue')['default']
     ComponentInstance: typeof import('./src/components/Document/Attribute/Module/ComponentInstance.vue')['default']

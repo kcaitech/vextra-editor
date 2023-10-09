@@ -62,7 +62,7 @@ onUnmounted(() => {
 </script>
 <template>
     <div class="list-contianer" ref="list_container" :style="{ 'grid-template-columns': gen_columns() }" :reflush="reflush">
-        <ComponentCard v-for="(item, index) in props.data" :key="index" :data="(item as GroupShape)"
+        <ComponentCard v-for="(item, index) in props.data" :key="index" :data="(item as GroupShape)" :context="props.context"
             @mousedown="(e: MouseEvent) => down(e, item as unknown as Shape)">
         </ComponentCard>
     </div>

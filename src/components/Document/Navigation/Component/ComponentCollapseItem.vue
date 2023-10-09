@@ -1,8 +1,9 @@
 <script setup lang="ts">
 import ComponentListView from './ComponentListView.vue';
-import { ref } from 'vue';
+import { onMounted, ref } from 'vue';
 import { Context } from '@/context';
 import { SymbolListItem } from '@/utils/symbol';
+import ComponentCollapseItemTitle from './ComponentCollapseItemTitle.vue';
 
 interface Props {
     context: Context
@@ -13,8 +14,14 @@ const fold = ref<boolean>(true);
 const props = defineProps<Props>();
 function toggle() {
     fold.value = !fold.value;
-    props.context.component.set_list_action_target(props.data.id);
+    props.context.component.set_list_status(props.data.id);
 }
+function init() {
+    if (!props.data.isFolder) return;
+    const status = props.context.component.list_status;
+    fold.value = !status.has(props.data.id);
+}
+onMounted(init);
 </script>
 <template>
     <div v-if="props.data.isFolder" class="component-lib-collapse" @click.stop="toggle">
@@ -22,7 +29,7 @@ function toggle() {
             <div class="triangle">
                 <div :class="fold ? 'triangle-right' : 'triangle-down'"></div>
             </div>
-            <span>{{ props.title }}</span>
+            <ComponentCollapseItemTitle :data="props.data"></ComponentCollapseItemTitle>
         </div>
     </div>
     <ComponentListView v-else :context="props.context" :data="props.data.symbols"></ComponentListView>

@@ -64,6 +64,7 @@ export interface SymbolListItem {
     extend: boolean
     symbols: SymbolShape[]
     childs: SymbolListItem[]
+    parent: SymbolListItem | undefined
 }
 export function classification_level_page(pages: Page[]) { // 页面这一层比较特殊
     const result: SymbolListItem[] = [];
@@ -76,12 +77,14 @@ export function classification_level_page(pages: Page[]) { // 页面这一层比
                 isFolder: true,
                 extend: false,
                 symbols: [],
-                childs: classification_level_artboard(page)
+                childs: classification_level_artboard(page),
+                parent: undefined
             }
             result.push(item);
         }
     }
-    return result.length > 1 ? result : result.length === 1 ? result[0].childs : [];
+    // return result.length > 1 ? result : result.length === 1 ? result[0].childs : [];
+    return result;
 }
 function get_symbol_level_under(group: GroupShape) {
     const symbols: SymbolShape[] = [];
@@ -100,8 +103,6 @@ export function classification_level_artboard(page: Page) { // 以名称为标�
     const artboards = page.artboardList;
     const result: SymbolListItem[] = [];
     const symbols_under_page = get_symbol_level_under(page);
-    console.log('symbols_under_page: ', symbols_under_page);
-
     if (symbols_under_page.length) {
         const item: SymbolListItem = {
             id: v4(),
@@ -109,7 +110,8 @@ export function classification_level_artboard(page: Page) { // 以名称为标�
             isFolder: false,
             extend: false,
             symbols: symbols_under_page,
-            childs: []
+            childs: [],
+            parent: undefined
         }
         result.push(item);
     }
@@ -130,7 +132,8 @@ export function classification_level_artboard(page: Page) { // 以名称为标�
             isFolder: true,
             extend: false,
             symbols: [],
-            childs: []
+            childs: [],
+            parent: undefined
         }
         const child: SymbolListItem = {
             id: v4(),
@@ -138,7 +141,8 @@ export function classification_level_artboard(page: Page) { // 以名称为标�
             isFolder: false,
             extend: false,
             symbols: symbols,
-            childs: []
+            childs: [],
+            parent: undefined
         }
         item.childs.push(child);
         result.push(item);
@@ -159,6 +163,18 @@ function check_symbol_level_artboard(artboard: GroupShape, init?: SymbolShape[])
         if (item.type === ShapeType.Artboard) check_symbol_level_artboard(item as Artboard, symbols);
     }
     return symbols;
+}
+export function modify_parent(list: SymbolListItem[]) {
+    for (let i = 0, len = list.length; i < len; i++) modify(list[i]);
+    function modify(item: SymbolListItem) {
+        if (!item.childs.length) return;
+        for (let i = 0, len = item.childs.length; i < len; i++) {
+            const child = item.childs[i];
+            child.parent = item;
+            if (!child.childs.length) continue;
+            modify(child);
+        }
+    }
 }
 export function list_layout(list: SymbolListItem[], extend_set: Set<string>, init?: SymbolListItem[]) {
     const result: SymbolListItem[] = init || [];
