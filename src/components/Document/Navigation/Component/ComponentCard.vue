@@ -36,8 +36,8 @@ const options = {
     thresholds: 1,
 }
 function intersection(entries: any) {
-    if (entries[0]?.isIntersecting) {
-        console.log('render card', props.data.name);
+    if (!render_preview.value && entries[0]?.isIntersecting) {
+        // console.log('render card', props.data.name);
         render_preview.value = true;
     }
 }
@@ -45,6 +45,7 @@ const io = new IntersectionObserver(intersection, options);
 function check_render_required() {
     if (!(props.context.component.component_container && preview_container.value)) {
         render_preview.value = true;
+        io.disconnect();
     } else {
         io.observe(preview_container.value);
     }
