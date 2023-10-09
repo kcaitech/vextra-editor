@@ -350,7 +350,7 @@ const getDocumentInfo = async () => {
 
         const repo = new Repository();
         const importDocumentParams: StorageOptions = {
-            endPoint: STORAGE_URL,
+            endPoint: data.endpoint,
             region: data.region,
             accessKey: data.access_key,
             secretKey: data.secret_access_key,
