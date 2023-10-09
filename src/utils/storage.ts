@@ -90,7 +90,7 @@ export class OssStorage implements IStorage {
         this.options = options
     }
 
-    public async get(uri: string, versionId?: string): Promise<Uint8Array> {
+    private async _get(uri: string, versionId?: string): Promise<Uint8Array> {
         const result = await this.client.get(uri, {
             versionId: versionId,
         })
@@ -100,6 +100,16 @@ export class OssStorage implements IStorage {
             throw new Error(`${uri} 数据类型错误 content:${typeof result.content}`)
         }
         return result.content
+    }
+
+    public async get(uri: string, versionId?: string): Promise<Uint8Array> {
+        try {
+            console.log("1")
+            return await this._get(uri, versionId)
+        } catch (err) {
+            console.log("2")
+            return await this._get(uri)
+        }
     }
 
     // 将二进制数据上传到指定的路径
