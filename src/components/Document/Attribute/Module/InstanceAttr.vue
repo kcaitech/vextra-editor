@@ -158,9 +158,10 @@ onUnmounted(() => {
             </div>
             <div class="delete"></div>
         </div>
-        <div class="module_state_item" ref="comps" v-for="(item, index) in instances" :key="index">
+        <!-- <div class="module_state_item" ref="comps" v-for="(item, index) in instances" :key="index"> -->
+        <div class="module_state_item" ref="comps">
             <div class="state_item">
-                <div class="state_name"><span>{{ item.name }}</span></div>
+                <div class="state_name"><span>{{ 111 }}</span></div>
                 <div class="state_value border" @click="compsDialog">
                     <span style="color: #606266;">默认</span>
                     <svg-icon icon-class="down" style="color: #a8abb2;"></svg-icon>
