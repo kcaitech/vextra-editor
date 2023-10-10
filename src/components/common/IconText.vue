@@ -109,7 +109,6 @@ const onMouseMove = (e: MouseEvent) => {
 }
 const onMouseUp = (e: MouseEvent) => {
     isDrag.value = false;
-    emit("onchange", String());
     document.removeEventListener('mousemove', onMouseMove)
     document.removeEventListener('mouseup', onMouseUp)
 
@@ -126,45 +125,15 @@ watch(scale, () => {
     if (props.ticon) {
         const shapes = props.context.selection.selectedShapes;
         if(shapes.length === 1) {
-            const lt = shapes[0].matrix2Root().computeCoord2(0, 0);
-            const frame = shapes[0].frame
-            let result = 0;
-            if(props.ticon === 'X') {
-                result = lt.x;
-            }else if(props.ticon === 'Y') {
-                result = lt.y;
-            }else if(props.ticon === 'W') {
-                result = Math.max(frame.width, 1);
-            }else if(props.ticon === 'H') {
-                result = Math.max(frame.height, 1);
-            }
-            result = result + scale.value.axleX;
+            input.value!.value = String(Number(input.value!.value) + scale.value.axleX)
             if (props.ticon === 'W' || props.ticon === 'H') {
                 if (Number(input.value!.value) < 1) {
-                    result = 1;
+                    input.value!.value = '1'
                 }
             }
-            emit("onchange", String(result));
+            emit("onchange", input.value!.value);
         }else if(shapes.length > 1) {
-            const lt = shapes[0].matrix2Root().computeCoord2(0, 0);
-            const frame = shapes[0].frame
-            let result = 0;
-            if(props.ticon === 'X') {
-                result = lt.x;
-            }else if(props.ticon === 'Y') {
-                result = lt.y;
-            }else if(props.ticon === 'W') {
-                result = Math.max(frame.width, 1);
-            }else if(props.ticon === 'H') {
-                result = Math.max(frame.height, 1);
-            }
-            result = result + scale.value.axleX;
-            if (props.ticon === 'W' || props.ticon === 'H') {
-                if (Number(input.value!.value) < 1) {
-                    result = 1;
-                }
-            }
-            emit("onchange", String(result));
+            
         }
     } else {
         const shapes = props.context.selection.selectedShapes;
