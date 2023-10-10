@@ -5,44 +5,40 @@ import { onMounted, onUnmounted, ref } from 'vue';
 import { GroupShape, Shape, SymbolShape } from '@kcdesign/data';
 import { shape_track } from '@/utils/content';
 import { ClientXY } from '@/context/selection';
+import { is_dbl_action } from '@/utils/action';
+import { add_blur_for_window, add_move_and_up_for_document, check_drag_action, get_current_position_client, modify_down_position_client, remove_blur_from_window, remove_move_and_up_from_document } from '@/utils/mouse_interactive';
 interface Props {
     context: Context
     data: SymbolShape[]
 }
 const props = defineProps<Props>();
-const dragActiveDis = 4; // 拖动 4px 后开始触发移动
 let compo: Shape;
 let down_position: ClientXY = { x: 0, y: 0 };
 let is_drag: boolean = false;
 const reflush = ref<number>(0);
 const list_container = ref<HTMLDivElement>();
 function down(e: MouseEvent, shape: Shape) {
-    if (e.button !== 1) return;
+    if (e.button !== 0) return;
+    if (is_dbl_action()) {
+        shape_track(props.context, shape);
+        return;
+    }
     compo = shape;
-    const root = props.context.workspace.root;
-    down_position = { x: e.clientX - root.x, y: e.clientY - root.y };
-    document.addEventListener('mousemove', move);
-    document.addEventListener('mouseup', up);
+    modify_down_position_client(props.context, e, down_position);
+    add_move_and_up_for_document(move, up);
 }
 function move(e: MouseEvent) {
-    const root = props.context.workspace.root;
-    const curr_position = { x: e.clientX - root.x, y: e.clientY - root.y };
-    if (is_drag) {
-        // todo
-    } else if (Math.hypot(curr_position.x - down_position.x, curr_position.y - down_position.y) > dragActiveDis) {
+    const curr_position = get_current_position_client(props.context, e);
+    if (is_drag) return;
+    if (check_drag_action(down_position, curr_position)) {
         is_drag = true;
         props.context.component.set_brige_status(true);
         props.context.component.register_wonder(compo);
     }
 }
 function up() {
-    if (is_drag) {
-        is_drag = false;
-    } else {
-        shape_track(props.context, compo);
-    }
-    document.removeEventListener('mousemove', move);
-    document.removeEventListener('mouseup', up);
+    if (is_drag) is_drag = false;
+    remove_move_and_up_from_document(move, up);
 }
 function gen_columns() {
     const repeat = Math.floor(((props.context.workspace.root.x - 16) / 106));
@@ -52,12 +48,17 @@ const observer = new ResizeObserver(() => { reflush.value++; });
 function init() {
     list_container.value && observer.observe(list_container.value);
 }
-
+function window_blur() {
+    is_drag = false;
+    remove_move_and_up_from_document(move, up);
+}
 onMounted(() => {
     init();
+    add_blur_for_window(window_blur);
 })
 onUnmounted(() => {
     observer && observer.disconnect();
+    remove_blur_from_window(window_blur);
 })
 </script>
 <template>
