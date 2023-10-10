@@ -6,11 +6,13 @@ export class Component extends Watchable(Object) {
     static WONDER_CHANGE = 2;
     static EXTEND_FOLDER = 3;
     static CONTAINER_INIT = 4;
+    static CARD_TYPE_CHANGE = 5;
     private m_context: Context;
     private m_bridge: boolean = false;
     private m_wonder: Shape | undefined;
     private m_component_list_status_set: Set<string> = new Set();
     private m_component_container: Element | null = null;
+    private m_card_type: 'alpha' | 'beta' = 'beta';
 
     constructor(context: Context) {
         super();
@@ -57,5 +59,12 @@ export class Component extends Watchable(Object) {
     init_component_container() {
         this.m_component_container = document.querySelector('.component-container-level-1 > .el-scrollbar > .el-scrollbar__wrap');
         console.log('component container dom registered');
+    }
+    get card_type() {
+        return this.m_card_type;
+    }
+    set_card_type(v: 'alpha' | 'beta') {
+        this.m_card_type = v;
+        this.notify(Component.CARD_TYPE_CHANGE);
     }
 }

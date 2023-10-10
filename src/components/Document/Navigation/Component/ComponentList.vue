@@ -1,7 +1,6 @@
 <script lang="ts" setup>
-import { ref } from 'vue';
+import { onMounted, ref } from 'vue';
 import { Search } from '@element-plus/icons-vue';
-import ComponentListView from './ComponentListView.vue';
 import ComponentContainer from './ComponentContainer.vue';
 import { Context } from '@/context';
 import { useI18n } from 'vue-i18n';
@@ -16,10 +15,17 @@ interface Emits {
 const props = defineProps<Props>();
 const emit = defineEmits<Emits>();
 const search = ref('');
-const isList = ref('list');
+const isList = ref<'alpha' | 'beta'>('beta');
+function set_card_type(v: 'alpha' | 'beta') {
+    props.context.component.set_card_type(v);
+    isList.value = props.context.component.card_type;
+}
 const close = () => {
     emit('close');
 }
+onMounted(() => {
+    isList.value = props.context.component.card_type;
+})
 </script>
 
 <template>
@@ -33,8 +39,10 @@ const close = () => {
         <div class="search_togger">
             <el-input v-model="search" class="w-50 m-2" :placeholder="t('compos.search_compos')" :prefix-icon="Search" />
             <div class="toggle_list">
-                <svg-icon v-if="isList === 'card'" icon-class="resource" @click.stop="isList = 'list'"></svg-icon>
-                <svg-icon v-if="isList === 'list'" icon-class="text-bulleted-list" @click.stop="isList = 'card'"></svg-icon>
+                <svg-icon v-if="isList === 'beta'" icon-class="resource"
+                    @click.stop="() => set_card_type('alpha')"></svg-icon>
+                <svg-icon v-if="isList === 'alpha'" icon-class="text-bulleted-list"
+                    @click.stop="() => set_card_type('beta')"></svg-icon>
             </div>
         </div>
         <div class="body" :style="{ height: heard ? 'calc(100% - 80px)' : 'calc(100% - 35px)' }">

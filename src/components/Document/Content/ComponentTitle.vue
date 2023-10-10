@@ -122,6 +122,7 @@ function down(e: MouseEvent) {
     const context = props.context; // 组件通信中心，里面包含负责各种功能的通信模组
     if (context.workspace.isPageDragging) return;
     e.stopPropagation();
+    if (isInput.value) return;
     if (!permIsEdit(context)) return; // 检查是否有权限编辑文档， 没有则return；
     if (!check_status(context)) return; // 检查当前文档状态是否可以编辑；
     if (e.button === 0) { // 只允许左键进行拖动
@@ -277,6 +278,9 @@ function modify_speed(e: MouseEvent) {
 function move2(e: MouseEvent) {
     if (e.buttons === 0) e.stopPropagation();
 }
+function move3(e: MouseEvent) {
+    if (e.buttons === 1) e.stopPropagation();
+}
 onMounted(() => {
     props.shape.watch(watcher);
 })
@@ -316,7 +320,7 @@ onUnmounted(() => {
             </div>
         </div>
         <input v-if="isInput" type="text" :style="{ maxWidth: props.maxWidth + 'px', width: inputWidth + 'px' }"
-            ref="nameInput" class="rename" @input="onInputName" @change="ChangeReName">
+            ref="nameInput" class="rename" @input="onInputName" @change="ChangeReName" @mousemove="move3">
         <span v-if="isInput" style="position: absolute; visibility: hidden; top: 0px;" ref="inputSpan"></span>
     </div>
 </template>

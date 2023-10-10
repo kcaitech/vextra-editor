@@ -338,49 +338,48 @@ export function adjust_content_xy(context: Context, m: Media) {
 export function drop(e: DragEvent, context: Context, t: Function) {
   e.preventDefault();
   const data = e?.dataTransfer?.files;
-  if (data && data[0].type.indexOf('image') !== -1) {
-    const item: SystemClipboardItem = { type: ShapeType.Image, contentType: 'image/png', content: '' };
-    const file = data[0];
-    item.contentType = file.type;
-    const frame = { width: 100, height: 100 };
-    const img = new Image();
-    img.onload = function () {
-      frame.width = img.width;
-      frame.height = img.height;
-      const ratio = frame.width / frame.height;
-      if (frame.width >= frame.height) {
-        if (frame.width > 600) {
-          frame.width = 600;
-          frame.height = frame.width / ratio;
-        }
-      } else {
-        if (frame.height > 600) {
-          frame.height = 600;
-          frame.width = 600 * ratio;
-        }
+  if (!data || !data.length || data[0]?.type.indexOf('image') !== -1) return;
+  const item: SystemClipboardItem = { type: ShapeType.Image, contentType: 'image/png', content: '' };
+  const file = data[0];
+  item.contentType = file.type;
+  const frame = { width: 100, height: 100 };
+  const img = new Image();
+  img.onload = function () {
+    frame.width = img.width;
+    frame.height = img.height;
+    const ratio = frame.width / frame.height;
+    if (frame.width >= frame.height) {
+      if (frame.width > 600) {
+        frame.width = 600;
+        frame.height = frame.width / ratio;
       }
-      const fr = new FileReader();
-      fr.onload = function (event) {
-        const base64: any = event.target?.result;
-        if (base64) {
-          fr.onload = function (event) {
-            const buff = event.target?.result;
-            if (base64 && buff) {
-              item.content = { name: file.name, frame, buff: new Uint8Array(buff as any), base64 };
-              const content = item!.content as Media;
-              const root = context.workspace.root;
-              const { clientX, clientY } = e;
-              const xy: PageXY = context.workspace.matrix.inverseCoord({ x: clientX - root.x, y: clientY - root.y });
-              paster_image(context, xy, t, content);
-            }
-          }
-          fr.readAsArrayBuffer(file);
-        }
+    } else {
+      if (frame.height > 600) {
+        frame.height = 600;
+        frame.width = 600 * ratio;
       }
-      fr.readAsDataURL(file);
     }
-    img.src = URL.createObjectURL(file);
+    const fr = new FileReader();
+    fr.onload = function (event) {
+      const base64: any = event.target?.result;
+      if (base64) {
+        fr.onload = function (event) {
+          const buff = event.target?.result;
+          if (base64 && buff) {
+            item.content = { name: file.name, frame, buff: new Uint8Array(buff as any), base64 };
+            const content = item!.content as Media;
+            const root = context.workspace.root;
+            const { clientX, clientY } = e;
+            const xy: PageXY = context.workspace.matrix.inverseCoord({ x: clientX - root.x, y: clientY - root.y });
+            paster_image(context, xy, t, content);
+          }
+        }
+        fr.readAsArrayBuffer(file);
+      }
+    }
+    fr.readAsDataURL(file);
   }
+  img.src = URL.createObjectURL(file);
 }
 /**
  * 使page全部内容都在可视区，并居中
