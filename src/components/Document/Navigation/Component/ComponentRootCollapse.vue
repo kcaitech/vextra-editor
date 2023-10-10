@@ -8,6 +8,7 @@ interface Props {
     title: string
     data: SymbolListItem[]
     extend: boolean
+    container: Element | null
 }
 const fold = ref<boolean>(true);
 const props = defineProps<Props>();
@@ -28,7 +29,7 @@ onMounted(() => {
         </div>
         <div class="component-lib-collapse-content" v-show="!fold" @click.stop>
             <component :is="ComponentCollapseItem" v-for="item in props.data" :title="item.title" :data="item"
-                :key="item.id" :context="props.context"></component>
+                :container="props.container" :key="item.id" :context="props.context"></component>
         </div>
     </div>
 </template>

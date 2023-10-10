@@ -187,3 +187,13 @@ export function list_layout(list: SymbolListItem[], extend_set: Set<string>, ini
     }
     return result;
 }
+export function search_symbol_by_keywords(context: Context, keywords: string) {
+    const symbol_resource = context.data.symbolsMgr.resource;
+    const reg = new RegExp(keywords.toLocaleLowerCase(), 'img');
+    const result: SymbolShape[] = [];
+    for (let i = 0, len = symbol_resource.length; i < len; i++) {
+        const item = symbol_resource[i];
+        if (item.name.search(reg) > -1) result.push(item as SymbolShape);
+    }
+    return result;
+}

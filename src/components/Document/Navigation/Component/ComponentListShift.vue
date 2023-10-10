@@ -4,10 +4,6 @@ import { Search } from '@element-plus/icons-vue';
 import ComponentContainer from './ComponentContainer.vue';
 import { Context } from '@/context';
 import { useI18n } from 'vue-i18n';
-import ComponentSearchPanel from './ComponentSearchPanel.vue';
-import { SymbolShape } from '@kcdesign/data';
-import { search_symbol_by_keywords } from '@/utils/symbol';
-import { debounce } from 'lodash';
 const { t } = useI18n();
 interface Props {
     context: Context
@@ -19,16 +15,11 @@ interface Emits {
 const props = defineProps<Props>();
 const emit = defineEmits<Emits>();
 const search = ref('');
-const search_result = ref<SymbolShape[]>([]);
 const isList = ref<'alpha' | 'beta'>('beta');
 function set_card_type(v: 'alpha' | 'beta') {
     props.context.component.set_card_type(v);
     isList.value = props.context.component.card_type;
 }
-function _searching() {
-    search_result.value = search_symbol_by_keywords(props.context, search.value);
-}
-const searching = debounce(_searching, 100);
 const close = () => {
     emit('close');
 }
@@ -46,8 +37,7 @@ onMounted(() => {
             </div>
         </div>
         <div class="search_togger">
-            <el-input v-model="search" class="w-50 m-2" :placeholder="t('compos.search_compos')" :prefix-icon="Search"
-                @input="searching" />
+            <el-input v-model="search" class="w-50 m-2" :placeholder="t('compos.search_compos')" :prefix-icon="Search" />
             <div class="toggle_list">
                 <svg-icon v-if="isList === 'beta'" icon-class="resource"
                     @click.stop="() => set_card_type('alpha')"></svg-icon>
@@ -55,11 +45,9 @@ onMounted(() => {
                     @click.stop="() => set_card_type('beta')"></svg-icon>
             </div>
         </div>
-        <div class="body" v-show="!search" :style="{ height: heard ? 'calc(100% - 80px)' : 'calc(100% - 35px)' }">
+        <div class="body" :style="{ height: heard ? 'calc(100% - 80px)' : 'calc(100% - 35px)' }">
             <ComponentContainer :context="context" :search="search"></ComponentContainer>
         </div>
-        <ComponentSearchPanel v-show="search" :context="props.context" :data="(search_result as SymbolShape[])">
-        </ComponentSearchPanel>
     </div>
 </template>
 

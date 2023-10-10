@@ -9,6 +9,7 @@ import { Selection } from '@/context/selection';
 interface Props {
     data: GroupShape
     context: Context
+    container: Element | null
 }
 const props = defineProps<Props>();
 const common = initCommonShape(props);
@@ -30,7 +31,7 @@ function check_selected_status() {
     selected.value = props.context.selection.isSelectedShape(props.data);
 }
 const options = {
-    root: props.context.component.component_container,
+    root: props.container,
     rootMargin: '0px 0px 0px 0px',
     thresholds: 1,
 }
@@ -42,7 +43,7 @@ function intersection(entries: any) {
 }
 const io = new IntersectionObserver(intersection, options);
 function check_render_required() {
-    if (!(props.context.component.component_container && preview_container.value)) {
+    if (!(props.container && preview_container.value)) {
         render_preview.value = true;
         io.disconnect();
     } else {

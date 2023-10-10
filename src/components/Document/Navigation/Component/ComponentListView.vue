@@ -16,6 +16,7 @@ import { Component } from '@/context/component';
 interface Props {
     context: Context
     data: SymbolShape[]
+    container: Element | null
 }
 const props = defineProps<Props>();
 let compo: Shape;
@@ -99,13 +100,15 @@ onUnmounted(() => {
 <template>
     <div v-if="render_alpha" class="list-container-alpha">
         <ComponentCardAlpha v-for="(item, index) in props.data" :key="index" :data="(item as GroupShape)"
-            :context="props.context" @mousedown="(e: MouseEvent) => down(e, item as unknown as Shape)">
+            :context="props.context" @mousedown="(e: MouseEvent) => down(e, item as unknown as Shape)"
+            :container="props.container">
         </ComponentCardAlpha>
     </div>
     <div v-else class="list-container-beta" ref="list_container_beta" :style="{ 'grid-template-columns': gen_columns() }"
         :reflush="reflush">
         <ComponentCardBeta v-for="(item, index) in props.data" :key="index" :data="(item as GroupShape)"
-            :context="props.context" @mousedown="(e: MouseEvent) => down(e, item as unknown as Shape)">
+            :context="props.context" @mousedown="(e: MouseEvent) => down(e, item as unknown as Shape)"
+            :container="props.container">
         </ComponentCardBeta>
     </div>
 </template>
