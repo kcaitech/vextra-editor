@@ -2,7 +2,6 @@
 import { ref, nextTick, onMounted, onUnmounted } from 'vue';
 import { CaretBottom } from '@element-plus/icons-vue'
 import { Context } from '@/context';
-import ComponentPageList from '../../Navigation/Component/ComponentPageList.vue';
 import CompoSelectList from './CompoSelectList.vue';
 import { useI18n } from 'vue-i18n';
 const { t } = useI18n();

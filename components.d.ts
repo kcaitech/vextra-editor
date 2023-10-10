@@ -53,11 +53,9 @@ declare module '@vue/runtime-core' {
     CommentTab: typeof import('./src/components/Document/Navigation/Comment/CommentTab.vue')['default']
     CommentView: typeof import('./src/components/Document/Content/CommentView.vue')['default']
     CompLayerShow: typeof import('./src/components/Document/Attribute/PopoverMenu/CompLayerShow.vue')['default']
-    ComponentAll: typeof import('./src/components/Document/Navigation/Component/ComponentAll.vue')['default']
     ComponentAttr: typeof import('./src/components/Document/Attribute/Module/ComponentAttr.vue')['default']
     ComponentCardAlpha: typeof import('./src/components/Document/Navigation/Component/ComponentCardAlpha.vue')['default']
     ComponentCardBeta: typeof import('./src/components/Document/Navigation/Component/ComponentCardBeta.vue')['default']
-    ComponentCollapse: typeof import('./src/components/Document/Navigation/Component/ComponentCollapse.vue')['default']
     ComponentCollapseItem: typeof import('./src/components/Document/Navigation/Component/ComponentCollapseItem.vue')['default']
     ComponentCollapseItemTitle: typeof import('./src/components/Document/Navigation/Component/ComponentCollapseItemTitle.vue')['default']
     ComponentContainer: typeof import('./src/components/Document/Navigation/Component/ComponentContainer.vue')['default']
@@ -65,8 +63,6 @@ declare module '@vue/runtime-core' {
     ComponentInstance: typeof import('./src/components/Document/Attribute/Module/ComponentInstance.vue')['default']
     ComponentList: typeof import('./src/components/Document/Navigation/Component/ComponentList.vue')['default']
     ComponentListView: typeof import('./src/components/Document/Navigation/Component/ComponentListView.vue')['default']
-    ComponentPageCard: typeof import('./src/components/Document/Navigation/Component/ComponentPageCard.vue')['default']
-    ComponentPageList: typeof import('./src/components/Document/Navigation/Component/ComponentPageList.vue')['default']
     ComponentRootCollapse: typeof import('./src/components/Document/Navigation/Component/ComponentRootCollapse.vue')['default']
     ComponentState: typeof import('./src/components/Document/Attribute/Module/ComponentState.vue')['default']
     ComponentTitle: typeof import('./src/components/Document/Content/ComponentTitle.vue')['default']
@@ -248,6 +244,5 @@ declare module '@vue/runtime-core' {
     UserAvatar: typeof import('./src/components/Document/Toolbar/UserAvatar.vue')['default']
     UserInfo: typeof import('./src/components/Document/Toolbar/UserInfo.vue')['default']
     UsersSelection: typeof import('./src/components/Document/Selection/TeamWork/UsersSelection.vue')['default']
-    W: typeof import('./src/components/Document/Navigation/Component/W.vue')['default']
   }
 }
