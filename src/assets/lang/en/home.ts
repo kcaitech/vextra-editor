@@ -167,7 +167,7 @@ export const navi = {
     add_page: 'Add new page',
     copy: 'copy',
     development: 'Functional development…',
-    overname: 'The maximum filename length is 50'
+    overname: 'The maximum length of filenames is 50 characters'
 }
 
 export const frame = {

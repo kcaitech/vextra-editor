@@ -100,6 +100,9 @@ function calc_attri() {
         if (w.value !== mixed) w.value = Math.max(frame.width, 1);
         if (isMixed.type === 'mixed' || !isMixed.type) {
             if (h.value !== mixed) h.value = Math.max(frame.height, 1);
+            if (isMixed.type === 'mixed') {
+                model_disable_state.height = true;
+            }
         } else {
             h.value = 0;
         }
@@ -123,6 +126,9 @@ function check_mixed() {
     isMixed.constrainerProportions === 'mixed' ? isLock.value = true : isLock.value = (isMixed.constrainerProportions as boolean)!;
     if (isMixed.type === 'mixed' || !isMixed.type) {
         isMixed.h === 'mixed' ? h.value = mixed : h.value = isMixed.h;
+        if (isMixed.type === 'mixed') {
+            model_disable_state.height = true;
+        }
     } else {
         h.value = 0;
         model_disable_state.height = true;
@@ -348,6 +354,7 @@ const onChangeRadian = (value: string, type: 'rt' | 'lt' | 'rb' | 'lb') => {
             if (!radius.value) return;
             const fixedRadius = newRadian > 0 ? Number(newRadian.toFixed(fix)) : 0;
             const shape = props.context.selection.selectedShapes[0];
+            radius.value.lt = fixedRadius;
             if (shape instanceof RectShape) {
                 e.setRectRadius(fixedRadius, fixedRadius, fixedRadius, fixedRadius);
             } else {
@@ -676,4 +683,5 @@ onUnmounted(() => {
             height: 90%;
         }
     }
-}</style>
+}
+</style>
