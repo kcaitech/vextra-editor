@@ -101,6 +101,7 @@ function calc_attri() {
             if (h.value !== mixed) h.value = Math.max(frame.height, 1);
             if (isMixed.type === 'mixed') {
                 model_disable_state.height = true;
+                h.value = mixed
             }
         } else {
             h.value = 0;
@@ -127,6 +128,7 @@ function check_mixed() {
         isMixed.h === 'mixed' ? h.value = mixed : h.value = isMixed.h;
         if (isMixed.type === 'mixed') {
                 model_disable_state.height = true;
+                h.value = mixed
             }
     } else {
         h.value = 0;
