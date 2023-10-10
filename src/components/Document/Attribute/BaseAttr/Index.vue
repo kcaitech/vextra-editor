@@ -93,10 +93,18 @@ function calc_attri() {
         const shape = props.context.selection.selectedShapes[0];
         const lt = shape.matrix2Root().computeCoord2(0, 0);
         const frame = shape.frame;
+        const isMixed = is_mixed(props.context.selection.selectedShapes);
         if (x.value !== mixed) x.value = lt.x;
         if (y.value !== mixed) y.value = lt.y;
         if (w.value !== mixed) w.value = Math.max(frame.width, 1);
-        if (h.value !== mixed) h.value = Math.max(frame.height, 1);
+        if (isMixed.type === 'mixed' || !isMixed.type) {
+            if (h.value !== mixed) h.value = Math.max(frame.height, 1);
+            if (isMixed.type === 'mixed') {
+                model_disable_state.height = true;
+            }
+        } else {
+            h.value = 0;
+        }
     }
 }
 function _update_view() {
@@ -113,9 +121,17 @@ function check_mixed() {
     isMixed.x === 'mixed' ? x.value = mixed : x.value = isMixed.x;
     isMixed.y === 'mixed' ? y.value = mixed : y.value = isMixed.y;
     isMixed.w === 'mixed' ? w.value = mixed : w.value = isMixed.w;
-    isMixed.h === 'mixed' ? h.value = mixed : h.value = isMixed.h;
     isMixed.rotate === 'mixed' ? rotate.value = mixed : rotate.value = isMixed.rotate;
     isMixed.constrainerProportions === 'mixed' ? isLock.value = true : isLock.value = (isMixed.constrainerProportions as boolean)!
+    if (isMixed.type === 'mixed' || !isMixed.type) {
+        isMixed.h === 'mixed' ? h.value = mixed : h.value = isMixed.h;
+        if (isMixed.type === 'mixed') {
+                model_disable_state.height = true;
+            }
+    } else {
+        h.value = 0;
+        model_disable_state.height = true;
+    }
 }
 
 function radiusValuesMixed(radius: any) {
@@ -342,6 +358,7 @@ const onChangeRadian = (value: string, type: 'rt' | 'lt' | 'rb' | 'lb') => {
             if (!radius.value) return;
             const fixedRadius = newRadian > 0 ? Number(newRadian.toFixed(fix)) : 0;
             const shape = props.context.selection.selectedShapes[0];
+            radius.value.lt = fixedRadius;
             if (shape instanceof RectShape) {
                 e.setRectRadius(fixedRadius, fixedRadius, fixedRadius, fixedRadius);
             } else {
@@ -447,20 +464,20 @@ onUnmounted(() => {
     <div class="table">
         <div class="tr">
             <IconText class="td positon" ticon="X" :text="typeof (x) === 'number' ? x.toFixed(fix) : x"
-                @onchange="onChangeX" :disabled="model_disable_state.x" />
+                @onchange="onChangeX" :disabled="model_disable_state.x"  :context="context"/>
             <div class="space"></div>
             <IconText class="td positon" ticon="Y" :text="typeof (y) === 'number' ? y.toFixed(fix) : y"
-                @onchange="onChangeY" :disabled="model_disable_state.y" />
+                @onchange="onChangeY" :disabled="model_disable_state.y"  :context="context"/>
             <Position :context="props.context" :shape="props.context.selection.selectedShapes[0]"></Position>
         </div>
         <div class="tr" :reflush="reflush">
             <IconText class="td frame" ticon="W" :text="typeof (w) === 'number' ? w.toFixed(fix) : w" @onchange="onChangeW"
-                :disabled="model_disable_state.width" />
+                :disabled="model_disable_state.width"  :context="context"/>
             <div class="lock" @click="lockToggle">
                 <svg-icon v-if="!s_length" :icon-class="isLock ? 'lock' : 'unlock'"></svg-icon>
             </div>
             <IconText class="td frame" ticon="H" :text="typeof (h) === 'number' ? h.toFixed(fix) : h" @onchange="onChangeH"
-                :disabled="model_disable_state.height" />
+                :disabled="model_disable_state.height"  :context="context"/>
             <div class="adapt" v-if="s_adapt" :title="t('attr.adapt')" @click="adapt">
                 <svg-icon icon-class="adapt"></svg-icon>
             </div>
@@ -468,7 +485,7 @@ onUnmounted(() => {
         </div>
         <div class="tr" :reflush="reflush">
             <IconText class="td angle" svgicon="angle" :text="`${rotate}` + '°'" @onchange="onChangeRotate"
-                :frame="{ width: 14, height: 14 }" :disabled="model_disable_state.rotation" />
+                :frame="{ width: 14, height: 14 }" :disabled="model_disable_state.rotation"  :context="context"/>
             <Tooltip v-if="s_flip" :content="t('attr.flip_h')" :offset="15">
                 <div :class="{ flip: !model_disable_state.filpVertical, 'flip-disable': model_disable_state.filpVertical, 'ml-24': true }"
                     @click="fliph">
@@ -486,20 +503,21 @@ onUnmounted(() => {
         <div class="tr" v-if="s_radius" :reflush="reflush">
             <IconText class="td frame" svgicon="radius" :multipleValues="multipleValues" :text="radius?.lt || 0"
                 :frame="{ width: 12, height: 12 }" @onchange="e => onChangeRadian(e, 'lt')"
-                :disabled="model_disable_state.radius" />
+                :disabled="model_disable_state.radius"  :context="context"/>
             <div class="td frame ml-24" v-if="!isMoreForRadius"></div>
             <IconText v-if="isMoreForRadius" class="td frame ml-24" svgicon="radius" :text="radius?.rt || 0"
-                :frame="{ width: 12, height: 12, rotate: 90 }" @onchange="e => onChangeRadian(e, 'rt')" />
+                :frame="{ width: 12, height: 12, rotate: 90 }" @onchange="e => onChangeRadian(e, 'rt')"  :context="context"/>
             <div class="more-for-radius" @click="radiusToggle" v-if="s_radius && multiRadius">
                 <svg-icon :icon-class="isMoreForRadius ? 'more-for-radius' : 'more-for-radius'"></svg-icon>
             </div>
         </div>
         <div class="tr" v-if="isMoreForRadius">
             <IconText class="td frame" svgicon="radius" :text="radius?.lb || 0"
-                :frame="{ width: 12, height: 12, rotate: 270 }" @onchange="e => onChangeRadian(e, 'lb')" />
+                :frame="{ width: 12, height: 12, rotate: 270 }" @onchange="e => onChangeRadian(e, 'lb')"  :context="context"/>
             <IconText class="td frame ml-24" svgicon="radius" :text="radius?.rb || 0"
-                :frame="{ width: 12, height: 12, rotate: 180 }" @onchange="e => onChangeRadian(e, 'rb')" />
-            <RadiusForIos :context="props.context"></RadiusForIos>
+                :frame="{ width: 12, height: 12, rotate: 180 }" @onchange="e => onChangeRadian(e, 'rb')"  :context="context"/>
+            <!-- <RadiusForIos :context="props.context"></RadiusForIos> -->
+            <div style="width: 22px;height: 22px;"></div>
         </div>
     </div>
 </template>
