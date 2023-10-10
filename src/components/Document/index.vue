@@ -334,9 +334,10 @@ const getDocumentInfo = async () => {
             })
             return
         }
-        permType.value = dataInfo.data.document_permission.perm_type;
+        const perm = dataInfo.data.document_permission.perm_type
+        permType.value = perm;
         //获取文档类型是否为私有文档且有无权限
-        if (docInfo.value.document_permission.perm_type === 0) {
+        if (perm === 0) {
             router.push({
                 name: 'apply',
                 query: {
@@ -370,7 +371,7 @@ const getDocumentInfo = async () => {
             const file_name = docInfo.value.document?.name || document.name;
             window.document.title = file_name.length > 8 ? `${file_name.slice(0, 8)}... - ProtoDesign` : `${file_name} - ProtoDesign`;
             context = new Context(document, coopRepo);
-            context.workspace.setDocumentPerm(dataInfo.data.document_permission.perm_type)
+            context.workspace.setDocumentPerm(perm)
             getDocumentAuthority();
             getUserInfo()
             
@@ -388,8 +389,8 @@ const getDocumentInfo = async () => {
                 router.push("/");
                 return;
             }
-            await context.communication.docResourceUpload.start(token, docId);
-            await context.communication.docCommentOp.start(token, docId);
+            if(perm === 3) await context.communication.docResourceUpload.start(token, docId);
+            if(perm >= 2) await context.communication.docCommentOp.start(token, docId);
             await context.communication.docSelectionOp.start(token, docId, context);
             context.communication.docSelectionOp.addOnMessage(teamSelectionModifi)
         }
@@ -427,11 +428,14 @@ async function upload(projectId: string) {
     if (!await context.communication.docOp.start(token, doc_id, context!.data, context.coopRepo, result!.data.version_id ?? "")) {
         // todo 文档操作通道开启失败处理
     }
-    context.communication.docResourceUpload.start(token, doc_id);
-    context.communication.docCommentOp.start(token, doc_id);
-    await context.communication.docSelectionOp.start(token, doc_id, context);
-    context.communication.docSelectionOp.addOnMessage(teamSelectionModifi);
-    context.workspace.notify(WorkSpace.INIT_DOC_NAME);
+    getDocumentAuthority().then(async _ => {
+        if(!context) return;
+        if(permType.value === 3) context.communication.docResourceUpload.start(token, doc_id);
+        if(permType.value && permType.value >= 2) context.communication.docCommentOp.start(token, doc_id);
+        context.communication.docSelectionOp.start(token, doc_id, context);
+        await context.communication.docSelectionOp.addOnMessage(teamSelectionModifi);
+        context.workspace.notify(WorkSpace.INIT_DOC_NAME);
+    })
 }
 let timer: any = null;
 function init_screen_size() {
