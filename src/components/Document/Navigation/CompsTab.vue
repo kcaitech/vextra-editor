@@ -61,14 +61,7 @@ function set_parent(parent: CompoItem, range: CompoItem[]) {
 
 <template>
     <div class="comps-container">
-        <ComponentList :context="props.context">
-            <!-- <el-scrollbar>
-                <div class="demo-collapse" v-for="(item, index) in list" :key="index">
-                    <ComponentCollapse :context="context" :type="type.type" :item="item" :index="index"></ComponentCollapse>
-                </div>
-            </el-scrollbar> -->
-
-        </ComponentList>
+        <ComponentList :context="props.context"></ComponentList>
         <ShowHiddenLeft :showLeft="showLeft" :leftTriggleVisible="leftTriggleVisible" @showNavigation="showHiddenLeft">
         </ShowHiddenLeft>
     </div>
