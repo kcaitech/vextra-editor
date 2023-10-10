@@ -70,7 +70,7 @@ export function useControllerCustom(context: Context, i18nT: Function) {
             }
         }
     }
-    const migrate: (shapes: Shape[], start: ClientXY, end: ClientXY) => void = debounce(_migrate, 100);
+    const migrate: (shapes: Shape[], start: ClientXY, end: ClientXY) => void = debounce(_migrate, 200);
     function getCloesetContainer(shape: Shape): Shape {
         let result: any = selection.selectedPage!
         let p = shape.parent;
