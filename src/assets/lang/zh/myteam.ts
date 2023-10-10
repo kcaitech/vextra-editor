@@ -120,7 +120,7 @@ export const projectpage={
 }
 
 export const teammember={
-    transferCreator_context:'转让创建者权限后，您将不再拥有该团队，后续作为管理员留在项目中。',
+    transferCreator_context:'转让创建者权限后，您将不再拥有该团队，后续作为管理员留在团队中。',
     transferCreator_title:'转移创建者权限',
     transferCreator_confirm:'确定转移',
     outTeamDialog_context:'移出团队后，该成员无法再访问团中的项目及资源。',

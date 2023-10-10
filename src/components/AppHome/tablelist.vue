@@ -1,5 +1,4 @@
 <template>
-    <div class="table">
         <el-auto-resizer>
             <template #default="{ height, width }">
                 <el-table-v2 :columns="columns" :data=props.data :width="width" :height="height" :row-class="rowClass"
@@ -24,7 +23,6 @@
                 </el-table-v2>
             </template>
         </el-auto-resizer>
-    </div>
 </template>
 <script setup lang="tsx">
 import { ref, watchEffect, Ref, inject } from 'vue'
@@ -398,12 +396,12 @@ watchEffect(() => {
 </script>
 <style lang="scss" scoped>
 .table {
-    height: calc(100vh - 140px)
+    height: calc(100vh - 120px);
 }
 
 @media screen and (max-width: 1000px) {
     .table {
-        height: calc(100vh - 125px);
+        height: calc(100vh - 120px);
     }
 }
 :deep(.el-table-v2__row) {
@@ -483,10 +481,11 @@ watchEffect(() => {
     button {
         cursor: pointer;
         border: none;
-        width: 120px;
-        height: 40px;
+        width: 80px;
+        height: 32px;
         border-radius: 4px;
         background-color: #9775fa;
+        box-shadow: 1px 1px 3px #b1b1b1, -1px -1px 3px #b1b1b1;
         box-sizing: border-box;
         transition: all 0.5s ease-out;
         color: white;

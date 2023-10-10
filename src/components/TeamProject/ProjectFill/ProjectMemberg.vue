@@ -252,7 +252,11 @@ onMounted(() => {
         <div class="body">
             <el-scrollbar height="250px">
                 <div class="member-item" v-for="(item, index) in memberList" :key="index">
-                    <div class="name">{{ item.user.nickname }}</div>
+                    <div class="name">
+                        <img :src="item.user.avatar" alt="icon"
+                            style="width: 20px;height: 20px;;border-radius: 50%;margin-right: 4px;">
+                        {{ item.user.nickname }}
+                    </div>
                     <el-dropdown trigger="click" @command="handleCommandPerm"
                         :disabled="item.perm_type === 5 || (item.perm_type === 4 && props.currentProject.self_perm_type !== 5)">
                         <span class="el-dropdown-link">
@@ -357,9 +361,12 @@ onMounted(() => {
         justify-content: space-between;
         padding-right: 10px;
         height: 25px;
+        margin-bottom: 6px;
 
         .name {
             width: 60%;
+            display: flex;
+            align-items: center;
             overflow: hidden;
             white-space: nowrap;
             text-overflow: ellipsis;
