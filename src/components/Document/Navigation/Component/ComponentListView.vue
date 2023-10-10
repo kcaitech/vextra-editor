@@ -10,7 +10,6 @@ interface Props {
     data: SymbolShape[]
 }
 const props = defineProps<Props>();
-const compos = ref<Shape[]>([]);
 const dragActiveDis = 4; // 拖动 4px 后开始触发移动
 let compo: Shape;
 let down_position: ClientXY = { x: 0, y: 0 };
@@ -18,6 +17,7 @@ let is_drag: boolean = false;
 const reflush = ref<number>(0);
 const list_container = ref<HTMLDivElement>();
 function down(e: MouseEvent, shape: Shape) {
+    if (e.button !== 1) return;
     compo = shape;
     const root = props.context.workspace.root;
     down_position = { x: e.clientX - root.x, y: e.clientY - root.y };
@@ -46,7 +46,7 @@ function up() {
 }
 function gen_columns() {
     const repeat = Math.floor(((props.context.workspace.root.x - 16) / 106));
-    return `repeat(${repeat},100px)`;
+    return `repeat(${repeat}, 100px)`;
 }
 const observer = new ResizeObserver(() => { reflush.value++; });
 function init() {
@@ -62,8 +62,8 @@ onUnmounted(() => {
 </script>
 <template>
     <div class="list-contianer" ref="list_container" :style="{ 'grid-template-columns': gen_columns() }" :reflush="reflush">
-        <ComponentCard v-for="(item, index) in props.data" :key="index" :data="(item as GroupShape)" :context="props.context"
-            @mousedown="(e: MouseEvent) => down(e, item as unknown as Shape)">
+        <ComponentCard v-for="(item, index) in props.data" :key="index" :data="(item as GroupShape)"
+            :context="props.context" @mousedown="(e: MouseEvent) => down(e, item as unknown as Shape)">
         </ComponentCard>
     </div>
 </template>
