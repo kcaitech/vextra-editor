@@ -47,7 +47,7 @@ const close = () => {
 .container {
     height: 100%;
     min-width: 250px;
-    padding: var(--default-padding-half);
+    padding: 8px 0 8px 8px;
     font-size: var(--font-default-fontsize);
     box-sizing: border-box;
 

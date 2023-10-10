@@ -271,9 +271,7 @@ export class Selection extends Watchable(Object) implements ISave4Restore {
     }
 
     isSelectedShape(shape: Shape) {
-        const ret = this.m_selectShapes.find((value) => {
-            return shape.id == value.id;
-        })
+        const ret = this.m_selectShapes.find(value => shape.id == value.id);
         return ret !== undefined;
     }
 

@@ -100,8 +100,6 @@ const shapelist = ref<List>();
 const listBody = ref<HTMLDivElement>()
 const list_h = ref<number>(0)
 function _notifySourceChange(t?: number | string, shape?: Shape) {
-    const is_freeze = props.context.navi.is_shapelist_freeze;
-    if (is_freeze) return;
     if (t === Selection.CHANGE_SHAPE || t === 'changed') {
         const shapes = props.context.selection.selectedShapes
         shapes.forEach(item => {
@@ -135,7 +133,7 @@ function _notifySourceChange(t?: number | string, shape?: Shape) {
     }
     listviewSource.notify(0, 0, 0, Number.MAX_VALUE);
 }
-const notifySourceChange = debounce(_notifySourceChange, 48);
+const notifySourceChange = debounce(_notifySourceChange, 30);
 const stopWatch = watch(() => props.page, () => {
     let source = shapeListMap.get(props.page.id)
     if (!source) {
@@ -164,43 +162,39 @@ function toggleExpand(shape: Shape) {
 function selectShape(shape: Shape, ctrlKey: boolean, metaKey: boolean, shiftKey: boolean) {
     if (shiftKey) {
         selectShapeWhenShiftIsPressed(shape);
-    } else {
-        if (ctrlKey || metaKey) {
-            const selected_map: Map<string, Shape> = new Map();
-            const selected = props.context.selection.selectedShapes;
-            for (let i = 0; i < selected.length; i++) {
-                if (selected[i].id === shape.id) {
-                    props.context.selection.unSelectShape(shape); // 元素本身被选中的话就取消选中
-                    return;
-                }
-                selected_map.set(selected[i].id, selected[i]);
+    } else if (ctrlKey || metaKey) {
+        const selected_map: Map<string, Shape> = new Map();
+        const selected = props.context.selection.selectedShapes;
+        for (let i = 0; i < selected.length; i++) {
+            if (selected[i].id === shape.id) {
+                props.context.selection.unSelectShape(shape); // 元素本身被选中的话就取消选中
+                return;
             }
-            let p = shape.parent;
-            while (p && p.type !== ShapeType.Page) { // 元素有父级被选中就不需要在选中了
+            selected_map.set(selected[i].id, selected[i]);
+        }
+        let p = shape.parent;
+        while (p && p.type !== ShapeType.Page) { // 元素有父级被选中就不需要在选中了
+            if (selected_map.get(p.id)) return;
+            p = p.parent;
+        }
+        selected.push(shape);
+        selected_map.set(shape.id, shape);
+        for (let i = 0; i < selected.length; i++) {
+            const s = selected[i];
+            let need_remove = false;
+            let p = s.parent;
+            while (p && p.type !== ShapeType.Page) {
                 if (selected_map.get(p.id)) {
-                    return;
+                    need_remove = true;
+                    break;
                 }
                 p = p.parent;
             }
-            selected.push(shape);
-            selected_map.set(shape.id, shape);
-            for (let i = 0; i < selected.length; i++) {
-                const s = selected[i];
-                let need_remove = false;
-                let p = s.parent;
-                while (p && p.type !== ShapeType.Page) {
-                    if (selected_map.get(p.id)) {
-                        need_remove = true;
-                        break;
-                    }
-                    p = p.parent;
-                }
-                if (need_remove) selected_map.delete(s.id);
-            }
-            props.context.selection.rangeSelectShape(Array.from(selected_map.values()));
-        } else {
-            props.context.selection.selectShape(shape);
+            if (need_remove) selected_map.delete(s.id);
         }
+        props.context.selection.rangeSelectShape(Array.from(selected_map.values()));
+    } else {
+        props.context.selection.selectShape(shape);
     }
 }
 function selectShapeWhenShiftIsPressed(shape: Shape) {

@@ -226,7 +226,7 @@ onUnmounted(() => {
         @click="selectShape" @mousemove="hoverShape" @mouseleave="unHoverShape" @mousedown="mousedown">
         <div class="ph" :style="{ width: `${ph_width}px`, height: '100%', minWidth: `${ph_width}px` }"></div>
         <div :class="{ triangle: showTriangle, slot: !showTriangle }" @click="toggleExpand">
-            <div v-if="showTriangle" :class="{ 'triangle-right': !props.data.expand, 'triangle-down': props.data.expand }">
+            <div v-if="showTriangle" :class="props.data.expand ? 'triangle-down' : 'triangle-right'">
             </div>
         </div>
         <div class="container-svg" @dblclick="toggleContainer">
