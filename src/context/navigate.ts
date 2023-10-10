@@ -12,12 +12,14 @@ export class Navi extends Watchable(Object) {
   static TEXT_SELECTION_CHANGE = 7;
   static SHAPELIST_UPDATE = 8;
   static ADD_PAGE = 9;
+  static MODULE_CHANGE = 10;
   private m_page_need_extend: boolean = false;
   private m_focus_text: TextSelection | undefined;
   private m_keywords: string = '';
   private m_shapelist_freeze: boolean = false;
   private m_accurate: boolean = false;
   private m_phase1: string = '';
+  private m_cur_module: "Shape" | "Comps" | "Resource" | "Comment" = 'Shape';
   constructor() {
     super();
   }
@@ -58,7 +60,11 @@ export class Navi extends Watchable(Object) {
   setMode(isAcc: boolean) {
     this.m_accurate = isAcc;
   }
-  init_component_container() {
-    
+  get current_navi_module() {
+    return this.m_cur_module;
+  }
+  set_current_navi_module(v: "Shape" | "Comps" | "Resource" | "Comment") {
+    this.m_cur_module = v;
+    this.notify(Navi.MODULE_CHANGE);
   }
 }

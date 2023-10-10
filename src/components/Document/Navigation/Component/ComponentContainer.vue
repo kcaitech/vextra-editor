@@ -6,6 +6,7 @@ import { onMounted, onUnmounted, ref } from 'vue';
 import { debounce } from 'lodash';
 import { SymbolListItem, list_layout, classification_level_page, modify_parent } from '@/utils/symbol';
 import { useI18n } from 'vue-i18n';
+import { Navi } from '@/context/navigate';
 interface Props {
     context: Context
     search: string
@@ -23,12 +24,19 @@ const list_loader = debounce(_list_loader, 300);
 function component_watcher(t: number) {
     if (t === Component.EXTEND_FOLDER) _list_loader();
 }
+function navi_watch(t: number) {
+    if (t === Navi.MODULE_CHANGE) {
+        const curr_module = props.context.navi.current_navi_module;
+        if (curr_module === "Comps") _list_loader();
+    }
+}
 onMounted(() => {
     props.context.data.pagesMgr.watch(list_loader);
     props.context.data.symbolsMgr.watch(list_loader);
     props.context.component.watch(component_watcher);
     props.context.component.reset_list_status();
     props.context.component.init_component_container();
+    props.context.navi.watch(navi_watch);
     _list_loader();
     console.log('container mounted');
 })
@@ -36,6 +44,7 @@ onUnmounted(() => {
     props.context.data.pagesMgr.unwatch(list_loader);
     props.context.data.symbolsMgr.unwatch(list_loader);
     props.context.component.unwatch(component_watcher);
+    props.context.navi.unwatch(navi_watch);
 })
 </script>
 <template>
