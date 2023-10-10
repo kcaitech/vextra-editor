@@ -514,7 +514,7 @@ onUnmounted(() => {
     <div v-if="inited" :class="cursor" :data-area="rootId" ref="root" :reflush="reflush !== 0 ? reflush : undefined"
         @wheel="onMouseWheel" @mousedown="onMouseDown" @mousemove="onMouseMove_CV" @mouseleave="onMouseLeave"
         @drop="(e: DragEvent) => { drop(e, props.context, t) }" @dragover.prevent
-        :style="{ 'background-color': background_color }">
+        :style="{ 'background-color': background_color, 'position': 'relative' }">
         <PageView :context="props.context" :data="(props.page as Page)" :matrix="matrix.toArray()" />
         <TextSelection :context="props.context" :matrix="matrix"> </TextSelection>
         <UsersSelection :context="props.context" :matrix="matrix" v-if="avatarVisi" />
@@ -535,3 +535,6 @@ onUnmounted(() => {
         <Creator v-if="creatorMode" :context="props.context" />
     </div>
 </template>
+<style scoped lang="scss">
+
+</style>

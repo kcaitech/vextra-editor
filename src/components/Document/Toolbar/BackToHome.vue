@@ -9,7 +9,8 @@ import Saving from './Saving.vue';
 import { useRoute } from 'vue-router';
 import { WorkSpace, Perm } from '@/context/workspace';
 import { message } from '@/utils/message';
-import { ElMessageBox } from 'element-plus'
+import { ElMessageBox } from 'element-plus';
+import { new_file } from '@/utils/document';
 const route = useRoute();
 interface Props {
     context: Context
@@ -26,7 +27,6 @@ function home() {
     (window as any).skrepo = undefined;
     console.log(props.context.comment.isDocumentInfo);
     if (props.context.comment.isDocumentInfo?.project) {
-        
         router.push({ path: '/apphome/project/' + props.context.comment.isDocumentInfo.project.id });
     } else {
         router.push({ name: 'meshare' });
