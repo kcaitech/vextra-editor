@@ -27,9 +27,8 @@ onMounted(() => {
             </div>
         </div>
         <div class="component-lib-collapse-content" v-show="!fold" @click.stop>
-            <ComponentCollapseItem v-for="(item, index) in props.data" :title="item.title" :data="item"
-                :key="`${item.id}${index}`" :context="props.context">
-            </ComponentCollapseItem>
+            <component :is="ComponentCollapseItem" v-for="item in props.data" :title="item.title" :data="item"
+                :key="item.id" :context="props.context"></component>
         </div>
     </div>
 </template>
@@ -69,12 +68,6 @@ onMounted(() => {
 
     .component-lib-collapse-content {
         width: 100%;
-
-        .temp {
-            height: 28px;
-            width: 100%;
-            background-color: aliceblue;
-        }
     }
 }
 </style>

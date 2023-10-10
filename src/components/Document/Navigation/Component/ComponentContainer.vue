@@ -5,11 +5,13 @@ import ComponentRootCollapse from './ComponentRootCollapse.vue';
 import { onMounted, onUnmounted, ref } from 'vue';
 import { debounce } from 'lodash';
 import { SymbolListItem, list_layout, classification_level_page, modify_parent } from '@/utils/symbol';
+import { useI18n } from 'vue-i18n';
 interface Props {
     context: Context
     search: string
 }
 const props = defineProps<Props>();
+const { t } = useI18n();
 const local_data = ref<SymbolListItem[]>([]);
 function _list_loader() {
     const status = props.context.component.list_status;
@@ -39,10 +41,10 @@ onUnmounted(() => {
 <template>
     <div class="component-container-level-1">
         <el-scrollbar :always="true">
-            <ComponentRootCollapse :context="props.context" :extend="true" title="本地"
+            <ComponentRootCollapse :context="props.context" :extend="true" :title="t('compos.lib_local')"
                 :data="(local_data as SymbolListItem[])">
             </ComponentRootCollapse>
-            <ComponentRootCollapse :context="props.context" :extend="false" title="线框图组件库" :data="[]">
+            <ComponentRootCollapse :context="props.context" :extend="false" :title="t('compos.lib_line')" :data="[]">
             </ComponentRootCollapse>
         </el-scrollbar>
     </div>

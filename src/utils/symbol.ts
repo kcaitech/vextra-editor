@@ -99,13 +99,13 @@ function get_symbol_level_under(group: GroupShape) {
     }
     return symbols;
 }
-export function classification_level_artboard(page: Page) { // 以名称为标识
+export function classification_level_artboard(page: Page) {
     const artboards = page.artboardList;
     const result: SymbolListItem[] = [];
     const symbols_under_page = get_symbol_level_under(page);
     if (symbols_under_page.length) {
         const item: SymbolListItem = {
-            id: v4(),
+            id: symbols_under_page[0].id,
             title: '',
             isFolder: false,
             extend: false,
@@ -136,7 +136,7 @@ export function classification_level_artboard(page: Page) { // 以名称为标�
             parent: undefined
         }
         const child: SymbolListItem = {
-            id: v4(),
+            id: symbols[0].id,
             title: '',
             isFolder: false,
             extend: false,

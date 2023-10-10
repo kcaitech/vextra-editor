@@ -25,5 +25,7 @@ export const compos = {
     display_state: 'Display status',
     search_compos: 'Search component',
     attr_name: 'Attribute name',
-    state: "状态"
+    state: "State",
+    lib_local: 'Local',
+    lib_line: 'Path'
 }
