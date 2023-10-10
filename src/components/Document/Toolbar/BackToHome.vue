@@ -10,6 +10,8 @@ import { useRoute } from 'vue-router';
 import { WorkSpace, Perm } from '@/context/workspace';
 import { message } from '@/utils/message';
 import { ElMessageBox } from 'element-plus'
+import DocumentMenu from './DocumentMenu/DocumentMenu.vue';
+
 const route = useRoute();
 interface Props {
     context: Context
@@ -24,16 +26,13 @@ function home() {
     window.document.title = t('product.name');
     (window as any).sketchDocument = undefined;
     (window as any).skrepo = undefined;
-    console.log(props.context.comment.isDocumentInfo);
     if (props.context.comment.isDocumentInfo?.project) {
-        
         router.push({ path: '/apphome/project/' + props.context.comment.isDocumentInfo.project.id });
     } else {
         router.push({ name: 'meshare' });
         sessionStorage.setItem('index', '3')
     }
 }
-
 const hasPendingSyncCmd = () => {
     ElMessageBox.confirm(
         `${t('message.unuploaded_msg')}`,
@@ -58,7 +57,6 @@ const hasPendingSyncCmd = () => {
             return
         })
 }
-
 function rename() {
     if (props.context.workspace.documentPerm !== Perm.isEdit) return
     ele.value = 2;
@@ -132,10 +130,13 @@ onUnmounted(() => {
         <div class="home" @click="home">
             <svg-icon icon-class="home_0508"></svg-icon>
         </div>
-        <span v-if="ele === 1" @click="rename">{{ name }}</span>
-        <input v-if="ele === 2" type="text" ref="input" />
-        <div class="save" v-if="ele === 3">
-            <Saving></Saving>
+        <DocumentMenu :context="props.context"></DocumentMenu>
+        <div class="rename">
+            <span v-if="ele === 1" @click="rename">{{ name }}</span>
+            <input v-if="ele === 2" type="text" ref="input" />
+            <div class="save" v-if="ele === 3">
+                <Saving></Saving>
+            </div>
         </div>
     </div>
 </template>
@@ -169,6 +170,10 @@ onUnmounted(() => {
         font-size: var(--font-default-fontsize);
         color: #ffffff;
         cursor: pointer;
+
+        >.shortkey {
+            margin-left: auto;
+        }
     }
 
     input {
@@ -179,9 +184,16 @@ onUnmounted(() => {
         font-size: var(--font-default-fontsize);
     }
 
-    .save {
-        width: 8px;
-        height: 8px;
+
+    .rename {
+        margin-left: 9px;
+        margin-top: -5px;
+
+        .save {
+            width: 8px;
+            height: 8px;
+        }
     }
+
 }
 </style>
