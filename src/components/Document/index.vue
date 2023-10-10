@@ -9,7 +9,7 @@ import Toolbar from './Toolbar/index.vue'
 import ColSplitView from '@/components/common/ColSplitView.vue';
 import ApplyFor from './Toolbar/Share/ApplyFor.vue';
 import { Document, importDocument, Repository, Page, CoopRepository, IStorage } from '@kcdesign/data';
-import { STORAGE_URL, SCREEN_SIZE } from '@/utils/setting';
+import { SCREEN_SIZE } from '@/utils/setting';
 import * as share_api from '@/apis/share'
 import * as user_api from '@/apis/users'
 import { useRoute } from 'vue-router';
@@ -350,7 +350,7 @@ const getDocumentInfo = async () => {
 
         const repo = new Repository();
         const importDocumentParams: StorageOptions = {
-            endPoint: STORAGE_URL,
+            endPoint: data.endpoint,
             region: data.region,
             accessKey: data.access_key,
             secretKey: data.secret_access_key,
