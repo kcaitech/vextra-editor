@@ -5,7 +5,7 @@ import { onMounted, onUnmounted, ref } from 'vue';
 import { debounce } from 'lodash';
 import { useI18n } from 'vue-i18n';
 import { Navi } from '@/context/navigate';
-import { SymbolListItem, list_layout, classification_level_page, modify_parent } from '@/utils/symbol';
+import { SymbolListItem, list_layout, classification_level_page, modify_parent, init_status_set_by_symbol } from '@/utils/symbol';
 interface Props {
     context: Context
     container: Element | null
@@ -16,8 +16,15 @@ const local_data = ref<SymbolListItem[]>([]);
 const status_set = ref<Set<string>>(new Set());
 function _list_loader() {
     const resource = props.context.data.pagesMgr.resource;
-    local_data.value = list_layout(classification_level_page(resource), status_set.value);
-    modify_parent(local_data.value as SymbolListItem[]);
+    const data = classification_level_page(resource);
+    modify_parent(data as SymbolListItem[]);
+    const need_pre_init_set = props.context.component.into_view_target;
+    if (need_pre_init_set) {
+        init_status_set_by_symbol(data, status_set.value, need_pre_init_set);
+        console.log('pre init status set', status_set.value);
+        props.context.component.set_scroll_target(undefined);
+    }
+    local_data.value = list_layout(data, status_set.value);
     console.log('local component data load result: ', local_data.value);
 }
 const list_loader = debounce(_list_loader, 300);

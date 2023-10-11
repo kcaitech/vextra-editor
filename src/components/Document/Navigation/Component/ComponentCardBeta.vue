@@ -46,10 +46,18 @@ function check_render_required() {
         io.observe(preview_container.value);
     }
 }
+function is_need_scroll_to_view() {
+    const need_scroll_into_view = props.context.component.is_need_into_view(props.data.id);
+    if (need_scroll_into_view && preview_container.value) {
+        console.log(props.data.name, 'pre to scroll');
+        preview_container.value.scrollIntoView({ behavior: "smooth" });
+    }
+}
 onMounted(() => {
     check_selected_status();
     check_render_required();
     props.context.selection.watch(selection_watcher);
+    is_need_scroll_to_view();
     console.log('beta card mounted');
 })
 onUnmounted(() => {

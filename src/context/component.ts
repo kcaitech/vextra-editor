@@ -1,19 +1,15 @@
 import { Shape, Watchable } from "@kcdesign/data";
 import { Context } from ".";
-import { SymbolListItem } from '@/utils/symbol';
 export class Component extends Watchable(Object) {
     static BRIDGE_CHANGE = 1;
     static WONDER_CHANGE = 2;
-    static EXTEND_FOLDER = 3;
-    static CONTAINER_INIT = 4;
     static CARD_TYPE_CHANGE = 5;
     static COMP_MENU = 6;
     private m_context: Context;
     private m_bridge: boolean = false;
     private m_wonder: Shape | undefined;
-    private m_component_list_status_set: Set<string> = new Set();
     private m_card_type: 'alpha' | 'beta' = 'beta';
-
+    private m_into_view_after_mounted: string | undefined = undefined;
     constructor(context: Context) {
         super();
         this.m_context = context;
@@ -36,29 +32,22 @@ export class Component extends Watchable(Object) {
         this.m_wonder = undefined;
         this.notify(Component.WONDER_CHANGE);
     }
-    set_list_status(v: string) {
-        if (this.m_component_list_status_set.has(v)) {
-            this.m_component_list_status_set.delete(v);
-        } else {
-            this.m_component_list_status_set.add(v);
-        }
-        this.notify(Component.EXTEND_FOLDER);
-    }
-    isExtend(item: SymbolListItem) {
-        return this.m_component_list_status_set.has(item.id);
-    }
-    get list_status() {
-        return this.m_component_list_status_set;
-    }
-    reset_list_status() {
-        this.m_component_list_status_set.clear();
-    }
     get card_type() {
         return this.m_card_type;
     }
     set_card_type(v: 'alpha' | 'beta') {
         this.m_card_type = v;
         this.notify(Component.CARD_TYPE_CHANGE);
+    }
+    get into_view_target() {
+        return this.m_into_view_after_mounted;
+    }
+    set_scroll_target(id: string | undefined) {
+        this.m_into_view_after_mounted = id;
+    }
+    is_need_into_view(id: string) {
+        if (!this.m_into_view_after_mounted) return false;
+        return id === this.m_into_view_after_mounted;
     }
     compMenuMount(shape: Shape, e: MouseEvent) {
         this.notify(Component.COMP_MENU, shape, e);
