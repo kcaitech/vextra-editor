@@ -8,8 +8,8 @@ import Attribute from './Attribute/RightTabs.vue';
 import Toolbar from './Toolbar/index.vue'
 import ColSplitView from '@/components/common/ColSplitView.vue';
 import ApplyFor from './Toolbar/Share/ApplyFor.vue';
-import { Document, importDocument, Repository, Page, CoopRepository } from '@kcdesign/data';
-import { STORAGE_URL, SCREEN_SIZE } from '@/utils/setting';
+import { Document, importDocument, Repository, Page, CoopRepository, IStorage } from '@kcdesign/data';
+import { SCREEN_SIZE } from '@/utils/setting';
 import * as share_api from '@/apis/share'
 import * as user_api from '@/apis/users'
 import { useRoute } from 'vue-router';
@@ -351,15 +351,21 @@ const getDocumentInfo = async () => {
 
         const repo = new Repository();
         const importDocumentParams: StorageOptions = {
-            endPoint: STORAGE_URL,
-            region: "cn-hangzhou",
+            endPoint: data.endpoint,
+            region: data.region,
             accessKey: data.access_key,
             secretKey: data.secret_access_key,
             sessionToken: data.session_token,
-            bucketName: "protodesign-document"
+            bucketName: data.bucket_name,
+        }
+        let storage: IStorage;
+        if (data.provider === "oss") {
+            storage = new OssStorage(importDocumentParams);
+        } else {
+            storage = new S3Storage(importDocumentParams);
         }
         const path = docInfo.value.document.path;
-        const document = await importDocument(new OssStorage(importDocumentParams), path, "", dataInfo.data.document.version_id ?? "", repo)
+        const document = await importDocument(storage, path, "", dataInfo.data.document.version_id ?? "", repo)
         if (document) {
             const coopRepo = new CoopRepository(document, repo)
             const file_name = docInfo.value.document?.name || document.name;

@@ -1,9 +1,7 @@
 <script setup lang="ts">
 import { ref, onMounted, onUnmounted } from 'vue';
 import { Context } from '@/context';
-import { ArrowDown } from '@element-plus/icons-vue';
-import ComponentList from "../../Navigation/Component/ComponentList.vue";
-// import ComponentCollapse from '../../Navigation/Component/ComponentCollapse.vue';
+import ComponentListShift from "../../Navigation/Component/ComponentListShift.vue";
 const props = defineProps<{
     top?: string,
     right?: string,
@@ -15,31 +13,6 @@ const emit = defineEmits<{
     (e: 'closeDialog'): void;
     (e: 'saveLayerShow', data: any, type: 'Text' | 'Show' | 'toggle' | ''): void;
 }>()
-const list = [{
-    name: ['页面1'],
-    contents: [
-        { name: '矩形1' },
-        { name: '矩形2' },
-        { name: '矩形3' },
-        { name: '矩形4' }
-    ],
-    children: []
-}, {
-    name: ['页面2'],
-    contents: [],
-    children: [
-        {
-            name: ['容器'],
-            contents: [
-                { name: '矩形1' },
-                { name: '矩形2' },
-                { name: '矩形3' },
-                { name: '矩形4' }
-            ],
-            children: []
-        },
-    ]
-}]
 function popoverClose() {
     emit('closeDialog');
 }
@@ -79,9 +52,9 @@ onUnmounted(() => {
         left: props.comps_posi!.x + 'px',
         top: cur_p === 0 ? props.comps_posi!.y + 10 + 'px' : cur_top + 'px'
     }">
-        <ComponentList :heard="true" @close="popoverClose" :context="context">
+        <ComponentListShift :heard="true" @close="popoverClose" :context="context">
          
-        </ComponentList>
+        </ComponentListShift>
     </div>
     <div class="overlay" @click.stop="popoverClose" @mousedown.stop @wheel.stop></div>
 </template>

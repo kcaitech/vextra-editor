@@ -1,19 +1,13 @@
 <script setup lang="ts">
 import { RouterView } from 'vue-router';
-import { computed, onMounted, ref, watch } from 'vue';
+import { onMounted, ref, watch } from 'vue';
 import { useRoute } from 'vue-router'
 import { useI18n } from 'vue-i18n';
-
-// interface Props {
-//     // title?: string,
-//     // recycle?: boolean
-// }
 
 const { t } = useI18n();
 const route = useRoute()
 const active = ref(true);
-// const props = defineProps<Props>();
-const title = ref('')
+const title = ref()
 const recycle = ref(false)
 
 const emits = defineEmits<{
@@ -57,7 +51,9 @@ const settilte = (title: string) => {
 
 watch(() => route.name, () => {
     recycle.value = false
-    if (title.value) title.value = ''
+    console.log(title.value);
+    if (title.value) title.value = undefined
+    console.log(title.value);
     if (route.name != undefined) {
         title.value = settilte(route.name.toString())!
         if (route.name === titles.meshare || route.name === titles.recyclebin) {
@@ -86,7 +82,7 @@ onMounted(() => {
 </script>
 
 <template>
-    <div v-if="title != ''" class="title">
+    <div v-if="title != undefined" class="title">
         <span v-if="recycle">
             <router-link to="/apphome/meshare">
                 <span @click="highlight(true)"
@@ -100,8 +96,9 @@ onMounted(() => {
                     :style="{ opacity: active ? '0.5' : '1', fontSize: active ? '16px' : '18px' }">回收站</span>
             </router-link>
         </span>
+        <el-divider />
     </div>
-    <el-divider v-if="title != ''" />
+
     <div class="main">
         <RouterView @dataUpdate="update" />
     </div>
@@ -113,7 +110,7 @@ onMounted(() => {
 }
 
 .title {
-    margin-top: 20px;
+    margin-top: 16px;
 
     span {
         font-size: 18px;
@@ -134,6 +131,6 @@ onMounted(() => {
 
 .main {
     overflow: hidden;
-    height: calc(100% - 66px);
+    height: 100%;
 }
 </style>

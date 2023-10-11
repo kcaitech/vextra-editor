@@ -7,7 +7,6 @@ import { useI18n } from 'vue-i18n';
 const { t } = useI18n();
 interface Props {
     context: Context
-    heard?: boolean
 }
 interface Emits {
     (e: 'close'): void;
@@ -30,7 +29,7 @@ onMounted(() => {
 
 <template>
     <div class="container">
-        <div class="header" v-if="heard">
+        <div class="header">
             <span class="title">{{ t('compos.compos') }}</span>
             <div class="close">
                 <svg-icon icon-class="close" @click.stop="close"></svg-icon>
@@ -45,7 +44,7 @@ onMounted(() => {
                     @click.stop="() => set_card_type('beta')"></svg-icon>
             </div>
         </div>
-        <div class="body" :style="{ height: heard ? 'calc(100% - 80px)' : 'calc(100% - 35px)' }">
+        <div class="body">
             <ComponentContainer :context="context" :search="search"></ComponentContainer>
         </div>
     </div>
@@ -125,6 +124,7 @@ onMounted(() => {
     }
 
     .body {
+        height: calc(100% - 80px);
         box-sizing: border-box;
     }
 }

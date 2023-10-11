@@ -9,11 +9,19 @@ interface Props {
     data: SymbolListItem[]
     extend: boolean
     container: Element | null
+    status_set: Set<string>
 }
-const fold = ref<boolean>(true);
+interface Emits {
+    (e: 'change-status', id: string): void;
+}
 const props = defineProps<Props>();
+const emits = defineEmits<Emits>();
+const fold = ref<boolean>(true);
 function toggle() {
     fold.value = !fold.value;
+}
+function change_status(id: string) {
+    emits("change-status", id)
 }
 onMounted(() => {
     if (props.extend) toggle();
@@ -29,7 +37,9 @@ onMounted(() => {
         </div>
         <div class="component-lib-collapse-content" v-show="!fold" @click.stop>
             <component :is="ComponentCollapseItem" v-for="item in props.data" :title="item.title" :data="item"
-                :container="props.container" :key="item.id" :context="props.context"></component>
+                :container="props.container" :key="item.id" :context="props.context" :status_set="props.status_set"
+                @change-status="change_status">
+            </component>
         </div>
     </div>
 </template>

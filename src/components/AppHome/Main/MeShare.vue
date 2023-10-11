@@ -1,7 +1,11 @@
 
 <template>
-    <tablelist :data="lists" :iconlist="iconlists" @share="Sharefile" @deletefile="Deletefile" @dbclickopen="openDocument"
-        @updatestar="Starfile" @rightMeun="rightmenu" :noNetwork="noNetwork" @refreshDoc="refreshDoc" />
+    <div class="tatle" style="height: calc(100vh - 120px);">
+        <tablelist :data="lists" :iconlist="iconlists" @share="Sharefile" @deletefile="Deletefile"
+            @dbclickopen="openDocument" @updatestar="Starfile" @rightMeun="rightmenu" :noNetwork="noNetwork"
+            @refreshDoc="refreshDoc" />
+    </div>
+
 
     <listrightmenu :items="items" :data="mydata" @get-doucment="getDoucment" @r-starfile="Starfile" @r-sharefile="Sharefile"
         @r-removefile="Deletefile" @ropen="openDocument" @moveFillAddress="moveFillAddress" />
@@ -11,15 +15,16 @@
         :docUserId="docUserId" @select-type="onSelectType" @switch-state="onSwitch" :shareSwitch="shareSwitch"
         :pageHeight="pageHeight">
     </FileShare>
-    <MoveProjectFill :title="t('Createteam.movetip')" :confirm-btn="t('Createteam.move')" :projectItem="projectItem" :doc="mydata"
-        :projectVisible="moveVisible" @clodeDialog="clodeDialog" @moveFillSeccess="moveFillSeccess"></MoveProjectFill>
+    <MoveProjectFill :title="t('Createteam.movetip')" :confirm-btn="t('Createteam.move')" :projectItem="projectItem"
+        :doc="mydata" :projectVisible="moveVisible" @clodeDialog="clodeDialog" @moveFillSeccess="moveFillSeccess">
+    </MoveProjectFill>
 </template>
 
 <script setup lang="ts">
 import * as share_api from "@/apis/share"
 import * as user_api from '@/apis/users'
 import { ElMessage } from 'element-plus'
-import { onMounted, ref, onUnmounted, nextTick, watch, inject, Ref, watchEffect } from "vue"
+import { onMounted, ref, onUnmounted, nextTick, watch, inject, Ref } from "vue"
 import { useI18n } from 'vue-i18n'
 import { router } from '@/router'
 import FileShare from '@/components/Document/Toolbar/Share/FileShare.vue'
@@ -27,8 +32,7 @@ import tablelist from '@/components/AppHome/tablelist.vue'
 import { UserInfo } from '@/context/user';
 import listrightmenu from "../listrightmenu.vue";
 import MoveProjectFill from "@/components/TeamProject/MoveProjectFill.vue";
-import { useRoute } from 'vue-router'
-const route = useRoute();
+
 interface data {
     document: {
         id: string
@@ -241,16 +245,8 @@ onUnmounted(() => {
     window.removeEventListener('resize', getPageHeight)
 })
 
-function emit(arg0: string) {
-    throw new Error("Function not implemented.")
-}
-
 </script>
 <style lang="scss" scoped>
-main {
-    height: auto;
-}
-
 .overlay {
     position: absolute;
     top: 0;

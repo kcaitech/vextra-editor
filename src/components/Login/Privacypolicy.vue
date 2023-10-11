@@ -4,6 +4,7 @@
 <script setup lang="ts">
 import { htmlContent } from "@/utils/showmarkdown";
 import Markdowncontent from "@/assets/privacypolicy.md"
+
 </script>
 
 <style lang="scss" scoped>

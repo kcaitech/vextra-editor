@@ -94,17 +94,17 @@ export class DocSelectionOp extends Watchable(Object) {
         else this.context.selection.selectText(cursorStart, cursorEnd, (shape0 as TextShape).text);
     }
 
-    public async start(token: string, documentId: string, context: Context): Promise<boolean> {
+    public async start(token: string, documentId: string, context: Context, options?: StartOptions): Promise<boolean> {
         if (this.docSelectionOp) return true;
         if (this.startPromise) return await this.startPromise;
         const docSelectionOp = _DocSelectionOp.Make(token, documentId)
         const startParams = [token, documentId]
         docSelectionOp.setOnClose(async () => {
+            const diff_time = 1000 - (Date.now() - (Number.isInteger(options?.last_time) ? options!.last_time! : 0))
+            if (diff_time > 0) await new Promise(resolve => setTimeout(resolve, diff_time));
             this.docSelectionOp = undefined
-            while (!this.isClosed && !await this.start.apply(this, startParams as any)) { // eslint-disable-line prefer-spread
-                await new Promise(resolve => setTimeout(resolve, 1000))
-            }
-        })
+            if (!this.isClosed) await this.start.apply(this, [...startParams.slice(0, 5), { last_time: Date.now() }] as any); // eslint-disable-line prefer-spread
+        });
         this.startPromise = new Promise<boolean>(resolve => this.startResolve = resolve)
         try {
             if (!await docSelectionOp.start()) {

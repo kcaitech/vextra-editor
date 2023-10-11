@@ -1,7 +1,6 @@
 <script setup lang="ts">
-import { Ref, inject, ref, watch, computed, nextTick, onMounted } from 'vue'
+import { Ref, inject, ref, computed, nextTick } from 'vue'
 import { useI18n } from 'vue-i18n'
-import { useRoute } from 'vue-router'
 import { router } from '@/router'
 import * as team_api from '@/apis/team'
 import ProjectDialog from '../ProjectDialog.vue'
@@ -14,7 +13,7 @@ const { t } = useI18n();
 const tableData = computed(() => {
     return projectList.value.filter(item => !item.is_in_team);
 });
-const route = useRoute();
+
 const innerVisible = ref(false);
 const delVisible = ref(false);
 const items = ref(['rename', 'projectset', 'memberset', 'setfixed', 'cancelfixed', 'exitproject', 'deleteproject'])
@@ -23,14 +22,11 @@ const mydata = ref()
 const mydataindex = ref()
 const projectMembergDialog = ref(false)
 const projectSettingDialog = ref(false)
-const { projectList, saveProjectData, is_favor, favoriteList, updateFavor, is_team_upodate, teamUpdate } = inject('shareData') as {
+const { projectList, is_favor, favoriteList, updateFavor } = inject('shareData') as {
     projectList: Ref<any[]>;
     favoriteList: Ref<any[]>;
-    saveProjectData: (data: any[]) => void;
     is_favor: Ref<boolean>;
     updateFavor: (b: boolean) => void;
-    is_team_upodate: Ref<boolean>;
-    teamUpdate: (b: boolean) => void;
 };
 const setProjectIsFavorite = async (id: string, state: boolean) => {
     try {
@@ -284,10 +280,12 @@ const setProjectInfo = async (params: any) => {
             </template>
         </el-table-column>
     </el-table>
-    <ProjectDialog :projectVisible="innerVisible" :context="t('Createteam.projectexitcontext')" :title="t('Createteam.projectexittitle')"
-        :confirm-btn="t('Createteam.ok_exit')" @clode-dialog="handleClose" @confirm="quitProject"></ProjectDialog>
-    <ProjectDialog :projectVisible="delVisible" :context="t('Createteam.projectdelcontext')" :title="t('Createteam.projectdeltitle')" :confirm-btn="t('Createteam.ok_delete')"
-        @clode-dialog="closeDelVisible" @confirm="DelProject"></ProjectDialog>
+    <ProjectDialog :projectVisible="innerVisible" :context="t('Createteam.projectexitcontext')"
+        :title="t('Createteam.projectexittitle')" :confirm-btn="t('Createteam.ok_exit')" @clode-dialog="handleClose"
+        @confirm="quitProject"></ProjectDialog>
+    <ProjectDialog :projectVisible="delVisible" :context="t('Createteam.projectdelcontext')"
+        :title="t('Createteam.projectdeltitle')" :confirm-btn="t('Createteam.ok_delete')" @clode-dialog="closeDelVisible"
+        @confirm="DelProject"></ProjectDialog>
     <listrightmenu :items="updateitems" :data="mydata" @showMembergDialog="showMembergDialog"
         @projectrename="setProjectInfo" @showSettingDialog="showSettingDialog" @cancelFixed="cancelFixed(mydata)"
         @exitproject="rexitProject" @delproject="rdelProject" />
@@ -305,6 +303,7 @@ const setProjectInfo = async (params: any) => {
         width: 16px;
         height: 16px;
         transition: 0.3s;
+
         &:hover {
             transform: scale(1.2);
         }
@@ -385,5 +384,4 @@ const setProjectInfo = async (params: any) => {
     .other1 {
         display: none;
     }
-}
-</style>
+}</style>

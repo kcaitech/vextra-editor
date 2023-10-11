@@ -1,13 +1,15 @@
 <template>
+    <div class="tatle" style="height: calc(100vh - 120px);">
         <tablelist :data="lists" :iconlist="iconlists" @share="Sharefile" @exit_share="Exitshar" @dbclickopen="openDocument"
-            @updatestar="Starfile" @rightMeun="rightmenu" :noNetwork="noNetwork" @refreshDoc="refreshDoc"/>
-        <listrightmenu :items="items" :data="mydata" @ropen="openDocument" @r-sharefile="Sharefile" @r-starfile="Starfile"
-            @r-exitshare="Exitshar" />
-        <FileShare v-if="showFileShare" @close="closeShare" :docId="docId" :selectValue="selectValue" :docUserId="docUserId"
-            :userInfo="userInfo" @select-type="onSelectType" @switch-state="onSwitch" :shareSwitch="shareSwitch"
-            :pageHeight="pageHeight" :projectPerm="projectPerm">
-        </FileShare>
-        <div v-if="showFileShare" class="overlay"></div>
+            @updatestar="Starfile" @rightMeun="rightmenu" :noNetwork="noNetwork" @refreshDoc="refreshDoc" />
+    </div>
+    <listrightmenu :items="items" :data="mydata" @ropen="openDocument" @r-sharefile="Sharefile" @r-starfile="Starfile"
+        @r-exitshare="Exitshar" />
+    <FileShare v-if="showFileShare" @close="closeShare" :docId="docId" :selectValue="selectValue" :docUserId="docUserId"
+        :userInfo="userInfo" @select-type="onSelectType" @switch-state="onSwitch" :shareSwitch="shareSwitch"
+        :pageHeight="pageHeight" :projectPerm="projectPerm">
+    </FileShare>
+    <div v-if="showFileShare" class="overlay"></div>
 </template>
 <script setup lang="ts">
 import * as user_api from '@/apis/users'
@@ -82,9 +84,9 @@ async function ShareLists() {
                 let { document: { size }, document_access_record: { last_access_time } } = data[i]
                 data[i].document.size = sizeTostr(size)
                 data[i].document_access_record.last_access_time = last_access_time.slice(0, 19)
-                if(data[i].project) {
+                if (data[i].project) {
                     const project = projectList.value.filter(item => item.project.id === data[i].project.id)[0];
-                    if(project) {
+                    if (project) {
                         data[i].project_perm = project.self_perm_type;
                     }
                 }

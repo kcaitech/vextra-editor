@@ -26,7 +26,6 @@ import { useI18n } from 'vue-i18n';
 import { NetworkStatus } from '@/communication/modules/network_status'
 import { insertNetworkInfo } from "@/utils/message"
 import * as user_api from '@/apis/users'
-import * as team_api from '@/apis/users'
 
 const { t } = useI18n();
 const title = ref<any>(sessionStorage.getItem('title') ? sessionStorage.getItem('title') : t('home.recently_opened'));
@@ -226,7 +225,7 @@ onUnmounted(() => {
 
 <style lang="scss" scoped>
 .common-layout {
-  height: 100vh;
+  height: 100%;
   overflow: hidden;
 }
 
@@ -235,10 +234,13 @@ onUnmounted(() => {
 }
 
 .el-main {
-  padding-top: 0;
+  height: calc(100vh - 56px);
+  padding: 0 20px;
+  overflow: hidden;
 }
 
 .el-aside {
+  height: calc(100% - 56px);
   border-right: rgba(239, 239, 239, 0.838) solid 1px;
   transition: all .3s ease-in-out;
 }
