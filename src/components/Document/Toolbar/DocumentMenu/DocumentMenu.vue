@@ -49,14 +49,14 @@ function showMenu(e: MouseEvent) {
 }
 async function newFile() {
     props.context.workspace.setFreezeStatus(true); // 请求发起，进入loading状态
-    const result = await new_file(props.context, t('system.new_file'), t('system.page1'));
+    await new_file(props.context, t('system.new_file'), t('system.page1'));
     popoverVisible.value = false;
     props.context.workspace.setFreezeStatus(false); // 取消loading状态
 }
 async function copiedFile() {   
     props.context.workspace.setFreezeStatus(true);
     const doc_id = route.query.id;
-    if (!doc_id){
+    if (!doc_id || typeof doc_id !== "string"){
         props.context.workspace.setFreezeStatus(false);
         return;
     }
