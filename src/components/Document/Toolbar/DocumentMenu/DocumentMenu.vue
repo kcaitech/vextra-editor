@@ -4,12 +4,16 @@ import { nextTick, ref, onMounted, onUnmounted, reactive } from 'vue';
 import { Context } from '@/context';
 import { useI18n } from 'vue-i18n';
 import { XY } from '@/context/selection';
+import { router } from '@/router';
 
 const { t } = useI18n();
 interface Props {
     context: Context,
     site?: { x: number, y: number }
 }
+const emit = defineEmits<{
+    (e: 'rename'): void;
+}>();
 const props = defineProps<Props>();
 const popoverVisible = ref<boolean>(false);
 const childMenuVisible = ref<boolean>(false);
@@ -44,17 +48,20 @@ function showMenu(e: MouseEvent) {
 }
 function newFile() {
     // todo 
+    window.open('/pcenter', '_blank');
     popoverVisible.value = false;
 }
-const copiedFile = () => {
+function copiedFile() {
     // todo
+    
     popoverVisible.value = false;
 }
 function rename() {
-    // todo
+    emit("rename");
     popoverVisible.value = false;
 }
 function close() {
+    childMenuVisible.value = false;
     popoverVisible.value = false;
 }
 const guide = () => {
@@ -88,11 +95,12 @@ function onMenuBlur(e: MouseEvent) {
         </div>
         <div ref="popover" class="popover-f" v-if="popoverVisible">
             <span @click="newFile">{{ t('fileMenu.create_new') }}</span>
+            <!-- <a target="_blank"></a> -->
             <span @click="copiedFile">{{ t('fileMenu.create_copy') }}</span>
             <span @click="rename">{{ t('fileMenu.rename') }}</span>
-            <span>{{ t('fileMenu.view') }}
-                <div class="childMenu" @mouseenter="(e: MouseEvent) => showChildFileMenu(e)"
-                    @mouseleave="closeChildFileMenu">
+            <span @mouseenter="(e: MouseEvent) => showChildFileMenu(e)" @mouseleave="closeChildFileMenu">
+                {{ t('fileMenu.view') }}
+                <div class="childMenu">
                     <div class="triangle"></div>
                     <SubMenu v-if="childMenuVisible" :context="props.context" :x="childMenuPosition.x"
                         :y="childMenuPosition.y" :width="180" :site="site" @close="close"></SubMenu>

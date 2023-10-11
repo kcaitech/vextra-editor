@@ -130,7 +130,7 @@ onUnmounted(() => {
         <div class="home" @click="home">
             <svg-icon icon-class="home_0508"></svg-icon>
         </div>
-        <DocumentMenu :context="props.context"></DocumentMenu>
+        <DocumentMenu :context="props.context" @rename="rename"></DocumentMenu>
         <div class="rename">
             <span v-if="ele === 1" @click="rename">{{ name }}</span>
             <input v-if="ele === 2" type="text" ref="input" />

@@ -120,8 +120,8 @@ function comment() {
   flex-direction: column;
   border-radius: 4px;
   box-shadow: 4px 4px 10px rgba($color: #000000, $alpha: 0.2);
-  background-color: rgba($color: #000000, $alpha: 0.82);
-
+  background-color: var(--theme-color);
+  overflow: hidden;
 
   .line {
     width: 100%;
