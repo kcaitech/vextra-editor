@@ -5,7 +5,8 @@ import { Context } from '@/context';
 import { useI18n } from 'vue-i18n';
 import { XY } from '@/context/selection';
 import { router } from '@/router';
-
+import { new_file, copy_file } from '@/utils/document';
+import { useRoute } from 'vue-router';
 const { t } = useI18n();
 interface Props {
     context: Context,
@@ -20,6 +21,7 @@ const childMenuVisible = ref<boolean>(false);
 const trigger = ref<HTMLDivElement>(); // 按钮 Dom
 const popover = ref<HTMLDivElement>(); // 菜单 Dom
 const childMenuPosition: XY = reactive({ x: 0, y: 0 });
+const route = useRoute();
 
 function showChildFileMenu(e: MouseEvent) {
     const targetWidth = (e.target as Element).getBoundingClientRect().width;
@@ -28,7 +30,6 @@ function showChildFileMenu(e: MouseEvent) {
     childMenuVisible.value = true
 }
 const closeChildFileMenu = () => {
-    // todo
     childMenuVisible.value = false
 }
 /**
@@ -47,13 +48,13 @@ function showMenu(e: MouseEvent) {
     document.addEventListener('click', onMenuBlur);
 }
 function newFile() {
-    // todo 
-    window.open('/pcenter', '_blank');
+    new_file(props.context, t('system.new_file'), t('system.page1'));
     popoverVisible.value = false;
 }
-function copiedFile() {
-    // todo
-    
+function copiedFile() {   
+    const doc_id = route.query.id;
+    if (!doc_id) return;
+    copy_file(doc_id);
     popoverVisible.value = false;
 }
 function rename() {

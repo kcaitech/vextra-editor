@@ -21,7 +21,7 @@ export async function new_file(context: Context, filename: string, pagename: str
   const url = `${window.location.href.split('?')[0]}?id=${doc_id}`;
   window.open(url);
 }
-export async function upload_file(context: Context, data: Document) {
+async function upload_file(context: Context, data: Document) {
   const token = localStorage.getItem("token");
   if (!token) return false;
   if (!await context.communication.docUpload.start(token, '')) {
