@@ -19,11 +19,12 @@ function register_container() {
 import ContextMenu from '@/components/common/ContextMenu.vue'
 import { Component } from '@/context/component';
 import { Shape } from '@kcdesign/data';
+import { shape_track } from '@/utils/content';
 type ContextMenuEl = InstanceType<typeof ContextMenu>;
 const contextMenuEl = ref<ContextMenuEl>();
 interface MenuItem {
     name: string
-    id: string
+    shape: Shape
 }
 const compMenu = ref<boolean>(false)
 const compMenuPosition = ref<{ x: number, y: number }>({ x: 0, y: 0 }); //鼠标点击page所在的位置
@@ -38,13 +39,12 @@ const component_menu_watcher = (t: number, shape?: Shape, e?: MouseEvent) => {
 
 const compMenuMount = (shape: Shape, e: MouseEvent) => {
     const menu = props.context.menu
-    const id = shape.id;
     menu.menuMount();
     compMenuPosition.value.x = e.clientX
     compMenuPosition.value.y = e.clientY - 72
     compMenuItems = [
-        { name: '转到主组件', id: id },
-        { name: '查看详情', id: id }
+        { name: 'gocomp', shape: shape },
+        // { name: 'datail', shape: shape }
     ]
 
     compMenu.value = true
@@ -70,10 +70,16 @@ function Menuesc(e: KeyboardEvent) {
     if (e.code === 'Escape') compMenuUnmount();
 }
 
-const compMenuUnmount = (e?: MouseEvent, item?: string, id?: string) => {
+const compMenuUnmount = (e?: MouseEvent, name?: string, shape?: Shape) => {
     document.removeEventListener('keydown', Menuesc);
+    if(name === 'gocomp') {
+        if(shape) {
+            shape_track(props.context, shape);
+        }
+    }else if(name === 'datail') {
+
+    }
     compMenu.value = false;
-    props.context.component.set_brige_status(false);
 }
 
 onMounted(register_container);
@@ -98,8 +104,8 @@ onUnmounted(() => {
         <ContextMenu v-if="compMenu" :x="compMenuPosition.x" :y="compMenuPosition.y" ref="contextMenuEl"
             :context="props.context" @close="compMenuUnmount">
             <div class="items-wrap" v-for="(item, index) in compMenuItems" :key="index"
-                @click="(e: any) => compMenuUnmount(e, item.name, item.id)">
-                <span>{{ item.name }}</span>
+                @click="(e: any) => compMenuUnmount(e, item.name, item.shape)">
+                <span>{{ t(`compos.${item.name}`) }}</span>
             </div>
         </ContextMenu>
     </div>

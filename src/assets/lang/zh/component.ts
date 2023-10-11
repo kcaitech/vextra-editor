@@ -28,5 +28,7 @@ export const compos: any = {
     attr_name: '属性名称',
     state: '状态',
     lib_local: '本地',
-    lib_line: '线框图组件'
+    lib_line: '线框图组件',
+    gocomp: '转到主组件',
+    datail: '查看详情'
 }
