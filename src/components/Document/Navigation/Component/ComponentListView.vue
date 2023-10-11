@@ -13,11 +13,13 @@ import {
     remove_move_and_up_from_document
 } from '@/utils/mouse_interactive';
 import { Component } from '@/context/component';
+
 interface Props {
     context: Context
     data: SymbolShape[]
     container: Element | null
 }
+
 const props = defineProps<Props>();
 let compo: Shape;
 let down_position: ClientXY = { x: 0, y: 0 };
@@ -28,7 +30,13 @@ const list_container_beta = ref<HTMLDivElement>();
 let observer = new ResizeObserver(() => { reflush.value++; });
 
 function down(e: MouseEvent, shape: Shape) {
-    if (e.button !== 0) return;
+    if (e.button === 2) {
+        props.context.component.set_brige_status(true);
+        nextTick(() => {
+            props.context.component.compMenuMount(shape, e);
+        })
+        return;
+    }
     if (is_dbl_action()) {
         shape_track(props.context, shape);
         return;
@@ -46,6 +54,7 @@ function move(e: MouseEvent) {
         props.context.component.register_wonder(compo);
     }
 }
+
 function up() {
     if (is_drag) is_drag = false;
     remove_move_and_up_from_document(move, up);
@@ -86,6 +95,7 @@ function window_blur() {
     is_drag = false;
     remove_move_and_up_from_document(move, up);
 }
+
 onMounted(() => {
     init();
     add_blur_for_window(window_blur);
@@ -121,4 +131,5 @@ onUnmounted(() => {
     padding: 4px 0px 8px 0px;
     box-sizing: border-box;
 }
+
 </style>

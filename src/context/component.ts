@@ -7,6 +7,7 @@ export class Component extends Watchable(Object) {
     static EXTEND_FOLDER = 3;
     static CONTAINER_INIT = 4;
     static CARD_TYPE_CHANGE = 5;
+    static COMP_MENU = 6;
     private m_context: Context;
     private m_bridge: boolean = false;
     private m_wonder: Shape | undefined;
@@ -58,5 +59,8 @@ export class Component extends Watchable(Object) {
     set_card_type(v: 'alpha' | 'beta') {
         this.m_card_type = v;
         this.notify(Component.CARD_TYPE_CHANGE);
+    }
+    compMenuMount(shape: Shape, e: MouseEvent) {
+        this.notify(Component.COMP_MENU, shape, e);
     }
 }
