@@ -64,6 +64,7 @@ declare module '@vue/runtime-core' {
     ComponentList: typeof import('./src/components/Document/Navigation/Component/ComponentList.vue')['default']
     ComponentListShift: typeof import('./src/components/Document/Navigation/Component/ComponentListShift.vue')['default']
     ComponentListView: typeof import('./src/components/Document/Navigation/Component/ComponentListView.vue')['default']
+    ComponentLocalData: typeof import('./src/components/Document/Navigation/Component/ComponentLocalData.vue')['default']
     ComponentRootCollapse: typeof import('./src/components/Document/Navigation/Component/ComponentRootCollapse.vue')['default']
     ComponentSearchPanel: typeof import('./src/components/Document/Navigation/Component/ComponentSearchPanel.vue')['default']
     ComponentState: typeof import('./src/components/Document/Attribute/Module/ComponentState.vue')['default']

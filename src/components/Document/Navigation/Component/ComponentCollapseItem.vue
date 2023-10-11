@@ -10,17 +10,21 @@ interface Props {
     title: string
     data: SymbolListItem
     container: Element | null
+    status_set: Set<string>
 }
-const fold = ref<boolean>(true);
+interface Emits {
+    (e: 'change-status', id: string): void;
+}
 const props = defineProps<Props>();
+const emits = defineEmits<Emits>();
+const fold = ref<boolean>(true);
 function toggle() {
     fold.value = !fold.value;
-    props.context.component.set_list_status(props.data.id);
+    emits("change-status", props.data.id);
 }
 function init() {
     if (!props.data.isFolder) return;
-    const status = props.context.component.list_status;
-    fold.value = !status.has(props.data.id);
+    fold.value = !props.status_set.has(props.data.id);
 }
 onMounted(init);
 </script>

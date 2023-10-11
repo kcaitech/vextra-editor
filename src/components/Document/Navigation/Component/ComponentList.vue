@@ -11,13 +11,8 @@ import { debounce } from 'lodash';
 const { t } = useI18n();
 interface Props {
     context: Context
-    heard?: boolean
-}
-interface Emits {
-    (e: 'close'): void;
 }
 const props = defineProps<Props>();
-const emit = defineEmits<Emits>();
 const search = ref('');
 const search_result = ref<SymbolShape[]>([]);
 const isList = ref<'alpha' | 'beta'>('beta');
@@ -29,9 +24,6 @@ function _searching() {
     search_result.value = search_symbol_by_keywords(props.context, search.value);
 }
 const searching = debounce(_searching, 100);
-const close = () => {
-    emit('close');
-}
 onMounted(() => {
     isList.value = props.context.component.card_type;
 })
@@ -39,12 +31,6 @@ onMounted(() => {
 
 <template>
     <div class="container">
-        <div class="header" v-if="heard">
-            <span class="title">{{ t('compos.compos') }}</span>
-            <div class="close">
-                <svg-icon icon-class="close" @click.stop="close"></svg-icon>
-            </div>
-        </div>
         <div class="search_togger">
             <el-input v-model="search" class="w-50 m-2" :placeholder="t('compos.search_compos')" :prefix-icon="Search"
                 @input="searching" />
@@ -55,7 +41,7 @@ onMounted(() => {
                     @click.stop="() => set_card_type('beta')"></svg-icon>
             </div>
         </div>
-        <div class="body" v-show="!search" :style="{ height: heard ? 'calc(100% - 80px)' : 'calc(100% - 35px)' }">
+        <div class="body" v-show="!search">
             <ComponentContainer :context="context" :search="search"></ComponentContainer>
         </div>
         <ComponentSearchPanel v-show="search" :context="props.context" :data="(search_result as SymbolShape[])">
@@ -70,36 +56,6 @@ onMounted(() => {
     padding: 8px 0 8px 8px;
     font-size: var(--font-default-fontsize);
     box-sizing: border-box;
-
-    .header {
-        width: 100%;
-        height: 32px;
-        border-bottom: 1px solid var(--grey-light);
-        display: flex;
-        box-sizing: border-box;
-        align-items: center;
-        margin-bottom: 10px;
-
-        .title {
-            line-height: 32px;
-            font-weight: var(--font-default-bold);
-        }
-
-        .close {
-            width: 24px;
-            height: 24px;
-            position: absolute;
-            right: var(--default-padding-half);
-            display: flex;
-            align-items: center;
-            justify-content: center;
-
-            >svg {
-                width: 65%;
-                height: 65%;
-            }
-        }
-    }
 
     .search_togger {
         display: flex;
@@ -137,6 +93,7 @@ onMounted(() => {
     }
 
     .body {
+        height: calc(100% - 35px);
         box-sizing: border-box;
     }
 }
