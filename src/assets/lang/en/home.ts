@@ -180,6 +180,15 @@ export const frame = {
     social_media: 'Social media'
 }
 
+export const fileMenu = {
+    create_new: 'Create new file',
+    create_copy: 'Create copy of file',
+    save: 'Save file',
+    rename: 'Rename file',
+    view: 'View',
+    guide: 'Shortcut key guide'
+}
+
 export const pageMenu = {
     copy_link: 'Copy link to page',
     duplicate: 'Duplicate page',
