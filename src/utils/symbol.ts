@@ -2,7 +2,6 @@ import { Context } from "@/context";
 import { Artboard, GroupShape, Page, Shape, ShapeType, SymbolShape } from "@kcdesign/data";
 import { getName, get_component_state_name } from "./content";
 import { sort_by_layer } from "./group_ungroup";
-import { v4 } from "uuid";
 
 export function make_symbol(context: Context, t: Function) {
     const selected = context.selection.selectedShapes;
@@ -66,7 +65,7 @@ export interface SymbolListItem {
     childs: SymbolListItem[]
     parent: SymbolListItem | undefined
 }
-export function classification_level_page(pages: Page[]) { // 页面这一层比较特殊
+export function classification_level_page(pages: Page[]) {
     const result: SymbolListItem[] = [];
     for (let i = 0; i < pages.length; i++) {
         const page = pages[i];
@@ -196,4 +195,29 @@ export function search_symbol_by_keywords(context: Context, keywords: string) {
         if (item.name.search(reg) > -1) result.push(item as SymbolShape);
     }
     return result;
+}
+export function init_status_set_by_symbol(data: SymbolListItem[], status_set: Set<string>, id: string) {
+    const item = locate(data, id);
+    if (!item) return false;
+    let p = item.parent;
+    while (p) {
+        status_set.add(p.id);
+        p = p.parent;
+    }
+    function locate(items: SymbolListItem[], id: string) {
+        let result: SymbolListItem | undefined;
+        for (let i = 0, len = items.length; i < len; i++) {
+            const item = items[i];
+            if (item.symbols.length && is_target_set(id, item.symbols)) return item;
+            if (item.childs.length) result = locate(item.childs, id);
+            if (result) break;
+        }
+        return result;
+    }
+    function is_target_set(id: string, symbols: SymbolShape[]) {
+        for (let i = 0, len = symbols.length; i < len; i++) {
+            if (id === symbols[i].id) return true;
+        }
+        return false;
+    }
 }
