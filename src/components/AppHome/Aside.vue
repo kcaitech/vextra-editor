@@ -857,7 +857,7 @@ a {
 }
 
 .nested-leave-active {
-    transition-delay: 0.25s;
+    transition-delay: 0.1s;
 }
 
 .nested-enter-from,
@@ -871,15 +871,15 @@ a {
 }
 
 .nested-enter-active .inner {
-    transition-delay: 0.25s;
+    transition-delay: 0.1s;
 }
 
 .nested-enter-from .inner,
 .nested-leave-to .inner {
-    top: 50%;
-    left: 50%;
-    transform: translate(-50%, -50%) scale(0.8);
-    opacity: 0.001;
+    top: calc(50% - 50px);
+    // left: 50%;
+    // transform: translate(-50%, -50%) scale(0.8);
+    opacity: 0.5;
 }
 
 .overlay {
@@ -988,6 +988,7 @@ a {
                 justify-content: center;
                 align-items: center;
                 background: #9775fa;
+                box-shadow: 1px 1px 3px #b1b1b1, -1px -1px 3px #b1b1b1;
                 color: #ffffff;
 
                 &:hover {
@@ -1001,6 +1002,7 @@ a {
 
             .openfile {
                 background-color: #f3f0ff;
+                box-shadow: 1px 1px 3px #b1b1b1, -1px -1px 3px #b1b1b1;
                 color: #9775fa;
 
                 &:hover {

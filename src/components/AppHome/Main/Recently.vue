@@ -1,13 +1,16 @@
 
 <template>
-        <tablelist :data="lists" :iconlist="iconlists" @share="Sharefile" @remove="Removefile" @dbclickopen="openDocument" :address="true"
-            @updatestar="Starfile" @rightMeun="rightmenu" :noNetwork="noNetwork" @refreshDoc="refreshDoc"/>
-        <listrightmenu :items="items" :data="mydata" @get-userdata="getUserdata" @r-starfile="Starfile" @r-sharefile="Sharefile"
-            @r-removehistory="Removefile" @ropen="openDocument"/>
-        <FileShare v-if="showFileShare" @close="closeShare" :docId="docId" @switch-state="onSwitch" :userInfo="userInfo"  :docUserId="docUserId" :project="is_project"
-            :selectValue="selectValue" @select-type="onSelectType" :shareSwitch="shareSwitch" :pageHeight="pageHeight" :projectPerm="projectPerm">
-        </FileShare>
-        <div v-if="showFileShare" class="overlay"></div>
+    <div class="tatle" style="height: calc(100vh - 120px);">
+        <tablelist :data="lists" :iconlist="iconlists" @share="Sharefile" @remove="Removefile" @dbclickopen="openDocument"
+            :address="true" @updatestar="Starfile" @rightMeun="rightmenu" :noNetwork="noNetwork" @refreshDoc="refreshDoc" />
+    </div>
+    <listrightmenu :items="items" :data="mydata" @get-userdata="getUserdata" @r-starfile="Starfile" @r-sharefile="Sharefile"
+        @r-removehistory="Removefile" @ropen="openDocument" />
+    <FileShare v-if="showFileShare" @close="closeShare" :docId="docId" @switch-state="onSwitch" :userInfo="userInfo"
+        :docUserId="docUserId" :project="is_project" :selectValue="selectValue" @select-type="onSelectType"
+        :shareSwitch="shareSwitch" :pageHeight="pageHeight" :projectPerm="projectPerm">
+    </FileShare>
+    <div v-if="showFileShare" class="overlay"></div>
 </template>
 
 <script setup lang="ts">
@@ -76,9 +79,9 @@ async function getUserdata() {
                 data[i].document.size = sizeTostr(size)
                 data[i].document_access_record.last_access_time = last_access_time.slice(0, 19)
 
-                if(data[i].project) {
+                if (data[i].project) {
                     const project = projectList.value.filter(item => item.project.id === data[i].project.id)[0];
-                    if(project) {
+                    if (project) {
                         data[i].project_perm = project.self_perm_type;
                     }
                 }
@@ -87,7 +90,7 @@ async function getUserdata() {
         lists.value = Object.values(data)
     } catch (error) {
         console.log(error);
-        
+
         noNetwork.value = true
         ElMessage.closeAll('error')
         ElMessage.error({ duration: 1500, message: t('home.failed_list_tips') })
@@ -151,9 +154,9 @@ const Sharefile = (data: data) => {
         showFileShare.value = false
         return
     }
-    if(data.document.project_id && data.document.project_id !== '0') {
+    if (data.document.project_id && data.document.project_id !== '0') {
         is_project.value = true;
-    }else {
+    } else {
         is_project.value = false;
     }
     docUserId.value = data.document.user_id

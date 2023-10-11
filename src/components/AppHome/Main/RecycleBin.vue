@@ -1,6 +1,8 @@
 <template>
-    <tablelist :data="lists" :iconlist="iconlists" @restore="Restorefile" @ndelete="Deletefile" @rightMeun="rightmenu"
-        :noNetwork="noNetwork" @refreshDoc="refreshDoc" />
+    <div class="tatle" style="height: calc(100vh - 120px);">
+        <tablelist :data="lists" :iconlist="iconlists" @restore="Restorefile" @ndelete="Deletefile" @rightMeun="rightmenu"
+            :noNetwork="noNetwork" @refreshDoc="refreshDoc" />
+    </div>
     <!-- 右键菜单 -->
     <listrightmenu :items="items" :data="mydata" @getrecycle-lists="GetrecycleLists" @r-deletefile="Deletefile"
         @r-restorefile="Restorefile" />
@@ -23,7 +25,6 @@ import * as user_api from '@/apis/users'
 import { ElMessage } from 'element-plus'
 import { ref, onMounted, onUnmounted, nextTick, watch } from 'vue'
 import { useI18n } from 'vue-i18n'
-import listsitem from '@/components/AppHome/listsitem.vue'
 import tablelist from '@/components/AppHome/tablelist.vue'
 import listrightmenu from "../listrightmenu.vue"
 
