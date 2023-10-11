@@ -4,6 +4,7 @@ export class Component extends Watchable(Object) {
     static BRIDGE_CHANGE = 1;
     static WONDER_CHANGE = 2;
     static CARD_TYPE_CHANGE = 5;
+    static COMP_MENU = 6;
     private m_context: Context;
     private m_bridge: boolean = false;
     private m_wonder: Shape | undefined;
@@ -47,5 +48,8 @@ export class Component extends Watchable(Object) {
     is_need_into_view(id: string) {
         if (!this.m_into_view_after_mounted) return false;
         return id === this.m_into_view_after_mounted;
+    }
+    compMenuMount(shape: Shape, e: MouseEvent) {
+        this.notify(Component.COMP_MENU, shape, e);
     }
 }

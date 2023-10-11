@@ -8,6 +8,7 @@ import { get_symbol_ref_name, is_content, ref_symbol } from '@/utils/content';
 interface Props {
     context: Context
 }
+
 const props = defineProps<Props>();
 const wonder = ref<Shape>();
 const wonder_card_x = ref<number>();
@@ -49,6 +50,7 @@ function get_position_on_page(e: MouseEvent) {
     const root = props.context.workspace.root;
     return matirx.inverseCoord(e.clientX - root.x, e.clientY - root.y);
 }
+
 onMounted(() => {
     props.context.watch(component_watcher);
     check_status();
