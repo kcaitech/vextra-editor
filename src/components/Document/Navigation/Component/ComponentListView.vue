@@ -31,10 +31,7 @@ let observer = new ResizeObserver(() => { reflush.value++; });
 
 function down(e: MouseEvent, shape: Shape) {
     if (e.button === 2) {
-        props.context.component.set_brige_status(true);
-        nextTick(() => {
-            props.context.component.compMenuMount(shape, e);
-        })
+        props.context.component.compMenuMount(shape, e);
         return;
     }
     if (is_dbl_action()) {
