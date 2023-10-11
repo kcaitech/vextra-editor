@@ -2,6 +2,7 @@ import { Context } from "@/context";
 import { Artboard, GroupShape, Page, Shape, ShapeType, SymbolShape } from "@kcdesign/data";
 import { getName, get_component_state_name } from "./content";
 import { sort_by_layer } from "./group_ungroup";
+import { debounce } from "lodash";
 
 export function make_symbol(context: Context, t: Function) {
     const selected = context.selection.selectedShapes;
@@ -221,3 +222,9 @@ export function init_status_set_by_symbol(data: SymbolListItem[], status_set: Se
         return false;
     }
 }
+function _clear_scroll_target(context: Context) {
+    context.component.set_scroll_target(undefined);
+}
+export const clear_scroll_target = debounce(_clear_scroll_target, 300);
+
+

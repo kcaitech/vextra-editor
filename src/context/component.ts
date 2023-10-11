@@ -43,6 +43,9 @@ export class Component extends Watchable(Object) {
         return this.m_into_view_after_mounted;
     }
     set_scroll_target(id: string | undefined) {
+        if (id === undefined) {
+            console.log('clear');
+        }
         this.m_into_view_after_mounted = id;
     }
     is_need_into_view(id: string) {

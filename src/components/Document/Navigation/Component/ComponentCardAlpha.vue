@@ -1,11 +1,12 @@
 <script setup lang="ts">
-import { h, onMounted, onUnmounted, ref } from 'vue';
+import { h, nextTick, onMounted, onUnmounted, ref } from 'vue';
 import comsMap from '@/components/Document/Content/comsmap';
 import { GroupShape } from "@kcdesign/data";
 import { renderSymbolPreview as r } from "@kcdesign/data";
 import { initCommonShape } from "@/components/Document/Content/common";
 import { Context } from '@/context';
 import { Selection } from '@/context/selection';
+import { clear_scroll_target } from '@/utils/symbol';
 interface Props {
     data: GroupShape
     context: Context
@@ -50,9 +51,20 @@ function check_render_required() {
         io.observe(preview_container.value);
     }
 }
+function is_need_scroll_to_view() {
+    const need_scroll_into_view = props.context.component.is_need_into_view(props.data.id);
+    if (need_scroll_into_view && preview_container.value) {
+        console.log(props.data.name, 'pre to scroll');
+        nextTick(() => {
+            preview_container.value && preview_container.value.scrollIntoView();
+        })
+    }
+    clear_scroll_target(props.context);
+}
 onMounted(() => {
     check_selected_status();
     check_render_required();
+    is_need_scroll_to_view();
     props.context.selection.watch(selection_watcher);
     console.log('alpha card mounted');
 })

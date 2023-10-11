@@ -38,8 +38,6 @@ const closeDialog = () => {
     showCompsDialog.value = false;
 }
 const compsDialog = () => {
-    console.log('set_scroll_target');
-    
     props.context.component.set_scroll_target(props.shape.refId);
     if (comps.value) {
         const el = comps.value.getBoundingClientRect();

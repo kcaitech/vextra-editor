@@ -5,7 +5,7 @@ import { onMounted, onUnmounted, ref } from 'vue';
 import { debounce } from 'lodash';
 import { useI18n } from 'vue-i18n';
 import { Navi } from '@/context/navigate';
-import { SymbolListItem, list_layout, classification_level_page, modify_parent, init_status_set_by_symbol } from '@/utils/symbol';
+import { SymbolListItem, list_layout, classification_level_page, modify_parent, init_status_set_by_symbol, clear_scroll_target } from '@/utils/symbol';
 interface Props {
     context: Context
     container: Element | null
@@ -22,7 +22,7 @@ function _list_loader() {
     if (need_pre_init_set) {
         init_status_set_by_symbol(data, status_set.value, need_pre_init_set);
         console.log('pre init status set', status_set.value);
-        props.context.component.set_scroll_target(undefined);
+        clear_scroll_target(props.context);
     }
     local_data.value = list_layout(data, status_set.value);
     console.log('local component data load result: ', local_data.value);
