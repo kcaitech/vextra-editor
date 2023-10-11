@@ -43,6 +43,10 @@ export async function upload_file(context: Context, data: Document) {
 }
 
 export async function copy_file(id: string) {
-  const { code } = await user_api.Copyfile({ doc_id: id })
-
+  const { code, data } = await user_api.Copyfile({ doc_id: id });
+  const doc_id = data?.document?.id;
+  if (code === 0 && doc_id) {
+    const url = `${window.location.href.split('?')[0]}?id=${doc_id}`;
+    window.open(url);
+  }
 }
