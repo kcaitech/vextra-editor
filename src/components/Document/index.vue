@@ -10,8 +10,8 @@ import ColSplitView from '@/components/common/ColSplitView.vue';
 import ApplyFor from './Toolbar/Share/ApplyFor.vue';
 import { Document, importDocument, Repository, Page, CoopRepository, IStorage } from '@kcdesign/data';
 import { SCREEN_SIZE } from '@/utils/setting';
-import * as share_api from '@/apis/share'
-import * as user_api from '@/apis/users'
+import * as share_api from '@/request/share'
+import * as user_api from '@/request/users'
 import { useRoute } from 'vue-router';
 import { router } from '@/router';
 import { useI18n } from 'vue-i18n';
@@ -301,7 +301,6 @@ const hideNotification = (type?: number) => {
 }
 const showNotification = (type?: number) => {
     insertNetworkInfo('networkError', false, network_error);
-    window.removeEventListener('beforeunload', onBeforeUnload);
     showHint.value = true;
     startCountdown(type);
 }
@@ -571,8 +570,9 @@ networkStatus.addOnChange((status: NetworkStatusType) => {
 })
 
 function onBeforeUnload(event: any) {
-    if (context?.communication.docOp.hasPendingSyncCmd()) return event.returnValue = t('message.leave'); // 浏览器弹框提示
-    return event.preventDefault();
+    if (!context?.communication.docOp.hasPendingSyncCmd()) return; // 不需要弹框
+    event.preventDefault();
+    return event.returnValue = t('message.leave');
 }
 
 function onUnloadForCommunication() {

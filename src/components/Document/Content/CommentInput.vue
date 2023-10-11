@@ -2,7 +2,7 @@
 import { ref, onMounted, onUnmounted, watchEffect, computed, nextTick } from 'vue'
 import { Context } from '@/context';
 import { useI18n } from 'vue-i18n'
-import * as comment_api from '@/apis/comment'
+import * as comment_api from '@/request/comment'
 import { useRoute } from 'vue-router';
 import { Matrix } from "@kcdesign/data";
 import { v4 } from 'uuid';

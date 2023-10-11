@@ -21,8 +21,8 @@
 </template>
 
 <script setup lang="ts">
-import * as share_api from "@/apis/share"
-import * as user_api from '@/apis/users'
+import * as share_api from "@/request/share"
+import * as user_api from '@/request/users'
 import { ElMessage } from 'element-plus'
 import { onMounted, ref, onUnmounted, nextTick, watch, inject, Ref } from "vue"
 import { useI18n } from 'vue-i18n'

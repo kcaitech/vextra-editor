@@ -2,7 +2,7 @@
 import { reactive, onMounted, onUnmounted, computed, ref, nextTick, onUpdated } from 'vue';
 import { Context } from '@/context';
 import PageCommentItem from '@/components/Document/Content/PageCommentItem.vue'
-import * as comment_api from '@/apis/comment';
+import * as comment_api from '@/request/comment';
 import { ClientXY, PageXY } from '@/context/selection';
 import { useRoute } from 'vue-router';
 import { WorkSpace } from '@/context/workspace';

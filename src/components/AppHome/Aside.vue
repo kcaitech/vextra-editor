@@ -20,8 +20,8 @@ import { createDocument } from '@kcdesign/data';
 import { useI18n } from 'vue-i18n';
 import { DocEditor } from '@kcdesign/data';
 import { Ref, inject, nextTick, onMounted, onUnmounted, ref, watch, computed, watchEffect } from 'vue';
-import * as user_api from '@/apis/users'
-import * as team_api from '@/apis/team'
+import * as user_api from '@/request/users'
+import * as team_api from '@/request/team'
 import addTeam from '../TeamProject/addTeam.vue'
 import addProject from '../TeamProject/addProject.vue';
 import { ElMessage } from 'element-plus';

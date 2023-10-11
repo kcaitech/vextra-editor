@@ -26,7 +26,7 @@ import { Action, Tool } from "@/context/tool";
 import { initpal } from './initpal';
 import UsersSelection from './Selection/TeamWork/UsersSelection.vue';
 import CellSetting from '@/components/Document/Menu/TableMenu/CellSetting.vue';
-import * as comment_api from '@/apis/comment';
+import * as comment_api from '@/request/comment';
 // import Overview from './Content/Overview.vue';
 import Creator from './Creator.vue';
 import { TaskType } from '@/context/escstack';

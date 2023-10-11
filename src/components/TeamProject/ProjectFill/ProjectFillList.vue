@@ -20,8 +20,8 @@
 </template>
 
 <script setup lang="ts">
-import * as user_api from '@/apis/users'
-import * as team_api from '@/apis/team'
+import * as user_api from '@/request/users'
+import * as team_api from '@/request/team'
 import { ElMessage } from 'element-plus'
 import { onMounted, ref, onUnmounted, nextTick, Ref, inject, watch } from "vue"
 import { useI18n } from 'vue-i18n'
