@@ -20,6 +20,7 @@ export async function new_file(context: Context, filename: string, pagename: str
   if (!doc_id) return false;
   const url = `${window.location.href.split('?')[0]}?id=${doc_id}`;
   window.open(url);
+  return true;
 }
 async function upload_file(context: Context, data: Document) {
   const token = localStorage.getItem("token");
@@ -45,8 +46,8 @@ async function upload_file(context: Context, data: Document) {
 export async function copy_file(id: string) {
   const { code, data } = await user_api.Copyfile({ doc_id: id });
   const doc_id = data?.document?.id;
-  if (code === 0 && doc_id) {
-    const url = `${window.location.href.split('?')[0]}?id=${doc_id}`;
-    window.open(url);
-  }
+  if (code !== 0 || !doc_id) return false;
+  const url = `${window.location.href.split('?')[0]}?id=${doc_id}`;
+  window.open(url);
+  return true;
 }
