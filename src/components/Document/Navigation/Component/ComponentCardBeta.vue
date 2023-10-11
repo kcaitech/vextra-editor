@@ -9,6 +9,7 @@ import { Selection } from '@/context/selection';
 interface Props {
     data: GroupShape
     context: Context
+    container: Element | null
 }
 const props = defineProps<Props>();
 const common = initCommonShape(props);
@@ -20,8 +21,7 @@ function gen_view_box() {
     return `0 0 ${frame.width} ${frame.height}`;
 }
 function render() {
-    const ret = r(h, props.data, comsMap, common.reflush);
-    return ret;
+    return r(h, props.data, comsMap, common.reflush);
 }
 function selection_watcher(t: number) {
     if (t === Selection.CHANGE_SHAPE || t === Selection.CHANGE_PAGE) check_selected_status();
@@ -30,19 +30,16 @@ function check_selected_status() {
     selected.value = props.context.selection.isSelectedShape(props.data);
 }
 const options = {
-    root: props.context.component.component_container,
+    root: props.container,
     rootMargin: '0px 0px 0px 0px',
     thresholds: 1,
 }
 function intersection(entries: any) {
-    if (!render_preview.value && entries[0]?.isIntersecting) {
-        // console.log('render card', props.data.name);
-        render_preview.value = true;
-    }
+    render_preview.value = Boolean(entries[0]?.isIntersecting);
 }
 const io = new IntersectionObserver(intersection, options);
 function check_render_required() {
-    if (!(props.context.component.component_container && preview_container.value)) {
+    if (!(props.container && preview_container.value)) {
         render_preview.value = true;
         io.disconnect();
     } else {
@@ -53,7 +50,7 @@ onMounted(() => {
     check_selected_status();
     check_render_required();
     props.context.selection.watch(selection_watcher);
-    console.log('card mounted');
+    console.log('beta card mounted');
 })
 onUnmounted(() => {
     io.disconnect();

@@ -9,6 +9,7 @@ interface Props {
     context: Context
     title: string
     data: SymbolListItem
+    container: Element | null
 }
 const fold = ref<boolean>(true);
 const props = defineProps<Props>();
@@ -32,7 +33,8 @@ onMounted(init);
             <ComponentCollapseItemTitle :data="props.data"></ComponentCollapseItemTitle>
         </div>
     </div>
-    <ComponentListView v-else :context="props.context" :data="props.data.symbols"></ComponentListView>
+    <ComponentListView v-else :context="props.context" :data="props.data.symbols" :container="props.container">
+    </ComponentListView>
 </template>
 <style scoped lang="scss">
 .component-lib-collapse {

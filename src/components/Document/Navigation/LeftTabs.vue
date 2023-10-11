@@ -32,7 +32,8 @@ function update(t: number) {
     if (t === Comment.SELECT_LIST_TAB) currentTab.value = 'Comment';
 }
 function toggle(id: Tab) {
-    currentTab.value = id
+    currentTab.value = id;
+    props.context.navi.set_current_navi_module(id);
 }
 const showHiddenLeft = () => {
     emit('showNavigation')

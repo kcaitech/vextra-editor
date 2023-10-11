@@ -11,7 +11,6 @@ export class Component extends Watchable(Object) {
     private m_bridge: boolean = false;
     private m_wonder: Shape | undefined;
     private m_component_list_status_set: Set<string> = new Set();
-    private m_component_container: Element | null = null;
     private m_card_type: 'alpha' | 'beta' = 'beta';
 
     constructor(context: Context) {
@@ -52,13 +51,6 @@ export class Component extends Watchable(Object) {
     }
     reset_list_status() {
         this.m_component_list_status_set.clear();
-    }
-    get component_container() {
-        return this.m_component_container;
-    }
-    init_component_container() {
-        this.m_component_container = document.querySelector('.component-container-level-1 > .el-scrollbar > .el-scrollbar__wrap');
-        console.log('component container dom registered');
     }
     get card_type() {
         return this.m_card_type;
