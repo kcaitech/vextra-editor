@@ -47,7 +47,7 @@ export class Clipboard {
                 return false;
             }
         } else { // 写入图层数据
-            const shapes = sort_by_layer(this.context, this.context.selection.selectedShapes);
+            const shapes = sort_by_layer(this.context, this.context.selection.selectedShapes, -1);
             if (!shapes.length) return false;
             // 记录相对root位置
             const position_map: Map<string, PageXY> = new Map();
