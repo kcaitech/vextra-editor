@@ -50,7 +50,6 @@ function check_render_required() {
 function is_need_scroll_to_view() {
     const need_scroll_into_view = props.context.component.is_need_into_view(props.data.id);
     if (need_scroll_into_view && preview_container.value) {
-        console.log(props.data.name, 'pre to scroll');
         nextTick(() => {
             preview_container.value && preview_container.value.scrollIntoView();
         })

@@ -24,7 +24,7 @@ const props = defineProps<Props>();
 let compo: Shape;
 let down_position: ClientXY = { x: 0, y: 0 };
 let is_drag: boolean = false;
-const render_alpha = ref<boolean>(false);
+const render_alpha = ref<boolean>(Boolean(props.context.component.card_type === 'alpha'));
 const reflush = ref<number>(0);
 const list_container_beta = ref<HTMLDivElement>();
 let observer = new ResizeObserver(() => { reflush.value++; });
@@ -128,5 +128,4 @@ onUnmounted(() => {
     padding: 4px 0px 8px 0px;
     box-sizing: border-box;
 }
-
 </style>
