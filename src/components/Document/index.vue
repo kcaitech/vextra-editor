@@ -247,7 +247,7 @@ const getDocumentAuthority = async () => {
             permissionChange.value = PermissionChange.delete
             showNotification(0)
         }
-        if (data.data.perm_type !== permType.value) {
+        if (permType.value && data.data.perm_type !== permType.value) {
             if (data.data.perm_type === 1) {
                 permissionChange.value = PermissionChange.update
                 showNotification(data.data.perm_type)
@@ -432,8 +432,8 @@ async function upload(projectId: string) {
         if(!context) return;
         if(permType.value === 3) context.communication.docResourceUpload.start(token, doc_id);
         if(permType.value && permType.value >= 2) context.communication.docCommentOp.start(token, doc_id);
-        context.communication.docSelectionOp.start(token, doc_id, context);
-        await context.communication.docSelectionOp.addOnMessage(teamSelectionModifi);
+        await context.communication.docSelectionOp.start(token, doc_id, context);
+        context.communication.docSelectionOp.addOnMessage(teamSelectionModifi);
         context.workspace.notify(WorkSpace.INIT_DOC_NAME);
     })
 }
