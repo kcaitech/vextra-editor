@@ -61,7 +61,7 @@ async function newFile() {
   props.context.workspace.setFreezeStatus(true); // 请求发起，进入loading状态
   const result = await new_file(props.context, t('system.new_file'), t('system.page1'));
   if (!result) {
-    ElMessage.error({ duration: 1500, message: t('homerightmenu.copyfile_no') })
+    ElMessage.error({duration: 1500, message: t('homerightmenu.copyfile_no')})
   }
   props.context.workspace.setFreezeStatus(false); // 取消loading状态
 }
@@ -76,7 +76,7 @@ async function copiedFile() {
   }
   const result = await copy_file(doc_id);
   if (!result) {
-    ElMessage.error({ duration: 1500, message: t('homerightmenu.copyfile_no') });
+    ElMessage.error({duration: 1500, message: t('homerightmenu.copyfile_no')});
   }
   props.context.workspace.setFreezeStatus(false);
 }
@@ -116,7 +116,8 @@ function onMenuBlur(e: MouseEvent) {
         <svg width="17" height="17" viewBox="0 0 16 16" fill="none" stroke-width="1.5">
           <g id="group-0" stroke="currentColor" fill="currentColor">
             <path d="M2.5 3H13.5M2.5 8H13.5M2.5 13H13.5" stroke-linecap="round" stroke-linejoin="miter"
-                  fill="none" vector-effect="non-scaling-stroke"></path>
+                  fill="none" vector-effect="non-scaling-stroke">
+            </path>
           </g>
         </svg>
       </el-icon>
