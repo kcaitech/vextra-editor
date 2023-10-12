@@ -1,6 +1,6 @@
 <script setup lang="ts">
 import SubMenu from './SubMenu.vue';
-import {nextTick, ref, reactive} from 'vue';
+import {nextTick, ref, reactive, onMounted, onUnmounted} from 'vue';
 import {Context} from '@/context';
 import {useI18n} from 'vue-i18n';
 import {XY} from '@/context/selection';
@@ -101,7 +101,7 @@ const guide = () => {
  */
 function onMenuBlur(e: MouseEvent) {
   if (e.target instanceof Element && !e.target.closest('.popover-f') && !e.target.closest('.icon')) {
-    var timer = setTimeout(() => {
+    let timer = setTimeout(() => {
       popoverVisible.value = false;
       clearTimeout(timer)
       document.removeEventListener('click', onMenuBlur);
@@ -161,11 +161,11 @@ function onMenuBlur(e: MouseEvent) {
     outline: none;
     padding: var(--default-padding-half) 0;
 
-    > span {
+    > div, > span {
       position: relative;
       width: 100%;
       height: 28px;
-      padding: 0 var(--default-padding) 0 20px;
+      padding: 0 var(--default-padding);
       display: flex;
       flex-direction: row;
       align-items: center;
@@ -174,7 +174,6 @@ function onMenuBlur(e: MouseEvent) {
       &:hover {
         background-color: var(--active-color);
       }
-
     }
 
     > .disabled {
