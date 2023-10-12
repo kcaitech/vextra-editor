@@ -493,7 +493,8 @@ const substituteVisible = computed(() => {
     return draging.value
 })
 function mouseDownOnItem(index: number, e: MouseEvent) {
-    if(props.context?.workspace.documentPerm !== Perm.isEdit) return
+    if(props.context?.workspace.documentPerm !== Perm.isEdit) return;
+    if(props.context.tool.isLable) return;
     if (e.button !== 0) return; // 图层拖动只支持左键
     if (!props.allowDrag) return;
     // record fromIndex && pre to take off

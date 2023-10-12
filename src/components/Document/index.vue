@@ -143,7 +143,7 @@ function keyboardEventHandler(event: KeyboardEvent) {
                 shiftKey ? keyToggleTB() : keyToggleLR();
             }
         }
-        if (context.workspace.documentPerm !== Perm.isEdit) {
+        if (context.workspace.documentPerm !== Perm.isEdit || context.tool.isLable) {
             if (permKeyBoard(event)) {
                 context.workspace.keyboardHandle(event); // 只读可评论的键盘事件
             }

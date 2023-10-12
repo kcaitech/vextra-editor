@@ -10,6 +10,7 @@ import { useRoute } from 'vue-router';
 import { WorkSpace, Perm } from '@/context/workspace';
 import { message } from '@/utils/message';
 import { ElMessageBox } from 'element-plus'
+import { Tool } from '@/context/tool';
 const route = useRoute();
 interface Props {
     context: Context
@@ -60,7 +61,8 @@ const hasPendingSyncCmd = () => {
 }
 
 function rename() {
-    if (props.context.workspace.documentPerm !== Perm.isEdit) return
+    if (props.context.workspace.documentPerm !== Perm.isEdit) return;
+    if(props.context.tool.isLable) return;
     ele.value = 2;
     nextTick(() => {
         if (input.value) {
@@ -123,12 +125,20 @@ function workspace_watcher(t?: any) {
         init_name();
     }
 }
+const isLable = ref(props.context.tool.isLable);
+const tool_watcher = (t: number) => {
+    if(t === Tool.LABLE_CHANGE) {
+        isLable.value = props.context.tool.isLable;
+    }
+}
 onMounted(() => {
     init_name();
     props.context.workspace.watch(workspace_watcher);
+    props.context.tool.watch(tool_watcher);
 })
 onUnmounted(() => {
     props.context.workspace.unwatch(workspace_watcher);
+    props.context.tool.unwatch(tool_watcher);
 })
 </script>
 
@@ -142,6 +152,7 @@ onUnmounted(() => {
         <div class="save" v-if="ele === 3">
             <Saving></Saving>
         </div>
+        <span v-if="isLable" style="margin-left: 10px; color: #a42bc5;">【开发模式】</span>
     </div>
 </template>
 

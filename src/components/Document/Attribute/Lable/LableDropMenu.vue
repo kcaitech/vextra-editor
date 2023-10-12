@@ -1,0 +1,125 @@
+<script setup lang="ts">
+import e from 'express';
+import { ref, onMounted, onUnmounted } from 'vue'
+
+const props = defineProps<{
+    Items: string[],
+    pxItems?: string[],
+    choose: number,
+    choose2?: number
+}>()
+const emit = defineEmits<{
+    (e:'close'): void
+    (e: 'listMenuStatus', index: number): void
+    (e: 'pxMenuStatus', index: number): void
+}>()
+const i = ref('')
+const unit = ['pt', 'px', 'dp', 'rpx']
+
+const hoverShape = (e: MouseEvent, item: string) => {
+    e.stopPropagation()
+    i.value = item
+}
+
+const unHoverShape = (e: MouseEvent) => {
+    e.stopPropagation()
+    i.value = ''
+}
+const handleClick = (e: Event) => {
+  e.stopPropagation()
+  e.target instanceof Element && !e.target.closest('.lablemenu-container') && !e.target.closest('.platform-input') && emit('close');
+}
+
+const onClick = (index: number) => {
+    emit('listMenuStatus', index)
+    emit('close');
+}
+const onPxClick = (index: number) => {
+    emit('pxMenuStatus', index)
+    emit('close');
+}
+
+onMounted(() => {  
+  document.addEventListener('click', handleClick);
+})
+
+onUnmounted(() => {
+  document.removeEventListener('click', handleClick);
+})
+</script>
+
+<template>
+    <div class="lablemenu-container">
+        <template v-for="(item, index) in props.Items" :key="index">
+            <div class="menu-item" :class="{active: i === item}" @mouseenter="(e: MouseEvent) => hoverShape(e, item)" @mouseleave="(e: MouseEvent) => unHoverShape(e)" @click.stop="onClick(index)">
+                <div class="choose" :style="{visibility: choose === index ? 'visible' : 'hidden'}" :class="{choose_active: i === item}"></div>
+                <div class="text">
+                    <span>{{ item }}</span>
+                    <span v-if="pxItems">{{ unit[index] }}</span>
+                </div>
+            </div>
+        </template>
+        <div class="line" v-if="props.pxItems"></div>
+        <template v-for="(item, index) in props.pxItems" :key="index">
+            <div class="menu-item" :class="{active: i === item}" @mouseenter="(e: MouseEvent) => hoverShape(e, item)" @mouseleave="(e: MouseEvent) => unHoverShape(e)" @click.stop="onPxClick(index)">
+                <div class="choose" :style="{visibility: choose2 === index ? 'visible' : 'hidden'}" :class="{choose_active: i === item}"></div>
+                <div>{{ item }}</div>
+            </div>
+        </template>
+    </div>
+</template>
+
+<style scoped lang="scss">
+    .lablemenu-container {
+        position: absolute;
+        top: 32px;
+        right: 0;
+        width: 99%;
+        font-size: var(--font-default-fontsize);
+        padding: 8px 0;
+        background-color: #fff;
+        border: 1px solid var(--theme-color-line);
+        border-radius: 2px;
+        box-shadow: 2px 2px 10px rgba(0, 0, 0, 0.2);
+        z-index: 99;
+    }
+    .menu-item {
+        display: flex;
+        align-items: center;
+        height: 30px;
+        padding: 0 var(--default-padding-half);
+        .text {
+            flex: 1;
+            display: flex;
+            justify-content: space-between;
+        }
+        
+    }
+    .choose {
+        box-sizing: border-box;
+        width: 10px;
+        height: 6px;
+        margin-right: 10px;
+        margin-left: 2px;
+        border-width: 0 0 1px 1px;
+        border-style: solid;
+        border-color: rgb(0, 0, 0,.75);
+        transform: rotate(-45deg) translateY(-30%);
+    }
+    .line {
+        width: 100%;
+        height: 11px;
+        border-width: 5px 0 5px 0;
+        border-style: solid;
+        border-color: #fff;
+        box-sizing: border-box;
+        background-color:  rgb(0, 0, 0,.05);
+    }
+    .active {
+        background-color: var(--active-color);
+        color: #fff;
+    }
+    .choose_active {
+        border-color:rgb(255,255,255,.8)
+    }
+</style>

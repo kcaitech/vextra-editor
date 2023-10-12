@@ -42,13 +42,16 @@ function select(action: Action) {
 function selectComps() {
     message('feature', t('navi.development'));
 }
+const isLable = ref(props.context.tool.isLable);
 function tool_watcher(t?: number) {
     if (t === Tool.CHANGE_ACTION) selected.value = props.context.tool.action;
+    if(t === Tool.LABLE_CHANGE) {
+        isLable.value = props.context.tool.isLable;
+    }
 }
 //获取文档权限
 const hangdlePerm = () => {
-    const perm = props.context.workspace.documentPerm
-    console.log(perm,'perm');
+    const perm = props.context.workspace.documentPerm;
     
     if (perm === Perm.isRead) {
         isread.value = true
@@ -73,7 +76,7 @@ onUnmounted(() => {
 </script>
 
 <template>
-    <div class="editor-tools" @dblclick.stop v-if="isEdit">
+    <div class="editor-tools" @dblclick.stop v-if="isEdit && !isLable">
         <Cursor @select="select" :d="selected" :active="selected === Action.AutoV || selected === Action.AutoK"></Cursor>
         <div class="vertical-line" />
         <Frame :context="props.context" :active="selected === Action.AddFrame" @select="select"></Frame>
@@ -97,7 +100,7 @@ onUnmounted(() => {
         <Comment @select="select" :active="selected === Action.AddComment" :workspace="workspace"></Comment>
         <GroupUngroup :context="props.context" :selection="props.selection"></GroupUngroup>
     </div>
-    <div class="editor-tools" @dblclick.stop v-if="isread || canComment">
+    <div class="editor-tools" @dblclick.stop v-if="isread || canComment || isLable">
         <Cursor @select="select" :d="selected" :active="selected === Action.AutoV || selected === Action.AutoK"></Cursor>
         <div class="vertical-line" />
         <Comment @select="select" :active="selected === Action.AddComment" :workspace="workspace"></Comment>
