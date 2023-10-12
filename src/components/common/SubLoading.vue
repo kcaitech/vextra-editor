@@ -14,8 +14,8 @@
   // background-color: rgba($color: #ffffff, $alpha: 0.05);
 
   .container {
-    width: 60px;
-    height: 60px;
+    width: 12px;
+    height: 12px;
     position: absolute;
     top: 50%;
     left: 50%;

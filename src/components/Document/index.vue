@@ -25,12 +25,9 @@ import { insertNetworkInfo } from "@/utils/message"
 import { OssStorage, S3Storage, StorageOptions } from "@/utils/storage";
 import { NetworkStatus } from '@/communication/modules/network_status'
 import { Comment } from '@/context/comment';
-import { DocSelectionOp } from "@/context/communication/doc_selection_op";
-import { throttle } from "@/utils/timing_util";
 import { DocSelectionOpData, DocSelectionOpType } from "@/communication/modules/doc_selection_op";
 import { debounce } from '@/utils/timing_util';
 import { NetworkStatusType } from "@/communication/types";
-import { _updateRoot } from '@/utils/content';
 
 const { t } = useI18n();
 const curPage = shallowRef<Page | undefined>(undefined);
