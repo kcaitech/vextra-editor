@@ -1,12 +1,17 @@
 <script setup lang="ts">
 import SubMenu from './SubMenu.vue';
-import { nextTick, ref, onMounted, onUnmounted, reactive } from 'vue';
+import { nextTick, ref, onMounted, onUnmounted, reactive, computed } from 'vue';
 import { Context } from '@/context';
 import { useI18n } from 'vue-i18n';
 import { XY } from '@/context/selection';
 import { router } from '@/router';
 import { new_file, copy_file } from '@/utils/document';
 import { useRoute } from 'vue-router';
+import * as share_api from '@/apis/share'
+import { async } from 'node-stream-zip';
+import { Perm } from '@/context/workspace';
+import { permIsEdit } from '@/utils/content';
+
 const { t } = useI18n();
 interface Props {
     context: Context,
@@ -53,10 +58,10 @@ async function newFile() {
     popoverVisible.value = false;
     props.context.workspace.setFreezeStatus(false); // 取消loading状态
 }
-async function copiedFile() {   
+async function copiedFile() {
     props.context.workspace.setFreezeStatus(true);
     const doc_id = route.query.id;
-    if (!doc_id || typeof doc_id !== "string"){
+    if (!doc_id || typeof doc_id !== "string") {
         props.context.workspace.setFreezeStatus(false);
         return;
     }
@@ -88,6 +93,22 @@ function onMenuBlur(e: MouseEvent) {
         }, 10)
     }
 }
+
+const isDisabled: any = computed(() => {
+    if (Perm.isEdit != 3 ) {
+        return { state: false, color: '#E0E0E0' };
+    } else {
+        return { state: true };
+    }
+});
+
+//  const judgement = async () => {
+//     const data = await share_api.getDocumentAuthorityAPI({ doc_id: route.query.id })
+//     if (data.data.perm_type !== 3) {
+//         isEdit.value = false
+//     }
+//  }
+//  onMounted(judgement)
 </script>
 <template>
     <div class="file">
@@ -104,8 +125,8 @@ function onMenuBlur(e: MouseEvent) {
         <div ref="popover" class="popover-f" v-if="popoverVisible">
             <span @click="newFile">{{ t('fileMenu.create_new') }}</span>
             <!-- <a target="_blank"></a> -->
-            <span @click="copiedFile">{{ t('fileMenu.create_copy') }}</span>
-            <span @click="rename">{{ t('fileMenu.rename') }}</span>
+            <span @click="copiedFile" :class="{ 'disabled': isDisabled.state }">{{ t('fileMenu.create_copy') }}</span>
+            <span @click="rename" :class="{ 'disabled': isDisabled.state }">{{ t('fileMenu.rename') }}</span>
             <span @mouseenter="(e: MouseEvent) => showChildFileMenu(e)" @mouseleave="closeChildFileMenu">
                 {{ t('fileMenu.view') }}
                 <div class="childMenu">
@@ -151,6 +172,11 @@ function onMenuBlur(e: MouseEvent) {
             flex-direction: row;
             align-items: center;
             box-sizing: border-box;
+
+            .disabled {
+                color: #E0E0E0;
+                pointer-events: none;
+            }
 
             &:hover {
                 background-color: var(--active-color);
