@@ -130,6 +130,8 @@ export const teammember={
     exitTeamDialog_title:'离开团队',
     exitTeamDialog_confirm:'确认离开',
     name:'姓名',
+    change_teamname: '修改团队姓名',
+    change_name: '修改姓名',
     team_permission:'团队权限',
     all: '全部',
     creator: '创建者',

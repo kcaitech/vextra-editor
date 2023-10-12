@@ -23,7 +23,27 @@
         <div class="main">
             <div class="member-item"
                 v-for=" { user: { nickname, id }, perm_type }  in  searchvalue === '' ? ListData : SearchList " :key="id">
-                <div class="member-name">{{ nickname }}</div>
+                <div class="member-name">{{ nickname }}
+                    <div class="changeName">
+                        <el-tooltip class="tips" effect="dark" :content="`${t('teammember.change_name')}`"
+                            placement="bottom" :show-after="600" :offset="10" :hide-after="0">
+                            <el-button class="button" @click="dialogVisible = true">修改
+                            </el-button>
+                        </el-tooltip>
+                        <el-dialog v-model="dialogVisible" :title="t('teammember.change_teamname')" width="500"
+                            align-center>
+                            <input class="change" type="text" v-model="newname" ref="renameinput">
+                            <template #footer>
+                                <span class="dialog-footer">
+                                    <el-button @click="dialogVisible = false">{{ t('home.cancel') }}</el-button>
+                                    <el-button type="primary" @click="dialogVisible = false">
+                                        {{ t('home.rename_ok') }}
+                                    </el-button>
+                                </span>
+                            </template>
+                        </el-dialog>
+                    </div>
+                </div>
                 <div class="member-jurisdiction">
                     <div class="member-jurisdiction-container">
                         {{ membertype(perm_type) }}
@@ -396,6 +416,9 @@ onMounted(() => {
 onUnmounted(() => {
 
 })
+const dialogVisible = ref(false)
+const newname = ref()
+const renameinput = ref<HTMLInputElement>()
 </script>
 <style lang="scss" scoped>
 .container {
@@ -475,10 +498,64 @@ onUnmounted(() => {
         margin: 6px 0;
     }
 
-    .member-name,
+    .member-name {
+        width: 200px;
+        display: flex;
+
+        .changeName {
+            margin-left: auto;
+            height: 10px;
+
+            .button {
+                width: 50px;
+                height: 20px;
+                margin: 0px 0 20px 0;
+                border: none;
+                font-size: 10px;
+                letter-spacing: 1px;
+                font-weight: 500;
+                border-radius: 6px;
+                display: flex;
+                justify-content: center;
+                align-items: center;
+                cursor: pointer;
+                background-color: #9775fa;
+                color: #ffffff;
+
+                &:hover {
+                    background-color: #9675fadc;
+                }
+            }
+
+            .change {
+                outline: none;
+                height: 30px;
+                width: 460px;
+                box-sizing: border-box;
+
+                &:hover {
+                    border-radius: 2px;
+                    border: 2px #f3f0ff solid;
+
+                }
+
+                &:focus {
+                    border-radius: 2px;
+                    border: 2px #9775fa solid;
+                }
+            }
+
+            :deep(.el-button--primary) {
+                background-color: #9775fa;
+            }
+        }
+    }
+
     .member-jurisdiction {
         width: 200px;
         display: flex;
+
+
 
         .member-jurisdiction-container {
             display: flex;

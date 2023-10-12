@@ -129,6 +129,8 @@ export const teammember = {
     exitTeamDialog_title: 'Leave the team',
     exitTeamDialog_confirm: 'Confirm to leave',
     name: 'Name',
+    change_teamname: 'Change teamname',
+    change_name: 'Change name',
     team_permission: 'Team permissions',
     all: 'All',
     creator: 'Creator',
