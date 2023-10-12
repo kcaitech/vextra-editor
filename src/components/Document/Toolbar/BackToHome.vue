@@ -129,11 +129,15 @@ onUnmounted(() => {
     props.context.workspace.unwatch(workspace_watcher);
 })
 </script>
-
 <template>
     <div class="container" @dblclick.stop>
         <div class="home" @click="home">
-            <svg-icon icon-class="home_0508"></svg-icon>
+            <svg viewBox="0 0 1024 1024" version="1.1" xmlns="http://www.w3.org/2000/svg">
+                <path
+                    d="M946.751948 410.824772L527.008111 79.821076a28.047291 28.047291 0 0 0-34.717904 0L72.547395 410.824772c-12.15659 9.583567-14.25146 27.21692-4.654583 39.374534 9.596877 12.19857 27.271186 14.252484 39.37351 4.654582l48.518854-38.260546v513.949477c0 15.484218 12.540547 28.0391 28.038076 28.0391h651.65591c15.497528 0 28.038076-12.554882 28.038076-28.0391v-513.949477l48.51783 38.260546a27.917257 27.917257 0 0 0 17.331307 6.023518c8.296543 0 16.510151-3.655271 22.041179-10.679124 9.581519-12.15659 7.500984-29.789944-4.655606-39.37351z m-553.250292 490.379637V668.85616h232.323676v232.347225H393.501656z m413.937383 1.300334H681.899435V640.81706c0-15.484218-12.540547-28.0391-28.038075-28.039099h-288.39778c-15.497528 0-28.037052 12.554882-28.037052 28.039099v261.687683H211.85928V372.373782L509.649159 137.541587 807.439039 372.373782v530.130961z"
+                    fill="#ffffff">
+                </path>
+            </svg>
         </div>
         <DocumentMenu :context="props.context" @rename="rename"></DocumentMenu>
         <div class="rename">
@@ -154,50 +158,46 @@ onUnmounted(() => {
 
     .home {
         cursor: pointer;
-        width: 28px;
-        height: 28px;
-        font-size: 12px;
-        color: #ffffff;
+        width: 18px;
+        height: 18px;
         box-sizing: border-box;
-        padding: 2px;
-        display: flex;
-        align-items: center;
-        justify-items: center;
         margin-right: 4px;
 
         >svg {
-            width: 88%;
-            height: 88%;
+            width: 100%;
+            height: 100%;
         }
     }
 
-    span {
-        max-width: 210px;
-        font-size: var(--font-default-fontsize);
-        color: #ffffff;
-        cursor: pointer;
-        overflow: hidden;
-        text-overflow: ellipsis;
-        white-space: nowrap;
-    }
-
-    input {
-        width: 210px;
-        border: none;
-        outline: none;
-        background-color: transparent;
-        color: #ffffff;
-        font-size: var(--font-default-fontsize);
-    }
-
-
     .rename {
         margin-left: 9px;
-        margin-top: -5px;
 
         .save {
             width: 8px;
             height: 8px;
+        }
+
+        span {
+            display: block;
+            max-width: 210px;
+            height: 100%;
+            font-size: var(--font-default-fontsize);
+            color: #ffffff;
+            cursor: pointer;
+            overflow: hidden;
+            text-overflow: ellipsis;
+            white-space: nowrap;
+        }
+
+        input {
+            display: block;
+            max-width: 210px;
+            height: 100%;
+            border: none;
+            outline: none;
+            background-color: transparent;
+            color: #ffffff;
+            font-size: var(--font-default-fontsize);
         }
     }
 

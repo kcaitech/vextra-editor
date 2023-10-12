@@ -8,7 +8,6 @@ import { router } from '@/router';
 import { new_file, copy_file } from '@/utils/document';
 import { useRoute } from 'vue-router';
 import * as share_api from '@/apis/share'
-import { async } from 'node-stream-zip';
 import { Perm } from '@/context/workspace';
 import { permIsEdit } from '@/utils/content';
 
@@ -95,7 +94,7 @@ function onMenuBlur(e: MouseEvent) {
 }
 
 const isDisabled: any = computed(() => {
-    if (Perm.isEdit != 3 ) {
+    if (Perm.isEdit != 3) {
         return { state: false, color: '#E0E0E0' };
     } else {
         return { state: true };
@@ -113,18 +112,15 @@ const isDisabled: any = computed(() => {
 <template>
     <div class="file">
         <div class="icon" @click="showMenu" ref="trigger">
-            <el-icon size="17">
-                <svg width="17" height="17" viewBox="0 0 16 16" fill="none" stroke-width="1.5">
-                    <g id="group-0" stroke="currentColor" fill="currentColor">
-                        <path d="M2.5 3H13.5M2.5 8H13.5M2.5 13H13.5" stroke-linecap="round" stroke-linejoin="miter"
-                            fill="none" vector-effect="non-scaling-stroke"></path>
-                    </g>
-                </svg>
-            </el-icon>
+            <svg width="18" height="18" viewBox="0 0 16 16" fill="none" stroke-width="1.5">
+                <g id="group-0" stroke="currentColor" fill="currentColor">
+                    <path d="M2.5 3H13.5M2.5 8H13.5M2.5 13H13.5" stroke-linecap="round" stroke-linejoin="miter" fill="none"
+                        vector-effect="non-scaling-stroke"></path>
+                </g>
+            </svg>
         </div>
         <div ref="popover" class="popover-f" v-if="popoverVisible">
             <span @click="newFile">{{ t('fileMenu.create_new') }}</span>
-            <!-- <a target="_blank"></a> -->
             <span @click="copiedFile" :class="{ 'disabled': isDisabled.state }">{{ t('fileMenu.create_copy') }}</span>
             <span @click="rename" :class="{ 'disabled': isDisabled.state }">{{ t('fileMenu.rename') }}</span>
             <span @mouseenter="(e: MouseEvent) => showChildFileMenu(e)" @mouseleave="closeChildFileMenu">
@@ -141,11 +137,8 @@ const isDisabled: any = computed(() => {
 </template>
 <style scoped lang="scss">
 .file {
-    margin-left: -6px;
-
     .icon {
         display: flex;
-        justify-content: center;
         align-items: center;
         margin-left: 3px;
         color: #ffffff;
