@@ -15,8 +15,8 @@
   top: 0;
 
   .container {
-    width: 12px;
-    height: 12px;
+    width: 20px;
+    height: 20px;
     position: absolute;
     top: 50%;
     left: 50%;

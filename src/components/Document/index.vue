@@ -654,7 +654,7 @@ onUnmounted(() => {
 
 <template>
   <div class="main" style="height: 100vh;">
-    <Loading v-if="loading || null_context"></Loading>
+    <Loading v-if="loading || null_context" :size="20"></Loading>
     <div id="top" @dblclick="screenSetting" v-if="showTop">
       <Toolbar :context="context!" v-if="!loading && !null_context"/>
     </div>
