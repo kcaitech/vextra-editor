@@ -153,6 +153,7 @@ const routes = [
 ]
 
 export const router = createRouter({
+    // history: createWebHistory(),
     history: createWebHashHistory(),
     scrollBehavior(to,from,savedPosition){
         if(savedPosition){

@@ -200,7 +200,7 @@ const setTextSize = () => {
     if (fonstSize.value.length < 1) {
         fonstSize.value = 1
     }
-    if (!isNaN(Number(fonstSize.value))) {
+    if (!isNaN(Number(fonstSize.value)) && Number(fonstSize.value > 0)) {
         changeTextSize(fonstSize.value)
         textFormat()
     } else {

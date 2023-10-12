@@ -1,5 +1,4 @@
 <template>
-    <div>
         <div class="title" v-if="currentProject[0]">
             <div class="left">
                 <div class="p">
@@ -95,10 +94,9 @@
         <ProjectDialog :projectVisible="exitVisible" :context="t('Createteam.projectexitcontext')"
             :title="t('Createteam.projectexittitle')" :confirm-btn="t('Createteam.ok_exit')"
             @clode-dialog="closeExitVisible" @confirm="ExitProject"></ProjectDialog>
-    </div>
 </template>
 <script setup lang="ts">
-import { Ref, nextTick, inject, ref, onMounted, watch, watchEffect } from 'vue'
+import { Ref, nextTick, inject, ref, onMounted, watch } from 'vue'
 import { useRoute } from 'vue-router'
 import { useI18n } from 'vue-i18n'
 import { router } from '@/router'
@@ -113,6 +111,7 @@ import TeamProjectMenu from './TeamProjectMenu.vue';
 import { ElMessage } from 'element-plus';
 import ProjectDialog from './ProjectDialog.vue';
 import Tooltip from '../common/Tooltip.vue'
+import { debounce } from 'lodash'
 
 const { t } = useI18n()
 const itemid = ref(0)
@@ -316,20 +315,23 @@ const setProjectIsFavorite = async (id: string, state: boolean) => {
     }
 }
 
-watch(is_favor, () => {
-    const timer = setTimeout(() => {
-        currentProject.value = projectList.value.filter((item) => item.project.id === route.params.id);
-        clearTimeout(timer)
-    }, 300)
+watch(is_favor, (v) => {
+    currentProject.value = projectList.value.filter((item) => item.project.id === route.params.id);
 })
 
-const cancelFixed = () => {
+const _cancelFixed = () => {
     const project = currentProject.value[0];
     project.is_favor = !project.is_favor;
+    if (project.is_favor) {
+        favoriteList.value.push(project)
+    } else {
+        const index = favoriteList.value.findIndex(item => item.project.id === project.project.id)
+        favoriteList.value.splice(index, 1)
+    }
     setProjectIsFavorite(project.project.id, project.is_favor);
     updateFavor(!is_favor.value);
 }
-
+const cancelFixed = debounce(_cancelFixed, 200);
 const GetprojectLists = async () => {
     try {
         const { data } = await user_api.GetprojectLists()
@@ -500,8 +502,11 @@ watch(() => currentProject.value, (n) => {
 }, { deep: true });
 
 
-watchEffect(() => {
-    route.params.id;
+// watchEffect(() => {
+//     route.params.id;
+//     currentProject.value = projectList.value.filter((item) => item.project.id === route.params.id);
+// })
+watch(() => route.params.id, () => {
     currentProject.value = projectList.value.filter((item) => item.project.id === route.params.id);
 })
 
@@ -555,8 +560,7 @@ onMounted(() => {
     display: flex;
     justify-content: space-between;
     align-items: center;
-    margin: 10px 0 8px 0;
-    padding: 12px;
+    margin: 8px 0;
     border-bottom: 1px solid #c4c4c4cf;
 
     .menu {
@@ -623,9 +627,7 @@ onMounted(() => {
     justify-content: space-between;
     align-items: center;
     height: 80px;
-    margin-top: 30px;
-    padding: 0 12px;
-    margin: 32px 0 8px 0;
+    margin: 16px 0 0 0;
     box-sizing: border-box;
 
     .left {
@@ -672,9 +674,6 @@ onMounted(() => {
                 overflow: hidden;
                 text-overflow: ellipsis;
                 white-space: nowrap;
-                padding-left: 5px;
-                padding-top: 3px;
-                padding-bottom: 3px;
                 box-sizing: border-box;
             }
         }
@@ -693,7 +692,7 @@ onMounted(() => {
             font-size: 18px;
             font-weight: bold;
             margin: 0;
-            padding: 5px;
+            padding: 5px 0px;
             border: 2px solid transparent;
             overflow: hidden;
             text-overflow: ellipsis;
@@ -706,30 +705,33 @@ onMounted(() => {
             white-space: nowrap;
             display: inline-block;
             max-width: 100%;
+            height: 32px;
             padding-right: 10px;
 
             input {
-                font-size: 10px;
+                font-size: 14px;
                 outline: none;
                 border: none;
                 width: auto;
                 max-width: 100%;
-                height: 24px;
+                height: 100%;
                 border: 2px solid #9775fa;
                 border-radius: 0%;
                 overflow: hidden;
                 text-overflow: ellipsis;
                 white-space: nowrap;
-                padding-left: 5px;
+                letter-spacing: 1px;
+                box-sizing: border-box;
+
             }
         }
 
         span {
             display: list-item;
             width: auto;
-            font-size: 10px;
+            font-size: 14px;
             color: rgba(0, 0, 0, 0.7);
-            padding: 5px;
+            padding: 5px 0px;
             box-sizing: border-box;
             border: 2px solid transparent;
             overflow: hidden;

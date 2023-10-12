@@ -4,9 +4,10 @@
 <script setup lang="ts">
 import { htmlContent } from "@/utils/showmarkdown";
 import Markdowncontent from "@/assets/privacypolicy.md"
+
 </script>
 
-<style lang="scss">
+<style lang="scss" scoped>
 .content {
     color: #333333;
     max-width: 880px;
@@ -14,7 +15,7 @@ import Markdowncontent from "@/assets/privacypolicy.md"
     overflow: hidden;
     padding: 0 12px;
 
-    h1 {
+    .title {
         text-align: center;
     }
 

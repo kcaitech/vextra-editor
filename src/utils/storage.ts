@@ -1,6 +1,6 @@
 import { IStorage } from "@kcdesign/data"
 
-export interface StorageOptions {
+export type StorageOptions = {
     endPoint: string
     region: string
     accessKey: string
@@ -10,6 +10,7 @@ export interface StorageOptions {
 }
 
 import AWS from "aws-sdk"
+
 AWS.config.correctClockSkew = true
 
 export class S3Storage implements IStorage {
@@ -65,5 +66,52 @@ export class S3Storage implements IStorage {
                 resolve()
             })
         })
+    }
+}
+
+import OSS from "ali-oss"
+
+export class OssStorage implements IStorage {
+    private client: OSS
+    private options: StorageOptions
+
+    constructor(options: StorageOptions) {
+        this.client = new OSS({
+            endpoint: options.endPoint,
+            region: options.region,
+            accessKeyId: options.accessKey,
+            accessKeySecret: options.secretKey,
+            stsToken: options.sessionToken,
+            bucket: options.bucketName,
+            secure: false,
+            internal: true,
+            cname: true,
+        })
+        this.options = options
+    }
+
+    private async _get(uri: string, versionId?: string): Promise<Uint8Array> {
+        const result = await this.client.get(uri, {
+            versionId: versionId,
+        })
+        if (result.res.status !== 200) {
+            throw new Error(`${uri} 请求失败 status:${result.res.status}`)
+        } else if (!(result.content instanceof Uint8Array)) {
+            throw new Error(`${uri} 数据类型错误 content:${typeof result.content}`)
+        }
+        return result.content
+    }
+
+    public async get(uri: string, versionId?: string): Promise<Uint8Array> {
+        try {
+            return await this._get(uri, versionId)
+        } catch (err) {
+            return await this._get(uri)
+        }
+    }
+
+    // 将二进制数据上传到指定的路径
+    public async put(uri: string, data: Uint8Array, contentType: string = "application/json"): Promise<void> {
+        await this.client.put(uri, Buffer.from(data), { headers: { "Content-Type": contentType } })
     }
 }

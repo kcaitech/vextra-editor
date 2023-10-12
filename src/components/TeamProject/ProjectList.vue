@@ -5,6 +5,7 @@
                 <div class="title" v-for="(item, index) in titles" :key="index">{{ item }}</div>
             </div>
             <div class="main">
+                <el-scrollbar height="100%">
                 <div class="project-item" :class="{ 'selected': selectid === item.project.id }"
                     v-for="(item, index) in searchvalue === '' ? teamprojectlist : SearchList" :key="item.project.id"
                     @click.stop="selectid = item.project.id" @dblclick.stop="skipProject(item.project.id)"
@@ -14,8 +15,8 @@
                     <div class="project-description">{{ item.project.description }}</div>
                     <div class="project-creator">{{ item.creator.nickname }}</div>
                     <div class="other" v-if="showother && hoverId === item.project.id">
-                        <div @click="cancelFixed(item.project.id, item.is_favor, index)">
-                            <svg t="1693476333821" class="icon" viewBox="0 0 1024 1024" version="1.1"
+                        <div @click="cancelFixed(item.project.id, item.is_favor, index)" @dblclick.stop>
+                            <!-- <svg t="1693476333821" class="icon" viewBox="0 0 1024 1024" version="1.1"
                                 xmlns="http://www.w3.org/2000/svg" p-id="15755" width="24" height="24">
                                 <path
                                     d="M0 0m256 0l512 0q256 0 256 256l0 512q0 256-256 256l-512 0q-256 0-256-256l0-512q0-256 256-256Z"
@@ -27,14 +28,32 @@
                                     fill="#FFFFFF" p-id="15757" data-spm-anchor-id="a313x.search_index.0.i10.6fa73a817d52QG"
                                     class="">
                                 </path>
-                            </svg>
+                            </svg> -->
+                            <Tooltip v-if="!item.is_favor" :content="'固定项目'">
+                                <div>
+                                    <svg-icon icon-class="fixed"></svg-icon>
+                                </div>
+                            </Tooltip>
+                            <Tooltip v-else :content="'取消固定'">
+                                <div>
+                                    <svg-icon icon-class="fixed-cancel"></svg-icon>
+                                </div>
+                            </Tooltip>
                         </div>
-                        <div @click.stop="skipProject(item.project.id)"><svg-icon icon-class="drag"></svg-icon></div>
-                        <div @click="onExitProject(item)"><svg-icon icon-class="pattern-ellipse"></svg-icon></div>
+                        <Tooltip :content="'进入项目'">
+                            <div @click.stop="skipProject(item.project.id)"><svg-icon icon-class="entrance"></svg-icon>
+                            </div>
+                        </Tooltip>
+                        <Tooltip :content="item.self_perm_type === 5 ? '删除项目' : '退出项目'">
+                            <div @click="onExitProject(item)">
+                                <svg-icon v-if="item.self_perm_type != 5" icon-class="exit-project"></svg-icon>
+                                <svg-icon v-else icon-class="delete-project"></svg-icon>
+                            </div>
+                        </Tooltip>
                     </div>
                     <div class="other" v-else-if="item.is_favor">
-                        <div @click="cancelFixed(item.project.id, item.is_favor, index)">
-                            <svg t="1693476333821" class="icon" viewBox="0 0 1024 1024" version="1.1"
+                        <div @click="cancelFixed(item.project.id, item.is_favor, index)" @dblclick.stop>
+                            <!-- <svg t="1693476333821" class="icon" viewBox="0 0 1024 1024" version="1.1"
                                 xmlns="http://www.w3.org/2000/svg" p-id="15755" width="24" height="24">
                                 <path
                                     d="M0 0m256 0l512 0q256 0 256 256l0 512q0 256-256 256l-512 0q-256 0-256-256l0-512q0-256 256-256Z"
@@ -46,23 +65,28 @@
                                     fill="#FFFFFF" p-id="15757" data-spm-anchor-id="a313x.search_index.0.i10.6fa73a817d52QG"
                                     class="">
                                 </path>
-                            </svg>
+                            </svg> -->
+                            <svg-icon icon-class="fixed-cancel"></svg-icon>
                         </div>
                     </div>
                     <div class="other" v-else></div>
                 </div>
+            </el-scrollbar>
             </div>
         </div>
         <div v-else class="datanull">
-            <p>{{t('projectlist.datanull')}}</p>
-            <button type="button" @click.stop="onAddproject" v-if="teamSelfPermType > 0">{{t('projectlist.addproject')}}</button>
+            <p>{{ t('projectlist.datanull') }}</p>
+            <button type="button" @click.stop="onAddproject" v-if="teamSelfPermType > 0">{{ t('projectlist.addproject')
+            }}</button>
         </div>
     </div>
     <NetworkError v-else @refresh-doc="GetprojectLists"></NetworkError>
-    <ProjectDialog :projectVisible="innerVisible" :context="t('Createteam.projectexitcontext')" :title="t('Createteam.projectexittitle')"
-        :confirm-btn="t('Createteam.ok_exit')" @clode-dialog="handleClose" @confirm="quitProject"></ProjectDialog>
-    <ProjectDialog :projectVisible="delVisible" :context="t('Createteam.projectdelcontext')" :title="t('Createteam.projectdeltitle')" :confirm-btn="t('Createteam.ok_delete')"
-        @clode-dialog="closeDelVisible" @confirm="DelProject"></ProjectDialog>
+    <ProjectDialog :projectVisible="innerVisible" :context="t('Createteam.projectexitcontext')"
+        :title="t('Createteam.projectexittitle')" :confirm-btn="t('Createteam.ok_exit')" @clode-dialog="handleClose"
+        @confirm="quitProject"></ProjectDialog>
+    <ProjectDialog :projectVisible="delVisible" :context="t('Createteam.projectdelcontext')"
+        :title="t('Createteam.projectdeltitle')" :confirm-btn="t('Createteam.ok_delete')" @clode-dialog="closeDelVisible"
+        @confirm="DelProject"></ProjectDialog>
     <listrightmenu v-show="rightmenushow" :items="updateitems" :data="mydata" @showMembergDialog="showMembergDialog"
         @projectrename="setProjectInfo" @showSettingDialog="showSettingDialog"
         @cancelFixed="cancelFixed(mydata.project.id, mydata.is_favor, mydataindex)" @exitproject="rexitProject"
@@ -84,6 +108,8 @@ import ProjectDialog from './ProjectDialog.vue';
 import listrightmenu from "@/components/AppHome/listrightmenu.vue"
 import ProjectMemberg from '../TeamProject/ProjectFill/ProjectMemberg.vue'
 import ProjectAccessSetting from '../TeamProject/ProjectFill/ProjectAccessSetting.vue'
+import Tooltip from '../common/Tooltip.vue'
+import { debounce } from 'lodash';
 
 interface Props {
     searchvalue?: string
@@ -333,10 +359,7 @@ watchEffect(() => {
 })
 
 watch(is_favor, () => {
-    const timer = setTimeout(() => {
-        teamprojectlist.value = projectList.value.filter((item) => item.project.team_id === teamID.value)
-        clearTimeout(timer)
-    }, 300)
+    teamprojectlist.value = projectList.value.filter((item) => item.project.team_id === teamID.value)
 })
 
 //通过计算属性，筛选出与搜索匹配的项目
@@ -360,7 +383,7 @@ const setProjectIsFavorite = async (id: string, state: boolean) => {
     }
 }
 
-const cancelFixed = (id: string, state: boolean, index: number) => {
+const _cancelFixed = (id: string, state: boolean, index: number) => {
     if (props.searchvalue === '') {
         teamprojectlist.value[index].is_favor = !state;
     } else {
@@ -368,9 +391,16 @@ const cancelFixed = (id: string, state: boolean, index: number) => {
     }
     const i = projectList.value.findIndex(item => item.project.id === id);
     projectList.value[i].is_favor = !state;
+    if (!state) {
+        favoriteList.value.push(projectList.value[i])
+    } else {
+        const index = favoriteList.value.findIndex(item => item.project.id === projectList.value[i].project.id)
+        favoriteList.value.splice(index, 1)
+    }
     setProjectIsFavorite(id, !state);
     updateFavor(!is_favor.value);
 }
+const cancelFixed = debounce(_cancelFixed, 200);
 
 onMounted(() => {
     GetprojectLists();
@@ -381,7 +411,9 @@ onMounted(() => {
 .selected {
     background-color: #e5dbff !important;
 }
-
+.main{
+    height: calc(100vh - 96px - 56px - 56px - 20px);
+}
 .container {
 
     .hearder-container {
@@ -389,6 +421,7 @@ onMounted(() => {
 
         .title {
             flex: 1;
+            font-size: 14px;
             font-weight: 600;
         }
     }
@@ -397,10 +430,9 @@ onMounted(() => {
         display: flex;
         align-items: center;
         font-size: 14px;
-        height: 40px;
+        height: 50px;
         border-radius: 4px;
         margin: 6px 0;
-        padding: 0 6px;
 
         &:hover {
             background-color: #f3f0ff;
@@ -410,48 +442,31 @@ onMounted(() => {
         .project-description,
         .project-creator,
         .other {
-            width: 25%;
+            white-space: nowrap;
+            text-overflow: ellipsis;
+            overflow: hidden;
+            flex: 1;
+        }
+
+        .other {
             display: flex;
+            align-items: center;
 
             svg {
-                width: 16px;
-                height: 16px;
+                display: flex;
+                width: 20px;
+                height: 20px;
+                color: #9775fa;
+                margin-right: 6px;
+                padding: 2px;
                 transition: .3s;
 
                 &:hover {
+                    cursor: pointer;
                     transform: scale(1.2);
                 }
             }
 
-            >div {
-                margin-right: 10px;
-            }
-        }
-
-        .project-name {
-            display: inline-block;
-            overflow: hidden;
-            text-overflow: ellipsis;
-            white-space: nowrap;
-            padding-right: 20px;
-            box-sizing: border-box;
-            margin-left: 5px;
-        }
-
-        .project-description {
-            display: inline-block;
-            overflow: hidden;
-            text-overflow: ellipsis;
-            white-space: nowrap;
-            padding-right: 20px;
-        }
-
-        .project-creator {
-            display: inline-block;
-            overflow: hidden;
-            text-overflow: ellipsis;
-            white-space: nowrap;
-            padding-right: 20px;
         }
     }
 }
@@ -461,17 +476,20 @@ onMounted(() => {
     flex-direction: column;
     align-items: center;
     margin-top: 240px;
+    font-size: 14px;
 
     button {
         cursor: pointer;
         border: none;
-        width: 120px;
-        height: 40px;
+        width: 80px;
+        height: 32px;
         border-radius: 4px;
         background-color: #9775fa;
         box-sizing: border-box;
         transition: all 0.5s ease-out;
         color: white;
+        margin-bottom: 10px;
+        box-shadow: 1px 1px 3px #b1b1b1, -1px -1px 3px #b1b1b1;
 
         &:hover {
             background-color: rgba(150, 117, 250, 0.862745098);

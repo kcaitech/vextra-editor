@@ -13,11 +13,11 @@
             <input class="newname" type="text" v-model="newname" ref="renameinput" @keydown.enter="rename1" />
             <template #footer>
                 <span class="dialog-footer">
-                    <el-button type="primary" style="background-color: none;" @click.stop="rename1"
+                    <el-button class="confirm" type="primary" style="background-color: none;" @click.stop="rename1"
                         :disabled="newname.trim() == '' ? true : false">
                         {{ t('home.rename_ok') }}
                     </el-button>
-                    <el-button @click="dialogVisible = false">{{ t('home.cancel') }}</el-button>
+                    <el-button class="cancel" @click="dialogVisible = false">{{ t('home.cancel') }}</el-button>
                 </span>
             </template>
         </el-dialog>
@@ -304,6 +304,9 @@ const rename1 = async () => {
 
 //右键创建副本
 const rcopyfile = async (id: string) => {
+    if (menu.value) {
+        menu.value.style.display = 'none'
+    }
     const { code } = await user_api.Copyfile({ doc_id: id })
     if (code === 0) {
         ElMessage.closeAll('success')
@@ -313,9 +316,6 @@ const rcopyfile = async (id: string) => {
     } else {
         ElMessage.closeAll('error')
         ElMessage.error({ duration: 1500, message: t('homerightmenu.copyfile_no') })
-    }
-    if (menu.value) {
-        menu.value.style.display = 'none'
     }
 }
 

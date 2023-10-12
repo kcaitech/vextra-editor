@@ -9,6 +9,7 @@ import { Media, getName } from '@/utils/content';
 import { message } from './message';
 import { Action } from '@/context/tool';
 import { XYsBounding2, is_box_outer_view, is_box_outer_view2 } from './common';
+import { sort_by_layer } from './group_ungroup';
 interface SystemClipboardItem {
     type: ShapeType
     contentType: string
@@ -46,7 +47,7 @@ export class Clipboard {
                 return false;
             }
         } else { // 写入图层数据
-            const shapes = this.context.selection.selectedShapes;
+            const shapes = sort_by_layer(this.context, this.context.selection.selectedShapes, -1);
             if (!shapes.length) return false;
             // 记录相对root位置
             const position_map: Map<string, PageXY> = new Map();

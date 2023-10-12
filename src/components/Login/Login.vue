@@ -22,9 +22,7 @@ const Wxcode = ref('')
 const isShow = ref(true)
 
 function onmessage(e: any) {
-    if (e.data?.type !== "GetWxCode") {
-        return
-    }
+    if (e.data?.type !== "GetWxCode") return
     isLoading.value = true
     Wxcode.value = e.data.code
     getlogin(Wxcode.value)

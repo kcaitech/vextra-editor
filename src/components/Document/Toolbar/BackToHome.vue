@@ -77,10 +77,15 @@ function enter(e: KeyboardEvent) {
 }
 async function blur() {
     if (input.value) {
-        const p_name = input.value.value.trim().slice(0, 12);
+        const p_name = input.value.value.trim();
         if (p_name.length < 1) {
             ele.value = 1;
             message('info', props.context.workspace.t('system.null_file_name'));
+            return;
+        }
+        if (p_name.length > 50) {
+            ele.value = 1;
+            message('info', props.context.workspace.t('navi.overname'));
             return;
         }
         if (p_name === name.value) {
@@ -166,12 +171,17 @@ onUnmounted(() => {
     }
 
     span {
+        max-width: 210px;
         font-size: var(--font-default-fontsize);
         color: #ffffff;
         cursor: pointer;
+        overflow: hidden;
+        text-overflow: ellipsis;
+        white-space: nowrap;
     }
 
     input {
+        width: 210px;
         border: none;
         outline: none;
         background-color: transparent;

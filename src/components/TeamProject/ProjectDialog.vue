@@ -28,7 +28,7 @@ const quitProject = () => {
 </script>
 
 <template>
-    <el-dialog v-model="isshow" width=20% :title="title" align-center :append-to-body="body" :close-on-click-modal="false"
+    <el-dialog v-model="isshow" width=480 :title="title" align-center :append-to-body="body" :close-on-click-modal="false"
         :before-close="handleClose">
         <div class="context">
             {{ context }}

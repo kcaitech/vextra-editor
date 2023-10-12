@@ -2,6 +2,7 @@ import { Context } from "@/context";
 import { Text, Shape } from "@kcdesign/data";
 import { TextShapeEditor } from "@kcdesign/data";
 import { paster_inner_shape } from "@/utils/clipboard";
+import { WorkSpace } from "@/context/workspace";
 
 type TextShape = Shape & { text: Text };
 
@@ -192,7 +193,7 @@ function copy(e: KeyboardEvent, context: Context, shape: TextShape) {
     }
 }
 async function cut(e: KeyboardEvent, context: Context, shape: TextShape, editor: TextShapeEditor) {
-    if (e.ctrlKey || e.metaKey) {
+    if ((e.ctrlKey || e.metaKey) && !e.shiftKey) {
         e.preventDefault();
         const selection = context.textSelection;
         const start = selection.cursorStart;
@@ -206,6 +207,8 @@ async function cut(e: KeyboardEvent, context: Context, shape: TextShape, editor:
             }
         }
         context.menu.menuMount();
+    } else if ((e.ctrlKey || e.metaKey) && e.shiftKey) {
+        context.workspace.notify(WorkSpace.DELETE_LINE);
     }
 }
 function paster(e: KeyboardEvent, context: Context, shape: TextShape, editor: TextShapeEditor) {
@@ -250,6 +253,30 @@ const enterTab = throttle2((e: KeyboardEvent, context: Context, shape: TextShape
     editor.offsetParaIndent(offset, start, end - start);
 
 }, keydelays);
+// 文本下划线
+const Underline = (e: KeyboardEvent, context: Context, shape: TextShape) => {
+    const { ctrlKey, metaKey, shiftKey } = e;
+    if((ctrlKey || metaKey) && !shiftKey) {
+        e.preventDefault();
+        context.workspace.notify(WorkSpace.UNDER_LINE);
+    }
+}
+//文本倾斜
+const Italic = (e: KeyboardEvent, context: Context, shape: TextShape) => {
+    const { ctrlKey, metaKey, shiftKey } = e;
+    if((ctrlKey || metaKey) && !shiftKey) {
+        e.preventDefault();
+        context.workspace.notify(WorkSpace.ITALIC);
+    }
+}
+//文本加粗
+const Bold = (e: KeyboardEvent, context: Context, shape: TextShape) => {
+    const { ctrlKey, metaKey, shiftKey } = e;
+    if((ctrlKey || metaKey) && !shiftKey) {
+        e.preventDefault();
+        context.workspace.notify(WorkSpace.BOLD);
+    }
+}
 
 const handler: { [key: string]: (e: KeyboardEvent, context: Context, shape: TextShape, editor: TextShapeEditor) => void } = {}
 handler['enter'] = enterNewLine;
@@ -267,6 +294,10 @@ handler['√'] = paster;
 handler['a'] = select_all;
 handler['z'] = undo_redo;
 handler['tab'] = enterTab;
+handler['u'] = Underline;
+handler['i'] = Italic;
+handler['b'] = Bold;
+
 
 
 export function handleKeyEvent(e: KeyboardEvent, context: Context, shape: TextShape, editor: TextShapeEditor) {

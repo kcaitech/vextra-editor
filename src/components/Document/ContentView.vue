@@ -30,6 +30,7 @@ import * as comment_api from '@/apis/comment';
 // import Overview from './Content/Overview.vue';
 import Creator from './Creator.vue';
 import { TaskType } from '@/context/escstack';
+import { Wheel, EffectType, fourWayWheel } from '@/utils/wheel';
 interface Props {
     context: Context
     page: Page
@@ -306,16 +307,19 @@ function select(e: MouseEvent) {
 function createSelector(e: MouseEvent) { // 创建一个selector框选器
     const { clientX, clientY, altKey } = e;
     const { x: rx, y: ry } = workspace.value.root;
-    const { x: mx, y: my } = { x: clientX - rx, y: clientY - ry };
-    const { x: sx, y: sy } = mousedownOnClientXY;
+    const xy = matrix_inverse.computeCoord2(clientX - rx, clientY - ry);
+    const { x: mx, y: my } = { x: xy.x, y: xy.y };
+    const { x: sx, y: sy } = mousedownOnPageXY;
     const left = Math.min(sx, mx);
     const right = Math.max(mx, sx);
     const top = Math.min(my, sy);
     const bottom = Math.max(my, sy);
-    selectorFrame.value.top = top;
-    selectorFrame.value.left = left;
-    selectorFrame.value.width = right - left;
-    selectorFrame.value.height = bottom - top;
+    const p = matrix_inverse.inverseCoord({x: left, y: top})
+    const s = matrix_inverse.inverseCoord({x: right, y: bottom})
+    selectorFrame.value.top = Math.min(p.y, s.y);
+    selectorFrame.value.left = Math.min(p.x, s.x);
+    selectorFrame.value.width = Math.max(p.x, s.x) - Math.min(p.x, s.x);
+    selectorFrame.value.height = Math.max(p.y, s.y) - Math.min(p.y, s.y);
     selectorFrame.value.includes = altKey;
     selector_mount.value = true;
 }
@@ -335,6 +339,7 @@ function onMouseDown(e: MouseEvent) {
             pageViewDragStart(e); // 空格键press，准备拖动页面
         } else {
             isMouseLeftPress = true;
+            wheel = fourWayWheel(props.context, undefined, mousedownOnPageXY);
         }
         document.addEventListener("mousemove", onMouseMove);
         document.addEventListener("mouseup", onMouseUp);
@@ -346,12 +351,26 @@ function onMouseDown(e: MouseEvent) {
     }
 }
 // mousemove(target：document)
+let timer: any = null;
 function onMouseMove(e: MouseEvent) {
     if (workspace.value.controller == 'page') {
         if (e.buttons == 1 && spacePressed.value) pageViewDragging(e); // 拖拽页面
+        if (isDragging && wheel) {
+            wheel.moving(e);
+            clearInterval(timer);
+            timer = null;
+            timer = setInterval(() => {
+                createSelector(e);
+            }, 6);
+            createSelector(e);
+        } else {
+            isDragging = true;
+        }
     }
 }
 // mousemove(target：contentview) 
+let isDragging: boolean = false;
+let wheel: Wheel | undefined = undefined;
 function onMouseMove_CV(e: MouseEvent) {
     if (workspace.value.controller === 'page') {
         if (!spacePressed.value) {
@@ -377,6 +396,10 @@ function onMouseUp(e: MouseEvent) {
                 selectEnd();
             }
         }
+        if (wheel) wheel = wheel.remove();
+        isDragging = false;
+        clearInterval(timer);
+        timer = null;
         document.removeEventListener('mousemove', onMouseMove);
         document.removeEventListener('mouseup', onMouseUp);
     }

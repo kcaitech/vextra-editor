@@ -1,17 +1,22 @@
 
 <template>
-    <tablelist :data="lists" :iconlist="iconlists" @share="Sharefile" @deletefile="Deletefile" @dbclickopen="openDocument" :type="currentProject.self_perm_type > 2 ? 'project' : ''"
-        @updatestar="Starfile" @rightMeun="rightmenu" :noNetwork="noNetwork" @refreshDoc="refreshDoc" @newProjectFill="newProjectFill" :creator="true" :perm="currentProject.self_perm_type"/>
-
+    <div class="tatle" style="height: calc(100vh - 56px - 96px - 56px);">
+        <tablelist :data="lists" :iconlist="iconlists" @share="Sharefile" @deletefile="Deletefile"
+            @dbclickopen="openDocument" :type="currentProject.self_perm_type > 2 ? 'project' : ''" @updatestar="Starfile"
+            @rightMeun="rightmenu" :noNetwork="noNetwork" @refreshDoc="refreshDoc" @newProjectFill="newProjectFill"
+            :creator="true" :perm="currentProject.self_perm_type" />
+    </div>
     <listrightmenu :items="items" :data="mydata" @get-doucment="getDoucment" @r-starfile="Starfile" @r-sharefile="Sharefile"
-        @r-removefile="Deletefile" @ropen="openDocument" @moveFillAddress="moveFillAddress"/>
+        @r-removefile="Deletefile" @ropen="openDocument" @moveFillAddress="moveFillAddress" />
 
     <div v-if="showFileShare" class="overlay"></div>
     <FileShare v-if="showFileShare" @close="closeShare" :docId="docId" :selectValue="selectValue" :userInfo="userInfo"
         :docUserId="docUserId" @select-type="onSelectType" @switch-state="onSwitch" :shareSwitch="shareSwitch"
         :pageHeight="pageHeight" :project="is_project" :projectPerm="currentProject.self_perm_type">
     </FileShare>
-    <MoveProjectFill :title="t('Createteam.movetip')" :confirm-btn="t('Createteam.move')"  :projectItem="projectItem" :doc="mydata" :projectVisible="moveVisible" @clodeDialog="clodeDialog" @moveFillSeccess="moveFillSeccess"></MoveProjectFill>
+    <MoveProjectFill :title="t('Createteam.movetip')" :confirm-btn="t('Createteam.move')" :projectItem="projectItem"
+        :doc="mydata" :projectVisible="moveVisible" @clodeDialog="clodeDialog" @moveFillSeccess="moveFillSeccess">
+    </MoveProjectFill>
 </template>
 
 <script setup lang="ts">
@@ -69,12 +74,12 @@ const is_project = ref(false);
 //获取服务器我的文件列表
 async function getDoucment(id: string) {
     let projectId = id
-    if(!id || id === '0') {
+    if (!id || id === '0') {
         projectId = route.params.id as string
     }
     isLoading.value = true
     try {
-        const { data } = await team_api.getDoucmentListAPI({project_id: projectId})
+        const { data } = await team_api.getDoucmentListAPI({ project_id: projectId })
         if (data == null) {
             noNetwork.value = true
         } else {
@@ -111,7 +116,7 @@ const newProjectFill = () => {
     window.document.title = nd.name;
     (window as any).skrepo = coopRepo;
     (window as any).sketchDocument = nd;
-    router.push({ name: 'document'});
+    router.push({ name: 'document' });
 }
 
 const moveFillAddress = (data: any) => {
@@ -178,9 +183,9 @@ const Sharefile = (data: data) => {
         showFileShare.value = false
         return
     }
-    if(data.document.project_id && data.document.project_id !== '0') {
+    if (data.document.project_id && data.document.project_id !== '0') {
         is_project.value = true;
-    }else {
+    } else {
         is_project.value = false;
     }
     docUserId.value = data.document.user_id
@@ -205,14 +210,10 @@ const Deletefile = async (data: data) => {
     }
 }
 
-function filterItemsByIndexes(sourceArray: any, indexesToDelete: any) {
-    return sourceArray.filter((_: any, index: number) => !indexesToDelete.includes(index));
-}
-
 //右键菜单入口
 const rightmenu = (e: MouseEvent, data: data) => {
     const el = document.querySelector('.target_star')! as HTMLElement
-    const { document: { id,user_id,project_id }, document_favorites: { is_favorite } } = data
+    const { document: { id, user_id, project_id }, document_favorites: { is_favorite } } = data
     const viewportWidth = window.innerWidth || document.documentElement.clientWidth
     const viewportHeight = window.innerHeight || document.documentElement.clientHeight
     const rightmenu: any = document.querySelector('.rightmenu')
@@ -237,20 +238,20 @@ const rightmenu = (e: MouseEvent, data: data) => {
     })
     items = ['open', 'newtabopen', 'share', 'target_star']
     const userId = localStorage.getItem('userId');
-    if(props.currentProject.self_perm_type > 3) {
+    if (props.currentProject.self_perm_type > 3) {
         items.push('movefill', 'rename', 'copyfile', 'deletefile');
-    }else if (props.currentProject.self_perm_type === 3) {
-        if(user_id === userId) {
+    } else if (props.currentProject.self_perm_type === 3) {
+        if (user_id === userId) {
             items.push('movefill', 'rename', 'copyfile', 'deletefile')
         }
-    }else {
-        if(user_id === userId) {
+    } else {
+        if (user_id === userId) {
             items.push('movefill', 'rename', 'copyfile', 'deletefile')
         }
     }
     docId.value = id
     mydata.value = data
-    projectItem.value = projectList.value.filter(item => item.project.id === project_id)[0];    
+    projectItem.value = projectList.value.filter(item => item.project.id === project_id)[0];
 }
 
 const userData = ref({
@@ -293,10 +294,6 @@ function emit(arg0: string) {
 
 </script>
 <style lang="scss" scoped>
-main {
-    height: auto;
-}
-
 .overlay {
     position: absolute;
     top: 0;
