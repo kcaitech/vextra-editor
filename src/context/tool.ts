@@ -192,7 +192,7 @@ export class Tool extends Watchable(Object) {
     get isShowTitle() {
         return this.m_show_title;
     }
-    setTitleVisibale(val: boolean) {
+    setTitleVisible(val: boolean) {
         this.m_show_title = val;
         this.notify(Tool.TITILE_VISIBLE);
     }
