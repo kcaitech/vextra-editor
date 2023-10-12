@@ -1,5 +1,5 @@
 <template>
-    <div v-if="!noNetwork">
+    <!-- <div >
         <div v-if="teamprojectlist.length > 0 || SearchList.length > 0" class="container">
             <div class="hearder-container">
                 <div class="title" v-for="(item, index) in titles" :key="index">{{ item }}</div>
@@ -16,19 +16,6 @@
                     <div class="project-creator">{{ item.creator.nickname }}</div>
                     <div class="other" v-if="showother && hoverId === item.project.id">
                         <div @click="cancelFixed(item.project.id, item.is_favor, index)" @dblclick.stop>
-                            <!-- <svg t="1693476333821" class="icon" viewBox="0 0 1024 1024" version="1.1"
-                                xmlns="http://www.w3.org/2000/svg" p-id="15755" width="24" height="24">
-                                <path
-                                    d="M0 0m256 0l512 0q256 0 256 256l0 512q0 256-256 256l-512 0q-256 0-256-256l0-512q0-256 256-256Z"
-                                    :fill="item.is_favor ? '#9775fa' : '#999'" p-id="15756"
-                                    data-spm-anchor-id="a313x.search_index.0.i11.6fa73a817d52QG" class="">
-                                </path>
-                                <path
-                                    d="M256 767.6416l202.9568-160.9216 80.9728 86.1184s33.792 9.216 35.8656-16.384l-2.0736-87.1424 119.936-138.368 52.2496-3.0464s41.0112-8.2432 11.2896-44.0832l-146.5856-147.584s-39.936-5.12-36.8896 31.744v39.9872l-136.2944 115.8912-84.0192 5.0688s-30.7712 10.24-19.5072 36.9152l78.9504 77.9008L256 767.6416z"
-                                    fill="#FFFFFF" p-id="15757" data-spm-anchor-id="a313x.search_index.0.i10.6fa73a817d52QG"
-                                    class="">
-                                </path>
-                            </svg> -->
                             <Tooltip v-if="!item.is_favor" :content="'固定项目'">
                                 <div>
                                     <svg-icon icon-class="fixed"></svg-icon>
@@ -41,7 +28,8 @@
                             </Tooltip>
                         </div>
                         <Tooltip :content="'进入项目'">
-                            <div @click.stop="skipProject(item.project.id)"><svg-icon icon-class="entrance"></svg-icon>
+                            <div @click.stop="skipProject(item.project.id)">
+                                <svg-icon icon-class="entrance"></svg-icon>
                             </div>
                         </Tooltip>
                         <Tooltip :content="item.self_perm_type === 5 ? '删除项目' : '退出项目'">
@@ -51,21 +39,9 @@
                             </div>
                         </Tooltip>
                     </div>
+
                     <div class="other" v-else-if="item.is_favor">
                         <div @click="cancelFixed(item.project.id, item.is_favor, index)" @dblclick.stop>
-                            <!-- <svg t="1693476333821" class="icon" viewBox="0 0 1024 1024" version="1.1"
-                                xmlns="http://www.w3.org/2000/svg" p-id="15755" width="24" height="24">
-                                <path
-                                    d="M0 0m256 0l512 0q256 0 256 256l0 512q0 256-256 256l-512 0q-256 0-256-256l0-512q0-256 256-256Z"
-                                    :fill="item.is_favor ? '#9775fa' : '#999'" p-id="15756"
-                                    data-spm-anchor-id="a313x.search_index.0.i11.6fa73a817d52QG" class="">
-                                </path>
-                                <path
-                                    d="M256 767.6416l202.9568-160.9216 80.9728 86.1184s33.792 9.216 35.8656-16.384l-2.0736-87.1424 119.936-138.368 52.2496-3.0464s41.0112-8.2432 11.2896-44.0832l-146.5856-147.584s-39.936-5.12-36.8896 31.744v39.9872l-136.2944 115.8912-84.0192 5.0688s-30.7712 10.24-19.5072 36.9152l78.9504 77.9008L256 767.6416z"
-                                    fill="#FFFFFF" p-id="15757" data-spm-anchor-id="a313x.search_index.0.i10.6fa73a817d52QG"
-                                    class="">
-                                </path>
-                            </svg> -->
                             <svg-icon icon-class="fixed-cancel"></svg-icon>
                         </div>
                     </div>
@@ -79,8 +55,13 @@
             <button type="button" @click.stop="onAddproject" v-if="teamSelfPermType > 0">{{ t('projectlist.addproject')
             }}</button>
         </div>
+    </div> -->
+    <div class="tatle" style="height: calc(100vh - 208px);">
+        <tablelist :data="searchvalue === '' ? teamprojectlist : SearchList" :iconlist="iconlists" :projectshare="true" @onexitproject="onExitProject"
+            @cancelfixed="cancelFixed" @on-addproject="onAddproject" @dbclickopen="dblclickskipProject" @skipproject="skipProject" @rightMeun="rightmenu"
+            :noNetwork="noNetwork" :addproject="teamSelfPermType" />
     </div>
-    <NetworkError v-else @refresh-doc="GetprojectLists"></NetworkError>
+    <NetworkError  @refresh-doc="GetprojectLists"></NetworkError>
     <ProjectDialog :projectVisible="innerVisible" :context="t('Createteam.projectexitcontext')"
         :title="t('Createteam.projectexittitle')" :confirm-btn="t('Createteam.ok_exit')" @clode-dialog="handleClose"
         @confirm="quitProject"></ProjectDialog>
@@ -108,13 +89,14 @@ import ProjectDialog from './ProjectDialog.vue';
 import listrightmenu from "@/components/AppHome/listrightmenu.vue"
 import ProjectMemberg from '../TeamProject/ProjectFill/ProjectMemberg.vue'
 import ProjectAccessSetting from '../TeamProject/ProjectFill/ProjectAccessSetting.vue'
+import tablelist from '@/components/AppHome/tablelist.vue'
 import Tooltip from '../common/Tooltip.vue'
 import { debounce } from 'lodash';
 
 interface Props {
     searchvalue?: string
 }
-
+const iconlists = ref(['fixed', 'entrance', 'project'])
 const items = ref(['rename', 'projectset', 'memberset', 'setfixed', 'cancelfixed', 'exitproject', 'deleteproject'])
 const updateitems = ref(items.value)
 const mydata = ref()
@@ -330,7 +312,7 @@ const rightmenu = (e: MouseEvent, data: any, index?: number) => {
         rightmenu.style.top = top + height > viewportHeight ? (viewportHeight - height) + 'px' : top + 'px'
     })
 
-    if ((e.target as HTMLElement).closest('.project-item')) {
+    if ((e.target as HTMLElement).closest('.el-table-v2__row')) {
         rightmenu.style.display = 'block'
     }
     updateitems.value = updateItemsBasedOnFavor(data, items.value);
@@ -383,13 +365,13 @@ const setProjectIsFavorite = async (id: string, state: boolean) => {
     }
 }
 
-const _cancelFixed = (id: string, state: boolean, index: number) => {
+const _cancelFixed = (row:any, state: boolean, index: number) => {
     if (props.searchvalue === '') {
         teamprojectlist.value[index].is_favor = !state;
     } else {
         SearchList.value[index].is_favor = !state;
     }
-    const i = projectList.value.findIndex(item => item.project.id === id);
+    const i = projectList.value.findIndex(item => item.project.id === row.project.id);
     projectList.value[i].is_favor = !state;
     if (!state) {
         favoriteList.value.push(projectList.value[i])
@@ -397,7 +379,7 @@ const _cancelFixed = (id: string, state: boolean, index: number) => {
         const index = favoriteList.value.findIndex(item => item.project.id === projectList.value[i].project.id)
         favoriteList.value.splice(index, 1)
     }
-    setProjectIsFavorite(id, !state);
+    setProjectIsFavorite(row.project.id, !state);
     updateFavor(!is_favor.value);
 }
 const cancelFixed = debounce(_cancelFixed, 200);
@@ -405,6 +387,10 @@ const cancelFixed = debounce(_cancelFixed, 200);
 onMounted(() => {
     GetprojectLists();
 })
+
+const dblclickskipProject = (row: any) => {
+    skipProject(row.project.id);
+}
 
 </script>
 <style lang="scss" scoped>

@@ -187,15 +187,14 @@ onUnmounted(() => {
     border-bottom: 1px solid #c4c4c4cf;
 
     .menu {
-        cursor: pointer;
         list-style: none;
         padding: 0;
         margin: 0;
         display: flex;
-
         color: #666;
 
         .item {
+            cursor: pointer;
             white-space: nowrap;
             margin-right: 32px;
             font-size: 18px;

@@ -2,7 +2,7 @@
 <template>
     <div class="tatle" style="height: calc(100vh - 56px - 96px - 56px);">
         <tablelist :data="lists" :iconlist="iconlists" @share="Sharefile" @deletefile="Deletefile"
-            @dbclickopen="openDocument" :type="currentProject.self_perm_type > 2 ? 'project' : ''" @updatestar="Starfile"
+            @dbclickopen="openDocument" :addfile="currentProject.self_perm_type" @updatestar="Starfile"
             @rightMeun="rightmenu" :noNetwork="noNetwork" @refreshDoc="refreshDoc" @newProjectFill="newProjectFill"
             :creator="true" :perm="currentProject.self_perm_type" />
     </div>
@@ -32,7 +32,7 @@ import tablelist from '@/components/AppHome/tablelist.vue'
 import { UserInfo } from '@/context/user';
 import listrightmenu from "@/components/AppHome/listrightmenu.vue"
 import MoveProjectFill from '../MoveProjectFill.vue';
-import { Repository, CoopRepository, Document } from '@kcdesign/data';
+import { Repository, CoopRepository } from '@kcdesign/data';
 import { createDocument } from '@kcdesign/data';
 import { DocEditor } from '@kcdesign/data';
 
@@ -56,7 +56,6 @@ const props = defineProps<{
 }>()
 const { t } = useI18n()
 const route = useRoute();
-const isLoading = ref(false)
 const showFileShare = ref<boolean>(false)
 const shareSwitch = ref(true)
 const pageHeight = ref(0)
@@ -77,7 +76,6 @@ async function getDoucment(id: string) {
     if (!id || id === '0') {
         projectId = route.params.id as string
     }
-    isLoading.value = true
     try {
         const { data } = await team_api.getDoucmentListAPI({ project_id: projectId })
         if (data == null) {
@@ -94,7 +92,6 @@ async function getDoucment(id: string) {
     } catch (error) {
         noNetwork.value = true
     }
-    isLoading.value = false
 }
 
 const { projectList } = inject('shareData') as {

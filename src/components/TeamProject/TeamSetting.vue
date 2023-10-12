@@ -27,8 +27,9 @@
                 <div class="text">{{ t('teamsetting.avatar_restriction') }}</div>
             </div>
             <div class="right">
-                <label class="modify" :style="{ backgroundColor: isDisabled.color,boxShadow:isDisabled.shadow }" for="image_uploads">{{
-                    t('teamsetting.edit_avatar') }}</label>
+                <label class="modify" :style="{ backgroundColor: isDisabled.color, boxShadow: isDisabled.shadow }"
+                    for="image_uploads">{{
+                        t('teamsetting.edit_avatar') }}</label>
                 <input type="file" id="image_uploads" name="image_uploads" accept=".jpg,.png" style="display: none;"
                     @change="midAvatarRequest($event)" :disabled="isDisabled.state" />
             </div>
@@ -132,7 +133,7 @@ interface teamDataType {
 }
 
 const isDisabled: any = computed(() => {
-    return teamSelfPermType.value === 0 || teamSelfPermType.value === 1 ? { state: true, color: 'rgba(98, 67, 237, 0.3)',shadow:'none' } : false
+    return teamSelfPermType.value === 0 || teamSelfPermType.value === 1 ? { state: true, color: 'rgba(98, 67, 237, 0.3)', shadow: 'none' } : false
 })
 
 //获取元素，设置焦点并全选内容
@@ -205,7 +206,7 @@ const midAvatarRequest = async (e: any) => {
                     ElMessage.error(message)
                 }
             } catch (error) {
-
+                ElMessage.error('修改失败')
             }
 
         } else {
@@ -475,7 +476,7 @@ const confirm = () => {
 
         .left {
             font-size: 14px;
-
+            color: #909399;
             .title {
                 font-weight: 600;
                 margin-bottom: 8px;
@@ -519,4 +520,5 @@ const confirm = () => {
         }
     }
 
-}</style>
+}
+</style>

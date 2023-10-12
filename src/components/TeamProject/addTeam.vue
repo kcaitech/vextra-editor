@@ -82,7 +82,8 @@ const createTeam = async () => {
             ElMessage.error(message)
         }
     } catch (error) {
-        ElMessage.error(t('home.other_tips'))
+        emits('close')
+        ElMessage.error('创建失败')
     }
 }
 
