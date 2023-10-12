@@ -30,9 +30,20 @@ const isLable = ref(false);
         }
 
     }
+    :deep(.el-switch__core) {
+        height: 25px;
+        .el-switch__action {
+            width: 20px;
+            height: 20px;
+            svg {
+                color: #fff;
+            }
+        }
+    }
 
     :deep(.el-switch.is-checked .el-switch__core .el-switch__action) {
-        background-color: #a544e6 !important;
+        background-color: #a42bc5 !important;
+        left: calc(100% - 20px);
     }
 
 }
