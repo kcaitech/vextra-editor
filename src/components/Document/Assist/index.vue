@@ -24,8 +24,8 @@ const matrix = ref<Matrix>(props.context.workspace.matrix);
 const data = reactive<Data>({ nodesX: [], nodesY: [], lineX: '', lineY: '', exLineX: [], exLineY: [], exNodesX: [], exNodesY: [] });
 let { lineX, nodesX, lineY, nodesY, exLineX, exLineY, exNodesX, exNodesY } = data;
 let ax = 0, ay = 0;
-function assist_watcher(t: number, params?: number) {
-    if (t === Asssit.UPDATE_ASSIST) render(params);
+function assist_watcher(t: number) {
+    if (t === Asssit.UPDATE_ASSIST) render();
     if (t === Asssit.UPDATE_MAIN_LINE) update_main_line();
     if (t === Asssit.CLEAR && assist.value) clear();
 }
@@ -48,7 +48,7 @@ function update_main_line() {
     }
     // console.log('更新主辅助线:', Date.now() - s1);
 }
-function render(multi?: number) {
+function render() {
     // const s = Date.now();
     clear();
     const ns_x = minus_nodes_x(props.context.assist.nodes_x);
@@ -65,14 +65,8 @@ function render(multi?: number) {
         lineY = render_line_y(nodesY);
         assist.value = true;
     }
-    if (multi === 3) {
-        getExLineX();
-        getExLineY();
-    } else if (multi === 2) {
-        getExLineY();
-    } else if (multi === 1) {
-        getExLineX();
-    }
+    getExLineX();
+    getExLineY();
     // console.log('初次确定辅助线(ms):', Date.now() - s);
 }
 function getExLineX() {

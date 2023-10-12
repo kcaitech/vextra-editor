@@ -1,25 +1,38 @@
-import { Shape, ShapeType, GroupShape, TextShape } from '@kcdesign/data';
-import { onMounted, onUnmounted } from "vue";
-import { Context } from "@/context";
-import { Matrix } from '@kcdesign/data';
-import { ClientXY, PageXY } from "@/context/selection";
-import { fourWayWheel, Wheel, EffectType } from "@/utils/wheel";
-import { get_speed, keyboardHandle as handle } from "@/utils/controllerFn";
-import { Selection } from "@/context/selection";
-import { groupPassthrough } from "@/utils/scout";
-import { WorkSpace } from "@/context/workspace";
-import { Action } from "@/context/tool";
-import { AsyncTransfer } from "@kcdesign/data";
-import { debounce } from "lodash";
-import { paster_short } from '@/utils/clipboard';
-import { sort_by_layer } from '@/utils/group_ungroup';
-import { Comment } from '@/context/comment';
-import { useI18n } from 'vue-i18n';
-import { map_from_shapes, permIsEdit } from '@/utils/content';
-import { distance2apex, distance2apex2, get_frame, get_pg_by_frame, gen_match_points, PointsOffset } from '@/utils/assist';
-import { Asssit } from '@/context/assist';
-import { Menu } from '@/context/menu';
-import { TaskType } from '@/context/escstack';
+import {Shape, ShapeType, GroupShape, TextShape} from '@kcdesign/data';
+import {onMounted, onUnmounted} from "vue";
+import {Context} from "@/context";
+import {Matrix} from '@kcdesign/data';
+import {ClientXY, PageXY} from "@/context/selection";
+import {fourWayWheel, Wheel, EffectType} from "@/utils/wheel";
+import {get_speed, keyboardHandle as handle} from "@/utils/controllerFn";
+import {Selection} from "@/context/selection";
+import {groupPassthrough} from "@/utils/scout";
+import {WorkSpace} from "@/context/workspace";
+import {Action} from "@/context/tool";
+import {AsyncTransfer} from "@kcdesign/data";
+import {debounce} from "lodash";
+import {paster_short} from '@/utils/clipboard';
+import {sort_by_layer} from '@/utils/group_ungroup';
+import {Comment} from '@/context/comment';
+import {useI18n} from 'vue-i18n';
+import {map_from_shapes, permIsEdit} from '@/utils/content';
+import {
+    distance2apex,
+    distance2apex2,
+    get_frame,
+    get_pg_by_frame,
+    gen_match_points,
+    PointsOffset
+} from '@/utils/assist';
+import {Asssit} from '@/context/assist';
+import {Menu} from '@/context/menu';
+import {TaskType} from '@/context/escstack';
+import {
+    down_while_is_text_editing,
+    is_ctrl_element,
+    is_mouse_on_content, modify_down_position,
+    reset_trans_editor_status
+} from "@/utils/mouse";
 
 export function useControllerCustom(context: Context, i18nT: Function) {
     const matrix = new Matrix();
@@ -27,9 +40,9 @@ export function useControllerCustom(context: Context, i18nT: Function) {
     let timer: any;
     const duration: number = 250; // 双击判定时长 ms 
     let isDragging = false;
-    let startPosition: ClientXY = { x: 0, y: 0 };
-    let startPositionOnPage: PageXY = { x: 0, y: 0 };
-    let root: ClientXY = { x: 0, y: 0 };
+    let startPosition: ClientXY = {x: 0, y: 0};
+    let startPositionOnPage: PageXY = {x: 0, y: 0};
+    let root: ClientXY = {x: 0, y: 0};
     let wheel: Wheel | undefined = undefined;
     let editing: boolean = false;
     let shapes: Shape[] = [];
@@ -42,6 +55,7 @@ export function useControllerCustom(context: Context, i18nT: Function) {
     const selection = context.selection;
     const workspace = context.workspace;
     let offset_map: PointsOffset | undefined;
+
     function gen_offset_map(shape: Shape, down: PageXY) {
         const m = shape.matrix2Root(), f = shape.frame;
         const lt = m.computeCoord2(0, 0);
@@ -50,13 +64,14 @@ export function useControllerCustom(context: Context, i18nT: Function) {
         const rt = m.computeCoord2(f.width, 0);
         const lb = m.computeCoord2(0, f.height);
         return {
-            lt: { x: lt.x - down.x, y: lt.y - down.y },
-            rb: { x: rb.x - down.x, y: rb.y - down.y },
-            pivot: { x: pivot.x - down.x, y: pivot.y - down.y },
-            rt: { x: rt.x - down.x, y: rt.y - down.y },
-            lb: { x: lb.x - down.x, y: lb.y - down.y }
+            lt: {x: lt.x - down.x, y: lt.y - down.y},
+            rb: {x: rb.x - down.x, y: rb.y - down.y},
+            pivot: {x: pivot.x - down.x, y: pivot.y - down.y},
+            rt: {x: rt.x - down.x, y: rt.y - down.y},
+            lb: {x: lb.x - down.x, y: lb.y - down.y}
         }
     }
+
     function _migrate(shapes: Shape[], start: ClientXY, end: ClientXY) {
         if (shapes.length) {
             const pe: PageXY = matrix.computeCoord3(end);
@@ -70,7 +85,9 @@ export function useControllerCustom(context: Context, i18nT: Function) {
             }
         }
     }
+
     const migrate: (shapes: Shape[], start: ClientXY, end: ClientXY) => void = debounce(_migrate, 100);
+
     function getCloesetContainer(shape: Shape): Shape {
         let result: any = selection.selectedPage!
         let p = shape.parent;
@@ -83,25 +100,20 @@ export function useControllerCustom(context: Context, i18nT: Function) {
         }
         return result;
     }
-    function pre2do(e: MouseEvent) { // 移动之前做的准备
-        const action = context.tool.action;
-        if (!permIsEdit(context) || action === Action.AddComment) return;
-        if (e.button === 0) { // 当前组件只处理左键事件，右键事件冒泡出去由父节点处理
-            setPosition(e);
-            context.cursor.cursor_freeze(true);
-            context.menu.menuMount(); // 取消右键事件
-            context.menu.notify(Menu.SHUTDOWN_POPOVER);
-            root = workspace.root;
-            shapes = selection.selectedShapes;
-            if (!shapes.length) return;
-            if (action == Action.AutoV || action == Action.AutoK) {
-                workspace.setCtrl('controller');
-                wheel = fourWayWheel(context, undefined, startPositionOnPage);
-                document.addEventListener('mousemove', mousemove);
-                document.addEventListener('mouseup', mouseup);
-            }
-        }
+
+    function pre_to_translate(e: MouseEvent) { // 移动之前做的准备
+        reset_trans_editor_status(e, context);
+        if (!context.workspace.can_translate(e)) return;
+        shapes = selection.selectedShapes;
+        matrix.reset(workspace.matrix.inverse);
+        modify_down_position(e, context, startPosition, startPositionOnPage, matrix);
+        wheel = fourWayWheel(context, undefined, startPositionOnPage);
+        workspace.setCtrl('controller');
+        root = workspace.root;
+        document.addEventListener('mousemove', mousemove);
+        document.addEventListener('mouseup', mouseup);
     }
+
     function handleDblClick() {
         const selected = selection.selectedShapes;
         if (selected.length !== 1) return;
@@ -117,53 +129,34 @@ export function useControllerCustom(context: Context, i18nT: Function) {
             workspace.contentEdit(editing);
         }
     }
-    function isMouseOnContent(e: MouseEvent): boolean {
-        return (e.target as Element)?.closest(`#content`) ? true : false;
-    }
+
     function mousedown(e: MouseEvent) {
-        if (workspace.isEditing) {
-            if (isMouseOnContent(e)) {
-                shapes = selection.selectedShapes;
-                if (shapes.length === 1 && shapes[0].type === ShapeType.Text) {
-                    const len = (shapes[0] as TextShape).text.length;
-                    const t = (shapes[0] as TextShape).text.getText(0, len).replaceAll('\n', '');
-                    if (t.length) {
-                        const save = shapes.slice(0, 1);
-                        selection.resetSelectShapes();
-                        selection.rangeSelectShape(save);
-                    } else {
-                        const editor = context.editor4Shape(shapes[0]);
-                        editor.delete();
-                        selection.resetSelectShapes();
-                    }
-                    return;
-                }
-            }
-        }
+        if (workspace.isEditing && is_mouse_on_content(e) && down_while_is_text_editing(e, context)) return;
         if (workspace.isPageDragging) return;
-        if (isElement(e)) {
+        if (is_ctrl_element(e, context)) {
             if (timer) handleDblClick();
             initTimer();
-            pre2do(e);
-        } else if (isMouseOnContent(e)) {
+            pre_to_translate(e);
+        } else if (is_mouse_on_content(e)) {
             const h = selection.hoveredShape;
             if (h) {
                 selection.selectShape(h);
-                pre2do(e);
+                pre_to_translate(e);
             } else {
                 selection.resetSelectShapes();
             }
         }
     }
+
     function mousemove(e: MouseEvent) {
         if (e.buttons !== 1) return;
-        const mousePosition: ClientXY = { x: e.clientX - root.x, y: e.clientY - root.y };
+        const mousePosition: ClientXY = {x: e.clientX - root.x, y: e.clientY - root.y};
         if (isDragging && !editing && wheel && asyncTransfer) {
             speed = get_speed(t_e || e, e), t_e = e;
             let update_type = 0;
-            const isOut = wheel.moving(e, { type: EffectType.TRANS, effect: asyncTransfer.transByWheel });
+            const isOut = wheel.moving(e, {type: EffectType.TRANS, effect: asyncTransfer.transByWheel});
             if (!isOut) update_type = transform(startPosition, mousePosition);
-            if (update_type === 3) startPosition = { ...mousePosition };
+            if (update_type === 3) startPosition = {...mousePosition};
             else if (update_type === 2) startPosition.y = mousePosition.y;
             else if (update_type === 1) startPosition.x = mousePosition.x;
         } else if (Math.hypot(mousePosition.x - startPosition.x, mousePosition.y - startPosition.y) > dragActiveDis && !editing) {
@@ -178,6 +171,7 @@ export function useControllerCustom(context: Context, i18nT: Function) {
             offset_map = gen_offset_map(shapes[0], pe);
         }
     }
+
     function transform(start: ClientXY, end: ClientXY) {
         const ps: PageXY = matrix.computeCoord3(start);
         const pe: PageXY = matrix.computeCoord3(end);
@@ -188,10 +182,12 @@ export function useControllerCustom(context: Context, i18nT: Function) {
         }
         return update_type;
     }
+
     let pre_target_x: number, pre_target_y: number;
+
     function trans(asyncTransfer: AsyncTransfer, ps: PageXY, pe: PageXY): number {
         // const s1 = Date.now();
-        if (speed > 5) {
+        if (speed > 5) { // 如果速度过快，不进行辅助对齐
             asyncTransfer.trans(ps, pe);
             context.assist.notify(Asssit.CLEAR);
             return 3;
@@ -199,7 +195,7 @@ export function useControllerCustom(context: Context, i18nT: Function) {
         if (!offset_map) return 3;
         let need_multi = 0;
         let update_type = 3;
-        const stick = { dx: 0, dy: 0, sticked_x: false, sticked_y: false };
+        const stick = {dx: 0, dy: 0, sticked_x: false, sticked_y: false};
         const stickness = context.assist.stickness;
         const len = shapes.length;
         const shape = shapes[0];
@@ -245,11 +241,12 @@ export function useControllerCustom(context: Context, i18nT: Function) {
                 workspace.setCFrame(fs);
                 context.assist.setCPG(get_pg_by_frame(fs, true));
             }
-            context.assist.notify(Asssit.UPDATE_ASSIST, need_multi);
+            context.assist.notify(Asssit.UPDATE_ASSIST);
             context.assist.notify(Asssit.UPDATE_MAIN_LINE);
         }
         // console.log('一次辅助线从计算到渲染总共用时', Date.now() - s1); // < 3ms
         return update_type;
+
         function modify_fix_x(target: any) {
             pre_target_x = target.x;
             const distance = len === 1 ? distance2apex(shape, target.alignX) : distance2apex2(workspace.controllerFrame, target.alignX);
@@ -265,6 +262,7 @@ export function useControllerCustom(context: Context, i18nT: Function) {
             stickedX = true;
             need_multi += 1;
         }
+
         function modify_fix_y(target: any) {
             pre_target_y = target.y;
             const distance = len === 1 ? distance2apex(shape, target.alignY) : distance2apex2(workspace.controllerFrame, target.alignY);
@@ -282,12 +280,13 @@ export function useControllerCustom(context: Context, i18nT: Function) {
             need_multi += 2;
         }
     }
+
     function mouseup(e: MouseEvent) {
         if (e.button === 0) {
             if (isDragging) {
                 if (asyncTransfer) {
-                    const { clientX, clientY } = e;
-                    const mousePosition: ClientXY = { x: clientX - root.x, y: clientY - root.y };
+                    const {clientX, clientY} = e;
+                    const mousePosition: ClientXY = {x: clientX - root.x, y: clientY - root.y};
                     _migrate(shapes, startPosition, mousePosition);
                     asyncTransfer = asyncTransfer.close();
                 }
@@ -310,6 +309,7 @@ export function useControllerCustom(context: Context, i18nT: Function) {
         context.cursor.cursor_freeze(false);
         workspace.setCtrl('page');
     }
+
     function pickerFromSelectedShapes(e: MouseEvent) {
         const selected = selection.selectedShapes;
         const hoveredShape = selection.hoveredShape;
@@ -319,25 +319,21 @@ export function useControllerCustom(context: Context, i18nT: Function) {
             if (!selection.getShapesByXY(startPositionOnPage, e.metaKey || e.ctrlKey, selected).length) selection.resetSelectShapes();
         }
     }
+
     function checkStatus() {
         if (workspace.isPreToTranslating) {
             const start = workspace.startPoint;
             if (!start) return;
-            pre2do(start);
+            pre_to_translate(start);
             workspace.preToTranslating(false);
             need_update_comment = true;
         }
     }
-    function setPosition(e: MouseEvent) {
-        const { clientX, clientY } = e;
-        matrix.reset(workspace.matrix.inverse);
-        root = workspace.root;
-        startPosition = { x: clientX - root.x, y: clientY - root.y };
-        startPositionOnPage = matrix.computeCoord(startPosition.x, startPosition.y);
-    }
+
     function initController() {
         initTimer();
     }
+
     function initTimer() {
         clearTimeout(timer);
         timer = setTimeout(() => {
@@ -345,38 +341,36 @@ export function useControllerCustom(context: Context, i18nT: Function) {
             timer = null;
         }, duration)
     }
+
     function timerClear() {
         if (timer) {
             clearTimeout(timer);
             timer = null;
         }
     }
+
     function isDblClick(): boolean {
-        return timer ? true : false;
+        return Boolean(timer);
     }
+
     function isEditing() {
         return editing;
     }
+
     function isDrag() {
         return isDragging;
     }
-    function isElement(e: MouseEvent): boolean {
-        const root = workspace.root;
-        const selected = selection.selectedShapes;
-        if (selected.length === 1 && selected[0].type === ShapeType.Line) {
-            return Boolean(selection.scout?.isPointInStroke(workspace.ctrlPath, { x: e.clientX - root.x, y: e.clientY - root.y }));
-        } else {
-            return Boolean(selection.scout?.isPointInPath(workspace.ctrlPath, { x: e.clientX - root.x, y: e.clientY - root.y }));
-        }
-    }
+
     function exit() {
         const len = context.selection.selectedShapes.length;
         context.selection.resetSelectShapes();
         return Boolean(len);
     }
+
     function keyboardHandle(e: KeyboardEvent) {
         handle(e, context, i18nT);
     }
+
     function selection_watcher(t?: number) {
         if (t === Selection.CHANGE_SHAPE) { // 选中的图形发生改变，初始化控件
             const selected = selection.selectedShapes;
@@ -389,9 +383,11 @@ export function useControllerCustom(context: Context, i18nT: Function) {
             workspace.contentEdit(false);
         }
     }
+
     function workspace_watcher(t?: number) {
         if (t === WorkSpace.CHECKSTATUS) checkStatus();
     }
+
     function windowBlur() {
         if (isDragging) { // 窗口失焦,此时鼠标事件(up,move)不再受系统管理, 此时需要手动关闭已开启的状态
             workspace.translating(false);
@@ -405,6 +401,7 @@ export function useControllerCustom(context: Context, i18nT: Function) {
         timerClear();
         context.cursor.cursor_freeze(false);
     }
+
     function init() {
         shapes = selection.selectedShapes;
         workspace.watch(workspace_watcher);
@@ -417,6 +414,7 @@ export function useControllerCustom(context: Context, i18nT: Function) {
         workspace.contentEdit(false);
         context.esctask.save(TaskType.SELECTION, exit);
     }
+
     function dispose() {
         workspace.unwatch(workspace_watcher);
         selection.unwatch(selection_watcher);
@@ -425,11 +423,12 @@ export function useControllerCustom(context: Context, i18nT: Function) {
         document.removeEventListener('mousedown', mousedown);
         timerClear();
     }
-    return { isDblClick, isEditing, isDrag, init, dispose };
+
+    return {isDblClick, isEditing, isDrag, init, dispose};
 }
 
 export function useController(context: Context) {
-    const { t } = useI18n();
+    const {t} = useI18n();
 
     const ctrl = useControllerCustom(context, t);
     onMounted(() => {

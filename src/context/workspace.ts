@@ -1,10 +1,9 @@
-import {ShapeType, TableShape, Watchable} from "@kcdesign/data";
-import {Matrix} from '@kcdesign/data';
+import {Matrix, ShapeType, TableShape, Watchable} from "@kcdesign/data";
 import {Context} from "./index";
-import {Root} from "@/utils/content";
+import {adapt_page, Root} from "@/utils/content";
 import {Clipboard} from "@/utils/clipboard";
-import {adapt_page} from "@/utils/content";
 import {PageXY} from "./selection";
+import {Action} from "@/context/tool";
 
 interface Point {
     x: number
@@ -104,7 +103,17 @@ export class WorkSpace extends Watchable(Object) {
     private m_pre_to_translating: boolean = false;
     private m_mousedown_on_page: MouseEvent | undefined;
     private m_controller: 'page' | 'controller' = 'page';
-    private m_root: Root = {init: false, x: 332, y: 30, bottom: 0, right: 0, width: 0, height: 0, element: undefined, center: {x: 0, y: 0}};
+    private m_root: Root = {
+        init: false,
+        x: 332,
+        y: 30,
+        bottom: 0,
+        right: 0,
+        width: 0,
+        height: 0,
+        element: undefined,
+        center: {x: 0, y: 0}
+    };
     private m_document_perm: number = 3;
     private m_should_selection_view_update: boolean = true;
     private m_freeze: boolean = false;
@@ -448,5 +457,13 @@ export class WorkSpace extends Watchable(Object) {
 
     keydown_x(ctrl: boolean, meta: boolean, shift: boolean) {
         if ((ctrl || meta) && shift) this.notify(WorkSpace.DELETE_LINE);
+    }
+
+    can_translate(e: MouseEvent) {
+        const shapes = this.context.selection.selectedShapes;
+        const action = this.context.tool.action;
+        return e.button === 0 && shapes.length > 0
+            && (action === Action.AutoV || action === Action.AutoK)
+            && this.m_document_perm === Perm.isEdit;
     }
 }
