@@ -314,8 +314,8 @@ function createSelector(e: MouseEvent) { // 创建一个selector框选器
     const right = Math.max(mx, sx);
     const top = Math.min(my, sy);
     const bottom = Math.max(my, sy);
-    const p = matrix_inverse.inverseCoord({x: left, y: top})
-    const s = matrix_inverse.inverseCoord({x: right, y: bottom})
+    const p = matrix_inverse.inverseCoord({ x: left, y: top })
+    const s = matrix_inverse.inverseCoord({ x: right, y: bottom })
     selectorFrame.value.top = Math.min(p.y, s.y);
     selectorFrame.value.left = Math.min(p.x, s.x);
     selectorFrame.value.width = Math.max(p.x, s.x) - Math.min(p.x, s.x);
@@ -538,7 +538,7 @@ onUnmounted(() => {
         @wheel="onMouseWheel" @mousedown="onMouseDown" @mousemove="onMouseMove_CV" @mouseleave="onMouseLeave"
         @drop="(e: DragEvent) => { drop(e, props.context, t) }" @dragover.prevent
         :style="{ 'background-color': background_color }">
-        <PageView :context="props.context" :data="(props.page as Page)" :matrix="matrix.toArray()" />
+        <PageView :context="props.context" :data="(props.page as Page)" :matrix="matrix" />
         <TextSelection :context="props.context" :matrix="matrix"> </TextSelection>
         <UsersSelection :context="props.context" :matrix="matrix" v-if="avatarVisi" />
         <SelectionView :context="props.context" :matrix="matrix" />
