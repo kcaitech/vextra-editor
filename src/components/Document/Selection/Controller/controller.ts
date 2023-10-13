@@ -15,11 +15,6 @@ import {sort_by_layer} from '@/utils/group_ungroup';
 import {useI18n} from 'vue-i18n';
 import {map_from_shapes} from '@/utils/content';
 import {
-    distance2apex,
-    distance2apex2,
-    get_frame,
-    get_pg_by_frame,
-    gen_match_points,
     PointsOffset, get_apex, pre_render_assist_line
 } from '@/utils/assist';
 import {Asssit} from '@/context/assist';
@@ -156,7 +151,7 @@ export function useControllerCustom(context: Context, i18nT: Function) {
     let stickedX: boolean = false, stickedY: boolean = false;
 
     /**
-     * @description 计算对齐辅助线、辅助对齐
+     * @description 计算对齐辅助线、辅助对齐。出于性能考虑，代码凌乱，一碰就会爆炸
      */
     function trans_assistant(asyncTransfer: AsyncTransfer, ps: PageXY, pe: PageXY): number {
         // const s1 = Date.now();
@@ -173,7 +168,6 @@ export function useControllerCustom(context: Context, i18nT: Function) {
         const shape = shapes[0];
         const target = gen_assist_target(context, offset_map, pe, shapes);
         if (!target) return update_type;
-        let inverse_matrix: Matrix | undefined;
         if (stickedX) {
             if (is_rid_stick(context, ps.x, pe.x)) { // 挣脱吸附
                 stickedX = false;
@@ -224,10 +218,7 @@ export function useControllerCustom(context: Context, i18nT: Function) {
             stick.sticked_x = true;
             stick.dy = pe.y - ps.y;
             pe.x = ps.x + trans_x;
-            if (!inverse_matrix) {
-                inverse_matrix = workspace.matrix;
-            }
-            const t = inverse_matrix.computeCoord3(pe);
+            const t = workspace.matrix.computeCoord3(pe);
             startPosition.x = t.x;
             update_type -= 1;
             stickedX = true;
@@ -242,10 +233,7 @@ export function useControllerCustom(context: Context, i18nT: Function) {
             stick.sticked_y = true;
             pe.y = ps.y + trans_y;
             if (!stick.sticked_x) stick.dx = pe.x - ps.x;
-            if (!inverse_matrix) {
-                inverse_matrix = workspace.matrix;
-            }
-            const t = inverse_matrix.computeCoord3(pe);
+            const t = workspace.matrix.computeCoord3(pe);
             startPosition.y = t.y;
             update_type -= 2;
             stickedY = true;
