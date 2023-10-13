@@ -1,12 +1,15 @@
 <script setup lang="ts">
 import { h, onUnmounted, watch } from 'vue';
-import { Shape, GroupShape } from "@kcdesign/data";
+import { Shape, GroupShape, SymbolRefShape, SymbolShape, RenderTransform, Variable } from "@kcdesign/data";
 import { renderBoolOpShape as opr } from "@kcdesign/data";
 import { renderGroup as normalR } from "@kcdesign/data";
 import comsMap from './comsmap';
 import { initCommonShape } from './common';
 
-const props = defineProps<{ data: GroupShape }>();
+const props = defineProps<{
+    data: GroupShape, transx?: RenderTransform,
+    varsContainer?: (SymbolRefShape | SymbolShape)[]
+}>();
 const common = initCommonShape(props);
 const consumed: Array<Shape> = [];
 const watcher = () => {
@@ -29,12 +32,14 @@ onUnmounted(() => {
 
 function render() {
     const consumed0: Array<Shape> = [];
-
+        const consumedVars: { slot: string, vars: Variable[] }[] = [];
     const isBoolOpShape = props.data.isBoolOpShape;
 
     const ret = isBoolOpShape ?
-        opr(h, props.data, common.reflush, consumed0) :
-        normalR(h, props.data, comsMap, common.reflush);
+        opr(h, props.data, props.transx, props.varsContainer, consumedVars, common.reflush, consumed0) :
+        normalR(h, props.data, comsMap, props.transx, props.varsContainer, consumedVars, common.reflush);
+
+        common.watchVars(consumedVars);
 
     if (consumed0.length < consumed.length) {
         for (let i = consumed0.length, len = consumed.length; i < len; i++) {

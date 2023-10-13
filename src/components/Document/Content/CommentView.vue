@@ -1,14 +1,13 @@
 <script setup lang="ts">
-import { reactive, onMounted, onUnmounted, computed, ref, nextTick, onUpdated } from 'vue';
+import { reactive, onMounted, onUnmounted, computed, ref, nextTick } from 'vue';
 import { Context } from '@/context';
 import PageCommentItem from '@/components/Document/Content/PageCommentItem.vue'
 import * as comment_api from '@/apis/comment';
 import { ClientXY, PageXY } from '@/context/selection';
 import { useRoute } from 'vue-router';
-import { WorkSpace } from '@/context/workspace';
 import { useI18n } from 'vue-i18n';
 import { searchCommentShape } from '@/utils/comment';
-import { Page, Shape, ShapeType } from "@kcdesign/data";
+import { Page, Shape } from "@kcdesign/data";
 import { Comment } from '@/context/comment';
 import { DocCommentOpData, DocCommentOpType } from "@/communication/modules/doc_comment_op"
 

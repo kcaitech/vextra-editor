@@ -1,7 +1,7 @@
-import { CoopRepository, TaskMgr, Task, Watchable, TaskPriority, TableShape, TableEditor, Text, GroupShape } from "@kcdesign/data";
+import { CoopRepository, TaskMgr, Task, Watchable, TaskPriority, TableShape, TableEditor, Text, SymbolShape } from "@kcdesign/data";
 import { Document } from "@kcdesign/data";
 import { Page } from "@kcdesign/data";
-import { Shape, TextShape } from "@kcdesign/data";
+import { Shape } from "@kcdesign/data";
 import { DocEditor, Editor, PageEditor } from "@kcdesign/data";
 import { ShapeEditor, TextShapeEditor } from "@kcdesign/data";
 import { Selection } from "./selection";
@@ -127,7 +127,7 @@ export class Context extends Watchable(Object) {
         this.m_taskMgr.startLoop();
 
         // symbol loader
-        data.symbolsMgr.setLoader(async (id: string): Promise<GroupShape> => {
+        data.symbolsMgr.setLoader(async (id: string): Promise<SymbolShape> => {
             return new Promise((resolve, reject) => {
                 checkSymLoaded.push(() => {
                     const sym = data.symbolsMgr.getSync(id);

@@ -234,7 +234,7 @@ function finder_symbol(context: Context, scout: Scout, symbol: SymbolShape | Sym
     if (isTarget(scout, symbol, position)) {
         return symbol;
     } else {
-        const childs = symbol.type === ShapeType.Symbol ? symbol.childs : symbol.naviChilds;
+        const childs = symbol.type === ShapeType.Symbol ? symbol.childs : (symbol.naviChilds || []);
         result = finder(context, scout, childs, position, selected, isCtrl);
     }
     return result;

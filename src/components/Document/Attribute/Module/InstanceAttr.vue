@@ -75,36 +75,37 @@ const inputRef = ref<any>()
 const selectAllText = () => {
     inputRef.value.select()
 }
-const variables = ref<Variable[]>([]);
+// const variables = ref<Variable[]>([]);
 const visibles = ref<Variable[]>([]);
 const textContents = ref<Variable[]>([]);
 const instances = ref<Variable[]>([]);
 const attrStates = ref<Variable[]>([]);
 
 const watchShape = () => {
-    varUnwatch(variables.value as Variable[])
-    variables.value = props.shape.variables;
+    // varUnwatch(variables.value as Variable[])
+    // variables.value = props.shape.variables;
     updateData();
-    varWatch(variables.value as Variable[])
+    // varWatch(variables.value as Variable[])
 }
 
 const updateData = () => {
-    visibles.value = variables.value.filter(item => item.type === VariableType.Visible) || [];
-    instances.value = variables.value.filter(item => item.type === VariableType.Instance) || [];
-    textContents.value = variables.value.filter(item => item.type === VariableType.Text) || [];
-    attrStates.value = variables.value.filter(item => item.type === VariableType.Status) || [];
+    const variables = Array.from(props.shape.variables?.values() || []);
+    visibles.value = variables.filter(item => item.type === VariableType.Visible) || [];
+    instances.value = variables.filter(item => item.type === VariableType.Instance) || [];
+    textContents.value = variables.filter(item => item.type === VariableType.Text) || [];
+    attrStates.value = variables.filter(item => item.type === VariableType.Status) || [];
 }
 
-const varWatch = (variables: Variable[]) => {
-    variables.forEach(item => {
-        item.watch(updateData)
-    })
-}
-const varUnwatch = (variables: Variable[]) => {
-    variables.forEach(item => {
-        item.unwatch(updateData)
-    })
-}
+// const varWatch = (variables: Variable[]) => {
+//     variables.forEach(item => {
+//         item.watch(updateData)
+//     })
+// }
+// const varUnwatch = (variables: Variable[]) => {
+//     variables.forEach(item => {
+//         item.unwatch(updateData)
+//     })
+// }
 
 onMounted(() => {
     watchShape();

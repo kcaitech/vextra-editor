@@ -1,11 +1,15 @@
 <script setup lang="ts">
 import { h, onUnmounted, watch } from 'vue';
-import { Shape, TableShape } from "@kcdesign/data";
+import { Shape, TableShape, RenderTransform, SymbolRefShape , SymbolShape, Variable } from "@kcdesign/data";
 import { renderTable as r } from "@kcdesign/data";
 import { initCommonShape } from './common';
 import comsMap from './comsmap';
 
-const props = defineProps<{ data: TableShape }>();
+const props = defineProps<{
+    data: TableShape, transx?: RenderTransform,
+    varsContainer?: (SymbolRefShape | SymbolShape)[]
+}>();
+
 const common = initCommonShape(props);
 const watcher = (...args: any[]) => {
     if (args.indexOf('borders') >= 0) common.incReflush();
@@ -31,9 +35,9 @@ onUnmounted(() => {
 
 function render() {
     const consumed0 = props.data.datas;
-
-    const ret = r(h, props.data, comsMap, common.reflush);
-
+    const consumedVars: { slot: string, vars: Variable[] }[] = [];
+    const ret = r(h, props.data, comsMap, props.transx, props.varsContainer, consumedVars, common.reflush);
+    common.watchVars(consumedVars);
     if (consumed0.length < consumed.length) {
         for (let i = consumed0.length, len = consumed.length; i < len; i++) {
             const cell = consumed[i];
