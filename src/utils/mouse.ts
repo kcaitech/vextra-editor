@@ -7,6 +7,7 @@ import {WorkSpace} from "@/context/workspace";
 import {Comment} from "@/context/comment";
 import {Asssit} from "@/context/assist";
 import {distance2apex, distance2apex2, gen_match_points, get_frame, get_pg_by_frame} from "@/utils/assist";
+import {XYsBounding} from "@/utils/common";
 
 /**
  * @description 判断落点是否在content上
@@ -142,17 +143,35 @@ export function check_drag_action(start: { x: number, y: number }, current: { x:
 
 /**
  * @description 根据鼠标在client坐标系上的一点确定辅助对象的点图
- * @param _down client坐标系上的一点
- * @param matrix client 坐标系到root坐标系的转换矩阵
+ * @param down root坐标系上的一点
  */
-export function gen_offset_map(shape: Shape, _down: PageXY, matrix: Matrix) {
-    const down = matrix.computeCoord3(_down);
-    const m = shape.matrix2Root(), f = shape.frame;
-    const lt = m.computeCoord2(0, 0);
-    const rb = m.computeCoord2(f.width, f.height);
-    const pivot = m.computeCoord2(f.width / 2, f.height / 2);
-    const rt = m.computeCoord2(f.width, 0);
-    const lb = m.computeCoord2(0, f.height);
+export function gen_offset_points_map(shapes: Shape[], down: PageXY) {
+    let lt: { x: number, y: number }, rb: { x: number, y: number }, pivot: { x: number, y: number },
+        rt: { x: number, y: number }, lb: { x: number, y: number };
+    if (shapes.length === 1) {
+        const shape = shapes[0];
+        const m = shape.matrix2Root(), f = shape.frame;
+        lt = m.computeCoord2(0, 0);
+        rb = m.computeCoord2(f.width, f.height);
+        pivot = m.computeCoord2(f.width / 2, f.height / 2);
+        rt = m.computeCoord2(f.width, 0);
+        lb = m.computeCoord2(0, f.height);
+    } else {
+        const points: { x: number, y: number }[] = [];
+        for (let i = 0, len = shapes.length; i < len; i++) {
+            const s = shapes[i];
+            const m = s.matrix2Root();
+            const f = s.frame;
+            const ps: { x: number, y: number }[] = [{x: 0, y: 0}, {x: f.width, y: 0}, {x: f.width, y: f.height}, {x: 0, y: f.height}];
+            for (let i = 0; i < 4; i++) points.push(m.computeCoord3(ps[i]));
+        }
+        const box = XYsBounding(points);
+        lt = {x: box.left, y: box.top};
+        rb = {x: box.right, y: box.bottom};
+        pivot = {x: (box.left + box.right) / 2, y: (box.top + box.bottom) / 2};
+        rt = {x: box.right, y: box.top};
+        lb = {x: box.left, y: box.bottom};
+    }
     return {
         lt: {x: lt.x - down.x, y: lt.y - down.y},
         rb: {x: rb.x - down.x, y: rb.y - down.y},
@@ -248,19 +267,18 @@ export function shapes_picker(e: MouseEvent, context: Context, p: { x: number, y
  * @description 获取移动辅助中心对象点图
  * @param pe
  */
-export function gen_assist_target(context: Context, offset_map: any, pe: { x: number, y: number }, shapes: Shape[]) {
-    const len = shapes.length;
-    if (len === 1) {
-        return context.assist.trans_match(offset_map, pe);
+export function gen_assist_target(context: Context, shapes: Shape[], is_multi: boolean, offset_map: any, pe: { x: number, y: number }) {
+    if (is_multi) {
+        return context.assist.trans_match_multi(shapes, offset_map, pe);
     } else {
-        return context.assist.trans_match_multi(shapes)
+        return context.assist.trans_match(offset_map, pe);
     }
 }
 
 /**
  * @description 是否摆脱辅助吸附
  */
-export function is_rid_stick(context: Context, a:number, b: number) {
-    return Math.abs(a -b) >= context.assist.stickness;
+export function is_rid_stick(context: Context, a: number, b: number) {
+    return Math.abs(a - b) >= context.assist.stickness;
 }
 

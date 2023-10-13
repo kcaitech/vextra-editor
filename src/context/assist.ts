@@ -1,7 +1,23 @@
-import { GroupShape, Shape, Watchable } from "@kcdesign/data";
-import { PageXY, Selection } from "./selection";
-import { Context } from ".";
-import { finder, getClosestAB, get_frame, get_pg_by_frame, get_tree, modify_pt_x, modify_pt_x4create, modify_pt_x4p, modify_pt_y, modify_pt_y4create, modify_pt_y4p, gen_match_points, gen_match_points_by_map, PointsOffset } from "@/utils/assist";
+import {GroupShape, Shape, Watchable} from "@kcdesign/data";
+import {PageXY, Selection} from "./selection";
+import {Context} from ".";
+import {
+    finder,
+    getClosestAB,
+    get_frame,
+    get_pg_by_frame,
+    get_tree,
+    modify_pt_x,
+    modify_pt_x4create,
+    modify_pt_x4p,
+    modify_pt_y,
+    modify_pt_y4create,
+    modify_pt_y4p,
+    gen_match_points,
+    gen_match_points_by_map,
+    PointsOffset
+} from "@/utils/assist";
+
 export interface PointGroup1 {
     lt: PageXY
     rb: PageXY
@@ -15,6 +31,7 @@ export interface PointGroup1 {
     bh?: PageXY
     lh?: PageXY
 }
+
 export interface PointGroup2 {
     lt: PageXY
     rt: PageXY
@@ -28,6 +45,7 @@ export interface PointGroup2 {
     cy?: number
     right?: number
 }
+
 export type PointType = 'lt' | 'rt' | 'rb' | 'lb' | 'pivot';
 
 export interface PT1 {
@@ -36,12 +54,14 @@ export interface PT1 {
     align: Align
     delta: number | undefined
 }
+
 export interface PT2 {
     y: number
     sx: number
     align: Align
     delta: number | undefined
 }
+
 export interface PT1_2 {
     x: number
     sy: number
@@ -49,6 +69,7 @@ export interface PT1_2 {
     delta: number | undefined
     ex: PageXY2[]
 }
+
 export interface PT2_2 {
     y: number
     sx: number
@@ -56,16 +77,19 @@ export interface PT2_2 {
     delta: number | undefined
     ex: PageXY2[]
 }
+
 export interface PT4P1 {
     x: number
     sy: number
     delta: number | undefined
 }
+
 export interface PT4P2 {
     y: number
     sx: number
     delta: number | undefined
 }
+
 enum Align {
     LT_X = 'lt_x',
     RT_X = 'rt_x',
@@ -78,10 +102,12 @@ enum Align {
     RB_Y = 'rb_y',
     LB_Y = 'lb_y'
 }
+
 export interface PageXY2 {
     id: string
     p: PageXY
 }
+
 export class Asssit extends Watchable(Object) {
     static UPDATE_ASSIST = 1;
     static UPDATE_MAIN_LINE = 2;
@@ -98,43 +124,55 @@ export class Asssit extends Watchable(Object) {
     private m_nodes_x: PageXY2[] = [];
     private m_nodes_y: PageXY2[] = [];
     private m_stickness: number = 5;
+
     constructor(context: Context) {
         super();
         this.m_context = context;
     }
+
     get CPG() {
         return this.m_current_pg;
     }
+
     setCPG(pg: PointGroup2) {
         this.m_current_pg = pg;
     }
+
     get except() {
         return this.m_except;
     }
+
     get stickness() {
         return this.m_stickness;
     }
+
     set_stickness(v: number) {
         this.m_stickness = v;
     }
+
     get xAxis() {
         return this.m_x_axis;
     }
+
     get yAxis() {
         return this.m_y_axis;
     }
+
     get nodes_x() {
         return this.m_nodes_x;
     }
+
     get nodes_y() {
         return this.m_nodes_y;
     }
+
     private clear() {
         this.m_shape_inner.length = 0;
         this.m_pg_inner.clear();
         this.m_x_axis.clear();
         this.m_y_axis.clear();
     }
+
     private selection_watcher(t?: any) {
         if (t === Selection.CHANGE_SHAPE) {
             this.m_collect_target = [];
@@ -146,11 +184,16 @@ export class Asssit extends Watchable(Object) {
             this.m_collect_target = [];
         }
     }
-    init() { this.m_context.selection.watch(this.selection_watcher.bind(this)) }
+
+    init() {
+        this.m_context.selection.watch(this.selection_watcher.bind(this))
+    }
+
     set_collect_target(groups: GroupShape[], collect?: boolean) {
         this.m_collect_target = groups;
         if (collect) this.collect();
     }
+
     collect() {
         // const s = Date.now();
         const page = this.m_context.selection.selectedPage;
@@ -163,7 +206,9 @@ export class Asssit extends Watchable(Object) {
         // const e = Date.now();
         // console.log('点位收集用时(ms):', e - s);
     }
+
     set_trans_target(shapes: Shape[]) {
+        this.m_context.workspace.clear_cache_map();
         this.collect();
         this.m_except.clear();
         if (shapes.length === 1) {
@@ -172,15 +217,16 @@ export class Asssit extends Watchable(Object) {
             for (let i = 0, len = shapes.length; i < len; i++) get_tree(shapes[i], this.m_except);
         }
     }
+
     trans_match(offsetMap: PointsOffset, p: PageXY) {
         // const st = Date.now();
         if (!this.m_except.size) return;
         this.m_nodes_x = [];
         this.m_nodes_y = [];
         this.m_current_pg = gen_match_points_by_map(offsetMap, p);
-        const target = { x: 0, y: 0, sticked_by_x: false, sticked_by_y: false, alignX: Align.LT_X, alignY: Align.LT_Y };
-        const pre_target1: PT1 = { x: 0, sy: 0, align: Align.LT_X, delta: undefined };
-        const pre_target2: PT2 = { y: 0, sx: 0, align: Align.LT_Y, delta: undefined };
+        const target = {x: 0, y: 0, sticked_by_x: false, sticked_by_y: false, alignX: Align.LT_X, alignY: Align.LT_Y};
+        const pre_target1: PT1 = {x: 0, sy: 0, align: Align.LT_X, delta: undefined};
+        const pre_target2: PT2 = {y: 0, sx: 0, align: Align.LT_Y, delta: undefined};
         for (let i = 0, len = this.m_shape_inner.length; i < len; i++) {
             const cs = this.m_shape_inner[i];
             if (this.m_except.get(cs.id)) continue;
@@ -201,17 +247,24 @@ export class Asssit extends Watchable(Object) {
         // console.log('单次匹配辅助点位(ms):', Date.now() - st);
         return target;
     }
-    trans_match_multi(shapes: Shape[]) {
+
+    trans_match_multi(shapes: Shape[], offsetMap: PointsOffset, p: PageXY) {
         // const st = Date.now();
         if (!this.m_except.size) return;
         this.m_nodes_x = [];
         this.m_nodes_y = [];
-        const fs = get_frame(shapes);
-        this.m_context.workspace.setCFrame(fs);
-        this.m_current_pg = get_pg_by_frame(fs);
-        const target = { x: 0, y: 0, sticked_by_x: false, sticked_by_y: false, alignX: Align.LT_X, alignY: Align.LT_Y };
-        const pre_target1: PT1 = { x: 0, sy: 0, align: Align.LT_X, delta: undefined };
-        const pre_target2: PT2 = { y: 0, sx: 0, align: Align.LT_Y, delta: undefined };
+        const cache_map = this.m_context.workspace.cache_map;
+        if (cache_map) {
+            this.m_context.workspace.revert_frame_by_map(shapes[0]);
+        } else {
+            const frame = get_frame(shapes);
+            this.m_context.workspace.gen_chahe_map_by_shape_one(shapes[0], frame);
+            this.m_context.workspace.setCFrame(frame);
+        }
+        this.m_current_pg = gen_match_points_by_map(offsetMap, p);
+        const target = {x: 0, y: 0, sticked_by_x: false, sticked_by_y: false, alignX: Align.LT_X, alignY: Align.LT_Y};
+        const pre_target1: PT1 = {x: 0, sy: 0, align: Align.LT_X, delta: undefined};
+        const pre_target2: PT2 = {y: 0, sx: 0, align: Align.LT_Y, delta: undefined};
         for (let i = 0, len = this.m_shape_inner.length; i < len; i++) {
             const cs = this.m_shape_inner[i];
             if (this.m_except.get(cs.id)) continue;
@@ -229,19 +282,20 @@ export class Asssit extends Watchable(Object) {
             this.m_nodes_y = (this.m_y_axis.get(target.y) || []);
         }
         this.notify(Asssit.UPDATE_ASSIST);
-        const e = Date.now();
+        // const e = Date.now();
         // console.log('单次匹配用时(ms):', e - st);
         return target;
     }
+
     point_match(point: PageXY) {
         // const st = Date.now();
         if (!this.m_except.size) return;
         this.m_nodes_x = [];
         this.m_nodes_y = [];
         // this.m_current_pg = gen_match_points(s);  // *
-        const target = { x: 0, y: 0, sticked_by_x: false, sticked_by_y: false };
-        const pre_target1: PT4P1 = { x: 0, sy: 0, delta: undefined };
-        const pre_target2: PT4P2 = { y: 0, sx: 0, delta: undefined };
+        const target = {x: 0, y: 0, sticked_by_x: false, sticked_by_y: false};
+        const pre_target1: PT4P1 = {x: 0, sy: 0, delta: undefined};
+        const pre_target2: PT4P2 = {y: 0, sx: 0, delta: undefined};
         for (let i = 0, len = this.m_shape_inner.length; i < len; i++) {
             const cs = this.m_shape_inner[i];
             if (this.m_except.get(cs.id)) continue;
@@ -252,25 +306,26 @@ export class Asssit extends Watchable(Object) {
         }
         if (pre_target1.delta !== undefined) {
             target.x = pre_target1.x, target.sticked_by_x = true;
-            this.m_nodes_x = (this.m_x_axis.get(target.x) || []).concat([{ p: { x: target.x, y: pre_target1.sy }, id: 'ex' }]);
+            this.m_nodes_x = (this.m_x_axis.get(target.x) || []).concat([{p: {x: target.x, y: pre_target1.sy}, id: 'ex'}]);
         }
         if (pre_target2.delta !== undefined) {
             target.y = pre_target2.y, target.sticked_by_y = true;
-            this.m_nodes_y = (this.m_y_axis.get(target.y) || []).concat([{ p: { x: pre_target2.sx, y: target.y }, id: 'ex' }]);
+            this.m_nodes_y = (this.m_y_axis.get(target.y) || []).concat([{p: {x: pre_target2.sx, y: target.y}, id: 'ex'}]);
         }
         this.notify(Asssit.UPDATE_ASSIST);
         // const e = Date.now();
         // console.log('单次匹配用时(ms):', e - st);
         return target;
     }
+
     create_match(p: PageXY) {
         const st = Date.now();
         if (!this.m_except.size) return;
         this.m_nodes_x = [];
         this.m_nodes_y = [];
-        const target = { x: 0, y: 0, sticked_by_x: false, sticked_by_y: false };
-        const pre_target1: PT4P1 = { x: 0, sy: 0, delta: undefined };
-        const pre_target2: PT4P2 = { y: 0, sx: 0, delta: undefined };
+        const target = {x: 0, y: 0, sticked_by_x: false, sticked_by_y: false};
+        const pre_target1: PT4P1 = {x: 0, sy: 0, delta: undefined};
+        const pre_target2: PT4P2 = {y: 0, sx: 0, delta: undefined};
         for (let i = 0, len = this.m_shape_inner.length; i < len; i++) {
             const cs = this.m_shape_inner[i];
             if (this.m_except.get(cs.id)) continue;
@@ -281,17 +336,18 @@ export class Asssit extends Watchable(Object) {
         }
         if (pre_target1.delta !== undefined) {
             target.x = pre_target1.x, target.sticked_by_x = true;
-            this.m_nodes_x = (this.m_x_axis.get(target.x) || []).concat([{ p: { x: target.x, y: pre_target1.sy }, id: 'ex' }]);
+            this.m_nodes_x = (this.m_x_axis.get(target.x) || []).concat([{p: {x: target.x, y: pre_target1.sy}, id: 'ex'}]);
         }
         if (pre_target2.delta !== undefined) {
             target.y = pre_target2.y, target.sticked_by_y = true;
-            this.m_nodes_y = (this.m_y_axis.get(target.y) || []).concat([{ p: { x: pre_target2.sx, y: target.y }, id: 'ex' }]);
+            this.m_nodes_y = (this.m_y_axis.get(target.y) || []).concat([{p: {x: pre_target2.sx, y: target.y}, id: 'ex'}]);
         }
         this.notify(Asssit.UPDATE_ASSIST);
         const e = Date.now();
         // console.log('单次匹配用时(ms):', e - st);
         return target;
     }
+
     reset() {
         this.m_nodes_x = [];
         this.m_nodes_y = [];

@@ -370,14 +370,14 @@ export function get_pg_by_frame(frame: Point[], multi?: boolean): PointGroup2 { 
     }
 }
 
-export function get_frame(selection: Shape[]): Point[] {
+export function get_frame(shapes: Shape[]): Point[] {
     const points: { x: number, y: number }[] = [];
-    for (let i = 0, len = selection.length; i < len; i++) {
-        const s = selection[i];
+    for (let i = 0, len = shapes.length; i < len; i++) {
+        const s = shapes[i];
         const m = s.matrix2Root();
         const f = s.frame;
-        const ps: { x: number, y: number }[] = [{x: 0, y: 0}, {x: f.width, y: 0}, {x: f.width, y: f.height}, {x: 0, y: f.height}].map(p => m.computeCoord2(p.x, p.y));
-        points.push(...ps);
+        const ps: { x: number, y: number }[] = [{x: 0, y: 0}, {x: f.width, y: 0}, {x: f.width, y: f.height}, {x: 0, y: f.height}];
+        for (let i = 0; i < 4; i++) points.push(m.computeCoord3(ps[i]));
     }
     const b = XYsBounding(points);
     return [{x: b.left, y: b.top}, {x: b.right, y: b.top}, {x: b.right, y: b.bottom}, {x: b.left, y: b.bottom}];
@@ -416,8 +416,15 @@ export function get_p_form_pg_by_y(pg: PointGroup2, y: number): PageXY[] {
 export function pre_render_assist_line(context: Context, is_multi: boolean, shape: Shape, shapes: Shape[]) {
     const assist = context.assist;
     if (is_multi) {
-        const fs = get_frame(shapes);
-        context.workspace.setCFrame(fs);
+        const cache_map = context.workspace.cache_map;
+        if (cache_map) {
+            context.workspace.revert_frame_by_map(shapes[0]);
+        } else {
+            const fs = get_frame(shapes);
+            context.workspace.gen_chahe_map_by_shape_one(shapes[0], fs);
+            context.workspace.setCFrame(fs);
+        }
+        const fs = context.workspace.controllerFrame;
         assist.setCPG(get_pg_by_frame(fs, true));
     } else {
         assist.setCPG(gen_match_points(shape, true));

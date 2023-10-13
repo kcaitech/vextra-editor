@@ -1,9 +1,10 @@
-import {Matrix, ShapeType, TableShape, Watchable} from "@kcdesign/data";
+import {Matrix, Shape, ShapeType, TableShape, Watchable} from "@kcdesign/data";
 import {Context} from "./index";
 import {adapt_page, Root} from "@/utils/content";
 import {Clipboard} from "@/utils/clipboard";
 import {PageXY} from "./selection";
 import {Action} from "@/context/tool";
+import {PointsOffset} from "@/utils/assist";
 
 interface Point {
     x: number
@@ -223,6 +224,43 @@ export class WorkSpace extends Watchable(Object) {
 
     setCtrlPath(val: string) {
         this.m_controller_path = val;
+    }
+
+    private __cache_map: PointsOffset | undefined;
+
+    get cache_map() {
+        return this.__cache_map;
+    }
+    clear_cache_map() {
+        this.__cache_map = undefined;
+    }
+
+    gen_chahe_map_by_shape_one(shape: Shape, frame: Point[]) {
+        const anchor = shape.matrix2Root().computeCoord2(0, 0);
+        const lt = frame[0];
+        const rt = frame[1];
+        const rb = frame[2];
+        const lb = frame[3];
+        const pivot = {x: (lt.x + rb.x) / 2, y: (lt.y + rb.y) / 2};
+        this.__cache_map = {
+            lt: {x: lt.x - anchor.x, y: lt.y - anchor.y},
+            rb: {x: rb.x - anchor.x, y: rb.y - anchor.y},
+            pivot: {x: pivot.x - anchor.x, y: pivot.y - anchor.y},
+            rt: {x: rt.x - anchor.x, y: rt.y - anchor.y},
+            lb: {x: lb.x - anchor.x, y: lb.y - anchor.y}
+        }
+    }
+
+    revert_frame_by_map(shape: Shape) {
+        const achor = shape.matrix2Root().computeCoord2(0, 0);
+        if (!this.__cache_map) return [];
+        const map = this.__cache_map;
+        this.m_controller_frame = [
+            {x: map.lt.x + achor.x, y: map.lt.y + achor.y},
+            {x: map.rt.x + achor.x, y: map.rt.y + achor.y},
+            {x: map.rb.x + achor.x, y: map.rb.y + achor.y},
+            {x: map.lb.x + achor.x, y: map.lb.y + achor.y},
+        ]
     }
 
     get controllerFrame() {
