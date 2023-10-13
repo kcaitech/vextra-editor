@@ -28,10 +28,10 @@ import {
     add_blur_for_window,
     add_move_and_up_for_document,
     check_drag_action,
-    down_while_is_text_editing, end_transalte, gen_offset_map, get_closest_container,
+    down_while_is_text_editing, end_transalte, gen_assist_target, gen_offset_map, get_closest_container,
     get_current_position_client,
     is_ctrl_element,
-    is_mouse_on_content,
+    is_mouse_on_content, is_rid_stick,
     modify_down_position,
     modify_mouse_position_by_type,
     remove_blur_from_window,
@@ -42,7 +42,7 @@ import {
 export function useControllerCustom(context: Context, i18nT: Function) {
     const matrix = new Matrix();
     let timer: any;
-    const duration: number = 250; // 双击判定时长 ms 
+    const duration: number = 250; // 双击判定时长 ms
     let isDragging = false;
     let startPosition: ClientXY = {x: 0, y: 0};
     let startPositionOnPage: PageXY = {x: 0, y: 0};
@@ -75,16 +75,6 @@ export function useControllerCustom(context: Context, i18nT: Function) {
 
     const migrate: (shapes: Shape[], start: ClientXY, end: ClientXY) => void = debounce(_migrate, 100);
 
-    function pre_to_translate(e: MouseEvent) { // 移动之前做的准备
-        shutdown_menu(e, context);
-        if (!context.workspace.can_translate(e)) return;
-        shapes = selection.selectedShapes;
-        matrix.reset(workspace.matrix.inverse);
-        modify_down_position(e, context, startPosition, startPositionOnPage, matrix);
-        wheel = fourWayWheel(context, undefined, startPositionOnPage);
-        workspace.setCtrl('controller');
-        add_move_and_up_for_document(mousemove, mouseup);
-    }
 
     /**
      * @description 双击控件
@@ -112,6 +102,7 @@ export function useControllerCustom(context: Context, i18nT: Function) {
             if (timer) handleDblClick();
             initTimer();
             pre_to_translate(e);
+            console.log('shapes.length', shapes.length);
         } else if (is_mouse_on_content(e)) {
             const h = selection.hoveredShape;
             if (h) {
@@ -121,6 +112,17 @@ export function useControllerCustom(context: Context, i18nT: Function) {
                 selection.resetSelectShapes();
             }
         }
+    }
+
+    function pre_to_translate(e: MouseEvent) { // 移动之前做的准备
+        shutdown_menu(e, context);
+        if (!context.workspace.can_translate(e)) return;
+        shapes = selection.selectedShapes;
+        matrix.reset(workspace.matrix.inverse);
+        modify_down_position(e, context, startPosition, startPositionOnPage, matrix);
+        wheel = fourWayWheel(context, undefined, startPositionOnPage);
+        workspace.setCtrl('controller');
+        add_move_and_up_for_document(mousemove, mouseup);
     }
 
     function mousemove(e: MouseEvent) {
@@ -134,12 +136,12 @@ export function useControllerCustom(context: Context, i18nT: Function) {
             if (!isOut) update_type = transform(startPosition, mousePosition);
             modify_mouse_position_by_type(update_type, startPosition, mousePosition);
         } else if (check_drag_action(startPosition, mousePosition) && !editing) {
+            console.log('shapes.length check_drag_action', shapes.length);
             if (e.altKey) shapes = paster_short(context, shapes);
             reset_assist_before_translate(context, shapes);
             offset_map = gen_offset_map(shapes[0], startPosition, matrix);
             isDragging = true;
             asyncTransfer = context.editor.controller().asyncTransfer(shapes, selection.selectedPage!);
-
         }
     }
 
@@ -148,7 +150,7 @@ export function useControllerCustom(context: Context, i18nT: Function) {
         const pe: PageXY = matrix.computeCoord3(end);
         let update_type = 0;
         if (asyncTransfer) {
-            update_type = trans(asyncTransfer, ps, pe);
+            update_type = trans_assistant(asyncTransfer, ps, pe);
             migrate(shapes, start, end);
         }
         return update_type;
@@ -156,26 +158,26 @@ export function useControllerCustom(context: Context, i18nT: Function) {
 
     let pre_target_x: number, pre_target_y: number;
 
-    function trans(asyncTransfer: AsyncTransfer, ps: PageXY, pe: PageXY): number {
+    function trans_assistant(asyncTransfer: AsyncTransfer, ps: PageXY, pe: PageXY): number {
         // const s1 = Date.now();
-        if (speed > 5) { // 如果速度过快，不进行辅助对齐
+        let update_type = 3;
+        if (speed > 5) { // 如果速度过快，不进行移动辅助
             asyncTransfer.trans(ps, pe);
             context.assist.notify(Asssit.CLEAR);
-            return 3;
+            return update_type;
         }
-        if (!offset_map) return 3;
+        if (!offset_map) return update_type;
         let need_multi = 0;
-        let update_type = 3;
         const stick = {dx: 0, dy: 0, sticked_x: false, sticked_y: false};
-        const stickness = context.assist.stickness;
         const len = shapes.length;
         const shape = shapes[0];
-        const target = len === 1 ? context.assist.trans_match(offset_map, pe) : context.assist.trans_match_multi(shapes);
-        let inverse_matrix: Matrix | undefined;
+        const target = gen_assist_target(context, offset_map, pe, shapes);
         if (!target) return update_type;
+        let inverse_matrix: Matrix | undefined;
         if (stickedX) {
-            if (Math.abs(pe.x - ps.x) >= stickness) stickedX = false;
-            else {
+            if (is_rid_stick(context, ps, pe)) {
+                stickedX = false;
+            } else {
                 if (pre_target_x === target.x) {
                     pe.x = ps.x, update_type -= 1, need_multi += 1;
                 } else if (target.sticked_by_x) {
@@ -186,7 +188,7 @@ export function useControllerCustom(context: Context, i18nT: Function) {
             modify_fix_x(target);
         }
         if (stickedY) {
-            if (Math.abs(pe.y - ps.y) >= stickness) { // 没有挣脱吸附
+            if (is_rid_stick(context, ps, pe)) { // 没有挣脱吸附
                 stickedY = false;
             } else {
                 if (pre_target_y === target.y) { // 还是原先的吸附点
@@ -225,7 +227,7 @@ export function useControllerCustom(context: Context, i18nT: Function) {
             stick.dx = trans_x, stick.sticked_x = true, stick.dy = pe.y - ps.y;
             pe.x = ps.x + trans_x;
             if (!inverse_matrix) {
-                inverse_matrix = new Matrix(matrix.inverse);
+                inverse_matrix = workspace.matrix;
             }
             const t = inverse_matrix.computeCoord3(pe);
             startPosition.x = t.x;
@@ -242,7 +244,7 @@ export function useControllerCustom(context: Context, i18nT: Function) {
             pe.y = ps.y + trans_y;
             if (!stick.sticked_x) stick.dx = pe.x - ps.x;
             if (!inverse_matrix) {
-                inverse_matrix = new Matrix(matrix.inverse);
+                inverse_matrix = workspace.matrix;
             }
             const t = inverse_matrix.computeCoord3(pe);
             startPosition.y = t.y;
@@ -265,6 +267,7 @@ export function useControllerCustom(context: Context, i18nT: Function) {
         } else {
             shapes_picker(e, context, startPositionOnPage);
         }
+        workspace.setCtrl('page');
         if (wheel) wheel = wheel.remove();
         remove_move_and_up_from_document(mousemove, mouseup);
         need_update_comment = update_comment(context, need_update_comment);

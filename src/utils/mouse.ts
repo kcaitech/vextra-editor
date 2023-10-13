@@ -5,6 +5,8 @@ import {ClientXY, PageXY} from "@/context/selection";
 import {debounce} from "lodash";
 import {WorkSpace} from "@/context/workspace";
 import {Comment} from "@/context/comment";
+import {Asssit} from "@/context/assist";
+import {distance2apex, distance2apex2, gen_match_points, get_frame, get_pg_by_frame} from "@/utils/assist";
 
 /**
  * @description 判断落点是否在content上
@@ -190,7 +192,9 @@ export function migrate_immediate(context: Context, asyncTransfer: AsyncTransfer
     if (m && asyncTransfer) asyncTransfer.migrate(targetParent as GroupShape);
 }
 
-// 判断当前所处的wrap
+/**
+ * @description 获取当前图形的最近 父级容器
+ */
 export function get_closest_container(context: Context, shape: Shape): Shape {
     let result = context.selection.selectedPage!
     let p = shape.parent;
@@ -212,7 +216,6 @@ export function end_transalte(context: Context) {
     context.workspace.setSelectionViewUpdater(true);
     context.workspace.notify(WorkSpace.SELECTION_VIEW_UPDATE);
     context.assist.reset();
-    context.workspace.setCtrl('page');
     context.cursor.cursor_freeze(false);
 }
 
@@ -239,4 +242,24 @@ export function shapes_picker(e: MouseEvent, context: Context, p: { x: number, y
     } else {
         if (!selection.getShapesByXY(p, e.metaKey || e.ctrlKey, selected).length) selection.resetSelectShapes();
     }
+}
+
+/**
+ * @description 获取移动辅助中心对象点图
+ * @param pe
+ */
+export function gen_assist_target(context: Context, offset_map: any, pe: { x: number, y: number }, shapes: Shape[]) {
+    const len = shapes.length;
+    if (len === 1) {
+        return context.assist.trans_match(offset_map, pe);
+    } else {
+        return context.assist.trans_match_multi(shapes)
+    }
+}
+
+/**
+ * @description 是否摆脱辅助吸附
+ */
+export function is_rid_stick(context: Context, ps: { x: number, y: number }, pe: { x: number, y: number }) {
+    return Math.abs(pe.x - ps.x) >= context.assist.stickness;
 }
