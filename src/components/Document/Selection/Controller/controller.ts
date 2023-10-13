@@ -12,7 +12,6 @@ import {AsyncTransfer} from "@kcdesign/data";
 import {debounce} from "lodash";
 import {paster_short} from '@/utils/clipboard';
 import {sort_by_layer} from '@/utils/group_ungroup';
-import {Comment} from '@/context/comment';
 import {useI18n} from 'vue-i18n';
 import {map_from_shapes} from '@/utils/content';
 import {
@@ -28,21 +27,25 @@ import {TaskType} from '@/context/escstack';
 import {
     add_blur_for_window,
     add_move_and_up_for_document,
-    down_while_is_text_editing,
+    check_drag_action,
+    down_while_is_text_editing, end_transalte, gen_offset_map, get_closest_container,
+    get_current_position_client,
     is_ctrl_element,
-    is_mouse_on_content, modify_down_position, remove_blur_from_window, remove_move_and_up_from_document,
-    reset_trans_editor_status
+    is_mouse_on_content,
+    modify_down_position,
+    modify_mouse_position_by_type,
+    remove_blur_from_window,
+    remove_move_and_up_from_document, reset_assist_before_translate, shapes_picker,
+    shutdown_menu, update_comment
 } from "@/utils/mouse";
 
 export function useControllerCustom(context: Context, i18nT: Function) {
     const matrix = new Matrix();
-    const dragActiveDis = 3;
     let timer: any;
     const duration: number = 250; // 双击判定时长 ms 
     let isDragging = false;
     let startPosition: ClientXY = {x: 0, y: 0};
     let startPositionOnPage: PageXY = {x: 0, y: 0};
-    let root: ClientXY = {x: 0, y: 0};
     let wheel: Wheel | undefined = undefined;
     let editing: boolean = false;
     let shapes: Shape[] = [];
@@ -56,28 +59,12 @@ export function useControllerCustom(context: Context, i18nT: Function) {
     const workspace = context.workspace;
     let offset_map: PointsOffset | undefined;
 
-    function gen_offset_map(shape: Shape, down: PageXY) {
-        const m = shape.matrix2Root(), f = shape.frame;
-        const lt = m.computeCoord2(0, 0);
-        const rb = m.computeCoord2(f.width, f.height);
-        const pivot = m.computeCoord2(f.width / 2, f.height / 2);
-        const rt = m.computeCoord2(f.width, 0);
-        const lb = m.computeCoord2(0, f.height);
-        return {
-            lt: {x: lt.x - down.x, y: lt.y - down.y},
-            rb: {x: rb.x - down.x, y: rb.y - down.y},
-            pivot: {x: pivot.x - down.x, y: pivot.y - down.y},
-            rt: {x: rt.x - down.x, y: rt.y - down.y},
-            lb: {x: lb.x - down.x, y: lb.y - down.y}
-        }
-    }
-
     function _migrate(shapes: Shape[], start: ClientXY, end: ClientXY) {
         if (shapes.length) {
             const pe: PageXY = matrix.computeCoord3(end);
             const map = map_from_shapes(shapes);
             const targetParent = selection.getClosetArtboard(pe, map);
-            const emit_migrate = getCloesetContainer(shapes[0]).id !== targetParent.id;
+            const emit_migrate = get_closest_container(context, shapes[0]).id !== targetParent.id;
             if (emit_migrate && asyncTransfer) {
                 shapes = sort_by_layer(context, shapes);
                 asyncTransfer.migrate(targetParent as GroupShape);
@@ -88,28 +75,14 @@ export function useControllerCustom(context: Context, i18nT: Function) {
 
     const migrate: (shapes: Shape[], start: ClientXY, end: ClientXY) => void = debounce(_migrate, 100);
 
-    function getCloesetContainer(shape: Shape): Shape {
-        let result: any = selection.selectedPage!
-        let p = shape.parent;
-        while (p) {
-            if (p.type === ShapeType.Artboard) {
-                result = p;
-                break;
-            }
-            p = p.parent;
-        }
-        return result;
-    }
-
     function pre_to_translate(e: MouseEvent) { // 移动之前做的准备
-        reset_trans_editor_status(e, context);
+        shutdown_menu(e, context);
         if (!context.workspace.can_translate(e)) return;
         shapes = selection.selectedShapes;
         matrix.reset(workspace.matrix.inverse);
         modify_down_position(e, context, startPosition, startPositionOnPage, matrix);
         wheel = fourWayWheel(context, undefined, startPositionOnPage);
         workspace.setCtrl('controller');
-        root = workspace.root;
         add_move_and_up_for_document(mousemove, mouseup);
     }
 
@@ -152,26 +125,21 @@ export function useControllerCustom(context: Context, i18nT: Function) {
 
     function mousemove(e: MouseEvent) {
         if (e.buttons !== 1) return;
-        const mousePosition: ClientXY = {x: e.clientX - root.x, y: e.clientY - root.y};
+        const mousePosition: ClientXY = get_current_position_client(context, e);
         if (isDragging && !editing && wheel && asyncTransfer) {
             speed = get_speed(t_e || e, e);
             t_e = e;
             let update_type = 0;
             const isOut = wheel.moving(e, {type: EffectType.TRANS, effect: asyncTransfer.transByWheel});
             if (!isOut) update_type = transform(startPosition, mousePosition);
-            if (update_type === 3) startPosition = {...mousePosition};
-            else if (update_type === 2) startPosition.y = mousePosition.y;
-            else if (update_type === 1) startPosition.x = mousePosition.x;
-        } else if (Math.hypot(mousePosition.x - startPosition.x, mousePosition.y - startPosition.y) > dragActiveDis && !editing) {
+            modify_mouse_position_by_type(update_type, startPosition, mousePosition);
+        } else if (check_drag_action(startPosition, mousePosition) && !editing) {
             if (e.altKey) shapes = paster_short(context, shapes);
-            asyncTransfer = context.editor.controller().asyncTransfer(shapes, selection.selectedPage!);
-            selection.unHoverShape();
-            workspace.setSelectionViewUpdater(false);
-            workspace.translating(true);
-            context.assist.set_trans_target(shapes);
+            reset_assist_before_translate(context, shapes);
+            offset_map = gen_offset_map(shapes[0], startPosition, matrix);
             isDragging = true;
-            const pe = matrix.computeCoord3(startPosition);
-            offset_map = gen_offset_map(shapes[0], pe);
+            asyncTransfer = context.editor.controller().asyncTransfer(shapes, selection.selectedPage!);
+
         }
     }
 
@@ -285,41 +253,21 @@ export function useControllerCustom(context: Context, i18nT: Function) {
     }
 
     function mouseup(e: MouseEvent) {
-        if (e.button === 0) {
-            if (isDragging) {
-                if (asyncTransfer) {
-                    const {clientX, clientY} = e;
-                    const mousePosition: ClientXY = {x: clientX - root.x, y: clientY - root.y};
-                    _migrate(shapes, startPosition, mousePosition);
-                    asyncTransfer = asyncTransfer.close();
-                }
-                workspace.translating(false);
-                workspace.setSelectionViewUpdater(true);
-                workspace.notify(WorkSpace.SELECTION_VIEW_UPDATE);
-                context.assist.reset();
-                isDragging = false;
-            } else {
-                pickerFromSelectedShapes(e);
+        if (e.button !== 0) return;
+        if (isDragging) {
+            if (asyncTransfer) {
+                const mousePosition: ClientXY = get_current_position_client(context, e);
+                _migrate(shapes, startPosition, mousePosition);
+                asyncTransfer = asyncTransfer.close();
             }
-            if (wheel) wheel = wheel.remove();
-            remove_move_and_up_from_document(mousemove, mouseup);
-        }
-        if (need_update_comment) {
-            context.comment.notify(Comment.UPDATE_COMMENT_POS);
-            need_update_comment = false;
-        }
-        context.cursor.cursor_freeze(false);
-        workspace.setCtrl('page');
-    }
-
-    function pickerFromSelectedShapes(e: MouseEvent) {
-        const selected = selection.selectedShapes;
-        const hoveredShape = selection.hoveredShape;
-        if (hoveredShape) {
-            e.shiftKey ? selection.rangeSelectShape([...selected, hoveredShape]) : selection.selectShape(hoveredShape);
+            end_transalte(context);
+            isDragging = false;
         } else {
-            if (!selection.getShapesByXY(startPositionOnPage, e.metaKey || e.ctrlKey, selected).length) selection.resetSelectShapes();
+            shapes_picker(e, context, startPositionOnPage);
         }
+        if (wheel) wheel = wheel.remove();
+        remove_move_and_up_from_document(mousemove, mouseup);
+        need_update_comment = update_comment(context, need_update_comment);
     }
 
     function checkStatus() {
@@ -366,7 +314,7 @@ export function useControllerCustom(context: Context, i18nT: Function) {
     function exit() {
         const len = context.selection.selectedShapes.length;
         context.selection.resetSelectShapes();
-        return Boolean(len);
+        return !!len;
     }
 
     function keyboardHandle(e: KeyboardEvent) {
@@ -392,15 +340,13 @@ export function useControllerCustom(context: Context, i18nT: Function) {
 
     function windowBlur() {
         if (isDragging) { // 窗口失焦,此时鼠标事件(up,move)不再受系统管理, 此时需要手动关闭已开启的状态
-            workspace.translating(false);
             remove_move_and_up_from_document(mousemove, mouseup);
             if (asyncTransfer) asyncTransfer = asyncTransfer.close();
             isDragging = false;
+            end_transalte(context);
         }
         if (wheel) wheel = wheel.remove();
-        workspace.setCtrl('page');
         timerClear();
-        context.cursor.cursor_freeze(false);
     }
 
     function init() {
