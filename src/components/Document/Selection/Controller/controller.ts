@@ -20,7 +20,7 @@ import {
     get_frame,
     get_pg_by_frame,
     gen_match_points,
-    PointsOffset
+    PointsOffset, get_apex, pre_render_assist_line
 } from '@/utils/assist';
 import {Asssit} from '@/context/assist';
 import {TaskType} from '@/context/escstack';
@@ -31,7 +31,7 @@ import {
     down_while_is_text_editing, end_transalte, gen_assist_target, gen_offset_map, get_closest_container,
     get_current_position_client,
     is_ctrl_element,
-    is_mouse_on_content, is_rid_stick_x, is_rid_stick_y,
+    is_mouse_on_content, is_rid_stick,
     modify_down_position,
     modify_mouse_position_by_type,
     remove_blur_from_window,
@@ -51,8 +51,6 @@ export function useControllerCustom(context: Context, i18nT: Function) {
     let shapes: Shape[] = [];
     let asyncTransfer: AsyncTransfer | undefined = undefined;
     let need_update_comment: boolean = false;
-    let stickedX: boolean = false;
-    let stickedY: boolean = false;
     let t_e: MouseEvent | undefined;
     let speed: number = 0;
     const selection = context.selection;
@@ -155,7 +153,11 @@ export function useControllerCustom(context: Context, i18nT: Function) {
     }
 
     let pre_target_x: number, pre_target_y: number;
+    let stickedX: boolean = false, stickedY: boolean = false;
 
+    /**
+     * @description 计算对齐辅助线、辅助对齐
+     */
     function trans_assistant(asyncTransfer: AsyncTransfer, ps: PageXY, pe: PageXY): number {
         // const s1 = Date.now();
         let update_type = 3;
@@ -173,25 +175,30 @@ export function useControllerCustom(context: Context, i18nT: Function) {
         if (!target) return update_type;
         let inverse_matrix: Matrix | undefined;
         if (stickedX) {
-            if (is_rid_stick_x(context, ps, pe)) {
+            if (is_rid_stick(context, ps.x, pe.x)) { // 挣脱吸附
                 stickedX = false;
             } else {
-                if (pre_target_x === target.x) {
-                    pe.x = ps.x, update_type -= 1, need_multi += 1;
-                } else if (target.sticked_by_x) {
+                if (pre_target_x === target.x) { // 还是原先的吸附点
+                    pe.x = ps.x;
+                    update_type -= 1;
+                    need_multi += 1;
+                } else if (target.sticked_by_x) { // 需要转移到另一个吸附点
                     modify_fix_x(target);
                 }
             }
-        } else if (target.sticked_by_x) {
+        } else if (target.sticked_by_x) { // 吸附
             modify_fix_x(target);
         }
         if (stickedY) {
-            if (is_rid_stick_y(context, ps, pe)) { // 没有挣脱吸附
+            if (is_rid_stick(context, ps.y, pe.y)) {
                 stickedY = false;
             } else {
-                if (pre_target_y === target.y) { // 还是原先的吸附点
-                    pe.y = ps.y, stick.dy = 0, update_type -= 2, need_multi += 2;
-                } else if (target.sticked_by_y) { // 需要转移到另一个吸附点
+                if (pre_target_y === target.y) {
+                    pe.y = ps.y;
+                    stick.dy = 0;
+                    update_type -= 2;
+                    need_multi += 2;
+                } else if (target.sticked_by_y) {
                     modify_fix_y(target);
                 }
             }
@@ -204,24 +211,18 @@ export function useControllerCustom(context: Context, i18nT: Function) {
             asyncTransfer.trans(ps, pe);
         }
         if (need_multi) {
-            if (len === 1) {
-                context.assist.setCPG(gen_match_points(shape, true));
-            } else {
-                const fs = get_frame(shapes);
-                workspace.setCFrame(fs);
-                context.assist.setCPG(get_pg_by_frame(fs, true));
-            }
-            context.assist.notify(Asssit.UPDATE_ASSIST);
-            context.assist.notify(Asssit.UPDATE_MAIN_LINE);
+            pre_render_assist_line(context, len > 1, shape, shapes);
         }
         // console.log('一次辅助线从计算到渲染总共用时', Date.now() - s1); // < 3ms
         return update_type;
 
         function modify_fix_x(target: any) {
             pre_target_x = target.x;
-            const distance = len === 1 ? distance2apex(shape, target.alignX) : distance2apex2(workspace.controllerFrame, target.alignX);
-            const trans_x = target.x - distance;
-            stick.dx = trans_x, stick.sticked_x = true, stick.dy = pe.y - ps.y;
+            const apex = get_apex(context, shape, len > 1, target.alignX); // 确定吸附点位置
+            const trans_x = target.x - apex; // 计算到达吸附点需要的距离
+            stick.dx = trans_x;
+            stick.sticked_x = true;
+            stick.dy = pe.y - ps.y;
             pe.x = ps.x + trans_x;
             if (!inverse_matrix) {
                 inverse_matrix = workspace.matrix;
@@ -235,9 +236,10 @@ export function useControllerCustom(context: Context, i18nT: Function) {
 
         function modify_fix_y(target: any) {
             pre_target_y = target.y;
-            const distance = len === 1 ? distance2apex(shape, target.alignY) : distance2apex2(workspace.controllerFrame, target.alignY);
-            const trans_y = target.y - distance;
-            stick.dy = trans_y, stick.sticked_y = true;
+            const apex = get_apex(context, shape, len > 1, target.alignY);
+            const trans_y = target.y - apex;
+            stick.dy = trans_y;
+            stick.sticked_y = true;
             pe.y = ps.y + trans_y;
             if (!stick.sticked_x) stick.dx = pe.x - ps.x;
             if (!inverse_matrix) {
@@ -250,12 +252,14 @@ export function useControllerCustom(context: Context, i18nT: Function) {
             need_multi += 2;
         }
     }
+
     function reset_sticked() {
         pre_target_x = Infinity;
         pre_target_y = Infinity;
         stickedX = false;
         stickedY = false;
     }
+
     function mouseup(e: MouseEvent) {
         if (e.button !== 0) return;
         if (isDragging) {
@@ -350,6 +354,8 @@ export function useControllerCustom(context: Context, i18nT: Function) {
             if (asyncTransfer) asyncTransfer = asyncTransfer.close();
             isDragging = false;
             end_transalte(context);
+            reset_sticked();
+            workspace.setCtrl('page');
         }
         if (wheel) wheel = wheel.remove();
         timerClear();
