@@ -31,7 +31,7 @@ import {
     down_while_is_text_editing, end_transalte, gen_assist_target, gen_offset_map, get_closest_container,
     get_current_position_client,
     is_ctrl_element,
-    is_mouse_on_content, is_rid_stick,
+    is_mouse_on_content, is_rid_stick_x, is_rid_stick_y,
     modify_down_position,
     modify_mouse_position_by_type,
     remove_blur_from_window,
@@ -102,7 +102,6 @@ export function useControllerCustom(context: Context, i18nT: Function) {
             if (timer) handleDblClick();
             initTimer();
             pre_to_translate(e);
-            console.log('shapes.length', shapes.length);
         } else if (is_mouse_on_content(e)) {
             const h = selection.hoveredShape;
             if (h) {
@@ -136,7 +135,6 @@ export function useControllerCustom(context: Context, i18nT: Function) {
             if (!isOut) update_type = transform(startPosition, mousePosition);
             modify_mouse_position_by_type(update_type, startPosition, mousePosition);
         } else if (check_drag_action(startPosition, mousePosition) && !editing) {
-            console.log('shapes.length check_drag_action', shapes.length);
             if (e.altKey) shapes = paster_short(context, shapes);
             reset_assist_before_translate(context, shapes);
             offset_map = gen_offset_map(shapes[0], startPosition, matrix);
@@ -175,7 +173,7 @@ export function useControllerCustom(context: Context, i18nT: Function) {
         if (!target) return update_type;
         let inverse_matrix: Matrix | undefined;
         if (stickedX) {
-            if (is_rid_stick(context, ps, pe)) {
+            if (is_rid_stick_x(context, ps, pe)) {
                 stickedX = false;
             } else {
                 if (pre_target_x === target.x) {
@@ -188,7 +186,7 @@ export function useControllerCustom(context: Context, i18nT: Function) {
             modify_fix_x(target);
         }
         if (stickedY) {
-            if (is_rid_stick(context, ps, pe)) { // 没有挣脱吸附
+            if (is_rid_stick_y(context, ps, pe)) { // 没有挣脱吸附
                 stickedY = false;
             } else {
                 if (pre_target_y === target.y) { // 还是原先的吸附点
@@ -200,7 +198,6 @@ export function useControllerCustom(context: Context, i18nT: Function) {
         } else if (target.sticked_by_y) {
             modify_fix_y(target);
         }
-
         if (stick.sticked_x || stick.sticked_y) {
             asyncTransfer.stick(stick.dx, stick.dy);
         } else {
@@ -253,7 +250,12 @@ export function useControllerCustom(context: Context, i18nT: Function) {
             need_multi += 2;
         }
     }
-
+    function reset_sticked() {
+        pre_target_x = Infinity;
+        pre_target_y = Infinity;
+        stickedX = false;
+        stickedY = false;
+    }
     function mouseup(e: MouseEvent) {
         if (e.button !== 0) return;
         if (isDragging) {
@@ -263,6 +265,7 @@ export function useControllerCustom(context: Context, i18nT: Function) {
                 asyncTransfer = asyncTransfer.close();
             }
             end_transalte(context);
+            reset_sticked();
             isDragging = false;
         } else {
             shapes_picker(e, context, startPositionOnPage);

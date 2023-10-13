@@ -260,6 +260,9 @@ export function gen_assist_target(context: Context, offset_map: any, pe: { x: nu
 /**
  * @description 是否摆脱辅助吸附
  */
-export function is_rid_stick(context: Context, ps: { x: number, y: number }, pe: { x: number, y: number }) {
+export function is_rid_stick_x(context: Context, ps: { x: number, y: number }, pe: { x: number, y: number }) {
     return Math.abs(pe.x - ps.x) >= context.assist.stickness;
+}
+export function is_rid_stick_y(context: Context, ps: { x: number, y: number }, pe: { x: number, y: number }) {
+    return Math.abs(pe.y - ps.y) >= context.assist.stickness;
 }

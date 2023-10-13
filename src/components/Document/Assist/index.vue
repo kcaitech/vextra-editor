@@ -36,6 +36,7 @@ function assist_watcher(t: number) {
 
 function update_main_line() {
     // const s1 = Date.now();
+
     const cpg = props.context.assist.CPG;
     if (!cpg) return;
     clear4main_line();
@@ -61,19 +62,23 @@ function render() {
     const ns_y = minus_nodes_y(props.context.assist.nodes_y);
     if (ns_x.length) { // 绘制x轴线
         ax = ns_x[0].x;
-        nodesX = ns_x.map(n => matrix.value.computeCoord3(n));
+        points_to_client(ns_x, props.context.workspace.matrix, nodesX);
         lineX = render_line_x(nodesX);
         assist.value = true;
     }
     if (ns_y.length) { // 绘制y轴线
         ay = ns_y[0].y;
-        nodesY = ns_y.map(n => matrix.value.computeCoord3(n));
+        points_to_client(ns_y, props.context.workspace.matrix, nodesY);
         lineY = render_line_y(nodesY);
         assist.value = true;
     }
     getExLineX();
     getExLineY();
     // console.log('初次确定辅助线(ms):', Date.now() - s);
+}
+
+function points_to_client(points: { x: number, y: number }[], matrix: Matrix, local: { x: number, y: number }[]) {
+    for (let i = 0, len = points.length; i < len; i++) local[i] = matrix.computeCoord3(points[i]);
 }
 
 function getExLineX() {
