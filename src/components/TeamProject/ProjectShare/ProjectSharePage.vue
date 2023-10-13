@@ -6,6 +6,7 @@
                 <div class="team-name">{{t('Createteam.sharetip')}}</div>
             </div>
         </div>
+        <el-divider />
         <ProjectShareList />
     </div>
 </template>
@@ -46,7 +47,9 @@ const { t } = useI18n();
     transform: translate(-50%, -50%) scale(0.8);
     opacity: 0.001;
 }
-
+.el-divider {
+    margin: 10px 0;
+}
 .overlay {
     position: absolute;
     top: 0;
@@ -65,18 +68,16 @@ const { t } = useI18n();
 
 .team {
     display: flex;
-    margin: 16px 0px;
+    margin-top: 16px;
     align-items: center;
 
     .team-info {
         display: flex;
         flex-direction: column;
-        margin: 0 12px;
 
         .team-name {
-            font-size: 24px;
+            font-size: 18px;
             font-weight: 600;
-            margin-bottom: 8px;
         }
     }
 }

@@ -1,5 +1,5 @@
 <script setup lang="ts">
-import { Ref, inject, ref, computed, nextTick } from 'vue'
+import { Ref, inject, ref, computed, nextTick, watch, watchEffect, onMounted } from 'vue'
 import { useI18n } from 'vue-i18n'
 import { router } from '@/router'
 import * as team_api from '@/apis/team'
@@ -8,11 +8,10 @@ import listrightmenu from '@/components/AppHome/listrightmenu.vue'
 import ProjectMemberg from '@/components/TeamProject/ProjectFill/ProjectMemberg.vue'
 import ProjectAccessSetting from '@/components/TeamProject/ProjectFill/ProjectAccessSetting.vue'
 import { ElMessage } from 'element-plus'
-
+import tablelist from '@/components/AppHome/tablelist.vue'
 const { t } = useI18n();
-const tableData = computed(() => {
-    return projectList.value.filter(item => !item.is_in_team);
-});
+
+
 
 const innerVisible = ref(false);
 const delVisible = ref(false);
@@ -28,6 +27,17 @@ const { projectList, is_favor, favoriteList, updateFavor } = inject('shareData')
     is_favor: Ref<boolean>;
     updateFavor: (b: boolean) => void;
 };
+
+const tableData = ref<any[]>( projectList.value.filter(item => !item.is_in_team))
+onMounted(() => {
+    // tableData.value = projectList.value.filter(item => !item.is_in_team)
+})
+watchEffect(() => {
+    console.log('1111');
+    
+    tableData.value = projectList.value.filter(item => !item.is_in_team)
+})
+
 const setProjectIsFavorite = async (id: string, state: boolean) => {
     try {
         await team_api.setProjectIsFavoriteAPI({ project_id: id, is_favor: state });
@@ -35,8 +45,17 @@ const setProjectIsFavorite = async (id: string, state: boolean) => {
         console.log(err);
     }
 }
-const cancelFixed = (project: any) => {
+const cancelFixed = (project: any, state: boolean) => {
+    console.log(favoriteList);
+
     project.is_favor = !project.is_favor;
+    const i = projectList.value.findIndex(item => item.project.id === project.project.id);
+    if (!state) {
+        favoriteList.value.push(projectList.value[i])
+    } else {
+        const index = favoriteList.value.findIndex(item => item.project.id === projectList.value[i].project.id)
+        favoriteList.value.splice(index, 1)
+    }
     setProjectIsFavorite(project.project.id, project.is_favor);
     updateFavor(!is_favor.value);
 }
@@ -60,7 +79,11 @@ const project_index = ref<number>(-1);
 const onExitProject = (row: any, index: number,) => {
     project_item.value = row;
     project_index.value = index;
-    innerVisible.value = true;
+    if (row.self_perm_type === 5) {
+        delVisible.value = true
+    } else {
+        innerVisible.value = true
+    }
     document.addEventListener('keydown', escClose);
 }
 
@@ -168,10 +191,8 @@ function updateItemsBasedOnFavor(data: any, sourceItems: any) {
     return updateItems
 }
 
-const table = ref()
-
 //右键菜单入口
-const rightmenu = (row: any, _: any, e: MouseEvent) => {
+const rightmenu = (e: MouseEvent, row: any) => {
     const index = tableData.value.indexOf(row)
     const viewportWidth = window.innerWidth || document.documentElement.clientWidth
     const viewportHeight = window.innerHeight || document.documentElement.clientHeight
@@ -184,9 +205,8 @@ const rightmenu = (row: any, _: any, e: MouseEvent) => {
         rightmenu.style.left = left + width > viewportWidth ? (viewportWidth - width) + "px" : left + 'px'
         rightmenu.style.top = top + height > viewportHeight ? (viewportHeight - height) + 'px' : top + 'px'
     })
-    if ((e.target as HTMLElement).closest('.el-table__row')) {
+    if ((e.target as HTMLElement).closest('.el-table-v2__row')) {
         rightmenu.style.display = 'block'
-        table.value.setCurrentRow(row)
     }
     updateitems.value = updateItemsBasedOnFavor(row, items.value);
     mydata.value = row
@@ -219,11 +239,21 @@ const setProjectInfo = async (params: any) => {
     }
 }
 
+const customRowClassName = () => {
+    return {
+        height: '50px',
+        'border-radius': '6px'
+    }
+}
+
+const noNetwork = ref(false)
+const iconlists = ref(['fixed', 'entrance', 'project'])
 </script>
 
 <template>
-    <el-table :data="tableData" ref="table" height="100%" style="width: 100%" :border="false"
-        @row-dblclick="dblclickskipProject" @row-contextmenu="rightmenu" highlight-current-row>
+    <!-- <el-table :data="tableData" ref="table" height="100%" style="width: 100%" :border="false"
+        @row-dblclick="dblclickskipProject" @row-contextmenu="rightmenu" :row-style="customRowClassName"
+        highlight-current-row>
         <el-table-column prop="project" :label="t('Createteam.project_name')">
             <template #default="scope">
                 <span class="description">{{ scope.row.project.name }}</span>
@@ -242,45 +272,43 @@ const setProjectInfo = async (params: any) => {
         <el-table-column prop="project" :label="t('home.operation')">
             <template #default="scope">
                 <div class="other1" v-if="scope.row.is_favor">
-                    <div @click="cancelFixed(scope.row)">
-                        <svg t="1693476333821" class="icon" viewBox="0 0 1024 1024" version="1.1"
-                            xmlns="http://www.w3.org/2000/svg" p-id="15755" width="24" height="24">
-                            <path
-                                d="M0 0m256 0l512 0q256 0 256 256l0 512q0 256-256 256l-512 0q-256 0-256-256l0-512q0-256 256-256Z"
-                                :fill="scope.row.is_favor ? '#9775fa' : '#999'" p-id="15756"
-                                data-spm-anchor-id="a313x.search_index.0.i11.6fa73a817d52QG" class="">
-                            </path>
-                            <path
-                                d="M256 767.6416l202.9568-160.9216 80.9728 86.1184s33.792 9.216 35.8656-16.384l-2.0736-87.1424 119.936-138.368 52.2496-3.0464s41.0112-8.2432 11.2896-44.0832l-146.5856-147.584s-39.936-5.12-36.8896 31.744v39.9872l-136.2944 115.8912-84.0192 5.0688s-30.7712 10.24-19.5072 36.9152l78.9504 77.9008L256 767.6416z"
-                                fill="#FFFFFF" p-id="15757" data-spm-anchor-id="a313x.search_index.0.i10.6fa73a817d52QG"
-                                class="">
-                            </path>
-                        </svg>
+                    <div class="fixed-cancel" @click="cancelFixed(scope.row, scope.row.is_favor)">
+                        <svg-icon icon-class="fixed-cancel"></svg-icon>
                     </div>
                 </div>
                 <div class="other">
-                    <div @click="cancelFixed(scope.row)">
-                        <svg t="1693476333821" class="icon" viewBox="0 0 1024 1024" version="1.1"
-                            xmlns="http://www.w3.org/2000/svg" p-id="15755" width="24" height="24">
-                            <path
-                                d="M0 0m256 0l512 0q256 0 256 256l0 512q0 256-256 256l-512 0q-256 0-256-256l0-512q0-256 256-256Z"
-                                :fill="scope.row.is_favor ? '#9775fa' : '#999'" p-id="15756"
-                                data-spm-anchor-id="a313x.search_index.0.i11.6fa73a817d52QG" class="">
-                            </path>
-                            <path
-                                d="M256 767.6416l202.9568-160.9216 80.9728 86.1184s33.792 9.216 35.8656-16.384l-2.0736-87.1424 119.936-138.368 52.2496-3.0464s41.0112-8.2432 11.2896-44.0832l-146.5856-147.584s-39.936-5.12-36.8896 31.744v39.9872l-136.2944 115.8912-84.0192 5.0688s-30.7712 10.24-19.5072 36.9152l78.9504 77.9008L256 767.6416z"
-                                fill="#FFFFFF" p-id="15757" data-spm-anchor-id="a313x.search_index.0.i10.6fa73a817d52QG"
-                                class="">
-                            </path>
-                        </svg>
+                    <div @click="cancelFixed(scope.row, scope.row.is_favor)">
+                        <Tooltip v-if="!scope.row.is_favor" :content="'固定项目'">
+                            <div class="fixed">
+                                <svg-icon icon-class="fixed"></svg-icon>
+                            </div>
+                        </Tooltip>
+                        <Tooltip v-else :content="'取消固定'">
+                            <div class="fixed-cel">
+                                <svg-icon icon-class="fixed-cancel"></svg-icon>
+                            </div>
+                        </Tooltip>
                     </div>
-                    <div @click.stop="skipProject(scope.row.project.id)"><svg-icon icon-class="drag"></svg-icon></div>
-                    <div @click="onExitProject(scope.row, scope.$index)"><svg-icon icon-class="pattern-ellipse"></svg-icon>
-                    </div>
+                    <Tooltip :content="'进入项目'">
+                        <div class="entrance" @click.stop="skipProject(scope.row.project.id)">
+                            <svg-icon icon-class="entrance"></svg-icon>
+                        </div>
+                    </Tooltip>
+                    <Tooltip :content="scope.row.self_perm_type === 5 ? '删除项目' : '退出项目'">
+                        <div class="project" @click="onExitProject(scope.row, scope.$index)">
+                            <svg-icon v-if="scope.row.self_perm_type != 5" icon-class="exit-project"></svg-icon>
+                            <svg-icon v-else icon-class="delete-project"></svg-icon>
+                        </div>
+                    </Tooltip>
                 </div>
             </template>
         </el-table-column>
-    </el-table>
+    </el-table> -->
+    <div class="tatle" style="height: calc(100vh - 120px);">
+        <tablelist :data="tableData" :iconlist="iconlists" :projectshare="true" @onexitproject="onExitProject"
+            @cancelfixed="cancelFixed" @dbclickopen="dblclickskipProject" @skipproject="skipProject" @rightMeun="rightmenu"
+            :noNetwork="noNetwork" />
+    </div>
     <ProjectDialog :projectVisible="innerVisible" :context="t('Createteam.projectexitcontext')"
         :title="t('Createteam.projectexittitle')" :confirm-btn="t('Createteam.ok_exit')" @clode-dialog="handleClose"
         @confirm="quitProject"></ProjectDialog>
@@ -288,8 +316,8 @@ const setProjectInfo = async (params: any) => {
         :title="t('Createteam.projectdeltitle')" :confirm-btn="t('Createteam.ok_delete')" @clode-dialog="closeDelVisible"
         @confirm="DelProject"></ProjectDialog>
     <listrightmenu :items="updateitems" :data="mydata" @showMembergDialog="showMembergDialog"
-        @projectrename="setProjectInfo" @showSettingDialog="showSettingDialog" @cancelFixed="cancelFixed(mydata)"
-        @exitproject="rexitProject" @delproject="rdelProject" />
+        @projectrename="setProjectInfo" @showSettingDialog="showSettingDialog"
+        @cancelFixed="cancelFixed(mydata, mydata.is_favor)" @exitproject="rexitProject" @delproject="rdelProject" />
     <ProjectAccessSetting v-if="projectSettingDialog" :title="t('Createteam.membertip')" :data="mydata" width="500px"
         @clodeDialog="projectSettingDialog = false" />
     <ProjectMemberg v-if="projectMembergDialog" :projectMembergDialog="projectMembergDialog" :currentProject="mydata"
@@ -300,32 +328,47 @@ const setProjectInfo = async (params: any) => {
 .other {
     display: none;
 
-    svg {
-        width: 16px;
-        height: 16px;
-        transition: 0.3s;
-
-        &:hover {
-            transform: scale(1.2);
-        }
-    }
-
-    >div {
+    .fixed,
+    .fixed-cel,
+    .entrance,
+    .project {
+        cursor: pointer;
+        display: flex;
+        align-items: center;
         margin-right: 10px;
+
+        svg {
+            color: #9775fa;
+            margin: 2px 0;
+            width: 20px;
+            height: 20px;
+            transition: 0.3s;
+
+            &:hover {
+                transform: scale(1.2);
+            }
+        }
     }
 }
 
 .other1 {
     display: flex;
 
-    svg {
-        width: 16px;
-        height: 16px;
+    .fixed-cancel {
+        display: flex;
+        align-items: center;
+        margin-right: 10px;
+
+        svg {
+            color: #9775fa;
+            margin: 2px 0;
+            width: 20px;
+            height: 20px;
+        }
     }
 
-    >div {
-        margin-right: 10px;
-    }
+
+
 }
 
 :deep(thead .cell) {
@@ -359,11 +402,11 @@ const setProjectInfo = async (params: any) => {
     background-color: #e5dbff;
 
     .other {
-        display: flex;
+        // display: flex;
     }
 
     .other1 {
-        display: none;
+        // display: none;
     }
 }
 
@@ -377,12 +420,18 @@ const setProjectInfo = async (params: any) => {
     }
 }
 
-:deep(.el-table__row:hover) {
-    .other {
-        display: flex;
+:deep(.el-table__row) {
+    border: none;
+
+    &:hover {
+        .other {
+            display: flex;
+        }
+
+        .other1 {
+            display: none;
+        }
     }
 
-    .other1 {
-        display: none;
-    }
-}</style>
+}
+</style>
