@@ -20,16 +20,18 @@ const props = defineProps<{
 .container-type {
     width: 100%;
     padding: 8px;
+    padding-right: 10px;
     box-sizing: border-box;
     .title {
         display: flex;
         justify-content: space-between;
+        align-items: center;
         >span {
             font-weight: bold;
         }
     }
 }
 .border_t {
-    border-bottom: 1px solid rgba($color: gray, $alpha: 0.5);
+    border-bottom: 1px solid #ccc;
 }
 </style>

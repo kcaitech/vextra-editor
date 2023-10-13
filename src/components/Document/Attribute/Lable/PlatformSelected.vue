@@ -1,7 +1,7 @@
 <script lang="ts" setup>
 import { Context } from "@/context";
 import { ArrowDown } from '@element-plus/icons-vue';
-import { ref } from "vue";
+import { nextTick, ref } from "vue";
 import LableDropMenu from "./LableDropMenu.vue";
 const props = defineProps<{
     context: Context
@@ -19,14 +19,24 @@ const pxMenuItems = ref<string[]>([
 ])
 
 const onSelected = () => {
+    if(selsectedShow.value) {
+        props.context.menu.lableMenuMount('platform');
+    }else {
+        props.context.menu.lableMenuMount();
+    }
     selsectedShow.value = !selsectedShow.value;
 }
 const listMenuStatus = (i: number) => {
     platform.value = i;
     props.context.menu.setPlatfrom(i);
 }
+const multiples = [0.5, 1, 2];
 const pxMenuStatus = (i: number) => {
     multiple.value = i;
+    props.context.menu.setLableMulriple(multiples[i]);
+}
+const close = () => {
+    selsectedShow.value = false;
 }
 </script>
 
@@ -34,14 +44,14 @@ const pxMenuStatus = (i: number) => {
     <div class="container">
         <span class="name">开发平台</span>
         <div class="selected">
-            <div class="platform-input" @click="onSelected">
+            <div class="platform-input" @click.stop="onSelected">
                 <span>{{ platformMenuItems[platform] }}</span>
                 <el-icon>
                     <ArrowDown
                         :style="{ transform: selectoption ? 'rotate(180deg)' : 'rotate(0deg)', transition: '0.3s' }" />
                 </el-icon>
-                <LableDropMenu v-if="selsectedShow" :Items="platformMenuItems" :pxItems="pxMenuItems" :choose="platform"
-                    :choose2="multiple" @close="selsectedShow = false" @listMenuStatus="listMenuStatus"
+                <LableDropMenu v-if="selsectedShow" :context="context" :Items="platformMenuItems" :pxItems="pxMenuItems" :choose="platform"
+                    :choose2="multiple" @close="close" @listMenuStatus="listMenuStatus"
                     @pxMenuStatus="pxMenuStatus"></LableDropMenu>
             </div>
         </div>
@@ -54,6 +64,7 @@ const pxMenuStatus = (i: number) => {
     height: 50px;
     display: flex;
     padding: 10px 8px;
+    padding-right: 10px;
     justify-content: space-between;
     align-items: center;
     box-sizing: border-box;

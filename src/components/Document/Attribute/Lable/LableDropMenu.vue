@@ -1,12 +1,14 @@
 <script setup lang="ts">
-import e from 'express';
+import { Context } from '@/context';
+import { Menu } from '@/context/menu';
 import { ref, onMounted, onUnmounted } from 'vue'
 
 const props = defineProps<{
     Items: string[],
     pxItems?: string[],
     choose: number,
-    choose2?: number
+    choose2?: number,
+    context: Context
 }>()
 const emit = defineEmits<{
     (e:'close'): void
@@ -27,7 +29,7 @@ const unHoverShape = (e: MouseEvent) => {
 }
 const handleClick = (e: Event) => {
   e.stopPropagation()
-  e.target instanceof Element && !e.target.closest('.lablemenu-container') && !e.target.closest('.platform-input') && emit('close');
+  e.target instanceof Element && !e.target.closest('.lablemenu-container') && emit('close');
 }
 
 const onClick = (index: number) => {
@@ -38,13 +40,19 @@ const onPxClick = (index: number) => {
     emit('pxMenuStatus', index)
     emit('close');
 }
-
+function menu_watcher(type: number) {
+  if (type === Menu.SHUTDOWN_LABLE_MENU) {
+    emit('close');
+  }
+}
 onMounted(() => {  
+    props.context.menu.watch(menu_watcher)
   document.addEventListener('click', handleClick);
 })
 
 onUnmounted(() => {
   document.removeEventListener('click', handleClick);
+  props.context.menu.unwatch(menu_watcher)
 })
 </script>
 
@@ -75,6 +83,7 @@ onUnmounted(() => {
         top: 32px;
         right: 0;
         width: 99%;
+        min-width: 75px;
         font-size: var(--font-default-fontsize);
         padding: 8px 0;
         background-color: #fff;
