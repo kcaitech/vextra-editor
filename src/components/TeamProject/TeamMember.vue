@@ -29,6 +29,12 @@
                         <img :src="avatar" alt="icon"
                             style="width: 20px;height: 20px;;border-radius: 50%;margin-right: 4px;">
                         {{ nickname }}
+                        <div class="changeName">
+                            <el-tooltip class="tips" effect="dark" :content="`${t('teammember.change_name')}`"
+                                placement="bottom" :show-after="600" :offset="10" :hide-after="0">
+                                <button class="button" @click="() => openDialog(nickname)">修改</button>
+                            </el-tooltip>
+                        </div>
                     </div>
                     <div class="member-jurisdiction">
                         <div class="member-jurisdiction-container">
@@ -52,6 +58,19 @@
                         </div>
                     </div>
                 </div>
+                <el-dialog v-model="dialogVisible" :title="t('teammember.change_teamname')" width="500" align-center>
+                    <span>仅针对当前团队修改，不影响在其他团队的姓名</span>
+                    <input class="change" type="text" ref="changeinput" />
+                    <template #footer>
+                        <span class="dialog-footer" style="text-align: center;">
+                            <el-button class="confirm" type="primary" style="background-color: none;">
+                                {{ t('home.rename_ok') }}
+                            </el-button>
+                            <el-button class="cancel" @click="dialogVisible = false">{{ t('home.cancel')
+                            }}</el-button>
+                        </span>
+                    </template>
+                </el-dialog>
             </el-scrollbar>
         </div>
     </div>
@@ -67,7 +86,7 @@
         @clode-dialog="closeExitTeamDialog" @confirm="confirmExitTeamDialog"></ProjectDialog>
 </template>
 <script setup lang="ts">
-import { onMounted, onUnmounted, ref, inject, Ref, watch, computed } from 'vue';
+import { onMounted, onUnmounted, ref, inject, Ref, watch, computed, nextTick } from 'vue';
 import NetworkError from '@/components/NetworkError.vue'
 import * as user_api from '@/apis/users'
 import { ElMessage } from 'element-plus'
@@ -86,6 +105,8 @@ const props = withDefaults(defineProps<Props>(), {
 const userID = ref(localStorage.getItem('userId'))
 const userid = ref()
 const { t } = useI18n()
+const dialogVisible = ref(false)
+const changeinput = ref<HTMLInputElement>()
 const titles = [t('teammember.name'), t('teammember.team_permission')]
 const filteritems = [t('teammember.Readonly'), t('teammember.editable'), t('teammember.manager'), t('teammember.creator'), t('teammember.all')]
 const noNetwork = ref(false)
@@ -98,7 +119,19 @@ const listmenu = ref()
 const transferCreator = ref(false);
 const outTeamDialog = ref(false);
 const exitTeamDialog = ref(false);
-const dialogData = ref<any>({})
+const dialogData = ref<any>({});
+const openDialog = (name: string) => {
+    dialogVisible.value = true;
+    nextTick(() => {
+        if (changeinput.value) {
+            changeinput.value.value = name;
+            setTimeout(() => {
+                changeinput.value?.select();
+                changeinput.value?.focus();
+            }, 100)
+        }
+    })
+};
 const { teamID, teamData, upDateTeamData, is_team_upodate, teamUpdate } = inject('shareData') as {
     teamID: Ref<string>;
     teamData: Ref<[{
@@ -403,9 +436,6 @@ onMounted(() => {
 onUnmounted(() => {
 
 })
-const dialogVisible = ref(false)
-const newname = ref()
-const renameinput = ref<HTMLInputElement>()
 </script>
 <style lang="scss" scoped>
 .container {
@@ -494,6 +524,7 @@ const renameinput = ref<HTMLInputElement>()
             margin-left: auto;
             height: 10px;
 
+
             .button {
                 width: 50px;
                 height: 20px;
@@ -513,28 +544,6 @@ const renameinput = ref<HTMLInputElement>()
                 &:hover {
                     background-color: #9675fadc;
                 }
-            }
-
-            .change {
-                outline: none;
-                height: 30px;
-                width: 460px;
-                box-sizing: border-box;
-
-                &:hover {
-                    border-radius: 2px;
-                    border: 2px #f3f0ff solid;
-
-                }
-
-                &:focus {
-                    border-radius: 2px;
-                    border: 2px #9775fa solid;
-                }
-            }
-
-            :deep(.el-button--primary) {
-                background-color: #9775fa;
             }
         }
     }
@@ -614,5 +623,65 @@ const renameinput = ref<HTMLInputElement>()
 
 .main {
     height: calc(100vh - 96px - 56px - 56px - 20px);
+
+    .change {
+        outline: none;
+        height: 30px;
+        width: 440px;
+        box-sizing: border-box;
+        margin-top: 22px;
+        border-radius: 4px;
+
+        &:hover {
+            border-radius: 2px;
+            border: 2px #f3f0ff solid;
+
+        }
+
+        &:focus {
+            border-radius: 2px;
+            border: 2px #9775fa solid;
+        }
+    }
+
+    .confirm {
+        background-color: #9775fa;
+        color: white;
+        border-color: #9775fa;
+
+        &:hover {
+            background: #9675fa91;
+            border-color: #9675fa91;
+        }
+
+        &:active {
+            background-color: #9775fa;
+            border-color: #9775fa;
+        }
+
+    }
+
+    .cancel {
+
+        &:hover {
+            background-color: #ffffff;
+            color: #9775fa;
+            border-color: #9775fa;
+        }
+
+        &:active {
+            background-color: #ffffff;
+        }
+
+        &:focus {
+            background-color: white;
+            color: #9775fa;
+            border-color: #9775fa;
+        }
+    }
+
+    :deep(.el-button--primary) {
+        background-color: #9775fa;
+    }
 }
 </style>
