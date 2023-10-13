@@ -1,4 +1,4 @@
-import {Shape, ShapeType, GroupShape, TextShape} from '@kcdesign/data';
+import {Shape, ShapeType, GroupShape} from '@kcdesign/data';
 import {onMounted, onUnmounted} from "vue";
 import {Context} from "@/context";
 import {Matrix} from '@kcdesign/data';
@@ -8,14 +8,13 @@ import {get_speed, keyboardHandle as handle} from "@/utils/controllerFn";
 import {Selection} from "@/context/selection";
 import {groupPassthrough} from "@/utils/scout";
 import {WorkSpace} from "@/context/workspace";
-import {Action} from "@/context/tool";
 import {AsyncTransfer} from "@kcdesign/data";
 import {debounce} from "lodash";
 import {paster_short} from '@/utils/clipboard';
 import {sort_by_layer} from '@/utils/group_ungroup';
 import {Comment} from '@/context/comment';
 import {useI18n} from 'vue-i18n';
-import {map_from_shapes, permIsEdit} from '@/utils/content';
+import {map_from_shapes} from '@/utils/content';
 import {
     distance2apex,
     distance2apex2,
@@ -25,12 +24,13 @@ import {
     PointsOffset
 } from '@/utils/assist';
 import {Asssit} from '@/context/assist';
-import {Menu} from '@/context/menu';
 import {TaskType} from '@/context/escstack';
 import {
+    add_blur_for_window,
+    add_move_and_up_for_document,
     down_while_is_text_editing,
     is_ctrl_element,
-    is_mouse_on_content, modify_down_position,
+    is_mouse_on_content, modify_down_position, remove_blur_from_window, remove_move_and_up_from_document,
     reset_trans_editor_status
 } from "@/utils/mouse";
 
@@ -110,10 +110,12 @@ export function useControllerCustom(context: Context, i18nT: Function) {
         wheel = fourWayWheel(context, undefined, startPositionOnPage);
         workspace.setCtrl('controller');
         root = workspace.root;
-        document.addEventListener('mousemove', mousemove);
-        document.addEventListener('mouseup', mouseup);
+        add_move_and_up_for_document(mousemove, mouseup);
     }
 
+    /**
+     * @description 双击控件
+     */
     function handleDblClick() {
         const selected = selection.selectedShapes;
         if (selected.length !== 1) return;
@@ -152,7 +154,8 @@ export function useControllerCustom(context: Context, i18nT: Function) {
         if (e.buttons !== 1) return;
         const mousePosition: ClientXY = {x: e.clientX - root.x, y: e.clientY - root.y};
         if (isDragging && !editing && wheel && asyncTransfer) {
-            speed = get_speed(t_e || e, e), t_e = e;
+            speed = get_speed(t_e || e, e);
+            t_e = e;
             let update_type = 0;
             const isOut = wheel.moving(e, {type: EffectType.TRANS, effect: asyncTransfer.transByWheel});
             if (!isOut) update_type = transform(startPosition, mousePosition);
@@ -299,8 +302,7 @@ export function useControllerCustom(context: Context, i18nT: Function) {
                 pickerFromSelectedShapes(e);
             }
             if (wheel) wheel = wheel.remove();
-            document.removeEventListener('mousemove', mousemove);
-            document.removeEventListener('mouseup', mouseup);
+            remove_move_and_up_from_document(mousemove, mouseup);
         }
         if (need_update_comment) {
             context.comment.notify(Comment.UPDATE_COMMENT_POS);
@@ -391,8 +393,7 @@ export function useControllerCustom(context: Context, i18nT: Function) {
     function windowBlur() {
         if (isDragging) { // 窗口失焦,此时鼠标事件(up,move)不再受系统管理, 此时需要手动关闭已开启的状态
             workspace.translating(false);
-            document.removeEventListener('mousemove', mousemove);
-            document.removeEventListener('mouseup', mouseup);
+            remove_move_and_up_from_document(mousemove, mouseup);
             if (asyncTransfer) asyncTransfer = asyncTransfer.close();
             isDragging = false;
         }
@@ -406,7 +407,7 @@ export function useControllerCustom(context: Context, i18nT: Function) {
         shapes = selection.selectedShapes;
         workspace.watch(workspace_watcher);
         selection.watch(selection_watcher);
-        window.addEventListener('blur', windowBlur);
+        add_blur_for_window(windowBlur);
         document.addEventListener('keydown', keyboardHandle);
         document.addEventListener('mousedown', mousedown);
         checkStatus();
@@ -418,7 +419,7 @@ export function useControllerCustom(context: Context, i18nT: Function) {
     function dispose() {
         workspace.unwatch(workspace_watcher);
         selection.unwatch(selection_watcher);
-        window.removeEventListener('blur', windowBlur);
+        remove_blur_from_window(windowBlur);
         document.removeEventListener('keydown', keyboardHandle);
         document.removeEventListener('mousedown', mousedown);
         timerClear();
