@@ -166,7 +166,7 @@ const picker = new FilePicker('.sketch', (file) => {
 function newFile() {
     if (route.name === 'ProjectPage') {
         const perm = projectList.value.filter(item => item.project.id === route.params.id)[0].self_perm_type;
-        if (perm > 2) {
+        if (perm > 2) {            
             localStorage.setItem('project_id', route.params.id as string);
         }
     }

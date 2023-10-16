@@ -15,7 +15,19 @@ import { Menu } from '@/context/menu';
 import { debounce } from 'lodash';
 import { useI18n } from 'vue-i18n';
 import { v4 as uuid } from "uuid";
-import { _updateRoot, is_drag, drop, right_select, adapt_page, flattenShapes, get_menu_items, selectShapes, color2string, init_insert_table } from '@/utils/content';
+import {
+  _updateRoot,
+  is_drag,
+  drop,
+  right_select,
+  adapt_page,
+  flattenShapes,
+  get_menu_items,
+  selectShapes,
+  color2string,
+  init_insert_table,
+  root_scale, root_trans
+} from '@/utils/content';
 import { paster } from '@/utils/clipboard';
 import { insertFrameTemplate } from '@/utils/artboardFn';
 import { Comment } from '@/context/comment';
@@ -106,29 +118,14 @@ function setMousedownXY(e: MouseEvent) { // 记录鼠标在页面上的点击位
 function onMouseWheel(e: WheelEvent) { // 滚轮、触摸板事件
     if (contextMenu.value) return; //右键菜单已打开
     e.preventDefault();
-    const xy = workspace.value.root;
-    const { ctrlKey, metaKey, shiftKey, deltaX, deltaY } = e;
-    const offsetX = e.x - xy.x;
-    const offsetY = e.y - xy.y;
+    const { ctrlKey, metaKey, deltaX, deltaY } = e;
     if (ctrlKey || metaKey) { // 缩放
-        if (Number((props.context.workspace.matrix.toArray()[0] * 100).toFixed(0)) <= 2) {
-            scale_delta_ = 1
-        } else {
-            scale_delta_ = 1 / scale_delta;
-        }
-        matrix.trans(-offsetX, -offsetY);
-        matrix.scale(Math.sign(deltaY) <= 0 ? scale_delta : scale_delta_);
-        matrix.trans(offsetX, offsetY);
+      root_scale(props.context, e);
     } else {
-        if (Math.abs(deltaX) + Math.abs(deltaY) < 150) { // 临时适配方案，需根据使用设备进一步完善适配
+        if (Math.abs(deltaX) + Math.abs(deltaY) < 100) { // 临时适配方案，需根据使用设备进一步完善适配
             matrix.trans(-deltaX, -deltaY);
         } else {
-            const delta = deltaY > 0 ? -wheel_step : wheel_step;
-            if (shiftKey) {
-                matrix.trans(delta, 0);
-            } else {
-                matrix.trans(0, delta);
-            }
+          root_trans(props.context, e, wheel_step);
         }
     }
     workspace.value.notify(WorkSpace.MATRIX_TRANSFORMATION);
@@ -314,8 +311,8 @@ function createSelector(e: MouseEvent) { // 创建一个selector框选器
     const right = Math.max(mx, sx);
     const top = Math.min(my, sy);
     const bottom = Math.max(my, sy);
-    const p = matrix_inverse.inverseCoord({x: left, y: top})
-    const s = matrix_inverse.inverseCoord({x: right, y: bottom})
+    const p = matrix_inverse.inverseCoord({ x: left, y: top })
+    const s = matrix_inverse.inverseCoord({ x: right, y: bottom })
     selectorFrame.value.top = Math.min(p.y, s.y);
     selectorFrame.value.left = Math.min(p.x, s.x);
     selectorFrame.value.width = Math.max(p.x, s.x) - Math.min(p.x, s.x);
@@ -538,7 +535,7 @@ onUnmounted(() => {
         @wheel="onMouseWheel" @mousedown="onMouseDown" @mousemove="onMouseMove_CV" @mouseleave="onMouseLeave"
         @drop="(e: DragEvent) => { drop(e, props.context, t) }" @dragover.prevent
         :style="{ 'background-color': background_color }">
-        <PageView :context="props.context" :data="(props.page as Page)" :matrix="matrix.toArray()" />
+        <PageView :context="props.context" :data="(props.page as Page)" :matrix="matrix" />
         <TextSelection :context="props.context" :matrix="matrix"> </TextSelection>
         <UsersSelection :context="props.context" :matrix="matrix" v-if="avatarVisi" />
         <SelectionView :context="props.context" :matrix="matrix" />
