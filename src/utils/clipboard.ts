@@ -346,15 +346,17 @@ async function clipboard_text_html(context: Context, data: any, xy?: PageXY) {
             // parse JSON数据并导入
             const source = JSON.parse(text_html.split(identity)[1]);
             if (!source) throw new Error('invalid source');
-            const shapes = import_shape(context.data, source);
-            if (!shapes.length) throw new Error('invalid source');
 
             if (xy) { // 指定复制位置
-                modify_frame_by_xy(xy, shapes); // 以新的起点为基准，重新计算每个图形位置
-            } else if (is_box_outer_view2(shapes, context)) { // 粘贴进入文档的图形将脱离视野，需要重新寻找新的定位
+                modify_frame_by_xy(xy, source); // 以新的起点为基准，重新计算每个图形位置
+            } else if (is_box_outer_view2(source, context)) { // 粘贴进入文档的图形将脱离视野，需要重新寻找新的定位
                 console.log('return to center')
                 // modify_frame_by_xy(context.workspace.center_on_page, shapes);
             }
+
+            const shapes = import_shape(context.data, source);
+            if (!shapes.length) throw new Error('invalid source');
+
             const page = context.selection.selectedPage;
             if (page) {
                 const editor = context.editor.editor4Page(page);
@@ -560,7 +562,8 @@ export function paster_short(context: Context, shapes: Shape[]): Shape[] {
             }
         }
     }
-    const source = export_shape(pre_shapes), new_source = import_shape(context.data, source);
+    const source = export_shape(pre_shapes);
+    const new_source = import_shape(context.data, source);
     const page = context.selection.selectedPage;
     let result: Shape[] = [];
     if (page) {
@@ -570,8 +573,12 @@ export function paster_short(context: Context, shapes: Shape[]): Shape[] {
             return [];
         }
         const _r = editor.pasteShapes2(new_source, actions);
-        _r && _r.length && (result = _r);
+        if (_r && _r.length) {
+            result = _r;
+        }
     }
-    result.length && context.selection.rangeSelectShape(result);
+    if (result.length) {
+        context.selection.rangeSelectShape(result);
+    }
     return result;
 }
