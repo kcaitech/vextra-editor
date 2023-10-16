@@ -157,13 +157,13 @@ export function useControllerCustom(context: Context, i18nT: Function) {
 
     let pre_target_x: number, pre_target_y: number;
     let stickedX: boolean = false, stickedY: boolean = false;
-    let count: number = 0, times: number = 0; // 性能测试
+    // let count: number = 0, times: number = 0; // 性能测试
 
     /**
      * @description 计算对齐辅助线、辅助对齐。出于性能考虑，代码凌乱，一碰就会爆炸
      */
     function trans_assistant(asyncTransfer: AsyncTransfer, ps: PageXY, pe: PageXY): number {
-        const s1 = Date.now();
+        // const s1 = Date.now();
         let update_type = 3;
         if (speed > 5) { // 如果速度过快，不进行移动辅助
             asyncTransfer.trans(ps, pe);
@@ -216,13 +216,13 @@ export function useControllerCustom(context: Context, i18nT: Function) {
         if (need_multi) {
             pre_render_assist_line(context, len > 1, shape, shapes);
         }
-        times++; // 性能测试
-        count += Date.now() - s1;
-        if (times >= 20) {
-            console.log('一次辅助线从计算到渲染总共用时', count / times); // 大于10ms 则能感觉明显卡顿
-            count = 0;
-            times = 0;
-        }
+        // times++; // 性能测试
+        // count += Date.now() - s1;
+        // if (times >= 20) {
+        //     console.log('一次辅助线从计算到渲染总共用时', count / times); // 大于10ms 则能感觉明显卡顿
+        //     count = 0;
+        //     times = 0;
+        // }
         return update_type;
 
         function modify_fix_x(target: any) {

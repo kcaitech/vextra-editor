@@ -15,7 +15,7 @@ import {
 } from "@kcdesign/data";
 import {Action, ResultByAction} from "@/context/tool";
 import {Perm, WorkSpace} from '@/context/workspace';
-import {XYsBounding} from '@/utils/common';
+import {is_mac, XYsBounding} from '@/utils/common';
 import {searchCommentShape as finder} from '@/utils/comment'
 import {paster_image} from "./clipboard";
 import {landFinderOnPage, scrollToContentView} from './artboardFn'
@@ -741,7 +741,8 @@ export function root_scale(context: Context, e: WheelEvent) {
 
 export function root_trans(context: Context, e: WheelEvent, step: number) {
     if (e.shiftKey) {
-        const delta = e.deltaX > 0 ? -step : step;
+        const _d = is_mac() ? e.deltaX : e.deltaY; // window的deltaX竟然有问题
+        const delta = _d > 0 ? -step : step;
         context.workspace.matrix.trans(delta, 0);
     } else {
         const delta = e.deltaY > 0 ? -step : step;

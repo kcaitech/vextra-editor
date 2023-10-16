@@ -122,7 +122,7 @@ function onMouseWheel(e: WheelEvent) { // 滚轮、触摸板事件
     if (ctrlKey || metaKey) { // 缩放
       root_scale(props.context, e);
     } else {
-        if (Math.abs(deltaX) + Math.abs(deltaY) < 150) { // 临时适配方案，需根据使用设备进一步完善适配
+        if (Math.abs(deltaX) + Math.abs(deltaY) < 100) { // 临时适配方案，需根据使用设备进一步完善适配
             matrix.trans(-deltaX, -deltaY);
         } else {
           root_trans(props.context, e, wheel_step);
