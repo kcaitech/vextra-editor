@@ -2,7 +2,7 @@ import { Context } from "@/context";
 import { CoopRepository, DocEditor, Repository, createDocument } from "@kcdesign/data";
 import { ResponseStatus } from "@/communication/modules/doc_upload";
 import { Document } from "@kcdesign/data";
-import * as user_api from '@/apis/users'
+import * as user_api from '@/request/users'
 
 /**
  * @description 文档内创建一个新的文档，并在跳转新标签页之后打开新文档

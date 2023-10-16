@@ -2,8 +2,8 @@
 import {useI18n} from 'vue-i18n';
 import {router} from '@/router';
 import {Context} from '@/context';
-import * as user_api from '@/apis/users';
-import * as share_api from '@/apis/share';
+import * as user_api from '@/request/users';
+import * as share_api from '@/request/share';
 import {nextTick, ref, onMounted, onUnmounted} from 'vue';
 import Saving from './Saving.vue';
 import {useRoute} from 'vue-router';

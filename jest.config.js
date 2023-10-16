@@ -1,6 +1,3 @@
-const { pathsToModuleNameMapper } = require("ts-jest");
-const { compilerOptions } = require("./tsconfig.json");
-
 module.exports = {
     preset: "ts-jest",
     // testEnvironment: "node",
@@ -11,14 +8,14 @@ module.exports = {
     ],
     testPathIgnorePatterns: [
         "/node_modules/",
-        "/dist/",
+        "/dist/"
     ],
-    transform: {
-        "^.+\\.tsx?$": "ts-jest",
+    coveragePathIgnorePatterns: [
+        "/node_modules/",
+        "/build/"
+    ],
+    transform: { "^.+\\.tsx?$": "ts-jest" },
+    moduleNameMapper: {
+        "^@/(.*)$": "<rootDir>/src/$1"
     },
-    maxConcurrency: 10,
-    maxWorkers: 1,
-    moduleNameMapper: pathsToModuleNameMapper(compilerOptions.paths, {
-        prefix: "<rootDir>/"
-    }),
 };

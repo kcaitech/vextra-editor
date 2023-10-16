@@ -10,8 +10,8 @@ import ColSplitView from '@/components/common/ColSplitView.vue';
 import ApplyFor from './Toolbar/Share/ApplyFor.vue';
 import { Document, importDocument, Repository, Page, CoopRepository, IStorage } from '@kcdesign/data';
 import { SCREEN_SIZE } from '@/utils/setting';
-import * as share_api from '@/apis/share'
-import * as user_api from '@/apis/users'
+import * as share_api from '@/request/share'
+import * as user_api from '@/request/users'
 import {useRoute} from 'vue-router';
 import {router} from '@/router';
 import {useI18n} from 'vue-i18n';
