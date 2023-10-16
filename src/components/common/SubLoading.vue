@@ -7,26 +7,27 @@
 </template>
 <style scoped lang="scss">
 .wrap {
-  position: absolute;
+  position: fixed;
   width: 100%;
   height: 100%;
   z-index: 9999;
-  // background-color: rgba($color: #ffffff, $alpha: 0.05);
+  background-color: rgba($color: #ffffff, $alpha: 0.3);
+  top: 0;
 
   .container {
-    width: 60px;
-    height: 60px;
+    width: 20px;
+    height: 20px;
     position: absolute;
     top: 50%;
     left: 50%;
     transform: translate(-50%, -50%);
 
-    >.loader {
+    > .loader {
       width: 100%;
       height: 100%;
       border: 2px solid transparent;
-      border-top: 2px solid grey;
-      border-left: 2px solid grey;
+      border-top: 2px solid var(--active-color);
+      border-left: 2px solid var(--active-color);;
       border-radius: 50%;
       animation: spin 1s linear infinite;
       box-sizing: border-box;

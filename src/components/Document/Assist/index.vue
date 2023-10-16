@@ -1,13 +1,15 @@
 <script setup lang="ts">
-import { Context } from '@/context';
-import { Asssit, PageXY2 } from '@/context/assist';
-import { ClientXY, PageXY } from '@/context/selection';
-import { Matrix } from '@kcdesign/data';
-import { onMounted, onUnmounted, reactive, ref } from 'vue';
-import { get_p_form_pg_by_x, get_p_form_pg_by_y } from '@/utils/assist';
+import {Context} from '@/context';
+import {Asssit, PageXY2} from '@/context/assist';
+import {ClientXY, PageXY} from '@/context/selection';
+import {Matrix} from '@kcdesign/data';
+import {onMounted, onUnmounted, reactive, ref} from 'vue';
+import {get_p_form_pg_by_x, get_p_form_pg_by_y} from '@/utils/assist';
+
 interface Props {
     context: Context
 }
+
 interface Data {
     nodesX: ClientXY[]
     nodesY: ClientXY[]
@@ -18,19 +20,23 @@ interface Data {
     exNodesX: ClientXY[]
     exNodesY: ClientXY[]
 }
+
 const props = defineProps<Props>();
 const assist = ref<boolean>(false);
 const matrix = ref<Matrix>(props.context.workspace.matrix);
-const data = reactive<Data>({ nodesX: [], nodesY: [], lineX: '', lineY: '', exLineX: [], exLineY: [], exNodesX: [], exNodesY: [] });
-let { lineX, nodesX, lineY, nodesY, exLineX, exLineY, exNodesX, exNodesY } = data;
+const data = reactive<Data>({nodesX: [], nodesY: [], lineX: '', lineY: '', exLineX: [], exLineY: [], exNodesX: [], exNodesY: []});
+let {lineX, nodesX, lineY, nodesY, exLineX, exLineY, exNodesX, exNodesY} = data;
 let ax = 0, ay = 0;
-function assist_watcher(t: number, params?: number) {
-    if (t === Asssit.UPDATE_ASSIST) render(params);
+
+function assist_watcher(t: number) {
+    if (t === Asssit.UPDATE_ASSIST) render();
     if (t === Asssit.UPDATE_MAIN_LINE) update_main_line();
     if (t === Asssit.CLEAR && assist.value) clear();
 }
+
 function update_main_line() {
     // const s1 = Date.now();
+
     const cpg = props.context.assist.CPG;
     if (!cpg) return;
     clear4main_line();
@@ -48,38 +54,38 @@ function update_main_line() {
     }
     // console.log('更新主辅助线:', Date.now() - s1);
 }
-function render(multi?: number) {
+
+function render() {
     // const s = Date.now();
     clear();
     const ns_x = minus_nodes_x(props.context.assist.nodes_x);
     const ns_y = minus_nodes_y(props.context.assist.nodes_y);
     if (ns_x.length) { // 绘制x轴线
         ax = ns_x[0].x;
-        nodesX = ns_x.map(n => matrix.value.computeCoord3(n));
+        points_to_client(ns_x, props.context.workspace.matrix, nodesX);
         lineX = render_line_x(nodesX);
         assist.value = true;
     }
     if (ns_y.length) { // 绘制y轴线
         ay = ns_y[0].y;
-        nodesY = ns_y.map(n => matrix.value.computeCoord3(n));
+        points_to_client(ns_y, props.context.workspace.matrix, nodesY);
         lineY = render_line_y(nodesY);
         assist.value = true;
     }
-    if (multi === 3) {
-        getExLineX();
-        getExLineY();
-    } else if (multi === 2) {
-        getExLineY();
-    } else if (multi === 1) {
-        getExLineX();
-    }
+    getExLineX();
+    getExLineY();
     // console.log('初次确定辅助线(ms):', Date.now() - s);
 }
+
+function points_to_client(points: { x: number, y: number }[], matrix: Matrix, local: { x: number, y: number }[]) {
+    for (let i = 0, len = points.length; i < len; i++) local[i] = matrix.computeCoord3(points[i]);
+}
+
 function getExLineX() {
     const cpg = props.context.assist.CPG;
     if (!cpg) return;
     const xAxis = props.context.assist.xAxis;
-    const { left, cx, right } = cpg;
+    const {left, cx, right} = cpg;
     if (left !== undefined && Math.abs(left - ax) > 1) {
         let t = minus_nodes_x(xAxis.get(left) || []);
         if (t.length) {
@@ -115,11 +121,12 @@ function getExLineX() {
         }
     }
 }
+
 function getExLineY() {
     const cpg = props.context.assist.CPG;
     if (!cpg) return;
     const yAxis = props.context.assist.yAxis;
-    const { top, cy, bottom } = cpg;
+    const {top, cy, bottom} = cpg;
     if (top !== undefined && Math.abs(top - ay) > 1) {
         let t = minus_nodes_y(yAxis.get(top) || []);
         if (t.length) {
@@ -154,6 +161,7 @@ function getExLineY() {
         }
     }
 }
+
 function clear() {
     ax = 0, ay = 0;
     nodesX.length = 0;
@@ -166,6 +174,7 @@ function clear() {
     lineY = '';
     assist.value = false;
 }
+
 function clear4main_line() {
     ax = 0, ay = 0;
     nodesX.length = 0;
@@ -173,26 +182,28 @@ function clear4main_line() {
     lineX = '';
     lineY = '';
 }
+
 /**
  * @description 去除重复的点
  */
 function minus_nodes_x(nodes: PageXY2[]): PageXY[] {
     const except = props.context.assist.except;
-    let result: Map<number, PageXY> = new Map();
-    for (let i = 0; i < nodes.length; i++) {
+    let result: PageXY[] = [];
+    for (let i = 0, len = nodes.length; i < len; i++) {
         const n = nodes[i];
-        if (!except.get(n.id)) result.set(n.p.y, n.p);
+        if (!except.get(n.id)) result.push(n.p);
     }
-    return Array.from(result.values());
+    return result;
 }
+
 function minus_nodes_y(nodes: PageXY2[]): PageXY[] {
     const except = props.context.assist.except;
-    let result: Map<number, PageXY> = new Map();
-    for (let i = 0; i < nodes.length; i++) {
+    let result: PageXY[] = [];
+    for (let i = 0, len = nodes.length; i < len; i++) {
         const n = nodes[i];
-        if (!except.get(n.id)) result.set(n.p.x, n.p);
+        if (!except.get(n.id)) result.push(n.p);
     }
-    return Array.from(result.values());
+    return result;
 }
 
 /**
@@ -200,7 +211,7 @@ function minus_nodes_y(nodes: PageXY2[]): PageXY[] {
  */
 function render_line_x(nodes: PageXY[]) {
     nodes = sort_nodes_x(nodes);
-    let d = `M ${nodes[0].x} ${nodes[0].y}`
+    let d = `M ${nodes[0].x} ${nodes[0].y}`;
     for (let i = 1, len = nodes.length; i < len; i++) {
         const n = nodes[i];
         d += `L${n.x} ${n.y}`
@@ -208,6 +219,7 @@ function render_line_x(nodes: PageXY[]) {
     d += ' z';
     return d;
 }
+
 /**
  * @description 绘制y轴上的线
  */
@@ -221,6 +233,7 @@ function render_line_y(nodes: PageXY[]) {
     d += ' z';
     return d;
 }
+
 /**
  * @description 给x轴上的点排序
  */
@@ -231,6 +244,7 @@ function sort_nodes_x(nodes: PageXY[]): PageXY[] {
         else return 1;
     })
 }
+
 /**
  * @description 给y轴上的点排序
  */
@@ -241,6 +255,7 @@ function sort_nodes_y(nodes: PageXY[]): PageXY[] {
         else return 1;
     })
 }
+
 onMounted(() => {
     props.context.assist.watch(assist_watcher);
 })
@@ -250,21 +265,21 @@ onUnmounted(() => {
 </script>
 <template>
     <svg version="1.1" xmlns="http://www.w3.org/2000/svg" xmlns:xlink="http://www.w3.org/1999/xlink"
-        xmlns:xhtml="http://www.w3.org/1999/xhtml" preserveAspectRatio="xMinYMin meet" overflow="visible" :width="4"
-        :height="4" viewBox="0 0 4 4" style="position: absolute">
+         xmlns:xhtml="http://www.w3.org/1999/xhtml" preserveAspectRatio="xMinYMin meet" overflow="visible" :width="4"
+         :height="4" viewBox="0 0 4 4" style="position: absolute">
         <g id="node">
-            <path d="M -2 -2 L 2 2 z" style="stroke-width: inherit; stroke: inherit;" />
-            <path d="M 2 -2 L -2 2 z" style="stroke-width: inherit; stroke: inherit;" />
+            <path d="M -2 -2 L 2 2 z" style="stroke-width: inherit; stroke: inherit;"/>
+            <path d="M 2 -2 L -2 2 z" style="stroke-width: inherit; stroke: inherit;"/>
         </g>
         <g v-if="assist">
-            <use v-for="(n, i) in nodesX" :transform="`translate(${n.x}, ${n.y})`" xlink:href="#node" :key="i" />
-            <use v-for="(n, i) in nodesY" :transform="`translate(${n.x}, ${n.y})`" xlink:href="#node" :key="i" />
-            <use v-for="(n, i) in exNodesX" :transform="`translate(${n.x}, ${n.y})`" xlink:href="#node" :key="i" />
-            <use v-for="(n, i) in exNodesY" :transform="`translate(${n.x}, ${n.y})`" xlink:href="#node" :key="i" />
-            <path v-if="lineX" :d="lineX" class="a-path" />
-            <path v-if="lineY" :d="lineY" class="a-path" />
-            <path v-for="(el, i) in exLineX" :d="el" :key="i" class="a-path" />
-            <path v-for="(el, i) in exLineY" :d="el" :key="i" class="a-path" />
+            <use v-for="(n, i) in nodesX" :transform="`translate(${n.x}, ${n.y})`" xlink:href="#node" :key="i"/>
+            <use v-for="(n, i) in nodesY" :transform="`translate(${n.x}, ${n.y})`" xlink:href="#node" :key="i"/>
+            <use v-for="(n, i) in exNodesX" :transform="`translate(${n.x}, ${n.y})`" xlink:href="#node" :key="i"/>
+            <use v-for="(n, i) in exNodesY" :transform="`translate(${n.x}, ${n.y})`" xlink:href="#node" :key="i"/>
+            <path v-if="lineX" :d="lineX" class="a-path"/>
+            <path v-if="lineY" :d="lineY" class="a-path"/>
+            <path v-for="(el, i) in exLineX" :d="el" :key="i" class="a-path"/>
+            <path v-for="(el, i) in exLineY" :d="el" :key="i" class="a-path"/>
         </g>
     </svg>
 </template>
