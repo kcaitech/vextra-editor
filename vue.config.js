@@ -127,7 +127,8 @@ var exports = defineConfig({
     // publicPath: '/tjs',
     // publicPath: '/zbb',
     // publicPath: '/tyx',
-    publicPath: './',
+        publicPath: '/zrx',
+    // publicPath: './',
     configureWebpack,
 
     pluginOptions: {
