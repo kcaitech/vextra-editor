@@ -23,7 +23,7 @@
 import Header from '@/components/AppHome/Header.vue';
 import { onMounted, ref } from 'vue';
 import { useRoute } from 'vue-router';
-import * as team_api from '@/apis/team'
+import * as team_api from '@/request/team'
 import { router } from '@/router';
 
 const route = useRoute();

@@ -26,7 +26,7 @@
 <script setup lang="ts">
 import { useI18n } from 'vue-i18n'
 import { router } from '@/router'
-import * as user_api from '@/apis/users'
+import * as user_api from '@/request/users'
 import { ElMessage } from 'element-plus'
 import { onMounted, ref, onUnmounted, Ref, inject, watch } from 'vue';
 

@@ -14,7 +14,7 @@ import { useI18n } from 'vue-i18n';
 import CommentInput from './Content/CommentInput.vue';
 import { useRoute } from 'vue-router';
 import { searchCommentShape } from '@/utils/comment';
-import * as comment_api from '@/apis/comment';
+import * as comment_api from '@/request/comment';
 import ContactInit from './Toolbar/ContactInit.vue';
 import { get_contact_environment } from '@/utils/contact';
 

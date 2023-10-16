@@ -2,7 +2,7 @@
 import { Ref, inject, ref, computed, nextTick } from 'vue'
 import { useI18n } from 'vue-i18n'
 import { router } from '@/router'
-import * as team_api from '@/apis/team'
+import * as team_api from '@/request/team'
 import ProjectDialog from '../ProjectDialog.vue'
 import listrightmenu from '@/components/AppHome/listrightmenu.vue'
 import ProjectMemberg from '@/components/TeamProject/ProjectFill/ProjectMemberg.vue'

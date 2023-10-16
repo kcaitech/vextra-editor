@@ -2,8 +2,8 @@
 import { onMounted, reactive, toRefs, ref, onUnmounted, computed, watch } from 'vue'
 import { Search, User, SwitchButton, Close, Bell } from '@element-plus/icons-vue'
 import Inform from './Inform.vue'
-import * as share_api from '@/apis/share';
-import * as team_api from '@/apis/team';
+import * as share_api from '@/request/share';
+import * as team_api from '@/request/team';
 import { useI18n } from 'vue-i18n'
 import { router } from '@/router'
 import avatar from '@/assets/pd-logo-svg.svg';

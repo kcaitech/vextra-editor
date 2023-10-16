@@ -13,15 +13,10 @@ declare module "axios" {
     export function create(config?: AxiosRequestConfig): AxiosInstance;
 }
 
-// 创建一个 axios 实例
 const service = axios.create({
-    // baseURL: 'http://192.168.0.10:10000/api/v1',
     baseURL: API_URL,
-    //  baseURL: 'https://mock.apifox.cn/m1/2612240-0-1d5a81b5', // 所有的请求地址前缀部分
-    timeout: 60000, // 请求超时时间毫秒
+    timeout: 60000,
 })
-
-
 
 // 添加请求拦截器
 service.interceptors.request.use(function (config) {

@@ -72,18 +72,19 @@ const onMouseleave = () => {
 </script>
 
 <template>
-  <div ref="popover" class="popover-t" tabindex="-1" v-if="popoverVisible">
+    <div ref="popover" class="popover-t" tabindex="-1" v-if="popoverVisible">
     <!-- <div ref="popover" class="popover" tabindex="-1"> -->
-    <CreateTable :context="context" @close="closeInsert"></CreateTable>
-  </div>
-  <el-tooltip class="box-item" effect="dark" :content="`${t('table.table')}`" placement="bottom" :show-after="600"
+        <CreateTable :context="context" @close="closeInsert"></CreateTable>
+    </div>
+    <el-tooltip class="box-item" effect="dark" :content="`${t('table.table')}`" placement="bottom" :show-after="600"
     :offset="10" :hide-after="0" :visible="popoverVisible ? false : visible">
-    <ToolButton ref="button" :selected="props.active" @mouseenter.stop="onMouseenter" @mouseleave.stop="onMouseleave">
-      <div class="svg-table" @click="showTable">
-        <svg-icon icon-class="pattern-table"></svg-icon>
-      </div>
-    </ToolButton>
-  </el-tooltip>
+    <ToolButton ref="button" :selected="props.active"
+            @mouseenter.stop="onMouseenter" @mouseleave.stop="onMouseleave">
+            <div class="svg-table" @click="showTable">
+                <svg-icon icon-class="pattern-table"></svg-icon>
+            </div>
+        </ToolButton>
+      </el-tooltip>
 </template>
 
 <style lang="scss" scoped>
@@ -100,7 +101,6 @@ const onMouseleave = () => {
     height: 14px;
   }
 }
-
 .popover-t {
   position: absolute;
 }

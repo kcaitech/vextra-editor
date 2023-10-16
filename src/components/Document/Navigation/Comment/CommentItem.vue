@@ -5,7 +5,7 @@ import { Context } from "@/context";
 import { useI18n } from 'vue-i18n'
 import { Page } from '@kcdesign/data';
 import { Selection } from '@/context/selection'
-import * as comment_api from '@/apis/comment';
+import * as comment_api from '@/request/comment';
 import moment = require('moment');
 import 'moment/locale/zh-cn';
 import { mapDateLang } from '@/utils/date_lang'

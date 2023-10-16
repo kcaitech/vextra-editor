@@ -1,17 +1,18 @@
 <script lang="ts" setup>
-import { watchEffect, onMounted, onUnmounted, computed, reactive } from "vue";
-import { Context } from "@/context";
-import { Matrix, Page, Shape, ShapeType } from "@kcdesign/data";
-import { WorkSpace } from "@/context/workspace";
-import { ClientXY } from "@/context/selection";
+import {watchEffect, onMounted, onUnmounted, computed, reactive} from "vue";
+import {Context} from "@/context";
+import {Matrix, Page, Shape, ShapeType} from "@kcdesign/data";
+import {WorkSpace} from "@/context/workspace";
+import {ClientXY} from "@/context/selection";
 import ArtboardName from "./ArtboardName.vue";
-import { is_shape_out, top_side } from "@/utils/content";
+import {is_shape_out, top_side} from "@/utils/content";
 
 const props = defineProps<{
     context: Context
     data: Page,
     matrix: number[]
 }>()
+
 interface Title {
     id: string
     content: string
@@ -23,9 +24,10 @@ interface Title {
     maxWidth: number
     selected: boolean
 }
+
 const matrix = new Matrix(props.matrix);
 const titles: Title[] = reactive([]);
-const origin: ClientXY = { x: 0, y: 0 };
+const origin: ClientXY = {x: 0, y: 0};
 const watcher = () => {
     updater();
 }
@@ -35,12 +37,14 @@ function updater() {
     setOrigin();
     setPosition();
 }
+
 function handleWorkspaceUpdate(t: any) {
     if (t === WorkSpace.MATRIX_TRANSFORMATION) {
         setOrigin();
         setPosition();
     }
 }
+
 const setPosition = () => {
     const artboards: Shape[] = props.data.artboardList; // 只要遍历容器就可以了，直接拿这个，这个数组里面有全部容器，如果拿childs，会存在多余的遍历
     const len = artboards.length;
@@ -60,7 +64,7 @@ const setPosition = () => {
                     selected = false
                 }
                 const m = artboard.matrix2Root(); // 图形到页面的转换矩阵
-                const f2p = artboard.frame2Root(); // 
+                const f2p = artboard.frame2Root(); //
                 const frame = artboard.frame;
                 const matrix = props.context.workspace.matrix; // 页面坐标系转换矩阵
                 const matrix_artboard_root = artboard.matrix2Root();
@@ -71,36 +75,20 @@ const setPosition = () => {
                 if (top_side_l < 72) continue;
                 // let anchor = { x: 0, y: 0 }; // 锚点，其所在坐标系是page坐标系
                 let anchor = modify_anchor(artboard, matrix_artboard_root);
-
-                // let rotate = artboard.rotation || 0;
-                // rotate = rotate < 0 ? rotate + 360 : rotate; // 这些关于角度的计算把图画出来就会比较清楚
-                // if (rotate < 135 && rotate >= 45) {
-                //     anchor = m.computeCoord({ x: 0, y: 0 + frame.height }); // 将 [图形坐标系] 的锚点通过 [图形到页面的转换矩阵] 转换到 [页面坐标系]，下面的也是
-                //     rotate -= 90;
-                // } else if (rotate < 225 && rotate >= 135) {
-                //     anchor = m.computeCoord({ x: 0 + frame.width, y: 0 + frame.height });
-                //     rotate -= 180;
-                // } else if (rotate < 315 && rotate >= 225) {
-                //     anchor = m.computeCoord({ x: 0 + frame.width, y: 0 });
-                //     rotate += 90;
-                // } else if (rotate < 360 && rotate > 315) {
-                //     anchor = m.computeCoord({ x: 0, y: 0 });
-                // } else if (rotate < 45 && rotate >= 0) {
-                //     anchor = m.computeCoord({ x: 0, y: 0 });
-                // }
-                anchor = matrix.computeCoord({ x: anchor.x, y: anchor.y }); //将锚点从 [页面坐标系] 转换到 [窗口坐标系]
+                anchor = matrix.computeCoord({x: anchor.x, y: anchor.y}); //将锚点从 [页面坐标系] 转换到 [窗口坐标系]
                 anchor.y -= origin.y;
                 anchor.x -= origin.x;
                 anchor.y -= 16; // 顶上去16像素
                 const width = f2p.width;
                 const maxWidth = frame.width
-                titles.push({ id: artboard.id, content: artboard.name, x: anchor.x, y: anchor.y, width, shape: artboard, rotate: modify_rotate(artboard), maxWidth, selected });
+                titles.push({id: artboard.id, content: artboard.name, x: anchor.x, y: anchor.y, width, shape: artboard, rotate: modify_rotate(artboard), maxWidth, selected});
             }
         }
     } else {
         titles.length = 0;
     }
 }
+
 function pre_modify_anchor(shape: Shape) {
     let rotate = shape.rotation || 0;
     if (shape.isFlippedHorizontal) rotate = rotate + 270;
@@ -110,6 +98,7 @@ function pre_modify_anchor(shape: Shape) {
     rotate = (rotate < 0 ? rotate + 360 : rotate) % 360;
     return rotate;
 }
+
 function modify_rotate(shape: Shape) {
     let rotate = shape.rotation || 0;
     if (shape.isFlippedHorizontal) rotate = 180 - rotate;
@@ -126,10 +115,11 @@ function modify_rotate(shape: Shape) {
     }
     return rotate;
 }
+
 function modify_anchor(shape: Shape, m2r: Matrix) {
     const rotate = pre_modify_anchor(shape);
     const frame = shape.frame;
-    let anchor = { x: 0, y: 0 };
+    let anchor = {x: 0, y: 0};
     if (rotate >= 0 && rotate < 45) {
         anchor = m2r.computeCoord2(0, 0);
     } else if (rotate >= 45 && rotate < 135) {
@@ -143,6 +133,7 @@ function modify_anchor(shape: Shape, m2r: Matrix) {
     }
     return anchor;
 }
+
 function setOrigin() { // 这个动作是让container与页面坐标系重合
     matrix.reset(props.context.workspace.matrix);
     matrix.preTrans(props.data.frame.x, props.data.frame.y);
@@ -150,6 +141,7 @@ function setOrigin() { // 这个动作是让container与页面坐标系重合
     origin.y = matrix.m12;
 }
 const watchedShapes = new Map();
+
 function watchShapes() { // 监听相关shape的变化
     const needWatchShapes = new Map();
     const selection = props.context.selection.selectedPage?.childs;
@@ -184,9 +176,11 @@ function hover(shape: Shape) {
         props.context.selection.hoverShape(s);
     }
 }
+
 function leave() {
     props.context.selection.unHoverShape();
 }
+
 onMounted(() => {
     props.context.workspace.watch(handleWorkspaceUpdate)
     props.context.selection.watch(updater);
@@ -203,9 +197,10 @@ watchEffect(() => updater());
     <!-- container -->
     <div class="container" :style="{ top: `${origin.y}px`, left: `${origin.x}px` }">
         <div class="title-container" v-for="(t, index) in titles" :key="index"
-            :style="{ top: `${t.y}px`, left: `${t.x}px`, 'max-width': `${t.maxWidth}px`, transform: `rotate(${t.rotate}deg)` }">
-            <ArtboardName :context="props.context" :name="t.content" :index="index" :maxWidth="t.maxWidth" @rename="rename"
-                @hover="hover" @leave="leave" :shape="t.shape" :selected="t.selected"></ArtboardName>
+             :style="{ top: `${t.y}px`, left: `${t.x}px`, 'max-width': `${t.maxWidth}px`, transform: `rotate(${t.rotate}deg)` }">
+            <ArtboardName :context="props.context" :name="t.content" :index="index" :maxWidth="t.maxWidth"
+                          @rename="rename"
+                          @hover="hover" @leave="leave" :shape="t.shape" :selected="t.selected"></ArtboardName>
         </div>
     </div>
 </template>

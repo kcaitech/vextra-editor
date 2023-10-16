@@ -36,7 +36,6 @@ export function is_mixed(shapes: Shape[]) {
     if(type_line !== result.type) result.type = 'mixed';
     if (Object.values(result).every(v => v === 'mixed')) return result;
   }
-  
   if (result.rotate !== 'mixed') result.rotate = Number((result.rotate as number).toFixed(2));
   return result;
 }

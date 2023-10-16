@@ -1,4 +1,6 @@
-import { router } from "@/router";
+import {router} from "@/router";
+import {Context} from "@/context";
+import {Perm} from "@/context/workspace";
 
 //守卫白名单
 const whiteList = ['/', '/login', '/404', '/privacypolicy', '/serviceagreement']
@@ -14,12 +16,12 @@ router.beforeEach((to, from, next) => {
         if (whiteList.find(function (item) {
             return item === to.path
         })) {
-            if(to.name==='privacypolicy'){
-                document.title='隐私协议'
-            }else if(to.name==='serviceagreement'){
-                document.title='服务协议'
-            }else{
-                document.title='ProtoDesign'
+            if (to.name === 'privacypolicy') {
+                document.title = '隐私协议'
+            } else if (to.name === 'serviceagreement') {
+                document.title = '服务协议'
+            } else {
+                document.title = 'ProtoDesign'
             }
             next()
         } else {
@@ -32,3 +34,6 @@ router.beforeEach((to, from, next) => {
         }
     }
 })
+export const permIsEdit = (context: Context) => {
+    return Boolean(context.workspace.documentPerm === Perm.isEdit);
+}

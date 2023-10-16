@@ -22,7 +22,7 @@
 import Header from '@/components/AppHome/Header.vue';
 import { onMounted, ref } from 'vue';
 import { useRoute } from 'vue-router';
-import * as user_api from '@/apis/users'
+import * as user_api from '@/request/users'
 import { ElMessage } from 'element-plus';
 import { router } from '@/router';
 import { useI18n } from 'vue-i18n';

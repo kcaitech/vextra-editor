@@ -5,8 +5,8 @@ import { Context } from '@/context';
 import { useI18n } from 'vue-i18n';
 import { useRoute } from 'vue-router';
 import { UserInfo, DocInfo } from '@/context/user';
-import * as share_api from '@/apis/share';
-import * as team_api from '@/apis/team'
+import * as share_api from '@/request/share';
+import * as team_api from '@/request/team'
 
 const { t } = useI18n()
 interface Props {

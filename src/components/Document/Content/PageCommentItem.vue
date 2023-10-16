@@ -6,7 +6,7 @@ import { Action } from "@/context/tool";
 import HoverComment from './HoverComment.vue'
 import CommentPopup from './CommentPopup.vue'
 import { Matrix, Shape, ShapeType } from "@kcdesign/data";
-import * as comment_api from '@/apis/comment';
+import * as comment_api from '@/request/comment';
 import { Selection } from '@/context/selection';
 import { Comment } from '@/context/comment';
 import { DocCommentOpData, DocCommentOpType } from "@/communication/modules/doc_comment_op"

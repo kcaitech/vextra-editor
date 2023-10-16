@@ -69,7 +69,7 @@
 <script setup lang="ts">
 import { onMounted, onUnmounted, ref, inject, Ref, watch, computed } from 'vue';
 import NetworkError from '@/components/NetworkError.vue'
-import * as user_api from '@/apis/users'
+import * as user_api from '@/request/users'
 import { ElMessage } from 'element-plus'
 import { useI18n } from 'vue-i18n'
 import { router } from '@/router';

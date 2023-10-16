@@ -1,15 +1,15 @@
-import { ShapeType, TableShape, Watchable } from "@kcdesign/data";
-import { Matrix } from '@kcdesign/data';
-import { Context } from "./index";
-import { Root } from "@/utils/content";
-import { Clipboard } from "@/utils/clipboard";
-import { adapt_page } from "@/utils/content";
-import { PageXY } from "./selection";
-import { Menu } from "./menu";
+import {Matrix, Shape, ShapeType, TableShape, Watchable} from "@kcdesign/data";
+import {Context} from "./index";
+import {adapt_page, Root} from "@/utils/content";
+import {Clipboard} from "@/utils/clipboard";
+import {PageXY} from "./selection";
+import {Action} from "@/context/tool";
+import {PointsOffset} from "@/utils/assist";
 interface Point {
     x: number
     y: number
 }
+
 export enum KeyboardKeys {
     Space = 'Space',
     A = 'KeyA',
@@ -35,6 +35,7 @@ export enum KeyboardKeys {
     Digit1 = 'Digit1',
     Backspace = 'Backspace',
 }
+
 export enum CtrlElementType { // 控制元素类型
     RectLeft = 'rect-left',
     RectRight = 'rect-right',
@@ -54,11 +55,13 @@ export enum CtrlElementType { // 控制元素类型
     LineEndR = 'line-end-rotate',
     Text = 'text'
 }
+
 export enum Perm {
-    isRead = 1,
-    isComment = 2,
-    isEdit = 3
+    isRead = 1, // 仅阅读
+    isComment = 2, // 可评论
+    isEdit = 3 // 可编辑
 }
+
 export class WorkSpace extends Watchable(Object) {
     static MATRIX_TRANSFORMATION = 4;
     static SELECTING = 5;
@@ -100,19 +103,32 @@ export class WorkSpace extends Watchable(Object) {
     private m_pre_to_translating: boolean = false;
     private m_mousedown_on_page: MouseEvent | undefined;
     private m_controller: 'page' | 'controller' = 'page';
-    private m_root: Root = { init: false, x: 332, y: 30, bottom: 0, right: 0, width: 0, height: 0, element: undefined, center: { x: 0, y: 0 } };
+    private m_root: Root = {
+        init: false,
+        x: 332,
+        y: 30,
+        bottom: 0,
+        right: 0,
+        width: 0,
+        height: 0,
+        element: undefined,
+        center: {x: 0, y: 0}
+    };
     private m_document_perm: number = 3;
     private m_should_selection_view_update: boolean = true;
     private m_freeze: boolean = false;
     private m_clipboard: Clipboard;
-    private m_t: Function = () => { };
+    private m_t: Function = () => {
+    };
     private m_controller_path: string = '';
     private m_controller_frame: Point[] = [];
+
     constructor(context: Context) {
         super();
         this.context = context;
         this.m_clipboard = new Clipboard(context);
     }
+
     test() {
         const s = this.context.selection.selectedShapes[0];
         if (!s) return console.log('选择元素');
@@ -121,9 +137,11 @@ export class WorkSpace extends Watchable(Object) {
         const lt = m.computeCoord2(0, 0);
         return 'frame lt:' + lt.x + ',' + lt.y
     }
+
     get matrix() {
         return this.m_matrix;
     }
+
     get root(): Root { //return contentView HTMLElement info
         const root = this.m_root; // 如果已经更新到最新状态就不用再去查找Dom了(在改变contentview的Dom结构后会进行root数据更新)；
         if (root.init) {
@@ -132,8 +150,8 @@ export class WorkSpace extends Watchable(Object) {
             let content: any = document.querySelectorAll('#content');
             content = Array.from(content).find(i => (i as HTMLElement)?.dataset?.area === this.m_rootId);
             if (content) {
-                const { x, y, bottom, right } = content.getBoundingClientRect();
-                root.center = { x: (right - x) / 2, y: (bottom - y) / 2 };
+                const {x, y, bottom, right} = content.getBoundingClientRect();
+                root.center = {x: (right - x) / 2, y: (bottom - y) / 2};
                 root.x = x;
                 root.y = y;
                 root.bottom = bottom;
@@ -144,101 +162,169 @@ export class WorkSpace extends Watchable(Object) {
             return root;
         }
     }
+
     get center_on_page(): PageXY {
-        const { x, right, y, bottom } = this.root;
-        return this.matrix.inverseCoord({ x: (right - x) / 2, y: (bottom - y) / 2 });
+        const {x, right, y, bottom} = this.root;
+        return this.matrix.inverseCoord({x: (right - x) / 2, y: (bottom - y) / 2});
     }
+
     get pageView() {//return pageView HTMLElement
         const pageView: any = document.querySelector(`[data-area="${this.m_pageViewId}"]`);
         if (pageView) return pageView as Element;
     }
+
     get documentPerm() {
         return this.m_document_perm;
     }
+
     get isPreToTranslating() {
         return this.m_pre_to_translating;
     }
+
     get startPoint() {
         return this.m_mousedown_on_page;
     }
+
     get transforming() {
         return this.m_scaling || this.m_rotating || this.m_translating || this.m_creating || this.m_setting;
     }
+
     get select() {
         return this.m_selecting;
     }
+
     get isTranslating() {
         return this.m_translating;
     }
+
     get controller() {
         return this.m_controller;
     }
+
     get isPageDragging() {
         return this.m_page_dragging;
     }
+
     get isEditing() {
         return this.m_content_editing;
     }
+
     get shouldSelectionViewUpdate() {
         return this.m_should_selection_view_update;
     }
+
     get isFreeze() {
         return this.m_freeze;
     }
+
     get ctrlPath() {
         return this.m_controller_path;
     }
+
     setCtrlPath(val: string) {
         this.m_controller_path = val;
     }
+
+    private __cache_map: PointsOffset | undefined;
+
+    get cache_map() {
+        return this.__cache_map;
+    }
+    clear_cache_map() {
+        this.__cache_map = undefined;
+    }
+
+    gen_chahe_map_by_shape_one(shape: Shape, frame: Point[]) {
+        const anchor = shape.matrix2Root().computeCoord2(0, 0);
+        const lt = frame[0];
+        const rt = frame[1];
+        const rb = frame[2];
+        const lb = frame[3];
+        const pivot = {x: (lt.x + rb.x) / 2, y: (lt.y + rb.y) / 2};
+        this.__cache_map = {
+            lt: {x: lt.x - anchor.x, y: lt.y - anchor.y},
+            rb: {x: rb.x - anchor.x, y: rb.y - anchor.y},
+            pivot: {x: pivot.x - anchor.x, y: pivot.y - anchor.y},
+            rt: {x: rt.x - anchor.x, y: rt.y - anchor.y},
+            lb: {x: lb.x - anchor.x, y: lb.y - anchor.y}
+        }
+    }
+
+    revert_frame_by_map(shape: Shape) {
+        const achor = shape.matrix2Root().computeCoord2(0, 0);
+        if (!this.__cache_map) return [];
+        const map = this.__cache_map;
+        this.m_controller_frame = [
+            {x: map.lt.x + achor.x, y: map.lt.y + achor.y},
+            {x: map.rt.x + achor.x, y: map.rt.y + achor.y},
+            {x: map.rb.x + achor.x, y: map.rb.y + achor.y},
+            {x: map.lb.x + achor.x, y: map.lb.y + achor.y},
+        ]
+    }
+
     get controllerFrame() {
         return this.m_controller_frame;
     }
+
     setCFrame(v: Point[]) {
         this.m_controller_frame = v;
     }
+
     focusText() {
         this.notify(WorkSpace.TEXT_FORMAT)
     }
+
     downArboardTitle(ev: MouseEvent) {
         this.notify(WorkSpace.ONARBOARD__TITLE_MENU, ev)
     }
+
     setDocumentPerm(perm: number) {
         this.m_document_perm = perm;
     }
+
     get clipboard() {
         return this.m_clipboard;
     }
+
     t(content: string) {
         return this.m_t(content);
     }
+
     init(t: Function) {
         this.m_t = t;
     }
+
     setFreezeStatus(isFreeze: boolean) {
         this.m_freeze = isFreeze;
         this.notify(isFreeze ? WorkSpace.FREEZE : WorkSpace.THAW);
     }
+
     selectionViewUpdate() {
         this.notify(WorkSpace.SELECTION_VIEW_UPDATE);
     }
+
     setSelectionViewUpdater(isWork: boolean) {
         this.m_should_selection_view_update = isWork;
     }
+
     updateRoot(root: Root) {
         this.m_root = root;
     }
+
     contentEdit(v: boolean) {
         this.m_content_editing = v;
         this.notify(WorkSpace.PRE_EDIT);
     }
+
     pageDragging(v: boolean) {
         this.m_page_dragging = v;
         this.notify(WorkSpace.MATRIX_TRANSFORMATION);
     }
+
     setCtrl(v: 'page' | 'controller') {
         this.m_controller = v;
     }
+
     preToTranslating(from: MouseEvent | false) {
         if (from) {
             this.m_pre_to_translating = true;
@@ -249,14 +335,17 @@ export class WorkSpace extends Watchable(Object) {
             this.m_mousedown_on_page = undefined;
         }
     }
+
     setRootId(id: string) {
         this.m_rootId = id;
     }
+
     setPageViewId(id: string) {
         this.m_pageViewId = id
     }
+
     keyboardHandle(event: KeyboardEvent) {
-        const { ctrlKey, shiftKey, metaKey, target } = event;
+        const {ctrlKey, shiftKey, metaKey, target} = event;
         if (target instanceof HTMLInputElement) return; // 在输入框中输入时避免触发编辑器的键盘事件
         if (this.isFreeze) return;
         if (event.code === KeyboardKeys.A) {
@@ -290,29 +379,37 @@ export class WorkSpace extends Watchable(Object) {
             if (ctrlKey || metaKey) adapt_page(this.context);
         }
     }
+
     scaling(v: boolean) {
         this.m_scaling = v;
     }
+
     rotating(v: boolean) {
         this.m_rotating = v;
     }
+
     translating(v: boolean) {
         this.m_translating = v;
         this.notify(WorkSpace.TRANSLATING)
     }
+
     creating(v: boolean) {
         this.m_creating = v;
     }
+
     selecting(v: boolean) {
         this.m_selecting = v;
         this.notify(WorkSpace.SELECTING);
     }
+
     setting(v: boolean) {
         this.m_setting = v;
     }
+
     keydown_v(ctrlKey: boolean, metaKey: boolean) {
         if (ctrlKey || metaKey) this.notify(WorkSpace.PASTE);
     }
+
     keydown_a(ctrlKey: boolean, metaKey: boolean) {
         if (ctrlKey || metaKey) {
             const selection = this.context.selection, selected = selection.selectedShapes;
@@ -324,7 +421,9 @@ export class WorkSpace extends Watchable(Object) {
                     ts.selectTableCellRange(0, grid.rowCount - 1, 0, grid.colCount - 1, true);
                 } else {
                     const p_map = new Map();
-                    selected.forEach(s => { if (s.parent) p_map.set(s.parent.id, s.parent) });
+                    selected.forEach(s => {
+                        if (s.parent) p_map.set(s.parent.id, s.parent)
+                    });
                     if (p_map.size > 1) {
                         const page = selection.selectedPage;
                         if (page) selection.rangeSelectShape(page.childs);
@@ -338,9 +437,11 @@ export class WorkSpace extends Watchable(Object) {
             }
         }
     }
+
     keydown_i(ctrl: boolean, meta: boolean) {
         if (ctrl || meta) this.notify(WorkSpace.ITALIC);
     }
+
     keydown_z(context: Context, ctrl?: boolean, shift?: boolean, meta?: boolean) {
         const repo = context.repo;
         if ((ctrl || meta) && !shift) {
@@ -363,6 +464,7 @@ export class WorkSpace extends Watchable(Object) {
             if (this.context.selection.selectedShapes.length > 1) this.notify(WorkSpace.CLAC_ATTRI);
         }
     }
+
     keydown_c(ctrlKey?: boolean, metaKey?: boolean, shift?: boolean) {
         if ((ctrlKey || metaKey) && !shift) {
             this.notify(WorkSpace.COPY)
@@ -370,9 +472,10 @@ export class WorkSpace extends Watchable(Object) {
             this.context.comment.setVisibleComment(!this.context.comment.isVisibleComment);
         }
     }
+
     keydown_0(ctrl: boolean, meta: boolean) {
         if (ctrl || meta) {
-            const { center } = this.root;
+            const {center} = this.root;
             this.m_matrix.trans(-center.x, -center.y);
             const _s = 1 / this.m_matrix.m00;
             this.m_matrix.scale(_s);
@@ -380,13 +483,24 @@ export class WorkSpace extends Watchable(Object) {
             this.notify(WorkSpace.MATRIX_TRANSFORMATION);
         }
     }
+
     keydown_b(ctrl: boolean, meta: boolean) {
         if (ctrl || meta) this.notify(WorkSpace.BOLD);
     }
+
     keydown_u(ctrl: boolean, meta: boolean) {
         if (ctrl || meta) this.notify(WorkSpace.UNDER_LINE);
     }
+
     keydown_x(ctrl: boolean, meta: boolean, shift: boolean) {
         if ((ctrl || meta) && shift) this.notify(WorkSpace.DELETE_LINE);
+    }
+
+    can_translate(e: MouseEvent) {
+        const shapes = this.context.selection.selectedShapes;
+        const action = this.context.tool.action;
+        return e.button === 0 && shapes.length > 0
+            && (action === Action.AutoV || action === Action.AutoK)
+            && this.m_document_perm === Perm.isEdit;
     }
 }
