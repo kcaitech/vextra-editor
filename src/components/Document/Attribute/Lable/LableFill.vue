@@ -6,7 +6,8 @@ import { Selection } from '@/context/selection';
 import LableDropMenu from "./LableDropMenu.vue";
 import { ArrowDown } from '@element-plus/icons-vue';
 import { Color, Fill } from '@kcdesign/data';
-import { RGB2HSL, RGB2HSB } from '@/components/common/ColorPicker/utils'
+import { RGB2HSL, RGB2HSB } from '@/components/common/ColorPicker/utils';
+import LableTootip from './LableTootip.vue';
 const props = defineProps<{
     context: Context
 }>();
@@ -19,6 +20,9 @@ const selsectedShow = ref(false);
 const fillMenuItems = ref<string[]>(['HEX', 'RGB', 'HSL A', 'HSB A']);
 const fill_i = ref(0);
 const fills: FillItem[] = reactive([]);
+const copy_text = ref(false);
+const color_visible = ref();
+const alpha_visible = ref(-1);
 const onSelected = () => {
     if (selsectedShow.value) {
         props.context.menu.lableMenuMount('fill');
@@ -78,12 +82,12 @@ const toColor = (options: Color, type: string) => {
     let color = '';
     if (type === 'HEX') {
         color = toHex(options.red, options.green, options.blue);
-    }else if (type === 'RGB') {
+    } else if (type === 'RGB') {
         color = toRGBA(options.red, options.green, options.blue, options.alpha);
-    }else if(type === 'HSL A') {
+    } else if (type === 'HSL A') {
         color = toHSL(options);
     }
-    else if(type === 'HSB A') {
+    else if (type === 'HSB A') {
         color = toHSB(options);
     }
     return color;
@@ -94,18 +98,18 @@ const toHex = (r: number, g: number, b: number) => {
     return '#' + hex(r) + hex(g) + hex(b);
 }
 const toRGB = (r: number, g: number, b: number) => {
-  return "rgb(" +r + "," + g + "," + b + ")";
+    return "rgb(" + r + "," + g + "," + b + ")";
 }
 const toRGBA = (r: number, g: number, b: number, a?: number) => {
-  return "rgba(" +r + "，" + g + "，" + b + "，" + a + ")";
+    return "rgba(" + r + ", " + g + ", " + b + ", " + a + ")";
 }
 const toHSL = (color: Color) => {
-    const {h, s, l} = RGB2HSL(color);
-    return "hsla(" +Math.round(h) + "，" + Math.round(s * 100) + "%，" + Math.round(l * 100) + "%，" + color.alpha + ")";
+    const { h, s, l } = RGB2HSL(color);
+    return "hsla(" + Math.round(h) + ", " + Math.round(s * 100) + "%, " + Math.round(l * 100) + "%, " + color.alpha + ")";
 }
 const toHSB = (color: Color) => {
-    const {h, s, b} = RGB2HSB(color);
-    return "hsba(" +Math.round(h) + "，" + Math.round(s * 100) + "%，" + Math.round(b * 100) + "%，" + color.alpha + ")";
+    const { h, s, b } = RGB2HSB(color);
+    return "hsba(" + Math.round(h) + ", " + Math.round(s * 100) + "%, " + Math.round(b * 100) + "%, " + color.alpha + ")";
 }
 
 const filterAlpha = (a: number) => {
@@ -116,6 +120,30 @@ const filterAlpha = (a: number) => {
         return alpha.toFixed(1); // 保留一位小数
     } else {
         return alpha.toFixed(2); // 保留两位小数
+    }
+}
+
+const copyLable = async (e: MouseEvent) => {
+    const clickedDiv = e.target as HTMLDivElement; // 获取点击的<div>元素
+    const text = clickedDiv.textContent;
+    if (text) {
+        if (navigator.clipboard && window.isSecureContext) {
+            return navigator.clipboard.writeText(text).then(() => {
+                copy_text.value = true;
+
+            }, () => {
+                console.log('复制失败');
+            })
+        } else {
+            const textArea = document.createElement('textarea')
+            textArea.value = text;
+            document.body.appendChild(textArea)
+            textArea.focus()
+            textArea.select()
+            document.execCommand('copy')
+            copy_text.value = true;
+            textArea.remove()
+        }
     }
 }
 
@@ -153,12 +181,23 @@ onUnmounted(() => {
                 </div>
             </template>
             <template #body>
-                <div class="row" v-for="(f) in fills" :key="f.id">
+                <div class="row" v-for="(f, index) in fills" :key="f.id">
                     <span class="named">纯色</span>
                     <div style="display: flex;">
-                        <div class="color" :style="{ backgroundColor: toRGB(f.fill.color.red, f.fill.color.green, f.fill.color.blue) }"></div>
-                        <span class="name">{{ toColor(f.fill.color, fillMenuItems[fill_i]) }}</span>
-                        <span style="margin-left: 15px;" v-if="fillMenuItems[fill_i] === 'HEX'">{{ filterAlpha(f.fill.color.alpha * 100) + '%' }}</span>
+                        <div class="color"
+                            :style="{ backgroundColor: toRGB(f.fill.color.red, f.fill.color.green, f.fill.color.blue) }">
+                        </div>
+                        <LableTootip :copy_text="copy_text" :visible="color_visible === f.id">
+                            <span class="name" @click="copyLable" @mouseenter.stop="color_visible = f.id"
+                                @mouseleave.stop="color_visible = undefined, copy_text = false">{{ toColor(f.fill.color,
+                                    fillMenuItems[fill_i]) }}</span>
+                        </LableTootip>
+                        <LableTootip :copy_text="copy_text" :visible="alpha_visible === index" v-if="fillMenuItems[fill_i] === 'HEX'">
+                            <span style="margin-left: 15px;" v-if="fillMenuItems[fill_i] === 'HEX'" @click="copyLable"
+                                @mouseenter.stop="alpha_visible = index"
+                                @mouseleave.stop="alpha_visible = -1, copy_text = false">{{
+                                    filterAlpha(f.fill.color.alpha * 100) + '%' }}</span>
+                        </LableTootip>
                     </div>
                 </div>
             </template>
@@ -213,5 +252,4 @@ onUnmounted(() => {
     overflow: hidden;
     text-overflow: ellipsis;
     white-space: nowrap;
-}
-</style>
+}</style>

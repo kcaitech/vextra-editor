@@ -4,18 +4,49 @@ import PlatformSelected from './PlatformSelected.vue';
 import LableLayerInfo from "./LableLayerInfo.vue";
 import LableFill from "./LableFill.vue";
 import LableBorder from "./LableBorder.vue";
+import LableText from "./LableText.vue";
+import LableCode from "./LableCode.vue"
+import { computed, onMounted, onUnmounted, ref } from "vue";
+import { Selection } from '@/context/selection';
+import { Shape, ShapeType } from "@kcdesign/data";
 const props = defineProps<{
     context: Context
 }>();
+const shapes = ref<Shape[]>([]);
+const len = ref(0);
+const shapeType = ref();
+const getShapeInfo = () => {
+    if (props.context.selection.selectedShapes.length === 1) {
+        shapes.value = new Array(...props.context.selection.selectedShapes);
+        shapeType.value = shapes.value[0].type;
+    } else {
+        shapes.value = new Array();
+    }
+    len.value = shapes.value.length;
+}
+const selection_watcher = (t: number) => {
+    if (t === Selection.CHANGE_PAGE || t === Selection.CHANGE_SHAPE) {
+        getShapeInfo();
+    }
+}
+onMounted(() => {
+    getShapeInfo();
+    props.context.selection.watch(selection_watcher);
+})
+onUnmounted(() => {
+    props.context.selection.unwatch(selection_watcher);
+})
 </script>
 
 <template>
     <div class="container">
         <el-scrollbar>
-            <PlatformSelected :context="context"></PlatformSelected>
-            <LableLayerInfo :context="context"></LableLayerInfo>
-            <LableFill :context="context"></LableFill>
-            <LableBorder :context="context"></LableBorder>
+            <PlatformSelected v-if="len > 0" :context="context"></PlatformSelected>
+            <LableLayerInfo v-if="len > 0" :context="context"></LableLayerInfo>
+            <LableFill v-if="len > 0 && shapes[0].style.fills.length > 0" :context="context"></LableFill>
+            <LableBorder v-if="len > 0 && shapes[0].style.borders.length > 0" :context="context"></LableBorder>
+            <LableText v-if="len > 0 && shapeType === ShapeType.Text" :context="context"></LableText>
+            <LableCode v-if="len > 0"></LableCode>
         </el-scrollbar>
     </div>
 </template>

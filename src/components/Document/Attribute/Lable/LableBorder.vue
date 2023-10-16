@@ -6,8 +6,9 @@ import { Selection } from '@/context/selection';
 import LableDropMenu from "./LableDropMenu.vue";
 import { ArrowDown } from '@element-plus/icons-vue';
 import { Border, Color } from '@kcdesign/data';
-import { RGB2HSL, RGB2HSB } from '@/components/common/ColorPicker/utils'
+import { RGB2HSL, RGB2HSB } from '@/components/common/ColorPicker/utils';
 import { useI18n } from 'vue-i18n';
+import LableTootip from './LableTootip.vue';
 const { t } = useI18n();
 const props = defineProps<{
     context: Context
@@ -21,6 +22,15 @@ const selsectedShow = ref(false);
 const fillMenuItems = ref<string[]>(['HEX', 'RGB', 'HSL A', 'HSB A']);
 const fill_i = ref(0);
 const borders: BorderItem[] = reactive([]);
+const copy_text = ref(false);
+const address_visible = ref();
+const b_top_visible = ref();
+const b_right_visible = ref();
+const b_bottoms_visible = ref();
+const line_visible = ref();
+const color_visible = ref();
+const alpha_visible = ref();
+const b_left_visible = ref();
 const onSelected = () => {
     if (selsectedShow.value) {
         props.context.menu.lableMenuMount('fill');
@@ -76,8 +86,6 @@ const getBordersData = () => {
             }
             borders.unshift(b);
         }
-        console.log(borders, 'borders');
-
     }
 }
 
@@ -104,15 +112,15 @@ const toRGB = (r: number, g: number, b: number) => {
     return "rgb(" + r + "," + g + "," + b + ")";
 }
 const toRGBA = (r: number, g: number, b: number, a?: number) => {
-    return "rgba(" + r + "，" + g + "，" + b + "，" + a + ")";
+    return "rgba(" + r + ", " + g + ", " + b + ", " + a + ")";
 }
 const toHSL = (color: Color) => {
     const { h, s, l } = RGB2HSL(color);
-    return "hsla(" + Math.round(h) + "，" + Math.round(s * 100) + "%，" + Math.round(l * 100) + "%，" + color.alpha + ")";
+    return "hsla(" + Math.round(h) + ", " + Math.round(s * 100) + "%, " + Math.round(l * 100) + "%, " + color.alpha + ")";
 }
 const toHSB = (color: Color) => {
     const { h, s, b } = RGB2HSB(color);
-    return "hsba(" + Math.round(h) + "，" + Math.round(s * 100) + "%，" + Math.round(b * 100) + "%，" + color.alpha + ")";
+    return "hsba(" + Math.round(h) + ", " + Math.round(s * 100) + "%, " + Math.round(b * 100) + "%, " + color.alpha + ")";
 }
 
 const filterAlpha = (a: number) => {
@@ -123,6 +131,30 @@ const filterAlpha = (a: number) => {
         return alpha.toFixed(1); // 保留一位小数
     } else {
         return alpha.toFixed(2); // 保留两位小数
+    }
+}
+
+const copyLable = async (e: MouseEvent) => {
+    const clickedDiv = e.target as HTMLDivElement; // 获取点击的<div>元素
+    const text = clickedDiv.textContent;
+    if (text) {
+        if (navigator.clipboard && window.isSecureContext) {
+            return navigator.clipboard.writeText(text).then(() => {
+                copy_text.value = true;
+
+            }, () => {
+                console.log('复制失败');
+            })
+        } else {
+            const textArea = document.createElement('textarea')
+            textArea.value = text;
+            document.body.appendChild(textArea)
+            textArea.focus()
+            textArea.select()
+            document.execCommand('copy')
+            copy_text.value = true;
+            textArea.remove()
+        }
     }
 }
 
@@ -163,7 +195,11 @@ onUnmounted(() => {
                 <template v-for="(b, i) in borders" :key="b.id">
                     <div class="row">
                         <span class="named">位置</span>
-                        <div><span>{{ t(`attr.${b.border.position}`) }}</span></div>
+                        <LableTootip :copy_text="copy_text" :visible="address_visible === b.id + 'address'">
+                            <div><span @click="copyLable" @mouseenter.stop="address_visible = b.id + 'address'"
+                                    @mouseleave.stop="address_visible = undefined, copy_text = false">{{
+                                        t(`attr.${b.border.position}`) }}</span></div>
+                        </LableTootip>
                     </div>
                     <div class="color_row">
                         <span class="named">纯色</span>
@@ -171,24 +207,53 @@ onUnmounted(() => {
                             <div class="color"
                                 :style="{ backgroundColor: toRGB(b.border.color.red, b.border.color.green, b.border.color.blue) }">
                             </div>
-                            <span class="name">{{ toColor(b.border.color, fillMenuItems[fill_i]) }}</span>
-                            <span style="margin-left: 15px;" v-if="fillMenuItems[fill_i] === 'HEX'">{{
-                                filterAlpha(b.border.color.alpha * 100) + '%' }}</span>
+                            <LableTootip :copy_text="copy_text" :visible="color_visible === b.id + 'color'">
+                                <span class="name" @click="copyLable" @mouseenter.stop="color_visible = b.id + 'color'"
+                                    @mouseleave.stop="color_visible = undefined, copy_text = false">{{
+                                        toColor(b.border.color, fillMenuItems[fill_i]) }}</span>
+                            </LableTootip>
+                            <LableTootip :copy_text="copy_text" :visible="alpha_visible === b.id + 'alpha'">
+                                <span style="margin-left: 15px;" v-if="fillMenuItems[fill_i] === 'HEX'" @click="copyLable"
+                                    @mouseenter.stop="alpha_visible = b.id + 'alpha'"
+                                    @mouseleave.stop="alpha_visible = undefined, copy_text = false">{{
+                                        filterAlpha(b.border.color.alpha * 100) + '%' }}</span>
+                            </LableTootip>
                         </div>
                     </div>
                     <div class="row">
                         <span class="named">粗细</span>
                         <div>
-                            <span>{{ b.border.thickness + 'px' }}&nbsp;</span>
-                            <span>{{ b.border.thickness + 'px' }}&nbsp;</span>
-                            <span>{{ b.border.thickness + 'px' }}&nbsp;</span>
-                            <span>{{ b.border.thickness + 'px' }}</span>
+                            <LableTootip :copy_text="copy_text" :visible="b_top_visible === b.id + 'top'">
+                                <span @click="copyLable" @mouseenter.stop="b_top_visible = b.id + 'top'"
+                                    @mouseleave.stop="b_top_visible = undefined, copy_text = false">{{ b.border.thickness +
+                                        'px' }}&nbsp;</span>
+                            </LableTootip>
+                            <LableTootip :copy_text="copy_text" :visible="b_right_visible === b.id + 'right'">
+                                <span @click="copyLable" @mouseenter.stop="b_right_visible = b.id + 'right'"
+                                    @mouseleave.stop="b_right_visible = undefined, copy_text = false">{{ b.border.thickness +
+                                        'px' }}&nbsp;</span>
+                            </LableTootip>
+                            <LableTootip :copy_text="copy_text" :visible="b_bottoms_visible === b.id + 'bottom'">
+                                <span @click="copyLable" @mouseenter.stop="b_bottoms_visible = b.id + 'bottom'"
+                                    @mouseleave.stop="b_bottoms_visible = undefined, copy_text = false">{{ b.border.thickness +
+                                        'px' }}&nbsp;</span>
+                            </LableTootip>
+                            <LableTootip :copy_text="copy_text" :visible="b_left_visible === b.id + 'left'">
+                                <span @click="copyLable" @mouseenter.stop="b_left_visible = b.id + 'left'"
+                                    @mouseleave.stop="b_left_visible = undefined, copy_text = false">{{ b.border.thickness +
+                                        'px' }}</span>
+                            </LableTootip>
                         </div>
                     </div>
                     <div class="row">
                         <span class="named">样式</span>
                         <div style="display: flex;">
-                            <span style="color: #a5a5a5;">{{ b.border.borderStyle.gap > 0 ? '虚线' : '实线' }}</span>
+                            <LableTootip :copy_text="copy_text" :visible="line_visible === b.id + 'line'">
+                                <span style="color: #a5a5a5;" @click="copyLable"
+                                    @mouseenter.stop="line_visible = b.id + 'line'"
+                                    @mouseleave.stop="line_visible = undefined, copy_text = false">{{
+                                        b.border.borderStyle.gap > 0 ? '虚线' : '实线' }}</span>
+                            </LableTootip>
                             <span v-if="b.border.borderStyle.gap > 0" style="margin-left: 10px;">{{ b.border.borderStyle.gap
                             }}</span>
                             <span v-if="b.border.borderStyle.gap > 0" style="margin-left: 10px;">{{

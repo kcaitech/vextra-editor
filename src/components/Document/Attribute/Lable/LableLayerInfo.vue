@@ -6,6 +6,8 @@ import { Selection } from '@/context/selection';
 import { get_rotation } from '@/utils/attri_setting';
 import { GroupShape, PathShape, PathShape2, RectShape, Shape, ShapeType, TextShape } from '@kcdesign/data';
 import { Menu } from '@/context/menu';
+import Tooltip from '@/components/common/Tooltip.vue';
+import LableTootip from './LableTootip.vue';
 const props = defineProps<{
     context: Context
 }>();
@@ -16,6 +18,14 @@ const rotate = ref(0);
 const radius = ref<{ lt: number, rt: number, rb: number, lb: number }>({ lt: 0, rt: 0, rb: 0, lb: 0 });
 const watchedShapes = new Map();
 const unit = ['pt', 'px', 'dp', 'rpx'];
+const copy_text = ref(false);
+const name_visible = ref(false)
+const x_visible = ref(false)
+const y_visible = ref(false)
+const w_visible = ref(false)
+const h_visible = ref(false)
+const radius_visible = ref(false)
+const rotate_visible = ref(false)
 const platfrom = ref(props.context.menu.isPlatfrom);
 const multiple = ref(props.context.menu.isMulriple);
 function watch_shapes() {
@@ -85,6 +95,30 @@ const innerRaduis = (r: { lt: number, rt: number, rb: number, lb: number }, type
         return `${lt}${type} ${rt}${type} ${rb}${type} ${lb}${type}`;
     }
 }
+
+const copyLable = async (e: MouseEvent) => {
+    const clickedDiv = e.target as HTMLDivElement; // 获取点击的<div>元素
+    const text = clickedDiv.textContent;
+    if (text) {
+        if (navigator.clipboard && window.isSecureContext) {
+            return navigator.clipboard.writeText(text).then(() => {
+                copy_text.value = true;
+            }, () => {
+                console.log('复制失败');
+            })
+        } else {
+            const textArea = document.createElement('textarea')
+            textArea.value = text;
+            document.body.appendChild(textArea)
+            textArea.focus()
+            textArea.select()
+            document.execCommand('copy')
+            copy_text.value = true;
+            textArea.remove()
+        }
+    }
+}
+
 const menu_watcher = (t: number) => {
     if (t === Menu.LABLE_PLATFROM_CHANGE) {
         platfrom.value = props.context.menu.isPlatfrom;
@@ -95,6 +129,7 @@ const menu_watcher = (t: number) => {
         getShapeInfo();
     }
 }
+
 // hooks
 onMounted(() => {
     watch_shapes();
@@ -114,29 +149,62 @@ onUnmounted(() => {
             <template #body>
                 <div class="row">
                     <span class="named">名称</span>
-                    <div><span class="name">{{ name }}</span></div>
+                    <LableTootip :copy_text="copy_text" :visible="name_visible">
+                        <div><span class="name" @click="copyLable" @mouseenter.stop="name_visible = true"
+                                @mouseleave.stop="name_visible = false, copy_text = false">{{ name }}</span></div>
+                    </LableTootip>
                 </div>
                 <div class="row">
                     <span class="named">位置</span>
                     <div style="display: flex;">
-                        <span style="display: block; width: 50%;"><span class="name" style="color: #a5a5a5;">X</span> {{ xy.x
-                        }}{{ unit[platfrom] }}</span>
-                        <span style="display: block; width: 50%;"><span class="name" style="color: #a5a5a5;">Y</span> {{ xy.y
-                        }}{{ unit[platfrom] }}</span>
+                        <span style="display: block; width: 50%;"><span class="name"
+                                style="color: #a5a5a5; margin-right: 5px;">X</span>
+                            <LableTootip :copy_text="copy_text" :visible="x_visible">
+                                <span @click="copyLable" @mouseenter.stop="x_visible = true"
+                                    @mouseleave.stop="x_visible = false, copy_text = false">
+                                    {{ xy.x }}{{ unit[platfrom] }}
+                                </span>
+                            </LableTootip>
+                        </span>
+                        <span style="display: block; width: 50%;"><span class="name"
+                                style="color: #a5a5a5; margin-right: 5px">Y</span>
+                            <LableTootip :copy_text="copy_text" :visible="y_visible">
+                                <span @click="copyLable" @mouseenter.stop="y_visible = true"
+                                    @mouseleave.stop="y_visible = false, copy_text = false">{{ xy.y }}{{ unit[platfrom]
+                                    }}</span>
+                            </LableTootip>
+                        </span>
                     </div>
                 </div>
                 <div class="row">
                     <span class="named">大小</span>
                     <div style="display: flex;">
-                        <span style="display: block; width: 50%;"><span class="name" style="color: #a5a5a5;">W</span> {{ size.w
-                        }}{{ unit[platfrom] }}</span>
-                        <span style="display: block; width: 50%;"><span class="name" style="color: #a5a5a5;">H</span> {{ size.h
-                        }}{{ unit[platfrom] }} </span>
+                        <span style="display: block; width: 50%;"><span class="name"
+                                style="color: #a5a5a5; margin-right: 5px">W</span>
+                            <LableTootip :copy_text="copy_text" :visible="w_visible">
+                                <span @click="copyLable" @mouseenter.stop="w_visible = true"
+                                    @mouseleave.stop="w_visible = false, copy_text = false">
+                                    {{ size.w }}{{ unit[platfrom] }}
+                                </span>
+                            </LableTootip>
+                        </span>
+                        <span style="display: block; width: 50%;"><span class="name"
+                                style="color: #a5a5a5; margin-right: 5px">H</span>
+                            <LableTootip :copy_text="copy_text" :visible="h_visible">
+                                <span @click="copyLable" @mouseenter.stop="h_visible = true"
+                                    @mouseleave.stop="h_visible = false, copy_text = false">
+                                    {{ size.h }}{{ unit[platfrom] }}
+                                </span>
+                            </LableTootip>
+                        </span>
                     </div>
                 </div>
                 <div class="row" v-if="rotate > 0">
                     <span class="named">角度</span>
-                    <div><span>{{ rotate }}deg</span></div>
+                    <LableTootip :copy_text="copy_text" :visible="rotate_visible">
+                        <div><span @click="copyLable" @mouseenter.stop="rotate_visible = true"
+                                @mouseleave.stop="rotate_visible = false, copy_text = false">{{ rotate }}deg</span></div>
+                    </LableTootip>
                 </div>
                 <!-- <div class="row">
                     <span class="named">不透明度</span>
@@ -144,7 +212,11 @@ onUnmounted(() => {
                 </div> -->
                 <div class="row" v-if="innerRaduis(radius, unit[platfrom], true)">
                     <span class="named">圆角</span>
-                    <div><span class="name">{{ innerRaduis(radius, unit[platfrom]) }}</span></div>
+                    <LableTootip :copy_text="copy_text" :visible="radius_visible">
+                        <div><span class="name" @click="copyLable" @mouseenter.stop="radius_visible = true"
+                                @mouseleave.stop="radius_visible = false, copy_text = false">{{ innerRaduis(radius,
+                                    unit[platfrom]) }}</span></div>
+                    </LableTootip>
                 </div>
             </template>
         </LableType>
@@ -165,8 +237,6 @@ onUnmounted(() => {
 
     >div {
         flex: 1;
-
-
     }
 }
 
@@ -174,5 +244,4 @@ onUnmounted(() => {
     overflow: hidden;
     text-overflow: ellipsis;
     white-space: nowrap;
-}
-</style>
+}</style>
