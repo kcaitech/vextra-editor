@@ -2,16 +2,15 @@ import {debounce} from "lodash";
 import {Context} from "@/context";
 import {ClientXY, PageXY} from "@/context/selection";
 import {
-    AsyncCreator,
-    Shape,
-    ShapeFrame,
-    ShapeType,
-    GroupShape,
-    TextShape,
-    Matrix,
-    Color,
-    TableShape,
-    ContactForm
+  AsyncCreator,
+  Shape,
+  ShapeFrame,
+  ShapeType,
+  GroupShape,
+  TextShape,
+  Matrix,
+  Color,
+  ContactForm, SymbolShape, Page
 } from "@kcdesign/data";
 import {Action, ResultByAction} from "@/context/tool";
 import {Perm, WorkSpace} from '@/context/workspace';
@@ -760,12 +759,6 @@ export function is_need_skip_to_render(shape: Shape, matrix: Matrix) { // 不是
   const rt = matrix.computeCoord2(f.width, f.height);
   return Math.hypot(rt.x - lt.x, rt.y - lt.y) < 72;
 }
-export function top_side(shape: Shape, matrix: Matrix) {
-  const f = shape.frame;
-  const lt = matrix.computeCoord2(0, 0);
-  const rt = matrix.computeCoord2(f.width, f.height);
-  return Math.hypot(rt.x - lt.x, rt.y - lt.y)
-}
 /**
  * @description 图形追踪，可跨页面
  * @param context
@@ -845,22 +838,7 @@ export function root_trans(context: Context, e: WheelEvent, step: number) {
         context.workspace.matrix.trans(0, delta);
     }
 }
-export function is_shape_out(context: Context, shape: Shape, matrix: Matrix) {
-    const { x, y, bottom, right } = context.workspace.root;
-    const { width, height } = shape.frame;
-    let point: { x: number, y: number }[] = [{ x: 0, y: 0 }, { x: width, y: 0 }, { x: width, y: height }, { x: 0, y: height }];
-    for (let i = 0; i < 4; i++) point[i] = matrix.computeCoord3(point[i]);
-    return Math.min(point[0].x, point[1].x, point[2].x, point[3].x) > right - x ||
-        Math.max(point[0].x, point[1].x, point[2].x, point[3].x) < 0 ||
-        Math.max(point[0].y, point[1].y, point[2].y, point[3].y) < 0 ||
-        Math.min(point[0].y, point[1].y, point[2].y, point[3].y) > bottom - y;
-}
-export function is_need_skip_to_render(shape: Shape, matrix: Matrix) { // 不是准确的方法，但是综合效果最好
-    const f = shape.frame;
-    const lt = matrix.computeCoord2(0, 0);
-    const rt = matrix.computeCoord2(f.width, f.height);
-    return Math.hypot(rt.x - lt.x, rt.y - lt.y) < 72;
-}
+
 export function top_side(shape: Shape, matrix: Matrix) {
     const f = shape.frame;
     const lt = matrix.computeCoord2(0, 0);

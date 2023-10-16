@@ -366,7 +366,6 @@ async function clipboard_text_html(context: Context, data: any, xy?: PageXY) {
                 console.log('return to center')
                 // modify_frame_by_xy(context.workspace.center_on_page, shapes);
             }
-            const page = context.selection.selectedPage;
             if (page) {
                 const editor = context.editor.editor4Page(page);
                 const r = editor.pasteShapes1(page, shapes);

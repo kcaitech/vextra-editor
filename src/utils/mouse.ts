@@ -259,9 +259,9 @@ export function shapes_picker(e: MouseEvent, context: Context, p: { x: number, y
     if (hoveredShape) {
         e.shiftKey ? selection.rangeSelectShape([...selected, hoveredShape]) : selection.selectShape(hoveredShape);
     } else {
-        const shapes = selection.getShapesByXY(p, e.metaKey || e.ctrlKey, selected);
-        if (shapes.length) {
-            selection.selectShape(shapes[0]);
+        const shape = selection.getShapesByXY(p, e.metaKey || e.ctrlKey, selected);
+        if (shape) {
+            selection.selectShape(shape);
         } else {
             selection.resetSelectShapes();
         }
