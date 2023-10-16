@@ -348,7 +348,7 @@ const getDocumentInfo = async () => {
         // documentKey.value = data
 
         const repo = new Repository();
-        const importDocumentParams: StorageOptions = {
+        const storageOptions: StorageOptions = {
             endPoint: data.endpoint,
             region: data.region,
             accessKey: data.access_key,
@@ -358,9 +358,9 @@ const getDocumentInfo = async () => {
         }
         let storage: IStorage;
         if (data.provider === "oss") {
-            storage = new OssStorage(importDocumentParams);
+            storage = new OssStorage(storageOptions);
         } else {
-            storage = new S3Storage(importDocumentParams);
+            storage = new S3Storage(storageOptions);
         }
         const path = docInfo.value.document.path;
         const document = await importDocument(storage, path, "", dataInfo.data.document.version_id ?? "", repo)
@@ -443,7 +443,7 @@ function init_doc() {
         timer = setInterval(() => {
             getDocumentAuthority();
         }, 30000);
-    } else { // 从本地读取文件
+    } else {
         if ((window as any).sketchDocument) {
             context = new Context((window as any).sketchDocument as Document, ((window as any).skrepo as CoopRepository));
             null_context.value = false;
