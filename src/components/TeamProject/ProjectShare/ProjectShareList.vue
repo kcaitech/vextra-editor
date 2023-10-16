@@ -30,10 +30,9 @@ const { projectList, is_favor, favoriteList, updateFavor } = inject('shareData')
 
 const tableData = ref<any[]>( projectList.value.filter(item => !item.is_in_team))
 onMounted(() => {
-    // tableData.value = projectList.value.filter(item => !item.is_in_team)
+    tableData.value = projectList.value.filter(item => !item.is_in_team)
 })
 watchEffect(() => {
-    console.log('1111');
     
     tableData.value = projectList.value.filter(item => !item.is_in_team)
 })
