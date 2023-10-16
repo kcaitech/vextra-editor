@@ -569,7 +569,7 @@ export function paster_short(context: Context, shapes: Shape[]): Shape[] {
             console.log('error io');
             return [];
         }
-        const _r = editor.insertShapes2(new_source, actions);
+        const _r = editor.pasteShapes2(new_source, actions);
         _r && _r.length && (result = _r);
     }
     result.length && context.selection.rangeSelectShape(result);
