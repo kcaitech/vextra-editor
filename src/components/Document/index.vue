@@ -145,6 +145,7 @@ function keyboardEventHandler(event: KeyboardEvent) {
         }
         if (context.workspace.documentPerm !== Perm.isEdit || context.tool.isLable) {
             if (permKeyBoard(event)) {
+                console.log(event,'dd');
                 context.workspace.keyboardHandle(event); // 只读可评论的键盘事件
             }
         } else {
@@ -156,7 +157,8 @@ function keyboardEventHandler(event: KeyboardEvent) {
 }
 const permKeyBoard = (e: KeyboardEvent) => {
     const { code, ctrlKey, metaKey, shiftKey } = e;
-    if (code === 'KeyV' || code === 'KeyC' || code === 'KeyA' || code === 'Digit0 ' || ctrlKey || metaKey || shiftKey) return true
+    if(code === 'KeyV') return false;
+    if (code === 'KeyC' || code === 'KeyA' || code === 'Digit0 ' || ctrlKey || metaKey || shiftKey) return true
     else false
 }
 

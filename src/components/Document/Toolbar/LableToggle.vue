@@ -10,7 +10,8 @@ const props = defineProps<Props>();
 const isLable = ref(false);
 const visible = ref(false)
 const vis = ref(false);
-watch(isLable, (v) => {
+const isActive = ref(false);
+watch(isActive, (v) => {
     props.context.tool.setLableSwitch(v);
     vis.value = true;
 })
@@ -28,15 +29,24 @@ const onMouseleave = () => {
     vis.value = false;
 }
 
+const toggleSwitch = () => {
+    isActive.value = !isActive.value;
+}
+
 </script>
 
 <template>
     <div class="content_lable">
         <el-tooltip class="box-item" effect="dark" content="开发模式" placement="bottom" :show-after="600" :offset="10"
             :hide-after="0" :visible="vis ? false : visible">
-            <el-switch @mouseenter.stop="onMouseenter" @mouseleave.stop="onMouseleave" v-model="isLable"
-                :active-action-icon="Switch" :inactive-action-icon="Switch"
-                style="--el-switch-on-color: #898989; --el-switch-off-color: #898989" />
+            <div class="d-switch" :class="{ 'is-checked': isActive }" @mouseenter.stop="onMouseenter"
+                @mouseleave.stop="onMouseleave">
+                <input class="d-switch__input" ref="input" type="checkbox" :checked="isActive" @change="toggleSwitch"
+                    :true-value="isActive" :false-value="!isActive" />
+                <span class="d-switch_action">
+                    <Switch style="width: 14px; height: 14px;" />
+                </span>
+            </div>
         </el-tooltip>
     </div>
 </template>
@@ -49,30 +59,55 @@ const onMouseleave = () => {
     height: 100%;
     width: 50px;
     margin: 0 10px;
+}
 
-    .el-switch {
-        :deep(.el-switch__core .el-switch__action) {
-            background-color: black;
+.d-switch {
+    position: relative;
+    height: 25px;
+    transition: background 0.2s;
+    width: 40px;
+    background: rgb(117, 117, 117);
+    border-radius: 10px;
+    display: inline-flex;
+    align-items: center;
+    vertical-align: middle;
+
+    .d-switch__input {
+        position: relative;
+        z-index: 1;
+        margin: 0;
+        width: 100%;
+        height: 100%;
+        opacity: 0;
+    }
+
+    .d-switch_action {
+        position: absolute;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        transition: 0.2s;
+        left: 2px;
+        top: 2px;
+        z-index: 0;
+        height: 20px;
+        width: 20px;
+        background: black;
+        border-radius: 50%;
+
+        svg {
+            color: #fff;
         }
-
     }
 
-    :deep(.el-switch__core) {
-        height: 25px;
+    &.is-checked {
+        background: #898989;
 
-        .el-switch__action {
-            width: 20px;
-            height: 20px;
-
-            svg {
-                color: #fff;
-            }
+        .d-switch_action {
+            left: 100%;
+            background: #a42bc5;
+            margin-left: -22px;
         }
     }
-
-    :deep(.el-switch.is-checked .el-switch__core .el-switch__action) {
-        background-color: #a42bc5 !important;
-        left: calc(100% - 20px);
-    }
-
-}</style>
+}
+</style>

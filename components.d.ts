@@ -103,6 +103,7 @@ declare module '@vue/runtime-core' {
     LableDropMenu: typeof import('./src/components/Document/Attribute/Lable/LableDropMenu.vue')['default']
     LableFill: typeof import('./src/components/Document/Attribute/Lable/LableFill.vue')['default']
     LableLayerInfo: typeof import('./src/components/Document/Attribute/Lable/LableLayerInfo.vue')['default']
+    LableMultiSelect: typeof import('./src/components/Document/Attribute/Lable/LableMultiSelect.vue')['default']
     LableText: typeof import('./src/components/Document/Attribute/Lable/LableText.vue')['default']
     LableToggle: typeof import('./src/components/Document/Toolbar/LableToggle.vue')['default']
     LableTootip: typeof import('./src/components/Document/Attribute/Lable/LableTootip.vue')['default']

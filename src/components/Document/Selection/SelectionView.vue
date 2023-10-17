@@ -5,7 +5,7 @@ import { Selection } from "@/context/selection";
 import { Shape, ShapeType, Matrix } from "@kcdesign/data";
 import { ControllerType, ctrlMap } from "./Controller/map";
 import { CtrlElementType } from "@/context/workspace";
-import { Action } from "@/context/tool";
+import { Action, Tool } from "@/context/tool";
 import { getHorizontalAngle, XYsBounding } from "@/utils/common";
 import { WorkSpace } from "@/context/workspace";
 import { permIsEdit } from "@/utils/content";
@@ -96,6 +96,13 @@ function selectionWatcher(t?: any) { // selection的部分动作可触发更新
     } else if (t === Selection.CHANGE_SHAPE_HOVER) {
         matrix.reset(props.matrix);
         createShapeTracing();
+        watchShapes();
+    }
+}
+function tool_watcher(t: number) {
+    if (t === Tool.LABLE_CHANGE) {
+        matrix.reset(props.matrix);
+        createController();
         watchShapes();
     }
 }
@@ -225,6 +232,7 @@ watch(() => props.matrix, update_by_matrix, { deep: true });
 onMounted(() => {
     props.context.selection.watch(selectionWatcher);
     props.context.workspace.watch(workspace_watcher);
+    props.context.tool.watch(tool_watcher);
     document.addEventListener('keydown', keyboard_down_watcher);
     document.addEventListener('keyup', keyboard_up_watcher);
     window.addEventListener('blur', window_blur)
@@ -232,6 +240,7 @@ onMounted(() => {
 onUnmounted(() => {
     props.context.selection.unwatch(selectionWatcher);
     props.context.workspace.unwatch(workspace_watcher);
+    props.context.tool.unwatch(tool_watcher);
     document.removeEventListener('keydown', keyboard_down_watcher);
     document.removeEventListener('keyup', keyboard_up_watcher);
     window.removeEventListener('blur', window_blur);

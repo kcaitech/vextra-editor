@@ -32,6 +32,6 @@ const props = defineProps<{
     }
 }
 .border_t {
-    border-bottom: 1px solid #ccc;
+    border-bottom: 1px solid rgba($color: #ccc, $alpha: 0.5);
 }
 </style>
