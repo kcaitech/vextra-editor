@@ -1,10 +1,10 @@
-import { GroupShape, ImageShape, PathShape, Shape, SymbolRefShape, TextShape } from "@kcdesign/data";
+import { GroupShape, ImageShape, PathShape, RectShape, Shape, SymbolRefShape, TextShape } from "@kcdesign/data";
 import { Artboard } from "@kcdesign/data";
 import { renderArtboard as art } from "@kcdesign/data";
 import { renderGroup as group } from "@kcdesign/data";
 import { renderImage as image } from "@kcdesign/data";
 import { renderPathShape as path } from "@kcdesign/data";
-import { renderRecShape as rect } from "@kcdesign/data";
+import { renderPathShape as rect } from "@kcdesign/data";
 import { renderTextShape as text } from "@kcdesign/data";
 import { renderSymbolRef as symref } from "@kcdesign/data";
 import { ShapeType, BoolOp } from "@kcdesign/data";
@@ -62,7 +62,7 @@ comsMap.set(ShapeType.Path, (data: Shape) => {
     return path(h, data as PathShape, undefined, undefined, undefined);
 });
 comsMap.set(ShapeType.Rectangle, (data: Shape) => {
-    return rect(h, data, undefined, undefined, undefined);
+    return rect(h, data as RectShape, undefined, undefined, undefined);
 });
 comsMap.set(ShapeType.Text, (data: Shape) => {
     return text(h, data as TextShape, undefined, undefined, undefined);
