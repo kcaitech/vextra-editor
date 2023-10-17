@@ -1,183 +1,130 @@
 <script lang="ts" setup>
-import { useI18n } from 'vue-i18n';
-import { Context } from '@/context';
+import {useI18n} from 'vue-i18n';
+import {Context} from '@/context';
 import TypeHeader from '../TypeHeader.vue';
-import { ref, nextTick } from 'vue'
+import {onMounted, onUnmounted, ref, watch} from 'vue'
 import CompLayerShow from '../PopoverMenu/CompLayerShow.vue';
-import { ShapeType, SymbolShape } from '@kcdesign/data';
-const { t } = useI18n();
-const props = defineProps<{
+import {SymbolShape, VariableType} from '@kcdesign/data';
+import {make_union, variable_sort} from "@/utils/symbol";
+import AttributeCard from "./AttributeCard.vue";
+import {AttriListItem} from "@/utils/symbol";
+
+const {t} = useI18n();
+
+interface Props {
     context: Context
     shape: SymbolShape
-}>()
+}
+
+const props = defineProps<Props>()
 const compsType = ref(false)
 const selectComps = ref<HTMLDivElement>()
-const attrInput = ref('属性1')
-const showRename = ref(false)
 const isaddStateDialog = ref(false)
-const iseditLayerShow = ref(false)
-const moduleStates = ref<any[]>([])
-const showStates = ref<any[]>([])
-const textStates = ref<any[]>([])
-const toggleStates = ref<any[]>([])
-const stateIndex = ref(-1)
-const layerIndex = ref(-1)
-const textIndex = ref(-1)
-const iseditText = ref(false)
-const toggleIndex = ref(-1)
-const iseditToggle = ref(false)
-const dislogTitle = ref('');
+const dialog_title = ref('');
 const atrrdialog = ref<HTMLDivElement>();
-const layer_show = ref<any>([]);
-const text_dia = ref<any>([]);
-const module_dia = ref<any>([]);
-const addType = ref<'Show' | 'Text' | 'toggle'>('Show')
+const addType = ref<VariableType>(VariableType.Visible);
+const variables = ref<AttriListItem[]>();
 
-const selectCompsType = () => {
+function close() {
+    compsType.value = false;
+}
+
+const closeCompsType = (e: Event) => {
+    if (e.target instanceof Element && !e.target.closest('.add-comps')) {
+        close();
+        return;
+    }
+    document.removeEventListener('mousedown', closeCompsType)
+}
+
+function update_variable_list() {
+    console.log('update_variable_list');
+    variables.value = variable_sort(props.shape);
+    console.log('sort result: ', variables.value);
+}
+
+/**
+ * @description 选择需要添加的组件变量类型
+ */
+function selectCompsType() {
     if (compsType.value) {
-        return compsType.value = false
+        close();
+        return;
     }
     compsType.value = true
     document.addEventListener('mousedown', closeCompsType)
 }
 
-const closeCompsType = (e: Event) => {
-    if (e.target instanceof Element && !e.target.closest('.add-comps')) {
-        compsType.value = false
-    }
-    document.removeEventListener('mousedown', closeCompsType)
-}
-
-const onRename = (index: number) => {
-    stateIndex.value = index;
-    attrInput.value = moduleStates.value[index].attrName;
-    showRename.value = true
-    nextTick(() => {
-        const el = document.querySelector(`[data-area="state-${index}"]`);
-        if (el) {
-            (el as HTMLInputElement).focus();
-        }
-    })
-
-}
-
-const selectAllText = (event: FocusEvent) => {
-    (event.target as HTMLInputElement).select(); // 选择输入框内的文本
-};
-
-const closeInput = () => {
-    if (attrInput.value.trim().length === 0) return showRename.value = false
-    showRename.value = false
-}
-
-const editName = (e: KeyboardEvent) => {
-    if (attrInput.value.trim().length === 0) return showRename.value = false
-    if (e.code === 'Enter' || e.code === 'NumpadEnter') {
-        showRename.value = false
-    }
-}
-
-const layerIsShow = () => {
-    dislogTitle.value = t('compos.layer_isShow');
-    addType.value = 'Show';
-    getDialogPosi(atrrdialog.value);
-    isaddStateDialog.value = true;
-}
-
+/**
+ * @description 添加一个组件状态
+ */
 const addModuleState = () => {
-    const page = props.context.selection.selectedPage;
-    const shape = props.shape;
-    if (shape && shape.type === ShapeType.Symbol && !shape.isUnionSymbolShape && page) {
-        const editor = props.context.editor4Page(page);
-        const make_result = editor.makeSymbolUnion(shape, t('shape.default'))
-        if (make_result) {
-            props.context.selection.selectShape(make_result);
-        }
+    const make_result = make_union(props.context, t)
+    if (make_result) {
+        props.context.selection.selectShape(make_result);
     }
-    const len = moduleStates.value.length + 1;
-    const state = {
-        attrName: '属性' + len,
-        attrValue: '默认'
-    }
-    moduleStates.value.push(state);
 }
-
-const addAttrSate = (data: any, type: 'Show' | 'Text' | 'toggle' | '') => {
-    if (type === 'Show') {
-        const state = {
-            attrName: data.name,
-            visi: data.visi
-        }
-        showStates.value.push(state);
-    } else if (type === 'Text') {
-        const state = {
-            attrName: data.name,
-            text: data.text
-        }
-        textStates.value.push(state);
-    } else if (type === 'toggle') {
-        const state = {
-            attrName: data.name,
-            value: '默认'
-        }
-        toggleStates.value.push(state);
-    }
-    isaddStateDialog.value = false;
+/**
+ * @description 添加一条显示状态
+ */
+const layerIsShow = () => {
+    dialog_title.value = t('compos.layer_isShow');
+    addType.value = VariableType.Visible;
+    get_dialog_posi(atrrdialog.value);
+    isaddStateDialog.value = true;
 }
-const editLayer = (index: number) => {
-    getDialogPosi(layer_show.value[index]);
-    iseditLayerShow.value = true;
-    layerIndex.value = index;
-}
-const saveLayerShow = () => {
-    iseditLayerShow.value = false;
-}
-
-//文本属性
+/**
+ * @description 文本内容
+ */
 const addTextDialog = () => {
-    dislogTitle.value = t('compos.text_content');
-    addType.value = 'Text';
-    getDialogPosi(atrrdialog.value);
+    dialog_title.value = t('compos.text_content');
+    addType.value = VariableType.Text;
+    get_dialog_posi(atrrdialog.value);
     isaddStateDialog.value = true;
 }
-const editText = (index: number) => {
-    getDialogPosi(text_dia.value[index]);
-    iseditText.value = true;
-    textIndex.value = index;
-}
-const saveTextContext = () => {
-    iseditText.value = false;
-}
-
-//实例切换
+/**
+ * @description 实例切换
+ */
 const examplesToggle = () => {
-    dislogTitle.value = t('compos.instance_toggle');
-    addType.value = 'toggle';
-    getDialogPosi(atrrdialog.value);
+    dialog_title.value = t('compos.instance_toggle');
+    addType.value = VariableType.Instance;
+    get_dialog_posi(atrrdialog.value);
     isaddStateDialog.value = true;
 }
-const editToggle = (index: number) => {
-    getDialogPosi(module_dia.value[index]);
-    iseditToggle.value = true;
-    toggleIndex.value = index;
-}
-const saveExamplesToggle = () => {
-    iseditToggle.value = false;
-}
 
-const dialog_posi = ref({ x: 0, y: 0 });
-const getDialogPosi = (div: HTMLDivElement | undefined) => {
+const dialog_posi = ref({x: 0, y: 0});
+/**
+ * @description 根据触发元素获取弹窗位置
+ */
+const get_dialog_posi = (div: HTMLDivElement | undefined) => {
     if (div) {
         const el = div.getBoundingClientRect();
         dialog_posi.value.x = el.x - (el.width + 32);
         dialog_posi.value.y = el.y;
     }
 }
+
+function variable_watcher(args: any[]) {
+    if (args && args.includes('map')) update_variable_list();
+}
+
+watch(() => props.shape, (v, o) => {
+    v.watch(variable_watcher);
+    o.unwatch(variable_watcher);
+})
+onMounted(() => {
+    props.shape.watch(variable_watcher);
+    update_variable_list();
+})
+onUnmounted(() => {
+    props.shape.unwatch(variable_watcher);
+})
 </script>
 
 <template>
     <div style="position: relative;" ref="atrrdialog">
-        <TypeHeader :title="t('compos.compos_attr')" class="mt-24">
+        <!--header-->
+        <TypeHeader :title="t('compos.compos_attr')" class="mt-24" @click="selectCompsType">
             <template #tool>
                 <div class="add-comps" @click="selectCompsType">
                     <svg-icon icon-class="add"></svg-icon>
@@ -198,7 +145,7 @@ const getDialogPosi = (div: HTMLDivElement | undefined) => {
                         <div class="status" @click="examplesToggle">
                             <div>
                                 <svg-icon icon-class="pattern-rectangle"
-                                    style="transform: rotate(45deg);width: 10px; height: 10px;"></svg-icon>
+                                          style="transform: rotate(45deg);width: 10px; height: 10px;"></svg-icon>
                             </div>
                             <span>{{ t('compos.instance_toggle') }}</span>
                         </div>
@@ -212,93 +159,18 @@ const getDialogPosi = (div: HTMLDivElement | undefined) => {
                 </div>
             </template>
         </TypeHeader>
-        <CompLayerShow :context="context" v-if="isaddStateDialog" @close-dialog="isaddStateDialog = false" right="250px"
-            :width="260" :addType="addType" :title="dislogTitle" @save-layer-show="addAttrSate" :dialog_posi="dialog_posi">
-        </CompLayerShow>
+
+        <!--list container-->
         <div class="module_container">
-            <template v-for="(item, index) in moduleStates" :key="index">
-                <div class="module_attr_item">
-                    <div class="attr_con">
-                        <div class="module_input" v-if="showRename && stateIndex === index"><el-input v-model="attrInput"
-                                @focus="selectAllText" class="input" :data-area="'state-' + index" @blur="closeInput"
-                                @keydown="editName" />
-                        </div>
-                        <div class="module_item_left" @dblclick="onRename(index)" v-else>
-                            <div class="module_name">
-                                <svg-icon icon-class="comp-state"></svg-icon>
-                                <span class="name">{{ item.attrName }}</span>
-                            </div>
-                            <div><span class="name">{{ item.attrValue }}</span></div>
-                        </div>
-                        <div class="delete">
-                            <svg-icon icon-class="delete"></svg-icon>
-                        </div>
-                    </div>
-                    <div class="warn" v-if="false">{{ t('compos.duplicate_name') }}</div>
-                </div>
-            </template>
-            <template v-for="(item, index) in showStates" :key="index">
-                <div class="module_attr_item" ref="layer_show">
-                    <div class="attr_con">
-                        <div class="module_item_left" @click="editLayer(index)">
-                            <div class="module_name">
-                                <svg-icon icon-class="eye-open"></svg-icon>
-                                <span class="name">{{ item.attrName }}</span>
-                            </div>
-                            <div><span class="name">{{ item.visi }}</span></div>
-                        </div>
-                        <div class="delete">
-                            <svg-icon icon-class="delete"></svg-icon>
-                        </div>
-                    </div>
-                    <CompLayerShow :context="context" v-if="iseditLayerShow && layerIndex === index"
-                        @close-dialog="iseditLayerShow = false" right="250px" :width="260" :add-type="'Show'"
-                        :title="t('compos.layer_isShow')" @save-layer-show="saveLayerShow" :dialog_posi="dialog_posi">
-                    </CompLayerShow>
-                </div>
-            </template>
-            <template v-for="(item, index) in textStates" :key="index">
-                <div class="module_attr_item" ref="text_dia">
-                    <div class="attr_con">
-                        <div class="module_item_left" @click="editText(index)">
-                            <div class="module_name">
-                                <svg-icon icon-class="text" style="width: 10px; height: 10px;"></svg-icon>
-                                <span class="name">{{ item.attrName }}</span>
-                            </div>
-                            <div><span class="name">{{ item.text }}</span></div>
-                        </div>
-                        <div class="delete">
-                            <svg-icon icon-class="delete"></svg-icon>
-                        </div>
-                    </div>
-                    <CompLayerShow :context="context" v-if="iseditText && textIndex === index"
-                        @close-dialog="iseditText = false" right="250px" :width="260" :add-type="''"
-                        :title="t('compos.text_content')" @save-layer-show="saveTextContext" :dialog_posi="dialog_posi">
-                    </CompLayerShow>
-                </div>
-            </template>
-            <template v-for="(item, index) in toggleStates" :key="index">
-                <div class="module_attr_item" ref="module_dia">
-                    <div class="attr_con">
-                        <div class="module_item_left" @click="editToggle(index)">
-                            <div class="module_name">
-                                <svg-icon icon-class="pattern-rectangle"
-                                    style="width: 10px; height: 10px; transform: rotate(45deg); margin-top: 0;"></svg-icon>
-                                <span class="name">{{ item.attrName }}</span>
-                            </div>
-                            <div><span class="name">{{ item.value }}</span></div>
-                        </div>
-                        <div class="delete">
-                            <svg-icon icon-class="delete"></svg-icon>
-                        </div>
-                    </div>
-                    <CompLayerShow :context="context" v-if="iseditToggle && toggleIndex === index"
-                        @close-dialog="iseditToggle = false" right="250px" :width="260" :add-type="'toggle'"
-                        :title="t('compos.instance_toggle')" @save-layer-show="saveExamplesToggle"
-                        :dialog_posi="dialog_posi"></CompLayerShow>
-                </div>
-            </template>
+            <component v-for="item in variables" :is="AttributeCard" :key="item.variable.id" :context="props.context"
+                       :variable="item.variable"></component>
         </div>
+
+        <!--dialog-->
+        <CompLayerShow :context="context" v-if="isaddStateDialog" @close-dialog="isaddStateDialog = false" right="250px"
+                       :width="260" :addType="addType" :title="dialog_title"
+                       :dialog_posi="dialog_posi">
+        </CompLayerShow>
     </div>
 </template>
 
@@ -311,7 +183,7 @@ const getDialogPosi = (div: HTMLDivElement | undefined) => {
     align-items: center;
     justify-content: center;
 
-    >svg {
+    > svg {
         width: 50%;
         height: 50%;
     }
@@ -390,7 +262,7 @@ const getDialogPosi = (div: HTMLDivElement | undefined) => {
             .module_name {
                 width: 45%;
 
-                >svg {
+                > svg {
                     width: 14px;
                     height: 14px;
                     margin: -2px 10px;
@@ -429,7 +301,7 @@ const getDialogPosi = (div: HTMLDivElement | undefined) => {
             width: 22px;
             height: 22px;
 
-            >svg {
+            > svg {
                 width: 11px;
                 height: 11px;
             }
@@ -445,4 +317,5 @@ const getDialogPosi = (div: HTMLDivElement | undefined) => {
 
 :deep(.el-input__wrapper.is-focus) {
     box-shadow: 0 0 0 1px var(--active-color) inset;
-}</style>
+}
+</style>

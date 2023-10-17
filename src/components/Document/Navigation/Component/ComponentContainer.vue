@@ -4,6 +4,10 @@ import ComponentRootCollapse from './ComponentRootCollapse.vue';
 import ComponentLocalData from './ComponentLocalData.vue';
 import { nextTick, onMounted, onUnmounted, ref } from 'vue';
 import { useI18n } from 'vue-i18n';
+import ContextMenu from '@/components/common/ContextMenu.vue'
+import { Component } from '@/context/component';
+import { Shape } from '@kcdesign/data';
+import { shape_track } from '@/utils/content';
 interface Props {
     context: Context
     search: string
@@ -16,10 +20,7 @@ function register_container() {
     if (!top_wrapper.value) return;
     scroll_container.value = top_wrapper.value.querySelector('.el-scrollbar > .el-scrollbar__wrap');
 }
-import ContextMenu from '@/components/common/ContextMenu.vue'
-import { Component } from '@/context/component';
-import { Shape } from '@kcdesign/data';
-import { shape_track } from '@/utils/content';
+
 type ContextMenuEl = InstanceType<typeof ContextMenu>;
 const contextMenuEl = ref<ContextMenuEl>();
 interface MenuItem {
@@ -81,8 +82,6 @@ const compMenuUnmount = (e?: MouseEvent, name?: string, shape?: Shape) => {
     }
     compMenu.value = false;
 }
-
-onMounted(register_container);
 
 onMounted(() => {
     props.context.component.watch(component_menu_watcher);

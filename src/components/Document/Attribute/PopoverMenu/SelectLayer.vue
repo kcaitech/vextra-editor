@@ -1,21 +1,26 @@
 <script lang="ts" setup>
-import { ref, nextTick, onMounted, onUnmounted } from 'vue';
-import { CaretBottom } from '@element-plus/icons-vue'
-import { Context } from '@/context';
+import {onMounted, onUnmounted, ref} from 'vue';
+import {Context} from '@/context';
 import CompoSelectList from './CompoSelectList.vue';
-import { useI18n } from 'vue-i18n';
-const { t } = useI18n();
+import {useI18n} from 'vue-i18n';
+import {VariableType} from '@kcdesign/data';
+
+const {t} = useI18n();
+
 interface Tree {
     id: number
     label: string
     pid: number | undefined
     children?: Tree[]
 }
-const props = defineProps<{
-    type: 'Text' | 'Show' | 'toggle' | ''
+
+interface Props {
+    type: VariableType
     context: Context
     selectList: any[]
-}>()
+}
+
+const props = defineProps<Props>();
 
 const checkList = ref<string[]>([])
 const emit = defineEmits<{
@@ -25,10 +30,12 @@ const close = (e: MouseEvent) => {
     e.stopPropagation();
     emit('close');
 }
+
 function handleClickOutside(event: MouseEvent) {
     event.target instanceof Element && !event.target.closest('.select_layerbox') && close(event);
 }
-const top = ref(33);
+
+const top = ref(32);
 const popover = ref<HTMLDivElement>();
 
 const confirmSelect = () => {
@@ -67,8 +74,10 @@ onUnmounted(() => {
 <template>
     <div class="select_layerbox" ref="popover" :style="{ top: top + 'px' }">
         <div class="heard">
-            <span class="title">{{ props.type === 'toggle' ? `${t('compos.compos_instance')}` :
-                `${t('compos.select_layer')}` }}</span>
+            <span class="title">{{
+                    props.type === VariableType.Instance ? `${t('compos.compos_instance')}` :
+                        `${t('compos.select_layer')}`
+                }}</span>
             <div class="close">
                 <div class="toggle_list">
                     <svg-icon icon-class="close" @click.stop="emit('close');"></svg-icon>
@@ -77,29 +86,40 @@ onUnmounted(() => {
         </div>
         <div class="container" v-if="selectList.length">
             <!-- 组件实例 -->
-            <div style="height: 100%;" v-if="props.type === 'toggle'">
+            <div style="height: 100%;" v-if="props.type === VariableType.Instance">
                 <el-scrollbar>
                     <div class="demo-collapse">
-                        <CompoSelectList :context="context" :contents="selectList" samll="samll" @handleCheck="handleCheck">
+                        <CompoSelectList :context="context" :contents="selectList" samll="samll"
+                                         @handleCheck="handleCheck">
                         </CompoSelectList>
                     </div>
                 </el-scrollbar>
-                <div class="button"><el-button>确认</el-button></div>
+                <div class="button">
+                    <el-button>确认</el-button>
+                </div>
             </div>
             <div style="height: 100%;" v-else>
                 <el-scrollbar>
                     <div class="demo-collapse">
-                        <CompoSelectList :context="context" :contents="selectList" samll="samll" @handleCheck="handleCheck">
+                        <CompoSelectList :context="context" :contents="selectList" samll="samll"
+                                         @handleCheck="handleCheck">
                         </CompoSelectList>
                     </div>
                 </el-scrollbar>
-                <div class="button" :style="{ opacity: checkList.length > 0 ? 1 : 0.5 }"><el-button
-                        @click.stop="confirmSelect">确认</el-button></div>
+                <div class="button" :style="{ opacity: checkList.length > 0 ? 1 : 0.5 }">
+                    <el-button
+                        @click.stop="confirmSelect">确认
+                    </el-button>
+                </div>
             </div>
         </div>
-        <div class="null" v-if="selectList.length === 0 && props.type === 'Text' || props.type === ''">
-            {{ t('compos.text_layer_null') }}</div>
-        <div class="null" v-if="selectList.length === 0 && props.type === 'toggle'">{{ t('compos.instance_null') }}</div>
+        <div class="null" v-if="selectList.length === 0 && props.type === VariableType.Text || props.type === VariableType.Status">
+            {{ t('compos.text_layer_null') }}
+        </div>
+        <div class="null" v-if="selectList.length === 0 && props.type === VariableType.Instance">{{
+                t('compos.instance_null')
+            }}
+        </div>
     </div>
 </template>
 

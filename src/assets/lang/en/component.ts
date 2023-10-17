@@ -29,5 +29,6 @@ export const compos = {
     lib_local: 'Local',
     lib_line: 'Path',
     gocomp: 'Go to main component',
-    datail: 'View details'
+    datail: 'View details',
+    attri_1: 'Attribute 1'
 }

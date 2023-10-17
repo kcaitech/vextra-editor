@@ -1,27 +1,33 @@
 <script setup lang="ts">
-import { ref, nextTick, onMounted, onUnmounted } from 'vue';
-import { Context } from '@/context';
+import {onMounted, onUnmounted, ref} from 'vue';
+import {Context} from '@/context';
 import SelectLayer from "./SelectLayer.vue";
-import { ArrowDown } from '@element-plus/icons-vue'
-import { add } from 'lodash';
-import { ShapeType, SymbolShape } from '@kcdesign/data';
+import {ArrowDown} from '@element-plus/icons-vue'
+import {ShapeType, SymbolShape, VariableType} from '@kcdesign/data';
 import SelectMenu from './SelectMenu.vue';
-import { useI18n } from 'vue-i18n';
-const { t } = useI18n();
-const props = defineProps<{
+import {useI18n} from 'vue-i18n';
+
+const {t} = useI18n();
+
+interface Props {
     title?: string,
     top?: string,
     right?: string,
     width?: number,
     height?: string | number,
     context: Context,
-    addType: 'Text' | 'Show' | 'toggle' | '',
+    addType: VariableType,
     dialog_posi: { x: number, y: number }
-}>();
-const emit = defineEmits<{
+}
+
+interface Emits {
     (e: 'closeDialog'): void;
-    (e: 'saveLayerShow', data: any, type: 'Text' | 'Show' | 'toggle' | ''): void;
-}>()
+
+    (e: 'saveLayerShow', type: VariableType): void;
+}
+
+const props = defineProps<Props>();
+const emit = defineEmits<Emits>();
 
 function popoverClose() {
     emit('closeDialog');
@@ -43,6 +49,7 @@ const options = [
 const defaultValue = ref('显示');
 const textDefaultValue = ref('');
 const selectList = ref<any[]>([])
+
 function esc(e: KeyboardEvent) {
     if (e.code === 'Escape') popoverClose();
     else e.stopPropagation();
@@ -56,11 +63,11 @@ const showSelectLayer = (e: MouseEvent) => {
     if (shapes.length === 1) {
         if (shapes[0].type === ShapeType.Symbol) {
             const symbol = shapes[0] as SymbolShape
-            if (props.addType === 'Show') {
+            if (props.addType === VariableType.Visible) {
                 selectList.value = symbol.childs.filter(item => item.type !== ShapeType.Symbol);
-            } else if (props.addType === 'Text' || props.addType === '') {
+            } else if (props.addType === VariableType.Text || props.addType === VariableType.Status) {
                 selectList.value = symbol.childs.filter(item => item.type === ShapeType.Text);
-            } else if (props.addType === 'toggle') {
+            } else if (props.addType === VariableType.Instance) {
                 selectList.value = symbol.childs.filter(item => item.type === ShapeType.SymbolRef);
             }
         } else {
@@ -70,23 +77,7 @@ const showSelectLayer = (e: MouseEvent) => {
     isselectLayer.value = true;
 }
 const save = () => {
-    let data
-    if (props.addType === 'Show') {
-        data = {
-            name: attrName.value,
-            visi: defaultValue.value
-        }
-    } else if (props.addType === 'Text') {
-        data = {
-            name: attrName.value,
-            text: textDefaultValue.value
-        }
-    } else if (props.addType === 'toggle') {
-        data = {
-            name: attrName.value,
-        }
-    }
-    emit('saveLayerShow', data, props.addType)
+    emit('saveLayerShow', props.addType)
 }
 
 const selectoption = ref(false)
@@ -105,7 +96,7 @@ const cur_p = ref(0)
 onMounted(() => {
     if (comps.value) {
         const body_h = document.body.clientHeight;
-        const { y, height } = comps.value.getBoundingClientRect();
+        const {y, height} = comps.value.getBoundingClientRect();
         const su = body_h - y;
         const cur_t = su - height;
         cur_p.value = cur_t;
@@ -139,24 +130,30 @@ onUnmounted(() => {
         </div>
         <div class="body">
             <div>
-                <span>{{ addType === 'toggle' ? `${t('compos.compos_instance')}` : `${t('compos.select_layer')}` }}</span>
+                <span>{{
+                        addType === 'toggle' ? `${t('compos.compos_instance')}` : `${t('compos.select_layer')}`
+                    }}</span>
                 <div class="select-layer" @mouseup="showSelectLayer" @click.stop>
                     <div class="input"
-                        :style="{ opacity: context.selection.selectedShapes[0].type !== ShapeType.Symbol ? '0.5' : '1' }">
+                         :style="{ opacity: context.selection.selectedShapes[0].type !== ShapeType.Symbol ? '0.5' : '1' }">
                         <span v-if="selectLayer"></span>
-                        <span v-else style="opacity: 0.5">{{ addType === 'toggle' ? `${t('compos.place_select_instance')}` :
-                            `${t('compos.place_select_layer')}` }}</span>
+                        <span v-else style="opacity: 0.5">{{
+                                addType === 'toggle' ? `${t('compos.place_select_instance')}` :
+                                    `${t('compos.place_select_layer')}`
+                            }}</span>
                         <el-icon>
-                            <ArrowDown />
+                            <ArrowDown/>
                         </el-icon>
                     </div>
                     <SelectLayer v-if="isselectLayer" @close="isselectLayer = false" :type="props.addType"
-                        :context="context" :selectList="selectList"></SelectLayer>
+                                 :context="context" :selectList="selectList"></SelectLayer>
                 </div>
             </div>
             <div>
                 <span>{{ t('compos.attr_name') }}</span>
-                <div><el-input v-model="attrName" :placeholder="t('compos.attr_name_input')" /></div>
+                <div>
+                    <el-input v-model="attrName" :placeholder="t('compos.attr_name_input')"/>
+                </div>
             </div>
             <p class="warn" v-if="false">{{ t('compos.duplicate_name') }}</p>
             <div v-if="props.addType !== 'toggle' && props.addType">
@@ -166,14 +163,16 @@ onUnmounted(() => {
                         <span>{{ defaultValue }}</span>
                         <el-icon>
                             <ArrowDown
-                                :style="{ transform: selectoption ? 'rotate(180deg)' : 'rotate(0deg)', transition: '0.3s' }" />
+                                :style="{ transform: selectoption ? 'rotate(180deg)' : 'rotate(0deg)', transition: '0.3s' }"/>
                         </el-icon>
                         <SelectMenu v-if="selectoption" :top="33" width="100%" :menuItems="menuItems"
-                            @select-index="handleShow" @close="selectoption = false"></SelectMenu>
+                                    @select-index="handleShow" @close="selectoption = false"></SelectMenu>
                     </div>
                 </div>
-                <div v-if="props.addType === 'Text'"><el-input v-model="textDefaultValue"
-                        :placeholder="t('compos.default_text_input')" /></div>
+                <div v-if="props.addType === 'Text'">
+                    <el-input v-model="textDefaultValue"
+                              :placeholder="t('compos.default_text_input')"/>
+                </div>
             </div>
         </div>
         <div class="footer">
@@ -216,7 +215,7 @@ onUnmounted(() => {
             align-items: center;
             justify-content: center;
 
-            >svg {
+            > svg {
                 width: 65%;
                 height: 65%;
             }
@@ -266,7 +265,7 @@ onUnmounted(() => {
             margin-left: 60px;
         }
 
-        >div {
+        > div {
             height: 30px;
             width: 100%;
             margin-top: 10px;
@@ -279,7 +278,7 @@ onUnmounted(() => {
                 width: 60px;
             }
 
-            >div {
+            > div {
                 flex: 1;
             }
 
@@ -303,7 +302,7 @@ onUnmounted(() => {
                 height: 30px;
                 font-size: 10px;
 
-                >div {
+                > div {
                     height: 100%;
                 }
 

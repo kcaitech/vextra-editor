@@ -1,62 +1,13 @@
-import { Context } from "@/context";
-import { Artboard, GroupShape, Page, Shape, ShapeType, SymbolShape } from "@kcdesign/data";
-import { getName, get_component_state_name } from "./content";
-import { sort_by_layer } from "./group_ungroup";
-import { debounce } from "lodash";
+import {Context} from "@/context";
+import {Artboard, GroupShape, Page, Shape, ShapeType, SymbolShape, Variable, VariableType} from "@kcdesign/data";
+import {get_component_state_name, getName} from "./content";
+import {sort_by_layer} from "./group_ungroup";
+import {debounce} from "lodash";
 
-export function make_symbol(context: Context, t: Function) {
-    const selected = context.selection.selectedShapes;
-    const page = context.selection.selectedPage;
-    if (!page || !selected.length) return false;
-    const editor = context.editor4Page(page);
-    const name = getName(ShapeType.Symbol, context.data.symbolsMgr.resource, t);
-    const shapes: Shape[] = sort_by_layer(context, selected);
-    return editor.makeSymbol(context.data, shapes, name);
-}
-
-export function make_union(context: Context, t: Function) {
-    const selected = context.selection.selectedShapes;
-    if (selected.length !== 1) return;
-    const shape = selected[0];
-    const page = context.selection.selectedPage;
-    if (shape && shape.type === ShapeType.Symbol && !shape.isUnionSymbolShape && page) {
-        const editor = context.editor4Page(page);
-        const make_result = editor.makeSymbolUnion(shape as SymbolShape, t('shape.default'));
-        return make_result;
-    }
-}
-export function make_default_state(context: Context, t: Function) {
-    const selected = context.selection.selectedShapes;
-    if (selected.length !== 1) return;
-    const shape = selected[0];
-    const page = context.selection.selectedPage;
-    if (shape && shape.type === ShapeType.Symbol && shape.isUnionSymbolShape && page) {
-        const editor = context.editor4Page(page);
-        const name = get_component_state_name(shape as SymbolShape, t);
-        const make_result = editor.makeStateAt(shape as SymbolShape, name);
-        return make_result;
-    }
-}
-export function make_state(context: Context, t: Function) {
-    const selected = context.selection.selectedShapes;
-    if (selected.length !== 1) return;
-    const shape = selected[0];
-    const page = context.selection.selectedPage;
-    if (shape && shape.type === ShapeType.Symbol && !shape.isUnionSymbolShape && shape.parent && shape.parent.isUnionSymbolShape && page) {
-        let index = -1;
-        for (let i = 0, len = shape.parent.childs.length; i < len; i++) {
-            if (shape.parent?.childs[i]?.id === shape.id) {
-                index = i;
-                break;
-            }
-        }
-        if (index < 0) return;
-        const editor = context.editor4Page(page);
-        const name = get_component_state_name(shape.parent as SymbolShape, t);
-        const make_result = editor.makeStateAt(shape.parent as SymbolShape, name, index);
-        return make_result;
-    }
-}
+// region 组件列表相关
+/**
+ * @description 组件列表项
+ */
 export interface SymbolListItem {
     id: string
     title: string
@@ -66,6 +17,7 @@ export interface SymbolListItem {
     childs: SymbolListItem[]
     parent: SymbolListItem | undefined
 }
+
 export function classification_level_page(pages: Page[]) {
     const result: SymbolListItem[] = [];
     for (let i = 0; i < pages.length; i++) {
@@ -86,6 +38,7 @@ export function classification_level_page(pages: Page[]) {
     // return result.length > 1 ? result : result.length === 1 ? result[0].childs : [];
     return result;
 }
+
 function get_symbol_level_under(group: GroupShape) {
     const symbols: SymbolShape[] = [];
     const childs = group.childs;
@@ -99,6 +52,7 @@ function get_symbol_level_under(group: GroupShape) {
     }
     return symbols;
 }
+
 export function classification_level_artboard(page: Page) {
     const artboards = page.artboardList;
     const result: SymbolListItem[] = [];
@@ -150,6 +104,7 @@ export function classification_level_artboard(page: Page) {
     }
     return result;
 }
+
 function check_symbol_level_artboard(artboard: GroupShape, init?: SymbolShape[]) {
     const symbols: SymbolShape[] = init || [];
     const childs = artboard.childs;
@@ -164,8 +119,10 @@ function check_symbol_level_artboard(artboard: GroupShape, init?: SymbolShape[])
     }
     return symbols;
 }
+
 export function modify_parent(list: SymbolListItem[]) {
     for (let i = 0, len = list.length; i < len; i++) modify(list[i]);
+
     function modify(item: SymbolListItem) {
         if (!item.childs.length) return;
         for (let i = 0, len = item.childs.length; i < len; i++) {
@@ -176,6 +133,7 @@ export function modify_parent(list: SymbolListItem[]) {
         }
     }
 }
+
 export function list_layout(list: SymbolListItem[], extend_set: Set<string>, init?: SymbolListItem[]) {
     const result: SymbolListItem[] = init || [];
     for (let i = 0, len = list.length; i < len; i++) {
@@ -187,6 +145,7 @@ export function list_layout(list: SymbolListItem[], extend_set: Set<string>, ini
     }
     return result;
 }
+
 export function search_symbol_by_keywords(context: Context, keywords: string) {
     const symbol_resource = context.data.symbolsMgr.resource;
     const reg = new RegExp(keywords.toLocaleLowerCase(), 'img');
@@ -197,6 +156,7 @@ export function search_symbol_by_keywords(context: Context, keywords: string) {
     }
     return result;
 }
+
 export function init_status_set_by_symbol(data: SymbolListItem[], status_set: Set<string>, id: string) {
     const item = locate(data, id);
     if (!item) return false;
@@ -205,6 +165,7 @@ export function init_status_set_by_symbol(data: SymbolListItem[], status_set: Se
         status_set.add(p.id);
         p = p.parent;
     }
+
     function locate(items: SymbolListItem[], id: string) {
         let result: SymbolListItem | undefined;
         for (let i = 0, len = items.length; i < len; i++) {
@@ -215,6 +176,7 @@ export function init_status_set_by_symbol(data: SymbolListItem[], status_set: Se
         }
         return result;
     }
+
     function is_target_set(id: string, symbols: SymbolShape[]) {
         for (let i = 0, len = symbols.length; i < len; i++) {
             if (id === symbols[i].id) return true;
@@ -222,9 +184,106 @@ export function init_status_set_by_symbol(data: SymbolListItem[], status_set: Se
         return false;
     }
 }
+
 function _clear_scroll_target(context: Context) {
     context.component.set_scroll_target(undefined);
 }
+
 export const clear_scroll_target = debounce(_clear_scroll_target, 300);
+
+// endregion
+export interface AttriListItem {
+    variable: Variable
+    values: { key: string, value: string }[]
+}
+
+export function variable_sort(symbol: SymbolShape) {
+    const list: AttriListItem[] = [];
+    if (!symbol.isUnionSymbolShape || !symbol.variables) return list;
+    let status_index = 0;
+    const resource = symbol.variables;
+    resource.forEach((v) => {
+        const item = {
+            variable: v,
+            values: []
+        }
+        if (v.type === VariableType.Status) {
+            list.splice(status_index++, 0, item);
+        } else {
+            list.push(item);
+        }
+    })
+    return list;
+}
+
+/**
+ * @description 创建一个组件
+ * @return symbolshape
+ */
+export function make_symbol(context: Context, t: Function) {
+    const selected = context.selection.selectedShapes;
+    const page = context.selection.selectedPage;
+    if (!page || !selected.length) return false;
+    const editor = context.editor4Page(page);
+    const name = getName(ShapeType.Symbol, context.data.symbolsMgr.resource, t);
+    const shapes: Shape[] = sort_by_layer(context, selected);
+    return editor.makeSymbol(context.data, shapes, name);
+}
+
+/**
+ * @description 创建组件状态集合union
+ * return union
+ */
+export function make_union(context: Context, t: Function) {
+    const selected = context.selection.selectedShapes;
+    if (selected.length !== 1) return;
+    const shape = selected[0];
+    const page = context.selection.selectedPage;
+    if (shape && shape.type === ShapeType.Symbol && !shape.isUnionSymbolShape && page) {
+        const editor = context.editor4Page(page);
+        return editor.makeSymbolUnion(shape as SymbolShape, t('shape.default'), t('compos.attri_1'));
+    }
+}
+
+/**
+ * @description 创建一个默认状态
+ * @return state
+ */
+export function make_default_state(context: Context, t: Function) {
+    const selected = context.selection.selectedShapes;
+    if (selected.length !== 1) return;
+    const shape = selected[0];
+    const page = context.selection.selectedPage;
+    if (shape && shape.type === ShapeType.Symbol && shape.isUnionSymbolShape && page) {
+        const editor = context.editor4Page(page);
+        const name = get_component_state_name(shape as SymbolShape, t);
+        return editor.makeStateAt(shape as SymbolShape, name);
+    }
+}
+
+/**
+ * @description 创建一个状态
+ * @return state
+ */
+export function make_state(context: Context, t: Function) {
+    const selected = context.selection.selectedShapes;
+    if (selected.length !== 1) return;
+    const shape = selected[0];
+    const page = context.selection.selectedPage;
+    if (shape && shape.type === ShapeType.Symbol && !shape.isUnionSymbolShape && shape.parent && shape.parent.isUnionSymbolShape && page) {
+        let index = -1;
+        for (let i = 0, len = shape.parent.childs.length; i < len; i++) {
+            if (shape.parent?.childs[i]?.id === shape.id) {
+                index = i;
+                break;
+            }
+        }
+        if (index < 0) return;
+        const editor = context.editor4Page(page);
+        const name = get_component_state_name(shape.parent as SymbolShape, t);
+        return editor.makeStateAt(shape.parent as SymbolShape, name, index);
+    }
+}
+
 
 

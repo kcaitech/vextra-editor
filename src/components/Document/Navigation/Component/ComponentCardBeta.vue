@@ -1,44 +1,54 @@
 <script setup lang="ts">
-import { h, nextTick, onMounted, onUnmounted, ref } from 'vue';
+import {h, nextTick, onMounted, onUnmounted, ref} from 'vue';
 import comsMap from '@/components/Document/Content/comsmap';
-import { GroupShape } from "@kcdesign/data";
-import { renderSymbolPreview as r } from "@kcdesign/data";
-import { initCommonShape } from "@/components/Document/Content/common";
-import { Context } from '@/context';
-import { Selection } from '@/context/selection';
-import { clear_scroll_target } from '@/utils/symbol';
+import {GroupShape} from "@kcdesign/data";
+import {renderSymbolPreview as r} from "@kcdesign/data";
+import {initCommonShape} from "@/components/Document/Content/common";
+import {Context} from '@/context';
+import {Selection} from '@/context/selection';
+import {clear_scroll_target} from '@/utils/symbol';
+
 interface Props {
     data: GroupShape
     context: Context
     container: Element | null
 }
+
 const props = defineProps<Props>();
 const common = initCommonShape(props);
 const selected = ref<boolean>(false);
 const render_preview = ref<boolean>(false);
 const preview_container = ref<Element>();
+
 function gen_view_box() {
     const frame = props.data.frame;
     return `0 0 ${frame.width} ${frame.height}`;
 }
+
 function render() {
     return r(h, props.data, comsMap, common.reflush);
 }
+
 function selection_watcher(t: number) {
     if (t === Selection.CHANGE_SHAPE || t === Selection.CHANGE_PAGE) check_selected_status();
 }
+
 function check_selected_status() {
     selected.value = props.context.selection.isSelectedShape(props.data);
 }
+
 const options = {
     root: props.container,
     rootMargin: '0px 0px 0px 0px',
     thresholds: 1,
 }
+
 function intersection(entries: any) {
     render_preview.value = Boolean(entries[0]?.isIntersecting);
 }
+
 const io = new IntersectionObserver(intersection, options);
+
 function check_render_required() {
     if (!(props.container && preview_container.value)) {
         render_preview.value = true;
@@ -47,6 +57,7 @@ function check_render_required() {
         io.observe(preview_container.value);
     }
 }
+
 function is_need_scroll_to_view() {
     const need_scroll_into_view = props.context.component.is_need_into_view(props.data.id);
     if (need_scroll_into_view && preview_container.value) {
@@ -56,6 +67,7 @@ function is_need_scroll_to_view() {
     }
     clear_scroll_target(props.context);
 }
+
 onMounted(() => {
     check_selected_status();
     check_render_required();
@@ -71,9 +83,9 @@ onUnmounted(() => {
 <template>
     <div class="compo-preview-container" ref="preview_container">
         <svg v-if="render_preview" version="1.1" xmlns="http://www.w3.org/2000/svg"
-            xmlns:xlink="http://www.w3.org/1999/xlink" xmlns:xhtml="http://www.w3.org/1999/xhtml"
-            preserveAspectRatio="xMinYMin meet" width="96px" height="96px" :viewBox='gen_view_box()' overflow="visible"
-            class="render-wrap">
+             xmlns:xlink="http://www.w3.org/1999/xlink" xmlns:xhtml="http://www.w3.org/1999/xhtml"
+             preserveAspectRatio="xMinYMin meet" width="96px" height="96px" :viewBox='gen_view_box()' overflow="visible"
+             class="render-wrap">
             <render></render>
         </svg>
         <div :class="{ status: true, selected }"></div>
