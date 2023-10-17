@@ -20,6 +20,7 @@ import { distance2apex, distance2apex2, get_frame, get_pg_by_frame, gen_match_po
 import { Asssit } from '@/context/assist';
 import { Menu } from '@/context/menu';
 import { TaskType } from '@/context/escstack';
+import {gen_assist_target} from "@/utils/mouse";
 
 export function useControllerCustom(context: Context, i18nT: Function) {
     const matrix = new Matrix();
@@ -201,7 +202,7 @@ export function useControllerCustom(context: Context, i18nT: Function) {
         const stickness = context.assist.stickness;
         const len = shapes.length;
         const shape = shapes[0];
-        const target = len === 1 ? context.assist.trans_match(offset_map, pe) : context.assist.trans_match_multi(shapes);
+        const target = gen_assist_target(context, shapes, len > 1, offset_map, pe);
         let inverse_matrix: Matrix | undefined;
         if (!target) return update_type;
         if (stickedX) {

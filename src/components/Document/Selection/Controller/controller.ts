@@ -1,4 +1,4 @@
-import {Shape, ShapeType, GroupShape} from '@kcdesign/data';
+import {Shape, ShapeType, GroupShape, PathShape} from '@kcdesign/data';
 import {onMounted, onUnmounted} from "vue";
 import {Context} from "@/context";
 import {Matrix} from '@kcdesign/data';
