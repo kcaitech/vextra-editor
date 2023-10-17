@@ -202,7 +202,7 @@ export async function paster(context: Context, t: Function, xy?: PageXY) {
         }
 
         // 读取剪切板数据
-        context.workspace.setFreezeStatus(true);
+        // context.workspace.setFreezeStatus(true);
         const data = await navigator.clipboard.read();
         if (!data) {
             message('info', t('clipboard.invalid_data'));
@@ -350,8 +350,7 @@ async function clipboard_text_html(context: Context, data: any, xy?: PageXY) {
             if (xy) { // 指定复制位置
                 modify_frame_by_xy(xy, source); // 以新的起点为基准，重新计算每个图形位置
             } else if (is_box_outer_view2(source, context)) { // 粘贴进入文档的图形将脱离视野，需要重新寻找新的定位
-                console.log('return to center')
-                // modify_frame_by_xy(context.workspace.center_on_page, shapes);
+                modify_frame_by_xy(context.workspace.center_on_page, source);
             }
 
             const shapes = import_shape(context.data, source);
@@ -361,7 +360,7 @@ async function clipboard_text_html(context: Context, data: any, xy?: PageXY) {
             if (page) {
                 const editor = context.editor.editor4Page(page);
                 const r = editor.pasteShapes1(page, shapes);
-                if (r && r.length) context.selection.rangeSelectShape(r);
+                if (r) context.selection.rangeSelectShape(r.shapes);
             }
         } else {
             message('info', context.workspace.t('clipboard.invalid_data'));
