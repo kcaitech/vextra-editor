@@ -1,11 +1,11 @@
 <script setup lang="ts">
-import { RenderTransform, Shape, SymbolRefShape, SymbolShape, Variable } from '@kcdesign/data';
+import { RectShape, RenderTransform, SymbolRefShape, SymbolShape, Variable } from '@kcdesign/data';
 import { h } from 'vue';
-import { renderRecShape as r } from "@kcdesign/data";
+import { renderPathShape as r } from "@kcdesign/data";
 import { initCommonShape } from './common';
 
 const props = defineProps<{
-    data: Shape, transx?: RenderTransform,
+    data: RectShape, transx?: RenderTransform,
     varsContainer?: (SymbolRefShape | SymbolShape)[]
 }>();
 const common = initCommonShape(props);
