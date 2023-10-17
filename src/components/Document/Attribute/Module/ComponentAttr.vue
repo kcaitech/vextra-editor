@@ -6,7 +6,7 @@ import {onMounted, onUnmounted, ref, watch} from 'vue'
 import CompLayerShow from '../PopoverMenu/CompLayerShow.vue';
 import {SymbolShape, VariableType} from '@kcdesign/data';
 import {make_union, variable_sort} from "@/utils/symbol";
-import AttributeCard from "./AttributeCard.vue";
+import AttriCard from "./AttriCard.vue";
 import {AttriListItem} from "@/utils/symbol";
 
 const {t} = useI18n();
@@ -162,7 +162,7 @@ onUnmounted(() => {
 
         <!--list container-->
         <div class="module_container">
-            <component v-for="item in variables" :is="AttributeCard" :key="item.variable.id" :context="props.context"
+            <component v-for="item in variables" :is="AttriCard" :key="item.variable.id" :context="props.context"
                        :variable="item.variable"></component>
         </div>
 

@@ -1,7 +1,7 @@
 <script lang="ts" setup>
 import {Context} from "@/context";
 import {Variable, VariableType} from '@kcdesign/data';
-import {nextTick, ref} from "vue/dist/vue";
+import {nextTick, ref} from 'vue';
 import {useI18n} from 'vue-i18n';
 import CompLayerShow from "@/components/Document/Attribute/PopoverMenu/CompLayerShow.vue";
 
