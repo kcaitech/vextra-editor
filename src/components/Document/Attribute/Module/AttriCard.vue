@@ -26,14 +26,17 @@ const dialog_posi = ref({ x: 0, y: 0 });
 function selectAllText(event: FocusEvent) {
     (event.target as HTMLInputElement).select(); // 选择输入框内的文本
 }
+
 function closeInput() {
     showRename.value = false;
 }
+
 function keyboard_watcher(e: KeyboardEvent) {
     if (e.code === 'Enter' || e.code === 'NumpadEnter') {
         showRename.value = false
     }
 }
+
 function rename() {
     showRename.value = true;
     nextTick(() => {
@@ -44,6 +47,7 @@ function rename() {
         }
     })
 }
+
 function get_dialog_posi(div: HTMLDivElement | undefined) {
     if (div) {
         const el = div.getBoundingClientRect();
@@ -51,10 +55,12 @@ function get_dialog_posi(div: HTMLDivElement | undefined) {
         dialog_posi.value.y = el.y;
     }
 }
+
 function edit_visible() {
     get_dialog_posi(visible_card.value);
     iseditLayerShow.value = true;
 }
+
 function save_layer_show() {
     iseditLayerShow.value = false;
 }
@@ -65,17 +71,19 @@ function edit_text() {
 function save_text() {
     iseditText.value = false;
 }
+
 function edit_instance() {
     get_dialog_posi(instance_card.value);
     iseditToggle.value = true;
 }
+
 function save_instance() {
     iseditToggle.value = false;
 }
 </script>
 <template>
     <!--组件状态-->
-    <div v-if="props.variable.type === VariableType.Status">
+    <div v-if="props.variable.type === VariableType.Status" class="module_attr_item">
         <div class="attr_con">
             <div class="module_input" v-if="showRename">
                 <el-input ref="input_s" v-model="attrInput" @focus="selectAllText" class="input" @blur="closeInput"
@@ -95,7 +103,7 @@ function save_instance() {
         <div class="warn" v-if="false">{{ t('compos.duplicate_name') }}</div>
     </div>
     <!--显示状态-->
-    <div v-if="props.variable.type === VariableType.Visible">
+    <div v-if="props.variable.type === VariableType.Visible" class="item-wrap">
         <div class="module_attr_item" ref="visible_card">
             <div class="attr_con">
                 <div class="module_item_left" @click="edit_visible">
@@ -116,7 +124,7 @@ function save_instance() {
         </div>
     </div>
     <!--文本内容-->
-    <div v-if="props.variable.type === VariableType.Text">
+    <div v-if="props.variable.type === VariableType.Text" class="item-wrap">
         <div class="module_attr_item" ref="text_card">
             <div class="attr_con">
                 <div class="module_item_left" @click="edit_text">
@@ -137,7 +145,7 @@ function save_instance() {
         </div>
     </div>
     <!--实例切换-->
-    <div v-if="props.variable.type === VariableType.Instance">
+    <div v-if="props.variable.type === VariableType.Instance" class="item-wrap">
         <div class="module_attr_item" ref="instance_card">
             <div class="attr_con">
                 <div class="module_item_left" @click="edit_instance">
@@ -158,4 +166,82 @@ function save_instance() {
         </div>
     </div>
 </template>
-<style lang="scss" scoped></style>
+<style lang="scss" scoped>
+.module_attr_item {
+    position: relative;
+    display: flex;
+    flex-direction: column;
+    margin-bottom: 5px;
+
+    .attr_con {
+        display: flex;
+        align-items: center;
+        justify-content: space-between;
+    }
+
+    .module_item_left {
+        display: flex;
+        align-items: center;
+        border-radius: 4px;
+        background-color: var(--grey-light);
+        width: 100%;
+        height: 30px;
+
+        .module_name {
+            width: 45%;
+
+            >svg {
+                width: 14px;
+                height: 14px;
+                margin: -2px 10px;
+            }
+        }
+
+        .name {
+            overflow: hidden;
+            text-overflow: ellipsis;
+            white-space: nowrap;
+        }
+    }
+
+    .module_input {
+        display: flex;
+        align-items: center;
+        width: 100%;
+        height: 30px;
+
+        .el-input {
+            font-size: 10px;
+            height: 30px;
+        }
+    }
+
+    .warn {
+        color: red;
+        transform: scale(.9);
+    }
+
+    .delete {
+        flex: 0 0 22px;
+        display: flex;
+        justify-content: center;
+        align-items: center;
+        width: 22px;
+        height: 22px;
+
+        >svg {
+            width: 11px;
+            height: 11px;
+        }
+
+        transition: .2s;
+    }
+}
+:deep(.el-input__inner) {
+    --el-input-inner-height: 100%;
+}
+
+:deep(.el-input__wrapper.is-focus) {
+    box-shadow: 0 0 0 1px var(--active-color) inset;
+}
+</style>
