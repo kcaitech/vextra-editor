@@ -50,7 +50,7 @@ onUnmounted(() => {
             <LableFill v-if="len === 1 && shapes[0].style.fills.length > 0" :context="context"></LableFill>
             <LableBorder v-if="len === 1 && shapes[0].style.borders.length > 0" :context="context"></LableBorder>
             <LableText v-if="len === 1 && shapeType === ShapeType.Text" :context="context"></LableText>
-            <LableCode v-if="len > 0" :context="context"></LableCode>
+            <!-- <LableCode v-if="len > 0" :context="context"></LableCode> -->
         </el-scrollbar>
     </div>
 </template>

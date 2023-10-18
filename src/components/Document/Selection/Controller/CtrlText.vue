@@ -64,7 +64,7 @@ function update() {
         if (point.y < bounds.top) bounds.top = point.y;
         else if (point.y > bounds.bottom) bounds.bottom = point.y;
         return bounds;
-    }, bounds)
+    }, bounds)    
 }
 function clear_null_shape(shape: Shape) {
     const editor = props.context.editor4Shape(shape);

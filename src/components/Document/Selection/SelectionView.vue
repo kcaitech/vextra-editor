@@ -10,6 +10,7 @@ import { getHorizontalAngle, XYsBounding } from "@/utils/common";
 import { WorkSpace } from "@/context/workspace";
 import { permIsEdit } from "@/utils/content";
 import Assist from "@/components/Document/Assist/index.vue";
+import ShapeSize from "./ShapeSize.vue"
 export interface Point {
     x: number
     y: number
@@ -262,5 +263,7 @@ onUnmounted(() => {
     </component>
     <!-- 辅助 -->
     <Assist :context="props.context" :controller-frame="controllerFrame"></Assist>
+    
+    <ShapeSize :context="props.context" :controller-frame="controllerFrame"></ShapeSize>
 </template>
 <style lang="scss"></style>
