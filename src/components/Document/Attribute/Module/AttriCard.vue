@@ -26,14 +26,17 @@ const dialog_posi = ref({x: 0, y: 0});
 function selectAllText(event: FocusEvent) {
     (event.target as HTMLInputElement).select(); // 选择输入框内的文本
 }
+
 function closeInput() {
     showRename.value = false;
 }
+
 function keyboard_watcher(e: KeyboardEvent) {
     if (e.code === 'Enter' || e.code === 'NumpadEnter') {
         showRename.value = false
     }
 }
+
 function rename() {
     showRename.value = true;
     nextTick(() => {
@@ -44,38 +47,45 @@ function rename() {
         }
     })
 }
-function get_dialog_posi (div: HTMLDivElement | undefined) {
+
+function get_dialog_posi(div: HTMLDivElement | undefined) {
     if (div) {
         const el = div.getBoundingClientRect();
         dialog_posi.value.x = el.x - (el.width + 32);
         dialog_posi.value.y = el.y;
     }
 }
+
 function edit_visible() {
     get_dialog_posi(visible_card.value);
     iseditLayerShow.value = true;
 }
+
 function save_layer_show() {
     iseditLayerShow.value = false;
 }
-function  edit_text() {
+
+function edit_text() {
     get_dialog_posi(visible_card.value);
     iseditText.value = true;
 }
-function  save_text() {
+
+function save_text() {
     iseditText.value = false;
 }
+
 function edit_instance() {
     get_dialog_posi(instance_card.value);
     iseditToggle.value = true;
 }
+
 function save_instance() {
     iseditToggle.value = false;
 }
 </script>
 <template>
     <!--组件状态-->
-    <div v-if="props.variable.type === VariableType.Status">
+    <div v-if="props.variable.type === VariableType.Status" class="module_attr_item">
         <div class="attr_con">
             <div class="module_input" v-if="showRename">
                 <el-input ref="input_s" v-model="attrInput" @focus="selectAllText" class="input" @blur="closeInput"
@@ -95,7 +105,7 @@ function save_instance() {
         <div class="warn" v-if="false">{{ t('compos.duplicate_name') }}</div>
     </div>
     <!--显示状态-->
-    <div v-if="props.variable.type === VariableType.Visible">
+    <div v-if="props.variable.type === VariableType.Visible" class="item-wrap">
         <div class="module_attr_item" ref="visible_card">
             <div class="attr_con">
                 <div class="module_item_left" @click="edit_visible">
@@ -117,7 +127,7 @@ function save_instance() {
         </div>
     </div>
     <!--文本内容-->
-    <div v-if="props.variable.type === VariableType.Text">
+    <div v-if="props.variable.type === VariableType.Text" class="item-wrap">
         <div class="module_attr_item" ref="text_card">
             <div class="attr_con">
                 <div class="module_item_left" @click="edit_text">
@@ -139,7 +149,7 @@ function save_instance() {
         </div>
     </div>
     <!--实例切换-->
-    <div v-if="props.variable.type === VariableType.Instance">
+    <div v-if="props.variable.type === VariableType.Instance" class="item-wrap">
         <div class="module_attr_item" ref="instance_card">
             <div class="attr_con">
                 <div class="module_item_left" @click="edit_instance">

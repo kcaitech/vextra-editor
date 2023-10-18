@@ -59,10 +59,12 @@ function selectCompsType() {
  * @description 添加一个组件状态
  */
 const addModuleState = () => {
+    console.log('emit addModuleState');
     const make_result = make_union(props.context, t)
     if (make_result) {
         props.context.selection.selectShape(make_result);
     }
+    close();
 }
 /**
  * @description 添加一条显示状态
@@ -72,6 +74,7 @@ const layerIsShow = () => {
     addType.value = VariableType.Visible;
     get_dialog_posi(atrrdialog.value);
     isaddStateDialog.value = true;
+    close();
 }
 /**
  * @description 文本内容
@@ -81,6 +84,7 @@ const addTextDialog = () => {
     addType.value = VariableType.Text;
     get_dialog_posi(atrrdialog.value);
     isaddStateDialog.value = true;
+    close();
 }
 /**
  * @description 实例切换
@@ -90,6 +94,7 @@ const examplesToggle = () => {
     addType.value = VariableType.Instance;
     get_dialog_posi(atrrdialog.value);
     isaddStateDialog.value = true;
+    close();
 }
 
 const dialog_posi = ref({x: 0, y: 0});
@@ -126,9 +131,9 @@ onUnmounted(() => {
         <!--header-->
         <TypeHeader :title="t('compos.compos_attr')" class="mt-24" @click="selectCompsType">
             <template #tool>
-                <div class="add-comps" @click="selectCompsType">
+                <div class="add-comps" @click.stop="selectCompsType">
                     <svg-icon icon-class="add"></svg-icon>
-                    <div class="selectType" v-if="compsType" ref="selectComps">
+                    <div class="selectType" v-if="compsType" ref="selectComps" @click.stop>
                         <div class="type-title">{{ t('compos.delect_attr_type') }}:</div>
                         <div class="status" @click="addModuleState">
                             <div>
