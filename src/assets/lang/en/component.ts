@@ -24,11 +24,14 @@ export const compos = {
     delect_attr_type: 'Select the attribute type',
     display_state: 'Display status',
     search_compos: 'Search component',
+    compos: 'Component',
     attr_name: 'Attribute name',
     state: "State",
     lib_local: 'Local',
     lib_line: 'Path',
     gocomp: 'Go to main component',
     datail: 'View details',
-    attri_1: 'Attribute 1'
+    attri_1: 'Attribute 1',
+    dlt: 'Default',
+    attri: 'Attribute'
 }

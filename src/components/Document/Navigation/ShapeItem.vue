@@ -2,7 +2,7 @@
 import { ref, computed, nextTick, InputHTMLAttributes, watch, onUnmounted, onMounted } from "vue";
 import { Shape, ShapeType } from '@kcdesign/data';
 import { Context } from "@/context";
-import { is_parent_locked, is_parent_unvisible } from "@/utils/shapelist";
+import {get_name, is_parent_locked, is_parent_unvisible} from "@/utils/shapelist";
 import { Perm } from "@/context/workspace";
 export interface ItemData {
     id: string
@@ -233,7 +233,7 @@ onUnmounted(() => {
             <svg-icon class="svg" :icon-class="icon_class()"></svg-icon>
         </div>
         <div class="text" :style="{ opacity: !visible_status ? 1 : .3, display: isInput ? 'none' : '' }">
-            <div class="txt" @dblclick="onRename">{{ props.data.shape().name }}</div>
+            <div class="txt" @dblclick="onRename">{{ get_name(props.data.shape()) }}</div>
             <div class="tool_icon"
                 :style="{ visibility: `${is_tool_visible ? 'visible' : 'hidden'}`, width: `${is_tool_visible ? 66 + 'px' : lock_status || visible_status ? 66 + 'px' : 0}` }">
                 <div class="tool_lock tool" :class="{ 'visible': lock_status }" @click="(e: MouseEvent) => setLock(e)"

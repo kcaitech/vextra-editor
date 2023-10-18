@@ -15,7 +15,7 @@ import { paster, paster_inner_shape, replace } from '@/utils/clipboard';
 import { sort_by_layer } from '@/utils/group_ungroup';
 import { Menu } from '@/context/menu';
 import TableMenu from "./TableMenu/TableMenu.vue"
-import { make_symbol, make_union } from '@/utils/symbol';
+import { make_symbol } from '@/utils/symbol';
 const { t } = useI18n();
 interface Props {
   context: Context,

@@ -203,17 +203,29 @@ export function variable_sort(symbol: SymbolShape) {
     let status_index = 0;
     const resource = symbol.variables;
     resource.forEach((v) => {
-        const item = {
+        const item: { variable: Variable, values: any[] } = {
             variable: v,
             values: []
         }
         if (v.type === VariableType.Status) {
+            item.values = tag_values_sort(symbol, v);
             list.splice(status_index++, 0, item);
         } else {
             list.push(item);
         }
     })
     return list;
+}
+
+export function tag_values_sort(symbol: SymbolShape, variable: Variable) {
+    const childs: SymbolShape[] = symbol.childs as unknown as SymbolShape[];
+    const result_set: Set<string> = new Set();
+    for (let i = 0, len = childs.length; i < len; i++) {
+        const item = childs[i];
+        const v = item.vartag?.get(variable.id) || variable.value;
+        v && result_set.add(v);
+    }
+    return Array.from(result_set.values());
 }
 
 /**
@@ -234,14 +246,14 @@ export function make_symbol(context: Context, t: Function) {
  * @description 创建组件状态集合union
  * return union
  */
-export function make_union(context: Context, t: Function) {
-    const selected = context.selection.selectedShapes;
-    if (selected.length !== 1) return;
-    const shape = selected[0];
+export function make_status(context: Context, t: Function) {
+    const shape = context.selection.symbolshape;
     const page = context.selection.selectedPage;
-    if (shape && shape.type === ShapeType.Symbol && !shape.isUnionSymbolShape && page) {
+    if (shape && page) {
         const editor = context.editor4Page(page);
-        return editor.makeSymbolUnion(shape as SymbolShape, t('shape.default'), t('compos.attri_1'));
+        const name = gen_special_name_for_status(shape, t('compos.attri'));
+        if (!name) return;
+        return editor.makeStatus(shape as SymbolShape, name, t('compos.dlt'));
     }
 }
 
@@ -256,8 +268,7 @@ export function make_default_state(context: Context, t: Function) {
     const page = context.selection.selectedPage;
     if (shape && shape.type === ShapeType.Symbol && shape.isUnionSymbolShape && page) {
         const editor = context.editor4Page(page);
-        const name = get_component_state_name(shape as SymbolShape, t);
-        return editor.makeStateAt(shape as SymbolShape, name);
+        return editor.makeStateAt(shape as SymbolShape, t('compos.state'));
     }
 }
 
@@ -280,10 +291,28 @@ export function make_state(context: Context, t: Function) {
         }
         if (index < 0) return;
         const editor = context.editor4Page(page);
-        const name = get_component_state_name(shape.parent as SymbolShape, t);
-        return editor.makeStateAt(shape.parent as SymbolShape, name, index);
+        return editor.makeStateAt(shape.parent as SymbolShape, t('compos.state'), index);
     }
 }
 
-
-
+export function gen_special_name_for_status(symbol: SymbolShape, dlt: string) {
+    let index = 1
+    if (!symbol.variables) return `${dlt}${index}`;
+    const variables = symbol.variables;
+    const number_set: Set<number> = new Set();
+    const reg = new RegExp(`^${dlt}[0-9]*$`);
+    let max = 1;
+    variables.forEach((v, k) => {
+        if (v.type !== VariableType.Status) return;
+        if (reg.test(v.name)) {
+            const n = Number(v.name.split(dlt)[1]);
+            number_set.add(n);
+            if (n > max) max = n;
+        }
+    })
+    while (index <= max) {
+        index++;
+        if (!number_set.has(index)) break;
+    }
+    return `${dlt}${index}`;
+}
