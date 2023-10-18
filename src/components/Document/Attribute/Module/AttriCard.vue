@@ -1,8 +1,8 @@
 <script lang="ts" setup>
-import {Context} from "@/context";
-import {Variable, VariableType} from '@kcdesign/data';
-import {nextTick, ref} from 'vue';
-import {useI18n} from 'vue-i18n';
+import { Context } from "@/context";
+import { Variable, VariableType } from '@kcdesign/data';
+import { nextTick, ref } from 'vue';
+import { useI18n } from 'vue-i18n';
 import CompLayerShow from "@/components/Document/Attribute/PopoverMenu/CompLayerShow.vue";
 
 interface Props {
@@ -10,7 +10,7 @@ interface Props {
     variable: Variable
 }
 
-const {t} = useI18n();
+const { t } = useI18n();
 const props = defineProps<Props>();
 const attrInput = ref('');
 const input_s = ref<HTMLInputElement>();
@@ -21,7 +21,7 @@ const iseditToggle = ref(false);
 const visible_card = ref<HTMLDivElement>();
 const text_card = ref<HTMLDivElement>();
 const instance_card = ref<HTMLDivElement>();
-const dialog_posi = ref({x: 0, y: 0});
+const dialog_posi = ref({ x: 0, y: 0 });
 
 function selectAllText(event: FocusEvent) {
     (event.target as HTMLInputElement).select(); // 选择输入框内的文本
@@ -44,7 +44,7 @@ function rename() {
         }
     })
 }
-function get_dialog_posi (div: HTMLDivElement | undefined) {
+function get_dialog_posi(div: HTMLDivElement | undefined) {
     if (div) {
         const el = div.getBoundingClientRect();
         dialog_posi.value.x = el.x - (el.width + 32);
@@ -58,11 +58,11 @@ function edit_visible() {
 function save_layer_show() {
     iseditLayerShow.value = false;
 }
-function  edit_text() {
+function edit_text() {
     get_dialog_posi(visible_card.value);
     iseditText.value = true;
 }
-function  save_text() {
+function save_text() {
     iseditText.value = false;
 }
 function edit_instance() {
@@ -79,7 +79,7 @@ function save_instance() {
         <div class="attr_con">
             <div class="module_input" v-if="showRename">
                 <el-input ref="input_s" v-model="attrInput" @focus="selectAllText" class="input" @blur="closeInput"
-                          @keydown="keyboard_watcher"/>
+                    @keydown="keyboard_watcher" />
             </div>
             <div class="module_item_left" @dblclick="rename" v-else>
                 <div class="module_name">
@@ -109,10 +109,9 @@ function save_instance() {
                     <svg-icon icon-class="delete"></svg-icon>
                 </div>
             </div>
-            <CompLayerShow :context="props.context" v-if="iseditLayerShow"
-                           @close-dialog="iseditLayerShow = false" right="250px" :width="260" add-type="Show"
-                           :title="t('compos.layer_isShow')" @save-layer-show="save_layer_show"
-                           :dialog_posi="dialog_posi">
+            <CompLayerShow :context="props.context" v-if="iseditLayerShow" @close-dialog="iseditLayerShow = false"
+                right="250px" :width="260" :add-type="VariableType.Visible" :title="t('compos.layer_isShow')"
+                @save-layer-show="save_layer_show" :dialog_posi="dialog_posi">
             </CompLayerShow>
         </div>
     </div>
@@ -131,10 +130,9 @@ function save_instance() {
                     <svg-icon icon-class="delete"></svg-icon>
                 </div>
             </div>
-            <CompLayerShow :context="context" v-if="iseditText"
-                           @close-dialog="iseditText = false" right="250px" :width="260" add-type=""
-                           :title="t('compos.text_content')" @save-layer-show="save_text"
-                           :dialog_posi="dialog_posi">
+            <CompLayerShow :context="context" v-if="iseditText" @close-dialog="iseditText = false" right="250px"
+                :width="260" :add-type="VariableType.Status" :title="t('compos.text_content')" @save-layer-show="save_text"
+                :dialog_posi="dialog_posi">
             </CompLayerShow>
         </div>
     </div>
@@ -145,7 +143,7 @@ function save_instance() {
                 <div class="module_item_left" @click="edit_instance">
                     <div class="module_name">
                         <svg-icon icon-class="pattern-rectangle"
-                                  style="width: 10px; height: 10px; transform: rotate(45deg); margin-top: 0;"></svg-icon>
+                            style="width: 10px; height: 10px; transform: rotate(45deg); margin-top: 0;"></svg-icon>
                         <span class="name">{{ props.variable.name }}</span>
                     </div>
                     <div><span class="name">数据来源待定</span></div>
@@ -154,13 +152,10 @@ function save_instance() {
                     <svg-icon icon-class="delete"></svg-icon>
                 </div>
             </div>
-            <CompLayerShow :context="context" v-if="iseditToggle"
-                           @close-dialog="iseditToggle = false" right="250px" :width="260" add-type="toggle"
-                           :title="t('compos.instance_toggle')" @save-layer-show="save_instance"
-                           :dialog_posi="dialog_posi"></CompLayerShow>
+            <CompLayerShow :context="context" v-if="iseditToggle" @close-dialog="iseditToggle = false" right="250px"
+                :width="260" :add-type="VariableType.Instance" :title="t('compos.instance_toggle')"
+                @save-layer-show="save_instance" :dialog_posi="dialog_posi"></CompLayerShow>
         </div>
     </div>
 </template>
-<style lang="scss" scoped>
-
-</style>
+<style lang="scss" scoped></style>

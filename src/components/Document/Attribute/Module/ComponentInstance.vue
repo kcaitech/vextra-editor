@@ -7,6 +7,7 @@ import CompLayerShow from '../PopoverMenu/CompLayerShow.vue';
 import { Shape, SymbolRefShape } from '@kcdesign/data';
 import { get_shape_within_document, shape_track } from '@/utils/content';
 import { MoreFilled } from '@element-plus/icons-vue';
+import { VariableType } from '@kcdesign/data';
 const props = defineProps<{
     context: Context
     shapes: Shape[]
@@ -92,7 +93,7 @@ onUnmounted(() => {
             </template>
         </TypeHeader>
         <CompLayerShow :context="context" v-if="isInstanceShow" @close-dialog="saveExamplesToggle" right="250px"
-            :add-type="'toggle'" :width="260" :title="t('compos.instance_toggle')" :dialog_posi="dialog_posi"></CompLayerShow>
+            :add-type="VariableType.Instance" :width="260" :title="t('compos.instance_toggle')" :dialog_posi="dialog_posi"></CompLayerShow>
     </div>
 </template>
 

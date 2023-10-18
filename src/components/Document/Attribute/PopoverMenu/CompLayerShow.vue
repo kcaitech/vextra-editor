@@ -131,14 +131,14 @@ onUnmounted(() => {
         <div class="body">
             <div>
                 <span>{{
-                        addType === 'toggle' ? `${t('compos.compos_instance')}` : `${t('compos.select_layer')}`
+                        addType === VariableType.Instance ? `${t('compos.compos_instance')}` : `${t('compos.select_layer')}`
                     }}</span>
                 <div class="select-layer" @mouseup="showSelectLayer" @click.stop>
                     <div class="input"
                          :style="{ opacity: context.selection.selectedShapes[0].type !== ShapeType.Symbol ? '0.5' : '1' }">
                         <span v-if="selectLayer"></span>
                         <span v-else style="opacity: 0.5">{{
-                                addType === 'toggle' ? `${t('compos.place_select_instance')}` :
+                                addType === VariableType.Instance ? `${t('compos.place_select_instance')}` :
                                     `${t('compos.place_select_layer')}`
                             }}</span>
                         <el-icon>
@@ -156,9 +156,9 @@ onUnmounted(() => {
                 </div>
             </div>
             <p class="warn" v-if="false">{{ t('compos.duplicate_name') }}</p>
-            <div v-if="props.addType !== 'toggle' && props.addType">
+            <div v-if="props.addType !== VariableType.Instance && props.addType">
                 <span>默认值</span>
-                <div v-if="props.addType === 'Show'" class="show">
+                <div v-if="props.addType === VariableType.Visible" class="show">
                     <div class="input" @click.stop="showMenu">
                         <span>{{ defaultValue }}</span>
                         <el-icon>
@@ -169,7 +169,7 @@ onUnmounted(() => {
                                     @select-index="handleShow" @close="selectoption = false"></SelectMenu>
                     </div>
                 </div>
-                <div v-if="props.addType === 'Text'">
+                <div v-if="props.addType === VariableType.Text">
                     <el-input v-model="textDefaultValue"
                               :placeholder="t('compos.default_text_input')"/>
                 </div>
