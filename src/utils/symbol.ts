@@ -1,6 +1,6 @@
 import {Context} from "@/context";
 import {Artboard, GroupShape, Page, Shape, ShapeType, SymbolShape, Variable, VariableType} from "@kcdesign/data";
-import {get_component_state_name, getName} from "./content";
+import {getName} from "./content";
 import {sort_by_layer} from "./group_ungroup";
 import {debounce} from "lodash";
 
@@ -192,6 +192,7 @@ function _clear_scroll_target(context: Context) {
 export const clear_scroll_target = debounce(_clear_scroll_target, 300);
 
 // endregion
+// region union属性列表相关
 export interface AttriListItem {
     variable: Variable
     values: { key: string, value: string }[]
@@ -203,11 +204,12 @@ export function variable_sort(symbol: SymbolShape) {
     let status_index = 0;
     const resource = symbol.variables;
     resource.forEach((v) => {
-        const item = {
+        const item: { variable: Variable, values: any[] } = {
             variable: v,
             values: []
         }
         if (v.type === VariableType.Status) {
+            item.values = tag_values_sort(symbol, v);
             list.splice(status_index++, 0, item);
         } else {
             list.push(item);
@@ -216,6 +218,68 @@ export function variable_sort(symbol: SymbolShape) {
     return list;
 }
 
+export function tag_values_sort(symbol: SymbolShape, variable: Variable) {
+    const childs: SymbolShape[] = symbol.childs as unknown as SymbolShape[];
+    const result_set: Set<string> = new Set();
+    for (let i = 0, len = childs.length; i < len; i++) {
+        const item = childs[i];
+        const v = item.vartag?.get(variable.id) || variable.value;
+        v && result_set.add(v);
+    }
+    return Array.from(result_set.values());
+}
+
+// endregion
+export interface StatusValueItem {
+    variable: Variable
+    values: any[]
+}
+
+export function states_tag_values_sort(shapes: SymbolShape[]) {
+    const result: StatusValueItem[] = [];
+    if (shapes.length === 1) {
+        const par = shapes[0].parent as SymbolShape;
+        const bros: SymbolShape[] = par.childs as unknown as SymbolShape[];
+        const variables = par.variables;
+        if (!variables) return result;
+        variables.forEach((v, k) => {
+            if (v.type !== VariableType.Status) return;
+            const item: StatusValueItem = {
+                variable: v,
+                values: tag_values_sort(par, v)
+            }
+            result.push(item);
+        })
+    } else {
+        // todo
+    }
+    return result;
+}
+
+export function is_state_selection(shapes: Shape[]) {
+    if (!shapes.length) return false;
+    const p = shapes[0].parent;
+    if (!p) return false;
+    for (let i = 0, len = shapes.length; i < len; i++) {
+        const shape = shapes[i];
+        if (shape.type !== ShapeType.Symbol || !shape.parent || shape.parent !== p || !shape.parent.isUnionSymbolShape) return false;
+    }
+    return true;
+}
+
+export function setup_watch(shapes: Shape[], f: (...args: any[]) => void) {
+    for (let i = 0, len = shapes.length; i < len; i++) {
+        shapes[i].watch(f);
+    }
+}
+
+export function remove_watch(shapes: Shape[], f: (...args: any[]) => void) {
+    for (let i = 0, len = shapes.length; i < len; i++) {
+        shapes[i].unwatch(f);
+    }
+}
+
+// region 其他
 /**
  * @description 创建一个组件
  * @return symbolshape
@@ -234,14 +298,14 @@ export function make_symbol(context: Context, t: Function) {
  * @description 创建组件状态集合union
  * return union
  */
-export function make_union(context: Context, t: Function) {
-    const selected = context.selection.selectedShapes;
-    if (selected.length !== 1) return;
-    const shape = selected[0];
+export function make_status(context: Context, t: Function) {
+    const shape = context.selection.symbolshape;
     const page = context.selection.selectedPage;
-    if (shape && shape.type === ShapeType.Symbol && !shape.isUnionSymbolShape && page) {
+    if (shape && page) {
         const editor = context.editor4Page(page);
-        return editor.makeSymbolUnion(shape as SymbolShape, t('shape.default'), t('compos.attri_1'));
+        const name = gen_special_name_for_status(shape, t('compos.attri'));
+        if (!name) return;
+        return editor.makeStatus(shape as SymbolShape, name, t('compos.dlt'));
     }
 }
 
@@ -256,8 +320,7 @@ export function make_default_state(context: Context, t: Function) {
     const page = context.selection.selectedPage;
     if (shape && shape.type === ShapeType.Symbol && shape.isUnionSymbolShape && page) {
         const editor = context.editor4Page(page);
-        const name = get_component_state_name(shape as SymbolShape, t);
-        return editor.makeStateAt(shape as SymbolShape, name);
+        return editor.makeStateAt(shape as SymbolShape, t('compos.state'));
     }
 }
 
@@ -280,10 +343,30 @@ export function make_state(context: Context, t: Function) {
         }
         if (index < 0) return;
         const editor = context.editor4Page(page);
-        const name = get_component_state_name(shape.parent as SymbolShape, t);
-        return editor.makeStateAt(shape.parent as SymbolShape, name, index);
+        return editor.makeStateAt(shape.parent as SymbolShape, t('compos.state'), index);
     }
 }
 
+export function gen_special_name_for_status(symbol: SymbolShape, dlt: string) {
+    let index = 1
+    if (!symbol.variables) return `${dlt}${index}`;
+    const variables = symbol.variables;
+    const number_set: Set<number> = new Set();
+    const reg = new RegExp(`^${dlt}[0-9]*$`);
+    let max = 1;
+    variables.forEach((v, k) => {
+        if (v.type !== VariableType.Status) return;
+        if (reg.test(v.name)) {
+            const n = Number(v.name.split(dlt)[1]);
+            number_set.add(n);
+            if (n > max) max = n;
+        }
+    })
+    while (index <= max) {
+        index++;
+        if (!number_set.has(index)) break;
+    }
+    return `${dlt}${index}`;
+}
 
-
+// endregion

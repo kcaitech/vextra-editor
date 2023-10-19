@@ -1,4 +1,4 @@
-import {ISave4Restore, Matrix, ShapeType, TableShape, TextShape, Watchable} from "@kcdesign/data";
+import {ISave4Restore, Matrix, ShapeType, SymbolShape, TableShape, TextShape, Watchable} from "@kcdesign/data";
 import {Document} from "@kcdesign/data";
 import {Page} from "@kcdesign/data";
 import {Shape, Text} from "@kcdesign/data";
@@ -373,6 +373,21 @@ export class Selection extends Watchable(Object) implements ISave4Restore {
 
     get textshape() {
         return this.selectedShapes.length === 1 && this.selectedShapes[0].type === ShapeType.Text ? this.selectedShapes[0] as TextShape : false;
+    }
+    get symbolshape(){
+        return this.selectedShapes.length === 1 && this.selectedShapes[0].type === ShapeType.Symbol ? this.selectedShapes[0] as SymbolShape : false;
+    }
+    get symbolstate() {
+        if (this.selectedShapes.length === 1) {
+            const s = this.selectedShapes[0];
+            if (s.type === ShapeType.Symbol && s.parent?.isUnionSymbolShape) {
+                return s as SymbolShape;
+            } else {
+                return false;
+            }
+        } else {
+            return false;
+        }
     }
     get_closest_container(shape: Shape) {
         let result: any = this.m_selectPage!;

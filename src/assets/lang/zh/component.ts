@@ -31,5 +31,7 @@ export const compos: any = {
     lib_line: '线框图组件',
     gocomp: '转到主组件',
     datail: '查看详情',
-    attri_1: '属性 1'
+    attri_1: '属性 1',
+    dlt: '默认',
+    attri: '属性'
 }

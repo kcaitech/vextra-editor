@@ -5,7 +5,7 @@ import TypeHeader from '../TypeHeader.vue';
 import {onMounted, onUnmounted, ref, watch} from 'vue'
 import CompLayerShow from '../PopoverMenu/CompLayerShow.vue';
 import {SymbolShape, VariableType} from '@kcdesign/data';
-import {make_union, variable_sort} from "@/utils/symbol";
+import {make_status, variable_sort} from "@/utils/symbol";
 import AttriCard from "./AttriCard.vue";
 import {AttriListItem} from "@/utils/symbol";
 
@@ -38,9 +38,8 @@ const closeCompsType = (e: Event) => {
 }
 
 function update_variable_list() {
-    console.log('update_variable_list');
     variables.value = variable_sort(props.shape);
-    console.log('sort result: ', variables.value);
+    console.log('update result: ', variables.value);
 }
 
 /**
@@ -59,8 +58,7 @@ function selectCompsType() {
  * @description 添加一个组件状态
  */
 const addModuleState = () => {
-    console.log('emit addModuleState');
-    const make_result = make_union(props.context, t)
+    const make_result = make_status(props.context, t)
     if (make_result) {
         props.context.selection.selectShape(make_result);
     }
@@ -110,12 +108,13 @@ const get_dialog_posi = (div: HTMLDivElement | undefined) => {
 }
 
 function variable_watcher(args: any[]) {
-    if (args && args.includes('map')) update_variable_list();
+    if (args && (args.includes('map') || args.includes('childs'))) update_variable_list();
 }
 
 watch(() => props.shape, (v, o) => {
     v.watch(variable_watcher);
     o.unwatch(variable_watcher);
+    variables.value = variable_sort(v);
 })
 onMounted(() => {
     props.shape.watch(variable_watcher);
@@ -168,7 +167,7 @@ onUnmounted(() => {
         <!--list container-->
         <div class="module_container">
             <component v-for="item in variables" :is="AttriCard" :key="item.variable.id" :context="props.context"
-                       :variable="item.variable"></component>
+                       :variable="item.variable" :item="item"></component>
         </div>
 
         <!--dialog-->

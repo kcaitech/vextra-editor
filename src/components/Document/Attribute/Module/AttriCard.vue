@@ -4,10 +4,12 @@ import { Variable, VariableType } from '@kcdesign/data';
 import { nextTick, ref } from 'vue';
 import { useI18n } from 'vue-i18n';
 import CompLayerShow from "@/components/Document/Attribute/PopoverMenu/CompLayerShow.vue";
+import {AttriListItem} from "@/utils/symbol";
 
 interface Props {
     context: Context
     variable: Variable
+    item: AttriListItem
 }
 
 const { t } = useI18n();
@@ -94,7 +96,7 @@ function save_instance() {
                     <svg-icon icon-class="comp-state"></svg-icon>
                     <span class="name">{{ props.variable.name }}</span>
                 </div>
-                <div><span class="name">数据来源待定</span></div>
+                <div class="name" :title="props.item.values.toString()">{{props.item.values.toString()}}</div>
             </div>
             <div class="delete">
                 <svg-icon icon-class="delete"></svg-icon>
@@ -104,8 +106,7 @@ function save_instance() {
     </div>
     <!--显示状态-->
     <div class="item-wrap">
-    <!-- <div v-if="props.variable.type === VariableType.Visible" class="item-wrap"> -->
-        <div class="module_attr_item" ref="visible_card">
+    <div v-if="props.variable.type === VariableType.Visible" class="item-wrap">
             <div class="attr_con">
                 <div class="module_item_left" @click="edit_visible">
                     <div class="module_name">
@@ -126,8 +127,7 @@ function save_instance() {
     </div>
     <!--文本内容-->
     <div class="item-wrap">
-    <!-- <div v-if="props.variable.type === VariableType.Text" class="item-wrap"> -->
-        <div class="module_attr_item" ref="text_card">
+    <div v-if="props.variable.type === VariableType.Text" class="item-wrap">
             <div class="attr_con">
                 <div class="module_item_left" @click="edit_text">
                     <div class="module_name">
@@ -148,8 +148,7 @@ function save_instance() {
     </div>
     <!--实例切换-->
     <div class="item-wrap">
-    <!-- <div v-if="props.variable.type === VariableType.Instance" class="item-wrap"> -->
-        <div class="module_attr_item" ref="instance_card">
+    <div v-if="props.variable.type === VariableType.Instance" class="item-wrap">
             <div class="attr_con">
                 <div class="module_item_left" @click="edit_instance">
                     <div class="module_name">
@@ -175,6 +174,7 @@ function save_instance() {
     display: flex;
     flex-direction: column;
     margin-bottom: 5px;
+    width: 100%;
 
     .attr_con {
         display: flex;
@@ -187,16 +187,23 @@ function save_instance() {
         align-items: center;
         border-radius: 4px;
         background-color: var(--grey-light);
-        width: 100%;
+        width: calc(100% - 22px);
         height: 30px;
 
         .module_name {
-            width: 45%;
-
+            display: flex;
+            align-items: center;
+            width: 84px;
             >svg {
                 width: 14px;
                 height: 14px;
-                margin: -2px 10px;
+                margin: 0px 10px;
+            }
+            .name {
+                max-width: 54px;
+                overflow: hidden;
+                text-overflow: ellipsis;
+                white-space: nowrap;
             }
         }
 
@@ -204,6 +211,7 @@ function save_instance() {
             overflow: hidden;
             text-overflow: ellipsis;
             white-space: nowrap;
+            max-width: 120px;
         }
     }
 

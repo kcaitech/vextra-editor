@@ -217,6 +217,7 @@ declare module '@vue/runtime-core' {
     Simple: typeof import('./src/components/Document/Content/Simple.vue')['default']
     StarFile: typeof import('./src/components/AppHome/Main/StarFile.vue')['default']
     StatusBar: typeof import('./src/components/Document/StatusBar/index.vue')['default']
+    StatusCard: typeof import('./src/components/Document/Attribute/Module/StatusCard.vue')['default']
     SubLoading: typeof import('./src/components/common/SubLoading.vue')['default']
     SubMenu: typeof import('./src/components/Document/Toolbar/DocumentMenu/SubMenu.vue')['default']
     SvgIcon: typeof import('./src/components/common/SvgIcon.vue')['default']
