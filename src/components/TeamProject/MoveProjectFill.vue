@@ -1,7 +1,7 @@
 <script lang="ts" setup>
 import { watch, ref, Ref, inject, computed, nextTick } from 'vue';
 import { Folder } from '@element-plus/icons-vue';
-import * as team_api from '@/apis/team';
+import * as team_api from '@/request/team';
 import { useI18n } from 'vue-i18n';
 
 interface data {

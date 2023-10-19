@@ -243,7 +243,7 @@ onUnmounted(() => {
                 <div class="menu">
                     <svg-icon icon-class="down"></svg-icon>
                 </div>
-                <TableContextAlgin v-if="isAlignMenu === 'hor'" :context="context" :cells="[]" :menu="isAlignMenu"
+                <TableContextAlgin v-if="isAlignMenu === 'hor'" :context="context" :cells="[]" :menu="isAlignMenu" :selectIcon="horIcon"
                     @textAlginHor="textAlginHor">
                 </TableContextAlgin>
             </div>
@@ -252,7 +252,7 @@ onUnmounted(() => {
                 <div class="menu">
                     <svg-icon icon-class="down"></svg-icon>
                 </div>
-                <TableContextAlgin v-if="isAlignMenu === 'ver'" :context="context" :cells="[]" :menu="isAlignMenu"
+                <TableContextAlgin v-if="isAlignMenu === 'ver'" :context="context" :cells="[]" :menu="isAlignMenu" :selectIcon="verIcon"
                     @textAlginVer="textAlginVer">
                 </TableContextAlgin>
             </div>

@@ -69,6 +69,7 @@ declare module '@vue/runtime-core' {
     Describes: typeof import('./src/components/Login/Describes.vue')['default']
     Design: typeof import('./src/components/Document/Attribute/Design.vue')['default']
     Document: typeof import('./src/components/Document/index.vue')['default']
+    DocumentMenu: typeof import('./src/components/Document/Toolbar/DocumentMenu/DocumentMenu.vue')['default']
     DropFile: typeof import('./src/components/Home/DropFile.vue')['default']
     DropSelect: typeof import('./src/components/Document/Toolbar/Buttons/DropSelect.vue')['default']
     EditorTools: typeof import('./src/components/Document/Toolbar/EditorTools.vue')['default']

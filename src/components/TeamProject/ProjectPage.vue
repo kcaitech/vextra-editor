@@ -100,11 +100,11 @@ import { Ref, nextTick, inject, ref, onMounted, watch } from 'vue'
 import { useRoute } from 'vue-router'
 import { useI18n } from 'vue-i18n'
 import { router } from '@/router'
-import * as user_api from '@/apis/users'
+import * as user_api from '@/request/users'
 import ProjectFillList from './ProjectFill/ProjectFillList.vue';
 import ProjectRecycleBin from './ProjectFill/ProjectRecycleBin.vue';
 import { User, MoreFilled } from '@element-plus/icons-vue';
-import * as team_api from '@/apis/team';
+import * as team_api from '@/request/team';
 import ProjectAccessSetting from './ProjectFill/ProjectAccessSetting.vue';
 import ProjectMemberg from './ProjectFill/ProjectMemberg.vue';
 import TeamProjectMenu from './TeamProjectMenu.vue';

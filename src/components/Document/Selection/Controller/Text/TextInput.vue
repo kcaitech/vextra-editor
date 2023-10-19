@@ -166,6 +166,9 @@ function onfocusout() {
 }
 
 function onKeyDown(e: KeyboardEvent) {
+    if(e.code === 'Tab') {
+        e.preventDefault();
+    }
     handleKeyEvent(e, props.context, props.shape, editor);
 }
 
@@ -173,6 +176,9 @@ function onKeyUp(e: KeyboardEvent) {
 }
 
 function onKeyPress(e: KeyboardEvent) {
+    if(e.code === 'Tab') {
+        e.preventDefault();
+    }
     handleKeyEvent(e, props.context, props.shape, editor);
 }
 </script>

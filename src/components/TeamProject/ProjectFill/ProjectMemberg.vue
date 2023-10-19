@@ -1,7 +1,7 @@
 <script setup lang="ts">
 import { ref, watch, onMounted } from 'vue';
 import { ArrowDown, Check } from '@element-plus/icons-vue';
-import * as team_api from '@/apis/team';
+import * as team_api from '@/request/team';
 import { useI18n } from 'vue-i18n';
 
 const props = defineProps<{

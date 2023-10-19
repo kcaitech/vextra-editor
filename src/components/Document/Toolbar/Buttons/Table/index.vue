@@ -4,7 +4,6 @@ import { ref, nextTick } from 'vue';
 import { Action } from "@/context/tool";
 import { Context } from '@/context';
 import { useI18n } from 'vue-i18n';
-import Tooltip from '@/components/common/Tooltip.vue';
 import CreateTable from './CreateTable.vue';
 const { t } = useI18n()
 interface Props {
@@ -25,7 +24,6 @@ function select(action: Action) {
 }
 
 function showTable(e: MouseEvent) {
-    e.stopPropagation()
   if (button.value?.toolButtonEl) {
     select(Action.AddTable);
     const el = button.value?.toolButtonEl;
@@ -43,10 +41,12 @@ function showTable(e: MouseEvent) {
 }
 
 function onTableBlur(e: MouseEvent) {
-  if (e.target instanceof Element && !e.target.closest('.popover') && !e.target.closest('.svg-table')) {
-    if (e.target.closest('.popover')) return;
-    var timer = setTimeout(() => {
+  if (e.target instanceof Element && !e.target.closest('.popover-t') && !e.target.closest('.svg-table')) {
+    if (e.target.closest('.popover-t')) return;
+    if (e.target instanceof Element && (!e.target.closest('.tool-button') || e.target.closest('.group'))) {
       select(Action.AutoV);
+    }
+    var timer = setTimeout(() => {
       popoverVisible.value = false;
       clearTimeout(timer);
       document.removeEventListener('click', onTableBlur);
@@ -72,18 +72,19 @@ const onMouseleave = () => {
 </script>
 
 <template>
-    <div ref="popover" class="popover" tabindex="-1" v-if="popoverVisible">
+    <div ref="popover" class="popover-t" tabindex="-1" v-if="popoverVisible">
     <!-- <div ref="popover" class="popover" tabindex="-1"> -->
         <CreateTable :context="context" @close="closeInsert"></CreateTable>
     </div>
-    <Tooltip :content="`${t('table.table')}`">
-        <ToolButton ref="button" :selected="props.active" 
+    <el-tooltip class="box-item" effect="dark" :content="`${t('table.table')}`" placement="bottom" :show-after="600"
+    :offset="10" :hide-after="0" :visible="popoverVisible ? false : visible">
+    <ToolButton ref="button" :selected="props.active" 
             @mouseenter.stop="onMouseenter" @mouseleave.stop="onMouseleave">
             <div class="svg-table" @click="showTable">
                 <svg-icon icon-class="pattern-table"></svg-icon>
             </div>
         </ToolButton>
-    </Tooltip>
+      </el-tooltip>
 </template>
 
 <style lang="scss" scoped>
@@ -99,7 +100,7 @@ const onMouseleave = () => {
     height: 14px;
   }
 }
-.popover {
+.popover-t {
   position: absolute;
 }
 </style>
