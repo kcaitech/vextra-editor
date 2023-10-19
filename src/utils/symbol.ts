@@ -386,4 +386,23 @@ export function gen_special_name_for_status(symbol: SymbolShape, dlt: string) {
     return `${dlt}${index}`;
 }
 
+/**
+ * @description 检测组件状态值是否有冲突
+ * @return Boolean
+ */
+export function detects_comp_status_val_is_clash(symbol: SymbolShape) {
+    const variables = symbol.variables;
+    if(symbol.childs.length > 1) {
+        let first = []
+        variables.forEach(v, k) => {
+            symbol.childs[0].vartag
+        }
+        symbol.childs.forEach(item => {
+            item.vartag.keys()
+        })
+    }else {
+        return false;
+    }
+}
+
 // endregion

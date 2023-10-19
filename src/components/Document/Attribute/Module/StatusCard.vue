@@ -48,7 +48,9 @@ const showMenu = (e: MouseEvent) => {
 const statusValue = ref();
 const getVattagValue = () => {
     const shape = props.context.selection.selectedShapes[0] as SymbolShape;
-    statusValue.value = get_tag_value(shape, props.data.variable)
+    if(shape) {
+        statusValue.value = get_tag_value(shape, props.data.variable)
+    }
 }
 const selected_watcher = (t: number) => {
     if(t === Selection.CHANGE_SHAPE) {
