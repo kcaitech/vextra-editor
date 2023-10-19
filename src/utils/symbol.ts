@@ -235,6 +235,7 @@ export function delete_variable(context: Context, variable: Variable) {
     const editor = context.editor4Shape(union);
     editor.removeVar(variable.id);
 }
+
 // endregion
 // region 可变组件属性列表相关
 export interface StatusValueItem {
@@ -275,15 +276,11 @@ export function is_state_selection(shapes: Shape[]) {
 }
 
 export function setup_watch(shapes: Shape[], f: (...args: any[]) => void) {
-    for (let i = 0, len = shapes.length; i < len; i++) {
-        shapes[i].watch(f);
-    }
+    for (let i = 0, len = shapes.length; i < len; i++) shapes[i].watch(f);
 }
 
 export function remove_watch(shapes: Shape[], f: (...args: any[]) => void) {
-    for (let i = 0, len = shapes.length; i < len; i++) {
-        shapes[i].unwatch(f);
-    }
+    for (let i = 0, len = shapes.length; i < len; i++) shapes[i].unwatch(f);
 }
 
 /**
@@ -292,8 +289,9 @@ export function remove_watch(shapes: Shape[], f: (...args: any[]) => void) {
  * @param variable 属性对象
  */
 export function get_tag_value(state: SymbolShape, variable: Variable) {
-    return  state.vartag?.get(variable.id) || variable.value || '';
+    return state.vartag?.get(variable.id) || variable.value || '';
 }
+
 // endregion
 
 // region 其他
