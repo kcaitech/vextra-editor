@@ -4,6 +4,7 @@ import { Context } from '@/context';
 import TypeHeader from '../TypeHeader.vue';
 import { ref, nextTick } from 'vue';
 import CompLayerShow from '../PopoverMenu/CompLayerShow.vue';
+import { VariableType } from '@kcdesign/data';
 const props = defineProps<{
     context: Context
 }>()
@@ -38,7 +39,7 @@ const getDialogPosi = () => {
                 </div>
             </template>
         </TypeHeader>
-        <CompLayerShow :context="context" v-if="isTextShow" @close-dialog="closeLayerShowPopup" right="250px" :add-type="''"
+        <CompLayerShow :context="context" v-if="isTextShow" @close-dialog="closeLayerShowPopup" right="250px" :add-type="VariableType.Status"
             :width="260" :title="t('compos.text_content')" :dialog_posi="dialog_posi"></CompLayerShow>
     </div>
 </template>

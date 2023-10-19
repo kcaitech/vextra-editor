@@ -52,7 +52,7 @@ onMounted(() => {
             :shape="(shapes[0] as SymbolShape)">
         </ComponentAttr>
         <ComponentState :context="context" v-if="is_state()"></ComponentState>
-        <InstanceAttr :context="context" v-if="shapeType === ShapeType.SymbolRef" :shape="(shapes[0] as SymbolRefShape)">
+        <InstanceAttr :context="context" v-if="shapeType === ShapeType.SymbolRef && !p_symble" :shape="(shapes[0] as SymbolRefShape)">
         </InstanceAttr>
         <LayerShow :context="context" v-if="p_symble && shapeType !== ShapeType.Symbol"></LayerShow>
         <TextContent :context="context" v-if="p_symble && shapeType === ShapeType.Text"></TextContent>

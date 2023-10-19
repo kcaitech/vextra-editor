@@ -103,7 +103,8 @@ function save_instance() {
         <div class="warn" v-if="false">{{ t('compos.duplicate_name') }}</div>
     </div>
     <!--显示状态-->
-    <div v-if="props.variable.type === VariableType.Visible" class="item-wrap">
+    <div class="item-wrap">
+    <!-- <div v-if="props.variable.type === VariableType.Visible" class="item-wrap"> -->
         <div class="module_attr_item" ref="visible_card">
             <div class="attr_con">
                 <div class="module_item_left" @click="edit_visible">
@@ -124,7 +125,8 @@ function save_instance() {
         </div>
     </div>
     <!--文本内容-->
-    <div v-if="props.variable.type === VariableType.Text" class="item-wrap">
+    <div class="item-wrap">
+    <!-- <div v-if="props.variable.type === VariableType.Text" class="item-wrap"> -->
         <div class="module_attr_item" ref="text_card">
             <div class="attr_con">
                 <div class="module_item_left" @click="edit_text">
@@ -145,7 +147,8 @@ function save_instance() {
         </div>
     </div>
     <!--实例切换-->
-    <div v-if="props.variable.type === VariableType.Instance" class="item-wrap">
+    <div class="item-wrap">
+    <!-- <div v-if="props.variable.type === VariableType.Instance" class="item-wrap"> -->
         <div class="module_attr_item" ref="instance_card">
             <div class="attr_con">
                 <div class="module_item_left" @click="edit_instance">

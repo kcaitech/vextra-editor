@@ -4,6 +4,7 @@ const props = defineProps<{
     width: string
     top: number
     menuItems: string[]
+    menuIndex?: number
 }>()
 const emit = defineEmits<{
     (e: 'selectIndex', index: number): void
@@ -18,7 +19,7 @@ const close = (e: MouseEvent) => {
         emit('close');
     }
 }
-const isActive = ref(0);
+const isActive = ref(props.menuIndex);
 const hoverColor = (index: number) => {
     isActive.value = index;
 }
@@ -33,7 +34,7 @@ onUnmounted(() => {
 <template>
     <div class="select_menu" :style="{ width: width, top: top + 'px' }">
         <div class="untie" @click="clickItem(index)" v-for="(item, index) in menuItems" :key="index"
-            @mouseleave="hoverColor(index)" :class="{ active: isActive === index }">
+            @mouseenter="hoverColor(index)" :class="{ active: isActive === index }">
             <span>{{ item }}</span>
         </div>
     </div>

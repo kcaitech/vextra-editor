@@ -81,13 +81,15 @@ const save = () => {
 }
 
 const selectoption = ref(false)
-const menuItems = ['显示', '隐藏']
+const menuItems = ['显示', '隐藏'];
+const menuIndex = ref(0);
 const showMenu = () => {
     if (selectoption.value) return selectoption.value = false
     selectoption.value = true;
 }
 const handleShow = (index: number) => {
     defaultValue.value = menuItems[index];
+    menuIndex.value = index;
 }
 
 const comps = ref<HTMLDivElement>()
@@ -165,7 +167,7 @@ onUnmounted(() => {
                             <ArrowDown
                                 :style="{ transform: selectoption ? 'rotate(180deg)' : 'rotate(0deg)', transition: '0.3s' }"/>
                         </el-icon>
-                        <SelectMenu v-if="selectoption" :top="33" width="100%" :menuItems="menuItems"
+                        <SelectMenu v-if="selectoption" :top="33" width="100%" :menuItems="menuItems" :menuIndex="menuIndex"
                                     @select-index="handleShow" @close="selectoption = false"></SelectMenu>
                     </div>
                 </div>
