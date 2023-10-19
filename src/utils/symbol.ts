@@ -287,11 +287,7 @@ export function remove_watch(shapes: Shape[], f: (...args: any[]) => void) {
 }
 
 export function get_tag_value(state: SymbolShape, variable: Variable) {
-    if (state.parent && state.parent.isUnionSymbolShape) {
-        return  state.vartag?.get(variable.id) || variable.value || '';
-    } else {
-        return '';
-    }
+    return  state.vartag?.get(variable.id) || variable.value || '';
 }
 // endregion
 
