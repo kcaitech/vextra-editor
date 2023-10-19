@@ -2,7 +2,7 @@
 import { Context } from '@/context';
 import { Selection } from '@/context/selection';
 import { onMounted, onUnmounted, shallowRef, ref, computed } from 'vue';
-import { ShapeType, Shape, TextShape, TableShape } from "@kcdesign/data"
+import { ShapeType, Shape, TextShape, TableShape, SymbolShape } from "@kcdesign/data"
 import Arrange from './Arrange.vue';
 import ShapeBaseAttr from './BaseAttr/Index.vue';
 import Fill from './Fill/Fill.vue';
@@ -15,6 +15,7 @@ import TableText from './Table/TableText.vue'
 import { TableSelection } from '@/context/tableselection';
 import TableStyle from './Table/TableStyle.vue'
 import { Tool } from '@/context/tool';
+import { detects_comp_status_val_is_clash } from '@/utils/symbol';
 const props = defineProps<{ context: Context }>();
 const shapes = shallowRef<Shape[]>([]);
 const len = computed<number>(() => shapes.value.length);
@@ -56,8 +57,14 @@ const getShapeType = () => {
     if (props.context.selection.selectedShapes.length === 1) {
         shapes.value = new Array(...props.context.selection.selectedShapes);
         shapeType.value = shapes.value[0].type;
-        if(shapeType.value === ShapeType.Text) {
+        if (shapeType.value === ShapeType.Text) {
             textShapes.value = shapes.value;
+        }
+        if (props.context.selection.selectedShapes[0].type === ShapeType.Symbol) {
+
+            const result = detects_comp_status_val_is_clash(props.context.selection.selectedShapes[0] as SymbolShape);
+            console.log(result,'result');
+            
         }
     } else if (props.context.selection.selectedShapes.length > 1) {
         shapes.value = new Array(...props.context.selection.selectedShapes);
@@ -129,8 +136,10 @@ onUnmounted(() => {
                 <Module :context="props.context" :shapeType="shapeType" :shapes="shapes"></Module>
                 <Fill v-if="WITH_FILL.includes(shapeType)" :shapes="shapes" :context="props.context"></Fill>
                 <Border v-if="WITH_BORDER.includes(shapeType)" :shapes="shapes" :context="props.context"></Border>
-                <Text v-if="WITH_TEXT.includes(shapeType)" :shape="(shapes[0] as TextShape)" :textShapes="(textShapes as TextShape[])" :context="props.context"></Text>
-                <TableText v-if="WITH_TABLE.includes(shapeType)" :shape="(shapes[0] as TableShape)" :context="props.context">
+                <Text v-if="WITH_TEXT.includes(shapeType)" :shape="(shapes[0] as TextShape)"
+                    :textShapes="(textShapes as TextShape[])" :context="props.context"></Text>
+                <TableText v-if="WITH_TABLE.includes(shapeType)" :shape="(shapes[0] as TableShape)"
+                    :context="props.context">
                 </TableText>
             </div>
         </el-scrollbar>
