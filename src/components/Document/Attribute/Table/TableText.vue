@@ -989,7 +989,7 @@ onUnmounted(() => {
                 input[type="text"] {
                     -moz-appearance: textfield;
                     appearance: textfield;
-                    font-size: 10px;
+                    font-size: var(--font-default-fontsize);
                 }
 
                 input:focus {

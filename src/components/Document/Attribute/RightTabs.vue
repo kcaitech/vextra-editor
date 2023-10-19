@@ -90,7 +90,7 @@ const showHiddenRight = () => {
 
         >.tab {
             font-weight: var(--font-default-bold);
-            font-size: 10px;
+            font-size: var(--font-default-fontsize);
             min-width: 36px;
             margin-right: 4px;
             margin-top: 4px;

@@ -257,7 +257,7 @@ onMounted(() => {
 }
 
 :deep(.el-input__inner) {
-    font-size: 10px;
+    font-size:var(--font-default-fontsize);
 }
 
 :deep(.el-dialog__title) {
@@ -265,7 +265,7 @@ onMounted(() => {
 }
 
 .body {
-    font-size: 10px;
+    font-size: var(--font-default-fontsize);
 }
 
 .button {

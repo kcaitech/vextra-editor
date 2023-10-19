@@ -652,7 +652,7 @@ onUnmounted(() => {
     width: 47px;
     border-radius: calc(4px);
     height: 24px;
-    font-size: 10px;
+    font-size: var(--font-default-fontsize);
     padding: 0;
 }
 
