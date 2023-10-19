@@ -23,12 +23,12 @@
 </template>
 <script setup lang="ts">
 import { Ref, computed, inject, watchEffect, onMounted, ref, watch, nextTick } from 'vue';
-import * as user_api from '@/apis/users'
+import * as user_api from '@/request/users'
 import { ElMessage } from 'element-plus'
 import { useI18n } from 'vue-i18n'
 import NetworkError from '@/components/NetworkError.vue'
 import { router } from '@/router'
-import * as team_api from '@/apis/team'
+import * as team_api from '@/request/team'
 import ProjectDialog from './ProjectDialog.vue';
 import listrightmenu from "@/components/AppHome/listrightmenu.vue"
 import ProjectMemberg from '../TeamProject/ProjectFill/ProjectMemberg.vue'

@@ -10,8 +10,8 @@ import ColSplitView from '@/components/common/ColSplitView.vue';
 import ApplyFor from './Toolbar/Share/ApplyFor.vue';
 import { Document, importDocument, Repository, Page, CoopRepository, IStorage } from '@kcdesign/data';
 import { SCREEN_SIZE } from '@/utils/setting';
-import * as share_api from '@/apis/share'
-import * as user_api from '@/apis/users'
+import * as share_api from '@/request/share'
+import * as user_api from '@/request/users'
 import {useRoute} from 'vue-router';
 import {router} from '@/router';
 import {useI18n} from 'vue-i18n';
@@ -305,10 +305,9 @@ const hideNotification = (type?: number) => {
   }
 }
 const showNotification = (type?: number) => {
-  insertNetworkInfo('networkError', false, network_error);
-  window.removeEventListener('beforeunload', onBeforeUnload);
-  showHint.value = true;
-  startCountdown(type);
+    insertNetworkInfo('networkError', false, network_error);
+    showHint.value = true;
+    startCountdown(type);
 }
 const getUserInfo = async () => {
   const {data} = await user_api.GetInfo()
@@ -355,7 +354,7 @@ const getDocumentInfo = async () => {
         // documentKey.value = data
 
         const repo = new Repository();
-        const importDocumentParams: StorageOptions = {
+        const storageOptions: StorageOptions = {
             endPoint: data.endpoint,
             region: data.region,
             accessKey: data.access_key,
@@ -365,9 +364,9 @@ const getDocumentInfo = async () => {
         }
         let storage: IStorage;
         if (data.provider === "oss") {
-            storage = new OssStorage(importDocumentParams);
+            storage = new OssStorage(storageOptions);
         } else {
-            storage = new S3Storage(importDocumentParams);
+            storage = new S3Storage(storageOptions);
         }
         const path = docInfo.value.document.path;
         const document = await importDocument(storage, path, "", dataInfo.data.document.version_id ?? "", repo)
@@ -450,28 +449,28 @@ function init_screen_size() {
 }
 
 function init_doc() {
-  if (route.query.id) { // 从远端读取文件
-    getDocumentInfo();
-    document.addEventListener('keydown', keyboardEventHandler);
-    timer = setInterval(() => {
-      getDocumentAuthority();
-    }, 30000);
-  } else { // 从本地读取文件
-    if ((window as any).sketchDocument) {
-      context = new Context((window as any).sketchDocument as Document, ((window as any).skrepo as CoopRepository));
-      null_context.value = false;
-      getUserInfo();
-      context.selection.watch(selectionWatcher);
-      context.workspace.watch(workspaceWatcher);
-      const project_id = localStorage.getItem('project_id') || '';
-      upload(project_id);
-      localStorage.setItem('project_id', '');
-      switchPage(((window as any).sketchDocument as Document).pagesList[0]?.id);
-      document.addEventListener('keydown', keyboardEventHandler);
+    if (route.query.id) { // 从远端读取文件
+        getDocumentInfo();
+        document.addEventListener('keydown', keyboardEventHandler);
+        timer = setInterval(() => {
+            getDocumentAuthority();
+        }, 30000);
     } else {
-      router.push('/');
+        if ((window as any).sketchDocument) {
+            context = new Context((window as any).sketchDocument as Document, ((window as any).skrepo as CoopRepository));
+            null_context.value = false;
+            getUserInfo();
+            context.selection.watch(selectionWatcher);
+            context.workspace.watch(workspaceWatcher);
+            const project_id = localStorage.getItem('project_id') || ''; 
+            upload(project_id);
+            localStorage.setItem('project_id', '');
+            switchPage(((window as any).sketchDocument as Document).pagesList[0]?.id);
+            document.addEventListener('keydown', keyboardEventHandler);
+        } else {
+            router.push('/');
+        }
     }
-  }
 }
 
 function workspaceWatcher(t: number) {
@@ -584,8 +583,9 @@ networkStatus.addOnChange((status: NetworkStatusType) => {
 })
 
 function onBeforeUnload(event: any) {
-  if (context?.communication.docOp.hasPendingSyncCmd()) return event.returnValue = t('message.leave'); // 浏览器弹框提示
-  return event.preventDefault();
+    if (!context?.communication.docOp.hasPendingSyncCmd()) return; // 不需要弹框
+    event.preventDefault();
+    return event.returnValue = t('message.leave');
 }
 
 function onUnloadForCommunication() {

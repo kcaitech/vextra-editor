@@ -2,7 +2,7 @@
 import { ref, watch, onMounted, onUnmounted, watchEffect } from 'vue'
 import { router } from '../../router'
 import { useRoute } from 'vue-router'
-import * as share_api from '../../apis/share'
+import * as share_api from '../../request/share'
 import { useI18n } from 'vue-i18n'
 import { Warning } from '@element-plus/icons-vue'
 const { t } = useI18n()

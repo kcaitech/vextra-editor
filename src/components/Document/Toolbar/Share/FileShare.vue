@@ -3,7 +3,7 @@ import { ref, onMounted, onUnmounted, nextTick, reactive, watch, watchEffect, } 
 import { useI18n } from 'vue-i18n';
 import { UserInfo } from '@/context/user';
 import { Context } from '@/context';
-import * as share_api from '@/apis/share';
+import * as share_api from '@/request/share';
 import { ElMessage } from 'element-plus';
 import { useRoute } from 'vue-router';
 import { DocInfo } from "@/context/user"

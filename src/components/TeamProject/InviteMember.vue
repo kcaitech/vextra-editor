@@ -34,7 +34,7 @@
 <script setup lang="ts">
 import { Ref, computed, inject, onMounted, ref, watch } from 'vue';
 import { useI18n } from 'vue-i18n';
-import * as user_api from '@/apis/users'
+import * as user_api from '@/request/users'
 import { ElMessage } from 'element-plus'
 
 interface teaminfotype {

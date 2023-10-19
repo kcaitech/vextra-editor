@@ -2,8 +2,8 @@
 import { ElMessage } from 'element-plus'
 import { Ref, inject, onMounted, ref, watch, watchEffect } from 'vue'
 import { useI18n } from 'vue-i18n'
-import * as team_api from '@/apis/team';
 import CloseIcon from '@/components/common/CloseIcon.vue';
+import * as team_api from '@/request/team';
 
 const props = defineProps<{
     showcontainer: boolean,
