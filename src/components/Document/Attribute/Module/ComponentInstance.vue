@@ -1,18 +1,21 @@
 <script setup lang="ts">
-import { useI18n } from 'vue-i18n';
-import { Context } from '@/context';
+import {useI18n} from 'vue-i18n';
+import {Context} from '@/context';
 import TypeHeader from '../TypeHeader.vue';
-import { ref, nextTick, onUnmounted } from 'vue';
+import {ref, onUnmounted} from 'vue';
 import CompLayerShow from '../PopoverMenu/CompLayerShow.vue';
-import { Shape, SymbolRefShape } from '@kcdesign/data';
-import { get_shape_within_document, shape_track } from '@/utils/content';
-import { MoreFilled } from '@element-plus/icons-vue';
-import { VariableType } from '@kcdesign/data';
-const props = defineProps<{
+import {Shape, SymbolRefShape} from '@kcdesign/data';
+import {get_shape_within_document, shape_track} from '@/utils/content';
+import {MoreFilled} from '@element-plus/icons-vue';
+import {VariableType} from '@kcdesign/data';
+
+interface Props {
     context: Context
     shapes: Shape[]
-}>()
-const { t } = useI18n();
+}
+
+const props = defineProps<Props>();
+const {t} = useI18n();
 const isInstanceShow = ref(false);
 const saveExamplesToggle = () => {
     isInstanceShow.value = false
@@ -55,7 +58,7 @@ const closeResetMenu = (e: MouseEvent) => {
 }
 
 const atrrdialog = ref<HTMLDivElement>();
-const dialog_posi = ref({ x: 0, y: 0 });
+const dialog_posi = ref({x: 0, y: 0});
 const getDialogPosi = () => {
     if (atrrdialog.value) {
         const el = atrrdialog.value.getBoundingClientRect();
@@ -80,20 +83,24 @@ onUnmounted(() => {
                         <svg-icon icon-class="edit-comp"></svg-icon>
                     </div>
                     <div class="reset_svg" @click.stop="selectReset">
-                        <el-icon><MoreFilled /></el-icon>
+                        <el-icon>
+                            <MoreFilled/>
+                        </el-icon>
                         <div class="reset_menu" v-if="resetMenu">
                             <div class="untie" @click="untie">
-                                <span>{{t('compos.untie')}}</span>
+                                <span>{{ t('compos.untie') }}</span>
                                 <span>快捷键</span>
                             </div>
-                            <div class="untie">{{t('compos.reset_all_attr')}}</div>
+                            <div class="untie">{{ t('compos.reset_all_attr') }}</div>
                         </div>
                     </div>
                 </div>
             </template>
         </TypeHeader>
+
         <CompLayerShow :context="context" v-if="isInstanceShow" @close-dialog="saveExamplesToggle" right="250px"
-            :add-type="VariableType.Instance" :width="260" :title="t('compos.instance_toggle')" :dialog_posi="dialog_posi"></CompLayerShow>
+                       :add-type="VariableType.Instance" :width="260" :title="t('compos.instance_toggle')"
+                       :dialog_posi="dialog_posi"></CompLayerShow>
     </div>
 </template>
 
@@ -103,6 +110,7 @@ onUnmounted(() => {
     height: 22px;
     display: flex;
     align-items: center;
+
     .rele_svg {
         width: 22px;
         height: 22px;
@@ -110,11 +118,12 @@ onUnmounted(() => {
         align-items: center;
         justify-content: center;
 
-        >svg {
+        > svg {
             width: 70%;
             height: 70%;
         }
     }
+
     .edit_svg {
         width: 22px;
         height: 22px;
@@ -122,7 +131,7 @@ onUnmounted(() => {
         align-items: center;
         justify-content: center;
 
-        >svg {
+        > svg {
             width: 50%;
             height: 50%;
         }
@@ -137,7 +146,7 @@ onUnmounted(() => {
         align-items: center;
         justify-content: center;
 
-        >svg {
+        > svg {
             width: 50%;
             height: 50%;
         }
@@ -169,4 +178,5 @@ onUnmounted(() => {
             }
         }
     }
-}</style>
+}
+</style>

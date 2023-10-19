@@ -377,6 +377,18 @@ export class Selection extends Watchable(Object) implements ISave4Restore {
     get symbolshape(){
         return this.selectedShapes.length === 1 && this.selectedShapes[0].type === ShapeType.Symbol ? this.selectedShapes[0] as SymbolShape : false;
     }
+    get symbolstate() {
+        if (this.selectedShapes.length === 1) {
+            const s = this.selectedShapes[0];
+            if (s.type === ShapeType.Symbol && s.parent?.isUnionSymbolShape) {
+                return s as SymbolShape;
+            } else {
+                return false;
+            }
+        } else {
+            return false;
+        }
+    }
     get_closest_container(shape: Shape) {
         let result: any = this.m_selectPage!;
         let p = shape.parent;

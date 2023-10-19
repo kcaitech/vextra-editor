@@ -1,6 +1,6 @@
 import {Context} from "@/context";
 import {Artboard, GroupShape, Page, Shape, ShapeType, SymbolShape, Variable, VariableType} from "@kcdesign/data";
-import {get_component_state_name, getName} from "./content";
+import {getName} from "./content";
 import {sort_by_layer} from "./group_ungroup";
 import {debounce} from "lodash";
 
@@ -192,6 +192,7 @@ function _clear_scroll_target(context: Context) {
 export const clear_scroll_target = debounce(_clear_scroll_target, 300);
 
 // endregion
+// region union属性列表相关
 export interface AttriListItem {
     variable: Variable
     values: { key: string, value: string }[]
@@ -228,6 +229,57 @@ export function tag_values_sort(symbol: SymbolShape, variable: Variable) {
     return Array.from(result_set.values());
 }
 
+// endregion
+export interface StatusValueItem {
+    variable: Variable
+    values: any[]
+}
+
+export function states_tag_values_sort(shapes: SymbolShape[]) {
+    const result: StatusValueItem[] = [];
+    if (shapes.length === 1) {
+        const par = shapes[0].parent as SymbolShape;
+        const bros: SymbolShape[] = par.childs as unknown as SymbolShape[];
+        const variables = par.variables;
+        if (!variables) return result;
+        variables.forEach((v, k) => {
+            if (v.type !== VariableType.Status) return;
+            const item: StatusValueItem = {
+                variable: v,
+                values: tag_values_sort(par, v)
+            }
+            result.push(item);
+        })
+    } else {
+        // todo
+    }
+    return result;
+}
+
+export function is_state_selection(shapes: Shape[]) {
+    if (!shapes.length) return false;
+    const p = shapes[0].parent;
+    if (!p) return false;
+    for (let i = 0, len = shapes.length; i < len; i++) {
+        const shape = shapes[i];
+        if (shape.type !== ShapeType.Symbol || !shape.parent || shape.parent !== p || !shape.parent.isUnionSymbolShape) return false;
+    }
+    return true;
+}
+
+export function setup_watch(shapes: Shape[], f: (...args: any[]) => void) {
+    for (let i = 0, len = shapes.length; i < len; i++) {
+        shapes[i].watch(f);
+    }
+}
+
+export function remove_watch(shapes: Shape[], f: (...args: any[]) => void) {
+    for (let i = 0, len = shapes.length; i < len; i++) {
+        shapes[i].unwatch(f);
+    }
+}
+
+// region 其他
 /**
  * @description 创建一个组件
  * @return symbolshape
@@ -316,3 +368,5 @@ export function gen_special_name_for_status(symbol: SymbolShape, dlt: string) {
     }
     return `${dlt}${index}`;
 }
+
+// endregion
