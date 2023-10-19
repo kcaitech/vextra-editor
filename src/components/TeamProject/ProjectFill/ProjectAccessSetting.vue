@@ -3,21 +3,22 @@ import { ElMessage } from 'element-plus'
 import { Ref, inject, onMounted, ref, watch, watchEffect } from 'vue'
 import { useI18n } from 'vue-i18n'
 import * as team_api from '@/apis/team';
+import CloseIcon from '@/components/common/CloseIcon.vue';
 
 const props = defineProps<{
-    title: string
-    width: string
+    showcontainer: boolean,
+    title: string,
+    width: string,
     data: any
-}>()
+}>();
+
 const emit = defineEmits<{
     (e: 'clodeDialog'): void;
 }>()
-const handleClose = () => {
-    emit('clodeDialog')
-}
+
 const linkSwitch = ref(false)
 const sharelink = ref(``)
-const isshow = ref(true)
+const isshow = ref(false)
 const checked = ref(false);
 const currentProject = ref<any[]>([props.data]);
 const { t } = useI18n()
@@ -126,6 +127,10 @@ const setProjectInvitedInfo = async () => {
     }
 }
 
+watch(() => props.showcontainer, (newval) => {
+    isshow.value = newval
+})
+
 watch(projectType, (v) => {
     const index = projectList.value.findIndex((item) => item.project.id === currentProject.value[0].project.id);
     if (v === projectOptions[0].label) {
@@ -196,62 +201,76 @@ onMounted(() => {
     params.need_approval = project.need_approval;
     params.perm_type = project.perm_type;
     sharelink.value = `https://test.protodesign.cn/zbb/#/apphome/project/${project.id}`
+
 })
+
+const changemargin = () => {
+    const el = document.querySelector('.el-dialog__header') as HTMLElement
+    el.style.marginRight = '0px'
+}
 
 </script>
 
 <template>
-    <div>
-        <el-dialog v-model="isshow" :title="title" :width="width" align-center :close-on-click-modal="false"
-            :before-close="handleClose">
-            <div class="body">
-                <div class="project_type">
-                    <p>{{t('Createteam.projecttype')}}</p>
-                    <el-select v-model="projectType" class="m-2" style="width: 230px;" size="large"
-                        :disabled="!(currentProject[0].self_perm_type === 4 || currentProject[0].self_perm_type === 5)">
-                        <el-option v-for="item in projectOptions" :key="item.value" :label="item.label"
-                            :value="item.label" />
-                    </el-select>
+    <el-dialog v-model="isshow" :width="width" align-center :append-to-body="true" :close-on-click-modal="false"
+        :show-close="false" @open="changemargin" :destroy-on-close="true">
+        <template #header>
+            <div class="my-header">
+                <div class="title">{{ title }}</div>
+                <CloseIcon :size="20" @close="emit('clodeDialog')" />
+            </div>
+        </template>
+        <div class="body">
+            <div class="project_type">
+                <p class="text">{{ t('Createteam.projecttype') }}</p>
+                <el-select v-model="projectType" class="m-2" style="width: 230px;" size="large"
+                    :disabled="!(currentProject[0].self_perm_type === 4 || currentProject[0].self_perm_type === 5)">
+                    <el-option v-for="item in projectOptions" :key="item.value" :label="item.label" :value="item.label" />
+                </el-select>
+            </div>
+            <div class="project_type" v-if="currentProject[0]">
+                <p class="text">{{ t('Createteam.jurisdiction') }}</p>
+                <el-select v-model="projectPerm" class="m-2" style="width: 230px;" size="large"
+                    :disabled="!(currentProject[0].self_perm_type === 4 || currentProject[0].self_perm_type === 5)">
+                    <el-option v-for="item in projectPerms" :key="item.value" :label="item.label" :value="item.label" />
+                </el-select>
+            </div>
+            <div v-if="currentProject[0] && projectType === projectOptions[1].label">
+                <div>{{ t('Createteam.jointips') }}</div>
+                <div class="share-switch"
+                    :style="{ opacity: currentProject[0].self_perm_type === 4 || currentProject[0].self_perm_type === 5 ? '1' : '.5' }">
+                    <span style="font-weight: 600;">{{ t('Createteam.invitation_switch') }}:</span>
+                    <el-switch class="switch" size="small" v-model="linkSwitch" @click="onLinkSwitch"
+                        :disabled="!(currentProject[0].self_perm_type === 4 || currentProject[0].self_perm_type === 5)" />
                 </div>
-                <div class="project_type" v-if="currentProject[0]">
-                    <p>{{t('Createteam.jurisdiction')}}</p>
-                    <el-select v-model="projectPerm" class="m-2" style="width: 230px;" size="large"
-                        :disabled="!(currentProject[0].self_perm_type === 4 || currentProject[0].self_perm_type === 5)">
-                        <el-option v-for="item in projectPerms" :key="item.value" :label="item.label" :value="item.label" />
-                    </el-select>
+                <div class="link" v-if="linkSwitch">
+                    <el-input :value="sharelink" :readonly="true" />
+                    <!-- <div class="qrcode" @click="produceQrcode"><svg-icon icon-class="qrcode"></svg-icon></div> -->
                 </div>
-                <div v-if="currentProject[0] && projectType === projectOptions[1].label">
-                    <div>{{t('Createteam.jointips')}}</div>
-                    <div class="share-switch"
-                        :style="{ opacity: currentProject[0].self_perm_type === 4 || currentProject[0].self_perm_type === 5 ? '1' : '.5' }">
-                        <span>{{t('Createteam.invitation_switch')}}:</span>
-                        <el-switch class="switch" size="small" v-model="linkSwitch" @click="onLinkSwitch"
-                            :disabled="!(currentProject[0].self_perm_type === 4 || currentProject[0].self_perm_type === 5)" />
-                    </div>
-                    <div class="link" v-if="linkSwitch">
-                        <el-input :value="sharelink" :readonly="true" />
-                        <!-- <div class="qrcode" @click="produceQrcode"><svg-icon icon-class="qrcode"></svg-icon></div> -->
-                    </div>
-                    <div class="qrcode-box" v-if="!is_qrcode">
-                    </div>
-                    <div class="checked" v-if="linkSwitch"
-                        :style="{ opacity: currentProject[0].self_perm_type === 4 || currentProject[0].self_perm_type === 5 ? '1' : '.5' }">
-                        <el-checkbox v-model="checked"
-                            :disabled="!(currentProject[0].self_perm_type === 4 || currentProject[0].self_perm_type === 5)"></el-checkbox><span>申请后需管理员审批确认</span>
-                    </div>
-                    <div class="button" :style="{ opacity: linkSwitch ? '1' : '.5' }" @click="copyLink">
-                        <button>{{t('Createteam.copylink')}}</button>
-                    </div>
+                <div class="qrcode-box" v-if="!is_qrcode">
                 </div>
-                <div v-else>
-                    <div class="button" @click.stop="handleClose"><button>{{t('Createteam.confirm')}}</button></div>
+                <div class="checked" v-if="linkSwitch"
+                    :style="{ opacity: currentProject[0].self_perm_type === 4 || currentProject[0].self_perm_type === 5 ? '1' : '.5' }">
+                    <el-checkbox v-model="checked"
+                        :disabled="!(currentProject[0].self_perm_type === 4 || currentProject[0].self_perm_type === 5)"></el-checkbox><span>申请后需管理员审批确认</span>
+                </div>
+                <div class="button" :style="{ opacity: linkSwitch ? '1' : '.5' }" @click="copyLink">
+                    <button>{{ t('Createteam.copylink') }}</button>
                 </div>
             </div>
-        </el-dialog>
-    </div>
+            <div v-else>
+                <div class="button" @click.stop="emit('clodeDialog')"><button>{{ t('Createteam.confirm') }}</button></div>
+            </div>
+        </div>
+    </el-dialog>
 </template>
 
 <style scoped lang="scss">
+
+:deep(.el-checkbox__input.is-checked .el-checkbox__inner) {
+  border-color: #9775fa; 
+  background-color: #9775fa;
+}
 :deep(.el-dialog__body) {
     padding: 16px !important;
 }
@@ -266,6 +285,16 @@ onMounted(() => {
 
 .body {
     font-size: 10px;
+}
+
+.my-header {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+
+    .title {
+        font-weight: 600;
+    }
 }
 
 .button {
@@ -289,11 +318,11 @@ onMounted(() => {
 .project_type {
     display: flex;
     align-items: center;
-    margin-bottom: 10px;
+    margin-bottom: 8px;
 
-    p {
-        width: 50px;
-        margin-right: 10px;
+    .text {
+        width: 60px;
+        font-weight: 600;
     }
 }
 
@@ -334,11 +363,13 @@ onMounted(() => {
         font-size: 14px;
     }
 }
+
 .qrcode-box {
     display: flex;
     align-items: center;
     justify-content: center;
     margin: 10px 0;
+
     div {
         width: 150px;
         height: 150px;

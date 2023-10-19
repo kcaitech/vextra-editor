@@ -2,7 +2,8 @@
     <el-auto-resizer>
         <template #default="{ height, width }">
             <el-table-v2 v-if="height != 0" :columns="columns" :data=props.data :width="width" :height="height"
-                :row-class="rowClass" :row-event-handlers="rowHandleClick" @scroll="rightmenu">
+                :row-class="rowClass" :row-event-handlers="rowHandleClick" @scroll="rightmenu" :header-height="24"
+                :row-height="40" :header-class="headerClass">
                 <template v-if="loading" #overlay>
                     <div class="el-loading-mask" style="display: flex; align-items: center; justify-content: center">
                         <Loading :size="20" />
@@ -14,7 +15,7 @@
                         <button type="button" @click.stop="newProjectFill">{{ t('home.new_file') }}</button>
                     </div>
                     <div v-else-if="props.addproject! > 0 && !loading && !noNetwork" class="datanull">
-                        <p>{{ t('projectlist.datanull') }}</p>
+                        <p>{{ props.nulldata ? t('search.search_results') : t('projectlist.datanull') }}</p>
                         <button type="button" @click.stop="onAddproject">{{ t('projectlist.addproject') }}</button>
                     </div>
                     <div v-else-if="!noNetwork && empty" class="flex items-center justify-center h-100%">
@@ -29,18 +30,12 @@
     </el-auto-resizer>
 </template>
 <script setup lang="tsx">
-import { ref, watchEffect, Ref, inject, watch } from 'vue'
+import { ref, watchEffect, Ref, inject, watch, computed, nextTick } from 'vue'
 import { Share, Delete, Remove } from '@element-plus/icons-vue'
 import type { Column, RowClassNameGetter } from 'element-plus'
 import { useI18n } from 'vue-i18n'
 import NetworkError from '@/components/NetworkError.vue'
 import Loading from '../common/Loading.vue';
-
-const { t } = useI18n()
-const loading = ref(true)
-const empty = ref(false)
-const net = ref<HTMLDivElement>()
-const user_id = localStorage.getItem('userId');
 const props = defineProps<{
     data: any,
     iconlist: any,
@@ -51,8 +46,16 @@ const props = defineProps<{
     deleter?: boolean,
     projectshare?: boolean,
     addproject?: number,
-    perm?: number
+    perm?: number,
+    nulldata?: boolean
 }>()
+const { t } = useI18n()
+const loading = ref(true)
+const empty = ref(false)
+const net = ref<HTMLDivElement>()
+const user_id = localStorage.getItem('userId');
+
+
 
 let timer: any
 watch(() => props.data, () => {
@@ -70,21 +73,21 @@ const { projectList } = inject('shareData') as {
     projectList: Ref<any[]>;
 };
 
-// watch(() => props.noNetwork, (newV) => {
-//     if (newV) {
-//         nextTick(() => {
-//             if (net.value) {
-//                 loading.value = false
-//                 const el = net.value.parentElement
-//                 nextTick(() => {
-//                     if (el) {
-//                         el.style.top = '50%'
-//                     }
-//                 })
-//             }
-//         })
-//     }
-// })
+watch(() => props.noNetwork, (newV) => {
+    if (newV) {
+        nextTick(() => {
+            if (net.value) {
+                loading.value = false
+                const el = net.value.parentElement
+                nextTick(() => {
+                    if (el) {
+                        el.style.top = '50%'
+                    }
+                })
+            }
+        })
+    }
+})
 
 const emits = defineEmits([
     'rightMeun',
@@ -119,7 +122,7 @@ const onAddproject = () => {
     emits('onAddproject');
 }
 
-const rightmenu = (e: any) => {
+const rightmenu = (e: any,) => {
     const rightmenuElement = document.querySelector('.rightmenu') as HTMLElement;
     if (e.scrollTop >= scrolltop.value + 300 || scrolltop.value - e.scrollTop >= 300) {
         scrolltop.value = e.scrollTop;
@@ -127,16 +130,18 @@ const rightmenu = (e: any) => {
             rightmenuElement.style.display = 'none'
         }
     }
+    x.value = e.scrollTop
 }
 
 const rowHandleClick = ({
     onclick: ({ rowData }: any) => {
-        if (props.projectshare) {
+        selectedId.value = -1
+        if (rowData.project) {
             selectedId.value = rowData.project.id
-        } else {
+        }
+        if (rowData.document) {
             selectedId.value = rowData.document.id
         }
-
     },
 
     ondblclick: ({ rowData }: any) => {
@@ -148,13 +153,13 @@ const rowHandleClick = ({
 
     },
 
-    oncontextmenu: ({ event, rowData }: any) => {
+    oncontextmenu: ({ event, rowData, rowIndex }: any) => {
         if (props.projectshare) {
             selectedId.value = rowData.project.id
         } else {
             selectedId.value = rowData.document.id
         }
-        emits('rightMeun', event, rowData)
+        emits('rightMeun', event, rowData, rowIndex)
     },
 })
 
@@ -169,6 +174,12 @@ const rowClass = ({ rowData }: Parameters<RowClassNameGetter<any>>[0]) => {
             return 'selected'
         }
 }
+
+const x = ref(0)
+
+const headerClass = computed(() => {
+    return x.value > 0 ? 'test' : ''
+})
 
 
 
@@ -528,6 +539,18 @@ watchEffect(() => {
 
 </script>
 <style lang="scss" scoped>
+:deep(.el-table-v2__header-wrapper) {
+    height: 26px !important;
+}
+
+:deep(.el-table-v2__header) {
+    height: 26px !important;
+}
+
+:deep(.test) {
+    box-shadow: 0 0 4px 0 rgb(0, 0, 0, 0.1) !important;
+}
+
 :deep(.el-table-v2__row) {
     display: flex;
     justify-content: space-between;
@@ -536,8 +559,10 @@ watchEffect(() => {
 }
 
 :deep(.el-table-v2__header-row) {
+    border: none;
     display: flex;
     justify-content: space-between;
+    transition: all 0.2s ease-in-out;
 }
 
 :deep(.el-table-v2__row:hover) {
@@ -572,10 +597,9 @@ watchEffect(() => {
     }
 }
 
-
-:deep(.el-table-v2__row.selected) {
-    background-color: #e5dbff;
-    border-radius: 4px;
+:deep(.selected) {
+    background-color: #e5dbff !important;
+    border-radius: 4px !important;
 }
 
 :deep(span) {

@@ -101,8 +101,6 @@ const rdelProject = (data: any) => {
 }
 
 const escClose = () => {
-    console.log('1111');
-
     if (innerVisible.value) {
         innerVisible.value = false;
     }

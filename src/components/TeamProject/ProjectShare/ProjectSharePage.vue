@@ -2,11 +2,8 @@
 <template>
     <div>
         <div class="team">
-            <div class="team-info">
-                <div class="team-name">{{t('Createteam.sharetip')}}</div>
-            </div>
+            <div class="team-name">{{ t('Createteam.sharetip') }}</div>
         </div>
-        <el-divider />
         <ProjectShareList />
     </div>
 </template>
@@ -47,9 +44,7 @@ const { t } = useI18n();
     transform: translate(-50%, -50%) scale(0.8);
     opacity: 0.001;
 }
-.el-divider {
-    margin: 10px 0;
-}
+
 .overlay {
     position: absolute;
     top: 0;
@@ -68,17 +63,20 @@ const { t } = useI18n();
 
 .team {
     display: flex;
-    margin-top: 16px;
-    align-items: center;
+    align-items: flex-end;
+    height: 40px;
+    border-bottom: 1px solid rgba(196, 196, 196, 0.8117647059);
+    margin: 6px 0;
+    box-sizing: border-box;
 
-    .team-info {
-        display: flex;
-        flex-direction: column;
-
-        .team-name {
-            font-size: 18px;
-            font-weight: 600;
-        }
+    .team-name {
+        font-size: 18px;
+        font-weight: 600;
+        letter-spacing: 2px;
+        line-height: 40px;
+        margin-right: 12px;
+        color: #000;
     }
+
 }
 </style>

@@ -285,10 +285,6 @@ onUnmounted(() => {
     window.removeEventListener('resize', getPageHeight)
 })
 
-function emit(arg0: string) {
-    throw new Error("Function not implemented.")
-}
-
 </script>
 <style lang="scss" scoped>
 .overlay {
