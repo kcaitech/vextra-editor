@@ -298,7 +298,7 @@ const showHiddenLeft = () => {
         align-items: center;
         >button {
             margin-top: 10px;
-            font-size: 10px;
+            font-size: var(--font-default-fontsize);
             border: none;
             height: 30px;
             color: #fff;

@@ -471,7 +471,7 @@ onUnmounted(() => {
         input[type="text"] {
           -moz-appearance: textfield;
           appearance: textfield;
-          font-size: 10px;
+          font-size: var(--font-default-fontsize);
           width: 90px;
           border: none;
           background-color: var(--input-background);

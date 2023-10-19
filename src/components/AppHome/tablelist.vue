@@ -1,75 +1,76 @@
 <template>
-        <el-auto-resizer>
-            <template #default="{ height, width }">
-                <el-table-v2 :columns="columns" :data=props.data :width="width" :height="height" :row-class="rowClass"
-                    :row-event-handlers="rowHandleClick" @scroll="rightmenu">
-                    <template v-if="loading && height!=0" #overlay >
-                        <div class="el-loading-mask" style="display: flex; align-items: center; justify-content: center">
-                            <Loading :size="20"/>
-                        </div>
-                    </template>
-                    <template #empty>
-                        <div v-if="props.type === 'project' && !loading" class="datanull">
-                            <p>{{t('Createteam.projectfilenull')}}</p>
-                            <button type="button" @click="newProjectFill">{{t('home.new_file')}}</button>
-                        </div>
-                        <div v-else-if="empty" class="flex items-center justify-center h-100%">
-                            <el-empty :style="{ 'height': height - 50 + 'px' }" :description="t('home.table_empty_tips')" />
-                        </div>
-                        <div v-else-if="noNetwork" ref="net" class="flex items-center justify-center h-100%">
-                            <NetworkError @refreshDoc="refreshDoc"></NetworkError>
-                        </div>
-                    </template>
-                </el-table-v2>
-            </template>
-        </el-auto-resizer>
+    <el-auto-resizer>
+        <template #default="{ height, width }">
+            <el-table-v2 v-if="height != 0" :columns="columns" :data=props.data :width="width" :height="height"
+                :row-class="rowClass" :row-event-handlers="rowHandleClick" @scroll="rightmenu" :header-height="24"
+                :row-height="40" :header-class="headerClass">
+                <template v-if="loading" #overlay>
+                    <div class="el-loading-mask" style="display: flex; align-items: center; justify-content: center">
+                        <Loading :size="20" />
+                    </div>
+                </template>
+                <template #empty>
+                    <div v-if="props.addfile! > 2 && !loading && !noNetwork" class="datanull">
+                        <p>{{ t('Createteam.projectfilenull') }}</p>
+                        <button type="button" @click.stop="newProjectFill">{{ t('home.new_file') }}</button>
+                    </div>
+                    <div v-else-if="props.addproject! > 0 && !loading && !noNetwork" class="datanull">
+                        <p>{{ props.nulldata ? t('search.search_results') : t('projectlist.datanull') }}</p>
+                        <button type="button" @click.stop="onAddproject">{{ t('projectlist.addproject') }}</button>
+                    </div>
+                    <div v-else-if="!noNetwork && empty" class="flex items-center justify-center h-100%">
+                        <el-empty :style="{ 'height': height - 50 + 'px' }" :description="t('home.table_empty_tips')" />
+                    </div>
+                    <div v-else-if="noNetwork" ref="net" class="flex items-center justify-center h-full">
+                        <NetworkError @refreshDoc="refreshDoc"></NetworkError>
+                    </div>
+                </template>
+            </el-table-v2>
+        </template>
+    </el-auto-resizer>
 </template>
 <script setup lang="tsx">
-import { ref, watchEffect, Ref, inject } from 'vue'
+import { ref, watchEffect, Ref, inject, watch, computed, nextTick } from 'vue'
 import { Share, Delete, Remove } from '@element-plus/icons-vue'
 import type { Column, RowClassNameGetter } from 'element-plus'
 import { useI18n } from 'vue-i18n'
-import { watch, nextTick } from 'vue';
 import NetworkError from '@/components/NetworkError.vue'
 import Loading from '../common/Loading.vue';
-
+const props = defineProps<{
+    data: any,
+    iconlist: any,
+    noNetwork: boolean,
+    addfile?: number,
+    address?: boolean,
+    creator?: boolean,
+    deleter?: boolean,
+    projectshare?: boolean,
+    addproject?: number,
+    perm?: number,
+    nulldata?: boolean
+}>()
 const { t } = useI18n()
-
-
 const loading = ref(true)
 const empty = ref(false)
 const net = ref<HTMLDivElement>()
-const props = defineProps<{
-    data: any
-    iconlist: any
-    noNetwork: boolean
-    type?: string
-    address?: boolean
-    creator?: boolean
-    deleter?: boolean
-    perm?: number
-}>()
 const user_id = localStorage.getItem('userId');
+
+
+
+let timer: any
 watch(() => props.data, () => {
-    loading.value = false
-    empty.value = true
+    clearTimeout(timer)
+    if (props.data[0]) {
+        loading.value = false
+
+    } else {
+        empty.value = true
+        loading.value = false
+    }
 });
 
-const { projectList, saveProjectData, is_favor, favoriteList, updateFavor, is_team_upodate, teamData } = inject('shareData') as {
+const { projectList } = inject('shareData') as {
     projectList: Ref<any[]>;
-    favoriteList: Ref<any[]>;
-    saveProjectData: (data: any[]) => void;
-    is_favor: Ref<boolean>;
-    updateFavor: (b: boolean) => void;
-    is_team_upodate: Ref<boolean>;
-    teamData: Ref<[{
-        team: {
-            id: string,
-            name: string,
-            avatar: string,
-            description: string
-        }
-    }]>;
 };
 
 watch(() => props.noNetwork, (newV) => {
@@ -88,7 +89,6 @@ watch(() => props.noNetwork, (newV) => {
     }
 })
 
-
 const emits = defineEmits([
     'rightMeun',
     'updatestar',
@@ -100,7 +100,12 @@ const emits = defineEmits([
     'exit_share',
     'dbclickopen',
     'refreshDoc',
-    'newProjectFill'
+    'newProjectFill',
+    'onAddproject',
+    'cancelfixed',
+    'skipproject',
+    'onexitproject'
+
 ])
 
 const selectedId = ref(-1)
@@ -113,7 +118,11 @@ const newProjectFill = () => {
     emits('newProjectFill');
 }
 
-const rightmenu = (e: any) => {
+const onAddproject = () => {
+    emits('onAddproject');
+}
+
+const rightmenu = (e: any,) => {
     const rightmenuElement = document.querySelector('.rightmenu') as HTMLElement;
     if (e.scrollTop >= scrolltop.value + 300 || scrolltop.value - e.scrollTop >= 300) {
         scrolltop.value = e.scrollTop;
@@ -121,27 +130,58 @@ const rightmenu = (e: any) => {
             rightmenuElement.style.display = 'none'
         }
     }
+    x.value = e.scrollTop
 }
 
 const rowHandleClick = ({
     onclick: ({ rowData }: any) => {
-        selectedId.value = rowData.document.id
+        selectedId.value = -1
+        if (rowData.project) {
+            selectedId.value = rowData.project.id
+        }
+        if (rowData.document) {
+            selectedId.value = rowData.document.id
+        }
     },
+
     ondblclick: ({ rowData }: any) => {
-        emits('dbclickopen', rowData.document.id)
+        if (props.projectshare) {
+            emits('dbclickopen', rowData)
+        } else {
+            emits('dbclickopen', rowData.document.id)
+        }
+
     },
-    oncontextmenu: ({ event, rowData }: any) => {
-        selectedId.value = rowData.document.id
-        emits('rightMeun', event, rowData)
+
+    oncontextmenu: ({ event, rowData, rowIndex }: any) => {
+        if (props.projectshare) {
+            selectedId.value = rowData.project.id
+        } else {
+            selectedId.value = rowData.document.id
+        }
+        emits('rightMeun', event, rowData, rowIndex)
     },
 })
 
 const rowClass = ({ rowData }: Parameters<RowClassNameGetter<any>>[0]) => {
-    if (selectedId.value === rowData.document.id) {
-        return 'selected'
+    if (rowData.project) {
+        if (selectedId.value === rowData.project.id) {
+            return 'selected'
+        }
     }
-    return ''
+    if (rowData.document)
+        if (selectedId.value === rowData.document.id) {
+            return 'selected'
+        }
 }
+
+const x = ref(0)
+
+const headerClass = computed(() => {
+    return x.value > 0 ? 'test' : ''
+})
+
+
 
 const columns: Column<any>[] = [
     {
@@ -328,18 +368,18 @@ const columns: Column<any>[] = [
 const getFillAddress = (id: string, project: any, team: any) => {
     const user_id = localStorage.getItem('userId');
     let address = '';
-    if(project) {
+    if (project) {
         const p_Info = projectList.value.filter(item => item.project.id === project.id)[0];
-        if(p_Info && p_Info.is_in_team) {
+        if (p_Info && p_Info.is_in_team) {
             address = team.name + ' / ' + project.name;
-        }else if(p_Info) {
+        } else if (p_Info) {
             address = `${t('Createteam.sharetip')} / '` + project.name;
         }
         return address;
-    }else {
-        if(user_id === id) {
+    } else {
+        if (user_id === id) {
             address = t('home.file_shared');
-        }else {
+        } else {
             address = t('home.shared_file_received');
         }
         return address;
@@ -358,7 +398,7 @@ watchEffect(() => {
                 const address = getFillAddress(user_id, project, team);
                 return (
                     <span>{address}</span>
-            );
+                );
             },
         },)
     }
@@ -373,11 +413,11 @@ watchEffect(() => {
             cellRenderer: ({ rowData: { user: { nickname } } }) => {
                 return (
                     <span>{nickname}</span>
-            );
+                );
             },
         },)
     }
-    if(props.deleter) {
+    if (props.deleter) {
         columns.splice(3, 0, {
             key: 'deleter',
             dataKey: 'document',
@@ -387,34 +427,146 @@ watchEffect(() => {
             cellRenderer: ({ rowData: { delete_user: { nickname } } }) => {
                 return (
                     <span>{nickname}</span>
-            );
+                );
             },
         },)
+    }
+    if (props.projectshare) {
+        columns.splice(0, columns.length, {
+            key: 'name',
+            title: t('Createteam.project_name'),
+            width: 400,
+            minWidth: 100,
+            dataKey: 'project',
+            align: 'left',
+            cellRenderer: ({ rowData: { project: { name } } }) => <span>{name}</span>
+        },
+            {
+                key: 'description',
+                title: t('Createteam.project_description'),
+                width: 400,
+                minWidth: 100,
+                dataKey: 'project',
+                align: 'left',
+                cellRenderer: ({ rowData: { project: { description } } }) => <span>{description}</span>
+            },
+            {
+                key: 'creator',
+                title: t('Createteam.creator'),
+                width: 400,
+                minWidth: 100,
+                dataKey: 'creator',
+                align: 'left',
+                cellRenderer: ({ rowData: { creator: { nickname } } }) => <span>{nickname}</span>
+            },
+            {
+                key: 'name',
+                title: t('home.operation'),
+                width: 400,
+                minWidth: 100,
+                dataKey: 'project',
+                align: 'left',
+                cellRenderer: ({ rowData, rowIndex }) => (
+                    <>
+                        {!rowData.is_favor && (
+                            <el-icon size={20}
+                                onDblclick={(event: MouseEvent) => event.stopPropagation()}
+                                onClick={(event: MouseEvent) => {
+                                    event.stopPropagation()
+                                    emits('cancelfixed', rowData, rowData.is_favor, rowIndex)
+                                }}>
+                                <el-tooltip content='固定项目' show-after={1000} hide-after={0}>
+                                    <svg-icon icon-class="fixed"></svg-icon>
+                                </el-tooltip>
+                            </el-icon>
+                        )}
+
+                        {rowData.is_favor && (
+                            <el-icon size={20} style={"display: inline-block"}
+                                onDblclick={(event: MouseEvent) => event.stopPropagation()}
+                                onClick={(event: MouseEvent) => {
+                                    event.stopPropagation()
+                                    emits('cancelfixed', rowData, rowData.is_favor, rowIndex)
+                                }}>
+                                <el-tooltip content='取消固定' show-after={1000} hide-after={0}>
+                                    <svg-icon icon-class="fixed-cancel"></svg-icon>
+                                </el-tooltip>
+                            </el-icon>
+                        )}
+
+                        {(
+                            <el-icon size={20}
+                                onDblclick={(event: MouseEvent) => event.stopPropagation()}
+                                onClick={(event: MouseEvent) => {
+                                    event.stopPropagation()
+                                    emits('skipproject', rowData.project.id)
+                                }}>
+                                <el-tooltip content='进入项目' show-after={1000} hide-after={0}>
+                                    <svg-icon icon-class="entrance"></svg-icon>
+                                </el-tooltip>
+                            </el-icon>
+                        )}
+
+                        {rowData.self_perm_type === 5 && (
+                            <el-icon size={20}
+                                onDblclick={(event: MouseEvent) => event.stopPropagation()}
+                                onClick={(event: MouseEvent) => {
+                                    event.stopPropagation()
+                                    emits('onexitproject', rowData, rowIndex)
+                                }}>
+                                <el-tooltip content='删除项目' show-after={1000} hide-after={0}>
+                                    <svg-icon icon-class="delete-project"></svg-icon>
+                                </el-tooltip>
+                            </el-icon>
+                        )}
+                        {rowData.self_perm_type !== 5 && (
+                            <el-icon size={20}
+                                onDblclick={(event: MouseEvent) => event.stopPropagation()}
+                                onClick={(event: MouseEvent) => {
+                                    event.stopPropagation()
+                                    emits('onexitproject', rowData, rowIndex)
+                                }}>
+                                <el-tooltip content='退出项目' show-after={1000} hide-after={0}>
+                                    <svg-icon icon-class="exit-project"></svg-icon>
+                                </el-tooltip>
+                            </el-icon>
+                        )}
+                    </>
+                ),
+            },)
     }
 })
 
 </script>
 <style lang="scss" scoped>
-.table {
-    height: calc(100vh - 120px);
+:deep(.el-table-v2__header-wrapper) {
+    height: 26px !important;
 }
 
-@media screen and (max-width: 1000px) {
-    .table {
-        height: calc(100vh - 120px);
-    }
+:deep(.el-table-v2__header) {
+    height: 26px !important;
 }
+
+:deep(.test) {
+    box-shadow: 0 0 4px 0 rgb(0, 0, 0, 0.1) !important;
+}
+
 :deep(.el-table-v2__row) {
     display: flex;
     justify-content: space-between;
+    border-bottom: 1px solid white;
+    border-top: 1px solid white;
 }
+
 :deep(.el-table-v2__header-row) {
+    border: none;
     display: flex;
     justify-content: space-between;
+    transition: all 0.2s ease-in-out;
 }
 
 :deep(.el-table-v2__row:hover) {
-    border-radius: 6px;
+    border-radius: 4px;
     background-color: #f3f0ff;
 
     // border: none;
@@ -445,10 +597,9 @@ watchEffect(() => {
     }
 }
 
-
-:deep(.el-table-v2__row.selected) {
-    background-color: #e5dbff;
-    border-radius: 6px;
+:deep(.selected) {
+    background-color: #e5dbff !important;
+    border-radius: 4px !important;
 }
 
 :deep(span) {
