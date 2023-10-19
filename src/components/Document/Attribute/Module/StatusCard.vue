@@ -74,6 +74,9 @@ function save_change(v: string) {
     const editor = props.context.editor4Shape(state);
     editor.modifyStateSymTagValue(props.data.variable.id, v);
 }
+onUpdated(() => {
+    getVattagValue();
+})
 onMounted(() => {
     getVattagValue();
     props.context.selection.watch(selected_watcher);
@@ -192,7 +195,7 @@ onUnmounted(() => {
         height: 30px;
 
         .el-input {
-            font-size: 10px;
+            font-size: var(--font-default-fontsize);
             height: 30px;
         }
     }

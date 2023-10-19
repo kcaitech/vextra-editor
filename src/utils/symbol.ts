@@ -414,4 +414,13 @@ export function detects_comp_status_val_is_clash(symbol: SymbolShape) {
     }
 }
 
+export function detects_comp_status_val_is_clash_for_states(states: SymbolShape[]) {
+    if (states.length === 1) {
+        return detects_comp_status_val_is_clash(states[0].parent as SymbolShape);
+    } else {
+        // todo
+        return false;
+    }
+}
+
 // endregion
