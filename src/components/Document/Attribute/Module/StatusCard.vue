@@ -3,8 +3,10 @@ import SelectMenu from "@/components/Document/Attribute/PopoverMenu/SelectMenu.v
 import { ArrowDown } from "@element-plus/icons-vue";
 import { Context } from "@/context";
 import { useI18n } from "vue-i18n";
-import { nextTick, ref } from "vue";
-import { StatusValueItem } from "@/utils/symbol";
+import { nextTick, onMounted, onUnmounted, ref } from "vue";
+import { StatusValueItem, get_tag_value } from "@/utils/symbol";
+import { SymbolShape } from "@kcdesign/data";
+import { Selection } from "@/context/selection";
 interface Props {
     context: Context
     data: StatusValueItem
@@ -43,7 +45,23 @@ const showMenu = (e: MouseEvent) => {
     if (selectoption.value) return selectoption.value = false
     selectoption.value = true;
 }
-
+const statusValue = ref();
+const getVattagValue = () => {
+    const shape = props.context.selection.selectedShapes[0] as SymbolShape;
+    statusValue.value = get_tag_value(shape, props.data.variable)
+}
+const selected_watcher = (t: number) => {
+    if(t === Selection.CHANGE_SHAPE) {
+        getVattagValue();
+    }
+}
+onMounted(() => {
+    getVattagValue();
+    props.context.selection.watch(selected_watcher);
+})
+onUnmounted(() => {
+    props.context.selection.unwatch(selected_watcher);
+})
 </script>
 <template>
     <div class="module_state_item">
@@ -52,7 +70,7 @@ const showMenu = (e: MouseEvent) => {
                 <div class="state_name"><span>{{ data.variable.name }}</span></div>
                 <div class="state_value" v-if="!editAttrValue" @dblclick="onRevalue">
                     <div class="input" @click.stop="showMenu">
-                        <span>{{ data.variable.value }}</span>
+                        <span>{{ statusValue }}</span>
                         <el-icon>
                             <ArrowDown
                                 :style="{ transform: selectoption ? 'rotate(180deg)' : 'rotate(0deg)', transition: '0.3s' }" />
