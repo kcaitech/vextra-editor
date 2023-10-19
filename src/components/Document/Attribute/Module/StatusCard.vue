@@ -1,11 +1,11 @@
 <script setup lang="ts">
 import SelectMenu from "@/components/Document/Attribute/PopoverMenu/SelectMenu.vue";
-import {ArrowDown} from "@element-plus/icons-vue";
-import {Context} from "@/context";
-import {useI18n} from "vue-i18n";
-import {nextTick, onMounted, onUnmounted, ref} from "vue";
-import {StatusValueItem, get_tag_value} from "@/utils/symbol";
-import {Selection} from "@/context/selection";
+import { ArrowDown } from "@element-plus/icons-vue";
+import { Context } from "@/context";
+import { useI18n } from "vue-i18n";
+import { nextTick, onMounted, onUnmounted, ref } from "vue";
+import { StatusValueItem, get_tag_value } from "@/utils/symbol";
+import { Selection } from "@/context/selection";
 
 interface Props {
     context: Context
@@ -13,7 +13,7 @@ interface Props {
 }
 
 const props = defineProps<Props>();
-const {t} = useI18n();
+const { t } = useI18n();
 const attrValueInput = ref('')
 const editAttrValue = ref(false)
 const revalueInput = ref<HTMLDivElement>();
@@ -47,7 +47,6 @@ const onEditAttrValue = (e: KeyboardEvent) => {
 }
 const selectoption = ref(false);
 const showMenu = (e: MouseEvent) => {
-    e.stopPropagation();
     if (selectoption.value) return selectoption.value = false
     selectoption.value = true;
 }
@@ -94,15 +93,14 @@ onUnmounted(() => {
                         <span>{{ statusValue }}</span>
                         <el-icon @click.stop="showMenu">
                             <ArrowDown
-                                :style="{ transform: selectoption ? 'rotate(180deg)' : 'rotate(0deg)', transition: '0.3s' }"/>
+                                :style="{ transform: selectoption ? 'rotate(180deg)' : 'rotate(0deg)', transition: '0.3s' }" />
                         </el-icon>
                         <SelectMenu v-if="selectoption" :top="33" width="100%" :menuItems="data.values"
-                                    @close="selectoption = false" @selectIndex="selcet"></SelectMenu>
+                            @close="selectoption = false" @selectIndex="selcet"></SelectMenu>
                     </div>
                 </div>
                 <div class="module_input" v-if="editAttrValue">
-                    <el-input v-model="attrValueInput" ref="revalueInput" @blur="input_blur"
-                              @keydown="onEditAttrValue"/>
+                    <el-input v-model="attrValueInput" ref="revalueInput" @blur="input_blur" @keydown="onEditAttrValue" />
                 </div>
             </div>
             <div class="delete"></div>
@@ -149,7 +147,7 @@ onUnmounted(() => {
             height: 100%;
             background-color: var(--grey-light);
 
-            > svg {
+            >svg {
                 width: 10px;
                 height: 10px;
             }

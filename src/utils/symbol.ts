@@ -384,4 +384,40 @@ export function gen_special_name_for_status(symbol: SymbolShape, dlt: string) {
     return `${dlt}${index}`;
 }
 
+/**
+ * @description 检测组件状态值是否有冲突
+ * @return Boolean
+ */
+export function detects_comp_status_val_is_clash(symbol: SymbolShape) {
+    if (!symbol.variables) return false;
+    const variables = symbol.variables;
+    const d = '默认';
+    if(symbol.childs.length > 1) {
+        let clashs: any = {}
+        variables.forEach((v, k) => {
+            symbol.childs.forEach((item, i) => {
+                const id = item.id;
+                 if(!clashs[id]) {
+                     clashs[id] = [];
+                 }
+                clashs[id].push(item.vartag.get(k) || d);
+            })
+        })
+        let result = false;
+        for (const key in clashs) {
+            if (Object.prototype.hasOwnProperty.call(clashs, key)) {
+                if(key !== symbol.childs[0].id) {
+                    const v = JSON.stringify(clashs[key]);
+                    const first = JSON.stringify(clashs[symbol.childs[0].id]);
+                    console.log(v, first,'dddddddddd');
+                    if(first === v) result = true; 
+                }
+            }
+        }
+        return result;
+    }else {
+        return false;
+    }
+}
+
 // endregion
