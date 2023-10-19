@@ -277,6 +277,7 @@ export function is_state_selection(shapes: Shape[]) {
 
 export function setup_watch(shapes: Shape[], f: (...args: any[]) => void) {
     for (let i = 0, len = shapes.length; i < len; i++) shapes[i].watch(f);
+    console.log('wtach result', shapes[0]);
 }
 
 export function remove_watch(shapes: Shape[], f: (...args: any[]) => void) {
