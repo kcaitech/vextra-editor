@@ -1,8 +1,8 @@
 <script setup lang="ts">
 import { ref, computed } from 'vue';
 import { ElMessage } from 'element-plus';
-import * as share_api from '@/apis/share';
-import * as team_api from '@/apis/team';
+import * as share_api from '@/request/share';
+import * as team_api from '@/request/team';
 import { useI18n } from 'vue-i18n';
 import moment = require('moment');
 import 'moment/locale/zh-cn';

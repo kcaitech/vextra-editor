@@ -22,7 +22,7 @@
 import Header from '@/components/AppHome/Header.vue';
 import { onMounted, ref } from 'vue';
 import { useRoute } from 'vue-router';
-import * as user_api from '@/apis/users'
+import * as user_api from '@/request/users'
 import { ElMessage } from 'element-plus';
 import { router } from '@/router';
 import { useI18n } from 'vue-i18n';
@@ -44,12 +44,15 @@ const switchstate = ref<boolean>()
 const Getteaminfo = async (teamid: string) => {
     try {
         const { code, data } = await user_api.Getteaminfo({ team_id: teamid })
+        
         if (code === 0) {
             if (data.self_perm_type != null) {
-                if (data.self_perm_type >= data.invited_perm_type) {
+                if (data.self_perm_type !== 255 && data.self_perm_type >= data.invited_perm_type) {
                     return router.push({ path: '/apphome/teams/' + teamid });
                 }
             }
+        console.log(code, data,'ddd');
+
             teaminfo.value = data
             switchstate.value = teaminfo.value?.invited_switch
         } else {

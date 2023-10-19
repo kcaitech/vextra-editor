@@ -1,7 +1,7 @@
 <script setup lang='ts'>
 import Describes from './Describes.vue'
 import Footer from './Footer.vue'
-import * as user_api from '@/apis/users'
+import * as user_api from '@/request/users'
 import { nextTick, onMounted, onUnmounted, ref } from 'vue'
 import { router } from '@/router'
 import { useI18n } from 'vue-i18n';

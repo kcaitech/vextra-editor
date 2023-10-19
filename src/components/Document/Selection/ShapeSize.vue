@@ -2,7 +2,7 @@
 import { Context } from '@/context';
 import { nextTick, onMounted, onUnmounted, ref } from 'vue';
 import { ClientXY, Selection } from "@/context/selection";
-import { Matrix } from '@kcdesign/data';
+import { Matrix, Shape } from '@kcdesign/data';
 import { WorkSpace } from '@/context/workspace';
 import { XYsBounding } from '@/utils/common';
 import { tr } from 'element-plus/es/locale';
@@ -33,9 +33,13 @@ const getShapePositionSize = () => {
         framePoint = framePoint.map(p => m.computeCoord(p.x, p.y));
         origin.x = framePoint[0].x;
         origin.y = framePoint[0].y;
-        trans.value.x = (b.width / 2);
-        trans.value.y = b.height + 5;
-        rotate.value = shapes[0].rotation || 0;
+        let anchor = modify_anchor(shapes[0], m);
+        // anchor = matrix.computeCoord({ x: anchor.x, y: anchor.y });
+        console.log(anchor, 'anchor');
+        // trans.value.x = (b.width / 2);
+        // trans.value.y = b.height + 5;
+        rotate.value = modify_rotate(shapes[0]);
+
     } else if (shapes.length > 1) {
         const points: { x: number, y: number }[] = [];
         for (let index = 0; index < shapes.length; index++) {
@@ -58,6 +62,50 @@ const getShapePositionSize = () => {
         trans.value.y = (b.bottom - b.top) + 5;
 
     }
+}
+function pre_modify_anchor(shape: Shape) {
+    let rotate = shape.rotation || 0;
+    if (shape.isFlippedHorizontal) rotate = rotate + 270;
+    if (shape.isFlippedVertical) {
+        rotate = shape.isFlippedHorizontal ? rotate -= 90 : rotate += 90;
+    }
+    rotate = (rotate < 0 ? rotate + 360 : rotate) % 360;
+    return rotate;
+}
+
+function modify_rotate(shape: Shape) {
+    let rotate = shape.rotation || 0;
+    if (shape.isFlippedHorizontal) rotate = 180 - rotate;
+    if (shape.isFlippedVertical) rotate = 360 - rotate;
+    rotate = (rotate < 0 ? rotate + 360 : rotate) % 360;
+    if (rotate >= 0 && rotate < 45) {
+    } else if (rotate >= 45 && rotate < 135) {
+        rotate -= 90;
+    } else if (rotate >= 135 && rotate < 225) {
+        rotate -= 180;
+    } else if (rotate >= 225 && rotate < 315) {
+        rotate += 90;
+    } else if (rotate > 315 && rotate <= 360) {
+    }
+    return rotate;
+}
+
+function modify_anchor(shape: Shape, m2r: Matrix) {
+    const rotate = pre_modify_anchor(shape);
+    const frame = shape.frame;
+    let anchor = { x: 0, y: 0 };
+    if (rotate >= 0 && rotate < 45) {
+        anchor = m2r.computeCoord2(0, 0);
+    } else if (rotate >= 45 && rotate < 135) {
+        anchor = m2r.computeCoord2(0, frame.height);
+    } else if (rotate >= 135 && rotate < 225) {
+        anchor = m2r.computeCoord2(frame.width, frame.height);
+    } else if (rotate >= 225 && rotate < 315) {
+        anchor = m2r.computeCoord2(frame.width, 0);
+    } else if (rotate >= 315 && rotate <= 360) {
+        anchor = m2r.computeCoord2(0, 0);
+    }
+    return anchor;
 }
 
 function selectionWatcher(t: number) {
@@ -122,8 +170,9 @@ onUnmounted(() => {
 
 <template>
     <div class="container-size" :style="{ top: `${origin.y}px`, left: `${origin.x}px` }">
-        <div :style="{ transform: `translate(${trans.x}px, ${trans.y}px)` }">{{ filterDecimals(shapeSize.w) }} × {{
-            filterDecimals(shapeSize.h) }}</div>
+        <div :style="{ transform: `translate(${trans.x}px, ${trans.y}px) rotate(${rotate}deg)` }">{{
+            filterDecimals(shapeSize.w) }} × {{
+        filterDecimals(shapeSize.h) }}</div>
     </div>
 </template>
 
@@ -141,6 +190,7 @@ onUnmounted(() => {
         display: flex;
         align-items: center;
         padding: 0 10px;
+        transform-origin: bottom left;
     }
 }
 </style>

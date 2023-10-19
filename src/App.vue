@@ -1,6 +1,7 @@
 <script setup lang="ts">
 import { RouterView } from 'vue-router';
 import { debounce } from 'lodash';
+import {onMounted} from "vue";
 
 const _ResizeObserver = window.ResizeObserver;
 window.ResizeObserver = class ResizeObserver extends _ResizeObserver{
@@ -9,6 +10,9 @@ window.ResizeObserver = class ResizeObserver extends _ResizeObserver{
     super(callback);
   }
 }
+onMounted(() => {
+    document.title = 'ProtoDesign';
+})
 </script>
 
 <template>

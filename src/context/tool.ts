@@ -67,6 +67,7 @@ export class Tool extends Watchable(Object) {
     static INSERT_TABLE = 7;
     static CHANGE_CONTACT_APEX = 8;
     static LABLE_CHANGE = 10;
+    static NEW_FILE = 9;
     private m_current_action: Action = Action.AutoV;
     private m_context: Context;
     private m_show_title: boolean = true;
@@ -184,6 +185,11 @@ export class Tool extends Watchable(Object) {
             this.notify(Tool.UNGROUP);
         }
     }
+    keydown_n(ctrl: boolean, meta: boolean,shift: boolean, alt: boolean) {
+        if ((ctrl || meta) && !shift && !alt) {
+            this.notify(Tool.NEW_FILE);
+        }
+    }
     keydown_i(ctrl: boolean, meta: boolean, shift: boolean) {
         // todo
     }
@@ -194,7 +200,7 @@ export class Tool extends Watchable(Object) {
     get isShowTitle() {
         return this.m_show_title;
     }
-    setTitleVisibale(val: boolean) {
+    setTitleVisible(val: boolean) {
         this.m_show_title = val;
         this.notify(Tool.TITILE_VISIBLE);
     }
