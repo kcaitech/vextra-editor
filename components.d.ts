@@ -37,6 +37,7 @@ declare module '@vue/runtime-core' {
     BorderStyleItem: typeof import('./src/components/Document/Attribute/Border/BorderStyleItem.vue')['default']
     BorderStyleSelected: typeof import('./src/components/Document/Attribute/Border/BorderStyleSelected.vue')['default']
     CellSetting: typeof import('./src/components/Document/Menu/TableMenu/CellSetting.vue')['default']
+    CloseIcon: typeof import('./src/components/common/CloseIcon.vue')['default']
     ColInfo: typeof import('./src/components/Document/Toolbar/Collaboration/ColInfo.vue')['default']
     Collaborator: typeof import('./src/components/Document/Toolbar/Collaboration/Collaborator.vue')['default']
     ColorPicker: typeof import('./src/components/common/ColorPicker/index.vue')['default']

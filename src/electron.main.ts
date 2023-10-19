@@ -7,7 +7,7 @@ import ElementPlus from 'element-plus';
 import 'element-plus/dist/index.css';
 import '@/style/constant.scss';
 import '@/style/app.scss';
-import { router } from "./router" ;
+import { router } from "./router";
 
 // All of the Node.js APIs are available in the preload process.
 // It has the same sandbox as a Chrome extension.
