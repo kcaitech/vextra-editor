@@ -4,7 +4,7 @@ import { Variable, VariableType } from '@kcdesign/data';
 import { nextTick, ref } from 'vue';
 import { useI18n } from 'vue-i18n';
 import CompLayerShow from "@/components/Document/Attribute/PopoverMenu/CompLayerShow.vue";
-import {AttriListItem} from "@/utils/symbol";
+import {AttriListItem, delete_variable} from "@/utils/symbol";
 
 interface Props {
     context: Context
@@ -82,6 +82,10 @@ function edit_instance() {
 function save_instance() {
     iseditToggle.value = false;
 }
+
+function _delete() {
+    delete_variable(props.context, props.variable);
+}
 </script>
 <template>
     <!--组件状态-->
@@ -98,7 +102,7 @@ function save_instance() {
                 </div>
                 <div class="name" :title="props.item.values.toString()">{{props.item.values.toString()}}</div>
             </div>
-            <div class="delete">
+            <div class="delete" @click="_delete">
                 <svg-icon icon-class="delete"></svg-icon>
             </div>
         </div>

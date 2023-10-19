@@ -229,7 +229,14 @@ export function tag_values_sort(symbol: SymbolShape, variable: Variable) {
     return Array.from(result_set.values());
 }
 
+export function delete_variable(context: Context, variable: Variable) {
+    const union = context.selection.unionshape;
+    if (!union) return;
+    const editor = context.editor4Shape(union);
+    editor.removeVar(variable.id);
+}
 // endregion
+// region 可变组件属性列表相关
 export interface StatusValueItem {
     variable: Variable
     values: any[]
@@ -278,6 +285,15 @@ export function remove_watch(shapes: Shape[], f: (...args: any[]) => void) {
         shapes[i].unwatch(f);
     }
 }
+
+export function get_tag_value(state: SymbolShape, variable: Variable) {
+    if (state.parent && state.parent.isUnionSymbolShape) {
+        return  state.vartag?.get(variable.id) || variable.value || '';
+    } else {
+        return '';
+    }
+}
+// endregion
 
 // region 其他
 /**

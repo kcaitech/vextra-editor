@@ -35,7 +35,7 @@ onUnmounted(() => {
 
 <template>
     <div class="module_container">
-        <StatusCard v-for="item in data" :context="props.context" :·data="item" :key="item.variable.id"></StatusCard>
+        <StatusCard v-for="item in data" :context="props.context" :data="item" :key="item.variable.id"></StatusCard>
     </div>
 </template>
 
