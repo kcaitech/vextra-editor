@@ -286,6 +286,11 @@ export function remove_watch(shapes: Shape[], f: (...args: any[]) => void) {
     }
 }
 
+/**
+ * @description 读取可变组件属性值
+ * @param state 可变组件
+ * @param variable 属性对象
+ */
 export function get_tag_value(state: SymbolShape, variable: Variable) {
     return  state.vartag?.get(variable.id) || variable.value || '';
 }
