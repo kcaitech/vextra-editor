@@ -1,8 +1,8 @@
 <script lang="ts" setup>
-import { Context } from "@/context";
-import { Variable, VariableType } from '@kcdesign/data';
-import { nextTick, ref } from 'vue';
-import { useI18n } from 'vue-i18n';
+import {Context} from "@/context";
+import {Variable, VariableType} from '@kcdesign/data';
+import {nextTick, ref} from 'vue';
+import {useI18n} from 'vue-i18n';
 import CompLayerShow from "@/components/Document/Attribute/PopoverMenu/CompLayerShow.vue";
 import {AttriListItem, delete_variable} from "@/utils/symbol";
 
@@ -12,7 +12,7 @@ interface Props {
     item: AttriListItem
 }
 
-const { t } = useI18n();
+const {t} = useI18n();
 const props = defineProps<Props>();
 const attrInput = ref('');
 const input_s = ref<HTMLInputElement>();
@@ -23,7 +23,7 @@ const iseditToggle = ref(false);
 const visible_card = ref<HTMLDivElement>();
 const text_card = ref<HTMLDivElement>();
 const instance_card = ref<HTMLDivElement>();
-const dialog_posi = ref({ x: 0, y: 0 });
+const dialog_posi = ref({x: 0, y: 0});
 
 function selectAllText(event: FocusEvent) {
     (event.target as HTMLInputElement).select(); // 选择输入框内的文本
@@ -35,8 +35,17 @@ function closeInput() {
 
 function keyboard_watcher(e: KeyboardEvent) {
     if (e.code === 'Enter' || e.code === 'NumpadEnter') {
-        showRename.value = false
+        const _v = (e.target as HTMLInputElement).value;
+        if (_v && _v !== props.variable.name) save_name(_v);
+        closeInput()
     }
+}
+
+function save_name(v: string) {
+    const shape = props.context.selection.symbolshape;
+    if (!shape) return;
+    const editor = props.context.editor4Shape(shape);
+    editor.modifyVariableName(props.variable, v);
 }
 
 function rename() {
@@ -45,7 +54,7 @@ function rename() {
         const el = input_s.value;
         if (el) {
             (el as HTMLInputElement).focus();
-            (el as HTMLInputElement).value = '';
+            (el as HTMLInputElement).value = props.variable.name;
         }
     })
 }
@@ -66,10 +75,12 @@ function edit_visible() {
 function save_layer_show() {
     iseditLayerShow.value = false;
 }
+
 function edit_text() {
     get_dialog_posi(visible_card.value);
     iseditText.value = true;
 }
+
 function save_text() {
     iseditText.value = false;
 }
@@ -93,14 +104,14 @@ function _delete() {
         <div class="attr_con">
             <div class="module_input" v-if="showRename">
                 <el-input ref="input_s" v-model="attrInput" @focus="selectAllText" class="input" @blur="closeInput"
-                    @keydown="keyboard_watcher" />
+                          @keydown="keyboard_watcher"/>
             </div>
             <div class="module_item_left" @dblclick="rename" v-else>
                 <div class="module_name">
                     <svg-icon icon-class="comp-state"></svg-icon>
                     <span class="name">{{ props.variable.name }}</span>
                 </div>
-                <div class="name" :title="props.item.values.toString()">{{props.item.values.toString()}}</div>
+                <div class="name" :title="props.item.values.toString()">{{ props.item.values.toString() }}</div>
             </div>
             <div class="delete" @click="_delete">
                 <svg-icon icon-class="delete"></svg-icon>
@@ -110,7 +121,7 @@ function _delete() {
     </div>
     <!--显示状态-->
     <div class="item-wrap">
-    <div v-if="props.variable.type === VariableType.Visible" class="item-wrap">
+        <div v-if="props.variable.type === VariableType.Visible" class="item-wrap">
             <div class="attr_con">
                 <div class="module_item_left" @click="edit_visible">
                     <div class="module_name">
@@ -124,14 +135,14 @@ function _delete() {
                 </div>
             </div>
             <CompLayerShow :context="props.context" v-if="iseditLayerShow" @close-dialog="iseditLayerShow = false"
-                right="250px" :width="260" :add-type="VariableType.Visible" :title="t('compos.layer_isShow')"
-                @save-layer-show="save_layer_show" :dialog_posi="dialog_posi">
+                           right="250px" :width="260" :add-type="VariableType.Visible" :title="t('compos.layer_isShow')"
+                           @save-layer-show="save_layer_show" :dialog_posi="dialog_posi">
             </CompLayerShow>
         </div>
     </div>
     <!--文本内容-->
     <div class="item-wrap">
-    <div v-if="props.variable.type === VariableType.Text" class="item-wrap">
+        <div v-if="props.variable.type === VariableType.Text" class="item-wrap">
             <div class="attr_con">
                 <div class="module_item_left" @click="edit_text">
                     <div class="module_name">
@@ -145,19 +156,20 @@ function _delete() {
                 </div>
             </div>
             <CompLayerShow :context="context" v-if="iseditText" @close-dialog="iseditText = false" right="250px"
-                :width="260" :add-type="VariableType.Status" :title="t('compos.text_content')" @save-layer-show="save_text"
-                :dialog_posi="dialog_posi">
+                           :width="260" :add-type="VariableType.Status" :title="t('compos.text_content')"
+                           @save-layer-show="save_text"
+                           :dialog_posi="dialog_posi">
             </CompLayerShow>
         </div>
     </div>
     <!--实例切换-->
     <div class="item-wrap">
-    <div v-if="props.variable.type === VariableType.Instance" class="item-wrap">
+        <div v-if="props.variable.type === VariableType.Instance" class="item-wrap">
             <div class="attr_con">
                 <div class="module_item_left" @click="edit_instance">
                     <div class="module_name">
                         <svg-icon icon-class="pattern-rectangle"
-                            style="width: 10px; height: 10px; transform: rotate(45deg); margin-top: 0;"></svg-icon>
+                                  style="width: 10px; height: 10px; transform: rotate(45deg); margin-top: 0;"></svg-icon>
                         <span class="name">{{ props.variable.name }}</span>
                     </div>
                     <div><span class="name">数据来源待定</span></div>
@@ -167,8 +179,8 @@ function _delete() {
                 </div>
             </div>
             <CompLayerShow :context="context" v-if="iseditToggle" @close-dialog="iseditToggle = false" right="250px"
-                :width="260" :add-type="VariableType.Instance" :title="t('compos.instance_toggle')"
-                @save-layer-show="save_instance" :dialog_posi="dialog_posi"></CompLayerShow>
+                           :width="260" :add-type="VariableType.Instance" :title="t('compos.instance_toggle')"
+                           @save-layer-show="save_instance" :dialog_posi="dialog_posi"></CompLayerShow>
         </div>
     </div>
 </template>
@@ -198,13 +210,15 @@ function _delete() {
             display: flex;
             align-items: center;
             width: 84px;
-            >svg {
+
+            > svg {
                 width: 14px;
                 height: 14px;
                 margin: 0px 10px;
             }
+
             .name {
-                max-width: 54px;
+                max-width: 50px;
                 overflow: hidden;
                 text-overflow: ellipsis;
                 white-space: nowrap;
@@ -244,7 +258,7 @@ function _delete() {
         width: 22px;
         height: 22px;
 
-        >svg {
+        > svg {
             width: 11px;
             height: 11px;
         }
@@ -252,6 +266,7 @@ function _delete() {
         transition: .2s;
     }
 }
+
 :deep(.el-input__inner) {
     --el-input-inner-height: 100%;
 }

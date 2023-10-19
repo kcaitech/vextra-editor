@@ -1,42 +1,48 @@
 <script setup lang="ts">
 import SelectMenu from "@/components/Document/Attribute/PopoverMenu/SelectMenu.vue";
-import { ArrowDown } from "@element-plus/icons-vue";
-import { Context } from "@/context";
-import { useI18n } from "vue-i18n";
-import { nextTick, onMounted, onUnmounted, ref } from "vue";
-import { StatusValueItem, get_tag_value } from "@/utils/symbol";
-import { SymbolShape } from "@kcdesign/data";
-import { Selection } from "@/context/selection";
+import {ArrowDown} from "@element-plus/icons-vue";
+import {Context} from "@/context";
+import {useI18n} from "vue-i18n";
+import {nextTick, onMounted, onUnmounted, ref} from "vue";
+import {StatusValueItem, get_tag_value} from "@/utils/symbol";
+import {Selection} from "@/context/selection";
+
 interface Props {
     context: Context
     data: StatusValueItem
 }
+
 const props = defineProps<Props>();
-const { t } = useI18n();
-const attrValueInput = ref('默认')
+const {t} = useI18n();
+const attrValueInput = ref('')
 const editAttrValue = ref(false)
-const revalueInput = ref<HTMLInputElement>()
+const revalueInput = ref<HTMLDivElement>();
 
 const onRevalue = (e: MouseEvent) => {
     e.stopPropagation();
     editAttrValue.value = true
     nextTick(() => {
         if (revalueInput.value) {
-            revalueInput.value?.focus()
-            revalueInput.value?.select()
+            attrValueInput.value = statusValue.value;
+            (revalueInput.value as HTMLInputElement).focus();
+            (revalueInput.value as HTMLInputElement).select();
         }
     })
 }
 
 const closeValueInput = () => {
-    if (attrValueInput.value.trim().length === 0) return editAttrValue.value = false
     editAttrValue.value = false
 }
-
+function input_blur(e: InputEvent) {
+    const v = (e.target as HTMLInputElement).value;
+    save_change(v);
+    closeValueInput();
+}
 const onEditAttrValue = (e: KeyboardEvent) => {
-    if (attrValueInput.value.trim().length === 0) return editAttrValue.value = false
     if (e.code === 'Enter' || e.code === 'NumpadEnter') {
-        editAttrValue.value = false
+        const v = (e.target as HTMLInputElement).value;
+        save_change(v);
+        closeValueInput();
     }
 }
 const selectoption = ref(false);
@@ -47,16 +53,29 @@ const showMenu = (e: MouseEvent) => {
 }
 const statusValue = ref();
 const getVattagValue = () => {
-    const shape = props.context.selection.selectedShapes[0] as SymbolShape;
-    if(shape) {
-        statusValue.value = get_tag_value(shape, props.data.variable)
+    const shape = props.context.selection.symbolstate;
+    if (shape) {
+        statusValue.value = get_tag_value(shape, props.data.variable);
     }
 }
 const selected_watcher = (t: number) => {
-    if(t === Selection.CHANGE_SHAPE) {
+    if (t === Selection.CHANGE_SHAPE) {
         getVattagValue();
     }
 }
+
+function selcet(index: number) {
+    const val = props.data.values[index];
+    save_change(val);
+}
+
+function save_change(v: string) {
+    const state = props.context.selection.symbolstate;
+    if (!v || !state) return;
+    const editor = props.context.editor4Shape(state);
+    editor.modifyStateSymTagValue(props.data.variable.id, v);
+}
+
 onMounted(() => {
     getVattagValue();
     props.context.selection.watch(selected_watcher);
@@ -73,17 +92,17 @@ onUnmounted(() => {
                 <div class="state_value" v-if="!editAttrValue" @dblclick="onRevalue">
                     <div class="input" @click.stop="showMenu">
                         <span>{{ statusValue }}</span>
-                        <el-icon>
+                        <el-icon @click.stop="showMenu">
                             <ArrowDown
-                                :style="{ transform: selectoption ? 'rotate(180deg)' : 'rotate(0deg)', transition: '0.3s' }" />
+                                :style="{ transform: selectoption ? 'rotate(180deg)' : 'rotate(0deg)', transition: '0.3s' }"/>
                         </el-icon>
                         <SelectMenu v-if="selectoption" :top="33" width="100%" :menuItems="data.values"
-                            @close="selectoption = false"></SelectMenu>
+                                    @close="selectoption = false" @selectIndex="selcet"></SelectMenu>
                     </div>
                 </div>
                 <div class="module_input" v-if="editAttrValue">
-                    <el-input v-model="attrValueInput" ref="revalueInput" @blur="closeValueInput"
-                        @keydown="onEditAttrValue" />
+                    <el-input v-model="attrValueInput" ref="revalueInput" @blur="input_blur"
+                              @keydown="onEditAttrValue"/>
                 </div>
             </div>
             <div class="delete"></div>
@@ -130,7 +149,7 @@ onUnmounted(() => {
             height: 100%;
             background-color: var(--grey-light);
 
-            >svg {
+            > svg {
                 width: 10px;
                 height: 10px;
             }
