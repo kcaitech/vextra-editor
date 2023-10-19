@@ -99,7 +99,6 @@ declare module '@vue/runtime-core' {
     JionTeam: typeof import('./src/components/TeamProject/jionTeam.vue')['default']
     KChome: typeof import('./src/components/Home/KChome.vue')['default']
     Key: typeof import('./src/components/common/Key.vue')['default']
-    Lable: typeof import('./src/components/Document/Attribute/Lable/index.vue')['default']
     Layers: typeof import('./src/components/Document/Menu/Layers.vue')['default']
     LeftTabs: typeof import('./src/components/Document/Navigation/LeftTabs.vue')['default']
     Line: typeof import('./src/components/Document/Content/Line.vue')['default']

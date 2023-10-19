@@ -1,5 +1,5 @@
 <script setup lang="ts">
-import { Ref, inject, ref, computed, nextTick, watch, watchEffect, onMounted } from 'vue'
+import { Ref, inject, ref, nextTick, watchEffect, onMounted } from 'vue'
 import { useI18n } from 'vue-i18n'
 import { router } from '@/router'
 import * as team_api from '@/request/team'
@@ -21,6 +21,7 @@ const mydata = ref()
 const mydataindex = ref()
 const projectMembergDialog = ref(false)
 const projectSettingDialog = ref(false)
+const showcontainer = ref(false)
 const { projectList, is_favor, favoriteList, updateFavor } = inject('shareData') as {
     projectList: Ref<any[]>;
     favoriteList: Ref<any[]>;
@@ -28,12 +29,12 @@ const { projectList, is_favor, favoriteList, updateFavor } = inject('shareData')
     updateFavor: (b: boolean) => void;
 };
 
-const tableData = ref<any[]>( projectList.value.filter(item => !item.is_in_team))
+const tableData = ref<any[]>(projectList.value.filter(item => !item.is_in_team))
 onMounted(() => {
     tableData.value = projectList.value.filter(item => !item.is_in_team)
 })
 watchEffect(() => {
-    
+
     tableData.value = projectList.value.filter(item => !item.is_in_team)
 })
 
@@ -212,14 +213,27 @@ const rightmenu = (e: MouseEvent, row: any) => {
 
 const showMembergDialog = () => {
     projectMembergDialog.value = true
+    nextTick(() => {
+        showcontainer.value = true
+    })
 }
 
 const showSettingDialog = () => {
     projectSettingDialog.value = true
+    nextTick(() => {
+        showcontainer.value = true
+    })
 }
 
 const closeDialog = () => {
-    projectMembergDialog.value = false;
+    if (projectMembergDialog.value) {
+        showcontainer.value = false
+        projectMembergDialog.value = false;
+    }
+    if (projectSettingDialog.value) {
+        showcontainer.value = false
+        projectSettingDialog.value = false
+    }
 }
 
 const setProjectInfo = async (params: any) => {
@@ -248,59 +262,6 @@ const iconlists = ref(['fixed', 'entrance', 'project'])
 </script>
 
 <template>
-    <!-- <el-table :data="tableData" ref="table" height="100%" style="width: 100%" :border="false"
-        @row-dblclick="dblclickskipProject" @row-contextmenu="rightmenu" :row-style="customRowClassName"
-        highlight-current-row>
-        <el-table-column prop="project" :label="t('Createteam.project_name')">
-            <template #default="scope">
-                <span class="description">{{ scope.row.project.name }}</span>
-            </template>
-        </el-table-column>
-        <el-table-column prop="project" :label="t('Createteam.project_description')">
-            <template #default="scope">
-                <span class="description">{{ scope.row.project.description }}</span>
-            </template>
-        </el-table-column>
-        <el-table-column prop="creator" :label="t('Createteam.creator')">
-            <template #default="scope">
-                <span class="description"> {{ scope.row.creator.nickname }}</span>
-            </template>
-        </el-table-column>
-        <el-table-column prop="project" :label="t('home.operation')">
-            <template #default="scope">
-                <div class="other1" v-if="scope.row.is_favor">
-                    <div class="fixed-cancel" @click="cancelFixed(scope.row, scope.row.is_favor)">
-                        <svg-icon icon-class="fixed-cancel"></svg-icon>
-                    </div>
-                </div>
-                <div class="other">
-                    <div @click="cancelFixed(scope.row, scope.row.is_favor)">
-                        <Tooltip v-if="!scope.row.is_favor" :content="'固定项目'">
-                            <div class="fixed">
-                                <svg-icon icon-class="fixed"></svg-icon>
-                            </div>
-                        </Tooltip>
-                        <Tooltip v-else :content="'取消固定'">
-                            <div class="fixed-cel">
-                                <svg-icon icon-class="fixed-cancel"></svg-icon>
-                            </div>
-                        </Tooltip>
-                    </div>
-                    <Tooltip :content="'进入项目'">
-                        <div class="entrance" @click.stop="skipProject(scope.row.project.id)">
-                            <svg-icon icon-class="entrance"></svg-icon>
-                        </div>
-                    </Tooltip>
-                    <Tooltip :content="scope.row.self_perm_type === 5 ? '删除项目' : '退出项目'">
-                        <div class="project" @click="onExitProject(scope.row, scope.$index)">
-                            <svg-icon v-if="scope.row.self_perm_type != 5" icon-class="exit-project"></svg-icon>
-                            <svg-icon v-else icon-class="delete-project"></svg-icon>
-                        </div>
-                    </Tooltip>
-                </div>
-            </template>
-        </el-table-column>
-    </el-table> -->
     <div class="tatle" style="height: calc(100vh - 120px);">
         <tablelist :data="tableData" :iconlist="iconlists" :projectshare="true" @onexitproject="onExitProject"
             @cancelfixed="cancelFixed" @dbclickopen="dblclickskipProject" @skipproject="skipProject" @rightMeun="rightmenu"
@@ -315,10 +276,10 @@ const iconlists = ref(['fixed', 'entrance', 'project'])
     <listrightmenu :items="updateitems" :data="mydata" @showMembergDialog="showMembergDialog"
         @projectrename="setProjectInfo" @showSettingDialog="showSettingDialog"
         @cancelFixed="cancelFixed(mydata, mydata.is_favor)" @exitproject="rexitProject" @delproject="rdelProject" />
-    <ProjectAccessSetting v-if="projectSettingDialog" :title="t('Createteam.membertip')" :data="mydata" width="500px"
-        @clodeDialog="projectSettingDialog = false" />
-    <ProjectMemberg v-if="projectMembergDialog" :projectMembergDialog="projectMembergDialog" :currentProject="mydata"
-        @closeDialog="closeDialog" @exitProject="exitProject" />
+    <ProjectAccessSetting v-if="projectSettingDialog" :showcontainer="showcontainer" :title="t('Createteam.membertip')"
+        :data="mydata" width="500px" @clodeDialog="closeDialog" />
+    <ProjectMemberg v-if="projectMembergDialog" :showcontainer="showcontainer" :projectMembergDialog="projectMembergDialog"
+        :currentProject="mydata" @closeDialog="closeDialog" @exitProject="exitProject" />
 </template>
 
 <style scoped lang="scss">
