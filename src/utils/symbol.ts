@@ -226,7 +226,6 @@ export function tag_values_sort(symbol: SymbolShape, variable: Variable) {
         const v = item.vartag?.get(variable.id) || variable.value;
         v && result_set.add(v);
     }
-    if (result_set.size > 1 && result_set.has(variable.value)) result_set.delete(variable.value);
     return Array.from(result_set.values());
 }
 
@@ -278,6 +277,7 @@ export function is_state_selection(shapes: Shape[]) {
 
 export function setup_watch(shapes: Shape[], f: (...args: any[]) => void) {
     for (let i = 0, len = shapes.length; i < len; i++) shapes[i].watch(f);
+    console.log('wtach result', shapes[0]);
 }
 
 export function remove_watch(shapes: Shape[], f: (...args: any[]) => void) {

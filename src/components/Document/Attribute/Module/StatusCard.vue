@@ -3,7 +3,7 @@ import SelectMenu from "@/components/Document/Attribute/PopoverMenu/SelectMenu.v
 import {ArrowDown} from "@element-plus/icons-vue";
 import {Context} from "@/context";
 import {useI18n} from "vue-i18n";
-import {nextTick, onMounted, onUnmounted, ref} from "vue";
+import {nextTick, onMounted, onUnmounted, onUpdated, ref} from "vue";
 import {StatusValueItem, get_tag_value} from "@/utils/symbol";
 import {Selection} from "@/context/selection";
 
@@ -75,7 +75,6 @@ function save_change(v: string) {
     const editor = props.context.editor4Shape(state);
     editor.modifyStateSymTagValue(props.data.variable.id, v);
 }
-
 onMounted(() => {
     getVattagValue();
     props.context.selection.watch(selected_watcher);

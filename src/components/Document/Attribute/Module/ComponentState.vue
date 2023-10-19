@@ -3,9 +3,10 @@ import {useI18n} from 'vue-i18n';
 import {Context} from '@/context';
 import {onMounted, onUnmounted, ref, watch} from "vue";
 import StatusCard from "@/components/Document/Attribute/Module/StatusCard.vue";
-import {remove_watch, setup_watch, states_tag_values_sort, StatusValueItem} from "@/utils/symbol";
-import {SymbolShape} from "@kcdesign/data"
+import {states_tag_values_sort, StatusValueItem} from "@/utils/symbol";
+import {Shape, SymbolShape} from "@kcdesign/data"
 import TypeHeader from '../TypeHeader.vue';
+
 interface Props {
     context: Context
     shapes: SymbolShape[]
@@ -21,15 +22,29 @@ function update_list() {
 }
 
 watch(() => props.shapes, (v, o) => {
-    setup_watch(v, update_list);
-    remove_watch(v, update_list);
+    watch_shapes(v);
+    unwatch_shapes(o);
     update_list();
 })
+
+function watch_shapes(shapes: Shape[]) {
+    for (let i = 0, len = shapes.length; i < len; i++) {
+        shapes[i].watch(update_list);
+    }
+}
+
+function unwatch_shapes(shapes: Shape[]) {
+    for (let i = 0, len = shapes.length; i < len; i++) {
+        shapes[i].unwatch(update_list);
+    }
+}
+
 onMounted(() => {
+    watch_shapes(props.shapes)
     update_list();
 })
 onUnmounted(() => {
-    remove_watch(props.shapes, update_list);
+    unwatch_shapes(props.shapes);
 })
 </script>
 
@@ -49,6 +64,7 @@ onUnmounted(() => {
     font-size: var(--font-default-fontsize);
     margin-bottom: 10px;
 }
+
 .compos_state {
     width: 22px;
     height: 22px;
