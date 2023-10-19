@@ -390,28 +390,24 @@ export function gen_special_name_for_status(symbol: SymbolShape, dlt: string) {
  * @return Boolean
  */
 export function detects_comp_status_val_is_clash(symbol: SymbolShape) {
-    if (symbol.childs.length > 1) {
-        if (!symbol.variables) return false;
-        const variables = symbol.variables;
-        const values_set: Set<string> = new Set();
-        const childs = symbol.childs as unknown as SymbolShape[];
-        const p = v4();
-        for (let i = 0, len = childs.length; i < len; i++) {
-            const item = childs[i];
-            let slices = '';
-            variables.forEach(v => {
-                if (v.type === VariableType.Status) {
-                    const dlt = item.vartag?.get(v.id);
-                    slices += (!dlt || dlt === v.value) ? p : dlt;
-                }
-            })
-            if (values_set.has(slices)) return true;
-            values_set.add(slices);
-        }
-        return false;
-    } else {
-        return false;
+    if (symbol.childs.length < 2) return false;
+    if (!symbol.variables) return false;
+    const variables = symbol.variables;
+    const values_set: Set<string> = new Set();
+    const childs = symbol.childs as unknown as SymbolShape[];
+    const p = v4();
+    for (let i = 0, len = childs.length; i < len; i++) {
+        const item = childs[i];
+        let slices = '';
+        variables.forEach(v => {
+            if (v.type !== VariableType.Status) return;
+            const dlt = item.vartag?.get(v.id);
+            slices += (!dlt || dlt === v.value) ? p : dlt;
+        })
+        if (values_set.has(slices)) return true;
+        values_set.add(slices);
     }
+    return false;
 }
 
 export function detects_comp_status_val_is_clash_for_states(states: SymbolShape[]) {
