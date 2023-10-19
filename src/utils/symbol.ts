@@ -226,6 +226,7 @@ export function tag_values_sort(symbol: SymbolShape, variable: Variable) {
         const v = item.vartag?.get(variable.id) || variable.value;
         v && result_set.add(v);
     }
+    if (result_set.size > 1 && result_set.has(variable.value)) result_set.delete(variable.value);
     return Array.from(result_set.values());
 }
 
