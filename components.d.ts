@@ -161,6 +161,7 @@ declare module '@vue/runtime-core' {
     PointsContainerForSym: typeof import('./src/components/Document/Selection/Controller/Points/PointsContainerForSym.vue')['default']
     PointsContainerForTable: typeof import('./src/components/Document/Selection/Controller/Points/PointsContainerForTable.vue')['default']
     Popover: typeof import('./src/components/common/Popover.vue')['default']
+    PopoverDefaultInput: typeof import('./src/components/Document/Attribute/Module/PopoverDefaultInput.vue')['default']
     Position: typeof import('./src/components/Document/Attribute/PopoverMenu/Position.vue')['default']
     Privacypolicy: typeof import('./src/components/Login/Privacypolicy.vue')['default']
     ProjectAccessSetting: typeof import('./src/components/TeamProject/ProjectFill/ProjectAccessSetting.vue')['default']

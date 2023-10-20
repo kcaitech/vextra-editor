@@ -9,6 +9,7 @@ import { detects_comp_status_val_is_clash, make_status, variable_sort } from "@/
 import AttriCard from "./AttriCard.vue";
 import { AttriListItem } from "@/utils/symbol";
 import SelectLayerInput from "./SelectLayerInput.vue";
+import PopoverDefaultInput from './PopoverDefaultInput.vue';
 
 const { t } = useI18n();
 
@@ -97,6 +98,10 @@ const examplesToggle = () => {
     close();
 }
 
+const saveLayerShow = () => {
+    isaddStateDialog.value = false;
+}
+
 const dialog_posi = ref({ x: 0, y: 0 });
 /**
  * @description 根据触发元素获取弹窗位置
@@ -177,13 +182,16 @@ onUnmounted(() => {
 
         <!--dialog-->
         <CompLayerShow :context="context" v-if="isaddStateDialog" @close-dialog="isaddStateDialog = false" right="250px"
-            :width="260" :addType="addType" :title="dialog_title" :dialog_posi="dialog_posi">
+            :width="260" :addType="addType" :title="dialog_title" :dialog_posi="dialog_posi" @save-layer-show="saveLayerShow">
             <template #layer>
                 <SelectLayerInput
                     :title="addType === VariableType.SymbolRef ? t('compos.compos_instance') : t('compos.select_layer')"
                     :add-type="addType" :context="props.context"
                     :placeholder="addType === VariableType.SymbolRef ? t('compos.place_select_instance') : t('compos.place_select_layer')">
                 </SelectLayerInput>
+            </template>
+            <template #default_value>
+                <PopoverDefaultInput v-if="addType !== VariableType.SymbolRef" :context="context" :add-type="addType"></PopoverDefaultInput>
             </template>
         </CompLayerShow>
     </div>

@@ -6,6 +6,7 @@ import { ref, nextTick } from 'vue';
 import CompLayerShow from '../PopoverMenu/CompLayerShow.vue';
 import { VariableType } from '@kcdesign/data';
 import SelectLayerInput from './SelectLayerInput.vue';
+import PopoverDefaultInput from './PopoverDefaultInput.vue';
 const props = defineProps<{
     context: Context
 }>()
