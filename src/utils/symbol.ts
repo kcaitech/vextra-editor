@@ -4,6 +4,7 @@ import {getName} from "./content";
 import {sort_by_layer} from "./group_ungroup";
 import {debounce} from "lodash";
 import {v4} from "uuid";
+import {get_name} from "@/utils/shapelist";
 
 // region 组件列表相关
 /**
@@ -420,3 +421,39 @@ export function detects_comp_status_val_is_clash_for_states(states: SymbolShape[
 }
 
 // endregion
+export interface LayerCollectItem {
+    state: string
+    data: Shape[]
+}
+
+export function get_layer_from_symbol(symbol: Shape) {
+    const result: LayerCollectItem[] = [];
+    if (symbol.type !== ShapeType.Symbol) return result;
+    if (symbol.isUnionSymbolShape) { // 存在可变组件
+        const childs = symbol.childs;
+        for (let i = 0, len = childs.length; i < len; i++) {
+            const item = childs[i];
+            const lci = {
+                state: get_name(item),
+                data: get_layer_i(childs[i])
+            }
+            result.push(lci);
+        }
+        return result;
+    } else { // 不存在可变组件
+        return [{state: symbol.name, data: get_layer_i(symbol)}];
+    }
+}
+
+function get_layer_i(symbol: Shape, init?: Shape[]) {
+    let shapes: Shape[] = init || [];
+    const childs = symbol.childs;
+    for (let i = 0, len = childs.length; i < len; i++) {
+        const item = childs[i];
+        shapes.push(item);
+        if (item.childs && item.childs.length) {
+            shapes = get_layer_i(item, shapes);
+        }
+    }
+    return shapes;
+}
