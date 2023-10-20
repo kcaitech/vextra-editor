@@ -1,10 +1,13 @@
 <script  setup lang="ts">
+import { Context } from '@/context';
+import { Menu } from '@/context/menu';
 import { onMounted, onUnmounted, ref } from 'vue';
 const props = defineProps<{
     width: string
     top: number
     menuItems: string[]
     menuIndex?: number
+    context: Context
 }>()
 const emit = defineEmits<{
     (e: 'selectIndex', index: number): void
@@ -23,11 +26,19 @@ const isActive = ref(props.menuIndex);
 const hoverColor = (index: number) => {
     isActive.value = index;
 }
+const menu_watcher = (t: number) => {
+    if(t === Menu.CLOSE_COMP_MENU) {
+        emit('close');
+    }
+}
 onMounted(() => {
     document.addEventListener('click', close);
+    props.context.menu.watch(menu_watcher);
 })
 onUnmounted(() => {
     document.removeEventListener('click', close);
+    props.context.menu.unwatch(menu_watcher);
+
 })
 </script>
 
