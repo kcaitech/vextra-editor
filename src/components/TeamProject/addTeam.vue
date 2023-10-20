@@ -1,5 +1,5 @@
 <template>
-    <div class="card-container">
+    <div class="card-container" @keyup.esc="close" @keyup.enter="createTeam">
         <div class="heard">
             <div class="title">
                 {{ t('Createteam.add_team') }}

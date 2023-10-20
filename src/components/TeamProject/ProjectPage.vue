@@ -84,7 +84,7 @@
     <ProjectFillList v-if="itemid === 0 && currentProject[0]" :currentProject="currentProject[0]"></ProjectFillList>
     <ProjectRecycleBin v-if="itemid === 1 && currentProject[0]" :currentProject="currentProject[0]"></ProjectRecycleBin>
     <ProjectAccessSetting v-if="projectSettingDialog" :showcontainer="showcontainer" :title="t('Createteam.membertip')"
-        :data="currentProject[0]" width="500px" @clodeDialog="closeDialog" />
+        :data="currentProject[0]" width="500px" @closeDialog="closeDialog" />
     <div :reflush="reflush !== 0 ? reflush : undefined">
         <ProjectMemberg v-if="projectMembergDialog" :projectMembergDialog="projectMembergDialog"
             :showcontainer="showcontainer" :currentProject="currentProject[0]" @closeDialog="closeDialog"
@@ -304,12 +304,11 @@ const showMembergDialog = () => {
 }
 
 const closeDialog = () => {
+    showcontainer.value = false
     if (projectMembergDialog.value) {
-        showcontainer.value = false
         projectMembergDialog.value = false;
     }
     if (projectSettingDialog.value) {
-        showcontainer.value = false
         projectSettingDialog.value = false
     }
 }

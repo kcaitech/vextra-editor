@@ -13,7 +13,7 @@ const props = defineProps<{
 }>();
 
 const emit = defineEmits<{
-    (e: 'clodeDialog'): void;
+    (e: 'closeDialog'): void;
 }>()
 
 const linkSwitch = ref(false)
@@ -213,11 +213,11 @@ const changemargin = () => {
 
 <template>
     <el-dialog v-model="isshow" :width="width" align-center :append-to-body="true" :close-on-click-modal="false"
-        :show-close="false" @open="changemargin" :destroy-on-close="true">
+        :show-close="false" @open="changemargin" :destroy-on-close="true" @close="emit('closeDialog')">
         <template #header>
             <div class="my-header">
                 <div class="title">{{ title }}</div>
-                <CloseIcon :size="20" @close="emit('clodeDialog')" />
+                <CloseIcon :size="20" @close="emit('closeDialog')" />
             </div>
         </template>
         <div class="body">
@@ -259,7 +259,7 @@ const changemargin = () => {
                 </div>
             </div>
             <div v-else>
-                <div class="button" @click.stop="emit('clodeDialog')"><button>{{ t('Createteam.confirm') }}</button></div>
+                <div class="button" @click.stop="emit('closeDialog')"><button>{{ t('Createteam.confirm') }}</button></div>
             </div>
         </div>
     </el-dialog>
@@ -293,6 +293,7 @@ const changemargin = () => {
     align-items: center;
 
     .title {
+        color:#3D3D3D ;
         font-weight: 600;
     }
 }

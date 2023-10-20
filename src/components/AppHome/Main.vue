@@ -99,17 +99,17 @@ onMounted(() => {
         }
     }
     if (route.path === '/apphome/meshare') {
-                nextTick(() => {
-                    elwidth.value = myfile.value?.getBoundingClientRect().width
-                    elleft.value = myfile.value?.getBoundingClientRect().x
-                })
-            }
-            if (route.path === '/apphome/recyclebin') {
-                nextTick(() => {
-                    elwidth.value = mydel.value?.getBoundingClientRect().width
-                    elleft.value = mydel.value?.getBoundingClientRect().x
-                })
-            }
+        nextTick(() => {
+            elwidth.value = myfile.value?.getBoundingClientRect().width;
+            elleft.value = myfile.value?.getBoundingClientRect().x;
+        })
+    }
+    if (route.path === '/apphome/recyclebin') {
+        nextTick(() => {
+            elwidth.value = mydel.value?.getBoundingClientRect().width
+            elleft.value = mydel.value?.getBoundingClientRect().x
+        })
+    }
 
 })
 </script>
@@ -118,11 +118,11 @@ onMounted(() => {
     <div v-if="title != undefined" class="title">
         <div v-if="recycle" class="indicator" :style="{ width: elwidth + 'px', left: elleft + 'px' }"></div>
         <div v-if="recycle" class="container">
-            <div ref="myfile" class="title-text" @click="highlight(true, $event, '/apphome/meshare')"
+            <div ref="myfile" class="title-text" style="cursor: pointer;" @click="highlight(true, $event, '/apphome/meshare')"
                 :style="{ opacity: active ? '1' : '0.5' }">
-                {{
-                    title }}</div>
-            <div ref="mydel" class="title-text" @click="highlight(false, $event, '/apphome/recyclebin')"
+                {{ title }}
+            </div>
+            <div ref="mydel" class="title-text" style="cursor: pointer;" @click="highlight(false, $event, '/apphome/recyclebin')"
                 :style="{ opacity: active ? '0.5' : '1' }">
                 回收站</div>
         </div>

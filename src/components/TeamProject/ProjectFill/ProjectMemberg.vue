@@ -148,10 +148,6 @@ const delProjectmember = async (params: { project_id: string, user_id: string })
     }
 }
 
-const close = () => {
-    emit('closeDialog');
-}
-
 const handleClose = () => {
     innerVisible.value = false;
 }
@@ -238,8 +234,8 @@ const changemargin = () => {
 </script>
 
 <template>
-    <el-dialog v-model="isshow" width="350px" align-center :close-on-click-modal="false" :before-close="close"
-        :show-close="false" @open="changemargin">
+    <el-dialog v-model="isshow" width="350px" align-center :close-on-click-modal="false" :show-close="false"
+        @open="changemargin" @close="emit('closeDialog')">
         <template #header>
             <div class="my-header">
                 <div class="title">{{ t('Createteam.membersed') }}</div>
@@ -354,6 +350,7 @@ const changemargin = () => {
     align-items: center;
 
     .title {
+        color: #3D3D3D;
         font-weight: 600;
     }
 }
@@ -362,7 +359,7 @@ const changemargin = () => {
     display: flex;
     align-items: center;
     justify-content: space-between;
-    color: #000;
+    color: #3D3D3D;
     padding-right: 10px;
 
     .name {
@@ -373,7 +370,7 @@ const changemargin = () => {
     .el-dropdown-link {
         font-size: 14px;
         font-weight: bold;
-        color: #000;
+        color: #3D3D3D;
     }
 }
 
