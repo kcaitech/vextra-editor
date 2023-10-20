@@ -1,18 +1,18 @@
 <script setup lang="ts">
 import { Context } from '@/context';
 import ComponentDialog from './ComponentDialog.vue';
-import { ArrowDown, MoreFilled } from '@element-plus/icons-vue';
+import { ArrowDown } from '@element-plus/icons-vue';
 import SelectMenu from '../PopoverMenu/SelectMenu.vue';
 import { useI18n } from 'vue-i18n';
 import { VariableType } from '@kcdesign/data';
-import { ref } from 'vue';
-import { RefAttriListItem } from '@/utils/symbol';
+import { ref, onMounted } from 'vue';
+import {modify_status_value_for_ref, RefAttriListItem} from '@/utils/symbol';
 const { t } = useI18n();
 const props = defineProps<{
     context: Context
     data: RefAttriListItem
 }>()
-
+const status_value = ref<string>('');
 const selectoption = ref(false)
 const showMenu = () => {
     if (selectoption.value) return selectoption.value = false
@@ -42,6 +42,16 @@ const selectAllText = () => {
 }
 
 const open = ref(false);
+function select(index: number) {
+    const _v = props.data.values[index];
+    modify_status_value_for_ref(props.context, props.data.variable, _v);
+}
+function getVattagValue() {
+
+}
+onMounted(() => {
+    getVattagValue();
+})
 </script>
 
 <template>
@@ -50,12 +60,12 @@ const open = ref(false);
             <div class="state_name"><span>{{ data.variable.name }}</span></div>
             <div class="state_value" style="padding: 0;">
                 <div class="input" @click="showMenu">
-                    <span>{{  }}</span>
+                    <span></span>
                     <el-icon>
                         <ArrowDown
                             :style="{ transform: selectoption ? 'rotate(180deg)' : 'rotate(0deg)', transition: '0.3s' }" />
                     </el-icon>
-                    <SelectMenu v-if="selectoption" :top="33" width="100%" :menuItems="data.values" :context="context">
+                    <SelectMenu v-if="selectoption" :top="33" width="100%" :menuItems="data.values" :context="context" @select-index="select">
                     </SelectMenu>
                 </div>
             </div>

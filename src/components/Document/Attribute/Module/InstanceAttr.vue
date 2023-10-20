@@ -1,16 +1,16 @@
 <script lang="ts" setup>
-import { useI18n } from 'vue-i18n';
-import { Context } from '@/context';
+import {useI18n} from 'vue-i18n';
+import {Context} from '@/context';
 import TypeHeader from '../TypeHeader.vue';
-import { ref, onUnmounted, watch, onMounted } from 'vue'
-import { shape_track, get_shape_within_document } from '@/utils/content';
-import { SymbolRefShape, Variable, VariableType } from '@kcdesign/data';
-import { MoreFilled } from '@element-plus/icons-vue';
-import { RefAttriListItem, get_var_for_ref } from "@/utils/symbol";
+import {ref, onUnmounted, watch, onMounted} from 'vue'
+import {shape_track, get_shape_within_document} from '@/utils/content';
+import {SymbolRefShape, Variable, VariableType} from '@kcdesign/data';
+import {MoreFilled} from '@element-plus/icons-vue';
+import {RefAttriListItem, get_var_for_ref} from "@/utils/symbol";
 import InstanceAttrCard from "@/components/Document/Attribute/Module/InstanceAttrCard.vue";
 
 
-const { t } = useI18n();
+const {t} = useI18n();
 const props = defineProps<{
     context: Context
     shape: SymbolRefShape
@@ -84,7 +84,7 @@ onUnmounted(() => {
                 </div>
                 <div class="reset_svg" @click.stop="selectReset">
                     <el-icon>
-                        <MoreFilled />
+                        <MoreFilled/>
                     </el-icon>
                     <div class="reset_menu" v-if="resetMenu">
                         <div class="untie" @click="untie">
@@ -99,7 +99,7 @@ onUnmounted(() => {
     </TypeHeader>
     <div class="module_container">
         <component v-for="item in variables" :key="item.variable.id" :is="InstanceAttrCard" :context="props.context"
-            :type="item.variable.type" :data="(item as RefAttriListItem)"></component>
+                   :data="(item as RefAttriListItem)"></component>
     </div>
 </template>
 
@@ -117,7 +117,7 @@ onUnmounted(() => {
         align-items: center;
         justify-content: center;
 
-        >svg {
+        > svg {
             width: 50%;
             height: 50%;
         }
@@ -131,7 +131,7 @@ onUnmounted(() => {
         align-items: center;
         justify-content: center;
 
-        >svg {
+        > svg {
             width: 50%;
             height: 50%;
         }

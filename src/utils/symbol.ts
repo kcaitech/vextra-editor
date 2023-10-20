@@ -507,18 +507,27 @@ export function get_var_for_ref(context: Context, symref: SymbolRefShape) {
         symref.findVar(v.id, _r);
     })
     if (!_r.length) return result;
+    const rmap = new Map<string, RefAttriListItem>();
+
     for(let i = 0, len = _r.length; i < len; i++) {
         const vari = _r[i];
         const item: RefAttriListItem = { variable: vari, values: []};
         if (vari.type !== VariableType.Status) continue;
         item.values = tag_values_sort(sym, vari);
-        result.push(item);
+        rmap.set(item.variable.id, item);
     }
     console.log('result: ', result);
     return result;
 }
+
 export function get_var_value_for_ref(context: Context, symref: SymbolRefShape, variable: Variable) {
     const sym = context.data.symbolsMgr.getSync(symref.refId);
     if (!sym) return;
-    return symref.varbinds?.get(variable.id) || variable.value || '';
+    return sym.getTagedSym(symref);
+}
+export function modify_status_value_for_ref(context: Context, vari: Variable, value: any) {
+    const symref = context.selection.symbolrefshape;
+    if (!symref) return;
+    const editor = context.editor4Shape(symref);
+    editor.modifySymbolRefStatus(vari, value);
 }
