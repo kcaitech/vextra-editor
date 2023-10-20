@@ -1,11 +1,11 @@
 <script setup lang="ts">
 import SelectMenu from "@/components/Document/Attribute/PopoverMenu/SelectMenu.vue";
-import {ArrowDown} from "@element-plus/icons-vue";
-import {Context} from "@/context";
-import {useI18n} from "vue-i18n";
-import {nextTick, onMounted, onUnmounted, onUpdated, ref} from "vue";
-import {StatusValueItem, get_tag_value} from "@/utils/symbol";
-import {Selection} from "@/context/selection";
+import { ArrowDown } from "@element-plus/icons-vue";
+import { Context } from "@/context";
+import { useI18n } from "vue-i18n";
+import { nextTick, onMounted, onUnmounted, onUpdated, ref } from "vue";
+import { StatusValueItem, get_tag_value } from "@/utils/symbol";
+import { Selection } from "@/context/selection";
 
 interface Props {
     context: Context
@@ -20,6 +20,7 @@ const revalueInput = ref<HTMLDivElement>();
 
 const onRevalue = (e: MouseEvent) => {
     e.stopPropagation();
+    if(e.target instanceof Element && e.target.closest('.status-icon-down')) return;
     editAttrValue.value = true
     nextTick(() => {
         if (revalueInput.value) {
@@ -88,9 +89,9 @@ onUnmounted(() => {
             <div class="state_item">
                 <div class="state_name"><span>{{ data.variable.name }}</span></div>
                 <div class="state_value" v-if="!editAttrValue" @dblclick="onRevalue">
-                    <div class="input" @click.stop="showMenu">
+                    <div class="input">
                         <span>{{ statusValue }}</span>
-                        <el-icon @click.stop="showMenu">
+                        <el-icon @click.stop="showMenu" class="status-icon-down">
                             <ArrowDown
                                 :style="{ transform: selectoption ? 'rotate(180deg)' : 'rotate(0deg)', transition: '0.3s' }" />
                         </el-icon>

@@ -60,12 +60,6 @@ const getShapeType = () => {
         if (shapeType.value === ShapeType.Text) {
             textShapes.value = shapes.value;
         }
-        if (props.context.selection.selectedShapes[0].type === ShapeType.Symbol) {
-
-            const result = detects_comp_status_val_is_clash(props.context.selection.selectedShapes[0] as SymbolShape);
-            console.log(result,'result');
-            
-        }
     } else if (props.context.selection.selectedShapes.length > 1) {
         shapes.value = new Array(...props.context.selection.selectedShapes);
         textShapes.value = shapes.value.filter(item => item.type === ShapeType.Text);

@@ -396,6 +396,7 @@ export function detects_comp_status_val_is_clash(symbol: SymbolShape) {
     if(symbol.childs.length > 1) {
         let clashs: any = {}
         variables.forEach((v, k) => {
+            if (v.type !== VariableType.Status) return false;
             symbol.childs.forEach((item, i) => {
                 const id = item.id;
                  if(!clashs[id]) {
