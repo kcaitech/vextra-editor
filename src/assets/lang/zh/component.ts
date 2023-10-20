@@ -33,5 +33,6 @@ export const compos: any = {
     datail: '查看详情',
     attri_1: '属性 1',
     dlt: '默认',
-    attri: '属性'
+    attri: '属性',
+    add_new: '添加新值'
 }

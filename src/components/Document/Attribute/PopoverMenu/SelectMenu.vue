@@ -2,6 +2,7 @@
 import { Context } from '@/context';
 import { Menu } from '@/context/menu';
 import { onMounted, onUnmounted, ref } from 'vue';
+import { useI18n } from "vue-i18n";
 const props = defineProps<{
     width: string
     top: number
@@ -9,6 +10,7 @@ const props = defineProps<{
     menuIndex?: number
     context: Context
 }>()
+const {t} = useI18n();
 const emit = defineEmits<{
     (e: 'selectIndex', index: number): void
     (e: 'close'): void
@@ -46,7 +48,8 @@ onUnmounted(() => {
     <div class="select_menu" :style="{ width: width, top: top + 'px' }">
         <div class="untie" @click="clickItem(index)" v-for="(item, index) in menuItems" :key="index"
             @mouseenter="hoverColor(index)" :class="{ active: isActive === index }">
-            <span>{{ item }}</span>
+            <span v-if="item !== 'add'">{{ item }}</span>
+            <span v-if="item === 'add'">{{ t('compos.add_new') }}</span>
         </div>
     </div>
 </template>

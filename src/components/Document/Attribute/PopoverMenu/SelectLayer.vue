@@ -1,11 +1,11 @@
 <script lang="ts" setup>
-import {onMounted, onUnmounted, ref} from 'vue';
-import {Context} from '@/context';
+import { onMounted, onUnmounted, ref, watchEffect } from 'vue';
+import { Context } from '@/context';
 import CompoSelectList from './CompoSelectList.vue';
-import {useI18n} from 'vue-i18n';
-import {VariableType} from '@kcdesign/data';
+import { useI18n } from 'vue-i18n';
+import { VariableType } from '@kcdesign/data';
 
-const {t} = useI18n();
+const { t } = useI18n();
 
 interface Tree {
     id: number
@@ -21,8 +21,8 @@ interface Props {
 }
 
 const props = defineProps<Props>();
-
 const checkList = ref<string[]>([])
+const unfold = new Set();
 const emit = defineEmits<{
     (e: 'close'): void;
 }>()
@@ -36,16 +36,31 @@ function handleClickOutside(event: MouseEvent) {
 }
 
 const top = ref(32);
+const reflush = ref(0);
 const popover = ref<HTMLDivElement>();
 
 const confirmSelect = () => {
     if (checkList.value.length === 0) return;
     emit('close');
 }
+function toggle(i: number) {
+   if(unfold.has(i)) {
+    unfold.delete(i);
+   }else {
+    unfold.add(i);
+   }
+   reflush.value = reflush.value++;
+}
 const handleCheck = (v: string[]) => {
     // 选中对象的id
     checkList.value = v
 }
+watchEffect(() => {
+    props.selectList.length;
+    if(props.selectList.length === 1) {
+        unfold.add(0);
+    }
+})
 onMounted(() => {
     if (popover.value) {
         const body_h = document.body.clientHeight;
@@ -75,9 +90,9 @@ onUnmounted(() => {
     <div class="select_layerbox" ref="popover" :style="{ top: top + 'px' }">
         <div class="heard">
             <span class="title">{{
-                    props.type === VariableType.SymbolRef ? `${t('compos.compos_instance')}` :
-                        `${t('compos.select_layer')}`
-                }}</span>
+                props.type === VariableType.SymbolRef ? `${t('compos.compos_instance')}` :
+                `${t('compos.select_layer')}`
+            }}</span>
             <div class="close">
                 <div class="toggle_list">
                     <svg-icon icon-class="close" @click.stop="emit('close');"></svg-icon>
@@ -86,39 +101,37 @@ onUnmounted(() => {
         </div>
         <div class="container" v-if="selectList.length">
             <!-- 组件实例 -->
-            <div style="height: 100%;" v-if="props.type === VariableType.SymbolRef">
+            <div style="height: 100%;">
                 <el-scrollbar>
-                    <div class="demo-collapse">
-                        <CompoSelectList :context="context" :contents="selectList" samll="samll"
-                                         @handleCheck="handleCheck">
-                        </CompoSelectList>
-                    </div>
-                </el-scrollbar>
-                <div class="button">
-                    <el-button>确认</el-button>
-                </div>
-            </div>
-            <div style="height: 100%;" v-else>
-                <el-scrollbar>
-                    <div class="demo-collapse">
-                        <CompoSelectList :context="context" :contents="selectList" samll="samll"
-                                         @handleCheck="handleCheck">
-                        </CompoSelectList>
-                    </div>
+                    <!-- 可变组件折叠 -->
+                    <template v-for="(item, i) in selectList" :key="i">
+                        <div class="collapse-title" @click="toggle(i)" v-if="selectList.length > 1" :reflush="reflush">
+                            <span>{{ item.state }}</span>
+                            <div class="shrink">
+                                <svg-icon icon-class="down"
+                                    :style="{ transform: !unfold.has(i) ? 'rotate(-90deg)' : 'rotate(0deg)' }"></svg-icon>
+                            </div>
+                        </div>
+                        <div class="demo-collapse" v-show="unfold.has(i)" :reflush="reflush">
+                            <component :is="CompoSelectList" :context="context" :contents="item.data" samll="samll"
+                                @handleCheck="handleCheck">
+                            </component>
+                        </div>
+                    </template>
                 </el-scrollbar>
                 <div class="button" :style="{ opacity: checkList.length > 0 ? 1 : 0.5 }">
-                    <el-button
-                        @click.stop="confirmSelect">确认
+                    <el-button @click.stop="confirmSelect">确认
                     </el-button>
                 </div>
             </div>
         </div>
-        <div class="null" v-if="selectList.length === 0 && props.type === VariableType.Text || props.type === VariableType.Status">
+        <div class="null"
+            v-if="selectList.length === 0 && props.type === VariableType.Text || props.type === VariableType.Status">
             {{ t('compos.text_layer_null') }}
         </div>
         <div class="null" v-if="selectList.length === 0 && props.type === VariableType.SymbolRef">{{
-                t('compos.instance_null')
-            }}
+            t('compos.instance_null')
+        }}
         </div>
     </div>
 </template>
@@ -222,4 +235,41 @@ onUnmounted(() => {
         justify-content: center;
         padding-bottom: 20px;
     }
-}</style>
+}
+
+.collapse-title {
+    width: 100%;
+    height: 28px;
+    transition: 0.1s;
+    border-radius: 4px;
+    display: flex;
+    align-items: center;
+    padding: 0 4px;
+    box-sizing: border-box;
+    margin-top: 5px;
+    position: relative;
+
+    &:hover {
+        background-color: var(--grey-light);
+    }
+
+    >span {
+        font-weight: 600;
+        overflow: hidden;
+        text-overflow: ellipsis;
+        white-space: nowrap;
+    }
+
+    .shrink {
+        position: absolute;
+        right: 5px;
+        height: 12px;
+        width: 12px;
+
+        >svg {
+            width: 80%;
+            height: 80%;
+        }
+    }
+}
+</style>

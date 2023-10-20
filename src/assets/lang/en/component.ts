@@ -33,5 +33,6 @@ export const compos = {
     datail: 'View details',
     attri_1: 'Attribute 1',
     dlt: 'Default',
-    attri: 'Attribute'
+    attri: 'Attribute',
+    add_new: 'Add new'
 }

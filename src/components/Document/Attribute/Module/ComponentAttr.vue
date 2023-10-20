@@ -1,15 +1,16 @@
 <script lang="ts" setup>
-import {useI18n} from 'vue-i18n';
-import {Context} from '@/context';
+import { useI18n } from 'vue-i18n';
+import { Context } from '@/context';
 import TypeHeader from '../TypeHeader.vue';
-import {onMounted, onUnmounted, ref, watch} from 'vue'
+import { onMounted, onUnmounted, ref, watch } from 'vue'
 import CompLayerShow from '../PopoverMenu/CompLayerShow.vue';
-import {SymbolShape, VariableType} from '@kcdesign/data';
-import {detects_comp_status_val_is_clash, make_status, variable_sort} from "@/utils/symbol";
+import { SymbolShape, VariableType } from '@kcdesign/data';
+import { detects_comp_status_val_is_clash, make_status, variable_sort } from "@/utils/symbol";
 import AttriCard from "./AttriCard.vue";
-import {AttriListItem} from "@/utils/symbol";
+import { AttriListItem } from "@/utils/symbol";
+import SelectLayerInput from "./SelectLayerInput.vue";
 
-const {t} = useI18n();
+const { t } = useI18n();
 
 interface Props {
     context: Context
@@ -25,7 +26,6 @@ const atrrdialog = ref<HTMLDivElement>();
 const addType = ref<VariableType>(VariableType.Visible);
 const variables = ref<AttriListItem[]>();
 const conflict = ref<boolean>(false);
-
 function close() {
     compsType.value = false;
 }
@@ -97,7 +97,7 @@ const examplesToggle = () => {
     close();
 }
 
-const dialog_posi = ref({x: 0, y: 0});
+const dialog_posi = ref({ x: 0, y: 0 });
 /**
  * @description 根据触发元素获取弹窗位置
  */
@@ -151,7 +151,7 @@ onUnmounted(() => {
                         <div class="status" @click="examplesToggle">
                             <div>
                                 <svg-icon icon-class="pattern-rectangle"
-                                          style="transform: rotate(45deg);width: 10px; height: 10px;"></svg-icon>
+                                    style="transform: rotate(45deg);width: 10px; height: 10px;"></svg-icon>
                             </div>
                             <span>{{ t('compos.instance_toggle') }}</span>
                         </div>
@@ -169,14 +169,22 @@ onUnmounted(() => {
         <!--list container-->
         <div class="module_container">
             <component v-for="item in variables" :is="AttriCard" :key="item.variable.id" :context="props.context"
-                       :variable="item.variable" :item="item"></component>
+                :variable="item.variable" :item="item"></component>
         </div>
-        <div v-if="conflict" style="width: 100% ;text-align: center; color: red; box-sizing: border-box; border: 2px solid orangered">存在冲突</div>
+        <div v-if="conflict"
+            style="width: 100% ;text-align: center; color: red; box-sizing: border-box; border: 2px solid orangered">存在冲突
+        </div>
 
         <!--dialog-->
         <CompLayerShow :context="context" v-if="isaddStateDialog" @close-dialog="isaddStateDialog = false" right="250px"
-                       :width="260" :addType="addType" :title="dialog_title"
-                       :dialog_posi="dialog_posi">
+            :width="260" :addType="addType" :title="dialog_title" :dialog_posi="dialog_posi">
+            <template #layer>
+                <SelectLayerInput
+                    :title="addType === VariableType.SymbolRef ? t('compos.compos_instance') : t('compos.select_layer')"
+                    :add-type="addType" :context="props.context"
+                    :placeholder="addType === VariableType.SymbolRef ? t('compos.place_select_instance') : t('compos.place_select_layer')">
+                </SelectLayerInput>
+            </template>
         </CompLayerShow>
     </div>
 </template>
@@ -190,7 +198,7 @@ onUnmounted(() => {
     align-items: center;
     justify-content: center;
 
-    > svg {
+    >svg {
         width: 50%;
         height: 50%;
     }
@@ -269,7 +277,7 @@ onUnmounted(() => {
             .module_name {
                 width: 45%;
 
-                > svg {
+                >svg {
                     width: 14px;
                     height: 14px;
                     margin: -2px 10px;
@@ -308,7 +316,7 @@ onUnmounted(() => {
             width: 22px;
             height: 22px;
 
-            > svg {
+            >svg {
                 width: 11px;
                 height: 11px;
             }
@@ -324,5 +332,4 @@ onUnmounted(() => {
 
 :deep(.el-input__wrapper.is-focus) {
     box-shadow: 0 0 0 1px var(--active-color) inset;
-}
-</style>
+}</style>
