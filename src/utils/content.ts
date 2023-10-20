@@ -797,13 +797,17 @@ export function is_content(context: Context, e: MouseEvent) {
   return e.clientX > root.x && e.clientX < root.right && e.clientY > root.y && e.clientY < root.bottom;
 }
 export function ref_symbol(context: Context, position: PageXY, name: string, symbol: Shape) {
+  const state = symbol;
+  if (symbol.parent && (symbol.parent as SymbolShape).isUnionSymbolShape) {
+    symbol = symbol.parent;
+  }
   const selection = context.selection, workspace = context.workspace;
   const shapes: Shape[] = selection.selectedPage?.childs || [];
   const parent = selection.selectedPage;
   if (parent) {
     const editor = context.editor.editor4Page(parent), matrix = workspace.matrix;
-    const frame = new ShapeFrame(0, 0, symbol.frame.width, symbol.frame.height);
-    frame.x = position.x - symbol.frame.width / 2, frame.y = position.y - symbol.frame.height / 2;
+    const frame = new ShapeFrame(0, 0, state.frame.width, state.frame.height);
+    frame.x = position.x - state.frame.width / 2, frame.y = position.y - state.frame.height / 2;
     let ref: Shape | false = editor.refSymbol(context.data, name, frame, symbol.id);
     ref = editor.insert(parent, shapes.length, ref);
     if (ref) selection.selectShape(ref);
