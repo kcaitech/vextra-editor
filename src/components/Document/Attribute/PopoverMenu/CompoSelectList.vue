@@ -5,32 +5,18 @@ import { ref, watch } from 'vue';
 
 const props = defineProps<{
     context: Context
-    samll?: string
+    samll: string
     contents: any[]
 }>();
 const emit = defineEmits<{
     (e: 'handleCheck', list: any[]): void;
 }>();
 const checkList = ref([])
-const thumbnail_bgc = ref<any>('rgba(1, 239, 239, 239)');
-function getThumbnailBgc() {
-    const page = props.context.selection.selectedPage;
-    if (!page) return;
-    const f = page.style.fills[0];
-    if (!f) {
-        thumbnail_bgc.value = 'rgba(1, 239, 239, 239)'
-    } else {
-        const r = f.color.red;
-        const g = f.color.green;
-        const b = f.color.blue;
-        const a = f.color.alpha;
-        thumbnail_bgc.value = `rgba(${r}, ${g}, ${b}, ${a})`
-    }
-}
+
 watch(checkList, (v) => {
     emit('handleCheck', v)
 })
-getThumbnailBgc()
+
 function icon_class(type: ShapeType) {
     if (type === ShapeType.Symbol) {
         return 'pattern-component';
@@ -38,6 +24,7 @@ function icon_class(type: ShapeType) {
         return `pattern-${type}`;
     }
 }
+
 </script>
 <template>
     <div class="container" v-for="(item, index) in contents" :key="index">
@@ -45,7 +32,7 @@ function icon_class(type: ShapeType) {
             <el-checkbox :label="item.id">
                 <div class="component" :style="{ height: samll === 'samll' ? '30px' : '50px' }">
                     <div class="thumbnail"
-                        :style="{ 'background-color': thumbnail_bgc ? thumbnail_bgc : 'rgba(1, 239, 239, 239)', width: samll === 'samll' ? '30px' : '50px' }">
+                        :style="{ 'background-color': 'rgba(1, 239, 239, 239)', width: '30px' }">
                     </div>
                     <svg-icon class="svg" :icon-class="icon_class(item.type)"></svg-icon>
                     <span class="name">{{ item.name }}</span>

@@ -164,7 +164,7 @@ function _delete() {
     </div>
     <!--实例切换-->
     <div class="item-wrap">
-        <div v-if="props.variable.type === VariableType.Instance" class="item-wrap">
+        <div v-if="props.variable.type === VariableType.SymbolRef" class="item-wrap">
             <div class="attr_con">
                 <div class="module_item_left" @click="edit_instance">
                     <div class="module_name">
@@ -179,7 +179,7 @@ function _delete() {
                 </div>
             </div>
             <CompLayerShow :context="context" v-if="iseditToggle" @close-dialog="iseditToggle = false" right="250px"
-                           :width="260" :add-type="VariableType.Instance" :title="t('compos.instance_toggle')"
+                           :width="260" :add-type="VariableType.SymbolRef" :title="t('compos.instance_toggle')"
                            @save-layer-show="save_instance" :dialog_posi="dialog_posi"></CompLayerShow>
         </div>
     </div>

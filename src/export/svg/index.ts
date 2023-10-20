@@ -74,7 +74,7 @@ comsMap.set(ShapeType.Text, (data: Shape) => {
 //     return group(h, data as GroupShape, comsMap, overrides);
 // });
 comsMap.set(ShapeType.SymbolRef, (data: Shape) => {
-    return symref(h, data as SymbolRefShape, comsMap, undefined, undefined, undefined);
+    return symref(h, data as SymbolRefShape, undefined, comsMap, undefined, undefined, undefined);
 });
 
 export function exportSvg(shape: Shape): string {

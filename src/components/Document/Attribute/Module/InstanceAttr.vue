@@ -91,7 +91,7 @@ const watchShape = () => {
 const updateData = () => {
     const variables = Array.from(props.shape.variables?.values() || []);
     visibles.value = variables.filter(item => item.type === VariableType.Visible) || [];
-    instances.value = variables.filter(item => item.type === VariableType.Instance) || [];
+    instances.value = variables.filter(item => item.type === VariableType.SymbolRef) || [];
     textContents.value = variables.filter(item => item.type === VariableType.Text) || [];
     attrStates.value = variables.filter(item => item.type === VariableType.Status) || [];
 }

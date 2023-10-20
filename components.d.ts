@@ -193,6 +193,7 @@ declare module '@vue/runtime-core' {
     SelectFont: typeof import('./src/components/Document/Attribute/Text/SelectFont.vue')['default']
     SelectionView: typeof import('./src/components/Document/Selection/SelectionView.vue')['default']
     SelectLayer: typeof import('./src/components/Document/Attribute/PopoverMenu/SelectLayer.vue')['default']
+    SelectLayerInput: typeof import('./src/components/Document/Attribute/Module/SelectLayerInput.vue')['default']
     SelectMenu: typeof import('./src/components/Document/Attribute/PopoverMenu/SelectMenu.vue')['default']
     Selector: typeof import('./src/components/Document/Selection/Selector.vue')['default']
     SelectView: typeof import('./src/components/Document/Selection/Controller/Text/SelectView.vue')['default']

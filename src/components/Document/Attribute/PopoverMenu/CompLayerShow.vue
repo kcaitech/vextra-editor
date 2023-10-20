@@ -1,13 +1,14 @@
 <script setup lang="ts">
-import {onMounted, onUnmounted, ref} from 'vue';
-import {Context} from '@/context';
+import { onMounted, onUnmounted, ref } from 'vue';
+import { Context } from '@/context';
 import SelectLayer from "./SelectLayer.vue";
-import {ArrowDown} from '@element-plus/icons-vue'
-import {ShapeType, SymbolShape, VariableType} from '@kcdesign/data';
+import { ArrowDown } from '@element-plus/icons-vue'
+import { ShapeType, SymbolShape, VariableType } from '@kcdesign/data';
 import SelectMenu from './SelectMenu.vue';
-import {useI18n} from 'vue-i18n';
+import { useI18n } from 'vue-i18n';
+import { get_layer_from_symbol } from '@/utils/symbol';
 
-const {t} = useI18n();
+const { t } = useI18n();
 
 interface Props {
     title?: string,
@@ -59,25 +60,30 @@ const showSelectLayer = (e: MouseEvent) => {
     e.stopPropagation();
     selectoption.value = false;
     if (isselectLayer.value && e.target instanceof Element && e.target.closest('.input')) return isselectLayer.value = false;
-    const shapes = props.context.selection.selectedShapes;
-    if (shapes.length === 1) {
-        if (shapes[0].type === ShapeType.Symbol) {
-            const symbol = shapes[0] as SymbolShape
-            if (props.addType === VariableType.Visible) {
-                selectList.value = symbol.childs.filter(item => item.type !== ShapeType.Symbol);
-            } else if (props.addType === VariableType.Text || props.addType === VariableType.Status) {
-                selectList.value = symbol.childs.filter(item => item.type === ShapeType.Text);
-            } else if (props.addType === VariableType.Instance) {
-                selectList.value = symbol.childs.filter(item => item.type === ShapeType.SymbolRef);
-            }
-        } else {
-            return;
-        }
-    }
     isselectLayer.value = true;
 }
 const save = () => {
     emit('saveLayerShow', props.addType)
+}
+
+const get_symbol_layer = () => {
+    const shapes = props.context.selection.selectedShapes;
+    if (shapes.length === 1) {
+        let symbolLayer = get_layer_from_symbol(shapes[0]);
+        if (props.addType === VariableType.Text) {
+            symbolLayer = symbolLayer.map(v => {
+                v.data = v.data.filter(item => item.type === ShapeType.Text);
+                return v;
+            }).filter(v => v.data.length > 0);
+        } else if (props.addType === VariableType.SymbolRef) {
+            symbolLayer = symbolLayer.map(v => {
+                v.data = v.data.filter(item => item.type === ShapeType.SymbolRef);
+                return v;
+            }).filter(v => v.data.length > 0);
+
+        }
+        selectList.value = symbolLayer;
+    }
 }
 
 const selectoption = ref(false)
@@ -96,9 +102,10 @@ const comps = ref<HTMLDivElement>()
 const cur_top = ref(0)
 const cur_p = ref(0)
 onMounted(() => {
+    get_symbol_layer();
     if (comps.value) {
         const body_h = document.body.clientHeight;
-        const {y, height} = comps.value.getBoundingClientRect();
+        const { y, height } = comps.value.getBoundingClientRect();
         const su = body_h - y;
         const cur_t = su - height;
         cur_p.value = cur_t;
@@ -131,49 +138,49 @@ onUnmounted(() => {
             </div>
         </div>
         <div class="body">
+            <slot name="input"></slot>
             <div>
                 <span>{{
-                        addType === VariableType.Instance ? `${t('compos.compos_instance')}` : `${t('compos.select_layer')}`
-                    }}</span>
+                    addType === VariableType.SymbolRef ? `${t('compos.compos_instance')}` : `${t('compos.select_layer')}`
+                }}</span>
                 <div class="select-layer" @mouseup="showSelectLayer" @click.stop>
                     <div class="input"
-                         :style="{ opacity: context.selection.selectedShapes[0].type !== ShapeType.Symbol ? '0.5' : '1' }">
+                        :style="{ opacity: context.selection.selectedShapes[0].type !== ShapeType.Symbol ? '0.5' : '1' }">
                         <span v-if="selectLayer"></span>
                         <span v-else style="opacity: 0.5">{{
-                                addType === VariableType.Instance ? `${t('compos.place_select_instance')}` :
-                                    `${t('compos.place_select_layer')}`
-                            }}</span>
+                            addType === VariableType.SymbolRef ? `${t('compos.place_select_instance')}` :
+                            `${t('compos.place_select_layer')}`
+                        }}</span>
                         <el-icon>
-                            <ArrowDown/>
+                            <ArrowDown />
                         </el-icon>
                     </div>
                     <SelectLayer v-if="isselectLayer" @close="isselectLayer = false" :type="props.addType"
-                                 :context="context" :selectList="selectList"></SelectLayer>
+                        :context="context" :selectList="selectList"></SelectLayer>
                 </div>
             </div>
             <div>
                 <span>{{ t('compos.attr_name') }}</span>
                 <div>
-                    <el-input v-model="attrName" :placeholder="t('compos.attr_name_input')"/>
+                    <el-input v-model="attrName" :placeholder="t('compos.attr_name_input')" />
                 </div>
             </div>
             <p class="warn" v-if="false">{{ t('compos.duplicate_name') }}</p>
-            <div v-if="props.addType !== VariableType.Instance && props.addType">
+            <div v-if="props.addType !== VariableType.SymbolRef && props.addType">
                 <span>默认值</span>
                 <div v-if="props.addType === VariableType.Visible" class="show">
                     <div class="input" @click.stop="showMenu">
                         <span>{{ defaultValue }}</span>
                         <el-icon>
                             <ArrowDown
-                                :style="{ transform: selectoption ? 'rotate(180deg)' : 'rotate(0deg)', transition: '0.3s' }"/>
+                                :style="{ transform: selectoption ? 'rotate(180deg)' : 'rotate(0deg)', transition: '0.3s' }" />
                         </el-icon>
-                        <SelectMenu v-if="selectoption" :top="33" width="100%" :menuItems="menuItems" :menuIndex="menuIndex" :context="context"
-                                    @select-index="handleShow" @close="selectoption = false"></SelectMenu>
+                        <SelectMenu v-if="selectoption" :top="33" width="100%" :menuItems="menuItems" :menuIndex="menuIndex"
+                            :context="context" @select-index="handleShow" @close="selectoption = false"></SelectMenu>
                     </div>
                 </div>
                 <div v-if="props.addType === VariableType.Text">
-                    <el-input v-model="textDefaultValue"
-                              :placeholder="t('compos.default_text_input')"/>
+                    <el-input v-model="textDefaultValue" :placeholder="t('compos.default_text_input')" />
                 </div>
             </div>
         </div>
@@ -217,7 +224,7 @@ onUnmounted(() => {
             align-items: center;
             justify-content: center;
 
-            > svg {
+            >svg {
                 width: 65%;
                 height: 65%;
             }
@@ -267,7 +274,7 @@ onUnmounted(() => {
             margin-left: 60px;
         }
 
-        > div {
+        >div {
             height: 30px;
             width: 100%;
             margin-top: 10px;
@@ -280,7 +287,7 @@ onUnmounted(() => {
                 width: 60px;
             }
 
-            > div {
+            >div {
                 flex: 1;
             }
 
@@ -304,7 +311,7 @@ onUnmounted(() => {
                 height: 30px;
                 font-size: 10px;
 
-                > div {
+                >div {
                     height: 100%;
                 }
 
@@ -400,4 +407,5 @@ onUnmounted(() => {
     height: 100%;
     z-index: 10003;
     background-color: rgba(0, 0, 0, 0.3);
-}</style>
+}
+</style>
