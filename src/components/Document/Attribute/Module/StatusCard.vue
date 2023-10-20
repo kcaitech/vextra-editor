@@ -6,6 +6,7 @@ import { useI18n } from "vue-i18n";
 import { nextTick, onMounted, onUnmounted, onUpdated, ref } from "vue";
 import { StatusValueItem, get_tag_value } from "@/utils/symbol";
 import { Selection } from "@/context/selection";
+import { Menu } from "@/context/menu";
 
 interface Props {
     context: Context
@@ -48,7 +49,8 @@ const onEditAttrValue = (e: KeyboardEvent) => {
 }
 const selectoption = ref(false);
 const showMenu = (e: MouseEvent) => {
-    if (selectoption.value) return selectoption.value = false
+    if (selectoption.value) return selectoption.value = false;
+    props.context.menu.notify(Menu.CLOSE_COMP_MENU);
     selectoption.value = true;
 }
 const statusValue = ref();
@@ -98,7 +100,7 @@ onUnmounted(() => {
                             <ArrowDown
                                 :style="{ transform: selectoption ? 'rotate(180deg)' : 'rotate(0deg)', transition: '0.3s' }" />
                         </el-icon>
-                        <SelectMenu v-if="selectoption" :top="33" width="100%" :menuItems="data.values"
+                        <SelectMenu v-if="selectoption" :top="33" width="100%" :menuItems="data.values" :context="context"
                             @close="selectoption = false" @selectIndex="selcet"></SelectMenu>
                     </div>
                 </div>

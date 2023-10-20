@@ -14,6 +14,7 @@ export class Menu extends Watchable(Object) {
   static HIDE_PLACEMENT = 5;
   static CHANGE_USER_CURSOR = 6;
   static OPEN_SPLIT_CELL = 7;
+  static CLOSE_COMP_MENU = 8;
   private m_menu_mounted: string = '';
   private m_popover: boolean = false;
   private m_color_picker: string | undefined; // 编辑器是否已经有调色板🎨
