@@ -2,13 +2,15 @@
 import { useI18n } from 'vue-i18n';
 import { Context } from '@/context';
 import TypeHeader from '../TypeHeader.vue';
-import { ref, onUnmounted } from 'vue';
+import SelectLayerInput from './SelectLayerInput.vue';
+import { ref, onUnmounted, onMounted } from 'vue';
 import CompLayerShow from '../PopoverMenu/CompLayerShow.vue';
 import { Shape, SymbolRefShape } from '@kcdesign/data';
 import { get_shape_within_document, shape_track } from '@/utils/content';
 import { MoreFilled } from '@element-plus/icons-vue';
 import { VariableType } from '@kcdesign/data';
-import SelectLayerInput from './SelectLayerInput.vue';
+import { get_var_for_ref } from "@/utils/symbol";
+
 interface Props {
     context: Context
     shapes: Shape[]
@@ -66,6 +68,9 @@ const getDialogPosi = () => {
         dialog_posi.value.y = el.y;
     }
 }
+onMounted(() => {
+
+})
 onUnmounted(() => {
     document.removeEventListener('click', closeResetMenu)
 })

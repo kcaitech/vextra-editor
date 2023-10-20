@@ -1,5 +1,15 @@
 import {Context} from "@/context";
-import {Artboard, GroupShape, Page, Shape, ShapeType, SymbolShape, Variable, VariableType} from "@kcdesign/data";
+import {
+    Artboard,
+    GroupShape,
+    Page,
+    Shape,
+    ShapeType,
+    SymbolRefShape,
+    SymbolShape,
+    Variable,
+    VariableType
+} from "@kcdesign/data";
 import {getName} from "./content";
 import {sort_by_layer} from "./group_ungroup";
 import {debounce} from "lodash";
@@ -371,6 +381,7 @@ export function create_ref_var(context: Context, symbol: SymbolShape, name: stri
     const editor = context.editor4Page(context.selection.selectedPage!);
     editor.makeSymbolRefVar(symbol, name, values);
 }
+
 export function create_text_var(context: Context, symbol: SymbolShape, name: string, values: any) {
     const editor = context.editor4Page(context.selection.selectedPage!);
     editor.makeTextVar(symbol, name, values);
@@ -476,4 +487,38 @@ function get_layer_i(symbol: Shape, init?: Shape[]) {
     }
     return shapes;
 }
-
+export interface RefAttriListItem {
+    variable: Variable
+    values: any[]
+}
+/**
+ * @description 整理实例的变量列表
+ * @param context
+ * @param symref
+ */
+export function get_var_for_ref(context: Context, symref: SymbolRefShape) {
+    const result: RefAttriListItem[] = [];
+    const _r: Variable[] = [];
+    const sym = context.data.symbolsMgr.getSync(symref.refId);
+    if (!sym) return result;
+    const variables = sym.variables;
+    if (!variables) return result;
+    variables.forEach(v => {
+        symref.findVar(v.id, _r);
+    })
+    if (!_r.length) return result;
+    for(let i = 0, len = _r.length; i < len; i++) {
+        const vari = _r[i];
+        const item: RefAttriListItem = { variable: vari, values: []};
+        if (vari.type !== VariableType.Status) continue;
+        item.values = tag_values_sort(sym, vari);
+        result.push(item);
+    }
+    console.log('result: ', result);
+    return result;
+}
+export function get_var_value_for_ref(context: Context, symref: SymbolRefShape, variable: Variable) {
+    const sym = context.data.symbolsMgr.getSync(symref.refId);
+    if (!sym) return;
+    return symref.varbinds?.get(variable.id) || variable.value || '';
+}

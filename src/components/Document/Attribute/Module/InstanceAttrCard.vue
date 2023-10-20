@@ -6,10 +6,11 @@ import SelectMenu from '../PopoverMenu/SelectMenu.vue';
 import { useI18n } from 'vue-i18n';
 import { VariableType } from '@kcdesign/data';
 import { ref } from 'vue';
+import { RefAttriListItem } from '@/utils/symbol';
 const { t } = useI18n();
 const props = defineProps<{
     context: Context
-    type: VariableType
+    data: RefAttriListItem
 }>()
 
 const selectoption = ref(false)
@@ -17,7 +18,6 @@ const showMenu = () => {
     if (selectoption.value) return selectoption.value = false
     selectoption.value = true;
 }
-const menuItems = ['默认']
 
 const showCompsDialog = ref(false);
 const comps_posi = ref({ x: 0, y: 0 });
@@ -45,9 +45,9 @@ const open = ref(false);
 </script>
 
 <template>
-    <div class="module_state_item" v-if="type === VariableType.Status">
+    <div class="module_state_item" v-if="data.variable.type === VariableType.Status">
         <div class="state_item">
-            <div class="state_name"><span>{{  }}</span></div>
+            <div class="state_name"><span>{{ data.variable.name }}</span></div>
             <div class="state_value" style="padding: 0;">
                 <div class="input" @click="showMenu">
                     <span>{{  }}</span>
@@ -55,14 +55,14 @@ const open = ref(false);
                         <ArrowDown
                             :style="{ transform: selectoption ? 'rotate(180deg)' : 'rotate(0deg)', transition: '0.3s' }" />
                     </el-icon>
-                    <SelectMenu v-if="selectoption" :top="33" width="100%" :menuItems="menuItems" :context="context">
+                    <SelectMenu v-if="selectoption" :top="33" width="100%" :menuItems="data.values" :context="context">
                     </SelectMenu>
                 </div>
             </div>
         </div>
         <div class="delete"></div>
     </div>
-    <div class="module_state_item" ref="comps" v-if="type === VariableType.SymbolRef">
+    <div class="module_state_item" ref="comps" v-if="data.variable.type === VariableType.SymbolRef">
         <div class="state_item">
             <div class="state_name"><span>{{ 111 }}</span></div>
             <div class="state_value border" @click="compsDialog">
@@ -75,7 +75,7 @@ const open = ref(false);
             :comps_posi="comps_posi">
         </ComponentDialog>
     </div>
-    <div class="module_state_item" v-if="type === VariableType.Text">
+    <div class="module_state_item" v-if="data.variable.type === VariableType.Text">
         <div class="state_item">
             <div class="state_name"><span>{{ }}</span></div>
             <div class="state_value" style="padding: 0;">
@@ -84,7 +84,7 @@ const open = ref(false);
         </div>
         <div class="delete"></div>
     </div>
-    <div class="open" v-if="type === VariableType.Visible">
+    <div class="open" v-if="data.variable.type === VariableType.Visible">
         <div>
             <span class="title">{{ t('compos.layer_show') }}:</span>
             <div class="switch">

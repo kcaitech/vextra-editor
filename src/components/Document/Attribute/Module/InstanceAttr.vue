@@ -2,13 +2,14 @@
 import { useI18n } from 'vue-i18n';
 import { Context } from '@/context';
 import TypeHeader from '../TypeHeader.vue';
-import { ref, nextTick, onUnmounted, watch, onMounted, computed } from 'vue'
-import ComponentDialog from './ComponentDialog.vue';
+import { ref, onUnmounted, watch, onMounted } from 'vue'
 import { shape_track, get_shape_within_document } from '@/utils/content';
-import { Shape, SymbolRefShape, Variable, VariableType } from '@kcdesign/data';
-import { ArrowDown, MoreFilled } from '@element-plus/icons-vue';
-import SelectMenu from '../PopoverMenu/SelectMenu.vue';
-import InstanceAttrCard from './InstanceAttrCard.vue';
+import { SymbolRefShape, Variable, VariableType } from '@kcdesign/data';
+import { MoreFilled } from '@element-plus/icons-vue';
+import { RefAttriListItem, get_var_for_ref } from "@/utils/symbol";
+import InstanceAttrCard from "@/components/Document/Attribute/Module/InstanceAttrCard.vue";
+
+
 const { t } = useI18n();
 const props = defineProps<{
     context: Context
@@ -16,12 +17,6 @@ const props = defineProps<{
 }>()
 
 const resetMenu = ref(false)
-const showCompsDialog = ref(false)
-const textValue = ref('文本内容')
-const menuItems = ['默认']
-const attrValue = ref('默认')
-const comps = ref<HTMLDivElement>();
-const comps_posi = ref({ x: 0, y: 0 });
 const selectReset = (e: MouseEvent) => {
     if (resetMenu.value) return resetMenu.value = false
     resetMenu.value = true
@@ -35,18 +30,6 @@ const closeResetMenu = (e: MouseEvent) => {
     document.removeEventListener('click', closeResetMenu)
 }
 
-const closeDialog = () => {
-    showCompsDialog.value = false;
-}
-const compsDialog = () => {
-    props.context.component.set_scroll_target(props.shape.refId);
-    if (comps.value) {
-        const el = comps.value.getBoundingClientRect();
-        comps_posi.value.x = el.x - (el.width + 32);
-        comps_posi.value.y = el.y;
-    }
-    showCompsDialog.value = true;
-}
 
 const editComps = () => {
     const refId = props.context.selection.selectedShapes[0].refId;
@@ -67,46 +50,16 @@ const untie = () => {
         }
     }
 }
-const selectoption = ref(false)
-const showMenu = () => {
-    if (selectoption.value) return selectoption.value = false
-    selectoption.value = true;
-}
-const inputRef = ref<any>()
-const selectAllText = () => {
-    inputRef.value.select()
-}
-// const variables = ref<Variable[]>([]);
-const visibles = ref<Variable[]>([]);
-const textContents = ref<Variable[]>([]);
-const instances = ref<Variable[]>([]);
-const attrStates = ref<Variable[]>([]);
+
+const variables = ref<RefAttriListItem[]>([]);
 
 const watchShape = () => {
-    // varUnwatch(variables.value as Variable[])
-    // variables.value = props.shape.variables;
     updateData();
-    // varWatch(variables.value as Variable[])
 }
 
 const updateData = () => {
-    const variables = Array.from(props.shape.variables?.values() || []);
-    visibles.value = variables.filter(item => item.type === VariableType.Visible) || [];
-    instances.value = variables.filter(item => item.type === VariableType.SymbolRef) || [];
-    textContents.value = variables.filter(item => item.type === VariableType.Text) || [];
-    attrStates.value = variables.filter(item => item.type === VariableType.Status) || [];
+    variables.value = get_var_for_ref(props.context, props.shape);
 }
-
-// const varWatch = (variables: Variable[]) => {
-//     variables.forEach(item => {
-//         item.watch(updateData)
-//     })
-// }
-// const varUnwatch = (variables: Variable[]) => {
-//     variables.forEach(item => {
-//         item.unwatch(updateData)
-//     })
-// }
 
 onMounted(() => {
     watchShape();
@@ -145,10 +98,8 @@ onUnmounted(() => {
         </template>
     </TypeHeader>
     <div class="module_container">
-        <component :is="InstanceAttrCard" :context="props.context" :type="VariableType.Status"></component>
-        <component :is="InstanceAttrCard" :context="props.context" :type="VariableType.SymbolRef"></component>
-        <component :is="InstanceAttrCard" :context="props.context" :type="VariableType.Text"></component>
-        <component :is="InstanceAttrCard" :context="props.context" :type="VariableType.Visible"></component>
+        <component v-for="item in variables" :key="item.variable.id" :is="InstanceAttrCard" :context="props.context"
+            :type="item.variable.type" :data="(item as RefAttriListItem)"></component>
     </div>
 </template>
 
