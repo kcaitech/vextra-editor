@@ -108,7 +108,7 @@ onUnmounted(() => {
     line-height: 30px;
     color: var(--left-navi-font-color);
     background-color: var(--left-navi-bg-color);
-    font-size: 10px;
+    font-size: var(--font-default-fontsize);
     text-overflow: ellipsis;
     white-space: nowrap;
     overflow: visible;
@@ -125,7 +125,7 @@ onUnmounted(() => {
         >.title {
             width: 100%;
             height: 100%;
-            font-size: 10px;
+            font-size: var(--font-default-fontsize);
             text-overflow: ellipsis;
             white-space: nowrap;
             overflow: hidden;
@@ -156,7 +156,7 @@ div .rename {
     flex: 1;
     width: 100%;
     height: 22px;
-    font-size: 10px;
+    font-size: var(--font-default-fontsize);
     text-overflow: ellipsis;
     white-space: nowrap;
     overflow: hidden;

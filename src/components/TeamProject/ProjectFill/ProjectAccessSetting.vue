@@ -276,7 +276,7 @@ const changemargin = () => {
 }
 
 :deep(.el-input__inner) {
-    font-size: 10px;
+    font-size:var(--font-default-fontsize);
 }
 
 :deep(.el-dialog__title) {
@@ -284,7 +284,7 @@ const changemargin = () => {
 }
 
 .body {
-    font-size: 10px;
+    font-size: var(--font-default-fontsize);
 }
 
 .my-header {

@@ -78,7 +78,7 @@ const setPosition = () => {
                 anchor = matrix.computeCoord({x: anchor.x, y: anchor.y}); //将锚点从 [页面坐标系] 转换到 [窗口坐标系]
                 anchor.y -= origin.y;
                 anchor.x -= origin.x;
-                anchor.y -= 16; // 顶上去16像素
+                anchor.y -= 22; // 顶上去22像素
                 const width = f2p.width;
                 const maxWidth = frame.width
                 titles.push({id: artboard.id, content: artboard.name, x: anchor.x, y: anchor.y, width, shape: artboard, rotate: modify_rotate(artboard), maxWidth, selected});
@@ -213,17 +213,16 @@ watchEffect(() => updater());
     .title-container {
         display: flex;
         align-items: flex-end;
+        height: 20px;
         min-width: 10px;
         overflow: hidden;
         text-overflow: ellipsis;
         white-space: nowrap;
         position: absolute;
         font-size: var(--font-default-fontsize);
-        height: 15px;
         transform-origin: bottom left;
         color: grey;
         z-index: 1;
-        // transform: rotate(0deg);
     }
 }
 </style>
