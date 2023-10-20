@@ -1,11 +1,11 @@
 <script lang="ts" setup>
-import {onMounted, onUnmounted, ref} from 'vue';
-import {Context} from '@/context';
+import { onMounted, onUnmounted, ref } from 'vue';
+import { Context } from '@/context';
 import CompoSelectList from './CompoSelectList.vue';
-import {useI18n} from 'vue-i18n';
-import {VariableType} from '@kcdesign/data';
+import { useI18n } from 'vue-i18n';
+import { VariableType } from '@kcdesign/data';
 
-const {t} = useI18n();
+const { t } = useI18n();
 
 interface Tree {
     id: number
@@ -21,7 +21,7 @@ interface Props {
 }
 
 const props = defineProps<Props>();
-
+const fold = ref<boolean>(true);
 const checkList = ref<string[]>([])
 const emit = defineEmits<{
     (e: 'close'): void;
@@ -41,6 +41,9 @@ const popover = ref<HTMLDivElement>();
 const confirmSelect = () => {
     if (checkList.value.length === 0) return;
     emit('close');
+}
+function toggle() {
+    fold.value = !fold.value;
 }
 const handleCheck = (v: string[]) => {
     // 选中对象的id
@@ -75,9 +78,9 @@ onUnmounted(() => {
     <div class="select_layerbox" ref="popover" :style="{ top: top + 'px' }">
         <div class="heard">
             <span class="title">{{
-                    props.type === VariableType.Instance ? `${t('compos.compos_instance')}` :
-                        `${t('compos.select_layer')}`
-                }}</span>
+                props.type === VariableType.Instance ? `${t('compos.compos_instance')}` :
+                `${t('compos.select_layer')}`
+            }}</span>
             <div class="close">
                 <div class="toggle_list">
                     <svg-icon icon-class="close" @click.stop="emit('close');"></svg-icon>
@@ -85,40 +88,35 @@ onUnmounted(() => {
             </div>
         </div>
         <div class="container" v-if="selectList.length">
-            <!-- 组件实例 -->
-            <div style="height: 100%;" v-if="props.type === VariableType.Instance">
+            <div style="height: 100%;">
                 <el-scrollbar>
-                    <div class="demo-collapse">
-                        <CompoSelectList :context="context" :contents="selectList" samll="samll"
-                                         @handleCheck="handleCheck">
-                        </CompoSelectList>
+                    <!-- 可变组件折叠 -->
+                    <div class="collapse-title" @click="toggle">
+                        <span>111</span>
+                        <div class="shrink">
+                            <svg-icon icon-class="down"
+                                :style="{ transform: fold ? 'rotate(-90deg)' : 'rotate(0deg)' }"></svg-icon>
+                        </div>
                     </div>
-                </el-scrollbar>
-                <div class="button">
-                    <el-button>确认</el-button>
-                </div>
-            </div>
-            <div style="height: 100%;" v-else>
-                <el-scrollbar>
-                    <div class="demo-collapse">
-                        <CompoSelectList :context="context" :contents="selectList" samll="samll"
-                                         @handleCheck="handleCheck">
-                        </CompoSelectList>
+                    <div class="demo-collapse" v-show="!fold">
+                        <component :is="CompoSelectList" :context="context" :contents="selectList" samll="samll"
+                            @handleCheck="handleCheck">
+                        </component>
                     </div>
                 </el-scrollbar>
                 <div class="button" :style="{ opacity: checkList.length > 0 ? 1 : 0.5 }">
-                    <el-button
-                        @click.stop="confirmSelect">确认
+                    <el-button @click.stop="confirmSelect">确认
                     </el-button>
                 </div>
             </div>
         </div>
-        <div class="null" v-if="selectList.length === 0 && props.type === VariableType.Text || props.type === VariableType.Status">
+        <div class="null"
+            v-if="selectList.length === 0 && props.type === VariableType.Text || props.type === VariableType.Status">
             {{ t('compos.text_layer_null') }}
         </div>
         <div class="null" v-if="selectList.length === 0 && props.type === VariableType.Instance">{{
-                t('compos.instance_null')
-            }}
+            t('compos.instance_null')
+        }}
         </div>
     </div>
 </template>
@@ -222,4 +220,37 @@ onUnmounted(() => {
         justify-content: center;
         padding-bottom: 20px;
     }
-}</style>
+}
+
+.collapse-title {
+    width: 100%;
+    height: 28px;
+    transition: 0.1s;
+    border-radius: 4px;
+    display: flex;
+    align-items: center;
+    padding: 0 4px;
+    box-sizing: border-box;
+    margin-top: 5px;
+    position: relative;
+    &:hover {
+        background-color: var(--grey-light);
+    }
+
+    >span {
+        font-weight: 600;
+    }
+
+    .shrink {
+        position: absolute;
+        right: 5px;
+        height: 12px;
+        width: 12px;
+
+        >svg {
+            width: 80%;
+            height: 80%;
+        }
+    }
+}
+</style>

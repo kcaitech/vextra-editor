@@ -167,7 +167,7 @@ onUnmounted(() => {
                             <ArrowDown
                                 :style="{ transform: selectoption ? 'rotate(180deg)' : 'rotate(0deg)', transition: '0.3s' }"/>
                         </el-icon>
-                        <SelectMenu v-if="selectoption" :top="33" width="100%" :menuItems="menuItems" :menuIndex="menuIndex"
+                        <SelectMenu v-if="selectoption" :top="33" width="100%" :menuItems="menuItems" :menuIndex="menuIndex" :context="context"
                                     @select-index="handleShow" @close="selectoption = false"></SelectMenu>
                     </div>
                 </div>

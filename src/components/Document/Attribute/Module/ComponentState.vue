@@ -19,6 +19,9 @@ const conflict = ref<boolean>(false);
 
 function update_list() {
     data.value = states_tag_values_sort(props.shapes);
+    data.value.forEach(item => {
+        item.values.push('add');
+    })
     conflict.value = detects_comp_status_val_is_clash_for_states(props.shapes);
     console.log('state attribute update result: ', data.value);
 }
