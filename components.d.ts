@@ -122,6 +122,7 @@ declare module '@vue/runtime-core' {
     Index: typeof import('./src/components/Document/Attribute/BaseAttr/Index.vue')['default']
     Inform: typeof import('./src/components/AppHome/Inform.vue')['default']
     InstanceAttr: typeof import('./src/components/Document/Attribute/Module/InstanceAttr.vue')['default']
+    InstanceAttrCard: typeof import('./src/components/Document/Attribute/Module/InstanceAttrCard.vue')['default']
     InviteMember: typeof import('./src/components/TeamProject/InviteMember.vue')['default']
     JionTeam: typeof import('./src/components/TeamProject/jionTeam.vue')['default']
     KChome: typeof import('./src/components/Home/KChome.vue')['default']

@@ -1,22 +1,18 @@
 <script setup lang="ts">
 import { Context } from '@/context';
-import { VariableType, ShapeType } from '@kcdesign/data'; 
-import SelectLayer from "./SelectLayer.vue";
+import { VariableType, ShapeType } from '@kcdesign/data';
 import { ArrowDown } from '@element-plus/icons-vue';
 import { useI18n } from 'vue-i18n';
 import { onMounted, ref } from 'vue';
 import { get_layer_from_symbol } from '@/utils/symbol';
+import SelectLayer from '../PopoverMenu/SelectLayer.vue';
 
 const { t } = useI18n();
 interface Props {
-    title?: string,
-    top?: string,
-    right?: string,
-    width?: number,
-    height?: string | number,
+    title: string,
     context: Context,
     addType: VariableType,
-    dialog_posi: { x: number, y: number }
+    placeholder: string
 }
 
 const props = defineProps<Props>();
@@ -58,18 +54,13 @@ onMounted(() => {
 </script>
 
 <template>
-    <div>
-        <span>{{
-            addType === VariableType.SymbolRef ? `${t('compos.compos_instance')}` : `${t('compos.select_layer')}`
-        }}</span>
+    <div class="container">
+        <span>{{ title }}</span>
         <div class="select-layer" @mouseup="showSelectLayer" @click.stop>
             <div class="input"
                 :style="{ opacity: context.selection.selectedShapes[0].type !== ShapeType.Symbol ? '0.5' : '1' }">
                 <span v-if="selectLayer"></span>
-                <span v-else style="opacity: 0.5">{{
-                    addType === VariableType.SymbolRef ? `${t('compos.place_select_instance')}` :
-                    `${t('compos.place_select_layer')}`
-                }}</span>
+                <span v-else style="opacity: 0.5">{{ placeholder }}</span>
                 <el-icon>
                     <ArrowDown />
                 </el-icon>
@@ -81,6 +72,66 @@ onMounted(() => {
 </template>
 
 <style scoped lang="scss">
+.container {
+    height: 30px;
+    width: 100%;
+    margin-top: 10px;
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    box-sizing: border-box;
+
+    span {
+        width: 60px;
+    }
+
+    >div {
+        flex: 1;
+    }
+
+    .el-input {
+        width: 100%;
+        height: 30px;
+        font-size: 10px;
+
+        :deep(.el-input__wrapper) {
+            background-color: var(--grey-light);
+            box-shadow: none;
+        }
+
+        :deep(.el-input__wrapper.is-focus) {
+            box-shadow: 0 0 0 1px var(--active-color) inset;
+        }
+    }
+
+    .el-select {
+        width: 100%;
+        height: 30px;
+        font-size: 10px;
+
+        >div {
+            height: 100%;
+        }
+
+        .el-option {
+            font-size: 10px
+        }
+
+        :deep(.el-input__wrapper) {
+            height: 30px;
+            font-size: 10px;
+            background-color: var(--grey-light);
+            box-shadow: none;
+
+            .el-icon svg {
+                width: 10px;
+                height: 10px;
+                color: black;
+            }
+        }
+    }
+}
+
 .select-layer {
     position: relative;
     z-index: 1;

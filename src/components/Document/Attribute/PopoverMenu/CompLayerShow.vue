@@ -5,8 +5,8 @@ import SelectLayer from "./SelectLayer.vue";
 import { ArrowDown } from '@element-plus/icons-vue'
 import { ShapeType, SymbolShape, VariableType } from '@kcdesign/data';
 import SelectMenu from './SelectMenu.vue';
-import { useI18n } from 'vue-i18n';
-import { get_layer_from_symbol } from '@/utils/symbol';
+import {useI18n} from 'vue-i18n';
+import {create_ref_var, create_text_var, create_visible_var, get_layer_from_symbol} from "@/utils/symbol";
 
 const { t } = useI18n();
 
@@ -63,6 +63,21 @@ const showSelectLayer = (e: MouseEvent) => {
     isselectLayer.value = true;
 }
 const save = () => {
+    // 测试用代码 start
+    const selection = props.context.selection;
+    if (selection.symbolshape) {
+        switch (props.addType) {
+            case VariableType.Visible:
+                return create_visible_var(props.context, selection.symbolshape, '图层显示', []);
+            case VariableType.SymbolRef:
+                return create_ref_var(props.context, selection.symbolshape, '实例切换', '嘿嘿');
+            case VariableType.Text:
+                return create_text_var(props.context, selection.symbolshape, '文本切换', '嘿嘿');
+            default:
+                console.log('wrong action');
+        }
+    }
+    // 测试用代码 end
     emit('saveLayerShow', props.addType)
 }
 
@@ -138,8 +153,8 @@ onUnmounted(() => {
             </div>
         </div>
         <div class="body">
-            <slot name="input"></slot>
-            <div>
+            <slot name="layer"></slot>
+            <!-- <div>
                 <span>{{
                     addType === VariableType.SymbolRef ? `${t('compos.compos_instance')}` : `${t('compos.select_layer')}`
                 }}</span>
@@ -158,7 +173,7 @@ onUnmounted(() => {
                     <SelectLayer v-if="isselectLayer" @close="isselectLayer = false" :type="props.addType"
                         :context="context" :selectList="selectList"></SelectLayer>
                 </div>
-            </div>
+            </div> -->
             <div>
                 <span>{{ t('compos.attr_name') }}</span>
                 <div>

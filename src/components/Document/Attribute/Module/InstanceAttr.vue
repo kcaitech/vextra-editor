@@ -8,6 +8,7 @@ import { shape_track, get_shape_within_document } from '@/utils/content';
 import { Shape, SymbolRefShape, Variable, VariableType } from '@kcdesign/data';
 import { ArrowDown, MoreFilled } from '@element-plus/icons-vue';
 import SelectMenu from '../PopoverMenu/SelectMenu.vue';
+import InstanceAttrCard from './InstanceAttrCard.vue';
 const { t } = useI18n();
 const props = defineProps<{
     context: Context
@@ -144,57 +145,10 @@ onUnmounted(() => {
         </template>
     </TypeHeader>
     <div class="module_container">
-        <div class="module_state_item" v-for="(item, index) in attrStates" :key="index">
-            <div class="state_item">
-                <div class="state_name"><span>{{ item.name }}</span></div>
-                <div class="state_value" style="padding: 0;">
-                    <div class="input" @click="showMenu">
-                        <span>{{ attrValue }}</span>
-                        <el-icon>
-                            <ArrowDown
-                                :style="{ transform: selectoption ? 'rotate(180deg)' : 'rotate(0deg)', transition: '0.3s' }" />
-                        </el-icon>
-                        <SelectMenu v-if="selectoption" :top="33" width="100%" :menuItems="menuItems" :context="context"></SelectMenu>
-                    </div>
-                </div>
-            </div>
-            <div class="delete"></div>
-        </div>
-        <!-- <div class="module_state_item" ref="comps" v-for="(item, index) in instances" :key="index"> -->
-        <div class="module_state_item" ref="comps">
-            <div class="state_item">
-                <div class="state_name"><span>{{ 111 }}</span></div>
-                <div class="state_value border" @click="compsDialog">
-                    <span style="color: #606266;">默认</span>
-                    <svg-icon icon-class="down" style="color: #a8abb2;"></svg-icon>
-                </div>
-            </div>
-            <div class="delete"></div>
-            <ComponentDialog v-if="showCompsDialog" :context="context" right="250px" top="0" @closeDialog="closeDialog"
-                :comps_posi="comps_posi">
-            </ComponentDialog>
-        </div>
-        <div class="module_state_item" v-for="(item, index) in textContents" :key="index">
-            <div class="state_item">
-                <div class="state_name"><span>{{ item.name }}</span></div>
-                <div class="state_value" style="padding: 0;">
-                    <el-input ref="inputRef" v-model="textValue" @focus="selectAllText" />
-                </div>
-            </div>
-            <div class="delete"></div>
-        </div>
-        <div class="open" v-if="visibles.length > 0">
-            <div>
-                <span class="title">{{ t('compos.layer_show') }}:</span>
-                <div class="switch">
-                    <div v-for="(item, index) in visibles" :key="index">
-                        <span class="name">{{ item.name }}</span>
-                        <el-switch v-model="item.value" size="small"
-                            style="margin-left: 10px;--el-switch-on-color: #9775fa" />
-                    </div>
-                </div>
-            </div>
-        </div>
+        <component :is="InstanceAttrCard" :context="props.context" :type="VariableType.Status"></component>
+        <component :is="InstanceAttrCard" :context="props.context" :type="VariableType.SymbolRef"></component>
+        <component :is="InstanceAttrCard" :context="props.context" :type="VariableType.Text"></component>
+        <component :is="InstanceAttrCard" :context="props.context" :type="VariableType.Visible"></component>
     </div>
 </template>
 
@@ -264,175 +218,11 @@ onUnmounted(() => {
 .module_container {
     font-size: var(--font-default-fontsize);
     margin-bottom: 10px;
-
-    .module_state_item {
-        position: relative;
-        display: flex;
-        align-items: center;
-        margin-bottom: 3px;
-        margin-top: 5px;
-
-        .state_item {
-            display: flex;
-            align-items: center;
-            width: 100%;
-            height: 30px;
-
-            .state_name {
-                display: flex;
-                align-items: center;
-                width: 40%;
-                height: 100%;
-
-                span {
-                    overflow: hidden;
-                    text-overflow: ellipsis;
-                    white-space: nowrap;
-                }
-            }
-
-            .state_value {
-                display: flex;
-                align-items: center;
-                justify-content: space-between;
-                padding: 0 11px;
-                flex: 1;
-                height: 100%;
-                border-radius: 4px;
-
-                >svg {
-                    width: 10px;
-                    height: 10px;
-                }
-
-                .input {
-                    position: relative;
-                    width: 100%;
-                    height: 30px;
-                    border-radius: 4px;
-                    padding-left: 11px;
-                    box-sizing: border-box;
-                    display: flex;
-                    align-items: center;
-                    background-color: var(--grey-light);
-
-                    span {
-                        flex: 1;
-                    }
-
-                    .el-icon {
-                        width: 30px;
-                        height: 30px;
-                        display: flex;
-                        align-items: center;
-                        justify-content: center;
-                    }
-                }
-
-                .el-select {
-                    width: 100%;
-                    height: 30px;
-                    font-size: 10px;
-
-                    >div {
-                        height: 100%;
-                    }
-
-                    .el-option {
-                        font-size: 10px
-                    }
-
-                    :deep(.el-input__wrapper) {
-                        height: 30px;
-                        font-size: 10px;
-                        background-color: var(--grey-light);
-                        box-shadow: none;
-
-                        &:hover {
-                            border-color: var(--grey-light);
-                            box-shadow: none;
-                        }
-                    }
-                }
-
-                .el-input {
-                    width: 100%;
-                    height: 30px;
-                    font-size: 10px;
-
-                    :deep(.el-input__inner) {
-                        --el-input-inner-height: 100%;
-                    }
-
-                    :deep(.el-input__wrapper) {
-                        background-color: var(--grey-light);
-                        border-color: var(--grey-light);
-                        box-shadow: none;
-
-                        &:hover {
-                            border-color: var(--grey-light);
-                            box-shadow: none;
-                        }
-                    }
-
-                    :deep(.el-input__wrapper.is-focus) {
-                        box-shadow: 0 0 0 1px var(--active-color) inset;
-                    }
-                }
-            }
-
-            .border {
-                background-color: var(--grey-light);
-            }
-        }
-
-        .delete {
-            flex: 0 0 22px;
-            display: flex;
-            justify-content: center;
-            align-items: center;
-            width: 22px;
-            height: 22px;
-        }
-    }
-
-    .open {
-        margin-bottom: 3px;
-
-        >div {
-            display: flex;
-
-            .title {
-                width: 60px;
-                margin-right: 5px;
-                padding-top: 2px;
-            }
-
-            .switch {
-                >div {
-                    display: flex;
-                    align-items: center;
-                }
-            }
-
-            .name {
-                width: 60px;
-                margin-right: 5px;
-                overflow: hidden;
-                text-overflow: ellipsis;
-                white-space: nowrap;
-            }
-
-            >div {
-                flex: 1;
-            }
-        }
-    }
 }
 
 :deep(.el-select-dropdown__item.selected) {
     color: #9775fa !important;
-    font-size: 10px;
+    font-size: 12px;
 }
 
 :deep(.el-select .el-input.is-focus .el-input__wrapper) {
