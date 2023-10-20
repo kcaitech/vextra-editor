@@ -76,17 +76,15 @@ export function makeVarWatcher(obj: any): VarWatcher {
     return obj;
 }
 
-export function initCommonShape(props: { data: Shape, varsContainer?: (SymbolRefShape | SymbolShape)[] }) {
+export function initCommonShape(props: { data: Shape, varsContainer?: (SymbolRefShape | SymbolShape)[] }, updater?: () => void) {
     const _reflush = ref(0);
     const __var_onwatch = new Map<string, Variable[]>();
 
     const watcher = () => {
         _reflush.value++;
+        if (updater) updater();
     }
-    const watcher2 = () => {
-        // console.log("watcher2")
-        _reflush.value++;
-    }
+
     const _watch_vars = (slot: string, vars: Variable[]) => {
         const old = __var_onwatch.get(slot);
         if (!old) {
@@ -137,22 +135,24 @@ export function initCommonShape(props: { data: Shape, varsContainer?: (SymbolRef
 
     // watch varsContainer
     watch(() => props.varsContainer, (value, old) => {
-        old?.forEach((v) => v.unwatch(watcher2));
-        value?.forEach((v) => v.watch(watcher2));
+        old?.forEach((v) => v.unwatch(watcher));
+        value?.forEach((v) => v.watch(watcher));
+        if (updater) updater();
     })
 
     watch(() => props.data, (value, old) => {
         old.unwatch(watcher);
         value.watch(watcher);
+        if (updater) updater();
     })
     onMounted(() => {
         props.data.watch(watcher);
-        if (props.varsContainer) props.varsContainer.forEach((v) => v.watch(watcher2));
+        if (props.varsContainer) props.varsContainer.forEach((v) => v.watch(watcher));
     })
     onUnmounted(() => {
         props.data.unwatch(watcher);
         _var_on_removed();
-        if (props.varsContainer) props.varsContainer.forEach((v) => v.unwatch(watcher2));
+        if (props.varsContainer) props.varsContainer.forEach((v) => v.unwatch(watcher));
     })
 
     return ret;
