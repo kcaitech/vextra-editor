@@ -33,7 +33,6 @@ function watch_shapes(shapes: Shape[]) {
     for (let i = 0, len = shapes.length; i < len; i++) {
         shapes[i].watch(update_list);
     }
-    console.log('rewatch', shapes[0].__watcher);
 }
 
 function unwatch_shapes(shapes: Shape[]) {
