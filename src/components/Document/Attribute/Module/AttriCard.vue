@@ -120,68 +120,59 @@ function _delete() {
         <div class="warn" v-if="false">{{ t('compos.duplicate_name') }}</div>
     </div>
     <!--显示状态-->
-    <div class="item-wrap">
-        <div v-if="props.variable.type === VariableType.Visible" class="item-wrap">
-            <div class="attr_con">
-                <div class="module_item_left" @click="edit_visible">
-                    <div class="module_name">
-                        <svg-icon icon-class="eye-open"></svg-icon>
-                        <span class="name">{{ props.variable.name }}</span>
-                    </div>
-                    <div><span class="name">数据来源待定</span></div>
-                </div>
-                <div class="delete">
-                    <svg-icon icon-class="delete"></svg-icon>
+    <div v-if="props.variable.type === VariableType.Visible" class="module_attr_item">
+        <div class="attr_con">
+            <div class="module_item_left" @click="edit_visible">
+                <div class="module_name-2">
+                    <svg-icon icon-class="eye-open"></svg-icon>
+                    <span class="name">{{ props.variable.name }}</span>
                 </div>
             </div>
-            <CompLayerShow :context="props.context" v-if="iseditLayerShow" @close-dialog="iseditLayerShow = false"
-                           right="250px" :width="260" :add-type="VariableType.Visible" :title="t('compos.layer_isShow')"
-                           @save-layer-show="save_layer_show" :dialog_posi="dialog_posi">
-            </CompLayerShow>
+            <div class="delete">
+                <svg-icon icon-class="delete"></svg-icon>
+            </div>
         </div>
+        <CompLayerShow :context="props.context" v-if="iseditLayerShow" @close-dialog="iseditLayerShow = false"
+                       right="250px" :width="260" :add-type="VariableType.Visible" :title="t('compos.layer_isShow')"
+                       @save-layer-show="save_layer_show" :dialog_posi="dialog_posi">
+        </CompLayerShow>
     </div>
     <!--文本内容-->
-    <div class="item-wrap">
-        <div v-if="props.variable.type === VariableType.Text" class="item-wrap">
-            <div class="attr_con">
-                <div class="module_item_left" @click="edit_text">
-                    <div class="module_name">
-                        <svg-icon icon-class="text" style="width: 10px; height: 10px;"></svg-icon>
-                        <span class="name">{{ props.variable.name }}</span>
-                    </div>
-                    <div><span class="name">数据来源待定</span></div>
-                </div>
-                <div class="delete">
-                    <svg-icon icon-class="delete"></svg-icon>
+    <div v-if="props.variable.type === VariableType.Text" class="module_attr_item">
+        <div class="attr_con">
+            <div class="module_item_left" @click="edit_text">
+                <div class="module_name-2">
+                    <svg-icon icon-class="text" style="width: 10px; height: 10px;"></svg-icon>
+                    <span class="name">{{ props.variable.name }}</span>
                 </div>
             </div>
-            <CompLayerShow :context="context" v-if="iseditText" @close-dialog="iseditText = false" right="250px"
-                           :width="260" :add-type="VariableType.Status" :title="t('compos.text_content')"
-                           @save-layer-show="save_text"
-                           :dialog_posi="dialog_posi">
-            </CompLayerShow>
+            <div class="delete">
+                <svg-icon icon-class="delete"></svg-icon>
+            </div>
         </div>
+        <CompLayerShow :context="context" v-if="iseditText" @close-dialog="iseditText = false" right="250px"
+                       :width="260" :add-type="VariableType.Status" :title="t('compos.text_content')"
+                       @save-layer-show="save_text"
+                       :dialog_posi="dialog_posi">
+        </CompLayerShow>
     </div>
     <!--实例切换-->
-    <div class="item-wrap">
-        <div v-if="props.variable.type === VariableType.SymbolRef" class="item-wrap">
-            <div class="attr_con">
-                <div class="module_item_left" @click="edit_instance">
-                    <div class="module_name">
-                        <svg-icon icon-class="pattern-rectangle"
-                                  style="width: 10px; height: 10px; transform: rotate(45deg); margin-top: 0;"></svg-icon>
-                        <span class="name">{{ props.variable.name }}</span>
-                    </div>
-                    <div><span class="name">数据来源待定</span></div>
-                </div>
-                <div class="delete">
-                    <svg-icon icon-class="delete"></svg-icon>
+    <div v-if="props.variable.type === VariableType.SymbolRef" class="module_attr_item">
+        <div class="attr_con">
+            <div class="module_item_left" @click="edit_instance">
+                <div class="module_name-2">
+                    <svg-icon icon-class="pattern-rectangle"
+                              style="width: 10px; height: 10px; transform: rotate(45deg); margin-top: 0;"></svg-icon>
+                    <span class="name">{{ props.variable.name }}</span>
                 </div>
             </div>
-            <CompLayerShow :context="context" v-if="iseditToggle" @close-dialog="iseditToggle = false" right="250px"
-                           :width="260" :add-type="VariableType.SymbolRef" :title="t('compos.instance_toggle')"
-                           @save-layer-show="save_instance" :dialog_posi="dialog_posi"></CompLayerShow>
+            <div class="delete">
+                <svg-icon icon-class="delete"></svg-icon>
+            </div>
         </div>
+        <CompLayerShow :context="context" v-if="iseditToggle" @close-dialog="iseditToggle = false" right="250px"
+                       :width="260" :add-type="VariableType.SymbolRef" :title="t('compos.instance_toggle')"
+                       @save-layer-show="save_instance" :dialog_posi="dialog_posi"></CompLayerShow>
     </div>
 </template>
 <style lang="scss" scoped>
@@ -224,7 +215,23 @@ function _delete() {
                 white-space: nowrap;
             }
         }
+        .module_name-2 {
+            display: flex;
+            align-items: center;
 
+            > svg {
+                width: 14px;
+                height: 14px;
+                margin: 0px 10px;
+            }
+
+            .name {
+                max-width: 100%;
+                overflow: hidden;
+                text-overflow: ellipsis;
+                white-space: nowrap;
+            }
+        }
         .name {
             overflow: hidden;
             text-overflow: ellipsis;

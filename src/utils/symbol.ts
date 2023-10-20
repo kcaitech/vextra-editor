@@ -202,14 +202,11 @@ export interface AttriListItem {
 
 export function variable_sort(symbol: SymbolShape) {
     const list: AttriListItem[] = [];
-    if (!symbol.isUnionSymbolShape || !symbol.variables) return list;
+    if (!symbol.variables) return list;
     let status_index = 0;
     const resource = symbol.variables;
-    resource.forEach((v) => {
-        const item: { variable: Variable, values: any[] } = {
-            variable: v,
-            values: []
-        }
+    resource.forEach(v => {
+        const item: { variable: Variable, values: any[] } = {variable: v, values: []};
         if (v.type === VariableType.Status) {
             item.values = tag_values_sort(symbol, v);
             list.splice(status_index++, 0, item);
@@ -221,6 +218,7 @@ export function variable_sort(symbol: SymbolShape) {
 }
 
 export function tag_values_sort(symbol: SymbolShape, variable: Variable) {
+    if (!symbol.isUnionSymbolShape) return [];
     const childs: SymbolShape[] = symbol.childs as unknown as SymbolShape[];
     const result_set: Set<string> = new Set();
     for (let i = 0, len = childs.length; i < len; i++) {
@@ -364,6 +362,20 @@ export function make_state(context: Context, t: Function) {
     }
 }
 
+export function create_visible_var(context: Context, symbol: SymbolShape, name: string, values: string[]) {
+    const editor = context.editor4Page(context.selection.selectedPage!);
+    editor.makeVisibleVar(symbol, name, values);
+}
+
+export function create_ref_var(context: Context, symbol: SymbolShape, name: string, values: any) {
+    const editor = context.editor4Page(context.selection.selectedPage!);
+    editor.makeSymbolRefVar(symbol, name, values);
+}
+export function create_text_var(context: Context, symbol: SymbolShape, name: string, values: any) {
+    const editor = context.editor4Page(context.selection.selectedPage!);
+    editor.makeTextVar(symbol, name, values);
+}
+
 export function gen_special_name_for_status(symbol: SymbolShape, dlt: string) {
     let index = 1
     if (!symbol.variables) return `${dlt}${index}`;
@@ -380,8 +392,8 @@ export function gen_special_name_for_status(symbol: SymbolShape, dlt: string) {
         }
     })
     while (index <= max) {
-        index++;
         if (!number_set.has(index)) break;
+        index++;
     }
     return `${dlt}${index}`;
 }
@@ -397,14 +409,17 @@ export function detects_comp_status_val_is_clash(symbol: SymbolShape) {
     const values_set: Set<string> = new Set();
     const childs = symbol.childs as unknown as SymbolShape[];
     const p = v4();
+    let _no_status = true;
     for (let i = 0, len = childs.length; i < len; i++) {
         const item = childs[i];
         let slices = '';
         variables.forEach(v => {
             if (v.type !== VariableType.Status) return;
+            _no_status = false;
             const dlt = item.vartag?.get(v.id);
             slices += (!dlt || dlt === v.value) ? p : dlt;
         })
+        if (_no_status) return false;
         if (values_set.has(slices)) return true;
         values_set.add(slices);
     }

@@ -6,6 +6,7 @@ import {ArrowDown} from '@element-plus/icons-vue'
 import {ShapeType, SymbolShape, VariableType} from '@kcdesign/data';
 import SelectMenu from './SelectMenu.vue';
 import {useI18n} from 'vue-i18n';
+import {create_ref_var, create_text_var, create_visible_var} from "@/utils/symbol";
 
 const {t} = useI18n();
 
@@ -77,6 +78,21 @@ const showSelectLayer = (e: MouseEvent) => {
     isselectLayer.value = true;
 }
 const save = () => {
+    // 测试用代码 start
+    const selection = props.context.selection;
+    if (selection.symbolshape) {
+        switch (props.addType) {
+            case VariableType.Visible:
+                return create_visible_var(props.context, selection.symbolshape, '图层显示', []);
+            case VariableType.SymbolRef:
+                return create_ref_var(props.context, selection.symbolshape, '实例切换', '嘿嘿');
+            case VariableType.Text:
+                return create_text_var(props.context, selection.symbolshape, '文本切换', '嘿嘿');
+            default:
+                console.log('wrong action');
+        }
+    }
+    // 测试用代码 end
     emit('saveLayerShow', props.addType)
 }
 
@@ -167,7 +183,8 @@ onUnmounted(() => {
                             <ArrowDown
                                 :style="{ transform: selectoption ? 'rotate(180deg)' : 'rotate(0deg)', transition: '0.3s' }"/>
                         </el-icon>
-                        <SelectMenu v-if="selectoption" :top="33" width="100%" :menuItems="menuItems" :menuIndex="menuIndex"
+                        <SelectMenu v-if="selectoption" :top="33" width="100%" :menuItems="menuItems"
+                                    :menuIndex="menuIndex"
                                     @select-index="handleShow" @close="selectoption = false"></SelectMenu>
                     </div>
                 </div>
