@@ -2,13 +2,13 @@
 import {useI18n} from 'vue-i18n';
 import {Context} from '@/context';
 import TypeHeader from '../TypeHeader.vue';
-import {ref, nextTick, onUnmounted, watch, onMounted, computed} from 'vue'
-import ComponentDialog from './ComponentDialog.vue';
+import {ref, onUnmounted, watch, onMounted} from 'vue'
 import {shape_track, get_shape_within_document} from '@/utils/content';
-import {Shape, SymbolRefShape, Variable, VariableType} from '@kcdesign/data';
-import {ArrowDown, MoreFilled} from '@element-plus/icons-vue';
-import SelectMenu from '../PopoverMenu/SelectMenu.vue';
+import {SymbolRefShape, Variable, VariableType} from '@kcdesign/data';
+import {MoreFilled} from '@element-plus/icons-vue';
 import {get_var_for_ref} from "@/utils/symbol";
+import InstanceAttrCard from "@/components/Document/Attribute/Module/InstanceAttrCard.vue";
+
 
 const {t} = useI18n();
 const props = defineProps<{
