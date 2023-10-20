@@ -75,7 +75,7 @@ onUnmounted(() => {
     <div class="select_layerbox" ref="popover" :style="{ top: top + 'px' }">
         <div class="heard">
             <span class="title">{{
-                    props.type === VariableType.Instance ? `${t('compos.compos_instance')}` :
+                    props.type === VariableType.SymbolRef ? `${t('compos.compos_instance')}` :
                         `${t('compos.select_layer')}`
                 }}</span>
             <div class="close">
@@ -86,7 +86,7 @@ onUnmounted(() => {
         </div>
         <div class="container" v-if="selectList.length">
             <!-- 组件实例 -->
-            <div style="height: 100%;" v-if="props.type === VariableType.Instance">
+            <div style="height: 100%;" v-if="props.type === VariableType.SymbolRef">
                 <el-scrollbar>
                     <div class="demo-collapse">
                         <CompoSelectList :context="context" :contents="selectList" samll="samll"
@@ -116,7 +116,7 @@ onUnmounted(() => {
         <div class="null" v-if="selectList.length === 0 && props.type === VariableType.Text || props.type === VariableType.Status">
             {{ t('compos.text_layer_null') }}
         </div>
-        <div class="null" v-if="selectList.length === 0 && props.type === VariableType.Instance">{{
+        <div class="null" v-if="selectList.length === 0 && props.type === VariableType.SymbolRef">{{
                 t('compos.instance_null')
             }}
         </div>

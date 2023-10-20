@@ -67,7 +67,7 @@ const showSelectLayer = (e: MouseEvent) => {
                 selectList.value = symbol.childs.filter(item => item.type !== ShapeType.Symbol);
             } else if (props.addType === VariableType.Text || props.addType === VariableType.Status) {
                 selectList.value = symbol.childs.filter(item => item.type === ShapeType.Text);
-            } else if (props.addType === VariableType.Instance) {
+            } else if (props.addType === VariableType.SymbolRef) {
                 selectList.value = symbol.childs.filter(item => item.type === ShapeType.SymbolRef);
             }
         } else {
@@ -133,14 +133,14 @@ onUnmounted(() => {
         <div class="body">
             <div>
                 <span>{{
-                        addType === VariableType.Instance ? `${t('compos.compos_instance')}` : `${t('compos.select_layer')}`
+                        addType === VariableType.SymbolRef ? `${t('compos.compos_instance')}` : `${t('compos.select_layer')}`
                     }}</span>
                 <div class="select-layer" @mouseup="showSelectLayer" @click.stop>
                     <div class="input"
                          :style="{ opacity: context.selection.selectedShapes[0].type !== ShapeType.Symbol ? '0.5' : '1' }">
                         <span v-if="selectLayer"></span>
                         <span v-else style="opacity: 0.5">{{
-                                addType === VariableType.Instance ? `${t('compos.place_select_instance')}` :
+                                addType === VariableType.SymbolRef ? `${t('compos.place_select_instance')}` :
                                     `${t('compos.place_select_layer')}`
                             }}</span>
                         <el-icon>
@@ -158,7 +158,7 @@ onUnmounted(() => {
                 </div>
             </div>
             <p class="warn" v-if="false">{{ t('compos.duplicate_name') }}</p>
-            <div v-if="props.addType !== VariableType.Instance && props.addType">
+            <div v-if="props.addType !== VariableType.SymbolRef && props.addType">
                 <span>默认值</span>
                 <div v-if="props.addType === VariableType.Visible" class="show">
                     <div class="input" @click.stop="showMenu">

@@ -91,7 +91,7 @@ const addTextDialog = () => {
  */
 const examplesToggle = () => {
     dialog_title.value = t('compos.instance_toggle');
-    addType.value = VariableType.Instance;
+    addType.value = VariableType.SymbolRef;
     get_dialog_posi(atrrdialog.value);
     isaddStateDialog.value = true;
     close();

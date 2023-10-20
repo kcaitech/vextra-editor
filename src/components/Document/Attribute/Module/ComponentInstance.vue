@@ -99,7 +99,7 @@ onUnmounted(() => {
         </TypeHeader>
 
         <CompLayerShow :context="context" v-if="isInstanceShow" @close-dialog="saveExamplesToggle" right="250px"
-                       :add-type="VariableType.Instance" :width="260" :title="t('compos.instance_toggle')"
+                       :add-type="VariableType.SymbolRef" :width="260" :title="t('compos.instance_toggle')"
                        :dialog_posi="dialog_posi"></CompLayerShow>
     </div>
 </template>
