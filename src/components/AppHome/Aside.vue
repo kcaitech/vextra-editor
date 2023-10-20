@@ -2,12 +2,10 @@
 import {
     Clock,
     Star,
-    Delete,
     BottomLeft,
     Plus,
-    Folder,
+    Document as document,
     FolderOpened,
-    Operation
 } from '@element-plus/icons-vue'
 import { router } from '@/router'
 import { useRoute } from 'vue-router'
@@ -59,6 +57,7 @@ const projectMembergDialog = ref(false)
 const projectSettingDialog = ref(false)
 const Input = ref<HTMLInputElement>();
 const hover = ref('');
+const isactive = ref('1')
 
 const { updatestate, is_favor, projectList, is_team_upodate, teamData, activeNames, targetItem, favoriteList, updateActiveNames,
     updateShareData, upDateTeamData, state, saveProjectData, favoriteListsData, updateFavor, addTargetItem, setMenuVisi, menuState } = inject('shareData') as {
@@ -184,6 +183,7 @@ function newFile() {
 
 function Setindex(index: any, title: any) {
     sessionStorage.setItem('index', index);
+    isactive.value = String(index)
     x.value = String(index);
     if (index == 3) {
         emits('settitle', title, true);
@@ -606,8 +606,7 @@ onUnmounted(() => {
                     </div>
                     <el-menu :default-active="x" active-text-color="#ffd04b" class="el-menu-vertical-demo"
                         text-color="#000000">
-                        <router-link to="/apphome/recently"><el-menu-item index="1"
-                                :style="{ backgroundColor: x === '1' ? '#e5dbff' : hover === '1' ? '#f3f0ff' : '#fff', color: x === '1' ? '#9775fa' : '#000', fontWeight: x === '1' ? '600' : '400' }"
+                        <router-link to="/apphome/recently"><el-menu-item index="1" :class="{ 'is_active': x == '1' }"
                                 @click="Setindex(1, t('home.recently_opened'))" @mouseenter="hover = '1'"
                                 @mouseleave="hover = ''">
                                 <el-icon>
@@ -616,7 +615,7 @@ onUnmounted(() => {
                                 <span>{{ t('home.recently_opened') }}</span>
                             </el-menu-item></router-link>
                         <router-link to="/apphome/starfile"><el-menu-item index="2"
-                                :style="{ backgroundColor: x === '2' ? '#e5dbff' : hover === '2' ? '#f3f0ff' : '#fff', color: x === '2' ? '#9775fa' : '#000', fontWeight: x === '2' ? '600' : '400' }"
+                            :class="{ 'is_active': x == '2' }"
                                 @click="Setindex(2, t('home.star_file'))" @mouseenter="hover = '2'"
                                 @mouseleave="hover = ''">
                                 <el-icon>
@@ -625,16 +624,16 @@ onUnmounted(() => {
                                 <span>{{ t('home.star_file') }}</span>
                             </el-menu-item></router-link>
                         <router-link to="/apphome/meshare"><el-menu-item index="3"
-                                :style="{ backgroundColor: x === '3' ? '#e5dbff' : hover === '3' ? '#f3f0ff' : '#fff', color: x === '3' ? '#9775fa' : '#000', fontWeight: x === '3' ? '600' : '400' }"
+                            :class="{ 'is_active': x == '3' }"
                                 @click="Setindex(3, t('home.file_shared'))" @mouseenter="hover = '3'"
                                 @mouseleave="hover = ''">
                                 <el-icon>
-                                    <Folder />
+                                    <document />
                                 </el-icon>
                                 <span>{{ t('home.file_shared') }}</span>
                             </el-menu-item></router-link>
                         <router-link to="/apphome/shareme"><el-menu-item index="4"
-                                :style="{ backgroundColor: x === '4' ? '#e5dbff' : hover === '4' ? '#f3f0ff' : '#fff', color: x === '4' ? '#9775fa' : '#000', fontWeight: x === '4' ? '600' : '400' }"
+                            :class="{ 'is_active': x == '4' }"
                                 @click="Setindex(4, t('home.shared_file_received'))" @mouseenter="hover = '4'"
                                 @mouseleave="hover = ''">
                                 <el-icon>
@@ -668,7 +667,7 @@ onUnmounted(() => {
                                             <div class="receive">
                                                 <svg-icon icon-class="receive-fill" />
                                             </div>
-                                            <div class="name">{{t('Createteam.sharetip')}}</div>
+                                            <div class="name">{{ t('Createteam.sharetip') }}</div>
                                         </div>
                                         <div class="right">
                                         </div>
@@ -790,7 +789,7 @@ onUnmounted(() => {
             </div>
             <div class="team-container">
                 <button class="newteam" @click.stop="showteamcard">
-                    <svg-icon icon-class="close" />
+                    <svg-icon icon-class="teamicon" />
                     <span>{{ t('Createteam.add_team') }}</span>
                 </button>
             </div>
@@ -807,10 +806,12 @@ onUnmounted(() => {
         ref="rightMenuEl" @delProject="onDelProject" @exitProject="onExitProject" @cancelFixed="menucancelFixed"
         @reName="inputCusname" @showMembergDialog="showMembergDialog" @projectSetting="showSettingDialog">
     </TeamProjectMenu>
-    <ProjectDialog :projectVisible="delVisible" :context="t('Createteam.projectdelcontext')" :title="t('Createteam.projectdeltitle')" :confirm-btn="t('Createteam.ok_delete')"
-        @clode-dialog="closeDelVisible" @confirm="DelProject"></ProjectDialog>
-    <ProjectDialog :projectVisible="exitVisible" :context="t('Createteam.projectexitcontext')" :title="t('Createteam.projectexittitle')"
-        :confirm-btn="t('Createteam.ok_exit')" @clode-dialog="closeExitVisible" @confirm="ExitProject"></ProjectDialog>
+    <ProjectDialog :projectVisible="delVisible" :context="t('Createteam.projectdelcontext')"
+        :title="t('Createteam.projectdeltitle')" :confirm-btn="t('Createteam.ok_delete')" @clode-dialog="closeDelVisible"
+        @confirm="DelProject"></ProjectDialog>
+    <ProjectDialog :projectVisible="exitVisible" :context="t('Createteam.projectexitcontext')"
+        :title="t('Createteam.projectexittitle')" :confirm-btn="t('Createteam.ok_exit')" @clode-dialog="closeExitVisible"
+        @confirm="ExitProject"></ProjectDialog>
     <ProjectAccessSetting v-if="projectSettingDialog" :title="t('Createteam.membertip')" :data="menuData" width="500px"
         @clodeDialog="projectSettingDialog = false" />
     <ProjectMemberg v-if="projectMembergDialog" :projectMembergDialog="projectMembergDialog" :currentProject="menuData"
@@ -923,18 +924,16 @@ a {
 
         span {
             color: #ffffff;
-            letter-spacing: 2px;
-            font-size: 14px;
+            letter-spacing: 1px;
+            font-size: 12px;
             font-weight: 600;
         }
 
         svg {
             margin-right: 4px;
-            margin-top: 2px;
-            width: 16px;
-            height: 16px;
+            width: 18px;
+            height: 18px;
             fill: white;
-            transform: rotate(45deg);
         }
     }
 }
@@ -962,9 +961,9 @@ a {
                 height: 40px;
                 margin: 0px 0 20px 0;
                 border: none;
-                font-size: 14px;
+                font-size: 12px;
                 letter-spacing: 1px;
-                font-weight: 500;
+                font-weight: 600;
                 border-radius: 6px;
                 display: flex;
                 justify-content: center;
@@ -977,7 +976,7 @@ a {
                 }
 
                 .el-icon {
-                    font-size: 20px;
+                    font-size: 18px;
                     margin-right: 6px;
                 }
             }
@@ -1002,7 +1001,7 @@ a {
 
             .openfile {
                 background-color: #f3f0ff;
-                box-shadow: 1px 1px 3px #b1b1b1, -1px -1px 3px #b1b1b1;
+                // box-shadow: 1px 1px 3px #b1b1b1, -1px -1px 3px #b1b1b1;
                 color: #9775fa;
 
                 &:hover {
@@ -1016,7 +1015,7 @@ a {
         .el-menu {
             border: none;
             background: none;
-
+            font-size: 12px;
 
             .el-menu-item {
                 border-radius: 4px;
@@ -1025,7 +1024,7 @@ a {
 
                 &:hover {
                     background-color: #f3f0ff;
-                    color: #9775fa;
+                    // color: #9775fa;
                 }
 
             }
@@ -1116,6 +1115,7 @@ a {
                             overflow: hidden;
                             text-overflow: ellipsis;
                             white-space: nowrap;
+                            font-size: 12px;
                         }
                     }
 
@@ -1231,19 +1231,19 @@ a {
     text-overflow: ellipsis;
     white-space: nowrap;
     margin-right: 10px;
+    font-size: 12px;
 }
 
 .receive {
+    
     display: flex;
     align-items: center;
     justify-content: center;
-    margin: 0 5px;
-    width: 20px;
-    height: 100%;
+    margin: 0 6px 0 3px;
 
     >svg {
-        width: 16px;
-        height: 16px;
+        width: 18px;
+        height: 18px;
     }
 }
 
@@ -1277,7 +1277,7 @@ a {
 
 .is_active {
     font-weight: 600;
-    color: #9775fa;
+    color: #000000b6;
     background-color: #e5dbff !important;
 }
 

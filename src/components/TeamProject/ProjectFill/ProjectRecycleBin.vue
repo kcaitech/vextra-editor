@@ -4,8 +4,7 @@
             :noNetwork="noNetwork" @refreshDoc="refreshDoc" :deleter="true" />
     </div>
     <!-- 右键菜单 -->
-    <listrightmenu :items="items" :data="mydata" @getrecycle-lists="GetrecycleLists" @r-deletefile="Deletefile"
-        @r-restorefile="Restorefile" />
+    <listrightmenu :items="items" :data="mydata" @r-deletefile="Deletefile" @r-restorefile="Restorefile" />
     <!-- 确认删除弹框 -->
     <el-dialog v-model="dialogVisible" :title="t('home.completely_delete')" width="500" align-center
         @keyup.enter="Qdeletefile(docId)">

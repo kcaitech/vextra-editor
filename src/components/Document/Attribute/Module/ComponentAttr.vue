@@ -5,7 +5,7 @@ import TypeHeader from '../TypeHeader.vue';
 import {onMounted, onUnmounted, ref, watch} from 'vue'
 import CompLayerShow from '../PopoverMenu/CompLayerShow.vue';
 import {SymbolShape, VariableType} from '@kcdesign/data';
-import {make_status, variable_sort} from "@/utils/symbol";
+import {detects_comp_status_val_is_clash, make_status, variable_sort} from "@/utils/symbol";
 import AttriCard from "./AttriCard.vue";
 import {AttriListItem} from "@/utils/symbol";
 
@@ -24,6 +24,7 @@ const dialog_title = ref('');
 const atrrdialog = ref<HTMLDivElement>();
 const addType = ref<VariableType>(VariableType.Visible);
 const variables = ref<AttriListItem[]>();
+const conflict = ref<boolean>(false);
 
 function close() {
     compsType.value = false;
@@ -39,7 +40,8 @@ const closeCompsType = (e: Event) => {
 
 function update_variable_list() {
     variables.value = variable_sort(props.shape);
-    console.log('update result: ', variables.value);
+    conflict.value = detects_comp_status_val_is_clash(props.shape);
+    console.log('update result: ', variables.value, conflict.value);
 }
 
 /**
@@ -169,6 +171,7 @@ onUnmounted(() => {
             <component v-for="item in variables" :is="AttriCard" :key="item.variable.id" :context="props.context"
                        :variable="item.variable" :item="item"></component>
         </div>
+        <div v-if="conflict" style="width: 100% ;text-align: center; color: red; box-sizing: border-box; border: 2px solid orangered">存在冲突</div>
 
         <!--dialog-->
         <CompLayerShow :context="context" v-if="isaddStateDialog" @close-dialog="isaddStateDialog = false" right="250px"

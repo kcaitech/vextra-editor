@@ -15,7 +15,6 @@ import TableText from './Table/TableText.vue'
 import { TableSelection } from '@/context/tableselection';
 import TableStyle from './Table/TableStyle.vue'
 import { Tool } from '@/context/tool';
-import { detects_comp_status_val_is_clash } from '@/utils/symbol';
 const props = defineProps<{ context: Context }>();
 const shapes = shallowRef<Shape[]>([]);
 const len = computed<number>(() => shapes.value.length);

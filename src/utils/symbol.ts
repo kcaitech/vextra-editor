@@ -3,6 +3,7 @@ import {Artboard, GroupShape, Page, Shape, ShapeType, SymbolShape, Variable, Var
 import {getName} from "./content";
 import {sort_by_layer} from "./group_ungroup";
 import {debounce} from "lodash";
+import {v4} from "uuid";
 
 // region 组件列表相关
 /**
@@ -277,7 +278,6 @@ export function is_state_selection(shapes: Shape[]) {
 
 export function setup_watch(shapes: Shape[], f: (...args: any[]) => void) {
     for (let i = 0, len = shapes.length; i < len; i++) shapes[i].watch(f);
-    console.log('wtach result', shapes[0]);
 }
 
 export function remove_watch(shapes: Shape[], f: (...args: any[]) => void) {
@@ -390,34 +390,31 @@ export function gen_special_name_for_status(symbol: SymbolShape, dlt: string) {
  * @return Boolean
  */
 export function detects_comp_status_val_is_clash(symbol: SymbolShape) {
+    if (symbol.childs.length < 2) return false;
     if (!symbol.variables) return false;
     const variables = symbol.variables;
-    const d = '默认';
-    if(symbol.childs.length > 1) {
-        let clashs: any = {}
-        variables.forEach((v, k) => {
-            if (v.type !== VariableType.Status) return false;
-            symbol.childs.forEach((item, i) => {
-                const id = item.id;
-                 if(!clashs[id]) {
-                     clashs[id] = [];
-                 }
-                clashs[id].push(item.vartag.get(k) || d);
-            })
+    const values_set: Set<string> = new Set();
+    const childs = symbol.childs as unknown as SymbolShape[];
+    const p = v4();
+    for (let i = 0, len = childs.length; i < len; i++) {
+        const item = childs[i];
+        let slices = '';
+        variables.forEach(v => {
+            if (v.type !== VariableType.Status) return;
+            const dlt = item.vartag?.get(v.id);
+            slices += (!dlt || dlt === v.value) ? p : dlt;
         })
-        let result = false;
-        for (const key in clashs) {
-            if (Object.prototype.hasOwnProperty.call(clashs, key)) {
-                if(key !== symbol.childs[0].id) {
-                    const v = JSON.stringify(clashs[key]);
-                    const first = JSON.stringify(clashs[symbol.childs[0].id]);
-                    console.log(v, first,'dddddddddd');
-                    if(first === v) result = true; 
-                }
-            }
-        }
-        return result;
-    }else {
+        if (values_set.has(slices)) return true;
+        values_set.add(slices);
+    }
+    return false;
+}
+
+export function detects_comp_status_val_is_clash_for_states(states: SymbolShape[]) {
+    if (states.length === 1) {
+        return detects_comp_status_val_is_clash(states[0].parent as SymbolShape);
+    } else {
+        // todo
         return false;
     }
 }

@@ -153,7 +153,7 @@ onUnmounted(() => {
     >.body {
       width: 100%;
       height: calc(100% - 32px);
-      font-size: 10px;
+      font-size:var(--font-default-fontsize);
       position: relative;
     }
   }

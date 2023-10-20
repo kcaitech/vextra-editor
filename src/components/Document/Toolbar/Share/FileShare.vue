@@ -7,6 +7,7 @@ import * as share_api from '@/request/share';
 import { ElMessage } from 'element-plus';
 import { useRoute } from 'vue-router';
 import { DocInfo } from "@/context/user"
+import CloseIcon from '@/components/common/CloseIcon.vue';
 const { t } = useI18n()
 const props = defineProps<{
   pageHeight: number,
@@ -84,10 +85,6 @@ const DocType = reactive([`${t('share.shareable')}`, `${t('share.need_to_apply_f
 const permission = reactive([`${t('share.no_authority')}`, `${t('share.readOnly')}`, `${t('share.reviewable')}`, `${t('share.editable')}`])
 const selectValue = ref(DocType[props.selectValue])
 
-const closeShare = (e: MouseEvent) => {
-  e.stopPropagation()
-  emit('close')
-}
 const handleClick = (e: MouseEvent) => {
   e.stopPropagation()
   e.target instanceof Element && !e.target.closest('.box-card') && emit('close');
@@ -140,8 +137,6 @@ const getShareList = async () => {
     const { data } = await share_api.getShareListAPI({ doc_id: docID })
     if (data) {
       shareList.value = data
-      console.log(shareList.value + '11111');
-
     }
   } catch (err) {
     console.log(err);
@@ -221,7 +216,7 @@ watchEffect(() => {
       } else if (props.projectPerm === 3) {
         if (props.docInfo && props.docInfo.user.id === userId) {
           return founder.value = false;
-        }else {
+        } else {
           return founder.value = true;
         }
       } else {
@@ -242,13 +237,13 @@ watchEffect(() => {
       } else if (props.projectPerm === 3) {
         if (props.docUserId && props.docUserId === userId) {
           return founder.value = false;
-        }else {
+        } else {
           return founder.value = true;
         }
       } else {
         return founder.value = true;
       }
-    }else {
+    } else {
       if (props.docUserId) {
         props.docUserId != userId ? founder.value = true : founder.value = false
       } else if (props.docInfo) {
@@ -337,27 +332,25 @@ onUnmounted(() => {
       <!-- 标题 -->
       <template #header>
         <div class="card-header">
-          <span>{{ t('share.file_sharing') }}</span>
-          <el-button class="button" text @click="closeShare">
-            <div class="close"> X </div>
-          </el-button>
+          <div class="title">{{ t('share.file_sharing') }}</div>
+          <CloseIcon :size="20" @close="emit('close')" />
         </div>
       </template>
       <!-- 内容 -->
       <div class="contain">
         <!-- 开关 -->
         <div class="share-switch">
-          <span>{{ t('share.share_switch') }}:</span>
+          <span class="type">{{ t('share.share_switch') }}:</span>
           <el-switch class="switch" size="small" v-model="value1" />
         </div>
         <!-- 文件名 -->
         <div class="file-name">
-          <span style="margin-right: 12px;">{{ t('share.file_name') }}:</span>
+          <span class="type">{{ t('share.file_name') }}:</span>
           <p class="name">{{ docInfo!.document.name }}</p>
         </div>
         <!-- 权限设置 -->
         <div class="purview">
-          <span>{{ t('share.permission_setting') }}:</span>
+          <span class="type">{{ t('share.permission_setting') }}:</span>
           <el-select v-model="selectValue" style="width: 180px;" class="m-2">
             <el-option style="font-size: 10px;" class="option" v-for="item in options" :key="item.value"
               :label="item.label" :value="item.label" />
@@ -366,7 +359,7 @@ onUnmounted(() => {
         </div>
         <!-- 分享人 -->
         <div>
-          <span>{{ t('share.people_who_have_joined_the_share') }} ({{ t('share.share_limit') }}5) :</span>
+          <span class="type">{{ t('share.people_who_have_joined_the_share') }} ({{ t('share.share_limit') }}5) :</span>
           <el-scrollbar height="300px" class="shared-by">
             <div class="scrollbar-demo-item">
               <div class="item-left">
@@ -405,26 +398,24 @@ onUnmounted(() => {
       <!-- 标题 -->
       <template #header>
         <div class="card-header">
-          <span>{{ t('share.file_sharing') }}</span>
-          <el-button class="button" text @click="closeShare">
-            <div class="close"> X </div>
-          </el-button>
+          <div class="title">{{ t('share.file_sharing') }}</div>
+          <CloseIcon :size="20" @close="emit('close')" />
         </div>
       </template>
       <div class="contain">
         <!-- 文件名 -->
         <div class="unfounder">
-          <span>{{ t('share.file_name') }}:</span>
+          <div class="type">{{ t('share.file_name') }}:</div>
           <p class="name">{{ docInfo!.document.name }}</p>
         </div>
         <!-- 创建者 -->
         <div class="unfounder">
-          <span>{{ t('share.founder') }}:</span>
+          <div class="type">{{ t('share.founder') }}:</div>
           <p class="name">{{ docInfo!.user.nickname }}</p>
         </div>
         <!-- 文档权限 -->
         <div class="unfounder">
-          <span>{{ t('share.document_permission') }}:</span>
+          <div class="type">{{ t('share.document_permission') }}:</div>
           <p class="name">{{ DocType[docInfo.document.doc_type] }}</p>
         </div>
         <div class="project" v-if="project || props.docInfo?.project">项目中所有成员均可访问</div>
@@ -442,7 +433,7 @@ onUnmounted(() => {
   opacity: .5;
   display: flex;
   justify-content: center;
-  margin-bottom: 5px;
+  margin-bottom: 8px;
 }
 
 .card-header {
@@ -450,15 +441,9 @@ onUnmounted(() => {
   justify-content: space-between;
   align-items: center;
 
-  span {
+  .title {
     font-weight: var(--font-default-bold);
   }
-
-  .close {
-    font-size: 16px;
-    color: black;
-  }
-
 }
 
 :deep(.el-card__header) {
@@ -479,34 +464,65 @@ onUnmounted(() => {
   font-size: var(--font-default-fontsize);
 
   .share-switch {
+    display: flex;
+    align-items: center;
     margin: var(--default-margin-half) 0;
+
+    .type {
+      font-weight: var(--font-default-bold);
+    }
+
+    .switch {
+      --el-switch-on-color: var(--active-color);
+      margin-left: 10px;
+
+    }
   }
 
-  .switch {
-    --el-switch-on-color: var(--active-color);
-    margin-left: 10px;
+  .file-name {
+    margin: var(--default-margin-half) 0;
+    display: flex;
+    align-items: center;
 
+    .type {
+      font-weight: var(--font-default-bold);
+      letter-spacing: 4px;
+    }
+
+    .name {
+      margin-left: 10px;
+    }
+  }
+
+
+  .purview {
+    font-weight: var(--font-default-bold);
+    display: flex;
+    align-items: center;
+
+    .type {
+      font-weight: var(--font-default-bold);
+    }
+
+    .m-2 {
+      margin-left: 10px;
+      margin-right: 5px;
+      box-sizing: border-box;
+    }
   }
 
   .bottom {
     margin: 5px 0 var(--default-margin) 0;
   }
-}
 
-.file-name {
-  margin: var(--default-margin-half) 0;
-  display: flex;
-  align-items: center;
-
-  .name {
-    margin-left: 10px;
+  .type {
+    font-weight: var(--font-default-bold);
   }
 }
 
-.m-2 {
-  margin-left: 10px;
-  margin-right: 5px;
-}
+
+
+
 
 .scrollbar-demo-item {
   display: flex;
@@ -592,7 +608,11 @@ onUnmounted(() => {
   display: flex;
   align-items: center;
 
-  >.name {
+  .type {
+    font-weight: 600;
+  }
+
+  .name {
     margin-left: 10px;
   }
 }
@@ -601,6 +621,7 @@ onUnmounted(() => {
   display: flex;
   align-items: center;
   justify-content: center;
+
 }
 
 .founder {
@@ -620,4 +641,5 @@ onUnmounted(() => {
 
 :deep(.el-button) {
   color: #fff;
-}</style>
+}
+</style>

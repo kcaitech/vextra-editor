@@ -3,7 +3,7 @@ import {useI18n} from 'vue-i18n';
 import {Context} from '@/context';
 import {onMounted, onUnmounted, ref, watch} from "vue";
 import StatusCard from "@/components/Document/Attribute/Module/StatusCard.vue";
-import {states_tag_values_sort, StatusValueItem} from "@/utils/symbol";
+import {detects_comp_status_val_is_clash_for_states, states_tag_values_sort, StatusValueItem} from "@/utils/symbol";
 import {Shape, SymbolShape} from "@kcdesign/data"
 import TypeHeader from '../TypeHeader.vue';
 
@@ -15,15 +15,17 @@ interface Props {
 const props = defineProps<Props>()
 const {t} = useI18n();
 const data = ref<StatusValueItem[]>();
+const conflict = ref<boolean>(false);
 
 function update_list() {
     data.value = states_tag_values_sort(props.shapes);
-    console.log('update result: ', data.value);
+    conflict.value = detects_comp_status_val_is_clash_for_states(props.shapes);
+    console.log('state attribute update result: ', data.value);
 }
 
 watch(() => props.shapes, (v, o) => {
-    watch_shapes(v);
     unwatch_shapes(o);
+    watch_shapes(v);
     update_list();
 })
 
@@ -31,6 +33,7 @@ function watch_shapes(shapes: Shape[]) {
     for (let i = 0, len = shapes.length; i < len; i++) {
         shapes[i].watch(update_list);
     }
+    console.log('rewatch', shapes[0].__watcher);
 }
 
 function unwatch_shapes(shapes: Shape[]) {
@@ -56,6 +59,7 @@ onUnmounted(() => {
             </template>
         </TypeHeader>
         <StatusCard v-for="item in data" :context="props.context" :data="item" :key="item.variable.id"></StatusCard>
+        <div v-if="conflict" style="width: 100% ;text-align: center; color: red; box-sizing: border-box; border: 2px solid orangered">存在冲突</div>
     </div>
 </template>
 

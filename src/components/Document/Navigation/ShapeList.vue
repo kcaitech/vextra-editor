@@ -617,7 +617,7 @@ onUnmounted(() => {
 
     .header {
         width: 100%;
-        font-size: 10px;
+        font-size: var(--font-default-fontsize);
         box-sizing: border-box;
         position: relative;
         padding-bottom: 4px;
