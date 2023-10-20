@@ -1,14 +1,16 @@
 <script lang="ts" setup>
-import { useI18n } from 'vue-i18n';
-import { Context } from '@/context';
+import {useI18n} from 'vue-i18n';
+import {Context} from '@/context';
 import TypeHeader from '../TypeHeader.vue';
-import { ref, nextTick, onUnmounted, watch, onMounted, computed } from 'vue'
+import {ref, nextTick, onUnmounted, watch, onMounted, computed} from 'vue'
 import ComponentDialog from './ComponentDialog.vue';
-import { shape_track, get_shape_within_document } from '@/utils/content';
-import { Shape, SymbolRefShape, Variable, VariableType } from '@kcdesign/data';
-import { ArrowDown, MoreFilled } from '@element-plus/icons-vue';
+import {shape_track, get_shape_within_document} from '@/utils/content';
+import {Shape, SymbolRefShape, Variable, VariableType} from '@kcdesign/data';
+import {ArrowDown, MoreFilled} from '@element-plus/icons-vue';
 import SelectMenu from '../PopoverMenu/SelectMenu.vue';
-const { t } = useI18n();
+import {get_var_for_ref} from "@/utils/symbol";
+
+const {t} = useI18n();
 const props = defineProps<{
     context: Context
     shape: SymbolRefShape
@@ -20,7 +22,7 @@ const textValue = ref('文本内容')
 const menuItems = ['默认']
 const attrValue = ref('默认')
 const comps = ref<HTMLDivElement>();
-const comps_posi = ref({ x: 0, y: 0 });
+const comps_posi = ref({x: 0, y: 0});
 const selectReset = (e: MouseEvent) => {
     if (resetMenu.value) return resetMenu.value = false
     resetMenu.value = true
@@ -130,7 +132,7 @@ onUnmounted(() => {
                 </div>
                 <div class="reset_svg" @click.stop="selectReset">
                     <el-icon>
-                        <MoreFilled />
+                        <MoreFilled/>
                     </el-icon>
                     <div class="reset_menu" v-if="resetMenu">
                         <div class="untie" @click="untie">
@@ -152,7 +154,7 @@ onUnmounted(() => {
                         <span>{{ attrValue }}</span>
                         <el-icon>
                             <ArrowDown
-                                :style="{ transform: selectoption ? 'rotate(180deg)' : 'rotate(0deg)', transition: '0.3s' }" />
+                                :style="{ transform: selectoption ? 'rotate(180deg)' : 'rotate(0deg)', transition: '0.3s' }"/>
                         </el-icon>
                         <SelectMenu v-if="selectoption" :top="33" width="100%" :menuItems="menuItems"></SelectMenu>
                     </div>
@@ -171,14 +173,14 @@ onUnmounted(() => {
             </div>
             <div class="delete"></div>
             <ComponentDialog v-if="showCompsDialog" :context="context" right="250px" top="0" @closeDialog="closeDialog"
-                :comps_posi="comps_posi">
+                             :comps_posi="comps_posi">
             </ComponentDialog>
         </div>
         <div class="module_state_item" v-for="(item, index) in textContents" :key="index">
             <div class="state_item">
                 <div class="state_name"><span>{{ item.name }}</span></div>
                 <div class="state_value" style="padding: 0;">
-                    <el-input ref="inputRef" v-model="textValue" @focus="selectAllText" />
+                    <el-input ref="inputRef" v-model="textValue" @focus="selectAllText"/>
                 </div>
             </div>
             <div class="delete"></div>
@@ -190,7 +192,7 @@ onUnmounted(() => {
                     <div v-for="(item, index) in visibles" :key="index">
                         <span class="name">{{ item.name }}</span>
                         <el-switch v-model="item.value" size="small"
-                            style="margin-left: 10px;--el-switch-on-color: #9775fa" />
+                                   style="margin-left: 10px;--el-switch-on-color: #9775fa"/>
                     </div>
                 </div>
             </div>
@@ -212,7 +214,7 @@ onUnmounted(() => {
         align-items: center;
         justify-content: center;
 
-        >svg {
+        > svg {
             width: 50%;
             height: 50%;
         }
@@ -226,7 +228,7 @@ onUnmounted(() => {
         align-items: center;
         justify-content: center;
 
-        >svg {
+        > svg {
             width: 50%;
             height: 50%;
         }
@@ -300,7 +302,7 @@ onUnmounted(() => {
                 height: 100%;
                 border-radius: 4px;
 
-                >svg {
+                > svg {
                     width: 10px;
                     height: 10px;
                 }
@@ -334,7 +336,7 @@ onUnmounted(() => {
                     height: 30px;
                     font-size: 10px;
 
-                    >div {
+                    > div {
                         height: 100%;
                     }
 
@@ -399,7 +401,7 @@ onUnmounted(() => {
     .open {
         margin-bottom: 3px;
 
-        >div {
+        > div {
             display: flex;
 
             .title {
@@ -409,7 +411,7 @@ onUnmounted(() => {
             }
 
             .switch {
-                >div {
+                > div {
                     display: flex;
                     align-items: center;
                 }
@@ -423,7 +425,7 @@ onUnmounted(() => {
                 white-space: nowrap;
             }
 
-            >div {
+            > div {
                 flex: 1;
             }
         }
