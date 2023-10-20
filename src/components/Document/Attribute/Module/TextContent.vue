@@ -5,6 +5,7 @@ import TypeHeader from '../TypeHeader.vue';
 import { ref, nextTick } from 'vue';
 import CompLayerShow from '../PopoverMenu/CompLayerShow.vue';
 import { VariableType } from '@kcdesign/data';
+import SelectLayerInput from './SelectLayerInput.vue';
 const props = defineProps<{
     context: Context
 }>()
@@ -39,8 +40,13 @@ const getDialogPosi = () => {
                 </div>
             </template>
         </TypeHeader>
-        <CompLayerShow :context="context" v-if="isTextShow" @close-dialog="closeLayerShowPopup" right="250px" :add-type="VariableType.Status"
-            :width="260" :title="t('compos.text_content')" :dialog_posi="dialog_posi"></CompLayerShow>
+        <CompLayerShow :context="context" v-if="isTextShow" @close-dialog="closeLayerShowPopup" right="250px"
+            :add-type="VariableType.Status" :width="260" :title="t('compos.text_content')" :dialog_posi="dialog_posi">
+            <template #layer>
+                <SelectLayerInput :title="t('compos.select_layer')" :add-type="VariableType.Text"
+                    :context="props.context" :placeholder="t('compos.place_select_layer')"></SelectLayerInput>
+            </template>
+        </CompLayerShow>
     </div>
 </template>
 <style lang="scss" scoped>

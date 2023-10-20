@@ -153,27 +153,8 @@ onUnmounted(() => {
             </div>
         </div>
         <div class="body">
+            <!-- 图层选择插槽 -->
             <slot name="layer"></slot>
-            <!-- <div>
-                <span>{{
-                    addType === VariableType.SymbolRef ? `${t('compos.compos_instance')}` : `${t('compos.select_layer')}`
-                }}</span>
-                <div class="select-layer" @mouseup="showSelectLayer" @click.stop>
-                    <div class="input"
-                        :style="{ opacity: context.selection.selectedShapes[0].type !== ShapeType.Symbol ? '0.5' : '1' }">
-                        <span v-if="selectLayer"></span>
-                        <span v-else style="opacity: 0.5">{{
-                            addType === VariableType.SymbolRef ? `${t('compos.place_select_instance')}` :
-                            `${t('compos.place_select_layer')}`
-                        }}</span>
-                        <el-icon>
-                            <ArrowDown />
-                        </el-icon>
-                    </div>
-                    <SelectLayer v-if="isselectLayer" @close="isselectLayer = false" :type="props.addType"
-                        :context="context" :selectList="selectList"></SelectLayer>
-                </div>
-            </div> -->
             <div>
                 <span>{{ t('compos.attr_name') }}</span>
                 <div>
