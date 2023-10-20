@@ -10,7 +10,6 @@ import { getHorizontalAngle, XYsBounding } from "@/utils/common";
 import { WorkSpace } from "@/context/workspace";
 import { permIsEdit } from "@/utils/content";
 import Assist from "@/components/Document/Assist/index.vue";
-import {get_layer_from_symbol} from "@/utils/symbol";
 export interface Point {
     x: number
     y: number

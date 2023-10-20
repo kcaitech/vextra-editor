@@ -426,6 +426,10 @@ export interface LayerCollectItem {
     data: Shape[]
 }
 
+/**
+ * @description 获取可变图层
+ * @param symbol
+ */
 export function get_layer_from_symbol(symbol: Shape) {
     const result: LayerCollectItem[] = [];
     if (symbol.type !== ShapeType.Symbol) return result;
