@@ -6,6 +6,7 @@ import { ref, nextTick } from 'vue';
 import CompLayerShow from '../PopoverMenu/CompLayerShow.vue';
 import SelectLayerInput from './SelectLayerInput.vue';
 import { VariableType } from '@kcdesign/data';
+import PopoverDefaultInput from './PopoverDefaultInput.vue';
 const props = defineProps<{
     context: Context
 }>()
@@ -44,6 +45,9 @@ const getDialogPosi = () => {
             <template #layer>
                 <SelectLayerInput :title="t('compos.select_layer')" :add-type="VariableType.Visible"
                     :context="props.context" :placeholder="t('compos.place_select_layer')"></SelectLayerInput>
+            </template>
+            <template #default_value>
+                <PopoverDefaultInput :context="context" :add-type="VariableType.Visible"></PopoverDefaultInput>
             </template>
         </CompLayerShow>
     </div>

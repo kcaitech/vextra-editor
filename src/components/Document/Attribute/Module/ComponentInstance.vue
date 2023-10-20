@@ -10,7 +10,7 @@ import { get_shape_within_document, shape_track } from '@/utils/content';
 import { MoreFilled } from '@element-plus/icons-vue';
 import { VariableType } from '@kcdesign/data';
 import { get_var_for_ref } from "@/utils/symbol";
-
+import PopoverDefaultInput from './PopoverDefaultInput.vue';
 interface Props {
     context: Context
     shapes: Shape[]

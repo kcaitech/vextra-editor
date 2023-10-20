@@ -6,6 +6,7 @@ import { useI18n } from 'vue-i18n';
 import CompLayerShow from "@/components/Document/Attribute/PopoverMenu/CompLayerShow.vue";
 import { AttriListItem, delete_variable } from "@/utils/symbol";
 import SelectLayerInput from "./SelectLayerInput.vue";
+import PopoverDefaultInput from "./PopoverDefaultInput.vue";
 
 interface Props {
     context: Context
@@ -101,7 +102,7 @@ function _delete() {
 </script>
 <template>
     <!--组件状态-->
-    <div v-if="props.variable.type === VariableType.Status" class="module_attr_item">
+    <div v-if="props.variable.type === VariableType.Status" class="module_attr_item" ref="visible_card">
         <div class="attr_con">
             <div class="module_input" v-if="showRename">
                 <el-input ref="input_s" v-model="attrInput" @focus="selectAllText" class="input" @blur="closeInput"
@@ -121,7 +122,7 @@ function _delete() {
         <div class="warn" v-if="false">{{ t('compos.duplicate_name') }}</div>
     </div>
     <!--显示状态-->
-    <div v-if="props.variable.type === VariableType.Visible" class="module_attr_item">
+    <div v-if="props.variable.type === VariableType.Visible" class="module_attr_item" ref="visible_card">
         <div class="attr_con">
             <div class="module_item_left" @click="edit_visible">
                 <div class="module_name-2">
@@ -140,10 +141,13 @@ function _delete() {
                 <SelectLayerInput :title="t('compos.select_layer')" :add-type="VariableType.Visible"
                     :context="props.context" :placeholder="t('compos.place_select_layer')"></SelectLayerInput>
             </template>
+            <template #default_value>
+                <PopoverDefaultInput :context="context" :add-type="VariableType.Visible"></PopoverDefaultInput>
+            </template>
         </CompLayerShow>
     </div>
     <!--文本内容-->
-    <div v-if="props.variable.type === VariableType.Text" class="module_attr_item">
+    <div v-if="props.variable.type === VariableType.Text" class="module_attr_item" ref="visible_card">
         <div class="attr_con">
             <div class="module_item_left" @click="edit_text">
                 <div class="module_name-2">
@@ -162,10 +166,13 @@ function _delete() {
                 <SelectLayerInput :title="t('compos.select_layer')" :add-type="VariableType.Visible"
                     :context="props.context" :placeholder="t('compos.place_select_layer')"></SelectLayerInput>
             </template>
+            <template #default_value>
+                <PopoverDefaultInput :context="context" :add-type="VariableType.Text"></PopoverDefaultInput>
+            </template>
         </CompLayerShow>
     </div>
     <!--实例切换-->
-    <div v-if="props.variable.type === VariableType.SymbolRef" class="module_attr_item">
+    <div v-if="props.variable.type === VariableType.SymbolRef" class="module_attr_item" ref="visible_card">
         <div class="attr_con">
             <div class="module_item_left" @click="edit_instance">
                 <div class="module_name-2">

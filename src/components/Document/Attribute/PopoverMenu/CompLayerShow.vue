@@ -1,12 +1,9 @@
 <script setup lang="ts">
 import { onMounted, onUnmounted, ref } from 'vue';
 import { Context } from '@/context';
-import SelectLayer from "./SelectLayer.vue";
-import { ArrowDown } from '@element-plus/icons-vue'
-import { ShapeType, SymbolShape, VariableType } from '@kcdesign/data';
-import SelectMenu from './SelectMenu.vue';
-import {useI18n} from 'vue-i18n';
-import {create_ref_var, create_text_var, create_visible_var, get_layer_from_symbol} from "@/utils/symbol";
+import { ShapeType, VariableType } from '@kcdesign/data';
+import { useI18n } from 'vue-i18n';
+import { create_ref_var, create_text_var, create_visible_var, get_layer_from_symbol } from "@/utils/symbol";
 
 const { t } = useI18n();
 
@@ -23,7 +20,6 @@ interface Props {
 
 interface Emits {
     (e: 'closeDialog'): void;
-
     (e: 'saveLayerShow', type: VariableType): void;
 }
 
@@ -34,21 +30,10 @@ function popoverClose() {
     emit('closeDialog');
 }
 
-const selectLayer = ref('')
 const attrName = ref('')
 const isselectLayer = ref(false)
-const options = [
-    {
-        value: '显示',
-        label: '显示',
-    },
-    {
-        value: '隐藏',
-        label: '隐藏',
-    }
-]
-const defaultValue = ref('显示');
-const textDefaultValue = ref('');
+
+
 const selectList = ref<any[]>([])
 
 function esc(e: KeyboardEvent) {
@@ -56,12 +41,6 @@ function esc(e: KeyboardEvent) {
     else e.stopPropagation();
 }
 
-const showSelectLayer = (e: MouseEvent) => {
-    e.stopPropagation();
-    selectoption.value = false;
-    if (isselectLayer.value && e.target instanceof Element && e.target.closest('.input')) return isselectLayer.value = false;
-    isselectLayer.value = true;
-}
 const save = () => {
     // 测试用代码 start
     const selection = props.context.selection;
@@ -99,18 +78,6 @@ const get_symbol_layer = () => {
         }
         selectList.value = symbolLayer;
     }
-}
-
-const selectoption = ref(false)
-const menuItems = ['显示', '隐藏'];
-const menuIndex = ref(0);
-const showMenu = () => {
-    if (selectoption.value) return selectoption.value = false
-    selectoption.value = true;
-}
-const handleShow = (index: number) => {
-    defaultValue.value = menuItems[index];
-    menuIndex.value = index;
 }
 
 const comps = ref<HTMLDivElement>()
@@ -155,6 +122,7 @@ onUnmounted(() => {
         <div class="body">
             <!-- 图层选择插槽 -->
             <slot name="layer"></slot>
+            <!-- 属性名 -->
             <div>
                 <span>{{ t('compos.attr_name') }}</span>
                 <div>
@@ -162,23 +130,8 @@ onUnmounted(() => {
                 </div>
             </div>
             <p class="warn" v-if="false">{{ t('compos.duplicate_name') }}</p>
-            <div v-if="props.addType !== VariableType.SymbolRef && props.addType">
-                <span>默认值</span>
-                <div v-if="props.addType === VariableType.Visible" class="show">
-                    <div class="input" @click.stop="showMenu">
-                        <span>{{ defaultValue }}</span>
-                        <el-icon>
-                            <ArrowDown
-                                :style="{ transform: selectoption ? 'rotate(180deg)' : 'rotate(0deg)', transition: '0.3s' }" />
-                        </el-icon>
-                        <SelectMenu v-if="selectoption" :top="33" width="100%" :menuItems="menuItems" :menuIndex="menuIndex"
-                            :context="context" @select-index="handleShow" @close="selectoption = false"></SelectMenu>
-                    </div>
-                </div>
-                <div v-if="props.addType === VariableType.Text">
-                    <el-input v-model="textDefaultValue" :placeholder="t('compos.default_text_input')" />
-                </div>
-            </div>
+            <!-- 默认值 -->
+            <slot name="default_value"></slot>
         </div>
         <div class="footer">
             <el-button style="background-color: #9775fa;" @click="save">确认</el-button>
@@ -234,34 +187,6 @@ onUnmounted(() => {
         padding: 0 var(--default-padding);
         box-sizing: border-box;
 
-        .select-layer {
-            position: relative;
-            z-index: 1;
-
-            .input {
-                width: 100%;
-                height: 30px;
-                border-radius: 4px;
-                background-color: var(--grey-light);
-                padding-left: 10px;
-                box-sizing: border-box;
-                display: flex;
-                align-items: center;
-
-                span {
-                    flex: 1;
-                }
-
-                .el-icon {
-                    width: 30px;
-                    height: 30px;
-                    display: flex;
-                    align-items: center;
-                    justify-content: center;
-                }
-            }
-        }
-
         .warn {
             padding: 0;
             color: red;
@@ -301,33 +226,6 @@ onUnmounted(() => {
                     box-shadow: 0 0 0 1px var(--active-color) inset;
                 }
             }
-
-            .el-select {
-                width: 100%;
-                height: 30px;
-                font-size: 10px;
-
-                >div {
-                    height: 100%;
-                }
-
-                .el-option {
-                    font-size: 10px
-                }
-
-                :deep(.el-input__wrapper) {
-                    height: 30px;
-                    font-size: 10px;
-                    background-color: var(--grey-light);
-                    box-shadow: none;
-
-                    .el-icon svg {
-                        width: 10px;
-                        height: 10px;
-                        color: black;
-                    }
-                }
-            }
         }
     }
 
@@ -337,33 +235,6 @@ onUnmounted(() => {
         align-items: center;
         justify-content: center;
         margin: 10px 0;
-    }
-}
-
-.show {
-    .input {
-        position: relative;
-        width: 100%;
-        height: 30px;
-        border-radius: 4px;
-        border: 1px solid #dcdfe6;
-        padding-left: 11px;
-        box-sizing: border-box;
-        display: flex;
-        align-items: center;
-        background-color: var(--grey-light);
-
-        span {
-            flex: 1;
-        }
-
-        .el-icon {
-            width: 30px;
-            height: 30px;
-            display: flex;
-            align-items: center;
-            justify-content: center;
-        }
     }
 }
 
