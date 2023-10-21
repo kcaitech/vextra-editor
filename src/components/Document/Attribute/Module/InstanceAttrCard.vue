@@ -5,25 +5,27 @@ import { ArrowDown } from '@element-plus/icons-vue';
 import SelectMenu from '../PopoverMenu/SelectMenu.vue';
 import { useI18n } from 'vue-i18n';
 import { VariableType } from '@kcdesign/data';
-import { ref, onMounted } from 'vue';
-import {modify_status_value_for_ref, RefAttriListItem} from '@/utils/symbol';
+import {ref, onMounted, onUpdated} from 'vue';
+import {get_status_value_for_ref, modify_status_value_for_ref, RefAttriListItem} from '@/utils/symbol';
 const { t } = useI18n();
-const props = defineProps<{
+interface Props {
     context: Context
     data: RefAttriListItem
-}>()
+}
+const props = defineProps<Props>();
 const status_value = ref<string>('');
 const selectoption = ref(false)
+const showCompsDialog = ref(false);
+const comps_posi = ref({ x: 0, y: 0 });
+const comps = ref<HTMLDivElement>();
+const textValue = ref('文本内容');
+const inputRef = ref<HTMLInputElement>();
+const open = ref(false);
 const showMenu = () => {
     if (selectoption.value) return selectoption.value = false
     selectoption.value = true;
 }
-
-const showCompsDialog = ref(false);
-const comps_posi = ref({ x: 0, y: 0 });
-const comps = ref<HTMLDivElement>();
 const compsDialog = () => {
-    // props.context.component.set_scroll_target(props.shape.refId);
     if (comps.value) {
         const el = comps.value.getBoundingClientRect();
         comps_posi.value.x = el.x - (el.width + 32);
@@ -34,21 +36,22 @@ const compsDialog = () => {
 const closeDialog = () => {
     showCompsDialog.value = false;
 }
-
-const textValue = ref('文本内容')
-const inputRef = ref<any>()
 const selectAllText = () => {
-    inputRef.value.select()
+    inputRef.value?.select()
 }
 
-const open = ref(false);
 function select(index: number) {
     const _v = props.data.values[index];
     modify_status_value_for_ref(props.context, props.data.variable, _v);
 }
 function getVattagValue() {
-
+    const symref = props.context.selection.symbolrefshape;
+    if (!symref) return;
+    status_value.value = get_status_value_for_ref(symref, props.data.variable);
 }
+onUpdated(() => {
+    getVattagValue();
+})
 onMounted(() => {
     getVattagValue();
 })
@@ -60,7 +63,7 @@ onMounted(() => {
             <div class="state_name"><span>{{ data.variable.name }}</span></div>
             <div class="state_value" style="padding: 0;">
                 <div class="input" @click="showMenu">
-                    <span></span>
+                    <span>{{ status_value }}</span>
                     <el-icon>
                         <ArrowDown
                             :style="{ transform: selectoption ? 'rotate(180deg)' : 'rotate(0deg)', transition: '0.3s' }" />

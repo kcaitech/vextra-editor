@@ -1,7 +1,7 @@
 import {Context} from "@/context";
 import {
     Artboard,
-    GroupShape,
+    GroupShape, OverrideType,
     Page,
     Shape,
     ShapeType,
@@ -487,44 +487,54 @@ function get_layer_i(symbol: Shape, init?: Shape[]) {
     }
     return shapes;
 }
+
 export interface RefAttriListItem {
     variable: Variable
     values: any[]
 }
+
 /**
  * @description 整理实例的变量列表
  * @param context
  * @param symref
  */
 export function get_var_for_ref(context: Context, symref: SymbolRefShape) {
-    const result: RefAttriListItem[] = [];
-    const _r: Variable[] = [];
+    console.log('update');
+    let result: RefAttriListItem[] = [];
     const sym = context.data.symbolsMgr.getSync(symref.refId);
     if (!sym) return result;
-    const variables = sym.variables;
-    if (!variables) return result;
-    variables.forEach(v => {
-        symref.findVar(v.id, _r);
-    })
-    if (!_r.length) return result;
+    const variables = Array.from(sym.variables?.values() || []);
+    if (!variables.length) return result;
+    console.log('variables:', variables);
+    const _r: Variable[][] = [];
+    for (let i = 0, len = variables.length; i < len; i++) {
+        const v = variables[i];
+        if (v.type !== VariableType.Status) continue;
+        const vr: Variable[] = [];
+        symref.findVar(v.id, vr);
+        _r.push(vr);
+    }
+    console.log('findVar _r:', _r);
+    // 整理variables、_r
     const rmap = new Map<string, RefAttriListItem>();
-
-    for(let i = 0, len = _r.length; i < len; i++) {
-        const vari = _r[i];
-        const item: RefAttriListItem = { variable: vari, values: []};
+    for (let i = 0, len = _r.length; i < len; i++) {
+        const vari = variables[i];
+        const item: RefAttriListItem = {variable: variables[i], values: []};
         if (vari.type !== VariableType.Status) continue;
         item.values = tag_values_sort(sym, vari);
         rmap.set(item.variable.id, item);
     }
+    result = Array.from(rmap.values());
     console.log('result: ', result);
     return result;
 }
 
-export function get_var_value_for_ref(context: Context, symref: SymbolRefShape, variable: Variable) {
-    const sym = context.data.symbolsMgr.getSync(symref.refId);
-    if (!sym) return;
-    return sym.getTagedSym(symref);
+export function get_status_value_for_ref(symref: SymbolRefShape, variable: Variable) {
+    const overrides = symref.findOverride(variable.id, OverrideType.Variable);
+    const _v = overrides ? overrides[overrides.length - 1] : variable;
+    return _v.value
 }
+
 export function modify_status_value_for_ref(context: Context, vari: Variable, value: any) {
     const symref = context.selection.symbolrefshape;
     if (!symref) return;

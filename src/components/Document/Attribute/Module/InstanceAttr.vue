@@ -4,19 +4,19 @@ import {Context} from '@/context';
 import TypeHeader from '../TypeHeader.vue';
 import {ref, onUnmounted, watch, onMounted} from 'vue'
 import {shape_track, get_shape_within_document} from '@/utils/content';
-import {SymbolRefShape, Variable, VariableType} from '@kcdesign/data';
+import {SymbolRefShape} from '@kcdesign/data';
 import {MoreFilled} from '@element-plus/icons-vue';
 import {RefAttriListItem, get_var_for_ref} from "@/utils/symbol";
 import InstanceAttrCard from "@/components/Document/Attribute/Module/InstanceAttrCard.vue";
-
-
-const {t} = useI18n();
-const props = defineProps<{
+interface Props {
     context: Context
     shape: SymbolRefShape
-}>()
+}
+const {t} = useI18n();
+const props = defineProps<Props>();
+const resetMenu = ref(false);
+const variables = ref<RefAttriListItem[]>([]);
 
-const resetMenu = ref(false)
 const selectReset = (e: MouseEvent) => {
     if (resetMenu.value) return resetMenu.value = false
     resetMenu.value = true
@@ -25,52 +25,46 @@ const selectReset = (e: MouseEvent) => {
 
 const closeResetMenu = (e: MouseEvent) => {
     if (e.target instanceof Element && !e.target.closest('.reset_svg')) {
-        resetMenu.value = false
+        resetMenu.value = false;
     }
-    document.removeEventListener('click', closeResetMenu)
+    document.removeEventListener('click', closeResetMenu);
 }
 
-
 const editComps = () => {
-    const refId = props.context.selection.selectedShapes[0].refId;
-    const shape = get_shape_within_document(props.context, refId)
-    if (shape) {
-        shape_track(props.context, shape)
-    }
+    const symref = props.context.selection.symbolrefshape;
+    if (!symref) return;
+    const shape = get_shape_within_document(props.context, symref.refId)
+    if (!shape) return;
+    shape_track(props.context, shape);
 }
 const untie = () => {
     const selection = props.context.selection;
     const page = selection.selectedPage;
-    if (page) {
-        const editor = props.context.editor4Page(page);
-        const shapes = editor.extractSymbol(props.shape);
-        if (shapes) {
-            selection.selectShape(shapes);
-            resetMenu.value = false;
-        }
-    }
+    if (!page) return;
+    const editor = props.context.editor4Page(page);
+    const shapes = editor.extractSymbol(props.shape);
+    if (!shapes) return;
+    selection.selectShape(shapes);
+    resetMenu.value = false;
 }
 
-const variables = ref<RefAttriListItem[]>([]);
-
-const watchShape = () => {
-    updateData();
+const shape_watcher = (arg: any) => {
+    if (arg !== 'shape-frame') updateData();
 }
 
 const updateData = () => {
     variables.value = get_var_for_ref(props.context, props.shape);
 }
-
+watch(() => props.shape, (nVal, oVal) => {
+    oVal.unwatch(shape_watcher);
+    nVal.watch(shape_watcher);
+})
 onMounted(() => {
-    watchShape();
-    props.shape.watch(watchShape)
-    watch(() => props.shape, (nVal, oVal) => {
-        oVal.unwatch(watchShape);
-        nVal.watch(watchShape);
-    })
+    updateData();
+    props.shape.watch(shape_watcher)
 })
 onUnmounted(() => {
-    props.shape.unwatch(watchShape)
+    props.shape.unwatch(shape_watcher)
     document.removeEventListener('click', closeResetMenu)
 })
 </script>
@@ -99,7 +93,7 @@ onUnmounted(() => {
     </TypeHeader>
     <div class="module_container">
         <component v-for="item in variables" :key="item.variable.id" :is="InstanceAttrCard" :context="props.context"
-                   :data="(item as RefAttriListItem)"></component>
+                   :data="item"></component>
     </div>
 </template>
 
