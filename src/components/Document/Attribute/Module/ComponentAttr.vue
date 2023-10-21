@@ -6,10 +6,11 @@ import {onMounted, onUnmounted, ref, watch} from 'vue'
 import CompLayerShow from '../PopoverMenu/CompLayerShow.vue';
 import {SymbolShape, VariableType} from '@kcdesign/data';
 import {is_wrong_bind_sym, make_status, variable_sort} from "@/utils/symbol";
-import AttriCard from "./AttriCard.vue";
 import {AttriListItem} from "@/utils/symbol";
 import SelectLayerInput from "./SelectLayerInput.vue";
 import PopoverDefaultInput from './PopoverDefaultInput.vue';
+import {cardmap} from "./StatusCard/map";
+import Status from "./StatusCard/SCStatus.vue";
 
 const {t} = useI18n();
 
@@ -174,7 +175,7 @@ onUnmounted(() => {
 
         <!--list container-->
         <div class="module_container">
-            <component v-for="item in variables" :is="AttriCard" :key="item.variable.id" :context="props.context"
+            <component v-for="item in variables" :is="cardmap.get(item.variable.type) || Status" :key="item.variable.id" :context="props.context"
                        :variable="item.variable" :item="item"></component>
         </div>
         <div v-if="conflict"

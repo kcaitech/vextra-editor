@@ -1,8 +1,8 @@
 import {VariableType} from "@kcdesign/data";
-import Status from "./IACStatus.vue";
-import SymbolRef from "./IACSymbolRef.vue";
-import Text from "./IACText.vue";
-import Visible from "./IACVisible.vue";
+import Status from "./SCStatus.vue";
+import SymbolRef from "./SCSymbolRef.vue";
+import Text from "./SCText.vue";
+import Visible from "./SCVisible.vue";
 export const cardmap = new Map<VariableType, any>([
     [VariableType.Status, Status],
     [VariableType.SymbolRef, SymbolRef],

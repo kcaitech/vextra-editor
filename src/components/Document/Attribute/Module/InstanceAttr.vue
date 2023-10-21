@@ -8,7 +8,7 @@ import {SymbolRefShape} from '@kcdesign/data';
 import {MoreFilled} from '@element-plus/icons-vue';
 import {RefAttriListItem, get_var_for_ref} from "@/utils/symbol";
 import {cardmap} from "./InstanceAttrCard/map";
-import Status from "./InstanceAttrCard/Status.vue"
+import Status from "./InstanceAttrCard/IACStatus.vue"
 interface Props {
     context: Context
     shape: SymbolRefShape
