@@ -1,94 +1,24 @@
 <script setup lang="ts">
-import { Context } from '@/context';
-import ComponentDialog from './ComponentDialog.vue';
-import { ArrowDown } from '@element-plus/icons-vue';
-import SelectMenu from '../PopoverMenu/SelectMenu.vue';
-import { useI18n } from 'vue-i18n';
-import { VariableType } from '@kcdesign/data';
-import {ref, onMounted, onUpdated} from 'vue';
-import {get_status_value_for_ref, modify_status_value_for_ref, RefAttriListItem} from '@/utils/symbol';
-const { t } = useI18n();
+import {RefAttriListItem} from "@/utils/symbol";
+import {ref} from "vue";
+import {Context} from "@/context";
 interface Props {
     context: Context
     data: RefAttriListItem
 }
 const props = defineProps<Props>();
-const status_value = ref<string>('');
-const selectoption = ref(false)
-const showCompsDialog = ref(false);
-const comps_posi = ref({ x: 0, y: 0 });
-const comps = ref<HTMLDivElement>();
 const textValue = ref('文本内容');
 const inputRef = ref<HTMLInputElement>();
-const open = ref(false);
-const showMenu = () => {
-    if (selectoption.value) return selectoption.value = false
-    selectoption.value = true;
-}
-const compsDialog = () => {
-    if (comps.value) {
-        const el = comps.value.getBoundingClientRect();
-        comps_posi.value.x = el.x - (el.width + 32);
-        comps_posi.value.y = el.y;
-    }
-    showCompsDialog.value = true;
-}
-const closeDialog = () => {
-    showCompsDialog.value = false;
-}
+
 const selectAllText = () => {
     inputRef.value?.select()
 }
 
-function select(index: number) {
-    const _v = props.data.values[index];
-    modify_status_value_for_ref(props.context, props.data.variable, _v);
-}
-function getVattagValue() {
-    const symref = props.context.selection.symbolrefshape;
-    if (!symref) return;
-    status_value.value = get_status_value_for_ref(symref, props.data.variable);
-}
-onUpdated(() => {
-    getVattagValue();
-})
-onMounted(() => {
-    getVattagValue();
-})
-</script>
 
+
+</script>
 <template>
-    <div class="module_state_item" v-if="data.variable.type === VariableType.Status">
-        <div class="state_item">
-            <div class="state_name"><span>{{ data.variable.name }}</span></div>
-            <div class="state_value" style="padding: 0;">
-                <div class="input" @click="showMenu">
-                    <span>{{ status_value }}</span>
-                    <el-icon>
-                        <ArrowDown
-                            :style="{ transform: selectoption ? 'rotate(180deg)' : 'rotate(0deg)', transition: '0.3s' }" />
-                    </el-icon>
-                    <SelectMenu v-if="selectoption" :top="33" width="100%" :menuItems="data.values" :context="context" @select-index="select">
-                    </SelectMenu>
-                </div>
-            </div>
-        </div>
-        <div class="delete"></div>
-    </div>
-    <div class="module_state_item" ref="comps" v-if="data.variable.type === VariableType.SymbolRef">
-        <div class="state_item">
-            <div class="state_name"><span>{{ 111 }}</span></div>
-            <div class="state_value border" @click="compsDialog">
-                <span style="color: #606266;">默认</span>
-                <svg-icon icon-class="down" style="color: #a8abb2;"></svg-icon>
-            </div>
-        </div>
-        <div class="delete"></div>
-        <ComponentDialog v-if="showCompsDialog" :context="context" right="250px" top="0" @closeDialog="closeDialog"
-            :comps_posi="comps_posi">
-        </ComponentDialog>
-    </div>
-    <div class="module_state_item" v-if="data.variable.type === VariableType.Text">
+    <div class="module_state_item">
         <div class="state_item">
             <div class="state_name"><span>{{ }}</span></div>
             <div class="state_value" style="padding: 0;">
@@ -97,19 +27,8 @@ onMounted(() => {
         </div>
         <div class="delete"></div>
     </div>
-    <div class="open" v-if="data.variable.type === VariableType.Visible">
-        <div>
-            <span class="title">{{ t('compos.layer_show') }}:</span>
-            <div class="switch">
-                <div>
-                    <span class="name">{{  }}</span>
-                    <el-switch v-model="open" size="small" style="margin-left: 10px;--el-switch-on-color: #9775fa" />
-                </div>
-            </div>
-        </div>
-    </div>
 </template>
-<style scoped lang="scss">
+<style lang="scss" scoped>
 .module_state_item {
     position: relative;
     display: flex;
@@ -241,38 +160,6 @@ onMounted(() => {
     }
 }
 
-.open {
-    margin-bottom: 3px;
-
-    >div {
-        display: flex;
-
-        .title {
-            width: 60px;
-            margin-right: 5px;
-            padding-top: 2px;
-        }
-
-        .switch {
-            >div {
-                display: flex;
-                align-items: center;
-            }
-        }
-
-        .name {
-            width: 60px;
-            margin-right: 5px;
-            overflow: hidden;
-            text-overflow: ellipsis;
-            white-space: nowrap;
-        }
-
-        >div {
-            flex: 1;
-        }
-    }
-}
 :deep(.el-select-dropdown__item.selected) {
     color: #9775fa !important;
     font-size: 12px;

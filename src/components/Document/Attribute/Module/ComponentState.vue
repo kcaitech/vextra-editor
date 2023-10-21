@@ -3,7 +3,7 @@ import {useI18n} from 'vue-i18n';
 import {Context} from '@/context';
 import {onMounted, onUnmounted, ref, watch} from "vue";
 import StatusCard from "@/components/Document/Attribute/Module/StatusCard.vue";
-import {detects_comp_status_val_is_clash_for_states, states_tag_values_sort, StatusValueItem} from "@/utils/symbol";
+import {is_wrong_bind, states_tag_values_sort, StatusValueItem} from "@/utils/symbol";
 import {Shape, SymbolShape} from "@kcdesign/data"
 import TypeHeader from '../TypeHeader.vue';
 
@@ -22,7 +22,7 @@ function update_list() {
     data.value.forEach(item => {
         item.values.push('add');
     })
-    conflict.value = detects_comp_status_val_is_clash_for_states(props.shapes);
+    conflict.value = is_wrong_bind(props.shapes);
     console.log('state attribute update result: ', data.value);
 }
 

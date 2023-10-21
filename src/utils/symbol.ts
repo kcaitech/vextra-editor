@@ -132,6 +132,9 @@ function check_symbol_level_artboard(artboard: GroupShape, init?: SymbolShape[])
     return symbols;
 }
 
+/**
+ * @description 给组件列表的项与项之间确定关系
+  */
 export function modify_parent(list: SymbolListItem[]) {
     for (let i = 0, len = list.length; i < len; i++) modify(list[i]);
 
@@ -146,6 +149,9 @@ export function modify_parent(list: SymbolListItem[]) {
     }
 }
 
+/**
+ * @description 根据文件夹展开、闭合状态整理组件列表的展示布局
+ */
 export function list_layout(list: SymbolListItem[], extend_set: Set<string>, init?: SymbolListItem[]) {
     const result: SymbolListItem[] = init || [];
     for (let i = 0, len = list.length; i < len; i++) {
@@ -169,6 +175,9 @@ export function search_symbol_by_keywords(context: Context, keywords: string) {
     return result;
 }
 
+/**
+ * @description 初始化组件列表的文件夹展开、闭合状态
+ */
 export function init_status_set_by_symbol(data: SymbolListItem[], status_set: Set<string>, id: string) {
     const item = locate(data, id);
     if (!item) return false;
@@ -197,10 +206,15 @@ export function init_status_set_by_symbol(data: SymbolListItem[], status_set: Se
     }
 }
 
+/**
+ * @description 设置需要定位到组件
+ */
 function _clear_scroll_target(context: Context) {
     context.component.set_scroll_target(undefined);
 }
-
+/**
+ * @description 设置需要定位到组件，一段时间内只执行一次
+ */
 export const clear_scroll_target = debounce(_clear_scroll_target, 300);
 
 // endregion
@@ -210,6 +224,10 @@ export interface AttriListItem {
     values: { key: string, value: string }[]
 }
 
+/**
+ * @description 为组件整理变量列表
+ * @param symbol
+ */
 export function variable_sort(symbol: SymbolShape) {
     const list: AttriListItem[] = [];
     if (!symbol.variables) return list;
@@ -227,6 +245,11 @@ export function variable_sort(symbol: SymbolShape) {
     return list;
 }
 
+/**
+ * @description 检查变量variable有哪些可选值并返回
+ * @param symbol
+ * @param variable
+ */
 export function tag_values_sort(symbol: SymbolShape, variable: Variable) {
     if (!symbol.isUnionSymbolShape) return [];
     const childs: SymbolShape[] = symbol.childs as unknown as SymbolShape[];
@@ -239,6 +262,9 @@ export function tag_values_sort(symbol: SymbolShape, variable: Variable) {
     return Array.from(result_set.values());
 }
 
+/**
+ * @description 为组件删除一个变量
+ */
 export function delete_variable(context: Context, variable: Variable) {
     const union = context.selection.unionshape;
     if (!union) return;
@@ -253,6 +279,9 @@ export interface StatusValueItem {
     values: any[]
 }
 
+/**
+ * @description 为可变组件整理变量列表
+ */
 export function states_tag_values_sort(shapes: SymbolShape[]) {
     const result: StatusValueItem[] = [];
     if (shapes.length === 1) {
@@ -274,6 +303,10 @@ export function states_tag_values_sort(shapes: SymbolShape[]) {
     return result;
 }
 
+/**
+ * @description 选区是否都为同一个组件下的可变组件
+ * @param shapes
+ */
 export function is_state_selection(shapes: Shape[]) {
     if (!shapes.length) return false;
     const p = shapes[0].parent;
@@ -283,14 +316,6 @@ export function is_state_selection(shapes: Shape[]) {
         if (shape.type !== ShapeType.Symbol || !shape.parent || shape.parent !== p || !shape.parent.isUnionSymbolShape) return false;
     }
     return true;
-}
-
-export function setup_watch(shapes: Shape[], f: (...args: any[]) => void) {
-    for (let i = 0, len = shapes.length; i < len; i++) shapes[i].watch(f);
-}
-
-export function remove_watch(shapes: Shape[], f: (...args: any[]) => void) {
-    for (let i = 0, len = shapes.length; i < len; i++) shapes[i].unwatch(f);
 }
 
 /**
@@ -350,7 +375,7 @@ export function make_default_state(context: Context, t: Function) {
 }
 
 /**
- * @description 创建一个状态
+ * @description 创建一个可变组件
  * @return state
  */
 export function make_state(context: Context, t: Function) {
@@ -371,22 +396,34 @@ export function make_state(context: Context, t: Function) {
         return editor.makeStateAt(shape.parent as SymbolShape, t('compos.state'), index);
     }
 }
-
+/**
+ * @description 为组件创建图层显示变量
+ */
 export function create_visible_var(context: Context, symbol: SymbolShape, name: string, values: string[]) {
     const editor = context.editor4Page(context.selection.selectedPage!);
     editor.makeVisibleVar(symbol, name, values);
 }
-
+/**
+ * @description 为组件创建实例切换变量
+ */
 export function create_ref_var(context: Context, symbol: SymbolShape, name: string, values: any) {
     const editor = context.editor4Page(context.selection.selectedPage!);
     editor.makeSymbolRefVar(symbol, name, values);
 }
 
+/**
+ * @description 为组件创建文本切换变量
+ */
 export function create_text_var(context: Context, symbol: SymbolShape, name: string, values: any) {
     const editor = context.editor4Page(context.selection.selectedPage!);
     editor.makeTextVar(symbol, name, values);
 }
 
+/**
+ * @description 给symbol生成一个与其他变量名称不会产生冲突并且有序的变量名称
+ * @param symbol
+ * @param dlt 默认名称
+ */
 export function gen_special_name_for_status(symbol: SymbolShape, dlt: string) {
     let index = 1
     if (!symbol.variables) return `${dlt}${index}`;
@@ -410,10 +447,9 @@ export function gen_special_name_for_status(symbol: SymbolShape, dlt: string) {
 }
 
 /**
- * @description 检测组件状态值是否有冲突
- * @return Boolean
+ * @description 检查组件的可变组件之间的各个变量值之间的组合是否有重复情况
  */
-export function detects_comp_status_val_is_clash(symbol: SymbolShape) {
+export function is_wrong_bind_sym(symbol: SymbolShape) {
     if (symbol.childs.length < 2) return false;
     if (!symbol.variables) return false;
     const variables = symbol.variables;
@@ -436,11 +472,13 @@ export function detects_comp_status_val_is_clash(symbol: SymbolShape) {
     }
     return false;
 }
-
-export function detects_comp_status_val_is_clash_for_states(states: SymbolShape[]) {
-    if (states.length === 1) {
-        return detects_comp_status_val_is_clash(states[0].parent as SymbolShape);
-    } else {
+/**
+ * @description 检测可变组件之间的各个变量值之间的组合是否有重复情况
+ */
+export function is_wrong_bind(states: SymbolShape[]) {
+    if (states.length === 1) { // 单选
+        return is_wrong_bind_sym(states[0].parent as SymbolShape);
+    } else { // 多选
         // todo
         return false;
     }
@@ -453,7 +491,7 @@ export interface LayerCollectItem {
 }
 
 /**
- * @description 获取可变图层
+ * @description 获取组件或者可变组件身上的可变图层
  * @param symbol
  */
 export function get_layer_from_symbol(symbol: Shape) {
@@ -494,47 +532,36 @@ export interface RefAttriListItem {
 }
 
 /**
- * @description 整理实例的变量列表
+ * @description 整理实例身上的变量列表
  * @param context
  * @param symref
  */
 export function get_var_for_ref(context: Context, symref: SymbolRefShape) {
-    console.log('update');
     let result: RefAttriListItem[] = [];
     const sym = context.data.symbolsMgr.getSync(symref.refId);
     if (!sym) return result;
-    const variables = Array.from(sym.variables?.values() || []);
-    if (!variables.length) return result;
-    console.log('variables:', variables);
-    const _r: Variable[][] = [];
-    for (let i = 0, len = variables.length; i < len; i++) {
-        const v = variables[i];
-        if (v.type !== VariableType.Status) continue;
-        const vr: Variable[] = [];
-        symref.findVar(v.id, vr);
-        _r.push(vr);
-    }
-    console.log('findVar _r:', _r);
-    // 整理variables、_r
-    const rmap = new Map<string, RefAttriListItem>();
-    for (let i = 0, len = _r.length; i < len; i++) {
-        const vari = variables[i];
-        const item: RefAttriListItem = {variable: variables[i], values: []};
-        if (vari.type !== VariableType.Status) continue;
-        item.values = tag_values_sort(sym, vari);
-        rmap.set(item.variable.id, item);
-    }
-    result = Array.from(rmap.values());
-    console.log('result: ', result);
+    const variables = sym.variables;
+    if (!variables) return result;
+    variables.forEach(v => {
+        const item: RefAttriListItem = {variable: v, values: []};
+        if (v.type !== VariableType.Status) return;
+        item.values = tag_values_sort(sym, v);
+        result.push(item);
+    })
     return result;
 }
 
+/**
+ * @description 获取实例symref身上的某个变量variable的值
+ */
 export function get_status_value_for_ref(symref: SymbolRefShape, variable: Variable) {
     const overrides = symref.findOverride(variable.id, OverrideType.Variable);
-    const _v = overrides ? overrides[overrides.length - 1] : variable;
-    return _v.value
+    return overrides ? overrides[overrides.length - 1].value : variable.value;
 }
 
+/**
+ * @description 修改实例身上某个变量vari的值
+ */
 export function modify_status_value_for_ref(context: Context, vari: Variable, value: any) {
     const symref = context.selection.symbolrefshape;
     if (!symref) return;

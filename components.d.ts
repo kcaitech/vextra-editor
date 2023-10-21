@@ -220,6 +220,7 @@ declare module '@vue/runtime-core' {
     ShowHiddenLeft: typeof import('./src/components/Document/Navigation/ShowHiddenLeft.vue')['default']
     Simple: typeof import('./src/components/Document/Content/Simple.vue')['default']
     StarFile: typeof import('./src/components/AppHome/Main/StarFile.vue')['default']
+    Status: typeof import('./src/components/Document/Attribute/Module/InstanceAttrCard/Status.vue')['default']
     StatusBar: typeof import('./src/components/Document/StatusBar/index.vue')['default']
     StatusCard: typeof import('./src/components/Document/Attribute/Module/StatusCard.vue')['default']
     SubLoading: typeof import('./src/components/common/SubLoading.vue')['default']
@@ -255,5 +256,6 @@ declare module '@vue/runtime-core' {
     UserAvatar: typeof import('./src/components/Document/Toolbar/UserAvatar.vue')['default']
     UserInfo: typeof import('./src/components/Document/Toolbar/UserInfo.vue')['default']
     UsersSelection: typeof import('./src/components/Document/Selection/TeamWork/UsersSelection.vue')['default']
+    Visible: typeof import('./src/components/Document/Attribute/Module/InstanceAttrCard/Visible.vue')['default']
   }
 }

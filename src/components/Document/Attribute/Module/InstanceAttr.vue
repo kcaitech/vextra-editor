@@ -7,11 +7,13 @@ import {shape_track, get_shape_within_document} from '@/utils/content';
 import {SymbolRefShape} from '@kcdesign/data';
 import {MoreFilled} from '@element-plus/icons-vue';
 import {RefAttriListItem, get_var_for_ref} from "@/utils/symbol";
-import InstanceAttrCard from "@/components/Document/Attribute/Module/InstanceAttrCard.vue";
+import {cardmap} from "./InstanceAttrCard/map";
+import Status from "./InstanceAttrCard/Status.vue"
 interface Props {
     context: Context
     shape: SymbolRefShape
 }
+
 const {t} = useI18n();
 const props = defineProps<Props>();
 const resetMenu = ref(false);
@@ -92,7 +94,8 @@ onUnmounted(() => {
         </template>
     </TypeHeader>
     <div class="module_container">
-        <component v-for="item in variables" :key="item.variable.id" :is="InstanceAttrCard" :context="props.context"
+        <component v-for="item in variables" :key="item.variable.id" :is="cardmap.get(item.variable.type) || Status"
+                   :context="props.context"
                    :data="item"></component>
     </div>
 </template>
