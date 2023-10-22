@@ -180,7 +180,7 @@ function init_insert_shape(context: Context, mousedownOnPageXY: PageXY, t: Funct
     }
     workspace.creating(false);
     tool.setAction(Action.AutoV);
-    context.cursor.setType('auto-0');
+    context.cursor.reset();
 }
 
 // 图形从init到insert
@@ -211,7 +211,7 @@ export function init_insert_shape2(context: Context, mousedownOnPageXY: PageXY, 
         selection.selectShape(page!.getShape(new_shape.id))
     }
     tool.setAction(Action.AutoV);
-    context.cursor.setType('auto-0');
+    context.cursor.reset();
 }
 
 //插入表格
@@ -249,7 +249,7 @@ function init_insert_table(context: Context, t: Function, land?: Shape, _t?: Sha
     }
     workspace.creating(false);
     tool.setAction(Action.AutoV);
-    context.cursor.setType('auto-0');
+    context.cursor.reset();
 }
 
 // 插入文本框
@@ -274,7 +274,7 @@ function init_insert_textshape(context: Context, mousedownOnPageXY: PageXY, cont
     }
     workspace.creating(false);
     context.tool.setAction(Action.AutoV);
-    context.cursor.setType('auto-0');
+    context.cursor.reset();
 }
 
 // 图片从init到insert
