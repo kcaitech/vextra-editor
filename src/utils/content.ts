@@ -159,7 +159,7 @@ export function init_contact_shape(context: Context, frame: ShapeFrame, mousedow
 }
 
 // 图形从init到insert
-function init_insert_shape(context: Context, mousedownOnPageXY: PageXY, t: Function, land?: Shape, _t?: ShapeType) {
+export function init_insert_shape(context: Context, mousedownOnPageXY: PageXY, t: Function, land?: Shape, _t?: ShapeType) {
     const tool = context.tool;
     const action = tool.action;
     if (action === Action.AddText) return init_insert_textshape(context, mousedownOnPageXY, t('shape.input_text'));
@@ -222,7 +222,7 @@ export function init_insert_shape2(context: Context, mousedownOnPageXY: PageXY, 
 }
 
 //插入表格
-function init_insert_table(context: Context, t: Function, land?: Shape, _t?: ShapeType) {
+export function init_insert_table(context: Context, t: Function, land?: Shape, _t?: ShapeType) {
     const tool = context.tool;
     const action = tool.action;
     const table = context.tool.tableSize;
@@ -260,7 +260,7 @@ function init_insert_table(context: Context, t: Function, land?: Shape, _t?: Sha
 }
 
 // 插入文本框
-function init_insert_textshape(context: Context, mousedownOnPageXY: PageXY, content: string, land?: Shape, _t?: ShapeType) {
+export function init_insert_textshape(context: Context, mousedownOnPageXY: PageXY, content: string, land?: Shape, _t?: ShapeType) {
     const selection = context.selection;
     const workspace = context.workspace;
     const type = _t || ResultByAction(context.tool.action);
@@ -764,7 +764,7 @@ export function is_need_skip_to_render(shape: Shape, matrix: Matrix) { // 不是
  * @param context
  * @param shape
  */
-export function shape_track(context: Context, shape: Shape) {
+export function  shape_track(context: Context, shape: Shape) {
   const page = shape.getPage();
   if (!page) return;
   const target = page.getShape(shape.id);
