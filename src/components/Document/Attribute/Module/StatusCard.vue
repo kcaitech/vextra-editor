@@ -63,12 +63,16 @@ const getVattagValue = () => {
 const selected_watcher = (t: number) => {
     if (t === Selection.CHANGE_SHAPE) {
         getVattagValue();
+        if(selectoption.value) {
+            selectoption.value = false;
+        }
     }
 }
 
 function selcet(index: number) {
     const val = props.data.values[index];
     save_change(val);
+    selectoption.value = false;
 }
 
 function save_change(v: string) {

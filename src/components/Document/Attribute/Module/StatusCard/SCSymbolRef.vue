@@ -50,7 +50,7 @@ function save_instance() {
 }
 </script>
 <template>
-    <div class="module_attr_item" ref="visible_card">
+    <div class="module_attr_item" ref="instance_card">
         <div class="attr_con">
             <div class="module_item_left" @click="edit_instance">
                 <div class="module_name-2">

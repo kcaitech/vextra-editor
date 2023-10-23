@@ -48,8 +48,8 @@ onUnmounted(() => {
     <div class="select_menu" :style="{ width: width, top: top + 'px' }">
         <div class="untie" @click="clickItem(index)" v-for="(item, index) in menuItems" :key="index"
             @mouseenter="hoverColor(index)" :class="{ active: isActive === index }">
-            <span v-if="item !== 'add'">{{ item }}</span>
-            <span v-if="item === 'add'">{{ t('compos.add_new') }}</span>
+            <span v-if="item !== 'add_new_value' && index !== menuItems.length - 1">{{ item }}</span>
+            <span v-if="item === 'add_new_value' && index === menuItems.length - 1">{{ t('compos.add_new') }}</span>
         </div>
     </div>
 </template>

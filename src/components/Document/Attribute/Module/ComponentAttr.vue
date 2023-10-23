@@ -11,6 +11,7 @@ import SelectLayerInput from "./SelectLayerInput.vue";
 import PopoverDefaultInput from './PopoverDefaultInput.vue';
 import {cardmap} from "./StatusCard/map";
 import Status from "./StatusCard/SCStatus.vue";
+import { Warning } from '@element-plus/icons-vue';
 
 const {t} = useI18n();
 
@@ -178,9 +179,9 @@ onUnmounted(() => {
             <component v-for="item in variables" :is="cardmap.get(item.variable.type) || Status" :key="item.variable.id" :context="props.context"
                        :variable="item.variable" :item="item"></component>
         </div>
-        <div v-if="conflict"
-             style="width: 100% ;text-align: center; color: red; box-sizing: border-box; border: 2px solid orangered">
-            存在冲突
+        <div v-if="conflict" class="conflict_warn">
+            <div><el-icon><Warning /></el-icon></div>
+            <p>存在状态相同的可变组件，需要修改状态以解决冲突</p>
         </div>
 
         <!--dialog-->
@@ -260,6 +261,26 @@ onUnmounted(() => {
                 color: #fff;
             }
         }
+    }
+}
+
+.conflict_warn {
+    display: flex;
+    width: 100%;
+    font-size: var(--font-default-fontsize);
+    box-sizing: border-box;
+    border: 0.5px solid rgba(0, 0, 0, 0.05);
+    border-radius: 4px;
+    padding: 10px;
+    >div {
+        display: flex;
+        align-items: center;
+        width: 20px;
+        height: 20px;
+        margin-right: 10px;
+    }
+    >p {
+        margin: 0;
     }
 }
 

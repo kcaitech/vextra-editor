@@ -1,11 +1,12 @@
 <script lang="ts" setup>
-import {useI18n} from 'vue-i18n';
-import {Context} from '@/context';
-import {onMounted, onUnmounted, ref, watch} from "vue";
+import { useI18n } from 'vue-i18n';
+import { Context } from '@/context';
+import { onMounted, onUnmounted, ref, watch } from "vue";
 import StatusCard from "@/components/Document/Attribute/Module/StatusCard.vue";
-import {is_wrong_bind, states_tag_values_sort, StatusValueItem} from "@/utils/symbol";
-import {Shape, SymbolShape} from "@kcdesign/data"
+import { is_conflict_comp, is_wrong_bind, states_tag_values_sort, StatusValueItem } from "@/utils/symbol";
+import { Shape, SymbolShape } from "@kcdesign/data"
 import TypeHeader from '../TypeHeader.vue';
+import { Warning } from '@element-plus/icons-vue';
 
 interface Props {
     context: Context
@@ -13,17 +14,36 @@ interface Props {
 }
 
 const props = defineProps<Props>()
-const {t} = useI18n();
+const { t } = useI18n();
 const data = ref<StatusValueItem[]>();
 const conflict = ref<boolean>(false);
 
 function update_list() {
     data.value = states_tag_values_sort(props.shapes);
     data.value.forEach(item => {
-        item.values.push('add');
+        item.values.push('add_new_value');
     })
-    conflict.value = is_wrong_bind(props.shapes);
+    is_conflict();
     console.log('state attribute update result: ', data.value);
+}
+
+const is_conflict = () => {
+    if (is_wrong_bind(props.shapes)) {
+        const conflict_comp = is_conflict_comp(props.shapes[0].parent as SymbolShape);
+        if (!conflict_comp) return;
+        let is_conflict = false;
+        conflict_comp.forEach((item: any[]) => {
+            const shape_id = props.shapes[0].id;
+            const i = item.findIndex(v => v.id === shape_id);
+            if(i !== -1) {
+                is_conflict = true;
+            }
+        })
+        console.log(conflict_comp,'conflict_comp');
+        conflict.value = is_conflict;
+    } else {
+        conflict.value = false;
+    }
 }
 
 watch(() => props.shapes, (v, o) => {
@@ -61,7 +81,12 @@ onUnmounted(() => {
             </template>
         </TypeHeader>
         <StatusCard v-for="item in data" :context="props.context" :data="item" :key="item.variable.id"></StatusCard>
-        <div v-if="conflict" style="width: 100% ;text-align: center; color: red; box-sizing: border-box; border: 2px solid orangered">存在冲突</div>
+        <div v-if="conflict" class="conflict_warn">
+            <div><el-icon>
+                    <Warning />
+                </el-icon></div>
+            <p>此可变组件存在相同状态，需要修改状态以解决冲突</p>
+        </div>
     </div>
 </template>
 
@@ -74,6 +99,29 @@ onUnmounted(() => {
 .compos_state {
     width: 22px;
     height: 22px;
+}
+
+.conflict_warn {
+    display: flex;
+    width: 100%;
+    margin-top: 8px;
+    font-size: var(--font-default-fontsize);
+    box-sizing: border-box;
+    border: 0.5px solid rgba(0, 0, 0, 0.05);
+    border-radius: 4px;
+    padding: 10px;
+
+    >div {
+        display: flex;
+        align-items: center;
+        width: 20px;
+        height: 20px;
+        margin-right: 10px;
+    }
+
+    >p {
+        margin: 0;
+    }
 }
 
 :deep(.el-input__inner) {
