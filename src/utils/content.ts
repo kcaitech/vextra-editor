@@ -159,35 +159,35 @@ export function init_contact_shape(context: Context, frame: ShapeFrame, mousedow
 }
 
 // 图形从init到insert
-export function init_insert_shape(context: Context, mousedownOnPageXY: PageXY, t: Function, land?: Shape, _t?: ShapeType) {
-  const tool = context.tool;
-  const action = tool.action;
-  if (action === Action.AddText) return init_insert_textshape(context, mousedownOnPageXY, t('shape.input_text'));
-  const selection = context.selection;
-  const workspace = context.workspace;
-  const type = _t || ResultByAction(action);
-  const page = selection.selectedPage;
-  const parent = land || selection.getClosetArtboard(mousedownOnPageXY);
-  let asyncCreator: AsyncCreator | undefined;
-  let new_shape: Shape | undefined;
-  const frame = new ShapeFrame(mousedownOnPageXY.x, mousedownOnPageXY.y, 100, 100);
-  if (page && parent && type) {
-    const editor = context.editor.controller();
-    const name = getName(type, parent.childs, t);
-    asyncCreator = editor.asyncCreator(mousedownOnPageXY);
-    if (action === Action.AddArrow) {
-      new_shape = asyncCreator.init_arrow(page, (parent as GroupShape), name, frame);
-    } else {
-      new_shape = asyncCreator.init(page, (parent as GroupShape), type, name, frame);
+function init_insert_shape(context: Context, mousedownOnPageXY: PageXY, t: Function, land?: Shape, _t?: ShapeType) {
+    const tool = context.tool;
+    const action = tool.action;
+    if (action === Action.AddText) return init_insert_textshape(context, mousedownOnPageXY, t('shape.input_text'));
+    const selection = context.selection;
+    const workspace = context.workspace;
+    const type = _t || ResultByAction(action);
+    const page = selection.selectedPage;
+    const parent = land || selection.getClosetArtboard(mousedownOnPageXY);
+    let asyncCreator: AsyncCreator | undefined;
+    let new_shape: Shape | undefined;
+    const frame = new ShapeFrame(mousedownOnPageXY.x, mousedownOnPageXY.y, 100, 100);
+    if (page && parent && type) {
+        const editor = context.editor.controller();
+        const name = getName(type, parent.childs, t);
+        asyncCreator = editor.asyncCreator(mousedownOnPageXY);
+        if (action === Action.AddArrow) {
+            new_shape = asyncCreator.init_arrow(page, (parent as GroupShape), name, frame);
+        } else {
+            new_shape = asyncCreator.init(page, (parent as GroupShape), type, name, frame);
+        }
     }
-  }
-  if (asyncCreator && new_shape) {
-    asyncCreator = asyncCreator.close();
-    selection.selectShape(page!.getShape(new_shape.id));
-  }
-  workspace.creating(false);
-  tool.setAction(Action.AutoV);
-  context.cursor.setType('auto-0');
+    if (asyncCreator && new_shape) {
+        asyncCreator = asyncCreator.close();
+        selection.selectShape(page!.getShape(new_shape.id));
+    }
+    workspace.creating(false);
+    tool.setAction(Action.AutoV);
+    context.cursor.reset();
 }
 
 // 图形从init到insert
@@ -218,70 +218,70 @@ export function init_insert_shape2(context: Context, mousedownOnPageXY: PageXY, 
         selection.selectShape(page!.getShape(new_shape.id))
     }
     tool.setAction(Action.AutoV);
-    context.cursor.setType('auto-0');
+    context.cursor.reset();
 }
 
 //插入表格
-export function init_insert_table(context: Context, t: Function, land?: Shape, _t?: ShapeType) {
-  const tool = context.tool;
-  const action = tool.action;
-  const table = context.tool.tableSize;
-  const matrix = context.workspace.matrix;
-  const frame = new ShapeFrame(0, 0, table.col * 80, table.row * 30);
-  const { x, y } = landFinderOnPage(matrix, context, frame)
-  frame.x = x, frame.y = y;
-  const PageXY = { x: x, y: y };
-  const selection = context.selection;
-  const workspace = context.workspace;
-  const type = _t || ResultByAction(action);
-  const page = selection.selectedPage;
-  const parent = land || selection.getClosetArtboard(PageXY);
-  let asyncCreator: AsyncCreator | undefined;
-  let new_shape: Shape | undefined;
-  if (page && parent && type) {
-    const editor = context.editor.controller();
-    const name = getName(type, parent.childs, t);
-    asyncCreator = editor.asyncCreator(PageXY);
-    new_shape = asyncCreator.init_table(page, (parent as GroupShape), name, frame, table.row, table.col);
-    if (new_shape) {
-      const timer = setTimeout(() => {
-        new_shape && scrollToContentView(new_shape, context);
-        clearTimeout(timer);
-      }, 100)
+function init_insert_table(context: Context, t: Function, land?: Shape, _t?: ShapeType) {
+    const tool = context.tool;
+    const action = tool.action;
+    const table = context.tool.tableSize;
+    const matrix = context.workspace.matrix;
+    const frame = new ShapeFrame(0, 0, table.col * 80, table.row * 30);
+    const {x, y} = landFinderOnPage(matrix, context, frame)
+    frame.x = x, frame.y = y;
+    const PageXY = {x: x, y: y};
+    const selection = context.selection;
+    const workspace = context.workspace;
+    const type = _t || ResultByAction(action);
+    const page = selection.selectedPage;
+    const parent = land || selection.getClosetArtboard(PageXY);
+    let asyncCreator: AsyncCreator | undefined;
+    let new_shape: Shape | undefined;
+    if (page && parent && type) {
+        const editor = context.editor.controller();
+        const name = getName(type, parent.childs, t);
+        asyncCreator = editor.asyncCreator(PageXY);
+        new_shape = asyncCreator.init_table(page, (parent as GroupShape), name, frame, table.row, table.col);
+        if (new_shape) {
+            const timer = setTimeout(() => {
+                new_shape && scrollToContentView(new_shape, context);
+                clearTimeout(timer);
+            }, 100)
+        }
     }
-  }
-  if (asyncCreator && new_shape) {
-    asyncCreator = asyncCreator.close();
-    selection.selectShape(page!.getShape(new_shape.id));
-  }
-  workspace.creating(false);
-  tool.setAction(Action.AutoV);
-  context.cursor.setType('auto-0');
+    if (asyncCreator && new_shape) {
+        asyncCreator = asyncCreator.close();
+        selection.selectShape(page!.getShape(new_shape.id));
+    }
+    workspace.creating(false);
+    tool.setAction(Action.AutoV);
+    context.cursor.reset();
 }
 
 // 插入文本框
-export function init_insert_textshape(context: Context, mousedownOnPageXY: PageXY, content: string, land?: Shape, _t?: ShapeType) {
-  const selection = context.selection;
-  const workspace = context.workspace;
-  const type = _t || ResultByAction(context.tool.action);
-  const page = selection.selectedPage;
-  const parent = land || selection.getClosetArtboard(mousedownOnPageXY);
-  let asyncCreator: AsyncCreator | undefined;
-  let new_shape: Shape | undefined;
-  const frame = new ShapeFrame(mousedownOnPageXY.x, mousedownOnPageXY.y, 100, 100);
-  if (page && parent && type) {
-    const editor = context.editor.controller();
-    asyncCreator = editor.asyncCreator(mousedownOnPageXY);
-    new_shape = asyncCreator.init_text(page, (parent as GroupShape), frame, content);
-  }
-  if (asyncCreator && new_shape) {
-    asyncCreator = asyncCreator.close();
-    selection.selectShape(page!.getShape(new_shape.id));
-    context.textSelection.selectText(0, (new_shape as TextShape).text.length, (new_shape as TextShape).text);
-  }
-  workspace.creating(false);
-  context.tool.setAction(Action.AutoV);
-  context.cursor.setType('auto-0');
+function init_insert_textshape(context: Context, mousedownOnPageXY: PageXY, content: string, land?: Shape, _t?: ShapeType) {
+    const selection = context.selection;
+    const workspace = context.workspace;
+    const type = _t || ResultByAction(context.tool.action);
+    const page = selection.selectedPage;
+    const parent = land || selection.getClosetArtboard(mousedownOnPageXY);
+    let asyncCreator: AsyncCreator | undefined;
+    let new_shape: Shape | undefined;
+    const frame = new ShapeFrame(mousedownOnPageXY.x, mousedownOnPageXY.y, 100, 100);
+    if (page && parent && type) {
+        const editor = context.editor.controller();
+        asyncCreator = editor.asyncCreator(mousedownOnPageXY);
+        new_shape = asyncCreator.init_text(page, (parent as GroupShape), frame, content);
+    }
+    if (asyncCreator && new_shape) {
+        asyncCreator = asyncCreator.close();
+        selection.selectShape(page!.getShape(new_shape.id));
+        context.textSelection.selectText(0, (new_shape as TextShape).text.length, (new_shape as TextShape).text);
+    }
+    workspace.creating(false);
+    context.tool.setAction(Action.AutoV);
+    context.cursor.reset();
 }
 
 // 图片从init到insert
@@ -568,7 +568,7 @@ export function get_selected_types(context: Context): number {
 /**
  * 右键菜单打开之前根据点击的区域整理应该显示的菜单项
  * @param { "controller" | "text-selection" | "group" | "artboard" | "component" | "null" | "normal" | "table" | "table_cell" | "instance" } area 点击的区域
- * @returns 
+ * @returns
  */
 export function get_menu_items(context: Context, area: "controller" | "text-selection" | "group" | "artboard" | "component" | "null" | "normal" | "table" | "table_cell" | "instance"): string[] {
   let contextMenuItems = []
