@@ -62,7 +62,6 @@ onUnmounted(() => {
     height: 100%;
     font-size: var(--font-default-fontsize);
 }
-
 .blank {
     width: 100%;
     height: 100%;
