@@ -19,6 +19,7 @@ import {searchCommentShape as finder} from '@/utils/comment'
 import {paster_image} from "./clipboard";
 import {landFinderOnPage, scrollToContentView} from './artboardFn'
 import { fit_no_transform } from "./shapelist";
+import {get_state_name} from "../../../kcdesign-data/src/editor/utils";
 export interface Media {
     name: string
     frame: { width: number, height: number }
@@ -796,10 +797,12 @@ export function is_content(context: Context, e: MouseEvent) {
   const root = context.workspace.root;
   return e.clientX > root.x && e.clientX < root.right && e.clientY > root.y && e.clientY < root.bottom;
 }
-export function ref_symbol(context: Context, position: PageXY, name: string, symbol: Shape) {
+export function ref_symbol(context: Context, position: PageXY, symbol: Shape) {
   const state = symbol;
+  let name = symbol.name;
   if (symbol.parent && (symbol.parent as SymbolShape).isUnionSymbolShape) {
     symbol = symbol.parent;
+    name = `${symbol.name}/${get_state_name(state as any)}`;
   }
   const selection = context.selection, workspace = context.workspace;
   const shapes: Shape[] = selection.selectedPage?.childs || [];
