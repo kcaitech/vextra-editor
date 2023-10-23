@@ -1,4 +1,4 @@
-import { ShapeType } from "@kcdesign/data";
+import {ShapeType} from "@kcdesign/data";
 import Rectangle from "./Rectangle.vue";
 import ShapeGroup from "./ShapeGroup.vue"
 import ShapePath from "./ShapePath.vue"
@@ -23,6 +23,7 @@ comsMap.set(ShapeType.Page, ShapeGroup);
 comsMap.set(ShapeType.Path, ShapePath);
 comsMap.set(ShapeType.Path2, ShapePath);
 comsMap.set(ShapeType.Rectangle, Rectangle);
+comsMap.set(ShapeType.Oval, Rectangle);
 comsMap.set(ShapeType.Text, TextView);
 comsMap.set(ShapeType.Symbol, ShapeSymbol);
 comsMap.set(ShapeType.SymbolRef, SymbolRef);

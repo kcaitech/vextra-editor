@@ -1,40 +1,31 @@
 <script setup lang="ts">
 import { Context } from '@/context';
-import { ShapeType } from '@kcdesign/data';
 import { ref, watch } from 'vue';
-
-const props = defineProps<{
+import StaticAbbrCard from "./StaticAbbrCard.vue";
+interface Props {
     context: Context
     samll: string
     contents: any[]
-}>();
-const emit = defineEmits<{
+}
+interface Emits {
     (e: 'handleCheck', list: any[]): void;
-}>();
+}
+const props = defineProps<Props>();
+const emits = defineEmits<Emits>();
 const checkList = ref([])
 
 watch(checkList, (v) => {
-    emit('handleCheck', v)
+    emits('handleCheck', v)
 })
-
-function icon_class(type: ShapeType) {
-    if (type === ShapeType.Symbol) {
-        return 'pattern-component';
-    } else {
-        return `pattern-${type}`;
-    }
-}
-
 </script>
 <template>
     <div class="container" v-for="(item, index) in contents" :key="index">
         <el-checkbox-group v-model="checkList">
             <el-checkbox :label="item.id">
                 <div class="component" :style="{ height: samll === 'samll' ? '30px' : '50px' }">
-                    <div class="thumbnail"
-                        :style="{ 'background-color': 'rgba(1, 239, 239, 239)', width: '30px' }">
+                    <div class="thumbnail">
+                        <StaticAbbrCard :data="item"></StaticAbbrCard>
                     </div>
-                    <svg-icon class="svg" :icon-class="icon_class(item.type)"></svg-icon>
                     <span class="name">{{ item.name }}</span>
                 </div>
             </el-checkbox>
@@ -98,7 +89,12 @@ function icon_class(type: ShapeType) {
     .thumbnail {
         border-radius: 4px;
         height: 100%;
-        margin-right: 10px;
+        width: 30px;
+        margin-right: 8px;
+        box-sizing: border-box;
+        border: 2px solid var(--grey-light);
+        background-image: url("data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAABAAAAAQCAYAAAAf8/9hAAAAAXNSR0IArs4c6QAAADBJREFUOE9jfPbs2X8GPEBSUhKfNAPjqAHDIgz+//+PNx08f/4cfzoYNYCBceiHAQC5flV5JzgrxQAAAABJRU5ErkJggg==");
+        background-size: auto 25%;
     }
 
     .name {

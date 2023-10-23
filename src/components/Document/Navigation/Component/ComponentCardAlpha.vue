@@ -76,7 +76,7 @@ onUnmounted(() => {
 <template>
     <div class="compo-preview-container" ref="preview_container">
         <div class="card-wrap" v-if="render_preview">
-            <svg version="1.1" xmlns="http://www.w3.org/2000/svg" xmlns:xlink="http://www.w3.org/1999/xlink"
+            <svg xmlns="http://www.w3.org/2000/svg" xmlns:xlink="http://www.w3.org/1999/xlink"
                 xmlns:xhtml="http://www.w3.org/1999/xhtml" preserveAspectRatio="xMinYMin meet" width="36px" height="36px"
                 :viewBox='gen_view_box()' overflow="visible" class="render-wrap">
                 <render></render>
@@ -97,7 +97,6 @@ onUnmounted(() => {
         height: 100%;
         display: flex;
         align-items: center;
-
         >.render-wrap {
             margin-left: 2px;
             background-color: var(--grey-light);
