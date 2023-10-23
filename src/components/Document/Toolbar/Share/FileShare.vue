@@ -85,13 +85,22 @@ const DocType = reactive([`${t('share.shareable')}`, `${t('share.need_to_apply_f
 const permission = reactive([`${t('share.no_authority')}`, `${t('share.readOnly')}`, `${t('share.reviewable')}`, `${t('share.editable')}`])
 const selectValue = ref(DocType[props.selectValue])
 
-const handleClick = (e: MouseEvent) => {
+const handlekeyup = (e: KeyboardEvent) => {
   e.stopPropagation()
-  e.target instanceof Element && !e.target.closest('.box-card') && emit('close');
-  if (e.target instanceof Element && !e.target.closest('.popover')) {
-    authority.value = false
+  if (e.key === 'Escape' || e.keyCode === 27) {
+    emit('close')
   }
 }
+
+const handleClick = (e: MouseEvent) => {
+  e.stopPropagation()
+  e.target instanceof Element && !e.target.closest('.popover') && (authority.value = false)
+}
+
+const showselect = () => {
+  authority.value = false
+}
+
 const getDocumentInfo = async () => {
   try {
     const { data } = await share_api.getDocumentInfoAPI({ doc_id: docID })
@@ -318,10 +327,12 @@ onMounted(() => {
       setShateType(docType.Share)
     }
   }
+  document.addEventListener('keyup', handlekeyup);
   document.addEventListener('click', handleClick);
 })
 
 onUnmounted(() => {
+  document.removeEventListener('keyup', handlekeyup);
   document.removeEventListener('click', handleClick);
 })
 
@@ -351,11 +362,11 @@ onUnmounted(() => {
         <!-- 权限设置 -->
         <div class="purview">
           <span class="type">{{ t('share.permission_setting') }}:</span>
-          <el-select v-model="selectValue" style="width: 180px;" class="m-2">
+          <el-select v-model="selectValue" style="width: 180px;" class="m-2" size="large" @visible-change="showselect">
             <el-option style="font-size: 10px;" class="option" v-for="item in options" :key="item.value"
               :label="item.label" :value="item.label" />
           </el-select>
-          <el-button color="#9775fa" @click="copyLink">{{ t('share.copy_link') }}</el-button>
+          <el-button class="copybnt" color="#9775fa" @click="copyLink">{{ t('share.copy_link') }}</el-button>
         </div>
         <!-- 分享人 -->
         <div>
@@ -421,7 +432,7 @@ onUnmounted(() => {
         <div class="project" v-if="project || props.docInfo?.project">项目中所有成员均可访问</div>
         <!-- 链接按钮 -->
         <div class="button bottom">
-          <el-button color="#9775fa" @click="copyLink">{{ t('share.copy_link') }}</el-button>
+          <el-button class="copybnt" color="#9775fa" @click="copyLink">{{ t('share.copy_link') }}</el-button>
         </div>
       </div>
     </el-card>
@@ -429,6 +440,10 @@ onUnmounted(() => {
 </template>
   
 <style scoped lang="scss">
+:deep(.copybnt) {
+  box-shadow: 1px 1px 3px #b1b1b1, -1px -1px 3px #b1b1b1;
+}
+
 .project {
   opacity: .5;
   display: flex;
@@ -636,6 +651,7 @@ onUnmounted(() => {
 }
 
 .box-card {
+  color: #3D3D3D;
   width: 400px;
 }
 

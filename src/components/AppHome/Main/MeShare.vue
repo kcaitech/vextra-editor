@@ -247,6 +247,7 @@ onUnmounted(() => {
 
 </script>
 <style lang="scss" scoped>
+
 .overlay {
     position: absolute;
     top: 0;

@@ -7,8 +7,14 @@
     <listrightmenu :items="items" :data="mydata" @getrecycle-lists="GetrecycleLists" @r-deletefile="Deletefile"
         @r-restorefile="Restorefile" />
     <!-- 确认删除弹框 -->
-    <el-dialog v-model="dialogVisible" :title="t('home.completely_delete')" width="500" align-center
-        @keyup.enter="Qdeletefile(docId)">
+    <el-dialog v-model="dialogVisible" width="500" align-center @keyup.enter="Qdeletefile(docId)" :show-close="false"
+        :close-on-click-modal="false" @open="changemargin">
+        <template #header>
+            <div class="my-header">
+                <div class="title">{{ t('home.completely_delete') }}</div>
+                <CloseIcon :size="20" @close="dialogVisible = false" />
+            </div>
+        </template>
         <span>{{ t('home.delete_tips') }}</span>
         <template #footer>
             <span class="dialog-footer">
@@ -27,6 +33,7 @@ import { ref, onMounted, onUnmounted, nextTick, watch } from 'vue'
 import { useI18n } from 'vue-i18n'
 import tablelist from '@/components/AppHome/tablelist.vue'
 import listrightmenu from "../listrightmenu.vue"
+import CloseIcon from '@/components/common/CloseIcon.vue';
 
 const items = ['restore', 'completely_delete']
 const { t } = useI18n()
@@ -94,6 +101,11 @@ function sizeTostr(size: any) {
         size = Math.round(size * 100) / 100 + "B"
     }
     return size
+}
+
+const changemargin = () => {
+    const el = document.querySelector('.el-dialog__header') as HTMLElement
+    el.style.marginRight = '0px'
 }
 
 //还原对应文件
@@ -176,6 +188,17 @@ onUnmounted(() => {
 </script>
 
 <style lang="scss" scoped>
+.my-header {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+
+    .title {
+        color: #3D3D3D;
+        font-weight: 600;
+    }
+}
+
 main {
     height: auto;
 }

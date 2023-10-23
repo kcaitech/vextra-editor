@@ -4,7 +4,7 @@ import {
     Star,
     BottomLeft,
     Plus,
-    Document as document,
+    Document as documents,
     FolderOpened,
 } from '@element-plus/icons-vue'
 import { router } from '@/router'
@@ -55,6 +55,7 @@ const projectItem = ref<any>({});
 const proname = ref('');
 const projectMembergDialog = ref(false)
 const projectSettingDialog = ref(false)
+const showcontainer=ref(false)
 const Input = ref<HTMLInputElement>();
 const hover = ref('');
 const isactive = ref('1')
@@ -95,14 +96,26 @@ const { updatestate, is_favor, projectList, is_team_upodate, teamData, activeNam
 
 const showMembergDialog = () => {
     projectMembergDialog.value = true
+    nextTick(() => {
+        showcontainer.value = true
+    })
 }
 
 const showSettingDialog = () => {
     projectSettingDialog.value = true
+    nextTick(() => {
+        showcontainer.value = true
+    })
 }
 
 const closeDialog = () => {
-    projectMembergDialog.value = false;
+    showcontainer.value = false
+  if (projectMembergDialog.value) {  
+        projectMembergDialog.value = false;
+    }
+    if (projectSettingDialog.value) {
+        projectSettingDialog.value = false
+    }
 }
 
 const exitProject = () => {
@@ -628,7 +641,7 @@ onUnmounted(() => {
                                 @click="Setindex(3, t('home.file_shared'))" @mouseenter="hover = '3'"
                                 @mouseleave="hover = ''">
                                 <el-icon>
-                                    <document />
+                                    <documents />
                                 </el-icon>
                                 <span>{{ t('home.file_shared') }}</span>
                             </el-menu-item></router-link>
@@ -812,9 +825,9 @@ onUnmounted(() => {
     <ProjectDialog :projectVisible="exitVisible" :context="t('Createteam.projectexitcontext')"
         :title="t('Createteam.projectexittitle')" :confirm-btn="t('Createteam.ok_exit')" @clode-dialog="closeExitVisible"
         @confirm="ExitProject"></ProjectDialog>
-    <ProjectAccessSetting v-if="projectSettingDialog" :title="t('Createteam.membertip')" :data="menuData" width="500px"
-        @clodeDialog="projectSettingDialog = false" />
-    <ProjectMemberg v-if="projectMembergDialog" :projectMembergDialog="projectMembergDialog" :currentProject="menuData"
+    <ProjectAccessSetting v-if="projectSettingDialog" :showcontainer="showcontainer" :title="t('Createteam.membertip')" :data="menuData" width="500px"
+        @closeDialog="closeDialog" />
+    <ProjectMemberg v-if="projectMembergDialog" :showcontainer="showcontainer" :projectMembergDialog="projectMembergDialog" :currentProject="menuData"
         @closeDialog="closeDialog" @exitProject="exitProject" />
 </template>
 
