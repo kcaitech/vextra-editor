@@ -9,8 +9,8 @@ import {is_wrong_bind_sym, make_status, variable_sort} from "@/utils/symbol";
 import {AttriListItem} from "@/utils/symbol";
 import SelectLayerInput from "./SelectLayerInput.vue";
 import PopoverDefaultInput from './PopoverDefaultInput.vue';
-import {cardmap} from "./StatusCard/map";
-import Status from "./StatusCard/SCStatus.vue";
+import {cardmap} from "@/components/Document/Attribute/Module/ComponentStatusCard/map";
+import Status from "@/components/Document/Attribute/Module/ComponentStatusCard/SCStatus.vue";
 
 const {t} = useI18n();
 

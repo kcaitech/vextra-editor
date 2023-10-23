@@ -5,6 +5,7 @@ import { onMounted, onUnmounted, ref } from 'vue';
 import { GroupShape, Shape } from '@kcdesign/data';
 import { Component } from '@/context/component';
 import { get_symbol_ref_name, is_content, ref_symbol } from '@/utils/content';
+import {get_state_name} from "../../../../kcdesign-data/src/editor/utils";
 interface Props {
     context: Context
 }
@@ -32,8 +33,7 @@ function move(e: MouseEvent) {
 function up(e: MouseEvent) {
     if (is_content(props.context, e) && wonder.value) {
         const locate = get_position_on_page(e);
-        const name = get_symbol_ref_name(wonder.value.name, wonder.value.id, Array.from(props.context.selection.selectedPage!.shapes.values()));
-        ref_symbol(props.context, locate, name, wonder.value);
+        ref_symbol(props.context, locate, wonder.value);
     } else {
         console.log('区外');
     }
