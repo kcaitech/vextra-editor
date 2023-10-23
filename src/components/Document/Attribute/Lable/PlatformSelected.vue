@@ -12,7 +12,7 @@ const selsectedShow = ref(false);
 const multiple = ref(1);
 const platform = ref(1);
 const platformMenuItems = ref<string[]>([
-    'ios', 'Web', 'Android', '微信小程序'
+    'iOS', 'Web', 'Android', '微信小程序'
 ])
 const pxMenuItems = ref<string[]>([
     '像素 x0.5', '像素 x1', '像素 x2'

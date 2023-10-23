@@ -31,6 +31,7 @@ const line_visible = ref();
 const para_visible = ref();
 const color_visible = ref();
 const alpha_visible = ref();
+const _visible = ref();
 function watch_shapes() {
     watchedShapes.forEach((v, k) => {
         v.unwatch(getTextFormat);
@@ -148,13 +149,14 @@ const filterAlpha = (a: number) => {
     }
 }
 
-const copyLable = async (e: MouseEvent) => {
+const copyLable = async (e: MouseEvent, v: string) => {
     const clickedDiv = e.target as HTMLDivElement; // 获取点击的<div>元素
     const text = clickedDiv.textContent;
     if (text) {
         if (navigator.clipboard && window.isSecureContext) {
             return navigator.clipboard.writeText(text).then(() => {
                 copy_text.value = true;
+                _visible.value = v;
             }, () => {
                 console.log('复制失败');
             })
@@ -166,6 +168,7 @@ const copyLable = async (e: MouseEvent) => {
             textArea.select()
             document.execCommand('copy')
             copy_text.value = true;
+            _visible.value = v;
             textArea.remove()
         }
     }
@@ -184,56 +187,53 @@ onUnmounted(() => {
 <template>
     <div class="container">
         <LableType title="文本">
+            <template #select>
+                <div class="fillunit-input" @click.stop="onSelected">
+                    <span>{{ textMenuItems[text_i] }}</span>
+                    <el-icon>
+                        <ArrowDown
+                            :style="{ transform: selectoption ? 'rotate(180deg)' : 'rotate(0deg)', transition: '0.3s' }" />
+                    </el-icon>
+                    <LableDropMenu v-if="selsectedShow" :context="props.context" :Items="textMenuItems" :choose="text_i"
+                        @close="close" @listMenuStatus="listMenuStatus"></LableDropMenu>
+                </div>
+            </template>
             <template #body>
                 <div class="row">
                     <div class="named">内容</div>
-                    <LableTootip :copy_text="copy_text" :visible="content_visible">
+                    <LableTootip :copy_text="copy_text" :visible="_visible === 'content'">
                         <div class="name" style="flex: 1;">
-                            <span style="width: 100%;" @click="copyLable" @mouseenter.stop="content_visible = true"
-                                @mouseleave.stop="content_visible = false, copy_text = false">{{ text }}</span>
+                            <span style="width: 100%; cursor: pointer;" @click="(e) => copyLable(e, 'content')"
+                                @mouseleave.stop="_visible = undefined, copy_text = false">{{ text }}</span>
                         </div>
                     </LableTootip>
-                </div>
-                <div class="row text_color">
-                    <span class="named">字体颜色</span>
-                    <div>
-                        <div class="fillunit-input" @click.stop="onSelected">
-                            <span>{{ textMenuItems[text_i] }}</span>
-                            <el-icon>
-                                <ArrowDown
-                                    :style="{ transform: selectoption ? 'rotate(180deg)' : 'rotate(0deg)', transition: '0.3s' }" />
-                            </el-icon>
-                            <LableDropMenu v-if="selsectedShow" :context="props.context" :Items="textMenuItems"
-                                :choose="text_i" @close="close" @listMenuStatus="listMenuStatus"></LableDropMenu>
-                        </div>
-                    </div>
                 </div>
                 <div class="line"></div>
                 <template v-for="(t, index) in textFormat" :key="index">
                     <div class="row">
                         <span class="named">字体</span>
                         <div class="name" style="flex: 1;">
-                            <LableTootip :copy_text="copy_text" :visible="font_visible === 'font' + index">
-                                <span @click="copyLable" @mouseenter.stop="font_visible = 'font' + index"
-                                    @mouseleave.stop="font_visible = undefined, copy_text = false">{{ t.fontName }}</span>
+                            <LableTootip :copy_text="copy_text" :visible="_visible === 'font' + index">
+                                <span @click="(e) => copyLable(e, 'font' + index)" style="cursor: pointer;"
+                                    @mouseleave.stop="_visible = undefined, copy_text = false">{{ t.fontName }}</span>
                             </LableTootip>
                         </div>
                     </div>
                     <div class="row">
                         <span class="named">字号</span>
                         <div style="flex: 1;">
-                            <LableTootip :copy_text="copy_text" :visible="size_visible === 'size' + index">
-                                <span @click="copyLable" @mouseenter.stop="size_visible = 'size' + index"
-                                    @mouseleave.stop="size_visible = undefined, copy_text = false">{{ t.fontSize }}</span>
+                            <LableTootip :copy_text="copy_text" :visible="_visible === 'size' + index">
+                                <span @click="(e) => copyLable(e, 'size' + index)" style="cursor: pointer;"
+                                    @mouseleave.stop="_visible = undefined, copy_text = false">{{ t.fontSize }}</span>
                             </LableTootip>
                         </div>
                     </div>
                     <div class="row">
                         <span class="named">字重</span>
                         <div style="flex: 1;">
-                            <LableTootip :copy_text="copy_text" :visible="weight_visible === 'weight' + index">
-                                <span @click="copyLable" @mouseenter.stop="weight_visible = 'weight' + index"
-                                    @mouseleave.stop="weight_visible = undefined, copy_text = false">{{ t.bold ? 700 : 400
+                            <LableTootip :copy_text="copy_text" :visible="_visible === 'weight' + index">
+                                <span @click="(e) => copyLable(e, 'weight' + index)" style="cursor: pointer;"
+                                    @mouseleave.stop="_visible = undefined, copy_text = false">{{ t.bold ? 700 : 400
                                     }}</span>
                             </LableTootip>
                         </div>
@@ -241,9 +241,9 @@ onUnmounted(() => {
                     <div class="row" v-if="t.kerning">
                         <span class="named">字间距</span>
                         <div style="flex: 1;">
-                            <LableTootip :copy_text="copy_text" :visible="ker_visible === 'ker' + index">
-                                <span @click="copyLable" @mouseenter.stop="ker_visible = 'ker' + index"
-                                    @mouseleave.stop="ker_visible = undefined, copy_text = false">{{ t.kerning ? t.kerning :
+                            <LableTootip :copy_text="copy_text" :visible="_visible === 'ker' + index">
+                                <span @click="(e) => copyLable(e, 'ker' + index)" style="cursor: pointer;"
+                                    @mouseleave.stop="_visible = undefined, copy_text = false">{{ t.kerning ? t.kerning :
                                         0 }}</span>
                             </LableTootip>
                         </div>
@@ -251,9 +251,9 @@ onUnmounted(() => {
                     <div class="row">
                         <span class="named">行高</span>
                         <div style="flex: 1;">
-                            <LableTootip :copy_text="copy_text" :visible="line_visible === 'line' + index">
-                                <span @click="copyLable" @mouseenter.stop="line_visible = 'line' + index"
-                                    @mouseleave.stop="line_visible = undefined, copy_text = false">{{ t.line_height ?
+                            <LableTootip :copy_text="copy_text" :visible="_visible === 'line' + index">
+                                <span @click="(e) => copyLable(e, 'line' + index)" style="cursor: pointer;"
+                                    @mouseleave.stop="_visible = undefined, copy_text = false">{{ t.line_height ?
                                         t.line_height : 0 }}</span>
                             </LableTootip>
                         </div>
@@ -261,9 +261,9 @@ onUnmounted(() => {
                     <div class="row" v-if="t.paraSpacing">
                         <span class="named">段间距</span>
                         <div style="flex: 1;">
-                            <LableTootip :copy_text="copy_text" :visible="para_visible === 'para' + index">
-                                <span @click="copyLable" @mouseenter.stop="para_visible = 'para' + index"
-                                    @mouseleave.stop="para_visible = undefined, copy_text = false">{{ t.paraSpacing ?
+                            <LableTootip :copy_text="copy_text" :visible="_visible === 'para' + index">
+                                <span @click="(e) => copyLable(e, 'para' + index)" style="cursor: pointer;"
+                                    @mouseleave.stop="_visible = undefined, copy_text = false">{{ t.paraSpacing ?
                                         t.paraSpacing : 0 }}</span>
                             </LableTootip>
                         </div>
@@ -274,15 +274,16 @@ onUnmounted(() => {
                             <div class="color"
                                 :style="{ backgroundColor: toRGB(t.color.red, t.color.green, t.color.blue) }">
                             </div>
-                            <LableTootip :copy_text="copy_text" :visible="color_visible === 'color' + index">
-                                <span class="name" @click="copyLable" @mouseenter.stop="color_visible = 'color' + index"
-                                    @mouseleave.stop="color_visible = undefined, copy_text = false">{{ toColor(t.color,
+                            <LableTootip :copy_text="copy_text" :visible="_visible === 'color' + index">
+                                <span class="name" @click="(e) => copyLable(e, 'color' + index)" style="cursor: pointer;"
+                                    @mouseleave.stop="_visible = undefined, copy_text = false">{{ toColor(t.color,
                                         textMenuItems[text_i]) }}</span>
                             </LableTootip>
-                            <LableTootip :copy_text="copy_text" :visible="alpha_visible === 'alpha' + index">
-                                <span style="margin-left: 15px;" v-if="textMenuItems[text_i] === 'HEX'" @click="copyLable"
-                                    @mouseenter.stop="alpha_visible = 'alpha' + index"
-                                    @mouseleave.stop="alpha_visible = undefined, copy_text = false">{{
+                            <LableTootip v-if="textMenuItems[text_i] === 'HEX'" :copy_text="copy_text"
+                                :visible="_visible === 'alpha' + index">
+                                <span style="margin-left: 15px; cursor: pointer;"
+                                    @click="(e) => copyLable(e, 'alpha' + index)" v-if="textMenuItems[text_i] === 'HEX'"
+                                    @mouseleave.stop="_visible = undefined, copy_text = false">{{
                                         filterAlpha(t.color.alpha * 100) + '%' }}</span>
                             </LableTootip>
                         </div>
@@ -350,10 +351,10 @@ onUnmounted(() => {
 
 .line {
     width: 100%;
-    height: 11px;
-    border-width: 5px 0 5px 0;
+    height: 1px;
     border-style: solid;
-    border-color: #fff;
-    box-sizing: border-box;
-    background-color: rgb(0, 0, 0, .05);
-}</style>
+    border-color: transparent;
+    border-bottom: 1px solid rgba($color: #ccc, $alpha: 0.5);
+    margin: 5px 0;
+}
+</style>

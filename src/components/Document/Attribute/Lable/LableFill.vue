@@ -21,8 +21,7 @@ const fillMenuItems = ref<string[]>(['HEX', 'RGB', 'HSL A', 'HSB A']);
 const fill_i = ref(0);
 const fills: FillItem[] = reactive([]);
 const copy_text = ref(false);
-const color_visible = ref();
-const alpha_visible = ref(-1);
+const _visible = ref();
 const onSelected = () => {
     if (selsectedShow.value) {
         props.context.menu.lableMenuMount('fill');
@@ -123,14 +122,14 @@ const filterAlpha = (a: number) => {
     }
 }
 
-const copyLable = async (e: MouseEvent) => {
+const copyLable = async (e: MouseEvent, v: string) => {
     const clickedDiv = e.target as HTMLDivElement; // 获取点击的<div>元素
     const text = clickedDiv.textContent;
     if (text) {
         if (navigator.clipboard && window.isSecureContext) {
             return navigator.clipboard.writeText(text).then(() => {
                 copy_text.value = true;
-
+                _visible.value = v;
             }, () => {
                 console.log('复制失败');
             })
@@ -142,6 +141,7 @@ const copyLable = async (e: MouseEvent) => {
             textArea.select()
             document.execCommand('copy')
             copy_text.value = true;
+            _visible.value = v;
             textArea.remove()
         }
     }
@@ -181,21 +181,20 @@ onUnmounted(() => {
                 </div>
             </template>
             <template #body>
-                <div class="row" v-for="(f, index) in fills" :key="f.id">
+                <div class="row" v-for="(f) in fills" :key="f.id">
                     <span class="named">纯色</span>
                     <div style="display: flex;">
                         <div class="color"
                             :style="{ backgroundColor: toRGB(f.fill.color.red, f.fill.color.green, f.fill.color.blue) }">
                         </div>
-                        <LableTootip :copy_text="copy_text" :visible="color_visible === f.id">
-                            <span class="name" @click="copyLable" @mouseenter.stop="color_visible = f.id"
-                                @mouseleave.stop="color_visible = undefined, copy_text = false">{{ toColor(f.fill.color,
+                        <LableTootip :copy_text="copy_text" :visible="_visible === f.id + 'color'">
+                            <span class="name" @click="(e) => copyLable(e, f.id + 'color')" style="cursor: pointer;"
+                                @mouseleave.stop="_visible = undefined, copy_text = false">{{ toColor(f.fill.color,
                                     fillMenuItems[fill_i]) }}</span>
                         </LableTootip>
-                        <LableTootip :copy_text="copy_text" :visible="alpha_visible === index" v-if="fillMenuItems[fill_i] === 'HEX'">
-                            <span style="margin-left: 15px;" v-if="fillMenuItems[fill_i] === 'HEX'" @click="copyLable"
-                                @mouseenter.stop="alpha_visible = index"
-                                @mouseleave.stop="alpha_visible = -1, copy_text = false">{{
+                        <LableTootip :copy_text="copy_text" :visible="_visible === f.id + 'alpha'" v-if="fillMenuItems[fill_i] === 'HEX'">
+                            <span style="margin-left: 15px; cursor: pointer;" @click="(e) => copyLable(e, f.id + 'alpha')"
+                                @mouseleave.stop="_visible = undefined, copy_text = false">{{
                                     filterAlpha(f.fill.color.alpha * 100) + '%' }}</span>
                         </LableTootip>
                     </div>

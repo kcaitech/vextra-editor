@@ -20,7 +20,7 @@ const getShapeInfo = () => {
     if (props.context.selection.selectedShapes.length === 1) {
         shapes.value = new Array(...props.context.selection.selectedShapes);
         shapeType.value = shapes.value[0].type;
-    } else if(props.context.selection.selectedShapes.length > 1) {
+    } else if (props.context.selection.selectedShapes.length > 1) {
         shapes.value = new Array(...props.context.selection.selectedShapes);
     } else {
         shapes.value = new Array();
@@ -43,7 +43,7 @@ onUnmounted(() => {
 
 <template>
     <div class="container">
-        <el-scrollbar>
+        <el-scrollbar v-if="len > 0">
             <PlatformSelected v-if="len === 1" :context="context"></PlatformSelected>
             <LableMultiSelect v-if="len > 1"></LableMultiSelect>
             <LableLayerInfo v-if="len === 1" :context="context"></LableLayerInfo>
@@ -52,6 +52,7 @@ onUnmounted(() => {
             <LableText v-if="len === 1 && shapeType === ShapeType.Text" :context="context"></LableText>
             <!-- <LableCode v-if="len > 0" :context="context"></LableCode> -->
         </el-scrollbar>
+        <div class="blank" v-if="len === 0">请选择图层</div>
     </div>
 </template>
 
@@ -60,5 +61,14 @@ onUnmounted(() => {
     width: 100%;
     height: 100%;
     font-size: var(--font-default-fontsize);
+}
+
+.blank {
+    width: 100%;
+    height: 100%;
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    color: #999;
 }
 </style>

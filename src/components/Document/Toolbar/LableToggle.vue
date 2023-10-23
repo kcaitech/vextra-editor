@@ -101,11 +101,11 @@ const toggleSwitch = () => {
     }
 
     &.is-checked {
-        background: #898989;
+        background: rgb(117, 117, 117);
 
         .d-switch_action {
             left: 100%;
-            background: #a42bc5;
+            background: #865dff;
             margin-left: -22px;
         }
     }

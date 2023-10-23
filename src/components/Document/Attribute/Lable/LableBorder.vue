@@ -9,6 +9,7 @@ import { Border, Color } from '@kcdesign/data';
 import { RGB2HSL, RGB2HSB } from '@/components/common/ColorPicker/utils';
 import { useI18n } from 'vue-i18n';
 import LableTootip from './LableTootip.vue';
+import { Menu } from '@/context/menu';
 const { t } = useI18n();
 const props = defineProps<{
     context: Context
@@ -22,15 +23,10 @@ const selsectedShow = ref(false);
 const fillMenuItems = ref<string[]>(['HEX', 'RGB', 'HSL A', 'HSB A']);
 const fill_i = ref(0);
 const borders: BorderItem[] = reactive([]);
-const copy_text = ref(false);
-const address_visible = ref();
-const b_top_visible = ref();
-const b_right_visible = ref();
-const b_bottoms_visible = ref();
-const line_visible = ref();
-const color_visible = ref();
-const alpha_visible = ref();
-const b_left_visible = ref();
+const copy_text = ref(true);
+const _visible = ref();
+
+const multiple = ref(props.context.menu.isMulriple);
 const onSelected = () => {
     if (selsectedShow.value) {
         props.context.menu.lableMenuMount('fill');
@@ -134,14 +130,14 @@ const filterAlpha = (a: number) => {
     }
 }
 
-const copyLable = async (e: MouseEvent) => {
+const copyLable = async (e: MouseEvent, v: string) => {
     const clickedDiv = e.target as HTMLDivElement; // 获取点击的<div>元素
     const text = clickedDiv.textContent;
     if (text) {
         if (navigator.clipboard && window.isSecureContext) {
             return navigator.clipboard.writeText(text).then(() => {
                 copy_text.value = true;
-
+                _visible.value = v;
             }, () => {
                 console.log('复制失败');
             })
@@ -153,6 +149,7 @@ const copyLable = async (e: MouseEvent) => {
             textArea.select()
             document.execCommand('copy')
             copy_text.value = true;
+            _visible.value = v;
             textArea.remove()
         }
     }
@@ -168,12 +165,20 @@ const selection_wather = (t: number) => {
         getBordersData();
     }
 }
+
+const menu_watcher = (t: number) => {
+    if (t === Menu.LABLE_MULRIPLE) {
+        multiple.value = props.context.menu.isMulriple;
+    }
+}
 onMounted(() => {
     update_by_shapes();
     props.context.selection.watch(selection_wather);
+    props.context.menu.watch(menu_watcher);
 })
 onUnmounted(() => {
     props.context.selection.unwatch(selection_wather);
+    props.context.menu.unwatch(menu_watcher);
 })
 </script>
 
@@ -195,9 +200,9 @@ onUnmounted(() => {
                 <template v-for="(b, i) in borders" :key="b.id">
                     <div class="row">
                         <span class="named">位置</span>
-                        <LableTootip :copy_text="copy_text" :visible="address_visible === b.id + 'address'">
-                            <div><span @click="copyLable" @mouseenter.stop="address_visible = b.id + 'address'"
-                                    @mouseleave.stop="address_visible = undefined, copy_text = false">{{
+                        <LableTootip :copy_text="copy_text" :visible="_visible === b.id + 'address'">
+                            <div><span @click="(e) => copyLable(e, b.id + 'address')" style="cursor: pointer;"
+                                    @mouseleave.stop="_visible = undefined, copy_text = false">{{
                                         t(`attr.${b.border.position}`) }}</span></div>
                         </LableTootip>
                     </div>
@@ -207,15 +212,14 @@ onUnmounted(() => {
                             <div class="color"
                                 :style="{ backgroundColor: toRGB(b.border.color.red, b.border.color.green, b.border.color.blue) }">
                             </div>
-                            <LableTootip :copy_text="copy_text" :visible="color_visible === b.id + 'color'">
-                                <span class="name" @click="copyLable" @mouseenter.stop="color_visible = b.id + 'color'"
-                                    @mouseleave.stop="color_visible = undefined, copy_text = false">{{
+                            <LableTootip :copy_text="copy_text" :visible="_visible === b.id + 'color'">
+                                <span class="name" style="cursor: pointer;" @click="(e) => copyLable(e, b.id + 'color')"
+                                    @mouseleave.stop="_visible = undefined, copy_text = false">{{
                                         toColor(b.border.color, fillMenuItems[fill_i]) }}</span>
                             </LableTootip>
-                            <LableTootip :copy_text="copy_text" :visible="alpha_visible === b.id + 'alpha'">
-                                <span style="margin-left: 15px;" v-if="fillMenuItems[fill_i] === 'HEX'" @click="copyLable"
-                                    @mouseenter.stop="alpha_visible = b.id + 'alpha'"
-                                    @mouseleave.stop="alpha_visible = undefined, copy_text = false">{{
+                            <LableTootip v-if="fillMenuItems[fill_i] === 'HEX'" :copy_text="copy_text" :visible="_visible === b.id + 'alpha'">
+                                <span style="margin-left: 15px; cursor: pointer;" v-if="fillMenuItems[fill_i] === 'HEX'" @click="(e) => copyLable(e, b.id + 'alpha')"
+                                    @mouseleave.stop="_visible = undefined, copy_text = false">{{
                                         filterAlpha(b.border.color.alpha * 100) + '%' }}</span>
                             </LableTootip>
                         </div>
@@ -223,35 +227,34 @@ onUnmounted(() => {
                     <div class="row">
                         <span class="named">粗细</span>
                         <div>
-                            <LableTootip :copy_text="copy_text" :visible="b_top_visible === b.id + 'top'">
-                                <span @click="copyLable" @mouseenter.stop="b_top_visible = b.id + 'top'"
-                                    @mouseleave.stop="b_top_visible = undefined, copy_text = false">{{ b.border.thickness +
-                                        'px' }}&nbsp;</span>
+                            <LableTootip :copy_text="copy_text" :visible="_visible === b.id + 'top'">
+                                <span @click="(e) => copyLable(e, b.id + 'top')" style="cursor: pointer;"
+                                    @mouseleave.stop="_visible = undefined, copy_text = false">{{ b.border.thickness *
+                                        multiple + 'px' }}&nbsp;</span>
                             </LableTootip>
-                            <LableTootip :copy_text="copy_text" :visible="b_right_visible === b.id + 'right'">
-                                <span @click="copyLable" @mouseenter.stop="b_right_visible = b.id + 'right'"
-                                    @mouseleave.stop="b_right_visible = undefined, copy_text = false">{{ b.border.thickness +
-                                        'px' }}&nbsp;</span>
+                            <LableTootip :copy_text="copy_text" :visible="_visible === b.id + 'right'">
+                                <span @click="(e) => copyLable(e, b.id + 'right')" style="cursor: pointer;"
+                                    @mouseleave.stop="_visible = undefined, copy_text = false">{{ b.border.thickness
+                                        * multiple + 'px' }}&nbsp;</span>
                             </LableTootip>
-                            <LableTootip :copy_text="copy_text" :visible="b_bottoms_visible === b.id + 'bottom'">
-                                <span @click="copyLable" @mouseenter.stop="b_bottoms_visible = b.id + 'bottom'"
-                                    @mouseleave.stop="b_bottoms_visible = undefined, copy_text = false">{{ b.border.thickness +
-                                        'px' }}&nbsp;</span>
+                            <LableTootip :copy_text="copy_text" :visible="_visible === b.id + 'bottom'">
+                                <span @click="(e) => copyLable(e, b.id + 'bottom')" style="cursor: pointer;"
+                                    @mouseleave.stop="_visible = undefined, copy_text = false">{{
+                                        b.border.thickness * multiple + 'px' }}&nbsp;</span>
                             </LableTootip>
-                            <LableTootip :copy_text="copy_text" :visible="b_left_visible === b.id + 'left'">
-                                <span @click="copyLable" @mouseenter.stop="b_left_visible = b.id + 'left'"
-                                    @mouseleave.stop="b_left_visible = undefined, copy_text = false">{{ b.border.thickness +
-                                        'px' }}</span>
+                            <LableTootip :copy_text="copy_text" :visible="_visible === b.id + 'left'">
+                                <span @click="(e) => copyLable(e, b.id + 'left')" style="cursor: pointer;"
+                                    @mouseleave.stop="_visible = undefined, copy_text = false">{{ b.border.thickness *
+                                        multiple + 'px' }}</span>
                             </LableTootip>
                         </div>
                     </div>
                     <div class="row">
                         <span class="named">样式</span>
                         <div style="display: flex;">
-                            <LableTootip :copy_text="copy_text" :visible="line_visible === b.id + 'line'">
-                                <span style="color: #a5a5a5;" @click="copyLable"
-                                    @mouseenter.stop="line_visible = b.id + 'line'"
-                                    @mouseleave.stop="line_visible = undefined, copy_text = false">{{
+                            <LableTootip :copy_text="copy_text" :visible="_visible === b.id + 'line'">
+                                <span style="color: #a5a5a5; cursor: pointer;" @click="(e) => copyLable(e, b.id + 'line')"
+                                    @mouseleave.stop="_visible = undefined, copy_text = false">{{
                                         b.border.borderStyle.gap > 0 ? '虚线' : '实线' }}</span>
                             </LableTootip>
                             <span v-if="b.border.borderStyle.gap > 0" style="margin-left: 10px;">{{ b.border.borderStyle.gap
@@ -329,4 +332,5 @@ onUnmounted(() => {
     border-color: #fff;
     box-sizing: border-box;
     background-color: rgb(0, 0, 0, .05);
-}</style>
+}
+</style>

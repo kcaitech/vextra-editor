@@ -6,6 +6,7 @@ import { Matrix, Shape } from '@kcdesign/data';
 import { WorkSpace } from '@/context/workspace';
 import { XYsBounding } from '@/utils/common';
 import { tr } from 'element-plus/es/locale';
+import { Tool } from '@/context/tool';
 interface Point {
     x: number
     y: number
@@ -20,9 +21,12 @@ const shapeSize = ref({ w: 0, h: 0 });
 const origin: ClientXY = { x: 0, y: 0 };
 const trans = ref({ x: 0, y: 0 });
 const rotate = ref(0);
+const isSizeBox = ref(false);
 const getShapePositionSize = () => {
     const shapes = props.context.selection.selectedShapes;
-    const matrix = props.context.workspace.matrix
+    const matrix = props.context.workspace.matrix;
+    trans.value.x = 0;
+    trans.value.y = 0;
     if (shapes.length === 1) {
         const b = shapes[0].frame;
         let framePoint = [{ x: 0, y: 0 }, { x: b.width, y: 0 }, { x: b.width, y: b.height }, { x: 0, y: b.height }];
@@ -31,13 +35,11 @@ const getShapePositionSize = () => {
         shapeSize.value.h = framePoint[2].y;
         m.multiAtLeft(matrix);
         framePoint = framePoint.map(p => m.computeCoord(p.x, p.y));
-        origin.x = framePoint[0].x;
-        origin.y = framePoint[0].y;
         let anchor = modify_anchor(shapes[0], m);
-        // anchor = matrix.computeCoord({ x: anchor.x, y: anchor.y });
-        console.log(anchor, 'anchor');
-        // trans.value.x = (b.width / 2);
-        // trans.value.y = b.height + 5;
+        origin.x = anchor.x;
+        origin.y = anchor.y + 6;
+        trans.value.x = 0;
+        trans.value.y = 0;
         rotate.value = modify_rotate(shapes[0]);
 
     } else if (shapes.length > 1) {
@@ -95,23 +97,51 @@ function modify_anchor(shape: Shape, m2r: Matrix) {
     const frame = shape.frame;
     let anchor = { x: 0, y: 0 };
     if (rotate >= 0 && rotate < 45) {
-        anchor = m2r.computeCoord2(0, 0);
+        anchor = m2r.computeCoord2(frame.width / 2, frame.height);
+        if (shape.isFlippedHorizontal && !shape.isFlippedVertical) {
+            anchor = m2r.computeCoord2(frame.width, frame.height / 2);
+        }else if (!shape.isFlippedHorizontal && shape.isFlippedVertical) {
+            anchor = m2r.computeCoord2(frame.width, frame.height / 2);
+        }
     } else if (rotate >= 45 && rotate < 135) {
-        anchor = m2r.computeCoord2(0, frame.height);
+        anchor = m2r.computeCoord2(frame.width, frame.height / 2);
+        if (shape.isFlippedHorizontal && !shape.isFlippedVertical) {
+            anchor = m2r.computeCoord2(frame.width / 2, 0);
+        }else if (!shape.isFlippedHorizontal && shape.isFlippedVertical) {
+            anchor = m2r.computeCoord2(frame.width / 2, 0);
+        }
     } else if (rotate >= 135 && rotate < 225) {
-        anchor = m2r.computeCoord2(frame.width, frame.height);
+        anchor = m2r.computeCoord2(frame.width / 2, 0);
+        if (shape.isFlippedHorizontal && !shape.isFlippedVertical) {
+            anchor = m2r.computeCoord2(0, frame.height / 2);
+        }else if (!shape.isFlippedHorizontal && shape.isFlippedVertical) {
+            anchor = m2r.computeCoord2(0, frame.height / 2);
+        }
     } else if (rotate >= 225 && rotate < 315) {
-        anchor = m2r.computeCoord2(frame.width, 0);
+        anchor = m2r.computeCoord2(0, frame.height / 2);
+        if (shape.isFlippedHorizontal && !shape.isFlippedVertical) {
+            anchor = m2r.computeCoord2(frame.width / 2, frame.height);
+        }else if (!shape.isFlippedHorizontal && shape.isFlippedVertical) {
+            anchor = m2r.computeCoord2(frame.width / 2, frame.height);
+        }
     } else if (rotate >= 315 && rotate <= 360) {
-        anchor = m2r.computeCoord2(0, 0);
+        anchor = m2r.computeCoord2(frame.width / 2, frame.height);
+        if (shape.isFlippedHorizontal && !shape.isFlippedVertical) {
+            anchor = m2r.computeCoord2(frame.width , frame.height / 2);
+        }else if (!shape.isFlippedHorizontal && shape.isFlippedVertical) {
+            anchor = m2r.computeCoord2(frame.width, frame.height / 2);
+        }
     }
     return anchor;
 }
 
 function selectionWatcher(t: number) {
-    if (t == Selection.CHANGE_SHAPE) {
+    if (t === Selection.CHANGE_SHAPE) {
         watchShapes();
         getShapePositionSize();
+        size_box_show();
+    }else if (t === Selection.CHANGE_PAGE) {
+        size_box_show();
     }
 }
 const workspaceUpdate = (t: number) => {
@@ -119,6 +149,13 @@ const workspaceUpdate = (t: number) => {
         getShapePositionSize();
     } else if (t === WorkSpace.SELECTION_VIEW_UPDATE) {
         getShapePositionSize();
+    } else if (t === WorkSpace.TRANSLATING) {
+        size_box_show();
+    }
+}
+const tool_watcher = (t: number) => {
+    if(t === Tool.LABLE_CHANGE) {
+        size_box_show();
     }
 }
 const watchedShapes = new Map();
@@ -145,6 +182,17 @@ const watcher = () => {
     getShapePositionSize();
 }
 
+const size_box_show = () => {
+    const isLable = props.context.tool.isLable;
+    const shapes = props.context.selection.selectedShapes;
+    const isTrans = props.context.workspace.isTranslating;
+    if(isLable && shapes.length > 0 && !isTrans) {
+        isSizeBox.value = true;
+    }else {
+        isSizeBox.value = false;
+    }
+}
+
 const filterDecimals = (a: number) => {
     let alpha = Math.round(a * 100) / 100;
     if (Number.isInteger(alpha)) {
@@ -159,17 +207,20 @@ const filterDecimals = (a: number) => {
 onMounted(() => {
     watchShapes();
     getShapePositionSize();
+    size_box_show();
     props.context.selection.watch(selectionWatcher);
     props.context.workspace.watch(workspaceUpdate);
+    props.context.tool.watch(tool_watcher);
 })
 onUnmounted(() => {
     props.context.selection.unwatch(selectionWatcher);
     props.context.workspace.unwatch(workspaceUpdate);
+    props.context.tool.unwatch(tool_watcher);
 })
 </script>
 
 <template>
-    <div class="container-size" :style="{ top: `${origin.y}px`, left: `${origin.x}px` }">
+    <div v-if="isSizeBox" class="container-size" :style="{ top: `${origin.y}px`, left: `${origin.x}px` }">
         <div :style="{ transform: `translate(${trans.x}px, ${trans.y}px) rotate(${rotate}deg)` }">{{
             filterDecimals(shapeSize.w) }} × {{
         filterDecimals(shapeSize.h) }}</div>
@@ -181,6 +232,7 @@ onUnmounted(() => {
     position: absolute;
     font-size: var(--font-default-fontsize);
     transform: translateX(-50%);
+    text-wrap: nowrap;
 
     >div {
         height: 25px;
@@ -190,7 +242,7 @@ onUnmounted(() => {
         display: flex;
         align-items: center;
         padding: 0 10px;
-        transform-origin: bottom left;
+        transform-origin: top center;
     }
 }
 </style>
