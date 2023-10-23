@@ -15,6 +15,7 @@ import {sort_by_layer} from "./group_ungroup";
 import {debounce} from "lodash";
 import {v4} from "uuid";
 import {get_name} from "@/utils/shapelist";
+import e from "express";
 
 // region 组件列表相关
 /**
@@ -482,6 +483,49 @@ export function is_wrong_bind(states: SymbolShape[]) {
         // todo
         return false;
     }
+}
+
+/**
+ * @description 获取冲突的可变组件
+ */
+export function is_conflict_comp(symbol: SymbolShape) {
+    if (!symbol.variables) return;
+    const variables = symbol.variables;
+    let conflict_arr = [];
+    const childs = symbol.childs as unknown as SymbolShape[];
+    const p = v4();
+    let _no_status = true;
+    for (let i = 0, len = childs.length; i < len; i++) {
+        const item = childs[i];
+        let slices = '';
+        variables.forEach(v => {
+            if (v.type !== VariableType.Status) return;
+            _no_status = false;
+            const dlt = item.vartag?.get(v.id);
+            slices += (!dlt || dlt === v.value) ? p : dlt;
+        })
+        if (_no_status) return;
+        conflict_arr.push({id: item.id, equal: slices});
+    }
+    let obj: any={},newArr: any[]=[];
+    conflict_arr.forEach(function(item,suffix){
+        if(!obj[item.equal]){
+            let arr=[];
+            arr.push(item);
+            newArr.push(arr);
+            obj[item.equal]=item;
+        }else{
+            newArr.forEach(function(value,index){
+                if(value[0].equal==item.equal){
+                    value.push(item)
+                }
+            })
+        }
+    })
+    let arr: any = [];
+    newArr = newArr.filter(item => item.length > 1);
+
+    return newArr;
 }
 
 // endregion

@@ -44,6 +44,11 @@ function edit_text() {
     get_dialog_posi(card_ref.value);
     iseditText.value = true;
 }
+
+const save_text = () => {
+    iseditText.value = false;
+}
+
 </script>
 <template>
     <div v-if="props.variable.type === VariableType.Text" class="module_attr_item" ref="card_ref">
