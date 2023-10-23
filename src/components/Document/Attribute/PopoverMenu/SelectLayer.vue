@@ -246,12 +246,14 @@ onUnmounted(() => {
     align-items: center;
     padding: 0 4px;
     box-sizing: border-box;
-    margin-top: 5px;
-    position: relative;
+    position: sticky;
+    top: 0;
+    background-color: var(--theme-color-anti);
+    z-index: 9;
 
-    &:hover {
-        background-color: var(--grey-light);
-    }
+    //&:hover {
+    //    background-color: var(--grey-light);
+    //}
 
     >span {
         font-weight: 600;
