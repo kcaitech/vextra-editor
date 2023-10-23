@@ -26,10 +26,14 @@ function updater() {
     const refId = props.data.getRefId2(props.varsContainer);
     if (__startLoad === refId) {
         if (__data) { // 更新subdata
-            if (__data.isUnionSymbolShape && !__subdata) {
+            if (__data.isUnionSymbolShape) {
                 const syms = __data.getTagedSym(props.data);
-                __subdata = syms[0] || __data.childs[0];
-                if (__subdata) __subdata.watch(watcher);
+                const subdata = syms[0] || __data.childs[0];
+                if (__subdata !== subdata) {
+                    if (__subdata) __subdata.unwatch(watcher);
+                    __subdata = subdata;
+                    if (__subdata) __subdata.watch(watcher);
+                }
             }
             else if (!__data.isUnionSymbolShape && __subdata) {
                 __subdata.unwatch(watcher);
