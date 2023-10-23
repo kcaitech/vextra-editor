@@ -143,7 +143,7 @@ onUnmounted(() => {
     flex-direction: column;
     left: 0;
     bottom: 0;
-    width: 230px;
+    width: 320px;
     height: 450px;
     background-color: #fff;
     border-radius: 4px;
@@ -188,7 +188,6 @@ onUnmounted(() => {
         height: calc(100% - 42px);
 
         .el-scrollbar {
-            padding-right: 10px;
             height: calc(100% - 40px);
 
             .el-collapse {

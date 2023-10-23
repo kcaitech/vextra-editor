@@ -1,15 +1,18 @@
 <script setup lang="ts">
-import { Context } from '@/context';
-import { ref, watch } from 'vue';
+import {Context} from '@/context';
+import {ref, watch} from 'vue';
 import StaticAbbrCard from "./StaticAbbrCard.vue";
+import LevelName from "./LevelName.vue";
 interface Props {
     context: Context
     samll: string
     contents: any[]
 }
+
 interface Emits {
     (e: 'handleCheck', list: any[]): void;
 }
+
 const props = defineProps<Props>();
 const emits = defineEmits<Emits>();
 const checkList = ref([])
@@ -26,7 +29,7 @@ watch(checkList, (v) => {
                     <div class="thumbnail">
                         <StaticAbbrCard :data="item"></StaticAbbrCard>
                     </div>
-                    <span class="name">{{ item.name }}</span>
+                    <LevelName :data="item" class="name"></LevelName>
                 </div>
             </el-checkbox>
         </el-checkbox-group>
@@ -98,11 +101,11 @@ watch(checkList, (v) => {
     }
 
     .name {
-        width: 125px;
-        font-size: var(--font-default-fontsize);
+        max-width: calc(100% - 42px);
         overflow: hidden;
-        text-overflow: ellipsis;
-        white-space: nowrap;
+        //font-size: var(--font-default-fontsize);
+        //text-overflow: ellipsis;
+        //white-space: nowrap;
     }
 }
 

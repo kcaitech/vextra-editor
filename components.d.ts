@@ -134,6 +134,7 @@ declare module '@vue/runtime-core' {
     Layers: typeof import('./src/components/Document/Menu/Layers.vue')['default']
     LayerShow: typeof import('./src/components/Document/Attribute/Module/LayerShow.vue')['default']
     LeftTabs: typeof import('./src/components/Document/Navigation/LeftTabs.vue')['default']
+    LevelName: typeof import('./src/components/Document/Attribute/PopoverMenu/LevelName.vue')['default']
     Line: typeof import('./src/components/Document/Content/Line.vue')['default']
     Listrightmenu: typeof import('./src/components/AppHome/listrightmenu.vue')['default']
     ListView: typeof import('./src/components/common/ListView.vue')['default']

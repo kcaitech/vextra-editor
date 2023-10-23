@@ -41,7 +41,7 @@ const getDialogPosi = () => {
             </template>
         </TypeHeader>
         <CompLayerShow :context="context" v-if="isLayerShow" @close-dialog="closeLayerShowPopup" right="250px"
-            :add-type="VariableType.Visible" :width="260" :title="t('compos.layer_isShow')" :dialog_posi="dialog_posi">
+            :add-type="VariableType.Visible" :width="320" :title="t('compos.layer_isShow')" :dialog_posi="dialog_posi">
             <template #layer>
                 <SelectLayerInput :title="t('compos.select_layer')" :add-type="VariableType.Visible"
                     :context="props.context" :placeholder="t('compos.place_select_layer')"></SelectLayerInput>

@@ -64,6 +64,7 @@ const get_symbol_layer = () => {
     const shapes = props.context.selection.selectedShapes;
     if (shapes.length === 1) {
         let symbolLayer = get_layer_from_symbol(shapes[0]);
+        console.log('symbolLayer:', symbolLayer)
         if (props.addType === VariableType.Text) {
             symbolLayer = symbolLayer.map(v => {
                 v.data = v.data.filter(item => item.type === ShapeType.Text);

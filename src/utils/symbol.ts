@@ -135,7 +135,7 @@ function check_symbol_level_artboard(artboard: GroupShape, init?: SymbolShape[])
 
 /**
  * @description 给组件列表的项与项之间确定关系
-  */
+ */
 export function modify_parent(list: SymbolListItem[]) {
     for (let i = 0, len = list.length; i < len; i++) modify(list[i]);
 
@@ -213,6 +213,7 @@ export function init_status_set_by_symbol(data: SymbolListItem[], status_set: Se
 function _clear_scroll_target(context: Context) {
     context.component.set_scroll_target(undefined);
 }
+
 /**
  * @description 设置需要定位到组件，一段时间内只执行一次
  */
@@ -397,6 +398,7 @@ export function make_state(context: Context, t: Function) {
         return editor.makeStateAt(shape.parent as SymbolShape, t('compos.state'), index);
     }
 }
+
 /**
  * @description 为组件创建图层显示变量
  */
@@ -404,6 +406,7 @@ export function create_visible_var(context: Context, symbol: SymbolShape, name: 
     const editor = context.editor4Page(context.selection.selectedPage!);
     editor.makeVisibleVar(symbol, name, values);
 }
+
 /**
  * @description 为组件创建实例切换变量
  */
@@ -473,6 +476,7 @@ export function is_wrong_bind_sym(symbol: SymbolShape) {
     }
     return false;
 }
+
 /**
  * @description 检测可变组件之间的各个变量值之间的组合是否有重复情况
  */
@@ -507,16 +511,16 @@ export function is_conflict_comp(symbol: SymbolShape) {
         if (_no_status) return;
         conflict_arr.push({id: item.id, equal: slices});
     }
-    let obj: any={},newArr: any[]=[];
-    conflict_arr.forEach(function(item,suffix){
-        if(!obj[item.equal]){
-            let arr=[];
+    let obj: any = {}, newArr: any[] = [];
+    conflict_arr.forEach(function (item, suffix) {
+        if (!obj[item.equal]) {
+            let arr = [];
             arr.push(item);
             newArr.push(arr);
-            obj[item.equal]=item;
-        }else{
-            newArr.forEach(function(value,index){
-                if(value[0].equal==item.equal){
+            obj[item.equal] = item;
+        } else {
+            newArr.forEach(function (value, index) {
+                if (value[0].equal == item.equal) {
                     value.push(item)
                 }
             })
@@ -557,14 +561,16 @@ export function get_layer_from_symbol(symbol: Shape) {
     }
 }
 
-function get_layer_i(symbol: Shape, init?: Shape[]) {
-    let shapes: Shape[] = init || [];
+function get_layer_i(symbol: Shape) {
+    let shapes: Shape[] = [];
+    let slow_index = 0;
     const childs = symbol.childs;
     for (let i = 0, len = childs.length; i < len; i++) {
         const item = childs[i];
-        shapes.push(item);
         if (item.childs && item.childs.length) {
-            shapes = get_layer_i(item, shapes);
+            shapes.push(item, ...get_layer_i(item));
+        } else {
+            shapes.splice(slow_index++, 0, item);
         }
     }
     return shapes;
