@@ -17,17 +17,24 @@ const props = defineProps<Props>();
 const { t } = useI18n();
 const attrValueInput = ref('')
 const editAttrValue = ref(false)
-const revalueInput = ref<HTMLDivElement>();
+const revalueInput = ref<HTMLInputElement>();
 
 const onRevalue = (e: MouseEvent) => {
     e.stopPropagation();
-    if(e.target instanceof Element && e.target.closest('.status-icon-down')) return;
+    if (e.target instanceof Element && e.target.closest('.status-icon-down')) return;
     editAttrValue.value = true
     nextTick(() => {
         if (revalueInput.value) {
             attrValueInput.value = statusValue.value;
             (revalueInput.value as HTMLInputElement).focus();
             (revalueInput.value as HTMLInputElement).select();
+        }
+    })
+}
+const selectText = () => {
+    nextTick(() => {
+        if (revalueInput.value) {
+            revalueInput.value.select();
         }
     })
 }
@@ -54,16 +61,18 @@ const showMenu = (e: MouseEvent) => {
     selectoption.value = true;
 }
 const statusValue = ref();
+const menuIndex = ref();
 const getVattagValue = () => {
     const shape = props.context.selection.symbolstate;
     if (shape) {
         statusValue.value = get_tag_value(shape, props.data.variable);
+        menuIndex.value = props.data.values.findIndex(v => v === statusValue.value);
     }
 }
 const selected_watcher = (t: number) => {
     if (t === Selection.CHANGE_SHAPE) {
         getVattagValue();
-        if(selectoption.value) {
+        if (selectoption.value) {
             selectoption.value = false;
         }
     }
@@ -104,12 +113,13 @@ onUnmounted(() => {
                             <ArrowDown
                                 :style="{ transform: selectoption ? 'rotate(180deg)' : 'rotate(0deg)', transition: '0.3s' }" />
                         </el-icon>
-                        <SelectMenu v-if="selectoption" :top="33" width="100%" :menuItems="data.values" :context="context"
+                        <SelectMenu v-if="selectoption" :top="33" width="100%" :menuItems="data.values" :context="context" :menuIndex="menuIndex"
                             @close="selectoption = false" @selectIndex="selcet"></SelectMenu>
                     </div>
                 </div>
                 <div class="module_input" v-if="editAttrValue">
-                    <el-input v-model="attrValueInput" ref="revalueInput" @blur="input_blur" @keydown="onEditAttrValue" />
+                    <el-input v-model="attrValueInput" ref="revalueInput" @blur="input_blur" @focus="selectText"
+                        @keydown="onEditAttrValue" />
                 </div>
             </div>
             <div class="delete"></div>
