@@ -24,7 +24,6 @@ function update_list() {
         item.values.push('add_new_value');
     })
     is_conflict();
-    console.log('state attribute update result: ', data.value);
 }
 
 const is_conflict = () => {
@@ -63,7 +62,6 @@ function unwatch_shapes(shapes: Shape[]) {
         shapes[i].unwatch(update_list);
     }
 }
-
 onMounted(() => {
     watch_shapes(props.shapes)
     update_list();

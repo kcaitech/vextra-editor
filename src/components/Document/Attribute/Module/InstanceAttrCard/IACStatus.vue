@@ -1,5 +1,5 @@
 <script setup lang="ts">
-import {get_status_value_for_ref, modify_status_value_for_ref, RefAttriListItem} from "@/utils/symbol";
+import {get_vari_value_for_ref, modify_status_value_for_ref, RefAttriListItem} from "@/utils/symbol";
 import {ref} from "vue";
 import {Context} from "@/context";
 import {onMounted, onUpdated} from "vue";
@@ -30,7 +30,7 @@ function select(index: number) {
 function getVattagValue() {
     const symref = props.context.selection.symbolrefshape;
     if (!symref) return;
-    status_value.value = get_status_value_for_ref(symref, props.data.variable);
+    status_value.value = get_vari_value_for_ref(symref, props.data.variable);
 }
 
 onUpdated(() => {

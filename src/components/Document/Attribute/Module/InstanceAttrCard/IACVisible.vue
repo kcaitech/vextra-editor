@@ -1,9 +1,9 @@
 <script setup lang="ts">
-import {RefAttriListItem} from "@/utils/symbol";
+import {get_vari_value_for_ref, modify_status_value_for_ref, RefAttriListItem} from "@/utils/symbol";
 import {useI18n} from "vue-i18n";
 
 import {Context} from "@/context";
-import {ref} from "vue";
+import {onMounted, ref} from "vue";
 
 const {t} = useI18n();
 
@@ -14,11 +14,24 @@ interface Props {
 
 const props = defineProps<Props>();
 const open = ref(false);
+
+function get_value() {
+    const symref = props.context.selection.symbolrefshape;
+    if (!symref) return;
+    open.value = get_vari_value_for_ref(symref, props.data.variable);
+}
+
+function change(v: boolean) {
+    modify_status_value_for_ref(props.context, props.data.variable, v);
+}
+
+onMounted(get_value);
 </script>
 <template>
     <div class="item-wrap">
         <div class="name">{{ props.data.variable.name }}</div>
-        <el-switch v-model="open" size="small" style="margin-left: 10px;--el-switch-on-color: #9775fa"/>
+        <el-switch v-model="open" size="small" style="margin-left: 10px;--el-switch-on-color: #9775fa"
+                   @change="change"/>
     </div>
 </template>
 <style lang="scss" scoped>

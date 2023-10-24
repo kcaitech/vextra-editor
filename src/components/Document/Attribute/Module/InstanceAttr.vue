@@ -186,6 +186,7 @@ onUnmounted(() => {
     .title {
         width: 72px;
         line-height: 26px;
+        font-weight: 600;
     }
     .items-wrap {
         width: 120px;

@@ -646,7 +646,7 @@ export function get_var_for_ref(context: Context, symref: SymbolRefShape) {
 /**
  * @description 获取实例symref身上的某个变量variable的值
  */
-export function get_status_value_for_ref(symref: SymbolRefShape, variable: Variable) {
+export function get_vari_value_for_ref(symref: SymbolRefShape, variable: Variable) {
     const overrides = symref.findOverride(variable.id, OverrideType.Variable);
     return overrides ? overrides[overrides.length - 1].value : variable.value;
 }

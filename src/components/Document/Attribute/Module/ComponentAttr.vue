@@ -38,7 +38,7 @@ const variables = ref<AttriListItem[]>();
 const conflict = ref<boolean>(false);
 const selected = ref<string[]>([]);
 const var_name = ref<string>('');
-const dlt_value = ref<boolean>(false);
+const dlt_value = ref<boolean>(true);
 function close() {
     const is_achieve_expected_results = compsType.value;
     compsType.value = false;
