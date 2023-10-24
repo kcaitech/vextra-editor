@@ -7,6 +7,7 @@ interface Props {
     context: Context
     samll: string
     contents: any[]
+    layerId?: string[]
 }
 
 interface Emits {
@@ -15,7 +16,7 @@ interface Emits {
 
 const props = defineProps<Props>();
 const emits = defineEmits<Emits>();
-const checkList = ref([])
+const checkList = ref(props.layerId || []);
 
 watch(checkList, (v) => {
     emits('handleCheck', v)

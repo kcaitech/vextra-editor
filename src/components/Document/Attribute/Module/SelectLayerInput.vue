@@ -1,13 +1,13 @@
 <script setup lang="ts">
-import {Context} from '@/context';
-import {ShapeType, VariableType} from '@kcdesign/data';
-import {ArrowDown} from '@element-plus/icons-vue';
-import {useI18n} from 'vue-i18n';
-import {onMounted, ref} from 'vue';
-import {get_layer_from_symbol} from '@/utils/symbol';
+import { Context } from '@/context';
+import { ShapeType, VariableType } from '@kcdesign/data';
+import { ArrowDown } from '@element-plus/icons-vue';
+import { useI18n } from 'vue-i18n';
+import { onMounted, ref } from 'vue';
+import { get_layer_from_symbol } from '@/utils/symbol';
 import SelectLayer from '../PopoverMenu/SelectLayer.vue';
 
-const {t} = useI18n();
+const { t } = useI18n();
 
 interface Props {
     title: string,
@@ -21,7 +21,8 @@ const emit = defineEmits<{
     (e: 'change', data: string[]): void;
 }>()
 const selectoption = ref(false);
-const selectLayer = ref('');
+const selectLayerName = ref('');
+const selectLayerid = ref<string[]>([]);
 const selectList = ref<any[]>([]);
 const isselectLayer = ref(false);
 
@@ -60,7 +61,25 @@ const get_symbol_layer = () => {
 }
 
 function select_change(data: string[]) {
+    const v = getShapesName(data);
+    selectLayerName.value = v;
+    selectLayerid.value = data;
     emit("change", data);
+}
+
+const getShapesName = (ids: string[]) => {
+    const page = props.context.selection.selectedPage;
+    let names: string[] = [];
+    if (!page) return '';
+    for (let i = 0; i < ids.length; i++) {
+        const id = ids[i];
+        const shape = page.getShape(id);
+        if (shape) {
+            names.push(shape.name);
+        }
+    }
+    let result = names.length > 0 ? names.join(',') : '';
+    return result;
 }
 
 onMounted(get_symbol_layer);
@@ -71,15 +90,15 @@ onMounted(get_symbol_layer);
         <span>{{ title }}</span>
         <div class="select-layer" @mouseup="showSelectLayer" @click.stop>
             <div class="input"
-                 :style="{ opacity: context.selection.selectedShapes[0].type !== ShapeType.Symbol ? '0.5' : '1' }">
-                <span v-if="selectLayer"></span>
+                :style="{ opacity: context.selection.selectedShapes[0].type !== ShapeType.Symbol ? '0.5' : '1' }">
+                <span v-if="selectLayerName" class="value">{{ selectLayerName }}</span>
                 <span v-else style="opacity: 0.5">{{ placeholder }}</span>
                 <el-icon>
-                    <ArrowDown/>
+                    <ArrowDown />
                 </el-icon>
             </div>
             <SelectLayer v-if="isselectLayer" @close="isselectLayer = false" :type="props.addType" :context="context"
-                         :selectList="selectList" @change="select_change"></SelectLayer>
+                :selectList="selectList" @change="select_change" :layerId="selectLayerid"></SelectLayer>
         </div>
     </div>
 </template>
@@ -98,7 +117,7 @@ onMounted(get_symbol_layer);
         width: 60px;
     }
 
-    > div {
+    >div {
         flex: 1;
     }
 
@@ -122,7 +141,7 @@ onMounted(get_symbol_layer);
         height: 30px;
         font-size: 10px;
 
-        > div {
+        >div {
             height: 100%;
         }
 
@@ -161,6 +180,12 @@ onMounted(get_symbol_layer);
 
         span {
             flex: 1;
+        }
+
+        .value {
+            overflow: hidden;
+            text-overflow: ellipsis;
+            white-space: nowrap;
         }
 
         .el-icon {

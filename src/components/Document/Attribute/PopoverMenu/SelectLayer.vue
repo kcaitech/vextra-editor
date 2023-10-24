@@ -18,6 +18,7 @@ interface Props {
     type: VariableType
     context: Context
     selectList: any[]
+    layerId?: string[]
 }
 
 const props = defineProps<Props>();
@@ -58,7 +59,6 @@ const handleCheck = (v: string[]) => {
     // 选中对象的id
     checkList.value = v;
     emit("change", v);
-    console.log('一层');
 }
 watchEffect(() => {
     props.selectList.length;
@@ -119,7 +119,7 @@ onUnmounted(() => {
                         </div>
                         <div class="demo-collapse" v-show="unfold.has(i)" :reflush="reflush">
                             <component :is="CompoSelectList" :context="context" :contents="item.data" samll="samll"
-                                       @handleCheck="handleCheck">
+                                       @handleCheck="handleCheck" :layerId="props.layerId">
                             </component>
                         </div>
                     </template>
