@@ -1,11 +1,11 @@
 <script lang="ts" setup>
-import { onMounted, onUnmounted, ref, watchEffect } from 'vue';
-import { Context } from '@/context';
+import {onMounted, onUnmounted, ref, watchEffect} from 'vue';
+import {Context} from '@/context';
 import CompoSelectList from './CompoSelectList.vue';
-import { useI18n } from 'vue-i18n';
-import { VariableType } from '@kcdesign/data';
+import {useI18n} from 'vue-i18n';
+import {VariableType} from '@kcdesign/data';
 
-const { t } = useI18n();
+const {t} = useI18n();
 
 interface Tree {
     id: number
@@ -25,6 +25,7 @@ const checkList = ref<string[]>([])
 const unfold = new Set();
 const emit = defineEmits<{
     (e: 'close'): void;
+    (e: 'change', data: string[]): void;
 }>()
 const close = (e: MouseEvent) => {
     e.stopPropagation();
@@ -43,21 +44,25 @@ const confirmSelect = () => {
     if (checkList.value.length === 0) return;
     emit('close');
 }
+
 function toggle(i: number) {
-   if(unfold.has(i)) {
-    unfold.delete(i);
-   }else {
-    unfold.add(i);
-   }
-   reflush.value = reflush.value++;
+    if (unfold.has(i)) {
+        unfold.delete(i);
+    } else {
+        unfold.add(i);
+    }
+    reflush.value = reflush.value++;
 }
+
 const handleCheck = (v: string[]) => {
     // 选中对象的id
-    checkList.value = v
+    checkList.value = v;
+    emit("change", v);
+    console.log('一层');
 }
 watchEffect(() => {
     props.selectList.length;
-    if(props.selectList.length === 1) {
+    if (props.selectList.length === 1) {
         unfold.add(0);
     }
 })
@@ -90,9 +95,9 @@ onUnmounted(() => {
     <div class="select_layerbox" ref="popover" :style="{ top: top + 'px' }">
         <div class="heard">
             <span class="title">{{
-                props.type === VariableType.SymbolRef ? `${t('compos.compos_instance')}` :
-                `${t('compos.select_layer')}`
-            }}</span>
+                    props.type === VariableType.SymbolRef ? `${t('compos.compos_instance')}` :
+                        `${t('compos.select_layer')}`
+                }}</span>
             <div class="close">
                 <div class="toggle_list">
                     <svg-icon icon-class="close" @click.stop="emit('close');"></svg-icon>
@@ -109,12 +114,12 @@ onUnmounted(() => {
                             <span>{{ item.state }}</span>
                             <div class="shrink">
                                 <svg-icon icon-class="down"
-                                    :style="{ transform: !unfold.has(i) ? 'rotate(-90deg)' : 'rotate(0deg)' }"></svg-icon>
+                                          :style="{ transform: !unfold.has(i) ? 'rotate(-90deg)' : 'rotate(0deg)' }"></svg-icon>
                             </div>
                         </div>
                         <div class="demo-collapse" v-show="unfold.has(i)" :reflush="reflush">
                             <component :is="CompoSelectList" :context="context" :contents="item.data" samll="samll"
-                                @handleCheck="handleCheck">
+                                       @handleCheck="handleCheck">
                             </component>
                         </div>
                     </template>
@@ -126,12 +131,12 @@ onUnmounted(() => {
             </div>
         </div>
         <div class="null"
-            v-if="selectList.length === 0 && props.type === VariableType.Text || props.type === VariableType.Status">
+             v-if="selectList.length === 0 && props.type === VariableType.Text || props.type === VariableType.Status">
             {{ t('compos.text_layer_null') }}
         </div>
         <div class="null" v-if="selectList.length === 0 && props.type === VariableType.SymbolRef">{{
-            t('compos.instance_null')
-        }}
+                t('compos.instance_null')
+            }}
         </div>
     </div>
 </template>
@@ -254,7 +259,7 @@ onUnmounted(() => {
     //    background-color: var(--grey-light);
     //}
 
-    >span {
+    > span {
         font-weight: 600;
         overflow: hidden;
         text-overflow: ellipsis;
@@ -267,7 +272,7 @@ onUnmounted(() => {
         height: 12px;
         width: 12px;
 
-        >svg {
+        > svg {
             width: 80%;
             height: 80%;
         }

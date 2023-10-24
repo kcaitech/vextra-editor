@@ -423,6 +423,21 @@ export function create_text_var(context: Context, symbol: SymbolShape, name: str
     editor.makeTextVar(symbol, name, values);
 }
 
+export function create_var_by_type(context: Context, type: VariableType, name: string, values: any) {
+    const selection = context.selection;
+    if (!selection.symbolshape) return;
+    switch (type) {
+        case VariableType.Visible:
+            return create_visible_var(context, selection.symbolshape, name, values);
+        case VariableType.SymbolRef:
+            return create_ref_var(context, selection.symbolshape, name, '嘿嘿');
+        case VariableType.Text:
+            return create_text_var(context, selection.symbolshape, name, '嘿嘿');
+        default:
+            console.log('wrong action');
+    }
+}
+
 /**
  * @description 给symbol生成一个与其他变量名称不会产生冲突并且有序的变量名称
  * @param symbol

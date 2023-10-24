@@ -5,12 +5,20 @@ import TypeHeader from '../TypeHeader.vue';
 import {onMounted, onUnmounted, ref, watch} from 'vue'
 import CompLayerShow from '../PopoverMenu/CompLayerShow.vue';
 import {SymbolShape, VariableType} from '@kcdesign/data';
-import {AttriListItem, is_wrong_bind_sym, make_status, variable_sort} from "@/utils/symbol";
+import {
+    AttriListItem,
+    create_ref_var, create_text_var,
+    create_visible_var,
+    is_wrong_bind_sym,
+    make_status,
+    variable_sort
+} from "@/utils/symbol";
 import SelectLayerInput from "./SelectLayerInput.vue";
 import PopoverDefaultInput from './PopoverDefaultInput.vue';
 import {cardmap} from "./ComponentStatusCard/map";
 import Status from "./ComponentStatusCard/SCStatus.vue";
 import {Warning} from '@element-plus/icons-vue';
+import {message} from "@/utils/message";
 
 const {t} = useI18n();
 
@@ -28,6 +36,8 @@ const atrrdialog = ref<HTMLDivElement>();
 const addType = ref<VariableType>(VariableType.Visible);
 const variables = ref<AttriListItem[]>();
 const conflict = ref<boolean>(false);
+const selected = ref<string[]>([]);
+const var_name = ref<string>('');
 
 function close() {
     const is_achieve_expected_results = compsType.value;
@@ -110,7 +120,15 @@ const examplesToggle = () => {
     close();
 }
 
-const saveLayerShow = () => {
+const saveLayerShow = (type: VariableType) => {
+    if (!selected.value.length) {
+        message('info', '请选择图层');
+        return;
+    }
+    if (!var_name.value.trim()) {
+        message('info', '属性名不能为空');
+        return;
+    }
     isaddStateDialog.value = false;
 }
 
@@ -128,6 +146,14 @@ const get_dialog_posi = (div: HTMLDivElement | undefined) => {
 
 function variable_watcher(args: any[]) {
     if (args && (args.includes('map') || args.includes('childs'))) update_variable_list();
+}
+
+function list_change(data: string[]) {
+    selected.value = data;
+}
+
+function name_change(v: string) {
+    var_name.value = v;
 }
 
 watch(() => props.shape, (v, o) => {
@@ -182,7 +208,6 @@ onUnmounted(() => {
                 </div>
             </template>
         </TypeHeader>
-
         <!--list container-->
         <div class="module_container">
             <component v-for="item in variables" :is="cardmap.get(item.variable.type) || Status" :key="item.variable.id"
@@ -197,16 +222,17 @@ onUnmounted(() => {
             </div>
             <p>存在状态相同的可变组件，需要修改状态以解决冲突</p>
         </div>
-
         <!--dialog-->
         <CompLayerShow :context="context" v-if="isaddStateDialog" @close-dialog="isaddStateDialog = false" right="250px"
                        :width="260" :addType="addType" :title="dialog_title" :dialog_posi="dialog_posi"
-                       @save-layer-show="saveLayerShow">
+                       @save-layer-show="saveLayerShow" @name-change="name_change">
             <template #layer>
                 <SelectLayerInput
                     :title="addType === VariableType.SymbolRef ? t('compos.compos_instance') : t('compos.select_layer')"
                     :add-type="addType" :context="props.context"
-                    :placeholder="addType === VariableType.SymbolRef ? t('compos.place_select_instance') : t('compos.place_select_layer')">
+                    :placeholder="addType === VariableType.SymbolRef ? t('compos.place_select_instance') : t('compos.place_select_layer')"
+                    @change="list_change"
+                >
                 </SelectLayerInput>
             </template>
             <template #default_value>

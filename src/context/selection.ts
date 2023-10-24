@@ -323,7 +323,7 @@ export class Selection extends Watchable(Object) implements ISave4Restore {
     }
 
     unHoverShape() {
-        const needNotify = this.m_hoverShape ? true : false;
+        const needNotify = this.m_hoverShape;
         this.m_hoverShape = undefined;
         if (needNotify) {
             this.notify(Selection.CHANGE_SHAPE_HOVER);

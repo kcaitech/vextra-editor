@@ -17,7 +17,9 @@ interface Props {
 }
 
 const props = defineProps<Props>();
-
+const emit = defineEmits<{
+    (e: 'change', data: string[]): void;
+}>()
 const selectoption = ref(false);
 const selectLayer = ref('');
 const selectList = ref<any[]>([]);
@@ -56,6 +58,11 @@ const get_symbol_layer = () => {
         selectList.value = symbolLayer;
     }
 }
+
+function select_change(data: string[]) {
+    emit("change", data);
+}
+
 onMounted(get_symbol_layer);
 </script>
 
@@ -72,7 +79,7 @@ onMounted(get_symbol_layer);
                 </el-icon>
             </div>
             <SelectLayer v-if="isselectLayer" @close="isselectLayer = false" :type="props.addType" :context="context"
-                         :selectList="selectList"></SelectLayer>
+                         :selectList="selectList" @change="select_change"></SelectLayer>
         </div>
     </div>
 </template>

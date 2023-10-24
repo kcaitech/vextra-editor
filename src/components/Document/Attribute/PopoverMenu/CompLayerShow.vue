@@ -1,11 +1,11 @@
 <script setup lang="ts">
-import { onMounted, onUnmounted, ref } from 'vue';
-import { Context } from '@/context';
-import { ShapeType, VariableType } from '@kcdesign/data';
-import { useI18n } from 'vue-i18n';
-import { create_ref_var, create_text_var, create_visible_var, get_layer_from_symbol } from "@/utils/symbol";
+import {onMounted, ref} from 'vue';
+import {Context} from '@/context';
+import {ShapeType, VariableType} from '@kcdesign/data';
+import {useI18n} from 'vue-i18n';
+import {get_layer_from_symbol} from "@/utils/symbol";
 
-const { t } = useI18n();
+const {t} = useI18n();
 
 interface Props {
     title?: string,
@@ -20,7 +20,10 @@ interface Props {
 
 interface Emits {
     (e: 'closeDialog'): void;
+
     (e: 'saveLayerShow', type: VariableType): void;
+
+    (e: 'name-change', name: string): void;
 }
 
 const props = defineProps<Props>();
@@ -37,21 +40,6 @@ const isselectLayer = ref(false)
 const selectList = ref<any[]>([])
 
 const save = () => {
-    // 测试用代码 start
-    const selection = props.context.selection;
-    if (selection.symbolshape) {
-        switch (props.addType) {
-            case VariableType.Visible:
-                return create_visible_var(props.context, selection.symbolshape, '图层显示', []);
-            case VariableType.SymbolRef:
-                return create_ref_var(props.context, selection.symbolshape, '实例切换', '嘿嘿');
-            case VariableType.Text:
-                return create_text_var(props.context, selection.symbolshape, '文本切换', '嘿嘿');
-            default:
-                console.log('wrong action');
-        }
-    }
-    // 测试用代码 end
     emit('saveLayerShow', props.addType)
 }
 
@@ -79,11 +67,16 @@ const get_symbol_layer = () => {
 const comps = ref<HTMLDivElement>()
 const cur_top = ref(0)
 const cur_p = ref(0)
+
+function name_change(v: any) {
+    emit('name-change', v);
+}
+
 onMounted(() => {
     get_symbol_layer();
     if (comps.value) {
         const body_h = document.body.clientHeight;
-        const { y, height } = comps.value.getBoundingClientRect();
+        const {y, height} = comps.value.getBoundingClientRect();
         const su = body_h - y;
         const cur_t = su - height;
         cur_p.value = cur_t;
@@ -118,7 +111,7 @@ onMounted(() => {
             <div>
                 <span>{{ t('compos.attr_name') }}</span>
                 <div>
-                    <el-input v-model="attrName" :placeholder="t('compos.attr_name_input')" />
+                    <el-input v-model="attrName" :placeholder="t('compos.attr_name_input')" @input="name_change"/>
                 </div>
             </div>
             <p class="warn" v-if="false">{{ t('compos.duplicate_name') }}</p>
@@ -165,7 +158,7 @@ onMounted(() => {
             align-items: center;
             justify-content: center;
 
-            >svg {
+            > svg {
                 width: 65%;
                 height: 65%;
             }
@@ -187,7 +180,7 @@ onMounted(() => {
             margin-left: 60px;
         }
 
-        >div {
+        > div {
             height: 30px;
             width: 100%;
             margin-top: 10px;
@@ -200,7 +193,7 @@ onMounted(() => {
                 width: 60px;
             }
 
-            >div {
+            > div {
                 flex: 1;
             }
 
