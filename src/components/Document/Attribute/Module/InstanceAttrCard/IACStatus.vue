@@ -5,6 +5,7 @@ import {Context} from "@/context";
 import {onMounted, onUpdated} from "vue";
 import SelectMenu from "@/components/Document/Attribute/PopoverMenu/SelectMenu.vue";
 import {ArrowDown} from '@element-plus/icons-vue'
+import { Menu } from "@/context/menu";
 
 interface Props {
     context: Context
@@ -16,7 +17,9 @@ const selectoption = ref(false);
 const status_value = ref<string>('');
 
 function show_menu() {
-    selectoption.value = !selectoption.value;
+    if (selectoption.value) return selectoption.value = false;
+    props.context.menu.notify(Menu.CLOSE_COMP_MENU);
+    selectoption.value = true;
 }
 
 function select(index: number) {
@@ -42,14 +45,14 @@ onMounted(() => {
         <div class="state_item">
             <div class="state_name"><span>{{ data.variable.name }}</span></div>
             <div class="state_value" style="padding: 0;">
-                <div class="input" @click="show_menu">
+                <div class="input" @click.stop="show_menu">
                     <span>{{ status_value }}</span>
                     <el-icon>
                         <ArrowDown
                             :style="{ transform: selectoption ? 'rotate(180deg)' : 'rotate(0deg)', transition: '0.3s' }"/>
                     </el-icon>
                     <SelectMenu v-if="selectoption" :top="33" width="100%" :menuItems="data.values" :context="context"
-                                @select-index="select">
+                                @select-index="select" @close="selectoption = false">
                     </SelectMenu>
                 </div>
             </div>
@@ -63,7 +66,6 @@ onMounted(() => {
     display: flex;
     align-items: center;
     margin-bottom: 3px;
-    margin-top: 5px;
 
     .state_item {
         display: flex;

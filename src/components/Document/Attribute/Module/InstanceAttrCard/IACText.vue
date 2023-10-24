@@ -34,7 +34,6 @@ const selectAllText = () => {
     display: flex;
     align-items: center;
     margin-bottom: 3px;
-    margin-top: 5px;
 
     .state_item {
         display: flex;

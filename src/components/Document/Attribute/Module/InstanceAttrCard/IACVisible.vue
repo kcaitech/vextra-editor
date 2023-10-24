@@ -3,12 +3,14 @@ import { RefAttriListItem} from "@/utils/symbol";
 import {useI18n} from "vue-i18n";
 
 import {Context} from "@/context";
+import { ref } from "vue";
 const { t } = useI18n();
 interface Props {
     context: Context
     data: RefAttriListItem
 }
 const props = defineProps<Props>();
+const open = ref(false)
 </script>
 <template>
     <div class="open">
@@ -28,7 +30,6 @@ const props = defineProps<Props>();
     display: flex;
     align-items: center;
     margin-bottom: 3px;
-    margin-top: 5px;
 
     .state_item {
         display: flex;
