@@ -41,7 +41,6 @@ import CellSetting from '@/components/Document/Menu/TableMenu/CellSetting.vue';
 import * as comment_api from '@/request/comment';
 // import Overview from './Content/Overview.vue';
 import Creator from './Creator.vue';
-import { TaskType } from '@/context/escstack';
 import { Wheel, EffectType, fourWayWheel } from '@/utils/wheel';
 interface Props {
     context: Context
@@ -289,7 +288,7 @@ function contextMenuMount(e: MouseEvent) {
                 }
             }
             // eslint-disable-next-line
-            props.context.esctask.save(TaskType.MENU, contextMenuUnmount); // 将关闭菜单事件加入到esc任务队列
+            props.context.esctask.save(contextMenuUnmount); // 将关闭菜单事件加入到esc任务队列
         }
     })
 }

@@ -6,7 +6,6 @@ import {useI18n} from 'vue-i18n';
 import {onMounted, ref} from 'vue';
 import {get_layer_from_symbol} from '@/utils/symbol';
 import SelectLayer from '../PopoverMenu/SelectLayer.vue';
-import {TaskType} from "@/context/escstack";
 
 const {t} = useI18n();
 
@@ -29,7 +28,7 @@ const showSelectLayer = (e: MouseEvent) => {
     selectoption.value = false;
     if (isselectLayer.value && e.target instanceof Element && e.target.closest('.input')) return isselectLayer.value = false;
     isselectLayer.value = true;
-    props.context.esctask.save(TaskType.DIALOG, de_show_select_layer);
+    props.context.esctask.save(de_show_select_layer);
 }
 
 function de_show_select_layer() {

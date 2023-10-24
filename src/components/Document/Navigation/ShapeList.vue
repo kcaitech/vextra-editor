@@ -19,7 +19,6 @@ import { is_shape_in_selection, selection_types, fit } from "@/utils/shapelist";
 import { Navi } from "@/context/navigate";
 import { Perm, WorkSpace } from "@/context/workspace"
 import ShapeTypes from "./Search/ShapeTypes.vue";
-import { TaskType } from "@/context/escstack";
 type List = InstanceType<typeof ListView>;
 type ContextMenuEl = InstanceType<typeof ContextMenu>;
 class Iter implements IDataIter<ItemData> {
@@ -378,7 +377,7 @@ const chartMenuMount = (e: MouseEvent) => {
                 el.style.borderRadius = 4 + 'px'
                 el.style.width = 200 + 'px'
             }
-            props.context.esctask.save(TaskType.MENU, close);
+            props.context.esctask.save(close);
         }
     })
 }

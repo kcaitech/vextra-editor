@@ -4,7 +4,6 @@ import { Context } from '@/context';
 import { WorkSpace } from '@/context/workspace';
 import { Tool } from '@/context/tool';
 import { Menu } from '@/context/menu';
-import { TaskType } from '@/context/escstack';
 const props = defineProps<{
   title?: string,
   top?: number,
@@ -56,7 +55,7 @@ function show() {
         }
         popover.value.style.left = propsLeft + 'px';
         popover.value.style.top = propsTop + 'px';
-        props.context.esctask.save(TaskType.WINDOW, popoverClose);
+        props.context.esctask.save(popoverClose);
       }
     })
   }

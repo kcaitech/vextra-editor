@@ -36,11 +36,6 @@ const isselectLayer = ref(false)
 
 const selectList = ref<any[]>([])
 
-function esc(e: KeyboardEvent) {
-    if (e.code === 'Escape') popoverClose();
-    else e.stopPropagation();
-}
-
 const save = () => {
     // 测试用代码 start
     const selection = props.context.selection;
@@ -101,10 +96,6 @@ onMounted(() => {
             cur_top.value = 40
         }
     }
-    document.addEventListener('keyup', esc);
-})
-onUnmounted(() => {
-    document.removeEventListener('keyup', esc);
 })
 </script>
 

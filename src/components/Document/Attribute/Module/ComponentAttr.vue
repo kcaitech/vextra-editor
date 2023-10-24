@@ -11,7 +11,6 @@ import PopoverDefaultInput from './PopoverDefaultInput.vue';
 import {cardmap} from "./ComponentStatusCard/map";
 import Status from "./ComponentStatusCard/SCStatus.vue";
 import {Warning} from '@element-plus/icons-vue';
-import {TaskType} from "@/context/escstack";
 
 const {t} = useI18n();
 
@@ -47,7 +46,6 @@ const closeCompsType = (e: Event) => {
 function update_variable_list() {
     variables.value = variable_sort(props.shape);
     conflict.value = is_wrong_bind_sym(props.shape);
-    console.log('update result: ', variables.value, conflict.value);
 }
 
 /**
@@ -58,9 +56,9 @@ function selectCompsType() {
         close();
         return;
     }
-    compsType.value = true
+    compsType.value = true;
     document.addEventListener('mousedown', closeCompsType);
-    props.context.esctask.save(TaskType.DOWN, close);
+    props.context.esctask.save(close);
 }
 
 /**
@@ -81,8 +79,7 @@ const layerIsShow = () => {
     addType.value = VariableType.Visible;
     get_dialog_posi(atrrdialog.value);
     isaddStateDialog.value = true;
-    console.log('add', de_layer_is_show);
-    props.context.esctask.save(TaskType.DIALOG, de_layer_is_show);
+    props.context.esctask.save(de_layer_is_show);
     close();
 }
 

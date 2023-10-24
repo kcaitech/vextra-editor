@@ -18,7 +18,6 @@ import {
     PointsOffset, get_apex, pre_render_assist_line
 } from '@/utils/assist';
 import {Asssit} from '@/context/assist';
-import {TaskType} from '@/context/escstack';
 import {
     add_blur_for_window,
     add_move_and_up_for_document,
@@ -372,7 +371,7 @@ export function useControllerCustom(context: Context, i18nT: Function) {
         checkStatus();
         initController();
         workspace.contentEdit(false);
-        context.esctask.save(TaskType.SELECTION, exit);
+        context.esctask.save(exit);
     }
 
     function dispose() {

@@ -19,7 +19,6 @@ import { map_from_shapes, permIsEdit } from '@/utils/content';
 import { distance2apex, distance2apex2, get_frame, get_pg_by_frame, gen_match_points, PointsOffset } from '@/utils/assist';
 import { Asssit } from '@/context/assist';
 import { Menu } from '@/context/menu';
-import { TaskType } from '@/context/escstack';
 import {gen_assist_target} from "@/utils/mouse";
 
 export function useControllerCustom(context: Context, i18nT: Function) {
@@ -414,7 +413,7 @@ export function useControllerCustom(context: Context, i18nT: Function) {
         checkStatus();
         initController();
         workspace.contentEdit(false);
-        context.esctask.save(TaskType.SELECTION, exit);
+        context.esctask.save(exit);
     }
     function dispose() {
         workspace.unwatch(workspace_watcher);

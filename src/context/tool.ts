@@ -1,7 +1,6 @@
 import { Shape, ShapeType, Watchable } from "@kcdesign/data";
 import { Context } from ".";
 import { Comment } from "./comment";
-import { TaskType } from "./escstack";
 export enum Action {
     Auto = 'auto',
     AutoV = 'drag',
@@ -123,7 +122,7 @@ export class Tool extends Watchable(Object) {
         this.m_current_action = action;
         if (action.startsWith('add')) {
             this.m_context.menu.menuMount();
-            this.m_context.esctask.save(TaskType.TOOL, this.reset.bind(this));
+            this.m_context.esctask.save(this.reset.bind(this));
             if (action === Action.AddComment) {
                 if (this.m_context.workspace.documentPerm === 1) return;
                 this.m_context.comment.commentInput(false);
