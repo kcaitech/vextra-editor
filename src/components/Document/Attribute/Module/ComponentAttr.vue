@@ -7,7 +7,7 @@ import CompLayerShow from '../PopoverMenu/CompLayerShow.vue';
 import {SymbolShape, VariableType} from '@kcdesign/data';
 import {
     AttriListItem,
-    create_ref_var, create_text_var,
+    create_ref_var, create_text_var, create_var_by_type,
     create_visible_var,
     is_wrong_bind_sym,
     make_status,
@@ -38,7 +38,7 @@ const variables = ref<AttriListItem[]>();
 const conflict = ref<boolean>(false);
 const selected = ref<string[]>([]);
 const var_name = ref<string>('');
-
+const dlt_value = ref<boolean>(false);
 function close() {
     const is_achieve_expected_results = compsType.value;
     compsType.value = false;
@@ -129,6 +129,7 @@ const saveLayerShow = (type: VariableType) => {
         message('info', '属性名不能为空');
         return;
     }
+    create_var_by_type(props.context, type, var_name.value, dlt_value.value, selected.value);
     isaddStateDialog.value = false;
 }
 
@@ -154,6 +155,10 @@ function list_change(data: string[]) {
 
 function name_change(v: string) {
     var_name.value = v;
+}
+
+function dlt_change(v: number) {
+    dlt_value.value = !v;
 }
 
 watch(() => props.shape, (v, o) => {
@@ -237,7 +242,7 @@ onUnmounted(() => {
             </template>
             <template #default_value>
                 <PopoverDefaultInput v-if="addType !== VariableType.SymbolRef" :context="context"
-                                     :add-type="addType"></PopoverDefaultInput>
+                                     :add-type="addType" @select="dlt_change"></PopoverDefaultInput>
             </template>
         </CompLayerShow>
     </div>

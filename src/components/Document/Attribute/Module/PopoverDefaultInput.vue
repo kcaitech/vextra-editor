@@ -1,18 +1,24 @@
 <script setup lang="ts">
-import { Context } from '@/context';
-import { VariableType } from '@kcdesign/data';
-import { useI18n } from 'vue-i18n';
+import {Context} from '@/context';
+import {VariableType} from '@kcdesign/data';
+import {useI18n} from 'vue-i18n';
 import SelectMenu from '../PopoverMenu/SelectMenu.vue';
-import { ArrowDown } from '@element-plus/icons-vue'
-import { ref } from 'vue';
-const { t } = useI18n();
+import {ArrowDown} from '@element-plus/icons-vue'
+import {ref} from 'vue';
+
+const {t} = useI18n();
+
 interface Props {
     context: Context,
     addType: VariableType | undefined,
 }
 
-const props = defineProps<Props>();
+interface Emits {
+    (e: "select", index: number): void;
+}
 
+const props = defineProps<Props>();
+const emits = defineEmits<Emits>();
 const textDefaultValue = ref('');
 const selectoption = ref(false);
 const menuItems = ['显示', '隐藏'];
@@ -25,6 +31,7 @@ const showMenu = () => {
 const handleShow = (index: number) => {
     defaultValue.value = menuItems[index];
     menuIndex.value = index;
+    emits('select', index);
 }
 </script>
 
@@ -36,14 +43,14 @@ const handleShow = (index: number) => {
                 <span>{{ defaultValue }}</span>
                 <el-icon>
                     <ArrowDown
-                        :style="{ transform: selectoption ? 'rotate(180deg)' : 'rotate(0deg)', transition: '0.3s' }" />
+                        :style="{ transform: selectoption ? 'rotate(180deg)' : 'rotate(0deg)', transition: '0.3s' }"/>
                 </el-icon>
                 <SelectMenu v-if="selectoption" :top="33" width="100%" :menuItems="menuItems" :menuIndex="menuIndex"
-                    :context="context" @select-index="handleShow" @close="selectoption = false"></SelectMenu>
+                            :context="context" @select-index="handleShow" @close="selectoption = false"></SelectMenu>
             </div>
         </div>
         <div v-if="props.addType === VariableType.Text">
-            <el-input v-model="textDefaultValue" :placeholder="t('compos.default_text_input')" />
+            <el-input v-model="textDefaultValue" :placeholder="t('compos.default_text_input')"/>
         </div>
     </div>
 </template>
@@ -62,7 +69,7 @@ const handleShow = (index: number) => {
         width: 60px;
     }
 
-    >div {
+    > div {
         flex: 1;
     }
 

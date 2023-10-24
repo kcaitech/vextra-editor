@@ -1,7 +1,8 @@
 import {Context} from "@/context";
 import {
     Artboard,
-    GroupShape, OverrideType,
+    GroupShape,
+    OverrideType,
     Page,
     Shape,
     ShapeType,
@@ -15,7 +16,6 @@ import {sort_by_layer} from "./group_ungroup";
 import {debounce} from "lodash";
 import {v4} from "uuid";
 import {get_name} from "@/utils/shapelist";
-import e from "express";
 
 // region 组件列表相关
 /**
@@ -402,9 +402,9 @@ export function make_state(context: Context, t: Function) {
 /**
  * @description 为组件创建图层显示变量
  */
-export function create_visible_var(context: Context, symbol: SymbolShape, name: string, values: string[]) {
+export function create_visible_var(context: Context, symbol: SymbolShape, name: string, value: boolean, shapes: Shape[]) {
     const editor = context.editor4Page(context.selection.selectedPage!);
-    editor.makeVisibleVar(symbol, name, values);
+    editor.makeVisibleVar(symbol, name, value, shapes);
 }
 
 /**
@@ -423,12 +423,20 @@ export function create_text_var(context: Context, symbol: SymbolShape, name: str
     editor.makeTextVar(symbol, name, values);
 }
 
-export function create_var_by_type(context: Context, type: VariableType, name: string, values: any) {
+export function create_var_by_type(context: Context, type: VariableType, name: string, value: boolean, values: any[]) {
     const selection = context.selection;
     if (!selection.symbolshape) return;
+    const shapes: Shape[] = [];
+    if (type === VariableType.Visible) {
+        const page = selection.selectedPage!;
+        for (let i = 0, len = values.length; i < len; i++) {
+            const s = page.getShape(values[i]);
+            if (s) shapes.push(s);
+        }
+    }
     switch (type) {
         case VariableType.Visible:
-            return create_visible_var(context, selection.symbolshape, name, values);
+            return create_visible_var(context, selection.symbolshape, name, value, shapes);
         case VariableType.SymbolRef:
             return create_ref_var(context, selection.symbolshape, name, '嘿嘿');
         case VariableType.Text:
@@ -576,15 +584,27 @@ export function get_layer_from_symbol(symbol: Shape) {
     }
 }
 
+function is_bind_visible_var(shape: Shape) {
+    if (!shape.varbinds) return false;
+    let result = false;
+    shape.varbinds.forEach((_, k) => {
+        if (result) return;
+        result = k === OverrideType.Visible
+    })
+    return result;
+}
+
 function get_layer_i(symbol: Shape) {
     let shapes: Shape[] = [];
     let slow_index = 0;
     const childs = symbol.childs;
     for (let i = 0, len = childs.length; i < len; i++) {
         const item = childs[i];
-        if (item.childs && item.childs.length) {
-            shapes.push(item, ...get_layer_i(item));
+        if (item.childs && item.childs.length && item.type !== ShapeType.Table) {
+            if (!is_bind_visible_var(item)) shapes.push(item);
+            shapes.push(...get_layer_i(item));
         } else {
+            if (is_bind_visible_var(item)) continue;
             shapes.splice(slow_index++, 0, item);
         }
     }
@@ -603,17 +623,23 @@ export interface RefAttriListItem {
  */
 export function get_var_for_ref(context: Context, symref: SymbolRefShape) {
     let result: RefAttriListItem[] = [];
+    let result2: RefAttriListItem[] = [];
     const sym = context.data.symbolsMgr.getSync(symref.refId);
-    if (!sym) return result;
+    if (!sym) return false;
     const variables = sym.variables;
-    if (!variables) return result;
+    if (!variables) return false;
+    let slow_index = 0;
     variables.forEach(v => {
         const item: RefAttriListItem = {variable: v, values: []};
-        if (v.type !== VariableType.Status) return;
-        item.values = tag_values_sort(sym, v);
-        result.push(item);
+        if (v.type === VariableType.Visible) {
+            result2.push(item);
+        }
+        if (v.type === VariableType.Status) {
+            item.values = tag_values_sort(sym, v);
+            result.splice(slow_index, 0, item);
+        }
     })
-    return result;
+    return {variables: result, visible_variables: result2};
 }
 
 /**

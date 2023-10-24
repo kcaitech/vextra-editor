@@ -9,6 +9,8 @@ import {MoreFilled} from '@element-plus/icons-vue';
 import {RefAttriListItem, get_var_for_ref} from "@/utils/symbol";
 import {cardmap} from "./InstanceAttrCard/map";
 import Status from "./InstanceAttrCard/IACStatus.vue"
+import Visible from "./InstanceAttrCard/IACVisible.vue"
+
 interface Props {
     context: Context
     shape: SymbolRefShape
@@ -18,7 +20,7 @@ const {t} = useI18n();
 const props = defineProps<Props>();
 const resetMenu = ref(false);
 const variables = ref<RefAttriListItem[]>([]);
-
+const visible_variables = ref<RefAttriListItem[]>([]);
 const selectReset = (e: MouseEvent) => {
     if (resetMenu.value) return resetMenu.value = false
     resetMenu.value = true
@@ -55,7 +57,10 @@ const shape_watcher = (arg: any) => {
 }
 
 const updateData = () => {
-    variables.value = get_var_for_ref(props.context, props.shape);
+    const result = get_var_for_ref(props.context, props.shape);
+    if (!result) return;
+    variables.value = result.variables;
+    visible_variables.value = result.visible_variables;
 }
 watch(() => props.shape, (nVal, oVal) => {
     oVal.unwatch(shape_watcher);
@@ -63,11 +68,11 @@ watch(() => props.shape, (nVal, oVal) => {
 })
 onMounted(() => {
     updateData();
-    props.shape.watch(shape_watcher)
+    props.shape.watch(shape_watcher);
 })
 onUnmounted(() => {
-    props.shape.unwatch(shape_watcher)
-    document.removeEventListener('click', closeResetMenu)
+    props.shape.unwatch(shape_watcher);
+    document.removeEventListener('click', closeResetMenu);
 })
 </script>
 
@@ -97,6 +102,14 @@ onUnmounted(() => {
         <component v-for="item in variables" :key="item.variable.id" :is="cardmap.get(item.variable.type) || Status"
                    :context="props.context"
                    :data="item"></component>
+    </div>
+    <div v-if="visible_variables.length" class="visible-var-container">
+        <div class="title">{{ t('compos.layer_show') }}:</div>
+        <div class="items-wrap">
+            <component v-for="item in visible_variables" :key="item.variable.id" :is="Visible"
+                       :context="props.context"
+                       :data="item"></component>
+        </div>
     </div>
 </template>
 
@@ -166,6 +179,18 @@ onUnmounted(() => {
 .module_container {
     font-size: var(--font-default-fontsize);
     margin-bottom: 10px;
+}
+
+.visible-var-container {
+    display: flex;
+    .title {
+        width: 72px;
+        line-height: 26px;
+    }
+    .items-wrap {
+        width: 120px;
+        margin-left: 16px;
+    }
 }
 
 :deep(.el-select-dropdown__item.selected) {

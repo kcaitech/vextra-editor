@@ -1,11 +1,13 @@
 <script setup lang="ts">
 import {Shape, ShapeType} from "@kcdesign/data";
 import {static_coms_map} from "../../ContentStatic/static_coms_map";
+
 interface Props {
     data: Shape
 }
 const props = defineProps<Props>();
 function gen_view_box() {
+    if (props.data.type === ShapeType.Table) return `0 0 16 16`;
     const frame = props.data.boundingBox();
     return `0 0 ${frame.width} ${frame.height}`;
 }
