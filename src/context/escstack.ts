@@ -5,7 +5,9 @@ export enum TaskType {
   EDIT = 'edit',
   WINDOW = 'window',
   SELECTION = 'selection',
-  COLOR = 'color'
+  COLOR = 'color',
+  DOWN = 'down',
+  DIALOG = 'dialog'
 }
 export interface EscItem {
   name: TaskType

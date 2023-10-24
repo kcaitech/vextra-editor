@@ -5,13 +5,13 @@ import TypeHeader from '../TypeHeader.vue';
 import {onMounted, onUnmounted, ref, watch} from 'vue'
 import CompLayerShow from '../PopoverMenu/CompLayerShow.vue';
 import {SymbolShape, VariableType} from '@kcdesign/data';
-import {is_wrong_bind_sym, make_status, variable_sort} from "@/utils/symbol";
-import {AttriListItem} from "@/utils/symbol";
+import {AttriListItem, is_wrong_bind_sym, make_status, variable_sort} from "@/utils/symbol";
 import SelectLayerInput from "./SelectLayerInput.vue";
 import PopoverDefaultInput from './PopoverDefaultInput.vue';
 import {cardmap} from "./ComponentStatusCard/map";
 import Status from "./ComponentStatusCard/SCStatus.vue";
-import { Warning } from '@element-plus/icons-vue';
+import {Warning} from '@element-plus/icons-vue';
+import {TaskType} from "@/context/escstack";
 
 const {t} = useI18n();
 
@@ -31,7 +31,9 @@ const variables = ref<AttriListItem[]>();
 const conflict = ref<boolean>(false);
 
 function close() {
+    const is_achieve_expected_results = compsType.value;
     compsType.value = false;
+    return is_achieve_expected_results;
 }
 
 const closeCompsType = (e: Event) => {
@@ -57,7 +59,8 @@ function selectCompsType() {
         return;
     }
     compsType.value = true
-    document.addEventListener('mousedown', closeCompsType)
+    document.addEventListener('mousedown', closeCompsType);
+    props.context.esctask.save(TaskType.DOWN, close);
 }
 
 /**
@@ -78,8 +81,17 @@ const layerIsShow = () => {
     addType.value = VariableType.Visible;
     get_dialog_posi(atrrdialog.value);
     isaddStateDialog.value = true;
+    console.log('add', de_layer_is_show);
+    props.context.esctask.save(TaskType.DIALOG, de_layer_is_show);
     close();
 }
+
+function de_layer_is_show() {
+    const is_achieve_expected_results = isaddStateDialog.value;
+    isaddStateDialog.value = false;
+    return is_achieve_expected_results;
+}
+
 /**
  * @description 文本内容
  */
@@ -176,11 +188,16 @@ onUnmounted(() => {
 
         <!--list container-->
         <div class="module_container">
-            <component v-for="item in variables" :is="cardmap.get(item.variable.type) || Status" :key="item.variable.id" :context="props.context"
+            <component v-for="item in variables" :is="cardmap.get(item.variable.type) || Status" :key="item.variable.id"
+                       :context="props.context"
                        :variable="item.variable" :item="item"></component>
         </div>
         <div v-if="conflict" class="conflict_warn">
-            <div><el-icon><Warning /></el-icon></div>
+            <div>
+                <el-icon>
+                    <Warning/>
+                </el-icon>
+            </div>
             <p>存在状态相同的可变组件，需要修改状态以解决冲突</p>
         </div>
 
@@ -272,14 +289,16 @@ onUnmounted(() => {
     border: 0.5px solid rgba(0, 0, 0, 0.05);
     border-radius: 4px;
     padding: 10px;
-    >div {
+
+    > div {
         display: flex;
         align-items: center;
         width: 20px;
         height: 20px;
         margin-right: 10px;
     }
-    >p {
+
+    > p {
         margin: 0;
     }
 }

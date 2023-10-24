@@ -1,13 +1,15 @@
 <script setup lang="ts">
-import { Context } from '@/context';
-import { VariableType, ShapeType } from '@kcdesign/data';
-import { ArrowDown } from '@element-plus/icons-vue';
-import { useI18n } from 'vue-i18n';
-import { onMounted, ref } from 'vue';
-import { get_layer_from_symbol } from '@/utils/symbol';
+import {Context} from '@/context';
+import {ShapeType, VariableType} from '@kcdesign/data';
+import {ArrowDown} from '@element-plus/icons-vue';
+import {useI18n} from 'vue-i18n';
+import {onMounted, ref} from 'vue';
+import {get_layer_from_symbol} from '@/utils/symbol';
 import SelectLayer from '../PopoverMenu/SelectLayer.vue';
+import {TaskType} from "@/context/escstack";
 
-const { t } = useI18n();
+const {t} = useI18n();
+
 interface Props {
     title: string,
     context: Context,
@@ -27,6 +29,13 @@ const showSelectLayer = (e: MouseEvent) => {
     selectoption.value = false;
     if (isselectLayer.value && e.target instanceof Element && e.target.closest('.input')) return isselectLayer.value = false;
     isselectLayer.value = true;
+    props.context.esctask.save(TaskType.DIALOG, de_show_select_layer);
+}
+
+function de_show_select_layer() {
+    const is_achieve = isselectLayer.value;
+    isselectLayer.value = false;
+    return is_achieve;
 }
 
 const get_symbol_layer = () => {
@@ -48,9 +57,7 @@ const get_symbol_layer = () => {
         selectList.value = symbolLayer;
     }
 }
-onMounted(() => {
-    get_symbol_layer();
-})
+onMounted(get_symbol_layer);
 </script>
 
 <template>
@@ -58,15 +65,15 @@ onMounted(() => {
         <span>{{ title }}</span>
         <div class="select-layer" @mouseup="showSelectLayer" @click.stop>
             <div class="input"
-                :style="{ opacity: context.selection.selectedShapes[0].type !== ShapeType.Symbol ? '0.5' : '1' }">
+                 :style="{ opacity: context.selection.selectedShapes[0].type !== ShapeType.Symbol ? '0.5' : '1' }">
                 <span v-if="selectLayer"></span>
                 <span v-else style="opacity: 0.5">{{ placeholder }}</span>
                 <el-icon>
-                    <ArrowDown />
+                    <ArrowDown/>
                 </el-icon>
             </div>
             <SelectLayer v-if="isselectLayer" @close="isselectLayer = false" :type="props.addType" :context="context"
-                :selectList="selectList"></SelectLayer>
+                         :selectList="selectList"></SelectLayer>
         </div>
     </div>
 </template>
@@ -85,7 +92,7 @@ onMounted(() => {
         width: 60px;
     }
 
-    >div {
+    > div {
         flex: 1;
     }
 
@@ -109,7 +116,7 @@ onMounted(() => {
         height: 30px;
         font-size: 10px;
 
-        >div {
+        > div {
             height: 100%;
         }
 
