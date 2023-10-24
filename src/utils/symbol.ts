@@ -628,7 +628,7 @@ export function get_var_for_ref(context: Context, symref: SymbolRefShape) {
     if (!sym) return false;
     const variables = sym.variables;
     if (!variables) return false;
-    let slow_index = 0;
+    let status_index = 0;
     variables.forEach(v => {
         const item: RefAttriListItem = {variable: v, values: []};
         if (v.type === VariableType.Visible) {
@@ -636,7 +636,8 @@ export function get_var_for_ref(context: Context, symref: SymbolRefShape) {
         }
         if (v.type === VariableType.Status) {
             item.values = tag_values_sort(sym, v);
-            result.splice(slow_index, 0, item);
+            result.splice(status_index, 0, item);
+            status_index++;
         }
     })
     return {variables: result, visible_variables: result2};
