@@ -172,6 +172,7 @@ declare module '@vue/runtime-core' {
     Select: typeof import('./src/components/common/Select.vue')['default']
     SelectBySearch: typeof import('./src/components/Document/Selection/Controller/Text/SelectBySearch.vue')['default']
     SelectFont: typeof import('./src/components/Document/Attribute/Text/SelectFont.vue')['default']
+    SelectHoverContour: typeof import('./src/components/Document/Assist/SelectHoverContour.vue')['default']
     SelectionView: typeof import('./src/components/Document/Selection/SelectionView.vue')['default']
     Selector: typeof import('./src/components/Document/Selection/Selector.vue')['default']
     SelectView: typeof import('./src/components/Document/Selection/Controller/Text/SelectView.vue')['default']
