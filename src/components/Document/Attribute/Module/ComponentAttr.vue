@@ -230,7 +230,7 @@ onUnmounted(() => {
         <!--dialog-->
         <CompLayerShow :context="context" v-if="isaddStateDialog" @close-dialog="isaddStateDialog = false" right="250px"
                        :width="260" :addType="addType" :title="dialog_title" :dialog_posi="dialog_posi"
-                       @save-layer-show="saveLayerShow" @name-change="name_change">
+                       @save-layer-show="saveLayerShow" @name-change="name_change" :selected_layer="selected">
             <template #layer>
                 <SelectLayerInput
                     :title="addType === VariableType.SymbolRef ? t('compos.compos_instance') : t('compos.select_layer')"

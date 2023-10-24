@@ -1,5 +1,5 @@
 <script setup lang="ts">
-import {onMounted, ref} from 'vue';
+import {onMounted, ref, watch} from 'vue';
 import {Context} from '@/context';
 import {ShapeType, VariableType} from '@kcdesign/data';
 import {useI18n} from 'vue-i18n';
@@ -15,7 +15,8 @@ interface Props {
     height?: string | number,
     context: Context,
     addType: VariableType,
-    dialog_posi: { x: number, y: number }
+    dialog_posi: { x: number, y: number },
+    selected_layer?: string[]
 }
 
 interface Emits {
@@ -33,9 +34,31 @@ function popoverClose() {
     emit('closeDialog');
 }
 
-const attrName = ref('')
+const attrName = ref('');
 const isselectLayer = ref(false)
 
+watch(() => props.selected_layer,(v) => {
+    if(v && v.length > 0) {
+        attrName.value = getShapesName(v);
+    }else {
+        attrName.value = '';
+    }
+})
+
+const getShapesName = (ids: string[]) => {
+    const page = props.context.selection.selectedPage;
+    let names: string[] = [];
+    if (!page) return '';
+    for (let i = 0; i < ids.length; i++) {
+        const id = ids[i];
+        const shape = page.getShape(id);
+        if (shape) {
+            names.push(shape.name);
+        }
+    }
+    let result = names.length > 0 ? names.join(',') : '';
+    return result;
+}
 
 const selectList = ref<any[]>([])
 
