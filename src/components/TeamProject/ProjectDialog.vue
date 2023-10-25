@@ -63,6 +63,7 @@ const changemargin = () => {
     align-items: center;
 
     .title {
+        color: #3D3D3D;
         font-weight: 600;
     }
 }

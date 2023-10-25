@@ -496,6 +496,7 @@ const confirm = () => {
             width: 80px;
             height: 32px;
             border: none;
+            outline: none;
             background-color: #9775fa;
             box-shadow: 1px 1px 3px #b1b1b1, -1px -1px 3px #b1b1b1;
             margin-right: 8px;

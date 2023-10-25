@@ -81,6 +81,7 @@ onUnmounted(() => {
         :reflush="reflush !== 0 ? reflush : undefined" :style="{ transform: matrixWithFrame.toString() }" :data-area="rootId">
         <component :is="comsMap.get(c.type) ?? comsMap.get(ShapeType.Rectangle)" v-for="c in renderItems" :key="c.id"
             :data="c" />
+
     </svg>
     <ShapeTitles v-if="show_t" :context="props.context" :data="data" :matrix="matrixWithFrame.toArray()"></ShapeTitles>
     <ComponentTitleContainer :context="props.context" :data="data" :matrix="matrixWithFrame.toArray()">

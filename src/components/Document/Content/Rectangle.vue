@@ -17,13 +17,6 @@ function render() {
     return ret;
 }
 </script>
-
 <template>
     <render></render>
 </template>
-
-<style scoped>
-/* rect {
-    background-color: aqua;
-} */
-</style>

@@ -556,6 +556,7 @@ watchEffect(() => {
     justify-content: space-between;
     border-bottom: 1px solid white;
     border-top: 1px solid white;
+    will-change: top;
 }
 
 :deep(.el-table-v2__header-row) {
