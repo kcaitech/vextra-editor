@@ -654,9 +654,9 @@ export function get_vari_value_for_ref(symref: SymbolRefShape, variable: Variabl
 /**
  * @description 修改实例身上某个变量vari的值
  */
-export function modify_status_value_for_ref(context: Context, vari: Variable, value: any) {
+export function modify_vari_value_for_ref(context: Context, vari: Variable, value: any) {
     const symref = context.selection.symbolrefshape;
     if (!symref) return;
     const editor = context.editor4Shape(symref);
-    editor.modifySymbolRefStatus(vari, value);
+    editor.modifySymbolRefVariable(vari, value);
 }

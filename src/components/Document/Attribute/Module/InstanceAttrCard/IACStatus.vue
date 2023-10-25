@@ -1,5 +1,5 @@
 <script setup lang="ts">
-import {get_vari_value_for_ref, modify_status_value_for_ref, RefAttriListItem} from "@/utils/symbol";
+import {get_vari_value_for_ref, modify_vari_value_for_ref, RefAttriListItem} from "@/utils/symbol";
 import {ref} from "vue";
 import {Context} from "@/context";
 import {onMounted, onUpdated} from "vue";
@@ -24,7 +24,7 @@ function show_menu() {
 
 function select(index: number) {
     const _v = props.data.values[index];
-    modify_status_value_for_ref(props.context, props.data.variable, _v);
+    modify_vari_value_for_ref(props.context, props.data.variable, _v);
 }
 
 function getVattagValue() {

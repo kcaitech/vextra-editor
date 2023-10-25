@@ -1,5 +1,5 @@
 <script setup lang="ts">
-import {modify_status_value_for_ref, RefAttriListItem} from "@/utils/symbol";
+import {modify_vari_value_for_ref, RefAttriListItem} from "@/utils/symbol";
 import {ref} from "vue";
 import {Context} from "@/context";
 import ComponentDialog from "@/components/Document/Attribute/Module/ComponentDialog.vue";
@@ -27,7 +27,7 @@ const closeDialog = () => {
 
 function select(index: number) {
     const _v = props.data.values[index];
-    modify_status_value_for_ref(props.context, props.data.variable, _v);
+    modify_vari_value_for_ref(props.context, props.data.variable, _v);
 }
 
 </script>

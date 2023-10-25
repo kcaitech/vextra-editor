@@ -43,6 +43,7 @@ watch(() => props.selected_layer,(v) => {
     }else {
         attrName.value = '';
     }
+    emit("name-change", attrName.value);
 })
 
 const getShapesName = (ids: string[]) => {

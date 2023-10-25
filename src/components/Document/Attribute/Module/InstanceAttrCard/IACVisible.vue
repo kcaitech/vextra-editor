@@ -1,5 +1,5 @@
 <script setup lang="ts">
-import {get_vari_value_for_ref, modify_status_value_for_ref, RefAttriListItem} from "@/utils/symbol";
+import {get_vari_value_for_ref, modify_vari_value_for_ref, RefAttriListItem} from "@/utils/symbol";
 import {useI18n} from "vue-i18n";
 
 import {Context} from "@/context";
@@ -22,7 +22,7 @@ function get_value() {
 }
 
 function change(v: boolean) {
-    modify_status_value_for_ref(props.context, props.data.variable, v);
+    modify_vari_value_for_ref(props.context, props.data.variable, v);
 }
 
 onMounted(get_value);
