@@ -18,6 +18,7 @@ interface Props {
     context: Context
     data: SymbolShape[]
     container: Element | null
+    isAttri: boolean
 }
 
 const props = defineProps<Props>();
@@ -30,6 +31,10 @@ const list_container_beta = ref<HTMLDivElement>();
 let observer = new ResizeObserver(() => { reflush.value++; });
 
 function down(e: MouseEvent, shape: Shape) {
+    if (props.isAttri) {
+        props.context.component.notify(Component.SELECTED_VAL, shape);
+        return;
+    }
     if (e.button === 2) {
         props.context.component.compMenuMount(shape, e);
         return;

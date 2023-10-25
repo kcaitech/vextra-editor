@@ -45,7 +45,7 @@ onMounted(() => {
             </div>
         </div>
         <div class="body">
-            <ComponentContainer :context="context" :search="search"></ComponentContainer>
+            <ComponentContainer :context="context" :search="search" :is-attri="true"></ComponentContainer>
         </div>
     </div>
 </template>

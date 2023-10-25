@@ -1,10 +1,11 @@
 <script setup lang="ts">
-import {get_vari_value_for_ref, modify_vari_value_for_ref, RefAttriListItem} from "@/utils/symbol";
-import {onMounted, ref} from "vue";
+import {get_vari_value_for_ref, is_circular_ref2, modify_vari_value_for_ref, RefAttriListItem} from "@/utils/symbol";
+import {onMounted, onUnmounted, onUpdated, ref} from "vue";
 import {Context} from "@/context";
 import ComponentDialog from "@/components/Document/Attribute/Module/ComponentDialog.vue";
-import {SymbolRefShape} from "../../../../../../../kcdesign-data";
-import {name} from "axios";
+import {Shape} from "@kcdesign/data";
+import {Component} from "@/context/component";
+import {message} from "@/utils/message";
 
 interface Props {
     context: Context
@@ -44,7 +45,32 @@ function get_value() {
     vari_value.value = props.context.data.symbolsMgr.getSync(id)?.name || 'Error';
 }
 
-onMounted(get_value)
+function component_watcher(t: number, val: Shape) {
+    if (t === Component.SELECTED_VAL) {
+        const symbolref = props.context.selection.symbolrefshape;
+        if (!symbolref) return;
+        const sym = props.context.data.symbolsMgr.getSync(symbolref.refId);
+        if (!sym) return;
+        console.log('val: ', val.id);
+        const is_circular = is_circular_ref2(sym, val.id);
+        if (is_circular) {
+            message("danger", '存在循环引用');
+            return;
+        }
+        modify_vari_value_for_ref(props.context, props.data.variable, val.id);
+        closeDialog();
+    }
+}
+
+onUpdated(get_value);
+
+onMounted(() => {
+    get_value();
+    props.context.component.watch(component_watcher);
+})
+onUnmounted(() => {
+    props.context.component.unwatch(component_watcher);
+})
 </script>
 <template>
     <div class="module_state_item" ref="comps">

@@ -759,3 +759,67 @@ export function modify_vari_value_for_ref(context: Context, vari: Variable, valu
     const editor = context.editor4Shape(symref);
     editor.modifySymbolRefVariable(vari, value);
 }
+
+function get_topology_map(shape: Shape, init?: { shape: string, ref: string }[]) {
+    let deps: { shape: string, ref: string }[] = init || [];
+    const childs = shape.type === ShapeType.SymbolRef ? shape.naviChilds : shape.childs;
+    if (!childs || childs.length === 0) return [];
+    for (let i = 0, len = childs.length; i < len; i++) {
+        const child = childs[i];
+        deps.push({shape: shape.id, ref: childs[i].type === ShapeType.SymbolRef ? childs[i].refId : childs[i].id});
+        const c_childs = child.type === ShapeType.SymbolRef ? child.naviChilds : child.childs;
+        if (c_childs && c_childs.length) deps = [...get_topology_map(child, deps)];
+    }
+    return deps;
+}
+
+function filter_deps(deps: { shape: string, ref: string }[], key1: 'shape' | 'ref', key2: 'shape' | 'ref') {
+    const result: { shape: string, ref: string }[] = [];
+    const _checked: Set<string> = new Set();
+    const _checked_invalid: Set<string> = new Set();
+    for (let i = 0, len = deps.length; i < len; i++) {
+        const d = deps[i];
+        if (_checked.has(d[key1])) {
+            result.push(d);
+            continue;
+        }
+        if (_checked_invalid.has(d[key1])) continue;
+        let invalid: boolean = true;
+        for (let j = 0, len = deps.length; j < len; j++) {
+            if (deps[j][key2] === d[key1]) {
+                result.push(d);
+                _checked.add(d[key1]);
+                invalid = false;
+                break;
+            }
+        }
+        if (invalid) _checked_invalid.add(d[key1]);
+    }
+    return result;
+}
+
+/**
+ * @description 检查symbol与ref之间是否存在循环引用
+ * @param symbol 任意存在子元素的图形
+ * @param ref 想去引用的组件
+ * @returns
+ */
+export function is_circular_ref(symbol: Shape, ref: SymbolRefShape): boolean {
+    let deps: { shape: string, ref: string }[] = [...get_topology_map(symbol), {shape: symbol.id, ref: ref.refId}];
+    if (deps.length < 2) return false;
+    // 过滤左侧
+    deps = filter_deps(deps, 'shape', 'ref');
+    // 过滤右侧
+    deps = filter_deps(deps, 'ref', 'shape');
+    return !!deps.length;
+}
+
+export function is_circular_ref2(symbol: Shape, refId: string): boolean {
+    let deps: { shape: string, ref: string }[] = [...get_topology_map(symbol), {shape: symbol.id, ref: refId}];
+    if (deps.length < 2) return false;
+    // 过滤左侧
+    deps = filter_deps(deps, 'shape', 'ref');
+    // 过滤右侧
+    deps = filter_deps(deps, 'ref', 'shape');
+    return !!deps.length;
+}

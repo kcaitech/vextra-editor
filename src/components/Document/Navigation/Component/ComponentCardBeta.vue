@@ -73,7 +73,6 @@ onMounted(() => {
     check_render_required();
     props.context.selection.watch(selection_watcher);
     is_need_scroll_to_view();
-    console.log('beta card mounted');
 })
 onUnmounted(() => {
     io.disconnect();

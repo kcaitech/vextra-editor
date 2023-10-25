@@ -42,7 +42,7 @@ onMounted(() => {
             </div>
         </div>
         <div class="body" v-show="!search">
-            <ComponentContainer :context="context" :search="search"></ComponentContainer>
+            <ComponentContainer :context="context" :search="search" :is-attri="false"></ComponentContainer>
         </div>
         <ComponentSearchPanel v-show="search" :context="props.context" :data="(search_result as SymbolShape[])">
         </ComponentSearchPanel>

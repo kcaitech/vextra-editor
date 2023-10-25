@@ -5,6 +5,7 @@ export class Component extends Watchable(Object) {
     static WONDER_CHANGE = 2;
     static CARD_TYPE_CHANGE = 5;
     static COMP_MENU = 6;
+    static SELECTED_VAL = 7;
     private m_context: Context;
     private m_bridge: boolean = false;
     private m_wonder: Shape | undefined;

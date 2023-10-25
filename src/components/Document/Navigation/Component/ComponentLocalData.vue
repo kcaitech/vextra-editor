@@ -9,6 +9,7 @@ import { SymbolListItem, list_layout, classification_level_page, modify_parent, 
 interface Props {
     context: Context
     container: Element | null
+    isAttri: boolean
 }
 const props = defineProps<Props>();
 const { t } = useI18n();
@@ -55,7 +56,7 @@ onUnmounted(() => {
 <template>
     <ComponentRootCollapse :context="props.context" :extend="true" :container="props.container"
         :title="t('compos.lib_local')" :data="(local_data as SymbolListItem[])" :status_set="status_set"
-        @change-status="update_status_set">
+        @change-status="update_status_set" :is-attri="props.isAttri">
     </ComponentRootCollapse>
 </template>
 <style lang="scss" scoped></style>

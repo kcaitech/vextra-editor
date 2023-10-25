@@ -11,6 +11,7 @@ import { shape_track } from '@/utils/content';
 interface Props {
     context: Context
     search: string
+    isAttri: boolean
 }
 const props = defineProps<Props>();
 const { t } = useI18n();
@@ -94,10 +95,10 @@ onUnmounted(() => {
 <template>
     <div class="component-container-level-1" ref="top_wrapper">
         <el-scrollbar :always="true">
-            <ComponentLocalData v-if="scroll_container" :context="props.context" :container="scroll_container">
+            <ComponentLocalData v-if="scroll_container" :context="props.context" :container="scroll_container" :is-attri="props.isAttri">
             </ComponentLocalData>
             <ComponentRootCollapse v-if="scroll_container" :context="props.context" :extend="false"
-                :container="scroll_container" :title="t('compos.lib_line')" :data="[]" :status_set="new Set()">
+                :container="scroll_container" :title="t('compos.lib_line')" :data="[]" :status_set="new Set()" :is-attri="props.isAttri">
             </ComponentRootCollapse>
         </el-scrollbar>
         <ContextMenu v-if="compMenu" :x="compMenuPosition.x" :y="compMenuPosition.y" ref="contextMenuEl"
