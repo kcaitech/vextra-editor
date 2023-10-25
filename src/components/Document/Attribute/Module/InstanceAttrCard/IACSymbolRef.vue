@@ -5,6 +5,7 @@ import {Context} from "@/context";
 import ComponentDialog from "@/components/Document/Attribute/Module/ComponentDialog.vue";
 import {SymbolRefShape} from "../../../../../../../kcdesign-data";
 import {name} from "axios";
+
 interface Props {
     context: Context
     data: RefAttriListItem
@@ -16,6 +17,10 @@ const comps = ref<HTMLDivElement>();
 const comps_posi = ref({x: 0, y: 0});
 const vari_value = ref<string>('');
 const compsDialog = () => {
+    const symref = props.context.selection.symbolrefshape;
+    if (symref) {
+        props.context.component.set_scroll_target(symref.refId);
+    }
     if (comps.value) {
         const el = comps.value.getBoundingClientRect();
         comps_posi.value.x = el.x - (el.width + 32);
@@ -31,12 +36,14 @@ function select(index: number) {
     const _v = props.data.values[index];
     modify_vari_value_for_ref(props.context, props.data.variable, _v);
 }
+
 function get_value() {
     const symref = props.context.selection.symbolrefshape;
     if (!symref) return;
     const id = get_vari_value_for_ref(symref, props.data.variable);
-    vari_value.value =  props.context.data.symbolsMgr.getSync(id)?.name || 'Error';
+    vari_value.value = props.context.data.symbolsMgr.getSync(id)?.name || 'Error';
 }
+
 onMounted(get_value)
 </script>
 <template>
@@ -44,7 +51,7 @@ onMounted(get_value)
         <div class="state_item">
             <div class="state_name"><span>{{ props.data.variable.name }}</span></div>
             <div class="state_value border" @click="compsDialog">
-                <span style="color: #606266;">{{ vari_value}}</span>
+                <span style="color: #606266;">{{ vari_value }}</span>
                 <svg-icon icon-class="down" style="color: #a8abb2;"></svg-icon>
             </div>
         </div>
