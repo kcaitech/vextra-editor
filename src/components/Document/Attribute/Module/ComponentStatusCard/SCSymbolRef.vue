@@ -126,7 +126,7 @@ function save_instance() {
             }
 
             .name {
-                max-width: 100%;
+                max-width: 64%;
                 overflow: hidden;
                 text-overflow: ellipsis;
                 white-space: nowrap;

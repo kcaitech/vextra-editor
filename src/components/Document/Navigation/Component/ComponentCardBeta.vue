@@ -13,6 +13,7 @@ interface Props {
     data: GroupShape
     context: Context
     container: Element | null
+    isAttri: boolean
 }
 
 const props = defineProps<Props>();
@@ -69,17 +70,18 @@ function is_need_scroll_to_view() {
     }
     clear_scroll_target(props.context);
 }
+
 function danger_check() {
     const symbolref = props.context.selection.symbolrefshape;
     if (!symbolref) return;
     const sym = props.context.data.symbolsMgr.getSync(symbolref.refId);
     if (!sym) return;
     const is_circular = is_circular_ref2(sym, props.data.id);
-    console.log('is_circular', props.data.name, is_circular)
     if (is_circular) danger.value = true;
 }
+
 onMounted(() => {
-    danger_check();
+    if (props.isAttri) danger_check();
     check_selected_status();
     check_render_required();
     props.context.selection.watch(selection_watcher);
@@ -128,6 +130,7 @@ onUnmounted(() => {
     .selected {
         border: 2px solid var(--component-color);
     }
+
     .danger {
         border: 2px solid #F56C6C;
         background-color: rgba(245, 108, 108, 0.3);

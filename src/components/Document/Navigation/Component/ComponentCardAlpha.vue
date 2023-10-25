@@ -11,6 +11,7 @@ interface Props {
     data: GroupShape
     context: Context
     container: Element | null
+    isAttri: boolean
 }
 const props = defineProps<Props>();
 const common = initCommonShape(props);

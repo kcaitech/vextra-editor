@@ -75,7 +75,9 @@ onUnmounted(() => {
 <template>
     <div class="module_state_item" ref="comps">
         <div class="state_item">
-            <div class="state_name"><span>{{ props.data.variable.name }}</span></div>
+            <div class="state_name">
+                <span>{{ props.data.variable.name }}</span>
+            </div>
             <div class="state_value border" @click="compsDialog">
                 <span style="color: #606266;">{{ vari_value }}</span>
                 <svg-icon icon-class="down" style="color: #a8abb2;"></svg-icon>

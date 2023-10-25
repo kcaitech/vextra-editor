@@ -134,7 +134,7 @@ function save_layer_show() {
             }
 
             .name {
-                max-width: 100%;
+                max-width: 64%;
                 overflow: hidden;
                 text-overflow: ellipsis;
                 white-space: nowrap;
