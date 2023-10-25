@@ -238,6 +238,7 @@ declare module '@vue/runtime-core' {
     SubMenu: typeof import('./src/components/Document/Toolbar/DocumentMenu/SubMenu.vue')['default']
     SvgIcon: typeof import('./src/components/common/SvgIcon.vue')['default']
     SymbolRef: typeof import('./src/components/Document/Content/SymbolRef.vue')['default']
+    SymbolRefStatic: typeof import('./src/components/Document/ContentStatic/SymbolRefStatic.vue')['default']
     Table: typeof import('./src/components/Document/Toolbar/Buttons/Table/index.vue')['default']
     TableCellsMenu: typeof import('./src/components/Document/Menu/TableMenu/TableCellsMenu.vue')['default']
     TableContextAlgin: typeof import('./src/components/Document/Menu/TableMenu/TableContextAlgin.vue')['default']

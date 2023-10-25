@@ -4,7 +4,7 @@ import { ShapeType, VariableType } from '@kcdesign/data';
 import { ArrowDown } from '@element-plus/icons-vue';
 import { useI18n } from 'vue-i18n';
 import { onMounted, ref } from 'vue';
-import { get_layer_from_symbol } from '@/utils/symbol';
+import {get_instance_from_symbol, get_layer_from_symbol} from '@/utils/symbol';
 import SelectLayer from '../PopoverMenu/SelectLayer.vue';
 
 const { t } = useI18n();
@@ -41,28 +41,19 @@ function de_show_select_layer() {
 }
 
 const get_symbol_layer = () => {
-    const shapes = props.context.selection.selectedShapes;
-    if (shapes.length === 1) {
-        let symbolLayer = get_layer_from_symbol(shapes[0]);
-        if (props.addType === VariableType.Text) {
-            symbolLayer = symbolLayer.map(v => {
-                v.data = v.data.filter(item => item.type === ShapeType.Text);
-                return v;
-            }).filter(v => v.data.length > 0);
-        } else if (props.addType === VariableType.SymbolRef) {
-            symbolLayer = symbolLayer.map(v => {
-                v.data = v.data.filter(item => item.type === ShapeType.SymbolRef);
-                return v;
-            }).filter(v => v.data.length > 0);
+    const symbolshape = props.context.selection.symbolshape;
+    if (!symbolshape) return;
+    if (props.addType === VariableType.Visible) {
+        selectList.value = get_layer_from_symbol(symbolshape);
+    } else if (props.addType === VariableType.Text) {
 
-        }
-        selectList.value = symbolLayer;
+    } else if (props.addType === VariableType.SymbolRef) {
+        selectList.value = get_instance_from_symbol(symbolshape);
     }
 }
 
 function select_change(data: string[]) {
-    const v = getShapesName(data);
-    selectLayerName.value = v;
+    selectLayerName.value = getShapesName(data);
     selectLayerid.value = data;
     emit("change", data);
 }

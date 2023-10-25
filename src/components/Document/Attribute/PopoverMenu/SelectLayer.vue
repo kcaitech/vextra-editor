@@ -20,17 +20,17 @@ interface Props {
     selectList: any[]
     layerId?: string[]
 }
-
-const props = defineProps<Props>();
-const checkList = ref<string[]>([])
-const unfold = new Set();
-const emit = defineEmits<{
+interface Emits {
     (e: 'close'): void;
     (e: 'change', data: string[]): void;
-}>()
+}
+const props = defineProps<Props>();
+const emits = defineEmits<Emits>();
+const checkList = ref<string[]>([])
+const unfold = new Set();
 const close = (e: MouseEvent) => {
     e.stopPropagation();
-    emit('close');
+    emits('close');
 }
 
 function handleClickOutside(event: MouseEvent) {
@@ -43,7 +43,7 @@ const popover = ref<HTMLDivElement>();
 
 const confirmSelect = () => {
     if (checkList.value.length === 0) return;
-    emit('close');
+    emits('close');
 }
 
 function toggle(i: number) {
@@ -58,7 +58,7 @@ function toggle(i: number) {
 const handleCheck = (v: string[]) => {
     // 选中对象的id
     checkList.value = v;
-    emit("change", v);
+    emits("change", v);
 }
 watchEffect(() => {
     props.selectList.length;
@@ -100,7 +100,7 @@ onUnmounted(() => {
                 }}</span>
             <div class="close">
                 <div class="toggle_list">
-                    <svg-icon icon-class="close" @click.stop="emit('close');"></svg-icon>
+                    <svg-icon icon-class="close" @click.stop="emits('close');"></svg-icon>
                 </div>
             </div>
         </div>

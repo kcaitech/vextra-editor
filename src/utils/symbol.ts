@@ -611,6 +611,50 @@ function get_layer_i(symbol: Shape) {
     return shapes;
 }
 
+export interface InstanceCollectItem {
+    state: string
+    data: Shape[]
+}
+
+export function get_instance_from_symbol(symbol: Shape) {
+    const result: InstanceCollectItem[] = [];
+    if (symbol.type !== ShapeType.Symbol) return result;
+    if (symbol.isUnionSymbolShape) { // 存在可变组件
+        const childs = symbol.childs;
+        for (let i = 0, len = childs.length; i < len; i++) {
+            const item = childs[i];
+            const lci = {
+                state: get_name(item),
+                data: get_instance_i(item)
+            }
+            result.push(lci);
+        }
+        return result;
+    } else { // 不存在可变组件
+        return [{state: symbol.name, data: get_instance_i(symbol)}];
+    }
+}
+
+function get_instance_i(group: Shape) {
+    const shapes: Shape[] = [];
+    const childs = group.childs;
+    if (de_check_for_get_instance_i_1(group)) return shapes;
+    let slow_index = 0;
+    for (let i = 0, len = childs.length; i < len; i++) {
+        const item = childs[i];
+        if (item.type === ShapeType.SymbolRef) {
+            shapes.splice(slow_index++, 0, item);
+        } else if (item.childs && item.childs.length && item.type !== ShapeType.Table) {
+            shapes.push(...get_instance_i(item));
+        }
+    }
+    return shapes;
+}
+
+function de_check_for_get_instance_i_1(item: Shape) {
+    return !item.childs || !item.childs.length || item.type === ShapeType.Table || item.type === ShapeType.SymbolRef
+}
+
 export interface RefAttriListItem {
     variable: Variable
     values: any[]

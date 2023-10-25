@@ -61,31 +61,8 @@ const getShapesName = (ids: string[]) => {
     return result;
 }
 
-const selectList = ref<any[]>([])
-
 const save = () => {
     emit('saveLayerShow', props.addType)
-}
-
-const get_symbol_layer = () => {
-    const shapes = props.context.selection.selectedShapes;
-    if (shapes.length === 1) {
-        let symbolLayer = get_layer_from_symbol(shapes[0]);
-        console.log('symbolLayer:', symbolLayer)
-        if (props.addType === VariableType.Text) {
-            symbolLayer = symbolLayer.map(v => {
-                v.data = v.data.filter(item => item.type === ShapeType.Text);
-                return v;
-            }).filter(v => v.data.length > 0);
-        } else if (props.addType === VariableType.SymbolRef) {
-            symbolLayer = symbolLayer.map(v => {
-                v.data = v.data.filter(item => item.type === ShapeType.SymbolRef);
-                return v;
-            }).filter(v => v.data.length > 0);
-
-        }
-        selectList.value = symbolLayer;
-    }
 }
 
 const comps = ref<HTMLDivElement>()
@@ -97,7 +74,6 @@ function name_change(v: any) {
 }
 
 onMounted(() => {
-    get_symbol_layer();
     if (comps.value) {
         const body_h = document.body.clientHeight;
         const {y, height} = comps.value.getBoundingClientRect();
