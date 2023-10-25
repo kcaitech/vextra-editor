@@ -202,6 +202,7 @@ function _search(auto: boolean) { // 支持阻止子元素冒泡的图形检索
     const { x: mx, y: my } = mouseOnClient;
     const xy: PageXY = matrix_inverse.computeCoord2(mx - x, my - y);
     const shapes = props.context.selection.getShapesByXY(xy, auto);
+    console.log('_search');
     selectShapes(props.context, shapes);
 }
 function search(e: MouseEvent) { // 常规图形检索
