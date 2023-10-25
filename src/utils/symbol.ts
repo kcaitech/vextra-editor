@@ -418,12 +418,12 @@ export function create_ref_var(context: Context, symbol: SymbolShape, name: stri
 /**
  * @description 为组件创建文本切换变量
  */
-export function create_text_var(context: Context, symbol: SymbolShape, name: string, values: any) {
+export function create_text_var(context: Context, symbol: SymbolShape, name: string, dlt: string, shapes: Shape[]) {
     const editor = context.editor4Page(context.selection.selectedPage!);
-    editor.makeTextVar(symbol, name, values);
+    editor.makeTextVar(symbol, name, dlt, shapes);
 }
 
-export function create_var_by_type(context: Context, type: VariableType, name: string, value: boolean, values: any[]) {
+export function create_var_by_type(context: Context, type: VariableType, name: string, value: any, values: any[]) {
     const selection = context.selection;
     if (!selection.symbolshape) return;
     const shapes: Shape[] = [];
@@ -438,7 +438,7 @@ export function create_var_by_type(context: Context, type: VariableType, name: s
         case VariableType.SymbolRef:
             return create_ref_var(context, selection.symbolshape, name, shapes);
         case VariableType.Text:
-            return create_text_var(context, selection.symbolshape, name, '嘿嘿');
+            return create_text_var(context, selection.symbolshape, name, value, shapes);
         default:
             console.log('wrong action');
     }
@@ -725,7 +725,7 @@ export function get_var_for_ref(context: Context, symref: SymbolRefShape) {
     let status_index: number = 0;
     let instance_index: number = 0;
     let text_index: number = 0;
-    variables.forEach(v => {
+    variables.forEach((v: Variable) => {
         const item: RefAttriListItem = {variable: v, values: []};
         if (v.type === VariableType.Visible) {
             result2.push(item);

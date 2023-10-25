@@ -1,6 +1,6 @@
 <script setup lang="ts">
-import {RefAttriListItem} from "@/utils/symbol";
-import {ref} from "vue";
+import {get_vari_value_for_ref, modify_vari_value_for_ref, RefAttriListItem} from "@/utils/symbol";
+import {ref, onMounted} from "vue";
 import {Context} from "@/context";
 interface Props {
     context: Context
@@ -14,15 +14,22 @@ const selectAllText = () => {
     inputRef.value?.select()
 }
 
-
-
+function get_value() {
+    const symref = props.context.selection.symbolrefshape;
+    if (!symref) return;
+    textValue.value = get_vari_value_for_ref(symref, props.data.variable);
+}
+function change(v: boolean) {
+    modify_vari_value_for_ref(props.context, props.data.variable, v);
+}
+onMounted(get_value);
 </script>
 <template>
     <div class="module_state_item">
         <div class="state_item">
-            <div class="state_name"><span>{{ }}</span></div>
+            <div class="state_name"><span>{{ props.data.variable.name }}</span></div>
             <div class="state_value" style="padding: 0;">
-                <el-input ref="inputRef" v-model="textValue" @focus="selectAllText" />
+                <el-input ref="inputRef" v-model="textValue" @focus="selectAllText" @change="change"/>
             </div>
         </div>
         <div class="delete"></div>

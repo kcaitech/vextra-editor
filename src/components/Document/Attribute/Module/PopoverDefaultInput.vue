@@ -15,6 +15,7 @@ interface Props {
 
 interface Emits {
     (e: "select", index: number): void;
+    (e: "change", value: string): void;
 }
 
 const props = defineProps<Props>();
@@ -33,6 +34,9 @@ const handleShow = (index: number) => {
     menuIndex.value = index;
     emits('select', index);
 }
+function change(v: string) {
+    emits("change", v);
+}
 </script>
 
 <template>
@@ -50,7 +54,7 @@ const handleShow = (index: number) => {
             </div>
         </div>
         <div v-if="props.addType === VariableType.Text">
-            <el-input v-model="textDefaultValue" :placeholder="t('compos.default_text_input')"/>
+            <el-input v-model="textDefaultValue" :placeholder="t('compos.default_text_input')" @change="change"/>
         </div>
     </div>
 </template>

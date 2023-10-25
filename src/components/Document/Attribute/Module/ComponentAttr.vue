@@ -38,7 +38,7 @@ const variables = ref<AttriListItem[]>();
 const conflict = ref<boolean>(false);
 const selected = ref<string[]>([]);
 const var_name = ref<string>('');
-const dlt_value = ref<boolean>(true);
+const dlt_value = ref<any>(true);
 function close() {
     const is_achieve_expected_results = compsType.value;
     compsType.value = false;
@@ -160,6 +160,9 @@ function name_change(v: string) {
 function dlt_change(v: number) {
     dlt_value.value = !v;
 }
+function text_dlt_change(v: string) {
+    dlt_value.value = v;
+}
 
 watch(() => props.shape, (v, o) => {
     v.watch(variable_watcher);
@@ -242,7 +245,7 @@ onUnmounted(() => {
             </template>
             <template #default_value>
                 <PopoverDefaultInput v-if="addType !== VariableType.SymbolRef" :context="context"
-                                     :add-type="addType" @select="dlt_change"></PopoverDefaultInput>
+                                     :add-type="addType" @select="dlt_change" @change="text_dlt_change"></PopoverDefaultInput>
             </template>
         </CompLayerShow>
     </div>
