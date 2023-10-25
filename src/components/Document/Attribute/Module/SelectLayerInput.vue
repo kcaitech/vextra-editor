@@ -4,7 +4,7 @@ import { ShapeType, VariableType } from '@kcdesign/data';
 import { ArrowDown } from '@element-plus/icons-vue';
 import { useI18n } from 'vue-i18n';
 import { onMounted, ref } from 'vue';
-import {get_instance_from_symbol, get_layer_from_symbol} from '@/utils/symbol';
+import {get_instance_from_symbol, get_layer_from_symbol, get_text_from_symbol} from '@/utils/symbol';
 import SelectLayer from '../PopoverMenu/SelectLayer.vue';
 
 const { t } = useI18n();
@@ -46,7 +46,7 @@ const get_symbol_layer = () => {
     if (props.addType === VariableType.Visible) {
         selectList.value = get_layer_from_symbol(symbolshape);
     } else if (props.addType === VariableType.Text) {
-
+        selectList.value = get_text_from_symbol(symbolshape);
     } else if (props.addType === VariableType.SymbolRef) {
         selectList.value = get_instance_from_symbol(symbolshape);
     }
