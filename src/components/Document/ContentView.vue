@@ -133,6 +133,7 @@ function onMouseWheel(e: WheelEvent) { // 滚轮、触摸板事件
 }
 function onKeyDown(e: KeyboardEvent) { // 键盘监听
     if (e.target instanceof HTMLInputElement) return;
+    if (e.repeat) return;
     if (e.code === KeyboardKeys.Space) {
         if (workspace.value.select || spacePressed.value) return;
         // overview.value = true;
@@ -202,7 +203,6 @@ function _search(auto: boolean) { // 支持阻止子元素冒泡的图形检索
     const { x: mx, y: my } = mouseOnClient;
     const xy: PageXY = matrix_inverse.computeCoord2(mx - x, my - y);
     const shapes = props.context.selection.getShapesByXY(xy, auto);
-    console.log('_search');
     selectShapes(props.context, shapes);
 }
 function search(e: MouseEvent) { // 常规图形检索
