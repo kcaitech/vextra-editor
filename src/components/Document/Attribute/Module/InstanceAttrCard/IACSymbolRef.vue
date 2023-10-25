@@ -1,8 +1,10 @@
 <script setup lang="ts">
-import {modify_vari_value_for_ref, RefAttriListItem} from "@/utils/symbol";
-import {ref} from "vue";
+import {get_vari_value_for_ref, modify_vari_value_for_ref, RefAttriListItem} from "@/utils/symbol";
+import {onMounted, ref} from "vue";
 import {Context} from "@/context";
 import ComponentDialog from "@/components/Document/Attribute/Module/ComponentDialog.vue";
+import {SymbolRefShape} from "../../../../../../../kcdesign-data";
+import {name} from "axios";
 interface Props {
     context: Context
     data: RefAttriListItem
@@ -12,7 +14,7 @@ const props = defineProps<Props>();
 const showCompsDialog = ref(false);
 const comps = ref<HTMLDivElement>();
 const comps_posi = ref({x: 0, y: 0});
-
+const vari_value = ref<string>('');
 const compsDialog = () => {
     if (comps.value) {
         const el = comps.value.getBoundingClientRect();
@@ -29,14 +31,20 @@ function select(index: number) {
     const _v = props.data.values[index];
     modify_vari_value_for_ref(props.context, props.data.variable, _v);
 }
-
+function get_value() {
+    const symref = props.context.selection.symbolrefshape;
+    if (!symref) return;
+    const id = get_vari_value_for_ref(symref, props.data.variable);
+    vari_value.value =  props.context.data.symbolsMgr.getSync(id)?.name || 'Error';
+}
+onMounted(get_value)
 </script>
 <template>
     <div class="module_state_item" ref="comps">
         <div class="state_item">
-            <div class="state_name"><span>{{ 111 }}</span></div>
+            <div class="state_name"><span>{{ props.data.variable.name }}</span></div>
             <div class="state_value border" @click="compsDialog">
-                <span style="color: #606266;">默认</span>
+                <span style="color: #606266;">{{ vari_value}}</span>
                 <svg-icon icon-class="down" style="color: #a8abb2;"></svg-icon>
             </div>
         </div>

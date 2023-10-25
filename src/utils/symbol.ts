@@ -410,9 +410,9 @@ export function create_visible_var(context: Context, symbol: SymbolShape, name: 
 /**
  * @description 为组件创建实例切换变量
  */
-export function create_ref_var(context: Context, symbol: SymbolShape, name: string, values: any) {
+export function create_ref_var(context: Context, symbol: SymbolShape, name: string, shapes: Shape[]) {
     const editor = context.editor4Page(context.selection.selectedPage!);
-    editor.makeSymbolRefVar(symbol, name, values);
+    editor.makeSymbolRefVar(symbol, name, shapes);
 }
 
 /**
@@ -427,18 +427,16 @@ export function create_var_by_type(context: Context, type: VariableType, name: s
     const selection = context.selection;
     if (!selection.symbolshape) return;
     const shapes: Shape[] = [];
-    if (type === VariableType.Visible) {
-        const page = selection.selectedPage!;
-        for (let i = 0, len = values.length; i < len; i++) {
-            const s = page.getShape(values[i]);
-            if (s) shapes.push(s);
-        }
+    const page = selection.selectedPage!;
+    for (let i = 0, len = values.length; i < len; i++) {
+        const s = page.getShape(values[i]);
+        if (s) shapes.push(s);
     }
     switch (type) {
         case VariableType.Visible:
             return create_visible_var(context, selection.symbolshape, name, value, shapes);
         case VariableType.SymbolRef:
-            return create_ref_var(context, selection.symbolshape, name, '嘿嘿');
+            return create_ref_var(context, selection.symbolshape, name, shapes);
         case VariableType.Text:
             return create_text_var(context, selection.symbolshape, name, '嘿嘿');
         default:
@@ -672,7 +670,9 @@ export function get_var_for_ref(context: Context, symref: SymbolRefShape) {
     if (!sym) return false;
     const variables = sym.variables;
     if (!variables) return false;
-    let status_index = 0;
+    let status_index: number = 0;
+    let instance_index: number = 0;
+    let text_index: number = 0;
     variables.forEach(v => {
         const item: RefAttriListItem = {variable: v, values: []};
         if (v.type === VariableType.Visible) {
@@ -680,8 +680,11 @@ export function get_var_for_ref(context: Context, symref: SymbolRefShape) {
         }
         if (v.type === VariableType.Status) {
             item.values = tag_values_sort(sym, v);
-            result.splice(status_index, 0, item);
-            status_index++;
+            result.splice(status_index++, 0, item);
+        } else if (v.type === VariableType.SymbolRef) {
+            result.splice(status_index + instance_index++, 0, item);
+        } else if (v.type === VariableType.Text) {
+            result.splice(status_index + instance_index + text_index++, 0, item);
         }
     })
     return {variables: result, visible_variables: result2};
