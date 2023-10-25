@@ -6,7 +6,8 @@ import {renderSymbolPreview as r} from "@kcdesign/data";
 import {initCommonShape} from "@/components/Document/Content/common";
 import {Context} from '@/context';
 import {Selection} from '@/context/selection';
-import {clear_scroll_target} from '@/utils/symbol';
+import {clear_scroll_target, is_circular_ref2} from '@/utils/symbol';
+import {message} from "@/utils/message";
 
 interface Props {
     data: GroupShape
@@ -19,6 +20,7 @@ const common = initCommonShape(props);
 const selected = ref<boolean>(false);
 const render_preview = ref<boolean>(false);
 const preview_container = ref<Element>();
+const danger = ref<boolean>(false);
 
 function gen_view_box() {
     const frame = props.data.frame;
@@ -67,8 +69,17 @@ function is_need_scroll_to_view() {
     }
     clear_scroll_target(props.context);
 }
-
+function danger_check() {
+    const symbolref = props.context.selection.symbolrefshape;
+    if (!symbolref) return;
+    const sym = props.context.data.symbolsMgr.getSync(symbolref.refId);
+    if (!sym) return;
+    const is_circular = is_circular_ref2(sym, props.data.id);
+    console.log('is_circular', props.data.name, is_circular)
+    if (is_circular) danger.value = true;
+}
 onMounted(() => {
+    danger_check();
     check_selected_status();
     check_render_required();
     props.context.selection.watch(selection_watcher);
@@ -87,7 +98,7 @@ onUnmounted(() => {
              class="render-wrap">
             <render></render>
         </svg>
-        <div :class="{ status: true, selected }"></div>
+        <div :class="{ status: true, selected, danger }"></div>
     </div>
 </template>
 <style scoped lang="scss">
@@ -116,6 +127,10 @@ onUnmounted(() => {
 
     .selected {
         border: 2px solid var(--component-color);
+    }
+    .danger {
+        border: 2px solid #F56C6C;
+        background-color: rgba(245, 108, 108, 0.3);
     }
 }
 </style>

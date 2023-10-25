@@ -38,7 +38,6 @@ const options = {
 }
 function intersection(entries: any) {
     if (!render_preview.value && entries[0]?.isIntersecting) {
-        // console.log('render alpha card', props.data.name);
         render_preview.value = true;
     }
 }
