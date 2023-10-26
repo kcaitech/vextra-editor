@@ -10,7 +10,7 @@ const props = defineProps<{
     menuIndex?: number
     context: Context
 }>()
-const {t} = useI18n();
+const { t } = useI18n();
 const emit = defineEmits<{
     (e: 'selectIndex', index: number): void
     (e: 'close'): void
@@ -29,7 +29,7 @@ const hoverColor = (index: number) => {
     isActive.value = index;
 }
 const menu_watcher = (t: number) => {
-    if(t === Menu.CLOSE_COMP_MENU) {
+    if (t === Menu.CLOSE_COMP_MENU) {
         emit('close');
     }
 }
@@ -72,6 +72,12 @@ onUnmounted(() => {
         justify-content: space-between;
         padding: 0 16px;
         box-sizing: border-box;
+
+        span {
+            overflow: hidden;
+            text-overflow: ellipsis;
+            white-space: nowrap;
+        }
 
         // &:hover {
         //     background-color: var(--active-color);

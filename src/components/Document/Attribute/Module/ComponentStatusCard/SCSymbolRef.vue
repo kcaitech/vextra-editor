@@ -54,9 +54,11 @@ function save_instance() {
         <div class="attr_con">
             <div class="module_item_left" @click="edit_instance">
                 <div class="module_name-2">
-                    <svg-icon icon-class="pattern-rectangle"
-                              style="width: 10px; height: 10px; transform: rotate(45deg); margin-top: 0;"></svg-icon>
-                    <span class="name">{{ props.variable.name }}</span>
+                    <div style="width: 30px;" class="svg">
+                        <svg-icon icon-class="pattern-rectangle"
+                                  style="width: 10px; height: 10px; transform: rotate(45deg); margin-top: 0;"></svg-icon>
+                    </div>
+                    <div class="name">{{ props.variable.name }}</div>
                 </div>
             </div>
             <div class="delete">
@@ -118,18 +120,25 @@ function save_instance() {
         .module_name-2 {
             display: flex;
             align-items: center;
-
-            > svg {
-                width: 14px;
-                height: 14px;
-                margin: 0px 10px;
+            width: 100%;
+            .svg {
+                display: flex;
+                align-items: center;
+                justify-content: center;
+                > svg {
+                    width: 14px;
+                    height: 14px;
+                    margin: 0px 10px;
+                }
             }
 
+
             .name {
-                max-width: 64%;
+                flex: 1;
                 overflow: hidden;
                 text-overflow: ellipsis;
                 white-space: nowrap;
+                padding-right: 10px;
             }
         }
 
@@ -137,7 +146,6 @@ function save_instance() {
             overflow: hidden;
             text-overflow: ellipsis;
             white-space: nowrap;
-            max-width: 120px;
         }
     }
 

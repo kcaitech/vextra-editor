@@ -1,11 +1,12 @@
 <script setup lang="ts">
-import {get_vari_value_for_ref, is_circular_ref2, modify_vari_value_for_ref, RefAttriListItem} from "@/utils/symbol";
-import {onMounted, onUnmounted, onUpdated, ref} from "vue";
-import {Context} from "@/context";
+import { get_vari_value_for_ref, is_circular_ref2, modify_vari_value_for_ref, RefAttriListItem } from "@/utils/symbol";
+import { onMounted, onUnmounted, onUpdated, ref } from "vue";
+import { Context } from "@/context";
 import ComponentDialog from "@/components/Document/Attribute/Module/ComponentDialog.vue";
-import {Shape} from "@kcdesign/data";
-import {Component} from "@/context/component";
-import {message} from "@/utils/message";
+import { Shape } from "@kcdesign/data";
+import { Component } from "@/context/component";
+import { message } from "@/utils/message";
+import { ArrowDown } from '@element-plus/icons-vue'
 
 interface Props {
     context: Context
@@ -15,7 +16,7 @@ interface Props {
 const props = defineProps<Props>();
 const showCompsDialog = ref(false);
 const comps = ref<HTMLDivElement>();
-const comps_posi = ref({x: 0, y: 0});
+const comps_posi = ref({ x: 0, y: 0 });
 const vari_value = ref<string>('');
 const compsDialog = () => {
     const symref = props.context.selection.symbolrefshape;
@@ -79,12 +80,16 @@ onUnmounted(() => {
             </div>
             <div class="state_value border" @click="compsDialog">
                 <span style="color: #606266;">{{ vari_value }}</span>
-                <svg-icon icon-class="down" style="color: #a8abb2;"></svg-icon>
+                <div style="width: 30px;">
+                    <el-icon>
+                        <ArrowDown />
+                    </el-icon>
+                </div>
             </div>
         </div>
         <div class="delete"></div>
         <ComponentDialog v-if="showCompsDialog" :context="context" right="250px" top="0" @closeDialog="closeDialog"
-                         :comps_posi="comps_posi">
+            :comps_posi="comps_posi">
         </ComponentDialog>
     </div>
 </template>
@@ -98,7 +103,7 @@ onUnmounted(() => {
     .state_item {
         display: flex;
         align-items: center;
-        width: 100%;
+        width: calc(100% - 22px);
         height: 30px;
 
         .state_name {
@@ -106,6 +111,8 @@ onUnmounted(() => {
             align-items: center;
             width: 40%;
             height: 100%;
+            box-sizing: border-box;
+            padding-right: 10px;
 
             span {
                 overflow: hidden;
@@ -118,14 +125,29 @@ onUnmounted(() => {
             display: flex;
             align-items: center;
             justify-content: space-between;
-            padding: 0 11px;
+            box-sizing: border-box;
+            width: 60%;
+            padding-left: 11px;
             flex: 1;
             height: 100%;
             border-radius: 4px;
 
-            > svg {
-                width: 10px;
-                height: 10px;
+            >div {
+                display: flex;
+                align-items: center;
+                justify-content: center;
+
+                >svg {
+                    width: 12px;
+                    height: 12px;
+                }
+            }
+
+            span {
+                flex: 1;
+                overflow: hidden;
+                text-overflow: ellipsis;
+                white-space: nowrap;
             }
 
             .input {
@@ -157,7 +179,7 @@ onUnmounted(() => {
                 height: 30px;
                 font-size: 10px;
 
-                > div {
+                >div {
                     height: 100%;
                 }
 

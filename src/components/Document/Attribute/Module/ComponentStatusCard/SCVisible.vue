@@ -59,7 +59,9 @@ function save_layer_show() {
         <div class="attr_con">
             <div class="module_item_left" @click="edit_visible">
                 <div class="module_name-2">
-                    <svg-icon icon-class="eye-open"></svg-icon>
+                    <div style="width: 30px;" class="svg">
+                        <svg-icon icon-class="eye-open"></svg-icon>
+                    </div>
                     <span class="name">{{ props.variable.name }}</span>
                 </div>
             </div>
@@ -112,7 +114,6 @@ function save_layer_show() {
             > svg {
                 width: 14px;
                 height: 14px;
-                margin: 0px 10px;
             }
 
             .name {
@@ -126,15 +127,20 @@ function save_layer_show() {
         .module_name-2 {
             display: flex;
             align-items: center;
-
-            > svg {
-                width: 14px;
-                height: 14px;
-                margin: 0px 10px;
+            width: 100%;
+            .svg {
+                display: flex;
+                align-items: center;
+                justify-content: center;
+                > svg {
+                    width: 14px;
+                    height: 14px;
+                }
             }
 
             .name {
-                max-width: 64%;
+                flex: 1;
+                padding-right: 10px;
                 overflow: hidden;
                 text-overflow: ellipsis;
                 white-space: nowrap;
@@ -145,7 +151,6 @@ function save_layer_show() {
             overflow: hidden;
             text-overflow: ellipsis;
             white-space: nowrap;
-            max-width: 120px;
         }
     }
 

@@ -70,7 +70,7 @@ onMounted(() => {
     .state_item {
         display: flex;
         align-items: center;
-        width: 100%;
+        width: calc(100% - 22px);
         height: 30px;
 
         .state_name {
@@ -78,6 +78,8 @@ onMounted(() => {
             align-items: center;
             width: 40%;
             height: 100%;
+            box-sizing: border-box;
+            padding-right: 10px;
 
             span {
                 overflow: hidden;
@@ -90,6 +92,7 @@ onMounted(() => {
             display: flex;
             align-items: center;
             justify-content: space-between;
+            width: 60%;
             padding: 0 11px;
             flex: 1;
             height: 100%;
@@ -98,6 +101,11 @@ onMounted(() => {
             > svg {
                 width: 10px;
                 height: 10px;
+            }
+            span {
+                overflow: hidden;
+                text-overflow: ellipsis;
+                white-space: nowrap;
             }
 
             .input {

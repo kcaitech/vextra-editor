@@ -142,7 +142,7 @@ onUnmounted(() => {
     .state_item {
         display: flex;
         align-items: center;
-        width: 100%;
+        width: calc(100% - 22px);
         height: 30px;
 
         .state_name {
@@ -150,6 +150,8 @@ onUnmounted(() => {
             align-items: center;
             width: 40%;
             height: 100%;
+            box-sizing: border-box;
+            padding-right: 10px;
 
             span {
                 overflow: hidden;
@@ -162,6 +164,7 @@ onUnmounted(() => {
             display: flex;
             align-items: center;
             border-radius: 4px;
+            width: 60%;
             flex: 1;
             height: 100%;
             background-color: var(--grey-light);
