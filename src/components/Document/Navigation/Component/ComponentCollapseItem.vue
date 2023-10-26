@@ -4,6 +4,7 @@ import { onMounted, ref } from 'vue';
 import { Context } from '@/context';
 import { SymbolListItem } from '@/utils/symbol';
 import ComponentCollapseItemTitle from './ComponentCollapseItemTitle.vue';
+import Position from "@/components/Document/Attribute/PopoverMenu/Position.vue";
 
 interface Props {
     context: Context

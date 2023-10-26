@@ -55,7 +55,7 @@ export function classification_level_page(pages: Page[]) {
 function get_symbol_level_under(group: GroupShape) {
     const symbols: SymbolShape[] = [];
     const childs = group.childs;
-    for (let i = 0, len = childs.length; i < len; i++) {
+    for (let i = childs.length - 1; i > -1; i--) {
         const item = childs[i];
         if (item.isUnionSymbolShape) {
             symbols.push(item.childs[0]);
@@ -761,7 +761,7 @@ export function modify_vari_value_for_ref(context: Context, vari: Variable, valu
 }
 
 /**
- * @description 或者以shape为根的所有父子对
+ * @description 以shape为根的所有父子对
  * @param shape
  */
 function get_topology_map(shape: Shape) {
@@ -809,7 +809,7 @@ function filter_deps(deps: { shape: string, ref: string }[], key1: Sides, key2: 
 }
 
 /**
- * @description 检查是否单向
+ * @description 检查是否存在入度为0的枝
  * @param deps
  */
 function is_exist_single_stick(deps: { shape: string, ref: string }[]) {
@@ -833,28 +833,12 @@ function is_exist_single_stick(deps: { shape: string, ref: string }[]) {
 
 /**
  * @description 检查symbol与ref之间是否存在循环引用
- * @param symbol 任意存在子元素的图形
- * @param ref 想去引用的组件
- * @returns
  */
-export function is_circular_ref(symbol: Shape, ref: SymbolRefShape): boolean {
-    let deps: { shape: string, ref: string }[] = [...get_topology_map(symbol), {shape: symbol.id, ref: ref.refId}];
-    if (deps.length < 2) return false;
-    // 过滤左侧
-    deps = filter_deps(deps, 'shape', 'ref');
-    // 过滤右侧
-    deps = filter_deps(deps, 'ref', 'shape');
-    return !!deps.length;
-}
-
 export function is_circular_ref2(symbol: Shape, refId: string): boolean {
     let deps: { shape: string, ref: string }[] = [...get_topology_map(symbol), {shape: refId, ref: symbol.id}];
-    console.log('deps:', deps);
     if (deps.length < 2) return false;
     while (deps.length && is_exist_single_stick(deps)) {
-        // 过滤左侧
         deps = filter_deps(deps, 'shape', 'ref');
-        // 过滤右侧
         deps = filter_deps(deps, 'ref', 'shape');
     }
     return !!deps.length;
