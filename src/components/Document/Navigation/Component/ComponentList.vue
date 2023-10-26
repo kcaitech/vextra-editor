@@ -35,7 +35,7 @@ onMounted(() => {
             <el-input v-model="search" class="w-50 m-2" :placeholder="t('compos.search_compos')" :prefix-icon="Search"
                 @input="searching" />
             <div class="toggle_list">
-                <svg-icon v-if="isList === 'beta'" icon-class="resource"
+                <svg-icon v-if="isList === 'alpha'" icon-class="resource"
                     @click.stop="() => set_card_type('alpha')"></svg-icon>
                 <svg-icon v-if="isList === 'alpha'" icon-class="text-bulleted-list"
                     @click.stop="() => set_card_type('beta')"></svg-icon>

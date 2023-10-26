@@ -582,12 +582,15 @@ export function get_layer_from_symbol(symbol: Shape) {
     }
 }
 
-function is_bind_visible_var(shape: Shape) {
+/**
+ * @description 检查是否绑定过 x类型 的变量
+ */
+function is_bind_x_type_var(shape: Shape, type: OverrideType) {
     if (!shape.varbinds) return false;
     let result = false;
     shape.varbinds.forEach((_, k) => {
         if (result) return;
-        result = k === OverrideType.Visible
+        result = k === type;
     })
     return result;
 }
@@ -599,10 +602,10 @@ function get_layer_i(symbol: Shape) {
     for (let i = 0, len = childs.length; i < len; i++) {
         const item = childs[i];
         if (item.childs && item.childs.length && item.type !== ShapeType.Table) {
-            if (!is_bind_visible_var(item)) shapes.push(item);
+            if (!is_bind_x_type_var(item, OverrideType.Visible)) shapes.push(item);
             shapes.push(...get_layer_i(item));
         } else {
-            if (is_bind_visible_var(item)) continue;
+            if (is_bind_x_type_var(item, OverrideType.Visible)) continue;
             shapes.splice(slow_index++, 0, item);
         }
     }
@@ -640,11 +643,10 @@ function get_instance_i(group: Shape) {
     const shapes: Shape[] = [];
     const childs = group.childs;
     if (de_check_for_get_instance_i_1(group)) return shapes;
-    let slow_index = 0;
     for (let i = 0, len = childs.length; i < len; i++) {
         const item = childs[i];
         if (item.type === ShapeType.SymbolRef) {
-            shapes.splice(slow_index++, 0, item);
+            if (!is_bind_x_type_var(item, OverrideType.SymbolID)) shapes.push(item);
         } else if (item.childs && item.childs.length && item.type !== ShapeType.Table) {
             shapes.push(...get_instance_i(item));
         }
@@ -689,11 +691,10 @@ function get_text_i(group: Shape) {
     const shapes: Shape[] = [];
     const childs = group.childs;
     if (de_check_for_get_text_i_1(group)) return shapes;
-    let slow_index = 0;
     for (let i = 0, len = childs.length; i < len; i++) {
         const item = childs[i];
         if (item.type === ShapeType.Text) {
-            shapes.splice(slow_index++, 0, item);
+            if (!is_bind_x_type_var(item, OverrideType.Text)) shapes.push(item);
         } else if (item.childs && item.childs.length && item.type !== ShapeType.Table) {
             shapes.push(...get_instance_i(item));
         }
@@ -729,8 +730,7 @@ export function get_var_for_ref(context: Context, symref: SymbolRefShape) {
         const item: RefAttriListItem = {variable: v, values: []};
         if (v.type === VariableType.Visible) {
             result2.push(item);
-        }
-        if (v.type === VariableType.Status) {
+        } else if (v.type === VariableType.Status) {
             item.values = tag_values_sort(sym, v);
             result.splice(status_index++, 0, item);
         } else if (v.type === VariableType.SymbolRef) {
@@ -842,4 +842,42 @@ export function is_circular_ref2(symbol: Shape, refId: string): boolean {
         deps = filter_deps(deps, 'ref', 'shape');
     }
     return !!deps.length;
+}
+
+/**
+ * @description 检查属性名称是否有效，有效则返回true  --8yyg9986i7g
+ */
+export function is_valid_name(symbol: SymbolShape, name: string, type: VariableType) {
+    let valid: boolean = true;
+    const variables = symbol.variables
+    if (!variables) return valid;
+    variables.forEach((v, k) => {
+        if (v.type !== type) return;
+        if (name === v.name) valid = false;
+    })
+    return valid;
+}
+
+/**
+ * @description 判断选中图形是否支持创建组件 ---js34hgws8033jh238
+ * @param shapes
+ */
+export function is_allow_to_create_sym(shapes: Shape[]) {
+    let vaild = true;
+    for (let i = 0, len = shapes.length; i < len; i++) {
+        if (shapes[i].type === ShapeType.Symbol) return false;
+    }
+    return true;
+}
+
+/**
+ * @description 判断组件状态是否允许删除 --82shdf82kj
+ */
+export function is_status_allow_to_delete(symbol: SymbolShape) {
+    let valid = -1;
+    if (!symbol.variables) return false;
+    symbol.variables.forEach(v => {
+        if (v.type === VariableType.Status) valid++;
+    })
+    return valid > 0;
 }
