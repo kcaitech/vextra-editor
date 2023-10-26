@@ -561,9 +561,8 @@ export interface LayerCollectItem {
 
 /**
  * @description 获取组件或者可变组件身上的可变图层
- * @param symbol
  */
-export function get_layer_from_symbol(symbol: Shape) {
+export function get_layer_from_symbol(symbol: Shape, vari?: Variable, container?: Shape[]) {
     const result: LayerCollectItem[] = [];
     if (symbol.type !== ShapeType.Symbol) return result;
     if (symbol.isUnionSymbolShape) { // 存在可变组件
@@ -572,40 +571,45 @@ export function get_layer_from_symbol(symbol: Shape) {
             const item = childs[i];
             const lci = {
                 state: get_name(item),
-                data: get_layer_i(childs[i])
+                data: get_layer_i(childs[i], vari, container)
             }
             result.push(lci);
         }
         return result;
     } else { // 不存在可变组件
-        return [{state: symbol.name, data: get_layer_i(symbol)}];
+        return [{state: symbol.name, data: get_layer_i(symbol, vari, container)}];
     }
 }
 
 /**
  * @description 检查是否绑定过 x类型 的变量
  */
-function is_bind_x_type_var(shape: Shape, type: OverrideType) {
+function is_bind_x_type_var(shape: Shape, type: OverrideType, vari?: Variable, container?: Shape[]) {
     if (!shape.varbinds) return false;
     let result = false;
-    shape.varbinds.forEach((_, k) => {
+    shape.varbinds.forEach((v, k) => {
+        if (vari?.id === v && container) {
+            container.push(shape);
+            return;
+        }
         if (result) return;
         result = k === type;
     })
     return result;
 }
 
-function get_layer_i(symbol: Shape) {
+function get_layer_i(symbol: Shape, vari?: Variable, container?: Shape[]) {
     let shapes: Shape[] = [];
     let slow_index = 0;
     const childs = symbol.childs;
     for (let i = 0, len = childs.length; i < len; i++) {
         const item = childs[i];
+        const canbe = !is_bind_x_type_var(item, OverrideType.Visible, vari, container);
         if (item.childs && item.childs.length && item.type !== ShapeType.Table) {
-            if (!is_bind_x_type_var(item, OverrideType.Visible)) shapes.push(item);
-            shapes.push(...get_layer_i(item));
+            if (canbe) shapes.push(item);
+            shapes.push(...get_layer_i(item, vari, container));
         } else {
-            if (is_bind_x_type_var(item, OverrideType.Visible)) continue;
+            if (!canbe) continue;
             shapes.splice(slow_index++, 0, item);
         }
     }
@@ -620,7 +624,7 @@ export interface InstanceCollectItem {
 /**
  * @description 收集可以设置切换实例类型变量的图层
  */
-export function get_instance_from_symbol(symbol: Shape) {
+export function get_instance_from_symbol(symbol: Shape, vari?: Variable, container?: Shape[]) {
     const result: InstanceCollectItem[] = [];
     if (symbol.type !== ShapeType.Symbol) return result;
     if (symbol.isUnionSymbolShape) { // 存在可变组件
@@ -629,26 +633,26 @@ export function get_instance_from_symbol(symbol: Shape) {
             const item = childs[i];
             const lci = {
                 state: get_name(item),
-                data: get_instance_i(item)
+                data: get_instance_i(item, vari, container)
             }
             result.push(lci);
         }
         return result;
     } else { // 不存在可变组件
-        return [{state: symbol.name, data: get_instance_i(symbol)}];
+        return [{state: symbol.name, data: get_instance_i(symbol, vari, container)}];
     }
 }
 
-function get_instance_i(group: Shape) {
+function get_instance_i(group: Shape, vari?: Variable, container?: Shape[]) {
     const shapes: Shape[] = [];
     const childs = group.childs;
     if (de_check_for_get_instance_i_1(group)) return shapes;
     for (let i = 0, len = childs.length; i < len; i++) {
         const item = childs[i];
         if (item.type === ShapeType.SymbolRef) {
-            if (!is_bind_x_type_var(item, OverrideType.SymbolID)) shapes.push(item);
+            if (!is_bind_x_type_var(item, OverrideType.SymbolID, vari, container)) shapes.push(item);
         } else if (item.childs && item.childs.length && item.type !== ShapeType.Table) {
-            shapes.push(...get_instance_i(item));
+            shapes.push(...get_instance_i(item, vari, container));
         }
     }
     return shapes;
@@ -667,7 +671,7 @@ export interface TextCollectItem {
  * @description 收集可以设置文本内容类型变量的图层
  * @param symbol
  */
-export function get_text_from_symbol(symbol: Shape) {
+export function get_text_from_symbol(symbol: Shape, vari?: Variable, container?: Shape[]) {
     const result: TextCollectItem[] = [];
     if (symbol.type !== ShapeType.Symbol) return result;
     if (symbol.isUnionSymbolShape) { // 存在可变组件
@@ -676,27 +680,27 @@ export function get_text_from_symbol(symbol: Shape) {
             const item = childs[i];
             const lci = {
                 state: get_name(item),
-                data: get_text_i(item)
+                data: get_text_i(item, vari, container)
             }
             result.push(lci);
         }
         return result;
     } else { // 不存在可变组件
-        return [{state: symbol.name, data: get_text_i(symbol)}];
+        return [{state: symbol.name, data: get_text_i(symbol, vari, container)}];
     }
     return result;
 }
 
-function get_text_i(group: Shape) {
+function get_text_i(group: Shape, vari?: Variable, container?: Shape[]) {
     const shapes: Shape[] = [];
     const childs = group.childs;
     if (de_check_for_get_text_i_1(group)) return shapes;
     for (let i = 0, len = childs.length; i < len; i++) {
         const item = childs[i];
         if (item.type === ShapeType.Text) {
-            if (!is_bind_x_type_var(item, OverrideType.Text)) shapes.push(item);
+            if (!is_bind_x_type_var(item, OverrideType.Text, vari, container)) shapes.push(item);
         } else if (item.childs && item.childs.length && item.type !== ShapeType.Table) {
-            shapes.push(...get_instance_i(item));
+            shapes.push(...get_instance_i(item, vari, container));
         }
     }
     return shapes;

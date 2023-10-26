@@ -19,7 +19,7 @@ const showRename = ref(false);
 const input_s = ref<HTMLInputElement>();
 const {t} = useI18n();
 const card_ref = ref<HTMLDivElement>();
-const dialog_posi = ref({ x: 0, y: 0 });
+const dialog_posi = ref({x: 0, y: 0});
 const iseditLayerShow = ref(false);
 
 function rename() {
@@ -39,6 +39,7 @@ function save_name(v: string) {
     const editor = props.context.editor4Shape(shape);
     editor.modifyVariableName(props.variable, v);
 }
+
 function get_dialog_posi(div: HTMLDivElement | undefined) {
     if (div) {
         const el = div.getBoundingClientRect();
@@ -46,10 +47,12 @@ function get_dialog_posi(div: HTMLDivElement | undefined) {
         dialog_posi.value.y = el.y;
     }
 }
+
 function edit_visible() {
     get_dialog_posi(card_ref.value);
     iseditLayerShow.value = true;
 }
+
 function save_layer_show() {
     iseditLayerShow.value = false;
 }
@@ -76,7 +79,8 @@ function save_layer_show() {
             <template #layer>
                 <SelectLayerInput :title="t('compos.select_layer')" :add-type="VariableType.Visible"
                                   :context="props.context"
-                                  :placeholder="t('compos.place_select_layer')"></SelectLayerInput>
+                                  :placeholder="t('compos.place_select_layer')"
+                                  :variable="props.variable"></SelectLayerInput>
             </template>
             <template #default_value>
                 <PopoverDefaultInput :context="context" :add-type="VariableType.Visible"></PopoverDefaultInput>
@@ -128,10 +132,12 @@ function save_layer_show() {
             display: flex;
             align-items: center;
             width: 100%;
+
             .svg {
                 display: flex;
                 align-items: center;
                 justify-content: center;
+
                 > svg {
                     width: 14px;
                     height: 14px;

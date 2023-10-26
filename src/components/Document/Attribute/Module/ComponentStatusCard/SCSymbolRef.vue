@@ -71,7 +71,7 @@ function save_instance() {
             <template #layer>
                 <SelectLayerInput :title="t('compos.compos_instance')" :add-type="VariableType.SymbolRef"
                                   :context="props.context"
-                                  :placeholder="t('compos.place_select_instance')"></SelectLayerInput>
+                                  :placeholder="t('compos.place_select_instance')" :variable="props.variable"></SelectLayerInput>
             </template>
         </CompLayerShow>
     </div>

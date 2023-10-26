@@ -247,7 +247,8 @@ function contextMenuMount(e: MouseEvent) {
     selection.unHoverShape();
     site.x = e.clientX, site.y = e.clientY;
     const root = workspace.root;
-    contextMenuPosition.x = e.clientX - root.x, contextMenuPosition.y = e.clientY - root.y;
+    contextMenuPosition.x = e.clientX - root.x;
+    contextMenuPosition.y = e.clientY - root.y;
     setMousedownXY(e); // 更新鼠标定位
     contextMenuItems = [];
     const area = right_select(e, mousedownOnPageXY, props.context); // 判断点击环境
