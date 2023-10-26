@@ -121,7 +121,7 @@ export function classification_level_artboard(page: Page) {
 function check_symbol_level_artboard(artboard: GroupShape, init?: SymbolShape[]) {
     const symbols: SymbolShape[] = init || [];
     const childs = artboard.childs;
-    for (let i = 0, len = childs.length; i < len; i++) {
+    for (let i = childs.length - 1; i > -1; i--) {
         const item = childs[i];
         if (item.isUnionSymbolShape) {
             symbols.push(item.childs[0]);
@@ -760,20 +760,30 @@ export function modify_vari_value_for_ref(context: Context, vari: Variable, valu
     editor.modifySymbolRefVariable(vari, value);
 }
 
-function get_topology_map(shape: Shape, init?: { shape: string, ref: string }[]) {
-    let deps: { shape: string, ref: string }[] = init || [];
+/**
+ * @description 或者以shape为根的所有父子对
+ * @param shape
+ */
+function get_topology_map(shape: Shape) {
+    const deps: { shape: string, ref: string }[] = [];
     const childs = shape.type === ShapeType.SymbolRef ? shape.naviChilds : shape.childs;
-    if (!childs || childs.length === 0) return [];
+    if (!childs?.length) return [];
     for (let i = 0, len = childs.length; i < len; i++) {
-        const child = childs[i];
-        deps.push({shape: shape.id, ref: childs[i].type === ShapeType.SymbolRef ? childs[i].refId : childs[i].id});
-        const c_childs = child.type === ShapeType.SymbolRef ? child.naviChilds : child.childs;
-        if (c_childs && c_childs.length) deps = [...get_topology_map(child, deps)];
+        const item = childs[i];
+        const is_ref = item.type === ShapeType.SymbolRef
+        const c_childs = is_ref ? item.naviChilds : item.childs;
+        if (c_childs?.length || is_ref) {
+            deps.push({shape: shape.id, ref: childs[i].type === ShapeType.SymbolRef ? item.refId : item.id});
+        }
+        if (!c_childs?.length) continue;
+        deps.push(...get_topology_map(item));
     }
     return deps;
 }
 
-function filter_deps(deps: { shape: string, ref: string }[], key1: 'shape' | 'ref', key2: 'shape' | 'ref') {
+type Sides = 'shape' | 'ref';
+
+function filter_deps(deps: { shape: string, ref: string }[], key1: Sides, key2: Sides) {
     const result: { shape: string, ref: string }[] = [];
     const _checked: Set<string> = new Set();
     const _checked_invalid: Set<string> = new Set();
@@ -799,6 +809,29 @@ function filter_deps(deps: { shape: string, ref: string }[], key1: 'shape' | 're
 }
 
 /**
+ * @description 检查是否单向
+ * @param deps
+ */
+function is_exist_single_stick(deps: { shape: string, ref: string }[]) {
+    const set1 = new Set<string>();
+    const set2 = new Set<string>();
+    let is_single = false;
+    for (let i = 0, len = deps.length; i < len; i++) {
+        const dep = deps[i];
+        set1.add(dep.shape);
+        set2.add(dep.ref);
+    }
+    set1.forEach(v => {
+        if (!set2.has(v)) is_single = true;
+    })
+    if (is_single) return true;
+    set2.forEach(v => {
+        if (!set1.has(v)) is_single = true;
+    })
+    return is_single;
+}
+
+/**
  * @description 检查symbol与ref之间是否存在循环引用
  * @param symbol 任意存在子元素的图形
  * @param ref 想去引用的组件
@@ -815,11 +848,14 @@ export function is_circular_ref(symbol: Shape, ref: SymbolRefShape): boolean {
 }
 
 export function is_circular_ref2(symbol: Shape, refId: string): boolean {
-    let deps: { shape: string, ref: string }[] = [...get_topology_map(symbol), {shape: symbol.id, ref: refId}];
+    let deps: { shape: string, ref: string }[] = [...get_topology_map(symbol), {shape: refId, ref: symbol.id}];
+    console.log('deps:', deps);
     if (deps.length < 2) return false;
-    // 过滤左侧
-    deps = filter_deps(deps, 'shape', 'ref');
-    // 过滤右侧
-    deps = filter_deps(deps, 'ref', 'shape');
+    while (deps.length && is_exist_single_stick(deps)) {
+        // 过滤左侧
+        deps = filter_deps(deps, 'shape', 'ref');
+        // 过滤右侧
+        deps = filter_deps(deps, 'ref', 'shape');
+    }
     return !!deps.length;
 }

@@ -49,10 +49,9 @@ function component_watcher(t: number, val: Shape) {
     if (t === Component.SELECTED_VAL) {
         const symbolref = props.context.selection.symbolrefshape;
         if (!symbolref) return;
-        const sym = props.context.data.symbolsMgr.getSync(symbolref.refId);
+        const sym = props.context.data.symbolsMgr.getSync(val.id);
         if (!sym) return;
-        console.log('val: ', val.id);
-        const is_circular = is_circular_ref2(sym, val.id);
+        const is_circular = is_circular_ref2(sym, symbolref.refId);
         if (is_circular) {
             message("danger", '存在循环引用');
             return;

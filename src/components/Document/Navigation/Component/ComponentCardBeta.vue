@@ -74,9 +74,9 @@ function is_need_scroll_to_view() {
 function danger_check() {
     const symbolref = props.context.selection.symbolrefshape;
     if (!symbolref) return;
-    const sym = props.context.data.symbolsMgr.getSync(symbolref.refId);
+    const sym = props.context.data.symbolsMgr.getSync(props.data.id);
     if (!sym) return;
-    const is_circular = is_circular_ref2(sym, props.data.id);
+    const is_circular = is_circular_ref2(sym, symbolref.refId);
     if (is_circular) danger.value = true;
 }
 
