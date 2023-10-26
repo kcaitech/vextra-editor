@@ -78,7 +78,7 @@ onUnmounted(() => {
         <div class="card-wrap" v-if="render_preview">
             <svg xmlns="http://www.w3.org/2000/svg" xmlns:xlink="http://www.w3.org/1999/xlink"
                 xmlns:xhtml="http://www.w3.org/1999/xhtml" preserveAspectRatio="xMinYMin meet" width="36px" height="36px"
-                :viewBox='gen_view_box()' overflow="visible" class="render-wrap">
+                :viewBox='gen_view_box()' overflow="hidden" class="render-wrap">
                 <render></render>
             </svg>
             <div>{{ props.data.name }}</div>

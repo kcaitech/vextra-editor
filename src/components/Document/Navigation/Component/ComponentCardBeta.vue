@@ -7,7 +7,6 @@ import {initCommonShape} from "@/components/Document/Content/common";
 import {Context} from '@/context';
 import {Selection} from '@/context/selection';
 import {clear_scroll_target, is_circular_ref2} from '@/utils/symbol';
-import {message} from "@/utils/message";
 
 interface Props {
     data: GroupShape
@@ -96,7 +95,7 @@ onUnmounted(() => {
     <div class="compo-preview-container" ref="preview_container">
         <svg v-if="render_preview" xmlns="http://www.w3.org/2000/svg"
              xmlns:xlink="http://www.w3.org/1999/xlink" xmlns:xhtml="http://www.w3.org/1999/xhtml"
-             preserveAspectRatio="xMinYMin meet" width="96px" height="96px" :viewBox='gen_view_box()' overflow="visible"
+             preserveAspectRatio="xMinYMin meet" width="96px" height="96px" :viewBox='gen_view_box()' overflow="hidden"
              class="render-wrap">
             <render></render>
         </svg>
