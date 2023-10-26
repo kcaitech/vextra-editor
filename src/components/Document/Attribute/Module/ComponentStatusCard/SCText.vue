@@ -1,9 +1,9 @@
 <script lang="ts" setup>
-import {Context} from "@/context";
-import {AttriListItem} from "@/utils/symbol";
-import {nextTick, ref} from "vue";
-import {Variable, VariableType} from "@kcdesign/data";
-import {useI18n} from "vue-i18n";
+import { Context } from "@/context";
+import { AttriListItem } from "@/utils/symbol";
+import { nextTick, ref } from "vue";
+import { Variable, VariableType } from "@kcdesign/data";
+import { useI18n } from "vue-i18n";
 import CompLayerShow from "@/components/Document/Attribute/PopoverMenu/CompLayerShow.vue";
 import SelectLayerInput from "@/components/Document/Attribute/Module/SelectLayerInput.vue";
 import PopoverDefaultInput from "@/components/Document/Attribute/Module/PopoverDefaultInput.vue";
@@ -17,7 +17,7 @@ interface Props {
 const props = defineProps<Props>();
 const showRename = ref(false);
 const input_s = ref<HTMLInputElement>();
-const {t} = useI18n();
+const { t } = useI18n();
 const card_ref = ref<HTMLDivElement>();
 const dialog_posi = ref({ x: 0, y: 0 });
 const iseditText = ref(false);
@@ -58,7 +58,10 @@ const save_text = () => {
                     <div style="width: 30px;" class="svg">
                         <svg-icon icon-class="text" style="width: 10px; height: 10px;"></svg-icon>
                     </div>
-                    <span class="name">{{ props.variable.name }}</span>
+                    <div class="name">
+                        <span style="width: 40%;">{{ props.variable.name }}</span>
+                        <span style="width: 60%;"> {{ props.variable.value }}</span>
+                    </div>
                 </div>
             </div>
             <div class="delete">
@@ -66,18 +69,17 @@ const save_text = () => {
             </div>
         </div>
         <CompLayerShow :context="context" v-if="iseditText" @close-dialog="iseditText = false" right="250px" :width="260"
-                       :add-type="VariableType.Status" :title="t('compos.text_content')" @save-layer-show="save_text"
-                       :dialog_posi="dialog_posi">
+            :add-type="VariableType.Status" :title="t('compos.text_content')" @save-layer-show="save_text"
+            :dialog_posi="dialog_posi">
             <template #layer>
                 <SelectLayerInput :title="t('compos.select_layer')" :add-type="VariableType.Visible"
-                                  :context="props.context" :placeholder="t('compos.place_select_layer')"></SelectLayerInput>
+                    :context="props.context" :placeholder="t('compos.place_select_layer')"></SelectLayerInput>
             </template>
             <template #default_value>
                 <PopoverDefaultInput :context="context" :add-type="VariableType.Text"></PopoverDefaultInput>
             </template>
         </CompLayerShow>
     </div>
-
 </template>
 <style scoped lang="scss">
 .module_attr_item {
@@ -106,7 +108,7 @@ const save_text = () => {
             align-items: center;
             width: 84px;
 
-            > svg {
+            >svg {
                 width: 14px;
                 height: 14px;
                 margin: 0px 10px;
@@ -124,11 +126,13 @@ const save_text = () => {
             display: flex;
             align-items: center;
             width: 100%;
+
             .svg {
                 display: flex;
                 align-items: center;
                 justify-content: center;
-                > svg {
+
+                >svg {
                     width: 14px;
                     height: 14px;
                     margin: 0px 10px;
@@ -138,10 +142,16 @@ const save_text = () => {
 
             .name {
                 flex: 1;
+                display: flex;
                 max-width: 100%;
-                overflow: hidden;
-                text-overflow: ellipsis;
-                white-space: nowrap;
+                >span {
+                    display: block;
+                    box-sizing: border-box;
+                    overflow: hidden;
+                    text-overflow: ellipsis;
+                    white-space: nowrap;
+                    padding-right: 10px;
+                }
             }
         }
 
@@ -177,7 +187,7 @@ const save_text = () => {
         width: 22px;
         height: 22px;
 
-        > svg {
+        >svg {
             width: 11px;
             height: 11px;
         }
