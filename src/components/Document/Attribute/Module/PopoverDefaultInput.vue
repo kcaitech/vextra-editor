@@ -1,12 +1,12 @@
 <script setup lang="ts">
-import {Context} from '@/context';
-import {VariableType} from '@kcdesign/data';
-import {useI18n} from 'vue-i18n';
+import { Context } from '@/context';
+import { VariableType } from '@kcdesign/data';
+import { useI18n } from 'vue-i18n';
 import SelectMenu from '../PopoverMenu/SelectMenu.vue';
-import {ArrowDown} from '@element-plus/icons-vue'
-import {ref} from 'vue';
+import { ArrowDown } from '@element-plus/icons-vue'
+import { ref } from 'vue';
 
-const {t} = useI18n();
+const { t } = useI18n();
 
 interface Props {
     context: Context,
@@ -47,21 +47,22 @@ function change(v: string) {
                 <span>{{ defaultValue }}</span>
                 <el-icon>
                     <ArrowDown
-                        :style="{ transform: selectoption ? 'rotate(180deg)' : 'rotate(0deg)', transition: '0.3s' }"/>
+                        :style="{ transform: selectoption ? 'rotate(180deg)' : 'rotate(0deg)', transition: '0.3s' }" />
                 </el-icon>
                 <SelectMenu v-if="selectoption" :top="33" width="100%" :menuItems="menuItems" :menuIndex="menuIndex"
-                            :context="context" @select-index="handleShow" @close="selectoption = false"></SelectMenu>
+                    :context="context" @select-index="handleShow" @close="selectoption = false"></SelectMenu>
             </div>
         </div>
         <div v-if="props.addType === VariableType.Text">
-            <el-input v-model="textDefaultValue" :placeholder="t('compos.default_text_input')" @change="change"/>
+            <el-input v-model="textDefaultValue" type="textarea" :autosize="{ minRows: 1, maxRows: 4 }" resize="none"
+                :placeholder="t('compos.default_text_input')" @keydown.stop @change="change" />
         </div>
     </div>
 </template>
 
 <style scoped lang="scss">
 .container {
-    height: 30px;
+    min-height: 30px;
     width: 100%;
     margin-top: 10px;
     display: flex;
@@ -73,22 +74,22 @@ function change(v: string) {
         width: 60px;
     }
 
-    > div {
+    >div {
         flex: 1;
     }
 
-    .el-input {
+    :deep(.el-textarea) {
         width: 100%;
-        height: 30px;
-        font-size: 10px;
 
-        :deep(.el-input__wrapper) {
+        .el-textarea__inner {
+            font-size: 12px;
+            min-height: 30px !important;
             background-color: var(--grey-light);
             box-shadow: none;
-        }
 
-        :deep(.el-input__wrapper.is-focus) {
-            box-shadow: 0 0 0 1px var(--active-color) inset;
+            &:focus {
+                box-shadow: 0 0 0 1px var(--active-color) inset;
+            }
         }
     }
 
@@ -120,4 +121,18 @@ function change(v: string) {
         }
     }
 }
-</style>
+
+:deep(.el-textarea__inner::-webkit-scrollbar) {
+    width: 6px;
+}
+
+:deep(.el-textarea__inner::-webkit-scrollbar-thumb) {
+    border-radius: 3px;
+    -moz-border-radius: 3px;
+    -webkit-border-radius: 3px;
+    background-color: #c3c3c3;
+}
+
+:deep(.el-textarea__inner::-webkit-scrollbar-track) {
+    background-color: transparent;
+}</style>

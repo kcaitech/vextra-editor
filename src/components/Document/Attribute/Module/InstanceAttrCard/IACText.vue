@@ -1,7 +1,7 @@
 <script setup lang="ts">
-import {get_vari_value_for_ref, modify_vari_value_for_ref, RefAttriListItem} from "@/utils/symbol";
-import {ref, onMounted} from "vue";
-import {Context} from "@/context";
+import { get_vari_value_for_ref, modify_vari_value_for_ref, RefAttriListItem } from "@/utils/symbol";
+import { ref, onMounted } from "vue";
+import { Context } from "@/context";
 interface Props {
     context: Context
     data: RefAttriListItem
@@ -29,7 +29,8 @@ onMounted(get_value);
         <div class="state_item">
             <div class="state_name"><span>{{ props.data.variable.name }}</span></div>
             <div class="state_value" style="padding: 0;">
-                <el-input ref="inputRef" v-model="textValue" @focus="selectAllText" @change="change"/>
+                <el-input ref="inputRef" v-model="textValue" type="textarea" :autosize="{ minRows: 1, maxRows: 4 }"
+                    resize="none" @focus="selectAllText" @change="change" @keydown.stop/>
             </div>
         </div>
         <div class="delete"></div>
@@ -44,15 +45,16 @@ onMounted(get_value);
 
     .state_item {
         display: flex;
-        align-items: center;
-        width: 100%;
-        height: 30px;
+        width: calc(100% - 22px);
+        min-height: 30px;
 
         .state_name {
             display: flex;
             align-items: center;
             width: 40%;
-            height: 100%;
+            height: 30px;
+            box-sizing: border-box;
+            padding-right: 10px;
 
             span {
                 overflow: hidden;
@@ -66,6 +68,7 @@ onMounted(get_value);
             align-items: center;
             justify-content: space-between;
             padding: 0 11px;
+            width: 60%;
             flex: 1;
             height: 100%;
             border-radius: 4px;
@@ -125,28 +128,19 @@ onMounted(get_value);
                 }
             }
 
-            .el-input {
+            :deep(.el-textarea) {
                 width: 100%;
-                height: 30px;
                 font-size: var(--font-default-fontsize);
 
-                :deep(.el-input__inner) {
-                    --el-input-inner-height: 100%;
-                }
-
-                :deep(.el-input__wrapper) {
+                .el-textarea__inner {
+                    font-size: 12px;
+                    min-height: 30px !important;
                     background-color: var(--grey-light);
-                    border-color: var(--grey-light);
                     box-shadow: none;
 
-                    &:hover {
-                        border-color: var(--grey-light);
-                        box-shadow: none;
+                    &:focus {
+                        box-shadow: 0 0 0 1px var(--active-color) inset;
                     }
-                }
-
-                :deep(.el-input__wrapper.is-focus) {
-                    box-shadow: 0 0 0 1px var(--active-color) inset;
                 }
             }
         }
@@ -178,5 +172,19 @@ onMounted(get_value);
 
 :deep(.el-select .el-input__wrapper.is-focus) {
     box-shadow: 0 0 0 1px var(--active-color) inset !important;
+}
+:deep(.el-textarea__inner::-webkit-scrollbar) {
+    width: 6px;
+}
+
+:deep(.el-textarea__inner::-webkit-scrollbar-thumb) {
+    border-radius: 3px;
+    -moz-border-radius: 3px;
+    -webkit-border-radius: 3px;
+    background-color: #c3c3c3;
+}
+
+:deep(.el-textarea__inner::-webkit-scrollbar-track) {
+    background-color: transparent;
 }
 </style>

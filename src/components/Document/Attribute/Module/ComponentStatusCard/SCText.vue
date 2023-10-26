@@ -55,7 +55,9 @@ const save_text = () => {
         <div class="attr_con">
             <div class="module_item_left" @click="edit_text">
                 <div class="module_name-2">
-                    <svg-icon icon-class="text" style="width: 10px; height: 10px;"></svg-icon>
+                    <div style="width: 30px;" class="svg">
+                        <svg-icon icon-class="text" style="width: 10px; height: 10px;"></svg-icon>
+                    </div>
                     <span class="name">{{ props.variable.name }}</span>
                 </div>
             </div>
@@ -121,14 +123,21 @@ const save_text = () => {
         .module_name-2 {
             display: flex;
             align-items: center;
-
-            > svg {
-                width: 14px;
-                height: 14px;
-                margin: 0px 10px;
+            width: 100%;
+            .svg {
+                display: flex;
+                align-items: center;
+                justify-content: center;
+                > svg {
+                    width: 14px;
+                    height: 14px;
+                    margin: 0px 10px;
+                }
             }
 
+
             .name {
+                flex: 1;
                 max-width: 100%;
                 overflow: hidden;
                 text-overflow: ellipsis;
@@ -140,7 +149,6 @@ const save_text = () => {
             overflow: hidden;
             text-overflow: ellipsis;
             white-space: nowrap;
-            max-width: 120px;
         }
     }
 
