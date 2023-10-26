@@ -65,7 +65,10 @@ function save_layer_show() {
                     <div style="width: 30px;" class="svg">
                         <svg-icon icon-class="eye-open"></svg-icon>
                     </div>
-                    <span class="name">{{ props.variable.name }}</span>
+                    <div class="name">
+                        <span style="width: 40%;">{{ props.variable.name }}</span>
+                        <span style="width: 60%;"> {{ props.variable.value ? '显示' : '隐藏' }}</span>
+                    </div>
                 </div>
             </div>
             <div class="delete">
@@ -146,10 +149,16 @@ function save_layer_show() {
 
             .name {
                 flex: 1;
-                padding-right: 10px;
-                overflow: hidden;
-                text-overflow: ellipsis;
-                white-space: nowrap;
+                display: flex;
+                max-width: 100%;
+                >span {
+                    display: block;
+                    box-sizing: border-box;
+                    overflow: hidden;
+                    text-overflow: ellipsis;
+                    white-space: nowrap;
+                    padding-right: 10px;
+                }
             }
         }
 

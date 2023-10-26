@@ -48,6 +48,9 @@ function edit_instance() {
 function save_instance() {
     iseditToggle.value = false;
 }
+const getValue = (id: string) => {
+    return props.context.data.symbolsMgr.getSync(id)?.name;
+}
 </script>
 <template>
     <div class="module_attr_item" ref="instance_card">
@@ -58,7 +61,10 @@ function save_instance() {
                         <svg-icon icon-class="pattern-rectangle"
                                   style="width: 10px; height: 10px; transform: rotate(45deg); margin-top: 0;"></svg-icon>
                     </div>
-                    <div class="name">{{ props.variable.name }}</div>
+                    <div class="name">
+                        <span style="width: 40%;">{{ props.variable.name }}</span>
+                        <span style="width: 60%;"> {{ getValue(props.variable.value) }}</span>
+                    </div>
                 </div>
             </div>
             <div class="delete">
@@ -135,10 +141,16 @@ function save_instance() {
 
             .name {
                 flex: 1;
-                overflow: hidden;
-                text-overflow: ellipsis;
-                white-space: nowrap;
-                padding-right: 10px;
+                display: flex;
+                max-width: 100%;
+                >span {
+                    display: block;
+                    box-sizing: border-box;
+                    overflow: hidden;
+                    text-overflow: ellipsis;
+                    white-space: nowrap;
+                    padding-right: 10px;
+                }
             }
         }
 
