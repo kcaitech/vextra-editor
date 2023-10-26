@@ -1,9 +1,9 @@
-import {Context} from "@/context";
-import {PT1, PT2, PT4P1, PT4P2, PageXY2, PointGroup1, PointGroup2, Asssit} from "@/context/assist";
-import {PageXY} from "@/context/selection";
-import {GroupShape, Matrix, Shape, ShapeType} from "@kcdesign/data";
-import {debounce} from "lodash";
-import {XYsBounding} from "./common";
+import { Context } from "@/context";
+import { PT1, PT2, PT4P1, PT4P2, PageXY2, PointGroup1, PointGroup2, Asssit } from "@/context/assist";
+import { PageXY } from "@/context/selection";
+import { GroupShape, Matrix, Shape, ShapeType } from "@kcdesign/data";
+import { debounce } from "lodash";
+import { XYsBounding } from "./common";
 
 enum Align {
     LT_X = 'lt_x',
@@ -122,13 +122,13 @@ export function colloct_point_group(host: Shape): PointGroup1 {
     if (host.type === ShapeType.Line) {
         const apexX = [lt.x, rb.x, pivot.x];
         const apexY = [lt.y, rb.y, pivot.y];
-        return {lt, rb, pivot, apexX, apexY};
+        return { lt, rb, pivot, apexX, apexY };
     }
     const rt = m.computeCoord2(f.width, 0);
     const lb = m.computeCoord2(0, f.height);
     const apexX = [lt.x, rt.x, rb.x, lb.x, pivot.x];
     const apexY = [lt.y, rt.y, rb.y, lb.y, pivot.y];
-    const pg: PointGroup1 = {lt, rt, rb, lb, pivot, apexX, apexY};
+    const pg: PointGroup1 = { lt, rt, rb, lb, pivot, apexX, apexY };
     if (host.type === ShapeType.Artboard) {
         const th = m.computeCoord2(f.width / 2, 0);
         const rh = m.computeCoord2(f.width, f.height / 2);
@@ -153,7 +153,7 @@ export function gen_match_points(host: Shape, multi?: boolean): PointGroup2 {
     const lb = m.computeCoord2(0, f.height);
     const apexX = [lt.x, rt.x, rb.x, lb.x, pivot.x];
     const apexY = [lt.y, rt.y, rb.y, lb.y, pivot.y];
-    const pg: PointGroup2 = {lt, rt, rb, lb, pivot};
+    const pg: PointGroup2 = { lt, rt, rb, lb, pivot };
     if (multi) {
         pg.top = Math.min(...apexY), pg.right = Math.max(...apexX), pg.bottom = Math.max(...apexY), pg.left = Math.min(...apexX), pg.cy = pivot.y, pg.cx = pivot.x;
     }
@@ -169,14 +169,14 @@ export interface PointsOffset {
 }
 
 export function gen_match_points_by_map(offset: PointsOffset, p: PageXY, multi?: boolean) {
-    const lt = {x: p.x + offset.lt.x, y: p.y + offset.lt.y};
-    const rb = {x: p.x + offset.rb.x, y: p.y + offset.rb.y};
-    const pivot = {x: p.x + offset.pivot.x, y: p.y + offset.pivot.y};
-    const rt = {x: p.x + offset.rt.x, y: p.y + offset.rt.y};
-    const lb = {x: p.x + offset.lb.x, y: p.y + offset.lb.y};
+    const lt = { x: p.x + offset.lt.x, y: p.y + offset.lt.y };
+    const rb = { x: p.x + offset.rb.x, y: p.y + offset.rb.y };
+    const pivot = { x: p.x + offset.pivot.x, y: p.y + offset.pivot.y };
+    const rt = { x: p.x + offset.rt.x, y: p.y + offset.rt.y };
+    const lb = { x: p.x + offset.lb.x, y: p.y + offset.lb.y };
     const apexX = [lt.x, rt.x, rb.x, lb.x, pivot.x];
     const apexY = [lt.y, rt.y, rb.y, lb.y, pivot.y];
-    const pg: PointGroup2 = {lt, rt, rb, lb, pivot};
+    const pg: PointGroup2 = { lt, rt, rb, lb, pivot };
     if (multi) {
         pg.top = Math.min(...apexY), pg.right = Math.max(...apexX), pg.bottom = Math.max(...apexY), pg.left = Math.min(...apexX), pg.cy = pivot.y, pg.cx = pivot.x;
     }
@@ -184,11 +184,11 @@ export function gen_match_points_by_map(offset: PointsOffset, p: PageXY, multi?:
 }
 
 export function isShapeOut(context: Context, shape: Shape) {
-    const {x, y, bottom, right} = context.workspace.root;
-    const {width, height} = shape.frame;
+    const { x, y, bottom, right } = context.workspace.root;
+    const { width, height } = shape.frame;
     const m = shape.matrix2Root();
     m.multiAtLeft(context.workspace.matrix);
-    const point: { x: number, y: number }[] = [{x: 0, y: 0}, {x: width, y: 0}, {x: width, y: height}, {x: 0, y: height}].map(p => m.computeCoord2(p.x, p.y));
+    const point: { x: number, y: number }[] = [{ x: 0, y: 0 }, { x: width, y: 0 }, { x: width, y: height }, { x: 0, y: height }].map(p => m.computeCoord2(p.x, p.y));
     return Math.min(point[0].x, point[1].x, point[2].x, point[3].x) > right - x ||
         Math.max(point[0].x, point[1].x, point[2].x, point[3].x) < 0 ||
         Math.max(point[0].y, point[1].y, point[2].y, point[3].y) < 0 ||
@@ -203,7 +203,7 @@ export function finder(context: Context, scope: GroupShape, all_pg: Map<string, 
         all_pg.set(scope.id, pg);
         const pvs = Object.values(pg);
         for (let i = 0, len = pvs.length; i < len; i++) {
-            const p2 = {id: scope.id, p: pvs[i]};
+            const p2 = { id: scope.id, p: pvs[i] };
             const x = x_axis.get(p2.p.x);
             const y = y_axis.get(p2.p.y);
             if (x) x.push(p2); else x_axis.set(p2.p.x, [p2]);
@@ -219,7 +219,7 @@ export function finder(context: Context, scope: GroupShape, all_pg: Map<string, 
         all_pg.set(c.id, pg);
         const pvs = Object.values(pg);
         for (let i = 0, len = pvs.length; i < len; i++) {
-            const p2 = {id: c.id, p: pvs[i]};
+            const p2 = { id: c.id, p: pvs[i] };
             const x = x_axis.get(p2.p.x);
             const y = y_axis.get(p2.p.y);
             if (x) x.push(p2); else x_axis.set(p2.p.x, [p2]);
@@ -352,7 +352,7 @@ interface Point {
 
 export function get_pg_by_frame(frame: Point[], multi?: boolean): PointGroup2 { // 无旋转
     const lt = frame[0], rt = frame[1], rb = frame[2], lb = frame[3];
-    const pivot = {x: lt.x + (rb.x - lt.x) / 2, y: lt.y + (rb.y - lt.y) / 2};
+    const pivot = { x: lt.x + (rb.x - lt.x) / 2, y: lt.y + (rb.y - lt.y) / 2 };
     const apexX = [lt.x, rt.x, rb.x, lb.x, pivot.x];
     const apexY = [lt.y, rt.y, rb.y, lb.y, pivot.y];
     if (multi) {
@@ -366,7 +366,7 @@ export function get_pg_by_frame(frame: Point[], multi?: boolean): PointGroup2 { 
             cx: pivot.x
         }
     } else {
-        return {lt, rt, rb, lb, pivot};
+        return { lt, rt, rb, lb, pivot };
     }
 }
 
@@ -376,11 +376,11 @@ export function get_frame(shapes: Shape[]): Point[] {
         const s = shapes[i];
         const m = s.matrix2Root();
         const f = s.frame;
-        const ps: { x: number, y: number }[] = [{x: 0, y: 0}, {x: f.width, y: 0}, {x: f.width, y: f.height}, {x: 0, y: f.height}];
+        const ps: { x: number, y: number }[] = [{ x: 0, y: 0 }, { x: f.width, y: 0 }, { x: f.width, y: f.height }, { x: 0, y: f.height }];
         for (let i = 0; i < 4; i++) points.push(m.computeCoord3(ps[i]));
     }
     const b = XYsBounding(points);
-    return [{x: b.left, y: b.top}, {x: b.right, y: b.top}, {x: b.right, y: b.bottom}, {x: b.left, y: b.bottom}];
+    return [{ x: b.left, y: b.top }, { x: b.right, y: b.top }, { x: b.right, y: b.bottom }, { x: b.left, y: b.bottom }];
 }
 
 /**
@@ -431,4 +431,204 @@ export function pre_render_assist_line(context: Context, is_multi: boolean, shap
     }
     assist.notify(Asssit.UPDATE_ASSIST);
     assist.notify(Asssit.UPDATE_MAIN_LINE);
+}
+
+// 标注相对位置
+enum Direction {
+    TL = 'Top-Left',
+    T = 'Top',
+    L = 'Left',
+    TR = 'Top-Right',
+    C = 'Center',
+    R = 'Right',
+    BL = 'Bottom-Left',
+    B = 'Bottom',
+    BR = 'Bottom-Right'
+}
+
+//边
+enum Sides {
+    Top = 'top',
+    Left = 'left',
+    Bottom = 'bottom',
+    Right = 'right'
+}
+
+/**
+ *  @description 一个图形相对于另一个图形的位置
+ *  @param
+ * */
+export function get_graph_relative_posi(sp: { x: number, y: number }[], hp: { x: number, y: number }[]) {
+    if (sp.length === 0 || hp.length === 0) return;
+    const st = sp[0].y, sb = sp[2].y, sl = sp[0].x, sr = sp[2].x;
+    const ht = hp[0].y, hb = hp[2].y, hl = hp[0].x, hr = hp[2].x;
+
+    const relativeDirection = {
+        horizontal: Direction.C,
+        vertical: Direction.C,
+    };
+
+    if (sb <= ht || (sb > ht && st < ht && sb < hb)) relativeDirection.vertical = Direction.B;
+    if ((st > ht && sb < hb) || (st < ht && sb > hb)) relativeDirection.vertical = Direction.C;
+    if (st >= hb || (sb > hb && st < hb && st > ht)) relativeDirection.vertical = Direction.T;
+    if (sl >= hr || (sl > hl && sl < hr && sr > hr)) relativeDirection.horizontal = Direction.L;
+    if ((sl > hl && sr < hr) || (sl < hl && sr > hr)) relativeDirection.horizontal = Direction.C;
+    if (sr <= hl || (sl < hl && sr < hr && sr > hl)) relativeDirection.horizontal = Direction.R;
+
+    let result
+    if (relativeDirection.horizontal === Direction.C && relativeDirection.vertical === Direction.C) {
+        result = Direction.C;
+    } else if (relativeDirection.horizontal === Direction.L && relativeDirection.vertical === Direction.C) {
+        result = Direction.L;
+    } else if (relativeDirection.horizontal === Direction.R && relativeDirection.vertical === Direction.C) {
+        result = Direction.R;
+    } else if (relativeDirection.horizontal === Direction.C && relativeDirection.vertical === Direction.T) {
+        result = Direction.T;
+    } else if (relativeDirection.horizontal === Direction.C && relativeDirection.vertical === Direction.B) {
+        result = Direction.B;
+    } else if (relativeDirection.horizontal === Direction.L && relativeDirection.vertical === Direction.T) {
+        result = Direction.TL;
+    } else if (relativeDirection.horizontal === Direction.R && relativeDirection.vertical === Direction.T) {
+        result = Direction.TR;
+    } else if (relativeDirection.horizontal === Direction.R && relativeDirection.vertical === Direction.B) {
+        result = Direction.BR;
+    } else if (relativeDirection.horizontal === Direction.L && relativeDirection.vertical === Direction.B) {
+        result = Direction.BL;
+    }
+    return result;
+}
+
+/**
+ *  @description 获取选中图层边的中心点
+ * */
+
+function get_select_sides_midpoint(posi: { x: number, y: number }[]) {
+    if (posi.length === 0) return;
+    const xc = (posi[0].x + posi[1].x) / 2;
+    const yc = (posi[0].y + posi[2].y) / 2;
+    return { xc, yc };
+}
+/**
+ *  @description 获取hover图形相对方向上最近的边的位置,两条边的情况
+ * */
+
+function get_hovered_sides_dir(sp: { x: number, y: number }[], hp: { x: number, y: number }[], dir: Direction) {
+    if (sp.length === 0 || hp.length === 0 || !dir) return;
+    const st = sp[0].y, sb = sp[2].y, sl = sp[0].x, sr = sp[2].x;
+    const ht = hp[0].y, hb = hp[2].y, hl = hp[0].x, hr = hp[2].x;
+    let sides: { s1: Sides, s2: Sides } = { s1: Sides.Bottom, s2: Sides.Left };
+    if (dir === Direction.TR) {
+        sides.s1 = st > hb ? Sides.Bottom : Sides.Top;
+        sides.s2 = sr < hl ? Sides.Left : Sides.Right;
+    } else if (dir === Direction.TL) {
+        sides.s1 = st > hb ? Sides.Bottom : Sides.Top;
+        sides.s2 = sl < hr ? Sides.Left : Sides.Right;
+    } else if (dir === Direction.BL) {
+        sides.s1 = sb > ht ? Sides.Bottom : Sides.Top;
+        sides.s2 = sl < hr ? Sides.Left : Sides.Right;
+    } else if (dir === Direction.BR) {
+        sides.s1 = sb > ht ? Sides.Bottom : Sides.Top;
+        sides.s2 = sr < hl ? Sides.Left : Sides.Right;
+    } else if (dir === Direction.T) {
+        sides.s1 = st > hb ? Sides.Bottom : Sides.Top;
+    } else if (dir === Direction.R) {
+        sides.s2 = sr < hl ? Sides.Left : Sides.Right;
+    } else if (dir === Direction.B) {
+        sides.s1 = sb > ht ? Sides.Bottom : Sides.Top;
+    } else if (dir === Direction.L) {
+        sides.s2 = sl < hr ? Sides.Left : Sides.Right;
+    }
+    return sides;
+}
+/**
+ *  @description 获取实线的点,四角方向，两条线的情况
+ * */
+export function get_solid_line_point(sp: { x: number, y: number }[], hp: { x: number, y: number }[], dir?: Direction) {
+    if (sp.length === 0 || hp.length === 0 || !dir) return;
+    const s = get_hovered_sides_dir(sp, hp, dir);
+    const midpoint = get_select_sides_midpoint(sp);
+    if (!s || !midpoint) return;
+    const st = sp[0].y, sb = sp[2].y, sl = sp[0].x, sr = sp[2].x;
+    const ht = hp[0].y, hb = hp[2].y, hl = hp[0].x, hr = hp[2].x;
+    let sieds1 = { x1: 0, y1: 0, x2: 0, y2: 0 };
+    let sieds2 = { x1: 0, y1: 0, x2: 0, y2: 0 };
+    let sides = [];
+    console.log(dir, 'dir');
+
+    if (dir === Direction.TR) {
+        sieds1.x1 = midpoint.xc; sieds1.y1 = st; sieds1.x2 = midpoint.xc; sieds1.y2 = s.s1 === Sides.Bottom ? hb : ht;
+        sieds2.x1 = sr; sieds2.y1 = midpoint.yc; sieds2.x2 = s.s2 === Sides.Left ? hl : hr; sieds2.y2 = midpoint.yc;
+        sides = [sieds1, sieds2];
+    } else if (dir === Direction.TL) {
+        sieds1.x1 = midpoint.xc; sieds1.y1 = st; sieds1.x2 = midpoint.xc; sieds1.y2 = s.s1 === Sides.Bottom ? hb : ht;
+        sieds2.x1 = sl; sieds2.y1 = midpoint.yc; sieds2.x2 = s.s2 === Sides.Left ? hl : hr; sieds2.y2 = midpoint.yc;
+        sides = [sieds1, sieds2];
+    } else if (dir === Direction.BL) {
+        sieds1.x1 = midpoint.xc; sieds1.y1 = sb; sieds1.x2 = midpoint.xc; sieds1.y2 = s.s1 === Sides.Bottom ? hb : ht;
+        sieds2.x1 = sl; sieds2.y1 = midpoint.yc; sieds2.x2 = s.s2 === Sides.Left ? hl : hr; sieds2.y2 = midpoint.yc;
+        sides = [sieds1, sieds2];
+    } else if (dir === Direction.BR) {
+        sieds1.x1 = midpoint.xc; sieds1.y1 = sb; sieds1.x2 = midpoint.xc; sieds1.y2 = s.s1 === Sides.Bottom ? hb : ht;
+        sieds2.x1 = sr; sieds2.y1 = midpoint.yc; sieds2.x2 = s.s2 === Sides.Left ? hl : hr; sieds2.y2 = midpoint.yc;
+        sides = [sieds1, sieds2];
+    } else if (dir === Direction.C) {
+        let sieds3 = { x1: 0, y1: 0, x2: 0, y2: 0 };
+        let sieds4 = { x1: 0, y1: 0, x2: 0, y2: 0 };
+        sieds1.x1 = midpoint.xc; sieds1.y1 = st; sieds1.x2 = midpoint.xc; sieds1.y2 = ht;
+        sieds2.x1 = sr; sieds2.y1 = midpoint.yc; sieds2.x2 = hr; sieds2.y2 = midpoint.yc;
+        sieds3.x1 = midpoint.xc; sieds3.y1 = sb; sieds3.x2 = midpoint.xc; sieds3.y2 = hb;
+        sieds4.x1 = sl; sieds4.y1 = midpoint.yc; sieds4.x2 = hl; sieds4.y2 = midpoint.yc;
+        sides = [sieds1, sieds2, sieds3, sieds4];
+    } else {
+        sides = get_solid_line_sieds_point(sp, hp, dir) as any[];
+    }
+    return sides;
+}
+/**
+ *  @description 获取实线的点,垂直水平方向，三条线的情况
+ * */
+function get_solid_line_sieds_point(sp: { x: number, y: number }[], hp: { x: number, y: number }[], dir?: Direction) {
+    if (sp.length === 0 || hp.length === 0 || !dir) return;
+    const s = get_hovered_sides_dir(sp, hp, dir);
+    const midpoint = get_select_sides_midpoint(sp);
+    if (!s || !midpoint) return;
+    const st = sp[0].y, sb = sp[2].y, sl = sp[0].x, sr = sp[2].x;
+    const ht = hp[0].y, hb = hp[2].y, hl = hp[0].x, hr = hp[2].x;
+    let sieds1 = { x1: 0, y1: 0, x2: 0, y2: 0 };
+    let sieds2 = { x1: 0, y1: 0, x2: 0, y2: 0 };
+    let sieds3 = { x1: 0, y1: 0, x2: 0, y2: 0 };
+    if (dir === Direction.T) {
+        //垂直线
+        sieds1.x1 = midpoint.xc; sieds1.y1 = st; sieds1.x2 = midpoint.xc;
+        sieds1.y2 = st === hb ? ((midpoint.xc > hl && midpoint.xc < hr) ? hb : ht) : (s.s1 === Sides.Bottom ? hb : ht);
+        //右侧线
+        sieds2.x1 = sr; sieds2.y1 = midpoint.yc; sieds2.x2 = hr; sieds2.y2 = midpoint.yc;
+        //左侧线
+        sieds3.x1 = sl; sieds3.y1 = midpoint.yc; sieds3.x2 = hl; sieds3.y2 = midpoint.yc;
+    } else if (dir === Direction.R) {
+        //右侧线
+        sieds1.x1 = sr; sieds1.y1 = midpoint.yc;
+        sieds1.x2 = sr === hl ? ((midpoint.yc > ht && midpoint.yc < hb) ? hl : hr) : (s.s2 === Sides.Left ? hl : hr); sieds1.y2 = midpoint.yc;
+        // 上
+        sieds2.x1 = midpoint.xc; sieds2.y1 = st; sieds2.x2 = midpoint.xc; sieds2.y2 = ht;
+        // 下
+        sieds3.x1 = midpoint.xc; sieds3.y1 = sb; sieds3.x2 = midpoint.xc; sieds3.y2 = hb;
+    } else if (dir === Direction.B) {
+        //下线
+        sieds1.x1 = midpoint.xc; sieds1.y1 = sb; sieds1.x2 = midpoint.xc;
+        sieds1.y2 = sb === ht ? ((midpoint.xc > hl && midpoint.xc < hr) ? ht : hb) : (s.s1 === Sides.Bottom ? hb : ht);
+        // 右线
+        sieds2.x1 = sr; sieds2.y1 = midpoint.yc; sieds2.x2 = hr; sieds2.y2 = midpoint.yc;
+        // 左线
+        sieds3.x1 = sl; sieds3.y1 = midpoint.yc; sieds3.x2 = hl; sieds3.y2 = midpoint.yc;
+    } else if (dir === Direction.L) {
+        //左线
+        sieds1.x1 = sl; sieds1.y1 = midpoint.yc;
+        sieds1.x2 = sl === hr ? ((midpoint.yc > ht && midpoint.yc < hb) ? hr : hl) : (s.s2 === Sides.Left ? hl : hr); sieds1.y2 = midpoint.yc;
+        // 上线
+        sieds2.x1 = midpoint.xc; sieds2.y1 = st; sieds2.x2 = midpoint.xc; sieds2.y2 = ht;
+        // 下线
+        sieds3.x1 = midpoint.xc; sieds3.y1 = sb; sieds3.x2 = midpoint.xc; sieds3.y2 = hb;
+    }
+    return [sieds1, sieds2, sieds3];
 }
