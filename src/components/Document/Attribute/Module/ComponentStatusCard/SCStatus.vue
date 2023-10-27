@@ -1,9 +1,9 @@
 <script lang="ts" setup>
-import {Context} from "@/context";
-import {AttriListItem, delete_variable, is_status_allow_to_delete, is_valid_name} from "@/utils/symbol";
-import {nextTick, ref} from "vue";
-import {Variable, VariableType} from "@kcdesign/data";
-import {useI18n} from "vue-i18n";
+import { Context } from "@/context";
+import { AttriListItem, delete_variable, is_status_allow_to_delete, is_valid_name } from "@/utils/symbol";
+import { nextTick, ref } from "vue";
+import { Variable, VariableType } from "@kcdesign/data";
+import { useI18n } from "vue-i18n";
 
 interface Props {
     context: Context
@@ -15,7 +15,9 @@ const props = defineProps<Props>();
 const showRename = ref(false);
 const attrInput = ref('');
 const input_s = ref<HTMLInputElement>();
-const {t} = useI18n();
+const isWarnRepeat = ref(false);
+const isWarnNull = ref(false);
+const { t } = useI18n();
 
 function selectAllText(event: FocusEvent) {
     (event.target as HTMLInputElement).select(); // 选择输入框内的文本
@@ -27,7 +29,7 @@ function closeInput() {
 
 function keyboard_watcher(e: KeyboardEvent) {
     if (e.code === 'Enter' || e.code === 'NumpadEnter') {
-        if(!validate()) return;
+        if (!validate()) return;
         const _v = (e.target as HTMLInputElement).value;
         if (_v && _v !== props.variable.name) save_name(_v);
         closeInput()
@@ -35,8 +37,8 @@ function keyboard_watcher(e: KeyboardEvent) {
 }
 
 const blur = () => {
-    if(!validate()) return;
-    if(attrInput.value !== props.variable.name) {
+    if (!validate()) return;
+    if (attrInput.value !== props.variable.name) {
         save_name(attrInput.value);
         closeInput()
     }
@@ -46,10 +48,18 @@ const validate = () => {
     const len = attrInput.value.trim().length > 0;
     const shape = props.context.selection.symbolshape;
     if (!shape) return false;
+    if(attrInput.value === props.variable.name) return closeInput();
     const repeat = is_valid_name(shape, attrInput.value, VariableType.Status);
-    if(!len || !repeat) {
+    console.log(repeat,'repact');
+    
+    if (!len || !repeat) {
+        if (!len) isWarnNull.value = true;
+        else isWarnRepeat.value = true;
+        if (input_s.value) input_s.value.focus();
         return false;
-    }else {
+    } else {
+        isWarnRepeat.value = false;
+        isWarnNull.value = false;
         return true;
     }
 }
@@ -85,20 +95,23 @@ function _delete() {
         <div class="attr_con">
             <div class="module_input" v-if="showRename">
                 <el-input ref="input_s" v-model="attrInput" @focus="selectAllText" class="input" @blur="blur"
-                          @keydown="keyboard_watcher"/>
+                    @keydown="keyboard_watcher" />
             </div>
             <div class="module_item_left" @dblclick="rename" v-else>
                 <div class="module_name">
                     <svg-icon icon-class="comp-state"></svg-icon>
-                    <span class="name">{{ props.variable.name }}</span>
                 </div>
-                <div class="name" :title="props.item.values.toString()">{{ props.item.values.toString() }}</div>
+                <div class="name_i" :title="props.item.values.toString()">
+                    <span style="width: 40%;">{{ props.variable.name }}</span>
+                    <span style="width: 60%;">{{ props.item.values.toString() }}</span>
+                </div>
             </div>
             <div class="delete" @click="_delete">
                 <svg-icon icon-class="delete"></svg-icon>
             </div>
         </div>
-        <div class="warn" v-if="false">{{ t('compos.duplicate_name') }}</div>
+        <p class="warn" v-if="isWarnRepeat">{{ t('compos.duplicate_name') }}</p>
+        <p class="warn" v-if="isWarnNull">属性名称不能为空</p>
     </div>
 </template>
 <style scoped lang="scss">
@@ -126,12 +139,11 @@ function _delete() {
         .module_name {
             display: flex;
             align-items: center;
-            width: 84px;
-
-            > svg {
+            justify-content: center;
+            width: 30px;
+            >svg {
                 width: 14px;
                 height: 14px;
-                margin: 0px 10px;
             }
 
             .name {
@@ -142,11 +154,26 @@ function _delete() {
             }
         }
 
+        >.name_i {
+            flex: 1;
+            display: flex;
+            max-width: 100%;
+
+            >span {
+                display: block;
+                box-sizing: border-box;
+                overflow: hidden;
+                text-overflow: ellipsis;
+                white-space: nowrap;
+                padding-right: 10px;
+            }
+        }
+
         .module_name-2 {
             display: flex;
             align-items: center;
 
-            > svg {
+            >svg {
                 width: 14px;
                 height: 14px;
                 margin: 0px 10px;
@@ -181,8 +208,11 @@ function _delete() {
     }
 
     .warn {
+        font-size: 10px;
         color: red;
-        transform: scale(.9);
+        padding: 0;
+        color: red;
+        margin: 3px;
     }
 
     .delete {
@@ -193,7 +223,7 @@ function _delete() {
         width: 22px;
         height: 22px;
 
-        > svg {
+        >svg {
             width: 11px;
             height: 11px;
         }

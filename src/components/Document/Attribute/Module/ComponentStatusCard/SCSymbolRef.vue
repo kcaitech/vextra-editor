@@ -137,7 +137,6 @@ function _delete() {
                 > svg {
                     width: 14px;
                     height: 14px;
-                    margin: 0px 10px;
                 }
             }
 

@@ -113,6 +113,7 @@ const validate = () => {
     const len = attrName.value.trim().length > 0;
     const shape = props.context.selection.symbolshape;
     if (!shape) return false;
+    if(props.default_name && attrName.value === props.default_name) return true;
     const repeat = is_valid_name(shape, attrName.value, props.addType);
     if (!len || !repeat) {
         if (!len) isWarnNull.value = true;
@@ -189,7 +190,7 @@ onUnmounted(() => {
             <el-button style="background-color: #9775fa;" @click="save">确认</el-button>
         </div>
     </div>
-    <div class="overlay" @click.stop="isselectLayer = false" @mousedown.stop @wheel.stop></div>
+    <div class="overlay" @click.stop="isselectLayer = false"></div>
 </template>
 
 <style scoped lang="scss">
@@ -240,9 +241,9 @@ onUnmounted(() => {
         box-sizing: border-box;
 
         .warn {
+            font-size: 10px;
             padding: 0;
             color: red;
-            transform: scale(.9);
             margin: 3px;
             margin-left: 60px;
         }

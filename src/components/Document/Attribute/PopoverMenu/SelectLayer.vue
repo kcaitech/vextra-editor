@@ -34,6 +34,7 @@ const close = (e: MouseEvent) => {
 }
 
 function handleClickOutside(event: MouseEvent) {
+    event.stopPropagation()
     event.target instanceof Element && !event.target.closest('.select_layerbox') && close(event);
 }
 
@@ -84,10 +85,10 @@ onMounted(() => {
             }
         }
     }
-    document.addEventListener('click', handleClickOutside);
+    document.addEventListener('mouseup', handleClickOutside);
 })
 onUnmounted(() => {
-    document.removeEventListener('click', handleClickOutside);
+    document.removeEventListener('mouseup', handleClickOutside);
 })
 </script>
 

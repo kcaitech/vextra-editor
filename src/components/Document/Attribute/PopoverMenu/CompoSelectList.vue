@@ -56,6 +56,7 @@ watch(checkList, (v) => {
             height: 100%;
             display: flex;
             align-items: center;
+            margin-left: 3px;
         }
 
         :deep(.el-checkbox__input.is-checked .el-checkbox__inner) {
@@ -72,7 +73,7 @@ watch(checkList, (v) => {
 .component {
     display: flex;
     align-items: center;
-    padding: 2px 0 2px 2px;
+    padding: 2px 3px 2px 2px;
     width: 100%;
     border-radius: 4px;
 
