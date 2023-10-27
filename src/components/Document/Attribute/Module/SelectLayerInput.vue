@@ -29,6 +29,7 @@ const isselectLayer = ref(false);
 
 const showSelectLayer = (e: MouseEvent) => {
     e.stopPropagation();
+    if(props.context.selection.selectedShapes[0].type !== ShapeType.Symbol) return;
     selectoption.value = false;
     if (isselectLayer.value && e.target instanceof Element && e.target.closest('.input')) return isselectLayer.value = false;
     isselectLayer.value = true;

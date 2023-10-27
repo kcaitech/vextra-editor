@@ -2,7 +2,7 @@
 import { useI18n } from 'vue-i18n';
 import { Context } from '@/context';
 import TypeHeader from '../TypeHeader.vue';
-import { ref, nextTick } from 'vue';
+import { ref, nextTick, onMounted } from 'vue';
 import CompLayerShow from '../PopoverMenu/CompLayerShow.vue';
 import SelectLayerInput from './SelectLayerInput.vue';
 import { VariableType } from '@kcdesign/data';
@@ -28,6 +28,11 @@ const getDialogPosi = () => {
         dialog_posi.value.y = el.y;
     }
 }
+onMounted(() => {
+    const shapes = props.context.selection.selectedShapes;
+    console.log(shapes[0].parent);
+    
+})
 </script>
 <template>
     <div style="position: relative;" ref="atrrdialog">
@@ -41,7 +46,7 @@ const getDialogPosi = () => {
             </template>
         </TypeHeader>
         <CompLayerShow :context="context" v-if="isLayerShow" @close-dialog="closeLayerShowPopup" right="250px"
-            :add-type="VariableType.Visible" :width="320" :title="t('compos.layer_isShow')" :dialog_posi="dialog_posi">
+            :add-type="VariableType.Visible" :width="260" :title="t('compos.layer_isShow')" :dialog_posi="dialog_posi">
             <template #layer>
                 <SelectLayerInput :title="t('compos.select_layer')" :add-type="VariableType.Visible"
                     :context="props.context" :placeholder="t('compos.place_select_layer')"></SelectLayerInput>
