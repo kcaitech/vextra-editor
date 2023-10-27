@@ -48,10 +48,18 @@ const get_symbol_layer = () => {
         const select: Shape[] = [];
         selectList.value = get_layer_from_symbol(symbolshape, props.variable, select);
         console.log('select', select);
+        selectLayerid.value = select.map(item => item.id);
+        selectLayerName.value = getShapesName(selectLayerid.value);
     } else if (props.addType === VariableType.Text) {
-        selectList.value = get_text_from_symbol(symbolshape);
+        const select: Shape[] = [];
+        selectList.value = get_text_from_symbol(symbolshape, props.variable, select);
+        selectLayerid.value = select.map(item => item.id);
+        selectLayerName.value = getShapesName(selectLayerid.value);
     } else if (props.addType === VariableType.SymbolRef) {
-        selectList.value = get_instance_from_symbol(symbolshape);
+        const select: Shape[] = [];
+        selectList.value = get_instance_from_symbol(symbolshape, props.variable, select);
+        selectLayerid.value = select.map(item => item.id);
+        selectLayerName.value = getShapesName(selectLayerid.value);
     }
 }
 

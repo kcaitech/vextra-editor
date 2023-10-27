@@ -76,7 +76,7 @@ function _delete() {
         </div>
         <CompLayerShow :context="context" v-if="iseditToggle" @close-dialog="iseditToggle = false" right="250px"
                        :width="260" :add-type="VariableType.SymbolRef" :title="t('compos.instance_toggle')"
-                       @save-layer-show="save_instance" :dialog_posi="dialog_posi">
+                       @save-layer-show="save_instance" :dialog_posi="dialog_posi" :default_name="props.variable.name" :variable="props.variable">
             <template #layer>
                 <SelectLayerInput :title="t('compos.compos_instance')" :add-type="VariableType.SymbolRef"
                                   :context="props.context"

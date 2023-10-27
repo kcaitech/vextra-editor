@@ -1,11 +1,11 @@
 <script setup lang="ts">
-import {onMounted, ref, watch} from 'vue';
-import {Context} from '@/context';
-import {ShapeType, VariableType} from '@kcdesign/data';
-import {useI18n} from 'vue-i18n';
-import {get_layer_from_symbol} from "@/utils/symbol";
+import { onMounted, onUnmounted, ref, watch, watchEffect } from 'vue';
+import { Context } from '@/context';
+import { ShapeType, Variable, VariableType } from '@kcdesign/data';
+import { useI18n } from 'vue-i18n';
+import { get_layer_from_symbol, is_valid_name } from "@/utils/symbol";
 
-const {t} = useI18n();
+const { t } = useI18n();
 
 interface Props {
     title?: string,
@@ -16,7 +16,9 @@ interface Props {
     context: Context,
     addType: VariableType,
     dialog_posi: { x: number, y: number },
-    selected_layer?: string[]
+    selected_layer?: string[],
+    default_name?: string,
+    variable?: Variable
 }
 
 interface Emits {
@@ -35,13 +37,21 @@ function popoverClose() {
 }
 
 const attrName = ref('');
-const isselectLayer = ref(false)
+const isselectLayer = ref(false);
+const fixed = ref(false);
+const isWarnRepeat = ref(false);
+const isWarnNull = ref(false);
 
-watch(() => props.selected_layer,(v) => {
-    if(v && v.length > 0) {
-        attrName.value = getShapesName(v);
-    }else {
-        attrName.value = '';
+watch(() => props.selected_layer, (v) => {
+    if (v && v.length > 0) {
+        if (!fixed.value || attrName.value.length < 1) {
+            attrName.value = getShapesName(v);
+            validate();
+        }
+    } else {
+        if (!fixed.value) {
+            attrName.value = '';
+        }
     }
     emit("name-change", attrName.value);
 })
@@ -62,6 +72,8 @@ const getShapesName = (ids: string[]) => {
 }
 
 const save = () => {
+    if (!validate()) return;
+    save_name(attrName.value);
     emit('saveLayerShow', props.addType)
 }
 
@@ -71,12 +83,61 @@ const cur_p = ref(0)
 
 function name_change(v: any) {
     emit('name-change', v);
+    fixed.value = true;
+    isWarnRepeat.value = false;
+    isWarnNull.value = false;
 }
+const input = ref();
+const focus = () => {
+    if (input.value) {
+        input.value.select();
+    }
+}
+
+function keyboard_watcher(e: KeyboardEvent) {
+    e.stopPropagation();
+    if (e.code === 'Enter' || e.code === 'NumpadEnter') {
+        save();
+    }
+}
+
+function save_name(v: string) {
+    const shape = props.context.selection.symbolshape;
+    const value = attrName.value !== props.default_name || '';
+    if (!shape || !props.variable || !value) return;
+    const editor = props.context.editor4Shape(shape);
+    editor.modifyVariableName(props.variable, v);
+}
+
+const validate = () => {
+    const len = attrName.value.trim().length > 0;
+    const shape = props.context.selection.symbolshape;
+    if (!shape) return false;
+    const repeat = is_valid_name(shape, attrName.value, props.addType);
+    if (!len || !repeat) {
+        if (!len) isWarnNull.value = true;
+        else isWarnRepeat.value = true;
+        if (input.value) input.value.focus();
+        return false;
+    } else {
+        isWarnRepeat.value = false;
+        isWarnNull.value = false;
+        return true;
+    }
+}
+
+watchEffect(() => {
+    props.default_name;
+    if (props.default_name) {
+        attrName.value = props.default_name;
+        fixed.value = true;
+    }
+})
 
 onMounted(() => {
     if (comps.value) {
         const body_h = document.body.clientHeight;
-        const {y, height} = comps.value.getBoundingClientRect();
+        const { y, height } = comps.value.getBoundingClientRect();
         const su = body_h - y;
         const cur_t = su - height;
         cur_p.value = cur_t;
@@ -89,6 +150,10 @@ onMounted(() => {
             cur_top.value = 40
         }
     }
+    document.addEventListener('keydown', keyboard_watcher);
+})
+onUnmounted(() => {
+    document.removeEventListener('keydown', keyboard_watcher);
 })
 </script>
 
@@ -111,10 +176,12 @@ onMounted(() => {
             <div>
                 <span>{{ t('compos.attr_name') }}</span>
                 <div>
-                    <el-input v-model="attrName" :placeholder="t('compos.attr_name_input')" @input="name_change"/>
+                    <el-input v-model="attrName" ref="input" :placeholder="t('compos.attr_name_input')" @input="name_change"
+                        @keydown.stop="keyboard_watcher" @focus="focus" @blur="validate()" />
                 </div>
             </div>
-            <p class="warn" v-if="false">{{ t('compos.duplicate_name') }}</p>
+            <p class="warn" v-if="isWarnRepeat">{{ t('compos.duplicate_name') }}</p>
+            <p class="warn" v-if="isWarnNull">属性名称不能为空</p>
             <!-- 默认值 -->
             <slot name="default_value"></slot>
         </div>
@@ -158,7 +225,7 @@ onMounted(() => {
             align-items: center;
             justify-content: center;
 
-            > svg {
+            >svg {
                 width: 65%;
                 height: 65%;
             }
@@ -168,7 +235,7 @@ onMounted(() => {
     .body {
         width: 100%;
         height: calc(100% - 32px);
-        font-size: 10px;
+        font-size: 12px;
         padding: 0 var(--default-padding);
         box-sizing: border-box;
 
@@ -180,7 +247,7 @@ onMounted(() => {
             margin-left: 60px;
         }
 
-        > div {
+        >div {
             height: 30px;
             width: 100%;
             margin-top: 10px;
@@ -193,7 +260,7 @@ onMounted(() => {
                 width: 60px;
             }
 
-            > div {
+            >div {
                 flex: 1;
             }
 

@@ -81,7 +81,7 @@ function _delete() {
         <CompLayerShow :context="props.context" v-if="iseditLayerShow" @close-dialog="iseditLayerShow = false"
                        right="250px"
                        :width="260" :add-type="VariableType.Visible" :title="t('compos.layer_isShow')"
-                       @save-layer-show="save_layer_show" :dialog_posi="dialog_posi">
+                       @save-layer-show="save_layer_show" :dialog_posi="dialog_posi" :default_name="props.variable.name" :variable="props.variable">
             <template #layer>
                 <SelectLayerInput :title="t('compos.select_layer')" :add-type="VariableType.Visible"
                                   :context="props.context"

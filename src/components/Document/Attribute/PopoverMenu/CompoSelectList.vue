@@ -20,7 +20,7 @@ const checkList = ref(props.layerId || []);
 
 watch(checkList, (v) => {
     emits('handleCheck', v)
-})
+},{immediate: true})
 </script>
 <template>
     <div class="container" v-for="(item, index) in contents" :key="index">

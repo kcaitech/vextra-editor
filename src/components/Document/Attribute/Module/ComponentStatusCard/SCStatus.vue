@@ -1,8 +1,8 @@
 <script lang="ts" setup>
 import {Context} from "@/context";
-import {AttriListItem, delete_variable, is_status_allow_to_delete} from "@/utils/symbol";
+import {AttriListItem, delete_variable, is_status_allow_to_delete, is_valid_name} from "@/utils/symbol";
 import {nextTick, ref} from "vue";
-import {Variable} from "@kcdesign/data";
+import {Variable, VariableType} from "@kcdesign/data";
 import {useI18n} from "vue-i18n";
 
 interface Props {
@@ -27,19 +27,41 @@ function closeInput() {
 
 function keyboard_watcher(e: KeyboardEvent) {
     if (e.code === 'Enter' || e.code === 'NumpadEnter') {
+        if(!validate()) return;
         const _v = (e.target as HTMLInputElement).value;
         if (_v && _v !== props.variable.name) save_name(_v);
         closeInput()
     }
 }
 
+const blur = () => {
+    if(!validate()) return;
+    if(attrInput.value !== props.variable.name) {
+        save_name(attrInput.value);
+        closeInput()
+    }
+}
+
+const validate = () => {
+    const len = attrInput.value.trim().length > 0;
+    const shape = props.context.selection.symbolshape;
+    if (!shape) return false;
+    const repeat = is_valid_name(shape, attrInput.value, VariableType.Status);
+    if(!len || !repeat) {
+        return false;
+    }else {
+        return true;
+    }
+}
+
 function rename() {
     showRename.value = true;
+    attrInput.value = props.variable.name;
     nextTick(() => {
         const el = input_s.value;
         if (el) {
             (el as HTMLInputElement).focus();
-            (el as HTMLInputElement).value = props.variable.name;
+            el.select();
         }
     })
 }
@@ -62,7 +84,7 @@ function _delete() {
     <div class="module_attr_item">
         <div class="attr_con">
             <div class="module_input" v-if="showRename">
-                <el-input ref="input_s" v-model="attrInput" @focus="selectAllText" class="input" @blur="closeInput"
+                <el-input ref="input_s" v-model="attrInput" @focus="selectAllText" class="input" @blur="blur"
                           @keydown="keyboard_watcher"/>
             </div>
             <div class="module_item_left" @dblclick="rename" v-else>

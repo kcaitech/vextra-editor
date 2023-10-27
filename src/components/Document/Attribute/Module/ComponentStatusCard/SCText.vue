@@ -72,7 +72,7 @@ function _delete() {
         </div>
         <CompLayerShow :context="context" v-if="iseditText" @close-dialog="iseditText = false" right="250px" :width="260"
             :add-type="VariableType.Status" :title="t('compos.text_content')" @save-layer-show="save_text"
-            :dialog_posi="dialog_posi">
+            :dialog_posi="dialog_posi" :default_name="props.variable.name" :variable="props.variable">
             <template #layer>
                 <SelectLayerInput :title="t('compos.select_layer')" :add-type="VariableType.Visible"
                     :context="props.context" :placeholder="t('compos.place_select_layer')"></SelectLayerInput>
