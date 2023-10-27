@@ -268,9 +268,9 @@ export function tag_values_sort(symbol: SymbolShape, variable: Variable) {
  * @description 为组件删除一个变量
  */
 export function delete_variable(context: Context, variable: Variable) {
-    const union = context.selection.unionshape;
-    if (!union) return;
-    const editor = context.editor4Shape(union);
+    const sym = context.selection.symbolshape;
+    if (!sym) return;
+    const editor = context.editor4Shape(sym);
     editor.removeVar(variable.id);
 }
 

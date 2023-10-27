@@ -1,6 +1,6 @@
 <script lang="ts" setup>
 import {Context} from "@/context";
-import {AttriListItem} from "@/utils/symbol";
+import {AttriListItem, delete_variable} from "@/utils/symbol";
 import {nextTick, ref} from "vue";
 import {Variable, VariableType} from "@kcdesign/data";
 import {useI18n} from "vue-i18n";
@@ -56,6 +56,9 @@ function edit_visible() {
 function save_layer_show() {
     iseditLayerShow.value = false;
 }
+function _delete() {
+    delete_variable(props.context, props.variable);
+}
 </script>
 <template>
     <div class="module_attr_item" ref="card_ref">
@@ -71,7 +74,7 @@ function save_layer_show() {
                     </div>
                 </div>
             </div>
-            <div class="delete">
+            <div class="delete" @click="_delete">
                 <svg-icon icon-class="delete"></svg-icon>
             </div>
         </div>

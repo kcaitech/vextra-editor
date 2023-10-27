@@ -1,6 +1,6 @@
 <script lang="ts" setup>
 import {Context} from "@/context";
-import {AttriListItem} from "@/utils/symbol";
+import {AttriListItem, delete_variable} from "@/utils/symbol";
 import {nextTick, ref} from "vue";
 import {Variable, VariableType} from "@kcdesign/data";
 import {useI18n} from "vue-i18n";
@@ -51,6 +51,9 @@ function save_instance() {
 const getValue = (id: string) => {
     return props.context.data.symbolsMgr.getSync(id)?.name;
 }
+function _delete() {
+    delete_variable(props.context, props.variable);
+}
 </script>
 <template>
     <div class="module_attr_item" ref="instance_card">
@@ -67,7 +70,7 @@ const getValue = (id: string) => {
                     </div>
                 </div>
             </div>
-            <div class="delete">
+            <div class="delete" @click="_delete">
                 <svg-icon icon-class="delete"></svg-icon>
             </div>
         </div>

@@ -1,6 +1,6 @@
 <script lang="ts" setup>
 import {Context} from "@/context";
-import {AttriListItem, delete_variable} from "@/utils/symbol";
+import {AttriListItem, delete_variable, is_status_allow_to_delete} from "@/utils/symbol";
 import {nextTick, ref} from "vue";
 import {Variable} from "@kcdesign/data";
 import {useI18n} from "vue-i18n";
@@ -10,18 +10,21 @@ interface Props {
     item: AttriListItem
     variable: Variable
 }
+
 const props = defineProps<Props>();
 const showRename = ref(false);
 const attrInput = ref('');
 const input_s = ref<HTMLInputElement>();
-const { t } = useI18n();
+const {t} = useI18n();
 
 function selectAllText(event: FocusEvent) {
     (event.target as HTMLInputElement).select(); // 选择输入框内的文本
 }
+
 function closeInput() {
     showRename.value = false;
 }
+
 function keyboard_watcher(e: KeyboardEvent) {
     if (e.code === 'Enter' || e.code === 'NumpadEnter') {
         const _v = (e.target as HTMLInputElement).value;
@@ -29,6 +32,7 @@ function keyboard_watcher(e: KeyboardEvent) {
         closeInput()
     }
 }
+
 function rename() {
     showRename.value = true;
     nextTick(() => {
@@ -39,13 +43,18 @@ function rename() {
         }
     })
 }
+
 function save_name(v: string) {
     const shape = props.context.selection.symbolshape;
     if (!shape) return;
     const editor = props.context.editor4Shape(shape);
     editor.modifyVariableName(props.variable, v);
 }
+
 function _delete() {
+    const sym = props.context.selection.symbolshape;
+    if (!sym) return;
+    if (!is_status_allow_to_delete(sym)) return;
     delete_variable(props.context, props.variable);
 }
 </script>
@@ -54,7 +63,7 @@ function _delete() {
         <div class="attr_con">
             <div class="module_input" v-if="showRename">
                 <el-input ref="input_s" v-model="attrInput" @focus="selectAllText" class="input" @blur="closeInput"
-                          @keydown="keyboard_watcher" />
+                          @keydown="keyboard_watcher"/>
             </div>
             <div class="module_item_left" @dblclick="rename" v-else>
                 <div class="module_name">
@@ -97,7 +106,7 @@ function _delete() {
             align-items: center;
             width: 84px;
 
-            >svg {
+            > svg {
                 width: 14px;
                 height: 14px;
                 margin: 0px 10px;
@@ -115,7 +124,7 @@ function _delete() {
             display: flex;
             align-items: center;
 
-            >svg {
+            > svg {
                 width: 14px;
                 height: 14px;
                 margin: 0px 10px;
@@ -162,7 +171,7 @@ function _delete() {
         width: 22px;
         height: 22px;
 
-        >svg {
+        > svg {
             width: 11px;
             height: 11px;
         }
