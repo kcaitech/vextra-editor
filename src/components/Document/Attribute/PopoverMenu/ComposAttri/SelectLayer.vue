@@ -3,8 +3,7 @@ import {onMounted, onUnmounted, ref, watchEffect} from 'vue';
 import {Context} from '@/context';
 import CompoSelectList from './CompoSelectList.vue';
 import {useI18n} from 'vue-i18n';
-import {VariableType} from '../../../../../../../kcdesign-data/src';
-
+import {VariableType} from '@kcdesign/data';
 const {t} = useI18n();
 
 interface Tree {
@@ -43,6 +42,7 @@ function register_container() {
 }
 
 function handleClickOutside(event: MouseEvent) {
+    event.stopPropagation()
     event.target instanceof Element && !event.target.closest('.select_layerbox') && close(event);
 }
 
@@ -93,11 +93,11 @@ onMounted(() => {
             }
         }
     }
-    document.addEventListener('click', handleClickOutside);
+    document.addEventListener('mouseup', handleClickOutside);
     register_container();
 })
 onUnmounted(() => {
-    document.removeEventListener('click', handleClickOutside);
+    document.removeEventListener('mouseup', handleClickOutside);
 })
 </script>
 
