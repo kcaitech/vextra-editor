@@ -133,6 +133,7 @@ function onMouseWheel(e: WheelEvent) { // 滚轮、触摸板事件
 }
 function onKeyDown(e: KeyboardEvent) { // 键盘监听
     if (e.target instanceof HTMLInputElement) return;
+    if (e.repeat) return;
     if (e.code === KeyboardKeys.Space) {
         if (workspace.value.select || spacePressed.value) return;
         // overview.value = true;

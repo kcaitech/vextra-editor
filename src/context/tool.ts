@@ -127,7 +127,7 @@ export class Tool extends Watchable(Object) {
                 this.m_context.cursor.setType('comment-0');
             } else this.m_context.cursor.setType('cross-0');
 
-        } else this.m_context.cursor.setType('auto-0');
+        } else this.m_context.cursor.reset();
         this.notify(Tool.CHANGE_ACTION);
     }
     reset() {
@@ -136,7 +136,7 @@ export class Tool extends Watchable(Object) {
             exe_result = true;
         }
         this.m_current_action = Action.AutoV;
-        this.m_context.cursor.setType('auto-0');
+        this.m_context.cursor.reset();
         this.notify(Tool.CHANGE_ACTION);
         return exe_result;
     }
