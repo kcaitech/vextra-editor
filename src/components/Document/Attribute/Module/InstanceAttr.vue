@@ -104,12 +104,15 @@ onUnmounted(() => {
                    :data="item"></component>
     </div>
     <div v-if="visible_variables.length" class="visible-var-container">
-        <div class="title">{{ t('compos.layer_show') }}:</div>
-        <div class="items-wrap">
-            <component v-for="item in visible_variables" :key="item.variable.id" :is="Visible"
-                       :context="props.context"
-                       :data="item"></component>
+        <div class="show">
+            <div class="title">{{ t('compos.layer_show') }}:</div>
+            <div class="items-wrap">
+                <component v-for="item in visible_variables" :key="item.variable.id" :is="Visible"
+                           :context="props.context"
+                           :data="item"></component>
+            </div>
         </div>
+        <div class="place"></div>
     </div>
 </template>
 
@@ -183,14 +186,27 @@ onUnmounted(() => {
 
 .visible-var-container {
     display: flex;
-    .title {
-        width: 72px;
-        line-height: 26px;
-        font-weight: 600;
+    width: 100%;
+    .show {
+        display: flex;
+        width: calc(100% - 22px);
+        .title {
+            width: 40%;
+            line-height: 26px;
+            font-weight: 600;
+            padding-right: 10px;
+        }
+        .items-wrap {
+            width: 60%;
+        }
     }
-    .items-wrap {
-        width: 120px;
-        margin-left: 16px;
+    .place {
+        flex: 0 0 22px;
+        display: flex;
+        justify-content: center;
+        align-items: center;
+        width: 22px;
+        height: 22px;
     }
 }
 
