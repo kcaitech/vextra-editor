@@ -1,5 +1,5 @@
 <script setup lang="ts">
-import {h, nextTick, onMounted, onUnmounted, ref} from 'vue';
+import {h, nextTick, onMounted, onUnmounted, onUpdated, ref} from 'vue';
 import comsMap from '@/components/Document/Content/comsmap';
 import {GroupShape} from "@kcdesign/data";
 import {renderSymbolPreview as r} from "@kcdesign/data";
@@ -7,6 +7,7 @@ import {initCommonShape} from "@/components/Document/Content/common";
 import {Context} from '@/context';
 import {Selection} from '@/context/selection';
 import {clear_scroll_target, is_circular_ref2} from '@/utils/symbol';
+import {debounce} from "lodash";
 
 interface Props {
     data: GroupShape
@@ -21,14 +22,16 @@ const selected = ref<boolean>(false);
 const render_preview = ref<boolean>(false);
 const preview_container = ref<Element>();
 const danger = ref<boolean>(false);
+const reflush = ref<number>(0);
+const render_item = ref<GroupShape>(props.data);
 
 function gen_view_box() {
-    const frame = props.data.frame;
+    const frame = render_item.value.frame;
     return `0 0 ${frame.width} ${frame.height}`;
 }
 
 function render() {
-    return r(h, props.data, comsMap, common.reflush);
+    return r(h, render_item.value as GroupShape, comsMap);
 }
 
 function selection_watcher(t: number) {
@@ -39,6 +42,20 @@ function check_selected_status() {
     selected.value = props.context.selection.isSelectedShape(props.data);
 }
 
+function _shape_watcher() {
+    check_render_item();
+    reflush.value++;
+}
+
+function check_render_item() {
+    if (!props.data.isUnionSymbolShape) return;
+    render_item.value = (props.data?.childs[0] as GroupShape) || props.data;
+    props.data.unwatch(shape_watcher);
+    render_item.value.watch(shape_watcher);
+}
+
+const shape_watcher = debounce(_shape_watcher, 1000);
+
 const options = {
     root: props.container,
     rootMargin: '0px 0px 0px 0px',
@@ -47,6 +64,17 @@ const options = {
 
 function intersection(entries: any) {
     render_preview.value = Boolean(entries[0]?.isIntersecting);
+    if (render_preview.value) {
+        if (props.isAttri) danger_check();
+        check_selected_status();
+        props.context.selection.watch(selection_watcher);
+        props.data.watch(shape_watcher);
+        check_render_item();
+    } else {
+        props.context.selection.unwatch(selection_watcher);
+        props.data.unwatch(shape_watcher);
+        render_item.value.unwatch(shape_watcher);
+    }
 }
 
 const io = new IntersectionObserver(intersection, options);
@@ -80,15 +108,13 @@ function danger_check() {
 }
 
 onMounted(() => {
-    if (props.isAttri) danger_check();
-    check_selected_status();
     check_render_required();
-    props.context.selection.watch(selection_watcher);
     is_need_scroll_to_view();
 })
 onUnmounted(() => {
     io.disconnect();
     props.context.selection.unwatch(selection_watcher);
+    props.data.unwatch(shape_watcher);
 })
 </script>
 <template>
