@@ -2,7 +2,7 @@
 import {Context} from '@/context';
 import ComponentCardAlpha from './ComponentCardAlpha.vue';
 import ComponentCardBeta from './ComponentCardBeta.vue';
-import {nextTick, onMounted, onUnmounted, ref} from 'vue';
+import {computed, nextTick, onMounted, onUnmounted, ref, watch} from 'vue';
 import {GroupShape, Shape, SymbolShape} from '@kcdesign/data';
 import {shape_track} from '@/utils/content';
 import {ClientXY} from '@/context/selection';
@@ -19,18 +19,19 @@ interface Props {
     data: SymbolShape[]
     container: Element | null
     isAttri: boolean
+    cardType: 'alpha' | 'beta'
 }
 
 const props = defineProps<Props>();
 let compo: Shape;
 let down_position: ClientXY = {x: 0, y: 0};
 let is_drag: boolean = false;
-const render_alpha = ref<boolean>(Boolean(props.context.component.card_type === 'alpha'));
 const reflush = ref<number>(0);
 const list_container_beta = ref<HTMLDivElement>();
 let observer = new ResizeObserver(() => {
     reflush.value++;
 });
+const render_alpha = computed<boolean>(() => props.cardType === 'alpha');
 
 function down(e: MouseEvent, shape: Shape) {
     compo = shape.isUnionSymbolShape ? shape.childs[0] || shape : shape;
@@ -71,34 +72,23 @@ function gen_columns() {
 }
 
 function init() {
-    const type = props.context.component.card_type;
-    if (type === 'alpha') {
-        render_alpha.value = true;
-    } else {
-        render_alpha.value = false;
+    if (!render_alpha.value) {
         nextTick(() => {
             if (list_container_beta.value) observer.observe(list_container_beta.value);
         })
     }
 }
 
-function component_watcher(t: number) {
-    if (t === Component.CARD_TYPE_CHANGE) modify_render_type();
-}
-
-function modify_render_type() {
-    const type = props.context.component.card_type;
-    if (type === 'alpha') {
-        render_alpha.value = true;
+watch(() => render_alpha.value, (v) => {
+    if (v) {
         if (list_container_beta.value) observer.disconnect();
     } else {
-        render_alpha.value = false;
         nextTick(() => {
             if (list_container_beta.value) observer.observe(list_container_beta.value);
         })
+        reflush.value = 0;
     }
-    reflush.value = 0;
-}
+})
 
 function window_blur() {
     is_drag = false;
@@ -108,17 +98,15 @@ function window_blur() {
 onMounted(() => {
     init();
     add_blur_for_window(window_blur);
-    props.context.component.watch(component_watcher);
 })
 onUnmounted(() => {
     observer && observer.disconnect();
     remove_blur_from_window(window_blur);
-    props.context.component.unwatch(component_watcher);
 })
 </script>
 <template>
     <div v-if="render_alpha" class="list-container-alpha">
-        <ComponentCardAlpha v-for="(item, index) in props.data" :key="index" :data="(item as GroupShape)"
+        <ComponentCardAlpha v-for="item in props.data" :key="item.id" :data="(item as GroupShape)"
                             :context="props.context" @mousedown="(e: MouseEvent) => down(e, item as unknown as Shape)"
                             :container="props.container" :is-attri="props.isAttri">
         </ComponentCardAlpha>

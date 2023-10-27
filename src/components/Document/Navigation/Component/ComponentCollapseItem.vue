@@ -13,6 +13,7 @@ interface Props {
     container: Element | null
     status_set: Set<string>
     isAttri: boolean
+    cardType: 'alpha' | 'beta'
 }
 interface Emits {
     (e: 'change-status', id: string): void;
@@ -39,7 +40,7 @@ onMounted(init);
             <ComponentCollapseItemTitle :data="props.data"></ComponentCollapseItemTitle>
         </div>
     </div>
-    <ComponentListView v-else :context="props.context" :data="props.data.symbols" :container="props.container" :is-attri="props.isAttri">
+    <ComponentListView v-else :context="props.context" :data="props.data.symbols" :container="props.container" :is-attri="props.isAttri" :card-type="props.cardType">
     </ComponentListView>
 </template>
 <style scoped lang="scss">
