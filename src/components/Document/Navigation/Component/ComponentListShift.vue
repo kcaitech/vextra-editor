@@ -38,10 +38,10 @@ onMounted(() => {
         <div class="search_togger">
             <el-input v-model="search" class="w-50 m-2" :placeholder="t('compos.search_compos')" :prefix-icon="Search" />
             <div class="toggle_list">
-                <svg-icon v-if="isList === 'beta'" icon-class="resource"
-                    @click.stop="() => set_card_type('alpha')"></svg-icon>
-                <svg-icon v-if="isList === 'alpha'" icon-class="text-bulleted-list"
+                <svg-icon v-if="isList === 'alpha'" icon-class="resource"
                     @click.stop="() => set_card_type('beta')"></svg-icon>
+                <svg-icon v-if="isList === 'beta'" icon-class="text-bulleted-list"
+                    @click.stop="() => set_card_type('alpha')"></svg-icon>
             </div>
         </div>
         <div class="body">

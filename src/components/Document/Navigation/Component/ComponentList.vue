@@ -36,9 +36,9 @@ onMounted(() => {
                 @input="searching" />
             <div class="toggle_list">
                 <svg-icon v-if="isList === 'alpha'" icon-class="resource"
-                    @click.stop="() => set_card_type('alpha')"></svg-icon>
-                <svg-icon v-if="isList === 'alpha'" icon-class="text-bulleted-list"
                     @click.stop="() => set_card_type('beta')"></svg-icon>
+                <svg-icon v-if="isList === 'beta'" icon-class="text-bulleted-list"
+                    @click.stop="() => set_card_type('alpha')"></svg-icon>
             </div>
         </div>
         <div class="body" v-show="!search">

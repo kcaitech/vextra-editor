@@ -1,18 +1,18 @@
 <script setup lang="ts">
-import { Context } from '@/context';
+import {Context} from '@/context';
 import ComponentCardAlpha from './ComponentCardAlpha.vue';
 import ComponentCardBeta from './ComponentCardBeta.vue';
-import { nextTick, onMounted, onUnmounted, ref } from 'vue';
-import { GroupShape, Shape, SymbolShape } from '@kcdesign/data';
-import { shape_track } from '@/utils/content';
-import { ClientXY } from '@/context/selection';
-import { is_dbl_action } from '@/utils/action';
+import {nextTick, onMounted, onUnmounted, ref} from 'vue';
+import {GroupShape, Shape, SymbolShape} from '@kcdesign/data';
+import {shape_track} from '@/utils/content';
+import {ClientXY} from '@/context/selection';
+import {is_dbl_action} from '@/utils/action';
 import {
     add_blur_for_window, add_move_and_up_for_document, check_drag_action,
     get_current_position_client, modify_down_position_client, remove_blur_from_window,
     remove_move_and_up_from_document
 } from '@/utils/mouse_interactive';
-import { Component } from '@/context/component';
+import {Component} from '@/context/component';
 
 interface Props {
     context: Context
@@ -23,16 +23,19 @@ interface Props {
 
 const props = defineProps<Props>();
 let compo: Shape;
-let down_position: ClientXY = { x: 0, y: 0 };
+let down_position: ClientXY = {x: 0, y: 0};
 let is_drag: boolean = false;
 const render_alpha = ref<boolean>(Boolean(props.context.component.card_type === 'alpha'));
 const reflush = ref<number>(0);
 const list_container_beta = ref<HTMLDivElement>();
-let observer = new ResizeObserver(() => { reflush.value++; });
+let observer = new ResizeObserver(() => {
+    reflush.value++;
+});
 
 function down(e: MouseEvent, shape: Shape) {
-    if (props.isAttri) {
-        props.context.component.notify(Component.SELECTED_VAL, shape);
+    compo = shape.isUnionSymbolShape ? shape.childs[0] || shape : shape;
+    if (props.isAttri) { // 选择一个实例进行切换
+        props.context.component.notify(Component.SELECTED_VAL, compo);
         return;
     }
     if (e.button === 2) {
@@ -43,10 +46,10 @@ function down(e: MouseEvent, shape: Shape) {
         shape_track(props.context, shape);
         return;
     }
-    compo = shape;
     modify_down_position_client(props.context, e, down_position);
     add_move_and_up_for_document(move, up);
 }
+
 function move(e: MouseEvent) {
     const curr_position = get_current_position_client(props.context, e);
     if (is_drag) return;
@@ -66,6 +69,7 @@ function gen_columns() {
     const repeat = Math.floor(((props.context.workspace.root.x - 16) / 106));
     return `repeat(${repeat}, 100px)`;
 }
+
 function init() {
     const type = props.context.component.card_type;
     if (type === 'alpha') {
@@ -77,9 +81,11 @@ function init() {
         })
     }
 }
+
 function component_watcher(t: number) {
     if (t === Component.CARD_TYPE_CHANGE) modify_render_type();
 }
+
 function modify_render_type() {
     const type = props.context.component.card_type;
     if (type === 'alpha') {
@@ -93,6 +99,7 @@ function modify_render_type() {
     }
     reflush.value = 0;
 }
+
 function window_blur() {
     is_drag = false;
     remove_move_and_up_from_document(move, up);
@@ -112,15 +119,16 @@ onUnmounted(() => {
 <template>
     <div v-if="render_alpha" class="list-container-alpha">
         <ComponentCardAlpha v-for="(item, index) in props.data" :key="index" :data="(item as GroupShape)"
-            :context="props.context" @mousedown="(e: MouseEvent) => down(e, item as unknown as Shape)"
-            :container="props.container" :is-attri="props.isAttri">
+                            :context="props.context" @mousedown="(e: MouseEvent) => down(e, item as unknown as Shape)"
+                            :container="props.container" :is-attri="props.isAttri">
         </ComponentCardAlpha>
     </div>
-    <div v-else class="list-container-beta" ref="list_container_beta" :style="{ 'grid-template-columns': gen_columns() }"
-        :reflush="reflush">
-        <ComponentCardBeta v-for="(item, index) in props.data" :key="index" :data="(item as GroupShape)"
-            :context="props.context" @mousedown="(e: MouseEvent) => down(e, item as unknown as Shape)"
-            :container="props.container" :is-attri="props.isAttri">
+    <div v-else class="list-container-beta" ref="list_container_beta"
+         :style="{ 'grid-template-columns': gen_columns() }"
+         :reflush="reflush">
+        <ComponentCardBeta v-for="item in props.data" :key="item.id" :data="(item as GroupShape)"
+                           :context="props.context" @mousedown="(e: MouseEvent) => down(e, item as unknown as Shape)"
+                           :container="props.container" :is-attri="props.isAttri">
         </ComponentCardBeta>
     </div>
 </template>
