@@ -1,30 +1,32 @@
 <script lang="ts" setup>
-import { onMounted, ref } from 'vue';
-import { Search } from '@element-plus/icons-vue';
+import {onMounted, ref} from 'vue';
+import {Search} from '@element-plus/icons-vue';
 import ComponentContainer from './ComponentContainer.vue';
-import { Context } from '@/context';
-import { useI18n } from 'vue-i18n';
-const { t } = useI18n();
+import {Context} from '@/context';
+import {useI18n} from 'vue-i18n';
+
+const {t} = useI18n();
+
 interface Props {
     context: Context
 }
+
 interface Emits {
     (e: 'close'): void;
 }
+
 const props = defineProps<Props>();
 const emit = defineEmits<Emits>();
 const search = ref('');
-const isList = ref<'alpha' | 'beta'>('beta');
+const card_type = ref<'alpha' | 'beta'>('beta');
+
 function set_card_type(v: 'alpha' | 'beta') {
-    props.context.component.set_card_type(v);
-    isList.value = props.context.component.card_type;
+    card_type.value = v;
 }
+
 const close = () => {
     emit('close');
 }
-onMounted(() => {
-    isList.value = props.context.component.card_type;
-})
 </script>
 
 <template>
@@ -36,16 +38,17 @@ onMounted(() => {
             </div>
         </div>
         <div class="search_togger">
-            <el-input v-model="search" class="w-50 m-2" :placeholder="t('compos.search_compos')" :prefix-icon="Search" />
+            <el-input v-model="search" class="w-50 m-2" :placeholder="t('compos.search_compos')" :prefix-icon="Search"/>
             <div class="toggle_list">
-                <svg-icon v-if="isList === 'alpha'" icon-class="resource"
-                    @click.stop="() => set_card_type('beta')"></svg-icon>
-                <svg-icon v-if="isList === 'beta'" icon-class="text-bulleted-list"
-                    @click.stop="() => set_card_type('alpha')"></svg-icon>
+                <svg-icon v-if="card_type === 'alpha'" icon-class="resource"
+                          @click.stop="() => set_card_type('beta')"></svg-icon>
+                <svg-icon v-if="card_type === 'beta'" icon-class="text-bulleted-list"
+                          @click.stop="() => set_card_type('alpha')"></svg-icon>
             </div>
         </div>
         <div class="body">
-            <ComponentContainer :context="context" :search="search" :is-attri="true"></ComponentContainer>
+            <ComponentContainer :context="context" :search="search" :is-attri="true"
+                                :card-type="card_type"></ComponentContainer>
         </div>
     </div>
 </template>
@@ -81,7 +84,7 @@ onMounted(() => {
             align-items: center;
             justify-content: center;
 
-            >svg {
+            > svg {
                 width: 65%;
                 height: 65%;
             }

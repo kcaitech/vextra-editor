@@ -9,7 +9,6 @@ export class Component extends Watchable(Object) {
     private m_context: Context;
     private m_bridge: boolean = false;
     private m_wonder: Shape | undefined;
-    private m_card_type: 'alpha' | 'beta' = 'beta';
     private m_into_view_after_mounted: string | undefined = undefined;
     constructor(context: Context) {
         super();
@@ -32,13 +31,6 @@ export class Component extends Watchable(Object) {
     logout_wonder() {
         this.m_wonder = undefined;
         this.notify(Component.WONDER_CHANGE);
-    }
-    get card_type() {
-        return this.m_card_type;
-    }
-    set_card_type(v: 'alpha' | 'beta') {
-        this.m_card_type = v;
-        this.notify(Component.CARD_TYPE_CHANGE);
     }
     get into_view_target() {
         return this.m_into_view_after_mounted;

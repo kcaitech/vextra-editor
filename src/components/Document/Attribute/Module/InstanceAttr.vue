@@ -65,6 +65,7 @@ const updateData = () => {
 watch(() => props.shape, (nVal, oVal) => {
     oVal.unwatch(shape_watcher);
     nVal.watch(shape_watcher);
+    updateData();
 })
 onMounted(() => {
     updateData();
@@ -187,19 +188,23 @@ onUnmounted(() => {
 .visible-var-container {
     display: flex;
     width: 100%;
+
     .show {
         display: flex;
         width: calc(100% - 22px);
+
         .title {
             width: 40%;
             line-height: 26px;
             font-weight: 600;
             padding-right: 10px;
         }
+
         .items-wrap {
             width: 60%;
         }
     }
+
     .place {
         flex: 0 0 22px;
         display: flex;

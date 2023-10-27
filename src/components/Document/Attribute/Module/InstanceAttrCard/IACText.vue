@@ -1,6 +1,6 @@
 <script setup lang="ts">
 import { get_vari_value_for_ref, modify_vari_value_for_ref, RefAttriListItem } from "@/utils/symbol";
-import { ref, onMounted } from "vue";
+import {ref, onMounted, onUpdated} from "vue";
 import { Context } from "@/context";
 interface Props {
     context: Context
@@ -22,6 +22,7 @@ function get_value() {
 function change(v: boolean) {
     modify_vari_value_for_ref(props.context, props.data.variable, v);
 }
+onUpdated(get_value);
 onMounted(get_value);
 </script>
 <template>

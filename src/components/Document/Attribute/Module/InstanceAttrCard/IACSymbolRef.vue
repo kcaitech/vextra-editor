@@ -63,7 +63,6 @@ function component_watcher(t: number, val: Shape) {
 }
 
 onUpdated(get_value);
-
 onMounted(() => {
     get_value();
     props.context.component.watch(component_watcher);

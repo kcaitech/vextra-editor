@@ -33,9 +33,7 @@ function getVattagValue() {
     status_value.value = get_vari_value_for_ref(symref, props.data.variable);
 }
 
-onUpdated(() => {
-    getVattagValue();
-})
+onUpdated(getVattagValue);
 onMounted(() => {
     getVattagValue();
 })

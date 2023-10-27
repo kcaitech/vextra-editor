@@ -18,6 +18,7 @@ interface Props {
     context: Context
     container: Element | null
     isAttri: boolean
+    cardType: 'alpha' | 'beta'
 }
 
 const props = defineProps<Props>();
@@ -38,7 +39,7 @@ function _list_loader() {
     console.log('local component data load result: ', local_data.value);
 }
 
-const list_loader = debounce(_list_loader, 1500);
+const list_loader = debounce(_list_loader, 200);
 
 function navi_watch(t: number) {
     if (t === Navi.MODULE_CHANGE) {
@@ -55,7 +56,6 @@ function update_status_set(id: string) {
 onMounted(() => {
     props.context.data.pagesMgr.watch(list_loader);
     props.context.data.symbolsMgr.watch(list_loader);
-    props.context.data.artboardMgr.watch(list_loader);
     props.context.navi.watch(navi_watch);
     _list_loader();
 })
@@ -69,7 +69,7 @@ onUnmounted(() => {
     <ComponentRootCollapse :context="props.context" :extend="true" :container="props.container"
                            :title="t('compos.lib_local')" :data="(local_data as SymbolListItem[])"
                            :status_set="status_set"
-                           @change-status="update_status_set" :is-attri="props.isAttri">
+                           @change-status="update_status_set" :is-attri="props.isAttri" :card-type="props.cardType">
     </ComponentRootCollapse>
 </template>
 <style lang="scss" scoped></style>

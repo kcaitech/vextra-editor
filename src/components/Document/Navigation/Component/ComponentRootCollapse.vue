@@ -11,6 +11,7 @@ interface Props {
     container: Element | null
     status_set: Set<string>
     isAttri: boolean
+    cardType: 'alpha' | 'beta'
 }
 interface Emits {
     (e: 'change-status', id: string): void;
@@ -38,7 +39,7 @@ onMounted(() => {
         </div>
         <div class="component-lib-collapse-content" v-show="!fold" @click.stop>
             <component :is="ComponentCollapseItem" v-for="item in props.data" :title="item.title" :data="item"
-                :container="props.container" :key="item.id" :context="props.context" :status_set="props.status_set" :is-attri="props.isAttri"
+                :container="props.container" :key="item.id" :context="props.context" :status_set="props.status_set" :is-attri="props.isAttri" :card-type="props.cardType"
                 @change-status="change_status">
             </component>
         </div>
