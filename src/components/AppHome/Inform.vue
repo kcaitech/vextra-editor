@@ -213,9 +213,9 @@ const getName = (user: any) => {
                     {{ t('apply.apply_project') }}"{{ item.project.name }}"，{{ t('apply.authority') }}：{{
                       permission[item.request.perm_type] }}</div>
                       <div class="item-text"  v-else-if="!item.user && item.request.status === 1">
-                    欢迎加入{{ item.project ? '项目组' : '团队' }}: {{ item.project ? item.project.name : item.team.name }}</div>
+                    {{t('Createteam.welcome')}}{{ item.project ? t('Createteam.project') : t('Createteam.team') }}: {{ item.project ? item.project.name : item.team.name }}</div>
                     <div class="item-text"  v-else-if="!item.user && item.request.status === 2">
-                    申请加入{{ item.project ? '项目组' : '团队' }}"{{ item.project ? item.project.name : item.team.name }}"被拒绝，如有疑问，请联系项目组管理员</div>
+                    {{t('Createteam.rejectprompt1')}}{{ item.project ? t('Createteam.project') : t('Createteam.team') }}"{{ item.project ? item.project.name : item.team.name }}"{{t('Createteam.rejectprompt2')}}</div>
                 </el-tooltip>
               </div>
               <div class="botton" v-if="item.request.status === 0 && item.user">

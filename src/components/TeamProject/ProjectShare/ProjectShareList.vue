@@ -226,12 +226,11 @@ const showSettingDialog = () => {
 }
 
 const closeDialog = () => {
+    showcontainer.value = false
     if (projectMembergDialog.value) {
-        showcontainer.value = false
         projectMembergDialog.value = false;
     }
     if (projectSettingDialog.value) {
-        showcontainer.value = false
         projectSettingDialog.value = false
     }
 }
@@ -277,7 +276,7 @@ const iconlists = ref(['fixed', 'entrance', 'project'])
         @projectrename="setProjectInfo" @showSettingDialog="showSettingDialog"
         @cancelFixed="cancelFixed(mydata, mydata.is_favor)" @exitproject="rexitProject" @delproject="rdelProject" />
     <ProjectAccessSetting v-if="projectSettingDialog" :showcontainer="showcontainer" :title="t('Createteam.membertip')"
-        :data="mydata" width="500px" @clodeDialog="closeDialog" />
+        :data="mydata" width="500px" @closeDialog="closeDialog" />
     <ProjectMemberg v-if="projectMembergDialog" :showcontainer="showcontainer" :projectMembergDialog="projectMembergDialog"
         :currentProject="mydata" @closeDialog="closeDialog" @exitProject="exitProject" />
 </template>

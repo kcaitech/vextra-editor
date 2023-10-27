@@ -3,6 +3,7 @@ import { watch, ref, Ref, inject, computed, nextTick } from 'vue';
 import { Folder } from '@element-plus/icons-vue';
 import * as team_api from '@/request/team';
 import { useI18n } from 'vue-i18n';
+import CloseIcon from '../common/CloseIcon.vue';
 
 interface data {
     document: {
@@ -94,9 +95,9 @@ const quitProject = () => {
             params = {
                 document_id: props.doc!.document.id,
                 source_project_id: props.projectItem.project.id,
-                target_project_id: curProject.value.project.id
+                target_project_id: active.value
             }
-            if (props.projectItem.project.id === curProject.value.project.id) return emit('moveFillSeccess');
+            if (props.projectItem.project.id === active.value) return emit('moveFillSeccess');
         }
     } else {
         if (activeNames.value === '2') {
@@ -104,7 +105,7 @@ const quitProject = () => {
         }
         params = {
             document_id: props.doc!.document.id,
-            target_project_id: curProject.value.project.id
+            target_project_id: active.value
         }
     }
     moveProjectTarget(params);
@@ -125,11 +126,26 @@ const onactiveNames = (id: string) => {
         })
     }
 }
+
+const changemargin = () => {
+    nextTick(() => {
+        let el = document.querySelectorAll('.el-dialog__header')
+        for (let i = 0; i < el.length; i++) {
+            (el[i] as HTMLElement).style.marginRight = '0px'
+        }
+    })
+}
 </script>
 
 <template>
-    <el-dialog v-model="isshow" width="550px" :title="title" align-center :close-on-click-modal="false"
-        :before-close="handleClose">
+    <el-dialog v-model="isshow" width="550px" align-center :close-on-click-modal="false" :before-close="handleClose"
+        :show-close="false" @open="changemargin">
+        <template #header>
+            <div class="my-header">
+                <div class="title">{{ title }}</div>
+                <CloseIcon :size="20" @close="handleClose" />
+            </div>
+        </template>
         <div class="context">
             <div class="name">
                 <span>{{ t('moveprojectfill.name') }}</span>
@@ -198,7 +214,7 @@ const onactiveNames = (id: string) => {
                                 <div>{{ t('moveprojectfill.private_file') }}</div>
                             </div>
                         </div>
-                        <template v-for="(item, i) in shareProject" :key="i">
+                        <template v-for="(item, index) in shareProject" :key="index">
                             <div class="project" v-if="activeNames === '1'" @click="targetProject(item)">
                                 <div :class="{ 'is_active': item.project.id === active }">
                                     <el-icon style="margin-right: 10px;">
@@ -257,6 +273,16 @@ const onactiveNames = (id: string) => {
 
 :deep(.el-scrollbar) {
     margin-right: -10px;
+}
+.my-header {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+
+    .title {
+        color: #3D3D3D;
+        font-weight: 600;
+    }
 }
 
 h6 {

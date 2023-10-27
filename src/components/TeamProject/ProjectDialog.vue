@@ -1,5 +1,5 @@
 <script setup lang="ts">
-import { watch, ref, onMounted } from 'vue';
+import { watch, ref, onMounted, nextTick } from 'vue';
 import { useI18n } from 'vue-i18n';
 import CloseIcon from '../common/CloseIcon.vue';
 const { t } = useI18n()
@@ -28,8 +28,12 @@ const quitProject = () => {
 }
 
 const changemargin = () => {
-    const el = document.querySelector('.el-dialog__header') as HTMLElement
-    el.style.marginRight = '0px'
+    nextTick(() => {
+        let el = document.querySelectorAll('.el-dialog__header')
+        for (let i = 0; i < el.length; i++) {
+            (el[i] as HTMLElement).style.marginRight = '0px'
+        }
+    })
 }
 
 </script>

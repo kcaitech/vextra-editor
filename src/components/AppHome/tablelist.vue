@@ -237,11 +237,12 @@ const columns: Column<any>[] = [
         dataKey: 'document',
         width: 400,
         minWidth: 100,
+        class: 'other',
         align: 'left',
         cellRenderer: ({ rowData }) => (
             <>
                 {props.iconlist.includes('star') && !rowData.document_favorites.is_favorite && (
-                    <el-icon size={20}
+                    <el-icon
                         onDblclick={(event: MouseEvent) => event.stopPropagation()}
                         onClick={(event: MouseEvent) => {
                             event.stopPropagation()
@@ -255,7 +256,7 @@ const columns: Column<any>[] = [
                 )}
 
                 {props.iconlist.includes('star') && rowData.document_favorites.is_favorite && (
-                    <el-icon size={20} style={"display: inline-block"}
+                    <el-icon style={"display: inline-block"}
                         onDblclick={(event: MouseEvent) => event.stopPropagation()}
                         onClick={(event: MouseEvent) => {
                             event.stopPropagation()
@@ -269,7 +270,7 @@ const columns: Column<any>[] = [
                 )}
 
                 {props.iconlist.includes('share') && (
-                    <el-icon size={20}
+                    <el-icon
                         onDblclick={(event: MouseEvent) => event.stopPropagation()}
                         onClick={(event: MouseEvent) => {
                             event.stopPropagation()
@@ -282,7 +283,7 @@ const columns: Column<any>[] = [
                 )}
 
                 {(props.iconlist.includes('delete_p') && props.perm! > 3 || props.perm! === 3 && rowData.document.user_id === user_id) && (
-                    <el-icon size={20}
+                    <el-icon
                         onDblclick={(event: MouseEvent) => event.stopPropagation()}
                         onClick={(event: MouseEvent) => {
                             event.stopPropagation()
@@ -294,7 +295,7 @@ const columns: Column<any>[] = [
                     </el-icon>
                 )}
                 {(props.iconlist.includes('delete')) && (
-                    <el-icon size={20}
+                    <el-icon
                         onDblclick={(event: MouseEvent) => event.stopPropagation()}
                         onClick={(event: MouseEvent) => {
                             event.stopPropagation()
@@ -307,7 +308,7 @@ const columns: Column<any>[] = [
                 )}
 
                 {props.iconlist.includes('remove') && (
-                    <el-icon size={20}
+                    <el-icon
                         onDblclick={(event: MouseEvent) => event.stopPropagation()}
                         onClick={(event: MouseEvent) => {
                             event.stopPropagation()
@@ -320,7 +321,7 @@ const columns: Column<any>[] = [
                 )}
 
                 {props.iconlist.includes('restore') && (
-                    <el-icon size={20}
+                    <el-icon
                         onDblclick={(event: MouseEvent) => event.stopPropagation()}
                         onClick={(event: MouseEvent) => {
                             event.stopPropagation()
@@ -334,7 +335,7 @@ const columns: Column<any>[] = [
                 )}
 
                 {props.iconlist.includes('Delete') && (
-                    <el-icon size={20}
+                    <el-icon
                         onDblclick={(event: MouseEvent) => event.stopPropagation()}
                         onClick={(event: MouseEvent) => {
                             event.stopPropagation()
@@ -347,7 +348,7 @@ const columns: Column<any>[] = [
                 )}
 
                 {props.iconlist.includes('EXshare') && (
-                    <el-icon size={20}
+                    <el-icon
                         onDblclick={(event: MouseEvent) => event.stopPropagation()}
                         onClick={(event: MouseEvent) => {
                             event.stopPropagation()
@@ -465,68 +466,69 @@ watchEffect(() => {
                 width: 400,
                 minWidth: 100,
                 dataKey: 'project',
+                class: 'other',
                 align: 'left',
                 cellRenderer: ({ rowData, rowIndex }) => (
                     <>
                         {!rowData.is_favor && (
-                            <el-icon size={20}
+                            <el-icon
                                 onDblclick={(event: MouseEvent) => event.stopPropagation()}
                                 onClick={(event: MouseEvent) => {
                                     event.stopPropagation()
                                     emits('cancelfixed', rowData, rowData.is_favor, rowIndex)
                                 }}>
-                                <el-tooltip content='固定项目' show-after={1000} hide-after={0}>
+                                <el-tooltip content={t('Createteam.fixed')} show-after={1000} hide-after={0}>
                                     <svg-icon icon-class="fixed"></svg-icon>
                                 </el-tooltip>
                             </el-icon>
                         )}
 
                         {rowData.is_favor && (
-                            <el-icon size={20} style={"display: inline-block"}
+                            <el-icon style={"display: inline-block"}
                                 onDblclick={(event: MouseEvent) => event.stopPropagation()}
                                 onClick={(event: MouseEvent) => {
                                     event.stopPropagation()
                                     emits('cancelfixed', rowData, rowData.is_favor, rowIndex)
                                 }}>
-                                <el-tooltip content='取消固定' show-after={1000} hide-after={0}>
+                                <el-tooltip content={t('Createteam.cancelFixed')} show-after={1000} hide-after={0}>
                                     <svg-icon icon-class="fixed-cancel"></svg-icon>
                                 </el-tooltip>
                             </el-icon>
                         )}
 
                         {(
-                            <el-icon size={20}
+                            <el-icon
                                 onDblclick={(event: MouseEvent) => event.stopPropagation()}
                                 onClick={(event: MouseEvent) => {
                                     event.stopPropagation()
                                     emits('skipproject', rowData.project.id)
                                 }}>
-                                <el-tooltip content='进入项目' show-after={1000} hide-after={0}>
+                                <el-tooltip content={t('projectlist.enterproject')} show-after={1000} hide-after={0}>
                                     <svg-icon icon-class="entrance"></svg-icon>
                                 </el-tooltip>
                             </el-icon>
                         )}
 
                         {rowData.self_perm_type === 5 && (
-                            <el-icon size={20}
+                            <el-icon
                                 onDblclick={(event: MouseEvent) => event.stopPropagation()}
                                 onClick={(event: MouseEvent) => {
                                     event.stopPropagation()
                                     emits('onexitproject', rowData, rowIndex)
                                 }}>
-                                <el-tooltip content='删除项目' show-after={1000} hide-after={0}>
+                                <el-tooltip content={t('teamprojectmenu.projectdeltitle')} show-after={1000} hide-after={0}>
                                     <svg-icon icon-class="delete-project"></svg-icon>
                                 </el-tooltip>
                             </el-icon>
                         )}
                         {rowData.self_perm_type !== 5 && (
-                            <el-icon size={20}
+                            <el-icon
                                 onDblclick={(event: MouseEvent) => event.stopPropagation()}
                                 onClick={(event: MouseEvent) => {
                                     event.stopPropagation()
                                     emits('onexitproject', rowData, rowIndex)
                                 }}>
-                                <el-tooltip content='退出项目' show-after={1000} hide-after={0}>
+                                <el-tooltip content={t('teamprojectmenu.projectexittitle')} show-after={1000} hide-after={0}>
                                     <svg-icon icon-class="exit-project"></svg-icon>
                                 </el-tooltip>
                             </el-icon>
@@ -539,6 +541,21 @@ watchEffect(() => {
 
 </script>
 <style lang="scss" scoped>
+:deep(.other) {
+    color: var(--active-color);
+
+    .el-icon {
+        font-size: 20px;
+        margin-right: 6px;
+        padding: 2px;
+        display: none;
+
+        svg {
+            outline: none;
+        }
+    }
+}
+
 :deep(.el-table-v2__header-wrapper) {
     height: 26px !important;
 }
@@ -571,6 +588,7 @@ watchEffect(() => {
     background-color: #f3f0ff;
 
     // border: none;
+
     .el-icon {
         display: block;
 
@@ -586,18 +604,6 @@ watchEffect(() => {
     }
 }
 
-:deep(.el-icon) {
-    box-sizing: content-box;
-    margin-right: 6px;
-    padding: 2px;
-    display: none;
-    color: #9775fa;
-
-    &>:focus {
-        outline: none;
-    }
-}
-
 :deep(.selected) {
     background-color: #e5dbff !important;
     border-radius: 4px !important;
@@ -608,10 +614,6 @@ watchEffect(() => {
     white-space: nowrap;
     text-overflow: ellipsis;
     color: #606266;
-}
-
-:deep(.action) {
-    background-color: red;
 }
 
 @keyframes el-icon {
@@ -628,7 +630,7 @@ watchEffect(() => {
     display: flex;
     flex-direction: column;
     align-items: center;
-    margin-top: 240px;
+    margin-top: 25%;
 
     button {
         cursor: pointer;
@@ -646,5 +648,4 @@ watchEffect(() => {
             background-color: rgba(150, 117, 250, 0.862745098);
         }
     }
-}
-</style>
+}</style>

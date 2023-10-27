@@ -22,7 +22,7 @@
             </div>
         </div>
         <div class="addproject">
-            <button type="submit" :disabled=isDisabled @click.stop.once="createProject">确认</button>
+            <button type="submit" :disabled=isDisabled @click.stop.once="createProject">{{t('projectlist.confirm1')}}</button>
         </div>
     </div>
 </template>

@@ -1,5 +1,5 @@
 <script setup lang="ts">
-import { ref, watch, onMounted } from 'vue';
+import { ref, watch, onMounted, nextTick } from 'vue';
 import { ArrowDown, Check } from '@element-plus/icons-vue';
 import * as team_api from '@/request/team';
 import { useI18n } from 'vue-i18n';
@@ -228,8 +228,12 @@ onMounted(() => {
 })
 
 const changemargin = () => {
-    const el = document.querySelector('.el-dialog__header') as HTMLElement
-    el.style.marginRight = '0px'
+    nextTick(() => {
+        let el = document.querySelectorAll('.el-dialog__header')
+        for (let i = 0; i < el.length; i++) {
+            (el[i] as HTMLElement).style.marginRight = '0px'
+        }
+    })
 }
 </script>
 

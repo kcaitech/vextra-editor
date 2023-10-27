@@ -194,8 +194,8 @@ onUnmounted(() => {
     align-items: center;
 
     .title {
-        color: #3D3D3D;
-        font-weight: 600;
+        color: var(--title-color);
+        font-weight: var(--title-weight);
     }
 }
 
@@ -204,6 +204,8 @@ main {
 }
 
 .dialog-footer>.el-button {
+    outline: none;
+
     &:hover {
         background-color: #fff;
         color: #000;

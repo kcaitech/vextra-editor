@@ -43,7 +43,7 @@ const switchstate = ref<boolean>()
 
 const Getteaminfo = async (teamid: string) => {
     try {
-        const { code, data } = await user_api.Getteaminfo({ team_id: teamid })
+        const { code, data,message } = await user_api.Getteaminfo({ team_id: teamid })
         if (code === 0) {
             if (data.self_perm_type != null) {
                 if (data.self_perm_type >= data.invited_perm_type) {
@@ -53,7 +53,7 @@ const Getteaminfo = async (teamid: string) => {
             teaminfo.value = data
             switchstate.value = teaminfo.value?.invited_switch
         } else {
-            ElMessage.error('获取失败')
+            ElMessage.error(message)
         }
     } catch (error) {
 

@@ -248,6 +248,8 @@ const rightmenu = (e: MouseEvent, data: data) => {
     }
     docId.value = id
     mydata.value = data
+    console.log(mydata.value);
+    
     projectItem.value = projectList.value.filter(item => item.project.id === project_id)[0];
 }
 

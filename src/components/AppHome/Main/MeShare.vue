@@ -247,7 +247,6 @@ onUnmounted(() => {
 
 </script>
 <style lang="scss" scoped>
-
 .overlay {
     position: absolute;
     top: 0;
@@ -255,6 +254,6 @@ onUnmounted(() => {
     width: 100%;
     height: 100%;
     z-index: 999;
-    background-color: rgba(0, 0, 0, 0.5);
+    background-color: var(--overlay-bg-color);
 }
 </style>

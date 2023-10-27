@@ -655,13 +655,6 @@ onUnmounted(() => {
                                 <span>{{ t('home.shared_file_received') }}</span>
                             </el-menu-item></router-link>
                         <div class="line"></div>
-                        <!-- <router-link to="/apphome/recyclebin"><el-menu-item index="5"
-                        @click="Setindex(5, t('home.recycling_station'))">
-                        <el-icon>
-                            <Delete />
-                        </el-icon>
-                        <span>{{ t('home.recycling_station') }}</span>
-                    </el-menu-item></router-link> -->
                     </el-menu>
                 </div>
             </el-scrollbar>
@@ -690,10 +683,12 @@ onUnmounted(() => {
                                     <div class="project" @click.stop="(e) => skipProject(item, e)"
                                         @mousedown.stop="(e) => rightMenu(item, e)"
                                         :class="{ 'is_active': isProjectActive(item.project.id) }">
-                                        <div style="box-sizing: border-box;">
+                                        <el-input v-if="reName === item.project.id" v-model="proname" ref="Input" autofocus
+                                            @blur="onblur" />
+                                        <div v-else style="box-sizing: border-box;">
                                             <div class="project_name">{{ item.project.name }}</div>
                                             <div class="right">
-                                                <Tooltip :content="'取消固定'" :offset="10">
+                                                <Tooltip :content="t('Createteam.cancelFixed')" :offset="10">
                                                     <div @click.stop="shareFixed(i, item.project.id)">
                                                         <svg t="1693476333821" class="icon" viewBox="0 0 1024 1024"
                                                             version="1.1" xmlns="http://www.w3.org/2000/svg" p-id="15755"

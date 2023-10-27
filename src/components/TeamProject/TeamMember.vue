@@ -52,6 +52,11 @@
                         </div>
                     </div>
                 </div>
+                <div v-if="SearchList.length === 0 && searchvalue !== ''" class="empty">
+                    <svg-icon icon-class="member"></svg-icon>
+                    没有找到该成员
+                </div>
+                <Loading v-if="SearchList.length === 0 && searchvalue == ''" :size="20" />
             </el-scrollbar>
         </div>
     </div>
@@ -74,7 +79,7 @@ import { ElMessage } from 'element-plus'
 import { useI18n } from 'vue-i18n'
 import { router } from '@/router';
 import ProjectDialog from './ProjectDialog.vue';
-
+import Loading from '../common/Loading.vue';
 interface Props {
     searchvalue?: string
 }
@@ -99,6 +104,7 @@ const transferCreator = ref(false);
 const outTeamDialog = ref(false);
 const exitTeamDialog = ref(false);
 const dialogData = ref<any>({})
+const loading = ref(true)
 const { teamID, teamData, upDateTeamData, is_team_upodate, teamUpdate } = inject('shareData') as {
     teamID: Ref<string>;
     teamData: Ref<[{
@@ -557,5 +563,20 @@ onUnmounted(() => {
 
 .main {
     height: calc(100vh - 96px - 56px - 56px - 20px);
+
+    .empty {
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        margin-top: 25%;
+        font-size: 14px;
+
+        svg {
+            color: #9775fa;
+            width: 22px;
+            height: 22px;
+            margin-right: 4px;
+        }
+    }
 }
 </style>

@@ -429,7 +429,7 @@ onUnmounted(() => {
           <div class="type">{{ t('share.document_permission') }}:</div>
           <p class="name">{{ DocType[docInfo.document.doc_type] }}</p>
         </div>
-        <div class="project" v-if="project || props.docInfo?.project">项目中所有成员均可访问</div>
+        <div class="project" v-if="project || props.docInfo?.project">{{ t('Createteam.shareprojecttips') }}</div>
         <!-- 链接按钮 -->
         <div class="button bottom">
           <el-button class="copybnt" color="#9775fa" @click="copyLink">{{ t('share.copy_link') }}</el-button>
