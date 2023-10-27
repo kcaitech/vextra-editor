@@ -1,5 +1,5 @@
 <script lang="ts" setup>
-import {Shape, ShapeType} from "@kcdesign/data";
+import {Shape, ShapeType} from "../../../../../../../kcdesign-data/src";
 import {onMounted, ref} from "vue";
 
 interface Props {

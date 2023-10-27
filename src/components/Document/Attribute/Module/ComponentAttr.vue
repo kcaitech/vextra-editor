@@ -3,7 +3,7 @@ import {useI18n} from 'vue-i18n';
 import {Context} from '@/context';
 import TypeHeader from '../TypeHeader.vue';
 import {onMounted, onUnmounted, ref, watch} from 'vue'
-import CompLayerShow from '../PopoverMenu/CompLayerShow.vue';
+import CompLayerShow from '../PopoverMenu/ComposAttri/CompLayerShow.vue';
 import {SymbolShape, VariableType} from '@kcdesign/data';
 import {
     AttriListItem,

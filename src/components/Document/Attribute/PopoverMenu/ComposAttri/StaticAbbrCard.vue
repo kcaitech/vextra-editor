@@ -1,6 +1,6 @@
 <script setup lang="ts">
-import {Shape, ShapeType} from "@kcdesign/data";
-import {static_coms_map} from "../../ContentStatic/static_coms_map";
+import {Shape, ShapeType} from "../../../../../../../kcdesign-data/src";
+import {static_coms_map} from "../../../ContentStatic/static_coms_map";
 
 interface Props {
     data: Shape

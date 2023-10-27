@@ -1,12 +1,13 @@
 <script setup lang="ts">
 import {Context} from '@/context';
 import {ref, watch} from 'vue';
-import StaticAbbrCard from "./StaticAbbrCard.vue";
-import LevelName from "./LevelName.vue";
+import CardWrap from "./CardWrap.vue";
+import {Shape} from "@kcdesign/data";
+
 interface Props {
     context: Context
-    samll: string
     contents: any[]
+    container: Element | null
     layerId?: string[]
 }
 
@@ -18,20 +19,19 @@ const props = defineProps<Props>();
 const emits = defineEmits<Emits>();
 const checkList = ref(props.layerId || []);
 
+function hover_item(shape: Shape) {
+    props.context.selection.hoverShape(shape);
+}
+
 watch(checkList, (v) => {
     emits('handleCheck', v)
-},{immediate: true})
+}, {immediate: true})
 </script>
 <template>
     <div class="container" v-for="(item, index) in contents" :key="index">
         <el-checkbox-group v-model="checkList">
-            <el-checkbox :label="item.id">
-                <div class="component" :style="{ height: samll === 'samll' ? '30px' : '50px' }">
-                    <div class="thumbnail">
-                        <StaticAbbrCard :data="item"></StaticAbbrCard>
-                    </div>
-                    <LevelName :data="item" class="name"></LevelName>
-                </div>
+            <el-checkbox :label="item.id" @mouseenter.stop="() => hover_item(item)">
+                <CardWrap :data="item" :container="props.container"></CardWrap>
             </el-checkbox>
         </el-checkbox-group>
     </div>
@@ -74,6 +74,7 @@ watch(checkList, (v) => {
     align-items: center;
     padding: 2px 0 2px 2px;
     width: 100%;
+    height: 30px;
     border-radius: 4px;
 
     &:hover {
@@ -104,9 +105,6 @@ watch(checkList, (v) => {
     .name {
         max-width: calc(100% - 42px);
         overflow: hidden;
-        //font-size: var(--font-default-fontsize);
-        //text-overflow: ellipsis;
-        //white-space: nowrap;
     }
 }
 

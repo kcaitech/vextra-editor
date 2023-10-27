@@ -3,7 +3,7 @@ import { useI18n } from 'vue-i18n';
 import { Context } from '@/context';
 import TypeHeader from '../TypeHeader.vue';
 import { ref, nextTick } from 'vue';
-import CompLayerShow from '../PopoverMenu/CompLayerShow.vue';
+import CompLayerShow from '../PopoverMenu/ComposAttri/CompLayerShow.vue';
 import SelectLayerInput from './SelectLayerInput.vue';
 import { VariableType } from '@kcdesign/data';
 import PopoverDefaultInput from './PopoverDefaultInput.vue';

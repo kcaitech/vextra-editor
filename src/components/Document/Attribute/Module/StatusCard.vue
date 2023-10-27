@@ -1,5 +1,5 @@
 <script setup lang="ts">
-import SelectMenu from "@/components/Document/Attribute/PopoverMenu/SelectMenu.vue";
+import SelectMenu from "@/components/Document/Attribute/PopoverMenu/ComposAttri/SelectMenu.vue";
 import { ArrowDown } from "@element-plus/icons-vue";
 import { Context } from "@/context";
 import { useI18n } from "vue-i18n";

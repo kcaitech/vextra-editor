@@ -4,7 +4,7 @@ import {AttriListItem, delete_variable} from "@/utils/symbol";
 import {nextTick, ref} from "vue";
 import {Variable, VariableType} from "@kcdesign/data";
 import {useI18n} from "vue-i18n";
-import CompLayerShow from "@/components/Document/Attribute/PopoverMenu/CompLayerShow.vue";
+import CompLayerShow from "@/components/Document/Attribute/PopoverMenu/ComposAttri/CompLayerShow.vue";
 import SelectLayerInput from "@/components/Document/Attribute/Module/SelectLayerInput.vue";
 
 interface Props {

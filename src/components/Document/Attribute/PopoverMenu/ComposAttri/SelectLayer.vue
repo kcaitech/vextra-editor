@@ -3,7 +3,7 @@ import {onMounted, onUnmounted, ref, watchEffect} from 'vue';
 import {Context} from '@/context';
 import CompoSelectList from './CompoSelectList.vue';
 import {useI18n} from 'vue-i18n';
-import {VariableType} from '@kcdesign/data';
+import {VariableType} from '../../../../../../../kcdesign-data/src';
 
 const {t} = useI18n();
 
@@ -20,17 +20,26 @@ interface Props {
     selectList: any[]
     layerId?: string[]
 }
+
 interface Emits {
     (e: 'close'): void;
     (e: 'change', data: string[]): void;
 }
+
 const props = defineProps<Props>();
 const emits = defineEmits<Emits>();
 const checkList = ref<string[]>([])
+const top_wrapper = ref<HTMLDivElement>();
+const scroll_container = ref<Element | null>(null);
 const unfold = new Set();
 const close = (e: MouseEvent) => {
     e.stopPropagation();
     emits('close');
+}
+
+function register_container() {
+    if (!top_wrapper.value) return;
+    scroll_container.value = top_wrapper.value.querySelector('.el-scrollbar > .el-scrollbar__wrap');
 }
 
 function handleClickOutside(event: MouseEvent) {
@@ -85,6 +94,7 @@ onMounted(() => {
         }
     }
     document.addEventListener('click', handleClickOutside);
+    register_container();
 })
 onUnmounted(() => {
     document.removeEventListener('click', handleClickOutside);
@@ -106,7 +116,7 @@ onUnmounted(() => {
         </div>
         <div class="container" v-if="selectList.length">
             <!-- 组件实例 -->
-            <div style="height: 100%;">
+            <div style="height: 100%;" ref="top_wrapper">
                 <el-scrollbar>
                     <!-- 可变组件折叠 -->
                     <template v-for="(item, i) in selectList" :key="i">
@@ -117,9 +127,11 @@ onUnmounted(() => {
                                           :style="{ transform: !unfold.has(i) ? 'rotate(-90deg)' : 'rotate(0deg)' }"></svg-icon>
                             </div>
                         </div>
-                        <div class="demo-collapse" v-show="unfold.has(i)" :reflush="reflush">
-                            <component :is="CompoSelectList" :context="context" :contents="item.data" samll="samll"
-                                       @handleCheck="handleCheck" :layerId="props.layerId">
+                        <div class="demo-collapse" v-if="unfold.has(i)" :reflush="reflush">
+                            <component v-if="scroll_container" :is="CompoSelectList" :context="context"
+                                       :contents="item.data"
+                                       @handleCheck="handleCheck" :layerId="props.layerId"
+                                       :container="scroll_container">
                             </component>
                         </div>
                     </template>

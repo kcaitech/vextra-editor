@@ -1,0 +1,99 @@
+<script setup lang="ts">
+import LevelName from "@/components/Document/Attribute/PopoverMenu/ComposAttri/LevelName.vue";
+import StaticAbbrCard from "@/components/Document/Attribute/PopoverMenu/ComposAttri/StaticAbbrCard.vue";
+import {Shape} from "@kcdesign/data";
+import {onMounted, onUnmounted, ref} from "vue";
+
+interface Props {
+    data: Shape
+    container: Element | null
+}
+
+const props = defineProps<Props>();
+const real = ref<boolean>(false);
+const wrapper = ref<HTMLDivElement>();
+const options = {
+    root: props.container,
+    rootMargin: '0px 0px 0px 0px',
+    thresholds: 1,
+}
+
+function intersection(entries: any) {
+    real.value = Boolean(entries[0]?.isIntersecting);
+}
+
+const io = new IntersectionObserver(intersection, options);
+onMounted(() => {
+    if (props.container && wrapper.value) {
+        io.observe(wrapper.value);
+    } else {
+        real.value = true;
+        console.log('No IntersectionObserver Api');
+    }
+})
+onUnmounted(() => {
+    io.disconnect();
+})
+</script>
+<template>
+    <div class="wrapper" ref="wrapper">
+        <div class="component" v-if="real">
+            <div class="thumbnail">
+                <StaticAbbrCard :data="props.data"></StaticAbbrCard>
+            </div>
+            <LevelName :data="props.data" class="name"></LevelName>
+        </div>
+        <div v-else class="space"></div>
+    </div>
+</template>
+<style scoped lang="scss">
+.wrapper {
+    width: 100%;
+    height: 100%;
+
+    .component {
+        display: flex;
+        align-items: center;
+        padding: 2px 0 2px 2px;
+        width: 100%;
+        height: 30px;
+        border-radius: 4px;
+
+        &:hover {
+            background-color: #e5dbff;
+
+            .thumbnail {
+                opacity: .5;
+            }
+        }
+
+        .svg {
+            width: 10px;
+            height: 10px;
+            margin-right: 5px;
+        }
+
+        .thumbnail {
+            border-radius: 4px;
+            height: 100%;
+            width: 30px;
+            margin-right: 8px;
+            box-sizing: border-box;
+            border: 2px solid var(--grey-light);
+            background-image: url("data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAABAAAAAQCAYAAAAf8/9hAAAAAXNSR0IArs4c6QAAADBJREFUOE9jfPbs2X8GPEBSUhKfNAPjqAHDIgz+//+PNx08f/4cfzoYNYCBceiHAQC5flV5JzgrxQAAAABJRU5ErkJggg==");
+            background-size: auto 25%;
+        }
+
+        .name {
+            max-width: calc(100% - 42px);
+            overflow: hidden;
+        }
+    }
+
+    .space {
+        width: 100%;
+        height: 30px;
+    }
+}
+
+</style>

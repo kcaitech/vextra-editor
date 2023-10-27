@@ -5,7 +5,7 @@ import {ArrowDown} from '@element-plus/icons-vue';
 import {useI18n} from 'vue-i18n';
 import {onMounted, ref} from 'vue';
 import {get_instance_from_symbol, get_layer_from_symbol, get_text_from_symbol} from '@/utils/symbol';
-import SelectLayer from '../PopoverMenu/SelectLayer.vue';
+import SelectLayer from '../PopoverMenu/ComposAttri/SelectLayer.vue';
 
 const {t} = useI18n();
 
