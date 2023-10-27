@@ -561,6 +561,7 @@ export interface LayerCollectItem {
 
 /**
  * @description 获取组件或者可变组件身上的可变图层
+ * @container 用来装已选项目的容器
  */
 export function get_layer_from_symbol(symbol: Shape, vari?: Variable, container?: Shape[]) {
     const result: LayerCollectItem[] = [];

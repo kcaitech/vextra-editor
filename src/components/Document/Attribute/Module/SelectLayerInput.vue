@@ -45,7 +45,6 @@ const get_symbol_layer = () => {
     const symbolshape = props.context.selection.symbolshape;
     if (!symbolshape) return;
     if (props.addType === VariableType.Visible) {
-
         const select: Shape[] = [];
         selectList.value = get_layer_from_symbol(symbolshape, props.variable, select);
         console.log('select', select);
