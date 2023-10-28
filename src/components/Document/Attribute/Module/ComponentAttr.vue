@@ -129,6 +129,7 @@ const saveLayerShow = (type: VariableType) => {
         message('info', '属性名不能为空');
         return;
     }
+    console.log('here');
     create_var_by_type(props.context, type, var_name.value, dlt_value.value, selected.value);
     isaddStateDialog.value = false;
 }

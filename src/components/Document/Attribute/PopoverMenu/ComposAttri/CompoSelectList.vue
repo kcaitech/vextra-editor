@@ -18,9 +18,14 @@ interface Emits {
 const props = defineProps<Props>();
 const emits = defineEmits<Emits>();
 const checkList = ref(props.layerId || []);
+const detail = ref<boolean>(false);
 
 function hover_item(shape: Shape) {
     props.context.selection.hoverShape(shape);
+}
+
+function unhover() {
+    props.context.selection.unHoverShape();
 }
 
 watch(checkList, (v) => {
@@ -29,7 +34,7 @@ watch(checkList, (v) => {
 </script>
 <template>
     <div class="container" v-for="(item, index) in contents" :key="index">
-        <el-checkbox-group v-model="checkList">
+        <el-checkbox-group v-model="checkList" @mouseleave="unhover">
             <el-checkbox :label="item.id" @mouseenter.stop="() => hover_item(item)">
                 <CardWrap :data="item" :container="props.container"></CardWrap>
             </el-checkbox>

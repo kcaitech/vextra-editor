@@ -701,7 +701,7 @@ function get_text_i(group: Shape, vari?: Variable, container?: Shape[]) {
         if (item.type === ShapeType.Text) {
             if (!is_bind_x_type_var(item, OverrideType.Text, vari, container)) shapes.push(item);
         } else if (item.childs && item.childs.length && item.type !== ShapeType.Table) {
-            shapes.push(...get_instance_i(item, vari, container));
+            shapes.push(...get_text_i(item, vari, container));
         }
     }
     return shapes;
