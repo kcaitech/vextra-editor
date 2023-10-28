@@ -4,8 +4,8 @@ import {Shape, ShapeType, Variable, VariableType} from '@kcdesign/data';
 import {ArrowDown} from '@element-plus/icons-vue';
 import {useI18n} from 'vue-i18n';
 import {onMounted, ref} from 'vue';
-import {get_instance_from_symbol, get_layer_from_symbol, get_text_from_symbol} from '@/utils/symbol';
 import SelectLayer from '../PopoverMenu/ComposAttri/SelectLayer.vue';
+import {get_options_from_symbol} from "@/utils/symbol";
 
 const {t} = useI18n();
 
@@ -45,13 +45,7 @@ const get_symbol_layer = () => {
     const symbolshape = props.context.selection.symbolshape;
     if (!symbolshape) return;
     const select: Shape[] = [];
-    if (props.addType === VariableType.Visible) {
-        selectList.value = get_layer_from_symbol(symbolshape, props.variable, select);
-    } else if (props.addType === VariableType.Text) {
-        selectList.value = get_text_from_symbol(symbolshape, props.variable, select);
-    } else if (props.addType === VariableType.SymbolRef) {
-        selectList.value = get_instance_from_symbol(symbolshape, props.variable, select);
-    }
+    selectList.value = get_options_from_symbol(symbolshape, props.addType, props.variable, select);
     selectLayerid.value = select.map(item => item.id);
     selectLayerName.value = getShapesName(selectLayerid.value);
 }

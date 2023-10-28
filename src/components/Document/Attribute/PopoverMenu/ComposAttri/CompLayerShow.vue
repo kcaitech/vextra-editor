@@ -1,9 +1,9 @@
 <script setup lang="ts">
 import { onMounted, onUnmounted, ref, watch, watchEffect } from 'vue';
 import { Context } from '@/context';
-import { ShapeType, Variable, VariableType } from '../../../../../../../kcdesign-data/src';
+import { Variable, VariableType } from '@kcdesign/data';
 import { useI18n } from 'vue-i18n';
-import { get_layer_from_symbol, is_valid_name } from "@/utils/symbol";
+import { is_valid_name } from "@/utils/symbol";
 
 const { t } = useI18n();
 
