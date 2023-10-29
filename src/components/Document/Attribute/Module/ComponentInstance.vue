@@ -1,23 +1,24 @@
 <script setup lang="ts">
-import { useI18n } from 'vue-i18n';
-import { Context } from '@/context';
+import {useI18n} from 'vue-i18n';
+import {Context} from '@/context';
 import TypeHeader from '../TypeHeader.vue';
 import SelectLayerInput from './SelectLayerInput.vue';
-import { ref, onUnmounted, onMounted } from 'vue';
+import {ref, onUnmounted, onMounted} from 'vue';
 import CompLayerShow from '../PopoverMenu/ComposAttri/CompLayerShow.vue';
-import { Shape, SymbolRefShape } from '@kcdesign/data';
-import { get_shape_within_document, shape_track } from '@/utils/content';
-import { MoreFilled } from '@element-plus/icons-vue';
-import { VariableType } from '@kcdesign/data';
-import { get_var_for_ref } from "@/utils/symbol";
+import {Shape, SymbolRefShape} from '@kcdesign/data';
+import {get_shape_within_document, shape_track} from '@/utils/content';
+import {MoreFilled} from '@element-plus/icons-vue';
+import {VariableType} from '@kcdesign/data';
+import {get_var_for_ref, reset_all_attr_for_ref} from "@/utils/symbol";
 import PopoverDefaultInput from './PopoverDefaultInput.vue';
+
 interface Props {
     context: Context
     shapes: Shape[]
 }
 
 const props = defineProps<Props>();
-const { t } = useI18n();
+const {t} = useI18n();
 const isInstanceShow = ref(false);
 const saveExamplesToggle = () => {
     isInstanceShow.value = false
@@ -60,7 +61,7 @@ const closeResetMenu = (e: MouseEvent) => {
 }
 
 const atrrdialog = ref<HTMLDivElement>();
-const dialog_posi = ref({ x: 0, y: 0 });
+const dialog_posi = ref({x: 0, y: 0});
 const getDialogPosi = () => {
     if (atrrdialog.value) {
         const el = atrrdialog.value.getBoundingClientRect();
@@ -68,6 +69,13 @@ const getDialogPosi = () => {
         dialog_posi.value.y = el.y;
     }
 }
+
+function reset_all_attr() {
+    console.log('emit')
+    const res = reset_all_attr_for_ref(props.context);
+    console.log('reset res', res)
+}
+
 onMounted(() => {
 
 })
@@ -89,14 +97,14 @@ onUnmounted(() => {
                     </div>
                     <div class="reset_svg" @click.stop="selectReset">
                         <el-icon>
-                            <MoreFilled />
+                            <MoreFilled/>
                         </el-icon>
                         <div class="reset_menu" v-if="resetMenu">
                             <div class="untie" @click="untie">
                                 <span>{{ t('compos.untie') }}</span>
                                 <span>快捷键</span>
                             </div>
-                            <div class="untie">{{ t('compos.reset_all_attr') }}</div>
+                            <div class="untie" @click="reset_all_attr">{{ t('compos.reset_all_attr') }}</div>
                         </div>
                     </div>
                 </div>
@@ -104,10 +112,12 @@ onUnmounted(() => {
         </TypeHeader>
 
         <CompLayerShow :context="context" v-if="isInstanceShow" @close-dialog="saveExamplesToggle" right="250px"
-            :add-type="VariableType.SymbolRef" :width="260" :title="t('compos.instance_toggle')" :dialog_posi="dialog_posi">
+                       :add-type="VariableType.SymbolRef" :width="260" :title="t('compos.instance_toggle')"
+                       :dialog_posi="dialog_posi">
             <template #layer>
                 <SelectLayerInput :title="t('compos.compos_instance')" :add-type="VariableType.SymbolRef"
-                    :context="props.context" :placeholder="t('compos.place_select_instance')"></SelectLayerInput>
+                                  :context="props.context"
+                                  :placeholder="t('compos.place_select_instance')"></SelectLayerInput>
             </template>
         </CompLayerShow>
     </div>
@@ -127,7 +137,7 @@ onUnmounted(() => {
         align-items: center;
         justify-content: center;
 
-        >svg {
+        > svg {
             width: 70%;
             height: 70%;
         }
@@ -140,7 +150,7 @@ onUnmounted(() => {
         align-items: center;
         justify-content: center;
 
-        >svg {
+        > svg {
             width: 50%;
             height: 50%;
         }
@@ -155,7 +165,7 @@ onUnmounted(() => {
         align-items: center;
         justify-content: center;
 
-        >svg {
+        > svg {
             width: 50%;
             height: 50%;
         }

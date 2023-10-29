@@ -853,3 +853,9 @@ function is_bind_x_vari(shape: Shape, type: OverrideType) {
     if (!vk) return;
     return variables.get(vk);
 }
+export function reset_all_attr_for_ref(context: Context) {
+    const shape = context.selection.symbolrefshape;
+    if (!shape) return;
+    const editor = context.editor4Shape(shape);
+    editor.resetSymbolRefVariable();
+}

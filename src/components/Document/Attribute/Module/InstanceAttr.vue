@@ -6,7 +6,7 @@ import {ref, onUnmounted, watch, onMounted} from 'vue'
 import {shape_track, get_shape_within_document} from '@/utils/content';
 import {SymbolRefShape} from '@kcdesign/data';
 import {MoreFilled} from '@element-plus/icons-vue';
-import {RefAttriListItem, get_var_for_ref} from "@/utils/symbol";
+import {RefAttriListItem, get_var_for_ref, reset_all_attr_for_ref} from "@/utils/symbol";
 import {cardmap} from "./InstanceAttrCard/map";
 import Status from "./InstanceAttrCard/IACStatus.vue"
 import Visible from "./InstanceAttrCard/IACVisible.vue"
@@ -62,6 +62,13 @@ const updateData = () => {
     variables.value = result.variables;
     visible_variables.value = result.visible_variables;
 }
+
+function reset_all_attr() {
+    console.log('emit')
+    const res = reset_all_attr_for_ref(props.context);
+    console.log('reset res', res)
+}
+
 watch(() => props.shape, (nVal, oVal) => {
     oVal.unwatch(shape_watcher);
     nVal.watch(shape_watcher);
@@ -93,7 +100,7 @@ onUnmounted(() => {
                             <span>{{ t('compos.untie') }}</span>
                             <span>快捷键</span>
                         </div>
-                        <div class="untie">{{ t('compos.reset_all_attr') }}</div>
+                        <div class="untie" @click="reset_all_attr">{{ t('compos.reset_all_attr') }}</div>
                     </div>
                 </div>
             </div>
