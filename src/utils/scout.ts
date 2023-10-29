@@ -1,8 +1,10 @@
-import { Context } from "@/context";
-import { PageXY, XY } from "@/context/selection";
-import { GroupShape, Matrix, Shape, ShapeType, SymbolRefShape, SymbolShape } from "@kcdesign/data";
-import { v4 as uuid } from "uuid";
-import { isShapeOut } from "./assist";
+import {Context} from "@/context";
+import {PageXY, XY} from "@/context/selection";
+import {GroupShape, Matrix, Shape, ShapeType, SymbolRefShape, SymbolShape} from "@kcdesign/data";
+import {v4 as uuid} from "uuid";
+import {isShapeOut} from "./assist";
+import {debounce} from "lodash";
+
 export interface Scout {
     path: SVGPathElement
     remove: () => void
@@ -85,6 +87,7 @@ function createPath(path: string, id: string): SVGPathElement {
     p.setAttributeNS(null, 'd', path);
     return p;
 }
+
 export function getPathOnPageString(shape: Shape): string { // path坐标系：页面
     const path = shape.getPath();
     const m2page = shape.matrix2Root();
@@ -203,6 +206,7 @@ function finder_artboard(context: Context, scout: Scout, artboard: GroupShape, p
         return artboard;
     }
 }
+
 // 编组：如果光标在一个编组A内，当光标在子元素(包括所有后代元素)上时，有且只有编组A被认为是target。
 // 注：在没有任何元素选中的情况下，子元素如果也是编组(编组B(编组C(编组D...)))的话都要冒泡到编组A上，如果已经有元素被选中，则只冒泡到同一层级兄弟元素
 export function finder_group(scout: Scout, g: Shape[], position: PageXY, selected: Shape, isCtrl: boolean): Shape | undefined {
@@ -228,6 +232,7 @@ export function finder_group(scout: Scout, g: Shape[], position: PageXY, selecte
     }
     return result;
 }
+
 function finder_symbol_union(context: Context, scout: Scout, union: GroupShape, position: PageXY, selected: Shape, isCtrl: boolean) {
     let result: Shape | undefined;
     const childs = union.childs;
@@ -241,15 +246,16 @@ function finder_symbol_union(context: Context, scout: Scout, union: GroupShape, 
 }
 
 function finder_symbol(context: Context, scout: Scout, symbol: SymbolShape | SymbolRefShape, position: PageXY, selected: Shape, isCtrl: boolean) {
-    let result: Shape | undefined;
-
-    if (isTarget(scout, symbol, position)) {
-        return symbol;
-    } else {
+    if (!isTarget(scout, symbol, position)) {
         const childs = symbol.type === ShapeType.Symbol ? symbol.childs : (symbol.naviChilds || []);
-        result = finder(context, scout, childs, position, selected, isCtrl);
+        return finder(context, scout, childs, position, selected, isCtrl);
     }
-    return result;
+    if (!context.selection.selectedSymOrRefMenber) return symbol;
+    const bros = context.selection.selectedSymRefBros;
+    for (let i = bros.length - 1; i > -1; i--) {
+        const b = bros[i];
+        if (isTarget(scout, b, position)) return b;
+    }
 }
 
 export function finder_contact(scout: Scout, g: Shape[], position: PageXY, selected: Shape, init?: Shape[]): Shape[] {
@@ -320,6 +326,7 @@ export function finder_layers(scout: Scout, g: Shape[], position: PageXY): Shape
     }
     return result;
 }
+
 // 判断一个编组中是否已经有子元素被选中
 function isPartSelect(shape: Shape, selected: Shape): boolean {
     let result: boolean = false;
@@ -334,9 +341,10 @@ function isPartSelect(shape: Shape, selected: Shape): boolean {
     }
     return false;
 }
+
 function is_part_select_for_symbol(shape: Shape, selected: Shape): boolean {
     let result: boolean = false;
- const c = shape instanceof GroupShape ? shape.childs : undefined;
+    const c = shape instanceof GroupShape ? shape.childs : undefined;
     return result;
 }
 
@@ -364,3 +372,30 @@ export function artboardFinder(scout: Scout, g: Shape[], position: PageXY, excep
 export function canBeTarget(shape: Shape): boolean { // 可以被判定为检索结果的前提是没有被锁定和isVisible可视
     return !!(shape.isVisible && !shape.isLocked);
 }
+
+/**
+ * @description 是否有组成组件、组件实例的图形被选中
+ * @param shapes
+ */
+export function _selected_symbol_menber(context: Context, shapes: Shape[]) {
+    let result: Shape | undefined;
+    let bros: Shape[] = [];
+    if (shapes.length === 1) {
+        let s = shapes[0];
+        let p: Shape | undefined = s.parent;
+        while (p) {
+            if (p.type === ShapeType.Symbol || p.type === ShapeType.SymbolRef) {
+                result = s;
+                let childs = p.type === ShapeType.SymbolRef ? p.naviChilds : (p as SymbolShape).childs;
+                if (!childs) break;
+                for (let i = 0, len = childs.length; i < len; i++) bros.push(childs[i]);
+                break;
+            }
+            p = p.parent;
+        }
+    }
+    context.selection.setSelectedSymRefBros(bros);
+    context.selection.setSelectSoRMenber(result);
+}
+
+export const selected_sym_ref_menber = debounce(_selected_symbol_menber, 100);

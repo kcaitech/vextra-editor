@@ -12,7 +12,15 @@ import {Document} from "@kcdesign/data";
 import {Page} from "@kcdesign/data";
 import {Shape, Text} from "@kcdesign/data";
 import {cloneDeep} from "lodash";
-import {scout, Scout, finder, finder_layers, artboardFinder, finder_contact} from "@/utils/scout";
+import {
+    scout,
+    Scout,
+    finder,
+    finder_layers,
+    artboardFinder,
+    finder_contact,
+    selected_sym_ref_menber
+} from "@/utils/scout";
 import {Artboard} from "@kcdesign/data";
 import {Context} from ".";
 import {TextSelection} from "./textselection";
@@ -89,6 +97,8 @@ export class Selection extends Watchable(Object) implements ISave4Restore {
     private m_comment_page_sort: boolean = false;
     private m_comment_about_me: boolean = false;
     private m_table_area: { id: TableArea, area: string }[] = [];
+    private m_selected_sym_ref_menber: Shape | undefined;
+    private m_selected_sym_ref_bros: Shape[] = [];
     private m_context: Context;
 
     constructor(document: Document, context: Context) {
@@ -216,6 +226,10 @@ export class Selection extends Watchable(Object) implements ISave4Restore {
         }
         return result;
     }
+
+    private m_count = 0;
+    private m_total = 0;
+
     /**
      * @description 基于SVGGeometryElement的图形检索，与getLayers相比，getShapesByXY返回的结果长度最多为1，而这里可以大于1
      * @param position 点位置，坐标系时page
@@ -231,13 +245,13 @@ export class Selection extends Watchable(Object) implements ISave4Restore {
             const childs: Shape[] = scope || page.childs;
             shape = finder(this.m_context, this.scout, childs, position, this.selectedShapes[0], isCtrl)
         }
-        // this.m_count++;
-        // this.m_total += Date.now() - s;
-        // if (this.m_count > 100) {
-        //     console.log('computing: ', this.m_total / 100);
-        //     this.m_count = 0;
-        //     this.m_total = 0;
-        // }
+        this.m_count++;
+        this.m_total += Date.now() - s;
+        if (this.m_count > 100) {
+            console.log('computing: ', this.m_total / 100);
+            this.m_count = 0;
+            this.m_total = 0;
+        }
         return shape;
     }
 
@@ -271,12 +285,14 @@ export class Selection extends Watchable(Object) implements ISave4Restore {
             this.m_hoverShape = undefined;
             this.notify(Selection.CHANGE_SHAPE);
         }
+        selected_sym_ref_menber(this.m_context, this.m_selectShapes);
     }
 
     unSelectShape(shape: Shape) {
         const index = this.m_selectShapes.findIndex((s: Shape) => s.id === shape.id);
         if (index > -1) {
             this.m_selectShapes.splice(index, 1);
+            selected_sym_ref_menber(this.m_context, this.m_selectShapes);
             this.notify(Selection.CHANGE_SHAPE);
         }
     }
@@ -284,6 +300,7 @@ export class Selection extends Watchable(Object) implements ISave4Restore {
     rangeSelectShape(shapes: Shape[]) {
         this.m_selectShapes.length = 0;
         this.m_selectShapes.push(...shapes);
+        selected_sym_ref_menber(this.m_context, this.m_selectShapes);
         this.m_hoverShape = undefined;
         this.notify(Selection.CHANGE_SHAPE);
     }
@@ -294,11 +311,13 @@ export class Selection extends Watchable(Object) implements ISave4Restore {
             return;
         }
         this.m_selectShapes.push(shape);
+        selected_sym_ref_menber(this.m_context, this.m_selectShapes);
         this.notify(Selection.CHANGE_SHAPE);
     }
 
     resetSelectShapes() {
         this.m_selectShapes.length = 0;
+        selected_sym_ref_menber(this.m_context, this.m_selectShapes);
         this.notify(Selection.CHANGE_SHAPE);
     }
 
@@ -383,9 +402,11 @@ export class Selection extends Watchable(Object) implements ISave4Restore {
     get textshape() {
         return this.selectedShapes.length === 1 && this.selectedShapes[0].type === ShapeType.Text ? this.selectedShapes[0] as TextShape : false;
     }
-    get symbolshape(){
+
+    get symbolshape() {
         return this.selectedShapes.length === 1 && this.selectedShapes[0].type === ShapeType.Symbol ? this.selectedShapes[0] as SymbolShape : false;
     }
+
     get unionshape() {
         if (this.selectedShapes.length === 1) {
             const xs = this.selectedShapes[0];
@@ -398,6 +419,7 @@ export class Selection extends Watchable(Object) implements ISave4Restore {
             return false;
         }
     }
+
     get symbolstate() {
         if (this.selectedShapes.length === 1) {
             const s = this.selectedShapes[0];
@@ -410,6 +432,7 @@ export class Selection extends Watchable(Object) implements ISave4Restore {
             return false;
         }
     }
+
     get symbolrefshape() {
         if (this.selectedShapes.length === 1) {
             const s = this.selectedShapes[0];
@@ -422,6 +445,23 @@ export class Selection extends Watchable(Object) implements ISave4Restore {
             return false;
         }
     }
+
+    get selectedSymOrRefMenber() {
+        return this.m_selected_sym_ref_menber;
+    }
+
+    setSelectSoRMenber(shape: Shape | undefined) {
+        this.m_selected_sym_ref_menber = shape;
+    }
+
+    get selectedSymRefBros() {
+        return this.m_selected_sym_ref_bros;
+    }
+
+    setSelectedSymRefBros(shapes: Shape[]) {
+        this.m_selected_sym_ref_bros = shapes;
+    }
+
     get_closest_container(shape: Shape) {
         let result: any = this.m_selectPage!;
         let p = shape.parent;
