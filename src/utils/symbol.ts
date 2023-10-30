@@ -423,9 +423,8 @@ export function create_text_var(context: Context, symbol: SymbolShape, name: str
     editor.makeTextVar(symbol, name, dlt, shapes);
 }
 
-export function create_var_by_type(context: Context, type: VariableType, name: string, value: any, values: any[]) {
+export function create_var_by_type(context: Context, type: VariableType, name: string, value: any, values: any[], symbol: SymbolShape) {
     const selection = context.selection;
-    if (!selection.symbolshape) return;
     const shapes: Shape[] = [];
     const page = selection.selectedPage!;
     for (let i = 0, len = values.length; i < len; i++) {
@@ -434,11 +433,11 @@ export function create_var_by_type(context: Context, type: VariableType, name: s
     }
     switch (type) {
         case VariableType.Visible:
-            return create_visible_var(context, selection.symbolshape, name, value, shapes);
+            return create_visible_var(context, symbol, name, value, shapes);
         case VariableType.SymbolRef:
-            return create_ref_var(context, selection.symbolshape, name, shapes);
+            return create_ref_var(context, symbol, name, shapes);
         case VariableType.Text:
-            return create_text_var(context, selection.symbolshape, name, value, shapes);
+            return create_text_var(context, symbol, name, value, shapes);
         default:
             console.log('wrong action');
     }
@@ -554,41 +553,39 @@ export function is_conflict_comp(symbol: SymbolShape) {
 }
 
 // endregion
-export interface LayerCollectItem {
+export interface LCOption {
     state: string
     data: Shape[]
 }
 
-/**
- * @description 获取组件或者可变组件身上的可变图层
- * @container 用来装已选项目的容器
- */
-export function get_layer_from_symbol(symbol: Shape, vari?: Variable, container?: Shape[]) {
-    const result: LayerCollectItem[] = [];
+export function get_options_from_symbol(symbol: SymbolShape, type: VariableType, vari?: Variable, container?: Shape[]) {
+    const result: LCOption[] = [];
     if (symbol.type !== ShapeType.Symbol) return result;
     if (symbol.isUnionSymbolShape) { // 存在可变组件
         const childs = symbol.childs;
         for (let i = 0, len = childs.length; i < len; i++) {
             const item = childs[i];
-            const lci = {
-                state: get_name(item),
-                data: get_layer_i(childs[i], vari, container)
-            }
+            const lci = {state: get_name(item), data: get_x_type_option(symbol, symbol, type, vari, container)};
             result.push(lci);
         }
         return result;
     } else { // 不存在可变组件
-        return [{state: symbol.name, data: get_layer_i(symbol, vari, container)}];
+        return [{state: symbol.name, data: get_x_type_option(symbol, symbol, type, vari, container)}];
     }
+}
+
+function de_check(item: Shape) {
+    return !item.childs || !item.childs.length || item.type === ShapeType.Table || item.type === ShapeType.SymbolRef
 }
 
 /**
  * @description 检查是否绑定过 x类型 的变量
  */
-function is_bind_x_type_var(shape: Shape, type: OverrideType, vari?: Variable, container?: Shape[]) {
+function is_bind_x_type_var(symbol: SymbolShape, shape: Shape, type: OverrideType, vari?: Variable, container?: Shape[]) {
     if (!shape.varbinds) return false;
     let result = false;
     shape.varbinds.forEach((v, k) => {
+        if (!symbol.variables?.get(v)) return;
         if (vari?.id === v && container) {
             container.push(shape);
             return;
@@ -599,116 +596,46 @@ function is_bind_x_type_var(shape: Shape, type: OverrideType, vari?: Variable, c
     return result;
 }
 
-function get_layer_i(symbol: Shape, vari?: Variable, container?: Shape[]) {
+
+function get_target_type_by_vt(vt: VariableType) {
+    if (vt === VariableType.SymbolRef) return ShapeType.SymbolRef;
+    if (vt === VariableType.Text) return ShapeType.Text;
+}
+
+function get_ot_by_vt(vt: VariableType) {
+    if (vt === VariableType.SymbolRef) return OverrideType.SymbolID;
+    if (vt === VariableType.Text) return OverrideType.Text;
+}
+
+function get_x_type_option(symbol: Shape, group: Shape, type: VariableType, vari?: Variable, container?: Shape[]) {
     let shapes: Shape[] = [];
-    let slow_index = 0;
-    const childs = symbol.childs;
-    for (let i = 0, len = childs.length; i < len; i++) {
-        const item = childs[i];
-        const canbe = !is_bind_x_type_var(item, OverrideType.Visible, vari, container);
-        if (item.childs && item.childs.length && item.type !== ShapeType.Table) {
-            if (canbe) shapes.push(item);
-            shapes.push(...get_layer_i(item, vari, container));
-        } else {
-            if (!canbe) continue;
-            shapes.splice(slow_index++, 0, item);
-        }
-    }
-    return shapes;
-}
-
-export interface InstanceCollectItem {
-    state: string
-    data: Shape[]
-}
-
-/**
- * @description 收集可以设置切换实例类型变量的图层
- */
-export function get_instance_from_symbol(symbol: Shape, vari?: Variable, container?: Shape[]) {
-    const result: InstanceCollectItem[] = [];
-    if (symbol.type !== ShapeType.Symbol) return result;
-    if (symbol.isUnionSymbolShape) { // 存在可变组件
-        const childs = symbol.childs;
+    const childs = group.childs;
+    if (!childs?.length) return shapes;
+    if (type === VariableType.Visible) {
+        let slow_index = 0;
         for (let i = 0, len = childs.length; i < len; i++) {
             const item = childs[i];
-            const lci = {
-                state: get_name(item),
-                data: get_instance_i(item, vari, container)
+            const canbe = !is_bind_x_type_var(symbol as SymbolShape, item, OverrideType.Visible, vari, container);
+            if (item.childs && item.childs.length && item.type !== ShapeType.Table) {
+                if (canbe) shapes.push(item);
+                shapes.push(...get_x_type_option(symbol, item, type, vari, container));
+            } else {
+                if (!canbe) continue;
+                shapes.splice(slow_index++, 0, item);
             }
-            result.push(lci);
         }
-        return result;
-    } else { // 不存在可变组件
-        return [{state: symbol.name, data: get_instance_i(symbol, vari, container)}];
-    }
-}
-
-function get_instance_i(group: Shape, vari?: Variable, container?: Shape[]) {
-    const shapes: Shape[] = [];
-    const childs = group.childs;
-    if (de_check_for_get_instance_i_1(group)) return shapes;
-    for (let i = 0, len = childs.length; i < len; i++) {
-        const item = childs[i];
-        if (item.type === ShapeType.SymbolRef) {
-            if (!is_bind_x_type_var(item, OverrideType.SymbolID, vari, container)) shapes.push(item);
-        } else if (item.childs && item.childs.length && item.type !== ShapeType.Table) {
-            shapes.push(...get_instance_i(item, vari, container));
-        }
-    }
-    return shapes;
-}
-
-function de_check_for_get_instance_i_1(item: Shape) {
-    return !item.childs || !item.childs.length || item.type === ShapeType.Table || item.type === ShapeType.SymbolRef
-}
-
-export interface TextCollectItem {
-    state: string
-    data: Shape[]
-}
-
-/**
- * @description 收集可以设置文本内容类型变量的图层
- * @param symbol
- */
-export function get_text_from_symbol(symbol: Shape, vari?: Variable, container?: Shape[]) {
-    const result: TextCollectItem[] = [];
-    if (symbol.type !== ShapeType.Symbol) return result;
-    if (symbol.isUnionSymbolShape) { // 存在可变组件
-        const childs = symbol.childs;
+    } else {
+        if (de_check(group)) return shapes;
         for (let i = 0, len = childs.length; i < len; i++) {
             const item = childs[i];
-            const lci = {
-                state: get_name(item),
-                data: get_text_i(item, vari, container)
+            if (item.type === get_target_type_by_vt(type)) {
+                if (!is_bind_x_type_var(symbol as SymbolShape, item, get_ot_by_vt(type)!, vari, container)) shapes.push(item);
+            } else if (item.childs && item.childs.length && item.type !== ShapeType.Table) {
+                shapes.push(...get_x_type_option(symbol, item, type, vari, container));
             }
-            result.push(lci);
-        }
-        return result;
-    } else { // 不存在可变组件
-        return [{state: symbol.name, data: get_text_i(symbol, vari, container)}];
-    }
-    return result;
-}
-
-function get_text_i(group: Shape, vari?: Variable, container?: Shape[]) {
-    const shapes: Shape[] = [];
-    const childs = group.childs;
-    if (de_check_for_get_text_i_1(group)) return shapes;
-    for (let i = 0, len = childs.length; i < len; i++) {
-        const item = childs[i];
-        if (item.type === ShapeType.Text) {
-            if (!is_bind_x_type_var(item, OverrideType.Text, vari, container)) shapes.push(item);
-        } else if (item.childs && item.childs.length && item.type !== ShapeType.Table) {
-            shapes.push(...get_instance_i(item, vari, container));
         }
     }
     return shapes;
-}
-
-function de_check_for_get_text_i_1(item: Shape) {
-    return !item.childs || !item.childs.length || item.type === ShapeType.Table || item.type === ShapeType.SymbolRef
 }
 
 export interface RefAttriListItem {
@@ -924,4 +851,10 @@ export function is_bind_x_vari(shape: Shape, type: OverrideType) {
     })
     if (!vk) return;
     return variables.get(vk);
+}
+export function reset_all_attr_for_ref(context: Context) {
+    const shape = context.selection.symbolrefshape;
+    if (!shape) return;
+    const editor = context.editor4Shape(shape);
+    editor.resetSymbolRefVariable();
 }

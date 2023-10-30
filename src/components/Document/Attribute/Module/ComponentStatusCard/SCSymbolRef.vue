@@ -39,6 +39,9 @@ function get_dialog_posi(div: HTMLDivElement | undefined) {
         dialog_posi.value.y = el.y;
     }
 }
+const selectLayerId = (ids: string[]) => {
+
+}
 
 function edit_instance() {
     get_dialog_posi(instance_card.value);
@@ -80,7 +83,7 @@ function _delete() {
             <template #layer>
                 <SelectLayerInput :title="t('compos.compos_instance')" :add-type="VariableType.SymbolRef"
                                   :context="props.context"
-                                  :placeholder="t('compos.place_select_instance')" :variable="props.variable"></SelectLayerInput>
+                                  :placeholder="t('compos.place_select_instance')" :variable="props.variable" @change="selectLayerId"></SelectLayerInput>
             </template>
         </CompLayerShow>
     </div>

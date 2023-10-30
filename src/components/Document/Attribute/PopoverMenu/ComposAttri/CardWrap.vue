@@ -79,9 +79,10 @@ onUnmounted(() => {
             width: 30px;
             margin-right: 8px;
             box-sizing: border-box;
-            border: 2px solid var(--grey-light);
+            border: 1px solid var(--grey-light);
             background-image: url("data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAABAAAAAQCAYAAAAf8/9hAAAAAXNSR0IArs4c6QAAADBJREFUOE9jfPbs2X8GPEBSUhKfNAPjqAHDIgz+//+PNx08f/4cfzoYNYCBceiHAQC5flV5JzgrxQAAAABJRU5ErkJggg==");
             background-size: auto 25%;
+            position: relative;
         }
 
         .name {

@@ -4,13 +4,14 @@ import { VariableType } from '@kcdesign/data';
 import { useI18n } from 'vue-i18n';
 import SelectMenu from '../PopoverMenu/ComposAttri/SelectMenu.vue';
 import { ArrowDown } from '@element-plus/icons-vue'
-import { ref } from 'vue';
+import { ref, watch } from 'vue';
 
 const { t } = useI18n();
 
 interface Props {
     context: Context,
     addType: VariableType | undefined,
+    default_value?: string | boolean
 }
 
 interface Emits {
@@ -20,11 +21,20 @@ interface Emits {
 
 const props = defineProps<Props>();
 const emits = defineEmits<Emits>();
-const textDefaultValue = ref('');
+const textDefaultValue = ref(props.default_value as string ||'');
 const selectoption = ref(false);
 const menuItems = ['显示', '隐藏'];
 const defaultValue = ref('显示');
 const menuIndex = ref(0);
+watch(() => props.default_value, (v) => {
+    if(v) {
+        menuIndex.value = 0;
+        defaultValue.value = '显示';
+    }else {
+        menuIndex.value = 1;
+        defaultValue.value = '隐藏';
+    }
+},{immediate: true})
 const showMenu = () => {
     if (selectoption.value) return selectoption.value = false
     selectoption.value = true;

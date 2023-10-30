@@ -53,6 +53,13 @@ function edit_visible() {
     iseditLayerShow.value = true;
 }
 
+const selectLayerId = (ids: string[]) => {
+
+}
+function default_value(v: number) {
+
+}
+
 function save_layer_show() {
     iseditLayerShow.value = false;
 }
@@ -86,10 +93,10 @@ function _delete() {
                 <SelectLayerInput :title="t('compos.select_layer')" :add-type="VariableType.Visible"
                                   :context="props.context"
                                   :placeholder="t('compos.place_select_layer')"
-                                  :variable="props.variable"></SelectLayerInput>
+                                  :variable="props.variable" @change="selectLayerId"></SelectLayerInput>
             </template>
             <template #default_value>
-                <PopoverDefaultInput :context="context" :add-type="VariableType.Visible"></PopoverDefaultInput>
+                <PopoverDefaultInput :context="context" :add-type="VariableType.Visible" :default_value="props.variable.value" @select="default_value"></PopoverDefaultInput>
             </template>
         </CompLayerShow>
     </div>

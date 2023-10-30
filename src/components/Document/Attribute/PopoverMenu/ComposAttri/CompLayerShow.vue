@@ -1,9 +1,9 @@
 <script setup lang="ts">
 import { onMounted, onUnmounted, ref, watch, watchEffect } from 'vue';
 import { Context } from '@/context';
+import { SymbolShape, Variable, VariableType } from '@kcdesign/data';
 import { useI18n } from 'vue-i18n';
-import { get_layer_from_symbol, is_valid_name } from "@/utils/symbol";
-import { Variable, VariableType } from '@kcdesign/data';
+import { is_valid_name } from "@/utils/symbol";
 
 const { t } = useI18n();
 
@@ -18,13 +18,14 @@ interface Props {
     dialog_posi: { x: number, y: number },
     selected_layer?: string[],
     default_name?: string,
-    variable?: Variable
+    variable?: Variable,
+    symbol?: SymbolShape, // 图层所在的组件
 }
 
 interface Emits {
     (e: 'closeDialog'): void;
 
-    (e: 'saveLayerShow', type: VariableType): void;
+    (e: 'saveLayerShow', type: VariableType, name: string): void;
 
     (e: 'name-change', name: string): void;
 }
@@ -73,8 +74,8 @@ const getShapesName = (ids: string[]) => {
 
 const save = () => {
     if (!validate()) return;
-    save_name(attrName.value);
-    emit('saveLayerShow', props.addType)
+    // save_name(attrName.value);
+    emit('saveLayerShow', props.addType, attrName.value)
 }
 
 const comps = ref<HTMLDivElement>()
@@ -82,7 +83,7 @@ const cur_top = ref(0)
 const cur_p = ref(0)
 
 function name_change(v: any) {
-    emit('name-change', v);
+    emit('name-change', attrName.value);
     fixed.value = true;
     isWarnRepeat.value = false;
     isWarnNull.value = false;
@@ -102,7 +103,7 @@ function keyboard_watcher(e: KeyboardEvent) {
 }
 
 function save_name(v: string) {
-    const shape = props.context.selection.symbolshape;
+    const shape = props.context.selection.symbolshape || props.symbol;
     const value = attrName.value !== props.default_name || '';
     if (!shape || !props.variable || !value) return;
     const editor = props.context.editor4Shape(shape);
@@ -111,7 +112,7 @@ function save_name(v: string) {
 
 const validate = () => {
     const len = attrName.value.trim().length > 0;
-    const shape = props.context.selection.symbolshape;
+    const shape = props.context.selection.symbolshape || props.symbol;
     if (!shape) return false;
     if(props.default_name && attrName.value === props.default_name) return true;
     const repeat = is_valid_name(shape, attrName.value, props.addType);
@@ -273,6 +274,9 @@ onUnmounted(() => {
                 :deep(.el-input__wrapper) {
                     background-color: var(--grey-light);
                     box-shadow: none;
+                    .el-input__inner {
+                        line-height: 100%;
+                    }
                 }
 
                 :deep(.el-input__wrapper.is-focus) {

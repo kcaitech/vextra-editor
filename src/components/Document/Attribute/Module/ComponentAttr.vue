@@ -129,7 +129,9 @@ const saveLayerShow = (type: VariableType) => {
         message('info', '属性名不能为空');
         return;
     }
-    create_var_by_type(props.context, type, var_name.value, dlt_value.value, selected.value);
+    const symbolshape = props.context.selection.symbolshape;
+    if(!symbolshape) return;
+    create_var_by_type(props.context, type, var_name.value, dlt_value.value, selected.value, symbolshape);
     isaddStateDialog.value = false;
 }
 
@@ -179,7 +181,7 @@ onUnmounted(() => {
 </script>
 
 <template>
-    <div style="position: relative;" ref="atrrdialog">
+    <div style="position: relative; margin-bottom: 10px;" ref="atrrdialog">
         <!--header-->
         <TypeHeader :title="t('compos.compos_attr')" class="mt-24" @click="selectCompsType">
             <template #tool>

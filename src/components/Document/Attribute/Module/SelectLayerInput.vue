@@ -1,11 +1,11 @@
 <script setup lang="ts">
-import { Context } from '@/context';
-import { Shape, ShapeType, Variable, VariableType } from '@kcdesign/data';
-import { ArrowDown } from '@element-plus/icons-vue';
-import { useI18n } from 'vue-i18n';
-import { onMounted, ref } from 'vue';
-import { get_instance_from_symbol, get_layer_from_symbol, get_text_from_symbol } from '@/utils/symbol';
+import {Context} from '@/context';
+import {Shape, ShapeType, Variable, VariableType} from '@kcdesign/data';
+import {ArrowDown} from '@element-plus/icons-vue';
+import {useI18n} from 'vue-i18n';
+import {onMounted, ref} from 'vue';
 import SelectLayer from '../PopoverMenu/ComposAttri/SelectLayer.vue';
+import {get_options_from_symbol} from "@/utils/symbol";
 
 const { t } = useI18n();
 
@@ -46,22 +46,10 @@ function de_show_select_layer() {
 const get_symbol_layer = () => {
     const symbolshape = props.context.selection.symbolshape;
     if (!symbolshape) return;
-    if (props.addType === VariableType.Visible) {
-        const select: Shape[] = [];
-        selectList.value = get_layer_from_symbol(symbolshape, props.variable, select);
-        selectLayerid.value = select.map(item => item.id);
-        selectLayerName.value = getShapesName(selectLayerid.value);
-    } else if (props.addType === VariableType.Text) {
-        const select: Shape[] = [];
-        selectList.value = get_text_from_symbol(symbolshape, props.variable, select);
-        selectLayerid.value = select.map(item => item.id);
-        selectLayerName.value = getShapesName(selectLayerid.value);
-    } else if (props.addType === VariableType.SymbolRef) {
-        const select: Shape[] = [];
-        selectList.value = get_instance_from_symbol(symbolshape, props.variable, select);
-        selectLayerid.value = select.map(item => item.id);
-        selectLayerName.value = getShapesName(selectLayerid.value);
-    }
+    const select: Shape[] = [];
+    selectList.value = get_options_from_symbol(symbolshape, props.addType, props.variable, select);
+    selectLayerid.value = select.map(item => item.id);
+    selectLayerName.value = getShapesName(selectLayerid.value);
 }
 
 function select_change(data: string[]) {
