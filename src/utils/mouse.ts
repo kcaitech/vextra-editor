@@ -8,6 +8,7 @@ import {Comment} from "@/context/comment";
 import {Asssit} from "@/context/assist";
 import {distance2apex, distance2apex2, gen_match_points, get_frame, get_pg_by_frame} from "@/utils/assist";
 import {XYsBounding} from "@/utils/common";
+import {sort_by_layer} from "@/utils/group_ungroup";
 
 /**
  * @description 判断落点是否在content上
@@ -194,21 +195,17 @@ export function reset_assist_before_translate(context: Context, shapes: Shape[])
 }
 
 /**
- * @description 更新更新类型更新鼠标在client坐标系上的落点
- * @param update_type
+ * @description 更新更新类型update_type更新鼠标在client坐标系上的落点
  */
 export function modify_mouse_position_by_type(update_type: number, startPosition: ClientXY, mousePosition: ClientXY,) {
-    if (update_type === 3) startPosition.x = mousePosition.x, startPosition.y = mousePosition.y;
-    else if (update_type === 2) startPosition.y = mousePosition.y;
-    else if (update_type === 1) startPosition.x = mousePosition.x;
-}
-
-export function migrate_immediate(context: Context, asyncTransfer: AsyncTransfer, shape: Shape) {
-    const p = shape.matrix2Root().computeCoord2(4, 4);
-    const targetParent = context.selection.getClosetArtboard(p);
-    const m = get_closest_container(context, shape).id !== targetParent.id;
-    if (targetParent.id === shape.id) return;
-    if (m && asyncTransfer) asyncTransfer.migrate(targetParent as GroupShape);
+    if (update_type === 3) {
+        startPosition.x = mousePosition.x;
+        startPosition.y = mousePosition.y;
+    } else if (update_type === 2) {
+        startPosition.y = mousePosition.y;
+    } else if (update_type === 1) {
+        startPosition.x = mousePosition.x;
+    }
 }
 
 /**
@@ -224,8 +221,6 @@ export function get_closest_container(context: Context, shape: Shape): Shape {
     return result
 }
 
-// 迁移
-export const migrate = debounce(migrate_immediate, 100);
 
 /**
  * @description 结束图形拖动，开启控件更新机并立刻更新一次、重置辅助对象、控制权由控件转移到编辑器、解除光标固定

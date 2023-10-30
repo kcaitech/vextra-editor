@@ -2,7 +2,7 @@ import { Context } from "@/context";
 import { message } from "./message";
 import { replace } from "./clipboard";
 import { is_parent_locked, is_parent_unvisible } from "@/utils/shapelist";
-import { getName, permIsEdit } from "./content";
+import {getName, map_from_shapes, permIsEdit} from "./content";
 import { Action } from "@/context/tool";
 import { AsyncTransfer, GroupShape, Shape, ShapeType, TableShape } from "@kcdesign/data";
 import { ClientXY, PageXY } from "@/context/selection";
@@ -233,10 +233,11 @@ export function modify_mouse_position_by_type(update_type: number, startPosition
 export function migrate_immediate(context: Context, asyncTransfer: AsyncTransfer, shapes: Shape[], shape: Shape) {
     if (!shapes.length) return;
     const p = shape.matrix2Root().computeCoord2(4, 4);
-    const targetParent = context.selection.getClosetArtboard(p);
-    const m = getCloesetContainer(context, shape).id !== targetParent.id;
+    const map = map_from_shapes(shapes);
+    const targetParent = context.selection.getClosestContainer(p, map);
     if (targetParent.id === shape.id) return;
-    if (m && asyncTransfer) asyncTransfer.migrate(targetParent as GroupShape);
+    const m = getCloesetContainer(context, shape).id !== targetParent.id;
+    if (m && asyncTransfer) asyncTransfer.migrate(targetParent as GroupShape, sort_by_layer(context, shapes));
 }
 // 判断当前所处的wrap
 function getCloesetContainer(context: Context, shape: Shape): Shape {

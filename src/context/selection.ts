@@ -19,7 +19,7 @@ import {
     finder_layers,
     artboardFinder,
     finder_contact,
-    selected_sym_ref_menber
+    selected_sym_ref_menber, finder_container
 } from "@/utils/scout";
 import {Artboard} from "@kcdesign/data";
 import {Context} from ".";
@@ -267,14 +267,15 @@ export class Selection extends Watchable(Object) implements ISave4Restore {
         return shapes;
     }
 
-    getClosetArtboard(position: PageXY, except?: Map<string, Shape>, scope?: Shape[]): Shape {
-        let result: Shape = this.selectedPage!; // 任何一个元素,至少在一个容器内
-        const range: Shape[] = scope || this.m_selectPage?.artboardList.filter((ab: Artboard) => !ab.isLocked && ab.isVisible) || [];
-        const artboard = artboardFinder(this.scout!, range, position, except);
-        if (artboard) {
-            result = artboard;
-        }
-        return result;
+    /**
+     * @description 获取最近的可插入图形
+     * @param position
+     * @param except
+     * @param scope
+     */
+    getClosestContainer(position: PageXY, except?: Map<string, Shape>, scope?: Shape[]): Shape {
+        const range: Shape[] = scope || this.selectedPage?.childs || [];
+        return finder_container(this.scout!, range, position, except) || this.selectedPage!;
     }
 
     selectShape(shape?: Shape) {

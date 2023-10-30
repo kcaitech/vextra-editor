@@ -15,6 +15,7 @@ import { Comment } from '@/context/comment';
 import { permIsEdit } from '@/utils/content';
 import { Menu } from '@/context/menu';
 import { paster_short } from '@/utils/clipboard';
+import {sort_by_layer} from "@/utils/group_ungroup";
 interface Props {
     matrix: number[]
     context: Context
@@ -196,10 +197,10 @@ function mousemove4trans(e: MouseEvent) {
 function _migrate() {
     if (!shapes.length) return;
     const p = props.shape.matrix2Root().computeCoord2(4, 4);
-    const targetParent = props.context.selection.getClosetArtboard(p);
+    const targetParent = props.context.selection.getClosestContainer(p);
     const m = getCloesetContainer(props.shape).id !== targetParent.id;
     if (targetParent.id === props.shape.id) return;
-    if (m && asyncTransfer) asyncTransfer.migrate(targetParent as GroupShape);
+    if (m && asyncTransfer) asyncTransfer.migrate(targetParent as GroupShape, sort_by_layer(props.context, shapes));
 }
 const migrate: () => void = debounce(_migrate, 100);
 function getCloesetContainer(shape: Shape): Shape {

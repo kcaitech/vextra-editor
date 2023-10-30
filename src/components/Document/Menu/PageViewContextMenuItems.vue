@@ -10,7 +10,6 @@ import {
     Shape,
     ShapeType,
     SymbolRefShape,
-    SymbolShape,
     TableCellType,
     TextShape
 } from "@kcdesign/data";
@@ -18,7 +17,7 @@ import Layers from './Layers.vue';
 import {Context} from '@/context';
 import {WorkSpace} from '@/context/workspace';
 import {Selection} from '@/context/selection';
-import {adapt_page, getName, get_component_state_name, get_shape_within_document, shape_track} from '@/utils/content';
+import {adapt_page, getName, get_shape_within_document, shape_track} from '@/utils/content';
 import {message} from '@/utils/message';
 import {paster, paster_inner_shape, replace} from '@/utils/clipboard';
 import {sort_by_layer} from '@/utils/group_ungroup';
@@ -47,8 +46,7 @@ const isCursor = ref<boolean>(props.context.menu.isUserCursorVisible);
 const invalid_items = ref<string[]>([]);
 
 function showLayerSubMenu(e: MouseEvent) {
-    const targetWidth = (e.target as Element).getBoundingClientRect().width;
-    layerSubMenuPosition.x = targetWidth;
+    layerSubMenuPosition.x = (e.target as Element).getBoundingClientRect().width;
     layerSubMenuPosition.y = -10;
     layerSubMenuVisiable.value = true;
 }
