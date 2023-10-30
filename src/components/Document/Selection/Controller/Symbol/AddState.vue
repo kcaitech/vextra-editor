@@ -1,6 +1,6 @@
 <script setup lang='ts'>
 import { Context } from '@/context';
-import { make_default_state, make_state } from '@/utils/symbol';
+import {make_default_state, make_state, SymbolType} from '@/utils/symbol';
 import { Matrix, Shape } from '@kcdesign/data';
 import { nextTick, onMounted, onUnmounted, ref, watch } from 'vue';
 import { useI18n } from 'vue-i18n';
@@ -11,13 +11,6 @@ interface Props {
     shape: Shape
     symbolType: SymbolType
 }
-enum SymbolType {
-    Symbol = 'symbol',
-    Union = 'union',
-    State = 'state',
-    Ref = 'ref'
-}
-
 const props = defineProps<Props>();
 const { t } = useI18n();
 const matrix = new Matrix();

@@ -9,11 +9,8 @@ import {Selection} from "@/context/selection";
 import {groupPassthrough} from "@/utils/scout";
 import {WorkSpace} from "@/context/workspace";
 import {AsyncTransfer} from "@kcdesign/data";
-import {debounce} from "lodash";
 import {paster_short} from '@/utils/clipboard';
-import {sort_by_layer} from '@/utils/group_ungroup';
 import {useI18n} from 'vue-i18n';
-import {map_from_shapes} from '@/utils/content';
 import {
     PointsOffset, get_apex, pre_render_assist_line
 } from '@/utils/assist';
@@ -26,7 +23,6 @@ import {
     end_transalte,
     gen_assist_target,
     gen_offset_points_map,
-    get_closest_container,
     get_current_position_client,
     is_ctrl_element,
     is_mouse_on_content,
@@ -40,6 +36,7 @@ import {
     shutdown_menu,
     update_comment
 } from "@/utils/mouse";
+import {migrate_immediate, migrate_once} from "@/utils/migrate";
 
 export function useControllerCustom(context: Context, i18nT: Function) {
     const matrix = new Matrix();
@@ -58,21 +55,6 @@ export function useControllerCustom(context: Context, i18nT: Function) {
     const selection = context.selection;
     const workspace = context.workspace;
     let offset_map: PointsOffset | undefined;
-
-    function _migrate(shapes: Shape[], start: ClientXY, end: ClientXY) {
-        if (shapes.length) {
-            const pe: PageXY = matrix.computeCoord3(end);
-            const map = map_from_shapes(shapes);
-            const targetParent = selection.getClosestContainer(pe, map);
-            const emit_migrate = get_closest_container(context, shapes[0]).id !== targetParent.id;
-            if (emit_migrate && asyncTransfer) {
-                asyncTransfer.migrate(targetParent as GroupShape, sort_by_layer(context, shapes));
-                context.assist.set_collect_target([targetParent as GroupShape], true);
-            }
-        }
-    }
-
-    const migrate: (shapes: Shape[], start: ClientXY, end: ClientXY) => void = debounce(_migrate, 100);
 
     function handleDblClick() {
         const selected = selection.selectedShapes;
@@ -142,7 +124,7 @@ export function useControllerCustom(context: Context, i18nT: Function) {
         let update_type = 0;
         if (asyncTransfer) {
             update_type = trans_assistant(asyncTransfer, ps, pe);
-            migrate(shapes, start, end);
+            migrate_once(context, asyncTransfer, shapes, end);
         }
         return update_type;
     }
@@ -261,7 +243,7 @@ export function useControllerCustom(context: Context, i18nT: Function) {
         if (isDragging) {
             if (asyncTransfer) {
                 const mousePosition: ClientXY = get_current_position_client(context, e);
-                _migrate(shapes, startPosition, mousePosition);
+                migrate_immediate(context, asyncTransfer, shapes, mousePosition);
                 asyncTransfer = asyncTransfer.close();
             }
             end_transalte(context);

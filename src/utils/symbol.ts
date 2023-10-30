@@ -17,6 +17,13 @@ import {debounce} from "lodash";
 import {v4} from "uuid";
 import {get_name} from "@/utils/shapelist";
 
+export enum SymbolType {
+    Symbol = 'symbol',
+    Union = 'union',
+    State = 'state',
+    Ref = 'ref'
+}
+
 // region 组件列表相关
 /**
  * @description 组件列表项
@@ -852,6 +859,7 @@ export function is_bind_x_vari(shape: Shape, type: OverrideType) {
     if (!vk) return;
     return variables.get(vk);
 }
+
 export function reset_all_attr_for_ref(context: Context) {
     const shape = context.selection.symbolrefshape;
     if (!shape) return;
