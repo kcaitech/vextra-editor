@@ -399,3 +399,10 @@ export function _selected_symbol_menber(context: Context, shapes: Shape[]) {
 }
 
 export const selected_sym_ref_menber = debounce(_selected_symbol_menber, 100);
+
+export function is_shape_in_selected(selected: Shape[], shape: Shape) {
+    for (let i = 0, len = selected.length; i < len; i++) {
+        if (selected[i].id === shape.id) return true;
+    }
+    return false;
+}
