@@ -136,7 +136,7 @@ onUnmounted(() => {
                 </SelectLayerInput>
             </template>
             <template #default_value>
-                <PopoverDefaultInput :context="context" :add-type="VariableType.Visible" :default_value="is_bind?.value" @select="dlt_change"></PopoverDefaultInput>
+                <PopoverDefaultInput :context="context" :add-type="VariableType.Visible" :default_value="is_bind?.value" :dft_show="is_bind ? true : false" @select="dlt_change"></PopoverDefaultInput>
             </template>
         </CompLayerShow>
     </div>

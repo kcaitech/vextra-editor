@@ -11,7 +11,8 @@ const { t } = useI18n();
 interface Props {
     context: Context,
     addType: VariableType | undefined,
-    default_value?: string | boolean
+    default_value?: string | boolean,
+    dft_show?: boolean
 }
 
 interface Emits {
@@ -27,6 +28,7 @@ const menuItems = ['显示', '隐藏'];
 const defaultValue = ref('显示');
 const menuIndex = ref(0);
 watch(() => props.default_value, (v) => {
+    if(!props.dft_show) return;
     if(v) {
         menuIndex.value = 0;
         defaultValue.value = '显示';

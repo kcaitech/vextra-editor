@@ -105,8 +105,8 @@ onUnmounted(() => {
                 </div>
             </template>
         </TypeHeader>
-        <div class="module_container" :style="{marginTop: variables.length > 0 ? '10px' : '0'}">
-            <component v-for="item in variables" :key="item.variable.id" :is="cardmap.get(item.variable.type) || Status"
+        <div class="module_container" :style="{marginBottom: variables.length > 0 ? '10px' : '0'}">
+            <component v-for="item in variables" :key="item.variable.id  + props.shape.id" :is="cardmap.get(item.variable.type) || Status"
                        :context="props.context"
                        :data="item"></component>
         </div>
@@ -116,7 +116,7 @@ onUnmounted(() => {
                 <div class="items-wrap">
                     <component v-for="item in visible_variables" :key="item.variable.id" :is="Visible"
                                :context="props.context"
-                               :data="item"></component>
+                               :data="(item as RefAttriListItem)"></component>
                 </div>
             </div>
             <div class="place"></div>

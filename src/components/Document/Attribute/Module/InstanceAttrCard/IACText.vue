@@ -7,7 +7,7 @@ interface Props {
     data: RefAttriListItem
 }
 const props = defineProps<Props>();
-const textValue = ref('文本内容');
+const textValue = ref('');
 const inputRef = ref<HTMLInputElement>();
 
 const selectAllText = () => {
@@ -22,7 +22,6 @@ function get_value() {
 function change(v: boolean) {
     modify_vari_value_for_ref(props.context, props.data.variable, v);
 }
-onUpdated(get_value);
 onMounted(get_value);
 </script>
 <template>

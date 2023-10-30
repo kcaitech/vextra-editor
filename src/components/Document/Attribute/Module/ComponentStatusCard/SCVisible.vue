@@ -102,7 +102,7 @@ function _delete() {
                                   :variable="props.variable" @change="selectLayerId"></SelectLayerInput>
             </template>
             <template #default_value>
-                <PopoverDefaultInput :context="context" :add-type="VariableType.Visible" :default_value="props.variable.value" @select="default_value"></PopoverDefaultInput>
+                <PopoverDefaultInput :context="context" :add-type="VariableType.Visible" :default_value="props.variable.value" :dft_show="true" @select="default_value"></PopoverDefaultInput>
             </template>
         </CompLayerShow>
     </div>
