@@ -1,7 +1,7 @@
 <script setup lang='ts'>
 import {Context} from '@/context';
-import {make_default_state, make_state, SymbolType} from '@/utils/symbol';
-import {Matrix, Shape} from '@kcdesign/data';
+import {find_space_for_state, make_default_state, make_state, SymbolType} from '@/utils/symbol';
+import {Matrix, Shape, SymbolShape} from '@kcdesign/data';
 import {onMounted, onUnmounted, ref, watch} from 'vue';
 import {useI18n} from 'vue-i18n';
 
@@ -49,9 +49,14 @@ function down(e: MouseEvent) {
     e.stopPropagation();
     let make_result: Shape | undefined;
     if (props.symbolType === SymbolType.Union) {
-        make_result = make_default_state(props.context, t);
+        make_default_state(props.context, t);
     } else if (props.symbolType === SymbolType.State) {
-        make_result = make_state(props.context, t);
+        const state = props.context.selection.symbolstate;
+        if (!state) return;
+        const symbol = state.parent as SymbolShape;
+        if (!symbol) return;
+        const result = find_space_for_state(symbol, state);
+        make_result = make_state(props.context, t, result?.x);
         if (make_result) {
             props.context.selection.selectShape(make_result);
         }

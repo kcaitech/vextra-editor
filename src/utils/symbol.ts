@@ -16,6 +16,8 @@ import {sort_by_layer} from "./group_ungroup";
 import {debounce} from "lodash";
 import {v4} from "uuid";
 import {get_name} from "@/utils/shapelist";
+import {XY} from "@/context/selection";
+import {isTarget} from "@/utils/common";
 
 export enum SymbolType {
     Symbol = 'symbol',
@@ -387,7 +389,7 @@ export function make_default_state(context: Context, t: Function) {
  * @description 创建一个可变组件
  * @return state
  */
-export function make_state(context: Context, t: Function) {
+export function make_state(context: Context, t: Function, hor?: number) {
     const selected = context.selection.selectedShapes;
     if (selected.length !== 1) return;
     const shape = selected[0];
@@ -402,7 +404,7 @@ export function make_state(context: Context, t: Function) {
         }
         if (index < 0) return;
         const editor = context.editor4Page(page);
-        return editor.makeStateAt(shape.parent as SymbolShape, t('compos.state'), index);
+        return editor.makeStateAt(shape.parent as SymbolShape, t('compos.state'), index, hor);
     }
 }
 
@@ -865,4 +867,46 @@ export function reset_all_attr_for_ref(context: Context) {
     if (!shape) return;
     const editor = context.editor4Shape(shape);
     editor.resetSymbolRefVariable();
+}
+
+export function find_space_for_state(symbol: SymbolShape, state: SymbolShape) {
+    if (!(symbol as SymbolShape).isUnionSymbolShape) return;
+    const targets = symbol.childs;
+    if (!targets.length) return;
+    const init_frame = {
+        x: state.frame.x + state.frame.width + 20,
+        y: state.frame.y,
+        width: state.frame.width,
+        height: state.frame.height
+    }
+    const p2r = symbol.matrix2Root();
+    let pure: boolean = false;
+    while (!pure) {
+        pure = true
+        let selectorPoints: XY[] = [
+            {x: init_frame.x, y: init_frame.y},
+            {x: init_frame.x + init_frame.width, y: init_frame.y},
+            {x: init_frame.x + init_frame.width, y: init_frame.y + init_frame.height},
+            {x: init_frame.x, y: init_frame.y + init_frame.height},
+            {x: init_frame.x, y: init_frame.y},
+        ];
+        selectorPoints = selectorPoints.map(p => p2r.computeCoord3(p));
+        for (let i = 0; i < targets.length; i++) {
+            const m = targets[i].matrix2Root();
+            const {width: w, height: h} = targets[i].frame;
+            const ps: XY[] = [
+                {x: 0, y: 0},
+                {x: w, y: 0},
+                {x: w, y: h},
+                {x: 0, y: h},
+                {x: 0, y: 0},
+            ].map(p => m.computeCoord3(p));
+            if (isTarget(selectorPoints as any, ps) || isTarget(ps as any, selectorPoints)) {
+                pure = false; // 存在🍌
+                break;
+            }
+        }
+        !pure && (init_frame.x += 20);
+    }
+    return init_frame;
 }
