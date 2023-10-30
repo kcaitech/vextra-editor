@@ -42,7 +42,8 @@ function register_container() {
 }
 
 function handleClickOutside(event: MouseEvent) {
-    event.stopPropagation()
+    event.stopPropagation();
+    console.log(123456789);
     event.target instanceof Element && !event.target.closest('.select_layerbox') && close(event);
 }
 
@@ -298,5 +299,8 @@ onUnmounted(() => {
             height: 80%;
         }
     }
+}
+:deep(.el-scrollbar__bar.is-vertical) {
+    z-index: 9;
 }
 </style>
