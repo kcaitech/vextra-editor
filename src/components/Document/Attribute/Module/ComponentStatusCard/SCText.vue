@@ -45,14 +45,18 @@ function edit_text() {
     iseditText.value = true;
 }
 
-function text_dlt_change(v: string) {
-    console.log(v,'text');
-}
+//选中图层的id
+const layerIds = ref<string[]>();
 const selectLayerId = (ids: string[]) => {
-
+    layerIds.value = ids;
 }
-
-const save_text = () => {
+//默认值
+const dlt_value = ref<string>('');
+function text_dlt_change(v: string) {
+    dlt_value.value = v;
+}
+//asdfg
+const save_text = (type: VariableType, name: string) => {
     iseditText.value = false;
 }
 function _delete() {
