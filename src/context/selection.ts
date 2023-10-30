@@ -83,6 +83,7 @@ export class Selection extends Watchable(Object) implements ISave4Restore {
     static PAGE_SORT = 12;
     static ABOUT_ME = 13;
     static EXTEND = 14;
+    static PLACEMENT_CHANGE = 15;
 
     private m_selectPage?: Page;
     private m_selectShapes: Shape[] = [];
@@ -99,6 +100,7 @@ export class Selection extends Watchable(Object) implements ISave4Restore {
     private m_table_area: { id: TableArea, area: string }[] = [];
     private m_selected_sym_ref_menber: Shape | undefined;
     private m_selected_sym_ref_bros: Shape[] = [];
+    private m_placement: Shape | undefined;
     private m_context: Context;
 
     constructor(document: Document, context: Context) {
@@ -227,8 +229,8 @@ export class Selection extends Watchable(Object) implements ISave4Restore {
         return result;
     }
 
-    private m_count = 0;
-    private m_total = 0;
+    // private m_count = 0;
+    // private m_total = 0;
 
     /**
      * @description 基于SVGGeometryElement的图形检索，与getLayers相比，getShapesByXY返回的结果长度最多为1，而这里可以大于1
@@ -245,13 +247,13 @@ export class Selection extends Watchable(Object) implements ISave4Restore {
             const childs: Shape[] = scope || page.childs;
             shape = finder(this.m_context, this.scout, childs, position, this.selectedShapes[0], isCtrl)
         }
-        this.m_count++;
-        this.m_total += Date.now() - s;
-        if (this.m_count > 100) {
-            console.log('computing: ', this.m_total / 100);
-            this.m_count = 0;
-            this.m_total = 0;
-        }
+        // this.m_count++;
+        // this.m_total += Date.now() - s;
+        // if (this.m_count > 100) {
+        //     console.log('computing: ', this.m_total / 100);
+        //     this.m_count = 0;
+        //     this.m_total = 0;
+        // }
         return shape;
     }
 
@@ -460,6 +462,15 @@ export class Selection extends Watchable(Object) implements ISave4Restore {
 
     setSelectedSymRefBros(shapes: Shape[]) {
         this.m_selected_sym_ref_bros = shapes;
+    }
+
+    get placement() {
+        return this.m_placement;
+    }
+
+    setPlacement(shape?: Shape) {
+        this.m_placement = shape;
+        this.notify(Selection.PLACEMENT_CHANGE);
     }
 
     get_closest_container(shape: Shape) {
