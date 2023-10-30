@@ -64,9 +64,7 @@ const updateData = () => {
 }
 
 function reset_all_attr() {
-    console.log('emit')
-    const res = reset_all_attr_for_ref(props.context);
-    console.log('reset res', res)
+    reset_all_attr_for_ref(props.context);
 }
 
 watch(() => props.shape, (nVal, oVal) => {
