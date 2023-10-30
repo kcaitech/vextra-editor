@@ -26,6 +26,7 @@ const atrrdialog = ref<HTMLDivElement>();
 const card_ref = ref<HTMLDivElement>();
 const dialog_posi = ref({ x: 0, y: 0 });
 const default_name = ref('');
+//选中图层的id
 const selectId = ref<string[]>([]);
 const getDialogPosi = (div: HTMLDivElement | undefined) => {
     if (div) {
@@ -57,10 +58,11 @@ const isBind = () => {
     }
 }
 const dlt_value = ref<any>(true);
+//默认值
 function dlt_change(v: number) {
     dlt_value.value = !v;
 }
-
+//asdfg
 function save_layer_show(type: VariableType, name: string) {
     if(is_bind.value) return isLayerShow.value = false;
     if (!name.trim()) {

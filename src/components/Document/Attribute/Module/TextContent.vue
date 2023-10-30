@@ -57,6 +57,7 @@ function edit_text() {
     getDialogPosi(card_ref.value);
     isTextShow.value = true;
 }
+//asdfg
 function save_layer_show(type: VariableType, name: string) {
     if(is_bind.value) return isTextShow.value = false;
     if (!name.trim()) {

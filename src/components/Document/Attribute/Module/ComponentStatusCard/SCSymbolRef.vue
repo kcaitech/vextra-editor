@@ -39,16 +39,20 @@ function get_dialog_posi(div: HTMLDivElement | undefined) {
         dialog_posi.value.y = el.y;
     }
 }
-const selectLayerId = (ids: string[]) => {
-
-}
 
 function edit_instance() {
     get_dialog_posi(instance_card.value);
     iseditToggle.value = true;
 }
-
-function save_instance() {
+//选中图层的id
+const layerIds = ref<string[]>();
+const selectLayerId = (ids: string[]) => {
+    layerIds.value = ids;
+}
+//asdfg
+function save_instance(type: VariableType, name: string) {
+    layerIds.value //图层id
+    name //属性名
     iseditToggle.value = false;
 }
 const getValue = (id: string) => {

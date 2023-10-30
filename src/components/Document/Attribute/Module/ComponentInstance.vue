@@ -99,6 +99,8 @@ function edit_instance() {
     getDialogPosi(card_ref.value);
     isInstanceShow.value = true;
 }
+
+//asdfg
 function save_layer_show(type: VariableType, name: string) {
     if(is_bind.value) return isInstanceShow.value = false;
     if (!name.trim()) {

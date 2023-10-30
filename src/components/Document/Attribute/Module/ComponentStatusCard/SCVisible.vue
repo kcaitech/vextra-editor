@@ -52,15 +52,21 @@ function edit_visible() {
     get_dialog_posi(card_ref.value);
     iseditLayerShow.value = true;
 }
-
+//选中图层的id
+const layerIds = ref<string[]>();
 const selectLayerId = (ids: string[]) => {
-
+    layerIds.value = ids;
 }
+//默认值
+const dlt_value = ref<boolean>();
 function default_value(v: number) {
-
+    v === 0 ? dlt_value.value = true : dlt_value.value = false;
 }
-
-function save_layer_show() {
+//asdfg
+function save_layer_show(type: VariableType, name: string) {
+    layerIds.value //图层id
+    name //属性名
+    dlt_value.value //默认值
     iseditLayerShow.value = false;
 }
 function _delete() {
