@@ -9,6 +9,7 @@ import {Asssit} from "@/context/assist";
 import {distance2apex, distance2apex2, gen_match_points, get_frame, get_pg_by_frame} from "@/utils/assist";
 import {XYsBounding} from "@/utils/common";
 import {sort_by_layer} from "@/utils/group_ungroup";
+import {map_from_shapes} from "@/utils/content";
 
 /**
  * @description 判断落点是否在content上
@@ -282,3 +283,12 @@ export function is_rid_stick(context: Context, a: number, b: number) {
     return Math.abs(a - b) >= context.assist.stickness;
 }
 
+export function migrate_immediate(context: Context, asyncTransfer: AsyncTransfer, shapes: Shape[], end: ClientXY) {
+    if (!shapes.length) return;
+    const matrix = new Matrix(context.workspace.matrix.inverse);
+    const pe: PageXY = matrix.computeCoord3(end);
+    const map = map_from_shapes(shapes);
+    const target_parent = context.selection.getClosestContainer(pe, map);
+
+
+}

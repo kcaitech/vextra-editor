@@ -268,7 +268,7 @@ export class Selection extends Watchable(Object) implements ISave4Restore {
     }
 
     /**
-     * @description 获取最近的可插入图形
+     * @description 获取点上最近的可插入图形
      * @param position
      * @param except
      * @param scope
