@@ -83,42 +83,44 @@ onUnmounted(() => {
 </script>
 
 <template>
-    <TypeHeader :title="t('compos.instance_attr')" class="mt-24">
-        <template #tool>
-            <div class="edit-comps">
-                <div class="edit_svg" @click.stop="editComps">
-                    <svg-icon icon-class="edit-comp"></svg-icon>
-                </div>
-                <div class="reset_svg" @click.stop="selectReset">
-                    <el-icon>
-                        <MoreFilled/>
-                    </el-icon>
-                    <div class="reset_menu" v-if="resetMenu">
-                        <div class="untie" @click="untie">
-                            <span>{{ t('compos.untie') }}</span>
-                            <span>快捷键</span>
+    <div style="margin-bottom: 10px;">
+        <TypeHeader :title="t('compos.instance_attr')" class="mt-24">
+            <template #tool>
+                <div class="edit-comps">
+                    <div class="edit_svg" @click.stop="editComps">
+                        <svg-icon icon-class="edit-comp"></svg-icon>
+                    </div>
+                    <div class="reset_svg" @click.stop="selectReset">
+                        <el-icon>
+                            <MoreFilled/>
+                        </el-icon>
+                        <div class="reset_menu" v-if="resetMenu">
+                            <div class="untie" @click="untie">
+                                <span>{{ t('compos.untie') }}</span>
+                                <span>快捷键</span>
+                            </div>
+                            <div class="untie" @click="reset_all_attr">{{ t('compos.reset_all_attr') }}</div>
                         </div>
-                        <div class="untie" @click="reset_all_attr">{{ t('compos.reset_all_attr') }}</div>
                     </div>
                 </div>
-            </div>
-        </template>
-    </TypeHeader>
-    <div class="module_container">
-        <component v-for="item in variables" :key="item.variable.id" :is="cardmap.get(item.variable.type) || Status"
-                   :context="props.context"
-                   :data="item"></component>
-    </div>
-    <div v-if="visible_variables.length" class="visible-var-container">
-        <div class="show">
-            <div class="title">{{ t('compos.layer_show') }}:</div>
-            <div class="items-wrap">
-                <component v-for="item in visible_variables" :key="item.variable.id" :is="Visible"
-                           :context="props.context"
-                           :data="item"></component>
-            </div>
+            </template>
+        </TypeHeader>
+        <div class="module_container" :style="{marginTop: variables.length > 0 ? '10px' : '0'}">
+            <component v-for="item in variables" :key="item.variable.id" :is="cardmap.get(item.variable.type) || Status"
+                       :context="props.context"
+                       :data="item"></component>
         </div>
-        <div class="place"></div>
+        <div v-if="visible_variables.length" class="visible-var-container">
+            <div class="show">
+                <div class="title">{{ t('compos.layer_show') }}:</div>
+                <div class="items-wrap">
+                    <component v-for="item in visible_variables" :key="item.variable.id" :is="Visible"
+                               :context="props.context"
+                               :data="item"></component>
+                </div>
+            </div>
+            <div class="place"></div>
+        </div>
     </div>
 </template>
 
@@ -187,7 +189,6 @@ onUnmounted(() => {
 
 .module_container {
     font-size: var(--font-default-fontsize);
-    margin-bottom: 10px;
 }
 
 .visible-var-container {

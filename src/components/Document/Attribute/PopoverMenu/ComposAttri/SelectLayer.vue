@@ -75,6 +75,15 @@ watchEffect(() => {
         unfold.add(0);
     }
 })
+
+const keyboard_watcher = (e: KeyboardEvent) => {
+    e.stopPropagation();
+    if (e.code === 'Enter' || e.code === 'NumpadEnter') {
+        if(checkList.value.length > 0) {
+            emits('close');
+        }
+    }
+}
 onMounted(() => {
     if (popover.value) {
         const body_h = document.body.clientHeight;
@@ -102,7 +111,7 @@ onUnmounted(() => {
 </script>
 
 <template>
-    <div class="select_layerbox" ref="popover" :style="{ top: top + 'px' }">
+    <div class="select_layerbox" ref="popover" :style="{ top: top + 'px' }" @keydown="keyboard_watcher">
         <div class="heard">
             <span class="title">{{
                     props.type === VariableType.SymbolRef ? `${t('compos.compos_instance')}` :

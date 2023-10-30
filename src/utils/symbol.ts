@@ -423,9 +423,8 @@ export function create_text_var(context: Context, symbol: SymbolShape, name: str
     editor.makeTextVar(symbol, name, dlt, shapes);
 }
 
-export function create_var_by_type(context: Context, type: VariableType, name: string, value: any, values: any[]) {
+export function create_var_by_type(context: Context, type: VariableType, name: string, value: any, values: any[], symbol: SymbolShape) {
     const selection = context.selection;
-    if (!selection.symbolshape) return;
     const shapes: Shape[] = [];
     const page = selection.selectedPage!;
     for (let i = 0, len = values.length; i < len; i++) {
@@ -434,11 +433,11 @@ export function create_var_by_type(context: Context, type: VariableType, name: s
     }
     switch (type) {
         case VariableType.Visible:
-            return create_visible_var(context, selection.symbolshape, name, value, shapes);
+            return create_visible_var(context, symbol, name, value, shapes);
         case VariableType.SymbolRef:
-            return create_ref_var(context, selection.symbolshape, name, shapes);
+            return create_ref_var(context, symbol, name, shapes);
         case VariableType.Text:
-            return create_text_var(context, selection.symbolshape, name, value, shapes);
+            return create_text_var(context, symbol, name, value, shapes);
         default:
             console.log('wrong action');
     }
@@ -826,7 +825,7 @@ function is_sym(shape: Shape) {
 /**
  * @description 给一个图层，返回这个图层所在的组件，如果不是组件内的图层，则return undefined;
  */
-function get_symbol_by_layer(layer: Shape): SymbolShape | undefined {
+export function get_symbol_by_layer(layer: Shape): SymbolShape | undefined {
     let s: Shape | undefined = layer;
     while (s && !is_sym(s)) {
         s = s.parent;
@@ -839,7 +838,7 @@ function get_symbol_by_layer(layer: Shape): SymbolShape | undefined {
  * @param shape
  * @param type
  */
-function is_bind_x_vari(shape: Shape, type: OverrideType) {
+export function is_bind_x_vari(shape: Shape, type: OverrideType) {
     const symbol = get_symbol_by_layer(shape);
     if (!symbol) return;
     const variables = symbol.variables;

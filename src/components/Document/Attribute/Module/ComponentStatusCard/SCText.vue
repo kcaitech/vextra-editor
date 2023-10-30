@@ -45,6 +45,13 @@ function edit_text() {
     iseditText.value = true;
 }
 
+function text_dlt_change(v: string) {
+    console.log(v,'text');
+}
+const selectLayerId = (ids: string[]) => {
+
+}
+
 const save_text = () => {
     iseditText.value = false;
 }
@@ -71,14 +78,14 @@ function _delete() {
             </div>
         </div>
         <CompLayerShow :context="context" v-if="iseditText" @close-dialog="iseditText = false" right="250px" :width="260"
-            :add-type="VariableType.Status" :title="t('compos.text_content')" @save-layer-show="save_text"
+            :add-type="VariableType.Text" :title="t('compos.text_content')" @save-layer-show="save_text"
             :dialog_posi="dialog_posi" :default_name="props.variable.name" :variable="props.variable">
             <template #layer>
-                <SelectLayerInput :title="t('compos.select_layer')" :add-type="VariableType.Visible"
-                    :context="props.context" :placeholder="t('compos.place_select_layer')"></SelectLayerInput>
+                <SelectLayerInput :title="t('compos.select_layer')" :add-type="VariableType.Text"
+                    :context="props.context" :placeholder="t('compos.place_select_layer')" :variable="props.variable" @change="selectLayerId"></SelectLayerInput>
             </template>
             <template #default_value>
-                <PopoverDefaultInput :context="context" :add-type="VariableType.Text"></PopoverDefaultInput>
+                <PopoverDefaultInput :context="context" :add-type="VariableType.Text" :default_value="props.variable.value" @change="text_dlt_change"></PopoverDefaultInput>
             </template>
         </CompLayerShow>
     </div>

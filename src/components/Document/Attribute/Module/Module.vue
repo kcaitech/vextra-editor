@@ -51,7 +51,7 @@ function is_state() {
                        :shape="(shapes[0] as SymbolShape)">
         </ComponentAttr>
         <ComponentState :context="context" v-if="is_state()" :shapes="props.shapes as SymbolShape[]"></ComponentState>
-        <InstanceAttr :context="context" v-if="shapeType === ShapeType.SymbolRef && !p_symble"
+        <InstanceAttr :context="context" v-if="shapeType === ShapeType.SymbolRef"
                       :shape="(shapes[0] as SymbolRefShape)">
         </InstanceAttr>
         <LayerShow :context="context" v-if="p_symble && shapeType !== ShapeType.Symbol"></LayerShow>
