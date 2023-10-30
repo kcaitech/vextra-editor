@@ -89,7 +89,7 @@ onMounted(() => {
     <div class="container">
         <span>{{ title }}</span>
         <div class="select-layer">
-            <div class="input" @click="showSelectLayer" @mouseup.stop
+            <div class="input" @click="showSelectLayer"
                 :style="{ opacity: context.selection.selectedShapes[0].type !== ShapeType.Symbol ? '0.5' : '1' }">
                 <span v-if="selectLayerName" class="value">{{ selectLayerName }}</span>
                 <span v-else style="opacity: 0.5">{{ placeholder }}</span>
