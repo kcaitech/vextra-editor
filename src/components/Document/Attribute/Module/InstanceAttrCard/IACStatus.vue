@@ -3,7 +3,7 @@ import {get_vari_value_for_ref, modify_vari_value_for_ref, RefAttriListItem} fro
 import {ref} from "vue";
 import {Context} from "@/context";
 import {onMounted, onUpdated} from "vue";
-import SelectMenu from "@/components/Document/Attribute/PopoverMenu/SelectMenu.vue";
+import SelectMenu from "@/components/Document/Attribute/PopoverMenu/ComposAttri/SelectMenu.vue";
 import {ArrowDown} from '@element-plus/icons-vue'
 import { Menu } from "@/context/menu";
 

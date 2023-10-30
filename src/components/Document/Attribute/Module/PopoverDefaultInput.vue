@@ -2,7 +2,7 @@
 import { Context } from '@/context';
 import { VariableType } from '@kcdesign/data';
 import { useI18n } from 'vue-i18n';
-import SelectMenu from '../PopoverMenu/SelectMenu.vue';
+import SelectMenu from '../PopoverMenu/ComposAttri/SelectMenu.vue';
 import { ArrowDown } from '@element-plus/icons-vue'
 import { ref } from 'vue';
 

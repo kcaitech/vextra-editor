@@ -1,20 +1,21 @@
 <script setup lang="ts">
-import {Context} from '@/context';
-import {Shape, ShapeType, Variable, VariableType} from '@kcdesign/data';
-import {ArrowDown} from '@element-plus/icons-vue';
-import {useI18n} from 'vue-i18n';
-import {onMounted, ref} from 'vue';
-import {get_instance_from_symbol, get_layer_from_symbol, get_text_from_symbol} from '@/utils/symbol';
-import SelectLayer from '../PopoverMenu/SelectLayer.vue';
+import { Context } from '@/context';
+import { Shape, ShapeType, Variable, VariableType } from '@kcdesign/data';
+import { ArrowDown } from '@element-plus/icons-vue';
+import { useI18n } from 'vue-i18n';
+import { onMounted, ref } from 'vue';
+import { get_instance_from_symbol, get_layer_from_symbol, get_text_from_symbol } from '@/utils/symbol';
+import SelectLayer from '../PopoverMenu/ComposAttri/SelectLayer.vue';
 
-const {t} = useI18n();
+const { t } = useI18n();
 
 interface Props {
     title: string,
     context: Context,
     addType: VariableType,
-    placeholder: string
-    variable?: Variable
+    placeholder: string,
+    variable?: Variable,
+    selectId?: string[]
 }
 
 const props = defineProps<Props>();
@@ -29,7 +30,7 @@ const isselectLayer = ref(false);
 
 const showSelectLayer = (e: MouseEvent) => {
     e.stopPropagation();
-    if(props.context.selection.selectedShapes[0].type !== ShapeType.Symbol) return;
+    if (props.context.selection.selectedShapes[0].type !== ShapeType.Symbol) return;
     selectoption.value = false;
     if (isselectLayer.value && e.target instanceof Element && e.target.closest('.input')) return isselectLayer.value = false;
     isselectLayer.value = true;
@@ -48,7 +49,6 @@ const get_symbol_layer = () => {
     if (props.addType === VariableType.Visible) {
         const select: Shape[] = [];
         selectList.value = get_layer_from_symbol(symbolshape, props.variable, select);
-        console.log('select', select);
         selectLayerid.value = select.map(item => item.id);
         selectLayerName.value = getShapesName(selectLayerid.value);
     } else if (props.addType === VariableType.Text) {
@@ -70,6 +70,12 @@ function select_change(data: string[]) {
     emit("change", data);
 }
 
+const get_bind_layer_name = () => {
+    if (props.selectId && props.selectId.length > 0) {
+        selectLayerName.value = getShapesName(props.selectId);
+    }
+}
+
 const getShapesName = (ids: string[]) => {
     const page = props.context.selection.selectedPage;
     let names: string[] = [];
@@ -85,7 +91,10 @@ const getShapesName = (ids: string[]) => {
     return result;
 }
 
-onMounted(get_symbol_layer);
+onMounted(() => {
+    get_bind_layer_name();
+    get_symbol_layer();
+});
 </script>
 
 <template>
@@ -93,15 +102,15 @@ onMounted(get_symbol_layer);
         <span>{{ title }}</span>
         <div class="select-layer">
             <div class="input" @click="showSelectLayer" @mouseup.stop
-                 :style="{ opacity: context.selection.selectedShapes[0].type !== ShapeType.Symbol ? '0.5' : '1' }">
+                :style="{ opacity: context.selection.selectedShapes[0].type !== ShapeType.Symbol ? '0.5' : '1' }">
                 <span v-if="selectLayerName" class="value">{{ selectLayerName }}</span>
                 <span v-else style="opacity: 0.5">{{ placeholder }}</span>
                 <el-icon>
-                    <ArrowDown/>
+                    <ArrowDown />
                 </el-icon>
             </div>
             <SelectLayer v-if="isselectLayer" @close="isselectLayer = false" :type="props.addType" :context="context"
-                         :selectList="selectList" @change="select_change" :layerId="selectLayerid"></SelectLayer>
+                :selectList="selectList" @change="select_change" :layerId="selectLayerid"></SelectLayer>
         </div>
     </div>
 </template>
@@ -120,7 +129,7 @@ onMounted(get_symbol_layer);
         width: 60px;
     }
 
-    > div {
+    >div {
         flex: 1;
     }
 
@@ -144,7 +153,7 @@ onMounted(get_symbol_layer);
         height: 30px;
         font-size: 10px;
 
-        > div {
+        >div {
             height: 100%;
         }
 

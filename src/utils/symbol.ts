@@ -886,3 +886,42 @@ export function is_status_allow_to_delete(symbol: SymbolShape) {
     })
     return valid > 0;
 }
+
+function is_state(shape: Shape) {
+    return shape.type === ShapeType.Symbol && shape?.parent?.isUnionSymbolShape;
+}
+
+function is_sym(shape: Shape) {
+    return shape.type === ShapeType.Symbol;
+}
+
+/**
+ * @description 给一个图层，返回这个图层所在的组件，如果不是组件内的图层，则return undefined;
+ */
+export function get_symbol_by_layer(layer: Shape): SymbolShape | undefined {
+    let s: Shape | undefined = layer;
+    while (s && !is_sym(s)) {
+        s = s.parent;
+    }
+    if (s) return is_state(s) ? s.parent as SymbolShape : s as SymbolShape;
+}
+
+/**
+ * @description 根据类型x查看图层是否绑定了某一个变量，如果绑定了变量，则返回该变量
+ * @param shape
+ * @param type
+ */
+export function is_bind_x_vari(shape: Shape, type: OverrideType) {
+    const symbol = get_symbol_by_layer(shape);
+    if (!symbol) return;
+    const variables = symbol.variables;
+    if (!variables) return;
+    const binds = shape.varbinds;
+    if (!binds) return;
+    let vk = '';
+    binds.forEach((v, k) => {
+        if (k === type) vk = v;
+    })
+    if (!vk) return;
+    return variables.get(vk);
+}

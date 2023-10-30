@@ -25,10 +25,7 @@ function change(v: boolean) {
     modify_vari_value_for_ref(props.context, props.data.variable, v);
 }
 
-onUpdated(() => {
-    console.log('updated');
-    get_value();
-})
+onUpdated(get_value);
 onMounted(get_value);
 </script>
 <template>

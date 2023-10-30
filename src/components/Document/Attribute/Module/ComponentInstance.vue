@@ -4,7 +4,7 @@ import { Context } from '@/context';
 import TypeHeader from '../TypeHeader.vue';
 import SelectLayerInput from './SelectLayerInput.vue';
 import { ref, onUnmounted, onMounted } from 'vue';
-import CompLayerShow from '../PopoverMenu/CompLayerShow.vue';
+import CompLayerShow from '../PopoverMenu/ComposAttri/CompLayerShow.vue';
 import { Shape, SymbolRefShape } from '@kcdesign/data';
 import { get_shape_within_document, shape_track } from '@/utils/content';
 import { MoreFilled } from '@element-plus/icons-vue';
