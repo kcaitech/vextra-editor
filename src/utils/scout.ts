@@ -305,24 +305,17 @@ export function finder_contact(scout: Scout, g: Shape[], position: PageXY, selec
  */
 export function finder_layers(scout: Scout, g: Shape[], position: PageXY): Shape[] {
     const result = [];
-    for (let i = g.length - 1; i > -1; i--) { // 从最上层开始往下找(z-index：大 -> 小)
-        if (canBeTarget(g[i])) { // 只要是!isVisible，force与否都不可以选中
-            const item = g[i];
-            // 特殊处理的三类图形：容器、编组、flatten
-            if ([ShapeType.Group, ShapeType.Artboard].includes(item.type)) {
-                const isItemIsTarget = isTarget(scout, item, position);
-                if (!isItemIsTarget) continue; // 如果整个容器和编组都不是目标元素，则不需要向下遍历
-                const c = item.childs as Shape[];
-                if (c.length) {
-                    result.push(...finder_layers(scout, c, position));
-                }
-                result.push(item);
-            } else {
-                if (isTarget(scout, item, position)) {
-                    result.push(item);
-                }
+    for (let i = g.length - 1; i > -1; i--) {
+        if (!canBeTarget(g[i])) continue;
+        const item = g[i];
+        if (!isTarget(scout, item, position)) continue;
+        if ([ShapeType.Group, ShapeType.Artboard, ShapeType.Symbol, ShapeType.SymbolRef].includes(item.type)) {
+            const c: Shape[] = item.type === ShapeType.SymbolRef ? item.naviChilds : item.childs;
+            if (c?.length) {
+                result.push(...finder_layers(scout, c, position));
             }
         }
+        result.push(item);
     }
     return result;
 }
@@ -353,7 +346,8 @@ export function artboardFinder(scout: Scout, g: Shape[], position: PageXY, excep
     let result: Shape | undefined = undefined;
     for (let i = g.length - 1; i > -1; i--) {
         const item = g[i];
-        if (except && except.get(item.id)) continue;
+        if (except?.get(item.id)) continue;
+        if (item.type !== ShapeType.Artboard) continue;
         if (item.type === ShapeType.Artboard) {
             if (isTarget(scout, item, position)) {
                 const c = (item as GroupShape)?.childs || [], length = c.length;
@@ -367,6 +361,19 @@ export function artboardFinder(scout: Scout, g: Shape[], position: PageXY, excep
         }
     }
     return result
+}
+
+/**
+ * @description 寻找到最近的层级较高的那个容器
+ */
+export function finder_container(scout: Scout, g: Shape[], position: PageXY, except?: Map<string, Shape>) {
+    const layers = finder_layers(scout, g, position);
+    for (let i = 0, len = layers.length; i < len; i++) {
+        const item = layers[i];
+        if ([ShapeType.Artboard, ShapeType.Symbol].includes(item.type) && (!except || !except.get(item.id))) {
+            return item;
+        }
+    }
 }
 
 export function canBeTarget(shape: Shape): boolean { // 可以被判定为检索结果的前提是没有被锁定和isVisible可视

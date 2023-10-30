@@ -63,11 +63,10 @@ export function useControllerCustom(context: Context, i18nT: Function) {
         if (shapes.length) {
             const pe: PageXY = matrix.computeCoord3(end);
             const map = map_from_shapes(shapes);
-            const targetParent = selection.getClosetArtboard(pe, map);
+            const targetParent = selection.getClosestContainer(pe, map);
             const emit_migrate = get_closest_container(context, shapes[0]).id !== targetParent.id;
             if (emit_migrate && asyncTransfer) {
-                shapes = sort_by_layer(context, shapes);
-                asyncTransfer.migrate(targetParent as GroupShape);
+                asyncTransfer.migrate(targetParent as GroupShape, sort_by_layer(context, shapes));
                 context.assist.set_collect_target([targetParent as GroupShape], true);
             }
         }
@@ -154,6 +153,7 @@ export function useControllerCustom(context: Context, i18nT: Function) {
 
     let pre_target_x: number, pre_target_y: number;
     let stickedX: boolean = false, stickedY: boolean = false;
+
     // let count: number = 0, times: number = 0; // 性能测试
 
     /**

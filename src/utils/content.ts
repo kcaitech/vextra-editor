@@ -138,7 +138,7 @@ export function init_shape(context: Context, frame: ShapeFrame, mousedownOnPageX
     const action = context.tool.action;
     const type = ResultByAction(action);
     const page = selection.selectedPage;
-    const parent = selection.getClosetArtboard(mousedownOnPageXY);
+    const parent = selection.getClosestContainer(mousedownOnPageXY);
     let asyncCreator: AsyncCreator | undefined;
     let new_shape: Shape | undefined;
     if (page && parent && type) {
@@ -188,7 +188,7 @@ export function init_insert_shape(context: Context, mousedownOnPageXY: PageXY, t
     const workspace = context.workspace;
     const type = _t || ResultByAction(action);
     const page = selection.selectedPage;
-    const parent = land || selection.getClosetArtboard(mousedownOnPageXY);
+    const parent = land || selection.getClosestContainer(mousedownOnPageXY);
     let asyncCreator: AsyncCreator | undefined;
     let new_shape: Shape | undefined;
     const frame = new ShapeFrame(mousedownOnPageXY.x, mousedownOnPageXY.y, 100, 100);
@@ -219,7 +219,7 @@ export function init_insert_shape2(context: Context, mousedownOnPageXY: PageXY, 
     const selection = context.selection;
     const type = _t || ResultByAction(action);
     const page = selection.selectedPage;
-    const parent = land || selection.getClosetArtboard(mousedownOnPageXY);
+    const parent = land || selection.getClosestContainer(mousedownOnPageXY);
     let new_shape: Shape | undefined | false;
     const frame = new ShapeFrame(mousedownOnPageXY.x, mousedownOnPageXY.y, 100, 100);
     if (page && parent && type) {
@@ -256,7 +256,7 @@ export function init_insert_table(context: Context, t: Function, land?: Shape, _
     const workspace = context.workspace;
     const type = _t || ResultByAction(action);
     const page = selection.selectedPage;
-    const parent = land || selection.getClosetArtboard(PageXY);
+    const parent = land || selection.getClosestContainer(PageXY);
     let asyncCreator: AsyncCreator | undefined;
     let new_shape: Shape | undefined;
     if (page && parent && type) {
@@ -286,7 +286,7 @@ export function init_insert_textshape(context: Context, mousedownOnPageXY: PageX
     const workspace = context.workspace;
     const type = _t || ResultByAction(context.tool.action);
     const page = selection.selectedPage;
-    const parent = land || selection.getClosetArtboard(mousedownOnPageXY);
+    const parent = land || selection.getClosestContainer(mousedownOnPageXY);
     let asyncCreator: AsyncCreator | undefined;
     let new_shape: Shape | undefined;
     const frame = new ShapeFrame(mousedownOnPageXY.x, mousedownOnPageXY.y, 100, 100);

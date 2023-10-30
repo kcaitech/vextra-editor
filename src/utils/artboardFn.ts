@@ -1,10 +1,10 @@
-import { XY, PageXY } from '@/context/selection';
-import { Matrix, ShapeFrame, Shape, ShapeType } from '@kcdesign/data';
-import { isTarget } from './common';
-import { Context } from '@/context';
-import { Action, Tool } from '@/context/tool';
-import { sort_by_layer } from './group_ungroup';
-import { WorkSpace } from '@/context/workspace';
+import {XY, PageXY} from '@/context/selection';
+import {Matrix, ShapeFrame, Shape, ShapeType} from '@kcdesign/data';
+import {isTarget} from './common';
+import {Context} from '@/context';
+import {Action, Tool} from '@/context/tool';
+import {sort_by_layer} from './group_ungroup';
+import {WorkSpace} from '@/context/workspace';
 // 寻找一块空白的区域；
 // 先寻找当前编辑器中心center在page上的位置，center、pageMatrix -> XY;
 // 以XY为start点，在start处建立一个width、height的矩形，在这里会获得isTarget的第一个传参selectorPoints，与所有图形Shapes(只要page的子元素就行)匹配是否🍌，一旦有图形🍌则XY向右移动offset = 40px；
@@ -12,43 +12,43 @@ import { WorkSpace } from '@/context/workspace';
 
 export function landFinderOnPage(pageMatrix: Matrix, context: Context, frame: ShapeFrame): PageXY {
     const shapes: Shape[] = context.selection.selectedPage?.childs || [];
-    const { width, height } = frame;
+    const {width, height} = frame;
     let center = context.workspace.root.center;
     center = pageMatrix.inverseCoord(center.x, center.y);
-    const start = { x: center.x - width / 2, y: center.y - height / 2 }; // get start point
+    const start = {x: center.x - width / 2, y: center.y - height / 2}; // get start point
     const offset = 40;
     let pure: boolean = false;
     let max = 0;
     while (!pure && max <= 100000) {
         pure = true;
-        const { x: sx, y: sy } = start, w = width, h = height;
+        const {x: sx, y: sy} = start, w = width, h = height;
         const selectorPoints: [XY, XY, XY, XY, XY] = [
-            { x: sx, y: sy },
-            { x: sx + w, y: sy },
-            { x: sx + w, y: sy + h },
-            { x: sx, y: sy + h },
-            { x: sx, y: sy },
+            {x: sx, y: sy},
+            {x: sx + w, y: sy},
+            {x: sx + w, y: sy + h},
+            {x: sx, y: sy + h},
+            {x: sx, y: sy},
         ];
 
         for (let i = 0; i < shapes.length; i++) {
             const m = shapes[i].matrix2Root();
-            const { width: w, height: h } = shapes[i].frame;
+            const {width: w, height: h} = shapes[i].frame;
             const ps: XY[] = [
-                { x: 0, y: 0 },
-                { x: w, y: 0 },
-                { x: w, y: h },
-                { x: 0, y: h },
-                { x: 0, y: 0 },
+                {x: 0, y: 0},
+                {x: w, y: 0},
+                {x: w, y: h},
+                {x: 0, y: h},
+                {x: 0, y: 0},
             ].map(p => m.computeCoord2(p.x, p.y));
-            if (isTarget(selectorPoints, ps) || isTarget(ps as [XY, XY, XY, XY, XY], selectorPoints)) pure = false; // 存在🍌，不是净土！
+            if (isTarget(selectorPoints, ps) || isTarget(ps as [XY, XY, XY, XY, XY], selectorPoints)) pure = false; // 存在🍌
         }
-        !pure && (start.x += offset); // 不是净土，挪一下，再找。
+        !pure && (start.x += offset); // 挪一下，再找。
         max++;
     }
     if (max === 100000) {
         throw new Error('overflow');
     }
-    return start; // 找到了净土的起点
+    return start; // 找到了空白区域的起点
 }
 
 // 使容器滚动到可视区域
@@ -59,7 +59,7 @@ export function scrollToContentView(shape: Shape, context: Context) {
     const lt = m2r.computeCoord2(0, 0);
     const rb = m2r.computeCoord2(f.width, f.height);
     const w = rb.x - lt.x, h = rb.y - lt.y;
-    const shapeCenter = { x: lt.x + w / 2, y: lt.y + h / 2 };
+    const shapeCenter = {x: lt.x + w / 2, y: lt.y + h / 2};
     const contentViewCenter = workspace.root.center;
     const transX = contentViewCenter.x - shapeCenter.x, transY = contentViewCenter.y - shapeCenter.y;
     if (transX || transY) {
@@ -104,7 +104,7 @@ export function insertFrameTemplate(context: Context) {
     if (parent) {
         const editor = context.editor.editor4Page(parent), tf = tool.frameSize, matrix = workspace.matrix;
         const frame = new ShapeFrame(0, 0, tf.size.width, tf.size.height);
-        const { x, y } = landFinderOnPage(matrix, context, frame);
+        const {x, y} = landFinderOnPage(matrix, context, frame);
         frame.x = x, frame.y = y;
         let artboard: Shape | false = editor.create(type, tf.name, frame);
         artboard = editor.insert(parent, shapes.length, artboard);
@@ -117,6 +117,7 @@ export function insertFrameTemplate(context: Context) {
     }
     context.tool.setAction(Action.AutoV);
 }
+
 export function collect(context: Context): Shape[] {
     const selection = context.selection;
     const page = selection.selectedPage;
@@ -125,16 +126,17 @@ export function collect(context: Context): Shape[] {
         const m2r = artboard.matrix2Root();
         const frame = artboard.frame;
         const ps = [
-            { x: 0, y: 0 },
-            { x: frame.width, y: 0 },
-            { x: frame.width, y: frame.height },
-            { x: 0, y: frame.height },
-            { x: 0, y: 0 }
+            {x: 0, y: 0},
+            {x: frame.width, y: 0},
+            {x: frame.width, y: frame.height},
+            {x: 0, y: frame.height},
+            {x: 0, y: 0}
         ].map(p => m2r.computeCoord(p.x, p.y));
         const scope = (artboard.parent || page).childs || [];
         return finder(context, scope, ps as [XY, XY, XY, XY, XY]);
     } else return [];
 }
+
 function finder(context: Context, childs: Shape[], Points: [XY, XY, XY, XY, XY]) {
     let ids = 0;
     const selectedShapes: Map<string, Shape> = new Map();
@@ -145,14 +147,14 @@ function finder(context: Context, childs: Shape[], Points: [XY, XY, XY, XY, XY])
             continue;
         }
         const m = childs[ids].matrix2Root();
-        const { width: w, height: h } = shape.frame;
+        const {width: w, height: h} = shape.frame;
         const ps: XY[] = [
-            { x: 0, y: 0 },
-            { x: w, y: 0 },
-            { x: w, y: h },
-            { x: 0, y: h },
-            { x: 0, y: 0 },
-        ].map(p => m.computeCoord(p.x, p.y));
+            {x: 0, y: 0},
+            {x: w, y: 0},
+            {x: w, y: h},
+            {x: 0, y: h},
+            {x: 0, y: 0},
+        ].map(p => m.computeCoord3(p));
         if (shape.type === ShapeType.Artboard) { // 容器要判定为真的条件是完全被选区覆盖
             if (isTarget(Points, ps, true)) {
                 selectedShapes.set(shape.id, shape);
@@ -160,19 +162,18 @@ function finder(context: Context, childs: Shape[], Points: [XY, XY, XY, XY, XY])
                     selectedShapes.delete(shape.childs[i].id);
                 }
             }
-        }
-        else if (shape.type === ShapeType.Line) {
+        } else if (shape.type === ShapeType.Line) {
             if (isTarget(Points, [ps[0], ps[2]], true)) {
                 selectedShapes.set(shape.id, shape);
             }
-        }
-        else if (isTarget(Points, ps, true)) {
+        } else if (isTarget(Points, ps, true)) {
             selectedShapes.set(shape.id, shape);
         }
         ids++;
     }
     return sort_by_layer(context, Array.from(selectedShapes.values()));
 }
+
 export function get_artboard_list_by_point(context: Context, range: Shape[], point: PageXY, init?: Shape[]) {
     let result: Shape[] = init || [context.selection.selectedPage!];
     const scout = context.selection.scout!;
@@ -188,6 +189,7 @@ export function get_artboard_list_by_point(context: Context, range: Shape[], poi
     }
     return result;
 }
+
 export function get_common_environment(shapes1: Shape[], shapes2: Shape[]) {
     let longer = shapes1.length > shapes2.length ? shapes1 : shapes2;
     const anther = longer === shapes1 ? shapes2 : shapes1;
