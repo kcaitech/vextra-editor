@@ -19,6 +19,7 @@ const props = defineProps<Props>();
 const emit = defineEmits<Emits>();
 const search = ref('');
 const card_type = ref<'alpha' | 'beta'>('beta');
+const root = ref<Element | null>(null);
 
 function set_card_type(v: 'alpha' | 'beta') {
     card_type.value = v;
@@ -46,9 +47,9 @@ const close = () => {
                           @click.stop="() => set_card_type('alpha')"></svg-icon>
             </div>
         </div>
-        <div class="body">
+        <div class="body" ref="root">
             <ComponentContainer :context="context" :search="search" :is-attri="true"
-                                :card-type="card_type"></ComponentContainer>
+                                :card-type="card_type" :root="root"></ComponentContainer>
         </div>
     </div>
 </template>
