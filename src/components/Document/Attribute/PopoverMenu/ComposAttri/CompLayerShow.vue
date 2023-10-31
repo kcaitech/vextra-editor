@@ -179,7 +179,7 @@ onUnmounted(() => {
                 <span>{{ t('compos.attr_name') }}</span>
                 <div>
                     <el-input v-model="attrName" ref="input" :placeholder="t('compos.attr_name_input')" @input="name_change"
-                        @keydown.stop="keyboard_watcher" @focus="focus" @blur="validate()" />
+                        @keydown.stop="keyboard_watcher" @focus="focus" @change="validate()"/>
                 </div>
             </div>
             <p class="warn" v-if="isWarnRepeat">{{ t('compos.duplicate_name') }}</p>
@@ -188,7 +188,7 @@ onUnmounted(() => {
             <slot name="default_value"></slot>
         </div>
         <div class="footer">
-            <el-button style="background-color: #9775fa;" @click="save">确认</el-button>
+            <el-button :style="{backgroundColor: '#9775fa'}" @click="save">确认</el-button>
         </div>
     </div>
     <div class="overlay" @click.stop="isselectLayer = false"></div>
@@ -269,7 +269,7 @@ onUnmounted(() => {
             .el-input {
                 width: 100%;
                 height: 30px;
-                font-size: 10px;
+                font-size: 12px;
 
                 :deep(.el-input__wrapper) {
                     background-color: var(--grey-light);
@@ -294,7 +294,6 @@ onUnmounted(() => {
         margin: 10px 0;
     }
 }
-
 :deep(.el-button:focus, .el-button:hover) {
     background-color: #9775fa;
     border-color: #9775fa;
@@ -308,11 +307,11 @@ onUnmounted(() => {
 
 :deep(.el-select-dropdown__item.selected) {
     color: #9775fa !important;
-    font-size: 10px;
+    font-size: 12px;
 }
 
 :deep(.el-select-dropdown__item>span) {
-    font-size: 10px !important;
+    font-size: 12px !important;
 }
 
 :deep(.el-select .el-input.is-focus .el-input__wrapper) {

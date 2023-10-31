@@ -4,7 +4,7 @@ import { VariableType } from '@kcdesign/data';
 import { useI18n } from 'vue-i18n';
 import SelectMenu from '../PopoverMenu/ComposAttri/SelectMenu.vue';
 import { ArrowDown } from '@element-plus/icons-vue'
-import { ref, watch } from 'vue';
+import { onMounted, ref, watch } from 'vue';
 
 const { t } = useI18n();
 
@@ -12,31 +12,33 @@ interface Props {
     context: Context,
     addType: VariableType | undefined,
     default_value?: string | boolean,
-    dft_show?: boolean
+    dft_show?: boolean,
+    warn?: boolean
 }
 
 interface Emits {
     (e: "select", index: number): void;
     (e: "change", value: string): void;
+    (e: "input", value: string): void;
 }
 
 const props = defineProps<Props>();
 const emits = defineEmits<Emits>();
-const textDefaultValue = ref(props.default_value as string ||'');
+const textDefaultValue = ref(props.default_value as string || '');
 const selectoption = ref(false);
 const menuItems = ['显示', '隐藏'];
 const defaultValue = ref('显示');
 const menuIndex = ref(0);
 watch(() => props.default_value, (v) => {
-    if(!props.dft_show) return;
-    if(v) {
+    if (!props.dft_show) return;
+    if (v) {
         menuIndex.value = 0;
         defaultValue.value = '显示';
-    }else {
+    } else {
         menuIndex.value = 1;
         defaultValue.value = '隐藏';
     }
-},{immediate: true})
+}, { immediate: true })
 const showMenu = () => {
     if (selectoption.value) return selectoption.value = false
     selectoption.value = true;
@@ -49,6 +51,28 @@ const handleShow = (index: number) => {
 function change(v: string) {
     emits("change", v);
 }
+const input_v = ref();
+const keysumbit = (e: KeyboardEvent) => {
+    const { shiftKey, ctrlKey, metaKey } = e;
+    if (e.key === 'Enter') {
+        if (ctrlKey || metaKey || shiftKey) {
+            input_v.value = input_v.value + '\n'
+        } else {
+            input_v.value.blur();
+        }
+    }
+}
+
+watch(() => props.warn, (v) => {
+    if(v && input_v.value) {
+        input_v.value.focus();
+    }
+})
+onMounted(() => {
+    if (props.addType === VariableType.Text) {
+        emits("change", textDefaultValue.value);
+    }
+})
 </script>
 
 <template>
@@ -66,9 +90,12 @@ function change(v: string) {
             </div>
         </div>
         <div v-if="props.addType === VariableType.Text">
-            <el-input v-model="textDefaultValue" type="textarea" :autosize="{ minRows: 1, maxRows: 4 }" resize="none"
-                :placeholder="t('compos.default_text_input')" @keydown.stop @change="change" />
+            <el-input v-model="textDefaultValue" type="textarea" ref="input_v" :autosize="{ minRows: 1, maxRows: 4 }" resize="none"
+                :placeholder="t('compos.default_text_input')" @keydown.stop="keysumbit" @change="change" />
         </div>
+    </div>
+    <div class="warning" v-if="props.warn">
+        <p class="warn">默认值不能为空</p>
     </div>
 </template>
 
@@ -95,7 +122,7 @@ function change(v: string) {
 
         .el-textarea__inner {
             font-size: 12px;
-            min-height: 30px !important;
+            min-height: 28px !important;
             background-color: var(--grey-light);
             box-shadow: none;
 
@@ -105,6 +132,21 @@ function change(v: string) {
         }
     }
 
+}
+.warning {
+    width: 100%;
+    height: 25px;
+    display: flex;
+    align-items: center;
+    box-sizing: border-box;
+
+    .warn {
+        font-size: 10px;
+        padding: 0;
+        color: red;
+        margin: 3px;
+        margin-left: 70px;
+    }
 }
 
 .show {
@@ -147,4 +189,5 @@ function change(v: string) {
 
 :deep(.el-textarea__inner::-webkit-scrollbar-track) {
     background-color: transparent;
-}</style>
+}
+</style>

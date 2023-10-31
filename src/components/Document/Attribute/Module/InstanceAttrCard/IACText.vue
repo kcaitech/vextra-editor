@@ -8,7 +8,7 @@ interface Props {
 }
 const props = defineProps<Props>();
 const textValue = ref('');
-const inputRef = ref<HTMLInputElement>();
+const inputRef = ref();
 
 const selectAllText = () => {
     inputRef.value?.select()
@@ -19,7 +19,19 @@ function get_value() {
     if (!symref) return;
     textValue.value = get_vari_value_for_ref(symref, props.data.variable);
 }
-function change(v: boolean) {
+const keysumbit = (e: KeyboardEvent) => {
+    const { shiftKey, ctrlKey, metaKey } = e;
+    if (e.key === 'Enter') {
+        if (ctrlKey || metaKey || shiftKey) {
+            inputRef.value = inputRef.value + '\n'
+        } else {
+            inputRef.value.blur();
+            change(textValue.value);
+        }
+    }
+}
+
+function change(v: string) {
     modify_vari_value_for_ref(props.context, props.data.variable, v);
 }
 onMounted(get_value);
@@ -30,7 +42,7 @@ onMounted(get_value);
             <div class="state_name"><span>{{ props.data.variable.name }}</span></div>
             <div class="state_value" style="padding: 0;">
                 <el-input ref="inputRef" v-model="textValue" type="textarea" :autosize="{ minRows: 1, maxRows: 4 }"
-                    resize="none" @focus="selectAllText" @change="change" @keydown.stop/>
+                    resize="none" @focus="selectAllText" @change="change" @keydown.stop="keysumbit"/>
             </div>
         </div>
         <div class="delete"></div>
