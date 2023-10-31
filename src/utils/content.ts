@@ -3,14 +3,16 @@ import {Context} from "@/context";
 import {ClientXY, PageXY} from "@/context/selection";
 import {
     AsyncCreator,
+    Color,
+    ContactForm,
+    GroupShape,
+    Matrix,
+    Page,
     Shape,
     ShapeFrame,
     ShapeType,
-    GroupShape,
-    TextShape,
-    Matrix,
-    Color,
-    ContactForm, SymbolShape, Page
+    SymbolShape,
+    TextShape
 } from "@kcdesign/data";
 import {Action, ResultByAction} from "@/context/tool";
 import {Perm, WorkSpace} from '@/context/workspace';
@@ -19,7 +21,6 @@ import {searchCommentShape as finder} from '@/utils/comment'
 import {paster_image} from "./clipboard";
 import {landFinderOnPage, scrollToContentView} from './artboardFn'
 import {fit_no_transform} from "./shapelist";
-import {get_state_name} from "../../../kcdesign-data/src/editor/utils";
 
 export interface Media {
     name: string
@@ -838,19 +839,21 @@ export function is_content(context: Context, e: MouseEvent) {
 
 export function ref_symbol(context: Context, position: PageXY, symbol: Shape) {
     const state = symbol;
-    let name = symbol.name;
-    if (symbol.parent && (symbol.parent as SymbolShape).isUnionSymbolShape) {
-        symbol = symbol.parent;
-        name = `${symbol.name}/${get_state_name(state as any)}`;
-    }
     const selection = context.selection, workspace = context.workspace;
     const shapes: Shape[] = selection.selectedPage?.childs || [];
     const parent = selection.selectedPage;
     if (parent) {
         const editor = context.editor.editor4Page(parent), matrix = workspace.matrix;
         const frame = new ShapeFrame(0, 0, state.frame.width, state.frame.height);
-        frame.x = position.x - state.frame.width / 2, frame.y = position.y - state.frame.height / 2;
-        let ref: Shape | false = editor.refSymbol(context.data, name, frame, symbol.id);
+        frame.x = position.x - state.frame.width / 2;
+        frame.y = position.y - state.frame.height / 2;
+        const childs = (parent as GroupShape).childs;
+        let count = 0;
+        for (let i = 0, len = childs.length; i < len; i++) {
+            const type = childs[i].type;
+            if (type === ShapeType.SymbolRef || type === ShapeType.Symbol) count++;
+        }
+        let ref: Shape | false = editor.refSymbol(context.data, count ? `组件 ${count}` : '组件', frame, symbol.id);
         ref = editor.insert(parent, shapes.length, ref);
         if (ref) selection.selectShape(ref);
     }

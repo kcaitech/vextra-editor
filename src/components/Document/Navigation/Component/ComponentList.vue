@@ -19,6 +19,7 @@ const props = defineProps<Props>();
 const search = ref('');
 const search_result = ref<SymbolShape[]>([]);
 const card_type = ref<'alpha' | 'beta'>('beta');
+const root = ref<Element | null>(null);
 
 function set_card_type(v: 'alpha' | 'beta') {
     card_type.value = v;
@@ -29,6 +30,7 @@ function _searching() {
 }
 
 const searching = debounce(_searching, 300);
+console.log('root.value', root.value)
 </script>
 
 <template>
@@ -45,7 +47,7 @@ const searching = debounce(_searching, 300);
         </div>
         <div class="body" v-show="!search">
             <ComponentContainer :context="context" :search="search" :is-attri="false"
-                                :card-type="card_type"></ComponentContainer>
+                                :card-type="card_type" :root="root"></ComponentContainer>
         </div>
         <ComponentSearchPanel v-show="search" :context="props.context" :data="(search_result as SymbolShape[])">
         </ComponentSearchPanel>
