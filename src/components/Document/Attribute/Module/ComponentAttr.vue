@@ -119,7 +119,7 @@ const examplesToggle = () => {
     isaddStateDialog.value = true;
     close();
 }
-
+const warn = ref(false);
 const saveLayerShow = (type: VariableType) => {
     if (!selected.value.length) {
         message('info', '请选择图层');
@@ -128,6 +128,9 @@ const saveLayerShow = (type: VariableType) => {
     if (!var_name.value.trim()) {
         message('info', '属性名不能为空');
         return;
+    }
+    if(typeof dlt_value.value === 'string' && dlt_value.value.trim().length < 1) {
+        return warn.value = true;
     }
     const symbolshape = props.context.selection.symbolshape;
     if(!symbolshape) return;
@@ -246,7 +249,7 @@ onUnmounted(() => {
                 </SelectLayerInput>
             </template>
             <template #default_value>
-                <PopoverDefaultInput v-if="addType !== VariableType.SymbolRef" :context="context"
+                <PopoverDefaultInput v-if="addType !== VariableType.SymbolRef" :context="context" :warn="warn"
                                      :add-type="addType" @select="dlt_change" @change="text_dlt_change"></PopoverDefaultInput>
             </template>
         </CompLayerShow>

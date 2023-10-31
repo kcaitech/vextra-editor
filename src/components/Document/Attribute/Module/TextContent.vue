@@ -18,7 +18,14 @@ const isTextShow = ref(false);
 const closeLayerShowPopup = () => {
     isTextShow.value = false
 }
+const warn = ref(false);
+const input_v = ref();
 const textDialog = () => {
+    if (textDefaultValue.value.trim().length < 1 && input_v.value) {
+        input_v.value.focus();
+        warn.value = true;
+        return;
+    }
     getDialogPosi(atrrdialog.value);
     isTextShow.value = true
 }
@@ -38,6 +45,7 @@ const sym_layer = ref<SymbolShape>();
 const default_name = ref('');
 const selectId = ref<string[]>([]);
 const shape = ref(props.context.selection.selectedShapes[0]);
+const textDefaultValue = ref('');
 const isBind = () => {
     const shapes = props.context.selection.selectedShapes;
     if (shapes.length === 1) {
@@ -59,20 +67,20 @@ function edit_text() {
 }
 //asdfg
 function save_layer_show(type: VariableType, name: string) {
-    if(is_bind.value) return isTextShow.value = false;
+    if (is_bind.value) return isTextShow.value = false;
     if (!name.trim()) {
         message('info', '属性名不能为空');
         return;
     }
     const shapes = props.context.selection.selectedShapes;
     const ids = shapes.map(item => item.id);
-    if(!sym_layer.value) return;
+    if (!sym_layer.value) return;
     const text = (shapes[0] as TextShape).text.getText(0, Infinity);
     create_var_by_type(props.context, VariableType.Text, name, text, ids, sym_layer.value);
     isTextShow.value = false;
 }
 const selected_watcher = (t: number) => {
-    if(t === Selection.CHANGE_SHAPE) {
+    if (t === Selection.CHANGE_SHAPE) {
         isBind();
     }
 }
@@ -80,14 +88,32 @@ function variable_watcher(args: any[]) {
     if (args && (args.includes('map') || args.includes('childs'))) isBind();
 }
 watch(() => shape.value, (v, o) => {
-    if(o) {
+    if (o) {
         o.unwatch(variable_watcher);
     }
     v.watch(variable_watcher);
-},{immediate: true})
+}, { immediate: true })
+
+const input = () => {
+    if(textDefaultValue.value.trim().length > 0) {
+        warn.value = false;
+    }
+}
+
+const keysumbit = (e: KeyboardEvent) => {
+    const { shiftKey, ctrlKey, metaKey } = e;
+    if (e.key === 'Enter') {
+        if (ctrlKey || metaKey || shiftKey) {
+            input_v.value = input_v.value + '\n'
+        } else {
+            input_v.value.blur();
+        }
+    }
+}
 
 onMounted(() => {
     isBind();
+    textDefaultValue.value = (shape.value as TextShape).text.getText(0, Infinity);
     shape.value.watch(variable_watcher);
     props.context.selection.watch(selected_watcher);
 })
@@ -98,7 +124,7 @@ onUnmounted(() => {
 })
 </script>
 <template>
-    <div style="position: relative;" ref="atrrdialog">
+    <div style="position: relative; margin-bottom: 10px;" ref="atrrdialog">
         <TypeHeader :title="t('compos.text_content')" class="mt-24">
             <template #tool>
                 <div class="edit-comps">
@@ -108,6 +134,13 @@ onUnmounted(() => {
                 </div>
             </template>
         </TypeHeader>
+        <div class="text" v-if="!is_bind">
+            <el-input v-model="textDefaultValue" type="textarea" ref="input_v" :autosize="{ minRows: 2, maxRows: 4 }"
+                resize="none" :placeholder="t('compos.default_text_input')" @keydown.stop="keysumbit" @input="input"/>
+        </div>
+        <div class="warning" v-if="warn">
+            <p class="warn">默认值不能为空</p>
+        </div>
         <div class="attr_con" ref="card_ref" v-if="is_bind">
             <div class="module_item_left" @click="edit_text">
                 <div class="module_name-2">
@@ -123,8 +156,9 @@ onUnmounted(() => {
             <div class="delete"></div>
         </div>
         <CompLayerShow :context="context" v-if="isTextShow" @close-dialog="closeLayerShowPopup" right="250px"
-            :add-type="VariableType.Status" :width="260" :title="t('compos.text_content')" :dialog_posi="dialog_posi" :default_name="default_name"
-            :variable="is_bind ? is_bind : undefined" @save-layer-show="save_layer_show" :symbol="sym_layer">
+            :add-type="VariableType.Status" :width="260" :title="t('compos.text_content')" :dialog_posi="dialog_posi"
+            :default_name="default_name" :variable="is_bind ? is_bind : undefined" @save-layer-show="save_layer_show"
+            :symbol="sym_layer">
             <template #layer>
                 <SelectLayerInput :title="t('compos.select_layer')" :add-type="VariableType.Text" :context="props.context"
                     :placeholder="t('compos.place_select_layer')" :selectId="selectId"></SelectLayerInput>
@@ -151,6 +185,54 @@ onUnmounted(() => {
             height: 70%;
         }
     }
+}
+
+.text {
+    :deep(.el-textarea) {
+        width: 100%;
+
+        .el-textarea__inner {
+            font-size: 12px;
+            min-height: 28px !important;
+            background-color: var(--grey-light);
+            box-shadow: none;
+
+            &:focus {
+                box-shadow: 0 0 0 1px var(--active-color) inset;
+            }
+        }
+    }
+}
+
+.warning {
+    width: 100%;
+    height: 20px;
+    display: flex;
+    align-items: center;
+    box-sizing: border-box;
+
+    .warn {
+        font-size: 10px;
+        padding: 0;
+        color: red;
+        margin: 3px;
+        margin-left: 10px;
+    }
+}
+
+:deep(.el-textarea__inner::-webkit-scrollbar) {
+    width: 6px;
+}
+
+:deep(.el-textarea__inner::-webkit-scrollbar-thumb) {
+    border-radius: 3px;
+    -moz-border-radius: 3px;
+    -webkit-border-radius: 3px;
+    background-color: #c3c3c3;
+}
+
+:deep(.el-textarea__inner::-webkit-scrollbar-track) {
+    background-color: transparent;
 }
 
 .attr_con {
@@ -241,4 +323,5 @@ onUnmounted(() => {
     }
 
     transition: .2s;
-}</style>
+}
+</style>
