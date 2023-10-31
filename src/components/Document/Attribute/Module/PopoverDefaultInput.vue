@@ -70,6 +70,9 @@ watch(() => props.warn, (v) => {
 })
 onMounted(() => {
     if (props.addType === VariableType.Text) {
+        if(props.default_value) {
+            textDefaultValue.value = (JSON.stringify(props.default_value as string)).slice(1, -3);
+        }
         emits("change", textDefaultValue.value);
     }
 })

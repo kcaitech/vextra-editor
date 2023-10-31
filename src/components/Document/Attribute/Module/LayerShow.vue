@@ -7,7 +7,7 @@ import CompLayerShow from '../PopoverMenu/ComposAttri/CompLayerShow.vue';
 import SelectLayerInput from './SelectLayerInput.vue';
 import { OverrideType, SymbolShape, Variable, VariableType } from '@kcdesign/data';
 import PopoverDefaultInput from './PopoverDefaultInput.vue';
-import { create_var_by_type, get_symbol_by_layer, is_bind_x_vari } from '@/utils/symbol';
+import { create_var_by_type, delete_variable, get_symbol_by_layer, is_bind_x_vari } from '@/utils/symbol';
 import { message } from '@/utils/message';
 import { Selection } from '@/context/selection';
 const props = defineProps<{
@@ -91,6 +91,14 @@ watch(() => shape.value, (v, o) => {
     v.watch(variable_watcher);
 },{immediate: true})
 
+function _delete() {
+    if(!is_bind.value) return;
+    if (!sym_layer.value) return;
+    const editor = props.context.editor4Shape(sym_layer.value);
+    editor.removeVar(is_bind.value.id);
+    isBind();
+}
+
 onMounted(() => {
     isBind();
     shape.value.watch(variable_watcher);
@@ -124,7 +132,8 @@ onUnmounted(() => {
                     </div>
                 </div>
             </div>
-            <div class="delete">
+            <div class="delete" @click="_delete">
+                <svg-icon icon-class="delete"></svg-icon>
             </div>
         </div>
         <CompLayerShow :context="context" v-if="isLayerShow" @close-dialog="closeLayerShowPopup" right="250px"
@@ -240,5 +249,12 @@ onUnmounted(() => {
     align-items: center;
     width: 22px;
     height: 22px;
+
+    >svg {
+        width: 11px;
+        height: 11px;
+    }
+
+    transition: .2s;
 }
 </style>
