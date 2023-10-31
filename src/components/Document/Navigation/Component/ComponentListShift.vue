@@ -4,9 +4,9 @@ import {Search} from '@element-plus/icons-vue';
 import ComponentContainer from './ComponentContainer.vue';
 import {Context} from '@/context';
 import {useI18n} from 'vue-i18n';
-import { search_symbol_by_keywords } from '@/utils/symbol';
-import { debounce } from 'lodash';
-import { SymbolShape } from '@kcdesign/data';
+import {search_symbol_by_keywords} from '@/utils/symbol';
+import {debounce} from 'lodash';
+import {SymbolShape} from '@kcdesign/data';
 import ComponentSearchPanel from './ComponentSearchPanel.vue';
 
 const {t} = useI18n();
@@ -25,6 +25,7 @@ const emit = defineEmits<Emits>();
 const search = ref('');
 const card_type = ref<'alpha' | 'beta'>('beta');
 const root = ref<Element | null>(null);
+const root2 = ref<Element | null>(null);
 
 function set_card_type(v: 'alpha' | 'beta') {
     if (props.currentInstanceFrom) {
@@ -32,7 +33,9 @@ function set_card_type(v: 'alpha' | 'beta') {
     }
     card_type.value = v;
 }
+
 const search_result = ref<SymbolShape[]>([]);
+
 function _searching() {
     search_result.value = search_symbol_by_keywords(props.context, search.value);
 }
@@ -52,7 +55,8 @@ const close = () => {
             </div>
         </div>
         <div class="search_togger">
-            <el-input v-model="search" class="w-50 m-2" :placeholder="t('compos.search_compos')" :prefix-icon="Search" @input="searching"/>
+            <el-input v-model="search" class="w-50 m-2" :placeholder="t('compos.search_compos')" :prefix-icon="Search"
+                      @input="searching"/>
             <div class="toggle_list">
                 <svg-icon v-if="card_type === 'alpha'" icon-class="resource"
                           @click.stop="() => set_card_type('beta')"></svg-icon>
@@ -64,8 +68,9 @@ const close = () => {
             <ComponentContainer :context="context" :search="search" :is-attri="true"
                                 :card-type="card_type" :root="root"></ComponentContainer>
         </div>
-        <div class="body">
-            <ComponentSearchPanel v-show="search" :context="props.context" :data="(search_result as SymbolShape[])">
+        <div class="body" ref="root2">
+            <ComponentSearchPanel v-if="search" :context="props.context" :data="(search_result as SymbolShape[])"
+                                  :is-attri="true" :card-type="card_type" :root="root2">
             </ComponentSearchPanel>
         </div>
     </div>

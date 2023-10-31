@@ -20,6 +20,8 @@ const search = ref('');
 const search_result = ref<SymbolShape[]>([]);
 const card_type = ref<'alpha' | 'beta'>('beta');
 const root = ref<Element | null>(null);
+const root2 = ref<Element | null>(null);
+
 
 function set_card_type(v: 'alpha' | 'beta') {
     card_type.value = v;
@@ -44,12 +46,13 @@ const searching = debounce(_searching, 300);
                           @click.stop="() => set_card_type('alpha')"></svg-icon>
             </div>
         </div>
-        <div class="body" v-show="!search">
+        <div class="body" ref="root" v-show="!search">
             <ComponentContainer :context="context" :search="search" :is-attri="false"
                                 :card-type="card_type" :root="root"></ComponentContainer>
         </div>
-        <div class="body">
-            <ComponentSearchPanel v-show="search" :context="props.context" :data="(search_result as SymbolShape[])">
+        <div class="body" ref="root2">
+            <ComponentSearchPanel v-if="search" :context="props.context" :data="(search_result as SymbolShape[])"
+                                  :is-attri="false" :card-type="card_type" :root="root2">
             </ComponentSearchPanel>
         </div>
     </div>
