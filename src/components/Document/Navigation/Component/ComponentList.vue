@@ -22,7 +22,6 @@ const card_type = ref<'alpha' | 'beta'>('beta');
 const root = ref<Element | null>(null);
 const root2 = ref<Element | null>(null);
 
-
 function set_card_type(v: 'alpha' | 'beta') {
     card_type.value = v;
 }
