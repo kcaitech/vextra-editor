@@ -17,7 +17,8 @@ const selectAllText = () => {
 function get_value() {
     const symref = props.context.selection.symbolrefshape;
     if (!symref) return;
-    textValue.value = get_vari_value_for_ref(symref, props.data.variable);
+    const text = JSON.stringify(get_vari_value_for_ref(symref, props.data.variable));
+    textValue.value = text.slice(1, -3);
 }
 const keysumbit = (e: KeyboardEvent) => {
     const { shiftKey, ctrlKey, metaKey } = e;

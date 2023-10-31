@@ -49,8 +49,10 @@ console.log('root.value', root.value)
             <ComponentContainer :context="context" :search="search" :is-attri="false"
                                 :card-type="card_type" :root="root"></ComponentContainer>
         </div>
-        <ComponentSearchPanel v-show="search" :context="props.context" :data="(search_result as SymbolShape[])">
-        </ComponentSearchPanel>
+        <div class="body">
+            <ComponentSearchPanel v-show="search" :context="props.context" :data="(search_result as SymbolShape[])">
+            </ComponentSearchPanel>
+        </div>
     </div>
 </template>
 

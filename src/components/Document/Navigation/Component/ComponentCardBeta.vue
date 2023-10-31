@@ -1,13 +1,14 @@
 <script setup lang="ts">
-import {h, nextTick, onMounted, onUnmounted, onUpdated, ref} from 'vue';
+import { h, nextTick, onMounted, onUnmounted, onUpdated, ref } from 'vue';
 import comsMap from '@/components/Document/Content/comsmap';
-import {GroupShape} from "@kcdesign/data";
-import {renderSymbolPreview as r} from "@kcdesign/data";
-import {initCommonShape} from "@/components/Document/Content/common";
-import {Context} from '@/context';
-import {Selection} from '@/context/selection';
-import {clear_scroll_target, is_circular_ref2} from '@/utils/symbol';
-import {debounce} from "lodash";
+import { GroupShape } from "@kcdesign/data";
+import { renderSymbolPreview as r } from "@kcdesign/data";
+import { initCommonShape } from "@/components/Document/Content/common";
+import { Context } from '@/context';
+import { Selection } from '@/context/selection';
+import { clear_scroll_target, is_circular_ref2 } from '@/utils/symbol';
+import { debounce } from "lodash";
+import Tooltip from '@/components/common/Tooltip.vue';
 
 interface Props {
     data: GroupShape
@@ -119,13 +120,14 @@ onUnmounted(() => {
 </script>
 <template>
     <div class="compo-preview-container" ref="preview_container">
-        <svg v-if="render_preview" xmlns="http://www.w3.org/2000/svg"
-             xmlns:xlink="http://www.w3.org/1999/xlink" xmlns:xhtml="http://www.w3.org/1999/xhtml"
-             preserveAspectRatio="xMinYMin meet" width="96px" height="96px" :viewBox='gen_view_box()' overflow="hidden"
-             class="render-wrap">
-            <render></render>
-        </svg>
-        <div :class="{ status: true, selected, danger }"></div>
+        <Tooltip :content="props.data.name" v-if="render_preview">
+            <svg v-if="render_preview" xmlns="http://www.w3.org/2000/svg" xmlns:xlink="http://www.w3.org/1999/xlink"
+                xmlns:xhtml="http://www.w3.org/1999/xhtml" preserveAspectRatio="xMinYMin meet" width="96px" height="96px"
+                :viewBox='gen_view_box()' overflow="hidden" class="render-wrap">
+                <render></render>
+            </svg>
+            <div :class="{ status: true, selected, danger }"></div>
+        </Tooltip>
     </div>
 </template>
 <style scoped lang="scss">

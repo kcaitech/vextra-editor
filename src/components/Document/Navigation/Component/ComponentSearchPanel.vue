@@ -34,7 +34,7 @@ onMounted(() => {
 <style scoped lang="scss">
 .component-search-panel {
     width: 100%;
-    height: calc(100% - 35px);
+    height: 100%;
 }
 
 .null-result {

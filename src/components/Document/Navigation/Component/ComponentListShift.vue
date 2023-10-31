@@ -4,6 +4,10 @@ import {Search} from '@element-plus/icons-vue';
 import ComponentContainer from './ComponentContainer.vue';
 import {Context} from '@/context';
 import {useI18n} from 'vue-i18n';
+import { search_symbol_by_keywords } from '@/utils/symbol';
+import { debounce } from 'lodash';
+import { SymbolShape } from '@kcdesign/data';
+import ComponentSearchPanel from './ComponentSearchPanel.vue';
 
 const {t} = useI18n();
 
@@ -24,7 +28,12 @@ const root = ref<Element | null>(null);
 function set_card_type(v: 'alpha' | 'beta') {
     card_type.value = v;
 }
+const search_result = ref<SymbolShape[]>([]);
+function _searching() {
+    search_result.value = search_symbol_by_keywords(props.context, search.value);
+}
 
+const searching = debounce(_searching, 300);
 const close = () => {
     emit('close');
 }
@@ -39,7 +48,7 @@ const close = () => {
             </div>
         </div>
         <div class="search_togger">
-            <el-input v-model="search" class="w-50 m-2" :placeholder="t('compos.search_compos')" :prefix-icon="Search"/>
+            <el-input v-model="search" class="w-50 m-2" :placeholder="t('compos.search_compos')" :prefix-icon="Search" @input="searching"/>
             <div class="toggle_list">
                 <svg-icon v-if="card_type === 'alpha'" icon-class="resource"
                           @click.stop="() => set_card_type('beta')"></svg-icon>
@@ -47,9 +56,13 @@ const close = () => {
                           @click.stop="() => set_card_type('alpha')"></svg-icon>
             </div>
         </div>
-        <div class="body" ref="root">
+        <div class="body" ref="root" v-show="!search">
             <ComponentContainer :context="context" :search="search" :is-attri="true"
                                 :card-type="card_type" :root="root"></ComponentContainer>
+        </div>
+        <div class="body">
+            <ComponentSearchPanel v-show="search" :context="props.context" :data="(search_result as SymbolShape[])">
+            </ComponentSearchPanel>
         </div>
     </div>
 </template>
