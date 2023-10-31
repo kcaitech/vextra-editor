@@ -94,7 +94,6 @@ function is_need_scroll_to_view() {
             preview_container.value?.scrollIntoView();
             const timer = setTimeout(() => {
                 selected.value = true;
-                console.log('setting');
                 clearTimeout(timer);
             }, 100)
         })
@@ -124,13 +123,15 @@ onUnmounted(() => {
 <template>
     <div class="compo-preview-container" ref="preview_container">
         <Tooltip :content="props.data.name" v-if="render_preview">
-            <svg v-if="render_preview" xmlns="http://www.w3.org/2000/svg" xmlns:xlink="http://www.w3.org/1999/xlink"
-                 xmlns:xhtml="http://www.w3.org/1999/xhtml" preserveAspectRatio="xMinYMin meet" width="96px"
-                 height="96px"
-                 :viewBox='gen_view_box()' overflow="hidden" class="render-wrap">
-                <render></render>
-            </svg>
-            <div :class="{ status: true, selected, danger }"></div>
+            <div>
+                <svg v-if="render_preview" xmlns="http://www.w3.org/2000/svg" xmlns:xlink="http://www.w3.org/1999/xlink"
+                     xmlns:xhtml="http://www.w3.org/1999/xhtml" preserveAspectRatio="xMinYMin meet" width="96px"
+                     height="96px"
+                     :viewBox='gen_view_box()' overflow="hidden" class="render-wrap">
+                    <render></render>
+                </svg>
+                <div :class="{ status: true, selected, danger }"></div>
+            </div>
         </Tooltip>
     </div>
 </template>

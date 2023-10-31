@@ -96,7 +96,6 @@ function is_need_scroll_to_view() {
             preview_container.value && preview_container.value.scrollIntoView();
             const timer = setTimeout(() => {
                 selected.value = true;
-                console.log('setting');
                 clearTimeout(timer);
             }, 100)
         })
