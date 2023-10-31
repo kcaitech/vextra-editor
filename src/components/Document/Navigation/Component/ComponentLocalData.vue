@@ -36,7 +36,6 @@ function _list_loader() {
         const p = props.context.data.pagesMgr.getSync(pagelist[i].id);
         if (p) list.push({page: p, desc: desc.name});
     }
-    console.log('raw list: ', list);
     const data = classification_level_page(list);
     modify_parent(data as SymbolListItem[]);
     const need_pre_init_set = props.context.component.into_view_target;
@@ -45,7 +44,6 @@ function _list_loader() {
         clear_scroll_target(props.context);
     }
     local_data.value = list_layout(data, status_set.value);
-    console.log('local data update:', local_data.value);
 }
 
 const list_loader = debounce(_list_loader, 200);
