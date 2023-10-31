@@ -17,12 +17,12 @@ const props = defineProps<Props>();
 const { t } = useI18n();
 const attrValueInput = ref('')
 const editAttrValue = ref(false)
-const revalueInput = ref<HTMLInputElement>();
-
+const revalueInput = ref();
+const active = ref(false);
 const onRevalue = (e: MouseEvent) => {
     e.stopPropagation();
     if (e.target instanceof Element && e.target.closest('.status-icon-down')) return;
-    editAttrValue.value = true
+    editAttrValue.value = true;
     nextTick(() => {
         if (revalueInput.value) {
             attrValueInput.value = statusValue.value;
@@ -79,8 +79,17 @@ const selected_watcher = (t: number) => {
 }
 
 function selcet(index: number) {
-    const val = props.data.values[index];
-    save_change(val);
+    if(index === props.data.values.length - 1) {
+        editAttrValue.value = true;
+        attrValueInput.value = '新的值';
+        nextTick(() => {
+            (revalueInput.value as HTMLInputElement).focus();
+            (revalueInput.value as HTMLInputElement).select();
+        })
+    }else {
+        const val = props.data.values[index];
+        save_change(val);
+    }
     selectoption.value = false;
 }
 
@@ -107,19 +116,19 @@ onUnmounted(() => {
             <div class="state_item">
                 <div class="state_name"><span>{{ data.variable.name }}</span></div>
                 <div class="state_value" v-if="!editAttrValue" @dblclick="onRevalue">
-                    <div class="input">
+                    <div class="input" @mouseenter.stop="active = true" @mouseleave.stop="active = false">
                         <span>{{ statusValue }}</span>
-                        <el-icon @click.stop="showMenu" class="status-icon-down">
+                        <el-icon @click.stop="showMenu" class="status-icon-down" :class="{active: active}">
                             <ArrowDown
                                 :style="{ transform: selectoption ? 'rotate(180deg)' : 'rotate(0deg)', transition: '0.3s' }" />
                         </el-icon>
-                        <SelectMenu v-if="selectoption" :top="33" width="100%" :menuItems="data.values" :context="context" :menuIndex="menuIndex"
-                            @close="selectoption = false" @selectIndex="selcet"></SelectMenu>
                     </div>
+                    <SelectMenu v-if="selectoption" :top="33" width="100%" :menuItems="data.values" :context="context"
+                        :menuIndex="menuIndex" @close="selectoption = false" @selectIndex="selcet"></SelectMenu>
                 </div>
                 <div class="module_input" v-if="editAttrValue">
                     <el-input v-model="attrValueInput" ref="revalueInput" @blur="input_blur" @focus="selectText"
-                        @keydown="onEditAttrValue" />
+                        @keydown.stop="onEditAttrValue" />
                 </div>
             </div>
             <div class="delete"></div>
@@ -161,6 +170,7 @@ onUnmounted(() => {
         }
 
         .state_value {
+            position: relative;
             display: flex;
             align-items: center;
             border-radius: 4px;
@@ -181,7 +191,6 @@ onUnmounted(() => {
             }
 
             .input {
-                position: relative;
                 width: 100%;
                 height: 30px;
                 border-radius: 4px;
@@ -196,11 +205,13 @@ onUnmounted(() => {
                 }
 
                 .el-icon {
-                    width: 30px;
-                    height: 30px;
+                    width: 24px;
+                    height: 24px;
                     display: flex;
                     align-items: center;
                     justify-content: center;
+                    margin: 3px;
+                    border-radius: 4px;
                 }
             }
         }
@@ -233,5 +244,8 @@ onUnmounted(() => {
         width: 22px;
         height: 22px;
     }
+}
+.active {
+    background-color: rgba($color: #000000, $alpha: 0.08);
 }
 </style>
