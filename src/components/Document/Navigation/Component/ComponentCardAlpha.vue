@@ -94,6 +94,10 @@ function is_need_scroll_to_view() {
     if (need_scroll_into_view && preview_container.value) {
         nextTick(() => {
             preview_container.value && preview_container.value.scrollIntoView();
+            let timer = setTimeout(() => {
+                selected.value = true;
+                clearTimeout(timer);
+            }, 100)
         })
     }
     clear_scroll_target(props.context);
@@ -107,14 +111,16 @@ function danger_check() {
     const is_circular = is_circular_ref2(sym, symbolref.refId);
     if (is_circular) danger.value = true;
 }
+
 function get_name() {
-   if (is_state(props.data)) {
-       const sym = props.context.data.symbolsMgr.getSync(props.data.parent!.id);
-       name.value = sym?.name || props.data.name;
-   } else {
-       name.value = props.data.name;
-   }
+    if (is_state(props.data)) {
+        const sym = props.context.data.symbolsMgr.getSync(props.data.parent!.id);
+        name.value = sym?.name || props.data.name;
+    } else {
+        name.value = props.data.name;
+    }
 }
+
 onMounted(() => {
     check_render_required();
     is_need_scroll_to_view();

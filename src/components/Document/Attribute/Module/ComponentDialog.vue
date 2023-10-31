@@ -1,18 +1,21 @@
 <script setup lang="ts">
-import { ref, onMounted, onUnmounted } from 'vue';
-import { Context } from '@/context';
+import {ref, onMounted, onUnmounted} from 'vue';
+import {Context} from '@/context';
 import ComponentListShift from "../../Navigation/Component/ComponentListShift.vue";
+
 const props = defineProps<{
+    currentInstanceFrom: string
     top?: string,
     right?: string,
     context: Context;
-    comps_posi?: {x: number, y: number};
+    comps_posi?: { x: number, y: number };
 }>();
 
 const emit = defineEmits<{
     (e: 'closeDialog'): void;
     (e: 'saveLayerShow', data: any, type: 'Text' | 'Show' | 'toggle' | ''): void;
 }>()
+
 function popoverClose() {
     emit('closeDialog');
 }
@@ -21,22 +24,23 @@ function esc(e: KeyboardEvent) {
     if (e.code === 'Escape') popoverClose();
     else e.stopPropagation();
 }
+
 const comps = ref<HTMLDivElement>()
 const cur_top = ref(0)
 const cur_p = ref(0)
 onMounted(() => {
     if (comps.value) {
         const body_h = document.body.clientHeight;
-        const { y, height } = comps.value.getBoundingClientRect();
+        const {y, height} = comps.value.getBoundingClientRect();
         const su = body_h - y;
         const cur_t = su - height;
         cur_p.value = cur_t;
-        if(cur_t > 0) {
+        if (cur_t > 0) {
             cur_top.value = props.comps_posi!.y;
-        }else {
+        } else {
             cur_top.value = props.comps_posi!.y - Math.abs(cur_t - 10);
         }
-        if(cur_top.value - 40 < 0) {
+        if (cur_top.value - 40 < 0) {
             cur_top.value = 40
         }
     }
@@ -52,8 +56,8 @@ onUnmounted(() => {
         left: props.comps_posi!.x + 'px',
         top: cur_p === 0 ? props.comps_posi!.y + 10 + 'px' : cur_top + 'px'
     }">
-        <ComponentListShift :heard="true" @close="popoverClose" :context="context">
-         
+        <ComponentListShift @close="popoverClose" :context="context"
+                            :currentInstanceFrom="props.currentInstanceFrom">
         </ComponentListShift>
     </div>
     <div class="overlay" @click.stop="popoverClose" @mousedown.stop @wheel.stop></div>

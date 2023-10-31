@@ -1,12 +1,12 @@
 <script setup lang="ts">
-import { get_vari_value_for_ref, is_circular_ref2, modify_vari_value_for_ref, RefAttriListItem } from "@/utils/symbol";
-import { onMounted, onUnmounted, onUpdated, ref } from "vue";
-import { Context } from "@/context";
+import {get_vari_value_for_ref, is_circular_ref2, modify_vari_value_for_ref, RefAttriListItem} from "@/utils/symbol";
+import {onMounted, onUnmounted, onUpdated, ref} from "vue";
+import {Context} from "@/context";
 import ComponentDialog from "@/components/Document/Attribute/Module/ComponentDialog.vue";
-import { Shape } from "@kcdesign/data";
-import { Component } from "@/context/component";
-import { message } from "@/utils/message";
-import { ArrowDown } from '@element-plus/icons-vue'
+import {Shape} from "@kcdesign/data";
+import {Component} from "@/context/component";
+import {message} from "@/utils/message";
+import {ArrowDown} from '@element-plus/icons-vue'
 
 interface Props {
     context: Context
@@ -16,12 +16,12 @@ interface Props {
 const props = defineProps<Props>();
 const showCompsDialog = ref(false);
 const comps = ref<HTMLDivElement>();
-const comps_posi = ref({ x: 0, y: 0 });
+const comps_posi = ref({x: 0, y: 0});
 const vari_value = ref<string>('');
+const vari_instance_from = ref<string>('');
 const compsDialog = () => {
-    const symref = props.context.selection.symbolrefshape;
-    if (symref) {
-        props.context.component.set_scroll_target(symref.refId);
+    if (vari_instance_from.value) {
+        props.context.component.set_scroll_target(vari_instance_from.value);
     }
     if (comps.value) {
         const el = comps.value.getBoundingClientRect();
@@ -44,6 +44,7 @@ function get_value() {
     if (!symref) return;
     const id = get_vari_value_for_ref(symref, props.data.variable);
     vari_value.value = props.context.data.symbolsMgr.getSync(id)?.name || 'Error';
+    if (vari_value.value) vari_instance_from.value = id;
 }
 
 function component_watcher(t: number, val: Shape) {
@@ -81,14 +82,14 @@ onUnmounted(() => {
                 <span style="color: #606266;">{{ vari_value }}</span>
                 <div style="width: 30px;">
                     <el-icon>
-                        <ArrowDown />
+                        <ArrowDown/>
                     </el-icon>
                 </div>
             </div>
         </div>
         <div class="delete"></div>
-        <ComponentDialog v-if="showCompsDialog" :context="context" right="250px" top="0" @closeDialog="closeDialog"
-            :comps_posi="comps_posi">
+        <ComponentDialog v-if="showCompsDialog" :context="context" right="250px" top="0" @closeDialog="closeDialog" :current-instance-from="vari_instance_from"
+                         :comps_posi="comps_posi">
         </ComponentDialog>
     </div>
 </template>
@@ -131,12 +132,12 @@ onUnmounted(() => {
             height: 100%;
             border-radius: 4px;
 
-            >div {
+            > div {
                 display: flex;
                 align-items: center;
                 justify-content: center;
 
-                >svg {
+                > svg {
                     width: 12px;
                     height: 12px;
                 }
@@ -178,7 +179,7 @@ onUnmounted(() => {
                 height: 30px;
                 font-size: 10px;
 
-                >div {
+                > div {
                     height: 100%;
                 }
 

@@ -9,6 +9,7 @@ const {t} = useI18n();
 
 interface Props {
     context: Context
+    currentInstanceFrom: string
 }
 
 interface Emits {
@@ -22,6 +23,9 @@ const card_type = ref<'alpha' | 'beta'>('beta');
 const root = ref<Element | null>(null);
 
 function set_card_type(v: 'alpha' | 'beta') {
+    if (props.currentInstanceFrom) {
+        props.context.component.set_scroll_target(props.currentInstanceFrom);
+    }
     card_type.value = v;
 }
 
