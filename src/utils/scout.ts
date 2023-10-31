@@ -390,12 +390,14 @@ export function _selected_symbol_menber(context: Context, shapes: Shape[]) {
     if (shapes.length === 1) {
         let s = shapes[0];
         let p: Shape | undefined = s.parent;
+        let parents: GroupShape[] = [];
+        let parents_map: Map<string, GroupShape> = new Map();
         while (p) {
+            parents.push(p as GroupShape);
+            parents_map.set(p.id, p as GroupShape);
             if (p.type === ShapeType.Symbol || p.type === ShapeType.SymbolRef) {
                 result = s;
-                let childs = p.type === ShapeType.SymbolRef ? p.naviChilds : (p as SymbolShape).childs;
-                if (!childs) break;
-                for (let i = 0, len = childs.length; i < len; i++) bros.push(childs[i]);
+                flat(parents, bros, parents_map);
                 break;
             }
             p = p.parent;
@@ -403,6 +405,20 @@ export function _selected_symbol_menber(context: Context, shapes: Shape[]) {
     }
     context.selection.setSelectedSymRefBros(bros);
     context.selection.setSelectSoRMenber(result);
+}
+
+function flat(parents: GroupShape[], bros: Shape[], parents_map: Map<string, GroupShape>) {
+    let p = parents.pop()
+    while (p) {
+        const childs = p.type === ShapeType.SymbolRef ? p.naviChilds : (p as SymbolShape).childs;
+        if (childs) {
+            for (let i = childs.length - 1; i > -1; i--) {
+                const c = childs[i];
+                !parents_map.get(c.id) && bros.push(childs[i]);
+            }
+        }
+        p = parents.pop();
+    }
 }
 
 export const selected_sym_ref_menber = debounce(_selected_symbol_menber, 100);

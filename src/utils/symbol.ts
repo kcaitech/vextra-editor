@@ -574,7 +574,7 @@ export function get_options_from_symbol(symbol: SymbolShape, type: VariableType,
         const childs = symbol.childs;
         for (let i = 0, len = childs.length; i < len; i++) {
             const item = childs[i];
-            const lci = {state: get_name(item), data: get_x_type_option(symbol, symbol, type, vari, container)};
+            const lci = {state: get_name(item), data: get_x_type_option(symbol, item, type, vari, container)};
             result.push(lci);
         }
         return result;

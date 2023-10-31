@@ -22,7 +22,7 @@ const props = defineProps<Props>();
 const emit = defineEmits<{ (e: 'showNavigation'): void }>()
 type Tab = "Shape" | "Comps" | "Resource" | "Comment"
 
-const currentTab = ref<Tab>("Comps");
+const currentTab = ref<Tab>("Shape");
 const tabs: { title: string, id: Tab }[] = [
     {
         title: t('navi.shape'),
