@@ -1,13 +1,13 @@
 <script setup lang="ts">
-import { h, nextTick, onMounted, onUnmounted, onUpdated, ref } from 'vue';
+import {h, nextTick, onMounted, onUnmounted, onUpdated, ref} from 'vue';
 import comsMap from '@/components/Document/Content/comsmap';
-import { GroupShape } from "@kcdesign/data";
-import { renderSymbolPreview as r } from "@kcdesign/data";
-import { initCommonShape } from "@/components/Document/Content/common";
-import { Context } from '@/context';
-import { Selection } from '@/context/selection';
-import { clear_scroll_target, is_circular_ref2 } from '@/utils/symbol';
-import { debounce } from "lodash";
+import {GroupShape} from "@kcdesign/data";
+import {renderSymbolPreview as r} from "@kcdesign/data";
+import {initCommonShape} from "@/components/Document/Content/common";
+import {Context} from '@/context';
+import {Selection} from '@/context/selection';
+import {clear_scroll_target, is_circular_ref2} from '@/utils/symbol';
+import {debounce} from "lodash";
 import Tooltip from '@/components/common/Tooltip.vue';
 
 interface Props {
@@ -91,9 +91,10 @@ function is_need_scroll_to_view() {
     const need_scroll_into_view = props.context.component.is_need_into_view(props.data.id);
     if (need_scroll_into_view && preview_container.value) {
         nextTick(() => {
-            preview_container.value && preview_container.value.scrollIntoView();
-            let timer = setTimeout(() => {
+            preview_container.value?.scrollIntoView();
+            const timer = setTimeout(() => {
                 selected.value = true;
+                console.log('setting');
                 clearTimeout(timer);
             }, 100)
         })
@@ -124,8 +125,9 @@ onUnmounted(() => {
     <div class="compo-preview-container" ref="preview_container">
         <Tooltip :content="props.data.name" v-if="render_preview">
             <svg v-if="render_preview" xmlns="http://www.w3.org/2000/svg" xmlns:xlink="http://www.w3.org/1999/xlink"
-                xmlns:xhtml="http://www.w3.org/1999/xhtml" preserveAspectRatio="xMinYMin meet" width="96px" height="96px"
-                :viewBox='gen_view_box()' overflow="hidden" class="render-wrap">
+                 xmlns:xhtml="http://www.w3.org/1999/xhtml" preserveAspectRatio="xMinYMin meet" width="96px"
+                 height="96px"
+                 :viewBox='gen_view_box()' overflow="hidden" class="render-wrap">
                 <render></render>
             </svg>
             <div :class="{ status: true, selected, danger }"></div>
