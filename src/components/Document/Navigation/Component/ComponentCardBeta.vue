@@ -1,9 +1,8 @@
 <script setup lang="ts">
-import {h, nextTick, onMounted, onUnmounted, onUpdated, ref} from 'vue';
+import {h, nextTick, onMounted, onUnmounted, ref} from 'vue';
 import comsMap from '@/components/Document/Content/comsmap';
 import {GroupShape} from "@kcdesign/data";
 import {renderSymbolPreview as r} from "@kcdesign/data";
-import {initCommonShape} from "@/components/Document/Content/common";
 import {Context} from '@/context';
 import {Selection} from '@/context/selection';
 import {clear_scroll_target, is_circular_ref2} from '@/utils/symbol';
@@ -18,7 +17,6 @@ interface Props {
 }
 
 const props = defineProps<Props>();
-const common = initCommonShape(props);
 const selected = ref<boolean>(false);
 const render_preview = ref<boolean>(false);
 const preview_container = ref<Element>();
@@ -27,7 +25,7 @@ const render_item = ref<GroupShape>(props.data);
 
 function gen_view_box() {
     const frame = render_item.value.frame;
-    return `0 0 ${frame.width} ${frame.height}`;
+    return `-12 -12 ${frame.width + 24} ${frame.height + 24}`;
 }
 
 function render() {
