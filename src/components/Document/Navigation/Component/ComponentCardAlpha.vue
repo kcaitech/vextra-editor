@@ -6,7 +6,7 @@ import {renderSymbolPreview as r} from "@kcdesign/data";
 import {initCommonShape} from "@/components/Document/Content/common";
 import {Context} from '@/context';
 import {Selection} from '@/context/selection';
-import {clear_scroll_target, is_circular_ref2} from '@/utils/symbol';
+import {clear_scroll_target, is_circular_ref2, is_state} from '@/utils/symbol';
 import {debounce} from "lodash";
 
 interface Props {
@@ -24,6 +24,7 @@ const preview_container = ref<Element>();
 const danger = ref<boolean>(false);
 const render_item = ref<GroupShape>(props.data);
 const reflush = ref<number>(0);
+const name = ref<string>('');
 
 function gen_view_box() {
     const frame = render_item.value.frame;
@@ -106,10 +107,18 @@ function danger_check() {
     const is_circular = is_circular_ref2(sym, symbolref.refId);
     if (is_circular) danger.value = true;
 }
-
+function get_name() {
+   if (is_state(props.data)) {
+       const sym = props.context.data.symbolsMgr.getSync(props.data.parent!.id);
+       name.value = sym?.name || props.data.name;
+   } else {
+       name.value = props.data.name;
+   }
+}
 onMounted(() => {
     check_render_required();
     is_need_scroll_to_view();
+    get_name();
 })
 onUnmounted(() => {
     io.disconnect();
@@ -126,7 +135,7 @@ onUnmounted(() => {
                  :viewBox='gen_view_box()' overflow="hidden" class="render-wrap">
                 <render></render>
             </svg>
-            <div>{{ props.data.name }}</div>
+            <div>{{ name }}</div>
         </div>
         <div :class="{ status: true, selected, danger }"></div>
     </div>

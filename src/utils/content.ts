@@ -21,6 +21,7 @@ import {searchCommentShape as finder} from '@/utils/comment'
 import {paster_image} from "./clipboard";
 import {landFinderOnPage, scrollToContentView} from './artboardFn'
 import {fit_no_transform} from "./shapelist";
+import {is_state} from "@/utils/symbol";
 
 export interface Media {
     name: string
@@ -853,7 +854,9 @@ export function ref_symbol(context: Context, position: PageXY, symbol: Shape) {
             const type = childs[i].type;
             if (type === ShapeType.SymbolRef || type === ShapeType.Symbol) count++;
         }
-        let ref: Shape | false = editor.refSymbol(context.data, count ? `组件 ${count}` : '组件', frame, symbol.id);
+        let id = symbol.id;
+        if (is_state(symbol)) id = symbol.parent!.id;
+        let ref: Shape | false = editor.refSymbol(context.data, count ? `组件 ${count}` : '组件', frame, id);
         ref = editor.insert(parent, shapes.length, ref);
         if (ref) selection.selectShape(ref);
     }

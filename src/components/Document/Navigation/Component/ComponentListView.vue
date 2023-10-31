@@ -13,6 +13,7 @@ import {
     remove_move_and_up_from_document
 } from '@/utils/mouse_interactive';
 import {Component} from '@/context/component';
+import {is_state} from "@/utils/symbol";
 
 interface Props {
     context: Context
@@ -40,11 +41,11 @@ function down(e: MouseEvent, shape: Shape) {
         return;
     }
     if (e.button === 2) {
-        props.context.component.compMenuMount(shape, e);
+        props.context.component.compMenuMount(is_state(compo) ? compo.parent! : compo, e);
         return;
     }
     if (is_dbl_action()) {
-        shape_track(props.context, shape);
+        shape_track(props.context, is_state(compo) ? compo.parent! : compo);
         return;
     }
     modify_down_position_client(props.context, e, down_position);

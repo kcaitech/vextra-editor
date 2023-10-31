@@ -36,7 +36,6 @@ function _list_loader() {
         clear_scroll_target(props.context);
     }
     local_data.value = list_layout(data, status_set.value);
-    console.log('local component data load result: ', local_data.value);
 }
 
 const list_loader = debounce(_list_loader, 200);
@@ -53,15 +52,23 @@ function update_status_set(id: string) {
     _list_loader();
 }
 
+function document_watcher(t: string) {
+    console.log('update-symbol-list');
+    if (t === 'update-symbol-list') list_loader();
+}
 onMounted(() => {
+    console.log('here mount')
     props.context.data.pagesMgr.watch(list_loader);
     props.context.data.symbolsMgr.watch(list_loader);
+    props.context.data.__correspondent.watch(document_watcher);
     props.context.navi.watch(navi_watch);
     _list_loader();
 })
 onUnmounted(() => {
+    console.log('unmount');
     props.context.data.pagesMgr.unwatch(list_loader);
     props.context.data.symbolsMgr.unwatch(list_loader);
+    props.context.data.__correspondent.unwatch(document_watcher);
     props.context.navi.unwatch(navi_watch);
 })
 </script>
