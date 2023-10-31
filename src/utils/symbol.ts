@@ -329,6 +329,7 @@ export function is_state_selection(shapes: Shape[]) {
     return true;
 }
 
+
 /**
  * @description 读取可变组件属性值
  * @param state 可变组件
@@ -823,7 +824,11 @@ export function is_status_allow_to_delete(symbol: SymbolShape) {
     return valid > 0;
 }
 
-function is_state(shape: Shape) {
+/**
+ * @description 是否为可变组件
+ * @param shape
+ */
+export function is_state(shape: Shape) {
     return shape.type === ShapeType.Symbol && shape?.parent?.isUnionSymbolShape;
 }
 

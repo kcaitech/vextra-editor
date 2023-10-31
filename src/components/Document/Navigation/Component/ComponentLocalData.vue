@@ -13,6 +13,7 @@ import {
     init_status_set_by_symbol,
     clear_scroll_target
 } from '@/utils/symbol';
+import {Page} from "@kcdesign/data";
 
 interface Props {
     context: Context
@@ -27,8 +28,14 @@ const local_data = ref<SymbolListItem[]>([]);
 const status_set = ref<Set<string>>(new Set());
 
 function _list_loader() {
-    if (props.context.navi.current_navi_module !== "Comps") return;
-    const data = classification_level_page(props.context.data.pagesMgr.resource);
+    if (props.context.navi.current_navi_module !== "Comps" && !props.isAttri) return;
+    const pagelist = props.context.data.pagesList;
+    const list: Page[] = [];
+    for (let i = 0, len = pagelist.length; i < len; i++) {
+        const p = props.context.data.pagesMgr.getSync(pagelist[i].id);
+        if (p) list.push(p);
+    }
+    const data = classification_level_page(list);
     modify_parent(data as SymbolListItem[]);
     const need_pre_init_set = props.context.component.into_view_target;
     if (need_pre_init_set) {
@@ -36,7 +43,6 @@ function _list_loader() {
         clear_scroll_target(props.context);
     }
     local_data.value = list_layout(data, status_set.value);
-    console.log('local component data load result: ', local_data.value);
 }
 
 const list_loader = debounce(_list_loader, 200);
@@ -53,15 +59,21 @@ function update_status_set(id: string) {
     _list_loader();
 }
 
+function document_watcher(t: string) {
+    if (t === 'update-symbol-list') list_loader();
+}
+
 onMounted(() => {
     props.context.data.pagesMgr.watch(list_loader);
     props.context.data.symbolsMgr.watch(list_loader);
+    props.context.data.__correspondent.watch(document_watcher);
     props.context.navi.watch(navi_watch);
     _list_loader();
 })
 onUnmounted(() => {
     props.context.data.pagesMgr.unwatch(list_loader);
     props.context.data.symbolsMgr.unwatch(list_loader);
+    props.context.data.__correspondent.unwatch(document_watcher);
     props.context.navi.unwatch(navi_watch);
 })
 </script>

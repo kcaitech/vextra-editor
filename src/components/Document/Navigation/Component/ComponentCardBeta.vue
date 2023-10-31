@@ -23,7 +23,6 @@ const selected = ref<boolean>(false);
 const render_preview = ref<boolean>(false);
 const preview_container = ref<Element>();
 const danger = ref<boolean>(false);
-const reflush = ref<number>(0);
 const render_item = ref<GroupShape>(props.data);
 
 function gen_view_box() {
@@ -45,7 +44,6 @@ function check_selected_status() {
 
 function _shape_watcher() {
     check_render_item();
-    reflush.value++;
 }
 
 function check_render_item() {
@@ -94,6 +92,10 @@ function is_need_scroll_to_view() {
     if (need_scroll_into_view && preview_container.value) {
         nextTick(() => {
             preview_container.value && preview_container.value.scrollIntoView();
+            let timer = setTimeout(() => {
+                selected.value = true;
+                clearTimeout(timer);
+            }, 100)
         })
     }
     clear_scroll_target(props.context);
