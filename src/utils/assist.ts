@@ -553,7 +553,6 @@ export function get_solid_line_point(sp: { x: number, y: number }[], hp: { x: nu
     let sieds1 = { x1: 0, y1: 0, x2: 0, y2: 0 };
     let sieds2 = { x1: 0, y1: 0, x2: 0, y2: 0 };
     let sides = [];
-    console.log(dir, 'dir');
 
     if (dir === Direction.TR) {
         sieds1.x1 = midpoint.xc; sieds1.y1 = st; sieds1.x2 = midpoint.xc; sieds1.y2 = s.s1 === Sides.Bottom ? hb : ht;
@@ -631,4 +630,39 @@ function get_solid_line_sieds_point(sp: { x: number, y: number }[], hp: { x: num
         sieds3.x1 = midpoint.xc; sieds3.y1 = sb; sieds3.x2 = midpoint.xc; sieds3.y2 = hb;
     }
     return [sieds1, sieds2, sieds3];
+}
+
+/**
+ *  @description 获取虚线的点,四角方向 dotted line
+ * */ 
+export function get_dotted_line_point(sp: { x: number, y: number }[], hp: { x: number, y: number }[], dir?: Direction) {
+    if (sp.length === 0 || hp.length === 0 || !dir) return;
+    const s = get_hovered_sides_dir(sp, hp, dir);
+    const midpoint = get_select_sides_midpoint(sp);
+    if (!s || !midpoint) return;
+    const st = sp[0].y, sb = sp[2].y, sl = sp[0].x, sr = sp[2].x;
+    const ht = hp[0].y, hb = hp[2].y, hl = hp[0].x, hr = hp[2].x;
+    let sieds1 = { x1: 0, y1: 0, x2: 0, y2: 0 };
+    let sieds2 = { x1: 0, y1: 0, x2: 0, y2: 0 };
+    let sides = [];
+    if (dir === Direction.TR) {
+        sieds1.x1 = hl; sieds1.y1 = s.s1 === Sides.Bottom ? hb : ht; sieds1.x2 = sl; sieds1.y2 = s.s1 === Sides.Bottom ? hb : ht;
+        sieds2.x1 = s.s2 === Sides.Left ? hl : hr; sieds2.y1 = hb; sieds2.x2 = s.s2 === Sides.Left ? hl : hr; sieds2.y2 = sb;
+        sides = [sieds1, sieds2];
+    } else if (dir === Direction.TL) {
+        sieds1.x1 = hr; sieds1.y1 = s.s1 === Sides.Bottom ? hb : ht; sieds1.x2 = sr; sieds1.y2 = s.s1 === Sides.Bottom ? hb : ht;
+        sieds2.x1 = s.s2 === Sides.Left ? hl : hr; sieds2.y1 = hb; sieds2.x2 = s.s2 === Sides.Left ? hl : hr; sieds2.y2 = sb;
+        sides = [sieds1, sieds2];
+    } else if (dir === Direction.BL) {
+        sieds1.x1 = midpoint.xc; sieds1.y1 = sb; sieds1.x2 = midpoint.xc; sieds1.y2 = s.s1 === Sides.Bottom ? hb : ht;
+        sieds2.x1 = sl; sieds2.y1 = midpoint.yc; sieds2.x2 = s.s2 === Sides.Left ? hl : hr; sieds2.y2 = midpoint.yc;
+        sides = [sieds1, sieds2];
+    } else if (dir === Direction.BR) {
+        sieds1.x1 = midpoint.xc; sieds1.y1 = sb; sieds1.x2 = midpoint.xc; sieds1.y2 = s.s1 === Sides.Bottom ? hb : ht;
+        sieds2.x1 = sr; sieds2.y1 = midpoint.yc; sieds2.x2 = s.s2 === Sides.Left ? hl : hr; sieds2.y2 = midpoint.yc;
+        sides = [sieds1, sieds2];
+    } else {
+        sides = get_solid_line_sieds_point(sp, hp, dir) as any[];
+    }
+    return sides;
 }

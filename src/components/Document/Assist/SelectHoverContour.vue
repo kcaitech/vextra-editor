@@ -6,7 +6,7 @@ import { Selection } from '@/context/selection';
 import { Context } from "@/context";
 import { onMounted, onUnmounted, ref } from "vue";
 import { genRectPath } from "../Selection/common";
-import { get_graph_relative_posi, get_solid_line_point } from "@/utils/assist";
+import { get_dotted_line_point, get_graph_relative_posi, get_solid_line_point } from "@/utils/assist";
 interface Props {
     context: Context
     matrix: Matrix
@@ -21,6 +21,7 @@ type LintPoint = {
     x1: number, y1: number, x2: number, y2: number 
 }
 const solid_point = ref<LintPoint[]>([]);
+const dotted_point = ref<LintPoint[]>([]);
 
 // hover后给选中和hover的图形描边
 const contour = () => {
@@ -34,6 +35,7 @@ const contour = () => {
     selectContour(selectShape);
     hoveredContour(hoveredShape);
     solid_line_point(select_shape_posi.value, hover_shape_posi.value);
+    dotted_line_point(select_shape_posi.value, hover_shape_posi.value);
 }
 
 const selectContour = (shapes: Shape[]) => {
@@ -81,6 +83,16 @@ const solid_line_point = (s:{ x: number, y: number }[], h: { x: number, y: numbe
     }
 }
 
+// 获取虚线的点
+const dotted_line_point = (s:{ x: number, y: number }[], h: { x: number, y: number }[]) => {
+    const direction = get_graph_relative_posi(s, h);
+    if (!direction) return;
+    const point = get_dotted_line_point(s, h, direction);
+    if(point && point.length > 0) {
+        dotted_point.value = point;
+    }
+}
+
 
 const workspaceUpdate = (t: number) => {
     if (t === WorkSpace.MATRIX_TRANSFORMATION) {
@@ -116,7 +128,9 @@ onUnmounted(() => {
         <path v-for="(p, i) in tracingPath" :key="i" :d="p" fill="transparent" stroke="#ff2200" stroke-width="1px"
             opacity="0.8"></path>
         <line v-for="(p, i) in solid_point" :key="i" :x1="p.x1" :y1="p.y1" :x2="p.x2" :y2="p.y2" style="stroke:#ff2200;"></line>
+        <line v-for="(p, i) in dotted_point" :key="i" :x1="p.x1" :y1="p.y1" :x2="p.x2" :y2="p.y2" stroke-dasharray="3 2" style="stroke:#ff2200;"></line>
     </svg>
 </template>
 
-<style scoped lang="scss"></style>
+<style scoped lang="scss">
+</style>
