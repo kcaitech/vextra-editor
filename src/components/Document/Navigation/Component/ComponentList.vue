@@ -30,7 +30,6 @@ function _searching() {
 }
 
 const searching = debounce(_searching, 300);
-console.log('root.value', root.value)
 </script>
 
 <template>

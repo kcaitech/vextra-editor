@@ -13,6 +13,7 @@ import {
     init_status_set_by_symbol,
     clear_scroll_target
 } from '@/utils/symbol';
+import {Page} from "@kcdesign/data";
 
 interface Props {
     context: Context
@@ -28,7 +29,13 @@ const status_set = ref<Set<string>>(new Set());
 
 function _list_loader() {
     if (props.context.navi.current_navi_module !== "Comps") return;
-    const data = classification_level_page(props.context.data.pagesMgr.resource);
+    const pagelist = props.context.data.pagesList;
+    const list: Page[] = [];
+    for (let i = 0, len = pagelist.length; i < len; i++) {
+        const p = props.context.data.pagesMgr.getSync(pagelist[i].id);
+        if (p) list.push(p);
+    }
+    const data = classification_level_page(list);
     modify_parent(data as SymbolListItem[]);
     const need_pre_init_set = props.context.component.into_view_target;
     if (need_pre_init_set) {
@@ -56,8 +63,8 @@ function document_watcher(t: string) {
     console.log('update-symbol-list');
     if (t === 'update-symbol-list') list_loader();
 }
+
 onMounted(() => {
-    console.log('here mount')
     props.context.data.pagesMgr.watch(list_loader);
     props.context.data.symbolsMgr.watch(list_loader);
     props.context.data.__correspondent.watch(document_watcher);

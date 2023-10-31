@@ -433,6 +433,9 @@ function navi_watcher(t: number) {
         }
     } else if (t === Navi.SHAPELIST_UPDATE) {
         listviewSource.notify(0, 0, 0, Number.MAX_VALUE);
+    } else if (t === Navi.MODULE_CHANGE) {
+        const curr_module = props.context.navi.current_navi_module;
+        if (curr_module === "Shape") listviewSource.notify(0, 0, 0, Number.MAX_VALUE);
     }
 }
 function clear_text() {
