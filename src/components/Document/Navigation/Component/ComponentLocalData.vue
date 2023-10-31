@@ -30,11 +30,13 @@ const status_set = ref<Set<string>>(new Set());
 function _list_loader() {
     if (props.context.navi.current_navi_module !== "Comps" && !props.isAttri) return;
     const pagelist = props.context.data.pagesList;
-    const list: Page[] = [];
+    const list: {page: Page, desc: string}[] = [];
     for (let i = 0, len = pagelist.length; i < len; i++) {
+        const desc = pagelist[i];
         const p = props.context.data.pagesMgr.getSync(pagelist[i].id);
-        if (p) list.push(p);
+        if (p) list.push({page: p, desc: desc.name});
     }
+    console.log('raw list: ', list);
     const data = classification_level_page(list);
     modify_parent(data as SymbolListItem[]);
     const need_pre_init_set = props.context.component.into_view_target;
@@ -43,6 +45,7 @@ function _list_loader() {
         clear_scroll_target(props.context);
     }
     local_data.value = list_layout(data, status_set.value);
+    console.log('local data update:', local_data.value);
 }
 
 const list_loader = debounce(_list_loader, 200);

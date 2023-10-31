@@ -23,7 +23,7 @@ onMounted(() => {
         <el-scrollbar :always="true">
             <div v-if="scroll_container">
                 <ComponentListView :context="props.context" :data="props.data" v-if="props.data.length"
-                    :container="scroll_container"></ComponentListView>
+                    :container="scroll_container" :is-attri="false" card-type="alpha"></ComponentListView>
                 <div class="null-result" v-else>
                     {{ t('search.search_results') }}
                 </div>

@@ -18,6 +18,7 @@ import {v4} from "uuid";
 import {get_name} from "@/utils/shapelist";
 import {XY} from "@/context/selection";
 import {isTarget} from "@/utils/common";
+import {message} from "@/utils/message";
 
 export enum SymbolType {
     Symbol = 'symbol',
@@ -40,18 +41,18 @@ export interface SymbolListItem {
     parent: SymbolListItem | undefined
 }
 
-export function classification_level_page(pages: Page[]) {
+export function classification_level_page(pages: { page: Page, desc: string }[]) {
     const result: SymbolListItem[] = [];
     for (let i = 0; i < pages.length; i++) {
         const page = pages[i];
-        if (page.__symbolshapes.size) {
+        if (page.page.__symbolshapes.size) {
             const item = {
-                id: page.id,
-                title: page.name,
+                id: page.page.id,
+                title: page.desc,
                 isFolder: true,
                 extend: false,
                 symbols: [],
-                childs: classification_level_artboard(page),
+                childs: classification_level_artboard(page.page),
                 parent: undefined
             }
             result.push(item);
@@ -350,6 +351,10 @@ export function make_symbol(context: Context, t: Function) {
     const selected = context.selection.selectedShapes;
     const page = context.selection.selectedPage;
     if (!page || !selected.length) return false;
+    if (is_exist_symbol_layer(selected)) {
+        message('info', '新的组件不能包含已有组件或已有组件图层');
+        return false;
+    }
     const editor = context.editor4Page(page);
     const name = getName(ShapeType.Symbol, context.data.symbolsMgr.resource, t);
     const shapes: Shape[] = sort_by_layer(context, selected);
@@ -914,4 +919,15 @@ export function find_space_for_state(symbol: SymbolShape, state: SymbolShape) {
         !pure && (init_frame.x += 20);
     }
     return init_frame;
+}
+
+export function is_exist_symbol_layer(shapes: Shape[]) {
+    for (let i = 0, len = shapes.length; i < len; i++) {
+        let s: Shape | undefined = shapes[i];
+        while (s) {
+            if (s.type === ShapeType.Symbol) return true;
+            s = s.parent;
+        }
+    }
+    return false;
 }

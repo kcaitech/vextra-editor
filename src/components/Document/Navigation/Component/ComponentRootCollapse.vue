@@ -1,8 +1,9 @@
 <script setup lang="ts">
-import { onMounted, ref } from 'vue';
+import {onMounted, ref} from 'vue';
 import ComponentCollapseItem from './ComponentCollapseItem.vue';
-import { Context } from '@/context';
-import { SymbolListItem } from '@/utils/symbol';
+import {Context} from '@/context';
+import {SymbolListItem} from '@/utils/symbol';
+
 interface Props {
     context: Context
     title: string
@@ -13,18 +14,23 @@ interface Props {
     isAttri: boolean
     cardType: 'alpha' | 'beta'
 }
+
 interface Emits {
     (e: 'change-status', id: string): void;
 }
+
 const props = defineProps<Props>();
 const emits = defineEmits<Emits>();
 const fold = ref<boolean>(true);
+
 function toggle() {
     fold.value = !fold.value;
 }
+
 function change_status(id: string) {
     emits("change-status", id)
 }
+
 onMounted(() => {
     if (props.extend) toggle();
 })
@@ -39,8 +45,9 @@ onMounted(() => {
         </div>
         <div class="component-lib-collapse-content" v-show="!fold" @click.stop>
             <component :is="ComponentCollapseItem" v-for="item in props.data" :title="item.title" :data="item"
-                :container="props.container" :key="item.id" :context="props.context" :status_set="props.status_set" :is-attri="props.isAttri" :card-type="props.cardType"
-                @change-status="change_status">
+                       :container="props.container" :key="item.id+item.title" :context="props.context"
+                       :status_set="props.status_set" :is-attri="props.isAttri" :card-type="props.cardType"
+                       @change-status="change_status">
             </component>
         </div>
     </div>
@@ -58,7 +65,7 @@ onMounted(() => {
         box-sizing: border-box;
         position: relative;
 
-        >span {
+        > span {
             font-weight: 600;
         }
 
@@ -68,7 +75,7 @@ onMounted(() => {
             height: 14px;
             width: 14px;
 
-            >svg {
+            > svg {
                 width: 80%;
                 height: 80%;
             }

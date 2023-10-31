@@ -164,6 +164,7 @@ onUnmounted(() => {
             border: 1px solid var(--grey-dark);
             box-sizing: border-box;
             border-radius: 4px;
+            flex-shrink: 0;
         }
 
         > div {
