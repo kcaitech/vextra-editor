@@ -94,8 +94,9 @@ function is_need_scroll_to_view() {
     if (need_scroll_into_view && preview_container.value) {
         nextTick(() => {
             preview_container.value && preview_container.value.scrollIntoView();
-            let timer = setTimeout(() => {
+            const timer = setTimeout(() => {
                 selected.value = true;
+                console.log('setting');
                 clearTimeout(timer);
             }, 100)
         })
