@@ -24,8 +24,10 @@ const scroll_container = ref<Element | null>(null);
 
 function register_container() {
     const el = props.root || top_wrapper.value;
+    console.log('el', el);
     if (!el) return;
     scroll_container.value = el.querySelector('.el-scrollbar > .el-scrollbar__wrap');
+    console.log('scroll_container.value', scroll_container.value);
 }
 
 type ContextMenuEl = InstanceType<typeof ContextMenu>;

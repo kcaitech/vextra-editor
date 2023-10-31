@@ -28,7 +28,7 @@ const local_data = ref<SymbolListItem[]>([]);
 const status_set = ref<Set<string>>(new Set());
 
 function _list_loader() {
-    if (props.context.navi.current_navi_module !== "Comps") return;
+    if (props.context.navi.current_navi_module !== "Comps" && !props.isAttri) return;
     const pagelist = props.context.data.pagesList;
     const list: Page[] = [];
     for (let i = 0, len = pagelist.length; i < len; i++) {
@@ -60,7 +60,6 @@ function update_status_set(id: string) {
 }
 
 function document_watcher(t: string) {
-    console.log('update-symbol-list');
     if (t === 'update-symbol-list') list_loader();
 }
 
@@ -72,7 +71,6 @@ onMounted(() => {
     _list_loader();
 })
 onUnmounted(() => {
-    console.log('unmount');
     props.context.data.pagesMgr.unwatch(list_loader);
     props.context.data.symbolsMgr.unwatch(list_loader);
     props.context.data.__correspondent.unwatch(document_watcher);
