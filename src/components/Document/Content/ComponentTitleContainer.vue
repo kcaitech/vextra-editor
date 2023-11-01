@@ -154,7 +154,7 @@ onUnmounted(() => {
 </script>
 <template>
     <div class="container" :style="{ top: `${origin.y}px`, left: `${origin.x}px` }">
-        <div class="title-container" v-for="(t, index) in titles" :key="index"
+        <div class="title-container" v-for="(t, index) in titles" :key="t.id"
             :style="{ top: `${t.y}px`, left: `${t.x}px`, 'max-width': `${t.maxWidth}px`, transform: `rotate(${t.rotate}deg)` }">
             <ComponentTitle :context="props.context" :name="t.content" :index="index" :maxWidth="t.maxWidth"
                 @rename="rename" @hover="hover" @leave="leave" :shape="t.shape"></ComponentTitle>
