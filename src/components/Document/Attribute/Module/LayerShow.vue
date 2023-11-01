@@ -98,12 +98,14 @@ watch(() => shape.value, (v, o) => {
 }, {immediate: true})
 
 function _delete() {
-    debugger;
     if (!is_bind.value) return;
-    if (!sym_layer.value) return;
-    const editor = props.context.editor4Shape(sym_layer.value);
-    editor.removeBinds(OverrideType.Visible);
-    isBind();
+    const select = props.context.selection.selectedShapes;
+    if (select.length === 1) {
+      const editor = props.context.editor4Shape(select[0]);
+      editor.removeBinds(OverrideType.Visible);
+      isBind();
+    }
+
 }
 
 onMounted(() => {

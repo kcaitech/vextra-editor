@@ -69,7 +69,7 @@ function updater(t?: any) {
     const naviChilds = shape.naviChilds;
     showTriangle.value = Boolean(naviChilds && naviChilds.length > 0);
     lock_status.value = shape.isLocked ? 1 : 0;
-    visible_status.value = shape.isVisible ? 0 : 1;
+    visible_status.value = shape.getVisible() ? 0 : 1;
     if (is_parent_locked(shape)) lock_status.value = 2;
     if (is_parent_unvisible(shape)) visible_status.value = 2;
 }
