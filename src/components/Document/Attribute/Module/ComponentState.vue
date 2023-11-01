@@ -27,7 +27,6 @@ function update_list() {
 }
 
 const is_conflict = () => {
-    console.log(is_wrong_bind(props.shapes),'is_wrong_bind(props.shapes)');
     if (is_wrong_bind(props.shapes)) {
         const conflict_comp = is_conflict_comp(props.shapes[0].parent as SymbolShape);
         if (!conflict_comp) return;
