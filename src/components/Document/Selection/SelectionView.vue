@@ -11,7 +11,7 @@ import { WorkSpace } from "@/context/workspace";
 import { permIsEdit } from "@/utils/content";
 import Assist from "@/components/Document/Assist/index.vue";
 import ShapeSize from "./ShapeSize.vue";
-import SelectHoverContour from "../Assist/SelectHoverContour.vue";
+import LableLine from "../Assist/LableLine.vue";
 export interface Point {
     x: number
     y: number
@@ -106,6 +106,7 @@ function tool_watcher(t: number) {
         matrix.reset(props.matrix);
         createController();
         watchShapes();
+        lableLineStatus();
     }
 }
 function createShapeTracing() { // 描边  
@@ -228,6 +229,18 @@ function window_blur() {
         altKey.value = false;
     }
 }
+
+//标注线
+const isLableLine = ref(false);
+const lableLineStatus = () => {
+    const isLable = props.context.tool.isLable;
+    if(isLable) {
+        isLableLine.value = true;
+    }else {
+        isLableLine.value = false;
+    }
+}
+
 // hooks
 watch(() => props.matrix, update_by_matrix, { deep: true });
 
@@ -264,8 +277,8 @@ onUnmounted(() => {
     </component>
     <!-- 辅助 -->
     <Assist :context="props.context" :controller-frame="controllerFrame"></Assist>
-    <!-- 图形相对位置描边 -->
-    <SelectHoverContour :context="props.context" :matrix="props.matrix"></SelectHoverContour>
+    <!-- 标注线 -->
+    <LableLine v-if="isLableLine" :context="props.context" :matrix="props.matrix"></LableLine>
     <!-- 选中大小 -->
     <ShapeSize :context="props.context" :controller-frame="controllerFrame"></ShapeSize>
 </template>
