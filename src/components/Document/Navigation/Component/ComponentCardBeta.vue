@@ -25,7 +25,7 @@ const render_item = ref<GroupShape>(props.data);
 
 function gen_view_box() {
     const frame = render_item.value.frame;
-    return `-12 -12 ${frame.width + 24} ${frame.height + 24}`;
+    return `-8 -8 ${frame.width + 16} ${frame.height + 16}`;
 }
 
 function render() {
