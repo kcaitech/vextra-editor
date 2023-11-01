@@ -85,6 +85,7 @@ declare module '@vue/runtime-core' {
     GridView: typeof import('./src/components/common/GridView.vue')['default']
     GroupUngroup: typeof import('./src/components/Document/Toolbar/GroupUngroup.vue')['default']
     Header: typeof import('./src/components/AppHome/Header.vue')['default']
+    HelpEntrance: typeof import('./src/components/Help/HelpEntrance.vue')['default']
     Home: typeof import('./src/components/Home/index.vue')['default']
     HomeContent: typeof import('./src/components/Home/HomeContent.vue')['default']
     HoverCell: typeof import('./src/components/Document/Selection/Controller/Table/HoverCell.vue')['default']

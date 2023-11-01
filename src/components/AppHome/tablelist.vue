@@ -245,7 +245,7 @@ const columns: Column<any>[] = [
                     <el-icon
                         onDblclick={(event: MouseEvent) => event.stopPropagation()}
                         onClick={(event: MouseEvent) => {
-                            event.stopPropagation()
+                        
                             emits('updatestar', rowData)
                         }}>
                         <el-tooltip content={t('home.star')} show-after={1000} hide-after={0}>
@@ -259,7 +259,7 @@ const columns: Column<any>[] = [
                     <el-icon style={"display: inline-block"}
                         onDblclick={(event: MouseEvent) => event.stopPropagation()}
                         onClick={(event: MouseEvent) => {
-                            event.stopPropagation()
+                            
                             emits('updatestar', rowData)
                         }}>
                         <el-tooltip content={t('home.de_star')} show-after={1000} hide-after={0}>
@@ -273,7 +273,7 @@ const columns: Column<any>[] = [
                     <el-icon
                         onDblclick={(event: MouseEvent) => event.stopPropagation()}
                         onClick={(event: MouseEvent) => {
-                            event.stopPropagation()
+                          
                             emits('share', rowData)
                         }}>
                         <el-tooltip content={t('home.share')} show-after={1000} hide-after={0}>
@@ -286,7 +286,7 @@ const columns: Column<any>[] = [
                     <el-icon
                         onDblclick={(event: MouseEvent) => event.stopPropagation()}
                         onClick={(event: MouseEvent) => {
-                            event.stopPropagation()
+                            
                             emits('deletefile', rowData)
                         }}>
                         <el-tooltip content={t('home.delete')} show-after={1000} hide-after={0}>
@@ -298,7 +298,7 @@ const columns: Column<any>[] = [
                     <el-icon
                         onDblclick={(event: MouseEvent) => event.stopPropagation()}
                         onClick={(event: MouseEvent) => {
-                            event.stopPropagation()
+                           
                             emits('deletefile', rowData)
                         }}>
                         <el-tooltip content={t('home.delete')} show-after={1000} hide-after={0}>
@@ -311,7 +311,7 @@ const columns: Column<any>[] = [
                     <el-icon
                         onDblclick={(event: MouseEvent) => event.stopPropagation()}
                         onClick={(event: MouseEvent) => {
-                            event.stopPropagation()
+                          
                             emits('remove', rowData)
                         }}>
                         <el-tooltip content={t('home.de_access_record')} show-after={1000} hide-after={0}>
@@ -324,7 +324,7 @@ const columns: Column<any>[] = [
                     <el-icon
                         onDblclick={(event: MouseEvent) => event.stopPropagation()}
                         onClick={(event: MouseEvent) => {
-                            event.stopPropagation()
+                           
                             emits('restore', rowData)
                         }}>
                         <el-tooltip content={t('home.restore')} show-after={1000} hide-after={0}>
@@ -338,7 +338,7 @@ const columns: Column<any>[] = [
                     <el-icon
                         onDblclick={(event: MouseEvent) => event.stopPropagation()}
                         onClick={(event: MouseEvent) => {
-                            event.stopPropagation()
+                           
                             emits('ndelete', rowData)
                         }}>
                         <el-tooltip content={t('home.completely_delete')} show-after={1000} hide-after={0}>
@@ -351,7 +351,7 @@ const columns: Column<any>[] = [
                     <el-icon
                         onDblclick={(event: MouseEvent) => event.stopPropagation()}
                         onClick={(event: MouseEvent) => {
-                            event.stopPropagation()
+
                             emits('exit_share', rowData)
                         }}>
                         <el-tooltip content={t('home.exit_share')} show-after={1000} hide-after={0}>
