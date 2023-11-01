@@ -1,19 +1,20 @@
 <script setup lang="ts">
-import { useI18n } from 'vue-i18n';
-import { Context } from '@/context';
+import {useI18n} from 'vue-i18n';
+import {Context} from '@/context';
 import TypeHeader from '../TypeHeader.vue';
-import { ref, nextTick, onMounted, onUnmounted, watch } from 'vue';
+import {onMounted, onUnmounted, ref, watch} from 'vue';
 import CompLayerShow from '../PopoverMenu/ComposAttri/CompLayerShow.vue';
 import SelectLayerInput from './SelectLayerInput.vue';
-import { OverrideType, SymbolShape, Variable, VariableType } from '@kcdesign/data';
+import {OverrideType, SymbolShape, Variable, VariableType} from '@kcdesign/data';
 import PopoverDefaultInput from './PopoverDefaultInput.vue';
-import { create_var_by_type, delete_variable, get_symbol_by_layer, is_bind_x_vari } from '@/utils/symbol';
-import { message } from '@/utils/message';
-import { Selection } from '@/context/selection';
+import {create_var_by_type, get_symbol_by_layer, is_bind_x_vari} from '@/utils/symbol';
+import {message} from '@/utils/message';
+import {Selection} from '@/context/selection';
+
 const props = defineProps<{
     context: Context
 }>()
-const { t } = useI18n();
+const {t} = useI18n();
 const isLayerShow = ref(false);
 const closeLayerShowPopup = () => {
     isLayerShow.value = false
@@ -24,7 +25,7 @@ const layerIsShow = () => {
 }
 const atrrdialog = ref<HTMLDivElement>();
 const card_ref = ref<HTMLDivElement>();
-const dialog_posi = ref({ x: 0, y: 0 });
+const dialog_posi = ref({x: 0, y: 0});
 const default_name = ref('');
 //选中图层的id
 const selectId = ref<string[]>([]);
@@ -40,6 +41,7 @@ function edit_visible() {
     getDialogPosi(card_ref.value);
     isLayerShow.value = true;
 }
+
 const is_bind = ref<Variable>();
 const sym_layer = ref<SymbolShape>();
 const shape = ref(props.context.selection.selectedShapes[0]);
@@ -58,44 +60,49 @@ const isBind = () => {
     }
 }
 const dlt_value = ref<any>(true);
+
 //默认值
 function dlt_change(v: number) {
     dlt_value.value = !v;
 }
+
 //asdfg
 function save_layer_show(type: VariableType, name: string) {
-    if(is_bind.value) return isLayerShow.value = false;
+    if (is_bind.value) return isLayerShow.value = false;
     if (!name.trim()) {
         message('info', '属性名不能为空');
         return;
     }
     const shapes = props.context.selection.selectedShapes;
     const ids = shapes.map(item => item.id);
-    if(!sym_layer.value) return;
+    if (!sym_layer.value) return;
     create_var_by_type(props.context, VariableType.Visible, name, dlt_value.value, ids, sym_layer.value);
     isLayerShow.value = false;
 }
 
 const selected_watcher = (t: number) => {
-    if(t === Selection.CHANGE_SHAPE) {
+    if (t === Selection.CHANGE_SHAPE) {
         isBind();
     }
 }
+
 function variable_watcher(args: any[]) {
     if (args && (args.includes('map') || args.includes('childs'))) isBind();
 }
+
 watch(() => shape.value, (v, o) => {
-    if(o) {
+    if (o) {
         o.unwatch(variable_watcher);
     }
     v.watch(variable_watcher);
-},{immediate: true})
+}, {immediate: true})
 
 function _delete() {
-    if(!is_bind.value) return;
+    debugger;
+    if (!is_bind.value) return;
     if (!sym_layer.value) return;
     const editor = props.context.editor4Shape(sym_layer.value);
-    editor.removeVar(is_bind.value.id);
+    editor.removeBinds(OverrideType.Visible);
     isBind();
 }
 
@@ -137,15 +144,19 @@ onUnmounted(() => {
             </div>
         </div>
         <CompLayerShow :context="context" v-if="isLayerShow" @close-dialog="closeLayerShowPopup" right="250px"
-            :add-type="VariableType.Visible" :width="260" :title="t('compos.layer_isShow')" :dialog_posi="dialog_posi"
-            :default_name="default_name" :variable="is_bind ? is_bind : undefined" @save-layer-show="save_layer_show" :symbol="sym_layer">
+                       :add-type="VariableType.Visible" :width="260" :title="t('compos.layer_isShow')"
+                       :dialog_posi="dialog_posi"
+                       :default_name="default_name" :variable="is_bind ? is_bind : undefined"
+                       @save-layer-show="save_layer_show" :symbol="sym_layer">
             <template #layer>
                 <SelectLayerInput :title="t('compos.select_layer')" :add-type="VariableType.Visible"
-                    :context="props.context" :placeholder="t('compos.place_select_layer')" :selectId="selectId">
+                                  :context="props.context" :placeholder="t('compos.place_select_layer')"
+                                  :selectId="selectId">
                 </SelectLayerInput>
             </template>
             <template #default_value>
-                <PopoverDefaultInput :context="context" :add-type="VariableType.Visible" :default_value="is_bind?.value" :dft_show="is_bind ? true : false" @select="dlt_change"></PopoverDefaultInput>
+                <PopoverDefaultInput :context="context" :add-type="VariableType.Visible" :default_value="is_bind?.value"
+                                     :dft_show="is_bind ? true : false" @select="dlt_change"></PopoverDefaultInput>
             </template>
         </CompLayerShow>
     </div>
@@ -164,7 +175,7 @@ onUnmounted(() => {
         align-items: center;
         justify-content: center;
 
-        >svg {
+        > svg {
             width: 70%;
             height: 70%;
         }
@@ -190,7 +201,7 @@ onUnmounted(() => {
         align-items: center;
         width: 84px;
 
-        >svg {
+        > svg {
             width: 14px;
             height: 14px;
         }
@@ -213,7 +224,7 @@ onUnmounted(() => {
             align-items: center;
             justify-content: center;
 
-            >svg {
+            > svg {
                 width: 14px;
                 height: 14px;
             }
@@ -224,7 +235,7 @@ onUnmounted(() => {
             display: flex;
             max-width: 100%;
 
-            >span {
+            > span {
                 display: block;
                 box-sizing: border-box;
                 overflow: hidden;
@@ -250,7 +261,7 @@ onUnmounted(() => {
     width: 22px;
     height: 22px;
 
-    >svg {
+    > svg {
         width: 11px;
         height: 11px;
     }

@@ -47,4 +47,4 @@ export function migrate_immediate(context: Context, asyncTransfer: AsyncTransfer
 /**
  * @description 一组图形在另一个容器上方停留一段时间后，把这组图形从其原本的容器移动到该容器
  */
-export const migrate_once = debounce(migrate_immediate, 100);
+export const migrate_once = debounce(migrate_immediate, 160);

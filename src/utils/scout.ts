@@ -126,7 +126,7 @@ function isTarget2(scout: Scout, shape: Shape, p: PageXY): boolean {
 // 扁平化一个编组的树结构 tree -> list
 export function delayering(groupshape: Shape, flat?: Shape[]): Shape[] {
     let f: Shape[] = flat || [];
-    const childs: Shape[] = groupshape.type === ShapeType.SymbolRef ? groupshape.naviChilds : groupshape.childs;
+    const childs: Shape[] = groupshape.type === ShapeType.SymbolRef ? (groupshape.naviChilds || []) : groupshape.childs;
     for (let i = 0, len = childs.length; i < len; i++) {
         const item = childs[i];
         if (item.type === ShapeType.Group || item.type === ShapeType.Symbol || item.type === ShapeType.SymbolRef) {
@@ -141,23 +141,17 @@ export function delayering(groupshape: Shape, flat?: Shape[]): Shape[] {
 // 编组穿透
 export function groupPassthrough(scout: Scout, scope: Shape[], position: PageXY): Shape | undefined {
     // scope 编组子元素
-    let shape: Shape | undefined;
+    if (!scope?.length) return;
     for (let i = scope.length - 1; i > -1; i--) {
         const cur = scope[i];
         if ([ShapeType.Group, ShapeType.Symbol, ShapeType.SymbolRef].includes(cur.type)) {
             const items: Shape[] = delayering(cur);
             for (let j = items.length - 1; j > -1; j--) {
-                if (isTarget(scout, items[j], position)) {
-                    shape = cur;
-                    break;
-                }
+                if (isTarget(scout, items[j], position)) return cur;
             }
-        } else {
-            if (isTarget(scout, cur, position)) shape = cur;
         }
-        if (shape) break;
+        if (isTarget(scout, cur, position)) return cur;
     }
-    return shape;
 }
 
 /**

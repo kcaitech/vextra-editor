@@ -1,11 +1,18 @@
 <script setup lang="ts">
-import {get_vari_value_for_ref, modify_vari_value_for_ref, RefAttriListItem} from "@/utils/symbol";
+import {
+    get_status_vari_for_symbolref,
+    get_vari_value_for_ref,
+    modify_vari_value_for_ref,
+    RefAttriListItem,
+    switch_symref_state
+} from "@/utils/symbol";
 import {ref} from "vue";
 import {Context} from "@/context";
 import {onMounted, onUpdated} from "vue";
 import SelectMenu from "@/components/Document/Attribute/PopoverMenu/ComposAttri/SelectMenu.vue";
 import {ArrowDown} from '@element-plus/icons-vue'
-import { Menu } from "@/context/menu";
+import {Menu} from "@/context/menu";
+import {OverrideType} from "@kcdesign/data";
 
 interface Props {
     context: Context
@@ -22,14 +29,23 @@ function show_menu() {
     selectoption.value = true;
 }
 
+function get_var_for_symbol() {
+}
+
 function select(index: number) {
     const _v = props.data.values[index];
-    modify_vari_value_for_ref(props.context, props.data.variable, _v);
+    // modify_vari_value_for_ref(props.context, props.data.variable, _v);
+    const symbolref = props.context.selection.symbolrefshape;
+    if (!symbolref) return;
+    const vari = get_status_vari_for_symbolref(symbolref, props.data.variable);
+    switch_symref_state(props.context, vari, _v);
 }
 
 function getVattagValue() {
     const symref = props.context.selection.symbolrefshape;
     if (!symref) return;
+    const vari = get_status_vari_for_symbolref(symref, props.data.variable);
+    // status_value.value = get_vari_value_for_ref(symref, vari);
     status_value.value = get_vari_value_for_ref(symref, props.data.variable);
 }
 
@@ -100,6 +116,7 @@ onMounted(() => {
                 width: 10px;
                 height: 10px;
             }
+
             span {
                 overflow: hidden;
                 text-overflow: ellipsis;

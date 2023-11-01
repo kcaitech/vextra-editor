@@ -872,6 +872,9 @@ export function is_bind_x_vari(shape: Shape, type: OverrideType) {
     return variables.get(vk);
 }
 
+/**
+ * @description 重置所有属性
+ */
 export function reset_all_attr_for_ref(context: Context) {
     const shape = context.selection.symbolrefshape;
     if (!shape) return;
@@ -921,6 +924,9 @@ export function find_space_for_state(symbol: SymbolShape, state: SymbolShape) {
     return init_frame;
 }
 
+/**
+ * @description shapes中是否存在symbol或组成symbol的图层
+ */
 export function is_exist_symbol_layer(shapes: Shape[]) {
     for (let i = 0, len = shapes.length; i < len; i++) {
         let s: Shape | undefined = shapes[i];
@@ -928,6 +934,30 @@ export function is_exist_symbol_layer(shapes: Shape[]) {
             if (s.type === ShapeType.Symbol) return true;
             s = s.parent;
         }
+    }
+    return false;
+}
+
+export function switch_symref_state(context: Context, variable: Variable, state: string) {
+    const symbolref = context.selection.symbolrefshape;
+    if (!symbolref) return;
+    const editor = context.editor4Shape(symbolref);
+    editor.switchSymState(variable.id, state);
+}
+
+export function get_status_vari_for_symbolref(symbolref: SymbolRefShape, variable: Variable) {
+    const overrides = symbolref.findOverride(variable.id, OverrideType.Variable);
+    return overrides ? overrides[overrides.length - 1] : variable;
+}
+
+/**
+ * @description 判断图层是否为组件的组成部分
+ */
+export function is_part_of_symbol(shape: Shape) {
+    let s: Shape | undefined = shape;
+    while (s) {
+        if (s.type === ShapeType.Symbol) return true;
+        s = s.parent;
     }
     return false;
 }
