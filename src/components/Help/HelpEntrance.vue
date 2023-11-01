@@ -27,7 +27,7 @@
                     </div>
                 </div>
                 <div class="shortcut-content">
-                    <div class="shortcut-item" v-for="(item, index) in shortcutdata.value" :key="index">
+                    <div class="shortcut-item" v-for="(item, index) in shortcuts" :key="index">
                         <div class="item-title">{{ item.title }}</div>
                         <div class="item-name" style="display: flex;justify-content: space-between;"
                             v-for="(i, index) in item.shortcutKey" :key="index">
@@ -36,8 +36,6 @@
                         </div>
                     </div>
                 </div>
-
-
             </div>
         </Teleport>
     </div>
@@ -285,6 +283,15 @@ onUnmounted(() => {
         .shortcut-item {
             display: flex;
             flex-direction: column;
+        }
+        .item-title{
+            color:var(--title-color)
+        }
+
+        .item-name{
+            color: #000000E6;
+            line-height: 20px;
+            margin-bottom: 12px;
         }
     }
 }

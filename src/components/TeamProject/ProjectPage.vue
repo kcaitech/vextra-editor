@@ -520,6 +520,7 @@ watch(() => currentProject.value, (n) => {
     if (currentProject.value[0]) {
         reflush.value++;
         nextTick(() => {
+            itemid.value = 0
             const items = document.querySelectorAll('.item')
             const rect = items[itemid.value].getBoundingClientRect()
             elwidth.value = rect.width
