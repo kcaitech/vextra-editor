@@ -1,7 +1,7 @@
 <script lang="ts" setup>
 import { useI18n } from 'vue-i18n';
 import { Context } from '@/context';
-import { onMounted, onUnmounted, ref, watch } from "vue";
+import { onMounted, onUnmounted, ref, watch, watchEffect } from "vue";
 import StatusCard from "@/components/Document/Attribute/Module/StatusCard.vue";
 import { is_conflict_comp, is_wrong_bind, states_tag_values_sort, StatusValueItem } from "@/utils/symbol";
 import { Shape, SymbolShape } from "@kcdesign/data"
@@ -27,6 +27,7 @@ function update_list() {
 }
 
 const is_conflict = () => {
+    console.log(is_wrong_bind(props.shapes),'is_wrong_bind(props.shapes)');
     if (is_wrong_bind(props.shapes)) {
         const conflict_comp = is_conflict_comp(props.shapes[0].parent as SymbolShape);
         if (!conflict_comp) return;
@@ -38,7 +39,6 @@ const is_conflict = () => {
                 is_conflict = true;
             }
         })
-        console.log(conflict_comp,'conflict_comp');
         conflict.value = is_conflict;
     } else {
         conflict.value = false;
@@ -62,6 +62,7 @@ function unwatch_shapes(shapes: Shape[]) {
         shapes[i].unwatch(update_list);
     }
 }
+
 onMounted(() => {
     watch_shapes(props.shapes)
     update_list();

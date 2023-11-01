@@ -239,7 +239,7 @@ onUnmounted(() => {
 
         :deep(.el-collapse-item__header) {
             height: 35px;
-            font-size: 10px;
+            font-size: 12px;
             border-bottom-color: transparent;
             border-radius: 4px;
 
@@ -252,7 +252,7 @@ onUnmounted(() => {
     }
 
     .null {
-        font-size: 10px;
+        font-size: 12px;
         color: rgba(0, 0, 0, 0.5);
         width: 100%;
         height: 100%;

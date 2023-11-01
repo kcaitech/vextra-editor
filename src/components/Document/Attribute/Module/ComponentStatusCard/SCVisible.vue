@@ -192,14 +192,14 @@ function _delete() {
         height: 30px;
 
         .el-input {
-            font-size: 10px;
+            font-size: 12px;
             height: 30px;
         }
     }
 
     .warn {
         color: red;
-        transform: scale(.9);
+        font-size: 10px;
     }
 
     .delete {
