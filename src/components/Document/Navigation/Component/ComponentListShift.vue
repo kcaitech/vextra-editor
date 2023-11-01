@@ -123,7 +123,7 @@ const close = () => {
 
         .el-input {
             height: 28px;
-            font-size: 10px;
+            font-size: 12px;
             line-height: 28px;
 
             :deep(.el-input__wrapper) {

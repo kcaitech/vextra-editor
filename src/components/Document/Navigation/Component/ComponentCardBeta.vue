@@ -5,7 +5,7 @@ import {GroupShape} from "@kcdesign/data";
 import {renderSymbolPreview as r} from "@kcdesign/data";
 import {Context} from '@/context';
 import {Selection} from '@/context/selection';
-import {clear_scroll_target, is_circular_ref2} from '@/utils/symbol';
+import {clear_scroll_target, is_circular_ref2, is_state} from '@/utils/symbol';
 import {debounce} from "lodash";
 import Tooltip from '@/components/common/Tooltip.vue';
 
@@ -22,6 +22,7 @@ const render_preview = ref<boolean>(false);
 const preview_container = ref<Element>();
 const danger = ref<boolean>(false);
 const render_item = ref<GroupShape>(props.data);
+const name = ref('');
 
 function gen_view_box() {
     const frame = render_item.value.frame;
@@ -108,9 +109,19 @@ function danger_check() {
     if (is_circular) danger.value = true;
 }
 
+function get_name() {
+    if (is_state(props.data)) {
+        const sym = props.context.data.symbolsMgr.getSync(props.data.parent!.id);
+        name.value = sym?.name || props.data.name;
+    } else {
+        name.value = props.data.name;
+    }
+}
+
 onMounted(() => {
     check_render_required();
     is_need_scroll_to_view();
+    get_name();
 })
 onUnmounted(() => {
     io.disconnect();
@@ -120,7 +131,7 @@ onUnmounted(() => {
 </script>
 <template>
     <div class="compo-preview-container" ref="preview_container">
-        <Tooltip :content="props.data.name" v-if="render_preview">
+        <Tooltip :content="name" v-if="render_preview">
             <div>
                 <svg v-if="render_preview" xmlns="http://www.w3.org/2000/svg" xmlns:xlink="http://www.w3.org/1999/xlink"
                      xmlns:xhtml="http://www.w3.org/1999/xhtml" preserveAspectRatio="xMinYMin meet" width="96px"

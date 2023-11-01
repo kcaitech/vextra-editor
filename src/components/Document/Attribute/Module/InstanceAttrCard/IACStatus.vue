@@ -150,19 +150,19 @@ onMounted(() => {
             .el-select {
                 width: 100%;
                 height: 30px;
-                font-size: 10px;
+                font-size: 12px;
 
                 > div {
                     height: 100%;
                 }
 
                 .el-option {
-                    font-size: 10px
+                    font-size: 12px
                 }
 
                 :deep(.el-input__wrapper) {
                     height: 30px;
-                    font-size: 10px;
+                    font-size: 12px;
                     background-color: var(--grey-light);
                     box-shadow: none;
 
@@ -176,7 +176,7 @@ onMounted(() => {
             .el-input {
                 width: 100%;
                 height: 30px;
-                font-size: 10px;
+                font-size: 12px;
 
                 :deep(.el-input__inner) {
                     --el-input-inner-height: 100%;

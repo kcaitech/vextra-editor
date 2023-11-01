@@ -38,7 +38,7 @@ const onRename = () => {
         if (nameInput.value) {
             if (inputSpan.value) {
                 inputSpan.value.innerHTML = props.name
-                inputWidth.value = inputSpan.value.offsetWidth + 2
+                inputWidth.value = inputSpan.value.offsetWidth + 6
             }
             (nameInput.value as HTMLInputElement).value = props.name.trim();
             nameInput.value.focus();
@@ -81,7 +81,7 @@ const onInputName = (e: Event) => {
     const value = (e.target as HTMLInputElement).value;
     if (inputSpan.value) {
         inputSpan.value.innerHTML = value;
-        inputWidth.value = inputSpan.value.offsetWidth + 2;
+        inputWidth.value = inputSpan.value.offsetWidth + 6;
     }
 }
 
@@ -292,7 +292,7 @@ onUnmounted(() => {
 <template>
     <div :reflush="reflush" class="container-name" @mouseenter="hoverShape" @mouseleave="unHoverShape" @mousedown="down"
         @mousemove="move2" data-area="controller">
-        <div class="name-wrap" :style="{ maxWidth: props.maxWidth + 'px' }" @dblclick="onRename">
+        <div class="name-wrap" :style="{ maxWidth: props.maxWidth + 'px' }" @dblclick="onRename" v-if="!isInput">
             <svg width="306" height="306" viewBox="0 0 306 306" fill="none" xmlns="http://www.w3.org/2000/svg"
                 v-if="props.shape.isUnionSymbolShape">
                 <rect x="8.07106" y="153.895" width="90" height="90" transform="rotate(-45.0629 8.07106 153.895)"
@@ -321,7 +321,7 @@ onUnmounted(() => {
         </div>
         <input v-if="isInput" type="text" :style="{ maxWidth: props.maxWidth + 'px', width: inputWidth + 'px' }"
             ref="nameInput" class="rename" @input="onInputName" @change="ChangeReName" @mousemove="move3">
-        <span v-if="isInput" style="position: absolute; visibility: hidden; top: 0px;" ref="inputSpan"></span>
+        <span v-if="isInput" style="position: absolute; visibility: hidden; top: 0px; font-size: 10px;" ref="inputSpan"></span>
     </div>
 </template>
 
@@ -351,9 +351,9 @@ onUnmounted(() => {
     .rename {
         height: 15px;
         outline-style: none;
-        font-size: 9px;
+        font-size: 10px;
         border: 1px solid var(--active-color);
-        padding: 0 1px;
+        padding: 0 3px;
         margin-right: 1px;
         box-sizing: border-box;
     }

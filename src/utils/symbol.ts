@@ -177,6 +177,8 @@ export function list_layout(list: SymbolListItem[], extend_set: Set<string>, ini
 
 export function search_symbol_by_keywords(context: Context, keywords: string) {
     const symbol_resource = context.data.symbolsMgr.resource;
+    console.log(symbol_resource,'symbol_resource');
+    
     const reg = new RegExp(keywords.toLocaleLowerCase(), 'img');
     const result: SymbolShape[] = [];
     for (let i = 0, len = symbol_resource.length; i < len; i++) {

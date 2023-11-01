@@ -98,7 +98,7 @@ function set_parent(parent: CompoItem, range: CompoItem[]) {
 
     :deep(.el-collapse-item__header) {
         height: 35px;
-        font-size: 10px;
+        font-size: 12px;
         border-bottom-color: transparent;
         border-radius: 4px;
 

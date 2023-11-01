@@ -2,7 +2,7 @@
 import TypeHeader from '../TypeHeader.vue';
 import { useI18n } from 'vue-i18n';
 import SelectFont from '../Text/SelectFont.vue';
-import { onMounted, ref, onUnmounted, watchEffect, watch } from 'vue';
+import { onMounted, ref, onUnmounted, watchEffect, watch, nextTick } from 'vue';
 import { Context } from '@/context';
 import { AttrGetter, TableShape, TableCell, Text } from "@kcdesign/data";
 import Tooltip from '@/components/common/Tooltip.vue';
@@ -70,7 +70,18 @@ const onShowFontBlur = (e: Event) => {
 const onShowSize = () => {
     props.context.workspace.focusText()
     if (showSize.value) return showSize.value = false
-    showSize.value = true
+    showSize.value = true;
+    nextTick(() => {
+        if (sizeList.value) {
+            const body_h = document.body.clientHeight;
+            const { y, height } = sizeList.value.getBoundingClientRect();
+            const su = body_h - y;
+            const cur_t = su - height;
+            if (cur_t - 10 < 0) {
+                sizeList.value.style.top = cur_t + 20 + 'px';
+            }
+        }
+    })
     document.addEventListener('click', onShowSizeBlur);
 }
 
@@ -731,19 +742,25 @@ onUnmounted(() => {
         </TypeHeader>
         <div class="text-container">
             <div class="text-top">
-                <div class="select-font jointly-text" @click="onShowFont">
+                <div class="select-font jointly-text" style="padding-right: 0;" @click="onShowFont">
                     <span>{{ fontName }}</span>
-                    <svg-icon icon-class="down"></svg-icon>
+                    <div class="down">
+                        <svg-icon icon-class="down"></svg-icon>
+                    </div>
                 </div>
                 <SelectFont v-if="showFont" @set-font="setFont" :fontName="fontName" :context="props.context"></SelectFont>
                 <div class="perch"></div>
             </div>
             <div class="text-middle">
                 <div class="text-middle-size">
-                    <div class="text-size jointly-text">
-                        <input type="text" v-model="fonstSize" ref="textSize" class="input" @change="setTextSize"
-                            @focus="selectSizeValue">
-                        <svg-icon icon-class="down" @click="onShowSize"></svg-icon>
+                    <div class="text-size jointly-text" style="padding-right: 0;">
+                        <div class="size_input">
+                            <input type="text" v-model="fonstSize" ref="textSize" class="input" @change="setTextSize"
+                                @focus="selectSizeValue">
+                            <div class="down" @click="onShowSize">
+                                <svg-icon icon-class="down"></svg-icon>
+                            </div>
+                        </div>
                         <div class="font-size-list" ref="sizeList" v-if="showSize">
                             <div @click="changeTextSize(10)">10</div>
                             <div @click="changeTextSize(12)">12</div>
@@ -938,7 +955,7 @@ onUnmounted(() => {
             justify-content: space-between;
             align-items: center;
 
-            >svg {
+            svg {
                 width: 12px;
                 height: 12px;
                 overflow: visible !important;
@@ -953,6 +970,12 @@ onUnmounted(() => {
             .select-font {
                 flex: 1;
                 padding: 0 10px;
+
+                &:hover {
+                    .down {
+                        background-color: rgba(0, 0, 0, 0.08);
+                    }
+                }
             }
         }
 
@@ -974,8 +997,20 @@ onUnmounted(() => {
                 width: 70px;
                 padding: 0 10px;
 
+                .size_input {
+                    display: flex;
+                    justify-content: space-between;
+                    align-items: center;
+
+                    &:hover {
+                        .down {
+                            background-color: rgba(0, 0, 0, 0.08);
+                        }
+                    }
+                }
+
                 .input {
-                    width: 55px;
+                    width: 43px;
                     background-color: transparent;
                     border: none;
                 }
@@ -1140,7 +1175,17 @@ onUnmounted(() => {
     }
 }
 
+.down {
+    height: 20px;
+    width: 20px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    border-radius: 4px;
+    margin-right: 3px;
+    box-sizing: border-box;
+}
+
 :deep(.el-tooltip__trigger:focus) {
     outline: none !important;
-}
-</style>
+}</style>

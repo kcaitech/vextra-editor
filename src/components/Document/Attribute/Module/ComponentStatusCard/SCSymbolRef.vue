@@ -177,14 +177,14 @@ function _delete() {
         height: 30px;
 
         .el-input {
-            font-size: 10px;
+            font-size: 12px;
             height: 30px;
         }
     }
 
     .warn {
+        font-size: 10px;
         color: red;
-        transform: scale(.9);
     }
 
     .delete {
