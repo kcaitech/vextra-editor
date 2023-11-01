@@ -381,7 +381,8 @@ export function canBeTarget(shape: Shape): boolean { // 可以被判定为检索
 export function _selected_symbol_menber(context: Context, shapes: Shape[]) {
     let result: Shape | undefined;
     let bros: Shape[] = [];
-    if (shapes.length === 1) {
+    // if (shapes.length === 1) { // todo 多选的处理
+    if (shapes.length) {
         let s = shapes[0];
         let p: Shape | undefined = s.parent;
         let parents: GroupShape[] = [];
@@ -406,7 +407,7 @@ function flat(parents: GroupShape[], bros: Shape[], parents_map: Map<string, Gro
     while (p) {
         const childs = p.type === ShapeType.SymbolRef ? p.naviChilds : (p as SymbolShape).childs;
         if (childs) {
-            for (let i = childs.length - 1; i > -1; i--) {
+            for (let i = 0, len = childs.length; i < len; i++) {
                 const c = childs[i];
                 !parents_map.get(c.id) && bros.push(childs[i]);
             }
