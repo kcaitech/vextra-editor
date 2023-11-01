@@ -409,7 +409,7 @@ function flat(parents: GroupShape[], bros: Shape[], parents_map: Map<string, Gro
         if (childs) {
             for (let i = 0, len = childs.length; i < len; i++) {
                 const c = childs[i];
-                !parents_map.get(c.id) && bros.push(childs[i]);
+                !parents_map.get(c.id) && bros.push(c);
             }
         }
         p = parents.pop();
