@@ -28,7 +28,7 @@ const name = ref<string>('');
 
 function gen_view_box() {
     const frame = render_item.value.frame;
-    return `-12 -12 ${frame.width + 24} ${frame.height + 24}`;
+    return `-20 -20 ${frame.width + 40} ${frame.height + 40}`;
 }
 
 function render() {
