@@ -101,9 +101,9 @@ function _delete() {
     if (!is_bind.value) return;
     const select = props.context.selection.selectedShapes;
     if (select.length === 1) {
-      const editor = props.context.editor4Shape(select[0]);
-      editor.removeBinds(OverrideType.Visible);
-      isBind();
+        const editor = props.context.editor4Shape(select[0]);
+        editor.removeBinds(OverrideType.Visible);
+        isBind();
     }
 
 }
