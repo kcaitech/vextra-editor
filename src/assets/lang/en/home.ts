@@ -202,6 +202,7 @@ export const attr: any = {
     inspect: 'Inspect',
     constraints: 'Constraints',
     border: 'Border',
+    opacity: 'Opacity',
     fill: 'Fill',
     text: 'Text',
     'follow_container_scaling': 'Follow container scaling',
@@ -314,7 +315,26 @@ export const comment = {
 export const clipboard = {
     'invalid_data': 'invalid data'
 }
-
+export const opacity = {
+    normal: 'Normal',
+    become_dark: 'Become dark',
+    multiply: 'Multiply',
+    color_deepening: 'Color deepening',
+    become_bright: 'Become bright',
+    filter: 'Filter',
+    color_dodge: 'Color dodge',
+    superpose: 'Superpose',
+    soft_light: 'Soft light',
+    strong_light: 'Strong light',
+    difference: 'Difference',
+    exclude: 'Exclude',
+    hue: 'Hue',
+    saturation: 'Saturation',
+    color: 'Color',
+    lightness: 'Lightness',
+    darken: 'Darken',
+    brighten: 'Brighten'
+}
 export const message = {
     doc_notopen: "Network anomalies, the document can't open, please try again after checking the network.",
     list_for_failure: 'Network exception, file list acquisition failed, please check the network and try again.',

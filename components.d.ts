@@ -112,6 +112,7 @@ declare module '@vue/runtime-core' {
     MoveProjectFill: typeof import('./src/components/TeamProject/MoveProjectFill.vue')['default']
     Navigation: typeof import('./src/components/Document/Navigation/index.vue')['default']
     NetworkError: typeof import('./src/components/NetworkError.vue')['default']
+    Opacity: typeof import('./src/components/Document/Attribute/Opacity/Opacity.vue')['default']
     Overview: typeof import('./src/components/Document/Content/Overview.vue')['default']
     PageAttr: typeof import('./src/components/Document/Attribute/PageAttr.vue')['default']
     PageBackgorund: typeof import('./src/components/Document/Attribute/PageBackgorund.vue')['default']

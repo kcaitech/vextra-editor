@@ -202,6 +202,7 @@ export const attr: any = {
     inspect: '标注',
     constraints: '相对容器位置',
     border: '边框',
+    opacity: '不透明度',
     fill: '填充',
     text: '文本',
     'follow_container_scaling': '跟随容器缩放',
@@ -314,7 +315,26 @@ export const comment = {
 export const clipboard = {
     'invalid_data': '该内容无法解析'
 }
-
+export const opacity = {
+    normal: '正常',
+    become_dark: '变暗',
+    multiply: '正片叠底',
+    color_deepening: '颜色加深',
+    become_bright: '变亮',
+    filter: '滤色',
+    color_dodge: '颜色减淡',
+    superpose: '叠加',
+    soft_light: '柔光',
+    strong_light: '强光',
+    difference: '差值',
+    exclude: '排除',
+    hue: '色相',
+    saturation: '饱和度',
+    color: '颜色',
+    lightness: '明度',
+    darken: '加暗',
+    brighten: '提亮'
+}
 export const message = {
     doc_notopen: '网络异常，文档无法打开，请检查网络后重试。',
     list_for_failure: '网络异常，文件列表获取失败，请检查网络后重试。',
