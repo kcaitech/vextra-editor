@@ -85,7 +85,7 @@ onUnmounted(() => {
         <Table @select="select" :active="selected === Action.AddTable" :context="props.context"></Table>
         <Contact @select="select" :active="selected === Action.AddContact" :context="props.context"></Contact>
         <div class="vertical-line" />
-        <CreateComps @select="select" :active="selected === Action.AddComponent" :context="props.context"></CreateComps>
+        <CreateComps @select="select" :context="props.context"></CreateComps>
         <Comment @select="select" :active="selected === Action.AddComment" :workspace="workspace"></Comment>
         <GroupUngroup :context="props.context" :selection="props.selection"></GroupUngroup>
     </div>

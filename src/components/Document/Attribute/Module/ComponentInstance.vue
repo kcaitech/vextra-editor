@@ -35,9 +35,9 @@ const untie = () => {
     const page = selection.selectedPage;
     if (page) {
         const editor = props.context.editor4Page(page);
-        const shapes = editor.extractSymbol(props.shapes[0] as SymbolRefShape);
+        const shapes = editor.extractSymbol(props.shapes as SymbolRefShape[]);
         if (shapes) {
-            selection.selectShape(shapes);
+            selection.rangeSelectShape(shapes);
             resetMenu.value = false;
         }
     }
