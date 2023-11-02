@@ -21,7 +21,7 @@ import {searchCommentShape as finder} from '@/utils/comment'
 import {paster_image} from "./clipboard";
 import {landFinderOnPage, scrollToContentView} from './artboardFn'
 import {fit_no_transform} from "./shapelist";
-import {is_state} from "@/utils/symbol";
+import {is_shapes_if_symbolref, is_state} from "@/utils/symbol";
 
 export interface Media {
     name: string
@@ -648,7 +648,8 @@ export function get_menu_items(context: Context, area: "controller" | "text-sele
             }
         }
         if (types & 4) { // 存在实例
-            if (permIsEdit(context)) {
+            const shapes = context.selection.selectedShapes;
+            if (permIsEdit(context) && is_shapes_if_symbolref(shapes)) {
                 contextMenuItems.push('instance');
             }
         }

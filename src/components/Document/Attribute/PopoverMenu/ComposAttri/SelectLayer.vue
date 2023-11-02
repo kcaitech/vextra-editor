@@ -1,10 +1,10 @@
 <script lang="ts" setup>
-import {onMounted, onUnmounted, ref, watchEffect} from 'vue';
-import {Context} from '@/context';
+import { onMounted, onUnmounted, ref, watchEffect } from 'vue';
+import { Context } from '@/context';
 import CompoSelectList from './CompoSelectList.vue';
-import {useI18n} from 'vue-i18n';
-import {VariableType} from '@kcdesign/data';
-const {t} = useI18n();
+import { useI18n } from 'vue-i18n';
+import { VariableType } from '@kcdesign/data';
+const { t } = useI18n();
 
 interface Tree {
     id: number
@@ -43,7 +43,6 @@ function register_container() {
 
 function handleClickOutside(event: MouseEvent) {
     event.stopPropagation();
-    console.log(123456789);
     event.target instanceof Element && !event.target.closest('.select_layerbox') && close(event);
 }
 
@@ -77,16 +76,17 @@ watchEffect(() => {
     }
 })
 
+
 const keyboard_watcher = (e: KeyboardEvent) => {
     e.stopPropagation();
     if (e.code === 'Enter' || e.code === 'NumpadEnter') {
-        if(checkList.value.length > 0) {
-            emits('close');
-        }
+        emits('close');
     }
 }
+
 onMounted(() => {
     if (popover.value) {
+        popover.value.focus();
         const body_h = document.body.clientHeight;
         const popover_y = popover.value.getBoundingClientRect().y;
         const popover_h = popover.value.clientHeight + 5;
@@ -112,12 +112,12 @@ onUnmounted(() => {
 </script>
 
 <template>
-    <div class="select_layerbox" ref="popover" :style="{ top: top + 'px' }" @keydown="keyboard_watcher">
+    <div class="select_layerbox" ref="popover" tabindex="-1" @keydown.stop="keyboard_watcher" :style="{ top: top + 'px' }">
         <div class="heard">
             <span class="title">{{
-                    props.type === VariableType.SymbolRef ? `${t('compos.compos_instance')}` :
-                        `${t('compos.select_layer')}`
-                }}</span>
+                props.type === VariableType.SymbolRef ? `${t('compos.compos_instance')}` :
+                `${t('compos.select_layer')}`
+            }}</span>
             <div class="close">
                 <div class="toggle_list">
                     <svg-icon icon-class="close" @click.stop="emits('close');"></svg-icon>
@@ -134,14 +134,13 @@ onUnmounted(() => {
                             <span>{{ item.state }}</span>
                             <div class="shrink">
                                 <svg-icon icon-class="down"
-                                          :style="{ transform: !unfold.has(i) ? 'rotate(-90deg)' : 'rotate(0deg)' }"></svg-icon>
+                                    :style="{ transform: !unfold.has(i) ? 'rotate(-90deg)' : 'rotate(0deg)' }"></svg-icon>
                             </div>
                         </div>
                         <div class="demo-collapse" v-if="unfold.has(i)" :reflush="reflush">
                             <component v-if="scroll_container" :is="CompoSelectList" :context="context"
-                                       :contents="item.data"
-                                       @handleCheck="handleCheck" :layerId="props.layerId"
-                                       :container="scroll_container">
+                                :contents="item.data" @handleCheck="handleCheck" :layerId="props.layerId"
+                                :container="scroll_container">
                             </component>
                         </div>
                     </template>
@@ -153,12 +152,12 @@ onUnmounted(() => {
             </div>
         </div>
         <div class="null"
-             v-if="selectList.length === 0 && props.type === VariableType.Text || props.type === VariableType.Status">
+            v-if="selectList.length === 0 && props.type === VariableType.Text || props.type === VariableType.Status">
             {{ t('compos.text_layer_null') }}
         </div>
         <div class="null" v-if="selectList.length === 0 && props.type === VariableType.SymbolRef">{{
-                t('compos.instance_null')
-            }}
+            t('compos.instance_null')
+        }}
         </div>
     </div>
 </template>
@@ -177,6 +176,7 @@ onUnmounted(() => {
     border: 1px solid #ccc;
     box-shadow: 2px 2px 10px rgba(0, 0, 0, 0.2);
     z-index: 99;
+    outline: none;
 
     .heard {
         width: 100%;
@@ -281,7 +281,7 @@ onUnmounted(() => {
     //    background-color: var(--grey-light);
     //}
 
-    > span {
+    >span {
         font-weight: 600;
         overflow: hidden;
         text-overflow: ellipsis;
@@ -294,12 +294,13 @@ onUnmounted(() => {
         height: 12px;
         width: 12px;
 
-        > svg {
+        >svg {
             width: 80%;
             height: 80%;
         }
     }
 }
+
 :deep(.el-scrollbar__bar.is-vertical) {
     z-index: 9;
 }

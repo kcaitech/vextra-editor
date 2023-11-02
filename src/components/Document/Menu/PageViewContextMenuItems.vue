@@ -378,11 +378,12 @@ function component() {
 function instance() {
     const selection = props.context.selection;
     const page = selection.selectedPage;
+    const shapes = selection.selectedShapes;
     if (page) {
         const editor = props.context.editor4Page(page);
-        const shapes = editor.extractSymbol(selection.selectedShapes[0] as SymbolRefShape);
-        if (shapes) {
-            selection.selectShape(shapes);
+        const shape = editor.extractSymbol(shapes as SymbolRefShape[]);
+        if (shape) {
+            selection.selectShape(shape);
             emit('close');
         }
     }

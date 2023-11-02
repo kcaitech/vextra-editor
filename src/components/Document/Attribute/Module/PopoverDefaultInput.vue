@@ -69,7 +69,7 @@ watch(() => props.warn, (v) => {
     }
 })
 const get_text = () => {
-    const text =(props.default_value as string).slice(0, -1);
+    const text =(props.default_value as string);
     textDefaultValue.value = text;
 }
 onMounted(() => {

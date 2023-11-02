@@ -981,3 +981,15 @@ export function is_part_of_symbol(shape: Shape) {
     }
     return false;
 }
+
+export function is_shapes_if_symbolref(shapes: Shape[]) {
+    let is_all_ref = true;
+    for (let i = 0; i < shapes.length; i++) {
+        const shape = shapes[i];
+        if(shape.type !== ShapeType.SymbolRef) {
+            is_all_ref = false;
+            break;
+        }
+    }
+    return is_all_ref;
+}
