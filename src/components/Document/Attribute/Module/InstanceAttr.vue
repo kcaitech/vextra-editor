@@ -1,13 +1,13 @@
 <script lang="ts" setup>
-import {useI18n} from 'vue-i18n';
-import {Context} from '@/context';
+import { useI18n } from 'vue-i18n';
+import { Context } from '@/context';
 import TypeHeader from '../TypeHeader.vue';
-import {ref, onUnmounted, watch, onMounted} from 'vue'
-import {shape_track, get_shape_within_document} from '@/utils/content';
-import {SymbolRefShape} from '@kcdesign/data';
-import {MoreFilled} from '@element-plus/icons-vue';
-import {RefAttriListItem, get_var_for_ref, is_symbolref_disa, reset_all_attr_for_ref} from "@/utils/symbol";
-import {cardmap} from "./InstanceAttrCard/map";
+import { ref, onUnmounted, watch, onMounted } from 'vue'
+import { shape_track, get_shape_within_document } from '@/utils/content';
+import { Shape, ShapeType, SymbolRefShape } from '@kcdesign/data';
+import { MoreFilled } from '@element-plus/icons-vue';
+import { RefAttriListItem, get_var_for_ref, is_symbolref_disa, reset_all_attr_for_ref } from "@/utils/symbol";
+import { cardmap } from "./InstanceAttrCard/map";
 import Status from "./InstanceAttrCard/IACStatus.vue"
 import Visible from "./InstanceAttrCard/IACVisible.vue"
 
@@ -16,7 +16,7 @@ interface Props {
     shapes: SymbolRefShape[]
 }
 
-const {t} = useI18n();
+const { t } = useI18n();
 const props = defineProps<Props>();
 const resetMenu = ref(false);
 const variables = ref<RefAttriListItem[]>([]);
@@ -35,9 +35,10 @@ const closeResetMenu = (e: MouseEvent) => {
 }
 
 const editComps = () => {
-    const symref = props.context.selection.symbolrefshape;
-    if (!symref) return;
-    const shape = get_shape_within_document(props.context, symref.refId)
+    let shape: Shape | undefined
+    if (props.shapes[0].type !== ShapeType.SymbolRef) return;
+    let symref = props.shapes[0].refId;
+    shape = get_shape_within_document(props.context, symref);
     if (!shape) return;
     shape_track(props.context, shape);
 }
@@ -57,14 +58,24 @@ const shape_watcher = (arg: any) => {
 }
 
 const updateData = () => {
-    const result = get_var_for_ref(props.context, props.shapes[0]);
-    if (!result) return;
-    variables.value = result.variables;
-    visible_variables.value = result.visible_variables;
+    if (props.shapes.length === 1) {
+        const result = get_var_for_ref(props.context, props.shapes[0]);
+        variables.value = [];
+        visible_variables.value = [];
+        if (!result) return;
+        variables.value = result.variables;
+        visible_variables.value = result.visible_variables;
+    } else if (props.shapes.length > 1) {
+
+    }
 }
 
 function reset_all_attr() {
-    reset_all_attr_for_ref(props.context);
+    if (props.shapes.length === 1) {
+        reset_all_attr_for_ref(props.context);
+    } else {
+
+    }
 }
 
 watch(() => props.shapes[0], (nVal, oVal) => {
@@ -92,7 +103,7 @@ onUnmounted(() => {
                     </div>
                     <div class="reset_svg" @click.stop="selectReset">
                         <el-icon>
-                            <MoreFilled/>
+                            <MoreFilled />
                         </el-icon>
                         <div class="reset_menu" v-if="resetMenu">
                             <div class="untie" @click="untie">
@@ -105,21 +116,21 @@ onUnmounted(() => {
                 </div>
             </template>
         </TypeHeader>
-        <div class="module_container" :style="{marginBottom: variables.length > 0 ? '10px' : '0'}">
-            <component v-for="item in variables" :key="item.variable.id  + props.shapes[0].id" :is="cardmap.get(item.variable.type) || Status"
-                       :context="props.context"
-                       :data="item"></component>
-        </div>
-        <div v-if="visible_variables.length" class="visible-var-container">
-            <div class="show">
-                <div class="title">{{ t('compos.layer_show') }}:</div>
-                <div class="items-wrap">
-                    <component v-for="item in visible_variables" :key="item.variable.id" :is="Visible"
-                               :context="props.context"
-                               :data="(item as RefAttriListItem)"></component>
-                </div>
+        <div>
+            <div class="module_container" :style="{ marginBottom: variables.length > 0 ? '10px' : '0' }">
+                <component v-for="item in variables" :key="item.variable.id + props.shapes[0].id"
+                    :is="cardmap.get(item.variable.type) || Status" :context="props.context" :data="item"></component>
             </div>
-            <div class="place"></div>
+            <div v-if="visible_variables.length" class="visible-var-container">
+                <div class="show">
+                    <div class="title">{{ t('compos.layer_show') }}:</div>
+                    <div class="items-wrap">
+                        <component v-for="item in visible_variables" :key="item.variable.id + props.shapes[0].id"
+                            :is="Visible" :context="props.context" :data="(item as RefAttriListItem)"></component>
+                    </div>
+                </div>
+                <div class="place"></div>
+            </div>
         </div>
     </div>
 </template>
@@ -138,7 +149,7 @@ onUnmounted(() => {
         align-items: center;
         justify-content: center;
 
-        > svg {
+        >svg {
             width: 50%;
             height: 50%;
         }
@@ -152,7 +163,7 @@ onUnmounted(() => {
         align-items: center;
         justify-content: center;
 
-        > svg {
+        >svg {
             width: 50%;
             height: 50%;
         }
