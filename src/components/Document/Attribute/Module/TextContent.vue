@@ -49,6 +49,7 @@ const textDefaultValue = ref('');
 const isBind = () => {
     const shapes = props.context.selection.selectedShapes;
     if (shapes.length === 1) {
+        get_text();
         const vari = is_bind_x_vari(shapes[0], OverrideType.Text);
         sym_layer.value = get_symbol_by_layer(shapes[0]);
         selectId.value = [shapes[0].id];
@@ -84,18 +85,32 @@ const selected_watcher = (t: number) => {
         isBind();
     }
 }
-function variable_watcher(args: any[]) {
-    if (args && (args.includes('map') || args.includes('childs'))) isBind();
+function variable_watcher(args: any) {
+    if (args === 'map') isBind();
 }
+function text_watcher(args: any) {
+    if (args === 'text') get_text();
+    if (args === 'map') isBind();
+}
+
 watch(() => shape.value, (v, o) => {
+    if (o) {
+        o.unwatch(text_watcher);
+    }
+    v.watch(text_watcher);
+}, { immediate: true })
+
+watch(() => sym_layer.value, (v, o) => {
     if (o) {
         o.unwatch(variable_watcher);
     }
-    v.watch(variable_watcher);
+    if (v) {
+        v.watch(variable_watcher);
+    }
 }, { immediate: true })
 
 const input = () => {
-    if(textDefaultValue.value.trim().length > 0) {
+    if (textDefaultValue.value.trim().length > 0) {
         warn.value = false;
     }
 }
@@ -112,17 +127,24 @@ const keysumbit = (e: KeyboardEvent) => {
 }
 
 function _delete() {
-    if(!is_bind.value) return;
+    if (!is_bind.value) return;
     if (!sym_layer.value) return;
     const editor = props.context.editor4Shape(sym_layer.value);
     editor.removeVar(is_bind.value.id);
     isBind();
 }
 
+const change = () => {
+
+}
+
+const get_text = () => {
+    const text = (shape.value as TextShape).text.getText(0, Infinity).slice(0, -1);
+    textDefaultValue.value = text;
+}
+
 onMounted(() => {
     isBind();
-    const text = JSON.stringify((shape.value as TextShape).text.getText(0, Infinity));
-    textDefaultValue.value = text.slice(1, -3);
     shape.value.watch(variable_watcher);
     props.context.selection.watch(selected_watcher);
 })
@@ -145,7 +167,7 @@ onUnmounted(() => {
         </TypeHeader>
         <div class="text" v-if="!is_bind">
             <el-input v-model="textDefaultValue" type="textarea" ref="input_v" :autosize="{ minRows: 2, maxRows: 4 }"
-                resize="none" :placeholder="t('compos.default_text_input')" @keydown.stop="keysumbit" @input="input"/>
+                resize="none" :placeholder="t('compos.default_text_input')" @keydown.stop="keysumbit" @input="input" @change="change"/>
         </div>
         <div class="warning" v-if="warn">
             <p class="warn">默认值不能为空</p>

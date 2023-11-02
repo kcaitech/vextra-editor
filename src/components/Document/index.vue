@@ -281,6 +281,7 @@ const getDocumentAuthority = async () => {
             isEdit.value = true
         }
         permType.value = data.data.perm_type
+        console.log(permType.value,'文档权限接口的权限');
         context && context.workspace.setDocumentPerm(data.data.perm_type)
     } catch (err) {
         console.log(err);
@@ -343,6 +344,8 @@ const getDocumentInfo = async () => {
         }
         const perm = dataInfo.data.document_permission.perm_type
         permType.value = perm;
+        console.log(perm,'文档信息的权限');
+        
         //获取文档类型是否为私有文档且有无权限
         if (perm === 0) {
             router.push({

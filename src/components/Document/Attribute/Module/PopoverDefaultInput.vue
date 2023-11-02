@@ -68,10 +68,14 @@ watch(() => props.warn, (v) => {
         input_v.value.focus();
     }
 })
+const get_text = () => {
+    const text =(props.default_value as string).slice(0, -1);
+    textDefaultValue.value = text;
+}
 onMounted(() => {
     if (props.addType === VariableType.Text) {
         if(props.default_value) {
-            textDefaultValue.value = (JSON.stringify(props.default_value as string)).slice(1, -3);
+            get_text();
         }
         emits("change", textDefaultValue.value);
     }

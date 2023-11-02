@@ -175,15 +175,33 @@ export function list_layout(list: SymbolListItem[], extend_set: Set<string>, ini
     return result;
 }
 
-export function search_symbol_by_keywords(context: Context, keywords: string) {
-    const symbol_resource = context.data.symbolsMgr.resource;
-    console.log(symbol_resource,'symbol_resource');
-    
+export function search_symbol_by_keywords(context: Context, keywords: string, symbols: SymbolShape[]) {
     const reg = new RegExp(keywords.toLocaleLowerCase(), 'img');
     const result: SymbolShape[] = [];
-    for (let i = 0, len = symbol_resource.length; i < len; i++) {
-        const item = symbol_resource[i];
+    for (let i = 0, len = symbols.length; i < len; i++) {
+        const item = symbols[i];
         if (item.name.search(reg) > -1) result.push(item as SymbolShape);
+    }
+    return result;
+}
+export function get_search_symbol_list(pages: Page[]) {
+    const result: SymbolShape[] = [];
+    for (let i = 0; i < pages.length; i++) {
+        const page = pages[i];
+        if (page.__symbolshapes.size) {
+            const artboards = page.artboardList;
+            const symbols_under_page = get_symbol_level_under(page);
+            if(symbols_under_page.length) result.push(...symbols_under_page);
+            if(artboards.length) {
+                for (let index = 0; index < artboards.length; index++) {
+                    const artboard = artboards[index];
+                    if (artboard.parent?.type !== ShapeType.Page) continue;
+                    const symbols = check_symbol_level_artboard(artboard);
+                    if (!symbols.length) continue;
+                    result.push(...symbols);
+                }
+            }
+        }
     }
     return result;
 }
