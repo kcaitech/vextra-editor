@@ -13,7 +13,7 @@ import Visible from "./InstanceAttrCard/IACVisible.vue"
 
 interface Props {
     context: Context
-    shape: SymbolRefShape
+    shapes: SymbolRefShape[]
 }
 
 const {t} = useI18n();
@@ -46,9 +46,9 @@ const untie = () => {
     const page = selection.selectedPage;
     if (!page) return;
     const editor = props.context.editor4Page(page);
-    const shapes = editor.extractSymbol(props.shape);
+    const shapes = editor.extractSymbol(props.shapes);
     if (!shapes) return;
-    selection.selectShape(shapes);
+    selection.rangeSelectShape(shapes);
     resetMenu.value = false;
 }
 
@@ -57,7 +57,7 @@ const shape_watcher = (arg: any) => {
 }
 
 const updateData = () => {
-    const result = get_var_for_ref(props.context, props.shape);
+    const result = get_var_for_ref(props.context, props.shapes[0]);
     if (!result) return;
     variables.value = result.variables;
     visible_variables.value = result.visible_variables;
@@ -67,17 +67,17 @@ function reset_all_attr() {
     reset_all_attr_for_ref(props.context);
 }
 
-watch(() => props.shape, (nVal, oVal) => {
+watch(() => props.shapes[0], (nVal, oVal) => {
     oVal.unwatch(shape_watcher);
     nVal.watch(shape_watcher);
     updateData();
 })
 onMounted(() => {
     updateData();
-    props.shape.watch(shape_watcher);
+    props.shapes[0].watch(shape_watcher);
 })
 onUnmounted(() => {
-    props.shape.unwatch(shape_watcher);
+    props.shapes[0].unwatch(shape_watcher);
     document.removeEventListener('click', closeResetMenu);
 })
 </script>
@@ -106,7 +106,7 @@ onUnmounted(() => {
             </template>
         </TypeHeader>
         <div class="module_container" :style="{marginBottom: variables.length > 0 ? '10px' : '0'}">
-            <component v-for="item in variables" :key="item.variable.id  + props.shape.id" :is="cardmap.get(item.variable.type) || Status"
+            <component v-for="item in variables" :key="item.variable.id  + props.shapes[0].id" :is="cardmap.get(item.variable.type) || Status"
                        :context="props.context"
                        :data="item"></component>
         </div>

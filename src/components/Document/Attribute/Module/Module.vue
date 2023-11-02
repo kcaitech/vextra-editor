@@ -9,7 +9,7 @@ import LayerShow from './LayerShow.vue';
 import TextContent from './TextContent.vue';
 import ComponentInstance from './ComponentInstance.vue';
 import {Shape, ShapeType, SymbolRefShape, SymbolShape} from '@kcdesign/data';
-import {is_state_selection} from "@/utils/symbol";
+import {is_shapes_if_symbolref, is_state_selection} from "@/utils/symbol";
 
 interface Props {
     context: Context
@@ -40,6 +40,10 @@ const p_symble = computed(() => {
     return isSymble
 })
 
+const is_symbolref = () => {
+   return is_shapes_if_symbolref(props.shapes);
+}
+
 function is_state() {
     return is_state_selection(props.shapes);
 }
@@ -51,8 +55,8 @@ function is_state() {
                        :shape="(shapes[0] as SymbolShape)">
         </ComponentAttr>
         <ComponentState :context="context" v-if="is_state()" :shapes="props.shapes as SymbolShape[]"></ComponentState>
-        <InstanceAttr :context="context" v-if="shapeType === ShapeType.SymbolRef"
-                      :shape="(shapes[0] as SymbolRefShape)">
+        <InstanceAttr :context="context" v-if="is_symbolref()"
+                      :shapes="(shapes as SymbolRefShape[])">
         </InstanceAttr>
         <LayerShow :context="context" v-if="p_symble && shapeType !== ShapeType.Symbol"></LayerShow>
         <TextContent :context="context" v-if="p_symble && shapeType === ShapeType.Text"></TextContent>
