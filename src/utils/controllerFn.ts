@@ -136,7 +136,6 @@ export function keyboardHandle(e: KeyboardEvent, context: Context, t: Function) 
         }
     } else if (e.code === 'KeyK') {
         if (altKey && (ctrlKey || metaKey)) {
-            if (!is_allow_to_create_sym(context.selection.selectedShapes)) return;
             const symbol = make_symbol(context, t);
             if (symbol) {
                 context.selection.selectShape(symbol as unknown as Shape);

@@ -372,10 +372,10 @@ export function make_symbol(context: Context, t: Function) {
     const selected = context.selection.selectedShapes;
     const page = context.selection.selectedPage;
     if (!page || !selected.length) return false;
-    if (is_exist_symbol_layer(selected)) {
-        message('info', '新的组件不能包含已有组件或已有组件图层');
-        return false;
-    }
+    // if (is_exist_symbol_layer(selected)) {
+    //     message('info', '新的组件不能包含已有组件或已有组件图层');
+    //     return false;
+    // }
     if (is_exsit_contact_shape(selected)) {
         message('info', '组件内部不能包含连接线');
         return false;
