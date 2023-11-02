@@ -184,6 +184,7 @@ export function search_symbol_by_keywords(context: Context, keywords: string, sy
     }
     return result;
 }
+
 export function get_search_symbol_list(pages: Page[]) {
     const result: SymbolShape[] = [];
     for (let i = 0; i < pages.length; i++) {
@@ -191,8 +192,8 @@ export function get_search_symbol_list(pages: Page[]) {
         if (page.__symbolshapes.size) {
             const artboards = page.artboardList;
             const symbols_under_page = get_symbol_level_under(page);
-            if(symbols_under_page.length) result.push(...symbols_under_page);
-            if(artboards.length) {
+            if (symbols_under_page.length) result.push(...symbols_under_page);
+            if (artboards.length) {
                 for (let index = 0; index < artboards.length; index++) {
                     const artboard = artboards[index];
                     if (artboard.parent?.type !== ShapeType.Page) continue;
@@ -375,10 +376,21 @@ export function make_symbol(context: Context, t: Function) {
         message('info', '新的组件不能包含已有组件或已有组件图层');
         return false;
     }
+    if (is_exsit_contact_shape(selected)) {
+        message('info', '组件内部不能包含连接线');
+        return false;
+    }
     const editor = context.editor4Page(page);
     const name = getName(ShapeType.Symbol, context.data.symbolsMgr.resource, t);
     const shapes: Shape[] = sort_by_layer(context, selected);
     return editor.makeSymbol(context.data, shapes, name);
+}
+
+export function is_exsit_contact_shape(selected: Shape[]) {
+    for (let i = 0, len = selected.length; i < len; i++) {
+        if (selected[i].type === ShapeType.Contact) return true;
+    }
+    return false;
 }
 
 /**
@@ -986,7 +998,7 @@ export function is_shapes_if_symbolref(shapes: Shape[]) {
     let is_all_ref = true;
     for (let i = 0; i < shapes.length; i++) {
         const shape = shapes[i];
-        if(shape.type !== ShapeType.SymbolRef) {
+        if (shape.type !== ShapeType.SymbolRef) {
             is_all_ref = false;
             break;
         }

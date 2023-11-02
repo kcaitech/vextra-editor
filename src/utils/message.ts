@@ -31,6 +31,7 @@ export const message = (type: MessageType, context: string) => {
     const top = 120;
     const duration: number = 2.5;
     const fadeDur: number = 0.8;
+    const speed: number = 0.2;
     const style = toStyle({
         position: 'absolute',
         top: '0px',
@@ -61,7 +62,7 @@ export const message = (type: MessageType, context: string) => {
         body.removeChild(exist);
     }
     body.appendChild(el);
-    dropIn(el, fadeDur);
+    dropIn(el, speed);
 
     const preToOut = setTimeout(() => {
         fadeOut(el);
