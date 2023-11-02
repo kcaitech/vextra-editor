@@ -63,6 +63,7 @@ const isBind = () => {
 }
 const card_ref = ref<HTMLDivElement>();
 function edit_text() {
+    isBind();
     getDialogPosi(card_ref.value);
     isTextShow.value = true;
 }
@@ -85,9 +86,7 @@ const selected_watcher = (t: number) => {
         isBind();
     }
 }
-function variable_watcher(args: any) {
-    if (args === 'map') isBind();
-}
+
 function text_watcher(args: any) {
     if (args === 'text') get_text();
     if (args === 'map') isBind();
@@ -102,12 +101,12 @@ watch(() => shape.value, (v, o) => {
 
 watch(() => sym_layer.value, (v, o) => {
     if (o) {
-        o.unwatch(variable_watcher);
+        o.unwatch(text_watcher);
     }
     if (v) {
-        v.watch(variable_watcher);
+        v.watch(text_watcher);
     }
-}, { immediate: true })
+})
 
 const input = () => {
     if (textDefaultValue.value.trim().length > 0) {
@@ -131,7 +130,6 @@ function _delete() {
     if (!sym_layer.value) return;
     const editor = props.context.editor4Shape(sym_layer.value);
     editor.removeVar(is_bind.value.id);
-    isBind();
 }
 
 const change = () => {
@@ -144,13 +142,12 @@ const get_text = () => {
 }
 
 onMounted(() => {
-    isBind();
-    shape.value.watch(variable_watcher);
+    shape.value.watch(text_watcher);
     props.context.selection.watch(selected_watcher);
 })
 onUnmounted(() => {
     props.context.selection.unwatch(selected_watcher);
-    shape.value.unwatch(variable_watcher);
+    shape.value.unwatch(text_watcher);
 
 })
 </script>
