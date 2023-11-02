@@ -15,7 +15,6 @@ export enum Action {
     AddImage = 'add-image',
     AddTable = 'table',
     AddContact = 'add-contact',
-    AddComponent = 'component'
 }
 export enum KeyboardKeys { // 键盘按键类型
     Space = 'Space',
@@ -67,6 +66,7 @@ export class Tool extends Watchable(Object) {
     static INSERT_TABLE = 7;
     static CHANGE_CONTACT_APEX = 8;
     static NEW_FILE = 9;
+    static COMPONENT = 10;
     private m_current_action: Action = Action.AutoV;
     private m_context: Context;
     private m_show_title: boolean = true;
@@ -194,7 +194,7 @@ export class Tool extends Watchable(Object) {
     keydown_i(ctrl: boolean, meta: boolean, shift: boolean) {
         // todo
         if(shift) {
-            this.setAction(Action.AddComponent);
+            this.notify(Tool.COMPONENT);
         }
     }
     keydown_x(ctrl: boolean, meta: boolean, shift: boolean) {

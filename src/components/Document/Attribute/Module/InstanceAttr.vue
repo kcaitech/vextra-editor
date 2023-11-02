@@ -6,7 +6,7 @@ import {ref, onUnmounted, watch, onMounted} from 'vue'
 import {shape_track, get_shape_within_document} from '@/utils/content';
 import {SymbolRefShape} from '@kcdesign/data';
 import {MoreFilled} from '@element-plus/icons-vue';
-import {RefAttriListItem, get_var_for_ref, reset_all_attr_for_ref} from "@/utils/symbol";
+import {RefAttriListItem, get_var_for_ref, is_symbolref_disa, reset_all_attr_for_ref} from "@/utils/symbol";
 import {cardmap} from "./InstanceAttrCard/map";
 import Status from "./InstanceAttrCard/IACStatus.vue"
 import Visible from "./InstanceAttrCard/IACVisible.vue"
@@ -87,7 +87,7 @@ onUnmounted(() => {
         <TypeHeader :title="t('compos.instance_attr')" class="mt-24">
             <template #tool>
                 <div class="edit-comps">
-                    <div class="edit_svg" @click.stop="editComps">
+                    <div class="edit_svg" @click.stop="editComps" v-if="is_symbolref_disa(props.shapes)">
                         <svg-icon icon-class="edit-comp"></svg-icon>
                     </div>
                     <div class="reset_svg" @click.stop="selectReset">

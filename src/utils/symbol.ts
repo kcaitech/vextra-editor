@@ -993,7 +993,9 @@ export function is_part_of_symbol(shape: Shape) {
     }
     return false;
 }
-
+/**
+ * @description 判断选中的图层是否都是实例
+ */
 export function is_shapes_if_symbolref(shapes: Shape[]) {
     let is_all_ref = true;
     for (let i = 0; i < shapes.length; i++) {
@@ -1004,4 +1006,19 @@ export function is_shapes_if_symbolref(shapes: Shape[]) {
         }
     }
     return is_all_ref;
+}
+/**
+ * @description 判断选中的实例是否是同一个组件
+ */
+export function is_symbolref_disa(shapes: SymbolRefShape[]) {
+    let result = true;
+    const firstId = shapes[0].refId;
+    for (let i = 1; i < shapes.length; i++) {
+        const symbolref = shapes[i];
+        if(symbolref.refId !== firstId) {
+            result = false;
+            break;
+        }
+    }
+    return result;
 }
