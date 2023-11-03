@@ -50,6 +50,7 @@ const get_symbol_layer = () => {
     selectList.value = get_options_from_symbol(symbolshape, props.addType, props.variable, select);
     selectLayerid.value = select.map(item => item.id);
     selectLayerName.value = getShapesName(selectLayerid.value);
+    emit("change", selectLayerid.value);
 }
 
 function select_change(data: string[]) {

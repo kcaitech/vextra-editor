@@ -7,7 +7,7 @@ import CompLayerShow from '../PopoverMenu/ComposAttri/CompLayerShow.vue';
 import SelectLayerInput from './SelectLayerInput.vue';
 import { OverrideType, SymbolShape, Variable, VariableType } from '@kcdesign/data';
 import PopoverDefaultInput from './PopoverDefaultInput.vue';
-import { create_var_by_type, get_symbol_by_layer, is_bind_x_vari } from '@/utils/symbol';
+import { create_var_by_type, get_symbol_by_layer, is_bind_x_vari, modify_variable } from '@/utils/symbol';
 import { message } from '@/utils/message';
 import { Selection } from '@/context/selection';
 
@@ -66,17 +66,20 @@ function dlt_change(v: number) {
     dlt_value.value = !v;
 }
 
-//asdfg
 function save_layer_show(type: VariableType, name: string) {
-    if (is_bind.value) return isLayerShow.value = false;
-    if (!name.trim()) {
-        message('info', '属性名不能为空');
-        return;
+    if (is_bind.value) {
+        if (!sym_layer.value) return;
+        modify_variable(props.context, sym_layer.value, is_bind.value, name, dlt_value.value, selectId.value)
+    } else {
+        if (!name.trim()) {
+            message('info', '属性名不能为空');
+            return;
+        }
+        const shapes = props.context.selection.selectedShapes;
+        const ids = shapes.map(item => item.id);
+        if (!sym_layer.value) return;
+        create_var_by_type(props.context, VariableType.Visible, name, dlt_value.value, ids, sym_layer.value);
     }
-    const shapes = props.context.selection.selectedShapes;
-    const ids = shapes.map(item => item.id);
-    if (!sym_layer.value) return;
-    create_var_by_type(props.context, VariableType.Visible, name, dlt_value.value, ids, sym_layer.value);
     isLayerShow.value = false;
 }
 

@@ -7,7 +7,7 @@ import CompLayerShow from '../PopoverMenu/ComposAttri/CompLayerShow.vue';
 import { OverrideType, SymbolShape, TextShape, Variable, VariableType } from '@kcdesign/data';
 import SelectLayerInput from './SelectLayerInput.vue';
 import PopoverDefaultInput from './PopoverDefaultInput.vue';
-import { create_var_by_type, delete_variable, get_symbol_by_layer, is_bind_x_vari } from '@/utils/symbol';
+import { create_var_by_type, delete_variable, get_symbol_by_layer, is_bind_x_vari, modify_variable } from '@/utils/symbol';
 import { Selection } from '@/context/selection';
 import { message } from '@/utils/message';
 const props = defineProps<{
@@ -67,18 +67,20 @@ function edit_text() {
     getDialogPosi(card_ref.value);
     isTextShow.value = true;
 }
-//asdfg
 function save_layer_show(type: VariableType, name: string) {
-    if (is_bind.value) return isTextShow.value = false;
-    if (!name.trim()) {
-        message('info', '属性名不能为空');
-        return;
+    if (is_bind.value) {
+        if (!sym_layer.value) return;
+        modify_variable(props.context, sym_layer.value, is_bind.value, name, is_bind.value.value, selectId.value)
+    } else {
+        if (!name.trim()) {
+            message('info', '属性名不能为空');
+            return;
+        }
+        const shapes = props.context.selection.selectedShapes;
+        const ids = shapes.map(item => item.id);
+        if (!sym_layer.value) return;
+        create_var_by_type(props.context, VariableType.Text, name, textDefaultValue.value, ids, sym_layer.value);
     }
-    const shapes = props.context.selection.selectedShapes;
-    const ids = shapes.map(item => item.id);
-    if (!sym_layer.value) return;
-    const text = (shapes[0] as TextShape).text.getText(0, Infinity);
-    create_var_by_type(props.context, VariableType.Text, name, text, ids, sym_layer.value);
     isTextShow.value = false;
 }
 const selected_watcher = (t: number) => {

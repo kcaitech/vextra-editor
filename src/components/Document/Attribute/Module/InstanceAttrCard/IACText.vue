@@ -17,7 +17,7 @@ const selectAllText = () => {
 function get_value() {
     const symref = props.context.selection.symbolrefshape;
     if (!symref) return;
-    const text = get_vari_value_for_ref(symref, props.data.variable);
+    const text = get_vari_value_for_ref(symref, props.data.variable).slice(0, -1);
     textValue.value = text;
 }
 const keysumbit = (e: KeyboardEvent) => {
