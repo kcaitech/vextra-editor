@@ -35,5 +35,5 @@ router.beforeEach((to, from, next) => {
     }
 })
 export const permIsEdit = (context: Context) => {
-    return Boolean(context.workspace.documentPerm === Perm.isEdit);
+    return Boolean(context.workspace.documentPerm === Perm.isEdit && !context.tool.isLable);
 }

@@ -66,6 +66,7 @@ export class Tool extends Watchable(Object) {
     static INSERT_FRAME = 6;
     static INSERT_TABLE = 7;
     static CHANGE_CONTACT_APEX = 8;
+    static LABLE_CHANGE = 10;
     static NEW_FILE = 9;
     private m_current_action: Action = Action.AutoV;
     private m_context: Context;
@@ -75,6 +76,7 @@ export class Tool extends Watchable(Object) {
     private m_table_size: { row: number, col: number } = { row: 3, col: 3 };
     private m_contact_apex: Shape | undefined;
     private m_contact_from: boolean = false;
+    private m_lable_status: boolean = false;
     constructor(context: Context) {
         super();
         this.m_context = context;
@@ -238,5 +240,12 @@ export class Tool extends Watchable(Object) {
     }
     setContactFrom(v: boolean) {
         this.m_contact_from = v;
+    }
+    get isLable() {
+        return this.m_lable_status;
+    }
+    setLableSwitch(v: boolean) {
+        this.m_lable_status = v;
+        this.notify(Tool.LABLE_CHANGE);
     }
 }
