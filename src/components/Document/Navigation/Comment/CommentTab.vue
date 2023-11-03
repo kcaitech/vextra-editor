@@ -4,7 +4,7 @@ import { Context } from "@/context";
 import CommentItem from "./CommentItem.vue";
 import CommentMenu from "./CommentMenu.vue";
 import { useI18n } from 'vue-i18n';
-import * as comment_api from '@/apis/comment';
+import * as comment_api from '@/request/comment';
 import { useRoute } from 'vue-router';
 import { Action } from "@/context/tool";
 import { ElScrollbar } from 'element-plus'
@@ -298,7 +298,7 @@ const showHiddenLeft = () => {
         align-items: center;
         >button {
             margin-top: 10px;
-            font-size: 10px;
+            font-size: var(--font-default-fontsize);
             border: none;
             height: 30px;
             color: #fff;

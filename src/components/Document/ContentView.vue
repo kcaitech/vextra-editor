@@ -15,7 +15,19 @@ import { Menu } from '@/context/menu';
 import { debounce } from 'lodash';
 import { useI18n } from 'vue-i18n';
 import { v4 as uuid } from "uuid";
-import { _updateRoot, is_drag, drop, right_select, adapt_page, flattenShapes, get_menu_items, selectShapes, color2string, init_insert_table } from '@/utils/content';
+import {
+  _updateRoot,
+  is_drag,
+  drop,
+  right_select,
+  adapt_page,
+  flattenShapes,
+  get_menu_items,
+  selectShapes,
+  color2string,
+  init_insert_table,
+  root_scale, root_trans
+} from '@/utils/content';
 import { paster } from '@/utils/clipboard';
 import { insertFrameTemplate } from '@/utils/artboardFn';
 import { Comment } from '@/context/comment';
@@ -26,10 +38,11 @@ import { Action, Tool } from "@/context/tool";
 import { initpal } from './initpal';
 import UsersSelection from './Selection/TeamWork/UsersSelection.vue';
 import CellSetting from '@/components/Document/Menu/TableMenu/CellSetting.vue';
-import * as comment_api from '@/apis/comment';
+import * as comment_api from '@/request/comment';
 // import Overview from './Content/Overview.vue';
 import Creator from './Creator.vue';
 import { TaskType } from '@/context/escstack';
+import { Wheel, EffectType, fourWayWheel } from '@/utils/wheel';
 interface Props {
     context: Context
     page: Page
@@ -105,29 +118,14 @@ function setMousedownXY(e: MouseEvent) { // 记录鼠标在页面上的点击位
 function onMouseWheel(e: WheelEvent) { // 滚轮、触摸板事件
     if (contextMenu.value) return; //右键菜单已打开
     e.preventDefault();
-    const xy = workspace.value.root;
-    const { ctrlKey, metaKey, shiftKey, deltaX, deltaY } = e;
-    const offsetX = e.x - xy.x;
-    const offsetY = e.y - xy.y;
+    const { ctrlKey, metaKey, deltaX, deltaY } = e;
     if (ctrlKey || metaKey) { // 缩放
-        if (Number((props.context.workspace.matrix.toArray()[0] * 100).toFixed(0)) <= 2) {
-            scale_delta_ = 1
-        } else {
-            scale_delta_ = 1 / scale_delta;
-        }
-        matrix.trans(-offsetX, -offsetY);
-        matrix.scale(Math.sign(deltaY) <= 0 ? scale_delta : scale_delta_);
-        matrix.trans(offsetX, offsetY);
+      root_scale(props.context, e);
     } else {
-        if (Math.abs(deltaX) + Math.abs(deltaY) < 150) { // 临时适配方案，需根据使用设备进一步完善适配
+        if (Math.abs(deltaX) + Math.abs(deltaY) < 100) { // 临时适配方案，需根据使用设备进一步完善适配
             matrix.trans(-deltaX, -deltaY);
         } else {
-            const delta = deltaY > 0 ? -wheel_step : wheel_step;
-            if (shiftKey) {
-                matrix.trans(delta, 0);
-            } else {
-                matrix.trans(0, delta);
-            }
+          root_trans(props.context, e, wheel_step);
         }
     }
     workspace.value.notify(WorkSpace.MATRIX_TRANSFORMATION);
@@ -135,6 +133,7 @@ function onMouseWheel(e: WheelEvent) { // 滚轮、触摸板事件
 }
 function onKeyDown(e: KeyboardEvent) { // 键盘监听
     if (e.target instanceof HTMLInputElement) return;
+    if (e.repeat) return;
     if (e.code === KeyboardKeys.Space) {
         if (workspace.value.select || spacePressed.value) return;
         // overview.value = true;
@@ -306,16 +305,19 @@ function select(e: MouseEvent) {
 function createSelector(e: MouseEvent) { // 创建一个selector框选器
     const { clientX, clientY, altKey } = e;
     const { x: rx, y: ry } = workspace.value.root;
-    const { x: mx, y: my } = { x: clientX - rx, y: clientY - ry };
-    const { x: sx, y: sy } = mousedownOnClientXY;
+    const xy = matrix_inverse.computeCoord2(clientX - rx, clientY - ry);
+    const { x: mx, y: my } = { x: xy.x, y: xy.y };
+    const { x: sx, y: sy } = mousedownOnPageXY;
     const left = Math.min(sx, mx);
     const right = Math.max(mx, sx);
     const top = Math.min(my, sy);
     const bottom = Math.max(my, sy);
-    selectorFrame.value.top = top;
-    selectorFrame.value.left = left;
-    selectorFrame.value.width = right - left;
-    selectorFrame.value.height = bottom - top;
+    const p = matrix_inverse.inverseCoord({ x: left, y: top })
+    const s = matrix_inverse.inverseCoord({ x: right, y: bottom })
+    selectorFrame.value.top = Math.min(p.y, s.y);
+    selectorFrame.value.left = Math.min(p.x, s.x);
+    selectorFrame.value.width = Math.max(p.x, s.x) - Math.min(p.x, s.x);
+    selectorFrame.value.height = Math.max(p.y, s.y) - Math.min(p.y, s.y);
     selectorFrame.value.includes = altKey;
     selector_mount.value = true;
 }
@@ -335,6 +337,7 @@ function onMouseDown(e: MouseEvent) {
             pageViewDragStart(e); // 空格键press，准备拖动页面
         } else {
             isMouseLeftPress = true;
+            wheel = fourWayWheel(props.context, undefined, mousedownOnPageXY);
         }
         document.addEventListener("mousemove", onMouseMove);
         document.addEventListener("mouseup", onMouseUp);
@@ -346,12 +349,26 @@ function onMouseDown(e: MouseEvent) {
     }
 }
 // mousemove(target：document)
+let timer: any = null;
 function onMouseMove(e: MouseEvent) {
     if (workspace.value.controller == 'page') {
         if (e.buttons == 1 && spacePressed.value) pageViewDragging(e); // 拖拽页面
+        if (isDragging && wheel) {
+            wheel.moving(e);
+            clearInterval(timer);
+            timer = null;
+            timer = setInterval(() => {
+                createSelector(e);
+            }, 6);
+            createSelector(e);
+        } else {
+            isDragging = true;
+        }
     }
 }
 // mousemove(target：contentview) 
+let isDragging: boolean = false;
+let wheel: Wheel | undefined = undefined;
 function onMouseMove_CV(e: MouseEvent) {
     if (workspace.value.controller === 'page') {
         if (!spacePressed.value) {
@@ -377,6 +394,10 @@ function onMouseUp(e: MouseEvent) {
                 selectEnd();
             }
         }
+        if (wheel) wheel = wheel.remove();
+        isDragging = false;
+        clearInterval(timer);
+        timer = null;
         document.removeEventListener('mousemove', onMouseMove);
         document.removeEventListener('mouseup', onMouseUp);
     }
@@ -515,7 +536,7 @@ onUnmounted(() => {
         @wheel="onMouseWheel" @mousedown="onMouseDown" @mousemove="onMouseMove_CV" @mouseleave="onMouseLeave"
         @drop="(e: DragEvent) => { drop(e, props.context, t) }" @dragover.prevent
         :style="{ 'background-color': background_color }">
-        <PageView :context="props.context" :data="(props.page as Page)" :matrix="matrix.toArray()" />
+        <PageView :context="props.context" :data="(props.page as Page)" :matrix="matrix" />
         <TextSelection :context="props.context" :matrix="matrix"> </TextSelection>
         <UsersSelection :context="props.context" :matrix="matrix" v-if="avatarVisi" />
         <SelectionView :context="props.context" :matrix="matrix" />

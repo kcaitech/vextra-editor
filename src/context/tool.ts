@@ -66,6 +66,7 @@ export class Tool extends Watchable(Object) {
     static INSERT_FRAME = 6;
     static INSERT_TABLE = 7;
     static CHANGE_CONTACT_APEX = 8;
+    static NEW_FILE = 9;
     private m_current_action: Action = Action.AutoV;
     private m_context: Context;
     private m_show_title: boolean = true;
@@ -126,7 +127,7 @@ export class Tool extends Watchable(Object) {
                 this.m_context.cursor.setType('comment-0');
             } else this.m_context.cursor.setType('cross-0');
 
-        } else this.m_context.cursor.setType('auto-0');
+        } else this.m_context.cursor.reset();
         this.notify(Tool.CHANGE_ACTION);
     }
     reset() {
@@ -135,7 +136,7 @@ export class Tool extends Watchable(Object) {
             exe_result = true;
         }
         this.m_current_action = Action.AutoV;
-        this.m_context.cursor.setType('auto-0');
+        this.m_context.cursor.reset();
         this.notify(Tool.CHANGE_ACTION);
         return exe_result;
     }
@@ -182,6 +183,11 @@ export class Tool extends Watchable(Object) {
             this.notify(Tool.UNGROUP);
         }
     }
+    keydown_n(ctrl: boolean, meta: boolean,shift: boolean, alt: boolean) {
+        if ((ctrl || meta) && !shift && !alt) {
+            this.notify(Tool.NEW_FILE);
+        }
+    }
     keydown_i(ctrl: boolean, meta: boolean, shift: boolean) {
         // todo
     }
@@ -192,7 +198,7 @@ export class Tool extends Watchable(Object) {
     get isShowTitle() {
         return this.m_show_title;
     }
-    setTitleVisibale(val: boolean) {
+    setTitleVisible(val: boolean) {
         this.m_show_title = val;
         this.notify(Tool.TITILE_VISIBLE);
     }

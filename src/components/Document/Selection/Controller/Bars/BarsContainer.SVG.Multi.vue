@@ -204,7 +204,7 @@ function setCursor(t: CtrlElementType, force?: boolean) {
     else if (t === CtrlElementType.RectLeft) props.context.cursor.setType('scale-0', force);
 }
 function bar_mouseleave() {
-    props.context.cursor.setType('auto-0');
+    props.context.cursor.reset();
 }
 function window_blur() {
     if (isDragging) isDragging = false;

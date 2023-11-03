@@ -65,8 +65,15 @@ export const Createteam = {
     pertipsA: '项目权限: 公开，所有团队成员均可访问',
     pertipsB: '项目权限: 非公开，仅通过链接邀请成员可访问',
     Transfertips: '转让创建者权限后，您将不再拥有该项目，后续作为管理员留在项目中。',
-    confirmTransfer: '确定转让'
+    confirmTransfer: '确定转让',
 
+    project: '项目组',
+    team: '团队',
+
+    welcome: '欢迎加入',
+    rejectprompt1: '申请加入',
+    rejectprompt2: '被拒绝，如有疑问，请联系项目组管理员。',
+    shareprojecttips: '项目中所有成员均可访问',
 }
 
 export const inviteMember = {
@@ -75,86 +82,90 @@ export const inviteMember = {
     permission_tips: '发送链接或二维码给同事申请加入',
     permission_switch: '邀请链接开关：',
     permission_tipsA: '同事申请后，需管理员确认后才能加入',
+    copy_success: '复制成功',
+    copy_failure: '复制失败',
 }
 
-export const joinTeam={
-    jointeamtipsA:'申请加入团队：',
+export const joinTeam = {
+    jointeamtipsA: '申请加入团队：',
     jurisdiction: '加入团队后，可访问该团队中的项目、文件、资源',
-    jointeamtipsB:'申请加入',
-    jointeamtipsC:'已发送申请，',
-    jointeamtipsC1:'即将进入应用首页，待审批通过后，可查看该团队内容',
-    jointeamtipsD:'团队邀请已关闭，如需加入团队，请联系团队管理员处理。',
+    jointeamtipsB: '申请加入',
+    jointeamtipsC: '已发送申请，',
+    jointeamtipsC1: '即将进入应用首页，待审批通过后，可查看该团队内容',
+    jointeamtipsD: '团队邀请已关闭，如需加入团队，请联系团队管理员处理。',
     read: '阅读',
     edit: '编辑',
 }
 
-export const moveprojectfill={
-    name:'文件名称: ',
-    location:'当前位置: ',
-    my_file:'我的文件',
-    move_to:'移动文件至: ',
-    private_file:'设为私有文件',
-    share_Project:'收到的共享项目',
-    cancel:'取消',
+export const moveprojectfill = {
+    name: '文件名称: ',
+    location: '当前位置: ',
+    my_file: '我的文件',
+    move_to: '移动文件至: ',
+    private_file: '设为私有文件',
+    share_Project: '收到的共享项目',
+    cancel: '取消',
 }
 
-export const projectlist={
-    datanull:'未加入任何项目',
-    addproject:'新建项目',
-    project_name:'项目名称',
-    project_description:'项目描述',
-    creator:'创建者',
-    operation:'操作'
+export const projectlist = {
+    datanull: '未加入任何项目',
+    addproject: '新建项目',
+    project_name: '项目名称',
+    project_description: '项目描述',
+    creator: '创建者',
+    operation: '操作',
+    enterproject: '进入项目',
+    confirm1: '确认',
 }
 
-export const projectpage={
-    menu:'项目菜单',
-    back:'回到上一级',
-    input_tips:'点击输入项目描述…',
-    unpin:'取消固定',
-    fixed_items:'固定项目',
-    member:'邀请项目成员',
-    permission:'成员权限',
-    file:'文件',
-    recycle_bin:'回收站',
+export const projectpage = {
+    menu: '项目菜单',
+    back: '回到上一级',
+    input_tips: '点击输入项目描述…',
+    unpin: '取消固定',
+    fixed_items: '固定项目',
+    member: '邀请项目成员',
+    permission: '成员权限',
+    file: '文件',
+    recycle_bin: '回收站',
 }
 
-export const teammember={
-    transferCreator_context:'转让创建者权限后，您将不再拥有该团队，后续作为管理员留在团队中。',
-    transferCreator_title:'转移创建者权限',
-    transferCreator_confirm:'确定转移',
-    outTeamDialog_context:'移出团队后，该成员无法再访问团中的项目及资源。',
-    outTeamDialog_title:'移出团队',
-    outTeamDialog_confirm:'确认移出',
-    exitTeamDialog_context:'退出团队后，团队中的所有项目，文件及资源，将无法再进行访问。',
-    exitTeamDialog_title:'离开团队',
-    exitTeamDialog_confirm:'确认离开',
-    name:'姓名',
-    team_permission:'团队权限',
+export const teammember = {
+    transferCreator_context: '转让创建者权限后，您将不再拥有该团队，后续作为管理员留在团队中。',
+    transferCreator_title: '转移创建者权限',
+    transferCreator_confirm: '确定转移',
+    outTeamDialog_context: '移出团队后，该成员无法再访问团中的项目及资源。',
+    outTeamDialog_title: '移出团队',
+    outTeamDialog_confirm: '确认移出',
+    exitTeamDialog_context: '退出团队后，团队中的所有项目，文件及资源，将无法再进行访问。',
+    exitTeamDialog_title: '离开团队',
+    exitTeamDialog_confirm: '确认离开',
+    name: '姓名',
+    team_permission: '团队权限',
     all: '全部',
     creator: '创建者',
     manager: '管理员',
     editable: '可编辑',
     Readonly: '仅阅读',
-    leave_team:'离开团队',
-    move_team:'移出团队',
-    transfer_creator:'转移创建者',
-    permission_tips:'已设为：',
-    transfer_tips:'已转让给：',
+    leave_team: '离开团队',
+    move_team: '移出团队',
+    transfer_creator: '转移创建者',
+    permission_tips: '已设为：',
+    transfer_tips: '已转让给：',
 }
 
-export const teampage={
-    addproject:'新建项目',
-    addmember:'邀请成员',
-    search_default_tipsA:'搜索项目/创建者',
-    search_default_tipsB:'搜索成员',
-    project:'项目',
-    members:'成员',
-    team_set:'团队设置',
+export const teampage = {
+    addproject: '新建项目',
+    addmember: '邀请成员',
+    search_default_tipsA: '搜索项目/创建者',
+    search_default_tipsB: '搜索成员',
+    project: '项目',
+    members: '成员',
+    team_set: '团队设置',
 }
 
-export const teamprojectmenu={
-    rename:'重命名',
+export const teamprojectmenu = {
+    rename: '重命名',
     projectsetting: '项目访问设置',
     membersetting: '成员权限设置',
     fixed: '固定项目',
@@ -165,19 +176,23 @@ export const teamprojectmenu={
 
 export const teamsetting = {
     team_name: '团队名称',
-    edit_name:' 修改名称',
+    edit_name: ' 修改名称',
     team_description: '团队描述',
-    edit_description:'修改描述',
+    edit_description: '修改描述',
     team_avatar: '团队头像',
-    edit_avatar:'修改头像',
+    edit_avatar: '修改头像',
     avatar_restriction: '选择2M以内的JPG、PNG格式图片作为头像显示',
-    disband_team:'解散团队',
-    disband_team_tips:'解散团队，删除团队文件，不可恢复',
-    leave_team:'离开团队',
-    leave_team_tips:'离开团队后，将无法再查看团队项目及资源',
-    disband_team_tipsB:'解散团队后，将彻底删除团队中包含的全部项目资料，且不可恢复。',
-    leave:'离开',
-    disband:'解散',
-    confirm:'确定',
-    cancel:'取消', 
+    disband_team: '解散团队',
+    disband_team_tips: '解散团队，删除团队文件，不可恢复',
+    leave_team: '离开团队',
+    leave_team_tips: '离开团队后，将无法再查看团队项目及资源',
+    disband_team_tipsB: '解散团队后，将彻底删除团队中包含的全部项目资料，且不可恢复。',
+    leave: '离开',
+    disband: '解散',
+    confirm: '确定',
+    cancel: '取消',
+    title_name1: '修改团队名称',
+    title_name2: '修改团队描述',
+    title_name3: '解散团队',
+    title_name4: '离开团队',
 }

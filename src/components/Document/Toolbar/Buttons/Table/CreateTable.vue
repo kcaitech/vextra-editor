@@ -165,7 +165,7 @@ const createTable = (row?: number, col?: number) => {
                 border-radius: 4px;
                 height: 20px;
                 border: 1px solid rgba(0, 0, 0, 0.3);
-                font-size: 10px;
+                font-size: var(--font-default-fontsize);
                 padding-left: 5px;
             }
 
@@ -188,7 +188,7 @@ const createTable = (row?: number, col?: number) => {
                 border-radius: 4px;
                 height: 20px;
                 border: 1px solid rgba(0, 0, 0, 0.3);
-                font-size: 10px;
+                font-size: var(--font-default-fontsize);
                 padding-left: 5px;
             }
 

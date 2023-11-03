@@ -301,7 +301,7 @@ const setTextSize = () => {
     if (fonstSize.value.length < 1) {
         fonstSize.value = 1
     }
-    if (!isNaN(Number(fonstSize.value))) {
+    if (!isNaN(Number(fonstSize.value)) && Number(fonstSize.value > 0)) {
         changeTextSize(fonstSize.value);
         textFormat();
     } else {
@@ -372,7 +372,7 @@ const textFormat = () => {
                 const referenceValue = formats[0][key];
                 let foundEqual = true;
                 for (let i = 1; i < formats.length; i++) {
-                    if (key === 'color' || key === 'highlight' && formats[i][key] && referenceValue) {
+                    if (formats[i][key] && referenceValue && (key === 'color' || key === 'highlight')) {
                         const { alpha: alpha1, blue: blue1, green: green1, red: red1 } = formats[i][key];
                         const { alpha: alpha2, blue: blue2, green: green2, red: red2 } = referenceValue;
                         if (alpha1 !== alpha2 || blue1 !== blue2 || green1 !== green2 || red1 !== red2) {
@@ -989,7 +989,7 @@ onUnmounted(() => {
                 input[type="text"] {
                     -moz-appearance: textfield;
                     appearance: textfield;
-                    font-size: 10px;
+                    font-size: var(--font-default-fontsize);
                 }
 
                 input:focus {
