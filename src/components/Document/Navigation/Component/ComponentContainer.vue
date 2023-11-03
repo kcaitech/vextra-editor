@@ -21,7 +21,8 @@ const props = defineProps<Props>();
 const {t} = useI18n();
 const top_wrapper = ref<Element | null>(null);
 const scroll_container = ref<Element | null>(null);
-
+const dlt_set = new Set();
+const null_data =  [];
 function register_container() {
     const el = props.root || top_wrapper.value;
     if (!el) return;
@@ -108,8 +109,8 @@ onUnmounted(() => {
                                 :is-attri="props.isAttri" :card-type="props.cardType">
             </ComponentLocalData>
             <ComponentRootCollapse v-if="scroll_container" :context="props.context" :extend="false"
-                                   :container="scroll_container" :title="t('compos.lib_line')" :data="[]"
-                                   :status_set="new Set()" :is-attri="props.isAttri" :card-type="props.cardType">
+                                   :container="scroll_container" :title="t('compos.lib_line')" :data="null_data"
+                                   :status_set="dlt_set" :is-attri="props.isAttri" :card-type="props.cardType">
             </ComponentRootCollapse>
         </el-scrollbar>
         <ContextMenu v-if="compMenu" :x="compMenuPosition.x" :y="compMenuPosition.y" ref="contextMenuEl"

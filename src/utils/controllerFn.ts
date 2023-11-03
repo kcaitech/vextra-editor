@@ -1,20 +1,20 @@
-import { Context } from "@/context";
-import { message } from "./message";
-import { replace } from "./clipboard";
-import { is_parent_locked, is_parent_unvisible } from "@/utils/shapelist";
+import {Context} from "@/context";
+import {message} from "./message";
+import {replace} from "./clipboard";
+import {is_parent_locked, is_parent_unvisible} from "@/utils/shapelist";
 import {getName, map_from_shapes, permIsEdit} from "./content";
-import { Action } from "@/context/tool";
-import { AsyncTransfer, GroupShape, Shape, ShapeType, TableShape } from "@kcdesign/data";
-import { ClientXY, PageXY } from "@/context/selection";
-import { debounce } from "lodash";
-import { WorkSpace } from "@/context/workspace";
-import { Menu } from "@/context/menu";
-import { sort_by_layer } from "./group_ungroup";
-import {is_allow_to_create_sym, make_symbol} from "./symbol";
+import {Action} from "@/context/tool";
+import {AsyncTransfer, GroupShape, Shape, ShapeType, TableShape} from "@kcdesign/data";
+import {ClientXY, PageXY} from "@/context/selection";
+import {debounce} from "lodash";
+import {WorkSpace} from "@/context/workspace";
+import {Menu} from "@/context/menu";
+import {sort_by_layer} from "./group_ungroup";
+import {make_symbol} from "./symbol";
 
 export function keyboardHandle(e: KeyboardEvent, context: Context, t: Function) {
     if (!permIsEdit(context) || context.tool.action === Action.AddComment) return;
-    const { target, shiftKey, ctrlKey, metaKey, altKey } = e;
+    const {target, shiftKey, ctrlKey, metaKey, altKey} = e;
     if (target instanceof HTMLInputElement) return;
     const shapes = context.selection.selectedShapes;
     if (!shapes.length) return;
@@ -149,6 +149,7 @@ export function keyboardHandle(e: KeyboardEvent, context: Context, t: Function) 
         }
     }
 }
+
 export function d(s: { x: number, y: number }, e: { x: number, y: number }): number {
     const is2r = e.x - s.x;
     const is2b = e.y - s.y;
@@ -165,13 +166,16 @@ export function d(s: { x: number, y: number }, e: { x: number, y: number }): num
     }
     return d;
 }
+
 export function getDelta(s: Shape, p: PageXY) {
     const f2r = s.frame2Root();
-    return { dx: p.x - f2r.x, dy: p.y - f2r.y };
+    return {dx: p.x - f2r.x, dy: p.y - f2r.y};
 }
+
 export function get_speed(e1: MouseEvent, e2: MouseEvent) {
     return Math.hypot(Math.abs(e2.clientX - e1.clientX), Math.abs(e2.clientY - e1.clientY));
 }
+
 export function get_range(index1: { row: number, col: number }, index2: { row: number, col: number }) {
     const t1 = index1.row > index2.row;
     const t2 = index1.col > index2.col;
@@ -182,14 +186,16 @@ export function get_range(index1: { row: number, col: number }, index2: { row: n
         cole: t2 ? index1.col : index2.col,
     }
 }
+
 /**
  *          7
  *      6        8
- *  5       .        1 
+ *  5       .        1
  *      4        2
  *          3
  */
 export type ActionDirection = 1 | 2 | 3 | 4 | 5 | 6 | 7 | 8;
+
 export function get_direction(rotation: number) {
     if (rotation >= 0 && rotation < 22) return 0;
     else if (rotation >= 22 && rotation < 77) return 45;
@@ -202,6 +208,7 @@ export function get_direction(rotation: number) {
     else if (rotation >= 338 && rotation <= 360) return 0;
     else return 0;
 }
+
 export function gen_offset_map(shape: Shape, down: PageXY) {
     const m = shape.matrix2Root(), f = shape.frame;
     const lt = m.computeCoord2(0, 0);
@@ -210,13 +217,14 @@ export function gen_offset_map(shape: Shape, down: PageXY) {
     const rt = m.computeCoord2(f.width, 0);
     const lb = m.computeCoord2(0, f.height);
     return {
-        lt: { x: lt.x - down.x, y: lt.y - down.y },
-        rb: { x: rb.x - down.x, y: rb.y - down.y },
-        pivot: { x: pivot.x - down.x, y: pivot.y - down.y },
-        rt: { x: rt.x - down.x, y: rt.y - down.y },
-        lb: { x: lb.x - down.x, y: lb.y - down.y }
+        lt: {x: lt.x - down.x, y: lt.y - down.y},
+        rb: {x: rb.x - down.x, y: rb.y - down.y},
+        pivot: {x: pivot.x - down.x, y: pivot.y - down.y},
+        rt: {x: rt.x - down.x, y: rt.y - down.y},
+        lb: {x: lb.x - down.x, y: lb.y - down.y}
     }
 }
+
 export function pre_translate(context: Context, shapes: Shape[]) {
     context.selection.unHoverShape();
     context.workspace.setSelectionViewUpdater(false);
@@ -224,11 +232,13 @@ export function pre_translate(context: Context, shapes: Shape[]) {
     context.assist.set_trans_target(shapes);
     context.cursor.cursor_freeze(true); // 拖动过程中禁止鼠标光标切换
 }
+
 export function modify_mouse_position_by_type(update_type: number, startPosition: ClientXY, mousePosition: ClientXY,) {
     if (update_type === 3) startPosition.x = mousePosition.x, startPosition.y = mousePosition.y;
     else if (update_type === 2) startPosition.y = mousePosition.y;
     else if (update_type === 1) startPosition.x = mousePosition.x;
 }
+
 export function migrate_immediate(context: Context, asyncTransfer: AsyncTransfer, shapes: Shape[], shape: Shape) {
     if (!shapes.length) return;
     const p = shape.matrix2Root().computeCoord2(4, 4);
@@ -238,6 +248,7 @@ export function migrate_immediate(context: Context, asyncTransfer: AsyncTransfer
     const m = getCloesetContainer(context, shape).id !== targetParent.id;
     if (m && asyncTransfer) asyncTransfer.migrate(targetParent as GroupShape, sort_by_layer(context, shapes));
 }
+
 // 判断当前所处的wrap
 function getCloesetContainer(context: Context, shape: Shape): Shape {
     let result = context.selection.selectedPage!
@@ -248,8 +259,10 @@ function getCloesetContainer(context: Context, shape: Shape): Shape {
     }
     return result
 }
+
 // 迁移
 export const migrate = debounce(migrate_immediate, 100);
+
 export function end_transalte(context: Context) {
     context.workspace.translating(false);
     context.workspace.setSelectionViewUpdater(true);
@@ -258,6 +271,7 @@ export function end_transalte(context: Context) {
     context.workspace.setCtrl('page');
     context.cursor.cursor_freeze(false);
 }
+
 export function check_status(context: Context) {
     context.menu.menuMount(); // 关闭可能已经打开的右键菜单
     context.menu.notify(Menu.SHUTDOWN_POPOVER); // 关闭可能已经打开的弹窗
