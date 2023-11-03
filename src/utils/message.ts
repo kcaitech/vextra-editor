@@ -28,13 +28,14 @@ const C = {
     }
 }
 export const message = (type: MessageType, context: string) => {
-    const top = 120;
+    const offset = 120;
     const duration: number = 2.5;
     const fadeDur: number = 0.8;
-    const speed: number = 0.2;
+    const speed: number = 0;
+    const position: 'top' | 'bottom' = "top";
     const style = toStyle({
         position: 'absolute',
-        top: '0px',
+        bottom: '0',
         left: '50%',
         transform: 'translateX(-50%)',
         'min-width': '72px',
@@ -73,7 +74,7 @@ export const message = (type: MessageType, context: string) => {
     function dropIn(el: HTMLDivElement, dur: number) {
         const drop = setTimeout(() => {
             el.style.transition = dur + 's';
-            el.style.top = top + 'px';
+            el.style[position] = offset + 'px';
             el.style.opacity = '1';
             clearTimeout(drop);
         }, 1);

@@ -752,7 +752,10 @@ function get_topology_map(shape: Shape) {
         const is_ref = item.type === ShapeType.SymbolRef
         const c_childs = is_ref ? item.naviChilds : item.childs;
         if (c_childs?.length || is_ref) {
-            deps.push({shape: shape.id, ref: childs[i].type === ShapeType.SymbolRef ? item.refId : item.id});
+            deps.push({
+                shape: get_id(shape.type === ShapeType.SymbolRef ? shape.refId : shape.id),
+                ref: get_id(is_ref ? item.refId : item.id)
+            });
         }
         if (!c_childs?.length) continue;
         deps.push(...get_topology_map(item));
@@ -810,11 +813,24 @@ function is_exist_single_stick(deps: { shape: string, ref: string }[]) {
     return is_single;
 }
 
+function get_id(raw_id: string) {
+    return raw_id;
+    // const index = raw_id.lastIndexOf('/');
+    // if (index > -1) {
+    //     return raw_id.slice(index + 1);
+    // } else {
+    //     return raw_id;
+    // }
+}
+
 /**
  * @description 检查symbol与ref之间是否存在循环引用
  */
 export function is_circular_ref2(symbol: Shape, refId: string): boolean {
-    let deps: { shape: string, ref: string }[] = [...get_topology_map(symbol), {shape: refId, ref: symbol.id}];
+    let deps: { shape: string, ref: string }[] = [...get_topology_map(symbol), {
+        shape: get_id(refId),
+        ref: get_id(symbol.id)
+    }];
     if (deps.length < 2) return false;
     while (deps.length && is_exist_single_stick(deps)) {
         deps = filter_deps(deps, 'shape', 'ref');
@@ -993,6 +1009,7 @@ export function is_part_of_symbol(shape: Shape) {
     }
     return false;
 }
+
 /**
  * @description 判断选中的图层是否都是实例
  */
@@ -1007,6 +1024,7 @@ export function is_shapes_if_symbolref(shapes: Shape[]) {
     }
     return is_all_ref;
 }
+
 /**
  * @description 判断选中的实例是否是同一个组件
  */
@@ -1015,7 +1033,7 @@ export function is_symbolref_disa(shapes: SymbolRefShape[]) {
     const firstId = shapes[0].refId;
     for (let i = 1; i < shapes.length; i++) {
         const symbolref = shapes[i];
-        if(symbolref.refId !== firstId) {
+        if (symbolref.refId !== firstId) {
             result = false;
             break;
         }
