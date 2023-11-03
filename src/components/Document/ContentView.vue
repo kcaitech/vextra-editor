@@ -56,7 +56,6 @@ const STATE_CHECKMOVE = 1;
 const STATE_MOVEING = 2;
 const workspace = computed(() => props.context.workspace);
 const comment = computed(() => props.context.comment);
-let scale_delta = 1.06;
 const wheel_step = 50;
 const spacePressed = ref<boolean>(false);
 const contextMenu = ref<boolean>(false);
