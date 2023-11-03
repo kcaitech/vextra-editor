@@ -1002,10 +1002,10 @@ export function get_status_vari_for_symbolref(symbolref: SymbolRefShape, variabl
  * @description 判断图层是否为组件的组成部分
  */
 export function is_part_of_symbol(shape: Shape) {
-    let s: Shape | undefined = shape;
-    while (s) {
-        if (s.type === ShapeType.Symbol) return true;
-        s = s.parent;
+    let p: Shape | undefined = shape.parent;
+    while (p) {
+        if (p.type === ShapeType.Symbol) return true;
+        p = p.parent;
     }
     return false;
 }

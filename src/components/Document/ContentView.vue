@@ -262,7 +262,8 @@ function contextMenuMount(e: MouseEvent) {
     const workspace = props.context.workspace, selection = props.context.selection, menu = props.context.menu;
     menu.menuMount();
     selection.unHoverShape();
-    site.x = e.clientX, site.y = e.clientY;
+    site.x = e.clientX;
+    site.y = e.clientY;
     const root = workspace.root;
     contextMenuPosition.x = e.clientX - root.x;
     contextMenuPosition.y = e.clientY - root.y;
