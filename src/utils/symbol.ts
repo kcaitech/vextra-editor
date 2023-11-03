@@ -1044,7 +1044,6 @@ export function is_symbolref_disa(shapes: SymbolRefShape[]) {
 /**
  * @description 修改图层显示、实例切换、文本内容变量的绑定对象(该方法存在隐患，必须保证编辑的symbol在当前页面)
  * @param symbol 当前组件
- * @param type 变量类型
  * @param variable
  * @param new_name 新名称
  * @param new_dlt_value 新默认值
