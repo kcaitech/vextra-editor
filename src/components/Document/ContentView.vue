@@ -291,24 +291,22 @@ function contextMenuMount(e: MouseEvent) {
     menu.menuMount('content');
     // 打开菜单之后调整菜单位置
     nextTick(() => {
-        if (contextMenuEl.value) {
-            const el = contextMenuEl.value.menu;
-            surplusY.value = document.documentElement.clientHeight - site.y;
-            const root_height = props.context.workspace.root.height;
-            if (el) {
-                let height = el.offsetHeight;
-                if (height > root_height * 0.98) {
-                    height = root_height * 0.98;
-                    el.style.height = height + 'px';
-                }
-                if (surplusY.value - 4 < height) {
-                    surplusY.value = document.documentElement.clientHeight - site.y - 4;
-                    el.style.top = contextMenuPosition.y + surplusY.value - height + 'px';
-                }
-            }
-            // eslint-disable-next-line
-            props.context.esctask.save(contextMenuUnmount); // 将关闭菜单事件加入到esc任务队列
+        if (!contextMenuEl.value) return;
+        const el = contextMenuEl.value.menu;
+        surplusY.value = document.documentElement.clientHeight - site.y;
+        const root_height = props.context.workspace.root.height;
+        if (!el) props.context.esctask.save(contextMenuUnmount);
+        let height = el.offsetHeight;
+        if (height > root_height * 0.98) {
+            height = root_height * 0.98;
+            el.style.height = height + 'px';
         }
+        if (surplusY.value - 4 < height) {
+            surplusY.value = document.documentElement.clientHeight - site.y - 4;
+            el.style.top = contextMenuPosition.y + surplusY.value - height + 'px';
+        }
+        // eslint-disable-next-line
+        props.context.esctask.save(contextMenuUnmount); // 将关闭菜单事件加入到esc任务队列
     })
 }
 
