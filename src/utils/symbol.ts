@@ -450,7 +450,7 @@ export function make_state(context: Context, t: Function, hor?: number) {
  * @description 为组件创建图层显示变量
  */
 export function create_visible_var(context: Context, symbol: SymbolShape, name: string, value: boolean, shapes: Shape[]) {
-    const editor = context.editor4Page(context.selection.selectedPage!);
+    const editor = context.editor4Shape(symbol);
     editor.makeVisibleVar(symbol, name, value, shapes);
 }
 
@@ -458,7 +458,7 @@ export function create_visible_var(context: Context, symbol: SymbolShape, name: 
  * @description 为组件创建实例切换变量
  */
 export function create_ref_var(context: Context, symbol: SymbolShape, name: string, shapes: Shape[]) {
-    const editor = context.editor4Page(context.selection.selectedPage!);
+    const editor = context.editor4Shape(symbol);
     editor.makeSymbolRefVar(symbol, name, shapes);
 }
 
@@ -466,7 +466,7 @@ export function create_ref_var(context: Context, symbol: SymbolShape, name: stri
  * @description 为组件创建文本切换变量
  */
 export function create_text_var(context: Context, symbol: SymbolShape, name: string, dlt: string, shapes: Shape[]) {
-    const editor = context.editor4Page(context.selection.selectedPage!);
+    const editor = context.editor4Shape(symbol);
     editor.makeTextVar(symbol, name, dlt, shapes);
 }
 
@@ -1039,4 +1039,53 @@ export function is_symbolref_disa(shapes: SymbolRefShape[]) {
         }
     }
     return result;
+}
+
+/**
+ * @description 修改图层显示、实例切换、文本内容变量的绑定对象(该方法存在隐患，必须保证编辑的symbol在当前页面)
+ * @param symbol 当前组件
+ * @param type 变量类型
+ * @param variable
+ * @param new_name 新名称
+ * @param new_dlt_value 新默认值
+ * @param new_values 新的绑定图层id
+ * @param old_values 之前的绑定图层id
+ */
+export function modify_variable(context: Context, symbol: SymbolShape, variable: Variable, new_name: string, new_dlt_value: any, new_values: string[], old_values?: string[]) {
+    const need_bind_set = new Set<string>();
+    const need_unbind_set = new Set<string>();
+    for (let i = 0, len = new_values.length; i < len; i++) {
+        need_bind_set.add(new_values[i]);
+    }
+    if (old_values) {
+        for (let i = 0, len = old_values.length; i < len; i++) {
+            const item = old_values[i];
+            if (need_bind_set.has(item)) continue;
+            need_unbind_set.add(item);
+        }
+    } else {
+        const _old_values: Shape[] = [];
+        get_x_type_option(symbol, symbol, variable.type, variable, _old_values);
+        for (let i = 0, len = _old_values.length; i < len; i++) {
+            const item = _old_values[i].id;
+            if (need_bind_set.has(item)) continue;
+            need_unbind_set.add(item);
+        }
+    }
+    const need_bind_shapes: Shape[] = [];
+    const need_unbind_shapes: Shape[] = [];
+    const page = context.selection.selectedPage!;
+    need_bind_set.forEach((v) => {
+        const s = page.getShape(v);
+        if (!s) return;
+        need_bind_shapes.push(s);
+    })
+    need_unbind_set.forEach((v) => {
+        const s = page.getShape(v);
+        if (!s) return;
+        need_unbind_shapes.push(s);
+    })
+    // 自此绑定列表、解绑列表整理完毕
+    const editor = context.editor4Shape(symbol);
+    return editor.modifyVar(symbol, variable, new_name, new_dlt_value, need_bind_shapes, need_unbind_shapes);
 }
