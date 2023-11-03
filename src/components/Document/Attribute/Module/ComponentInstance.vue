@@ -103,9 +103,7 @@ function edit_instance() {
 function save_layer_show(type: VariableType, name: string) {
     if(is_bind.value) {
         if (!sym_layer.value) return;
-        console.log(is_bind.value.value, selectId.value);
-        
-        modify_variable(props.context, sym_layer.value, is_bind.value, name, is_bind.value.value, selectId.value)
+        modify_variable(props.context, sym_layer.value, is_bind.value, name, is_bind.value.value, [is_bind.value.value])
     } else {
         if (!name.trim()) {
             message('info', '属性名不能为空');

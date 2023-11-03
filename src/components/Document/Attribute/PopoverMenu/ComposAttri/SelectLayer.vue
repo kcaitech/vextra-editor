@@ -43,7 +43,7 @@ function register_container() {
 
 function handleClickOutside(event: MouseEvent) {
     event.stopPropagation();
-    event.target instanceof Element && !event.target.closest('.select_layerbox') && close(event);
+    event.target instanceof Element && !event.target.closest('.select_layerbox') && !event.target.closest('.input_lay') && close(event);
 }
 
 const top = ref(32);
