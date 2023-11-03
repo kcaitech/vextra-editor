@@ -54,8 +54,8 @@ const selectContour = (shapes: Shape[]) => {
     const b = XYsBounding(points);
     const framePoint = [{ x: b.left, y: b.top }, { x: b.right, y: b.top }, { x: b.right, y: b.bottom }, { x: b.left, y: b.bottom }];
     select_shape_posi.value = framePoint.map(item => {
-        item.x = +item.x.toFixed(5);
-        item.y = +item.y.toFixed(5);
+        item.x = +item.x.toFixed(4);
+        item.y = +item.y.toFixed(4);
         return item;
     })
     const borPath = genRectPath(framePoint);
@@ -74,8 +74,8 @@ const hoveredContour = (shape: Shape) => {
     const b = XYsBounding(points);
     const framePoint = [{ x: b.left, y: b.top }, { x: b.right, y: b.top }, { x: b.right, y: b.bottom }, { x: b.left, y: b.bottom }];
     hover_shape_posi.value = framePoint.map(item => {
-        item.x = +item.x.toFixed(5);
-        item.y = +item.y.toFixed(5);
+        item.x = +item.x.toFixed(4);
+        item.y = +item.y.toFixed(4);
         return item;
     })
     const borPath = genRectPath(framePoint);

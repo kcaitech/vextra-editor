@@ -71,8 +71,8 @@ export function get_graph_relative_posi(sp: { x: number, y: number }[], hp: { x:
 
 function get_select_sides_midpoint(posi: { x: number, y: number }[]) {
     if (posi.length === 0) return;
-    const xc = (posi[0].x + posi[1].x) / 2;
-    const yc = (posi[0].y + posi[2].y) / 2;
+    const xc = +((posi[0].x + posi[1].x) / 2).toFixed(4);
+    const yc = +((posi[0].y + posi[2].y) / 2).toFixed(4);
     return { xc, yc };
 }
 /**
@@ -122,7 +122,7 @@ export function get_solid_line_point(sp: { x: number, y: number }[], hp: { x: nu
     let sides = [];
 
     if (dir === Direction.TR) {
-        sieds1.x1 = midpoint.xc; sieds1.y1 = st; sieds1.x2 = midpoint.xc; sieds1.y2 = s.s1 === Sides.Bottom ? st === hb ? ht :  hb : ht;
+        sieds1.x1 = midpoint.xc; sieds1.y1 = st; sieds1.x2 = midpoint.xc; sieds1.y2 = s.s1 === Sides.Bottom ? st === hb ? ht : hb : ht;
         sieds2.x1 = sr; sieds2.y1 = midpoint.yc; sieds2.x2 = s.s2 === Sides.Left ? sr === hl ? hr : hl : hr; sieds2.y2 = midpoint.yc;
         sides = [sieds1, sieds2];
     } else if (dir === Direction.TL) {
@@ -140,10 +140,11 @@ export function get_solid_line_point(sp: { x: number, y: number }[], hp: { x: nu
     } else if (dir === Direction.C) {
         let sieds3 = { x1: 0, y1: 0, x2: 0, y2: 0 };
         let sieds4 = { x1: 0, y1: 0, x2: 0, y2: 0 };
+        let hc = +((ht + hb) / 2).toFixed(4);
         sieds1.x1 = midpoint.xc; sieds1.y1 = st; sieds1.x2 = midpoint.xc; sieds1.y2 = ht;
-        sieds2.x1 = sr; sieds2.y1 = midpoint.yc; sieds2.x2 = hr; sieds2.y2 = midpoint.yc;
+        sieds2.x1 = sr; sieds2.y1 = hr < sr ? hc : midpoint.yc; sieds2.x2 = hr; sieds2.y2 = hr < sr ? hc : midpoint.yc;
         sieds3.x1 = midpoint.xc; sieds3.y1 = sb; sieds3.x2 = midpoint.xc; sieds3.y2 = hb;
-        sieds4.x1 = sl; sieds4.y1 = midpoint.yc; sieds4.x2 = hl; sieds4.y2 = midpoint.yc;
+        sieds4.x1 = sl; sieds4.y1 = hl > sl ? hc : midpoint.yc; sieds4.x2 = hl; sieds4.y2 = hl > sl ? hc : midpoint.yc;
         sides = [sieds1, sieds2, sieds3, sieds4];
     } else {
         sides = get_solid_line_sieds_point(sp, hp, dir) as any[];
@@ -226,25 +227,79 @@ export function get_dotted_line_point(sp: { x: number, y: number }[], hp: { x: n
 function get_dotted_line_sieds_point(sp: { x: number, y: number }[], hp: { x: number, y: number }[], dir?: Direction) {
     if (sp.length === 0 || hp.length === 0 || !dir) return;
     const s = get_hovered_sides_dir(sp, hp, dir);
-    if (!s) return;
+    const midpoint = get_select_sides_midpoint(sp);
+    if (!s || !midpoint) return;
     const st = sp[0].y, sb = sp[2].y, sl = sp[0].x, sr = sp[2].x;
     const ht = hp[0].y, hb = hp[2].y, hl = hp[0].x, hr = hp[2].x;
     let sieds1 = { x1: 0, y1: 0, x2: 0, y2: 0 };
     let sieds2 = { x1: 0, y1: 0, x2: 0, y2: 0 };
+    let sides: any[] = [];
     if (dir === Direction.T) {
         sieds1.x1 = hr; sieds1.y1 = hb; sieds1.x2 = hr; sieds1.y2 = sb;
         sieds2.x1 = hl; sieds2.y1 = hb; sieds2.x2 = hl; sieds2.y2 = sb;
+        sides = [sieds1, sieds2];
+        
+        if (hl > midpoint.xc && hl !== midpoint.xc) {
+            let sieds3 = { x1: 0, y1: 0, x2: 0, y2: 0 };
+            sieds3.x1 = hl; sieds3.y1 = s.s1 === Sides.Bottom ? st === ht ? ht : hb : ht; sieds3.x2 = sl; sieds3.y2 = s.s1 === Sides.Bottom ? st === ht ? ht : hb : ht;
+            sides.push(sieds3);
+        }else if (hr < midpoint.xc && hr !== midpoint.xc) {
+            let sieds3 = { x1: 0, y1: 0, x2: 0, y2: 0 };
+            sieds3.x1 = hr; sieds3.y1 = s.s1 === Sides.Bottom ? st === ht ? ht : hb : ht; sieds3.x2 = sr; sieds3.y2 = s.s1 === Sides.Bottom ? st === ht ? ht : hb : ht;
+            sides.push(sieds3);
+        }
     } else if (dir === Direction.R) {
         sieds1.x1 = hl; sieds1.y1 = ht; sieds1.x2 = sl; sieds1.y2 = ht;
         sieds2.x1 = hl; sieds2.y1 = hb; sieds2.x2 = sl; sieds2.y2 = hb;
+        sides = [sieds1, sieds2];
+        if (ht > midpoint.yc && ht !== midpoint.yc) {
+            let sieds3 = { x1: 0, y1: 0, x2: 0, y2: 0 };
+            sieds3.x1 = s.s2 === Sides.Left ? sr === hl ? hr : hl : hr; sieds3.y1 = ht; sieds3.x2 = s.s2 === Sides.Left ? sr === hl ? hr : hl : hr; sieds3.y2 = st;
+            sides.push(sieds3);
+        }else if (hb < midpoint.yc && hb !== midpoint.yc) {
+            let sieds3 = { x1: 0, y1: 0, x2: 0, y2: 0 };
+            sieds3.x1 = s.s2 === Sides.Left ? sr === hl ? hr : hl : hr; sieds3.y1 = hb; sieds3.x2 = s.s2 === Sides.Left ? sr === hl ? hr : hl : hr; sieds3.y2 = sb;
+            sides.push(sieds3);
+        }
     } else if (dir === Direction.B) {
         sieds1.x1 = hr; sieds1.y1 = ht; sieds1.x2 = hr; sieds1.y2 = st;
         sieds2.x1 = hl; sieds2.y1 = ht; sieds2.x2 = hl; sieds2.y2 = st;
+        sides = [sieds1, sieds2];
+        if (hl > midpoint.xc && hl !== midpoint.xc) {
+            let sieds3 = { x1: 0, y1: 0, x2: 0, y2: 0 };
+            sieds3.x1 = hl; sieds3.y1 = s.s1 === Sides.Bottom ? hb : sb === ht ? hb : ht; sieds3.x2 = sl; sieds3.y2 = s.s1 === Sides.Bottom ? hb : sb === ht ? hb : ht;
+            sides.push(sieds3);
+        }else if (hr < midpoint.xc && hr !== midpoint.xc) {
+            let sieds3 = { x1: 0, y1: 0, x2: 0, y2: 0 };
+            sieds3.x1 = hr; sieds3.y1 = s.s1 === Sides.Bottom ? hb : sb === ht ? hb : ht; sieds3.x2 = sr; sieds3.y2 = s.s1 === Sides.Bottom ? hb : sb === ht ? hb : ht;
+            sides.push(sieds3);
+        }
     } else if (dir === Direction.L) {
         sieds1.x1 = hr; sieds1.y1 = ht; sieds1.x2 = sr; sieds1.y2 = ht;
         sieds2.x1 = hr; sieds2.y1 = hb; sieds2.x2 = sr; sieds2.y2 = hb;
+        sides = [sieds1, sieds2];
+        if (ht > midpoint.yc && ht !== midpoint.yc) {
+            let sieds3 = { x1: 0, y1: 0, x2: 0, y2: 0 };
+            sieds3.x1 = s.s2 === Sides.Left ? hl : sl === hr ? hl : hr; sieds3.y1 = ht; sieds3.x2 = s.s2 === Sides.Left ? hl : sl === hr ? hl : hr; sieds3.y2 = st;
+            sides.push(sieds3);
+        }else if (hb < midpoint.yc && hb !== midpoint.yc) {
+            let sieds3 = { x1: 0, y1: 0, x2: 0, y2: 0 };
+            sieds3.x1 = s.s2 === Sides.Left ? hl : sl === hr ? hl : hr; sieds3.y1 = hb; sieds3.x2 = s.s2 === Sides.Left ? hl : sl === hr ? hl : hr; sieds3.y2 = sb;
+            sides.push(sieds3);
+        }
+    }else if (dir === Direction.C) {
+        if(ht > st || hb < sb) {
+            if(hl >= midpoint.xc) {
+                sieds1.x1 = hl; sieds1.y1 = ht; sieds1.x2 = ht === st ? hl : sl; sieds1.y2 = ht;
+                sieds2.x1 = hl; sieds2.y1 = hb; sieds2.x2 = hb === sb ? hl : sl; sieds2.y2 = hb;
+            }else if (hr <= midpoint.xc) {
+                sieds1.x1 = hr; sieds1.y1 = ht; sieds1.x2 = ht === st ? hr : sr; sieds1.y2 = ht;
+                sieds2.x1 = hr; sieds2.y1 = hb; sieds2.x2 = hb === sb ? hr : sr; sieds2.y2 = hb;
+            }
+            sides = [sieds1, sieds2];
+        }
     }
-    return [sieds1, sieds2];
+    return sides;
 }
 
 /**
@@ -258,7 +313,7 @@ export type CenterPoint = {
     x: number,
     y: number,
     length: number,
-    tran: {x: number, y: number}
+    tran: { x: number, y: number }
 }
 export function get_solid_line_center_point(point: LintPoint[], context: Context) {
     let c_point: CenterPoint[] = [];
@@ -267,12 +322,12 @@ export function get_solid_line_center_point(point: LintPoint[], context: Context
         let length = solid_length(line_p, context)
         let x = (line_p.x1 + line_p.x2) / 2;
         let y = (line_p.y1 + line_p.y2) / 2;
-        let tran = {x: 0, y: 0}
-        if(x === line_p.x1) {
+        let tran = { x: 0, y: 0 }
+        if (x === line_p.x1) {
             x = x + 5
             tran.y = 50
         }
-        if(y === line_p.y1) {
+        if (y === line_p.y1) {
             y = y + 5
             tran.x = 50
         }
@@ -286,9 +341,9 @@ function solid_length(p: LintPoint, context: Context) {
     const inverse = new Matrix(matrix.inverse);
     const p1 = inverse.computeCoord2(p.x1, p.y1);
     const p2 = inverse.computeCoord2(p.x2, p.y2);
-    if(p1.x === p2.x) {
+    if (p1.x === p2.x) {
         return Math.abs(p1.y - p2.y);
-    }else {
+    } else {
         return Math.abs(p1.x - p2.x);
     }
 }
