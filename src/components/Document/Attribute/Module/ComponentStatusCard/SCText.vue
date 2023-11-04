@@ -1,6 +1,6 @@
 <script lang="ts" setup>
 import { Context } from "@/context";
-import {AttriListItem, delete_variable} from "@/utils/symbol";
+import {AttriListItem, delete_variable, modify_variable} from "@/utils/symbol";
 import { nextTick, ref } from "vue";
 import { Variable, VariableType } from "@kcdesign/data";
 import { useI18n } from "vue-i18n";
@@ -55,8 +55,10 @@ const dlt_value = ref<string>('');
 function text_dlt_change(v: string) {
     dlt_value.value = v;
 }
-//asdfg
 const save_text = (type: VariableType, name: string) => {
+    const symbol = props.context.selection.symbolshape;
+    if(!symbol || !layerIds.value) return;
+    modify_variable(props.context, symbol, props.variable, name, dlt_value.value, layerIds.value)
     iseditText.value = false;
 }
 function _delete() {

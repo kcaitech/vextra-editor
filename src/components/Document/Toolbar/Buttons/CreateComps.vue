@@ -1,6 +1,6 @@
 <script lang="ts" setup>
 import ToolButton from '../ToolButton.vue';
-import { Action } from "@/context/tool";
+import { Action, Tool } from "@/context/tool";
 import { Context } from '@/context';
 import { useI18n } from 'vue-i18n';
 import Tooltip from '@/components/common/Tooltip.vue';
@@ -9,14 +9,11 @@ import { string_by_sys } from "@/utils/common";
 const { t } = useI18n()
 interface Props {
     context: Context
-    active: boolean
 }
 const props = defineProps<Props>();
-const emit = defineEmits<{
-    (e: "select", action: Action): void;
-}>();
-function select(action: Action) {
-    emit('select', action);
+
+function select() {
+    props.context.tool.notify(Tool.COMPONENT);
 }
 
 
@@ -28,7 +25,7 @@ function select(action: Action) {
         </ComponentDialog>
     </div> -->
     <Tooltip :content="string_by_sys(`${t('navi.comps')} &nbsp;&nbsp; Shift I`)">
-        <ToolButton ref="button" @click="() => { select(Action.AddComponent) }" :selected="props.active">
+        <ToolButton ref="button" @click="select">
             <div class="svg-component">
                 <svg-icon icon-class="resource"></svg-icon>
             </div>

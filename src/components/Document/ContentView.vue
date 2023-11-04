@@ -6,7 +6,7 @@ import ContextMenu from '../common/ContextMenu.vue';
 import PageViewContextMenuItems from '@/components/Document/Menu/PageViewContextMenuItems.vue';
 import Selector, {SelectorFrame} from './Selection/Selector.vue';
 import CommentView from './Content/CommentView.vue';
-import {Matrix, Shape, Page, Color, ShapeType, AsyncTransfer} from '@kcdesign/data';
+import {Matrix, Shape, Page, Color, ShapeType} from '@kcdesign/data';
 import {Context} from '@/context';
 import {PageXY, ClientXY, ClientXYRaw} from '@/context/selection';
 import {KeyboardKeys, WorkSpace} from '@/context/workspace';
@@ -41,7 +41,7 @@ import CellSetting from '@/components/Document/Menu/TableMenu/CellSetting.vue';
 import * as comment_api from '@/request/comment';
 // import Overview from './Content/Overview.vue';
 import Creator from './Creator.vue';
-import {Wheel, EffectType, fourWayWheel} from '@/utils/wheel';
+import {Wheel, fourWayWheel} from '@/utils/wheel';
 
 interface Props {
     context: Context
@@ -56,8 +56,6 @@ const STATE_CHECKMOVE = 1;
 const STATE_MOVEING = 2;
 const workspace = computed(() => props.context.workspace);
 const comment = computed(() => props.context.comment);
-let scale_delta = 1.06;
-let scale_delta_ = 1 / scale_delta;
 const wheel_step = 50;
 const spacePressed = ref<boolean>(false);
 const contextMenu = ref<boolean>(false);
@@ -104,9 +102,8 @@ function page_watcher(...args: any) {
 
 function rootRegister(mount: boolean) {
     if (mount) {
-        const id = (uuid().split('-').at(-1)) || 'content';
-        rootId.value = id;
-    } else rootId.value = 'content';
+        rootId.value = (uuid().split('-').at(-1)) || 'content';
+    }
     workspace.value.setRootId(rootId.value);
 }
 
@@ -258,11 +255,15 @@ function pageViewDragEnd() {
     props.context.cursor.setType('grab-0')
 }
 
+/**
+ * @description 打开右键菜单
+ */
 function contextMenuMount(e: MouseEvent) {
     const workspace = props.context.workspace, selection = props.context.selection, menu = props.context.menu;
     menu.menuMount();
     selection.unHoverShape();
-    site.x = e.clientX, site.y = e.clientY;
+    site.x = e.clientX;
+    site.y = e.clientY;
     const root = workspace.root;
     contextMenuPosition.x = e.clientX - root.x;
     contextMenuPosition.y = e.clientY - root.y;
@@ -290,27 +291,28 @@ function contextMenuMount(e: MouseEvent) {
     menu.menuMount('content');
     // 打开菜单之后调整菜单位置
     nextTick(() => {
-        if (contextMenuEl.value) {
-            const el = contextMenuEl.value.menu;
-            surplusY.value = document.documentElement.clientHeight - site.y;
-            const root_height = props.context.workspace.root.height;
-            if (el) {
-                let height = el.offsetHeight;
-                if (height > root_height * 0.98) {
-                    height = root_height * 0.98;
-                    el.style.height = height + 'px';
-                }
-                if (surplusY.value - 4 < height) {
-                    surplusY.value = document.documentElement.clientHeight - site.y - 4;
-                    el.style.top = contextMenuPosition.y + surplusY.value - height + 'px';
-                }
-            }
-            // eslint-disable-next-line
-            props.context.esctask.save(contextMenuUnmount); // 将关闭菜单事件加入到esc任务队列
+        if (!contextMenuEl.value) return;
+        const el = contextMenuEl.value.menu;
+        surplusY.value = document.documentElement.clientHeight - site.y;
+        const root_height = props.context.workspace.root.height;
+        if (!el) props.context.esctask.save(contextMenuUnmount);
+        let height = el.offsetHeight;
+        if (height > root_height * 0.98) {
+            height = root_height * 0.98;
+            el.style.height = height + 'px';
         }
+        if (surplusY.value - 4 < height) {
+            surplusY.value = document.documentElement.clientHeight - site.y - 4;
+            el.style.top = contextMenuPosition.y + surplusY.value - height + 'px';
+        }
+        // eslint-disable-next-line
+        props.context.esctask.save(contextMenuUnmount); // 将关闭菜单事件加入到esc任务队列
     })
 }
 
+/**
+ * @description 关闭右键菜单
+ */
 function contextMenuUnmount() {
     const exe_result = contextMenu.value;
     contextMenu.value = false;
@@ -399,14 +401,12 @@ let isDragging: boolean = false;
 let wheel: Wheel | undefined = undefined;
 
 function onMouseMove_CV(e: MouseEvent) {
-    if (workspace.value.controller === 'page') {
-        if (!spacePressed.value) {
-            const action = props.context.tool.action;
-            if (e.buttons === 1) {
-                if (action === Action.AutoV && isMouseLeftPress) select(e);
-            } else if (e.buttons === 0) {
-                if (action === Action.AutoV || action === Action.AutoK) search(e); // 图形检索(hover)
-            }
+    if (workspace.value.controller === 'page' && !spacePressed.value) {
+        const action = props.context.tool.action;
+        if (e.buttons === 1) {
+            if (action === Action.AutoV && isMouseLeftPress) select(e);
+        } else if (e.buttons === 0) {
+            if (action === Action.AutoV || action === Action.AutoK) search(e); // 图形检索(hover)
         }
     }
     updateMouse(e);
@@ -548,11 +548,10 @@ onMounted(() => {
     initpal().then(() => {
         inited.value = true;
         nextTick(() => {
-            if (root.value) {
-                resizeObserver.observe(root.value);
-                _updateRoot(props.context, root.value); // 第一次记录root数据，所有需要root数据的方法，都需要在此之后
-                initMatrix(props.page); // 初始化页面视图
-            }
+            if (!root.value) return;
+            resizeObserver.observe(root.value);
+            _updateRoot(props.context, root.value); // 第一次记录root数据，所有需要root数据的方法，都需要在此之后
+            initMatrix(props.page); // 初始化页面视图
         });
     }).catch((e) => {
         console.log(e)

@@ -49,7 +49,7 @@ const showHiddenLeft = () => {
     emit('showNavigation')
 }
 const tool_watch = (t: number) => {
-    if (t === Tool.CHANGE_ACTION && props.context.tool.action === Action.AddComponent) {
+    if (t === Tool.COMPONENT) {
         currentTab.value = 'Comps';
     }
 }

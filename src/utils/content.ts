@@ -21,7 +21,7 @@ import {searchCommentShape as finder} from '@/utils/comment'
 import {paster_image} from "./clipboard";
 import {landFinderOnPage, scrollToContentView} from './artboardFn'
 import {fit_no_transform} from "./shapelist";
-import {is_state} from "@/utils/symbol";
+import {is_part_of_symbol, is_shapes_if_symbolref, is_state} from "@/utils/symbol";
 
 export interface Media {
     name: string
@@ -529,8 +529,6 @@ export function page_scale(context: Context, scale: number) {
  * 右键选择图形的规则
  * @param p 点击位置在页面中所处的位置
  * @param context
- * @param pre_shapes 预选图形
- * @param Area area
  */
 export function right_select(e: MouseEvent, p: PageXY, context: Context): Area {
     const is_edting = context.workspace.isEditing;
@@ -579,19 +577,21 @@ export function right_select(e: MouseEvent, p: PageXY, context: Context): Area {
 /**
  * 判断选区存在的类型
  * @param context
- * @returns { number } 只判断了两种图形 两位二进制 00
  */
 export function get_selected_types(context: Context): number {
     let result = 0;
     const shapes = context.selection.selectedShapes;
     for (let i = shapes.length - 1; i > -1; i--) {
-        if (shapes[i].type === ShapeType.Artboard) {
+        const shape = shapes[i];
+        const type = shape.type;
+        if (type === ShapeType.Artboard) {
             result = result | 1;
-        } else if (shapes[i].type === ShapeType.Group) {
+        } else if (type === ShapeType.Group) {
             result = result | 2;
-        } else if (shapes[i].type === ShapeType.SymbolRef) {
+        } else if (type === ShapeType.SymbolRef) {
             result = result | 4;
-        } else if (shapes[i].type === ShapeType.Symbol) {
+        }
+        if (is_part_of_symbol(shape)) {
             result = result | 8;
         }
         if (result >= 15) return result; // 已经得到了最多类型，不可能再有新的类型，不需要继续判断
@@ -604,37 +604,39 @@ export function get_selected_types(context: Context): number {
  * @param { "controller" | "text-selection" | "group" | "artboard" | "component" | "null" | "normal" | "table" | "table_cell" | "instance" } area 点击的区域
  * @returns
  */
+const BASE_ITEM = ['all', 'copy'];
+
 export function get_menu_items(context: Context, area: "controller" | "text-selection" | "group" | "artboard" | "component" | "null" | "normal" | "table" | "table_cell" | "instance"): string[] {
     let contextMenuItems = []
     if (area === 'artboard') { // 点击在容器上
         if (permIsEdit(context)) {
             contextMenuItems = ['all', 'copy', 'paste-here', 'replace', 'visible', 'component', 'lock', 'forward', 'back', 'top', 'bottom', 'groups', 'container', 'dissolution'];
         } else {
-            contextMenuItems = ['all', 'copy'];
+            contextMenuItems = BASE_ITEM;
         }
     } else if (area === 'group') { // 点击在编组上
         if (permIsEdit(context)) {
             contextMenuItems = ['all', 'copy', 'paste-here', 'replace', 'visible', 'component', 'lock', 'forward', 'back', 'top', 'bottom', 'groups', 'container', 'un_group'];
         } else {
-            contextMenuItems = ['all', 'copy'];
+            contextMenuItems = BASE_ITEM;
         }
     } else if (area === 'component') {
         if (permIsEdit(context)) {
-            contextMenuItems = ['all', 'copy', 'paste-here', 'replace', 'visible', 'lock', 'forward', 'back', 'top', 'bottom', 'groups', 'container'];
+            contextMenuItems = ['all', 'copy', 'paste-here', 'replace', 'visible', 'component', 'lock', 'forward', 'back', 'top', 'bottom', 'groups', 'container'];
         } else {
-            contextMenuItems = ['all', 'copy'];
+            contextMenuItems = BASE_ITEM;
         }
     } else if (area === 'instance') {
         if (permIsEdit(context)) {
-            contextMenuItems = ['all', 'copy', 'paste-here', 'replace', 'visible', 'lock', 'forward', 'back', 'top', 'bottom', 'groups', 'container', 'instance', 'component'];
+            contextMenuItems = ['all', 'copy', 'paste-here', 'replace', 'visible', 'component', 'lock', 'forward', 'back', 'top', 'bottom', 'groups', 'container', 'instance'];
         } else {
-            contextMenuItems = ['all', 'copy'];
+            contextMenuItems = BASE_ITEM;
         }
     } else if (area === 'controller') { // 点击在选区上
         if (permIsEdit(context)) {
             contextMenuItems = ['all', 'copy', 'paste-here', 'replace', 'component', 'visible', 'lock', 'groups', 'container'];
         } else {
-            contextMenuItems = ['all', 'copy'];
+            contextMenuItems = BASE_ITEM;
         }
         const types = get_selected_types(context); // 点击在选区上时，需要判定选区内存在图形的类型
         if (types & 1) { // 存在容器
@@ -648,7 +650,8 @@ export function get_menu_items(context: Context, area: "controller" | "text-sele
             }
         }
         if (types & 4) { // 存在实例
-            if (permIsEdit(context)) {
+            const shapes = context.selection.selectedShapes;
+            if (permIsEdit(context) && is_shapes_if_symbolref(shapes)) {
                 contextMenuItems.push('instance');
             }
         }
@@ -667,7 +670,7 @@ export function get_menu_items(context: Context, area: "controller" | "text-sele
         if (permIsEdit(context)) {
             contextMenuItems = ['all', 'copy', 'paste-here', 'replace', 'visible', 'lock', 'component', 'forward', 'back', 'top', 'bottom', 'groups', 'container'];
         } else {
-            contextMenuItems = ['all', 'copy'];
+            contextMenuItems = BASE_ITEM;
         }
     } else if (area === 'text-selection') {
         if (permIsEdit(context)) {
@@ -678,7 +681,7 @@ export function get_menu_items(context: Context, area: "controller" | "text-sele
                 contextMenuItems = ['all', 'copy', 'cut', 'paste', 'only_text'];
             }
         } else {
-            contextMenuItems = ['all', 'copy'];
+            contextMenuItems = BASE_ITEM;
         }
     } else if (area === 'table') {
         if (permIsEdit(context)) {
@@ -690,13 +693,13 @@ export function get_menu_items(context: Context, area: "controller" | "text-sele
                 contextMenuItems = ['all', 'copy', 'cut', 'paste', 'only_text', 'insert_column', 'delete_column', 'split_cell'];
             }
         } else {
-            contextMenuItems = ['all', 'copy'];
+            contextMenuItems = BASE_ITEM;
         }
     } else if (area === 'table_cell') {
         if (permIsEdit(context)) {
             contextMenuItems = ['insert_column', 'delete_column', 'merge_cell'];
         } else {
-            contextMenuItems = ['all', 'copy'];
+            contextMenuItems = BASE_ITEM;
         }
     } else {
         if (permIsEdit(context)) {

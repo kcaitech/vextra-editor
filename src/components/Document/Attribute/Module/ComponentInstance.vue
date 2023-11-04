@@ -9,7 +9,7 @@ import { OverrideType, Shape, SymbolRefShape, SymbolShape, Variable } from '@kcd
 import { get_shape_within_document, shape_track } from '@/utils/content';
 import { MoreFilled } from '@element-plus/icons-vue';
 import { VariableType } from '@kcdesign/data';
-import { create_var_by_type, get_symbol_by_layer, is_bind_x_vari, reset_all_attr_for_ref } from "@/utils/symbol";
+import { create_var_by_type, get_symbol_by_layer, is_bind_x_vari, modify_variable, reset_all_attr_for_ref } from "@/utils/symbol";
 import { message } from '@/utils/message';
 import { Selection } from '@/context/selection';
 
@@ -35,9 +35,9 @@ const untie = () => {
     const page = selection.selectedPage;
     if (page) {
         const editor = props.context.editor4Page(page);
-        const shapes = editor.extractSymbol(props.shapes[0] as SymbolRefShape);
+        const shapes = editor.extractSymbol(props.shapes as SymbolRefShape[]);
         if (shapes) {
-            selection.selectShape(shapes);
+            selection.rangeSelectShape(shapes);
             resetMenu.value = false;
         }
     }
@@ -100,17 +100,20 @@ function edit_instance() {
     isInstanceShow.value = true;
 }
 
-//asdfg
 function save_layer_show(type: VariableType, name: string) {
-    if(is_bind.value) return isInstanceShow.value = false;
-    if (!name.trim()) {
-        message('info', '属性名不能为空');
-        return;
+    if(is_bind.value) {
+        if (!sym_layer.value) return;
+        modify_variable(props.context, sym_layer.value, is_bind.value, name, is_bind.value.value, [is_bind.value.value])
+    } else {
+        if (!name.trim()) {
+            message('info', '属性名不能为空');
+            return;
+        }
+        const shapes = props.context.selection.selectedShapes;
+        const ids = shapes.map(item => item.id);
+        if(!sym_layer.value) return;
+        create_var_by_type(props.context, VariableType.SymbolRef, name, undefined, ids, sym_layer.value);
     }
-    const shapes = props.context.selection.selectedShapes;
-    const ids = shapes.map(item => item.id);
-    if(!sym_layer.value) return;
-    create_var_by_type(props.context, VariableType.SymbolRef, name, undefined, ids, sym_layer.value);
     isInstanceShow.value = false;
 }
 const getValue = (id: string) => {

@@ -7,7 +7,7 @@ import CompLayerShow from '../PopoverMenu/ComposAttri/CompLayerShow.vue';
 import { OverrideType, SymbolShape, TextShape, Variable, VariableType } from '@kcdesign/data';
 import SelectLayerInput from './SelectLayerInput.vue';
 import PopoverDefaultInput from './PopoverDefaultInput.vue';
-import { create_var_by_type, delete_variable, get_symbol_by_layer, is_bind_x_vari } from '@/utils/symbol';
+import { create_var_by_type, delete_variable, get_symbol_by_layer, is_bind_x_vari, modify_variable } from '@/utils/symbol';
 import { Selection } from '@/context/selection';
 import { message } from '@/utils/message';
 const props = defineProps<{
@@ -49,6 +49,7 @@ const textDefaultValue = ref('');
 const isBind = () => {
     const shapes = props.context.selection.selectedShapes;
     if (shapes.length === 1) {
+        get_text();
         const vari = is_bind_x_vari(shapes[0], OverrideType.Text);
         sym_layer.value = get_symbol_by_layer(shapes[0]);
         selectId.value = [shapes[0].id];
@@ -62,21 +63,24 @@ const isBind = () => {
 }
 const card_ref = ref<HTMLDivElement>();
 function edit_text() {
+    isBind();
     getDialogPosi(card_ref.value);
     isTextShow.value = true;
 }
-//asdfg
 function save_layer_show(type: VariableType, name: string) {
-    if (is_bind.value) return isTextShow.value = false;
-    if (!name.trim()) {
-        message('info', '属性名不能为空');
-        return;
+    if (is_bind.value) {
+        if (!sym_layer.value) return;
+        modify_variable(props.context, sym_layer.value, is_bind.value, name, is_bind.value.value, selectId.value)
+    } else {
+        if (!name.trim()) {
+            message('info', '属性名不能为空');
+            return;
+        }
+        const shapes = props.context.selection.selectedShapes;
+        const ids = shapes.map(item => item.id);
+        if (!sym_layer.value) return;
+        create_var_by_type(props.context, VariableType.Text, name, textDefaultValue.value, ids, sym_layer.value);
     }
-    const shapes = props.context.selection.selectedShapes;
-    const ids = shapes.map(item => item.id);
-    if (!sym_layer.value) return;
-    const text = (shapes[0] as TextShape).text.getText(0, Infinity);
-    create_var_by_type(props.context, VariableType.Text, name, text, ids, sym_layer.value);
     isTextShow.value = false;
 }
 const selected_watcher = (t: number) => {
@@ -84,18 +88,30 @@ const selected_watcher = (t: number) => {
         isBind();
     }
 }
-function variable_watcher(args: any[]) {
-    if (args && (args.includes('map') || args.includes('childs'))) isBind();
+
+function text_watcher(args: any) {
+    if (args === 'text') get_text();
+    if (args === 'map') isBind();
 }
+
 watch(() => shape.value, (v, o) => {
     if (o) {
-        o.unwatch(variable_watcher);
+        o.unwatch(text_watcher);
     }
-    v.watch(variable_watcher);
+    v.watch(text_watcher);
 }, { immediate: true })
 
+watch(() => sym_layer.value, (v, o) => {
+    if (o) {
+        o.unwatch(text_watcher);
+    }
+    if (v) {
+        v.watch(text_watcher);
+    }
+})
+
 const input = () => {
-    if(textDefaultValue.value.trim().length > 0) {
+    if (textDefaultValue.value.trim().length > 0) {
         warn.value = false;
     }
 }
@@ -112,23 +128,28 @@ const keysumbit = (e: KeyboardEvent) => {
 }
 
 function _delete() {
-    if(!is_bind.value) return;
+    if (!is_bind.value) return;
     if (!sym_layer.value) return;
     const editor = props.context.editor4Shape(sym_layer.value);
     editor.removeVar(is_bind.value.id);
-    isBind();
+}
+
+const change = () => {
+
+}
+
+const get_text = () => {
+    const text = (shape.value as TextShape).text.getText(0, Infinity).slice(0, -1);
+    textDefaultValue.value = text;
 }
 
 onMounted(() => {
-    isBind();
-    const text = JSON.stringify((shape.value as TextShape).text.getText(0, Infinity));
-    textDefaultValue.value = text.slice(1, -3);
-    shape.value.watch(variable_watcher);
+    shape.value.watch(text_watcher);
     props.context.selection.watch(selected_watcher);
 })
 onUnmounted(() => {
     props.context.selection.unwatch(selected_watcher);
-    shape.value.unwatch(variable_watcher);
+    shape.value.unwatch(text_watcher);
 
 })
 </script>
@@ -145,7 +166,7 @@ onUnmounted(() => {
         </TypeHeader>
         <div class="text" v-if="!is_bind">
             <el-input v-model="textDefaultValue" type="textarea" ref="input_v" :autosize="{ minRows: 2, maxRows: 4 }"
-                resize="none" :placeholder="t('compos.default_text_input')" @keydown.stop="keysumbit" @input="input"/>
+                resize="none" :placeholder="t('compos.default_text_input')" @keydown.stop="keysumbit" @input="input" @change="change"/>
         </div>
         <div class="warning" v-if="warn">
             <p class="warn">默认值不能为空</p>

@@ -32,7 +32,7 @@ const showSelectLayer = (e: MouseEvent) => {
     e.stopPropagation();
     if (props.context.selection.selectedShapes[0].type !== ShapeType.Symbol) return;
     selectoption.value = false;
-    if (isselectLayer.value && e.target instanceof Element && e.target.closest('.input')) return isselectLayer.value = false;
+    if(isselectLayer.value) return isselectLayer.value = false;
     isselectLayer.value = true;
     props.context.esctask.save(de_show_select_layer);
 }
@@ -50,6 +50,7 @@ const get_symbol_layer = () => {
     selectList.value = get_options_from_symbol(symbolshape, props.addType, props.variable, select);
     selectLayerid.value = select.map(item => item.id);
     selectLayerName.value = getShapesName(selectLayerid.value);
+    emit("change", selectLayerid.value);
 }
 
 function select_change(data: string[]) {
@@ -89,7 +90,7 @@ onMounted(() => {
     <div class="container">
         <span>{{ title }}</span>
         <div class="select-layer">
-            <div class="input" @click="showSelectLayer"
+            <div class="input_lay" @click="showSelectLayer"
                 :style="{ opacity: context.selection.selectedShapes[0].type !== ShapeType.Symbol ? '0.5' : '1' }">
                 <span v-if="selectLayerName" class="value">{{ selectLayerName }}</span>
                 <span v-else style="opacity: 0.5">{{ placeholder }}</span>
@@ -168,7 +169,7 @@ onMounted(() => {
     position: relative;
     z-index: 1;
 
-    .input {
+    .input_lay {
         width: 100%;
         height: 30px;
         border-radius: 4px;

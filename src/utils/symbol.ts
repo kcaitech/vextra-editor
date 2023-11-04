@@ -175,15 +175,34 @@ export function list_layout(list: SymbolListItem[], extend_set: Set<string>, ini
     return result;
 }
 
-export function search_symbol_by_keywords(context: Context, keywords: string) {
-    const symbol_resource = context.data.symbolsMgr.resource;
-    console.log(symbol_resource,'symbol_resource');
-    
+export function search_symbol_by_keywords(context: Context, keywords: string, symbols: SymbolShape[]) {
     const reg = new RegExp(keywords.toLocaleLowerCase(), 'img');
     const result: SymbolShape[] = [];
-    for (let i = 0, len = symbol_resource.length; i < len; i++) {
-        const item = symbol_resource[i];
+    for (let i = 0, len = symbols.length; i < len; i++) {
+        const item = symbols[i];
         if (item.name.search(reg) > -1) result.push(item as SymbolShape);
+    }
+    return result;
+}
+
+export function get_search_symbol_list(pages: Page[]) {
+    const result: SymbolShape[] = [];
+    for (let i = 0; i < pages.length; i++) {
+        const page = pages[i];
+        if (page.__symbolshapes.size) {
+            const artboards = page.artboardList;
+            const symbols_under_page = get_symbol_level_under(page);
+            if (symbols_under_page.length) result.push(...symbols_under_page);
+            if (artboards.length) {
+                for (let index = 0; index < artboards.length; index++) {
+                    const artboard = artboards[index];
+                    if (artboard.parent?.type !== ShapeType.Page) continue;
+                    const symbols = check_symbol_level_artboard(artboard);
+                    if (!symbols.length) continue;
+                    result.push(...symbols);
+                }
+            }
+        }
     }
     return result;
 }
@@ -354,13 +373,24 @@ export function make_symbol(context: Context, t: Function) {
     const page = context.selection.selectedPage;
     if (!page || !selected.length) return false;
     if (is_exist_symbol_layer(selected)) {
-        message('info', '新的组件不能包含已有组件或已有组件图层');
+        message('info', '新的组件不能包含已有组件图层的组成图层');
+        return false;
+    }
+    if (is_exsit_contact_shape(selected)) {
+        message('info', '组件内部不能包含连接线');
         return false;
     }
     const editor = context.editor4Page(page);
     const name = getName(ShapeType.Symbol, context.data.symbolsMgr.resource, t);
     const shapes: Shape[] = sort_by_layer(context, selected);
     return editor.makeSymbol(context.data, shapes, name);
+}
+
+export function is_exsit_contact_shape(selected: Shape[]) {
+    for (let i = 0, len = selected.length; i < len; i++) {
+        if (selected[i].type === ShapeType.Contact) return true;
+    }
+    return false;
 }
 
 /**
@@ -420,7 +450,7 @@ export function make_state(context: Context, t: Function, hor?: number) {
  * @description 为组件创建图层显示变量
  */
 export function create_visible_var(context: Context, symbol: SymbolShape, name: string, value: boolean, shapes: Shape[]) {
-    const editor = context.editor4Page(context.selection.selectedPage!);
+    const editor = context.editor4Shape(symbol);
     editor.makeVisibleVar(symbol, name, value, shapes);
 }
 
@@ -428,7 +458,7 @@ export function create_visible_var(context: Context, symbol: SymbolShape, name: 
  * @description 为组件创建实例切换变量
  */
 export function create_ref_var(context: Context, symbol: SymbolShape, name: string, shapes: Shape[]) {
-    const editor = context.editor4Page(context.selection.selectedPage!);
+    const editor = context.editor4Shape(symbol);
     editor.makeSymbolRefVar(symbol, name, shapes);
 }
 
@@ -436,7 +466,7 @@ export function create_ref_var(context: Context, symbol: SymbolShape, name: stri
  * @description 为组件创建文本切换变量
  */
 export function create_text_var(context: Context, symbol: SymbolShape, name: string, dlt: string, shapes: Shape[]) {
-    const editor = context.editor4Page(context.selection.selectedPage!);
+    const editor = context.editor4Shape(symbol);
     editor.makeTextVar(symbol, name, dlt, shapes);
 }
 
@@ -722,7 +752,10 @@ function get_topology_map(shape: Shape) {
         const is_ref = item.type === ShapeType.SymbolRef
         const c_childs = is_ref ? item.naviChilds : item.childs;
         if (c_childs?.length || is_ref) {
-            deps.push({shape: shape.id, ref: childs[i].type === ShapeType.SymbolRef ? item.refId : item.id});
+            deps.push({
+                shape: get_id(shape.type === ShapeType.SymbolRef ? shape.refId : shape.id),
+                ref: get_id(is_ref ? item.refId : item.id)
+            });
         }
         if (!c_childs?.length) continue;
         deps.push(...get_topology_map(item));
@@ -780,11 +813,24 @@ function is_exist_single_stick(deps: { shape: string, ref: string }[]) {
     return is_single;
 }
 
+function get_id(raw_id: string) {
+    return raw_id;
+    // const index = raw_id.lastIndexOf('/');
+    // if (index > -1) {
+    //     return raw_id.slice(index + 1);
+    // } else {
+    //     return raw_id;
+    // }
+}
+
 /**
  * @description 检查symbol与ref之间是否存在循环引用
  */
 export function is_circular_ref2(symbol: Shape, refId: string): boolean {
-    let deps: { shape: string, ref: string }[] = [...get_topology_map(symbol), {shape: refId, ref: symbol.id}];
+    let deps: { shape: string, ref: string }[] = [...get_topology_map(symbol), {
+        shape: get_id(refId),
+        ref: get_id(symbol.id)
+    }];
     if (deps.length < 2) return false;
     while (deps.length && is_exist_single_stick(deps)) {
         deps = filter_deps(deps, 'shape', 'ref');
@@ -931,7 +977,7 @@ export function find_space_for_state(symbol: SymbolShape, state: SymbolShape) {
  */
 export function is_exist_symbol_layer(shapes: Shape[]) {
     for (let i = 0, len = shapes.length; i < len; i++) {
-        let s: Shape | undefined = shapes[i];
+        let s: Shape | undefined = shapes[i].parent;
         while (s) {
             if (s.type === ShapeType.Symbol) return true;
             s = s.parent;
@@ -956,10 +1002,89 @@ export function get_status_vari_for_symbolref(symbolref: SymbolRefShape, variabl
  * @description 判断图层是否为组件的组成部分
  */
 export function is_part_of_symbol(shape: Shape) {
-    let s: Shape | undefined = shape;
-    while (s) {
-        if (s.type === ShapeType.Symbol) return true;
-        s = s.parent;
+    let p: Shape | undefined = shape.parent;
+    while (p) {
+        if (p.type === ShapeType.Symbol) return true;
+        p = p.parent;
     }
     return false;
+}
+
+/**
+ * @description 判断选中的图层是否都是实例
+ */
+export function is_shapes_if_symbolref(shapes: Shape[]) {
+    let is_all_ref = true;
+    for (let i = 0; i < shapes.length; i++) {
+        const shape = shapes[i];
+        if (shape.type !== ShapeType.SymbolRef) {
+            is_all_ref = false;
+            break;
+        }
+    }
+    return is_all_ref;
+}
+
+/**
+ * @description 判断选中的实例是否是同一个组件
+ */
+export function is_symbolref_disa(shapes: SymbolRefShape[]) {
+    let result = true;
+    const firstId = shapes[0].refId;
+    for (let i = 1; i < shapes.length; i++) {
+        const symbolref = shapes[i];
+        if (symbolref.refId !== firstId) {
+            result = false;
+            break;
+        }
+    }
+    return result;
+}
+
+/**
+ * @description 修改图层显示、实例切换、文本内容变量的绑定对象(该方法存在隐患，必须保证编辑的symbol在当前页面)
+ * @param symbol 当前组件
+ * @param variable
+ * @param new_name 新名称
+ * @param new_dlt_value 新默认值
+ * @param new_values 新的绑定图层id
+ * @param old_values 之前的绑定图层id
+ */
+export function modify_variable(context: Context, symbol: SymbolShape, variable: Variable, new_name: string, new_dlt_value: any, new_values: string[], old_values?: string[]) {
+    const need_bind_set = new Set<string>();
+    const need_unbind_set = new Set<string>();
+    for (let i = 0, len = new_values.length; i < len; i++) {
+        need_bind_set.add(new_values[i]);
+    }
+    if (old_values) {
+        for (let i = 0, len = old_values.length; i < len; i++) {
+            const item = old_values[i];
+            if (need_bind_set.has(item)) continue;
+            need_unbind_set.add(item);
+        }
+    } else {
+        const _old_values: Shape[] = [];
+        get_x_type_option(symbol, symbol, variable.type, variable, _old_values);
+        for (let i = 0, len = _old_values.length; i < len; i++) {
+            const item = _old_values[i].id;
+            if (need_bind_set.has(item)) continue;
+            need_unbind_set.add(item);
+        }
+    }
+    const need_bind_shapes: Shape[] = [];
+    const need_unbind_shapes: Shape[] = [];
+    const page = context.selection.selectedPage!;
+    need_bind_set.forEach((v) => {
+        const s = page.getShape(v);
+        if (!s) return;
+        need_bind_shapes.push(s);
+    })
+    need_unbind_set.forEach((v) => {
+        const s = page.getShape(v);
+        if (!s) return;
+        need_unbind_shapes.push(s);
+    })
+    // 自此绑定列表、解绑列表整理完毕
+    const editor = context.editor4Shape(symbol);
+    return editor.modifyVar(symbol, variable, new_name, new_dlt_value, need_bind_shapes, need_unbind_shapes);
 }

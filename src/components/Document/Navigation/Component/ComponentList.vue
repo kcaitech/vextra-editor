@@ -5,8 +5,8 @@ import ComponentContainer from './ComponentContainer.vue';
 import {Context} from '@/context';
 import {useI18n} from 'vue-i18n';
 import ComponentSearchPanel from './ComponentSearchPanel.vue';
-import {SymbolShape} from '@kcdesign/data';
-import {search_symbol_by_keywords} from '@/utils/symbol';
+import {Page, SymbolShape} from '@kcdesign/data';
+import {classification_level_page, get_search_symbol_list, search_symbol_by_keywords} from '@/utils/symbol';
 import {debounce} from 'lodash';
 
 const {t} = useI18n();
@@ -27,7 +27,15 @@ function set_card_type(v: 'alpha' | 'beta') {
 }
 
 function _searching() {
-    search_result.value = search_symbol_by_keywords(props.context, search.value);
+    const pagelist = props.context.data.pagesList;
+    const list: Page[] = [];
+    for (let i = 0, len = pagelist.length; i < len; i++) {
+        const desc = pagelist[i];
+        const p = props.context.data.pagesMgr.getSync(desc.id);
+        if (p) list.push(p);
+    }
+    const symbols = get_search_symbol_list(list);
+    search_result.value = search_symbol_by_keywords(props.context, search.value, symbols);
 }
 
 const searching = debounce(_searching, 300);

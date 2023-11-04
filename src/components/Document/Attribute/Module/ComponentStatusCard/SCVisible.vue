@@ -1,6 +1,6 @@
 <script lang="ts" setup>
 import {Context} from "@/context";
-import {AttriListItem, delete_variable} from "@/utils/symbol";
+import {AttriListItem, delete_variable, modify_variable} from "@/utils/symbol";
 import {nextTick, ref} from "vue";
 import {Variable, VariableType} from "@kcdesign/data";
 import {useI18n} from "vue-i18n";
@@ -62,11 +62,10 @@ const dlt_value = ref<boolean>();
 function default_value(v: number) {
     v === 0 ? dlt_value.value = true : dlt_value.value = false;
 }
-//asdfg
 function save_layer_show(type: VariableType, name: string) {
-    layerIds.value //图层id
-    name //属性名
-    dlt_value.value //默认值
+    const symbol = props.context.selection.symbolshape;
+    if(!symbol || !layerIds.value) return;
+    modify_variable(props.context, symbol, props.variable, name, dlt_value.value, layerIds.value)
     iseditLayerShow.value = false;
 }
 function _delete() {
