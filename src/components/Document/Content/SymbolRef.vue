@@ -27,7 +27,7 @@ function updater() {
     if (__startLoad === refId) {
         if (__data) { // 更新subdata
             if (__data.isUnionSymbolShape) {
-                const syms = __data.getTagedSym(props.data);
+                const syms = __data.getTagedSym(props.data, props.varsContainer || []);
                 const subdata = syms[0] || __data.childs[0];
                 if (__subdata !== subdata) {
                     if (__subdata) __subdata.unwatch(watcher);
@@ -50,7 +50,7 @@ function updater() {
         if (__data) __data.watch(watcher);
         // 处理status
         if (val && val.isUnionSymbolShape) {
-            const syms = val.getTagedSym(props.data);
+            const syms = val.getTagedSym(props.data, props.varsContainer || []);
             if (__subdata) __subdata.unwatch(watcher);
             __subdata = syms[0] || val.childs[0];
             if (__subdata) __subdata.watch(watcher);

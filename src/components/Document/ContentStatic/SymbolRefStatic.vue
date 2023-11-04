@@ -25,7 +25,7 @@ function updater() {
     if (__startLoad === refId) {
         if (__data) { // 更新subdata
             if (__data.isUnionSymbolShape) {
-                const syms = __data.getTagedSym(props.data);
+                const syms = __data.getTagedSym(props.data, props.varsContainer || []);
                 const subdata = syms[0] || __data.childs[0];
                 if (__subdata !== subdata) {
                     __subdata = subdata;
@@ -42,7 +42,7 @@ function updater() {
     symMgr.get(refId).then((val) => {
         __data = val;
         if (val && val.isUnionSymbolShape) {
-            __subdata = val.getTagedSym(props.data)[0] || val.childs[0];
+            __subdata = val.getTagedSym(props.data, props.varsContainer || [])[0] || val.childs[0];
         } else if (__subdata) {
             __subdata = undefined;
         }
