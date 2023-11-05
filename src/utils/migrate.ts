@@ -1,10 +1,10 @@
-import {Context} from "@/context";
-import {AsyncTransfer, GroupShape, Matrix, Shape} from "@kcdesign/data";
-import {ClientXY, PageXY} from "@/context/selection";
-import {debounce} from "lodash";
-import {map_from_shapes} from "@/utils/content";
-import {sort_by_layer} from "@/utils/group_ungroup";
-import {get_closest_container} from "@/utils/mouse";
+import { Context } from "@/context";
+import { AsyncTransfer, GroupShape, Matrix, Shape } from "@kcdesign/data";
+import { ClientXY, PageXY } from "@/context/selection";
+import { debounce } from "lodash";
+import { map_from_shapes } from "@/utils/content";
+import { sort_by_layer } from "@/utils/group_ungroup";
+import { get_closest_container } from "@/utils/mouse";
 
 function is_need_migrate() {
 
@@ -20,7 +20,6 @@ export function _migrate(context: Context, asyncTransfer: AsyncTransfer, shapes:
     const point_end: PageXY = matrix.computeCoord3(end);
     const map = map_from_shapes(shapes);
     const target_parent = context.selection.getClosestContainer(point_end, map);
-
 }
 
 /**
