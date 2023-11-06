@@ -1,10 +1,8 @@
 import {
     ISave4Restore,
-    Matrix,
     ShapeType,
     SymbolRefShape,
     SymbolShape,
-    TableShape,
     TextShape,
     Watchable
 } from "@kcdesign/data";
@@ -17,11 +15,9 @@ import {
     Scout,
     finder,
     finder_layers,
-    artboardFinder,
     finder_contact,
     selected_sym_ref_menber, finder_container
 } from "@/utils/scout";
-import {Artboard} from "@kcdesign/data";
 import {Context} from ".";
 import {TextSelection} from "./textselection";
 import {TableSelection} from "./tableselection";

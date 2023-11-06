@@ -1,4 +1,4 @@
-import { Context } from "@/context";
+import {Context} from "@/context";
 import {
     Artboard,
     GroupShape,
@@ -11,14 +11,14 @@ import {
     Variable,
     VariableType
 } from "@kcdesign/data";
-import { getName } from "./content";
-import { sort_by_layer } from "./group_ungroup";
-import { debounce } from "lodash";
-import { v4 } from "uuid";
-import { get_name } from "@/utils/shapelist";
-import { XY } from "@/context/selection";
-import { isTarget } from "@/utils/common";
-import { message } from "@/utils/message";
+import {getName} from "./content";
+import {sort_by_layer} from "./group_ungroup";
+import {debounce} from "lodash";
+import {v4} from "uuid";
+import {get_name} from "@/utils/shapelist";
+import {XY} from "@/context/selection";
+import {isTarget} from "@/utils/common";
+import {message} from "@/utils/message";
 
 export enum SymbolType {
     Symbol = 'symbol',
@@ -267,7 +267,7 @@ export function variable_sort(symbol: SymbolShape) {
     let status_index = 0;
     const resource = symbol.variables;
     resource.forEach(v => {
-        const item: { variable: Variable, values: any[] } = { variable: v, values: [] };
+        const item: { variable: Variable, values: any[] } = {variable: v, values: []};
         if (v.type === VariableType.Status) {
             item.values = tag_values_sort(symbol, v);
             list.splice(status_index++, 0, item);
@@ -576,7 +576,7 @@ export function is_conflict_comp(symbol: SymbolShape) {
             slices += (!dlt || dlt === v.value) ? p : dlt;
         })
         if (_no_status) return;
-        conflict_arr.push({ id: item.id, equal: slices });
+        conflict_arr.push({id: item.id, equal: slices});
     }
     let obj: any = {}, newArr: any[] = [];
     conflict_arr.forEach(function (item, suffix) {
@@ -612,12 +612,12 @@ export function get_options_from_symbol(symbol: SymbolShape, type: VariableType,
         const childs = symbol.childs;
         for (let i = 0, len = childs.length; i < len; i++) {
             const item = childs[i];
-            const lci = { state: get_name(item), data: get_x_type_option(symbol, item, type, vari, container) };
+            const lci = {state: get_name(item), data: get_x_type_option(symbol, item, type, vari, container)};
             result.push(lci);
         }
         return result;
     } else { // 不存在可变组件
-        return [{ state: symbol.name, data: get_x_type_option(symbol, symbol, type, vari, container) }];
+        return [{state: symbol.name, data: get_x_type_option(symbol, symbol, type, vari, container)}];
     }
 }
 
@@ -706,7 +706,7 @@ export function get_var_for_ref(context: Context, symref: SymbolRefShape) {
     let instance_index: number = 0;
     let text_index: number = 0;
     variables.forEach((v: Variable) => {
-        const item: RefAttriListItem = { variable: v, values: [] };
+        const item: RefAttriListItem = {variable: v, values: []};
         if (v.type === VariableType.Visible) {
             result2.push(item);
         } else if (v.type === VariableType.Status) {
@@ -718,7 +718,7 @@ export function get_var_for_ref(context: Context, symref: SymbolRefShape) {
             result.splice(status_index + instance_index + text_index++, 0, item);
         }
     })
-    return { variables: result, visible_variables: result2 };
+    return {variables: result, visible_variables: result2};
 }
 
 /**
@@ -945,22 +945,22 @@ export function find_space_for_state(symbol: SymbolShape, state: SymbolShape) {
     while (!pure) {
         pure = true
         let selectorPoints: XY[] = [
-            { x: init_frame.x, y: init_frame.y },
-            { x: init_frame.x + init_frame.width, y: init_frame.y },
-            { x: init_frame.x + init_frame.width, y: init_frame.y + init_frame.height },
-            { x: init_frame.x, y: init_frame.y + init_frame.height },
-            { x: init_frame.x, y: init_frame.y },
+            {x: init_frame.x, y: init_frame.y},
+            {x: init_frame.x + init_frame.width, y: init_frame.y},
+            {x: init_frame.x + init_frame.width, y: init_frame.y + init_frame.height},
+            {x: init_frame.x, y: init_frame.y + init_frame.height},
+            {x: init_frame.x, y: init_frame.y},
         ];
         selectorPoints = selectorPoints.map(p => p2r.computeCoord3(p));
         for (let i = 0; i < targets.length; i++) {
             const m = targets[i].matrix2Root();
-            const { width: w, height: h } = targets[i].frame;
+            const {width: w, height: h} = targets[i].frame;
             const ps: XY[] = [
-                { x: 0, y: 0 },
-                { x: w, y: 0 },
-                { x: w, y: h },
-                { x: 0, y: h },
-                { x: 0, y: 0 },
+                {x: 0, y: 0},
+                {x: w, y: 0},
+                {x: w, y: h},
+                {x: 0, y: h},
+                {x: 0, y: 0},
             ].map(p => m.computeCoord3(p));
             if (isTarget(selectorPoints as any, ps) || isTarget(ps as any, selectorPoints)) {
                 pure = false; // 存在🍌
@@ -1101,10 +1101,23 @@ export function modify_variable(context: Context, symbol: SymbolShape, variable:
     const editor = context.editor4Shape(symbol);
     return editor.modifyVar(symbol, variable, new_name, new_dlt_value, need_bind_shapes, need_unbind_shapes);
 }
+
 export function is_able_to_unbind(shapes: Shape[]) {
     for (let i = 0, l = shapes.length; i < l; i++) {
         const s = shapes[i];
         if (s.type === ShapeType.SymbolRef && (s.parent && s.parent.type !== ShapeType.SymbolRef)) return true;
     }
     return false;
+}
+
+export function get_symbolref_by_layer(shape: Shape) {
+    let p = shape.parent;
+    let result: Shape | undefined = undefined;
+    while (p) {
+        if (p.type === ShapeType.SymbolRef) {
+            result = p;
+        }
+        p = p.parent;
+    }
+    return result
 }

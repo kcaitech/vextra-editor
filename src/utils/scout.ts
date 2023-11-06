@@ -1,9 +1,9 @@
-import {Context} from "@/context";
-import {PageXY, XY} from "@/context/selection";
-import {GroupShape, Matrix, Shape, ShapeType, SymbolRefShape, SymbolShape} from "@kcdesign/data";
-import {v4 as uuid} from "uuid";
-import {isShapeOut} from "./assist";
-import {debounce} from "lodash";
+import { Context } from "@/context";
+import { PageXY, XY } from "@/context/selection";
+import { GroupShape, Matrix, Shape, ShapeType, SymbolRefShape, SymbolShape } from "@kcdesign/data";
+import { v4 as uuid } from "uuid";
+import { isShapeOut } from "./assist";
+import { debounce } from "lodash";
 
 export interface Scout {
     path: SVGPathElement
@@ -71,7 +71,7 @@ export function scout(context: Context): Scout {
         if (s) document.body.removeChild(s);
     }
 
-    return {path, isPointInShape, isPointInShape2, remove, isPointInPath, isPointInStroke}
+    return { path, isPointInShape, isPointInShape2, remove, isPointInPath, isPointInStroke }
 }
 
 function createSVGGeometryElement(id: string): SVGElement {

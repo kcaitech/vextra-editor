@@ -10,7 +10,7 @@ import {debounce} from "lodash";
 import {WorkSpace} from "@/context/workspace";
 import {Menu} from "@/context/menu";
 import {sort_by_layer} from "./group_ungroup";
-import {make_symbol} from "./symbol";
+import {get_symbolref_by_layer, make_symbol} from "./symbol";
 
 export function keyboardHandle(e: KeyboardEvent, context: Context, t: Function) {
     if (!permIsEdit(context) || context.tool.action === Action.AddComment) return;
@@ -277,4 +277,29 @@ export function check_status(context: Context) {
     context.menu.notify(Menu.SHUTDOWN_POPOVER); // 关闭可能已经打开的弹窗
     const action = context.tool.action;
     return action === Action.AutoV || action === Action.AutoK;
+}
+
+/**
+ * @description 整理选区，避免实例内部被控件修改
+ * @param context
+ * @param shapes
+ * @returns
+ */
+export function modify_shapes(context: Context, shapes: Shape[]) {
+    const shape_map = new Map<string, Shape>();
+    let is_change = false;
+    for (let i = 0, l = shapes.length; i < l; i++) {
+        const shape = shapes[i];
+        const symref = get_symbolref_by_layer(shape);
+        if (symref) {
+            shape_map.set(symref.id, symref);
+            is_change = true;
+        } else {
+            shape_map.set(shape.id, shape);
+        }
+    }
+    if (is_change) {
+        context.selection.rangeSelectShape(Array.from(shape_map.values()));
+    }
+    return context.selection.selectedShapes;
 }

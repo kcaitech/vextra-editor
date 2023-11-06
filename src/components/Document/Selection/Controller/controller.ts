@@ -1,20 +1,20 @@
-import {Shape, ShapeType, GroupShape, PathShape} from '@kcdesign/data';
-import {onMounted, onUnmounted} from "vue";
-import {Context} from "@/context";
-import {Matrix} from '@kcdesign/data';
-import {ClientXY, PageXY} from "@/context/selection";
-import {fourWayWheel, Wheel, EffectType} from "@/utils/wheel";
-import {get_speed, keyboardHandle as handle} from "@/utils/controllerFn";
-import {Selection} from "@/context/selection";
-import {groupPassthrough} from "@/utils/scout";
-import {WorkSpace} from "@/context/workspace";
-import {AsyncTransfer} from "@kcdesign/data";
-import {paster_short} from '@/utils/clipboard';
-import {useI18n} from 'vue-i18n';
+import { Shape, ShapeType, GroupShape, PathShape } from '@kcdesign/data';
+import { onMounted, onUnmounted } from "vue";
+import { Context } from "@/context";
+import { Matrix } from '@kcdesign/data';
+import { ClientXY, PageXY } from "@/context/selection";
+import { fourWayWheel, Wheel, EffectType } from "@/utils/wheel";
+import { get_speed, keyboardHandle as handle, modify_shapes } from "@/utils/controllerFn";
+import { Selection } from "@/context/selection";
+import { groupPassthrough } from "@/utils/scout";
+import { WorkSpace } from "@/context/workspace";
+import { AsyncTransfer } from "@kcdesign/data";
+import { paster_short } from '@/utils/clipboard';
+import { useI18n } from 'vue-i18n';
 import {
     PointsOffset, get_apex, pre_render_assist_line
 } from '@/utils/assist';
-import {Asssit} from '@/context/assist';
+import { Asssit } from '@/context/assist';
 import {
     add_blur_for_window,
     add_move_and_up_for_document,
@@ -36,15 +36,15 @@ import {
     shutdown_menu,
     update_comment
 } from "@/utils/mouse";
-import {migrate_immediate, migrate_once} from "@/utils/migrate";
+import { migrate_immediate, migrate_once } from "@/utils/migrate";
 
 export function useControllerCustom(context: Context, i18nT: Function) {
     const matrix = new Matrix();
     let timer: any;
     const duration: number = 250; // 双击判定时长 ms
     let isDragging = false;
-    let startPosition: ClientXY = {x: 0, y: 0};
-    let startPositionOnPage: PageXY = {x: 0, y: 0};
+    let startPosition: ClientXY = { x: 0, y: 0 };
+    let startPositionOnPage: PageXY = { x: 0, y: 0 };
     let wheel: Wheel | undefined = undefined;
     let editing: boolean = false;
     let shapes: Shape[] = [];
@@ -106,10 +106,11 @@ export function useControllerCustom(context: Context, i18nT: Function) {
             speed = get_speed(t_e || e, e);
             t_e = e;
             let update_type = 0;
-            const isOut = wheel.moving(e, {type: EffectType.TRANS, effect: asyncTransfer.transByWheel});
+            const isOut = wheel.moving(e, { type: EffectType.TRANS, effect: asyncTransfer.transByWheel });
             if (!isOut) update_type = transform(startPosition, mousePosition);
             modify_mouse_position_by_type(update_type, startPosition, mousePosition);
         } else if (check_drag_action(startPosition, mousePosition) && !editing) {
+            shapes = modify_shapes(context, shapes);
             if (e.altKey) shapes = paster_short(context, shapes);
             reset_assist_before_translate(context, shapes);
             offset_map = gen_offset_points_map(shapes, startPositionOnPage);
@@ -147,7 +148,7 @@ export function useControllerCustom(context: Context, i18nT: Function) {
         }
         if (!offset_map) return update_type;
         let need_multi = 0;
-        const stick = {dx: 0, dy: 0, sticked_x: false, sticked_y: false};
+        const stick = { dx: 0, dy: 0, sticked_x: false, sticked_y: false };
         const len = shapes.length;
         const shape = shapes[0];
         const target = gen_assist_target(context, shapes, len > 1, offset_map, pe);
@@ -361,11 +362,11 @@ export function useControllerCustom(context: Context, i18nT: Function) {
         timerClear();
     }
 
-    return {isDblClick, isEditing, isDrag, init, dispose};
+    return { isDblClick, isEditing, isDrag, init, dispose };
 }
 
 export function useController(context: Context) {
-    const {t} = useI18n();
+    const { t } = useI18n();
 
     const ctrl = useControllerCustom(context, t);
     onMounted(() => {

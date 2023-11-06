@@ -1,16 +1,16 @@
 <script setup lang="ts">
-import {onMounted, onUnmounted, ref, watch} from "vue";
-import {Context} from "@/context";
-import {Selection} from "@/context/selection";
-import {Shape, ShapeType, Matrix} from "@kcdesign/data";
-import {ControllerType, ctrlMap} from "./Controller/map";
-import {CtrlElementType} from "@/context/workspace";
-import {Action} from "@/context/tool";
-import {getHorizontalAngle, XYsBounding} from "@/utils/common";
-import {WorkSpace} from "@/context/workspace";
-import {permIsEdit} from "@/utils/content";
+import { onMounted, onUnmounted, ref, watch } from "vue";
+import { Context } from "@/context";
+import { Selection } from "@/context/selection";
+import { Shape, ShapeType, Matrix } from "@kcdesign/data";
+import { ControllerType, ctrlMap } from "./Controller/map";
+import { CtrlElementType } from "@/context/workspace";
+import { Action } from "@/context/tool";
+import { getHorizontalAngle, XYsBounding } from "@/utils/common";
+import { WorkSpace } from "@/context/workspace";
+import { permIsEdit } from "@/utils/content";
 import Assist from "@/components/Document/Assist/index.vue";
-import {is_shape_in_selected} from "@/utils/scout";
+import { is_shape_in_selected } from "@/utils/scout";
 
 export interface Point {
     x: number
@@ -45,10 +45,10 @@ const altKey = ref<boolean>(false);
 const tracing = ref<boolean>(false);
 const tracingStroke = ref<string>('#865dff');
 const traceEle = ref<Element>();
-const tracingFrame = ref<PathView>({path: '', viewBox: '', height: 0, width: 0});
+const tracingFrame = ref<PathView>({ path: '', viewBox: '', height: 0, width: 0 });
 const placement = ref<boolean>(false);
 const placementStroke = ref<string>('#865dff');
-const placementFrame = ref<PathView>({path: '', viewBox: '', height: 0, width: 0});
+const placementFrame = ref<PathView>({ path: '', viewBox: '', height: 0, width: 0 });
 const watchedShapes = new Map();
 
 function watchShapes() { // 监听选区相关shape的变化
@@ -140,10 +140,10 @@ function createShapeTracing() {
         m.multiAtLeft(matrix);
         const path = hoveredShape.getPath();
         path.transform(m);
-        const {x, y, right, bottom} = props.context.workspace.root;
+        const { x, y, right, bottom } = props.context.workspace.root;
         const w = right - x;
         const h = bottom - y;
-        tracingFrame.value = {height: h, width: w, viewBox: `${0} ${0} ${w} ${h}`, path: path.toString()};
+        tracingFrame.value = { height: h, width: w, viewBox: `${0} ${0} ${w} ${h}`, path: path.toString() };
         tracing.value = true;
         if (hoveredShape.type === ShapeType.Symbol || hoveredShape.type === ShapeType.SymbolRef) {
             tracingStroke.value = '#ff9900';
@@ -167,10 +167,10 @@ function createPalcement() {
         m.multiAtLeft(matrix);
         const path = p.getPath();
         path.transform(m);
-        const {x, y, right, bottom} = props.context.workspace.root;
+        const { x, y, right, bottom } = props.context.workspace.root;
         const w = right - x;
         const h = bottom - y;
-        placementFrame.value = {height: h, width: w, viewBox: `0 0 ${w} ${h}`, path: path.toString()};
+        placementFrame.value = { height: h, width: w, viewBox: `0 0 ${w} ${h}`, path: path.toString() };
         placement.value = true;
         if (p.type === ShapeType.Symbol || p.type === ShapeType.SymbolRef) {
             placementStroke.value = '#ff9900';
@@ -192,7 +192,7 @@ function createController() {
     }
     if (selection.length === 1) {
         const s = selection[0], m = s.matrix2Root(), f = s.frame;
-        const points = [{x: 0, y: 0}, {x: f.width, y: 0}, {x: f.width, y: f.height}, {x: 0, y: f.height}];
+        const points = [{ x: 0, y: 0 }, { x: f.width, y: 0 }, { x: f.width, y: f.height }, { x: 0, y: f.height }];
         m.multiAtLeft(matrix);
         for (let i = 0; i < 4; i++) {
             const p = points[i];
@@ -227,7 +227,7 @@ function createController() {
             if (s.type === ShapeType.Contact) continue;
             const m = s.matrix2Root(), f = s.frame;
             m.multiAtLeft(matrix);
-            const ps: { x: number, y: number }[] = [{x: 0, y: 0}, {x: f.width, y: 0}, {x: f.width, y: f.height}, {
+            const ps: { x: number, y: number }[] = [{ x: 0, y: 0 }, { x: f.width, y: 0 }, { x: f.width, y: f.height }, {
                 x: 0,
                 y: f.height
             }];
@@ -235,7 +235,7 @@ function createController() {
             points.push(...ps);
         }
         const b = XYsBounding(points);
-        controllerFrame.value = [{x: b.left, y: b.top}, {x: b.right, y: b.top}, {x: b.right, y: b.bottom}, {
+        controllerFrame.value = [{ x: b.left, y: b.top }, { x: b.right, y: b.top }, { x: b.right, y: b.bottom }, {
             x: b.left,
             y: b.bottom
         }];
@@ -296,7 +296,7 @@ function window_blur() {
 }
 
 // hooks
-watch(() => props.matrix, update_by_matrix, {deep: true});
+watch(() => props.matrix, update_by_matrix, { deep: true });
 
 onMounted(() => {
     props.context.selection.watch(selectionWatcher);
@@ -316,24 +316,24 @@ onUnmounted(() => {
 <template>
     <!-- 描边 -->
     <svg v-if="tracing" version="1.1" xmlns="http://www.w3.org/2000/svg" xmlns:xlink="http://www.w3.org/1999/xlink"
-         xmlns:xhtml="http://www.w3.org/1999/xhtml" preserveAspectRatio="xMinYMin meet" overflow="visible"
-         :width="tracingFrame.width" :height="tracingFrame.height" :viewBox="tracingFrame.viewBox"
-         @mousedown="(e: MouseEvent) => pathMousedown(e)" style="transform: translate(0px, 0px); position: absolute;">
+        xmlns:xhtml="http://www.w3.org/1999/xhtml" preserveAspectRatio="xMinYMin meet" overflow="visible"
+        :width="tracingFrame.width" :height="tracingFrame.height" :viewBox="tracingFrame.viewBox"
+        @mousedown="(e: MouseEvent) => pathMousedown(e)" style="transform: translate(0px, 0px); position: absolute;">
         <path :d="tracingFrame.path" class="tracing" :style="{ stroke: tracingStroke }">
         </path>
     </svg>
-    <!-- 描边 -->
+    <!-- 落点 -->
     <svg v-if="placement" version="1.1" xmlns="http://www.w3.org/2000/svg" xmlns:xlink="http://www.w3.org/1999/xlink"
-         xmlns:xhtml="http://www.w3.org/1999/xhtml" preserveAspectRatio="xMinYMin meet" overflow="visible"
-         :width="placementFrame.width" :height="placementFrame.height" :viewBox="placementFrame.viewBox"
-         style="transform: translate(0px, 0px); position: absolute;">
+        xmlns:xhtml="http://www.w3.org/1999/xhtml" preserveAspectRatio="xMinYMin meet" overflow="visible"
+        :width="placementFrame.width" :height="placementFrame.height" :viewBox="placementFrame.viewBox"
+        style="transform: translate(0px, 0px); position: absolute;">
         <path :d="placementFrame.path" class="tracing" :style="{ stroke: placementStroke }">
         </path>
     </svg>
     <!-- 控制 -->
     <component v-if="controller" :is="ctrlMap.get(controllerType) ?? ctrlMap.get(ControllerType.Rect)"
-               :context="props.context" :controller-frame="controllerFrame" :rotate="rotate" :matrix="props.matrix"
-               :shape="context.selection.selectedShapes[0]">
+        :context="props.context" :controller-frame="controllerFrame" :rotate="rotate" :matrix="props.matrix"
+        :shape="context.selection.selectedShapes[0]">
     </component>
     <!-- 辅助 -->
     <Assist :context="props.context" :controller-frame="controllerFrame"></Assist>

@@ -37,6 +37,7 @@ function update() {
     update_dot_path();
 }
 function update_dot_path() {
+    if (!props.context.workspace.shouldSelectionViewUpdate) return;
     paths.length = 0;
     const frame = props.shape.frame;
     let apex = [{ x: 0, y: 0 }, { x: frame.width, y: 0 }, { x: frame.width, y: frame.height }, { x: 0, y: frame.height }];
