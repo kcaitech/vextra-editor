@@ -1,10 +1,10 @@
 <script lang="ts" setup>
-import {onMounted, onUnmounted, reactive, watch} from "vue";
-import {Context} from "@/context";
-import {Matrix, Page, Shape, ShapeType} from "@kcdesign/data";
-import {ClientXY, Selection} from "@/context/selection";
+import { onMounted, onUnmounted, reactive, watch } from "vue";
+import { Context } from "@/context";
+import { Matrix, Page, Shape, ShapeType } from "@kcdesign/data";
+import { ClientXY, Selection } from "@/context/selection";
 import ComponentTitle from "./ComponentTitle.vue"
-import {is_shape_out, top_side} from "@/utils/content";
+import { is_shape_out, top_side } from "@/utils/content";
 
 interface Props {
     context: Context
@@ -26,7 +26,7 @@ interface Title {
 
 const matrix = new Matrix(props.matrix);
 const titles: Title[] = reactive([]);
-const origin: ClientXY = {x: 0, y: 0};
+const origin: ClientXY = { x: 0, y: 0 };
 
 function updater(t: any) {
     setOrigin();
@@ -39,11 +39,10 @@ const setPosition = () => {
     // const st = Date.now();
     titles.length = 0;
     const components: Shape[] = props.data.childs;
-    const len = components.length;
-    if (!len) return;
-    for (let i = 0; i < len; i++) {
+    const l = components.length;
+    for (let i = 0; i < l; i++) {
         const compo = components[i];
-        if (compo.type !== ShapeType.Symbol || !compo.isVisible) return;
+        if (compo.type !== ShapeType.Symbol || !compo.isVisible) continue;
         const matrix_compo_root = compo.matrix2Root();
         const matrix_page_client = props.context.workspace.matrix;
         const matrix_compo = new Matrix(matrix_compo_root);
@@ -82,7 +81,7 @@ function pre_modify_anchor(shape: Shape) {
 function modify_anchor(shape: Shape, m2r: Matrix) {
     const rotate = pre_modify_anchor(shape);
     const frame = shape.frame;
-    let anchor = {x: 0, y: 0};
+    let anchor = { x: 0, y: 0 };
     if (rotate >= 0 && rotate < 45) {
         anchor = m2r.computeCoord2(0, 0);
     } else if (rotate >= 45 && rotate < 135) {
@@ -95,7 +94,7 @@ function modify_anchor(shape: Shape, m2r: Matrix) {
         anchor = m2r.computeCoord2(0, 0);
     }
     return anchor;
-}//
+}
 
 function modify_rotate(shape: Shape) {
     let rotate = shape.rotation || 0;
@@ -173,9 +172,9 @@ onUnmounted(() => {
 <template>
     <div class="container" :style="{ top: `${origin.y}px`, left: `${origin.x}px` }">
         <div class="title-container" v-for="(t, index) in titles" :key="t.id"
-             :style="{ top: `${t.y}px`, left: `${t.x}px`, 'max-width': `${t.maxWidth}px`, transform: `rotate(${t.rotate}deg)` }">
+            :style="{ top: `${t.y}px`, left: `${t.x}px`, 'max-width': `${t.maxWidth}px`, transform: `rotate(${t.rotate}deg)` }">
             <ComponentTitle :context="props.context" :name="t.content" :index="index" :maxWidth="t.maxWidth"
-                            @rename="rename" @hover="hover" @leave="leave" :shape="t.shape"></ComponentTitle>
+                @rename="rename" @hover="hover" @leave="leave" :shape="t.shape"></ComponentTitle>
         </div>
     </div>
 </template>
