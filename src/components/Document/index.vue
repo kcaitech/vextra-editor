@@ -31,6 +31,7 @@ import { NetworkStatusType } from "@/communication/types";
 import { _updateRoot } from '@/utils/content';
 import Bridge from "@/components/Document/Bridge.vue";
 import { Component } from '@/context/component';
+import {initpal} from './initpal';
 
 const {t} = useI18n();
 const curPage = shallowRef<Page | undefined>(undefined);
@@ -60,6 +61,8 @@ const isRead = ref(false);
 const canComment = ref(false);
 const isEdit = ref(true);
 const bridge = ref<boolean>(false);
+const inited = ref(false);
+
 function screenSetting() {
     const element = document.documentElement;
     const isFullScreen = document.fullscreenElement;
@@ -642,6 +645,11 @@ onMounted(() => {
     window.addEventListener('unload', onUnload);
     init_screen_size();
     init_doc();
+    initpal().then(() => {
+        inited.value = true;
+    }).catch((e) => {
+        console.log(e)
+    })
 })
 
 onUnmounted(() => {
@@ -676,7 +684,7 @@ onUnmounted(() => {
       <ApplyFor></ApplyFor>
     </div>
     <ColSplitView id="center" :style="{ height: showTop ? 'calc(100% - 40px)' : '100%' }"
-                  v-if="!loading && !null_context"
+                  v-if="inited && !loading && !null_context"
                   :left="{ width: Left.leftWidth, minWidth: Left.leftMinWidth, maxWidth: 0.5 }"
                   :middle="{ width: middleWidth, minWidth: middleMinWidth, maxWidth: middleWidth }"
                   :right="{ width: Right.rightWidth, minWidth: Right.rightMinWidth, maxWidth: 0.5 }"

@@ -35,7 +35,6 @@ import Placement from './Menu/Placement.vue';
 import TextSelection from './Selection/TextSelection.vue';
 import {Cursor} from "@/context/cursor";
 import {Action, Tool} from "@/context/tool";
-import {initpal} from './initpal';
 import UsersSelection from './Selection/TeamWork/UsersSelection.vue';
 import CellSetting from '@/components/Document/Menu/TableMenu/CellSetting.vue';
 import * as comment_api from '@/request/comment';
@@ -66,7 +65,6 @@ const prePt: { x: number, y: number } = {x: 0, y: 0};
 const matrix: Matrix = reactive(props.context.workspace.matrix as any);
 const matrixMap = new Map<string, { m: Matrix, x: number, y: number }>();
 const reflush = ref(0);
-const inited = ref(false);
 const root = ref<HTMLDivElement>();
 const mousedownOnClientXY: ClientXY = {x: 0, y: 0}; // 鼠标在可视区中的坐标
 const mousedownOnPageXY: PageXY = {x: 0, y: 0}; // 鼠标在page中的坐标
@@ -545,19 +543,16 @@ onMounted(() => {
     document.addEventListener('keydown', onKeyDown);
     document.addEventListener('keyup', onKeyUp);
     window.addEventListener('blur', windowBlur);
-    initpal().then(() => {
-        inited.value = true;
-        nextTick(() => {
-            if (!root.value) return;
-            resizeObserver.observe(root.value);
-            _updateRoot(props.context, root.value); // 第一次记录root数据，所有需要root数据的方法，都需要在此之后
-            initMatrix(props.page); // 初始化页面视图
-        });
-    }).catch((e) => {
-        console.log(e)
-    }).finally(() => {
-        props.context.workspace.setFreezeStatus(false)
+
+    nextTick(() => {
+        if (!root.value) return;
+        resizeObserver.observe(root.value);
+        _updateRoot(props.context, root.value); // 第一次记录root数据，所有需要root数据的方法，都需要在此之后
+        initMatrix(props.page); // 初始化页面视图
     });
+
+    props.context.workspace.setFreezeStatus(false)
+
 })
 onUnmounted(() => {
     props.context.selection.scout?.remove();
@@ -575,7 +570,7 @@ onUnmounted(() => {
 })
 </script>
 <template>
-    <div v-if="inited" :class="cursor" :data-area="rootId" ref="root" :reflush="reflush !== 0 ? reflush : undefined"
+    <div :class="cursor" :data-area="rootId" ref="root" :reflush="reflush !== 0 ? reflush : undefined"
          @wheel="onMouseWheel" @mousedown="onMouseDown" @mousemove="onMouseMove_CV" @mouseleave="onMouseLeave"
          @drop="(e: DragEvent) => { drop(e, props.context, t) }" @dragover.prevent
          :style="{ 'background-color': background_color }">
