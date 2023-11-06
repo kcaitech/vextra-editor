@@ -1,14 +1,19 @@
 <script setup lang="ts">
 import { RouterView } from 'vue-router';
-import { onMounted, ref, watch } from 'vue';
+import { nextTick, onMounted, ref, watch } from 'vue';
 import { useRoute } from 'vue-router'
 import { useI18n } from 'vue-i18n';
+import { router } from '@/router';
 
 const { t } = useI18n();
 const route = useRoute()
 const active = ref(true);
 const title = ref()
 const recycle = ref(false)
+const elwidth = ref()
+const elleft = ref()
+const myfile = ref<HTMLElement>()
+const mydel = ref<HTMLElement>()
 
 const emits = defineEmits<{
     (e: 'dataUpdate', list: any[], title: string): void
@@ -20,8 +25,14 @@ const update = (data: any, searchtitle: string) => {
     emits('dataUpdate', data, searchtitle)
 }
 
-const highlight = (state: boolean) => {
+const highlight = (state: boolean, e?: MouseEvent, path?: string,) => {
     active.value = state;
+    if (path) router.push({ path: path })
+    if (e) {
+        const rect = (e.target as HTMLElement).getBoundingClientRect()
+        elwidth.value = rect.width
+        elleft.value = rect.x
+    }
 }
 
 enum titles {
@@ -51,13 +62,23 @@ const settilte = (title: string) => {
 
 watch(() => route.name, () => {
     recycle.value = false
-    console.log(title.value);
     if (title.value) title.value = undefined
-    console.log(title.value);
     if (route.name != undefined) {
         title.value = settilte(route.name.toString())!
         if (route.name === titles.meshare || route.name === titles.recyclebin) {
             recycle.value = true
+            if (route.path === '/apphome/meshare') {
+                nextTick(() => {
+                    elwidth.value = myfile.value?.getBoundingClientRect().width
+                    elleft.value = myfile.value?.getBoundingClientRect().x
+                })
+            }
+            if (route.path === '/apphome/recyclebin') {
+                nextTick(() => {
+                    elwidth.value = mydel.value?.getBoundingClientRect().width
+                    elleft.value = mydel.value?.getBoundingClientRect().x
+                })
+            }
         }
         if (route.name === titles.recyclebin) {
             highlight(false)
@@ -77,26 +98,35 @@ onMounted(() => {
             recycle.value = true
         }
     }
+    if (route.path === '/apphome/meshare') {
+        nextTick(() => {
+            elwidth.value = myfile.value?.getBoundingClientRect().width;
+            elleft.value = myfile.value?.getBoundingClientRect().x;
+        })
+    }
+    if (route.path === '/apphome/recyclebin') {
+        nextTick(() => {
+            elwidth.value = mydel.value?.getBoundingClientRect().width
+            elleft.value = mydel.value?.getBoundingClientRect().x
+        })
+    }
 
 })
 </script>
 
 <template>
     <div v-if="title != undefined" class="title">
-        <span v-if="recycle">
-            <router-link to="/apphome/meshare">
-                <span @click="highlight(true)"
-                    :style="{ opacity: active ? '1' : '0.5', fontSize: active ? '18px' : '16px' }">{{ title }}</span>
-            </router-link>
-        </span>
-        <span v-else>{{ title }}</span>
-        <span v-if="recycle" style="margin-left: 20px;">
-            <router-link to="/apphome/recyclebin">
-                <span @click="highlight(false)"
-                    :style="{ opacity: active ? '0.5' : '1', fontSize: active ? '16px' : '18px' }">回收站</span>
-            </router-link>
-        </span>
-        <el-divider />
+        <div v-if="recycle" class="indicator" :style="{ width: elwidth + 'px', left: elleft + 'px' }"></div>
+        <div v-if="recycle" class="container">
+            <div ref="myfile" class="title-text" style="cursor: pointer;" @click="highlight(true, $event, '/apphome/meshare')"
+                :style="{ opacity: active ? '1' : '0.5' }">
+                {{ title }}
+            </div>
+            <div ref="mydel" class="title-text" style="cursor: pointer;" @click="highlight(false, $event, '/apphome/recyclebin')"
+                :style="{ opacity: active ? '0.5' : '1' }">
+                {{t('home.recycling_station')}}</div>
+        </div>
+        <div v-else class="title-text">{{ title }}</div>
     </div>
 
     <div class="main">
@@ -105,27 +135,38 @@ onMounted(() => {
 </template>
 
 <style lang="scss" scoped>
-.el-divider {
-    margin: 10px 0;
-}
-
 .title {
-    margin-top: 16px;
+    display: flex;
+    align-items: flex-end;
+    height: 40px;
+    border-bottom: 1px solid rgba(196, 196, 196, 0.8117647059);
+    margin: 6px 0;
+    box-sizing: border-box;
 
-    span {
+    .indicator {
+        position: absolute;
+        height: 2px;
+        background-color: #9775fa;
+        border-radius: 2px;
+        transition: all 0.2s ease-in-out;
+    }
+
+    .container {
+        display: flex;
+        align-items: center;
+        line-height: 40px;
+    }
+
+    .title-text {
         font-size: 18px;
-        width: auto;
         font-weight: 600;
         letter-spacing: 2px;
-        overflow: hidden;
-        white-space: nowrap;
-        text-overflow: ellipsis;
+        line-height: 40px;
+        margin-right: 12px;
+        // overflow: hidden;
+        // white-space: nowrap;
+        // text-overflow: ellipsis;
         color: #000;
-
-        a {
-            text-decoration: none;
-
-        }
     }
 }
 

@@ -1,5 +1,5 @@
 <template>
-    <div class="card-container">
+    <div class="card-container" @keyup.esc="close" @keyup.enter="createProject">
         <div class="heard">
             <div class="title">
                 {{ t('Createteam.add_project') }}
@@ -22,14 +22,14 @@
             </div>
         </div>
         <div class="addproject">
-            <button type="submit" :disabled=isDisabled @click.stop.once="createProject">确认</button>
+            <button type="submit" :disabled=isDisabled @click.stop.once="createProject">{{t('projectlist.confirm1')}}</button>
         </div>
     </div>
 </template>
 <script setup lang="ts">
 import { computed, inject, nextTick, ref } from 'vue';
 import { useI18n } from 'vue-i18n';
-import * as user_api from '@/apis/users'
+import * as user_api from '@/request/users'
 import { ElMessage } from 'element-plus'
 import { router } from '@/router';
 const { t } = useI18n();
@@ -49,6 +49,10 @@ const { updateprojectliststate } = inject('shareData') as {
 };
 
 const createProject = async () => {
+    if (inputValue.value.trim() === '') {
+        ElMessage.error('项目名称不能为空')
+        return
+    }
     try {
         const { code, message, data } = await user_api.CreateProject({ team_id: props.teamid, name: inputValue.value, description: textareaValue.value })
         if (code === 0) {
@@ -145,41 +149,36 @@ const close = () => {
             }
 
             input {
-                padding: 0 6px;
+                padding: 2px 8px;
                 width: 100%;
                 height: 32px;
                 border: none;
                 outline-style: none;
-                border: 1px solid silver;
-                border-radius: 3px;
+                background-color: rgba(0, 0, 0, 0.08);
+                border-radius: 4px;
                 box-sizing: border-box;
 
-                &:hover {
-                    border: 1px solid #e5dbff;
-                }
-
                 &:focus {
-                    border: 1px solid #9775fa;
+                    border: 2px solid #9775fa;
+                    padding: 0px 6px;
                 }
             }
 
             textarea {
-                padding: 6px;
+                padding: 8px;
                 width: 100%;
                 height: 120px;
+                border: none;
                 outline-style: none;
                 resize: none;
                 font-family: none;
-                border: 1px solid silver;
-                border-radius: 3px;
+                background-color: rgba(0, 0, 0, 0.08);
+                border-radius: 4px;
                 box-sizing: border-box;
 
-                &:hover {
-                    border: 1px solid #e5dbff;
-                }
-
                 &:focus {
-                    border: 1px solid #9775fa;
+                    border: 2px solid #9775fa;
+                    padding: 6px;
                 }
             }
         }
@@ -212,8 +211,9 @@ const close = () => {
 
             &:disabled {
                 background-color: rgba(98, 67, 237, 0.3);
-                box-shadow:none;
+                box-shadow: none;
             }
         }
     }
-}</style>
+}
+</style>

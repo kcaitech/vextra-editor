@@ -6,7 +6,7 @@ import CommentPopupItem from './CommentPopupItem.vue';
 import { Action } from "@/context/tool";
 import { Matrix } from "@kcdesign/data";
 import { useI18n } from 'vue-i18n'
-import * as comment_api from '@/apis/comment';
+import * as comment_api from '@/request/comment';
 import { v4 } from 'uuid';
 import { ElScrollbar } from 'element-plus'
 import { Selection } from '@/context/selection';
@@ -652,7 +652,7 @@ onUnmounted(() => {
     width: 47px;
     border-radius: calc(4px);
     height: 24px;
-    font-size: 10px;
+    font-size: var(--font-default-fontsize);
     padding: 0;
 }
 

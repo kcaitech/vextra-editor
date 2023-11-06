@@ -28,7 +28,11 @@
                     <div class="member-name">
                         <img :src="avatar" alt="icon"
                             style="width: 20px;height: 20px;;border-radius: 50%;margin-right: 4px;">
-                        {{ nickname }}
+                            {{ nickname }}
+                        <!-- <div class="nickname" v-if="value === ''">{{ nickname }}</div>
+                        <div class="nickname" v-else>
+                            <div v-for="{ team_member: { nickname } } in value" :key="teamID">{{ team_member.nickname }}</div>
+                        </div> -->
                         <div class="changeName">
                             <el-tooltip class="tips" effect="dark" :content="`${t('teammember.change_name')}`"
                                 placement="bottom" :show-after="600" :offset="10" :hide-after="0">
@@ -71,6 +75,11 @@
                         </span>
                     </template>
                 </el-dialog>
+                <div v-if="SearchList.length === 0 && searchvalue !== ''" class="empty">
+                    <svg-icon icon-class="member"></svg-icon>
+                    没有找到该成员
+                </div>
+                <Loading v-if="SearchList.length === 0 && searchvalue == ''" :size="20" />
             </el-scrollbar>
         </div>
     </div>
@@ -88,18 +97,20 @@
 <script setup lang="ts">
 import { onMounted, onUnmounted, ref, inject, Ref, watch, computed, nextTick } from 'vue';
 import NetworkError from '@/components/NetworkError.vue'
-import * as user_api from '@/apis/users'
+import * as user_api from '@/request/users'
 import { ElMessage } from 'element-plus'
 import { useI18n } from 'vue-i18n'
 import { router } from '@/router';
 import ProjectDialog from './ProjectDialog.vue';
-
+import Loading from '../common/Loading.vue';
 interface Props {
     searchvalue?: string
+    value: string
 }
 
 const props = withDefaults(defineProps<Props>(), {
-    searchvalue: ''
+    searchvalue: '',
+    value: ''
 })
 
 const userID = ref(localStorage.getItem('userId'))
@@ -111,6 +122,7 @@ const titles = [t('teammember.name'), t('teammember.team_permission')]
 const filteritems = [t('teammember.Readonly'), t('teammember.editable'), t('teammember.manager'), t('teammember.creator'), t('teammember.all')]
 const noNetwork = ref(false)
 const teammemberdata = ref<any[]>([])
+const memberdata = ref<any[]>([])
 const fold = ref(false)
 const folds = ref(false)
 const fontName = ref(4)
@@ -132,6 +144,8 @@ const openDialog = (name: string) => {
         }
     })
 };
+
+const loading = ref(true)
 const { teamID, teamData, upDateTeamData, is_team_upodate, teamUpdate } = inject('shareData') as {
     teamID: Ref<string>;
     teamData: Ref<[{
@@ -146,6 +160,7 @@ const { teamID, teamData, upDateTeamData, is_team_upodate, teamUpdate } = inject
     is_team_upodate: Ref<boolean>;
     teamUpdate: (b: boolean) => void;
 }
+
 const userperm = ref()
 const usertype = (p: number, id: string) => {
     const text = teammemberdata.value.find((item) => item.user.id === userID.value)
@@ -253,6 +268,7 @@ const SearchList = computed(() => {
 
 //通过计算属性，筛选出符合当前权限类型的成员
 const ListData = computed(() => {
+    console.log(memberdata.value, '1')
     if (fontName.value < 4) {
         return teammemberdata.value.filter((el: any) => {
             return el.perm_type === fontName.value
@@ -682,6 +698,21 @@ onUnmounted(() => {
 
     :deep(.el-button--primary) {
         background-color: #9775fa;
+    }
+
+    .empty {
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        margin-top: 25%;
+        font-size: 14px;
+
+        svg {
+            color: #9775fa;
+            width: 22px;
+            height: 22px;
+            margin-right: 4px;
+        }
     }
 }
 </style>

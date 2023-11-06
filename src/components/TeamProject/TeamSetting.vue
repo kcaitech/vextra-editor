@@ -27,8 +27,9 @@
                 <div class="text">{{ t('teamsetting.avatar_restriction') }}</div>
             </div>
             <div class="right">
-                <label class="modify" :style="{ backgroundColor: isDisabled.color,boxShadow:isDisabled.shadow }" for="image_uploads">{{
-                    t('teamsetting.edit_avatar') }}</label>
+                <label class="modify" :style="{ backgroundColor: isDisabled.color, boxShadow: isDisabled.shadow }"
+                    for="image_uploads">{{
+                        t('teamsetting.edit_avatar') }}</label>
                 <input type="file" id="image_uploads" name="image_uploads" accept=".jpg,.png" style="display: none;"
                     @change="midAvatarRequest($event)" :disabled="isDisabled.state" />
             </div>
@@ -87,7 +88,7 @@
 <script setup lang="ts">
 import { Ref, computed, inject, nextTick, ref } from 'vue';
 import { useI18n } from 'vue-i18n';
-import * as user_api from '@/apis/users'
+import * as user_api from '@/request/users'
 import { router } from '@/router';
 import { ElMessage } from 'element-plus';
 import ProjectDialog from './ProjectDialog.vue';
@@ -132,7 +133,7 @@ interface teamDataType {
 }
 
 const isDisabled: any = computed(() => {
-    return teamSelfPermType.value === 0 || teamSelfPermType.value === 1 ? { state: true, color: 'rgba(98, 67, 237, 0.3)',shadow:'none' } : false
+    return teamSelfPermType.value === 0 || teamSelfPermType.value === 1 ? { state: true, color: 'rgba(98, 67, 237, 0.3)', shadow: 'none' } : false
 })
 
 //获取元素，设置焦点并全选内容
@@ -205,7 +206,7 @@ const midAvatarRequest = async (e: any) => {
                     ElMessage.error(message)
                 }
             } catch (error) {
-
+                ElMessage.error('修改失败')
             }
 
         } else {
@@ -272,7 +273,7 @@ const leave = async (id: string) => {
 const midname = () => {
     showoverlay.value = true
     textareashow.value = true
-    titlevalue.value = '修改团队名称'
+    titlevalue.value = t('teamsetting.title_name1')
     textareaValue.value = teamName.value
     maxvalue.value = 20
     nextTick(() => el())
@@ -281,7 +282,7 @@ const midname = () => {
 const middescription = () => {
     showoverlay.value = true
     textareashow.value = true
-    titlevalue.value = '修改团队描述'
+    titlevalue.value =  t('teamsetting.title_name2')
     textareaValue.value = teamDescription.value
     maxvalue.value = 120
     nextTick(() => el())
@@ -290,15 +291,15 @@ const middescription = () => {
 const dissolveteam = () => {
     showDialog.value = true
     textareashow.value = false
-    titlevalue.value = '解散团队'
-    contenttext.value = '解散团队后，将彻底删除团队中包含的全部项目资料，且不可恢复。'
+    titlevalue.value = t('teamsetting.title_name3')
+    contenttext.value = t('teamsetting.disband_team_tipsB')
 }
 
 const leaveteam = () => {
     showDialog.value = true
     textareashow.value = false
-    titlevalue.value = '离开团队'
-    contenttext.value = '离开团队后，将无法再查看团队项目及资源。'
+    titlevalue.value = t('teamsetting.title_name4')
+    contenttext.value = t('teamsetting.leave_team_tips')
 }
 
 const confirm = () => {
@@ -475,7 +476,7 @@ const confirm = () => {
 
         .left {
             font-size: 14px;
-
+            color: #909399;
             .title {
                 font-weight: 600;
                 margin-bottom: 8px;
@@ -495,6 +496,7 @@ const confirm = () => {
             width: 80px;
             height: 32px;
             border: none;
+            outline: none;
             background-color: #9775fa;
             box-shadow: 1px 1px 3px #b1b1b1, -1px -1px 3px #b1b1b1;
             margin-right: 8px;
@@ -519,4 +521,5 @@ const confirm = () => {
         }
     }
 
-}</style>
+}
+</style>

@@ -65,7 +65,7 @@ function borderStyleSelect(selected: SelectItem) {
   props.context.workspace.notify(WorkSpace.CTRL_DISAPPEAR);
   borderStyle.value = selected;
   if (len.value === 1) {
-    const bs = selected.value === 'dash' ? new BorderStyle(10, 10) : new BorderStyle(0, 0);
+    const bs = selected.value === 'dash' ? new BorderStyle(2, 2) : new BorderStyle(0, 0);
     const shape = props.shapes[0] as TableShape;
     if (shape.type === ShapeType.Table) {
       const table = props.context.tableSelection;

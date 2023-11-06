@@ -1,5 +1,6 @@
 // 光标样式处理   ---.svg + 角度 = base64
-import { v4 as uuid } from "uuid";
+import {v4 as uuid} from "uuid";
+
 const auto = 'data:image/png;base64,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';
 const cross = 'data:image/png;base64,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';
 const scale = 'data:image/png;base64,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';
@@ -9,140 +10,138 @@ const comment = 'data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAAEEAAABACAYAAABFq
 const scan = 'data:image/png;base64,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';
 export const pipette = 'data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAADAAAAAwCAYAAABXAvmHAAAAAXNSR0IArs4c6QAABV9JREFUaEPtmG1oVXUcxz8+zpZbLgcuTHDOF6OYsGoTI3IyMG14Hex67waJFERBqdALfZNDDLIoexG9qCjyTTBQat7bwoXMXRTntm4OFnIFr2srkPWc7VG7M77z/1/zsrvOuWdXEe4fDmdnnHPu5/f0/f3Ofx73+Jp3j/OTNeBuRzAbgWwEPHogm0IeHej58WwEPLvQ4wuyEfDoQM+PZyPg2YUeX3AnIqDfmH4I+aY5JjzyZ3wanQ8sNMciQNeCTwD/ADfM3/pfWiuTERDsYmAJ8BDQBDwM/A58B+wGRoExY0xaRmTKgAUGPhd4HAib6+le7gJqgSFjiCLiemXCAAt/P/Ak0GxqYCa4o8B+4BowbtLLlRFzbYDgcwDBPw0cmwVeoD8BT5m0GjH1cFcMkCOs55cC1cDn/wMv0D+BSuAXk0qu0yjdCCRLoy1YeX4r8JlDN8ZMHfwM/G2K2eGjt25LxwArjfL4I8BlQBK5pKys7FBvb+/zDgmkQLuAKPCbiYDk1dVKxwDBSh7l5TLgVeVyeXn5hxcuXKhy+OvS/zeBL036KJUkp64bWzoGCP4+IAB8DMRLS0uvxWKxcofwyvN3jDr9CvwBDJum5roXuDVA91uVeQDwFxcXv93X1+eQfdLD703zvIWXhLr2fjo1oPxXZxX88rq6uj0tLS0vjo+Pc/OmI+cJ/gvAel5NTPCuc996zG0ElP/qrg8Gg8G9J0+e3LNy5cp5hw8fZseOHVy/fn22SLxv+sJ0eOV92vBuI6ChTN7Pa2ho2N3a2rq/qKhofkdHB/n5+USjUTZs2MCNG6rP21dJSUkkHo83moLVLGQ971r3k9/tNAKCV+4vra+vf7mtra2xsLBwCt6+VLWwdu1aJib+S+fS0tLeWCy2F5DWC96ODZ7hnUZgCr6hoeGFSCTyxrJlyxZYzyd75OrVq6xatYpEIkFxcfEPfX19rwCDxgDJpfR/TuCdGDAFHwgEnuvo6HgrLy9vYSr44eFhqqur6ezsZMWKFQwODg4ArwPdpnDVbVUojireibTNlkJTg1kwGKzv7Ow8kpubu2g2+M2bN3Pu3Dm2bdv2TTgc/h54TX0CeAn41uj9nHl/tgjIMDWspYFAYGs0Gv00JydncSr4kZERtmzZwpkzZwT/dTgc/sjMNhrUNNjtMyOH0seT6jgtYqWOum3B+vXre/r7+wsuXbo0qTbJa3R0lJqaGk6fPo3P5/sqFApJLpUq6q4akeVxXQte6XNHDJDi5Pt8vmdDodDRpqYmgsHgjPA+n49Tp05Z+CNmNBCwNF7AMsB+/0pj0+q4qephphpQt51sVn6/f9fx48cPxeNx1qxZc9s7xsbGqK2tpbW1dTq85nopjTxvva2CFbQ95qyAU9WAcl+58qjf7393YGDgCaVIY6P60K2l0aGuro6WlhYZEW5ubtaIIHjNNvK+xgN5fTrsnIKnGiXsrFOwcePGUCQSeayqqor29nYOHjzIzp076enp4cCBA1y8eNHCK23seGBTJxneiSKmdU9yCkk69VW1HLgieBXnpk2bJo2wa926daOrV68Oh0KhD8zHiNLmjsPPlEIyQN+0hdu3bz924sSJchuBmpqay4lEom1oaOjHs2fPnjcjwV/mrNnG0/5OWu6f4ZPSRqAAeKaysnJfV1dXSUVFxZXu7u5PAO3lCFYSac+Sx5lyPl0mV88lp5CtgTwz8+usCVQFKEjBCt5CS2k8bw+6Ik66OdkAXU9+oJtGpmampiYDBKs00SFoFaqVRi8Mnp5N1QfshqzOdkPWNiQLnhFZdGtNqmHO7vsI3i55226Lu/2djN3v9IMmYwBeX/wvm6rTQFcM4lMAAAAASUVORK5CYII='
 export const copy = 'data:image/png;base64,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';
-interface StyleSheetController {
-  getId: Function
-  setup: Function
-  remove: Function
-  appendClass: Function
-  getClass: (c: string) => Promise<string | false>
+
+export interface StyleSheetController {
+    getId: Function
+    setup: Function
+    remove: Function
+    getClass: (c: string) => Promise<string | undefined>
 }
+
 const getBase64ByType = new Map([
-  ['auto', auto],
-  ['cross', cross],
-  ['scale', scale],
-  ['rotate', rotate],
-  ['extend', extend],
-  ['scan', scan],
-  ['comment', comment]
+    ['auto', auto],
+    ['cross', cross],
+    ['scale', scale],
+    ['rotate', rotate],
+    ['extend', extend],
+    ['scan', scan],
+    ['comment', comment]
 ])
 
 const hot = [16, 16]; // 光标热点在svg的位置
 
 // 返回一个StyleSheetController对象
-function styleSheetController(): StyleSheetController {
-  let styleSheetId: string = '';
-  let style: HTMLStyleElement;
-  const classList: Map<string, string> = new Map();
-  const loading: Map<string, 1> = new Map();
-  async function appendStyleSheetForCursor() {
-    style = document.createElement('style');
-    style.type = 'text/css';
-    styleSheetId = (uuid().split('-').at(-1)) || 'cursor'; // at() 可能存在浏览器兼容问题，后期观察👀；
-    style.id = styleSheetId;
-    // 预设一个auto
-    style.innerHTML += await getClassString('auto', 0, styleSheetId);
-    classList.set(`auto-0-${styleSheetId}`, `auto-0-${styleSheetId}`);
-    document.querySelector('head')?.appendChild(style);
-  }
-  // 根据id移除一个<style>标签
-  function removeStyleSheetForCursor() {
-    if (styleSheetId.length) {
-      const style = document.getElementById(styleSheetId);
-      style?.remove();
+export function styleSheetController(): StyleSheetController {
+    let styleSheetId: string = '';
+    let style: HTMLStyleElement;
+    const classList: Set<string> = new Set();
+
+    async function appendStyleSheetForCursor() {
+        style = document.createElement('style');
+        style.type = 'text/css';
+        styleSheetId = (uuid().split('-').at(-1)) || 'cursor'; // at() 可能存在浏览器兼容问题，后期观察👀；
+        style.id = styleSheetId;
+        // 预设一个auto
+        style.innerHTML += await getClassString('auto', 0, styleSheetId);
+        classList.add(`auto-0-${styleSheetId}`);
+        document.querySelector('head')?.appendChild(style);
     }
-  }
-  // 向style标签里面插入class样式
-  function appendClass(clsName: string, cls: string) {
-    if (style) {
-      style.innerHTML += cls;
-      classList.set(clsName, clsName);
+
+    // 根据id移除一个<style>标签
+    function removeStyleSheetForCursor() {
+        if (!styleSheetId.length) return;
+        const style = document.getElementById(styleSheetId);
+        style?.remove();
     }
-  }
-  async function getClass(clsName: string) { //这个clsName是不带id的，只有类型和度数
-    const arr = clsName.split('-');
-    arr[1] = findNearestMultipleOf(Math.floor(((Number(arr[1] || -arr[2] || 0) % 360))), 6).toString();
-    clsName = `${arr[0]}-${arr[1]}-${styleSheetId}`;
-    // 如果获取的过程中无法从已有的样式库中取得样式，则先创建一个样式插入到样式库
-    if (!classList.get(clsName)) {
-      const [type, deg] = clsName.split('-');
-      if (loading.get(clsName)) {
-        return false;
-      } else {
-        loading.set(clsName, 1);
-        const cls: string = await getClassString(type, Number(deg), styleSheetId);
+
+    // 向style标签里面插入class样式
+    function appendClass(clsName: string, cls: string) {
+        if (!style) return
+        style.innerHTML += cls;
+        classList.add(clsName);
+    }
+
+    async function getClass(clsName: string) { //这个clsName是不带id的，只有类型和度数
+        const arr = clsName.split('-');
+        const deg = findNearestMultipleOf(Math.floor(((Number(arr[1] || -arr[2] || 0) % 360))), 6);
+        const type = arr[0];
+        clsName = `${type}-${deg}-${styleSheetId}`;
+        // 如果获取的过程中无法从已有的样式库中取得样式，则先创建一个样式插入到样式库
+        if (classList.has(clsName)) return clsName;
+        const cls: string = await getClassString(type, deg, styleSheetId);
         appendClass(clsName, cls);
-        loading.delete(clsName);
         return clsName;
-      }
-    } else {
-      return classList.get(clsName) || `auto-0-${styleSheetId}`;
     }
-  }
-  async function getClassString(type: string, deg: number, id: string) {
-    let src: string = getBase64ByType.get(type) || auto;
-    const result = await rotateBase64Image(src, deg);
-    let str = `.${type}-${deg}-${id} {`;
-    if (result) {
-      src = (result as string);
-      if (type === 'auto') {
-        str += `cursor: -webkit-image-set(url(${src}) 2x) ${hot[0] - 3} ${hot[1] - 3}, auto !important;`;
-      } else if (type === 'grab') {
-        str += 'cursor: grab !important;';
-      } else if (type === 'grabbing') {
-        str += 'cursor: grabbing !important;';
-      } else {
-        str += `cursor: -webkit-image-set(url(${src}) 2x) ${hot[0]} ${hot[1]}, auto !important;`;
-      }
+
+    async function getClassString(type: string, deg: number, id: string) {
+        let src: string = getBase64ByType.get(type) || auto;
+        const result = await rotateBase64Image(src, deg);
+        let str = `.${type}-${deg}-${id} {`;
+        if (!result) return str + '}';
+        src = (result as string);
+        switch (type) {
+            case 'auto':
+                str += `cursor: -webkit-image-set(url(${src}) 2x) ${hot[0] - 3} ${hot[1] - 3}, auto !important;`;
+                break;
+            case 'grab':
+                str += 'cursor: grab !important;';
+                break;
+            case 'grabbing':
+                str += 'cursor: grabbing !important;';
+                break;
+            default:
+                str += `cursor: -webkit-image-set(url(${src}) 2x) ${hot[0]} ${hot[1]}, auto !important;`;
+        }
+        str += '}'
+        return str;
     }
-    str += '}'
-    return str;
-  }
-  function getId() {
-    return styleSheetId;
-  }
-  return {
-    getId,
-    setup: appendStyleSheetForCursor,
-    remove: removeStyleSheetForCursor,
-    appendClass,
-    getClass,
-  };
+
+    function getId() {
+        return styleSheetId;
+    }
+
+    return {
+        getId,
+        setup: appendStyleSheetForCursor,
+        remove: removeStyleSheetForCursor,
+        getClass,
+    };
 }
 
 // image/svg+xml -rotate-> image/svg+xml;
 function rotateBase64Image(base64Image: string, angle: number) {
-  return new Promise((resolve, reject) => {
-    const image = new Image();
-    image.src = base64Image;
-    image.onload = function () {
-      const canvas = document.createElement('canvas');
-      const context = canvas.getContext('2d');
-      if (!context) reject('canvas api error');
-      const radians = angle * Math.PI / 180;
-      const cos = Math.abs(Math.cos(radians));
-      const sin = Math.abs(Math.sin(radians));
-      const width = image.width * cos + image.height * sin;
-      const height = image.width * sin + image.height * cos;
-      canvas.width = width;
-      canvas.height = height;
-      context!.translate(width / 2, height / 2);
-      context!.rotate(radians);
-      context!.drawImage(image, -image.width / 2, -image.height / 2);
-      const rotatedBase64Image = canvas.toDataURL('image/png');
-      resolve(rotatedBase64Image);
-    };
-    image.onerror = function () {
-      reject('Invalid base64 image');
-    }
-  });
+    return new Promise((resolve, reject) => {
+        const image = new Image();
+        image.src = base64Image;
+        image.onload = function () {
+            const canvas = document.createElement('canvas');
+            const context = canvas.getContext('2d');
+            if (!context) return reject('canvas api error');
+            const radians = angle * Math.PI / 180;
+            const cos = Math.abs(Math.cos(radians));
+            const sin = Math.abs(Math.sin(radians));
+            const width = image.width * cos + image.height * sin;
+            const height = image.width * sin + image.height * cos;
+            canvas.width = width;
+            canvas.height = height;
+            context.translate(width / 2, height / 2);
+            context.rotate(radians);
+            context.drawImage(image, -image.width / 2, -image.height / 2);
+            const rotatedBase64Image = canvas.toDataURL('image/png');
+            resolve(rotatedBase64Image);
+        };
+        image.onerror = function () {
+            reject('Invalid base64 image');
+        }
+    });
 }
+
 function findNearestMultipleOf(num: number, step?: number): number {
-  if (num < 0) num = num + 360;
-  step = step || 3
-  let closest = Math.round(num / step) * step;
-  if (closest < num) {
-    closest += step;
-  }
-  return closest;
+    if (num < 0) num = num + 360;
+    step = step || 3
+    let closest = Math.round(num / step) * step;
+    if (closest < num) {
+        closest += step;
+    }
+    return closest;
 }
-export { StyleSheetController, styleSheetController }

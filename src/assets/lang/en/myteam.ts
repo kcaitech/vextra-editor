@@ -65,7 +65,15 @@ export const Createteam = {
     pertipsA: 'Project permissions: Public, accessible to all team members',
     pertipsB: 'Project permissions: Non-public, accessible only by inviting members via link',
     Transfertips: 'After you transfer Creator rights, you no longer own the project and remain in the project as an administrator.',
-    confirmTransfer: 'Confirm transfer'
+    confirmTransfer: 'Confirm transfer',
+
+    project:'Project',
+    Team:'Team',
+
+    welcome:'Welcome to',
+    rejectprompt1:'The application to join',
+    rejectprompt2:'was rejected. If you have any questions, please contact the project team administrator.',
+    shareprojecttips:'Accessible to all members of the project',
 }
 
 export const inviteMember = {
@@ -74,6 +82,8 @@ export const inviteMember = {
     permission_tips: 'Send a link or QR code to colleagues to apply to join',
     permission_switch: 'Invitation link switch: ',
     permission_tipsA: 'After colleagues apply, they need to be confirmed by the administrator before they can join.',
+    copy_success:'Copy Success',
+    copy_failure:'Copy Failure',
 }
 
 export const joinTeam = {
@@ -103,7 +113,9 @@ export const projectlist = {
     project_name: 'Project name',
     project_description: 'Project description',
     creator: 'Creator',
-    operation: 'Operation'
+    operation: 'Operation',
+    enterproject:'Enter project',
+    confirm1:'Confirm',
 }
 
 export const projectpage = {
@@ -181,4 +193,8 @@ export const teamsetting = {
     disband:'Disband',
     confirm:'Confirm',
     cancel:'Cancel', 
+    title_name1:'修改团队名称',
+    title_name2:'修改团队描述',
+    title_name3:'解散团队',
+    title_name4:'离开团队',
 }

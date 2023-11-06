@@ -694,7 +694,7 @@ onUnmounted(() => {
             height: 32px;
             min-width: 40px;
             color: rgba($color: #000000, $alpha: 0.25);
-            font-size: 10px;
+            font-size: var(--font-default-fontsize);
             width: 100%;
             text-overflow: ellipsis;
             white-space: nowrap;

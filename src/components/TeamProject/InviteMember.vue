@@ -34,7 +34,7 @@
 <script setup lang="ts">
 import { Ref, computed, inject, onMounted, ref, watch } from 'vue';
 import { useI18n } from 'vue-i18n';
-import * as user_api from '@/apis/users'
+import * as user_api from '@/request/users'
 import { ElMessage } from 'element-plus'
 
 interface teaminfotype {
@@ -97,17 +97,17 @@ const Getteaminfo = async () => {
 }
 
 const teaminviteinfo = computed(() => {
-    return `https://test.protodesign.cn/zbb/#/join?key=${teamInvitePermission.value}&teamid=${teamID.value}`
+    return `https://protodesign.cn/#/join?key=${teamInvitePermission.value}&teamid=${teamID.value}`
 })
 
 async function copyText() {
     try {
         await navigator.clipboard.writeText(teaminviteinfo.value);
         ElMessage.closeAll();
-        ElMessage.success("复制成功");
+        ElMessage.success(t('inviteMember.copy_success'));
     } catch (error) {
         ElMessage.closeAll();
-        ElMessage.error("复制失败");
+        ElMessage.error(t('inviteMember.copy_failure'));
     }
 }
 

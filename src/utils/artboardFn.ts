@@ -65,7 +65,7 @@ export function scrollToContentView(shape: Shape, context: Context) {
     if (transX || transY) {
         selection.unHoverShape();
         selection.selectShape();
-        context.tool.setTitleVisibale(false);
+        context.tool.setTitleVisible(false);
         const pageViewEl = workspace.pageView;
         if (pageViewEl) {
             pageViewEl.classList.add('transition-400');
@@ -85,7 +85,7 @@ export function scrollToContentView(shape: Shape, context: Context) {
             workspace.matrix.reset(m);
             const timer = setTimeout(() => {
                 selection.selectShape(shape);
-                context.tool.setTitleVisibale(true);
+                context.tool.setTitleVisible(true);
                 pageViewEl.classList.remove('transition-400');
                 clearTimeout(timer);
             }, 400);

@@ -2,9 +2,7 @@
 <template>
     <div>
         <div class="team">
-            <div class="team-info">
-                <div class="team-name">{{t('Createteam.sharetip')}}</div>
-            </div>
+            <div class="team-name">{{ t('Createteam.sharetip') }}</div>
         </div>
         <ProjectShareList />
     </div>
@@ -65,19 +63,20 @@ const { t } = useI18n();
 
 .team {
     display: flex;
-    margin: 16px 0px;
-    align-items: center;
+    align-items: flex-end;
+    height: 40px;
+    border-bottom: 1px solid rgba(196, 196, 196, 0.8117647059);
+    margin: 6px 0;
+    box-sizing: border-box;
 
-    .team-info {
-        display: flex;
-        flex-direction: column;
-        margin: 0 12px;
-
-        .team-name {
-            font-size: 24px;
-            font-weight: 600;
-            margin-bottom: 8px;
-        }
+    .team-name {
+        font-size: 18px;
+        font-weight: 600;
+        letter-spacing: 2px;
+        line-height: 40px;
+        margin-right: 12px;
+        color: #000;
     }
+
 }
 </style>

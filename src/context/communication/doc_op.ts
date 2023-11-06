@@ -16,7 +16,7 @@ export class DocOp extends Watchable(Object) {
             const diff_time = 1000 - (Date.now() - (Number.isInteger(startOptions?.last_time) ? startOptions!.last_time! : 0))
             if (diff_time > 0) await new Promise(resolve => setTimeout(resolve, diff_time));
             this.docOp = undefined
-            if (!this.isClosed) await this.start.apply(this, [...startParams.slice(0, 5), options, { last_time: Date.now() }] as any); // eslint-disable-line prefer-spread
+            if (!this.isClosed) await this.start.apply(this, [...startParams, options, { last_time: Date.now() }] as any); // eslint-disable-line prefer-spread
         });
         this.startPromise = new Promise<boolean>(resolve => this.startResolve = resolve)
         try {
