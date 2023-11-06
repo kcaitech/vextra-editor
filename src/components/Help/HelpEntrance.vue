@@ -28,7 +28,7 @@
                 </div>
                 <div class="shortcut-content">
                     <div class="shortcut-item" v-for="(item, index) in shortcuts" :key="index">
-                        <div class="item-title">{{ item.title }}</div>
+                        <div v-if="item.title" class="item-title">{{ item.title }}</div>
                         <div class="item-name" style="display: flex;justify-content: space-between;"
                             v-for="(i, index) in item.shortcutKey" :key="index">
                             {{ i.name }}
@@ -41,7 +41,7 @@
     </div>
 </template>
 <script setup lang="ts">
-import { computed, nextTick, onMounted, onUnmounted, ref, watch } from 'vue';
+import { nextTick, onMounted, onUnmounted, ref, watch } from 'vue';
 import { useRoute } from 'vue-router';
 import QRCode from '@/assets/qr-code.png';
 const route = useRoute()
@@ -62,7 +62,7 @@ const shortcuts = ref<any[]>([{
     ]
 },
 {
-    title: '',
+    title: '测试标题',
     shortcutKey: [
         { name: '复制1', keys: 'Ctrl+C' },
         { name: '复制2', keys: 'Ctrl+C' }
@@ -76,11 +76,6 @@ const shortcuts = ref<any[]>([{
     ]
 }
 ])
-const shortcuts1 = ref<any[]>([{ title: '测试标题2', shortcutKey: { name: '粘贴', keys: 'Ctrl+V' } }])
-
-const shortcutdata = computed(() => {
-    return itemid.value === 0 ? shortcuts : shortcuts1
-})
 
 const clickEvent = (index: number, e: MouseEvent) => {
     itemid.value = index
@@ -195,6 +190,7 @@ onUnmounted(() => {
     background-color: white;
     box-shadow: 0px 2px 5px 0px rgba(0, 0, 0, 0.3);
     box-sizing: border-box;
+    z-index: 998;
 
     .item {
         cursor: pointer;
@@ -225,6 +221,7 @@ onUnmounted(() => {
     background-color: white;
     box-shadow: 0px 2px 5px 0px rgba(0, 0, 0, 0.3);
     box-sizing: border-box;
+    z-index: 998;
 
     .qr-code {
         width: 200px;
@@ -283,15 +280,22 @@ onUnmounted(() => {
         .shortcut-item {
             display: flex;
             flex-direction: column;
-        }
-        .item-title{
-            color:var(--title-color)
-        }
 
-        .item-name{
-            color: #000000E6;
-            line-height: 20px;
-            margin-bottom: 12px;
+            .item-title {
+                color: var(--title-color);
+                line-height: 20px;
+                margin-bottom: 12px;
+            }
+
+            .item-name {
+                color: #000000E6;
+                line-height: 20px;
+                margin-bottom: 12px;
+
+                .item-key {
+                    color: #000000E6;
+                }
+            }
         }
     }
 }
