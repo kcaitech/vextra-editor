@@ -6,10 +6,11 @@ import { ref, onUnmounted, watch, onMounted } from 'vue'
 import { shape_track, get_shape_within_document } from '@/utils/content';
 import { Shape, ShapeType, SymbolRefShape } from '@kcdesign/data';
 import { MoreFilled } from '@element-plus/icons-vue';
-import { RefAttriListItem, get_var_for_ref, is_symbolref_disa, reset_all_attr_for_ref } from "@/utils/symbol";
+import { RefAttriListItem, get_var_for_ref, is_able_to_unbind, is_symbolref_disa, reset_all_attr_for_ref } from "@/utils/symbol";
 import { cardmap } from "./InstanceAttrCard/map";
 import Status from "./InstanceAttrCard/IACStatus.vue"
 import Visible from "./InstanceAttrCard/IACVisible.vue"
+import { Selection } from '@/context/selection';
 
 interface Props {
     context: Context
@@ -21,10 +22,12 @@ const props = defineProps<Props>();
 const resetMenu = ref(false);
 const variables = ref<RefAttriListItem[]>([]);
 const visible_variables = ref<RefAttriListItem[]>([]);
+const untie_state = ref<boolean>(false);
 const selectReset = (e: MouseEvent) => {
     if (resetMenu.value) return resetMenu.value = false
     resetMenu.value = true
-    document.addEventListener('click', closeResetMenu)
+    document.addEventListener('click', closeResetMenu);
+    props.context.esctask.save(close_popover);
 }
 
 const closeResetMenu = (e: MouseEvent) => {
@@ -33,7 +36,12 @@ const closeResetMenu = (e: MouseEvent) => {
     }
     document.removeEventListener('click', closeResetMenu);
 }
-
+function close_popover() {
+    const is_exist = resetMenu.value;
+    resetMenu.value = false;
+    document.removeEventListener('click', closeResetMenu);
+    return is_exist;
+}
 const editComps = () => {
     let shape: Shape | undefined
     if (props.shapes[0].type !== ShapeType.SymbolRef) return;
@@ -43,6 +51,7 @@ const editComps = () => {
     shape_track(props.context, shape);
 }
 const untie = () => {
+    if (!untie_state.value) return;
     const selection = props.context.selection;
     const page = selection.selectedPage;
     if (!page) return;
@@ -77,19 +86,27 @@ function reset_all_attr() {
 
     }
 }
-
+function updater_untie_state() {
+    untie_state.value = is_able_to_unbind(props.context.selection.selectedShapes);
+}
+function selection_watcher(t: number) {
+    if (t === Selection.CHANGE_SHAPE) updater_untie_state();
+}
 watch(() => props.shapes[0], (nVal, oVal) => {
     oVal.unwatch(shape_watcher);
     nVal.watch(shape_watcher);
     updateData();
 })
 onMounted(() => {
+    updater_untie_state();
     updateData();
     props.shapes[0].watch(shape_watcher);
+    props.context.selection.watch(selection_watcher);
 })
 onUnmounted(() => {
     props.shapes[0].unwatch(shape_watcher);
     document.removeEventListener('click', closeResetMenu);
+    props.context.selection.unwatch(selection_watcher);
 })
 </script>
 
@@ -106,7 +123,7 @@ onUnmounted(() => {
                             <MoreFilled />
                         </el-icon>
                         <div class="reset_menu" v-if="resetMenu">
-                            <div class="untie" @click="untie">
+                            <div :class="{ untie, disabled: !untie_state }" @click="untie">
                                 <span>{{ t('compos.untie') }}</span>
                                 <span>快捷键</span>
                             </div>
@@ -192,6 +209,11 @@ onUnmounted(() => {
                     background-color: var(--active-color);
                     color: #fff;
                 }
+            }
+
+            .disabled {
+                pointer-events: none;
+                opacity: 0.2;
             }
         }
     }
