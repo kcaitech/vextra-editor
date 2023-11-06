@@ -16,7 +16,7 @@ export const lable = {
     layer_info: 'Layer information',
     name: 'name',
     posi: 'position',
-    size: '大小',
+    size: 'size',
     rotate: 'rotate',
     raduis: 'raduis',
     opacity: 'opacity',
