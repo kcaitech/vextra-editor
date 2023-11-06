@@ -10,6 +10,9 @@ import LableMultiSelect from "./LableMultiSelect.vue";
 import { computed, onMounted, onUnmounted, ref } from "vue";
 import { Selection } from '@/context/selection';
 import { Shape, ShapeType } from "@kcdesign/data";
+import { useI18n } from 'vue-i18n'
+
+const {t} = useI18n();
 const props = defineProps<{
     context: Context
 }>();
@@ -52,7 +55,7 @@ onUnmounted(() => {
             <LableText v-if="len === 1 && shapeType === ShapeType.Text" :context="context"></LableText>
             <!-- <LableCode v-if="len > 0" :context="context"></LableCode> -->
         </el-scrollbar>
-        <div class="blank" v-if="len === 0">请选择图层</div>
+        <div class="blank" v-if="len === 0">{{t('lable.selectLayer')}}</div>
     </div>
 </template>
 

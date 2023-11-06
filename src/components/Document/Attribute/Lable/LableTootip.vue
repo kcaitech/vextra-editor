@@ -1,5 +1,8 @@
 <script setup lang="ts">
 import { onMounted, ref, watch } from 'vue';
+import { useI18n } from 'vue-i18n'
+
+const { t } = useI18n();
 const props = defineProps<{
     copy_text: boolean,
     offset?: number,
@@ -13,14 +16,13 @@ onMounted(() => {
 </script>
 
 <template>
-    <el-tooltip class="box-item" effect="dark" :placement="placement ? placement : 'left'" :offset="offset || 10" :visible="visible">
+    <el-tooltip class="box-item" effect="dark" :placement="placement ? placement : 'left'" :offset="offset || 10"
+        :visible="visible">
         <template #content>
-            <span>{{ copy_text ? '已复制' : copy ? copy : '点击复制' }}</span>
+            <span>{{ copy_text ? `${t('lable.copied')}` : copy ? copy : `${t('lable.click_copy')}` }}</span>
         </template>
         <slot />
     </el-tooltip>
 </template>
 
-<style scoped lang="scss">
-
-</style>
+<style scoped lang="scss"></style>

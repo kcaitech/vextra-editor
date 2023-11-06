@@ -25,6 +25,7 @@ export class Menu extends Watchable(Object) {
   private m_context: Context;
   private m_platfrom: number = 1;
   private m_mulriple: number = 1;
+  private m_mulriple_i: number = 1
   private m_lable_menu_mounted: string = '';
   constructor(context: Context) {
     super();
@@ -82,8 +83,12 @@ export class Menu extends Watchable(Object) {
   get isMulriple() {
     return this.m_mulriple;
   }
-  setLableMulriple(v: number) {
+  get isMulripleI() {
+    return this.m_mulriple_i;
+  }
+  setLableMulriple(v: number, i: number) {
     this.m_mulriple = v;
+    this.m_mulriple_i = i;
     this.notify(Menu.LABLE_MULRIPLE);
   }
   get isLableMenuMount() {

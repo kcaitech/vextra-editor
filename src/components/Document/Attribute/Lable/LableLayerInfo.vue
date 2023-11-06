@@ -8,6 +8,9 @@ import { GroupShape, PathShape, PathShape2, RectShape, Shape, ShapeType, TextSha
 import { Menu } from '@/context/menu';
 import Tooltip from '@/components/common/Tooltip.vue';
 import LableTootip from './LableTootip.vue';
+import { useI18n } from 'vue-i18n'
+
+const { t } = useI18n();
 const props = defineProps<{
     context: Context
 }>();
@@ -19,14 +22,8 @@ const radius = ref<{ lt: number, rt: number, rb: number, lb: number }>({ lt: 0, 
 const watchedShapes = new Map();
 const unit = ['pt', 'px', 'dp', 'rpx'];
 const copy_text = ref(false);
-const name_visible = ref(false)
-const x_visible = ref(false)
-const y_visible = ref(false)
-const w_visible = ref(false)
-const h_visible = ref(false)
+
 const _visible = ref();
-const radius_visible = ref(false)
-const rotate_visible = ref(false)
 const platfrom = ref(props.context.menu.isPlatfrom);
 const multiple = ref(props.context.menu.isMulriple);
 function watch_shapes() {
@@ -106,7 +103,7 @@ const copyLable = async (e: MouseEvent, v: string) => {
                 copy_text.value = true;
                 _visible.value = v;
             }, () => {
-                console.log('复制失败');
+                console.log(`${t('lable.copyfailure')}`);
             })
         } else {
             const textArea = document.createElement('textarea')
@@ -148,22 +145,22 @@ onUnmounted(() => {
 
 <template>
     <div class="container">
-        <LableType title="图层信息">
+        <LableType :title="t('lable.layer_info')">
             <template #body>
                 <div class="row">
-                    <span class="named">名称</span>
+                    <span class="named">{{ t('lable.name') }}</span>
                     <LableTootip :copy_text="copy_text" :visible="_visible === 'name'">
-                        <div><span class="name" @click="(e) => copyLable(e, 'name')"  style="cursor: pointer;"
+                        <div><span class="name" @click="(e) => copyLable(e, 'name')" style="cursor: pointer;"
                                 @mouseleave.stop="_visible = undefined, copy_text = false">{{ name }}</span></div>
                     </LableTootip>
                 </div>
                 <div class="row">
-                    <span class="named">位置</span>
+                    <span class="named">{{ t('lable.posi') }}</span>
                     <div style="display: flex;">
                         <span style="display: block; width: 50%;"><span class="name"
                                 style="color: #a5a5a5; margin-right: 5px;">X</span>
                             <LableTootip :copy_text="copy_text" :visible="_visible === 'x'">
-                                <span @click="(e) => copyLable(e, 'x')"  style="cursor: pointer;"
+                                <span @click="(e) => copyLable(e, 'x')" style="cursor: pointer;"
                                     @mouseleave.stop="_visible = undefined, copy_text = false">
                                     {{ xy.x }}{{ unit[platfrom] }}
                                 </span>
@@ -172,7 +169,7 @@ onUnmounted(() => {
                         <span style="display: block; width: 50%;"><span class="name"
                                 style="color: #a5a5a5; margin-right: 5px">Y</span>
                             <LableTootip :copy_text="copy_text" :visible="_visible === 'y'">
-                                <span @click="(e) => copyLable(e, 'y')"  style="cursor: pointer;"
+                                <span @click="(e) => copyLable(e, 'y')" style="cursor: pointer;"
                                     @mouseleave.stop="_visible = undefined, copy_text = false">{{ xy.y }}{{ unit[platfrom]
                                     }}</span>
                             </LableTootip>
@@ -180,12 +177,12 @@ onUnmounted(() => {
                     </div>
                 </div>
                 <div class="row">
-                    <span class="named">大小</span>
+                    <span class="named">{{ t('lable.size') }}</span>
                     <div style="display: flex;">
                         <span style="display: block; width: 50%;"><span class="name"
                                 style="color: #a5a5a5; margin-right: 5px">W</span>
                             <LableTootip :copy_text="copy_text" :visible="_visible === 'w'">
-                                <span @click="(e) => copyLable(e, 'w')"  style="cursor: pointer;"
+                                <span @click="(e) => copyLable(e, 'w')" style="cursor: pointer;"
                                     @mouseleave.stop="_visible = undefined, copy_text = false">
                                     {{ size.w }}{{ unit[platfrom] }}
                                 </span>
@@ -194,7 +191,7 @@ onUnmounted(() => {
                         <span style="display: block; width: 50%;"><span class="name"
                                 style="color: #a5a5a5; margin-right: 5px">H</span>
                             <LableTootip :copy_text="copy_text" :visible="_visible === 'h'">
-                                <span @click="(e) => copyLable(e, 'h')"  style="cursor: pointer;"
+                                <span @click="(e) => copyLable(e, 'h')" style="cursor: pointer;"
                                     @mouseleave.stop="_visible = undefined, copy_text = false">
                                     {{ size.h }}{{ unit[platfrom] }}
                                 </span>
@@ -203,9 +200,9 @@ onUnmounted(() => {
                     </div>
                 </div>
                 <div class="row" v-if="rotate > 0">
-                    <span class="named">角度</span>
+                    <span class="named">{{ t('lable.rotate') }}</span>
                     <LableTootip :copy_text="copy_text" :visible="_visible === 'rotate'">
-                        <div><span @click="(e) => copyLable(e, 'rotate')"  style="cursor: pointer;"
+                        <div><span @click="(e) => copyLable(e, 'rotate')" style="cursor: pointer;"
                                 @mouseleave.stop="_visible = undefined, copy_text = false">{{ rotate }}deg</span></div>
                     </LableTootip>
                 </div>
@@ -214,9 +211,9 @@ onUnmounted(() => {
                     <div></div>
                 </div> -->
                 <div class="row" v-if="innerRaduis(radius, unit[platfrom], true)">
-                    <span class="named">圆角</span>
+                    <span class="named">{{ t('lable.raduis') }}</span>
                     <LableTootip :copy_text="copy_text" :visible="_visible === 'radius'">
-                        <div><span class="name" @click="(e) => copyLable(e, 'radius')"  style="cursor: pointer;"
+                        <div><span class="name" @click="(e) => copyLable(e, 'radius')" style="cursor: pointer;"
                                 @mouseleave.stop="_visible = undefined, copy_text = false">{{ innerRaduis(radius,
                                     unit[platfrom]) }}</span></div>
                     </LableTootip>

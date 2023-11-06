@@ -10,6 +10,8 @@ import { RGB2HSL, RGB2HSB } from '@/components/common/ColorPicker/utils';
 import { useI18n } from 'vue-i18n';
 import { isEqual, uniqWith } from 'lodash';
 import LableTootip from './LableTootip.vue';
+
+const { t } = useI18n();
 const props = defineProps<{
     context: Context
 }>();
@@ -158,7 +160,7 @@ const copyLable = async (e: MouseEvent, v: string) => {
                 copy_text.value = true;
                 _visible.value = v;
             }, () => {
-                console.log('复制失败');
+                console.log(`${t('lable.copyfailure')}`);
             })
         } else {
             const textArea = document.createElement('textarea')
@@ -186,7 +188,7 @@ onUnmounted(() => {
 
 <template>
     <div class="container">
-        <LableType title="文本">
+        <LableType :title="t('lable.text')">
             <template #select>
                 <div class="fillunit-input" @click.stop="onSelected">
                     <span>{{ textMenuItems[text_i] }}</span>
@@ -200,7 +202,7 @@ onUnmounted(() => {
             </template>
             <template #body>
                 <div class="row">
-                    <div class="named">内容</div>
+                    <div class="named">{{ t('lable.content') }}</div>
                     <LableTootip :copy_text="copy_text" :visible="_visible === 'content'">
                         <div class="name" style="flex: 1;">
                             <span style="width: 100%; cursor: pointer;" @click="(e) => copyLable(e, 'content')"
@@ -211,7 +213,7 @@ onUnmounted(() => {
                 <div class="line"></div>
                 <template v-for="(t, index) in textFormat" :key="index">
                     <div class="row">
-                        <span class="named">字体</span>
+                        <span class="named">{{ t('lable.font') }}</span>
                         <div class="name" style="flex: 1;">
                             <LableTootip :copy_text="copy_text" :visible="_visible === 'font' + index">
                                 <span @click="(e) => copyLable(e, 'font' + index)" style="cursor: pointer;"
@@ -220,7 +222,7 @@ onUnmounted(() => {
                         </div>
                     </div>
                     <div class="row">
-                        <span class="named">字号</span>
+                        <span class="named">{{ t('lable.type_size') }}</span>
                         <div style="flex: 1;">
                             <LableTootip :copy_text="copy_text" :visible="_visible === 'size' + index">
                                 <span @click="(e) => copyLable(e, 'size' + index)" style="cursor: pointer;"
@@ -229,7 +231,7 @@ onUnmounted(() => {
                         </div>
                     </div>
                     <div class="row">
-                        <span class="named">字重</span>
+                        <span class="named">{{ t('lable.word_weight') }}</span>
                         <div style="flex: 1;">
                             <LableTootip :copy_text="copy_text" :visible="_visible === 'weight' + index">
                                 <span @click="(e) => copyLable(e, 'weight' + index)" style="cursor: pointer;"
@@ -239,7 +241,7 @@ onUnmounted(() => {
                         </div>
                     </div>
                     <div class="row" v-if="t.kerning">
-                        <span class="named">字间距</span>
+                        <span class="named">{{ t('lable.word_space') }}</span>
                         <div style="flex: 1;">
                             <LableTootip :copy_text="copy_text" :visible="_visible === 'ker' + index">
                                 <span @click="(e) => copyLable(e, 'ker' + index)" style="cursor: pointer;"
@@ -249,7 +251,7 @@ onUnmounted(() => {
                         </div>
                     </div>
                     <div class="row">
-                        <span class="named">行高</span>
+                        <span class="named">{{ t('lable.line_height') }}</span>
                         <div style="flex: 1;">
                             <LableTootip :copy_text="copy_text" :visible="_visible === 'line' + index">
                                 <span @click="(e) => copyLable(e, 'line' + index)" style="cursor: pointer;"
@@ -259,7 +261,7 @@ onUnmounted(() => {
                         </div>
                     </div>
                     <div class="row" v-if="t.paraSpacing">
-                        <span class="named">段间距</span>
+                        <span class="named">{{ t('lable.para_spacing') }}</span>
                         <div style="flex: 1;">
                             <LableTootip :copy_text="copy_text" :visible="_visible === 'para' + index">
                                 <span @click="(e) => copyLable(e, 'para' + index)" style="cursor: pointer;"
@@ -269,7 +271,7 @@ onUnmounted(() => {
                         </div>
                     </div>
                     <div class="row">
-                        <span class="named">纯色</span>
+                        <span class="named">{{ t('lable.pure_color') }}</span>
                         <div style="display: flex;">
                             <div class="color"
                                 :style="{ backgroundColor: toRGB(t.color.red, t.color.green, t.color.blue) }">

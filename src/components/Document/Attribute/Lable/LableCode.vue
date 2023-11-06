@@ -4,7 +4,9 @@ import LableType from './LableType.vue';
 import { Selection } from '@/context/selection';
 import { Context } from '@/context';
 import LableTootip from './LableTootip.vue';
+import { useI18n } from 'vue-i18n'
 
+const { t } = useI18n();
 const props = defineProps<{
     context: Context
 }>();
@@ -21,7 +23,7 @@ const copyLable = async (e: MouseEvent) => {
                 copy_text.value = true;
 
             }, () => {
-                console.log('复制失败');
+                console.log(`${t('lable.copyfailure')}`);
             })
         } else {
             const textArea = document.createElement('textarea')
@@ -43,7 +45,7 @@ const copyCode = () => {
             return navigator.clipboard.writeText(code).then(() => {
                 copy_code.value = true;
             }, () => {
-                console.log('复制失败');
+                console.log(`${t('lable.copyfailure')}`);
             })
         } else {
             const textArea = document.createElement('textarea')
@@ -68,12 +70,12 @@ const toRGBA = (r: number, g: number, b: number, a: number) => {
 
 const getShapeInfo = () => {
     const shapes = props.context.selection.selectedShapes;
-    if(shapes.length > 0) {
+    if (shapes.length > 0) {
         const shape = shapes[0];
         const witch = shape.frame.width.toFixed(2);
         const height = shape.frame.height.toFixed(2);
         let color = ''
-        if(shape.style.fills[0]) {
+        if (shape.style.fills[0]) {
             const fill = shape.style.fills[0].color
             if (fill.alpha === 1) {
                 color = toHex(fill.red, fill.green, fill.blue);
@@ -116,12 +118,13 @@ onUnmounted(() => {
 
 <template>
     <div class="container">
-        <LableType title="代码">
+        <LableType :title="t('lable.code')">
             <template #select>
                 <div class="button">
-                    <LableTootip :copy_text="copy_code" :visible="copy_all === true" copy="复制全部" placement="top">
+                    <LableTootip :copy_text="copy_code" :visible="copy_all === true" :copy="t('lable.copy_all')"
+                        placement="top">
                         <button @click="copyCode" @mouseenter.stop="copy_all = true"
-                                @mouseleave.stop="copy_all = false, copy_code = false">复制</button>
+                            @mouseleave.stop="copy_all = false, copy_code = false">{{ t('lable.copy') }}</button>
                     </LableTootip>
                 </div>
             </template>
@@ -182,6 +185,7 @@ onUnmounted(() => {
     >span {
         cursor: default;
     }
+
     cursor: default;
 }
 </style>

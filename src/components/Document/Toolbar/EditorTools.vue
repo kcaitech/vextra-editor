@@ -77,7 +77,7 @@ onUnmounted(() => {
 
 <template>
     <div class="editor-tools" @dblclick.stop v-if="isEdit && !isLable">
-        <Cursor @select="select" :d="selected" :active="selected === Action.AutoV || selected === Action.AutoK"></Cursor>
+        <Cursor @select="select" :d="selected" :active="selected === Action.AutoV || selected === Action.AutoK" :is_lable="isLable" :edit="isEdit"></Cursor>
         <div class="vertical-line" />
         <Frame :context="props.context" :active="selected === Action.AddFrame" @select="select"></Frame>
         <Rect @select="select" :active="selected === Action.AddRect"></Rect>
@@ -101,9 +101,9 @@ onUnmounted(() => {
         <GroupUngroup :context="props.context" :selection="props.selection"></GroupUngroup>
     </div>
     <div class="editor-tools" @dblclick.stop v-if="isread || canComment || isLable">
-        <Cursor @select="select" :d="selected" :active="selected === Action.AutoV || selected === Action.AutoK"></Cursor>
+        <Cursor @select="select" :d="selected" :active="selected === Action.AutoV || selected === Action.AutoK" :is_lable="isLable" :edit="isEdit"></Cursor>
         <div class="vertical-line" />
-        <Comment @select="select" :active="selected === Action.AddComment" :workspace="workspace"></Comment>
+        <Comment @select="select" :active="selected === Action.AddComment" :workspace="workspace" v-if="!isread"></Comment>
     </div>
 </template>
 

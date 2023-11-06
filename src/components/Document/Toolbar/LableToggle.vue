@@ -2,7 +2,9 @@
 import { ref, watch } from 'vue'
 import { Switch } from '@element-plus/icons-vue'
 import { Context } from '@/context';
+import { useI18n } from 'vue-i18n'
 
+const {t} = useI18n();
 interface Props {
     context: Context
 }
@@ -37,7 +39,7 @@ const toggleSwitch = () => {
 
 <template>
     <div class="content_lable">
-        <el-tooltip class="box-item" effect="dark" content="开发模式" placement="bottom" :show-after="600" :offset="10"
+        <el-tooltip class="box-item" effect="dark" :content="t('lable.development')" placement="bottom" :show-after="600" :offset="10"
             :hide-after="0" :visible="vis ? false : visible">
             <div class="d-switch" :class="{ 'is-checked': isActive }" @mouseenter.stop="onMouseenter"
                 @mouseleave.stop="onMouseleave">

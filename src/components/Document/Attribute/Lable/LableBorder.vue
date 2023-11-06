@@ -139,7 +139,7 @@ const copyLable = async (e: MouseEvent, v: string) => {
                 copy_text.value = true;
                 _visible.value = v;
             }, () => {
-                console.log('复制失败');
+                console.log(`${t('lable.copyfailure')}`);
             })
         } else {
             const textArea = document.createElement('textarea')
@@ -184,7 +184,7 @@ onUnmounted(() => {
 
 <template>
     <div class="container">
-        <LableType title="边框">
+        <LableType :title="t('lable.border')">
             <template #select>
                 <div class="fillunit-input" @click.stop="onSelected">
                     <span>{{ fillMenuItems[fill_i] }}</span>
@@ -199,7 +199,7 @@ onUnmounted(() => {
             <template #body>
                 <template v-for="(b, i) in borders" :key="b.id">
                     <div class="row">
-                        <span class="named">位置</span>
+                        <span class="named">{{ t('lable.position') }}</span>
                         <LableTootip :copy_text="copy_text" :visible="_visible === b.id + 'address'">
                             <div><span @click="(e) => copyLable(e, b.id + 'address')" style="cursor: pointer;"
                                     @mouseleave.stop="_visible = undefined, copy_text = false">{{
@@ -207,7 +207,7 @@ onUnmounted(() => {
                         </LableTootip>
                     </div>
                     <div class="color_row">
-                        <span class="named">纯色</span>
+                        <span class="named">{{ t('lable.pure_color') }}</span>
                         <div style="display: flex;">
                             <div class="color"
                                 :style="{ backgroundColor: toRGB(b.border.color.red, b.border.color.green, b.border.color.blue) }">
@@ -217,15 +217,17 @@ onUnmounted(() => {
                                     @mouseleave.stop="_visible = undefined, copy_text = false">{{
                                         toColor(b.border.color, fillMenuItems[fill_i]) }}</span>
                             </LableTootip>
-                            <LableTootip v-if="fillMenuItems[fill_i] === 'HEX'" :copy_text="copy_text" :visible="_visible === b.id + 'alpha'">
-                                <span style="margin-left: 15px; cursor: pointer;" v-if="fillMenuItems[fill_i] === 'HEX'" @click="(e) => copyLable(e, b.id + 'alpha')"
+                            <LableTootip v-if="fillMenuItems[fill_i] === 'HEX'" :copy_text="copy_text"
+                                :visible="_visible === b.id + 'alpha'">
+                                <span style="margin-left: 15px; cursor: pointer;" v-if="fillMenuItems[fill_i] === 'HEX'"
+                                    @click="(e) => copyLable(e, b.id + 'alpha')"
                                     @mouseleave.stop="_visible = undefined, copy_text = false">{{
                                         filterAlpha(b.border.color.alpha * 100) + '%' }}</span>
                             </LableTootip>
                         </div>
                     </div>
                     <div class="row">
-                        <span class="named">粗细</span>
+                        <span class="named">{{ t('lable.thickness') }}</span>
                         <div>
                             <LableTootip :copy_text="copy_text" :visible="_visible === b.id + 'top'">
                                 <span @click="(e) => copyLable(e, b.id + 'top')" style="cursor: pointer;"
@@ -250,12 +252,13 @@ onUnmounted(() => {
                         </div>
                     </div>
                     <div class="row">
-                        <span class="named">样式</span>
+                        <span class="named">{{ t('lable.style') }}</span>
                         <div style="display: flex;">
                             <LableTootip :copy_text="copy_text" :visible="_visible === b.id + 'line'">
                                 <span style="color: #a5a5a5; cursor: pointer;" @click="(e) => copyLable(e, b.id + 'line')"
                                     @mouseleave.stop="_visible = undefined, copy_text = false">{{
-                                        b.border.borderStyle.gap > 0 ? '虚线' : '实线' }}</span>
+                                        b.border.borderStyle.gap > 0 ? `${t('lable.dotted_line')}` : `${t('lable.solid_line')}`
+                                    }}</span>
                             </LableTootip>
                             <span v-if="b.border.borderStyle.gap > 0" style="margin-left: 10px;">{{ b.border.borderStyle.gap
                             }}</span>
@@ -332,5 +335,4 @@ onUnmounted(() => {
     border-color: #fff;
     box-sizing: border-box;
     background-color: rgb(0, 0, 0, .05);
-}
-</style>
+}</style>

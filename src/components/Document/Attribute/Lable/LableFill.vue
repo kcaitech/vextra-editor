@@ -8,6 +8,9 @@ import { ArrowDown } from '@element-plus/icons-vue';
 import { Color, Fill } from '@kcdesign/data';
 import { RGB2HSL, RGB2HSB } from '@/components/common/ColorPicker/utils';
 import LableTootip from './LableTootip.vue';
+import { useI18n } from 'vue-i18n'
+
+const { t } = useI18n();
 const props = defineProps<{
     context: Context
 }>();
@@ -131,7 +134,7 @@ const copyLable = async (e: MouseEvent, v: string) => {
                 copy_text.value = true;
                 _visible.value = v;
             }, () => {
-                console.log('复制失败');
+                console.log(`${t('lable.copyfailure')}`);
             })
         } else {
             const textArea = document.createElement('textarea')
@@ -168,7 +171,7 @@ onUnmounted(() => {
 
 <template>
     <div class="container">
-        <LableType title="填充">
+        <LableType :title="t('lable.fill')">
             <template #select>
                 <div class="fillunit-input" @click.stop="onSelected">
                     <span>{{ fillMenuItems[fill_i] }}</span>
@@ -182,7 +185,7 @@ onUnmounted(() => {
             </template>
             <template #body>
                 <div class="row" v-for="(f) in fills" :key="f.id">
-                    <span class="named">纯色</span>
+                    <span class="named">{{ t('lable.pure_color') }}</span>
                     <div style="display: flex;">
                         <div class="color"
                             :style="{ backgroundColor: toRGB(f.fill.color.red, f.fill.color.green, f.fill.color.blue) }">
@@ -192,7 +195,8 @@ onUnmounted(() => {
                                 @mouseleave.stop="_visible = undefined, copy_text = false">{{ toColor(f.fill.color,
                                     fillMenuItems[fill_i]) }}</span>
                         </LableTootip>
-                        <LableTootip :copy_text="copy_text" :visible="_visible === f.id + 'alpha'" v-if="fillMenuItems[fill_i] === 'HEX'">
+                        <LableTootip :copy_text="copy_text" :visible="_visible === f.id + 'alpha'"
+                            v-if="fillMenuItems[fill_i] === 'HEX'">
                             <span style="margin-left: 15px; cursor: pointer;" @click="(e) => copyLable(e, f.id + 'alpha')"
                                 @mouseleave.stop="_visible = undefined, copy_text = false">{{
                                     filterAlpha(f.fill.color.alpha * 100) + '%' }}</span>
@@ -251,4 +255,5 @@ onUnmounted(() => {
     overflow: hidden;
     text-overflow: ellipsis;
     white-space: nowrap;
-}</style>
+}
+</style>
