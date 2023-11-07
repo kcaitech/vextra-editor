@@ -20,6 +20,7 @@ import { Action, Tool } from "@/context/tool";
 import { useI18n } from 'vue-i18n'
 import { message } from "@/utils/message";
 import { string_by_sys } from "@/utils/common";
+import { ElMessage } from "element-plus";
 const { t } = useI18n();
 interface Props {
     context: Context
@@ -70,6 +71,13 @@ onMounted(() => {
 onUnmounted(() => {
     props.context.tool.unwatch(tool_watcher);
 })
+function applyForEdit() {
+    ElMessage.success({
+        message: '已发送权限申请',
+        center: true,
+        duration: 3000
+    })
+}
 </script>
 
 <template>
@@ -98,6 +106,10 @@ onUnmounted(() => {
         <GroupUngroup :context="props.context" :selection="props.selection"></GroupUngroup>
     </div>
     <div class="editor-tools" @dblclick.stop v-if="isread || canComment">
+        <span style="color: #ffffff;">{{ t('apply.read_only') }}</span>
+        <div class="button">
+            <button class="el" style="background-color: #865DFF;" @click="applyForEdit">申请编辑</button>
+        </div>
         <Cursor @select="select" :d="selected" :active="selected === Action.AutoV || selected === Action.AutoK"></Cursor>
         <div class="vertical-line" />
         <Comment @select="select" :active="selected === Action.AddComment" :workspace="workspace"></Comment>
@@ -134,6 +146,17 @@ onUnmounted(() => {
 
     &::-webkit-scrollbar-thumb:active {
         background-color: none;
+    }
+
+    .button {
+        margin-left: 15px;
+
+        .el {
+            height: 33px;
+            border-radius: 5px;
+            color: #ffffff;
+            background-color: #865DFF;
+        }
     }
 
     .temp {
