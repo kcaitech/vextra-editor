@@ -31,6 +31,7 @@ const isread = ref(false)
 const canComment = ref(false)
 const isEdit = ref(false)
 const selected = ref<Action>(Action.AutoV);
+const menuVisible = ref(false);
 function select(action: Action) {
     props.context.tool.setAction(action);
     if (action === Action.AddComment) {
@@ -45,14 +46,14 @@ function selectComps() {
 const isLable = ref(props.context.tool.isLable);
 function tool_watcher(t?: number) {
     if (t === Tool.CHANGE_ACTION) selected.value = props.context.tool.action;
-    if(t === Tool.LABLE_CHANGE) {
+    if (t === Tool.LABLE_CHANGE) {
         isLable.value = props.context.tool.isLable;
     }
 }
 //获取文档权限
 const hangdlePerm = () => {
     const perm = props.context.workspace.documentPerm;
-    
+
     if (perm === Perm.isRead) {
         isread.value = true
     } else if (perm === Perm.isComment) {
@@ -77,13 +78,26 @@ onUnmounted(() => {
 
 <template>
     <div class="editor-tools" @dblclick.stop v-if="isEdit && !isLable">
-        <Cursor @select="select" :d="selected" :active="selected === Action.AutoV || selected === Action.AutoK" :is_lable="isLable" :edit="isEdit"></Cursor>
+        <Cursor @select="select" :d="selected" :active="selected === Action.AutoV || selected === Action.AutoK"
+            :is_lable="isLable" :edit="isEdit"></Cursor>
         <div class="vertical-line" />
         <Frame :context="props.context" :active="selected === Action.AddFrame" @select="select"></Frame>
-        <Rect @select="select" :active="selected === Action.AddRect"></Rect>
+
+        <!-- <Rect @select="select" :active="selected === Action.AddRect"></Rect>
         <Ellipse @select="select" :active="selected === Action.AddEllipse"></Ellipse>
         <Line @select="select" :active="selected === Action.AddLine"></Line>
-        <Arrow @select="select" :active="selected === Action.AddArrow"></Arrow>
+        <Arrow @select="select" :active="selected === Action.AddArrow"></Arrow> -->
+
+        <div class="menu-f">
+            <svg-icon icon-class="down"></svg-icon>
+            <div v-if="menuVisible">
+                <Rect @select="select" :active="selected === Action.AddRect"></Rect>
+                <Ellipse @select="select" :active="selected === Action.AddEllipse"></Ellipse>
+                <Line @select="select" :active="selected === Action.AddLine"></Line>
+                <Arrow @select="select" :active="selected === Action.AddArrow"></Arrow>
+            </div>
+        </div>
+
         <CreateText @select="select" :active="selected === Action.AddText"></CreateText>
         <CreateImage :active="selected === Action.AddImage" :context="props.context"></CreateImage>
         <Table @select="select" :active="selected === Action.AddTable" :context="props.context"></Table>
@@ -101,7 +115,8 @@ onUnmounted(() => {
         <GroupUngroup :context="props.context" :selection="props.selection"></GroupUngroup>
     </div>
     <div class="editor-tools" @dblclick.stop v-if="isread || canComment || isLable">
-        <Cursor @select="select" :d="selected" :active="selected === Action.AutoV || selected === Action.AutoK" :is_lable="isLable" :edit="isEdit"></Cursor>
+        <Cursor @select="select" :d="selected" :active="selected === Action.AutoV || selected === Action.AutoK"
+            :is_lable="isLable" :edit="isEdit"></Cursor>
         <div class="vertical-line" />
         <Comment @select="select" :active="selected === Action.AddComment" :workspace="workspace" v-if="!isread"></Comment>
     </div>
@@ -163,6 +178,27 @@ onUnmounted(() => {
         flex: 0 0 auto;
         margin-left: 5px;
         margin-right: 5px;
+    }
+
+    .menu-f {
+        width: 10px;
+        height: 28px;
+        display: flex;
+        padding-right: 4px;
+        margin-right: 2px;
+        justify-content: center;
+        align-items: center;
+        color: #ffffff;
+        transition: 0.3s;
+
+        >svg {
+            width: 80%;
+            height: 60%;
+        }
+    }
+
+    .menu-f:hover {
+        transform: translateY(4px);
     }
 }
 </style>
