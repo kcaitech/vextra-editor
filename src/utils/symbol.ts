@@ -725,7 +725,7 @@ export function get_var_for_ref(context: Context, symref: SymbolRefShape) {
             }
         })
     } else { // 存在可变组件
-        const state = get_state_by_ref(context.data, symref); // 先确定当前实例用的是哪个可变组件
+        const state = get_state_by_ref(symref); // 先确定当前实例用的是哪个可变组件
         if (!state) return false;
         variables.forEach((v: Variable) => {
             const item: RefAttriListItem = {variable: v, values: []};
@@ -1180,9 +1180,8 @@ export function get_symbolref_by_layer(shape: Shape) {
 /**
  * @description 确定当前实例引用的是组件中的哪个可变组件
  */
-export function get_state_by_ref(document: Document, symref: SymbolRefShape) {
-    const mgr = document.symbolsMgr;
-    const symbol = mgr.getSync(symref.refId);
+export function get_state_by_ref(symref: SymbolRefShape) {
+    const symbol = symref.rootData;
     if (!symbol) return;
     const variables = symbol.variables;
     if (!symbol.isUnionSymbolShape || !variables) return symbol;

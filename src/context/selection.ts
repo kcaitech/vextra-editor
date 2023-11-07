@@ -467,7 +467,7 @@ export class Selection extends Watchable(Object) implements ISave4Restore {
         return this.m_placement;
     }
     test() {
-        const t = get_state_by_ref(this.m_document, this.m_selectShapes[0] as any);
+        const t = get_state_by_ref(this.m_selectShapes[0] as any);
         console.log('t', get_name(t as any));
     }
 
