@@ -41,6 +41,7 @@ export const apply = {
     file_attribution: '文件归属',
     apply_for_permission: '申请权限',
     read_only: '仅阅读',
+    apply_for_edit: '申请编辑',
     please_remarks: '请输入申请备注',
     file_deleted: '文件已被删除，或创建者已关闭分享',
     authorization_failure: '授权失败',

@@ -108,7 +108,7 @@ function applyForEdit() {
     <div class="editor-tools" @dblclick.stop v-if="isread || canComment">
         <span style="color: #ffffff;">{{ t('apply.read_only') }}</span>
         <div class="button">
-            <button class="el" style="background-color: #865DFF;" @click="applyForEdit">申请编辑</button>
+            <button class="el" style="background-color: #865DFF;" @click="applyForEdit">{{ t('apply.apply_for_edit') }}</button>
         </div>
         <Cursor @select="select" :d="selected" :active="selected === Action.AutoV || selected === Action.AutoK"></Cursor>
         <div class="vertical-line" />
