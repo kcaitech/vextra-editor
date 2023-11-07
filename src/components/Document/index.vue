@@ -1,42 +1,42 @@
 <script setup lang="ts">
-import {onMounted, onUnmounted, shallowRef, ref, watchEffect} from 'vue';
+import { onMounted, onUnmounted, shallowRef, ref, watchEffect } from 'vue';
 import ContentView from "./ContentView.vue";
-import {Context} from '@/context';
+import { Context } from '@/context';
 import Navigation from './Navigation/index.vue';
-import {Selection} from '@/context/selection';
+import { Selection } from '@/context/selection';
 import Attribute from './Attribute/RightTabs.vue';
 import Toolbar from './Toolbar/index.vue'
 import ColSplitView from '@/components/common/ColSplitView.vue';
 import ApplyFor from './Toolbar/Share/ApplyFor.vue';
-import {Document, importDocument, Repository, Page, CoopRepository, IStorage} from '@kcdesign/data';
-import {SCREEN_SIZE} from '@/utils/setting';
+import { Document, importDocument, Repository, Page, CoopRepository, IStorage } from '@kcdesign/data';
+import { SCREEN_SIZE } from '@/utils/setting';
 import * as share_api from '@/request/share'
 import * as user_api from '@/request/users'
-import {useRoute} from 'vue-router';
-import {router} from '@/router';
-import {useI18n} from 'vue-i18n';
-import {Warning} from '@element-plus/icons-vue';
+import { useRoute } from 'vue-router';
+import { router } from '@/router';
+import { useI18n } from 'vue-i18n';
+import { Warning } from '@element-plus/icons-vue';
 import Loading from '@/components/common/Loading.vue';
 import SubLoading from '@/components/common/SubLoading.vue';
-import {Perm, WorkSpace} from '@/context/workspace';
+import { Perm, WorkSpace } from '@/context/workspace';
 import NetWorkError from '@/components/NetworkError.vue'
-import {ResponseStatus} from "@/communication/modules/doc_upload";
-import {insertNetworkInfo} from "@/utils/message"
-import {OssStorage, S3Storage, StorageOptions} from "@/utils/storage";
-import {NetworkStatus} from '@/communication/modules/network_status'
-import {Comment} from '@/context/comment';
-import {DocSelectionOpData, DocSelectionOpType} from "@/communication/modules/doc_selection_op";
-import {debounce} from '@/utils/timing_util';
-import {NetworkStatusType} from "@/communication/types";
+import { ResponseStatus } from "@/communication/modules/doc_upload";
+import { insertNetworkInfo } from "@/utils/message"
+import { OssStorage, S3Storage, StorageOptions } from "@/utils/storage";
+import { NetworkStatus } from '@/communication/modules/network_status'
+import { Comment } from '@/context/comment';
+import { DocSelectionOpData, DocSelectionOpType } from "@/communication/modules/doc_selection_op";
+import { debounce } from '@/utils/timing_util';
+import { NetworkStatusType } from "@/communication/types";
 
-const {t} = useI18n();
+const { t } = useI18n();
 const curPage = shallowRef<Page | undefined>(undefined);
 let context: Context | undefined;
 const middleWidth = ref<number>(0.8);
 const middleMinWidth = ref<number>(0.3);
 const route = useRoute();
-const Right = ref({rightMin: 250, rightMinWidth: 0.1, rightWidth: 0.1});
-const Left = ref({leftMin: 250, leftWidth: 0.1, leftMinWidth: 0.1});
+const Right = ref({ rightMin: 250, rightMinWidth: 0.1, rightWidth: 0.1 });
+const Left = ref({ leftMin: 250, leftWidth: 0.1, leftMinWidth: 0.1 });
 const showRight = ref<boolean>(true);
 const showLeft = ref<boolean>(true);
 const showTop = ref<boolean>(true);
@@ -137,7 +137,7 @@ function selectionWatcher(t: number) {
 }
 
 function keyboardEventHandler(event: KeyboardEvent) {
-    const {target, code, ctrlKey, metaKey, shiftKey} = event;
+    const { target, code, ctrlKey, metaKey, shiftKey } = event;
     if (target instanceof HTMLInputElement) return; // 在输入框中输入时避免触发编辑器的键盘事件
     if (context) {
         if (code === 'Backslash') {
@@ -145,9 +145,12 @@ function keyboardEventHandler(event: KeyboardEvent) {
                 shiftKey ? keyToggleTB() : keyToggleLR();
             }
         }
-        if (context.workspace.documentPerm !== Perm.isEdit) {
+        if (context.workspace.documentPerm !== Perm.isEdit || context.tool.isLable) {
             if (permKeyBoard(event)) {
                 context.workspace.keyboardHandle(event); // 只读可评论的键盘事件
+                if (context.workspace.documentPerm !== Perm.isRead) {
+                    context.tool.keyhandle(event);
+                }
             }
         } else {
             context.esctask.keyboardHandle(event);
@@ -158,8 +161,9 @@ function keyboardEventHandler(event: KeyboardEvent) {
 }
 
 const permKeyBoard = (e: KeyboardEvent) => {
-    const {code, ctrlKey, metaKey, shiftKey} = e;
-    if (code === 'KeyV' || code === 'KeyC' || code === 'KeyA' || code === 'Digit0 ' || ctrlKey || metaKey || shiftKey) return true
+    const { code, ctrlKey, metaKey, shiftKey } = e;
+    if (code === 'KeyV' && (ctrlKey || metaKey)) return;
+    if (code === 'KeyV' || (code === 'KeyC' && !(ctrlKey || metaKey)) || code === 'KeyA' || code === 'Digit0 ' || ctrlKey || metaKey || shiftKey) return true
     else false
 }
 
@@ -247,7 +251,7 @@ enum PermissionChange {
 
 const getDocumentAuthority = async () => {
     try {
-        const data = await share_api.getDocumentAuthorityAPI({doc_id: route.query.id})
+        const data = await share_api.getDocumentAuthorityAPI({ doc_id: route.query.id })
         if (data.code === 400) {
             permissionChange.value = PermissionChange.delete
             showNotification(0)
@@ -310,7 +314,7 @@ const showNotification = (type?: number) => {
     startCountdown(type);
 }
 const getUserInfo = async () => {
-    const {data} = await user_api.GetInfo()
+    const { data } = await user_api.GetInfo()
     if (context) {
         context.comment.setUserInfo(data)
         localStorage.setItem('avatar', data.avatar)
@@ -324,7 +328,7 @@ const getDocumentInfo = async () => {
     try {
         loading.value = true;
         noNetwork.value = false
-        const dataInfo = await share_api.getDocumentInfoAPI({doc_id: route.query.id});
+        const dataInfo = await share_api.getDocumentInfoAPI({ doc_id: route.query.id });
         docInfo.value = dataInfo.data;
         if (dataInfo.code === 400) {
             //无效链接
@@ -350,7 +354,7 @@ const getDocumentInfo = async () => {
             })
             return
         }
-        const {data} = await share_api.getDocumentKeyAPI({doc_id: route.query.id});
+        const { data } = await share_api.getDocumentKeyAPI({ doc_id: route.query.id });
         // documentKey.value = data
 
         const repo = new Repository();
@@ -427,7 +431,7 @@ async function upload(projectId: string) {
     const doc_id = result!.data.doc_id;
     router.replace({
         path: '/document',
-        query: {id: doc_id},
+        query: { id: doc_id },
     });
     if (!await context.communication.docOp.start(token, doc_id, context!.data, context.coopRepo, result!.data.version_id ?? "")) {
         // todo 文档操作通道开启失败处理
@@ -655,36 +659,32 @@ onUnmounted(() => {
     <div class="main" style="height: 100vh;">
         <Loading v-if="loading || null_context" :size="20"></Loading>
         <div id="top" @dblclick="screenSetting" v-if="showTop">
-            <Toolbar :context="context!" v-if="!loading && !null_context"/>
+            <Toolbar :context="context!" v-if="!loading && !null_context" />
         </div>
         <div id="visit">
             <ApplyFor></ApplyFor>
         </div>
         <ColSplitView id="center" :style="{ height: showTop ? 'calc(100% - 40px)' : '100%' }"
-                      v-if="!loading && !null_context"
-                      :left="{ width: Left.leftWidth, minWidth: Left.leftMinWidth, maxWidth: 0.5 }"
-                      :middle="{ width: middleWidth, minWidth: middleMinWidth, maxWidth: middleWidth }"
-                      :right="{ width: Right.rightWidth, minWidth: Right.rightMinWidth, maxWidth: 0.5 }"
-                      :right-min-width-in-px="Right.rightMin" :left-min-width-in-px="Left.leftMin" :context="context!">
+            v-if="!loading && !null_context" :left="{ width: Left.leftWidth, minWidth: Left.leftMinWidth, maxWidth: 0.5 }"
+            :middle="{ width: middleWidth, minWidth: middleMinWidth, maxWidth: middleWidth }"
+            :right="{ width: Right.rightWidth, minWidth: Right.rightMinWidth, maxWidth: 0.5 }"
+            :right-min-width-in-px="Right.rightMin" :left-min-width-in-px="Left.leftMin" :context="context!">
             <template #slot1>
                 <Navigation v-if="curPage !== undefined && !null_context" id="navigation" :context="context!"
-                            @switchpage="switchPage" @mouseenter="() => { mouseenter('left') }"
-                            @showNavigation="showHiddenLeft"
-                            @mouseleave="() => { mouseleave('left') }" :page="(curPage as Page)" :showLeft="showLeft"
-                            :leftTriggleVisible="leftTriggleVisible">
+                    @switchpage="switchPage" @mouseenter="() => { mouseenter('left') }" @showNavigation="showHiddenLeft"
+                    @mouseleave="() => { mouseleave('left') }" :page="(curPage as Page)" :showLeft="showLeft"
+                    :leftTriggleVisible="leftTriggleVisible">
                 </Navigation>
             </template>
             <template #slot2>
                 <ContentView v-if="curPage !== undefined && !null_context" id="content" :context="context!"
-                             :page="(curPage as Page)">
+                    :page="(curPage as Page)">
                 </ContentView>
             </template>
             <template #slot3>
                 <Attribute id="attributes" v-if="!null_context && !isRead" :context="context!"
-                           @mouseenter="(e: Event) => { mouseenter('right') }"
-                           @mouseleave="() => { mouseleave('right') }"
-                           :showRight="showRight" :rightTriggleVisible="rightTriggleVisible"
-                           @showAttrbute="showHiddenRight">
+                    @mouseenter="(e: Event) => { mouseenter('right') }" @mouseleave="() => { mouseleave('right') }"
+                    :showRight="showRight" :rightTriggleVisible="rightTriggleVisible" @showAttrbute="showHiddenRight">
                 </Attribute>
             </template>
         </ColSplitView>
@@ -693,7 +693,7 @@ onUnmounted(() => {
         </div>
         <div v-if="showHint" class="notification">
             <el-icon :size="13">
-                <Warning/>
+                <Warning />
             </el-icon>
             <span class="text" v-if="permissionChange === PermissionChange.update">{{ t('home.prompt') }}</span>
             <span class="text" v-if="permissionChange === PermissionChange.close">{{ t('home.visit') }}</span>
@@ -809,7 +809,7 @@ onUnmounted(() => {
     border-radius: 4px;
 
     .loading-spinner {
-        > svg {
+        >svg {
             width: 15px;
             height: 15px;
             color: #000;
