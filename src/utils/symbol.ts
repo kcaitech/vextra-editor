@@ -14,7 +14,7 @@ import {
 } from "@kcdesign/data";
 import {getName} from "./content";
 import {sort_by_layer} from "./group_ungroup";
-import {debounce} from "lodash";
+import {debounce, result} from "lodash";
 import {v4} from "uuid";
 import {get_name} from "@/utils/shapelist";
 import {XY} from "@/context/selection";
@@ -388,8 +388,12 @@ export function make_symbol(context: Context, t: Function) {
 }
 
 export function is_exsit_contact_shape(selected: Shape[]) {
+    let result = false;
     for (let i = 0, len = selected.length; i < len; i++) {
+        const item = selected[i];
         if (selected[i].type === ShapeType.Contact) return true;
+        if (item.childs?.length) result = is_exsit_contact_shape(item.childs);
+        if (result) return true;
     }
     return false;
 }
@@ -733,8 +737,8 @@ export function get_var_for_ref(context: Context, symref: SymbolRefShape) {
 
         const sub_variables = new Map<string, Variable>(); // 查看当前可变组件下，绑定了哪些变量
         search_binds_for_state(variables, state, sub_variables);
-        let instance_index: number = 0;
-        let text_index: number = 0;
+        let instance_index: number = result.length;
+        let text_index: number = instance_index;
         sub_variables.forEach((v: Variable) => { // 整理顺序
             const item: RefAttriListItem = {variable: v, values: []};
             if (v.type === VariableType.Visible) {
