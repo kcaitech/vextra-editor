@@ -23,20 +23,16 @@
         <div class="main">
             <el-scrollbar height="100%">
                 <div class="member-item"
-                    v-for=" { user: { nickname, id, avatar }, perm_type }  in  searchvalue === '' ? ListData : SearchList "
+                    v-for=" { user: { id, avatar }, perm_type, team_member: { nickname } }  in  searchvalue === '' ? ListData : SearchList "
                     :key="id">
                     <div class="member-name">
                         <img :src="avatar" alt="icon"
                             style="width: 20px;height: 20px;;border-radius: 50%;margin-right: 4px;">
-                            {{ nickname }}
-                        <!-- <div class="nickname" v-if="value === ''">{{ nickname }}</div>
-                        <div class="nickname" v-else>
-                            <div v-for="{ team_member: { nickname } } in value" :key="teamID">{{ team_member.nickname }}</div>
-                        </div> -->
+                        {{ nickname }}
                         <div class="changeName">
                             <el-tooltip class="tips" effect="dark" :content="`${t('teammember.change_name')}`"
                                 placement="bottom" :show-after="600" :offset="10" :hide-after="0">
-                                <button class="button" @click="() => openDialog(nickname)">修改</button>
+                                <button class="button" @click="() => openDialog(nickname, id)">{{ t('teammember.modify') }}</button>
                             </el-tooltip>
                         </div>
                     </div>
@@ -63,11 +59,12 @@
                     </div>
                 </div>
                 <el-dialog v-model="dialogVisible" :title="t('teammember.change_teamname')" width="500" align-center>
-                    <span>仅针对当前团队修改，不影响在其他团队的姓名</span>
-                    <input class="change" type="text" ref="changeinput" />
+                    <span>{{ t('teammember.modifyNickname_title') }}</span>
+                    <input class="change" type="text" ref="changeinput" @keydown.enter="confirm_to_modify_name" />
                     <template #footer>
                         <span class="dialog-footer" style="text-align: center;">
-                            <el-button class="confirm" type="primary" style="background-color: none;">
+                            <el-button class="confirm" type="primary" style="background-color: none;"
+                                @click="confirm_to_modify_name" :loading="confirmLoading">
                                 {{ t('home.rename_ok') }}
                             </el-button>
                             <el-button class="cancel" @click="dialogVisible = false">{{ t('home.cancel')
@@ -103,20 +100,25 @@ import { useI18n } from 'vue-i18n'
 import { router } from '@/router';
 import ProjectDialog from './ProjectDialog.vue';
 import Loading from '../common/Loading.vue';
+import { setTeamMemberNicknameAPI } from '@/request/team';
+
+interface Emits {
+    (e: 'update'): void
+}
 interface Props {
     searchvalue?: string
-    value: string
 }
 
 const props = withDefaults(defineProps<Props>(), {
     searchvalue: '',
-    value: ''
 })
 
+const emits = defineEmits<Emits>();
 const userID = ref(localStorage.getItem('userId'))
 const userid = ref()
 const { t } = useI18n()
 const dialogVisible = ref(false)
+const confirmLoading = ref(false)
 const changeinput = ref<HTMLInputElement>()
 const titles = [t('teammember.name'), t('teammember.team_permission')]
 const filteritems = [t('teammember.Readonly'), t('teammember.editable'), t('teammember.manager'), t('teammember.creator'), t('teammember.all')]
@@ -132,8 +134,10 @@ const transferCreator = ref(false);
 const outTeamDialog = ref(false);
 const exitTeamDialog = ref(false);
 const dialogData = ref<any>({});
-const openDialog = (name: string) => {
+let user_id = '';
+const openDialog = (name: string, userid: string) => {
     dialogVisible.value = true;
+    user_id = userid;
     nextTick(() => {
         if (changeinput.value) {
             changeinput.value.value = name;
@@ -268,13 +272,23 @@ const SearchList = computed(() => {
 
 //通过计算属性，筛选出符合当前权限类型的成员
 const ListData = computed(() => {
-    console.log(memberdata.value, '1')
     if (fontName.value < 4) {
-        return teammemberdata.value.filter((el: any) => {
-            return el.perm_type === fontName.value
-        })
+        const list = [];
+        for (let i = 0; i < teammemberdata.value.length; i++) {
+            const item = teammemberdata.value[i];
+            if (item.perm_type !== fontName.value) continue;
+            if (!item.team_member.nickname) item.team_member.nickname = item.user.nickname;
+            list.push(item);
+        }
+        return list;
     } else {
-        return teammemberdata.value
+        const list = [];
+        for (let i = 0; i < teammemberdata.value.length; i++) {
+            const item = teammemberdata.value[i];
+            if (!item.team_member.nickname) item.team_member.nickname = item.user.nickname;
+            list.push(item);
+        }
+        return list;
     }
 })
 
@@ -422,6 +436,52 @@ const handleEventitem = (id: string) => {
     }
 }
 
+// 修改名称 --确认
+async function confirm_to_modify_name() {
+    if (confirmLoading.value) { return; }
+    const params = get_params_for_modify_name();
+    // 1. 校验
+    if (changeinput.value && changeinput.value.value.length > 0 && changeinput.value.value.length < 9) {
+        confirmLoading.value = true;
+        try {
+            // 2. 执行修改接口
+            const result = await setTeamMemberNicknameAPI(params);
+            if (result?.code === 0) {
+                // 3. 更新列表
+                const n = teammemberdata.value.findIndex(i => i.user.id === user_id);
+                if (n > -1) {
+                    teammemberdata.value[n].team_member.nickname = params.nickname;
+                }
+                ElMessage.closeAll('success');
+                ElMessage.success({ duration: 1500, message: t('percenter.successtips') });
+                // 4. 关闭对话
+                dialogVisible.value = false;
+            } else {
+                // 5. 失败提醒
+                ElMessage.closeAll('error');
+                ElMessage.error({ duration: 1500, message: t('percenter.errortips1') });
+            }
+        } catch (error) {
+            ElMessage.closeAll('error');
+            ElMessage.error({ duration: 1500, message: t('percenter.error_occurred') });
+        } finally {
+            // 结束加载状态，无论成功还是失败
+            confirmLoading.value = false;
+        }
+    } else {
+        ElMessage.closeAll('warning');
+        ElMessage.warning({ duration: 1500, message: t('percenter.nicknametips_length') });
+    }
+}
+function get_params_for_modify_name() {
+    const params: any = {};
+    if (changeinput.value) {
+        params['nickname'] = (changeinput.value as HTMLInputElement).value;
+    }
+    params['user_id'] = localStorage.getItem("userId");
+    params['team_id'] = teamID.value;
+    return params;
+}
 
 watch(teamID, () => {
     GetteamMember()
