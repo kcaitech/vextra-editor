@@ -358,13 +358,13 @@ const iconlists = ref(['fixed', 'entrance', 'project'])
 :deep(.el-table__body tr.current-row>td.el-table__cell) {
     background-color: #e5dbff;
 
-    .other {
-        // display: flex;
-    }
+    // .other {
+    //     display: flex;
+    // }
 
-    .other1 {
-        // display: none;
-    }
+    // .other1 {
+    //     display: none;
+    // }
 }
 
 :deep(.el-table--enable-row-hover .el-table__body tr:hover > td.el-table__cell) {

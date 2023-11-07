@@ -53,6 +53,8 @@ const Getteaminfo = async (teamid: string) => {
                     return router.push({ path: '/apphome/teams/' + teamid });
                 }
             }
+        console.log(code, data,'ddd');
+
             teaminfo.value = data
             switchstate.value = teaminfo.value?.invited_switch
         } else {
