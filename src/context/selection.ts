@@ -21,6 +21,8 @@ import {
 import {Context} from ".";
 import {TextSelection} from "./textselection";
 import {TableSelection} from "./tableselection";
+import {get_state_by_ref} from "@/utils/symbol";
+import {get_name} from "@/utils/shapelist";
 
 interface Saved {
     page: Page | undefined,
@@ -463,6 +465,10 @@ export class Selection extends Watchable(Object) implements ISave4Restore {
 
     get placement() {
         return this.m_placement;
+    }
+    test() {
+        const t = get_state_by_ref(this.m_document, this.m_selectShapes[0] as any);
+        console.log('t', get_name(t as any));
     }
 
     setPlacement(shape?: Shape) {

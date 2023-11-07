@@ -1,6 +1,7 @@
 import {Context} from "@/context";
 import {
     Artboard,
+    Document,
     GroupShape,
     OverrideType,
     Page,
@@ -702,23 +703,74 @@ export function get_var_for_ref(context: Context, symref: SymbolRefShape) {
     if (!sym) return false;
     const variables = sym.variables;
     if (!variables) return false;
-    let status_index: number = 0;
-    let instance_index: number = 0;
-    let text_index: number = 0;
-    variables.forEach((v: Variable) => {
-        const item: RefAttriListItem = {variable: v, values: []};
-        if (v.type === VariableType.Visible) {
-            result2.push(item);
-        } else if (v.type === VariableType.Status) {
-            item.values = tag_values_sort(sym, v);
-            result.splice(status_index++, 0, item);
-        } else if (v.type === VariableType.SymbolRef) {
-            result.splice(status_index + instance_index++, 0, item);
-        } else if (v.type === VariableType.Text) {
-            result.splice(status_index + instance_index + text_index++, 0, item);
-        }
-    })
+    if (!sym.isUnionSymbolShape) { // 不存在可变组件
+        let status_index: number = 0;
+        let instance_index: number = 0;
+        let text_index: number = 0;
+        variables.forEach((v: Variable) => {
+            const item: RefAttriListItem = {variable: v, values: []};
+            if (v.type === VariableType.Visible) {
+                result2.push(item);
+            } else if (v.type === VariableType.Status) {
+                item.values = tag_values_sort(sym, v);
+                result.splice(status_index++, 0, item);
+            } else if (v.type === VariableType.SymbolRef) {
+                result.splice(status_index + instance_index++, 0, item);
+            } else if (v.type === VariableType.Text) {
+                result.splice(status_index + instance_index + text_index++, 0, item);
+            }
+        })
+    } else { // 存在可变组件
+        const state = get_state_by_ref(context.data, symref); // 先确定当前实例用的是哪个可变组件
+        if (!state) return false;
+        variables.forEach((v: Variable) => {
+            const item: RefAttriListItem = {variable: v, values: []};
+            if (v.type === VariableType.Status) {
+                item.values = tag_values_sort(sym, v);
+                result.push(item);
+            }
+        })
+
+        const sub_variables = new Map<string, Variable>(); // 查看当前可变组件下，绑定了哪些变量
+        search_binds_for_state(variables, state, sub_variables);
+        let instance_index: number = 0;
+        let text_index: number = 0;
+        sub_variables.forEach((v: Variable) => { // 整理顺序
+            const item: RefAttriListItem = {variable: v, values: []};
+            if (v.type === VariableType.Visible) {
+                result2.push(item);
+            } else if (v.type === VariableType.SymbolRef) {
+                result.splice(instance_index++, 0, item);
+            } else if (v.type === VariableType.Text) {
+                result.splice(instance_index + text_index++, 0, item);
+            }
+        })
+    }
     return {variables: result, visible_variables: result2};
+}
+
+/**
+ * @description 检查可变组件身上绑定了哪些变量
+ */
+function search_binds_for_state(variables: Map<string, Variable>, state: Shape, variables_result: Map<string, Variable>) {
+    const childs = state.childs;
+    if (!childs?.length) return;
+    for (let i = 0, l = childs.length; i < l; i++) {
+        const item = childs[i];
+        console.log('item name:', item.name);
+        const binds = item.varbinds;
+        if (binds) {
+            binds.forEach((v: string) => {
+                const variable = variables.get(v);
+                if (variable) variables_result.set(v, variable);
+            })
+        }
+        const type = item.type;
+        if (type === ShapeType.Table || type === ShapeType.SymbolRef) continue;
+        const cs = item.childs;
+        if (!cs?.length) continue;
+        search_binds_for_state(variables, item, variables_result);
+    }
 }
 
 /**
@@ -1120,4 +1172,36 @@ export function get_symbolref_by_layer(shape: Shape) {
         p = p.parent;
     }
     return result
+}
+
+/**
+ * @description 确定当前实例引用的是组件中的哪个可变组件
+ */
+export function get_state_by_ref(document: Document, symref: SymbolRefShape) {
+    const mgr = document.symbolsMgr;
+    const symbol = mgr.getSync(symref.refId);
+    if (!symbol) return;
+    const variables = symbol.variables;
+    if (!symbol.isUnionSymbolShape || !variables) return symbol;
+    const states = symbol.childs;
+    if (!states.length) return console.log('Error: No State`s Union');
+    const dlt_state: SymbolShape = states[0] as SymbolShape;
+    if (states.length < 2) return dlt_state;
+    const tag_map = new Map<string, string>(); // 当前实例的标签值
+    variables.forEach(v => {
+        if (v.type !== VariableType.Status) return;
+        const overrides = symref.findOverride(v.id, OverrideType.Variable);
+        tag_map.set(v.id, overrides ? overrides[overrides.length - 1].value : v.value);
+    })
+    for (let i = 0, l = states.length; i < l; i++) { // 在可变组件state中寻找标签值符合实例标签组合的那一个
+        const state = states[i] as SymbolShape;
+        const tags = (state as SymbolShape).vartag;
+        if (!tags) continue;
+        let is_target = true;
+        tags.forEach((v, k) => {
+            if (tag_map.get(k) !== v) is_target = false;
+        })
+        if (is_target) return state;
+    }
+    return dlt_state; // 如果没有找到，返回默认可变组件，如果到这里则已经在某一个环节出问题了
 }
