@@ -1,9 +1,9 @@
-import { Context } from "@/context";
-import { PageXY, XY } from "@/context/selection";
-import { GroupShape, Matrix, Shape, ShapeType, SymbolRefShape, SymbolShape } from "@kcdesign/data";
-import { v4 as uuid } from "uuid";
-import { isShapeOut } from "./assist";
-import { debounce } from "lodash";
+import {Context} from "@/context";
+import {PageXY, XY} from "@/context/selection";
+import {GroupShape, Matrix, Shape, ShapeType, SymbolRefShape, SymbolShape} from "@kcdesign/data";
+import {v4 as uuid} from "uuid";
+import {isShapeOut} from "./assist";
+import {debounce} from "lodash";
 
 export interface Scout {
     path: SVGPathElement
@@ -71,7 +71,7 @@ export function scout(context: Context): Scout {
         if (s) document.body.removeChild(s);
     }
 
-    return { path, isPointInShape, isPointInShape2, remove, isPointInPath, isPointInStroke }
+    return {path, isPointInShape, isPointInShape2, remove, isPointInPath, isPointInStroke}
 }
 
 function createSVGGeometryElement(id: string): SVGElement {
@@ -147,10 +147,11 @@ export function groupPassthrough(scout: Scout, scope: Shape[], position: PageXY)
         if ([ShapeType.Group, ShapeType.Symbol, ShapeType.SymbolRef].includes(cur.type)) {
             const items: Shape[] = delayering(cur);
             for (let j = items.length - 1; j > -1; j--) {
-                if (isTarget(scout, items[j], position)) return cur;
+                const item = items[j];
+                if (canBeTarget(item) && isTarget(scout, item, position)) return cur;
             }
         }
-        if (isTarget(scout, cur, position)) return cur;
+        if (canBeTarget(cur) && isTarget(scout, cur, position)) return cur;
     }
 }
 
@@ -248,7 +249,7 @@ function finder_symbol(context: Context, scout: Scout, symbol: SymbolShape | Sym
     const bros = context.selection.selectedSymRefBros;
     for (let i = bros.length - 1; i > -1; i--) {
         const b = bros[i];
-        if (isTarget(scout, b, position)) return b;
+        if (canBeTarget(b) && isTarget(scout, b, position)) return b;
     }
 }
 
@@ -371,7 +372,7 @@ export function finder_container(scout: Scout, g: Shape[], position: PageXY, exc
 }
 
 export function canBeTarget(shape: Shape): boolean { // 可以被判定为检索结果的前提是没有被锁定和isVisible可视
-    return !!(shape.isVisible && !shape.isLocked);
+    return shape.getVisible() && !shape.isLocked;
 }
 
 /**
