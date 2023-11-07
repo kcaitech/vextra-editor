@@ -22,13 +22,7 @@
         </div>
         <div class="main">
             <el-scrollbar height="100%">
-<<<<<<< HEAD
-                <div class="member-item"
-                    v-for=" { user: { id, avatar }, perm_type, team_member: { nickname } }  in  searchvalue === '' ? ListData : SearchList "
-                    :key="id">
-=======
                 <div class="member-item" v-for=" { user: { nickname, id, avatar }, perm_type }  in  SearchList " :key="id">
->>>>>>> 7a7ec564e5aacd43e6164d65ea47c58e9408a410
                     <div class="member-name">
                         <img :src="avatar" alt="icon"
                             style="width: 20px;height: 20px;;border-radius: 50%;margin-right: 4px;">
@@ -63,7 +57,6 @@
                         </div>
                     </div>
                 </div>
-<<<<<<< HEAD
                 <el-dialog v-model="dialogVisible" :title="t('teammember.change_teamname')" width="500" align-center>
                     <span>{{ t('teammember.modifyNickname_title') }}</span>
                     <input class="change" type="text" ref="changeinput" @keydown.enter="confirm_to_modify_name" />
@@ -78,14 +71,9 @@
                         </span>
                     </template>
                 </el-dialog>
-                <div v-if="SearchList.length === 0 && searchvalue !== ''" class="empty">
-                    <svg-icon icon-class="member"></svg-icon>
-                    没有找到该成员
-=======
                 <div v-if="SearchList.length === 0" class="empty">
                     <svg-icon v-if="searchvalue !== '' || fontName !== 4" icon-class="member"></svg-icon>
                     <div v-html="emptytips"></div>
->>>>>>> 7a7ec564e5aacd43e6164d65ea47c58e9408a410
                 </div>
                 <Loading v-if="SearchList.length === 0 && searchvalue === '' && fontName === 4" :size="20" />
             </el-scrollbar>
@@ -144,7 +132,6 @@ const listmenu = ref()
 const transferCreator = ref(false);
 const outTeamDialog = ref(false);
 const exitTeamDialog = ref(false);
-<<<<<<< HEAD
 const dialogData = ref<any>({});
 let user_id = '';
 const openDialog = (name: string, userid: string) => {
@@ -162,9 +149,6 @@ const openDialog = (name: string, userid: string) => {
 };
 
 const loading = ref(true)
-=======
-const dialogData = ref<any>({})
->>>>>>> 7a7ec564e5aacd43e6164d65ea47c58e9408a410
 const { teamID, teamData, upDateTeamData, is_team_upodate, teamUpdate } = inject('shareData') as {
     teamID: Ref<string>;
     teamData: Ref<[{
@@ -297,13 +281,13 @@ const SearchList = computed(() => {
 
 //通过计算属性，筛选出符合当前权限类型的成员
 const ListData = computed(() => {
-<<<<<<< HEAD
     if (fontName.value < 4) {
         const list = [];
         for (let i = 0; i < teammemberdata.value.length; i++) {
             const item = teammemberdata.value[i];
             if (item.perm_type !== fontName.value) continue;
             if (!item.team_member.nickname) item.team_member.nickname = item.user.nickname;
+            // if (item.team_member.nickname) item.user.nickname = item.team_member.nickname;
             list.push(item);
         }
         return list;
@@ -312,13 +296,11 @@ const ListData = computed(() => {
         for (let i = 0; i < teammemberdata.value.length; i++) {
             const item = teammemberdata.value[i];
             if (!item.team_member.nickname) item.team_member.nickname = item.user.nickname;
+            // if (item.team_member.nickname) item.user.nickname = item.team_member.nickname;
             list.push(item);
         }
         return list;
     }
-=======
-    return fontName.value < 4 ? teammemberdata.value.filter((el: any) => { return el.perm_type === fontName.value }) : teammemberdata.value
->>>>>>> 7a7ec564e5aacd43e6164d65ea47c58e9408a410
 })
 
 const filterEvent = (index: number = 4) => {
