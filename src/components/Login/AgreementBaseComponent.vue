@@ -47,7 +47,7 @@ onUnmounted(() => {
 </script>
 <style lang="scss" scoped>
 .phonetips {
-    position: sticky;
+    position: fixed;
     font-size: 12px;
     font-weight: 600;
     line-height: 40px;
