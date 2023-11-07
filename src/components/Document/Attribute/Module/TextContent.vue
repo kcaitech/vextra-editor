@@ -164,10 +164,10 @@ onUnmounted(() => {
                 </div>
             </template>
         </TypeHeader>
-        <div class="text" v-if="!is_bind">
-            <el-input v-model="textDefaultValue" type="textarea" ref="input_v" :autosize="{ minRows: 2, maxRows: 4 }"
-                resize="none" :placeholder="t('compos.default_text_input')" @keydown.stop="keysumbit" @input="input" @change="change"/>
-        </div>
+<!--        <div class="text" v-if="!is_bind">-->
+<!--            <el-input v-model="textDefaultValue" type="textarea" ref="input_v" :autosize="{ minRows: 2, maxRows: 4 }"-->
+<!--                resize="none" :placeholder="t('compos.default_text_input')" @keydown.stop="keysumbit" @input="input" @change="change"/>-->
+<!--        </div>-->
         <div class="warning" v-if="warn">
             <p class="warn">默认值不能为空</p>
         </div>
