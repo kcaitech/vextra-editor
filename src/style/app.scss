@@ -113,3 +113,16 @@
 .el-input.is-disabled .el-input__wrapper {
   background-color: #fff;
 }
+
+.el-button:focus,
+.el-button:hover {
+  background-color: #9775fa;
+  border-color: #9775fa;
+  color: #fff;
+  outline: none;
+}
+.el-popper.is-dark {
+  font-size: var(--font-default-fontsize);
+  padding-top: 3px;
+  padding-bottom: 3px;
+}

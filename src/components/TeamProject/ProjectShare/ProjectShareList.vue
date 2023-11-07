@@ -227,12 +227,11 @@ const showSettingDialog = () => {
 }
 
 const closeDialog = () => {
+    showcontainer.value = false
     if (projectMembergDialog.value) {
-        showcontainer.value = false
         projectMembergDialog.value = false;
     }
     if (projectSettingDialog.value) {
-        showcontainer.value = false
         projectSettingDialog.value = false
     }
 }
@@ -278,7 +277,7 @@ const iconlists = ref(['fixed', 'entrance', 'project'])
         @projectrename="setProjectInfo" @showSettingDialog="showSettingDialog"
         @cancelFixed="cancelFixed(mydata, mydata.is_favor)" @exitproject="rexitProject" @delproject="rdelProject" />
     <ProjectAccessSetting v-if="projectSettingDialog" :showcontainer="showcontainer" :title="t('Createteam.membertip')"
-        :data="mydata" width="500px" @clodeDialog="closeDialog" />
+        :data="mydata" width="500px" @closeDialog="closeDialog" />
     <ProjectMemberg v-if="projectMembergDialog" :showcontainer="showcontainer" :projectMembergDialog="projectMembergDialog"
         :currentProject="mydata" @closeDialog="closeDialog" @exitProject="exitProject" />
 </template>
@@ -360,13 +359,13 @@ const iconlists = ref(['fixed', 'entrance', 'project'])
 :deep(.el-table__body tr.current-row>td.el-table__cell) {
     background-color: #e5dbff;
 
-    .other {
-        // display: flex;
-    }
+    // .other {
+    //     display: flex;
+    // }
 
-    .other1 {
-        // display: none;
-    }
+    // .other1 {
+    //     display: none;
+    // }
 }
 
 :deep(.el-table--enable-row-hover .el-table__body tr:hover > td.el-table__cell) {

@@ -124,7 +124,7 @@ onMounted(() => {
             </div>
             <div ref="mydel" class="title-text" style="cursor: pointer;" @click="highlight(false, $event, '/apphome/recyclebin')"
                 :style="{ opacity: active ? '0.5' : '1' }">
-                回收站</div>
+                {{t('home.recycling_station')}}</div>
         </div>
         <div v-else class="title-text">{{ title }}</div>
     </div>

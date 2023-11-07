@@ -5,8 +5,6 @@
             @dbclickopen="openDocument" @updatestar="Starfile" @rightMeun="rightmenu" :noNetwork="noNetwork"
             @refreshDoc="refreshDoc" />
     </div>
-
-
     <listrightmenu :items="items" :data="mydata" @get-doucment="getDoucment" @r-starfile="Starfile" @r-sharefile="Sharefile"
         @r-removefile="Deletefile" @ropen="openDocument" @moveFillAddress="moveFillAddress" />
 
@@ -85,10 +83,14 @@ async function getDoucment() {
             }
         }
         lists.value = Object.values(data)
-    } catch (error) {
-        noNetwork.value = true
-        ElMessage.closeAll('error')
-        ElMessage.error({ duration: 1500, message: t('home.failed_list_tips') })
+    } catch (error:any) {
+        if (error.data.code === 401) {
+            return
+        } else {
+            noNetwork.value = true
+            ElMessage.closeAll('error')
+            ElMessage.error({ duration: 1500, message: t('home.failed_list_tips') })
+        }
     }
 }
 
@@ -247,7 +249,6 @@ onUnmounted(() => {
 
 </script>
 <style lang="scss" scoped>
-
 .overlay {
     position: absolute;
     top: 0;
@@ -255,6 +256,6 @@ onUnmounted(() => {
     width: 100%;
     height: 100%;
     z-index: 999;
-    background-color: rgba(0, 0, 0, 0.5);
+    background-color: var(--overlay-bg-color);
 }
 </style>

@@ -5,12 +5,15 @@
             <div class="img" style="width: 400px;height: 400px;background-color: silver;border-radius: 4px;"></div>
             <div v-if="switchstate" class="join">
                 <p>
-                    {{t('joinTeam.jointeamtipsA')}}<strong>{{ teaminfo?.name }}</strong>
-                    <span>（{{t('Createteam.jurisdiction')}}：<strong>{{ checktype(teaminfo?.invited_perm_type) }}</strong>）</span>
+                    {{ t('joinTeam.jointeamtipsA') }}<strong>{{ teaminfo?.name }}</strong>
+                    <span>（{{ t('Createteam.jurisdiction') }}：<strong>{{ checktype(teaminfo?.invited_perm_type)
+                    }}</strong>）</span>
                 </p>
                 <p>{{ t('joinTeam.jurisdiction') }}</p>
-                <button v-if="showjoinbnt" type="button" @click.stop="joinTeam(teaminfo?.id, undefined)">{{t('joinTeam.jointeamtipsB')}}</button>
-                <p v-else style="font-size: 18px;">{{t('joinTeam.jointeamtipsC')}}{{ time }}s{{t('joinTeam.jointeamtipsC1')}}</p>
+                <button v-if="showjoinbnt" type="button"
+                    @click.stop="joinTeam(teaminfo?.id, undefined)">{{ t('joinTeam.jointeamtipsB') }}</button>
+                <p v-else style="font-size: 18px;">{{ t('joinTeam.jointeamtipsC') }}{{ time
+                }}s{{ t('joinTeam.jointeamtipsC1') }}</p>
             </div>
             <div v-else class="offtips">
                 <p style="font-size: 18px;">{{ t('joinTeam.jointeamtipsD') }}</p>
@@ -43,20 +46,23 @@ const switchstate = ref<boolean>()
 
 const Getteaminfo = async (teamid: string) => {
     try {
-        const { code, data } = await user_api.Getteaminfo({ team_id: teamid })
+        const { code, data, message } = await user_api.Getteaminfo({ team_id: teamid })
         if (code === 0) {
-            if (data.self_perm_type != null) {
+            if (data.self_perm_type != null && data.self_perm_type !== 255) {
                 if (data.self_perm_type >= data.invited_perm_type) {
                     return router.push({ path: '/apphome/teams/' + teamid });
                 }
             }
+        console.log(code, data,'ddd');
+
             teaminfo.value = data
             switchstate.value = teaminfo.value?.invited_switch
         } else {
-            ElMessage.error('获取失败')
+            ElMessage.error(message)
+            router.push({name:'apphome'})
         }
     } catch (error) {
-
+        
     }
 }
 
@@ -148,5 +154,4 @@ onMounted(() => {
             }
         }
     }
-}
-</style>
+}</style>

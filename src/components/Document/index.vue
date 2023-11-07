@@ -1,24 +1,24 @@
 <script setup lang="ts">
-import {onMounted, onUnmounted, shallowRef, ref, watchEffect} from 'vue';
+import { onMounted, onUnmounted, shallowRef, ref, watchEffect } from 'vue';
 import ContentView from "./ContentView.vue";
-import {Context} from '@/context';
+import { Context } from '@/context';
 import Navigation from './Navigation/index.vue';
-import {Selection} from '@/context/selection';
+import { Selection } from '@/context/selection';
 import Attribute from './Attribute/RightTabs.vue';
 import Toolbar from './Toolbar/index.vue'
 import ColSplitView from '@/components/common/ColSplitView.vue';
 import ApplyFor from './Toolbar/Share/ApplyFor.vue';
-import {Document, importDocument, Repository, Page, CoopRepository, IStorage} from '@kcdesign/data';
-import {SCREEN_SIZE} from '@/utils/setting';
+import { Document, importDocument, Repository, Page, CoopRepository, IStorage } from '@kcdesign/data';
+import { SCREEN_SIZE } from '@/utils/setting';
 import * as share_api from '@/request/share'
 import * as user_api from '@/request/users'
-import {useRoute} from 'vue-router';
-import {router} from '@/router';
-import {useI18n} from 'vue-i18n';
-import {Warning} from '@element-plus/icons-vue';
+import { useRoute } from 'vue-router';
+import { router } from '@/router';
+import { useI18n } from 'vue-i18n';
+import { Warning } from '@element-plus/icons-vue';
 import Loading from '@/components/common/Loading.vue';
 import SubLoading from '@/components/common/SubLoading.vue';
-import {Perm, WorkSpace} from '@/context/workspace';
+import { Perm, WorkSpace } from '@/context/workspace';
 import NetWorkError from '@/components/NetworkError.vue'
 import { ResponseStatus } from "@/communication/modules/doc_upload";
 import { insertNetworkInfo } from "@/utils/message"
@@ -33,14 +33,14 @@ import Bridge from "@/components/Document/Bridge.vue";
 import { Component } from '@/context/component';
 import {initpal} from './initpal';
 
-const {t} = useI18n();
+const { t } = useI18n();
 const curPage = shallowRef<Page | undefined>(undefined);
 let context: Context | undefined;
 const middleWidth = ref<number>(0.8);
 const middleMinWidth = ref<number>(0.3);
 const route = useRoute();
-const Right = ref({rightMin: 250, rightMinWidth: 0.1, rightWidth: 0.1});
-const Left = ref({leftMin: 250, leftWidth: 0.1, leftMinWidth: 0.1});
+const Right = ref({ rightMin: 250, rightMinWidth: 0.1, rightWidth: 0.1 });
+const Left = ref({ leftMin: 250, leftWidth: 0.1, leftMinWidth: 0.1 });
 const showRight = ref<boolean>(true);
 const showLeft = ref<boolean>(true);
 const showTop = ref<boolean>(true);
@@ -143,7 +143,7 @@ function selectionWatcher(t: number) {
 }
 
 function keyboardEventHandler(event: KeyboardEvent) {
-    const {target, code, ctrlKey, metaKey, shiftKey} = event;
+    const { target, code, ctrlKey, metaKey, shiftKey } = event;
     if (target instanceof HTMLInputElement) return; // 在输入框中输入时避免触发编辑器的键盘事件
     if (context) {
         if (code === 'Backslash') {
@@ -151,9 +151,12 @@ function keyboardEventHandler(event: KeyboardEvent) {
                 shiftKey ? keyToggleTB() : keyToggleLR();
             }
         }
-        if (context.workspace.documentPerm !== Perm.isEdit) {
+        if (context.workspace.documentPerm !== Perm.isEdit || context.tool.isLable) {
             if (permKeyBoard(event)) {
                 context.workspace.keyboardHandle(event); // 只读可评论的键盘事件
+                if (context.workspace.documentPerm !== Perm.isRead) {
+                    context.tool.keyhandle(event);
+                }
             }
         } else {
             context.esctask.keyboardHandle(event);
@@ -164,8 +167,9 @@ function keyboardEventHandler(event: KeyboardEvent) {
 }
 
 const permKeyBoard = (e: KeyboardEvent) => {
-    const {code, ctrlKey, metaKey, shiftKey} = e;
-    if (code === 'KeyV' || code === 'KeyC' || code === 'KeyA' || code === 'Digit0 ' || ctrlKey || metaKey || shiftKey) return true
+    const { code, ctrlKey, metaKey, shiftKey } = e;
+    if (code === 'KeyV' && (ctrlKey || metaKey)) return;
+    if (code === 'KeyV' || (code === 'KeyC' && !(ctrlKey || metaKey)) || code === 'KeyA' || code === 'Digit0 ' || ctrlKey || metaKey || shiftKey) return true
     else false
 }
 
@@ -253,7 +257,7 @@ enum PermissionChange {
 
 const getDocumentAuthority = async () => {
     try {
-        const data = await share_api.getDocumentAuthorityAPI({doc_id: route.query.id})
+        const data = await share_api.getDocumentAuthorityAPI({ doc_id: route.query.id })
         if (data.code === 400) {
             permissionChange.value = PermissionChange.delete
             showNotification(0)
@@ -317,7 +321,7 @@ const showNotification = (type?: number) => {
     startCountdown(type);
 }
 const getUserInfo = async () => {
-    const {data} = await user_api.GetInfo()
+    const { data } = await user_api.GetInfo()
     if (context) {
         context.comment.setUserInfo(data)
         localStorage.setItem('avatar', data.avatar)
@@ -331,7 +335,7 @@ const getDocumentInfo = async () => {
     try {
         loading.value = true;
         noNetwork.value = false
-        const dataInfo = await share_api.getDocumentInfoAPI({doc_id: route.query.id});
+        const dataInfo = await share_api.getDocumentInfoAPI({ doc_id: route.query.id });
         docInfo.value = dataInfo.data;
         if (dataInfo.code === 400) {
             //无效链接
@@ -348,7 +352,7 @@ const getDocumentInfo = async () => {
         const perm = dataInfo.data.document_permission.perm_type
         permType.value = perm;
         console.log(perm,'文档信息的权限');
-        
+
         //获取文档类型是否为私有文档且有无权限
         if (perm === 0) {
             router.push({
@@ -359,7 +363,7 @@ const getDocumentInfo = async () => {
             })
             return
         }
-        const {data} = await share_api.getDocumentKeyAPI({doc_id: route.query.id});
+        const { data } = await share_api.getDocumentKeyAPI({ doc_id: route.query.id });
         // documentKey.value = data
 
         const repo = new Repository();
@@ -438,7 +442,7 @@ async function upload(projectId: string) {
     const doc_id = result!.data.doc_id;
     router.replace({
         path: '/document',
-        query: {id: doc_id},
+        query: { id: doc_id },
     });
     if (!await context.communication.docOp.start(token, doc_id, context!.data, context.coopRepo, result!.data.version_id ?? "")) {
         // todo 文档操作通道开启失败处理
@@ -830,7 +834,7 @@ onUnmounted(() => {
     border-radius: 4px;
 
     .loading-spinner {
-        > svg {
+        >svg {
             width: 15px;
             height: 15px;
             color: #000;

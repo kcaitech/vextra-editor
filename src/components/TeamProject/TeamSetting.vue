@@ -273,7 +273,7 @@ const leave = async (id: string) => {
 const midname = () => {
     showoverlay.value = true
     textareashow.value = true
-    titlevalue.value = '修改团队名称'
+    titlevalue.value = t('teamsetting.title_name1')
     textareaValue.value = teamName.value
     maxvalue.value = 20
     nextTick(() => el())
@@ -282,7 +282,7 @@ const midname = () => {
 const middescription = () => {
     showoverlay.value = true
     textareashow.value = true
-    titlevalue.value = '修改团队描述'
+    titlevalue.value =  t('teamsetting.title_name2')
     textareaValue.value = teamDescription.value
     maxvalue.value = 120
     nextTick(() => el())
@@ -291,15 +291,15 @@ const middescription = () => {
 const dissolveteam = () => {
     showDialog.value = true
     textareashow.value = false
-    titlevalue.value = '解散团队'
-    contenttext.value = '解散团队后，将彻底删除团队中包含的全部项目资料，且不可恢复。'
+    titlevalue.value = t('teamsetting.title_name3')
+    contenttext.value = t('teamsetting.disband_team_tipsB')
 }
 
 const leaveteam = () => {
     showDialog.value = true
     textareashow.value = false
-    titlevalue.value = '离开团队'
-    contenttext.value = '离开团队后，将无法再查看团队项目及资源。'
+    titlevalue.value = t('teamsetting.title_name4')
+    contenttext.value = t('teamsetting.leave_team_tips')
 }
 
 const confirm = () => {

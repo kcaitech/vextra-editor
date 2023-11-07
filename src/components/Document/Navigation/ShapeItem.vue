@@ -4,6 +4,8 @@ import { Shape, ShapeType } from '@kcdesign/data';
 import { Context } from "@/context";
 import {get_name, is_parent_locked, is_parent_unvisible} from "@/utils/shapelist";
 import { Perm } from "@/context/workspace";
+import { XYsBounding } from "@/utils/common";
+import { Tool } from "@/context/tool";
 export interface ItemData {
     id: string
     shape: () => Shape // 作用function，防止vue对shape内部数据进行proxy
@@ -114,7 +116,8 @@ const setVisible = (e: MouseEvent) => {
     emit('set-visible', Boolean(visible_status.value < 0), props.data.shape())
 }
 const onRename = () => {
-    if (!isEdit.value) return
+    if (!isEdit.value) return;
+    if(props.data.context.tool.isLable) return;
     isInput.value = true
     nextTick(() => {
         if (nameInput.value) {
@@ -212,11 +215,20 @@ function icon_class() {
         return `pattern-${shape.type}`;
     }
 }
+const isLable = ref(props.data.context.tool.isLable);
+const tool_watcher = (t?: number) => {
+    if(t === Tool.LABLE_CHANGE) {
+        isLable.value = props.data.context.tool.isLable;
+    }
+}
 onMounted(() => {
     hangdlePerm()
     updater();
+    props.data.context.tool.watch(tool_watcher);
+    // init_d();
 })
 onUnmounted(() => {
+    props.data.context.tool.watch(tool_watcher);
     stop();
 })
 </script>
@@ -237,7 +249,7 @@ onUnmounted(() => {
             <div class="tool_icon"
                 :style="{ visibility: `${is_tool_visible ? 'visible' : 'hidden'}`, width: `${is_tool_visible ? 66 + 'px' : lock_status || visible_status ? 66 + 'px' : 0}` }">
                 <div class="tool_lock tool" :class="{ 'visible': lock_status }" @click="(e: MouseEvent) => setLock(e)"
-                    v-if="isEdit">
+                    v-if="isEdit && !isLable">
                     <svg-icon v-if="lock_status === 0" class="svg-open" icon-class="lock-open"></svg-icon>
                     <svg-icon v-else-if="lock_status === 1" class="svg" icon-class="lock-lock"></svg-icon>
                     <div class="dot" v-else-if="lock_status === 2"></div>
@@ -246,7 +258,7 @@ onUnmounted(() => {
                     <svg-icon class="svg-open" icon-class="locate"></svg-icon>
                 </div>
                 <div class="tool_eye tool" :class="{ 'visible': visible_status }" @click="(e: MouseEvent) => setVisible(e)"
-                    v-if="isEdit">
+                    v-if="isEdit && !isLable">
                     <svg-icon v-if="visible_status === 0" class="svg" icon-class="eye-open"></svg-icon>
                     <svg-icon v-else-if="visible_status === 1" class="svg" icon-class="eye-closed"></svg-icon>
                     <div class="dot" v-else-if="visible_status === 2"></div>

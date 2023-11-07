@@ -21,7 +21,7 @@
 import Aside from './Aside.vue';
 import Header from './Header.vue';
 import Main from './Main.vue';
-import { ref, onUnmounted, provide } from 'vue';
+import { ref, onUnmounted, provide, onMounted } from 'vue';
 import { useI18n } from 'vue-i18n';
 import { NetworkStatus } from '@/communication/modules/network_status'
 import { insertNetworkInfo } from "@/utils/message"
@@ -116,11 +116,7 @@ const GetprojectLists = async () => {
     console.log(error);
   }
 }
-GetprojectLists();
 
-setInterval(() => {
-  GetprojectLists();
-}, 60000);
 const favoriteProjectList = (arr1: any[], arr2: any[]) => {
   const projectList = arr1.map(item => {
     item.is_favor = arr2.some(value => value.project.id === item.project.id)
@@ -216,8 +212,22 @@ const closeNetMsg = () => {
   insertNetworkInfo('networkSuccess', false, link_success)
 }
 
+let timer: any
+onMounted(() => {
+  GetprojectLists();
+  if (timer) {
+    clearInterval(timer)
+  }
+  timer = setInterval(() => {
+    GetprojectLists();
+  }, 60000);
+})
+
 onUnmounted(() => {
   closeNetMsg()
+  if (timer) {
+    clearInterval(timer)
+  }
   networkStatus.close()
 })
 

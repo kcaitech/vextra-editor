@@ -736,7 +736,7 @@ export function selectShapes(context: Context, shapes: Shape | undefined) {
 }
 
 export const permIsEdit = (context: Context) => {
-    return Boolean(context.workspace.documentPerm === Perm.isEdit);
+  return Boolean(context.workspace.documentPerm === Perm.isEdit && !context.tool.isLable);
 }
 
 export const hasRadiusShape = (shape: Shape, type: ShapeType[]) => {

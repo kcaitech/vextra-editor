@@ -56,7 +56,7 @@ async function documentInfo(id: any) {
       }
       return data
     } else {
-      console.log('没有该文档');
+      console.log(t('share.no_document'));
     }
   } catch (err) {
     return console.error(err); // 这里return了个undefined

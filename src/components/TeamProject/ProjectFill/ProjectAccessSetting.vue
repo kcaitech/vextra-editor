@@ -1,6 +1,6 @@
 <script setup lang="ts">
 import { ElMessage } from 'element-plus'
-import { Ref, inject, onMounted, ref, watch, watchEffect } from 'vue'
+import { Ref, inject, nextTick, onMounted, ref, watch, watchEffect } from 'vue'
 import { useI18n } from 'vue-i18n'
 import CloseIcon from '@/components/common/CloseIcon.vue';
 import * as team_api from '@/request/team';
@@ -200,13 +200,18 @@ onMounted(() => {
     params.invited_switch = project.invited_switch;
     params.need_approval = project.need_approval;
     params.perm_type = project.perm_type;
-    sharelink.value = `https://protodesign.cn/zbb/#/apphome/project/${project.id}`
+    sharelink.value = `https://protodesign.cn/#/apphome/project/${project.id}`
 
 })
 
 const changemargin = () => {
-    const el = document.querySelector('.el-dialog__header') as HTMLElement
-    el.style.marginRight = '0px'
+    nextTick(() => {
+        let el = document.querySelectorAll('.el-dialog__header')
+        for (let i = 0; i<el.length;i++) {
+            (el[i] as HTMLElement).style.marginRight='0px'
+        }
+    })
+
 }
 
 </script>
@@ -266,17 +271,17 @@ const changemargin = () => {
 </template>
 
 <style scoped lang="scss">
-
 :deep(.el-checkbox__input.is-checked .el-checkbox__inner) {
-  border-color: #9775fa; 
-  background-color: #9775fa;
+    border-color: #9775fa;
+    background-color: #9775fa;
 }
+
 :deep(.el-dialog__body) {
     padding: 16px !important;
 }
 
 :deep(.el-input__inner) {
-    font-size:var(--font-default-fontsize);
+    font-size: var(--font-default-fontsize);
 }
 
 :deep(.el-dialog__title) {
@@ -293,7 +298,7 @@ const changemargin = () => {
     align-items: center;
 
     .title {
-        color:#3D3D3D ;
+        color: #3D3D3D;
         font-weight: 600;
     }
 }

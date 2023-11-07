@@ -303,7 +303,7 @@ watch(() => props.pageHeight, () => {
 })
 watchEffect(() => {
   getDocumentInfo()
-  getShareList()
+  if (!founder.value) getShareList()
   nextTick(() => {
     handleTop.value = props.pageHeight / 2
     if (card.value) {
@@ -314,21 +314,23 @@ watchEffect(() => {
 })
 
 onMounted(() => {
-  if (!value1.value) {
-    setShateType(docType.Private)
-  } else {
-    if (props.selectValue === docType.Critical) {
-      setShateType(docType.Critical)
-    } else if (props.selectValue === docType.Edit) {
-      setShateType(docType.Edit)
-    } else if (props.selectValue === docType.Read) {
-      setShateType(docType.Read)
-    } else if (props.selectValue === docType.Share) {
-      setShateType(docType.Share)
-    }
-  }
   document.addEventListener('keyup', handlekeyup);
   document.addEventListener('click', handleClick);
+  if (!founder.value) {
+    if (!value1.value) {
+      setShateType(docType.Private)
+    } else {
+      if (props.selectValue === docType.Critical) {
+        setShateType(docType.Critical)
+      } else if (props.selectValue === docType.Edit) {
+        setShateType(docType.Edit)
+      } else if (props.selectValue === docType.Read) {
+        setShateType(docType.Read)
+      } else if (props.selectValue === docType.Share) {
+        setShateType(docType.Share)
+      }
+    }
+  }
 })
 
 onUnmounted(() => {
@@ -429,7 +431,7 @@ onUnmounted(() => {
           <div class="type">{{ t('share.document_permission') }}:</div>
           <p class="name">{{ DocType[docInfo.document.doc_type] }}</p>
         </div>
-        <div class="project" v-if="project || props.docInfo?.project">项目中所有成员均可访问</div>
+        <div class="project" v-if="project || props.docInfo?.project">{{ t('Createteam.shareprojecttips') }}</div>
         <!-- 链接按钮 -->
         <div class="button bottom">
           <el-button class="copybnt" color="#9775fa" @click="copyLink">{{ t('share.copy_link') }}</el-button>

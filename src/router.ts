@@ -1,6 +1,7 @@
 import { createRouter, createWebHashHistory, createWebHistory, onBeforeRouteLeave, onBeforeRouteUpdate } from "vue-router";
 import { SKIP_LOGIN } from '@/utils/setting';
 import { Component } from "vue-property-decorator";
+
 const HomeVue = () => import("@/components/Home/index.vue");
 const DocumentVue = () => import("@/components/Document/index.vue");
 const Apphome = () => import("@/components/AppHome/Apphome.vue");
@@ -21,6 +22,56 @@ const joinTeam = () => import("@/components/TeamProject/jionTeam.vue");
 const ProjectPage = () => import("@/components/TeamProject/ProjectPage.vue");
 const projectApply = () => import("@/components/TeamProject/ProjectFill/ProjectApply.vue");
 const ProjectShare = () => import('@/components/TeamProject/ProjectShare/ProjectSharePage.vue')
+
+const children=[
+    {
+        path: 'recently',
+        name: 'recently',
+        component: Recently
+    },
+    {
+        path: 'starfile',
+        name: 'starfile',
+        component: StarFile
+    },
+    {
+        path: 'meshare',
+        name: 'meshare',
+        component: MeShare
+    },
+    {
+        path: 'shareme',
+        name: 'shareme',
+        component: ShareMe
+    },
+    {
+        path: 'recyclebin',
+        name: 'recyclebin',
+        component: RecycleBin
+    },
+    {
+        path: 'teams/:id',
+        name: 'TeamPage',
+        component: TeamPage,
+        meta: {
+            requireAuth: true
+        }
+    },
+    {
+        path: 'project_share',
+        name: 'ProjectShare',
+        component: ProjectShare
+    },
+    {
+        path: 'project/:id',
+        name: 'ProjectPage',
+        component: ProjectPage,
+        meta: {
+            requireAuth: true
+        }
+    },
+]
+
 const routes = [
     {
         path: '/',
@@ -33,17 +84,20 @@ const routes = [
                 name: "homecontent",
                 component: HomeContent,
                 alias: '/'
+
             },
             {
                 path: "privacypolicy",
                 name: "privacypolicy",
                 component: Privacypolicy,
+                meta: { title: '隐私协议' },
 
             },
             {
                 path: "serviceagreement",
                 name: "serviceagreement",
-                component: Serviceagreement
+                component: Serviceagreement,
+                meta: { title: '服务协议' },
             },
         ]
     },
@@ -51,6 +105,7 @@ const routes = [
         path: "/login",
         name: "login",
         component: Login,
+        meta: { title: '登录' },
     },
     {
         path: "/home",
@@ -71,51 +126,7 @@ const routes = [
         name: "apphome",
         component: Apphome,
         redirect: '/apphome/recently',
-        children: [
-            {
-                path: 'recently',
-                name: 'recently',
-                component: Recently
-            },
-            {
-                path: 'starfile',
-                name: 'starfile',
-                component: StarFile
-            },
-            {
-                path: 'meshare',
-                name: 'meshare',
-                component: MeShare
-            },
-            {
-                path: 'shareme',
-                name: 'shareme',
-                component: ShareMe
-            },
-            {
-                path: 'recyclebin',
-                name: 'recyclebin',
-                component: RecycleBin
-            },
-            {
-                path: 'teams/:id',
-                name: 'TeamPage',
-                component: TeamPage
-            },
-            {
-                path: 'project_share',
-                name: 'ProjectShare',
-                component: ProjectShare
-            },
-            {
-                path: 'project/:id',
-                name: 'ProjectPage',
-                component: ProjectPage,
-                meta: {
-                    requireAuth: true
-                }
-            },
-        ]
+        children: children
     },
     {
         path: "/join",
@@ -152,11 +163,11 @@ const routes = [
     },
 ]
 
-export const router = createRouter({
+export  const router = createRouter({
     // history: createWebHistory(),
     history: createWebHashHistory(),
-    scrollBehavior(to,from,savedPosition){
-        if(savedPosition){
+    scrollBehavior(to, from, savedPosition) {
+        if (savedPosition) {
             return savedPosition
         }
         return {

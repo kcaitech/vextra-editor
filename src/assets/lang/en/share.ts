@@ -20,7 +20,8 @@ export const share = {
     share_limit: 'Share limit',
     founder: 'Founder',
     document_permission: 'Document permission',
-    reviewable: 'Reviewable'
+    reviewable: 'Reviewable',
+    no_document:'No such document',
 
 }
 

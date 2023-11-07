@@ -63,11 +63,11 @@ const setPosition = () => {
                 } else {
                     selected = false
                 }
-                const m = artboard.matrix2Root(); // 图形到页面的转换矩阵
-                const f2p = artboard.frame2Root(); //
+                const f2p = artboard.frame2Root();
+                
                 const frame = artboard.frame;
-                const matrix = props.context.workspace.matrix; // 页面坐标系转换矩阵
-                const matrix_artboard_root = artboard.matrix2Root();
+                const matrix_artboard_root = artboard.matrix2Root(); // 图形到页面的转换矩阵
+                const matrix = props.context.workspace.matrix; // 页面到屏幕的转换矩阵
                 const matrix_artboard = new Matrix(matrix_artboard_root);
                 matrix_artboard.multiAtLeft(matrix);
                 if (is_shape_out(props.context, artboard, matrix_artboard)) continue;

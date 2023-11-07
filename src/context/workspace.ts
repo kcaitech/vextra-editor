@@ -501,6 +501,6 @@ export class WorkSpace extends Watchable(Object) {
         const action = this.context.tool.action;
         return e.button === 0 && shapes.length > 0
             && (action === Action.AutoV || action === Action.AutoK)
-            && this.m_document_perm === Perm.isEdit;
+            && this.m_document_perm === Perm.isEdit && !this.context.tool.isLable;
     }
 }

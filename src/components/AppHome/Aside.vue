@@ -55,7 +55,7 @@ const projectItem = ref<any>({});
 const proname = ref('');
 const projectMembergDialog = ref(false)
 const projectSettingDialog = ref(false)
-const showcontainer=ref(false)
+const showcontainer = ref(false)
 const Input = ref<HTMLInputElement>();
 const hover = ref('');
 const isactive = ref('1')
@@ -110,7 +110,7 @@ const showSettingDialog = () => {
 
 const closeDialog = () => {
     showcontainer.value = false
-  if (projectMembergDialog.value) {  
+    if (projectMembergDialog.value) {
         projectMembergDialog.value = false;
     }
     if (projectSettingDialog.value) {
@@ -178,7 +178,7 @@ const picker = new FilePicker('.sketch', (file) => {
 function newFile() {
     if (route.name === 'ProjectPage') {
         const perm = projectList.value.filter(item => item.project.id === route.params.id)[0].self_perm_type;
-        if (perm > 2) {            
+        if (perm > 2) {
             localStorage.setItem('project_id', route.params.id as string);
         }
     }
@@ -413,15 +413,20 @@ const exitProjectApi = async (id: string) => {
 }
 const reName = ref('');
 const inputCusname = (data: any) => {
-    proname.value = data.project.name;
     reName.value = data.project.id;
+    proname.value = data.project.name;
     nextTick(() => {
         if (Input.value) {
             project_item.value = data;
+            //@ts-ignore
+            Input.value[0].focus()
+            //@ts-ignore
+            Input.value[0].select()
             document.addEventListener('keydown', enter);
         }
     })
 }
+
 function enter(e: KeyboardEvent) {
     if (e.code === 'Enter' || e.code === 'NumpadEnter') {
         onblur();
@@ -589,17 +594,24 @@ watchEffect(() => {
     })
 })
 
-setInterval(() => {
-    GetteamList();
-    getProjectFavoriteLists();
-}, 60000);
 
+let timer: any
 onMounted(() => {
     GetteamList();
     getProjectFavoriteLists();
+    if (timer) {
+        clearInterval(timer)
+    }
+    timer = setInterval(() => {
+        GetteamList();
+        getProjectFavoriteLists();
+    }, 60000);
 })
 
 onUnmounted(() => {
+    if (timer) {
+        clearInterval(timer)
+    }
     picker.unmount();
 })
 
@@ -627,8 +639,7 @@ onUnmounted(() => {
                                 </el-icon>
                                 <span>{{ t('home.recently_opened') }}</span>
                             </el-menu-item></router-link>
-                        <router-link to="/apphome/starfile"><el-menu-item index="2"
-                            :class="{ 'is_active': x == '2' }"
+                        <router-link to="/apphome/starfile"><el-menu-item index="2" :class="{ 'is_active': x == '2' }"
                                 @click="Setindex(2, t('home.star_file'))" @mouseenter="hover = '2'"
                                 @mouseleave="hover = ''">
                                 <el-icon>
@@ -636,8 +647,7 @@ onUnmounted(() => {
                                 </el-icon>
                                 <span>{{ t('home.star_file') }}</span>
                             </el-menu-item></router-link>
-                        <router-link to="/apphome/meshare"><el-menu-item index="3"
-                            :class="{ 'is_active': x == '3' }"
+                        <router-link to="/apphome/meshare"><el-menu-item index="3" :class="{ 'is_active': x == '3' }"
                                 @click="Setindex(3, t('home.file_shared'))" @mouseenter="hover = '3'"
                                 @mouseleave="hover = ''">
                                 <el-icon>
@@ -645,8 +655,7 @@ onUnmounted(() => {
                                 </el-icon>
                                 <span>{{ t('home.file_shared') }}</span>
                             </el-menu-item></router-link>
-                        <router-link to="/apphome/shareme"><el-menu-item index="4"
-                            :class="{ 'is_active': x == '4' }"
+                        <router-link to="/apphome/shareme"><el-menu-item index="4" :class="{ 'is_active': x == '4' }"
                                 @click="Setindex(4, t('home.shared_file_received'))" @mouseenter="hover = '4'"
                                 @mouseleave="hover = ''">
                                 <el-icon>
@@ -655,13 +664,6 @@ onUnmounted(() => {
                                 <span>{{ t('home.shared_file_received') }}</span>
                             </el-menu-item></router-link>
                         <div class="line"></div>
-                        <!-- <router-link to="/apphome/recyclebin"><el-menu-item index="5"
-                        @click="Setindex(5, t('home.recycling_station'))">
-                        <el-icon>
-                            <Delete />
-                        </el-icon>
-                        <span>{{ t('home.recycling_station') }}</span>
-                    </el-menu-item></router-link> -->
                     </el-menu>
                 </div>
             </el-scrollbar>
@@ -690,10 +692,12 @@ onUnmounted(() => {
                                     <div class="project" @click.stop="(e) => skipProject(item, e)"
                                         @mousedown.stop="(e) => rightMenu(item, e)"
                                         :class="{ 'is_active': isProjectActive(item.project.id) }">
-                                        <div style="box-sizing: border-box;">
+                                        <el-input v-if="reName === item.project.id" v-model="proname" ref="Input"
+                                            :autofocus="true" @blur="onblur" />
+                                        <div v-else style="box-sizing: border-box;">
                                             <div class="project_name">{{ item.project.name }}</div>
                                             <div class="right">
-                                                <Tooltip :content="'取消固定'" :offset="10">
+                                                <Tooltip :content="t('Createteam.cancelFixed')" :offset="10">
                                                     <div @click.stop="shareFixed(i, item.project.id)">
                                                         <svg t="1693476333821" class="icon" viewBox="0 0 1024 1024"
                                                             version="1.1" xmlns="http://www.w3.org/2000/svg" p-id="15755"
@@ -750,8 +754,8 @@ onUnmounted(() => {
                                     <div class="project" @click.stop="(e) => skipProject(item, e)"
                                         @mousedown.stop="(e) => rightMenu(item, e)"
                                         :class="{ 'is_active': isProjectActive(item.project.id) }">
-                                        <el-input v-if="reName === item.project.id" v-model="proname" ref="Input" autofocus
-                                            @blur="onblur" />
+                                        <el-input v-if="reName === item.project.id" v-model="proname" ref="Input"
+                                            :autofocus="true" @blur="onblur" />
                                         <div v-else style="box-sizing: border-box;">
                                             <div class="project_name">{{ item.project.name }}</div>
                                             <div class="right">
@@ -825,10 +829,10 @@ onUnmounted(() => {
     <ProjectDialog :projectVisible="exitVisible" :context="t('Createteam.projectexitcontext')"
         :title="t('Createteam.projectexittitle')" :confirm-btn="t('Createteam.ok_exit')" @clode-dialog="closeExitVisible"
         @confirm="ExitProject"></ProjectDialog>
-    <ProjectAccessSetting v-if="projectSettingDialog" :showcontainer="showcontainer" :title="t('Createteam.membertip')" :data="menuData" width="500px"
-        @closeDialog="closeDialog" />
-    <ProjectMemberg v-if="projectMembergDialog" :showcontainer="showcontainer" :projectMembergDialog="projectMembergDialog" :currentProject="menuData"
-        @closeDialog="closeDialog" @exitProject="exitProject" />
+    <ProjectAccessSetting v-if="projectSettingDialog" :showcontainer="showcontainer" :title="t('Createteam.membertip')"
+        :data="menuData" width="500px" @closeDialog="closeDialog" />
+    <ProjectMemberg v-if="projectMembergDialog" :showcontainer="showcontainer" :projectMembergDialog="projectMembergDialog"
+        :currentProject="menuData" @closeDialog="closeDialog" @exitProject="exitProject" />
 </template>
 
 <style lang="scss" scoped>
@@ -1248,7 +1252,7 @@ a {
 }
 
 .receive {
-    
+
     display: flex;
     align-items: center;
     justify-content: center;

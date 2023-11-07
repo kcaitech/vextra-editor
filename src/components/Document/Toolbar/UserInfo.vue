@@ -5,6 +5,7 @@ import Scale from './Scale.vue';
 import { } from 'vue';
 import { Context } from '@/context';
 import Collaborator from './Collaboration/Collaborator.vue';
+import LableToggle from './LableToggle.vue';
 interface Props {
     context: Context
 }
@@ -15,6 +16,7 @@ const props = defineProps<Props>();
     <div class="user-info" @dblclick.stop>
         <Collaborator :context="props.context"></Collaborator>
         <Share :context="props.context"></Share>
+        <LableToggle :context="props.context"></LableToggle>
         <UserAvatar :context="props.context"></UserAvatar>
         <Scale :context="props.context"></Scale>
     </div>

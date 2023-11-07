@@ -1,9 +1,9 @@
-import {Context} from "@/context";
-import {PT1, PT2, PT4P1, PT4P2, PageXY2, PointGroup1, PointGroup2, Asssit} from "@/context/assist";
-import {PageXY} from "@/context/selection";
-import {GroupShape, Matrix, Shape, ShapeType} from "@kcdesign/data";
-import {debounce} from "lodash";
-import {XYsBounding} from "./common";
+import { Context } from "@/context";
+import { PT1, PT2, PT4P1, PT4P2, PageXY2, PointGroup1, PointGroup2, Asssit } from "@/context/assist";
+import { PageXY } from "@/context/selection";
+import { GroupShape, Matrix, Shape, ShapeType } from "@kcdesign/data";
+import { debounce } from "lodash";
+import { XYsBounding } from "./common";
 
 enum Align {
     LT_X = 'lt_x',
@@ -122,13 +122,13 @@ export function colloct_point_group(host: Shape): PointGroup1 {
     if (host.type === ShapeType.Line) {
         const apexX = [lt.x, rb.x, pivot.x];
         const apexY = [lt.y, rb.y, pivot.y];
-        return {lt, rb, pivot, apexX, apexY};
+        return { lt, rb, pivot, apexX, apexY };
     }
     const rt = m.computeCoord2(f.width, 0);
     const lb = m.computeCoord2(0, f.height);
     const apexX = [lt.x, rt.x, rb.x, lb.x, pivot.x];
     const apexY = [lt.y, rt.y, rb.y, lb.y, pivot.y];
-    const pg: PointGroup1 = {lt, rt, rb, lb, pivot, apexX, apexY};
+    const pg: PointGroup1 = { lt, rt, rb, lb, pivot, apexX, apexY };
     if (host.type === ShapeType.Artboard) {
         const th = m.computeCoord2(f.width / 2, 0);
         const rh = m.computeCoord2(f.width, f.height / 2);
@@ -153,7 +153,7 @@ export function gen_match_points(host: Shape, multi?: boolean): PointGroup2 {
     const lb = m.computeCoord2(0, f.height);
     const apexX = [lt.x, rt.x, rb.x, lb.x, pivot.x];
     const apexY = [lt.y, rt.y, rb.y, lb.y, pivot.y];
-    const pg: PointGroup2 = {lt, rt, rb, lb, pivot};
+    const pg: PointGroup2 = { lt, rt, rb, lb, pivot };
     if (multi) {
         pg.top = Math.min(...apexY), pg.right = Math.max(...apexX), pg.bottom = Math.max(...apexY), pg.left = Math.min(...apexX), pg.cy = pivot.y, pg.cx = pivot.x;
     }
@@ -169,14 +169,14 @@ export interface PointsOffset {
 }
 
 export function gen_match_points_by_map(offset: PointsOffset, p: PageXY, multi?: boolean) {
-    const lt = {x: p.x + offset.lt.x, y: p.y + offset.lt.y};
-    const rb = {x: p.x + offset.rb.x, y: p.y + offset.rb.y};
-    const pivot = {x: p.x + offset.pivot.x, y: p.y + offset.pivot.y};
-    const rt = {x: p.x + offset.rt.x, y: p.y + offset.rt.y};
-    const lb = {x: p.x + offset.lb.x, y: p.y + offset.lb.y};
+    const lt = { x: p.x + offset.lt.x, y: p.y + offset.lt.y };
+    const rb = { x: p.x + offset.rb.x, y: p.y + offset.rb.y };
+    const pivot = { x: p.x + offset.pivot.x, y: p.y + offset.pivot.y };
+    const rt = { x: p.x + offset.rt.x, y: p.y + offset.rt.y };
+    const lb = { x: p.x + offset.lb.x, y: p.y + offset.lb.y };
     const apexX = [lt.x, rt.x, rb.x, lb.x, pivot.x];
     const apexY = [lt.y, rt.y, rb.y, lb.y, pivot.y];
-    const pg: PointGroup2 = {lt, rt, rb, lb, pivot};
+    const pg: PointGroup2 = { lt, rt, rb, lb, pivot };
     if (multi) {
         pg.top = Math.min(...apexY), pg.right = Math.max(...apexX), pg.bottom = Math.max(...apexY), pg.left = Math.min(...apexX), pg.cy = pivot.y, pg.cx = pivot.x;
     }
@@ -184,8 +184,8 @@ export function gen_match_points_by_map(offset: PointsOffset, p: PageXY, multi?:
 }
 
 export function isShapeOut(context: Context, shape: Shape) {
-    const {x, y, bottom, right} = context.workspace.root;
-    const {width, height} = shape.frame;
+    const { x, y, bottom, right } = context.workspace.root;
+    const { width, height } = shape.frame;
     const m = shape.matrix2Root();
     m.multiAtLeft(context.workspace.matrix);
     const point: { x: number, y: number }[] = [{ x: 0, y: 0 }, { x: width, y: 0 }, { x: width, y: height }, { x: 0, y: height }];
@@ -204,7 +204,7 @@ export function finder(context: Context, scope: GroupShape, all_pg: Map<string, 
         all_pg.set(scope.id, pg);
         const pvs = Object.values(pg);
         for (let i = 0, len = pvs.length; i < len; i++) {
-            const p2 = {id: scope.id, p: pvs[i]};
+            const p2 = { id: scope.id, p: pvs[i] };
             const x = x_axis.get(p2.p.x);
             const y = y_axis.get(p2.p.y);
             if (x) x.push(p2); else x_axis.set(p2.p.x, [p2]);
@@ -220,7 +220,7 @@ export function finder(context: Context, scope: GroupShape, all_pg: Map<string, 
         all_pg.set(c.id, pg);
         const pvs = Object.values(pg);
         for (let i = 0, len = pvs.length; i < len; i++) {
-            const p2 = {id: c.id, p: pvs[i]};
+            const p2 = { id: c.id, p: pvs[i] };
             const x = x_axis.get(p2.p.x);
             const y = y_axis.get(p2.p.y);
             if (x) x.push(p2); else x_axis.set(p2.p.x, [p2]);
@@ -353,7 +353,7 @@ interface Point {
 
 export function get_pg_by_frame(frame: Point[], multi?: boolean): PointGroup2 { // 无旋转
     const lt = frame[0], rt = frame[1], rb = frame[2], lb = frame[3];
-    const pivot = {x: lt.x + (rb.x - lt.x) / 2, y: lt.y + (rb.y - lt.y) / 2};
+    const pivot = { x: lt.x + (rb.x - lt.x) / 2, y: lt.y + (rb.y - lt.y) / 2 };
     const apexX = [lt.x, rt.x, rb.x, lb.x, pivot.x];
     const apexY = [lt.y, rt.y, rb.y, lb.y, pivot.y];
     if (multi) {
@@ -367,7 +367,7 @@ export function get_pg_by_frame(frame: Point[], multi?: boolean): PointGroup2 { 
             cx: pivot.x
         }
     } else {
-        return {lt, rt, rb, lb, pivot};
+        return { lt, rt, rb, lb, pivot };
     }
 }
 
@@ -377,11 +377,11 @@ export function get_frame(shapes: Shape[]): Point[] {
         const s = shapes[i];
         const m = s.matrix2Root();
         const f = s.frame;
-        const ps: { x: number, y: number }[] = [{x: 0, y: 0}, {x: f.width, y: 0}, {x: f.width, y: f.height}, {x: 0, y: f.height}];
+        const ps: { x: number, y: number }[] = [{ x: 0, y: 0 }, { x: f.width, y: 0 }, { x: f.width, y: f.height }, { x: 0, y: f.height }];
         for (let i = 0; i < 4; i++) points.push(m.computeCoord3(ps[i]));
     }
     const b = XYsBounding(points);
-    return [{x: b.left, y: b.top}, {x: b.right, y: b.top}, {x: b.right, y: b.bottom}, {x: b.left, y: b.bottom}];
+    return [{ x: b.left, y: b.top }, { x: b.right, y: b.top }, { x: b.right, y: b.bottom }, { x: b.left, y: b.bottom }];
 }
 
 /**
