@@ -3,11 +3,11 @@
         <div class="hearder-container">
             <div class="title" v-for="(item, index) in  titles " :key="index">
                 <div class="content">{{ item }}
-                    <div v-if="index === 1" class="shrink" @click.stop="handleEvent">
+                    <div v-if="index === 1" class="shrink" @click.stop="fold = !fold, folds = false">
                         <svg-icon icon-class="down"
                             :style="{ transform: fold ? 'rotate(-180deg)' : 'rotate(0deg)' }"></svg-icon>
                         <transition name="el-zoom-in-top">
-                            <ul class="filterlist" v-if="fold" ref="menu">
+                            <ul class="filterlist2" v-if="fold" ref="menu">
                                 <li class="item" v-for="(item, index) in  filteritems " :key="index"
                                     @click.stop="filterEvent(index)">
                                     <div class="choose" :style="{ visibility: index == fontName ? 'visible' : 'hidden' }">
@@ -22,9 +22,13 @@
         </div>
         <div class="main">
             <el-scrollbar height="100%">
+<<<<<<< HEAD
                 <div class="member-item"
                     v-for=" { user: { id, avatar }, perm_type, team_member: { nickname } }  in  searchvalue === '' ? ListData : SearchList "
                     :key="id">
+=======
+                <div class="member-item" v-for=" { user: { nickname, id, avatar }, perm_type }  in  SearchList " :key="id">
+>>>>>>> 7a7ec564e5aacd43e6164d65ea47c58e9408a410
                     <div class="member-name">
                         <img :src="avatar" alt="icon"
                             style="width: 20px;height: 20px;;border-radius: 50%;margin-right: 4px;">
@@ -39,7 +43,8 @@
                     <div class="member-jurisdiction">
                         <div class="member-jurisdiction-container">
                             {{ membertype(perm_type) }}
-                            <div v-if="usertype(perm_type, id)" class="shrink" @click.stop="handleEventitem(id)">
+                            <div v-if="usertype(perm_type, id)" class="shrink"
+                                @click.stop="folds = !folds, fold = false, userid = id">
                                 <svg-icon icon-class="down"
                                     :style="{ transform: folds && userid === id ? 'rotate(-180deg)' : 'rotate(0deg)' }"></svg-icon>
                                 <transition name="el-zoom-in-top">
@@ -58,6 +63,7 @@
                         </div>
                     </div>
                 </div>
+<<<<<<< HEAD
                 <el-dialog v-model="dialogVisible" :title="t('teammember.change_teamname')" width="500" align-center>
                     <span>{{ t('teammember.modifyNickname_title') }}</span>
                     <input class="change" type="text" ref="changeinput" @keydown.enter="confirm_to_modify_name" />
@@ -75,8 +81,13 @@
                 <div v-if="SearchList.length === 0 && searchvalue !== ''" class="empty">
                     <svg-icon icon-class="member"></svg-icon>
                     没有找到该成员
+=======
+                <div v-if="SearchList.length === 0" class="empty">
+                    <svg-icon v-if="searchvalue !== '' || fontName !== 4" icon-class="member"></svg-icon>
+                    <div v-html="emptytips"></div>
+>>>>>>> 7a7ec564e5aacd43e6164d65ea47c58e9408a410
                 </div>
-                <Loading v-if="SearchList.length === 0 && searchvalue == ''" :size="20" />
+                <Loading v-if="SearchList.length === 0 && searchvalue === '' && fontName === 4" :size="20" />
             </el-scrollbar>
         </div>
     </div>
@@ -133,6 +144,7 @@ const listmenu = ref()
 const transferCreator = ref(false);
 const outTeamDialog = ref(false);
 const exitTeamDialog = ref(false);
+<<<<<<< HEAD
 const dialogData = ref<any>({});
 let user_id = '';
 const openDialog = (name: string, userid: string) => {
@@ -150,6 +162,9 @@ const openDialog = (name: string, userid: string) => {
 };
 
 const loading = ref(true)
+=======
+const dialogData = ref<any>({})
+>>>>>>> 7a7ec564e5aacd43e6164d65ea47c58e9408a410
 const { teamID, teamData, upDateTeamData, is_team_upodate, teamUpdate } = inject('shareData') as {
     teamID: Ref<string>;
     teamData: Ref<[{
@@ -207,6 +222,12 @@ const typeitems = (num: number) => {
     }
 }
 
+
+const emptytips = computed(() => {
+    return props.searchvalue !== '' ? '没有找到该成员' : fontName.value !== 4 ? `没有成员属于<b>[${filteritems[fontName.value]}]</b>权限类型` : ''
+})
+
+
 const closetransferCreator = () => {
     transferCreator.value = false;
 }
@@ -241,10 +262,14 @@ const GetteamMember = async () => {
                 ElMessage({ type: 'error', message: message })
             }
         }
-    } catch (error) {
-        noNetwork.value = true
-        ElMessage.closeAll('error')
-        ElMessage.error({ duration: 1500, message: t('home.failed_list_tips') })
+    } catch (error: any) {
+        if (error.data.code === 401) {
+            return
+        } else {
+            noNetwork.value = true
+            ElMessage.closeAll('error')
+            ElMessage.error({ duration: 1500, message: t('home.failed_list_tips') })
+        }
     }
 }
 
@@ -272,6 +297,7 @@ const SearchList = computed(() => {
 
 //通过计算属性，筛选出符合当前权限类型的成员
 const ListData = computed(() => {
+<<<<<<< HEAD
     if (fontName.value < 4) {
         const list = [];
         for (let i = 0; i < teammemberdata.value.length; i++) {
@@ -290,6 +316,9 @@ const ListData = computed(() => {
         }
         return list;
     }
+=======
+    return fontName.value < 4 ? teammemberdata.value.filter((el: any) => { return el.perm_type === fontName.value }) : teammemberdata.value
+>>>>>>> 7a7ec564e5aacd43e6164d65ea47c58e9408a410
 })
 
 const filterEvent = (index: number = 4) => {
@@ -416,15 +445,6 @@ const itemEvent = (item: string, teamid: string, userid: string, perm_type: numb
     }
 }
 
-const handleEvent = () => {
-    if (folds.value) {
-        folds.value = false
-        fold.value = !fold.value
-    } else {
-        fold.value = !fold.value
-    }
-}
-
 const handleEventitem = (id: string) => {
     if (fold.value) {
         fold.value = false
@@ -487,30 +507,27 @@ watch(teamID, () => {
     GetteamMember()
 })
 
+const handleClickOutside = (event: MouseEvent) => {
+    const list1 = document.querySelector('.member-jurisdiction-container .shrink .filterlist')!;
+    const list2 = document.querySelector('.content .shrink .filterlist2')!;
+    function handleFoldState(list: Element, foldState: boolean) {
+        if (list && event.target instanceof Element && event.target.closest('.filterlist') == null) {
+            if (foldState) {
+                folds.value = fold.value = false;
+            }
+        }
+    }
+    handleFoldState(list1, folds.value)
+    handleFoldState(list2, fold.value)
+}
+
 onMounted(() => {
     GetteamMember()
-    document.addEventListener("click", (event: MouseEvent) => {
-        const list1 = document.querySelector('.member-jurisdiction-container .shrink .filterlist')
-        const list2 = document.querySelector('.content .shrink .filterlist')
-        if (list1) {
-            if (event.target instanceof Element && event.target.closest('.filterlist') == null) {
-                if (folds.value) {
-                    folds.value = false
-                }
-            }
-        }
-        if (list2) {
-            if (event.target instanceof Element && event.target.closest('.filterlist') == null) {
-                if (fold.value) {
-                    fold.value = false
-                }
-            }
-        }
-    })
+    document.addEventListener("click", handleClickOutside)
 })
 
 onUnmounted(() => {
-
+    document.removeEventListener("click", handleClickOutside)
 })
 </script>
 <style lang="scss" scoped>
@@ -544,7 +561,7 @@ onUnmounted(() => {
                         margin-left: 4px;
                     }
 
-                    .filterlist {
+                    .filterlist2 {
                         position: relative;
                         list-style-type: none;
                         font-size: 14px;

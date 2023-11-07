@@ -129,8 +129,12 @@ const GetprojectLists = async () => {
         } else {
             ElMessage({ type: 'error', message: message })
         }
-    } catch (error) {
-        noNetwork.value = true
+    } catch (error:any) {
+        if (error.data.code === 401) {
+            return
+        } else {
+            noNetwork.value = true
+        }
     }
 }
 

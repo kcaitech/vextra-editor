@@ -17,6 +17,7 @@ import { onMounted, ref } from 'vue';
 const selectid = ref('')
 const Elements = ref<any>()
 
+let timer: any
 const scrollToSection = (selector: string) => {
     const targetElement = document.querySelector(selector)
     if (targetElement) {
@@ -24,8 +25,9 @@ const scrollToSection = (selector: string) => {
         targetElement.scrollIntoView({ behavior: 'smooth', block: 'end' });
         selectid.value = selector
     }
-    setTimeout(() => {
+    timer = setTimeout(() => {
         startObserving(Elements.value) //延迟0.5秒后重启观察
+        clearTimeout(timer)
     }, 500);
 }
 

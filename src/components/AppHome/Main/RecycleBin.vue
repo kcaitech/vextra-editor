@@ -3,28 +3,11 @@
         <tablelist :data="lists" :iconlist="iconlists" @restore="Restorefile" @ndelete="Deletefile" @rightMeun="rightmenu"
             :noNetwork="noNetwork" @refreshDoc="refreshDoc" />
     </div>
-    <!-- 右键菜单 -->
     <listrightmenu :items="items" :data="mydata" @getrecycle-lists="GetrecycleLists" @r-deletefile="Deletefile"
         @r-restorefile="Restorefile" />
-    <!-- 确认删除弹框 -->
-    <el-dialog v-model="dialogVisible" width="500" align-center @keyup.enter="Qdeletefile(docId)" :show-close="false"
-        :close-on-click-modal="false" @open="changemargin">
-        <template #header>
-            <div class="my-header">
-                <div class="title">{{ t('home.completely_delete') }}</div>
-                <CloseIcon :size="20" @close="dialogVisible = false" />
-            </div>
-        </template>
-        <span>{{ t('home.delete_tips') }}</span>
-        <template #footer>
-            <span class="dialog-footer">
-                <el-button type="primary" :disabled="false" @click=" Qdeletefile(docId)" style="background-color: none;">
-                    {{ t('home.delete_ok') }}
-                </el-button>
-                <el-button @click=" dialogVisible = false">{{ t('home.cancel') }}</el-button>
-            </span>
-        </template>
-    </el-dialog>
+    <DeleteDialog :projectVisible="dialogVisible" :context="t('home.delete_tips')" :title="t('home.completely_delete')"
+        :confirm-btn="t('home.delete_ok')" @clode-dialog="dialogVisible = !dialogVisible" @confirm="Qdeletefile(docId)">
+    </DeleteDialog>
 </template>
 <script setup lang="ts">
 import * as user_api from '@/request/users'
@@ -33,11 +16,10 @@ import { ref, onMounted, onUnmounted, nextTick, watch } from 'vue'
 import { useI18n } from 'vue-i18n'
 import tablelist from '@/components/AppHome/tablelist.vue'
 import listrightmenu from "../listrightmenu.vue"
-import CloseIcon from '@/components/common/CloseIcon.vue';
+import DeleteDialog from '@/components/TeamProject/ProjectDialog.vue';
 
 const items = ['restore', 'completely_delete']
 const { t } = useI18n()
-const isLoading = ref(false)
 const dialogVisible = ref(false)
 const docId = ref('')
 const mydata = ref()
@@ -60,8 +42,6 @@ interface data {
 
 //获取回收站文件列表
 async function GetrecycleLists() {
-    // loading
-    isLoading.value = true
     try {
         const { data } = await user_api.GetrecycleList()
         if (data == null) {
@@ -76,13 +56,15 @@ async function GetrecycleLists() {
             }
         }
         lists.value = Object.values(data)
-    } catch (error) {
-        noNetwork.value = true
-        ElMessage.error(t('home.failed_list_tips'))
+    } catch (error:any) {
+        if (error.data.code === 401) {
+            return
+        } else {
+            noNetwork.value = true
+            ElMessage.closeAll('error')
+            ElMessage.error({ duration: 1500, message: t('home.failed_list_tips') })
+        }
     }
-
-    // unloading  
-    isLoading.value = false;
 }
 
 const refreshDoc = () => {

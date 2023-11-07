@@ -88,12 +88,14 @@ async function getUserdata() {
             }
         }
         lists.value = Object.values(data)
-    } catch (error) {
-        console.log(error);
-
-        noNetwork.value = true
-        ElMessage.closeAll('error')
-        ElMessage.error({ duration: 1500, message: t('home.failed_list_tips') })
+    } catch (error: any) {
+        if (error.data.code === 401) {
+            return
+        } else {
+            noNetwork.value = true
+            ElMessage.closeAll('error')
+            ElMessage.error({ duration: 1500, message: t('home.failed_list_tips') })
+        }
     }
 }
 const refreshDoc = () => {
