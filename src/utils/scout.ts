@@ -138,9 +138,10 @@ export function delayering(groupshape: Shape, flat?: Shape[]): Shape[] {
     return f;
 }
 
-// 编组穿透
-export function groupPassthrough(scout: Scout, scope: Shape[], position: PageXY): Shape | undefined {
-    // scope 编组子元素
+/**
+ * @description 点击穿透，穿透父级选区对子元素选区的覆盖
+ */
+export function selection_penetrate(scout: Scout, scope: Shape[], position: PageXY): Shape | undefined {
     if (!scope?.length) return;
     for (let i = scope.length - 1; i > -1; i--) {
         const cur = scope[i];
@@ -160,7 +161,7 @@ export function groupPassthrough(scout: Scout, scope: Shape[], position: PageXY)
  * @param { Scout } scout 图形检索器，负责判定一个点(position)是否在一条path路径上(或路径的填充中)
  * @param { Shape[] } g 检索的范围，只会在该范围内进行上述匹配
  * @param { PageXY } position 一个点，在页面坐标系上的点
- * @param { boolean } isCtrl 是否把容器、编组元素当作普通图形判定，不为真的时候会有特殊判定，比如编组子元素会冒泡的编组、存在子元素容器无法被判定为目标...
+ * @param { boolean } isCtrl 深度挖掘⛏️，不为真的时候会有特殊判定，比如编组子元素会冒泡的编组、存在子元素容器无法被判定为目标...
  * @returns { Shape[] } 返回符合检索条件的图形
  */
 export function finder(context: Context, scout: Scout, g: Shape[], position: PageXY, selected: Shape, isCtrl: boolean): Shape | undefined {
@@ -241,10 +242,14 @@ function finder_symbol_union(context: Context, scout: Scout, union: GroupShape, 
 }
 
 function finder_symbol(context: Context, scout: Scout, symbol: SymbolShape | SymbolRefShape, position: PageXY, selected: Shape, isCtrl: boolean) {
-    if (!isTarget(scout, symbol, position)) {
-        const childs = symbol.type === ShapeType.Symbol ? symbol.childs : (symbol.naviChilds || []);
-        return finder(context, scout, childs, position, selected, isCtrl);
+    const children = symbol.type === ShapeType.SymbolRef ? (symbol.naviChilds || []) : symbol.childs;
+    if (!isTarget(scout, symbol, position)) { // 如果frame感应区的不被判定为目标，则还需要判定子元素
+        return finder(context, scout, children, position, selected, isCtrl);
     }
+    if (isCtrl) {
+        return finder(context, scout, children, position, selected, true);
+    }
+    // frame感应区被判定为真
     if (!context.selection.selectedSymOrRefMenber) return symbol;
     const bros = context.selection.selectedSymRefBros;
     for (let i = bros.length - 1; i > -1; i--) {

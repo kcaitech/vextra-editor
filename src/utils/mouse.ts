@@ -159,7 +159,10 @@ export function gen_offset_points_map(shapes: Shape[], down: PageXY) {
             const s = shapes[i];
             const m = s.matrix2Root();
             const f = s.frame;
-            const ps: { x: number, y: number }[] = [{x: 0, y: 0}, {x: f.width, y: 0}, {x: f.width, y: f.height}, {x: 0, y: f.height}];
+            const ps: { x: number, y: number }[] = [{x: 0, y: 0}, {x: f.width, y: 0}, {x: f.width, y: f.height}, {
+                x: 0,
+                y: f.height
+            }];
             for (let i = 0; i < 4; i++) points.push(m.computeCoord3(ps[i]));
         }
         const box = XYsBounding(points);
@@ -248,8 +251,12 @@ export function shapes_picker(e: MouseEvent, context: Context, p: { x: number, y
     const selected = selection.selectedShapes;
     const hoveredShape = selection.hoveredShape;
     if (hoveredShape) {
-        e.shiftKey ? selection.rangeSelectShape([...selected, hoveredShape]) : selection.selectShape(hoveredShape);
-    } else {
+        if (e.shiftKey) { // todo 当按下shift时选中的也需要hover
+            selection.rangeSelectShape([...selected, hoveredShape]);
+        } else {
+            selection.selectShape(hoveredShape);
+        }
+    } else if (selected.length > 1) {
         const shape = selection.getShapesByXY(p, e.metaKey || e.ctrlKey, selected);
         if (shape) {
             selection.selectShape(shape);
@@ -262,7 +269,10 @@ export function shapes_picker(e: MouseEvent, context: Context, p: { x: number, y
 /**
  * @description 获取移动辅助中心对象点图
  */
-export function gen_assist_target(context: Context, shapes: Shape[], is_multi: boolean, offset_map: any, pe: { x: number, y: number }) {
+export function gen_assist_target(context: Context, shapes: Shape[], is_multi: boolean, offset_map: any, pe: {
+    x: number,
+    y: number
+}) {
     if (is_multi) {
         return context.assist.trans_match_multi(shapes, offset_map, pe);
     } else {
