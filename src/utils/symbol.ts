@@ -761,7 +761,6 @@ function search_binds_for_state(variables: Map<string, Variable>, state: Shape, 
     if (!childs?.length) return;
     for (let i = 0, l = childs.length; i < l; i++) {
         const item = childs[i];
-        console.log('item name:', item.name);
         const binds = item.varbinds;
         if (binds) {
             binds.forEach((v: string) => {
