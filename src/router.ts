@@ -22,6 +22,56 @@ const joinTeam = () => import("@/components/TeamProject/jionTeam.vue");
 const ProjectPage = () => import("@/components/TeamProject/ProjectPage.vue");
 const projectApply = () => import("@/components/TeamProject/ProjectFill/ProjectApply.vue");
 const ProjectShare = () => import('@/components/TeamProject/ProjectShare/ProjectSharePage.vue')
+
+const children=[
+    {
+        path: 'recently',
+        name: 'recently',
+        component: Recently
+    },
+    {
+        path: 'starfile',
+        name: 'starfile',
+        component: StarFile
+    },
+    {
+        path: 'meshare',
+        name: 'meshare',
+        component: MeShare
+    },
+    {
+        path: 'shareme',
+        name: 'shareme',
+        component: ShareMe
+    },
+    {
+        path: 'recyclebin',
+        name: 'recyclebin',
+        component: RecycleBin
+    },
+    {
+        path: 'teams/:id',
+        name: 'TeamPage',
+        component: TeamPage,
+        meta: {
+            requireAuth: true
+        }
+    },
+    {
+        path: 'project_share',
+        name: 'ProjectShare',
+        component: ProjectShare
+    },
+    {
+        path: 'project/:id',
+        name: 'ProjectPage',
+        component: ProjectPage,
+        meta: {
+            requireAuth: true
+        }
+    },
+]
+
 const routes = [
     {
         path: '/',
@@ -76,54 +126,7 @@ const routes = [
         name: "apphome",
         component: Apphome,
         redirect: '/apphome/recently',
-        children: [
-            {
-                path: 'recently',
-                name: 'recently',
-                component: Recently
-            },
-            {
-                path: 'starfile',
-                name: 'starfile',
-                component: StarFile
-            },
-            {
-                path: 'meshare',
-                name: 'meshare',
-                component: MeShare
-            },
-            {
-                path: 'shareme',
-                name: 'shareme',
-                component: ShareMe
-            },
-            {
-                path: 'recyclebin',
-                name: 'recyclebin',
-                component: RecycleBin
-            },
-            {
-                path: 'teams/:id',
-                name: 'TeamPage',
-                component: TeamPage,
-                meta: {
-                    requireAuth: true
-                }
-            },
-            {
-                path: 'project_share',
-                name: 'ProjectShare',
-                component: ProjectShare
-            },
-            {
-                path: 'project/:id',
-                name: 'ProjectPage',
-                component: ProjectPage,
-                meta: {
-                    requireAuth: true
-                }
-            },
-        ]
+        children: children
     },
     {
         path: "/join",
