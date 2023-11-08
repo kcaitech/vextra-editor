@@ -37,7 +37,6 @@ export function migrate_immediate(context: Context, asyncTransfer: AsyncTransfer
     const map = map_from_shapes(shapes);
     const target_parent = context.selection.getClosestContainer(pe, map);
     const emit_migrate = get_closest_container(context, shapes[0]).id !== target_parent.id;
-    console.log('target parent:', target_parent.name, 'current parent', get_closest_container(context, shapes[0]).name);
     if (emit_migrate) {
         asyncTransfer.migrate(target_parent as GroupShape, sort_by_layer(context, shapes, -1));
         context.assist.set_collect_target([target_parent as GroupShape], true);
