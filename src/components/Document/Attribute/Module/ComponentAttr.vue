@@ -341,7 +341,6 @@ onUnmounted(() => {
 
 .module_container {
     font-size: var(--font-default-fontsize);
-    margin-bottom: 10px;
 
     .module_attr_item {
         position: relative;

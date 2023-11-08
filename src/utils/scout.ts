@@ -370,7 +370,7 @@ export function finder_container(scout: Scout, g: Shape[], position: PageXY, exc
     const layers = finder_layers(scout, g, position);
     for (let i = 0, len = layers.length; i < len; i++) {
         const item = layers[i];
-        if ([ShapeType.Artboard, ShapeType.Symbol].includes(item.type) && !item.isUnionSymbolShape && (!except || !except.get(item.id))) {
+        if ([ShapeType.Artboard, ShapeType.Symbol].includes(item.type) && (!except || !except.get(item.id))) {
             return item;
         }
     }
