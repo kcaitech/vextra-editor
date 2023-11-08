@@ -1,6 +1,6 @@
 <script setup lang="ts">
 import {get_vari_value_for_ref, is_circular_ref2, modify_vari_value_for_ref, RefAttriListItem} from "@/utils/symbol";
-import {onMounted, onUnmounted, onUpdated, ref} from "vue";
+import {onMounted, onUnmounted, onUpdated, ref, watch} from "vue";
 import {Context} from "@/context";
 import ComponentDialog from "@/components/Document/Attribute/Module/ComponentDialog.vue";
 import {Shape} from "@kcdesign/data";
@@ -62,6 +62,9 @@ function component_watcher(t: number, val: Shape) {
         closeDialog();
     }
 }
+watch(() => props.data, (v) => {
+    get_value();
+})
 
 onUpdated(get_value);
 onMounted(() => {

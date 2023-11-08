@@ -1,6 +1,6 @@
 <script setup lang="ts">
 import { get_vari_value_for_ref, modify_vari_value_for_ref, RefAttriListItem } from "@/utils/symbol";
-import {ref, onMounted, onUpdated} from "vue";
+import {ref, onMounted, onUpdated, watch} from "vue";
 import { Context } from "@/context";
 interface Props {
     context: Context
@@ -17,7 +17,7 @@ const selectAllText = () => {
 function get_value() {
     const symref = props.context.selection.symbolrefshape;
     if (!symref) return;
-    const text = get_vari_value_for_ref(symref, props.data.variable).slice(0, -1);
+    const text = get_vari_value_for_ref(symref, props.data.variable);
     textValue.value = text;
 }
 const keysumbit = (e: KeyboardEvent) => {
@@ -31,6 +31,10 @@ const keysumbit = (e: KeyboardEvent) => {
         }
     }
 }
+
+watch(() => props.data, (v) => {
+    get_value();
+})
 
 function change(v: string) {
     modify_vari_value_for_ref(props.context, props.data.variable, v);

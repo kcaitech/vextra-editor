@@ -791,7 +791,7 @@ export function get_vari_value_for_ref(symref: SymbolRefShape, variable: Variabl
 }
 
 /**
- * @description 修改实例身上某个变量vari的值
+ * @description 修改实例身上某个变量vari的值 ---zrxfix1804
  */
 export function modify_vari_value_for_ref(context: Context, vari: Variable, value: any) {
     const symref = context.selection.symbolrefshape;

@@ -6,7 +6,7 @@ import {
     RefAttriListItem,
     switch_symref_state
 } from "@/utils/symbol";
-import {ref} from "vue";
+import {ref, watch} from "vue";
 import {Context} from "@/context";
 import {onMounted, onUpdated} from "vue";
 import SelectMenu from "@/components/Document/Attribute/PopoverMenu/ComposAttri/SelectMenu.vue";
@@ -48,6 +48,9 @@ function getVattagValue() {
     // status_value.value = get_vari_value_for_ref(symref, vari);
     status_value.value = get_vari_value_for_ref(symref, props.data.variable);
 }
+watch(() => props.data, (v) => {
+    getVattagValue();
+})
 
 onUpdated(getVattagValue);
 onMounted(() => {

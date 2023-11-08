@@ -3,7 +3,7 @@ import {get_vari_value_for_ref, modify_vari_value_for_ref, RefAttriListItem} fro
 import {useI18n} from "vue-i18n";
 
 import {Context} from "@/context";
-import {onMounted, onUpdated, ref} from "vue";
+import {onMounted, onUpdated, ref, watch} from "vue";
 
 const {t} = useI18n();
 
@@ -24,6 +24,9 @@ function get_value() {
 function change(v: boolean) {
     modify_vari_value_for_ref(props.context, props.data.variable, v);
 }
+watch(() => props.data, (v) => {
+    get_value();
+})
 
 onUpdated(get_value);
 onMounted(get_value);
