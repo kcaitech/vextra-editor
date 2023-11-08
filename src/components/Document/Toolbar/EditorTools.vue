@@ -75,8 +75,19 @@ function showMenu(e: MouseEvent) {
     popoverVisible.value = true;
     nextTick(() => {
         if (!popover.value) return;
-        
+        popover.value.style.left = el.offsetLeft + 'px';
+        popover.value.style.top = el.offsetHeight + 24 + 'px';
     })
+    document.addEventListener('click', onMenuBlur)
+}
+function onMenuBlur(e: MouseEvent) {
+    if (e.target instanceof Element && !e.target.closest('.popover-f') && !e.target.closest('.menu')) {
+        let timer = setTimeout(() => {
+            popoverVisible.value = false;
+            clearTimeout(timer)
+            document.removeEventListener('click', onMenuBlur);
+        }, 10)
+    }
 }
 // hooks
 onMounted(() => {
@@ -95,12 +106,12 @@ onUnmounted(() => {
         <div class="vertical-line" />
         <Frame :context="props.context" :active="selected === Action.AddFrame" @select="select"></Frame>
 
-        <Rect @select="select" :active="selected === Action.AddRect"></Rect>
+        <!-- <Rect @select="select" :active="selected === Action.AddRect"></Rect>
         <Ellipse @select="select" :active="selected === Action.AddEllipse"></Ellipse>
         <Line @select="select" :active="selected === Action.AddLine"></Line>
-        <Arrow @select="select" :active="selected === Action.AddArrow"></Arrow>
+        <Arrow @select="select" :active="selected === Action.AddArrow"></Arrow> -->
 
-        <!-- <div class="menu" @click="showMenu" ref="trigger">
+        <div class="menu" @click="showMenu" ref="trigger">
             <svg-icon icon-class="down"></svg-icon>
             <div ref="popover" class="popover-f" v-if="popoverVisible">
                 <Rect @select="select" :active="selected === Action.AddRect"></Rect>
@@ -108,7 +119,7 @@ onUnmounted(() => {
                 <Line @select="select" :active="selected === Action.AddLine"></Line>
                 <Arrow @select="select" :active="selected === Action.AddArrow"></Arrow>
             </div>
-        </div> -->
+        </div>
 
         <CreateText @select="select" :active="selected === Action.AddText"></CreateText>
         <CreateImage :active="selected === Action.AddImage" :context="props.context"></CreateImage>
