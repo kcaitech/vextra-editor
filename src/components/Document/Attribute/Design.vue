@@ -29,7 +29,8 @@ const WITH_FILL = [
     ShapeType.Path2,
     ShapeType.Text,
     ShapeType.Table,
-    ShapeType.TableCell
+    ShapeType.TableCell,
+    ShapeType.Symbol
 ];
 const WITH_TEXT = [ShapeType.Text];
 const WITH_BORDER = [
@@ -46,7 +47,8 @@ const WITH_BORDER = [
     ShapeType.TableCell,
     ShapeType.Text,
     ShapeType.Line,
-    ShapeType.Contact
+    ShapeType.Contact,
+    ShapeType.Symbol
 ];
 const WITH_TABLE = [ShapeType.Table];
 const shapeType = ref();
