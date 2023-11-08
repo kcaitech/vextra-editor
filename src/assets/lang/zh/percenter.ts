@@ -15,7 +15,7 @@ export const percenter={
     errortips:'图片大小或格式不符',
     usernametips_null:'用户名不能为空',
     usernametips_length:'用户名不能超过20个字符',
-    nicknametips_length:'昵称不能为空且不超过9个字符',
+    nicknametips_length:'昵称不能为空且不超过20个字符',
     error_occurred:'发生错误'
 
 
