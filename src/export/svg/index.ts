@@ -44,7 +44,7 @@ function h(...args: any[]): string {
 }
 
 comsMap.set(ShapeType.Artboard, (data: Shape) => {
-    return art(h, data as Artboard, comsMap);
+    return art(h, data as Artboard, comsMap, undefined, undefined, undefined);
 });
 comsMap.set(ShapeType.Group, (data: Shape) => {
     return group(h, data as GroupShape, comsMap, undefined, undefined, undefined);
