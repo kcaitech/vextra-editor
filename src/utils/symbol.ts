@@ -69,7 +69,8 @@ function get_symbol_level_under(group: GroupShape) {
     for (let i = childs.length - 1; i > -1; i--) {
         const item = childs[i];
         if (item.isUnionSymbolShape) {
-            symbols.push(item.childs[0]);
+            const children = item.childs;
+            children.length && symbols.push(children[0]);
         } else if (item.type === ShapeType.Symbol) {
             symbols.push(item as SymbolShape);
         }
@@ -135,7 +136,8 @@ function check_symbol_level_artboard(artboard: GroupShape, init?: SymbolShape[])
     for (let i = childs.length - 1; i > -1; i--) {
         const item = childs[i];
         if (item.isUnionSymbolShape) {
-            symbols.push(item.childs[0]);
+            const children = item.childs;
+            children.length && symbols.push(children[0]);
         } else if (item.type === ShapeType.Symbol) {
             symbols.push(item as SymbolShape);
         }
