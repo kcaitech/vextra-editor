@@ -27,7 +27,7 @@
                         <img :src="avatar" alt="icon"
                             style="width: 20px;height: 20px;;border-radius: 50%;margin-right: 4px;">
                         {{ nickname }}
-                        <div class="changeName">
+                        <div v-if="usertype(perm_type, id) || perm_type === 3" class="changeName">
                             <el-tooltip class="tips" effect="dark" :content="`${t('teammember.change_name')}`"
                                 placement="bottom" :show-after="600" :offset="10" :hide-after="0">
                                 <button class="button" @click="() => openDialog(nickname, id)">{{ t('teammember.modify') }}</button>
@@ -286,8 +286,8 @@ const ListData = computed(() => {
         for (let i = 0; i < teammemberdata.value.length; i++) {
             const item = teammemberdata.value[i];
             if (item.perm_type !== fontName.value) continue;
-            if (!item.team_member.nickname) item.team_member.nickname = item.user.nickname;
-            // if (item.team_member.nickname) item.user.nickname = item.team_member.nickname;
+            // if (!item.team_member.nickname) item.team_member.nickname = item.user.nickname;
+            if (item.team_member.nickname) item.user.nickname = item.team_member.nickname;
             list.push(item);
         }
         return list;
@@ -295,8 +295,8 @@ const ListData = computed(() => {
         const list = [];
         for (let i = 0; i < teammemberdata.value.length; i++) {
             const item = teammemberdata.value[i];
-            if (!item.team_member.nickname) item.team_member.nickname = item.user.nickname;
-            // if (item.team_member.nickname) item.user.nickname = item.team_member.nickname;
+            // if (!item.team_member.nickname) item.team_member.nickname = item.user.nickname;
+            if (item.team_member.nickname) item.user.nickname = item.team_member.nickname;
             list.push(item);
         }
         return list;
@@ -443,7 +443,7 @@ async function confirm_to_modify_name() {
     if (confirmLoading.value) { return; }
     const params = get_params_for_modify_name();
     // 1. 校验
-    if (changeinput.value && changeinput.value.value.length > 0 && changeinput.value.value.length < 9) {
+    if (changeinput.value && changeinput.value.value.length > 0 && changeinput.value.value.length < 20) {
         confirmLoading.value = true;
         try {
             // 2. 执行修改接口
@@ -480,7 +480,7 @@ function get_params_for_modify_name() {
     if (changeinput.value) {
         params['nickname'] = (changeinput.value as HTMLInputElement).value;
     }
-    params['user_id'] = localStorage.getItem("userId");
+    params['user_id'] = user_id;
     params['team_id'] = teamID.value;
     return params;
 }
