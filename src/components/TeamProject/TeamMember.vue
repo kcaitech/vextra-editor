@@ -22,15 +22,19 @@
         </div>
         <div class="main">
             <el-scrollbar height="100%">
-                <div class="member-item" v-for=" { user: { nickname, id, avatar }, perm_type }  in  SearchList " :key="id">
+                <div class="member-item"
+                    v-for=" { team_member: { nickname: teamname }, user: { nickname, id, avatar }, perm_type }  in  SearchList "
+                    :key="id">
                     <div class="member-name">
                         <img :src="avatar" alt="icon"
                             style="width: 20px;height: 20px;;border-radius: 50%;margin-right: 4px;">
-                        {{ nickname }}
-                        <div v-if="usertype(perm_type, id) || perm_type === 3" class="changeName">
+                        {{ teamname }}
+                        <div v-if="usertype(perm_type, id) || (perm_type === 3 && userID === id)" class="changeName">
                             <el-tooltip class="tips" effect="dark" :content="`${t('teammember.change_name')}`"
                                 placement="bottom" :show-after="600" :offset="10" :hide-after="0">
-                                <button class="button" @click="() => openDialog(nickname, id)">{{ t('teammember.modify') }}</button>
+                                <button class="button" @click="() => openDialog(teamname, id)">{{
+                                    t('teammember.modify')
+                                }}</button>
                             </el-tooltip>
                         </div>
                     </div>
@@ -286,8 +290,8 @@ const ListData = computed(() => {
         for (let i = 0; i < teammemberdata.value.length; i++) {
             const item = teammemberdata.value[i];
             if (item.perm_type !== fontName.value) continue;
-            // if (!item.team_member.nickname) item.team_member.nickname = item.user.nickname;
-            if (item.team_member.nickname) item.user.nickname = item.team_member.nickname;
+            if (!item.team_member.nickname) item.team_member.nickname = item.user.nickname;
+            // if (item.team_member.nickname) item.user.nickname = item.team_member.nickname;
             list.push(item);
         }
         return list;
@@ -295,8 +299,8 @@ const ListData = computed(() => {
         const list = [];
         for (let i = 0; i < teammemberdata.value.length; i++) {
             const item = teammemberdata.value[i];
-            // if (!item.team_member.nickname) item.team_member.nickname = item.user.nickname;
-            if (item.team_member.nickname) item.user.nickname = item.team_member.nickname;
+            if (!item.team_member.nickname) item.team_member.nickname = item.user.nickname;
+            // if (item.team_member.nickname) item.user.nickname = item.team_member.nickname;
             list.push(item);
         }
         return list;
