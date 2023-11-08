@@ -31,7 +31,10 @@ const isread = ref(false)
 const canComment = ref(false)
 const isEdit = ref(false)
 const selected = ref<Action>(Action.AutoV);
-const menuVisible = ref(false);
+const popoverVisible = ref(false);
+const popover = ref<HTMLDivElement>()
+const trigger = ref<HTMLDivElement>()
+
 function select(action: Action) {
     props.context.tool.setAction(action);
     if (action === Action.AddComment) {
@@ -65,7 +68,16 @@ const hangdlePerm = () => {
         isEdit.value = true
     }
 }
-
+function showMenu(e: MouseEvent) {
+    if (popoverVisible.value) return popoverVisible.value = false;
+    if (!trigger.value) return;
+    const el = trigger.value;
+    popoverVisible.value = true;
+    nextTick(() => {
+        if (!popover.value) return;
+        
+    })
+}
 // hooks
 onMounted(() => {
     hangdlePerm()
@@ -83,20 +95,20 @@ onUnmounted(() => {
         <div class="vertical-line" />
         <Frame :context="props.context" :active="selected === Action.AddFrame" @select="select"></Frame>
 
-        <!-- <Rect @select="select" :active="selected === Action.AddRect"></Rect>
+        <Rect @select="select" :active="selected === Action.AddRect"></Rect>
         <Ellipse @select="select" :active="selected === Action.AddEllipse"></Ellipse>
         <Line @select="select" :active="selected === Action.AddLine"></Line>
-        <Arrow @select="select" :active="selected === Action.AddArrow"></Arrow> -->
+        <Arrow @select="select" :active="selected === Action.AddArrow"></Arrow>
 
-        <div class="menu-f">
+        <!-- <div class="menu" @click="showMenu" ref="trigger">
             <svg-icon icon-class="down"></svg-icon>
-            <div v-if="menuVisible">
+            <div ref="popover" class="popover-f" v-if="popoverVisible">
                 <Rect @select="select" :active="selected === Action.AddRect"></Rect>
                 <Ellipse @select="select" :active="selected === Action.AddEllipse"></Ellipse>
                 <Line @select="select" :active="selected === Action.AddLine"></Line>
                 <Arrow @select="select" :active="selected === Action.AddArrow"></Arrow>
             </div>
-        </div>
+        </div> -->
 
         <CreateText @select="select" :active="selected === Action.AddText"></CreateText>
         <CreateImage :active="selected === Action.AddImage" :context="props.context"></CreateImage>
