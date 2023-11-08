@@ -1,28 +1,37 @@
 <script setup lang="ts">
-import { computed, onMounted, onUnmounted, reactive, ref, watch } from 'vue';
-import { Context } from '@/context';
-import { Color, Fill, Shape, FillType, ShapeType, TableShape, TableCell } from "@kcdesign/data";
-import { Reg_HEX } from "@/utils/RegExp";
+import {computed, onMounted, onUnmounted, reactive, ref, watch} from 'vue';
+import {Context} from '@/context';
+import {Color, Fill, Shape, FillType, ShapeType, TableShape, TableCell} from "@kcdesign/data";
+import {Reg_HEX} from "@/utils/RegExp";
 import TypeHeader from '../TypeHeader.vue';
-import { useI18n } from 'vue-i18n';
+import {useI18n} from 'vue-i18n';
 import ColorPicker from '@/components/common/ColorPicker/index.vue';
-import { message } from "@/utils/message";
-import { get_fills, get_actions_fill_color, get_actions_add_fill, get_actions_fill_unify, get_actions_fill_enabled, get_actions_fill_delete } from '@/utils/shape_style';
-import { v4 } from 'uuid';
-import { TableSelection } from '@/context/tableselection';
+import {message} from "@/utils/message";
+import {
+    get_fills,
+    get_actions_fill_color,
+    get_actions_add_fill,
+    get_actions_fill_unify,
+    get_actions_fill_enabled,
+    get_actions_fill_delete
+} from '@/utils/shape_style';
+import {v4} from 'uuid';
+import {TableSelection} from '@/context/tableselection';
 
 interface FillItem {
     id: number,
     fill: Fill
 }
+
 interface Props {
     context: Context
     shapes: Shape[]
 }
+
 const props = defineProps<Props>();
 const editor = computed(() => props.context.editor4Shape(props.shapes[0]));
 const len = computed<number>(() => props.shapes.length);
-const { t } = useI18n();
+const {t} = useI18n();
 const watchedShapes = new Map();
 const fills: FillItem[] = reactive([]);
 const alphaFill = ref<any>();
@@ -30,10 +39,12 @@ const colorFill = ref<any>();
 const mixed = ref<boolean>(false);
 const mixed_cell = ref(false);
 let table: TableShape;
+
 function toHex(r: number, g: number, b: number) {
     const hex = (n: number) => n.toString(16).toUpperCase().length === 1 ? `0${n.toString(16).toUpperCase()}` : n.toString(16).toUpperCase();
     return hex(r) + hex(g) + hex(b);
 }
+
 function watchShapes() {
     const needWatchShapes = new Map();
     const selection = props.context.selection;
@@ -56,9 +67,11 @@ function watchShapes() {
         watchedShapes.set(k, v);
     })
 }
+
 function updateData() {
     fills.length = 0;
-    mixed.value = false; mixed_cell.value = false;
+    mixed.value = false;
+    mixed_cell.value = false;
     if (props.shapes.length === 1) {
         const shape = props.shapes[0];
         const table = props.context.tableSelection;
@@ -91,7 +104,7 @@ function updateData() {
             const style = shape.style;
             for (let i = 0, len = style.fills.length; i < len; i++) {
                 const fill = style.fills[i];
-                const f = { id: i, fill };
+                const f = {id: i, fill};
                 fills.unshift(f);
             }
         }
@@ -104,9 +117,11 @@ function updateData() {
         }
     }
 }
+
 function watcher(...args: any[]) {
-    if (args.length > 0 && args.includes('style')) updateData();
+    if (args.length > 0 && (args.includes('style') || args.includes('variable'))) updateData();
 }
+
 function addFill(): void {
     const color = new Color(0.2, 0, 0, 0);
     const fill = new Fill(v4(), true, FillType.SolidColor, color);
@@ -120,9 +135,19 @@ function addFill(): void {
             if (table.tableRowStart > -1 || table.tableColStart > -1 || is_edting) {
                 let range
                 if (is_edting) {
-                    range = { rowStart: is_edting.index.row, rowEnd: is_edting.index.row, colStart: is_edting.index.col, colEnd: is_edting.index.col };
+                    range = {
+                        rowStart: is_edting.index.row,
+                        rowEnd: is_edting.index.row,
+                        colStart: is_edting.index.col,
+                        colEnd: is_edting.index.col
+                    };
                 } else {
-                    range = { rowStart: table.tableRowStart, rowEnd: table.tableRowEnd, colStart: table.tableColStart, colEnd: table.tableColEnd };
+                    range = {
+                        rowStart: table.tableRowStart,
+                        rowEnd: table.tableRowEnd,
+                        colStart: table.tableColStart,
+                        colEnd: table.tableColEnd
+                    };
                 }
                 if (mixed_cell.value) {
                     editor.addFill4Multi(fill, range);
@@ -153,9 +178,11 @@ function addFill(): void {
         }
     }
 }
+
 function first() {
     if (fills.length === 0 && !mixed.value) addFill();
 }
+
 function deleteFill(idx: number) {
     const _idx = fills.length - idx - 1;
     if (len.value === 1) {
@@ -167,9 +194,19 @@ function deleteFill(idx: number) {
             if (table.tableRowStart > -1 || table.tableColStart > -1 || is_edting) {
                 let range
                 if (is_edting) {
-                    range = { rowStart: is_edting.index.row, rowEnd: is_edting.index.row, colStart: is_edting.index.col, colEnd: is_edting.index.col };
+                    range = {
+                        rowStart: is_edting.index.row,
+                        rowEnd: is_edting.index.row,
+                        colStart: is_edting.index.col,
+                        colEnd: is_edting.index.col
+                    };
                 } else {
-                    range = { rowStart: table.tableRowStart, rowEnd: table.tableRowEnd, colStart: table.tableColStart, colEnd: table.tableColEnd };
+                    range = {
+                        rowStart: table.tableRowStart,
+                        rowEnd: table.tableRowEnd,
+                        colStart: table.tableColStart,
+                        colEnd: table.tableColEnd
+                    };
                 }
                 e.deleteFill(_idx, range)
             } else {
@@ -187,6 +224,7 @@ function deleteFill(idx: number) {
         }
     }
 }
+
 function toggleVisible(idx: number) {
     const _idx = fills.length - idx - 1;
     if (len.value === 1) {
@@ -198,9 +236,19 @@ function toggleVisible(idx: number) {
             if (table.tableRowStart > -1 || table.tableColStart > -1 || is_edting) {
                 let range
                 if (is_edting) {
-                    range = { rowStart: is_edting.index.row, rowEnd: is_edting.index.row, colStart: is_edting.index.col, colEnd: is_edting.index.col };
+                    range = {
+                        rowStart: is_edting.index.row,
+                        rowEnd: is_edting.index.row,
+                        colStart: is_edting.index.col,
+                        colEnd: is_edting.index.col
+                    };
                 } else {
-                    range = { rowStart: table.tableRowStart, rowEnd: table.tableRowEnd, colStart: table.tableColStart, colEnd: table.tableColEnd };
+                    range = {
+                        rowStart: table.tableRowStart,
+                        rowEnd: table.tableRowEnd,
+                        colStart: table.tableColStart,
+                        colEnd: table.tableColEnd
+                    };
                 }
                 e.setFillEnable(_idx, !fills[idx].fill.isEnabled, range)
             } else {
@@ -219,6 +267,7 @@ function toggleVisible(idx: number) {
         }
     }
 }
+
 function setColor(idx: number, clr: string, alpha: number) {
     const res = clr.match(Reg_HEX);
     if (!res) {
@@ -238,9 +287,19 @@ function setColor(idx: number, clr: string, alpha: number) {
             if (table.tableRowStart > -1 || table.tableColStart > -1 || is_edting) {
                 let range
                 if (is_edting) {
-                    range = { rowStart: is_edting.index.row, rowEnd: is_edting.index.row, colStart: is_edting.index.col, colEnd: is_edting.index.col };
+                    range = {
+                        rowStart: is_edting.index.row,
+                        rowEnd: is_edting.index.row,
+                        colStart: is_edting.index.col,
+                        colEnd: is_edting.index.col
+                    };
                 } else {
-                    range = { rowStart: table.tableRowStart, rowEnd: table.tableRowEnd, colStart: table.tableColStart, colEnd: table.tableColEnd };
+                    range = {
+                        rowStart: table.tableRowStart,
+                        rowEnd: table.tableRowEnd,
+                        colStart: table.tableColStart,
+                        colEnd: table.tableColEnd
+                    };
                 }
                 e.setFillColor(_idx, new Color(alpha, r, g, b), range)
             } else {
@@ -258,6 +317,7 @@ function setColor(idx: number, clr: string, alpha: number) {
         }
     }
 }
+
 function onColorChange(idx: number, e: Event) {
     let value = (e.target as HTMLInputElement)?.value;
     if (value.slice(0, 1) !== '#') {
@@ -273,6 +333,7 @@ function onColorChange(idx: number, e: Event) {
         return (e.target as HTMLInputElement).value = toHex(fills[idx].fill.color.red, fills[idx].fill.color.green, fills[idx].fill.color.blue);
     }
 }
+
 function onAlphaChange(idx: number, e: Event) {
     let value = (e.currentTarget as any)['value'];
     if (alphaFill.value) {
@@ -317,6 +378,7 @@ function onAlphaChange(idx: number, e: Event) {
         }
     }
 }
+
 function getColorFromPicker(idx: number, color: Color) {
     const _idx = fills.length - idx - 1;
     if (len.value === 1) {
@@ -328,9 +390,19 @@ function getColorFromPicker(idx: number, color: Color) {
             if (table.tableRowStart > -1 || table.tableColStart > -1 || is_edting) {
                 let range
                 if (is_edting) {
-                    range = { rowStart: is_edting.index.row, rowEnd: is_edting.index.row, colStart: is_edting.index.col, colEnd: is_edting.index.col };
+                    range = {
+                        rowStart: is_edting.index.row,
+                        rowEnd: is_edting.index.row,
+                        colStart: is_edting.index.col,
+                        colEnd: is_edting.index.col
+                    };
                 } else {
-                    range = { rowStart: table.tableRowStart, rowEnd: table.tableRowEnd, colStart: table.tableColStart, colEnd: table.tableColEnd };
+                    range = {
+                        rowStart: table.tableRowStart,
+                        rowEnd: table.tableRowEnd,
+                        colStart: table.tableColStart,
+                        colEnd: table.tableColEnd
+                    };
                 }
                 e.setFillColor(_idx, color, range)
             } else {
@@ -369,10 +441,12 @@ const filterAlpha = (a: number) => {
         return alpha.toFixed(2); // 保留两位小数
     }
 }
+
 function update_by_shapes() {
     watchShapes();
     updateData();
 }
+
 function shapes_watcher(v: Shape[]) {
     update_by_shapes();
     watchCells.forEach((v) => v.unwatch(updateData));
@@ -384,10 +458,13 @@ function shapes_watcher(v: Shape[]) {
         table?.unwatch(table_watcher);
     }
 }
+
 function table_watcher() {
     cells_watcher();
 }
+
 let watchCells: Map<string, TableCell> = new Map();
+
 function cells_watcher() {
     const table_selection = props.context.tableSelection;
     const is_edting = table_selection.editingCell;
@@ -412,8 +489,10 @@ function cells_watcher() {
         watchCells = needWatch;
     }
 }
+
 // hooks
 const stop = watch(() => props.shapes, (v) => shapes_watcher(v));
+
 function table_selection_watcher(t: number) {
     if (t === TableSelection.CHANGE_TABLE_CELL) {
         updateData();
@@ -423,6 +502,7 @@ function table_selection_watcher(t: number) {
         cells_watcher();
     }
 }
+
 onMounted(() => {
     update_by_shapes();
     props.context.tableSelection.watch(table_selection_watcher);
@@ -430,7 +510,9 @@ onMounted(() => {
 onUnmounted(() => {
     stop();
     props.context.tableSelection.unwatch(table_selection_watcher);
-    watchedShapes.forEach(v => { v.unwatch(watcher) });
+    watchedShapes.forEach(v => {
+        v.unwatch(watcher)
+    });
 })
 </script>
 
@@ -455,12 +537,14 @@ onUnmounted(() => {
                     <svg-icon v-if="f.fill.isEnabled" icon-class="select"></svg-icon>
                 </div>
                 <div class="color">
-                    <ColorPicker :color="f.fill.color" :context="props.context" @change="c => getColorFromPicker(idx, c)">
+                    <ColorPicker :color="f.fill.color" :context="props.context"
+                                 @change="c => getColorFromPicker(idx, c)">
                     </ColorPicker>
                     <input ref="colorFill" :value="toHex(f.fill.color.red, f.fill.color.green, f.fill.color.blue)"
-                        :spellcheck="false" @change="(e) => onColorChange(idx, e)" @focus="selectColor(idx)" />
-                    <input ref="alphaFill" style="text-align: center;" :value="filterAlpha(f.fill.color.alpha * 100) + '%'"
-                        @change="(e) => onAlphaChange(idx, e)" @focus="selectAlpha(idx)" />
+                           :spellcheck="false" @change="(e) => onColorChange(idx, e)" @focus="selectColor(idx)"/>
+                    <input ref="alphaFill" style="text-align: center;"
+                           :value="filterAlpha(f.fill.color.alpha * 100) + '%'"
+                           @change="(e) => onAlphaChange(idx, e)" @focus="selectAlpha(idx)"/>
                 </div>
                 <div style="width: 22px;"></div>
                 <div class="delete" @click="deleteFill(idx)">
@@ -487,7 +571,7 @@ onUnmounted(() => {
         align-items: center;
         justify-content: center;
 
-        >svg {
+        > svg {
             width: 50%;
             height: 50%;
         }
@@ -522,7 +606,7 @@ onUnmounted(() => {
                 justify-content: center;
                 align-items: center;
 
-                >svg {
+                > svg {
                     width: 60%;
                     height: 60%;
                 }
@@ -556,7 +640,7 @@ onUnmounted(() => {
                     margin-left: 5px;
                 }
 
-                input+input {
+                input + input {
                     width: 45px;
                 }
             }
@@ -569,7 +653,7 @@ onUnmounted(() => {
                 width: 22px;
                 height: 22px;
 
-                >svg {
+                > svg {
                     width: 11px;
                     height: 11px;
                 }
