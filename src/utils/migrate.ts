@@ -3,7 +3,7 @@ import {AsyncTransfer, GroupShape, Matrix, Shape} from "@kcdesign/data";
 import {ClientXY, PageXY} from "@/context/selection";
 import {debounce} from "lodash";
 import {map_from_shapes} from "@/utils/content";
-import {sort_by_layer} from "@/utils/group_ungroup";
+import {compare_layer_3} from "@/utils/group_ungroup";
 import {get_closest_container} from "@/utils/mouse";
 
 function is_need_migrate() {
@@ -38,7 +38,7 @@ export function migrate_immediate(context: Context, asyncTransfer: AsyncTransfer
     const target_parent = context.selection.getClosestContainer(pe, map);
     const emit_migrate = get_closest_container(context, shapes[0]).id !== target_parent.id;
     if (emit_migrate) {
-        asyncTransfer.migrate(target_parent as GroupShape, sort_by_layer(context, shapes, -1));
+        asyncTransfer.migrate(target_parent as GroupShape, compare_layer_3(shapes, -1));
         context.assist.set_collect_target([target_parent as GroupShape], true);
     }
 }
