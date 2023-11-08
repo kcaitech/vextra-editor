@@ -59,8 +59,8 @@ export function classification_level_page(pages: { page: Page, desc: string }[])
             result.push(item);
         }
     }
-    // return result.length > 1 ? result : result.length === 1 ? result[0].childs : [];
-    return result;
+    return result.length > 1 ? result : result.length === 1 ? result[0].childs : [];
+    // return result;
 }
 
 function get_symbol_level_under(group: GroupShape) {
@@ -1214,7 +1214,7 @@ export function get_symbolref_by_layer(shape: Shape) {
  * @description 确定当前实例引用的是组件中的哪个可变组件
  */
 export function get_state_by_ref(symref: SymbolRefShape) {
-    const symbol = symref.rootData;
+    const symbol = symref.getRootData();
     if (!symbol) return;
     const variables = symbol.variables;
     if (!symbol.isUnionSymbolShape || !variables) return symbol;

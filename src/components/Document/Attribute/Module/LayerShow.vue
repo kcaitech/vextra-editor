@@ -116,6 +116,7 @@ function _delete() {
 onMounted(() => {
     shape.value.watch(layer_watcher);
     props.context.selection.watch(selected_watcher);
+    isBind();
 })
 onUnmounted(() => {
     props.context.selection.unwatch(selected_watcher);

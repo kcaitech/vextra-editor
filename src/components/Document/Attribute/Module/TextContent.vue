@@ -1,19 +1,26 @@
 <script setup lang="ts">
-import { useI18n } from 'vue-i18n';
-import { Context } from '@/context';
+import {useI18n} from 'vue-i18n';
+import {Context} from '@/context';
 import TypeHeader from '../TypeHeader.vue';
-import { ref, nextTick, onMounted, onUnmounted, watch } from 'vue';
+import {ref, nextTick, onMounted, onUnmounted, watch} from 'vue';
 import CompLayerShow from '../PopoverMenu/ComposAttri/CompLayerShow.vue';
-import { OverrideType, SymbolShape, TextShape, Variable, VariableType } from '@kcdesign/data';
+import {OverrideType, SymbolShape, TextShape, Variable, VariableType} from '@kcdesign/data';
 import SelectLayerInput from './SelectLayerInput.vue';
 import PopoverDefaultInput from './PopoverDefaultInput.vue';
-import { create_var_by_type, delete_variable, get_symbol_by_layer, is_bind_x_vari, modify_variable } from '@/utils/symbol';
-import { Selection } from '@/context/selection';
-import { message } from '@/utils/message';
+import {
+    create_var_by_type,
+    delete_variable,
+    get_symbol_by_layer,
+    is_bind_x_vari,
+    modify_variable
+} from '@/utils/symbol';
+import {Selection} from '@/context/selection';
+import {message} from '@/utils/message';
+
 const props = defineProps<{
     context: Context
 }>()
-const { t } = useI18n();
+const {t} = useI18n();
 const isTextShow = ref(false);
 const closeLayerShowPopup = () => {
     isTextShow.value = false
@@ -31,7 +38,7 @@ const textDialog = () => {
 }
 
 const atrrdialog = ref<HTMLDivElement>();
-const dialog_posi = ref({ x: 0, y: 0 });
+const dialog_posi = ref({x: 0, y: 0});
 const getDialogPosi = (div: HTMLDivElement | undefined) => {
     if (div) {
         const el = div.getBoundingClientRect();
@@ -62,11 +69,13 @@ const isBind = () => {
     }
 }
 const card_ref = ref<HTMLDivElement>();
+
 function edit_text() {
     isBind();
     getDialogPosi(card_ref.value);
     isTextShow.value = true;
 }
+
 function save_layer_show(type: VariableType, name: string) {
     if (is_bind.value) {
         if (!sym_layer.value) return;
@@ -83,10 +92,9 @@ function save_layer_show(type: VariableType, name: string) {
     }
     isTextShow.value = false;
 }
+
 const selected_watcher = (t: number) => {
-    if (t === Selection.CHANGE_SHAPE) {
-        isBind();
-    }
+    if (t === Selection.CHANGE_SHAPE) isBind();
 }
 
 function text_watcher(args: any) {
@@ -99,7 +107,7 @@ watch(() => shape.value, (v, o) => {
         o.unwatch(text_watcher);
     }
     v.watch(text_watcher);
-}, { immediate: true })
+}, {immediate: true})
 
 watch(() => sym_layer.value, (v, o) => {
     if (o) {
@@ -117,7 +125,7 @@ const input = () => {
 }
 
 const keysumbit = (e: KeyboardEvent) => {
-    const { shiftKey, ctrlKey, metaKey } = e;
+    const {shiftKey, ctrlKey, metaKey} = e;
     if (e.key === 'Enter') {
         if (ctrlKey || metaKey || shiftKey) {
             input_v.value = input_v.value + '\n'
@@ -146,6 +154,7 @@ const get_text = () => {
 onMounted(() => {
     shape.value.watch(text_watcher);
     props.context.selection.watch(selected_watcher);
+    isBind();
 })
 onUnmounted(() => {
     props.context.selection.unwatch(selected_watcher);
@@ -165,9 +174,10 @@ onUnmounted(() => {
             </template>
         </TypeHeader>
 <!--        <div class="text" v-if="!is_bind">-->
-<!--            <el-input v-model="textDefaultValue" type="textarea" ref="input_v" :autosize="{ minRows: 2, maxRows: 4 }"-->
-<!--                resize="none" :placeholder="t('compos.default_text_input')" @keydown.stop="keysumbit" @input="input" @change="change"/>-->
-<!--        </div>-->
+        <!--            <el-input v-model="textDefaultValue" type="textarea" ref="input_v" :autosize="{ minRows: 2, maxRows: 4 }"-->
+        <!--                      resize="none" :placeholder="t('compos.default_text_input')" @keydown.stop="keysumbit"-->
+        <!--                      @input="input" @change="change" disabled/>-->
+        <!--        </div>-->
         <div class="warning" v-if="warn">
             <p class="warn">默认值不能为空</p>
         </div>
@@ -188,12 +198,15 @@ onUnmounted(() => {
             </div>
         </div>
         <CompLayerShow :context="context" v-if="isTextShow" @close-dialog="closeLayerShowPopup" right="250px"
-            :add-type="VariableType.Status" :width="260" :title="t('compos.text_content')" :dialog_posi="dialog_posi"
-            :default_name="default_name" :variable="is_bind ? is_bind : undefined" @save-layer-show="save_layer_show"
-            :symbol="sym_layer">
+                       :add-type="VariableType.Status" :width="260" :title="t('compos.text_content')"
+                       :dialog_posi="dialog_posi"
+                       :default_name="default_name" :variable="is_bind ? is_bind : undefined"
+                       @save-layer-show="save_layer_show"
+                       :symbol="sym_layer">
             <template #layer>
-                <SelectLayerInput :title="t('compos.select_layer')" :add-type="VariableType.Text" :context="props.context"
-                    :placeholder="t('compos.place_select_layer')" :selectId="selectId"></SelectLayerInput>
+                <SelectLayerInput :title="t('compos.select_layer')" :add-type="VariableType.Text"
+                                  :context="props.context"
+                                  :placeholder="t('compos.place_select_layer')" :selectId="selectId"></SelectLayerInput>
             </template>
         </CompLayerShow>
     </div>
@@ -212,7 +225,7 @@ onUnmounted(() => {
         align-items: center;
         justify-content: center;
 
-        >svg {
+        > svg {
             width: 70%;
             height: 70%;
         }
@@ -286,7 +299,7 @@ onUnmounted(() => {
         align-items: center;
         width: 84px;
 
-        >svg {
+        > svg {
             width: 14px;
             height: 14px;
             margin: 0px 10px;
@@ -310,7 +323,7 @@ onUnmounted(() => {
             align-items: center;
             justify-content: center;
 
-            >svg {
+            > svg {
                 width: 14px;
                 height: 14px;
                 margin: 0px 10px;
@@ -323,7 +336,7 @@ onUnmounted(() => {
             display: flex;
             max-width: 100%;
 
-            >span {
+            > span {
                 display: block;
                 box-sizing: border-box;
                 overflow: hidden;
@@ -349,7 +362,7 @@ onUnmounted(() => {
     width: 22px;
     height: 22px;
 
-    >svg {
+    > svg {
         width: 11px;
         height: 11px;
     }
