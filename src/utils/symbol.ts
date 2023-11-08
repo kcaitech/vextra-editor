@@ -13,7 +13,7 @@ import {
     VariableType
 } from "@kcdesign/data";
 import {getName} from "./content";
-import {sort_by_layer} from "./group_ungroup";
+import {compare_layer_3} from "./group_ungroup";
 import {debounce, result} from "lodash";
 import {v4} from "uuid";
 import {get_name} from "@/utils/shapelist";
@@ -69,7 +69,8 @@ function get_symbol_level_under(group: GroupShape) {
     for (let i = childs.length - 1; i > -1; i--) {
         const item = childs[i];
         if (item.isUnionSymbolShape) {
-            symbols.push(item.childs[0]);
+            const children = item.childs;
+            children.length && symbols.push(children[0]);
         } else if (item.type === ShapeType.Symbol) {
             symbols.push(item as SymbolShape);
         }
@@ -135,7 +136,8 @@ function check_symbol_level_artboard(artboard: GroupShape, init?: SymbolShape[])
     for (let i = childs.length - 1; i > -1; i--) {
         const item = childs[i];
         if (item.isUnionSymbolShape) {
-            symbols.push(item.childs[0]);
+            const children = item.childs;
+            children.length && symbols.push(children[0]);
         } else if (item.type === ShapeType.Symbol) {
             symbols.push(item as SymbolShape);
         }
@@ -377,13 +379,17 @@ export function make_symbol(context: Context, t: Function) {
         message('info', '新的组件不能包含已有组件图层的组成图层');
         return false;
     }
+    if (is_exist_symbolref_layer(selected)) {
+        message('info', '新的组件不能包含组件实例的组成图层');
+        return false;
+    }
     if (is_exsit_contact_shape(selected)) {
         message('info', '组件内部不能包含连接线');
         return false;
     }
     const editor = context.editor4Page(page);
     const name = getName(ShapeType.Symbol, context.data.symbolsMgr.resource, t);
-    const shapes: Shape[] = sort_by_layer(context, selected);
+    const shapes: Shape[] = compare_layer_3(selected);
     return editor.makeSymbol(context.data, shapes, name);
 }
 
@@ -1041,6 +1047,20 @@ export function is_exist_symbol_layer(shapes: Shape[]) {
     return false;
 }
 
+/**
+ * @description shapes中是否存在symbolref的图层
+ */
+export function is_exist_symbolref_layer(shapes: Shape[]) {
+    for (let i = 0, len = shapes.length; i < len; i++) {
+        let s: Shape | undefined = shapes[i].parent;
+        while (s) {
+            if (s.type === ShapeType.SymbolRef) return true;
+            s = s.parent;
+        }
+    }
+    return false;
+}
+
 export function switch_symref_state(context: Context, variable: Variable, state: string) {
     const symbolref = context.selection.symbolrefshape;
     if (!symbolref) return;
@@ -1060,6 +1080,19 @@ export function is_part_of_symbol(shape: Shape) {
     let p: Shape | undefined = shape.parent;
     while (p) {
         if (p.type === ShapeType.Symbol) return true;
+        p = p.parent;
+    }
+    return false;
+}
+
+/**
+ * @description 图层是否为组件实例的引用部分
+ * @param shape
+ */
+export function is_part_of_symbolref(shape: Shape) {
+    let p = shape.parent;
+    while (p) {
+        if (p.type === ShapeType.SymbolRef) return true;
         p = p.parent;
     }
     return false;

@@ -20,10 +20,11 @@ import {Selection} from '@/context/selection';
 import {adapt_page, getName, get_shape_within_document, shape_track} from '@/utils/content';
 import {message} from '@/utils/message';
 import {paster, paster_inner_shape, replace} from '@/utils/clipboard';
-import {sort_by_layer} from '@/utils/group_ungroup';
+import {compare_layer_3} from '@/utils/group_ungroup';
 import {Menu} from '@/context/menu';
 import TableMenu from "./TableMenu/TableMenu.vue"
 import {make_symbol} from '@/utils/symbol';
+import {Tool} from "@/context/tool";
 
 const {t} = useI18n();
 
@@ -301,17 +302,7 @@ function bottom() {
  * 创建编组
  */
 function groups() {
-    const selection = props.context.selection;
-    const page = selection.selectedPage;
-    if (page) {
-        const editor = props.context.editor4Page(page);
-        const shapes = sort_by_layer(props.context, selection.selectedShapes);
-        const group = editor.group(shapes, getName(ShapeType.Group, page.childs, t));
-        if (group) {
-            selection.selectShape(group);
-            selection.notify(Selection.EXTEND, group);
-        }
-    }
+    props.context.tool.notify(Tool.GROUP); // 发送到tool，由tool去处理
     emit('close');
 }
 
@@ -319,17 +310,7 @@ function groups() {
  * 创建容器
  */
 function container() {
-    const selection = props.context.selection;
-    const page = selection.selectedPage;
-    if (page) {
-        const editor = props.context.editor4Page(page);
-        const shapes = sort_by_layer(props.context, selection.selectedShapes);
-        const artboard = editor.create_artboard(shapes, getName(ShapeType.Artboard, page.childs, t));
-        if (artboard) {
-            selection.selectShape(artboard);
-            selection.notify(Selection.EXTEND, artboard);
-        }
-    }
+    props.context.tool.notify(Tool.GROUP, true);
     emit('close');
 }
 

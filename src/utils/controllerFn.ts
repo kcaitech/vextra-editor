@@ -9,7 +9,7 @@ import {ClientXY, PageXY} from "@/context/selection";
 import {debounce} from "lodash";
 import {WorkSpace} from "@/context/workspace";
 import {Menu} from "@/context/menu";
-import {sort_by_layer} from "./group_ungroup";
+import {compare_layer_3} from "./group_ungroup";
 import {get_symbolref_by_layer, make_symbol} from "./symbol";
 
 export function keyboardHandle(e: KeyboardEvent, context: Context, t: Function) {
@@ -246,7 +246,7 @@ export function migrate_immediate(context: Context, asyncTransfer: AsyncTransfer
     const targetParent = context.selection.getClosestContainer(p, map);
     if (targetParent.id === shape.id) return;
     const m = getCloesetContainer(context, shape).id !== targetParent.id;
-    if (m && asyncTransfer) asyncTransfer.migrate(targetParent as GroupShape, sort_by_layer(context, shapes));
+    if (m && asyncTransfer) asyncTransfer.migrate(targetParent as GroupShape, compare_layer_3(shapes));
 }
 
 // 判断当前所处的wrap

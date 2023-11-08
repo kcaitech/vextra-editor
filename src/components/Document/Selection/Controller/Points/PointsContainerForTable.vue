@@ -15,7 +15,7 @@ import { Comment } from '@/context/comment';
 import { permIsEdit } from '@/utils/content';
 import { Menu } from '@/context/menu';
 import { paster_short } from '@/utils/clipboard';
-import {sort_by_layer} from "@/utils/group_ungroup";
+import {compare_layer_3} from "@/utils/group_ungroup";
 interface Props {
     matrix: number[]
     context: Context
@@ -200,7 +200,7 @@ function _migrate() {
     const targetParent = props.context.selection.getClosestContainer(p);
     const m = getCloesetContainer(props.shape).id !== targetParent.id;
     if (targetParent.id === props.shape.id) return;
-    if (m && asyncTransfer) asyncTransfer.migrate(targetParent as GroupShape, sort_by_layer(props.context, shapes));
+    if (m && asyncTransfer) asyncTransfer.migrate(targetParent as GroupShape, compare_layer_3(shapes));
 }
 const migrate: () => void = debounce(_migrate, 100);
 function getCloesetContainer(shape: Shape): Shape {

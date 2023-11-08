@@ -3,7 +3,7 @@ import {Matrix, ShapeFrame, Shape, ShapeType} from '@kcdesign/data';
 import {isTarget} from './common';
 import {Context} from '@/context';
 import {Action, Tool} from '@/context/tool';
-import {sort_by_layer} from './group_ungroup';
+import {compare_layer_3} from './group_ungroup';
 import {WorkSpace} from '@/context/workspace';
 // 寻找一块空白的区域；
 // 先寻找当前编辑器中心center在page上的位置，center、pageMatrix -> XY;
@@ -171,7 +171,7 @@ function finder(context: Context, childs: Shape[], Points: [XY, XY, XY, XY, XY])
         }
         ids++;
     }
-    return sort_by_layer(context, Array.from(selectedShapes.values()));
+    return compare_layer_3(Array.from(selectedShapes.values()));
 }
 
 export function get_artboard_list_by_point(context: Context, range: Shape[], point: PageXY, init?: Shape[]) {

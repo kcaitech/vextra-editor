@@ -9,7 +9,7 @@ import {Media, getName} from '@/utils/content';
 import {message} from './message';
 import {Action} from '@/context/tool';
 import {is_box_outer_view2} from './common';
-import {sort_by_layer} from './group_ungroup';
+import {compare_layer_3} from './group_ungroup';
 
 interface SystemClipboardItem {
     type: ShapeType
@@ -51,7 +51,7 @@ export class Clipboard {
                 return false;
             }
         } else { // 写入图层数据
-            const shapes = sort_by_layer(this.context, this.context.selection.selectedShapes, -1); // 处理层级
+            const shapes = compare_layer_3(this.context.selection.selectedShapes, -1); // 处理层级
             if (!shapes.length) return false;
             // 记录每个图形相对root位置
             const position_map: Map<string, PageXY> = new Map();

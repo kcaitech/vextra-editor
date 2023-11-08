@@ -58,7 +58,7 @@ const selectLayerId = (ids: string[]) => {
     layerIds.value = ids;
 }
 //默认值
-const dlt_value = ref<boolean>();
+const dlt_value = ref<boolean>(!!props.variable.value);
 function default_value(v: number) {
     v === 0 ? dlt_value.value = true : dlt_value.value = false;
 }
