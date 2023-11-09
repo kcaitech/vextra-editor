@@ -2,7 +2,7 @@
 import { Context } from "@/context";
 import {AttriListItem, delete_variable, modify_variable} from "@/utils/symbol";
 import { nextTick, ref } from "vue";
-import { Variable, VariableType } from "@kcdesign/data";
+import { Variable, VariableType, Text } from "@kcdesign/data";
 import { useI18n } from "vue-i18n";
 import CompLayerShow from "@/components/Document/Attribute/PopoverMenu/ComposAttri/CompLayerShow.vue";
 import SelectLayerInput from "@/components/Document/Attribute/Module/SelectLayerInput.vue";
@@ -64,6 +64,9 @@ const save_text = (type: VariableType, name: string) => {
 function _delete() {
     delete_variable(props.context, props.variable);
 }
+const getValue = (value: Text | string | undefined) => {
+    return value instanceof Text ? value.getText(0, Number.MAX_VALUE) : value;
+}
 </script>
 <template>
     <div v-if="props.variable.type === VariableType.Text" class="module_attr_item" ref="card_ref">
@@ -75,7 +78,7 @@ function _delete() {
                     </div>
                     <div class="name">
                         <span style="width: 40%;">{{ props.variable.name }}</span>
-                        <span style="width: 60%;"> {{ props.variable.value }}</span>
+                        <span style="width: 60%;"> {{ getValue(props.variable.value) }}</span>
                     </div>
                 </div>
             </div>

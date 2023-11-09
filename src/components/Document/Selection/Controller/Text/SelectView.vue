@@ -12,7 +12,10 @@ const props = defineProps<{
     matrix: number[],
     context: Context
 }>();
-
+function getText(shape: Shape & { text: Text }): Text {
+    if (shape.isVirtualShape) return shape.text;
+    return shape.getText();
+}
 const matrix = new Matrix();
 const isCursor = ref(true);
 const cursorPath = ref("");
@@ -55,13 +58,13 @@ function _update() {
         // selected range
         const start = text_selection.cursorStart;
         const end = text_selection.cursorEnd;
-        selectPath.value = genRectPath(props.shape.text.locateRange(start, end).map((point) => matrix.computeCoord2(point.x, point.y)));
+        selectPath.value = genRectPath(getText(props.shape).locateRange(start, end).map((point) => matrix.computeCoord2(point.x, point.y)));
     } else {
         isCursor.value = true;
         // cursor
         const cursorAtBefore = text_selection.cursorAtBefore;
         const index = text_selection.cursorStart;
-        const cursor = props.shape.text.locateCursor(index, cursorAtBefore);
+        const cursor = getText(props.shape).locateCursor(index, cursorAtBefore);
         if (!cursor) {
             cursor_points = [];
             cursorPath.value = "";
