@@ -6,51 +6,18 @@ import { htmlContent } from "@/utils/showmarkdown";
 import Markdowncontent from "@/assets/serviceagreement.md";
 </script>
 <style lang="scss" scoped>
-
 .content {
     color: #333333;
     max-width: 880px;
     letter-spacing: 1px;
     overflow: hidden;
     padding: 0 12px;
-
-    .title {
-        text-align: center !important;
-    }
-
-    .update,
-    .date {
-        font-weight: 500;
-        text-align: right;
-    }
-
-    p,
-    li {
-        line-height: 32px;
-    }
-
 }
 
 @media (max-width:880px) {
-    h1 {
-        font-size: 24px;
-    }
-
-    h2 {
-        font-size: 18px;
-    }
-
-    .update,
-    .date {
-        margin: 0;
-        margin-bottom: 8px;
-    }
-
-    p,
-    li {
+    .content {
         font-size: 14px;
-        line-height: 28px !important;
     }
-
 }
+
 </style>

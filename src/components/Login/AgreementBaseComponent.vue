@@ -11,10 +11,10 @@
         </div>
     </div>
     <div v-if="isMobile" class="phonetips"> {{ t('system.phonetips') }}</div>
-    <div class="content-container">
+    <div class="content-container" :style="{ top: isMobile ? 96 + 'px' : 56 + 'px' }">
         <slot></slot>
     </div>
-    <div class="footer-container">
+    <div class="footer-container" :style="{ top: isMobile ? 96 + 'px' : 56 + 'px' }">
         <Footer />
     </div>
 </template>
@@ -52,7 +52,8 @@ onUnmounted(() => {
     font-weight: 600;
     line-height: 40px;
     color: white;
-    top: 80px;
+    top: 56px;
+    width: 100%;
     text-align: center;
     background-color: black;
     z-index: 999;
@@ -68,7 +69,7 @@ onUnmounted(() => {
     z-index: 999;
 
     .kc-header {
-        height: 80px;
+        height: 56px;
         width: 100%;
         max-width: 1200px;
         display: flex;
@@ -81,8 +82,8 @@ onUnmounted(() => {
             cursor: pointer;
 
             .logo-img {
-                width: 80px;
-                height: 80px;
+                width: 56px;
+                height: 56px;
             }
 
             .logo-text {
@@ -109,7 +110,7 @@ onUnmounted(() => {
 
 .content-container {
     position: relative;
-    top: 80px;
+    top: 56px;
     display: flex;
     justify-content: center;
 }
@@ -120,9 +121,9 @@ onUnmounted(() => {
     display: flex;
     align-items: flex-end;
     justify-content: center;
-    height: 160px;
+    height: 56px;
     position: relative;
-    top: 80px;
+    top: 56px;
     background-color: #9775fa;
 
     .footer {
