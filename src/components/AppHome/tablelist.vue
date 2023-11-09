@@ -2,12 +2,8 @@
     <el-auto-resizer>
         <template #default="{ height, width }">
             <el-table-v2 v-if="height != 0" :columns="columns" :data=props.data :width="width" :height="height"
-<<<<<<< HEAD
-                :row-class="rowClass" :row-event-handlers="rowHandleClick" @scroll="rightmenu" :header-height="24" :row-height="40">
-=======
                 :row-class="rowClass" :row-event-handlers="rowHandleClick" @scroll="rightmenu" :header-height="24"
                 :row-height="40" :header-class="headerClass">
->>>>>>> 25fcb16a24b3a17eda88f0d8ed850909eab308cd
                 <template v-if="loading" #overlay>
                     <div class="el-loading-mask" style="display: flex; align-items: center; justify-content: center">
                         <Loading :size="20" />
