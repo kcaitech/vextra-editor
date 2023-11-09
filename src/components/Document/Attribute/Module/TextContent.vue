@@ -2,14 +2,12 @@
 import {useI18n} from 'vue-i18n';
 import {Context} from '@/context';
 import TypeHeader from '../TypeHeader.vue';
-import {ref, nextTick, onMounted, onUnmounted, watch} from 'vue';
+import {ref, onMounted, onUnmounted, watch} from 'vue';
 import CompLayerShow from '../PopoverMenu/ComposAttri/CompLayerShow.vue';
-import {OverrideType, SymbolShape, TextShape, Variable, VariableType} from '@kcdesign/data';
+import {OverrideType, SymbolShape, TextShape, Variable, VariableType, Text} from '@kcdesign/data';
 import SelectLayerInput from './SelectLayerInput.vue';
-import PopoverDefaultInput from './PopoverDefaultInput.vue';
 import {
     create_var_by_type,
-    delete_variable,
     get_symbol_by_layer,
     is_bind_x_vari,
     modify_variable
@@ -161,6 +159,9 @@ onUnmounted(() => {
     shape.value.unwatch(text_watcher);
 
 })
+const getValue = (value: Text | string | undefined) => {
+    return value instanceof Text ? value.getText(0, Number.MAX_VALUE) : value;
+}
 </script>
 <template>
     <div style="position: relative; margin-bottom: 10px;" ref="atrrdialog">
@@ -189,7 +190,7 @@ onUnmounted(() => {
                     </div>
                     <div class="name">
                         <span style="width: 40%;">{{ is_bind?.name }}</span>
-                        <span style="width: 60%;"> {{ is_bind?.value }}</span>
+                        <span style="width: 60%;"> {{ getValue(is_bind?.value) }}</span>
                     </div>
                 </div>
             </div>
