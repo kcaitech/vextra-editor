@@ -2,7 +2,12 @@
 import {onMounted, reactive, ref, computed, onUnmounted} from "vue";
 import {Context} from "@/context";
 import {Perm} from "@/context/workspace";
-import {check_orientation_during_movement, get_part_of_target1} from "@/utils/listview";
+import {
+    check_orientation_during_movement, DragDetail,
+    get_destination_by_drag_event,
+    get_drag_detail,
+    get_part_of_target1
+} from "@/utils/listview";
 
 export interface IDataIter<T extends { id: string }> {
     hasNext(): boolean;
@@ -39,8 +44,15 @@ const props = defineProps<{
 }>();
 
 const emit = defineEmits<{
-    // wanderer：被拖拽的项目；host：目的地处的项目； isOverHalf：落地在目的地是否上下过半，影响插入位置在目的地的上下位置。
+    (e: "drag-start", fromId: string): void;
+    (e: "drag-over", overId: string): void;
     (e: "after-drag", wandererId: string, hostId: string, isOverHalf: boolean): void;
+    (e: "after-drag-2", detail: {
+        descend: string,
+        layer: number,
+        type: 'aside' | 'insert',
+        position: 'upper' | 'inner' | 'lower'
+    }): void;
 }>();
 
 const contents = ref<HTMLDivElement>();
@@ -464,26 +476,20 @@ function onScrollBarMouseUp() {
 
 // #region 列表子元素换位处理
 const currentHoverTarget = ref<Element | null>(null);
+const hoverItem = ref<{ x: number, y: number, id: string, data: any }>();
 const mousedown = ref<boolean>(false);
 const fromIndex = ref<number>(0);
 const toIndex = ref<number>(0);
 const wandererId = ref<string>('');
-let offsetOverhalf: boolean = false; // 过半，在hover节点下面插入被拖动节点，反则上面
 const draging = ref<boolean>(false);
 const mouseBegin: { x: number, y: number } = {x: 0, y: 0};
 const destination = ref<{ x: number, y: number, length: number }>({x: 0, y: 0, length: 20});
 const destinationMount = ref<boolean>(false);
 const substitute = ref<{ x: number, y: number, context: string }>({x: 0, y: 0, context: ''});
 const substituteName = ref<string>('')
-const listTop = ref<number>(0)
-const listBottom = ref<number>(0)
-const scrollHeight = ref<number>(0)
-const destinationVisible = computed(() => {
-    return draging.value && destinationMount.value && (fromIndex.value !== toIndex.value)
-})
-const substituteVisible = computed(() => {
-    return draging.value
-})
+const port_a_visible = ref<boolean>(false);
+const port_i_visible = ref<boolean>(false);
+let drag_result_detail: DragDetail | undefined = undefined;
 
 function mouseDownOnItem(index: number, e: MouseEvent) {
     if (e.button !== 0) return; // 图层拖动只支持左键
@@ -492,8 +498,8 @@ function mouseDownOnItem(index: number, e: MouseEvent) {
     if (!props.allowDrag) return; // 不允许拖动
     // record fromIndex && pre to take off
     fromIndex.value = index;
-    wandererId.value = layoutResult[fromIndex.value].id;
     toIndex.value = index;
+    wandererId.value = layoutResult[fromIndex.value].id;
     mousedown.value = true;
     mouseBegin.x = e.clientX;
     mouseBegin.y = e.clientY;
@@ -504,79 +510,75 @@ function mouseDownOnItem(index: number, e: MouseEvent) {
     document.addEventListener('mouseup', mouseUp);
 }
 
-let timer: any = null
+let scroll_timer: any = null
 
 function mouseMove(event: MouseEvent) {
     event.stopPropagation();
-    if (!currentHoverTarget.value) return;
-    const {clientX, clientY} = event;
-    if (timer) clearInterval(timer);
+    port_a_visible.value = false;
+    port_i_visible.value = false;
     if (!container.value) return;
-    if (Math.hypot(clientX - mouseBegin.x, clientY - mouseBegin.y) < 6 && !draging.value) return;
-    draging.value = true;
-    // const orientation = check_orientation_during_movement(container.value, event);
-    const {x, y} = currentHoverTarget.value.getBoundingClientRect();
-    const offsetX: number = clientX - x;
-    const offsetY: number = clientY - y; //相对于鼠标在列表移动的距离
-    const offset = props.orientation === Orientation.H ? offsetX : offsetY; //0-30px
-    const itemRange = props.orientation === Orientation.H ? props.itemWidth : props.itemHeight; //30px
-    if ((offset >= 0) && (offset <= itemRange / 2)) {
-        offsetOverhalf = false;
-    } else if ((offset > itemRange / 2) && (offset <= itemRange)) {
-        offsetOverhalf = true;
-    }
-    // const position = get_part_of_target1(currentHoverTarget.value, event);
-    if (props.shapeHeight && props.draging === 'shapeList') {
-        listTop.value = document.documentElement.offsetHeight - props.shapeHeight
-        scrollHeight.value = Math.abs(scroll.y) + props.shapeHeight - container.value!.offsetTop
-        listBottom.value = document.documentElement.offsetHeight - clientY
-    } else if (props.pageHeight && props.draging === 'pageList') {
-        const top = container.value?.getBoundingClientRect()
-        listTop.value = top?.top! - 75
-        listBottom.value = clientY - (props.pageHeight + top?.top! - 15)
-        scrollHeight.value = Math.abs(scroll.y) + props.pageHeight
-    }
-    if (scroll.y < 0 && clientY - listTop.value < 90 && clientY - listTop.value > 60) {
-        timer = setInterval(() => {
-            scroll.y = scroll.y + 1
-            substitute.value.y = (clientY - containerPosition.value.y + 14) - (scroll.y % 30 === 0 ? scroll.y : scroll.y - scroll.y % 30);
-            clampScroll(0, scroll.y)
-            layoutUp[props.orientation]();
-            if (scroll.y === 0) clearInterval(timer)
-        }, 10)
-    } else if (scroll.y <= 0 && listBottom.value < 30 && listBottom.value > 0 && props.source.length() * props.itemHeight > scrollHeight.value) {
-        timer = setInterval(() => {
-            scroll.y = scroll.y - 1
-            substitute.value.y = (clientY - containerPosition.value.y + 14) - (scroll.y % 30 === 0 ? scroll.y : scroll.y - scroll.y % 30);
-            clampScroll(0, scroll.y)
-            layoutUp[props.orientation]();
-            if (scroll.y === 0) clearInterval(timer)
-        }, 10)
-    }
-    const text = (currentHoverTarget.value as Element).closest('.contain')?.children
-    const shapew = text && text[3].clientWidth
-    if (shapew && props.draging === 'shapeList') {
-        destination.value.length = shapew
-    } else if (props.draging === 'pageList') {
-        const text = (currentHoverTarget.value as Element).closest('.pageItem')?.children
-        const pagew = text && text[1].clientWidth
-        destination.value.length = pagew!
-    }
-    destination.value.y = offsetOverhalf ? ((toIndex.value + 1) * props.itemHeight - 1) - (scroll.y % 30 === 0 ? scroll.y : scroll.y - scroll.y % 30) : (toIndex.value * props.itemHeight - 1) - (scroll.y % 30 === 0 ? scroll.y : scroll.y - scroll.y % 30);
+    if (!(currentHoverTarget.value && hoverItem.value)) return;
 
-    if ((currentHoverTarget.value as HTMLDivElement)?.getBoundingClientRect) {
+    const {clientX, clientY} = event;
+    if (!draging.value) {
+        const diff = Math.hypot(clientX - mouseBegin.x, clientY - mouseBegin.y);
+        if (diff < 6) return;
+        draging.value = true;
+        emit('drag-start', wandererId.value);
+    }
+
+    if (scroll_timer) clearInterval(scroll_timer);
+
+    const orientation = check_orientation_during_movement(container.value, event);
+    if (orientation !== 'middle') {
+        port_a_visible.value = false;
+        port_i_visible.value = false;
+        let step = -5;
+        if (orientation === "top") {
+            step = -step;
+        }
+        scroll_timer = setInterval(() => {
+            let need_clear = false;
+            scroll.y += step;
+            if (scroll.y > 0) {
+                scroll.y = 0;
+                need_clear = true;
+            }
+            if (scroll.y < -(measureHeight.value - visibleHeight)) {
+                scroll.y = -(measureHeight.value - visibleHeight);
+                need_clear = true;
+            }
+            clampScroll(0, scroll.y)
+            orientation === "top" ? layoutUp[props.orientation]() : layoutDown[props.orientation]();
+            if (need_clear) clearInterval(scroll_timer);
+        }, 10)
+        return;
+    }
+
+    // 计算终点位置
+    const position = get_part_of_target1(currentHoverTarget.value, event);
+    // console.log('position:', position);
+    const start_y = toIndex.value * props.itemHeight - 1 - (scroll.y % 30 === 0 ? scroll.y : scroll.y - scroll.y % 30);
+    const _destination = get_destination_by_drag_event(position, start_y, props.itemHeight);
+    if (_destination.type === "insert") {
+        port_i_visible.value = true;
+        destination.value.x = 6;
+        destination.value.y = start_y;
+    } else {
+        port_a_visible.value = true;
+        destination.value.x = _destination.x;
+        destination.value.y = _destination.y;
 
     }
-    // 填充替身内容 && 计算替身位置
-    substitute.value.y = (clientY - containerPosition.value.y + 14) - (scroll.y % 30 === 0 ? scroll.y : scroll.y - scroll.y % 30);
-    substitute.value.x = clientX - containerPosition.value.x;
+    drag_result_detail = get_drag_detail(layoutResult[toIndex.value].id, position, _destination);
 }
 
 function itemOnHover(e: MouseEvent, index: number) {
     if (!props.allowDrag || !mousedown.value || !(e.target instanceof Element)) return;
     destinationMount.value = true;
-    currentHoverTarget.value = e.target.closest('.listitem');
-    toIndex.value = index
+    currentHoverTarget.value = e.target.closest('.list-item');
+    toIndex.value = index;
+    hoverItem.value = layoutResult[index];
 }
 
 function descend(from: number, to: number) {
@@ -585,8 +587,7 @@ function descend(from: number, to: number) {
 }
 
 function mouseUp() {
-    clearInterval(timer)
-    if (!props.allowDrag) return;
+    clearInterval(scroll_timer)
     // close events && check descend port && descend
     mousedown.value = false;
     destinationMount.value = false;
@@ -594,12 +595,18 @@ function mouseUp() {
     document.removeEventListener('mouseup', mouseUp);
     if (draging.value) {
         const dragTarget = descend(fromIndex.value, toIndex.value);
+        let host_id = '';
         if (dragTarget) {
-            // emit('update-after-drag', { from: fromIndex.value, to: toIndex.value, dragTarget });
-            const hostId: string = layoutResult[toIndex.value].id;
-            emit('after-drag', wandererId.value, hostId, offsetOverhalf);
+            host_id = layoutResult[toIndex.value].id;
+        }
+        emit('after-drag', wandererId.value, host_id, false);
+        if (drag_result_detail) {
+            emit('after-drag-2', drag_result_detail);
         }
         draging.value = false;
+        port_a_visible.value = false;
+        port_i_visible.value = false;
+        drag_result_detail = undefined;
     }
 }
 
@@ -636,23 +643,25 @@ onUnmounted(() => {
             width: orientation === 'horizontal' ? measureWidth + 'px' : 'auto',
             height: orientation === 'vertical' ? measureHeight + 'px' : 'auto'
         }" ref="contents">
-            <component class="listitem" :is="props.itemView" v-for="(c, i) in layoutResult" :key="c.id" :data="c.data"
+            <component class="list-item" :is="props.itemView" v-for="(c, i) in layoutResult" :key="c.id" :data="c.data"
                        v-bind="$attrs" @mousedown.stop="(e: MouseEvent) => mouseDownOnItem(i, e)"
                        @mouseover.stop="(e: MouseEvent) => itemOnHover(e, i)"
                        :style="{ left: c.x + 'px', top: c.y + 'px' }"/>
-            <div class="port" v-if="destinationVisible" :style="{
-                top: destination.y + 'px',
-                width: destination.length + 'px',
-            }"></div>
-            <div class="substitute" v-if="substituteVisible" :style="{
-                top: `${substitute.y}px`,
-                left: `${substitute.x}px`
-            }">{{ substitute.context || substituteName }}
-            </div>
+            <div class="port" v-if="port_a_visible" :style="{
+                            top: destination.y + 'px', left: destination.x + 'px'
+                        }"></div>
+            <div class="port-2" v-if="port_i_visible" :style="{
+                            top: destination.y + 'px'
+                        }"></div>
+            <!--            <div class="substitute" v-if="substituteVisible" :style="{-->
+            <!--                top: `${substitute.y}px`,-->
+            <!--                left: `${substitute.x}px`-->
+            <!--            }">{{ substitute.context || substituteName }}-->
+            <!--            </div>-->
         </div>
         <!-- scroll -->
         <div ref="scrollTrack" class="scroll-track" @click="onScrollTrackClick" :style="{
-            opacity: scrollBar.mount && (listMouseOver || scrolling) ? 1 : 0,
+            opacity: scrollBar.mount && (listMouseOver || scrolling || draging) ? 1 : 0,
         }">
             <div ref="bar" @mousedown.stop="onScrollBarMouseDown" class="scroll-bar" :style="{
                 top: scrollBar.y + 'px',
@@ -664,6 +673,7 @@ onUnmounted(() => {
 </template>
 
 <style scoped lang="scss">
+// 这个样式表决定定位和计算结果,不可以轻易修改
 .container {
     overflow: hidden;
     position: relative;
@@ -671,27 +681,35 @@ onUnmounted(() => {
 
     > .horizontal,
     .vertical {
-        > .listitem {
+        > .list-item {
             position: absolute;
-            flex: 1;
         }
 
         > .port {
             position: absolute;
-            right: 0;
-            background-color: rgba($color: #8B7355, $alpha: 0.15);
+            background-color: var(--active-color);
             height: 2px;
+            width: 100%;
+        }
+
+        > .port-2 {
+            position: absolute;
+            border: 2px solid var(--active-color);
+            width: calc(100% - 12px);
+            height: 30px;
+            left: 6px;
+            box-sizing: border-box;
+            border-radius: 2px;
         }
 
         > .port::before {
             content: "";
-            width: 10px;
-            height: 10px;
-            border: 2px solid rgba($color: #8B7355, $alpha: 0.15);
-            border-radius: 50%;
+            width: 2px;
+            height: 18px;
             position: absolute;
-            left: -12px;
-            top: -6px;
+            top: -8px;
+            left: 0;
+            background-color: var(--active-color);
         }
 
         > .substitute {

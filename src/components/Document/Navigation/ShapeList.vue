@@ -19,6 +19,7 @@ import {is_shape_in_selection, selection_types, fit} from "@/utils/shapelist";
 import {Navi} from "@/context/navigate";
 import {Perm, WorkSpace} from "@/context/workspace"
 import ShapeTypes from "./Search/ShapeTypes.vue";
+import {adjust_layer, DragDetail} from "@/utils/listview";
 
 type List = InstanceType<typeof ListView>;
 type ContextMenuEl = InstanceType<typeof ContextMenu>;
@@ -404,16 +405,17 @@ const chartMenuMount = (e: MouseEvent) => {
 }
 
 function after_drag(wandererId: string, hostId: string, offsetOverhalf: boolean) {
-    const selection = props.context.selection;
-    const page = selection.selectedPage;
-    if (page) {
-        const wanderer = selection.getShapeById(wandererId);
-        const host = selection.getShapeById(hostId);
-        if (wanderer && host) {
-            const editor = props.context.editor4Page(page);
-            editor.shapeListDrag(wanderer, host, offsetOverhalf);
-        }
-    }
+    // const selection = props.context.selection;
+    // const page = selection.selectedPage;
+    // if (page) {
+    //     const wanderer = selection.getShapeById(wandererId);
+    //     const host = selection.getShapeById(hostId);
+    //     if (wanderer && host) {
+    //         const editor = props.context.editor4Page(page);
+    //         editor.shapeListDrag(wanderer, host, offsetOverhalf);
+    //     }
+    // }
+    props.context.navi.set_dragging_status(false);
 }
 
 function menu_watcher(t: number) {
@@ -571,6 +573,30 @@ function accurate_shift() {
     props.context.navi.notify(Navi.SEARCHING);
 }
 
+function start_to_drag(id: string) {
+    const page = props.context.selection.selectedPage!;
+    const shape = page.getShape(id);
+    if (!shape) return;
+    props.context.selection.selectShape(shape);
+    props.context.navi.set_dragging_status(true);
+}
+
+function hover_once(is: string) {
+}
+
+function after_drag_2(detail: DragDetail) {
+    console.log('detail:', detail);
+    let descend = props.context.selection.getShapeById(detail.descend);
+    if (!descend) return;
+    descend = adjust_layer(descend, detail.layer);
+    console.log('descend:', descend.name);
+    if (detail.layer < 0) detail.position = "lower";
+    const page = props.context.selection.selectedPage!;
+    const editor = props.context.editor4Page(page);
+    const shapes = props.context.selection.selectedShapes;
+    editor.afterShapeListDrag(shapes, descend, detail.position);
+}
+
 onMounted(() => {
     props.context.selection.watch(notifySourceChange)
     props.context.menu.watch(menu_watcher);
@@ -645,7 +671,8 @@ onUnmounted(() => {
                       :item-width="0" :first-index="0" :context="props.context" @toggleexpand="toggleExpand"
                       @selectshape="selectShape" @hovershape="hoverShape" @unhovershape="unHovershape"
                       @scrolltoview="shapeScrollToContentView" @rename="rename" @set-visible="isRead" @set-lock="isLock"
-                      @item-mousedown="list_mousedown" orientation="vertical" @after-drag="after_drag">
+                      @item-mousedown="list_mousedown" orientation="vertical" @drag-start="start_to_drag"
+                      @after-drag="after_drag" @after-drag-2="after_drag_2">
             </ListView>
             <ContextMenu v-if="chartMenu" :x="chartMenuPosition.x" :y="chartMenuPosition.y" @close="close"
                          :context="props.context" ref="contextMenuEl" @click.stop>
