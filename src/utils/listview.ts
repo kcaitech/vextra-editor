@@ -20,6 +20,8 @@ interface ItemDragEvent {
     position: Ver
     layer: number
     zero: number
+    is_group: boolean
+    off: boolean;
 }
 
 export interface DragDetail {
@@ -32,8 +34,8 @@ export interface DragDetail {
 export function get_part_of_target1(element: Element, e: MouseEvent) {
     let v: Ver = 'upper'; // 先计算上下
     const box = element.getBoundingClientRect();
-    const trigger = element.querySelector('.triangle');
-    const drag_event: ItemDragEvent = {position: "upper", layer: 0, zero: 0};
+    const trigger = element.querySelector('.is-group');
+    const drag_event: ItemDragEvent = {position: "upper", layer: 0, zero: 0, is_group: !!trigger, off: true};
     if (trigger) { // 三层结构
         const y = box.y;
         const l = box.height / 3;
@@ -67,6 +69,7 @@ export function get_part_of_target1(element: Element, e: MouseEvent) {
             h = 1;
         } else {
             const off = !!trigger.querySelector('.triangle-right');
+            drag_event.off = off;
             if (off) {
                 h = __get_h(zero_divide - 10, e.clientX);
             } else {
@@ -97,7 +100,10 @@ export function get_destination_by_drag_event(event: ItemDragEvent, start_y: num
         result.type = 'insert';
         return result;
     }
-    if (position === 'lower') result.y += unit_height;
+    if (position === 'lower') {
+        result.y += unit_height;
+        if (event.is_group && !event.off) result.type = 'insert';
+    }
     if (layer === 1) {
         result.x += 12;
     } else if (layer < 0) {

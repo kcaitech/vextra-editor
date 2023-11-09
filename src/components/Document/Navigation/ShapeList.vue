@@ -432,6 +432,7 @@ function close() {
 }
 
 function reset_selection() {
+    console.log('emit reset')
     props.context.selection.resetSelectShapes();
 }
 
@@ -581,15 +582,12 @@ function start_to_drag(id: string) {
     props.context.navi.set_dragging_status(true);
 }
 
-function hover_once(is: string) {
-}
-
 function after_drag_2(detail: DragDetail) {
-    console.log('detail:', detail);
+    // console.log('detail:', detail);
     let descend = props.context.selection.getShapeById(detail.descend);
     if (!descend) return;
     descend = adjust_layer(descend, detail.layer);
-    console.log('descend:', descend.name);
+    // console.log('descend:', descend.name);
     if (detail.layer < 0) detail.position = "lower";
     const page = props.context.selection.selectedPage!;
     const editor = props.context.editor4Page(page);
@@ -827,7 +825,6 @@ onUnmounted(() => {
                     align-items: center;
 
                     .content {
-                        flex-wrap: 1;
                         height: 100%;
                         overflow: hidden;
                         text-overflow: ellipsis;

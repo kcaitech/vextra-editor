@@ -234,6 +234,12 @@ const tool_watcher = (t?: number) => {
         isLable.value = props.data.context.tool.isLable;
     }
 }
+
+function is_group() {
+    const type = props.data.shape().type;
+    return [ShapeType.Artboard, ShapeType.Group, ShapeType.Symbol].includes(type);
+}
+
 onMounted(() => {
     hangdlePerm()
     updater();
@@ -252,7 +258,7 @@ onUnmounted(() => {
         <!-- 缩进 -->
         <div class="ph" :style="{ width: `${ph_width}px` }"></div>
         <!-- 开合 -->
-        <div :class="{ triangle: showTriangle, slot: !showTriangle }" @click="toggleExpand">
+        <div :class="{ 'is-group': is_group(), triangle: showTriangle, slot: !showTriangle }" @click="toggleExpand">
             <div v-if="showTriangle" :class="props.data.expand ? 'triangle-down' : 'triangle-right'">
             </div>
         </div>
@@ -297,6 +303,7 @@ onUnmounted(() => {
     width: calc(100% - 12px);
     height: 30px;
     box-sizing: border-box;
+    transition: 0.1s;
 
     > .ph {
         height: 100%;

@@ -570,7 +570,9 @@ function mouseMove(event: MouseEvent) {
         destination.value.y = _destination.y;
 
     }
-    drag_result_detail = get_drag_detail(layoutResult[toIndex.value].id, position, _destination);
+    const c = layoutResult[toIndex.value];
+    if (!c) return;
+    drag_result_detail = get_drag_detail(c.id, position, _destination);
 }
 
 function itemOnHover(e: MouseEvent, index: number) {
@@ -692,6 +694,17 @@ onUnmounted(() => {
             width: 100%;
         }
 
+
+        > .port::before {
+            content: "";
+            width: 2px;
+            height: 14px;
+            position: absolute;
+            top: -6px;
+            left: 0;
+            background-color: var(--active-color);
+        }
+
         > .port-2 {
             position: absolute;
             border: 2px solid var(--active-color);
@@ -700,16 +713,6 @@ onUnmounted(() => {
             left: 6px;
             box-sizing: border-box;
             border-radius: 2px;
-        }
-
-        > .port::before {
-            content: "";
-            width: 2px;
-            height: 18px;
-            position: absolute;
-            top: -8px;
-            left: 0;
-            background-color: var(--active-color);
         }
 
         > .substitute {
