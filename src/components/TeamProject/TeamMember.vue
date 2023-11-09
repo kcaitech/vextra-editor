@@ -29,7 +29,7 @@
                         <img :src="avatar" alt="icon"
                             style="width: 20px;height: 20px;;border-radius: 50%;margin-right: 4px;">
                         {{ teamname }}
-                        <div v-if="perm_type < usertype2 || id === userID && usertype2" class="changeName">
+                        <div v-if="perm_type < usertype2 || id === userID " class="changeName">
                             <el-tooltip class="tips" effect="dark" :content="`${t('teammember.change_name')}`"
                                 placement="bottom" :show-after="600" :offset="10" :hide-after="0">
                                 <button class="button" @click="() => openDialog(teamname, id)">{{
