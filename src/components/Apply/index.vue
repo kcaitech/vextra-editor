@@ -2,7 +2,7 @@
 import { ref, watch, onMounted, onUnmounted, watchEffect } from 'vue'
 import { router } from '../../router'
 import { useRoute } from 'vue-router'
-import * as share_api from '../../apis/share'
+import * as share_api from '../../request/share'
 import { useI18n } from 'vue-i18n'
 import { Warning } from '@element-plus/icons-vue'
 const { t } = useI18n()
@@ -15,13 +15,14 @@ const linkValid = ref(true)
 let permType = undefined
 const status = ref(2)
 const messages = ref<string>(t('apply.request_access'))
-const execute= ref(false)
+const execute = ref(false)
+const avatar = ref(localStorage.getItem('avatar')!)
 
 const onSave = () => {
     disabled.value = true
     execute.value = true
-    if(execute.value) {
-        getDocumentInfo()    
+    if (execute.value) {
+        getDocumentInfo()
     }
 }
 
@@ -33,12 +34,12 @@ const promptMessage = () => {
             router.push('/')
             clearTimeout(routeTimer)
         }, 3000)
-    }else {
+    } else {
         if (radio.value === '1') {
             postDocumentAuthority({ doc_id: route.query.id, perm_type: Number(radio.value), applicant_notes: textarea.value })
-        }else if (radio.value === '2') {
+        } else if (radio.value === '2') {
             postDocumentAuthority({ doc_id: route.query.id, perm_type: Number(radio.value), applicant_notes: textarea.value })
-        }else if (radio.value === '3') {
+        } else if (radio.value === '3') {
             postDocumentAuthority({ doc_id: route.query.id, perm_type: Number(radio.value), applicant_notes: textarea.value })
         }
     }
@@ -53,11 +54,9 @@ watch(textarea, () => {
 const getDocumentAuthority = async () => {
     try {
         const { data } = await share_api.getDocumentAuthorityAPI({ doc_id: route.query.id })
-        if(data) {
-            console.log(data,'文档权限');
-            
+        if (data) {
             permType = data.perm_type
-            if(permType !== 0) {
+            if (permType !== 0) {
                 router.push({
                     name: 'document',
                     query: {
@@ -66,44 +65,44 @@ const getDocumentAuthority = async () => {
                 })
             }
         }
-    } catch(err) {
+    } catch (err) {
         console.log(err);
-        
+
     }
 }
 
 getDocumentAuthority()
 const getDocumentInfo = async () => {
-    try{
+    try {
         const data = await share_api.getDocumentInfoAPI({ doc_id: route.query.id })
-        if(data) {
+        if (data) {
             docInfo.value = data.data
-            if(data.code === 400) {
+            if (data.code === 400) {
                 return linkValid.value = false
             }
-            if(docInfo.value.document.doc_type === 0) {
+            if (docInfo.value.document.doc_type === 0) {
                 linkValid.value = false
-            }else {
+            } else {
                 linkValid.value = true
             }
-            if(execute.value) {
+            if (execute.value) {
                 promptMessage()
             }
-            if(docInfo.value.apply_list[0].status === 2 && status.value !== 2) {
+            if (docInfo.value.apply_list[0].status === 2 && status.value !== 2) {
                 status.value = docInfo.value.apply_list[0].status
-            }else if(docInfo.value.apply_list[0].status !== 2) {
+            } else if (docInfo.value.apply_list[0].status !== 2) {
                 status.value = docInfo.value.apply_list[0].status
             }
         }
         execute.value = false
-    }catch (err) {
+    } catch (err) {
         console.log(err);
         execute.value = false
     }
 }
 
-watch(status,() => {
-    if(status.value === 2) {
+watch(status, () => {
+    if (status.value === 2) {
         messages.value = t('apply.not_passed')
         showNotification()
         disabled.value = false
@@ -113,8 +112,8 @@ watch(status,() => {
 getDocumentInfo()
 const postDocumentAuthority = async (data: { doc_id: any, perm_type: number, applicant_notes: any }) => {
     const res = await share_api.postDocumentAuthorityAPI(data)
-    
-    if(res.code === 400 && (res as any).message === '申请次数已达上限') {
+
+    if (res.code === 400 && (res as any).message === '申请次数已达上限') {
         messages.value = t('apply.request_access')
         showNotification()
     }
@@ -126,28 +125,28 @@ const showHint = ref(false)
 const countdown = ref(4)
 const startCountdown = (type?: number) => {
     const tipstimer = setInterval(() => {
-    if (countdown.value > 1) {
-        countdown.value--;
-    } else {
-        hideNotification(type);
-        clearInterval(tipstimer);
-    }
+        if (countdown.value > 1) {
+            countdown.value--;
+        } else {
+            hideNotification(type);
+            clearInterval(tipstimer);
+        }
     }, 1000);
 }
 const hideNotification = (type?: number) => {
     showHint.value = false;
     countdown.value = 4;
 }
-const showNotification = (type?:number) => {
+const showNotification = (type?: number) => {
     showHint.value = true;
     startCountdown(type);
 }
 
-onMounted(() => {  
+onMounted(() => {
     timer = setInterval(() => {
-    getDocumentInfo()
-    getDocumentAuthority()
-    }, 10000) 
+        getDocumentInfo()
+        getDocumentAuthority()
+    }, 10000)
 })
 onUnmounted(() => {
     clearInterval(timer)
@@ -163,7 +162,7 @@ onUnmounted(() => {
                 <svg-icon class="svg" icon-class="home_0508"></svg-icon>
             </div>
             <div class="user-avatar">
-                <img src="../../assets/pd-logo-svg.svg">
+                <img :src="avatar">
             </div>
         </div>
         <div class="context" v-if="linkValid && docInfo.document">
@@ -192,8 +191,8 @@ onUnmounted(() => {
                     <el-input class="text" v-model="textarea" :autosize="{ minRows: 4, maxRows: 6 }" maxlength="50"
                         size="small" :placeholder="t('apply.please_remarks')" show-word-limit type="textarea" />
                 </div>
-                <div class="button"><el-button :disabled="disabled" color="#0d99ff" size="small"
-                        @click="onSave">{{ t('apply.apply_for_permission') }}</el-button></div>
+                <div class="button"><el-button :disabled="disabled" color="#0d99ff" size="small" @click="onSave">{{
+                    t('apply.apply_for_permission') }}</el-button></div>
             </div>
         </div>
         <div v-else class="context">
@@ -205,7 +204,9 @@ onUnmounted(() => {
         </div>
     </div>
     <div v-if="showHint" class="notification">
-        <el-icon :size="13"><Warning /></el-icon>
+        <el-icon :size="13">
+            <Warning />
+        </el-icon>
         <span class="text">{{ messages }}</span>
     </div>
 </template>
@@ -222,57 +223,61 @@ onUnmounted(() => {
         align-items: center;
         border-bottom: 2px solid var(--theme-color-line);
         padding: 0 var(--default-margin);
+        box-sizing: border-box;
 
         .svgBox {
-            width: 28px;
-            height: 28px;
+            width: 40px;
+            height: 40px;
+            display: flex;
+            align-items: center;
 
             .svg {
-                width: 80%;
-                height: 80%;
+                width: 60%;
+                height: 60%;
             }
         }
 
         .user-avatar {
             cursor: pointer;
-            width: 28px;
-            height: 28px;
+            width: 32px;
+            height: 32px;
             border-radius: 50%;
             background-color: #fff;
             text-align: center;
+            display: flex;
+            align-items: center;
+            overflow: hidden;
 
             >img {
-                width: 90%;
-                height: 90%;
+                width: 100%;
+                height: 100%;
             }
         }
     }
 
     .context {
-        height: 100%;
+        height: calc(100% - 40px);
         display: flex;
         flex-direction: column;
         justify-content: center;
         align-items: center;
+
         >.text {
             margin-top: 10px;
         }
 
         .svg-file {
             margin: var(--default-margin);
-            padding-left: 40px;
 
             >.svg {
                 color: #ccc;
-                width: 90%;
-                height: 90%;
             }
         }
 
         .file-info {
             width: 305px;
             height: 200px;
-            margin-top: 40px;
+            margin-top: 20px;
             border-radius: 4px;
             padding: var(--default-padding);
             background-color: #f5f5f5;
@@ -290,6 +295,7 @@ onUnmounted(() => {
 
             .textarea {
                 display: flex;
+                resize: none;
                 span {
                     display: block;
                     width: 60px;
@@ -307,6 +313,7 @@ onUnmounted(() => {
                 display: flex;
                 justify-content: center;
                 margin-top: 20px;
+
                 .el-button.is-disabled {
                     cursor: pointer;
                 }
@@ -314,6 +321,7 @@ onUnmounted(() => {
         }
     }
 }
+
 .notification {
     position: fixed;
     font-size: var(--font-default-fontsize);
@@ -327,6 +335,7 @@ onUnmounted(() => {
     border: 1px solid #ccc;
     padding: 7px 30px;
     border-radius: 4px;
+
     .text {
         margin: 0 15px 0 10px;
     }

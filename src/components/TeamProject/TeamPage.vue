@@ -1,55 +1,56 @@
 
 <template>
-        <div class="team">
-            <div class="team-avatar">
-                <div v-if="avatar.length > 4" class="img">
-                    <img :src="avatar" alt="team avatar">
-                </div>
-                <div v-else class="text">
-                    <span>{{ avatar }}</span>
-                </div>
+    <div class="team">
+        <div class="team-avatar">
+            <div v-if="avatar.length > 4" class="img">
+                <img :src="avatar" alt="team avatar">
             </div>
-            <div class="team-info">
-                <div class="team-name">{{ teamName }}</div>
-                <div class="team-description">{{ teamDescription }}</div>
+            <div v-else class="text">
+                <span>{{ avatar }}</span>
             </div>
         </div>
-        <div class="team-header">
-            <ul class="menu">
-                <li class="item" :class="{ 'activate': itemid === index }" v-for="(item, index) in items" :key="index"
-                    @click.stop="clickEvent(index)">
-                    {{ item }}
-                </li>
-            </ul>
-            <div class="addandsearch">
-                <button type="button" v-if="itemid === 0 && teamSelfPermType > 0"
-                    @click.stop="showoverlay = true">{{ t('teampage.addproject') }}</button>
-                <button type="button" v-if="itemid === 1"
-                    @click.stop="showoverlay = true">{{ t('teampage.addmember') }}</button>
-                <el-input v-if="itemid != 2" ref="inputRef" size="large" v-model="search"
-                    :placeholder="itemid === 0 ? t('teampage.search_default_tipsA') : t('teampage.search_default_tipsB')">
-                    <template #prefix>
-                        <el-icon size="18">
-                            <Search />
-                        </el-icon>
-                    </template>
-                    <template #suffix>
-                        <el-icon v-if="search != ''" class="close" size="18" @click.stop="search = ''">
-                            <Close />
-                        </el-icon>
-                    </template>
-                </el-input>
-            </div>
+        <div class="team-info">
+            <div class="team-name">{{ teamName }}</div>
+            <div class="team-description">{{ teamDescription }}</div>
         </div>
-        <ProjectList v-if="itemid === 0" :searchvalue="search" @addproject="showoverlay = true" />
-        <TeamMember v-if="itemid === 1" :searchvalue="search" />
-        <TeamSetting v-if="itemid === 2" />
-        <transition name="nested" :duration="550">
-            <div v-if="showoverlay" class="overlay">
-                <addProject v-if="itemid === 0" class="inner" :teamid="teamID" @close="showoverlay = false" />
-                <InviteMember v-if="itemid === 1" class="inner" :teamid="teamID" @close="showoverlay = false" />
-            </div>
-        </transition>
+    </div>
+    <div class="team-header">
+        <ul class="menu">
+            <li class="indicator" :style="{ width: elwidth + 'px', left: elleft + 'px', height: 2 + 'px' }"></li>
+            <li class="item" :class="{ 'activate': itemid === index }" v-for="(item, index) in items" :key="index"
+                @click.stop="clickEvent(index, $event)">
+                {{ item }}
+            </li>
+        </ul>
+        <div class="addandsearch">
+            <button type="button" v-if="itemid === 0 && teamSelfPermType > 0" @click.stop="showoverlay = true">{{
+                t('teampage.addproject') }}</button>
+            <button type="button" v-if="itemid === 1" @click.stop="showoverlay = true">{{ t('teampage.addmember')
+            }}</button>
+            <el-input v-if="itemid != 2" ref="inputRef" size="large" v-model="search"
+                :placeholder="itemid === 0 ? t('teampage.search_default_tipsA') : t('teampage.search_default_tipsB')">
+                <template #prefix>
+                    <el-icon size="18">
+                        <Search />
+                    </el-icon>
+                </template>
+                <template #suffix>
+                    <el-icon v-if="search != ''" class="close" size="18" @click.stop="search = ''">
+                        <Close />
+                    </el-icon>
+                </template>
+            </el-input>
+        </div>
+    </div>
+    <ProjectList v-if="itemid === 0" :searchvalue="search" @addproject="showoverlay = true" />
+    <TeamMember v-if="itemid === 1" :searchvalue="search" />
+    <TeamSetting v-if="itemid === 2" />
+    <transition name="nested" :duration="550">
+        <div v-if="showoverlay" class="overlay">
+            <addProject v-if="itemid === 0" class="inner" :teamid="teamID" @close="showoverlay = false" />
+            <InviteMember v-if="itemid === 1" class="inner" :teamid="teamID" @close="showoverlay = false" />
+        </div>
+    </transition>
 </template>
 <script setup lang="ts">
 import { Ref, computed, inject, ref, onMounted, watch, onUnmounted } from 'vue'
@@ -70,6 +71,8 @@ const items = [t('teampage.project'), t('teampage.members'), t('teampage.team_se
 const img = ref(false)
 const search = ref<string>('')
 const route = useRoute()
+const elwidth = ref()
+const elleft = ref()
 
 
 interface data {
@@ -101,7 +104,10 @@ const avatar = computed(() => {
     return teamAvatar.value != '' ? teamAvatar.value : teamName.value.slice(0, 1)
 })
 
-const clickEvent = (index: number) => {
+const clickEvent = (index: number, e: MouseEvent) => {
+    const rect = (e.target as HTMLElement).getBoundingClientRect()
+    elwidth.value = rect.width
+    elleft.value = rect.x
     itemid.value = index
     sessionStorage.setItem('activateitem', index.toString())
 }
@@ -125,6 +131,10 @@ onMounted(() => {
     if (x) {
         itemid.value = parseInt(x)
     }
+    const items = document.querySelectorAll('.item')
+    const rect = items[itemid.value].getBoundingClientRect()
+    elwidth.value = rect.width
+    elleft.value = rect.x
 })
 
 onUnmounted(() => {
@@ -157,7 +167,7 @@ onUnmounted(() => {
 
 .nested-enter-from .inner,
 .nested-leave-to .inner {
-    top:calc(50% - 50px);
+    top: calc(50% - 50px);
     // left: 50%;
     // transform: translate(-50%, -50%) scale(0.8);
     opacity: 0.5;
@@ -175,7 +185,7 @@ onUnmounted(() => {
 
 .activate {
     color: black;
-    border-bottom: 2px solid #9775fa;
+    // border-bottom: 2px solid #9775fa;
 }
 
 .team-header {
@@ -187,11 +197,21 @@ onUnmounted(() => {
     border-bottom: 1px solid #c4c4c4cf;
 
     .menu {
+        display: flex;
+        align-items: flex-end;
         list-style: none;
+        line-height: 40px;
         padding: 0;
         margin: 0;
-        display: flex;
         color: #666;
+
+        .indicator {
+            position: absolute;
+            height: 2px;
+            background-color: #9775fa;
+            border-radius: 2px;
+            transition: all 0.2s ease-in-out;
+        }
 
         .item {
             cursor: pointer;
@@ -199,13 +219,13 @@ onUnmounted(() => {
             margin-right: 32px;
             font-size: 18px;
             font-weight: 600;
-            padding-bottom: 6px;
         }
     }
 
     .addandsearch {
         display: flex;
         align-items: center;
+
         button {
             cursor: pointer;
             border: none;
@@ -248,12 +268,12 @@ onUnmounted(() => {
 
 .team {
     display: flex;
-    margin: 16px 0px 0px;
+    margin: 6px 0;
     align-items: center;
-    height: 80px;
+
     .team-avatar {
         width: 56px;
-        height:56px;
+        height: 56px;
         min-width: 56px;
         background-color: #9775fa;
         text-align: center;

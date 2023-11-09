@@ -1,6 +1,7 @@
 <script setup lang="ts">
-import { watch, ref } from 'vue';
+import { watch, ref, nextTick } from 'vue';
 import { useI18n } from 'vue-i18n';
+import CloseIcon from '../common/CloseIcon.vue';
 const { t } = useI18n()
 const props = defineProps<{
     projectVisible: boolean
@@ -25,14 +26,28 @@ const handleClose = () => {
 const quitProject = () => {
     emit('confirm');
 }
+
+const changemargin = () => {
+    nextTick(() => {
+        let el = document.querySelectorAll('.el-dialog__header')
+        for (let i = 0; i < el.length; i++) {
+            (el[i] as HTMLElement).style.marginRight = '0px'
+        }
+    })
+}
+
 </script>
 
 <template>
-    <el-dialog v-model="isshow" width=480 :title="title" align-center :append-to-body="body" :close-on-click-modal="false"
-        :before-close="handleClose">
-        <div class="context">
-            {{ context }}
-        </div>
+    <el-dialog v-model="isshow" width=480 align-center :append-to-body="true" :close-on-click-modal="false"
+        :before-close="handleClose" :show-close="false" @open="changemargin">
+        <template #header>
+            <div class="my-header">
+                <div class="title">{{ title }}</div>
+                <CloseIcon :size="20" @close="handleClose" />
+            </div>
+        </template>
+        {{ context }}
         <template #footer>
             <div class="dialog-footer">
                 <el-button class="quit" @click="quitProject" style="background-color: #9775fa; color: #fff;">{{ confirmBtn
@@ -46,6 +61,17 @@ const quitProject = () => {
 </template>
 
 <style scoped lang="scss">
+.my-header {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+
+    .title {
+        color: #3D3D3D;
+        font-weight: 600;
+    }
+}
+
 :deep(.el-button:focus, .el-button:hover) {
     background-color: #9775fa;
     border-color: #9775fa;

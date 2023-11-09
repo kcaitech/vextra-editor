@@ -9,7 +9,14 @@
             </ul>
         </div>
         <!-- 重命名弹框 -->
-        <el-dialog v-model="dialogVisible" :title="t('home.rename')" width="500" align-center>
+        <el-dialog v-model="dialogVisible" width="500" align-center :show-close="false" :close-on-click-modal="false"
+            @open="changemargin">
+            <template #header>
+                <div class="my-header">
+                    <div class="title">{{ t('home.rename') }}</div>
+                    <CloseIcon :size="20" @close="dialogVisible = false" />
+                </div>
+            </template>
             <input class="newname" type="text" v-model="newname" ref="renameinput" @keydown.enter="rename1" />
             <template #footer>
                 <span class="dialog-footer">
@@ -26,9 +33,10 @@
 <script setup lang="ts">
 import { useI18n } from 'vue-i18n'
 import { router } from '@/router'
-import * as user_api from '@/apis/users'
+import * as user_api from '@/request/users'
 import { ElMessage } from 'element-plus'
-import { onMounted, ref, onUnmounted, Ref, inject, watch } from 'vue';
+import { onMounted, ref, onUnmounted, Ref, inject, watch, nextTick } from 'vue';
+import CloseIcon from '@/components/common/CloseIcon.vue';
 
 const dialogVisible = ref(false)
 const newname = ref()
@@ -220,6 +228,11 @@ const EventHandler = (item: string) => {
     }
 }
 
+const changemargin = () => {
+    const el = document.querySelector('.el-dialog__header') as HTMLElement
+    el.style.marginRight = '0px'
+}
+
 //右键新窗口打开
 const openNewWindowDocument = (id: string) => {
     if (menu.value) {
@@ -249,16 +262,18 @@ const rStarfile = (data: any) => {
 
 //右键重命名
 //弹框
+let tiemr: any
 const rrename = (name: string) => {
     newname.value = name
     if (dialogVisible.value) {
         dialogVisible.value = false
     } else {
         dialogVisible.value = true
-        setTimeout(() => {
+        tiemr = setTimeout(() => {
             renameinput.value?.focus()
             renameinput.value?.select()
-        }, 100)
+            clearTimeout(tiemr)
+        }, 0);
     }
     if (menu.value) {
         menu.value.style.display = 'none'
@@ -384,6 +399,17 @@ onUnmounted(() => {
 })
 </script>
 <style lang="scss" scoped>
+.my-header {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+
+    .title {
+        color: #3D3D3D;
+        font-weight: 600;
+    }
+}
+
 .rightmenu {
     display: none;
     min-width: 200px;
@@ -427,6 +453,7 @@ onUnmounted(() => {
     height: 30px;
     width: 460px;
     box-sizing: border-box;
+
     &:hover {
         border-radius: 2px;
         border: 2px #f3f0ff solid;
@@ -439,6 +466,7 @@ onUnmounted(() => {
     }
 
 }
+
 .confirm {
     background-color: #9775fa;
     color: white;
@@ -461,7 +489,7 @@ onUnmounted(() => {
 }
 
 .cancel {
-   
+
     &:hover {
         background-color: #ffffff;
         color: #9775fa;
@@ -471,8 +499,9 @@ onUnmounted(() => {
     &:active {
         background-color: #ffffff;
     }
-    &:focus{
-        background-color:white;
+
+    &:focus {
+        background-color: white;
         color: #9775fa;
         border-color: #9775fa;
     }
@@ -481,5 +510,4 @@ onUnmounted(() => {
 :deep(.el-button--primary) {
     background-color: #9775fa;
 }
-
 </style>

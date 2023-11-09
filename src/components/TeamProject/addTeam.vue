@@ -1,5 +1,5 @@
 <template>
-    <div class="card-container">
+    <div class="card-container" @keyup.esc="close" @keyup.enter="createTeam">
         <div class="heard">
             <div class="title">
                 {{ t('Createteam.add_team') }}
@@ -38,7 +38,7 @@
 import { ElMessage } from 'element-plus';
 import { computed, inject, nextTick, ref } from 'vue';
 import { useI18n } from 'vue-i18n';
-import * as user_api from '@/apis/users'
+import * as user_api from '@/request/users'
 import { useRoute } from 'vue-router'
 import { router } from '@/router';
 const { t } = useI18n();
@@ -66,7 +66,7 @@ const createTeam = async () => {
     try {
         const { code, message, data } = await user_api.CreateTeam(formData)
         console.log(formData);
-        
+
         if (code === 0) {
             emits('close')
             state(true)  //改变updatestate的值为TRUE
@@ -187,44 +187,38 @@ const close = () => {
             }
 
             input {
-                padding: 0 6px;
+                padding: 2px 8px;
                 width: 100%;
                 height: 32px;
                 border: none;
                 outline-style: none;
-                border: 1px solid silver;
-                border-radius: 3px;
+                border-radius: 4px;
                 font-size: 14px;
+                background-color: rgba(0, 0, 0, 0.08);
                 box-sizing: border-box;
 
-                &:hover {
-                    border: 1px solid #e5dbff;
-                }
-
                 &:focus {
-                    border: 1px solid #9775fa;
+                    border: 2px solid #9775fa;
+                    padding: 0px 6px;
                 }
             }
 
             textarea {
-                padding:6px;
+                padding: 8px;
                 width: 100%;
                 height: 120px;
                 border: none;
                 outline-style: none;
-                border: 1px solid silver;
-                border-radius: 3px;
+                border-radius: 4px;
                 resize: none;
                 font-size: 14px;
                 font-family: none;
+                background-color: rgba(0, 0, 0, 0.08);
                 box-sizing: border-box;
 
-                &:hover {
-                    border: 1px solid #e5dbff;
-                }
-
                 &:focus {
-                    border: 1px solid #9775fa;
+                    border: 2px solid #9775fa;
+                    padding: 6px;
                 }
             }
 
@@ -235,12 +229,12 @@ const close = () => {
                 flex-direction: column;
                 align-items: center;
                 justify-content: center;
-                border: 1px solid silver;
-                border-radius: 3px;
+                border-radius: 4px;
+                background-color: rgba(0, 0, 0, 0.08);
                 box-sizing: border-box;
 
                 &:hover {
-                    border: 1px solid #e5dbff;
+                    background-color: rgba(0, 0, 0, 0.1);
                 }
 
                 svg {
@@ -256,25 +250,13 @@ const close = () => {
                 }
 
                 input {
+                    cursor: pointer;
                     position: absolute;
                     width: 100%;
                     height: 130px;
                     box-sizing: border-box;
                     opacity: 0;
                     z-index: 999;
-
-
-                    &:hover {
-                        cursor: pointer;
-
-                        &+svg+P {
-                            color: #9775fa;
-                        }
-
-                        &+svg {
-                            fill: #9775fa;
-                        }
-                    }
                 }
 
 
@@ -309,8 +291,9 @@ const close = () => {
 
             &:disabled {
                 background-color: rgba(98, 67, 237, 0.3);
-                box-shadow:none;
+                box-shadow: none;
             }
         }
     }
-}</style>
+}
+</style>

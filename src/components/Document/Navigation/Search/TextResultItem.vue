@@ -316,7 +316,7 @@ onUnmounted(() => {
   >.text {
     flex: 1;
     line-height: 30px;
-    font-size: 10px;
+    font-size: var(--font-default-fontsize);
     text-overflow: ellipsis;
     white-space: nowrap;
     overflow: hidden;
@@ -327,7 +327,7 @@ onUnmounted(() => {
       width: 100%;
       height: 30px;
       line-height: 30px;
-      font-size: 10px;
+      font-size: var(--font-default-fontsize);
       text-overflow: ellipsis;
       white-space: nowrap;
       overflow: hidden;
@@ -394,7 +394,7 @@ onUnmounted(() => {
     flex: 1;
     height: 20px;
     width: 100%;
-    font-size: 10px;
+    font-size: var(--font-default-fontsize);
     text-overflow: ellipsis;
     white-space: nowrap;
     overflow: hidden;

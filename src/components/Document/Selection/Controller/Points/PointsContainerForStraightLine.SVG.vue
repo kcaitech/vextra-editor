@@ -169,7 +169,7 @@ function get_t(cct: CtrlElementType, p2: PageXY): PageXY {
 }
 function scale(asyncBaseAction: AsyncBaseAction, p2: PageXY) {
     const stickness = props.context.assist.stickness;
-    const target = props.context.assist.point_match(props.shape, pointType);
+    const target = props.context.assist.point_match(p2);
     if (target) {
         if (stickedX) {
             if (Math.abs(p2.x - sticked_x_v) > stickness) stickedX = false;
@@ -191,7 +191,7 @@ function scale(asyncBaseAction: AsyncBaseAction, p2: PageXY) {
     asyncBaseAction.executeScale(cur_ctrl_type, p2);
 }
 function scale2(asyncBaseAction: AsyncBaseAction, p2: PageXY) {
-    props.context.assist.point_match(props.shape, pointType);
+    props.context.assist.point_match(p2);
     asyncBaseAction.executeScale(cur_ctrl_type, p2);
 }
 function point_mouseup(event: MouseEvent) {
@@ -228,7 +228,7 @@ function setCursor(t: CtrlElementType, force?: boolean) {
     }
 }
 function point_mouseleave() {
-    props.context.cursor.setType('auto-0');
+    props.context.cursor.reset();
 }
 function window_blur() {
     const workspace = props.context.workspace;
@@ -263,7 +263,7 @@ onUnmounted(() => {
 <template>
     <g :reflush="reflush">
         <g v-for="(p, i) in dots" :key="i" :style="`transform: ${p.r.transform};`">
-            <path :d="p.r.p" fill="none" stroke="none" @mousedown.stop="(e) => point_mousedown(e, p.type2)"
+            <path :d="p.r.p" fill="transparent" stroke="transparent" @mousedown.stop="(e) => point_mousedown(e, p.type2)"
                 @mouseenter="() => setCursor(p.type2)" @mouseleave="point_mouseleave">
             </path>
             <rect :x="p.extra.x" :y="p.extra.y" width="14px" height="14px" fill="transparent" stroke='transparent'

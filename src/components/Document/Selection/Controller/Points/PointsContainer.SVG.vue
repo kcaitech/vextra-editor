@@ -255,7 +255,7 @@ function setCursor(t: CtrlElementType, force?: boolean) {
   }
 }
 function point_mouseleave() {
-  props.context.cursor.setType('auto-0');
+  props.context.cursor.reset();
 }
 function window_blur() {
   const workspace = props.context.workspace;

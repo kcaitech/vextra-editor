@@ -1,8 +1,8 @@
 <script setup lang="ts">
 import { ref, onMounted, onUnmounted, watchEffect } from 'vue';
 import { useI18n } from 'vue-i18n';
-import * as share_api from '@/apis/share';
-import * as team_api from '@/apis/team';
+import * as share_api from '@/request/share';
+import * as team_api from '@/request/team';
 import { useRoute } from 'vue-router';
 const { t } = useI18n();
 const route = useRoute();

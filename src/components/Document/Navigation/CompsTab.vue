@@ -30,7 +30,7 @@ const showHiddenLeft = () => {
     width: 100%;
     height: 100%;
     background-color: #fff;
-    font-size: 10px;
+    font-size: var(--font-default-fontsize);
     box-sizing: border-box;
     overflow: hidden;
     >img {

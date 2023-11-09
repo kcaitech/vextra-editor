@@ -14,7 +14,10 @@ export const percenter={
     errortips1:'Failed',
     errortips:'The file size or format is out of limit',
     usernametips_null:'The user name cannot be empty',
-    usernametips_length:'The user name cannot exceed 20 characters'
+    usernametips_length:'The user name cannot exceed 20 characters',
+    nicknametips_length:'Nickname cannot be empty and cannot exceed 9 characters',
+    error_occurred:'error occurred'
+
 
 
 

@@ -2,12 +2,13 @@
 import { onMounted, reactive, toRefs, ref, onUnmounted, computed, watch } from 'vue'
 import { Search, User, SwitchButton, Close, Bell } from '@element-plus/icons-vue'
 import Inform from './Inform.vue'
-import * as share_api from '@/apis/share';
-import * as team_api from '@/apis/team';
+import * as share_api from '@/request/share';
+import * as team_api from '@/request/team';
 import { useI18n } from 'vue-i18n'
 import { router } from '@/router'
 import avatar from '@/assets/pd-logo-svg.svg';
 import Loading from '../common/Loading.vue';
+import { el } from 'element-plus/es/locale';
 interface Props {
     items?: Array<object>,
     title?: string | undefined
@@ -162,9 +163,7 @@ function closeclick() {
     showSearchHistory.value = false
 }
 
-let timer2: any
 const screenout = async () => {
-    clearTimeout(timer2)
     if (!search.value) return
     isLoading.value = true
     SearchList.value = []
@@ -175,7 +174,6 @@ const screenout = async () => {
 }
 
 function userinfo() {
-    localStorage.setItem('location', location.href)
     router.push({ path: '/pcenter' })
 }
 
@@ -192,22 +190,31 @@ const reviewed = () => {
 
 const toDocument = (row: any, column: any) => {
     if (row.document.deleted_at != null) return
-    if (column.label === t('home.file_name')) {
-        const x = { keyword: search.value }
-        const maxLength = 15
-        historyList.value = historyList.value.filter(item => item.keyword !== x.keyword)
-        if (historyList.value.length >= maxLength) {
-            historyList.value.pop()
+    if (column.label !== t('home.file_name')) return
+    const searchTerm = search.value;
+    const maxHistoryLength = 15;
+
+    const updateHistory = (keyword: string, maxLength: number) => {
+        const searchitem = keyword
+        const history = new Set(historyList.value.map(item => item));
+        history.delete(searchitem);
+        const updatedHistory = [searchitem, ...Array.from(history)];
+        if (history.size >= maxLength) {
+            updatedHistory.pop()
         }
-        historyList.value.unshift(x);
+        historyList.value = updatedHistory
         localStorage.setItem('searchlist', JSON.stringify(historyList.value));
-        const docId = row.document.id
+    }
+
+    const openDocument = (id: string) => {
         const Name = 'document'
-        const query = { id: docId }
+        const query = { id: id }
         const url = router.resolve({ name: Name, query: query }).href
         window.open(url, '_blank')
-
     }
+
+    updateHistory(searchTerm, maxHistoryLength);
+    openDocument(row.document.id);
 }
 
 const prpotitle = computed(() => {
@@ -286,7 +293,7 @@ const textHighLight = (text: string) => {
                 @focus="showSearchHistory = true" @input="screenout">
                 <template #prefix>
                     <el-icon v-if="isLoading" class="is-loading" size="18">
-                        <Loading :size="18"/>
+                        <Loading :size="18" />
                     </el-icon>
                     <el-icon v-else size="18">
                         <Search />
@@ -336,8 +343,8 @@ const textHighLight = (text: string) => {
 
                         </div>
                         <ul class="historyListItem">
-                            <li class="listItem" v-for="item in historyList" :key="item.keyword" @click.stop="itemClick">
-                                <span>{{ item.keyword }}</span>
+                            <li class="listItem" v-for="(item, index) in historyList" :key="index" @click.stop="itemClick">
+                                <span>{{ item }}</span>
                             </li>
                         </ul>
                     </div>

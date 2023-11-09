@@ -3,11 +3,11 @@
         <div class="hearder-container">
             <div class="title" v-for="(item, index) in  titles " :key="index">
                 <div class="content">{{ item }}
-                    <div v-if="index === 1" class="shrink" @click.stop="handleEvent">
+                    <div v-if="index === 1" class="shrink" @click.stop="fold = !fold, folds = false">
                         <svg-icon icon-class="down"
                             :style="{ transform: fold ? 'rotate(-180deg)' : 'rotate(0deg)' }"></svg-icon>
                         <transition name="el-zoom-in-top">
-                            <ul class="filterlist" v-if="fold" ref="menu">
+                            <ul class="filterlist2" v-if="fold" ref="menu">
                                 <li class="item" v-for="(item, index) in  filteritems " :key="index"
                                     @click.stop="filterEvent(index)">
                                     <div class="choose" :style="{ visibility: index == fontName ? 'visible' : 'hidden' }">
@@ -23,25 +23,34 @@
         <div class="main">
             <el-scrollbar height="100%">
                 <div class="member-item"
-                    v-for=" { user: { nickname, id, avatar }, perm_type }  in  searchvalue === '' ? ListData : SearchList "
+                    v-for=" { team_member: { nickname: teamname }, user: { nickname, id, avatar }, perm_type }  in  SearchList "
                     :key="id">
                     <div class="member-name">
                         <img :src="avatar" alt="icon"
                             style="width: 20px;height: 20px;;border-radius: 50%;margin-right: 4px;">
-                        {{ nickname }}
+                        {{ teamname }}
+                        <div v-if="perm_type < usertype2 || id === userID" class="changeName">
+                            <el-tooltip class="tips" effect="dark" :content="`${t('teammember.change_name')}`"
+                                placement="bottom" :show-after="600" :offset="10" :hide-after="0">
+                                <button class="button" @click.stop="() => openDialog(teamname, id)">{{
+                                    t('teammember.modify')
+                                }}</button>
+                            </el-tooltip>
+                        </div>
                     </div>
                     <div class="member-jurisdiction">
                         <div class="member-jurisdiction-container">
                             {{ membertype(perm_type) }}
-                            <div v-if="usertype(perm_type, id)" class="shrink" @click.stop="handleEventitem(id)">
+                            <div v-if="perm_type < usertype2 || (id === userID && usertype2 != TeamPermisssions.creator)"
+                                class="shrink" @click.stop="folds = !folds, fold = false, userid = id">
                                 <svg-icon icon-class="down"
                                     :style="{ transform: folds && userid === id ? 'rotate(-180deg)' : 'rotate(0deg)' }"></svg-icon>
                                 <transition name="el-zoom-in-top">
                                     <ul class="filterlist" v-if="userid === id && folds" ref="listmenu">
                                         <li class="item"
-                                            v-for="(item, index) in  typeitems((userperm === 2 && userID === id) ? 1 : userperm) "
+                                            v-for="(item, index) in typeitems((usertype2 === TeamPermisssions.adminstartors && userID === id) ? 1 : usertype2) "
                                             :key="index" @click.stop="itemEvent(item, teamID, id, perm_type, nickname)">
-                                            <div v-if="true" class="choose"
+                                            <div class="choose"
                                                 :style="{ visibility: item === membertype(perm_type) ? 'visible' : 'hidden' }">
                                             </div>
                                             {{ item }}
@@ -52,6 +61,25 @@
                         </div>
                     </div>
                 </div>
+                <el-dialog v-model="dialogVisible" :title="t('teammember.change_teamname')" width="500" align-center>
+                    <span>{{ t('teammember.modifyNickname_title') }}</span>
+                    <input class="change" type="text" ref="changeinput" @keydown.enter="confirm_to_modify_name" />
+                    <template #footer>
+                        <span class="dialog-footer" style="text-align: center;">
+                            <el-button class="confirm" type="primary" style="background-color: none;"
+                                @click="confirm_to_modify_name" :loading="confirmLoading">
+                                {{ t('home.rename_ok') }}
+                            </el-button>
+                            <el-button class="cancel" @click="dialogVisible = false">{{ t('home.cancel')
+                            }}</el-button>
+                        </span>
+                    </template>
+                </el-dialog>
+                <div v-if="SearchList.length === 0" class="empty">
+                    <svg-icon v-if="searchvalue !== '' || fontName !== 4" icon-class="member"></svg-icon>
+                    <div v-html="emptytips"></div>
+                </div>
+                <Loading v-if="SearchList.length === 0 && searchvalue === '' && fontName === 4" :size="20" />
             </el-scrollbar>
         </div>
     </div>
@@ -67,25 +95,43 @@
         @clode-dialog="closeExitTeamDialog" @confirm="confirmExitTeamDialog"></ProjectDialog>
 </template>
 <script setup lang="ts">
-import { onMounted, onUnmounted, ref, inject, Ref, watch, computed } from 'vue';
+import { onMounted, onUnmounted, ref, inject, Ref, watch, computed, nextTick } from 'vue';
 import NetworkError from '@/components/NetworkError.vue'
-import * as user_api from '@/apis/users'
+import * as user_api from '@/request/users'
 import { ElMessage } from 'element-plus'
 import { useI18n } from 'vue-i18n'
 import { router } from '@/router';
 import ProjectDialog from './ProjectDialog.vue';
+import Loading from '../common/Loading.vue';
+import { setTeamMemberNicknameAPI } from '@/request/team';
 
+
+interface Emits {
+    (e: 'update'): void
+}
 interface Props {
     searchvalue?: string
 }
 
+enum TeamPermisssions {
+    onlyRead = 0,
+    edit = 1,
+    adminstartors = 2,
+    creator = 3,
+    noPermisssion = 255
+}
+
 const props = withDefaults(defineProps<Props>(), {
-    searchvalue: ''
+    searchvalue: '',
 })
 
+const emits = defineEmits<Emits>();
 const userID = ref(localStorage.getItem('userId'))
 const userid = ref()
 const { t } = useI18n()
+const dialogVisible = ref(false)
+const confirmLoading = ref(false)
+const changeinput = ref<HTMLInputElement>()
 const titles = [t('teammember.name'), t('teammember.team_permission')]
 const filteritems = [t('teammember.Readonly'), t('teammember.editable'), t('teammember.manager'), t('teammember.creator'), t('teammember.all')]
 const noNetwork = ref(false)
@@ -98,7 +144,22 @@ const listmenu = ref()
 const transferCreator = ref(false);
 const outTeamDialog = ref(false);
 const exitTeamDialog = ref(false);
-const dialogData = ref<any>({})
+const dialogData = ref<any>({});
+let user_id = '';
+const openDialog = (name: string, userid: string) => {
+    dialogVisible.value = true;
+    user_id = userid;
+    nextTick(() => {
+        if (changeinput.value) {
+            changeinput.value.value = name;
+            setTimeout(() => {
+                changeinput.value?.select();
+                changeinput.value?.focus();
+            }, 100)
+        }
+    })
+};
+
 const { teamID, teamData, upDateTeamData, is_team_upodate, teamUpdate } = inject('shareData') as {
     teamID: Ref<string>;
     teamData: Ref<[{
@@ -112,32 +173,6 @@ const { teamID, teamData, upDateTeamData, is_team_upodate, teamUpdate } = inject
     upDateTeamData: (data: any[]) => void;
     is_team_upodate: Ref<boolean>;
     teamUpdate: (b: boolean) => void;
-}
-const userperm = ref()
-const usertype = (p: number, id: string) => {
-    const text = teammemberdata.value.find((item) => item.user.id === userID.value)
-    userperm.value = text.perm_type
-    if (text.perm_type === 3) {
-        if (text.perm_type === p) {
-            return false
-        } else {
-            return true
-        }
-    } else if (text.perm_type === 2) {
-        if (text.perm_type === p && userID.value === id) {
-            return true
-        } else if (p === 2 || p === 3) {
-            return false
-        } else {
-            return true
-        }
-    } else if (text.perm_type === 1 || text.perm_type === 0) {
-        if (userID.value === id) {
-            return true
-        } else {
-            return false
-        }
-    }
 }
 
 const typeitems = (num: number) => {
@@ -154,6 +189,11 @@ const typeitems = (num: number) => {
             return null
     }
 }
+
+const emptytips = computed(() => {
+    return props.searchvalue !== '' ? '没有找到该成员' : fontName.value !== 4 ? `没有成员属于<b>[${filteritems[fontName.value]}]</b>权限类型` : ''
+})
+
 
 const closetransferCreator = () => {
     transferCreator.value = false;
@@ -189,31 +229,40 @@ const GetteamMember = async () => {
                 ElMessage({ type: 'error', message: message })
             }
         }
-    } catch (error) {
-        noNetwork.value = true
-        ElMessage.closeAll('error')
-        ElMessage.error({ duration: 1500, message: t('home.failed_list_tips') })
+    } catch (error: any) {
+        if (error.data.code === 401) {
+            return
+        } else {
+            noNetwork.value = true
+            ElMessage.closeAll('error')
+            ElMessage.error({ duration: 1500, message: t('home.failed_list_tips') })
+        }
     }
 }
 
 const membertype = (num: number) => {
     switch (num) {
-        case 0:
+        case TeamPermisssions.onlyRead:
             return t('teammember.Readonly')
-        case 1:
+        case TeamPermisssions.edit:
             return t('teammember.editable')
-        case 2:
+        case TeamPermisssions.adminstartors:
             return t('teammember.manager')
-        case 3:
+        case TeamPermisssions.creator:
             return t('teammember.creator')
         default:
             return null
     }
 }
 
+const usertype2 = ref()
+
 //通过计算属性，筛选出与搜索匹配的成员
 const SearchList = computed(() => {
     return ListData.value.filter((el: any) => {
+        if (el.user.id === userID.value) {
+            usertype2.value = el.perm_type
+        }
         return el.user.nickname.toLowerCase().includes(props.searchvalue.toLowerCase())
     })
 })
@@ -221,11 +270,22 @@ const SearchList = computed(() => {
 //通过计算属性，筛选出符合当前权限类型的成员
 const ListData = computed(() => {
     if (fontName.value < 4) {
-        return teammemberdata.value.filter((el: any) => {
-            return el.perm_type === fontName.value
-        })
+        const list = [];
+        for (let i = 0; i < teammemberdata.value.length; i++) {
+            const item = teammemberdata.value[i];
+            if (item.perm_type !== fontName.value) continue;
+            if (!item.team_member.nickname) item.team_member.nickname = item.user.nickname;
+            list.push(item);
+        }
+        return list;
     } else {
-        return teammemberdata.value
+        const list = [];
+        for (let i = 0; i < teammemberdata.value.length; i++) {
+            const item = teammemberdata.value[i];
+            if (!item.team_member.nickname) item.team_member.nickname = item.user.nickname;
+            list.push(item);
+        }
+        return list;
     }
 })
 
@@ -353,15 +413,6 @@ const itemEvent = (item: string, teamid: string, userid: string, perm_type: numb
     }
 }
 
-const handleEvent = () => {
-    if (folds.value) {
-        folds.value = false
-        fold.value = !fold.value
-    } else {
-        fold.value = !fold.value
-    }
-}
-
 const handleEventitem = (id: string) => {
     if (fold.value) {
         fold.value = false
@@ -373,35 +424,78 @@ const handleEventitem = (id: string) => {
     }
 }
 
+// 修改名称 --确认
+async function confirm_to_modify_name() {
+    if (confirmLoading.value) { return; }
+    const params = get_params_for_modify_name();
+    // 1. 校验
+    if (changeinput.value && changeinput.value.value.length > 0 && changeinput.value.value.length < 9) {
+        confirmLoading.value = true;
+        try {
+            // 2. 执行修改接口
+            const result = await setTeamMemberNicknameAPI(params);
+            if (result?.code === 0) {
+                // 3. 更新列表
+                const n = teammemberdata.value.findIndex(i => i.user.id === user_id);
+                if (n > -1) {
+                    teammemberdata.value[n].team_member.nickname = params.nickname;
+                }
+                ElMessage.closeAll('success');
+                ElMessage.success({ duration: 1500, message: t('percenter.successtips') });
+                // 4. 关闭对话
+                dialogVisible.value = false;
+            } else {
+                // 5. 失败提醒
+                ElMessage.closeAll('error');
+                ElMessage.error({ duration: 1500, message: t('percenter.errortips1') });
+            }
+        } catch (error) {
+            ElMessage.closeAll('error');
+            ElMessage.error({ duration: 1500, message: t('percenter.error_occurred') });
+        } finally {
+            // 结束加载状态，无论成功还是失败
+            confirmLoading.value = false;
+        }
+    } else {
+        ElMessage.closeAll('warning');
+        ElMessage.warning({ duration: 1500, message: t('percenter.nicknametips_length') });
+    }
+}
+function get_params_for_modify_name() {
+    const params: any = {};
+    if (changeinput.value) {
+        params['nickname'] = (changeinput.value as HTMLInputElement).value;
+    }
+    params['user_id'] = user_id;
+    params['team_id'] = teamID.value;
+    return params;
+}
 
 watch(teamID, () => {
     GetteamMember()
 })
 
+const handleClickOutside = (event: MouseEvent) => {
+    const list1 = document.querySelector('.member-jurisdiction-container .shrink .filterlist')!;
+    const list2 = document.querySelector('.content .shrink .filterlist2')!;
+    function handleFoldState(list: Element, foldState: boolean) {
+        if (list && event.target instanceof Element && event.target.closest('.filterlist') == null) {
+            if (foldState) {
+                folds.value = fold.value = false;
+            }
+        }
+    }
+    handleFoldState(list1, folds.value)
+    handleFoldState(list2, fold.value)
+}
+
 onMounted(() => {
     GetteamMember()
-    document.addEventListener("click", (event: MouseEvent) => {
-        const list1 = document.querySelector('.member-jurisdiction-container .shrink .filterlist')
-        const list2 = document.querySelector('.content .shrink .filterlist')
-        if (list1) {
-            if (event.target instanceof Element && event.target.closest('.filterlist') == null) {
-                if (folds.value) {
-                    folds.value = false
-                }
-            }
-        }
-        if (list2) {
-            if (event.target instanceof Element && event.target.closest('.filterlist') == null) {
-                if (fold.value) {
-                    fold.value = false
-                }
-            }
-        }
-    })
+    document.addEventListener("click", handleClickOutside)
 })
 
 onUnmounted(() => {
-
+    document.removeEventListener("click", handleClickOutside)
 })
 </script>
 <style lang="scss" scoped>
@@ -435,7 +529,7 @@ onUnmounted(() => {
                         margin-left: 4px;
                     }
 
-                    .filterlist {
+                    .filterlist2 {
                         position: relative;
                         list-style-type: none;
                         font-size: 14px;
@@ -483,10 +577,43 @@ onUnmounted(() => {
         margin: 6px 0;
     }
 
-    .member-name,
+    .member-name {
+        width: 200px;
+        display: flex;
+
+        .changeName {
+            margin-left: auto;
+            height: 10px;
+
+
+            .button {
+                width: 50px;
+                height: 20px;
+                margin: 0px 0 20px 0;
+                border: none;
+                font-size: 10px;
+                letter-spacing: 1px;
+                font-weight: 500;
+                border-radius: 6px;
+                display: flex;
+                justify-content: center;
+                align-items: center;
+                cursor: pointer;
+                background-color: #9775fa;
+                color: #ffffff;
+
+                &:hover {
+                    background-color: #9675fadc;
+                }
+            }
+        }
+    }
+
     .member-jurisdiction {
         width: 200px;
         display: flex;
+
+
 
         .member-jurisdiction-container {
             display: flex;
@@ -557,5 +684,80 @@ onUnmounted(() => {
 
 .main {
     height: calc(100vh - 96px - 56px - 56px - 20px);
+
+    .change {
+        outline: none;
+        height: 30px;
+        width: 440px;
+        box-sizing: border-box;
+        margin-top: 22px;
+        border-radius: 4px;
+
+        &:hover {
+            border-radius: 2px;
+            border: 2px #f3f0ff solid;
+
+        }
+
+        &:focus {
+            border-radius: 2px;
+            border: 2px #9775fa solid;
+        }
+    }
+
+    .confirm {
+        background-color: #9775fa;
+        color: white;
+        border-color: #9775fa;
+
+        &:hover {
+            background: #9675fa91;
+            border-color: #9675fa91;
+        }
+
+        &:active {
+            background-color: #9775fa;
+            border-color: #9775fa;
+        }
+
+    }
+
+    .cancel {
+
+        &:hover {
+            background-color: #ffffff;
+            color: #9775fa;
+            border-color: #9775fa;
+        }
+
+        &:active {
+            background-color: #ffffff;
+        }
+
+        &:focus {
+            background-color: white;
+            color: #9775fa;
+            border-color: #9775fa;
+        }
+    }
+
+    :deep(.el-button--primary) {
+        background-color: #9775fa;
+    }
+
+    .empty {
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        margin-top: 25%;
+        font-size: 14px;
+
+        svg {
+            color: #9775fa;
+            width: 22px;
+            height: 22px;
+            margin-right: 4px;
+        }
+    }
 }
 </style>

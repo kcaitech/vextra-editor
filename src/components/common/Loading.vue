@@ -14,8 +14,8 @@ defineProps<Props>();
 
 <style scoped lang="scss">
 .container {
-  width: 60px;
-  height: 60px;
+  width: 12px;
+  height: 12px;
   position: absolute;
   top: 50%;
   left: 50%;

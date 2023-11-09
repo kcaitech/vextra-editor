@@ -14,7 +14,7 @@
 </template>
 
 <script setup lang="ts">
-import * as user_api from '@/apis/users'
+import * as user_api from '@/request/users'
 import { ElMessage } from 'element-plus'
 import { ref, onMounted, onUnmounted, nextTick, watch, inject, Ref } from 'vue'
 import { useI18n } from 'vue-i18n'
@@ -88,12 +88,14 @@ async function getUserdata() {
             }
         }
         lists.value = Object.values(data)
-    } catch (error) {
-        console.log(error);
-
-        noNetwork.value = true
-        ElMessage.closeAll('error')
-        ElMessage.error({ duration: 1500, message: t('home.failed_list_tips') })
+    } catch (error: any) {
+        if (error.data.code === 401) {
+            return
+        } else {
+            noNetwork.value = true
+            ElMessage.closeAll('error')
+            ElMessage.error({ duration: 1500, message: t('home.failed_list_tips') })
+        }
     }
 }
 const refreshDoc = () => {
@@ -261,6 +263,6 @@ main {
     width: 100%;
     height: 100%;
     z-index: 999;
-    background-color: rgba(0, 0, 0, 0.5);
+    background-color: var(--overlay-bg-color);
 }
 </style>

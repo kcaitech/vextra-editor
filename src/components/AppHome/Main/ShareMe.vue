@@ -12,7 +12,7 @@
     <div v-if="showFileShare" class="overlay"></div>
 </template>
 <script setup lang="ts">
-import * as user_api from '@/apis/users'
+import * as user_api from '@/request/users'
 import { ElMessage } from 'element-plus'
 import { ref, onMounted, onUnmounted, nextTick, watch, inject, Ref } from 'vue'
 import { router } from '@/router'
@@ -46,7 +46,6 @@ const emits = defineEmits<{
     (e: 'dataUpdate', list: any, title: string): void
 }>();
 const { t } = useI18n()
-const isLoading = ref(false);
 const showFileShare = ref<boolean>(false);
 const shareSwitch = ref(true)
 const pageHeight = ref(0)
@@ -69,8 +68,6 @@ const { projectList } = inject('shareData') as {
 };
 
 async function ShareLists() {
-    // loading
-    isLoading.value = true
     try {
         const { data } = await user_api.ShareLists()
         if (data == null) {
@@ -93,14 +90,15 @@ async function ShareLists() {
             }
         }
         lists.value = Object.values(data)
-    } catch (error) {
-        noNetwork.value = true
-        ElMessage.closeAll('error')
-        ElMessage.error({ duration: 1500, message: t('home.failed_list_tips') })
+    } catch (error:any) {
+        if (error.data.code === 401) {
+            return
+        } else {
+            noNetwork.value = true
+            ElMessage.closeAll('error')
+            ElMessage.error({ duration: 1500, message: t('home.failed_list_tips') })
+        }
     }
-
-    // // unloading  
-    isLoading.value = false;
 }
 
 const refreshDoc = () => {

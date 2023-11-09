@@ -1,7 +1,7 @@
 <script setup lang='ts'>
 import Describes from './Describes.vue'
 import Footer from './Footer.vue'
-import * as user_api from '@/apis/users'
+import * as user_api from '@/request/users'
 import { nextTick, onMounted, onUnmounted, ref } from 'vue'
 import { router } from '@/router'
 import { useI18n } from 'vue-i18n';
@@ -67,6 +67,7 @@ async function getlogin(code: string, invite_code: string = '', id: string = '')
                     } else {
                         router.push({ path: perRoute })
                     }
+                    localStorage.removeItem('perRoute')
                 }
                 else {
                     router.push({ name: 'apphome' })
@@ -162,13 +163,7 @@ const handleOpenNewWindow = (routeName: string) => {
     const routeLocation = router.resolve({
         name: routeName
     })
-    const newWindow = window.open(routeLocation.href, '_blank');
-    if (newWindow) {
-        setTimeout(() => {
-            newWindow.document.title = routeName === 'privacypolicy' ? '隐私协议' : '服务协议'
-        }, 100);
-
-    }
+    window.open(routeLocation.href, '_blank');
 }
 
 onMounted(() => {
@@ -223,7 +218,7 @@ const mobileKeywords = [
                     <a href="" @click.prevent="handleOpenNewWindow('privacypolicy')">{{ t('system.read_Privacy') }}</a>
                 </p>
             </div>
-            <Footer v-if="isShow" @Privacypolicy="handleOpenNewWindow" @Serviceagreement="handleOpenNewWindow" />
+            <Footer v-if="isShow" />
         </div>
         <div class="code_input" v-else>
             <div class="top">

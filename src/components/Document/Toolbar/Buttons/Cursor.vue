@@ -16,7 +16,9 @@ const selects = ref<Action>(Action.AutoV);
 const visible = ref(false)
 const props = defineProps<{
   active: boolean,
-  d: Action
+  d: Action,
+  is_lable: boolean,
+  edit: boolean
 }>();
 const emit = defineEmits<{
   (e: "select", action: Action): void;
@@ -101,7 +103,7 @@ onUpdated(() => {
       <div class="svg-container">
         <svg-icon :icon-class="props.d === selected ? props.d : selects"></svg-icon>
       </div>
-      <div class="menu" @click="showMenu">
+      <div class="menu" @click="showMenu" v-if="edit && !is_lable">
         <svg-icon icon-class="down"></svg-icon>
       </div>
     </ToolButton>

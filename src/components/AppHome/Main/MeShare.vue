@@ -5,8 +5,6 @@
             @dbclickopen="openDocument" @updatestar="Starfile" @rightMeun="rightmenu" :noNetwork="noNetwork"
             @refreshDoc="refreshDoc" />
     </div>
-
-
     <listrightmenu :items="items" :data="mydata" @get-doucment="getDoucment" @r-starfile="Starfile" @r-sharefile="Sharefile"
         @r-removefile="Deletefile" @ropen="openDocument" @moveFillAddress="moveFillAddress" />
 
@@ -21,8 +19,8 @@
 </template>
 
 <script setup lang="ts">
-import * as share_api from "@/apis/share"
-import * as user_api from '@/apis/users'
+import * as share_api from "@/request/share"
+import * as user_api from '@/request/users'
 import { ElMessage } from 'element-plus'
 import { onMounted, ref, onUnmounted, nextTick, watch, inject, Ref } from "vue"
 import { useI18n } from 'vue-i18n'
@@ -85,10 +83,14 @@ async function getDoucment() {
             }
         }
         lists.value = Object.values(data)
-    } catch (error) {
-        noNetwork.value = true
-        ElMessage.closeAll('error')
-        ElMessage.error({ duration: 1500, message: t('home.failed_list_tips') })
+    } catch (error:any) {
+        if (error.data.code === 401) {
+            return
+        } else {
+            noNetwork.value = true
+            ElMessage.closeAll('error')
+            ElMessage.error({ duration: 1500, message: t('home.failed_list_tips') })
+        }
     }
 }
 
@@ -254,6 +256,6 @@ onUnmounted(() => {
     width: 100%;
     height: 100%;
     z-index: 999;
-    background-color: rgba(0, 0, 0, 0.5);
+    background-color: var(--overlay-bg-color);
 }
 </style>

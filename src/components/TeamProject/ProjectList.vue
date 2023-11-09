@@ -1,67 +1,11 @@
 <template>
-    <!-- <div >
-        <div v-if="teamprojectlist.length > 0 || SearchList.length > 0" class="container">
-            <div class="hearder-container">
-                <div class="title" v-for="(item, index) in titles" :key="index">{{ item }}</div>
-            </div>
-            <div class="main">
-                <el-scrollbar height="100%">
-                <div class="project-item" :class="{ 'selected': selectid === item.project.id }"
-                    v-for="(item, index) in searchvalue === '' ? teamprojectlist : SearchList" :key="item.project.id"
-                    @click.stop="selectid = item.project.id" @dblclick.stop="skipProject(item.project.id)"
-                    @contextmenu="rightmenu($event, item, index)" @mouseenter="showOther(item.project.id)"
-                    @mouseleave="hiddOther">
-                    <div class="project-name">{{ item.project.name }}</div>
-                    <div class="project-description">{{ item.project.description }}</div>
-                    <div class="project-creator">{{ item.creator.nickname }}</div>
-                    <div class="other" v-if="showother && hoverId === item.project.id">
-                        <div @click="cancelFixed(item.project.id, item.is_favor, index)" @dblclick.stop>
-                            <Tooltip v-if="!item.is_favor" :content="'固定项目'">
-                                <div>
-                                    <svg-icon icon-class="fixed"></svg-icon>
-                                </div>
-                            </Tooltip>
-                            <Tooltip v-else :content="'取消固定'">
-                                <div>
-                                    <svg-icon icon-class="fixed-cancel"></svg-icon>
-                                </div>
-                            </Tooltip>
-                        </div>
-                        <Tooltip :content="'进入项目'">
-                            <div @click.stop="skipProject(item.project.id)">
-                                <svg-icon icon-class="entrance"></svg-icon>
-                            </div>
-                        </Tooltip>
-                        <Tooltip :content="item.self_perm_type === 5 ? '删除项目' : '退出项目'">
-                            <div @click="onExitProject(item)">
-                                <svg-icon v-if="item.self_perm_type != 5" icon-class="exit-project"></svg-icon>
-                                <svg-icon v-else icon-class="delete-project"></svg-icon>
-                            </div>
-                        </Tooltip>
-                    </div>
-
-                    <div class="other" v-else-if="item.is_favor">
-                        <div @click="cancelFixed(item.project.id, item.is_favor, index)" @dblclick.stop>
-                            <svg-icon icon-class="fixed-cancel"></svg-icon>
-                        </div>
-                    </div>
-                    <div class="other" v-else></div>
-                </div>
-            </el-scrollbar>
-            </div>
-        </div>
-        <div v-else class="datanull">
-            <p>{{ t('projectlist.datanull') }}</p>
-            <button type="button" @click.stop="onAddproject" v-if="teamSelfPermType > 0">{{ t('projectlist.addproject')
-            }}</button>
-        </div>
-    </div> -->
-    <div class="tatle" style="height: calc(100vh - 208px);">
-        <tablelist :data="searchvalue === '' ? teamprojectlist : SearchList" :iconlist="iconlists" :projectshare="true" @onexitproject="onExitProject"
-            @cancelfixed="cancelFixed" @on-addproject="onAddproject" @dbclickopen="dblclickskipProject" @skipproject="skipProject" @rightMeun="rightmenu"
-            :noNetwork="noNetwork" :addproject="teamSelfPermType" />
+    <div class="tatle" style="height: calc(100vh - 186px);">
+        <tablelist :data="searchvalue === '' ? teamprojectlist : SearchList" :iconlist="iconlists" :nulldata="nulldata"
+            :projectshare="true" @onexitproject="onExitProject" @cancelfixed="cancelFixed" @on-addproject="onAddproject"
+            @dbclickopen="dblclickskipProject" @skipproject="skipProject" @rightMeun="rightmenu" :noNetwork="noNetwork"
+            :addproject="teamSelfPermType" />
     </div>
-    <NetworkError  @refresh-doc="GetprojectLists"></NetworkError>
+    <NetworkError @refresh-doc="GetprojectLists"></NetworkError>
     <ProjectDialog :projectVisible="innerVisible" :context="t('Createteam.projectexitcontext')"
         :title="t('Createteam.projectexittitle')" :confirm-btn="t('Createteam.ok_exit')" @clode-dialog="handleClose"
         @confirm="quitProject"></ProjectDialog>
@@ -70,27 +14,26 @@
         @confirm="DelProject"></ProjectDialog>
     <listrightmenu v-show="rightmenushow" :items="updateitems" :data="mydata" @showMembergDialog="showMembergDialog"
         @projectrename="setProjectInfo" @showSettingDialog="showSettingDialog"
-        @cancelFixed="cancelFixed(mydata.project.id, mydata.is_favor, mydataindex)" @exitproject="rexitProject"
+        @cancelFixed="cancelFixed(mydata, mydata.is_favor, mydataindex)" @exitproject="rexitProject"
         @delproject="rdelProject" />
-    <ProjectAccessSetting v-if="projectSettingDialog" :title="t('Createteam.membertip')" :data="mydata" width="500px"
-        @clodeDialog="projectSettingDialog = false" />
-    <ProjectMemberg v-if="projectMembergDialog" :projectMembergDialog="projectMembergDialog" :currentProject="mydata"
+    <ProjectAccessSetting v-if="projectSettingDialog" :showcontainer="showcontainer" :title="t('Createteam.membertip')"
+        :data="mydata" width="500px" @closeDialog="closeDialog" />
+    <ProjectMemberg v-if="projectMembergDialog" :showcontainer="showcontainer" :projectMembergDialog="projectMembergDialog" :currentProject="mydata"
         @closeDialog="closeDialog" @exitProject="exitProject" />
 </template>
 <script setup lang="ts">
 import { Ref, computed, inject, watchEffect, onMounted, ref, watch, nextTick } from 'vue';
-import * as user_api from '@/apis/users'
+import * as user_api from '@/request/users'
 import { ElMessage } from 'element-plus'
 import { useI18n } from 'vue-i18n'
 import NetworkError from '@/components/NetworkError.vue'
 import { router } from '@/router'
-import * as team_api from '@/apis/team'
+import * as team_api from '@/request/team'
 import ProjectDialog from './ProjectDialog.vue';
 import listrightmenu from "@/components/AppHome/listrightmenu.vue"
 import ProjectMemberg from '../TeamProject/ProjectFill/ProjectMemberg.vue'
 import ProjectAccessSetting from '../TeamProject/ProjectFill/ProjectAccessSetting.vue'
 import tablelist from '@/components/AppHome/tablelist.vue'
-import Tooltip from '../common/Tooltip.vue'
 import { debounce } from 'lodash';
 
 interface Props {
@@ -105,7 +48,6 @@ const showbutton = ref(false)
 const noNetwork = ref(false)
 const rightmenushow = ref(false)
 const { t } = useI18n()
-const titles = [t('projectlist.project_name'), t('projectlist.project_description'), t('projectlist.creator'), t('projectlist.operation'),]
 const selectid = ref(0)
 const projectLists = ref<any[]>([])
 const teamprojectlist = ref<any[]>([])
@@ -113,8 +55,8 @@ const innerVisible = ref(false);
 const project_item = ref<any>({});
 const projectMembergDialog = ref(false)
 const projectSettingDialog = ref(false)
-const showother = ref(false)
-const hoverId = ref('')
+const nulldata = ref(false)
+const showcontainer = ref(false)
 const emits = defineEmits<{
     (e: 'addproject'): void
 }>()
@@ -145,25 +87,30 @@ const favoriteProjectList = (arr1: any[], arr2: any[]) => {
 const onAddproject = () => {
     emits('addproject');
 }
-const showOther = (id: string) => {
-    showother.value = true;
-    hoverId.value = id;
-}
-const hiddOther = () => {
-    showother.value = false;
-    hoverId.value = '';
-}
 
 const showMembergDialog = () => {
     projectMembergDialog.value = true
+    nextTick(() => {
+        showcontainer.value = true
+    })
 }
 
 const showSettingDialog = () => {
     projectSettingDialog.value = true
+    nextTick(() => {
+        showcontainer.value = true
+    })
+
 }
 
 const closeDialog = () => {
-    projectMembergDialog.value = false;
+    showcontainer.value = false
+    if (projectMembergDialog.value) {
+        projectMembergDialog.value = false;
+    }
+    if (projectSettingDialog.value) {
+        projectSettingDialog.value = false
+    }
 }
 
 const exitProject = () => {
@@ -182,8 +129,12 @@ const GetprojectLists = async () => {
         } else {
             ElMessage({ type: 'error', message: message })
         }
-    } catch (error) {
-        noNetwork.value = true
+    } catch (error:any) {
+        if (error.data.code === 401) {
+            return
+        } else {
+            noNetwork.value = true
+        }
     }
 }
 
@@ -347,10 +298,18 @@ watch(is_favor, () => {
 //通过计算属性，筛选出与搜索匹配的项目
 const SearchList = computed(() => {
     return teamprojectlist.value.filter((el: any) => {
-        return el.project.name.toLowerCase().includes(props.searchvalue.toLowerCase())
+        return el.project.name.toLowerCase().includes(props.searchvalue.trim().toLowerCase())
             ||
-            el.creator.nickname.toLowerCase().includes(props.searchvalue.toLowerCase())
+            el.creator.nickname.toLowerCase().includes(props.searchvalue.trim().toLowerCase())
     })
+})
+
+watch(() => props.searchvalue, () => {
+    if (props.searchvalue.trim() !== '') {
+        SearchList.value.length === 0 ? nulldata.value = true : ''
+    } else {
+        nulldata.value = false
+    }
 })
 
 const skipProject = (id: string) => {
@@ -365,7 +324,7 @@ const setProjectIsFavorite = async (id: string, state: boolean) => {
     }
 }
 
-const _cancelFixed = (row:any, state: boolean, index: number) => {
+const _cancelFixed = (row: any, state: boolean, index: number) => {
     if (props.searchvalue === '') {
         teamprojectlist.value[index].is_favor = !state;
     } else {
@@ -397,9 +356,11 @@ const dblclickskipProject = (row: any) => {
 .selected {
     background-color: #e5dbff !important;
 }
-.main{
+
+.main {
     height: calc(100vh - 96px - 56px - 56px - 20px);
 }
+
 .container {
 
     .hearder-container {
