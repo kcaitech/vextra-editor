@@ -22,31 +22,35 @@
         </div>
         <div class="main">
             <el-scrollbar height="100%">
-                <div class="member-item" v-for=" { user: { nickname, id, avatar }, perm_type }  in  SearchList " :key="id">
+                <div class="member-item"
+                    v-for=" { team_member: { nickname: teamname }, user: { nickname, id, avatar }, perm_type }  in  SearchList "
+                    :key="id">
                     <div class="member-name">
                         <img :src="avatar" alt="icon"
                             style="width: 20px;height: 20px;;border-radius: 50%;margin-right: 4px;">
-                        {{ nickname }}
-                        <div class="changeName">
+                        {{ teamname }}
+                        <div v-if="perm_type < usertype2 || id === userID" class="changeName">
                             <el-tooltip class="tips" effect="dark" :content="`${t('teammember.change_name')}`"
                                 placement="bottom" :show-after="600" :offset="10" :hide-after="0">
-                                <button class="button" @click="() => openDialog(nickname, id)">{{ t('teammember.modify') }}</button>
+                                <button class="button" @click.stop="() => openDialog(teamname, id)">{{
+                                    t('teammember.modify')
+                                }}</button>
                             </el-tooltip>
                         </div>
                     </div>
                     <div class="member-jurisdiction">
                         <div class="member-jurisdiction-container">
                             {{ membertype(perm_type) }}
-                            <div v-if="usertype(perm_type, id)" class="shrink"
-                                @click.stop="folds = !folds, fold = false, userid = id">
+                            <div v-if="perm_type < usertype2 || (id === userID && usertype2 != TeamPermisssions.creator)"
+                                class="shrink" @click.stop="folds = !folds, fold = false, userid = id">
                                 <svg-icon icon-class="down"
                                     :style="{ transform: folds && userid === id ? 'rotate(-180deg)' : 'rotate(0deg)' }"></svg-icon>
                                 <transition name="el-zoom-in-top">
                                     <ul class="filterlist" v-if="userid === id && folds" ref="listmenu">
                                         <li class="item"
-                                            v-for="(item, index) in  typeitems((userperm === 2 && userID === id) ? 1 : userperm) "
+                                            v-for="(item, index) in typeitems((usertype2 === TeamPermisssions.adminstartors && userID === id) ? 1 : usertype2) "
                                             :key="index" @click.stop="itemEvent(item, teamID, id, perm_type, nickname)">
-                                            <div v-if="true" class="choose"
+                                            <div class="choose"
                                                 :style="{ visibility: item === membertype(perm_type) ? 'visible' : 'hidden' }">
                                             </div>
                                             {{ item }}
@@ -101,11 +105,20 @@ import ProjectDialog from './ProjectDialog.vue';
 import Loading from '../common/Loading.vue';
 import { setTeamMemberNicknameAPI } from '@/request/team';
 
+
 interface Emits {
     (e: 'update'): void
 }
 interface Props {
     searchvalue?: string
+}
+
+enum TeamPermisssions {
+    onlyRead = 0,
+    edit = 1,
+    adminstartors = 2,
+    creator = 3,
+    noPermisssion = 255
 }
 
 const props = withDefaults(defineProps<Props>(), {
@@ -123,7 +136,6 @@ const titles = [t('teammember.name'), t('teammember.team_permission')]
 const filteritems = [t('teammember.Readonly'), t('teammember.editable'), t('teammember.manager'), t('teammember.creator'), t('teammember.all')]
 const noNetwork = ref(false)
 const teammemberdata = ref<any[]>([])
-const memberdata = ref<any[]>([])
 const fold = ref(false)
 const folds = ref(false)
 const fontName = ref(4)
@@ -148,7 +160,6 @@ const openDialog = (name: string, userid: string) => {
     })
 };
 
-const loading = ref(true)
 const { teamID, teamData, upDateTeamData, is_team_upodate, teamUpdate } = inject('shareData') as {
     teamID: Ref<string>;
     teamData: Ref<[{
@@ -162,33 +173,6 @@ const { teamID, teamData, upDateTeamData, is_team_upodate, teamUpdate } = inject
     upDateTeamData: (data: any[]) => void;
     is_team_upodate: Ref<boolean>;
     teamUpdate: (b: boolean) => void;
-}
-
-const userperm = ref()
-const usertype = (p: number, id: string) => {
-    const text = teammemberdata.value.find((item) => item.user.id === userID.value)
-    userperm.value = text.perm_type
-    if (text.perm_type === 3) {
-        if (text.perm_type === p) {
-            return false
-        } else {
-            return true
-        }
-    } else if (text.perm_type === 2) {
-        if (text.perm_type === p && userID.value === id) {
-            return true
-        } else if (p === 2 || p === 3) {
-            return false
-        } else {
-            return true
-        }
-    } else if (text.perm_type === 1 || text.perm_type === 0) {
-        if (userID.value === id) {
-            return true
-        } else {
-            return false
-        }
-    }
 }
 
 const typeitems = (num: number) => {
@@ -205,7 +189,6 @@ const typeitems = (num: number) => {
             return null
     }
 }
-
 
 const emptytips = computed(() => {
     return props.searchvalue !== '' ? '没有找到该成员' : fontName.value !== 4 ? `没有成员属于<b>[${filteritems[fontName.value]}]</b>权限类型` : ''
@@ -259,22 +242,27 @@ const GetteamMember = async () => {
 
 const membertype = (num: number) => {
     switch (num) {
-        case 0:
+        case TeamPermisssions.onlyRead:
             return t('teammember.Readonly')
-        case 1:
+        case TeamPermisssions.edit:
             return t('teammember.editable')
-        case 2:
+        case TeamPermisssions.adminstartors:
             return t('teammember.manager')
-        case 3:
+        case TeamPermisssions.creator:
             return t('teammember.creator')
         default:
             return null
     }
 }
 
+const usertype2 = ref()
+
 //通过计算属性，筛选出与搜索匹配的成员
 const SearchList = computed(() => {
     return ListData.value.filter((el: any) => {
+        if (el.user.id === userID.value) {
+            usertype2.value = el.perm_type
+        }
         return el.user.nickname.toLowerCase().includes(props.searchvalue.toLowerCase())
     })
 })
@@ -287,7 +275,6 @@ const ListData = computed(() => {
             const item = teammemberdata.value[i];
             if (item.perm_type !== fontName.value) continue;
             if (!item.team_member.nickname) item.team_member.nickname = item.user.nickname;
-            // if (item.team_member.nickname) item.user.nickname = item.team_member.nickname;
             list.push(item);
         }
         return list;
@@ -296,7 +283,6 @@ const ListData = computed(() => {
         for (let i = 0; i < teammemberdata.value.length; i++) {
             const item = teammemberdata.value[i];
             if (!item.team_member.nickname) item.team_member.nickname = item.user.nickname;
-            // if (item.team_member.nickname) item.user.nickname = item.team_member.nickname;
             list.push(item);
         }
         return list;
@@ -480,7 +466,7 @@ function get_params_for_modify_name() {
     if (changeinput.value) {
         params['nickname'] = (changeinput.value as HTMLInputElement).value;
     }
-    params['user_id'] = localStorage.getItem("userId");
+    params['user_id'] = user_id;
     params['team_id'] = teamID.value;
     return params;
 }
