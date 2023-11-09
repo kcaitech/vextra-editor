@@ -415,7 +415,6 @@ function after_drag(wandererId: string, hostId: string, offsetOverhalf: boolean)
     //         editor.shapeListDrag(wanderer, host, offsetOverhalf);
     //     }
     // }
-    props.context.navi.set_dragging_status(false);
 }
 
 function menu_watcher(t: number) {
@@ -578,8 +577,11 @@ function start_to_drag(id: string) {
     const page = props.context.selection.selectedPage!;
     const shape = page.getShape(id);
     if (!shape) return;
+    const selected = props.context.selection.selectedShapes;
+    for (let i = 0, l = selected.length; i < l; i++) {
+        if (selected[i].id === shape.id) return;
+    }
     props.context.selection.selectShape(shape);
-    props.context.navi.set_dragging_status(true);
 }
 
 function after_drag_2(detail: DragDetail) {
@@ -660,7 +662,7 @@ onUnmounted(() => {
                 </div>
             </div>
         </div>
-        <div class="body" ref="listBody" @click="reset_selection">
+        <div class="body" ref="listBody" @mousedown="reset_selection">
             <SearchPanel :keywords="keywords" :context="props.context" v-if="keywords || includes_type.length"
                          :shape-types="includes_type" :accurate="accurate">
             </SearchPanel>

@@ -40,7 +40,7 @@ const props = defineProps<{
     allowDrag?: boolean,
     shapeHeight?: number,
     pageHeight?: number,
-    draging: "shapeList" | "pageList"
+    dragging: "shapeList" | "pageList"
 }>();
 
 const emit = defineEmits<{
@@ -481,7 +481,7 @@ const mousedown = ref<boolean>(false);
 const fromIndex = ref<number>(0);
 const toIndex = ref<number>(0);
 const wandererId = ref<string>('');
-const draging = ref<boolean>(false);
+const dragging = ref<boolean>(false);
 const mouseBegin: { x: number, y: number } = {x: 0, y: 0};
 const destination = ref<{ x: number, y: number, length: number }>({x: 0, y: 0, length: 20});
 const destinationMount = ref<boolean>(false);
@@ -520,10 +520,10 @@ function mouseMove(event: MouseEvent) {
     if (!(currentHoverTarget.value && hoverItem.value)) return;
 
     const {clientX, clientY} = event;
-    if (!draging.value) {
+    if (!dragging.value) {
         const diff = Math.hypot(clientX - mouseBegin.x, clientY - mouseBegin.y);
         if (diff < 6) return;
-        draging.value = true;
+        dragging.value = true;
         emit('drag-start', wandererId.value);
     }
 
@@ -595,17 +595,18 @@ function mouseUp() {
     destinationMount.value = false;
     document.removeEventListener('mousemove', mouseMove);
     document.removeEventListener('mouseup', mouseUp);
-    if (draging.value) {
+    if (dragging.value) {
         const dragTarget = descend(fromIndex.value, toIndex.value);
         let host_id = '';
-        if (dragTarget) {
-            host_id = layoutResult[toIndex.value].id;
+        const c = layoutResult[toIndex.value];
+        if (dragTarget && c) {
+            host_id = c.id;
         }
         emit('after-drag', wandererId.value, host_id, false);
         if (drag_result_detail) {
             emit('after-drag-2', drag_result_detail);
         }
-        draging.value = false;
+        dragging.value = false;
         port_a_visible.value = false;
         port_i_visible.value = false;
         drag_result_detail = undefined;
@@ -663,7 +664,7 @@ onUnmounted(() => {
         </div>
         <!-- scroll -->
         <div ref="scrollTrack" class="scroll-track" @click="onScrollTrackClick" :style="{
-            opacity: scrollBar.mount && (listMouseOver || scrolling || draging) ? 1 : 0,
+            opacity: scrollBar.mount && (listMouseOver || scrolling || dragging) ? 1 : 0,
         }">
             <div ref="bar" @mousedown.stop="onScrollBarMouseDown" class="scroll-bar" :style="{
                 top: scrollBar.y + 'px',
