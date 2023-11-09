@@ -4,13 +4,15 @@ export const shape: any = {
     page: "Page",
     line: 'Line',
     oval: 'Oval',
+    rect: 'Rect',
     artboard: 'Artboard',
     arrow: 'Arrow',
     text: 'text',
     image: 'image',
     input_text: 'Input text',
     table: 'Table',
-    contact: 'Contact'
+    contact: 'Contact',
+    shape_tool: 'Shape tool'
 }
 shape[ShapeType.Rectangle] = 'Rectangle';
 

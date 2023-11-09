@@ -20,10 +20,17 @@ import { Action, Tool } from "@/context/tool";
 import { useI18n } from 'vue-i18n'
 import { message } from "@/utils/message";
 import { string_by_sys } from "@/utils/common";
+import ShapeMenu from "./ShapeMenu.vue";
+
 const { t } = useI18n();
 interface Props {
     context: Context
     selection: Selection
+    select?: any
+    d: Action
+    active: boolean
+    is_lable: boolean
+    edit: boolean
 }
 const props = defineProps<Props>();
 const workspace = computed<WorkSpace>(() => props.context.workspace)
@@ -34,6 +41,22 @@ const selected = ref<Action>(Action.AutoV);
 const popoverVisible = ref(false);
 const popover = ref<HTMLDivElement>()
 const trigger = ref<HTMLDivElement>()
+const selects = ref<Action>(Action.AddRect);
+const visible = ref(false)
+type Button = InstanceType<typeof ToolButton>
+const button = ref<Button>();
+const patterns = ((items: [string, Action, string][]) => (items.map(item => ({ value: item[0], content: item[1], key: item[2] }))))([
+    ['rect', Action.AddRect, 'R'],
+    ['oval', Action.AddEllipse, 'O'],
+    ['line', Action.AddLine, 'L'],
+    ['arrow', Action.AddEllipse, 'Shift L']
+]);
+const emit = defineEmits<{
+    (e: "select", action: Action): void;
+}>();
+function select_shape(action: Action) {
+    emit('select', action);
+}
 
 function select(action: Action) {
     props.context.tool.setAction(action);
@@ -70,23 +93,50 @@ const hangdlePerm = () => {
 }
 function showMenu(e: MouseEvent) {
     if (popoverVisible.value) return popoverVisible.value = false;
-    if (!trigger.value) return;
-    const el = trigger.value;
-    popoverVisible.value = true;
-    nextTick(() => {
-        if (!popover.value) return;
-        popover.value.style.left = el.offsetLeft + 'px';
-        popover.value.style.top = el.offsetHeight + 24 + 'px';
-    })
-    document.addEventListener('click', onMenuBlur)
+    if (button.value?.toolButtonEl) {
+        const el = button.value?.toolButtonEl
+        visible.value = false
+        popoverVisible.value = true
+        nextTick(() => {
+            if (popover.value) {
+                popover.value.style.left = el.offsetLeft + -5 + 'px';
+                popover.value.style.top = el.offsetHeight + 13 + 'px';
+            }
+        })
+        document.addEventListener('click', onMenuBlur)
+    }
 }
 function onMenuBlur(e: MouseEvent) {
-    if (e.target instanceof Element && !e.target.closest('.popover-f') && !e.target.closest('.menu')) {
+    if (e.target instanceof Element && !e.target.closest('.popover-f') && !e.target.closest('.button-right')) {
         let timer = setTimeout(() => {
             popoverVisible.value = false;
             clearTimeout(timer)
             document.removeEventListener('click', onMenuBlur);
         }, 10)
+    }
+}
+function close() {
+    popoverVisible.value = false;
+}
+const selector = (active: Action) => {
+    selected.value = active
+    emit('select', active)
+    popoverVisible.value = false
+}
+var timer: any = null
+const onMouseenter = () => {
+    timer = setTimeout(() => {
+        visible.value = true
+        clearTimeout(timer)
+    }, 600)
+}
+const onMouseleave = () => {
+    clearTimeout(timer)
+    visible.value = false
+}
+function get_current_icon_class() {
+    if (props.d === Action.AddRect) {
+
     }
 }
 // hooks
@@ -111,15 +161,42 @@ onUnmounted(() => {
         <Line @select="select" :active="selected === Action.AddLine"></Line>
         <Arrow @select="select" :active="selected === Action.AddArrow"></Arrow> -->
 
-        <div class="menu" @click="showMenu" ref="trigger">
-            <svg-icon icon-class="down"></svg-icon>
-            <div ref="popover" class="popover-f" v-if="popoverVisible">
-                <Rect @select="select" :active="selected === Action.AddRect"></Rect>
-                <Ellipse @select="select" :active="selected === Action.AddEllipse"></Ellipse>
-                <Line @select="select" :active="selected === Action.AddLine"></Line>
-                <Arrow @select="select" :active="selected === Action.AddArrow"></Arrow>
+        <!-- <div class="menu">
+            <div ref="popover" class="popover-f" tabindex="-1" v-if="popoverVisible">
+                <Rect @select="select" :active="selected === Action.AddRect" @close="close"></Rect>
+                <Ellipse @select="select" :active="selected === Action.AddEllipse" @close="close"></Ellipse>
+                <Line @select="select" :active="selected === Action.AddLine" @close="close"></Line>
+                <Arrow @select="select" :active="selected === Action.AddArrow" @close="close"></Arrow>
             </div>
+            <el-tooltip class="box-item" effect="dark" :content="`${t('shape.shape_tool')}`" placement="bottom"
+                :show-after="600" :offset="10" :hide-after="0">
+                <ToolButton> -->
+        <!-- <div class="button-left" @click="showMenu" ref="trigger">
+                    <svg-icon :icon-class="select"></svg-icon>
+                </div> -->
+        <!-- <div class="button-right" @click="showMenu" ref="trigger">
+                    <svg-icon icon-class="down"></svg-icon>
+                </div>
+            </ToolButton>
+            </el-tooltip>
+        </div> -->
+
+        <div ref="popover" class="popover-f" tabindex="-1" v-if="popoverVisible">
+            <template v-for="item in patterns" :key="item.value">
+                <ShapeMenu @select-rect="selector" :lg="item.value" :quick="item.key" :d="d" :select="item.content"
+                    type="rect"></ShapeMenu>
+            </template>
         </div>
+        <!-- <el-tooltip class="box-item" effect="dark" :content=""></el-tooltip> -->
+        <ToolButton ref="button" @click="() => { select(selects) }" :selected="props.active" @mouseenter.stop="onMouseenter"
+            @mouseleave.stop="onMouseleave">
+            <div class="svg-container">
+                <svg-icon :icon-class="get_current_icon_class()"></svg-icon>
+            </div>
+            <div class="menu" @click="showMenu" v-if="edit && !is_lable">
+                <svg-icon icon-class="down"></svg-icon>
+            </div>
+        </ToolButton>
 
         <CreateText @select="select" :active="selected === Action.AddText"></CreateText>
         <CreateImage :active="selected === Action.AddImage" :context="props.context"></CreateImage>
@@ -203,25 +280,72 @@ onUnmounted(() => {
         margin-right: 5px;
     }
 
-    .menu-f {
-        width: 10px;
-        height: 28px;
-        display: flex;
-        padding-right: 4px;
-        margin-right: 2px;
-        justify-content: center;
-        align-items: center;
-        color: #ffffff;
-        transition: 0.3s;
+    .menu {
 
-        >svg {
-            width: 80%;
-            height: 60%;
+        .button-left {
+            width: 28px;
+            height: 28px;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            margin-left: 3px;
+            color: #ffffff;
+
+            >svg {
+                width: 13px;
+                height: 13px;
+            }
         }
-    }
 
-    .menu-f:hover {
-        transform: translateY(4px);
+        .button-right {
+            width: 10px;
+            height: 28px;
+            display: flex;
+            padding-right: 4px;
+            margin-right: 2px;
+            justify-content: center;
+            align-items: center;
+            color: #ffffff;
+            transition: 0.3s;
+
+            >svg {
+                width: 80%;
+                height: 60%;
+            }
+        }
+
+        .button-right:hover {
+            transform: translateY(4px);
+        }
+
+        .popover-f {
+            position: absolute;
+            color: #ffffff;
+            z-index: 999;
+            width: 150px;
+            height: auto;
+            font-size: var(--font-default-fontsize);
+            background-color: var(--theme-color);
+            border-radius: 4px;
+            outline: none;
+            padding: var(--default-padding-half) 0;
+
+            >div {
+                position: relative;
+                width: 100%;
+                height: 28px;
+                left: -2px;
+                padding: 0 var(--default-padding);
+                display: flex;
+                flex-direction: row;
+                align-items: center;
+                box-sizing: border-box;
+
+                &:hover {
+                    background-color: var(--active-color);
+                }
+            }
+        }
     }
 }
 </style>
