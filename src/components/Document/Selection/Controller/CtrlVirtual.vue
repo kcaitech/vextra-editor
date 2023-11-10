@@ -88,12 +88,12 @@ watchEffect(updateControllerView);
 </script>
 <template>
     <svg version="1.1" xmlns="http://www.w3.org/2000/svg" xmlns:xlink="http://www.w3.org/1999/xlink" data-area="controller"
-        xmlns:xhtml="http://www.w3.org/1999/xhtml" preserveAspectRatio="xMinYMin meet" :viewBox="viewBox"
-        :width="bounds.right - bounds.left" :height="bounds.bottom - bounds.top"
-        :style="{ transform: `translate(${bounds.left}px,${bounds.top}px)`, left: 0, top: 0, position: 'absolute' }"
-        :class="{ 'un-visible': !visible }" @mousedown="mousedown" overflow="visible">
-        <path :d="boundrectPath" fill="none" stroke='#865dff' stroke-width="1.5px"></path>
-        <ShapesStrokeContainer :context="props.context" :matrix="props.matrix" :shape="props.shape" color-hex="#865dff">
+         xmlns:xhtml="http://www.w3.org/1999/xhtml" preserveAspectRatio="xMinYMin meet" :viewBox="viewBox"
+         :width="bounds.right - bounds.left" :height="bounds.bottom - bounds.top"
+         :style="{ transform: `translate(${bounds.left}px,${bounds.top}px)`, left: 0, top: 0, position: 'absolute' }"
+         :class="{ 'un-visible': !visible }" @mousedown="mousedown" overflow="visible">
+        <path :d="boundrectPath" fill="none" stroke='#ff9900' stroke-width="1.5px"></path>
+        <ShapesStrokeContainer :context="props.context" :matrix="props.matrix" :shape="props.shape" color-hex="#ff9900">
         </ShapesStrokeContainer>
     </svg>
 </template>

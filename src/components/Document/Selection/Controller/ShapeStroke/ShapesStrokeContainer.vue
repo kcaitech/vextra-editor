@@ -8,6 +8,7 @@ const watchedShapes = new Map();
 interface Props {
     matrix: Matrix
     context: Context
+    colorHex: string
 }
 const props = defineProps<Props>();
 const matrix = new Matrix();
@@ -93,7 +94,7 @@ onUnmounted(() => {
 </script>
 <template>
     <g>
-        <path v-for="(p, i) in paths" :key="i" :d="p" stroke='#865dff' stroke-width="1px" fill="none"></path>
+        <path v-for="(p, i) in paths" :key="i" :d="p" :stroke="colorHex" stroke-width="1px" fill="none"></path>
     </g>
 </template>
 <style lang='scss' scoped></style>
