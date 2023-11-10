@@ -4,6 +4,7 @@ import {useI18n} from "vue-i18n";
 
 import {Context} from "@/context";
 import {onMounted, onUpdated, ref, watch} from "vue";
+import {OverrideType} from "../../../../../../../kcdesign-data/src";
 
 const {t} = useI18n();
 
@@ -22,8 +23,11 @@ function get_value() {
 }
 
 function change(v: boolean) {
+    const symref = props.context.selection.symbolrefshape;
+    if (!symref) return;
     modify_vari_value_for_ref(props.context, props.data.variable, v);
 }
+
 watch(() => props.data, (v) => {
     get_value();
 })

@@ -709,7 +709,9 @@ export interface RefAttriListItem {
 export function get_var_for_ref(context: Context, symref: SymbolRefShape) {
     let result: RefAttriListItem[] = [];
     let result2: RefAttriListItem[] = [];
-    const sym = context.data.symbolsMgr.getSync(symref.refId);
+    const varsContainer = symref.varsContainer;
+    const ref_id = symref.getRefId2(varsContainer);
+    const sym = context.data.symbolsMgr.getSync(ref_id);
     if (!sym) return false;
     const variables = sym.variables;
     if (!variables) return false;
@@ -720,6 +722,8 @@ export function get_var_for_ref(context: Context, symref: SymbolRefShape) {
         variables.forEach((v: Variable) => {
             const item: RefAttriListItem = {variable: v, values: []};
             if (v.type === VariableType.Visible) {
+                const overrides = symref.findOverride(v.id, OverrideType.Visible);
+                if (overrides) item.variable = overrides[overrides.length - 1];
                 result2.push(item);
             } else if (v.type === VariableType.Status) {
                 item.values = tag_values_sort(sym, v);
