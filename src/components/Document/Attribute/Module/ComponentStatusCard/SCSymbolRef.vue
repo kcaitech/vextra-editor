@@ -2,7 +2,7 @@
 import {Context} from "@/context";
 import {AttriListItem, delete_variable, modify_variable} from "@/utils/symbol";
 import {nextTick, ref} from "vue";
-import {Variable, VariableType} from "@kcdesign/data";
+import {SymbolRefShape, Variable, VariableType} from "@kcdesign/data";
 import {useI18n} from "vue-i18n";
 import CompLayerShow from "@/components/Document/Attribute/PopoverMenu/ComposAttri/CompLayerShow.vue";
 import SelectLayerInput from "@/components/Document/Attribute/Module/SelectLayerInput.vue";
@@ -44,20 +44,31 @@ function edit_instance() {
     get_dialog_posi(instance_card.value);
     iseditToggle.value = true;
 }
+
 //选中图层的id
-const layerIds = ref<string[]>();
+const layerIds = ref<string[]>([]);
 const selectLayerId = (ids: string[]) => {
     layerIds.value = ids;
 }
+
 function save_instance(type: VariableType, name: string) {
     const symbol = props.context.selection.symbolshape;
-    if(!symbol || !layerIds.value) return;
-    modify_variable(props.context, symbol, props.variable, name, layerIds.value[0], layerIds.value)
+    if (!(symbol && layerIds.value.length)) return;
+    const sym_ids: string[] = [];
+    for (let i = 0, l = layerIds.value.length; i < l; i++) {
+        const s = props.context.selection.getShapeById(layerIds.value[i]);
+        if (!s) continue;
+        sym_ids.push((s as SymbolRefShape).refId);
+    }
+    modify_variable(props.context, symbol, props.variable, name, sym_ids[0], sym_ids);
     iseditToggle.value = false;
 }
+
 const getValue = (id: string) => {
-    return props.context.data.symbolsMgr.getSync(id)?.name;
+    const sym = props.context.data.symbolsMgr.getSync(id);
+    return sym?.name || '';
 }
+
 function _delete() {
     delete_variable(props.context, props.variable);
 }
@@ -83,11 +94,13 @@ function _delete() {
         </div>
         <CompLayerShow :context="context" v-if="iseditToggle" @close-dialog="iseditToggle = false" right="250px"
                        :width="260" :add-type="VariableType.SymbolRef" :title="t('compos.instance_toggle')"
-                       @save-layer-show="save_instance" :dialog_posi="dialog_posi" :default_name="props.variable.name" :variable="props.variable">
+                       @save-layer-show="save_instance" :dialog_posi="dialog_posi" :default_name="props.variable.name"
+                       :variable="props.variable">
             <template #layer>
                 <SelectLayerInput :title="t('compos.compos_instance')" :add-type="VariableType.SymbolRef"
                                   :context="props.context"
-                                  :placeholder="t('compos.place_select_instance')" :variable="props.variable" @change="selectLayerId"></SelectLayerInput>
+                                  :placeholder="t('compos.place_select_instance')" :variable="props.variable"
+                                  @change="selectLayerId"></SelectLayerInput>
             </template>
         </CompLayerShow>
     </div>
@@ -137,10 +150,12 @@ function _delete() {
             display: flex;
             align-items: center;
             width: 100%;
+
             .svg {
                 display: flex;
                 align-items: center;
                 justify-content: center;
+
                 > svg {
                     width: 14px;
                     height: 14px;
@@ -152,7 +167,8 @@ function _delete() {
                 flex: 1;
                 display: flex;
                 max-width: 100%;
-                >span {
+
+                > span {
                     display: block;
                     box-sizing: border-box;
                     overflow: hidden;

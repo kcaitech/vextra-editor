@@ -1154,24 +1154,34 @@ export function is_symbolref_disa(shapes: SymbolRefShape[]) {
 export function modify_variable(context: Context, symbol: SymbolShape, variable: Variable, new_name: string, new_dlt_value: any, new_values: string[], old_values?: string[]) {
     const need_bind_set = new Set<string>();
     const need_unbind_set = new Set<string>();
+
     for (let i = 0, len = new_values.length; i < len; i++) {
         need_bind_set.add(new_values[i]);
     }
+    let __old_values: string[] = [];
     if (old_values) {
         for (let i = 0, len = old_values.length; i < len; i++) {
             const item = old_values[i];
             if (need_bind_set.has(item)) continue;
             need_unbind_set.add(item);
         }
+        __old_values = old_values;
     } else {
         const _old_values: Shape[] = [];
         get_x_type_option(symbol, symbol, variable.type, variable, _old_values);
+        __old_values = _old_values.map(v => v.id);
         for (let i = 0, len = _old_values.length; i < len; i++) {
             const item = _old_values[i].id;
             if (need_bind_set.has(item)) continue;
             need_unbind_set.add(item);
         }
     }
+
+    for (let i = 0, l = __old_values.length; i < l; i++) {
+        const item = __old_values[i];
+        need_bind_set.delete(item);
+    }
+
     const need_bind_shapes: Shape[] = [];
     const need_unbind_shapes: Shape[] = [];
     const page = context.selection.selectedPage!;
@@ -1187,6 +1197,9 @@ export function modify_variable(context: Context, symbol: SymbolShape, variable:
     })
     // 自此绑定列表、解绑列表整理完毕
     const editor = context.editor4Shape(symbol);
+    console.log("need_bind_shapes:", need_bind_shapes);
+    console.log("need_unbind_shapes:", need_unbind_shapes);
+
     return editor.modifyVar(symbol, variable, new_name, new_dlt_value, need_bind_shapes, need_unbind_shapes);
 }
 

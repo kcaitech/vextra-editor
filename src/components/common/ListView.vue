@@ -40,7 +40,6 @@ const props = defineProps<{
     allowDrag?: boolean,
     shapeHeight?: number,
     pageHeight?: number,
-    dragging: "shapeList" | "pageList"
 }>();
 
 const emit = defineEmits<{

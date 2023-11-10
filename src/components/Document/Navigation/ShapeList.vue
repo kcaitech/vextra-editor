@@ -666,7 +666,7 @@ onUnmounted(() => {
             <SearchPanel :keywords="keywords" :context="props.context" v-if="keywords || includes_type.length"
                          :shape-types="includes_type" :accurate="accurate">
             </SearchPanel>
-            <ListView v-else ref="shapelist" location="shapelist" :allow-drag="true" draging="shapeList"
+            <ListView v-else ref="shapelist" location="shapelist" :allow-drag="true"
                       :shapeHeight="shapeH" :source="listviewSource" :item-view="ShapeItem" :item-height="itemHieght"
                       :item-width="0" :first-index="0" :context="props.context" @toggleexpand="toggleExpand"
                       @selectshape="selectShape" @hovershape="hoverShape" @unhovershape="unHovershape"

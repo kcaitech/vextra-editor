@@ -1,31 +1,36 @@
 <script setup lang="ts">
-import { Selection } from "@/context/selection";
-import { Menu } from "@/context/menu";
-import { onMounted, onUnmounted, ref, nextTick } from "vue";
-import ListView, { IDataIter, IDataSource } from "@/components/common/ListView.vue";
-import PageItem, { ItemData } from "./PageItem.vue";
-import { Context } from "@/context";
-import { useI18n } from 'vue-i18n';
-import { Page } from "@kcdesign/data";
-import { Document, PageListItem } from "@kcdesign/data";
+import {Selection} from "@/context/selection";
+import {Menu} from "@/context/menu";
+import {onMounted, onUnmounted, ref, nextTick} from "vue";
+import ListView, {IDataIter, IDataSource} from "@/components/common/ListView.vue";
+import PageItem, {ItemData} from "./PageItem.vue";
+import {Context} from "@/context";
+import {useI18n} from 'vue-i18n';
+import {Page} from "@kcdesign/data";
+import {Document, PageListItem} from "@kcdesign/data";
 import ContextMenu from '@/components/common/ContextMenu.vue';
-import { Navi } from "@/context/navigate";
-import { Perm } from "@/context/workspace";
-import { Tool } from "@/context/tool";
+import {Navi} from "@/context/navigate";
+import {Perm} from "@/context/workspace";
+import {Tool} from "@/context/tool";
+
 type List = InstanceType<typeof ListView>;
+
 interface Props {
     context: Context
 }
+
 interface Emits {
     (e: "fold", fold: boolean): void;
 }
+
 interface MenuItem {
     name: string
     id: string
     disable: boolean
 }
+
 type ContextMenuEl = InstanceType<typeof ContextMenu>;
-const { t } = useI18n();
+const {t} = useI18n();
 const props = defineProps<Props>();
 const emit = defineEmits<Emits>();
 const pagelist = ref<List>();
@@ -35,7 +40,7 @@ const pageH = ref<number>(0)
 const fold = ref<boolean>(false)
 const MOUSE_RIGHT = 2
 const pageMenu = ref<boolean>(false)
-const pageMenuPosition = ref<{ x: number, y: number }>({ x: 0, y: 0 }); //鼠标点击page所在的位置
+const pageMenuPosition = ref<{ x: number, y: number }>({x: 0, y: 0}); //鼠标点击page所在的位置
 let pageMenuItems: MenuItem[] = [];
 const contextMenuEl = ref<ContextMenuEl>();
 const cur_page_name = ref<string>(props.context.selection.selectedPage?.name || t('navi.page'));
@@ -48,21 +53,26 @@ const selectionWatcher = (type: number) => {
 const isEdit = ref(props.context.workspace.documentPerm);
 const isLable = ref(props.context.tool.isLable);
 const rightTarget = ref<string>('');
+
 function document_watcher() {
     pageSource.notify(0, 0, 0, Number.MAX_VALUE);
 }
+
 class Iter implements IDataIter<ItemData> {
     private __document: Document;
     private __selection: Selection;
     private __index: number;
+
     constructor(context: Context, index: number) {
         this.__document = context.data;
         this.__selection = context.selection;
         this.__index = index;
     }
+
     hasNext(): boolean {
         return this.__index < this.__document.pagesList.length;
     }
+
     next(): ItemData {
         const id: PageListItem = this.__document.pagesList[this.__index];
         this.__index++;
@@ -79,15 +89,19 @@ class Iter implements IDataIter<ItemData> {
 
 const pageSource = new class implements IDataSource<ItemData> {
     private m_onchange?: (index: number, del: number, insert: number, modify: number) => void;
+
     indexOf(data: ItemData): number {
         throw new Error("Method not implemented.");
     }
+
     length(): number {
         return props.context.data.pagesList.length;
     }
+
     iterAt(index: number): IDataIter<ItemData> {
         return new Iter(props.context, index);
     }
+
     onChange(l: (index: number, del: number, insert: number, modify: number) => void): void {
         this.m_onchange = l;
     }
@@ -123,15 +137,18 @@ const addPage = () => {
         })
     }
 }
+
 function toggle() {
     fold.value = !fold.value;
     emit('fold', fold.value)
 }
+
 function afterDrag(wandererId: string, hostId: string, offsetOverhalf: boolean) {
     const docEditor = props.context.editor4Doc();
     docEditor.pageListDrag(wandererId, hostId, offsetOverhalf);
     pageSource.notify(0, 0, 0, Number.MAX_VALUE);
 }
+
 const rename = (value: string, id: string) => {
     props.context.data.pagesMgr.get(id).then((p: Page | undefined) => {
         if (!p) return
@@ -157,17 +174,17 @@ const pageMenuMount = (id: string, e: MouseEvent) => {
     pageMenuPosition.value.x = e.clientX
     pageMenuPosition.value.y = e.clientY - 75
     pageMenuItems = [
-        { name: 'copy_link', id: id, disable: false },
-        { name: 'duplicate', id: id, disable: false },
-        { name: 'rename', id: id, disable: false },
-        { name: 'delete', id: id, disable: false }
+        {name: 'copy_link', id: id, disable: false},
+        {name: 'duplicate', id: id, disable: false},
+        {name: 'rename', id: id, disable: false},
+        {name: 'delete', id: id, disable: false}
     ]
     if (props.context.data.pagesList.length === 1) {
         pageMenuItems[3].disable = true;
     }
-    if(props.context.workspace.documentPerm !== Perm.isEdit || props.context.tool.isLable) {
+    if (props.context.workspace.documentPerm !== Perm.isEdit || props.context.tool.isLable) {
         pageMenuItems = [
-            { name: 'copy_link', id: id, disable: false },
+            {name: 'copy_link', id: id, disable: false},
         ]
     }
     pageMenu.value = true
@@ -184,9 +201,11 @@ const pageMenuMount = (id: string, e: MouseEvent) => {
 
     })
 }
+
 function Menuesc(e: KeyboardEvent) {
     if (e.code === 'Escape') pageMenuUnmount();
 }
+
 function pageMenuUnmount(e?: MouseEvent, item?: string, id?: string) {
     document.removeEventListener('keydown', Menuesc);
     if (item === 'rename') {
@@ -225,15 +244,18 @@ function pageMenuUnmount(e?: MouseEvent, item?: string, id?: string) {
     pageSource.notify(0, 0, 0, Number.MAX_VALUE);
     pageMenu.value = false;
 }
+
 function menu_watcher(t?: number) {
     if (t === Menu.SHUTDOWN_MENU) {
         pageMenu.value = false;
     }
 }
-function navi_watcher(t?: number) { }
+
+function navi_watcher(t?: number) {
+}
 
 const tool_watcher = (t?: number) => {
-    if(t === Tool.LABLE_CHANGE) {
+    if (t === Tool.LABLE_CHANGE) {
         isLable.value = props.context.tool.isLable;
     }
 }
@@ -262,30 +284,33 @@ onUnmounted(() => {
             <div class="title">{{ fold ? cur_page_name : t('navi.page') }}</div>
             <div class="space"></div>
             <div class="btn">
-                <div class="add" @click.stop="addPage" :title="t('navi.add_page')" v-if="isEdit === Perm.isEdit && !isLable">
+                <div class="add" @click.stop="addPage" :title="t('navi.add_page')"
+                     v-if="isEdit === Perm.isEdit && !isLable">
                     <svg-icon icon-class="add"></svg-icon>
                 </div>
                 <div class="shrink" @click="toggle">
-                    <svg-icon icon-class="down" :style="{ transform: fold ? 'rotate(-90deg)' : 'rotate(0deg)' }"></svg-icon>
+                    <svg-icon icon-class="down"
+                              :style="{ transform: fold ? 'rotate(-90deg)' : 'rotate(0deg)' }"></svg-icon>
                 </div>
             </div>
         </div>
         <div class="body" ref="list_body" :style="{ height: fold ? 0 : 'calc(100% - 36px)' }">
-            <ListView ref="pagelist" :source="pageSource" :item-view="PageItem" draging="pageList" :item-width="0" :context="props.context"
-                :pageHeight="pageH" :item-height="30" :first-index="0" v-bind="$attrs" orientation="vertical"
-                :allowDrag="true" location="pagelist" @rename="rename" @onMouseDown="mousedown" @after-drag="afterDrag">
+            <ListView ref="pagelist" :source="pageSource" :item-view="PageItem" :item-width="0" :context="props.context"
+                      :pageHeight="pageH" :item-height="30" :first-index="0" v-bind="$attrs" orientation="vertical"
+                      :allowDrag="true" location="pagelist" @rename="rename" @onMouseDown="mousedown"
+                      @after-drag="afterDrag">
             </ListView>
             <ContextMenu v-if="pageMenu" :x="pageMenuPosition.x" :y="pageMenuPosition.y" ref="contextMenuEl"
-                :context="props.context" @close="pageMenuUnmount">
+                         :context="props.context" @close="pageMenuUnmount">
                 <div :class="item.disable ? 'items-wrap-disable' : 'items-wrap'" v-for="(item, index) in pageMenuItems"
-                    :key="index" @click="e => pageMenuUnmount(e, item.name, item.id)">
+                     :key="index" @click="e => pageMenuUnmount(e, item.name, item.id)">
                     <span>{{ t(`pageMenu.${item.name}`) }}</span>
                 </div>
             </ContextMenu>
         </div>
     </div>
 </template>
-    
+
 <style scoped lang="scss">
 .pagelist-wrap {
     height: 100%;
@@ -299,7 +324,7 @@ onUnmounted(() => {
         position: relative;
         align-items: center;
 
-        >div:not(.space) {
+        > div:not(.space) {
             flex-shrink: 0;
         }
 
@@ -322,7 +347,7 @@ onUnmounted(() => {
             display: flex;
             flex-direction: row;
 
-            >div {
+            > div {
                 margin-left: 8px;
             }
 
@@ -330,7 +355,7 @@ onUnmounted(() => {
                 height: 14px;
                 width: 14px;
 
-                >svg {
+                > svg {
                     width: 80%;
                     height: 80%;
                 }
@@ -340,7 +365,7 @@ onUnmounted(() => {
                 height: 14px;
                 width: 14px;
 
-                >svg {
+                > svg {
                     width: 80%;
                     height: 80%;
                 }
@@ -350,7 +375,7 @@ onUnmounted(() => {
                 height: 14px;
                 width: 14px;
 
-                >svg {
+                > svg {
                     transition: 0.5s;
                     width: 80%;
                     height: 80%;
@@ -362,7 +387,7 @@ onUnmounted(() => {
     .body {
         height: calc(100% - 30px);
 
-        >.container {
+        > .container {
             height: 100%;
         }
     }

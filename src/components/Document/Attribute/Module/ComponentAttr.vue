@@ -39,6 +39,7 @@ const conflict = ref<boolean>(false);
 const selected = ref<string[]>([]);
 const var_name = ref<string>('');
 const dlt_value = ref<any>(true);
+
 function close() {
     const is_achieve_expected_results = compsType.value;
     compsType.value = false;
@@ -129,11 +130,11 @@ const saveLayerShow = (type: VariableType) => {
         message('info', '属性名不能为空');
         return;
     }
-    if(typeof dlt_value.value === 'string' && dlt_value.value.trim().length < 1) {
+    if (typeof dlt_value.value === 'string' && dlt_value.value.trim().length < 1) {
         return warn.value = true;
     }
     const symbolshape = props.context.selection.symbolshape;
-    if(!symbolshape) return;
+    if (!symbolshape) return;
     create_var_by_type(props.context, type, var_name.value, dlt_value.value, selected.value, symbolshape);
     isaddStateDialog.value = false;
 }
@@ -165,6 +166,7 @@ function name_change(v: string) {
 function dlt_change(v: number) {
     dlt_value.value = !v;
 }
+
 function text_dlt_change(v: string) {
     dlt_value.value = v;
 }
@@ -250,7 +252,8 @@ onUnmounted(() => {
             </template>
             <template #default_value>
                 <PopoverDefaultInput v-if="addType !== VariableType.SymbolRef" :context="context" :warn="warn"
-                                     :add-type="addType" @select="dlt_change" @change="text_dlt_change"></PopoverDefaultInput>
+                                     :add-type="addType" @select="dlt_change"
+                                     @change="text_dlt_change"></PopoverDefaultInput>
             </template>
         </CompLayerShow>
     </div>

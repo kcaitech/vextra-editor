@@ -52,7 +52,10 @@ function component_watcher(t: number, val: Shape) {
         const symbolref = props.context.selection.symbolrefshape;
         if (!symbolref) return;
         const sym = props.context.data.symbolsMgr.getSync(val.id);
-        if (!sym) return;
+        if (!sym)  {
+            message("info", '无效组件');
+            return;
+        }
         const is_circular = is_circular_ref2(sym, symbolref.refId);
         if (is_circular) {
             message("danger", '存在循环引用');

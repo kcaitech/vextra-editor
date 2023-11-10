@@ -528,8 +528,7 @@ onUnmounted(() => {
       <div class="list-wrap">
         <ListView v-if="valid_result_by_shape" :source="source_by_shape" :item-view="ResultItem" :item-height="30"
           :item-width="0" :first-index="0" :context="props.context" @selectshape="selectShape" @hovershape="hoverShape"
-          @unhovershape="unHovershape" @scrolltoview="shapeScrollToContentView_1" @rename="rename" @isRead="isRead"
-          draging="shapeList" @isLock="isLock" @item-mousedown="list_mousedown" orientation="vertical">
+          @unhovershape="unHovershape" @scrolltoview="shapeScrollToContentView_1" @rename="rename" @isRead="isRead" @isLock="isLock" @item-mousedown="list_mousedown" orientation="vertical">
         </ListView>
         <div v-else class="null-result">
           {{ t('search.search_results') }}
@@ -554,7 +553,7 @@ onUnmounted(() => {
         <ListView v-if="valid_result_by_content" :source="source_by_content" :item-view="TextResultItem" :item-height="50"
           :item-width="0" :first-index="0" :context="props.context" @selectshape="selectShape" @hovershape="hoverShape"
           @unhovershape="unHovershape" @scrolltoview="shapeScrollToContentView" @rename="rename" @isRead="isRead"
-          draging="shapeList" @isLock="isLock" @item-mousedown="list_mousedown" orientation="vertical">
+          @isLock="isLock" @item-mousedown="list_mousedown" orientation="vertical">
         </ListView>
         <div v-else class="null-result">
           {{ t('search.search_results') }}
