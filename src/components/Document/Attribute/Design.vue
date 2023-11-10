@@ -7,6 +7,7 @@ import Arrange from './Arrange.vue';
 import ShapeBaseAttr from './BaseAttr/Index.vue';
 import Fill from './Fill/Fill.vue';
 import Border from './Border/Border.vue';
+import Shadow from './Shadow/Shadows.vue';
 import PageBackgorund from './PageBackgorund.vue';
 import Text from './Text/Text.vue';
 import { throttle } from 'lodash';
@@ -48,6 +49,17 @@ const WITH_BORDER = [
     ShapeType.Contact
 ];
 const WITH_TABLE = [ShapeType.Table];
+const WITH_SHADOW = [
+    ShapeType.Rectangle,
+    ShapeType.Oval,
+    ShapeType.Path,
+    ShapeType.Artboard,
+    ShapeType.Image,
+    ShapeType.Text,
+    ShapeType.Path,
+    ShapeType.Group,
+    ShapeType.Line
+]
 const shapeType = ref();
 const reflush = ref<number>(0);
 
@@ -123,6 +135,8 @@ onUnmounted(() => {
             <Text v-if="WITH_TEXT.includes(shapeType)" :shape="(shapes[0] as TextShape)" :context="props.context"></Text>
             <TableText v-if="WITH_TABLE.includes(shapeType)" :shape="(shapes[0] as TableShape)" :context="props.context">
             </TableText>
+            <Shadow v-if="WITH_SHADOW.includes(shapeType)" :shapes="shapes" :context="props.context">
+            </Shadow>
         </div>
     </section>
 </template>

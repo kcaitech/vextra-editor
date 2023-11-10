@@ -75,13 +75,28 @@ onUnmounted(() => {
 
 <template>
     <svg version="1.1" xmlns="http://www.w3.org/2000/svg" xmlns:xlink="http://www.w3.org/1999/xlink"
-        xmlns:xhtml="http://www.w3.org/1999/xhtml" preserveAspectRatio="xMinYMin meet" :width="width"
-        :height="height" :viewBox="`0 0 ${width} ${height}`" overflow="visible"
-        :reflush="reflush !== 0 ? reflush : undefined" :style="{ transform: matrixWithFrame.toString() }" :data-area="rootId">
+        xmlns:xhtml="http://www.w3.org/1999/xhtml" preserveAspectRatio="xMinYMin meet" :width="width" :height="height"
+        :viewBox="`0 0 ${width} ${height}`" overflow="visible" :reflush="reflush !== 0 ? reflush : undefined"
+        :style="{ transform: matrixWithFrame.toString() }" :data-area="rootId">
         <component :is="comsMap.get(c.type) ?? comsMap.get(ShapeType.Rectangle)" v-for="c in renderItems" :key="c.id"
             :data="c" />
 
     </svg>
+    <!-- <div class="text">
+        <svg width="200" height="200" xmlns="http://www.w3.org/2000/svg">
+  <defs>
+    <filter id="shadow">
+      <feDropShadow dx="4" dy="8" stdDeviation="4"/>
+    </filter>
+    <mask id="invisible">
+      <rect width="100%" height="100%" fill="white"/>
+      <circle cx="50%" cy="50%" r="80" fill="black"/>
+    </mask>
+  </defs>
+  <circle cx="50%" cy="50%" r="80"
+      style="fill:blue; filter:url(#shadow); mask: url(#invisible);"/>
+</svg>
+    </div> -->
     <ShapeTitles v-if="show_t" :context="props.context" :data="data" :matrix="matrixWithFrame.toArray()"></ShapeTitles>
 </template>
 
@@ -89,5 +104,11 @@ onUnmounted(() => {
 svg {
     position: absolute;
     transform-origin: top left;
+}
+
+.text {
+    width: 600px;
+    height: 600px;
+    background-color: #fff;
 }
 </style>

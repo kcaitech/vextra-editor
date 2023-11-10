@@ -1,0 +1,192 @@
+<script setup lang="ts">
+import { Context } from '@/context';
+import { Menu } from '@/context/menu';
+import { get_actions_shadow_position } from '@/utils/shape_style';
+import { Shadow, ShadowPosition, Shape } from '@kcdesign/data';
+import { onMounted, onUnmounted, ref, watch } from 'vue';
+import { useI18n } from 'vue-i18n';
+const { t } = useI18n();
+const props = defineProps<{
+    context: Context
+    shadow: Shadow
+    idx: number
+    length: number
+    shapes: Shape[]
+}>();
+const isMenu = ref(false);
+const activeItem = ref(props.shadow.position);
+const showMenu = () => {
+    if (isMenu.value) return isMenu.value = false;
+    activeItem.value = props.shadow.position;
+    props.context.menu.shadowPositionMenu();
+    isMenu.value = true;
+    document.addEventListener('click', handleClick);
+}
+
+const togglePositinon = (position: ShadowPosition) => {
+    const idx = props.length - props.idx - 1;
+    const len = props.shapes.length;
+    if (len === 1) {
+        if (props.shadow.position === position) return close();
+        const e = props.context.editor4Shape(props.context.selection.selectedShapes[0]);
+        e.setShadowPosition(idx, position);
+    } else if (len > 1) {
+        const actions = get_actions_shadow_position(props.shapes, idx, position);
+        if (actions && actions.length) {
+            const page = props.context.selection.selectedPage;
+            if (page) {
+                const editor = props.context.editor4Page(page);
+                editor.setShapesShadowPosition(actions);
+            }
+        }
+    }
+    close();
+}
+
+const close = () => {
+    isMenu.value = false;
+}
+
+const handleClick = (e: MouseEvent) => {
+    e.stopPropagation();
+    e.target instanceof Element && !e.target.closest('.shadow-position') && close();
+}
+
+const menu_watcher = (t: number) => {
+    if (t === Menu.SHADOW_POSITION_MENU) {
+        close();
+    }
+}
+
+onMounted(() => {
+    props.context.menu.watch(menu_watcher);
+})
+onUnmounted(() => {
+    props.context.menu.unwatch(menu_watcher);
+})
+</script>
+
+<template>
+    <div class="shadow-position">
+        <div class="context" @click="showMenu">{{ t(`shadow.${shadow.position}`) }}</div>
+        <div class="down" @click="showMenu" :class="{ 'active-down': isMenu }">
+            <svg-icon icon-class="down" />
+        </div>
+        <div class="select_menu" v-if="isMenu">
+            <div class="item" @click="togglePositinon(ShadowPosition.Outer)" @mouseenter="activeItem = ShadowPosition.Outer"
+                :class="{ 'active-item': activeItem === ShadowPosition.Outer }">
+                <div class="icon">
+                    <div class="choose" v-if="shadow.position === ShadowPosition.Outer"></div>
+                </div>
+                <div class="text">外阴影</div>
+            </div>
+            <div class="item" @click="togglePositinon(ShadowPosition.Inner)" @mouseenter="activeItem = ShadowPosition.Inner"
+                :class="{ 'active-item': activeItem === ShadowPosition.Inner }">
+                <div class="icon">
+                    <div class="choose" v-if="shadow.position === ShadowPosition.Inner"></div>
+                </div>
+                <div class="text">内阴影</div>
+            </div>
+        </div>
+    </div>
+</template>
+
+<style scoped lang="scss">
+.shadow-position {
+    font-size: 12px;
+    position: relative;
+    background-color: rgba(#D8D8D8, 0.4);
+    width: 100%;
+    height: 100%;
+    border-radius: var(--default-radius);
+    box-sizing: border-box;
+    display: flex;
+    align-items: center;
+    padding-left: 10px;
+
+    &:hover {
+        .down {
+            background-color: rgba(0, 0, 0, 0.09);
+        }
+    }
+
+    .context {
+        flex: 1;
+        height: 100%;
+        display: flex;
+        align-items: center;
+    }
+
+    .down {
+        width: 24px;
+        height: 24px;
+        border-radius: 4px;
+        margin-right: 3px;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+
+        >svg {
+            width: 12px;
+            height: 12px;
+        }
+    }
+
+    .select_menu {
+        position: absolute;
+        top: 32px;
+        left: 0px;
+        width: 85%;
+        border-radius: 4px;
+        background-color: #fff;
+        box-shadow: 1px 1px 5px rgba(0, 0, 0, 0.2);
+        z-index: 100;
+        padding: 10px 0;
+
+        .item {
+            display: flex;
+            align-items: center;
+            width: 100%;
+            height: 30px;
+
+            .icon {
+                width: 30px;
+                height: 30px;
+                display: flex;
+                align-items: center;
+                justify-content: center;
+                margin: 0 3px;
+            }
+        }
+
+        .choose {
+            box-sizing: border-box;
+            width: 10px;
+            height: 6px;
+            margin-left: 2px;
+            border-width: 0 0 1px 1px;
+            border-style: solid;
+            border-color: rgb(0, 0, 0, .75);
+            transform: rotate(-45deg) translateY(-30%);
+        }
+    }
+}
+
+.active-down {
+    background-color: rgba(0, 0, 0, 0.09);
+}
+
+.active-item {
+    background-color: var(--active-color);
+
+    >.icon {
+        >.choose {
+            border-color: #fff;
+        }
+    }
+
+    .text {
+        color: #fff;
+    }
+}
+</style>

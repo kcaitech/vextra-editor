@@ -1,0 +1,417 @@
+<script setup lang="ts">
+import { Context } from '@/context';
+import { onUpdated, ref, watch } from 'vue';
+import Popover from '@/components/common/Popover.vue';
+import ShadowInput from './ShadowInput.vue';
+import { useI18n } from 'vue-i18n';
+import ColorPicker from '@/components/common/ColorPicker/index.vue';
+import { toHex } from "@/utils/color";
+import { Color, Shadow, Shape } from '@kcdesign/data';
+import { message } from "@/utils/message";
+import { Reg_HEX } from "@/utils/RegExp";
+import { get_actions_shadow_blur, get_actions_shadow_color, get_actions_shadow_offsetx, get_actions_shadow_offsety, get_actions_shadow_spread } from '@/utils/shape_style';
+
+const { t } = useI18n();
+interface Props {
+    context: Context
+    shadow: Shadow
+    idx: number
+    length: number
+    shapes: Shape[]
+}
+const props = defineProps<Props>();
+const popover = ref();
+const reflush = ref<number>(0);
+const alphaShadow = ref<HTMLInputElement>();
+const colorShadow = ref<HTMLInputElement>();
+
+const setOffsetX = (value: number) => {
+    const _idx = props.length - props.idx - 1;
+    const len = props.shapes.length;
+    if (len === 1) {
+        const e = props.context.editor4Shape(props.context.selection.selectedShapes[0]);
+        e.setShadowOffsetX(_idx, value);
+    } else if (len > 1) {
+        const actions = get_actions_shadow_offsetx(props.shapes, _idx, value);
+        if (actions && actions.length) {
+            const page = props.context.selection.selectedPage;
+            if (page) {
+                const editor = props.context.editor4Page(page);
+                editor.setShapesShadowOffsetX(actions);
+            }
+        }
+    }
+}
+const setOffsetY = (value: number) => {
+    const _idx = props.length - props.idx - 1;
+    const len = props.shapes.length;
+    if (len === 1) {
+        const e = props.context.editor4Shape(props.context.selection.selectedShapes[0]);
+        e.setShadowOffsetY(_idx, value);
+    } else if (len > 1) {
+        const actions = get_actions_shadow_offsety(props.shapes, _idx, value);
+        if (actions && actions.length) {
+            const page = props.context.selection.selectedPage;
+            if (page) {
+                const editor = props.context.editor4Page(page);
+                editor.setShapesShadowOffsetY(actions);
+            }
+        }
+    }
+}
+const setBlurRadius = (value: number) => {
+    const _idx = props.length - props.idx - 1;
+    const len = props.shapes.length;
+    if (len === 1) {
+        const e = props.context.editor4Shape(props.context.selection.selectedShapes[0]);
+        e.setShadowBlur(_idx, value);
+    } else if (len > 1) {
+        const actions = get_actions_shadow_blur(props.shapes, _idx, value);
+        if (actions && actions.length) {
+            const page = props.context.selection.selectedPage;
+            if (page) {
+                const editor = props.context.editor4Page(page);
+                editor.setShapesShadowBlurRadius(actions);
+            }
+        }
+    }
+}
+const setSpread = (value: number) => {
+    const _idx = props.length - props.idx - 1;
+    const len = props.shapes.length;
+    if (len === 1) {
+        const e = props.context.editor4Shape(props.context.selection.selectedShapes[0]);
+        e.setShadowSpread(_idx, value);
+    } else if (len > 1) {
+        const actions = get_actions_shadow_spread(props.shapes, _idx, value);
+        if (actions && actions.length) {
+            const page = props.context.selection.selectedPage;
+            if (page) {
+                const editor = props.context.editor4Page(page);
+                editor.setShapesShadowSpread(actions);
+            }
+        }
+    }
+}
+
+function setColor(clr: string, alpha: number) {
+    const res = clr.match(Reg_HEX);
+    if (!res) {
+        message('danger', t('system.illegal_input'));
+        return;
+    }
+    const r = Number.parseInt(res[1], 16);
+    const g = Number.parseInt(res[2], 16);
+    const b = Number.parseInt(res[3], 16);
+    const _idx = props.length - props.idx - 1;
+    const len = props.shapes.length;
+    if (len === 1) {
+        const e = props.context.editor4Shape(props.context.selection.selectedShapes[0]);
+        e.setShadowColor(_idx, new Color(alpha, r, g, b));
+    } else if (len > 1) {
+        const actions = get_actions_shadow_color(props.shapes, _idx, new Color(alpha, r, g, b));
+        const page = props.context.selection.selectedPage;
+        if (page) {
+            const editor = props.context.editor4Page(page);
+            editor.setShapesShadowColor(actions);
+        }
+    }
+}
+function onColorChange(e: Event) {
+    let value = (e.target as HTMLInputElement)?.value;
+    if (value.slice(0, 1) !== '#') value = "#" + value;
+    if (value.length === 4) value = `#${value.slice(1).split('').map(i => `${i}${i}`).join('')}`;
+    if (value.length === 2) value = `#${value.slice(1).split('').map(i => `${i}${i}${i}${i}${i}${i}`).join('')}`;
+    if (Reg_HEX.test(value)) {
+        setColor(value, props.shadow.color.alpha);
+    } else {
+        message('danger', t('system.illegal_input'));
+        return (e.target as HTMLInputElement).value = toHex(props.shadow.color);
+    }
+}
+function onAlphaChange(e: Event) {
+    let value = (e.currentTarget as any)['value'];
+    if (alphaShadow.value) {
+        if (value?.slice(-1) === '%') {
+            value = Number(value?.slice(0, -1))
+            if (value >= 0) {
+                if (value > 100) value = 100;
+                value = value.toFixed(2) / 100;
+                const color = props.shadow.color;
+                let clr = toHex(color);
+                if (clr.slice(0, 1) !== '#') clr = "#" + clr;
+                return setColor(clr, value);
+            } else {
+                message('danger', t('system.illegal_input'));
+                return (e.target as HTMLInputElement).value = (props.shadow.color.alpha * 100) + '%'
+            }
+        } else if (!isNaN(Number(value))) {
+            if (value >= 0) {
+                if (value > 100) value = 100;
+                value = Number((Number(value)).toFixed(2)) / 100;
+                const color = props.shadow.color;
+                let clr = toHex(color);
+                if (clr.slice(0, 1) !== '#') clr = "#" + clr;
+                return setColor(clr, value);
+            } else {
+                message('danger', t('system.illegal_input'));
+                return (e.target as HTMLInputElement).value = (props.shadow.color.alpha * 100) + '%'
+            }
+        } else {
+            message('danger', t('system.illegal_input'));
+            return (e.target as HTMLInputElement).value = (props.shadow.color.alpha * 100) + '%'
+        }
+    }
+}
+function getColorFromPicker(color: Color) {
+    const _idx = props.length - props.idx - 1;
+    const len = props.shapes.length;
+    if (len === 1) {
+        const e = props.context.editor4Shape(props.context.selection.selectedShapes[0]);
+        e.setShadowColor(_idx, color);
+    } else if (len > 1) {
+        const actions = get_actions_shadow_color(props.shapes, _idx, color);
+        const page = props.context.selection.selectedPage;
+        if (page) {
+            const editor = props.context.editor4Page(page);
+            editor.setShapesShadowColor(actions);
+        }
+    }
+}
+
+const filterAlpha = (a: number) => {
+    let alpha = Math.round(a * 100) / 100;
+    if (Number.isInteger(alpha)) {
+        return alpha.toFixed(0); // 返回整数形式
+    } else if (Math.abs(alpha * 10 - Math.round(alpha * 10)) < Number.EPSILON) {
+        return alpha.toFixed(1); // 保留一位小数
+    } else {
+        return alpha.toFixed(2); // 保留两位小数
+    }
+}
+
+const selectAlpha = () => {
+    if (alphaShadow.value) {
+        alphaShadow.value.select();
+    }
+}
+const selectColor = () => {
+    if (colorShadow.value) {
+        colorShadow.value.select()
+    }
+}
+function showMenu() {
+    popover.value.show();
+}
+onUpdated(() => {
+    reflush.value++;
+})
+</script>
+
+<template>
+    <div class="border-detail-container" @mousedown.stop>
+        <Popover :context="props.context" class="popover" ref="popover" :width="260" height="auto" :left="-475"
+            :title="`阴影设置`">
+            <template #trigger>
+                <div class="trigger" @click="showMenu">
+                    <svg-icon icon-class="gear"></svg-icon>
+                </div>
+            </template>
+            <template #body>
+                <div class="options-container">
+                    <div class="setting">
+                        <div class="name-title">位置</div>
+                        <ShadowInput ticon="X" :shadow-v="shadow.offsetX" @on-change="setOffsetX" :reflush="reflush">
+                        </ShadowInput>
+                        <ShadowInput ticon="Y" :shadow-v="shadow.offsetY" @on-change="setOffsetY" :reflush="reflush">
+                        </ShadowInput>
+                    </div>
+                    <div class="setting">
+                        <div class="name-title">效果</div>
+                        <ShadowInput ticon="B" :shadow-v="shadow.blurRadius" @on-change="setBlurRadius" :reflush="reflush">
+                        </ShadowInput>
+                        <ShadowInput ticon="S" :shadow-v="shadow.spread" @on-change="setSpread" :reflush="reflush">
+                        </ShadowInput>
+                    </div>
+                    <div class="setting">
+                        <div class="name-title">颜色</div>
+                        <div class="color">
+                            <ColorPicker :color="(shadow.color as Color)" :context="props.context"
+                                @change="(c: Color) => getColorFromPicker(c)" />
+                            <input ref="colorShadow" :spellcheck="false" :value="(toHex(shadow.color)).slice(1)"
+                                @change="e => onColorChange(e)" @focus="selectColor" />
+                            <input ref="alphaShadow" style="text-align: center;"
+                                :value="filterAlpha(shadow.color.alpha * 100) + '%'" @change="e => onAlphaChange(e)"
+                                @focus="selectAlpha" />
+                        </div>
+                    </div>
+                    <div class="show">
+                        <div :class="true ? 'visibility' : 'hidden'">
+                            <svg-icon icon-class="select"></svg-icon>
+                        </div>
+                        <span style="margin-left: 10px;">显示透明区域阴影</span>
+                    </div>
+                </div>
+            </template>
+        </Popover>
+    </div>
+</template>
+
+<style scoped lang="scss">
+.border-detail-container {
+    >.popover {
+        width: 18px;
+        height: 22px;
+
+        .trigger {
+            width: 100%;
+            height: 100%;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+
+            >svg {
+                width: 11px;
+                height: 11px;
+                transition: 0.5s;
+            }
+
+            >svg:hover {
+                transform: rotate(90deg);
+            }
+        }
+
+        .options-container {
+            display: flex;
+            flex-direction: column;
+            justify-content: space-between;
+            padding: 8px var(--default-padding);
+            box-sizing: border-box;
+            height: 100%;
+
+            >div {
+                display: flex;
+                align-items: center;
+                margin: 4px 0;
+
+                >label {
+                    flex: 0 0 72px;
+                    text-align: left;
+                    box-sizing: border-box;
+                    font-weight: var(--font-default-bold);
+                }
+
+                >.thickness-container {
+                    box-sizing: border-box;
+                    padding: 0 14px;
+                    background-color: var(--input-background);
+                    width: calc(100% - 72px);
+                    height: var(--default-input-height);
+                    border-radius: var(--default-radius);
+                    display: flex;
+                    align-items: center;
+
+                    >svg {
+                        cursor: ew-resize;
+                        flex: 0 0 24px;
+                        height: 24px;
+                    }
+
+                    >input {
+                        outline: none;
+                        border: none;
+                        width: calc(100% - 37px);
+                        margin-left: var(--default-margin-half);
+                        background-color: transparent;
+                    }
+
+                    .up_down {
+                        width: 10px;
+                        height: 100%;
+
+                        >svg {
+                            width: 10px;
+                            height: 10px;
+                        }
+                    }
+                }
+            }
+        }
+    }
+}
+
+.color {
+    flex: 0 1 140px;
+    background-color: var(--input-background);
+    height: 100%;
+    padding: 0px 10px;
+    margin-left: 5px;
+    border-radius: var(--default-radius);
+    box-sizing: border-box;
+    display: flex;
+    align-items: center;
+
+    input {
+        outline: none;
+        border: none;
+        box-sizing: border-box;
+        background-color: transparent;
+        width: 90px;
+        margin-left: 6px;
+    }
+
+    input+input {
+        width: 50px;
+    }
+}
+
+.setting {
+    width: 100%;
+    height: 30px;
+    display: flex;
+    box-sizing: border-box;
+    align-items: center;
+    justify-content: space-between;
+
+    .name-title {
+        width: 30px;
+    }
+}
+
+.show {
+    width: 100%;
+    height: 30px;
+    display: flex;
+    box-sizing: border-box;
+    align-items: center;
+
+    .visibility {
+        flex: 0 0 18px;
+        width: 18px;
+        height: 18px;
+        background-color: var(--active-color);
+        border-radius: var(--default-radius);
+        border: 1px solid #d8d8d8;
+        box-sizing: border-box;
+        color: #ffffff;
+        display: flex;
+        justify-content: center;
+        align-items: center;
+
+        >svg {
+            width: 60%;
+            height: 60%;
+        }
+    }
+
+    .hidden {
+        flex: 0 0 18px;
+        width: 18px;
+        height: 18px;
+        background-color: transparent;
+        border-radius: var(--default-radius);
+        border: 1px solid #d8d8d8;
+        box-sizing: border-box;
+    }
+}
+</style>
