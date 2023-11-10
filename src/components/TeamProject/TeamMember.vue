@@ -29,10 +29,10 @@
                         <img :src="avatar" alt="icon"
                             style="width: 20px;height: 20px;;border-radius: 50%;margin-right: 4px;">
                         {{ teamname }}
-                        <div v-if="perm_type < usertype2 || id === userID" class="changeName">
+                        <div v-if="perm_type < usertype2 || id === userID " class="changeName">
                             <el-tooltip class="tips" effect="dark" :content="`${t('teammember.change_name')}`"
                                 placement="bottom" :show-after="600" :offset="10" :hide-after="0">
-                                <button class="button" @click.stop="() => openDialog(teamname, id)">{{
+                                <button class="button" @click="() => openDialog(teamname, id)">{{
                                     t('teammember.modify')
                                 }}</button>
                             </el-tooltip>
@@ -429,7 +429,7 @@ async function confirm_to_modify_name() {
     if (confirmLoading.value) { return; }
     const params = get_params_for_modify_name();
     // 1. 校验
-    if (changeinput.value && changeinput.value.value.length > 0 && changeinput.value.value.length < 9) {
+    if (changeinput.value && changeinput.value.value.length > 0 && changeinput.value.value.length < 20) {
         confirmLoading.value = true;
         try {
             // 2. 执行修改接口
