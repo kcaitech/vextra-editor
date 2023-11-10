@@ -1,7 +1,7 @@
 
 <template>
     <div class="tatle" style="height: calc(100vh - 120px);">
-        <tablelist :data="lists" :iconlist="iconlists" @share="Sharefile" @remove="Removefile" @dbclickopen="openDocument"
+        <tablelist :data="searchlists" :iconlist="iconlists" @share="Sharefile" @remove="Removefile" @dbclickopen="openDocument"
             :address="true" @updatestar="Starfile" @rightMeun="rightmenu" :noNetwork="noNetwork" @refreshDoc="refreshDoc" />
     </div>
     <listrightmenu :items="items" :data="mydata" @get-userdata="getUserdata" @r-starfile="Starfile" @r-sharefile="Sharefile"
@@ -16,13 +16,14 @@
 <script setup lang="ts">
 import * as user_api from '@/request/users'
 import { ElMessage } from 'element-plus'
-import { ref, onMounted, onUnmounted, nextTick, watch, inject, Ref } from 'vue'
+import { ref, onMounted, onUnmounted, nextTick, watch, inject, Ref, watchEffect } from 'vue'
 import { useI18n } from 'vue-i18n'
 import { router } from '@/router'
 import FileShare from '@/components/Document/Toolbar/Share/FileShare.vue'
 import tablelist from '@/components/AppHome/tablelist.vue'
 import { UserInfo } from '@/context/user';
 import listrightmenu from "../listrightmenu.vue"
+import Bus from '@/components/AppHome/bus';
 
 const { t } = useI18n()
 const items = ['open', 'newtabopen', 'share', 'target_star', 'rename', 'copyfile', 'removefile']
@@ -45,6 +46,7 @@ const projectPerm = ref()
 const { projectList } = inject('shareData') as {
     projectList: Ref<any[]>;
 };
+
 
 interface data {
     document: {
@@ -101,6 +103,16 @@ async function getUserdata() {
 const refreshDoc = () => {
     getUserdata()
 }
+
+let searchvalue = ref('');
+const searchlists = ref<any[]>([])
+Bus.on('searchvalue', (str: string) => {
+    searchvalue.value = str
+})
+
+watchEffect(() => {
+    searchlists.value = lists.value.filter((el: any) => el.document.name.toLowerCase().includes(searchvalue.value.toLowerCase()))
+})
 
 function sizeTostr(size: any) {
     if ((size / 1024 / 1024 / 1024) > 1) {

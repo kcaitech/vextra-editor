@@ -1,6 +1,6 @@
 <template>
     <div class="tatle" style="height: calc(100vh - 120px);">
-        <tablelist :data="lists" :iconlist="iconlists" @restore="Restorefile" @ndelete="Deletefile" @rightMeun="rightmenu"
+        <tablelist :data="searchlists" :iconlist="iconlists" @restore="Restorefile" @ndelete="Deletefile" @rightMeun="rightmenu"
             :noNetwork="noNetwork" @refreshDoc="refreshDoc" />
     </div>
     <listrightmenu :items="items" :data="mydata" @getrecycle-lists="GetrecycleLists" @r-deletefile="Deletefile"
@@ -12,12 +12,12 @@
 <script setup lang="ts">
 import * as user_api from '@/request/users'
 import { ElMessage } from 'element-plus'
-import { ref, onMounted, onUnmounted, nextTick, watch } from 'vue'
+import { ref, onMounted, onUnmounted, nextTick, watch, watchEffect } from 'vue'
 import { useI18n } from 'vue-i18n'
 import tablelist from '@/components/AppHome/tablelist.vue'
 import listrightmenu from "../listrightmenu.vue"
 import DeleteDialog from '@/components/TeamProject/ProjectDialog.vue';
-
+import Bus from '@/components/AppHome/bus'
 const items = ['restore', 'completely_delete']
 const { t } = useI18n()
 const dialogVisible = ref(false)
@@ -70,6 +70,18 @@ async function GetrecycleLists() {
 const refreshDoc = () => {
     GetrecycleLists()
 }
+let searchlists = ref<any[]>([])
+const searchvalue = ref('');
+
+Bus.on('searchvalue', (str: string) => {
+    searchvalue.value = str
+})
+
+watchEffect(() => {
+    console.log(lists.value);
+    
+    searchlists.value = lists.value.filter((el: any) => el.document.name.toLowerCase().includes(searchvalue.value.toLowerCase()))
+})
 
 //转换文件大小
 function sizeTostr(size: any) {

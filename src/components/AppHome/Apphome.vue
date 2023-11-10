@@ -6,7 +6,7 @@
       </el-header>
       <el-container>
         <el-aside width="260px" min-width="260px">
-          <Aside @settitle="setTitle" />
+          <Aside/>
         </el-aside>
         <el-main>
           <Main @dataUpdate="update" />
@@ -163,14 +163,9 @@ provide('shareData', {
   setMenuVisi,
   menuState
 })
-function setTitle(t: string, tyep: boolean) {
-  title.value = t;
-  recycle.value = tyep;
-  sessionStorage.setItem('title', title.value)
-}
 
 //===>接收到最新的lists,props传给Headher组件
-const update = (data: any, title: any) => {
+const update = (data: any) => {
   //main组件传过来的lists和title
   items.value = data || []
   searchtitle.value = title

@@ -29,11 +29,8 @@ import Tooltip from '@/components/common/Tooltip.vue';
 import ProjectAccessSetting from '../TeamProject/ProjectFill/ProjectAccessSetting.vue';
 import ProjectMemberg from '../TeamProject/ProjectFill/ProjectMemberg.vue';
 
-interface Emits {
-    (e: 'settitle', title: string, recycle: boolean): void;
-}
 
-const emits = defineEmits<Emits>();
+
 const { t } = useI18n();
 const route = useRoute();
 const showoverlay = ref(false);
@@ -198,11 +195,6 @@ function Setindex(index: any, title: any) {
     sessionStorage.setItem('index', index);
     isactive.value = String(index)
     x.value = String(index);
-    if (index == 3) {
-        emits('settitle', title, true);
-    } else {
-        emits('settitle', title, false);
-    }
 }
 
 const showteamcard = () => {

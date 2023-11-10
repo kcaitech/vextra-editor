@@ -1,5 +1,5 @@
 <script setup lang="ts">
-import { onMounted, reactive, toRefs, ref, onUnmounted, computed, watch } from 'vue'
+import { onMounted, reactive, toRefs, ref, onUnmounted, computed, watch, nextTick } from 'vue'
 import { Search, User, SwitchButton, Close, Bell } from '@element-plus/icons-vue'
 import Inform from './Inform.vue'
 import * as share_api from '@/request/share';
@@ -8,7 +8,7 @@ import { useI18n } from 'vue-i18n'
 import { router } from '@/router'
 import avatar from '@/assets/pd-logo-svg.svg';
 import Loading from '../common/Loading.vue';
-import { el } from 'element-plus/es/locale';
+import Bus from '@/components/AppHome/bus';
 interface Props {
     items?: Array<object>,
     title?: string | undefined
@@ -43,7 +43,6 @@ const totalList = ref<any[]>([])
 const total = computed(() => {
     return applynum.value + teamnum.value;
 })
-
 const errorHandler = () => true;
 const closeInForm = () => {
     showInForm.value = false;
@@ -142,6 +141,7 @@ watch(applyList, () => {
 }, { deep: true })
 
 const handleClickOutside = (event: MouseEvent) => {
+
     const e = event.target as HTMLElement
     if (e.closest('.el-input') === null && e.closest('.searchhistory') === null) {
         closeclick();
@@ -158,16 +158,28 @@ const handleClickOutside = (event: MouseEvent) => {
 }
 
 function closeclick() {
-    search.value = ''
-    inputRef.value?.blur()
-    showSearchHistory.value = false
+    nextTick(() => {
+        search.value = ''
+        inputRef.value!.blur()
+        showSearchHistory.value = false
+    })
+
 }
+let timer1: any
+watch(search, () => {
+    clearTimeout(timer1)
+    timer1 = setTimeout(() => {
+        Bus.emit('searchvalue', search.value)
+        clearTimeout(timer1)
+    },200);
+})
 
 const screenout = async () => {
     if (!search.value) return
     isLoading.value = true
     SearchList.value = []
     await new Promise((resolve) => setTimeout(resolve, 200));
+
     if (props.items)
         SearchList.value = props.items.filter((el: any) => el.document.name.toLowerCase().includes(search.value.toLowerCase()))
     isLoading.value = false;
@@ -249,13 +261,13 @@ onMounted(() => {
         getTeamNotice();
         getProjectApplyList();
     }, 60000)
-    document.addEventListener('mousedown', handleClickOutside)
+    document.addEventListener('click', handleClickOutside)
     const searchList = localStorage.getItem('searchlist')
     historyList.value = searchList != null ? JSON.parse(searchList) : []
 })
 
 onUnmounted(() => {
-    document.removeEventListener('mousedown', handleClickOutside)
+    document.removeEventListener('click', handleClickOutside)
     clearInterval(timer)
 
 })
@@ -289,8 +301,8 @@ const textHighLight = (text: string) => {
             <div class="logo-text">ProtoDesign</div>
         </div>
         <div v-if="props.switch" class="search">
-            <el-input ref="inputRef" v-model="search" size="large" :placeholder="`${t('system.placeholder')}`"
-                @focus="showSearchHistory = true" @input="screenout">
+            <el-input ref="inputRef" v-model="search" size="large" :placeholder="search ? `正在搜索
+                ${search}`:`${t('system.placeholder')}`" @focus="showSearchHistory = true" @input="screenout">
                 <template #prefix>
                     <el-icon v-if="isLoading" class="is-loading" size="18">
                         <Loading :size="18" />
@@ -306,9 +318,9 @@ const textHighLight = (text: string) => {
                 </template>
             </el-input>
             <transition name="el-zoom-in-top">
-                <div v-if="showSearchHistory" class="searchhistory" @click="inputRef?.focus()">
+                <div v-if="showSearchHistory" class="searchhistory" @click="inputRef!.focus()">
                     <div class="tabledata" v-if="search != ''">
-                        <el-table :data="SearchList" max-height="600" @row-click="toDocument" @cell-mouse-enter="mouseenter"
+                        <!-- <el-table :data="SearchList" max-height="600" @row-click="toDocument" @cell-mouse-enter="mouseenter"
                             @cell-mouse-leave="mouseleave">
                             <el-table-column :label="t('home.file_name')" header-align="left" align="left" :min-width="150"
                                 show-overflow-tooltip>
@@ -333,8 +345,7 @@ const textHighLight = (text: string) => {
                                 </el-skeleton>
                                 <span v-else class="results">{{ t('search.search_results') }}</span>
                             </template>
-
-                        </el-table>
+                        </el-table> -->
                     </div>
                     <div class="historyList" v-else-if="historyList.length != 0">
                         <div class="listTitle">

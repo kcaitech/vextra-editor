@@ -1,7 +1,7 @@
 
 <template>
     <div class="tatle" style="height: calc(100vh - 120px);">
-        <tablelist :data="lists" :iconlist="iconlists" @share="Sharefile" @deletefile="Deletefile"
+        <tablelist :data="searchlists" :iconlist="iconlists" @share="Sharefile" @deletefile="Deletefile"
             @dbclickopen="openDocument" @updatestar="Starfile" @rightMeun="rightmenu" :noNetwork="noNetwork"
             @refreshDoc="refreshDoc" />
     </div>
@@ -22,7 +22,7 @@
 import * as share_api from "@/request/share"
 import * as user_api from '@/request/users'
 import { ElMessage } from 'element-plus'
-import { onMounted, ref, onUnmounted, nextTick, watch, inject, Ref } from "vue"
+import { onMounted, ref, onUnmounted, nextTick, watch, inject, Ref, computed, watchEffect } from "vue"
 import { useI18n } from 'vue-i18n'
 import { router } from '@/router'
 import FileShare from '@/components/Document/Toolbar/Share/FileShare.vue'
@@ -30,6 +30,7 @@ import tablelist from '@/components/AppHome/tablelist.vue'
 import { UserInfo } from '@/context/user';
 import listrightmenu from "../listrightmenu.vue";
 import MoveProjectFill from "@/components/TeamProject/MoveProjectFill.vue";
+import Bus from '@/components/AppHome/bus'
 
 interface data {
     document: {
@@ -65,6 +66,7 @@ const moveVisible = ref(false);
 const { projectList } = inject('shareData') as {
     projectList: Ref<any[]>;
 };
+let searchlists = ref<any[]>([])
 
 //获取服务器我的文件列表
 async function getDoucment() {
@@ -83,7 +85,8 @@ async function getDoucment() {
             }
         }
         lists.value = Object.values(data)
-    } catch (error:any) {
+
+    } catch (error: any) {
         if (error.data.code === 401) {
             return
         } else {
@@ -93,6 +96,19 @@ async function getDoucment() {
         }
     }
 }
+
+
+const searchvalue = ref('');
+
+Bus.on('searchvalue', (str: string) => {
+    searchvalue.value = str
+})
+
+watchEffect(() => {
+    searchlists.value = lists.value.filter((el: any) => el.document.name.toLowerCase().includes(searchvalue.value.toLowerCase()))
+})
+
+
 
 const refreshDoc = () => {
     getDoucment()
@@ -244,6 +260,9 @@ onMounted(() => {
 })
 
 onUnmounted(() => {
+    // Bus.off('searchvalue', (str: string) => {
+    //     searchvalue.value = str
+    // })
     window.removeEventListener('resize', getPageHeight)
 })
 

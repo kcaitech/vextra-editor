@@ -16,13 +16,13 @@ const myfile = ref<HTMLElement>()
 const mydel = ref<HTMLElement>()
 
 const emits = defineEmits<{
-    (e: 'dataUpdate', list: any[], title: string): void
+    (e: 'dataUpdate', list: any[]): void
 }>();
 
 //===>Apphome组件接收
-const update = (data: any, searchtitle: string) => {
+const update = (data: any) => {
     //main目录下传过来的lists和title
-    emits('dataUpdate', data, searchtitle)
+    emits('dataUpdate', data,)
 }
 
 const highlight = (state: boolean, e?: MouseEvent, path?: string,) => {

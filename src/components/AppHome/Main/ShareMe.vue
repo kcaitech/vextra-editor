@@ -1,6 +1,6 @@
 <template>
     <div class="tatle" style="height: calc(100vh - 120px);">
-        <tablelist :data="lists" :iconlist="iconlists" @share="Sharefile" @exit_share="Exitshar" @dbclickopen="openDocument"
+        <tablelist :data="searchlists" :iconlist="iconlists" @share="Sharefile" @exit_share="Exitshar" @dbclickopen="openDocument"
             @updatestar="Starfile" @rightMeun="rightmenu" :noNetwork="noNetwork" @refreshDoc="refreshDoc" />
     </div>
     <listrightmenu :items="items" :data="mydata" @ropen="openDocument" @r-sharefile="Sharefile" @r-starfile="Starfile"
@@ -14,14 +14,14 @@
 <script setup lang="ts">
 import * as user_api from '@/request/users'
 import { ElMessage } from 'element-plus'
-import { ref, onMounted, onUnmounted, nextTick, watch, inject, Ref } from 'vue'
+import { ref, onMounted, onUnmounted, nextTick, watch, inject, Ref, watchEffect } from 'vue'
 import { router } from '@/router'
 import FileShare from '@/components/Document/Toolbar/Share/FileShare.vue'
 import tablelist from '@/components/AppHome/tablelist.vue'
 import { useI18n } from 'vue-i18n'
 import { UserInfo } from '@/context/user';
 import listrightmenu from "../listrightmenu.vue"
-
+import Bus from '@/components/AppHome/bus'
 interface data {
     document: {
         id: string
@@ -90,7 +90,7 @@ async function ShareLists() {
             }
         }
         lists.value = Object.values(data)
-    } catch (error:any) {
+    } catch (error: any) {
         if (error.data.code === 401) {
             return
         } else {
@@ -105,6 +105,17 @@ const refreshDoc = () => {
     ShareLists()
 }
 
+const searchlists = ref<any[]>([])
+const searchvalue = ref('');
+
+Bus.on('searchvalue', (str: string) => {
+    searchvalue.value = str
+})
+
+watchEffect(() => {
+    searchlists.value = lists.value.filter((el: any) => el.document.name.toLowerCase().includes(searchvalue.value.toLowerCase()))
+})
+
 function sizeTostr(size: any) {
     if ((size / 1024 / 1024 / 1024) > 1) {
         size = (size / 1024 / 1024 / 1024).toFixed(2) + "GB"
@@ -117,6 +128,7 @@ function sizeTostr(size: any) {
     }
     return size
 }
+
 
 //右键打开或双击打开
 const openDocument = (id: string) => {
