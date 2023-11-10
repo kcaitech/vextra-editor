@@ -953,6 +953,13 @@ export function is_state(shape: Shape) {
 function is_sym(shape: Shape) {
     return shape.type === ShapeType.Symbol;
 }
+/**
+ * @description 仅为组件(不是union)
+ * @param shape
+ */
+export function is_symbol_but_not_union(shape: Shape) {
+    return shape.type === ShapeType.Symbol && !(shape as SymbolShape).isUnionSymbolShape;
+}
 
 /**
  * @description 给一个图层，返回这个图层所在的组件，如果不是组件内的图层，则return undefined;

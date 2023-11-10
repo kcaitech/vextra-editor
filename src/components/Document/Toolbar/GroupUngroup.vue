@@ -82,7 +82,7 @@ const groupClick = (alt?: boolean) => {
     if (!page || !shapes.length) return;
     const bro = Array.from(page.shapes.values());
     const editor = props.context.editor4Page(page);
-    shapes = compare_layer_3(props.context.selection.selectedShapes);
+    shapes = compare_layer_3(shapes);
     if (alt) {
         const name = getName(ShapeType.Artboard, bro || [], t);
         const artboard = editor.create_artboard(shapes, name);
@@ -136,7 +136,9 @@ const ungroupClick = () => {
         selection.resetSelectShapes();
     }
 }
-
+/**
+ * @description 布尔操作
+ */
 const changeBoolgroup = (type: BoolOp, n: string) => {
     const selection = props.selection;
     const shapes = selection.selectedShapes;
@@ -148,7 +150,6 @@ const changeBoolgroup = (type: BoolOp, n: string) => {
             editor.setBoolOp(type, name)
             props.context.selection.notify(Selection.CHANGE_SHAPE)
         } else if (shapes.length > 1) {
-
             const shapessorted = compare_layer_3(filter_for_group1(shapes));
             const editor = props.context.editor4Page(page)
             const g = editor.boolgroup(shapessorted, name, type)
@@ -158,11 +159,13 @@ const changeBoolgroup = (type: BoolOp, n: string) => {
         }
     }
 }
-
+/**
+ * @description 路径拼合
+ */
 const flattenShape = () => {
     const page = props.context.selection.selectedPage;
     const selection = props.selection;
-    const shapes = selection.selectedShapes;
+    const shapes = compare_layer_3(filter_for_group1(selection.selectedShapes));
     if (page && shapes.length) {
         const editor = props.context.editor4Page(page)
         if (shapes.length === 1 && shapes[0] instanceof GroupShape) {

@@ -1,6 +1,6 @@
 import {Context} from "@/context";
 import {GroupShape, Shape} from "@kcdesign/data";
-import {is_part_of_symbolref} from "@/utils/symbol";
+import {is_part_of_symbolref, is_state} from "@/utils/symbol";
 
 /**
  * @description: 输入z轴层级无序的图形列表，输出有序的图形列表
@@ -184,7 +184,7 @@ export function filter_for_group1(shapes: Shape[]) {
     const result: Shape[] = [];
     for (let i = 0, l = shapes.length; i < l; i++) {
         const item = shapes[i];
-        if (is_part_of_symbolref(item)) continue;
+        if (is_part_of_symbolref(item) || is_state(item)) continue;
         result.push(item);
     }
     return result;
