@@ -515,7 +515,7 @@ function mouseMove(event: MouseEvent) {
     if (orientation.offset !== 'middle') {
         port_a_visible.value = false;
         port_i_visible.value = false;
-        let step = orientation.speed === 'slow' ? -1 : -30;
+        let step = orientation.speed === 'slow' ? -1 : -20;
         if (orientation.offset === "top") {
             step = -step;
         }
