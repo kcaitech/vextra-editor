@@ -259,6 +259,9 @@ const tool_watcher = (t?: number) => {
         isLable.value = props.context.tool.isLable;
     }
 }
+const allow_to_drag = () => {
+    return props.context.workspace.documentPerm === Perm.isEdit && !props.context.tool.isLable;
+}
 onMounted(() => {
     props.context.selection.watch(selectionWatcher);
     props.context.data.watch(document_watcher);
@@ -297,7 +300,7 @@ onUnmounted(() => {
         <div class="body" ref="list_body" :style="{ height: fold ? 0 : 'calc(100% - 36px)' }">
             <ListView ref="pagelist" :source="pageSource" :item-view="PageItem" :item-width="0" :context="props.context"
                       :pageHeight="pageH" :item-height="30" :first-index="0" v-bind="$attrs" orientation="vertical"
-                      :allowDrag="true" location="pagelist" @rename="rename" @onMouseDown="mousedown"
+                      :allowDrag="allow_to_drag()" location="pagelist" @rename="rename" @onMouseDown="mousedown"
                       @after-drag="afterDrag">
             </ListView>
             <ContextMenu v-if="pageMenu" :x="pageMenuPosition.x" :y="pageMenuPosition.y" ref="contextMenuEl"

@@ -1,7 +1,5 @@
 <script setup lang="ts">
-import {onMounted, reactive, ref, computed, onUnmounted} from "vue";
-import {Context} from "@/context";
-import {Perm} from "@/context/workspace";
+import {onMounted, reactive, ref, onUnmounted} from "vue";
 import {
     check_orientation_during_movement, DragDetail,
     get_destination_by_drag_event,
@@ -28,31 +26,29 @@ enum Orientation {
     V = "vertical"
 }
 
-const props = defineProps<{
-    context?: Context,
-    source: IDataSource<any>,
-    itemView: any,
-    itemWidth: number,
-    itemHeight: number,
-    firstIndex: number,
-    orientation: "horizontal" | "vertical",
-    location?: string,
-    allowDrag?: boolean,
-    shapeHeight?: number,
-    pageHeight?: number,
-}>();
+interface Props {
+    source: IDataSource<any>
+    itemView: any
+    itemWidth: number
+    itemHeight: number
+    firstIndex: number
+    orientation: "horizontal" | "vertical"
+    location?: string
+    allowDrag?: boolean
+}
 
-const emit = defineEmits<{
+interface Emits {
     (e: "drag-start"): void;
+
     (e: "drag-over", overId: string): void;
+
     (e: "after-drag", wandererId: string, hostId: string, isOverHalf: boolean): void;
-    (e: "after-drag-2", detail: {
-        descend: string,
-        layer: number,
-        type: 'aside' | 'insert',
-        position: 'upper' | 'inner' | 'lower'
-    }): void;
-}>();
+
+    (e: "after-drag-2", detail: DragDetail): void;
+}
+
+const props = defineProps<Props>();
+const emit = defineEmits<Emits>();
 
 const contents = ref<HTMLDivElement>();
 const container = ref<HTMLDivElement>();
@@ -67,12 +63,7 @@ const measureWidth = ref(0); // width of listView
 const measureHeight = ref(0); // height of listView
 const prepareCount = 10; //  多准备的
 const listMouseOver = ref<boolean>(false);
-
-defineExpose({
-    container,
-    clampScroll,
-    scroll
-})
+defineExpose({container, clampScroll, scroll});
 
 const relayout: { [key: string]: Function } = {};
 relayout[Orientation.V] = () => {
@@ -241,7 +232,6 @@ viewMeasure[Orientation.H] = () => {
 
 // todo
 // 局部更新 ?
-// 滚动到可见
 
 // let offset = 0;
 props.source.onChange((index: number, del: number, insert: number, modify: number): void => {
@@ -484,17 +474,12 @@ const dragging = ref<boolean>(false);
 const mouseBegin: { x: number, y: number } = {x: 0, y: 0};
 const destination = ref<{ x: number, y: number, length: number }>({x: 0, y: 0, length: 20});
 const destinationMount = ref<boolean>(false);
-const substitute = ref<{ x: number, y: number, context: string }>({x: 0, y: 0, context: ''});
-const substituteName = ref<string>('')
 const port_a_visible = ref<boolean>(false);
 const port_i_visible = ref<boolean>(false);
 let drag_result_detail: DragDetail | undefined = undefined;
 
 function mouseDownOnItem(index: number, e: MouseEvent) {
-    if (e.button !== 0 || e.shiftKey || e.ctrlKey || e.metaKey) return; // 图层拖动只支持左键
-    if (props.context?.workspace.documentPerm !== Perm.isEdit) return; // 没有编辑权限
-    if (props.context.tool.isLable) return; // 标注模式  todo 统一整合到allowDrag属性上是更好的设计
-    if (!props.allowDrag) return; // 不允许拖动
+    if (!props.allowDrag || e.button !== 0 || e.shiftKey || e.ctrlKey || e.metaKey) return; // 图层拖动只支持左键
     // record fromIndex && pre to take off
     fromIndex.value = index;
     toIndex.value = index;
@@ -502,8 +487,6 @@ function mouseDownOnItem(index: number, e: MouseEvent) {
     mousedown.value = true;
     mouseBegin.x = e.clientX;
     mouseBegin.y = e.clientY;
-    substitute.value.context = layoutResult[fromIndex.value].data.name
-    substituteName.value = layoutResult[fromIndex.value].data.shape?.name
 
     document.addEventListener('mousemove', mouseMove);
     document.addEventListener('mouseup', mouseUp);
@@ -592,8 +575,6 @@ function mouseUp() {
     // close events && check descend port && descend
     mousedown.value = false;
     destinationMount.value = false;
-    document.removeEventListener('mousemove', mouseMove);
-    document.removeEventListener('mouseup', mouseUp);
     if (dragging.value) {
         const dragTarget = descend(fromIndex.value, toIndex.value);
         let host_id = '';
@@ -601,15 +582,28 @@ function mouseUp() {
         if (dragTarget && c) {
             host_id = c.id;
         }
-        emit('after-drag', wandererId.value, host_id, false);
         if (drag_result_detail) {
             emit('after-drag-2', drag_result_detail);
+            emit('after-drag', wandererId.value, host_id, drag_result_detail.position === "lower");
         }
         dragging.value = false;
         port_a_visible.value = false;
         port_i_visible.value = false;
         drag_result_detail = undefined;
     }
+    document.removeEventListener('mousemove', mouseMove);
+    document.removeEventListener('mouseup', mouseUp);
+}
+
+function window_blur() {
+    if (!dragging.value) return;
+    port_a_visible.value = false;
+    port_i_visible.value = false;
+    drag_result_detail = undefined;
+    mousedown.value = false;
+    clearInterval(scroll_timer);
+    document.removeEventListener('mousemove', mouseMove);
+    document.removeEventListener('mouseup', mouseUp);
 }
 
 // #endregion
@@ -630,9 +624,11 @@ onMounted(() => {
     container.value && observer.observe(container.value);
     viewMeasure[props.orientation]();
     relayout[props.orientation]();
+    window.addEventListener('blur', window_blur);
 })
 onUnmounted(() => {
     observer.disconnect();
+    window.removeEventListener('blur', window_blur);
 })
 </script>
 

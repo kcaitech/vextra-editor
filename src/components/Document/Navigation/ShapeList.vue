@@ -594,7 +594,9 @@ function after_drag_2(detail: DragDetail) {
     }
     if (need_adjust) props.context.selection.rangeSelectShape(Array.from(map.values()));
 }
-
+const allow_to_drag = () => {
+    return props.context.workspace.documentPerm === Perm.isEdit && !props.context.tool.isLable;
+}
 onMounted(() => {
     props.context.selection.watch(notifySourceChange)
     props.context.menu.watch(menu_watcher);
@@ -664,7 +666,7 @@ onUnmounted(() => {
             <SearchPanel :keywords="keywords" :context="props.context" v-if="keywords || includes_type.length"
                          :shape-types="includes_type" :accurate="accurate">
             </SearchPanel>
-            <ListView v-else ref="shapelist" location="shapelist" :allow-drag="true"
+            <ListView v-else ref="shapelist" location="shapelist" :allow-drag="allow_to_drag()"
                       :shapeHeight="shapeH" :source="listviewSource" :item-view="ShapeItem" :item-height="itemHieght"
                       :item-width="0" :first-index="0" :context="props.context" @toggleexpand="toggleExpand"
                       @selectshape="selectShape" @hovershape="hoverShape" @unhovershape="unHovershape"

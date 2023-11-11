@@ -276,7 +276,7 @@ onUnmounted(() => {
             </div>
         </div>
         <!-- icon -->
-        <div class="container-svg" @dblclick="toggleContainer">
+        <div class="container-svg zero-symbol" @dblclick="toggleContainer">
             <svg-icon class="svg" :icon-class="icon_class()"></svg-icon>
         </div>
         <!-- 内容描述 -->

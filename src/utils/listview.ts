@@ -56,7 +56,15 @@ export function get_part_of_target1(element: Element, e: MouseEvent) {
     drag_event.position = v;
     // 计算左右
     const right_element = element.querySelector('.container-svg');
-    if (!right_element) return drag_event;
+
+    if (!right_element) {
+        const symbol = element.querySelector('.zero-symbol');
+        if (symbol) {
+            const box_symbol = symbol.getBoundingClientRect();
+            drag_event.zero = box_symbol.x;
+        }
+        return drag_event;
+    }
 
     let h = 0;
     const box2 = right_element.getBoundingClientRect();
