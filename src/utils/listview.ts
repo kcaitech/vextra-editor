@@ -6,12 +6,19 @@ type OffsetType = 'middle' | 'top' | 'bottom';
  * @description 拖动列表元素时，判断鼠标与列表的相对位置OffsetType
  * todo 考虑水平列表
  */
-export function check_orientation_during_movement(listview_element: Element, e: MouseEvent): OffsetType {
+export function check_orientation_during_movement(listview_element: Element, e: MouseEvent): { speed: 'slow' | 'fast', offset: OffsetType } {
     const box = listview_element.getBoundingClientRect(); // 可以由外部传入，避免拖动时不断计算这个固定不变的box
     const top = box.y, bottom = box.bottom;
-    if (e.clientY < top) return 'top';
-    if (e.clientY > top && e.clientY < bottom) return 'middle';
-    return 'bottom'
+    let speed: 'slow' | 'fast' = 'fast'
+    if (e.clientY < top) {
+        if (e.clientY > top - 72) speed = "slow";
+        return {speed, offset: 'top'};
+    } else if (e.clientY >= top && e.clientY < bottom) {
+        return {speed, offset: 'middle'};
+    } else {
+        if (e.clientY < bottom + 72) speed = "slow";
+        return {speed, offset: 'bottom'};
+    }
 }
 
 type Ver = 'upper' | 'inner' | 'lower';

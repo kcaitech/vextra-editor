@@ -512,11 +512,11 @@ function mouseMove(event: MouseEvent) {
     if (scroll_timer) clearInterval(scroll_timer);
 
     const orientation = check_orientation_during_movement(container.value, event);
-    if (orientation !== 'middle') {
+    if (orientation.offset !== 'middle') {
         port_a_visible.value = false;
         port_i_visible.value = false;
-        let step = -5;
-        if (orientation === "top") {
+        let step = orientation.speed === 'slow' ? -1 : -30;
+        if (orientation.offset === "top") {
             step = -step;
         }
         scroll_timer = setInterval(() => {
@@ -531,7 +531,7 @@ function mouseMove(event: MouseEvent) {
                 need_clear = true;
             }
             clampScroll(0, scroll.y)
-            orientation === "top" ? layoutUp[props.orientation]() : layoutDown[props.orientation]();
+            orientation.offset === "top" ? layoutUp[props.orientation]() : layoutDown[props.orientation]();
             if (need_clear) clearInterval(scroll_timer);
         }, 10)
         return;
