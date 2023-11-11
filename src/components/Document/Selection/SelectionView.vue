@@ -2,12 +2,11 @@
 import {onMounted, onUnmounted, ref, watch} from "vue";
 import {Context} from "@/context";
 import {Selection} from "@/context/selection";
-import {Shape, ShapeType, Matrix} from "@kcdesign/data";
+import {Matrix, Shape, ShapeType} from "@kcdesign/data";
 import {ControllerType, ctrlMap} from "./Controller/map";
-import {CtrlElementType} from "@/context/workspace";
+import {CtrlElementType, WorkSpace} from "@/context/workspace";
 import {Action, Tool} from "@/context/tool";
 import {getHorizontalAngle, XYsBounding} from "@/utils/common";
-import {WorkSpace} from "@/context/workspace";
 import {permIsEdit} from "@/utils/content";
 import Assist from "@/components/Document/Assist/index.vue";
 import {is_shape_in_selected} from "@/utils/scout";
@@ -207,7 +206,7 @@ function createController() {
         m.multiAtLeft(matrix);
         for (let i = 0; i < 4; i++) {
             const p = points[i];
-            points[i] = m.computeCoord(p.x, p.y);
+            points[i] = m.computeCoord3(p);
         }
         controllerFrame.value = points;
         const __type = s.type;
@@ -242,8 +241,10 @@ function createController() {
         }
     } else {
         const points: { x: number, y: number }[] = [];
+        let unable_to_modify = false;
         for (let i = 0; i < selection.length; i++) {
             const s = selection[i];
+            if (s.isVirtualShape) unable_to_modify = true;
             if (s.type === ShapeType.Contact) continue;
             const m = s.matrix2Root(), f = s.frame;
             m.multiAtLeft(matrix);
@@ -260,10 +261,14 @@ function createController() {
             y: b.bottom
         }];
         rotate.value = 0;
-        if (!permIsEdit(props.context) || props.context.tool.action === Action.AddComment) {
-            controllerType.value = ControllerType.Readonly;
+        if (unable_to_modify) {
+            controllerType.value = ControllerType.Virtual;
         } else {
-            controllerType.value = ControllerType.RectMulti;
+            if (!permIsEdit(props.context) || props.context.tool.action === Action.AddComment) {
+                controllerType.value = ControllerType.Readonly;
+            } else {
+                controllerType.value = ControllerType.RectMulti;
+            }
         }
     }
     tracing.value = false;

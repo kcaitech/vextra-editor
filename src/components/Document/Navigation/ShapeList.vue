@@ -181,11 +181,12 @@ function selectShape(shape: Shape, ctrlKey: boolean, metaKey: boolean, shiftKey:
         const selected_map: Map<string, Shape> = new Map();
         const selected = props.context.selection.selectedShapes;
         for (let i = 0; i < selected.length; i++) {
-            if (selected[i].id === shape.id) {
-                props.context.selection.unSelectShape(shape); // 元素本身被选中的话就取消选中
-                return;
-            }
             selected_map.set(selected[i].id, selected[i]);
+        }
+        if (selected_map.has(shape.id)) {
+            selected_map.delete(shape.id);
+            props.context.selection.unSelectShape(shape);
+            return;
         }
         let p = shape.parent;
         while (p && p.type !== ShapeType.Page) { // 元素有父级被选中就不需要在选中了
@@ -404,19 +405,6 @@ const chartMenuMount = (e: MouseEvent) => {
     })
 }
 
-function after_drag(wandererId: string, hostId: string, offsetOverhalf: boolean) {
-    // const selection = props.context.selection;
-    // const page = selection.selectedPage;
-    // if (page) {
-    //     const wanderer = selection.getShapeById(wandererId);
-    //     const host = selection.getShapeById(hostId);
-    //     if (wanderer && host) {
-    //         const editor = props.context.editor4Page(page);
-    //         editor.shapeListDrag(wanderer, host, offsetOverhalf);
-    //     }
-    // }
-}
-
 function menu_watcher(t: number) {
     if (t === Menu.SHUTDOWN_MENU) {
         close();
@@ -431,7 +419,6 @@ function close() {
 }
 
 function reset_selection() {
-    console.log('emit reset')
     props.context.selection.resetSelectShapes();
 }
 
@@ -573,28 +560,39 @@ function accurate_shift() {
     props.context.navi.notify(Navi.SEARCHING);
 }
 
-function start_to_drag(id: string) {
-    const page = props.context.selection.selectedPage!;
-    const shape = page.getShape(id);
-    if (!shape) return;
-    const selected = props.context.selection.selectedShapes;
-    for (let i = 0, l = selected.length; i < l; i++) {
-        if (selected[i].id === shape.id) return;
-    }
-    props.context.selection.selectShape(shape);
+function start_to_drag() {
+    props.context.navi.set_dragging_status(true);
 }
 
 function after_drag_2(detail: DragDetail) {
-    // console.log('detail:', detail);
+    props.context.navi.set_dragging_status(false);
     let descend = props.context.selection.getShapeById(detail.descend);
     if (!descend) return;
     descend = adjust_layer(descend, detail.layer);
-    // console.log('descend:', descend.name);
     if (detail.layer < 0) detail.position = "lower";
     const page = props.context.selection.selectedPage!;
     const editor = props.context.editor4Page(page);
     const shapes = props.context.selection.selectedShapes;
     editor.afterShapeListDrag(shapes, descend, detail.position);
+    const map = new Map<string, Shape>();
+    for (let i = 0, l = shapes.length; i < l; i++) {
+        const item = shapes[i];
+        map.set(item.id, item);
+    }
+    let need_adjust = false;
+    for (let i = 0, l = shapes.length; i < l; i++) {
+        const item = shapes[i];
+        let p = item.parent;
+        while (p) {
+            if (map.get(p.id)) {
+                map.delete(item.id);
+                need_adjust = true;
+                break;
+            }
+            p = p.parent;
+        }
+    }
+    if (need_adjust) props.context.selection.rangeSelectShape(Array.from(map.values()));
 }
 
 onMounted(() => {
@@ -672,7 +670,7 @@ onUnmounted(() => {
                       @selectshape="selectShape" @hovershape="hoverShape" @unhovershape="unHovershape"
                       @scrolltoview="shapeScrollToContentView" @rename="rename" @set-visible="isRead" @set-lock="isLock"
                       @item-mousedown="list_mousedown" orientation="vertical" @drag-start="start_to_drag"
-                      @after-drag="after_drag" @after-drag-2="after_drag_2">
+                      @after-drag-2="after_drag_2">
             </ListView>
             <ContextMenu v-if="chartMenu" :x="chartMenuPosition.x" :y="chartMenuPosition.y" @close="close"
                          :context="props.context" ref="contextMenuEl" @click.stop>

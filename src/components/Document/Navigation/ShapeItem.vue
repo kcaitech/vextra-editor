@@ -1,12 +1,10 @@
 <script setup lang="ts">
-import {ref, computed, nextTick, InputHTMLAttributes, watch, onUnmounted, onMounted} from "vue";
+import {computed, InputHTMLAttributes, nextTick, onMounted, onUnmounted, ref, watch} from "vue";
 import {Shape, ShapeType} from '@kcdesign/data';
 import {Context} from "@/context";
 import {get_name, is_parent_locked, is_parent_unvisible} from "@/utils/shapelist";
-import {Perm, WorkSpace} from "@/context/workspace";
-import {XYsBounding} from "@/utils/common";
+import {Perm} from "@/context/workspace";
 import {Tool} from "@/context/tool";
-import {Navi} from "@/context/navigate";
 
 export interface ItemData {
     id: string
@@ -94,12 +92,6 @@ const toggleContainer = (e: MouseEvent) => {
     emit('scrolltoview', props.data.shape());
 }
 
-function selectShape(e: MouseEvent) {
-    e.stopPropagation();
-    const {ctrlKey, metaKey, shiftKey} = e;
-    emit("selectshape", props.data.shape(), ctrlKey, metaKey, shiftKey);
-}
-
 function hoverShape(e: MouseEvent) {
     const working = !props.data.context.workspace.isTranslating;
     if (working) {
@@ -174,7 +166,7 @@ const selectedChild = () => {
     let parent = props.data.shape().parent
     let child
     while (parent) {
-        if (parent.type === 'page') break
+        if (parent.type === ShapeType.Page) break
         child = props.data.context.selection.isSelectedShape(parent)
         parent = parent.parent
         if (child) {
@@ -196,7 +188,28 @@ function is_component() {
 
 const mousedown = (e: MouseEvent) => {
     e.stopPropagation();
-    emit('item-mousedown', e, props.data.shape())
+    if (e.button === 0) {
+        const shape = props.data.shape();
+        const {ctrlKey, metaKey, shiftKey} = e;
+        const selected = props.data.context.selection.selectedShapes;
+        if (selected.length > 1) {
+            for (let i = 0, l = selected.length; i < l; i++) {
+                if (selected[i].id === shape.id && !(e.ctrlKey || e.metaKey)) return;
+            }
+        }
+        emit("selectshape", shape, ctrlKey, metaKey, shiftKey);
+        selectedChild();
+    } else if (e.button === 2) {
+        emit('item-mousedown', e, props.data.shape())
+        selectedChild();
+    }
+}
+
+function mouseup(e: MouseEvent) {
+    if (e.button !== 0) return;
+    if (props.data.context.selection.selectedShapes.length < 2) return;
+    if (props.data.context.navi.is_item_dragging || e.metaKey || e.shiftKey || e.ctrlKey) return;
+    emit("selectshape", props.data.shape(), false, false, false);
     selectedChild();
 }
 
@@ -254,7 +267,7 @@ onUnmounted(() => {
 <template>
     <div
         :class="{ container: true, selected: props.data.selected, selectedChild: selectedChild(), component: is_component() }"
-        @click="selectShape" @mousemove="hoverShape" @mouseleave="unHoverShape" @mousedown="mousedown">
+        @mousemove="hoverShape" @mouseleave="unHoverShape" @mousedown="mousedown" @mouseup="mouseup">
         <!-- 缩进 -->
         <div class="ph" :style="{ width: `${ph_width}px` }"></div>
         <!-- 开合 -->
@@ -303,7 +316,7 @@ onUnmounted(() => {
     width: calc(100% - 12px);
     height: 30px;
     box-sizing: border-box;
-    transition: 0.1s;
+    transition: 50ms;
 
     > .ph {
         height: 100%;

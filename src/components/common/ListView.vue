@@ -43,7 +43,7 @@ const props = defineProps<{
 }>();
 
 const emit = defineEmits<{
-    (e: "drag-start", fromId: string): void;
+    (e: "drag-start"): void;
     (e: "drag-over", overId: string): void;
     (e: "after-drag", wandererId: string, hostId: string, isOverHalf: boolean): void;
     (e: "after-drag-2", detail: {
@@ -491,7 +491,7 @@ const port_i_visible = ref<boolean>(false);
 let drag_result_detail: DragDetail | undefined = undefined;
 
 function mouseDownOnItem(index: number, e: MouseEvent) {
-    if (e.button !== 0) return; // 图层拖动只支持左键
+    if (e.button !== 0 || e.shiftKey || e.ctrlKey || e.metaKey) return; // 图层拖动只支持左键
     if (props.context?.workspace.documentPerm !== Perm.isEdit) return; // 没有编辑权限
     if (props.context.tool.isLable) return; // 标注模式  todo 统一整合到allowDrag属性上是更好的设计
     if (!props.allowDrag) return; // 不允许拖动
@@ -522,8 +522,8 @@ function mouseMove(event: MouseEvent) {
     if (!dragging.value) {
         const diff = Math.hypot(clientX - mouseBegin.x, clientY - mouseBegin.y);
         if (diff < 6) return;
+        emit('drag-start');
         dragging.value = true;
-        emit('drag-start', wandererId.value);
     }
 
     if (scroll_timer) clearInterval(scroll_timer);
@@ -655,11 +655,6 @@ onUnmounted(() => {
             <div class="port-2" v-if="port_i_visible" :style="{
                             top: destination.y + 'px'
                         }"></div>
-            <!--            <div class="substitute" v-if="substituteVisible" :style="{-->
-            <!--                top: `${substitute.y}px`,-->
-            <!--                left: `${substitute.x}px`-->
-            <!--            }">{{ substitute.context || substituteName }}-->
-            <!--            </div>-->
         </div>
         <!-- scroll -->
         <div ref="scrollTrack" class="scroll-track" @click="onScrollTrackClick" :style="{

@@ -35,7 +35,6 @@ export class Navi extends Watchable(Object) {
 
     set_dragging_status(v: boolean) {
         this.m_item_dragging = v;
-        this.notify(Navi.ITEM_DRAG);
     }
 
     get needExtend() {
