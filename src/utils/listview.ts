@@ -11,12 +11,12 @@ export function check_orientation_during_movement(listview_element: Element, e: 
     const top = box.y, bottom = box.bottom;
     let speed: 'slow' | 'fast' = 'fast'
     if (e.clientY < top) {
-        if (e.clientY > top - 72) speed = "slow";
+        if (e.clientY > top - 40) speed = "slow";
         return {speed, offset: 'top'};
     } else if (e.clientY >= top && e.clientY < bottom) {
         return {speed, offset: 'middle'};
     } else {
-        if (e.clientY < bottom + 72) speed = "slow";
+        if (e.clientY < bottom + 40) speed = "slow";
         return {speed, offset: 'bottom'};
     }
 }
