@@ -401,7 +401,7 @@ export class Selection extends Watchable(Object) implements ISave4Restore {
     }
 
     get textshape() {
-        return this.selectedShapes.length === 1 && this.selectedShapes[0].type === ShapeType.Text ? this.selectedShapes[0] as TextShape : false;
+        return this.selectedShapes.length === 1 && this.selectedShapes[0].type === ShapeType.Text ? this.selectedShapes[0] as TextShape : undefined ;
     }
 
     get symbolshape() {

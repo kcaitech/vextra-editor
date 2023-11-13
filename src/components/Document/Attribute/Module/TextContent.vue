@@ -14,10 +14,13 @@ import {
 } from '@/utils/symbol';
 import {Selection} from '@/context/selection';
 import {message} from '@/utils/message';
+import TextHolder from "@/components/Document/Selection/Controller/TextHolder/TextHolder.vue";
 
-const props = defineProps<{
+interface Props {
     context: Context
-}>()
+}
+
+const props = defineProps<Props>();
 const {t} = useI18n();
 const isTextShow = ref(false);
 const closeLayerShowPopup = () => {
@@ -49,7 +52,7 @@ const is_bind = ref<Variable>();
 const sym_layer = ref<SymbolShape>();
 const default_name = ref('');
 const selectId = ref<string[]>([]);
-const shape = ref(props.context.selection.selectedShapes[0]);
+const shape = ref(props.context.selection.textshape!);
 const textDefaultValue = ref('');
 const isBind = () => {
     const shapes = props.context.selection.selectedShapes;
@@ -174,11 +177,7 @@ const getValue = (value: Text | string | undefined) => {
                 </div>
             </template>
         </TypeHeader>
-<!--        <div class="text" v-if="!is_bind">-->
-        <!--            <el-input v-model="textDefaultValue" type="textarea" ref="input_v" :autosize="{ minRows: 2, maxRows: 4 }"-->
-        <!--                      resize="none" :placeholder="t('compos.default_text_input')" @keydown.stop="keysumbit"-->
-        <!--                      @input="input" @change="change" disabled/>-->
-        <!--        </div>-->
+        <TextHolder :context="props.context" :shape="shape"></TextHolder>
         <div class="warning" v-if="warn">
             <p class="warn">默认值不能为空</p>
         </div>
