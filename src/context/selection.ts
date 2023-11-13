@@ -20,9 +20,9 @@ import {
 } from "@/utils/scout";
 import {Context} from ".";
 import {TextSelection} from "./textselection";
-import {TableSelection} from "./tableselection";
 import {get_state_by_ref} from "@/utils/symbol";
 import {get_name} from "@/utils/shapelist";
+import {TextSelectionLite} from "@/context/textselectionlite";
 
 interface Saved {
     page: Page | undefined,
@@ -82,6 +82,7 @@ export class Selection extends Watchable(Object) implements ISave4Restore {
     static ABOUT_ME = 13;
     static EXTEND = 14;
     static PLACEMENT_CHANGE = 15;
+    static CHANGE_TEXT_LITE = 16;
 
     private m_selectPage?: Page;
     private m_selectShapes: Shape[] = [];
@@ -335,7 +336,7 @@ export class Selection extends Watchable(Object) implements ISave4Restore {
         return this.m_hoverShape;
     }
 
-    hoverShape(shape: Shape) {        
+    hoverShape(shape: Shape) {
         if (shape.id !== this.hoveredShape?.id) {
             this.m_hoverShape = shape;
             this.notify(Selection.CHANGE_SHAPE_HOVER);
@@ -391,6 +392,14 @@ export class Selection extends Watchable(Object) implements ISave4Restore {
     //     }
     //     return this.m_textSelection;
     // }
+    private m_textSelection_lite?: TextSelectionLite;
+
+    getTextSelection(shape: TextShapeLike) {
+        if (!this.m_textSelection_lite || this.m_textSelection_lite.shape.id !== shape.id) {
+            this.m_textSelection_lite = new TextSelectionLite(shape as TextShape, this);
+        }
+        return this.m_textSelection_lite;
+    }
 
     save() {
         throw new Error("Method not implemented.");
@@ -401,7 +410,7 @@ export class Selection extends Watchable(Object) implements ISave4Restore {
     }
 
     get textshape() {
-        return this.selectedShapes.length === 1 && this.selectedShapes[0].type === ShapeType.Text ? this.selectedShapes[0] as TextShape : undefined ;
+        return this.selectedShapes.length === 1 && this.selectedShapes[0].type === ShapeType.Text ? this.selectedShapes[0] as TextShape : undefined;
     }
 
     get symbolshape() {
@@ -466,6 +475,7 @@ export class Selection extends Watchable(Object) implements ISave4Restore {
     get placement() {
         return this.m_placement;
     }
+
     test() {
         const t = get_state_by_ref(this.m_selectShapes[0] as any);
         console.log('t', get_name(t as any));

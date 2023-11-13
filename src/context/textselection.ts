@@ -53,6 +53,7 @@ export class TextSelection extends Watchable(Object) {
         const xy = matrix.inverseCoord(x, y);
         x = xy.x;
         y = xy.y;
+        console.log(x, y);
         return ((shape as any).text as Text).locateText(x, y);
     }
 

@@ -14,7 +14,7 @@ import {
 } from '@/utils/symbol';
 import {Selection} from '@/context/selection';
 import {message} from '@/utils/message';
-import TextHolder from "@/components/Document/Selection/Controller/TextHolder/TextHolder.vue";
+import TextHolder from "@/components/Document/Selection/Controller/TextLite/TextHolder.vue";
 
 interface Props {
     context: Context

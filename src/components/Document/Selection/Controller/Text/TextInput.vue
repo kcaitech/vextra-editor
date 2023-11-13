@@ -7,12 +7,17 @@ import { Selection } from '@/context/selection';
 import { throttle } from '../../common';
 import { handleKeyEvent } from './keyhandler';
 import { WorkSpace } from '@/context/workspace';
+import {TextSelectionLite} from "@/context/textselectionlite";
 
-const props = defineProps<{
-    shape: Shape & { text: Text },
-    context: Context,
-    matrix: number[],
-}>();
+type SelectionLike = Selection | TextSelectionLite;
+interface Props {
+    shape: Shape & { text: Text }
+    context: Context
+    matrix: number[]
+    mainNotify: number
+    selection: SelectionLike
+}
+const props = defineProps<Props>();
 
 function getText(shape: Shape & { text: Text }): Text {
     if (shape.isVirtualShape) return shape.text;
@@ -41,11 +46,7 @@ function _updateInputPos() {
     if (!inputel.value) return;
     const text = getText(props.shape);
     if (!text) return;
-    // inputel.value.hidden = false;
-    const selection = props.context.textSelection;
-    // const m2p = props.shape.matrix2Root();
-    // matrix.reset(m2p);
-    // matrix.multiAtLeft(props.matrix);
+    const selection = props.selection;
     matrix.reset(props.matrix);
 
     let cursorAtBefore = selection.cursorAtBefore;
@@ -57,7 +58,6 @@ function _updateInputPos() {
     else if (end >= 0) {
         index = end;
     }
-    // const text = props.shape.text;
     const locatepoints = text.locateCursor(index, cursorAtBefore);
     if (!locatepoints) return;
     const cursor = locatepoints.cursorPoints.map((point) => matrix.computeCoord(point.x, point.y));
@@ -76,7 +76,7 @@ function _updateInputPos() {
 
 function selectionWatcher(...args: any[]) {
     if (editor && !editor.isInComposingInput()) editor.resetCachedSpanAttr(); // TODO 应该过滤掉协作变换的选区变化
-    if (args.indexOf(Selection.CHANGE_TEXT) >= 0) updateInputPos();
+    if (args.indexOf(props.mainNotify) >= 0) updateInputPos();
 }
 
 function workspaceWatcher(t: number) {
@@ -103,7 +103,7 @@ function committext() {
     const text = inputel.value.value;
     if (text.length === 0) return;
 
-    const selection = props.context.textSelection;
+    const selection = props.selection;
 
     if (editor.isInComposingInput()) {
         if (editor.composingInputEnd(text)) {
@@ -132,7 +132,7 @@ function oninput(e: Event) {
         if (!inputel.value) return;
         const text = inputel.value.value;
         if (editor.composingInputUpdate(text)) {
-            const selection = props.context.textSelection;
+            const selection = props.selection;
             selection.setCursor(composingStartIndex + text.length, true, getText(props.shape));
         }
     } else {
@@ -143,7 +143,7 @@ function oninput(e: Event) {
 let composingStartIndex = 0;
 function compositionstart(e: Event) {
     if (!inputel.value) return;
-    const selection = props.context.textSelection;
+    const selection = props.selection;
     let index = selection.cursorStart;
     let end = selection.cursorEnd;
     if (index > end) {
@@ -159,7 +159,7 @@ function compositionend(e: Event) {
     if (!inputel.value) return;
     const text = inputel.value.value;
     if (editor.composingInputEnd(text)) {
-        const selection = props.context.textSelection;
+        const selection = props.selection;
         selection.setCursor(composingStartIndex + text.length, true, getText(props.shape));
     }
     inputel.value.value = ''

@@ -118,15 +118,15 @@ var configureWebpack = (config) => {
             "node_modules\\/(?!(@kcdesign)\\/)",
             "communication\\/node_modules\\/)",
         ],
-        poll: 3000,
+        poll: 10000,
     }
 }
 
 var exports = defineConfig({
     transpileDependencies: true,
     // publicPath: '/tjs',
-    publicPath: '/zrx',
-    // publicPath: './',
+    // publicPath: '/zrx',
+    publicPath: './',
     configureWebpack,
 
     pluginOptions: {

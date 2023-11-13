@@ -12,7 +12,7 @@ interface Props {
 
 const props = defineProps<Props>();
 const height = 200
-const matrix = ref<Matrix>(new Matrix());
+const matrix = ref(new Matrix());
 const reflush = ref<number>(0);
 const container = ref<HTMLDivElement>();
 const container_root = ref<{ x: number, y: number }>({x: 0, y: 0});
@@ -24,7 +24,7 @@ function render() {
 
 function wheel(e: WheelEvent) {
     if (matrix.value.m12 === 0 && e.deltaY < 0) return;
-    const step = e.deltaY > 0 ? 20 : -20;
+    const step = e.deltaY > 0 ? 2 : -2;
     matrix.value.trans(0, -step);
     const del = matrix.value.m12 - 0;
     if (del > 0) matrix.value.trans(0, -del);
@@ -48,7 +48,8 @@ function init_view_box() {
         >
             <render></render>
         </svg>
-        <Ctrl v-if="container" :context="context" :root="container_root" :shape="props.shape" :matrix="matrix" :view-box="init_view_box()"></Ctrl>
+        <Ctrl v-if="container" :context="context" :root="container_root" :shape="props.shape"
+              :matrix="matrix.toArray()" :view-box="init_view_box()"></Ctrl>
     </div>
 </template>
 <style>
