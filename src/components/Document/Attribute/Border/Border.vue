@@ -1,17 +1,16 @@
 <script setup lang="ts">
-import {computed, onMounted, onUnmounted, reactive, ref, watch, watchEffect} from 'vue';
+import {computed, onMounted, onUnmounted, reactive, ref, watch} from 'vue';
 import {Context} from '@/context';
 import {Shape, ShapeType, TableCell, TableShape} from '@kcdesign/data';
 import TypeHeader from '../TypeHeader.vue';
 import BorderDetail from './BorderDetail.vue';
 import ColorPicker from '@/components/common/ColorPicker/index.vue';
 import {useI18n} from 'vue-i18n';
-import {Color, Border, BorderStyle, MarkerType} from '@kcdesign/data';
+import {Color, Border, BorderStyle} from '@kcdesign/data';
 import {FillType, BorderPosition} from '@kcdesign/data';
 import {Reg_HEX} from "@/utils/RegExp";
 import {message} from "@/utils/message";
 import {toHex} from "@/utils/color";
-import {Selection} from '@/context/selection';
 import {WorkSpace} from '@/context/workspace';
 import {
     get_borders,
@@ -24,6 +23,7 @@ import {
 import {v4} from 'uuid';
 import Apex from './Apex.vue';
 import {TableSelection} from '@/context/tableselection';
+import {Selection} from "@/context/selection";
 
 interface BorderItem {
     id: number
@@ -51,11 +51,22 @@ let table: TableShape;
 
 function watchShapes() {
     const needWatchShapes = new Map();
-    const selection = props.shapes;
-    if (selection.length > 0) {
-        selection.forEach((v) => {
+    const selectedShapes = props.context.selection.selectedShapes;
+    if (selectedShapes.length > 0) {
+        for (let i = 0, l = selectedShapes.length; i < l; i++) {
+            const v = selectedShapes[i];
+            if (v.isVirtualShape) {
+                let p = v.parent;
+                while (p) {
+                    if (p.type === ShapeType.SymbolRef) {
+                        needWatchShapes.set(p.id, p);
+                        break;
+                    }
+                    p = p.parent;
+                }
+            }
             needWatchShapes.set(v.id, v);
-        })
+        }
     }
     watchedShapes.forEach((v, k) => {
         if (needWatchShapes.has(k)) return;
@@ -176,6 +187,7 @@ function addBorder() {
         } else {
             const actions = get_actions_add_boder(props.shapes, border);
             const page = props.context.selection.selectedPage;
+            console.log('actions:', actions);
             if (page) {
                 const editor = props.context.editor4Page(page);
                 editor.shapesAddBorder(actions);
@@ -520,7 +532,7 @@ function layout() {
     show_apex.value = false;
     if (props.shapes.length === 1) {
         const type = props.shapes[0].type;
-        if (type === ShapeType.Line || type === ShapeType.Contact) show_apex.value = true;
+        show_apex.value = (type === ShapeType.Line || type === ShapeType.Contact);
     }
 }
 
@@ -583,15 +595,21 @@ function table_selection_watcher(t: number) {
     }
 }
 
+function selection_watcher(t: number) {
+    if (t === Selection.CHANGE_SHAPE) update_by_shapes();
+}
+
 // hooks
 const stop = watch(() => props.shapes, (v) => shapes_watcher(v));
 onMounted(() => {
     update_by_shapes();
     props.context.tableSelection.watch(table_selection_watcher);
+    props.context.selection.watch(selection_watcher);
 })
 onUnmounted(() => {
     stop();
     props.context.tableSelection.unwatch(table_selection_watcher);
+    props.context.selection.unwatch(selection_watcher);
     watchedShapes.forEach(v => {
         v.unwatch(watcher)
     });

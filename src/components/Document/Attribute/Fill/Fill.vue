@@ -1,22 +1,23 @@
 <script setup lang="ts">
 import {computed, onMounted, onUnmounted, reactive, ref, watch} from 'vue';
 import {Context} from '@/context';
-import {Color, Fill, Shape, FillType, ShapeType, TableShape, TableCell} from "@kcdesign/data";
+import {Color, Fill, FillType, Shape, ShapeType, TableCell, TableShape} from "@kcdesign/data";
 import {Reg_HEX} from "@/utils/RegExp";
 import TypeHeader from '../TypeHeader.vue';
 import {useI18n} from 'vue-i18n';
 import ColorPicker from '@/components/common/ColorPicker/index.vue';
 import {message} from "@/utils/message";
 import {
-    get_fills,
-    get_actions_fill_color,
     get_actions_add_fill,
-    get_actions_fill_unify,
+    get_actions_fill_color,
+    get_actions_fill_delete,
     get_actions_fill_enabled,
-    get_actions_fill_delete
+    get_actions_fill_unify,
+    get_fills
 } from '@/utils/shape_style';
 import {v4} from 'uuid';
 import {TableSelection} from '@/context/tableselection';
+import {Selection} from "@/context/selection";
 
 interface FillItem {
     id: number,
@@ -47,14 +48,22 @@ function toHex(r: number, g: number, b: number) {
 
 function watchShapes() {
     const needWatchShapes = new Map();
-    const selection = props.context.selection;
-    if (selection.hoveredShape) {
-        needWatchShapes.set(selection.hoveredShape.id, selection.hoveredShape);
-    }
-    if (selection.selectedShapes.length > 0) {
-        selection.selectedShapes.forEach((v) => {
+    const selectedShapes = props.context.selection.selectedShapes;
+    if (selectedShapes.length > 0) {
+        for (let i = 0, l = selectedShapes.length; i < l; i++) {
+            const v = selectedShapes[i];
+            if (v.isVirtualShape) {
+                let p =v.parent;
+                while (p) {
+                    if (p.type === ShapeType.SymbolRef) {
+                        needWatchShapes.set(p.id, p);
+                        break;
+                    }
+                    p = p.parent;
+                }
+            }
             needWatchShapes.set(v.id, v);
-        })
+        }
     }
     watchedShapes.forEach((v, k) => {
         if (needWatchShapes.has(k)) return;
@@ -490,6 +499,10 @@ function cells_watcher() {
     }
 }
 
+function selection_watcher(t: number) {
+    if (t === Selection.CHANGE_SHAPE) update_by_shapes();
+}
+
 // hooks
 const stop = watch(() => props.shapes, (v) => shapes_watcher(v));
 
@@ -506,13 +519,13 @@ function table_selection_watcher(t: number) {
 onMounted(() => {
     update_by_shapes();
     props.context.tableSelection.watch(table_selection_watcher);
+    props.context.selection.watch(selection_watcher);
 })
 onUnmounted(() => {
     stop();
     props.context.tableSelection.unwatch(table_selection_watcher);
-    watchedShapes.forEach(v => {
-        v.unwatch(watcher)
-    });
+    props.context.selection.unwatch(selection_watcher);
+    watchedShapes.forEach(v => v.unwatch(watcher));
 })
 </script>
 
