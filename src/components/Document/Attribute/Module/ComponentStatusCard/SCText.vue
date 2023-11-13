@@ -65,7 +65,7 @@ function _delete() {
     delete_variable(props.context, props.variable);
 }
 const getValue = (value: Text | string | undefined) => {
-    return value instanceof Text ? value.getText(0, Number.MAX_VALUE) : value;
+    return typeof value === 'string' ? value : value?.toString();
 }
 </script>
 <template>
