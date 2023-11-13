@@ -1,13 +1,13 @@
 <template>
   <div class="common-layout">
     <el-container>
-      <el-header height="56" min-height="56">
-        <Header :items="items" :title="searchtitle" />
-      </el-header>
+      <el-aside width="240px">
+        <Aside />
+      </el-aside>
       <el-container>
-        <el-aside width="260px" min-width="260px">
-          <Aside/>
-        </el-aside>
+        <el-header>
+          <Header :items="items" :title="searchtitle" />
+        </el-header>
         <el-main>
           <Main @dataUpdate="update" />
         </el-main>
@@ -234,19 +234,15 @@ onUnmounted(() => {
   overflow: hidden;
 }
 
-.el-header {
-  margin-top: 8px;
-}
 
 .el-main {
-  height: calc(100vh - 56px);
-  padding: 0 20px;
+  height: 100%;
+  padding: 0;
   overflow: hidden;
 }
 
 .el-aside {
-  height: calc(100% - 56px);
-  border-right: rgba(239, 239, 239, 0.838) solid 1px;
+  height: 100%;
   transition: all .3s ease-in-out;
 }
 

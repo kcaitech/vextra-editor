@@ -28,6 +28,7 @@ import ProjectDialog from '../TeamProject/ProjectDialog.vue';
 import Tooltip from '@/components/common/Tooltip.vue';
 import ProjectAccessSetting from '../TeamProject/ProjectFill/ProjectAccessSetting.vue';
 import ProjectMemberg from '../TeamProject/ProjectFill/ProjectMemberg.vue';
+import avatar from '@/assets/pd-logo-svg.svg';
 
 
 
@@ -609,18 +610,21 @@ onUnmounted(() => {
 
 </script>
 <template>
+    <div class="logo">
+        <img class="logo-image" :src="avatar" alt="ProtoDesign" />
+    </div>
     <el-row class="tac">
         <el-col>
             <el-scrollbar height="100%">
-                <div style="height: 360px;">
-                    <div class="new">
+                <div>
+                    <!-- <div class="new">
                         <button class="newfile" @click="newFile"> <el-icon>
                                 <Plus />
                             </el-icon><span>{{ t('home.New_file') }}</span></button>
                         <button class="openfile" @click="picker.invoke()"><el-icon>
                                 <FolderOpened />
                             </el-icon><span>{{ t('home.open_local_file') }}</span></button>
-                    </div>
+                    </div> -->
                     <el-menu :default-active="x" active-text-color="#ffd04b" class="el-menu-vertical-demo"
                         text-color="#000000">
                         <router-link to="/apphome/recently"><el-menu-item index="1" :class="{ 'is_active': x == '1' }"
@@ -655,12 +659,11 @@ onUnmounted(() => {
                                 </el-icon>
                                 <span>{{ t('home.shared_file_received') }}</span>
                             </el-menu-item></router-link>
-                        <div class="line"></div>
                     </el-menu>
                 </div>
-            </el-scrollbar>
-            <div class="teamlists" :reflush="reflush !== 0 ? reflush : undefined">
-                <el-scrollbar height="100%">
+
+                <div class="teamlists" :reflush="reflush !== 0 ? reflush : undefined">
+
                     <div class="demo-collapse">
                         <el-collapse v-model="activeShare" v-if="showShare">
                             <el-collapse-item @click.stop="skipProjecrShare" :name="1">
@@ -794,14 +797,14 @@ onUnmounted(() => {
                             </el-collapse-item>
                         </el-collapse>
                     </div>
-                </el-scrollbar>
-            </div>
-            <div class="team-container">
-                <button class="newteam" @click.stop="showteamcard">
-                    <svg-icon icon-class="teamicon" />
-                    <span>{{ t('Createteam.add_team') }}</span>
-                </button>
-            </div>
+                </div>
+                <div class="team-container">
+                    <button class="newteam" @click.stop="showteamcard">
+                        <svg-icon icon-class="teamicon" />
+                        <span>{{ t('Createteam.add_team') }}</span>
+                    </button>
+                </div>
+            </el-scrollbar>
         </el-col>
     </el-row>
     <transition name="nested" :duration="550">
@@ -828,6 +831,15 @@ onUnmounted(() => {
 </template>
 
 <style lang="scss" scoped>
+.logo {
+    display: flex;
+    justify-content: center;
+
+    .logo-image {
+        margin: 16px 0;
+    }
+}
+
 a {
     text-decoration: none;
 }
@@ -949,10 +961,9 @@ a {
 
 .el-row {
     width: 100%;
-    height: calc(100vh - 56px);
+    height: calc(100vh - 60px);
     overflow: hidden;
-    // overflow-y: auto;
-    background-color: white;
+    background-color: none;
 
     .el-col {
         width: 100%;
@@ -1041,10 +1052,7 @@ a {
 
         .teamlists {
             width: 100%;
-            position: absolute;
-            bottom: 60px;
-            top: 350px;
-
+            position: relative;
             .demo-collapse {
                 .team-title {
                     width: 100%;

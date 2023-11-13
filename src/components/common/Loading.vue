@@ -1,4 +1,6 @@
 <script lang="ts" setup>
+import { color } from '@/assets/lang/en';
+
 interface Props {
   size?: number
   width?: number
@@ -7,7 +9,7 @@ defineProps<Props>();
 </script>
 <template>
   <div class="container"
-    :style="{ width: size ? `${size}px` : '60px', height: size ? `${size}px` : '60px', 'border-width': width ? `${width}px` : '4px' }">
+    :style="{ width: size ? `${size}px` : '60px', height: size ? `${size}px` : '60px', 'border-width': width ? `${width}px` : '4px'}">
     <div class="loader"></div>
   </div>
 </template>
