@@ -256,7 +256,7 @@ const getElXY = (el: HTMLElement, elwidth: number = 0) => {
                         <Loading :size="18" />
                     </el-icon>
                     <el-icon v-else size="18">
-                        <Search :color="showSearchHistory ? '#1878F5' : '#333333'" />
+                        <svg-icon icon-class="search-icon" :color="showSearchHistory ? '#1878F5' : '#333333'"></svg-icon>
                     </el-icon>
                 </template>
                 <template #suffix>

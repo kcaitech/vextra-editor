@@ -630,40 +630,48 @@ onUnmounted(() => {
                         <router-link to="/apphome/recently"><el-menu-item index="1" :class="{ 'is_active': x == '1' }"
                                 @click="Setindex(1, t('home.recently_opened'))" @mouseenter="hover = '1'"
                                 @mouseleave="hover = ''">
-                                <el-icon>
-                                    <Clock />
+                                <el-icon size="20">
+                                    <svg-icon v-if="x == '1'" icon-class="recently-select"></svg-icon>
+                                    <svg-icon v-else icon-class="recently-normal"></svg-icon>
                                 </el-icon>
                                 <span>{{ t('home.recently_opened') }}</span>
                             </el-menu-item></router-link>
                         <router-link to="/apphome/starfile"><el-menu-item index="2" :class="{ 'is_active': x == '2' }"
                                 @click="Setindex(2, t('home.star_file'))" @mouseenter="hover = '2'"
                                 @mouseleave="hover = ''">
-                                <el-icon>
-                                    <Star />
+                                <el-icon size="20">
+                                    <svg-icon v-if="x == '2'" icon-class="star-select"></svg-icon>
+                                    <svg-icon v-else icon-class="star-normal"></svg-icon>
                                 </el-icon>
                                 <span>{{ t('home.star_file') }}</span>
                             </el-menu-item></router-link>
                         <router-link to="/apphome/meshare"><el-menu-item index="3" :class="{ 'is_active': x == '3' }"
                                 @click="Setindex(3, t('home.file_shared'))" @mouseenter="hover = '3'"
                                 @mouseleave="hover = ''">
-                                <el-icon>
-                                    <documents />
+                                <el-icon size="20">
+                                    <svg-icon v-if="x == '3'" icon-class="file-select"></svg-icon>
+                                    <svg-icon v-else icon-class="file-normal"></svg-icon>
                                 </el-icon>
                                 <span>{{ t('home.file_shared') }}</span>
                             </el-menu-item></router-link>
                         <router-link to="/apphome/shareme"><el-menu-item index="4" :class="{ 'is_active': x == '4' }"
                                 @click="Setindex(4, t('home.shared_file_received'))" @mouseenter="hover = '4'"
                                 @mouseleave="hover = ''">
-                                <el-icon>
-                                    <BottomLeft />
+                                <el-icon size="20">
+                                    <svg-icon v-if="x == '4'" icon-class="share-select"></svg-icon>
+                                    <svg-icon v-else icon-class="share-normal"></svg-icon>
                                 </el-icon>
                                 <span>{{ t('home.shared_file_received') }}</span>
                             </el-menu-item></router-link>
                     </el-menu>
                 </div>
-
+                <div class="team-container">
+                    <button class="newteam" @click.stop="showteamcard">
+                        <svg-icon icon-class="teamicon" />
+                        <span>{{ t('Createteam.add_team') }}</span>
+                    </button>
+                </div>
                 <div class="teamlists" :reflush="reflush !== 0 ? reflush : undefined">
-
                     <div class="demo-collapse">
                         <el-collapse v-model="activeShare" v-if="showShare">
                             <el-collapse-item @click.stop="skipProjecrShare" :name="1">
@@ -798,12 +806,7 @@ onUnmounted(() => {
                         </el-collapse>
                     </div>
                 </div>
-                <div class="team-container">
-                    <button class="newteam" @click.stop="showteamcard">
-                        <svg-icon icon-class="teamicon" />
-                        <span>{{ t('Createteam.add_team') }}</span>
-                    </button>
-                </div>
+               
             </el-scrollbar>
         </el-col>
     </el-row>
@@ -846,14 +849,13 @@ a {
 
 :deep(.el-collapse) {
     border: none;
-    margin: 0 10px;
 }
 
 :deep(.el-collapse-item__header) {
     border: none;
-    height: 40px;
-    border-radius: 4px;
-    margin-top: 5px;
+    height: 36px;
+    margin-bottom: 6px;
+    background-color: rgba(250, 250, 250, 1);
 }
 
 :deep(.el-collapse .el-collapse-item__arrow) {
@@ -861,15 +863,15 @@ a {
 }
 
 :deep(.el-collapse-item__header:hover) {
-    background-color: transparent;
+    background-color: rgba(250, 250, 250, 1);
     cursor: pointer;
-
     .right {
         visibility: visible;
     }
 }
 
 :deep(.el-collapse-item__wrap) {
+    background-color: rgba(250, 250, 250, 1);
     border: none;
 }
 
@@ -1035,15 +1037,17 @@ a {
         .el-menu {
             border: none;
             background: none;
-            font-size: 12px;
 
             .el-menu-item {
                 border-radius: 4px;
-                margin: 10px;
-                height: 40px;
+                height: 36px;
+                line-height: 36px;
+                margin: 6px;
+                font-size: 14px !important;
+                padding: 0 16px !important;
 
                 &:hover {
-                    background-color: #f3f0ff;
+                    background-color: rgba(243, 243, 245, 1);
                     // color: #9775fa;
                 }
 
@@ -1053,18 +1057,19 @@ a {
         .teamlists {
             width: 100%;
             position: relative;
+
             .demo-collapse {
                 .team-title {
                     width: 100%;
-                    height: 40px;
+                    height: 36px;
                     display: flex;
                     justify-content: space-between;
                     align-items: center;
-                    border-radius: 4px;
-                    margin-bottom: 5px;
+                    border-radius: 6px;
+                    margin: 6px;
 
                     &:hover {
-                        background-color: #f3f0ff;
+                        background-color: rgba(243, 243, 245, 1);
 
                         .right {
                             visibility: visible;
@@ -1075,7 +1080,6 @@ a {
                         display: flex;
                         align-items: center;
                         width: 200px;
-                        margin-left: 8px;
 
                         .down {
                             display: flex;
@@ -1083,7 +1087,7 @@ a {
                             justify-content: center;
                             height: 100%;
                             margin-right: 4px;
-                            margin-left: 2px;
+                            margin-left: 4px;
                             transition: .3s;
 
                             svg {
@@ -1093,9 +1097,8 @@ a {
                         }
 
                         .team-avatar {
-                            width: 24px;
-                            height: 24px;
-                            min-width: 24px;
+                            width: 20px;
+                            height: 20px;
                             background-color: #9775fa;
                             text-align: center;
                             border-radius: 50%;
@@ -1121,9 +1124,8 @@ a {
                                 display: flex;
 
                                 span {
-                                    font-size: 12px;
+                                    font-size: 14px;
                                     font-weight: 600;
-                                    color: white;
                                 }
                             }
                         }
@@ -1138,35 +1140,37 @@ a {
 
                     .right {
                         visibility: hidden;
-                        margin-right: 8px;
+                        margin-right: 6px;
                         height: 100%;
+                        display: flex;
+                        align-items: center;
 
                         svg {
                             width: 16px;
                             min-width: 16px;
                             height: 16px;
-                            fill: #9775fa;
+                            fill: rgba(51, 51, 51, 1);
                             transform: rotate(45deg);
                         }
                     }
                 }
 
                 .project {
-                    width: 100%;
                     display: flex;
                     align-items: center;
                     justify-content: space-between;
-                    border-radius: 4px;
+                    margin: 2px 6px;
+                    border-radius: 6px;
                     cursor: pointer;
 
                     .el-input {
-                        height: 35px;
+                        height: 36px;
                         border: none;
                         outline: none;
                     }
 
                     &:hover {
-                        background-color: #f3f0ff;
+                        background-color: rgba(243, 243, 245, 1);
 
                         .right {
                             display: flex;
@@ -1178,9 +1182,9 @@ a {
                         align-items: center;
                         justify-content: space-between;
                         width: 100%;
-                        height: 35px;
+                        height: 36px;
                         border-radius: 4px;
-                        padding-left: 50px;
+                        padding-left: 46px;
 
 
                         .right {
@@ -1190,16 +1194,15 @@ a {
                             }
 
                             display: none;
-
                             align-items: center;
                             height: 100%;
-                            padding-right: 10px;
+                            margin-right: 6px;
 
                             svg {
-                                width: 18px;
+                                width: 16px;
                                 min-width: 16px;
-                                height: 18px;
-                                fill: #9775fa;
+                                height: 16px;
+                                fill: rgba(51, 51, 51, 1);
                             }
                         }
                     }
@@ -1214,32 +1217,11 @@ a {
                 }
             }
 
-            .teamitem {
-                border-radius: 4px;
-                white-space: nowrap;
-                text-overflow: ellipsis;
-                overflow-x: hidden;
-                line-height: 40px;
-                margin: 0 10px 6px 10px;
-                padding: 0 6px;
-                font-size: 14px;
-                display: flex;
-                align-items: center;
-                justify-content: space-between;
-
-            }
+ 
 
 
         }
     }
-}
-
-.line {
-    width: 100%;
-    height: 0.1px;
-    border: 1px solid transparent;
-    background-color: rgba($color: #ccc, $alpha: 0.3);
-    box-sizing: border-box;
 }
 
 .project_name {
@@ -1252,15 +1234,14 @@ a {
 }
 
 .receive {
-
     display: flex;
     align-items: center;
     justify-content: center;
-    margin: 0 6px 0 3px;
+    margin: 0 6px 0 0px;
 
     >svg {
-        width: 18px;
-        height: 18px;
+        width: 20px;
+        height: 20px;
     }
 }
 
@@ -1269,14 +1250,13 @@ a {
 }
 
 :deep(.el-collapse-item__content .el-input__wrapper) {
-    height: 80%;
     outline: none;
     border: none;
     box-shadow: none;
     padding: 1px 5px;
     border-radius: 0;
     margin-right: 10px;
-    border-bottom: 1px solid #9775fa;
+    border-bottom: 1px solid rgba(24, 120, 245, 1);
     background-color: transparent;
 }
 
@@ -1294,8 +1274,8 @@ a {
 
 .is_active {
     font-weight: 600;
-    color: #000000b6;
-    background-color: #e5dbff !important;
+    color: rgba(24, 120, 245, 1);
+    background-color: rgba(24, 120, 245, 0.1) !important;
 }
 
 
