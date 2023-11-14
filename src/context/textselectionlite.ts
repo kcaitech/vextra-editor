@@ -29,6 +29,7 @@ export class TextSelectionLite extends Watchable(Object) {
         this.m_cursorStart = -1;
         this.m_cursorEnd = -1;
         this.m_cursorAtBefore = false;
+        this.notify(Selection.CHANGE_TEXT_LITE);
     }
 
     get shape() {

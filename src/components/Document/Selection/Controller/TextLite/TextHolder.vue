@@ -1,6 +1,6 @@
 <script setup lang="ts">
 import {Matrix, TextShape, Variable} from "@kcdesign/data";
-import {ref, h} from "vue";
+import {ref, h, onMounted, onUnmounted} from "vue";
 import {renderTextStatic as r} from "@kcdesign/data"
 import {Context} from "@/context";
 import Ctrl from "./Ctrl.vue";
@@ -24,7 +24,7 @@ function render() {
 
 function wheel(e: WheelEvent) {
     if (matrix.value.m12 === 0 && e.deltaY < 0) return;
-    const step = e.deltaY > 0 ? 2 : -2;
+    const step = e.deltaY > 0 ? 10 : -10;
     matrix.value.trans(0, -step);
     const del = matrix.value.m12 - 0;
     if (del > 0) matrix.value.trans(0, -del);
@@ -38,6 +38,17 @@ function init_view_box() {
     container_root.value.y = c_box.y;
     return `0 0 ${c_box.width - 8} 300`;
 }
+
+function shape_watcher(...arg: any) {
+    reflush.value++;
+}
+
+onMounted(() => {
+    props.shape.watch(shape_watcher);
+})
+onUnmounted(() => {
+    props.shape.unwatch(shape_watcher);
+})
 </script>
 <template>
     <div class="holder-container" @wheel.prevent="wheel" ref="container">

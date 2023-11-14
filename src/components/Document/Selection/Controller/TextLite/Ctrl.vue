@@ -3,7 +3,7 @@ import {Matrix, TextShape} from "@kcdesign/data";
 import {Context} from "@/context";
 import TextInput from "@/components/Document/Selection/Controller/Text/TextInput.vue";
 import SelectView from "@/components/Document/Selection/Controller/Text/SelectView.vue";
-import {reactive, watch} from "vue";
+import {onMounted, onUnmounted, reactive, watch} from "vue";
 import {TextSelectionLite} from "@/context/textselectionlite";
 import {Selection} from "@/context/selection";
 
@@ -76,6 +76,18 @@ function up(e: MouseEvent) {
         text_selection_lite.selectText(downIndex.index, locate.index);
     }
 }
+
+function document_down() {
+    console.log("text_selection_lite.cursorStart:", text_selection_lite.cursorStart)
+    if (text_selection_lite.cursorStart > -1) text_selection_lite.reset();
+}
+
+onMounted(() => {
+    document.addEventListener('mousedown', document_down);
+})
+onUnmounted(() => {
+    document.removeEventListener('mousedown', document_down);
+})
 </script>
 <template>
     <svg version="1.1" xmlns="http://www.w3.org/2000/svg" xmlns:xlink="http://www.w3.org/1999/xlink"
