@@ -1,18 +1,26 @@
 <script setup lang='ts'>
-import { Context } from '@/context';
-import { Matrix } from '@kcdesign/data';
-import { Shape, Text } from '@kcdesign/data';
-import { onUnmounted, ref, watch, onMounted } from 'vue';
-import { Selection } from '@/context/selection';
-import { throttle } from '../../common';
-import { handleKeyEvent } from './keyhandler';
-import { WorkSpace } from '@/context/workspace';
+import {Context} from '@/context';
+import {Matrix} from '@kcdesign/data';
+import {Shape, Text} from '@kcdesign/data';
+import {onUnmounted, ref, watch, onMounted} from 'vue';
+import {Selection} from '@/context/selection';
+import {throttle} from '../../common';
+import {handleKeyEvent} from './keyhandler';
+import {WorkSpace} from '@/context/workspace';
+import {TextSelectionLite} from "@/context/textselectionlite";
 
-const props = defineProps<{
-    shape: Shape & { text: Text },
-    context: Context,
-    matrix: number[],
-}>();
+type SelectionLike = Selection | TextSelectionLite;
+
+interface Props {
+    shape: Shape & { text: Text }
+    context: Context
+    matrix: number[]
+    mainNotify: number
+    selection: SelectionLike
+    root?: { x: number, y: number }
+}
+
+const props = defineProps<Props>();
 
 function getText(shape: Shape & { text: Text }): Text {
     if (shape.isVirtualShape) return shape.text;
@@ -32,7 +40,7 @@ watch(() => props.matrix, () => {
 })
 
 const inputel = ref<HTMLInputElement>();
-const inputpos = ref({ left: 0, top: 0 })
+const inputpos = ref({left: 0, top: 0})
 const matrix = new Matrix();
 
 const updateInputPos = throttle(_updateInputPos, 5);
@@ -41,11 +49,7 @@ function _updateInputPos() {
     if (!inputel.value) return;
     const text = getText(props.shape);
     if (!text) return;
-    // inputel.value.hidden = false;
-    const selection = props.context.textSelection;
-    // const m2p = props.shape.matrix2Root();
-    // matrix.reset(m2p);
-    // matrix.multiAtLeft(props.matrix);
+    const selection = props.selection;
     matrix.reset(props.matrix);
 
     let cursorAtBefore = selection.cursorAtBefore;
@@ -53,11 +57,9 @@ function _updateInputPos() {
     const end = selection.cursorEnd;
     if (index === end) {
         //
-    }
-    else if (end >= 0) {
+    } else if (end >= 0) {
         index = end;
     }
-    // const text = props.shape.text;
     const locatepoints = text.locateCursor(index, cursorAtBefore);
     if (!locatepoints) return;
     const cursor = locatepoints.cursorPoints.map((point) => matrix.computeCoord(point.x, point.y));
@@ -68,7 +70,7 @@ function _updateInputPos() {
     let y = cursor[0].y;
     if (cursor[1].y > y) y = cursor[1].y;
     y -= 10; // input 框高度
-    const root = props.context.workspace.root;
+    const root = props.root || props.context.workspace.root;
     inputpos.value.left = x + root.x;
     inputpos.value.top = y + root.y;
     inputel.value.focus();
@@ -76,7 +78,7 @@ function _updateInputPos() {
 
 function selectionWatcher(...args: any[]) {
     if (editor && !editor.isInComposingInput()) editor.resetCachedSpanAttr(); // TODO 应该过滤掉协作变换的选区变化
-    if (args.indexOf(Selection.CHANGE_TEXT) >= 0) updateInputPos();
+    if (args.indexOf(props.mainNotify) >= 0) updateInputPos();
 }
 
 function workspaceWatcher(t: number) {
@@ -103,14 +105,13 @@ function committext() {
     const text = inputel.value.value;
     if (text.length === 0) return;
 
-    const selection = props.context.textSelection;
+    const selection = props.selection;
 
     if (editor.isInComposingInput()) {
         if (editor.composingInputEnd(text)) {
             selection.setCursor(composingStartIndex + text.length, true, getText(props.shape));
         }
-    }
-    else {
+    } else {
         let index = selection.cursorStart;
         let end = selection.cursorEnd;
         if (index > end) {
@@ -132,7 +133,7 @@ function oninput(e: Event) {
         if (!inputel.value) return;
         const text = inputel.value.value;
         if (editor.composingInputUpdate(text)) {
-            const selection = props.context.textSelection;
+            const selection = props.selection;
             selection.setCursor(composingStartIndex + text.length, true, getText(props.shape));
         }
     } else {
@@ -141,9 +142,10 @@ function oninput(e: Event) {
 }
 
 let composingStartIndex = 0;
+
 function compositionstart(e: Event) {
     if (!inputel.value) return;
-    const selection = props.context.textSelection;
+    const selection = props.selection;
     let index = selection.cursorStart;
     let end = selection.cursorEnd;
     if (index > end) {
@@ -159,7 +161,7 @@ function compositionend(e: Event) {
     if (!inputel.value) return;
     const text = inputel.value.value;
     if (editor.composingInputEnd(text)) {
-        const selection = props.context.textSelection;
+        const selection = props.selection;
         selection.setCursor(composingStartIndex + text.length, true, getText(props.shape));
     }
     inputel.value.value = ''
@@ -173,7 +175,7 @@ function onfocusout() {
 }
 
 function onKeyDown(e: KeyboardEvent) {
-    if(e.code === 'Tab') {
+    if (e.code === 'Tab') {
         e.preventDefault();
     }
     handleKeyEvent(e, props.context, getText(props.shape), editor);
@@ -183,7 +185,7 @@ function onKeyUp(e: KeyboardEvent) {
 }
 
 function onKeyPress(e: KeyboardEvent) {
-    if(e.code === 'Tab') {
+    if (e.code === 'Tab') {
         e.preventDefault();
     }
     handleKeyEvent(e, props.context, getText(props.shape), editor);
@@ -191,9 +193,9 @@ function onKeyPress(e: KeyboardEvent) {
 </script>
 <template>
     <input type="text" :tabindex="-1" class="input" @focusout="onfocusout" @input="oninput"
-        @compositionstart="compositionstart" @compositionend="compositionend" @compositionupdate="compositionupdate"
-        @keydown="onKeyDown" @keypress="onKeyPress" @keyup="onKeyUp"
-        :style="{ left: `${inputpos.left}px`, top: `${inputpos.top}px` }" ref="inputel" />
+           @compositionstart="compositionstart" @compositionend="compositionend" @compositionupdate="compositionupdate"
+           @keydown="onKeyDown" @keypress="onKeyPress" @keyup="onKeyUp"
+           :style="{ left: `${inputpos.left}px`, top: `${inputpos.top}px` }" ref="inputel"/>
 </template>
 <style lang='scss' scoped>
 .input {

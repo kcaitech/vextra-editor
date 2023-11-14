@@ -1,20 +1,21 @@
 <script setup lang="ts">
-import { Context } from '@/context';
-import { Selection } from '@/context/selection';
-import { onMounted, onUnmounted, shallowRef, ref, computed } from 'vue';
-import { ShapeType, Shape, TextShape, TableShape, SymbolShape } from "@kcdesign/data"
+import {Context} from '@/context';
+import {Selection} from '@/context/selection';
+import {onMounted, onUnmounted, shallowRef, ref, computed} from 'vue';
+import {ShapeType, Shape, TextShape, TableShape, SymbolShape} from "@kcdesign/data"
 import Arrange from './Arrange.vue';
 import ShapeBaseAttr from './BaseAttr/Index.vue';
 import Fill from './Fill/Fill.vue';
 import Border from './Border/Border.vue';
 import PageBackgorund from './PageBackgorund.vue';
 import Text from './Text/Text.vue';
-import { throttle } from 'lodash';
+import {throttle} from 'lodash';
 import Module from './Module/Module.vue'
 import TableText from './Table/TableText.vue'
-import { TableSelection } from '@/context/tableselection';
+import {TableSelection} from '@/context/tableselection';
 import TableStyle from './Table/TableStyle.vue'
-import { Tool } from '@/context/tool';
+import {Tool} from '@/context/tool';
+
 const props = defineProps<{ context: Context }>();
 const shapes = shallowRef<Shape[]>([]);
 const len = computed<number>(() => shapes.value.length);
@@ -79,6 +80,7 @@ function _change(t: number) {
         baseAttr.value = true;
     }
 }
+
 const baseAttr = ref(true);
 const baseAttrVisible = () => {
     const shape = props.context.selection.selectedShapes[0]
@@ -96,16 +98,20 @@ const baseAttrVisible = () => {
 }
 
 const change = throttle(_change, 100);
+
 function tool_watcher(t: number) {
-    if (t === Tool.CHANGE_ACTION) {
-        getShapeType()
-    }
+    if (t === Tool.CHANGE_ACTION) getShapeType();
 }
-function selection_watcher(t: number) { change(t) }
+
+function selection_watcher(t: number) {
+    change(t)
+}
+
 function table_selection_watcher(t: number) {
     if (t === TableSelection.CHANGE_TABLE_CELL) baseAttrVisible();
     else if (t === TableSelection.CHANGE_EDITING_CELL) baseAttrVisible();
 }
+
 onMounted(() => {
     props.context.selection.watch(selection_watcher);
     props.context.tableSelection.watch(table_selection_watcher);
@@ -123,18 +129,18 @@ onUnmounted(() => {
         <el-scrollbar>
             <div v-if="len === 0">
                 <PageBackgorund :context="props.context" v-if="props.context.selection.selectedPage"
-                    :page="props.context.selection.selectedPage"></PageBackgorund>
+                                :page="props.context.selection.selectedPage"></PageBackgorund>
             </div>
             <Arrange v-if="len > 1" :context="props.context" :shapes="shapes"></Arrange>
-            <div v-if="len" :reflush="reflush" @mousedown.stop>
+            <div v-if="len" :reflush="reflush">
                 <ShapeBaseAttr v-if="baseAttr" :context="props.context"></ShapeBaseAttr>
                 <Module :context="props.context" :shapeType="shapeType" :shapes="shapes"></Module>
                 <Fill v-if="WITH_FILL.includes(shapeType)" :shapes="shapes" :context="props.context"></Fill>
                 <Border v-if="WITH_BORDER.includes(shapeType)" :shapes="shapes" :context="props.context"></Border>
                 <Text v-if="WITH_TEXT.includes(shapeType)" :shape="(shapes[0] as TextShape)"
-                    :textShapes="(textShapes as TextShape[])" :context="props.context"></Text>
+                      :textShapes="(textShapes as TextShape[])" :context="props.context"></Text>
                 <TableText v-if="WITH_TABLE.includes(shapeType)" :shape="(shapes[0] as TableShape)"
-                    :context="props.context">
+                           :context="props.context">
                 </TableText>
             </div>
         </el-scrollbar>
