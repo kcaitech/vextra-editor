@@ -161,8 +161,7 @@ function compositionend(e: Event) {
     if (!inputel.value) return;
     const text = inputel.value.value;
     if (editor.composingInputEnd(text)) {
-        const selection = props.selection;
-        selection.setCursor(composingStartIndex + text.length, true, getText(props.shape));
+        props.selection.setCursor(composingStartIndex + text.length, true, getText(props.shape));
     }
     inputel.value.value = ''
 }

@@ -889,14 +889,15 @@ function get_id(raw_id: string) {
 }
 
 /**
- * @description 检查symbol与ref之间是否存在循环引用
+ * @description 检查symbol与symbol2之间是否存在循环引用
+ * 组件symbol2内是否可以存在symbol的实例
  */
-export function is_circular_ref2(symbol: Shape, refId: string): boolean {
+export function is_circular_ref2(symbol: Shape, symbol2: string): boolean {
     let deps: { shape: string, ref: string }[] = [...get_topology_map(symbol), {
-        shape: get_id(refId),
+        shape: get_id(symbol2),
         ref: get_id(symbol.id)
     }];
-    if (deps.length < 2) return false;
+    // if (deps.length < 2) return false;
     while (deps.length && is_exist_single_stick(deps)) {
         deps = filter_deps(deps, 'shape', 'ref');
         deps = filter_deps(deps, 'ref', 'shape');

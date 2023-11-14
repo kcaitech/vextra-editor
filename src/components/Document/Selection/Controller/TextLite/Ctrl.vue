@@ -79,7 +79,6 @@ function up(e: MouseEvent) {
 }
 
 function document_down() {
-    console.log("text_selection_lite.cursorStart:", text_selection_lite.cursorStart)
     if (text_selection_lite.cursorStart > -1) text_selection_lite.reset();
 }
 
