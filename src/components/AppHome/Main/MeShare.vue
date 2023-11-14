@@ -1,6 +1,6 @@
 
 <template>
-    <div class="tatle" style="height: calc(100vh - 120px);">
+    <div class="tatle" style="height: 100%;">
         <tablelist :data="searchlists" :iconlist="iconlists" @share="Sharefile" @deletefile="Deletefile"
             @dbclickopen="openDocument" @updatestar="Starfile" @rightMeun="rightmenu" :noNetwork="noNetwork"
             @refreshDoc="refreshDoc" />

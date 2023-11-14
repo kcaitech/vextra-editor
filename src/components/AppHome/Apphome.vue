@@ -239,7 +239,6 @@ onUnmounted(() => {
 }
 
 .el-main {
-  height: calc(100% - 60px);
   padding: 0;
   overflow: hidden;
   background-color: rgba(255, 255, 255, 1);

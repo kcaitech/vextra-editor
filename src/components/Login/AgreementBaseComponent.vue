@@ -3,7 +3,6 @@
         <div class="kc-header">
             <div class="logo" @click="$router.push({ path: '/' })">
                 <img class="logo-img" :src=avatar alt="ProtoDesign">
-                <span class="logo-text">ProtoDesign</span>
             </div>
             <button class="loginbnt" v-if="!isMobile" type="button" @click.stop="router.push({ name: 'login' })">
                 {{ t('system.btn_login') }}
@@ -82,7 +81,7 @@ onUnmounted(() => {
             cursor: pointer;
 
             .logo-img {
-                width: 56px;
+                width: 160px;
                 height: 56px;
             }
 

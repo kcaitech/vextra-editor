@@ -36,6 +36,7 @@ import type { Column, RowClassNameGetter } from 'element-plus'
 import { useI18n } from 'vue-i18n'
 import NetworkError from '@/components/NetworkError.vue'
 import Loading from '../common/Loading.vue';
+import Bus from './bus'
 const props = defineProps<{
     data: any,
     iconlist: any,
@@ -54,7 +55,7 @@ const loading = ref(true)
 const empty = ref(false)
 const net = ref<HTMLDivElement>()
 const user_id = localStorage.getItem('userId');
-
+const x = ref(0)
 
 
 let timer: any
@@ -128,6 +129,18 @@ const rightmenu = (e: any,) => {
     x.value = e.scrollTop
 }
 
+const b = computed(() => {
+    return x.value > 0 ? false : true
+})
+
+watch(b,(newvalue)=>{
+    if(newvalue){
+        Bus.emit('test1',newvalue)
+    }else{
+        Bus.emit('test1',newvalue)
+    }
+})
+
 const rowHandleClick = ({
     onclick: ({ rowData }: any) => {
         selectedId.value = -1
@@ -170,7 +183,7 @@ const rowClass = ({ rowData }: Parameters<RowClassNameGetter<any>>[0]) => {
         }
 }
 
-const x = ref(0)
+
 
 const headerClass = computed(() => {
     return x.value > 0 ? 'test' : ''
@@ -559,9 +572,11 @@ watchEffect(() => {
     font-size: 12px !important;
     height: 26px !important;
 }
-:deep(.el-table-v2__header-cell){
+
+:deep(.el-table-v2__header-cell) {
     font-weight: 500 !important;
 }
+
 :deep(.test) {
     box-shadow: 0 0 4px 0 rgb(0, 0, 0, 0.1) !important;
 }
@@ -604,7 +619,7 @@ watchEffect(() => {
 }
 
 :deep(.selected) {
-    background-color:rgba(24, 120, 245, 0.1) !important;
+    background-color: rgba(24, 120, 245, 0.1) !important;
 
 }
 

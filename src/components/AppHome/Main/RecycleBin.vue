@@ -1,5 +1,5 @@
 <template>
-    <div class="tatle" style="height: calc(100vh - 120px);">
+    <div class="tatle" style="height: 100%;">
         <tablelist :data="searchlists" :iconlist="iconlists" @restore="Restorefile" @ndelete="Deletefile" @rightMeun="rightmenu"
             :noNetwork="noNetwork" @refreshDoc="refreshDoc" />
     </div>

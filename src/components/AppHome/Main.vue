@@ -11,6 +11,7 @@ import { FilePicker } from '../common/filepicker';
 import { LzDataLocal } from '@/basic/lzdatalocal'; // todo
 import { importSketch } from '@kcdesign/data';
 import { Zip } from "@pal/zip";
+import Bus from './bus';
 
 const { t } = useI18n();
 const route = useRoute()
@@ -145,6 +146,11 @@ onMounted(() => {
     }
 
 })
+const show = ref<boolean>(true)
+Bus.on('test1', (b: boolean) => {
+    show.value = b
+})
+
 </script>
 
 <template>
@@ -161,7 +167,8 @@ onMounted(() => {
         </div>
         <div v-else class="title-text">{{ title }}</div>
     </div>
-    <div v-if="route.name === 'recently'" class="newandopen">
+    <Transition>
+    <div v-if="route.name === 'recently' && show" class="newandopen">
         <div class="newfile" @click="newFile">
             <div class="left">
                 <svg-icon icon-class="newfile-normal"></svg-icon>
@@ -181,12 +188,22 @@ onMounted(() => {
             </div>
         </div>
     </div>
-    <div class="main">
+</Transition>
+    <div class="main" :style="{ height: `calc(100vh - ${(route.name === 'recently' && show) ? '220px' : '132px'})` }">
         <RouterView @dataUpdate="update" />
     </div>
 </template>
 
 <style lang="scss" scoped>
+.v-enter-active,
+.v-leave-active {
+  transition: all 0.2s ease-in-out;
+}
+
+.v-enter-from,
+.v-leave-to {
+  opacity: 0;
+}
 .newandopen {
     display: flex;
     align-items: center;
@@ -270,6 +287,5 @@ onMounted(() => {
 .main {
     margin: 24px 24px 0 24px;
     overflow: hidden;
-    height: calc(100% - 152px);
 }
 </style>
