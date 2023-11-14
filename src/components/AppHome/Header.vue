@@ -1,5 +1,5 @@
 <script setup lang="ts">
-import { onMounted, reactive, toRefs, ref, onUnmounted, computed, watch, nextTick } from 'vue'
+import { onMounted, reactive, toRefs, ref, onUnmounted, computed, watch, nextTick, HtmlHTMLAttributes } from 'vue'
 import { Search, User, SwitchButton, Close, Bell } from '@element-plus/icons-vue'
 import Inform from './Inform.vue'
 import * as share_api from '@/request/share';
@@ -188,7 +188,6 @@ const reviewed = () => {
     getProjectApplyList();
 }
 
-
 let timer: any = null
 getApplyList();
 getTeamApply();
@@ -310,10 +309,15 @@ const getElXY = (el: HTMLElement, elwidth: number = 0) => {
     color: #333333;
 }
 
-:deep(.el-input__wrapper){
-    background-color: rgba(255, 255, 255, 1) !important;
+:deep(.el-input__wrapper) {
+    background-color: transparent !important;
     border-radius: 8px !important;
+
+    &:hover {
+        background-color: rgba(255, 255, 255, 1) !important;
+    }
 }
+
 .header {
     display: flex;
     align-items: center;

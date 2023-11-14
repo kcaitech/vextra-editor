@@ -617,14 +617,6 @@ onUnmounted(() => {
         <el-col>
             <el-scrollbar height="100%">
                 <div>
-                    <!-- <div class="new">
-                        <button class="newfile" @click="newFile"> <el-icon>
-                                <Plus />
-                            </el-icon><span>{{ t('home.New_file') }}</span></button>
-                        <button class="openfile" @click="picker.invoke()"><el-icon>
-                                <FolderOpened />
-                            </el-icon><span>{{ t('home.open_local_file') }}</span></button>
-                    </div> -->
                     <el-menu :default-active="x" active-text-color="#ffd04b" class="el-menu-vertical-demo"
                         text-color="#000000">
                         <router-link to="/apphome/recently"><el-menu-item index="1" :class="{ 'is_active': x == '1' }"
@@ -665,11 +657,16 @@ onUnmounted(() => {
                             </el-menu-item></router-link>
                     </el-menu>
                 </div>
-                <div class="team-container">
-                    <button class="newteam" @click.stop="showteamcard">
-                        <svg-icon icon-class="teamicon" />
-                        <span>{{ t('Createteam.add_team') }}</span>
-                    </button>
+                <div class="newteam-container">
+                    <div class="left">
+                        <svg-icon icon-class="teamicon"></svg-icon>
+                        <span>团队</span>
+                    </div>
+                    <div class="right" @click.stop="showteamcard">
+                        <Tooltip :content="'创建团队'" :offset="10">
+                        <svg-icon icon-class="add-icon"></svg-icon>
+                        </Tooltip>
+                    </div>
                 </div>
                 <div class="teamlists" :reflush="reflush !== 0 ? reflush : undefined">
                     <div class="demo-collapse">
@@ -702,25 +699,14 @@ onUnmounted(() => {
                                             <div class="right">
                                                 <Tooltip :content="t('Createteam.cancelFixed')" :offset="10">
                                                     <div @click.stop="shareFixed(i, item.project.id)">
-                                                        <svg t="1693476333821" class="icon" viewBox="0 0 1024 1024"
-                                                            version="1.1" xmlns="http://www.w3.org/2000/svg" p-id="15755"
-                                                            width="20" height="20">
-                                                            <path
-                                                                d="M0 0m256 0l512 0q256 0 256 256l0 512q0 256-256 256l-512 0q-256 0-256-256l0-512q0-256 256-256Z"
-                                                                fill="#9775fa" p-id="15756"
-                                                                data-spm-anchor-id="a313x.search_index.0.i11.6fa73a817d52QG"
-                                                                class=""></path>
-                                                            <path
-                                                                d="M256 767.6416l202.9568-160.9216 80.9728 86.1184s33.792 9.216 35.8656-16.384l-2.0736-87.1424 119.936-138.368 52.2496-3.0464s41.0112-8.2432 11.2896-44.0832l-146.5856-147.584s-39.936-5.12-36.8896 31.744v39.9872l-136.2944 115.8912-84.0192 5.0688s-30.7712 10.24-19.5072 36.9152l78.9504 77.9008L256 767.6416z"
-                                                                fill="#FFFFFF" p-id="15757"
-                                                                data-spm-anchor-id="a313x.search_index.0.i10.6fa73a817d52QG"
-                                                                class=""></path>
-                                                        </svg>
+                                                        <svg-icon icon-class="fixed-icon"></svg-icon>
                                                     </div>
                                                 </Tooltip>
-                                                <svg-icon icon-class="close" @click.stop="newProjectFile(item.project.id)"
-                                                    v-if="item.self_perm_type > 2"
-                                                    style="transform: rotate(45deg); margin-left: 5px; width: 16px; height: 16px;" />
+                                                <Tooltip :content="'新建文件'" :offset="10">
+                                                    <svg-icon icon-class="add-icon"
+                                                        @click.stop="newProjectFile(item.project.id)"
+                                                        v-if="item.self_perm_type > 2" />
+                                                </Tooltip>
                                             </div>
                                         </div>
                                     </div>
@@ -749,7 +735,7 @@ onUnmounted(() => {
                                             <div class="name">{{ data.team.name }}</div>
                                         </div>
                                         <div class="right" @click.stop="showprojectcard(data.team.id)">
-                                            <svg-icon icon-class="close" v-if="data.self_perm_type > 0" />
+                                            <svg-icon icon-class="add-icon" v-if="data.self_perm_type > 0" />
                                         </div>
                                     </div>
                                 </template>
@@ -780,9 +766,9 @@ onUnmounted(() => {
                                                         </svg>
                                                     </div>
                                                 </Tooltip>
-                                                <svg-icon icon-class="close" @click.stop="newProjectFile(item.project.id)"
-                                                    v-if="item.self_perm_type > 2"
-                                                    style="transform: rotate(45deg); margin-left: 5px; width: 16px; height: 16px;" />
+                                                <svg-icon icon-class="add-icon"
+                                                    @click.stop="newProjectFile(item.project.id)"
+                                                    v-if="item.self_perm_type > 2" />
                                             </div>
                                         </div>
                                     </div>
@@ -796,8 +782,7 @@ onUnmounted(() => {
                                             <div class="project_name">{{ target.project.name }}</div>
                                             <div class="right" @click.stop="newProjectFile(target.project.id)"
                                                 v-if="target.self_perm_type > 2">
-                                                <svg-icon icon-class="close"
-                                                    style="transform: rotate(45deg); margin-left: 5px; width: 16px; height: 16px;" />
+                                                <svg-icon icon-class="add-icon" />
                                             </div>
                                         </div>
                                     </div>
@@ -806,7 +791,7 @@ onUnmounted(() => {
                         </el-collapse>
                     </div>
                 </div>
-               
+
             </el-scrollbar>
         </el-col>
     </el-row>
@@ -865,6 +850,7 @@ a {
 :deep(.el-collapse-item__header:hover) {
     background-color: rgba(250, 250, 250, 1);
     cursor: pointer;
+
     .right {
         visibility: visible;
     }
@@ -916,47 +902,41 @@ a {
     background-color: rgba(0, 0, 0, 0.5);
 }
 
-.team-container {
-    position: absolute;
-    bottom: 0px;
-    width: 100%;
-    text-align: center;
+.newteam-container {
+    height: 40px;
+    display: flex;
+    align-items: center;
+    margin: 20px 12px 6px 6px;
+    padding: 0 0 0 16px;
+    justify-content: space-between;
+    font-size: 14px;
+    color: rgb(128, 128, 128);
 
-    .newteam {
-        cursor: pointer;
-        border: none;
-        width: calc(100% - 16px);
-        height: 32px;
-        margin: 8px;
+    .left {
         display: flex;
         align-items: center;
-        justify-content: center;
-        border-radius: 4px;
-        background-color: #9775fa;
-        box-shadow: 1px 1px 2px rgba(0, 0, 0, .5);
-        box-sizing: border-box;
-        transition: all 0.5s ease-out;
+
+        svg {
+            fill: rgba(128, 128, 128, 1);
+            ;
+            margin-right: 5px;
+            width: 24px;
+            height: 20px;
+        }
+    }
+
+    .right {
+        display: flex;
+        padding: 6px;
+        border-radius: 6px;
 
         &:hover {
-            background-color: rgba(150, 117, 250, 0.862745098);
-        }
-
-        &:active {
-            background-color: #9775fa;
-        }
-
-        span {
-            color: #ffffff;
-            letter-spacing: 1px;
-            font-size: 12px;
-            font-weight: 600;
+            background-color: rgba(243, 243, 245, 1);
         }
 
         svg {
-            margin-right: 4px;
-            width: 18px;
-            height: 18px;
-            fill: white;
+            width: 16px;
+            height: 16px;
         }
     }
 }
@@ -1079,7 +1059,6 @@ a {
                     .left {
                         display: flex;
                         align-items: center;
-                        width: 200px;
 
                         .down {
                             display: flex;
@@ -1135,6 +1114,7 @@ a {
                             text-overflow: ellipsis;
                             white-space: nowrap;
                             font-size: 12px;
+                            width: 150px;
                         }
                     }
 
@@ -1146,11 +1126,16 @@ a {
                         align-items: center;
 
                         svg {
+                            border-radius: 6px;
+                            padding: 6px;
                             width: 16px;
                             min-width: 16px;
                             height: 16px;
                             fill: rgba(51, 51, 51, 1);
-                            transform: rotate(45deg);
+
+                            &:hover {
+                                background-color: rgba(235, 235, 237, 1);
+                            }
                         }
                     }
                 }
@@ -1199,10 +1184,16 @@ a {
                             margin-right: 6px;
 
                             svg {
+                                padding: 6px;
+                                border-radius: 6px;
                                 width: 16px;
                                 min-width: 16px;
                                 height: 16px;
-                                fill: rgba(51, 51, 51, 1);
+                                fill: rgba(51, 51, 51, 1) !important;
+
+                                &:hover {
+                                    background-color: rgba(235, 235, 237, 1);
+                                }
                             }
                         }
                     }
@@ -1217,7 +1208,7 @@ a {
                 }
             }
 
- 
+
 
 
         }

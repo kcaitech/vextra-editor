@@ -234,11 +234,18 @@ onUnmounted(() => {
   overflow: hidden;
 }
 
+.el-header{
+  padding: 0 20px 0 0;
+}
 
 .el-main {
-  height: 100%;
+  height: calc(100% - 60px);
   padding: 0;
   overflow: hidden;
+  background-color: rgba(255, 255, 255, 1);
+  border: 1px solid rgba(241, 242, 242, 1);
+  border-radius: 10px 10px 0 0;
+
 }
 
 .el-aside {

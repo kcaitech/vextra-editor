@@ -59,17 +59,17 @@ var configureWebpack = (config) => {
                         symbolId: "icon-[name]",
                     },
                 },
-                {
-                    loader: 'svgo-loader',
-                    options: {
-                        plugins: [
-                            {
-                                name: 'convertColors',
-                                params: { currentColor: true },
-                            },
-                        ],
-                    },
-                }
+                // {
+                //     loader: 'svgo-loader',
+                //     options: {
+                //         plugins: [
+                //             {
+                //                 name: 'convertColors',
+                //                 params: { currentColor: true },
+                //             },
+                //         ],
+                //     },
+                // }
             ],
             include: [iconspath],
             exclude: /node_modules/,

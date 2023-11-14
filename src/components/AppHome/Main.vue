@@ -4,6 +4,13 @@ import { nextTick, onMounted, ref, watch } from 'vue';
 import { useRoute } from 'vue-router'
 import { useI18n } from 'vue-i18n';
 import { router } from '@/router';
+import { createDocument } from '@kcdesign/data';
+import { Repository, CoopRepository, Document } from '@kcdesign/data';
+import { DocEditor } from '@kcdesign/data';
+import { FilePicker } from '../common/filepicker';
+import { LzDataLocal } from '@/basic/lzdatalocal'; // todo
+import { importSketch } from '@kcdesign/data';
+import { Zip } from "@pal/zip";
 
 const { t } = useI18n();
 const route = useRoute()
@@ -59,6 +66,32 @@ const settilte = (title: string) => {
             break;
     }
 }
+
+function newFile() {
+    const repo = new Repository();
+    const nd = createDocument(t('system.new_file'), repo);
+    const coopRepo = new CoopRepository(nd, repo)
+    const editor = new DocEditor(nd, coopRepo);
+    const page = editor.create(t('system.page1'));
+    editor.insert(0, page);
+    window.document.title = nd.name;
+    (window as any).skrepo = coopRepo;
+    (window as any).sketchDocument = nd;
+    router.push({ name: 'document' });
+}
+
+const picker = new FilePicker('.sketch', (file) => {
+    if (!file) return;
+    const lzdata = new LzDataLocal(new Zip(file));
+    const repo = new Repository();
+    importSketch(file.name, lzdata, repo).then((document: Document) => {
+        window.document.title = document.name;
+        const coopRepo = new CoopRepository(document, repo);
+        (window as any).skrepo = coopRepo;
+        (window as any).sketchDocument = document;
+        router.push({ name: 'document' });
+    })
+});
 
 watch(() => route.name, () => {
     recycle.value = false
@@ -118,35 +151,101 @@ onMounted(() => {
     <div v-if="title != undefined" class="title">
         <div v-if="recycle" class="indicator" :style="{ width: elwidth + 'px', left: elleft + 'px' }"></div>
         <div v-if="recycle" class="container">
-            <div ref="myfile" class="title-text" style="cursor: pointer;" @click="highlight(true, $event, '/apphome/meshare')"
-                :style="{ opacity: active ? '1' : '0.5' }">
+            <div ref="myfile" class="title-text" style="cursor: pointer;"
+                @click="highlight(true, $event, '/apphome/meshare')" :style="{ opacity: active ? '1' : '0.5' }">
                 {{ title }}
             </div>
-            <div ref="mydel" class="title-text" style="cursor: pointer;" @click="highlight(false, $event, '/apphome/recyclebin')"
-                :style="{ opacity: active ? '0.5' : '1' }">
-                {{t('home.recycling_station')}}</div>
+            <div ref="mydel" class="title-text" style="cursor: pointer;"
+                @click="highlight(false, $event, '/apphome/recyclebin')" :style="{ opacity: active ? '0.5' : '1' }">
+                {{ t('home.recycling_station') }}</div>
         </div>
         <div v-else class="title-text">{{ title }}</div>
     </div>
-
+    <div v-if="route.name === 'recently'" class="newandopen">
+        <div class="newfile" @click="newFile">
+            <div class="left">
+                <svg-icon icon-class="newfile-normal"></svg-icon>
+                <div class="text">{{ t('home.New_file') }}</div>
+            </div>
+            <div class="right">
+                <svg-icon icon-class="add-icon"></svg-icon>
+            </div>
+        </div>
+        <div class="openfile" @click="picker.invoke()">
+            <div class="left">
+                <svg-icon icon-class="openfile-normal"></svg-icon>
+                <div class="text">{{ t('home.open_local_file') }}</div>
+            </div>
+            <div class="right">
+                <svg-icon icon-class="add-icon"></svg-icon>
+            </div>
+        </div>
+    </div>
     <div class="main">
         <RouterView @dataUpdate="update" />
     </div>
 </template>
 
 <style lang="scss" scoped>
+.newandopen {
+    display: flex;
+    align-items: center;
+    margin: 0 32px;
+    gap: 32px;
+
+    .newfile,
+    .openfile {
+        display: flex;
+        align-items: center;
+        justify-content: space-between;
+        width: 260px;
+        height: 56px;
+        font-size: 14px;
+        border-radius: 8px;
+        border: 1px solid rgba(240, 240, 240, 1);
+        box-sizing: border-box;
+
+        &:hover {
+            background-color: rgba(248, 248, 250, 1);
+        }
+
+        .left {
+            display: flex;
+            align-items: center;
+            margin-left: 16px;
+
+            svg {
+                color: rgba(51, 51, 51, 1);
+                width: 30px;
+                height: 30px;
+            }
+        }
+
+        .right {
+            display: flex;
+            align-items: center;
+            margin-right: 16px;
+
+            svg {
+                width: 16px;
+                height: 16px;
+            }
+        }
+
+    }
+
+}
+
 .title {
     display: flex;
-    align-items: flex-end;
-    height: 40px;
-    border-bottom: 1px solid rgba(196, 196, 196, 0.8117647059);
-    margin: 6px 0;
+    margin: 24px 32px;
     box-sizing: border-box;
 
     .indicator {
+        margin-top: 30px;
         position: absolute;
         height: 2px;
-        background-color: #9775fa;
+        background-color: rgba(24, 120, 245, 1);
         border-radius: 2px;
         transition: all 0.2s ease-in-out;
     }
@@ -154,15 +253,13 @@ onMounted(() => {
     .container {
         display: flex;
         align-items: center;
-        line-height: 40px;
+        gap: 24px;
     }
 
     .title-text {
         font-size: 18px;
         font-weight: 600;
         letter-spacing: 2px;
-        line-height: 40px;
-        margin-right: 12px;
         // overflow: hidden;
         // white-space: nowrap;
         // text-overflow: ellipsis;
@@ -171,7 +268,8 @@ onMounted(() => {
 }
 
 .main {
+    margin: 24px 24px 0 24px;
     overflow: hidden;
-    height: 100%;
+    height: calc(100% - 152px);
 }
 </style>

@@ -3,7 +3,7 @@
         <template #default="{ height, width }">
             <el-table-v2 v-if="height != 0" :columns="columns" :data=props.data :width="width" :height="height"
                 :row-class="rowClass" :row-event-handlers="rowHandleClick" @scroll="rightmenu" :header-height="24"
-                :row-height="40" :header-class="headerClass">
+                :row-height="56" :header-class="headerClass">
                 <template v-if="loading" #overlay>
                     <div class="el-loading-mask" style="display: flex; align-items: center; justify-content: center">
                         <Loading :size="20" />
@@ -556,9 +556,12 @@ watchEffect(() => {
 }
 
 :deep(.el-table-v2__header) {
+    font-size: 12px !important;
     height: 26px !important;
 }
-
+:deep(.el-table-v2__header-cell){
+    font-weight: 500 !important;
+}
 :deep(.test) {
     box-shadow: 0 0 4px 0 rgb(0, 0, 0, 0.1) !important;
 }
@@ -568,7 +571,9 @@ watchEffect(() => {
     justify-content: space-between;
     border-bottom: 1px solid white;
     border-top: 1px solid white;
+    border-radius: 8px;
     will-change: top;
+    transition: none !important;
 }
 
 :deep(.el-table-v2__header-row) {
@@ -579,8 +584,7 @@ watchEffect(() => {
 }
 
 :deep(.el-table-v2__row:hover) {
-    border-radius: 4px;
-    background-color: #f3f0ff;
+    background-color: rgba(247, 247, 249, 1);
 
     // border: none;
 
@@ -600,8 +604,8 @@ watchEffect(() => {
 }
 
 :deep(.selected) {
-    background-color: #e5dbff !important;
-    border-radius: 4px !important;
+    background-color:rgba(24, 120, 245, 0.1) !important;
+
 }
 
 :deep(span) {
