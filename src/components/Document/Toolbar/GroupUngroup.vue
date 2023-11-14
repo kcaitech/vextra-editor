@@ -38,8 +38,7 @@ function _updater(t?: number) {
                 isBoolGroup.value = false
             }
             if (type === ShapeType.Group || type === ShapeType.Artboard) {
-                state.value = state.value ^ UNGROUP;
-                state.value = state.value ^ GROUP;
+                state.value = state.value ^ UNGROUP ^ GROUP;
             } else {
                 state.value = state.value ^ GROUP;
             }
@@ -47,8 +46,7 @@ function _updater(t?: number) {
             isBoolGroup.value = true
             const groups = shapes.filter(s => s.type === ShapeType.Group || s.type === ShapeType.Artboard);
             if (groups.length) {
-                state.value = state.value ^ UNGROUP;
-                state.value = state.value ^ GROUP;
+                state.value = state.value ^ UNGROUP ^ GROUP;
             } else {
                 state.value = state.value ^ GROUP;
             }

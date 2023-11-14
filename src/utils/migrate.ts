@@ -28,17 +28,16 @@ import {is_circular_ref2, is_part_of_symbolref, is_symbol_but_not_union} from "@
  */
 export function unable_to_migrate(target: Shape, wander: Shape): number {
     if (target.type === ShapeType.Symbol) {
-        if (wander.type === ShapeType.SymbolRef) {
-            if (is_circular_ref2(target, (wander as SymbolRefShape).refId)) return 3;
+        const children = wander.naviChilds || wander.childs;
+        if (children?.length) {
+            const tree = wander instanceof SymbolRefShape ? wander.getRootData() : wander;
+            if (!tree) return 999;
+            if (is_circular_ref2(tree, target.id)) return 3;
         }
         if ((target as SymbolShape).isUnionSymbolShape && !is_symbol_but_not_union(wander)) return 1;
         if (wander.type === ShapeType.Symbol) return 2;
     } else {
-        let p = target.parent;
-        while (p) {
-            if (p.type === ShapeType.Symbol) return 1;
-            p = p.parent;
-        }
+        if (target.isVirtualShape) return 4;
     }
     return 0;
 }

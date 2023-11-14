@@ -435,7 +435,7 @@ onUnmounted(() => {
 })
 </script>
 <template>
-    <div class="items-wrap">
+    <div class="items-wrap" @mousedown.stop @click.stop>
         <div v-if="props.items.includes('layers')" class="item layer-select"
              @mouseenter="(e: MouseEvent) => showLayerSubMenu(e)" @mouseleave="closeLayerSubMenu">
             <span>{{ t('system.select_layer') }}</span>
