@@ -5,7 +5,6 @@ import {
     finder,
     getClosestAB,
     get_frame,
-    get_pg_by_frame,
     get_tree,
     modify_pt_x,
     modify_pt_x4create,
@@ -13,9 +12,8 @@ import {
     modify_pt_y,
     modify_pt_y4create,
     modify_pt_y4p,
-    gen_match_points,
     gen_match_points_by_map,
-    PointsOffset
+    PointsOffset, getClosestContainer
 } from "@/utils/assist";
 
 export interface PointGroup1 {
@@ -165,9 +163,11 @@ export class Asssit extends Watchable(Object) {
     get nodes_y() {
         return this.m_nodes_y;
     }
+
     get shape_in_view() {
         return this.m_shape_inner;
     }
+
     is_shape_in_view(shape: Shape) {
         return !!this.m_pg_inner.get(shape.id);
     }
@@ -184,8 +184,10 @@ export class Asssit extends Watchable(Object) {
             this.m_collect_target = [];
             const shapes = this.m_context.selection.selectedShapes;
             if (shapes.length === 1) {
-                this.m_collect_target = [getClosestAB(shapes[0])];
-            } else this.m_collect_target = [];
+                this.m_collect_target = [getClosestContainer(shapes[0])];
+            } else {
+                this.m_collect_target = [];
+            }
         } else if (t === Selection.CHANGE_PAGE) {
             this.m_collect_target = [];
         }
@@ -312,11 +314,17 @@ export class Asssit extends Watchable(Object) {
         }
         if (pre_target1.delta !== undefined) {
             target.x = pre_target1.x, target.sticked_by_x = true;
-            this.m_nodes_x = (this.m_x_axis.get(target.x) || []).concat([{p: {x: target.x, y: pre_target1.sy}, id: 'ex'}]);
+            this.m_nodes_x = (this.m_x_axis.get(target.x) || []).concat([{
+                p: {x: target.x, y: pre_target1.sy},
+                id: 'ex'
+            }]);
         }
         if (pre_target2.delta !== undefined) {
             target.y = pre_target2.y, target.sticked_by_y = true;
-            this.m_nodes_y = (this.m_y_axis.get(target.y) || []).concat([{p: {x: pre_target2.sx, y: target.y}, id: 'ex'}]);
+            this.m_nodes_y = (this.m_y_axis.get(target.y) || []).concat([{
+                p: {x: pre_target2.sx, y: target.y},
+                id: 'ex'
+            }]);
         }
         this.notify(Asssit.UPDATE_ASSIST);
         // const e = Date.now();
@@ -342,11 +350,17 @@ export class Asssit extends Watchable(Object) {
         }
         if (pre_target1.delta !== undefined) {
             target.x = pre_target1.x, target.sticked_by_x = true;
-            this.m_nodes_x = (this.m_x_axis.get(target.x) || []).concat([{p: {x: target.x, y: pre_target1.sy}, id: 'ex'}]);
+            this.m_nodes_x = (this.m_x_axis.get(target.x) || []).concat([{
+                p: {x: target.x, y: pre_target1.sy},
+                id: 'ex'
+            }]);
         }
         if (pre_target2.delta !== undefined) {
             target.y = pre_target2.y, target.sticked_by_y = true;
-            this.m_nodes_y = (this.m_y_axis.get(target.y) || []).concat([{p: {x: pre_target2.sx, y: target.y}, id: 'ex'}]);
+            this.m_nodes_y = (this.m_y_axis.get(target.y) || []).concat([{
+                p: {x: pre_target2.sx, y: target.y},
+                id: 'ex'
+            }]);
         }
         this.notify(Asssit.UPDATE_ASSIST);
         const e = Date.now();
