@@ -7,6 +7,7 @@ import { nextTick, onMounted, onUnmounted, onUpdated, ref } from "vue";
 import { StatusValueItem, get_tag_value } from "@/utils/symbol";
 import { Selection } from "@/context/selection";
 import { Menu } from "@/context/menu";
+import { SymbolShape } from "@kcdesign/data";
 
 interface Props {
     context: Context
@@ -65,8 +66,10 @@ const menuIndex = ref();
 const getVattagValue = () => {
     const shape = props.context.selection.symbolstate;
     if (shape) {
-        statusValue.value = get_tag_value(shape, props.data.variable);
-        menuIndex.value = props.data.values.findIndex(v => v === statusValue.value);
+        let val = get_tag_value(shape, props.data.variable);
+        if (val === SymbolShape.Default_State) val = t('compos.dlt');
+        statusValue.value = val;
+        menuIndex.value = props.data.values.findIndex(v => v === val);
     }
 }
 const selected_watcher = (t: number) => {

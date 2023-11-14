@@ -79,7 +79,7 @@ const updateData = () => {
     if (props.shapes.length === 1) {
         const symref = props.context.selection.symbolrefshape;
         if (!symref) return;
-        const result = get_var_for_ref(props.context, symref);
+        const result = get_var_for_ref(props.context, symref, t);
         variables.value = [];
         visible_variables.value = [];
         if (!result) return;

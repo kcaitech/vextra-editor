@@ -2,7 +2,6 @@
 import {
     get_status_vari_for_symbolref,
     get_vari_value_for_ref,
-    modify_vari_value_for_ref,
     RefAttriListItem,
     switch_symref_state
 } from "@/utils/symbol";
@@ -12,8 +11,9 @@ import {onMounted, onUpdated} from "vue";
 import SelectMenu from "@/components/Document/Attribute/PopoverMenu/ComposAttri/SelectMenu.vue";
 import {ArrowDown} from '@element-plus/icons-vue'
 import {Menu} from "@/context/menu";
-import {OverrideType} from "@kcdesign/data";
-
+import { useI18n } from "vue-i18n";
+import { SymbolShape } from "@kcdesign/data";
+const { t } = useI18n();
 interface Props {
     context: Context
     data: RefAttriListItem
@@ -38,15 +38,17 @@ function select(index: number) {
     const symbolref = props.context.selection.symbolrefshape;
     if (!symbolref) return;
     const vari = get_status_vari_for_symbolref(symbolref, props.data.variable);
-    switch_symref_state(props.context, vari, _v);
+    switch_symref_state(props.context, vari, _v, t);
 }
 
 function getVattagValue() {
     const symref = props.context.selection.symbolrefshape;
     if (!symref) return;
-    const vari = get_status_vari_for_symbolref(symref, props.data.variable);
+    // const vari = get_status_vari_for_symbolref(symref, props.data.variable);
     // status_value.value = get_vari_value_for_ref(symref, vari);
-    status_value.value = get_vari_value_for_ref(symref, props.data.variable);
+    let val = get_vari_value_for_ref(symref, props.data.variable);
+    if (val === SymbolShape.Default_State) val = t('compos.dlt');
+    status_value.value = val;
 }
 watch(() => props.data, (v) => {
     getVattagValue();
