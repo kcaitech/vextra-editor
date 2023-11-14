@@ -1,7 +1,7 @@
 <script lang="ts" setup>
 import { useI18n } from 'vue-i18n';
 import { Context } from '@/context';
-import { onMounted, onUnmounted, ref, watch, watchEffect } from "vue";
+import { onMounted, onUnmounted, ref, watch } from "vue";
 import StatusCard from "@/components/Document/Attribute/Module/StatusCard.vue";
 import { is_conflict_comp, is_wrong_bind, states_tag_values_sort, StatusValueItem } from "@/utils/symbol";
 import { Shape, SymbolShape } from "@kcdesign/data"
@@ -19,7 +19,7 @@ const data = ref<StatusValueItem[]>();
 const conflict = ref<boolean>(false);
 
 function update_list() {
-    data.value = states_tag_values_sort(props.shapes);
+    data.value = states_tag_values_sort(props.shapes, t);
     data.value.forEach(item => {
         item.values.push('add_new_value');
     })

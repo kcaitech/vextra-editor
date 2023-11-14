@@ -55,7 +55,7 @@ const closeCompsType = (e: Event) => {
 }
 
 function update_variable_list() {
-    variables.value = variable_sort(props.shape);
+    variables.value = variable_sort(props.shape, t);
     conflict.value = is_wrong_bind_sym(props.shape);
 }
 
@@ -174,7 +174,7 @@ function text_dlt_change(v: string) {
 watch(() => props.shape, (v, o) => {
     v.watch(variable_watcher);
     o.unwatch(variable_watcher);
-    variables.value = variable_sort(v);
+    variables.value = variable_sort(v, t);
 })
 onMounted(() => {
     props.shape.watch(variable_watcher);

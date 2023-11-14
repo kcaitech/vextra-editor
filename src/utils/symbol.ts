@@ -264,7 +264,7 @@ export interface AttriListItem {
  * @description 为组件整理变量列表
  * @param symbol
  */
-export function variable_sort(symbol: SymbolShape) {
+export function variable_sort(symbol: SymbolShape, t: Function) {
     const list: AttriListItem[] = [];
     if (!symbol.variables) return list;
     let status_index = 0;
@@ -272,7 +272,7 @@ export function variable_sort(symbol: SymbolShape) {
     resource.forEach(v => {
         const item: { variable: Variable, values: any[] } = {variable: v, values: []};
         if (v.type === VariableType.Status) {
-            item.values = tag_values_sort(symbol, v);
+            item.values = tag_values_sort(symbol, v, t);
             list.splice(status_index++, 0, item);
         } else {
             list.push(item);
@@ -286,13 +286,15 @@ export function variable_sort(symbol: SymbolShape) {
  * @param symbol
  * @param variable
  */
-export function tag_values_sort(symbol: SymbolShape, variable: Variable) {
+export function tag_values_sort(symbol: SymbolShape, variable: Variable, t: Function) {
     if (!symbol.isUnionSymbolShape) return [];
+    const defaultVal = t('compos.dlt');
     const childs: SymbolShape[] = symbol.childs as unknown as SymbolShape[];
     const result_set: Set<string> = new Set();
     for (let i = 0, len = childs.length; i < len; i++) {
         const item = childs[i];
-        const v = item.vartag?.get(variable.id) || variable.value;
+        let v = item.vartag?.get(variable.id) || variable.value;
+        if (v === SymbolShape.Default_State) v = defaultVal;
         v && result_set.add(v);
     }
     return Array.from(result_set.values());
@@ -318,7 +320,7 @@ export interface StatusValueItem {
 /**
  * @description 为可变组件整理变量列表
  */
-export function states_tag_values_sort(shapes: SymbolShape[]) {
+export function states_tag_values_sort(shapes: SymbolShape[], t: Function) {
     const result: StatusValueItem[] = [];
     if (shapes.length === 1) {
         const par = shapes[0].parent as SymbolShape;
@@ -329,7 +331,7 @@ export function states_tag_values_sort(shapes: SymbolShape[]) {
             if (v.type !== VariableType.Status) return;
             const item: StatusValueItem = {
                 variable: v,
-                values: tag_values_sort(par, v)
+                values: tag_values_sort(par, v, t)
             }
             result.push(item);
         })
@@ -415,7 +417,7 @@ export function make_status(context: Context, t: Function) {
         const editor = context.editor4Page(page);
         const name = gen_special_name_for_status(shape, t('compos.attri'));
         if (!name) return;
-        return editor.makeStatus(shape as SymbolShape, name, t('compos.dlt'));
+        return editor.makeStatus(shape as SymbolShape, name, t('compos.dlt'), true);
     }
 }
 
@@ -706,7 +708,7 @@ export interface RefAttriListItem {
  * @param context
  * @param symref
  */
-export function get_var_for_ref(context: Context, symref: SymbolRefShape) {
+export function get_var_for_ref(context: Context, symref: SymbolRefShape, t: Function) {
     let result: RefAttriListItem[] = [];
     let result2: RefAttriListItem[] = [];
     const varsContainer = symref.varsContainer;
@@ -726,7 +728,7 @@ export function get_var_for_ref(context: Context, symref: SymbolRefShape) {
                 if (overrides) item.variable = overrides[overrides.length - 1];
                 result2.push(item);
             } else if (v.type === VariableType.Status) {
-                item.values = tag_values_sort(sym, v);
+                item.values = tag_values_sort(sym, v, t);
                 result.splice(status_index++, 0, item);
             } else if (v.type === VariableType.SymbolRef) {
                 result.splice(status_index + instance_index++, 0, item);
@@ -740,7 +742,7 @@ export function get_var_for_ref(context: Context, symref: SymbolRefShape) {
         variables.forEach((v: Variable) => {
             const item: RefAttriListItem = {variable: v, values: []};
             if (v.type === VariableType.Status) {
-                item.values = tag_values_sort(sym, v);
+                item.values = tag_values_sort(sym, v, t);
                 result.push(item);
             }
         })
@@ -791,7 +793,8 @@ function search_binds_for_state(variables: Map<string, Variable>, state: Shape, 
  */
 export function get_vari_value_for_ref(symref: SymbolRefShape, variable: Variable) {
     const overrides = symref.findOverride(variable.id, OverrideType.Variable);
-    return overrides ? overrides[overrides.length - 1].value : variable.value;
+    const val = overrides ? overrides[overrides.length - 1].value : variable.value;
+    return val;
 }
 
 /**
@@ -1073,16 +1076,17 @@ export function is_exist_symbolref_layer(shapes: Shape[]) {
     return false;
 }
 
-export function switch_symref_state(context: Context, variable: Variable, state: string) {
+export function switch_symref_state(context: Context, variable: Variable, state: string, t: Function) {
     const symbolref = context.selection.symbolrefshape;
     if (!symbolref) return;
     const editor = context.editor4Shape(symbolref);
-    editor.switchSymState(variable.id, state);
+    editor.switchSymState(variable.id, state === t('compos.dlt') ? SymbolShape.Default_State : state);
 }
 
 export function get_status_vari_for_symbolref(symbolref: SymbolRefShape, variable: Variable) {
     const overrides = symbolref.findOverride(variable.id, OverrideType.Variable);
-    return overrides ? overrides[overrides.length - 1] : variable;
+    const val = overrides ? overrides[overrides.length - 1] : variable;
+    return val;
 }
 
 /**
