@@ -19,7 +19,7 @@ const updateSlider = () => {
     if (sliderValue.value < 0) {
         sliderValue.value = 0;
     } else if (sliderValue.value > 100) {
-        sliderValue.value = 100;            
+        sliderValue.value = 100;
     }
 };
 const sliderValueFormatted = computed({
