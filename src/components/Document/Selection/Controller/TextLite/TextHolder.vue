@@ -38,7 +38,7 @@ function init_view_box() {
     container_root.value.y = c_box.y;
     return `0 0 ${c_box.width - 8} 300`;
 }
-
+function scroll(delta: number) {}
 function shape_watcher(...arg: any) {
     reflush.value++;
 }
@@ -60,7 +60,7 @@ onUnmounted(() => {
             <render></render>
         </svg>
         <Ctrl v-if="container" :context="context" :root="container_root" :shape="props.shape"
-              :matrix="matrix.toArray()" :view-box="init_view_box()"></Ctrl>
+              :matrix="matrix.toArray()" :view-box="init_view_box()" :container="container"></Ctrl>
     </div>
 </template>
 <style>

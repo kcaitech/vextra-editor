@@ -6,6 +6,7 @@ import SelectView from "@/components/Document/Selection/Controller/Text/SelectVi
 import {onMounted, onUnmounted, reactive, ref, watch} from "vue";
 import {TextSelectionLite} from "@/context/textselectionlite";
 import {Selection} from "@/context/selection";
+import {check_orientation_during_movement} from "@/utils/listview";
 
 interface Props {
     matrix: number[]
@@ -13,6 +14,7 @@ interface Props {
     shape: TextShape
     root: { x: number, y: number }
     viewBox: string
+    container: Element
 }
 
 const props = defineProps<Props>();
@@ -49,6 +51,8 @@ function down(e: MouseEvent) {
 function move(e: MouseEvent) {
     if (e.buttons !== 1) return;
     e.stopPropagation();
+    const orientation = check_orientation_during_movement(props.container, e);
+    console.log('orientation:', orientation);
     const {clientX, clientY} = e;
     matrix.reset(props.matrix);
     const xy = matrix.inverseCoord(clientX - root.value.x, clientY - root.value.y);
@@ -97,7 +101,7 @@ onUnmounted(() => {
 <template>
     <svg version="1.1" xmlns="http://www.w3.org/2000/svg" xmlns:xlink="http://www.w3.org/1999/xlink"
          xmlns:xhtml="http://www.w3.org/1999/xhtml" preserveAspectRatio="xMinYMin meet"
-         :viewBox="viewBox" overflow="visible"
+         :viewBox="viewBox" overflow="hidden"
          :style="{ transform: matrix.toString() }"
          @mousedown="down" @mousemove="move" @mouseup="up"
     >
