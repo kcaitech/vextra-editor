@@ -55,6 +55,7 @@ const WITH_TABLE = [ShapeType.Table];
 const shapeType = ref();
 const reflush = ref<number>(0);
 const textShapes = ref<Shape[]>([]);
+const symbol_attribute = ref<boolean>(true);
 const getShapeType = () => {
     if (props.context.selection.selectedShapes.length === 1) {
         shapes.value = new Array(...props.context.selection.selectedShapes);
@@ -78,6 +79,7 @@ function _change(t: number) {
     } else if (t === Selection.CHANGE_SHAPE) {
         getShapeType();
         baseAttr.value = true;
+        symbol_attribute.value = props.context.selection.selectedShapes.length < 2;
     }
 }
 
@@ -86,12 +88,8 @@ const baseAttrVisible = () => {
     const shape = props.context.selection.selectedShapes[0]
     if (props.context.selection.selectedShapes.length === 1 && shape.type === ShapeType.Table) {
         const table = props.context.tableSelection;
-        const is_edting = props.context.tableSelection.editingCell;
-        if (table.tableColStart === -1 && !is_edting) {
-            baseAttr.value = true;
-        } else {
-            baseAttr.value = false;
-        }
+        const is_editing = props.context.tableSelection.editingCell;
+        baseAttr.value = table.tableColStart === -1 && !is_editing;
     } else {
         baseAttr.value = true;
     }
@@ -134,7 +132,8 @@ onUnmounted(() => {
             <Arrange v-if="len > 1" :context="props.context" :shapes="shapes"></Arrange>
             <div v-if="len" :reflush="reflush">
                 <ShapeBaseAttr v-if="baseAttr" :context="props.context"></ShapeBaseAttr>
-                <Module :context="props.context" :shapeType="shapeType" :shapes="shapes"></Module>
+                <Module v-if="symbol_attribute" :context="props.context" :shapeType="shapeType"
+                        :shapes="shapes"></Module>
                 <Fill v-if="WITH_FILL.includes(shapeType)" :shapes="shapes" :context="props.context"></Fill>
                 <Border v-if="WITH_BORDER.includes(shapeType)" :shapes="shapes" :context="props.context"></Border>
                 <Text v-if="WITH_TEXT.includes(shapeType)" :shape="(shapes[0] as TextShape)"
