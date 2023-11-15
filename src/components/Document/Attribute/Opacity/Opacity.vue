@@ -1,16 +1,17 @@
 <script setup lang="ts">
 import TypeHeader from '../TypeHeader.vue';
-import { Shape } from '@kcdesign/data';
-import { useI18n } from 'vue-i18n';
-import { computed, nextTick, ref } from 'vue';
+import {Shape} from '@kcdesign/data';
+import {useI18n} from 'vue-i18n';
+import {computed, nextTick, ref} from 'vue';
 import {Context} from '@/context';
 
 interface Props {
     context: Context
     shapes: Shape[]
 }
+
 const props = defineProps<Props>();
-const { t } = useI18n();
+const {t} = useI18n();
 const sliderValue = ref(100);
 const popoverVisible = ref<boolean>(false);
 const popover = ref<HTMLDivElement>();
@@ -37,6 +38,7 @@ const change = (event: Event) => {
         event.target.select();
     }
 };
+
 function showMenu(e: MouseEvent) {
     if (popoverVisible.value) return popoverVisible.value = false;
     popoverVisible.value = true;
@@ -47,6 +49,7 @@ function showMenu(e: MouseEvent) {
     })
     document.addEventListener('click', onMenuBlur)
 }
+
 function onMenuBlur(e: MouseEvent) {
     if (e.target instanceof Element && !e.target.closest('.popover-f') && !e.target.closest('.icon')) {
         let timer = setTimeout(() => {
@@ -56,68 +59,77 @@ function onMenuBlur(e: MouseEvent) {
         }, 10)
     }
 }
+
 function selectOption(event: MouseEvent) {
     selectedOption.value = (event.target as HTMLSpanElement).innerText;
     popoverVisible.value = false;
+}
+
+function range_change(e: InputEvent) {
+    const value = (e.target as HTMLInputElement).value;
+    const page = props.context.selection.selectedPage!;
+    const editor = props.context.editor4Page(page);
+    const selected = props.context.selection.selectedShapes;
+    editor.modifyShapesContextSettingOpacity(selected, Number(value) / 100);
 }
 </script>
 <template>
     <div class="opacity-panel">
         <TypeHeader :title="t('attr.opacity')" class="mt-24">
             <template #tool>
-                <div class="icon" @click="showMenu" ref="trigger">
-                    <input v-model="selectedOption">
-                    <svg-icon icon-class="down"></svg-icon>
-                </div>
-                <div ref="popover" class="popover-f" v-if="popoverVisible">
-                    <span @click="selectOption" :class="{ 'selected': selectedOption === t('opacity.normal') }">{{
-                        t('opacity.normal') }}</span>
-                    <div class="line"></div>
-                    <span @click="selectOption" :class="{ 'selected': selectedOption === t('opacity.become_dark') }">{{
-                        t('opacity.become_dark') }}</span>
-                    <span @click="selectOption" :class="{ 'selected': selectedOption === t('opacity.multiply') }">{{
-                        t('opacity.multiply') }}</span>
-                    <span @click="selectOption" :class="{ 'selected': selectedOption === t('opacity.color_deepening') }">{{
-                        t('opacity.color_deepening') }}</span>
-                    <div class="line"></div>
-                    <span @click="selectOption" :class="{ 'selected': selectedOption === t('opacity.become_bright') }">{{
-                        t('opacity.become_bright') }}</span>
-                    <span @click="selectOption" :class="{ 'selected': selectedOption === t('opacity.filter') }">{{
-                        t('opacity.filter') }}</span>
-                    <span @click="selectOption" :class="{ 'selected': selectedOption === t('opacity.color_dodge') }">{{
-                        t('opacity.color_dodge') }}</span>
-                    <div class="line"></div>
-                    <span @click="selectOption" :class="{ 'selected': selectedOption === t('opacity.superpose') }">{{
-                        t('opacity.superpose') }}</span>
-                    <span @click="selectOption" :class="{ 'selected': selectedOption === t('opacity.soft_light') }">{{
-                        t('opacity.soft_light') }}</span>
-                    <span @click="selectOption" :class="{ 'selected': selectedOption === t('opacity.strong_light') }">{{
-                        t('opacity.strong_light') }}</span>
-                    <div class="line"></div>
-                    <span @click="selectOption" :class="{ 'selected': selectedOption === t('opacity.difference') }">{{
-                        t('opacity.difference') }}</span>
-                    <span @click="selectOption" :class="{ 'selected': selectedOption === t('opacity.exclude') }">{{
-                        t('opacity.exclude') }}</span>
-                    <div class="line"></div>
-                    <span @click="selectOption" :class="{ 'selected': selectedOption === t('opacity.hue') }">{{
-                        t('opacity.hue') }}</span>
-                    <span @click="selectOption" :class="{ 'selected': selectedOption === t('opacity.saturation') }">{{
-                        t('opacity.saturation') }}</span>
-                    <span @click="selectOption" :class="{ 'selected': selectedOption === t('opacity.color') }">{{
-                        t('opacity.color') }}</span>
-                    <span @click="selectOption" :class="{ 'selected': selectedOption === t('opacity.lightness') }">{{
-                        t('opacity.lightness') }}</span>
-                    <div class="line"></div>
-                    <span @click="selectOption" :class="{ 'selected': selectedOption === t('opacity.darken') }">{{
-                        t('opacity.darken') }}</span>
-                    <span @click="selectOption" :class="{ 'selected': selectedOption === t('opacity.brighten') }">{{
-                        t('opacity.brighten') }}</span>
-                </div>
+                <!--                <div class="icon" @click="showMenu" ref="trigger">-->
+                <!--                    <input v-model="selectedOption">-->
+                <!--                    <svg-icon icon-class="down"></svg-icon>-->
+                <!--                </div>-->
+                <!--                <div ref="popover" class="popover-f" v-if="popoverVisible">-->
+                <!--                    <span @click="selectOption" :class="{ 'selected': selectedOption === t('opacity.normal') }">{{-->
+                <!--                        t('opacity.normal') }}</span>-->
+                <!--                    <div class="line"></div>-->
+                <!--                    <span @click="selectOption" :class="{ 'selected': selectedOption === t('opacity.become_dark') }">{{-->
+                <!--                        t('opacity.become_dark') }}</span>-->
+                <!--                    <span @click="selectOption" :class="{ 'selected': selectedOption === t('opacity.multiply') }">{{-->
+                <!--                        t('opacity.multiply') }}</span>-->
+                <!--                    <span @click="selectOption" :class="{ 'selected': selectedOption === t('opacity.color_deepening') }">{{-->
+                <!--                        t('opacity.color_deepening') }}</span>-->
+                <!--                    <div class="line"></div>-->
+                <!--                    <span @click="selectOption" :class="{ 'selected': selectedOption === t('opacity.become_bright') }">{{-->
+                <!--                        t('opacity.become_bright') }}</span>-->
+                <!--                    <span @click="selectOption" :class="{ 'selected': selectedOption === t('opacity.filter') }">{{-->
+                <!--                        t('opacity.filter') }}</span>-->
+                <!--                    <span @click="selectOption" :class="{ 'selected': selectedOption === t('opacity.color_dodge') }">{{-->
+                <!--                        t('opacity.color_dodge') }}</span>-->
+                <!--                    <div class="line"></div>-->
+                <!--                    <span @click="selectOption" :class="{ 'selected': selectedOption === t('opacity.superpose') }">{{-->
+                <!--                        t('opacity.superpose') }}</span>-->
+                <!--                    <span @click="selectOption" :class="{ 'selected': selectedOption === t('opacity.soft_light') }">{{-->
+                <!--                        t('opacity.soft_light') }}</span>-->
+                <!--                    <span @click="selectOption" :class="{ 'selected': selectedOption === t('opacity.strong_light') }">{{-->
+                <!--                        t('opacity.strong_light') }}</span>-->
+                <!--                    <div class="line"></div>-->
+                <!--                    <span @click="selectOption" :class="{ 'selected': selectedOption === t('opacity.difference') }">{{-->
+                <!--                        t('opacity.difference') }}</span>-->
+                <!--                    <span @click="selectOption" :class="{ 'selected': selectedOption === t('opacity.exclude') }">{{-->
+                <!--                        t('opacity.exclude') }}</span>-->
+                <!--                    <div class="line"></div>-->
+                <!--                    <span @click="selectOption" :class="{ 'selected': selectedOption === t('opacity.hue') }">{{-->
+                <!--                        t('opacity.hue') }}</span>-->
+                <!--                    <span @click="selectOption" :class="{ 'selected': selectedOption === t('opacity.saturation') }">{{-->
+                <!--                        t('opacity.saturation') }}</span>-->
+                <!--                    <span @click="selectOption" :class="{ 'selected': selectedOption === t('opacity.color') }">{{-->
+                <!--                        t('opacity.color') }}</span>-->
+                <!--                    <span @click="selectOption" :class="{ 'selected': selectedOption === t('opacity.lightness') }">{{-->
+                <!--                        t('opacity.lightness') }}</span>-->
+                <!--                    <div class="line"></div>-->
+                <!--                    <span @click="selectOption" :class="{ 'selected': selectedOption === t('opacity.darken') }">{{-->
+                <!--                        t('opacity.darken') }}</span>-->
+                <!--                    <span @click="selectOption" :class="{ 'selected': selectedOption === t('opacity.brighten') }">{{-->
+                <!--                        t('opacity.brighten') }}</span>-->
+                <!--                </div>-->
             </template>
         </TypeHeader>
         <div class="opacity-container">
-            <input type="range" v-model="sliderValue" @input="updateSlider" class="input-range" />
-            <input type="text" class="input-text" v-model="sliderValueFormatted" @input="updateSlider" @click="change" />
+            <input type="range" v-model="sliderValue" @input="updateSlider" @change="range_change" class="input-range"/>
+            <input type="text" class="input-text" v-model="sliderValueFormatted" @input="updateSlider" @click="change"/>
         </div>
     </div>
 </template>
@@ -140,7 +152,7 @@ function selectOption(event: MouseEvent) {
         color: #000000;
         transition: 0.3s;
 
-        >input {
+        > input {
             width: 55px;
             height: 15px;
             margin-left: -79px;
@@ -150,7 +162,7 @@ function selectOption(event: MouseEvent) {
             font-size: 12px;
         }
 
-        >svg {
+        > svg {
             width: 80%;
             height: 60%;
             margin-left: -2px;
@@ -190,7 +202,7 @@ function selectOption(event: MouseEvent) {
             box-sizing: border-box;
         }
 
-        >span {
+        > span {
             position: relative;
             width: 100%;
             height: 28px;
