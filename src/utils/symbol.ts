@@ -390,8 +390,8 @@ export function make_symbol(context: Context, t: Function) {
         message('info', '新的组件不能包含组件实例的组成图层');
         return false;
     }
-    if (is_exsit_contact_shape(selected)) {
-        message('info', '组件内部不能包含连接线');
+    if (is_exsit_valid_shape(selected)) {
+        message('info', '组件内部不能包含连接线、表格');
         return false;
     }
     const editor = context.editor4Page(page);
@@ -400,12 +400,12 @@ export function make_symbol(context: Context, t: Function) {
     return editor.makeSymbol(context.data, shapes, name);
 }
 
-export function is_exsit_contact_shape(selected: Shape[]) {
+export function is_exsit_valid_shape(selected: Shape[]) {
     let result = false;
     for (let i = 0, len = selected.length; i < len; i++) {
         const item = selected[i];
-        if (selected[i].type === ShapeType.Contact) return true;
-        if (item.childs?.length) result = is_exsit_contact_shape(item.childs);
+        if ([ShapeType.Contact, ShapeType.Table].includes(item.type)) return true;
+        if (item.childs?.length) result = is_exsit_valid_shape(item.childs);
         if (result) return true;
     }
     return false;
