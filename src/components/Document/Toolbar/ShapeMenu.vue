@@ -1,83 +1,42 @@
 <script setup lang="ts">
 import { Action } from '@/context/tool';
-import { prop } from 'vue-class-component';
 import { useI18n } from 'vue-i18n';
 
 const { t } = useI18n();
 const props = defineProps<{
+    isActive: boolean
     lg: string,
-    quick?: string,
-    select?: any,
-    d?: any,
-    type: string,
-    // state?: boolean
+    quick: string,
+    action: Action,
 }>();
 const emit = defineEmits<{
-    (e: "selectRect", select: Action): void;
-    (e: "selectEllipse", select: Action): void;
-    (e: "selectPath", select: Action): void;
-    (e: "selectArrow", select: Action): void;
+    (e: "select", select: Action): void;
 }>();
-const selectRect = (active: Action) => {
-    emit('selectRect', active);
+const select = () => {
+    emit('select', props.action);
 };
-const selectEllipse = (e: MouseEvent) => {
-    e.stopPropagation()
-    emit('selectEllipse', props.select)
-}
-const selectPath = (e: MouseEvent) => {
-    e.stopPropagation()
-    emit('selectPath', props.select)
-}
-const selectArrow = (e: MouseEvent) => {
-    e.stopPropagation()
-    emit('selectArrow', props.select)
+function get_icon_class() {
+    if (props.action ===Action.AddRect) return "pattern-rectangle";
+    else if (props.action === Action.AddEllipse) return "pattern-oval";
+    else if (props.action === Action.AddLine) return "pattern-line";
+    else if (props.action === Action.AddArrow) return "pattern-arrow";
+    return  "pattern-rectangle"
 }
 </script>
 <template>
-    <div class="container-change" @click="selectRect(props.select!)" v-if="props.type === 'rect'">
+    <div class="container-change" @click="select">                                
         <div style="display: flex; align-items: center;">
-            <div class="choose" :style="{ visibility: props.select === props.d ? 'visible' : 'hidden' }"></div>
+            <div class="choose" :style="{ visibility: isActive ? 'visible' : 'hidden' }"></div>
             <div class="svg-container">
-                <svg-icon :icon-class="select"></svg-icon>
+                <svg-icon :icon-class="get_icon_class()"></svg-icon>
             </div>
             <div class="select">{{ t(`shape.${props.lg}`) }}</div>
         </div>
         <span class="quick">{{ props.quick }}</span>
     </div>
-    <div class="container-change" v-if="props.type === 'ellipse'" @mousedown="selectEllipse">
-        <div style="display: flex; align-items: center;">
-            <div class="choose" :style="{ visibility: props.select === props.d ? 'visible' : 'hidden' }"></div>
-            <div class="svg-container">
-                <svg-icon :icon-class="select"></svg-icon>
-            </div>
-            <div class="select">{{ t(`bool.${props.lg}`) }}</div>
-        </div>
-        <span class="quick">{{ props.quick }}</span>
-    </div>
-    <div class="container-change" v-if="props.type === 'path'" @mousedown="selectPath">
-        <div style="display: flex; align-items: center;">
-            <div class="choose" :style="{ visibility: props.select === props.d ? 'visible' : 'hidden' }"></div>
-            <div class="svg-container">
-                <svg-icon :icon-class="select"></svg-icon>
-            </div>
-            <div class="select">{{ t(`bool.${props.lg}`) }}</div>
-        </div>
-        <span class="quick">{{ props.quick }}</span>
-    </div>
-    <div class="container-change" v-if="props.type === 'arrow'" @mousedown="selectArrow">
-        <div style="display: flex; align-items: center;">
-            <div class="choose" :style="{ visibility: props.select === props.d ? 'visible' : 'hidden' }"></div>
-            <div class="svg-container">
-                <svg-icon :icon-class="select"></svg-icon>
-            </div>
-            <div class="select">{{ t(`bool.${props.lg}`) }}</div>
-        </div>
-        <span class="quick">{{ props.quick }}</span>
-    </div>
 </template>
 <style scoped lang="scss">
-.container-change:hover {
+.container-change:hover {                                                                                                              
   background-color: var(--active-color);
 }
 .choose {

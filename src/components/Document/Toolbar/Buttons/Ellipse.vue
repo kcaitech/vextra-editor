@@ -10,11 +10,9 @@ const props = defineProps<{
 }>();
 const emit = defineEmits<{
     (e: "select", action: Action): void;
-    // (e: 'close'): void;
 }>();
 function select(action: Action) {    
     emit('select', action);
-    // emit('close');
 }
 </script>
 <template>
@@ -23,7 +21,6 @@ function select(action: Action) {
       <div class="svg-container">
         <svg-icon icon-class="pattern-ellipse"></svg-icon>
       </div>
-      <!-- <span>{{ t('shape.oval') }}</span> -->
     </ToolButton>
   </Tooltip>
 </template>

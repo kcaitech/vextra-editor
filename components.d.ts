@@ -180,6 +180,7 @@ declare module '@vue/runtime-core' {
     SelectView: typeof import('./src/components/Document/Selection/Controller/Text/SelectView.vue')['default']
     Serviceagreement: typeof import('./src/components/Login/Serviceagreement.vue')['default']
     Shadow: typeof import('./src/components/Document/Attribute/Shadow.vue')['default']
+    Shape: typeof import('./src/components/Document/Toolbar/Buttons/Shape.vue')['default']
     ShapeAvatar: typeof import('./src/components/Document/Selection/TeamWork/ShapeAvatar.vue')['default']
     ShapeContact: typeof import('./src/components/Document/Content/ShapeContact.vue')['default']
     ShapeGroup: typeof import('./src/components/Document/Content/ShapeGroup.vue')['default']
