@@ -1,7 +1,12 @@
 import {Watchable} from "@kcdesign/data";
 
+interface EscItem {
+    key: string
+    task: Function
+}
+
 export class EscStack extends Watchable(Object) {
-    private m_stack_set: Set<Function> = new Set();
+    private m_stack_map: Map<string, EscItem> = new Map();
 
     constructor() {
         super();
@@ -13,37 +18,35 @@ export class EscStack extends Watchable(Object) {
         if (shiftKey) {
             this.clear_stack();
         } else {
-            this.excute();
+            this.execute();
         }
     }
 
-    save(call: Function) {
-        if (this.m_stack_set.has(call)) { // 先删后加，保持先来的后出
-            this.m_stack_set.delete(call);
+    save(key: string, call: Function) {
+        if (this.m_stack_map.has(key)) { // 先删后加，保持先来的后出
+            this.m_stack_map.delete(key);
         }
-        this.m_stack_set.add(call);
+        this.m_stack_map.set(key, {key: key, task: call});
     }
 
-    remove(call: Function) {
-        this.m_stack_set.delete(call);
+    remove(key: string) {
+        this.m_stack_map.delete(key);
     }
 
-    excute() {
-        const queue = Array.from(this.m_stack_set.values());
-        let result: boolean = false;
-        while (!result && queue.length) {
-            const task = queue.pop();
-            if (!task) continue;
-            this.m_stack_set.delete(task);
-            if (typeof task !== 'function') break;
-            result = task();
+    execute() {
+        const queue = Array.from(this.m_stack_map.values());
+        for (let i = queue.length - 1; i > -1; i--) {
+            const item = queue[i];
+            this.m_stack_map.delete(item.key);
+            if (typeof item.task !== 'function') continue;
+            if (item.task()) break;
         }
     }
 
     clear_stack() {
-        const queue = Array.from(this.m_stack_set.values());
+        const queue = Array.from(this.m_stack_map.values());
         while (queue.length) {
-            const f = queue.pop();
+            const f = queue.pop()?.task;
             if (typeof f !== 'function') continue;
             f();
         }

@@ -17,6 +17,7 @@ import {cardmap} from "./InstanceAttrCard/map";
 import Status from "./InstanceAttrCard/IACStatus.vue"
 import Visible from "./InstanceAttrCard/IACVisible.vue"
 import {Selection} from '@/context/selection';
+import {v4} from "uuid";
 
 interface Props {
     context: Context
@@ -33,7 +34,7 @@ const selectReset = (e: MouseEvent) => {
     if (resetMenu.value) return resetMenu.value = false
     resetMenu.value = true
     document.addEventListener('click', closeResetMenu);
-    props.context.esctask.save(close_popover);
+    props.context.esctask.save(v4(), close_popover);
 }
 
 const closeResetMenu = (e: MouseEvent) => {

@@ -350,7 +350,7 @@ export function useControllerCustom(context: Context, i18nT: Function) {
         checkStatus();
         initController();
         workspace.contentEdit(false);
-        context.esctask.save(exit);
+        context.esctask.save('select-shape', exit);
     }
 
     function dispose() {

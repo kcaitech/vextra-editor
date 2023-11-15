@@ -7,8 +7,7 @@ import CompLayerShow from '../PopoverMenu/ComposAttri/CompLayerShow.vue';
 import {SymbolShape, VariableType} from '@kcdesign/data';
 import {
     AttriListItem,
-    create_ref_var, create_text_var, create_var_by_type,
-    create_visible_var,
+    create_var_by_type,
     is_wrong_bind_sym,
     make_status,
     variable_sort
@@ -19,6 +18,7 @@ import {cardmap} from "./ComponentStatusCard/map";
 import Status from "./ComponentStatusCard/SCStatus.vue";
 import {Warning} from '@element-plus/icons-vue';
 import {message} from "@/utils/message";
+import {v4} from "uuid";
 
 const {t} = useI18n();
 
@@ -69,7 +69,7 @@ function selectCompsType() {
     }
     compsType.value = true;
     document.addEventListener('mousedown', closeCompsType);
-    props.context.esctask.save(close);
+    props.context.esctask.save(v4(), close);
 }
 
 /**
@@ -90,7 +90,7 @@ const layerIsShow = () => {
     addType.value = VariableType.Visible;
     get_dialog_posi(atrrdialog.value);
     isaddStateDialog.value = true;
-    props.context.esctask.save(de_layer_is_show);
+    props.context.esctask.save(v4(), de_layer_is_show);
     close();
 }
 

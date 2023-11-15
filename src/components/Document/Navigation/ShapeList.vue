@@ -20,6 +20,7 @@ import {Navi} from "@/context/navigate";
 import {Perm, WorkSpace} from "@/context/workspace"
 import ShapeTypes from "./Search/ShapeTypes.vue";
 import {adjust_layer, DragDetail} from "@/utils/listview";
+import {v4} from "uuid";
 
 type List = InstanceType<typeof ListView>;
 type ContextMenuEl = InstanceType<typeof ContextMenu>;
@@ -400,7 +401,7 @@ const chartMenuMount = (e: MouseEvent) => {
                 el.style.borderRadius = 4 + 'px'
                 el.style.width = 200 + 'px'
             }
-            props.context.esctask.save(close);
+            props.context.esctask.save(v4(), close);
         }
     })
 }

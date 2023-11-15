@@ -1,5 +1,6 @@
 import { Watchable } from "@kcdesign/data";
 import { Context } from ".";
+import {v4} from "uuid";
 export enum CellMenu {
   MultiSelect = 'multiCells', //多选单元格时
   SelectRow = 'row', //选中整行单元格
@@ -52,7 +53,7 @@ export class Menu extends Watchable(Object) {
   }
   setupColorPicker(id: string) {
     this.m_color_picker = id;
-    this.m_context.esctask.save(this.removeColorPicker.bind(this));
+    this.m_context.esctask.save(v4() ,this.removeColorPicker.bind(this));
   }
   clearColorPickerId() {
     this.m_color_picker = undefined;

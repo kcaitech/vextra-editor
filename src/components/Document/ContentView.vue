@@ -14,7 +14,7 @@ import { collect_once } from '@/utils/assist';
 import { Menu } from '@/context/menu';
 import { debounce } from 'lodash';
 import { useI18n } from 'vue-i18n';
-import { v4 as uuid } from "uuid";
+import {v4, v4 as uuid} from "uuid";
 import {
     _updateRoot,
     is_drag,
@@ -303,7 +303,7 @@ function contextMenuMount(e: MouseEvent) {
             surplusY.value = document.documentElement.clientHeight - site.y - 4;
             el.style.top = contextMenuPosition.y + surplusY.value - height + 'px';
         }
-        props.context.esctask.save(contextMenuUnmount); // 将关闭菜单事件加入到esc任务队列
+        props.context.esctask.save(v4(), contextMenuUnmount); // 将关闭菜单事件加入到esc任务队列
     })
 }
 

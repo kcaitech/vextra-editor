@@ -6,6 +6,7 @@ import {useI18n} from 'vue-i18n';
 import {onMounted, ref} from 'vue';
 import SelectLayer from '../PopoverMenu/ComposAttri/SelectLayer.vue';
 import {get_options_from_symbol} from "@/utils/symbol";
+import {v4} from "uuid";
 
 const {t} = useI18n();
 
@@ -34,7 +35,7 @@ const showSelectLayer = (e: MouseEvent) => {
     selectoption.value = false;
     if (isselectLayer.value) return isselectLayer.value = false;
     isselectLayer.value = true;
-    props.context.esctask.save(de_show_select_layer);
+    props.context.esctask.save(v4(), de_show_select_layer);
 }
 
 function de_show_select_layer() {
