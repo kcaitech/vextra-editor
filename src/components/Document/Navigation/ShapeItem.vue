@@ -331,7 +331,7 @@ onUnmounted(() => {
     width: calc(100% - 12px);
     height: 30px;
     box-sizing: border-box;
-    transition: 50ms;
+    //transition: 50ms;
 
     > .ph {
         height: 100%;

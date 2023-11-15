@@ -1,6 +1,6 @@
-import { debounce } from "lodash";
-import { Context } from "@/context";
-import { ClientXY, PageXY } from "@/context/selection";
+import {debounce} from "lodash";
+import {Context} from "@/context";
+import {ClientXY, PageXY} from "@/context/selection";
 import {
     AsyncCreator,
     Color,
@@ -14,14 +14,14 @@ import {
     SymbolShape,
     TextShape
 } from "@kcdesign/data";
-import { Action, ResultByAction } from "@/context/tool";
-import { Perm, WorkSpace } from '@/context/workspace';
-import { is_mac, XYsBounding } from '@/utils/common';
-import { searchCommentShape as finder } from '@/utils/comment'
-import { paster_image } from "./clipboard";
-import { landFinderOnPage, scrollToContentView } from './artboardFn'
-import { fit_no_transform } from "./shapelist";
-import { is_part_of_symbol, is_shapes_if_symbolref, is_state, one_of_is_symbolref } from "@/utils/symbol";
+import {Action, ResultByAction} from "@/context/tool";
+import {Perm, WorkSpace} from '@/context/workspace';
+import {is_mac, XYsBounding} from '@/utils/common';
+import {searchCommentShape as finder} from '@/utils/comment'
+import {paster_image} from "./clipboard";
+import {landFinderOnPage, scrollToContentView} from './artboardFn'
+import {fit_no_transform} from "./shapelist";
+import {is_part_of_symbol, is_state, one_of_is_symbolref} from "@/utils/symbol";
 
 export interface Media {
     name: string
@@ -776,9 +776,10 @@ export function map_from_shapes(shapes: Shape[], init?: Map<string, Shape>) {
     for (let i = 0, len = shapes.length; i < len; i++) {
         const shape = shapes[i];
         map.set(shape.id, shape);
-        const childs = shape.type === ShapeType.SymbolRef ? (shape.naviChilds || []) : shape.childs;
-        if (!childs?.length) continue;
-        map_from_shapes(childs, map);
+        if (shape.type === ShapeType.Table) continue;
+        const children = shape.type === ShapeType.SymbolRef ? (shape.naviChilds || []) : shape.childs;
+        if (!children?.length) continue;
+        map_from_shapes(children, map);
     }
     return map;
 }
