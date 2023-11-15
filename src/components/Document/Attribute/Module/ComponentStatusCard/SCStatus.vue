@@ -1,9 +1,9 @@
 <script lang="ts" setup>
-import { Context } from "@/context";
-import { AttriListItem, delete_variable, is_status_allow_to_delete, is_valid_name } from "@/utils/symbol";
-import { nextTick, ref } from "vue";
-import { Variable, VariableType } from "@kcdesign/data";
-import { useI18n } from "vue-i18n";
+import {Context} from "@/context";
+import {AttriListItem, delete_variable, is_status_allow_to_delete, is_valid_name} from "@/utils/symbol";
+import {nextTick, ref} from "vue";
+import {SymbolShape, Variable, VariableType} from "@kcdesign/data";
+import {useI18n} from "vue-i18n";
 
 interface Props {
     context: Context
@@ -17,7 +17,7 @@ const attrInput = ref('');
 const input_s = ref<HTMLInputElement>();
 const isWarnRepeat = ref(false);
 const isWarnNull = ref(false);
-const { t } = useI18n();
+const {t} = useI18n();
 
 function selectAllText(event: FocusEvent) {
     (event.target as HTMLInputElement).select(); // 选择输入框内的文本
@@ -48,10 +48,9 @@ const validate = () => {
     const len = attrInput.value.trim().length > 0;
     const shape = props.context.selection.symbolshape;
     if (!shape) return false;
-    if(attrInput.value === props.variable.name) return closeInput();
+    if (attrInput.value === props.variable.name) return closeInput();
     const repeat = is_valid_name(shape, attrInput.value, VariableType.Status);
-    console.log(repeat,'repact');
-    
+
     if (!len || !repeat) {
         if (!len) isWarnNull.value = true;
         else isWarnRepeat.value = true;
@@ -95,7 +94,7 @@ function _delete() {
         <div class="attr_con">
             <div class="module_input" v-if="showRename">
                 <el-input ref="input_s" v-model="attrInput" @focus="selectAllText" class="input" @blur="blur"
-                    @keydown="keyboard_watcher" />
+                          @keydown="keyboard_watcher"/>
             </div>
             <div class="module_item_left" @dblclick="rename" v-else>
                 <div class="module_name">
@@ -141,7 +140,8 @@ function _delete() {
             align-items: center;
             justify-content: center;
             width: 30px;
-            >svg {
+
+            > svg {
                 width: 14px;
                 height: 14px;
             }
@@ -154,12 +154,12 @@ function _delete() {
             }
         }
 
-        >.name_i {
+        > .name_i {
             flex: 1;
             display: flex;
             max-width: 100%;
 
-            >span {
+            > span {
                 display: block;
                 box-sizing: border-box;
                 overflow: hidden;
@@ -173,7 +173,7 @@ function _delete() {
             display: flex;
             align-items: center;
 
-            >svg {
+            > svg {
                 width: 14px;
                 height: 14px;
                 margin: 0px 10px;
@@ -223,7 +223,7 @@ function _delete() {
         width: 22px;
         height: 22px;
 
-        >svg {
+        > svg {
             width: 11px;
             height: 11px;
         }

@@ -5,6 +5,9 @@ import {Context} from "@/context";
 import {get_name, is_parent_locked, is_parent_unvisible} from "@/utils/shapelist";
 import {Perm} from "@/context/workspace";
 import {Tool} from "@/context/tool";
+import {useI18n} from 'vue-i18n';
+import {is_state} from "@/utils/symbol";
+
 
 export interface ItemData {
     id: string
@@ -19,6 +22,26 @@ interface Props {
     data: ItemData
 }
 
+interface Emits {
+    (e: "toggleexpand", shape: Shape): void;
+
+    (e: "selectshape", shape: Shape, ctrl: boolean, meta: boolean, shift: boolean): void;
+
+    (e: "hovershape", shape: Shape): void;
+
+    (e: "unhovershape"): void;
+
+    (e: "set-lock", shape: Shape): void;
+
+    (e: "set-visible", val: boolean, shape: Shape): void;
+
+    (e: "rename", name: string, shape: Shape, event?: KeyboardEvent): void;
+
+    (e: "scrolltoview", shape: Shape): void;
+
+    (e: "item-mousedown", event: MouseEvent, shape: Shape): void;
+}
+
 const lock_status = ref<number>(0) // 1：锁 2：继承锁 -1：不锁
 const visible_status = ref<number>(1) // 1：隐藏 2： 继承隐藏 -1：显示
 const is_tool_visible = ref<boolean>()
@@ -30,19 +53,10 @@ const isread = ref(false)
 const canComment = ref(false)
 const isEdit = ref(false)
 const ph_width = computed(() => (props.data.level - 1) * 12);
-const emit = defineEmits<{
-    (e: "toggleexpand", shape: Shape): void;
-    (e: "selectshape", shape: Shape, ctrl: boolean, meta: boolean, shift: boolean): void;
-    (e: "hovershape", shape: Shape): void;
-    (e: "unhovershape"): void;
-    (e: "set-lock", shape: Shape): void;
-    (e: "set-visible", val: boolean, shape: Shape): void;
-    (e: "rename", name: string, shape: Shape, event?: KeyboardEvent): void;
-    (e: "scrolltoview", shape: Shape): void;
-    (e: "item-mousedown", event: MouseEvent, shape: Shape): void;
-}>();
+const emit = defineEmits<Emits>();
 let showTriangle = ref<boolean>(false);
 const watchedShapes = new Map();
+const t = useI18n().t;
 
 function watchShapes() {
     const needWatchShapes = new Map();
@@ -117,6 +131,7 @@ const setVisible = (e: MouseEvent) => {
     emit('set-visible', Boolean(visible_status.value < 0), props.data.shape())
 }
 const onRename = () => {
+    if (is_state(props.data.shape())) return;
     if (!isEdit.value) return;
     if (props.data.context.tool.isLable) return;
     isInput.value = true
@@ -281,7 +296,7 @@ onUnmounted(() => {
         </div>
         <!-- 内容描述 -->
         <div class="text" :style="{ opacity: !visible_status ? 1 : .3, display: isInput ? 'none' : '' }">
-            <div class="txt" @dblclick="onRename">{{ get_name(props.data.shape()) }}</div>
+            <div class="txt" @dblclick="onRename">{{ get_name(props.data.shape(), t('compos.dlt')) }}</div>
             <div class="tool_icon"
                  :style="{ visibility: `${is_tool_visible ? 'visible' : 'hidden'}`, width: `${is_tool_visible ? 66 + 'px' : lock_status || visible_status ? 66 + 'px' : 0}` }">
                 <div class="tool_lock tool" :class="{ 'visible': lock_status }" @click="(e: MouseEvent) => setLock(e)"

@@ -585,8 +585,8 @@ export function is_conflict_comp(symbol: SymbolShape) {
         variables.forEach(v => {
             if (v.type !== VariableType.Status) return;
             _no_status = false;
-            const dlt = item.vartag?.get(v.id);
-            slices += (!dlt || dlt === v.value) ? p : dlt;
+            const t = item.vartag?.get(v.id);
+            slices += (!t || t === SymbolShape.Default_State) ? p : t;
         })
         if (_no_status) return;
         conflict_arr.push({id: item.id, equal: slices});
@@ -618,14 +618,14 @@ export interface LCOption {
     data: Shape[]
 }
 
-export function get_options_from_symbol(symbol: SymbolShape, type: VariableType, vari?: Variable, container?: Shape[]) {
+export function get_options_from_symbol(symbol: SymbolShape, type: VariableType, dlt: string, vari?: Variable, container?: Shape[]) {
     const result: LCOption[] = [];
     if (symbol.type !== ShapeType.Symbol) return result;
     if (symbol.isUnionSymbolShape) { // 存在可变组件
         const childs = symbol.childs;
         for (let i = 0, len = childs.length; i < len; i++) {
             const item = childs[i];
-            const lci = {state: get_name(item), data: get_x_type_option(symbol, item, type, vari, container)};
+            const lci = {state: get_name(item, dlt), data: get_x_type_option(symbol, item, type, vari, container)};
             result.push(lci);
         }
         return result;
@@ -957,6 +957,7 @@ export function is_state(shape: Shape) {
 function is_sym(shape: Shape) {
     return shape.type === ShapeType.Symbol;
 }
+
 /**
  * @description 仅为组件(不是union)
  * @param shape

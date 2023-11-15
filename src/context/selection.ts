@@ -19,9 +19,6 @@ import {
     selected_sym_ref_menber, finder_container
 } from "@/utils/scout";
 import {Context} from ".";
-import {TextSelection} from "./textselection";
-import {get_state_by_ref} from "@/utils/symbol";
-import {get_name} from "@/utils/shapelist";
 import {TextSelectionLite} from "@/context/textselectionlite";
 
 interface Saved {
@@ -474,11 +471,6 @@ export class Selection extends Watchable(Object) implements ISave4Restore {
 
     get placement() {
         return this.m_placement;
-    }
-
-    test() {
-        const t = get_state_by_ref(this.m_selectShapes[0] as any);
-        console.log('t', get_name(t as any));
     }
 
     setPlacement(shape?: Shape) {

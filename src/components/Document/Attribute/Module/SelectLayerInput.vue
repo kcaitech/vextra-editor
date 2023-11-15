@@ -7,7 +7,7 @@ import {onMounted, ref} from 'vue';
 import SelectLayer from '../PopoverMenu/ComposAttri/SelectLayer.vue';
 import {get_options_from_symbol} from "@/utils/symbol";
 
-const { t } = useI18n();
+const {t} = useI18n();
 
 interface Props {
     title: string,
@@ -32,7 +32,7 @@ const showSelectLayer = (e: MouseEvent) => {
     e.stopPropagation();
     if (props.context.selection.selectedShapes[0].type !== ShapeType.Symbol) return;
     selectoption.value = false;
-    if(isselectLayer.value) return isselectLayer.value = false;
+    if (isselectLayer.value) return isselectLayer.value = false;
     isselectLayer.value = true;
     props.context.esctask.save(de_show_select_layer);
 }
@@ -47,7 +47,7 @@ const get_symbol_layer = () => {
     const symbolshape = props.context.selection.symbolshape;
     if (!symbolshape) return;
     const select: Shape[] = [];
-    selectList.value = get_options_from_symbol(symbolshape, props.addType, props.variable, select);
+    selectList.value = get_options_from_symbol(symbolshape, props.addType, t('compos.dlt'), props.variable, select);
     selectLayerid.value = select.map(item => item.id);
     selectLayerName.value = getShapesName(selectLayerid.value);
     emit("change", selectLayerid.value);
@@ -91,15 +91,15 @@ onMounted(() => {
         <span>{{ title }}</span>
         <div class="select-layer">
             <div class="input_lay" @click="showSelectLayer"
-                :style="{ opacity: context.selection.selectedShapes[0].type !== ShapeType.Symbol ? '0.5' : '1' }">
+                 :style="{ opacity: context.selection.selectedShapes[0].type !== ShapeType.Symbol ? '0.5' : '1' }">
                 <span v-if="selectLayerName" class="value">{{ selectLayerName }}</span>
                 <span v-else style="opacity: 0.5">{{ placeholder }}</span>
                 <el-icon>
-                    <ArrowDown />
+                    <ArrowDown/>
                 </el-icon>
             </div>
             <SelectLayer v-if="isselectLayer" @close="isselectLayer = false" :type="props.addType" :context="context"
-                :selectList="selectList" @change="select_change" :layerId="selectLayerid"></SelectLayer>
+                         :selectList="selectList" @change="select_change" :layerId="selectLayerid"></SelectLayer>
         </div>
     </div>
 </template>
@@ -118,7 +118,7 @@ onMounted(() => {
         width: 60px;
     }
 
-    >div {
+    > div {
         flex: 1;
     }
 
@@ -142,7 +142,7 @@ onMounted(() => {
         height: 30px;
         font-size: 12px;
 
-        >div {
+        > div {
             height: 100%;
         }
 

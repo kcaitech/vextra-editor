@@ -100,6 +100,9 @@ function save_change(v: string) {
     const state = props.context.selection.symbolstate;
     if (!v || !state) return;
     const editor = props.context.editor4Shape(state);
+    if (v === t('compos.dlt')) {
+        v = SymbolShape.Default_State;
+    }
     editor.modifyStateSymTagValue(props.data.variable.id, v);
 }
 onUpdated(() => {

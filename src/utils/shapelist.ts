@@ -165,23 +165,24 @@ export function fit_no_transform(context: Context, shape: Shape) {
     }
 }
 
-function get_state_name(state: SymbolShape) {
+function get_state_name(state: SymbolShape, dlt: string) {
     if (!state.parent?.isUnionSymbolShape) return state.name;
     const variables = (state.parent as SymbolShape).variables;
     if (!variables) return state.name;
     let name_slice: string[] = [];
     variables.forEach((v, k) => {
         if (v.type !== VariableType.Status) return;
-        const slice = state.vartag?.get(k) || v.value;
+        let slice = state.vartag?.get(k) || v.value;
+        if (slice === SymbolShape.Default_State) slice = dlt;
         slice && name_slice.push(slice);
     })
     return name_slice.toString();
 }
 
-export function get_name(shape: Shape) {
+export function get_name(shape: Shape, dlt: string) {
     if (shape.type !== ShapeType.Symbol) {
         return shape.name;
     } else {
-        return get_state_name(shape as SymbolShape);
+        return get_state_name(shape as SymbolShape, dlt);
     }
 }
