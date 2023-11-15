@@ -1,7 +1,6 @@
 import {Context} from "@/context";
 import {
     Artboard,
-    Document,
     GroupShape,
     OverrideType,
     Page,
@@ -14,7 +13,7 @@ import {
 } from "@kcdesign/data";
 import {getName} from "./content";
 import {compare_layer_3} from "./group_ungroup";
-import {debounce, result} from "lodash";
+import {debounce} from "lodash";
 import {v4} from "uuid";
 import {get_name} from "@/utils/shapelist";
 import {XY} from "@/context/selection";
@@ -351,7 +350,13 @@ export function is_state_selection(shapes: Shape[]) {
     if (!p) return false;
     for (let i = 0, len = shapes.length; i < len; i++) {
         const shape = shapes[i];
-        if (shape.type !== ShapeType.Symbol || !shape.parent || shape.parent !== p || !shape.parent.isUnionSymbolShape) return false;
+        if (shape.type !== ShapeType.Symbol
+            || !shape.parent
+            || shape.parent.id !== p.id
+            || !shape.parent.isUnionSymbolShape
+        ) {
+            return false;
+        }
     }
     return true;
 }
@@ -445,9 +450,9 @@ export function make_state(context: Context, t: Function, hor?: number) {
     if (selected.length !== 1) return;
     const shape = selected[0];
     const page = context.selection.selectedPage;
-    if (shape && shape.type === ShapeType.Symbol && !shape.isUnionSymbolShape && shape.parent && shape.parent.isUnionSymbolShape && page) {
+    if (is_state(shape) && page) {
         let index = -1;
-        for (let i = 0, len = shape.parent.childs.length; i < len; i++) {
+        for (let i = 0, len = shape.parent!.childs.length; i < len; i++) {
             if (shape.parent?.childs[i]?.id === shape.id) {
                 index = i;
                 break;
@@ -689,7 +694,9 @@ function get_x_type_option(symbol: Shape, group: Shape, type: VariableType, vari
         for (let i = 0, len = childs.length; i < len; i++) {
             const item = childs[i];
             if (item.type === get_target_type_by_vt(type)) {
-                if (!is_bind_x_type_var(symbol as SymbolShape, item, get_ot_by_vt(type)!, vari, container)) shapes.push(item);
+                if (!is_bind_x_type_var(symbol as SymbolShape, item, get_ot_by_vt(type)!, vari, container)) {
+                    shapes.push(item);
+                }
             } else if (item.childs && item.childs.length && item.type !== ShapeType.Table) {
                 shapes.push(...get_x_type_option(symbol, item, type, vari, container));
             }
@@ -768,7 +775,11 @@ export function get_var_for_ref(context: Context, symref: SymbolRefShape, t: Fun
 /**
  * @description 检查可变组件身上绑定了哪些变量
  */
-function search_binds_for_state(variables: Map<string, Variable>, state: Shape, variables_result: Map<string, Variable>) {
+function search_binds_for_state(
+    variables: Map<string, Variable>,
+    state: Shape,
+    variables_result: Map<string, Variable>
+) {
     const childs = state.childs;
     if (!childs?.length) return;
     for (let i = 0, l = childs.length; i < l; i++) {
@@ -821,8 +832,8 @@ function get_topology_map(shape: Shape) {
         const c_childs = is_ref ? item.naviChilds : item.childs;
         if (c_childs?.length || is_ref) {
             deps.push({
-                shape: get_id(shape.type === ShapeType.SymbolRef ? shape.refId : shape.id),
-                ref: get_id(is_ref ? item.refId : item.id)
+                shape: shape.type === ShapeType.SymbolRef ? shape.refId : shape.id,
+                ref: is_ref ? item.refId : item.id
             });
         }
         if (!c_childs?.length) continue;
@@ -881,24 +892,14 @@ function is_exist_single_stick(deps: { shape: string, ref: string }[]) {
     return is_single;
 }
 
-function get_id(raw_id: string) {
-    return raw_id;
-    // const index = raw_id.lastIndexOf('/');
-    // if (index > -1) {
-    //     return raw_id.slice(index + 1);
-    // } else {
-    //     return raw_id;
-    // }
-}
-
 /**
  * @description 检查symbol与symbol2之间是否存在循环引用
- * 组件symbol2内是否可以存在symbol的实例
+ * symbol2将包含symbol，若用symbol建一棵树，这颗树上不可以存在一条以symbol2为形的枝叶，若存在则存在循环
  */
 export function is_circular_ref2(symbol: Shape, symbol2: string): boolean {
     let deps: { shape: string, ref: string }[] = [...get_topology_map(symbol), {
-        shape: get_id(symbol2),
-        ref: get_id(symbol.id)
+        shape: symbol2,
+        ref: symbol.id
     }];
     // if (deps.length < 2) return false;
     while (deps.length && is_exist_single_stick(deps)) {
@@ -951,7 +952,7 @@ export function is_status_allow_to_delete(symbol: SymbolShape) {
  * @param shape
  */
 export function is_state(shape: Shape) {
-    return shape.type === ShapeType.Symbol && shape?.parent?.isUnionSymbolShape;
+    return shape?.type === ShapeType.Symbol && shape?.parent?.isUnionSymbolShape;
 }
 
 function is_sym(shape: Shape) {
@@ -1086,8 +1087,7 @@ export function switch_symref_state(context: Context, variable: Variable, state:
 
 export function get_status_vari_for_symbolref(symbolref: SymbolRefShape, variable: Variable) {
     const overrides = symbolref.findOverride(variable.id, OverrideType.Variable);
-    const val = overrides ? overrides[overrides.length - 1] : variable;
-    return val;
+    return overrides ? overrides[overrides.length - 1] : variable;
 }
 
 /**
@@ -1168,7 +1168,15 @@ export function is_symbolref_disa(shapes: SymbolRefShape[]) {
  * @param new_values 新的绑定图层id
  * @param old_values 之前的绑定图层id
  */
-export function modify_variable(context: Context, symbol: SymbolShape, variable: Variable, new_name: string, new_dlt_value: any, new_values: string[], old_values?: string[]) {
+export function modify_variable(
+    context: Context,
+    symbol: SymbolShape,
+    variable: Variable,
+    new_name: string,
+    new_dlt_value: any,
+    new_values: string[],
+    old_values?: string[]
+) {
     const need_bind_set = new Set<string>();
     const need_unbind_set = new Set<string>();
 
@@ -1213,10 +1221,8 @@ export function modify_variable(context: Context, symbol: SymbolShape, variable:
         need_unbind_shapes.push(s);
     })
     // 自此绑定列表、解绑列表整理完毕
-    const editor = context.editor4Shape(symbol);
-    console.log("need_bind_shapes:", need_bind_shapes);
-    console.log("need_unbind_shapes:", need_unbind_shapes);
 
+    const editor = context.editor4Shape(symbol);
     return editor.modifyVar(symbol, variable, new_name, new_dlt_value, need_bind_shapes, need_unbind_shapes);
 }
 
