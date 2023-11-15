@@ -133,11 +133,11 @@ const b = computed(() => {
     return x.value > 0 ? false : true
 })
 
-watch(b,(newvalue)=>{
-    if(newvalue){
-        Bus.emit('test1',newvalue)
-    }else{
-        Bus.emit('test1',newvalue)
+watch(b, (newvalue) => {
+    if (newvalue) {
+        Bus.emit('test1', newvalue)
+    } else {
+        Bus.emit('test1', newvalue)
     }
 })
 
@@ -198,15 +198,47 @@ const columns: Column<any>[] = [
         width: 400,
         minWidth: 100,
         dataKey: 'document',
+        class: 'filename',
         align: 'left',
-        cellRenderer: ({ cellData: { name } }) => <span>{name}</span>
+        cellRenderer: ({ rowData }) => (
+            <>
+                <el-tooltip content={rowData.document.name} show-after={1000} hide-after={0}>
+                    <span>{rowData.document.name}</span>
+                </el-tooltip>
+                {props.iconlist.includes('star') && !rowData.document_favorites.is_favorite && (
+                    <el-icon style={"color:rgba(51, 51, 51, 1)"}
+                        onDblclick={(event: MouseEvent) => event.stopPropagation()}
+                        onClick={(event: MouseEvent) => {
+                            emits('updatestar', rowData)
+                        }}>
+                        <el-tooltip content={t('home.star')} show-after={1000} hide-after={0}>
+                            <svg-icon class="svg star" icon-class="star-normal1" >
+                            </svg-icon>
+                        </el-tooltip>
+                    </el-icon>
+                )}
+
+                {props.iconlist.includes('star') && rowData.document_favorites.is_favorite && (
+                    <el-icon style={"color: rgba(255, 185, 46, 1);display:flex;"}
+                        onDblclick={(event: MouseEvent) => event.stopPropagation()}
+                        onClick={(event: MouseEvent) => {
+
+                            emits('updatestar', rowData)
+                        }}>
+                        <el-tooltip content={t('home.de_star')} show-after={1000} hide-after={0}>
+                            <svg-icon class="svg star" icon-class="star-select2" >
+                            </svg-icon>
+                        </el-tooltip>
+                    </el-icon>
+                )}
+            </>)
     },
 
     {
         key: 'time',
         title: `${props.iconlist.includes('restore') ? t('home.delete_file_time') : t('home.modification_time')}`,
         dataKey: 'document',
-        width: 400,
+        width: 200,
         minWidth: 100,
         align: 'left',
         cellRenderer: ({ rowData: { document: { deleted_at, created_at }, document_access_record: { last_access_time, id } } }) => {
@@ -234,7 +266,7 @@ const columns: Column<any>[] = [
         key: 'size',
         dataKey: 'document',
         title: `${t('home.size')}`,
-        width: 400,
+        width: 100,
         minWidth: 100,
         align: 'left',
         cellRenderer: ({ cellData: { size } }) => <span>{size}</span>,
@@ -243,40 +275,12 @@ const columns: Column<any>[] = [
         key: 'operations',
         title: `${t('home.operation')}`,
         dataKey: 'document',
-        width: 400,
+        width: 100,
         minWidth: 100,
         class: 'other',
         align: 'left',
         cellRenderer: ({ rowData }) => (
             <>
-                {props.iconlist.includes('star') && !rowData.document_favorites.is_favorite && (
-                    <el-icon
-                        onDblclick={(event: MouseEvent) => event.stopPropagation()}
-                        onClick={(event: MouseEvent) => {
-
-                            emits('updatestar', rowData)
-                        }}>
-                        <el-tooltip content={t('home.star')} show-after={1000} hide-after={0}>
-                            <svg-icon class="svg star" icon-class="star" >
-                            </svg-icon>
-                        </el-tooltip>
-                    </el-icon>
-                )}
-
-                {props.iconlist.includes('star') && rowData.document_favorites.is_favorite && (
-                    <el-icon style={"display: inline-block"}
-                        onDblclick={(event: MouseEvent) => event.stopPropagation()}
-                        onClick={(event: MouseEvent) => {
-
-                            emits('updatestar', rowData)
-                        }}>
-                        <el-tooltip content={t('home.de_star')} show-after={1000} hide-after={0}>
-                            <svg-icon class="svg star" icon-class="stared" >
-                            </svg-icon>
-                        </el-tooltip>
-                    </el-icon>
-                )}
-
                 {props.iconlist.includes('share') && (
                     <el-icon
                         onDblclick={(event: MouseEvent) => event.stopPropagation()}
@@ -551,11 +555,30 @@ watchEffect(() => {
 <style lang="scss" scoped>
 :deep(.other) {
     color: var(--active-color);
+    display: flex;
+    gap: 8px;
 
     .el-icon {
-        font-size: 20px;
-        margin-right: 6px;
-        padding: 2px;
+        font-size: 28px;
+        padding: 5px;
+        display: none;
+        border-radius: 6px;
+
+        svg {
+            outline: none;
+        }
+    }
+}
+
+:deep(.filename) {
+    color: var(--active-color);
+    display: flex;
+    gap: 8px;
+
+    .el-icon {
+        font-size: 16px;
+        padding: 3px 2px;
+        border-radius: 2px;
         display: none;
 
         svg {
@@ -601,14 +624,12 @@ watchEffect(() => {
 :deep(.el-table-v2__row:hover) {
     background-color: rgba(247, 247, 249, 1);
 
-    // border: none;
-
     .el-icon {
-        display: block;
+        display: flex;
+        align-items: center;
 
         &:hover {
-            animation: el-icon 0.3s ease;
-            transform: scale(1.2);
+            background-color: rgba(235, 235, 237, 1);
             cursor: pointer;
         }
 
@@ -628,16 +649,6 @@ watchEffect(() => {
     white-space: nowrap;
     text-overflow: ellipsis;
     color: #606266;
-}
-
-@keyframes el-icon {
-    0% {
-        transform: scale(1);
-    }
-
-    100% {
-        transform: scale(1.2);
-    }
 }
 
 .datanull {
@@ -662,5 +673,4 @@ watchEffect(() => {
             background-color: rgba(150, 117, 250, 0.862745098);
         }
     }
-}
-</style>
+}</style>

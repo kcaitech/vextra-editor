@@ -935,8 +935,9 @@ a {
         }
 
         svg {
-            width: 16px;
-            height: 16px;
+            color: rgba(51, 51, 51, 1);
+            width: 14px;
+            height: 14px;
         }
     }
 }

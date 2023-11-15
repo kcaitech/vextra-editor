@@ -1,9 +1,11 @@
 
 <template>
+    <Transition>
     <div class="tatle" style="height:100%;">
         <tablelist :data="searchlists" :iconlist="iconlists" @share="Sharefile" @remove="Removefile" @dbclickopen="openDocument"
             :address="true" @updatestar="Starfile" @rightMeun="rightmenu" :noNetwork="noNetwork" @refreshDoc="refreshDoc" />
     </div>
+</Transition>
     <listrightmenu :items="items" :data="mydata" @get-userdata="getUserdata" @r-starfile="Starfile" @r-sharefile="Sharefile"
         @r-removehistory="Removefile" @ropen="openDocument" />
     <FileShare v-if="showFileShare" @close="closeShare" :docId="docId" @switch-state="onSwitch" :userInfo="userInfo"
@@ -264,10 +266,15 @@ onUnmounted(() => {
 </script>
 
 <style lang="scss" scoped>
-main {
-    height: auto;
+.v-enter-active,
+.v-leave-active {
+  transition: height 0.2s ease-in-out;
 }
 
+.v-enter-from,
+.v-leave-to {
+  height: 100%;
+}
 .overlay {
     position: absolute;
     top: 0;
