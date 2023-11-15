@@ -1,9 +1,5 @@
 import {Watchable} from "@kcdesign/data";
 
-export interface EscItem {
-    call: () => boolean;
-}
-
 export class EscStack extends Watchable(Object) {
     private m_stack_set: Set<Function> = new Set();
 

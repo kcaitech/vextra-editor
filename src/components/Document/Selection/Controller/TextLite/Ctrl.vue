@@ -41,6 +41,9 @@ function down(e: MouseEvent) {
     matrix.reset(props.matrix);
     const xy = matrix.inverseCoord(e.clientX - root.value.x, e.clientY - root.value.y);
     downIndex = text_selection_lite.locateText(xy.x, xy.y);
+    document.addEventListener('mousemove', move);
+    document.addEventListener('mouseup', up);
+
 }
 
 function move(e: MouseEvent) {
@@ -76,6 +79,8 @@ function up(e: MouseEvent) {
     } else {
         text_selection_lite.selectText(downIndex.index, locate.index);
     }
+    document.removeEventListener('mousemove', move);
+    document.removeEventListener('mouseup', up);
 }
 
 function document_down() {
