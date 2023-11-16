@@ -1,12 +1,12 @@
 <script setup lang="ts">
 import { Context } from '@/context';
-import { onUpdated, ref, watch } from 'vue';
+import { computed, onMounted, onUpdated, ref, watch } from 'vue';
 import Popover from '@/components/common/Popover.vue';
 import ShadowInput from './ShadowInput.vue';
 import { useI18n } from 'vue-i18n';
 import ColorPicker from '@/components/common/ColorPicker/index.vue';
 import { toHex } from "@/utils/color";
-import { Color, Shadow, Shape } from '@kcdesign/data';
+import { Color, Shadow, Shape, ShapeType } from '@kcdesign/data';
 import { message } from "@/utils/message";
 import { Reg_HEX } from "@/utils/RegExp";
 import { get_actions_shadow_blur, get_actions_shadow_color, get_actions_shadow_offsetx, get_actions_shadow_offsety, get_actions_shadow_spread } from '@/utils/shape_style';
@@ -206,6 +206,19 @@ function showMenu() {
 onUpdated(() => {
     reflush.value++;
 })
+const disable = computed(() => {
+    if (props.shapes.length === 1) {
+        const type = props.shapes[0].type;
+        if (type !== ShapeType.Rectangle && type !== ShapeType.Artboard && type !== ShapeType.Oval) {
+            return true;
+        } else {
+            return false;
+        }
+    } else {
+        return true;
+    }
+})
+
 </script>
 
 <template>
@@ -228,9 +241,11 @@ onUpdated(() => {
                     </div>
                     <div class="setting">
                         <div class="name-title">效果</div>
-                        <ShadowInput ticon="B" :shadow-v="shadow.blurRadius" @on-change="setBlurRadius" :reflush="reflush">
+                        <ShadowInput ticon="B" :shadow-v="shadow.blurRadius" @on-change="setBlurRadius" :tootip="`模糊`"
+                            :reflush="reflush">
                         </ShadowInput>
-                        <ShadowInput ticon="S" :shadow-v="shadow.spread" @on-change="setSpread" :reflush="reflush">
+                        <ShadowInput ticon="S" :shadow-v="shadow.spread" @on-change="setSpread" :disabled="disable"
+                            :tootip="`扩展`" :reflush="reflush">
                         </ShadowInput>
                     </div>
                     <div class="setting">
@@ -244,12 +259,6 @@ onUpdated(() => {
                                 :value="filterAlpha(shadow.color.alpha * 100) + '%'" @change="e => onAlphaChange(e)"
                                 @focus="selectAlpha" />
                         </div>
-                    </div>
-                    <div class="show">
-                        <div :class="true ? 'visibility' : 'hidden'">
-                            <svg-icon icon-class="select"></svg-icon>
-                        </div>
-                        <span style="margin-left: 10px;">显示透明区域阴影</span>
                     </div>
                 </div>
             </template>

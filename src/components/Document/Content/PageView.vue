@@ -82,21 +82,6 @@ onUnmounted(() => {
             :data="c" />
 
     </svg>
-    <!-- <div class="text">
-        <svg width="200" height="200" xmlns="http://www.w3.org/2000/svg">
-  <defs>
-    <filter id="shadow">
-      <feDropShadow dx="4" dy="8" stdDeviation="4"/>
-    </filter>
-    <mask id="invisible">
-      <rect width="100%" height="100%" fill="white"/>
-      <circle cx="50%" cy="50%" r="80" fill="black"/>
-    </mask>
-  </defs>
-  <circle cx="50%" cy="50%" r="80"
-      style="fill:blue; filter:url(#shadow); mask: url(#invisible);"/>
-</svg>
-    </div> -->
     <ShapeTitles v-if="show_t" :context="props.context" :data="data" :matrix="matrixWithFrame.toArray()"></ShapeTitles>
 </template>
 

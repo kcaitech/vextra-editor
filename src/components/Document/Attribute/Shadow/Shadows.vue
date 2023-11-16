@@ -2,15 +2,12 @@
 import { onMounted, onUnmounted, reactive, ref, watch } from 'vue';
 import { Context } from '@/context';
 import { Color, Shadow, ShadowPosition, Shape } from "@kcdesign/data";
-import { Reg_HEX } from "@/utils/RegExp";
 import TypeHeader from '../TypeHeader.vue';
 import { useI18n } from 'vue-i18n';
 import ShadowDetail from './ShadowDetail.vue'
-import ColorPicker from '@/components/common/ColorPicker/index.vue';
 import { v4 } from 'uuid';
 import ShadowPositionItem from './ShadowPosition.vue';
 import { get_actions_add_shadow, get_actions_shadow_delete, get_actions_shadow_enabled, get_actions_shadow_unify, get_shadows } from '@/utils/shape_style';
-import { shadow } from '@/assets/lang/en';
 
 interface ShadowItem {
   id: number,
