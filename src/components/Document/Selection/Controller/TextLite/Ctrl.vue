@@ -102,8 +102,7 @@ onUnmounted(() => {
     <svg version="1.1" xmlns="http://www.w3.org/2000/svg" xmlns:xlink="http://www.w3.org/1999/xlink"
          xmlns:xhtml="http://www.w3.org/1999/xhtml" preserveAspectRatio="xMinYMin meet"
          :viewBox="viewBox" overflow="hidden"
-         :style="{ transform: matrix.toString() }"
-         @mousedown="down" @mousemove="move" @mouseup="up"
+         :style="{ transform: matrix.toString() }" @mousedown="down"
     >
         <SelectView :context="props.context" :shape="(props.shape as TextShape)"
                     :matrix="o_matrix.toArray()" :main-notify="Selection.CHANGE_TEXT_LITE"

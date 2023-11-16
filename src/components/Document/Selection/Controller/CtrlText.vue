@@ -87,6 +87,18 @@ const height = computed(() => {
 })
 let downIndex: { index: number, before: boolean };
 
+function be_editor(index?: number) {
+    const workspace = props.context.workspace;
+    const selection = props.context.textSelection;
+    editing.value = true;
+    workspace.contentEdit(editing.value);
+    props.context.cursor.setType('scan-0');
+    if (index !== undefined) {
+        downIndex = {index, before: true};
+        selection.setCursor(index, true);
+    }
+}
+
 function onMouseDown(e: MouseEvent) {
     if (e.button === 0) {
         const workspace = props.context.workspace;
@@ -100,13 +112,13 @@ function onMouseDown(e: MouseEvent) {
             props.context.cursor.setType('scan-0');
         }
         if (!editing.value) return;
+        e.stopPropagation();
         const selection = props.context.textSelection;
         workspace.setCtrl('controller');
         const root = workspace.root
         matrix.reset(props.matrix);
         const xy = matrix.inverseCoord(e.clientX - root.x, e.clientY - root.y);
         downIndex = selection.locateText(xy.x, xy.y);
-        e.stopPropagation();
         document.addEventListener("mousemove", onMouseMove);
         document.addEventListener("mouseup", onMouseUp);
     } else if (e.button === 2) {
@@ -116,23 +128,30 @@ function onMouseDown(e: MouseEvent) {
     }
 }
 
-function be_editor(index?: number) {
+function onMouseMove(e: MouseEvent) {
+    e.stopPropagation();
+    if (!editing.value) return;
     const workspace = props.context.workspace;
     const selection = props.context.textSelection;
-    editing.value = true;
-    workspace.contentEdit(editing.value);
-    props.context.cursor.setType('scan-0');
-    if (index !== undefined) {
-        downIndex = {index, before: true};
-        selection.setCursor(index, true);
+    const {clientX, clientY} = e;
+    const root = workspace.root;
+    matrix.reset(props.matrix);
+    const xy = matrix.inverseCoord(clientX - root.x, clientY - root.y);
+    const locate = selection.locateText(xy.x, xy.y);
+    if (downIndex.index === locate.index) {
+        if (locate.placeholder) {
+            selection.setCursor(locate.index + 1, false, props.shape.text);
+        } else {
+            selection.setCursor(locate.index, locate.before, props.shape.text);
+        }
+    } else {
+        selection.selectText(downIndex.index, locate.index, props.shape.text);
     }
 }
 
 function onMouseUp(e: MouseEvent) {
     e.stopPropagation();
     if (!editing.value) return;
-    document.removeEventListener("mousemove", onMouseMove);
-    document.removeEventListener("mouseup", onMouseUp);
     const selection = props.context.textSelection;
     const workspace = props.context.workspace;
     const {clientX, clientY} = e;
@@ -147,25 +166,10 @@ function onMouseUp(e: MouseEvent) {
         selection.selectText(downIndex.index, locate.index, props.shape.text);
     }
     props.context.workspace.setCtrl('page');
+    document.removeEventListener("mousemove", onMouseMove);
+    document.removeEventListener("mouseup", onMouseUp);
 }
 
-function onMouseMove(e: MouseEvent) {
-    e.stopPropagation();
-    if (!editing.value) return;
-    const workspace = props.context.workspace;
-    const selection = props.context.textSelection;
-    const {clientX, clientY} = e;
-    const root = workspace.root;
-    matrix.reset(props.matrix);
-    const xy = matrix.inverseCoord(clientX - root.x, clientY - root.y);
-    const locate = selection.locateText(xy.x, xy.y);
-    if (downIndex.index === locate.index) {
-        if (locate.placeholder) selection.setCursor(locate.index + 1, false, props.shape.text);
-        else selection.setCursor(locate.index, locate.before, props.shape.text);
-    } else {
-        selection.selectText(downIndex.index, locate.index, props.shape.text);
-    }
-}
 
 function mouseenter() {
     if (editing.value) props.context.cursor.setType('scan-0');
@@ -217,7 +221,7 @@ onBeforeUnmount(() => {
          id="text-selection" xmlns:xhtml="http://www.w3.org/1999/xhtml" preserveAspectRatio="xMinYMin meet"
          :viewBox=genViewBox(bounds) :width="bounds.right - bounds.left" :height="bounds.bottom - bounds.top"
          :style="{ transform: `translate(${bounds.left}px,${bounds.top}px)`, left: 0, top: 0, position: 'absolute' }"
-         :onmousedown="onMouseDown" :on-mouseup="onMouseUp" :on-mousemove="onMouseMove" overflow="visible"
+         @mousedown="onMouseDown" overflow="visible"
          @mouseenter="mouseenter" @mouseleave="mouseleave" :class="{ 'un-visible': !visible }">
         <SelectView :context="props.context" :shape="(props.shape as TextShape)" :matrix="submatrix.toArray()"
                     :main-notify="Selection.CHANGE_TEXT" :selection="props.context.textSelection"></SelectView>

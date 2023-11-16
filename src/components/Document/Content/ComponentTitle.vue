@@ -321,7 +321,7 @@ onUnmounted(() => {
         </div>
         <input v-if="isInput" type="text" :style="{ maxWidth: props.maxWidth + 'px', width: inputWidth + 'px' }"
             ref="nameInput" class="rename" @input="onInputName" @change="ChangeReName" @mousemove="move3">
-        <span v-if="isInput" style="position: absolute; visibility: hidden; top: 0px; font-size: 10px;" ref="inputSpan"></span>
+        <span v-if="isInput" style="position: absolute; visibility: hidden; top: 0; font-size: 10px;" ref="inputSpan"></span>
     </div>
 </template>
 

@@ -242,11 +242,10 @@ onUnmounted(() => {
         box-sizing: border-box;
 
         .warn {
-            font-size: 10px;
+            font-size: var(--font-default-fontsize);
             padding: 0;
             color: red;
-            margin: 3px;
-            margin-left: 60px;
+            margin: 3px 3px 3px 60px;
         }
 
         >div {

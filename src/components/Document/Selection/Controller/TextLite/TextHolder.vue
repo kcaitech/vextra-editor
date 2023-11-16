@@ -55,7 +55,7 @@ onUnmounted(() => {
         <svg v-if="container" version="1.1" xmlns="http://www.w3.org/2000/svg"
              xmlns:xlink="http://www.w3.org/1999/xlink"
              xmlns:xhtml="http://www.w3.org/1999/xhtml" preserveAspectRatio="xMinYMin meet"
-             :viewBox="init_view_box()" overflow="visible" class="holder" :style="{ transform: matrix.toString() }"
+             :viewBox="init_view_box()" overflow="hidden" class="holder" :style="{ transform: matrix.toString() }"
         >
             <render></render>
         </svg>
@@ -66,13 +66,14 @@ onUnmounted(() => {
 <style>
 .holder-container {
     width: 100%;
-    height: 136px;
+    height: 72px;
     background-color: #EFEFEF;
     border-radius: 4px;
     overflow: hidden;
     padding: 2px 4px;
     box-sizing: border-box;
     position: relative;
+    margin-bottom: 4px;
 
     .holder {
         width: calc(100% - 8px);

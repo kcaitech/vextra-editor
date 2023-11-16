@@ -1,7 +1,7 @@
 import {
     export_shape, import_shape,
     Shape, ShapeType, AsyncCreator, ShapeFrame, GroupShape, TextShape, Text,
-    export_text, import_text, TextShapeEditor, symbol2ref, SymbolShape
+    export_text, import_text, TextShapeEditor
 } from '@kcdesign/data';
 import {Context} from '@/context';
 import {PageXY} from '@/context/selection';
@@ -389,13 +389,6 @@ function modify_frame_by_parent(parent: GroupShape, shapes: Shape[]) {
         const shape = shapes[i];
         shape.frame.x -= pp.x;
         shape.frame.y -= pp.y;
-    }
-}
-async function _symbol2ref(context: Context, source: Shape[]) {
-    for (let i = 0, len = source.length; i < len; i++) {
-        const symbol = source[i];
-        if (symbol.type !== ShapeType.Symbol) continue;
-        source[i] = await symbol2ref(context.data, symbol as SymbolShape)
     }
 }
 /**
