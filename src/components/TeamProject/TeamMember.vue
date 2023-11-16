@@ -1,15 +1,15 @@
 <template>
-    <div v-if="!noNetwork" class="container">
+    <div v-if="!noNetwork" class="container" style="height: calc(100vh - 224px);">
         <div class="hearder-container">
             <div class="title" v-for="(item, index) in  titles " :key="index">
                 <div class="content">{{ item }}
                     <div v-if="index === 1" class="shrink" @click.stop="fold = !fold, folds = false">
                         <svg-icon icon-class="down"
-                            :style="{ transform: fold ? 'rotate(-180deg)' : 'rotate(0deg)' }"></svg-icon>
+                            :style="{ transform: fold ? 'rotate(-180deg)' : 'rotate(0deg)', color: '#000000' }"></svg-icon>
                         <transition name="el-zoom-in-top">
                             <ul class="filterlist2" v-if="fold" ref="menu">
-                                <li class="item" v-for="(item, index) in  filteritems " :key="index"
-                                    @click.stop="filterEvent(index)">
+                                <li class="item" :style="{ color: index == fontName ? '#000000' : '' }"
+                                    v-for="(item, index) in  filteritems " :key="index" @click.stop="filterEvent(index)">
                                     <div class="choose" :style="{ visibility: index == fontName ? 'visible' : 'hidden' }">
                                     </div>
                                     {{ item }}
@@ -26,15 +26,13 @@
                     v-for=" { team_member: { nickname: teamname }, user: { nickname, id, avatar }, perm_type }  in  SearchList "
                     :key="id">
                     <div class="member-name">
-                        <img :src="avatar" alt="icon"
-                            style="width: 20px;height: 20px;;border-radius: 50%;margin-right: 4px;">
-                        {{ teamname }}
-                        <div v-if="perm_type < usertype2 || id === userID " class="changeName">
+                        <img :src="avatar" alt="icon" style="width: 32px;height: 32px;border-radius: 50%;">
+                        <div class="nametext"> {{ teamname }}</div>
+                        <div v-if="perm_type < usertype2 || id === userID" class="changeName"
+                            @click="() => openDialog(teamname, id)">
                             <el-tooltip class="tips" effect="dark" :content="`${t('teammember.change_name')}`"
                                 placement="bottom" :show-after="600" :offset="10" :hide-after="0">
-                                <button class="button" @click="() => openDialog(teamname, id)">{{
-                                    t('teammember.modify')
-                                }}</button>
+                                <svg-icon icon-class="editname"></svg-icon>
                             </el-tooltip>
                         </div>
                     </div>
@@ -500,45 +498,46 @@ onUnmounted(() => {
 </script>
 <style lang="scss" scoped>
 .container {
-    height: 100%;
+    margin: 0 8px 0px 8px;
 
     .hearder-container {
         display: flex;
+        gap: 16px;
 
         .title {
-            width: 200px;
-            font-weight: 600;
+            width: 362px;
+            min-width: 200px;
             display: flex;
             align-items: center;
-            font-size: 14px;
 
             .content {
+                font-size: 12px;
                 display: flex;
+                gap: 4px;
+                align-items: center;
                 justify-content: center;
+                color: rgba(168, 168, 168, 1);
+                white-space: nowrap;
 
                 .shrink {
-                    width: 16px;
-                    height: 16px;
-                    float: right;
-                    line-height: 25px;
+                    width: 14px;
+                    height: 14px;
 
                     >svg {
                         transition: 0.5s;
                         width: 100%;
                         height: 100%;
-                        margin-left: 4px;
                     }
 
                     .filterlist2 {
                         position: relative;
                         list-style-type: none;
-                        font-size: 14px;
-                        font-weight: 500;
+                        font-size: 12px;
                         min-width: 72px;
                         margin: 0;
                         padding: 0 8px;
-                        right: 72px;
-                        border-radius: 4px;
+                        right: 65px;
+                        border-radius: 6px;
                         background-color: white;
                         box-shadow: 0px 8px 16px 0px rgba(0, 0, 0, 0.2);
                         z-index: 3;
@@ -556,10 +555,9 @@ onUnmounted(() => {
                         }
 
                         .item {
-                            cursor: pointer;
                             display: flex;
                             align-items: center;
-                            line-height: 32px;
+                            line-height: 24px;
                         }
                     }
                 }
@@ -572,64 +570,63 @@ onUnmounted(() => {
         display: flex;
         align-items: center;
         font-size: 14px;
-        height: 40px;
-        border-radius: 4px;
-        margin: 6px 0;
+        height: 56px;
+        gap: 16px;
     }
 
     .member-name {
-        width: 200px;
+        color: #333333;
+        width: 362px;
+        min-width: 200px;
         display: flex;
+        align-items: center;
+        gap: 8px;
+
+        .nametext {
+            white-space: nowrap;
+        }
 
         .changeName {
-            margin-left: auto;
-            height: 10px;
+            display: flex;
+            align-items: center;
+            border-radius: 6px;
+            padding: 4px;
 
 
-            .button {
-                width: 50px;
-                height: 20px;
-                margin: 0px 0 20px 0;
-                border: none;
-                font-size: 10px;
-                letter-spacing: 1px;
-                font-weight: 500;
-                border-radius: 6px;
-                display: flex;
-                justify-content: center;
-                align-items: center;
-                cursor: pointer;
-                background-color: #9775fa;
-                color: #ffffff;
-
-                &:hover {
-                    background-color: #9675fadc;
-                }
+            svg {
+                width: 14px;
+                height: 14px;
+                color: #333333;
+                outline: none;
             }
+
+            &:hover {
+                background-color: #F7F7F9;
+            }
+
         }
     }
 
     .member-jurisdiction {
-        width: 200px;
+        width: 362px;
+        min-width: 200px;
         display: flex;
-
-
 
         .member-jurisdiction-container {
             display: flex;
             justify-content: center;
-
+            align-items: center;
+            color: #333333;
+            gap: 4px;
+            white-space: nowrap;
             .shrink {
-                width: 16px;
-                height: 16px;
-                float: right;
-                line-height: 25px;
+                width: 14px;
+                height: 14px;
 
                 >svg {
                     transition: 0.5s;
                     width: 100%;
                     height: 100%;
-                    margin-left: 4px;
                 }
 
                 .filterlist {
@@ -638,13 +635,12 @@ onUnmounted(() => {
                     flex-direction: column;
                     justify-content: center;
                     list-style-type: none;
-                    font-size: 14px;
-                    font-weight: 500;
+                    font-size: 12px;
                     min-width: 88px;
                     margin: 0;
-                    padding: 0 8px;
-                    right: 64px;
-                    border-radius: 4px;
+                    padding: 0 6px;
+                    right: 72px;
+                    border-radius: 6px;
                     background-color: white;
                     box-shadow: 0px 8px 16px 0px rgba(0, 0, 0, 0.2);
                     z-index: 2;
@@ -652,8 +648,8 @@ onUnmounted(() => {
                     .item {
                         display: flex;
                         align-items: center;
-                        cursor: pointer;
-                        line-height: 32px;
+                        line-height: 24px;
+                        margin-right: 12px;
 
                         .choose {
                             box-sizing: border-box;
@@ -683,7 +679,7 @@ onUnmounted(() => {
 }
 
 .main {
-    height: calc(100vh - 96px - 56px - 56px - 20px);
+    height: calc(100vh - 224px - 16.5px);
 
     .change {
         outline: none;
@@ -759,5 +755,4 @@ onUnmounted(() => {
             margin-right: 4px;
         }
     }
-}
-</style>
+}</style>

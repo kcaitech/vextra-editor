@@ -699,7 +699,7 @@ onUnmounted(() => {
                                             <div class="right">
                                                 <Tooltip :content="t('Createteam.cancelFixed')" :offset="10">
                                                     <div @click.stop="shareFixed(i, item.project.id)">
-                                                        <svg-icon icon-class="fixed-icon"></svg-icon>
+                                                        <svg-icon class="fixed" icon-class="fixed-icon"></svg-icon>
                                                     </div>
                                                 </Tooltip>
                                                 <Tooltip :content="'新建文件'" :offset="10">
@@ -750,20 +750,7 @@ onUnmounted(() => {
                                             <div class="right">
                                                 <Tooltip :content="t('Createteam.cancelFixed')" :offset="10">
                                                     <div @click.stop="cancelFixed(index, i, item.project.id)">
-                                                        <svg t="1693476333821" class="icon" viewBox="0 0 1024 1024"
-                                                            version="1.1" xmlns="http://www.w3.org/2000/svg" p-id="15755"
-                                                            width="20" height="20">
-                                                            <path
-                                                                d="M0 0m256 0l512 0q256 0 256 256l0 512q0 256-256 256l-512 0q-256 0-256-256l0-512q0-256 256-256Z"
-                                                                fill="#9775fa" p-id="15756"
-                                                                data-spm-anchor-id="a313x.search_index.0.i11.6fa73a817d52QG"
-                                                                class=""></path>
-                                                            <path
-                                                                d="M256 767.6416l202.9568-160.9216 80.9728 86.1184s33.792 9.216 35.8656-16.384l-2.0736-87.1424 119.936-138.368 52.2496-3.0464s41.0112-8.2432 11.2896-44.0832l-146.5856-147.584s-39.936-5.12-36.8896 31.744v39.9872l-136.2944 115.8912-84.0192 5.0688s-30.7712 10.24-19.5072 36.9152l78.9504 77.9008L256 767.6416z"
-                                                                fill="#FFFFFF" p-id="15757"
-                                                                data-spm-anchor-id="a313x.search_index.0.i10.6fa73a817d52QG"
-                                                                class=""></path>
-                                                        </svg>
+                                                        <svg-icon class="fixed" icon-class="fixed-icon"></svg-icon>
                                                     </div>
                                                 </Tooltip>
                                                 <svg-icon icon-class="add-icon"
@@ -849,9 +836,9 @@ a {
 
 :deep(.el-collapse-item__header:hover) {
     background-color: rgba(250, 250, 250, 1);
-    cursor: pointer;
 
     .right {
+        outline: none;
         visibility: visible;
     }
 }
@@ -918,7 +905,6 @@ a {
 
         svg {
             fill: rgba(128, 128, 128, 1);
-            ;
             margin-right: 5px;
             width: 24px;
             height: 20px;
@@ -935,6 +921,7 @@ a {
         }
 
         svg {
+            outline: none;
             color: rgba(51, 51, 51, 1);
             width: 14px;
             height: 14px;
@@ -954,67 +941,6 @@ a {
         height: 100%;
         flex: 1;
 
-        .new {
-            display: block;
-            text-align: center;
-            margin: 10px 10px auto;
-
-            button {
-                width: 100%;
-                height: 40px;
-                margin: 0px 0 20px 0;
-                border: none;
-                font-size: 12px;
-                letter-spacing: 1px;
-                font-weight: 600;
-                border-radius: 6px;
-                display: flex;
-                justify-content: center;
-                align-items: center;
-                cursor: pointer;
-
-                span {
-                    overflow: hidden;
-                    white-space: nowrap;
-                }
-
-                .el-icon {
-                    font-size: 18px;
-                    margin-right: 6px;
-                }
-            }
-
-
-            .newfile {
-                display: flex;
-                justify-content: center;
-                align-items: center;
-                background: #9775fa;
-                box-shadow: 1px 1px 3px #b1b1b1, -1px -1px 3px #b1b1b1;
-                color: #ffffff;
-
-                &:hover {
-                    background-color: #9675fadc;
-                }
-
-                &:active {
-                    background-color: #9775fa;
-                }
-            }
-
-            .openfile {
-                background-color: #f3f0ff;
-                // box-shadow: 1px 1px 3px #b1b1b1, -1px -1px 3px #b1b1b1;
-                color: #9775fa;
-
-                &:hover {
-                    border: 1px #9775fa solid;
-                }
-            }
-
-
-        }
-
         .el-menu {
             border: none;
             background: none;
@@ -1030,6 +956,10 @@ a {
                 &:hover {
                     background-color: rgba(243, 243, 245, 1);
                     // color: #9775fa;
+                }
+
+                .el-icon{
+                    fill: none !important;
                 }
 
             }
@@ -1079,7 +1009,7 @@ a {
                         .team-avatar {
                             width: 20px;
                             height: 20px;
-                            background-color: #9775fa;
+                            background-color: rgba(24, 120, 245, 1);
                             text-align: center;
                             border-radius: 50%;
                             overflow: hidden;
@@ -1104,6 +1034,7 @@ a {
                                 display: flex;
 
                                 span {
+                                    color: white;
                                     font-size: 14px;
                                     font-weight: 600;
                                 }
@@ -1114,6 +1045,7 @@ a {
                             overflow: hidden;
                             text-overflow: ellipsis;
                             white-space: nowrap;
+                            line-height: 36px;
                             font-size: 12px;
                             width: 150px;
                         }
@@ -1129,10 +1061,10 @@ a {
                         svg {
                             border-radius: 6px;
                             padding: 6px;
-                            width: 16px;
-                            min-width: 16px;
-                            height: 16px;
-                            fill: rgba(51, 51, 51, 1);
+                            width: 14px;
+                            min-width: 14px;
+                            height: 14px;
+                            color: rgba(51, 51, 51, 1);
 
                             &:hover {
                                 background-color: rgba(235, 235, 237, 1);
@@ -1147,8 +1079,6 @@ a {
                     justify-content: space-between;
                     margin: 2px 6px;
                     border-radius: 6px;
-                    cursor: pointer;
-
                     .el-input {
                         height: 36px;
                         border: none;
@@ -1187,14 +1117,17 @@ a {
                             svg {
                                 padding: 6px;
                                 border-radius: 6px;
-                                width: 16px;
-                                min-width: 16px;
-                                height: 16px;
-                                fill: rgba(51, 51, 51, 1) !important;
+                                width: 14px;
+                                min-width: 14px;
+                                height: 14px;
+                                color:rgba(51, 51, 51, 1) ;
 
                                 &:hover {
                                     background-color: rgba(235, 235, 237, 1);
                                 }
+                            }
+                            .fixed{
+                                color:rgba(24, 120, 245, 1) ;
                             }
                         }
                     }
@@ -1222,6 +1155,7 @@ a {
     text-overflow: ellipsis;
     white-space: nowrap;
     margin-right: 10px;
+    line-height: 36px;
     font-size: 12px;
 }
 
@@ -1230,10 +1164,10 @@ a {
     align-items: center;
     justify-content: center;
     margin: 0 6px 0 0px;
-
+    
     >svg {
-        width: 20px;
-        height: 20px;
+        width: 15px;
+        height: 15px;
     }
 }
 

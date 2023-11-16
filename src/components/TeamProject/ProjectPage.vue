@@ -3,6 +3,11 @@
         <div class="left">
             <div class="p">
                 <div class="title-p" v-if="!cusname">
+                    <Tooltip :content="t('projectpage.back')" :offset="5">
+                        <div class="back" @click="back(currentProject[0].project, currentProject[0].is_in_team)">
+                            <svg-icon icon-class="back-icon"></svg-icon>
+                        </div>
+                    </Tooltip>
                     <p @click="input_cusname(currentProject[0])"
                         :class="{ edit: currentProject[0].self_perm_type === 5 || currentProject[0].self_perm_type === 4 }">
                         {{ currentProject[0].project.name }}</p>
@@ -18,11 +23,6 @@
                                 @showMembergDialog="showMembergDialog" @delProject="onDelProject"
                                 @exitProject="onExitProject">
                             </TeamProjectMenu>
-                        </div>
-                    </Tooltip>
-                    <Tooltip :content="t('projectpage.back')" :offset="5">
-                        <div class="back" @click="back(currentProject[0].project, currentProject[0].is_in_team)">
-                            <svg-icon icon-class="back"></svg-icon>
                         </div>
                     </Tooltip>
                 </div>
@@ -41,33 +41,28 @@
             </div>
         </div>
         <div class="right">
-            <el-tooltip class="box-item" effect="dark"
-                :content="currentProject[0].is_favor ? t('projectpage.unpin') : t('projectpage.fixed_items')"
-                placement="bottom" :show-after="500" :offset="10" :hide-after="0">
-                <div @click="cancelFixed">
-                    <svg t="1693476333821" class="icon" viewBox="0 0 1024 1024" version="1.1"
-                        xmlns="http://www.w3.org/2000/svg" p-id="15755" width="24" height="24">
-                        <path
-                            d="M0 0m256 0l512 0q256 0 256 256l0 512q0 256-256 256l-512 0q-256 0-256-256l0-512q0-256 256-256Z"
-                            :fill="currentProject[0].is_favor ? '#9775fa' : '#999'" p-id="15756"
-                            data-spm-anchor-id="a313x.search_index.0.i11.6fa73a817d52QG" class="">
-                        </path>
-                        <path
-                            d="M256 767.6416l202.9568-160.9216 80.9728 86.1184s33.792 9.216 35.8656-16.384l-2.0736-87.1424 119.936-138.368 52.2496-3.0464s41.0112-8.2432 11.2896-44.0832l-146.5856-147.584s-39.936-5.12-36.8896 31.744v39.9872l-136.2944 115.8912-84.0192 5.0688s-30.7712 10.24-19.5072 36.9152l78.9504 77.9008L256 767.6416z"
-                            fill="#FFFFFF" p-id="15757" data-spm-anchor-id="a313x.search_index.0.i10.6fa73a817d52QG"
-                            class="">
-                        </path>
-                    </svg>
+            <Tooltip :content="currentProject[0].is_favor ? t('projectpage.unpin') : t('projectpage.fixed_items')"
+                :offset="10">
+                <div class="fixedbnt" @click="cancelFixed">
+                    <svg-icon v-if="currentProject[0].is_favor" style="color: rgba(24, 120, 245, 1)"
+                        icon-class="fixed-icon"></svg-icon>
+                    <svg-icon v-else icon-class="fixed-normal"></svg-icon>
                 </div>
-            </el-tooltip>
+            </Tooltip>
             <Tooltip :content="t('projectpage.member')" :offset="10">
-                <div class="setting" @click="projectSetting"><svg-icon icon-class="gear"></svg-icon></div>
+                <div class="setting" @click="projectSetting">
+                    <svg-icon icon-class="addmember-normal"></svg-icon>
+                </div>
             </Tooltip>
             <Tooltip :content="t('projectpage.permission')" :offset="10">
-                <div @click="showMembergDialog" v-if="currentProject[0].is_invited"><el-icon>
-                        <User />
-                    </el-icon></div>
+                <div class="members" @click="showMembergDialog" v-if="currentProject[0].is_invited">
+                    <svg-icon icon-class="memberlist-normal"></svg-icon>
+                </div>
             </Tooltip>
+            <button type="button" v-if="currentProject[0].self_perm_type > 2">
+                <svg-icon icon-class="addfile-icon"></svg-icon>
+                {{ t('home.new_file') }}
+            </button>
         </div>
     </div>
     <div class="team-header" v-if="currentProject[0]">
@@ -551,40 +546,8 @@ onUnmounted(() => {
 
 </script>
 <style lang="scss" scoped>
-.nested-enter-active,
-.nested-leave-active {
-    transition: all 0.3s ease-in-out;
-}
-
-.nested-leave-active {
-    transition-delay: 0.25s;
-}
-
-.nested-enter-from,
-.nested-leave-to {
-    transform: translateY(400px);
-    opacity: 0;
-}
-
-.nested-enter-active .inner,
-.nested-leave-active .inner {
-    transition: all 0.3s ease-in-out;
-}
-
-.nested-enter-active .inner {
-    transition-delay: 0.25s;
-}
-
-.nested-enter-from .inner,
-.nested-leave-to .inner {
-    top: 50%;
-    left: 50%;
-    transform: translate(-50%, -50%) scale(0.8);
-    opacity: 0.001;
-}
-
 .activate {
-    color: black;
+    color: rgba(0, 0, 0, 1) !important;
     // border-bottom: 2px solid #9775fa;
 }
 
@@ -593,73 +556,33 @@ onUnmounted(() => {
     display: flex;
     justify-content: space-between;
     align-items: center;
-    margin: 8px 0;
-    border-bottom: 1px solid #c4c4c4cf;
+    margin: 0 8px 16px 8px;
+    box-shadow: inset 0px -1px 0px 0px #F0F0F0;
+    box-sizing: border-box;
 
     .menu {
         display: flex;
+        gap: 24px;
         align-items: flex-end;
         list-style: none;
         line-height: 40px;
         padding: 0;
         margin: 0;
-        color: #666;
+
 
         .indicator {
             position: absolute;
             height: 2px;
-            background-color: #9775fa;
+            background-color: rgb(12, 111, 240);
             border-radius: 2px;
             transition: all 0.2s ease-in-out;
         }
 
         .item {
-            cursor: pointer;
             white-space: nowrap;
-            margin-right: 32px;
-            font-size: 18px;
-            font-weight: 600;
-        }
-    }
-
-    .addandsearch {
-        display: flex;
-
-        button {
-            cursor: pointer;
-            border: none;
-            width: 120px;
-            height: 40px;
-            border-radius: 4px;
-            background-color: #9775fa;
-            box-sizing: border-box;
-            margin-right: 12px;
-            transition: all 0.5s ease-out;
-            color: white;
-
-            &:hover {
-                background-color: rgba(150, 117, 250, 0.862745098);
-            }
-        }
-
-        .el-input {
-            width: 280px;
-            height: 40px;
-            font-size: 12px;
-            --el-input-border-color: #f3f0ff;
-            --el-input-hover-border-color: #e5dbff;
-            --el-input-focus-border-color: #9775fa;
-
-            .close:hover {
-                border-radius: 2px;
-                cursor: pointer;
-                background-color: #f3f0ff;
-            }
-
-            .el-icon {
-                padding: 2px;
-                color: #9775fa;
-            }
+            font-size: 13px;
+            font-weight: 500;
+            color: rgba(119, 119, 119, 1);
         }
     }
 }
@@ -668,18 +591,17 @@ onUnmounted(() => {
     display: flex;
     justify-content: space-between;
     align-items: center;
-    height: 80px;
-    margin: 6px 0;
+    height: 84px;
+    margin: 0 8px;
     box-sizing: border-box;
 
     .left {
-        width: calc(100% - 140px);
-        height: 100%;
+        display: flex;
+        flex-direction: column;
+        gap: 8px;
 
         .p {
             box-sizing: border-box;
-            margin-bottom: 10px;
-            height: 38px;
 
             .title-p {
                 width: fit-content;
@@ -687,9 +609,6 @@ onUnmounted(() => {
                 align-items: center;
                 text-overflow: ellipsis;
                 white-space: nowrap;
-                max-width: 100%;
-                padding-right: 10px;
-                height: 100%;
 
                 svg {
                     width: 16px;
@@ -704,14 +623,14 @@ onUnmounted(() => {
             }
 
             input {
-                font-size: 18px;
+                font-size: 20px;
                 font-weight: bold;
                 outline: none;
                 border: none;
                 width: auto;
                 max-width: 100%;
                 height: 38px;
-                border: 2px solid #9775fa;
+                border: 2px solid rgb(12, 111, 240);
                 border-radius: 0%;
                 overflow: hidden;
                 text-overflow: ellipsis;
@@ -725,13 +644,13 @@ onUnmounted(() => {
             box-sizing: border-box;
 
             &:hover {
-                border: 2px solid #9775fa;
+                border: 2px solid rgb(12, 111, 240);
             }
         }
 
         p {
             display: list-item;
-            font-size: 18px;
+            font-size: 20px;
             font-weight: bold;
             margin: 0;
             padding: 5px 0px;
@@ -757,7 +676,7 @@ onUnmounted(() => {
                 width: auto;
                 max-width: 100%;
                 height: 100%;
-                border: 2px solid #9775fa;
+                border: 2px solid rgb(12, 111, 240);
                 border-radius: 0%;
                 overflow: hidden;
                 text-overflow: ellipsis;
@@ -784,40 +703,58 @@ onUnmounted(() => {
 
     .right {
         display: flex;
-        width: 90px;
-        height: 30px;
-        margin-left: 50px;
+        gap: 18px;
+        align-items: center;
+        box-sizing: border-box;
 
-        svg {
-            width: 16px;
-            height: 16px;
-        }
-
-
-        >div {
-            margin-right: 5px;
-            padding: 0 4px;
-            width: 25px;
-            height: 25px;
+        .fixedbnt,
+        .setting,
+        .members {
             display: flex;
             align-items: center;
             justify-content: center;
-            border-radius: 2px;
+            width: 28px;
+            height: 28px;
+            border-radius: 6px;
+            box-sizing: border-box;
 
-            >svg {
-                width: 20px;
-                height: 20px;
+            svg {
+                width: 16px;
+                height: 16px;
             }
 
             &:hover {
-                background-color: #e5dbff;
+                background-color: rgba(235, 235, 237, 1);
             }
         }
 
-        .setting {
-            >svg {
+        button {
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            gap: 4px;
+            width: 108px;
+            height: 36px;
+            border: 1px solid rgba(24, 120, 245, 1);
+            border-radius: 6px;
+            background-color: rgba(24, 120, 245, 1);
+            box-sizing: border-box;
+            transition: all 0.5s ease-out;
+            color: white;
+
+            &:hover {
+                background-color: rgba(51, 140, 255, 1);
+            }
+
+            &:active {
+                background-color: rgba(12, 111, 240, 1);
+            }
+
+            svg {
+                padding: 2px;
                 width: 16px;
                 height: 16px;
+                box-sizing: border-box;
             }
         }
     }
@@ -895,7 +832,7 @@ onUnmounted(() => {
         background-color: var(--active-color-beta);
         color: #fff;
         border: 1px solid var(--active-color-beta);
-        border-radius: 4px;
+        border-radius: 6px;
     }
 }
 
@@ -903,14 +840,14 @@ onUnmounted(() => {
     display: flex;
     width: 20px;
     height: 20px;
-    border-radius: 4px;
+    border-radius: 6px;
     justify-content: center;
     align-items: center;
     padding: 3px 0;
     padding-left: 5px;
 
     &:hover {
-        background-color: #e5dbff;
+        background-color: rgba(235, 235, 237, 1);
     }
 }
 
@@ -918,19 +855,19 @@ onUnmounted(() => {
     display: flex;
     width: 20px;
     height: 20px;
-    border-radius: 4px;
+    border-radius: 6px;
     justify-content: center;
     align-items: center;
     padding: 3px;
     margin-top: 2px;
 
     &:hover {
-        background-color: #e5dbff;
+        background-color: rgba(235, 235, 237, 1);
     }
 }
 
 :deep(.el-checkbox__input.is-checked .el-checkbox__inner) {
-    background-color: #9775fa;
+    background-color: rgba(235, 235, 237, 1);
 }
 
 :deep(.el-checkbox) {
@@ -966,7 +903,7 @@ onUnmounted(() => {
 }
 
 :deep(.el-input.is-disabled .el-input__wrapper) {
-    background-color: #fff
+    background-color: rgba(235, 235, 237, 1)
 }
 
 :deep(.el-select .el-input.is-disabled .el-select__caret) {

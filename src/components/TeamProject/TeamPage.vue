@@ -201,6 +201,8 @@ onUnmounted(() => {
 .team-header {
     height: 40px;
     display: flex;
+    gap: 16px;
+    margin: 0px 8px 16px 8px;
     justify-content: space-between;
     align-items: center;
     box-shadow: inset 0px -1px 0px 0px #F0F0F0;
@@ -218,7 +220,7 @@ onUnmounted(() => {
         .indicator {
             position: absolute;
             height: 2px;
-            background-color: #9775fa;
+            background-color: rgba(12, 111, 240, 1);
             border-radius: 2px;
             transition: all 0.2s ease-in-out;
         }
@@ -257,7 +259,9 @@ onUnmounted(() => {
 
 .team {
     display: flex;
+    gap: 24px;
     height: 84px;
+    margin: 0 8px 0 8px;
     align-items: center;
     justify-content: space-between;
     box-sizing: border-box;
@@ -277,6 +281,7 @@ onUnmounted(() => {
             display: flex;
             align-items: center;
             justify-content: center;
+            background-color: rgba(24, 120, 245, 1);
 
             .img {
                 width: 100%;
@@ -298,7 +303,7 @@ onUnmounted(() => {
                     height: 100%;
                     font-size: 18px;
                     font-weight: 600;
-                    color: white;
+                    color: rgb(255, 255, 255);
                 }
             }
 

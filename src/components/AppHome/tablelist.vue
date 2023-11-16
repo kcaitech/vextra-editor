@@ -12,11 +12,11 @@
                 <template #empty>
                     <div v-if="props.addfile! > 2 && !loading && !noNetwork" class="datanull">
                         <p>{{ t('Createteam.projectfilenull') }}</p>
-                        <button type="button" @click.stop="newProjectFill">{{ t('home.new_file') }}</button>
+                        <!-- <button type="button" @click.stop="newProjectFill">{{ t('home.new_file') }}</button> -->
                     </div>
                     <div v-else-if="props.addproject! > 0 && !loading && !noNetwork" class="datanull">
                         <p>{{ props.nulldata ? t('search.search_results') : t('projectlist.datanull') }}</p>
-                        <button type="button" @click.stop="onAddproject">{{ t('projectlist.addproject') }}</button>
+                        <!-- <button type="button" @click.stop="onAddproject">{{ t('projectlist.addproject') }}</button> -->
                     </div>
                     <div v-else-if="!noNetwork && empty" class="flex items-center justify-center h-100%">
                         <el-empty :style="{ 'height': height - 50 + 'px' }" :description="t('home.table_empty_tips')" />
@@ -446,15 +446,16 @@ watchEffect(() => {
         },)
     }
     if (props.projectshare) {
-        columns.splice(0, columns.length, {
-            key: 'name',
-            title: t('Createteam.project_name'),
-            width: 400,
-            minWidth: 100,
-            dataKey: 'project',
-            align: 'left',
-            cellRenderer: ({ rowData: { project: { name } } }) => <span>{name}</span>
-        },
+        columns.splice(0, columns.length,
+            {
+                key: 'projectname',
+                title: t('Createteam.project_name'),
+                width: 300,
+                minWidth: 100,
+                dataKey: 'project',
+                align: 'left',
+                cellRenderer: ({ rowData: { project: { name } } }) => <span>{name}</span>
+            },
             {
                 key: 'description',
                 title: t('Createteam.project_description'),
@@ -467,7 +468,7 @@ watchEffect(() => {
             {
                 key: 'creator',
                 title: t('Createteam.creator'),
-                width: 400,
+                width: 200,
                 minWidth: 100,
                 dataKey: 'creator',
                 align: 'left',
@@ -476,7 +477,7 @@ watchEffect(() => {
             {
                 key: 'name',
                 title: t('home.operation'),
-                width: 400,
+                width: 120,
                 minWidth: 100,
                 dataKey: 'project',
                 class: 'other',
@@ -491,20 +492,20 @@ watchEffect(() => {
                                     emits('cancelfixed', rowData, rowData.is_favor, rowIndex)
                                 }}>
                                 <el-tooltip content={t('Createteam.fixed')} show-after={1000} hide-after={0}>
-                                    <svg-icon icon-class="fixed"></svg-icon>
+                                    <svg-icon icon-class="fixed-normal"></svg-icon>
                                 </el-tooltip>
                             </el-icon>
                         )}
 
                         {rowData.is_favor && (
-                            <el-icon style={"display: inline-block"}
+                            <el-icon style={"color: rgba(24, 120, 245, 1);display:flex;"}
                                 onDblclick={(event: MouseEvent) => event.stopPropagation()}
                                 onClick={(event: MouseEvent) => {
                                     event.stopPropagation()
                                     emits('cancelfixed', rowData, rowData.is_favor, rowIndex)
                                 }}>
                                 <el-tooltip content={t('Createteam.cancelFixed')} show-after={1000} hide-after={0}>
-                                    <svg-icon icon-class="fixed-cancel"></svg-icon>
+                                    <svg-icon icon-class="fixed-icon"></svg-icon>
                                 </el-tooltip>
                             </el-icon>
                         )}

@@ -363,7 +363,7 @@ onUnmounted(() => {
     .left {
         display: flex;
         align-items: center;
-        gap: 8px;
+        gap: 24px;
         font-size: 18px;
         font-weight: 500;
         letter-spacing: 2px;

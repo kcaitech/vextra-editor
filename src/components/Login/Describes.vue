@@ -9,7 +9,6 @@ const { t } = useI18n();
 <template>
   <div class="logo">
     <img :src="avatar" alt="ProtoDesign" />
-    <h1>{{ t('system.product_name') }}</h1>
     <p>{{ t('system.product_description') }}</p>
   </div>
 </template>
@@ -29,20 +28,9 @@ const { t } = useI18n();
   
 
   img {
-    width: 160px;
+    width: 500px;
     height: 160px;
-    margin: 20px;
-    animation: moveDown .5s;
-  }
-
-  h1 {
-   
-    font-size: 48PX;
-    height: 160px;
-    line-height: 160px;
-    color: white;
-    margin: 20px;
-    text-shadow: rgba(17, 17, 26, 0.1) 0px 1px 0px, rgba(17, 17, 26, 0.1) 0px 8px 24px, rgba(17, 17, 26, 0.1) 0px 16px 48px;;
+    filter: drop-shadow(5px 5px 5px #4332fc);
     animation: moveDown .5s;
   }
 
