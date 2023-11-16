@@ -1,7 +1,11 @@
 <template>
-    <div class="tatle" style="height: 100%;">
-        <tablelist :data="searchlists" :iconlist="iconlists" @share="Sharefile" @exit_share="Exitshar" @dbclickopen="openDocument"
-            @updatestar="Starfile" @rightMeun="rightmenu" :noNetwork="noNetwork" @refreshDoc="refreshDoc" />
+    <div class="title">
+        <div class="left"> {{ t('home.shared_file_received') }}</div>
+    </div>
+    <div class="tatle" style="height: calc(100vh - 144px);">
+        <tablelist :data="searchlists" :iconlist="iconlists" @share="Sharefile" @exit_share="Exitshar"
+            @dbclickopen="openDocument" @updatestar="Starfile" @rightMeun="rightmenu" :noNetwork="noNetwork"
+            @refreshDoc="refreshDoc" />
     </div>
     <listrightmenu :items="items" :data="mydata" @ropen="openDocument" @r-sharefile="Sharefile" @r-starfile="Starfile"
         @r-exitshare="Exitshar" />
@@ -9,6 +13,7 @@
         :userInfo="userInfo" @select-type="onSelectType" @switch-state="onSwitch" :shareSwitch="shareSwitch"
         :pageHeight="pageHeight" :projectPerm="projectPerm">
     </FileShare>
+
     <div v-if="showFileShare" class="overlay"></div>
 </template>
 <script setup lang="ts">
@@ -258,5 +263,20 @@ onUnmounted(() => {
     height: 100%;
     z-index: 999;
     background-color: rgba(0, 0, 0, 0.5);
+}
+
+.title {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    margin: 0 8px 24px 8px;
+    box-sizing: border-box;
+
+    .left {
+        font-size: 18px;
+        font-weight: 500;
+        letter-spacing: 2px;
+        line-height: 36px;
+    }
 }
 </style>

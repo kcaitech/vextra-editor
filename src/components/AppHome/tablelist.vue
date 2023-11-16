@@ -62,6 +62,7 @@ let timer: any
 watch(() => props.data, () => {
     clearTimeout(timer)
     if (props.data[0]) {
+
         loading.value = false
 
     } else {
@@ -600,9 +601,9 @@ watchEffect(() => {
     font-weight: 500 !important;
 }
 
-:deep(.test) {
-    box-shadow: 0 0 4px 0 rgb(0, 0, 0, 0.1) !important;
-}
+// :deep(.test) {
+//     box-shadow: 0 0 4px 0 rgb(0, 0, 0, 0.1) !important;
+// }
 
 :deep(.el-table-v2__row) {
     display: flex;
@@ -634,7 +635,7 @@ watchEffect(() => {
         }
 
         &:active {
-            color: #7950f2;
+            color: #1878F5;
         }
     }
 }
@@ -673,4 +674,5 @@ watchEffect(() => {
             background-color: rgba(150, 117, 250, 0.862745098);
         }
     }
-}</style>
+}
+</style>

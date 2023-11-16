@@ -159,7 +159,7 @@ function closeclick() {
 let timer1: any
 watch(search, () => {
     clearTimeout(timer1)
-    timer1 = setTimeout(() => {
+    timer1 = setTimeout(() => { 
         Bus.emit('searchvalue', search.value)
         clearTimeout(timer1)
     }, 200);
@@ -269,7 +269,7 @@ const getElXY = (el: HTMLElement, elwidth: number = 0) => {
             <div v-if="props.switch" class="bell">
                 <div ref="bell" class="notice" :class="{ 'menu-select': showInForm, 'menu-hover': !showInForm }"
                     @click="showinform(bell!, 300)">
-                    <svg-icon icon-class="bell"></svg-icon>
+                    <svg-icon icon-class="bell" :color="showInForm ? '#1878F5' : ''"></svg-icon>
                     <div class="num" v-if="total > 0" :class="{ after: total > 99 }"
                         :style="{ paddingRight: total > 99 ? 9 + 'px' : 4 + 'px' }">{{ total > 99 ? 99 : total }}</div>
                 </div>

@@ -1,7 +1,7 @@
 <template>
-    <div class="tatle" style="height: 100%;">
-        <tablelist :data="searchlists" :iconlist="iconlists" @restore="Restorefile" @ndelete="Deletefile" @rightMeun="rightmenu"
-            :noNetwork="noNetwork" @refreshDoc="refreshDoc" />
+    <div class="tatle" style="height: calc(100vh - 144px);">
+        <tablelist :data="searchlists" :iconlist="iconlists" @restore="Restorefile" @ndelete="Deletefile"
+            @rightMeun="rightmenu" :noNetwork="noNetwork" @refreshDoc="refreshDoc" />
     </div>
     <listrightmenu :items="items" :data="mydata" @getrecycle-lists="GetrecycleLists" @r-deletefile="Deletefile"
         @r-restorefile="Restorefile" />
@@ -18,8 +18,10 @@ import tablelist from '@/components/AppHome/tablelist.vue'
 import listrightmenu from "../listrightmenu.vue"
 import DeleteDialog from '@/components/TeamProject/ProjectDialog.vue';
 import Bus from '@/components/AppHome/bus'
+import { useRoute } from 'vue-router'
 const items = ['restore', 'completely_delete']
 const { t } = useI18n()
+const route = useRoute()
 const dialogVisible = ref(false)
 const docId = ref('')
 const mydata = ref()
@@ -56,7 +58,7 @@ async function GetrecycleLists() {
             }
         }
         lists.value = Object.values(data)
-    } catch (error:any) {
+    } catch (error: any) {
         if (error.data.code === 401) {
             return
         } else {
@@ -78,8 +80,6 @@ Bus.on('searchvalue', (str: string) => {
 })
 
 watchEffect(() => {
-    console.log(lists.value);
-    
     searchlists.value = lists.value.filter((el: any) => el.document.name.toLowerCase().includes(searchvalue.value.toLowerCase()))
 })
 
@@ -168,9 +168,11 @@ const rightmenu = (e: MouseEvent, data: data) => {
     mydata.value = data
 }
 
-watch(lists, (Nlist) => {
-    emits('dataUpdate', Nlist, t('home.delete_file_time'))
-}, { deep: true })
+watch(() => route.name, () => {
+    Bus.on('searchvalue', (str: string) => {
+        searchvalue.value = str
+    })
+})
 
 onMounted(() => {
     GetrecycleLists()

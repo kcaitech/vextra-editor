@@ -9,7 +9,7 @@
           <Header :items="items" :title="searchtitle" />
         </el-header>
         <el-main>
-          <Main @dataUpdate="update" />
+          <Main />
         </el-main>
       </el-container>
     </el-container>
@@ -164,13 +164,6 @@ provide('shareData', {
   menuState
 })
 
-//===>接收到最新的lists,props传给Headher组件
-const update = (data: any) => {
-  //main组件传过来的lists和title
-  items.value = data || []
-  searchtitle.value = title
-}
-
 //网络连接成功message信息
 const networkLinkSuccess = () => {
   insertNetworkInfo('netError', false, network_anomaly)
@@ -234,7 +227,7 @@ onUnmounted(() => {
   overflow: hidden;
 }
 
-.el-header{
+.el-header {
   padding: 0 20px 0 0;
 }
 
