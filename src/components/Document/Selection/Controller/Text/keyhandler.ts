@@ -217,6 +217,7 @@ function paster(e: KeyboardEvent, context: Context, shapetext: Text, editor: Tex
     }
 }
 function select_all(e: KeyboardEvent, context: Context, shapetext: Text) {
+    console.log('text key handler');
     if (e.ctrlKey || e.metaKey) {
         e.preventDefault();
         const selection = context.textSelection;

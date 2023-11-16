@@ -1,5 +1,5 @@
 <script setup lang='ts'>
-import {watch, onMounted, onUnmounted, ref, reactive, onBeforeUnmount, computed, onBeforeMount} from 'vue';
+import {watch, onMounted, onUnmounted, ref, reactive, onBeforeUnmount, computed} from 'vue';
 import {ClientXY, Selection} from '@/context/selection';
 import {Matrix} from '@kcdesign/data';
 import {TextShape} from '@kcdesign/data';
@@ -77,19 +77,6 @@ function update() {
 
 function clear_null_shape(shape: Shape) {
     props.context.editor4Shape(shape).delete();
-}
-
-function be_editor(index?: number) {
-    console.log('editor init!');
-    const workspace = props.context.workspace;
-    const selection = props.context.textSelection;
-    editing.value = true;
-    workspace.contentEdit(editing.value);
-    props.context.cursor.setType('scan-0');
-    if (index !== undefined) {
-        downIndex = {index, before: true};
-        selection.setCursor(index, true);
-    }
 }
 
 function onMouseDown(e: MouseEvent) {
@@ -176,6 +163,18 @@ function genViewBox(bounds: { left: number, top: number, right: number, bottom: 
     return "" + bounds.left + " " + bounds.top + " " + width.value + " " + height.value
 }
 
+function be_editor(index?: number) {
+    const workspace = props.context.workspace;
+    const selection = props.context.textSelection;
+    editing.value = true;
+    workspace.contentEdit(editing.value);
+    props.context.cursor.setType('scan-0');
+    if (index !== undefined) {
+        downIndex = {index, before: true};
+        selection.setCursor(index, true);
+    }
+}
+
 function workspace_watcher(t?: number, index?: number) {
     if (t === WorkSpace.TRANSLATING) {
         visible.value = !props.context.workspace.isTranslating;
@@ -187,8 +186,9 @@ function workspace_watcher(t?: number, index?: number) {
 }
 
 function selectionWatcher(...args: any[]) {
-    if (args.indexOf(Selection.CHANGE_TEXT) >= 0) update();
-    if (args.indexOf(Selection.CHANGE_SHAPE) >= 0) {
+    if (args.indexOf(Selection.CHANGE_TEXT) >= 0) {
+        update();
+    } else if (args.indexOf(Selection.CHANGE_SHAPE) >= 0) {
         editing.value = false;
         check_status();
     }
@@ -204,7 +204,9 @@ function check_status() {
 watch(() => props.matrix, update, {deep: true});
 
 watch(() => props.shape, (value, old) => {
-    if (old.text.length === 1) clear_null_shape(old);
+    if (old.text.length === 1) {
+        clear_null_shape(old);
+    }
     old.unwatch(update);
     value.watch(update);
     update();
@@ -224,7 +226,9 @@ onUnmounted(() => {
     props.context.cursor.reset();
 });
 onBeforeUnmount(() => {
-    if (props.shape.text.length === 1) clear_null_shape(props.shape);
+    if (props.shape.text.length === 1) {
+        clear_null_shape(props.shape);
+    }
 });
 </script>
 <template>
