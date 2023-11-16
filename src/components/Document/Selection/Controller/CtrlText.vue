@@ -23,6 +23,8 @@ interface Props {
     shape: TextShape
 }
 
+type ProtoInput = InstanceType<typeof TextInput>;
+
 const props = defineProps<Props>();
 const {isDblClick} = useController(props.context);
 const matrix = new Matrix();
@@ -31,6 +33,7 @@ const boundrectPath = ref("");
 const bounds = reactive({left: 0, top: 0, right: 0, bottom: 0}); // viewbox
 const editing = ref<boolean>(false); // 是否进入路径编辑状态
 const visible = ref<boolean>(true);
+const input = ref<ProtoInput>(null);
 const axle = computed<ClientXY>(() => {
     const [lt, rt, rb, lb] = props.controllerFrame;
     return getAxle(lt.x, lt.y, rt.x, rt.y, rb.x, rb.y, lb.x, lb.y);
@@ -148,6 +151,7 @@ function onMouseUp(e: MouseEvent) {
     props.context.workspace.setCtrl('page');
     document.removeEventListener("mousemove", onMouseMove);
     document.removeEventListener("mouseup", onMouseUp);
+    input.value.attention();
 }
 
 
@@ -249,7 +253,7 @@ onBeforeUnmount(() => {
                          :c-frame="props.controllerFrame" :axle="axle">
         </PointsContainer>
     </svg>
-    <TextInput :context="props.context" :shape="(props.shape as TextShape)" :matrix="submatrix.toArray()"
+    <TextInput ref="input" :context="props.context" :shape="(props.shape as TextShape)" :matrix="submatrix.toArray()"
                :main-notify="Selection.CHANGE_TEXT" :selection="props.context.textSelection"></TextInput>
 </template>
 <style lang='scss' scoped>

@@ -416,7 +416,6 @@ export class WorkSpace extends Watchable(Object) {
         if (ctrlKey || metaKey) {
             const selection = this.context.selection, selected = selection.selectedShapes;
             if (selected.length) {
-                console.log('here!');
                 if (selected.length === 1 && selected[0].type === ShapeType.Table) {
                     const table: TableShape = selected[0] as TableShape;
                     const ts = this.context.tableSelection;

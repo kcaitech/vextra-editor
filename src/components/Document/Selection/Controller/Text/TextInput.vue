@@ -20,6 +20,8 @@ interface Props {
     root?: { x: number, y: number }
 }
 
+defineExpose({attention});
+
 const props = defineProps<Props>();
 
 function getText(shape: Shape & { text: Text }): Text {
@@ -44,6 +46,10 @@ const inputpos = ref({left: 0, top: 0})
 const matrix = new Matrix();
 
 const updateInputPos = throttle(_updateInputPos, 5);
+
+function attention() {
+    inputel.value?.focus();
+}
 
 function _updateInputPos() {
     if (!inputel.value) return;
@@ -191,8 +197,10 @@ function onKeyPress(e: KeyboardEvent) {
 }
 </script>
 <template>
-    <input type="text" :tabindex="-1" class="input" @focusout="onfocusout" @input="oninput"
-           @compositionstart="compositionstart" @compositionend="compositionend" @compositionupdate="compositionupdate"
+    <input type="text" :tabindex="-1" class="input"
+           @focusout="onfocusout" @input="oninput"
+           @compositionstart="compositionstart" @compositionend="compositionend"
+           @compositionupdate="compositionupdate"
            @keydown="onKeyDown" @keypress="onKeyPress" @keyup="onKeyUp"
            :style="{ left: `${inputpos.left}px`, top: `${inputpos.top}px` }" ref="inputel"/>
 </template>
