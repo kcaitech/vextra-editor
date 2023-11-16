@@ -125,7 +125,7 @@ const selected_watcher = (t: number) => {
     }
 }
 function variable_watcher(args: any[]) {
-    if (args && (args.includes('map') || args.includes('childs'))) isBind();
+    if (args && (args.includes('variable') || args.includes('childs'))) isBind();
 }
 watch(() => shape.value, (v, o) => {
     if(o) {

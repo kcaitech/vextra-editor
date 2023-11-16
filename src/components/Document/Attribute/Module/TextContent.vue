@@ -100,7 +100,7 @@ const selected_watcher = (t: number) => {
 
 function text_watcher(args: any) {
     if (args === 'text') get_text();
-    if (args === 'map') isBind();
+    if (args === 'variable') isBind();
 }
 
 watch(() => shape.value, (v, o) => {
