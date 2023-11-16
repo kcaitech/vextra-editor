@@ -164,7 +164,7 @@ onUnmounted(() => {
         width: `${props.width ? props.width : 360}px`,
         left: props.dialog_posi.x - 10 + 'px',
         top: cur_p === 0 ? props.dialog_posi!.y + 10 + 'px' : cur_top + 'px'
-    }">
+    }" @mousedown.stop>
         <div class="header">
             <span class="title">{{ props.title }}</span>
             <div @click="popoverClose" class="close">
@@ -191,7 +191,7 @@ onUnmounted(() => {
             <el-button :style="{backgroundColor: '#9775fa'}" @click="save">确认</el-button>
         </div>
     </div>
-    <div class="overlay" @click.stop="isselectLayer = false"></div>
+    <div class="overlay" @click.stop="isselectLayer = false" @mousedown.stop></div>
 </template>
 
 <style scoped lang="scss">

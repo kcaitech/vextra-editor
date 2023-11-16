@@ -101,7 +101,7 @@ onMounted(() => {
                 :placeholder="t('compos.default_text_input')" @keydown.stop="keysumbit" @change="change" />
         </div>
     </div>
-    <div class="warning" v-if="props.warn">
+    <div class="warning" v-if="props.warn && props.addType === VariableType.Text">
         <p class="warn">默认值不能为空</p>
     </div>
 </template>

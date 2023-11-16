@@ -18,6 +18,7 @@ import Status from "./InstanceAttrCard/IACStatus.vue"
 import Visible from "./InstanceAttrCard/IACVisible.vue"
 import {Selection} from '@/context/selection';
 import {v4} from "uuid";
+import { Menu } from '@/context/menu';
 
 interface Props {
     context: Context
@@ -31,6 +32,7 @@ const variables = ref<RefAttriListItem[]>([]);
 const visible_variables = ref<RefAttriListItem[]>([]);
 const untie_state = ref<boolean>(false);
 const selectReset = (e: MouseEvent) => {
+    props.context.menu.notify(Menu.CLOSE_COMP_MENU);
     if (resetMenu.value) return resetMenu.value = false
     resetMenu.value = true
     document.addEventListener('click', closeResetMenu);
@@ -148,9 +150,15 @@ function get_ref_ref(symref: SymbolRefShape) {
         p = p.parent;
     }
 }
+const menu_watcher = (t: number, e: MouseEvent) => {
+    if (t === Menu.CLOSE_INSTANCE_ATTR_MENU) {
+        closeResetMenu(e)
+    }
+}
 
 onMounted(() => {
     props.context.selection.watch(selection_watcher);
+    props.context.menu.watch(menu_watcher);
     watchShapes();
     updater_untie_state();
     updateData();
@@ -158,6 +166,7 @@ onMounted(() => {
 onUnmounted(() => {
     document.removeEventListener('click', closeResetMenu);
     props.context.selection.unwatch(selection_watcher);
+    props.context.menu.unwatch(menu_watcher);
     watchedShapes.forEach(v => v.unwatch(shape_watcher));
 })
 </script>

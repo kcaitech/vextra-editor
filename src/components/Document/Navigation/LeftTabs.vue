@@ -37,7 +37,10 @@ const tabs: { title: string, id: Tab }[] = [
 ]
 
 function update(t: number) {
-    if (t === Comment.SELECT_LIST_TAB) currentTab.value = 'Comment';
+    if (t === Comment.SELECT_LIST_TAB) {
+        if(!props.showLeft) showHiddenLeft();
+        currentTab.value = 'Comment';
+    }
 }
 
 function toggle(id: Tab) {
@@ -50,6 +53,7 @@ const showHiddenLeft = () => {
 }
 const tool_watch = (t: number) => {
     if (t === Tool.COMPONENT) {
+        if(!props.showLeft) showHiddenLeft();
         currentTab.value = 'Comps';
         props.context.navi.set_current_navi_module(currentTab.value);
     }

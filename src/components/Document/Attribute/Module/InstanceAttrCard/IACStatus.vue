@@ -23,9 +23,10 @@ const props = defineProps<Props>();
 const selectoption = ref(false);
 const status_value = ref<string>('');
 
-function show_menu() {
+function show_menu(e: MouseEvent) {
     if (selectoption.value) return selectoption.value = false;
     props.context.menu.notify(Menu.CLOSE_COMP_MENU);
+    props.context.menu.notify(Menu.CLOSE_INSTANCE_ATTR_MENU, e)
     selectoption.value = true;
 }
 
