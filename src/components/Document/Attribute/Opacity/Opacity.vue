@@ -2,8 +2,9 @@
 import TypeHeader from '../TypeHeader.vue';
 import {Shape} from '@kcdesign/data';
 import {useI18n} from 'vue-i18n';
-import {computed, nextTick, ref} from 'vue';
+import {computed, nextTick, onMounted, ref} from 'vue';
 import {Context} from '@/context';
+import {forEach} from 'lodash';
 
 interface Props {
     context: Context
@@ -72,6 +73,19 @@ function range_change(e: InputEvent) {
     const selected = props.context.selection.selectedShapes;
     editor.modifyShapesContextSettingOpacity(selected, Number(value) / 100);
 }
+
+function update() {
+    const shape = props.context.selection.selectedShapes
+    shape.forEach((shape) => {
+        // 1. 检查多值
+        // 2. 更新界面
+    })
+}
+function selection_watcher() {}
+onMounted(() => {
+    // 给选区挂载 监听函数 --
+
+})
 </script>
 <template>
     <div class="opacity-panel">
