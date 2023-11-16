@@ -98,6 +98,7 @@ export class Selection extends Watchable(Object) implements ISave4Restore {
     private m_selected_sym_ref_bros: Shape[] = [];
     private m_placement: Shape | undefined;
     private m_context: Context;
+    private m_is_new_shape_selection: boolean = false;
 
     constructor(document: Document, context: Context) {
         super();
@@ -489,5 +490,11 @@ export class Selection extends Watchable(Object) implements ISave4Restore {
             p = p.parent;
         }
         return result;
+    }
+    get isNewShapeSelection() {
+        return this.m_is_new_shape_selection;
+    }
+    setSelectionNewShapeStatus(v: boolean) {
+        this.m_is_new_shape_selection = v;
     }
 }

@@ -62,12 +62,12 @@ export type Area =
 const updateRootTime = 300;
 
 export function _updateRoot(context: Context, element: HTMLElement) {
-    const { x, y, right, bottom } = element.getBoundingClientRect();
+    const {x, y, right, bottom} = element.getBoundingClientRect();
     const root: Root = {
         init: true, x, y, right, bottom, element,
         width: right - x,
         height: bottom - y,
-        center: { x: (right - x) / 2, y: (bottom - y) / 2 }
+        center: {x: (right - x) / 2, y: (bottom - y) / 2}
     }
     context.workspace.updateRoot(root);
 }
@@ -111,9 +111,9 @@ export function get_component_state_name(union: SymbolShape, t: Function) {
 // 判断图形是否在可视区域内
 export function isInner(context: Context, shape: Shape) {
     const pMatrix = context.workspace.matrix;
-    const { x: rx, y: ry, bottom, right } = context.workspace.root;
+    const {x: rx, y: ry, bottom, right} = context.workspace.root;
     const s2pMatirx = shape.matrix2Root();
-    const { width, height } = shape.frame;
+    const {width, height} = shape.frame;
     let point = [[0, 0], [width, 0], [width, height], [0, height]]
     point = point.map(p => {
         const _s = s2pMatirx.computeCoord(p[0], p[1]);
@@ -156,7 +156,7 @@ export function init_shape(context: Context, frame: ShapeFrame, mousedownOnPageX
     if (asyncCreator && new_shape) {
         selection.selectShape(new_shape);
         workspace.creating(true);
-        return { asyncCreator, new_shape };
+        return {asyncCreator, new_shape};
     }
 }
 
@@ -177,7 +177,7 @@ export function init_contact_shape(context: Context, frame: ShapeFrame, mousedow
     if (asyncCreator && new_shape) {
         selection.selectShape(new_shape);
         workspace.creating(true);
-        return { asyncCreator, new_shape };
+        return {asyncCreator, new_shape};
     }
 }
 
@@ -185,7 +185,9 @@ export function init_contact_shape(context: Context, frame: ShapeFrame, mousedow
 export function init_insert_shape(context: Context, mousedownOnPageXY: PageXY, t: Function, land?: Shape, _t?: ShapeType) {
     const tool = context.tool;
     const action = tool.action;
-    if (action === Action.AddText) return init_insert_textshape(context, mousedownOnPageXY, t('shape.input_text'));
+    if (action === Action.AddText) {
+        return init_insert_textshape(context, mousedownOnPageXY, t('shape.input_text'));
+    }
     const selection = context.selection;
     const workspace = context.workspace;
     const type = _t || ResultByAction(action);
@@ -205,7 +207,7 @@ export function init_insert_shape(context: Context, mousedownOnPageXY: PageXY, t
         }
     }
     if (asyncCreator && new_shape) {
-        asyncCreator = asyncCreator.close();
+        asyncCreator.close();
         selection.selectShape(page!.getShape(new_shape.id));
     }
     workspace.creating(false);
@@ -251,9 +253,10 @@ export function init_insert_table(context: Context, t: Function, land?: Shape, _
     const table = context.tool.tableSize;
     const matrix = context.workspace.matrix;
     const frame = new ShapeFrame(0, 0, table.col * 80, table.row * 30);
-    const { x, y } = landFinderOnPage(matrix, context, frame)
-    frame.x = x, frame.y = y;
-    const PageXY = { x: x, y: y };
+    const {x, y} = landFinderOnPage(matrix, context, frame)
+    frame.x = x;
+    frame.y = y;
+    const PageXY = {x: x, y: y};
     const selection = context.selection;
     const workspace = context.workspace;
     const type = _t || ResultByAction(action);
@@ -283,25 +286,25 @@ export function init_insert_table(context: Context, t: Function, land?: Shape, _
 }
 
 // 插入文本框
-export function init_insert_textshape(context: Context, mousedownOnPageXY: PageXY, content: string, land?: Shape, _t?: ShapeType) {
+export function init_insert_textshape(context: Context, mousedownOnPageXY: PageXY, content: string, land?: Shape) {
     const selection = context.selection;
     const workspace = context.workspace;
-    const type = _t || ResultByAction(context.tool.action);
     const page = selection.selectedPage;
     const parent = land || selection.getClosestContainer(mousedownOnPageXY);
     let asyncCreator: AsyncCreator | undefined;
     let new_shape: Shape | undefined;
     const frame = new ShapeFrame(mousedownOnPageXY.x, mousedownOnPageXY.y, 100, 100);
-    if (page && parent && type) {
+    if (page && parent) {
         const editor = context.editor.controller();
         asyncCreator = editor.asyncCreator(mousedownOnPageXY);
         new_shape = asyncCreator.init_text(page, (parent as GroupShape), frame, content);
     }
     if (asyncCreator && new_shape) {
-        asyncCreator = asyncCreator.close();
+        asyncCreator.close();
         selection.selectShape(page!.getShape(new_shape.id));
         context.textSelection.selectText(0, (new_shape as TextShape).text.length, (new_shape as TextShape).text);
     }
+    context.selection.setSelectionNewShapeStatus(true);
     workspace.creating(false);
     context.tool.setAction(Action.AutoV);
     context.cursor.reset();
@@ -382,17 +385,17 @@ export function adjust_content_xy(context: Context, m: Media) {
         }
     }
     const page_center = matrix.inverseCoord(root.center);
-    return { x: page_center.x - m.frame.width / 2, y: page_center.y - m.frame.height / 2 };
+    return {x: page_center.x - m.frame.width / 2, y: page_center.y - m.frame.height / 2};
 }
 
 export function drop(e: DragEvent, context: Context, t: Function) {
     e.preventDefault();
     const data = e?.dataTransfer?.files;
     if (!data || !data.length || data[0]?.type.indexOf('image') !== -1) return;
-    const item: SystemClipboardItem = { type: ShapeType.Image, contentType: 'image/png', content: '' };
+    const item: SystemClipboardItem = {type: ShapeType.Image, contentType: 'image/png', content: ''};
     const file = data[0];
     item.contentType = file.type;
-    const frame = { width: 100, height: 100 };
+    const frame = {width: 100, height: 100};
     const img = new Image();
     img.onload = function () {
         frame.width = img.width;
@@ -416,10 +419,10 @@ export function drop(e: DragEvent, context: Context, t: Function) {
                 fr.onload = function (event) {
                     const buff = event.target?.result;
                     if (base64 && buff) {
-                        item.content = { name: file.name, frame, buff: new Uint8Array(buff as any), base64 };
+                        item.content = {name: file.name, frame, buff: new Uint8Array(buff as any), base64};
                         const content = item!.content as Media;
                         const root = context.workspace.root;
-                        const { clientX, clientY } = e;
+                        const {clientX, clientY} = e;
                         const xy: PageXY = context.workspace.matrix.inverseCoord({
                             x: clientX - root.x,
                             y: clientY - root.y
@@ -461,8 +464,8 @@ export function adapt_page(context: Context, initPage = false) {
     const ratio_h = height / h_max * 1.12; // 留点位置给容器标题
     const ratio = Math.max(ratio_h, ratio_w);
     if (ratio !== 1) {
-        const p_center = { x: box.left + width / 2, y: box.top + height / 2 };
-        const del = { x: root.center.x - p_center.x, y: root.center.y - p_center.y };
+        const p_center = {x: box.left + width / 2, y: box.top + height / 2};
+        const del = {x: root.center.x - p_center.x, y: root.center.y - p_center.y};
         matrix.trans(del.x, del.y);
         matrix.trans(-root.width / 2, -root.height / 2); // 先去中心点
         const max = initPage ? 1 : 256;
@@ -478,8 +481,8 @@ export function adapt_page(context: Context, initPage = false) {
         matrix.trans(root.width / 2, root.height / 2);
         context.workspace.notify(WorkSpace.MATRIX_TRANSFORMATION);
     } else {
-        const p_center = { x: box.left + width / 2, y: box.top + height / 2 };
-        const del = { x: root.center.x - p_center.x, y: root.center.y - p_center.y };
+        const p_center = {x: box.left + width / 2, y: box.top + height / 2};
+        const del = {x: root.center.x - p_center.x, y: root.center.y - p_center.y};
         if (del.x || del.y) {
             matrix.trans(del.x, del.y);
             context.workspace.notify(WorkSpace.MATRIX_TRANSFORMATION);
@@ -712,7 +715,7 @@ export function get_menu_items(context: Context, area: "controller" | "text-sele
 }
 
 export function color2string(color: Color, t?: number) {
-    const { red, green, blue, alpha } = color;
+    const {red, green, blue, alpha} = color;
     return `rgba(${red}, ${green}, ${blue}, ${alpha})`;
 }
 
@@ -736,7 +739,7 @@ export function selectShapes(context: Context, shapes: Shape | undefined) {
 }
 
 export const permIsEdit = (context: Context) => {
-  return Boolean(context.workspace.documentPerm === Perm.isEdit && !context.tool.isLable);
+    return Boolean(context.workspace.documentPerm === Perm.isEdit && !context.tool.isLable);
 }
 
 export const hasRadiusShape = (shape: Shape, type: ShapeType[]) => {
@@ -763,8 +766,8 @@ export function skipUserSelectShapes(context: Context, shapes: Shape[]) {
     const width = box.right - box.left;
     const height = box.bottom - box.top;
     const root = context.workspace.root;
-    const p_center = { x: box.left + width / 2, y: box.top + height / 2 };
-    const del = { x: root.center.x - p_center.x, y: root.center.y - p_center.y };
+    const p_center = {x: box.left + width / 2, y: box.top + height / 2};
+    const del = {x: root.center.x - p_center.x, y: root.center.y - p_center.y};
     if (del.x || del.y) {
         matrix.trans(del.x, del.y);
         context.workspace.matrixTransformation();
@@ -785,9 +788,9 @@ export function map_from_shapes(shapes: Shape[], init?: Map<string, Shape>) {
 }
 
 export function is_shape_out(context: Context, shape: Shape, matrix: Matrix) {
-    const { x, y, bottom, right } = context.workspace.root;
-    const { width, height } = shape.frame;
-    let point: { x: number, y: number }[] = [{ x: 0, y: 0 }, { x: width, y: 0 }, { x: width, y: height }, { x: 0, y: height }];
+    const {x, y, bottom, right} = context.workspace.root;
+    const {width, height} = shape.frame;
+    let point: { x: number, y: number }[] = [{x: 0, y: 0}, {x: width, y: 0}, {x: width, y: height}, {x: 0, y: height}];
     for (let i = 0; i < 4; i++) point[i] = matrix.computeCoord3(point[i]);
     return Math.min(point[0].x, point[1].x, point[2].x, point[3].x) > right - x ||
         Math.max(point[0].x, point[1].x, point[2].x, point[3].x) < 0 ||
