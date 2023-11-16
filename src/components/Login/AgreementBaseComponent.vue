@@ -28,10 +28,11 @@ import { useI18n } from 'vue-i18n'
 
 const { t } = useI18n();
 const isMobile = ref(isMobileDevice())
-
+let tiemr: any
 function updateDeviceType() {
-    setTimeout(() => {
+    tiemr = setTimeout(() => {
         isMobile.value = isMobileDevice()
+        clearTimeout(tiemr)
     }, 0)
 }
 
@@ -46,7 +47,7 @@ onUnmounted(() => {
 </script>
 <style lang="scss" scoped>
 .phonetips {
-    position: sticky;
+    position: fixed;
     font-size: 12px;
     font-weight: 600;
     line-height: 40px;

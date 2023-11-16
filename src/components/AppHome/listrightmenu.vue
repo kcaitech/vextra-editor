@@ -35,7 +35,7 @@ import { useI18n } from 'vue-i18n'
 import { router } from '@/router'
 import * as user_api from '@/request/users'
 import { ElMessage } from 'element-plus'
-import { onMounted, ref, onUnmounted, Ref, inject, watch } from 'vue';
+import { onMounted, ref, onUnmounted, Ref, inject, watch, nextTick } from 'vue';
 import CloseIcon from '@/components/common/CloseIcon.vue';
 
 const dialogVisible = ref(false)
@@ -262,16 +262,18 @@ const rStarfile = (data: any) => {
 
 //右键重命名
 //弹框
+let tiemr: any
 const rrename = (name: string) => {
     newname.value = name
     if (dialogVisible.value) {
         dialogVisible.value = false
     } else {
         dialogVisible.value = true
-        setTimeout(() => {
+        tiemr = setTimeout(() => {
             renameinput.value?.focus()
             renameinput.value?.select()
-        }, 100)
+            clearTimeout(tiemr)
+        }, 0);
     }
     if (menu.value) {
         menu.value.style.display = 'none'

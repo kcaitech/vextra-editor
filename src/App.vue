@@ -19,7 +19,7 @@ onMounted(() => {
 
 <template>
     <RouterView></RouterView>
-    <!-- <HelpEntrance /> -->
+    <HelpEntrance />
 </template>
 
 <style lang="scss">

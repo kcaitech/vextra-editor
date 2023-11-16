@@ -23,7 +23,6 @@ import listrightmenu from "../listrightmenu.vue"
 const { t } = useI18n()
 
 const items = ['open', 'newtabopen', 'share', 'target_star', 'rename']
-const isLoading = ref(false);
 const showFileShare = ref<boolean>(false);
 const shareSwitch = ref(true)
 const pageHeight = ref(0)
@@ -65,8 +64,6 @@ interface data {
 }
 
 async function getUserdata() {
-    // loading
-    isLoading.value = true
     try {
         const { data } = await user_api.GetfavoritesList()
         if (data == null) {
@@ -88,12 +85,15 @@ async function getUserdata() {
             }
         }
         lists.value = Object.values(data)
-    } catch (error) {
-        noNetwork.value = true
-        ElMessage.error(t('home.failed_list_tips'))
+    } catch (error:any) {
+        if (error.data.code === 401) {
+            return
+        } else {
+            noNetwork.value = true
+            ElMessage.closeAll('error')
+            ElMessage.error({ duration: 1500, message: t('home.failed_list_tips') })
+        }
     }
-    // unloading  
-    isLoading.value = false;
 }
 
 const refreshDoc = () => {

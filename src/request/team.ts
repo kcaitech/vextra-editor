@@ -229,3 +229,13 @@ export function getTeamNoticeAPI(params = {}, ops = {}) {
         ...ops
     })
 }
+
+//设置团队成员昵称
+export function setTeamMemberNicknameAPI(params = {}, ops = {}) {
+    return httpRequest({
+        url: '/documents/team/member/nickname',
+        method: 'put',
+        data: params,
+        ...ops
+    })
+}

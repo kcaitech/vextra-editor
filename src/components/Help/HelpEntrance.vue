@@ -17,77 +17,22 @@
                     <img class="code-image" :src="QRCode" alt="QRCode">
                 </div>
             </div>
-            <div v-if="shortcut" class="shortcut-keys">
-                <div class="title">
-                    <div class="indicator" :style="{ width: elwidth + 'px', left: elleft + 'px', height: 2 + 'px' }">
-                    </div>
-                    <div class="item" :class="{ 'activate': itemid === index }" v-for="(title, index) in titles"
-                        :key="index" @click.stop="clickEvent(index, $event)">
-                        {{ title }}
-                    </div>
-                </div>
-                <div class="shortcut-content">
-                    <div class="shortcut-item" v-for="(item, index) in shortcuts" :key="index">
-                        <div class="item-title">{{ item.title }}</div>
-                        <div class="item-name" style="display: flex;justify-content: space-between;"
-                            v-for="(i, index) in item.shortcutKey" :key="index">
-                            {{ i.name }}
-                            <i class="item-key">{{ i.keys }}</i>
-                        </div>
-                    </div>
-                </div>
-            </div>
+            <ShortCut v-if="shortcut" @close="shortcut = false" :b="shortcut"></ShortCut>
         </Teleport>
     </div>
 </template>
 <script setup lang="ts">
-import { computed, nextTick, onMounted, onUnmounted, ref, watch } from 'vue';
+import { onMounted, onUnmounted, ref } from 'vue';
 import { useRoute } from 'vue-router';
 import QRCode from '@/assets/qr-code.png';
+import ShortCut from './ShortCut.vue';
+
 const route = useRoute()
 const showitem = ref(false)
 const qrcode = ref(false)
 const shortcut = ref(false)
 const items = ref<any[]>(['问题反馈', '快捷键介绍'])
 const itemsicon = ref<any[]>(['feedback-icon', 'shortcut-icon'])
-const titles = ref<any[]>(['工具', '视图', '缩放', '文本', '排列', '图层', '编辑', '形状', '组件'])
-const elwidth = ref()
-const elleft = ref()
-const itemid = ref(0)
-const shortcuts = ref<any[]>([{
-    title: '',
-    shortcutKey: [
-        { name: '复制1', keys: 'Ctrl+C' },
-        { name: '复制2', keys: 'Ctrl+C' }
-    ]
-},
-{
-    title: '',
-    shortcutKey: [
-        { name: '复制1', keys: 'Ctrl+C' },
-        { name: '复制2', keys: 'Ctrl+C' }
-    ]
-},
-{
-    title: '',
-    shortcutKey: [
-        { name: '复制1', keys: 'Ctrl+C' },
-        { name: '复制2', keys: 'Ctrl+C' }
-    ]
-}
-])
-const shortcuts1 = ref<any[]>([{ title: '测试标题2', shortcutKey: { name: '粘贴', keys: 'Ctrl+V' } }])
-
-const shortcutdata = computed(() => {
-    return itemid.value === 0 ? shortcuts : shortcuts1
-})
-
-const clickEvent = (index: number, e: MouseEvent) => {
-    itemid.value = index
-    const rect = (e.target as HTMLElement).getBoundingClientRect()
-    elwidth.value = rect.width
-    elleft.value = (e.target as HTMLElement).offsetLeft
-}
 
 const handleClickShowhelp = () => {
     if (qrcode.value) {
@@ -112,11 +57,6 @@ const handleClickOutside = (e: MouseEvent) => {
             qrcode.value = false
         }
     }
-    if (shortcut.value) {
-        if (!(e.target as HTMLElement).closest('.shortcut-keys')) {
-            shortcut.value = false
-        }
-    }
 }
 
 const handleClickShow = (index: number) => {
@@ -130,21 +70,6 @@ const handleClickShow = (index: number) => {
     }
 }
 
-watch(shortcut, (newvalue) => {
-    if (newvalue) {
-        nextTick(() => {
-            const items = document.querySelectorAll('.title .item')
-            const rect = items[itemid.value].getBoundingClientRect()
-            elwidth.value = rect.width
-            const item = items[itemid.value] as HTMLElement
-            if (item) {
-                elleft.value = item.offsetLeft
-            } else {
-                return
-            }
-        })
-    }
-})
 
 onMounted(() => {
     document.addEventListener("click", handleClickOutside);
@@ -163,7 +88,7 @@ onUnmounted(() => {
     bottom: 16px;
     right: 20px;
     padding: 2px;
-    z-index: 998;
+    z-index: 9999;
 
     .help-content {
         display: flex;
@@ -195,6 +120,7 @@ onUnmounted(() => {
     background-color: white;
     box-shadow: 0px 2px 5px 0px rgba(0, 0, 0, 0.3);
     box-sizing: border-box;
+    z-index: 9999;
 
     .item {
         cursor: pointer;
@@ -216,8 +142,8 @@ onUnmounted(() => {
     }
 }
 
-.qq-grop-code,
-.shortcut-keys {
+
+.qq-grop-code {
     position: fixed;
     bottom: 56px;
     right: 20px;
@@ -225,6 +151,7 @@ onUnmounted(() => {
     background-color: white;
     box-shadow: 0px 2px 5px 0px rgba(0, 0, 0, 0.3);
     box-sizing: border-box;
+    z-index: 9999;
 
     .qr-code {
         width: 200px;
@@ -236,62 +163,6 @@ onUnmounted(() => {
 
         .code-image {
             width: 80%;
-        }
-    }
-
-    .title {
-        display: flex;
-        height: 32px;
-        align-items: flex-end;
-        padding: 0px 0 6px 32px;
-        border-bottom: 1px solid #dddddd;
-
-        .indicator {
-            position: absolute;
-            height: 2px;
-            background-color: #9775fa;
-            border-radius: 2px;
-            transition: all 0.2s ease-in-out;
-        }
-
-        .item {
-            cursor: pointer;
-            white-space: nowrap;
-            line-height: 32px;
-            margin-right: 32px;
-            font-size: 14px;
-            font-weight: 600;
-            color: #b1b1b1;
-        }
-
-        .activate {
-            color: black;
-            // border-bottom: 2px solid #9775fa;
-        }
-    }
-
-    .shortcut-content {
-        height: 300px;
-        width: 100%;
-        display: grid;
-        grid-template-columns: 1fr 1fr 1fr;
-        gap: 20px;
-        font-size: 12px;
-        padding: 6px 16px 6px 16px;
-        box-sizing: border-box;
-
-        .shortcut-item {
-            display: flex;
-            flex-direction: column;
-        }
-        .item-title{
-            color:var(--title-color)
-        }
-
-        .item-name{
-            color: #000000E6;
-            line-height: 20px;
-            margin-bottom: 12px;
         }
     }
 }
