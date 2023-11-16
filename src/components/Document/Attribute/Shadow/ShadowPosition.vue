@@ -24,14 +24,15 @@ const showMenu = () => {
 }
 
 const togglePositinon = (position: ShadowPosition) => {
-    const idx = props.length - props.idx - 1;
+    const _idx = props.length - props.idx - 1;
     const len = props.shapes.length;
+    console.log(_idx,'_idx');
     if (len === 1) {
         if (props.shadow.position === position) return close();
         const e = props.context.editor4Shape(props.context.selection.selectedShapes[0]);
-        e.setShadowPosition(idx, position);
+        e.setShadowPosition(_idx, position);
     } else if (len > 1) {
-        const actions = get_actions_shadow_position(props.shapes, idx, position);
+        const actions = get_actions_shadow_position(props.shapes, _idx, position);
         if (actions && actions.length) {
             const page = props.context.selection.selectedPage;
             if (page) {

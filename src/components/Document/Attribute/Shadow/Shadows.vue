@@ -72,7 +72,7 @@ function watcher(...args: any[]) {
 }
 function addShadow(): void {
   const len = props.shapes.length;
-  const s = new Shadow(v4(), true, 10, new Color(0.3, 0, 0, 0), 0, 0, 0, ShadowPosition.Outer);
+  const s = new Shadow(v4(), true, 10, new Color(0.3, 0, 0, 0), 0, 4, 0, ShadowPosition.Outer);
   if (len === 1) {
     const e = props.context.editor4Shape(props.context.selection.selectedShapes[0]);
     e.addShadow(s);
@@ -159,7 +159,7 @@ onUnmounted(stop);
         </div>
         <div class="shadow_posi">
           <ShadowPositionItem :context="context" :shadow="s.shadow" :idx="idx" :length="shadows.length"
-            :shapes="props.shapes"></ShadowPositionItem>
+            :shapes="props.shapes" :reflush="reflush"></ShadowPositionItem>
         </div>
         <div class="detail">
           <ShadowDetail :context="props.context" :shadow="s.shadow" :idx="idx" :length="shadows.length"
