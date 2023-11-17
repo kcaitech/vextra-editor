@@ -79,14 +79,14 @@ onUnmounted(() => {
                 <div class="icon">
                     <div class="choose" v-if="shadow.position === ShadowPosition.Outer"></div>
                 </div>
-                <div class="text">外阴影</div>
+                <div class="text">{{t(`shadow.outer`)}}</div>
             </div>
             <div class="item" @click="togglePositinon(ShadowPosition.Inner)" @mouseenter="activeItem = ShadowPosition.Inner"
                 :class="{ 'active-item': activeItem === ShadowPosition.Inner }">
                 <div class="icon">
                     <div class="choose" v-if="shadow.position === ShadowPosition.Inner"></div>
                 </div>
-                <div class="text">内阴影</div>
+                <div class="text">{{t(`shadow.inner`)}}</div>
             </div>
         </div>
     </div>

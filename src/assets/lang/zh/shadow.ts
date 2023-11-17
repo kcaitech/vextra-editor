@@ -2,6 +2,13 @@ import { ShadowPosition } from "@kcdesign/data"
 
 export const shadow: any = {
     shadow_stting: '阴影',
+    only_used: '仅矩形、圆形以及容器可以使用',
+    shadow_setting: '阴影设置',
+    position: '位置',
+    color: '颜色',
+    effect:'效果',
+    blur: '模糊',
+    extend: '扩展',
 }
 
 

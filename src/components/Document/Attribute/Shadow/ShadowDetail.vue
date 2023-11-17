@@ -224,7 +224,7 @@ const disable = computed(() => {
 <template>
     <div class="border-detail-container" @mousedown.stop>
         <Popover :context="props.context" class="popover" ref="popover" :width="260" height="auto" :left="-475"
-            :title="`阴影设置`">
+            :title="`${t('shadow.shadow_setting')}`">
             <template #trigger>
                 <div class="trigger" @click="showMenu">
                     <svg-icon icon-class="gear"></svg-icon>
@@ -233,23 +233,23 @@ const disable = computed(() => {
             <template #body>
                 <div class="options-container">
                     <div class="setting">
-                        <div class="name-title">位置</div>
+                        <div class="name-title">{{t('shadow.position')}}</div>
                         <ShadowInput ticon="X" :shadow-v="shadow.offsetX" @on-change="setOffsetX" :reflush="reflush">
                         </ShadowInput>
                         <ShadowInput ticon="Y" :shadow-v="shadow.offsetY" @on-change="setOffsetY" :reflush="reflush">
                         </ShadowInput>
                     </div>
                     <div class="setting">
-                        <div class="name-title">效果</div>
-                        <ShadowInput ticon="B" :shadow-v="shadow.blurRadius" @on-change="setBlurRadius" :tootip="`模糊`"
+                        <div class="name-title">{{t('shadow.effect')}}</div>
+                        <ShadowInput ticon="B" :shadow-v="shadow.blurRadius" @on-change="setBlurRadius" :tootip="`${t('shadow.blur')}`"
                             :reflush="reflush">
                         </ShadowInput>
                         <ShadowInput ticon="S" :shadow-v="shadow.spread" @on-change="setSpread" :disabled="disable"
-                            :tootip="`扩展`" :reflush="reflush">
+                            :tootip="`${t('shadow.extend')}`" :reflush="reflush">
                         </ShadowInput>
                     </div>
                     <div class="setting">
-                        <div class="name-title">颜色</div>
+                        <div class="name-title">{{t('shadow.color')}}</div>
                         <div class="color">
                             <ColorPicker :color="(shadow.color as Color)" :context="props.context"
                                 @change="(c: Color) => getColorFromPicker(c)" />

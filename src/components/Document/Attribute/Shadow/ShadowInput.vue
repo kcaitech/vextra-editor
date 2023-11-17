@@ -60,7 +60,7 @@ const decrease = () => {
         </Tooltip>
         <span class="icon" v-if="!props.tootip || props.disabled"
             :style="{ cursor: props.disabled ? 'default' : 'ew-resize' }">{{ ticon }}</span>
-        <Tooltip v-if="props.disabled" :content="`仅矩形、圆形以及容器可以使用`" :offset="12">
+        <Tooltip v-if="props.disabled" :content="`${t('shadow.only_used')}`" :offset="12">
             <input ref="input" :value="props.shadowV" @focus="selectValue" :disabled="props.disabled"
                 :style="{ cursor: props.disabled ? 'default' : 'text' }" @change="onChange">
         </Tooltip>
