@@ -1,4 +1,5 @@
 import {
+    exportExForm,
     ISave4Restore,
     ShapeType,
     SymbolRefShape,

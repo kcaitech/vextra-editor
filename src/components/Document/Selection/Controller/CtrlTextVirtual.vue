@@ -223,7 +223,7 @@ onBeforeUnmount(() => {
         <ShapesStrokeContainer :context="props.context" :matrix="props.matrix" :shape="props.shape" color-hex="#ff9900">
         </ShapesStrokeContainer>
     </svg>
-    <TextInput :context="props.context" :shape="(props.shape as TextShape)" :matrix="submatrix.toArray()"
+    <TextInput  ref="input" :context="props.context" :shape="(props.shape as TextShape)" :matrix="submatrix.toArray()"
                :main-notify="Selection.CHANGE_TEXT" :selection="props.context.textSelection"></TextInput>
 </template>
 <style lang='scss' scoped>

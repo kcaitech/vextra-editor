@@ -13,7 +13,7 @@ import {debounce} from "lodash";
 import {map_from_shapes} from "@/utils/content";
 import {compare_layer_3} from "@/utils/group_ungroup";
 import {get_closest_container} from "@/utils/mouse";
-import {is_circular_ref2, is_part_of_symbolref, is_symbol_but_not_union} from "@/utils/symbol";
+import {is_circular_ref2, is_part_of_symbolref, is_symbol_but_not_union, is_part_of_symbol} from "@/utils/symbol";
 
 /**
  * @description 检查是否满足迁移条件
@@ -27,12 +27,15 @@ import {is_circular_ref2, is_part_of_symbolref, is_symbol_but_not_union} from "@
  *          999 其他
  */
 export function unable_to_migrate(target: Shape, wander: Shape): number {
-    if (target.type === ShapeType.Symbol) {
-        const children = wander.naviChilds || wander.childs;
-        if (children?.length) {
-            const tree = wander instanceof SymbolRefShape ? wander.getRootData() : wander;
-            if (!tree) return 999;
-            if (is_circular_ref2(tree, target.id)) return 3;
+    if (is_part_of_symbol(target)) {
+        if (wander.type === ShapeType.Table || wander.type === ShapeType.Contact) return 5;
+        if (target.type === ShapeType.Symbol) {
+            const children = wander.naviChilds || wander.childs;
+            if (children?.length) {
+                const tree = wander instanceof SymbolRefShape ? wander.getRootData() : wander;
+                if (!tree) return 999;
+                if (is_circular_ref2(tree, target.id)) return 3;
+            }
         }
         if ((target as SymbolShape).isUnionSymbolShape && !is_symbol_but_not_union(wander)) return 1;
         if (wander.type === ShapeType.Symbol) return 2;
@@ -41,6 +44,7 @@ export function unable_to_migrate(target: Shape, wander: Shape): number {
     }
     return 0;
 }
+
 
 /**
  * @description 立刻把一组图形从一个容器移动到另一个容器
