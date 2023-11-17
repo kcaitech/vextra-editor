@@ -305,6 +305,7 @@ export function init_insert_textshape(context: Context, mousedownOnPageXY: PageX
         context.textSelection.selectText(0, (new_shape as TextShape).text.length, (new_shape as TextShape).text);
     }
     context.selection.setSelectionNewShapeStatus(true);
+    context.workspace.notify(WorkSpace.INIT_EDITOR);
     workspace.creating(false);
     context.tool.setAction(Action.AutoV);
     context.cursor.reset();

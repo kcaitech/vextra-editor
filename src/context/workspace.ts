@@ -5,6 +5,7 @@ import {Clipboard} from "@/utils/clipboard";
 import {PageXY} from "./selection";
 import {Action} from "@/context/tool";
 import {PointsOffset} from "@/utils/assist";
+
 interface Point {
     x: number
     y: number
@@ -230,6 +231,7 @@ export class WorkSpace extends Watchable(Object) {
     get cache_map() {
         return this.__cache_map;
     }
+
     clear_cache_map() {
         this.__cache_map = undefined;
     }

@@ -22,6 +22,7 @@ interface Props {
 }
 
 const props = defineProps<Props>();
+type ProtoInput = InstanceType<typeof TextInput>;
 
 watch(() => props.shape, (value, old) => {
     if (old.text.length === 1) clear_null_shape(old);
@@ -36,6 +37,7 @@ const boundrectPath = ref("");
 const bounds = reactive({left: 0, top: 0, right: 0, bottom: 0}); // viewbox
 const editing = ref<boolean>(false); // 是否进入路径编辑状态
 const visible = ref<boolean>(true);
+const input = ref<ProtoInput>(null);
 
 function update() {
     if (!props.context.workspace.shouldSelectionViewUpdate) return;
@@ -160,6 +162,7 @@ function onMouseUp(e: MouseEvent) {
     props.context.workspace.setCtrl('page');
     document.removeEventListener("mousemove", onMouseMove);
     document.removeEventListener("mouseup", onMouseUp);
+    input.value.attention();
 }
 
 function mouseenter() {
