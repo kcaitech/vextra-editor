@@ -1,15 +1,15 @@
 <template>
-    <div v-if="!noNetwork" class="container">
+    <div v-if="!noNetwork" class="container" style="height: calc(100vh - 224px);">
         <div class="hearder-container">
             <div class="title" v-for="(item, index) in  titles " :key="index">
                 <div class="content">{{ item }}
                     <div v-if="index === 1" class="shrink" @click.stop="fold = !fold, folds = false">
                         <svg-icon icon-class="down"
-                            :style="{ transform: fold ? 'rotate(-180deg)' : 'rotate(0deg)' }"></svg-icon>
+                            :style="{ transform: fold ? 'rotate(-180deg)' : 'rotate(0deg)', color: '#000000' }"></svg-icon>
                         <transition name="el-zoom-in-top">
                             <ul class="filterlist2" v-if="fold" ref="menu">
-                                <li class="item" v-for="(item, index) in  filteritems " :key="index"
-                                    @click.stop="filterEvent(index)">
+                                <li class="item" :style="{ color: index == fontName ? '#000000' : '' }"
+                                    v-for="(item, index) in  filteritems " :key="index" @click.stop="filterEvent(index)">
                                     <div class="choose" :style="{ visibility: index == fontName ? 'visible' : 'hidden' }">
                                     </div>
                                     {{ item }}
@@ -21,36 +21,34 @@
             </div>
         </div>
         <div class="main">
-            <el-scrollbar height="100%">
+            <el-scrollbar v-if="SearchList.length !== 0" height="100%">
                 <div class="member-item"
                     v-for=" { team_member: { nickname: teamname }, user: { nickname, id, avatar }, perm_type }  in  SearchList "
                     :key="id">
                     <div class="member-name">
-                        <img :src="avatar" alt="icon"
-                            style="width: 20px;height: 20px;;border-radius: 50%;margin-right: 4px;">
-                        {{ teamname }}
-                        <div v-if="usertype(perm_type, id) || (perm_type === 3 && userID === id)" class="changeName">
+                        <img :src="avatar" alt="icon" style="width: 32px;height: 32px;border-radius: 50%;">
+                        <div class="nametext"> {{ teamname }}</div>
+                        <div v-if="perm_type < usertype2 || id === userID" class="changeName"
+                            @click="() => openDialog(teamname, id)">
                             <el-tooltip class="tips" effect="dark" :content="`${t('teammember.change_name')}`"
                                 placement="bottom" :show-after="600" :offset="10" :hide-after="0">
-                                <button class="button" @click="() => openDialog(teamname, id)">{{
-                                    t('teammember.modify')
-                                }}</button>
+                                <svg-icon icon-class="editname"></svg-icon>
                             </el-tooltip>
                         </div>
                     </div>
                     <div class="member-jurisdiction">
                         <div class="member-jurisdiction-container">
                             {{ membertype(perm_type) }}
-                            <div v-if="usertype(perm_type, id)" class="shrink"
-                                @click.stop="folds = !folds, fold = false, userid = id">
+                            <div v-if="perm_type < usertype2 || (id === userID && usertype2 != TeamPermisssions.creator)"
+                                class="shrink" @click.stop="folds = !folds, fold = false, userid = id">
                                 <svg-icon icon-class="down"
                                     :style="{ transform: folds && userid === id ? 'rotate(-180deg)' : 'rotate(0deg)' }"></svg-icon>
                                 <transition name="el-zoom-in-top">
                                     <ul class="filterlist" v-if="userid === id && folds" ref="listmenu">
                                         <li class="item"
-                                            v-for="(item, index) in  typeitems((userperm === 2 && userID === id) ? 1 : userperm) "
+                                            v-for="(item, index) in typeitems((usertype2 === TeamPermisssions.adminstartors && userID === id) ? 1 : usertype2) "
                                             :key="index" @click.stop="itemEvent(item, teamID, id, perm_type, nickname)">
-                                            <div v-if="true" class="choose"
+                                            <div class="choose"
                                                 :style="{ visibility: item === membertype(perm_type) ? 'visible' : 'hidden' }">
                                             </div>
                                             {{ item }}
@@ -75,12 +73,12 @@
                         </span>
                     </template>
                 </el-dialog>
-                <div v-if="SearchList.length === 0" class="empty">
-                    <svg-icon v-if="searchvalue !== '' || fontName !== 4" icon-class="member"></svg-icon>
-                    <div v-html="emptytips"></div>
-                </div>
                 <Loading v-if="SearchList.length === 0 && searchvalue === '' && fontName === 4" :size="20" />
             </el-scrollbar>
+            <div v-else class="empty">
+                <svg-icon v-if="searchvalue !== '' || fontName !== 4" icon-class="member"></svg-icon>
+                <div v-html="emptytips"></div>
+            </div>
         </div>
     </div>
     <NetworkError v-else @refresh-doc="GetteamMember"></NetworkError>
@@ -105,11 +103,20 @@ import ProjectDialog from './ProjectDialog.vue';
 import Loading from '../common/Loading.vue';
 import { setTeamMemberNicknameAPI } from '@/request/team';
 
+
 interface Emits {
     (e: 'update'): void
 }
 interface Props {
     searchvalue?: string
+}
+
+enum TeamPermisssions {
+    onlyRead = 0,
+    edit = 1,
+    adminstartors = 2,
+    creator = 3,
+    noPermisssion = 255
 }
 
 const props = withDefaults(defineProps<Props>(), {
@@ -127,7 +134,6 @@ const titles = [t('teammember.name'), t('teammember.team_permission')]
 const filteritems = [t('teammember.Readonly'), t('teammember.editable'), t('teammember.manager'), t('teammember.creator'), t('teammember.all')]
 const noNetwork = ref(false)
 const teammemberdata = ref<any[]>([])
-const memberdata = ref<any[]>([])
 const fold = ref(false)
 const folds = ref(false)
 const fontName = ref(4)
@@ -152,7 +158,6 @@ const openDialog = (name: string, userid: string) => {
     })
 };
 
-const loading = ref(true)
 const { teamID, teamData, upDateTeamData, is_team_upodate, teamUpdate } = inject('shareData') as {
     teamID: Ref<string>;
     teamData: Ref<[{
@@ -166,33 +171,6 @@ const { teamID, teamData, upDateTeamData, is_team_upodate, teamUpdate } = inject
     upDateTeamData: (data: any[]) => void;
     is_team_upodate: Ref<boolean>;
     teamUpdate: (b: boolean) => void;
-}
-
-const userperm = ref()
-const usertype = (p: number, id: string) => {
-    const text = teammemberdata.value.find((item) => item.user.id === userID.value)
-    userperm.value = text.perm_type
-    if (text.perm_type === 3) {
-        if (text.perm_type === p) {
-            return false
-        } else {
-            return true
-        }
-    } else if (text.perm_type === 2) {
-        if (text.perm_type === p && userID.value === id) {
-            return true
-        } else if (p === 2 || p === 3) {
-            return false
-        } else {
-            return true
-        }
-    } else if (text.perm_type === 1 || text.perm_type === 0) {
-        if (userID.value === id) {
-            return true
-        } else {
-            return false
-        }
-    }
 }
 
 const typeitems = (num: number) => {
@@ -209,7 +187,6 @@ const typeitems = (num: number) => {
             return null
     }
 }
-
 
 const emptytips = computed(() => {
     return props.searchvalue !== '' ? '没有找到该成员' : fontName.value !== 4 ? `没有成员属于<b>[${filteritems[fontName.value]}]</b>权限类型` : ''
@@ -263,22 +240,27 @@ const GetteamMember = async () => {
 
 const membertype = (num: number) => {
     switch (num) {
-        case 0:
+        case TeamPermisssions.onlyRead:
             return t('teammember.Readonly')
-        case 1:
+        case TeamPermisssions.edit:
             return t('teammember.editable')
-        case 2:
+        case TeamPermisssions.adminstartors:
             return t('teammember.manager')
-        case 3:
+        case TeamPermisssions.creator:
             return t('teammember.creator')
         default:
             return null
     }
 }
 
+const usertype2 = ref()
+
 //通过计算属性，筛选出与搜索匹配的成员
 const SearchList = computed(() => {
     return ListData.value.filter((el: any) => {
+        if (el.user.id === userID.value) {
+            usertype2.value = el.perm_type
+        }
         return el.user.nickname.toLowerCase().includes(props.searchvalue.toLowerCase())
     })
 })
@@ -291,7 +273,6 @@ const ListData = computed(() => {
             const item = teammemberdata.value[i];
             if (item.perm_type !== fontName.value) continue;
             if (!item.team_member.nickname) item.team_member.nickname = item.user.nickname;
-            // if (item.team_member.nickname) item.user.nickname = item.team_member.nickname;
             list.push(item);
         }
         return list;
@@ -300,7 +281,6 @@ const ListData = computed(() => {
         for (let i = 0; i < teammemberdata.value.length; i++) {
             const item = teammemberdata.value[i];
             if (!item.team_member.nickname) item.team_member.nickname = item.user.nickname;
-            // if (item.team_member.nickname) item.user.nickname = item.team_member.nickname;
             list.push(item);
         }
         return list;
@@ -431,17 +411,6 @@ const itemEvent = (item: string, teamid: string, userid: string, perm_type: numb
     }
 }
 
-const handleEventitem = (id: string) => {
-    if (fold.value) {
-        fold.value = false
-        folds.value = !folds.value
-        userid.value = id
-    } else {
-        folds.value = !folds.value
-        userid.value = id
-    }
-}
-
 // 修改名称 --确认
 async function confirm_to_modify_name() {
     if (confirmLoading.value) { return; }
@@ -518,45 +487,46 @@ onUnmounted(() => {
 </script>
 <style lang="scss" scoped>
 .container {
-    height: 100%;
+    margin: 0 8px 0px 8px;
 
     .hearder-container {
         display: flex;
+        gap: 16px;
 
         .title {
-            width: 200px;
-            font-weight: 600;
+            width: 362px;
+            min-width: 200px;
             display: flex;
             align-items: center;
-            font-size: 14px;
 
             .content {
+                font-size: 12px;
                 display: flex;
+                gap: 4px;
+                align-items: center;
                 justify-content: center;
+                color: rgba(168, 168, 168, 1);
+                white-space: nowrap;
 
                 .shrink {
-                    width: 16px;
-                    height: 16px;
-                    float: right;
-                    line-height: 25px;
+                    width: 14px;
+                    height: 14px;
 
                     >svg {
                         transition: 0.5s;
                         width: 100%;
                         height: 100%;
-                        margin-left: 4px;
                     }
 
                     .filterlist2 {
                         position: relative;
                         list-style-type: none;
-                        font-size: 14px;
-                        font-weight: 500;
+                        font-size: 12px;
                         min-width: 72px;
                         margin: 0;
                         padding: 0 8px;
-                        right: 72px;
-                        border-radius: 4px;
+                        right: 65px;
+                        border-radius: 6px;
                         background-color: white;
                         box-shadow: 0px 8px 16px 0px rgba(0, 0, 0, 0.2);
                         z-index: 3;
@@ -574,10 +544,9 @@ onUnmounted(() => {
                         }
 
                         .item {
-                            cursor: pointer;
                             display: flex;
                             align-items: center;
-                            line-height: 32px;
+                            line-height: 24px;
                         }
                     }
                 }
@@ -590,64 +559,64 @@ onUnmounted(() => {
         display: flex;
         align-items: center;
         font-size: 14px;
-        height: 40px;
-        border-radius: 4px;
-        margin: 6px 0;
+        height: 56px;
+        gap: 16px;
     }
 
     .member-name {
-        width: 200px;
+        color: #333333;
+        width: 362px;
+        min-width: 200px;
         display: flex;
+        align-items: center;
+        gap: 8px;
+
+        .nametext {
+            white-space: nowrap;
+        }
 
         .changeName {
-            margin-left: auto;
-            height: 10px;
+            display: flex;
+            align-items: center;
+            border-radius: 6px;
+            padding: 4px;
 
 
-            .button {
-                width: 50px;
-                height: 20px;
-                margin: 0px 0 20px 0;
-                border: none;
-                font-size: 10px;
-                letter-spacing: 1px;
-                font-weight: 500;
-                border-radius: 6px;
-                display: flex;
-                justify-content: center;
-                align-items: center;
-                cursor: pointer;
-                background-color: #9775fa;
-                color: #ffffff;
-
-                &:hover {
-                    background-color: #9675fadc;
-                }
+            svg {
+                width: 14px;
+                height: 14px;
+                color: #333333;
+                outline: none;
             }
+
+            &:hover {
+                background-color: #F7F7F9;
+            }
+
         }
     }
 
     .member-jurisdiction {
-        width: 200px;
+        width: 362px;
+        min-width: 200px;
         display: flex;
-
-
 
         .member-jurisdiction-container {
             display: flex;
             justify-content: center;
+            align-items: center;
+            color: #333333;
+            gap: 4px;
+            white-space: nowrap;
 
             .shrink {
-                width: 16px;
-                height: 16px;
-                float: right;
-                line-height: 25px;
+                width: 14px;
+                height: 14px;
 
                 >svg {
                     transition: 0.5s;
                     width: 100%;
                     height: 100%;
-                    margin-left: 4px;
                 }
 
                 .filterlist {
@@ -656,13 +625,12 @@ onUnmounted(() => {
                     flex-direction: column;
                     justify-content: center;
                     list-style-type: none;
-                    font-size: 14px;
-                    font-weight: 500;
+                    font-size: 12px;
                     min-width: 88px;
                     margin: 0;
-                    padding: 0 8px;
-                    right: 64px;
-                    border-radius: 4px;
+                    padding: 0 6px;
+                    right: 72px;
+                    border-radius: 6px;
                     background-color: white;
                     box-shadow: 0px 8px 16px 0px rgba(0, 0, 0, 0.2);
                     z-index: 2;
@@ -670,8 +638,8 @@ onUnmounted(() => {
                     .item {
                         display: flex;
                         align-items: center;
-                        cursor: pointer;
-                        line-height: 32px;
+                        line-height: 24px;
+                        margin-right: 12px;
 
                         .choose {
                             box-sizing: border-box;
@@ -701,7 +669,7 @@ onUnmounted(() => {
 }
 
 .main {
-    height: calc(100vh - 96px - 56px - 56px - 20px);
+    height: calc(100vh - 224px - 16.5px);
 
     .change {
         outline: none;
@@ -764,17 +732,17 @@ onUnmounted(() => {
     }
 
     .empty {
+        height: 100%;
         display: flex;
         align-items: center;
         justify-content: center;
-        margin-top: 25%;
         font-size: 14px;
+        font-weight: 500;
+        gap: 4px;
 
         svg {
-            color: #9775fa;
             width: 22px;
             height: 22px;
-            margin-right: 4px;
         }
     }
 }

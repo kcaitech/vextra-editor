@@ -376,6 +376,8 @@ const getDocumentInfo = async () => {
             window.document.title = file_name.length > 8 ? `${file_name.slice(0, 8)}... - ProtoDesign` : `${file_name} - ProtoDesign`;
             context = new Context(document, coopRepo);
             context.workspace.setDocumentPerm(perm)
+
+            
             getDocumentAuthority();
             getUserInfo()
             
@@ -433,6 +435,7 @@ async function upload(projectId: string) {
         // todo 文档操作通道开启失败处理
     }
     getDocumentAuthority().then(async _ => {
+    
         if(!context) return;
         if(permType.value === 3) context.communication.docResourceUpload.start(token, doc_id);
         if(permType.value && permType.value >= 2) context.communication.docCommentOp.start(token, doc_id);

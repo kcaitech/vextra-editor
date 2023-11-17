@@ -3,7 +3,7 @@
         <template #default="{ height, width }">
             <el-table-v2 v-if="height != 0" :columns="columns" :data=props.data :width="width" :height="height"
                 :row-class="rowClass" :row-event-handlers="rowHandleClick" @scroll="rightmenu" :header-height="24"
-                :row-height="40" :header-class="headerClass">
+                :row-height="56" :header-class="headerClass">
                 <template v-if="loading" #overlay>
                     <div class="el-loading-mask" style="display: flex; align-items: center; justify-content: center">
                         <Loading :size="20" />
@@ -12,11 +12,9 @@
                 <template #empty>
                     <div v-if="props.addfile! > 2 && !loading && !noNetwork" class="datanull">
                         <p>{{ t('Createteam.projectfilenull') }}</p>
-                        <button type="button" @click.stop="newProjectFill">{{ t('home.new_file') }}</button>
                     </div>
                     <div v-else-if="props.addproject! > 0 && !loading && !noNetwork" class="datanull">
                         <p>{{ props.nulldata ? t('search.search_results') : t('projectlist.datanull') }}</p>
-                        <button type="button" @click.stop="onAddproject">{{ t('projectlist.addproject') }}</button>
                     </div>
                     <div v-else-if="!noNetwork && empty" class="flex items-center justify-center h-100%">
                         <el-empty :style="{ 'height': height - 50 + 'px' }" :description="t('home.table_empty_tips')" />
@@ -36,6 +34,7 @@ import type { Column, RowClassNameGetter } from 'element-plus'
 import { useI18n } from 'vue-i18n'
 import NetworkError from '@/components/NetworkError.vue'
 import Loading from '../common/Loading.vue';
+import Bus from './bus'
 const props = defineProps<{
     data: any,
     iconlist: any,
@@ -54,13 +53,13 @@ const loading = ref(true)
 const empty = ref(false)
 const net = ref<HTMLDivElement>()
 const user_id = localStorage.getItem('userId');
-
-
+const x = ref(0)
 
 let timer: any
 watch(() => props.data, () => {
     clearTimeout(timer)
     if (props.data[0]) {
+
         loading.value = false
 
     } else {
@@ -83,7 +82,6 @@ watch([() => props.noNetwork, net], (newV) => {
     }
 })
 
-
 const emits = defineEmits([
     'rightMeun',
     'updatestar',
@@ -95,8 +93,6 @@ const emits = defineEmits([
     'exit_share',
     'dbclickopen',
     'refreshDoc',
-    'newProjectFill',
-    'onAddproject',
     'cancelfixed',
     'skipproject',
     'onexitproject'
@@ -109,13 +105,6 @@ const scrolltop = ref(0)
 const refreshDoc = () => {
     emits('refreshDoc')
 }
-const newProjectFill = () => {
-    emits('newProjectFill');
-}
-
-const onAddproject = () => {
-    emits('onAddproject');
-}
 
 const rightmenu = (e: any,) => {
     const rightmenuElement = document.querySelector('.rightmenu') as HTMLElement;
@@ -127,6 +116,18 @@ const rightmenu = (e: any,) => {
     }
     x.value = e.scrollTop
 }
+
+const b = computed(() => {
+    return x.value > 0 ? false : true
+})
+
+watch(b, (newvalue) => {
+    if (newvalue) {
+        Bus.emit('showbnt', newvalue)
+    } else {
+        Bus.emit('showbnt', newvalue)
+    }
+})
 
 const rowHandleClick = ({
     onclick: ({ rowData }: any) => {
@@ -170,13 +171,9 @@ const rowClass = ({ rowData }: Parameters<RowClassNameGetter<any>>[0]) => {
         }
 }
 
-const x = ref(0)
-
 const headerClass = computed(() => {
     return x.value > 0 ? 'test' : ''
 })
-
-
 
 const columns: Column<any>[] = [
     {
@@ -185,15 +182,47 @@ const columns: Column<any>[] = [
         width: 400,
         minWidth: 100,
         dataKey: 'document',
+        class: 'filename',
         align: 'left',
-        cellRenderer: ({ cellData: { name } }) => <span>{name}</span>
+        cellRenderer: ({ rowData }) => (
+            <>
+                <el-tooltip content={rowData.document.name} show-after={1000} hide-after={0}>
+                    <span>{rowData.document.name}</span>
+                </el-tooltip>
+                {props.iconlist.includes('star') && !rowData.document_favorites.is_favorite && (
+                    <el-icon style={"color:rgba(51, 51, 51, 1)"}
+                        onDblclick={(event: MouseEvent) => event.stopPropagation()}
+                        onClick={(event: MouseEvent) => {
+                            emits('updatestar', rowData)
+                        }}>
+                        <el-tooltip content={t('home.star')} show-after={1000} hide-after={0}>
+                            <svg-icon class="svg star" icon-class="star-normal1" >
+                            </svg-icon>
+                        </el-tooltip>
+                    </el-icon>
+                )}
+
+                {props.iconlist.includes('star') && rowData.document_favorites.is_favorite && (
+                    <el-icon style={"color: rgba(255, 185, 46, 1);display:flex;"}
+                        onDblclick={(event: MouseEvent) => event.stopPropagation()}
+                        onClick={(event: MouseEvent) => {
+
+                            emits('updatestar', rowData)
+                        }}>
+                        <el-tooltip content={t('home.de_star')} show-after={1000} hide-after={0}>
+                            <svg-icon class="svg star" icon-class="star-select2" >
+                            </svg-icon>
+                        </el-tooltip>
+                    </el-icon>
+                )}
+            </>)
     },
 
     {
         key: 'time',
         title: `${props.iconlist.includes('restore') ? t('home.delete_file_time') : t('home.modification_time')}`,
         dataKey: 'document',
-        width: 400,
+        width: 200,
         minWidth: 100,
         align: 'left',
         cellRenderer: ({ rowData: { document: { deleted_at, created_at }, document_access_record: { last_access_time, id } } }) => {
@@ -221,7 +250,7 @@ const columns: Column<any>[] = [
         key: 'size',
         dataKey: 'document',
         title: `${t('home.size')}`,
-        width: 400,
+        width: 100,
         minWidth: 100,
         align: 'left',
         cellRenderer: ({ cellData: { size } }) => <span>{size}</span>,
@@ -230,40 +259,12 @@ const columns: Column<any>[] = [
         key: 'operations',
         title: `${t('home.operation')}`,
         dataKey: 'document',
-        width: 400,
+        width: 100,
         minWidth: 100,
         class: 'other',
         align: 'left',
         cellRenderer: ({ rowData }) => (
             <>
-                {props.iconlist.includes('star') && !rowData.document_favorites.is_favorite && (
-                    <el-icon
-                        onDblclick={(event: MouseEvent) => event.stopPropagation()}
-                        onClick={(event: MouseEvent) => {
-
-                            emits('updatestar', rowData)
-                        }}>
-                        <el-tooltip content={t('home.star')} show-after={1000} hide-after={0}>
-                            <svg-icon class="svg star" icon-class="star" >
-                            </svg-icon>
-                        </el-tooltip>
-                    </el-icon>
-                )}
-
-                {props.iconlist.includes('star') && rowData.document_favorites.is_favorite && (
-                    <el-icon style={"display: inline-block"}
-                        onDblclick={(event: MouseEvent) => event.stopPropagation()}
-                        onClick={(event: MouseEvent) => {
-
-                            emits('updatestar', rowData)
-                        }}>
-                        <el-tooltip content={t('home.de_star')} show-after={1000} hide-after={0}>
-                            <svg-icon class="svg star" icon-class="stared" >
-                            </svg-icon>
-                        </el-tooltip>
-                    </el-icon>
-                )}
-
                 {props.iconlist.includes('share') && (
                     <el-icon
                         onDblclick={(event: MouseEvent) => event.stopPropagation()}
@@ -428,15 +429,16 @@ watchEffect(() => {
         },)
     }
     if (props.projectshare) {
-        columns.splice(0, columns.length, {
-            key: 'name',
-            title: t('Createteam.project_name'),
-            width: 400,
-            minWidth: 100,
-            dataKey: 'project',
-            align: 'left',
-            cellRenderer: ({ rowData: { project: { name } } }) => <span>{name}</span>
-        },
+        columns.splice(0, columns.length,
+            {
+                key: 'projectname',
+                title: t('Createteam.project_name'),
+                width: 300,
+                minWidth: 100,
+                dataKey: 'project',
+                align: 'left',
+                cellRenderer: ({ rowData: { project: { name } } }) => <span>{name}</span>
+            },
             {
                 key: 'description',
                 title: t('Createteam.project_description'),
@@ -449,7 +451,7 @@ watchEffect(() => {
             {
                 key: 'creator',
                 title: t('Createteam.creator'),
-                width: 400,
+                width: 200,
                 minWidth: 100,
                 dataKey: 'creator',
                 align: 'left',
@@ -458,7 +460,7 @@ watchEffect(() => {
             {
                 key: 'name',
                 title: t('home.operation'),
-                width: 400,
+                width: 120,
                 minWidth: 100,
                 dataKey: 'project',
                 class: 'other',
@@ -473,20 +475,20 @@ watchEffect(() => {
                                     emits('cancelfixed', rowData, rowData.is_favor, rowIndex)
                                 }}>
                                 <el-tooltip content={t('Createteam.fixed')} show-after={1000} hide-after={0}>
-                                    <svg-icon icon-class="fixed"></svg-icon>
+                                    <svg-icon icon-class="fixed-normal"></svg-icon>
                                 </el-tooltip>
                             </el-icon>
                         )}
 
                         {rowData.is_favor && (
-                            <el-icon style={"display: inline-block"}
+                            <el-icon style={"color: rgba(24, 120, 245, 1);display:flex;"}
                                 onDblclick={(event: MouseEvent) => event.stopPropagation()}
                                 onClick={(event: MouseEvent) => {
                                     event.stopPropagation()
                                     emits('cancelfixed', rowData, rowData.is_favor, rowIndex)
                                 }}>
                                 <el-tooltip content={t('Createteam.cancelFixed')} show-after={1000} hide-after={0}>
-                                    <svg-icon icon-class="fixed-cancel"></svg-icon>
+                                    <svg-icon icon-class="fixed-icon"></svg-icon>
                                 </el-tooltip>
                             </el-icon>
                         )}
@@ -538,11 +540,30 @@ watchEffect(() => {
 <style lang="scss" scoped>
 :deep(.other) {
     color: var(--active-color);
+    display: flex;
+    gap: 8px;
 
     .el-icon {
-        font-size: 20px;
-        margin-right: 6px;
-        padding: 2px;
+        font-size: 28px;
+        padding: 5px;
+        display: none;
+        border-radius: 6px;
+
+        svg {
+            outline: none;
+        }
+    }
+}
+
+:deep(.filename) {
+    color: var(--active-color);
+    display: flex;
+    gap: 8px;
+
+    .el-icon {
+        font-size: 16px;
+        padding: 3px 2px;
+        border-radius: 2px;
         display: none;
 
         svg {
@@ -556,19 +577,26 @@ watchEffect(() => {
 }
 
 :deep(.el-table-v2__header) {
+    font-size: 12px !important;
     height: 26px !important;
 }
 
-:deep(.test) {
-    box-shadow: 0 0 4px 0 rgb(0, 0, 0, 0.1) !important;
+:deep(.el-table-v2__header-cell) {
+    font-weight: 500 !important;
 }
+
+// :deep(.test) {
+//     box-shadow: 0 0 4px 0 rgb(0, 0, 0, 0.1) !important;
+// }
 
 :deep(.el-table-v2__row) {
     display: flex;
     justify-content: space-between;
     border-bottom: 1px solid white;
     border-top: 1px solid white;
+    border-radius: 8px;
     will-change: top;
+    transition: none !important;
 }
 
 :deep(.el-table-v2__header-row) {
@@ -579,29 +607,26 @@ watchEffect(() => {
 }
 
 :deep(.el-table-v2__row:hover) {
-    border-radius: 4px;
-    background-color: #f3f0ff;
-
-    // border: none;
+    background-color: rgba(247, 247, 249, 1);
 
     .el-icon {
-        display: block;
+        display: flex;
+        align-items: center;
 
         &:hover {
-            animation: el-icon 0.3s ease;
-            transform: scale(1.2);
+            background-color: rgba(235, 235, 237, 1);
             cursor: pointer;
         }
 
         &:active {
-            color: #7950f2;
+            color: #1878F5;
         }
     }
 }
 
 :deep(.selected) {
-    background-color: #e5dbff !important;
-    border-radius: 4px !important;
+    background-color: rgba(24, 120, 245, 0.1) !important;
+
 }
 
 :deep(span) {
@@ -610,38 +635,17 @@ watchEffect(() => {
     text-overflow: ellipsis;
     color: #606266;
 }
-
-@keyframes el-icon {
-    0% {
-        transform: scale(1);
-    }
-
-    100% {
-        transform: scale(1.2);
-    }
+:deep(.el-table-v2__empty){
+    height: 100%;
+    display: flex;
+    align-items: center;
+    justify-content: center;
 }
-
 .datanull {
     display: flex;
     flex-direction: column;
     align-items: center;
-    margin-top: 25%;
-
-    button {
-        cursor: pointer;
-        border: none;
-        width: 80px;
-        height: 32px;
-        border-radius: 4px;
-        background-color: #9775fa;
-        box-shadow: 1px 1px 3px #b1b1b1, -1px -1px 3px #b1b1b1;
-        box-sizing: border-box;
-        transition: all 0.5s ease-out;
-        color: white;
-
-        &:hover {
-            background-color: rgba(150, 117, 250, 0.862745098);
-        }
-    }
+    font-size: 14px;
+    font-weight: 600;
 }
 </style>

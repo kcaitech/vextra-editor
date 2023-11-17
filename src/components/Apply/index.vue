@@ -1,5 +1,5 @@
 <script lang="ts" setup>
-import { ref, watch, onMounted, onUnmounted, watchEffect } from 'vue'
+import { ref, watch, onMounted, onUnmounted } from 'vue'
 import { router } from '../../router'
 import { useRoute } from 'vue-router'
 import * as share_api from '../../request/share'
