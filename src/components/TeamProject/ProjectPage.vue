@@ -59,7 +59,7 @@
                     <svg-icon icon-class="memberlist-normal"></svg-icon>
                 </div>
             </Tooltip>
-            <button type="button" v-if="currentProject[0].self_perm_type > 2">
+            <button type="button" v-if="currentProject[0].self_perm_type > 2" @click="newFile">
                 <svg-icon icon-class="addfile-icon"></svg-icon>
                 {{ t('home.new_file') }}
             </button>
@@ -76,7 +76,8 @@
             </template>
         </ul>
     </div>
-    <ProjectFillList v-if="itemid === 0 && currentProject[0]" :currentProject="currentProject[0]"></ProjectFillList>
+    <ProjectFillList ref="childComponentRef" v-if="itemid === 0 && currentProject[0]" :currentProject="currentProject[0]">
+    </ProjectFillList>
     <ProjectRecycleBin v-if="itemid === 1 && currentProject[0]" :currentProject="currentProject[0]"></ProjectRecycleBin>
     <ProjectAccessSetting v-if="projectSettingDialog" :showcontainer="showcontainer" :title="t('Createteam.membertip')"
         :data="currentProject[0]" width="500px" @closeDialog="closeDialog" />
@@ -93,7 +94,7 @@
         @confirm="ExitProject"></ProjectDialog>
 </template>
 <script setup lang="ts">
-import { Ref, nextTick, inject, ref, onMounted, watch, onUnmounted } from 'vue'
+import { Ref, nextTick, inject, ref, onMounted, watch, onUnmounted, DefineComponent } from 'vue'
 import { useRoute } from 'vue-router'
 import { useI18n } from 'vue-i18n'
 import { router } from '@/router'
@@ -133,7 +134,7 @@ const showcontainer = ref(false)
 const elwidth = ref()
 const elleft = ref()
 let menuItem: string[] = ['visit'];
-
+const childComponentRef = ref()
 
 const { projectList, saveProjectData, is_favor, favoriteList, updateFavor, is_team_upodate, teamUpdate, setMenuVisi, menuState } = inject('shareData') as {
     projectList: Ref<any[]>;
@@ -147,6 +148,10 @@ const { projectList, saveProjectData, is_favor, favoriteList, updateFavor, is_te
     setMenuVisi: (b: boolean) => void;
 
 };
+
+const newFile = () => {
+    childComponentRef.value.newProjectFill()
+}
 
 const clickEvent = (index: number, e: MouseEvent) => {
     const rect = (e.target as HTMLElement).getBoundingClientRect()

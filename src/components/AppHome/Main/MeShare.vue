@@ -19,8 +19,6 @@
         </div>
         <listrightmenu :items="items" :data="mydata" @get-doucment="getDoucment" @r-starfile="Starfile"
             @r-sharefile="Sharefile" @r-removefile="Deletefile" @ropen="openDocument" @moveFillAddress="moveFillAddress" />
-
-        <div v-if="showFileShare" class="overlay"></div>
         <FileShare v-if="showFileShare" @close="closeShare" :docId="docId" :selectValue="selectValue" :userInfo="userInfo"
             :docUserId="docUserId" @select-type="onSelectType" @switch-state="onSwitch" :shareSwitch="shareSwitch"
             :pageHeight="pageHeight">
@@ -30,13 +28,14 @@
         </MoveProjectFill>
     </div>
     <RecycleBin v-if="!active" />
+    <div v-if="showFileShare" class="overlay"></div>
 </template>
 
 <script setup lang="ts">
 import * as share_api from "@/request/share"
 import * as user_api from '@/request/users'
 import { ElMessage } from 'element-plus'
-import { onMounted, ref, onUnmounted, nextTick, watch, inject, Ref, computed, watchEffect } from "vue"
+import { onMounted, ref, onUnmounted, nextTick, watch, inject, Ref, watchEffect } from "vue"
 import { useI18n } from 'vue-i18n'
 import { router } from '@/router'
 import FileShare from '@/components/Document/Toolbar/Share/FileShare.vue'
@@ -81,7 +80,6 @@ const { projectList } = inject('shareData') as {
     projectList: Ref<any[]>;
 };
 
-
 const myfile = ref<HTMLElement>()
 const mydel = ref<HTMLElement>()
 const elwidth = ref()
@@ -116,7 +114,6 @@ async function getDoucment() {
             }
         }
         lists.value = Object.values(data)
-
     } catch (error: any) {
         if (error.data.code === 401) {
             return
@@ -247,7 +244,6 @@ const rightmenu = (e: MouseEvent, data: data) => {
     if ((e.target as HTMLElement).closest('.el-table-v2__row')) {
         rightmenu.style.display = 'block'
     }
-
     nextTick(() => {
         if (is_favorite == true) {
             el.innerHTML = t('homerightmenu.unstar')
@@ -368,6 +364,7 @@ onUnmounted(() => {
         font-weight: 500;
         letter-spacing: 2px;
         line-height: 36px;
+        white-space: nowrap;
     }
 }
 </style>

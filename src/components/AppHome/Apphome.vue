@@ -28,7 +28,6 @@ import { insertNetworkInfo } from "@/utils/message"
 import * as user_api from '@/request/users'
 
 const { t } = useI18n();
-const title = ref<any>(sessionStorage.getItem('title') ? sessionStorage.getItem('title') : t('home.recently_opened'));
 const searchtitle = ref('')
 let items = ref<any[]>([])
 const link_success = t('message.link_success')
@@ -47,7 +46,6 @@ const is_favor = ref<boolean>();
 const is_team_upodate = ref<boolean>(false);
 const activeNames = ref<any[]>([-1])
 const targetItem = ref<any[]>([])
-const recycle = ref();
 const menuState = ref(false);
 
 const updateShareData = (id: string, name: string, avatar: string, description: string, selfpermtype: number) => {

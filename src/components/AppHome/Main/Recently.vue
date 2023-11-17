@@ -113,7 +113,7 @@
 <script setup lang="ts">
 import * as user_api from '@/request/users'
 import { ElMessage } from 'element-plus'
-import { ref, onMounted, onUnmounted, nextTick, watch, inject, Ref, watchEffect } from 'vue'
+import { ref, onMounted, onUnmounted, nextTick, inject, Ref, watchEffect } from 'vue'
 import { useI18n } from 'vue-i18n'
 import { router } from '@/router'
 import FileShare from '@/components/Document/Toolbar/Share/FileShare.vue'
@@ -140,9 +140,6 @@ const mydata = ref()
 const noNetwork = ref(false)
 const iconlists = ref(['star', 'share', 'remove'])
 const is_project = ref(false);
-const emits = defineEmits<{
-    (e: 'dataUpdate', list: any[], title: string): void
-}>()
 const projectPerm = ref()
 const { projectList } = inject('shareData') as {
     projectList: Ref<any[]>;
@@ -193,7 +190,7 @@ const picker = new FilePicker('.sketch', (file) => {
 });
 
 const show = ref<boolean>(true)
-Bus.on('test1', (b: boolean) => {
+Bus.on('showbnt', (b: boolean) => {
     show.value = b
 })
 
@@ -382,17 +379,13 @@ const onSelectType = (type: number) => {
     selectValue.value = type
 }
 
-watch(lists, (Nlist) => {
-    emits('dataUpdate', Nlist, t('home.modification_time'))
-}, { deep: true })
-
-
 onMounted(() => {
     getUserdata()
     getPageHeight()
     window.addEventListener('resize', getPageHeight)
 })
 onUnmounted(() => {
+    picker.unmount();
     window.removeEventListener('resize', getPageHeight)
 })
 </script>
@@ -420,6 +413,7 @@ onUnmounted(() => {
         font-weight: 500;
         letter-spacing: 2px;
         line-height: 36px;
+        white-space: nowrap;
     }
 
     .right {
@@ -486,6 +480,7 @@ onUnmounted(() => {
         display: flex;
         align-items: center;
         justify-content: space-between;
+        gap: 8px;
         width: 260px;
         height: 56px;
         font-size: 14px;
@@ -501,6 +496,12 @@ onUnmounted(() => {
             display: flex;
             align-items: center;
             margin-left: 16px;
+
+            .text {
+                white-space: nowrap;
+                overflow: hidden;
+                text-overflow: ellipsis;
+            }
 
             svg {
                 color: rgba(51, 51, 51, 1);

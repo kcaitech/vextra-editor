@@ -39,9 +39,6 @@ const docUserId = ref('')
 const noNetwork = ref(false)
 const iconlists = ref(['star', 'share'])
 const is_project = ref(false);
-const emits = defineEmits<{
-    (e: 'dataUpdate', list: any, title: string): void
-}>();
 const projectPerm = ref()
 const { projectList } = inject('shareData') as {
     projectList: Ref<any[]>;
@@ -99,7 +96,6 @@ async function getUserdata() {
         }
     }
 }
-
 
 let searchvalue = ref('');
 const searchlists = ref<any[]>([])
@@ -226,10 +222,6 @@ const onSelectType = (type: number) => {
     selectValue.value = type
 }
 
-watch(lists, (Nlist) => {
-    emits('dataUpdate', Nlist, t('home.modification_time'))
-}, { deep: true })
-
 onMounted(() => {
     getUserdata()
     getPageHeight()
@@ -263,6 +255,7 @@ onUnmounted(() => {
         font-weight: 500;
         letter-spacing: 2px;
         line-height: 36px;
+        white-space: nowrap;
     }
 }
 </style>

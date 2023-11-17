@@ -64,7 +64,7 @@
 <script setup lang="ts">
 import { Ref, computed, inject, ref, onMounted, watch, onUnmounted } from 'vue'
 import { useRoute } from 'vue-router'
-import { Search, Close } from '@element-plus/icons-vue'
+import { Close } from '@element-plus/icons-vue'
 import ProjectList from '@/components/TeamProject/ProjectList.vue'
 import addProject from './addProject.vue'
 import TeamMember from './TeamMember.vue'

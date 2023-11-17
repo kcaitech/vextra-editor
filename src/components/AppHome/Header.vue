@@ -1,14 +1,14 @@
 <script setup lang="ts">
-import { onMounted, reactive, toRefs, ref, onUnmounted, computed, watch, nextTick, HtmlHTMLAttributes } from 'vue'
-import { Search, User, SwitchButton, Close, Bell } from '@element-plus/icons-vue'
+import { onMounted, reactive, toRefs, ref, onUnmounted, computed, watch, nextTick } from 'vue'
+import { User, SwitchButton, Close } from '@element-plus/icons-vue'
 import Inform from './Inform.vue'
 import * as share_api from '@/request/share';
 import * as team_api from '@/request/team';
 import { useI18n } from 'vue-i18n'
 import { router } from '@/router'
-
 import Loading from '../common/Loading.vue';
 import Bus from '@/components/AppHome/bus';
+
 interface Props {
     items?: Array<object>,
     title?: string | undefined
@@ -159,7 +159,7 @@ function closeclick() {
 let timer1: any
 watch(search, () => {
     clearTimeout(timer1)
-    timer1 = setTimeout(() => { 
+    timer1 = setTimeout(() => {
         Bus.emit('searchvalue', search.value)
         clearTimeout(timer1)
     }, 200);
@@ -223,7 +223,6 @@ const showinform = (el: HTMLElement, w: number) => {
         rect_y.value = y
         rect_x.value = x
     }
-
 }
 
 const showuserinfo = (el: HTMLElement, w: number) => {
@@ -400,7 +399,7 @@ const getElXY = (el: HTMLElement, elwidth: number = 0) => {
             cursor: pointer;
 
             .el-avatar {
-                background: #9775fa !important;
+                background: #0004ff !important;
                 overflow: hidden;
                 font-weight: 700;
             }
@@ -427,19 +426,6 @@ const getElXY = (el: HTMLElement, elwidth: number = 0) => {
             background-color: rgba(243, 243, 245, 1);
             border-radius: 4px;
         }
-    }
-}
-
-@keyframes searchhistory {
-    from {
-        opacity: 48px;
-        transform: scale(0.9);
-
-    }
-
-    to {
-        opacity: 38px;
-        transform: scale(1)
     }
 }
 </style>

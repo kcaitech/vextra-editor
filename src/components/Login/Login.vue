@@ -8,7 +8,6 @@ import { useI18n } from 'vue-i18n';
 import { ElMessage } from 'element-plus'
 import avatar from '@/assets/pd-logo-svg.svg';
 import { User } from '@/context/user'
-import { Path } from '@kcdesign/data'
 
 const { t } = useI18n()
 const isLoading = ref(false)
@@ -224,7 +223,6 @@ const mobileKeywords = [
             <div class="top">
                 <div class="img">
                     <img :src="avatar" alt="ProtoDesign" />
-                    <span>{{ t('system.product_name') }}</span>
                 </div>
             </div>
             <span class="Invitation_code">{{ t('home.invitation_code_tips') }}</span>
@@ -308,8 +306,8 @@ const mobileKeywords = [
             }
 
             img {
-                height: 160px;
-                width: 160px;
+                width: 300px;
+                height: 60px;
             }
         }
     }

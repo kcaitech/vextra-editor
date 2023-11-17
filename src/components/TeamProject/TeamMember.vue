@@ -21,7 +21,7 @@
             </div>
         </div>
         <div class="main">
-            <el-scrollbar height="100%">
+            <el-scrollbar v-if="SearchList.length !== 0" height="100%">
                 <div class="member-item"
                     v-for=" { team_member: { nickname: teamname }, user: { nickname, id, avatar }, perm_type }  in  SearchList "
                     :key="id">
@@ -73,12 +73,12 @@
                         </span>
                     </template>
                 </el-dialog>
-                <div v-if="SearchList.length === 0" class="empty">
-                    <svg-icon v-if="searchvalue !== '' || fontName !== 4" icon-class="member"></svg-icon>
-                    <div v-html="emptytips"></div>
-                </div>
                 <Loading v-if="SearchList.length === 0 && searchvalue === '' && fontName === 4" :size="20" />
             </el-scrollbar>
+            <div v-else class="empty">
+                <svg-icon v-if="searchvalue !== '' || fontName !== 4" icon-class="member"></svg-icon>
+                <div v-html="emptytips"></div>
+            </div>
         </div>
     </div>
     <NetworkError v-else @refresh-doc="GetteamMember"></NetworkError>
@@ -411,17 +411,6 @@ const itemEvent = (item: string, teamid: string, userid: string, perm_type: numb
     }
 }
 
-const handleEventitem = (id: string) => {
-    if (fold.value) {
-        fold.value = false
-        folds.value = !folds.value
-        userid.value = id
-    } else {
-        folds.value = !folds.value
-        userid.value = id
-    }
-}
-
 // 修改名称 --确认
 async function confirm_to_modify_name() {
     if (confirmLoading.value) { return; }
@@ -619,6 +608,7 @@ onUnmounted(() => {
             color: #333333;
             gap: 4px;
             white-space: nowrap;
+
             .shrink {
                 width: 14px;
                 height: 14px;
@@ -742,17 +732,18 @@ onUnmounted(() => {
     }
 
     .empty {
+        height: 100%;
         display: flex;
         align-items: center;
         justify-content: center;
-        margin-top: 25%;
         font-size: 14px;
+        font-weight: 500;
+        gap: 4px;
 
         svg {
-            color: #9775fa;
             width: 22px;
             height: 22px;
-            margin-right: 4px;
         }
     }
-}</style>
+}
+</style>

@@ -1,22 +1,8 @@
 <script setup lang="ts" >
-import {
-    Clock,
-    Star,
-    BottomLeft,
-    Plus,
-    Document as documents,
-    FolderOpened,
-} from '@element-plus/icons-vue'
 import { router } from '@/router'
 import { useRoute } from 'vue-router'
-import { FilePicker } from '../common/filepicker';
-import { Repository, CoopRepository, Document } from '@kcdesign/data';
-import { LzDataLocal } from '@/basic/lzdatalocal'; // todo
-import { importSketch } from '@kcdesign/data';
-import { Zip } from "@pal/zip";
-import { createDocument } from '@kcdesign/data';
+import { Repository, CoopRepository,createDocument,DocEditor } from '@kcdesign/data';
 import { useI18n } from 'vue-i18n';
-import { DocEditor } from '@kcdesign/data';
 import { Ref, inject, nextTick, onMounted, onUnmounted, ref, watch, computed, watchEffect } from 'vue';
 import * as user_api from '@/request/users'
 import * as team_api from '@/request/team'
@@ -30,15 +16,12 @@ import ProjectAccessSetting from '../TeamProject/ProjectFill/ProjectAccessSettin
 import ProjectMemberg from '../TeamProject/ProjectFill/ProjectMemberg.vue';
 import avatar from '@/assets/pd-logo-svg.svg';
 
-
-
 const { t } = useI18n();
 const route = useRoute();
 const showoverlay = ref(false);
 const teamcard = ref(false);
 const projectcard = ref(false);
 const teamid = ref('');
-// const activeNames = ref([-1]);
 const x = ref('0');
 const teamList = ref<any>([]);
 const teamDataList = ref<any[]>([]);
@@ -119,6 +102,7 @@ const closeDialog = () => {
 const exitProject = () => {
     projectMembergDialog.value = false;
 }
+
 function addChildToParent(parent: { children: any[]; }, child: any) {
     if (!parent.children) {
         parent.children = [];
@@ -145,6 +129,7 @@ const favoriteProjectList = (arr1: any[], arr2: any[]) => {
     })
     return projectList;
 }
+
 const getProjectFavoriteLists = async () => {
     try {
         const { data } = await team_api.getProjectFavoriteListsAPI()
@@ -158,38 +143,6 @@ const getProjectFavoriteLists = async () => {
     } catch (error) {
         console.log(error);
     }
-}
-
-const picker = new FilePicker('.sketch', (file) => {
-    if (!file) return;
-    const lzdata = new LzDataLocal(new Zip(file));
-    const repo = new Repository();
-    importSketch(file.name, lzdata, repo).then((document: Document) => {
-        window.document.title = document.name;
-        const coopRepo = new CoopRepository(document, repo);
-        (window as any).skrepo = coopRepo;
-        (window as any).sketchDocument = document;
-        router.push({ name: 'document' });
-    })
-});
-
-function newFile() {
-    if (route.name === 'ProjectPage') {
-        const perm = projectList.value.filter(item => item.project.id === route.params.id)[0].self_perm_type;
-        if (perm > 2) {
-            localStorage.setItem('project_id', route.params.id as string);
-        }
-    }
-    const repo = new Repository();
-    const nd = createDocument(t('system.new_file'), repo);
-    const coopRepo = new CoopRepository(nd, repo)
-    const editor = new DocEditor(nd, coopRepo);
-    const page = editor.create(t('system.page1'));
-    editor.insert(0, page);
-    window.document.title = nd.name;
-    (window as any).skrepo = coopRepo;
-    (window as any).sketchDocument = nd;
-    router.push({ name: 'document' });
 }
 
 function Setindex(index: any, title: any) {
@@ -605,7 +558,6 @@ onUnmounted(() => {
     if (timer) {
         clearInterval(timer)
     }
-    picker.unmount();
 })
 
 </script>

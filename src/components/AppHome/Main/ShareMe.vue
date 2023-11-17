@@ -13,7 +13,6 @@
         :userInfo="userInfo" @select-type="onSelectType" @switch-state="onSwitch" :shareSwitch="shareSwitch"
         :pageHeight="pageHeight" :projectPerm="projectPerm">
     </FileShare>
-
     <div v-if="showFileShare" class="overlay"></div>
 </template>
 <script setup lang="ts">
@@ -47,9 +46,6 @@ interface data {
 
 const items = ['open', 'newtabopen', 'share', 'exit_share', 'target_star']
 const iconlists = ref(['star', 'share', 'EXshare'])
-const emits = defineEmits<{
-    (e: 'dataUpdate', list: any, title: string): void
-}>();
 const { t } = useI18n()
 const showFileShare = ref<boolean>(false);
 const shareSwitch = ref(true)
@@ -240,10 +236,6 @@ const onSelectType = (type: number) => {
     selectValue.value = type
 }
 
-watch(lists, (Nlist) => {
-    emits('dataUpdate', Nlist, t('home.modification_time'))
-}, { deep: true })
-
 onMounted(() => {
     ShareLists()
     getPageHeight()
@@ -277,6 +269,7 @@ onUnmounted(() => {
         font-weight: 500;
         letter-spacing: 2px;
         line-height: 36px;
+        white-space: nowrap;
     }
 }
 </style>

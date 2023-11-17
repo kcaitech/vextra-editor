@@ -28,9 +28,7 @@ const mydata = ref()
 const noNetwork = ref(false)
 let lists = ref<any[]>([])
 const iconlists = ref(['restore', 'Delete'])
-const emits = defineEmits<{
-    (e: 'dataUpdate', list: any[], title: string): void
-}>()
+
 interface data {
     document: {
         id: string
@@ -97,11 +95,6 @@ function sizeTostr(size: any) {
     return size
 }
 
-const changemargin = () => {
-    const el = document.querySelector('.el-dialog__header') as HTMLElement
-    el.style.marginRight = '0px'
-}
-
 //还原对应文件
 const Restorefile = async (data: data) => {
     const { document: { id } } = data
@@ -163,7 +156,6 @@ const rightmenu = (e: MouseEvent, data: data) => {
     if ((e.target as HTMLElement).closest('.el-table-v2__row')) {
         rightmenu.style.display = 'block'
     }
-
     docId.value = id
     mydata.value = data
 }

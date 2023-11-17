@@ -54,6 +54,8 @@ let items = ['open', 'newtabopen', 'share', 'target_star']
 const props = defineProps<{
     currentProject: any
 }>()
+
+
 const { t } = useI18n()
 const route = useRoute();
 const showFileShare = ref<boolean>(false)
@@ -70,6 +72,7 @@ const iconlists = ref(['star', 'share', 'delete_p']);
 const moveVisible = ref(false);
 const projectItem = ref<any>({});
 const is_project = ref(false);
+
 //获取服务器我的文件列表
 async function getDoucment(id: string) {
     let projectId = id
@@ -115,6 +118,10 @@ const newProjectFill = () => {
     (window as any).sketchDocument = nd;
     router.push({ name: 'document' });
 }
+
+defineExpose({
+    newProjectFill
+})
 
 const moveFillAddress = (data: any) => {
     moveVisible.value = true;

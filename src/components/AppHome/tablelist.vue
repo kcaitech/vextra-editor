@@ -12,11 +12,9 @@
                 <template #empty>
                     <div v-if="props.addfile! > 2 && !loading && !noNetwork" class="datanull">
                         <p>{{ t('Createteam.projectfilenull') }}</p>
-                        <!-- <button type="button" @click.stop="newProjectFill">{{ t('home.new_file') }}</button> -->
                     </div>
                     <div v-else-if="props.addproject! > 0 && !loading && !noNetwork" class="datanull">
                         <p>{{ props.nulldata ? t('search.search_results') : t('projectlist.datanull') }}</p>
-                        <!-- <button type="button" @click.stop="onAddproject">{{ t('projectlist.addproject') }}</button> -->
                     </div>
                     <div v-else-if="!noNetwork && empty" class="flex items-center justify-center h-100%">
                         <el-empty :style="{ 'height': height - 50 + 'px' }" :description="t('home.table_empty_tips')" />
@@ -57,7 +55,6 @@ const net = ref<HTMLDivElement>()
 const user_id = localStorage.getItem('userId');
 const x = ref(0)
 
-
 let timer: any
 watch(() => props.data, () => {
     clearTimeout(timer)
@@ -85,7 +82,6 @@ watch([() => props.noNetwork, net], (newV) => {
     }
 })
 
-
 const emits = defineEmits([
     'rightMeun',
     'updatestar',
@@ -97,8 +93,6 @@ const emits = defineEmits([
     'exit_share',
     'dbclickopen',
     'refreshDoc',
-    'newProjectFill',
-    'onAddproject',
     'cancelfixed',
     'skipproject',
     'onexitproject'
@@ -110,13 +104,6 @@ const scrolltop = ref(0)
 
 const refreshDoc = () => {
     emits('refreshDoc')
-}
-const newProjectFill = () => {
-    emits('newProjectFill');
-}
-
-const onAddproject = () => {
-    emits('onAddproject');
 }
 
 const rightmenu = (e: any,) => {
@@ -136,9 +123,9 @@ const b = computed(() => {
 
 watch(b, (newvalue) => {
     if (newvalue) {
-        Bus.emit('test1', newvalue)
+        Bus.emit('showbnt', newvalue)
     } else {
-        Bus.emit('test1', newvalue)
+        Bus.emit('showbnt', newvalue)
     }
 })
 
@@ -184,13 +171,9 @@ const rowClass = ({ rowData }: Parameters<RowClassNameGetter<any>>[0]) => {
         }
 }
 
-
-
 const headerClass = computed(() => {
     return x.value > 0 ? 'test' : ''
 })
-
-
 
 const columns: Column<any>[] = [
     {
@@ -652,28 +635,17 @@ watchEffect(() => {
     text-overflow: ellipsis;
     color: #606266;
 }
-
+:deep(.el-table-v2__empty){
+    height: 100%;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+}
 .datanull {
     display: flex;
     flex-direction: column;
     align-items: center;
-    margin-top: 25%;
-
-    button {
-        cursor: pointer;
-        border: none;
-        width: 80px;
-        height: 32px;
-        border-radius: 4px;
-        background-color: #9775fa;
-        box-shadow: 1px 1px 3px #b1b1b1, -1px -1px 3px #b1b1b1;
-        box-sizing: border-box;
-        transition: all 0.5s ease-out;
-        color: white;
-
-        &:hover {
-            background-color: rgba(150, 117, 250, 0.862745098);
-        }
-    }
+    font-size: 14px;
+    font-weight: 600;
 }
 </style>
