@@ -160,7 +160,7 @@ export class Server {
             return
         }
         const cmdId = data.cmd_id
-        if (typeof cmdId !== "string" || cmdId === "") {
+        if (typeof (cmdId as any) !== "string" || cmdId === "") {
             console.log("cmd_id参数错误", cmdId)
             return
         }
