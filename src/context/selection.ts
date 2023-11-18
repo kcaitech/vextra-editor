@@ -1,6 +1,6 @@
 import {
     exportExForm,
-    ISave4Restore,
+    ISave4Restore, PathShape,
     ShapeType,
     SymbolRefShape,
     SymbolShape,
@@ -412,6 +412,11 @@ export class Selection extends Watchable(Object) implements ISave4Restore {
         return this.selectedShapes.length === 1 && this.selectedShapes[0].type === ShapeType.Text ? this.selectedShapes[0] as TextShape : undefined;
     }
 
+    get pathshape() {
+        const s = this.selectedShapes[0];
+        return this.selectedShapes.length === 1 ? s instanceof PathShape ? s : undefined : undefined;
+    }
+
     get symbolshape() {
         return this.selectedShapes.length === 1 && this.selectedShapes[0].type === ShapeType.Symbol ? this.selectedShapes[0] as SymbolShape : false;
     }
@@ -492,9 +497,11 @@ export class Selection extends Watchable(Object) implements ISave4Restore {
         }
         return result;
     }
+
     get isNewShapeSelection() {
         return this.m_is_new_shape_selection;
     }
+
     setSelectionNewShapeStatus(v: boolean) {
         this.m_is_new_shape_selection = v;
     }

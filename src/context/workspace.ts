@@ -64,31 +64,32 @@ export enum Perm {
 }
 
 export class WorkSpace extends Watchable(Object) {
-    static MATRIX_TRANSFORMATION = 4;
-    static SELECTING = 5;
-    static TEXT_FORMAT = 6;
-    static TRANSLATING = 8;
-    static CHECKSTATUS = 9;
-    static SELECTION_VIEW_UPDATE = 12;
-    static CTRL_DISAPPEAR = 14;
-    static CTRL_APPEAR_IMMEDIATELY = 15;
-    static CTRL_APPEAR = 16;
-    static PASTE = 17;
-    static PASTE_RIGHT = 18;
-    static FREEZE = 20;
-    static THAW = 21;
-    static CLAC_ATTRI = 22;
-    static COPY = 23;
-    static HIDDEN_UI = 24;
-    static INIT_DOC_NAME = 25;
-    static ONARBOARD__TITLE_MENU = 27;
-    static BOLD = 28;
-    static UNDER_LINE = 29;
-    static ITALIC = 30;
-    static DELETE_LINE = 31;
-    static INIT_EDITOR = 32;
-    static CHANGE_NAVI = 33;
-    static PRE_EDIT = 34;
+    static MATRIX_TRANSFORMATION = 1;
+    static SELECTING = 2;
+    static TEXT_FORMAT = 3;
+    static TRANSLATING = 4;
+    static CHECKSTATUS = 5;
+    static SELECTION_VIEW_UPDATE = 6;
+    static CTRL_DISAPPEAR = 7;
+    static CTRL_APPEAR_IMMEDIATELY = 8;
+    static CTRL_APPEAR = 9;
+    static PASTE = 10;
+    static PASTE_RIGHT = 11;
+    static FREEZE = 12;
+    static THAW = 13;
+    static CLAC_ATTRI = 14;
+    static COPY = 15;
+    static HIDDEN_UI = 16;
+    static INIT_DOC_NAME = 17;
+    static ONARBOARD__TITLE_MENU = 18;
+    static BOLD = 19;
+    static UNDER_LINE = 20;
+    static ITALIC = 21;
+    static DELETE_LINE = 22;
+    static INIT_EDITOR = 23;
+    static CHANGE_NAVI = 24;
+    static PRE_EDIT = 25;
+    static PATH_EDIT_MODE = 26;
     private context: Context;
     private m_matrix: Matrix = new Matrix();
     private m_scaling: boolean = false; // 编辑器是否正在缩放图形
@@ -99,6 +100,7 @@ export class WorkSpace extends Watchable(Object) {
     private m_setting: boolean = false; // 是否正在设置属性
     private m_page_dragging: boolean = false; // 编辑器正在拖动页面
     private m_content_editing: boolean = false; // 编辑器正在内容编辑
+    private m_path_edit_mode: boolean = false;
     private m_rootId: string = 'content';
     private m_pageViewId: string = 'pageview';
     private m_pre_to_translating: boolean = false;
@@ -130,13 +132,12 @@ export class WorkSpace extends Watchable(Object) {
         this.m_clipboard = new Clipboard(context);
     }
 
-    test() {
-        const s = this.context.selection.selectedShapes[0];
-        if (!s) return console.log('选择元素');
-        const m = s.matrix2Root();
-        m.multiAtLeft(this.m_matrix);
-        const lt = m.computeCoord2(0, 0);
-        return 'frame lt:' + lt.x + ',' + lt.y
+    get is_path_edit_mode() {
+        return this.m_path_edit_mode;
+    }
+    setPathEditMode(v: boolean) {
+        this.m_path_edit_mode = v;
+        this.notify(WorkSpace.PATH_EDIT_MODE);
     }
 
     get matrix() {
@@ -207,7 +208,7 @@ export class WorkSpace extends Watchable(Object) {
     }
 
     get isEditing() {
-        return this.m_content_editing;
+        return this.m_content_editing || this.m_path_edit_mode;
     }
 
     get shouldSelectionViewUpdate() {

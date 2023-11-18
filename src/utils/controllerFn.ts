@@ -2,7 +2,7 @@ import {Context} from "@/context";
 import {message} from "./message";
 import {replace} from "./clipboard";
 import {is_parent_locked, is_parent_unvisible} from "@/utils/shapelist";
-import {getName, map_from_shapes, permIsEdit} from "./content";
+import {map_from_shapes, permIsEdit} from "./content";
 import {Action} from "@/context/tool";
 import {AsyncTransfer, GroupShape, Shape, ShapeType, TableShape} from "@kcdesign/data";
 import {ClientXY, PageXY} from "@/context/selection";

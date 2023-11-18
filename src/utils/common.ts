@@ -3,7 +3,6 @@ import { v4 as uuid } from "uuid";
 import { debounce } from 'lodash';
 import { Shape } from '@kcdesign/data';
 import { Context } from '@/context';
-import { ro } from 'element-plus/es/locale';
 // 打印
 function _debounceLog(mes: any, flag?: string) {
   console.log(flag ? `${flag} ${mes}` : mes);
