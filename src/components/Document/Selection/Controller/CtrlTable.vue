@@ -258,7 +258,7 @@ onUnmounted(() => {
         </TableSelectionView>
         <!-- 文本选区 -->
         <SelectView v-if="isEditingText()" :context="props.context" :shape="(editingCell!.cell as TextShape)"
-            :matrix="editingCellMatrix"></SelectView>
+            :matrix="editingCellMatrix" :main-notify="Selection.CHANGE_TEXT" :selection="props.context.textSelection"></SelectView>
         <!-- 列宽缩放 -->
         <BarsContainer :context="props.context" :matrix="submatrixArray" :shape="props.shape"
             :c-frame="props.controllerFrame">
@@ -280,7 +280,7 @@ onUnmounted(() => {
     </svg>
     <!-- 输入 -->
     <TextInput v-if="isEditingText()" :context="props.context" :shape="(editingCell!.cell as TextShape)"
-        :matrix="editingCellMatrix"></TextInput>
+        :matrix="editingCellMatrix" :main-notify="Selection.CHANGE_TEXT" :selection="props.context.textSelection"></TextInput>
     <!-- 小菜单 -->
     <TableCellsMenu :cells="[]" v-if="cell_menu" :context="props.context" @close="closeCellMenu"
         :position="{ x: cell_menu_posi.x, y: cell_menu_posi.y }" :cell-menu="cell_menu_type"></TableCellsMenu>

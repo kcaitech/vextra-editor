@@ -18,6 +18,7 @@ interface Props {
   color: Color
   late?: number
   top?: number
+  cell?: boolean
 }
 interface Data {
   rgba: RGBA
@@ -164,22 +165,39 @@ function triggle() {
 function colorPickerMount() {
   popoverVisible.value = true;
   props.context.menu.setupColorPicker(blockId);
+  init();
+  document_colors.value = getColorsFromDoc(props.context);
   nextTick(() => {
     if (popoverEl.value && block.value) {
       let el = popoverEl.value
       let top = Math.min(document.documentElement.clientHeight - 76 - block.value.offsetTop - el.offsetHeight, 0);
+      const p_el = block.value.getBoundingClientRect();
+      const body_h = document.body.clientHeight;
+      let p_top = p_el.top;
+      const su = body_h - p_el.top;
+      const cur_t = su - el.clientHeight;
+      
+      if (cur_t > 0) {
+        p_top = p_el.top;
+      } else {
+        p_top = p_el.top - Math.abs(cur_t - 10);
+      }
+      if (p_top - 40 < 0) {
+        p_top = 40
+      }
       if (props.top) {
         el.style.top = (top + props.top) + 'px';
       } else {
-        el.style.top = top + 'px';
+        el.style.top = p_top + 'px';
       }
+
       if (props.late) {
-        el.style.left = -(36 + el.offsetWidth + props.late) + 'px';
+        el.style.left = p_el.left - el.clientWidth - 47 - props.late + 'px';
+      } else if (props.cell) {
+        el.style.left = 0 + 'px';
       } else {
-        el.style.left = -(36 + el.offsetWidth) + 'px';
+        el.style.left = p_el.left - el.clientWidth - 47 + 'px';
       }
-      init();
-      document_colors.value = getColorsFromDoc(props.context);
     }
   })
   document.addEventListener('mousedown', quit);
@@ -744,7 +762,7 @@ onUnmounted(() => {
   font-size: var(--font-default-fontsize);
 
   .popover {
-    position: absolute;
+    position: fixed;
     width: 240px;
     box-sizing: border-box;
     background-color: #ffffff;

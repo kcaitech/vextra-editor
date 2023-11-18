@@ -1,24 +1,20 @@
-import {Shape, ShapeType, GroupShape} from '@kcdesign/data';
+import {Shape, ShapeType, GroupShape, PathShape} from '@kcdesign/data';
 import {onMounted, onUnmounted} from "vue";
 import {Context} from "@/context";
 import {Matrix} from '@kcdesign/data';
 import {ClientXY, PageXY} from "@/context/selection";
 import {fourWayWheel, Wheel, EffectType} from "@/utils/wheel";
-import {get_speed, keyboardHandle as handle} from "@/utils/controllerFn";
+import {get_speed, keyboardHandle as handle, modify_shapes} from "@/utils/controllerFn";
 import {Selection} from "@/context/selection";
-import {groupPassthrough} from "@/utils/scout";
+import {selection_penetrate} from "@/utils/scout";
 import {WorkSpace} from "@/context/workspace";
 import {AsyncTransfer} from "@kcdesign/data";
-import {debounce} from "lodash";
 import {paster_short} from '@/utils/clipboard';
-import {sort_by_layer} from '@/utils/group_ungroup';
 import {useI18n} from 'vue-i18n';
-import {map_from_shapes} from '@/utils/content';
 import {
     PointsOffset, get_apex, pre_render_assist_line
 } from '@/utils/assist';
 import {Asssit} from '@/context/assist';
-import {TaskType} from '@/context/escstack';
 import {
     add_blur_for_window,
     add_move_and_up_for_document,
@@ -27,7 +23,6 @@ import {
     end_transalte,
     gen_assist_target,
     gen_offset_points_map,
-    get_closest_container,
     get_current_position_client,
     is_ctrl_element,
     is_mouse_on_content,
@@ -41,6 +36,7 @@ import {
     shutdown_menu,
     update_comment
 } from "@/utils/mouse";
+import {migrate_immediate, migrate_once} from "@/utils/migrate";
 
 export function useControllerCustom(context: Context, i18nT: Function) {
     const matrix = new Matrix();
@@ -60,37 +56,15 @@ export function useControllerCustom(context: Context, i18nT: Function) {
     const workspace = context.workspace;
     let offset_map: PointsOffset | undefined;
 
-    function _migrate(shapes: Shape[], start: ClientXY, end: ClientXY) {
-        if (shapes.length) {
-            const pe: PageXY = matrix.computeCoord3(end);
-            const map = map_from_shapes(shapes);
-            const targetParent = selection.getClosetArtboard(pe, map);
-            const emit_migrate = get_closest_container(context, shapes[0]).id !== targetParent.id;
-            if (emit_migrate && asyncTransfer) {
-                shapes = sort_by_layer(context, shapes);
-                asyncTransfer.migrate(targetParent as GroupShape);
-                context.assist.set_collect_target([targetParent as GroupShape], true);
-            }
-        }
-    }
-
-    const migrate: (shapes: Shape[], start: ClientXY, end: ClientXY) => void = debounce(_migrate, 100);
-
-
-    /**
-     * @description 双击控件
-     */
     function handleDblClick() {
         const selected = selection.selectedShapes;
         if (selected.length !== 1) return;
         const shape = selected[0];
-        if ([ShapeType.Group, ShapeType.FlattenShape].includes(shape.type)) {
-            const scope = (shape as GroupShape).childs;
-            const scout = selection.scout;
-            if (!scout) return;
-            const target = groupPassthrough(scout, scope, startPositionOnPage);
+        if ([ShapeType.Group, ShapeType.Symbol, ShapeType.SymbolRef, ShapeType.Artboard].includes(shape.type)) {
+            const scope: any = shape.type === ShapeType.SymbolRef ? shape.naviChilds : (shape as GroupShape).childs;
+            const target = selection_penetrate(selection.scout!, scope, startPositionOnPage);
             if (target) selection.selectShape(target);
-        } else {
+        } else if (shape instanceof PathShape) {
             editing = !editing;
             workspace.contentEdit(editing);
         }
@@ -136,6 +110,7 @@ export function useControllerCustom(context: Context, i18nT: Function) {
             if (!isOut) update_type = transform(startPosition, mousePosition);
             modify_mouse_position_by_type(update_type, startPosition, mousePosition);
         } else if (check_drag_action(startPosition, mousePosition) && !editing) {
+            shapes = modify_shapes(context, shapes);
             if (e.altKey) shapes = paster_short(context, shapes);
             reset_assist_before_translate(context, shapes);
             offset_map = gen_offset_points_map(shapes, startPositionOnPage);
@@ -150,13 +125,14 @@ export function useControllerCustom(context: Context, i18nT: Function) {
         let update_type = 0;
         if (asyncTransfer) {
             update_type = trans_assistant(asyncTransfer, ps, pe);
-            migrate(shapes, start, end);
+            migrate_once(context, asyncTransfer, shapes, end);
         }
         return update_type;
     }
 
     let pre_target_x: number, pre_target_y: number;
     let stickedX: boolean = false, stickedY: boolean = false;
+
     // let count: number = 0, times: number = 0; // 性能测试
 
     /**
@@ -268,7 +244,7 @@ export function useControllerCustom(context: Context, i18nT: Function) {
         if (isDragging) {
             if (asyncTransfer) {
                 const mousePosition: ClientXY = get_current_position_client(context, e);
-                _migrate(shapes, startPosition, mousePosition);
+                migrate_immediate(context, asyncTransfer, shapes, mousePosition);
                 asyncTransfer = asyncTransfer.close();
             }
             end_transalte(context);
@@ -374,7 +350,7 @@ export function useControllerCustom(context: Context, i18nT: Function) {
         checkStatus();
         initController();
         workspace.contentEdit(false);
-        context.esctask.save(TaskType.SELECTION, exit);
+        context.esctask.save('select-shape', exit);
     }
 
     function dispose() {

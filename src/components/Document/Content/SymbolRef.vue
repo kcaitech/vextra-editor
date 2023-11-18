@@ -1,29 +1,82 @@
 <script setup lang="ts">
-import { h, onMounted, onUnmounted, ref, watch } from 'vue';
+import { h, onUnmounted } from 'vue';
 import comsMap from './comsmap'
-import { renderSymbolRef as r } from "@kcdesign/data"
-import { SymbolRefShape } from '@kcdesign/data';
+import { Variable, renderSymbolRef as r } from "@kcdesign/data"
+import { SymbolRefShape, RenderTransform, SymbolShape } from '@kcdesign/data';
+import { initCommonShape } from './common';
 
-const props = defineProps<{ data: SymbolRefShape }>();
+const props = defineProps<{
+    data: SymbolRefShape, transx?: RenderTransform,
+    varsContainer?: (SymbolRefShape | SymbolShape)[]
+}>();
 
-const reflush = ref(0);
-function watcher() {
-    reflush.value++;
+const watcher = () => {
+    common.incReflush();
+    updater();
 }
-const stopWatch = watch(() => props.data, (value, old) => {
-    old.unwatch(watcher);
-    value.watch(watcher);
-})
-onMounted(() => {
-    props.data.loadSymbol();
-    props.data.watch(watcher);
-})
+
+// 需要自己加载symbol
+let __data: SymbolShape | undefined;
+let __subdata: SymbolShape | undefined;
+
+let __startLoad: string = "";
+function updater() {
+    const symMgr = props.data.getSymbolMgr();
+    if (!symMgr) return;
+    const refId = props.data.getRefId2(props.varsContainer);
+    if (__startLoad === refId) {
+        if (__data) { // 更新subdata
+            if (__data.isUnionSymbolShape) {
+                const syms = __data.getTagedSym(props.data, props.varsContainer || []);
+                const subdata = syms[0] || __data.childs[0];
+                if (__subdata !== subdata) {
+                    if (__subdata) __subdata.unwatch(watcher);
+                    __subdata = subdata;
+                    if (__subdata) __subdata.watch(watcher);
+                }
+            }
+            else if (!__data.isUnionSymbolShape && __subdata) {
+                __subdata.unwatch(watcher);
+                __subdata = undefined;
+            }
+        }
+        return;
+    }
+
+    __startLoad = refId;
+    symMgr.get(refId).then((val) => {
+        if (__data) __data.unwatch(watcher);
+        __data = val;
+        if (__data) __data.watch(watcher);
+        // 处理status
+        if (val && val.isUnionSymbolShape) {
+            const syms = val.getTagedSym(props.data, props.varsContainer || []);
+            if (__subdata) __subdata.unwatch(watcher);
+            __subdata = syms[0] || val.childs[0];
+            if (__subdata) __subdata.watch(watcher);
+        }
+        else if (__subdata) {
+            __subdata.unwatch(watcher);
+            __subdata = undefined;
+        }
+        common.incReflush();
+    })
+}
+
+updater();
+
 onUnmounted(() => {
-    props.data.unwatch(watcher);
-    stopWatch();
+    if (__data) __data.unwatch(watcher);
+    if (__subdata) __subdata.unwatch(watcher);
 })
+
+const common = initCommonShape(props, updater);
+
 function render() {
-    return r(h, props.data, comsMap, reflush.value !== 0 ? reflush.value : undefined);
+    const consumedVars: { slot: string, vars: Variable[] }[] = [];
+    const ret = r(h, props.data, __subdata || __data, comsMap, props.transx, props.varsContainer, consumedVars, common.reflush);
+    common.watchVars(consumedVars);
+    return ret;
 }
 
 </script>
@@ -32,6 +85,4 @@ function render() {
     <render />
 </template>
 
-<style scoped>
-
-</style>
+<style scoped></style>

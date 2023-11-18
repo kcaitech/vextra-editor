@@ -788,7 +788,7 @@ onUnmounted(() => {
 
 :deep(.el-input__inner) {
     height: 30px;
-    font-size: 10px;
+    font-size: 12px;
 }
 
 .link {
@@ -832,7 +832,7 @@ onUnmounted(() => {
     button {
         width: 80px;
         height: 30px;
-        font-size: 10px;
+        font-size: 12px;
         border: none;
         background-color: var(--active-color-beta);
         color: #fff;

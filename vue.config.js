@@ -118,14 +118,12 @@ var configureWebpack = (config) => {
             "node_modules\\/(?!(@kcdesign)\\/)",
             "communication\\/node_modules\\/)",
         ],
-        poll: 3000,
+        poll: 5000,
     }
 }
 
 var exports = defineConfig({
     transpileDependencies: true,
-    // publicPath: '/tyx',
-    // publicPath: '/zbb',
     publicPath: './',
     configureWebpack,
 
