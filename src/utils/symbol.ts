@@ -383,15 +383,15 @@ export function make_symbol(context: Context, t: Function) {
     const page = context.selection.selectedPage;
     if (!page || !selected.length) return false;
     if (is_exist_symbol_layer(selected)) {
-        message('info', '新的组件不能包含已有组件图层的组成图层');
+        message('info', t('compos.error_1'));
         return false;
     }
     if (is_exist_symbolref_layer(selected)) {
-        message('info', '新的组件不能包含组件实例的组成图层');
+        message('info',  t('compos.error_2'));
         return false;
     }
     if (is_exist_invalid_shape(selected)) {
-        message('info', '组件内部不能包含连接线、表格');
+        message('info',  t('compos.error_3'));
         return false;
     }
     const editor = context.editor4Page(page);

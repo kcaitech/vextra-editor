@@ -183,12 +183,12 @@ onUnmounted(() => {
                 </div>
             </div>
             <p class="warn" v-if="isWarnRepeat">{{ t('compos.duplicate_name') }}</p>
-            <p class="warn" v-if="isWarnNull">属性名称不能为空</p>
+            <p class="warn" v-if="isWarnNull">{{ t('compos.validate_info_2')}}</p>
             <!-- 默认值 -->
             <slot name="default_value"></slot>
         </div>
         <div class="footer">
-            <el-button :style="{backgroundColor: '#9775fa'}" @click="save">确认</el-button>
+            <el-button :style="{backgroundColor: '#9775fa'}" @click="save">{{ t('compos.confirm')}}</el-button>
         </div>
     </div>
     <div class="overlay" @click.stop="isselectLayer = false" @mousedown.stop></div>

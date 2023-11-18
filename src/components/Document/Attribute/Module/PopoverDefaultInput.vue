@@ -102,7 +102,7 @@ onMounted(() => {
         </div>
     </div>
     <div class="warning" v-if="props.warn && props.addType === VariableType.Text">
-        <p class="warn">默认值不能为空</p>
+        <p class="warn">{{ t('compos.validate_info_3')}}</p>
     </div>
 </template>
 
