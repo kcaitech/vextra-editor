@@ -283,7 +283,8 @@ export const attr: any = {
     'flip_h': '水平翻转',
     full_border: '全边框',
     outer_border: '外边框',
-    inner_border: '内边框'
+    inner_border: '内边框',
+    exit_path_edit: '退出编辑模式(ESC)'
 }
 
 export const login = {
