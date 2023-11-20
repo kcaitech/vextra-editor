@@ -1,14 +1,24 @@
 <script setup lang="ts">
-import { ref, nextTick } from 'vue';
-import { AsyncTransfer, Matrix, Shape } from "@kcdesign/data";
-import { Context } from "@/context";
-import { ClientXY, PageXY } from '@/context/selection';
-import { EffectType, Wheel, fourWayWheel } from '@/utils/wheel';
-import { PointsOffset, distance2apex, gen_match_points } from '@/utils/assist';
-import { permIsEdit } from '@/utils/content';
-import { check_status, end_transalte, gen_offset_map, get_speed, migrate, migrate_immediate, modify_mouse_position_by_type, pre_translate } from '@/utils/controllerFn';
-import { paster_short } from '@/utils/clipboard';
-import { Asssit } from '@/context/assist';
+import {ref, nextTick} from 'vue'
+import {AsyncTransfer, Matrix, Shape} from "@kcdesign/data";
+import {Context} from "@/context";
+import {ClientXY, PageXY} from '@/context/selection';
+import {EffectType, Wheel, fourWayWheel} from '@/utils/wheel';
+import {PointsOffset, distance2apex, gen_match_points} from '@/utils/assist';
+import {permIsEdit} from '@/utils/content';
+import {
+    check_status,
+    end_transalte,
+    gen_offset_map,
+    get_speed,
+    migrate,
+    migrate_immediate,
+    modify_mouse_position_by_type,
+    pre_translate
+} from '@/utils/controllerFn';
+import {paster_short} from '@/utils/clipboard';
+import {Asssit} from '@/context/assist';
+
 const props = defineProps<{
     name: string,
     index: number,
@@ -28,7 +38,7 @@ const inputSpan = ref<HTMLSpanElement>()
 const esc = ref<boolean>(false)
 const inputWidth = ref(5)
 const hover = ref(false)
-let isDragging: boolean = false
+let isDragging: boolean = false;
 
 const onRename = () => {
     isInput.value = true
@@ -101,15 +111,7 @@ const unHoverShape = (e: MouseEvent) => {
     emit('leave')
     hover.value = false
 }
-
-// const selectShape = (e: MouseEvent) => {
-//     props.context.menu.menuMount()
-//     props.context.selection.selectShape(props.shape);
-//     if (e.button === 2) {
-//         props.context.workspace.downArboardTitle(e)
-//     }
-// }
-let startPosition: ClientXY = { x: 0, y: 0 };
+let startPosition: ClientXY = {x: 0, y: 0};
 let wheel: Wheel | undefined = undefined;
 let matrix_inverse: Matrix = new Matrix();
 let matrix: Matrix = new Matrix();
@@ -127,7 +129,7 @@ function down(e: MouseEvent) {
     if (e.button === 0) {
         context.selection.selectShape(props.shape);
         let root = props.context.workspace.root;
-        startPosition = { x: e.clientX - root.x, y: e.clientY - root.y };
+        startPosition = {x: e.clientX - root.x, y: e.clientY - root.y};
         document.addEventListener('mousemove', move);
         document.addEventListener('mouseup', up);
     } else if (e.button === 2) {
@@ -138,10 +140,10 @@ function down(e: MouseEvent) {
 function move(e: MouseEvent) {
     if (e.buttons !== 1) return;
     let root = props.context.workspace.root;
-    const mousePosition: ClientXY = { x: e.clientX - root.x, y: e.clientY - root.y };
+    const mousePosition: ClientXY = {x: e.clientX - root.x, y: e.clientY - root.y};
     if (isDragging && wheel && asyncTransfer) {
         modify_speed(e);
-        const isOut = wheel.moving(e, { type: EffectType.TRANS, effect: asyncTransfer.transByWheel });
+        const isOut = wheel.moving(e, {type: EffectType.TRANS, effect: asyncTransfer.transByWheel});
         let update_type: number = 0;
         if (!isOut) update_type = transform_f(startPosition, mousePosition);
         modify_mouse_position_by_type(update_type, startPosition, mousePosition);
@@ -159,6 +161,7 @@ function move(e: MouseEvent) {
         offset_map = gen_offset_map(shapes[0], map_anchor);
     }
 }
+
 function up(e: MouseEvent) {
     if (e.button !== 0) return;
     if (isDragging) {
@@ -173,6 +176,7 @@ function up(e: MouseEvent) {
     document.removeEventListener('mousemove', move);
     document.removeEventListener('mouseup', up);
 }
+
 function transform_f(start: ClientXY, end: ClientXY) {
     const ps: PageXY = matrix_inverse.computeCoord3(start);
     const pe: PageXY = matrix_inverse.computeCoord3(end);
@@ -183,9 +187,11 @@ function transform_f(start: ClientXY, end: ClientXY) {
     }
     return update_type;
 }
+
 let pre_target_x: number, pre_target_y: number;
 let stickedX: boolean = false;
 let stickedY: boolean = false;
+
 function trans(asyncTransfer: AsyncTransfer, ps: PageXY, pe: PageXY): number {
     const assist = props.context.assist;
     if (speed > 5) {
@@ -198,7 +204,7 @@ function trans(asyncTransfer: AsyncTransfer, ps: PageXY, pe: PageXY): number {
     if (!compo) return 3;
     let need_multi = 0;
     let update_type = 3;
-    const stick = { dx: 0, dy: 0, sticked_x: false, sticked_y: false };
+    const stick = {dx: 0, dy: 0, sticked_x: false, sticked_y: false};
     const stickness = assist.stickness;
     const target = assist.trans_match(offset_map, pe);
     if (!target) return update_type;
@@ -237,6 +243,7 @@ function trans(asyncTransfer: AsyncTransfer, ps: PageXY, pe: PageXY): number {
         assist.notify(Asssit.UPDATE_MAIN_LINE);
     }
     return update_type;
+
     function modify_fix_x(target: any) {
         pre_target_x = target.x;
         const distance = distance2apex(compo, target.alignX);
@@ -249,6 +256,7 @@ function trans(asyncTransfer: AsyncTransfer, ps: PageXY, pe: PageXY): number {
         stickedX = true;
         need_multi += 1;
     }
+
     function modify_fix_y(target: any) {
         pre_target_y = target.y;
         const distance = distance2apex(compo, target.alignY);
@@ -263,19 +271,26 @@ function trans(asyncTransfer: AsyncTransfer, ps: PageXY, pe: PageXY): number {
         need_multi += 2;
     }
 }
+
 function modify_speed(e: MouseEvent) {
     speed = get_speed(t_e || e, e);
     t_e = e;
+}
+
+function move2(e: MouseEvent) {
+    if (e.buttons === 0) e.stopPropagation();
 }
 </script>
 
 <template>
     <div class="container-name" @mouseenter="hoverShape" @mouseleave="unHoverShape" @mousedown.stop="down"
-        @mousemove.stop data-area="controller">
+         @mousemove="move2"
+         data-area="controller">
         <div class="name" :class="{ selected, active: hover }" :style="{ maxWidth: props.maxWidth + 'px' }"
-            @dblclick="onRename">{{ props.name }}</div>
+             @dblclick="onRename">{{ props.name }}
+        </div>
         <input v-if="isInput" type="text" :style="{ maxWidth: props.maxWidth + 'px', width: inputWidth + 'px' }"
-            ref="nameInput" class="rename" @input="onInputName" @change="ChangeReName">
+               ref="nameInput" class="rename" @input="onInputName" @change="ChangeReName">
         <span v-if="isInput" style="position: absolute; visibility: hidden; top: 0px;" ref="inputSpan"></span>
     </div>
 </template>
