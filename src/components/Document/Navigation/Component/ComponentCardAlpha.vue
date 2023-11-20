@@ -23,7 +23,6 @@ const render_preview = ref<boolean>(false);
 const preview_container = ref<Element>();
 const danger = ref<boolean>(false);
 const render_item = ref<GroupShape>(props.data);
-const reflush = ref<number>(0);
 const name = ref<string>('');
 
 function gen_view_box() {
@@ -32,7 +31,7 @@ function gen_view_box() {
 }
 
 function render() {
-    return r(h, render_item.value as GroupShape, comsMap);
+    return r(h, render_item.value as any, comsMap);
 }
 
 function selection_watcher(t: number) {
@@ -51,8 +50,9 @@ function check_render_item() {
 }
 
 function _shape_watcher() {
+    console.log('changed');
     check_render_item();
-    reflush.value++;
+    get_name();
 }
 
 const shape_watcher = debounce(_shape_watcher, 1000);

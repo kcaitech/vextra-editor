@@ -30,7 +30,7 @@ function gen_view_box() {
 }
 
 function render() {
-    return r(h, render_item.value as GroupShape, comsMap);
+    return r(h, render_item.value as any, comsMap);
 }
 
 function selection_watcher(t: number) {
@@ -43,6 +43,7 @@ function check_selected_status() {
 
 function _shape_watcher() {
     check_render_item();
+    get_name();
 }
 
 function check_render_item() {
