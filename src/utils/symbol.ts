@@ -804,8 +804,7 @@ function search_binds_for_state(
  */
 export function get_vari_value_for_ref(symref: SymbolRefShape, variable: Variable) {
     const overrides = symref.findOverride(variable.id, OverrideType.Variable);
-    const val = overrides ? overrides[overrides.length - 1].value : variable.value;
-    return val;
+    return overrides ? overrides[overrides.length - 1].value : variable.value;
 }
 
 /**
