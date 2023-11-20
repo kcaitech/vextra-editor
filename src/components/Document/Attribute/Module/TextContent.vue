@@ -176,7 +176,7 @@ const getValue = (value: Text | string | undefined) => {
                 </div>
             </template>
         </TypeHeader>
-<!--        <TextHolder :context="props.context" :shape="shape"></TextHolder>-->
+        <!--        <TextHolder :context="props.context" :shape="shape"></TextHolder>-->
         <div class="warning" v-if="warn">
             <p class="warn">默认值不能为空</p>
         </div>
