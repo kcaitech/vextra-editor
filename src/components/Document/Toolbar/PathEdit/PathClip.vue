@@ -6,7 +6,7 @@ import Tooltip from '@/components/common/Tooltip.vue';
 
 const {t} = useI18n()
 const props = defineProps<{
-    active: boolean,
+    active: boolean
 }>();
 const emit = defineEmits<{
     (e: "select", action: Action): void;
@@ -17,10 +17,10 @@ function select(action: Action) {
 }
 </script>
 <template>
-    <Tooltip :content="`${t('shape.arrow')} &nbsp;&nbsp; Shift L`">
-        <ToolButton ref="button" @click="() => {select(Action.AddArrow)}" :selected="props.active">
+    <Tooltip :content="t('shape.clip')">
+        <ToolButton ref="button" @click="() => {select(Action.PathClip)}" :selected="props.active">
             <div class="svg-container">
-                <svg-icon icon-class="pattern-arrow"></svg-icon>
+                <svg-icon icon-class="unknown"></svg-icon>
             </div>
         </ToolButton>
     </Tooltip>

@@ -95,7 +95,7 @@ onUnmounted(() => {
 </script>
 
 <template>
-    <div class="editor-tools" @dblclick.stop v-if="isEdit && !isLable && !is_path_edit">
+    <div v-if="isEdit && !isLable && !is_path_edit" class="editor-tools" @dblclick.stop>
         <Cursor @select="select" :d="selected" :active="selected === Action.AutoV || selected === Action.AutoK"
                 :is_lable="isLable" :edit="isEdit"></Cursor>
         <div class="vertical-line"/>
@@ -113,14 +113,15 @@ onUnmounted(() => {
         <Comment @select="select" :active="selected === Action.AddComment" :workspace="workspace"></Comment>
         <GroupUngroup :context="props.context" :selection="props.selection"></GroupUngroup>
     </div>
-    <div class="editor-tools" @dblclick.stop v-if="isread || canComment || isLable">
+    <div v-if="isread || canComment || isLable" class="editor-tools" @dblclick.stop>
         <Cursor @select="select" :d="selected" :active="selected === Action.AutoV || selected === Action.AutoK"
                 :is_lable="isLable" :edit="isEdit"></Cursor>
         <div class="vertical-line"/>
         <Comment @select="select" :active="selected === Action.AddComment" :workspace="workspace"
                  v-if="!isread"></Comment>
     </div>
-    <PathEditTool class="editor-tools" v-if="isEdit && is_path_edit"></PathEditTool>
+    <PathEditTool v-if="isEdit && is_path_edit" :context="props.context" class="editor-tools"
+                  :selected="selected"></PathEditTool>
 </template>
 
 <style scoped lang="scss">
@@ -133,44 +134,7 @@ onUnmounted(() => {
     position: absolute;
     left: 50%;
     transform: translateX(-50%);
-
-    &::-webkit-scrollbar {
-        width: 0px;
-        height: 0px;
-    }
-
-    &::-webkit-scrollbar-track {
-        background-color: none;
-    }
-
-    &::-webkit-scrollbar-thumb {
-        background-color: none;
-    }
-
-    &::-webkit-scrollbar-thumb:hover {
-        background-color: none;
-    }
-
-    &::-webkit-scrollbar-thumb:active {
-        background-color: none;
-    }
-
-    .temp {
-        width: 28px;
-        height: 28px;
-        font-size: 12px;
-        color: #ffffff;
-        box-sizing: border-box;
-        display: flex;
-        align-items: center;
-        justify-content: center;
-        padding: 4px;
-
-        > svg {
-            width: 14px;
-            height: 14px;
-        }
-    }
+    overflow: hidden;
 
     .vertical-line {
         width: 1px;

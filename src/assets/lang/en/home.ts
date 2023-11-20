@@ -284,7 +284,11 @@ export const attr: any = {
     full_border: 'Full border',
     outer_border: 'border',
     inner_border: 'Inner border',
-    exit_path_edit: 'Exit Editing Mode(ESC)'
+    exit_path_edit: 'Exit Editing Mode(ESC)',
+    right_angle: "Right Angle",
+    completely_symmetrical: "Completely Symmetrical",
+    angular_symmetry: "Angular Symmetry",
+    asymmetric: "Asymmetric",
 }
 
 export const login = {

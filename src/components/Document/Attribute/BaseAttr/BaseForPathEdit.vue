@@ -3,6 +3,8 @@ import IconText from "@/components/common/IconText.vue";
 import {ref, reactive} from "vue";
 import {Context} from "@/context";
 import {useI18n} from 'vue-i18n';
+import SvgIcon from "@/components/common/SvgIcon.vue";
+import Tooltip from "@/components/common/Tooltip.vue";
 
 interface Props {
     context: Context
@@ -50,7 +52,28 @@ function exit() {
                       @onchange="onChangeR" :disabled="model_state.r" :context="context"/>
         </div>
         <div class="tr">
-            <div class="tool"></div>
+            <div class="tool">
+                <Tooltip :content="t('attr.right_angle')">
+                    <div class="item">
+                        <svg-icon icon-class="unknown"></svg-icon>
+                    </div>
+                </Tooltip>
+                <Tooltip :content="t('attr.completely_symmetrical')">
+                    <div class="item">
+                        <svg-icon icon-class="unknown"></svg-icon>
+                    </div>
+                </Tooltip>
+                <Tooltip :content="t('attr.angular_symmetry')">
+                    <div class="item">
+                        <svg-icon icon-class="unknown"></svg-icon>
+                    </div>
+                </Tooltip>
+                <Tooltip :content="t('attr.asymmetric')">
+                    <div class="item">
+                        <svg-icon icon-class="unknown"></svg-icon>
+                    </div>
+                </Tooltip>
+            </div>
         </div>
         <div class="tr">
             <div class="btn" @click="exit">
@@ -102,8 +125,30 @@ function exit() {
         .tool {
             width: 64%;
             height: 100%;
-            border-radius: var(--default-radius);;
+            border-radius: var(--default-radius);
             background-color: var(--input-background);
+            display: flex;
+            align-content: space-around;
+            align-items: center;
+            box-sizing: border-box;
+            position: relative;
+
+
+            .item {
+                height: calc(100% - 4px);
+                margin: 2px;
+                border-radius: var(--default-radius);
+                background-color: var(--grey-dark);
+                display: flex;
+                justify-content: center;
+                align-items: center;
+                color: #ffffff;
+
+                > svg {
+                    height: 60%;
+                    width: 60%;
+                }
+            }
         }
 
         .btn {

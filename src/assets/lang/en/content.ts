@@ -12,7 +12,9 @@ export const shape: any = {
     table: 'Table',
     contact: 'Contact',
     symbol: 'Symbol',
-    default: 'Default'
+    curve: "Curve",
+    clip: "Clip",
+    default: 'Default',
 }
 shape[ShapeType.Rectangle] = 'Rectangle';
 
