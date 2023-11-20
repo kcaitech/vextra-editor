@@ -5,6 +5,7 @@ import {Clipboard} from "@/utils/clipboard";
 import {PageXY} from "./selection";
 import {Action} from "@/context/tool";
 import {PointsOffset} from "@/utils/assist";
+import {message} from "@/utils/message";
 
 interface Point {
     x: number
@@ -135,8 +136,14 @@ export class WorkSpace extends Watchable(Object) {
     get is_path_edit_mode() {
         return this.m_path_edit_mode;
     }
+
     setPathEditMode(v: boolean) {
         this.m_path_edit_mode = v;
+        if (v) {
+            message('info', '编辑路径');
+        } else {
+            message('info', '退出编辑');
+        }
         this.notify(WorkSpace.PATH_EDIT_MODE);
     }
 

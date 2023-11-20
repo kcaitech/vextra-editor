@@ -293,22 +293,18 @@ function select(e: MouseEvent) {
 }
 
 function createSelector(e: MouseEvent) { // 创建一个selector框选器
-    const {clientX, clientY, altKey} = e;
     const {x: rx, y: ry} = workspace.value.root;
-    const xy = matrix_inverse.computeCoord2(clientX - rx, clientY - ry);
-    const {x: mx, y: my} = {x: xy.x, y: xy.y};
-    const {x: sx, y: sy} = mousedownOnPageXY;
+    const {x: mx, y: my} = {x: e.clientX - rx, y: e.clientY - ry};
+    const {x: sx, y: sy} = mousedownOnClientXY;
     const left = Math.min(sx, mx);
     const right = Math.max(mx, sx);
     const top = Math.min(my, sy);
     const bottom = Math.max(my, sy);
-    const p = matrix_inverse.inverseCoord({x: left, y: top})
-    const s = matrix_inverse.inverseCoord({x: right, y: bottom})
-    selectorFrame.value.top = Math.min(p.y, s.y);
-    selectorFrame.value.left = Math.min(p.x, s.x);
-    selectorFrame.value.width = Math.max(p.x, s.x) - Math.min(p.x, s.x);
-    selectorFrame.value.height = Math.max(p.y, s.y) - Math.min(p.y, s.y);
-    selectorFrame.value.includes = altKey;
+    selectorFrame.value.top = top;
+    selectorFrame.value.left = left;
+    selectorFrame.value.width = right - left;
+    selectorFrame.value.height = bottom - top;
+    selectorFrame.value.includes = e.altKey;
     selector_mount.value = true;
 }
 

@@ -1,7 +1,7 @@
 <script setup lang="ts">
 import {Context} from "@/context";
 import {onMounted, onUnmounted, reactive, ref, watch} from "vue";
-import {PageXY, Selection} from "@/context/selection";
+import {Selection, XY} from "@/context/selection";
 import {dbl_action} from "@/utils/mouse_interactive";
 import Selector4PEM, {SelectorFrame} from "@/components/Document/Selection/Controller/PathEdit/Selector4PEM.vue";
 import {Matrix} from "@kcdesign/data";
@@ -17,7 +17,7 @@ interface Props {
 const props = defineProps<Props>();
 const selector_mount = ref<boolean>(false);
 const selectorFrame = ref<SelectorFrame>({top: 0, left: 0, width: 0, height: 0, includes: false});
-const mousedownOnPageXY: PageXY = {x: 0, y: 0}; // 鼠标在page中的坐标
+const mousedownOnClientXY: XY = {x: 0, y: 0}; // 鼠标在page中的坐标
 const matrix: Matrix = reactive(props.context.workspace.matrix as any);
 let matrix_inverse: Matrix = new Matrix();
 let main_button_is_down: boolean = false;
@@ -59,32 +59,23 @@ function up() {
 
 function setMousedownXY(e: MouseEvent) { // 记录鼠标在页面上的点击位置
     const {x, y} = props.context.workspace.root;
-    const xy = matrix_inverse.computeCoord2(e.clientX - x, e.clientY - y);
-    mousedownOnPageXY.x = xy.x;
-    mousedownOnPageXY.y = xy.y; //页面坐标系上的点
+    mousedownOnClientXY.x = e.clientX - x;
+    mousedownOnClientXY.y = e.clientY - y; //页面坐标系上的点
 }
 
 function select(e: MouseEvent) {
-    createSelector(e);
-}
-
-function createSelector(e: MouseEvent) { // 创建一个selector框选器
-    const {clientX, clientY, altKey} = e;
     const {x: rx, y: ry} = props.context.workspace.root;
-    const xy = matrix_inverse.computeCoord2(clientX - rx, clientY - ry);
-    const {x: mx, y: my} = {x: xy.x, y: xy.y};
-    const {x: sx, y: sy} = mousedownOnPageXY;
+    const {x: mx, y: my} = {x: e.clientX - rx, y: e.clientY - ry};
+    const {x: sx, y: sy} = mousedownOnClientXY;
     const left = Math.min(sx, mx);
     const right = Math.max(mx, sx);
     const top = Math.min(my, sy);
     const bottom = Math.max(my, sy);
-    const p = matrix_inverse.inverseCoord({x: left, y: top})
-    const s = matrix_inverse.inverseCoord({x: right, y: bottom})
-    selectorFrame.value.top = Math.min(p.y, s.y);
-    selectorFrame.value.left = Math.min(p.x, s.x);
-    selectorFrame.value.width = Math.max(p.x, s.x) - Math.min(p.x, s.x);
-    selectorFrame.value.height = Math.max(p.y, s.y) - Math.min(p.y, s.y);
-    selectorFrame.value.includes = altKey;
+    selectorFrame.value.top = top;
+    selectorFrame.value.left = left;
+    selectorFrame.value.width = right - left;
+    selectorFrame.value.height = bottom - top;
+    selectorFrame.value.includes = e.altKey;
     selector_mount.value = true;
 }
 
