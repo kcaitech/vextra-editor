@@ -11,9 +11,11 @@ import {onMounted, onUpdated} from "vue";
 import SelectMenu from "@/components/Document/Attribute/PopoverMenu/ComposAttri/SelectMenu.vue";
 import {ArrowDown} from '@element-plus/icons-vue'
 import {Menu} from "@/context/menu";
-import { useI18n } from "vue-i18n";
-import { SymbolShape } from "@kcdesign/data";
-const { t } = useI18n();
+import {useI18n} from "vue-i18n";
+import {OverrideType, SymbolShape} from "@kcdesign/data";
+
+const {t} = useI18n();
+
 interface Props {
     context: Context
     data: RefAttriListItem
@@ -30,31 +32,23 @@ function show_menu(e: MouseEvent) {
     selectoption.value = true;
 }
 
-function get_var_for_symbol() {
-}
-
 function select(index: number) {
     const _v = props.data.values[index];
-    // modify_vari_value_for_ref(props.context, props.data.variable, _v);
-    const symbolref = props.context.selection.symbolrefshape;
-    if (!symbolref) return;
-    const vari = get_status_vari_for_symbolref(symbolref, props.data.variable);
+    const symref = props.context.selection.symbolrefshape;
+    if (!symref) return console.log("wrong role");
+    const vari = get_status_vari_for_symbolref(symref, props.data.variable);
     switch_symref_state(props.context, vari, _v, t);
 }
 
 function getVattagValue() {
     const symref = props.context.selection.symbolrefshape;
     if (!symref) return;
-    // const vari = get_status_vari_for_symbolref(symref, props.data.variable);
-    // status_value.value = get_vari_value_for_ref(symref, vari);
     let val = get_vari_value_for_ref(symref, props.data.variable);
     if (val === SymbolShape.Default_State) val = t('compos.dlt');
     status_value.value = val;
 }
-watch(() => props.data, (v) => {
-    getVattagValue();
-})
 
+watch(() => props.data, getVattagValue);
 onUpdated(getVattagValue);
 onMounted(() => {
     getVattagValue();
