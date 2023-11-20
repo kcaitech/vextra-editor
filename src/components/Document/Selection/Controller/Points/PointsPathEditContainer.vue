@@ -51,6 +51,9 @@ function update() {
     lines.push(...get_conact_by_point(shape, matrix));
 }
 
+/**
+ * @description down下任意一个已有的编辑点
+ */
 function point_mousedown(event: MouseEvent, index: number) {
     if (event.button !== 0) return;
     if (dbl_action()) {
