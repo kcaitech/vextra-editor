@@ -19,7 +19,7 @@ const selectAllText = () => {
 
 function get_value() {
     const symref = props.context.selection.symbolrefshape;
-    if (!symref) return;
+    if (!symref) return console.log("wrong role");
     const text = get_vari_value_for_ref(symref, props.data.variable);
     textValue.value = typeof text === 'string' ? text : text.toString();
 }
@@ -36,13 +36,11 @@ const keysumbit = (e: KeyboardEvent) => {
     }
 }
 
-watch(() => props.data, (v) => {
-    get_value();
-})
+watch(() => props.data, get_value);
 
 function change(v: string) {
     const symref = props.context.selection.symbolrefshape;
-    if (!symref) return;
+    if (!symref) return console.log("wrong role");
     const overrides = symref.findOverride(props.data.variable.id, OverrideType.Variable);
     const _var = overrides ? overrides[overrides.length - 1] : props.data.variable;
     modify_vari_value_for_ref(props.context, _var, v);
