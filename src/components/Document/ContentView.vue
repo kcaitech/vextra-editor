@@ -38,7 +38,6 @@ import {Action, Tool} from "@/context/tool";
 import UsersSelection from './Selection/TeamWork/UsersSelection.vue';
 import CellSetting from '@/components/Document/Menu/TableMenu/CellSetting.vue';
 import * as comment_api from '@/request/comment';
-// import Overview from './Content/Overview.vue';
 import Creator from './Creator.vue';
 import {Wheel, fourWayWheel} from '@/utils/wheel';
 import PathEditMode from "@/components/Document/Selection/Controller/PathEdit/PathEditMode.vue";
@@ -88,8 +87,6 @@ const cellStatus = ref();
 const creatorMode = ref<boolean>(false);
 const documentCommentList = ref<any[]>(comment.value.pageCommentList);
 const path_edit_mode = ref<boolean>(false);
-
-// const overview = ref<boolean>(false);
 let matrix_inverse: Matrix = new Matrix();
 
 function page_watcher(...args: any) {
@@ -111,8 +108,10 @@ function setMousedownXY(e: MouseEvent) { // 记录鼠标在页面上的点击位
     const {clientX, clientY} = e;
     const {x, y} = workspace.value.root;
     const xy = matrix_inverse.computeCoord2(clientX - x, clientY - y);
-    mousedownOnPageXY.x = xy.x, mousedownOnPageXY.y = xy.y; //页面坐标系上的点
-    mousedownOnClientXY.x = clientX - x, mousedownOnClientXY.y = clientY - y; // 用户端可视区上的点
+    mousedownOnPageXY.x = xy.x;
+    mousedownOnPageXY.y = xy.y; //页面坐标系上的点
+    mousedownOnClientXY.x = clientX - x
+    mousedownOnClientXY.y = clientY - y; // 用户端可视区上的点
 }
 
 function onMouseWheel(e: WheelEvent) { // 滚轮、触摸板事件
@@ -167,47 +166,6 @@ function endDragPage() { // 编辑器完成拖动页面
     props.context.cursor.reset();
 }
 
-function workspace_watcher(type?: number, param?: string | MouseEvent | Color) {
-    if (type === WorkSpace.MATRIX_TRANSFORMATION) {
-        matrix.reset(workspace.value.matrix);
-    } else if (type === WorkSpace.PASTE) {
-        paster(props.context, t);
-    } else if (type === WorkSpace.PASTE_RIGHT) {
-        paster(props.context, t, mousedownOnPageXY);
-    } else if (type === WorkSpace.COPY) {
-        props.context.workspace.clipboard.write_html();
-    } else if ((type === WorkSpace.ONARBOARD__TITLE_MENU) && param) {
-        contextMenuMount((param as MouseEvent));
-    } else if (type === WorkSpace.PATH_EDIT_MODE) {
-        path_edit_mode.value = props.context.workspace.is_path_edit_mode;
-    }
-}
-
-function comment_watcher(type?: number) {
-    if (type === Comment.UPDATE_COMMENT_POS) saveShapeCommentXY();
-    else if (type === Comment.UPDATE_PAGE_COMMENT) documentCommentList.value = props.context.comment.pageCommentList;
-    else if (type === Comment.UPDATE_COMMENT) {
-        props.context.comment.updateCommentList(props.page.id)
-        documentCommentList.value = props.context.comment.pageCommentList
-    }
-}
-
-function menu_watcher(type?: number, mount?: string) {
-    if (type === Menu.SHUTDOWN_MENU) contextMenuUnmount();
-    if (type === Menu.CHANGE_USER_CURSOR) {
-        avatarVisi.value = props.context.menu.isUserCursorVisible;
-    } else if (type === Menu.OPEN_SPLIT_CELL) {
-        cellStatus.value = mount;
-        cellSetting.value = true;
-    }
-}
-
-function tool_watcher(type: number) {
-    if (type === Tool.CHANGE_ACTION) {
-        creatorMode.value = props.context.tool.action.startsWith('add');
-    } else if (type === Tool.INSERT_FRAME) insertFrame();
-    else if (type === Tool.INSERT_TABLE) init_insert_table(props.context, t);
-}
 
 function insertFrame() {
     insertFrameTemplate(props.context);
@@ -500,6 +458,48 @@ const closeModal = () => {
     cellSetting.value = false
 }
 
+function comment_watcher(type?: number) {
+    if (type === Comment.UPDATE_COMMENT_POS) saveShapeCommentXY();
+    else if (type === Comment.UPDATE_PAGE_COMMENT) documentCommentList.value = props.context.comment.pageCommentList;
+    else if (type === Comment.UPDATE_COMMENT) {
+        props.context.comment.updateCommentList(props.page.id)
+        documentCommentList.value = props.context.comment.pageCommentList
+    }
+}
+
+function menu_watcher(type?: number, mount?: string) {
+    if (type === Menu.SHUTDOWN_MENU) contextMenuUnmount();
+    if (type === Menu.CHANGE_USER_CURSOR) {
+        avatarVisi.value = props.context.menu.isUserCursorVisible;
+    } else if (type === Menu.OPEN_SPLIT_CELL) {
+        cellStatus.value = mount;
+        cellSetting.value = true;
+    }
+}
+
+function tool_watcher(type: number) {
+    if (type === Tool.CHANGE_ACTION) {
+        creatorMode.value = props.context.tool.action.startsWith('add');
+    } else if (type === Tool.INSERT_FRAME) insertFrame();
+    else if (type === Tool.INSERT_TABLE) init_insert_table(props.context, t);
+}
+
+function workspace_watcher(type?: number, param?: string | MouseEvent | Color) {
+    if (type === WorkSpace.MATRIX_TRANSFORMATION) {
+        matrix.reset(workspace.value.matrix);
+    } else if (type === WorkSpace.PASTE) {
+        paster(props.context, t);
+    } else if (type === WorkSpace.PASTE_RIGHT) {
+        paster(props.context, t, mousedownOnPageXY);
+    } else if (type === WorkSpace.COPY) {
+        props.context.workspace.clipboard.write_html();
+    } else if ((type === WorkSpace.ONARBOARD__TITLE_MENU) && param) {
+        contextMenuMount((param as MouseEvent));
+    } else if (type === WorkSpace.PATH_EDIT_MODE) {
+        path_edit_mode.value = props.context.workspace.is_path_edit_mode;
+    }
+}
+
 function frame_watcher() {
     if (!root.value) return;
     _updateRoot(props.context, root.value);
@@ -600,7 +600,6 @@ onUnmounted(() => {
         <Selector v-if="selector_mount" :selector-frame="selectorFrame" :context="props.context"></Selector>
         <CommentView :context="props.context" :pageId="page.id" :page="page" :root="root" :cursorClass="cursor">
         </CommentView>
-        <!-- <Overview :context="props.context" v-if="overview" :matrix="matrix.toArray()"></Overview> -->
         <Creator v-if="creatorMode" :context="props.context"/>
         <PathEditMode v-if="path_edit_mode" :context="props.context"></PathEditMode>
     </div>

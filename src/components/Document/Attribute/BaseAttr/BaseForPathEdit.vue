@@ -54,7 +54,7 @@ function exit() {
         <div class="tr">
             <div class="tool">
                 <Tooltip :content="t('attr.right_angle')">
-                    <div class="item">
+                    <div class="item active">
                         <svg-icon icon-class="unknown"></svg-icon>
                     </div>
                 </Tooltip>
@@ -148,6 +148,9 @@ function exit() {
                     height: 60%;
                     width: 60%;
                 }
+            }
+            .active {
+                background-color: var(--active-color-beta);
             }
         }
 

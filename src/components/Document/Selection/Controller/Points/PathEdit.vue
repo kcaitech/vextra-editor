@@ -49,6 +49,7 @@ function update() {
 
 function point_mousedown(event: MouseEvent, index: number) {
     if (event.button !== 0) return;
+    event.stopPropagation();
     props.context.menu.menuMount();
     const workspace = props.context.workspace;
     workspace.setCtrl('controller');

@@ -1,26 +1,90 @@
 <script setup lang="ts">
 import {Context} from "@/context";
-import {onMounted, onUnmounted} from "vue";
+import {onMounted, onUnmounted, reactive, ref, watch} from "vue";
 import PathEdit from "@/components/Document/Selection/Controller/Points/PathEdit.vue";
-import {Selection} from "@/context/selection";
+import {PageXY, Selection} from "@/context/selection";
 import {dbl_action} from "@/utils/mouse_interactive";
+import Selector4PEM, {SelectorFrame} from "@/components/Document/Selection/Controller/PathEdit/Selector4PEM.vue";
+import {Matrix} from "@kcdesign/data";
+import {Action} from "@/context/tool";
+import {root_scale, root_trans} from "@/utils/content";
+import {WorkSpace} from "@/context/workspace";
 
 interface Props {
     context: Context
 }
 
 const props = defineProps<Props>();
+const selector_mount = ref<boolean>(false);
+const selectorFrame = ref<SelectorFrame>({top: 0, left: 0, width: 0, height: 0, includes: false});
+const mousedownOnPageXY: PageXY = {x: 0, y: 0}; // 鼠标在page中的坐标
+const matrix: Matrix = reactive(props.context.workspace.matrix as any);
+let matrix_inverse: Matrix = new Matrix();
+let main_button_is_down: boolean = false;
 
-function down() {
+function onMouseWheel(e: WheelEvent) { // 滚轮、触摸板事件
+    e.preventDefault();
+    const {ctrlKey, metaKey, deltaX, deltaY} = e;
+    if (ctrlKey || metaKey) { // 缩放
+        root_scale(props.context, e);
+    } else {
+        if (Math.abs(deltaX) + Math.abs(deltaY) < 100) { // 临时适配方案，需根据使用设备进一步完善适配
+            matrix.trans(-deltaX, -deltaY);
+        } else {
+            root_trans(props.context, e, 50);
+        }
+    }
+    props.context.workspace.notify(WorkSpace.MATRIX_TRANSFORMATION);
+}
+
+function down(e: MouseEvent) {
+    if (e.button !== 0) return;
+    setMousedownXY(e);
+    main_button_is_down = true;
     dbl_action() && exit();
 }
 
-function move() {
-
+function move(e: MouseEvent) {
+    if (!(e.buttons === 1 && main_button_is_down)) return;
+    if (props.context.tool.action === Action.AutoV) {
+        select(e);
+    }
 }
 
 function up() {
+    selector_mount.value = false;
+    main_button_is_down = false;
+}
 
+function setMousedownXY(e: MouseEvent) { // 记录鼠标在页面上的点击位置
+    const {x, y} = props.context.workspace.root;
+    const xy = matrix_inverse.computeCoord2(e.clientX - x, e.clientY - y);
+    mousedownOnPageXY.x = xy.x;
+    mousedownOnPageXY.y = xy.y; //页面坐标系上的点
+}
+
+function select(e: MouseEvent) {
+    createSelector(e);
+}
+
+function createSelector(e: MouseEvent) { // 创建一个selector框选器
+    const {clientX, clientY, altKey} = e;
+    const {x: rx, y: ry} = props.context.workspace.root;
+    const xy = matrix_inverse.computeCoord2(clientX - rx, clientY - ry);
+    const {x: mx, y: my} = {x: xy.x, y: xy.y};
+    const {x: sx, y: sy} = mousedownOnPageXY;
+    const left = Math.min(sx, mx);
+    const right = Math.max(mx, sx);
+    const top = Math.min(my, sy);
+    const bottom = Math.max(my, sy);
+    const p = matrix_inverse.inverseCoord({x: left, y: top})
+    const s = matrix_inverse.inverseCoord({x: right, y: bottom})
+    selectorFrame.value.top = Math.min(p.y, s.y);
+    selectorFrame.value.left = Math.min(p.x, s.x);
+    selectorFrame.value.width = Math.max(p.x, s.x) - Math.min(p.x, s.x);
+    selectorFrame.value.height = Math.max(p.y, s.y) - Math.min(p.y, s.y);
+    selectorFrame.value.includes = altKey;
+    selector_mount.value = true;
 }
 
 function selection_watcher(type: Number) {
@@ -29,22 +93,33 @@ function selection_watcher(type: Number) {
     }
 }
 
+function matrix_watcher(nm: Matrix) {
+    matrix_inverse = new Matrix(nm.inverse);
+}
+
 function exit() {
     props.context.workspace.setPathEditMode(false);
 }
-
+function window_blur() {
+    selector_mount.value = false;
+    // todo
+}
+watch(() => matrix, matrix_watcher, {deep: true});
 onMounted(() => {
     console.log('PATH-EDIT-MODE');
     props.context.selection.watch(selection_watcher);
+    window.addEventListener('blur', window_blur);
 })
 onUnmounted(() => {
     props.context.selection.unwatch(selection_watcher);
+    window.removeEventListener('blur', window_blur);
     console.log('EXIT-PATH-EDIT-MODE');
 })
 </script>
 <template>
-    <div class="wrapper" @wheel.stop @mousedown.stop="down" @mousemove="move" @mouseup="up">
+    <div class="wrapper" @wheel.stop @mousedown.stop="down" @mousemove="move" @mouseup="up" @wheel="onMouseWheel">
         <PathEdit :context="props.context"></PathEdit>
+        <Selector4PEM v-if="selector_mount" :context="props.context" :selector-frame="selectorFrame"></Selector4PEM>
     </div>
 </template>
 <style scoped lang="scss">

@@ -233,6 +233,7 @@ declare module '@vue/runtime-core' {
     SelectLayerInput: typeof import('./src/components/Document/Attribute/Module/SelectLayerInput.vue')['default']
     SelectMenu: typeof import('./src/components/Document/Attribute/PopoverMenu/ComposAttri/SelectMenu.vue')['default']
     Selector: typeof import('./src/components/Document/Selection/Selector.vue')['default']
+    Selector4PEM: typeof import('./src/components/Document/Selection/Controller/PathEdit/Selector4PEM.vue')['default']
     SelectView: typeof import('./src/components/Document/Selection/Controller/Text/SelectView.vue')['default']
     Serviceagreement: typeof import('./src/components/Login/Serviceagreement.vue')['default']
     Shadow: typeof import('./src/components/Document/Attribute/Shadow.vue')['default']

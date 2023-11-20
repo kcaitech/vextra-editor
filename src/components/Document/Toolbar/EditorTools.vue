@@ -120,7 +120,7 @@ onUnmounted(() => {
         <Comment @select="select" :active="selected === Action.AddComment" :workspace="workspace"
                  v-if="!isread"></Comment>
     </div>
-    <PathEditTool v-if="isEdit && is_path_edit" :context="props.context" class="editor-tools"
+    <PathEditTool v-if="isEdit && is_path_edit" class="editor-tools" :context="props.context"
                   :selected="selected"></PathEditTool>
 </template>
 
