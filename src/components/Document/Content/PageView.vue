@@ -82,6 +82,7 @@ onUnmounted(() => {
             :data="c" />
 
     </svg>
+
     <ShapeTitles v-if="show_t" :context="props.context" :data="data" :matrix="matrixWithFrame.toArray()"></ShapeTitles>
 </template>
 

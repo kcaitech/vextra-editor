@@ -59,7 +59,6 @@ const WITH_SHADOW = [
     ShapeType.Path2,
     ShapeType.Group,
     ShapeType.Line,
-    ShapeType.Table,
 ]
 const shapeType = ref();
 const reflush = ref<number>(0);
