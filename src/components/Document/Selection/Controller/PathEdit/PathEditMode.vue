@@ -41,6 +41,7 @@ function down(e: MouseEvent) {
     if (e.button !== 0) return;
     setMousedownXY(e);
     main_button_is_down = true;
+    props.context.path.reset_points();
     dbl_action() && exit();
 }
 
@@ -100,10 +101,12 @@ function matrix_watcher(nm: Matrix) {
 function exit() {
     props.context.workspace.setPathEditMode(false);
 }
+
 function window_blur() {
     selector_mount.value = false;
     // todo
 }
+
 watch(() => matrix, matrix_watcher, {deep: true});
 onMounted(() => {
     console.log('PATH-EDIT-MODE');

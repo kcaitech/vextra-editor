@@ -14,6 +14,10 @@ export class Path extends Watchable(Object) {
         this.m_context = context;
     }
 
+    get selectedPoints() {
+        return this.selected_points;
+    }
+
     select_point(index: number) {
         this.selected_points.length = 0;
         this.selected_points.push(index);
@@ -34,11 +38,24 @@ export class Path extends Watchable(Object) {
                 break;
             }
         }
-        if (al > 0) {
+        if (al > -1) {
             this.selected_points.splice(al, 1);
         } else {
             this.selected_points.push(index);
         }
+        this.notify(Path.SELECTION_CHANGE);
+    }
+
+    push_after_sort_points(index: number) {
+        for (let i = this.selected_points.length - 1; i > -1; i--) {
+            if (this.selected_points[i] >= index) this.selected_points[i]++;
+        }
+        this.selected_points.push(index);
+        this.notify(Path.SELECTION_CHANGE);
+    }
+
+    reset_points() {
+        this.selected_points.length = 0;
         this.notify(Path.SELECTION_CHANGE);
     }
 
