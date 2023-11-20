@@ -1,0 +1,72 @@
+import {Watchable} from "@kcdesign/data";
+import {Context} from ".";
+
+export class Path extends Watchable(Object) {
+    static SELECTION_CHANGE = 1;
+    static SELECTION_CHANGE_P = 2;
+    static SELECTION_CHANGE_S = 3;
+    private m_context: Context;
+    private selected_points: number[] = [];
+    private selected_sides: number[] = [];
+
+    constructor(context: Context) {
+        super();
+        this.m_context = context;
+    }
+
+    select_point(index: number) {
+        this.selected_points.length = 0;
+        this.selected_points.push(index);
+        this.notify(Path.SELECTION_CHANGE);
+    }
+
+    select_points(indexes: number[]) {
+        this.selected_points.length = 0;
+        this.selected_points.push(...indexes);
+        this.notify(Path.SELECTION_CHANGE);
+    }
+
+    adjust_points(index: number) {
+        let al = -1;
+        for (let i = this.selected_points.length - 1; i > -1; i--) {
+            if (this.selected_points[i] === index) {
+                al = i;
+                break;
+            }
+        }
+        if (al > 0) {
+            this.selected_points.splice(al, 1);
+        } else {
+            this.selected_points.push(index);
+        }
+        this.notify(Path.SELECTION_CHANGE);
+    }
+
+    select_side(index: number) {
+        this.selected_sides.length = 0;
+        this.selected_sides.push(index);
+        this.notify(Path.SELECTION_CHANGE);
+    }
+
+    select_sides(indexes: number[]) {
+        this.selected_sides.length = 0;
+        this.selected_sides.push(...indexes);
+        this.notify(Path.SELECTION_CHANGE);
+    }
+
+    adjust_sides(index: number) {
+        let al = -1;
+        for (let i = this.selected_sides.length - 1; i > -1; i--) {
+            if (this.selected_sides[i] === index) {
+                al = i;
+                break;
+            }
+        }
+        if (al > 0) {
+            this.selected_sides.splice(al, 1);
+        } else {
+            this.selected_sides.push(index);
+        }
+        this.notify(Path.SELECTION_CHANGE);
+    }
+}
