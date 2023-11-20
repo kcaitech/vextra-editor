@@ -229,7 +229,7 @@ onUnmounted(() => {
     display: flex;
     justify-content: center;
     align-items: center;
-    border-radius: 4px;
+    border-radius: var(--default-radius);
 
     >svg {
         color: rgba(185, 185, 185, 1);
