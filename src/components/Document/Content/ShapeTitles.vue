@@ -140,7 +140,6 @@ function setOrigin() { // 这个动作是让container与页面坐标系重合
     origin.x = matrix.m02;
     origin.y = matrix.m12;
 }
-
 const watchedShapes = new Map();
 
 function watchShapes() { // 监听相关shape的变化

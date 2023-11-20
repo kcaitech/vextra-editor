@@ -165,7 +165,8 @@ export const navi = {
     page: '页面',
     add_page: '添加新页面',
     copy: '副本',
-    development: '功能开发中…'
+    development: '功能开发中…',
+    overname: '文件名最大长度50字符'
 
 }
 

@@ -1,31 +1,20 @@
 <script setup lang="ts">
-import { Shape } from '@kcdesign/data';
-import { h, onMounted, onUnmounted, ref, watch } from 'vue';
-import { renderRecShape as r } from "@kcdesign/data";
-import { asyncLoadFillImages } from './common';
+import { RectShape, RenderTransform, SymbolRefShape, SymbolShape, Variable } from '@kcdesign/data';
+import { h } from 'vue';
+import { renderPathShape as r } from "@kcdesign/data";
+import { initCommonShape } from './common';
 
-const props = defineProps<{ data: Shape }>();
-const reflush = ref(0);
-let stopFillWatch = asyncLoadFillImages(props.data, reflush);
-const watcher = () => {
-    reflush.value++;
-}
-const stopWatch = watch(() => props.data, (value, old) => {
-    stopFillWatch();
-    stopFillWatch = asyncLoadFillImages(value, reflush);
-    old.unwatch(watcher);
-    value.watch(watcher);
-})
-onMounted(() => {
-    props.data.watch(watcher);
-})
-onUnmounted(() => {
-    stopFillWatch();
-    props.data.unwatch(watcher);
-    stopWatch();
-})
+const props = defineProps<{
+    data: RectShape, transx?: RenderTransform,
+    varsContainer?: (SymbolRefShape | SymbolShape)[]
+}>();
+const common = initCommonShape(props);
+
 function render() {
-    return r(h, props.data, reflush.value !== 0 ? reflush.value : undefined);
+    const consumedVars: { slot: string, vars: Variable[] }[] = [];
+    const ret = r(h, props.data, props.transx, props.varsContainer, consumedVars, common.reflush);
+    common.watchVars(consumedVars);
+    return ret;
 }
 </script>
 <template>

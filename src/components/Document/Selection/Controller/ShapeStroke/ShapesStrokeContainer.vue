@@ -1,17 +1,22 @@
 <script setup lang='ts'>
-import { Context } from '@/context';
-import { Matrix, Shape } from '@kcdesign/data';
-import { ref, onMounted, onUnmounted, watch } from 'vue';
-import { Selection } from '@/context/selection';
-import { WorkSpace } from '@/context/workspace';
+import {Context} from '@/context';
+import {Matrix, Shape} from '@kcdesign/data';
+import {ref, onMounted, onUnmounted, watch} from 'vue';
+import {Selection} from '@/context/selection';
+import {WorkSpace} from '@/context/workspace';
+
 const watchedShapes = new Map();
+
 interface Props {
     matrix: Matrix
     context: Context
+    colorHex: string
 }
+
 const props = defineProps<Props>();
 const matrix = new Matrix();
 const paths = ref<string[]>([]);
+
 function watchShapes() { // 监听选区相关shape的变化
     const needWatchShapes = new Map();
     const selection = props.context.selection;
@@ -31,16 +36,19 @@ function watchShapes() { // 监听选区相关shape的变化
         watchedShapes.set(k, v);
     })
 }
+
 function update() {
     matrix.reset(props.matrix);
     update_paths(props.context.selection.selectedShapes);
 }
+
 function selection_watcher(t?: number) {
     if (t === Selection.CHANGE_SHAPE) {
         update();
         watchShapes();
     }
 }
+
 function update_paths(shapes: Shape[]) {
     // const s = Date.now();
     const workspace = props.context.workspace;
@@ -60,9 +68,11 @@ function update_paths(shapes: Shape[]) {
     // const e = Date.now();
     // console.log('描边绘制用时(ms):', e - s);
 }
+
 function workspace_watcher(t?: number) {
     if (t === WorkSpace.SELECTION_VIEW_UPDATE) passive_update();
 }
+
 function passive_update() {
     matrix.reset(props.matrix);
     paths.value.length = 0;
@@ -79,7 +89,8 @@ function passive_update() {
         props.context.workspace.setCtrlPath(paths.value[0]);
     }
 }
-watch(() => props.matrix, update, { deep: true })
+
+watch(() => props.matrix, update, {deep: true})
 onMounted(() => {
     props.context.selection.watch(selection_watcher);
     props.context.workspace.watch(workspace_watcher);
@@ -89,11 +100,12 @@ onMounted(() => {
 onUnmounted(() => {
     props.context.selection.unwatch(selection_watcher);
     props.context.workspace.unwatch(workspace_watcher);
+    watchedShapes.forEach(v => v.unwatch(update));
 })
 </script>
 <template>
     <g>
-        <path v-for="(p, i) in paths" :key="i" :d="p" stroke='#865dff' stroke-width="1px" fill="none"></path>
+        <path v-for="(p, i) in paths" :key="i" :d="p" :stroke="colorHex" stroke-width="1px" fill="none"></path>
     </g>
 </template>
 <style lang='scss' scoped></style>

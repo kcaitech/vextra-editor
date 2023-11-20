@@ -102,6 +102,7 @@ const rdelProject = (data: any) => {
 }
 
 const escClose = () => {
+
     if (innerVisible.value) {
         innerVisible.value = false;
     }

@@ -1,12 +1,9 @@
 import {Context} from "@/context";
-import {AsyncTransfer, GroupShape, Matrix, Shape, ShapeType} from "@kcdesign/data";
+import {Matrix, Shape, ShapeType} from "@kcdesign/data";
 import {Menu} from "@/context/menu";
 import {ClientXY, PageXY} from "@/context/selection";
-import {debounce} from "lodash";
 import {WorkSpace} from "@/context/workspace";
 import {Comment} from "@/context/comment";
-import {Asssit} from "@/context/assist";
-import {distance2apex, distance2apex2, gen_match_points, get_frame, get_pg_by_frame} from "@/utils/assist";
 import {XYsBounding} from "@/utils/common";
 
 /**
@@ -162,7 +159,10 @@ export function gen_offset_points_map(shapes: Shape[], down: PageXY) {
             const s = shapes[i];
             const m = s.matrix2Root();
             const f = s.frame;
-            const ps: { x: number, y: number }[] = [{x: 0, y: 0}, {x: f.width, y: 0}, {x: f.width, y: f.height}, {x: 0, y: f.height}];
+            const ps: { x: number, y: number }[] = [{x: 0, y: 0}, {x: f.width, y: 0}, {x: f.width, y: f.height}, {
+                x: 0,
+                y: f.height
+            }];
             for (let i = 0; i < 4; i++) points.push(m.computeCoord3(ps[i]));
         }
         const box = XYsBounding(points);
@@ -194,21 +194,17 @@ export function reset_assist_before_translate(context: Context, shapes: Shape[])
 }
 
 /**
- * @description 更新更新类型更新鼠标在client坐标系上的落点
- * @param update_type
+ * @description 更新更新类型update_type更新鼠标在client坐标系上的落点
  */
 export function modify_mouse_position_by_type(update_type: number, startPosition: ClientXY, mousePosition: ClientXY,) {
-    if (update_type === 3) startPosition.x = mousePosition.x, startPosition.y = mousePosition.y;
-    else if (update_type === 2) startPosition.y = mousePosition.y;
-    else if (update_type === 1) startPosition.x = mousePosition.x;
-}
-
-export function migrate_immediate(context: Context, asyncTransfer: AsyncTransfer, shape: Shape) {
-    const p = shape.matrix2Root().computeCoord2(4, 4);
-    const targetParent = context.selection.getClosetArtboard(p);
-    const m = get_closest_container(context, shape).id !== targetParent.id;
-    if (targetParent.id === shape.id) return;
-    if (m && asyncTransfer) asyncTransfer.migrate(targetParent as GroupShape);
+    if (update_type === 3) {
+        startPosition.x = mousePosition.x;
+        startPosition.y = mousePosition.y;
+    } else if (update_type === 2) {
+        startPosition.y = mousePosition.y;
+    } else if (update_type === 1) {
+        startPosition.x = mousePosition.x;
+    }
 }
 
 /**
@@ -218,14 +214,12 @@ export function get_closest_container(context: Context, shape: Shape): Shape {
     let result = context.selection.selectedPage!
     let p = shape.parent;
     while (p) {
-        if (p.type == ShapeType.Artboard) return p;
+        if (p.type === ShapeType.Artboard || p.type === ShapeType.Symbol) return p;
         p = p.parent;
     }
     return result
 }
 
-// 迁移
-export const migrate = debounce(migrate_immediate, 100);
 
 /**
  * @description 结束图形拖动，开启控件更新机并立刻更新一次、重置辅助对象、控制权由控件转移到编辑器、解除光标固定
@@ -257,11 +251,15 @@ export function shapes_picker(e: MouseEvent, context: Context, p: { x: number, y
     const selected = selection.selectedShapes;
     const hoveredShape = selection.hoveredShape;
     if (hoveredShape) {
-        e.shiftKey ? selection.rangeSelectShape([...selected, hoveredShape]) : selection.selectShape(hoveredShape);
-    } else {
-        const shapes = selection.getShapesByXY(p, e.metaKey || e.ctrlKey, selected);
-        if (shapes.length) {
-            selection.selectShape(shapes[0]);
+        if (e.shiftKey) { // todo 当按下shift时选中的也需要hover
+            selection.rangeSelectShape([...selected, hoveredShape]);
+        } else {
+            selection.selectShape(hoveredShape);
+        }
+    } else if (selected.length > 1) {
+        const shape = selection.getShapesByXY(p, e.metaKey || e.ctrlKey, selected);
+        if (shape) {
+            selection.selectShape(shape);
         } else {
             selection.resetSelectShapes();
         }
@@ -270,9 +268,11 @@ export function shapes_picker(e: MouseEvent, context: Context, p: { x: number, y
 
 /**
  * @description 获取移动辅助中心对象点图
- * @param pe
  */
-export function gen_assist_target(context: Context, shapes: Shape[], is_multi: boolean, offset_map: any, pe: { x: number, y: number }) {
+export function gen_assist_target(context: Context, shapes: Shape[], is_multi: boolean, offset_map: any, pe: {
+    x: number,
+    y: number
+}) {
     if (is_multi) {
         return context.assist.trans_match_multi(shapes, offset_map, pe);
     } else {
@@ -286,4 +286,3 @@ export function gen_assist_target(context: Context, shapes: Shape[], is_multi: b
 export function is_rid_stick(context: Context, a: number, b: number) {
     return Math.abs(a - b) >= context.assist.stickness;
 }
-

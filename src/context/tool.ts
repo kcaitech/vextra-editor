@@ -1,7 +1,8 @@
-import { Shape, ShapeType, Watchable } from "@kcdesign/data";
-import { Context } from ".";
-import { Comment } from "./comment";
-import { TaskType } from "./escstack";
+import {Shape, ShapeType, Watchable} from "@kcdesign/data";
+import {Context} from ".";
+import {Comment} from "./comment";
+import {v4} from "uuid";
+
 export enum Action {
     Auto = 'auto',
     AutoV = 'drag',
@@ -14,9 +15,10 @@ export enum Action {
     AddText = 'add-text',
     AddComment = 'add-comment',
     AddImage = 'add-image',
-    AddTable = 'add-table',
-    AddContact = 'add-contact'
+    AddTable = 'table',
+    AddContact = 'add-contact',
 }
+
 export enum KeyboardKeys { // 键盘按键类型
     Space = 'Space',
     A = 'KeyA',
@@ -42,6 +44,7 @@ export enum KeyboardKeys { // 键盘按键类型
     Digit1 = 'Digit1',
     Backspace = 'Backspace',
 }
+
 const A2R = new Map([
     [Action.Auto, undefined],
     [Action.AddRect, ShapeType.Rectangle],
@@ -68,24 +71,28 @@ export class Tool extends Watchable(Object) {
     static CHANGE_CONTACT_APEX = 8;
     static LABLE_CHANGE = 10;
     static NEW_FILE = 9;
+    static COMPONENT = 10;
     private m_current_action: Action = Action.AutoV;
     private m_context: Context;
     private m_show_title: boolean = true;
-    private m_frame_size: { width: number, height: number } = { width: 100, height: 100 }; // 容器模版frame
+    private m_frame_size: { width: number, height: number } = {width: 100, height: 100}; // 容器模版frame
     private m_frame_name: string = ''; // 容器模版名称
-    private m_table_size: { row: number, col: number } = { row: 3, col: 3 };
+    private m_table_size: { row: number, col: number } = {row: 3, col: 3};
     private m_contact_apex: Shape | undefined;
     private m_contact_from: boolean = false;
     private m_lable_status: boolean = false;
+
     constructor(context: Context) {
         super();
         this.m_context = context;
     }
+
     get action() {
         return this.m_current_action;
     }
+
     keyhandle(e: KeyboardEvent) {
-        const { target, code, shiftKey, ctrlKey, metaKey, altKey } = e;
+        const {target, code, shiftKey, ctrlKey, metaKey, altKey} = e;
         if (target instanceof HTMLInputElement) return;
         if (code === 'KeyR') {
             if (!(ctrlKey || shiftKey)) e.preventDefault();
@@ -115,23 +122,30 @@ export class Tool extends Watchable(Object) {
         } else if (code === 'KeyX') {
             e.preventDefault();
             this.keydown_x(ctrlKey, shiftKey, metaKey);
+        } else if (code === KeyboardKeys.I) {
+            e.preventDefault();
+            this.keydown_i(ctrlKey, metaKey, shiftKey);
         }
     }
+
     setAction(action: Action) {
         this.m_current_action = action;
         if (action.startsWith('add')) {
             this.m_context.menu.menuMount();
-            this.m_context.esctask.save(TaskType.TOOL, this.reset.bind(this));
+            this.m_context.esctask.save('tool-action', this.reset.bind(this));
             if (action === Action.AddComment) {
                 if (this.m_context.workspace.documentPerm === 1) return;
                 this.m_context.comment.commentInput(false);
                 this.m_context.comment.notify(Comment.SELECT_LIST_TAB);
                 this.m_context.cursor.setType('comment-0');
-            } else this.m_context.cursor.setType('cross-0');
+            } else {
+                this.m_context.cursor.setType('cross-0');
+            }
 
         } else this.m_context.cursor.reset();
         this.notify(Tool.CHANGE_ACTION);
     }
+
     reset() {
         let exe_result: boolean = false;
         if (this.m_current_action.startsWith('add')) {
@@ -142,38 +156,47 @@ export class Tool extends Watchable(Object) {
         this.notify(Tool.CHANGE_ACTION);
         return exe_result;
     }
+
     keydown_r(ctrl: boolean, shift: boolean, meta: boolean) {
         if (ctrl || shift || meta) return;
         this.setAction(Action.AddRect);
     }
+
     keydown_v(ctrlKey: boolean, metaKey: boolean) {
         if (ctrlKey || metaKey) return;
         this.setAction(Action.AutoV);
     }
+
     keydown_l(shiftKey: boolean) {
         this.setAction(shiftKey ? Action.AddArrow : Action.AddLine);
     }
+
     keydown_k(ctrl: boolean, shift: boolean, meta: boolean) {
         if (!(ctrl || meta || shift)) {
             this.setAction(Action.AutoK);
         }
     }
+
     keydown_o(ctrl: boolean, shift: boolean, meta: boolean) {
         if (ctrl || shift || meta) return;
         this.setAction(Action.AddEllipse);
     }
+
     keydown_f(ctrl: boolean, shift: boolean, meta: boolean) {
         if (ctrl || shift || meta) return;
         this.setAction(Action.AddFrame);
     }
+
     keydown_t(ctrl: boolean, shift: boolean, meta: boolean) {
         if (ctrl || shift || meta) return;
         this.setAction(Action.AddText);
     }
+
     keydown_c(ctrl: boolean, meta: boolean, shift: boolean) {
         if (ctrl || meta || shift) return;
         this.setAction(Action.AddComment);
     }
+
     keydown_g(ctrl: boolean, meta: boolean, shift: boolean, alt: boolean) {
         if ((ctrl || meta) && !shift) { // 编组
             if (alt) {
@@ -185,49 +208,64 @@ export class Tool extends Watchable(Object) {
             this.notify(Tool.UNGROUP);
         }
     }
-    keydown_n(ctrl: boolean, meta: boolean,shift: boolean, alt: boolean) {
+
+    keydown_n(ctrl: boolean, meta: boolean, shift: boolean, alt: boolean) {
         if ((ctrl || meta) && !shift && !alt) {
             this.notify(Tool.NEW_FILE);
         }
     }
+
     keydown_i(ctrl: boolean, meta: boolean, shift: boolean) {
         // todo
+        if (shift) {
+            this.notify(Tool.COMPONENT);
+        }
     }
+
     keydown_x(ctrl: boolean, meta: boolean, shift: boolean) {
         if (ctrl || meta || shift) return;
         this.setAction(Action.AddContact);
     }
+
     get isShowTitle() {
         return this.m_show_title;
     }
+
     setTitleVisible(val: boolean) {
         this.m_show_title = val;
         this.notify(Tool.TITILE_VISIBLE);
     }
+
     get frameSize(): { size: { width: number, height: number }, name: string } {
-        return { size: this.m_frame_size, name: this.m_frame_name };
+        return {size: this.m_frame_size, name: this.m_frame_name};
     }
+
     setArtboardTemp(width: number, height: number, name: string) {
-        this.m_frame_size = { width, height };
+        this.m_frame_size = {width, height};
         this.m_frame_name = name;
         this.notify(Tool.INSERT_FRAME);
     }
+
     get tableSize() {
         return this.m_table_size;
     }
+
     insertTable(size: { row: number, col: number }) {
         this.m_table_size = size
         this.notify(Tool.INSERT_TABLE);
     }
+
     get contactApex() {
         return this.m_contact_apex;
     }
+
     setContactApex(shape: Shape) {
         if (shape.id !== this.m_contact_apex?.id) {
             this.m_contact_apex = shape;
             this.notify(Tool.CHANGE_CONTACT_APEX);
         }
     }
+
     resetContactApex() {
         const needNotify = this.m_contact_apex ? true : false;
         this.m_contact_apex = undefined;
@@ -235,15 +273,19 @@ export class Tool extends Watchable(Object) {
             this.notify(Tool.CHANGE_CONTACT_APEX);
         }
     }
+
     get contactFrom() {
         return this.m_contact_from;
     }
+
     setContactFrom(v: boolean) {
         this.m_contact_from = v;
     }
+
     get isLable() {
         return this.m_lable_status;
     }
+
     setLableSwitch(v: boolean) {
         this.m_lable_status = v;
         this.notify(Tool.LABLE_CHANGE);

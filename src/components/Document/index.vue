@@ -28,6 +28,10 @@ import { Comment } from '@/context/comment';
 import { DocSelectionOpData, DocSelectionOpType } from "@/communication/modules/doc_selection_op";
 import { debounce } from '@/utils/timing_util';
 import { NetworkStatusType } from "@/communication/types";
+import { _updateRoot } from '@/utils/content';
+import Bridge from "@/components/Document/Bridge.vue";
+import { Component } from '@/context/component';
+import {initpal} from './initpal';
 
 const {t} = useI18n();
 const curPage = shallowRef<Page | undefined>(undefined);
@@ -53,9 +57,11 @@ let timeForRight: any;
 const loading = ref<boolean>(false);
 const sub_loading = ref<boolean>(false);
 const null_context = ref<boolean>(true);
-const isRead = ref(false)
-const canComment = ref(false)
-const isEdit = ref(true)
+const isRead = ref(false);
+const canComment = ref(false);
+const isEdit = ref(true);
+const bridge = ref<boolean>(false);
+const inited = ref(false);
 
 function screenSetting() {
   const element = document.documentElement;
@@ -278,6 +284,7 @@ const getDocumentAuthority = async () => {
             isEdit.value = true
         }
         permType.value = data.data.perm_type
+        console.log(permType.value,'文档权限接口的权限');
         context && context.workspace.setDocumentPerm(data.data.perm_type)
     } catch (err) {
         console.log(err);
@@ -340,6 +347,8 @@ const getDocumentInfo = async () => {
         }
         const perm = dataInfo.data.document_permission.perm_type
         permType.value = perm;
+        console.log(perm,'文档信息的权限');
+
         //获取文档类型是否为私有文档且有无权限
         if (perm === 0) {
             router.push({
@@ -377,15 +386,15 @@ const getDocumentInfo = async () => {
             context = new Context(document, coopRepo);
             context.workspace.setDocumentPerm(perm)
 
-            
+
             getDocumentAuthority();
             getUserInfo()
-            
+
             context.comment.setDocumentInfo(dataInfo.data)
             null_context.value = false;
             context.selection.watch(selectionWatcher);
             context.workspace.watch(workspaceWatcher);
-
+            context.component.watch(component_watcher);
             const docId = route.query.id as string;
             const token = localStorage.getItem("token") || "";
             if (await context.communication.docOp.start(token, docId, document, context.coopRepo, dataInfo.data.document.version_id ?? "")) {
@@ -426,6 +435,8 @@ async function upload(projectId: string) {
         // todo 上传失败处理
         return;
     }
+    console.log(result, '文档上传');
+
     const doc_id = result!.data.doc_id;
     router.replace({
         path: '/document',
@@ -435,7 +446,7 @@ async function upload(projectId: string) {
         // todo 文档操作通道开启失败处理
     }
     getDocumentAuthority().then(async _ => {
-    
+
         if(!context) return;
         if(permType.value === 3) context.communication.docResourceUpload.start(token, doc_id);
         if(permType.value && permType.value >= 2) context.communication.docCommentOp.start(token, doc_id);
@@ -465,7 +476,8 @@ function init_doc() {
             getUserInfo();
             context.selection.watch(selectionWatcher);
             context.workspace.watch(workspaceWatcher);
-            const project_id = localStorage.getItem('project_id') || ''; 
+            context.component.watch(component_watcher);
+            const project_id = localStorage.getItem('project_id') || '';
             upload(project_id);
             localStorage.setItem('project_id', '');
             switchPage(((window as any).sketchDocument as Document).pagesList[0]?.id);
@@ -626,32 +638,42 @@ const teamSelectionModifi = (docCommentOpData: DocSelectionOpData) => {
     }
   }
 }
+function component_watcher(t: number) {
+    if (!context) return;
+    if (t === Component.BRIDGE_CHANGE) bridge.value = context.component.bridge;
+}
 
 onMounted(() => {
-  window.addEventListener('beforeunload', onBeforeUnload);
-  window.addEventListener('unload', onUnload);
-  init_screen_size();
-  init_doc();
+    window.addEventListener('beforeunload', onBeforeUnload);
+    window.addEventListener('unload', onUnload);
+    init_screen_size();
+    init_doc();
+    initpal().then(() => {
+        inited.value = true;
+    }).catch((e) => {
+        console.log(e)
+    })
 })
 
 onUnmounted(() => {
-  closeNetMsg();
-  onUnloadForCommunication();
-  window.document.title = t('product.name');
-  (window as any).sketchDocument = undefined;
-  (window as any).skrepo = undefined;
-  context?.selection.unwatch(selectionWatcher);
-  context?.workspace.unwatch(workspaceWatcher);
-  document.removeEventListener('keydown', keyboardEventHandler);
-  clearInterval(timer);
-  localStorage.removeItem('docId')
-  showHint.value = false;
-  countdown.value = 10;
-  window.removeEventListener('beforeunload', onBeforeUnload);
-  window.removeEventListener('unload', onUnload);
-  clearInterval(loopNet);
-  clearInterval(netErr);
-  networkStatus.close();
+    closeNetMsg();
+    onUnloadForCommunication();
+    window.document.title = t('product.name');
+    (window as any).sketchDocument = undefined;
+    (window as any).skrepo = undefined;
+    context?.selection.unwatch(selectionWatcher);
+    context?.workspace.unwatch(workspaceWatcher);
+    document.removeEventListener('keydown', keyboardEventHandler);
+    clearInterval(timer);
+    localStorage.removeItem('docId')
+    showHint.value = false;
+    countdown.value = 10;
+    window.removeEventListener('beforeunload', onBeforeUnload);
+    window.removeEventListener('unload', onUnload);
+    clearInterval(loopNet);
+    clearInterval(netErr);
+    networkStatus.close();
+    context?.component.unwatch(component_watcher);
 })
 </script>
 
@@ -665,7 +687,7 @@ onUnmounted(() => {
       <ApplyFor></ApplyFor>
     </div>
     <ColSplitView id="center" :style="{ height: showTop ? 'calc(100% - 40px)' : '100%' }"
-                  v-if="!loading && !null_context"
+                  v-if="inited && !loading && !null_context"
                   :left="{ width: Left.leftWidth, minWidth: Left.leftMinWidth, maxWidth: 0.5 }"
                   :middle="{ width: middleWidth, minWidth: middleMinWidth, maxWidth: middleWidth }"
                   :right="{ width: Right.rightWidth, minWidth: Right.rightMinWidth, maxWidth: 0.5 }"
@@ -675,34 +697,35 @@ onUnmounted(() => {
                     @switchpage="switchPage" @mouseenter="() => { mouseenter('left') }" @showNavigation="showHiddenLeft"
                     @mouseleave="() => { mouseleave('left') }" :page="(curPage as Page)" :showLeft="showLeft"
                     :leftTriggleVisible="leftTriggleVisible">
-        </Navigation>
-      </template>
-      <template #slot2>
-        <ContentView v-if="curPage !== undefined && !null_context" id="content" :context="context!"
-                     :page="(curPage as Page)">
-        </ContentView>
-      </template>
-      <template #slot3>
-        <Attribute id="attributes" v-if="!null_context && !isRead" :context="context!"
-                   @mouseenter="(e: Event) => { mouseenter('right') }" @mouseleave="() => { mouseleave('right') }"
-                   :showRight="showRight" :rightTriggleVisible="rightTriggleVisible" @showAttrbute="showHiddenRight">
-        </Attribute>
-      </template>
-    </ColSplitView>
-    <div class="network" v-if="noNetwork">
-      <NetWorkError @refresh-doc="refreshDoc" :top="true"></NetWorkError>
+                </Navigation>
+            </template>
+            <template #slot2>
+                <ContentView v-if="curPage !== undefined && !null_context" id="content" :context="context!"
+                    :page="(curPage as Page)">
+                </ContentView>
+            </template>
+            <template #slot3>
+                <Attribute id="attributes" v-if="!null_context && !isRead" :context="context!"
+                    @mouseenter="(e: Event) => { mouseenter('right') }" @mouseleave="() => { mouseleave('right') }"
+                    :showRight="showRight" :rightTriggleVisible="rightTriggleVisible" @showAttrbute="showHiddenRight">
+                </Attribute>
+            </template>
+        </ColSplitView>
+        <SubLoading v-if="sub_loading"></SubLoading>
+        <div class="network" v-if="noNetwork">
+            <NetWorkError @refresh-doc="refreshDoc" :top="true"></NetWorkError>
+        </div>
+        <div v-if="showHint" class="notification">
+            <el-icon :size="13">
+                <Warning />
+            </el-icon>
+            <span class="text" v-if="permissionChange === PermissionChange.update">{{ t('home.prompt') }}</span>
+            <span class="text" v-if="permissionChange === PermissionChange.close">{{ t('home.visit') }}</span>
+            <span class="text" v-if="permissionChange === PermissionChange.delete">{{ t('home.delete_file') }}</span>
+            <span style="color: #0d99ff;" v-if="countdown > 0">{{ countdown }}</span>
+        </div>
+        <Bridge v-if="bridge" :context="context!"></Bridge>
     </div>
-    <div v-if="showHint" class="notification">
-      <el-icon :size="13">
-        <Warning/>
-      </el-icon>
-      <span class="text" v-if="permissionChange === PermissionChange.update">{{ t('home.prompt') }}</span>
-      <span class="text" v-if="permissionChange === PermissionChange.close">{{ t('home.visit') }}</span>
-      <span class="text" v-if="permissionChange === PermissionChange.delete">{{ t('home.delete_file') }}</span>
-      <span style="color: #0d99ff;" v-if="countdown > 0">{{ countdown }}</span>
-    </div>
-    <SubLoading v-if="sub_loading"></SubLoading>
-  </div>
 </template>
 <style>
 :root {

@@ -9,7 +9,7 @@ import {Media, getName} from '@/utils/content';
 import {message} from './message';
 import {Action} from '@/context/tool';
 import {is_box_outer_view2} from './common';
-import {sort_by_layer} from './group_ungroup';
+import {compare_layer_3} from './group_ungroup';
 
 interface SystemClipboardItem {
     type: ShapeType
@@ -51,7 +51,7 @@ export class Clipboard {
                 return false;
             }
         } else { // 写入图层数据
-            const shapes = sort_by_layer(this.context, this.context.selection.selectedShapes, -1); // 处理层级
+            const shapes = compare_layer_3(this.context.selection.selectedShapes, -1); // 处理层级
             if (!shapes.length) return false;
             // 记录每个图形相对root位置
             const position_map: Map<string, PageXY> = new Map();
@@ -372,7 +372,7 @@ async function clipboard_text_html(context: Context, data: any, xy?: PageXY) {
 }
 
 function modify_frame_by_xy(xy: PageXY, shapes: Shape[]) {
-    const lt_shape_xy = {x: shapes[0].frame.x, y: shapes[0].frame.y};
+    const lt_shape_xy = { x: Infinity, y: Infinity };
     for (let i = 0, len = shapes.length; i < len; i++) { // 寻找图形群体的起点
         const frame = shapes[i].frame;
         if (frame.x < lt_shape_xy.x) lt_shape_xy.x = frame.x;
@@ -383,7 +383,14 @@ function modify_frame_by_xy(xy: PageXY, shapes: Shape[]) {
         shape.frame.x += xy.x - lt_shape_xy.x, shape.frame.y += xy.y - lt_shape_xy.y;
     }
 }
-
+function modify_frame_by_parent(parent: GroupShape, shapes: Shape[]) {
+    const pp = parent.matrix2Root().computeCoord2(0, 0);
+    for (let i = 0, len = shapes.length; i < len; i++) {
+        const shape = shapes[i];
+        shape.frame.x -= pp.x;
+        shape.frame.y -= pp.y;
+    }
+}
 /**
  * @description 从剪切板拿出图形数据并替换掉src中的内容
  * @param data 剪切板拿出的数据

@@ -257,7 +257,7 @@ onUnmounted(() => {
                 </TableContextAlgin>
             </div>
             <div style="display: flex; align-items: center; justify-content: center; padding: 2px;">
-                <ColorPicker :context="props.context" :color="(color as Color)" :late="-270" :top="24"
+                <ColorPicker :context="props.context" :color="(color as Color)" :cell="true" :top="30"
                     @change="c => getColorFromPicker(c)"></ColorPicker>
             </div>
             <div style="padding: 2px;" @click.stop="mergeCells" v-if="!singleChoice">
@@ -278,7 +278,7 @@ onUnmounted(() => {
         </div>
         <div v-if="props.cellMenu === CellMenu.SelectRow || props.cellMenu === CellMenu.selectCol" class="popover-content">
             <div style="display: flex; align-items: center; justify-content: center;">
-                <ColorPicker :context="props.context" :color="(color as Color)" :late="-270" :top="24"
+                <ColorPicker :context="props.context" :color="(color as Color)" :cell="true" :top="30"
                     @change="c => getColorFromPicker(c)"></ColorPicker>
             </div>
             <div :style="{ transform: props.cellMenu === CellMenu.selectCol ? `rotate(180deg)` : `rotate(270deg)` }"

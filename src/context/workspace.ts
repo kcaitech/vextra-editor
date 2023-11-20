@@ -231,6 +231,7 @@ export class WorkSpace extends Watchable(Object) {
     get cache_map() {
         return this.__cache_map;
     }
+
     clear_cache_map() {
         this.__cache_map = undefined;
     }
