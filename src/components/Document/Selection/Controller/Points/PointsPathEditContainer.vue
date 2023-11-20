@@ -1,7 +1,7 @@
 <script setup lang='ts'>
 import {Context} from '@/context';
 import {AsyncPathEditor, Matrix, Shape} from '@kcdesign/data';
-import {onMounted, onUnmounted, watch, reactive, ref} from 'vue';
+import {onMounted, onUnmounted, reactive, ref} from 'vue';
 import {ClientXY, Selection} from '@/context/selection';
 import {get_path_by_point, get_conact_by_point} from './common';
 import {Point} from "../../SelectionView.vue";
@@ -25,7 +25,7 @@ interface Line {
 
 const props = defineProps<Props>();
 const matrix = new Matrix();
-const submatrix = new Matrix();
+const sub_matrix = new Matrix();
 const data: { dots: Dot[], lines: Line[] } = reactive({dots: [], lines: []});
 const {dots, lines} = data;
 const show_index = ref<number>(-1);
@@ -67,7 +67,7 @@ function point_mousemove(event: MouseEvent) {
     const root = workspace.root;
     const mouseOnClient: ClientXY = {x: event.clientX - root.x, y: event.clientY - root.y};
     if (isDragging && pathEditor) {
-        pathEditor.execute(down_index, submatrix.computeCoord3(mouseOnClient));
+        pathEditor.execute(down_index, sub_matrix.computeCoord3(mouseOnClient));
         startPosition.x = mouseOnClient.x
         startPosition.y = mouseOnClient.y;
     } else {
@@ -76,7 +76,7 @@ function point_mousemove(event: MouseEvent) {
         if (Math.hypot(mx - sx, my - sy) > dragActiveDis) {
             pathEditor = props.context.editor.controller().asyncPathEditor(shape, props.context.selection.selectedPage!);
             isDragging = true;
-            submatrix.reset(workspace.matrix.inverse);
+            sub_matrix.reset(workspace.matrix.inverse);
         }
     }
 }
@@ -127,7 +127,7 @@ function n_point_mousemove(event: MouseEvent) {
     const root = workspace.root;
     const mouseOnClient: ClientXY = {x: event.clientX - root.x, y: event.clientY - root.y};
     if (isDragging && pathEditor) {
-        pathEditor.execute(down_index, submatrix.computeCoord3(mouseOnClient));
+        pathEditor.execute(down_index, sub_matrix.computeCoord3(mouseOnClient));
         startPosition.x = mouseOnClient.x;
         startPosition.y = mouseOnClient.y;
     } else {
@@ -137,7 +137,7 @@ function n_point_mousemove(event: MouseEvent) {
             pathEditor = props.context.editor.controller().asyncPathEditor(shape, props.context.selection.selectedPage!);
             pathEditor.addNode(down_index, cur_new_node.point_raw);
             isDragging = true;
-            submatrix.reset(workspace.matrix.inverse);
+            sub_matrix.reset(workspace.matrix.inverse);
         }
     }
 }
@@ -190,23 +190,17 @@ onUnmounted(() => {
 })
 </script>
 <template>
-    <svg version="1.1" xmlns="http://www.w3.org/2000/svg" xmlns:xlink="http://www.w3.org/1999/xlink"
-         data-area="controller"
-         xmlns:xhtml="http://www.w3.org/1999/xhtml" preserveAspectRatio="xMinYMin meet"
-         :width="200" :height="200" overflow="visible"
-    >
-        <g v-for="(p, i) in lines" :key="i" @mouseenter="() => { line_enter(p.index) }" @mouseleave="line_leave">
-            <line :x1="p.apex1.x" :y1="p.apex1.y" :x2="p.apex2.x" :y2="p.apex2.y" class="line"></line>
-            <rect v-if="show_index === p.index" :x="p.point.x - 4" :y="p.point.y - 4" rx="4px" ry="4px" height="8px"
-                  width="8px"
-                  @mousedown="n_point_down" class="point">
-            </rect>
-        </g>
-        <rect v-for="(p, i) in dots" :key="i" :x="p.point.x - 4" :y="p.point.y - 4" rx="4px" ry="4px" height="8px"
+    <g v-for="(p, i) in lines" :key="i" @mouseenter="() => { line_enter(p.index) }" @mouseleave="line_leave">
+        <line :x1="p.apex1.x" :y1="p.apex1.y" :x2="p.apex2.x" :y2="p.apex2.y" class="line"></line>
+        <rect v-if="show_index === p.index" :x="p.point.x - 4" :y="p.point.y - 4" rx="4px" ry="4px" height="8px"
               width="8px"
-              @mousedown.stop="(e) => point_mousedown(e, p.index)" class="point">
+              @mousedown="n_point_down" class="point">
         </rect>
-    </svg>
+    </g>
+    <rect v-for="(p, i) in dots" :key="i" :x="p.point.x - 4" :y="p.point.y - 4" rx="4px" ry="4px" height="8px"
+          width="8px"
+          @mousedown.stop="(e) => point_mousedown(e, p.index)" class="point">
+    </rect>
 </template>
 <style lang='scss' scoped>
 .point {

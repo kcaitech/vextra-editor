@@ -1,7 +1,6 @@
 <script setup lang="ts">
 import {Context} from "@/context";
 import {onMounted, onUnmounted, reactive, ref, watch} from "vue";
-import PathEdit from "@/components/Document/Selection/Controller/Points/PathEdit.vue";
 import {PageXY, Selection} from "@/context/selection";
 import {dbl_action} from "@/utils/mouse_interactive";
 import Selector4PEM, {SelectorFrame} from "@/components/Document/Selection/Controller/PathEdit/Selector4PEM.vue";
@@ -9,6 +8,7 @@ import {Matrix} from "@kcdesign/data";
 import {Action} from "@/context/tool";
 import {root_scale, root_trans} from "@/utils/content";
 import {WorkSpace} from "@/context/workspace";
+import CtrlPathEdit from "@/components/Document/Selection/Controller/CtrlPathEdit.vue";
 
 interface Props {
     context: Context
@@ -118,7 +118,7 @@ onUnmounted(() => {
 </script>
 <template>
     <div class="wrapper" @wheel.stop @mousedown.stop="down" @mousemove="move" @mouseup="up" @wheel="onMouseWheel">
-        <PathEdit :context="props.context"></PathEdit>
+        <CtrlPathEdit :context="props.context"></CtrlPathEdit>
         <Selector4PEM v-if="selector_mount" :context="props.context" :selector-frame="selectorFrame"></Selector4PEM>
     </div>
 </template>
