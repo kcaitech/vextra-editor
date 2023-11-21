@@ -492,6 +492,7 @@ onUnmounted(() => {
     .hearder-container {
         display: flex;
         gap: 16px;
+        line-height: 24px;
 
         .title {
             width: 362px;

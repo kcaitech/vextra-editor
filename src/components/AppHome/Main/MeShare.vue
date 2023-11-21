@@ -10,6 +10,16 @@
                 :style="{ color: active ? '#777777' : '#333333' }">
                 {{ t('home.recycling_station') }}</div>
         </div>
+        <div class="right">
+            <div class="newfile" >
+                <svg-icon icon-class="addfile-icon"></svg-icon>
+                {{ t('home.New_file') }}
+            </div>
+            <div class="openfile" >
+                <svg-icon icon-class="open-icon"></svg-icon>
+                {{ t('home.open_local_file') }}
+            </div>
+        </div>
     </div>
     <div v-if="active">
         <div class="tatle" style="height: calc(100vh - 144px);">
@@ -365,6 +375,56 @@ onUnmounted(() => {
         letter-spacing: 2px;
         line-height: 36px;
         white-space: nowrap;
+    }
+    .right {
+        display: flex;
+        gap: 12px;
+        font-size: 14px;
+
+        .newfile,
+        .openfile {
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            gap: 4px;
+            width: 108px;
+            height: 36px;
+            border-radius: 6px;
+            box-sizing: border-box;
+        }
+
+        .newfile {
+            color: white;
+            border: 1px solid rgba(24, 120, 245, 1);
+            background-color: rgba(24, 120, 245, 1);
+
+            &:hover {
+                background-color: rgba(51, 140, 255, 1);
+            }
+
+            &:active {
+                background-color: rgba(12, 111, 240, 1);
+
+            }
+        }
+
+        .openfile {
+            border: 1px solid rgba(240, 240, 240, 1);
+            background-color: rgba(255, 255, 255, 0.1);
+
+            &:hover {
+                background-color: rgba(247, 247, 249, 1);
+            }
+
+            &:active {
+                background-color: rgba(243, 243, 245, 1);
+            }
+        }
+
+        svg {
+            width: 16px;
+            height: 16px;
+        }
     }
 }
 </style>
