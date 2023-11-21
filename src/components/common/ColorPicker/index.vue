@@ -176,7 +176,7 @@ function colorPickerMount() {
       let p_top = p_el.top;
       const su = body_h - p_el.top;
       const cur_t = su - el.clientHeight;
-      
+
       if (cur_t > 0) {
         p_top = p_el.top;
       } else {
@@ -185,10 +185,16 @@ function colorPickerMount() {
       if (p_top - 40 < 0) {
         p_top = 40
       }
+      const doc_height = document.documentElement.clientHeight;
+      let top = Math.min(doc_height - 76 - block.value.offsetTop - el.offsetHeight, 0);
       if (props.top) {
         el.style.top = (top + props.top) + 'px';
       } else {
         el.style.top = p_top + 'px';
+      }
+      const {height, y} = el.getBoundingClientRect();
+      if(doc_height - y < height + 10) {
+        el.style.top = parseInt(el.style.top) - ((height + 20) - (doc_height - y)) + 'px'
       }
 
       if (props.late) {

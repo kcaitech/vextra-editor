@@ -20,6 +20,7 @@ export class Menu extends Watchable(Object) {
   static LABLE_MULRIPLE = 9;
   static SHUTDOWN_LABLE_MENU =  10;
   static CLOSE_INSTANCE_ATTR_MENU = 11;
+  static SHADOW_POSITION_MENU = 12;
   private m_menu_mounted: string = '';
   private m_popover: boolean = false;
   private m_color_picker: string | undefined; // 编辑器是否已经有调色板🎨
@@ -99,5 +100,8 @@ export class Menu extends Watchable(Object) {
   lableMenuMount(mount?: string) {
     this.m_lable_menu_mounted = mount || '';
     if (!mount) this.notify(Menu.SHUTDOWN_LABLE_MENU);
+  }
+  shadowPositionMenu() {
+    this.notify(Menu.SHADOW_POSITION_MENU);
   }
 }
