@@ -27,7 +27,7 @@ html,
 body {
     margin: 0;
     padding: 0;
-
+    background-color:rgba(250, 250, 250, 1);
     >body {
         font-family: var(--font-family);
         height: 100vh;

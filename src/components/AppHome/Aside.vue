@@ -1,22 +1,8 @@
 <script setup lang="ts" >
-import {
-    Clock,
-    Star,
-    BottomLeft,
-    Plus,
-    Document as documents,
-    FolderOpened,
-} from '@element-plus/icons-vue'
 import { router } from '@/router'
 import { useRoute } from 'vue-router'
-import { FilePicker } from '../common/filepicker';
-import { Repository, CoopRepository, Document } from '@kcdesign/data';
-import { LzDataLocal } from '@/basic/lzdatalocal'; // todo
-import { importSketch } from '@kcdesign/data';
-import { Zip } from "@pal/zip";
-import { createDocument } from '@kcdesign/data';
+import { Repository, CoopRepository,createDocument,DocEditor } from '@kcdesign/data';
 import { useI18n } from 'vue-i18n';
-import { DocEditor } from '@kcdesign/data';
 import { Ref, inject, nextTick, onMounted, onUnmounted, ref, watch, computed, watchEffect } from 'vue';
 import * as user_api from '@/request/users'
 import * as team_api from '@/request/team'
@@ -28,19 +14,14 @@ import ProjectDialog from '../TeamProject/ProjectDialog.vue';
 import Tooltip from '@/components/common/Tooltip.vue';
 import ProjectAccessSetting from '../TeamProject/ProjectFill/ProjectAccessSetting.vue';
 import ProjectMemberg from '../TeamProject/ProjectFill/ProjectMemberg.vue';
+import avatar from '@/assets/pd-logo-svg.svg';
 
-interface Emits {
-    (e: 'settitle', title: string, recycle: boolean): void;
-}
-
-const emits = defineEmits<Emits>();
 const { t } = useI18n();
 const route = useRoute();
 const showoverlay = ref(false);
 const teamcard = ref(false);
 const projectcard = ref(false);
 const teamid = ref('');
-// const activeNames = ref([-1]);
 const x = ref('0');
 const teamList = ref<any>([]);
 const teamDataList = ref<any[]>([]);
@@ -121,6 +102,7 @@ const closeDialog = () => {
 const exitProject = () => {
     projectMembergDialog.value = false;
 }
+
 function addChildToParent(parent: { children: any[]; }, child: any) {
     if (!parent.children) {
         parent.children = [];
@@ -147,6 +129,7 @@ const favoriteProjectList = (arr1: any[], arr2: any[]) => {
     })
     return projectList;
 }
+
 const getProjectFavoriteLists = async () => {
     try {
         const { data } = await team_api.getProjectFavoriteListsAPI()
@@ -162,47 +145,10 @@ const getProjectFavoriteLists = async () => {
     }
 }
 
-const picker = new FilePicker('.sketch', (file) => {
-    if (!file) return;
-    const lzdata = new LzDataLocal(new Zip(file));
-    const repo = new Repository();
-    importSketch(file.name, lzdata, repo).then((document: Document) => {
-        window.document.title = document.name;
-        const coopRepo = new CoopRepository(document, repo);
-        (window as any).skrepo = coopRepo;
-        (window as any).sketchDocument = document;
-        router.push({ name: 'document' });
-    })
-});
-
-function newFile() {
-    if (route.name === 'ProjectPage') {
-        const perm = projectList.value.filter(item => item.project.id === route.params.id)[0].self_perm_type;
-        if (perm > 2) {
-            localStorage.setItem('project_id', route.params.id as string);
-        }
-    }
-    const repo = new Repository();
-    const nd = createDocument(t('system.new_file'), repo);
-    const coopRepo = new CoopRepository(nd, repo)
-    const editor = new DocEditor(nd, coopRepo);
-    const page = editor.create(t('system.page1'));
-    editor.insert(0, page);
-    window.document.title = nd.name;
-    (window as any).skrepo = coopRepo;
-    (window as any).sketchDocument = nd;
-    router.push({ name: 'document' });
-}
-
 function Setindex(index: any, title: any) {
     sessionStorage.setItem('index', index);
     isactive.value = String(index)
     x.value = String(index);
-    if (index == 3) {
-        emits('settitle', title, true);
-    } else {
-        emits('settitle', title, false);
-    }
 }
 
 const showteamcard = () => {
@@ -612,63 +558,69 @@ onUnmounted(() => {
     if (timer) {
         clearInterval(timer)
     }
-    picker.unmount();
 })
 
 </script>
 <template>
+    <div class="logo">
+        <img class="logo-image" :src="avatar" alt="ProtoDesign" />
+    </div>
     <el-row class="tac">
         <el-col>
             <el-scrollbar height="100%">
-                <div style="height: 360px;">
-                    <div class="new">
-                        <button class="newfile" @click="newFile"> <el-icon>
-                                <Plus />
-                            </el-icon><span>{{ t('home.New_file') }}</span></button>
-                        <button class="openfile" @click="picker.invoke()"><el-icon>
-                                <FolderOpened />
-                            </el-icon><span>{{ t('home.open_local_file') }}</span></button>
-                    </div>
+                <div>
                     <el-menu :default-active="x" active-text-color="#ffd04b" class="el-menu-vertical-demo"
                         text-color="#000000">
                         <router-link to="/apphome/recently"><el-menu-item index="1" :class="{ 'is_active': x == '1' }"
                                 @click="Setindex(1, t('home.recently_opened'))" @mouseenter="hover = '1'"
                                 @mouseleave="hover = ''">
-                                <el-icon>
-                                    <Clock />
+                                <el-icon size="20">
+                                    <svg-icon v-if="x == '1'" icon-class="recently-select"></svg-icon>
+                                    <svg-icon v-else icon-class="recently-normal"></svg-icon>
                                 </el-icon>
                                 <span>{{ t('home.recently_opened') }}</span>
                             </el-menu-item></router-link>
                         <router-link to="/apphome/starfile"><el-menu-item index="2" :class="{ 'is_active': x == '2' }"
                                 @click="Setindex(2, t('home.star_file'))" @mouseenter="hover = '2'"
                                 @mouseleave="hover = ''">
-                                <el-icon>
-                                    <Star />
+                                <el-icon size="20">
+                                    <svg-icon v-if="x == '2'" icon-class="star-select"></svg-icon>
+                                    <svg-icon v-else icon-class="star-normal"></svg-icon>
                                 </el-icon>
                                 <span>{{ t('home.star_file') }}</span>
                             </el-menu-item></router-link>
                         <router-link to="/apphome/meshare"><el-menu-item index="3" :class="{ 'is_active': x == '3' }"
                                 @click="Setindex(3, t('home.file_shared'))" @mouseenter="hover = '3'"
                                 @mouseleave="hover = ''">
-                                <el-icon>
-                                    <documents />
+                                <el-icon size="20">
+                                    <svg-icon v-if="x == '3'" icon-class="file-select"></svg-icon>
+                                    <svg-icon v-else icon-class="file-normal"></svg-icon>
                                 </el-icon>
                                 <span>{{ t('home.file_shared') }}</span>
                             </el-menu-item></router-link>
                         <router-link to="/apphome/shareme"><el-menu-item index="4" :class="{ 'is_active': x == '4' }"
                                 @click="Setindex(4, t('home.shared_file_received'))" @mouseenter="hover = '4'"
                                 @mouseleave="hover = ''">
-                                <el-icon>
-                                    <BottomLeft />
+                                <el-icon size="20">
+                                    <svg-icon v-if="x == '4'" icon-class="share-select"></svg-icon>
+                                    <svg-icon v-else icon-class="share-normal"></svg-icon>
                                 </el-icon>
                                 <span>{{ t('home.shared_file_received') }}</span>
                             </el-menu-item></router-link>
-                        <div class="line"></div>
                     </el-menu>
                 </div>
-            </el-scrollbar>
-            <div class="teamlists" :reflush="reflush !== 0 ? reflush : undefined">
-                <el-scrollbar height="100%">
+                <div class="newteam-container">
+                    <div class="left">
+                        <svg-icon icon-class="teamicon"></svg-icon>
+                        <span>团队</span>
+                    </div>
+                    <div class="right" @click.stop="showteamcard">
+                        <Tooltip :content="'创建团队'" :offset="10">
+                        <svg-icon icon-class="add-icon"></svg-icon>
+                        </Tooltip>
+                    </div>
+                </div>
+                <div class="teamlists" :reflush="reflush !== 0 ? reflush : undefined">
                     <div class="demo-collapse">
                         <el-collapse v-model="activeShare" v-if="showShare">
                             <el-collapse-item @click.stop="skipProjecrShare" :name="1">
@@ -699,25 +651,14 @@ onUnmounted(() => {
                                             <div class="right">
                                                 <Tooltip :content="t('Createteam.cancelFixed')" :offset="10">
                                                     <div @click.stop="shareFixed(i, item.project.id)">
-                                                        <svg t="1693476333821" class="icon" viewBox="0 0 1024 1024"
-                                                            version="1.1" xmlns="http://www.w3.org/2000/svg" p-id="15755"
-                                                            width="20" height="20">
-                                                            <path
-                                                                d="M0 0m256 0l512 0q256 0 256 256l0 512q0 256-256 256l-512 0q-256 0-256-256l0-512q0-256 256-256Z"
-                                                                fill="#9775fa" p-id="15756"
-                                                                data-spm-anchor-id="a313x.search_index.0.i11.6fa73a817d52QG"
-                                                                class=""></path>
-                                                            <path
-                                                                d="M256 767.6416l202.9568-160.9216 80.9728 86.1184s33.792 9.216 35.8656-16.384l-2.0736-87.1424 119.936-138.368 52.2496-3.0464s41.0112-8.2432 11.2896-44.0832l-146.5856-147.584s-39.936-5.12-36.8896 31.744v39.9872l-136.2944 115.8912-84.0192 5.0688s-30.7712 10.24-19.5072 36.9152l78.9504 77.9008L256 767.6416z"
-                                                                fill="#FFFFFF" p-id="15757"
-                                                                data-spm-anchor-id="a313x.search_index.0.i10.6fa73a817d52QG"
-                                                                class=""></path>
-                                                        </svg>
+                                                        <svg-icon class="fixed" icon-class="fixed-icon"></svg-icon>
                                                     </div>
                                                 </Tooltip>
-                                                <svg-icon icon-class="close" @click.stop="newProjectFile(item.project.id)"
-                                                    v-if="item.self_perm_type > 2"
-                                                    style="transform: rotate(45deg); margin-left: 5px; width: 16px; height: 16px;" />
+                                                <Tooltip :content="'新建文件'" :offset="10">
+                                                    <svg-icon icon-class="add-icon"
+                                                        @click.stop="newProjectFile(item.project.id)"
+                                                        v-if="item.self_perm_type > 2" />
+                                                </Tooltip>
                                             </div>
                                         </div>
                                     </div>
@@ -746,7 +687,7 @@ onUnmounted(() => {
                                             <div class="name">{{ data.team.name }}</div>
                                         </div>
                                         <div class="right" @click.stop="showprojectcard(data.team.id)">
-                                            <svg-icon icon-class="close" v-if="data.self_perm_type > 0" />
+                                            <svg-icon icon-class="add-icon" v-if="data.self_perm_type > 0" />
                                         </div>
                                     </div>
                                 </template>
@@ -761,25 +702,12 @@ onUnmounted(() => {
                                             <div class="right">
                                                 <Tooltip :content="t('Createteam.cancelFixed')" :offset="10">
                                                     <div @click.stop="cancelFixed(index, i, item.project.id)">
-                                                        <svg t="1693476333821" class="icon" viewBox="0 0 1024 1024"
-                                                            version="1.1" xmlns="http://www.w3.org/2000/svg" p-id="15755"
-                                                            width="20" height="20">
-                                                            <path
-                                                                d="M0 0m256 0l512 0q256 0 256 256l0 512q0 256-256 256l-512 0q-256 0-256-256l0-512q0-256 256-256Z"
-                                                                fill="#9775fa" p-id="15756"
-                                                                data-spm-anchor-id="a313x.search_index.0.i11.6fa73a817d52QG"
-                                                                class=""></path>
-                                                            <path
-                                                                d="M256 767.6416l202.9568-160.9216 80.9728 86.1184s33.792 9.216 35.8656-16.384l-2.0736-87.1424 119.936-138.368 52.2496-3.0464s41.0112-8.2432 11.2896-44.0832l-146.5856-147.584s-39.936-5.12-36.8896 31.744v39.9872l-136.2944 115.8912-84.0192 5.0688s-30.7712 10.24-19.5072 36.9152l78.9504 77.9008L256 767.6416z"
-                                                                fill="#FFFFFF" p-id="15757"
-                                                                data-spm-anchor-id="a313x.search_index.0.i10.6fa73a817d52QG"
-                                                                class=""></path>
-                                                        </svg>
+                                                        <svg-icon class="fixed" icon-class="fixed-icon"></svg-icon>
                                                     </div>
                                                 </Tooltip>
-                                                <svg-icon icon-class="close" @click.stop="newProjectFile(item.project.id)"
-                                                    v-if="item.self_perm_type > 2"
-                                                    style="transform: rotate(45deg); margin-left: 5px; width: 16px; height: 16px;" />
+                                                <svg-icon icon-class="add-icon"
+                                                    @click.stop="newProjectFile(item.project.id)"
+                                                    v-if="item.self_perm_type > 2" />
                                             </div>
                                         </div>
                                     </div>
@@ -793,8 +721,7 @@ onUnmounted(() => {
                                             <div class="project_name">{{ target.project.name }}</div>
                                             <div class="right" @click.stop="newProjectFile(target.project.id)"
                                                 v-if="target.self_perm_type > 2">
-                                                <svg-icon icon-class="close"
-                                                    style="transform: rotate(45deg); margin-left: 5px; width: 16px; height: 16px;" />
+                                                <svg-icon icon-class="add-icon" />
                                             </div>
                                         </div>
                                     </div>
@@ -802,14 +729,9 @@ onUnmounted(() => {
                             </el-collapse-item>
                         </el-collapse>
                     </div>
-                </el-scrollbar>
-            </div>
-            <div class="team-container">
-                <button class="newteam" @click.stop="showteamcard">
-                    <svg-icon icon-class="teamicon" />
-                    <span>{{ t('Createteam.add_team') }}</span>
-                </button>
-            </div>
+                </div>
+
+            </el-scrollbar>
         </el-col>
     </el-row>
     <transition name="nested" :duration="550">
@@ -836,20 +758,28 @@ onUnmounted(() => {
 </template>
 
 <style lang="scss" scoped>
+.logo {
+    display: flex;
+    justify-content: center;
+
+    .logo-image {
+        margin: 16px 0;
+    }
+}
+
 a {
     text-decoration: none;
 }
 
 :deep(.el-collapse) {
     border: none;
-    margin: 0 10px;
 }
 
 :deep(.el-collapse-item__header) {
     border: none;
-    height: 40px;
-    border-radius: 4px;
-    margin-top: 5px;
+    height: 36px;
+    margin-bottom: 6px;
+    background-color: rgba(250, 250, 250, 1);
 }
 
 :deep(.el-collapse .el-collapse-item__arrow) {
@@ -857,15 +787,16 @@ a {
 }
 
 :deep(.el-collapse-item__header:hover) {
-    background-color: transparent;
-    cursor: pointer;
+    background-color: rgba(250, 250, 250, 1);
 
     .right {
+        outline: none;
         visibility: visible;
     }
 }
 
 :deep(.el-collapse-item__wrap) {
+    background-color: rgba(250, 250, 250, 1);
     border: none;
 }
 
@@ -910,57 +841,51 @@ a {
     background-color: rgba(0, 0, 0, 0.5);
 }
 
-.team-container {
-    position: absolute;
-    bottom: 0px;
-    width: 100%;
-    text-align: center;
+.newteam-container {
+    height: 40px;
+    display: flex;
+    align-items: center;
+    margin: 20px 12px 6px 6px;
+    padding: 0 0 0 16px;
+    justify-content: space-between;
+    font-size: 14px;
+    color: rgb(128, 128, 128);
 
-    .newteam {
-        cursor: pointer;
-        border: none;
-        width: calc(100% - 16px);
-        height: 32px;
-        margin: 8px;
+    .left {
         display: flex;
         align-items: center;
-        justify-content: center;
-        border-radius: 4px;
-        background-color: #9775fa;
-        box-shadow: 1px 1px 2px rgba(0, 0, 0, .5);
-        box-sizing: border-box;
-        transition: all 0.5s ease-out;
+
+        svg {
+            fill: rgba(128, 128, 128, 1);
+            margin-right: 5px;
+            width: 24px;
+            height: 20px;
+        }
+    }
+
+    .right {
+        display: flex;
+        padding: 6px;
+        border-radius: 6px;
 
         &:hover {
-            background-color: rgba(150, 117, 250, 0.862745098);
-        }
-
-        &:active {
-            background-color: #9775fa;
-        }
-
-        span {
-            color: #ffffff;
-            letter-spacing: 1px;
-            font-size: 12px;
-            font-weight: 600;
+            background-color: rgba(243, 243, 245, 1);
         }
 
         svg {
-            margin-right: 4px;
-            width: 18px;
-            height: 18px;
-            fill: white;
+            outline: none;
+            color: rgba(51, 51, 51, 1);
+            width: 14px;
+            height: 14px;
         }
     }
 }
 
 .el-row {
     width: 100%;
-    height: calc(100vh - 56px);
+    height: calc(100vh - 60px);
     overflow: hidden;
-    // overflow-y: auto;
-    background-color: white;
+    background-color: none;
 
     .el-col {
         width: 100%;
@@ -968,80 +893,25 @@ a {
         height: 100%;
         flex: 1;
 
-        .new {
-            display: block;
-            text-align: center;
-            margin: 10px 10px auto;
-
-            button {
-                width: 100%;
-                height: 40px;
-                margin: 0px 0 20px 0;
-                border: none;
-                font-size: 12px;
-                letter-spacing: 1px;
-                font-weight: 600;
-                border-radius: 6px;
-                display: flex;
-                justify-content: center;
-                align-items: center;
-                cursor: pointer;
-
-                span {
-                    overflow: hidden;
-                    white-space: nowrap;
-                }
-
-                .el-icon {
-                    font-size: 18px;
-                    margin-right: 6px;
-                }
-            }
-
-
-            .newfile {
-                display: flex;
-                justify-content: center;
-                align-items: center;
-                background: #9775fa;
-                box-shadow: 1px 1px 3px #b1b1b1, -1px -1px 3px #b1b1b1;
-                color: #ffffff;
-
-                &:hover {
-                    background-color: #9675fadc;
-                }
-
-                &:active {
-                    background-color: #9775fa;
-                }
-            }
-
-            .openfile {
-                background-color: #f3f0ff;
-                // box-shadow: 1px 1px 3px #b1b1b1, -1px -1px 3px #b1b1b1;
-                color: #9775fa;
-
-                &:hover {
-                    border: 1px #9775fa solid;
-                }
-            }
-
-
-        }
-
         .el-menu {
             border: none;
             background: none;
-            font-size: 12px;
 
             .el-menu-item {
                 border-radius: 4px;
-                margin: 10px;
-                height: 40px;
+                height: 36px;
+                line-height: 36px;
+                margin: 6px;
+                font-size: 14px !important;
+                padding: 0 16px !important;
 
                 &:hover {
-                    background-color: #f3f0ff;
+                    background-color: rgba(243, 243, 245, 1);
                     // color: #9775fa;
+                }
+
+                .el-icon{
+                    fill: none !important;
                 }
 
             }
@@ -1049,22 +919,20 @@ a {
 
         .teamlists {
             width: 100%;
-            position: absolute;
-            bottom: 60px;
-            top: 350px;
+            position: relative;
 
             .demo-collapse {
                 .team-title {
                     width: 100%;
-                    height: 40px;
+                    height: 36px;
                     display: flex;
                     justify-content: space-between;
                     align-items: center;
-                    border-radius: 4px;
-                    margin-bottom: 5px;
+                    border-radius: 6px;
+                    margin: 6px;
 
                     &:hover {
-                        background-color: #f3f0ff;
+                        background-color: rgba(243, 243, 245, 1);
 
                         .right {
                             visibility: visible;
@@ -1074,8 +942,6 @@ a {
                     .left {
                         display: flex;
                         align-items: center;
-                        width: 200px;
-                        margin-left: 8px;
 
                         .down {
                             display: flex;
@@ -1083,7 +949,7 @@ a {
                             justify-content: center;
                             height: 100%;
                             margin-right: 4px;
-                            margin-left: 2px;
+                            margin-left: 4px;
                             transition: .3s;
 
                             svg {
@@ -1093,10 +959,9 @@ a {
                         }
 
                         .team-avatar {
-                            width: 24px;
-                            height: 24px;
-                            min-width: 24px;
-                            background-color: #9775fa;
+                            width: 20px;
+                            height: 20px;
+                            background-color: rgba(24, 120, 245, 1);
                             text-align: center;
                             border-radius: 50%;
                             overflow: hidden;
@@ -1121,9 +986,9 @@ a {
                                 display: flex;
 
                                 span {
-                                    font-size: 12px;
-                                    font-weight: 600;
                                     color: white;
+                                    font-size: 14px;
+                                    font-weight: 600;
                                 }
                             }
                         }
@@ -1132,41 +997,48 @@ a {
                             overflow: hidden;
                             text-overflow: ellipsis;
                             white-space: nowrap;
+                            line-height: 36px;
                             font-size: 12px;
+                            width: 150px;
                         }
                     }
 
                     .right {
                         visibility: hidden;
-                        margin-right: 8px;
+                        margin-right: 6px;
                         height: 100%;
+                        display: flex;
+                        align-items: center;
 
                         svg {
-                            width: 16px;
-                            min-width: 16px;
-                            height: 16px;
-                            fill: #9775fa;
-                            transform: rotate(45deg);
+                            border-radius: 6px;
+                            padding: 6px;
+                            width: 14px;
+                            min-width: 14px;
+                            height: 14px;
+                            color: rgba(51, 51, 51, 1);
+
+                            &:hover {
+                                background-color: rgba(235, 235, 237, 1);
+                            }
                         }
                     }
                 }
 
                 .project {
-                    width: 100%;
                     display: flex;
                     align-items: center;
                     justify-content: space-between;
-                    border-radius: 4px;
-                    cursor: pointer;
-
+                    margin: 2px 6px;
+                    border-radius: 6px;
                     .el-input {
-                        height: 35px;
+                        height: 36px;
                         border: none;
                         outline: none;
                     }
 
                     &:hover {
-                        background-color: #f3f0ff;
+                        background-color: rgba(243, 243, 245, 1);
 
                         .right {
                             display: flex;
@@ -1178,9 +1050,9 @@ a {
                         align-items: center;
                         justify-content: space-between;
                         width: 100%;
-                        height: 35px;
+                        height: 36px;
                         border-radius: 4px;
-                        padding-left: 50px;
+                        padding-left: 46px;
 
 
                         .right {
@@ -1190,16 +1062,24 @@ a {
                             }
 
                             display: none;
-
                             align-items: center;
                             height: 100%;
-                            padding-right: 10px;
+                            margin-right: 6px;
 
                             svg {
-                                width: 18px;
-                                min-width: 16px;
-                                height: 18px;
-                                fill: #9775fa;
+                                padding: 6px;
+                                border-radius: 6px;
+                                width: 14px;
+                                min-width: 14px;
+                                height: 14px;
+                                color:rgba(51, 51, 51, 1) ;
+
+                                &:hover {
+                                    background-color: rgba(235, 235, 237, 1);
+                                }
+                            }
+                            .fixed{
+                                color:rgba(24, 120, 245, 1) ;
                             }
                         }
                     }
@@ -1214,32 +1094,11 @@ a {
                 }
             }
 
-            .teamitem {
-                border-radius: 4px;
-                white-space: nowrap;
-                text-overflow: ellipsis;
-                overflow-x: hidden;
-                line-height: 40px;
-                margin: 0 10px 6px 10px;
-                padding: 0 6px;
-                font-size: 14px;
-                display: flex;
-                align-items: center;
-                justify-content: space-between;
 
-            }
 
 
         }
     }
-}
-
-.line {
-    width: 100%;
-    height: 0.1px;
-    border: 1px solid transparent;
-    background-color: rgba($color: #ccc, $alpha: 0.3);
-    box-sizing: border-box;
 }
 
 .project_name {
@@ -1248,19 +1107,19 @@ a {
     text-overflow: ellipsis;
     white-space: nowrap;
     margin-right: 10px;
+    line-height: 36px;
     font-size: 12px;
 }
 
 .receive {
-
     display: flex;
     align-items: center;
     justify-content: center;
-    margin: 0 6px 0 3px;
-
+    margin: 0 6px 0 0px;
+    
     >svg {
-        width: 18px;
-        height: 18px;
+        width: 15px;
+        height: 15px;
     }
 }
 
@@ -1269,14 +1128,13 @@ a {
 }
 
 :deep(.el-collapse-item__content .el-input__wrapper) {
-    height: 80%;
     outline: none;
     border: none;
     box-shadow: none;
     padding: 1px 5px;
     border-radius: 0;
     margin-right: 10px;
-    border-bottom: 1px solid #9775fa;
+    border-bottom: 1px solid rgba(24, 120, 245, 1);
     background-color: transparent;
 }
 
@@ -1294,8 +1152,8 @@ a {
 
 .is_active {
     font-weight: 600;
-    color: #000000b6;
-    background-color: #e5dbff !important;
+    color: rgba(24, 120, 245, 1);
+    background-color: rgba(24, 120, 245, 0.1) !important;
 }
 
 

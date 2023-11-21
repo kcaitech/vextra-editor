@@ -261,7 +261,7 @@ const iconlists = ref(['fixed', 'entrance', 'project'])
 </script>
 
 <template>
-    <div class="tatle" style="height: calc(100vh - 120px);">
+    <div class="tatle" style="height: calc(100vh - 144px);">
         <tablelist :data="tableData" :iconlist="iconlists" :projectshare="true" @onexitproject="onExitProject"
             @cancelfixed="cancelFixed" @dbclickopen="dblclickskipProject" @skipproject="skipProject" @rightMeun="rightmenu"
             :noNetwork="noNetwork" />
