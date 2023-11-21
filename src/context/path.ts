@@ -18,6 +18,10 @@ export class Path extends Watchable(Object) {
         return this.selected_points;
     }
 
+    is_selected(index: number) {
+        return this.selectedPoints.findIndex((i) => i === index) > -1;
+    }
+
     select_point(index: number) {
         this.selected_points.length = 0;
         this.selected_points.push(index);

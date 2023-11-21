@@ -46,8 +46,10 @@ function down(e: MouseEvent) {
 }
 
 function move(e: MouseEvent) {
-    if (!(e.buttons === 1 && main_button_is_down)) return;
-    if (props.context.tool.action === Action.AutoV) {
+    if (e.buttons !== 1) {
+        e.stopPropagation();
+    }
+    if (main_button_is_down && props.context.tool.action === Action.AutoV) {
         select(e);
     }
 }

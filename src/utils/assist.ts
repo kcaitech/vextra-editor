@@ -1,6 +1,6 @@
 import {Context} from "@/context";
 import {Asssit, PageXY2, PointGroup1, PointGroup2, PT1, PT2, PT4P1, PT4P2} from "@/context/assist";
-import {PageXY} from "@/context/selection";
+import {PageXY, XY} from "@/context/selection";
 import {GroupShape, Matrix, Shape, ShapeType} from "@kcdesign/data";
 import {debounce} from "lodash";
 import {XYsBounding} from "./common";
@@ -186,6 +186,12 @@ export function gen_match_points_by_map(offset: PointsOffset, p: PageXY, multi?:
     return pg;
 }
 
+export function gen_match_points_by_map2(offset: XY[], p: PageXY) {
+    return offset.map(i => {
+        return {x: p.x + i.x, y: p.y + i.y};
+    })
+}
+
 export function isShapeOut(context: Context, shape: Shape) {
     const {x, y, bottom, right} = context.workspace.root;
     const {width, height} = shape.frame;
@@ -321,12 +327,36 @@ export function modify_pt_x4p(pre_target1: PT4P1, p: PageXY, apexX: number[], st
     }
 }
 
+export function modify_pt_x_4_path_edit(pre_target1: PT4P1, p: PageXY, ps: XY[], stickness: number) {
+    for (let i = 0, len = ps.length; i < len; i++) {
+        const x = ps[i].x;
+        const delta = Math.abs(x - p.x);
+        if (delta < stickness && (pre_target1.delta === undefined || delta < pre_target1.delta)) {
+            pre_target1.delta = delta;
+            pre_target1.x = x;
+            pre_target1.sy = p.y;
+        }
+    }
+}
+
 export function modify_pt_y4p(pre_target2: PT4P2, p: PageXY, apexY: number[], stickness: number) {
     for (let i = 0, len = apexY.length; i < len; i++) {
         const y = apexY[i]
         const delta = Math.abs(y - p.y);
         if (delta < stickness && (pre_target2.delta === undefined || delta < pre_target2.delta)) {
             pre_target2.delta = delta, pre_target2.y = y, pre_target2.sx = p.x;
+        }
+    }
+}
+
+export function modify_pt_y_4_path_edit(pre_target2: PT4P2, p: PageXY, ps: XY[], stickness: number) {
+    for (let i = 0, len = ps.length; i < len; i++) {
+        const y = ps[i].y
+        const delta = Math.abs(y - p.y);
+        if (delta < stickness && (pre_target2.delta === undefined || delta < pre_target2.delta)) {
+            pre_target2.delta = delta;
+            pre_target2.y = y
+            pre_target2.sx = p.x;
         }
     }
 }

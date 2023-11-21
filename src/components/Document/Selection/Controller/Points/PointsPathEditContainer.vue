@@ -1,12 +1,13 @@
 <script setup lang='ts'>
 import {Context} from '@/context';
-import {AsyncPathEditor, Matrix, Shape} from '@kcdesign/data';
+import {AsyncBaseAction, AsyncPathEditor, Matrix, Shape} from '@kcdesign/data';
 import {onMounted, onUnmounted, reactive, ref} from 'vue';
-import {ClientXY, Selection} from '@/context/selection';
+import {ClientXY, PageXY, Selection, XY} from '@/context/selection';
 import {get_path_by_point, get_conact_by_point} from './common';
 import {Point} from "../../SelectionView.vue";
 import {Path} from "@/context/path";
 import {dbl_action} from "@/utils/mouse_interactive";
+import {gen_offset_points_map2} from "@/utils/mouse";
 
 interface Props {
     context: Context
@@ -34,11 +35,13 @@ const {dots, lines} = data;
 const show_index = ref<number>(-1); // 当前聚焦的编辑点
 let shape: Shape;
 let startPosition: ClientXY = {x: 0, y: 0};
+let startPosition2: PageXY = {x: 0, y: 0};
 let isDragging = false;
 let down_index: number = 0;
 let pathEditor: AsyncPathEditor | undefined;
 let cur_new_node: Line;
 let move: any;
+let offset_map: XY[] | undefined = [];
 
 const dragActiveDis = 3;
 
@@ -63,12 +66,17 @@ function point_mousedown(event: MouseEvent, index: number) {
     const workspace = props.context.workspace;
     const root = workspace.root;
     startPosition = {x: event.clientX - root.x, y: event.clientY - root.y};
+    startPosition2 = workspace.matrix.inverseCoord(startPosition);
     down_index = index;
     workspace.setCtrl('controller');
     if (event.shiftKey) {
         props.context.path.adjust_points(down_index)
     } else {
-        props.context.path.select_point(down_index);
+        if (props.context.path.is_selected(down_index)) {
+            //todo
+        } else {
+            props.context.path.select_point(down_index);
+        }
     }
     document.addEventListener('mousemove', point_mousemove);
     document.addEventListener('mouseup', point_mouseup);
@@ -80,7 +88,7 @@ function point_mousemove(event: MouseEvent) {
     const root = workspace.root;
     const mouseOnClient: ClientXY = {x: event.clientX - root.x, y: event.clientY - root.y};
     if (isDragging && pathEditor) {
-        pathEditor.execute(down_index, sub_matrix.computeCoord3(mouseOnClient));
+        execute(pathEditor, sub_matrix.computeCoord3(mouseOnClient));
         startPosition.x = mouseOnClient.x
         startPosition.y = mouseOnClient.y;
     } else {
@@ -90,10 +98,66 @@ function point_mousemove(event: MouseEvent) {
             pathEditor = props.context.editor.controller().asyncPathEditor(shape, props.context.selection.selectedPage!);
             isDragging = true;
             sub_matrix.reset(workspace.matrix.inverse);
+            props.context.assist.setCPG2();
+            offset_map = gen_offset_points_map2(props.context, startPosition2);
         }
     }
 }
 
+let stickedX: boolean = false;
+let stickedY: boolean = false;
+let sticked_x_v: number = 0;
+let sticked_y_v: number = 0;
+let pre_target_x: number, pre_target_y: number;
+
+function execute(pathEditor: AsyncPathEditor, p2: PageXY) {
+    return pathEditor.execute(down_index, p2);
+    // const stickness = props.context.assist.stickness;
+    // if (!offset_map) return pathEditor.execute(down_index, p2);
+    // const target = props.context.assist.edit_mode_match(p2, offset_map);
+    // if (!target) return pathEditor.execute(down_index, p2);
+    // if (stickedX) {
+    //     if (Math.abs(p2.x - sticked_x_v) >= stickness) {
+    //         stickedX = false
+    //     } else {
+    //         if (pre_target_x === target.x) {
+    //             p2.x = sticked_x_v;
+    //         } else if (target.sticked_by_x) {
+    //             modify_fix_x(p2, target.x);
+    //         }
+    //     }
+    // } else if (target.sticked_by_x) {
+    //     modify_fix_x(p2, target.x);
+    // }
+    // if (stickedY) {
+    //     if (Math.abs(p2.y - sticked_y_v) >= stickness) {
+    //         stickedY = false;
+    //     } else {
+    //         if (pre_target_y === target.x) {
+    //             p2.y = sticked_y_v;
+    //         } else if (target.sticked_by_y) {
+    //             modify_fix_y(p2, target.y);
+    //         }
+    //     }
+    // } else if (target.sticked_by_y) {
+    //     modify_fix_y(p2, target.y);
+    // }
+    // pathEditor.execute(down_index, p2);
+}
+
+function modify_fix_x(p2: PageXY, fix: number) {
+    p2.x = fix;
+    sticked_x_v = p2.x;
+    stickedX = true;
+    pre_target_x = fix;
+}
+
+function modify_fix_y(p2: PageXY, fix: number) {
+    p2.y = fix;
+    sticked_y_v = p2.y;
+    stickedY = true;
+    pre_target_y = fix;
+}
 
 function line_enter(index: number) {
     show_index.value = index;
