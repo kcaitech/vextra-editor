@@ -5,7 +5,7 @@ import {Context} from "@/context";
 import {useI18n} from 'vue-i18n';
 import SvgIcon from "@/components/common/SvgIcon.vue";
 import Tooltip from "@/components/common/Tooltip.vue";
-import {Path} from "@/context/path";
+import {Path, PointEditType} from "@/context/path";
 import {get_action_for_key_change, get_value_from_point, get_value_from_points} from "@/utils/pathedit";
 import {PathShape} from "@kcdesign/data";
 import {Selection} from "@/context/selection";
@@ -25,6 +25,7 @@ const props = defineProps<Props>();
 const x = ref<number | string>('');
 const y = ref<number | string>('');
 const r = ref<number | string>(0);
+const point_type = ref<PointEditType>('INVALID');
 const model_state: ModelState = reactive({x: true, y: true, r: true, tool: true});
 const t = useI18n().t;
 let path_shape: PathShape | undefined = undefined;
@@ -93,7 +94,24 @@ function modify_model_state() {
     }
 }
 
+function modify_point_type() {
+    const selected_points = props.context.path.selectedPoints;
+    const l = selected_points.length;
+    if (l === 0) {
+        point_type.value = 'INVALID';
+    } else {
+        // todo
+        if (l === 1) {
+            point_type.value = 'RA';
+        } else {
+            point_type.value = 'RA';
+        }
+    }
+    props.context.path.setPointType(point_type.value);
+}
+
 function update() {
+    modify_point_type();
     modify_model_state();
     calc();
 }
@@ -101,6 +119,8 @@ function update() {
 function path_watcher(t: number) {
     if (t === Path.SELECTION_CHANGE) {
         update();
+    } else if (Path.POINT_TYPE_CHANGE) {
+        point_type.value = props.context.path.pointType;
     }
 }
 
@@ -154,22 +174,22 @@ onUnmounted(() => {
         <div class="tr">
             <div :class="{tool: true, tool_disabled: model_state.tool}">
                 <Tooltip :content="t('attr.right_angle')">
-                    <div class="item">
+                    <div :class="{item: true, active: point_type === 'RA'}">
                         <svg-icon icon-class="unknown"></svg-icon>
                     </div>
                 </Tooltip>
                 <Tooltip :content="t('attr.completely_symmetrical')">
-                    <div class="item">
+                    <div :class="{item: true, active: point_type === 'CS'}">
                         <svg-icon icon-class="unknown"></svg-icon>
                     </div>
                 </Tooltip>
                 <Tooltip :content="t('attr.angular_symmetry')">
-                    <div class="item">
+                    <div :class="{item: true, active: point_type === 'AS'}">
                         <svg-icon icon-class="unknown"></svg-icon>
                     </div>
                 </Tooltip>
                 <Tooltip :content="t('attr.asymmetric')">
-                    <div class="item">
+                    <div :class="{item: true, active: point_type === 'A'}">
                         <svg-icon icon-class="unknown"></svg-icon>
                     </div>
                 </Tooltip>

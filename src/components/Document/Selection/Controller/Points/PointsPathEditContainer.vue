@@ -60,6 +60,12 @@ function update() {
 function point_mousedown(event: MouseEvent, index: number) {
     if (event.button !== 0) return;
     if (dbl_action()) {
+        const pet = props.context.path.pointType;
+        if (pet === "RA") {
+            props.context.path.setPointType("CS");
+        } else if (pet === "CS") {
+            props.context.path.setPointType("RA");
+        }
         console.log('双击切换工具');
     }
     event.stopPropagation();
@@ -223,6 +229,10 @@ function point_mouseup(event: MouseEvent) {
     if (event.button !== 0) return;
     if (isDragging) {
         isDragging = false;
+    } else {
+        if (props.context.path.selectedPoints.length > 1 && !event.shiftKey) {
+            props.context.path.select_point(down_index);
+        }
     }
     if (pathEditor) {
         pathEditor.close();
