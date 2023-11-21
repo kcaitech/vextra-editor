@@ -31,7 +31,6 @@ const keysumbit = (e: KeyboardEvent) => {
             inputRef.value = inputRef.value + '\n'
         } else {
             inputRef.value.blur();
-            change(textValue.value);
         }
     }
 }
