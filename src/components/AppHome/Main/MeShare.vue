@@ -11,11 +11,11 @@
                 {{ t('home.recycling_station') }}</div>
         </div>
         <div v-if="active" class="right">
-            <div class="newfile" >
+            <div class="newfile" @click="newFile">
                 <svg-icon icon-class="addfile-icon"></svg-icon>
                 {{ t('home.New_file') }}
             </div>
-            <div class="openfile" >
+            <div class="openfile" @click="picker.invoke">
                 <svg-icon icon-class="open-icon"></svg-icon>
                 {{ t('home.open_local_file') }}
             </div>
@@ -56,6 +56,7 @@ import MoveProjectFill from "@/components/TeamProject/MoveProjectFill.vue";
 import RecycleBin from './RecycleBin.vue'
 import Bus from '@/components/AppHome/bus'
 import { useRoute } from 'vue-router'
+import { newFile, picker } from '@/utils/neworopen';
 
 interface data {
     document: {
@@ -336,6 +337,7 @@ onMounted(() => {
 
 onUnmounted(() => {
     window.removeEventListener('resize', getPageHeight)
+    picker.unmount
 })
 
 </script>

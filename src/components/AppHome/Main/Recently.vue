@@ -8,7 +8,7 @@
                     <svg-icon icon-class="addfile-icon"></svg-icon>
                     {{ t('home.New_file') }}
                 </div>
-                <div class="openfile" @click="picker.invoke()">
+                <div class="openfile" @click="picker.invoke">
                     <svg-icon icon-class="open-icon"></svg-icon>
                     {{ t('home.open_local_file') }}
                 </div>
@@ -62,7 +62,7 @@
                 <svg-icon icon-class="add-icon"></svg-icon>
             </div>
         </div>
-        <div class="openfile" @click="picker.invoke()">
+        <div class="openfile" @click="picker.invoke">
             <div class="left">
                 <svg xmlns="http://www.w3.org/2000/svg" xmlns:xlink="http://www.w3.org/1999/xlink" fill="none" version="1.1"
                     width="24" height="24" viewBox="0 0 24 24">
@@ -120,11 +120,8 @@ import FileShare from '@/components/Document/Toolbar/Share/FileShare.vue'
 import tablelist from '@/components/AppHome/tablelist.vue'
 import { UserInfo } from '@/context/user';
 import listrightmenu from "../listrightmenu.vue"
-import { FilePicker } from '@/components/common/filepicker';
-import { LzDataLocal } from '@/basic/lzdatalocal'; // todo
-import { Repository, CoopRepository, Document, createDocument, DocEditor, importSketch } from '@kcdesign/data';
-import { Zip } from "@pal/zip";
 import Bus from '@/components/AppHome/bus';
+import { newFile, picker } from '@/utils/neworopen';
 
 const { t } = useI18n()
 const items = ['open', 'newtabopen', 'share', 'target_star', 'rename', 'copyfile', 'removefile']
@@ -163,37 +160,10 @@ interface data {
     project_perm: number
 }
 
-function newFile() {
-    const repo = new Repository();
-    const nd = createDocument(t('system.new_file'), repo);
-    const coopRepo = new CoopRepository(nd, repo)
-    const editor = new DocEditor(nd, coopRepo);
-    const page = editor.create(t('system.page1'));
-    editor.insert(0, page);
-    window.document.title = nd.name;
-    (window as any).skrepo = coopRepo;
-    (window as any).sketchDocument = nd;
-    router.push({ name: 'document' });
-}
-
-const picker = new FilePicker('.sketch', (file) => {
-    if (!file) return;
-    const lzdata = new LzDataLocal(new Zip(file));
-    const repo = new Repository();
-    importSketch(file.name, lzdata, repo).then((document: Document) => {
-        window.document.title = document.name;
-        const coopRepo = new CoopRepository(document, repo);
-        (window as any).skrepo = coopRepo;
-        (window as any).sketchDocument = document;
-        router.push({ name: 'document' });
-    })
-});
-
 const show = ref<boolean>(true)
 Bus.on('showbnt', (b: boolean) => {
     show.value = b
 })
-
 
 //获取服务器我的文件列表
 async function getUserdata() {
@@ -385,7 +355,7 @@ onMounted(() => {
     window.addEventListener('resize', getPageHeight)
 })
 onUnmounted(() => {
-    picker.unmount();
+    picker.unmount;
     window.removeEventListener('resize', getPageHeight)
 })
 </script>
