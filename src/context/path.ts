@@ -1,17 +1,30 @@
 import {Watchable} from "@kcdesign/data";
 import {Context} from ".";
 
+export type PointEditType = 'RA' | 'CS' | 'AS' | 'A' | 'INVALID'
+
 export class Path extends Watchable(Object) {
     static SELECTION_CHANGE = 1;
     static SELECTION_CHANGE_P = 2;
     static SELECTION_CHANGE_S = 3;
+    static POINT_TYPE_CHANGE = 4;
     private m_context: Context;
     private selected_points: number[] = [];
     private selected_sides: number[] = [];
+    private point_type: PointEditType = 'INVALID';
 
     constructor(context: Context) {
         super();
         this.m_context = context;
+    }
+
+    get pointType() {
+        return this.point_type;
+    }
+
+    setPointType(v: PointEditType) {
+        this.point_type = v;
+        this.notify(Path.POINT_TYPE_CHANGE);
     }
 
     get selectedPoints() {
