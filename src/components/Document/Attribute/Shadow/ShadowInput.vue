@@ -51,14 +51,49 @@ const decrease = () => {
         emits('onChange', result);
     }
 }
+const curpt: { x: number } = { x: 0 };
+const _curpt: { x: number } = { x: 0 };
+const isDrag = ref(false);
+const onMouseDown = (e: MouseEvent) => {
+    e.stopPropagation();
+    if (props.disabled) return;
+    curpt.x = e.screenX;
+    _curpt.x = e.screenX;
+    isDrag.value = true;
+    document.addEventListener('mousemove', onMouseMove);
+    document.addEventListener('mouseup', onMouseUp);
+}
+const onMouseMove = (e: MouseEvent) => {
+    let mx = e.screenX - curpt.x;
+    const diff = e.screenX - _curpt.x;
+    if ((diff > 3 || diff < 3) && input.value) {
+        curpt.x = e.screenX
+        let value = input.value.value;
+        if (mx > 0) {
+            if (Number(value) === 3000 || (props.ticon === 'B' && Number(value) === 200)) return;
+            const result = +value + 1;
+            emits('onChange', result);
+        } else if (mx < 0) {
+            if (Number(value) === -3000 || (props.ticon === 'B' && Number(value) === 0)) return;
+            const result = +value - 1;
+            emits('onChange', result);
+        }
+    }
+}
+const onMouseUp = (e: MouseEvent) => {
+    e.stopPropagation();
+    isDrag.value = false;
+    document.removeEventListener('mousemove', onMouseMove);
+    document.removeEventListener('mouseup', onMouseUp);
+}
 </script>
 
 <template>
     <div class="input-container" :class="{ disabled: props.disabled }">
         <Tooltip v-if="props.tootip && !props.disabled" :content="props.tootip" :offset="12">
-            <span class="icon">{{ ticon }}</span>
+            <span class="icon" ref="icon" @mousedown="onMouseDown">{{ ticon }}</span>
         </Tooltip>
-        <span class="icon" v-if="!props.tootip || props.disabled"
+        <span class="icon" ref="icon" v-if="!props.tootip || props.disabled" @mousedown="onMouseDown"
             :style="{ cursor: props.disabled ? 'default' : 'ew-resize' }">{{ ticon }}</span>
         <Tooltip v-if="props.disabled" :content="`${t('shadow.only_used')}`" :offset="12">
             <input ref="input" :value="props.shadowV" @focus="selectValue" :disabled="props.disabled"
