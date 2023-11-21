@@ -2,7 +2,6 @@
 import {onMounted, onUnmounted, ref, computed, nextTick} from "vue";
 import {Context} from '@/context';
 import {Selection} from '@/context/selection';
-import ToolButton from './ToolButton.vue';
 import Cursor from "./Buttons/Cursor.vue";
 import Frame from "./Buttons/Frame.vue";
 import GroupUngroup from "./GroupUngroup.vue";
@@ -20,7 +19,6 @@ import {WorkSpace, Perm} from "@/context/workspace";
 import {Action, Tool} from "@/context/tool";
 import {useI18n} from 'vue-i18n'
 import {message} from "@/utils/message";
-import {string_by_sys} from "@/utils/common";
 import PathEditTool from "@/components/Document/Toolbar/PathEditTool.vue";
 
 const {t} = useI18n();
@@ -54,8 +52,10 @@ function selectComps() {
 const isLable = ref(props.context.tool.isLable);
 
 function tool_watcher(t?: number) {
-    if (t === Tool.CHANGE_ACTION) selected.value = props.context.tool.action;
-    if (t === Tool.LABLE_CHANGE) {
+    if (t === Tool.CHANGE_ACTION) {
+        selected.value = props.context.tool.action;
+        console.log('selected.value changed', selected.value);
+    } else if (t === Tool.LABLE_CHANGE) {
         isLable.value = props.context.tool.isLable;
     }
 }
@@ -63,7 +63,6 @@ function tool_watcher(t?: number) {
 //获取文档权限
 const hangdlePerm = () => {
     const perm = props.context.workspace.documentPerm;
-
     if (perm === Perm.isRead) {
         isread.value = true
     } else if (perm === Perm.isComment) {
@@ -120,8 +119,9 @@ onUnmounted(() => {
         <Comment @select="select" :active="selected === Action.AddComment" :workspace="workspace"
                  v-if="!isread"></Comment>
     </div>
-    <PathEditTool v-if="isEdit && is_path_edit" class="editor-tools" :context="props.context"
-                  :selected="selected"></PathEditTool>
+    <PathEditTool v-if="isEdit && is_path_edit" class="editor-tools" :context="props.context" @select="select"
+                  :selected="selected"
+    ></PathEditTool>
 </template>
 
 <style scoped lang="scss">
