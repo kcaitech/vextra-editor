@@ -92,21 +92,30 @@ export function keyboardHandle(e: KeyboardEvent, context: Context, t: Function) 
             context.selection.resetSelectShapes();
         } else if (shapes.length === 1) {
             const shape = shapes[0];
-            if (shape.type === ShapeType.Table) {
-                const ts = context.tableSelection;
-                const editor = context.editor4Table(shape as TableShape);
-                if (ts.tableRowStart > -1 || ts.tableColStart > -1) {
-                    editor.resetCells(ts.tableRowStart, ts.tableRowEnd, ts.tableColStart, ts.tableColEnd);
-                    ts.resetSelection();
+            if (context.workspace.is_path_edit_mode) {
+                const points = context.path.selectedPoints;
+                if (points.length) {
+                    const editor = context.editor4Shape(shape);
+                    const result = editor.removePoints(points);
+                    result && context.path.reset_points();
+                }
+            } else {
+                if (shape.type === ShapeType.Table) {
+                    const ts = context.tableSelection;
+                    const editor = context.editor4Table(shape as TableShape);
+                    if (ts.tableRowStart > -1 || ts.tableColStart > -1) {
+                        editor.resetCells(ts.tableRowStart, ts.tableRowEnd, ts.tableColStart, ts.tableColEnd);
+                        ts.resetSelection();
+                    } else {
+                        const editor = context.editor4Shape(shape);
+                        editor.delete();
+                        context.selection.resetSelectShapes();
+                    }
                 } else {
                     const editor = context.editor4Shape(shape);
                     editor.delete();
                     context.selection.resetSelectShapes();
                 }
-            } else {
-                const editor = context.editor4Shape(shape);
-                editor.delete();
-                context.selection.resetSelectShapes();
             }
         }
     } else if (e.code === 'KeyR') {
