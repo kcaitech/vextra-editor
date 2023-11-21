@@ -257,7 +257,8 @@ const columns: Column<any>[] = [
     },
     {
         key: 'operations',
-        title: `${t('home.operation')}`,
+        // title: `${t('home.operation')}`,
+        title:'',
         dataKey: 'document',
         width: 100,
         minWidth: 100,
@@ -459,7 +460,8 @@ watchEffect(() => {
             },
             {
                 key: 'name',
-                title: t('home.operation'),
+                // title: t('home.operation'),
+                title:'',
                 width: 120,
                 minWidth: 100,
                 dataKey: 'project',

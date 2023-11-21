@@ -10,7 +10,7 @@
                 :style="{ color: active ? '#777777' : '#333333' }">
                 {{ t('home.recycling_station') }}</div>
         </div>
-        <div class="right">
+        <div v-if="active" class="right">
             <div class="newfile" >
                 <svg-icon icon-class="addfile-icon"></svg-icon>
                 {{ t('home.New_file') }}
