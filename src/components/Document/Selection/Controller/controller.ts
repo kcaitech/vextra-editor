@@ -46,7 +46,6 @@ export function useControllerCustom(context: Context, i18nT: Function) {
     let startPosition: ClientXY = {x: 0, y: 0};
     let startPositionOnPage: PageXY = {x: 0, y: 0};
     let wheel: Wheel | undefined = undefined;
-    let editing: boolean = false;
     let shapes: Shape[] = [];
     let asyncTransfer: AsyncTransfer | undefined = undefined;
     let need_update_comment: boolean = false;
@@ -63,15 +62,24 @@ export function useControllerCustom(context: Context, i18nT: Function) {
         if ([ShapeType.Group, ShapeType.Symbol, ShapeType.SymbolRef, ShapeType.Artboard].includes(shape.type)) {
             const scope: any = shape.type === ShapeType.SymbolRef ? shape.naviChilds : (shape as GroupShape).childs;
             const target = selection_penetrate(selection.scout!, scope, startPositionOnPage);
-            if (target) selection.selectShape(target);
+            target && selection.selectShape(target);
         } else if (shape instanceof PathShape) {
-            editing = !editing;
-            workspace.contentEdit(editing);
+            workspace.setPathEditMode(true);
+            context.esctask.save('path-edit', exist_edit_mode);
         }
     }
 
+    function exist_edit_mode() {
+        const al = context.workspace.is_path_edit_mode;
+        workspace.setPathEditMode(false);
+        return al;
+    }
+
     function mousedown(e: MouseEvent) {
-        if (workspace.isEditing && is_mouse_on_content(e) && down_while_is_text_editing(e, context)) return;
+        if (workspace.isEditing
+            && is_mouse_on_content(e)
+            && down_while_is_text_editing(e, context)
+        ) return;
         if (workspace.isPageDragging) return;
         if (is_ctrl_element(e, context)) {
             if (timer) handleDblClick();
@@ -102,14 +110,14 @@ export function useControllerCustom(context: Context, i18nT: Function) {
     function mousemove(e: MouseEvent) {
         if (e.buttons !== 1) return;
         const mousePosition: ClientXY = get_current_position_client(context, e);
-        if (isDragging && !editing && wheel && asyncTransfer) {
+        if (isDragging  && wheel && asyncTransfer && !workspace.isEditing) {
             speed = get_speed(t_e || e, e);
             t_e = e;
             let update_type = 0;
             const isOut = wheel.moving(e, {type: EffectType.TRANS, effect: asyncTransfer.transByWheel});
             if (!isOut) update_type = transform(startPosition, mousePosition);
             modify_mouse_position_by_type(update_type, startPosition, mousePosition);
-        } else if (check_drag_action(startPosition, mousePosition) && !editing) {
+        } else if (check_drag_action(startPosition, mousePosition) && !workspace.isEditing) {
             shapes = modify_shapes(context, shapes);
             if (e.altKey) shapes = paster_short(context, shapes);
             reset_assist_before_translate(context, shapes);
@@ -292,10 +300,6 @@ export function useControllerCustom(context: Context, i18nT: Function) {
         return Boolean(timer);
     }
 
-    function isEditing() {
-        return editing;
-    }
-
     function isDrag() {
         return isDragging;
     }
@@ -318,7 +322,6 @@ export function useControllerCustom(context: Context, i18nT: Function) {
                 if (type === ShapeType.Table || type === ShapeType.Contact) return dispose();
             }
             initController();
-            editing = false;
             workspace.contentEdit(false);
         }
     }
@@ -362,7 +365,7 @@ export function useControllerCustom(context: Context, i18nT: Function) {
         timerClear();
     }
 
-    return {isDblClick, isEditing, isDrag, init, dispose};
+    return {isDblClick, isDrag, init, dispose};
 }
 
 export function useController(context: Context) {

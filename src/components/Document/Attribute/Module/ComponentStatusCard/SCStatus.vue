@@ -110,7 +110,7 @@ function _delete() {
             </div>
         </div>
         <p class="warn" v-if="isWarnRepeat">{{ t('compos.duplicate_name') }}</p>
-        <p class="warn" v-if="isWarnNull">属性名称不能为空</p>
+        <p class="warn" v-if="isWarnNull">{{ t('compos.validate_info_2')}}</p>
     </div>
 </template>
 <style scoped lang="scss">

@@ -1,86 +1,89 @@
 <template>
-    <div class="set-container">
-        <div class="name-container">
-            <div class="left">
-                <div class="title">{{ t('teamsetting.team_name') }}</div>
-                <div class="text">{{ teamName }}</div>
-            </div>
-            <div class="right">
-                <button type="button" :disabled="isDisabled.state" @click.stop="midname">{{ t('teamsetting.edit_name')
-                }}</button>
-            </div>
-        </div>
-        <div class="description-container">
-            <div class="left">
-                <div class="title">{{ t('teamsetting.team_description') }}</div>
-                <div class="text">{{ teamDescription }}</div>
-            </div>
-            <div class="right">
-                <button type="button" :disabled="isDisabled.state" @click.stop="middescription">{{
-                    t('teamsetting.edit_description') }}</button>
-            </div>
-
-        </div>
-        <div class="avatar-container">
-            <div class="left">
-                <div class="title">{{ t('teamsetting.team_avatar') }}</div>
-                <div class="text">{{ t('teamsetting.avatar_restriction') }}</div>
-            </div>
-            <div class="right">
-                <label class="modify" :style="{ backgroundColor: isDisabled.color, boxShadow: isDisabled.shadow }"
-                    for="image_uploads">{{
-                        t('teamsetting.edit_avatar') }}</label>
-                <input type="file" id="image_uploads" name="image_uploads" accept=".jpg,.png" style="display: none;"
-                    @change="midAvatarRequest($event)" :disabled="isDisabled.state" />
-            </div>
-        </div>
-        <div v-if="teamSelfPermType === 3" class="dissolve-container">
-            <div class="left">
-                <div class="title">{{ t('teamsetting.disband_team') }}</div>
-                <div class="text">{{ t('teamsetting.disband_team_tips') }}</div>
-            </div>
-            <div class="right">
-                <button class="disband" type="button" @click.stop="dissolveteam">{{ t('teamsetting.disband_team')
-                }}</button>
-            </div>
-        </div>
-        <div v-else class="leave-container">
-            <div class="left">
-                <div class="title">{{ t('teamsetting.leave_team') }}</div>
-                <div class="text">{{ t('teamsetting.leave_team_tips') }}</div>
-            </div>
-            <div class="right">
-                <button class="disband" type="button" @click.stop="leaveteam">{{ t('teamsetting.leave_team') }}</button>
-            </div>
-        </div>
-    </div>
-    <div v-if="showoverlay" class="overlay" @keyup.esc="showoverlay = false">
-        <div class="card-container">
-            <div class="heard">
-                <div class="title" v-text="titlevalue"></div>
-                <div class="close" @click.stop="showoverlay = false">
-                    <svg-icon icon-class="close"></svg-icon>
+        <div class="set-container" style="height: calc(100vh -  224px);">
+            <el-scrollbar height="100%">
+            <div class="name-container">
+                <div class="left">
+                    <div class="title">{{ t('teamsetting.team_name') }}</div>
+                    <div class="text">{{ teamName }}</div>
+                </div>
+                <div v-if="isDisabled" class="right">
+                    <button type="button" @click.stop="midname">{{ t('teamsetting.edit_name')
+                    }}</button>
                 </div>
             </div>
-            <div class="centent">
-                <div class="textarea-container">
-                    <textarea v-if="textareashow" class="text-textarea" name="" id="" cols="30" rows="10"
-                        :placeholder="placeholdervalue" v-model="textareaValue" :maxlength="maxvalue" />
-                    <div v-else class="disbandtips">
-                        <p v-if="teamSelfPermType === 3">{{ t('teamsetting.disband_team_tipsB') }}</p>
-                        <p v-else>{{ t('teamsetting.leave_team_tips') }}</p>
+            <div class="description-container">
+                <div class="left">
+                    <div class="title">{{ t('teamsetting.team_description') }}</div>
+                    <div class="text">{{ teamDescription }}</div>
+                </div>
+                <div v-if="isDisabled" class="right">
+                    <button type="button" @click.stop="middescription">{{
+                        t('teamsetting.edit_description') }}</button>
+                </div>
+
+            </div>
+            <div class="avatar-container">
+                <div class="left">
+                    <div class="title">{{ t('teamsetting.team_avatar') }}</div>
+                    <div class="text">{{ t('teamsetting.avatar_restriction') }}</div>
+                </div>
+                <div v-if="isDisabled" class="right">
+                    <label class="modify" for="image_uploads">{{
+                        t('teamsetting.edit_avatar') }}</label>
+                    <input type="file" id="image_uploads" name="image_uploads" accept=".jpg,.png" style="display: none;"
+                        @change="midAvatarRequest($event)" />
+                </div>
+            </div>
+            <div v-if="teamSelfPermType === 3" class="dissolve-container">
+                <div class="left">
+                    <div class="title">{{ t('teamsetting.disband_team') }}</div>
+                    <div class="text">{{ t('teamsetting.disband_team_tips') }}</div>
+                </div>
+                <div class="right">
+                    <button class="disband" type="button" @click.stop="dissolveteam">{{ t('teamsetting.disband_team')
+                    }}</button>
+                </div>
+            </div>
+            <div v-else class="leave-container">
+                <div class="left">
+                    <div class="title">{{ t('teamsetting.leave_team') }}</div>
+                    <div class="text">{{ t('teamsetting.leave_team_tips') }}</div>
+                </div>
+                <div class="right">
+                    <button class="disband" type="button" @click.stop="leaveteam">{{ t('teamsetting.leave_team') }}</button>
+                </div>
+            </div>
+        </el-scrollbar>
+        </div>
+        <div v-if="showoverlay" class="overlay" @keyup.esc="showoverlay = false">
+            <div class="card-container">
+                <div class="heard">
+                    <div class="title" v-text="titlevalue"></div>
+                    <div class="close" @click.stop="showoverlay = false">
+                        <svg-icon icon-class="close"></svg-icon>
                     </div>
                 </div>
-            </div>
-            <div class="addproject">
-                <button class="bnt_confirm" type="submit" @click.stop="confirm">
-                    {{ teamSelfPermType === 3 ? t('teamsetting.confirm') : t('teamsetting.leave') }}
-                </button>
-                <button class="bnt_cancel" type="submit" @click.stop.once="showoverlay = false">{{ t('teamsetting.cancel')
-                }}</button>
+                <div class="centent">
+                    <div class="textarea-container">
+                        <textarea v-if="textareashow" class="text-textarea" name="" id="" cols="30" rows="10"
+                            :placeholder="placeholdervalue" v-model="textareaValue" :maxlength="maxvalue" />
+                        <div v-else class="disbandtips">
+                            <p v-if="teamSelfPermType === 3">{{ t('teamsetting.disband_team_tipsB') }}</p>
+                            <p v-else>{{ t('teamsetting.leave_team_tips') }}</p>
+                        </div>
+                    </div>
+                </div>
+                <div class="addproject">
+                    <button class="bnt_confirm" type="submit" @click.stop="confirm">
+                        {{ teamSelfPermType === 3 ? t('teamsetting.confirm') : t('teamsetting.leave') }}
+                    </button>
+                    <button class="bnt_cancel" type="submit" @click.stop.once="showoverlay = false">{{
+                        t('teamsetting.cancel')
+                    }}</button>
+                </div>
             </div>
         </div>
-    </div>
+
     <ProjectDialog :projectVisible="showDialog" :context="contenttext" :title="titlevalue"
         :confirm-btn="teamSelfPermType === 3 ? t('teamsetting.disband') : t('teamsetting.leave')"
         @clode-dialog="closeDisband" @confirm="confirmQuit"></ProjectDialog>
@@ -133,7 +136,7 @@ interface teamDataType {
 }
 
 const isDisabled: any = computed(() => {
-    return teamSelfPermType.value === 0 || teamSelfPermType.value === 1 ? { state: true, color: 'rgba(98, 67, 237, 0.3)', shadow: 'none' } : false
+    return teamSelfPermType.value === 0 || teamSelfPermType.value === 1 ? false : true
 })
 
 //获取元素，设置焦点并全选内容
@@ -282,7 +285,7 @@ const midname = () => {
 const middescription = () => {
     showoverlay.value = true
     textareashow.value = true
-    titlevalue.value =  t('teamsetting.title_name2')
+    titlevalue.value = t('teamsetting.title_name2')
     textareaValue.value = teamDescription.value
     maxvalue.value = 120
     nextTick(() => el())
@@ -463,6 +466,7 @@ const confirm = () => {
 }
 
 .set-container {
+    margin: 0 8px;
 
     .name-container,
     .description-container,
@@ -470,53 +474,75 @@ const confirm = () => {
     .dissolve-container,
     .leave-container {
         display: flex;
-        align-items: center;
+        align-items: flex-start;
         justify-content: space-between;
-        margin: 0 0 24px 0;
+        height: 89px;
+        gap: 20px;
 
         .left {
-            font-size: 14px;
-            color: #909399;
+            display: flex;
+            flex-direction: column;
+            gap: 10px;
+
             .title {
-                font-weight: 600;
-                margin-bottom: 8px;
+                font-size: 14px;
+                font-weight: 500;
+                color: #000000;
             }
 
             .text {
-                color: #666;
+                line-height: 20px;
+                font-size: 13px;
+                font-weight: 400;
+                color: #777777;
             }
         }
 
         .right button,
         .modify {
-            cursor: pointer;
-            color: white;
-            font-size: 12px;
-            letter-spacing: 1px;
-            width: 80px;
-            height: 32px;
-            border: none;
-            outline: none;
-            background-color: #9775fa;
-            box-shadow: 1px 1px 3px #b1b1b1, -1px -1px 3px #b1b1b1;
-            margin-right: 8px;
-            border-radius: 4px;
             display: flex;
             align-items: center;
             justify-content: center;
-            transition: all 0.2s ease-in-out;
+            color: rgba(51, 51, 51, 1);
+            font-size: 14px;
+            font-weight: 500;
+            width: 92px;
+            height: 36px;
+            border: 1px solid #F0F0F0;
+            outline: none;
+            background-color: rgba(255, 255, 255, 0.1);
+            border-radius: 6px;
 
             &:hover {
-                background-color: rgba(150, 117, 250, 0.862745098);
+                background-color: rgba(247, 247, 249, 1);
             }
 
             &:active {
-                background-color: #9775fa;
+                background-color: rgba(243, 243, 245, 1);
             }
 
             &:disabled {
-                background-color: rgba(98, 67, 237, 0.3);
                 box-shadow: none;
+            }
+        }
+    }
+
+    .dissolve-container,
+    .leave-container {
+        .right {
+            button {
+                color: #E22424;
+                background: rgba(255, 255, 255, 0.1);
+                border: 1px solid #E22424;
+
+                &:hover {
+                    background-color: rgba(199, 8, 8, 0.08);
+                }
+
+                &:active {
+                    background-color: rgba(248, 225, 225, 1);
+                    border: 1px solid #C70808;
+                }
             }
         }
     }

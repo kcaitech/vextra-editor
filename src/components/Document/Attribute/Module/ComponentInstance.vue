@@ -1,17 +1,23 @@
 <script setup lang="ts">
-import { useI18n } from 'vue-i18n';
-import { Context } from '@/context';
+import {useI18n} from 'vue-i18n';
+import {Context} from '@/context';
 import TypeHeader from '../TypeHeader.vue';
 import SelectLayerInput from './SelectLayerInput.vue';
-import { ref, onUnmounted, onMounted, watch } from 'vue';
+import {ref, onUnmounted, onMounted, watch} from 'vue';
 import CompLayerShow from '../PopoverMenu/ComposAttri/CompLayerShow.vue';
-import { OverrideType, Shape, SymbolRefShape, SymbolShape, Variable } from '@kcdesign/data';
-import { get_shape_within_document, shape_track } from '@/utils/content';
-import { MoreFilled } from '@element-plus/icons-vue';
-import { VariableType } from '@kcdesign/data';
-import { create_var_by_type, get_symbol_by_layer, is_bind_x_vari, modify_variable, reset_all_attr_for_ref } from "@/utils/symbol";
-import { message } from '@/utils/message';
-import { Selection } from '@/context/selection';
+import {OverrideType, Shape, SymbolRefShape, SymbolShape, Variable} from '@kcdesign/data';
+import {get_shape_within_document, shape_track} from '@/utils/content';
+import {MoreFilled} from '@element-plus/icons-vue';
+import {VariableType} from '@kcdesign/data';
+import {
+    create_var_by_type,
+    get_symbol_by_layer,
+    is_bind_x_vari,
+    modify_variable,
+    reset_all_attr_for_ref
+} from "@/utils/symbol";
+import {message} from '@/utils/message';
+import {Selection} from '@/context/selection';
 
 interface Props {
     context: Context
@@ -19,7 +25,7 @@ interface Props {
 }
 
 const props = defineProps<Props>();
-const { t } = useI18n();
+const {t} = useI18n();
 const isInstanceShow = ref(false);
 const saveExamplesToggle = () => {
     isInstanceShow.value = false
@@ -62,7 +68,7 @@ const closeResetMenu = (e: MouseEvent) => {
 }
 
 const atrrdialog = ref<HTMLDivElement>();
-const dialog_posi = ref({ x: 0, y: 0 });
+const dialog_posi = ref({x: 0, y: 0});
 const getDialogPosi = (div: HTMLDivElement | undefined) => {
     if (div) {
         const el = div.getBoundingClientRect();
@@ -75,6 +81,7 @@ function reset_all_attr() {
     console.log('emit')
     const res = reset_all_attr_for_ref(props.context);
 }
+
 const is_bind = ref<Variable>();
 const sym_layer = ref<SymbolShape>();
 const default_name = ref('');
@@ -95,44 +102,48 @@ const isBind = () => {
     }
 }
 const card_ref = ref<HTMLDivElement>();
+
 function edit_instance() {
     getDialogPosi(card_ref.value);
     isInstanceShow.value = true;
 }
 
 function save_layer_show(type: VariableType, name: string) {
-    if(is_bind.value) {
+    if (is_bind.value) {
         if (!sym_layer.value) return;
         modify_variable(props.context, sym_layer.value, is_bind.value, name, is_bind.value.value, [is_bind.value.value])
     } else {
         if (!name.trim()) {
-            message('info', '属性名不能为空');
+            message('info', t('compos.validate_info_2'));
             return;
         }
         const shapes = props.context.selection.selectedShapes;
         const ids = shapes.map(item => item.id);
-        if(!sym_layer.value) return;
+        if (!sym_layer.value) return;
         create_var_by_type(props.context, VariableType.SymbolRef, name, undefined, ids, sym_layer.value);
     }
     isInstanceShow.value = false;
 }
+
 const getValue = (id: string) => {
     return props.context.data.symbolsMgr.getSync(id)?.name;
 }
 const selected_watcher = (t: number) => {
-    if(t === Selection.CHANGE_SHAPE) {
+    if (t === Selection.CHANGE_SHAPE) {
         isBind();
     }
 }
+
 function variable_watcher(args: any[]) {
     if (args && (args.includes('variable') || args.includes('childs'))) isBind();
 }
+
 watch(() => shape.value, (v, o) => {
-    if(o) {
+    if (o) {
         o.unwatch(variable_watcher);
     }
     v.watch(variable_watcher);
-},{immediate: true})
+}, {immediate: true})
 
 onMounted(() => {
     isBind();
@@ -160,7 +171,7 @@ onUnmounted(() => {
                     </div>
                     <div class="reset_svg" @click.stop="selectReset">
                         <el-icon>
-                            <MoreFilled />
+                            <MoreFilled/>
                         </el-icon>
                         <div class="reset_menu" v-if="resetMenu">
                             <div class="untie" @click="untie">
@@ -178,7 +189,7 @@ onUnmounted(() => {
                 <div class="module_name-2">
                     <div style="width: 30px;" class="svg">
                         <svg-icon icon-class="pattern-rectangle"
-                            style="width: 10px; height: 10px; transform: rotate(45deg); margin-top: 0;"></svg-icon>
+                                  style="width: 10px; height: 10px; transform: rotate(45deg); margin-top: 0;"></svg-icon>
                     </div>
                     <div class="name">
                         <span style="width: 40%;">{{ is_bind?.name }}</span>
@@ -189,11 +200,13 @@ onUnmounted(() => {
             <div class="delete"></div>
         </div>
         <CompLayerShow :context="context" v-if="isInstanceShow" @close-dialog="saveExamplesToggle" right="250px"
-            :add-type="VariableType.SymbolRef" :width="260" :title="t('compos.instance_toggle')" :dialog_posi="dialog_posi" :default_name="default_name"
-            :variable="is_bind ? is_bind : undefined" @save-layer-show="save_layer_show" :symbol="sym_layer">
+                       :add-type="VariableType.SymbolRef" :width="260" :title="t('compos.instance_toggle')"
+                       :dialog_posi="dialog_posi" :default_name="default_name"
+                       :variable="is_bind ? is_bind : undefined" @save-layer-show="save_layer_show" :symbol="sym_layer">
             <template #layer>
                 <SelectLayerInput :title="t('compos.compos_instance')" :add-type="VariableType.SymbolRef"
-                    :context="props.context" :placeholder="t('compos.place_select_instance')" :selectId="selectId"></SelectLayerInput>
+                                  :context="props.context" :placeholder="t('compos.place_select_instance')"
+                                  :selectId="selectId"></SelectLayerInput>
             </template>
         </CompLayerShow>
     </div>
@@ -213,7 +226,7 @@ onUnmounted(() => {
         align-items: center;
         justify-content: center;
 
-        >svg {
+        > svg {
             width: 70%;
             height: 70%;
         }
@@ -226,7 +239,7 @@ onUnmounted(() => {
         align-items: center;
         justify-content: center;
 
-        >svg {
+        > svg {
             width: 50%;
             height: 50%;
         }
@@ -241,7 +254,7 @@ onUnmounted(() => {
         align-items: center;
         justify-content: center;
 
-        >svg {
+        > svg {
             width: 50%;
             height: 50%;
         }
@@ -294,7 +307,7 @@ onUnmounted(() => {
         align-items: center;
         width: 84px;
 
-        >svg {
+        > svg {
             width: 14px;
             height: 14px;
             margin: 0px 10px;
@@ -318,7 +331,7 @@ onUnmounted(() => {
             align-items: center;
             justify-content: center;
 
-            >svg {
+            > svg {
                 width: 14px;
                 height: 14px;
             }
@@ -330,7 +343,7 @@ onUnmounted(() => {
             display: flex;
             max-width: 100%;
 
-            >span {
+            > span {
                 display: block;
                 box-sizing: border-box;
                 overflow: hidden;
@@ -356,7 +369,7 @@ onUnmounted(() => {
     width: 22px;
     height: 22px;
 
-    >svg {
+    > svg {
         width: 11px;
         height: 11px;
     }

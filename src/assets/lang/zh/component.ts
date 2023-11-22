@@ -34,5 +34,16 @@ export const compos: any = {
     attri_1: '属性 1',
     dlt: '默认',
     attri: '属性',
-    add_new: '添加新值'
+    add_new: '添加新值',
+    error_1: '新的组件不能包含已有组件图层的组成图层',
+    error_2: '新的组件不能包含组件实例的组成图层',
+    error_3: '组件内部不能包含连接线、表格',
+    validate_info_1: '请选择图层',
+    validate_info_2: '属性名不能为空',
+    validate_info_3: '默认值不能为空',
+    conflict: '存在状态相同的可变组件，需要修改状态以解决冲突',
+    conflict_2: '此可变组件存在相同状态，需要修改状态以解决冲突',
+    confirm: '确认',
+    circle_warning: '存在循环引用',
+    invalid_compos: '无效组件'
 }

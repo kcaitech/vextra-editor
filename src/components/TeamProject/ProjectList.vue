@@ -1,5 +1,5 @@
 <template>
-    <div class="tatle" style="height: calc(100vh - 186px);">
+    <div class="tatle" style="height: calc(100vh - 224px);">
         <tablelist :data="searchvalue === '' ? teamprojectlist : SearchList" :iconlist="iconlists" :nulldata="nulldata"
             :projectshare="true" @onexitproject="onExitProject" @cancelfixed="cancelFixed" @on-addproject="onAddproject"
             @dbclickopen="dblclickskipProject" @skipproject="skipProject" @rightMeun="rightmenu" :noNetwork="noNetwork"

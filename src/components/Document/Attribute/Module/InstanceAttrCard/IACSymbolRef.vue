@@ -7,6 +7,8 @@ import {Shape} from "@kcdesign/data";
 import {Component} from "@/context/component";
 import {message} from "@/utils/message";
 import {ArrowDown} from '@element-plus/icons-vue'
+import {useI18n} from "vue-i18n";
+
 
 interface Props {
     context: Context
@@ -19,6 +21,7 @@ const comps = ref<HTMLDivElement>();
 const comps_posi = ref({x: 0, y: 0});
 const vari_value = ref<string>('');
 const vari_instance_from = ref<string>('');
+const t = useI18n().t;
 const compsDialog = () => {
     if (vari_instance_from.value) {
         props.context.component.set_scroll_target(vari_instance_from.value);
@@ -47,28 +50,26 @@ function get_value() {
     if (vari_value.value) vari_instance_from.value = id;
 }
 
-function component_watcher(t: number, val: Shape) {
-    if (t === Component.SELECTED_VAL) {
+function component_watcher(type: number, val: Shape) {
+    if (type === Component.SELECTED_VAL) {
         const symbolref = props.context.selection.symbolrefshape;
         if (!symbolref) return;
         const sym = props.context.data.symbolsMgr.getSync(val.id);
-        if (!sym)  {
-            message("info", '无效组件');
+        if (!sym) {
+            message("info", t('compos.invalid_compos'));
             return;
         }
         const is_circular = is_circular_ref2(sym, symbolref.refId);
         if (is_circular) {
-            message("danger", '存在循环引用');
+            message("danger", t('compos.circle_warning'));
             return;
         }
         modify_vari_value_for_ref(props.context, props.data.variable, val.id);
         closeDialog();
     }
 }
-watch(() => props.data, (v) => {
-    get_value();
-})
 
+watch(() => props.data, get_value);
 onUpdated(get_value);
 onMounted(() => {
     get_value();
@@ -94,7 +95,8 @@ onUnmounted(() => {
             </div>
         </div>
         <div class="delete"></div>
-        <ComponentDialog v-if="showCompsDialog" :context="context" right="250px" top="0" @closeDialog="closeDialog" :current-instance-from="vari_instance_from"
+        <ComponentDialog v-if="showCompsDialog" :context="context" right="250px" top="0" @closeDialog="closeDialog"
+                         :current-instance-from="vari_instance_from"
                          :comps_posi="comps_posi">
         </ComponentDialog>
     </div>

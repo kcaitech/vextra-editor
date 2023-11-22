@@ -1,9 +1,9 @@
 <script setup lang="ts">
-import { onMounted, onUnmounted, shallowRef, ref, watchEffect } from 'vue';
+import {onMounted, onUnmounted, shallowRef, ref, watchEffect} from 'vue';
 import ContentView from "./ContentView.vue";
-import { Context } from '@/context';
+import {Context} from '@/context';
 import Navigation from './Navigation/index.vue';
-import { Selection } from '@/context/selection';
+import {Selection} from '@/context/selection';
 import Attribute from './Attribute/RightTabs.vue';
 import Toolbar from './Toolbar/index.vue'
 import ColSplitView from '@/components/common/ColSplitView.vue';
@@ -12,13 +12,13 @@ import { Document, importDocument, Repository, Page, CoopRepository, IStorage } 
 import { SCREEN_SIZE } from '@/utils/setting';
 import * as share_api from '@/request/share'
 import * as user_api from '@/request/users'
-import { useRoute } from 'vue-router';
-import { router } from '@/router';
-import { useI18n } from 'vue-i18n';
-import { Warning } from '@element-plus/icons-vue';
+import {useRoute} from 'vue-router';
+import {router} from '@/router';
+import {useI18n} from 'vue-i18n';
+import {Warning} from '@element-plus/icons-vue';
 import Loading from '@/components/common/Loading.vue';
 import SubLoading from '@/components/common/SubLoading.vue';
-import { Perm, WorkSpace } from '@/context/workspace';
+import {Perm, WorkSpace} from '@/context/workspace';
 import NetWorkError from '@/components/NetworkError.vue'
 import { ResponseStatus } from "@/communication/modules/doc_upload";
 import { insertNetworkInfo } from "@/utils/message"
@@ -33,14 +33,14 @@ import Bridge from "@/components/Document/Bridge.vue";
 import { Component } from '@/context/component';
 import {initpal} from './initpal';
 
-const { t } = useI18n();
+const {t} = useI18n();
 const curPage = shallowRef<Page | undefined>(undefined);
 let context: Context | undefined;
 const middleWidth = ref<number>(0.8);
 const middleMinWidth = ref<number>(0.3);
 const route = useRoute();
-const Right = ref({ rightMin: 250, rightMinWidth: 0.1, rightWidth: 0.1 });
-const Left = ref({ leftMin: 250, leftWidth: 0.1, leftMinWidth: 0.1 });
+const Right = ref({rightMin: 250, rightMinWidth: 0.1, rightWidth: 0.1});
+const Left = ref({leftMin: 250, leftWidth: 0.1, leftMinWidth: 0.1});
 const showRight = ref<boolean>(true);
 const showLeft = ref<boolean>(true);
 const showTop = ref<boolean>(true);
@@ -64,195 +64,191 @@ const bridge = ref<boolean>(false);
 const inited = ref(false);
 
 function screenSetting() {
-    const element = document.documentElement;
-    const isFullScreen = document.fullscreenElement;
-    if (isFullScreen === null) {
-        element.requestFullscreen && element.requestFullscreen();
-        localStorage.setItem(SCREEN_SIZE.KEY, SCREEN_SIZE.FULL);
-    } else {
-        document.exitFullscreen && document.exitFullscreen();
-        localStorage.setItem(SCREEN_SIZE.KEY, SCREEN_SIZE.NORMAL);
-    }
+  const element = document.documentElement;
+  const isFullScreen = document.fullscreenElement;
+  if (isFullScreen === null) {
+    element.requestFullscreen && element.requestFullscreen();
+    localStorage.setItem(SCREEN_SIZE.KEY, SCREEN_SIZE.FULL);
+  } else {
+    document.exitFullscreen && document.exitFullscreen();
+    localStorage.setItem(SCREEN_SIZE.KEY, SCREEN_SIZE.NORMAL);
+  }
 }
 
 function mouseenter(t: 'left' | 'right') {
-    if (t === 'left') {
-        if (timerForLeft) {
-            clearTimeout(timerForLeft);
-            timerForLeft = undefined;
-        }
-        leftTriggleVisible.value = true;
-    } else {
-        if (timeForRight) {
-            clearTimeout(timeForRight);
-            timeForRight = undefined;
-        }
-        rightTriggleVisible.value = true;
+  if (t === 'left') {
+    if (timerForLeft) {
+      clearTimeout(timerForLeft);
+      timerForLeft = undefined;
     }
+    leftTriggleVisible.value = true;
+  } else {
+    if (timeForRight) {
+      clearTimeout(timeForRight);
+      timeForRight = undefined;
+    }
+    rightTriggleVisible.value = true;
+  }
 }
 
 function mouseleave(t: 'left' | 'right') {
-    const delay = 2000;
-    if (t === 'left') {
-        timerForLeft = setTimeout(() => {
-            if (!timerForLeft) return;
-            leftTriggleVisible.value = false;
-            clearTimeout(timerForLeft);
-            timerForLeft = undefined;
-        }, delay);
-    } else {
-        timeForRight = setTimeout(() => {
-            if (!timeForRight) return;
-            rightTriggleVisible.value = false;
-            clearTimeout(timeForRight);
-            timeForRight = undefined;
-        }, delay);
-    }
+  const delay = 2000;
+  if (t === 'left') {
+    timerForLeft = setTimeout(() => {
+      if (!timerForLeft) return;
+      leftTriggleVisible.value = false;
+      clearTimeout(timerForLeft);
+      timerForLeft = undefined;
+    }, delay);
+  } else {
+    timeForRight = setTimeout(() => {
+      if (!timeForRight) return;
+      rightTriggleVisible.value = false;
+      clearTimeout(timeForRight);
+      timeForRight = undefined;
+    }, delay);
+  }
 }
 
 function switchPage(id?: string) {
-    if (!id) return
-    if (context) {
-        const ctx: Context = context;
-        const pagesMgr = ctx.data.pagesMgr;
-        pagesMgr.get(id).then((page: Page | undefined) => {
-            if (page) {
-                ctx.comment.toggleCommentPage()
-                curPage.value = undefined;
-                ctx.comment.commentMount(false)
-                ctx.selection.selectPage(page);
-                curPage.value = page;
-            }
-        })
-    }
+  if (!id) return
+  if (context) {
+    const ctx: Context = context;
+    const pagesMgr = ctx.data.pagesMgr;
+    pagesMgr.get(id).then((page: Page | undefined) => {
+      if (page) {
+        ctx.comment.toggleCommentPage()
+        curPage.value = undefined;
+        ctx.comment.commentMount(false)
+        ctx.selection.selectPage(page);
+        curPage.value = page;
+      }
+    })
+  }
 }
 
 function selectionWatcher(t: number) {
-    if (t === Selection.CHANGE_PAGE) {
-        if (context) {
-            const ctx: Context = context;
-            curPage.value = ctx.selection.selectedPage;
-        }
+  if (t === Selection.CHANGE_PAGE) {
+    if (context) {
+      const ctx: Context = context;
+      curPage.value = ctx.selection.selectedPage;
     }
-    if (t === Selection.COMMENT_CHANGE_PAGE) {
-        if (context) {
-            const pageId = context.selection.commentPageId
-            switchPage(pageId)
-        }
+  }
+  if (t === Selection.COMMENT_CHANGE_PAGE) {
+    if (context) {
+      const pageId = context.selection.commentPageId
+      switchPage(pageId)
     }
+  }
 }
 
 function keyboardEventHandler(event: KeyboardEvent) {
-    const { target, code, ctrlKey, metaKey, shiftKey } = event;
-    if (target instanceof HTMLInputElement) return; // 在输入框中输入时避免触发编辑器的键盘事件
-    if (context) {
-        if (code === 'Backslash') {
-            if (ctrlKey || metaKey) {
-                shiftKey ? keyToggleTB() : keyToggleLR();
-            }
-        }
-        if (context.workspace.documentPerm !== Perm.isEdit || context.tool.isLable) {
-            if (permKeyBoard(event)) {
-                context.workspace.keyboardHandle(event); // 只读可评论的键盘事件
-                if (context.workspace.documentPerm !== Perm.isRead) {
-                    context.tool.keyhandle(event);
-                }
-            }
-        } else {
-            context.esctask.keyboardHandle(event);
-            context.workspace.keyboardHandle(event); // 编辑器相关的键盘事件
-            context.tool.keyhandle(event);
-        }
+  const {target, code, ctrlKey, metaKey, shiftKey} = event;
+  if (target instanceof HTMLInputElement) return; // 在输入框中输入时避免触发编辑器的键盘事件
+  if (context) {
+    if (code === 'Backslash') {
+      if (ctrlKey || metaKey) {
+        shiftKey ? keyToggleTB() : keyToggleLR();
+      }
     }
+    if (context.workspace.documentPerm !== Perm.isEdit) {
+      if (permKeyBoard(event)) {
+        context.workspace.keyboardHandle(event); // 只读可评论的键盘事件
+      }
+    } else {
+      context.esctask.keyboardHandle(event);
+      context.workspace.keyboardHandle(event); // 编辑器相关的键盘事件
+      context.tool.keyhandle(event);
+    }
+  }
 }
 
 const permKeyBoard = (e: KeyboardEvent) => {
-    const { code, ctrlKey, metaKey, shiftKey } = e;
-    if (code === 'KeyV' && (ctrlKey || metaKey)) return;
-    if (code === 'KeyV' || (code === 'KeyC' && !(ctrlKey || metaKey)) || code === 'KeyA' || code === 'Digit0 ' || ctrlKey || metaKey || shiftKey) return true
-    else false
+  const {code, ctrlKey, metaKey, shiftKey} = e;
+  if (code === 'KeyV' || code === 'KeyC' || code === 'KeyA' || code === 'Digit0 ' || ctrlKey || metaKey || shiftKey) return true
+  else false
 }
 
 const showHiddenRight = () => {
-    if (showRight.value) {
-        Right.value.rightMin = 0
-        Right.value.rightWidth = 0
-        Right.value.rightMinWidth = 0
-        middleWidth.value = middleWidth.value + 0.1
-        showRight.value = false
-    } else {
-        Right.value.rightMin = 250
-        Right.value.rightWidth = 0.1
-        Right.value.rightMinWidth = 0.1
-        middleWidth.value = middleWidth.value - 0.1
-        showRight.value = true
-    }
+  if (showRight.value) {
+    Right.value.rightMin = 0
+    Right.value.rightWidth = 0
+    Right.value.rightMinWidth = 0
+    middleWidth.value = middleWidth.value + 0.1
+    showRight.value = false
+  } else {
+    Right.value.rightMin = 250
+    Right.value.rightWidth = 0.1
+    Right.value.rightMinWidth = 0.1
+    middleWidth.value = middleWidth.value - 0.1
+    showRight.value = true
+  }
 }
 const showHiddenLeft = () => {
-    if (!context) return;
-    const w = context.workspace;
-    if (showLeft.value) {
-        Left.value.leftMin = 0
-        Left.value.leftWidth = 0
-        Left.value.leftMinWidth = 0
-        middleWidth.value = middleWidth.value + 0.1
-        showLeft.value = false
-    } else {
-        Left.value.leftMin = 250
-        Left.value.leftWidth = 0.1
-        Left.value.leftMinWidth = 0.1
-        middleWidth.value = middleWidth.value - 0.1
-        showLeft.value = true
-    }
-    w.notify(WorkSpace.CHANGE_NAVI);
+  if (!context) return;
+  const w = context.workspace;
+  if (showLeft.value) {
+    Left.value.leftMin = 0
+    Left.value.leftWidth = 0
+    Left.value.leftMinWidth = 0
+    middleWidth.value = middleWidth.value + 0.1
+    showLeft.value = false
+  } else {
+    Left.value.leftMin = 250
+    Left.value.leftWidth = 0.1
+    Left.value.leftMinWidth = 0.1
+    middleWidth.value = middleWidth.value - 0.1
+    showLeft.value = true
+  }
+  w.notify(WorkSpace.CHANGE_NAVI);
 }
 
 function keyToggleLR() {
-    if (showRight.value !== showLeft.value) {
-        showHiddenLeft();
-    } else {
-        showHiddenLeft();
-        showHiddenRight();
-    }
+  if (showRight.value !== showLeft.value) {
+    showHiddenLeft();
+  } else {
+    showHiddenLeft();
+    showHiddenRight();
+  }
 }
 
 function keyToggleTB() {
-    if (!context) return;
-    if (showRight.value !== showLeft.value) {
-        showHiddenLeft();
-        return;
-    }
-    if (showTop.value !== showLeft.value) {
-        showHiddenLeft();
-        showHiddenRight();
-        return;
-    }
+  if (!context) return;
+  if (showRight.value !== showLeft.value) {
+    showHiddenLeft();
+    return;
+  }
+  if (showTop.value !== showLeft.value) {
     showHiddenLeft();
     showHiddenRight();
-    showBottom.value = !showBottom.value;
-    showTop.value = showBottom.value;
-    if (showTop.value) {
-        context.workspace.matrix.trans(0, -40);
-    } else {
-        context.workspace.matrix.trans(0, 40);
-    }
-    context.workspace.notify(WorkSpace.MATRIX_TRANSFORMATION);
+    return;
+  }
+  showHiddenLeft();
+  showHiddenRight();
+  showBottom.value = !showBottom.value;
+  showTop.value = showBottom.value;
+  if (showTop.value) {
+    context.workspace.matrix.trans(0, -40);
+  } else {
+    context.workspace.matrix.trans(0, 40);
+  }
+  context.workspace.notify(WorkSpace.MATRIX_TRANSFORMATION);
 }
 
 //只读权限隐藏右侧属性栏
 watchEffect(() => {
-    if (isRead.value || canComment.value) {
-        Right.value.rightMin = 0
-        Right.value.rightWidth = 0
-        Right.value.rightMinWidth = 0
-        middleWidth.value = middleWidth.value + 0.1
-    }
+  if (isRead.value || canComment.value) {
+    Right.value.rightMin = 0
+    Right.value.rightWidth = 0
+    Right.value.rightMinWidth = 0
+    middleWidth.value = middleWidth.value + 0.1
+  }
 })
 
 enum PermissionChange {
-    update,
-    close,
-    delete
+  update,
+  close,
+  delete
 }
 
 const getDocumentAuthority = async () => {
@@ -297,23 +293,23 @@ const getDocumentAuthority = async () => {
 const permissionChange = ref(-1);
 // 权限被修改后的倒计时
 const startCountdown = (type?: number) => {
-    const timer = setInterval(() => {
-        if (countdown.value > 1) {
-            countdown.value--;
-        } else {
-            hideNotification(type);
-            clearInterval(timer);
-        }
-    }, 1000);
+  const timer = setInterval(() => {
+    if (countdown.value > 1) {
+      countdown.value--;
+    } else {
+      hideNotification(type);
+      clearInterval(timer);
+    }
+  }, 1000);
 }
 const hideNotification = (type?: number) => {
-    showHint.value = false;
-    countdown.value = 10;
-    if (type === 0) {
-        router.push('/')
-    } else {
-        router.go(0)
-    }
+  showHint.value = false;
+  countdown.value = 10;
+  if (type === 0) {
+    router.push('/')
+  } else {
+    router.go(0)
+  }
 }
 const showNotification = (type?: number) => {
     insertNetworkInfo('networkError', false, network_error);
@@ -321,13 +317,13 @@ const showNotification = (type?: number) => {
     startCountdown(type);
 }
 const getUserInfo = async () => {
-    const { data } = await user_api.GetInfo()
-    if (context) {
-        context.comment.setUserInfo(data)
-        localStorage.setItem('avatar', data.avatar)
-        localStorage.setItem('nickname', data.nickname)
-        localStorage.setItem('userId', data.id)
-    }
+  const {data} = await user_api.GetInfo()
+  if (context) {
+    context.comment.setUserInfo(data)
+    localStorage.setItem('avatar', data.avatar)
+    localStorage.setItem('nickname', data.nickname)
+    localStorage.setItem('userId', data.id)
+  }
 }
 
 //获取文档信息
@@ -389,6 +385,8 @@ const getDocumentInfo = async () => {
             window.document.title = file_name.length > 8 ? `${file_name.slice(0, 8)}... - ProtoDesign` : `${file_name} - ProtoDesign`;
             context = new Context(document, coopRepo);
             context.workspace.setDocumentPerm(perm)
+
+
             getDocumentAuthority();
             getUserInfo()
 
@@ -406,8 +404,8 @@ const getDocumentInfo = async () => {
                 router.push("/");
                 return;
             }
-            if (perm === 3) await context.communication.docResourceUpload.start(token, docId);
-            if (perm >= 2) await context.communication.docCommentOp.start(token, docId);
+            if(perm === 3) await context.communication.docResourceUpload.start(token, docId);
+            if(perm >= 2) await context.communication.docCommentOp.start(token, docId);
             await context.communication.docSelectionOp.start(token, docId, context);
             context.communication.docSelectionOp.addOnMessage(teamSelectionModifi)
         }
@@ -447,10 +445,10 @@ async function upload(projectId: string) {
     if (!await context.communication.docOp.start(token, doc_id, context!.data, context.coopRepo, result!.data.version_id ?? "")) {
         // todo 文档操作通道开启失败处理
     }
-    getDocumentAuthority().then(async _ => {
-        if (!context) return;
-        if (permType.value === 3) context.communication.docResourceUpload.start(token, doc_id);
-        if (permType.value && permType.value >= 2) context.communication.docCommentOp.start(token, doc_id);
+    getDocumentAuthority().then(async () => {
+        if(!context) return;
+        if(permType.value === 3) context.communication.docResourceUpload.start(token, doc_id);
+        if(permType.value && permType.value >= 2) context.communication.docCommentOp.start(token, doc_id);
         await context.communication.docSelectionOp.start(token, doc_id, context);
         context.communication.docSelectionOp.addOnMessage(teamSelectionModifi);
         context.workspace.notify(WorkSpace.INIT_DOC_NAME);
@@ -460,7 +458,7 @@ async function upload(projectId: string) {
 let timer: any = null;
 
 function init_screen_size() {
-    localStorage.setItem(SCREEN_SIZE.KEY, SCREEN_SIZE.NORMAL);
+  localStorage.setItem(SCREEN_SIZE.KEY, SCREEN_SIZE.NORMAL);
 }
 
 function init_doc() {
@@ -490,13 +488,13 @@ function init_doc() {
 }
 
 function workspaceWatcher(t: number) {
-    if (t === WorkSpace.FREEZE) {
-        sub_loading.value = true;
-    } else if (t === WorkSpace.THAW) {
-        sub_loading.value = false;
-    } else if (t === WorkSpace.HIDDEN_UI) {
-        keyToggleTB();
-    }
+  if (t === WorkSpace.FREEZE) {
+    sub_loading.value = true;
+  } else if (t === WorkSpace.THAW) {
+    sub_loading.value = false;
+  } else if (t === WorkSpace.HIDDEN_UI) {
+    keyToggleTB();
+  }
 }
 
 const autosave = t('message.autosave');
@@ -506,60 +504,60 @@ const network_error = t('message.network_error');
 
 // 保存文档成功message信息
 const autoSaveSuccess = () => {
-    insertNetworkInfo('saveSuccess', true, autosave);
-    const timer = setTimeout(() => {
-        insertNetworkInfo('saveSuccess', false, autosave);
-        clearTimeout(timer)
-    }, 3000)
+  insertNetworkInfo('saveSuccess', true, autosave);
+  const timer = setTimeout(() => {
+    insertNetworkInfo('saveSuccess', false, autosave);
+    clearTimeout(timer)
+  }, 3000)
 }
 //网络连接成功message信息
 const networkLinkSuccess = () => {
-    insertNetworkInfo('netError', false, network_anomaly);
-    insertNetworkInfo('networkSuccess', true, link_success);
-    const timer = setTimeout(() => {
-        insertNetworkInfo('networkSuccess', false, link_success);
-        clearTimeout(timer)
-    }, 3000)
+  insertNetworkInfo('netError', false, network_anomaly);
+  insertNetworkInfo('networkSuccess', true, link_success);
+  const timer = setTimeout(() => {
+    insertNetworkInfo('networkSuccess', false, link_success);
+    clearTimeout(timer)
+  }, 3000)
 }
 // 网络断开连接提示信息
 const networkLinkError = () => {
-    insertNetworkInfo('networkSuccess', false, link_success);
-    insertNetworkInfo('netError', true, network_anomaly);
-    const timer = setTimeout(() => {
-        insertNetworkInfo('netError', false, network_anomaly);
-        clearTimeout(timer);
-    }, 3000)
+  insertNetworkInfo('networkSuccess', false, link_success);
+  insertNetworkInfo('netError', true, network_anomaly);
+  const timer = setTimeout(() => {
+    insertNetworkInfo('netError', false, network_anomaly);
+    clearTimeout(timer);
+  }, 3000)
 }
 
 let previousStatus: NetworkStatusType = NetworkStatusType.Online
 const networkMessage = (status: NetworkStatusType) => {
-    if (status === previousStatus) return;
-    previousStatus = status
-    if (status === NetworkStatusType.Offline) {
-        networkLinkError()
-    } else {
-        networkLinkSuccess()
-    }
+  if (status === previousStatus) return;
+  previousStatus = status
+  if (status === NetworkStatusType.Offline) {
+    networkLinkError()
+  } else {
+    networkLinkSuccess()
+  }
 }
 const networkDebounce = debounce(networkMessage, 1000)
 
 //文档获取失败 重试刷新页面
 const refreshDoc = () => {
-    location.reload();
+  location.reload();
 }
 
 const hasPendingSync = () => {
-    if (context && context.communication.docOp.hasPendingSyncCmd() && !netErr) {
-        insertNetworkInfo('networkError', true, network_error);
-        netErr = setInterval(() => {
-            if (context && !context.communication.docOp.hasPendingSyncCmd()) {
-                insertNetworkInfo('networkError', false, network_error);
-                autoSaveSuccess();
-                clearInterval(netErr);
-                netErr = null;
-            }
-        }, 1000);
-    }
+  if (context && context.communication.docOp.hasPendingSyncCmd() && !netErr) {
+    insertNetworkInfo('networkError', true, network_error);
+    netErr = setInterval(() => {
+      if (context && !context.communication.docOp.hasPendingSyncCmd()) {
+        insertNetworkInfo('networkError', false, network_error);
+        autoSaveSuccess();
+        clearInterval(netErr);
+        netErr = null;
+      }
+    }, 1000);
+  }
 }
 // 检测是否有未上传的数据
 let loopNet: any = null
@@ -568,34 +566,34 @@ let netErr: any = null
 const token = localStorage.getItem("token") || "";
 const networkStatus = NetworkStatus.Make(token);
 networkStatus.addOnChange((status: NetworkStatusType) => {
-    if (status === NetworkStatusType.Offline) {
-        // 网络断开连接
-        if (context) {
-            clearInterval(loopNet);
-            loopNet = null;
-            loopNet = setInterval(() => {
-                hasPendingSync()
-            }, 1000)
-            if (context.communication.docOp.hasPendingSyncCmd() || netErr) {
-                //有未上传资源
-                hasPendingSync()
-            } else {
-                networkDebounce(status)
-            }
-        }
-    } else {
-        //网络连接成功
-        if (context) {
-            if (context.communication.docOp.hasPendingSyncCmd() || netErr) {
-                //有未上传资源
-                hasPendingSync()
-            } else {
-                networkDebounce(status)
-            }
-            context.comment.notify(Comment.EDIT_COMMENT)
-            clearInterval(loopNet)
-        }
+  if (status === NetworkStatusType.Offline) {
+    // 网络断开连接
+    if (context) {
+      clearInterval(loopNet);
+      loopNet = null;
+      loopNet = setInterval(() => {
+        hasPendingSync()
+      }, 1000)
+      if (context.communication.docOp.hasPendingSyncCmd() || netErr) {
+        //有未上传资源
+        hasPendingSync()
+      } else {
+        networkDebounce(status)
+      }
     }
+  } else {
+    //网络连接成功
+    if (context) {
+      if (context.communication.docOp.hasPendingSyncCmd() || netErr) {
+        //有未上传资源
+        hasPendingSync()
+      } else {
+        networkDebounce(status)
+      }
+      context.comment.notify(Comment.EDIT_COMMENT)
+      clearInterval(loopNet)
+    }
+  }
 })
 
 function onBeforeUnload(event: any) {
@@ -605,39 +603,39 @@ function onBeforeUnload(event: any) {
 }
 
 function onUnloadForCommunication() {
-    try {
-        context?.communication.docOp.close();
-        context?.communication.docResourceUpload.close();
-        context?.communication.docCommentOp.close();
-        context?.communication.docSelectionOp.close();
-    } catch (err) {
-    }
+  try {
+    context?.communication.docOp.close();
+    context?.communication.docResourceUpload.close();
+    context?.communication.docCommentOp.close();
+    context?.communication.docSelectionOp.close();
+  } catch (err) {
+  }
 }
 
 function onUnload(event: any) {
-    onUnloadForCommunication();
+  onUnloadForCommunication();
 }
 
 function closeNetMsg() {
-    insertNetworkInfo('saveSuccess', false, autosave);
-    insertNetworkInfo('networkError', false, network_error);
-    insertNetworkInfo('netError', false, network_anomaly);
-    insertNetworkInfo('networkSuccess', false, link_success);
+  insertNetworkInfo('saveSuccess', false, autosave);
+  insertNetworkInfo('networkError', false, network_error);
+  insertNetworkInfo('netError', false, network_anomaly);
+  insertNetworkInfo('networkSuccess', false, link_success);
 }
 
 //协作人员操作文档执行
 const teamSelectionModifi = (docCommentOpData: DocSelectionOpData) => {
-    const data = docCommentOpData.data
-    if (context && (docCommentOpData.user_id !== context.comment.isUserInfo?.id) && context.comment.isUserInfo?.id) {
-        const addUset = context!.teamwork.getUserSelection
-        if (docCommentOpData.type === DocSelectionOpType.Exit) {
-            const index = addUset.findIndex(obj => obj.user_id === docCommentOpData.user_id);
-            context?.teamwork.userSelectionExit(index)
-        } else if (docCommentOpData.type === DocSelectionOpType.Update) {
-            const index = addUset.findIndex(obj => obj.user_id === docCommentOpData.user_id);
-            context?.teamwork.userSelectionUpdate(data, index)
-        }
+  const data = docCommentOpData.data
+  if (context && (docCommentOpData.user_id !== context.comment.isUserInfo?.id) && context.comment.isUserInfo?.id) {
+    const addUset = context!.teamwork.getUserSelection
+    if (docCommentOpData.type === DocSelectionOpType.Exit) {
+      const index = addUset.findIndex(obj => obj.user_id === docCommentOpData.user_id);
+      context?.teamwork.userSelectionExit(index)
+    } else if (docCommentOpData.type === DocSelectionOpType.Update) {
+      const index = addUset.findIndex(obj => obj.user_id === docCommentOpData.user_id);
+      context?.teamwork.userSelectionUpdate(data, index)
     }
+  }
 }
 function component_watcher(t: number) {
     if (!context) return;
@@ -730,127 +728,127 @@ onUnmounted(() => {
 </template>
 <style>
 :root {
-    /* top toolbar */
-    --top-toolbar-bg-color: var(--theme-color);
-    --top-toolbar-font-color: var(--theme-color-anti);
-    /* left navigation col */
-    --left-navi-bg-color: var(--theme-color-anti);
-    --left-navi-button-hover-color: var(--grey-light);
-    --left-navi-button-select-color: var(--grey-dark);
-    --left-navi-font-color: var(--theme-color);
-    /* right attribute col */
-    --right-attr-bg-color: var(--theme-color-anti);
-    /* center content area */
-    --center-content-bg-color: var(--grey-light);
+  /* top toolbar */
+  --top-toolbar-bg-color: var(--theme-color);
+  --top-toolbar-font-color: var(--theme-color-anti);
+  /* left navigation col */
+  --left-navi-bg-color: var(--theme-color-anti);
+  --left-navi-button-hover-color: var(--grey-light);
+  --left-navi-button-select-color: var(--grey-dark);
+  --left-navi-font-color: var(--theme-color);
+  /* right attribute col */
+  --right-attr-bg-color: var(--theme-color-anti);
+  /* center content area */
+  --center-content-bg-color: var(--grey-light);
 }
 </style>
 <style scoped lang="scss">
 #top {
-    display: flex;
-    position: relative;
-    flex-flow: row nowrap;
-    width: 100%;
-    height: 40px;
-    background-color: var(--top-toolbar-bg-color);
-    z-index: 10;
-    min-height: 40px;
+  display: flex;
+  position: relative;
+  flex-flow: row nowrap;
+  width: 100%;
+  height: 40px;
+  background-color: var(--top-toolbar-bg-color);
+  z-index: 10;
+  min-height: 40px;
 }
 
 .network {
-    position: absolute;
-    width: 100%;
-    height: 100%;
-    z-index: 9999;
+  position: absolute;
+  width: 100%;
+  height: 100%;
+  z-index: 9999;
 }
 
 #visit {
-    position: absolute;
-    top: 45px;
-    right: 10px;
-    z-index: 999;
-    overflow: hidden;
-    height: calc(100% - 45px);
+  position: absolute;
+  top: 45px;
+  right: 10px;
+  z-index: 999;
+  overflow: hidden;
+  height: calc(100% - 45px);
 }
 
 #center {
-    display: flex;
-    flex-flow: row nowrap;
-    flex: 1 1 auto;
+  display: flex;
+  flex-flow: row nowrap;
+  flex: 1 1 auto;
+  width: 100%;
+  overflow: hidden;
+  position: relative;
+
+  #navigation {
+    height: 100%;
+    background-color: var(--left-navi-bg-color);
+    z-index: 9;
+  }
+
+  #content {
     width: 100%;
+    height: 100%;
     overflow: hidden;
     position: relative;
+  }
 
-    #navigation {
-        height: 100%;
-        background-color: var(--left-navi-bg-color);
-        z-index: 9;
-    }
-
-    #content {
-        width: 100%;
-        height: 100%;
-        overflow: hidden;
-        position: relative;
-    }
-
-    #attributes {
-        height: 100%;
-        background-color: var(--right-attr-bg-color);
-        z-index: 9;
-    }
+  #attributes {
+    height: 100%;
+    background-color: var(--right-attr-bg-color);
+    z-index: 9;
+  }
 }
 
 .notification {
-    position: fixed;
-    font-size: var(--font-default-fontsize);
-    display: flex;
-    align-items: center;
-    top: 60px;
-    left: 50%;
-    transform: translateX(-50%);
-    color: red;
-    background-color: #fff;
-    border: 1px solid #ccc;
-    padding: 7px 30px;
-    border-radius: 4px;
+  position: fixed;
+  font-size: var(--font-default-fontsize);
+  display: flex;
+  align-items: center;
+  top: 60px;
+  left: 50%;
+  transform: translateX(-50%);
+  color: red;
+  background-color: #fff;
+  border: 1px solid #ccc;
+  padding: 7px 30px;
+  border-radius: 4px;
 
-    .text {
-        margin: 0 15px 0 10px;
-    }
+  .text {
+    margin: 0 15px 0 10px;
+  }
 }
 
 .network_error {
-    position: fixed;
-    font-size: var(--font-default-fontsize);
-    display: flex;
-    align-items: center;
-    top: 60px;
-    left: 50%;
-    transform: translateX(-50%);
-    color: #f1f1f1;
-    background-color: var(--active-color-beta);
-    padding: 7px 30px;
-    border: 1px solid var(--active-color-beta);
-    border-radius: 4px;
+  position: fixed;
+  font-size: var(--font-default-fontsize);
+  display: flex;
+  align-items: center;
+  top: 60px;
+  left: 50%;
+  transform: translateX(-50%);
+  color: #f1f1f1;
+  background-color: var(--active-color-beta);
+  padding: 7px 30px;
+  border: 1px solid var(--active-color-beta);
+  border-radius: 4px;
 
-    .loading-spinner {
-        >svg {
-            width: 15px;
-            height: 15px;
-            color: #000;
-        }
-
-        animation: spin 1s linear infinite;
+  .loading-spinner {
+    > svg {
+      width: 15px;
+      height: 15px;
+      color: #000;
     }
 
-    @keyframes spin {
-        0% {
-            transform: rotate(0deg);
-        }
+    animation: spin 1s linear infinite;
+  }
 
-        100% {
-            transform: rotate(360deg);
-        }
+  @keyframes spin {
+    0% {
+      transform: rotate(0deg);
     }
+
+    100% {
+      transform: rotate(360deg);
+    }
+  }
 }
 </style>

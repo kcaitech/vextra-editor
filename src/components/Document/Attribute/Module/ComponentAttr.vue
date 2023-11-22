@@ -123,11 +123,11 @@ const examplesToggle = () => {
 const warn = ref(false);
 const saveLayerShow = (type: VariableType) => {
     if (!selected.value.length) {
-        message('info', '请选择图层');
+        message('info', t('compos.validate_info_1'));
         return;
     }
     if (!var_name.value.trim()) {
-        message('info', '属性名不能为空');
+        message('info', t('compos.validate_info_2'));
         return;
     }
     if (typeof dlt_value.value === 'string' && dlt_value.value.trim().length < 1) {
@@ -235,7 +235,7 @@ onUnmounted(() => {
                     <Warning/>
                 </el-icon>
             </div>
-            <p>存在状态相同的可变组件，需要修改状态以解决冲突</p>
+            <p>{{ t('compos.conflict')}}</p>
         </div>
         <!--dialog-->
         <CompLayerShow :context="context" v-if="isaddStateDialog" @close-dialog="isaddStateDialog = false" right="250px"

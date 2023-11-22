@@ -14,7 +14,6 @@ import {
 } from '@/utils/symbol';
 import {Selection} from '@/context/selection';
 import {message} from '@/utils/message';
-import TextHolder from "@/components/Document/Selection/Controller/TextLite/TextHolder.vue";
 
 interface Props {
     context: Context
@@ -83,7 +82,7 @@ function save_layer_show(type: VariableType, name: string) {
         modify_variable(props.context, sym_layer.value, is_bind.value, name, is_bind.value.value, selectId.value)
     } else {
         if (!name.trim()) {
-            message('info', '属性名不能为空');
+            message('info', t('compos.validate_info_2'));
             return;
         }
         const shapes = props.context.selection.selectedShapes;

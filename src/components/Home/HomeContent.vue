@@ -140,7 +140,7 @@ onMounted(() => {
     width: 100%;
 
     .container {
-        min-height: calc(100vh - 80px);
+        min-height: calc(100vh - 56px);
         display: flex;
 
         button {

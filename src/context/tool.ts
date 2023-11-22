@@ -17,6 +17,8 @@ export enum Action {
     AddImage = 'add-image',
     AddTable = 'table',
     AddContact = 'add-contact',
+    Curve = 'curve',
+    PathClip = 'path-clip'
 }
 
 export enum KeyboardKeys { // 键盘按键类型

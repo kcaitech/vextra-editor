@@ -146,7 +146,7 @@ onUnmounted(() => {
                     </template>
                 </el-scrollbar>
                 <div class="button" :style="{ opacity: checkList.length > 0 ? 1 : 0.5 }">
-                    <el-button @click.stop="confirmSelect">确认
+                    <el-button @click.stop="confirmSelect">{{t('compos.confirm')}}
                     </el-button>
                 </div>
             </div>

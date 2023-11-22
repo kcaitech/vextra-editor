@@ -12,8 +12,6 @@ import ShapesStrokeContainer from "./ShapeStroke/ShapesStrokeContainer.vue";
 import BarsContainer from "./Bars/BarsContainer.SVG.vue";
 import PointsContainer from "./Points/PointsContainer.SVG.vue";
 import {getAxle} from "@/utils/common";
-import PathEdit from './Points/PathEdit.vue';
-
 interface Props {
     context: Context
     controllerFrame: Point[]
@@ -50,8 +48,8 @@ function genViewBox(bounds: { left: number, top: number, right: number, bottom: 
 }
 
 function updateControllerView() {
-    const m2p = props.shape.matrix2Root();
-    matrix.reset(m2p);
+    const m2r = props.shape.matrix2Root();
+    matrix.reset(m2r);
     matrix.multiAtLeft(props.matrix);
     if (!submatrix.equals(matrix)) submatrix.reset(matrix)
     const framePoint = props.controllerFrame;
@@ -74,14 +72,16 @@ function updateControllerView() {
 
 // #endregion
 function selection_watcher(t: number) {
-    if (t == Selection.CHANGE_SHAPE) editing.value = false;
+    if (t == Selection.CHANGE_SHAPE) {
+        editing.value = false;
+    }
 }
 
 function workspace_watcher(t: number) {
     if (t === WorkSpace.TRANSLATING) {
         visible.value = !props.context.workspace.isTranslating;
-    } else if (t === WorkSpace.PRE_EDIT) {
-        editing.value = props.context.workspace.isEditing;
+    } else if (t === WorkSpace.PATH_EDIT_MODE) {
+        visible.value = !props.context.workspace.is_path_edit_mode;
     }
 }
 
@@ -124,19 +124,13 @@ watchEffect(updateControllerView);
          :width="width"
          :height="height" :class="{ 'un-visible': !visible }" @mousedown="mousedown" overflow="visible"
          :style="{ transform: `translate(${bounds.left}px,${bounds.top}px)`, left: 0, top: 0, position: 'absolute' }">
-        <g v-if="!editing">
-            <ShapesStrokeContainer :context="props.context" :matrix="props.matrix" color-hex="#865dff">
-            </ShapesStrokeContainer>
-            <BarsContainer :context="props.context" :matrix="submatrix.toArray()" :shape="props.shape"
-                           :c-frame="props.controllerFrame"></BarsContainer>
-            <PointsContainer :context="props.context" :matrix="submatrix.toArray()" :shape="props.shape" :axle="axle"
-                             :c-frame="props.controllerFrame">
-            </PointsContainer>
-        </g>
-        <g v-else>
-            <PathEdit :context="props.context" :matrix="submatrix.toArray()" :shape="props.shape" :axle="axle"
-                      :c-frame="props.controllerFrame"></PathEdit>
-        </g>
+        <ShapesStrokeContainer :context="props.context" :matrix="props.matrix" color-hex="#865dff">
+        </ShapesStrokeContainer>
+        <BarsContainer :context="props.context" :matrix="submatrix.toArray()" :shape="props.shape"
+                       :c-frame="props.controllerFrame"></BarsContainer>
+        <PointsContainer :context="props.context" :matrix="submatrix.toArray()" :shape="props.shape" :axle="axle"
+                         :c-frame="props.controllerFrame">
+        </PointsContainer>
     </svg>
 </template>
 <style lang='scss' scoped>

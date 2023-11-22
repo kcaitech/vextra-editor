@@ -1,4 +1,6 @@
 <script lang="ts" setup>
+import { color } from '@/assets/lang/en';
+
 interface Props {
   size?: number
   width?: number

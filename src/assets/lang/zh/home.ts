@@ -1,4 +1,4 @@
-import { BorderPosition } from "@kcdesign/data"
+import {BorderPosition} from "@kcdesign/data"
 
 export const product = {
     name: 'ProtoDesign'
@@ -89,9 +89,9 @@ export const home = {
     delete_file_time: '删除时间',
     size: '大小',
     operation: '操作',
-    filelocation:'文件位置',
-    creator:'创建者',
-    deleter:'删除人',
+    filelocation: '文件位置',
+    creator: '创建者',
+    deleter: '删除人',
     star_marking: '标星',
     share: '分享',
     delete: '删除',
@@ -283,7 +283,12 @@ export const attr: any = {
     'flip_h': '水平翻转',
     full_border: '全边框',
     outer_border: '外边框',
-    inner_border: '内边框'
+    inner_border: '内边框',
+    exit_path_edit: '退出编辑模式(ESC)',
+    right_angle: "直角",
+    completely_symmetrical: "完全对称",
+    angular_symmetry: "角度对称",
+    asymmetric: "不对称",
 }
 
 export const login = {

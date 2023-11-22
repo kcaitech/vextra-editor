@@ -34,5 +34,16 @@ export const compos = {
     attri_1: 'Attribute 1',
     dlt: 'Default',
     attri: 'Attribute',
-    add_new: 'Add new'
+    add_new: 'Add new',
+    error_1: 'Wrong Selection',
+    error_2: 'Wrong Selection',
+    error_3: 'Wrong Selection',
+    validate_info_1: 'Null Layer',
+    validate_info_2: 'Invalid Name',
+    validate_info_3: 'Invalid Default Value',
+    conflict: 'Conflict',
+    conflict_2: 'Conflict',
+    confirm: 'Confirm',
+    circle_warning: 'Wrong reference',
+    invalid_compos: 'Invalid Symbol'
 }

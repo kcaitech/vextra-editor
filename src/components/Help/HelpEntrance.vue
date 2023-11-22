@@ -97,8 +97,8 @@ onUnmounted(() => {
         width: 32px;
         height: 32px;
         border-radius: 50%;
-        background-color: #9775fa;
-        box-shadow: 1px 1px 3px #b1b1b1, -1px -1px 3px #b1b1b1;
+        background-color:rgba(33, 33, 33, 1);
+        box-shadow: 0px 4px 15px 0px rgba(0, 0, 0, 0.1);
 
         svg {
             width: 24px;
@@ -136,8 +136,7 @@ onUnmounted(() => {
         }
 
         &:hover {
-            color: white;
-            background: #9775fa;
+            background: #F3F3F5;
         }
     }
 }

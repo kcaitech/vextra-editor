@@ -362,9 +362,9 @@ const textFormat = () => {
     } else {
         let cells: (TableCell | undefined)[] = []
         if (table.tableRowStart < 0 || table.tableColStart < 0) {
-            cells = props.shape.childs
+            cells = props.shape.childs || [];
         } else {
-            cells = table.getSelectedCells(true).map(item => item.cell);
+            cells = table.getSelectedCells(true).map(item => item.cell) || [];
         }
         shape.value = undefined
         const formats: any[] = [];

@@ -83,7 +83,7 @@ onUnmounted(() => {
             <div><el-icon>
                     <Warning />
                 </el-icon></div>
-            <p>此可变组件存在相同状态，需要修改状态以解决冲突</p>
+            <p>{{ t('compos.conflict_2')}}</p>
         </div>
     </div>
 </template>

@@ -197,8 +197,8 @@ export class Tunnel {
                 data: undefined,
             })
         }
-        this.port.close()
         this.onclose()
         this.isClosed = true
+        this.port.close()
     }
 }

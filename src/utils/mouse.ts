@@ -1,10 +1,11 @@
 import {Context} from "@/context";
 import {Matrix, Shape, ShapeType} from "@kcdesign/data";
 import {Menu} from "@/context/menu";
-import {ClientXY, PageXY} from "@/context/selection";
+import {ClientXY, PageXY, XY} from "@/context/selection";
 import {WorkSpace} from "@/context/workspace";
 import {Comment} from "@/context/comment";
 import {XYsBounding} from "@/utils/common";
+import {get_root_points} from "@/utils/pathedit";
 
 /**
  * @description 判断落点是否在content上
@@ -181,6 +182,22 @@ export function gen_offset_points_map(shapes: Shape[], down: PageXY) {
     }
 }
 
+/**
+ * @description
+ * @param down root坐标系上的一点
+ */
+export function gen_offset_points_map2(context: Context, down: PageXY) {
+    const path_shape = context.selection.pathshape;
+    if (!path_shape) return;
+    const op = get_root_points(context, context.path.selectedPoints);
+    if (!op) return;
+    const offset: XY[] = [];
+    for (let i = 0, l = op.length; i < l; i++) {
+        const p = op[i];
+        offset.push({x: p.x - down.x, y: p.y - down.y});
+    }
+    return offset;
+}
 
 /**
  * @description 判定下一次移动为数据正式修改时，设置控件更新状态、预设辅助线中心对象、以及其他一些编辑器状态

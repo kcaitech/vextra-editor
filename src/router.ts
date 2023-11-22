@@ -47,7 +47,7 @@ const children=[
     {
         path: 'recyclebin',
         name: 'recyclebin',
-        component: RecycleBin
+        component: MeShare
     },
     {
         path: 'teams/:id',
