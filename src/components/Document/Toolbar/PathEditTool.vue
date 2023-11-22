@@ -30,9 +30,7 @@ let o: Action;
 
 function keyboard_up_watcher(e: KeyboardEvent) {
     if (e.target instanceof HTMLInputElement) return;
-    console.log('e.ctrlKey:', e.ctrlKey)
-    if (e.ctrlKey || e.metaKey) {
-        console.log("o", o)
+    if (['MetaLeft' || 'ControlLeft'].includes(e.code)) {
         props.context.tool.setAction(o);
         document.removeEventListener('keyup', keyboard_up_watcher);
     }

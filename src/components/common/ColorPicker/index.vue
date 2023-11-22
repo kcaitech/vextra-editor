@@ -1,76 +1,104 @@
 <script setup lang="ts">
-import { ref, nextTick, reactive, onMounted, onUnmounted, computed, watch } from 'vue';
-import { Color } from '@kcdesign/data';
-import { useI18n } from 'vue-i18n';
-import { Context } from '@/context';
-import { WorkSpace } from '@/context/workspace';
-import { ClientXY, Selection } from '@/context/selection';
-import { simpleId } from '@/utils/common';
-import { Eyedropper } from './eyedropper';
-import { drawTooltip, toRGBA, updateRecently, parseColorFormStorage, key_storage, RGB2HSB, RGB2H, validate, getHRGB, HSB2RGB, RGB2HSL, HSL2RGB, getColorsFromDoc } from './utils';
-import { typical, model2label } from './typical';
-import { genOptions } from '@/utils/common';
-import Select, { SelectSource, SelectItem } from '@/components/common/Select.vue';
-import { Menu } from "@/context/menu";
+import {ref, nextTick, reactive, onMounted, onUnmounted, computed, watch} from 'vue';
+import {Color} from '@kcdesign/data';
+import {useI18n} from 'vue-i18n';
+import {Context} from '@/context';
+import {WorkSpace} from '@/context/workspace';
+import {ClientXY, Selection} from '@/context/selection';
+import {simpleId} from '@/utils/common';
+import {Eyedropper} from './eyedropper';
+import {
+    drawTooltip,
+    toRGBA,
+    updateRecently,
+    parseColorFormStorage,
+    key_storage,
+    RGB2HSB,
+    RGB2H,
+    validate,
+    getHRGB,
+    HSB2RGB,
+    RGB2HSL,
+    HSL2RGB,
+    getColorsFromDoc
+} from './utils';
+import {typical, model2label} from './typical';
+import {genOptions} from '@/utils/common';
+import Select, {SelectSource, SelectItem} from '@/components/common/Select.vue';
+import {Menu} from "@/context/menu";
+
 type RgbMeta = number[];
+
 interface Props {
-  context: Context
-  color: Color
-  late?: number
-  top?: number
-  cell?: boolean
+    context: Context
+    color: Color
+    late?: number
+    top?: number
+    cell?: boolean
 }
+
 interface Data {
-  rgba: RGBA
-  hueIndicatorAttr: Indicator
-  alphaIndicatorAttr: Indicator
-  dotPosition: DotPosition
+    rgba: RGBA
+    hueIndicatorAttr: Indicator
+    alphaIndicatorAttr: Indicator
+    dotPosition: DotPosition
 }
+
 interface Emits {
-  (e: 'change', color: Color): void;
-  (e: 'choosecolor', color: number[]): void;
+    (e: 'change', color: Color): void;
+
+    (e: 'choosecolor', color: number[]): void;
 }
+
 export interface HRGB { // 色相
-  R: number
-  G: number
-  B: number
+    R: number
+    G: number
+    B: number
 }
+
 interface RGBA {
-  R: number
-  G: number
-  B: number
-  alpha: number
+    R: number
+    G: number
+    B: number
+    alpha: number
 }
+
 interface HSBA {
-  H: number
-  S: number
-  V: number
-  alpha: number
+    H: number
+    S: number
+    V: number
+    alpha: number
 }
+
 interface HSLA {
-  H: number
-  S: number
-  L: number
-  alpha: number
+    H: number
+    S: number
+    L: number
+    alpha: number
 }
+
 interface Indicator {
-  x: number
+    x: number
 }
+
 interface LineAttribute {
-  length: 196,
-  begin: number,
-  end: number
+    length: 196,
+    begin: number,
+    end: number
 }
+
 interface DotPosition {
-  left: number
-  top: number
+    left: number
+    top: number
 }
+
 interface Bounding {
-  x: number
-  y: number
-  right: number
-  bottom: number
+    x: number
+    y: number
+    right: number
+    bottom: number
 }
+
 const INDICATOR_WIDTH = 12;
 const HALF_INDICATOR_WIDTH = INDICATOR_WIDTH / 2;
 const DOT_WIDTH = 10;
@@ -78,71 +106,71 @@ const HUE_WIDTH = 240;
 const HUE_HEIGHT = 180;
 const props = defineProps<Props>();
 const emit = defineEmits<Emits>();
-const { t } = useI18n();
+const {t} = useI18n();
 const modelOptions: SelectSource[] = genOptions([['RGB', 'RGB'], ['HSL', 'HSL'], ['HSB', 'HSB']]);
 const saturationEL = ref<HTMLElement>();
-const saturationELBounding: Bounding = { x: 0, y: 0, right: 0, bottom: 0 };
+const saturationELBounding: Bounding = {x: 0, y: 0, right: 0, bottom: 0};
 const typicalColor = ref<Color[]>(typical);
 const hueEl = ref<HTMLElement>();
 const alphaEl = ref<HTMLElement>();
 const blockId: string = simpleId();
-const lineAttribute: LineAttribute = { length: 196, begin: 0, end: 196 };
+const lineAttribute: LineAttribute = {length: 196, begin: 0, end: 196};
 const recent = ref<Color[]>([]);
 const document_colors = ref<{ times: number, color: Color }[]>([]);
 let inputTarget: HTMLInputElement;
 let handleIndex = 0;
-const mousedownPositon: ClientXY = { x: 0, y: 0 };
+const mousedownPositon: ClientXY = {x: 0, y: 0};
 let isDrag: boolean = false;
 const reflush = ref<number>(1);
 const data = reactive<Data>({
-  rgba: { R: 255, G: 0, B: 0, alpha: 1 },
-  hueIndicatorAttr: { x: 0 },
-  alphaIndicatorAttr: { x: lineAttribute.length - INDICATOR_WIDTH },
-  dotPosition: { left: HUE_WIDTH - DOT_WIDTH / 2, top: -DOT_WIDTH / 2 }
+    rgba: {R: 255, G: 0, B: 0, alpha: 1},
+    hueIndicatorAttr: {x: 0},
+    alphaIndicatorAttr: {x: lineAttribute.length - INDICATOR_WIDTH},
+    dotPosition: {left: HUE_WIDTH - DOT_WIDTH / 2, top: -DOT_WIDTH / 2}
 })
-const { rgba, hueIndicatorAttr, alphaIndicatorAttr, dotPosition } = data;
+const {rgba, hueIndicatorAttr, alphaIndicatorAttr, dotPosition} = data;
 const h_rgb = computed<HRGB>(() => {
-  const color = new Color(1, rgba.R, rgba.G, rgba.B);
-  return getHRGB(RGB2H(color, hueIndicatorAttr.x / (lineAttribute.length - INDICATOR_WIDTH)));
+    const color = new Color(1, rgba.R, rgba.G, rgba.B);
+    return getHRGB(RGB2H(color, hueIndicatorAttr.x / (lineAttribute.length - INDICATOR_WIDTH)));
 })
 const hsba = computed<HSBA>(() => {
-  const { R, G, B, alpha } = rgba;
-  const { h, s, b } = RGB2HSB(new Color(alpha, R, G, B));
-  return { H: h, S: s, V: b, alpha };
+    const {R, G, B, alpha} = rgba;
+    const {h, s, b} = RGB2HSB(new Color(alpha, R, G, B));
+    return {H: h, S: s, V: b, alpha};
 })
 const hsla = computed<HSLA>(() => {
-  const { R, G, B, alpha } = rgba;
-  const { h, s, l } = RGB2HSL(new Color(alpha, R, G, B));
-  return { H: h, S: s, L: l, alpha };
+    const {R, G, B, alpha} = rgba;
+    const {h, s, l} = RGB2HSL(new Color(alpha, R, G, B));
+    return {H: h, S: s, L: l, alpha};
 })
 const labels = computed(() => {
-  return model2label.get(model.value.value as string) || ['R', 'G', 'B', 'A'];
+    return model2label.get(model.value.value as string) || ['R', 'G', 'B', 'A'];
 });
 const values = computed<number[]>(() => {
-  if (reflush.value) {
-    if (model.value.value === 'RGB') {
-      return [Math.round(rgba.R), Math.round(rgba.G), Math.round(rgba.B), Math.round(rgba.alpha * 100)];
-    } else if (model.value.value === 'HSB') {
-      return [Math.round(hsba.value.H * 360), Math.round(hsba.value.S * 100), Math.round(hsba.value.V * 100), Math.round(hsba.value.alpha * 100)];
-    } else if (model.value.value === 'HSL') {
-      return [Math.round(hsla.value.H), Math.round(hsla.value.S * 100), Math.round(hsla.value.L * 100), Math.round(hsla.value.alpha * 100)];
+    if (reflush.value) {
+        if (model.value.value === 'RGB') {
+            return [Math.round(rgba.R), Math.round(rgba.G), Math.round(rgba.B), Math.round(rgba.alpha * 100)];
+        } else if (model.value.value === 'HSB') {
+            return [Math.round(hsba.value.H * 360), Math.round(hsba.value.S * 100), Math.round(hsba.value.V * 100), Math.round(hsba.value.alpha * 100)];
+        } else if (model.value.value === 'HSL') {
+            return [Math.round(hsla.value.H), Math.round(hsla.value.S * 100), Math.round(hsla.value.L * 100), Math.round(hsla.value.alpha * 100)];
+        } else {
+            return [Math.round(rgba.R), Math.round(rgba.G), Math.round(rgba.B), Math.round(rgba.alpha * 100)];
+        }
     } else {
-      return [Math.round(rgba.R), Math.round(rgba.G), Math.round(rgba.B), Math.round(rgba.alpha * 100)];
+        return [Math.round(rgba.R), Math.round(rgba.G), Math.round(rgba.B), Math.round(rgba.alpha * 100)];
     }
-  } else {
-    return [Math.round(rgba.R), Math.round(rgba.G), Math.round(rgba.B), Math.round(rgba.alpha * 100)];
-  }
 });
 const hue = computed<number>(() => {
-  return Math.floor(((hueIndicatorAttr.x) / (lineAttribute.length - INDICATOR_WIDTH)) * 360);
+    return Math.floor(((hueIndicatorAttr.x) / (lineAttribute.length - INDICATOR_WIDTH)) * 360);
 })
 const saturation = computed<number>(() => {
-  return (dotPosition.left + DOT_WIDTH / 2) / HUE_WIDTH;
+    return (dotPosition.left + DOT_WIDTH / 2) / HUE_WIDTH;
 })
 const brightness = computed<number>(() => {
-  return (1 - (dotPosition.top + DOT_WIDTH / 2) / HUE_HEIGHT);
+    return (1 - (dotPosition.top + DOT_WIDTH / 2) / HUE_HEIGHT);
 })
-const model = ref<SelectItem>({ value: 'RGB', content: 'RGB' });
+const model = ref<SelectItem>({value: 'RGB', content: 'RGB'});
 const sliders = ref<HTMLDivElement>();
 const block = ref<HTMLDivElement>();
 const popoverEl = ref<HTMLDivElement>();
@@ -153,968 +181,1007 @@ const eyeDropper: Eyedropper = eyeDropperInit(); // 自制吸管🍉
 const need_update_recent = ref<boolean>(false);
 
 function triggle() {
-  const menu = props.context.menu;
-  const exsit = menu.isColorPickerMount;
-  if (exsit) {
-    menu.removeColorPicker();
-    if (exsit !== blockId) colorPickerMount();
-  } else {
-    colorPickerMount();
-  }
-}
-function colorPickerMount() {
-  popoverVisible.value = true;
-  props.context.menu.setupColorPicker(blockId);
-  init();
-  document_colors.value = getColorsFromDoc(props.context);
-  nextTick(() => {
-    if (popoverEl.value && block.value) {
-      let el = popoverEl.value
-      let top = Math.min(document.documentElement.clientHeight - 76 - block.value.offsetTop - el.offsetHeight, 0);
-      const p_el = block.value.getBoundingClientRect();
-      const body_h = document.body.clientHeight;
-      let p_top = p_el.top;
-      const su = body_h - p_el.top;
-      const cur_t = su - el.clientHeight;
-
-      if (cur_t > 0) {
-        p_top = p_el.top;
-      } else {
-        p_top = p_el.top - Math.abs(cur_t - 10);
-      }
-      if (p_top - 40 < 0) {
-        p_top = 40
-      }
-      const doc_height = document.documentElement.clientHeight;
-      let top = Math.min(doc_height - 76 - block.value.offsetTop - el.offsetHeight, 0);
-      if (props.top) {
-        el.style.top = (top + props.top) + 'px';
-      } else {
-        el.style.top = p_top + 'px';
-      }
-      const {height, y} = el.getBoundingClientRect();
-      if(doc_height - y < height + 10) {
-        el.style.top = parseInt(el.style.top) - ((height + 20) - (doc_height - y)) + 'px'
-      }
-
-      if (props.late) {
-        el.style.left = p_el.left - el.clientWidth - 47 - props.late + 'px';
-      } else if (props.cell) {
-        el.style.left = 0 + 'px';
-      } else {
-        el.style.left = p_el.left - el.clientWidth - 47 + 'px';
-      }
+    const menu = props.context.menu;
+    const exsit = menu.isColorPickerMount;
+    if (exsit) {
+        menu.removeColorPicker();
+        if (exsit !== blockId) colorPickerMount();
+    } else {
+        colorPickerMount();
     }
-  })
-  document.addEventListener('mousedown', quit);
 }
+
+function colorPickerMount() {
+    popoverVisible.value = true;
+    props.context.menu.setupColorPicker(blockId);
+    init();
+    document_colors.value = getColorsFromDoc(props.context);
+    nextTick(() => {
+        if (popoverEl.value && block.value) {
+            let el = popoverEl.value
+            let top = Math.min(document.documentElement.clientHeight - 76 - block.value.offsetTop - el.offsetHeight, 0);
+            const p_el = block.value.getBoundingClientRect();
+            const body_h = document.body.clientHeight;
+            let p_top;
+            const su = body_h - p_el.top;
+            const cur_t = su - el.clientHeight;
+            if (cur_t > 0) {
+                p_top = p_el.top;
+            } else {
+                p_top = p_el.top - Math.abs(cur_t - 10);
+            }
+
+            if (p_top - 40 < 0) {
+                p_top = 40
+            }
+            if (props.top) {
+                el.style.top = (top + props.top) + 'px';
+            } else {
+                el.style.top = p_top + 'px';
+            }
+
+            const doc_height = document.documentElement.clientHeight;
+            const {height, y} = el.getBoundingClientRect();
+
+            if (doc_height - y < height + 10) {
+                el.style.top = parseInt(el.style.top) - ((height + 20) - (doc_height - y)) + 'px'
+            }
+
+            if (props.late) {
+                el.style.left = p_el.left - el.clientWidth - 47 - props.late + 'px';
+            } else if (props.cell) {
+                el.style.left = 0 + 'px';
+            } else {
+                el.style.left = p_el.left - el.clientWidth - 47 + 'px';
+            }
+        }
+    })
+    document.addEventListener('mousedown', quit);
+}
+
 function removeCurColorPicker() {
-  if (need_update_recent.value) {
-    update_recent_color();
-    need_update_recent.value = false;
-  }
-  popoverVisible.value = false;
-  props.context.menu.clearColorPickerId();
-}
-function quit(e: MouseEvent) {
-  if (e.target instanceof Element && !e.target.closest('.color-block')) {
+    if (need_update_recent.value) {
+        update_recent_color();
+        need_update_recent.value = false;
+    }
     popoverVisible.value = false;
-    blockUnmount();
-    document.removeEventListener('mousedown', quit);
-  }
+    props.context.menu.clearColorPickerId();
 }
+
+function quit(e: MouseEvent) {
+    if (e.target instanceof Element && !e.target.closest('.color-block')) {
+        popoverVisible.value = false;
+        blockUnmount();
+        document.removeEventListener('mousedown', quit);
+    }
+}
+
 // 16进制色彩转10进制
 function hexToX(hex: string): RgbMeta {
-  hex = hex.slice(1);
-  let result: number[] = [];
-  if (hex.length === 3) {
-    let temp = hex.split('');
-    result = temp.map(v => {
-      return Number(eval(`0x${v}${v}`).toString(10));
-    })
-  } else if (hex.length === 6) {
-    let temp = hex.split('');
-    for (let i = 0; i < 6; i = i + 2) {
-      result.push(Number(eval(`0x${temp[i]}${temp[i + 1]}`).toString(10)));
+    hex = hex.slice(1);
+    let result: number[] = [];
+    if (hex.length === 3) {
+        let temp = hex.split('');
+        result = temp.map(v => {
+            return Number(eval(`0
+            x${v}${v}`).toString(10));
+        })
+    } else if (hex.length === 6) {
+        let temp = hex.split('');
+        for (let i = 0; i < 6; i = i + 2) {
+            result.push(Number(eval(`0
+            x
+            ${temp[i]}${temp[i + 1]}`).toString(10)));
+        }
     }
-  }
-  return result
+    return result
 }
+
 function setMousedownPosition(e: MouseEvent) {
-  mousedownPositon.x = e.clientX;
-  mousedownPositon.y = e.clientY;
+    mousedownPositon.x = e.clientX;
+    mousedownPositon.y = e.clientY;
 }
+
 function is_drag(e: MouseEvent) {
-  return Math.hypot(e.clientX - mousedownPositon.x, e.clientY - mousedownPositon.y) > 9;
+    return Math.hypot(e.clientX - mousedownPositon.x, e.clientY - mousedownPositon.y) > 9;
 }
+
 // 设置色相
 function setHueIndicatorPosition(e: MouseEvent) {
-  if (sliders.value) {
-    setMousedownPosition(e);
-    const { x, right } = sliders.value.getBoundingClientRect();
-    lineAttribute.begin = x;
-    lineAttribute.end = right;
-    let placement = e.x - lineAttribute.begin;
-    if (placement < HALF_INDICATOR_WIDTH) {
-      placement = HALF_INDICATOR_WIDTH;
-    } else if (placement > lineAttribute.length - HALF_INDICATOR_WIDTH) {
-      placement = lineAttribute.length - HALF_INDICATOR_WIDTH;
+    if (sliders.value) {
+        setMousedownPosition(e);
+        const {x, right} = sliders.value.getBoundingClientRect();
+        lineAttribute.begin = x;
+        lineAttribute.end = right;
+        let placement = e.x - lineAttribute.begin;
+        if (placement < HALF_INDICATOR_WIDTH) {
+            placement = HALF_INDICATOR_WIDTH;
+        } else if (placement > lineAttribute.length - HALF_INDICATOR_WIDTH) {
+            placement = lineAttribute.length - HALF_INDICATOR_WIDTH;
+        }
+        hueIndicatorAttr.x = placement - HALF_INDICATOR_WIDTH;
+        setRGB(hueIndicatorAttr.x);
+        document.addEventListener('mousemove', mousemove4Hue);
+        document.addEventListener('mouseup', mouseup);
+        need_update_recent.value = true;
+        props.context.workspace.notify(WorkSpace.CTRL_DISAPPEAR);
     }
-    hueIndicatorAttr.x = placement - HALF_INDICATOR_WIDTH;
-    setRGB(hueIndicatorAttr.x);
-    document.addEventListener('mousemove', mousemove4Hue);
-    document.addEventListener('mouseup', mouseup);
-    need_update_recent.value = true;
-    props.context.workspace.notify(WorkSpace.CTRL_DISAPPEAR);
-  }
 }
+
 function mousemove4Hue(e: MouseEvent) {
-  if (isDrag) {
-    let placement = e.x - lineAttribute.begin;
-    if (placement < HALF_INDICATOR_WIDTH) {
-      placement = HALF_INDICATOR_WIDTH;
-    } else if (placement > lineAttribute.length - HALF_INDICATOR_WIDTH) {
-      placement = lineAttribute.length - HALF_INDICATOR_WIDTH;
-    }
-    hueIndicatorAttr.x = placement - HALF_INDICATOR_WIDTH;
-    setRGB(hueIndicatorAttr.x);
-  } else {
-    isDrag = is_drag(e);
-  }
-}
-function wheel(e: WheelEvent) {
-  const wheel_step = 2;
-  e.preventDefault();
-  const { deltaX, deltaY } = e;
-  if (Math.abs(deltaX) + Math.abs(deltaY) < 150) { // 临时适配方案，需根据使用设备进一步完善适配
-    // todo
-  } else {
-    const delta = deltaY > 0 ? wheel_step : -wheel_step;
-    const critical_len = lineAttribute.length - INDICATOR_WIDTH
-    if (delta > 0) {
-      const val = (hueIndicatorAttr.x + delta) > critical_len ? hueIndicatorAttr.x + delta - critical_len : hueIndicatorAttr.x + delta;
-      hueIndicatorAttr.x = val;
-      setRGB(hueIndicatorAttr.x);
+    if (isDrag) {
+        let placement = e.x - lineAttribute.begin;
+        if (placement < HALF_INDICATOR_WIDTH) {
+            placement = HALF_INDICATOR_WIDTH;
+        } else if (placement > lineAttribute.length - HALF_INDICATOR_WIDTH) {
+            placement = lineAttribute.length - HALF_INDICATOR_WIDTH;
+        }
+        hueIndicatorAttr.x = placement - HALF_INDICATOR_WIDTH;
+        setRGB(hueIndicatorAttr.x);
     } else {
-      const val = (hueIndicatorAttr.x + delta) < 0 ? hueIndicatorAttr.x + delta + critical_len : hueIndicatorAttr.x + delta;
-      hueIndicatorAttr.x = val;
-      setRGB(hueIndicatorAttr.x);
+        isDrag = is_drag(e);
     }
-  }
 }
+
+function wheel(e: WheelEvent) {
+    const wheel_step = 2;
+    e.preventDefault();
+    const {deltaX, deltaY} = e;
+    if (Math.abs(deltaX) + Math.abs(deltaY) < 150) { // 临时适配方案，需根据使用设备进一步完善适配
+        // todo
+    } else {
+        const delta = deltaY > 0 ? wheel_step : -wheel_step;
+        const critical_len = lineAttribute.length - INDICATOR_WIDTH
+        if (delta > 0) {
+            const val = (hueIndicatorAttr.x + delta) > critical_len ? hueIndicatorAttr.x + delta - critical_len : hueIndicatorAttr.x + delta;
+            hueIndicatorAttr.x = val;
+            setRGB(hueIndicatorAttr.x);
+        } else {
+            const val = (hueIndicatorAttr.x + delta) < 0 ? hueIndicatorAttr.x + delta + critical_len : hueIndicatorAttr.x + delta;
+            hueIndicatorAttr.x = val;
+            setRGB(hueIndicatorAttr.x);
+        }
+    }
+}
+
 // 设置透明度
 function setAlphaIndicatorPosition(e: MouseEvent) {
-  if (sliders.value) {
-    setMousedownPosition(e);
-    const { x, right } = sliders.value.getBoundingClientRect();
-    lineAttribute.begin = x;
-    lineAttribute.end = right;
-    let placement = e.x - lineAttribute.begin;
-    if (placement < HALF_INDICATOR_WIDTH) {
-      placement = HALF_INDICATOR_WIDTH;
-    } else if (placement > lineAttribute.length - HALF_INDICATOR_WIDTH) {
-      placement = lineAttribute.length - HALF_INDICATOR_WIDTH;
+    if (sliders.value) {
+        setMousedownPosition(e);
+        const {x, right} = sliders.value.getBoundingClientRect();
+        lineAttribute.begin = x;
+        lineAttribute.end = right;
+        let placement = e.x - lineAttribute.begin;
+        if (placement < HALF_INDICATOR_WIDTH) {
+            placement = HALF_INDICATOR_WIDTH;
+        } else if (placement > lineAttribute.length - HALF_INDICATOR_WIDTH) {
+            placement = lineAttribute.length - HALF_INDICATOR_WIDTH;
+        }
+        alphaIndicatorAttr.x = placement - HALF_INDICATOR_WIDTH;
+        setAlpha(alphaIndicatorAttr.x);
+        document.addEventListener('mousemove', mousemove4Alpha);
+        document.addEventListener('mouseup', mouseup);
+        need_update_recent.value = true;
+        props.context.workspace.notify(WorkSpace.CTRL_DISAPPEAR);
     }
-    alphaIndicatorAttr.x = placement - HALF_INDICATOR_WIDTH;
-    setAlpha(alphaIndicatorAttr.x);
-    document.addEventListener('mousemove', mousemove4Alpha);
-    document.addEventListener('mouseup', mouseup);
-    need_update_recent.value = true;
-    props.context.workspace.notify(WorkSpace.CTRL_DISAPPEAR);
-  }
 }
+
 function mousemove4Alpha(e: MouseEvent) {
-  if (isDrag) {
-    let placement = e.x - lineAttribute.begin;
-    if (placement < HALF_INDICATOR_WIDTH) {
-      placement = HALF_INDICATOR_WIDTH;
-    } else if (placement > lineAttribute.length - HALF_INDICATOR_WIDTH) {
-      placement = lineAttribute.length - HALF_INDICATOR_WIDTH;
+    if (isDrag) {
+        let placement = e.x - lineAttribute.begin;
+        if (placement < HALF_INDICATOR_WIDTH) {
+            placement = HALF_INDICATOR_WIDTH;
+        } else if (placement > lineAttribute.length - HALF_INDICATOR_WIDTH) {
+            placement = lineAttribute.length - HALF_INDICATOR_WIDTH;
+        }
+        alphaIndicatorAttr.x = placement - HALF_INDICATOR_WIDTH;
+        setAlpha(alphaIndicatorAttr.x);
+    } else {
+        isDrag = is_drag(e);
     }
-    alphaIndicatorAttr.x = placement - HALF_INDICATOR_WIDTH;
-    setAlpha(alphaIndicatorAttr.x);
-  } else {
-    isDrag = is_drag(e);
-  }
 }
 
 function setDotPosition(e: MouseEvent) {
-  if (saturationEL.value) {
-    setMousedownPosition(e);
-    const { x: saturationX, y: saturationY, right, bottom } = saturationEL.value.getBoundingClientRect();
-    const { x: mx, y: my } = e;
-    dotPosition.left = mx - saturationX - 5;
-    dotPosition.top = my - saturationY - 5;
-    saturationELBounding.x = saturationX;
-    saturationELBounding.y = saturationY;
-    saturationELBounding.right = right;
-    saturationELBounding.bottom = bottom;
-    const { R, G, B } = HSB2RGB(hue.value, saturation.value, brightness.value);
-    update(R, G, B);
-    const color = new Color(rgba.alpha, Math.round(R), Math.round(G), Math.round(B));
-    emit('change', color);
-    document.addEventListener('mousemove', mousemove4Dot);
-    document.addEventListener('mouseup', mouseup);
-    props.context.workspace.notify(WorkSpace.CTRL_DISAPPEAR);
-  }
-}
-function mousemove4Dot(e: MouseEvent) {
-  if (isDrag) {
-    const { x, y } = e;
-    const { x: saturationX, y: saturationY, right, bottom } = saturationELBounding;
-    if (x >= saturationX && y <= bottom && x <= right && y >= saturationY) {
-      dotPosition.left = x - saturationX - DOT_WIDTH / 2;
-      dotPosition.top = y - saturationY - DOT_WIDTH / 2;
-    } else if (x < saturationX && y <= bottom && y >= saturationY) {
-      dotPosition.left = -(DOT_WIDTH / 2);
-      dotPosition.top = y - saturationY - DOT_WIDTH / 2;
-    } else if (x > right && y <= bottom && y >= saturationY) {
-      dotPosition.left = HUE_WIDTH - (DOT_WIDTH / 2);
-      dotPosition.top = y - saturationY - DOT_WIDTH / 2;
-    } else if (y < saturationY && x >= saturationX && x <= right) {
-      dotPosition.left = x - saturationX - DOT_WIDTH / 2;
-      dotPosition.top = -(DOT_WIDTH / 2);
-    } else if (y > bottom && x >= saturationX && x <= right) {
-      dotPosition.left = x - saturationX - DOT_WIDTH / 2;
-      dotPosition.top = HUE_HEIGHT - (DOT_WIDTH / 2);
+    if (saturationEL.value) {
+        setMousedownPosition(e);
+        const {x: saturationX, y: saturationY, right, bottom} = saturationEL.value.getBoundingClientRect();
+        const {x: mx, y: my} = e;
+        dotPosition.left = mx - saturationX - 5;
+        dotPosition.top = my - saturationY - 5;
+        saturationELBounding.x = saturationX;
+        saturationELBounding.y = saturationY;
+        saturationELBounding.right = right;
+        saturationELBounding.bottom = bottom;
+        const {R, G, B} = HSB2RGB(hue.value, saturation.value, brightness.value);
+        update(R, G, B);
+        const color = new Color(rgba.alpha, Math.round(R), Math.round(G), Math.round(B));
+        emit('change', color);
+        document.addEventListener('mousemove', mousemove4Dot);
+        document.addEventListener('mouseup', mouseup);
+        props.context.workspace.notify(WorkSpace.CTRL_DISAPPEAR);
     }
-    const { R, G, B } = HSB2RGB(hue.value, saturation.value, brightness.value);
-    const color = new Color(rgba.alpha, Math.round(R), Math.round(G), Math.round(B));
-    update(R, G, B);
-    emit('change', color);
-  } else {
-    isDrag = is_drag(e);
-  }
 }
+
+function mousemove4Dot(e: MouseEvent) {
+    if (isDrag) {
+        const {x, y} = e;
+        const {x: saturationX, y: saturationY, right, bottom} = saturationELBounding;
+        if (x >= saturationX && y <= bottom && x <= right && y >= saturationY) {
+            dotPosition.left = x - saturationX - DOT_WIDTH / 2;
+            dotPosition.top = y - saturationY - DOT_WIDTH / 2;
+        } else if (x < saturationX && y <= bottom && y >= saturationY) {
+            dotPosition.left = -(DOT_WIDTH / 2);
+            dotPosition.top = y - saturationY - DOT_WIDTH / 2;
+        } else if (x > right && y <= bottom && y >= saturationY) {
+            dotPosition.left = HUE_WIDTH - (DOT_WIDTH / 2);
+            dotPosition.top = y - saturationY - DOT_WIDTH / 2;
+        } else if (y < saturationY && x >= saturationX && x <= right) {
+            dotPosition.left = x - saturationX - DOT_WIDTH / 2;
+            dotPosition.top = -(DOT_WIDTH / 2);
+        } else if (y > bottom && x >= saturationX && x <= right) {
+            dotPosition.left = x - saturationX - DOT_WIDTH / 2;
+            dotPosition.top = HUE_HEIGHT - (DOT_WIDTH / 2);
+        }
+        const {R, G, B} = HSB2RGB(hue.value, saturation.value, brightness.value);
+        const color = new Color(rgba.alpha, Math.round(R), Math.round(G), Math.round(B));
+        update(R, G, B);
+        emit('change', color);
+    } else {
+        isDrag = is_drag(e);
+    }
+}
+
 // set color
 function setRGB(indicator: number) {
-  const h = (indicator / (lineAttribute.length - INDICATOR_WIDTH)) * 360;
-  const { R, G, B } = HSB2RGB(h, saturation.value, brightness.value);
-  const color = new Color(rgba.alpha, Math.round(R), Math.round(G), Math.round(B));
-  emit('change', color);
-  update(R, G, B);
-  need_update_recent.value = true;
+    const h = (indicator / (lineAttribute.length - INDICATOR_WIDTH)) * 360;
+    const {R, G, B} = HSB2RGB(h, saturation.value, brightness.value);
+    const color = new Color(rgba.alpha, Math.round(R), Math.round(G), Math.round(B));
+    emit('change', color);
+    update(R, G, B);
+    need_update_recent.value = true;
 }
+
 function setAlpha(indicator: number) {
-  rgba.alpha = Number((indicator / (lineAttribute.length - INDICATOR_WIDTH)).toFixed(2));
-  const color = new Color(rgba.alpha, Math.round(rgba.R), Math.round(rgba.G), Math.round(rgba.B));
-  emit('change', color);
-  need_update_recent.value = true;
+    rgba.alpha = Number((indicator / (lineAttribute.length - INDICATOR_WIDTH)).toFixed(2));
+    const color = new Color(rgba.alpha, Math.round(rgba.R), Math.round(rgba.G), Math.round(rgba.B));
+    emit('change', color);
+    need_update_recent.value = true;
 }
+
 function setColor(color: Color) {
-  props.context.workspace.notify(WorkSpace.CTRL_DISAPPEAR);
-  rgba.R = color.red;
-  rgba.G = color.green;
-  rgba.B = color.blue;
-  rgba.alpha = color.alpha;
-  emit('change', color);
-  update_dot_indicator_position(color);
-  need_update_recent.value = true;
-  props.context.workspace.notify(WorkSpace.CTRL_APPEAR);
+    props.context.workspace.notify(WorkSpace.CTRL_DISAPPEAR);
+    rgba.R = color.red;
+    rgba.G = color.green;
+    rgba.B = color.blue;
+    rgba.alpha = color.alpha;
+    emit('change', color);
+    update_dot_indicator_position(color);
+    need_update_recent.value = true;
+    props.context.workspace.notify(WorkSpace.CTRL_APPEAR);
 }
+
 // 鼠标抬起
 function mouseup() {
-  document.removeEventListener('mousemove', mousemove4Dot);
-  document.removeEventListener('mousemove', mousemove4Alpha)
-  document.removeEventListener('mousemove', mousemove4Hue)
-  document.removeEventListener('mouseup', mouseup)
-  need_update_recent.value = true;
-  props.context.workspace.notify(WorkSpace.CTRL_APPEAR);
-  isDrag = false;
+    document.removeEventListener('mousemove', mousemove4Dot);
+    document.removeEventListener('mousemove', mousemove4Alpha)
+    document.removeEventListener('mousemove', mousemove4Hue)
+    document.removeEventListener('mouseup', mouseup)
+    need_update_recent.value = true;
+    props.context.workspace.notify(WorkSpace.CTRL_APPEAR);
+    isDrag = false;
 }
+
 function eyedropper() {
-  if (!(window as any).EyeDropper) { // 不支持系统自带的接口，使用自实现的接口
-    const { x, y, right, bottom } = props.context.workspace.root;
-    eyeDropper.updateRoot({ x, y, width: right - x, height: bottom - y });
-    eyeDropper.start(t('color.esc'));
-  } else { // 调用系统自带的接口
-    systemEyeDropper();
-  }
+    if (!(window as any).EyeDropper) { // 不支持系统自带的接口，使用自实现的接口
+        const {x, y, right, bottom} = props.context.workspace.root;
+        eyeDropper.updateRoot({x, y, width: right - x, height: bottom - y});
+        eyeDropper.start(t('color.esc'));
+    } else { // 调用系统自带的接口
+        systemEyeDropper();
+    }
 }
+
 function blockUnmount() {
-  const menu = props.context.menu;
-  const exsit = menu.isColorPickerMount;
-  if (exsit === blockId) {
-    menu.clearColorPickerId();
-  }
+    const menu = props.context.menu;
+    const exsit = menu.isColorPickerMount;
+    if (exsit === blockId) {
+        menu.clearColorPickerId();
+    }
 }
+
 // 系统自带的取色器
 function systemEyeDropper() {
-  const System_EyeDropper = (window as any).EyeDropper;
-  const s_eye_dropper = new System_EyeDropper();
-  s_eye_dropper.open().then((result: any) => {
-    const rgb = hexToX(result.sRGBHex);
-    rgba.R = rgb[0];
-    rgba.G = rgb[1];
-    rgba.B = rgb[2];
-    const c = new Color(rgba.alpha, rgba.R, rgba.G, rgba.B);
-    emit('change', c);
-    update_dot_indicator_position(c);
-  }).catch(() => {
-    throw new Error("failed");
-  });
-  const tooltip = drawTooltip(t('color.esc'));
-  document.body.appendChild(tooltip);
-  setTimeout(() => tooltip?.parentNode?.removeChild(tooltip), 2000);
-}
-// 自制取色器
-function eyeDropperInit(): Eyedropper {
-  const root = props.context.workspace.root.element;
-  return new Eyedropper({
-    container: root,
-    scale: 2,
-    listener: {
-      onOk: ({ color }) => {
-        const rgb = hexToX(color);
+    const System_EyeDropper = (window as any).EyeDropper;
+    const s_eye_dropper = new System_EyeDropper();
+    s_eye_dropper.open().then((result: any) => {
+        const rgb = hexToX(result.sRGBHex);
         rgba.R = rgb[0];
         rgba.G = rgb[1];
         rgba.B = rgb[2];
         const c = new Color(rgba.alpha, rgba.R, rgba.G, rgba.B);
         emit('change', c);
         update_dot_indicator_position(c);
-      }
-    }
-  });
+    }).catch(() => {
+        throw new Error("failed");
+    });
+    const tooltip = drawTooltip(t('color.esc'));
+    document.body.appendChild(tooltip);
+    setTimeout(() => tooltip?.parentNode?.removeChild(tooltip), 2000);
 }
+
+// 自制取色器
+function eyeDropperInit(): Eyedropper {
+    const root = props.context.workspace.root.element;
+    return new Eyedropper({
+        container: root,
+        scale: 2,
+        listener: {
+            onOk: ({color}) => {
+                const rgb = hexToX(color);
+                rgba.R = rgb[0];
+                rgba.G = rgb[1];
+                rgba.B = rgb[2];
+                const c = new Color(rgba.alpha, rgba.R, rgba.G, rgba.B);
+                emit('change', c);
+                update_dot_indicator_position(c);
+            }
+        }
+    });
+}
+
 function switchModel(item: SelectItem) {
-  model.value = item;
+    model.value = item;
 }
+
 function inputClick(e: MouseEvent, hidx: number) {
-  const target = e.target as HTMLInputElement;
-  inputTarget = target;
-  handleIndex = hidx;
-  target.select();
-  target.addEventListener('keydown', keyboardWatcher);
+    const target = e.target as HTMLInputElement;
+    inputTarget = target;
+    handleIndex = hidx;
+    target.select();
+    target.addEventListener('keydown', keyboardWatcher);
 }
+
 function keyboardWatcher(e: KeyboardEvent) {
-  if (e.code === 'Enter' || e.code === 'NumpadEnter') {
-    enter();
-  } else if (e.code === 'ArrowUp') {
-    let v: string | number = inputTarget.value;
-    v = Number(v);
-    let _v = v + 1;
-    const valid = validate(model.value.value as any, handleIndex, _v);
-    if (valid) {
-      props.context.workspace.notify(WorkSpace.CTRL_DISAPPEAR);
-      if (handleIndex === 0) {
-        rgba.R = Number(v) + 1;
-      } else if (handleIndex === 1) {
-        rgba.G = Number(v) + 1;
-      } else if (handleIndex === 2) {
-        rgba.B = Number(v) + 1;
-      }
-      const color = new Color(rgba.alpha, Math.floor(rgba.R), Math.floor(rgba.G), Math.floor(rgba.B));
-      emit('change', color);
-      update_dot_indicator_position(color);
-      need_update_recent.value = true;
-      props.context.workspace.notify(WorkSpace.CTRL_APPEAR);
+    if (e.code === 'Enter' || e.code === 'NumpadEnter') {
+        enter();
+    } else if (e.code === 'ArrowUp') {
+        let v: string | number = inputTarget.value;
+        v = Number(v);
+        let _v = v + 1;
+        const valid = validate(model.value.value as any, handleIndex, _v);
+        if (valid) {
+            props.context.workspace.notify(WorkSpace.CTRL_DISAPPEAR);
+            if (handleIndex === 0) {
+                rgba.R = Number(v) + 1;
+            } else if (handleIndex === 1) {
+                rgba.G = Number(v) + 1;
+            } else if (handleIndex === 2) {
+                rgba.B = Number(v) + 1;
+            }
+            const color = new Color(rgba.alpha, Math.floor(rgba.R), Math.floor(rgba.G), Math.floor(rgba.B));
+            emit('change', color);
+            update_dot_indicator_position(color);
+            need_update_recent.value = true;
+            props.context.workspace.notify(WorkSpace.CTRL_APPEAR);
+        }
+    } else if (e.code === 'ArrowDown') {
+        let v: string | number = inputTarget.value;
+        v = Number(v);
+        let _v = v - 1;
+        const valid = validate(model.value.value as any, handleIndex, _v);
+        if (valid) {
+            props.context.workspace.notify(WorkSpace.CTRL_DISAPPEAR);
+            if (handleIndex === 0) {
+                rgba.R = Number(v) - 1;
+            } else if (handleIndex === 1) {
+                rgba.G = Number(v) - 1;
+            } else if (handleIndex === 2) {
+                rgba.B = Number(v) - 1;
+            }
+            const color = new Color(rgba.alpha, Math.floor(rgba.R), Math.floor(rgba.G), Math.floor(rgba.B));
+            emit('change', color);
+            update_dot_indicator_position(color);
+            need_update_recent.value = true;
+            props.context.workspace.notify(WorkSpace.CTRL_APPEAR);
+        }
     }
-  } else if (e.code === 'ArrowDown') {
-    let v: string | number = inputTarget.value;
-    v = Number(v);
-    let _v = v - 1;
-    const valid = validate(model.value.value as any, handleIndex, _v);
-    if (valid) {
-      props.context.workspace.notify(WorkSpace.CTRL_DISAPPEAR);
-      if (handleIndex === 0) {
-        rgba.R = Number(v) - 1;
-      } else if (handleIndex === 1) {
-        rgba.G = Number(v) - 1;
-      } else if (handleIndex === 2) {
-        rgba.B = Number(v) - 1;
-      }
-      const color = new Color(rgba.alpha, Math.floor(rgba.R), Math.floor(rgba.G), Math.floor(rgba.B));
-      emit('change', color);
-      update_dot_indicator_position(color);
-      need_update_recent.value = true;
-      props.context.workspace.notify(WorkSpace.CTRL_APPEAR);
-    }
-  }
 }
+
 // 输入框输入
 function enter() {
-  let v: string | number = inputTarget.value;
-  const valid = validate(model.value.value as any, handleIndex, Number(v));
-  if (valid) {
-    props.context.workspace.notify(WorkSpace.CTRL_DISAPPEAR);
-    if (model.value.value === 'RGB') {
-      v = Math.floor(Number(v));
-      if (handleIndex === 0) {
-        rgba.R = Number(v);
-      } else if (handleIndex === 1) {
-        rgba.G = Number(v);
-      } else if (handleIndex === 2) {
-        rgba.B = Number(v);
-      } else if (handleIndex === 3) {
-        rgba.alpha = Number(v) / 100;
-      }
-    } else if (model.value.value === 'HSB') {
-      const { H, S, V, alpha } = hsba.value;
-      const n = { H: H * 360, S, V, alpha };
-      if (handleIndex === 0) {
-        n.H = Number(v);
-      } else if (handleIndex === 1) {
-        n.S = Number(v) / 100;
-      } else if (handleIndex === 2) {
-        n.V = Number(v) / 100;
-      } else if (handleIndex === 3) {
-        n.alpha = Number(v) / 100;
-      }
-      const rgb_form_n = HSB2RGB(n.H, n.S, n.V);
-      rgba.R = rgb_form_n.R;
-      rgba.G = rgb_form_n.G;
-      rgba.B = rgb_form_n.B;
-      rgba.alpha = n.alpha;
-    } else if (model.value.value === 'HSL') {
-      const { H, S, L, alpha } = hsla.value;
-      const n = { h: H, s: S, l: L, alpha };
-      if (handleIndex === 0) {
-        n.h = Number(v);
-      } else if (handleIndex === 1) {
-        n.s = Number(v) / 100;
-      } else if (handleIndex === 2) {
-        n.l = Number(v) / 100;
-      } else if (handleIndex === 3) {
-        n.alpha = Number(v) / 100;
-      }
-      const rgb_form_n = HSL2RGB(n);
-      rgba.R = rgb_form_n.R;
-      rgba.G = rgb_form_n.G;
-      rgba.B = rgb_form_n.B;
-      rgba.alpha = n.alpha;
+    let v: string | number = inputTarget.value;
+    const valid = validate(model.value.value as any, handleIndex, Number(v));
+    if (valid) {
+        props.context.workspace.notify(WorkSpace.CTRL_DISAPPEAR);
+        if (model.value.value === 'RGB') {
+            v = Math.floor(Number(v));
+            if (handleIndex === 0) {
+                rgba.R = Number(v);
+            } else if (handleIndex === 1) {
+                rgba.G = Number(v);
+            } else if (handleIndex === 2) {
+                rgba.B = Number(v);
+            } else if (handleIndex === 3) {
+                rgba.alpha = Number(v) / 100;
+            }
+        } else if (model.value.value === 'HSB') {
+            const {H, S, V, alpha} = hsba.value;
+            const n = {H: H * 360, S, V, alpha};
+            if (handleIndex === 0) {
+                n.H = Number(v);
+            } else if (handleIndex === 1) {
+                n.S = Number(v) / 100;
+            } else if (handleIndex === 2) {
+                n.V = Number(v) / 100;
+            } else if (handleIndex === 3) {
+                n.alpha = Number(v) / 100;
+            }
+            const rgb_form_n = HSB2RGB(n.H, n.S, n.V);
+            rgba.R = rgb_form_n.R;
+            rgba.G = rgb_form_n.G;
+            rgba.B = rgb_form_n.B;
+            rgba.alpha = n.alpha;
+        } else if (model.value.value === 'HSL') {
+            const {H, S, L, alpha} = hsla.value;
+            const n = {h: H, s: S, l: L, alpha};
+            if (handleIndex === 0) {
+                n.h = Number(v);
+            } else if (handleIndex === 1) {
+                n.s = Number(v) / 100;
+            } else if (handleIndex === 2) {
+                n.l = Number(v) / 100;
+            } else if (handleIndex === 3) {
+                n.alpha = Number(v) / 100;
+            }
+            const rgb_form_n = HSL2RGB(n);
+            rgba.R = rgb_form_n.R;
+            rgba.G = rgb_form_n.G;
+            rgba.B = rgb_form_n.B;
+            rgba.alpha = n.alpha;
+        }
+        const color = new Color(rgba.alpha, Math.round(rgba.R), Math.round(rgba.G), Math.round(rgba.B));
+        emit('change', color);
+        update_dot_indicator_position(color);
+        update_alpha_indicator(color);
+        need_update_recent.value = true;
+        props.context.workspace.notify(WorkSpace.CTRL_APPEAR);
+    } else {
+        reflush.value++;
     }
-    const color = new Color(rgba.alpha, Math.round(rgba.R), Math.round(rgba.G), Math.round(rgba.B));
-    emit('change', color);
-    update_dot_indicator_position(color);
-    update_alpha_indicator(color);
-    need_update_recent.value = true;
-    props.context.workspace.notify(WorkSpace.CTRL_APPEAR);
-  } else {
-    reflush.value++;
-  }
-  inputTarget.removeEventListener('keydown', keyboardWatcher);
-  inputTarget.blur();
+    inputTarget.removeEventListener('keydown', keyboardWatcher);
+    inputTarget.blur();
 }
+
 function update(R: number, G: number, B: number) {
-  rgba.R = R;
-  rgba.G = G;
-  rgba.B = B;
+    rgba.R = R;
+    rgba.G = G;
+    rgba.B = B;
 }
+
 function update_recent_color() {
-  const color = new Color(rgba.alpha, Math.round(rgba.R), Math.round(rgba.G,), Math.round(rgba.B));
-  let nVal = updateRecently(color) || JSON.stringify([]);
-  nVal = JSON.parse(nVal);
-  if (nVal.length) {
-    recent.value = [];
-    for (let i = 0; i < nVal.length; i++) {
-      recent.value.push(parseColorFormStorage(nVal[i]));
+    const color = new Color(rgba.alpha, Math.round(rgba.R), Math.round(rgba.G,), Math.round(rgba.B));
+    let nVal = updateRecently(color) || JSON.stringify([]);
+    nVal = JSON.parse(nVal);
+    if (nVal.length) {
+        recent.value = [];
+        for (let i = 0; i < nVal.length; i++) {
+            recent.value.push(parseColorFormStorage(nVal[i]));
+        }
     }
-  }
 }
+
 function update_dot_indicator_position(color: Color) {
-  const { h, s, b } = RGB2HSB(color);
-  dotPosition.left = HUE_WIDTH * s - (DOT_WIDTH / 2);
-  dotPosition.top = HUE_HEIGHT * (1 - b) - (DOT_WIDTH / 2);
-  let hueIndicator = (lineAttribute.length * h) - (INDICATOR_WIDTH / 2);
-  if (hueIndicator < 0) {
-    hueIndicator = 0;
-  }
-  if (hueIndicator > (lineAttribute.length - INDICATOR_WIDTH)) {
-    hueIndicator = lineAttribute.length - INDICATOR_WIDTH;
-  }
-  hueIndicatorAttr.x = hueIndicator;
+    const {h, s, b} = RGB2HSB(color);
+    dotPosition.left = HUE_WIDTH * s - (DOT_WIDTH / 2);
+    dotPosition.top = HUE_HEIGHT * (1 - b) - (DOT_WIDTH / 2);
+    let hueIndicator = (lineAttribute.length * h) - (INDICATOR_WIDTH / 2);
+    if (hueIndicator < 0) {
+        hueIndicator = 0;
+    }
+    if (hueIndicator > (lineAttribute.length - INDICATOR_WIDTH)) {
+        hueIndicator = lineAttribute.length - INDICATOR_WIDTH;
+    }
+    hueIndicatorAttr.x = hueIndicator;
 }
+
 function init() {
-  const { red, green, blue, alpha } = props.color;
-  rgba.R = red;
-  rgba.G = green;
-  rgba.B = blue;
-  rgba.alpha = alpha;
-  update_dot_indicator_position(props.color);
-  update_alpha_indicator(props.color);
-  let r = localStorage.getItem(key_storage);
-  r = JSON.parse(r || '[]');
-  if (!r || !r.length) return;
-  recent.value = [];
-  for (let i = 0; i < r.length; i++) {
-    recent.value.push(parseColorFormStorage(r[i]));
-  }
+    const {red, green, blue, alpha} = props.color;
+    rgba.R = red;
+    rgba.G = green;
+    rgba.B = blue;
+    rgba.alpha = alpha;
+    update_dot_indicator_position(props.color);
+    update_alpha_indicator(props.color);
+    let r = localStorage.getItem(key_storage);
+    r = JSON.parse(r || '[]');
+    if (!r || !r.length) return;
+    recent.value = [];
+    for (let i = 0; i < r.length; i++) {
+        recent.value.push(parseColorFormStorage(r[i]));
+    }
 }
+
 function update_alpha_indicator(color: Color) {
-  const { alpha } = color;
-  alphaIndicatorAttr.x = (lineAttribute.length - INDICATOR_WIDTH) * alpha;
+    const {alpha} = color;
+    alphaIndicatorAttr.x = (lineAttribute.length - INDICATOR_WIDTH) * alpha;
 }
+
 function selectionWatcher(t: any) {
-  if (t === Selection.CHANGE_SHAPE) {
-    props.context.menu.removeColorPicker();
-  }
+    if (t === Selection.CHANGE_SHAPE) {
+        props.context.menu.removeColorPicker();
+    }
 }
+
 function menu_watcher(t?: any, id?: string) {
-  if (t === Menu.REMOVE_COLOR_PICKER && id === blockId) {
-    removeCurColorPicker();
-  }
+    if (t === Menu.REMOVE_COLOR_PICKER && id === blockId) {
+        removeCurColorPicker();
+    }
 }
+
 function window_blur() {
-  isDrag = false;
+    isDrag = false;
 }
+
 onMounted(() => {
-  props.context.selection.watch(selectionWatcher);
-  props.context.menu.watch(menu_watcher);
-  init();
-  window.addEventListener('blur', window_blur);
+    props.context.selection.watch(selectionWatcher);
+    props.context.menu.watch(menu_watcher);
+    init();
+    window.addEventListener('blur', window_blur);
 })
 onUnmounted(() => {
-  eyeDropper.destroy();
-  blockUnmount();
-  props.context.selection.unwatch(selectionWatcher);
-  props.context.menu.unwatch(menu_watcher);
-  window.removeEventListener('blur', window_blur);
+    eyeDropper.destroy();
+    blockUnmount();
+    props.context.selection.unwatch(selectionWatcher);
+    props.context.menu.unwatch(menu_watcher);
+    window.removeEventListener('blur', window_blur);
 })
 </script>
 
 <template>
-  <div class="color-block" :style="{ backgroundColor: toRGBA(color) }" ref="block" @click="triggle">
-    <div class="popover" ref="popoverEl" @click.stop v-if="popoverVisible" @wheel="wheel" @mousedown.stop>
-      <!-- 头部 -->
-      <div class="header">
-        <div class="color-type">{{ t('color.solid') }}</div>
-        <div @click="removeCurColorPicker" class="close">
-          <svg-icon icon-class="close"></svg-icon>
-        </div>
-      </div>
-      <!-- 饱和度 -->
-      <div class="saturation" @mousedown.stop="e => setDotPosition(e)"
-        :style="{ backgroundColor: `rgba(${h_rgb.R}, ${h_rgb.G}, ${h_rgb.B}, 1)` }" ref="saturationEL">
-        <div class="white"></div>
-        <div class="black"></div>
-        <div class="dot" :style="{ left: `${dotPosition.left}px`, top: `${dotPosition.top}px` }"></div>
-      </div>
-      <!-- 常用色 -->
-      <div class="typical-container">
-        <div class="block" v-for="(c, idx) in typicalColor" :key="idx" @click="() => setColor(c as any)"
-          :style="{ 'background-color': `rgba(${c.red}, ${c.green}, ${c.blue}, ${c.alpha * 100}%)` }"></div>
-      </div>
-      <div class="controller">
-        <div class="eyedropper">
-          <svg-icon icon-class="eyedropper" @click.stop="eyedropper"></svg-icon>
-        </div>
-        <div class="sliders-container" ref="sliders">
-          <!-- 色相 -->
-          <div class="hue" @mousedown.stop="setHueIndicatorPosition" ref="hueEl">
-            <div class="hueIndicator" ref="hueIndicator" :style="{ left: hueIndicatorAttr.x + 'px' }"></div>
-          </div>
-          <!-- 透明度 -->
-          <div class="alpha-bacground">
-            <div class="alpha" @mousedown.stop="setAlphaIndicatorPosition" ref="alphaEl"
-              :style="{ background: `linear-gradient(to right, rgba(${rgba.R}, ${rgba.G}, ${rgba.B}, 0) 0%, rgb(${rgba.R}, ${rgba.G}, ${rgba.B}) 100%)` }">
-              <div class="alphaIndicator" ref="alphaIndicator" :style="{ left: alphaIndicatorAttr.x + 'px' }"></div>
+    <div class="color-block" :style="{ backgroundColor: toRGBA(color) }" ref="block" @click="triggle">
+        <div class="popover" ref="popoverEl" @click.stop v-if="popoverVisible" @wheel="wheel" @mousedown.stop>
+            <!-- 头部 -->
+            <div class="header">
+                <div class="color-type">{{ t('color.solid') }}</div>
+                <div @click="removeCurColorPicker" class="close">
+                    <svg-icon icon-class="close"></svg-icon>
+                </div>
             </div>
-          </div>
-        </div>
-      </div>
-      <!-- model & values -->
-      <div class="input-container">
-        <div class="model">
-          <Select :itemHeight="32" :source="modelOptions" :selected="model" @select="switchModel"></Select>
-        </div>
-        <div class="values">
-          <div class="wrap">
-            <div class="value">
-              <div v-for="(i, idx) in values" :key="idx" class="item"><input :value="i"
-                  @click="(e) => inputClick(e, idx)" />
-              </div>
+            <!-- 饱和度 -->
+            <div class="saturation" @mousedown.stop="e => setDotPosition(e)"
+                 :style="{ backgroundColor: `rgba(${h_rgb.R}, ${h_rgb.G}, ${h_rgb.B}, 1)` }" ref="saturationEL">
+                <div class="white"></div>
+                <div class="black"></div>
+                <div class="dot" :style="{ left: `${dotPosition.left}px`, top: `${dotPosition.top}px` }"></div>
             </div>
-            <div class="label">
-              <div v-for="(i, idx) in labels" :key="idx" class="item">{{ i }}</div>
+            <!-- 常用色 -->
+            <div class="typical-container">
+                <div class="block" v-for="(c, idx) in typicalColor" :key="idx" @click="() => setColor(c as any)"
+                     :style="{ 'background-color': `rgba(${c.red}, ${c.green}, ${c.blue}, ${c.alpha * 100}%)` }"></div>
             </div>
-          </div>
-        </div>
-      </div>
-      <!-- 最近使用 -->
-      <div class="recently-container" v-if="recent.length">
-        <div class="inner">
-          <div class="header">{{ t('color.recently') }}</div>
-          <div class="typical-container">
-            <div class="block" v-for="(c, idx) in recent" :key="idx" @click="() => setColor(c as any)"
-              :style="{ 'background-color': `rgba(${c.red}, ${c.green}, ${c.blue}, ${c.alpha * 100}%)` }"></div>
-          </div>
-        </div>
-      </div>
-      <!-- 文档使用 -->
-      <div class="dc-container" v-if="recent.length">
-        <div class="inner">
-          <div class="header">{{ t('color.documentc') }}</div>
-          <div class="documentc-container" @wheel.stop>
-            <div class="block" v-for="(c, idx) in document_colors" :key="idx" @click="() => setColor(c.color as any)"
-              :title="t('color.times').replace('xx', c.times.toString())"
-              :style="{ 'background-color': `rgba(${c.color.red}, ${c.color.green}, ${c.color.blue}, ${c.color.alpha * 100}%)` }">
+            <div class="controller">
+                <div class="eyedropper">
+                    <svg-icon icon-class="eyedropper" @click.stop="eyedropper"></svg-icon>
+                </div>
+                <div class="sliders-container" ref="sliders">
+                    <!-- 色相 -->
+                    <div class="hue" @mousedown.stop="setHueIndicatorPosition" ref="hueEl">
+                        <div class="hueIndicator" ref="hueIndicator" :style="{ left: hueIndicatorAttr.x + 'px' }"></div>
+                    </div>
+                    <!-- 透明度 -->
+                    <div class="alpha-bacground">
+                        <div class="alpha" @mousedown.stop="setAlphaIndicatorPosition" ref="alphaEl"
+                             :style="{ background: `linear-gradient(to right, rgba(${rgba.R}, ${rgba.G}, ${rgba.B}, 0) 0%, rgb(${rgba.R}, ${rgba.G}, ${rgba.B}) 100%)` }">
+                            <div class="alphaIndicator" ref="alphaIndicator"
+                                 :style="{ left: alphaIndicatorAttr.x + 'px' }"></div>
+                        </div>
+                    </div>
+                </div>
             </div>
-          </div>
+            <!-- model & values -->
+            <div class="input-container">
+                <div class="model">
+                    <Select :itemHeight="32" :source="modelOptions" :selected="model" @select="switchModel"></Select>
+                </div>
+                <div class="values">
+                    <div class="wrap">
+                        <div class="value">
+                            <div v-for="(i, idx) in values" :key="idx" class="item"><input :value="i"
+                                                                                           @click="(e) => inputClick(e, idx)"/>
+                            </div>
+                        </div>
+                        <div class="label">
+                            <div v-for="(i, idx) in labels" :key="idx" class="item">{{ i }}</div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+            <!-- 最近使用 -->
+            <div class="recently-container" v-if="recent.length">
+                <div class="inner">
+                    <div class="header">{{ t('color.recently') }}</div>
+                    <div class="typical-container">
+                        <div class="block" v-for="(c, idx) in recent" :key="idx" @click="() => setColor(c as any)"
+                             :style="{ 'background-color': `rgba(${c.red}, ${c.green}, ${c.blue}, ${c.alpha * 100}%)` }"></div>
+                    </div>
+                </div>
+            </div>
+            <!-- 文档使用 -->
+            <div class="dc-container" v-if="recent.length">
+                <div class="inner">
+                    <div class="header">{{ t('color.documentc') }}</div>
+                    <div class="documentc-container" @wheel.stop>
+                        <div class="block" v-for="(c, idx) in document_colors" :key="idx"
+                             @click="() => setColor(c.color as any)"
+                             :title="t('color.times').replace('xx', c.times.toString())"
+                             :style="{ 'background-color': `rgba(${c.color.red}, ${c.color.green}, ${c.color.blue}, ${c.color.alpha * 100}%)` }">
+                        </div>
+                    </div>
+                </div>
+            </div>
         </div>
-      </div>
     </div>
-  </div>
 </template>
 
 <style lang="scss" scoped>
 .color-block {
-  position: relative;
-  z-index: 99;
-  width: 16px;
-  height: 16px;
-  border-radius: 2px;
-  border: 1px solid var(--grey-dark);
-  font-weight: 500;
-  font-size: var(--font-default-fontsize);
+    position: relative;
+    z-index: 99;
+    width: 16px;
+    height: 16px;
+    border-radius: 2px;
+    border: 1px solid var(--grey-dark);
+    font-weight: 500;
+    font-size: var(--font-default-fontsize);
 
-  .popover {
-    position: fixed;
-    width: 240px;
-    box-sizing: border-box;
-    background-color: #ffffff;
-    box-shadow: 0 0px 10px 4px rgba($color: #000000, $alpha: 0.1);
-    border-radius: 4px;
-
-    >.header {
-      width: 100%;
-      height: 32px;
-      position: relative;
-      color: #000000;
-      border-bottom: 1px solid var(--grey-dark);
-      box-sizing: border-box;
-
-      .color-type {
-        position: absolute;
-        left: 8px;
-        top: 8px;
-        color: var(--theme-color);
-        user-select: none;
-      }
-
-      >.close {
-        width: 16px;
-        height: 16px;
-        text-align: center;
-        line-height: 16px;
-        border-radius: 4px;
-        position: absolute;
-        right: 8px;
-        top: 8px;
-        user-select: none;
-        display: flex;
-        align-items: center;
-
-        >svg {
-          width: 85%;
-          height: 85%;
-        }
-      }
-    }
-
-    >.saturation {
-      width: 100%;
-      height: 180px;
-      position: relative;
-      cursor: pointer;
-      overflow: hidden;
-
-      >.white {
-        position: absolute;
-        width: 100%;
-        height: 100%;
-        background: linear-gradient(90deg, #fff, hsla(0, 0%, 100%, 0));
-      }
-
-      >.black {
-        position: absolute;
-        width: 100%;
-        height: 100%;
-        background: linear-gradient(0deg, #000, hsla(0, 0%, 100%, 0));
-      }
-
-      >.dot {
-        width: 10px;
-        height: 10px;
-        border-radius: 50%;
-        border: 1px solid #fff;
-        position: absolute;
+    .popover {
+        position: fixed;
+        width: 240px;
         box-sizing: border-box;
-        box-shadow: 0 0 0 0.5px #fff, inset 0 0 1px 1px rgb(0 0 0 / 30%), 0 0 1px 1px rgb(0 0 0 / 40%);
-      }
-    }
+        background-color: #ffffff;
+        box-shadow: 0 0px 10px 4px rgba($color: #000000, $alpha: 0.1);
+        border-radius: 4px;
 
-    >.typical-container {
-      width: 100%;
-      display: flex;
-      flex-direction: row;
-      align-items: center;
-      justify-content: space-around;
-      padding: 10px 10px 0 10px;
-      box-sizing: border-box;
-
-      >.block {
-        width: 16px;
-        height: 16px;
-        border-radius: 2px;
-        border: 1px solid var(--grey-dark);
-        cursor: -webkit-image-set(url('data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAADAAAAAwCAYAAABXAvmHAAAAAXNSR0IArs4c6QAABV9JREFUaEPtmG1oVXUcxz8+zpZbLgcuTHDOF6OYsGoTI3IyMG14Hex67waJFERBqdALfZNDDLIoexG9qCjyTTBQat7bwoXMXRTntm4OFnIFr2srkPWc7VG7M77z/1/zsrvOuWdXEe4fDmdnnHPu5/f0/f3Ofx73+Jp3j/OTNeBuRzAbgWwEPHogm0IeHej58WwEPLvQ4wuyEfDoQM+PZyPg2YUeX3AnIqDfmH4I+aY5JjzyZ3wanQ8sNMciQNeCTwD/ADfM3/pfWiuTERDsYmAJ8BDQBDwM/A58B+wGRoExY0xaRmTKgAUGPhd4HAib6+le7gJqgSFjiCLiemXCAAt/P/Ak0GxqYCa4o8B+4BowbtLLlRFzbYDgcwDBPw0cmwVeoD8BT5m0GjH1cFcMkCOs55cC1cDn/wMv0D+BSuAXk0qu0yjdCCRLoy1YeX4r8JlDN8ZMHfwM/G2K2eGjt25LxwArjfL4I8BlQBK5pKys7FBvb+/zDgmkQLuAKPCbiYDk1dVKxwDBSh7l5TLgVeVyeXn5hxcuXKhy+OvS/zeBL036KJUkp64bWzoGCP4+IAB8DMRLS0uvxWKxcofwyvN3jDr9CvwBDJum5roXuDVA91uVeQDwFxcXv93X1+eQfdLD703zvIWXhLr2fjo1oPxXZxX88rq6uj0tLS0vjo+Pc/OmI+cJ/gvAel5NTPCuc996zG0ElP/qrg8Gg8G9J0+e3LNy5cp5hw8fZseOHVy/fn22SLxv+sJ0eOV92vBuI6ChTN7Pa2ho2N3a2rq/qKhofkdHB/n5+USjUTZs2MCNG6rP21dJSUkkHo83moLVLGQ971r3k9/tNAKCV+4vra+vf7mtra2xsLBwCt6+VLWwdu1aJib+S+fS0tLeWCy2F5DWC96ODZ7hnUZgCr6hoeGFSCTyxrJlyxZYzyd75OrVq6xatYpEIkFxcfEPfX19rwCDxgDJpfR/TuCdGDAFHwgEnuvo6HgrLy9vYSr44eFhqqur6ezsZMWKFQwODg4ArwPdpnDVbVUojireibTNlkJTg1kwGKzv7Ow8kpubu2g2+M2bN3Pu3Dm2bdv2TTgc/h54TX0CeAn41uj9nHl/tgjIMDWspYFAYGs0Gv00JydncSr4kZERtmzZwpkzZwT/dTgc/sjMNhrUNNjtMyOH0seT6jgtYqWOum3B+vXre/r7+wsuXbo0qTbJa3R0lJqaGk6fPo3P5/sqFApJLpUq6q4akeVxXQte6XNHDJDi5Pt8vmdDodDRpqYmgsHgjPA+n49Tp05Z+CNmNBCwNF7AMsB+/0pj0+q4qephphpQt51sVn6/f9fx48cPxeNx1qxZc9s7xsbGqK2tpbW1dTq85nopjTxvva2CFbQ95qyAU9WAcl+58qjf7393YGDgCaVIY6P60K2l0aGuro6WlhYZEW5ubtaIIHjNNvK+xgN5fTrsnIKnGiXsrFOwcePGUCQSeayqqor29nYOHjzIzp076enp4cCBA1y8eNHCK23seGBTJxneiSKmdU9yCkk69VW1HLgieBXnpk2bJo2wa926daOrV68Oh0KhD8zHiNLmjsPPlEIyQN+0hdu3bz924sSJchuBmpqay4lEom1oaOjHs2fPnjcjwV/mrNnG0/5OWu6f4ZPSRqAAeKaysnJfV1dXSUVFxZXu7u5PAO3lCFYSac+Sx5lyPl0mV88lp5CtgTwz8+usCVQFKEjBCt5CS2k8bw+6Ik66OdkAXU9+oJtGpmampiYDBKs00SFoFaqVRi8Mnp5N1QfshqzOdkPWNiQLnhFZdGtNqmHO7vsI3i55226Lu/2djN3v9IMmYwBeX/wvm6rTQFcM4lMAAAAASUVORK5CYII=') 1.5x) 4 28, auto;
-      }
-    }
-
-    >.controller {
-      width: 100%;
-      height: 52px;
-      display: flex;
-      flex-direction: row;
-      align-items: center;
-      padding: 10px 10px 0 10px;
-      box-sizing: border-box;
-      justify-content: space-around;
-
-      >.sliders-container {
-        width: 196px;
-        height: 32px;
-
-        >.hue {
-          position: relative;
-          width: 100%;
-          height: 10px;
-          background: linear-gradient(90deg, #f00 0, #ff0 17%, #0f0 33%, #0ff 50%, #00f 67%, #f0f 83%, #f00);
-          border-radius: 5px 5px 5px 5px;
-          cursor: pointer;
-
-          >.hueIndicator {
-            top: -1px;
-            width: 12px;
-            height: 12px;
-            border-radius: 50%;
-            border: 1px solid #fff;
-            position: absolute;
-            box-sizing: border-box;
-            box-shadow: 0 0 0 0.5px #fff, inset 0 0 1px 1px rgb(0 0 0 / 30%), 0 0 1px 1px rgb(0 0 0 / 40%);
-          }
-        }
-
-        >.alpha-bacground {
-          margin-top: 8px;
-          width: 100%;
-          height: 10px;
-          background-image: url("data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAABAAAAAQCAYAAAAf8/9hAAAAAXNSR0IArs4c6QAAADBJREFUOE9jfPbs2X8GPEBSUhKfNAPjqAHDIgz+//+PNx08f/4cfzoYNYCBceiHAQC5flV5JzgrxQAAAABJRU5ErkJggg==");
-          background-size: auto 75%;
-          border-radius: 5px 5px 5px 5px;
-          cursor: pointer;
-          box-sizing: border-box;
-
-          >.alpha {
+        > .header {
+            width: 100%;
+            height: 32px;
             position: relative;
-            width: 100%;
-            height: 100%;
-            border-radius: 5px 5px 5px 5px;
+            color: #000000;
+            border-bottom: 1px solid var(--grey-dark);
+            box-sizing: border-box;
 
-            >.alphaIndicator {
-              top: -1px;
-              width: 12px;
-              height: 12px;
-              border-radius: 50%;
-              border: 1px solid #fff;
-              position: absolute;
-              box-sizing: border-box;
-              box-shadow: 0 0 0 0.5px #fff, inset 0 0 1px 1px rgb(0 0 0 / 30%), 0 0 1px 1px rgb(0 0 0 / 40%);
+            .color-type {
+                position: absolute;
+                left: 8px;
+                top: 8px;
+                color: var(--theme-color);
+                user-select: none;
             }
-          }
 
-        }
-      }
+            > .close {
+                width: 16px;
+                height: 16px;
+                text-align: center;
+                line-height: 16px;
+                border-radius: 4px;
+                position: absolute;
+                right: 8px;
+                top: 8px;
+                user-select: none;
+                display: flex;
+                align-items: center;
 
-      >.eyedropper {
-        width: 20px;
-        height: 20px;
-        display: flex;
-        justify-content: center;
-        align-items: center;
-        border-radius: 2px;
-        transition: 0.1s;
-
-        >svg {
-          width: 60%;
-          height: 60%;
-        }
-      }
-
-      .eyedropper:hover {
-        background-color: var(--grey-dark);
-      }
-    }
-
-    .input-container {
-      width: 100%;
-      height: 46px;
-      display: flex;
-      flex-direction: row;
-      align-items: center;
-      padding: 0 10px 10px 10px;
-      box-sizing: border-box;
-
-      .model {
-        flex: 0 0 25%;
-
-        :deep(.select-container .trigger .value-wrap) {
-          padding: 0 10px 0 0;
+                > svg {
+                    width: 85%;
+                    height: 85%;
+                }
+            }
         }
 
-        :deep(.select-container .trigger) {
-          background-color: transparent;
-        }
-      }
-
-      .values {
-        flex: 0 0 75%;
-
-        .wrap {
-          width: 100%;
-          height: 100%;
-          padding: 0px 4px 0px 4px;
-          box-sizing: border-box;
-
-          .value {
+        > .saturation {
             width: 100%;
-            height: 60%;
-            display: flex;
-            align-items: center;
-            background-color: var(--grey-dark);
-            border-radius: 2px;
-            padding: 4px 0 4px 0;
+            height: 180px;
+            position: relative;
+            cursor: pointer;
+            overflow: hidden;
 
-            .item {
-              height: 100%;
-              width: 25%;
-              text-align: center;
-
-              >input {
+            > .white {
+                position: absolute;
                 width: 100%;
                 height: 100%;
-                border: none;
-                outline: none;
-                text-align: center;
-                padding: 0;
-                background-color: transparent;
-              }
+                background: linear-gradient(90deg, #fff, hsla(0, 0%, 100%, 0));
             }
-          }
 
-          .label {
+            > .black {
+                position: absolute;
+                width: 100%;
+                height: 100%;
+                background: linear-gradient(0deg, #000, hsla(0, 0%, 100%, 0));
+            }
+
+            > .dot {
+                width: 10px;
+                height: 10px;
+                border-radius: 50%;
+                border: 1px solid #fff;
+                position: absolute;
+                box-sizing: border-box;
+                box-shadow: 0 0 0 0.5px #fff, inset 0 0 1px 1px rgb(0 0 0 / 30%), 0 0 1px 1px rgb(0 0 0 / 40%);
+            }
+        }
+
+        > .typical-container {
             width: 100%;
-            height: 40%;
             display: flex;
+            flex-direction: row;
             align-items: center;
+            justify-content: space-around;
+            padding: 10px 10px 0 10px;
+            box-sizing: border-box;
 
-            .item {
-              height: 100%;
-              width: 25%;
-              text-align: center;
+            > .block {
+                width: 16px;
+                height: 16px;
+                border-radius: 2px;
+                border: 1px solid var(--grey-dark);
+                cursor: -webkit-image-set(url('data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAADAAAAAwCAYAAABXAvmHAAAAAXNSR0IArs4c6QAABV9JREFUaEPtmG1oVXUcxz8+zpZbLgcuTHDOF6OYsGoTI3IyMG14Hex67waJFERBqdALfZNDDLIoexG9qCjyTTBQat7bwoXMXRTntm4OFnIFr2srkPWc7VG7M77z/1/zsrvOuWdXEe4fDmdnnHPu5/f0/f3Ofx73+Jp3j/OTNeBuRzAbgWwEPHogm0IeHej58WwEPLvQ4wuyEfDoQM+PZyPg2YUeX3AnIqDfmH4I+aY5JjzyZ3wanQ8sNMciQNeCTwD/ADfM3/pfWiuTERDsYmAJ8BDQBDwM/A58B+wGRoExY0xaRmTKgAUGPhd4HAib6+le7gJqgSFjiCLiemXCAAt/P/Ak0GxqYCa4o8B+4BowbtLLlRFzbYDgcwDBPw0cmwVeoD8BT5m0GjH1cFcMkCOs55cC1cDn/wMv0D+BSuAXk0qu0yjdCCRLoy1YeX4r8JlDN8ZMHfwM/G2K2eGjt25LxwArjfL4I8BlQBK5pKys7FBvb+/zDgmkQLuAKPCbiYDk1dVKxwDBSh7l5TLgVeVyeXn5hxcuXKhy+OvS/zeBL036KJUkp64bWzoGCP4+IAB8DMRLS0uvxWKxcofwyvN3jDr9CvwBDJum5roXuDVA91uVeQDwFxcXv93X1+eQfdLD703zvIWXhLr2fjo1oPxXZxX88rq6uj0tLS0vjo+Pc/OmI+cJ/gvAel5NTPCuc996zG0ElP/qrg8Gg8G9J0+e3LNy5cp5hw8fZseOHVy/fn22SLxv+sJ0eOV92vBuI6ChTN7Pa2ho2N3a2rq/qKhofkdHB/n5+USjUTZs2MCNG6rP21dJSUkkHo83moLVLGQ971r3k9/tNAKCV+4vra+vf7mtra2xsLBwCt6+VLWwdu1aJib+S+fS0tLeWCy2F5DWC96ODZ7hnUZgCr6hoeGFSCTyxrJlyxZYzyd75OrVq6xatYpEIkFxcfEPfX19rwCDxgDJpfR/TuCdGDAFHwgEnuvo6HgrLy9vYSr44eFhqqur6ezsZMWKFQwODg4ArwPdpnDVbVUojireibTNlkJTg1kwGKzv7Ow8kpubu2g2+M2bN3Pu3Dm2bdv2TTgc/h54TX0CeAn41uj9nHl/tgjIMDWspYFAYGs0Gv00JydncSr4kZERtmzZwpkzZwT/dTgc/sjMNhrUNNjtMyOH0seT6jgtYqWOum3B+vXre/r7+wsuXbo0qTbJa3R0lJqaGk6fPo3P5/sqFApJLpUq6q4akeVxXQte6XNHDJDi5Pt8vmdDodDRpqYmgsHgjPA+n49Tp05Z+CNmNBCwNF7AMsB+/0pj0+q4qephphpQt51sVn6/f9fx48cPxeNx1qxZc9s7xsbGqK2tpbW1dTq85nopjTxvva2CFbQ95qyAU9WAcl+58qjf7393YGDgCaVIY6P60K2l0aGuro6WlhYZEW5ubtaIIHjNNvK+xgN5fTrsnIKnGiXsrFOwcePGUCQSeayqqor29nYOHjzIzp076enp4cCBA1y8eNHCK23seGBTJxneiSKmdU9yCkk69VW1HLgieBXnpk2bJo2wa926daOrV68Oh0KhD8zHiNLmjsPPlEIyQN+0hdu3bz924sSJchuBmpqay4lEom1oaOjHs2fPnjcjwV/mrNnG0/5OWu6f4ZPSRqAAeKaysnJfV1dXSUVFxZXu7u5PAO3lCFYSac+Sx5lyPl0mV88lp5CtgTwz8+usCVQFKEjBCt5CS2k8bw+6Ik66OdkAXU9+oJtGpmampiYDBKs00SFoFaqVRi8Mnp5N1QfshqzOdkPWNiQLnhFZdGtNqmHO7vsI3i55226Lu/2djN3v9IMmYwBeX/wvm6rTQFcM4lMAAAAASUVORK5CYII=') 1.5x) 4 28, auto;
             }
-          }
         }
-      }
+
+        > .controller {
+            width: 100%;
+            height: 52px;
+            display: flex;
+            flex-direction: row;
+            align-items: center;
+            padding: 10px 10px 0 10px;
+            box-sizing: border-box;
+            justify-content: space-around;
+
+            > .sliders-container {
+                width: 196px;
+                height: 32px;
+
+                > .hue {
+                    position: relative;
+                    width: 100%;
+                    height: 10px;
+                    background: linear-gradient(90deg, #f00 0, #ff0 17%, #0f0 33%, #0ff 50%, #00f 67%, #f0f 83%, #f00);
+                    border-radius: 5px 5px 5px 5px;
+                    cursor: pointer;
+
+                    > .hueIndicator {
+                        top: -1px;
+                        width: 12px;
+                        height: 12px;
+                        border-radius: 50%;
+                        border: 1px solid #fff;
+                        position: absolute;
+                        box-sizing: border-box;
+                        box-shadow: 0 0 0 0.5px #fff, inset 0 0 1px 1px rgb(0 0 0 / 30%), 0 0 1px 1px rgb(0 0 0 / 40%);
+                    }
+                }
+
+                > .alpha-bacground {
+                    margin-top: 8px;
+                    width: 100%;
+                    height: 10px;
+                    background-image: url("data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAABAAAAAQCAYAAAAf8/9hAAAAAXNSR0IArs4c6QAAADBJREFUOE9jfPbs2X8GPEBSUhKfNAPjqAHDIgz+//+PNx08f/4cfzoYNYCBceiHAQC5flV5JzgrxQAAAABJRU5ErkJggg==");
+                    background-size: auto 75%;
+                    border-radius: 5px 5px 5px 5px;
+                    cursor: pointer;
+                    box-sizing: border-box;
+
+                    > .alpha {
+                        position: relative;
+                        width: 100%;
+                        height: 100%;
+                        border-radius: 5px 5px 5px 5px;
+
+                        > .alphaIndicator {
+                            top: -1px;
+                            width: 12px;
+                            height: 12px;
+                            border-radius: 50%;
+                            border: 1px solid #fff;
+                            position: absolute;
+                            box-sizing: border-box;
+                            box-shadow: 0 0 0 0.5px #fff, inset 0 0 1px 1px rgb(0 0 0 / 30%), 0 0 1px 1px rgb(0 0 0 / 40%);
+                        }
+                    }
+
+                }
+            }
+
+            > .eyedropper {
+                width: 20px;
+                height: 20px;
+                display: flex;
+                justify-content: center;
+                align-items: center;
+                border-radius: 2px;
+                transition: 0.1s;
+
+                > svg {
+                    width: 60%;
+                    height: 60%;
+                }
+            }
+
+            .eyedropper:hover {
+                background-color: var(--grey-dark);
+            }
+        }
+
+        .input-container {
+            width: 100%;
+            height: 46px;
+            display: flex;
+            flex-direction: row;
+            align-items: center;
+            padding: 0 10px 10px 10px;
+            box-sizing: border-box;
+
+            .model {
+                flex: 0 0 25%;
+
+                :deep(.select-container .trigger .value-wrap) {
+                    padding: 0 10px 0 0;
+                }
+
+                :deep(.select-container .trigger) {
+                    background-color: transparent;
+                }
+            }
+
+            .values {
+                flex: 0 0 75%;
+
+                .wrap {
+                    width: 100%;
+                    height: 100%;
+                    padding: 0px 4px 0px 4px;
+                    box-sizing: border-box;
+
+                    .value {
+                        width: 100%;
+                        height: 60%;
+                        display: flex;
+                        align-items: center;
+                        background-color: var(--grey-dark);
+                        border-radius: 2px;
+                        padding: 4px 0 4px 0;
+
+                        .item {
+                            height: 100%;
+                            width: 25%;
+                            text-align: center;
+
+                            > input {
+                                width: 100%;
+                                height: 100%;
+                                border: none;
+                                outline: none;
+                                text-align: center;
+                                padding: 0;
+                                background-color: transparent;
+                            }
+                        }
+                    }
+
+                    .label {
+                        width: 100%;
+                        height: 40%;
+                        display: flex;
+                        align-items: center;
+
+                        .item {
+                            height: 100%;
+                            width: 25%;
+                            text-align: center;
+                        }
+                    }
+                }
+            }
+        }
+
+        > .recently-container {
+            width: 100%;
+            display: flex;
+            flex-direction: row;
+            align-items: center;
+            justify-content: space-between;
+            padding: 0 10px 10px 10px;
+            box-sizing: border-box;
+
+            .inner {
+                border-top: 1px solid #cecece;
+                width: 100%;
+
+                .header {
+                    padding: 4px 0 8px 0;
+                }
+
+                > .typical-container {
+                    width: 100%;
+                    display: flex;
+                    flex-direction: row;
+                    align-items: center;
+                    box-sizing: border-box;
+
+                    > .block {
+                        width: 16px;
+                        height: 16px;
+                        border-radius: 2px;
+                        border: 1px solid var(--grey-dark);
+                        cursor: -webkit-image-set(url('data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAADAAAAAwCAYAAABXAvmHAAAAAXNSR0IArs4c6QAABV9JREFUaEPtmG1oVXUcxz8+zpZbLgcuTHDOF6OYsGoTI3IyMG14Hex67waJFERBqdALfZNDDLIoexG9qCjyTTBQat7bwoXMXRTntm4OFnIFr2srkPWc7VG7M77z/1/zsrvOuWdXEe4fDmdnnHPu5/f0/f3Ofx73+Jp3j/OTNeBuRzAbgWwEPHogm0IeHej58WwEPLvQ4wuyEfDoQM+PZyPg2YUeX3AnIqDfmH4I+aY5JjzyZ3wanQ8sNMciQNeCTwD/ADfM3/pfWiuTERDsYmAJ8BDQBDwM/A58B+wGRoExY0xaRmTKgAUGPhd4HAib6+le7gJqgSFjiCLiemXCAAt/P/Ak0GxqYCa4o8B+4BowbtLLlRFzbYDgcwDBPw0cmwVeoD8BT5m0GjH1cFcMkCOs55cC1cDn/wMv0D+BSuAXk0qu0yjdCCRLoy1YeX4r8JlDN8ZMHfwM/G2K2eGjt25LxwArjfL4I8BlQBK5pKys7FBvb+/zDgmkQLuAKPCbiYDk1dVKxwDBSh7l5TLgVeVyeXn5hxcuXKhy+OvS/zeBL036KJUkp64bWzoGCP4+IAB8DMRLS0uvxWKxcofwyvN3jDr9CvwBDJum5roXuDVA91uVeQDwFxcXv93X1+eQfdLD703zvIWXhLr2fjo1oPxXZxX88rq6uj0tLS0vjo+Pc/OmI+cJ/gvAel5NTPCuc996zG0ElP/qrg8Gg8G9J0+e3LNy5cp5hw8fZseOHVy/fn22SLxv+sJ0eOV92vBuI6ChTN7Pa2ho2N3a2rq/qKhofkdHB/n5+USjUTZs2MCNG6rP21dJSUkkHo83moLVLGQ971r3k9/tNAKCV+4vra+vf7mtra2xsLBwCt6+VLWwdu1aJib+S+fS0tLeWCy2F5DWC96ODZ7hnUZgCr6hoeGFSCTyxrJlyxZYzyd75OrVq6xatYpEIkFxcfEPfX19rwCDxgDJpfR/TuCdGDAFHwgEnuvo6HgrLy9vYSr44eFhqqur6ezsZMWKFQwODg4ArwPdpnDVbVUojireibTNlkJTg1kwGKzv7Ow8kpubu2g2+M2bN3Pu3Dm2bdv2TTgc/h54TX0CeAn41uj9nHl/tgjIMDWspYFAYGs0Gv00JydncSr4kZERtmzZwpkzZwT/dTgc/sjMNhrUNNjtMyOH0seT6jgtYqWOum3B+vXre/r7+wsuXbo0qTbJa3R0lJqaGk6fPo3P5/sqFApJLpUq6q4akeVxXQte6XNHDJDi5Pt8vmdDodDRpqYmgsHgjPA+n49Tp05Z+CNmNBCwNF7AMsB+/0pj0+q4qephphpQt51sVn6/f9fx48cPxeNx1qxZc9s7xsbGqK2tpbW1dTq85nopjTxvva2CFbQ95qyAU9WAcl+58qjf7393YGDgCaVIY6P60K2l0aGuro6WlhYZEW5ubtaIIHjNNvK+xgN5fTrsnIKnGiXsrFOwcePGUCQSeayqqor29nYOHjzIzp076enp4cCBA1y8eNHCK23seGBTJxneiSKmdU9yCkk69VW1HLgieBXnpk2bJo2wa926daOrV68Oh0KhD8zHiNLmjsPPlEIyQN+0hdu3bz924sSJchuBmpqay4lEom1oaOjHs2fPnjcjwV/mrNnG0/5OWu6f4ZPSRqAAeKaysnJfV1dXSUVFxZXu7u5PAO3lCFYSac+Sx5lyPl0mV88lp5CtgTwz8+usCVQFKEjBCt5CS2k8bw+6Ik66OdkAXU9+oJtGpmampiYDBKs00SFoFaqVRi8Mnp5N1QfshqzOdkPWNiQLnhFZdGtNqmHO7vsI3i55226Lu/2djN3v9IMmYwBeX/wvm6rTQFcM4lMAAAAASUVORK5CYII=') 1.5x) 4 28, auto;
+                    }
+
+                    > .block:not(:first-child) {
+                        margin-left: 6.2px;
+                    }
+                }
+            }
+        }
+
+        > .dc-container {
+            width: 100%;
+            display: flex;
+            flex-direction: row;
+            align-items: center;
+            justify-content: space-between;
+            padding: 0 10px 4px 10px;
+            box-sizing: border-box;
+
+            .inner {
+                border-top: 1px solid #cecece;
+                width: 100%;
+
+                .header {
+                    padding: 4px 0 8px 0;
+                }
+
+                > .documentc-container {
+                    width: 100%;
+                    max-height: 56px;
+                    padding: 2px 0px;
+                    overflow: scroll;
+                    display: grid;
+                    grid-row-gap: 4px;
+                    grid-column-gap: 6.5px;
+                    grid-template-columns: repeat(auto-fill, 16px);
+
+                    &::-webkit-scrollbar {
+                        width: 0px;
+                    }
+
+                    &::-webkit-scrollbar-track {
+                        background-color: none;
+                    }
+
+                    &::-webkit-scrollbar-thumb {
+                        background-color: none;
+                    }
+
+                    &::-webkit-scrollbar-thumb:hover {
+                        background-color: none;
+                    }
+
+                    &::-webkit-scrollbar-thumb:active {
+                        background-color: none;
+                    }
+
+                    > .block {
+                        display: inline-block;
+                        width: 16px;
+                        height: 16px;
+                        border-radius: 2px;
+                        border: 1px solid var(--grey-dark);
+                        cursor: -webkit-image-set(url('data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAADAAAAAwCAYAAABXAvmHAAAAAXNSR0IArs4c6QAABV9JREFUaEPtmG1oVXUcxz8+zpZbLgcuTHDOF6OYsGoTI3IyMG14Hex67waJFERBqdALfZNDDLIoexG9qCjyTTBQat7bwoXMXRTntm4OFnIFr2srkPWc7VG7M77z/1/zsrvOuWdXEe4fDmdnnHPu5/f0/f3Ofx73+Jp3j/OTNeBuRzAbgWwEPHogm0IeHej58WwEPLvQ4wuyEfDoQM+PZyPg2YUeX3AnIqDfmH4I+aY5JjzyZ3wanQ8sNMciQNeCTwD/ADfM3/pfWiuTERDsYmAJ8BDQBDwM/A58B+wGRoExY0xaRmTKgAUGPhd4HAib6+le7gJqgSFjiCLiemXCAAt/P/Ak0GxqYCa4o8B+4BowbtLLlRFzbYDgcwDBPw0cmwVeoD8BT5m0GjH1cFcMkCOs55cC1cDn/wMv0D+BSuAXk0qu0yjdCCRLoy1YeX4r8JlDN8ZMHfwM/G2K2eGjt25LxwArjfL4I8BlQBK5pKys7FBvb+/zDgmkQLuAKPCbiYDk1dVKxwDBSh7l5TLgVeVyeXn5hxcuXKhy+OvS/zeBL036KJUkp64bWzoGCP4+IAB8DMRLS0uvxWKxcofwyvN3jDr9CvwBDJum5roXuDVA91uVeQDwFxcXv93X1+eQfdLD703zvIWXhLr2fjo1oPxXZxX88rq6uj0tLS0vjo+Pc/OmI+cJ/gvAel5NTPCuc996zG0ElP/qrg8Gg8G9J0+e3LNy5cp5hw8fZseOHVy/fn22SLxv+sJ0eOV92vBuI6ChTN7Pa2ho2N3a2rq/qKhofkdHB/n5+USjUTZs2MCNG6rP21dJSUkkHo83moLVLGQ971r3k9/tNAKCV+4vra+vf7mtra2xsLBwCt6+VLWwdu1aJib+S+fS0tLeWCy2F5DWC96ODZ7hnUZgCr6hoeGFSCTyxrJlyxZYzyd75OrVq6xatYpEIkFxcfEPfX19rwCDxgDJpfR/TuCdGDAFHwgEnuvo6HgrLy9vYSr44eFhqqur6ezsZMWKFQwODg4ArwPdpnDVbVUojireibTNlkJTg1kwGKzv7Ow8kpubu2g2+M2bN3Pu3Dm2bdv2TTgc/h54TX0CeAn41uj9nHl/tgjIMDWspYFAYGs0Gv00JydncSr4kZERtmzZwpkzZwT/dTgc/sjMNhrUNNjtMyOH0seT6jgtYqWOum3B+vXre/r7+wsuXbo0qTbJa3R0lJqaGk6fPo3P5/sqFApJLpUq6q4akeVxXQte6XNHDJDi5Pt8vmdDodDRpqYmgsHgjPA+n49Tp05Z+CNmNBCwNF7AMsB+/0pj0+q4qephphpQt51sVn6/f9fx48cPxeNx1qxZc9s7xsbGqK2tpbW1dTq85nopjTxvva2CFbQ95qyAU9WAcl+58qjf7393YGDgCaVIY6P60K2l0aGuro6WlhYZEW5ubtaIIHjNNvK+xgN5fTrsnIKnGiXsrFOwcePGUCQSeayqqor29nYOHjzIzp076enp4cCBA1y8eNHCK23seGBTJxneiSKmdU9yCkk69VW1HLgieBXnpk2bJo2wa926daOrV68Oh0KhD8zHiNLmjsPPlEIyQN+0hdu3bz924sSJchuBmpqay4lEom1oaOjHs2fPnjcjwV/mrNnG0/5OWu6f4ZPSRqAAeKaysnJfV1dXSUVFxZXu7u5PAO3lCFYSac+Sx5lyPl0mV88lp5CtgTwz8+usCVQFKEjBCt5CS2k8bw+6Ik66OdkAXU9+oJtGpmampiYDBKs00SFoFaqVRi8Mnp5N1QfshqzOdkPWNiQLnhFZdGtNqmHO7vsI3i55226Lu/2djN3v9IMmYwBeX/wvm6rTQFcM4lMAAAAASUVORK5CYII=') 1.5x) 4 28, auto;
+                    }
+                }
+            }
+        }
     }
-
-    >.recently-container {
-      width: 100%;
-      display: flex;
-      flex-direction: row;
-      align-items: center;
-      justify-content: space-between;
-      padding: 0 10px 10px 10px;
-      box-sizing: border-box;
-
-      .inner {
-        border-top: 1px solid #cecece;
-        width: 100%;
-
-        .header {
-          padding: 4px 0 8px 0;
-        }
-
-        >.typical-container {
-          width: 100%;
-          display: flex;
-          flex-direction: row;
-          align-items: center;
-          box-sizing: border-box;
-
-          >.block {
-            width: 16px;
-            height: 16px;
-            border-radius: 2px;
-            border: 1px solid var(--grey-dark);
-            cursor: -webkit-image-set(url('data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAADAAAAAwCAYAAABXAvmHAAAAAXNSR0IArs4c6QAABV9JREFUaEPtmG1oVXUcxz8+zpZbLgcuTHDOF6OYsGoTI3IyMG14Hex67waJFERBqdALfZNDDLIoexG9qCjyTTBQat7bwoXMXRTntm4OFnIFr2srkPWc7VG7M77z/1/zsrvOuWdXEe4fDmdnnHPu5/f0/f3Ofx73+Jp3j/OTNeBuRzAbgWwEPHogm0IeHej58WwEPLvQ4wuyEfDoQM+PZyPg2YUeX3AnIqDfmH4I+aY5JjzyZ3wanQ8sNMciQNeCTwD/ADfM3/pfWiuTERDsYmAJ8BDQBDwM/A58B+wGRoExY0xaRmTKgAUGPhd4HAib6+le7gJqgSFjiCLiemXCAAt/P/Ak0GxqYCa4o8B+4BowbtLLlRFzbYDgcwDBPw0cmwVeoD8BT5m0GjH1cFcMkCOs55cC1cDn/wMv0D+BSuAXk0qu0yjdCCRLoy1YeX4r8JlDN8ZMHfwM/G2K2eGjt25LxwArjfL4I8BlQBK5pKys7FBvb+/zDgmkQLuAKPCbiYDk1dVKxwDBSh7l5TLgVeVyeXn5hxcuXKhy+OvS/zeBL036KJUkp64bWzoGCP4+IAB8DMRLS0uvxWKxcofwyvN3jDr9CvwBDJum5roXuDVA91uVeQDwFxcXv93X1+eQfdLD703zvIWXhLr2fjo1oPxXZxX88rq6uj0tLS0vjo+Pc/OmI+cJ/gvAel5NTPCuc996zG0ElP/qrg8Gg8G9J0+e3LNy5cp5hw8fZseOHVy/fn22SLxv+sJ0eOV92vBuI6ChTN7Pa2ho2N3a2rq/qKhofkdHB/n5+USjUTZs2MCNG6rP21dJSUkkHo83moLVLGQ971r3k9/tNAKCV+4vra+vf7mtra2xsLBwCt6+VLWwdu1aJib+S+fS0tLeWCy2F5DWC96ODZ7hnUZgCr6hoeGFSCTyxrJlyxZYzyd75OrVq6xatYpEIkFxcfEPfX19rwCDxgDJpfR/TuCdGDAFHwgEnuvo6HgrLy9vYSr44eFhqqur6ezsZMWKFQwODg4ArwPdpnDVbVUojireibTNlkJTg1kwGKzv7Ow8kpubu2g2+M2bN3Pu3Dm2bdv2TTgc/h54TX0CeAn41uj9nHl/tgjIMDWspYFAYGs0Gv00JydncSr4kZERtmzZwpkzZwT/dTgc/sjMNhrUNNjtMyOH0seT6jgtYqWOum3B+vXre/r7+wsuXbo0qTbJa3R0lJqaGk6fPo3P5/sqFApJLpUq6q4akeVxXQte6XNHDJDi5Pt8vmdDodDRpqYmgsHgjPA+n49Tp05Z+CNmNBCwNF7AMsB+/0pj0+q4qephphpQt51sVn6/f9fx48cPxeNx1qxZc9s7xsbGqK2tpbW1dTq85nopjTxvva2CFbQ95qyAU9WAcl+58qjf7393YGDgCaVIY6P60K2l0aGuro6WlhYZEW5ubtaIIHjNNvK+xgN5fTrsnIKnGiXsrFOwcePGUCQSeayqqor29nYOHjzIzp076enp4cCBA1y8eNHCK23seGBTJxneiSKmdU9yCkk69VW1HLgieBXnpk2bJo2wa926daOrV68Oh0KhD8zHiNLmjsPPlEIyQN+0hdu3bz924sSJchuBmpqay4lEom1oaOjHs2fPnjcjwV/mrNnG0/5OWu6f4ZPSRqAAeKaysnJfV1dXSUVFxZXu7u5PAO3lCFYSac+Sx5lyPl0mV88lp5CtgTwz8+usCVQFKEjBCt5CS2k8bw+6Ik66OdkAXU9+oJtGpmampiYDBKs00SFoFaqVRi8Mnp5N1QfshqzOdkPWNiQLnhFZdGtNqmHO7vsI3i55226Lu/2djN3v9IMmYwBeX/wvm6rTQFcM4lMAAAAASUVORK5CYII=') 1.5x) 4 28, auto;
-          }
-
-          >.block:not(:first-child) {
-            margin-left: 6.2px;
-          }
-        }
-      }
-    }
-
-    >.dc-container {
-      width: 100%;
-      display: flex;
-      flex-direction: row;
-      align-items: center;
-      justify-content: space-between;
-      padding: 0 10px 4px 10px;
-      box-sizing: border-box;
-
-      .inner {
-        border-top: 1px solid #cecece;
-        width: 100%;
-
-        .header {
-          padding: 4px 0 8px 0;
-        }
-
-        >.documentc-container {
-          width: 100%;
-          max-height: 56px;
-          padding: 2px 0px;
-          overflow: scroll;
-          display: grid;
-          grid-row-gap: 4px;
-          grid-column-gap: 6.5px;
-          grid-template-columns: repeat(auto-fill, 16px);
-
-          &::-webkit-scrollbar {
-            width: 0px;
-          }
-
-          &::-webkit-scrollbar-track {
-            background-color: none;
-          }
-
-          &::-webkit-scrollbar-thumb {
-            background-color: none;
-          }
-
-          &::-webkit-scrollbar-thumb:hover {
-            background-color: none;
-          }
-
-          &::-webkit-scrollbar-thumb:active {
-            background-color: none;
-          }
-
-          >.block {
-            display: inline-block;
-            width: 16px;
-            height: 16px;
-            border-radius: 2px;
-            border: 1px solid var(--grey-dark);
-            cursor: -webkit-image-set(url('data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAADAAAAAwCAYAAABXAvmHAAAAAXNSR0IArs4c6QAABV9JREFUaEPtmG1oVXUcxz8+zpZbLgcuTHDOF6OYsGoTI3IyMG14Hex67waJFERBqdALfZNDDLIoexG9qCjyTTBQat7bwoXMXRTntm4OFnIFr2srkPWc7VG7M77z/1/zsrvOuWdXEe4fDmdnnHPu5/f0/f3Ofx73+Jp3j/OTNeBuRzAbgWwEPHogm0IeHej58WwEPLvQ4wuyEfDoQM+PZyPg2YUeX3AnIqDfmH4I+aY5JjzyZ3wanQ8sNMciQNeCTwD/ADfM3/pfWiuTERDsYmAJ8BDQBDwM/A58B+wGRoExY0xaRmTKgAUGPhd4HAib6+le7gJqgSFjiCLiemXCAAt/P/Ak0GxqYCa4o8B+4BowbtLLlRFzbYDgcwDBPw0cmwVeoD8BT5m0GjH1cFcMkCOs55cC1cDn/wMv0D+BSuAXk0qu0yjdCCRLoy1YeX4r8JlDN8ZMHfwM/G2K2eGjt25LxwArjfL4I8BlQBK5pKys7FBvb+/zDgmkQLuAKPCbiYDk1dVKxwDBSh7l5TLgVeVyeXn5hxcuXKhy+OvS/zeBL036KJUkp64bWzoGCP4+IAB8DMRLS0uvxWKxcofwyvN3jDr9CvwBDJum5roXuDVA91uVeQDwFxcXv93X1+eQfdLD703zvIWXhLr2fjo1oPxXZxX88rq6uj0tLS0vjo+Pc/OmI+cJ/gvAel5NTPCuc996zG0ElP/qrg8Gg8G9J0+e3LNy5cp5hw8fZseOHVy/fn22SLxv+sJ0eOV92vBuI6ChTN7Pa2ho2N3a2rq/qKhofkdHB/n5+USjUTZs2MCNG6rP21dJSUkkHo83moLVLGQ971r3k9/tNAKCV+4vra+vf7mtra2xsLBwCt6+VLWwdu1aJib+S+fS0tLeWCy2F5DWC96ODZ7hnUZgCr6hoeGFSCTyxrJlyxZYzyd75OrVq6xatYpEIkFxcfEPfX19rwCDxgDJpfR/TuCdGDAFHwgEnuvo6HgrLy9vYSr44eFhqqur6ezsZMWKFQwODg4ArwPdpnDVbVUojireibTNlkJTg1kwGKzv7Ow8kpubu2g2+M2bN3Pu3Dm2bdv2TTgc/h54TX0CeAn41uj9nHl/tgjIMDWspYFAYGs0Gv00JydncSr4kZERtmzZwpkzZwT/dTgc/sjMNhrUNNjtMyOH0seT6jgtYqWOum3B+vXre/r7+wsuXbo0qTbJa3R0lJqaGk6fPo3P5/sqFApJLpUq6q4akeVxXQte6XNHDJDi5Pt8vmdDodDRpqYmgsHgjPA+n49Tp05Z+CNmNBCwNF7AMsB+/0pj0+q4qephphpQt51sVn6/f9fx48cPxeNx1qxZc9s7xsbGqK2tpbW1dTq85nopjTxvva2CFbQ95qyAU9WAcl+58qjf7393YGDgCaVIY6P60K2l0aGuro6WlhYZEW5ubtaIIHjNNvK+xgN5fTrsnIKnGiXsrFOwcePGUCQSeayqqor29nYOHjzIzp076enp4cCBA1y8eNHCK23seGBTJxneiSKmdU9yCkk69VW1HLgieBXnpk2bJo2wa926daOrV68Oh0KhD8zHiNLmjsPPlEIyQN+0hdu3bz924sSJchuBmpqay4lEom1oaOjHs2fPnjcjwV/mrNnG0/5OWu6f4ZPSRqAAeKaysnJfV1dXSUVFxZXu7u5PAO3lCFYSac+Sx5lyPl0mV88lp5CtgTwz8+usCVQFKEjBCt5CS2k8bw+6Ik66OdkAXU9+oJtGpmampiYDBKs00SFoFaqVRi8Mnp5N1QfshqzOdkPWNiQLnhFZdGtNqmHO7vsI3i55226Lu/2djN3v9IMmYwBeX/wvm6rTQFcM4lMAAAAASUVORK5CYII=') 1.5x) 4 28, auto;
-          }
-        }
-      }
-    }
-  }
 }
 </style>
