@@ -13,19 +13,19 @@ import {
 declare const COMMUNICATION_WORKER_URL: string
 
 export class Communication {
-    protected info: CommunicationInfo
-    protected worker: SharedWorker | undefined = undefined
+    private info: CommunicationInfo
+    private worker: SharedWorker | undefined = undefined
     protected onMessage: (data: any) => void = () => {}
     protected onClose: () => void = () => {}
-    protected isClosed: boolean = false
-    protected pendingCmdList = new Map<string, {
+    private isClosed: boolean = false
+    private pendingCmdList = new Map<string, {
         cmd: any,
         promise: Promise<any>,
         resolve: (value: any) => void,
     }>()
-    protected receivingData: WorkerPostData | undefined = undefined
-    protected isStarted: boolean = false
-    protected startPromise?: Promise<boolean>
+    private receivingData: WorkerPostData | undefined = undefined
+    private isStarted: boolean = false
+    private startPromise?: Promise<boolean>
 
     constructor(tunnelType: TunnelType, firstData?: any) {
         this.info = {
@@ -38,6 +38,10 @@ export class Communication {
     }
 
     public async start(token: string): Promise<boolean> {
+        return this.startOfWorker(token)
+    }
+
+    private async startOfWorker(token: string): Promise<boolean> {
         if (this.isStarted) return true;
         if (this.isClosed) return false;
         if (this.startPromise) return this.startPromise;
@@ -75,7 +79,11 @@ export class Communication {
         return this.startPromise
     }
 
-    protected receiveFromWorker(event: MessageEvent) {
+    // private async startOfDirect(token: string): Promise<boolean> {
+    //
+    // }
+
+    private receiveFromWorker(event: MessageEvent) {
         const data = event.data as WorkerPostData
         if (data.close) {
             this.close(false)
@@ -149,7 +157,7 @@ export class Communication {
         return true
     }
 
-    protected async getCmdResult(cmdId: string, timeout: number): Promise<any> {
+    private async getCmdResult(cmdId: string, timeout: number): Promise<any> {
         if (!this.pendingCmdList.has(cmdId)) return;
         const cmd = this.pendingCmdList.get(cmdId)
         const task = [cmd!.promise]
@@ -161,10 +169,10 @@ export class Communication {
         return result
     }
 
-    public close(closeWorkerPeer = true) {
+    public close(closePeer = true) {
         if (this.isClosed) return;
         console.log("通道关闭", TunnelTypeStr[this.info.tunnelType], this.info.id)
-        if (closeWorkerPeer) {
+        if (closePeer) {
             this.worker?.port.postMessage({
                 dataType: DataType.Text,
                 close: true,
