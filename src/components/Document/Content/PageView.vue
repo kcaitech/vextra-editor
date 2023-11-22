@@ -75,13 +75,14 @@ onUnmounted(() => {
 
 <template>
     <svg version="1.1" xmlns="http://www.w3.org/2000/svg" xmlns:xlink="http://www.w3.org/1999/xlink"
-        xmlns:xhtml="http://www.w3.org/1999/xhtml" preserveAspectRatio="xMinYMin meet" :width="width"
-        :height="height" :viewBox="`0 0 ${width} ${height}`" overflow="visible"
-        :reflush="reflush !== 0 ? reflush : undefined" :style="{ transform: matrixWithFrame.toString() }" :data-area="rootId">
+        xmlns:xhtml="http://www.w3.org/1999/xhtml" preserveAspectRatio="xMinYMin meet" :width="width" :height="height"
+        :viewBox="`0 0 ${width} ${height}`" overflow="visible" :reflush="reflush !== 0 ? reflush : undefined"
+        :style="{ transform: matrixWithFrame.toString() }" :data-area="rootId">
         <component :is="comsMap.get(c.type) ?? comsMap.get(ShapeType.Rectangle)" v-for="c in renderItems" :key="c.id"
             :data="c" />
 
     </svg>
+
     <ShapeTitles v-if="show_t" :context="props.context" :data="data" :matrix="matrixWithFrame.toArray()"></ShapeTitles>
 </template>
 
@@ -89,5 +90,11 @@ onUnmounted(() => {
 svg {
     position: absolute;
     transform-origin: top left;
+}
+
+.text {
+    width: 600px;
+    height: 600px;
+    background-color: #fff;
 }
 </style>
