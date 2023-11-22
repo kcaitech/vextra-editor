@@ -387,11 +387,11 @@ export function make_symbol(context: Context, t: Function) {
         return false;
     }
     if (is_exist_symbolref_layer(selected)) {
-        message('info',  t('compos.error_2'));
+        message('info', t('compos.error_2'));
         return false;
     }
     if (is_exist_invalid_shape(selected)) {
-        message('info',  t('compos.error_3'));
+        message('info', t('compos.error_3'));
         return false;
     }
     const editor = context.editor4Page(page);
@@ -745,6 +745,11 @@ export function get_var_for_ref(context: Context, symref: SymbolRefShape, t: Fun
         })
     } else { // 存在可变组件
         const state = get_state_by_ref(symref); // 先确定当前实例用的是哪个可变组件
+        console.log('lock state:', state);
+        console.log('sub_data:', symref.getSubData());
+        console.log('root_data:', symref.getRootData());
+        console.log('symbol:', sym);
+        console.log('varsContainer', varsContainer);
         if (!state) return false;
         variables.forEach((v: Variable) => {
             const item: RefAttriListItem = {variable: v, values: []};
@@ -753,7 +758,6 @@ export function get_var_for_ref(context: Context, symref: SymbolRefShape, t: Fun
                 result.push(item);
             }
         })
-
         const sub_variables = new Map<string, Variable>(); // 查看当前可变组件下，绑定了哪些变量
         search_binds_for_state(variables, state, sub_variables);
         let instance_index: number = result.length;

@@ -18,7 +18,7 @@ import Status from "./InstanceAttrCard/IACStatus.vue"
 import Visible from "./InstanceAttrCard/IACVisible.vue"
 import {Selection} from '@/context/selection';
 import {v4} from "uuid";
-import { Menu } from '@/context/menu';
+import {Menu} from '@/context/menu';
 
 interface Props {
     context: Context
@@ -88,8 +88,9 @@ const updateData = () => {
         if (!result) return;
         variables.value = result.variables;
         visible_variables.value = result.visible_variables;
+        console.log("get_var_for_ref:", variables.value, visible_variables.value);
     } else if (props.shapes.length > 1) {
-
+        // todo
     }
 }
 
@@ -150,6 +151,7 @@ function get_ref_ref(symref: SymbolRefShape) {
         p = p.parent;
     }
 }
+
 const menu_watcher = (t: number, e: MouseEvent) => {
     if (t === Menu.CLOSE_INSTANCE_ATTR_MENU) {
         closeResetMenu(e)

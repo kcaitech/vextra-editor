@@ -35,11 +35,11 @@ let observer = new ResizeObserver(() => {
 const render_alpha = computed<boolean>(() => props.cardType === 'alpha');
 
 function down(e: MouseEvent, shape: Shape) {
-    compo = shape.isUnionSymbolShape ? shape.childs[0] || shape : shape;
     if (props.isAttri) { // 选择一个实例进行切换
-        props.context.component.notify(Component.SELECTED_VAL, compo);
+        props.context.component.notify(Component.SELECTED_VAL, is_state(shape) ? shape.parent! : shape);
         return;
     }
+    compo = shape.isUnionSymbolShape ? shape.childs[0] || shape : shape;
     if (e.button === 2) {
         props.context.component.compMenuMount(is_state(compo) ? compo.parent! : compo, e);
         return;
