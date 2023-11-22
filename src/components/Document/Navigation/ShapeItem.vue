@@ -276,6 +276,7 @@ onMounted(() => {
 })
 onUnmounted(() => {
     props.data.context.tool.watch(tool_watcher);
+    props.data.shape().unwatch(updater);
     stop();
 })
 </script>
