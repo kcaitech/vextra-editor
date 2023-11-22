@@ -66,7 +66,6 @@ const WITH_SHADOW = [
     ShapeType.Line,
 ]
 const shapeType = ref();
-const reflush = ref<number>(0);
 const textShapes = ref<Shape[]>([]);
 const symbol_attribute = ref<boolean>(true);
 const getShapeType = () => {
@@ -148,11 +147,11 @@ onUnmounted(() => {
 <template>
     <section id="Design">
         <el-scrollbar>
-            <div v-if="len === 0">
+            <div v-if="!len">
                 <PageBackgorund :context="props.context" v-if="props.context.selection.selectedPage"
                                 :page="props.context.selection.selectedPage"></PageBackgorund>
             </div>
-            <div v-if="len" :reflush="reflush">
+            <div v-else class="attr-wrapper">
                 <Arrange :context="props.context" :shapes="shapes"></Arrange>
                 <ShapeBaseAttr v-if="baseAttr" :context="props.context"></ShapeBaseAttr>
                 <BaseForPathEdit v-if="editAttr" :context="props.context"></BaseForPathEdit>
@@ -178,5 +177,9 @@ section {
     height: 100%;
     font-size: var(--font-default-fontsize);
     box-sizing: border-box;
+    .attr-wrapper {
+        padding-bottom: 100px;
+        box-sizing: border-box;
+    }
 }
 </style>
