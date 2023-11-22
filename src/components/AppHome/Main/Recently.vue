@@ -122,6 +122,7 @@ import { UserInfo } from '@/context/user';
 import listrightmenu from "../listrightmenu.vue"
 import Bus from '@/components/AppHome/bus';
 import { newFile, picker } from '@/utils/neworopen';
+import PinyinMatch from 'pinyin-match'
 
 const { t } = useI18n()
 const items = ['open', 'newtabopen', 'share', 'target_star', 'rename', 'copyfile', 'removefile']
@@ -211,7 +212,8 @@ Bus.on('searchvalue', (str: string) => {
 })
 
 watchEffect(() => {
-    searchlists.value = lists.value.filter((el: any) => el.document.name.toLowerCase().includes(searchvalue.value.toLowerCase()))
+    if (!searchvalue.value) return searchlists.value = lists.value
+    searchlists.value = lists.value.filter((el: any) => PinyinMatch.match(el.document.name.toLowerCase(), searchvalue.value.toLowerCase()))
 })
 
 function sizeTostr(size: any) {

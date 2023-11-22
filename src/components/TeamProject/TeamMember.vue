@@ -102,6 +102,7 @@ import { router } from '@/router';
 import ProjectDialog from './ProjectDialog.vue';
 import Loading from '../common/Loading.vue';
 import { setTeamMemberNicknameAPI } from '@/request/team';
+import PinyinMatch from 'pinyin-match'
 
 
 interface Emits {
@@ -257,11 +258,12 @@ const usertype2 = ref()
 
 //通过计算属性，筛选出与搜索匹配的成员
 const SearchList = computed(() => {
+    if (!props.searchvalue) return ListData.value
     return ListData.value.filter((el: any) => {
         if (el.user.id === userID.value) {
             usertype2.value = el.perm_type
         }
-        return el.user.nickname.toLowerCase().includes(props.searchvalue.toLowerCase())
+        return PinyinMatch.match(el.team_member.nickname.toLowerCase(), props.searchvalue.toLowerCase())
     })
 })
 
