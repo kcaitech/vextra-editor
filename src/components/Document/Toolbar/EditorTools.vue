@@ -54,7 +54,6 @@ const isLable = ref(props.context.tool.isLable);
 function tool_watcher(t?: number) {
     if (t === Tool.CHANGE_ACTION) {
         selected.value = props.context.tool.action;
-        console.log('selected.value changed', selected.value);
     } else if (t === Tool.LABLE_CHANGE) {
         isLable.value = props.context.tool.isLable;
     }
