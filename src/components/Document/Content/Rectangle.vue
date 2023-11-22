@@ -28,13 +28,6 @@ function render() {
     return r(h, props.data, reflush.value !== 0 ? reflush.value : undefined);
 }
 </script>
-
 <template>
     <render></render>
 </template>
-
-<style scoped>
-/* rect {
-    background-color: aqua;
-} */
-</style>

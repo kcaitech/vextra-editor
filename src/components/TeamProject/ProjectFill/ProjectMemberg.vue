@@ -1,16 +1,18 @@
 <script setup lang="ts">
-import { ref, watch, onMounted } from 'vue';
+import { ref, watch, onMounted, nextTick } from 'vue';
 import { ArrowDown, Check } from '@element-plus/icons-vue';
-import * as team_api from '@/apis/team';
+import * as team_api from '@/request/team';
 import { useI18n } from 'vue-i18n';
+import CloseIcon from '@/components/common/CloseIcon.vue';
 
 const props = defineProps<{
+    showcontainer: boolean,
     projectMembergDialog: boolean
     currentProject: any
 }>();
 
 const emit = defineEmits<{
-    (e: 'closeDialog'): void;
+    (e: 'closeDialog'): () => void;
     (e: 'exitProject', id: string, state: boolean): void;
     (e: 'memberLength', num: number): void;
 }>();
@@ -18,7 +20,7 @@ const emit = defineEmits<{
 
 const { t } = useI18n();
 const innerVisible = ref(false)
-const isshow = ref(true)
+const isshow = ref(false)
 const memberList = ref<any[]>([]);
 const permission = ref([`${t('share.no_authority')}`, `${t('share.readOnly')}`, `${t('share.reviewable')}`, `${t('share.editable')}`, '管理员', '创建者'])
 const permList = ref([`${t('Createteam.all')}`, `${t('Createteam.creator')}`, `${t('Createteam.manager')}`, `${t('share.editable')}`, `${t('share.reviewable')}`, `${t('share.readOnly')}`])
@@ -66,6 +68,10 @@ const getTeamMemberList = async () => {
 }
 watch(() => memberList2.value.length, (v) => {
     emit('memberLength', v)
+})
+
+watch(() => props.showcontainer, (newval) => {
+    isshow.value = newval
 })
 
 const handleCommand = (command: number) => {
@@ -140,10 +146,6 @@ const delProjectmember = async (params: { project_id: string, user_id: string })
     } catch (err) {
         console.log(err);
     }
-}
-
-const close = () => {
-    emit('closeDialog');
 }
 
 const handleClose = () => {
@@ -224,11 +226,26 @@ watch(innerVisible, (v) => {
 onMounted(() => {
     getProjectMemberList();
 })
+
+const changemargin = () => {
+    nextTick(() => {
+        let el = document.querySelectorAll('.el-dialog__header')
+        for (let i = 0; i < el.length; i++) {
+            (el[i] as HTMLElement).style.marginRight = '0px'
+        }
+    })
+}
 </script>
 
 <template>
-    <el-dialog v-model="isshow" :title="t('Createteam.membersed')" width="350px" align-center :close-on-click-modal="false"
-        :before-close="close">
+    <el-dialog v-model="isshow" width="350px" align-center :close-on-click-modal="false" :show-close="false"
+        @open="changemargin" @close="emit('closeDialog')">
+        <template #header>
+            <div class="my-header">
+                <div class="title">{{ t('Createteam.membersed') }}</div>
+                <CloseIcon :size="20" @close="emit('closeDialog')" />
+            </div>
+        </template>
         <div class="perm_title">
             <div class="name">{{ t('Createteam.username') }}</div>
             <el-dropdown trigger="click" :hide-on-click="false" @command="handleCommand">
@@ -331,11 +348,22 @@ onMounted(() => {
 </template>
 
 <style scoped lang="scss">
+.my-header {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+
+    .title {
+        color: #3D3D3D;
+        font-weight: 600;
+    }
+}
+
 .perm_title {
     display: flex;
     align-items: center;
     justify-content: space-between;
-    color: #000;
+    color: #3D3D3D;
     padding-right: 10px;
 
     .name {
@@ -346,7 +374,7 @@ onMounted(() => {
     .el-dropdown-link {
         font-size: 14px;
         font-weight: bold;
-        color: #000;
+        color: #3D3D3D;
     }
 }
 

@@ -191,7 +191,7 @@ function bar_mouseup(event: MouseEvent) {
     document.removeEventListener('mouseup', bar_mouseup);
 }
 function bar_mouseleave() {
-    props.context.cursor.setType('auto-0');
+    props.context.cursor.reset();
 }
 function window_blur() {
     if (isDragging) {

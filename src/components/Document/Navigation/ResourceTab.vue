@@ -30,7 +30,7 @@ const { t } = useI18n();
     width: 100%;
     height: 100%;
     background-color: #fff;
-    font-size: 10px;
+    font-size: var(--font-default-fontsize);
     padding: 8px 16px;
     box-sizing: border-box;
     >img {

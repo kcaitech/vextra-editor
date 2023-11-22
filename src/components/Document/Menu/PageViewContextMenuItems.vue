@@ -373,7 +373,7 @@ function show_placement(val: boolean) {
   props.context.menu.notify(val ? Menu.SHOW_PLACEMENT : Menu.HIDE_PLACEMENT);
 }
 function toggle_title() {
-  props.context.tool.setTitleVisibale(!props.context.tool.isShowTitle);
+  props.context.tool.setTitleVisible(!props.context.tool.isShowTitle);
   emit('close');
 }
 function menu_watcher() {

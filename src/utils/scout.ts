@@ -1,7 +1,8 @@
-import { Context } from "@/context";
-import { PageXY, XY } from "@/context/selection";
-import { GroupShape, Matrix, Shape, ShapeType } from "@kcdesign/data";
-import { v4 as uuid } from "uuid";
+import {Context} from "@/context";
+import {PageXY, XY} from "@/context/selection";
+import {GroupShape, Matrix, Shape, ShapeType} from "@kcdesign/data";
+import {v4 as uuid} from "uuid";
+
 interface Scout {
     path: SVGPathElement
     remove: () => void
@@ -10,6 +11,7 @@ interface Scout {
     isPointInStroke: (d: string, point: PageXY) => boolean
     isPointInShape2: (shape: Shape, point: PageXY) => boolean
 }
+
 // Ver.SVGGeometryElement，基于SVGGeometryElement的图形检索
 // 动态修改path路径对象的d属性。返回一个Scout对象， scout.isPointInShape(d, SVGPoint)用于判断一个点(SVGPoint)是否在一条路径(d)上
 function scout(context: Context): Scout {
@@ -25,7 +27,8 @@ function scout(context: Context): Scout {
 
     function isPointInShape(shape: Shape, point: PageXY): boolean {
         const d = getPathOnPageString(shape);
-        SVGPoint.x = point.x, SVGPoint.y = point.y; // 根据鼠标位置确定point所处位置
+        SVGPoint.x = point.x;
+        SVGPoint.y = point.y; // 根据鼠标位置确定point所处位置
         path.setAttributeNS(null, 'd', d);
         let result: boolean = false;
         if (shape.type === ShapeType.Line || shape.type === ShapeType.Contact) {
@@ -42,7 +45,8 @@ function scout(context: Context): Scout {
 
     function isPointInShape2(shape: Shape, point: PageXY): boolean {
         const d = getPathOnPageStringCustomOffset(shape, 1 / context.workspace.matrix.m00);
-        SVGPoint.x = point.x, SVGPoint.y = point.y; // 根据鼠标位置确定point所处位置
+        SVGPoint.x = point.x;
+        SVGPoint.y = point.y; // 根据鼠标位置确定point所处位置
         path.setAttributeNS(null, 'd', d);
         return (path as SVGGeometryElement).isPointInFill(SVGPoint);
     }
@@ -52,17 +56,20 @@ function scout(context: Context): Scout {
         path.setAttributeNS(null, 'd', d);
         return (path as SVGGeometryElement).isPointInFill(SVGPoint);
     }
+
     function isPointInStroke(d: string, point: XY): boolean {
         SVGPoint.x = point.x, SVGPoint.y = point.y;
         path.setAttributeNS(null, 'd', d);
         path.setAttributeNS(null, 'stroke-width', '14');
         return (path as SVGGeometryElement).isPointInStroke(SVGPoint);
     }
+
     function remove() { // 把用于比对的svg元素从Dom树中去除
         const s = document.querySelector(`[id="${scoutId}"]`);
         if (s) document.body.removeChild(s);
     }
-    return { path, isPointInShape, isPointInShape2, remove, isPointInPath, isPointInStroke }
+
+    return {path, isPointInShape, isPointInShape2, remove, isPointInPath, isPointInStroke}
 }
 
 function createSVGGeometryElement(id: string): SVGElement {
@@ -72,17 +79,20 @@ function createSVGGeometryElement(id: string): SVGElement {
     svg.setAttribute('id', id);
     return svg;
 }
+
 function createPath(path: string, id: string): SVGPathElement {
     const p = document.createElementNS('http://www.w3.org/2000/svg', 'path');
     p.setAttributeNS(null, 'd', path);
     return p;
 }
+
 function getPathOnPageString(shape: Shape): string { // path坐标系：页面
     const path = shape.getPath();
     const m2page = shape.matrix2Root();
     path.transform(m2page);
     return path.toString();
 }
+
 function getPathOnPageStringCustomOffset(shape: Shape, s: number): string { // path坐标系：页面
     const f = shape.frame;
     const offset = 20 * s;
@@ -93,6 +103,7 @@ function getPathOnPageStringCustomOffset(shape: Shape, s: number): string { // p
     m.multiAtLeft(shape.matrix2Root());
     return getBoxPath(m);
 }
+
 function getBoxPath(transformMatrix: Matrix) {
     const p1 = transformMatrix.computeCoord2(0, 0);
     const p2 = transformMatrix.computeCoord2(1, 0);
@@ -100,10 +111,12 @@ function getBoxPath(transformMatrix: Matrix) {
     const p4 = transformMatrix.computeCoord2(0, 1);
     return `M ${p1.x} ${p1.y} L ${p2.x} ${p2.y} L ${p3.x} ${p3.y} L ${p4.x} ${p4.y} z`;
 }
+
 // 判定点是否在图形内
 function isTarget(scout: Scout, shape: Shape, p: PageXY): boolean {
     return scout.isPointInShape(shape, p);
 }
+
 function isTarget2(scout: Scout, shape: Shape, p: PageXY): boolean {
     return scout.isPointInShape2(shape, p);
 }
@@ -145,6 +158,7 @@ function groupPassthrough(scout: Scout, scope: Shape[], position: PageXY): Shape
     }
     return shape;
 }
+
 /**
  * 图形检索规则以及实现
  * @param { Scout } scout 图形检索器，负责判定一个点(position)是否在一条path路径上(或路径的填充中)
@@ -236,6 +250,7 @@ export function finder_contact(scout: Scout, g: Shape[], position: PageXY, selec
     }
     return result;
 }
+
 /**
  * 与finder相比，finder结果通常不会大于1，而这里通常可以大于1，代码上减少了逻辑判断，增大了遍历更多条目的概率
  * @param { Scout } scout 图形检索器，负责判定一个点(position)是否在一条path路径上(或路径的填充中)
@@ -265,6 +280,7 @@ function finder_layers(scout: Scout, g: Shape[], position: PageXY): Shape[] {
     }
     return result;
 }
+
 // 编组：如果光标在一个编组A内，当光标在子元素(包括所有后代元素)上时，有且只有编组A被认为是target。
 // 注：在没有任何元素选中的情况下，子元素如果也是编组(编组B(编组C(编组D...)))的话都要冒泡到编组A上，如果已经有元素被选中，则只冒泡到同一层级兄弟元素
 function forGroupHover(scout: Scout, g: Shape[], position: PageXY, selected: Shape, isCtrl: boolean): Shape | undefined {
@@ -293,6 +309,7 @@ function forGroupHover(scout: Scout, g: Shape[], position: PageXY, selected: Sha
     }
     return result;
 }
+
 // 判断一个编组中是否已经有子元素被选中
 function isPartSelect(shape: Shape, selected: Shape): boolean {
     let result: boolean = false;
@@ -309,6 +326,7 @@ function isPartSelect(shape: Shape, selected: Shape): boolean {
     }
     return result;
 }
+
 // 寻找到最近的层级较高的那个容器
 function artboardFinder(scout: Scout, g: Shape[], position: PageXY, except?: Map<string, Shape>): Shape | undefined {
     let result: Shape | undefined = undefined;
@@ -337,4 +355,17 @@ function canBeTarget(shape: Shape): boolean { // 可以被判定为检索结果�
         return false;
     }
 }
-export { Scout, scout, isTarget, getPathOnPageString, delayering, groupPassthrough, forGroupHover, finder, finder_layers, artboardFinder, canBeTarget }
+
+export {
+    Scout,
+    scout,
+    isTarget,
+    getPathOnPageString,
+    delayering,
+    groupPassthrough,
+    forGroupHover,
+    finder,
+    finder_layers,
+    artboardFinder,
+    canBeTarget
+}

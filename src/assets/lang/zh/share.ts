@@ -20,7 +20,8 @@ export const share = {
     share_limit: '分享限制人数',
     founder: '创建者',
     document_permission: '文档权限',
-    reviewable: '可评论'
+    reviewable: '可评论',
+    no_document:'没有该文档',
 }
 
 export const permission = {

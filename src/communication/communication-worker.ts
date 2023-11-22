@@ -9,7 +9,8 @@ import {
 import { Tunnel } from "@/communication/tunnel"
 import { Server } from "@/communication/server"
 
-const ctx: SharedWorkerGlobalScope = self as any
+const isWorker = typeof WorkerGlobalScope !== "undefined" && self instanceof WorkerGlobalScope
+
 let server: Server | undefined = undefined
 const tunnelMap = new Map<string, Tunnel>()
 const cmdIdToTunnel = new Map<string, Tunnel>()
@@ -29,8 +30,7 @@ function sendNetworkStatusToClient(status: NetworkStatusType) {
     }
 }
 
-ctx.onconnect = (event) => {
-    const port = event.ports[0]
+function setOnMessage(port: MessagePort) {
     port.onmessage = async (messageEvent) => {
         const data = messageEvent.data as CommunicationInfo
         if (token !== "" && data.token !== token && server !== undefined) { // 当有第二个用户连接时，关闭前面用户的连接
@@ -79,5 +79,11 @@ ctx.onconnect = (event) => {
             port.onmessage = tunnel.receiveFromClient.bind(tunnel)
         }
         port.postMessage(sendData)
+    }
+}
+
+if (isWorker) {
+    (self as any as SharedWorkerGlobalScope).onconnect = (event) => {
+        setOnMessage(event.ports[0])
     }
 }

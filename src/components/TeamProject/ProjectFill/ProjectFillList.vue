@@ -1,8 +1,8 @@
 
 <template>
-    <div class="tatle" style="height: calc(100vh - 56px - 96px - 56px);">
+    <div class="tatle" style="height: calc(100vh - 224px);">
         <tablelist :data="lists" :iconlist="iconlists" @share="Sharefile" @deletefile="Deletefile"
-            @dbclickopen="openDocument" :type="currentProject.self_perm_type > 2 ? 'project' : ''" @updatestar="Starfile"
+            @dbclickopen="openDocument" :addfile="currentProject.self_perm_type" @updatestar="Starfile"
             @rightMeun="rightmenu" :noNetwork="noNetwork" @refreshDoc="refreshDoc" @newProjectFill="newProjectFill"
             :creator="true" :perm="currentProject.self_perm_type" />
     </div>
@@ -20,8 +20,8 @@
 </template>
 
 <script setup lang="ts">
-import * as user_api from '@/apis/users'
-import * as team_api from '@/apis/team'
+import * as user_api from '@/request/users'
+import * as team_api from '@/request/team'
 import { ElMessage } from 'element-plus'
 import { onMounted, ref, onUnmounted, nextTick, Ref, inject, watch } from "vue"
 import { useI18n } from 'vue-i18n'
@@ -32,7 +32,7 @@ import tablelist from '@/components/AppHome/tablelist.vue'
 import { UserInfo } from '@/context/user';
 import listrightmenu from "@/components/AppHome/listrightmenu.vue"
 import MoveProjectFill from '../MoveProjectFill.vue';
-import { Repository, CoopRepository, Document } from '@kcdesign/data';
+import { Repository, CoopRepository } from '@kcdesign/data';
 import { createDocument } from '@kcdesign/data';
 import { DocEditor } from '@kcdesign/data';
 
@@ -54,9 +54,10 @@ let items = ['open', 'newtabopen', 'share', 'target_star']
 const props = defineProps<{
     currentProject: any
 }>()
+
+
 const { t } = useI18n()
 const route = useRoute();
-const isLoading = ref(false)
 const showFileShare = ref<boolean>(false)
 const shareSwitch = ref(true)
 const pageHeight = ref(0)
@@ -71,13 +72,13 @@ const iconlists = ref(['star', 'share', 'delete_p']);
 const moveVisible = ref(false);
 const projectItem = ref<any>({});
 const is_project = ref(false);
+
 //获取服务器我的文件列表
 async function getDoucment(id: string) {
     let projectId = id
     if (!id || id === '0') {
         projectId = route.params.id as string
     }
-    isLoading.value = true
     try {
         const { data } = await team_api.getDoucmentListAPI({ project_id: projectId })
         if (data == null) {
@@ -94,7 +95,6 @@ async function getDoucment(id: string) {
     } catch (error) {
         noNetwork.value = true
     }
-    isLoading.value = false
 }
 
 const { projectList } = inject('shareData') as {
@@ -118,6 +118,10 @@ const newProjectFill = () => {
     (window as any).sketchDocument = nd;
     router.push({ name: 'document' });
 }
+
+defineExpose({
+    newProjectFill
+})
 
 const moveFillAddress = (data: any) => {
     moveVisible.value = true;
@@ -287,10 +291,6 @@ onMounted(() => {
 onUnmounted(() => {
     window.removeEventListener('resize', getPageHeight)
 })
-
-function emit(arg0: string) {
-    throw new Error("Function not implemented.")
-}
 
 </script>
 <style lang="scss" scoped>

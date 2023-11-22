@@ -5,11 +5,13 @@ import { Selection } from "@/context/selection";
 import { Shape, ShapeType, Matrix } from "@kcdesign/data";
 import { ControllerType, ctrlMap } from "./Controller/map";
 import { CtrlElementType } from "@/context/workspace";
-import { Action } from "@/context/tool";
+import { Action, Tool } from "@/context/tool";
 import { getHorizontalAngle, XYsBounding } from "@/utils/common";
 import { WorkSpace } from "@/context/workspace";
 import { permIsEdit } from "@/utils/content";
 import Assist from "@/components/Document/Assist/index.vue";
+import ShapeSize from "./ShapeSize.vue";
+import LableLine from "../Assist/LableLine.vue";
 export interface Point {
     x: number
     y: number
@@ -99,6 +101,14 @@ function selectionWatcher(t?: any) { // selection的部分动作可触发更新
         watchShapes();
     }
 }
+function tool_watcher(t: number) {
+    if (t === Tool.LABLE_CHANGE) {
+        matrix.reset(props.matrix);
+        createController();
+        watchShapes();
+        lableLineStatus();
+    }
+}
 function createShapeTracing() { // 描边  
     const hoveredShape: Shape | undefined = props.context.selection.hoveredShape;
     tracing.value = false;
@@ -179,7 +189,7 @@ function createController() { // 计算控件点位以及类型判定
 
 function pathMousedown(e: MouseEvent) { // 点击图形描边以及描边内部区域，将选中图形
     const action = props.context.tool.action;
-    const selection = props.context.selection;
+    const selection = props.context.selection;    
     if (action === Action.AutoV || action === Action.AutoK) {
         if (e.button === 0) {
             e.stopPropagation();
@@ -219,12 +229,25 @@ function window_blur() {
         altKey.value = false;
     }
 }
+
+//标注线
+const isLableLine = ref(false);
+const lableLineStatus = () => {
+    const isLable = props.context.tool.isLable;
+    if(isLable) {
+        isLableLine.value = true;
+    }else {
+        isLableLine.value = false;
+    }
+}
+
 // hooks
 watch(() => props.matrix, update_by_matrix, { deep: true });
 
 onMounted(() => {
     props.context.selection.watch(selectionWatcher);
     props.context.workspace.watch(workspace_watcher);
+    props.context.tool.watch(tool_watcher);
     document.addEventListener('keydown', keyboard_down_watcher);
     document.addEventListener('keyup', keyboard_up_watcher);
     window.addEventListener('blur', window_blur)
@@ -232,6 +255,7 @@ onMounted(() => {
 onUnmounted(() => {
     props.context.selection.unwatch(selectionWatcher);
     props.context.workspace.unwatch(workspace_watcher);
+    props.context.tool.unwatch(tool_watcher);
     document.removeEventListener('keydown', keyboard_down_watcher);
     document.removeEventListener('keyup', keyboard_up_watcher);
     window.removeEventListener('blur', window_blur);
@@ -253,5 +277,9 @@ onUnmounted(() => {
     </component>
     <!-- 辅助 -->
     <Assist :context="props.context" :controller-frame="controllerFrame"></Assist>
+    <!-- 标注线 -->
+    <LableLine v-if="isLableLine" :context="props.context" :matrix="props.matrix"></LableLine>
+    <!-- 选中大小 -->
+    <ShapeSize :context="props.context" :controller-frame="controllerFrame"></ShapeSize>
 </template>
 <style lang="scss"></style>

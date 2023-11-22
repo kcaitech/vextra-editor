@@ -32,18 +32,19 @@ export class DocSelectionOp extends Watchable(Object) {
         if (!this.context) return;
         if (![Selection.CHANGE_PAGE, Selection.CHANGE_SHAPE, Selection.CHANGE_SHAPE_HOVER, Selection.CHANGE_TEXT].includes(type)) return;
         if (!this.docSelectionOpUpdate) this.docSelectionOpUpdate = throttle(this.update, 1000).bind(this);
+        const selection = this.context.selection
         if (type === Selection.CHANGE_TEXT
-            && this.context.selection.cursorStart === this.previousTextSelectionAfterTransform.cursorStart
-            && this.context.selection.cursorEnd === this.previousTextSelectionAfterTransform.cursorEnd
-            && this.context.selection.cursorAtBefore === this.previousTextSelectionAfterTransform.cursorAtBefore
+            && selection.cursorStart === this.previousTextSelectionAfterTransform.cursorStart
+            && selection.cursorEnd === this.previousTextSelectionAfterTransform.cursorEnd
+            && selection.cursorAtBefore === this.previousTextSelectionAfterTransform.cursorAtBefore
         ) return;
         this.docSelectionOpUpdate({
-            select_page_id: this.context.selection.selectedPage?.id ?? "",
-            select_shape_id_list: this.context.selection.selectedShapes.map((shape) => shape.id),
-            hover_shape_id: this.context.selection.hoveredShape?.id,
-            cursor_start: this.context.selection.cursorStart,
-            cursor_end: this.context.selection.cursorEnd,
-            cursor_at_before: this.context.selection.cursorAtBefore,
+            select_page_id: selection.selectedPage?.id ?? "",
+            select_shape_id_list: selection.selectedShapes.map((shape) => shape.id),
+            hover_shape_id: selection.hoveredShape?.id,
+            cursor_start: selection.cursorStart,
+            cursor_end: selection.cursorEnd,
+            cursor_at_before: selection.cursorAtBefore,
             previous_cmd_id: this.context.communication.docOp.lastServerCmdId ?? this.context.data.lastCmdId,
         }).catch(err => { })
     }
@@ -57,7 +58,7 @@ export class DocSelectionOp extends Watchable(Object) {
         if (!(shape0 instanceof TextShape) || !(shape0 instanceof TableCell)) return;
 
         const selection = this.context.textSelection
-        if (selection.cursorStart === -1 || this.context.selection.cursorEnd === -1) return;
+        if (selection.cursorStart === -1 || _selection.cursorEnd === -1) return;
         if (cmd.serverId === undefined && !(cmd as any).isUndo) return;
         if (!this.docSelectionOpUpdate) this.docSelectionOpUpdate = throttle(this.update, 1000).bind(this);
         const originalCursorStart = selection.cursorStart
@@ -70,10 +71,10 @@ export class DocSelectionOp extends Watchable(Object) {
         })()) : [(shape0 as TextShape).id];
 
         const textSelectionCmd = MyTextCmdSelection.Make(
-            this.context.selection.selectedPage?.id ?? "",
+            _selection.selectedPage?.id ?? "",
             shapeId,
-            this.context.selection.cursorStart,
-            this.context.selection.cursorEnd - this.context.selection.cursorStart,
+            _selection.cursorStart,
+            _selection.cursorEnd - _selection.cursorStart,
         )
         const originalCmd = cmdClone(cmd)
         setCmdServerIdAndOpsOrder(originalCmd, undefined, Number.MAX_VALUE - 1)
@@ -89,22 +90,22 @@ export class DocSelectionOp extends Watchable(Object) {
             cursorEnd = _op.start + _op.length
         }
         if (cursorStart === originalCursorStart && cursorEnd === originalCursorEnd) return;
-        this.previousTextSelectionAfterTransform = { cursorStart: cursorStart, cursorEnd: cursorEnd, cursorAtBefore: this.context.selection.cursorAtBefore }
-        if (cursorStart === cursorEnd) this.context.selection.setCursor(cursorStart, this.context.selection.cursorAtBefore, (shape0 as TextShape).text);
-        else this.context.selection.selectText(cursorStart, cursorEnd, (shape0 as TextShape).text);
+        this.previousTextSelectionAfterTransform = { cursorStart: cursorStart, cursorEnd: cursorEnd, cursorAtBefore: _selection.cursorAtBefore }
+        if (cursorStart === cursorEnd) _selection.setCursor(cursorStart, _selection.cursorAtBefore, (shape0 as TextShape).text);
+        else _selection.selectText(cursorStart, cursorEnd, (shape0 as TextShape).text);
     }
 
-    public async start(token: string, documentId: string, context: Context): Promise<boolean> {
+    public async start(token: string, documentId: string, context: Context, options?: StartOptions): Promise<boolean> {
         if (this.docSelectionOp) return true;
         if (this.startPromise) return await this.startPromise;
         const docSelectionOp = _DocSelectionOp.Make(token, documentId)
-        const startParams = [token, documentId]
+        const startParams = [token, documentId, context]
         docSelectionOp.setOnClose(async () => {
+            const diff_time = 1000 - (Date.now() - (Number.isInteger(options?.last_time) ? options!.last_time! : 0))
+            if (diff_time > 0) await new Promise(resolve => setTimeout(resolve, diff_time));
             this.docSelectionOp = undefined
-            while (!this.isClosed && !await this.start.apply(this, startParams as any)) { // eslint-disable-line prefer-spread
-                await new Promise(resolve => setTimeout(resolve, 1000))
-            }
-        })
+            if (!this.isClosed) await this.start.apply(this, [...startParams, { last_time: Date.now() }] as any); // eslint-disable-line prefer-spread
+        });
         this.startPromise = new Promise<boolean>(resolve => this.startResolve = resolve)
         try {
             if (!await docSelectionOp.start()) {
@@ -123,7 +124,7 @@ export class DocSelectionOp extends Watchable(Object) {
         this.context = context
         if (this.isFirstStart) {
             context.selection.watch(this.selectionWatcherForOp)
-            context.communication.docOp.addOnLocalUpdate(this.textSelectionTransform)
+            context.communication.docOp.addOnLocalUpdateAsync(this.textSelectionTransform)
         }
         this.isFirstStart = false
         return true

@@ -355,7 +355,7 @@ onMounted(() => {
 
             .none-font {
                 margin: 10px auto;
-                font-size: 10px;
+                font-size: var(--font-default-fontsize);
                 color: rgb(0, 0, 0, .5);
             }
         }

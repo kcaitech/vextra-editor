@@ -5,8 +5,8 @@ import { Context } from '@/context';
 import { useI18n } from 'vue-i18n';
 import { useRoute } from 'vue-router';
 import { UserInfo, DocInfo } from '@/context/user';
-import * as share_api from '@/apis/share';
-import * as team_api from '@/apis/team'
+import * as share_api from '@/request/share';
+import * as team_api from '@/request/team'
 
 const { t } = useI18n()
 interface Props {
@@ -56,7 +56,7 @@ async function documentInfo(id: any) {
       }
       return data
     } else {
-      console.log('没有该文档');
+      console.log(t('share.no_document'));
     }
   } catch (err) {
     return console.log(err);

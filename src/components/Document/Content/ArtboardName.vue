@@ -125,9 +125,8 @@ const selectShape = (e: MouseEvent) => {
     }
 
     .rename {
-        height: 15px;
         outline-style: none;
-        font-size: 9px;
+        font-size: var(--font-default-fontsize);
         border: 1px solid var(--active-color);
         padding: 0 1px;
         margin-right: 1px;

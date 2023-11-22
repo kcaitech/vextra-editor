@@ -1,6 +1,7 @@
 
 <template>
-        <div class="team">
+    <div class="team">
+        <div class="left">
             <div class="team-avatar">
                 <div v-if="avatar.length > 4" class="img">
                     <img :src="avatar" alt="team avatar">
@@ -14,47 +15,56 @@
                 <div class="team-description">{{ teamDescription }}</div>
             </div>
         </div>
-        <div class="team-header">
-            <ul class="menu">
-                <li class="item" :class="{ 'activate': itemid === index }" v-for="(item, index) in items" :key="index"
-                    @click.stop="clickEvent(index)">
-                    {{ item }}
-                </li>
-            </ul>
-            <div class="addandsearch">
-                <button type="button" v-if="itemid === 0 && teamSelfPermType > 0"
-                    @click.stop="showoverlay = true">{{ t('teampage.addproject') }}</button>
-                <button type="button" v-if="itemid === 1"
-                    @click.stop="showoverlay = true">{{ t('teampage.addmember') }}</button>
-                <el-input v-if="itemid != 2" ref="inputRef" size="large" v-model="search"
-                    :placeholder="itemid === 0 ? t('teampage.search_default_tipsA') : t('teampage.search_default_tipsB')">
-                    <template #prefix>
-                        <el-icon size="18">
-                            <Search />
-                        </el-icon>
-                    </template>
-                    <template #suffix>
-                        <el-icon v-if="search != ''" class="close" size="18" @click.stop="search = ''">
-                            <Close />
-                        </el-icon>
-                    </template>
-                </el-input>
-            </div>
+        <div class="right">
+            <button type="button" v-if="itemid === 0 && teamSelfPermType > 0" @click.stop="showoverlay = true">
+                <svg-icon icon-class="addfile-icon" ></svg-icon>
+                {{ t('teampage.addproject') }}
+            </button>
+            <button type="button" v-if="itemid === 1" @click.stop="showoverlay = true">
+                <svg-icon icon-class="member-icon" style="padding: 0;"></svg-icon>
+                {{ t('teampage.addmember') }}
+            </button>
         </div>
-        <ProjectList v-if="itemid === 0" :searchvalue="search" @addproject="showoverlay = true" />
-        <TeamMember v-if="itemid === 1" :searchvalue="search" />
-        <TeamSetting v-if="itemid === 2" />
-        <transition name="nested" :duration="550">
-            <div v-if="showoverlay" class="overlay">
-                <addProject v-if="itemid === 0" class="inner" :teamid="teamID" @close="showoverlay = false" />
-                <InviteMember v-if="itemid === 1" class="inner" :teamid="teamID" @close="showoverlay = false" />
-            </div>
-        </transition>
+    </div>
+    <div class="team-header">
+        <ul class="menu">
+            <li class="indicator" :style="{ width: elwidth + 'px', left: elleft + 'px', height: 2 + 'px' }"></li>
+            <li class="item" :class="{ 'activate': itemid === index }" v-for="(item, index) in items" :key="index"
+                @click.stop="clickEvent(index, $event)">
+                {{ item }}
+            </li>
+        </ul>
+        <div class="addandsearch">
+            <el-input v-if="itemid != 2" ref="inputRef" size="large" v-model="search" @focus="focusinput = true"
+                @blur="focusinput = false"
+                :placeholder="itemid === 0 ? t('teampage.search_default_tipsA') : t('teampage.search_default_tipsB')">
+                <template #prefix>
+                    <el-icon size="18">
+                        <svg-icon icon-class="search-icon" :color="focusinput ? '#1878F5' : ''"></svg-icon>
+                    </el-icon>
+                </template>
+                <template #suffix>
+                    <el-icon v-if="search != ''" class="close" size="18" @click.stop="search = ''">
+                        <Close />
+                    </el-icon>
+                </template>
+            </el-input>
+        </div>
+    </div>
+    <ProjectList v-if="itemid === 0" :searchvalue="search" @addproject="showoverlay = true" />
+    <TeamMember v-if="itemid === 1" :searchvalue="search" />
+    <TeamSetting v-if="itemid === 2" />
+    <transition name="nested" :duration="550">
+        <div v-if="showoverlay" class="overlay">
+            <addProject v-if="itemid === 0" class="inner" :teamid="teamID" @close="showoverlay = false" />
+            <InviteMember v-if="itemid === 1" class="inner" :teamid="teamID" @close="showoverlay = false" />
+        </div>
+    </transition>
 </template>
 <script setup lang="ts">
 import { Ref, computed, inject, ref, onMounted, watch, onUnmounted } from 'vue'
 import { useRoute } from 'vue-router'
-import { Search, Close } from '@element-plus/icons-vue'
+import { Close } from '@element-plus/icons-vue'
 import ProjectList from '@/components/TeamProject/ProjectList.vue'
 import addProject from './addProject.vue'
 import TeamMember from './TeamMember.vue'
@@ -70,6 +80,9 @@ const items = [t('teampage.project'), t('teampage.members'), t('teampage.team_se
 const img = ref(false)
 const search = ref<string>('')
 const route = useRoute()
+const elwidth = ref()
+const elleft = ref()
+const focusinput = ref<boolean>(false)
 
 
 interface data {
@@ -101,7 +114,10 @@ const avatar = computed(() => {
     return teamAvatar.value != '' ? teamAvatar.value : teamName.value.slice(0, 1)
 })
 
-const clickEvent = (index: number) => {
+const clickEvent = (index: number, e: MouseEvent) => {
+    const rect = (e.target as HTMLElement).getBoundingClientRect()
+    elwidth.value = rect.width
+    elleft.value = rect.x
     itemid.value = index
     sessionStorage.setItem('activateitem', index.toString())
 }
@@ -125,6 +141,10 @@ onMounted(() => {
     if (x) {
         itemid.value = parseInt(x)
     }
+    const items = document.querySelectorAll('.item')
+    const rect = items[itemid.value].getBoundingClientRect()
+    elwidth.value = rect.width
+    elleft.value = rect.x
 })
 
 onUnmounted(() => {
@@ -157,7 +177,7 @@ onUnmounted(() => {
 
 .nested-enter-from .inner,
 .nested-leave-to .inner {
-    top:calc(50% - 50px);
+    top: calc(50% - 50px);
     // left: 50%;
     // transform: translate(-50%, -50%) scale(0.8);
     opacity: 0.5;
@@ -175,73 +195,63 @@ onUnmounted(() => {
 
 .activate {
     color: black;
-    border-bottom: 2px solid #9775fa;
+    // border-bottom: 2px solid #9775fa;
 }
 
 .team-header {
     height: 40px;
     display: flex;
+    gap: 16px;
+    margin: 0px 8px 16px 8px;
     justify-content: space-between;
     align-items: center;
-    margin: 8px 0;
-    border-bottom: 1px solid #c4c4c4cf;
+    box-shadow: inset 0px -1px 0px 0px #F0F0F0;
 
     .menu {
-        cursor: pointer;
+        display: flex;
+        align-items: flex-end;
         list-style: none;
+        line-height: 40px;
         padding: 0;
         margin: 0;
-        display: flex;
-
+        gap: 24px;
         color: #666;
+
+        .indicator {
+            position: absolute;
+            height: 2px;
+            background-color: rgba(12, 111, 240, 1);
+            border-radius: 2px;
+            transition: all 0.2s ease-in-out;
+        }
 
         .item {
             white-space: nowrap;
-            margin-right: 32px;
-            font-size: 18px;
-            font-weight: 600;
-            padding-bottom: 6px;
+            font-size: 13px;
+            font-weight: 500;
         }
     }
 
     .addandsearch {
         display: flex;
         align-items: center;
-        button {
-            cursor: pointer;
-            border: none;
-            width: 80px;
-            height: 32px;
-            border-radius: 4px;
-            background-color: #9775fa;
-            box-sizing: border-box;
-            margin-right: 12px;
-            transition: all 0.5s ease-out;
-            color: white;
-            box-shadow: 1px 1px 3px #b1b1b1, -1px -1px 3px #b1b1b1;
-
-            &:hover {
-                background-color: rgba(150, 117, 250, 0.862745098);
-            }
-        }
 
         .el-input {
-            width: 280px;
-            height: 32px;
+            width: 178px;
+            height: 34px;
             font-size: 12px;
-            --el-input-border-color: #f3f0ff;
-            --el-input-hover-border-color: #e5dbff;
-            --el-input-focus-border-color: #9775fa;
+            --el-input-border-color: rgba(240, 240, 240, 1);
+            --el-input-hover-border-color: rgba(240, 240, 240, 1);
+            --el-input-focus-border-color: rgba(12, 111, 240, 1);
 
             .close:hover {
                 border-radius: 2px;
-                cursor: pointer;
-                background-color: #f3f0ff;
+                background-color:#F7F7F9;
             }
 
             .el-icon {
                 padding: 2px;
-                color: #9775fa;
+                color: rgba(51, 51, 51, 1);
             }
         }
     }
@@ -249,61 +259,109 @@ onUnmounted(() => {
 
 .team {
     display: flex;
-    margin: 16px 0px 0px;
+    gap: 24px;
+    height: 84px;
+    margin: 0 8px 0 8px;
     align-items: center;
-    height: 80px;
-    .team-avatar {
-        width: 56px;
-        height:56px;
-        min-width: 56px;
-        background-color: #9775fa;
-        text-align: center;
-        border-radius: 50%;
-        overflow: hidden;
+    justify-content: space-between;
+    box-sizing: border-box;
+
+    .left {
+        display: flex;
+        align-items: center;
+        gap: 24px;
+
+        .team-avatar {
+            width: 60px;
+            height: 60px;
+            min-width: 60px;
+            text-align: center;
+            border-radius: 50%;
+            overflow: hidden;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            background-color: rgba(24, 120, 245, 1);
+
+            .img {
+                width: 100%;
+                height: 100%;
+
+                img {
+                    width: 100%;
+                    height: 100%;
+                    object-fit: cover;
+
+                }
+            }
+
+            .text {
+                line-height: 0;
+
+                span {
+                    width: 100%;
+                    height: 100%;
+                    font-size: 18px;
+                    font-weight: 600;
+                    color: rgb(255, 255, 255);
+                }
+            }
+
+        }
+
+        .team-info {
+            display: flex;
+            flex-direction: column;
+            gap: 4px;
+
+            .team-name {
+                font-size: 18px;
+                font-weight: 700;
+                white-space: nowrap;
+            }
+
+            .team-description {
+                font-size: 12px;
+                font-weight: 400;
+                white-space: nowrap;
+                color: #808080;
+            }
+        }
+    }
+
+    .right {
         display: flex;
         align-items: center;
         justify-content: center;
 
-        .img {
-            width: 100%;
-            height: 100%;
+        button {
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            gap: 4px;
+            width: 108px;
+            height: 36px;
+            border: 1px solid rgba(24, 120, 245, 1);
+            border-radius: 6px;
+            background-color: rgba(24, 120, 245, 1);
+            box-sizing: border-box;
+            transition: all 0.5s ease-out;
+            color: white;
 
-            img {
-                width: 100%;
-                height: 100%;
-                object-fit: cover;
-
+            &:hover {
+                background-color: rgba(51, 140, 255, 1);
             }
-        }
 
-        .text {
-            line-height: 0;
-
-            span {
-                width: 100%;
-                height: 100%;
-                font-size: 18px;
-                font-weight: 600;
-                color: white;
+            &:active {
+                background-color: rgba(12, 111, 240, 1);
             }
-        }
 
-    }
-
-    .team-info {
-        display: flex;
-        flex-direction: column;
-        margin: 0 12px;
-
-        .team-name {
-            font-size: 18px;
-            font-weight: 600;
-            margin-bottom: 8px;
-        }
-
-        .team-description {
-            font-size: 14px;
-            color: #3D3D3D;
+            svg {
+                padding: 2px;
+                width: 16px;
+                height: 16px;
+                box-sizing: border-box;
+            }
         }
     }
 }

@@ -1,110 +1,108 @@
 <template>
-        <div class="title" v-if="currentProject[0]">
-            <div class="left">
-                <div class="p">
-                    <div class="title-p" v-if="!cusname">
-                        <p @click="input_cusname(currentProject[0])"
-                            :class="{ edit: currentProject[0].self_perm_type === 5 || currentProject[0].self_perm_type === 4 }">
-                            {{ currentProject[0].project.name }}</p>
-                        <Tooltip :content="t('projectpage.menu')" :offset="5" :visible="showProjecrMenu ? false : visible">
-                            <div class="setting hover" @mousedown.stop="(e) => projectMenu(currentProject[0], e)"
-                                @mouseenter.stop="onMouseenter" @mouseleave.stop="onMouseleave">
-                                <el-icon style="transform: rotate(90deg); margin-right: 5px;">
-                                    <MoreFilled />
-                                </el-icon>
-                                <TeamProjectMenu v-if="showProjecrMenu" :items="menuItem" :data="currentProject[0]"
-                                    @mousedown.stop :top="23" :left="0" @cancelFixed="cancelFixed" @close="closeMenu"
-                                    @projectSetting="projectSetting" @reName="input_cusname"
-                                    @showMembergDialog="showMembergDialog" @delProject="onDelProject"
-                                    @exitProject="onExitProject">
-                                </TeamProjectMenu>
-                            </div>
-                        </Tooltip>
-                        <Tooltip :content="t('projectpage.back')" :offset="5">
-                            <div class="back" @click="back(currentProject[0].project, currentProject[0].is_in_team)">
-                                <svg-icon icon-class="back"></svg-icon>
-                            </div>
-                        </Tooltip>
-                    </div>
-                    <div style="height: 38px;" v-if="cusname">
-                        <input type="text" @input="updateInputNameWidth" v-model="projectName" ref="input"
-                            :style="{ width: inputNameLength + 'px' }">
-                    </div>
+    <div class="title" v-if="currentProject[0]">
+        <div class="left">
+            <div class="p">
+                <div class="title-p" v-if="!cusname">
+                    <Tooltip :content="t('projectpage.back')" :offset="5">
+                        <div class="back" @click="back(currentProject[0].project, currentProject[0].is_in_team)">
+                            <svg-icon icon-class="back-icon"></svg-icon>
+                        </div>
+                    </Tooltip>
+                    <p @click="input_cusname(currentProject[0])"
+                        :class="{ edit: currentProject[0].self_perm_type === 5 || currentProject[0].self_perm_type === 4 }">
+                        {{ currentProject[0].project.name }}</p>
+                    <Tooltip :content="t('projectpage.menu')" :offset="5" :visible="showProjecrMenu ? false : visible">
+                        <div class="setting hover" @mousedown.stop="(e) => projectMenu(currentProject[0], e)"
+                            @mouseenter.stop="onMouseenter" @mouseleave.stop="onMouseleave">
+                            <el-icon style="transform: rotate(90deg); margin-right: 5px;">
+                                <MoreFilled />
+                            </el-icon>
+                            <TeamProjectMenu v-if="showProjecrMenu" :items="menuItem" :data="currentProject[0]"
+                                @mousedown.stop :top="23" :left="0" @cancelFixed="cancelFixed" @close="closeMenu"
+                                @projectSetting="projectSetting" @reName="input_cusname"
+                                @showMembergDialog="showMembergDialog" @delProject="onDelProject"
+                                @exitProject="onExitProject">
+                            </TeamProjectMenu>
+                        </div>
+                    </Tooltip>
                 </div>
-                <div class="span">
-                    <span v-if="!cusdesc" @click="input_cusdesc(currentProject[0])"
-                        :class="{ edit: currentProject[0].self_perm_type === 5 || currentProject[0].self_perm_type === 4 }">{{
-                            currentProject[0].project.description.trim().length === 0 ? t('projectpage.input_tips') :
-                            currentProject[0].project.description }}</span>
-                    <input v-if="cusdesc" type="text" ref="input" @input="updateInputDescWidth" v-model="projectDesc"
-                        :style="{ width: inputDescLength + 'px' }">
+                <div style="height: 38px;" v-if="cusname">
+                    <input type="text" @input="updateInputNameWidth" v-model="projectName" ref="input"
+                        :style="{ width: inputNameLength + 'px' }">
                 </div>
             </div>
-            <div class="right">
-                <el-tooltip class="box-item" effect="dark"
-                    :content="currentProject[0].is_favor ? t('projectpage.unpin') : t('projectpage.fixed_items')"
-                    placement="bottom" :show-after="500" :offset="10" :hide-after="0">
-                    <div @click="cancelFixed">
-                        <svg t="1693476333821" class="icon" viewBox="0 0 1024 1024" version="1.1"
-                            xmlns="http://www.w3.org/2000/svg" p-id="15755" width="24" height="24">
-                            <path
-                                d="M0 0m256 0l512 0q256 0 256 256l0 512q0 256-256 256l-512 0q-256 0-256-256l0-512q0-256 256-256Z"
-                                :fill="currentProject[0].is_favor ? '#9775fa' : '#999'" p-id="15756"
-                                data-spm-anchor-id="a313x.search_index.0.i11.6fa73a817d52QG" class="">
-                            </path>
-                            <path
-                                d="M256 767.6416l202.9568-160.9216 80.9728 86.1184s33.792 9.216 35.8656-16.384l-2.0736-87.1424 119.936-138.368 52.2496-3.0464s41.0112-8.2432 11.2896-44.0832l-146.5856-147.584s-39.936-5.12-36.8896 31.744v39.9872l-136.2944 115.8912-84.0192 5.0688s-30.7712 10.24-19.5072 36.9152l78.9504 77.9008L256 767.6416z"
-                                fill="#FFFFFF" p-id="15757" data-spm-anchor-id="a313x.search_index.0.i10.6fa73a817d52QG"
-                                class="">
-                            </path>
-                        </svg>
-                    </div>
-                </el-tooltip>
-                <Tooltip :content="t('projectpage.member')" :offset="10">
-                    <div class="setting" @click="projectSetting"><svg-icon icon-class="gear"></svg-icon></div>
-                </Tooltip>
-                <Tooltip :content="t('projectpage.permission')" :offset="10">
-                    <div @click="showMembergDialog" v-if="currentProject[0].is_invited"><el-icon>
-                            <User />
-                        </el-icon></div>
-                </Tooltip>
+            <div class="span">
+                <span v-if="!cusdesc" @click="input_cusdesc(currentProject[0])"
+                    :class="{ edit: currentProject[0].self_perm_type === 5 || currentProject[0].self_perm_type === 4 }">{{
+                        currentProject[0].project.description.trim().length === 0 ? t('projectpage.input_tips') :
+                        currentProject[0].project.description }}</span>
+                <input v-if="cusdesc" type="text" ref="input" @input="updateInputDescWidth" v-model="projectDesc"
+                    :style="{ width: inputDescLength + 'px' }">
             </div>
         </div>
-        <div class="team-header" v-if="currentProject[0]">
-            <ul class="menu">
-                <template v-for="(item, index) in items" :key="index">
-                    <li class="item" :class="{ 'activate': itemid === index }" @click.stop="clickEvent(index)"
-                        v-if="(index === 0) || (index === 1 && currentProject[0].self_perm_type === 5 || currentProject[0].self_perm_type === 4 || currentProject[0].self_perm_type === 3)">
-                        {{ item }}
-                    </li>
-                </template>
-            </ul>
+        <div class="right">
+            <Tooltip :content="currentProject[0].is_favor ? t('projectpage.unpin') : t('projectpage.fixed_items')"
+                :offset="10">
+                <div class="fixedbnt" @click="cancelFixed">
+                    <svg-icon v-if="currentProject[0].is_favor" style="color: rgba(24, 120, 245, 1)"
+                        icon-class="fixed-icon"></svg-icon>
+                    <svg-icon v-else icon-class="fixed-normal"></svg-icon>
+                </div>
+            </Tooltip>
+            <Tooltip :content="t('projectpage.member')" :offset="10">
+                <div class="setting" @click="projectSetting">
+                    <svg-icon icon-class="addmember-normal"></svg-icon>
+                </div>
+            </Tooltip>
+            <Tooltip :content="t('projectpage.permission')" :offset="10">
+                <div class="members" @click="showMembergDialog" v-if="currentProject[0].is_invited">
+                    <svg-icon icon-class="memberlist-normal"></svg-icon>
+                </div>
+            </Tooltip>
+            <button type="button" v-if="currentProject[0].self_perm_type > 2" @click="newFile">
+                <svg-icon icon-class="addfile-icon"></svg-icon>
+                {{ t('home.new_file') }}
+            </button>
         </div>
-        <ProjectFillList v-if="itemid === 0 && currentProject[0]" :currentProject="currentProject[0]"></ProjectFillList>
-        <ProjectRecycleBin v-if="itemid === 1 && currentProject[0]" :currentProject="currentProject[0]"></ProjectRecycleBin>
-        <ProjectAccessSetting v-if="projectSettingDialog" :title="t('Createteam.membertip')" :data="currentProject[0]"
-            width="500px" @clodeDialog="projectSettingDialog = false" />
-        <div :reflush="reflush !== 0 ? reflush : undefined">
-            <ProjectMemberg v-if="projectMembergDialog" :projectMembergDialog="projectMembergDialog"
-                :currentProject="currentProject[0]" @closeDialog="closeDialog" @exitProject="exitProject"></ProjectMemberg>
-        </div>
-        <ProjectDialog :projectVisible="delVisible" :context="t('Createteam.projectdelcontext')"
-            :title="t('Createteam.projectdeltitle')" :confirm-btn="t('Createteam.ok_delete')"
-            @clode-dialog="closeDelVisible" @confirm="DelProject"></ProjectDialog>
-        <ProjectDialog :projectVisible="exitVisible" :context="t('Createteam.projectexitcontext')"
-            :title="t('Createteam.projectexittitle')" :confirm-btn="t('Createteam.ok_exit')"
-            @clode-dialog="closeExitVisible" @confirm="ExitProject"></ProjectDialog>
+    </div>
+    <div class="team-header" v-if="currentProject[0]">
+        <ul class="menu">
+            <li class="indicator" :style="{ width: elwidth + 'px', left: elleft + 'px', height: 2 + 'px' }"></li>
+            <template v-for="(item, index) in items" :key="index">
+                <li class="item" :class="{ 'activate': itemid === index }" @click.stop="clickEvent(index, $event)"
+                    v-if="(index === 0) || (index === 1 && currentProject[0].self_perm_type === 5 || currentProject[0].self_perm_type === 4 || currentProject[0].self_perm_type === 3)">
+                    {{ item }}
+                </li>
+            </template>
+        </ul>
+    </div>
+    <ProjectFillList ref="childComponentRef" v-if="itemid === 0 && currentProject[0]" :currentProject="currentProject[0]">
+    </ProjectFillList>
+    <ProjectRecycleBin v-if="itemid === 1 && currentProject[0]" :currentProject="currentProject[0]"></ProjectRecycleBin>
+    <ProjectAccessSetting v-if="projectSettingDialog" :showcontainer="showcontainer" :title="t('Createteam.membertip')"
+        :data="currentProject[0]" width="500px" @closeDialog="closeDialog" />
+    <div :reflush="reflush !== 0 ? reflush : undefined">
+        <ProjectMemberg v-if="projectMembergDialog" :projectMembergDialog="projectMembergDialog"
+            :showcontainer="showcontainer" :currentProject="currentProject[0]" @closeDialog="closeDialog"
+            @exitProject="exitProject"></ProjectMemberg>
+    </div>
+    <ProjectDialog :projectVisible="delVisible" :context="t('Createteam.projectdelcontext')"
+        :title="t('Createteam.projectdeltitle')" :confirm-btn="t('Createteam.ok_delete')" @clode-dialog="closeDelVisible"
+        @confirm="DelProject"></ProjectDialog>
+    <ProjectDialog :projectVisible="exitVisible" :context="t('Createteam.projectexitcontext')"
+        :title="t('Createteam.projectexittitle')" :confirm-btn="t('Createteam.ok_exit')" @clode-dialog="closeExitVisible"
+        @confirm="ExitProject"></ProjectDialog>
 </template>
 <script setup lang="ts">
-import { Ref, nextTick, inject, ref, onMounted, watch } from 'vue'
+import { Ref, nextTick, inject, ref, onMounted, watch, onUnmounted, DefineComponent } from 'vue'
 import { useRoute } from 'vue-router'
 import { useI18n } from 'vue-i18n'
 import { router } from '@/router'
-import * as user_api from '@/apis/users'
+import * as user_api from '@/request/users'
 import ProjectFillList from './ProjectFill/ProjectFillList.vue';
 import ProjectRecycleBin from './ProjectFill/ProjectRecycleBin.vue';
 import { User, MoreFilled } from '@element-plus/icons-vue';
-import * as team_api from '@/apis/team';
+import * as team_api from '@/request/team';
 import ProjectAccessSetting from './ProjectFill/ProjectAccessSetting.vue';
 import ProjectMemberg from './ProjectFill/ProjectMemberg.vue';
 import TeamProjectMenu from './TeamProjectMenu.vue';
@@ -132,8 +130,11 @@ const showProjecrMenu = ref(false);
 const delVisible = ref(false);
 const exitVisible = ref(false);
 const visible = ref(false);
+const showcontainer = ref(false)
+const elwidth = ref()
+const elleft = ref()
 let menuItem: string[] = ['visit'];
-
+const childComponentRef = ref()
 
 const { projectList, saveProjectData, is_favor, favoriteList, updateFavor, is_team_upodate, teamUpdate, setMenuVisi, menuState } = inject('shareData') as {
     projectList: Ref<any[]>;
@@ -148,8 +149,16 @@ const { projectList, saveProjectData, is_favor, favoriteList, updateFavor, is_te
 
 };
 
-const clickEvent = (index: number) => {
+const newFile = () => {
+    childComponentRef.value.newProjectFill()
+}
+
+const clickEvent = (index: number, e: MouseEvent) => {
+    const rect = (e.target as HTMLElement).getBoundingClientRect()
+    elwidth.value = rect.width
+    elleft.value = rect.x
     itemid.value = index
+    sessionStorage.setItem('activateitem', index.toString())
 }
 const closeMenu = () => {
     showProjecrMenu.value = false;
@@ -281,15 +290,27 @@ const projectMenu = (project: any, e: MouseEvent) => {
 const projectSetting = () => {
     projectSettingDialog.value = true;
     visible.value = false;
+    nextTick(() => {
+        showcontainer.value = true
+    })
 }
 
 const showMembergDialog = () => {
     projectMembergDialog.value = true;
     visible.value = false;
+    nextTick(() => {
+        showcontainer.value = true
+    })
 }
 
 const closeDialog = () => {
-    projectMembergDialog.value = false;
+    showcontainer.value = false
+    if (projectMembergDialog.value) {
+        projectMembergDialog.value = false;
+    }
+    if (projectSettingDialog.value) {
+        projectSettingDialog.value = false
+    }
 }
 
 const exitProject = (id: string, isTeam: boolean) => {
@@ -498,6 +519,13 @@ watch(() => currentProject.value, (n) => {
     currentProject.value = n;
     if (currentProject.value[0]) {
         reflush.value++;
+        nextTick(() => {
+            itemid.value = 0
+            const items = document.querySelectorAll('.item')
+            const rect = items[itemid.value].getBoundingClientRect()
+            elwidth.value = rect.width
+            elleft.value = rect.x
+        })
     }
 }, { deep: true });
 
@@ -511,48 +539,21 @@ watch(() => route.params.id, () => {
 })
 
 onMounted(() => {
-    if (!currentProject.value.length) {
-        GetprojectLists()
-    }
+    const x = sessionStorage.getItem('activateitem')
+    if (x) itemid.value = parseInt(x)
+    if (!currentProject.value.length) GetprojectLists()
+
+})
+
+onUnmounted(() => {
+    sessionStorage.setItem('activateitem', '0')
 })
 
 </script>
 <style lang="scss" scoped>
-.nested-enter-active,
-.nested-leave-active {
-    transition: all 0.3s ease-in-out;
-}
-
-.nested-leave-active {
-    transition-delay: 0.25s;
-}
-
-.nested-enter-from,
-.nested-leave-to {
-    transform: translateY(400px);
-    opacity: 0;
-}
-
-.nested-enter-active .inner,
-.nested-leave-active .inner {
-    transition: all 0.3s ease-in-out;
-}
-
-.nested-enter-active .inner {
-    transition-delay: 0.25s;
-}
-
-.nested-enter-from .inner,
-.nested-leave-to .inner {
-    top: 50%;
-    left: 50%;
-    transform: translate(-50%, -50%) scale(0.8);
-    opacity: 0.001;
-}
-
 .activate {
-    color: black;
-    border-bottom: 2px solid #9775fa;
+    color: rgba(0, 0, 0, 1) !important;
+    // border-bottom: 2px solid #9775fa;
 }
 
 .team-header {
@@ -560,64 +561,33 @@ onMounted(() => {
     display: flex;
     justify-content: space-between;
     align-items: center;
-    margin: 8px 0;
-    border-bottom: 1px solid #c4c4c4cf;
+    margin: 0 8px 16px 8px;
+    box-shadow: inset 0px -1px 0px 0px #F0F0F0;
+    box-sizing: border-box;
 
     .menu {
-        cursor: pointer;
+        display: flex;
+        gap: 24px;
+        align-items: flex-end;
         list-style: none;
+        line-height: 40px;
         padding: 0;
         margin: 0;
-        display: flex;
 
-        color: #666;
+
+        .indicator {
+            position: absolute;
+            height: 2px;
+            background-color: rgb(12, 111, 240);
+            border-radius: 2px;
+            transition: all 0.2s ease-in-out;
+        }
 
         .item {
-            margin-right: 32px;
-            font-size: 18px;
-            font-weight: 600;
-            padding-bottom: 6px;
-        }
-    }
-
-    .addandsearch {
-        display: flex;
-
-        button {
-            cursor: pointer;
-            border: none;
-            width: 120px;
-            height: 40px;
-            border-radius: 4px;
-            background-color: #9775fa;
-            box-sizing: border-box;
-            margin-right: 12px;
-            transition: all 0.5s ease-out;
-            color: white;
-
-            &:hover {
-                background-color: rgba(150, 117, 250, 0.862745098);
-            }
-        }
-
-        .el-input {
-            width: 280px;
-            height: 40px;
-            font-size: 12px;
-            --el-input-border-color: #f3f0ff;
-            --el-input-hover-border-color: #e5dbff;
-            --el-input-focus-border-color: #9775fa;
-
-            .close:hover {
-                border-radius: 2px;
-                cursor: pointer;
-                background-color: #f3f0ff;
-            }
-
-            .el-icon {
-                padding: 2px;
-                color: #9775fa;
-            }
+            white-space: nowrap;
+            font-size: 13px;
+            font-weight: 500;
+            color: rgba(119, 119, 119, 1);
         }
     }
 }
@@ -626,18 +596,17 @@ onMounted(() => {
     display: flex;
     justify-content: space-between;
     align-items: center;
-    height: 80px;
-    margin: 16px 0 0 0;
+    height: 84px;
+    margin: 0 8px;
     box-sizing: border-box;
 
     .left {
-        width: calc(100% - 140px);
-        height: 100%;
+        display: flex;
+        flex-direction: column;
+        gap: 8px;
 
         .p {
             box-sizing: border-box;
-            margin-bottom: 10px;
-            height: 38px;
 
             .title-p {
                 width: fit-content;
@@ -645,9 +614,6 @@ onMounted(() => {
                 align-items: center;
                 text-overflow: ellipsis;
                 white-space: nowrap;
-                max-width: 100%;
-                padding-right: 10px;
-                height: 100%;
 
                 svg {
                     width: 16px;
@@ -662,14 +628,14 @@ onMounted(() => {
             }
 
             input {
-                font-size: 18px;
+                font-size: 20px;
                 font-weight: bold;
                 outline: none;
                 border: none;
                 width: auto;
                 max-width: 100%;
                 height: 38px;
-                border: 2px solid #9775fa;
+                border: 2px solid rgb(12, 111, 240);
                 border-radius: 0%;
                 overflow: hidden;
                 text-overflow: ellipsis;
@@ -683,13 +649,13 @@ onMounted(() => {
             box-sizing: border-box;
 
             &:hover {
-                border: 2px solid #9775fa;
+                border: 2px solid rgb(12, 111, 240);
             }
         }
 
         p {
             display: list-item;
-            font-size: 18px;
+            font-size: 20px;
             font-weight: bold;
             margin: 0;
             padding: 5px 0px;
@@ -715,7 +681,7 @@ onMounted(() => {
                 width: auto;
                 max-width: 100%;
                 height: 100%;
-                border: 2px solid #9775fa;
+                border: 2px solid rgb(12, 111, 240);
                 border-radius: 0%;
                 overflow: hidden;
                 text-overflow: ellipsis;
@@ -742,40 +708,58 @@ onMounted(() => {
 
     .right {
         display: flex;
-        width: 90px;
-        height: 30px;
-        margin-left: 50px;
+        gap: 18px;
+        align-items: center;
+        box-sizing: border-box;
 
-        svg {
-            width: 16px;
-            height: 16px;
-        }
-
-
-        >div {
-            margin-right: 5px;
-            padding: 0 4px;
-            width: 25px;
-            height: 25px;
+        .fixedbnt,
+        .setting,
+        .members {
             display: flex;
             align-items: center;
             justify-content: center;
-            border-radius: 2px;
+            width: 28px;
+            height: 28px;
+            border-radius: 6px;
+            box-sizing: border-box;
 
-            >svg {
-                width: 20px;
-                height: 20px;
+            svg {
+                width: 16px;
+                height: 16px;
             }
 
             &:hover {
-                background-color: #e5dbff;
+                background-color: rgba(235, 235, 237, 1);
             }
         }
 
-        .setting {
-            >svg {
+        button {
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            gap: 4px;
+            width: 108px;
+            height: 36px;
+            border: 1px solid rgba(24, 120, 245, 1);
+            border-radius: 6px;
+            background-color: rgba(24, 120, 245, 1);
+            box-sizing: border-box;
+            transition: all 0.5s ease-out;
+            color: white;
+
+            &:hover {
+                background-color: rgba(51, 140, 255, 1);
+            }
+
+            &:active {
+                background-color: rgba(12, 111, 240, 1);
+            }
+
+            svg {
+                padding: 2px;
                 width: 16px;
                 height: 16px;
+                box-sizing: border-box;
             }
         }
     }
@@ -853,7 +837,7 @@ onMounted(() => {
         background-color: var(--active-color-beta);
         color: #fff;
         border: 1px solid var(--active-color-beta);
-        border-radius: 4px;
+        border-radius: 6px;
     }
 }
 
@@ -861,14 +845,14 @@ onMounted(() => {
     display: flex;
     width: 20px;
     height: 20px;
-    border-radius: 4px;
+    border-radius: 6px;
     justify-content: center;
     align-items: center;
     padding: 3px 0;
     padding-left: 5px;
 
     &:hover {
-        background-color: #e5dbff;
+        background-color: rgba(235, 235, 237, 1);
     }
 }
 
@@ -876,19 +860,19 @@ onMounted(() => {
     display: flex;
     width: 20px;
     height: 20px;
-    border-radius: 4px;
+    border-radius: 6px;
     justify-content: center;
     align-items: center;
     padding: 3px;
     margin-top: 2px;
 
     &:hover {
-        background-color: #e5dbff;
+        background-color: rgba(235, 235, 237, 1);
     }
 }
 
 :deep(.el-checkbox__input.is-checked .el-checkbox__inner) {
-    background-color: #9775fa;
+    background-color: rgba(235, 235, 237, 1);
 }
 
 :deep(.el-checkbox) {
@@ -924,7 +908,7 @@ onMounted(() => {
 }
 
 :deep(.el-input.is-disabled .el-input__wrapper) {
-    background-color: #fff
+    background-color: rgba(235, 235, 237, 1)
 }
 
 :deep(.el-select .el-input.is-disabled .el-select__caret) {

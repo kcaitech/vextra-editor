@@ -347,7 +347,7 @@ const list_mousedown = (e: MouseEvent, shape: Shape) => {
         const types = selection_types(selected);
         if (types & 1) chartMenuItems.push('un_group');
         if (types & 2) chartMenuItems.push('dissolution');
-        if (props.context.workspace.documentPerm !== Perm.isEdit) {
+        if (props.context.workspace.documentPerm !== Perm.isEdit || props.context.tool.isLable) {
             chartMenuItems = ['all', 'copy'];
         }
         chartMenuMount(e);
@@ -612,7 +612,7 @@ onUnmounted(() => {
 
     .header {
         width: 100%;
-        font-size: 10px;
+        font-size: var(--font-default-fontsize);
         box-sizing: border-box;
         position: relative;
         padding-bottom: 4px;

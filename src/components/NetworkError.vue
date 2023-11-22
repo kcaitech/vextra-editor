@@ -60,7 +60,7 @@ onUnmounted(() => {
     }
     .button {
         margin-top: 20px;
-        font-size: 10px;
+        font-size: var(--font-default-fontsize);
         width: 80px;
         border: none;
         height: 25px;

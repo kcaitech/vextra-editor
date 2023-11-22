@@ -3,32 +3,22 @@
         <tablelist :data="lists" :iconlist="iconlists" @restore="Restorefile" @ndelete="Deletefile" @rightMeun="rightmenu"
             :noNetwork="noNetwork" @refreshDoc="refreshDoc" :deleter="true" />
     </div>
-    <!-- 右键菜单 -->
-    <listrightmenu :items="items" :data="mydata" @getrecycle-lists="GetrecycleLists" @r-deletefile="Deletefile"
-        @r-restorefile="Restorefile" />
-    <!-- 确认删除弹框 -->
-    <el-dialog v-model="dialogVisible" :title="t('home.completely_delete')" width="500" align-center
-        @keyup.enter="Qdeletefile(docId)">
-        <span>{{ t('home.delete_tips') }}</span>
-        <template #footer>
-            <span class="dialog-footer">
-                <el-button type="primary" :disabled="false" @click=" Qdeletefile(docId)" style="background-color: none;">
-                    {{ t('home.delete_ok') }}
-                </el-button>
-                <el-button @click=" dialogVisible = false">{{ t('home.cancel') }}</el-button>
-            </span>
-        </template>
-    </el-dialog>
+    <listrightmenu :items="items" :data="mydata" @r-deletefile="Deletefile" @r-restorefile="Restorefile" />
+    <DeleteDialog :projectVisible="dialogVisible" :context="t('home.delete_tips')" :title="t('home.completely_delete')"
+        :confirm-btn="t('home.delete_ok')" @clode-dialog="dialogVisible = !dialogVisible" @confirm="Qdeletefile(docId)">
+    </DeleteDialog>
 </template>
 <script setup lang="ts">
-import * as user_api from '@/apis/users'
-import * as team_api from '@/apis/team'
+import * as user_api from '@/request/users'
+import * as team_api from '@/request/team'
 import { ElMessage } from 'element-plus'
 import { ref, onMounted, onUnmounted, nextTick, watch } from 'vue'
 import { useI18n } from 'vue-i18n'
 import tablelist from '@/components/AppHome/tablelist.vue'
 import listrightmenu from "@/components/AppHome/listrightmenu.vue"
 import { useRoute } from 'vue-router'
+import DeleteDialog from '@/components/TeamProject/ProjectDialog.vue';
+
 const items = ['restore', 'completely_delete']
 const { t } = useI18n()
 const dialogVisible = ref(false)
@@ -83,6 +73,11 @@ async function GetrecycleLists(id: string) {
 
 const refreshDoc = () => {
     GetrecycleLists(props.currentProject.project.id)
+}
+
+const changemargin = () => {
+    const el = document.querySelector('.el-dialog__header') as HTMLElement
+    el.style.marginRight = '0px'
 }
 
 //转换文件大小
@@ -180,6 +175,17 @@ onUnmounted(() => {
 </script>
 
 <style lang="scss" scoped>
+.my-header {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+
+    .title {
+        color: #3D3D3D;
+        font-weight: 600;
+    }
+}
+
 main {
     height: auto;
 }

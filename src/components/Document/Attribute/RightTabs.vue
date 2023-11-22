@@ -1,11 +1,13 @@
 <script setup lang="ts">
-import { ref } from "vue";
+import { onMounted, onUnmounted, ref } from "vue";
 import { Context } from "@/context";
 import Design from "@/components/Document/Attribute/Design.vue";
 import CompsTab from "@/components/Document/Navigation/CompsTab.vue";
 import ResourceTab from "@/components/Document/Navigation/ResourceTab.vue";
 import { useI18n } from 'vue-i18n';
 import { Perm } from "@/context/workspace";
+import { Tool } from "@/context/tool";
+import Lable from './Lable/index.vue'
 const { t } = useI18n();
 
 const props = defineProps<{
@@ -36,6 +38,7 @@ const tabs: { title: string, id: Tab }[] = [
         id: 'Inspect'
     }
 ]
+const isLable = ref(props.context.tool.isLable);
 
 function toggle(id: Tab) {
     if (id === 'Design') {
@@ -51,25 +54,50 @@ const showHiddenRight = () => {
     emit('showAttrbute')
 }
 
+const tool_watcher = (t: number) => {
+    if(t === Tool.LABLE_CHANGE) {
+        isLable.value = props.context.tool.isLable;
+        if(isLable.value && !props.showRight) {
+            emit('showAttrbute');
+        }
+    }
+}
+
+onMounted(() => {
+    props.context.tool.watch(tool_watcher)
+})
+onUnmounted(() => {
+    props.context.tool.unwatch(tool_watcher)
+})
 </script>
 
 <template>
     <div class="tab-container">
-        <div class="controller">
-            <div :class="{ tab: true, active: currentTab === i.id }" v-for="(i, index) in tabs" :key="index"
-                @click="toggle(i.id)">{{ i.title }}</div>
-        </div>
-        <div class="body">
-            <Design :context="props.context" v-if="currentTab === 'Design'"></Design>
-            <!-- <CompsTab :context="props.context" v-if="currentTab === 'Prototype'"></CompsTab> -->
-            <ResourceTab :context="props.context" v-if="currentTab === 'Inspect'"></ResourceTab>
-            <template v-if="perm === Perm.isEdit">
-                <div class="showHiddenR" @click="showHiddenRight" v-if="!showRight || rightTriggleVisible"
-                    :style="{ opacity: showRight ? 1 : 0.6 }">
-                    <svg-icon v-if="showRight" class="svg" icon-class="right"></svg-icon>
-                    <svg-icon v-else class="svg" icon-class="left"></svg-icon>
-                </div>
-            </template>
+        <template v-if="!isLable">
+            <div class="controller">
+                <div :class="{ tab: true, active: currentTab === i.id }" v-for="(i, index) in tabs" :key="index"
+                    @click="toggle(i.id)">{{ i.title }}</div>
+            </div>
+            <div class="body">
+                <Design :context="props.context" v-if="currentTab === 'Design'"></Design>
+                <!-- <CompsTab :context="props.context" v-if="currentTab === 'Prototype'"></CompsTab> -->
+                <ResourceTab :context="props.context" v-if="currentTab === 'Inspect'"></ResourceTab>
+                <template v-if="perm === Perm.isEdit">
+                    <div class="showHiddenR" @click="showHiddenRight" v-if="!showRight || rightTriggleVisible"
+                        :style="{ opacity: showRight ? 1 : 0.6 }">
+                        <svg-icon v-if="showRight" class="svg" icon-class="right"></svg-icon>
+                        <svg-icon v-else class="svg" icon-class="left"></svg-icon>
+                    </div>
+                </template>
+            </div>
+        </template>
+        <div class="tab-lable" v-else>
+            <Lable :context="context"></Lable>
+            <div class="showHiddenR" @click="showHiddenRight" v-if="!showRight || rightTriggleVisible"
+                :style="{ opacity: showRight ? 1 : 0.6 }">
+                <svg-icon v-if="showRight" class="svg" icon-class="right"></svg-icon>
+                <svg-icon v-else class="svg" icon-class="left"></svg-icon>
+            </div>
         </div>
     </div>
 </template>
@@ -90,7 +118,7 @@ const showHiddenRight = () => {
 
         >.tab {
             font-weight: var(--font-default-bold);
-            font-size: 10px;
+            font-size: var(--font-default-fontsize);
             min-width: 36px;
             margin-right: 4px;
             margin-top: 4px;
@@ -116,26 +144,35 @@ const showHiddenRight = () => {
         position: relative;
         flex: 1 1 auto;
         box-sizing: border-box;
-        .showHiddenR {
-            position: absolute;
-            left: -12px;
-            top: 50%;
-            transform: translateY(-50%);
-            z-index: 9;
-            cursor: pointer;
-            height: 60px;
-            background-color: var(--theme-color-anti);
-            display: flex;
-            align-items: center;
-            justify-content: center;
-            border-radius: 4px 0px 0px 4px;
-            box-shadow: -4px 0px 8px rgba($color: #000000, $alpha: 0.05);
-
-            >.svg {
-                width: 12px;
-                height: 12px;
-            }
-        }
     }
+}
+
+.showHiddenR {
+    position: absolute;
+    left: -12px;
+    top: 50%;
+    transform: translateY(-50%);
+    z-index: 9;
+    cursor: pointer;
+    height: 60px;
+    background-color: var(--theme-color-anti);
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    border-radius: 4px 0px 0px 4px;
+    box-shadow: -4px 0px 8px rgba($color: #000000, $alpha: 0.05);
+
+    >.svg {
+        width: 12px;
+        height: 12px;
+    }
+}
+
+.tab-lable {
+    position: relative;
+    width: 100%;
+    height: 100%;
+    background-color: #fff;
+    box-shadow: -4px 0px 4px rgba($color: #000000, $alpha: 0.05);
 }
 </style>

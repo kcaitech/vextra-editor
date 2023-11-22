@@ -1,24 +1,33 @@
 <script setup lang="ts">
 import { RouterView } from 'vue-router';
 import { debounce } from 'lodash';
+import { onMounted } from "vue";
+import HelpEntrance from './components/Help/HelpEntrance.vue'
 
 const _ResizeObserver = window.ResizeObserver;
-window.ResizeObserver = class ResizeObserver extends _ResizeObserver{
-  constructor(callback:any) {
-    callback = debounce(callback, 16);
-    super(callback);
-  }
+window.ResizeObserver = class ResizeObserver extends _ResizeObserver {
+    constructor(callback: any) {
+        callback = debounce(callback, 16);
+        super(callback);
+    }
 }
+
+onMounted(() => {
+    document.title = 'ProtoDesign';
+})
 </script>
 
 <template>
     <RouterView></RouterView>
+    <HelpEntrance />
 </template>
 
 <style lang="scss">
-html,body {
+html,
+body {
     margin: 0;
     padding: 0;
+    background-color:rgba(250, 250, 250, 1);
     >body {
         font-family: var(--font-family);
         height: 100vh;
@@ -31,9 +40,9 @@ html,body {
         }
 
         >#app {
-           position: absolute;
-           width: 100%;
-           height: 100%;
+            position: absolute;
+            width: 100%;
+            height: 100%;
         }
     }
 }

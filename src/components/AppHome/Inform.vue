@@ -1,8 +1,8 @@
 <script setup lang="ts">
 import { ref, computed } from 'vue';
 import { ElMessage } from 'element-plus';
-import * as share_api from '@/apis/share';
-import * as team_api from '@/apis/team';
+import * as share_api from '@/request/share';
+import * as team_api from '@/request/team';
 import { useI18n } from 'vue-i18n';
 import moment = require('moment');
 import 'moment/locale/zh-cn';
@@ -15,7 +15,9 @@ const emit = defineEmits<{
 }>()
 const props = defineProps<{
   applyList: any,
-  teamApplyList: any
+  teamApplyList: any,
+  y?: number
+  x?: number
 }>()
 const activeName = ref('fill')
 const permission = ref([`${t('share.no_authority')}`, `${t('share.readOnly')}`, `${t('share.reviewable')}`, `${t('share.editable')}`])
@@ -70,17 +72,17 @@ const close = () => {
 }
 
 const consentTeam = (id: string, index: number, item: any) => {
-  if(item.team) {
+  if (item.team) {
     postTeamAudit(id, Audit.Pass)
-  }else {
+  } else {
     postTeamProjectAudit(id, Audit.Pass)
   }
   item.request.status = 1
 }
 const refuseTeam = (id: string, index: number, item: any) => {
-  if(item.team) {
+  if (item.team) {
     postTeamAudit(id, Audit.unPass)
-  }else {
+  } else {
     postTeamProjectAudit(id, Audit.unPass)
   }
   item.request.status = 2
@@ -88,15 +90,15 @@ const refuseTeam = (id: string, index: number, item: any) => {
 
 const postTeamProjectAudit = async (id: string, type: Audit) => {
   try {
-    await team_api.postTeamProjectAuditAPI({apply_id: id, approval_code: type});
-  }catch(err) {
+    await team_api.postTeamProjectAuditAPI({ apply_id: id, approval_code: type });
+  } catch (err) {
     console.log(err);
   }
 }
 const postTeamAudit = async (id: string, type: Audit) => {
   try {
-    await team_api.postTeamAuditAPI({apply_id: id, approval_code: type});
-  }catch(err) {
+    await team_api.postTeamAuditAPI({ apply_id: id, approval_code: type });
+  } catch (err) {
     console.log(err);
   }
 }
@@ -116,16 +118,16 @@ const getAvatar = () => {
   return localStorage.getItem('avatar');
 }
 const getName = (user: any) => {
-  if(user) {
+  if (user) {
     return user.nickname;
-  }else {
+  } else {
     return localStorage.getItem('nickname');
   }
 }
 </script>
 
 <template>
-  <el-card class="box-card">
+  <el-card class="box-card" :style="{ top: y + 'px', left: x + 'px' }">
     <!-- 标题 -->
     <template #header>
       <div class="card-header">
@@ -152,7 +154,8 @@ const getName = (user: any) => {
                   <span class="name">{{ item.user.nickname }}</span>
                   <span class="date">{{ formatDate(item.apply.created_at) }}</span>
                 </div>
-                <el-tooltip class="box-item" :enterable="false" effect="light" placement="bottom-end" :visible="hoveredFillIndex === i && tooltipTillVisible">
+                <el-tooltip class="box-item" :enterable="false" effect="light" placement="bottom-end"
+                  :visible="hoveredFillIndex === i && tooltipTillVisible">
                   <template #content>
                     <div class="custom-tooltip">
                       {{ t('apply.application_documents') }}"{{ item.document.name }}"，{{ t('apply.authority') }}：{{
@@ -195,7 +198,8 @@ const getName = (user: any) => {
                   <span class="name">{{ getName(item.user) }}</span>
                   <span class="date">{{ formatDate(item.request.created_at) }}</span>
                 </div>
-                <el-tooltip class="box-item" :enterable="false" effect="light" placement="bottom-end" :visible="hoveredFillIndex === i && tooltipTillVisible">
+                <el-tooltip class="box-item" :enterable="false" effect="light" placement="bottom-end"
+                  :visible="hoveredFillIndex === i && tooltipTillVisible">
                   <template #content>
                     <div class="custom-tooltip" v-if="item.team && item.user">
                       {{ t('apply.apply_team') }}"{{ item.team.name }}"，{{ t('apply.authority') }}：{{
@@ -206,16 +210,20 @@ const getName = (user: any) => {
                         permission[item.request.perm_type] }}
                     </div>
                   </template>
-                  <div class="item-text" v-if="item.team && item.user" @mouseenter.stop="showFillTooltip(i)" @mouseleave.stop="hideFillTooltip">
+                  <div class="item-text" v-if="item.team && item.user" @mouseenter.stop="showFillTooltip(i)"
+                    @mouseleave.stop="hideFillTooltip">
                     {{ t('apply.apply_team') }}"{{ item.team.name }}"，{{ t('apply.authority') }}：{{
                       permissionTeam[item.request.perm_type] }}</div>
-                  <div class="item-text"  v-else-if="item.project && item.user" @mouseenter.stop="showFillTooltip(i)" @mouseleave.stop="hideFillTooltip">
+                  <div class="item-text" v-else-if="item.project && item.user" @mouseenter.stop="showFillTooltip(i)"
+                    @mouseleave.stop="hideFillTooltip">
                     {{ t('apply.apply_project') }}"{{ item.project.name }}"，{{ t('apply.authority') }}：{{
                       permission[item.request.perm_type] }}</div>
-                      <div class="item-text"  v-else-if="!item.user && item.request.status === 1">
-                    欢迎加入{{ item.project ? '项目组' : '团队' }}: {{ item.project ? item.project.name : item.team.name }}</div>
-                    <div class="item-text"  v-else-if="!item.user && item.request.status === 2">
-                    申请加入{{ item.project ? '项目组' : '团队' }}"{{ item.project ? item.project.name : item.team.name }}"被拒绝，如有疑问，请联系项目组管理员</div>
+                  <div class="item-text" v-else-if="!item.user && item.request.status === 1">
+                    {{ t('Createteam.welcome') }}{{ item.project ? t('Createteam.project') : t('Createteam.team') }}: {{
+                      item.project ? item.project.name : item.team.name }}</div>
+                  <div class="item-text" v-else-if="!item.user && item.request.status === 2">
+                    {{ t('Createteam.rejectprompt1') }}{{ item.project ? t('Createteam.project') : t('Createteam.team')
+                    }}"{{ item.project ? item.project.name : item.team.name }}"{{ t('Createteam.rejectprompt2') }}</div>
                 </el-tooltip>
               </div>
               <div class="botton" v-if="item.request.status === 0 && item.user">

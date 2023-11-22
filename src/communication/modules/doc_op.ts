@@ -85,11 +85,11 @@ export class DocOp extends Communication {
         return true
     }
 
-    public addOnLocalUpdate(onUpdate: (cmd: Cmd) => void) {
-        this.coopLocal?.addOnLocalUpdate(onUpdate)
+    public addOnLocalUpdateAsync(onUpdate: (cmd: Cmd) => void) {
+        this.coopLocal?.addOnLocalUpdateAsync(onUpdate)
     }
 
-    public removeOnLocalUpdate(onUpdate: (cmd: Cmd) => void) {
-        this.coopLocal?.removeOnLocalUpdate(onUpdate)
+    public removeOnLocalUpdateAsync(onUpdate: (cmd: Cmd) => void) {
+        this.coopLocal?.removeOnLocalUpdateAsync(onUpdate)
     }
 }

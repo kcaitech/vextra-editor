@@ -11,6 +11,7 @@ import { Document, PageListItem } from "@kcdesign/data";
 import ContextMenu from '@/components/common/ContextMenu.vue';
 import { Navi } from "@/context/navigate";
 import { Perm } from "@/context/workspace";
+import { Tool } from "@/context/tool";
 type List = InstanceType<typeof ListView>;
 interface Props {
     context: Context
@@ -44,7 +45,8 @@ const selectionWatcher = (type: number) => {
         pageSource.notify(0, 0, 0, Number.MAX_VALUE);
     }
 }
-const isEdit = ref(props.context.workspace.documentPerm)
+const isEdit = ref(props.context.workspace.documentPerm);
+const isLable = ref(props.context.tool.isLable);
 const rightTarget = ref<string>('');
 function document_watcher() {
     pageSource.notify(0, 0, 0, Number.MAX_VALUE);
@@ -163,7 +165,7 @@ const pageMenuMount = (id: string, e: MouseEvent) => {
     if (props.context.data.pagesList.length === 1) {
         pageMenuItems[3].disable = true;
     }
-    if(props.context.workspace.documentPerm !== Perm.isEdit) {
+    if(props.context.workspace.documentPerm !== Perm.isEdit || props.context.tool.isLable) {
         pageMenuItems = [
             { name: 'copy_link', id: id, disable: false },
         ]
@@ -229,11 +231,18 @@ function menu_watcher(t?: number) {
     }
 }
 function navi_watcher(t?: number) { }
+
+const tool_watcher = (t?: number) => {
+    if(t === Tool.LABLE_CHANGE) {
+        isLable.value = props.context.tool.isLable;
+    }
+}
 onMounted(() => {
     props.context.selection.watch(selectionWatcher);
     props.context.data.watch(document_watcher);
     props.context.menu.watch(menu_watcher);
     props.context.navi.watch(navi_watcher);
+    props.context.tool.watch(tool_watcher);
     if (list_body.value) {
         pageH.value = list_body.value.clientHeight; //list可视高度
     }
@@ -244,6 +253,7 @@ onUnmounted(() => {
     props.context.data.unwatch(document_watcher);
     props.context.menu.unwatch(menu_watcher);
     props.context.navi.unwatch(navi_watcher);
+    props.context.tool.unwatch(tool_watcher);
 });
 </script>
 <template>
@@ -252,7 +262,7 @@ onUnmounted(() => {
             <div class="title">{{ fold ? cur_page_name : t('navi.page') }}</div>
             <div class="space"></div>
             <div class="btn">
-                <div class="add" @click.stop="addPage" :title="t('navi.add_page')" v-if="isEdit === Perm.isEdit">
+                <div class="add" @click.stop="addPage" :title="t('navi.add_page')" v-if="isEdit === Perm.isEdit && !isLable">
                     <svg-icon icon-class="add"></svg-icon>
                 </div>
                 <div class="shrink" @click="toggle">
@@ -284,7 +294,7 @@ onUnmounted(() => {
     .header {
         width: 100%;
         display: flex;
-        font-size: 10px;
+        font-size: var(--font-default-fontsize);
         box-sizing: border-box;
         position: relative;
         align-items: center;
