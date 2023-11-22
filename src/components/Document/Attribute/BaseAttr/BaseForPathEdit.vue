@@ -1,13 +1,13 @@
 <script setup lang="ts">
 import IconText from "@/components/common/IconText.vue";
-import {ref, reactive, onMounted, onUnmounted} from "vue";
+import {onMounted, onUnmounted, reactive, ref} from "vue";
 import {Context} from "@/context";
 import {useI18n} from 'vue-i18n';
 import SvgIcon from "@/components/common/SvgIcon.vue";
 import Tooltip from "@/components/common/Tooltip.vue";
 import {Path, PointEditType} from "@/context/path";
 import {get_action_for_key_change, get_value_from_point, get_value_from_points} from "@/utils/pathedit";
-import {PathShape} from "@kcdesign/data";
+import {CurveMode, PathShape} from "@kcdesign/data";
 import {Selection} from "@/context/selection";
 
 interface Props {
@@ -25,7 +25,7 @@ const props = defineProps<Props>();
 const x = ref<number | string>('');
 const y = ref<number | string>('');
 const r = ref<number | string>(0);
-const point_type = ref<PointEditType>('INVALID');
+const curve_mode = ref<PointEditType>('INVALID');
 const model_state: ModelState = reactive({x: true, y: true, r: true, tool: true});
 const t = useI18n().t;
 let path_shape: PathShape | undefined = undefined;
@@ -47,7 +47,19 @@ function onChangeY(_val: any) {
     execute_change_xy('y', _val);
 }
 
-function onChangeR() {
+function onChangeR(val: any) {
+    val = Number(val);
+    if (!path_shape || isNaN(val)) return;
+    const selected_points = props.context.path.selectedPoints;
+    const editor = props.context.editor4Shape(path_shape);
+    editor.modifyPointsCornerRadius(selected_points, val);
+}
+
+function onChangeCurveMode(cm: CurveMode) {
+    if (!path_shape) return;
+    const selected_points = props.context.path.selectedPoints;
+    const editor = props.context.editor4Shape(path_shape);
+    editor.modifyPointsCurveMode(selected_points, cm);
 }
 
 function exit() {
@@ -55,27 +67,24 @@ function exit() {
 }
 
 function calc() {
+    x.value = '';
+    y.value = '';
+    r.value = 0;
     const selected_points = props.context.path.selectedPoints;
     const l = selected_points.length;
-    if (l) {
-        if (l === 1) {
-            const state = get_value_from_point(props.context, selected_points[0]);
-            if (!state) return;
-            x.value = state.x;
-            y.value = state.y;
-            r.value = state.r;
-        } else {
-            const state = get_value_from_points(props.context, selected_points);
-            if (!state) return;
-            x.value = state.x === 'mix' ? t('attr.more_value') : state.x;
-            y.value = state.y === 'mix' ? t('attr.more_value') : state.y;
-            r.value = state.r;
-        }
-    } else {
-        x.value = '';
-        y.value = '';
-        r.value = 0;
+    if (l === 1) {
+        const state = get_value_from_point(props.context, selected_points[0]);
+        if (!state) return;
+        x.value = state.x;
+        y.value = state.y;
+        r.value = state.r;
+        return;
     }
+    const state = get_value_from_points(props.context, selected_points);
+    if (!state) return;
+    x.value = state.x === 'mix' ? t('attr.more_value') : state.x;
+    y.value = state.y === 'mix' ? t('attr.more_value') : state.y;
+    r.value = state.r === 'mix' ? t('attr.more_value') : state.r;
 }
 
 function modify_model_state() {
@@ -94,25 +103,36 @@ function modify_model_state() {
     }
 }
 
-function modify_point_type() {
+function get_current_curve_mode() {
+    curve_mode.value = 'INVALID';
     const selected_points = props.context.path.selectedPoints;
     const l = selected_points.length;
-    if (l === 0) {
-        point_type.value = 'INVALID';
-    } else {
-        // todo
-        if (l === 1) {
-            point_type.value = 'RA';
-        } else {
-            point_type.value = 'RA';
-        }
+    if (!l) return;
+    const __points = path_shape!.points;
+    if (!__points?.length) return;
+    if (l === 1) {
+        const __point = __points[selected_points[0]];
+        if (!__point) return;
+        curve_mode.value = __point.curveMode;
+        return;
     }
-    props.context.path.setPointType(point_type.value);
+    const fcm: CurveMode = __points[selected_points[0]].curveMode;
+    for (let i = 1, _l = selected_points.length; i < _l; i++) {
+        const curve_point = __points[selected_points[i]];
+        if (!curve_point) continue;
+        if (curve_point.curveMode !== fcm) return;
+    }
+    curve_mode.value = fcm;
 }
 
 function update() {
-    modify_point_type();
+    get_current_curve_mode();
     modify_model_state();
+    calc();
+}
+
+function __update() {
+    get_current_curve_mode();
     calc();
 }
 
@@ -120,14 +140,14 @@ function path_watcher(t: number) {
     if (t === Path.SELECTION_CHANGE) {
         update();
     } else if (Path.POINT_TYPE_CHANGE) {
-        point_type.value = props.context.path.pointType;
+        curve_mode.value = props.context.path.pointType;
     }
 }
 
 function init_path_shape() {
     path_shape = props.context.selection.pathshape;
     if (path_shape) {
-        path_shape.watch(calc);
+        path_shape.watch(__update);
     }
 }
 
@@ -135,11 +155,11 @@ function selection_watcher(t: number) {
     if (t === Selection.CHANGE_SHAPE) {
         const t = props.context.selection.pathshape;
         if (path_shape) {
-            path_shape.unwatch(calc);
+            path_shape.unwatch(__update);
         }
         if (t) {
             path_shape = t;
-            path_shape.watch(calc);
+            path_shape.watch(__update);
         }
     }
 }
@@ -153,7 +173,7 @@ onUnmounted(() => {
     props.context.path.unwatch(path_watcher);
     props.context.selection.unwatch(selection_watcher);
     if (path_shape) {
-        path_shape.unwatch(calc);
+        path_shape.unwatch(__update);
     }
 })
 </script>
@@ -174,22 +194,26 @@ onUnmounted(() => {
         <div class="tr">
             <div :class="{tool: true, tool_disabled: model_state.tool}">
                 <Tooltip :content="t('attr.right_angle')">
-                    <div :class="{item: true, active: point_type === 'RA'}">
+                    <div @mousedown.stop="() => onChangeCurveMode(CurveMode.Straight)"
+                         :class="{item: true, active: curve_mode === CurveMode.Straight}">
                         <svg-icon icon-class="unknown"></svg-icon>
                     </div>
                 </Tooltip>
                 <Tooltip :content="t('attr.completely_symmetrical')">
-                    <div :class="{item: true, active: point_type === 'CS'}">
+                    <div @mousedown.stop="() => onChangeCurveMode(CurveMode.Mirrored)"
+                         :class="{item: true, active: curve_mode === CurveMode.Mirrored}">
                         <svg-icon icon-class="unknown"></svg-icon>
                     </div>
                 </Tooltip>
                 <Tooltip :content="t('attr.angular_symmetry')">
-                    <div :class="{item: true, active: point_type === 'AS'}">
+                    <div @mousedown.stop="() => onChangeCurveMode(CurveMode.Disconnected)"
+                         :class="{item: true, active: curve_mode === CurveMode.Disconnected}">
                         <svg-icon icon-class="unknown"></svg-icon>
                     </div>
                 </Tooltip>
                 <Tooltip :content="t('attr.asymmetric')">
-                    <div :class="{item: true, active: point_type === 'A'}">
+                    <div @mousedown.stop="() => onChangeCurveMode(CurveMode.Asymmetric)"
+                         :class="{item: true, active: curve_mode === CurveMode.Asymmetric}">
                         <svg-icon icon-class="unknown"></svg-icon>
                     </div>
                 </Tooltip>

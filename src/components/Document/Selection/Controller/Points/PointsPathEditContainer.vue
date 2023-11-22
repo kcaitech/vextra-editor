@@ -1,6 +1,6 @@
 <script setup lang='ts'>
 import {Context} from '@/context';
-import {AsyncBaseAction, AsyncPathEditor, Matrix, Shape} from '@kcdesign/data';
+import {AsyncBaseAction, AsyncPathEditor, Matrix, PathShape, Shape} from '@kcdesign/data';
 import {onMounted, onUnmounted, reactive, ref} from 'vue';
 import {ClientXY, PageXY, Selection, XY} from '@/context/selection';
 import {get_path_by_point, get_conact_by_point} from './common';
@@ -8,6 +8,7 @@ import {Point} from "../../SelectionView.vue";
 import {Path} from "@/context/path";
 import {dbl_action} from "@/utils/mouse_interactive";
 import {gen_offset_points_map2} from "@/utils/mouse";
+import {modify_point_curve_mode} from "@/utils/pathedit";
 
 interface Props {
     context: Context
@@ -60,13 +61,7 @@ function update() {
 function point_mousedown(event: MouseEvent, index: number) {
     if (event.button !== 0) return;
     if (dbl_action()) {
-        const pet = props.context.path.pointType;
-        if (pet === "RA") {
-            props.context.path.setPointType("CS");
-        } else if (pet === "CS") {
-            props.context.path.setPointType("RA");
-        }
-        console.log('双击切换工具');
+        modify_point_curve_mode(props.context, index, shape as PathShape);
     }
     event.stopPropagation();
     const workspace = props.context.workspace;

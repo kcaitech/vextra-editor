@@ -1,7 +1,8 @@
 import {Watchable} from "@kcdesign/data";
 import {Context} from ".";
+import {CurveMode} from "@kcdesign/data";
 
-export type PointEditType = 'RA' | 'CS' | 'AS' | 'A' | 'INVALID'
+export type PointEditType = CurveMode | 'INVALID'
 
 export class Path extends Watchable(Object) {
     static SELECTION_CHANGE = 1;
@@ -23,8 +24,8 @@ export class Path extends Watchable(Object) {
     }
 
     setPointType(v: PointEditType) {
-        this.point_type = v;
-        this.notify(Path.POINT_TYPE_CHANGE);
+        // this.point_type = v;
+        // this.notify(Path.POINT_TYPE_CHANGE);
     }
 
     get selectedPoints() {
