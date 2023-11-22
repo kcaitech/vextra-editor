@@ -74,7 +74,7 @@ const untie = () => {
     resetMenu.value = false;
 }
 
-const shape_watcher = (arg: any) => {
+const shape_watcher = (arg: any) => { // todo 优化updateData时机
     if (arg !== 'shape-frame') updateData();
 }
 
@@ -88,7 +88,6 @@ const updateData = () => {
         if (!result) return;
         variables.value = result.variables;
         visible_variables.value = result.visible_variables;
-        console.log("get_var_for_ref:", variables.value, visible_variables.value);
     } else if (props.shapes.length > 1) {
         // todo
     }

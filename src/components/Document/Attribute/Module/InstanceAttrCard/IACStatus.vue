@@ -36,8 +36,9 @@ function select(index: number) {
     const _v = props.data.values[index];
     const symref = props.context.selection.symbolrefshape;
     if (!symref) return console.log("wrong role");
-    const vari = get_status_vari_for_symbolref(symref, props.data.variable);
-    switch_symref_state(props.context, vari, _v, t);
+    const overrides = symref.findOverride(props.data.variable.id, OverrideType.Variable);
+    const _var = overrides ? overrides[overrides.length - 1] : props.data.variable;
+    switch_symref_state(props.context, _var, _v, t);
 }
 
 function getVattagValue() {

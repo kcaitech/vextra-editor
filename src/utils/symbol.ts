@@ -744,12 +744,8 @@ export function get_var_for_ref(context: Context, symref: SymbolRefShape, t: Fun
             }
         })
     } else { // 存在可变组件
-        const state = get_state_by_ref(symref); // 先确定当前实例用的是哪个可变组件
-        console.log('lock state:', state);
-        console.log('sub_data:', symref.getSubData());
-        console.log('root_data:', symref.getRootData());
-        console.log('symbol:', sym);
-        console.log('varsContainer', varsContainer);
+        // const state = get_state_by_ref(symref); // 先确定当前实例用的是哪个可变组件
+        const state = varsContainer ? symref.getSubData() : symref.getRootData();
         if (!state) return false;
         variables.forEach((v: Variable) => {
             const item: RefAttriListItem = {variable: v, values: []};
@@ -1082,9 +1078,9 @@ export function is_exist_symbolref_layer(shapes: Shape[]) {
 }
 
 export function switch_symref_state(context: Context, variable: Variable, state: string, t: Function) {
-    const symbolref = context.selection.symbolrefshape;
-    if (!symbolref) return;
-    const editor = context.editor4Shape(symbolref);
+    const symbol_ref = context.selection.symbolrefshape;
+    if (!symbol_ref) return;
+    const editor = context.editor4Shape(symbol_ref);
     editor.switchSymState(variable.id, state === t('compos.dlt') ? SymbolShape.Default_State : state);
 }
 
