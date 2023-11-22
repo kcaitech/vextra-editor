@@ -47,7 +47,10 @@ const higlighAlpha = ref<HTMLInputElement>()
 
 // const selection = ref(props.context.selection)
 function toHex(r: number, g: number, b: number) {
-    const hex = (n: number) => n.toString(16).toUpperCase().length === 1 ? `0${n.toString(16).toUpperCase()}` : n.toString(16).toUpperCase();
+    const hex = (n: number) => n.toString(16)
+        .toUpperCase().length === 1
+        ? `0${n.toString(16).toUpperCase()}`
+        : n.toString(16).toUpperCase();
     return '#' + hex(r) + hex(g) + hex(b);
 }
 
@@ -101,7 +104,7 @@ const length = computed(() => {
 })
 // 设置加粗
 const onBold = () => {
-    isBold.value = !isBold.value
+    isBold.value = !isBold.value;
     const editor = props.context.editor4TextShape(props.shape)
     if (length.value) {
         const {textIndex, selectLength} = getTextIndexAndLen()
@@ -269,10 +272,11 @@ const textFormat = () => {
         const {textIndex, selectLength} = getTextIndexAndLen();
         const editor = props.context.editor4TextShape(props.shape)
         let format: AttrGetter
+        const __text = props.shape.getText();
         if (textIndex === -1) {
-            format = props.shape.text.getTextFormat(0, Infinity, editor.getCachedSpanAttr())
+            format = __text.getTextFormat(0, Infinity, editor.getCachedSpanAttr())
         } else {
-            format = props.shape.text.getTextFormat(textIndex, selectLength, editor.getCachedSpanAttr())
+            format = __text.getTextFormat(textIndex, selectLength, editor.getCachedSpanAttr())
         }
         colorIsMulti.value = format.colorIsMulti
         highlightIsMulti.value = format.highlightIsMulti
@@ -301,7 +305,8 @@ const textFormat = () => {
         for (let i = 0; i < props.textShapes.length; i++) {
             const text = props.textShapes[i];
             const editor = props.context.editor4TextShape(text);
-            const format = text.text.getTextFormat(0, Infinity, editor.getCachedSpanAttr());
+            const __text = text.getText();
+            const format = __text.getTextFormat(0, Infinity, editor.getCachedSpanAttr());
             formats.push(format)
         }
         const referenceKeys = Object.keys(formats[0]);

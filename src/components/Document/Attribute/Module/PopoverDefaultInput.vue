@@ -1,24 +1,26 @@
 <script setup lang="ts">
-import { Context } from '@/context';
-import { VariableType } from '@kcdesign/data';
-import { useI18n } from 'vue-i18n';
+import {Context} from '@/context';
+import {Text, VariableType} from '@kcdesign/data';
+import {useI18n} from 'vue-i18n';
 import SelectMenu from '../PopoverMenu/ComposAttri/SelectMenu.vue';
-import { ArrowDown } from '@element-plus/icons-vue'
-import { onMounted, ref, watch } from 'vue';
+import {ArrowDown} from '@element-plus/icons-vue'
+import {onMounted, ref, watch} from 'vue';
 
-const { t } = useI18n();
+const {t} = useI18n();
 
 interface Props {
     context: Context,
     addType: VariableType | undefined,
-    default_value?: string | boolean,
+    default_value?: string | boolean | Text,
     dft_show?: boolean,
     warn?: boolean
 }
 
 interface Emits {
     (e: "select", index: number): void;
+
     (e: "change", value: string): void;
+
     (e: "input", value: string): void;
 }
 
@@ -38,7 +40,7 @@ watch(() => props.default_value, (v) => {
         menuIndex.value = 1;
         defaultValue.value = '隐藏';
     }
-}, { immediate: true })
+}, {immediate: true})
 const showMenu = () => {
     if (selectoption.value) return selectoption.value = false
     selectoption.value = true;
@@ -48,12 +50,14 @@ const handleShow = (index: number) => {
     menuIndex.value = index;
     emits('select', index);
 }
+
 function change(v: string) {
     emits("change", v);
 }
+
 const input_v = ref();
 const keysumbit = (e: KeyboardEvent) => {
-    const { shiftKey, ctrlKey, metaKey } = e;
+    const {shiftKey, ctrlKey, metaKey} = e;
     if (e.key === 'Enter') {
         if (ctrlKey || metaKey || shiftKey) {
             input_v.value = input_v.value + '\n'
@@ -64,19 +68,18 @@ const keysumbit = (e: KeyboardEvent) => {
 }
 
 watch(() => props.warn, (v) => {
-    if(v && input_v.value) {
+    if (v && input_v.value) {
         input_v.value.focus();
     }
 })
 const get_text = () => {
-    const text =(props.default_value as string);
-    textDefaultValue.value = text;
+    if (props.default_value && props.default_value instanceof Text) {
+        textDefaultValue.value = props.default_value.getText(0, Infinity);
+    }
 }
 onMounted(() => {
     if (props.addType === VariableType.Text) {
-        if(props.default_value) {
-            get_text();
-        }
+        get_text();
         emits("change", textDefaultValue.value);
     }
 })
@@ -90,19 +93,20 @@ onMounted(() => {
                 <span>{{ defaultValue }}</span>
                 <el-icon>
                     <ArrowDown
-                        :style="{ transform: selectoption ? 'rotate(180deg)' : 'rotate(0deg)', transition: '0.3s' }" />
+                        :style="{ transform: selectoption ? 'rotate(180deg)' : 'rotate(0deg)', transition: '0.3s' }"/>
                 </el-icon>
                 <SelectMenu v-if="selectoption" :top="33" width="100%" :menuItems="menuItems" :menuIndex="menuIndex"
-                    :context="context" @select-index="handleShow" @close="selectoption = false"></SelectMenu>
+                            :context="context" @select-index="handleShow" @close="selectoption = false"></SelectMenu>
             </div>
         </div>
         <div v-if="props.addType === VariableType.Text">
-            <el-input v-model="textDefaultValue" type="textarea" ref="input_v" :autosize="{ minRows: 1, maxRows: 4 }" resize="none"
-                :placeholder="t('compos.default_text_input')" @keydown.stop="keysumbit" @change="change" />
+            <el-input v-model="textDefaultValue" type="textarea" ref="input_v" :autosize="{ minRows: 1, maxRows: 4 }"
+                      resize="none"
+                      :placeholder="t('compos.default_text_input')" @keydown.stop="keysumbit" @change="change"/>
         </div>
     </div>
     <div class="warning" v-if="props.warn && props.addType === VariableType.Text">
-        <p class="warn">{{ t('compos.validate_info_3')}}</p>
+        <p class="warn">{{ t('compos.validate_info_3') }}</p>
     </div>
 </template>
 
@@ -120,7 +124,7 @@ onMounted(() => {
         width: 60px;
     }
 
-    >div {
+    > div {
         flex: 1;
     }
 
@@ -140,6 +144,7 @@ onMounted(() => {
     }
 
 }
+
 .warning {
     width: 100%;
     height: 25px;
