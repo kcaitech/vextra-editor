@@ -131,9 +131,10 @@ const setVisible = (e: MouseEvent) => {
     emit('set-visible', Boolean(visible_status.value < 0), props.data.shape())
 }
 const onRename = () => {
-    if (is_state(props.data.shape())) return;
-    if (!isEdit.value) return;
-    if (props.data.context.tool.isLable) return;
+    if (is_state(props.data.shape())
+        || !isEdit.value
+        || props.data.context.tool.isLable
+        || props.data.shape().isVirtualShape) return;
     isInput.value = true
     nextTick(() => {
         if (nameInput.value) {

@@ -3,7 +3,7 @@ import {get_vari_value_for_ref, is_circular_ref2, modify_vari_value_for_ref, Ref
 import {onMounted, onUnmounted, onUpdated, ref, watch} from "vue";
 import {Context} from "@/context";
 import ComponentDialog from "@/components/Document/Attribute/Module/ComponentDialog.vue";
-import {Shape} from "@kcdesign/data";
+import {OverrideType, Shape} from "@kcdesign/data";
 import {Component} from "@/context/component";
 import {message} from "@/utils/message";
 import {ArrowDown} from '@element-plus/icons-vue'
@@ -38,8 +38,12 @@ const closeDialog = () => {
 }
 
 function select(index: number) {
+    const symref = props.context.selection.symbolrefshape;
+    if (!symref) return console.log("wrong role");
     const _v = props.data.values[index];
-    modify_vari_value_for_ref(props.context, props.data.variable, _v);
+    const overrides = symref.findOverride(props.data.variable.id, OverrideType.Variable);
+    const _var = overrides ? overrides[overrides.length - 1] : props.data.variable;
+    modify_vari_value_for_ref(props.context, _var, _v);
 }
 
 function get_value() {

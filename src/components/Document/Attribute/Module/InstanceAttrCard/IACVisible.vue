@@ -24,8 +24,10 @@ function get_value() {
 
 function change(v: boolean) {
     const symref = props.context.selection.symbolrefshape;
-    if (!symref) return;
-    modify_vari_value_for_ref(props.context, props.data.variable, v);
+    if (!symref) return console.log("wrong role");
+    const overrides = symref.findOverride(props.data.variable.id, OverrideType.Variable);
+    const _var = overrides ? overrides[overrides.length - 1] : props.data.variable;
+    modify_vari_value_for_ref(props.context, _var, v);
 }
 
 watch(() => props.data, (v) => {

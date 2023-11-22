@@ -1,11 +1,14 @@
 <script setup lang="ts">
-import { get_vari_value_for_ref, modify_vari_value_for_ref, RefAttriListItem } from "@/utils/symbol";
+import {get_vari_value_for_ref, modify_vari_value_for_ref, RefAttriListItem} from "@/utils/symbol";
 import {ref, onMounted, onUpdated, watch} from "vue";
-import { Context } from "@/context";
+import {Context} from "@/context";
+import {OverrideType} from "../../../../../../../kcdesign-data/src";
+
 interface Props {
     context: Context
     data: RefAttriListItem
 }
+
 const props = defineProps<Props>();
 const textValue = ref('');
 const inputRef = ref();
@@ -16,29 +19,32 @@ const selectAllText = () => {
 
 function get_value() {
     const symref = props.context.selection.symbolrefshape;
-    if (!symref) return;
+    if (!symref) return console.log("wrong role");
     const text = get_vari_value_for_ref(symref, props.data.variable);
     textValue.value = typeof text === 'string' ? text : text.toString();
 }
+
 const keysumbit = (e: KeyboardEvent) => {
-    const { shiftKey, ctrlKey, metaKey } = e;
+    const {shiftKey, ctrlKey, metaKey} = e;
     if (e.key === 'Enter') {
         if (ctrlKey || metaKey || shiftKey) {
             inputRef.value = inputRef.value + '\n'
         } else {
             inputRef.value.blur();
-            change(textValue.value);
         }
     }
 }
 
-watch(() => props.data, (v) => {
-    get_value();
-})
+watch(() => props.data, get_value);
 
 function change(v: string) {
-    modify_vari_value_for_ref(props.context, props.data.variable, v);
+    const symref = props.context.selection.symbolrefshape;
+    if (!symref) return console.log("wrong role");
+    const overrides = symref.findOverride(props.data.variable.id, OverrideType.Variable);
+    const _var = overrides ? overrides[overrides.length - 1] : props.data.variable;
+    modify_vari_value_for_ref(props.context, _var, v);
 }
+
 onMounted(get_value);
 </script>
 <template>
@@ -47,7 +53,7 @@ onMounted(get_value);
             <div class="state_name"><span>{{ props.data.variable.name }}</span></div>
             <div class="state_value" style="padding: 0;">
                 <el-input ref="inputRef" v-model="textValue" type="textarea" :autosize="{ minRows: 1, maxRows: 4 }"
-                    resize="none" @focus="selectAllText" @change="change" @keydown.stop="keysumbit"/>
+                          resize="none" @focus="selectAllText" @change="change" @keydown.stop="keysumbit"/>
             </div>
         </div>
         <div class="delete"></div>
@@ -90,7 +96,7 @@ onMounted(get_value);
             height: 100%;
             border-radius: 4px;
 
-            >svg {
+            > svg {
                 width: 10px;
                 height: 10px;
             }
@@ -124,7 +130,7 @@ onMounted(get_value);
                 height: 30px;
                 font-size: 12px;
 
-                >div {
+                > div {
                     height: 100%;
                 }
 
@@ -190,6 +196,7 @@ onMounted(get_value);
 :deep(.el-select .el-input__wrapper.is-focus) {
     box-shadow: 0 0 0 1px var(--active-color) inset !important;
 }
+
 :deep(.el-textarea__inner::-webkit-scrollbar) {
     width: 6px;
 }
