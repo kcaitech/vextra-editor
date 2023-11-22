@@ -92,19 +92,14 @@ const focus = (event: Event) => {
 // 你还需要做的是todo，选区监听已经处理好了
 function update() {
     // 更新组件状态
-    console.log('触发更新'); // 触发了两次的问题不用处理，已经在其他地方处理好了
     const shapes = props.context.selection.selectedShapes
-
-    // todo 1. 检查多值
-    // ps: 检查多值的遍历如果选择可以停止的遍历会比较合适，任意一个元素的opacity不与第一个元素的opacity相等就是多值，
-    // 这个时候后面的元素已经没有必要在检查了，直接break。forEach是不支持break的遍历，建议用for;
-    const firstOpacity = shapes[0]?.style?.contextSettings?.opacity;
+    if (!shapes.length) return;
+    let firstOpacity = shapes[0].style.contextSettings?.opacity;
+    firstOpacity = firstOpacity === undefined ? 1 : firstOpacity;
     let difference = false;
-    if (!firstOpacity || !shapes.length) return;
-    console.log(difference, '111')
     if (shapes.length > 1) {
         for (let i = 1; i < shapes.length; i++) {
-            const randomOpacity = shapes[i]?.style?.contextSettings?.opacity;
+            const randomOpacity = shapes[i].style.contextSettings?.opacity;
             if (randomOpacity !== firstOpacity) {
                 difference = true;
                 break;
@@ -114,7 +109,6 @@ function update() {
     } else {
         opacity.value = firstOpacity;
     }
-    console.log(difference, '222')
 }
 
 
@@ -373,4 +367,5 @@ onUnmounted(() => {
         margin-top: 9px;
         margin-left: 12px;
     }
-}</style>
+}
+</style>
