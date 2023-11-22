@@ -53,11 +53,11 @@ export class DocOp extends Watchable(Object) {
         this.startPromise = undefined
     }
 
-    public addOnLocalUpdate(onUpdate: (cmd: Cmd) => void) {
-        this.docOp?.addOnLocalUpdate(onUpdate)
+    public addOnLocalUpdateAsync(onUpdate: (cmd: Cmd) => void) {
+        this.docOp?.addOnLocalUpdateAsync(onUpdate)
     }
 
     public removeOnLocalUpdate(onUpdate: (cmd: Cmd) => void) {
-        this.docOp?.removeOnLocalUpdate(onUpdate)
+        this.docOp?.removeOnLocalUpdateAsync(onUpdate)
     }
 }
