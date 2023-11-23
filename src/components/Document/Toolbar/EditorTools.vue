@@ -1,7 +1,7 @@
 <script setup lang="ts">
-import { onMounted, onUnmounted, ref, computed, nextTick, onUpdated } from "vue";
-import { Context } from '@/context';
-import { Selection } from '@/context/selection';
+import {onMounted, onUnmounted, ref, computed, nextTick} from "vue";
+import {Context} from '@/context';
+import {Selection} from '@/context/selection';
 import ToolButton from './ToolButton.vue';
 import Cursor from "./Buttons/Cursor.vue";
 import Frame from "./Buttons/Frame.vue";
@@ -12,27 +12,27 @@ import Table from "./Buttons/Table/index.vue"
 import Comment from "./Buttons/Comment.vue"
 import Contact from "./Buttons/CreateContact.vue";
 import Shape from "./Buttons/Shape.vue";
-import { WorkSpace, Perm } from "@/context/workspace";
-import { Action, Tool } from "@/context/tool";
-import { useI18n } from 'vue-i18n'
-import { message } from "@/utils/message";
-import { string_by_sys } from "@/utils/common";
-import { ElMessage } from "element-plus";
-const { t } = useI18n();
+import {WorkSpace, Perm} from "@/context/workspace";
+import {Action, Tool} from "@/context/tool";
+import {useI18n} from 'vue-i18n'
+import {message} from "@/utils/message";
+import {string_by_sys} from "@/utils/common";
+import {ElMessage} from "element-plus";
+
+const {t} = useI18n();
+
 interface Props {
     context: Context
     selection: Selection
-    select?: any
-    active: boolean
-    is_lable: boolean
-    edit: boolean
 }
+
 const props = defineProps<Props>();
 const workspace = computed<WorkSpace>(() => props.context.workspace)
 const isread = ref(false)
 const canComment = ref(false)
 const isEdit = ref(false)
 const selected = ref<Action>(Action.AutoV);
+
 function select(action: Action) {
     props.context.tool.setAction(action);
     if (action === Action.AddComment) {
@@ -41,10 +41,13 @@ function select(action: Action) {
         })
     }
 }
+
 function selectComps() {
     message('feature', t('navi.development'));
 }
+
 const isLable = ref(props.context.tool.isLable);
+
 function tool_watcher(t?: number) {
     if (t === Tool.CHANGE_ACTION) {
         selected.value = props.context.tool.action;
@@ -52,6 +55,7 @@ function tool_watcher(t?: number) {
         isLable.value = props.context.tool.isLable;
     }
 }
+
 //获取文档权限
 const hangdlePerm = () => {
     const perm = props.context.workspace.documentPerm;
@@ -75,6 +79,7 @@ onMounted(() => {
 onUnmounted(() => {
     props.context.tool.unwatch(tool_watcher);
 })
+
 function applyForEdit() {
     ElMessage.success({
         message: '已发送权限申请',
@@ -87,17 +92,17 @@ function applyForEdit() {
 <template>
     <div class="editor-tools" @dblclick.stop v-if="isEdit && !isLable">
         <Cursor @select="select" :d="selected" :active="selected === Action.AutoV || selected === Action.AutoK"
-            :is_lable="isLable" :edit="isEdit"></Cursor>
-        <div class="vertical-line" />
+                :is_lable="isLable" :edit="isEdit"></Cursor>
+        <div class="vertical-line"/>
         <Frame :context="props.context" :active="selected === Action.AddFrame" @select="select"></Frame>
-        <Shape :active="active" :context="context"></Shape>
+        <Shape :context="context"></Shape>
         <CreateText @select="select" :active="selected === Action.AddText"></CreateText>
         <CreateImage :active="selected === Action.AddImage" :context="props.context"></CreateImage>
         <Table @select="select" :active="selected === Action.AddTable" :context="props.context"></Table>
         <Contact @select="select" :active="selected === Action.AddContact" :context="props.context"></Contact>
-        <div class="vertical-line" />
+        <div class="vertical-line"/>
         <el-tooltip class="box-item" effect="dark" :content="string_by_sys(`${t('navi.comps')} &nbsp;&nbsp; Shift I`)"
-            placement="bottom" :show-after="500" :offset="10" :hide-after="0">
+                    placement="bottom" :show-after="500" :offset="10" :hide-after="0">
             <ToolButton>
                 <div class="temp" @click="selectComps">
                     <svg-icon icon-class="resource"></svg-icon>
@@ -110,11 +115,16 @@ function applyForEdit() {
     <div class="editor-tools" @dblclick.stop v-if="isread || canComment || isLable">
         <span style="color: #ffffff;">{{ t('apply.read_only') }}</span>
         <div class="button">
-            <button class="el" style="background-color: #865DFF;" @click="applyForEdit">{{ t('apply.apply_for_edit') }}</button>
+            <button class="el" style="background-color: #865DFF;" @click="applyForEdit">{{
+                    t('apply.apply_for_edit')
+                }}
+            </button>
         </div>
-        <Cursor @select="select" :d="selected" :active="selected === Action.AutoV || selected === Action.AutoK" :is_lable="isLable" :edit="isEdit"></Cursor>
-        <div class="vertical-line" />
-        <Comment @select="select" :active="selected === Action.AddComment" :workspace="workspace" v-if="!isread"></Comment>
+        <Cursor @select="select" :d="selected" :active="selected === Action.AutoV || selected === Action.AutoK"
+                :is_lable="isLable" :edit="isEdit"></Cursor>
+        <div class="vertical-line"/>
+        <Comment @select="select" :active="selected === Action.AddComment" :workspace="workspace"
+                 v-if="!isread"></Comment>
     </div>
 </template>
 
@@ -172,7 +182,7 @@ function applyForEdit() {
         justify-content: center;
         padding: 4px;
 
-        >svg {
+        > svg {
             width: 28px;
             height: 28px;
         }

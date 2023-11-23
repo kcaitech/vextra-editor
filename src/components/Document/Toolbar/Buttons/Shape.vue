@@ -1,16 +1,17 @@
 <script setup lang="ts">
-import { Context } from '@/context';
-import { Action, Tool } from '@/context/tool';
-import { nextTick, onMounted, onUnmounted, ref } from 'vue';
-import { useI18n } from 'vue-i18n';
+import {Context} from '@/context';
+import {Action, Tool} from '@/context/tool';
+import {nextTick, onMounted, onUnmounted, ref} from 'vue';
+import {useI18n} from 'vue-i18n';
 import ShapeMenu from '../ShapeMenu.vue';
 import ToolButton from '../ToolButton.vue';
 
-const { t } = useI18n();
+const {t} = useI18n();
+
 interface Props {
     context: Context
-    active: boolean
 }
+
 type Button = InstanceType<typeof ToolButton>
 const button = ref<Button>();
 const props = defineProps<Props>();
@@ -18,8 +19,7 @@ const popoverVisible = ref(false);
 const popover = ref<HTMLDivElement>();
 const checked = ref<Action>(Action.AddRect);
 const visible = ref(false);
-const selected = ref<Action>(Action.AutoV);
-const patterns = ((items: [string, Action, string][]) => (items.map(item => ({ value: item[0], content: item[1], key: item[2] }))))([
+const patterns = ((items: [string, Action, string][]) => (items.map(item => ({value: item[0], content: item[1], key: item[2]}))))([
     ['rect', Action.AddRect, 'R'],
     ['oval', Action.AddEllipse, 'O'],
     ['line', Action.AddLine, 'L'],
@@ -27,10 +27,13 @@ const patterns = ((items: [string, Action, string][]) => (items.map(item => ({ v
 ]);
 
 const is_active = ref<boolean>(false);
+
 function is_base_active() {
     is_active.value = [Action.AddRect, Action.AddEllipse, Action.AddLine, Action.AddArrow].includes(props.context.tool.action);
 }
+
 const shortcut_keys = ref<string>(`${t('shape.rect')}\u00a0\u00a0\u00a0\u00a0R`)
+
 function get_tooltip_class() {
     const tool = props.context.tool.action;
     if (tool === Action.AddRect) {
@@ -43,7 +46,9 @@ function get_tooltip_class() {
         shortcut_keys.value = `${t('shape.arrow')}\u00a0\u00a0\u00a0\u00a0Shift L`;
     }
 }
+
 const cur_class = ref<string>("pattern-rectangle");
+
 function get_icon_class() {
     const tool = props.context.tool.action;
     if (tool === Action.AddRect) {
@@ -54,16 +59,25 @@ function get_icon_class() {
         cur_class.value = "pattern-line"
     } else if (tool === Action.AddArrow) {
         cur_class.value = "pattern-arrow"
-    } 
-    // else {
-    //     cur_class.value = "pattern-rectangle"
-    // }
+    }
 }
+
+function modify_checked() {
+    const tool = props.context.tool.action;
+    if ([Action.AddRect, Action.AddEllipse, Action.AddLine, Action.AddArrow].includes(tool)) {
+        checked.value = tool;
+    }
+}
+
 const check_shape = (active: Action) => {
-    checked.value = active;
     props.context.tool.setAction(active);
     popoverVisible.value = false
 }
+
+function short() {
+    props.context.tool.setAction(checked.value);
+}
+
 function showMenu(e: MouseEvent) {
     if (popoverVisible.value) return popoverVisible.value = false;
     if (button.value?.toolButtonEl) {
@@ -79,6 +93,7 @@ function showMenu(e: MouseEvent) {
         document.addEventListener('click', onMenuBlur)
     }
 }
+
 function onMenuBlur(e: MouseEvent) {
     if (e.target instanceof Element && !e.target.closest('.popover') && !e.target.closest('.menu')) {
         let timer = setTimeout(() => {
@@ -88,17 +103,20 @@ function onMenuBlur(e: MouseEvent) {
         }, 10)
     }
 }
+
 const isLable = ref(props.context.tool.isLable);
+
 function tool_watcher(t?: number) {
     if (t === Tool.CHANGE_ACTION) {
-        selected.value = props.context.tool.action;
         is_base_active();
         get_tooltip_class();
         get_icon_class();
+        modify_checked();
     } else if (t === Tool.LABLE_CHANGE) {
         isLable.value = props.context.tool.isLable;
     }
 }
+
 var timer: any = null
 const onMouseenter = () => {
     timer = setTimeout(() => {
@@ -118,10 +136,11 @@ onUnmounted(() => {
 })
 </script>
 <template>
-    <el-tooltip class="box-item" effect="dark" :content="shortcut_keys" placement="bottom" :show-after="600" :offset="10"
-        :hide-after="0" :visible="popoverVisible ? false : visible">
-        <ToolButton ref="button" :checked="props.active" @mouseenter.stop="onMouseenter" @mouseleave.stop="onMouseleave"
-            :selected="is_active">
+    <el-tooltip class="box-item" effect="dark" :content="shortcut_keys" placement="bottom" :show-after="600"
+                :offset="10"
+                :hide-after="0" :visible="popoverVisible ? false : visible">
+        <ToolButton ref="button" @mouseenter.stop="onMouseenter" @mouseleave.stop="onMouseleave" @click="short"
+                    :selected="is_active">
             <div class="svg-container">
                 <svg-icon :icon-class="cur_class"></svg-icon>
             </div>
@@ -133,7 +152,7 @@ onUnmounted(() => {
     <div ref="popover" class="popover" tabindex="-1" v-if="popoverVisible">
         <template v-for="item in patterns" :key="item.value">
             <ShapeMenu @select="check_shape" :lg="item.value" :quick="item.key" :action="item.content"
-                :is-active="checked === item.content"></ShapeMenu>
+                       :is-active="checked === item.content"></ShapeMenu>
         </template>
     </div>
 </template>
@@ -149,7 +168,7 @@ onUnmounted(() => {
     color: #ffffff;
     transition: 0.3s;
 
-    >svg {
+    > svg {
         width: 80%;
         height: 60%;
     }
@@ -179,7 +198,7 @@ onUnmounted(() => {
     margin-left: 3px;
     color: #ffffff;
 
-    >svg {
+    > svg {
         width: 30px;
         height: 30px;
     }
