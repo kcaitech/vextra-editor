@@ -1,6 +1,6 @@
 <script setup lang='ts'>
 import {Context} from '@/context';
-import {AsyncBaseAction, AsyncPathEditor, Matrix, PathShape, Shape} from '@kcdesign/data';
+import {AsyncPathEditor, Matrix, PathShape, Shape} from '@kcdesign/data';
 import {onMounted, onUnmounted, reactive, ref} from 'vue';
 import {ClientXY, PageXY, Selection, XY} from '@/context/selection';
 import {get_path_by_point, get_conact_by_point} from './common';
@@ -297,7 +297,7 @@ onUnmounted(() => {
 })
 </script>
 <template>
-    <!--    line todo    -->
+    <!--    line todo-->
     <g v-for="(p, i) in lines" :key="i" @mouseenter="() => { line_enter(p.index) }" @mouseleave="line_leave">
         <line :x1="p.apex1.x" :y1="p.apex1.y" :x2="p.apex2.x" :y2="p.apex2.y" class="line"></line>
         <rect v-if="show_index === p.index" :x="p.point.x - 4" :y="p.point.y - 4" rx="4px" ry="4px" height="8px"
@@ -305,8 +305,12 @@ onUnmounted(() => {
               @mousedown="n_point_down" class="point">
         </rect>
     </g>
-    <rect v-for="(p, i) in dots" :key="i" :x="p.point.x - 4" :y="p.point.y - 4" rx="4px" ry="4px" height="8px"
-          width="8px"
+    <rect v-for="(p, i) in dots"
+          :key="i"
+          :style="{transform: `translate(${p.point.x - 4}px, ${p.point.y - 4}px)`}"
+          class="point"
+          rx="4px" ry="4px"
+          height="8px" width="8px"
           @mousedown.stop="(e) => point_mousedown(e, p.index)" :class="{point: true, selected: p.selected}">
     </rect>
 </template>
