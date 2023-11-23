@@ -180,8 +180,8 @@ onUnmounted(() => {
     color: #ffffff;
 
     >svg {
-        width: 17px;
-        height: 17px;
+        width: 30px;
+        height: 30px;
     }
 }
 </style>

@@ -1,52 +1,34 @@
 <template>
-    <div class="tatle" style="height: calc(100vh - 120px);">
-        <tablelist :data="lists" :iconlist="iconlists" @restore="Restorefile" @ndelete="Deletefile" @rightMeun="rightmenu"
-            :noNetwork="noNetwork" @refreshDoc="refreshDoc" />
+    <div class="tatle" style="height: calc(100vh - 144px);">
+        <tablelist :data="searchlists" :iconlist="iconlists" @restore="Restorefile" @ndelete="Deletefile"
+            @rightMeun="rightmenu" :noNetwork="noNetwork" @refreshDoc="refreshDoc" />
     </div>
-    <!-- 右键菜单 -->
     <listrightmenu :items="items" :data="mydata" @getrecycle-lists="GetrecycleLists" @r-deletefile="Deletefile"
         @r-restorefile="Restorefile" />
-    <!-- 确认删除弹框 -->
-    <el-dialog v-model="dialogVisible" width="500" align-center @keyup.enter="Qdeletefile(docId)" :show-close="false"
-        :close-on-click-modal="false" @open="changemargin">
-        <template #header>
-            <div class="my-header">
-                <div class="title">{{ t('home.completely_delete') }}</div>
-                <CloseIcon :size="20" @close="dialogVisible = false" />
-            </div>
-        </template>
-        <span>{{ t('home.delete_tips') }}</span>
-        <template #footer>
-            <span class="dialog-footer">
-                <el-button type="primary" :disabled="false" @click=" Qdeletefile(docId)" style="background-color: none;">
-                    {{ t('home.delete_ok') }}
-                </el-button>
-                <el-button @click=" dialogVisible = false">{{ t('home.cancel') }}</el-button>
-            </span>
-        </template>
-    </el-dialog>
+    <DeleteDialog :projectVisible="dialogVisible" :context="t('home.delete_tips')" :title="t('home.completely_delete')"
+        :confirm-btn="t('home.delete_ok')" @clode-dialog="dialogVisible = !dialogVisible" @confirm="Qdeletefile(docId)">
+    </DeleteDialog>
 </template>
 <script setup lang="ts">
 import * as user_api from '@/request/users'
 import { ElMessage } from 'element-plus'
-import { ref, onMounted, onUnmounted, nextTick, watch } from 'vue'
+import { ref, onMounted, onUnmounted, nextTick, watch, watchEffect } from 'vue'
 import { useI18n } from 'vue-i18n'
 import tablelist from '@/components/AppHome/tablelist.vue'
 import listrightmenu from "../listrightmenu.vue"
-import CloseIcon from '@/components/common/CloseIcon.vue';
-
+import DeleteDialog from '@/components/TeamProject/ProjectDialog.vue';
+import Bus from '@/components/AppHome/bus'
+import { useRoute } from 'vue-router'
 const items = ['restore', 'completely_delete']
 const { t } = useI18n()
-const isLoading = ref(false)
+const route = useRoute()
 const dialogVisible = ref(false)
 const docId = ref('')
 const mydata = ref()
 const noNetwork = ref(false)
 let lists = ref<any[]>([])
 const iconlists = ref(['restore', 'Delete'])
-const emits = defineEmits<{
-    (e: 'dataUpdate', list: any[], title: string): void
-}>()
+
 interface data {
     document: {
         id: string
@@ -60,8 +42,6 @@ interface data {
 
 //获取回收站文件列表
 async function GetrecycleLists() {
-    // loading
-    isLoading.value = true
     try {
         const { data } = await user_api.GetrecycleList()
         if (data == null) {
@@ -76,18 +56,30 @@ async function GetrecycleLists() {
             }
         }
         lists.value = Object.values(data)
-    } catch (error) {
-        noNetwork.value = true
-        ElMessage.error(t('home.failed_list_tips'))
+    } catch (error: any) {
+        if (error.data.code === 401) {
+            return
+        } else {
+            noNetwork.value = true
+            ElMessage.closeAll('error')
+            ElMessage.error({ duration: 1500, message: t('home.failed_list_tips') })
+        }
     }
-
-    // unloading  
-    isLoading.value = false;
 }
 
 const refreshDoc = () => {
     GetrecycleLists()
 }
+let searchlists = ref<any[]>([])
+const searchvalue = ref('');
+
+Bus.on('searchvalue', (str: string) => {
+    searchvalue.value = str
+})
+
+watchEffect(() => {
+    searchlists.value = lists.value.filter((el: any) => el.document.name.toLowerCase().includes(searchvalue.value.toLowerCase()))
+})
 
 //转换文件大小
 function sizeTostr(size: any) {
@@ -101,11 +93,6 @@ function sizeTostr(size: any) {
         size = Math.round(size * 100) / 100 + "B"
     }
     return size
-}
-
-const changemargin = () => {
-    const el = document.querySelector('.el-dialog__header') as HTMLElement
-    el.style.marginRight = '0px'
 }
 
 //还原对应文件
@@ -169,14 +156,15 @@ const rightmenu = (e: MouseEvent, data: data) => {
     if ((e.target as HTMLElement).closest('.el-table-v2__row')) {
         rightmenu.style.display = 'block'
     }
-
     docId.value = id
     mydata.value = data
 }
 
-watch(lists, (Nlist) => {
-    emits('dataUpdate', Nlist, t('home.delete_file_time'))
-}, { deep: true })
+watch(() => route.name, () => {
+    Bus.on('searchvalue', (str: string) => {
+        searchvalue.value = str
+    })
+})
 
 onMounted(() => {
     GetrecycleLists()

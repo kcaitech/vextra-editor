@@ -591,22 +591,22 @@ onUnmounted(() => {
             </div>
             <!-- 字体颜色 -->
             <div class="text-color" v-if="!colorIsMulti && textColor" style="margin-bottom: 10px;">
-                <div>{{ t('attr.font_color') }}</div>
+<!--                <div>{{ t('attr.font_color') }}</div>-->
                 <div class="color">
-                    <ColorPicker :color="textColor!" :context="props.context" :late="40"
-                        @change="c => getColorFromPicker(c, 'color')">
-                    </ColorPicker>
-                    <input ref="sizeColor" @focus="selectColorValue" :spellcheck="false"
+                        <ColorPicker :color="textColor!" :context="props.context" :late="40"
+                                     @change="c => getColorFromPicker(c, 'color')">
+                        </ColorPicker>
+                    <input ref="sizeColor" class="sizeColor" @focus="selectColorValue" :spellcheck="false"
                         :value="toHex(textColor!.red, textColor!.green, textColor!.blue)"
                         @change="(e) => onColorChange(e, 'color')" />
-                    <input ref="alphaFill" @focus="selectAlphaValue" style="text-align: center;"
+                    <input ref="alphaFill" class="alphaFill" @focus="selectAlphaValue" style="text-align: center;"
                         :value="(textColor!.alpha * 100) + '%'" @change="(e) => onAlphaChange(e, 'color')" />
                 </div>
                 <div class="perch"></div>
             </div>
             <div class="text-colors" v-else-if="colorIsMulti" style="margin-bottom: 10px;">
                 <div class="color-title">
-                    <div>{{ t('attr.font_color') }}</div>
+<!--                    <div>{{ t('attr.font_color') }}</div>-->
                     <div class="add" @click="addTextColor">
                         <svg-icon icon-class="add"></svg-icon>
                     </div>
@@ -615,7 +615,7 @@ onUnmounted(() => {
             </div>
             <div class="text-colors" v-else-if="!colorIsMulti && !textColor" style="margin-bottom: 10px;">
                 <div class="color-title">
-                    <div>{{ t('attr.font_color') }}</div>
+<!--                    <div>{{ t('attr.font_color') }}</div>-->
                     <div class="add" @click="addTextColor">
                         <svg-icon icon-class="add"></svg-icon>
                     </div>
@@ -662,7 +662,7 @@ onUnmounted(() => {
 
 <style scoped lang="scss">
 .text-panel {
-    width: 100%;
+    width: 110%;
     display: flex;
     flex-direction: column;
     padding: 12px 10px;
@@ -690,16 +690,16 @@ onUnmounted(() => {
         font-size: var(--font-default-fontsize);
 
         .jointly-text {
-            height: 25px;
-            border-radius: 4px;
+            height: 32px;
+            border-radius: var(--default-radius);
             background-color: var(--input-background);
             display: flex;
             justify-content: space-between;
             align-items: center;
 
             >svg {
-                width: 12px;
-                height: 12px;
+                width: 14px;
+                height: 14px;
                 overflow: visible !important;
             }
         }
@@ -784,7 +784,7 @@ onUnmounted(() => {
             }
 
             .overbold {
-                width: 25px;
+                width: 32px;
                 display: flex;
                 justify-content: center;
             }
@@ -827,20 +827,28 @@ onUnmounted(() => {
 
             .color {
                 background-color: rgba(#D8D8D8, 0.4);
-                height: 25px;
+                width: 234px;
+                height: 32px;
                 padding: 0px 3px;
-                margin-left: 3px;
-                border-radius: 3px;
+                border-radius: var(--default-radius);
                 box-sizing: border-box;
                 display: flex;
                 align-items: center;
 
-                input {
+                .sizeColor {
                     outline: none;
                     border: none;
-                    width: 72px;
+                    width: 54px;
                     background-color: transparent;
-                    margin-left: 3px;
+                    margin-left: 17px;
+                }
+
+                .alphaFill {
+                    outline: none;
+                    border: none;
+                    width: 30px;
+                    background-color: transparent;
+                    margin-left: 45%;
                 }
 
                 input+input {

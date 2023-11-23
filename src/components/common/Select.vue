@@ -143,7 +143,8 @@ watch(() => props.selected, () => {
             text-align: left;
             line-height: var(--default-input-height);
             box-sizing: border-box;
-            padding: 0 var(--default-padding);
+            //padding: 0 var(--default-padding);
+            padding: 0px -1px 0px -1px;
         }
 
         >.svg-wrap {

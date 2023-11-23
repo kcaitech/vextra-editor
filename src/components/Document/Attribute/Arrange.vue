@@ -214,8 +214,8 @@ onUnmounted(() => {
 
     >svg {
         color: var(--theme-color);
-        width: 70%;
-        height: 70%;
+        width: 95%;
+        height: 95%;
     }
 }
 

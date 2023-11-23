@@ -1,15 +1,15 @@
 <template>
   <div class="common-layout">
     <el-container>
-      <el-header height="56" min-height="56">
-        <Header :items="items" :title="searchtitle" />
-      </el-header>
+      <el-aside width="240px">
+        <Aside />
+      </el-aside>
       <el-container>
-        <el-aside width="260px" min-width="260px">
-          <Aside @settitle="setTitle" />
-        </el-aside>
+        <el-header>
+          <Header :items="items" :title="searchtitle" />
+        </el-header>
         <el-main>
-          <Main @dataUpdate="update" />
+          <Main />
         </el-main>
       </el-container>
     </el-container>
@@ -21,14 +21,13 @@
 import Aside from './Aside.vue';
 import Header from './Header.vue';
 import Main from './Main.vue';
-import { ref, onUnmounted, provide } from 'vue';
+import { ref, onUnmounted, provide, onMounted } from 'vue';
 import { useI18n } from 'vue-i18n';
 import { NetworkStatus } from '@/communication/modules/network_status'
 import { insertNetworkInfo } from "@/utils/message"
 import * as user_api from '@/request/users'
 
 const { t } = useI18n();
-const title = ref<any>(sessionStorage.getItem('title') ? sessionStorage.getItem('title') : t('home.recently_opened'));
 const searchtitle = ref('')
 let items = ref<any[]>([])
 const link_success = t('message.link_success')
@@ -47,7 +46,6 @@ const is_favor = ref<boolean>();
 const is_team_upodate = ref<boolean>(false);
 const activeNames = ref<any[]>([-1])
 const targetItem = ref<any[]>([])
-const recycle = ref();
 const menuState = ref(false);
 
 const updateShareData = (id: string, name: string, avatar: string, description: string, selfpermtype: number) => {
@@ -116,11 +114,7 @@ const GetprojectLists = async () => {
     console.log(error);
   }
 }
-GetprojectLists();
 
-setInterval(() => {
-  GetprojectLists();
-}, 60000);
 const favoriteProjectList = (arr1: any[], arr2: any[]) => {
   const projectList = arr1.map(item => {
     item.is_favor = arr2.some(value => value.project.id === item.project.id)
@@ -167,18 +161,6 @@ provide('shareData', {
   setMenuVisi,
   menuState
 })
-function setTitle(t: string, tyep: boolean) {
-  title.value = t;
-  recycle.value = tyep;
-  sessionStorage.setItem('title', title.value)
-}
-
-//===>接收到最新的lists,props传给Headher组件
-const update = (data: any, title: any) => {
-  //main组件传过来的lists和title
-  items.value = data || []
-  searchtitle.value = title
-}
 
 //网络连接成功message信息
 const networkLinkSuccess = () => {
@@ -216,8 +198,22 @@ const closeNetMsg = () => {
   insertNetworkInfo('networkSuccess', false, link_success)
 }
 
+let timer: any
+onMounted(() => {
+  GetprojectLists();
+  if (timer) {
+    clearInterval(timer)
+  }
+  timer = setInterval(() => {
+    GetprojectLists();
+  }, 60000);
+})
+
 onUnmounted(() => {
   closeNetMsg()
+  if (timer) {
+    clearInterval(timer)
+  }
   networkStatus.close()
 })
 
@@ -230,18 +226,20 @@ onUnmounted(() => {
 }
 
 .el-header {
-  margin-top: 8px;
+  padding: 0 20px 0 0;
 }
 
 .el-main {
-  height: calc(100vh - 56px);
-  padding: 0 20px;
+  padding: 0;
   overflow: hidden;
+  background-color: rgba(255, 255, 255, 1);
+  border: 1px solid rgba(241, 242, 242, 1);
+  border-radius: 10px 10px 0 0;
+
 }
 
 .el-aside {
-  height: calc(100% - 56px);
-  border-right: rgba(239, 239, 239, 0.838) solid 1px;
+  height: 100%;
   transition: all .3s ease-in-out;
 }
 

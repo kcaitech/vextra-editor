@@ -60,6 +60,8 @@ const layout_options: LayoutOptions = reactive({ s_flip: true, s_radius: false, 
 const model_disable_state: ModelState = reactive({ x: false, y: false, width: false, height: false, rotation: false, flipHorizontal: false, filpVertical: false, radius: false });
 let { s_flip, s_adapt, s_radius, s_length } = layout_options;
 const reflush = ref<number>(0);
+const isLockActive1 = ref(false);
+const isLockActive2 = ref(false);
 function watch_shapes() {
     watchedShapes.forEach((v, k) => {
         v.unwatch(calc_attri);
@@ -127,9 +129,9 @@ function check_mixed() {
     if (isMixed.type === 'mixed' || !isMixed.type) {
         isMixed.h === 'mixed' ? h.value = mixed : h.value = isMixed.h;
         if (isMixed.type === 'mixed') {
-                model_disable_state.height = true;
-                h.value = mixed
-            }
+            model_disable_state.height = true;
+            h.value = mixed
+        }
     } else {
         h.value = 0;
         model_disable_state.height = true;
@@ -268,6 +270,12 @@ function lockToggle() {
         editor.setShapesConstrainerProportions(actions);
     }
     isLock.value = val;
+    isLockActive1.value = true;
+    isLockActive2.value = true;
+    setTimeout(() => {
+        isLockActive1.value = false;
+        isLockActive2.value = false;
+    }, 500);
 }
 function radiusToggle() {
     isMoreForRadius.value = !isMoreForRadius.value
@@ -466,37 +474,39 @@ onUnmounted(() => {
     <div class="table">
         <div class="tr">
             <IconText class="td positon" ticon="X" :text="typeof (x) === 'number' ? x.toFixed(fix) : x"
-                @onchange="onChangeX" :disabled="model_disable_state.x"  :context="context"/>
-            <div class="space"></div>
+                      @onchange="onChangeX" :disabled="model_disable_state.x"  :context="context"/>
+<!--            <div class="space"></div>-->
             <IconText class="td positon" ticon="Y" :text="typeof (y) === 'number' ? y.toFixed(fix) : y"
-                @onchange="onChangeY" :disabled="model_disable_state.y"  :context="context"/>
-            <Position :context="props.context" :shape="props.context.selection.selectedShapes[0]"></Position>
-        </div>
-        <div class="tr" :reflush="reflush">
-            <IconText class="td frame" ticon="W" :text="typeof (w) === 'number' ? w.toFixed(fix) : w" @onchange="onChangeW"
-                :disabled="model_disable_state.width"  :context="context"/>
-            <div class="lock" @click="lockToggle">
-                <svg-icon v-if="!s_length" :icon-class="isLock ? 'lock' : 'unlock'"></svg-icon>
-            </div>
-            <IconText class="td frame" ticon="H" :text="typeof (h) === 'number' ? h.toFixed(fix) : h" @onchange="onChangeH"
-                :disabled="model_disable_state.height"  :context="context"/>
+                      @onchange="onChangeY" :disabled="model_disable_state.y"  :context="context"/>
+<!--            <Position :context="props.context" :shape="props.context.selection.selectedShapes[0]"></Position>-->
             <div class="adapt" v-if="s_adapt" :title="t('attr.adapt')" @click="adapt">
                 <svg-icon icon-class="adapt"></svg-icon>
             </div>
             <div style="width: 22px;height: 22px;" v-else></div>
         </div>
         <div class="tr" :reflush="reflush">
+            <IconText class="td frame" ticon="W" :text="typeof (w) === 'number' ? w.toFixed(fix) : w" @onchange="onChangeW"
+                      :disabled="model_disable_state.width"  :context="context"/>
+
+            <IconText class="td frame" ticon="H" :text="typeof (h) === 'number' ? h.toFixed(fix) : h" @onchange="onChangeH"
+                      :disabled="model_disable_state.height"  :context="context"/>
+            <div class="lock" @click="lockToggle" :class="{ 'active': isLockActive1 }">
+                <svg-icon v-if="!s_length" :icon-class="isLock ? 'lock' : 'unlock'" :class="{ 'active': isLockActive2 }"></svg-icon>
+            </div>
+
+        </div>
+        <div class="tr" :reflush="reflush">
             <IconText class="td angle" svgicon="angle" :text="`${rotate}` + '°'" @onchange="onChangeRotate"
-                :frame="{ width: 14, height: 14 }" :disabled="model_disable_state.rotation"  :context="context"/>
+                      :frame="{ width: 14, height: 14 }" :disabled="model_disable_state.rotation"  :context="context"/>
             <Tooltip v-if="s_flip" :content="t('attr.flip_h')" :offset="15">
                 <div :class="{ flip: !model_disable_state.filpVertical, 'flip-disable': model_disable_state.filpVertical, 'ml-24': true }"
-                    @click="fliph">
+                     @click="fliph">
                     <svg-icon icon-class="fliph"></svg-icon>
                 </div>
             </Tooltip>
             <Tooltip v-if="s_flip" :content="t('attr.flip_v')" :offset="15">
                 <div :class="{ flip: !model_disable_state.filpVertical, 'flip-disable': model_disable_state.filpVertical, 'ml-12': true }"
-                    @click="flipv">
+                     @click="flipv">
                     <svg-icon icon-class="flipv"></svg-icon>
                 </div>
             </Tooltip>
@@ -504,20 +514,20 @@ onUnmounted(() => {
         </div>
         <div class="tr" v-if="s_radius" :reflush="reflush">
             <IconText class="td frame" svgicon="radius" :multipleValues="multipleValues" :text="radius?.lt || 0"
-                :frame="{ width: 12, height: 12 }" @onchange="e => onChangeRadian(e, 'lt')"
-                :disabled="model_disable_state.radius"  :context="context"/>
+                      :frame="{ width: 12, height: 12 }" @onchange="e => onChangeRadian(e, 'lt')"
+                      :disabled="model_disable_state.radius"  :context="context"/>
             <div class="td frame ml-24" v-if="!isMoreForRadius"></div>
             <IconText v-if="isMoreForRadius" class="td frame ml-24" svgicon="radius" :text="radius?.rt || 0"
-                :frame="{ width: 12, height: 12, rotate: 90 }" @onchange="e => onChangeRadian(e, 'rt')"  :context="context"/>
+                      :frame="{ width: 12, height: 12, rotate: 90 }" @onchange="e => onChangeRadian(e, 'rt')"  :context="context"/>
             <div class="more-for-radius" @click="radiusToggle" v-if="s_radius && multiRadius">
                 <svg-icon :icon-class="isMoreForRadius ? 'more-for-radius' : 'more-for-radius'"></svg-icon>
             </div>
         </div>
         <div class="tr" v-if="isMoreForRadius">
             <IconText class="td frame" svgicon="radius" :text="radius?.lb || 0"
-                :frame="{ width: 12, height: 12, rotate: 270 }" @onchange="e => onChangeRadian(e, 'lb')"  :context="context"/>
+                      :frame="{ width: 12, height: 12, rotate: 270 }" @onchange="e => onChangeRadian(e, 'lb')"  :context="context"/>
             <IconText class="td frame ml-24" svgicon="radius" :text="radius?.rb || 0"
-                :frame="{ width: 12, height: 12, rotate: 180 }" @onchange="e => onChangeRadian(e, 'rb')"  :context="context"/>
+                      :frame="{ width: 12, height: 12, rotate: 180 }" @onchange="e => onChangeRadian(e, 'rb')"  :context="context"/>
             <!-- <RadiusForIos :context="props.context"></RadiusForIos> -->
             <div style="width: 22px;height: 22px;"></div>
         </div>
@@ -551,9 +561,9 @@ onUnmounted(() => {
         flex-direction: row;
         margin: 4px 0;
 
-        .space {
-            width: 18px;
-        }
+        //.space {
+        //    width: 18px;
+        //}
 
         >.icontext {
             background-color: rgba(#D8D8D8, 0.4);
@@ -568,21 +578,38 @@ onUnmounted(() => {
         .frame {
             width: 95px;
             height: 30px;
+            margin: 0 0;
             border-radius: var(--default-radius);
         }
 
         .lock {
-            height: 18px;
-            width: 18px;
+            height: 22px;
+            width: 22px;
             display: flex;
             justify-content: center;
             align-items: center;
+            border-radius: 6px;
+            opacity: 1;
+            background: rgba(255, 255, 255, 0.1);
+            box-sizing: border-box;
+            border: 1px solid #F0F0F0;
 
             >svg {
-                color: grey;
-                width: 100%;
-                height: 100%;
+                color: #808080;
+                width: 14px;
+                height: 14px;
             }
+            >svg.active {
+                color: #FFFFFF;
+            }
+        }
+
+        .lock:hover {
+            background: #F4F5F5;
+        }
+
+        .lock.active{
+        background-color: #1878F5;
         }
 
         .adapt {
@@ -591,16 +618,22 @@ onUnmounted(() => {
             display: flex;
             justify-content: center;
             align-items: center;
+            border-radius: 6px;
+            opacity: 1;
+            background: rgba(255, 255, 255, 0.1);
+            box-sizing: border-box;
+            border: 1px solid #F0F0F0;
 
             >svg {
                 transition: 0.3s;
-                width: 60%;
-                height: 60%;
+                width: 13px;
+                height: 13px;
+                color: #808080;
             }
+        }
 
-            >svg:hover {
-                transform: scale(0.8);
-            }
+        .adapt:hover {
+            background: #F4F5F5;
         }
 
         .angle {
@@ -622,6 +655,7 @@ onUnmounted(() => {
             width: 45px;
             height: 30px;
             border-radius: var(--default-radius);
+            margin: 4px -4px;
 
             >svg {
                 color: var(--coco-grey);
@@ -658,18 +692,23 @@ onUnmounted(() => {
             display: flex;
             justify-content: center;
             align-items: center;
+            border-radius: 6px;
+            opacity: 1;
+            background: rgba(255, 255, 255, 0.1);
+            box-sizing: border-box;
+            border: 1px solid #F0F0F0;
 
             >svg {
                 transition: 0.3s;
-                width: 50%;
-                height: 50%;
-            }
-
-            >svg:hover {
-                transform: scale(1.25);
+                color: #808080;
+                width: 13px;
+                height: 13px;
             }
         }
 
+        .more-for-radius:hover {
+            background: #F4F5F5;
+        }
     }
 
     .add {

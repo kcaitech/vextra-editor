@@ -27,7 +27,6 @@ const invalid = computed(() => {
     justify-content: center;
     height: 80%;
     margin: 0 2px;
-    border-radius: 2px;
     min-width: 28px;
     min-height: 28px;
     overflow: hidden;
@@ -35,11 +34,14 @@ const invalid = computed(() => {
     box-sizing: border-box;
     color: #ffffff;
     transition: 0.06s;
+    border-radius: var(--default-radius);
 }
 
-.tool-button:hover,
+.tool-button:hover {
+    background-color: rgba(255, 255, 255, 0.1);
+}
 .tool-button:active {
-    background-color: #000;
+    background-color: #1878F5;
 }
 
 .tool-button-invalid {

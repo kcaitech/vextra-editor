@@ -11,7 +11,7 @@
     // font
     --font-family: BlinkMacSystemFont, Segoe UI, Roboto, Helvetica, Arial, PingFang SC, Microsoft Yahei, Hiragino Sans GB, sans-serif, apple color emoji, Noto Color Emoji, segoe ui emoji, segoe ui symbol;
     --font-default-bold: 700;
-    --font-default-fontsize: 14px;
+    --font-default-fontsize: 12px;
 
     // frame
     --el-border-width: 1px;
@@ -19,7 +19,7 @@
     --el-component-size-large: 32px;
     --el-component-size: 24px;
     --el-component-size-small: 16px;
-    --default-radius: 3px;
+    --default-radius: 6px;
 
     // color
     color-scheme: light;
@@ -34,7 +34,7 @@
     --theme-color: #2c2c2c;
     --theme-color-anti: #ffffff;
     --input-background: #efefef;
-    --active-color: #865dff;
+    --active-color: rgb(24, 120, 245);
     --active-color-beta: #865dff;
     --el-color-white: #ffffff;
     --el-color-black: #000000;

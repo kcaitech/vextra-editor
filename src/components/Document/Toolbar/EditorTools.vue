@@ -142,8 +142,8 @@ onUnmounted(() => {
     }
 
     .temp {
-        width: 28px;
-        height: 28px;
+        width: 35px;
+        height: 35px;
         font-size: 12px;
         color: #ffffff;
         box-sizing: border-box;
@@ -153,8 +153,8 @@ onUnmounted(() => {
         padding: 4px;
 
         >svg {
-            width: 14px;
-            height: 14px;
+            width: 28px;
+            height: 28px;
         }
     }
 

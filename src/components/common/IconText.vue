@@ -26,6 +26,7 @@ const scale = ref<Scale>({
 })
 const isDrag = ref(false)
 const input = ref<HTMLInputElement>();
+const isActived = ref(false)
 
 function onChange(e: Event) {
     if (props.disabled) return;
@@ -64,6 +65,7 @@ function onChange(e: Event) {
     emit("onchange", value);
 }
 const onBlur = (e: MouseEvent) => {
+    isActived.value = false
     if (props.disabled) return;
     document.addEventListener('click', onBlur)
     if (e.target instanceof Element && !e.target.closest('.icontext')) {
@@ -115,6 +117,7 @@ const onMouseUp = (e: MouseEvent) => {
 }
 
 const selectValue = () => {
+    isActived.value = true
     if (input.value) {
         input.value.select()
     }
@@ -170,7 +173,7 @@ onMounted(() => {
 </script>
 
 <template>
-    <div :class="{ icontext: true, disabled: props.disabled }">
+    <div :class="{ icontext: true, disabled: props.disabled, actived: isActived }">
         <svg-icon @mousedown="onMouseDown" class="icon" v-if="props.svgicon" :icon-class="props.svgicon" :style="{
             width: `${props.frame ? frame?.width : 18}px`,
             height: `${props.frame ? frame?.height : 18}px`,
@@ -186,6 +189,9 @@ onMounted(() => {
 </template>
 
 <style scoped lang="scss">
+.actived {
+    border-color: #0d99ff;
+}
 .icontext {
     display: flex;
     flex-flow: row;

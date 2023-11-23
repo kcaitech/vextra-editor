@@ -37,8 +37,8 @@ function select(action: Action) {
   color: #ffffff;
 
   >svg {
-    width: 16px;
-    height: 16px;
+      width: 30px;
+      height: 30px;
   }
 }
 </style>

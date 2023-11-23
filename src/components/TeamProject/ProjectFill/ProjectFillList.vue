@@ -1,6 +1,6 @@
 
 <template>
-    <div class="tatle" style="height: calc(100vh - 56px - 96px - 56px);">
+    <div class="tatle" style="height: calc(100vh - 224px);">
         <tablelist :data="lists" :iconlist="iconlists" @share="Sharefile" @deletefile="Deletefile"
             @dbclickopen="openDocument" :addfile="currentProject.self_perm_type" @updatestar="Starfile"
             @rightMeun="rightmenu" :noNetwork="noNetwork" @refreshDoc="refreshDoc" @newProjectFill="newProjectFill"
@@ -54,6 +54,8 @@ let items = ['open', 'newtabopen', 'share', 'target_star']
 const props = defineProps<{
     currentProject: any
 }>()
+
+
 const { t } = useI18n()
 const route = useRoute();
 const showFileShare = ref<boolean>(false)
@@ -70,6 +72,7 @@ const iconlists = ref(['star', 'share', 'delete_p']);
 const moveVisible = ref(false);
 const projectItem = ref<any>({});
 const is_project = ref(false);
+
 //获取服务器我的文件列表
 async function getDoucment(id: string) {
     let projectId = id
@@ -115,6 +118,10 @@ const newProjectFill = () => {
     (window as any).sketchDocument = nd;
     router.push({ name: 'document' });
 }
+
+defineExpose({
+    newProjectFill
+})
 
 const moveFillAddress = (data: any) => {
     moveVisible.value = true;
@@ -248,8 +255,6 @@ const rightmenu = (e: MouseEvent, data: data) => {
     }
     docId.value = id
     mydata.value = data
-    console.log(mydata.value);
-    
     projectItem.value = projectList.value.filter(item => item.project.id === project_id)[0];
 }
 

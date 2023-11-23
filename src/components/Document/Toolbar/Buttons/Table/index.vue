@@ -96,8 +96,8 @@ const onMouseleave = () => {
   align-items: center;
   color: #ffffff;
   > svg {
-    width: 14px;
-    height: 14px;
+      width: 30px;
+      height: 30px;
   }
 }
 .popover-t {

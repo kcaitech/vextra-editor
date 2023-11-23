@@ -9,6 +9,7 @@ import {useRoute} from 'vue-router';
 import {Perm} from '@/context/workspace';
 import {permIsEdit} from '@/utils/content';
 import {ElMessage} from 'element-plus';
+import SvgIcon from "@/components/common/SvgIcon.vue";
 
 const {t} = useI18n();
 
@@ -121,13 +122,14 @@ const isDisabled: any = computed(() => {
 <template>
     <div class="file">
         <div class="icon" @click="showMenu" ref="trigger">
-            <svg width="18" height="18" viewBox="0 0 16 16" fill="none" stroke-width="1.5">
-                <g id="group-0" stroke="currentColor" fill="currentColor">
-                    <path d="M2.5 3H13.5M2.5 8H13.5M2.5 13H13.5" stroke-linecap="round" stroke-linejoin="miter"
-                          fill="none" vector-effect="non-scaling-stroke">
-                    </path>
-                </g>
-            </svg>
+            <!--            <svg width="18" height="18" viewBox="0 0 16 16" fill="none" stroke-width="1.5">-->
+            <!--                <g id="group-0" stroke="currentColor" fill="currentColor">-->
+            <!--                    <path d="M2.5 3H13.5M2.5 8H13.5M2.5 13H13.5" stroke-linecap="round" stroke-linejoin="miter"-->
+            <!--                          fill="none" vector-effect="non-scaling-stroke">-->
+            <!--                    </path>-->
+            <!--                </g>-->
+            <!--            </svg>-->
+            <svg-icon icon-class="menu"></svg-icon>
         </div>
         <div ref="popover" class="popover-f" v-if="popoverVisible">
             <span @click="newFile">{{ t('fileMenu.create_new') }}</span>
@@ -154,6 +156,18 @@ const isDisabled: any = computed(() => {
         justify-content: center;
         align-items: center;
         color: #ffffff;
+
+        > svg {
+            width: 32px;
+            height: 32px;
+            color: #FFFFFF;
+            margin-left: -10px;
+            margin-top: -2px;
+        }
+    }
+
+    .icon:hover {
+        background-color: rgba(255, 255, 255, 0.1);
     }
 
     .popover-f {

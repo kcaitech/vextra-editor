@@ -465,15 +465,20 @@ watchEffect(watcher)
         display: flex;
         justify-content: center;
         align-items: center;
-        width: 35px;
-        height: 35px;
-        border-radius: calc(14px);
-        border-bottom-left-radius: 0;
-        background-color: #fff;
-        box-shadow: 0px 5px 10px rgba(0, 0, 0, 0.15);
+        width: 94.12%;
+        height: 94.12%;
+        //border-radius: calc(14px);
+        //border-bottom-left-radius: 0;
+        //background-color: #fff;
+        //box-shadow: 0px 5px 10px rgba(0, 0, 0, 0.15);
         transition: 0.2s;
         transform-origin: left bottom;
         cursor: default;
+        border-radius: 16px 16px 16px 0px;
+        opacity: 1;
+        background: #FFFFFF;
+        border: 2px solid #1878F5;
+        box-shadow: 0px 2px 6px 0px rgba(0, 0, 0, 0.05);
 
         >img {
             width: 80%;

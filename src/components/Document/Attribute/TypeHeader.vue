@@ -45,7 +45,8 @@ const props = defineProps<{
     }
     > .header + .line {
         margin-top: 4px;
-        width: 100%;
+        margin-left: -10px;
+        width: 250px;
         height: 1px;
         background-color: var(--theme-color-line);
         flex: 0 0 auto;

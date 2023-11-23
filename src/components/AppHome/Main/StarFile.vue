@@ -1,29 +1,32 @@
 <template>
-    <div class="tatle" style="height: calc(100vh - 120px);">
-        <tablelist :data="lists" :iconlist="iconlists" @share="Sharefile" @dbclickopen="openDocument" @updatestar="Starfile"
-            :address="true" @rightMeun="rightmenu" :noNetwork="noNetwork" @refreshDoc="refreshDoc" />
+    <div class="title">
+        <div class="left"> {{ t('home.star_file') }}</div>
+    </div>
+    <div class="tatle" style="height:calc(100vh - 144px);">
+        <tablelist :data="searchlists" :iconlist="iconlists" @share="Sharefile" @dbclickopen="openDocument"
+            @updatestar="Starfile" :address="true" @rightMeun="rightmenu" :noNetwork="noNetwork" @refreshDoc="refreshDoc" />
     </div>
     <listrightmenu :items="items" :data="mydata" @ropen="openDocument" @r-sharefile="Sharefile" @r-starfile="Starfile" />
-    <FileShare v-if="showFileShare" @close="closeShare" :docId="docId" :selectValue="selectValue"
-        :userInfo="userInfo" :project="is_project" @select-type="onSelectType" @switch-state="onSwitch"
-        :shareSwitch="shareSwitch" :pageHeight="pageHeight" :docUserId="docUserId" :projectPerm="projectPerm">
+    <FileShare v-if="showFileShare" @close="closeShare" :docId="docId" :selectValue="selectValue" :userInfo="userInfo"
+        :project="is_project" @select-type="onSelectType" @switch-state="onSwitch" :shareSwitch="shareSwitch"
+        :pageHeight="pageHeight" :docUserId="docUserId" :projectPerm="projectPerm">
     </FileShare>
     <div v-if="showFileShare" class="overlay"></div>
 </template>
 <script setup lang="ts">
 import * as user_api from '@/request/users'
 import { ElMessage } from 'element-plus'
-import { ref, onMounted, onUnmounted, nextTick, watch, inject, Ref } from 'vue'
+import { ref, onMounted, onUnmounted, nextTick, watch, inject, Ref, watchEffect } from 'vue'
 import { useI18n } from 'vue-i18n'
 import { router } from '@/router'
 import FileShare from '@/components/Document/Toolbar/Share/FileShare.vue'
 import tablelist from '@/components/AppHome/tablelist.vue'
 import { UserInfo } from '@/context/user';
 import listrightmenu from "../listrightmenu.vue"
+import Bus from '@/components/AppHome/bus';
 const { t } = useI18n()
 
 const items = ['open', 'newtabopen', 'share', 'target_star', 'rename']
-const isLoading = ref(false);
 const showFileShare = ref<boolean>(false);
 const shareSwitch = ref(true)
 const pageHeight = ref(0)
@@ -36,9 +39,6 @@ const docUserId = ref('')
 const noNetwork = ref(false)
 const iconlists = ref(['star', 'share'])
 const is_project = ref(false);
-const emits = defineEmits<{
-    (e: 'dataUpdate', list: any, title: string): void
-}>();
 const projectPerm = ref()
 const { projectList } = inject('shareData') as {
     projectList: Ref<any[]>;
@@ -65,8 +65,6 @@ interface data {
 }
 
 async function getUserdata() {
-    // loading
-    isLoading.value = true
     try {
         const { data } = await user_api.GetfavoritesList()
         if (data == null) {
@@ -88,14 +86,26 @@ async function getUserdata() {
             }
         }
         lists.value = Object.values(data)
-    } catch (error) {
-        noNetwork.value = true
-        ElMessage.error(t('home.failed_list_tips'))
+    } catch (error: any) {
+        if (error.data.code === 401) {
+            return
+        } else {
+            noNetwork.value = true
+            ElMessage.closeAll('error')
+            ElMessage.error({ duration: 1500, message: t('home.failed_list_tips') })
+        }
     }
-    // unloading  
-    isLoading.value = false;
 }
 
+let searchvalue = ref('');
+const searchlists = ref<any[]>([])
+Bus.on('searchvalue', (str: string) => {
+    searchvalue.value = str
+})
+
+watchEffect(() => {
+    searchlists.value = lists.value.filter((el: any) => el.document.name.toLowerCase().includes(searchvalue.value.toLowerCase()))
+})
 const refreshDoc = () => {
     getUserdata()
 }
@@ -212,10 +222,6 @@ const onSelectType = (type: number) => {
     selectValue.value = type
 }
 
-watch(lists, (Nlist) => {
-    emits('dataUpdate', Nlist, t('home.modification_time'))
-}, { deep: true })
-
 onMounted(() => {
     getUserdata()
     getPageHeight()
@@ -235,5 +241,21 @@ onUnmounted(() => {
     height: 100%;
     z-index: 999;
     background-color: rgba(0, 0, 0, 0.5);
+}
+
+.title {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    margin: 0 8px 24px 8px;
+    box-sizing: border-box;
+
+    .left {
+        font-size: 18px;
+        font-weight: 500;
+        letter-spacing: 2px;
+        line-height: 36px;
+        white-space: nowrap;
+    }
 }
 </style>

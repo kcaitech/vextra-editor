@@ -65,8 +65,8 @@ function get_icon_class() {
     justify-content: center;
     align-items: center;
     svg {
-      width: 50%;
-      height: 50%;
+      width: 30px;
+      height: 30px;
     }
   }
 }

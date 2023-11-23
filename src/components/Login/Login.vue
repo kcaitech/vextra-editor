@@ -8,7 +8,6 @@ import { useI18n } from 'vue-i18n';
 import { ElMessage } from 'element-plus'
 import avatar from '@/assets/pd-logo-svg.svg';
 import { User } from '@/context/user'
-import { Path } from '@kcdesign/data'
 
 const { t } = useI18n()
 const isLoading = ref(false)
@@ -67,6 +66,7 @@ async function getlogin(code: string, invite_code: string = '', id: string = '')
                     } else {
                         router.push({ path: perRoute })
                     }
+                    localStorage.removeItem('perRoute')
                 }
                 else {
                     router.push({ name: 'apphome' })
@@ -162,13 +162,7 @@ const handleOpenNewWindow = (routeName: string) => {
     const routeLocation = router.resolve({
         name: routeName
     })
-    const newWindow = window.open(routeLocation.href, '_blank');
-    if (newWindow) {
-        setTimeout(() => {
-            newWindow.document.title = routeName === 'privacypolicy' ? '隐私协议' : '服务协议'
-        }, 100);
-
-    }
+    window.open(routeLocation.href, '_blank');
 }
 
 onMounted(() => {
@@ -223,13 +217,12 @@ const mobileKeywords = [
                     <a href="" @click.prevent="handleOpenNewWindow('privacypolicy')">{{ t('system.read_Privacy') }}</a>
                 </p>
             </div>
-            <Footer v-if="isShow" @Privacypolicy="handleOpenNewWindow" @Serviceagreement="handleOpenNewWindow" />
+            <Footer v-if="isShow" />
         </div>
         <div class="code_input" v-else>
             <div class="top">
                 <div class="img">
                     <img :src="avatar" alt="ProtoDesign" />
-                    <span>{{ t('system.product_name') }}</span>
                 </div>
             </div>
             <span class="Invitation_code">{{ t('home.invitation_code_tips') }}</span>
@@ -247,7 +240,7 @@ const mobileKeywords = [
     width: 100% !important;
     height: 100% !important;
     border-radius: 0 !important;
-    background: conic-gradient(from 207deg at 100% 0%, rgba(73, 125, 202, 0.00) -113deg, #542FDB 93deg, rgba(84, 47, 219, 0.54) 155deg, rgba(84, 47, 219, 0.31) 195deg, rgba(73, 125, 202, 0.00) 247deg, #542FDB 453deg) !important;
+    background: conic-gradient(from 207deg at 100% 0%, rgba(73, 125, 202, 0) -113deg, #0062ff 93deg, rgba(84, 47, 219, 0.54) 155deg, rgba(84, 47, 219, 0.31) 195deg, rgba(73, 125, 202, 0) 247deg, #007dee 453deg) !important;
     background-blend-mode: color-dodge !important;
     color: white;
 }
@@ -261,7 +254,7 @@ const mobileKeywords = [
 .main {
     width: 100vw;
     height: 100vh;
-    background: conic-gradient(from 207deg at 100% 0%, rgba(73, 125, 202, 0.00) -113deg, #542FDB 93deg, rgba(84, 47, 219, 0.54) 155deg, rgba(84, 47, 219, 0.31) 195deg, rgba(73, 125, 202, 0.00) 247deg, #542FDB 453deg);
+    background: conic-gradient(from 207deg at 100% 0%, rgba(73, 125, 202, 0) -113deg, #0062ff 93deg, rgba(84, 47, 219, 0.54) 155deg, rgba(84, 47, 219, 0.31) 195deg, rgba(73, 125, 202, 0) 247deg, #007dee 453deg);
     background-blend-mode: color-dodge;
 }
 
@@ -313,8 +306,8 @@ const mobileKeywords = [
             }
 
             img {
-                height: 160px;
-                width: 160px;
+                width: 300px;
+                height: 60px;
             }
         }
     }

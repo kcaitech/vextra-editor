@@ -257,6 +257,7 @@ const showHiddenLeft = () => {
     font-size: var(--font-default-fontsize);
     box-sizing: border-box;
     overflow: hidden;
+
     .comment-title {
         position: relative;
         height: 30px;
@@ -266,15 +267,26 @@ const showHiddenLeft = () => {
         padding: 0 var(--default-padding);
         border-bottom: 1px solid var(--theme-color-line);
         z-index: 1;
+
+        .title {
+            margin-left: -4%;
+        }
+
         .drop-dowm {
-            width: 30px;
+            width: 28px;
+            height: 28px;
             display: flex;
             justify-content: center;
             align-items: center;
+            margin-right: -7%;
+
             >svg {
-                width: 14px;
-                height: 14px;
+                width: 16px;
+                height: 16px;
             }
+        }
+        .drop-dowm:hover {
+            background-color: #F3F3F5;
         }
     }
     .comment-list {
@@ -310,6 +322,6 @@ const showHiddenLeft = () => {
 }
 .el-scrollbar {
     height: 100%;
-    padding-right: 10px;
+    //padding-right: 10px;
 }
 </style>

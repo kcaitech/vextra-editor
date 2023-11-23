@@ -358,15 +358,19 @@ onUnmounted(() => {
                 justify-content: space-between;
                 .page {
                     color:rgba(0, 0, 0, .5);
+                    margin-right: -2%;
+                    max-width: 117px;
+                    overflow: hidden;
+                    text-overflow: ellipsis;
                 }
             }
         }
     }
     .active {
-        background-color: var(--grey);
+        background-color: #F7F7F9;
     }
     .selected {
-        background-color: var(--left-navi-button-select-color);
+        background-color: rgba(24, 120, 245, 0.15);;
     }
     .custom-icon {
         color: green; /* 设置颜色为绿色 */

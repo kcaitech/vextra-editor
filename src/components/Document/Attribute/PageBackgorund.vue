@@ -136,6 +136,7 @@ onUnmounted(() => {
         box-sizing: border-box;
         display: flex;
         align-items: center;
+        background-color: #F4F5F5;
 
         .color {
             flex-shrink: 0;
@@ -144,6 +145,7 @@ onUnmounted(() => {
         input {
             outline: none;
             border: none;
+            background-color: #F4F5F5;
         }
 
         #clr {

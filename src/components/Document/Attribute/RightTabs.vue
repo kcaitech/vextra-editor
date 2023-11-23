@@ -149,7 +149,7 @@ onUnmounted(() => {
 
 .showHiddenR {
     position: absolute;
-    left: -12px;
+    left: -13px;
     top: 50%;
     transform: translateY(-50%);
     z-index: 9;

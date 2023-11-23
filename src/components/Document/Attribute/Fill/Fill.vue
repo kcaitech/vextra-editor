@@ -456,9 +456,9 @@ onUnmounted(() => {
                 <div class="color">
                     <ColorPicker :color="f.fill.color" :context="props.context" @change="c => getColorFromPicker(idx, c)">
                     </ColorPicker>
-                    <input ref="colorFill" :value="toHex(f.fill.color.red, f.fill.color.green, f.fill.color.blue)"
+                    <input ref="colorFill" class="colorFill" :value="toHex(f.fill.color.red, f.fill.color.green, f.fill.color.blue)"
                         :spellcheck="false" @change="(e) => onColorChange(idx, e)" @focus="selectColor(idx)" />
-                    <input ref="alphaFill" style="text-align: center;" :value="filterAlpha(f.fill.color.alpha * 100) + '%'"
+                    <input ref="alphaFill" class="alphaFill" :value="filterAlpha(f.fill.color.alpha * 100) + '%'"
                         @change="(e) => onAlphaChange(idx, e)" @focus="selectAlpha(idx)" />
                 </div>
                 <div style="width: 22px;"></div>
@@ -487,15 +487,14 @@ onUnmounted(() => {
         justify-content: center;
 
         >svg {
-            width: 50%;
-            height: 50%;
+            width: 75%;
+            height: 75%;
         }
 
         transition: .2s;
     }
-
     .add:hover {
-        transform: scale(1.25);
+        background-color: #F4F5F5;
     }
 
     .fills-container {
@@ -540,6 +539,7 @@ onUnmounted(() => {
             .color {
                 background-color: rgba(#D8D8D8, 0.4);
                 height: 100%;
+                width: 80%;
                 padding: 0px 5px;
                 margin-left: 5px;
                 border-radius: var(--default-radius);
@@ -547,12 +547,21 @@ onUnmounted(() => {
                 display: flex;
                 align-items: center;
 
-                input {
+                .colorFill {
                     outline: none;
                     border: none;
                     background-color: transparent;
-                    width: 85px;
-                    margin-left: 5px;
+                    width: 50px;
+                    margin-left: 12px;
+                }
+
+                .alphaFill {
+                    outline: none;
+                    border: none;
+                    background-color: transparent;
+                    width: 37px;
+                    margin-left: 20%;
+                    text-align: center;
                 }
 
                 input+input {
@@ -569,15 +578,15 @@ onUnmounted(() => {
                 height: 22px;
 
                 >svg {
-                    width: 11px;
-                    height: 11px;
+                    width: 13px;
+                    height: 13px;
                 }
 
                 transition: .2s;
             }
 
             .delete:hover {
-                color: #ff5555;
+                background-color: #F4F5F5;
             }
         }
     }
@@ -586,6 +595,7 @@ onUnmounted(() => {
         padding: 12px 0;
 
         .mixed-tips {
+            color: #737373;
             display: block;
             width: 100%;
             text-align: center;

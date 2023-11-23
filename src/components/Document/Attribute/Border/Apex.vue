@@ -73,15 +73,16 @@ onUnmounted(stop);
 <template>
     <div class="wrap">
         <div class="apex-select-wrap">
-            <Select style="z-index: 100;" :selected="borderFrontStyle" :item-view="BorderApexStyleItem"
+            <Select style="width: 95%; z-index: 100;" :selected="borderFrontStyle" :item-view="BorderApexStyleItem"
                 :value-view="BorderApexStyleSelectedItem" :item-height="30" :source="borderFrontStyleOptionsSource"
+                @select="borderApexStyleSelect"></Select>
+            <div style="width: 14%"></div>
+            <Select style="width: 95%; z-index: 100;left: -3%" :selected="borderEndStyle" :item-view="BorderApexStyleItem"
+                :value-view="BorderApexStyleSelectedItem" :item-height="30" :source="borderEndStyleOptionsSource"
                 @select="borderApexStyleSelect"></Select>
             <div class="change" @click="exchange">
                 <svg-icon icon-class="exchange"></svg-icon>
             </div>
-            <Select style="z-index: 100;" :selected="borderEndStyle" :item-view="BorderApexStyleItem"
-                :value-view="BorderApexStyleSelectedItem" :item-height="30" :source="borderEndStyleOptionsSource"
-                @select="borderApexStyleSelect"></Select>
         </div>
 
     </div>
@@ -104,6 +105,7 @@ onUnmounted(stop);
             display: flex;
             align-items: center;
             cursor: pointer;
+            margin-right: -8%;
 
             >svg {
                 width: 100%;
