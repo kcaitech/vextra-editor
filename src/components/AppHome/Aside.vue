@@ -1,7 +1,7 @@
 <script setup lang="ts" >
 import { router } from '@/router'
 import { useRoute } from 'vue-router'
-import { Repository, CoopRepository,createDocument,DocEditor } from '@kcdesign/data';
+import { Repository, CoopRepository, createDocument, DocEditor } from '@kcdesign/data';
 import { useI18n } from 'vue-i18n';
 import { Ref, inject, nextTick, onMounted, onUnmounted, ref, watch, computed, watchEffect } from 'vue';
 import * as user_api from '@/request/users'
@@ -14,7 +14,8 @@ import ProjectDialog from '../TeamProject/ProjectDialog.vue';
 import Tooltip from '@/components/common/Tooltip.vue';
 import ProjectAccessSetting from '../TeamProject/ProjectFill/ProjectAccessSetting.vue';
 import ProjectMemberg from '../TeamProject/ProjectFill/ProjectMemberg.vue';
-import avatar from '@/assets/pd-logo-svg.svg';
+import logo from '@/assets/pd-logo-svg.svg';
+import min_logo from '@/assets/logo.png';
 
 const { t } = useI18n();
 const route = useRoute();
@@ -563,7 +564,8 @@ onUnmounted(() => {
 </script>
 <template>
     <div class="logo">
-        <img class="logo-image" :src="avatar" alt="ProtoDesign" />
+        <img class="logo-image" :src="logo" alt="ProtoDesign" />
+        <img class="mini_logo-image" :src="min_logo" alt="ProtoDesign" style="display: none;" />
     </div>
     <el-row class="tac">
         <el-col>
@@ -611,12 +613,11 @@ onUnmounted(() => {
                 </div>
                 <div class="newteam-container">
                     <div class="left">
-                        <svg-icon icon-class="teamicon"></svg-icon>
                         <span>团队</span>
                     </div>
                     <div class="right" @click.stop="showteamcard">
                         <Tooltip :content="'创建团队'" :offset="10">
-                        <svg-icon icon-class="add-icon"></svg-icon>
+                            <svg-icon icon-class="add-icon"></svg-icon>
                         </Tooltip>
                     </div>
                 </div>
@@ -636,8 +637,6 @@ onUnmounted(() => {
                                             </div>
                                             <div class="name">{{ t('Createteam.sharetip') }}</div>
                                         </div>
-                                        <div class="right">
-                                        </div>
                                     </div>
                                 </template>
                                 <template v-for="(item, i) in projectShareList" :key="i">
@@ -650,14 +649,16 @@ onUnmounted(() => {
                                             <div class="project_name">{{ item.project.name }}</div>
                                             <div class="right">
                                                 <Tooltip :content="t('Createteam.cancelFixed')" :offset="10">
-                                                    <div @click.stop="shareFixed(i, item.project.id)">
-                                                        <svg-icon class="fixed" icon-class="fixed-icon"></svg-icon>
+                                                    <div class="fixed" @click.stop="shareFixed(i, item.project.id)">
+                                                        <svg-icon icon-class="fixed-icon"
+                                                            style="color: rgba(24, 120, 245, 1);"></svg-icon>
                                                     </div>
                                                 </Tooltip>
                                                 <Tooltip :content="'新建文件'" :offset="10">
-                                                    <svg-icon icon-class="add-icon"
-                                                        @click.stop="newProjectFile(item.project.id)"
-                                                        v-if="item.self_perm_type > 2" />
+                                                    <div v-if="item.self_perm_type > 2" class="newfile"
+                                                        @click.stop="newProjectFile(item.project.id)">
+                                                        <svg-icon icon-class="add-icon"></svg-icon>
+                                                    </div>
                                                 </Tooltip>
                                             </div>
                                         </div>
@@ -686,8 +687,10 @@ onUnmounted(() => {
                                             </div>
                                             <div class="name">{{ data.team.name }}</div>
                                         </div>
-                                        <div class="right" @click.stop="showprojectcard(data.team.id)">
-                                            <svg-icon icon-class="add-icon" v-if="data.self_perm_type > 0" />
+                                        <div class="right" v-if="data.self_perm_type > 0">
+                                            <div class="newproject" @click.stop="showprojectcard(data.team.id)">
+                                                <svg-icon icon-class="add-icon" />
+                                            </div>
                                         </div>
                                     </div>
                                 </template>
@@ -697,17 +700,21 @@ onUnmounted(() => {
                                         :class="{ 'is_active': isProjectActive(item.project.id) }">
                                         <el-input v-if="reName === item.project.id" v-model="proname" ref="Input"
                                             :autofocus="true" @blur="onblur" />
-                                        <div v-else style="box-sizing: border-box;">
+                                        <div v-else>
                                             <div class="project_name">{{ item.project.name }}</div>
                                             <div class="right">
                                                 <Tooltip :content="t('Createteam.cancelFixed')" :offset="10">
-                                                    <div @click.stop="cancelFixed(index, i, item.project.id)">
-                                                        <svg-icon class="fixed" icon-class="fixed-icon"></svg-icon>
+                                                    <div class="fixed" @click.stop="cancelFixed(index, i, item.project.id)">
+                                                        <svg-icon icon-class="fixed-icon"
+                                                            style="color: rgba(24, 120, 245, 1);"></svg-icon>
                                                     </div>
                                                 </Tooltip>
-                                                <svg-icon icon-class="add-icon"
-                                                    @click.stop="newProjectFile(item.project.id)"
-                                                    v-if="item.self_perm_type > 2" />
+                                                <Tooltip :content="'新建文件'" :offset="10">
+                                                    <div v-if="item.self_perm_type > 2" class="newfile"
+                                                        @click.stop="newProjectFile(item.project.id)">
+                                                        <svg-icon icon-class="add-icon"></svg-icon>
+                                                    </div>
+                                                </Tooltip>
                                             </div>
                                         </div>
                                     </div>
@@ -719,9 +726,13 @@ onUnmounted(() => {
                                         :class="{ 'is_active': isProjectActive(target.project.id) }">
                                         <div style="box-sizing: border-box;">
                                             <div class="project_name">{{ target.project.name }}</div>
-                                            <div class="right" @click.stop="newProjectFile(target.project.id)"
-                                                v-if="target.self_perm_type > 2">
-                                                <svg-icon icon-class="add-icon" />
+                                            <div class="right">
+                                                <Tooltip :content="'新建文件'" :offset="10">
+                                                    <div v-if="target.self_perm_type > 2" class="newfile"
+                                                        @click.stop="newProjectFile(target.project.id)">
+                                                        <svg-icon icon-class="add-icon"></svg-icon>
+                                                    </div>
+                                                </Tooltip>
                                             </div>
                                         </div>
                                     </div>
@@ -765,6 +776,11 @@ onUnmounted(() => {
     .logo-image {
         margin: 16px 0;
     }
+
+    .mini_logo-image {
+        margin: 16px 0;
+        height: 28px;
+    }
 }
 
 a {
@@ -776,6 +792,7 @@ a {
 }
 
 :deep(.el-collapse-item__header) {
+    cursor: default !important;
     border: none;
     height: 36px;
     margin-bottom: 6px;
@@ -784,15 +801,6 @@ a {
 
 :deep(.el-collapse .el-collapse-item__arrow) {
     display: none;
-}
-
-:deep(.el-collapse-item__header:hover) {
-    background-color: rgba(250, 250, 250, 1);
-
-    .right {
-        outline: none;
-        visibility: visible;
-    }
 }
 
 :deep(.el-collapse-item__wrap) {
@@ -826,8 +834,6 @@ a {
 .nested-enter-from .inner,
 .nested-leave-to .inner {
     top: calc(50% - 50px);
-    // left: 50%;
-    // transform: translate(-50%, -50%) scale(0.8);
     opacity: 0.5;
 }
 
@@ -845,28 +851,31 @@ a {
     height: 40px;
     display: flex;
     align-items: center;
-    margin: 20px 12px 6px 6px;
+    margin: 20px 6px 6px 6px;
     padding: 0 0 0 16px;
     justify-content: space-between;
-    font-size: 14px;
+    font-size: 13px;
     color: rgb(128, 128, 128);
 
     .left {
         display: flex;
         align-items: center;
 
-        svg {
-            fill: rgba(128, 128, 128, 1);
-            margin-right: 5px;
-            width: 24px;
-            height: 20px;
+        span {
+            padding: 0 2px;
+            white-space: nowrap;
         }
     }
 
     .right {
+        height: 28px;
+        width: 28px;
         display: flex;
-        padding: 6px;
+        align-items: center;
+        justify-content: center;
+        margin: 6px;
         border-radius: 6px;
+        box-sizing: border-box;
 
         &:hover {
             background-color: rgba(243, 243, 245, 1);
@@ -875,6 +884,7 @@ a {
         svg {
             outline: none;
             color: rgba(51, 51, 51, 1);
+            padding: 1px;
             width: 14px;
             height: 14px;
         }
@@ -898,6 +908,7 @@ a {
             background: none;
 
             .el-menu-item {
+                cursor: default !important;
                 border-radius: 4px;
                 height: 36px;
                 line-height: 36px;
@@ -907,10 +918,13 @@ a {
 
                 &:hover {
                     background-color: rgba(243, 243, 245, 1);
-                    // color: #9775fa;
+
+                    .right {
+                        visibility: visible;
+                    }
                 }
 
-                .el-icon{
+                .el-icon {
                     fill: none !important;
                 }
 
@@ -934,7 +948,7 @@ a {
                     &:hover {
                         background-color: rgba(243, 243, 245, 1);
 
-                        .right {
+                        .right .newproject {
                             visibility: visible;
                         }
                     }
@@ -984,11 +998,15 @@ a {
 
                             .text {
                                 display: flex;
+                                justify-content: center;
+                                width: 20px;
+                                height: 20px;
 
                                 span {
                                     color: white;
-                                    font-size: 14px;
+                                    font-size: 12px;
                                     font-weight: 600;
+                                    line-height: 20px;
                                 }
                             }
                         }
@@ -998,29 +1016,35 @@ a {
                             text-overflow: ellipsis;
                             white-space: nowrap;
                             line-height: 36px;
-                            font-size: 12px;
+                            font-size: 14px;
                             width: 150px;
                         }
                     }
 
                     .right {
-                        visibility: hidden;
-                        margin-right: 6px;
-                        height: 100%;
                         display: flex;
-                        align-items: center;
 
-                        svg {
+                        .newproject {
+                            visibility: hidden;
+                            margin-right: 6px;
+                            width: 26px;
+                            height: 26px;
                             border-radius: 6px;
-                            padding: 6px;
-                            width: 14px;
-                            min-width: 14px;
-                            height: 14px;
-                            color: rgba(51, 51, 51, 1);
+                            display: flex;
+                            align-items: center;
+                            justify-content: center;
+
+                            svg {
+                                width: 14px;
+                                min-width: 14px;
+                                height: 14px;
+                                color: rgba(51, 51, 51, 1);
+                            }
 
                             &:hover {
                                 background-color: rgba(235, 235, 237, 1);
                             }
+
                         }
                     }
                 }
@@ -1029,8 +1053,9 @@ a {
                     display: flex;
                     align-items: center;
                     justify-content: space-between;
-                    margin: 2px 6px;
+                    margin: 6px 6px;
                     border-radius: 6px;
+
                     .el-input {
                         height: 36px;
                         border: none;
@@ -1040,8 +1065,8 @@ a {
                     &:hover {
                         background-color: rgba(243, 243, 245, 1);
 
-                        .right {
-                            display: flex;
+                        .right .newfile {
+                            visibility: visible;
                         }
                     }
 
@@ -1051,35 +1076,37 @@ a {
                         justify-content: space-between;
                         width: 100%;
                         height: 36px;
-                        border-radius: 4px;
+                        border-radius: 6px;
                         padding-left: 46px;
-
+                        box-sizing: border-box;
 
                         .right {
-                            >div {
+                            display: flex;
+
+                            .fixed,
+                            .newfile {
                                 display: flex;
                                 align-items: center;
-                            }
-
-                            display: none;
-                            align-items: center;
-                            height: 100%;
-                            margin-right: 6px;
-
-                            svg {
-                                padding: 6px;
+                                justify-content: center;
+                                width: 28px;
+                                height: 28px;
+                                margin-right: 6px;
                                 border-radius: 6px;
-                                width: 14px;
-                                min-width: 14px;
-                                height: 14px;
-                                color:rgba(51, 51, 51, 1) ;
+
+                                svg {
+                                    width: 14px;
+                                    min-width: 14px;
+                                    height: 14px;
+                                    color: rgba(51, 51, 51, 1);
+                                }
 
                                 &:hover {
                                     background-color: rgba(235, 235, 237, 1);
                                 }
                             }
-                            .fixed{
-                                color:rgba(24, 120, 245, 1) ;
+
+                            .newfile {
+                                visibility: hidden;
                             }
                         }
                     }
@@ -1108,18 +1135,20 @@ a {
     white-space: nowrap;
     margin-right: 10px;
     line-height: 36px;
-    font-size: 12px;
+    font-size: 14px;
 }
 
 .receive {
     display: flex;
     align-items: center;
     justify-content: center;
-    margin: 0 6px 0 0px;
-    
+    margin-right: 6px;
+
     >svg {
-        width: 15px;
-        height: 15px;
+        padding: 2px;
+        width: 20px;
+        height: 20px;
+        box-sizing: border-box;
     }
 }
 
@@ -1146,30 +1175,47 @@ a {
     background-color: #9775fa;
 }
 
-.hover {
-    background-color: #f3f0ff;
-}
 
 .is_active {
     font-weight: 600;
     color: rgba(24, 120, 245, 1);
     background-color: rgba(24, 120, 245, 0.1) !important;
+
+    .right .newproject,
+    .fixed,
+    .newfile {
+        &:hover {
+            background-color: rgba(24, 120, 245, 0.1) !important;
+        }
+    }
+
 }
 
 
 
-
 @media screen and (max-width:1000px) {
+    .logo {
+        .logo-image {
+            display: none;
+        }
+
+        .mini_logo-image {
+            display: flex !important;
+        }
+    }
+
+    .newteam-container {
+        padding: 0 !important;
+        justify-content: center !important;
+
+        .left {
+            display: none !important;
+        }
+    }
 
     span,
     h3 {
         display: none;
-    }
-
-    .el-row .el-col .new button .el-icon {
-        padding: 0;
-        margin: 0;
-        font-size: 24px;
     }
 
     .el-menu-item {
@@ -1179,7 +1225,7 @@ a {
     .el-icon {
         margin: 0;
         padding: 0;
-        font-size: 32px;
+        font-size: 32px !important;
     }
 
     .project_name {
@@ -1187,6 +1233,8 @@ a {
     }
 
     .team-title {
+        justify-content: center !important;
+
         .left {
             display: flex;
             justify-content: center;
@@ -1210,6 +1258,10 @@ a {
                     }
                 }
             }
+
+            .receive {
+                margin: 0 !important;
+            }
         }
 
         .name {
@@ -1217,7 +1269,7 @@ a {
         }
 
         .right {
-            display: none;
+            display: none !important;
         }
     }
 

@@ -7,6 +7,7 @@ if "%VERSION_TAG%"=="" (
     set VERSION_TAG=latest
 )
 
+call npm i
 call npm run build:web
 
 docker build -t webapp:%VERSION_TAG% -f Dockerfile ../../

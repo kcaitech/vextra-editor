@@ -17,7 +17,7 @@
         </div>
         <div class="right">
             <button type="button" v-if="itemid === 0 && teamSelfPermType > 0" @click.stop="showoverlay = true">
-                <svg-icon icon-class="addfile-icon" ></svg-icon>
+                <svg-icon icon-class="addfile-icon"></svg-icon>
                 {{ t('teampage.addproject') }}
             </button>
             <button type="button" v-if="itemid === 1" @click.stop="showoverlay = true">
@@ -26,7 +26,7 @@
             </button>
         </div>
     </div>
-    <div class="team-header">
+    <div class="team-header" :style="{ marginBottom: itemid === 2 ? '0px' : '' }">
         <ul class="menu">
             <li class="indicator" :style="{ width: elwidth + 'px', left: elleft + 'px', height: 2 + 'px' }"></li>
             <li class="item" :class="{ 'activate': itemid === index }" v-for="(item, index) in items" :key="index"
@@ -183,6 +183,10 @@ onUnmounted(() => {
     opacity: 0.5;
 }
 
+:deep(.el-input__wrapper) {
+    border-radius: 8px;
+}
+
 .overlay {
     position: absolute;
     top: 0;
@@ -246,7 +250,7 @@ onUnmounted(() => {
 
             .close:hover {
                 border-radius: 2px;
-                background-color:#F7F7F9;
+                background-color: #F7F7F9;
             }
 
             .el-icon {
@@ -260,7 +264,7 @@ onUnmounted(() => {
 .team {
     display: flex;
     gap: 24px;
-    height: 84px;
+    height: 108px;
     margin: 0 8px 0 8px;
     align-items: center;
     justify-content: space-between;

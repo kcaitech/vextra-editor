@@ -167,11 +167,16 @@ function colorPickerMount() {
   nextTick(() => {
     if (popoverEl.value && block.value) {
       let el = popoverEl.value
-      let top = Math.min(document.documentElement.clientHeight - 76 - block.value.offsetTop - el.offsetHeight, 0);
+      const doc_height = document.documentElement.clientHeight;
+      let top = Math.min(doc_height - 76 - block.value.offsetTop - el.offsetHeight, 0);
       if (props.top) {
         el.style.top = (top + props.top) + 'px';
       } else {
         el.style.top = top + 'px';
+      }
+      const {height, y} = el.getBoundingClientRect();
+      if(doc_height - y < height + 10) {
+        el.style.top = parseInt(el.style.top) - ((height + 20) - (doc_height - y)) + 'px'
       }
       if (props.late) {
         el.style.left = -(36 + el.offsetWidth + props.late) + 'px';

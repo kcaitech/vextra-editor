@@ -5,7 +5,7 @@
                 <div class="title-p" v-if="!cusname">
                     <Tooltip :content="t('projectpage.back')" :offset="5">
                         <div class="back" @click="back(currentProject[0].project, currentProject[0].is_in_team)">
-                            <svg-icon icon-class="back-icon"></svg-icon>
+                            <svg-icon icon-class="back-icon" ></svg-icon>
                         </div>
                     </Tooltip>
                     <p @click="input_cusname(currentProject[0])"
@@ -18,7 +18,7 @@
                                 <MoreFilled />
                             </el-icon>
                             <TeamProjectMenu v-if="showProjecrMenu" :items="menuItem" :data="currentProject[0]"
-                                @mousedown.stop :top="23" :left="0" @cancelFixed="cancelFixed" @close="closeMenu"
+                                @mousedown.stop :top="28" :left="0" @cancelFixed="cancelFixed" @close="closeMenu"
                                 @projectSetting="projectSetting" @reName="input_cusname"
                                 @showMembergDialog="showMembergDialog" @delProject="onDelProject"
                                 @exitProject="onExitProject">
@@ -596,7 +596,7 @@ onUnmounted(() => {
     display: flex;
     justify-content: space-between;
     align-items: center;
-    height: 84px;
+    height: 108px;
     margin: 0 8px;
     box-sizing: border-box;
 
@@ -616,8 +616,15 @@ onUnmounted(() => {
                 white-space: nowrap;
 
                 svg {
-                    width: 16px;
-                    height: 16px;
+                    width: 14px;
+                    height: 14px;
+                }
+
+                .back{
+                    svg{
+                        width: 16px !important;
+                        height: 16px !important;
+                    }
                 }
 
                 .setting {
@@ -675,7 +682,7 @@ onUnmounted(() => {
             padding-right: 10px;
 
             input {
-                font-size: 14px;
+                font-size: 12px;
                 outline: none;
                 border: none;
                 width: auto;
@@ -695,7 +702,7 @@ onUnmounted(() => {
         span {
             display: list-item;
             width: auto;
-            font-size: 14px;
+            font-size: 12px;
             color: rgba(0, 0, 0, 0.7);
             padding: 5px 0px;
             box-sizing: border-box;
@@ -708,7 +715,7 @@ onUnmounted(() => {
 
     .right {
         display: flex;
-        gap: 18px;
+        gap: 8px;
         align-items: center;
         box-sizing: border-box;
 
@@ -724,8 +731,8 @@ onUnmounted(() => {
             box-sizing: border-box;
 
             svg {
-                width: 16px;
-                height: 16px;
+                width: 18px;
+                height: 18px;
             }
 
             &:hover {
@@ -740,6 +747,7 @@ onUnmounted(() => {
             gap: 4px;
             width: 108px;
             height: 36px;
+            margin-left: 10px;
             border: 1px solid rgba(24, 120, 245, 1);
             border-radius: 6px;
             background-color: rgba(24, 120, 245, 1);

@@ -7,6 +7,7 @@ import Arrange from './Arrange.vue';
 import ShapeBaseAttr from './BaseAttr/Index.vue';
 import Fill from './Fill/Fill.vue';
 import Border from './Border/Border.vue';
+import Shadow from './Shadow/Shadows.vue';
 import PageBackgorund from './PageBackgorund.vue';
 import Text from './Text/Text.vue';
 import { throttle } from 'lodash';
@@ -14,6 +15,7 @@ import TableText from './Table/TableText.vue'
 import { TableSelection } from '@/context/tableselection';
 import TableStyle from './Table/TableStyle.vue'
 import { Tool } from '@/context/tool';
+import Opacity from './Opacity/Opacity.vue';
 const props = defineProps<{ context: Context }>();
 const shapes = shallowRef<Shape[]>([]);
 const len = computed<number>(() => shapes.value.length);
@@ -48,6 +50,17 @@ const WITH_BORDER = [
     ShapeType.Contact
 ];
 const WITH_TABLE = [ShapeType.Table];
+const WITH_SHADOW = [
+    ShapeType.Rectangle,
+    ShapeType.Oval,
+    ShapeType.Path,
+    ShapeType.Artboard,
+    ShapeType.Image,
+    ShapeType.Text,
+    ShapeType.Path2,
+    ShapeType.Group,
+    ShapeType.Line,
+]
 const shapeType = ref();
 const reflush = ref<number>(0);
 
@@ -118,11 +131,14 @@ onUnmounted(() => {
         <Arrange v-if="len > 1" :context="props.context" :shapes="shapes"></Arrange>
         <div v-if="len" :reflush="reflush" @mousedown.stop>
             <ShapeBaseAttr v-if="baseAttr" :context="props.context"></ShapeBaseAttr>
+            <Opacity :shapes="shapes" :context="props.context"></Opacity>
             <Fill v-if="WITH_FILL.includes(shapeType)" :shapes="shapes" :context="props.context"></Fill>
             <Border v-if="WITH_BORDER.includes(shapeType)" :shapes="shapes" :context="props.context"></Border>
             <Text v-if="WITH_TEXT.includes(shapeType)" :shape="(shapes[0] as TextShape)" :context="props.context"></Text>
             <TableText v-if="WITH_TABLE.includes(shapeType)" :shape="(shapes[0] as TableShape)" :context="props.context">
             </TableText>
+            <Shadow v-if="WITH_SHADOW.includes(shapeType)" :shapes="shapes" :context="props.context">
+            </Shadow>
         </div>
     </section>
 </template>
