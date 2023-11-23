@@ -36,6 +36,7 @@
     "moment": "^2.29.4",
     "node-stream-zip": "*",
     "pathkit-wasm": "^1.0.0",
+    "pinyin-match": "^1.2.4",
     "qrcode": "^1.5.1",
     "raw-loader": "^4.0.2",
     "sass": "^1.58.3",

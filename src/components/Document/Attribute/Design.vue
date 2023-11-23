@@ -17,6 +17,8 @@ import TableText from './Table/TableText.vue'
 import {TableSelection} from '@/context/tableselection';
 import {Tool} from '@/context/tool';
 import BaseForPathEdit from "@/components/Document/Attribute/BaseAttr/BaseForPathEdit.vue";
+import Opacity from './Opacity/Opacity.vue';
+import TableStyle from './Table/TableStyle.vue'
 
 const props = defineProps<{ context: Context }>();
 const shapes = shallowRef<Shape[]>([]);
@@ -155,6 +157,7 @@ onUnmounted(() => {
                 <Arrange :context="props.context" :shapes="shapes"></Arrange>
                 <ShapeBaseAttr v-if="baseAttr" :context="props.context"></ShapeBaseAttr>
                 <BaseForPathEdit v-if="editAttr" :context="props.context"></BaseForPathEdit>
+                <Opacity :shapes="shapes" :context="props.context"></Opacity>
                 <Module v-if="symbol_attribute" :context="props.context" :shapeType="shapeType"
                         :shapes="shapes"></Module>
                 <Fill v-if="WITH_FILL.includes(shapeType)" :shapes="shapes" :context="props.context"></Fill>

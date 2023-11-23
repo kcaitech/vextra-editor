@@ -15,14 +15,13 @@ import Table from "./Buttons/Table/index.vue"
 import Comment from "./Buttons/Comment.vue"
 import Contact from "./Buttons/CreateContact.vue";
 import CreateComps from "./Buttons/CreateComps.vue";
-import {WorkSpace, Perm} from "@/context/workspace";
-import {Action, Tool} from "@/context/tool";
-import {useI18n} from 'vue-i18n'
-import {message} from "@/utils/message";
 import PathEditTool from "@/components/Document/Toolbar/PathEditTool.vue";
-
-const {t} = useI18n();
-
+import { WorkSpace, Perm } from "@/context/workspace";
+import { Action, Tool } from "@/context/tool";
+import { useI18n } from 'vue-i18n'
+import { message } from "@/utils/message";
+import { ElMessage } from "element-plus";
+const { t } = useI18n();
 interface Props {
     context: Context
     selection: Selection
@@ -90,6 +89,13 @@ onUnmounted(() => {
     props.context.tool.unwatch(tool_watcher);
     props.context.tool.unwatch(workspace_watcher);
 })
+function applyForEdit() {
+    ElMessage.success({
+        message: '已发送权限申请',
+        center: true,
+        duration: 3000
+    })
+}
 </script>
 
 <template>
@@ -112,6 +118,10 @@ onUnmounted(() => {
         <GroupUngroup :context="props.context" :selection="props.selection"></GroupUngroup>
     </div>
     <div v-if="isread || canComment || isLable" class="editor-tools" @dblclick.stop>
+        <span style="color: #ffffff;">{{ t('apply.read_only') }}</span>
+        <div class="button">
+            <button class="el" style="background-color: #865DFF;" @click="applyForEdit">{{ t('apply.apply_for_edit') }}</button>
+        </div>
         <Cursor @select="select" :d="selected" :active="selected === Action.AutoV || selected === Action.AutoK"
                 :is_lable="isLable" :edit="isEdit"></Cursor>
         <div class="vertical-line"/>
