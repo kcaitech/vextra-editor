@@ -65,7 +65,6 @@ function onChange(e: Event) {
     emit("onchange", value);
 }
 const onBlur = (e: MouseEvent) => {
-    isActived.value = false
     if (props.disabled) return;
     document.addEventListener('click', onBlur)
     if (e.target instanceof Element && !e.target.closest('.icontext')) {
@@ -157,7 +156,9 @@ watch(scale, () => {
         emit("onchange", result!)
     }
 }, { deep: true });
-
+function blur2() {
+    isActived.value = false
+}
 watch(screenWidth, () => {
     screenWidth.value = window.innerWidth;
 })
@@ -183,15 +184,12 @@ onMounted(() => {
         <img :class="props.disabled ? 'deicon' : 'icon'" v-if="props.icon" :src="props.icon" />
         <span @mousedown="onMouseDown" :class="props.disabled ? 'deicon' : 'icon'" v-if="!props.icon && props.ticon">{{
             props.ticon }}</span>
-        <input ref="input" @click="onBlur" @focus="selectValue" :value="props.text" @keydown="onKeyBlur"
+        <input ref="input" @click="onBlur" @focus="selectValue" @blur="blur2" :value="props.text" @keydown="onKeyBlur"
             :disabled="props.disabled" :style="{ cursor: props.disabled ? 'default' : 'text' }" v-on:change="onChange" />
     </div>
 </template>
 
 <style scoped lang="scss">
-.actived {
-    border-color: #0d99ff;
-}
 .icontext {
     display: flex;
     flex-flow: row;
@@ -201,6 +199,7 @@ onMounted(() => {
     align-items: center;
     padding: 0 8px;
     box-sizing: border-box;
+
 
     >.icon {
         color: grey;
@@ -240,5 +239,9 @@ onMounted(() => {
 
 .disabled {
     opacity: 0.4;
+}
+
+.actived {
+    border: 2px solid #0d99ff;
 }
 </style>

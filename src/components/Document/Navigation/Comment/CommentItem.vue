@@ -11,6 +11,7 @@ import 'moment/locale/zh-cn';
 import { mapDateLang } from '@/utils/date_lang'
 import { Comment } from "@/context/comment";
 import { WorkSpace } from "@/context/workspace";
+import SvgIcon from "@/components/common/SvgIcon.vue";
 const { t } = useI18n()
 const props = defineProps<{
     commentItem: any,
@@ -122,14 +123,14 @@ const onReply = () => {
         const contentViewCenter = { x: (right - x) / 2, y: (bottom - y) / 2 }; // 计算contentview中心点的位置
         const transX = contentViewCenter.x - commentCenter.x, transY = contentViewCenter.y - commentCenter.y;
         props.context.selection.selectComment(props.commentItem.id)
-        
+
         if (transX || transY) {
             workspace.matrix.trans(transX, transY);
             workspace.notify(WorkSpace.MATRIX_TRANSFORMATION);
         }
     }else {
         props.context.comment.commentMount(false)
-        props.context.selection.selectCommentPage(props.pageId) 
+        props.context.selection.selectCommentPage(props.pageId)
         props.context.selection.setCommentSelect(true)
         props.context.selection.selectComment(props.commentItem.id)
     }
@@ -248,23 +249,35 @@ onUnmounted(() => {
                     <div class="name" :style="{opacity: props.commentItem.status === 0 ? 1 : 0.5}">{{props.commentItem.user.nickname}} </div>&nbsp;&nbsp;
                     <div class="date">{{ formatDate(props.commentItem.record_created_at) }}</div>
                 </div>
-                <div class="icon"  :style="{visibility: hoverIcon ? 'visible' : 'hidden'}">
+                <div class="icon" :style="{visibility: hoverIcon ? 'visible' : 'hidden'}">
                     <el-button-group class="ml-4">
                         <el-tooltip class="box-item" effect="dark" :content="`${t('comment.reply')}`"
                             placement="bottom" :show-after="1000" :offset="10" :hide-after="0">
-                            <el-button plain :icon="ChatDotSquare" @click.stop="onReply" style="margin-right: 5px;"/>
+<!--                            <el-button plain :icon="ChatDotSquare" @click.stop="onReply" style="margin-right: 5px;"/>-->
+                            <div class="onReply" @click.stop="onReply">
+                                <svg-icon icon-class="comment-reply"></svg-icon>
+                            </div>
                         </el-tooltip>
                         <el-tooltip class="box-item" effect="dark" :content="`${t('comment.delete')}`"
                             placement="bottom" :show-after="1000" :offset="10" :hide-after="0" v-if="isControls">
-                            <el-button plain :icon="Delete" @click="onDelete" :style="{'margin-right': 5 +'px'}" v-if="isControls"/>
+<!--                            <el-button plain :icon="Delete" @click="onDelete" :style="{'margin-right': 5 +'px'}" v-if="isControls"/>-->
+                            <div class="onDelete" @click="onDelete" v-if="isControls">
+                                <svg-icon icon-class="comment-delete"></svg-icon>
+                            </div>
                         </el-tooltip>
                         <el-tooltip class="box-item" effect="dark" :content="`${t('comment.settled')}`"
                             placement="bottom" :show-after="1000" :offset="10" :hide-after="0" v-if="resolve && isControls">
-                            <el-button plain :icon="CircleCheck" @click="onResolve" v-if="isControls"/>
+<!--                            <el-button plain :icon="CircleCheck" @click="onResolve" v-if="isControls"/>-->
+                            <div class="onResolve" @click="onResolve" v-if="isControls">
+                                <svg-icon icon-class="comment-solve"></svg-icon>
+                            </div>
                         </el-tooltip>
                         <el-tooltip class="box-item" effect="dark" :content="`${t('comment.settled')}`"
                             placement="bottom" :show-after="1000" :offset="10" :hide-after="0" v-else-if="!resolve && isControls">
-                            <el-button class="custom-icon" plain :icon="CircleCheckFilled" @click="onResolve" v-if="isControls"/>
+<!--                            <el-button class="custom-icon" plain :icon="CircleCheckFilled" @click="onResolve" v-if="isControls"/>-->
+                            <div class="onResolved" @click="onResolve" v-if="isControls">
+                                <svg-icon icon-class="comment-solved"></svg-icon>
+                            </div>
                         </el-tooltip>
                     </el-button-group>
                 </div>
@@ -309,11 +322,13 @@ onUnmounted(() => {
                 width: 100%;
                 height: 30px;
                 align-items: center;
-                justify-content: space-between;
+                //justify-content: space-between;
+
                 .item_heard {
                     display: flex;
                     width: calc(100% - 73px);
-                    margin-right: 3px;
+                    margin-right: 13px;
+
                     .name {
                         flex: 1;
                         width: calc(100% - 95px);
@@ -328,17 +343,90 @@ onUnmounted(() => {
                 .icon {
                     display: flex;
                     justify-content: flex-end;
-                    width: 70px;
+                    width: 60px;
                     height: 20px;
-                    .el-button {
-                        border: none;
-                        background-color: transparent;
-                        padding: 0;
-                        border-radius: 2px;
+                    //.el-button {
+                    //    border: none;
+                    //    background-color: transparent;
+                    //    padding: 0;
+                    //    border-radius: 2px;
+                    //    width: 20px;
+                    //    height: 20px;
+                    //    &:hover {
+                    //        background-color: rgba(0,0,0,0.08);
+                    //    }
+                    //}
+                    .onReply {
                         width: 20px;
                         height: 20px;
-                        &:hover {
-                            background-color: rgba(0,0,0,0.08);
+                        margin-left: -27px;
+                        display: flex;
+                        align-items: center;
+                        justify-content: center;
+                        border-radius: 4px;
+
+                        >svg {
+                            width: 12px;
+                            height: 12px;
+                            color: #555555;
+                        }
+                    }
+
+                    .onReply:hover{
+                        background-color: #EBEBED;
+                    }
+
+                    .onDelete {
+                        width: 20px;
+                        height: 20px;
+                        margin-top: -20px;
+                        margin-left: -9px;
+                        display: flex;
+                        align-items: center;
+                        justify-content: center;
+                        border-radius: 4px;
+
+                        >svg {
+                            width: 12px;
+                            height: 12px;
+                            color: #555555;
+                        }
+                    }
+
+                    .onDelete:hover{
+                        background-color: #EBEBED;
+                    }
+
+                    .onResolve {
+                        width: 20px;
+                        height: 20px;
+                        margin-top: -20px;
+                        margin-left: 9px;
+                        display: flex;
+                        align-items: center;
+                        justify-content: center;
+                        border-radius: 4px;
+
+                        >svg {
+                            width: 12px;
+                            height: 12px;
+                            color: #555555;
+                        }
+                    }
+
+                    .onResolve:hover{
+                        background-color: #EBEBED;
+                    }
+                    .onResolved {
+                        width: 20px;
+                        height: 20px;
+                        margin-top: -12px;
+                        margin-left: 9px;
+
+                        >svg {
+                            width: 12px;
+                            height: 12px;
+                            color: #555555;
                         }
                     }
                 }
@@ -348,18 +436,21 @@ onUnmounted(() => {
                 overflow: hidden;
                 text-overflow: ellipsis;
                 display: -webkit-box;
-                -webkit-line-clamp: 3;
+                -webkit-line-clamp: 4;
                 -webkit-box-orient: vertical;
                 color:rgba(0, 0, 0, .5);
+                margin: 0px -2px;
             }
+
             .bottom-info {
                 display: flex;
                 margin-top: 10px;
                 justify-content: space-between;
                 .page {
                     color:rgba(0, 0, 0, .5);
-                    margin-right: -2%;
+                    margin-right: 2%;
                     max-width: 117px;
+                    white-space: nowrap;
                     overflow: hidden;
                     text-overflow: ellipsis;
                 }
@@ -372,7 +463,7 @@ onUnmounted(() => {
     .selected {
         background-color: rgba(24, 120, 245, 0.15);;
     }
-    .custom-icon {
-        color: green; /* 设置颜色为绿色 */
-    }
+    //.onResolved {
+    //    color: green; /* 设置颜色为绿色 */
+    //}
 </style>

@@ -206,8 +206,9 @@ onUnmounted(() => {
                 :placeholder="t('comment.input_comments')" resize="none" size="small"
                 :input-style="{ overflow: scrollVisible ? 'visible' : 'hidden' }" @keydown="carriageReturn"
                 @input="handleInput" />
-            <div class="send" :style="{ opacity: sendBright ? '1' : '0.5' }" @click="addComment"><svg-icon
-                    icon-class="send"></svg-icon></div>
+            <div class="send" :style="{ background: sendBright ? '#1878F5' : 'transparent' }" @click="addComment">
+                <svg-icon icon-class="send" :style="{ color: sendBright ? '#FFFFFF' : '#CCCCCC' }"></svg-icon>
+            </div>
         </div>
     </div>
 </template>

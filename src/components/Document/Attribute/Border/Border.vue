@@ -577,6 +577,7 @@ onUnmounted(() => {
             width: 100%;
             text-align: center;
             font-size: var(--font-default-fontsize);
+            color: #737373;
         }
     }
 

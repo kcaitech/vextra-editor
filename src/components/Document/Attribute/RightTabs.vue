@@ -109,7 +109,7 @@ onUnmounted(() => {
     box-shadow: -4px 0px 4px rgba($color: #000000, $alpha: 0.05);
 
     .controller {
-        height: 32px;
+        height: 35px;
         width: 100%;
         flex: 0 0 auto;
         display: flex;
@@ -149,22 +149,26 @@ onUnmounted(() => {
 
 .showHiddenR {
     position: absolute;
-    left: -13px;
-    top: 50%;
+    left: -17px;
+    top: 0%;
     transform: translateY(-50%);
     z-index: 9;
     cursor: pointer;
-    height: 60px;
     background-color: var(--theme-color-anti);
     display: flex;
     align-items: center;
     justify-content: center;
-    border-radius: 4px 0px 0px 4px;
     box-shadow: -4px 0px 8px rgba($color: #000000, $alpha: 0.05);
+    width: 16px;
+    height: 44px;
+    border-radius: 8px 0px 0px 8px;
+    opacity: 1;
+    box-sizing: border-box;
+    border: 1px solid #F0F0F0;
 
     >.svg {
-        width: 12px;
-        height: 12px;
+        width: 10px;
+        height: 10px;
     }
 }
 
