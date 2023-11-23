@@ -23,7 +23,6 @@ interface Props {
     context: Context
     selection: Selection
     select?: any
-    d: Action
     active: boolean
     is_lable: boolean
     edit: boolean
