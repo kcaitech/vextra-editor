@@ -4,7 +4,7 @@ import {Context} from '@/context';
 import TypeHeader from '../TypeHeader.vue';
 import {ref, onMounted, onUnmounted, watch} from 'vue';
 import CompLayerShow from '../PopoverMenu/ComposAttri/CompLayerShow.vue';
-import {OverrideType, SymbolShape, TextShape, Variable, VariableType, Text} from '@kcdesign/data';
+import {OverrideType, SymbolShape, Variable, VariableType, Text} from '@kcdesign/data';
 import SelectLayerInput from './SelectLayerInput.vue';
 import {
     create_var_by_type,
@@ -51,7 +51,6 @@ const is_bind = ref<Variable>();
 const sym_layer = ref<SymbolShape>();
 const default_name = ref('');
 const selectId = ref<string[]>([]);
-const shape = ref(props.context.selection.textshape!);
 const textDefaultValue = ref('');
 const isBind = () => {
     const shapes = props.context.selection.selectedShapes;
@@ -94,20 +93,21 @@ function save_layer_show(type: VariableType, name: string) {
 }
 
 const selected_watcher = (t: number) => {
-    if (t === Selection.CHANGE_SHAPE) isBind();
+    if (t === Selection.CHANGE_SHAPE) {
+        update();
+        watchShapes();
+    }
+}
+
+function update() {
+    isBind();
+    get_text();
 }
 
 function text_watcher(args: any) {
     if (args === 'text') get_text();
     if (args === 'variable') isBind();
 }
-
-watch(() => shape.value, (v, o) => {
-    if (o) {
-        o.unwatch(text_watcher);
-    }
-    v.watch(text_watcher);
-}, {immediate: true})
 
 watch(() => sym_layer.value, (v, o) => {
     if (o) {
@@ -124,17 +124,6 @@ const input = () => {
     }
 }
 
-const keysumbit = (e: KeyboardEvent) => {
-    const {shiftKey, ctrlKey, metaKey} = e;
-    if (e.key === 'Enter') {
-        if (ctrlKey || metaKey || shiftKey) {
-            input_v.value = input_v.value + '\n'
-        } else {
-            input_v.value.blur();
-        }
-    }
-}
-
 function _delete() {
     if (!is_bind.value) return;
     if (!sym_layer.value) return;
@@ -142,24 +131,53 @@ function _delete() {
     editor.removeVar(is_bind.value.id);
 }
 
-const change = () => {
-
+const get_text = () => {
+    const shape = props.context.selection.textshape;
+    if (!shape) return;
+    textDefaultValue.value = shape.text.getText(0, Infinity).slice(0, -1);
 }
 
-const get_text = () => {
-    const text = (shape.value as TextShape).text.getText(0, Infinity).slice(0, -1);
-    textDefaultValue.value = text;
+/**
+ * @description 调整监听对象
+ * eg: 第一次选中了A、B,这个时候组件监听了A、B。
+ *     第二次从A、B到C、D，这个时候所选图形发生了变化，监听对象从A、B调整为C、D。
+ *     在调整过程中对C、D挂载(watch)监听的同时，还对A、B的监听进行了卸载(unwatch);
+ */
+const watchedShapes = new Map();
+
+function watchShapes() {
+    const needWatchShapes = new Map();
+    const selection = props.context.selection;
+    if (selection.selectedShapes.length) {
+        for (let i = 0, len = selection.selectedShapes.length; i < len; i++) {
+            const v = selection.selectedShapes[i];
+            needWatchShapes.set(v.id, v)
+        }
+    }
+    watchedShapes.forEach((v, k) => {
+        if (!needWatchShapes.has(k)) {
+            v.unwatch(update);
+            watchedShapes.delete(k);
+        }
+    })
+    needWatchShapes.forEach((v, k) => {
+        if (!watchedShapes.has(k)) {
+            v.watch(update);
+            watchedShapes.set(k, v);
+        }
+    })
 }
 
 onMounted(() => {
-    shape.value.watch(text_watcher);
     props.context.selection.watch(selected_watcher);
-    isBind();
+    update();
+    watchShapes();
 })
 onUnmounted(() => {
     props.context.selection.unwatch(selected_watcher);
-    shape.value.unwatch(text_watcher);
-
+    watchedShapes.forEach((v) => {
+        v.unwatch(update);
+    })
 })
 const getValue = (value: Text | string | undefined) => {
     return value instanceof Text ? value.getText(0, Number.MAX_VALUE) : value;
