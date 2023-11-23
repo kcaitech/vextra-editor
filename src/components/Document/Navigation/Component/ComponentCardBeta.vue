@@ -22,7 +22,7 @@ const render_preview = ref<boolean>(false);
 const preview_container = ref<Element>();
 const danger = ref<boolean>(false);
 const render_item = ref<GroupShape>(props.data);
-const name = ref('');
+const tip_name = ref('');
 
 function gen_view_box() {
     const frame = render_item.value.frame;
@@ -43,7 +43,7 @@ function check_selected_status() {
 
 function _shape_watcher() {
     check_render_item();
-    get_name();
+    update_name();
 }
 
 function check_render_item() {
@@ -110,19 +110,20 @@ function danger_check() {
     if (is_circular) danger.value = true;
 }
 
-function get_name() {
+function update_name() {
+    tip_name.value = '';
     if (is_state(props.data)) {
         const sym = props.context.data.symbolsMgr.getSync(props.data.parent!.id);
-        name.value = sym?.name || props.data.name;
+        tip_name.value = sym?.name || props.data.name;
     } else {
-        name.value = props.data.name;
+        tip_name.value = props.data.name;
     }
 }
 
 onMounted(() => {
     check_render_required();
     is_need_scroll_to_view();
-    get_name();
+    update_name();
 })
 onUnmounted(() => {
     io.disconnect();
@@ -132,7 +133,7 @@ onUnmounted(() => {
 </script>
 <template>
     <div class="compo-preview-container" ref="preview_container">
-        <Tooltip :content="name" v-if="render_preview">
+        <Tooltip :content="tip_name" v-if="render_preview">
             <div>
                 <svg v-if="render_preview" xmlns="http://www.w3.org/2000/svg" xmlns:xlink="http://www.w3.org/1999/xlink"
                      xmlns:xhtml="http://www.w3.org/1999/xhtml" preserveAspectRatio="xMinYMin meet" width="96px"
