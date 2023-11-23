@@ -1,6 +1,6 @@
 <script setup lang="ts">
 import TypeHeader from '../TypeHeader.vue';
-import {Shape} from '@kcdesign/data';
+import {AsyncOpacityEditor, Shape} from '@kcdesign/data';
 import {useI18n} from 'vue-i18n';
 import {nextTick, onMounted, onUnmounted, ref} from 'vue';
 import {Context} from '@/context';
@@ -16,6 +16,7 @@ const {t} = useI18n();
 const popoverVisible = ref<boolean>(false);
 const popover = ref<HTMLDivElement>();
 const selectedOption = ref('');
+let opacity_editor: AsyncOpacityEditor | undefined = undefined;
 
 function showMenu(e: MouseEvent) {
     if (popoverVisible.value) return popoverVisible.value = false;
@@ -78,9 +79,44 @@ function opacityChange(value: number) {
 
 function change(e: InputEvent) {
     const value = limitValue(Number((e.target as HTMLInputElement).value)) / 100;
+    if (isNaN(value) || value === 1 || value === 0) {
+        (e.target as HTMLInputElement).value =
+            typeof opacity.value === 'string'
+                ? ipt()
+                : `${ipt()}%`;
+
+        if (isNaN(value)) return;
+    }
+    opacity.value = value;
+    opacityChange(opacity.value);
+}
+
+function down(e: MouseEvent) {
+    const selected = props.context.selection.selectedShapes;
+    const page = props.context.selection.selectedPage;
+    if (!selected.length || !page) return;
+    const value = limitValue(Number((e.target as HTMLInputElement).value)) / 100;
     if (isNaN(value)) return;
     opacity.value = limitValue(Number(value));
-    opacityChange(opacity.value);
+    opacity_editor = props.context.editor
+        .controller()
+        .asyncOpacityEditor(selected, page);
+    opacity_editor.execute(value);
+}
+
+function input(e: InputEvent) {
+    const value = limitValue(Number((e.target as HTMLInputElement).value)) / 100;
+    if (isNaN(value) || !opacity_editor) return;
+    opacity.value = limitValue(Number(value));
+    opacity_editor.execute(value);
+}
+
+function change2(e: InputEvent) {
+    if (opacity_editor) {
+        opacity_editor = opacity_editor.close();
+    } else {
+        change(e);
+    }
 }
 
 const focus = (event: Event) => {
@@ -111,6 +147,15 @@ function update() {
     }
 }
 
+function range_keyboard(e: KeyboardEvent) {
+    if (e.repeat) return;
+    if (['ControlLeft', 'ControlRight', 'MetaLeft', 'MetaRight'].includes(e.code)) {
+        if (opacity_editor) {
+            opacity_editor = opacity_editor.close();
+        }
+        (e.target as HTMLInputElement).blur();
+    }
+}
 
 /**
  * @description 调整监听对象
@@ -223,8 +268,9 @@ onUnmounted(() => {
             </template>
         </TypeHeader>
         <div class="opacity-container">
-            <input type="range" class="input-range" :value="range()" @change="change"
-                   :disabled="typeof opacity === 'string'"/>
+            <input type="range" class="input-range" :value="range()" @mousedown="e => down(e)" @input="input"
+                   @change="change2"
+                   @keydown="range_keyboard"/>
             <input type="text" class="input-text" :value="typeof opacity === 'string' ? ipt() : `${ipt()}%`"
                    @click="focus" @change="change"/>
         </div>
