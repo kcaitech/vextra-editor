@@ -106,7 +106,7 @@ function update() {
 
 function text_watcher(args: any) {
     if (args === 'text') get_text();
-    if (args === 'variable') isBind();
+    if (args === 'variable' || args === 'map') isBind();
 }
 
 watch(() => sym_layer.value, (v, o) => {
@@ -126,9 +126,10 @@ const input = () => {
 
 function _delete() {
     if (!is_bind.value) return;
-    if (!sym_layer.value) return;
-    const editor = props.context.editor4Shape(sym_layer.value);
-    editor.removeVar(is_bind.value.id);
+    const shape = props.context.selection.textshape;
+    if (!shape) return;
+    const editor = props.context.editor4Shape(shape);
+    editor.removeBinds(OverrideType.Text);
 }
 
 const get_text = () => {

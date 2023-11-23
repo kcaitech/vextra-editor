@@ -78,8 +78,7 @@ const getDialogPosi = (div: HTMLDivElement | undefined) => {
 }
 
 function reset_all_attr() {
-    console.log('emit')
-    const res = reset_all_attr_for_ref(props.context);
+    reset_all_attr_for_ref(props.context);
 }
 
 const is_bind = ref<Variable>();
@@ -145,6 +144,15 @@ watch(() => shape.value, (v, o) => {
     v.watch(variable_watcher);
 }, {immediate: true})
 
+function _delete() {
+    if (!is_bind.value) return;
+    const select = props.context.selection.selectedShapes;
+    if (select.length === 1) {
+        const editor = props.context.editor4Shape(select[0]);
+        editor.removeBinds(OverrideType.SymbolID);
+    }
+}
+
 onMounted(() => {
     isBind();
     shape.value.watch(variable_watcher);
@@ -197,7 +205,9 @@ onUnmounted(() => {
                     </div>
                 </div>
             </div>
-            <div class="delete"></div>
+            <div class="delete" @click="_delete">
+                <svg-icon icon-class="delete"></svg-icon>
+            </div>
         </div>
         <CompLayerShow :context="context" v-if="isInstanceShow" @close-dialog="saveExamplesToggle" right="250px"
                        :add-type="VariableType.SymbolRef" :width="260" :title="t('compos.instance_toggle')"
