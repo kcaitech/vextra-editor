@@ -26,6 +26,7 @@ import { useI18n } from 'vue-i18n'
 import { UserInfo } from '@/context/user';
 import listrightmenu from "../listrightmenu.vue"
 import Bus from '@/components/AppHome/bus'
+import PinyinMatch from 'pinyin-match'
 interface data {
     document: {
         id: string
@@ -114,7 +115,8 @@ Bus.on('searchvalue', (str: string) => {
 })
 
 watchEffect(() => {
-    searchlists.value = lists.value.filter((el: any) => el.document.name.toLowerCase().includes(searchvalue.value.toLowerCase()))
+    if (!searchvalue.value) return searchlists.value = lists.value
+    searchlists.value = lists.value.filter((el: any) => PinyinMatch.match(el.document.name.toLowerCase(), searchvalue.value.toLowerCase()))
 })
 
 function sizeTostr(size: any) {
