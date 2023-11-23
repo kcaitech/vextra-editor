@@ -27,9 +27,9 @@
                     :key="id">
                     <div class="member-name">
                         <img :src="avatar" alt="icon" style="width: 32px;height: 32px;border-radius: 50%;">
-                        <div class="nametext"> {{ teamname }}</div>
+                        <div class="nametext"> {{ teamname ? teamname : nickname }}</div>
                         <div v-if="perm_type < usertype2 || id === userID" class="changeName"
-                            @click="() => openDialog(teamname, id)">
+                            @click="() => openDialog(teamname ? teamname : nickname, id)">
                             <el-tooltip class="tips" effect="dark" :content="`${t('teammember.change_name')}`"
                                 placement="bottom" :show-after="600" :offset="10" :hide-after="0">
                                 <svg-icon icon-class="editname"></svg-icon>
@@ -258,35 +258,22 @@ const usertype2 = ref()
 
 //通过计算属性，筛选出与搜索匹配的成员
 const SearchList = computed(() => {
-    if (!props.searchvalue) return ListData.value
-    return ListData.value.filter((el: any) => {
+    return props.searchvalue.toLowerCase() ? ListData.value.filter((el: any) => {
         if (el.user.id === userID.value) {
             usertype2.value = el.perm_type
         }
         return PinyinMatch.match(el.team_member.nickname.toLowerCase(), props.searchvalue.toLowerCase())
+    }) : ListData.value.filter((el: any) => {
+        if (el.user.id === userID.value) {
+            usertype2.value = el.perm_type
+        }
+        return ListData.value
     })
 })
 
 //通过计算属性，筛选出符合当前权限类型的成员
 const ListData = computed(() => {
-    if (fontName.value < 4) {
-        const list = [];
-        for (let i = 0; i < teammemberdata.value.length; i++) {
-            const item = teammemberdata.value[i];
-            if (item.perm_type !== fontName.value) continue;
-            if (!item.team_member.nickname) item.team_member.nickname = item.user.nickname;
-            list.push(item);
-        }
-        return list;
-    } else {
-        const list = [];
-        for (let i = 0; i < teammemberdata.value.length; i++) {
-            const item = teammemberdata.value[i];
-            if (!item.team_member.nickname) item.team_member.nickname = item.user.nickname;
-            list.push(item);
-        }
-        return list;
-    }
+    return fontName.value === 4 ? teammemberdata.value : teammemberdata.value.filter(item => item.perm_type === fontName.value)
 })
 
 const filterEvent = (index: number = 4) => {

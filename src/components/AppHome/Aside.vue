@@ -613,7 +613,6 @@ onUnmounted(() => {
                 </div>
                 <div class="newteam-container">
                     <div class="left">
-                        <svg-icon icon-class="teamicon"></svg-icon>
                         <span>团队</span>
                     </div>
                     <div class="right" @click.stop="showteamcard">
@@ -688,9 +687,10 @@ onUnmounted(() => {
                                             </div>
                                             <div class="name">{{ data.team.name }}</div>
                                         </div>
-                                        <div class="right" v-if="data.self_perm_type > 0"
-                                            @click.stop="showprojectcard(data.team.id)">
-                                            <svg-icon icon-class="add-icon" />
+                                        <div class="right" v-if="data.self_perm_type > 0">
+                                            <div class="newproject" @click.stop="showprojectcard(data.team.id)">
+                                                <svg-icon icon-class="add-icon" />
+                                            </div>
                                         </div>
                                     </div>
                                 </template>
@@ -776,7 +776,8 @@ onUnmounted(() => {
     .logo-image {
         margin: 16px 0;
     }
-    .mini_logo-image{
+
+    .mini_logo-image {
         margin: 16px 0;
         height: 28px;
     }
@@ -800,15 +801,6 @@ a {
 
 :deep(.el-collapse .el-collapse-item__arrow) {
     display: none;
-}
-
-:deep(.el-collapse-item__header:hover) {
-    background-color: rgba(250, 250, 250, 1);
-
-    .right {
-        outline: none;
-        visibility: visible;
-    }
 }
 
 :deep(.el-collapse-item__wrap) {
@@ -862,7 +854,7 @@ a {
     margin: 20px 6px 6px 6px;
     padding: 0 0 0 16px;
     justify-content: space-between;
-    font-size: 14px;
+    font-size: 13px;
     color: rgb(128, 128, 128);
 
     .left {
@@ -870,20 +862,14 @@ a {
         align-items: center;
 
         span {
+            padding: 0 2px;
             white-space: nowrap;
-        }
-
-        svg {
-            fill: rgba(128, 128, 128, 1);
-            margin-right: 5px;
-            width: 24px;
-            height: 20px;
         }
     }
 
     .right {
-        height: 26px;
-        width: 26px;
+        height: 28px;
+        width: 28px;
         display: flex;
         align-items: center;
         justify-content: center;
@@ -898,6 +884,7 @@ a {
         svg {
             outline: none;
             color: rgba(51, 51, 51, 1);
+            padding: 1px;
             width: 14px;
             height: 14px;
         }
@@ -931,7 +918,10 @@ a {
 
                 &:hover {
                     background-color: rgba(243, 243, 245, 1);
-                    // color: #9775fa;
+
+                    .right {
+                        visibility: visible;
+                    }
                 }
 
                 .el-icon {
@@ -958,7 +948,7 @@ a {
                     &:hover {
                         background-color: rgba(243, 243, 245, 1);
 
-                        .right {
+                        .right .newproject {
                             visibility: visible;
                         }
                     }
@@ -1011,6 +1001,7 @@ a {
                                 justify-content: center;
                                 width: 20px;
                                 height: 20px;
+
                                 span {
                                     color: white;
                                     font-size: 12px;
@@ -1025,30 +1016,35 @@ a {
                             text-overflow: ellipsis;
                             white-space: nowrap;
                             line-height: 36px;
-                            font-size: 12px;
+                            font-size: 14px;
                             width: 150px;
                         }
                     }
 
                     .right {
-                        visibility: hidden;
-                        margin-right: 6px;
-                        width: 26px;
-                        height: 26px;
-                        border-radius: 6px;
                         display: flex;
-                        align-items: center;
-                        justify-content: center;
 
-                        svg {
-                            width: 14px;
-                            min-width: 14px;
-                            height: 14px;
-                            color: rgba(51, 51, 51, 1);
-                        }
+                        .newproject {
+                            visibility: hidden;
+                            margin-right: 6px;
+                            width: 26px;
+                            height: 26px;
+                            border-radius: 6px;
+                            display: flex;
+                            align-items: center;
+                            justify-content: center;
 
-                        &:hover {
-                            background-color: rgba(235, 235, 237, 1);
+                            svg {
+                                width: 14px;
+                                min-width: 14px;
+                                height: 14px;
+                                color: rgba(51, 51, 51, 1);
+                            }
+
+                            &:hover {
+                                background-color: rgba(235, 235, 237, 1);
+                            }
+
                         }
                     }
                 }
@@ -1139,7 +1135,7 @@ a {
     white-space: nowrap;
     margin-right: 10px;
     line-height: 36px;
-    font-size: 12px;
+    font-size: 14px;
 }
 
 .receive {
@@ -1179,35 +1175,44 @@ a {
     background-color: #9775fa;
 }
 
-.hover {
-    background-color: #f3f0ff;
-}
 
 .is_active {
     font-weight: 600;
     color: rgba(24, 120, 245, 1);
     background-color: rgba(24, 120, 245, 0.1) !important;
+
+    .right .newproject,
+    .fixed,
+    .newfile {
+        &:hover {
+            background-color: rgba(24, 120, 245, 0.1) !important;
+        }
+    }
+
 }
 
 
 
-
 @media screen and (max-width:1000px) {
-    .logo{
-        .logo-image{
+    .logo {
+        .logo-image {
             display: none;
         }
-        .mini_logo-image{
+
+        .mini_logo-image {
             display: flex !important;
         }
     }
-    .newteam-container{
+
+    .newteam-container {
         padding: 0 !important;
         justify-content: center !important;
-        .left{
+
+        .left {
             display: none !important;
         }
     }
+
     span,
     h3 {
         display: none;
@@ -1229,6 +1234,7 @@ a {
 
     .team-title {
         justify-content: center !important;
+
         .left {
             display: flex;
             justify-content: center;
@@ -1243,6 +1249,7 @@ a {
 
                 .text {
                     display: flex;
+
                     span {
                         display: inline;
                         font-size: 12px;
@@ -1251,7 +1258,8 @@ a {
                     }
                 }
             }
-            .receive{
+
+            .receive {
                 margin: 0 !important;
             }
         }

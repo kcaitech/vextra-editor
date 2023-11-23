@@ -377,13 +377,12 @@ onUnmounted(() => {
     display: flex;
     align-items: center;
     justify-content: space-between;
-    margin: 0 8px 24px 8px;
+    margin: 24px 8px;
     box-sizing: border-box;
 
     .left {
         font-size: 18px;
         font-weight: 500;
-        letter-spacing: 2px;
         line-height: 36px;
         white-space: nowrap;
     }
@@ -434,8 +433,10 @@ onUnmounted(() => {
         }
 
         svg {
-            width: 16px;
-            height: 16px;
+            width: 18px;
+            height: 18px;
+            padding: 2px;
+            box-sizing: border-box;
         }
     }
 
@@ -467,8 +468,8 @@ onUnmounted(() => {
         .left {
             display: flex;
             align-items: center;
-            margin-left: 16px;
-
+            margin-left: 14px;
+            gap: 8px;
             .text {
                 white-space: nowrap;
                 overflow: hidden;
@@ -477,8 +478,8 @@ onUnmounted(() => {
 
             svg {
                 color: rgba(51, 51, 51, 1);
-                width: 30px;
-                height: 30px;
+                width: 24px;
+                height: 24px;
             }
         }
 
@@ -488,8 +489,10 @@ onUnmounted(() => {
             margin-right: 16px;
 
             svg {
-                width: 16px;
-                height: 16px;
+                width: 18px;
+                height: 18px;
+                padding: 2px;
+                box-sizing: border-box;
             }
         }
 

@@ -263,13 +263,12 @@ onUnmounted(() => {
     display: flex;
     align-items: center;
     justify-content: space-between;
-    margin: 0 8px 24px 8px;
+    margin: 24px 8px;
     box-sizing: border-box;
 
     .left {
         font-size: 18px;
         font-weight: 500;
-        letter-spacing: 2px;
         line-height: 36px;
         white-space: nowrap;
     }

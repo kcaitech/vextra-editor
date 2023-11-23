@@ -183,6 +183,10 @@ onUnmounted(() => {
     opacity: 0.5;
 }
 
+:deep(.el-input__wrapper){
+    border-radius: 8px;
+}
+
 .overlay {
     position: absolute;
     top: 0;
@@ -260,7 +264,7 @@ onUnmounted(() => {
 .team {
     display: flex;
     gap: 24px;
-    height: 84px;
+    height: 108px;
     margin: 0 8px 0 8px;
     align-items: center;
     justify-content: space-between;

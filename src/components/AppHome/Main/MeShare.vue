@@ -358,7 +358,7 @@ onUnmounted(() => {
     display: flex;
     align-items: center;
     justify-content: space-between;
-    margin: 0 8px 24px 8px;
+    margin: 24px 8px;
     box-sizing: border-box;
 
     .indicator {
@@ -376,7 +376,6 @@ onUnmounted(() => {
         gap: 24px;
         font-size: 18px;
         font-weight: 500;
-        letter-spacing: 2px;
         line-height: 36px;
         white-space: nowrap;
     }
@@ -427,8 +426,10 @@ onUnmounted(() => {
         }
 
         svg {
-            width: 16px;
-            height: 16px;
+            width: 18px;
+            height: 18px;
+            padding: 2px;
+            box-sizing: border-box;
         }
     }
 }
