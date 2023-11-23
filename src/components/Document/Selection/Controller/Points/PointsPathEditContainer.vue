@@ -9,6 +9,7 @@ import {Path} from "@/context/path";
 import {dbl_action} from "@/utils/mouse_interactive";
 import {gen_offset_points_map2} from "@/utils/mouse";
 import {modify_point_curve_mode} from "@/utils/pathedit";
+import {WorkSpace} from "@/context/workspace";
 
 interface Props {
     context: Context
@@ -50,6 +51,7 @@ function update() {
     if (!props.context.workspace.shouldSelectionViewUpdate) return;
     dots.length = 0;
     lines.length = 0;
+    init_matrix();
     const points_set = new Set(props.context.path.selectedPoints);
     dots.push(...get_path_by_point(shape, matrix, points_set));
     lines.push(...get_conact_by_point(shape, matrix));
@@ -265,7 +267,6 @@ function selection_watcher(t: number) {
         if (!ns) return;
         shape = ns;
         shape.watch(update);
-        init_matrix();
         update();
     }
 }
@@ -281,16 +282,23 @@ function path_watcher(type: number) {
     }
 }
 
+function matrix_watcher(t: number) {
+    if (t === WorkSpace.MATRIX_TRANSFORMATION) {
+        update();
+    }
+}
+
 onMounted(() => {
+    props.context.workspace.watch(matrix_watcher);
     shape = props.context.selection.pathshape!;
     if (!shape) return console.log('wrong shape');
     shape.watch(update);
-    init_matrix();
     update();
     window.addEventListener('blur', window_blur);
     props.context.path.watch(path_watcher);
 })
 onUnmounted(() => {
+    props.context.workspace.unwatch(matrix_watcher);
     shape.unwatch(update);
     window.removeEventListener('blur', window_blur);
     props.context.path.unwatch(path_watcher);
