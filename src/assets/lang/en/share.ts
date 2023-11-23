@@ -43,6 +43,7 @@ export const apply = {
     file_attribution: 'File attribution',
     apply_for_permission: 'Apply for permission',
     read_only: 'Read only',
+    apply_for_edit: 'Apply for edit',
     please_remarks: 'Please enter application remarks',
     file_deleted: 'The file has been deleted, or the creator has closed the share',
     authorization_failure: 'Authorization failure',

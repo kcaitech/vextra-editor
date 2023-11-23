@@ -15,6 +15,7 @@ import TableText from './Table/TableText.vue'
 import { TableSelection } from '@/context/tableselection';
 import TableStyle from './Table/TableStyle.vue'
 import { Tool } from '@/context/tool';
+import Opacity from './Opacity/Opacity.vue';
 const props = defineProps<{ context: Context }>();
 const shapes = shallowRef<Shape[]>([]);
 const len = computed<number>(() => shapes.value.length);
@@ -130,6 +131,7 @@ onUnmounted(() => {
         <Arrange v-if="len > 1" :context="props.context" :shapes="shapes"></Arrange>
         <div v-if="len" :reflush="reflush" @mousedown.stop>
             <ShapeBaseAttr v-if="baseAttr" :context="props.context"></ShapeBaseAttr>
+            <Opacity :shapes="shapes" :context="props.context"></Opacity>
             <Fill v-if="WITH_FILL.includes(shapeType)" :shapes="shapes" :context="props.context"></Fill>
             <Border v-if="WITH_BORDER.includes(shapeType)" :shapes="shapes" :context="props.context"></Border>
             <Text v-if="WITH_TEXT.includes(shapeType)" :shape="(shapes[0] as TextShape)" :context="props.context"></Text>
