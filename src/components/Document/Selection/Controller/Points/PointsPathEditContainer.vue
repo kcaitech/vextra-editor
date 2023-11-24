@@ -329,8 +329,9 @@ onUnmounted(() => {
 })
 </script>
 <template>
-    <Handle v-if="handle_visible && current_curve_point" :site="current_site"
-            :curve-point="current_curve_point" :index="current_curve_point_index"></Handle>
+    <Handle v-if="handle_visible"
+            :context="props.context"
+            :index="current_curve_point_index"></Handle>
     <!--    line todo-->
     <g v-for="(p, i) in lines" :key="i" @mouseenter="() => { line_enter(p.index) }" @mouseleave="line_leave">
         <line :x1="p.apex1.x" :y1="p.apex1.y" :x2="p.apex2.x" :y2="p.apex2.y" class="line"></line>

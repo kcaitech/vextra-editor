@@ -3,22 +3,32 @@ import {XY} from "@/context/selection";
 import {CurvePoint} from "@kcdesign/data";
 import Rect from "@/components/Document/Toolbar/Buttons/Rect.vue";
 import {onMounted, reactive, watchEffect} from "vue";
+import {Context} from "@/context";
 
 interface Props {
-    site: XY
-    curvePoint: CurvePoint
+    context: Context
     index: number
 }
 
 const props = defineProps<Props>();
-const apex_location_alpha = reactive({x: 0, y: 0});
-const apex_location_beta = reactive({x: 0, y: 0});
+const apex_location_alpha = reactive({x: -10, y: -10});
+const apex_location_beta = reactive({x: -10, y: -10});
+const site = reactive({x: -10, y: -10});
 
 function update() {
-    apex_location_alpha.x = props.site.x + 50;
-    apex_location_alpha.y = props.site.y + 50;
-    apex_location_beta.x = props.site.x - 50;
-    apex_location_beta.y = props.site.y - 50;
+    const path_shape = props.context.selection.pathshape;
+    const m = props.context.path.matrix_unit_to_root;
+    if (!path_shape || !m) return;
+    const __points = path_shape.points;
+    const current_point = __points[props.index];
+    if (!current_point) return;
+    const _p = m.computeCoord3(current_point.point);
+    site.x = _p.x;
+    site.y = _p.y;
+    apex_location_alpha.x = site.x + 50;
+    apex_location_alpha.y = site.y + 50;
+    apex_location_beta.x = site.x - 50;
+    apex_location_beta.y = site.y - 50;
 }
 
 function down(e: MouseEvent, side: 'alpha' | 'beta') {
@@ -30,7 +40,6 @@ function down(e: MouseEvent, side: 'alpha' | 'beta') {
 onMounted(() => {
     update();
 })
-watchEffect(update);
 </script>
 <template>
     <g>

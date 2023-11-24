@@ -1,4 +1,4 @@
-import {Watchable} from "@kcdesign/data";
+import {Matrix, Watchable} from "@kcdesign/data";
 import {Context} from ".";
 import {CurveMode} from "@kcdesign/data";
 
@@ -103,5 +103,15 @@ export class Path extends Watchable(Object) {
             this.selected_sides.push(index);
         }
         this.notify(Path.SELECTION_CHANGE);
+    }
+
+    get matrix_unit_to_root() {
+        const path_shape = this.m_context.selection.pathshape;
+        if (!path_shape) return;
+        const f = path_shape.frame;
+        const m = new Matrix(path_shape.matrix2Root());
+        m.multiAtLeft(this.m_context.workspace.matrix);
+        m.preScale(f.width, f.height);
+        return m;
     }
 }
