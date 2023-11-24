@@ -118,6 +118,7 @@ declare module '@vue/runtime-core' {
     FrameChild: typeof import('./src/components/Document/Toolbar/Buttons/FrameChild.vue')['default']
     GridView: typeof import('./src/components/common/GridView.vue')['default']
     GroupUngroup: typeof import('./src/components/Document/Toolbar/GroupUngroup.vue')['default']
+    Handle: typeof import('./src/components/Document/Selection/Controller/PathEdit/Handle.vue')['default']
     Header: typeof import('./src/components/AppHome/Header.vue')['default']
     HelpEntrance: typeof import('./src/components/Help/HelpEntrance.vue')['default']
     Home: typeof import('./src/components/Home/index.vue')['default']

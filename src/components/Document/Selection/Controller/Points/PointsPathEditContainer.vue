@@ -1,15 +1,16 @@
 <script setup lang='ts'>
 import {Context} from '@/context';
-import {AsyncPathEditor, Matrix, PathShape, Shape} from '@kcdesign/data';
+import {AsyncPathEditor, CurveMode, CurvePoint, Matrix, PathShape, Shape} from '@kcdesign/data';
 import {onMounted, onUnmounted, reactive, ref} from 'vue';
 import {ClientXY, PageXY, Selection, XY} from '@/context/selection';
-import {get_path_by_point, get_conact_by_point} from './common';
+import {get_conact_by_point, get_path_by_point} from './common';
 import {Point} from "../../SelectionView.vue";
 import {Path} from "@/context/path";
 import {dbl_action} from "@/utils/mouse_interactive";
 import {gen_offset_points_map2} from "@/utils/mouse";
 import {modify_point_curve_mode} from "@/utils/pathedit";
 import {WorkSpace} from "@/context/workspace";
+import Handle from "../PathEdit/Handle.vue"
 
 interface Props {
     context: Context
@@ -35,17 +36,39 @@ const sub_matrix = new Matrix();
 const data: { dots: Dot[], lines: Line[] } = reactive({dots: [], lines: []});
 const {dots, lines} = data;
 const show_index = ref<number>(-1); // 当前聚焦的编辑点
+const current_site = reactive<XY>({x: 0, y: 0});
+const handle_visible = ref<boolean>(false);
 let shape: Shape;
 let startPosition: ClientXY = {x: 0, y: 0};
 let startPosition2: PageXY = {x: 0, y: 0};
 let isDragging = false;
-let down_index: number = 0;
 let pathEditor: AsyncPathEditor | undefined;
 let cur_new_node: Line;
 let move: any;
 let offset_map: XY[] | undefined = [];
-
+const current_curve_point = ref<CurvePoint | undefined>();
+const current_curve_point_index = ref<number>(-1);
 const dragActiveDis = 3;
+
+function set_current_site() {
+    handle_visible.value = false;
+    current_curve_point.value = undefined;
+    const selected_points = props.context.path.selectedPoints;
+    if (selected_points.length !== 1) return;
+    const index = selected_points[0];
+    const __points = shape.points;
+    if (__points.length === 0) return;
+    const point = __points[index];
+    if (!point) return;
+    current_curve_point.value = point;
+    if (point.curveMode === CurveMode.Asymmetric
+        || point.curveMode === CurveMode.Disconnected
+        || point.curveMode === CurveMode.Mirrored) {
+        handle_visible.value = true;
+        current_site.x = dots[index].point.x;
+        current_site.y = dots[index].point.y;
+    }
+}
 
 function update() {
     if (!props.context.workspace.shouldSelectionViewUpdate) return;
@@ -55,6 +78,7 @@ function update() {
     const points_set = new Set(props.context.path.selectedPoints);
     dots.push(...get_path_by_point(shape, matrix, points_set));
     lines.push(...get_conact_by_point(shape, matrix));
+    set_current_site();
 }
 
 /**
@@ -70,15 +94,15 @@ function point_mousedown(event: MouseEvent, index: number) {
     const root = workspace.root;
     startPosition = {x: event.clientX - root.x, y: event.clientY - root.y};
     startPosition2 = workspace.matrix.inverseCoord(startPosition);
-    down_index = index;
+    current_curve_point_index.value = index;
     workspace.setCtrl('controller');
     if (event.shiftKey) {
-        props.context.path.adjust_points(down_index)
+        props.context.path.adjust_points(current_curve_point_index.value)
     } else {
-        if (props.context.path.is_selected(down_index)) {
+        if (props.context.path.is_selected(current_curve_point_index.value)) {
             //todo
         } else {
-            props.context.path.select_point(down_index);
+            props.context.path.select_point(current_curve_point_index.value);
         }
     }
     document.addEventListener('mousemove', point_mousemove);
@@ -114,11 +138,11 @@ let sticked_y_v: number = 0;
 let pre_target_x: number, pre_target_y: number;
 
 function execute(pathEditor: AsyncPathEditor, p2: PageXY) {
-    return pathEditor.execute(down_index, p2);
+    return pathEditor.execute(current_curve_point_index.value, p2);
     // const stickness = props.context.assist.stickness;
-    // if (!offset_map) return pathEditor.execute(down_index, p2);
+    // if (!offset_map) return pathEditor.execute(current_curve_point_index, p2);
     // const target = props.context.assist.edit_mode_match(p2, offset_map);
-    // if (!target) return pathEditor.execute(down_index, p2);
+    // if (!target) return pathEditor.execute(current_curve_point_index, p2);
     // if (stickedX) {
     //     if (Math.abs(p2.x - sticked_x_v) >= stickness) {
     //         stickedX = false
@@ -145,7 +169,7 @@ function execute(pathEditor: AsyncPathEditor, p2: PageXY) {
     // } else if (target.sticked_by_y) {
     //     modify_fix_y(p2, target.y);
     // }
-    // pathEditor.execute(down_index, p2);
+    // pathEditor.execute(current_curve_point_index, p2);
 }
 
 function modify_fix_x(p2: PageXY, fix: number) {
@@ -180,16 +204,16 @@ function n_point_down(event: MouseEvent) {
     const root = workspace.root;
     startPosition = {x: event.clientX - root.x, y: event.clientY - root.y};
     cur_new_node = lines[show_index.value - 1];
-    down_index = show_index.value;
+    current_curve_point_index.value = show_index.value;
     if (!pathEditor) {
         pathEditor = props.context.editor
             .controller()
             .asyncPathEditor(shape, props.context.selection.selectedPage!);
-        pathEditor.addNode(down_index, cur_new_node.point_raw);
+        pathEditor.addNode(current_curve_point_index.value, cur_new_node.point_raw);
         if (event.shiftKey) {
-            props.context.path.push_after_sort_points(down_index);
+            props.context.path.push_after_sort_points(current_curve_point_index.value);
         } else {
-            props.context.path.select_point(down_index);
+            props.context.path.select_point(current_curve_point_index.value);
         }
     }
     workspace.setCtrl('controller');
@@ -206,7 +230,7 @@ function n_point_mousemove(event: MouseEvent) {
     const root = workspace.root;
     const mouseOnClient: ClientXY = {x: event.clientX - root.x, y: event.clientY - root.y};
     if (isDragging && pathEditor) {
-        pathEditor.execute(down_index, sub_matrix.computeCoord3(mouseOnClient));
+        pathEditor.execute(current_curve_point_index.value, sub_matrix.computeCoord3(mouseOnClient));
         startPosition.x = mouseOnClient.x;
         startPosition.y = mouseOnClient.y;
     } else {
@@ -228,7 +252,7 @@ function point_mouseup(event: MouseEvent) {
         isDragging = false;
     } else {
         if (props.context.path.selectedPoints.length > 1 && !event.shiftKey) {
-            props.context.path.select_point(down_index);
+            props.context.path.select_point(current_curve_point_index.value);
         }
     }
     if (pathEditor) {
@@ -305,6 +329,8 @@ onUnmounted(() => {
 })
 </script>
 <template>
+    <Handle v-if="handle_visible && current_curve_point" :site="current_site"
+            :curve-point="current_curve_point" :index="current_curve_point_index"></Handle>
     <!--    line todo-->
     <g v-for="(p, i) in lines" :key="i" @mouseenter="() => { line_enter(p.index) }" @mouseleave="line_leave">
         <line :x1="p.apex1.x" :y1="p.apex1.y" :x2="p.apex2.x" :y2="p.apex2.y" class="line"></line>
@@ -321,6 +347,7 @@ onUnmounted(() => {
           height="8px" width="8px"
           @mousedown.stop="(e) => point_mousedown(e, p.index)" :class="{point: true, selected: p.selected}">
     </rect>
+
 </template>
 <style lang='scss' scoped>
 .point {
