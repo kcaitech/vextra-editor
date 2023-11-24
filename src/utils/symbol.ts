@@ -745,7 +745,7 @@ export function get_var_for_ref(context: Context, symref: SymbolRefShape, t: Fun
         })
     } else { // 存在可变组件
         // const state = get_state_by_ref(symref); // 先确定当前实例用的是哪个可变组件
-        const state = varsContainer ? symref.getSubData() : symref.getRootData();
+        const state = symref.getSubData();
         if (!state) return false;
         variables.forEach((v: Variable) => {
             const item: RefAttriListItem = {variable: v, values: []};
