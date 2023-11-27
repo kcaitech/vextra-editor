@@ -900,7 +900,6 @@ export function is_circular_ref2(symbol: Shape, symbol2: string): boolean {
         shape: symbol2,
         ref: symbol.id
     }];
-    // if (deps.length < 2) return false;
     while (deps.length && is_exist_single_stick(deps)) {
         deps = filter_deps(deps, 'shape', 'ref');
         deps = filter_deps(deps, 'ref', 'shape');
@@ -909,7 +908,7 @@ export function is_circular_ref2(symbol: Shape, symbol2: string): boolean {
 }
 
 /**
- * @description 检查属性名称是否有效，有效则返回true  --8yyg9986i7g
+ * @description 检查属性名称是否有效，有效则返回true
  */
 export function is_valid_name(symbol: SymbolShape, name: string, type: VariableType) {
     let valid: boolean = true;
@@ -923,7 +922,7 @@ export function is_valid_name(symbol: SymbolShape, name: string, type: VariableT
 }
 
 /**
- * @description 判断选中图形是否支持创建组件 ---js34hgws8033jh238
+ * @description 判断选中图形是否支持创建组件
  * @param shapes
  */
 export function is_allow_to_create_sym(shapes: Shape[]) {
@@ -935,7 +934,7 @@ export function is_allow_to_create_sym(shapes: Shape[]) {
 }
 
 /**
- * @description 判断组件状态是否允许删除 --82shdf82kj
+ * @description 判断组件状态是否允许删除
  */
 export function is_status_allow_to_delete(symbol: SymbolShape) {
     let valid = -1;
@@ -1245,33 +1244,6 @@ export function get_symbolref_by_layer(shape: Shape) {
     return result
 }
 
-/**
- * @description 确定当前实例引用的是组件中的哪个可变组件
- */
-export function get_state_by_ref(symref: SymbolRefShape) {
-    const symbol = symref.getRootData();
-    if (!symbol) return;
-    const variables = symbol.variables;
-    if (!symbol.isUnionSymbolShape || !variables) return symbol;
-    const states = symbol.childs;
-    if (!states.length) return console.log('Error: No State`s Union');
-    const dlt_state: SymbolShape = states[0] as SymbolShape;
-    if (states.length < 2) return dlt_state;
-    const tag_map = new Map<string, string>(); // 当前实例的标签值
-    variables.forEach(v => {
-        if (v.type !== VariableType.Status) return;
-        const overrides = symref.findOverride(v.id, OverrideType.Variable);
-        tag_map.set(v.id, overrides ? overrides[overrides.length - 1].value : v.value);
-    })
-    for (let i = 0, l = states.length; i < l; i++) { // 在可变组件state中寻找标签值符合实例标签组合的那一个
-        const state = states[i] as SymbolShape;
-        const tags = (state as SymbolShape).vartag;
-        if (!tags) continue;
-        let is_target = true;
-        tags.forEach((v, k) => {
-            if (tag_map.get(k) !== v) is_target = false;
-        })
-        if (is_target) return state;
-    }
-    return dlt_state; // 如果没有找到，返回默认可变组件，如果到这里则已经在某一个环节出问题了
+export function is_symbol_or_union(shape: Shape) {
+    return shape.type === ShapeType.Symbol || shape.type === ShapeType.SymbolUnion;
 }

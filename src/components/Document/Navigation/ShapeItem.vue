@@ -193,13 +193,10 @@ const selectedChild = () => {
 }
 
 function is_component() {
-    let s: any = props.data.shape();
-    while (s) {
-        if (s.type === ShapeType.Page) return false;
-        if (s.type === ShapeType.SymbolRef) return true;
-        if (s.type === ShapeType.Symbol) return true;
-        s = s.parent;
-    }
+    const s = props.data.shape();
+    return s.isVirtualShape
+        || s.type === ShapeType.Symbol
+        || s.type === ShapeType.SymbolUnion
 }
 
 const mousedown = (e: MouseEvent) => {
