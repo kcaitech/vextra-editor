@@ -745,7 +745,7 @@ export function get_var_for_ref(context: Context, symref: SymbolRefShape, t: Fun
             }
         })
     } else { // 存在可变组件
-        // const state = get_state_by_ref(symref); // 先确定当前实例用的是哪个可变组件
+        const state = sym; // 先确定当前实例用的是哪个可变组件
         const usym = sym.parent;
         if (!usym) return false;
         const variables = usym.variables;
@@ -758,7 +758,7 @@ export function get_var_for_ref(context: Context, symref: SymbolRefShape, t: Fun
             }
         })
         const sub_variables = new Map<string, Variable>(); // 查看当前可变组件下，绑定了哪些变量
-        search_binds_for_state(variables, usym, sub_variables);
+        search_binds_for_state(variables, state, sub_variables);
         let instance_index: number = result.length;
         let text_index: number = instance_index;
         sub_variables.forEach((v: Variable) => { // 整理顺序
