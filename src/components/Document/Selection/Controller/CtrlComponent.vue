@@ -106,17 +106,16 @@ function windowBlur() {
 function modify_symbol_type() {
     const shape = props.shape;
     if (shape.type === ShapeType.Symbol) {
-        if (shape.isUnionSymbolShape) {
-            symbol_type.value = SymbolType.Union;
+        if (shape.parent && shape.parent.isSymbolUnionShape) {
+            symbol_type.value = SymbolType.State;
         } else {
-            if (shape.parent && shape.parent.isUnionSymbolShape) {
-                symbol_type.value = SymbolType.State;
-            } else {
-                symbol_type.value = SymbolType.Symbol;
-            }
+            symbol_type.value = SymbolType.Symbol;
         }
     } else if (shape.type === ShapeType.SymbolRef) {
         symbol_type.value = SymbolType.Ref;
+    }
+    else if (shape.type === ShapeType.SymbolUnion) {
+        symbol_type.value = SymbolType.Union;
     }
 }
 

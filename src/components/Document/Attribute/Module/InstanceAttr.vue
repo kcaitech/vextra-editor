@@ -142,11 +142,10 @@ function watchShapes() { // 监听选区相关shape的变化
 }
 
 function get_ref_ref(symref: SymbolRefShape) {
-    const varsContainer = symref.varsContainer;
-    if (!varsContainer) return;
+    if (!symref.isVirtualShape) return;
     let p = symref.parent;
     while (p) {
-        if (p.type === ShapeType.SymbolRef && !p.varsContainer) return p;
+        if (p.type === ShapeType.SymbolRef && !p.isVirtualShape) return p;
         p = p.parent;
     }
 }

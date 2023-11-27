@@ -25,11 +25,11 @@ const p_symble = computed(() => {
     if (props.shapes.length === 1) {
         const shape = props.shapes[0]
         let p = shape.parent;
-        if (p && p.type === ShapeType.Symbol) {
+        if (p && (p.type === ShapeType.Symbol || p.type === ShapeType.SymbolUnion)) {
             isSymble = true;
         }
         while (p && p.type !== ShapeType.Page) {
-            if (p.type === ShapeType.Symbol) {
+            if ((p.type === ShapeType.Symbol || p.type === ShapeType.SymbolUnion)) {
                 isSymble = true;
             }
             p = p.parent;

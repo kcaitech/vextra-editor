@@ -166,13 +166,13 @@ export function fit_no_transform(context: Context, shape: Shape) {
 }
 
 function get_state_name(state: SymbolShape, dlt: string) {
-    if (!state.parent?.isUnionSymbolShape) return state.name;
+    if (!state.parent?.isSymbolUnionShape) return state.name;
     const variables = (state.parent as SymbolShape).variables;
     if (!variables) return state.name;
     let name_slice: string[] = [];
     variables.forEach((v, k) => {
         if (v.type !== VariableType.Status) return;
-        let slice = state.vartag?.get(k) || v.value;
+        let slice = state.symtags?.get(k) || v.value;
         if (slice === SymbolShape.Default_State) slice = dlt;
         slice && name_slice.push(slice);
     })

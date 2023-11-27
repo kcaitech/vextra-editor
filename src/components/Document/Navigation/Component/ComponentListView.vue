@@ -39,7 +39,7 @@ function down(e: MouseEvent, shape: Shape) {
         props.context.component.notify(Component.SELECTED_VAL, is_state(shape) ? shape.parent! : shape);
         return;
     }
-    compo = shape.isUnionSymbolShape ? shape.childs[0] || shape : shape;
+    compo = shape.isSymbolUnionShape ? shape.childs[0] || shape : shape;
     if (e.button === 2) {
         props.context.component.compMenuMount(is_state(compo) ? compo.parent! : compo, e);
         return;
