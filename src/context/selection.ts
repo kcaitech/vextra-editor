@@ -21,6 +21,7 @@ import {
 } from "@/utils/scout";
 import {Context} from ".";
 import {TextSelectionLite} from "@/context/textselectionlite";
+import {is_symbol_or_union} from "@/utils/symbol";
 
 interface Saved {
     page: Page | undefined,
@@ -418,7 +419,7 @@ export class Selection extends Watchable(Object) implements ISave4Restore {
     }
 
     get symbolshape() {
-        return this.selectedShapes.length === 1 && this.selectedShapes[0].type === ShapeType.Symbol ? this.selectedShapes[0] as SymbolShape : false;
+        return this.selectedShapes.length === 1 && is_symbol_or_union(this.selectedShapes[0]) ? this.selectedShapes[0] as SymbolShape : false;
     }
 
     get unionshape() {

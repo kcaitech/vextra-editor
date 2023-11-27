@@ -42,10 +42,12 @@ function select(index: number) {
 }
 
 function getVattagValue() {
-    const symref = props.context.selection.symbolrefshape;
-    if (!symref) return;
-    let val = get_vari_value_for_ref(symref, props.data.variable);
-    if (val === SymbolShape.Default_State) val = t('compos.dlt');
+    const symbol_ref = props.context.selection.symbolrefshape;
+    if (!symbol_ref) return;
+    let val = get_vari_value_for_ref(symbol_ref, props.data.variable);
+    if (val === SymbolShape.Default_State) {
+        val = t('compos.dlt');
+    }
     status_value.value = val;
 }
 

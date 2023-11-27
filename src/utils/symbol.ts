@@ -6,9 +6,9 @@ import {
     Page,
     Shape,
     ShapeType,
-    SymbolUnionShape,
     SymbolRefShape,
     SymbolShape,
+    SymbolUnionShape,
     Variable,
     VariableType
 } from "@kcdesign/data";
@@ -805,9 +805,13 @@ function search_binds_for_state(
 /**
  * @description 获取实例symref身上的某个变量variable的值
  */
-export function get_vari_value_for_ref(symref: SymbolRefShape, variable: Variable) {
-    const overrides = symref.findOverride(variable.id, OverrideType.Variable);
-    return overrides ? overrides[overrides.length - 1].value : variable.value;
+export function get_vari_value_for_ref(symbol_ref: SymbolRefShape, variable: Variable) {
+    let symbol: SymbolShape | SymbolUnionShape | undefined = symbol_ref.symData;
+    if (!symbol) {
+        return SymbolShape.Default_State;
+    }
+    const _val = (symbol as SymbolShape | SymbolUnionShape).symtags?.get(variable.id) || '';
+    return _val || SymbolShape.Default_State;
 }
 
 /**
@@ -953,7 +957,7 @@ export function is_status_allow_to_delete(symbol: SymbolShape) {
  * @param shape
  */
 export function is_state(shape: Shape) {
-    return shape?.type === ShapeType.Symbol && shape?.parent?.isSymbolUnionShape;
+    return shape?.type === ShapeType.Symbol && shape?.parent?.type === ShapeType.SymbolUnion;
 }
 
 function is_sym(shape: Shape) {
