@@ -36,13 +36,13 @@ function select() {
     const ps: [XY, XY, XY, XY, XY] = [p1, p2, p3, p4, p1]; // 5个点方便闭合循环
     changed = false;
     if (selectedShapes.size) remove(selectedShapes, ps); // 先剔除已经不再框选区的图形
-    finder(page.childs, ps); // 再寻找框选区外的图形
+    finder(page.childs, ps, selectedShapes); // 再寻找框选区外的图形
     if (changed) selection.rangeSelectShape(Array.from(selectedShapes.values()));
   }
 }
 
 // 加入
-function finder(childs: Shape[], Points: [XY, XY, XY, XY, XY]) {
+function finder(childs: Shape[], Points: [XY, XY, XY, XY, XY], selectedShapes:  Map<string, Shape>) {
   for (let ids = 0, len = childs.length; ids < len; ids++) {
     const shape = childs[ids];
     if (selectedShapes.get(shape.id) || shape.isLocked || !shape.isVisible) continue;
@@ -58,7 +58,7 @@ function finder(childs: Shape[], Points: [XY, XY, XY, XY, XY]) {
         private_set(shape.id, shape);
         for (let i = 0; i < shape.childs.length; i++) private_delete(shape.childs[i].id);
       } else {
-        finder(shape.childs, Points);
+        finder(shape.childs, Points, selectedShapes);
       }
     } else if (shape.type === ShapeType.Line) {
       if (isTarget(Points, [ps[0], ps[2]], props.selectorFrame.includes)) {

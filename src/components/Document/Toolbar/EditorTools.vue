@@ -15,6 +15,7 @@ import CreateImage from "./Buttons/CreateImage.vue";
 import Table from "./Buttons/Table/index.vue"
 import Comment from "./Buttons/Comment.vue"
 import Contact from "./Buttons/CreateContact.vue";
+import Cutout from "./Buttons/Cutout.vue";
 import { WorkSpace, Perm } from "@/context/workspace";
 import { Action, Tool } from "@/context/tool";
 import { useI18n } from 'vue-i18n'
@@ -88,6 +89,7 @@ onUnmounted(() => {
         <CreateImage :active="selected === Action.AddImage" :context="props.context"></CreateImage>
         <Table @select="select" :active="selected === Action.AddTable" :context="props.context"></Table>
         <Contact @select="select" :active="selected === Action.AddContact" :context="props.context"></Contact>
+        <Cutout @select="select" :active="selected === Action.AddCutout"></Cutout>
         <div class="vertical-line" />
         <el-tooltip class="box-item" effect="dark" :content="string_by_sys(`${t('navi.comps')} &nbsp;&nbsp; Shift I`)"
             placement="bottom" :show-after="500" :offset="10" :hide-after="0">
@@ -102,7 +104,7 @@ onUnmounted(() => {
     </div>
     <div class="editor-tools" @dblclick.stop v-if="isread || canComment || isLable">
         <Cursor @select="select" :d="selected" :active="selected === Action.AutoV || selected === Action.AutoK" :is_lable="isLable" :edit="isEdit"></Cursor>
-        <div class="vertical-line" />
+        <div class="vertical-line" v-if="!isread"/>
         <Comment @select="select" :active="selected === Action.AddComment" :workspace="workspace" v-if="!isread"></Comment>
     </div>
 </template>

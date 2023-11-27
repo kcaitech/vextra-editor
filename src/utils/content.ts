@@ -119,6 +119,8 @@ function init_shape(context: Context, frame: ShapeFrame, mousedownOnPageXY: Page
         asyncCreator = editor.asyncCreator(mousedownOnPageXY);
         if (action === Action.AddArrow) {
             new_shape = asyncCreator.init_arrow(page, (parent as GroupShape), name, frame);
+        } else if (action === Action.AddCutout) {
+            new_shape = asyncCreator.init_cutout(page, (parent as GroupShape), name, frame);
         } else {
             new_shape = asyncCreator.init(page, (parent as GroupShape), type, name, frame);
         }
@@ -170,6 +172,8 @@ function init_insert_shape(context: Context, mousedownOnPageXY: PageXY, t: Funct
         asyncCreator = editor.asyncCreator(mousedownOnPageXY);
         if (action === Action.AddArrow) {
             new_shape = asyncCreator.init_arrow(page, (parent as GroupShape), name, frame);
+        } else if (action === Action.AddCutout) {
+            new_shape = asyncCreator.init_cutout(page, (parent as GroupShape), name, frame);
         } else {
             new_shape = asyncCreator.init(page, (parent as GroupShape), type, name, frame);
         }

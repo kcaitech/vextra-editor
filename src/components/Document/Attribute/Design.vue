@@ -13,7 +13,9 @@ import Text from './Text/Text.vue';
 import { throttle } from 'lodash';
 import TableText from './Table/TableText.vue'
 import { TableSelection } from '@/context/tableselection';
-import TableStyle from './Table/TableStyle.vue'
+import TableStyle from './Table/TableStyle.vue';
+import CutoutExport from './CutoutExport/index.vue'
+
 import { Tool } from '@/context/tool';
 const props = defineProps<{ context: Context }>();
 const shapes = shallowRef<Shape[]>([]);
@@ -137,6 +139,7 @@ onUnmounted(() => {
             </TableText>
             <Shadow v-if="WITH_SHADOW.includes(shapeType)" :shapes="shapes" :context="props.context">
             </Shadow>
+            <CutoutExport :shapes="shapes" :context="props.context"></CutoutExport>
         </div>
     </section>
 </template>
