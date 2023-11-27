@@ -126,10 +126,12 @@ const watchedShapes = new Map();
 
 function watchShapes() { // 监听相关shape的变化
     const needWatchShapes = new Map();
-    const childs_of_page = props.data.childs;
-    for (let i = 0, len = childs_of_page.length; i < len; i++) {
-        const compo = childs_of_page[i];
-        if (compo.type === ShapeType.Symbol && compo.isVisible) needWatchShapes.set(compo.id, compo);
+    const children_of_page = props.data.childs;
+    for (let i = 0, len = children_of_page.length; i < len; i++) {
+        const compo = children_of_page[i];
+        if (is_symbol_or_union(compo) && compo.isVisible) {
+            needWatchShapes.set(compo.id, compo);
+        }
     }
     watchedShapes.forEach((v, k) => {
         if (needWatchShapes.has(k)) return;
