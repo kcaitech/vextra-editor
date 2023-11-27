@@ -103,7 +103,7 @@ export function get_symbol_ref_name(symbolname: string, symbolref: string, broth
 }
 
 export function get_component_state_name(union: SymbolShape, t: Function) {
-    if (!union.isUnionSymbolShape) return '';
+    if (!union.isSymbolUnionShape) return '';
     if (union.childs.length === 0) return t('shape.default');
     return t('compos.state') + (union.childs.length + 1);
 }
@@ -859,10 +859,10 @@ export function ref_symbol(context: Context, position: PageXY, symbol: Shape) {
         const childs = (parent as GroupShape).childs;
         let id = symbol.id;
         let name = symbol.name;
-        if (is_state(symbol)) {
-            id = symbol.parent!.id;
-            name = symbol.parent!.name;
-        }
+        // if (is_state(symbol)) {
+        //     id = symbol.parent!.id;
+        //     name = symbol.parent!.name;
+        // }
         let count = 1;
         for (let i = 0, len = childs.length; i < len; i++) {
             const item = childs[i];

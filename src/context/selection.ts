@@ -424,7 +424,7 @@ export class Selection extends Watchable(Object) implements ISave4Restore {
     get unionshape() {
         if (this.selectedShapes.length === 1) {
             const xs = this.selectedShapes[0];
-            if (xs.type === ShapeType.Symbol && xs.isUnionSymbolShape) {
+            if (xs.type === ShapeType.Symbol && xs.isSymbolUnionShape) {
                 return xs as SymbolShape;
             } else {
                 return false;
@@ -437,7 +437,7 @@ export class Selection extends Watchable(Object) implements ISave4Restore {
     get symbolstate() {
         if (this.selectedShapes.length === 1) {
             const s = this.selectedShapes[0];
-            if (s.type === ShapeType.Symbol && s.parent?.isUnionSymbolShape) {
+            if (s.type === ShapeType.Symbol && s.parent?.isSymbolUnionShape) {
                 return s as SymbolShape;
             } else {
                 return false;

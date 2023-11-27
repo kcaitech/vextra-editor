@@ -24,13 +24,13 @@ function updater() {
     const refId = props.data.getRefId2(props.varsContainer);
     if (__startLoad === refId) {
         if (__data) { // 更新subdata
-            if (__data.isUnionSymbolShape) {
+            if (__data.isSymbolUnionShape) {
                 const syms = __data.getTagedSym(props.data, props.varsContainer || []);
                 const subdata = syms[0] || __data.childs[0];
                 if (__subdata !== subdata) {
                     __subdata = subdata;
                 }
-            } else if (!__data.isUnionSymbolShape && __subdata) {
+            } else if (!__data.isSymbolUnionShape && __subdata) {
                 __subdata = undefined;
             }
             reflush.value++;
@@ -41,7 +41,7 @@ function updater() {
     __startLoad = refId;
     symMgr.get(refId).then((val) => {
         __data = val;
-        if (val && val.isUnionSymbolShape) {
+        if (val && val.isSymbolUnionShape) {
             __subdata = val.getTagedSym(props.data, props.varsContainer || [])[0] || val.childs[0];
         } else if (__subdata) {
             __subdata = undefined;

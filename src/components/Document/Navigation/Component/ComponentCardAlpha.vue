@@ -43,7 +43,7 @@ function check_selected_status() {
 }
 
 function check_render_item() {
-    if (!props.data.isUnionSymbolShape) return;
+    if (!props.data.isSymbolUnionShape) return;
     render_item.value = (props.data?.childs[0] as GroupShape) || props.data;
     props.data.unwatch(shape_watcher);
     render_item.value.watch(shape_watcher);

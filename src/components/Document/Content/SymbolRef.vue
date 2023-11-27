@@ -26,7 +26,7 @@ function updater() {
     const refId = props.data.getRefId2(props.varsContainer);
     if (__startLoad === refId) {
         if (__data) { // 更新subdata
-            if (__data.isUnionSymbolShape) {
+            if (__data.isSymbolUnionShape) {
                 const syms = __data.getTagedSym(props.data, props.varsContainer || []);
                 const subdata = syms[0] || __data.childs[0];
                 if (__subdata !== subdata) {
@@ -35,7 +35,7 @@ function updater() {
                     if (__subdata) __subdata.watch(watcher);
                 }
             }
-            else if (!__data.isUnionSymbolShape && __subdata) {
+            else if (!__data.isSymbolUnionShape && __subdata) {
                 __subdata.unwatch(watcher);
                 __subdata = undefined;
             }
@@ -49,7 +49,7 @@ function updater() {
         __data = val;
         if (__data) __data.watch(watcher);
         // 处理status
-        if (val && val.isUnionSymbolShape) {
+        if (val && val.isSymbolUnionShape) {
             const syms = val.getTagedSym(props.data, props.varsContainer || []);
             if (__subdata) __subdata.unwatch(watcher);
             __subdata = syms[0] || val.childs[0];
