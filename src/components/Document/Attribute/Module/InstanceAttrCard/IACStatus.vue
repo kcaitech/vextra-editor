@@ -1,7 +1,6 @@
 <script setup lang="ts">
 import {
-    get_status_vari_for_symbolref,
-    get_vari_value_for_ref,
+    get_vari_value_for_ref2,
     RefAttriListItem,
     switch_symref_state
 } from "@/utils/symbol";
@@ -44,7 +43,7 @@ function select(index: number) {
 function getVattagValue() {
     const symbol_ref = props.context.selection.symbolrefshape;
     if (!symbol_ref) return;
-    let val = get_vari_value_for_ref(symbol_ref, props.data.variable);
+    let val = get_vari_value_for_ref2(symbol_ref, props.data.variable);
     if (val === SymbolShape.Default_State) {
         val = t('compos.dlt');
     }

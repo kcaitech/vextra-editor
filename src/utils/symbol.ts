@@ -806,6 +806,12 @@ function search_binds_for_state(
  * @description 获取实例symref身上的某个变量variable的值
  */
 export function get_vari_value_for_ref(symbol_ref: SymbolRefShape, variable: Variable) {
+    const overrides = symbol_ref.findOverride(variable.id, OverrideType.Variable);
+    return overrides ? overrides[overrides.length - 1].value : variable.value;
+
+}
+
+export function get_vari_value_for_ref2(symbol_ref: SymbolRefShape, variable: Variable) {
     let symbol: SymbolShape | SymbolUnionShape | undefined = symbol_ref.symData;
     if (!symbol) {
         return SymbolShape.Default_State;
