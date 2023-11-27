@@ -135,3 +135,30 @@ export function modify_point_curve_mode(context: Context, index: number, shape?:
     }
     editor.modifyPointsCurveMode([index], target_curve_mode);
 }
+
+/**
+ * @description 获取当前编辑点的上一个点
+ */
+export function __previous_curve_point(shape: PathShape, index: number) {
+    const points = shape.points;
+    return index === 0 ? points[points.length - 1] : points[index - 1];
+}
+
+/**
+ * @description 获取当前编辑点的下一个点
+ */
+export function __next_curve_point(shape: PathShape, index: number) {
+    const points = shape.points;
+    return index === points.length - 1 ? points[0] : points[index + 1];
+}
+
+/**
+ * @description 获取当前编辑点的周围两点
+ */
+export function __round_curve_point(shape: PathShape, index: number) {
+    const points = shape.points;
+    return {
+        previous: index === 0 ? points[points.length - 1] : points[index - 1],
+        next: index === points.length - 1 ? points[0] : points[index + 1]
+    }
+}

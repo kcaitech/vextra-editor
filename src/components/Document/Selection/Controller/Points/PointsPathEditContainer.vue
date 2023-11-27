@@ -1,6 +1,6 @@
 <script setup lang='ts'>
 import {Context} from '@/context';
-import {AsyncPathEditor, CurveMode, CurvePoint, Matrix, PathShape, Shape} from '@kcdesign/data';
+import {AsyncPathEditor, Matrix, PathShape, Shape} from '@kcdesign/data';
 import {onMounted, onUnmounted, reactive, ref} from 'vue';
 import {ClientXY, PageXY, Selection, XY} from '@/context/selection';
 import {get_conact_by_point, get_path_by_point} from './common';
@@ -36,8 +36,8 @@ const sub_matrix = new Matrix();
 const data: { dots: Dot[], lines: Line[] } = reactive({dots: [], lines: []});
 const {dots, lines} = data;
 const show_index = ref<number>(-1); // 当前聚焦的编辑点
-const current_site = reactive<XY>({x: 0, y: 0});
-const handle_visible = ref<boolean>(false);
+const current_curve_point_index = ref<number>(-1);
+const dragActiveDis = 3;
 let shape: Shape;
 let startPosition: ClientXY = {x: 0, y: 0};
 let startPosition2: PageXY = {x: 0, y: 0};
@@ -46,39 +46,17 @@ let pathEditor: AsyncPathEditor | undefined;
 let cur_new_node: Line;
 let move: any;
 let offset_map: XY[] | undefined = [];
-const current_curve_point = ref<CurvePoint | undefined>();
-const current_curve_point_index = ref<number>(-1);
-const dragActiveDis = 3;
-
-function set_current_site() {
-    handle_visible.value = false;
-    current_curve_point.value = undefined;
-    const selected_points = props.context.path.selectedPoints;
-    if (selected_points.length !== 1) return;
-    const index = selected_points[0];
-    const __points = shape.points;
-    if (__points.length === 0) return;
-    const point = __points[index];
-    if (!point) return;
-    current_curve_point.value = point;
-    if (point.curveMode === CurveMode.Asymmetric
-        || point.curveMode === CurveMode.Disconnected
-        || point.curveMode === CurveMode.Mirrored) {
-        handle_visible.value = true;
-        current_site.x = dots[index].point.x;
-        current_site.y = dots[index].point.y;
-    }
-}
 
 function update() {
-    if (!props.context.workspace.shouldSelectionViewUpdate) return;
+    if (!props.context.workspace.shouldSelectionViewUpdate) {
+        return;
+    }
     dots.length = 0;
     lines.length = 0;
     init_matrix();
     const points_set = new Set(props.context.path.selectedPoints);
     dots.push(...get_path_by_point(shape, matrix, points_set));
     lines.push(...get_conact_by_point(shape, matrix));
-    set_current_site();
 }
 
 /**
@@ -288,7 +266,9 @@ function selection_watcher(t: number) {
     if (t === Selection.CHANGE_SHAPE) {
         shape.unwatch(update);
         const ns = props.context.selection.pathshape;
-        if (!ns) return;
+        if (!ns) {
+            return;
+        }
         shape = ns;
         shape.watch(update);
         update();
@@ -315,7 +295,9 @@ function matrix_watcher(t: number) {
 onMounted(() => {
     props.context.workspace.watch(matrix_watcher);
     shape = props.context.selection.pathshape!;
-    if (!shape) return console.log('wrong shape');
+    if (!shape) {
+        return console.log('wrong shape');
+    }
     shape.watch(update);
     update();
     window.addEventListener('blur', window_blur);
@@ -329,9 +311,7 @@ onUnmounted(() => {
 })
 </script>
 <template>
-    <Handle v-if="handle_visible"
-            :context="props.context"
-            :index="current_curve_point_index"></Handle>
+    <Handle :context="props.context"></Handle>
     <!--    line todo-->
     <g v-for="(p, i) in lines" :key="i" @mouseenter="() => { line_enter(p.index) }" @mouseleave="line_leave">
         <line :x1="p.apex1.x" :y1="p.apex1.y" :x2="p.apex2.x" :y2="p.apex2.y" class="line"></line>
