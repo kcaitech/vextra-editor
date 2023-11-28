@@ -178,15 +178,15 @@ export function get_conact_by_point(s: Shape, matrix: Matrix) {
 export function get_apexs(s: ContactShape, matrix: Matrix) {
     const raw_p = s.getPoints(), m = new Matrix(matrix);
     if (!raw_p || raw_p.length < 2) return false;
-    if (!raw_p[0].point || !raw_p[raw_p.length - 1].point) return false;
+    // if (!raw_p[0].point || !raw_p[raw_p.length - 1].point) return false;
     m.preScale(s.frame.width, s.frame.height);
     const apex1: {
         point: { x: number, y: number }
         type: 'from' | 'to'
-    } = {point: m.computeCoord3(raw_p[0].point), type: 'from'};
+    } = {point: m.computeCoord(raw_p[0]), type: 'from'};
     const apex2: {
         point: { x: number, y: number }
         type: 'from' | 'to'
-    } = {point: m.computeCoord3(raw_p[raw_p.length - 1].point), type: 'to'};
+    } = {point: m.computeCoord(raw_p[raw_p.length - 1]), type: 'to'};
     return {apex1, apex2};
 }
