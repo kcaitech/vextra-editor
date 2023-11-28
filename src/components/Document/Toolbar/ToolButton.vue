@@ -25,17 +25,13 @@ const invalid = computed(() => {
     display: flex;
     align-items: center;
     justify-content: center;
-    width: 56px;
-    height: 32px;
     margin: 0 2px;
     min-width: 28px;
     min-height: 28px;
-    overflow: hidden;
-    cursor: pointer;
     box-sizing: border-box;
     color: #ffffff;
-    transition: 0.06s;
     border-radius: 4px;
+    cursor: pointer;
 }
 
 .tool-button:hover {

@@ -749,6 +749,8 @@ onUnmounted(() => {
   background: var(--theme-color);
   padding: 10px 8px;
   box-sizing: border-box;
+  position: relative;
+  z-index: 1;
 }
 
 .network {

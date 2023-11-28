@@ -128,7 +128,7 @@ function applyForEdit() {
     <div v-if="isread || canComment || isLable" class="editor-tools" @dblclick.stop>
         <span style="color: #ffffff;">{{ t('apply.read_only') }}</span>
         <div class="button">
-            <button class="el" style="background-color: #865DFF;" @click="applyForEdit">{{
+            <button class="el" style="background-color: #1878F5;" @click="applyForEdit">{{
                 t('apply.apply_for_edit')
             }}
             </button>
@@ -154,6 +154,10 @@ function applyForEdit() {
     position: absolute;
     left: 50%;
     transform: translateX(-50%);
+
+    :deep(.tool-button) {
+        height: 32px;
+    }
 
     &::-webkit-scrollbar {
         width: 0px;
