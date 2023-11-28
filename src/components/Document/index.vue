@@ -378,7 +378,7 @@ const getDocumentInfo = async () => {
             context.workspace.setDocumentPerm(perm)
             getDocumentAuthority();
             getUserInfo()
-            
+
             context.comment.setDocumentInfo(dataInfo.data)
             null_context.value = false;
             context.selection.watch(selectionWatcher);
@@ -462,7 +462,7 @@ function init_doc() {
             getUserInfo();
             context.selection.watch(selectionWatcher);
             context.workspace.watch(workspaceWatcher);
-            const project_id = localStorage.getItem('project_id') || ''; 
+            const project_id = localStorage.getItem('project_id') || '';
             upload(project_id);
             localStorage.setItem('project_id', '');
             switchPage(((window as any).sketchDocument as Document).pagesList[0]?.id);
@@ -553,7 +553,7 @@ const token = localStorage.getItem("token") || "";
 const networkStatus = NetworkStatus.Make(token);
 networkStatus.addOnChange((status: NetworkStatusType) => {
   if (status === NetworkStatusType.Offline) {
-    // 网络断开连接
+    console.log("网络断开连接")
     if (context) {
       clearInterval(loopNet);
       loopNet = null;
@@ -568,7 +568,7 @@ networkStatus.addOnChange((status: NetworkStatusType) => {
       }
     }
   } else {
-    //网络连接成功
+    console.log("网络连接成功")
     if (context) {
       if (context.communication.docOp.hasPendingSyncCmd() || netErr) {
         //有未上传资源

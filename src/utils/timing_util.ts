@@ -1,8 +1,7 @@
 type UnwrappedPromise<T> = T extends Promise<infer U> ? U : T
 
 // 节流
-// 被后续调用取消时会抛出异常
-export function throttle<T extends (this: any, ...args: any[]) => any>(func: T, delay: number): (...funcArgs: Parameters<T>) => Promise<UnwrappedPromise<ReturnType<T>>> {
+export function throttle<T extends (...args: any[]) => any>(func: T, delay: number): (...funcArgs: Parameters<T>) => Promise<UnwrappedPromise<ReturnType<T>>> {
     let timer: ReturnType<typeof setTimeout> | undefined = undefined
     let cancel: (reason?: any) => void = () => {}
     let previousRunTime: number = 0
@@ -30,8 +29,7 @@ export function throttle<T extends (this: any, ...args: any[]) => any>(func: T, 
 }
 
 // 防抖
-// 被后续调用取消时会抛出异常
-export function debounce<T extends (this: any, ...args: any[]) => any>(func: T, delay: number): (...funcArgs: Parameters<T>) => Promise<UnwrappedPromise<ReturnType<T>>> {
+export function debounce<T extends (...args: any[]) => any>(func: T, delay: number): (...funcArgs: Parameters<T>) => Promise<UnwrappedPromise<ReturnType<T>>> {
     let timer: ReturnType<typeof setTimeout> | undefined = undefined
     let cancel: (reason?: any) => void = () => {}
     return function (this: any, ...args: Parameters<T>) {
