@@ -260,12 +260,12 @@ const showHiddenLeft = () => {
 
     .comment-title {
         position: relative;
-        height: 30px;
+        height: 40px;
         display: flex;
         align-items: center;
         justify-content: space-between;
         padding: 0 var(--default-padding);
-        border-bottom: 1px solid var(--theme-color-line);
+        //border-bottom: 1px solid var(--theme-color-line);
         z-index: 1;
 
         .title {
@@ -279,6 +279,8 @@ const showHiddenLeft = () => {
             justify-content: center;
             align-items: center;
             margin-right: -5%;
+            padding: 6px 6px 6px 6px;
+            box-sizing: border-box;
 
             >svg {
                 width: 16px;

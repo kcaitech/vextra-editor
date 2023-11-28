@@ -140,9 +140,11 @@ onUnmounted(() => {
 
         >.tab {
             cursor: pointer;
-            padding: 10px;
-            margin-right: 10px;
-
+            padding: 13px 14px 13px 14px;
+            font-size: 12px;
+            font-weight: 500;
+            font-feature-settings: "kern" on;
+            color: #000000;
         }
 
         >.tab:hover {
@@ -156,7 +158,7 @@ onUnmounted(() => {
 
         .underline {
             border: 2px #000000 solid;
-            border-radius: 6px;
+            border-radius: 292px;
             position: absolute;
             bottom: 0;
             transition: left 0.3s ease-in-out;

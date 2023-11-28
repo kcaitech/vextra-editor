@@ -539,12 +539,13 @@ onUnmounted(() => {
     position: absolute;
     width: 330px;
     max-height: 664px;
-    background-color: #fff;
-    border-radius: 6px;
-    box-shadow: 0px 5px 10px rgba(0, 0, 0, 0.15);
+    box-shadow: 0px 2px 6px 0px rgba(0, 0, 0, 0.05);
     z-index: 99;
     font-size: var(--font-default-fontsize);
     cursor: default;
+    border-radius: 12px;
+    background: #FFFFFF;
+    border: 1px solid #EBEBEB;
 
     .popup-heard {
         display: flex;

@@ -19,7 +19,7 @@ const props = defineProps<{
                 <slot name="tool"></slot>
             </div>
         </div>
-        <div class="line" />
+<!--        <div class="line" />-->
     </div>
     
 </template>
