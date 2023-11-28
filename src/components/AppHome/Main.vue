@@ -11,7 +11,7 @@ import { RouterView } from 'vue-router';
 <style lang="scss" scoped>
 .main {
     height: 100%;
-    margin: 24px 24px 0 24px;
+    margin: 0 24px;
     overflow: hidden;
 }
 </style>

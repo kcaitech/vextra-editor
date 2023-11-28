@@ -1,14 +1,24 @@
 <script setup lang="ts">
-import { ref, nextTick } from 'vue'
-import { AsyncTransfer, Matrix, Shape } from "@kcdesign/data";
-import { Context } from "@/context";
-import { ClientXY, PageXY } from '@/context/selection';
-import { EffectType, Wheel, fourWayWheel } from '@/utils/wheel';
-import { PointsOffset, distance2apex, gen_match_points } from '@/utils/assist';
-import { permIsEdit } from '@/utils/content';
-import { check_status, end_transalte, gen_offset_map, get_speed, migrate, migrate_immediate, modify_mouse_position_by_type, pre_translate } from '@/utils/controllerFn';
-import { paster_short } from '@/utils/clipboard';
-import { Asssit } from '@/context/assist';
+import {ref, nextTick} from 'vue'
+import {AsyncTransfer, Matrix, Shape} from "@kcdesign/data";
+import {Context} from "@/context";
+import {ClientXY, PageXY} from '@/context/selection';
+import {EffectType, Wheel, fourWayWheel} from '@/utils/wheel';
+import {PointsOffset, distance2apex, gen_match_points} from '@/utils/assist';
+import {permIsEdit} from '@/utils/content';
+import {
+    check_status,
+    end_transalte,
+    gen_offset_map,
+    get_speed,
+    migrate,
+    migrate_immediate,
+    modify_mouse_position_by_type,
+    pre_translate
+} from '@/utils/controllerFn';
+import {paster_short} from '@/utils/clipboard';
+import {Asssit} from '@/context/assist';
+
 const props = defineProps<{
     name: string,
     index: number,
@@ -101,7 +111,7 @@ const unHoverShape = (e: MouseEvent) => {
     emit('leave')
     hover.value = false
 }
-let startPosition: ClientXY = { x: 0, y: 0 };
+let startPosition: ClientXY = {x: 0, y: 0};
 let wheel: Wheel | undefined = undefined;
 let matrix_inverse: Matrix = new Matrix();
 let matrix: Matrix = new Matrix();
@@ -119,7 +129,7 @@ function down(e: MouseEvent) {
     if (e.button === 0) {
         context.selection.selectShape(props.shape);
         let root = props.context.workspace.root;
-        startPosition = { x: e.clientX - root.x, y: e.clientY - root.y };
+        startPosition = {x: e.clientX - root.x, y: e.clientY - root.y};
         document.addEventListener('mousemove', move);
         document.addEventListener('mouseup', up);
     } else if (e.button === 2) {
@@ -130,10 +140,10 @@ function down(e: MouseEvent) {
 function move(e: MouseEvent) {
     if (e.buttons !== 1) return;
     let root = props.context.workspace.root;
-    const mousePosition: ClientXY = { x: e.clientX - root.x, y: e.clientY - root.y };
+    const mousePosition: ClientXY = {x: e.clientX - root.x, y: e.clientY - root.y};
     if (isDragging && wheel && asyncTransfer) {
         modify_speed(e);
-        const isOut = wheel.moving(e, { type: EffectType.TRANS, effect: asyncTransfer.transByWheel });
+        const isOut = wheel.moving(e, {type: EffectType.TRANS, effect: asyncTransfer.transByWheel});
         let update_type: number = 0;
         if (!isOut) update_type = transform_f(startPosition, mousePosition);
         modify_mouse_position_by_type(update_type, startPosition, mousePosition);
@@ -175,9 +185,11 @@ function transform_f(start: ClientXY, end: ClientXY) {
     }
     return update_type;
 }
+
 let pre_target_x: number, pre_target_y: number;
 let stickedX: boolean = false;
 let stickedY: boolean = false;
+
 function trans(asyncTransfer: AsyncTransfer, ps: PageXY, pe: PageXY): number {
     const assist = props.context.assist;
     if (speed > 5) {
@@ -190,7 +202,7 @@ function trans(asyncTransfer: AsyncTransfer, ps: PageXY, pe: PageXY): number {
     if (!compo) return 3;
     let need_multi = 0;
     let update_type = 3;
-    const stick = { dx: 0, dy: 0, sticked_x: false, sticked_y: false };
+    const stick = {dx: 0, dy: 0, sticked_x: false, sticked_y: false};
     const stickness = assist.stickness;
     const target = assist.trans_match(offset_map, pe);
     if (!target) return update_type;
@@ -265,12 +277,14 @@ function move2(e: MouseEvent) {
 </script>
 
 <template>
-    <div class="container-name" @mouseenter="hoverShape" @mouseleave="unHoverShape" @mousedown.stop="down" @mousemove="move2"
-        data-area="controller">
+    <div class="container-name" @mouseenter="hoverShape" @mouseleave="unHoverShape" @mousedown.stop="down"
+         @mousemove="move2"
+         data-area="controller">
         <div class="name" :class="{ selected, active: hover }" :style="{ maxWidth: props.maxWidth + 'px' }"
-            @dblclick="onRename">{{ props.name }}</div>
+             @dblclick="onRename">{{ props.name }}
+        </div>
         <input v-if="isInput" type="text" :style="{ maxWidth: props.maxWidth + 'px', width: inputWidth + 'px' }"
-            ref="nameInput" class="rename" @input="onInputName" @change="ChangeReName">
+               ref="nameInput" class="rename" @input="onInputName" @change="ChangeReName">
         <span v-if="isInput" style="position: absolute; visibility: hidden; top: 0px;" ref="inputSpan"></span>
     </div>
 </template>

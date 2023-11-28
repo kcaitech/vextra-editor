@@ -19,6 +19,7 @@ import listrightmenu from "../listrightmenu.vue"
 import DeleteDialog from '@/components/TeamProject/ProjectDialog.vue';
 import Bus from '@/components/AppHome/bus'
 import { useRoute } from 'vue-router'
+import PinyinMatch from 'pinyin-match'
 const items = ['restore', 'completely_delete']
 const { t } = useI18n()
 const route = useRoute()
@@ -78,7 +79,8 @@ Bus.on('searchvalue', (str: string) => {
 })
 
 watchEffect(() => {
-    searchlists.value = lists.value.filter((el: any) => el.document.name.toLowerCase().includes(searchvalue.value.toLowerCase()))
+    if (!searchvalue.value) return searchlists.value = lists.value
+    searchlists.value = lists.value.filter((el: any) => PinyinMatch.match(el.document.name.toLowerCase(), searchvalue.value.toLowerCase()))
 })
 
 //转换文件大小

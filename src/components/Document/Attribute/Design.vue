@@ -14,10 +14,11 @@ import Text from './Text/Text.vue';
 import {throttle} from 'lodash';
 import Module from './Module/Module.vue'
 import TableText from './Table/TableText.vue'
-import {TableSelection} from '@/context/tableselection';
-import {Tool} from '@/context/tool';
+import { TableSelection } from '@/context/tableselection';
+import TableStyle from './Table/TableStyle.vue'
+import { Tool } from '@/context/tool';
+import Opacity from './Opacity/Opacity.vue';
 import BaseForPathEdit from "@/components/Document/Attribute/BaseAttr/BaseForPathEdit.vue";
-
 const props = defineProps<{ context: Context }>();
 const shapes = shallowRef<Shape[]>([]);
 const len = computed<number>(() => shapes.value.length);
@@ -155,6 +156,7 @@ onUnmounted(() => {
             <div v-if="len" :reflush="reflush">
                 <Arrange :context="props.context" :shapes="shapes"></Arrange>
                 <ShapeBaseAttr v-if="baseAttr" :context="props.context"></ShapeBaseAttr>
+                <Opacity :shapes="shapes" :context="props.context"></Opacity>
                 <BaseForPathEdit v-if="editAttr" :context="props.context"></BaseForPathEdit>
                 <Module v-if="symbol_attribute" :context="props.context" :shapeType="shapeType"
                         :shapes="shapes"></Module>

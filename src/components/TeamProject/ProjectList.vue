@@ -1,6 +1,6 @@
 <template>
     <div class="tatle" style="height: calc(100vh - 224px);">
-        <tablelist :data="searchvalue === '' ? teamprojectlist : SearchList" :iconlist="iconlists" :nulldata="nulldata"
+        <tablelist :data="SearchList" :iconlist="iconlists" :nulldata="nulldata"
             :projectshare="true" @onexitproject="onExitProject" @cancelfixed="cancelFixed" @on-addproject="onAddproject"
             @dbclickopen="dblclickskipProject" @skipproject="skipProject" @rightMeun="rightmenu" :noNetwork="noNetwork"
             :addproject="teamSelfPermType" />
@@ -35,6 +35,7 @@ import ProjectMemberg from '../TeamProject/ProjectFill/ProjectMemberg.vue'
 import ProjectAccessSetting from '../TeamProject/ProjectFill/ProjectAccessSetting.vue'
 import tablelist from '@/components/AppHome/tablelist.vue'
 import { debounce } from 'lodash';
+import PinyinMatch from 'pinyin-match'
 
 interface Props {
     searchvalue?: string
@@ -297,10 +298,11 @@ watch(is_favor, () => {
 
 //通过计算属性，筛选出与搜索匹配的项目
 const SearchList = computed(() => {
+    if(!props.searchvalue.toLowerCase()) return teamprojectlist.value
     return teamprojectlist.value.filter((el: any) => {
-        return el.project.name.toLowerCase().includes(props.searchvalue.trim().toLowerCase())
+        return PinyinMatch.match(el.project.name.toLowerCase(),props.searchvalue.trim().toLowerCase())
             ||
-            el.creator.nickname.toLowerCase().includes(props.searchvalue.trim().toLowerCase())
+            PinyinMatch.match(el.creator.nickname.toLowerCase(),props.searchvalue.trim().toLowerCase())
     })
 })
 

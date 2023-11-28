@@ -1,20 +1,20 @@
-import {Context} from "@/context";
-import {message} from "./message";
-import {replace} from "./clipboard";
-import {is_parent_locked, is_parent_unvisible} from "@/utils/shapelist";
-import {map_from_shapes, permIsEdit} from "./content";
-import {Action} from "@/context/tool";
-import {AsyncTransfer, GroupShape, Shape, ShapeType, TableShape} from "@kcdesign/data";
-import {ClientXY, PageXY} from "@/context/selection";
-import {debounce} from "lodash";
-import {WorkSpace} from "@/context/workspace";
-import {Menu} from "@/context/menu";
-import {compare_layer_3} from "./group_ungroup";
-import {get_symbolref_by_layer, make_symbol} from "./symbol";
+import { Context } from "@/context";
+import { message } from "./message";
+import { replace } from "./clipboard";
+import { is_parent_locked, is_parent_unvisible } from "@/utils/shapelist";
+import { map_from_shapes, permIsEdit } from "./content";
+import { Action } from "@/context/tool";
+import { AsyncTransfer, GroupShape, Shape, ShapeType, TableShape } from "@kcdesign/data";
+import { ClientXY, PageXY } from "@/context/selection";
+import { debounce } from "lodash";
+import { WorkSpace } from "@/context/workspace";
+import { Menu } from "@/context/menu";
+import { compare_layer_3 } from "./group_ungroup";
+import { get_symbolref_by_layer, make_symbol } from "./symbol";
 
 export function keyboardHandle(e: KeyboardEvent, context: Context, t: Function) {
     if (!permIsEdit(context) || context.tool.action === Action.AddComment) return;
-    const {target, shiftKey, ctrlKey, metaKey, altKey} = e;
+    const { target, shiftKey, ctrlKey, metaKey, altKey } = e;
     if (target instanceof HTMLInputElement) return;
     const shapes = context.selection.selectedShapes;
     if (!shapes.length) return;
@@ -186,7 +186,7 @@ export function d(s: { x: number, y: number }, e: { x: number, y: number }): num
 
 export function getDelta(s: Shape, p: PageXY) {
     const f2r = s.frame2Root();
-    return {dx: p.x - f2r.x, dy: p.y - f2r.y};
+    return { dx: p.x - f2r.x, dy: p.y - f2r.y };
 }
 
 export function get_speed(e1: MouseEvent, e2: MouseEvent) {
@@ -225,7 +225,6 @@ export function get_direction(rotation: number) {
     else if (rotation >= 338 && rotation <= 360) return 0;
     else return 0;
 }
-
 export function gen_offset_map(shape: Shape, down: PageXY) {
     const m = shape.matrix2Root(), f = shape.frame;
     const lt = m.computeCoord2(0, 0);
@@ -234,11 +233,11 @@ export function gen_offset_map(shape: Shape, down: PageXY) {
     const rt = m.computeCoord2(f.width, 0);
     const lb = m.computeCoord2(0, f.height);
     return {
-        lt: {x: lt.x - down.x, y: lt.y - down.y},
-        rb: {x: rb.x - down.x, y: rb.y - down.y},
-        pivot: {x: pivot.x - down.x, y: pivot.y - down.y},
-        rt: {x: rt.x - down.x, y: rt.y - down.y},
-        lb: {x: lb.x - down.x, y: lb.y - down.y}
+        lt: { x: lt.x - down.x, y: lt.y - down.y },
+        rb: { x: rb.x - down.x, y: rb.y - down.y },
+        pivot: { x: pivot.x - down.x, y: pivot.y - down.y },
+        rt: { x: rt.x - down.x, y: rt.y - down.y },
+        lb: { x: lb.x - down.x, y: lb.y - down.y }
     }
 }
 
@@ -249,7 +248,6 @@ export function pre_translate(context: Context, shapes: Shape[]) {
     context.assist.set_trans_target(shapes);
     context.cursor.cursor_freeze(true); // 拖动过程中禁止鼠标光标切换
 }
-
 export function modify_mouse_position_by_type(update_type: number, startPosition: ClientXY, mousePosition: ClientXY,) {
     if (update_type === 3) startPosition.x = mousePosition.x, startPosition.y = mousePosition.y;
     else if (update_type === 2) startPosition.y = mousePosition.y;
@@ -288,7 +286,6 @@ export function end_transalte(context: Context) {
     context.workspace.setCtrl('page');
     context.cursor.cursor_freeze(false);
 }
-
 export function check_status(context: Context) {
     context.menu.menuMount(); // 关闭可能已经打开的右键菜单
     context.menu.notify(Menu.SHUTDOWN_POPOVER); // 关闭可能已经打开的弹窗
