@@ -1,50 +1,17 @@
-import {Context} from "@/context";
+import { Context } from "@/context";
 import {
     AsyncTransfer,
     GroupShape,
     Matrix,
-    Shape,
-    ShapeType,
-    SymbolRefShape,
-    SymbolShape
+    Shape
 } from "@kcdesign/data";
-import {ClientXY, PageXY} from "@/context/selection";
-import {debounce} from "lodash";
-import {map_from_shapes} from "@/utils/content";
-import {compare_layer_3} from "@/utils/group_ungroup";
-import {get_closest_container} from "@/utils/mouse";
-import {is_circular_ref2, is_part_of_symbolref, is_symbol_but_not_union, is_part_of_symbol} from "@/utils/symbol";
-
-/**
- * @description 检查是否满足迁移条件
- * @param target 计划迁移到的目标
- * @param wander 迁移对象
- * @returns 0 满足迁移条件
- *          1 不满足：只有组件可以迁移到union里
- *          2 target、wonder都为组件且target不为union
- *          3 无法通过循环引用检查
- *          4 目标在实例里面
- *          999 其他
- */
-export function unable_to_migrate(target: Shape, wander: Shape): number {
-    if (is_part_of_symbol(target)) {
-        if (wander.type === ShapeType.Table || wander.type === ShapeType.Contact) return 5;
-        if (target.type === ShapeType.Symbol) {
-            const children = wander.naviChilds || wander.childs;
-            if (children?.length) {
-                const tree = wander instanceof SymbolRefShape ? wander.getRootData() : wander;
-                if (!tree) return 999;
-                if (is_circular_ref2(tree, target.id)) return 3;
-            }
-        }
-        if ((target as SymbolShape).isSymbolUnionShape && !is_symbol_but_not_union(wander)) return 1;
-        if (wander.type === ShapeType.Symbol) return 2;
-    } else {
-        if (target.isVirtualShape) return 4;
-    }
-    return 0;
-}
-
+import { ClientXY, PageXY } from "@/context/selection";
+import { debounce } from "lodash";
+import { map_from_shapes } from "@/utils/content";
+import { compare_layer_3 } from "@/utils/group_ungroup";
+import { get_closest_container } from "@/utils/mouse";
+import { is_part_of_symbolref } from "@/utils/symbol";
+import { get_state_name } from "./shapelist";
 
 /**
  * @description 立刻把一组图形从一个容器移动到另一个容器
@@ -55,10 +22,12 @@ export function migrate_immediate(context: Context, asyncTransfer: AsyncTransfer
     const pe: PageXY = matrix.computeCoord3(end);
     const map = map_from_shapes(shapes);
     const target_parent = context.selection.getClosestContainer(pe, map);
-    if (is_part_of_symbolref(target_parent)) return console.log('migrate error:', 4);
-    const emit_migrate = get_closest_container(context, shapes[0]).id !== target_parent.id;
+    if (is_part_of_symbolref(target_parent)) {
+        return console.log('migrate error:', 4);
+    }
+    const emit_migrate = (get_closest_container(context, shapes[0]).id !== target_parent.id);
     if (emit_migrate) {
-        asyncTransfer.migrate(target_parent as GroupShape, compare_layer_3(shapes, -1));
+        asyncTransfer.migrate(target_parent as GroupShape, compare_layer_3(shapes, -1), context.workspace.t('compos.dlt'));
         context.assist.set_collect_target([target_parent as GroupShape], true);
     }
 }

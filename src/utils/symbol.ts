@@ -1119,6 +1119,9 @@ export function is_part_of_symbol(shape: Shape) {
  */
 export function is_part_of_symbolref(shape: Shape) {
     let p = shape.parent;
+    if (shape.isVirtualShape) {
+        return true;
+    }
     while (p) {
         if (p.type === ShapeType.SymbolRef) return true;
         p = p.parent;
