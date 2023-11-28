@@ -1,19 +1,19 @@
 <script setup lang="ts">
 import Rect from "@/components/Document/Toolbar/Buttons/Rect.vue";
-import {onMounted, onUnmounted, reactive, ref} from "vue";
-import {Context} from "@/context";
-import {__round_curve_point} from "@/utils/pathedit";
-import {Path} from "@/context/path";
-import {WorkSpace} from "@/context/workspace";
+import { onMounted, onUnmounted, reactive, ref } from "vue";
+import { Context } from "@/context";
+import { __round_curve_point } from "@/utils/pathedit";
+import { Path } from "@/context/path";
+import { WorkSpace } from "@/context/workspace";
 
 interface Props {
     context: Context
 }
 
 const props = defineProps<Props>();
-const apex_location_alpha = reactive({x: -10, y: -10});
-const apex_location_beta = reactive({x: -10, y: -10});
-const site = reactive({x: -10, y: -10});
+const apex_location_alpha = reactive({ x: -10, y: -10 });
+const apex_location_beta = reactive({ x: -10, y: -10 });
+const site = reactive({ x: -10, y: -10 });
 const previous = ref<boolean>(false);
 const current = ref<boolean>(false);
 const next = ref<boolean>(false);
@@ -93,12 +93,12 @@ onUnmounted(() => {
         <g>
             <line :x1="site.x" :y1="site.y" :x2="apex_location_alpha.x" :y2="apex_location_alpha.y" class="line"></line>
             <rect :x="apex_location_alpha.x - 4" :y="apex_location_alpha.y - 4" width="8" height="8" class="point"
-                  @mousedown="(e) => {down(e, 'alpha')}"></rect>
+                @mousedown="(e) => { down(e, 'alpha') }"></rect>
         </g>
         <g>
             <line :x1="site.x" :y1="site.y" :x2="apex_location_beta.x" :y2="apex_location_beta.y" class="line"></line>
             <rect :x="apex_location_beta.x - 4" :y="apex_location_beta.y - 4" width="8" height="8" class="point"
-                  @mousedown="(e) => {down(e, 'beta')}"></rect>
+                @mousedown="(e) => { down(e, 'beta') }"></rect>
         </g>
     </g>
 </template>

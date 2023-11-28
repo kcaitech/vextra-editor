@@ -156,8 +156,8 @@ onUnmounted(() => {
             <div v-if="len" :reflush="reflush">
                 <Arrange :context="props.context" :shapes="shapes"></Arrange>
                 <ShapeBaseAttr v-if="baseAttr" :context="props.context"></ShapeBaseAttr>
-                <Opacity :shapes="shapes" :context="props.context"></Opacity>
                 <BaseForPathEdit v-if="editAttr" :context="props.context"></BaseForPathEdit>
+                <Opacity :shapes="shapes" :context="props.context"></Opacity>
                 <Module v-if="symbol_attribute" :context="props.context" :shapeType="shapeType"
                         :shapes="shapes"></Module>
                 <Fill v-if="WITH_FILL.includes(shapeType)" :shapes="shapes" :context="props.context"></Fill>
