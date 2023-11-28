@@ -1,5 +1,5 @@
 <script setup lang="ts">
-import {reactive, onMounted, onUnmounted, computed, ref, nextTick, watch} from 'vue';
+import {reactive, onMounted, onUnmounted, computed, ref, nextTick, watch, getCurrentInstance} from 'vue';
 import PageView from './Content/PageView.vue';
 import SelectionView from './Selection/SelectionView.vue';
 import ContextMenu from '../common/ContextMenu.vue';
@@ -532,10 +532,10 @@ const stopWatch = watch(() => props.page, (cur, old) => {
     if (f) background_color.value = color2string(f.color);
 })
 watch(() => matrix, matrix_watcher, {deep: true});
-onMounted(() => {
+onMounted(() => {    
     props.context.selection.scoutMount(props.context);
     props.context.workspace.watch(workspace_watcher);
-    props.context.workspace.init(t);
+    props.context.workspace.init(t.bind(getCurrentInstance()));
     props.context.workspace.setFreezeStatus(true);
     props.context.comment.watch(comment_watcher);
     props.context.menu.watch(menu_watcher);
