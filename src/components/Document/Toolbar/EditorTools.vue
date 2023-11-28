@@ -1,7 +1,7 @@
 <script setup lang="ts">
-import {onMounted, onUnmounted, ref, computed, nextTick} from "vue";
-import {Context} from '@/context';
-import {Selection} from '@/context/selection';
+import { onMounted, onUnmounted, ref, computed, nextTick } from "vue";
+import { Context } from '@/context';
+import { Selection } from '@/context/selection';
 import Cursor from "./Buttons/Cursor.vue";
 import Frame from "./Buttons/Frame.vue";
 import GroupUngroup from "./GroupUngroup.vue";
@@ -18,6 +18,8 @@ import { useI18n } from 'vue-i18n'
 import { message } from "@/utils/message";
 import { ElMessage } from "element-plus";
 import { string_by_sys } from "@/utils/common";
+import Shape from "./Buttons/Shape.vue";
+import ToolButton from "./ToolButton.vue";
 const { t } = useI18n();
 interface Props {
     context: Context
@@ -42,7 +44,7 @@ function select(action: Action) {
 }
 
 function selectComps() {
-    message('feature', t('navi.development'));
+    props.context.tool.notify(Tool.COMPONENT);
 }
 
 const isLable = ref(props.context.tool.isLable);
@@ -99,9 +101,9 @@ function applyForEdit() {
 <template>
     <div v-if="isEdit && !isLable && !is_path_edit" class="editor-tools" @dblclick.stop>
         <Cursor @select="select" :d="selected" :active="selected === Action.AutoV || selected === Action.AutoK"
-                :is_lable="isLable" :edit="isEdit"></Cursor>
+            :is_lable="isLable" :edit="isEdit"></Cursor>
         <div style="width: 16px;height: 52px;display: flex;align-items: center;justify-content: center;">
-            <div class="vertical-line"/>
+            <div class="vertical-line" />
         </div>
         <Frame :context="props.context" :active="selected === Action.AddFrame" @select="select"></Frame>
         <Shape :context="context"></Shape>
@@ -110,17 +112,16 @@ function applyForEdit() {
         <Table @select="select" :active="selected === Action.AddTable" :context="props.context"></Table>
         <Contact @select="select" :active="selected === Action.AddContact" :context="props.context"></Contact>
         <div style="width: 16px;height: 52px;display: flex;align-items: center;justify-content: center;">
-            <div class="vertical-line"/>
+            <div class="vertical-line" />
         </div>
         <el-tooltip class="box-item" effect="dark" :content="string_by_sys(`${t('navi.comps')} &nbsp;&nbsp; Shift I`)"
-                    placement="bottom" :show-after="500" :offset="10" :hide-after="0">
+            placement="bottom" :show-after="500" :offset="10" :hide-after="0">
             <ToolButton style="width: 32px">
                 <div class="temp" @click="selectComps">
                     <svg-icon icon-class="resource"></svg-icon>
                 </div>
             </ToolButton>
         </el-tooltip>
-        <CreateComps @select="select" :context="props.context"></CreateComps>
         <Comment @select="select" :active="selected === Action.AddComment" :workspace="workspace"></Comment>
         <GroupUngroup :context="props.context" :selection="props.selection"></GroupUngroup>
     </div>
@@ -128,21 +129,19 @@ function applyForEdit() {
         <span style="color: #ffffff;">{{ t('apply.read_only') }}</span>
         <div class="button">
             <button class="el" style="background-color: #865DFF;" @click="applyForEdit">{{
-                    t('apply.apply_for_edit')
-                }}
+                t('apply.apply_for_edit')
+            }}
             </button>
         </div>
         <Cursor @select="select" :d="selected" :active="selected === Action.AutoV || selected === Action.AutoK"
-                :is_lable="isLable" :edit="isEdit"></Cursor>
+            :is_lable="isLable" :edit="isEdit"></Cursor>
         <div style="width: 16px;height: 52px;display: flex;align-items: center;justify-content: center;">
-            <div class="vertical-line"/>
+            <div class="vertical-line" />
         </div>
-        <Comment @select="select" :active="selected === Action.AddComment" :workspace="workspace"
-                 v-if="!isread"></Comment>
+        <Comment @select="select" :active="selected === Action.AddComment" :workspace="workspace" v-if="!isread"></Comment>
     </div>
     <PathEditTool v-if="isEdit && is_path_edit" class="editor-tools" :context="props.context" @select="select"
-                  :selected="selected"
-    ></PathEditTool>
+        :selected="selected"></PathEditTool>
 </template>
 
 <style scoped lang="scss">
@@ -199,7 +198,7 @@ function applyForEdit() {
         padding: 6px 6px 6px 6px;
         box-sizing: border-box;
 
-        > svg {
+        >svg {
             width: 20px;
             height: 20px;
         }

@@ -719,7 +719,7 @@ onUnmounted(() => {
       <span class="text" v-if="permissionChange === PermissionChange.update">{{ t('home.prompt') }}</span>
       <span class="text" v-if="permissionChange === PermissionChange.close">{{ t('home.visit') }}</span>
       <span class="text" v-if="permissionChange === PermissionChange.delete">{{ t('home.delete_file') }}</span>
-      <span style="color: #0d99ff;" v-if="countdown > 0">{{ countdown }}</span>
+      <span style="color: #1878F5;" v-if="countdown > 0">{{ countdown }}</span>
     </div>
     <Bridge v-if="bridge" :context="context!"></Bridge>
   </div>
@@ -745,11 +745,9 @@ onUnmounted(() => {
   display: flex;
   flex-flow: row nowrap;
   width: 100%;
-  z-index: 10;
-  min-height: 40px;
   height: 52px;
-  background: #2C2C2C;
-  padding: 10px 8px 10px 8px;
+  background: var(--theme-color);
+  padding: 10px 8px;
   box-sizing: border-box;
 }
 
