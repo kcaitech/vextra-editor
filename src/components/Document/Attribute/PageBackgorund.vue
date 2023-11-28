@@ -107,7 +107,8 @@ onUnmounted(() => {
 </script>
 <template>
     <div class="wrap">
-        <span>{{ t('attr.background') }}</span>
+        <div style="width: 224px;height: 30px;padding: 8px 0 8px 0">
+        <span>{{ t('attr.background') }}</span></div>
         <div class="setting">
             <ColorPicker class="color" :color="(background_color as Color)" :context="props.context" :late="-24"
                 @change="c => colorChangeFromPicker(c)">
@@ -121,18 +122,25 @@ onUnmounted(() => {
 </template>
 <style scoped lang="scss">
 .wrap {
-    padding: 10px 13px;
+    padding: 12px 8px 18px 8px;
     box-sizing: border-box;
+    height: 98px;
 
     >span {
+        width: 48px;
+        height: 14px;
         font-weight: 700;
+        font-family: HarmonyOS Sans;
+        font-size: 12px;
+        font-feature-settings: "kern" on;
+        color: #000000;
     }
 
     .setting {
-        width: 100%;
-        height: 28px;
+        width: 224px;
+        height: 32px;
         border-radius: 4px;
-        padding: 8px 0px;
+        padding: 9px 0px;
         box-sizing: border-box;
         display: flex;
         align-items: center;
@@ -149,12 +157,14 @@ onUnmounted(() => {
         }
 
         #clr {
-            margin-left: 13px;
-            width: 80px;
+            margin-left: 16px;
+            width: 92px;
+            height: 14px;
         }
 
         #alpha {
             width: 40px;
+            height: 14px;
         }
     }
 }

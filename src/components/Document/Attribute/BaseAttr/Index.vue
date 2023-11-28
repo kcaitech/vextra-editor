@@ -545,9 +545,10 @@ onUnmounted(() => {
 
 .table {
     width: 100%;
+    height: 176px;
     display: flex;
     flex-direction: column;
-    padding: 2px 10px 12px 10px;
+    padding: 12px 8px 12px 8px;
     box-sizing: border-box;
     visibility: visible;
 
@@ -570,14 +571,14 @@ onUnmounted(() => {
         }
 
         .positon {
-            width: 95px;
-            height: 30px;
+            width: 88px;
+            height: 32px;
             border-radius: var(--default-radius);
         }
 
         .frame {
-            width: 95px;
-            height: 30px;
+            width: 88px;
+            height: 32px;
             margin: 0 0;
             border-radius: var(--default-radius);
         }
@@ -637,8 +638,8 @@ onUnmounted(() => {
         }
 
         .angle {
-            height: 30px;
-            width: 95px;
+            width: 88px;
+            height: 32px;
             border-radius: var(--default-radius);
 
             >svg {
@@ -652,10 +653,10 @@ onUnmounted(() => {
             display: flex;
             justify-content: center;
             align-items: center;
-            width: 45px;
-            height: 30px;
+            width: 42px;
+            height: 32px;
             border-radius: var(--default-radius);
-            margin: 4px -4px;
+            margin: 4px -10px;
 
             >svg {
                 color: var(--coco-grey);

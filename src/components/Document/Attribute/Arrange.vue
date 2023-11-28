@@ -200,8 +200,10 @@ onUnmounted(() => {
 .container {
     display: flex;
     justify-content: space-evenly;
-    padding: 4px 10px 0 10px;
+    padding: 6px 8px 6px 8px;
     box-sizing: border-box;
+    height: 40px;
+    border-bottom: 1px solid #F0F0F0;
 }
 
 .item {
@@ -214,8 +216,8 @@ onUnmounted(() => {
 
     >svg {
         color: var(--theme-color);
-        width: 95%;
-        height: 95%;
+        width: 28px;
+        height: 28px;
     }
 }
 

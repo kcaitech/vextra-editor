@@ -284,6 +284,7 @@ watchEffect(initSizeBounds);
 
     .column1 {
         position: relative;
+        margin-top: 50px;
     }
 
     .column2 {
