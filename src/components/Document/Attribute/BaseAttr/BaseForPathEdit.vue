@@ -113,14 +113,14 @@ function get_current_curve_mode() {
     if (l === 1) {
         const __point = __points[selected_points[0]];
         if (!__point) return;
-        curve_mode.value = __point.curveMode;
+        curve_mode.value = __point.mode;
         return;
     }
-    const fcm: CurveMode = __points[selected_points[0]].curveMode;
+    const fcm: CurveMode = __points[selected_points[0]].mode;
     for (let i = 1, _l = selected_points.length; i < _l; i++) {
         const curve_point = __points[selected_points[i]];
         if (!curve_point) continue;
-        if (curve_point.curveMode !== fcm) return;
+        if (curve_point.mode !== fcm) return;
     }
     curve_mode.value = fcm;
 }

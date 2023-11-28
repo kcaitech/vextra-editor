@@ -58,7 +58,7 @@ export function get_value_from_point(context: Context, index: number) {
     return {
         x: p.x,
         y: p.y,
-        r: c.radius
+        r: c.radius || 0
     }
 }
 
@@ -161,4 +161,7 @@ export function __round_curve_point(shape: PathShape, index: number) {
         previous: index === 0 ? points[points.length - 1] : points[index - 1],
         next: index === points.length - 1 ? points[0] : points[index + 1]
     }
+}
+export function __angle(x1: number, y1: number, x2: number, y2: number) {
+    return (Math.atan2(x2 - x1, y1 - y2) * (180 / Math.PI) + 360) % 360;
 }

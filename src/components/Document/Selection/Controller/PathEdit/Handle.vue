@@ -2,7 +2,7 @@
 import Rect from "@/components/Document/Toolbar/Buttons/Rect.vue";
 import { onMounted, onUnmounted, reactive, ref } from "vue";
 import { Context } from "@/context";
-import { __round_curve_point } from "@/utils/pathedit";
+import { __angle, __round_curve_point } from "@/utils/pathedit";
 import { Path } from "@/context/path";
 import { WorkSpace } from "@/context/workspace";
 
@@ -18,6 +18,8 @@ const previous_to = ref<boolean>(false);
 const previous_apex_location_from = reactive({ x: -10, y: -10 });
 const previous_apex_location_to = reactive({ x: -10, y: -10 });
 const previous_site = reactive({ x: -10, y: -10 });
+const __radius_pre_from = ref<number>(0);
+const __radius_pre_to = ref<number>(0);
 
 const current = ref<boolean>(false);
 const current_from = ref<boolean>(false);
@@ -25,6 +27,8 @@ const current_to = ref<boolean>(false);
 const apex_location_from = reactive({ x: -10, y: -10 });
 const apex_location_to = reactive({ x: -10, y: -10 });
 const site = reactive({ x: -10, y: -10 });
+const __radius_current_from = ref<number>(0);
+const __radius_current_to = ref<number>(0);
 
 const next = ref<boolean>(false);
 const next_from = ref<boolean>(false);
@@ -32,18 +36,27 @@ const next_to = ref<boolean>(false);
 const next_apex_location_from = reactive({ x: -10, y: -10 });
 const next_apex_location_to = reactive({ x: -10, y: -10 });
 const next_site = reactive({ x: -10, y: -10 });
+const __radius_next_from = ref<number>(0);
+const __radius_next_to = ref<number>(0);
+
 function reset() {
     previous.value = false;
     previous_from.value = false;
     previous_to.value = false;
+    __radius_pre_from.value = 0;
+    __radius_pre_to.value = 0;
 
     current.value = false;
     current_from.value = false;
     current_to.value = false;
+    __radius_current_from.value = 0;
+    __radius_current_to.value = 0;
 
     next.value = false;
     next_from.value = false;
     next_to.value = false;
+    __radius_next_from.value = 0;
+    __radius_next_to.value = 0;
 }
 
 function update() {
@@ -58,7 +71,6 @@ function update() {
     if (selected.length !== 1) {
         return;
     }
-
     // current
     const index = selected[0];
     const current_point = __points[index];
@@ -66,46 +78,53 @@ function update() {
         return;
     }
     current.value = true;
-    const _p = m.computeCoord3(current_point.point);
+    const _p = m.computeCoord2(current_point.x, current_point.y);
     site.x = _p.x;
     site.y = _p.y;
-    if (current_point.hasCurveFrom) {
+    if (current_point.hasFrom && current_point.fromX !== undefined &&  current_point.fromY !== undefined) {
         current_from.value = true;
-        const _cf  = m.computeCoord3(current_point.curveFrom);
+        const _cf  = m.computeCoord2(current_point.fromX, current_point.fromY);
         apex_location_from.x = _cf.x;
         apex_location_from.y = _cf.y;
+        __radius_current_from.value = __angle(site.x, site.y, apex_location_from.x, apex_location_from.y);
     }
-    if (current_point.hasCurveTo) {
+    if (current_point.hasTo && current_point.toX !== undefined && current_point.toY !== undefined) {
         current_to.value = true;
-        const _ct  = m.computeCoord3(current_point.curveTo);
+        const _ct  = m.computeCoord2(current_point.toX, current_point.toY);
         apex_location_to.x = _ct.x;
         apex_location_to.y = _ct.y;
+        __radius_current_to.value = __angle(site.x, site.y, apex_location_to.x, apex_location_to.y);
     }
 
     const {previous: __pre, next: __next} = __round_curve_point(path_shape, index);
     
+    // previous
     if (__pre && __pre.id !== current_point.id) {
         previous.value = true;
-        const __p = m.computeCoord3(__pre.point);
+        const __p = m.computeCoord2(__pre.x, __pre.y);
         previous_site.x = __p.x;
         previous_site.y = __p.y;
-        if (__pre.hasCurveFrom) {
+        if (__pre.hasFrom && __pre.fromX !== undefined &&  __pre.fromY !== undefined) {
             previous_from.value = true;
-            const __p = m.computeCoord3(__pre.curveFrom);
+            const __p = m.computeCoord2( __pre.fromX, __pre.fromY);
             previous_apex_location_from.x = __p.x;
             previous_apex_location_from.y = __p.y;
+            __radius_pre_from.value = __angle(previous_site.x, previous_site.y, __p.x, __p.y);
         }
+       
     }    
+    // next
     if (__next && __next.id !== current_point.id) {
         next.value = true;
-        const __p = m.computeCoord3(__next.point);
+        const __p = m.computeCoord2(__next.x, __next.y);
         next_site.x = __p.x;
         next_site.y = __p.y;
-        if (__next.hasCurveTo) {
+        if (__next.hasTo && __next.toX !== undefined &&  __next.toY !== undefined) {
             next_to.value = true;
-            const __p = m.computeCoord3(__next.curveTo);
+            const __p = m.computeCoord2(__next.toX, __next.toY);
             next_apex_location_to.x = __p.x;
             next_apex_location_to.y = __p.y;
+            __radius_next_to.value = __angle(next_site.x, next_site.y, __p.x, __p.y);
         }
     }
 }
@@ -149,39 +168,46 @@ onUnmounted(() => {
     <g v-if="previous">
         <g v-if="previous_from">
             <line :x1="previous_site.x" :y1="previous_site.y" :x2="previous_apex_location_from.x" :y2="previous_apex_location_from.y" class="line"></line>
-            <rect :x="previous_apex_location_from.x - 4" :y="previous_apex_location_from.y - 4" width="8" height="8" class="point"
-                @mousedown="(e) => { down(e, 'alpha') }"></rect>
+            <rect x="0" y="0" width="8" height="8" class="point"
+                @mousedown="(e) => { down(e, 'alpha') }"
+                :transform="`translate(${previous_apex_location_from.x}, ${previous_apex_location_from.y}) rotate(${__radius_pre_from}) translate(-4, -4)`"></rect>
         </g>
         <g v-if="previous_to">
             <line :x1="previous_site.x" :y1="previous_site.y" :x2="previous_apex_location_to.x" :y2="previous_apex_location_to.y" class="line"></line>
-            <rect :x="previous_apex_location_to.x - 4" :y="previous_apex_location_to.y - 4" width="8" height="8" class="point"
-                @mousedown="(e) => { down(e, 'beta') }"></rect>
+            <rect x="0" y="0" width="8" height="8" class="point"
+            :transform="`translate(${previous_apex_location_to.x}, ${previous_apex_location_to.y}) rotate(${__radius_pre_to}) translate(-4, -4)`"
+            @mousedown="(e) => { down(e, 'beta') }"></rect>
         </g>
     </g>
     <!--  当前点  -->
     <g v-if="current">
         <g v-if="current_from">
             <line :x1="site.x" :y1="site.y" :x2="apex_location_from.x" :y2="apex_location_from.y" class="line"></line>
-            <rect :x="apex_location_from.x - 4" :y="apex_location_from.y - 4" width="8" height="8" class="point"
-                @mousedown="(e) => { down(e, 'alpha') }"></rect>
+            <rect x="0" y="0" width="8" height="8" class="point"
+                @mousedown="(e) => { down(e, 'alpha') }"
+                :transform="`translate(${apex_location_from.x}, ${apex_location_from.y}) rotate(${__radius_current_from}) translate(-4, -4)`"
+                ></rect>
         </g>
         <g v-if="current_to">
             <line :x1="site.x" :y1="site.y" :x2="apex_location_to.x" :y2="apex_location_to.y" class="line"></line>
-            <rect :x="apex_location_to.x - 4" :y="apex_location_to.y - 4" width="8" height="8" class="point"
-                @mousedown="(e) => { down(e, 'beta') }"></rect>
+            <rect x="0" y="0" width="8" height="8" class="point"
+                @mousedown="(e) => { down(e, 'beta') }"
+                :transform="`translate(${apex_location_to.x}, ${apex_location_to.y}) rotate(${__radius_current_to}) translate(-4, -4)`"></rect>
         </g>
     </g>
     <!-- 后一个点 -->
     <g v-if="next">
         <g v-if="next_from">
             <line :x1="next_site.x" :y1="next_site.y" :x2="next_apex_location_from.x" :y2="next_apex_location_from.y" class="line"></line>
-            <rect :x="next_apex_location_from.x - 4" :y="next_apex_location_from.y - 4" width="8" height="8" class="point"
-                @mousedown="(e) => { down(e, 'alpha') }"></rect>
+            <rect x="0" y="0" width="8" height="8" class="point"
+                @mousedown="(e) => { down(e, 'alpha') }"
+                :transform="`translate(${next_apex_location_from.x}, ${next_apex_location_from.y}) rotate(${__radius_next_from}) translate(-4, -4)`"></rect>
         </g>
         <g v-if="next_to">
             <line :x1="next_site.x" :y1="next_site.y" :x2="next_apex_location_to.x" :y2="next_apex_location_to.y" class="line"></line>
-            <rect :x="next_apex_location_to.x - 4" :y="next_apex_location_to.y - 4" width="8" height="8" class="point"
-                @mousedown="(e) => { down(e, 'beta') }"></rect>
+            <rect x="0" y="0" width="8" height="8" class="point"
+                @mousedown="(e) => { down(e, 'beta') }"
+                :transform="`translate(${next_apex_location_to.x}, ${next_apex_location_to.y}) rotate(${__radius_next_to}) translate(-4, -4)`"></rect>
         </g>
     </g>
 </template>

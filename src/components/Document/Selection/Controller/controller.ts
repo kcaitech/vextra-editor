@@ -64,9 +64,9 @@ export function useControllerCustom(context: Context, i18nT: Function) {
             const target = selection_penetrate(selection.scout!, scope, startPositionOnPage);
             target && selection.selectShape(target);
         } else if (shape instanceof PathShape && !shape.isVirtualShape) {
-            console.log('已关闭对象编辑');
-            // workspace.setPathEditMode(true); // --开启对象编辑
-            // context.esctask.save('path-edit', exist_edit_mode);
+            // console.log('已关闭对象编辑');
+            workspace.setPathEditMode(true); // --开启对象编辑
+            context.esctask.save('path-edit', exist_edit_mode);
         }
     }
 
