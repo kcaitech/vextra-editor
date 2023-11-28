@@ -13,7 +13,7 @@ window.ResizeObserver = class ResizeObserver extends _ResizeObserver {
 }
 
 onMounted(() => {
-    document.title = 'ProtoDesign';
+  document.title = 'ProtoDesign';
 })
 </script>
 
@@ -34,10 +34,10 @@ body {
         user-select: none; //禁止复制内容
         position: relative;
 
-        &::-webkit-scrollbar {
-            height: 0;
-            width: 0;
-        }
+    &::-webkit-scrollbar {
+      height: 0;
+      width: 0;
+    }
 
         >#app {
             position: absolute;

@@ -3,7 +3,6 @@ import { v4 as uuid } from "uuid";
 import { debounce } from 'lodash';
 import { Shape } from '@kcdesign/data';
 import { Context } from '@/context';
-import { ro } from 'element-plus/es/locale';
 // 打印
 function _debounceLog(mes: any, flag?: string) {
   console.log(flag ? `${flag} ${mes}` : mes);
@@ -174,7 +173,7 @@ export function is_box_outer_view(box: { top: number, bottom: number, left: numb
 export function is_box_outer_view2(shapes: Shape[], context: Context) {
   const wm = context.workspace.matrix, { x, right, y, bottom } = context.workspace.root;
   for (let i = 0, len = shapes.length; i < len; i++) {
-    const f = shapes[i].frame, p = wm.computeCoord2(f.x, f.y);
+    const f = shapes[i].frame, p = wm.computeCoord3(f);
     if ((p.x > right - x) || (p.x < 0) || (p.y < 0) || (p.y > bottom - y)) return true;
   }
   return false;

@@ -28,12 +28,14 @@ const C = {
     }
 }
 export const message = (type: MessageType, context: string) => {
-    const top = 120;
+    const offset = 120;
     const duration: number = 2.5;
     const fadeDur: number = 0.8;
+    const speed: number = 0;
+    const position: 'top' | 'bottom' = "top";
     const style = toStyle({
         position: 'absolute',
-        top: '0px',
+        bottom: '0',
         left: '50%',
         transform: 'translateX(-50%)',
         'min-width': '72px',
@@ -43,7 +45,7 @@ export const message = (type: MessageType, context: string) => {
         'line-height': '32px',
         'z-index': '2008',
         color: C[type].color,
-        'font-size': '10px',
+        'font-size': '14px',
         padding: '0 8px',
         border: `1px solid ${C[type].border}`,
         opacity: '0',
@@ -61,7 +63,7 @@ export const message = (type: MessageType, context: string) => {
         body.removeChild(exist);
     }
     body.appendChild(el);
-    dropIn(el, fadeDur);
+    dropIn(el, speed);
 
     const preToOut = setTimeout(() => {
         fadeOut(el);
@@ -72,11 +74,12 @@ export const message = (type: MessageType, context: string) => {
     function dropIn(el: HTMLDivElement, dur: number) {
         const drop = setTimeout(() => {
             el.style.transition = dur + 's';
-            el.style.top = top + 'px';
+            el.style[position] = offset + 'px';
             el.style.opacity = '1';
             clearTimeout(drop);
         }, 1);
     }
+
     // 淡出
     function fadeOut(el: HTMLDivElement) {
         el.style.opacity = '0';
@@ -96,43 +99,43 @@ export function insertNetworkInfo(msg: NetworkMessage, state: boolean, text: str
             <span style="margin-right: 10px;">${text}</span>
             <div class="loading-spinner"> <div></div></div>
         </div>`
-        if(state) {
+        if (state) {
             document.body.appendChild(container)
             container.setAttribute('id', 'message1');
-        }else {
-            const message1 = document.getElementById('message1');  
+        } else {
+            const message1 = document.getElementById('message1');
             message1?.parentNode?.removeChild(message1)
         }
-    }else if(msg === 'netError') {
+    } else if (msg === 'netError') {
         container.innerHTML = `<div class="network_error_message" v-if="netError">
             <span>${text}</span>
         </div>`
-        if(state) {
+        if (state) {
             document.body.appendChild(container)
             container.setAttribute('id', 'message2');
-        }else {
+        } else {
             const message2 = document.getElementById('message2');
             message2?.parentNode?.removeChild(message2)
         }
-    }else if(msg === 'networkSuccess') {
+    } else if (msg === 'networkSuccess') {
         container.innerHTML = `<div class="network_error_message" v-if="networkSuccess">
             <span>${text}</span>
         </div>`
-        if(state) {
+        if (state) {
             document.body.appendChild(container)
             container.setAttribute('id', 'message3');
-        }else {
+        } else {
             const message3 = document.getElementById('message3');
             message3?.parentNode?.removeChild(message3)
         }
-    }else if(msg === 'saveSuccess') {
+    } else if (msg === 'saveSuccess') {
         container.innerHTML = `<div class="network_error_message" v-else-if="saveSuccess">
             <span>${text}</span>
         </div>`
-        if(state) {
+        if (state) {
             document.body.appendChild(container)
             container.setAttribute('id', 'message4');
-        }else {
+        } else {
             const message4 = document.getElementById('message4');
             message4?.parentNode?.removeChild(message4)
         }
