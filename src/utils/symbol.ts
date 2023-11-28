@@ -719,9 +719,9 @@ export interface RefAttriListItem {
 export function get_var_for_ref(context: Context, symref: SymbolRefShape, t: Function) {
     let result: RefAttriListItem[] = [];
     let result2: RefAttriListItem[] = [];
-    const varsContainer = symref.varsContainer;
-    const ref_id = symref.getRefId2(varsContainer);
-    const sym = context.data.symbolsMgr.getSync(ref_id);
+    // const varsContainer = symref.varsContainer;
+    // const ref_id = symref.getRefId2(varsContainer);
+    const sym = symref.symData;
     if (!sym) return false;
     if (!sym.parent?.isSymbolUnionShape) { // 不存在可变组件
         const variables = sym.variables;
