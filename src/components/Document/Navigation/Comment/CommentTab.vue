@@ -241,7 +241,7 @@ const showHiddenLeft = () => {
         <div class="comment-list" v-else>
             <el-scrollbar ref="scrollbarRef">
                 <CommentItem v-for="(item, index) in isPageSort ? getPage(true) : documentCommentList" :key="item.id" :commentItem="item" :index="index"
-                 :context="context" :pageId="item.page_id" @resolve="onResolve" @delete="onDelete" :data-comment="item.id" :myComment="aboutMe()"></CommentItem>
+                 :context="context" :pageId="item.page_id" @resolve="onResolve" @delete="onDelete" :data-comment="item.id" :myComment="aboutMe()" style="padding: 8px 6px"></CommentItem>
                 <div style="height: 30px;"></div>
             </el-scrollbar>
         </div>
@@ -269,7 +269,7 @@ const showHiddenLeft = () => {
         z-index: 1;
 
         .title {
-            margin-left: -4%;
+            margin-left: -3%;
         }
 
         .drop-dowm {
@@ -278,7 +278,7 @@ const showHiddenLeft = () => {
             display: flex;
             justify-content: center;
             align-items: center;
-            margin-right: -7%;
+            margin-right: -5%;
 
             >svg {
                 width: 16px;

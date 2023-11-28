@@ -74,7 +74,7 @@ onUnmounted(() => {
 </script>
 <template>
     <div class="scale-display-warp">
-        <span v-if="!cus" @click="input_cus" ref="inputSpan" :style="{ width: inputWidth + 'px', minWidth: '32px' }">{{
+        <span v-if="!cus" @click="input_cus" ref="inputSpan" style="height: 15px;font-size: 13px;" :style="{ width: inputWidth + 'px', minWidth: '33px' }">{{
             scale }}%</span>
         <input v-if="cus" type="text" ref="input" @input="onInputName"
             :style="{ width: inputWidth + 'px', minWidth: '32px' }">
@@ -84,21 +84,28 @@ onUnmounted(() => {
 <style lang='scss' scoped>
 .scale-display-warp {
     min-width: 32px;
-    height: 100%;
+    width: 72px;
+    height: 32px;
     display: flex;
-    justify-content: flex-end;
+    justify-content: center;
     align-items: center;
-    color: var(--theme-color-anti);
-    font-size: var(--font-default-fontsize);
+    color: #FFFFFF;
     cursor: pointer;
+    background: rgba(255, 255, 255, 0.1);
+    border-radius: var(--default-radius);
+    padding: 9px 19px 8px 20px;
+    box-sizing: border-box;
 
     input {
+        width: 33px;
+        height: 15px;
+        font-size: 13px;
         background-color: transparent;
         outline: none;
         border: none;
         color: var(--theme-color-anti);
-        font-size: var(--font-default-fontsize);
         padding: 0;
+        font-feature-settings: "kern" on;
     }
 }
 </style>

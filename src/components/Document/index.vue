@@ -661,7 +661,7 @@ onUnmounted(() => {
     <div id="visit">
       <ApplyFor></ApplyFor>
     </div>
-    <ColSplitView id="center" :style="{ height: showTop ? 'calc(100% - 40px)' : '100%' }"
+    <ColSplitView id="center" :style="{ height: showTop ? 'calc(100% - 52px)' : '100%' }"
                   v-if="!loading && !null_context"
                   :left="{ width: Left.leftWidth, minWidth: Left.leftMinWidth, maxWidth: 0.5 }"
                   :middle="{ width: middleWidth, minWidth: middleMinWidth, maxWidth: middleWidth }"
@@ -720,13 +720,15 @@ onUnmounted(() => {
 <style scoped lang="scss">
 #top {
   display: flex;
-  position: relative;
   flex-flow: row nowrap;
-  width: 100%;
-  height: 40px;
-  background-color: var(--top-toolbar-bg-color);
-  z-index: 10;
+    width: 100%;
+    z-index: 10;
   min-height: 40px;
+    position: fixed;
+    height: 52px;
+    background: #2C2C2C;
+    padding: 10px 8px 10px 8px;
+    box-sizing: border-box;
 }
 
 .network {

@@ -305,6 +305,7 @@ onUnmounted(() => {
             align-items: center;
             border: 1px solid #efefef;
             margin-right: 5px;
+
             >img {
                 width: 100%;
                 height: 100%;
@@ -323,6 +324,7 @@ onUnmounted(() => {
                 height: 30px;
                 align-items: center;
                 //justify-content: space-between;
+                margin-top: -2px;
 
                 .item_heard {
                     display: flex;
@@ -420,13 +422,17 @@ onUnmounted(() => {
                     .onResolved {
                         width: 20px;
                         height: 20px;
-                        margin-top: -12px;
+                        margin-top: -20px;
                         margin-left: 9px;
+                        display: flex;
+                        align-items: center;
+                        justify-content: center;
+                        border-radius: 4px;
 
                         >svg {
                             width: 12px;
                             height: 12px;
-                            color: #555555;
+                            color: #169248;
                         }
                     }
                 }

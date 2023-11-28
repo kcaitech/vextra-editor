@@ -120,7 +120,6 @@ const isDisabled: any = computed(() => {
 });
 </script>
 <template>
-    <div class="file">
         <div class="icon" @click="showMenu" ref="trigger">
             <!--            <svg width="18" height="18" viewBox="0 0 16 16" fill="none" stroke-width="1.5">-->
             <!--                <g id="group-0" stroke="currentColor" fill="currentColor">-->
@@ -147,22 +146,20 @@ const isDisabled: any = computed(() => {
             </span>
             <span @click="guide">{{ t('fileMenu.guide') }}</span>
         </div>
-    </div>
 </template>
 <style scoped lang="scss">
-.file {
     .icon {
-        display: flex;
-        justify-content: center;
-        align-items: center;
-        color: #ffffff;
+        width: 32px;
+        height: 32px;
+        border-radius: 4px;
+        flex: 0 0 32px;
+        margin-left: 30px;
+        margin-top: -32px;
 
         > svg {
             width: 32px;
             height: 32px;
             color: #FFFFFF;
-            margin-left: -10px;
-            margin-top: -2px;
         }
     }
 
@@ -216,5 +213,5 @@ const isDisabled: any = computed(() => {
             }
         }
     }
-}
+
 </style>

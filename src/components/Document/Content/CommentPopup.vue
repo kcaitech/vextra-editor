@@ -569,10 +569,10 @@ onUnmounted(() => {
 
             .button-icon {
                 width: 0;
-                height: 22px;
+                height: 23px;
                 border-left: 1px solid rgba(0, 0, 0, 0.15);
                 position: absolute;
-                left: 36px;
+                left: 34px;
             }
 
             .el-button:hover {
@@ -662,12 +662,12 @@ onUnmounted(() => {
                 display: flex;
                 align-items: center;
                 justify-content: center;
-                border-radius: var(--default-radius);
+                border-radius: 4px;
 
                 >svg {
                     width: 14px;
                     height: 14px;
-                    color: #555555;
+                    color: #169248;
                 }
             }
 
@@ -688,7 +688,7 @@ onUnmounted(() => {
                 >svg {
                     width: 14px;
                     height: 14px;
-                    color: #555555;
+                    color: #169248;
                 }
             }
 
@@ -819,8 +819,8 @@ onUnmounted(() => {
     padding-right: 10px;
 }
 
-.custom-icon {
-    color: green;
-    /* 设置颜色为绿色 */
-}
+//.custom-icon {
+//    color: green;
+//    /* 设置颜色为绿色 */
+//}
 </style>

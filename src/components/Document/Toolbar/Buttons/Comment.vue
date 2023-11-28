@@ -20,7 +20,7 @@ function select(action: Action) {
 </script>
 <template>
   <Tooltip :content="`${t('home.addComment')} &nbsp;&nbsp; C`">
-    <ToolButton ref="button" @click="() => { select(Action.AddComment) }" :selected="props.active">
+    <ToolButton ref="button" @click="() => { select(Action.AddComment) }" :selected="props.active" style="width: 32px">
       <div class="svg-container">
         <svg-icon icon-class="comment"></svg-icon>
       </div>
@@ -29,16 +29,18 @@ function select(action: Action) {
 </template>
 <style scoped lang="scss">
 .svg-container {
-  width: 28px;
-  height: 28px;
+  width: 32px;
+  height: 32px;
   display: flex;
   justify-content: center;
   align-items: center;
   color: #ffffff;
+    padding: 6px 6px 6px 6px;
+    box-sizing: border-box;
 
   >svg {
-      width: 30px;
-      height: 30px;
+      width: 20px;
+      height: 20px;
   }
 }
 </style>

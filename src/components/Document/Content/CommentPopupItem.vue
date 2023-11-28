@@ -235,6 +235,7 @@ function stopEditing() {
             align-items: center;
             border: 1px solid #efefef;
             margin-right: 5px;
+
             >img {
                 width: 100%;
                 height: 100%;

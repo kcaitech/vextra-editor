@@ -175,16 +175,20 @@ onUnmounted(() => {
 
 <style scoped lang="scss">
 .container {
-    display: flex;
     align-items: center;
     justify-content: space-around;
+    width: 116px;
+    height: 32px;
 
     .home {
         cursor: pointer;
-        width: 35px;
-        height: 35px;
-        box-sizing: border-box;
-        margin-right: 4px;
+        width: 32px;
+        height: 32px;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        flex: 0 0 32px;
+        border-radius: 4px;
 
         > svg {
             width: 32px;
@@ -198,11 +202,13 @@ onUnmounted(() => {
     }
 
     .rename {
-        margin-left: 9px;
-        width: 100%;
-        white-space: nowrap;
-        overflow: hidden;
-        text-overflow: ellipsis;
+        width: 224px;
+        height: 52px;
+        flex: 1;
+        margin-left: 64px;
+        margin-top: -44px;
+        box-sizing: border-box;
+        padding: 18px 8px 18px 8px;
 
         .save {
             width: 8px;
@@ -212,24 +218,26 @@ onUnmounted(() => {
         span {
             display: block;
             max-width: 210px;
-            height: 100%;
-            font-size: var(--font-default-fontsize);
+            height: 16px;
             color: #ffffff;
             cursor: pointer;
-            overflow: hidden;
+            //overflow: hidden;
             text-overflow: ellipsis;
             white-space: nowrap;
+            font-family: HarmonyOS Sans;
+            font-size: 14px;
         }
 
         input {
             display: block;
             max-width: 210px;
-            height: 100%;
+            height: 16px;
             border: none;
             outline: none;
             background-color: transparent;
-            color: #ffffff;
-            font-size: var(--font-default-fontsize);
+            color: #FFFFFF;
+            font-family: HarmonyOS Sans;
+            font-size: 14px;
         }
     }
 

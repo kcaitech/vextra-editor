@@ -592,17 +592,17 @@ onUnmounted(() => {
             margin-top: 4px;
 
             .visibility {
-                flex: 0 0 18px;
-                height: 18px;
-                width: 18px;
+                flex: 0 0 16px;
+                height: 16px;
+                width: 16px;
                 background-color: var(--active-color);
-                border-radius: var(--default-radius);
                 border: 1px solid var(--input-background);
                 box-sizing: border-box;
                 color: #ffffff;
                 display: flex;
                 justify-content: center;
                 align-items: center;
+                border-radius: 3px;
 
                 >svg {
                     width: 60%;
@@ -611,10 +611,11 @@ onUnmounted(() => {
             }
 
             .hidden {
-                flex: 0 0 18px;
-                height: 18px;
+                flex: 0 0 16px;
+                height: 16px;
+                width: 16px;
                 background-color: transparent;
-                border-radius: var(--default-radius);
+                border-radius: 3px;
                 border: 1px solid var(--input-background);
                 box-sizing: border-box;
             }

@@ -1,14 +1,15 @@
 <script setup lang="ts">
-import { onMounted, onUnmounted, ref } from "vue";
-import { Context } from "@/context";
+import {onMounted, onUnmounted, ref, watch, watchEffect} from "vue";
+import {Context} from "@/context";
 import Design from "@/components/Document/Attribute/Design.vue";
 import CompsTab from "@/components/Document/Navigation/CompsTab.vue";
 import ResourceTab from "@/components/Document/Navigation/ResourceTab.vue";
-import { useI18n } from 'vue-i18n';
-import { Perm } from "@/context/workspace";
-import { Tool } from "@/context/tool";
+import {useI18n} from 'vue-i18n';
+import {Perm} from "@/context/workspace";
+import {Tool} from "@/context/tool";
 import Lable from './Lable/index.vue'
-const { t } = useI18n();
+
+const {t} = useI18n();
 
 const props = defineProps<{
     context: Context
@@ -48,6 +49,7 @@ function toggle(id: Tab) {
 
     }
     currentTab.value = id;
+    updateUnderlinePosition();
 }
 
 const showHiddenRight = () => {
@@ -55,9 +57,9 @@ const showHiddenRight = () => {
 }
 
 const tool_watcher = (t: number) => {
-    if(t === Tool.LABLE_CHANGE) {
+    if (t === Tool.LABLE_CHANGE) {
         isLable.value = props.context.tool.isLable;
-        if(isLable.value && !props.showRight) {
+        if (isLable.value && !props.showRight) {
             emit('showAttrbute');
         }
     }
@@ -65,10 +67,28 @@ const tool_watcher = (t: number) => {
 
 onMounted(() => {
     props.context.tool.watch(tool_watcher)
+    if (controllerRef.value) {
+        console.log("ref:", controllerRef.value);
+        const current = controllerRef.value[0];
+        underlineWidth.value = current.clientWidth/tabs.length;
+        const x = current.offsetLeft;
+        const w = current.clientWidth;
+        underlinePosition.value = (x + w / 2);
+    }
 })
 onUnmounted(() => {
     props.context.tool.unwatch(tool_watcher)
 })
+const controllerRef = ref<HTMLElement[] | null>(null);
+const underlineWidth = ref(0);
+const underlinePosition = ref(0);
+
+function updateUnderlinePosition() {
+    const tabIndex = tabs.findIndex((tab) => tab.id === currentTab.value)+1;
+    console.log(tabIndex)
+    underlinePosition.value = tabIndex * underlineWidth.value;
+
+}
 </script>
 
 <template>
@@ -76,7 +96,10 @@ onUnmounted(() => {
         <template v-if="!isLable">
             <div class="controller">
                 <div :class="{ tab: true, active: currentTab === i.id }" v-for="(i, index) in tabs" :key="index"
-                    @click="toggle(i.id)">{{ i.title }}</div>
+                     @click="toggle(i.id)" ref="controllerRef">{{ i.title }}
+                </div>
+                <div class="underline"
+                     :style="{ width: underlineWidth + 'px', left: `${underlinePosition}px`, transform: `translateX(-50%)` }"></div>
             </div>
             <div class="body">
                 <Design :context="props.context" v-if="currentTab === 'Design'"></Design>
@@ -84,7 +107,7 @@ onUnmounted(() => {
                 <ResourceTab :context="props.context" v-if="currentTab === 'Inspect'"></ResourceTab>
                 <template v-if="perm === Perm.isEdit">
                     <div class="showHiddenR" @click="showHiddenRight" v-if="!showRight || rightTriggleVisible"
-                        :style="{ opacity: showRight ? 1 : 0.6 }">
+                         :style="{ opacity: showRight ? 1 : 0.6 }">
                         <svg-icon v-if="showRight" class="svg" icon-class="right"></svg-icon>
                         <svg-icon v-else class="svg" icon-class="left"></svg-icon>
                     </div>
@@ -94,7 +117,7 @@ onUnmounted(() => {
         <div class="tab-lable" v-else>
             <Lable :context="context"></Lable>
             <div class="showHiddenR" @click="showHiddenRight" v-if="!showRight || rightTriggleVisible"
-                :style="{ opacity: showRight ? 1 : 0.6 }">
+                 :style="{ opacity: showRight ? 1 : 0.6 }">
                 <svg-icon v-if="showRight" class="svg" icon-class="right"></svg-icon>
                 <svg-icon v-else class="svg" icon-class="left"></svg-icon>
             </div>
@@ -109,36 +132,39 @@ onUnmounted(() => {
     box-shadow: -4px 0px 4px rgba($color: #000000, $alpha: 0.05);
 
     .controller {
-        height: 35px;
-        width: 100%;
-        flex: 0 0 auto;
         display: flex;
-        flex-direction: row;
-        margin-left: 13px;
+        height: 40px;
 
-        >.tab {
-            font-weight: var(--font-default-bold);
-            font-size: var(--font-default-fontsize);
-            min-width: 36px;
-            margin-right: 4px;
-            margin-top: 4px;
-            text-align: left;
-            line-height: 24px;
-            color: var(--grey-dark);
+        > .tab {
+            cursor: pointer;
+            padding: 10px;
+            margin-right: 10px;
+
         }
 
-        >.tab:hover {
+        > .tab:hover {
             color: var(--theme-color);
         }
 
-        >.active {
+        > .active {
             border-radius: 4px 4px 0 0;
             color: var(--theme-color);
+        }
+
+        .underline {
+            border: 2px #000000 solid;
+            border-radius: 6px;
+            position: absolute;
+            top: 39px;
+            transition: left 0.3s ease-in-out;
+            box-sizing: border-box;
+            height: 1px;
+            flex: 0 0 auto;
         }
     }
 
     .body {
-        border-top: 1px solid var(--theme-color);
+        border-top: 1px solid #F0F0F0;
         width: 100%;
         height: calc(100% - 36px);
         position: relative;
@@ -149,7 +175,7 @@ onUnmounted(() => {
 
 .showHiddenR {
     position: absolute;
-    left: -17px;
+    left: -16px;
     top: 0%;
     transform: translateY(-50%);
     z-index: 9;
@@ -166,7 +192,7 @@ onUnmounted(() => {
     box-sizing: border-box;
     border: 1px solid #F0F0F0;
 
-    >.svg {
+    > .svg {
         width: 10px;
         height: 10px;
     }

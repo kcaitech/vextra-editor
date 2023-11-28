@@ -138,34 +138,38 @@ const customFrame = () => {
 
 <style scoped lang="scss">
 .svg-container {
-    width: 28px;
-    height: 28px;
+    width: 32px;
+    height: 32px;
     display: flex;
     justify-content: center;
     align-items: center;
-    margin-left: 3px;
+    margin-left: 4px;
     color: #ffffff;
+    padding: 6px 6px 6px 6px;
+    box-sizing: border-box;
 
     > svg {
-        width: 30px;
-        height: 30px;
+        width: 20px;
+        height: 20px;
     }
 }
 
 .menu-f {
-    width: 10px;
-    height: 28px;
+    width: 20px;
+    height: 32px;
     display: flex;
-    padding-right: 4px;
-    margin-right: 2px;
+    //padding-right: 4px;
+    //margin-right: 2px;
     justify-content: center;
     align-items: center;
     color: #ffffff;
     transition: 0.3s;
+    padding: 10px 8px 10px 0;
+    box-sizing: border-box;
 
     > svg {
-        width: 80%;
-        height: 60%;
+        width: 12px;
+        height: 12px;
     }
 }
 

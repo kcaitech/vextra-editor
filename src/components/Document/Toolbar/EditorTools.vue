@@ -93,17 +93,21 @@ function applyForEdit() {
     <div class="editor-tools" @dblclick.stop v-if="isEdit && !isLable">
         <Cursor @select="select" :d="selected" :active="selected === Action.AutoV || selected === Action.AutoK"
                 :is_lable="isLable" :edit="isEdit"></Cursor>
-        <div class="vertical-line"/>
+        <div style="width: 16px;height: 52px;display: flex;align-items: center;justify-content: center;">
+            <div class="vertical-line"/>
+        </div>
         <Frame :context="props.context" :active="selected === Action.AddFrame" @select="select"></Frame>
         <Shape :context="context"></Shape>
         <CreateText @select="select" :active="selected === Action.AddText"></CreateText>
         <CreateImage :active="selected === Action.AddImage" :context="props.context"></CreateImage>
         <Table @select="select" :active="selected === Action.AddTable" :context="props.context"></Table>
         <Contact @select="select" :active="selected === Action.AddContact" :context="props.context"></Contact>
-        <div class="vertical-line"/>
+        <div style="width: 16px;height: 52px;display: flex;align-items: center;justify-content: center;">
+            <div class="vertical-line"/>
+        </div>
         <el-tooltip class="box-item" effect="dark" :content="string_by_sys(`${t('navi.comps')} &nbsp;&nbsp; Shift I`)"
                     placement="bottom" :show-after="500" :offset="10" :hide-after="0">
-            <ToolButton>
+            <ToolButton style="width: 32px">
                 <div class="temp" @click="selectComps">
                     <svg-icon icon-class="resource"></svg-icon>
                 </div>
@@ -122,7 +126,9 @@ function applyForEdit() {
         </div>
         <Cursor @select="select" :d="selected" :active="selected === Action.AutoV || selected === Action.AutoK"
                 :is_lable="isLable" :edit="isEdit"></Cursor>
-        <div class="vertical-line"/>
+        <div style="width: 16px;height: 52px;display: flex;align-items: center;justify-content: center;">
+            <div class="vertical-line"/>
+        </div>
         <Comment @select="select" :active="selected === Action.AddComment" :workspace="workspace"
                  v-if="!isread"></Comment>
     </div>
@@ -172,25 +178,25 @@ function applyForEdit() {
     }
 
     .temp {
-        width: 35px;
-        height: 35px;
+        width: 32px;
+        height: 32px;
         font-size: 12px;
         color: #ffffff;
-        box-sizing: border-box;
         display: flex;
         align-items: center;
         justify-content: center;
-        padding: 4px;
+        padding: 6px 6px 6px 6px;
+        box-sizing: border-box;
 
         > svg {
-            width: 28px;
-            height: 28px;
+            width: 20px;
+            height: 20px;
         }
     }
 
     .vertical-line {
         width: 1px;
-        height: 28px;
+        height: 20px;
         background-color: grey;
         flex: 0 0 auto;
         margin-left: 5px;

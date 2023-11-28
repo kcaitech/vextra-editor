@@ -25,7 +25,8 @@ const invalid = computed(() => {
     display: flex;
     align-items: center;
     justify-content: center;
-    height: 80%;
+    width: 56px;
+    height: 32px;
     margin: 0 2px;
     min-width: 28px;
     min-height: 28px;
@@ -34,7 +35,7 @@ const invalid = computed(() => {
     box-sizing: border-box;
     color: #ffffff;
     transition: 0.06s;
-    border-radius: var(--default-radius);
+    border-radius: 4px;
 }
 
 .tool-button:hover {
