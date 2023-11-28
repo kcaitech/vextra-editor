@@ -11,12 +11,21 @@ interface Props {
 }
 
 const props = defineProps<Props>();
+
+const previous = ref<boolean>(false);
+const previous_apex_location_alpha = reactive({ x: -10, y: -10 });
+const previous_apex_location_beta = reactive({ x: -10, y: -10 });
+const previous_site = reactive({ x: -10, y: -10 });
+
+const current = ref<boolean>(false);
 const apex_location_alpha = reactive({ x: -10, y: -10 });
 const apex_location_beta = reactive({ x: -10, y: -10 });
 const site = reactive({ x: -10, y: -10 });
-const previous = ref<boolean>(false);
-const current = ref<boolean>(false);
+
 const next = ref<boolean>(false);
+const next_apex_location_alpha = reactive({ x: -10, y: -10 });
+const next_apex_location_beta = reactive({ x: -10, y: -10 });
+const next_site = reactive({ x: -10, y: -10 });
 
 
 function update() {
