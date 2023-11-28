@@ -18,7 +18,7 @@ import Status from "./InstanceAttrCard/IACStatus.vue"
 import Visible from "./InstanceAttrCard/IACVisible.vue"
 import {Selection} from '@/context/selection';
 import {v4} from "uuid";
-import { Menu } from '@/context/menu';
+import {Menu} from '@/context/menu';
 
 interface Props {
     context: Context
@@ -74,7 +74,7 @@ const untie = () => {
     resetMenu.value = false;
 }
 
-const shape_watcher = (arg: any) => {
+const shape_watcher = (arg: any) => { // todo 优化updateData时机
     if (arg !== 'shape-frame') updateData();
 }
 
@@ -89,7 +89,7 @@ const updateData = () => {
         variables.value = result.variables;
         visible_variables.value = result.visible_variables;
     } else if (props.shapes.length > 1) {
-
+        // todo
     }
 }
 
@@ -142,14 +142,14 @@ function watchShapes() { // 监听选区相关shape的变化
 }
 
 function get_ref_ref(symref: SymbolRefShape) {
-    const varsContainer = symref.varsContainer;
-    if (!varsContainer) return;
+    if (!symref.isVirtualShape) return;
     let p = symref.parent;
     while (p) {
-        if (p.type === ShapeType.SymbolRef && !p.varsContainer) return p;
+        if (p.type === ShapeType.SymbolRef && !p.isVirtualShape) return p;
         p = p.parent;
     }
 }
+
 const menu_watcher = (t: number, e: MouseEvent) => {
     if (t === Menu.CLOSE_INSTANCE_ATTR_MENU) {
         closeResetMenu(e)

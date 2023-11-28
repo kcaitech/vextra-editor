@@ -21,6 +21,7 @@ import {
 } from "@/utils/scout";
 import {Context} from ".";
 import {TextSelectionLite} from "@/context/textselectionlite";
+import {is_symbol_or_union} from "@/utils/symbol";
 
 interface Saved {
     page: Page | undefined,
@@ -418,13 +419,13 @@ export class Selection extends Watchable(Object) implements ISave4Restore {
     }
 
     get symbolshape() {
-        return this.selectedShapes.length === 1 && this.selectedShapes[0].type === ShapeType.Symbol ? this.selectedShapes[0] as SymbolShape : false;
+        return this.selectedShapes.length === 1 && is_symbol_or_union(this.selectedShapes[0]) ? this.selectedShapes[0] as SymbolShape : false;
     }
 
     get unionshape() {
         if (this.selectedShapes.length === 1) {
             const xs = this.selectedShapes[0];
-            if (xs.type === ShapeType.Symbol && xs.isUnionSymbolShape) {
+            if (xs.type === ShapeType.Symbol && xs.isSymbolUnionShape) {
                 return xs as SymbolShape;
             } else {
                 return false;
@@ -437,7 +438,7 @@ export class Selection extends Watchable(Object) implements ISave4Restore {
     get symbolstate() {
         if (this.selectedShapes.length === 1) {
             const s = this.selectedShapes[0];
-            if (s.type === ShapeType.Symbol && s.parent?.isUnionSymbolShape) {
+            if (s.type === ShapeType.Symbol && s.parent?.isSymbolUnionShape) {
                 return s as SymbolShape;
             } else {
                 return false;

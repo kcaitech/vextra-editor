@@ -34,7 +34,8 @@ const WITH_FILL = [
     ShapeType.Text,
     ShapeType.Table,
     ShapeType.TableCell,
-    ShapeType.Symbol
+    ShapeType.Symbol,
+    ShapeType.SymbolUnion
 ];
 const WITH_TEXT = [ShapeType.Text];
 const WITH_BORDER = [
@@ -52,7 +53,8 @@ const WITH_BORDER = [
     ShapeType.Text,
     ShapeType.Line,
     ShapeType.Contact,
-    ShapeType.Symbol
+    ShapeType.Symbol,
+    ShapeType.SymbolUnion
 ];
 const WITH_TABLE = [ShapeType.Table];
 const WITH_SHADOW = [
@@ -65,9 +67,10 @@ const WITH_SHADOW = [
     ShapeType.Path2,
     ShapeType.Group,
     ShapeType.Line,
+    ShapeType.Symbol,
+    ShapeType.SymbolUnion
 ]
 const shapeType = ref();
-const reflush = ref<number>(0);
 const textShapes = ref<Shape[]>([]);
 const symbol_attribute = ref<boolean>(true);
 const getShapeType = () => {
@@ -125,6 +128,7 @@ function table_selection_watcher(t: number) {
     if (t === TableSelection.CHANGE_TABLE_CELL) baseAttrVisible();
     else if (t === TableSelection.CHANGE_EDITING_CELL) baseAttrVisible();
 }
+
 function workspace_watcher(t: number) {
     if (t === WorkSpace.PATH_EDIT_MODE) {
         const _is_pdm = props.context.workspace.is_path_edit_mode;
@@ -132,6 +136,7 @@ function workspace_watcher(t: number) {
         editAttr.value = _is_pdm;
     }
 }
+
 onMounted(() => {
     props.context.selection.watch(selection_watcher);
     props.context.tableSelection.watch(table_selection_watcher);
@@ -149,11 +154,11 @@ onUnmounted(() => {
 <template>
     <section id="Design">
         <el-scrollbar>
-            <div v-if="len === 0">
+            <div v-if="!len">
                 <PageBackgorund :context="props.context" v-if="props.context.selection.selectedPage"
                                 :page="props.context.selection.selectedPage"></PageBackgorund>
             </div>
-            <div v-if="len" :reflush="reflush">
+            <div v-else class="attr-wrapper">
                 <Arrange :context="props.context" :shapes="shapes"></Arrange>
                 <ShapeBaseAttr v-if="baseAttr" :context="props.context"></ShapeBaseAttr>
                 <BaseForPathEdit v-if="editAttr" :context="props.context"></BaseForPathEdit>
@@ -180,5 +185,10 @@ section {
     height: 100%;
     font-size: var(--font-default-fontsize);
     box-sizing: border-box;
+
+    .attr-wrapper {
+        padding-bottom: 100px;
+        box-sizing: border-box;
+    }
 }
 </style>

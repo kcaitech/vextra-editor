@@ -170,7 +170,7 @@ export function finder(context: Context, scout: Scout, g: Shape[], position: Pag
         const item = g[i];
         if (!canBeTarget(item)) continue; // 隐藏图层或已锁定
         if (isShapeOut(context, item)) continue; // 屏幕外图形，这里会判断每个图形是否在屏幕内，本身消耗较小，另外可以避免后面的部分不必要的更大消耗
-        if (item.isUnionSymbolShape) { // 组件状态集合
+        if (item.isSymbolUnionShape) { // 组件状态集合
             result = finder_symbol_union(context, scout, item as GroupShape, position, selected, isCtrl);
             if (isTarget(scout, item, position)) break; // 只要进入集合，有无子元素选中都应该break
         } else if (item.type === ShapeType.Symbol || item.type === ShapeType.SymbolRef) { // 组件或引用

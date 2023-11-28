@@ -13,11 +13,11 @@ export function get_root_points(context: Context, indexes?: number[]) {
     const result: XY[] = [];
     if (indexes) {
         for (let i = 0, l = indexes.length; i < l; i++) {
-            result.push(m.computeCoord3(points[indexes[i]].point));
+            result.push(m.computeCoord(points[indexes[i]].x, points[indexes[i]].y));
         }
     } else {
         for (let i = 0, l = points.length; i < l; i++) {
-            result.push(m.computeCoord3(points[i].point));
+            result.push(m.computeCoord(points[i].x, points[i].y));
         }
     }
     return result;
@@ -34,13 +34,13 @@ export function get_parent_points(context: Context, indexes?: number[]) {
     const result: XY[] = [];
     if (indexes) {
         for (let i = 0, l = indexes.length; i < l; i++) {
-            const _p = points[indexes[i]]?.point;
-            if (!_p) continue;
+            const _p = points[indexes[i]];
+            // if (!_p) continue;
             result.push(m.computeCoord3(_p));
         }
     } else {
         for (let i = 0, l = points.length; i < l; i++) {
-            result.push(m.computeCoord3(points[i].point));
+            result.push(m.computeCoord(points[i]));
         }
     }
     return result;
@@ -54,11 +54,11 @@ export function get_value_from_point(context: Context, index: number) {
     m.preScale(f.width, f.height);
     m.multiAtLeft(path_shape.matrix2Parent());
     const c = path_shape.points[index];
-    const p = m.computeCoord3(c.point);
+    const p = m.computeCoord3(c);
     return {
         x: p.x,
         y: p.y,
-        r: c.cornerRadius
+        r: c.radius
     }
 }
 
@@ -108,7 +108,7 @@ export function get_action_for_key_change(context: Context, val: number, key: 'x
     const actions: { x: number, y: number, index: number }[] = [];
     for (let i = 0, l = indexes.length; i < l; i++) {
         const index = indexes[i];
-        const _p = m.computeCoord3(__points[index].point);
+        const _p = m.computeCoord3(__points[index]);
         const item = {
             x: _p.x,
             y: _p.y,

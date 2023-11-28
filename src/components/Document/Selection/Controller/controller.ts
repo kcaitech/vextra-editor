@@ -63,7 +63,7 @@ export function useControllerCustom(context: Context, i18nT: Function) {
             const scope: any = shape.type === ShapeType.SymbolRef ? shape.naviChilds : (shape as GroupShape).childs;
             const target = selection_penetrate(selection.scout!, scope, startPositionOnPage);
             target && selection.selectShape(target);
-        } else if (shape instanceof PathShape) {
+        } else if (shape instanceof PathShape && !shape.isVirtualShape) {
             workspace.setPathEditMode(true);
             context.esctask.save('path-edit', exist_edit_mode);
         }

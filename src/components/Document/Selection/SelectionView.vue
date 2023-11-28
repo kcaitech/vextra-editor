@@ -231,7 +231,7 @@ function createController() {
             } else if (__type === ShapeType.Contact) {
                 controllerType.value = ControllerType.Contact;
                 rotate.value = getHorizontalAngle(points[0], points[1]);
-            } else if (__type === ShapeType.Symbol || __type === ShapeType.SymbolRef) {
+            } else if (__type === ShapeType.Symbol || __type === ShapeType.SymbolRef || __type === ShapeType.SymbolUnion) {
                 controllerType.value = ControllerType.Symbol;
                 rotate.value = getHorizontalAngle(points[0], points[1]);
             } else {

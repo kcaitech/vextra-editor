@@ -8,6 +8,7 @@ import {
     ShapeType,
     SymbolRefShape,
     SymbolShape,
+    SymbolUnionShape,
     Variable,
     VariableType
 } from "@kcdesign/data";
@@ -67,7 +68,7 @@ function get_symbol_level_under(group: GroupShape) {
     const childs = group.childs;
     for (let i = childs.length - 1; i > -1; i--) {
         const item = childs[i];
-        if (item.isUnionSymbolShape) {
+        if (item.isSymbolUnionShape) {
             const children = item.childs;
             children.length && symbols.push(children[0]);
         } else if (item.type === ShapeType.Symbol) {
@@ -134,7 +135,7 @@ function check_symbol_level_artboard(artboard: GroupShape, init?: SymbolShape[])
     const childs = artboard.childs;
     for (let i = childs.length - 1; i > -1; i--) {
         const item = childs[i];
-        if (item.isUnionSymbolShape) {
+        if (item.isSymbolUnionShape) {
             const children = item.childs;
             children.length && symbols.push(children[0]);
         } else if (item.type === ShapeType.Symbol) {
@@ -286,13 +287,13 @@ export function variable_sort(symbol: SymbolShape, t: Function) {
  * @param variable
  */
 export function tag_values_sort(symbol: SymbolShape, variable: Variable, t: Function) {
-    if (!symbol.isUnionSymbolShape) return [];
+    if (!symbol.isSymbolUnionShape) return [];
     const defaultVal = t('compos.dlt');
     const childs: SymbolShape[] = symbol.childs as unknown as SymbolShape[];
     const result_set: Set<string> = new Set();
     for (let i = 0, len = childs.length; i < len; i++) {
         const item = childs[i];
-        let v = item.vartag?.get(variable.id) || variable.value;
+        let v = item.symtags?.get(variable.id) || variable.value;
         if (v === SymbolShape.Default_State) v = defaultVal;
         v && result_set.add(v);
     }
@@ -353,7 +354,7 @@ export function is_state_selection(shapes: Shape[]) {
         if (shape.type !== ShapeType.Symbol
             || !shape.parent
             || shape.parent.id !== p.id
-            || !shape.parent.isUnionSymbolShape
+            || !shape.parent.isSymbolUnionShape
         ) {
             return false;
         }
@@ -368,7 +369,7 @@ export function is_state_selection(shapes: Shape[]) {
  * @param variable 属性对象
  */
 export function get_tag_value(state: SymbolShape, variable: Variable) {
-    return state.vartag?.get(variable.id) || variable.value || '';
+    return state.symtags?.get(variable.id) || variable.value || '';
 }
 
 // endregion
@@ -387,11 +388,11 @@ export function make_symbol(context: Context, t: Function) {
         return false;
     }
     if (is_exist_symbolref_layer(selected)) {
-        message('info',  t('compos.error_2'));
+        message('info', t('compos.error_2'));
         return false;
     }
     if (is_exist_invalid_shape(selected)) {
-        message('info',  t('compos.error_3'));
+        message('info', t('compos.error_3'));
         return false;
     }
     const editor = context.editor4Page(page);
@@ -435,9 +436,9 @@ export function make_default_state(context: Context, t: Function) {
     if (selected.length !== 1) return;
     const shape = selected[0];
     const page = context.selection.selectedPage;
-    if (shape && shape.type === ShapeType.Symbol && shape.isUnionSymbolShape && page) {
+    if (shape && shape.type === ShapeType.SymbolUnion && page) {
         const editor = context.editor4Page(page);
-        return editor.makeStateAt(shape as SymbolShape, t('compos.state'));
+        return editor.makeStateAt(shape as SymbolUnionShape, t('compos.state'));
     }
 }
 
@@ -552,7 +553,7 @@ export function is_wrong_bind_sym(symbol: SymbolShape) {
         variables.forEach(v => {
             if (v.type !== VariableType.Status) return;
             _no_status = false;
-            const dlt = item.vartag?.get(v.id);
+            const dlt = item.symtags?.get(v.id);
             slices += (!dlt || dlt === v.value) ? p : dlt;
         })
         if (_no_status) return false;
@@ -590,7 +591,7 @@ export function is_conflict_comp(symbol: SymbolShape) {
         variables.forEach(v => {
             if (v.type !== VariableType.Status) return;
             _no_status = false;
-            const t = item.vartag?.get(v.id);
+            const t = item.symtags?.get(v.id);
             slices += (!t || t === SymbolShape.Default_State) ? p : t;
         })
         if (_no_status) return;
@@ -625,8 +626,8 @@ export interface LCOption {
 
 export function get_options_from_symbol(symbol: SymbolShape, type: VariableType, dlt: string, vari?: Variable, container?: Shape[]) {
     const result: LCOption[] = [];
-    if (symbol.type !== ShapeType.Symbol) return result;
-    if (symbol.isUnionSymbolShape) { // 存在可变组件
+    if (symbol.type !== ShapeType.Symbol && symbol.type !== ShapeType.SymbolUnion) return result;
+    if (symbol.isSymbolUnionShape) { // 存在可变组件
         const childs = symbol.childs;
         for (let i = 0, len = childs.length; i < len; i++) {
             const item = childs[i];
@@ -718,13 +719,13 @@ export interface RefAttriListItem {
 export function get_var_for_ref(context: Context, symref: SymbolRefShape, t: Function) {
     let result: RefAttriListItem[] = [];
     let result2: RefAttriListItem[] = [];
-    const varsContainer = symref.varsContainer;
-    const ref_id = symref.getRefId2(varsContainer);
-    const sym = context.data.symbolsMgr.getSync(ref_id);
+    // const varsContainer = symref.varsContainer;
+    // const ref_id = symref.getRefId2(varsContainer);
+    const sym = symref.symData;
     if (!sym) return false;
-    const variables = sym.variables;
-    if (!variables) return false;
-    if (!sym.isUnionSymbolShape) { // 不存在可变组件
+    if (!sym.parent?.isSymbolUnionShape) { // 不存在可变组件
+        const variables = sym.variables;
+        if (!variables) return false;
         let status_index: number = 0;
         let instance_index: number = 0;
         let text_index: number = 0;
@@ -744,16 +745,18 @@ export function get_var_for_ref(context: Context, symref: SymbolRefShape, t: Fun
             }
         })
     } else { // 存在可变组件
-        const state = get_state_by_ref(symref); // 先确定当前实例用的是哪个可变组件
-        if (!state) return false;
+        const state = sym; // 先确定当前实例用的是哪个可变组件
+        const usym = sym.parent;
+        if (!usym) return false;
+        const variables = usym.variables;
+        if (!variables) return false;
         variables.forEach((v: Variable) => {
             const item: RefAttriListItem = {variable: v, values: []};
             if (v.type === VariableType.Status) {
-                item.values = tag_values_sort(sym, v, t);
+                item.values = tag_values_sort(usym as SymbolShape, v, t);
                 result.push(item);
             }
         })
-
         const sub_variables = new Map<string, Variable>(); // 查看当前可变组件下，绑定了哪些变量
         search_binds_for_state(variables, state, sub_variables);
         let instance_index: number = result.length;
@@ -802,9 +805,19 @@ function search_binds_for_state(
 /**
  * @description 获取实例symref身上的某个变量variable的值
  */
-export function get_vari_value_for_ref(symref: SymbolRefShape, variable: Variable) {
-    const overrides = symref.findOverride(variable.id, OverrideType.Variable);
+export function get_vari_value_for_ref(symbol_ref: SymbolRefShape, variable: Variable) {
+    const overrides = symbol_ref.findOverride(variable.id, OverrideType.Variable);
     return overrides ? overrides[overrides.length - 1].value : variable.value;
+
+}
+
+export function get_vari_value_for_ref2(symbol_ref: SymbolRefShape, variable: Variable) {
+    let symbol: SymbolShape | SymbolUnionShape | undefined = symbol_ref.symData;
+    if (!symbol) {
+        return SymbolShape.Default_State;
+    }
+    const _val = (symbol as SymbolShape | SymbolUnionShape).symtags?.get(variable.id) || '';
+    return _val || SymbolShape.Default_State;
 }
 
 /**
@@ -900,7 +913,6 @@ export function is_circular_ref2(symbol: Shape, symbol2: string): boolean {
         shape: symbol2,
         ref: symbol.id
     }];
-    // if (deps.length < 2) return false;
     while (deps.length && is_exist_single_stick(deps)) {
         deps = filter_deps(deps, 'shape', 'ref');
         deps = filter_deps(deps, 'ref', 'shape');
@@ -909,7 +921,7 @@ export function is_circular_ref2(symbol: Shape, symbol2: string): boolean {
 }
 
 /**
- * @description 检查属性名称是否有效，有效则返回true  --8yyg9986i7g
+ * @description 检查属性名称是否有效，有效则返回true
  */
 export function is_valid_name(symbol: SymbolShape, name: string, type: VariableType) {
     let valid: boolean = true;
@@ -923,19 +935,19 @@ export function is_valid_name(symbol: SymbolShape, name: string, type: VariableT
 }
 
 /**
- * @description 判断选中图形是否支持创建组件 ---js34hgws8033jh238
+ * @description 判断选中图形是否支持创建组件
  * @param shapes
  */
 export function is_allow_to_create_sym(shapes: Shape[]) {
     let vaild = true;
     for (let i = 0, len = shapes.length; i < len; i++) {
-        if (shapes[i].type === ShapeType.Symbol) return false;
+        if (shapes[i].type === ShapeType.Symbol || shapes[i].type === ShapeType.SymbolUnion) return false;
     }
     return true;
 }
 
 /**
- * @description 判断组件状态是否允许删除 --82shdf82kj
+ * @description 判断组件状态是否允许删除
  */
 export function is_status_allow_to_delete(symbol: SymbolShape) {
     let valid = -1;
@@ -951,11 +963,11 @@ export function is_status_allow_to_delete(symbol: SymbolShape) {
  * @param shape
  */
 export function is_state(shape: Shape) {
-    return shape?.type === ShapeType.Symbol && shape?.parent?.isUnionSymbolShape;
+    return shape?.type === ShapeType.Symbol && shape?.parent?.type === ShapeType.SymbolUnion;
 }
 
 function is_sym(shape: Shape) {
-    return shape.type === ShapeType.Symbol;
+    return shape.type === ShapeType.Symbol || shape.type === ShapeType.SymbolUnion;
 }
 
 /**
@@ -963,7 +975,7 @@ function is_sym(shape: Shape) {
  * @param shape
  */
 export function is_symbol_but_not_union(shape: Shape) {
-    return shape.type === ShapeType.Symbol && !(shape as SymbolShape).isUnionSymbolShape;
+    return shape.type === ShapeType.Symbol;
 }
 
 /**
@@ -1008,7 +1020,7 @@ export function reset_all_attr_for_ref(context: Context) {
 }
 
 export function find_space_for_state(symbol: SymbolShape, state: SymbolShape) {
-    if (!(symbol as SymbolShape).isUnionSymbolShape) return;
+    if (!(symbol as SymbolShape).isSymbolUnionShape) return;
     const targets = symbol.childs;
     if (!targets.length) return;
     const init_frame = {
@@ -1056,7 +1068,7 @@ export function is_exist_symbol_layer(shapes: Shape[]) {
     for (let i = 0, len = shapes.length; i < len; i++) {
         let s: Shape | undefined = shapes[i].parent;
         while (s) {
-            if (s.type === ShapeType.Symbol) return true;
+            if (s.type === ShapeType.Symbol || s.type === ShapeType.SymbolUnion) return true;
             s = s.parent;
         }
     }
@@ -1078,9 +1090,9 @@ export function is_exist_symbolref_layer(shapes: Shape[]) {
 }
 
 export function switch_symref_state(context: Context, variable: Variable, state: string, t: Function) {
-    const symbolref = context.selection.symbolrefshape;
-    if (!symbolref) return;
-    const editor = context.editor4Shape(symbolref);
+    const symbol_ref = context.selection.symbolrefshape;
+    if (!symbol_ref) return;
+    const editor = context.editor4Shape(symbol_ref);
     editor.switchSymState(variable.id, state === t('compos.dlt') ? SymbolShape.Default_State : state);
 }
 
@@ -1095,7 +1107,7 @@ export function get_status_vari_for_symbolref(symbolref: SymbolRefShape, variabl
 export function is_part_of_symbol(shape: Shape) {
     let p: Shape | undefined = shape.parent;
     while (p) {
-        if (p.type === ShapeType.Symbol) return true;
+        if (p.type === ShapeType.Symbol || p.type === ShapeType.SymbolUnion) return true;
         p = p.parent;
     }
     return false;
@@ -1245,33 +1257,6 @@ export function get_symbolref_by_layer(shape: Shape) {
     return result
 }
 
-/**
- * @description 确定当前实例引用的是组件中的哪个可变组件
- */
-export function get_state_by_ref(symref: SymbolRefShape) {
-    const symbol = symref.getRootData();
-    if (!symbol) return;
-    const variables = symbol.variables;
-    if (!symbol.isUnionSymbolShape || !variables) return symbol;
-    const states = symbol.childs;
-    if (!states.length) return console.log('Error: No State`s Union');
-    const dlt_state: SymbolShape = states[0] as SymbolShape;
-    if (states.length < 2) return dlt_state;
-    const tag_map = new Map<string, string>(); // 当前实例的标签值
-    variables.forEach(v => {
-        if (v.type !== VariableType.Status) return;
-        const overrides = symref.findOverride(v.id, OverrideType.Variable);
-        tag_map.set(v.id, overrides ? overrides[overrides.length - 1].value : v.value);
-    })
-    for (let i = 0, l = states.length; i < l; i++) { // 在可变组件state中寻找标签值符合实例标签组合的那一个
-        const state = states[i] as SymbolShape;
-        const tags = (state as SymbolShape).vartag;
-        if (!tags) continue;
-        let is_target = true;
-        tags.forEach((v, k) => {
-            if (tag_map.get(k) !== v) is_target = false;
-        })
-        if (is_target) return state;
-    }
-    return dlt_state; // 如果没有找到，返回默认可变组件，如果到这里则已经在某一个环节出问题了
+export function is_symbol_or_union(shape: Shape) {
+    return shape.type === ShapeType.Symbol || shape.type === ShapeType.SymbolUnion;
 }

@@ -195,9 +195,11 @@ const selectedChild = () => {
 function is_component() {
     let s: any = props.data.shape();
     while (s) {
+        if (s.isVirtualShape) return true;
         if (s.type === ShapeType.Page) return false;
         if (s.type === ShapeType.SymbolRef) return true;
         if (s.type === ShapeType.Symbol) return true;
+        if (s.type === ShapeType.SymbolUnion) return true;
         s = s.parent;
     }
 }
@@ -276,6 +278,7 @@ onMounted(() => {
 })
 onUnmounted(() => {
     props.data.context.tool.watch(tool_watcher);
+    props.data.shape().unwatch(updater);
     stop();
 })
 </script>
