@@ -1,11 +1,11 @@
-const {defineConfig} = require('@vue/cli-service')
+const { defineConfig } = require('@vue/cli-service')
 const path = require('path')
 const fs = require('fs')
 const crypto = require('crypto')
 // 按需引入element ui
 const AutoImport = require('unplugin-auto-import/webpack')
 const Components = require('unplugin-vue-components/webpack')
-const {ElementPlusResolver} = require('unplugin-vue-components/resolvers')
+const { ElementPlusResolver } = require('unplugin-vue-components/resolvers')
 const CopyWebpackPlugin = require("copy-webpack-plugin")
 const webpack = require('webpack')
 
@@ -62,7 +62,7 @@ var configureWebpack = (config) => {
                         plugins: [
                             {
                                 name: 'convertColors',
-                                params: {currentColor: true},
+                                params: { currentColor: true },
                             },
                         ],
                     },
@@ -89,13 +89,13 @@ var configureWebpack = (config) => {
         .update(fs.readFileSync(communicationWorkerSourcePath))
         .digest('hex')
         .slice(0, 8)
-    }.js`
+        }.js`
     config.plugins = [
-        AutoImport({resolvers: [ElementPlusResolver()]}),
-        Components({resolvers: [ElementPlusResolver()]}),
+        AutoImport({ resolvers: [ElementPlusResolver()] }),
+        Components({ resolvers: [ElementPlusResolver()] }),
         new CopyWebpackPlugin({
             patterns: [
-                {from: 'node_modules/pathkit-wasm/bin/pathkit.wasm'}
+                { from: 'node_modules/pathkit-wasm/bin/pathkit.wasm' }
             ]
         }),
         new CopyWebpackPlugin({
@@ -124,33 +124,33 @@ var exports = defineConfig({
     publicPath: './',
     configureWebpack,
 
-        pluginOptions: {
-            electronBuilder: {
-                //preload: 'src/preload.js',
-                nodeIntegration: true,
-                //contextIsolation: false
-            }
-        },
+    pluginOptions: {
+        electronBuilder: {
+            //preload: 'src/preload.js',
+            nodeIntegration: true,
+            //contextIsolation: false
+        }
+    },
 
-        devServer: {
-            port: 8080,
-            https: true,
-            proxy: {
-                '/api': {
-                    target: 'http://192.168.0.10:10000',
-                    // target: 'http://mock.apifox.cn/m1/2612240-0-1d5a81b5',
-                    changeOrigin: true,
-                    disableHostCheck: true,
-                    //ws: true,
-                    pathRewrite: {
-                        '^/api': '/api'
-                        // '^/api/v1': '/'
-                    }
+    devServer: {
+        port: 8080,
+        https: true,
+        proxy: {
+            '/api': {
+                target: 'http://192.168.0.10:10000',
+                // target: 'http://mock.apifox.cn/m1/2612240-0-1d5a81b5',
+                changeOrigin: true,
+                disableHostCheck: true,
+                //ws: true,
+                pathRewrite: {
+                    '^/api': '/api'
+                    // '^/api/v1': '/'
                 }
             }
-        },
+        }
+    },
 
 
-    }
+}
 )
 module.exports = exports

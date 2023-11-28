@@ -1,11 +1,11 @@
-import {Context} from "@/context";
-import {Matrix, Shape, ShapeType} from "@kcdesign/data";
-import {Menu} from "@/context/menu";
-import {ClientXY, PageXY, XY} from "@/context/selection";
-import {WorkSpace} from "@/context/workspace";
-import {Comment} from "@/context/comment";
-import {XYsBounding} from "@/utils/common";
-import {get_root_points} from "@/utils/pathedit";
+import { Context } from "@/context";
+import { Matrix, Shape, ShapeType } from "@kcdesign/data";
+import { Menu } from "@/context/menu";
+import { ClientXY, PageXY, XY } from "@/context/selection";
+import { WorkSpace } from "@/context/workspace";
+import { Comment } from "@/context/comment";
+import { XYsBounding } from "@/utils/common";
+import { get_root_points } from "@/utils/pathedit";
 
 /**
  * @description 判断落点是否在content上
@@ -128,7 +128,7 @@ export function modify_down_position_client(context: Context, e: MouseEvent, pos
  */
 export function get_current_position_client(context: Context, e: MouseEvent) {
     const root = context.workspace.root;
-    return {x: e.clientX - root.x, y: e.clientY - root.y};
+    return { x: e.clientX - root.x, y: e.clientY - root.y };
 }
 
 /**
@@ -160,25 +160,25 @@ export function gen_offset_points_map(shapes: Shape[], down: PageXY) {
             const s = shapes[i];
             const m = s.matrix2Root();
             const f = s.frame;
-            const ps: { x: number, y: number }[] = [{x: 0, y: 0}, {x: f.width, y: 0}, {x: f.width, y: f.height}, {
+            const ps: { x: number, y: number }[] = [{ x: 0, y: 0 }, { x: f.width, y: 0 }, { x: f.width, y: f.height }, {
                 x: 0,
                 y: f.height
             }];
             for (let i = 0; i < 4; i++) points.push(m.computeCoord3(ps[i]));
         }
         const box = XYsBounding(points);
-        lt = {x: box.left, y: box.top};
-        rb = {x: box.right, y: box.bottom};
-        pivot = {x: (box.left + box.right) / 2, y: (box.top + box.bottom) / 2};
-        rt = {x: box.right, y: box.top};
-        lb = {x: box.left, y: box.bottom};
+        lt = { x: box.left, y: box.top };
+        rb = { x: box.right, y: box.bottom };
+        pivot = { x: (box.left + box.right) / 2, y: (box.top + box.bottom) / 2 };
+        rt = { x: box.right, y: box.top };
+        lb = { x: box.left, y: box.bottom };
     }
     return {
-        lt: {x: lt.x - down.x, y: lt.y - down.y},
-        rb: {x: rb.x - down.x, y: rb.y - down.y},
-        pivot: {x: pivot.x - down.x, y: pivot.y - down.y},
-        rt: {x: rt.x - down.x, y: rt.y - down.y},
-        lb: {x: lb.x - down.x, y: lb.y - down.y}
+        lt: { x: lt.x - down.x, y: lt.y - down.y },
+        rb: { x: rb.x - down.x, y: rb.y - down.y },
+        pivot: { x: pivot.x - down.x, y: pivot.y - down.y },
+        rt: { x: rt.x - down.x, y: rt.y - down.y },
+        lb: { x: lb.x - down.x, y: lb.y - down.y }
     }
 }
 
@@ -194,7 +194,7 @@ export function gen_offset_points_map2(context: Context, down: PageXY) {
     const offset: XY[] = [];
     for (let i = 0, l = op.length; i < l; i++) {
         const p = op[i];
-        offset.push({x: p.x - down.x, y: p.y - down.y});
+        offset.push({ x: p.x - down.x, y: p.y - down.y });
     }
     return offset;
 }
@@ -231,7 +231,13 @@ export function get_closest_container(context: Context, shape: Shape): Shape {
     let result = context.selection.selectedPage!
     let p = shape.parent;
     while (p) {
-        if (p.type === ShapeType.Artboard || p.type === ShapeType.Symbol) return p;
+        if (
+            p.type === ShapeType.Artboard ||
+            p.type === ShapeType.Symbol ||
+            p.type === ShapeType.SymbolUnion
+        ) {
+            return p;
+        }
         p = p.parent;
     }
     return result

@@ -1,6 +1,6 @@
-import {Context} from "@/context";
-import {XY} from "@/context/selection";
-import {CurveMode, Matrix, PathShape} from "@kcdesign/data";
+import { Context } from "@/context";
+import { XY } from "@/context/selection";
+import { CurveMode, Matrix, PathShape } from "@kcdesign/data";
 
 export function get_root_points(context: Context, indexes?: number[]) {
     const path_shape = context.selection.pathshape;
@@ -80,10 +80,10 @@ export function get_value_from_points(context: Context, indexes: number[]) {
         if (x === y && x === 'mix') break;
     }
     const __points = context.selection.pathshape!.points;
-    let r: number | 'mix' = __points[indexes[0]].cornerRadius;
+    let r: number | 'mix' = __points[indexes[0]].radius || 0;
     for (let i = 0, l = indexes.length; i < l; i++) {
         const index = indexes[i];
-        if (r !== __points[index].cornerRadius) {
+        if (r !== __points[index].radius) {
             r = 'mix';
             break;
         }
@@ -127,7 +127,7 @@ export function modify_point_curve_mode(context: Context, index: number, shape?:
     if (!point) return;
     const editor = context.editor4Shape(path_shape);
     let target_curve_mode: CurveMode;
-    const _curve_mode = point.curveMode;
+    const _curve_mode = point.mode;
     if (_curve_mode === CurveMode.Straight || _curve_mode === CurveMode.Asymmetric) {
         target_curve_mode = CurveMode.Mirrored;
     } else {

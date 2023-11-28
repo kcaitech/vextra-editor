@@ -4,8 +4,7 @@ import ComponentWonderCard from '@/components/Document/Navigation/Component/Comp
 import { onMounted, onUnmounted, ref } from 'vue';
 import { GroupShape, Shape } from '@kcdesign/data';
 import { Component } from '@/context/component';
-import { get_symbol_ref_name, is_content, ref_symbol } from '@/utils/content';
-import {get_state_name} from "../../../../kcdesign-data/src/editor/utils";
+import { is_content, ref_symbol } from '@/utils/content';
 interface Props {
     context: Context
 }

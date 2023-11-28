@@ -385,8 +385,6 @@ const getDocumentInfo = async () => {
             window.document.title = file_name.length > 8 ? `${file_name.slice(0, 8)}... - ProtoDesign` : `${file_name} - ProtoDesign`;
             context = new Context(document, coopRepo);
             context.workspace.setDocumentPerm(perm)
-
-
             getDocumentAuthority();
             getUserInfo()
 
@@ -567,7 +565,7 @@ const token = localStorage.getItem("token") || "";
 const networkStatus = NetworkStatus.Make(token);
 networkStatus.addOnChange((status: NetworkStatusType) => {
   if (status === NetworkStatusType.Offline) {
-    // 网络断开连接
+    console.log("网络断开连接")
     if (context) {
       clearInterval(loopNet);
       loopNet = null;
@@ -582,7 +580,7 @@ networkStatus.addOnChange((status: NetworkStatusType) => {
       }
     }
   } else {
-    //网络连接成功
+    console.log("网络连接成功")
     if (context) {
       if (context.communication.docOp.hasPendingSyncCmd() || netErr) {
         //有未上传资源

@@ -1,8 +1,8 @@
-import {Context} from "@/context";
-import {Navi} from "@/context/navigate";
-import {Shape, ShapeType, SymbolShape, VariableType} from "@kcdesign/data";
-import {XYsBounding} from "./common";
-import {WorkSpace} from "@/context/workspace";
+import { Context } from "@/context";
+import { Navi } from "@/context/navigate";
+import { Shape, ShapeType, SymbolShape, SymbolUnionShape, VariableType } from "@kcdesign/data";
+import { XYsBounding } from "./common";
+import { WorkSpace } from "@/context/workspace";
 
 export type Area = number | 'artboard' | 'group' | 'normal';
 
@@ -76,7 +76,7 @@ export function is_valid_data(context: Context, shape: Shape) {
 export function fit(context: Context, shape: Shape) {
     const m = shape.matrix2Root(), f = shape.frame, matrix = context.workspace.matrix, root = context.workspace.root;
     m.multiAtLeft(matrix);
-    const points: { x: number, y: number }[] = [{x: 0, y: 0}, {x: f.width, y: 0}, {x: f.width, y: f.height}, {
+    const points: { x: number, y: number }[] = [{ x: 0, y: 0 }, { x: f.width, y: 0 }, { x: f.width, y: f.height }, {
         x: 0,
         y: f.height
     }];
@@ -97,8 +97,8 @@ export function fit(context: Context, shape: Shape) {
                 clearTimeout(timer);
             }, 400);
         }
-        const p_center = {x: box.left + width / 2, y: box.top + height / 2};
-        const del = {x: root.center.x - p_center.x, y: root.center.y - p_center.y};
+        const p_center = { x: box.left + width / 2, y: box.top + height / 2 };
+        const del = { x: root.center.x - p_center.x, y: root.center.y - p_center.y };
         matrix.trans(del.x, del.y);
         matrix.trans(-root.width / 2, -root.height / 2);
         if (matrix.m00 * 1 / ratio > 0.02 && matrix.m00 * 1 / ratio < 7.2) matrix.scale(1 / ratio);
@@ -120,8 +120,8 @@ export function fit(context: Context, shape: Shape) {
                 clearTimeout(timer);
             }, 400);
         }
-        const p_center = {x: box.left + width / 2, y: box.top + height / 2};
-        const del = {x: root.center.x - p_center.x, y: root.center.y - p_center.y};
+        const p_center = { x: box.left + width / 2, y: box.top + height / 2 };
+        const del = { x: root.center.x - p_center.x, y: root.center.y - p_center.y };
         if (del.x || del.y) {
             matrix.trans(del.x, del.y);
             context.workspace.notify(WorkSpace.MATRIX_TRANSFORMATION);
@@ -132,7 +132,7 @@ export function fit(context: Context, shape: Shape) {
 export function fit_no_transform(context: Context, shape: Shape) {
     const m = shape.matrix2Root(), f = shape.frame, matrix = context.workspace.matrix, root = context.workspace.root;
     m.multiAtLeft(matrix);
-    const points: { x: number, y: number }[] = [{x: 0, y: 0}, {x: f.width, y: 0}, {x: f.width, y: f.height}, {
+    const points: { x: number, y: number }[] = [{ x: 0, y: 0 }, { x: f.width, y: 0 }, { x: f.width, y: f.height }, {
         x: 0,
         y: f.height
     }];
@@ -143,8 +143,8 @@ export function fit_no_transform(context: Context, shape: Shape) {
     const ratio = Math.max(ratio_h, ratio_w);
     if (ratio !== 1) {
         context.selection.selectShape(shape);
-        const p_center = {x: box.left + width / 2, y: box.top + height / 2};
-        const del = {x: root.center.x - p_center.x, y: root.center.y - p_center.y};
+        const p_center = { x: box.left + width / 2, y: box.top + height / 2 };
+        const del = { x: root.center.x - p_center.x, y: root.center.y - p_center.y };
         matrix.trans(del.x, del.y);
         matrix.trans(-root.width / 2, -root.height / 2);
         if (matrix.m00 * 1 / ratio > 0.02 && matrix.m00 * 1 / ratio < 7.2) matrix.scale(1 / ratio);
@@ -156,8 +156,8 @@ export function fit_no_transform(context: Context, shape: Shape) {
         context.workspace.notify(WorkSpace.MATRIX_TRANSFORMATION);
     } else {
         context.selection.selectShape(shape);
-        const p_center = {x: box.left + width / 2, y: box.top + height / 2};
-        const del = {x: root.center.x - p_center.x, y: root.center.y - p_center.y};
+        const p_center = { x: box.left + width / 2, y: box.top + height / 2 };
+        const del = { x: root.center.x - p_center.x, y: root.center.y - p_center.y };
         if (del.x || del.y) {
             matrix.trans(del.x, del.y);
             context.workspace.notify(WorkSpace.MATRIX_TRANSFORMATION);
@@ -165,8 +165,10 @@ export function fit_no_transform(context: Context, shape: Shape) {
     }
 }
 
-function get_state_name(state: SymbolShape, dlt: string) {
-    if (!state.parent?.isSymbolUnionShape) return state.name;
+export function get_state_name(state: SymbolShape, dlt: string) {
+    if (!(state.parent instanceof SymbolUnionShape)) {
+        return state.name;
+    }
     const variables = (state.parent as SymbolShape).variables;
     if (!variables) return state.name;
     let name_slice: string[] = [];
