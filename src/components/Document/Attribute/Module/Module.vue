@@ -41,7 +41,7 @@ const p_symble = computed(() => {
 })
 
 const is_symbolref = () => {
-   return is_shapes_if_symbolref(props.shapes);
+    return is_shapes_if_symbolref(props.shapes);
 }
 
 function is_state() {
@@ -51,7 +51,8 @@ function is_state() {
 
 <template>
     <div class="module-panel">
-        <ComponentAttr :context="context" v-if="shapeType === ShapeType.Symbol && !is_state()"
+        <ComponentAttr :context="context"
+                       v-if="(shapeType === ShapeType.Symbol || shapeType === ShapeType.SymbolUnion) && !is_state()"
                        :shape="(shapes[0] as SymbolShape)">
         </ComponentAttr>
         <ComponentState :context="context" v-if="is_state()" :shapes="props.shapes as SymbolShape[]"></ComponentState>
