@@ -91,6 +91,7 @@ const showAboutMe = () => {
 }
 
 const hoverComment = () => {
+    if(props.context.comment.isCommentMove) return;
     if (!showScale.value) {
         props.context.comment.hoverComment(false);
         if (props.context.workspace.isTranslating) return;

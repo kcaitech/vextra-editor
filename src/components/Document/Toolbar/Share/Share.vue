@@ -59,7 +59,7 @@ async function documentInfo(id: any) {
       console.log(t('share.no_document'));
     }
   } catch (err) {
-    return console.log(err);
+    return console.error(err); // 这里return了个undefined
   }
 }
 
@@ -69,7 +69,7 @@ const getPageHeight = () => {
 }
 const getSelectValue = (val: string) => {
   documentInfo(val).then((res: any) => {
-    if (res.document) {
+    if (res && res.document) {
       selectValue.value = res.document.doc_type !== 0 ? res.document.doc_type : res.document.doc_type
     }
   })

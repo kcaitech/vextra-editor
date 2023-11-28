@@ -7,8 +7,8 @@ import { useI18n } from 'vue-i18n';
 import CreateTable from './CreateTable.vue';
 const { t } = useI18n()
 interface Props {
-    context: Context
-    active: boolean
+  context: Context
+  active: boolean
 }
 type Button = InstanceType<typeof ToolButton>;
 const props = defineProps<Props>();
@@ -17,10 +17,10 @@ const visible = ref(false);
 const popoverVisible = ref<boolean>(false);
 const popover = ref<HTMLDivElement>();
 const emit = defineEmits<{
-    (e: "select", action: Action): void;
+  (e: "select", action: Action): void;
 }>();
-function select(action: Action) {   
-    emit('select', action);
+function select(action: Action) {
+  emit('select', action);
 }
 
 function showTable(e: MouseEvent) {
@@ -72,19 +72,19 @@ const onMouseleave = () => {
 </script>
 
 <template>
-    <div ref="popover" class="popover-t" tabindex="-1" v-if="popoverVisible">
+  <div ref="popover" class="popover-t" tabindex="-1" v-if="popoverVisible">
     <!-- <div ref="popover" class="popover" tabindex="-1"> -->
-        <CreateTable :context="context" @close="closeInsert"></CreateTable>
-    </div>
-    <el-tooltip class="box-item" effect="dark" :content="`${t('table.table')}`" placement="bottom" :show-after="600"
+    <CreateTable :context="context" @close="closeInsert"></CreateTable>
+  </div>
+  <el-tooltip class="box-item" effect="dark" :content="`${t('table.table')}`" placement="bottom" :show-after="600"
     :offset="10" :hide-after="0" :visible="popoverVisible ? false : visible">
-    <ToolButton ref="button" :selected="props.active" 
-            @mouseenter.stop="onMouseenter" @mouseleave.stop="onMouseleave" style="width: 32px">
-            <div class="svg-table" @click="showTable">
-                <svg-icon icon-class="pattern-table"></svg-icon>
-            </div>
-        </ToolButton>
-      </el-tooltip>
+    <ToolButton ref="button" :selected="props.active" @mouseenter.stop="onMouseenter" @mouseleave.stop="onMouseleave"
+      style="width: 32px">
+      <div class="svg-table" @click="showTable">
+        <svg-icon icon-class="pattern-table"></svg-icon>
+      </div>
+    </ToolButton>
+  </el-tooltip>
 </template>
 
 <style lang="scss" scoped>
@@ -95,14 +95,15 @@ const onMouseleave = () => {
   justify-content: center;
   align-items: center;
   color: #ffffff;
-    padding: 6px 6px 6px 6px;
-    box-sizing: border-box;
+  padding: 6px 6px 6px 6px;
+  box-sizing: border-box;
 
-  > svg {
-      width: 20px;
-      height: 20px;
+  >svg {
+    width: 20px;
+    height: 20px;
   }
 }
+
 .popover-t {
   position: absolute;
 }

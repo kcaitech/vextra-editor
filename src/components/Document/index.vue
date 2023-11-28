@@ -1,9 +1,9 @@
 <script setup lang="ts">
-import {onMounted, onUnmounted, shallowRef, ref, watchEffect} from 'vue';
+import { onMounted, onUnmounted, shallowRef, ref, watchEffect } from 'vue';
 import ContentView from "./ContentView.vue";
-import {Context} from '@/context';
+import { Context } from '@/context';
 import Navigation from './Navigation/index.vue';
-import {Selection} from '@/context/selection';
+import { Selection } from '@/context/selection';
 import Attribute from './Attribute/RightTabs.vue';
 import Toolbar from './Toolbar/index.vue'
 import ColSplitView from '@/components/common/ColSplitView.vue';
@@ -12,13 +12,13 @@ import { Document, importDocument, Repository, Page, CoopRepository, IStorage } 
 import { SCREEN_SIZE } from '@/utils/setting';
 import * as share_api from '@/request/share'
 import * as user_api from '@/request/users'
-import {useRoute} from 'vue-router';
-import {router} from '@/router';
-import {useI18n} from 'vue-i18n';
-import {Warning} from '@element-plus/icons-vue';
+import { useRoute } from 'vue-router';
+import { router } from '@/router';
+import { useI18n } from 'vue-i18n';
+import { Warning } from '@element-plus/icons-vue';
 import Loading from '@/components/common/Loading.vue';
 import SubLoading from '@/components/common/SubLoading.vue';
-import {Perm, WorkSpace} from '@/context/workspace';
+import { Perm, WorkSpace } from '@/context/workspace';
 import NetWorkError from '@/components/NetworkError.vue'
 import { ResponseStatus } from "@/communication/modules/doc_upload";
 import { insertNetworkInfo } from "@/utils/message"
@@ -28,15 +28,19 @@ import { Comment } from '@/context/comment';
 import { DocSelectionOpData, DocSelectionOpType } from "@/communication/modules/doc_selection_op";
 import { debounce } from '@/utils/timing_util';
 import { NetworkStatusType } from "@/communication/types";
+import { _updateRoot } from '@/utils/content';
+import Bridge from "@/components/Document/Bridge.vue";
+import { Component } from '@/context/component';
+import { initpal } from './initpal';
 
-const {t} = useI18n();
+const { t } = useI18n();
 const curPage = shallowRef<Page | undefined>(undefined);
 let context: Context | undefined;
 const middleWidth = ref<number>(0.8);
 const middleMinWidth = ref<number>(0.3);
 const route = useRoute();
-const Right = ref({rightMin: 250, rightMinWidth: 0.1, rightWidth: 0.1});
-const Left = ref({leftMin: 250, leftWidth: 0.1, leftMinWidth: 0.1});
+const Right = ref({ rightMin: 240, rightMinWidth: 0.1, rightWidth: 0.1 });
+const Left = ref({ leftMin: 240, leftWidth: 0.1, leftMinWidth: 0.1 });
 const showRight = ref<boolean>(true);
 const showLeft = ref<boolean>(true);
 const showTop = ref<boolean>(true);
@@ -53,9 +57,11 @@ let timeForRight: any;
 const loading = ref<boolean>(false);
 const sub_loading = ref<boolean>(false);
 const null_context = ref<boolean>(true);
-const isRead = ref(false)
-const canComment = ref(false)
-const isEdit = ref(true)
+const isRead = ref(false);
+const canComment = ref(false);
+const isEdit = ref(true);
+const bridge = ref<boolean>(false);
+const inited = ref(false);
 
 function screenSetting() {
   const element = document.documentElement;
@@ -137,7 +143,7 @@ function selectionWatcher(t: number) {
 }
 
 function keyboardEventHandler(event: KeyboardEvent) {
-  const {target, code, ctrlKey, metaKey, shiftKey} = event;
+  const { target, code, ctrlKey, metaKey, shiftKey } = event;
   if (target instanceof HTMLInputElement) return; // 在输入框中输入时避免触发编辑器的键盘事件
   if (context) {
     if (code === 'Backslash') {
@@ -158,7 +164,7 @@ function keyboardEventHandler(event: KeyboardEvent) {
 }
 
 const permKeyBoard = (e: KeyboardEvent) => {
-  const {code, ctrlKey, metaKey, shiftKey} = e;
+  const { code, ctrlKey, metaKey, shiftKey } = e;
   if (code === 'KeyV' || code === 'KeyC' || code === 'KeyA' || code === 'Digit0 ' || ctrlKey || metaKey || shiftKey) return true
   else false
 }
@@ -246,42 +252,43 @@ enum PermissionChange {
 }
 
 const getDocumentAuthority = async () => {
-    try {
-        const data = await share_api.getDocumentAuthorityAPI({ doc_id: route.query.id })
-        if (data.code === 400) {
-            permissionChange.value = PermissionChange.delete
-            showNotification(0)
-        }
-        if (permType.value && data.data.perm_type !== permType.value) {
-            if (data.data.perm_type === 1) {
-                permissionChange.value = PermissionChange.update
-                showNotification(data.data.perm_type)
-            } else if (data.data.perm_type === 2) {
-                permissionChange.value = PermissionChange.update
-                showNotification(data.data.perm_type)
-            } else if (data.data.perm_type === 3) {
-                permissionChange.value = PermissionChange.update
-                showNotification(data.data.perm_type)
-            } else if (data.data.perm_type === 0) {
-                permissionChange.value = PermissionChange.close
-                showNotification(data.data.perm_type)
-            }
-        }
-        if (data.data.perm_type === 1) {
-            isRead.value = true
-        } else if (data.data.perm_type === 2) {
-            isRead.value = false
-            canComment.value = true
-        } else if (data.data.perm_type === 3) {
-            isRead.value = false
-            canComment.value = false
-            isEdit.value = true
-        }
-        permType.value = data.data.perm_type
-        context && context.workspace.setDocumentPerm(data.data.perm_type)
-    } catch (err) {
-        console.log(err);
+  try {
+    const data = await share_api.getDocumentAuthorityAPI({ doc_id: route.query.id })
+    if (data.code === 400) {
+      permissionChange.value = PermissionChange.delete
+      showNotification(0)
     }
+    if (permType.value && data.data.perm_type !== permType.value) {
+      if (data.data.perm_type === 1) {
+        permissionChange.value = PermissionChange.update
+        showNotification(data.data.perm_type)
+      } else if (data.data.perm_type === 2) {
+        permissionChange.value = PermissionChange.update
+        showNotification(data.data.perm_type)
+      } else if (data.data.perm_type === 3) {
+        permissionChange.value = PermissionChange.update
+        showNotification(data.data.perm_type)
+      } else if (data.data.perm_type === 0) {
+        permissionChange.value = PermissionChange.close
+        showNotification(data.data.perm_type)
+      }
+    }
+    if (data.data.perm_type === 1) {
+      isRead.value = true
+    } else if (data.data.perm_type === 2) {
+      isRead.value = false
+      canComment.value = true
+    } else if (data.data.perm_type === 3) {
+      isRead.value = false
+      canComment.value = false
+      isEdit.value = true
+    }
+    permType.value = data.data.perm_type
+    console.log(permType.value, '文档权限接口的权限');
+    context && context.workspace.setDocumentPerm(data.data.perm_type)
+  } catch (err) {
+    console.log(err);
+  }
 }
 const permissionChange = ref(-1);
 // 权限被修改后的倒计时
@@ -305,12 +312,12 @@ const hideNotification = (type?: number) => {
   }
 }
 const showNotification = (type?: number) => {
-    insertNetworkInfo('networkError', false, network_error);
-    showHint.value = true;
-    startCountdown(type);
+  insertNetworkInfo('networkError', false, network_error);
+  showHint.value = true;
+  startCountdown(type);
 }
 const getUserInfo = async () => {
-  const {data} = await user_api.GetInfo()
+  const { data } = await user_api.GetInfo()
   if (context) {
     context.comment.setUserInfo(data)
     localStorage.setItem('avatar', data.avatar)
@@ -321,125 +328,129 @@ const getUserInfo = async () => {
 
 //获取文档信息
 const getDocumentInfo = async () => {
-    try {
-        loading.value = true;
-        noNetwork.value = false
-        const dataInfo = await share_api.getDocumentInfoAPI({ doc_id: route.query.id });
-        docInfo.value = dataInfo.data;
-        if (dataInfo.code === 400) {
-            //无效链接
-            // ElMessage({ message: `${t('apply.link_not')}` });
-            // return router.push('/');
-            router.push({
-                name: 'apply',
-                query: {
-                    id: route.query.id
-                }
-            })
-            return
+  try {
+    loading.value = true;
+    noNetwork.value = false
+    const dataInfo = await share_api.getDocumentInfoAPI({ doc_id: route.query.id });
+    docInfo.value = dataInfo.data;
+    if (dataInfo.code === 400) {
+      //无效链接
+      // ElMessage({ message: `${t('apply.link_not')}` });
+      // return router.push('/');
+      router.push({
+        name: 'apply',
+        query: {
+          id: route.query.id
         }
-        const perm = dataInfo.data.document_permission.perm_type
-        permType.value = perm;
-        //获取文档类型是否为私有文档且有无权限
-        if (perm === 0) {
-            router.push({
-                name: 'apply',
-                query: {
-                    id: route.query.id
-                }
-            })
-            return
-        }
-        const { data } = await share_api.getDocumentKeyAPI({ doc_id: route.query.id });
-        // documentKey.value = data
-
-        const repo = new Repository();
-        const storageOptions: StorageOptions = {
-            endPoint: data.endpoint,
-            region: data.region,
-            accessKey: data.access_key,
-            secretKey: data.secret_access_key,
-            sessionToken: data.session_token,
-            bucketName: data.bucket_name,
-        }
-        let storage: IStorage;
-        if (data.provider === "oss") {
-            storage = new OssStorage(storageOptions);
-        } else {
-            storage = new S3Storage(storageOptions);
-        }
-        const path = docInfo.value.document.path;
-        const document = await importDocument(storage, path, "", dataInfo.data.document.version_id ?? "", repo)
-        if (document) {
-            const coopRepo = new CoopRepository(document, repo)
-            const file_name = docInfo.value.document?.name || document.name;
-            window.document.title = file_name.length > 8 ? `${file_name.slice(0, 8)}... - ProtoDesign` : `${file_name} - ProtoDesign`;
-            context = new Context(document, coopRepo);
-            context.workspace.setDocumentPerm(perm)
-            getDocumentAuthority();
-            getUserInfo()
-            
-            context.comment.setDocumentInfo(dataInfo.data)
-            null_context.value = false;
-            context.selection.watch(selectionWatcher);
-            context.workspace.watch(workspaceWatcher);
-
-            const docId = route.query.id as string;
-            const token = localStorage.getItem("token") || "";
-            if (await context.communication.docOp.start(token, docId, document, context.coopRepo, dataInfo.data.document.version_id ?? "")) {
-                switchPage(context!.data.pagesList[0]?.id);
-                loading.value = false;
-            } else {
-                router.push("/");
-                return;
-            }
-            if(perm === 3) await context.communication.docResourceUpload.start(token, docId);
-            if(perm >= 2) await context.communication.docCommentOp.start(token, docId);
-            await context.communication.docSelectionOp.start(token, docId, context);
-            context.communication.docSelectionOp.addOnMessage(teamSelectionModifi)
-        }
-    } catch (err) {
-        loading.value = false;
-        noNetwork.value = true
-        console.log(err)
-        throw err;
+      })
+      return
     }
+    const perm = dataInfo.data.document_permission.perm_type
+    permType.value = perm;
+    console.log(perm, '文档信息的权限');
+
+    //获取文档类型是否为私有文档且有无权限
+    if (perm === 0) {
+      router.push({
+        name: 'apply',
+        query: {
+          id: route.query.id
+        }
+      })
+      return
+    }
+    const { data } = await share_api.getDocumentKeyAPI({ doc_id: route.query.id });
+    // documentKey.value = data
+
+    const repo = new Repository();
+    const storageOptions: StorageOptions = {
+      endPoint: data.endpoint,
+      region: data.region,
+      accessKey: data.access_key,
+      secretKey: data.secret_access_key,
+      sessionToken: data.session_token,
+      bucketName: data.bucket_name,
+    }
+    let storage: IStorage;
+    if (data.provider === "oss") {
+      storage = new OssStorage(storageOptions);
+    } else {
+      storage = new S3Storage(storageOptions);
+    }
+    const path = docInfo.value.document.path;
+    const document = await importDocument(storage, path, "", dataInfo.data.document.version_id ?? "", repo)
+    if (document) {
+      const coopRepo = new CoopRepository(document, repo)
+      const file_name = docInfo.value.document?.name || document.name;
+      window.document.title = file_name.length > 8 ? `${file_name.slice(0, 8)}... - ProtoDesign` : `${file_name} - ProtoDesign`;
+      context = new Context(document, coopRepo);
+      context.workspace.setDocumentPerm(perm)
+      getDocumentAuthority();
+      getUserInfo()
+
+      context.comment.setDocumentInfo(dataInfo.data)
+      null_context.value = false;
+      context.selection.watch(selectionWatcher);
+      context.workspace.watch(workspaceWatcher);
+      context.component.watch(component_watcher);
+      const docId = route.query.id as string;
+      const token = localStorage.getItem("token") || "";
+      if (await context.communication.docOp.start(token, docId, document, context.coopRepo, dataInfo.data.document.version_id ?? "")) {
+        switchPage(context!.data.pagesList[0]?.id);
+        loading.value = false;
+      } else {
+        router.push("/");
+        return;
+      }
+      if (perm === 3) await context.communication.docResourceUpload.start(token, docId);
+      if (perm >= 2) await context.communication.docCommentOp.start(token, docId);
+      await context.communication.docSelectionOp.start(token, docId, context);
+      context.communication.docSelectionOp.addOnMessage(teamSelectionModifi)
+    }
+  } catch (err) {
+    loading.value = false;
+    noNetwork.value = true
+    console.log(err)
+    throw err;
+  }
 }
 
 async function upload(projectId: string) {
-    const token = localStorage.getItem("token");
-    if (!token || !context || !context.data) return;
-    if (!await context.communication.docUpload.start(token, projectId)) {
-        // todo 上传通道开启失败处理
-        return;
-    }
-    let result;
-    try {
-        result = await context.communication.docUpload.upload(context.data);
-    } catch (e) {
-        // todo 上传失败处理
-        return;
-    }
-    if (!result || result.status !== ResponseStatus.Success || !result.data?.doc_id || typeof result.data?.doc_id !== "string") {
-        // todo 上传失败处理
-        return;
-    }
-    const doc_id = result!.data.doc_id;
-    router.replace({
-        path: '/document',
-        query: { id: doc_id },
-    });
-    if (!await context.communication.docOp.start(token, doc_id, context!.data, context.coopRepo, result!.data.version_id ?? "")) {
-        // todo 文档操作通道开启失败处理
-    }
-    getDocumentAuthority().then(async () => {
-        if(!context) return;
-        if(permType.value === 3) context.communication.docResourceUpload.start(token, doc_id);
-        if(permType.value && permType.value >= 2) context.communication.docCommentOp.start(token, doc_id);
-        await context.communication.docSelectionOp.start(token, doc_id, context);
-        context.communication.docSelectionOp.addOnMessage(teamSelectionModifi);
-        context.workspace.notify(WorkSpace.INIT_DOC_NAME);
-    })
+  const token = localStorage.getItem("token");
+  if (!token || !context || !context.data) return;
+  if (!await context.communication.docUpload.start(token, projectId)) {
+    // todo 上传通道开启失败处理
+    return;
+  }
+  let result;
+  try {
+    result = await context.communication.docUpload.upload(context.data);
+  } catch (e) {
+    // todo 上传失败处理
+    return;
+  }
+  if (!result || result.status !== ResponseStatus.Success || !result.data?.doc_id || typeof result.data?.doc_id !== "string") {
+    // todo 上传失败处理
+    return;
+  }
+  console.log(result, '文档上传');
+
+  const doc_id = result!.data.doc_id;
+  router.replace({
+    path: '/document',
+    query: { id: doc_id },
+  });
+  if (!await context.communication.docOp.start(token, doc_id, context!.data, context.coopRepo, result!.data.version_id ?? "")) {
+    // todo 文档操作通道开启失败处理
+  }
+  getDocumentAuthority().then(async () => {
+    if (!context) return;
+    if (permType.value === 3) context.communication.docResourceUpload.start(token, doc_id);
+    if (permType.value && permType.value >= 2) context.communication.docCommentOp.start(token, doc_id);
+    await context.communication.docSelectionOp.start(token, doc_id, context);
+    context.communication.docSelectionOp.addOnMessage(teamSelectionModifi);
+    context.workspace.notify(WorkSpace.INIT_DOC_NAME);
+  })
 }
 
 let timer: any = null;
@@ -449,28 +460,29 @@ function init_screen_size() {
 }
 
 function init_doc() {
-    if (route.query.id) { // 从远端读取文件
-        getDocumentInfo();
-        document.addEventListener('keydown', keyboardEventHandler);
-        timer = setInterval(() => {
-            getDocumentAuthority();
-        }, 30000);
+  if (route.query.id) { // 从远端读取文件
+    getDocumentInfo();
+    document.addEventListener('keydown', keyboardEventHandler);
+    timer = setInterval(() => {
+      getDocumentAuthority();
+    }, 30000);
+  } else {
+    if ((window as any).sketchDocument) {
+      context = new Context((window as any).sketchDocument as Document, ((window as any).skrepo as CoopRepository));
+      null_context.value = false;
+      getUserInfo();
+      context.selection.watch(selectionWatcher);
+      context.workspace.watch(workspaceWatcher);
+      context.component.watch(component_watcher);
+      const project_id = localStorage.getItem('project_id') || '';
+      upload(project_id);
+      localStorage.setItem('project_id', '');
+      switchPage(((window as any).sketchDocument as Document).pagesList[0]?.id);
+      document.addEventListener('keydown', keyboardEventHandler);
     } else {
-        if ((window as any).sketchDocument) {
-            context = new Context((window as any).sketchDocument as Document, ((window as any).skrepo as CoopRepository));
-            null_context.value = false;
-            getUserInfo();
-            context.selection.watch(selectionWatcher);
-            context.workspace.watch(workspaceWatcher);
-            const project_id = localStorage.getItem('project_id') || ''; 
-            upload(project_id);
-            localStorage.setItem('project_id', '');
-            switchPage(((window as any).sketchDocument as Document).pagesList[0]?.id);
-            document.addEventListener('keydown', keyboardEventHandler);
-        } else {
-            router.push('/');
-        }
+      router.push('/');
     }
+  }
 }
 
 function workspaceWatcher(t: number) {
@@ -553,7 +565,7 @@ const token = localStorage.getItem("token") || "";
 const networkStatus = NetworkStatus.Make(token);
 networkStatus.addOnChange((status: NetworkStatusType) => {
   if (status === NetworkStatusType.Offline) {
-    // 网络断开连接
+    console.log("网络断开连接")
     if (context) {
       clearInterval(loopNet);
       loopNet = null;
@@ -568,7 +580,7 @@ networkStatus.addOnChange((status: NetworkStatusType) => {
       }
     }
   } else {
-    //网络连接成功
+    console.log("网络连接成功")
     if (context) {
       if (context.communication.docOp.hasPendingSyncCmd() || netErr) {
         //有未上传资源
@@ -583,9 +595,9 @@ networkStatus.addOnChange((status: NetworkStatusType) => {
 })
 
 function onBeforeUnload(event: any) {
-    if (!context?.communication.docOp.hasPendingSyncCmd()) return; // 不需要弹框
-    event.preventDefault();
-    return event.returnValue = t('message.leave');
+  if (!context?.communication.docOp.hasPendingSyncCmd()) return; // 不需要弹框
+  event.preventDefault();
+  return event.returnValue = t('message.leave');
 }
 
 function onUnloadForCommunication() {
@@ -623,12 +635,21 @@ const teamSelectionModifi = (docCommentOpData: DocSelectionOpData) => {
     }
   }
 }
+function component_watcher(t: number) {
+  if (!context) return;
+  if (t === Component.BRIDGE_CHANGE) bridge.value = context.component.bridge;
+}
 
 onMounted(() => {
   window.addEventListener('beforeunload', onBeforeUnload);
   window.addEventListener('unload', onUnload);
   init_screen_size();
   init_doc();
+  initpal().then(() => {
+    inited.value = true;
+  }).catch((e) => {
+    console.log(e)
+  })
 })
 
 onUnmounted(() => {
@@ -649,6 +670,7 @@ onUnmounted(() => {
   clearInterval(loopNet);
   clearInterval(netErr);
   networkStatus.close();
+  context?.component.unwatch(component_watcher);
 })
 </script>
 
@@ -656,49 +678,50 @@ onUnmounted(() => {
   <div class="main" style="height: 100vh;">
     <Loading v-if="loading || null_context" :size="20"></Loading>
     <div id="top" @dblclick="screenSetting" v-if="showTop">
-      <Toolbar :context="context!" v-if="!loading && !null_context"/>
+      <Toolbar :context="context!" v-if="!loading && !null_context" />
     </div>
     <div id="visit">
       <ApplyFor></ApplyFor>
     </div>
     <ColSplitView id="center" :style="{ height: showTop ? 'calc(100% - 52px)' : '100%' }"
-                  v-if="!loading && !null_context"
-                  :left="{ width: Left.leftWidth, minWidth: Left.leftMinWidth, maxWidth: 0.5 }"
-                  :middle="{ width: middleWidth, minWidth: middleMinWidth, maxWidth: middleWidth }"
-                  :right="{ width: Right.rightWidth, minWidth: Right.rightMinWidth, maxWidth: 0.5 }"
-                  :right-min-width-in-px="Right.rightMin" :left-min-width-in-px="Left.leftMin" :context="context!">
+      v-if="inited && !loading && !null_context"
+      :left="{ width: Left.leftWidth, minWidth: Left.leftMinWidth, maxWidth: 0.5 }"
+      :middle="{ width: middleWidth, minWidth: middleMinWidth, maxWidth: middleWidth }"
+      :right="{ width: Right.rightWidth, minWidth: Right.rightMinWidth, maxWidth: 0.5 }"
+      :right-min-width-in-px="Right.rightMin" :left-min-width-in-px="Left.leftMin" :context="context!">
       <template #slot1>
         <Navigation v-if="curPage !== undefined && !null_context" id="navigation" :context="context!"
-                    @switchpage="switchPage" @mouseenter="() => { mouseenter('left') }" @showNavigation="showHiddenLeft"
-                    @mouseleave="() => { mouseleave('left') }" :page="(curPage as Page)" :showLeft="showLeft"
-                    :leftTriggleVisible="leftTriggleVisible">
+          @switchpage="switchPage" @mouseenter="() => { mouseenter('left') }" @showNavigation="showHiddenLeft"
+          @mouseleave="() => { mouseleave('left') }" :page="(curPage as Page)" :showLeft="showLeft"
+          :leftTriggleVisible="leftTriggleVisible">
         </Navigation>
       </template>
       <template #slot2>
         <ContentView v-if="curPage !== undefined && !null_context" id="content" :context="context!"
-                     :page="(curPage as Page)">
+          :page="(curPage as Page)">
         </ContentView>
       </template>
       <template #slot3>
         <Attribute id="attributes" v-if="!null_context && !isRead" :context="context!"
-                   @mouseenter="(e: Event) => { mouseenter('right') }" @mouseleave="() => { mouseleave('right') }"
-                   :showRight="showRight" :rightTriggleVisible="rightTriggleVisible" @showAttrbute="showHiddenRight">
+          @mouseenter="(e: Event) => { mouseenter('right') }" @mouseleave="() => { mouseleave('right') }"
+          :showRight="showRight" :rightTriggleVisible="rightTriggleVisible" @showAttrbute="showHiddenRight">
         </Attribute>
       </template>
     </ColSplitView>
+    <SubLoading v-if="sub_loading"></SubLoading>
     <div class="network" v-if="noNetwork">
       <NetWorkError @refresh-doc="refreshDoc" :top="true"></NetWorkError>
     </div>
     <div v-if="showHint" class="notification">
       <el-icon :size="13">
-        <Warning/>
+        <Warning />
       </el-icon>
       <span class="text" v-if="permissionChange === PermissionChange.update">{{ t('home.prompt') }}</span>
       <span class="text" v-if="permissionChange === PermissionChange.close">{{ t('home.visit') }}</span>
       <span class="text" v-if="permissionChange === PermissionChange.delete">{{ t('home.delete_file') }}</span>
       <span style="color: #0d99ff;" v-if="countdown > 0">{{ countdown }}</span>
     </div>
-    <SubLoading v-if="sub_loading"></SubLoading>
+    <Bridge v-if="bridge" :context="context!"></Bridge>
   </div>
 </template>
 <style>
@@ -721,14 +744,13 @@ onUnmounted(() => {
 #top {
   display: flex;
   flex-flow: row nowrap;
-    width: 100%;
-    z-index: 10;
+  width: 100%;
+  z-index: 10;
   min-height: 40px;
-    position: fixed;
-    height: 52px;
-    background: #2C2C2C;
-    padding: 10px 8px 10px 8px;
-    box-sizing: border-box;
+  height: 52px;
+  background: #2C2C2C;
+  padding: 10px 8px 10px 8px;
+  box-sizing: border-box;
 }
 
 .network {
@@ -809,7 +831,7 @@ onUnmounted(() => {
   border-radius: 4px;
 
   .loading-spinner {
-    > svg {
+    >svg {
       width: 15px;
       height: 15px;
       color: #000;

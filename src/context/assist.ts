@@ -1,11 +1,9 @@
-import {GroupShape, Shape, Watchable} from "@kcdesign/data";
-import {PageXY, Selection} from "./selection";
+import {GroupShape, Matrix, Shape, Watchable} from "@kcdesign/data";
+import {PageXY, Selection, XY} from "./selection";
 import {Context} from ".";
 import {
     finder,
-    getClosestAB,
     get_frame,
-    get_pg_by_frame,
     get_tree,
     modify_pt_x,
     modify_pt_x4create,
@@ -13,9 +11,8 @@ import {
     modify_pt_y,
     modify_pt_y4create,
     modify_pt_y4p,
-    gen_match_points,
     gen_match_points_by_map,
-    PointsOffset
+    PointsOffset, getClosestContainer, gen_match_points_by_map2, modify_pt_x_4_path_edit, modify_pt_y_4_path_edit
 } from "@/utils/assist";
 
 export interface PointGroup1 {
@@ -113,6 +110,7 @@ export class Asssit extends Watchable(Object) {
     static UPDATE_MAIN_LINE = 2;
     static CLEAR = 3;
     static STICKNESS = 5;
+    private m_stickness: number = 5;
     private m_collect_target: GroupShape[] = [];
     private m_context: Context;
     private m_shape_inner: Shape[] = [];
@@ -123,7 +121,7 @@ export class Asssit extends Watchable(Object) {
     private m_current_pg: PointGroup2 | undefined;
     private m_nodes_x: PageXY2[] = [];
     private m_nodes_y: PageXY2[] = [];
-    private m_stickness: number = 5;
+    private m_path_pg: Map<number, PageXY2> = new Map(); // 路径编辑模式
 
     constructor(context: Context) {
         super();
@@ -136,6 +134,34 @@ export class Asssit extends Watchable(Object) {
 
     setCPG(pg: PointGroup2) {
         this.m_current_pg = pg;
+    }
+
+    setCPG2() {
+        const path_shape = this.m_context.selection.pathshape;
+        if (!path_shape) return;
+        const points = path_shape.points;
+        const f = path_shape.frame;
+        const m = new Matrix();
+        m.preScale(f.width, f.height);
+        m.multiAtLeft(path_shape.matrix2Root());
+        this.clear();
+        for (let i = 0, l = points.length; i < l; i++) {
+            const p = m.computeCoord3(points[i].point);
+            const item = {id: 'path-edit-mode', p};
+            this.m_path_pg.set(i, item);
+            const xs = this.m_x_axis.get(p.x);
+            if (xs) {
+                xs.push(item);
+            } else {
+                this.m_x_axis.set(p.x, [item]);
+            }
+            const ys = this.m_y_axis.get(p.y);
+            if (ys) {
+                ys.push(item);
+            } else {
+                this.m_y_axis.set(p.y, [item]);
+            }
+        }
     }
 
     get except() {
@@ -166,6 +192,14 @@ export class Asssit extends Watchable(Object) {
         return this.m_nodes_y;
     }
 
+    get shape_in_view() {
+        return this.m_shape_inner;
+    }
+
+    is_shape_in_view(shape: Shape) {
+        return !!this.m_pg_inner.get(shape.id);
+    }
+
     private clear() {
         this.m_shape_inner.length = 0;
         this.m_pg_inner.clear();
@@ -178,8 +212,10 @@ export class Asssit extends Watchable(Object) {
             this.m_collect_target = [];
             const shapes = this.m_context.selection.selectedShapes;
             if (shapes.length === 1) {
-                this.m_collect_target = [getClosestAB(shapes[0])];
-            } else this.m_collect_target = [];
+                this.m_collect_target = [getClosestContainer(shapes[0])];
+            } else {
+                this.m_collect_target = [];
+            }
         } else if (t === Selection.CHANGE_PAGE) {
             this.m_collect_target = [];
         }
@@ -305,12 +341,20 @@ export class Asssit extends Watchable(Object) {
             modify_pt_y4p(pre_target2, point, c_pg.apexY, this.m_stickness);
         }
         if (pre_target1.delta !== undefined) {
-            target.x = pre_target1.x, target.sticked_by_x = true;
-            this.m_nodes_x = (this.m_x_axis.get(target.x) || []).concat([{p: {x: target.x, y: pre_target1.sy}, id: 'ex'}]);
+            target.x = pre_target1.x;
+            target.sticked_by_x = true;
+            this.m_nodes_x = (this.m_x_axis.get(target.x) || []).concat([{
+                p: {x: target.x, y: pre_target1.sy},
+                id: 'ex'
+            }]);
         }
         if (pre_target2.delta !== undefined) {
-            target.y = pre_target2.y, target.sticked_by_y = true;
-            this.m_nodes_y = (this.m_y_axis.get(target.y) || []).concat([{p: {x: pre_target2.sx, y: target.y}, id: 'ex'}]);
+            target.y = pre_target2.y;
+            target.sticked_by_y = true;
+            this.m_nodes_y = (this.m_y_axis.get(target.y) || []).concat([{
+                p: {x: pre_target2.sx, y: target.y},
+                id: 'ex'
+            }]);
         }
         this.notify(Asssit.UPDATE_ASSIST);
         // const e = Date.now();
@@ -336,14 +380,55 @@ export class Asssit extends Watchable(Object) {
         }
         if (pre_target1.delta !== undefined) {
             target.x = pre_target1.x, target.sticked_by_x = true;
-            this.m_nodes_x = (this.m_x_axis.get(target.x) || []).concat([{p: {x: target.x, y: pre_target1.sy}, id: 'ex'}]);
+            this.m_nodes_x = (this.m_x_axis.get(target.x) || []).concat([{
+                p: {x: target.x, y: pre_target1.sy},
+                id: 'ex'
+            }]);
         }
         if (pre_target2.delta !== undefined) {
             target.y = pre_target2.y, target.sticked_by_y = true;
-            this.m_nodes_y = (this.m_y_axis.get(target.y) || []).concat([{p: {x: pre_target2.sx, y: target.y}, id: 'ex'}]);
+            this.m_nodes_y = (this.m_y_axis.get(target.y) || []).concat([{
+                p: {x: pre_target2.sx, y: target.y},
+                id: 'ex'
+            }]);
         }
         this.notify(Asssit.UPDATE_ASSIST);
         const e = Date.now();
+        // console.log('单次匹配用时(ms):', e - st);
+        return target;
+    }
+
+    edit_mode_match(point: PageXY, offsetMap: XY[]) {
+        const indexes = this.m_context.path.selectedPoints;
+        if (!indexes.length) return;
+        const indexes_set = new Set(indexes);
+        this.m_nodes_x = [];
+        this.m_nodes_y = [];
+        const points = gen_match_points_by_map2(offsetMap, point);
+        const target = {x: 0, y: 0, sticked_by_x: false, sticked_by_y: false};
+        const pre_target1: PT4P1 = {x: 0, sy: 0, delta: undefined};
+        const pre_target2: PT4P2 = {y: 0, sx: 0, delta: undefined};
+        this.m_path_pg.forEach((v, k) => {
+            if (indexes_set.has(k)) return;
+            modify_pt_x_4_path_edit(pre_target1, v.p, points, this.stickness);
+            modify_pt_y_4_path_edit(pre_target2, v.p, points, this.stickness);
+        })
+        if (pre_target1.delta !== undefined) {
+            target.x = pre_target1.x;
+            target.sticked_by_x = true;
+            this.m_nodes_x = (this.m_x_axis.get(target.x) || []).concat([
+                {p: {x: target.x, y: pre_target1.sy}, id: 'ex'}
+            ]);
+        }
+        if (pre_target2.delta !== undefined) {
+            target.y = pre_target2.y;
+            target.sticked_by_y = true;
+            this.m_nodes_y = (this.m_y_axis.get(target.y) || []).concat([
+                {p: {x: pre_target2.sx, y: target.y}, id: 'ex'}
+            ]);
+        }
+        this.notify(Asssit.UPDATE_ASSIST);
+        // const e = Date.now();
         // console.log('单次匹配用时(ms):', e - st);
         return target;
     }

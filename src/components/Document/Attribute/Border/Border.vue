@@ -1,34 +1,44 @@
 <script setup lang="ts">
-import { computed, onMounted, onUnmounted, reactive, ref, watch, watchEffect } from 'vue';
-import { Context } from '@/context';
-import { Shape, ShapeType, TableCell, TableShape } from '@kcdesign/data';
+import {computed, onMounted, onUnmounted, reactive, ref, watch} from 'vue';
+import {Context} from '@/context';
+import {Shape, ShapeType, TableCell, TableShape} from '@kcdesign/data';
 import TypeHeader from '../TypeHeader.vue';
 import BorderDetail from './BorderDetail.vue';
 import ColorPicker from '@/components/common/ColorPicker/index.vue';
-import { useI18n } from 'vue-i18n';
-import { Color, Border, BorderStyle, MarkerType } from '@kcdesign/data';
-import { FillType, BorderPosition } from '@kcdesign/data';
-import { Reg_HEX } from "@/utils/RegExp";
-import { message } from "@/utils/message";
-import { toHex } from "@/utils/color";
-import { Selection } from '@/context/selection';
-import { WorkSpace } from '@/context/workspace';
-import { get_borders, get_actions_add_boder, get_actions_border_color, get_actions_border_unify, get_actions_border_enabled, get_actions_border_delete } from '@/utils/shape_style';
-import { v4 } from 'uuid';
+import {useI18n} from 'vue-i18n';
+import {Color, Border, BorderStyle} from '@kcdesign/data';
+import {FillType, BorderPosition} from '@kcdesign/data';
+import {Reg_HEX} from "@/utils/RegExp";
+import {message} from "@/utils/message";
+import {toHex} from "@/utils/color";
+import {WorkSpace} from '@/context/workspace';
+import {
+    get_borders,
+    get_actions_add_boder,
+    get_actions_border_color,
+    get_actions_border_unify,
+    get_actions_border_enabled,
+    get_actions_border_delete
+} from '@/utils/shape_style';
+import {v4} from 'uuid';
 import Apex from './Apex.vue';
-import { TableSelection } from '@/context/tableselection';
+import {TableSelection} from '@/context/tableselection';
+import {Selection} from "@/context/selection";
+
 interface BorderItem {
     id: number
     border: Border
 }
+
 interface Props {
     context: Context
     shapes: Shape[]
 }
-const { t } = useI18n();
+
+const {t} = useI18n();
 const props = defineProps<Props>();
-const data: { borders: BorderItem[] } = reactive({ borders: [] });
-const { borders } = data;
+const data: { borders: BorderItem[] } = reactive({borders: []});
+const {borders} = data;
 const alphaBorder = ref<any>();
 const colorBorder = ref<any>()
 const mixed = ref<boolean>(false);
@@ -38,13 +48,25 @@ const watchedShapes = new Map();
 const len = computed<number>(() => props.shapes.length);
 const show_apex = ref<boolean>(false);
 let table: TableShape;
+
 function watchShapes() {
     const needWatchShapes = new Map();
-    const selection = props.shapes;
-    if (selection.length > 0) {
-        selection.forEach((v) => {
+    const selectedShapes = props.context.selection.selectedShapes;
+    if (selectedShapes.length > 0) {
+        for (let i = 0, l = selectedShapes.length; i < l; i++) {
+            const v = selectedShapes[i];
+            if (v.isVirtualShape) {
+                let p = v.parent;
+                while (p) {
+                    if (p.type === ShapeType.SymbolRef) {
+                        needWatchShapes.set(p.id, p);
+                        break;
+                    }
+                    p = p.parent;
+                }
+            }
             needWatchShapes.set(v.id, v);
-        })
+        }
     }
     watchedShapes.forEach((v, k) => {
         if (needWatchShapes.has(k)) return;
@@ -57,12 +79,15 @@ function watchShapes() {
         watchedShapes.set(k, v);
     })
 }
+
 function watcher(...args: any[]) {
-    if (args.length > 0 && args.includes('style')) updateData();
+    if (args.length > 0 && (args.includes('style') || args.includes('variable'))) updateData();
 }
+
 function updateData() {
     borders.length = 0;
-    mixed.value = false; mixed_cell.value = false;
+    mixed.value = false;
+    mixed_cell.value = false;
     if (props.shapes.length === 1) {
         const shape = props.shapes[0];
         const table = props.context.tableSelection;
@@ -111,6 +136,7 @@ function updateData() {
         }
     }
 }
+
 function addBorder() {
     props.context.workspace.notify(WorkSpace.CTRL_DISAPPEAR);
     const color = new Color(1, 0, 0, 0);
@@ -125,9 +151,19 @@ function addBorder() {
             if (table.tableRowStart > -1 || table.tableColStart > -1 || is_edting) {
                 let range
                 if (is_edting) {
-                    range = { rowStart: is_edting.index.row, rowEnd: is_edting.index.row, colStart: is_edting.index.col, colEnd: is_edting.index.col };
+                    range = {
+                        rowStart: is_edting.index.row,
+                        rowEnd: is_edting.index.row,
+                        colStart: is_edting.index.col,
+                        colEnd: is_edting.index.col
+                    };
                 } else {
-                    range = { rowStart: table.tableRowStart, rowEnd: table.tableRowEnd, colStart: table.tableColStart, colEnd: table.tableColEnd };
+                    range = {
+                        rowStart: table.tableRowStart,
+                        rowEnd: table.tableRowEnd,
+                        colStart: table.tableColStart,
+                        colEnd: table.tableColEnd
+                    };
                 }
                 if (mixed_cell.value) {
                     e.addBorder4Multi(border, range)
@@ -151,6 +187,7 @@ function addBorder() {
         } else {
             const actions = get_actions_add_boder(props.shapes, border);
             const page = props.context.selection.selectedPage;
+            console.log('actions:', actions);
             if (page) {
                 const editor = props.context.editor4Page(page);
                 editor.shapesAddBorder(actions);
@@ -159,9 +196,11 @@ function addBorder() {
     }
     props.context.workspace.notify(WorkSpace.CTRL_APPEAR);
 }
+
 function first() {
     if (borders.length === 0 && !mixed.value) addBorder();
 }
+
 function deleteBorder(idx: number) {
     const _idx = borders.length - idx - 1;
     props.context.workspace.notify(WorkSpace.CTRL_DISAPPEAR);
@@ -174,9 +213,19 @@ function deleteBorder(idx: number) {
             if (table.tableRowStart > -1 || table.tableColStart > -1 || is_edting) {
                 let range
                 if (is_edting) {
-                    range = { rowStart: is_edting.index.row, rowEnd: is_edting.index.row, colStart: is_edting.index.col, colEnd: is_edting.index.col };
+                    range = {
+                        rowStart: is_edting.index.row,
+                        rowEnd: is_edting.index.row,
+                        colStart: is_edting.index.col,
+                        colEnd: is_edting.index.col
+                    };
                 } else {
-                    range = { rowStart: table.tableRowStart, rowEnd: table.tableRowEnd, colStart: table.tableColStart, colEnd: table.tableColEnd };
+                    range = {
+                        rowStart: table.tableRowStart,
+                        rowEnd: table.tableRowEnd,
+                        colStart: table.tableColStart,
+                        colEnd: table.tableColEnd
+                    };
                 }
                 e.deleteBorder(_idx, range)
             } else {
@@ -195,6 +244,7 @@ function deleteBorder(idx: number) {
     }
     props.context.workspace.notify(WorkSpace.CTRL_APPEAR);
 }
+
 function toggleVisible(idx: number) {
     props.context.workspace.notify(WorkSpace.CTRL_DISAPPEAR);
     const border = borders[idx].border;
@@ -209,9 +259,19 @@ function toggleVisible(idx: number) {
             if (table.tableRowStart > -1 || table.tableColStart > -1 || is_edting) {
                 let range
                 if (is_edting) {
-                    range = { rowStart: is_edting.index.row, rowEnd: is_edting.index.row, colStart: is_edting.index.col, colEnd: is_edting.index.col };
+                    range = {
+                        rowStart: is_edting.index.row,
+                        rowEnd: is_edting.index.row,
+                        colStart: is_edting.index.col,
+                        colEnd: is_edting.index.col
+                    };
                 } else {
-                    range = { rowStart: table.tableRowStart, rowEnd: table.tableRowEnd, colStart: table.tableColStart, colEnd: table.tableColEnd };
+                    range = {
+                        rowStart: table.tableRowStart,
+                        rowEnd: table.tableRowEnd,
+                        colStart: table.tableColStart,
+                        colEnd: table.tableColEnd
+                    };
                 }
                 e.setBorderEnable(_idx, isEnabled, range)
             } else {
@@ -230,6 +290,7 @@ function toggleVisible(idx: number) {
     }
     props.context.workspace.notify(WorkSpace.CTRL_APPEAR);
 }
+
 function onColorChange(e: Event, idx: number) {
     props.context.workspace.notify(WorkSpace.CTRL_DISAPPEAR);
     let value = (e.target as HTMLInputElement)?.value;
@@ -259,9 +320,19 @@ function onColorChange(e: Event, idx: number) {
             if (table.tableRowStart > -1 || table.tableColStart > -1 || is_edting) {
                 let range
                 if (is_edting) {
-                    range = { rowStart: is_edting.index.row, rowEnd: is_edting.index.row, colStart: is_edting.index.col, colEnd: is_edting.index.col };
+                    range = {
+                        rowStart: is_edting.index.row,
+                        rowEnd: is_edting.index.row,
+                        colStart: is_edting.index.col,
+                        colEnd: is_edting.index.col
+                    };
                 } else {
-                    range = { rowStart: table.tableRowStart, rowEnd: table.tableRowEnd, colStart: table.tableColStart, colEnd: table.tableColEnd };
+                    range = {
+                        rowStart: table.tableRowStart,
+                        rowEnd: table.tableRowEnd,
+                        colStart: table.tableColStart,
+                        colEnd: table.tableColEnd
+                    };
                 }
                 e.setBorderColor(_idx, color, range)
             } else {
@@ -280,6 +351,7 @@ function onColorChange(e: Event, idx: number) {
     }
     props.context.workspace.notify(WorkSpace.CTRL_APPEAR);
 }
+
 function onAlphaChange(e: Event, idx: number) {
     props.context.workspace.notify(WorkSpace.CTRL_DISAPPEAR);
     let alpha = (e.currentTarget as any)['value']
@@ -295,7 +367,7 @@ function onAlphaChange(e: Event, idx: number) {
             }
             alpha = alpha.toFixed(2) / 100
             const border = borders[idx].border;
-            const { red, green, blue } = border.color
+            const {red, green, blue} = border.color
             const color = new Color(alpha, red, green, blue);
             const _idx = borders.length - idx - 1;
             if (len.value === 1) {
@@ -307,9 +379,19 @@ function onAlphaChange(e: Event, idx: number) {
                     if (table.tableRowStart > -1 || table.tableColStart > -1 || is_edting) {
                         let range
                         if (is_edting) {
-                            range = { rowStart: is_edting.index.row, rowEnd: is_edting.index.row, colStart: is_edting.index.col, colEnd: is_edting.index.col };
+                            range = {
+                                rowStart: is_edting.index.row,
+                                rowEnd: is_edting.index.row,
+                                colStart: is_edting.index.col,
+                                colEnd: is_edting.index.col
+                            };
                         } else {
-                            range = { rowStart: table.tableRowStart, rowEnd: table.tableRowEnd, colStart: table.tableColStart, colEnd: table.tableColEnd };
+                            range = {
+                                rowStart: table.tableRowStart,
+                                rowEnd: table.tableRowEnd,
+                                colStart: table.tableColStart,
+                                colEnd: table.tableColEnd
+                            };
                         }
                         e.setBorderColor(_idx, color, range)
                     } else {
@@ -333,7 +415,7 @@ function onAlphaChange(e: Event, idx: number) {
                 }
                 alpha = Number((Number(alpha)).toFixed(2)) / 100
                 const border = borders[idx].border;
-                const { red, green, blue } = border.color
+                const {red, green, blue} = border.color
                 const color = new Color(alpha, red, green, blue);
                 const _idx = borders.length - idx - 1;
                 if (len.value === 1) {
@@ -345,9 +427,19 @@ function onAlphaChange(e: Event, idx: number) {
                         if (table.tableRowStart > -1 || table.tableColStart > -1 || is_edting) {
                             let range
                             if (is_edting) {
-                                range = { rowStart: is_edting.index.row, rowEnd: is_edting.index.row, colStart: is_edting.index.col, colEnd: is_edting.index.col };
+                                range = {
+                                    rowStart: is_edting.index.row,
+                                    rowEnd: is_edting.index.row,
+                                    colStart: is_edting.index.col,
+                                    colEnd: is_edting.index.col
+                                };
                             } else {
-                                range = { rowStart: table.tableRowStart, rowEnd: table.tableRowEnd, colStart: table.tableColStart, colEnd: table.tableColEnd };
+                                range = {
+                                    rowStart: table.tableRowStart,
+                                    rowEnd: table.tableRowEnd,
+                                    colStart: table.tableColStart,
+                                    colEnd: table.tableColEnd
+                                };
                             }
                             e.setBorderColor(_idx, color, range)
                         } else {
@@ -372,6 +464,7 @@ function onAlphaChange(e: Event, idx: number) {
     }
     props.context.workspace.notify(WorkSpace.CTRL_APPEAR);
 }
+
 function getColorFromPicker(color: Color, idx: number) {
     const _idx = borders.length - idx - 1;
     if (len.value === 1) {
@@ -383,9 +476,19 @@ function getColorFromPicker(color: Color, idx: number) {
             if (table.tableRowStart > -1 || table.tableColStart > -1 || is_edting) {
                 let range
                 if (is_edting) {
-                    range = { rowStart: is_edting.index.row, rowEnd: is_edting.index.row, colStart: is_edting.index.col, colEnd: is_edting.index.col };
+                    range = {
+                        rowStart: is_edting.index.row,
+                        rowEnd: is_edting.index.row,
+                        colStart: is_edting.index.col,
+                        colEnd: is_edting.index.col
+                    };
                 } else {
-                    range = { rowStart: table.tableRowStart, rowEnd: table.tableRowEnd, colStart: table.tableColStart, colEnd: table.tableColEnd };
+                    range = {
+                        rowStart: table.tableRowStart,
+                        rowEnd: table.tableRowEnd,
+                        colStart: table.tableColStart,
+                        colEnd: table.tableColEnd
+                    };
                 }
                 e.setBorderColor(_idx, color, range)
             } else {
@@ -424,13 +527,15 @@ const filterAlpha = (a: number) => {
         return alpha.toFixed(2); // 保留两位小数
     }
 }
+
 function layout() {
     show_apex.value = false;
     if (props.shapes.length === 1) {
         const type = props.shapes[0].type;
-        if (type === ShapeType.Line || type === ShapeType.Contact) show_apex.value = true;
+        show_apex.value = (type === ShapeType.Line || type === ShapeType.Contact);
     }
 }
+
 function update_by_shapes() {
     watchShapes();
     updateData();
@@ -454,6 +559,7 @@ function table_watcher() {
 }
 
 let watchCells: Map<string, TableCell> = new Map();
+
 function cells_watcher() {
     const table_selection = props.context.tableSelection;
     const is_edting = table_selection.editingCell;
@@ -488,15 +594,25 @@ function table_selection_watcher(t: number) {
         cells_watcher();
     }
 }
+
+function selection_watcher(t: number) {
+    if (t === Selection.CHANGE_SHAPE) update_by_shapes();
+}
+
 // hooks
 const stop = watch(() => props.shapes, (v) => shapes_watcher(v));
 onMounted(() => {
     update_by_shapes();
     props.context.tableSelection.watch(table_selection_watcher);
+    props.context.selection.watch(selection_watcher);
 })
 onUnmounted(() => {
     stop();
     props.context.tableSelection.unwatch(table_selection_watcher);
+    props.context.selection.unwatch(selection_watcher);
+    watchedShapes.forEach(v => {
+        v.unwatch(watcher)
+    });
 })
 </script>
 
@@ -531,7 +647,7 @@ onUnmounted(() => {
                 </div>
                 <div class="extra-action">
                     <BorderDetail :context="props.context" :shapes="props.shapes" :border="b.border"
-                        :index="borders.length - idx - 1">
+                                  :index="borders.length - idx - 1">
                     </BorderDetail>
                     <div class="delete" @click="deleteBorder(idx)">
                         <svg-icon icon-class="delete"></svg-icon>
@@ -604,7 +720,7 @@ onUnmounted(() => {
                 align-items: center;
                 border-radius: 3px;
 
-                >svg {
+                > svg {
                     width: 60%;
                     height: 60%;
                 }
@@ -646,7 +762,7 @@ onUnmounted(() => {
                     margin-left: -9%;
                 }
 
-                input+input {
+                input + input {
                     width: 45px;
                 }
             }

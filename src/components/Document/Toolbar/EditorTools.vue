@@ -2,7 +2,6 @@
 import {onMounted, onUnmounted, ref, computed, nextTick} from "vue";
 import {Context} from '@/context';
 import {Selection} from '@/context/selection';
-import ToolButton from './ToolButton.vue';
 import Cursor from "./Buttons/Cursor.vue";
 import Frame from "./Buttons/Frame.vue";
 import GroupUngroup from "./GroupUngroup.vue";
@@ -11,16 +10,15 @@ import CreateImage from "./Buttons/CreateImage.vue";
 import Table from "./Buttons/Table/index.vue"
 import Comment from "./Buttons/Comment.vue"
 import Contact from "./Buttons/CreateContact.vue";
-import Shape from "./Buttons/Shape.vue";
-import {WorkSpace, Perm} from "@/context/workspace";
-import {Action, Tool} from "@/context/tool";
-import {useI18n} from 'vue-i18n'
-import {message} from "@/utils/message";
-import {string_by_sys} from "@/utils/common";
-import {ElMessage} from "element-plus";
-
-const {t} = useI18n();
-
+import CreateComps from "./Buttons/CreateComps.vue";
+import PathEditTool from "@/components/Document/Toolbar/PathEditTool.vue";
+import { WorkSpace, Perm } from "@/context/workspace";
+import { Action, Tool } from "@/context/tool";
+import { useI18n } from 'vue-i18n'
+import { message } from "@/utils/message";
+import { ElMessage } from "element-plus";
+import { string_by_sys } from "@/utils/common";
+const { t } = useI18n();
 interface Props {
     context: Context
     selection: Selection
@@ -32,6 +30,7 @@ const isread = ref(false)
 const canComment = ref(false)
 const isEdit = ref(false)
 const selected = ref<Action>(Action.AutoV);
+const is_path_edit = ref<boolean>(false);
 
 function select(action: Action) {
     props.context.tool.setAction(action);
@@ -59,7 +58,6 @@ function tool_watcher(t?: number) {
 //获取文档权限
 const hangdlePerm = () => {
     const perm = props.context.workspace.documentPerm;
-
     if (perm === Perm.isRead) {
         isread.value = true
     } else if (perm === Perm.isComment) {
@@ -71,13 +69,22 @@ const hangdlePerm = () => {
         isEdit.value = true
     }
 }
+
+function workspace_watcher(t: number) {
+    if (t === WorkSpace.PATH_EDIT_MODE) {
+        is_path_edit.value = props.context.workspace.is_path_edit_mode
+    }
+}
+
 // hooks
 onMounted(() => {
     hangdlePerm()
     props.context.tool.watch(tool_watcher);
+    props.context.workspace.watch(workspace_watcher);
 });
 onUnmounted(() => {
     props.context.tool.unwatch(tool_watcher);
+    props.context.tool.unwatch(workspace_watcher);
 })
 
 function applyForEdit() {
@@ -90,7 +97,7 @@ function applyForEdit() {
 </script>
 
 <template>
-    <div class="editor-tools" @dblclick.stop v-if="isEdit && !isLable">
+    <div v-if="isEdit && !isLable && !is_path_edit" class="editor-tools" @dblclick.stop>
         <Cursor @select="select" :d="selected" :active="selected === Action.AutoV || selected === Action.AutoK"
                 :is_lable="isLable" :edit="isEdit"></Cursor>
         <div style="width: 16px;height: 52px;display: flex;align-items: center;justify-content: center;">
@@ -113,10 +120,11 @@ function applyForEdit() {
                 </div>
             </ToolButton>
         </el-tooltip>
+        <CreateComps @select="select" :context="props.context"></CreateComps>
         <Comment @select="select" :active="selected === Action.AddComment" :workspace="workspace"></Comment>
         <GroupUngroup :context="props.context" :selection="props.selection"></GroupUngroup>
     </div>
-    <div class="editor-tools" @dblclick.stop v-if="isread || canComment || isLable">
+    <div v-if="isread || canComment || isLable" class="editor-tools" @dblclick.stop>
         <span style="color: #ffffff;">{{ t('apply.read_only') }}</span>
         <div class="button">
             <button class="el" style="background-color: #865DFF;" @click="applyForEdit">{{
@@ -132,6 +140,9 @@ function applyForEdit() {
         <Comment @select="select" :active="selected === Action.AddComment" :workspace="workspace"
                  v-if="!isread"></Comment>
     </div>
+    <PathEditTool v-if="isEdit && is_path_edit" class="editor-tools" :context="props.context" @select="select"
+                  :selected="selected"
+    ></PathEditTool>
 </template>
 
 <style scoped lang="scss">

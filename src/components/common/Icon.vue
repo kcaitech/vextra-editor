@@ -1,6 +1,5 @@
 <script setup lang="ts">
 import { computed } from "@vue/reactivity";
-import {} from "vue";
 const props = defineProps<{ valid: boolean, selected: boolean, onclick: Function, icon: string }>();
 const maskcss = computed(() => {
     return "url(" + props.icon + ")";

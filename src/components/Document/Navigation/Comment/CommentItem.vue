@@ -245,7 +245,7 @@ onUnmounted(() => {
         </div>
         <div class="content">
             <div class="item-title">
-                <div class="item_heard">
+                <div class="item_heard" :style="{width: hoverIcon ? 'calc(100% - 73px)' : 'calc(100% - 3px)'}">
                     <div class="name" :style="{opacity: props.commentItem.status === 0 ? 1 : 0.5}">{{props.commentItem.user.nickname}} </div>&nbsp;&nbsp;
                     <div class="date">{{ formatDate(props.commentItem.record_created_at) }}</div>
                 </div>

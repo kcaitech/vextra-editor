@@ -12,7 +12,11 @@ export const shape: any = {
     input_text: '输入文本',
     table: '表格',
     contact: '连接线',
-    shape_tool: '形状工具'
+    shape_tool: '形状工具',
+    symbol: '组件',
+    curve: "曲线工具",
+    clip: "裁剪工具",
+    default: '默认',
 }
 shape[ShapeType.Rectangle] = '矩形';
 

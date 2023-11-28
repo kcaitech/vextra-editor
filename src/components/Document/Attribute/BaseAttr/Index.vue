@@ -1,6 +1,6 @@
 <script setup lang="ts">
 import { onMounted, onUnmounted, ref, reactive } from 'vue'
-import { Shape, ShapeType, RectShape, GroupShape, PathShape, PathShape2 } from '@kcdesign/data';
+import { Shape, ShapeType, RectShape, GroupShape, PathShape, PathShape2, TextShape } from '@kcdesign/data';
 import IconText from '@/components/common/IconText.vue';
 import Position from '../PopoverMenu/Position.vue';
 import RadiusForIos from '../PopoverMenu/RadiusForIos.vue';
@@ -95,6 +95,7 @@ function calc_attri() {
         const shape = props.context.selection.selectedShapes[0];
         const lt = shape.matrix2Root().computeCoord2(0, 0);
         const frame = shape.frame;
+
         const isMixed = is_mixed(props.context.selection.selectedShapes);
         if (x.value !== mixed) x.value = lt.x;
         if (y.value !== mixed) y.value = lt.y;
@@ -103,12 +104,40 @@ function calc_attri() {
             if (h.value !== mixed) h.value = Math.max(frame.height, 1);
             if (isMixed.type === 'mixed') {
                 model_disable_state.height = true;
-                h.value = mixed
             }
         } else {
             h.value = 0;
         }
     }
+}
+
+const parentSymbolRef = () => {
+    const len = props.context.selection.selectedShapes.length;
+    let is_dis = false;
+    if (len === 1) {
+        const shape = props.context.selection.selectedShapes[0];
+        let p = shape.parent;
+        while (p && p.type !== ShapeType.Page) {
+            if (p.type === ShapeType.SymbolRef) {
+                is_dis = true;
+            }
+            p = p.parent;
+        }
+    } else if (len > 1) {
+        const shapes = props.context.selection.selectedShapes;
+        for (let i = 0; i < shapes.length; i++) {
+            const shape = shapes[i];
+            let p = shape.parent;
+            while (p && p.type !== ShapeType.Page) {
+                if (p.type === ShapeType.SymbolRef) {
+                    is_dis = true;
+                    break;
+                }
+                p = p.parent;
+            }
+        }
+    }
+    return is_dis;
 }
 function _update_view() {
     if (props.context.selection.selectedShapes.length) {
@@ -116,6 +145,11 @@ function _update_view() {
         check_model_state();
     }
     if (props.context.selection.selectedShapes.length > 1) check_mixed();
+    if(parentSymbolRef()) {
+        all_disable();
+    }else {
+        check_model_state();
+    }
 }
 const update_view = debounce(_update_view, 200);
 // 检查是否多值
@@ -125,7 +159,7 @@ function check_mixed() {
     isMixed.y === 'mixed' ? y.value = mixed : y.value = isMixed.y;
     isMixed.w === 'mixed' ? w.value = mixed : w.value = isMixed.w;
     isMixed.rotate === 'mixed' ? rotate.value = mixed : rotate.value = isMixed.rotate;
-    isMixed.constrainerProportions === 'mixed' ? isLock.value = true : isLock.value = (isMixed.constrainerProportions as boolean)!
+    isMixed.constrainerProportions === 'mixed' ? isLock.value = true : isLock.value = (isMixed.constrainerProportions as boolean)!;
     if (isMixed.type === 'mixed' || !isMixed.type) {
         isMixed.h === 'mixed' ? h.value = mixed : h.value = isMixed.h;
         if (isMixed.type === 'mixed') {
@@ -153,21 +187,15 @@ function getRectShapeAttr(shape: Shape) {
             multipleValues.value = true
             radius.value.lt = mixed
         }
-    } else if (shape instanceof GroupShape) {
-        radius.value.lt = (shape as GroupShape).fixedRadius || 0
-        radius.value.lb = (shape as GroupShape).fixedRadius || 0
-        radius.value.rt = (shape as GroupShape).fixedRadius || 0
-        radius.value.rb = (shape as GroupShape).fixedRadius || 0
-    } else if (shape instanceof PathShape) {
-        radius.value.lt = (shape as PathShape).fixedRadius || 0
-        radius.value.lb = (shape as PathShape).fixedRadius || 0
-        radius.value.rt = (shape as PathShape).fixedRadius || 0
-        radius.value.rb = (shape as PathShape).fixedRadius || 0
-    } else if (shape instanceof PathShape2) {
-        radius.value.lt = (shape as PathShape2).fixedRadius || 0
-        radius.value.lb = (shape as PathShape2).fixedRadius || 0
-        radius.value.rt = (shape as PathShape2).fixedRadius || 0
-        radius.value.rb = (shape as PathShape2).fixedRadius || 0
+    } else if (shape instanceof GroupShape ||
+        shape instanceof PathShape ||
+        shape instanceof PathShape2 ||
+        shape instanceof TextShape) {
+        const fixedRadius = shape.fixedRadius ?? 0;
+        radius.value.lt = fixedRadius;
+        radius.value.lb = fixedRadius;
+        radius.value.rt = fixedRadius;
+        radius.value.rb = fixedRadius;
     }
 }
 function onChangeX(value: string) {
@@ -361,6 +389,7 @@ const onChangeRadian = (value: string, type: 'rt' | 'lt' | 'rb' | 'lb') => {
             const newRadian: number = Number.parseFloat(value) < Math.min((w.value as number), (h.value as number)) ? Number.parseFloat(value) : Math.min((w.value as number), (h.value as number))
             if (!radius.value) return;
             radius.value[type] = newRadian > 0 ? Number(newRadian.toFixed(fix)) : 0;
+
             e.setRectRadius(+radius.value.lt, radius.value.rt, radius.value.rb, radius.value.lb);
         } else {
             value = Number.parseFloat(value).toFixed(fix);
@@ -402,7 +431,8 @@ function adapt() {
 const RADIUS_SETTING = [
     ShapeType.Rectangle, ShapeType.Artboard,
     ShapeType.Image, ShapeType.Group,
-    ShapeType.Path, ShapeType.Path2, ShapeType.Contact
+    ShapeType.Path, ShapeType.Path2, ShapeType.Contact,
+    ShapeType.Text
 ];
 const MULTI_RADIUS = [ShapeType.Rectangle, ShapeType.Artboard, ShapeType.Image];
 function layout() {
@@ -444,6 +474,13 @@ function reset_model_state() {
     model_disable_state.rotation = false;
     model_disable_state.filpVertical = false, model_disable_state.flipHorizontal = false;
     model_disable_state.radius = false;
+}
+function all_disable() {
+    model_disable_state.x = true, model_disable_state.y = true;
+    model_disable_state.width = true, model_disable_state.height = true;
+    model_disable_state.rotation = true;
+    model_disable_state.filpVertical = true, model_disable_state.flipHorizontal = true;
+    model_disable_state.radius = true;
 }
 function workspace_watcher(t?: any) {
     if (t === WorkSpace.CLAC_ATTRI) check_mixed();
@@ -724,5 +761,4 @@ onUnmounted(() => {
             height: 90%;
         }
     }
-}
-</style>
+}</style>
