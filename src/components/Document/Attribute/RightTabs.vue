@@ -1,61 +1,80 @@
 <script setup lang="ts">
-import {onMounted, onUnmounted, ref, watch, watchEffect} from "vue";
-import {Context} from "@/context";
+import { onMounted, onUnmounted, ref } from "vue";
+import { Context } from "@/context";
 import Design from "@/components/Document/Attribute/Design.vue";
-import CompsTab from "@/components/Document/Navigation/CompsTab.vue";
 import ResourceTab from "@/components/Document/Navigation/ResourceTab.vue";
-import {useI18n} from 'vue-i18n';
-import {Perm} from "@/context/workspace";
-import {Tool} from "@/context/tool";
-import Lable from './Lable/index.vue'
+import { useI18n } from 'vue-i18n';
+import { Perm } from "@/context/workspace";
+import { Tool } from "@/context/tool";
+import Lable from './Lable/index.vue';
+const { t } = useI18n();
 
-const {t} = useI18n();
-
-const props = defineProps<{
+interface Props {
     context: Context
     rightTriggleVisible: boolean
     showRight: boolean
-}>();
-const emit = defineEmits<{
+}
+interface Emits {
     (e: 'showAttrbute'): void
-}>()
-
-// type Tab = "Design" | "Prototype" | "Inspect";
+}
 type Tab = "Design" | "Inspect";
 
-const perm = ref(props.context.workspace.documentPerm)
+const props = defineProps<Props>();
+const emit = defineEmits<Emits>();
+const controllerRef = ref<HTMLElement>();
+const underlineWidth = ref(0);
+const underlinePosition = ref(0);
+const perm = ref(props.context.workspace.documentPerm);
 const currentTab = ref<Tab>("Design");
 const tabs: { title: string, id: Tab }[] = [
     {
         title: t('attr.design'),
         id: 'Design'
     },
-    // {
-    //     title: t('attr.prototype'),
-    //     id: 'Prototype'
-    // },
     {
         title: t('attr.inspect'),
         id: 'Inspect'
     }
-]
+];
 const isLable = ref(props.context.tool.isLable);
 
 function toggle(id: Tab) {
-    if (id === 'Design') {
-        if (props.context.selection.selectedShapes.length === 1) {
-            props.context.selection.selectShape(props.context.selection.selectedShapes[0]);
-        }
-
-    }
     currentTab.value = id;
+    init();
     updateUnderlinePosition();
 }
-
+function init() {
+    if (currentTab.value === 'Design') {
+        const selected = props.context.selection.selectedShapes;
+        if (selected.length) {
+            props.context.selection.rangeSelectShape(selected);
+        }
+    }
+}
 const showHiddenRight = () => {
     emit('showAttrbute')
 }
 
+function updateUnderlinePosition() {
+    underlinePosition.value = 0;
+    underlineWidth.value = 0;
+    if (!controllerRef.value) {
+        return;
+    }
+    const tabIndex = tabs.findIndex((tab) => tab.id === currentTab.value);
+    if (tabIndex < 0) {
+        return;
+    }
+    const key = tabs[tabIndex].id;
+    const dom = controllerRef.value.querySelector(`#tabs-id-${key}`);
+    if (!dom) {
+        return;
+    }
+    const width = (dom as HTMLDivElement).offsetWidth - 20;
+    const left = (dom as HTMLDivElement).offsetLeft + 10;
+    underlineWidth.value = width;
+    underlinePosition.value = left + width / 2;
+}
 const tool_watcher = (t: number) => {
     if (t === Tool.LABLE_CHANGE) {
         isLable.value = props.context.tool.isLable;
@@ -64,50 +83,33 @@ const tool_watcher = (t: number) => {
         }
     }
 }
-
 onMounted(() => {
-    props.context.tool.watch(tool_watcher)
-    if (controllerRef.value) {
-        console.log("ref:", controllerRef.value);
-        const current = controllerRef.value[0];
-        underlineWidth.value = current.clientWidth/tabs.length;
-        const x = current.offsetLeft;
-        const w = current.clientWidth;
-        underlinePosition.value = (x + w / 2);
-    }
+    props.context.tool.watch(tool_watcher);
+    init();
+    updateUnderlinePosition();
 })
 onUnmounted(() => {
     props.context.tool.unwatch(tool_watcher)
 })
-const controllerRef = ref<HTMLElement[] | null>(null);
-const underlineWidth = ref(0);
-const underlinePosition = ref(0);
-
-function updateUnderlinePosition() {
-    const tabIndex = tabs.findIndex((tab) => tab.id === currentTab.value)+1;
-    console.log(tabIndex)
-    underlinePosition.value = tabIndex * underlineWidth.value;
-
-}
 </script>
 
 <template>
     <div class="tab-container">
         <template v-if="!isLable">
-            <div class="controller">
-                <div :class="{ tab: true, active: currentTab === i.id }" v-for="(i, index) in tabs" :key="index"
-                     @click="toggle(i.id)" ref="controllerRef">{{ i.title }}
+            <div ref="controllerRef" class="controller">
+                <div v-for="(i, index) in tabs" :class="{ tab: true, active: currentTab === i.id }" :key="index"
+                    :id="`tabs-id-${i.id}`" @click="toggle(i.id)">{{ i.title }}
                 </div>
                 <div class="underline"
-                     :style="{ width: underlineWidth + 'px', left: `${underlinePosition}px`, transform: `translateX(-50%)` }"></div>
+                    :style="{ width: underlineWidth + 'px', left: `${underlinePosition}px`, transform: `translateX(-50%)` }">
+                </div>
             </div>
             <div class="body">
                 <Design :context="props.context" v-if="currentTab === 'Design'"></Design>
-                <!-- <CompsTab :context="props.context" v-if="currentTab === 'Prototype'"></CompsTab> -->
                 <ResourceTab :context="props.context" v-if="currentTab === 'Inspect'"></ResourceTab>
                 <template v-if="perm === Perm.isEdit">
                     <div class="showHiddenR" @click="showHiddenRight" v-if="!showRight || rightTriggleVisible"
-                         :style="{ opacity: showRight ? 1 : 0.6 }">
+                        :style="{ opacity: showRight ? 1 : 0.6 }">
                         <svg-icon v-if="showRight" class="svg" icon-class="right"></svg-icon>
                         <svg-icon v-else class="svg" icon-class="left"></svg-icon>
                     </div>
@@ -117,7 +119,7 @@ function updateUnderlinePosition() {
         <div class="tab-lable" v-else>
             <Lable :context="context"></Lable>
             <div class="showHiddenR" @click="showHiddenRight" v-if="!showRight || rightTriggleVisible"
-                 :style="{ opacity: showRight ? 1 : 0.6 }">
+                :style="{ opacity: showRight ? 1 : 0.6 }">
                 <svg-icon v-if="showRight" class="svg" icon-class="right"></svg-icon>
                 <svg-icon v-else class="svg" icon-class="left"></svg-icon>
             </div>
@@ -134,19 +136,20 @@ function updateUnderlinePosition() {
     .controller {
         display: flex;
         height: 40px;
+        position: relative;
 
-        > .tab {
+        >.tab {
             cursor: pointer;
             padding: 10px;
             margin-right: 10px;
 
         }
 
-        > .tab:hover {
+        >.tab:hover {
             color: var(--theme-color);
         }
 
-        > .active {
+        >.active {
             border-radius: 4px 4px 0 0;
             color: var(--theme-color);
         }
@@ -155,11 +158,11 @@ function updateUnderlinePosition() {
             border: 2px #000000 solid;
             border-radius: 6px;
             position: absolute;
-            top: 39px;
+            bottom: 0;
             transition: left 0.3s ease-in-out;
             box-sizing: border-box;
             height: 1px;
-            flex: 0 0 auto;
+            z-index: 1;
         }
     }
 
@@ -192,7 +195,7 @@ function updateUnderlinePosition() {
     box-sizing: border-box;
     border: 1px solid #F0F0F0;
 
-    > .svg {
+    >.svg {
         width: 10px;
         height: 10px;
     }
