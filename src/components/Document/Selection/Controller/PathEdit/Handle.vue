@@ -185,7 +185,6 @@ function modify_down_site(e: MouseEvent) {
     down_site.x = e.clientX;
     down_site.y = e.clientY;
 }
-const test_point = ref<XY>({x: -10, y: -10});
 function move(e: MouseEvent) {
     if (drag && asyncEditor) {
         const root = props.context.workspace.root;
@@ -197,10 +196,6 @@ function move(e: MouseEvent) {
         const to = current_is_from ? anther : current_handle_point;
         asyncEditor.execute(side, from, to);
 
-
-        // const t = inverse_matrix_at_down.inverseCoord(anther);
-        // test_point.value.x = t.x;
-        // test_point.value.y = t.y;
     } else if (check_drag_action(down_site, {x: e.clientX, y: e.clientY})) {
         const page = props.context.selection.selectedPage!;
         const path_shape = props.context.selection.pathshape;
@@ -309,7 +304,6 @@ onUnmounted(() => {
             </rect>
         </g>
     </g>
-    <!--  <rect :x="test_point.x - 4" :y="test_point.y - 4" width="8" height="8" rx="4" ry="4" fill="red" stroke="none"></rect>  -->
 </template>
 <style scoped lang="scss">
 .line {
