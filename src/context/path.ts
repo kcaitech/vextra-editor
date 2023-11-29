@@ -107,7 +107,7 @@ export class Path extends Watchable(Object) {
 
     get matrix_unit_to_root() {
         const path_shape = this.m_context.selection.pathshape;
-        if (!path_shape) return;
+        if (!path_shape) return new Matrix();
         const f = path_shape.frame;
         const m = new Matrix(path_shape.matrix2Root());
         m.multiAtLeft(this.m_context.workspace.matrix);
