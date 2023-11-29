@@ -188,7 +188,6 @@ export function __anther_side_xy(curve_point: CurvePoint, handle_site: XY, curre
         const _l_y = Math.abs(Math.cos(__angle) * l);
         const _delta_x = handle_site.x - curve_point.x;
         const _delta_y = handle_site.y - curve_point.y;
-
         _a_xy.x = curve_point.x - (_delta_x / Math.abs(_delta_x)) * _l_x;
         _a_xy.y = curve_point.y - (_delta_y / Math.abs(_delta_y)) * _l_y;
         return _a_xy;

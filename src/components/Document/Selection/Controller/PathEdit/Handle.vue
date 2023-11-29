@@ -195,7 +195,6 @@ function move(e: MouseEvent) {
         const from = current_is_from ? current_handle_point : anther;
         const to = current_is_from ? anther : current_handle_point;
         asyncEditor.execute(side, from, to);
-
     } else if (check_drag_action(down_site, { x: e.clientX, y: e.clientY })) {
         const page = props.context.selection.selectedPage!;
         const path_shape = props.context.selection.pathshape;
