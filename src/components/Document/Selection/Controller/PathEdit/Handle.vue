@@ -55,7 +55,7 @@ let inverse_matrix_at_down = new Matrix();
 let action_curve_point: CurvePoint;
 let side: 'from' | 'to';
 let drag: boolean = false;
-let down_site: XY = {x: 0, y: 0};
+let down_site: XY = { x: 0, y: 0 };
 let asyncEditor: AsyncPathHandle | undefined = undefined;
 let down_index: number = -1;
 function reset() {
@@ -127,7 +127,7 @@ function update() {
         previous.value = true;
         previous_curve_point.value = __pre;
         previous_index.value = _pi;
-        const __p = m.computeCoord2(__pre.x, __pre.y);
+        const __p = m.computeCoord3(__pre);
         previous_site.x = __p.x;
         previous_site.y = __p.y;
         if (__pre.hasFrom && __pre.fromX !== undefined && __pre.fromY !== undefined) {
@@ -143,7 +143,7 @@ function update() {
         next.value = true;
         next_curve_point.value = __next;
         next_index.value = _ni;
-        const __p = m.computeCoord2(__next.x, __next.y);
+        const __p = m.computeCoord3(__next);
         next_site.x = __p.x;
         next_site.y = __p.y;
         if (__next.hasTo && __next.toX !== undefined && __next.toY !== undefined) {
@@ -196,7 +196,7 @@ function move(e: MouseEvent) {
         const to = current_is_from ? anther : current_handle_point;
         asyncEditor.execute(side, from, to);
 
-    } else if (check_drag_action(down_site, {x: e.clientX, y: e.clientY})) {
+    } else if (check_drag_action(down_site, { x: e.clientX, y: e.clientY })) {
         const page = props.context.selection.selectedPage!;
         const path_shape = props.context.selection.pathshape;
         if (!path_shape) {
