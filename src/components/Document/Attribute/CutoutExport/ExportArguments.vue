@@ -2,20 +2,17 @@
 import { ref } from 'vue';
 import ArgsSelect from './ArgsSelect.vue';
 import { Context } from '@/context';
-import { Shape } from '@kcdesign/data';
+import { ExportFileFormat, ExportFormat, ExportFormatNameingScheme, Shape } from '@kcdesign/data';
 import { Menu } from '@/context/menu';
-type Argus = {
-    size: string,
-    value: string,
-    prefix: string,
-    format: string
-}
+import { FormatItems } from './index.vue';
+import { useI18n } from 'vue-i18n';
+const { t } = useI18n();
 interface Props {
     context: Context
     shapes: Shape[]
-    argus: Argus
+    argus: FormatItems
     sizeItems: string[]
-    perfixItems: string[]
+    perfixItems: ExportFormatNameingScheme[]
     formatItems: string[]
     index: number
 }
@@ -29,27 +26,29 @@ const emits = defineEmits<{
 const showCutoutSize = ref(false);
 const showCutoutPerfix = ref(false);
 const showCutoutFormat = ref(false);
-let menuItems: string[] = [];
+let sizeMenuItems: string[] = [];
+let perMenuItems: ExportFormatNameingScheme[] = [];
+let formatMenuItems: string[] = [];
 
-const sizeValue = ref(props.argus.size);
-const perfixValue = ref(props.argus.prefix);
-const formatValue = ref(props.argus.format);
+const sizeValue = ref(props.argus.format.scale + 'x');
+const perfixValue = ref(props.argus.format.namingScheme);
+const formatValue = ref(props.argus.format.fileFormat.toUpperCase());
 const showCutoutSizeMenu = () => {
     if(showCutoutSize.value) return showCutoutSize.value = false;
     props.context.menu.notify(Menu.SHADOW_CUTOUT_ARGS_MENU);
-    menuItems = props.sizeItems;
+    sizeMenuItems = props.sizeItems;
     showCutoutSize.value = true;
 };
 const showCutoutPerfixMenu = () => {
     if(showCutoutPerfix.value) return showCutoutPerfix.value = false;
     props.context.menu.notify(Menu.SHADOW_CUTOUT_ARGS_MENU);
-    menuItems = props.perfixItems;
+    perMenuItems = props.perfixItems;
     showCutoutPerfix.value = true;
 };
 const showCutoutFormatMenu = () => {
     if(showCutoutFormat.value) return showCutoutFormat.value = false;
     props.context.menu.notify(Menu.SHADOW_CUTOUT_ARGS_MENU);
-    menuItems = props.formatItems;
+    formatMenuItems = props.formatItems;
     showCutoutFormat.value = true;
 };
 const selectSize = (i: number) => {
@@ -77,21 +76,21 @@ const deleteItem= () => {
                 <div class="down-icon size" @click.stop="showCutoutSizeMenu">
                     <svg-icon icon-class="down"></svg-icon>
                 </div>
-                <ArgsSelect v-if="showCutoutSize" :context="props.context" :menuItems="menuItems" :selectValue="sizeValue" @close="showCutoutSize = false" @select="selectSize"></ArgsSelect>
+                <ArgsSelect v-if="showCutoutSize" :context="props.context" :menuItems="sizeMenuItems" :selectValue="sizeValue" @close="showCutoutSize = false" @select="selectSize"></ArgsSelect>
             </div>
             <div class="cutout_presuffix_input cutout_export_input">
-                <input :placeholder="perfixValue">
+                <input :placeholder="t(`cutoutExport.${perfixValue}`)">
                 <div class="down-icon presuffix" @click.stop="showCutoutPerfixMenu">
                     <svg-icon icon-class="down"></svg-icon>
                 </div>
-                <ArgsSelect v-if="showCutoutPerfix" :context="props.context" :menuItems="menuItems" :selectValue="perfixValue" @close="showCutoutPerfix = false" @select="selectPerfix"></ArgsSelect>
+                <ArgsSelect v-if="showCutoutPerfix" :context="props.context" :menuItems="perMenuItems" :selectValue="perfixValue" :i18n="true" @close="showCutoutPerfix = false" @select="selectPerfix"></ArgsSelect>
             </div>
             <div class="cutout_format_input cutout_export_input">
                 <div class="span" @click.stop="showCutoutFormatMenu">{{ formatValue }}</div>
                 <div class="down-icon format-i"  @click.stop="showCutoutFormatMenu">
                     <svg-icon icon-class="down"></svg-icon>
                 </div>
-                <ArgsSelect v-if="showCutoutFormat" :context="props.context" :menuItems="menuItems" :selectValue="formatValue" @close="showCutoutFormat = false" @select="selectFormat"></ArgsSelect>
+                <ArgsSelect v-if="showCutoutFormat" :context="props.context" :menuItems="formatMenuItems" :selectValue="formatValue" @close="showCutoutFormat = false" @select="selectFormat"></ArgsSelect>
             </div>
         </div>
         <div class="delete" @click="deleteItem">
@@ -179,7 +178,7 @@ const deleteItem= () => {
             }
 
             .span {
-                width: 100%;
+                width: 52%;
                 height: 30px;
                 flex: 1 1 auto;
                 align-content: center;
@@ -190,12 +189,13 @@ const deleteItem= () => {
                 font-family: var(--font-family);
                 text-overflow: ellipsis;
                 background-color: transparent;
+                padding-bottom: 5px;
             }
         }
 
         input {
             width: 52%;
-            height: 12px;
+            height: 16px;
             flex: 1 1 auto;
             align-content: center;
             margin-left: 2px;
@@ -208,6 +208,7 @@ const deleteItem= () => {
             border: none;
             font-size: var(--font-default-fontsize);
             outline: none;
+            margin-bottom: 2px;
         }
 
         .down-icon {

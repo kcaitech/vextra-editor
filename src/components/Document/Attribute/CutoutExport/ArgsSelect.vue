@@ -2,14 +2,17 @@
 import { Context } from '@/context';
 import { Menu } from '@/context/menu';
 import { onMounted, onUnmounted, ref } from 'vue';
+import { useI18n } from 'vue-i18n';
+const { t } = useI18n();
 const props = defineProps<{
     context: Context
-    menuItems: string[]
-    selectValue: string
+    menuItems: any[]
+    selectValue: any
+    i18n?: boolean
 }>();
 const emits = defineEmits<{
     (e: 'close'): void;
-    (e:'select', index: number): void;
+    (e: 'select', index: number): void;
 }>();
 const selectHoverItem = ref(props.selectValue);
 const handleCloseMenu = (e: MouseEvent) => {
@@ -25,7 +28,7 @@ const close = () => {
     emits('close');
 }
 const menu_watcher = (t: number) => {
-    if(t === Menu.SHADOW_CUTOUT_ARGS_MENU) {
+    if (t === Menu.SHADOW_CUTOUT_ARGS_MENU) {
         close();
     }
 }
@@ -42,11 +45,13 @@ onUnmounted(() => {
 
 <template>
     <div class="args_select_menu" @click.stop>
-        <div class="item" v-for="(item, index) in menuItems" :key="index" :class="{ 'active-item': selectHoverItem === item }" @mouseover="selectHoverItem = item" @click="selectItem(index)">
+        <div class="item" v-for="(item, index) in menuItems" :key="index"
+            :class="{ 'active-item': selectHoverItem === item }" @mouseover="selectHoverItem = item"
+            @click="selectItem(index)">
             <div class="icon">
                 <div class="choose" v-if="selectValue === item"></div>
             </div>
-            <div class="text">{{ item }}</div>
+            <div class="text">{{ i18n ? t(`cutoutExport.${item}`) : item }}</div>
         </div>
     </div>
 </template>

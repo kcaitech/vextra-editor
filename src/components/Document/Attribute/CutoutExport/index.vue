@@ -1,79 +1,144 @@
 <script setup lang="ts">
-import { Shape } from '@kcdesign/data';
-import { ref, onMounted, onUnmounted } from 'vue';
+import { ExportFileFormat, ExportFormat, ExportFormatNameingScheme, ExportOptions, ExportVisibleScaleType, Shape } from '@kcdesign/data';
+import { ref, onMounted, onUnmounted, watch, reactive } from 'vue';
 import { WorkSpace } from '@/context/workspace';
 import { Context } from '@/context';
 import PreinstallSelect from './PreinstallSelect.vue';
 import Preview from './Preview.vue';
 import ExportArguments from './ExportArguments.vue';
 import { v4 } from 'uuid';
+import { useI18n } from 'vue-i18n';
+const { t } = useI18n();
 interface Props {
     context: Context
     shapes: Shape[]
 }
+export interface FormatItems {
+    id: number,
+    format: ExportFormat
+}
 const props = defineProps<Props>();
 const isPreinstall = ref(false);
-const lucency_bg = ref(false);
-const canvas_bg = ref(false);
-type Argus = {
-    id: string,
-    size: string,
-    value: string,
-    prefix: string,
-    format: string
-}
+
 const sizeItems: string[] = ['0.5x', '1x', '2x', '3x', '4x', '5x'];
-const perfixItems: string[] = ['前缀', '后缀'];
+const perfixItems: ExportFormatNameingScheme[] = [ExportFormatNameingScheme.Prefix, ExportFormatNameingScheme.Suffix];
 const formatItems: string[] = ['PNG', 'JPG', 'SVG', 'PDF'];
-const preinstallArgus = ref<Argus[]>([]);
-const defaultArgus = () => [{
-    id: '',
-    size: '1x',
-    value: '-',
-    prefix: '前缀',
-    format: 'PNG'
-}].map(i =>({...i, id: v4()}));
-const iosArgus = () => [
-    { id: '', size: '1x', value: '-', prefix: '前缀', format: 'PNG' },
-    { id:  '', size: '2x', value: '@2x', prefix: '后缀', format: 'PNG' },
-    { id:  '', size: '3x', value: '@3x', prefix: '后缀', format: 'PNG' },
-].map(i =>({...i, id: v4()}));
-const androidArgus =() => [
-    { id: '', size: '1x', value: 'mdpi/', prefix: '前缀', format: 'PNG' },
-    { id: '', size: '2x', value: 'xhdpi/', prefix: '前缀', format: 'PNG' },
-    { id: '', size: '3x', value: 'xxhdpi/', prefix: '前缀', format: 'PNG' },
-    { id: '', size: '4x', value: 'xxxhdpi/', prefix: '前缀', format: 'PNG' },
-].map(i =>({...i, id: v4()}));
+const preinstallArgus: FormatItems[] = reactive([]);
+const reflush = ref<number>(0);
+const watchedShapes = new Map();
+const mixed = ref<boolean>(false);
+const exportOption = ref<ExportOptions>();
+const lucency_bg = ref(exportOption.value?.trimTransparent);
+const canvas_bg = ref(exportOption.value?.canvasBackground);
+function watchShapes() {
+    const needWatchShapes = new Map();
+    const selection = props.context.selection;
+    if (selection.hoveredShape) {
+        needWatchShapes.set(selection.hoveredShape.id, selection.hoveredShape);
+    }
+    if (selection.selectedShapes.length > 0) {
+        selection.selectedShapes.forEach((v) => {
+            needWatchShapes.set(v.id, v);
+        })
+    }
+    watchedShapes.forEach((v, k) => {
+        if (needWatchShapes.has(k)) return;
+        v.unwatch(watcher);
+        watchedShapes.delete(k);
+    })
+    needWatchShapes.forEach((v, k) => {
+        if (watchedShapes.has(k)) return;
+        v.watch(watcher);
+        watchedShapes.set(k, v);
+    })
+}
+function watcher(...args: any[]) {
+    if (args.length > 0 && args.includes('export-options')) updateData();
+}
+function updateData() {
+    preinstallArgus.length = 0;
+    mixed.value = false;
+    const len = props.shapes.length;
+    if (len === 1) {
+        const shape = props.shapes[0];
+        const options = shape.exportOptions;
+        if (options) {
+            exportOption.value = options;
+            console.log(options);
+            
+            for (let i = 0; i < options.exportFormats.length; i++) {
+                const format = options.exportFormats[i];
+                const f = { id: i, format };
+                preinstallArgus.unshift(f);
+            }
+        }
+    } else if (len > 1) {
+
+    }
+    reflush.value++;
+}
+
 const showPreinstall = () => {
     if (isPreinstall.value) return isPreinstall.value = false;
     isPreinstall.value = true;
 }
 
 const preinstall = (v: string) => {
+    const len = props.shapes.length;
     switch (v) {
         case 'ios':
-            preinstallArgus.value = [...iosArgus(), ...preinstallArgus.value];
+            if (len === 1) {
+                const shape = props.shapes[0];
+                const editor = props.context.editor4Shape(shape);
+                const format1 = new ExportFormat(v4(), 0, ExportFileFormat.Png, '_', ExportFormatNameingScheme.Prefix, 1, ExportVisibleScaleType.Scale);
+                const format2 = new ExportFormat(v4(), 0, ExportFileFormat.Png, '@2x', ExportFormatNameingScheme.Suffix, 2, ExportVisibleScaleType.Scale);
+                const format3 = new ExportFormat(v4(), 0, ExportFileFormat.Png, '@3x', ExportFormatNameingScheme.Suffix, 3, ExportVisibleScaleType.Scale);
+                const formars = [format1, format2, format3]
+                editor.addExportFormat(formars);
+            }
             break;
         case 'android':
-            preinstallArgus.value = [...androidArgus(), ...preinstallArgus.value];
+        if (len === 1) {
+                const shape = props.shapes[0];
+                const editor = props.context.editor4Shape(shape);
+                const format1 = new ExportFormat(v4(), 0, ExportFileFormat.Png, 'mdpi/', ExportFormatNameingScheme.Prefix, 1, ExportVisibleScaleType.Scale);
+                const format2 = new ExportFormat(v4(), 0, ExportFileFormat.Png, 'xhdpi/', ExportFormatNameingScheme.Prefix, 2, ExportVisibleScaleType.Scale);
+                const format3 = new ExportFormat(v4(), 0, ExportFileFormat.Png, 'xxhdpi/', ExportFormatNameingScheme.Prefix, 3, ExportVisibleScaleType.Scale);
+                const format4 = new ExportFormat(v4(), 0, ExportFileFormat.Png, 'xxxhdpi/', ExportFormatNameingScheme.Prefix, 4, ExportVisibleScaleType.Scale);
+                const formars = [format1, format2, format3, format4]
+                editor.addExportFormat(formars);
+            }
             break;
         case 'default':
-            preinstallArgus.value.unshift(...defaultArgus());
+            if (len === 1) {
+                const shape = props.shapes[0];
+                const editor = props.context.editor4Shape(shape);
+                const format = new ExportFormat(v4(), 0, ExportFileFormat.Png, '_', ExportFormatNameingScheme.Prefix, 1, ExportVisibleScaleType.Scale);
+                editor.addExportFormat([format]);
+            }
             break;
     }
 }
 const changeSize = (index: number, argsi: number) => {
-    preinstallArgus.value[argsi].size = sizeItems[index];
+    // preinstallArgus.value[argsi].size = sizeItems[index];
 }
 const changePrefix = (index: number, argsi: number) => {
-    preinstallArgus.value[argsi].prefix = perfixItems[index];
+    // preinstallArgus.value[argsi].prefix = perfixItems[index];
 }
 const changeFormat = (index: number, argsi: number) => {
-    preinstallArgus.value[argsi].format = formatItems[index];
+    // preinstallArgus.value[argsi].format = formatItems[index];
 }
 const deleteArgus = (index: number) => {
-    preinstallArgus.value.splice(index, 1);
+    preinstallArgus.splice(index, 1);
 }
+function update_by_shapes() {
+    watchShapes();
+    updateData();
+}
+// hooks
+const stop = watch(() => props.shapes, update_by_shapes);
+onMounted(update_by_shapes);
+onUnmounted(stop);
 </script>
 
 <template>
@@ -96,16 +161,18 @@ const deleteArgus = (index: number) => {
                 @change-format="changeFormat" @delete="deleteArgus">
             </ExportArguments>
         </div>
-        <div class="canvas-bgc">
-            <el-checkbox v-model="lucency_bg" label="修剪透明像素" />
-        </div>
-        <div class="canvas-bgc">
-            <el-checkbox v-model="canvas_bg" label="画布背景色" />
-        </div>
-        <div class="export-box">
-            <div><span>导出</span></div>
-        </div>
-        <Preview :context="context" :shapes="shapes"></Preview>
+        <template v-if="shapes[0].exportOptions">
+            <div class="canvas-bgc">
+                <el-checkbox :value="lucency_bg" label="修剪透明像素" />
+            </div>
+            <div class="canvas-bgc">
+                <el-checkbox :value="canvas_bg" label="画布背景色" />
+            </div>
+            <div class="export-box">
+                <div><span>导出</span></div>
+            </div>
+            <Preview :context="context" :shapes="shapes" :unfold="false"></Preview>
+        </template>
     </div>
 </template>
 

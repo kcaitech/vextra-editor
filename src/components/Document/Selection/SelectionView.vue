@@ -41,6 +41,7 @@ const tracing = ref<boolean>(false);
 const traceEle = ref<Element>();
 const altKey = ref<boolean>(false);
 const watchedShapes = new Map();
+const isCutout = ref(false);
 const tracingFrame = ref<TracingFrame>({ path: '', viewBox: '', height: 0, width: 0 });
 function watchShapes() { // 监听选区相关shape的变化
     const needWatchShapes = new Map();
@@ -97,6 +98,7 @@ function selectionWatcher(t?: any) { // selection的部分动作可触发更新
         watchShapes();
     } else if (t === Selection.CHANGE_SHAPE_HOVER) {
         matrix.reset(props.matrix);
+        is_cutout();
         createShapeTracing();
         watchShapes();
     }
@@ -189,7 +191,7 @@ function createController() { // 计算控件点位以及类型判定
 
 function pathMousedown(e: MouseEvent) { // 点击图形描边以及描边内部区域，将选中图形
     const action = props.context.tool.action;
-    const selection = props.context.selection;    
+    const selection = props.context.selection;
     if (action === Action.AutoV || action === Action.AutoK) {
         if (e.button === 0) {
             e.stopPropagation();
@@ -230,13 +232,23 @@ function window_blur() {
     }
 }
 
+const is_cutout = () => {
+    const selected = props.context.selection.hoveredShape;
+    if (!selected) return;
+    if (selected.type === ShapeType.Cutout) {
+        isCutout.value = true;
+    } else {
+        isCutout.value = false;
+    }
+}
+
 //标注线
 const isLableLine = ref(false);
 const lableLineStatus = () => {
     const isLable = props.context.tool.isLable;
-    if(isLable) {
+    if (isLable) {
         isLableLine.value = true;
-    }else {
+    } else {
         isLableLine.value = false;
     }
 }
@@ -266,8 +278,12 @@ onUnmounted(() => {
     <svg v-if="tracing" version="1.1" xmlns="http://www.w3.org/2000/svg" xmlns:xlink="http://www.w3.org/1999/xlink"
         xmlns:xhtml="http://www.w3.org/1999/xhtml" preserveAspectRatio="xMinYMin meet" overflow="visible"
         :width="tracingFrame.width" :height="tracingFrame.height" :viewBox="tracingFrame.viewBox"
-        @mousedown="(e: MouseEvent) => pathMousedown(e)" style="transform: translate(0px, 0px); position: absolute;">
-        <path :d="tracingFrame.path" style="fill: transparent; stroke: #865dff; stroke-width: 1.5;">
+        style="transform: translate(0px, 0px); position: absolute;">
+        <path v-if="isCutout" :d="tracingFrame.path" style="fill: none; stroke: transparent; stroke-width: 16;"
+            @mousedown="(e: MouseEvent) => pathMousedown(e)">
+        </path>
+        <path :d="tracingFrame.path" :fill="isCutout ? 'none' : 'transparent'" style=" stroke: #865dff; stroke-width: 1.5;"
+            @mousedown="(e: MouseEvent) => pathMousedown(e)">
         </path>
     </svg>
     <!-- 控制 -->

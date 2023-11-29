@@ -1,7 +1,7 @@
-import {Context} from "@/context";
-import {PageXY, XY} from "@/context/selection";
-import {GroupShape, Matrix, Shape, ShapeType} from "@kcdesign/data";
-import {v4 as uuid} from "uuid";
+import { Context } from "@/context";
+import { PageXY, XY } from "@/context/selection";
+import { GroupShape, Matrix, Shape, ShapeType } from "@kcdesign/data";
+import { v4 as uuid } from "uuid";
 
 interface Scout {
     path: SVGPathElement
@@ -31,7 +31,7 @@ function scout(context: Context): Scout {
         SVGPoint.y = point.y; // 根据鼠标位置确定point所处位置
         path.setAttributeNS(null, 'd', d);
         let result: boolean = false;
-        if (shape.type === ShapeType.Line || shape.type === ShapeType.Contact) {
+        if (shape.type === ShapeType.Line || shape.type === ShapeType.Contact || shape.type === ShapeType.Cutout) {
             // 线条元素(不管是否闭合，都当不闭合)额外处理point是否在边框上
             const thickness = Math.max((shape.style.borders[0]?.thickness || 1), 14 / context.workspace.matrix.m00);
             path.setAttributeNS(null, 'stroke-width', `${thickness}`);
@@ -69,7 +69,7 @@ function scout(context: Context): Scout {
         if (s) document.body.removeChild(s);
     }
 
-    return {path, isPointInShape, isPointInShape2, remove, isPointInPath, isPointInStroke}
+    return { path, isPointInShape, isPointInShape2, remove, isPointInPath, isPointInStroke }
 }
 
 function createSVGGeometryElement(id: string): SVGElement {

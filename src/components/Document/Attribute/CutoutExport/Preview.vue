@@ -3,19 +3,29 @@ import { ref, reactive, onMounted, onUnmounted, watch } from 'vue';
 import comsMap from '@/components/Document/Content/comsmap';
 import { Matrix, Shape, ShapeType } from '@kcdesign/data';
 import { Context } from '@/context';
-import { getCutoutShape } from '@/utils/cutout';
+import { getCutoutShape, getShadowMax } from '@/utils/cutout';
 import { color2string } from '@/utils/content';
 import { Selection } from '@/context/selection';
 interface Props {
     context: Context
+    shapes: Shape[]
+    unfold: boolean
+}
+const DEFAULT_COLOR = () => {
+    const f = props.context.selection.selectedPage!.style.fills[0];
+    if (f) {
+        return color2string(f.color);
+    } else {
+        return 'rgba(239,239,239,1)';
+    }
 }
 const props = defineProps<Props>();
 const reflush = ref(0);
-const isTriangle = ref(false);
+const isTriangle = ref(props.unfold);
 const width = ref<number>(0);
 const height = ref<number>(0);
 const xy = ref<{ x: number, y: number }>({ x: 0, y: 0 });
-const background_color = ref<string>('rgba(239,239,239,1)');
+const background_color = ref<string>(DEFAULT_COLOR());
 let renderItems: Shape[] = [];
 const selectedShapes: Map<string, Shape> = new Map();
 const matrix = reactive<Matrix>(new Matrix());
@@ -28,7 +38,7 @@ const getCanvasShape = () => {
     if (!isTriangle.value) return;
     const shapes = props.context.selection.selectedShapes;
     const shape = shapes[0];
-    if(!shapes.length) return;
+    if (!shapes.length) return;
     resetSvg();
     if (shapes.length === 1 && shape.type === ShapeType.Cutout) {
         selectedShapes.clear();
@@ -47,6 +57,13 @@ const getPosition = (shape: Shape) => {
     height.value = shape.frame.height;
     xy.value.x = shape.frame.x;
     xy.value.y = shape.frame.y;
+    if (shape.type !== ShapeType.Cutout) {
+        const { left, top, right, bottom } = getShadowMax(shape);
+        xy.value.x -= right;
+        xy.value.y -= top;
+        width.value += right + left;
+        height.value += top + bottom;
+    }
     const svg_center = { x: width.value / 2, y: height.value / 2 };
     const canvas_center = { x: 236 / 2, y: 240 / 2 };
     matrix.reset();
@@ -70,16 +87,24 @@ const resetSvg = () => {
     reflush.value++;
 }
 function page_color() {
-    const f = props.context.selection.selectedPage!.style.fills[0];
-    if (f) background_color.value = color2string(f.color);
-    reflush.value++
+    background_color.value = DEFAULT_COLOR();
+    const selected = props.context.selection.selectedShapes;
+    if (!selected.length) {
+        return;
+    }
+    if (selected[0].type !== ShapeType.Cutout) {
+        background_color.value = 'transparent';
+        return;
+    }
 }
 
 const select_watcher = (t: number) => {
     if (t === Selection.CHANGE_SHAPE) {
+        page_color();
         getCanvasShape();
     }
 }
+
 onMounted(() => {
     page_color();
     getCanvasShape();
