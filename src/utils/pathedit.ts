@@ -179,14 +179,13 @@ export function __anther_side_xy(curve_point: CurvePoint, handle_site: XY, curre
         _a_xy.x = 2 * curve_point.x - handle_site.x;
         _a_xy.y = 2 * curve_point.y - handle_site.y;
         return _a_xy;
-    } else if (curve_point.mode === CurveMode.Disconnected) {
+    } else if (curve_point.mode === CurveMode.Asymmetric) {
         _a_xy.x = is_from ? curve_point.toX || 0 : curve_point.fromX || 0;
         _a_xy.y = is_from ? curve_point.toY || 0 : curve_point.fromY || 0;
         const l = Math.hypot(_a_xy.x - curve_point.x, _a_xy.y - curve_point.y);
-        const __angle = Math.atan2(handle_site.x - curve_point.y, handle_site.y - curve_point.y);
-        const _l_x = Math.abs(Math.cos(__angle) * l);
-        const _l_y = Math.abs(Math.sin(__angle) * l);
-
+        const __angle = Math.atan2(handle_site.x - curve_point.x, handle_site.y - curve_point.y);
+        const _l_x = Math.abs(Math.sin(__angle) * l);
+        const _l_y = Math.abs(Math.cos(__angle) * l);
         const _delta_x = handle_site.x - curve_point.x;
         const _delta_y = handle_site.y - curve_point.y;
 

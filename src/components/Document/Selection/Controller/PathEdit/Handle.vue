@@ -5,9 +5,11 @@ import { Context } from "@/context";
 import { __angle, __anther_side_xy, __round_curve_point } from "@/utils/pathedit";
 import { Path } from "@/context/path";
 import { WorkSpace } from "@/context/workspace";
-import { Matrix } from "@kcdesign/data";
+import { AsyncPathHandle, Matrix } from "@kcdesign/data";
 import { add_blur_for_window, add_move_and_up_for_document, remove_blur_from_window, remove_move_and_up_from_document } from "@/utils/mouse_interactive";
 import { CurvePoint } from "@kcdesign/data";
+import { XY } from "@/context/selection";
+import { check_drag_action } from "@/utils/mouse";
 
 interface Props {
     context: Context
@@ -52,6 +54,10 @@ let matrix_at_down = new Matrix();
 let inverse_matrix_at_down = new Matrix();
 let action_curve_point: CurvePoint;
 let side: 'from' | 'to';
+let drag: boolean = false;
+let down_site: XY = {x: 0, y: 0};
+let asyncEditor: AsyncPathHandle | undefined = undefined;
+let down_index: number = -1;
 function reset() {
     previous.value = false;
     previous_from.value = false;
@@ -131,7 +137,6 @@ function update() {
             previous_apex_location_from.y = __p.y;
             __radius_pre_from.value = __angle(previous_site.x, previous_site.y, __p.x, __p.y);
         }
-
     }
     // next
     if (__next && __next.id !== current_point.id) {
@@ -156,15 +161,16 @@ function down(e: MouseEvent, side: ActionHandle) {
     e.preventDefault();
     if (side.startsWith('pre')) {
         action_curve_point = previous_curve_point.value!;
-        console.log('previous:', action_curve_point);
+        down_index = previous_index.value;
     } else if (side.startsWith('current')) {
         action_curve_point = current_curve_point.value!;
-        console.log('current:', action_curve_point);
+        down_index = current_index.value;
     } else if (side.startsWith('next')) {
         action_curve_point = next_curve_point.value!;
-        console.log('next:', action_curve_point);
+        down_index = next_index.value;
     }
     modify_side(side);
+    modify_down_site(e);
     inverse_matrix_at_down = new Matrix(props.context.path.matrix_unit_to_root.inverse);
     add_move_and_up_for_document(move, up);
 }
@@ -175,15 +181,42 @@ function modify_side(s: ActionHandle) {
         side = 'to';
     }
 }
+function modify_down_site(e: MouseEvent) {
+    down_site.x = e.clientX;
+    down_site.y = e.clientY;
+}
+const test_point = ref<XY>({x: -10, y: -10});
 function move(e: MouseEvent) {
-    const root = props.context.workspace.root;
-    const xy = { x: e.clientX - root.x, y: e.clientY - root.y };
-    const __p = inverse_matrix_at_down.computeCoord3(xy);
-    const anther = __anther_side_xy(action_curve_point, __p, side);
-    console.log('handlee: ', __p);
-    console.log('anther:', anther);
+    if (drag && asyncEditor) {
+        const root = props.context.workspace.root;
+        const xy = { x: e.clientX - root.x, y: e.clientY - root.y };
+        const current_handle_point = inverse_matrix_at_down.computeCoord3(xy);
+        const anther = __anther_side_xy(action_curve_point, current_handle_point, side);
+        const current_is_from = side === 'from';
+        const from = current_is_from ? current_handle_point : anther;
+        const to = current_is_from ? anther : current_handle_point;
+        asyncEditor.execute(side, from, to);
+
+
+        // const t = inverse_matrix_at_down.inverseCoord(anther);
+        // test_point.value.x = t.x;
+        // test_point.value.y = t.y;
+    } else if (check_drag_action(down_site, {x: e.clientX, y: e.clientY})) {
+        const page = props.context.selection.selectedPage!;
+        const path_shape = props.context.selection.pathshape;
+        if (!path_shape) {
+            return;
+        }
+        asyncEditor = props.context.editor.controller().asyncPathHandle(path_shape, page, down_index);
+        drag = true;
+    }
 }
 function up() {
+    drag = false;
+    if (asyncEditor) {
+        asyncEditor.close();
+        asyncEditor = undefined;
+    }
     remove_move_and_up_from_document(move, up);
 }
 
@@ -204,6 +237,11 @@ function matrix_watcher(t: number) {
 }
 
 function window_blur() {
+    drag = false;
+    if (asyncEditor) {
+        asyncEditor.abort();
+        asyncEditor = undefined;
+    }
     remove_move_and_up_from_document(move, up);
 }
 
@@ -213,7 +251,6 @@ onMounted(() => {
     props.context.workspace.watch(matrix_watcher);
     add_blur_for_window(window_blur);
     update();
-
 })
 onUnmounted(() => {
     props.context.path.unwatch(path_selection_watcher);
@@ -272,6 +309,7 @@ onUnmounted(() => {
             </rect>
         </g>
     </g>
+    <!--  <rect :x="test_point.x - 4" :y="test_point.y - 4" width="8" height="8" rx="4" ry="4" fill="red" stroke="none"></rect>  -->
 </template>
 <style scoped lang="scss">
 .line {
