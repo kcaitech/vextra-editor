@@ -164,6 +164,7 @@ declare module '@vue/runtime-core' {
     Rect: typeof import('./src/components/Document/Toolbar/Buttons/Rect.vue')['default']
     Rectangle: typeof import('./src/components/Document/Content/Rectangle.vue')['default']
     RecycleBin: typeof import('./src/components/AppHome/Main/RecycleBin.vue')['default']
+    Report: typeof import('./src/components/Help/Report.vue')['default']
     ResizingConstraint: typeof import('./src/components/Document/Attribute/ResizingConstraint/index.vue')['default']
     ResourceTab: typeof import('./src/components/Document/Navigation/ResourceTab.vue')['default']
     ResultItem: typeof import('./src/components/Document/Navigation/Search/ResultItem.vue')['default']

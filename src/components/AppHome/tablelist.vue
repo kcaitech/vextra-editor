@@ -29,7 +29,6 @@
 </template>
 <script setup lang="tsx">
 import { ref, watchEffect, Ref, inject, watch, computed } from 'vue'
-import { Share, Delete, Remove } from '@element-plus/icons-vue'
 import type { Column, RowClassNameGetter } from 'element-plus'
 import { useI18n } from 'vue-i18n'
 import NetworkError from '@/components/NetworkError.vue'
@@ -206,7 +205,6 @@ const columns: Column<any>[] = [
                     <el-icon style={"color: rgba(255, 185, 46, 1);display:flex;"}
                         onDblclick={(event: MouseEvent) => event.stopPropagation()}
                         onClick={(event: MouseEvent) => {
-
                             emits('updatestar', rowData)
                         }}>
                         <el-tooltip content={t('home.de_star')} show-after={1000} hide-after={0}>
@@ -260,8 +258,8 @@ const columns: Column<any>[] = [
         // title: `${t('home.operation')}`,
         title:'',
         dataKey: 'document',
-        width: 100,
-        minWidth: 100,
+        width: 120,
+        minWidth: 120,
         class: 'other',
         align: 'left',
         cellRenderer: ({ rowData }) => (
@@ -455,7 +453,7 @@ watchEffect(() => {
                 // title: t('home.operation'),
                 title:'',
                 width: 120,
-                minWidth: 100,
+                minWidth: 120,
                 dataKey: 'project',
                 class: 'other',
                 align: 'left',
