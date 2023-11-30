@@ -1,6 +1,6 @@
 <script setup lang="ts">
 import { ShapeFrame, TableCell, RenderTransform, SymbolRefShape, SymbolShape } from '@kcdesign/data';
-import { h, defineProps, onMounted } from 'vue';
+import { h, onMounted } from 'vue';
 import { renderTableCell as r } from "@kcdesign/data";
 import { IMAGE_DEFAULT, initCommonShape } from './common';
 

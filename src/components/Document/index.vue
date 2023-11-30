@@ -31,7 +31,7 @@ import { NetworkStatusType } from "@/communication/types";
 import { _updateRoot } from '@/utils/content';
 import Bridge from "@/components/Document/Bridge.vue";
 import { Component } from '@/context/component';
-import {initpal} from './initpal';
+import { initpal } from './initpal';
 
 
 const { t } = useI18n();
@@ -635,41 +635,41 @@ const teamSelectionModifi = (docCommentOpData: DocSelectionOpData) => {
   }
 }
 function component_watcher(t: number) {
-    if (!context) return;
-    if (t === Component.BRIDGE_CHANGE) bridge.value = context.component.bridge;
+  if (!context) return;
+  if (t === Component.BRIDGE_CHANGE) bridge.value = context.component.bridge;
 }
 
 onMounted(() => {
-    window.addEventListener('beforeunload', onBeforeUnload);
-    window.addEventListener('unload', onUnload);
-    init_screen_size();
-    init_doc();
-    initpal().then(() => {
-        inited.value = true;
-    }).catch((e) => {
-        console.log(e)
-    })
+  window.addEventListener('beforeunload', onBeforeUnload);
+  window.addEventListener('unload', onUnload);
+  init_screen_size();
+  init_doc();
+  initpal().then(() => {
+    inited.value = true;
+  }).catch((e) => {
+    console.log(e)
+  })
 })
 
 onUnmounted(() => {
-    closeNetMsg();
-    onUnloadForCommunication();
-    window.document.title = t('product.name');
-    (window as any).sketchDocument = undefined;
-    (window as any).skrepo = undefined;
-    context?.selection.unwatch(selectionWatcher);
-    context?.workspace.unwatch(workspaceWatcher);
-    document.removeEventListener('keydown', keyboardEventHandler);
-    clearInterval(timer);
-    localStorage.removeItem('docId')
-    showHint.value = false;
-    countdown.value = 10;
-    window.removeEventListener('beforeunload', onBeforeUnload);
-    window.removeEventListener('unload', onUnload);
-    clearInterval(loopNet);
-    clearInterval(netErr);
-    networkStatus.close();
-    context?.component.unwatch(component_watcher);
+  closeNetMsg();
+  onUnloadForCommunication();
+  window.document.title = t('product.name');
+  (window as any).sketchDocument = undefined;
+  (window as any).skrepo = undefined;
+  context?.selection.unwatch(selectionWatcher);
+  context?.workspace.unwatch(workspaceWatcher);
+  document.removeEventListener('keydown', keyboardEventHandler);
+  clearInterval(timer);
+  localStorage.removeItem('docId')
+  showHint.value = false;
+  countdown.value = 10;
+  window.removeEventListener('beforeunload', onBeforeUnload);
+  window.removeEventListener('unload', onUnload);
+  clearInterval(loopNet);
+  clearInterval(netErr);
+  networkStatus.close();
+  context?.component.unwatch(component_watcher);
 })
 </script>
 
@@ -683,45 +683,45 @@ onUnmounted(() => {
       <ApplyFor></ApplyFor>
     </div>
     <ColSplitView id="center" :style="{ height: showTop ? 'calc(100% - 40px)' : '100%' }"
-                  v-if="inited && !loading && !null_context"
-                  :left="{ width: Left.leftWidth, minWidth: Left.leftMinWidth, maxWidth: 0.5 }"
-                  :middle="{ width: middleWidth, minWidth: middleMinWidth, maxWidth: middleWidth }"
-                  :right="{ width: Right.rightWidth, minWidth: Right.rightMinWidth, maxWidth: 0.5 }"
-                  :right-min-width-in-px="Right.rightMin" :left-min-width-in-px="Left.leftMin" :context="context!">
+      v-if="inited && !loading && !null_context"
+      :left="{ width: Left.leftWidth, minWidth: Left.leftMinWidth, maxWidth: 0.5 }"
+      :middle="{ width: middleWidth, minWidth: middleMinWidth, maxWidth: middleWidth }"
+      :right="{ width: Right.rightWidth, minWidth: Right.rightMinWidth, maxWidth: 0.5 }"
+      :right-min-width-in-px="Right.rightMin" :left-min-width-in-px="Left.leftMin" :context="context!">
       <template #slot1>
         <Navigation v-if="curPage !== undefined && !null_context" id="navigation" :context="context!"
-                    @switchpage="switchPage" @mouseenter="() => { mouseenter('left') }" @showNavigation="showHiddenLeft"
-                    @mouseleave="() => { mouseleave('left') }" :page="(curPage as Page)" :showLeft="showLeft"
-                    :leftTriggleVisible="leftTriggleVisible">
-                </Navigation>
-            </template>
-            <template #slot2>
-                <ContentView v-if="curPage !== undefined && !null_context" id="content" :context="context!"
-                    :page="(curPage as Page)">
-                </ContentView>
-            </template>
-            <template #slot3>
-                <Attribute id="attributes" v-if="!null_context && !isRead" :context="context!"
-                    @mouseenter="(e: Event) => { mouseenter('right') }" @mouseleave="() => { mouseleave('right') }"
-                    :showRight="showRight" :rightTriggleVisible="rightTriggleVisible" @showAttrbute="showHiddenRight">
-                </Attribute>
-            </template>
-        </ColSplitView>
-        <SubLoading v-if="sub_loading"></SubLoading>
-        <div class="network" v-if="noNetwork">
-            <NetWorkError @refresh-doc="refreshDoc" :top="true"></NetWorkError>
-        </div>
-        <div v-if="showHint" class="notification">
-            <el-icon :size="13">
-                <Warning />
-            </el-icon>
-            <span class="text" v-if="permissionChange === PermissionChange.update">{{ t('home.prompt') }}</span>
-            <span class="text" v-if="permissionChange === PermissionChange.close">{{ t('home.visit') }}</span>
-            <span class="text" v-if="permissionChange === PermissionChange.delete">{{ t('home.delete_file') }}</span>
-            <span style="color: #0d99ff;" v-if="countdown > 0">{{ countdown }}</span>
-        </div>
-        <Bridge v-if="bridge" :context="context!"></Bridge>
+          @switchpage="switchPage" @mouseenter="() => { mouseenter('left') }" @showNavigation="showHiddenLeft"
+          @mouseleave="() => { mouseleave('left') }" :page="(curPage as Page)" :showLeft="showLeft"
+          :leftTriggleVisible="leftTriggleVisible">
+        </Navigation>
+      </template>
+      <template #slot2>
+        <ContentView v-if="curPage !== undefined && !null_context" id="content" :context="context!"
+          :page="(curPage as Page)">
+        </ContentView>
+      </template>
+      <template #slot3>
+        <Attribute id="attributes" v-if="!null_context && !isRead" :context="context!"
+          @mouseenter="(e: Event) => { mouseenter('right') }" @mouseleave="() => { mouseleave('right') }"
+          :showRight="showRight" :rightTriggleVisible="rightTriggleVisible" @showAttrbute="showHiddenRight">
+        </Attribute>
+      </template>
+    </ColSplitView>
+    <SubLoading v-if="sub_loading"></SubLoading>
+    <div class="network" v-if="noNetwork">
+      <NetWorkError @refresh-doc="refreshDoc" :top="true"></NetWorkError>
     </div>
+    <div v-if="showHint" class="notification">
+      <el-icon :size="13">
+        <Warning />
+      </el-icon>
+      <span class="text" v-if="permissionChange === PermissionChange.update">{{ t('home.prompt') }}</span>
+      <span class="text" v-if="permissionChange === PermissionChange.close">{{ t('home.visit') }}</span>
+      <span class="text" v-if="permissionChange === PermissionChange.delete">{{ t('home.delete_file') }}</span>
+      <span style="color: #0d99ff;" v-if="countdown > 0">{{ countdown }}</span>
+    </div>
+    <Bridge v-if="bridge" :context="context!"></Bridge>
+  </div>
 </template>
 <style>
 :root {
