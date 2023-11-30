@@ -28,6 +28,10 @@ import { Comment } from '@/context/comment';
 import { DocSelectionOpData, DocSelectionOpType } from "@/communication/modules/doc_selection_op";
 import { debounce } from '@/utils/timing_util';
 import { NetworkStatusType } from "@/communication/types";
+import { _updateRoot } from '@/utils/content';
+import Bridge from "@/components/Document/Bridge.vue";
+import { Component } from '@/context/component';
+import {initpal} from './initpal';
 
 
 const { t } = useI18n();
@@ -54,9 +58,11 @@ let timeForRight: any;
 const loading = ref<boolean>(false);
 const sub_loading = ref<boolean>(false);
 const null_context = ref<boolean>(true);
-const isRead = ref(false)
-const canComment = ref(false)
-const isEdit = ref(true)
+const isRead = ref(false);
+const canComment = ref(false);
+const isEdit = ref(true);
+const bridge = ref<boolean>(false);
+const inited = ref(false);
 
 function screenSetting() {
   const element = document.documentElement;
@@ -466,6 +472,7 @@ function init_doc() {
       getUserInfo();
       context.selection.watch(selectionWatcher);
       context.workspace.watch(workspaceWatcher);
+      context.component.watch(component_watcher);
       const project_id = localStorage.getItem('project_id') || '';
       upload(project_id);
       localStorage.setItem('project_id', '');
@@ -557,7 +564,7 @@ const token = localStorage.getItem("token") || "";
 const networkStatus = NetworkStatus.Make(token);
 networkStatus.addOnChange((status: NetworkStatusType) => {
   if (status === NetworkStatusType.Offline) {
-    // 网络断开连接
+    console.log("网络断开连接")
     if (context) {
       clearInterval(loopNet);
       loopNet = null;
@@ -572,7 +579,7 @@ networkStatus.addOnChange((status: NetworkStatusType) => {
       }
     }
   } else {
-    //网络连接成功
+    console.log("网络连接成功")
     if (context) {
       if (context.communication.docOp.hasPendingSyncCmd() || netErr) {
         //有未上传资源
@@ -627,32 +634,42 @@ const teamSelectionModifi = (docCommentOpData: DocSelectionOpData) => {
     }
   }
 }
+function component_watcher(t: number) {
+    if (!context) return;
+    if (t === Component.BRIDGE_CHANGE) bridge.value = context.component.bridge;
+}
 
 onMounted(() => {
-  window.addEventListener('beforeunload', onBeforeUnload);
-  window.addEventListener('unload', onUnload);
-  init_screen_size();
-  init_doc();
+    window.addEventListener('beforeunload', onBeforeUnload);
+    window.addEventListener('unload', onUnload);
+    init_screen_size();
+    init_doc();
+    initpal().then(() => {
+        inited.value = true;
+    }).catch((e) => {
+        console.log(e)
+    })
 })
 
 onUnmounted(() => {
-  closeNetMsg();
-  onUnloadForCommunication();
-  window.document.title = t('product.name');
-  (window as any).sketchDocument = undefined;
-  (window as any).skrepo = undefined;
-  context?.selection.unwatch(selectionWatcher);
-  context?.workspace.unwatch(workspaceWatcher);
-  document.removeEventListener('keydown', keyboardEventHandler);
-  clearInterval(timer);
-  localStorage.removeItem('docId')
-  showHint.value = false;
-  countdown.value = 10;
-  window.removeEventListener('beforeunload', onBeforeUnload);
-  window.removeEventListener('unload', onUnload);
-  clearInterval(loopNet);
-  clearInterval(netErr);
-  networkStatus.close();
+    closeNetMsg();
+    onUnloadForCommunication();
+    window.document.title = t('product.name');
+    (window as any).sketchDocument = undefined;
+    (window as any).skrepo = undefined;
+    context?.selection.unwatch(selectionWatcher);
+    context?.workspace.unwatch(workspaceWatcher);
+    document.removeEventListener('keydown', keyboardEventHandler);
+    clearInterval(timer);
+    localStorage.removeItem('docId')
+    showHint.value = false;
+    countdown.value = 10;
+    window.removeEventListener('beforeunload', onBeforeUnload);
+    window.removeEventListener('unload', onUnload);
+    clearInterval(loopNet);
+    clearInterval(netErr);
+    networkStatus.close();
+    context?.component.unwatch(component_watcher);
 })
 </script>
 
@@ -665,44 +682,46 @@ onUnmounted(() => {
     <div id="visit">
       <ApplyFor></ApplyFor>
     </div>
-    <ColSplitView id="center" :style="{ height: showTop ? 'calc(100% - 40px)' : '100%' }" v-if="!loading && !null_context"
-      :left="{ width: Left.leftWidth, minWidth: Left.leftMinWidth, maxWidth: 0.5 }"
-      :middle="{ width: middleWidth, minWidth: middleMinWidth, maxWidth: middleWidth }"
-      :right="{ width: Right.rightWidth, minWidth: Right.rightMinWidth, maxWidth: 0.5 }"
-      :right-min-width-in-px="Right.rightMin" :left-min-width-in-px="Left.leftMin" :context="context!">
+    <ColSplitView id="center" :style="{ height: showTop ? 'calc(100% - 40px)' : '100%' }"
+                  v-if="inited && !loading && !null_context"
+                  :left="{ width: Left.leftWidth, minWidth: Left.leftMinWidth, maxWidth: 0.5 }"
+                  :middle="{ width: middleWidth, minWidth: middleMinWidth, maxWidth: middleWidth }"
+                  :right="{ width: Right.rightWidth, minWidth: Right.rightMinWidth, maxWidth: 0.5 }"
+                  :right-min-width-in-px="Right.rightMin" :left-min-width-in-px="Left.leftMin" :context="context!">
       <template #slot1>
         <Navigation v-if="curPage !== undefined && !null_context" id="navigation" :context="context!"
-          @switchpage="switchPage" @mouseenter="() => { mouseenter('left') }" @showNavigation="showHiddenLeft"
-          @mouseleave="() => { mouseleave('left') }" :page="(curPage as Page)" :showLeft="showLeft"
-          :leftTriggleVisible="leftTriggleVisible">
-        </Navigation>
-      </template>
-      <template #slot2>
-        <ContentView v-if="curPage !== undefined && !null_context" id="content" :context="context!"
-          :page="(curPage as Page)">
-        </ContentView>
-      </template>
-      <template #slot3>
-        <Attribute id="attributes" v-if="!null_context && !isRead" :context="context!"
-          @mouseenter="(e: Event) => { mouseenter('right') }" @mouseleave="() => { mouseleave('right') }"
-          :showRight="showRight" :rightTriggleVisible="rightTriggleVisible" @showAttrbute="showHiddenRight">
-        </Attribute>
-      </template>
-    </ColSplitView>
-    <div class="network" v-if="noNetwork">
-      <NetWorkError @refresh-doc="refreshDoc" :top="true"></NetWorkError>
+                    @switchpage="switchPage" @mouseenter="() => { mouseenter('left') }" @showNavigation="showHiddenLeft"
+                    @mouseleave="() => { mouseleave('left') }" :page="(curPage as Page)" :showLeft="showLeft"
+                    :leftTriggleVisible="leftTriggleVisible">
+                </Navigation>
+            </template>
+            <template #slot2>
+                <ContentView v-if="curPage !== undefined && !null_context" id="content" :context="context!"
+                    :page="(curPage as Page)">
+                </ContentView>
+            </template>
+            <template #slot3>
+                <Attribute id="attributes" v-if="!null_context && !isRead" :context="context!"
+                    @mouseenter="(e: Event) => { mouseenter('right') }" @mouseleave="() => { mouseleave('right') }"
+                    :showRight="showRight" :rightTriggleVisible="rightTriggleVisible" @showAttrbute="showHiddenRight">
+                </Attribute>
+            </template>
+        </ColSplitView>
+        <SubLoading v-if="sub_loading"></SubLoading>
+        <div class="network" v-if="noNetwork">
+            <NetWorkError @refresh-doc="refreshDoc" :top="true"></NetWorkError>
+        </div>
+        <div v-if="showHint" class="notification">
+            <el-icon :size="13">
+                <Warning />
+            </el-icon>
+            <span class="text" v-if="permissionChange === PermissionChange.update">{{ t('home.prompt') }}</span>
+            <span class="text" v-if="permissionChange === PermissionChange.close">{{ t('home.visit') }}</span>
+            <span class="text" v-if="permissionChange === PermissionChange.delete">{{ t('home.delete_file') }}</span>
+            <span style="color: #0d99ff;" v-if="countdown > 0">{{ countdown }}</span>
+        </div>
+        <Bridge v-if="bridge" :context="context!"></Bridge>
     </div>
-    <div v-if="showHint" class="notification">
-      <el-icon :size="13">
-        <Warning />
-      </el-icon>
-      <span class="text" v-if="permissionChange === PermissionChange.update">{{ t('home.prompt') }}</span>
-      <span class="text" v-if="permissionChange === PermissionChange.close">{{ t('home.visit') }}</span>
-      <span class="text" v-if="permissionChange === PermissionChange.delete">{{ t('home.delete_file') }}</span>
-      <span style="color: #0d99ff;" v-if="countdown > 0">{{ countdown }}</span>
-    </div>
-    <SubLoading v-if="sub_loading"></SubLoading>
-  </div>
 </template>
 <style>
 :root {

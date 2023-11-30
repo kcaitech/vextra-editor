@@ -1,13 +1,27 @@
-import {ISave4Restore, Matrix, ShapeType, TableShape, TextShape, Watchable} from "@kcdesign/data";
+import {
+    exportExForm,
+    ISave4Restore, PathShape,
+    ShapeType,
+    SymbolRefShape,
+    SymbolShape,
+    TextShape,
+    Watchable
+} from "@kcdesign/data";
 import {Document} from "@kcdesign/data";
 import {Page} from "@kcdesign/data";
 import {Shape, Text} from "@kcdesign/data";
 import {cloneDeep} from "lodash";
-import {scout, Scout, finder, finder_layers, artboardFinder, finder_contact} from "@/utils/scout";
-import {Artboard} from "@kcdesign/data";
+import {
+    scout,
+    Scout,
+    finder,
+    finder_layers,
+    finder_contact,
+    selected_sym_ref_menber, finder_container
+} from "@/utils/scout";
 import {Context} from ".";
-import {TextSelection} from "./textselection";
-import {TableSelection} from "./tableselection";
+import {TextSelectionLite} from "@/context/textselectionlite";
+import {is_symbol_or_union} from "@/utils/symbol";
 
 interface Saved {
     page: Page | undefined,
@@ -66,6 +80,8 @@ export class Selection extends Watchable(Object) implements ISave4Restore {
     static PAGE_SORT = 12;
     static ABOUT_ME = 13;
     static EXTEND = 14;
+    static PLACEMENT_CHANGE = 15;
+    static CHANGE_TEXT_LITE = 16;
 
     private m_selectPage?: Page;
     private m_selectShapes: Shape[] = [];
@@ -80,8 +96,11 @@ export class Selection extends Watchable(Object) implements ISave4Restore {
     private m_comment_page_sort: boolean = false;
     private m_comment_about_me: boolean = false;
     private m_table_area: { id: TableArea, area: string }[] = [];
+    private m_selected_sym_ref_menber: Shape | undefined;
+    private m_selected_sym_ref_bros: Shape[] = [];
+    private m_placement: Shape | undefined;
     private m_context: Context;
-
+    private m_is_new_shape_selection: boolean = false;
 
     constructor(document: Document, context: Context) {
         super();
@@ -209,6 +228,9 @@ export class Selection extends Watchable(Object) implements ISave4Restore {
         return result;
     }
 
+    // private m_count = 0;
+    // private m_total = 0;
+
     /**
      * @description 基于SVGGeometryElement的图形检索，与getLayers相比，getShapesByXY返回的结果长度最多为1，而这里可以大于1
      * @param position 点位置，坐标系时page
@@ -216,14 +238,22 @@ export class Selection extends Watchable(Object) implements ISave4Restore {
      * @param scope 在scope范围内进行检索，如果没有限定范围则在全域(page)下寻找
      * @returns 符合检索条件的图形
      */
-    getShapesByXY(position: PageXY, isCtrl: boolean, scope?: Shape[]): Shape[] {
-        const shapes: Shape[] = [];
+    getShapesByXY(position: PageXY, isCtrl: boolean, scope?: Shape[]): Shape | undefined {
+        const s = Date.now();
+        let shape: Shape | undefined;
         if (this.scout) {
             const page = this.m_selectPage!;
             const childs: Shape[] = scope || page.childs;
-            shapes.push(...finder(this.scout, childs, position, this.selectedShapes[0], isCtrl));
+            shape = finder(this.m_context, this.scout, childs, position, this.selectedShapes[0], isCtrl)
         }
-        return shapes;
+        // this.m_count++;
+        // this.m_total += Date.now() - s;
+        // if (this.m_count > 100) {
+        //     console.log('computing: ', this.m_total / 100);
+        //     this.m_count = 0;
+        //     this.m_total = 0;
+        // }
+        return shape;
     }
 
     getContactByXY(position: PageXY, scope?: Shape[]): Shape[] {
@@ -236,14 +266,15 @@ export class Selection extends Watchable(Object) implements ISave4Restore {
         return shapes;
     }
 
-    getClosetArtboard(position: PageXY, except?: Map<string, Shape>, scope?: Shape[]): Shape {
-        let result: Shape = this.selectedPage!; // 任何一个元素,至少在一个容器内
-        const range: Shape[] = scope || this.m_selectPage?.artboardList.filter((ab: Artboard) => !ab.isLocked && ab.isVisible) || [];
-        const artboard = artboardFinder(this.scout!, range, position, except);
-        if (artboard) {
-            result = artboard;
-        }
-        return result;
+    /**
+     * @description 获取点上最近的可插入图形
+     * @param position
+     * @param except
+     * @param scope
+     */
+    getClosestContainer(position: PageXY, except?: Map<string, Shape>, scope?: Shape[]): Shape {
+        const range: Shape[] = scope || this.selectedPage?.childs || [];
+        return finder_container(this.scout!, range, position, except) || this.selectedPage!;
     }
 
     selectShape(shape?: Shape) {
@@ -256,12 +287,14 @@ export class Selection extends Watchable(Object) implements ISave4Restore {
             this.m_hoverShape = undefined;
             this.notify(Selection.CHANGE_SHAPE);
         }
+        selected_sym_ref_menber(this.m_context, this.m_selectShapes);
     }
 
     unSelectShape(shape: Shape) {
         const index = this.m_selectShapes.findIndex((s: Shape) => s.id === shape.id);
         if (index > -1) {
             this.m_selectShapes.splice(index, 1);
+            selected_sym_ref_menber(this.m_context, this.m_selectShapes);
             this.notify(Selection.CHANGE_SHAPE);
         }
     }
@@ -269,6 +302,7 @@ export class Selection extends Watchable(Object) implements ISave4Restore {
     rangeSelectShape(shapes: Shape[]) {
         this.m_selectShapes.length = 0;
         this.m_selectShapes.push(...shapes);
+        selected_sym_ref_menber(this.m_context, this.m_selectShapes);
         this.m_hoverShape = undefined;
         this.notify(Selection.CHANGE_SHAPE);
     }
@@ -279,18 +313,18 @@ export class Selection extends Watchable(Object) implements ISave4Restore {
             return;
         }
         this.m_selectShapes.push(shape);
+        selected_sym_ref_menber(this.m_context, this.m_selectShapes);
         this.notify(Selection.CHANGE_SHAPE);
     }
 
     resetSelectShapes() {
         this.m_selectShapes.length = 0;
+        selected_sym_ref_menber(this.m_context, this.m_selectShapes);
         this.notify(Selection.CHANGE_SHAPE);
     }
 
     isSelectedShape(shape: Shape) {
-        const ret = this.m_selectShapes.find((value) => {
-            return shape.id == value.id;
-        })
+        const ret = this.m_selectShapes.find(value => shape.id == value.id);
         return ret !== undefined;
     }
 
@@ -302,7 +336,7 @@ export class Selection extends Watchable(Object) implements ISave4Restore {
         return this.m_hoverShape;
     }
 
-    hoverShape(shape: Shape) {        
+    hoverShape(shape: Shape) {
         if (shape.id !== this.hoveredShape?.id) {
             this.m_hoverShape = shape;
             this.notify(Selection.CHANGE_SHAPE_HOVER);
@@ -310,7 +344,7 @@ export class Selection extends Watchable(Object) implements ISave4Restore {
     }
 
     unHoverShape() {
-        const needNotify = this.m_hoverShape ? true : false;
+        const needNotify = this.m_hoverShape;
         this.m_hoverShape = undefined;
         if (needNotify) {
             this.notify(Selection.CHANGE_SHAPE_HOVER);
@@ -358,6 +392,14 @@ export class Selection extends Watchable(Object) implements ISave4Restore {
     //     }
     //     return this.m_textSelection;
     // }
+    private m_textSelection_lite?: TextSelectionLite;
+
+    getTextSelection(shape: TextShapeLike) {
+        if (!this.m_textSelection_lite || this.m_textSelection_lite.shape.id !== shape.id) {
+            this.m_textSelection_lite = new TextSelectionLite(shape as TextShape, this);
+        }
+        return this.m_textSelection_lite;
+    }
 
     save() {
         throw new Error("Method not implemented.");
@@ -368,8 +410,82 @@ export class Selection extends Watchable(Object) implements ISave4Restore {
     }
 
     get textshape() {
-        return this.selectedShapes.length === 1 && this.selectedShapes[0].type === ShapeType.Text ? this.selectedShapes[0] as TextShape : false;
+        return this.selectedShapes.length === 1 && this.selectedShapes[0].type === ShapeType.Text ? this.selectedShapes[0] as TextShape : undefined;
     }
+
+    get pathshape() {
+        const s = this.selectedShapes[0];
+        return this.selectedShapes.length === 1 ? s instanceof PathShape ? s : undefined : undefined;
+    }
+
+    get symbolshape() {
+        return this.selectedShapes.length === 1 && is_symbol_or_union(this.selectedShapes[0]) ? this.selectedShapes[0] as SymbolShape : false;
+    }
+
+    get unionshape() {
+        if (this.selectedShapes.length === 1) {
+            const xs = this.selectedShapes[0];
+            if (xs.type === ShapeType.Symbol && xs.isSymbolUnionShape) {
+                return xs as SymbolShape;
+            } else {
+                return false;
+            }
+        } else {
+            return false;
+        }
+    }
+
+    get symbolstate() {
+        if (this.selectedShapes.length === 1) {
+            const s = this.selectedShapes[0];
+            if (s.type === ShapeType.Symbol && s.parent?.isSymbolUnionShape) {
+                return s as SymbolShape;
+            } else {
+                return false;
+            }
+        } else {
+            return false;
+        }
+    }
+
+    get symbolrefshape() {
+        if (this.selectedShapes.length === 1) {
+            const s = this.selectedShapes[0];
+            if (s.type === ShapeType.SymbolRef) {
+                return s as SymbolRefShape;
+            } else {
+                return false;
+            }
+        } else {
+            return false;
+        }
+    }
+
+    get selectedSymOrRefMenber() {
+        return this.m_selected_sym_ref_menber;
+    }
+
+    setSelectSoRMenber(shape: Shape | undefined) {
+        this.m_selected_sym_ref_menber = shape;
+    }
+
+    get selectedSymRefBros() {
+        return this.m_selected_sym_ref_bros;
+    }
+
+    setSelectedSymRefBros(shapes: Shape[]) {
+        this.m_selected_sym_ref_bros = shapes;
+    }
+
+    get placement() {
+        return this.m_placement;
+    }
+
+    setPlacement(shape?: Shape) {
+        this.m_placement = shape;
+        this.notify(Selection.PLACEMENT_CHANGE);
+    }
+
     get_closest_container(shape: Shape) {
         let result: any = this.m_selectPage!;
         let p = shape.parent;
@@ -381,5 +497,13 @@ export class Selection extends Watchable(Object) implements ISave4Restore {
             p = p.parent;
         }
         return result;
+    }
+
+    get isNewShapeSelection() {
+        return this.m_is_new_shape_selection;
+    }
+
+    setSelectionNewShapeStatus(v: boolean) {
+        this.m_is_new_shape_selection = v;
     }
 }

@@ -138,4 +138,5 @@ const onSelectVertical = (icon: TextVerAlign, svg: string) => {
 
 :deep(.el-tooltip__trigger:focus) {
     outline: none !important;
-}</style>
+}
+</style>

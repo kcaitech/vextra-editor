@@ -7,12 +7,20 @@ import { Selection } from '@/context/selection';
 import { genRectPath } from '../../common';
 import { WorkSpace } from '@/context/workspace';
 import { throttle } from '../../common';
-const props = defineProps<{
-    shape: Shape & { text: Text },
-    matrix: number[],
+import {TextSelectionLite} from "@/context/textselectionlite";
+type SelectionLike = Selection | TextSelectionLite;
+interface Props {
+    shape: Shape & { text: Text }
+    matrix: number[]
     context: Context
-}>();
-
+    mainNotify: number
+    selection: SelectionLike
+}
+const props = defineProps<Props>();
+function getText(shape: Shape & { text: Text }): Text {
+    if (shape.isVirtualShape) return shape.text;
+    return shape.getText();
+}
 const matrix = new Matrix();
 const isCursor = ref(true);
 const cursorPath = ref("");
@@ -23,8 +31,6 @@ let cursor_points: { x: number, y: number }[] = [];
 const update = throttle(_update, 5);
 function _update() {
     if (!props.context.workspace.shouldSelectionViewUpdate) return;
-    // if (!props.shape.text) return;
-    const selection = props.context.selection;
     matrix.reset(props.matrix);
     const frame = props.shape.frame;
     const points = [
@@ -49,19 +55,19 @@ function _update() {
         else if (point.y > bounds.bottom) bounds.bottom = point.y;
         return bounds;
     }, bounds)
-    const text_selection = props.context.textSelection;
+    const text_selection = props.selection;
     if (text_selection.cursorStart !== text_selection.cursorEnd) {
         isCursor.value = false;
         // selected range
         const start = text_selection.cursorStart;
         const end = text_selection.cursorEnd;
-        selectPath.value = genRectPath(props.shape.text.locateRange(start, end).map((point) => matrix.computeCoord2(point.x, point.y)));
+        selectPath.value = genRectPath(getText(props.shape).locateRange(start, end).map((point) => matrix.computeCoord3(point)));
     } else {
         isCursor.value = true;
         // cursor
         const cursorAtBefore = text_selection.cursorAtBefore;
         const index = text_selection.cursorStart;
-        const cursor = props.shape.text.locateCursor(index, cursorAtBefore);
+        const cursor = getText(props.shape).locateCursor(index, cursorAtBefore);
         if (!cursor) {
             cursor_points = [];
             cursorPath.value = "";
@@ -72,11 +78,11 @@ function _update() {
     }
 }
 function selectionWatcher(t: number) {
-    if (t === Selection.CHANGE_TEXT) {
+    if (t === props.mainNotify) {
         update();
         cursor_tracking(cursor_points);
     } else if (t === Selection.CHANGE_SHAPE || t === Selection.CHANGE_PAGE) {
-        const text_selection = props.context.textSelection;
+        const text_selection = props.selection;
         text_selection.reset();
         cursorPath.value = "";
         selectPath.value = "";

@@ -15,6 +15,7 @@ import { Comment } from '@/context/comment';
 import { permIsEdit } from '@/utils/content';
 import { Menu } from '@/context/menu';
 import { paster_short } from '@/utils/clipboard';
+import {compare_layer_3} from "@/utils/group_ungroup";
 interface Props {
     matrix: number[]
     context: Context
@@ -145,21 +146,22 @@ function gen_offset_map(shape: Shape, down: PageXY) {
         lb: { x: lb.x - down.x, y: lb.y - down.y }
     }
 }
+// #region trans
 function down(e: MouseEvent) {
     const context = props.context;
     const action = context.tool.action;
-    if (!permIsEdit(context) || action === Action.AddComment) return;
+    if (!permIsEdit(context)) return;
     if (e.button === 0) { // 当前组件只处理左键事件，右键事件冒泡出去由父节点处理
         context.cursor.cursor_freeze(true);
         context.menu.menuMount(); // 取消右键事件
         context.menu.notify(Menu.SHUTDOWN_POPOVER);
-        if (action == Action.AutoV || action == Action.AutoK) {
+        if (action == Action.AutoV || action == Action.AutoK) { 
             context.workspace.setCtrl('controller');
             const table_selection = props.context.tableSelection;
             table_selection.setEditingCell();
             table_selection.resetSelection();
             startPosition = { x: e.clientX - root.x, y: e.clientY - root.y };
-            wheel = fourWayWheel(context, undefined, submatrix2.computeCoord(startPosition));
+            wheel = fourWayWheel(context, undefined, submatrix2.computeCoord(startPosition));           // mark: wheel等于什么
             document.addEventListener('mousemove', mousemove4trans);
             document.addEventListener('mouseup', mouseup4trans);
             move = mousemove4trans, up = mouseup4trans;
@@ -175,30 +177,30 @@ function mousemove4trans(e: MouseEvent) {
         let update_type = 0;
         const isOut = wheel.moving(e, { type: EffectType.TRANS, effect: asyncTransfer.transByWheel });
         if (!isOut) update_type = transform_f(startPosition, mousePosition);
-        if (update_type === 3) startPosition = { ...mousePosition };
+        if (update_type === 3) startPosition = { ...mousePosition };        // mark：update_type不同的值对应的情况是什么
         else if (update_type === 2) startPosition.y = mousePosition.y;
         else if (update_type === 1) startPosition.x = mousePosition.x;
-    } else if (Math.hypot(mousePosition.x - startPosition.x, mousePosition.y - startPosition.y) > dragActiveDis) {
-        shapes = selection.selectedShapes;
+    } else if (Math.hypot(mousePosition.x - startPosition.x, mousePosition.y - startPosition.y) > dragActiveDis) {   // mark：dragActiveDis是什么
+        shapes = selection.selectedShapes; 
         if (e.altKey) shapes = paster_short(props.context, shapes);
-        asyncTransfer = props.context.editor.controller().asyncTransfer(shapes, selection.selectedPage!);
-        selection.unHoverShape();
+        asyncTransfer = props.context.editor.controller().asyncTransfer(shapes, selection.selectedPage!);  // mark：asyncTransfer是什么
+        selection.unHoverShape();  
         workspace.setSelectionViewUpdater(false);
-        workspace.translating(true);
+        workspace.translating(true);  // mark：workspace.translating(true)的作用是什么
         props.context.assist.set_trans_target(shapes);
         submatrix2 = new Matrix(props.context.workspace.matrix.inverse);
         isDragging = true;
         const pe = submatrix2.computeCoord3(startPosition);
-        offset_map = gen_offset_map(shapes[0], pe);
+        offset_map = gen_offset_map(shapes[0], pe);  
     }
 }
 function _migrate() {
     if (!shapes.length) return;
     const p = props.shape.matrix2Root().computeCoord2(4, 4);
-    const targetParent = props.context.selection.getClosetArtboard(p);
+    const targetParent = props.context.selection.getClosestContainer(p);
     const m = getCloesetContainer(props.shape).id !== targetParent.id;
     if (targetParent.id === props.shape.id) return;
-    if (m && asyncTransfer) asyncTransfer.migrate(targetParent as GroupShape);
+    if (m && asyncTransfer) asyncTransfer.migrate(targetParent as GroupShape, compare_layer_3(shapes));
 }
 const migrate: () => void = debounce(_migrate, 100);
 function getCloesetContainer(shape: Shape): Shape {
@@ -374,6 +376,8 @@ function modify_fix_y(p2: PageXY, fix: number) {
     stickedY = true;
     pre_target_y = fix;
 }
+// #endregion
+
 function window_blur() {
     const workspace = props.context.workspace;
     if (isDragging) {
@@ -414,7 +418,7 @@ onUnmounted(() => {
 })
 </script>
 <template>
-    <g :style="{ transform }" @mousedown.stop="(e) => down(e)">
+    <g :style="{ transform }" @mousedown.stop="(e: MouseEvent) => down(e)">
         <rect x="0" y="0" width="18px" height="18px" rx="2" ry="2" fill="#865dff" fill-opacity="0.45" stroke="none">
         </rect>
         <svg viewBox="0 0 1024 1024" version="1.1" xmlns="http://www.w3.org/2000/svg" width="12" height="12" x="3px"
@@ -424,7 +428,7 @@ onUnmounted(() => {
                 fill="#865dff"></path>
         </svg>
     </g>
-    <g :style="{ transform: transform2 }" :class="{ hidden }" @mousedown.stop="(e) => point_mousedown(e)">
+    <g :style="{ transform: transform2 }" :class="{ hidden }" @mousedown.stop="(e: MouseEvent) => point_mousedown(e)">
         <rect x="0" y="0" width="18px" height="18px" rx="2" ry="2" fill="#865dff" fill-opacity="0.45" stroke="none">
         </rect>
         <svg viewBox="0 0 1024 1024" version="1.1" xmlns="http://www.w3.org/2000/svg" width="12" height="12" x="3" y="3">

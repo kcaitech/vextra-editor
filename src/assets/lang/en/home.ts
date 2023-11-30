@@ -166,7 +166,8 @@ export const navi = {
     page: 'Page',
     add_page: 'Add new page',
     copy: 'copy',
-    development: 'Functional development…'
+    development: 'Functional development…',
+    overname: 'The maximum length of filenames is 50 characters'
 }
 
 export const frame = {
@@ -282,11 +283,16 @@ export const attr: any = {
     multiple_colors: 'There are many color values, click + can be unified set',
     unfold: 'Unfold',
     packup: 'Pack up',
-    'flip_v': '垂直翻转',
-    'flip_h': '水平翻转',
+    'flip_v': 'Flip Vertical',
+    'flip_h': 'Flip Horizontal',
     full_border: 'Full border',
     outer_border: 'border',
-    inner_border: 'Inner border'
+    inner_border: 'Inner border',
+    exit_path_edit: 'Exit Editing Mode(ESC)',
+    right_angle: "Right Angle",
+    completely_symmetrical: "Completely Symmetrical",
+    angular_symmetry: "Angular Symmetry",
+    asymmetric: "Asymmetric",
 }
 
 export const login = {

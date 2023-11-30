@@ -35,6 +35,7 @@ export class Server {
     lastSendHeartbeatTime: number = 0
     sendHeartbeatInterval?: number
     receiveHeartbeatInterval?: number
+    offlineInterval?: number
     networkStatus: NetworkStatusType = NetworkStatusType.Offline
     onConnected: () => void = () => {}
 
@@ -48,6 +49,7 @@ export class Server {
         if (this.isClosed) return false;
         if (this.isConnected) return true;
         if (this.isConnecting && this.connectPromise) return await this.connectPromise;
+        this.closeWs()
         this.isConnecting = true
         let resolve: (value: boolean) => void = () => {}
         this.connectPromise = new Promise<boolean>(r => resolve = r)
@@ -59,6 +61,7 @@ export class Server {
             this.ws = undefined
             resolve(false)
             this.isConnecting = false
+            this.connectPromise = undefined
             return false
         }
         try {
@@ -71,6 +74,7 @@ export class Server {
             this.ws = undefined
             resolve(false)
             this.isConnecting = false
+            this.connectPromise = undefined
             return false
         }
         this.ws.send(JSON.stringify({
@@ -98,29 +102,22 @@ export class Server {
             this.ws = undefined
             resolve(false)
             this.isConnecting = false
+            this.connectPromise = undefined
             return false
         }
         this.ws.onmessage = this.onMessage.bind(this)
         resolve(true)
         this.isConnecting = false
+        this.connectPromise = undefined
         this.isConnected = true
-        this.ws.onclose = event => {
-            this.isConnected = false
-            if (this.isClosed || this.networkStatus === NetworkStatusType.Offline) return;
-            this.networkStatus = NetworkStatusType.Offline
-            this.onNetworkOffline()
-        }
+        this.ws.onclose = this.closeWs.bind(this)
         if (this.isFirstConnect) {
             this.isFirstConnect = false
             this.networkStatus = NetworkStatusType.Online
             this.sendHeartbeatInterval = setInterval(() => {
                 this.sendHeartbeat()
             }, 1000) as any
-            this.receiveHeartbeatInterval = setTimeout(() => {
-                if (this.isClosed || this.networkStatus === NetworkStatusType.Offline) return;
-                this.networkStatus = NetworkStatusType.Offline
-                this.onNetworkOffline()
-            }, 3000) as any
+            this.receiveHeartbeatInterval = setTimeout(this._onNetworkOffline.bind(this), 3000) as any
         } else {
             this._onNetworkOnline()
         }
@@ -128,14 +125,31 @@ export class Server {
         return true
     }
 
-    async send(data: any): Promise<boolean> {
+    async connectLoop() {
         if (this.isClosed) return false;
-        if (!this.isConnected) {
-            while (!await this.connect()) {
-                if (this.isClosed) return false;
-                await sleep(1000)
-            }
+        if (this.isConnected) return true;
+        while (!await this.connect()) {
+            if (this.isClosed) return false;
+            await sleep(1000)
         }
+        return true
+    }
+
+    closeWs() {
+        this.isConnected = false
+        if (this.ws) {
+            this.ws.onopen = null
+            this.ws.onerror = null
+            this.ws.onmessage = null
+            this.ws.onclose = null
+            this.ws.close()
+            this.ws = undefined
+        }
+        this._onNetworkOffline()
+    }
+
+    async send(data: any): Promise<boolean> {
+        if (!await this.connectLoop()) return false;
         this.ws!.send(data)
         return true
     }
@@ -210,17 +224,21 @@ export class Server {
         }))
     }
 
+    _onNetworkOffline() {
+        if (this.isClosed || this.networkStatus === NetworkStatusType.Offline) return;
+        this.networkStatus = NetworkStatusType.Offline
+        this.onNetworkOffline()
+        this.offlineInterval = setTimeout(this.closeWs.bind(this), 60000) as any
+    }
+
     _onNetworkOnline() {
         if (this.receiveHeartbeatInterval !== undefined) clearTimeout(this.receiveHeartbeatInterval);
-        this.receiveHeartbeatInterval = setTimeout(() => {
-            if (this.isClosed || this.networkStatus === NetworkStatusType.Offline) return;
-            this.networkStatus = NetworkStatusType.Offline
-            this.onNetworkOffline()
-        }, 3000) as any
+        this.receiveHeartbeatInterval = setTimeout(this._onNetworkOffline.bind(this), 3000) as any
         if (this.networkStatus === NetworkStatusType.Offline) {
             this.networkStatus = NetworkStatusType.Online
             this.onNetworkOnline()
         }
+        if (this.offlineInterval !== undefined) clearTimeout(this.offlineInterval);
         this.lastReceiveHeartbeatTime = Date.now()
     }
 
@@ -239,15 +257,16 @@ export class Server {
     }
 
     async close() {
+        if (!this.ws && this.isConnecting && this.connectPromise) {
+            await this.connectPromise
+        }
         if (this.ws !== undefined) {
             this.ws?.close()
             this.ws = undefined
-            this.isConnected = false
-            this.isConnecting = false
-        } else if (this.isConnecting && this.connectPromise !== undefined) {
-            await this.connectPromise
-            await this.close()
         }
+        this.isConnected = false
+        this.isConnecting = false
+        this.connectPromise = undefined
         if (this.sendHeartbeatInterval !== undefined) {
             clearInterval(this.sendHeartbeatInterval)
             this.sendHeartbeatInterval = undefined

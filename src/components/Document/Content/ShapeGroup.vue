@@ -1,15 +1,18 @@
 <script setup lang="ts">
 import { h } from 'vue';
 import comsMap from './comsmap'
-import { GroupShape } from "@kcdesign/data";
+import { GroupShape, SymbolRefShape, SymbolShape, RenderTransform } from "@kcdesign/data";
 import { renderGroup as r } from "@kcdesign/data";
-import { makeReflush } from "./common";
+import { initCommonShape } from "./common";
 
-const props = defineProps<{ data: GroupShape }>();
-const reflush = makeReflush(props);
+const props = defineProps<{
+    data: GroupShape, transx?: RenderTransform,
+    varsContainer?: (SymbolRefShape | SymbolShape)[]
+}>();
+const common = initCommonShape(props);
 
 function render() {
-    const ret = r(h, props.data, comsMap, reflush.value ? reflush.value : undefined);
+    const ret = r(h, props.data, comsMap, props.transx, props.varsContainer, common.reflush);
     return ret;
 }
 
