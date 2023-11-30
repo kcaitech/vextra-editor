@@ -196,24 +196,24 @@ onUnmounted(() => {
                 <Tooltip :content="t('attr.right_angle')">
                     <div @mousedown.stop="() => onChangeCurveMode(CurveMode.Straight)"
                          :class="{item: true, active: curve_mode === CurveMode.Straight}">
-                        <svg-icon icon-class="unknown"></svg-icon>
+                        <svg-icon icon-class="straight"></svg-icon>
                     </div>
                 </Tooltip>
                 <Tooltip :content="t('attr.completely_symmetrical')">
                     <div @mousedown.stop="() => onChangeCurveMode(CurveMode.Mirrored)"
                          :class="{item: true, active: curve_mode === CurveMode.Mirrored}">
-                        <svg-icon icon-class="unknown"></svg-icon>
-                    </div>
-                </Tooltip>
-                <Tooltip :content="t('attr.angular_symmetry')">
-                    <div @mousedown.stop="() => onChangeCurveMode(CurveMode.Disconnected)"
-                         :class="{item: true, active: curve_mode === CurveMode.Disconnected}">
-                        <svg-icon icon-class="unknown"></svg-icon>
+                        <svg-icon icon-class="mirrored"></svg-icon>
                     </div>
                 </Tooltip>
                 <Tooltip :content="t('attr.asymmetric')">
                     <div @mousedown.stop="() => onChangeCurveMode(CurveMode.Asymmetric)"
                          :class="{item: true, active: curve_mode === CurveMode.Asymmetric}">
+                        <svg-icon icon-class="asymmetric"></svg-icon>
+                    </div>
+                </Tooltip>
+                <Tooltip :content="t('attr.angular_symmetry')">
+                    <div @mousedown.stop="() => onChangeCurveMode(CurveMode.Disconnected)"
+                         :class="{item: true, active: curve_mode === CurveMode.Disconnected}">
                         <svg-icon icon-class="unknown"></svg-icon>
                     </div>
                 </Tooltip>
@@ -287,8 +287,8 @@ onUnmounted(() => {
                 align-items: center;
 
                 > svg {
-                    height: 60%;
-                    width: 60%;
+                    height: 80%;
+                    width: 80%;
                 }
             }
 

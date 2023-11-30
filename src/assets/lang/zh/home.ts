@@ -291,8 +291,8 @@ export const attr: any = {
     exit_path_edit: '退出编辑模式(ESC)',
     right_angle: "直角",
     completely_symmetrical: "完全对称",
-    angular_symmetry: "角度对称",
-    asymmetric: "不对称",
+    angular_symmetry: "不对称",
+    asymmetric: "角度对称",
 }
 
 export const login = {

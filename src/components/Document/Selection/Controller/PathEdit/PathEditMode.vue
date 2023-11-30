@@ -39,7 +39,9 @@ function onMouseWheel(e: WheelEvent) { // 滚轮、触摸板事件
 }
 
 function down(e: MouseEvent) {
-    if (e.button !== 0) return;
+    if (e.button !== 0) {
+        return;
+    }
     setMousedownXY(e);
     main_button_is_down = true;
     props.context.path.reset_points();
@@ -109,6 +111,7 @@ onMounted(() => {
 })
 onUnmounted(() => {
     props.context.selection.unwatch(selection_watcher);
+    props.context.tool.setAction(Action.AutoV);
     window.removeEventListener('blur', window_blur);
     console.log('EXIT-PATH-EDIT-MODE');
 })

@@ -2,9 +2,9 @@
 import Auto from '@/components/Document/Toolbar/PathEdit/Auto.vue'
 import Curve from '@/components/Document/Toolbar/PathEdit/Curve.vue';
 import PathClip from '@/components/Document/Toolbar/PathEdit/PathClip.vue';
-import {Context} from "@/context";
-import {Action} from "@/context/tool";
-import {onMounted, onUnmounted, ref} from "vue";
+import { Context } from "@/context";
+import { Action } from "@/context/tool";
+import { onMounted, onUnmounted, ref } from "vue";
 
 interface Props {
     context: Context
@@ -29,17 +29,23 @@ function is_curve_active() {
 let o: Action;
 
 function keyboard_up_watcher(e: KeyboardEvent) {
-    if (e.target instanceof HTMLInputElement) return;
-    if (['MetaLeft' || 'ControlLeft'].includes(e.code)) {
+    if (e.target instanceof HTMLInputElement) {
+        return;
+    }
+    if (['MetaLeft', 'ControlLeft'].includes(e.code)) {
         props.context.tool.setAction(o);
         document.removeEventListener('keyup', keyboard_up_watcher);
     }
 }
 
 function keyboard_down_watcher(e: KeyboardEvent) {
-    if (e.target instanceof HTMLInputElement) return;
-    if (e.repeat) return;
-    if (e.ctrlKey || e.metaKey) {
+    if (e.target instanceof HTMLInputElement) {
+        return;
+    }
+    if (e.repeat) {
+        return;
+    }
+    if (['MetaLeft', 'ControlLeft'].includes(e.code)) {
         o = props.context.tool.action;
         if (o !== Action.Curve) {
             props.context.tool.setAction(Action.Curve);

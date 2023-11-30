@@ -25,12 +25,16 @@ let path_string: string = '';
 let m42Dp: Matrix | undefined; // 2D点到页面的转换矩阵
 function select() {
     path_shape = props.context.selection.pathshape;
-    if (!path_shape) return;
+    if (!path_shape) {
+        return;
+    }
     changed = false;
     modify_select_path();
     remove_points();
     finder_points();
-    if (!changed) return;
+    if (!changed) {
+        return;
+    }
     props.context.path.select_points(Array.from(selected_points.values()));
 }
 

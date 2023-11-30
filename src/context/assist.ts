@@ -109,7 +109,9 @@ export class Asssit extends Watchable(Object) {
     static UPDATE_ASSIST = 1;
     static UPDATE_MAIN_LINE = 2;
     static CLEAR = 3;
-    static STICKNESS = 5;
+    static UPDATE_ASSIST_PATH = 4;
+    static UPDATE_MAIN_LINE_PATH = 5;
+    static STICKNESS = 6;
     private m_stickness: number = 5;
     private m_collect_target: GroupShape[] = [];
     private m_context: Context;
@@ -136,7 +138,7 @@ export class Asssit extends Watchable(Object) {
         this.m_current_pg = pg;
     }
 
-    setCPG2() {
+    set_points_map() {
         this.clear();
         const path_shape = this.m_context.selection.pathshape;
         if (!path_shape) {
@@ -146,7 +148,6 @@ export class Asssit extends Watchable(Object) {
         const f = path_shape.frame;
         const m = new Matrix(path_shape.matrix2Root());
         m.preScale(f.width, f.height);
-
         for (let i = 0, l = points.length; i < l; i++) {
             const __p = points[i];
             const p = m.computeCoord2(__p.x, __p.y);
@@ -165,7 +166,6 @@ export class Asssit extends Watchable(Object) {
                 this.m_y_axis.set(p.y, [item]);
             }
         }
-        console.log();
     }
 
     get except() {
@@ -240,7 +240,9 @@ export class Asssit extends Watchable(Object) {
         if (page) {
             this.clear();
             let target: GroupShape = page;
-            if (this.m_collect_target.length) target = this.m_collect_target[0] || page;
+            if (this.m_collect_target.length) {
+                target = this.m_collect_target[0] || page;
+            }
             this.m_shape_inner = finder(this.m_context, target, this.m_pg_inner, this.m_x_axis, this.m_y_axis);
         }
         // const e = Date.now();
@@ -253,11 +255,17 @@ export class Asssit extends Watchable(Object) {
         this.m_except.clear();
         if (shapes.length === 1) {
             get_tree(shapes[0], this.m_except);
-        } else if (shapes.length > 1) {
-            for (let i = 0, len = shapes.length; i < len; i++) get_tree(shapes[i], this.m_except);
+        }
+        else if (shapes.length > 1) {
+            for (let i = 0, len = shapes.length; i < len; i++) {
+                get_tree(shapes[i], this.m_except);
+            }
         }
     }
 
+    /**
+     * @description 拖拽单个图形
+     */
     trans_match(offsetMap: PointsOffset, p: PageXY) {
         // const st = Date.now();
         if (!this.m_except.size) return;
@@ -288,6 +296,9 @@ export class Asssit extends Watchable(Object) {
         return target;
     }
 
+    /**
+     * @description 拖拽多个图形
+     */
     trans_match_multi(shapes: Shape[], offsetMap: PointsOffset, p: PageXY) {
         // const st = Date.now();
         if (!this.m_except.size) return;
@@ -404,7 +415,9 @@ export class Asssit extends Watchable(Object) {
 
     edit_mode_match(point: PageXY, offsetMap: XY[]) {
         const indexes = this.m_context.path.selectedPoints;
-        if (!indexes.length) return;
+        if (!indexes.length) {
+            return;
+        }
         const indexes_set = new Set(indexes);
         this.m_nodes_x = [];
         this.m_nodes_y = [];
@@ -431,9 +444,7 @@ export class Asssit extends Watchable(Object) {
                 { p: { x: pre_target2.sx, y: target.y }, id: 'ex' }
             ]);
         }
-        this.notify(Asssit.UPDATE_ASSIST);
-        // const e = Date.now();
-        // console.log('单次匹配用时(ms):', e - st);
+        this.notify(Asssit.UPDATE_ASSIST_PATH);
         return target;
     }
 
@@ -441,6 +452,6 @@ export class Asssit extends Watchable(Object) {
         this.m_nodes_x = [];
         this.m_nodes_y = [];
         this.m_except.clear();
-        this.notify(Asssit.UPDATE_ASSIST);
+        this.notify(Asssit.CLEAR);
     }
 }

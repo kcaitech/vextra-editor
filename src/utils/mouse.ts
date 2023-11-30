@@ -188,9 +188,13 @@ export function gen_offset_points_map(shapes: Shape[], down: PageXY) {
  */
 export function gen_offset_points_map2(context: Context, down: PageXY) {
     const path_shape = context.selection.pathshape;
-    if (!path_shape) return;
+    if (!path_shape) {
+        return;
+    }
     const op = get_root_points(context, context.path.selectedPoints);
-    if (!op) return;
+    if (!op) {
+        return;
+    }
     const offset: XY[] = [];
     for (let i = 0, l = op.length; i < l; i++) {
         const p = op[i];

@@ -38,9 +38,9 @@ let { lineX, nodesX, lineY, nodesY, exLineX, exLineY, exNodesX, exNodesY } = dat
 let ax = 0, ay = 0;
 
 function assist_watcher(t: number) {
-    if (t === Asssit.UPDATE_ASSIST) {
+    if (t === Asssit.UPDATE_ASSIST_PATH) {
         render();
-    } else if (t === Asssit.UPDATE_MAIN_LINE) {
+    } else if (t === Asssit.UPDATE_MAIN_LINE_PATH) {
         update_main_line();
     } else if (t === Asssit.CLEAR && assist.value) {
         clear();
@@ -49,7 +49,9 @@ function assist_watcher(t: number) {
 
 function update_main_line() {
     const cpg = props.context.assist.CPG;
-    if (!cpg) return;
+    if (!cpg) {
+        return;
+    }
     clear4main_line();
     const ns_x = minus_nodes_x(props.context.assist.nodes_x);
     const ns_y = minus_nodes_y(props.context.assist.nodes_y);

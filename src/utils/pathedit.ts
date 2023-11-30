@@ -4,20 +4,29 @@ import { CurveMode, CurvePoint, Matrix, PathShape } from "@kcdesign/data";
 
 export function get_root_points(context: Context, indexes?: number[]) {
     const path_shape = context.selection.pathshape;
-    if (!path_shape) return;
+    if (!path_shape) {
+        return;
+    }
     const f = path_shape.frame;
-    const m = new Matrix();
+    const m = new Matrix(path_shape.matrix2Root());
     m.preScale(f.width, f.height);
-    m.multiAtLeft(path_shape.matrix2Root());
     const points = path_shape.points;
     const result: XY[] = [];
     if (indexes) {
         for (let i = 0, l = indexes.length; i < l; i++) {
-            result.push(m.computeCoord(points[indexes[i]].x, points[indexes[i]].y));
+            const __p = points[indexes[i]];
+            if (!__p) {
+                continue;
+            }
+            result.push(m.computeCoord2(__p.x, __p.y));
         }
     } else {
         for (let i = 0, l = points.length; i < l; i++) {
-            result.push(m.computeCoord(points[i].x, points[i].y));
+            const __p = points[i];
+            if (!__p) {
+                continue;
+            }
+            result.push(m.computeCoord(__p.x, __p.y));
         }
     }
     return result;
