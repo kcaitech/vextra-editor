@@ -1,16 +1,22 @@
 <script setup lang="ts">
-import { ref, reactive, onMounted, onUnmounted, watch } from 'vue';
+import { ref, reactive, onMounted, onUnmounted, watch, nextTick, watchEffect } from 'vue';
 import comsMap from '@/components/Document/Content/comsmap';
-import { Matrix, Shape, ShapeType } from '@kcdesign/data';
+import { ExportOptions, Matrix, Shape, ShapeType } from '@kcdesign/data';
 import { Context } from '@/context';
 import { getCutoutShape, getShadowMax } from '@/utils/cutout';
 import { color2string } from '@/utils/content';
 import { Selection } from '@/context/selection';
+import { debounce } from 'lodash';
 interface Props {
     context: Context
     shapes: Shape[]
     unfold: boolean
+    canvas_bg: boolean
+    trim_bg: boolean
 }
+const emits = defineEmits<{
+    (e: 'previewChange', v: boolean): void;
+}>();
 const DEFAULT_COLOR = () => {
     const f = props.context.selection.selectedPage!.style.fills[0];
     if (f) {
@@ -28,9 +34,12 @@ const xy = ref<{ x: number, y: number }>({ x: 0, y: 0 });
 const background_color = ref<string>(DEFAULT_COLOR());
 let renderItems: Shape[] = [];
 const selectedShapes: Map<string, Shape> = new Map();
-const matrix = reactive<Matrix>(new Matrix());
+const previewSvg = ref<SVGSVGElement>();
+const pngImage = ref();
+const trimImage = ref();
 const toggleExpand = () => {
     isTriangle.value = !isTriangle.value;
+    emits('previewChange', isTriangle.value);
     if (isTriangle.value) getCanvasShape();
 }
 
@@ -50,6 +59,54 @@ const getCanvasShape = () => {
         getPosition(shape);
         renderItems = [shape];
     }
+    nextTick(() => {
+        getPreviewSvg();
+    });
+
+}
+
+const getPreviewSvg = () => {
+    if (previewSvg.value) {
+        const canvas = document.createElement('canvas');
+        const context = canvas.getContext('2d');
+        canvas.width = previewSvg.value.clientWidth;
+        canvas.height = previewSvg.value.clientHeight;
+        const svgString = new XMLSerializer().serializeToString(previewSvg.value);
+        const img = new Image();
+        img.src = 'data:image/svg+xml;base64,' + btoa(unescape(encodeURIComponent(svgString)));
+        img.onload = () => {
+            context && context.drawImage(img, 0, 0);
+            const dataURL = canvas.toDataURL('image/png');
+            pngImage.value = dataURL;
+            if (props.trim_bg && context) {
+                const imageData = context.getImageData(0, 0, canvas.width, canvas.height);
+                const data = imageData.data;
+                let top = canvas.height, bottom = 0, left = canvas.width, right = 0;
+                for (let y = 0; y < canvas.height; y++) {
+                    for (let x = 0; x < canvas.width; x++) {
+                        const alpha = data[(y * canvas.width + x) * 4 + 3]; // 获取像素的透明度值
+                        if (alpha > 0) {
+                            top = Math.min(top, y);
+                            bottom = Math.max(bottom, y);
+                            left = Math.min(left, x);
+                            right = Math.max(right, x);
+                        }
+                    }
+                }
+                const width = right - left;
+                const height = bottom - top;
+                // 创建一个新Canvas元素，用于存储裁剪后的图像
+                const newCanvas = document.createElement("canvas");
+                const outputCtx = newCanvas.getContext("2d");
+                newCanvas.width = width;
+                newCanvas.height = height;
+                // 在新Canvas上绘制裁剪后的图像
+                outputCtx && outputCtx.drawImage(img, left, top, width, height, 0, 0, width, height);
+                const newDataURL = newCanvas.toDataURL('image/png');
+                trimImage.value = newDataURL;
+            }
+        };
+    }
 }
 
 const getPosition = (shape: Shape) => {
@@ -64,18 +121,6 @@ const getPosition = (shape: Shape) => {
         width.value += right + left;
         height.value += top + bottom;
     }
-    const svg_center = { x: width.value / 2, y: height.value / 2 };
-    const canvas_center = { x: 236 / 2, y: 240 / 2 };
-    matrix.reset();
-    const center_delta = {
-        x: svg_center.x - canvas_center.x,
-        y: svg_center.y - canvas_center.y,
-    }
-    const ratio = Math.max(width.value / 236 * 1.06, height.value / 240 * 1.03);
-    matrix.trans(-center_delta.x, -center_delta.y);
-    matrix.trans(-236 / 2, -240 / 2);
-    matrix.scale(1 / ratio);
-    matrix.trans(236 / 2, 240 / 2);
 }
 
 const resetSvg = () => {
@@ -84,6 +129,8 @@ const resetSvg = () => {
     height.value = 0;
     xy.value.x = 0;
     xy.value.y = 0;
+    pngImage.value = undefined;
+    trimImage.value = undefined;
     reflush.value++;
 }
 function page_color() {
@@ -95,22 +142,48 @@ function page_color() {
     if (selected[0].type !== ShapeType.Cutout) {
         background_color.value = 'transparent';
         return;
+    } else if (selected[0].type === ShapeType.Cutout) {
+        if (!props.canvas_bg) {
+            background_color.value = 'transparent';
+        } else {
+            background_color.value = DEFAULT_COLOR();
+        }
+        getCanvasShape();
     }
 }
 
 const select_watcher = (t: number) => {
     if (t === Selection.CHANGE_SHAPE) {
+        isTriangle.value = props.unfold;
         page_color();
         getCanvasShape();
     }
 }
+const img = ref();
+const startDrag = (e: DragEvent) => {
+    if (img.value) {
+        e.dataTransfer!.setDragImage(img.value, img.value.clientWidth / 2, img.value.clientHeight / 2);
+    }
+}
 
+watch(() => props.canvas_bg, (v) => {
+    page_color();
+})
+
+const updateCutoutCanvas = () => {
+    const selected = props.context.selection.selectedShapes;
+    if (selected.length === 1 && selected[0].type === ShapeType.Cutout) {
+        getCanvasShape();
+    }
+}
+const update = debounce(updateCutoutCanvas, 300, { leading: true });
+props.shapes[0].watch(update)
 onMounted(() => {
     page_color();
-    getCanvasShape();
     props.context.selection.watch(select_watcher);
 })
 onUnmounted(() => {
+    props.shapes[0].unwatch(updateCutoutCanvas)
     props.context.selection.watch(select_watcher);
 })
 
@@ -125,20 +198,29 @@ onUnmounted(() => {
             </div>
             <span>预览</span>
         </div>
-        <div class="preview-canvas" v-if="isTriangle" :reflush="reflush !== 0 ? reflush : undefined">
-            <svg version="1.1" xmlns="http://www.w3.org/2000/svg" xmlns:xlink="http://www.w3.org/1999/xlink"
-                xmlns:xhtml="http://www.w3.org/1999/xhtml" preserveAspectRatio="xMinYMin meet" :width="width"
-                :height="height" :viewBox="`${xy.x} ${xy.y} ${width} ${height}`"
-                :style="{ transform: matrix.toString(), 'background-color': background_color }">
-                <component :is="comsMap.get(c.type) ?? comsMap.get(ShapeType.Rectangle)" v-for="c in renderItems"
-                    :key="c.id" :data="c" />
-            </svg>
+        <svg version="1.1" ref="previewSvg" xmlns="http://www.w3.org/2000/svg" xmlns:xlink="http://www.w3.org/1999/xlink"
+            xmlns:xhtml="http://www.w3.org/1999/xhtml" preserveAspectRatio="xMinYMin meet" :width="width" :height="height"
+            :viewBox="`${xy.x} ${xy.y} ${width} ${height}`" :style="{ 'background-color': background_color }">
+            <component :is="comsMap.get(c.type) ?? comsMap.get(ShapeType.Rectangle)" v-for=" c  in  renderItems "
+                :key="c.id" :data="c" />
+        </svg>
+        <div class="preview-canvas" v-if="isTriangle && !trimImage && pngImage"
+            :reflush="reflush !== 0 ? reflush : undefined">
+            <div class="preview-image">
+                <img :src="pngImage" ref="img" alt="" v-if="pngImage" :draggable="true" @dragstart="startDrag">
+            </div>
+        </div>
+        <div class="trim-canvas" v-if="isTriangle && trimImage" :reflush="reflush !== 0 ? reflush : undefined">
+            <img :src="trimImage" ref="img" alt="" v-if="trimImage" :draggable="true" @dragstart="startDrag">
         </div>
     </div>
 </template>
 
 <style scoped lang="scss">
 .preview_box {
+    position: relative;
+    overflow: hidden;
+
     .title {
         display: flex;
         height: 30px;
@@ -181,6 +263,13 @@ onUnmounted(() => {
         }
     }
 
+    >svg {
+        position: absolute;
+        transform-origin: left top;
+        opacity: 0;
+        z-index: -1;
+    }
+
     .preview-canvas {
         position: relative;
         width: 100%;
@@ -192,10 +281,42 @@ onUnmounted(() => {
         border-radius: 6px;
         border: 1px solid rgba(0, 0, 0, 0.04);
         box-sizing: border-box;
+        overflow: hidden;
 
-        >svg {
-            position: absolute;
-            transform-origin: left top;
+
+        .preview-image {
+            width: 100%;
+            height: 100%;
+            padding: 8px;
+            box-sizing: border-box;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+
+            >img {
+                max-width: 100%;
+                max-height: 100%;
+                margin: auto;
+                display: block;
+            }
+        }
+    }
+
+    .trim-canvas {
+        margin: 0 auto;
+        width: fit-content;
+        box-sizing: border-box;
+        background: #fafafa;
+        background-image: linear-gradient(45deg, rgba(0, 0, 0, 0.04) 25%, transparent 0, transparent 75%, rgba(0, 0, 0, 0.04) 0), linear-gradient(45deg, rgba(0, 0, 0, 0.04) 25%, transparent 0, transparent 75%, rgba(0, 0, 0, 0.04) 0);
+        background-position: 0 0, 8px 8px;
+        background-size: 16px 16px;
+
+        >img {
+            max-width: 100%;
+            max-height: 240px;
+            margin: auto;
+            display: block;
+            object-fit: contain;
         }
     }
 }

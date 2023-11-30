@@ -11,7 +11,11 @@ export const shape: any = {
     input_text: 'Input text',
     table: 'Table',
     contact: 'Contact',
-    cutout: 'Cutout'
+    cutout: 'Cutout',
+    symbol: 'Symbol',
+    curve: "Curve",
+    clip: "Clip",
+    default: 'Default',
 }
 shape[ShapeType.Rectangle] = 'Rectangle';
 

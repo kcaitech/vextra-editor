@@ -1,6 +1,6 @@
 <script setup lang="ts">
-import { ExportFileFormat, ExportFormat, ExportFormatNameingScheme, ExportOptions, ExportVisibleScaleType, Shape } from '@kcdesign/data';
-import { ref, onMounted, onUnmounted, watch, reactive } from 'vue';
+import { ExportFileFormat, ExportFormat, ExportFormatNameingScheme, ExportOptions, ExportVisibleScaleType, Shape, ShapeType } from '@kcdesign/data';
+import { ref, onMounted, onUnmounted, watch, reactive, computed } from 'vue';
 import { WorkSpace } from '@/context/workspace';
 import { Context } from '@/context';
 import PreinstallSelect from './PreinstallSelect.vue';
@@ -8,6 +8,7 @@ import Preview from './Preview.vue';
 import ExportArguments from './ExportArguments.vue';
 import { v4 } from 'uuid';
 import { useI18n } from 'vue-i18n';
+import { Selection } from '@/context/selection';
 const { t } = useI18n();
 interface Props {
     context: Context
@@ -23,13 +24,15 @@ const isPreinstall = ref(false);
 const sizeItems: string[] = ['0.5x', '1x', '2x', '3x', '4x', '5x'];
 const perfixItems: ExportFormatNameingScheme[] = [ExportFormatNameingScheme.Prefix, ExportFormatNameingScheme.Suffix];
 const formatItems: string[] = ['PNG', 'JPG', 'SVG', 'PDF'];
+const fileFormat: ExportFileFormat[] = [ExportFileFormat.Png, ExportFileFormat.Jpg, ExportFileFormat.Svg, ExportFileFormat.Pdf];
 const preinstallArgus: FormatItems[] = reactive([]);
 const reflush = ref<number>(0);
 const watchedShapes = new Map();
 const mixed = ref<boolean>(false);
 const exportOption = ref<ExportOptions>();
-const lucency_bg = ref(exportOption.value?.trimTransparent);
-const canvas_bg = ref(exportOption.value?.canvasBackground);
+const trim_bg = ref(false);
+const canvas_bg = ref(false);
+const previewUnfold = ref(false);
 function watchShapes() {
     const needWatchShapes = new Map();
     const selection = props.context.selection;
@@ -58,14 +61,18 @@ function watcher(...args: any[]) {
 function updateData() {
     preinstallArgus.length = 0;
     mixed.value = false;
-    const len = props.shapes.length;
+    exportOption.value = undefined;
+    const selected = props.context.selection.selectedShapes;
+    const len = selected.length;
     if (len === 1) {
-        const shape = props.shapes[0];
+        const shape = selected[0];
         const options = shape.exportOptions;
         if (options) {
             exportOption.value = options;
-            console.log(options);
-            
+            trim_bg.value = options.trimTransparent;
+            canvas_bg.value = options.canvasBackground;
+            previewUnfold.value = options.unfold;
+
             for (let i = 0; i < options.exportFormats.length; i++) {
                 const format = options.exportFormats[i];
                 const f = { id: i, format };
@@ -90,7 +97,7 @@ const preinstall = (v: string) => {
             if (len === 1) {
                 const shape = props.shapes[0];
                 const editor = props.context.editor4Shape(shape);
-                const format1 = new ExportFormat(v4(), 0, ExportFileFormat.Png, '_', ExportFormatNameingScheme.Prefix, 1, ExportVisibleScaleType.Scale);
+                const format1 = new ExportFormat(v4(), 0, ExportFileFormat.Png, '', ExportFormatNameingScheme.Prefix, 1, ExportVisibleScaleType.Scale);
                 const format2 = new ExportFormat(v4(), 0, ExportFileFormat.Png, '@2x', ExportFormatNameingScheme.Suffix, 2, ExportVisibleScaleType.Scale);
                 const format3 = new ExportFormat(v4(), 0, ExportFileFormat.Png, '@3x', ExportFormatNameingScheme.Suffix, 3, ExportVisibleScaleType.Scale);
                 const formars = [format1, format2, format3]
@@ -98,7 +105,7 @@ const preinstall = (v: string) => {
             }
             break;
         case 'android':
-        if (len === 1) {
+            if (len === 1) {
                 const shape = props.shapes[0];
                 const editor = props.context.editor4Shape(shape);
                 const format1 = new ExportFormat(v4(), 0, ExportFileFormat.Png, 'mdpi/', ExportFormatNameingScheme.Prefix, 1, ExportVisibleScaleType.Scale);
@@ -113,37 +120,123 @@ const preinstall = (v: string) => {
             if (len === 1) {
                 const shape = props.shapes[0];
                 const editor = props.context.editor4Shape(shape);
-                const format = new ExportFormat(v4(), 0, ExportFileFormat.Png, '_', ExportFormatNameingScheme.Prefix, 1, ExportVisibleScaleType.Scale);
+                const format = new ExportFormat(v4(), 0, ExportFileFormat.Png, '', ExportFormatNameingScheme.Prefix, 1, ExportVisibleScaleType.Scale);
                 editor.addExportFormat([format]);
             }
             break;
     }
 }
-const changeSize = (index: number, argsi: number) => {
-    // preinstallArgus.value[argsi].size = sizeItems[index];
+function first() {
+  if (preinstallArgus.length === 0 && !mixed.value) preinstall('default');
 }
-const changePrefix = (index: number, argsi: number) => {
-    // preinstallArgus.value[argsi].prefix = perfixItems[index];
+const changeSize = (value: string, idx: number) => {
+    const _idx = preinstallArgus.length - idx - 1;
+    const selected = props.context.selection.selectedShapes;
+    const len = selected.length;
+    console.log(value,'v');
+    
+    if (len === 1) {
+        const shape = selected[0];
+        const editor = props.context.editor4Shape(shape);
+        editor.setExportFormatScale(_idx, parseFloat(value));
+    }
 }
-const changeFormat = (index: number, argsi: number) => {
-    // preinstallArgus.value[argsi].format = formatItems[index];
+const changePerfix = (index: number, idx: number) => {
+    const _idx = preinstallArgus.length - idx - 1;
+    const selected = props.context.selection.selectedShapes;
+    const len = selected.length;
+    if (len === 1) {
+        const shape = selected[0];
+        const editor = props.context.editor4Shape(shape);
+        editor.setExportFormatPerfix(_idx, perfixItems[index]);
+    }
 }
-const deleteArgus = (index: number) => {
-    preinstallArgus.splice(index, 1);
+const changeFormat = (index: number, idx: number) => {
+    const _idx = preinstallArgus.length - idx - 1;
+    const selected = props.context.selection.selectedShapes;
+    const len = selected.length;
+    if (len === 1) {
+        const shape = selected[0];
+        const editor = props.context.editor4Shape(shape);
+        editor.setExportFormatFileFormat(_idx, fileFormat[index]);
+    }
 }
+const changeName = (value: string, idx: number) => {
+    const _idx = preinstallArgus.length - idx - 1;
+    const selected = props.context.selection.selectedShapes;
+    const len = selected.length;
+    if (len === 1) {
+        const shape = selected[0];
+        const editor = props.context.editor4Shape(shape);
+        editor.setExportFormatName(_idx, value);
+    }
+}
+const deleteArgus = (idx: number) => {
+    const _idx = preinstallArgus.length - idx - 1;
+    const selected = props.context.selection.selectedShapes;
+    const len = selected.length;
+    if (len === 1) {
+        const shape = selected[0];
+        const editor = props.context.editor4Shape(shape);
+        editor.deleteExportFormat(_idx);
+    }
+}
+
+const trimBackground = (v: boolean) => {
+    const selected = props.context.selection.selectedShapes;
+    const len = selected.length;
+    if (len === 1) {
+        const shape = selected[0];
+        const editor = props.context.editor4Shape(shape);
+        editor.setExportTrimTransparent(v);
+    }
+}
+const canvasBackground = (v: boolean) => {
+    const selected = props.context.selection.selectedShapes;
+    const len = selected.length;
+    if (len === 1) {
+        const shape = selected[0];
+        const editor = props.context.editor4Shape(shape);
+        editor.setExportCanvasBackground(v);
+    }
+}
+const previewCanvas = (v: boolean) => {
+    const selected = props.context.selection.selectedShapes;
+    const len = selected.length;
+    previewUnfold.value = v;
+    if (len === 1) {
+        const shape = selected[0];
+        const editor = props.context.editor4Shape(shape);
+        editor.setExportPreviewUnfold(v);
+    }
+}
+const isShowCheckbox = ref(false);
+const showCheckbox = () => {
+    isShowCheckbox.value = props.context.selection.selectedShapes.length === 1 && props.context.selection.selectedShapes[0].type === ShapeType.Cutout;
+}
+
 function update_by_shapes() {
     watchShapes();
     updateData();
+    showCheckbox();
+}
+function selection_watcher(t: number) {
+    if (t === Selection.CHANGE_SHAPE) update_by_shapes();
 }
 // hooks
-const stop = watch(() => props.shapes, update_by_shapes);
-onMounted(update_by_shapes);
-onUnmounted(stop);
+onMounted(() => {
+    update_by_shapes();
+    showCheckbox();
+    props.context.selection.watch(selection_watcher);
+});
+onUnmounted(() => {
+    props.context.selection.unwatch(selection_watcher);
+});
 </script>
 
 <template>
     <div class="cutout_export_box">
-        <div class="title">
+        <div class="title" @click="first">
             <div class="name">创建切图与导出</div>
             <div class="cutout_add_icon">
                 <div class="cutout-icon cutout-preinstall"
@@ -157,21 +250,22 @@ onUnmounted(stop);
         <div class="argus" v-if="preinstallArgus.length > 0" preinstallArgus.length>
             <ExportArguments v-for="(argus, index) in preinstallArgus" :key="argus.id" :index="index" :argus="argus"
                 :context="context" :shapes="shapes" :sizeItems="sizeItems" :perfixItems="perfixItems"
-                :formatItems="formatItems" @change-size="changeSize" @change-prefix="changePrefix"
+                :formatItems="formatItems" @change-size="changeSize" @changePerfix="changePerfix" @change-name="changeName"
                 @change-format="changeFormat" @delete="deleteArgus">
             </ExportArguments>
         </div>
-        <template v-if="shapes[0].exportOptions">
-            <div class="canvas-bgc">
-                <el-checkbox :value="lucency_bg" label="修剪透明像素" />
+        <template v-if="exportOption">
+            <div class="canvas-bgc" v-if="isShowCheckbox">
+                <el-checkbox :model-value="trim_bg" @change="trimBackground" label="修剪透明像素" />
             </div>
-            <div class="canvas-bgc">
-                <el-checkbox :value="canvas_bg" label="画布背景色" />
+            <div class="canvas-bgc" v-if="isShowCheckbox">
+                <el-checkbox :model-value="canvas_bg" @change="canvasBackground" label="画布背景色" />
             </div>
             <div class="export-box">
                 <div><span>导出</span></div>
             </div>
-            <Preview :context="context" :shapes="shapes" :unfold="false"></Preview>
+            <Preview :context="context" :shapes="shapes" :unfold="previewUnfold" @preview-change="previewCanvas"
+                :canvas_bg="canvas_bg" :trim_bg="trim_bg"></Preview>
         </template>
     </div>
 </template>
@@ -236,6 +330,11 @@ onUnmounted(stop);
             border: 1.5px solid #000;
             border-left: 0;
             border-top: 0;
+            transition: none;
+        }
+
+        :deep(.el-checkbox__inner) {
+            transition: none;
         }
 
         :deep(.el-checkbox__input.is-checked .el-checkbox__inner) {

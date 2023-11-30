@@ -9,6 +9,8 @@ const props = defineProps<{
     menuItems: any[]
     selectValue: any
     i18n?: boolean
+    left: number
+    top: number
 }>();
 const emits = defineEmits<{
     (e: 'close'): void;
@@ -32,8 +34,17 @@ const menu_watcher = (t: number) => {
         close();
     }
 }
-
+const argsDialog = ref<HTMLDivElement>();
+const genTop = ref(0);
 onMounted(() => {
+    if (argsDialog.value) {
+        const diaH = argsDialog.value.clientHeight;
+        const docH = document.documentElement.clientHeight;
+        const surH = docH - (props.top + 30);
+        if (surH < diaH + 10) {
+            genTop.value = surH - (diaH + 10);
+        }
+    }
     props.context.menu.watch(menu_watcher);
     document.addEventListener('click', handleCloseMenu);
 });
@@ -44,7 +55,7 @@ onUnmounted(() => {
 </script>
 
 <template>
-    <div class="args_select_menu" @click.stop>
+    <div class="args_select_menu" ref="argsDialog" @click.stop :style="{ top: top + genTop + 32 + 'px', left: left + 'px' }">
         <div class="item" v-for="(item, index) in menuItems" :key="index"
             :class="{ 'active-item': selectHoverItem === item }" @mouseover="selectHoverItem = item"
             @click="selectItem(index)">
@@ -58,7 +69,7 @@ onUnmounted(() => {
 
 <style scoped lang="scss">
 .args_select_menu {
-    position: absolute;
+    position: fixed;
     top: 32px;
     right: 0px;
     width: 100px;

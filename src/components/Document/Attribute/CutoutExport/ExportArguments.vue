@@ -1,5 +1,5 @@
 <script setup lang="ts">
-import { ref } from 'vue';
+import { ref, watchEffect } from 'vue';
 import ArgsSelect from './ArgsSelect.vue';
 import { Context } from '@/context';
 import { ExportFileFormat, ExportFormat, ExportFormatNameingScheme, Shape } from '@kcdesign/data';
@@ -18,14 +18,20 @@ interface Props {
 }
 const props = defineProps<Props>();
 const emits = defineEmits<{
-    (e: 'changeSize', index: number, argsi: number): void;
+    (e: 'changeSize', value: string, argsi: number): void;
     (e: 'changePerfix', index: number, argsi: number): void;
     (e: 'changeFormat', index: number, argsi: number): void;
+    (e: 'changeName', value: string, index: number): void;
     (e: 'delete', index: number): void;
 }>();
 const showCutoutSize = ref(false);
 const showCutoutPerfix = ref(false);
 const showCutoutFormat = ref(false);
+const cutout_size_input = ref<HTMLDivElement>();
+const cutout_perfix_input = ref<HTMLDivElement>();
+const cutout_format_input = ref<HTMLDivElement>();
+const top = ref(0);
+const left = ref(0);
 let sizeMenuItems: string[] = [];
 let perMenuItems: ExportFormatNameingScheme[] = [];
 let formatMenuItems: string[] = [];
@@ -33,27 +39,37 @@ let formatMenuItems: string[] = [];
 const sizeValue = ref(props.argus.format.scale + 'x');
 const perfixValue = ref(props.argus.format.namingScheme);
 const formatValue = ref(props.argus.format.fileFormat.toUpperCase());
+const name = ref(props.argus.format.name);
 const showCutoutSizeMenu = () => {
-    if(showCutoutSize.value) return showCutoutSize.value = false;
+    if (showCutoutSize.value) return showCutoutSize.value = false;
     props.context.menu.notify(Menu.SHADOW_CUTOUT_ARGS_MENU);
+    const { y, x } = cutout_size_input.value!.getBoundingClientRect();
+    top.value = y;
+    left.value = x;
     sizeMenuItems = props.sizeItems;
     showCutoutSize.value = true;
 };
 const showCutoutPerfixMenu = () => {
-    if(showCutoutPerfix.value) return showCutoutPerfix.value = false;
+    if (showCutoutPerfix.value) return showCutoutPerfix.value = false;
     props.context.menu.notify(Menu.SHADOW_CUTOUT_ARGS_MENU);
+    const { y, x } = cutout_perfix_input.value!.getBoundingClientRect();
+    top.value = y;
+    left.value = x;
     perMenuItems = props.perfixItems;
     showCutoutPerfix.value = true;
 };
 const showCutoutFormatMenu = () => {
-    if(showCutoutFormat.value) return showCutoutFormat.value = false;
+    if (showCutoutFormat.value) return showCutoutFormat.value = false;
     props.context.menu.notify(Menu.SHADOW_CUTOUT_ARGS_MENU);
+    const { y, x } = cutout_format_input.value!.getBoundingClientRect();
+    top.value = y;
+    left.value = x;
     formatMenuItems = props.formatItems;
     showCutoutFormat.value = true;
 };
 const selectSize = (i: number) => {
     sizeValue.value = props.sizeItems[i];
-    emits('changeSize', i, props.index);
+    emits('changeSize', props.sizeItems[i], props.index);
 }
 const selectPerfix = (i: number) => {
     perfixValue.value = props.perfixItems[i];
@@ -63,34 +79,84 @@ const selectFormat = (i: number) => {
     formatValue.value = props.formatItems[i];
     emits('changeFormat', i, props.index);
 }
-const deleteItem= () => {
+const nameInput = ref<HTMLInputElement>();
+const changeName = () => {
+    const value = nameInput.value!.value;
+    name.value = value;
+    emits('changeName', value, props.index);
+}
+const scaleInput = ref<HTMLInputElement>();
+const changeScale = () => {
+    const regex = /^(\d+|(\d+)x)$/;
+    const value = scaleInput.value!.value;
+    if (regex.test(value)) {
+        sizeValue.value = value;
+        emits('changeSize', value, props.index);
+    } else {
+        sizeValue.value = props.argus.format.scale + 'x';
+        scaleInput.value!.value = sizeValue.value;
+    }
+}
+
+const selectScale = () => {
+    if (scaleInput.value) {
+        scaleInput.value.select();
+    }
+}
+
+const selectName = () => {
+    if (nameInput.value) {
+        nameInput.value.select();
+    }
+}
+const deleteItem = () => {
     emits('delete', props.index);
 }
+watchEffect(() => {
+    if (props.argus.format.scale) {
+        sizeValue.value = props.argus.format.scale + 'x';
+    }
+    if (props.argus.format.namingScheme) {
+        perfixValue.value = props.argus.format.namingScheme;
+    }
+    if (props.argus.format.fileFormat) {
+        formatValue.value = props.argus.format.fileFormat.toUpperCase();
+    }
+    if (props.argus.format.name) {
+        name.value = props.argus.format.name;
+    }
+})
 </script>
 
 <template>
     <div class="args_container">
         <div class="format">
-            <div class="cutout_size_input cutout_export_input">
-                <input :value="sizeValue">
+            <div class="cutout_size_input cutout_export_input" ref="cutout_size_input">
+                <input :value="sizeValue" ref="scaleInput" @change="changeScale"  @focus="selectScale">
                 <div class="down-icon size" @click.stop="showCutoutSizeMenu">
                     <svg-icon icon-class="down"></svg-icon>
                 </div>
-                <ArgsSelect v-if="showCutoutSize" :context="props.context" :menuItems="sizeMenuItems" :selectValue="sizeValue" @close="showCutoutSize = false" @select="selectSize"></ArgsSelect>
+                <ArgsSelect v-if="showCutoutSize" :context="props.context" :menuItems="sizeMenuItems"
+                    :selectValue="sizeValue" @close="showCutoutSize = false" :top="top" :left="left" @select="selectSize">
+                </ArgsSelect>
             </div>
-            <div class="cutout_presuffix_input cutout_export_input">
-                <input :placeholder="t(`cutoutExport.${perfixValue}`)">
+            <div class="cutout_presuffix_input cutout_export_input" ref="cutout_perfix_input">
+                <input :placeholder="t(`cutoutExport.${perfixValue}`)" ref="nameInput" @focus="selectName" :value="name" @change="changeName">
                 <div class="down-icon presuffix" @click.stop="showCutoutPerfixMenu">
                     <svg-icon icon-class="down"></svg-icon>
                 </div>
-                <ArgsSelect v-if="showCutoutPerfix" :context="props.context" :menuItems="perMenuItems" :selectValue="perfixValue" :i18n="true" @close="showCutoutPerfix = false" @select="selectPerfix"></ArgsSelect>
+                <ArgsSelect v-if="showCutoutPerfix" :context="props.context" :menuItems="perMenuItems"
+                    :selectValue="perfixValue" :i18n="true" @close="showCutoutPerfix = false" :top="top" :left="left"
+                    @select="selectPerfix"></ArgsSelect>
             </div>
-            <div class="cutout_format_input cutout_export_input">
+            <div class="cutout_format_input cutout_export_input" ref="cutout_format_input">
                 <div class="span" @click.stop="showCutoutFormatMenu">{{ formatValue }}</div>
-                <div class="down-icon format-i"  @click.stop="showCutoutFormatMenu">
+                <div class="down-icon format-i" @click.stop="showCutoutFormatMenu">
                     <svg-icon icon-class="down"></svg-icon>
                 </div>
-                <ArgsSelect v-if="showCutoutFormat" :context="props.context" :menuItems="formatMenuItems" :selectValue="formatValue" @close="showCutoutFormat = false" @select="selectFormat"></ArgsSelect>
+                <ArgsSelect v-if="showCutoutFormat" :context="props.context" :menuItems="formatMenuItems"
+                    :selectValue="formatValue" @close="showCutoutFormat = false" :top="top" :left="left"
+                    @select="selectFormat"></ArgsSelect>
             </div>
         </div>
         <div class="delete" @click="deleteItem">
@@ -189,7 +255,6 @@ const deleteItem= () => {
                 font-family: var(--font-family);
                 text-overflow: ellipsis;
                 background-color: transparent;
-                padding-bottom: 5px;
             }
         }
 
@@ -208,7 +273,6 @@ const deleteItem= () => {
             border: none;
             font-size: var(--font-default-fontsize);
             outline: none;
-            margin-bottom: 2px;
         }
 
         .down-icon {
@@ -244,5 +308,4 @@ const deleteItem= () => {
             background-color: rgba(0, 0, 0, 0.1);
         }
     }
-}
-</style>
+}</style>

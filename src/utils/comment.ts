@@ -1,5 +1,5 @@
 import { Context } from "@/context";
-import { canBeTarget, isTarget, forGroupHover, Scout } from "./scout";
+import { canBeTarget, isTarget, finder_group, Scout } from "./scout";
 import { PageXY } from "@/context/selection";
 import { Shape, ShapeType } from "@kcdesign/data";
 export function searchCommentShape(context: Context, position: PageXY) {
@@ -13,7 +13,7 @@ export function finder(scout: Scout, g: Shape[], position: PageXY, selected: Sha
     for (let i = g.length - 1; i > -1; i--) { 
         if (canBeTarget(g[i])) {
             const item = g[i];
-            if ([ShapeType.Group, ShapeType.FlattenShape, ShapeType.Artboard].includes(item.type)) {
+            if ([ShapeType.Group, ShapeType.Artboard].includes(item.type)) {
                 const isItemIsTarget = isTarget(scout, item, position);
                 if (!isItemIsTarget) continue; // 如果整个容器和编组都不是目标元素，则不需要向下遍历
                 const c = item.childs as Shape[];
@@ -30,8 +30,8 @@ export function finder(scout: Scout, g: Shape[], position: PageXY, selected: Sha
                         result.push(item);
                         return result;
                     }
-                } else if ([ShapeType.Group, ShapeType.FlattenShape].includes(item.type)) {
-                    const g = forGroupHover(scout, item.childs, position, selected, true);
+                } else if ([ShapeType.Group].includes(item.type)) {
+                    const g = finder_group(scout, item.childs, position, selected, true);
                     if (g) {
                         result.push(g);
                         return result;

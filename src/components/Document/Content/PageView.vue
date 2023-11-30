@@ -6,6 +6,7 @@ import { onMounted, onUnmounted, ref, watch } from 'vue';
 import comsMap from './comsmap';
 import { v4 } from "uuid";
 import ShapeTitles from './ShapeTitles.vue';
+import ComponentTitleContainer from './ComponentTitleContainer.vue';
 import { debounce } from 'lodash';
 import ShapeCutout from '../Cutout/ShapeCutout.vue';
 interface Props {
@@ -85,6 +86,8 @@ onUnmounted(() => {
     </svg>
     <ShapeCutout :context="props.context" :data="data" :matrix="props.matrix" :transform="matrixWithFrame.toArray()"></ShapeCutout>
     <ShapeTitles v-if="show_t" :context="props.context" :data="data" :matrix="matrixWithFrame.toArray()"></ShapeTitles>
+    <ComponentTitleContainer :context="props.context" :data="data" :matrix="matrixWithFrame.toArray()">
+    </ComponentTitleContainer>
 </template>
 
 <style scoped>
