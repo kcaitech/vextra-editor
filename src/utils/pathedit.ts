@@ -44,7 +44,7 @@ export function get_parent_points(context: Context, indexes?: number[]) {
     if (indexes) {
         for (let i = 0, l = indexes.length; i < l; i++) {
             const _p = points[indexes[i]];
-            // if (!_p) continue;
+            if (!_p) continue;
             result.push(m.computeCoord3(_p));
         }
     } else {
