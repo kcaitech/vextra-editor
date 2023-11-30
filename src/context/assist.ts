@@ -1,6 +1,6 @@
-import {GroupShape, Matrix, Shape, Watchable} from "@kcdesign/data";
-import {PageXY, Selection, XY} from "./selection";
-import {Context} from ".";
+import { GroupShape, Matrix, Shape, Watchable } from "@kcdesign/data";
+import { PageXY, Selection, XY } from "./selection";
+import { Context } from ".";
 import {
     finder,
     get_frame,
@@ -137,17 +137,20 @@ export class Asssit extends Watchable(Object) {
     }
 
     setCPG2() {
+        this.clear();
         const path_shape = this.m_context.selection.pathshape;
-        if (!path_shape) return;
+        if (!path_shape) {
+            return;
+        }
         const points = path_shape.points;
         const f = path_shape.frame;
-        const m = new Matrix();
+        const m = new Matrix(path_shape.matrix2Root());
         m.preScale(f.width, f.height);
-        m.multiAtLeft(path_shape.matrix2Root());
-        this.clear();
+
         for (let i = 0, l = points.length; i < l; i++) {
-            const p = m.computeCoord(points[i]);
-            const item = {id: 'path-edit-mode', p};
+            const __p = points[i];
+            const p = m.computeCoord2(__p.x, __p.y);
+            const item = { id: __p.id, p };
             this.m_path_pg.set(i, item);
             const xs = this.m_x_axis.get(p.x);
             if (xs) {
@@ -162,6 +165,7 @@ export class Asssit extends Watchable(Object) {
                 this.m_y_axis.set(p.y, [item]);
             }
         }
+        console.log();
     }
 
     get except() {
@@ -260,9 +264,9 @@ export class Asssit extends Watchable(Object) {
         this.m_nodes_x = [];
         this.m_nodes_y = [];
         this.m_current_pg = gen_match_points_by_map(offsetMap, p);
-        const target = {x: 0, y: 0, sticked_by_x: false, sticked_by_y: false, alignX: Align.LT_X, alignY: Align.LT_Y};
-        const pre_target1: PT1 = {x: 0, sy: 0, align: Align.LT_X, delta: undefined};
-        const pre_target2: PT2 = {y: 0, sx: 0, align: Align.LT_Y, delta: undefined};
+        const target = { x: 0, y: 0, sticked_by_x: false, sticked_by_y: false, alignX: Align.LT_X, alignY: Align.LT_Y };
+        const pre_target1: PT1 = { x: 0, sy: 0, align: Align.LT_X, delta: undefined };
+        const pre_target2: PT2 = { y: 0, sx: 0, align: Align.LT_Y, delta: undefined };
         for (let i = 0, len = this.m_shape_inner.length; i < len; i++) {
             const cs = this.m_shape_inner[i];
             if (this.m_except.get(cs.id)) continue;
@@ -298,9 +302,9 @@ export class Asssit extends Watchable(Object) {
             this.m_context.workspace.setCFrame(frame);
         }
         this.m_current_pg = gen_match_points_by_map(offsetMap, p);
-        const target = {x: 0, y: 0, sticked_by_x: false, sticked_by_y: false, alignX: Align.LT_X, alignY: Align.LT_Y};
-        const pre_target1: PT1 = {x: 0, sy: 0, align: Align.LT_X, delta: undefined};
-        const pre_target2: PT2 = {y: 0, sx: 0, align: Align.LT_Y, delta: undefined};
+        const target = { x: 0, y: 0, sticked_by_x: false, sticked_by_y: false, alignX: Align.LT_X, alignY: Align.LT_Y };
+        const pre_target1: PT1 = { x: 0, sy: 0, align: Align.LT_X, delta: undefined };
+        const pre_target2: PT2 = { y: 0, sx: 0, align: Align.LT_Y, delta: undefined };
         for (let i = 0, len = this.m_shape_inner.length; i < len; i++) {
             const cs = this.m_shape_inner[i];
             if (this.m_except.get(cs.id)) continue;
@@ -329,9 +333,9 @@ export class Asssit extends Watchable(Object) {
         this.m_nodes_x = [];
         this.m_nodes_y = [];
         // this.m_current_pg = gen_match_points(s);  // *
-        const target = {x: 0, y: 0, sticked_by_x: false, sticked_by_y: false};
-        const pre_target1: PT4P1 = {x: 0, sy: 0, delta: undefined};
-        const pre_target2: PT4P2 = {y: 0, sx: 0, delta: undefined};
+        const target = { x: 0, y: 0, sticked_by_x: false, sticked_by_y: false };
+        const pre_target1: PT4P1 = { x: 0, sy: 0, delta: undefined };
+        const pre_target2: PT4P2 = { y: 0, sx: 0, delta: undefined };
         for (let i = 0, len = this.m_shape_inner.length; i < len; i++) {
             const cs = this.m_shape_inner[i];
             if (this.m_except.get(cs.id)) continue;
@@ -344,7 +348,7 @@ export class Asssit extends Watchable(Object) {
             target.x = pre_target1.x;
             target.sticked_by_x = true;
             this.m_nodes_x = (this.m_x_axis.get(target.x) || []).concat([{
-                p: {x: target.x, y: pre_target1.sy},
+                p: { x: target.x, y: pre_target1.sy },
                 id: 'ex'
             }]);
         }
@@ -352,7 +356,7 @@ export class Asssit extends Watchable(Object) {
             target.y = pre_target2.y;
             target.sticked_by_y = true;
             this.m_nodes_y = (this.m_y_axis.get(target.y) || []).concat([{
-                p: {x: pre_target2.sx, y: target.y},
+                p: { x: pre_target2.sx, y: target.y },
                 id: 'ex'
             }]);
         }
@@ -367,9 +371,9 @@ export class Asssit extends Watchable(Object) {
         if (!this.m_except.size) return;
         this.m_nodes_x = [];
         this.m_nodes_y = [];
-        const target = {x: 0, y: 0, sticked_by_x: false, sticked_by_y: false};
-        const pre_target1: PT4P1 = {x: 0, sy: 0, delta: undefined};
-        const pre_target2: PT4P2 = {y: 0, sx: 0, delta: undefined};
+        const target = { x: 0, y: 0, sticked_by_x: false, sticked_by_y: false };
+        const pre_target1: PT4P1 = { x: 0, sy: 0, delta: undefined };
+        const pre_target2: PT4P2 = { y: 0, sx: 0, delta: undefined };
         for (let i = 0, len = this.m_shape_inner.length; i < len; i++) {
             const cs = this.m_shape_inner[i];
             if (this.m_except.get(cs.id)) continue;
@@ -381,14 +385,14 @@ export class Asssit extends Watchable(Object) {
         if (pre_target1.delta !== undefined) {
             target.x = pre_target1.x, target.sticked_by_x = true;
             this.m_nodes_x = (this.m_x_axis.get(target.x) || []).concat([{
-                p: {x: target.x, y: pre_target1.sy},
+                p: { x: target.x, y: pre_target1.sy },
                 id: 'ex'
             }]);
         }
         if (pre_target2.delta !== undefined) {
             target.y = pre_target2.y, target.sticked_by_y = true;
             this.m_nodes_y = (this.m_y_axis.get(target.y) || []).concat([{
-                p: {x: pre_target2.sx, y: target.y},
+                p: { x: pre_target2.sx, y: target.y },
                 id: 'ex'
             }]);
         }
@@ -405,9 +409,9 @@ export class Asssit extends Watchable(Object) {
         this.m_nodes_x = [];
         this.m_nodes_y = [];
         const points = gen_match_points_by_map2(offsetMap, point);
-        const target = {x: 0, y: 0, sticked_by_x: false, sticked_by_y: false};
-        const pre_target1: PT4P1 = {x: 0, sy: 0, delta: undefined};
-        const pre_target2: PT4P2 = {y: 0, sx: 0, delta: undefined};
+        const target = { x: 0, y: 0, sticked_by_x: false, sticked_by_y: false };
+        const pre_target1: PT4P1 = { x: 0, sy: 0, delta: undefined };
+        const pre_target2: PT4P2 = { y: 0, sx: 0, delta: undefined };
         this.m_path_pg.forEach((v, k) => {
             if (indexes_set.has(k)) return;
             modify_pt_x_4_path_edit(pre_target1, v.p, points, this.stickness);
@@ -417,14 +421,14 @@ export class Asssit extends Watchable(Object) {
             target.x = pre_target1.x;
             target.sticked_by_x = true;
             this.m_nodes_x = (this.m_x_axis.get(target.x) || []).concat([
-                {p: {x: target.x, y: pre_target1.sy}, id: 'ex'}
+                { p: { x: target.x, y: pre_target1.sy }, id: 'ex' }
             ]);
         }
         if (pre_target2.delta !== undefined) {
             target.y = pre_target2.y;
             target.sticked_by_y = true;
             this.m_nodes_y = (this.m_y_axis.get(target.y) || []).concat([
-                {p: {x: pre_target2.sx, y: target.y}, id: 'ex'}
+                { p: { x: pre_target2.sx, y: target.y }, id: 'ex' }
             ]);
         }
         this.notify(Asssit.UPDATE_ASSIST);

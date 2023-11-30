@@ -179,6 +179,7 @@ declare module '@vue/runtime-core' {
     PageView: typeof import('./src/components/Document/Content/PageView.vue')['default']
     PageViewContextMenuItems: typeof import('./src/components/Document/Menu/PageViewContextMenuItems.vue')['default']
     Path: typeof import('./src/components/Document/Toolbar/Buttons/Path.vue')['default']
+    PathAssist: typeof import('./src/components/Document/Assist/PathAssist.vue')['default']
     PathClip: typeof import('./src/components/Document/Toolbar/PathEdit/PathClip.vue')['default']
     PathEditMode: typeof import('./src/components/Document/Selection/Controller/PathEdit/PathEditMode.vue')['default']
     PathEditTool: typeof import('./src/components/Document/Toolbar/PathEditTool.vue')['default']
