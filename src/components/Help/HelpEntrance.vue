@@ -17,7 +17,7 @@
                     <img class="code-image" :src="QRCode" alt="QRCode">
                 </div>
             </div>
-            <Report v-if="report"></Report>
+            <Report v-if="report" @close="report=false"></Report>
             <ShortCut v-if="shortcut" @close="shortcut = false" :b="shortcut"></ShortCut>
         </Teleport>
     </div>
@@ -102,6 +102,7 @@ onUnmounted(() => {
     z-index: 999;
     background-color: var(--overlay-bg-color);
 }
+
 .help-container {
     position: fixed;
     bottom: 16px;

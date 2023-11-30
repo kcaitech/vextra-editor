@@ -35,7 +35,7 @@ enum permissions {
 }
 const route = useRoute()
 const docID = props.docId ? props.docId : route.query.id
-const url = route.path !== '/document' ? `https://test.protodesign.cn/zbb/#/document?id=${docID}` + " " + `邀请您进入《${props.docName}》，点击链接开始协作` : location.href + ' ' + `邀请您进入《${props.docInfo?.document.name}》，点击链接开始协作`
+const url = route.path !== '/document' ? `https://protodesign.cn/#/document?id=${docID}` + " " + `邀请您进入《${props.docName}》，点击链接开始协作` : location.href + ' ' + `邀请您进入《${props.docInfo?.document.name}》，点击链接开始协作`
 
 const value1 = ref(props.shareSwitch)
 const authority = ref(false)

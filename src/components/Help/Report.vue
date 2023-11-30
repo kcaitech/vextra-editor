@@ -1,81 +1,89 @@
 <template>
     <div class="crad-box">
         <div class="title">
-            <div class="text">举报</div>
-            <div class="close">
+            <div class="text">{{ t('report.title') }}</div>
+            <div class="close" @click.stop="emits('close')">
                 <svg-icon icon-class="report-close"></svg-icon>
             </div>
         </div>
-        <div class="tips">请选择要举报的问题类型，并填写详细举报内容。</div>
-        <form ref="myfrom" @submit.prevent="tankuang(myfrom)">
+        <div class="tips">{{ t('report.tips') }}</div>
+        <form @submit.prevent="submitreport()">
             <div class="type">
-                <label for="selectOption">举报类型<svg-icon icon-class="tips-icon"></svg-icon></label>
+                <label for="selectOption">{{ t('report.type') }}<svg-icon icon-class="tips-icon"></svg-icon></label>
                 <select id="selectOption" v-model="selectedOption" required>
-                    <option value="" disabled selected hidden>请选择类型</option>
-                    <option value="option1">欺诈</option>
-                    <option value="option2">色情低俗</option>
-                    <option value="option3">不当言论</option>
-                    <option value="option4">其他</option>
+                    <option value="" disabled selected hidden>{{ t('report.type_normal') }}</option>
+                    <option value="option1">{{ t('report.type_value1') }}</option>
+                    <option value="option2">{{ t('report.type_value2') }}</option>
+                    <option value="option3">{{ t('report.type_value3') }}</option>
+                    <option value="option4">{{ t('report.type_value4') }}</option>
                 </select>
             </div>
             <div class="content">
-                <label for="textInput">举报内容<svg-icon icon-class="tips-icon"></svg-icon></label>
-                <textarea type="text" id="textInput" placeholder="请填写详细内容" v-model="textInput" :maxlength="300" required></textarea>
+                <label for="textInput">{{ t('report.report_content') }}<svg-icon icon-class="tips-icon"></svg-icon></label>
+                <textarea type="text" id="textInput" :placeholder="t('report.report_normal')" v-model="textInput"
+                    :maxlength="300" required></textarea>
             </div>
             <div class="imgs">
-                <div style="width: 58px;">上传截图</div>
-                <label for="imageInput"><svg-icon icon-class="add-icon"></svg-icon>添加文件</label>
-                <span>添加png、jpg格式文件，最多可上传5张</span>
-                <input style="height: 0;width: 0;opacity: 0;" ref="inputfile" type="file" id="imageInput"
+                <div style="width: 58px;">{{ t('report.upload_img') }}</div>
+                <label for="imageInput" :class="{ 'disabled': myfiles.length >= 5 ? true : false }"><svg-icon
+                        icon-class="add-icon"></svg-icon>{{ t('report.select_img') }}</label>
+                <span>{{ t('report.img_tips') }}</span>
+                <input style="height: 0;width: 0;opacity: 0;" type="file" id="imageInput"
                     @change="handleImageUpload($event)" accept=".png, .jpeg, .jpg"
                     :disabled="myfiles.length >= 5 ? true : false" multiple />
             </div>
-            <div class="img-item" v-for="(item, index) in myfiles" :key="index">
+            <div class="img-item" v-for="( item, index ) in  myfiles " :key="index">
                 <div class="left">
                     <svg-icon icon-class="annex-icon"></svg-icon>
-                    {{ item.name }}
+                    <span>{{ item.name }}</span>
                 </div>
                 <div class="del-bnt" @click.stop="deleteimg(index)"><svg-icon icon-class="delete-icon"></svg-icon></div>
             </div>
-            <br>
+            <div class="filetips" v-if="$route.name === 'document'">
+                <input type="checkbox" id="filetips" v-model="filepath">
+                <label for="filetips">{{ t('report.filet_ips') }}</label>
+            </div>
             <div class="bottom">
-                <button class="confirm" type="submit" :disabled="!isFormValid">提交举报</button>
-                <button class="cancel" type="button">取消</button>
+                <button class="confirm" type="submit" :disabled="!isFormValid">{{ t('report.submit') }}</button>
+                <button class="cancel" type="button" @click.stop="emits('close')">{{ t('report.cancel') }}</button>
             </div>
         </form>
     </div>
 </template>
 <script setup lang="ts">
 import { ElMessage } from 'element-plus';
-import { computed, nextTick, reactive, ref } from 'vue';
+import { computed, nextTick, ref } from 'vue';
+import select from '@/assets/select-icon.svg'
+import { useRoute } from 'vue-router';
+import { useI18n } from 'vue-i18n';
 
+const emits = defineEmits<{
+    (event: 'close'): void
+}>()
+
+const { t } = useI18n()
+const route = useRoute()
 const selectedOption = ref("")
 const textInput = ref("")
 const myfiles = ref<any[]>([])
-const myfrom = ref()
-const inputfile = ref()
-const form = reactive({
-    type: '',
-    desc: '',
-    imgs: [],
-})
+const filepath = ref(route.name === 'document' ? true : false)
 
 const isFormValid = computed(() => {
     return selectedOption.value !== "" && textInput.value !== ""
 })
 
 const deleteimg = (index: number) => {
-    inputfile.value = ''
     myfiles.value.splice(index, 1)
 }
 
-const tankuang = (data: any) => {
-    const mydata = new FormData(data)
+const submitreport = () => {
+    const mydata = new FormData()
+    mydata.append('type', selectedOption.value)
+    mydata.append('text', textInput.value)
     for (let i = 0; i < myfiles.value.length; i++) {
         mydata.append('img[]', myfiles.value[i])
     }
-    mydata.append('type', selectedOption.value)
-    mydata.append('text', textInput.value)
+    if (filepath.value) mydata.append('filepath', filepath.value ? location.href : '')
     nextTick(() => {
         mydata.forEach((value, key) => {
             console.log(`${key}:${value}`);
@@ -85,26 +93,36 @@ const tankuang = (data: any) => {
 
 const handleImageUpload = (e: any) => {
     const files = e.target.files
+    const types = e.target.accept
     const failfile = []
+    const alreadyexists = []
+    const laveimg = myfiles.value.length
     if (files) {
-        for (let i = 0; i < Math.min(files.length, 5); i++) {
-            if (myfiles.value.length < 5 && e.target.accept.includes(files[i].name.substring(files[i].name.lastIndexOf('.')).toLowerCase())) {
+        for (let i = 0; i < Math.min(files.length, 5 - laveimg); i++) {
+            const imgtype = files[i].name.substring(files[i].name.lastIndexOf('.')).toLowerCase()
+            const isFilePresent = myfiles.value.some(file => file.name === files[i].name);
+            if (myfiles.value.length < 5 && types.includes(imgtype) && !isFilePresent) {
                 myfiles.value.push(files[i])
-            } else if (!e.target.accept.includes(files[i].name.substring(files[i].name.lastIndexOf('.')).toLowerCase())) {
+            } else if (!types.includes(imgtype)) {
                 failfile.push(files[i].name)
             } else {
-
+                alreadyexists.push(files[i].name)
             }
         }
     }
-    if (failfile.length > 0) {
-        ElMessage.error({ duration: 1500, message: `${failfile.join(', ')},文件格式不符。` })
+    if (failfile.length > 0 || alreadyexists.length > 0) {
+        ElMessage.error({ duration: 1500, message: "图片格式不符或图片已存在" })
     }
     e.target.value = ''
 }
 
 </script>
 <style lang="scss" scoped>
+.disabled {
+    opacity: 0.4;
+    background-color: rgba(255, 255, 255, 1) !important;
+}
+
 .crad-box {
     position: absolute;
     top: 50%;
@@ -125,7 +143,7 @@ const handleImageUpload = (e: any) => {
         display: flex;
         align-items: center;
         justify-content: space-between;
-        line-height: 64px;
+        height: 64px;
 
         .text {
             font-size: 16px;
@@ -134,8 +152,19 @@ const handleImageUpload = (e: any) => {
 
         .close {
             display: flex;
-            width: 16px;
-            height: 16px;
+            width: 28px;
+            height: 28px;
+            padding: 6px;
+            border-radius: 6px;
+            box-sizing: border-box;
+
+            &:hover {
+                background-color: rgba(247, 247, 249, 1);
+            }
+
+            &:active {
+                background-color: rgba(243, 243, 245, 1);
+            }
 
             svg {
                 width: 100%;
@@ -228,6 +257,15 @@ const handleImageUpload = (e: any) => {
             font-size: 14px;
             font-weight: 600;
             color: rgba(51, 51, 51, 1);
+            box-sizing: border-box;
+
+            &:hover {
+                background-color: rgba(247, 247, 249, 1);
+            }
+
+            &:active {
+                background-color: rgba(243, 243, 245, 1);
+            }
 
             svg {
                 width: 14px;
@@ -239,7 +277,8 @@ const handleImageUpload = (e: any) => {
     }
 
     .img-item {
-        display: flex;
+        display: grid;
+        grid-template-columns: 23fr 1fr;
         align-items: center;
         justify-content: space-between;
         height: 24px;
@@ -247,11 +286,19 @@ const handleImageUpload = (e: any) => {
         border-radius: 4px;
 
         .left {
-            display: flex;
-            align-items: center;
+            display: grid;
+            grid-template-columns: 1fr 23fr;
+            align-items: end;
             gap: 4px;
 
+            span {
+                text-overflow: ellipsis;
+                white-space: nowrap;
+                overflow: hidden;
+            }
+
             svg {
+                margin-left: 4px;
                 width: 14px;
                 height: 14px;
             }
@@ -263,16 +310,57 @@ const handleImageUpload = (e: any) => {
             justify-content: center;
             width: 24px;
             height: 24px;
+            border-radius: 0px 4px 4px 0px;
+            visibility: hidden;
 
             svg {
                 width: 14px;
                 height: 14px;
                 color: rgba(140, 140, 140, 1);
             }
+
+            &:hover {
+                background-color: rgba(240, 240, 240, 1);
+            }
         }
 
         &:hover {
             background-color: rgba(245, 245, 245, 1);
+
+            .del-bnt {
+                visibility: visible;
+            }
+        }
+    }
+
+    .filetips {
+        display: flex;
+        align-items: center;
+        height: 48px;
+        gap: 6px;
+
+        input[type=checkbox] {
+            margin: 3px 0 0 0;
+            padding: 0;
+            width: 14px;
+            height: 14px;
+            border-radius: 4px;
+        }
+
+        input[type=checkbox]:checked::after {
+            position: absolute;
+            width: 14px;
+            height: 14px;
+            margin: -1px 0 0 -1px;
+            content: "";
+            color: #FFFFFF;
+            border-radius: 4px;
+            border: 1px solid rgba(24, 120, 245, 1);
+            background-image: url('@/assets/select-icon.svg');
+            background-repeat: no-repeat;
+            background-position: center center;
+            background-size: 60% 40%;
+            background-color: rgba(24, 120, 245, 1);
         }
     }
 
@@ -313,6 +401,19 @@ const handleImageUpload = (e: any) => {
             color: rgba(51, 51, 51, 1);
             background-color: #FFFFFF;
             border: 1px solid #F0F0F0;
+
+            &:hover {
+                background-color: rgba(247, 247, 249, 1);
+            }
+
+            &:active {
+                background-color: rgba(243, 243, 245, 1);
+            }
+
+            &:disabled {
+                opacity: 0.4;
+                background-color: rgba(255, 255, 255, 1);
+            }
         }
     }
 }
