@@ -211,6 +211,19 @@ export function __round_curve_point2(points: CurvePoint[], index: number) {
         next: points[next_index],
     }
 }
+
+export function bezierCurvePoint(t: number, p0: XY, p1: XY, p2: XY, p3: XY): XY {
+    return {
+        x: Math.pow(1 - t, 3) * p0.x + 3 * Math.pow(1 - t, 2) * t * p1.x + 3 * (1 - t) * Math.pow(t, 2) * p2.x + Math.pow(t, 3) * p3.x,
+        y: Math.pow(1 - t, 3) * p0.y + 3 * Math.pow(1 - t, 2) * t * p1.y + 3 * (1 - t) * Math.pow(t, 2) * p2.y + Math.pow(t, 3) * p3.y
+    };
+}
+export function straightPoint(t: number, p0: XY, p1: XY) {
+    return {
+        x: p0.x + (p1.x - p0.x) * t,
+        y: p0.y + (p1.y - p0.y) * t
+    }
+}
 export interface Segment {
     mode: CurveMode
     start: XY
@@ -221,20 +234,103 @@ export interface Segment {
     index: number
     is_selected: boolean
 }
-export function get_segments(shape: PathShape, matrix: Matrix, segment_set: Set<number>) {
+export function get_segments(shape: PathShape, matrix: Matrix, segment_set: Set<number>): Segment[] {
     const result_segments: Segment[] = [];
     const points = shape.points;
     if (!points?.length) {
         console.log('points?.length');
         return result_segments;
     }
+    const m = new Matrix(matrix);
+    m.preScale(shape.frame.width, shape.frame.height);
     for (let index = 0, l = points.length; index < l; index++) {
         const point = points[index];
-        const { previous, next } = __round_curve_point2(points, index);
-        if (previous.mode === CurveMode.Straight && next.mode !==  CurveMode.Straight) { // 前直后曲
-            
+        const next = __round_curve_point2(points, index).next;
+        if (point.hasTo) {
+            if (next.mode === CurveMode.Straight) { // 曲直
+                result_segments.push(c_s(m, point, next, index, segment_set));
+                continue;
+            }
+            if (next.hasTo) { // 曲曲
+                result_segments.push(c_c(m, point, next, index, segment_set));
+                continue;
+            }
+
+        } else {
+            if (next.mode === CurveMode.Straight) { // 直直
+                result_segments.push(s_s(m, point, next, index, segment_set));
+                continue;
+            }
+            if (next.hasTo) { // 直曲
+                result_segments.push(s_c(m, point, next, index, segment_set));
+                continue;
+            }
         }
     }
+    return result_segments;
+}
+function s_s(m: Matrix, point: CurvePoint, next: CurvePoint, index: number, segment_set: Set<number>): Segment {
+    const _p = m.computeCoord2(point.x, point.y);
+    const _next = m.computeCoord2(next.x, next.y);
+    const add = straightPoint(0.5, _p, _next);
+    return {
+        mode: point.mode,
+        start: _p,
+        from: _p,
+        to: _p,
+        end: _next,
+        add,
+        index,
+        is_selected: segment_set.has(index)
+    }
 
-
+}
+function s_c(m: Matrix, point: CurvePoint, next: CurvePoint, index: number, segment_set: Set<number>): Segment {
+    const _p = m.computeCoord2(point.x, point.y);
+    const _next_to = m.computeCoord2(next.toX || 0, next.toY || 0);
+    const _next = m.computeCoord2(next.x, next.y);
+    const add = bezierCurvePoint(0.5, _p, _p, _next_to, _next);
+    return {
+        mode: point.mode,
+        start: _p,
+        from: _p,
+        to: _next_to,
+        end: _next,
+        add,
+        index,
+        is_selected: segment_set.has(index)
+    }
+}
+function c_s(m: Matrix, point: CurvePoint, next: CurvePoint, index: number, segment_set: Set<number>): Segment {
+    const _p = m.computeCoord2(point.x, point.y);
+    const _point_from = m.computeCoord2(point.fromX || 0, point.fromY || 0);
+    const _next = m.computeCoord2(next.x, next.y);
+    const add = bezierCurvePoint(0.5, _p, _point_from, _next, _next);
+    return {
+        mode: point.mode,
+        start: _p,
+        from: _point_from,
+        to: _next,
+        end: _next,
+        add,
+        index,
+        is_selected: segment_set.has(index)
+    }
+}
+function c_c(m: Matrix, point: CurvePoint, next: CurvePoint, index: number, segment_set: Set<number>): Segment {
+    const _p = m.computeCoord2(point.x, point.y);
+    const _point_from = m.computeCoord2(point.fromX || 0, point.fromY || 0);
+    const _next_to = m.computeCoord2(next.toX || 0, next.toY || 0);
+    const _next = m.computeCoord2(next.x, next.y);
+    const add = bezierCurvePoint(0.5, _p, _point_from, _next_to, _next);
+    return {
+        mode: point.mode,
+        start: _p,
+        from: _point_from,
+        to: _next_to,
+        end: _next,
+        add,
+        index,
+        is_selected: segment_set.has(index)
+    }
 }

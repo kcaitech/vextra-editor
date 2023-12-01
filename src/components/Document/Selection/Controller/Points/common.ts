@@ -141,8 +141,12 @@ export function update_dot3(ps: { x: number, y: number, type?: CtrlElementType }
 }
 
 export function get_path_by_point(s: Shape, matrix: Matrix, set: Set<number>) {
-    const points = [], raw_p = (s as PathShape).points, m = new Matrix(matrix);
-    if (!raw_p?.length) return [];
+    const points = [];
+    const raw_p = (s as PathShape).points;
+    const m = new Matrix(matrix);
+    if (!raw_p?.length) {
+        return [];
+    }
     m.preScale(s.frame.width, s.frame.height);
     for (let i = 0, l = raw_p.length; i < l; i++) {
         const p = raw_p[i];
