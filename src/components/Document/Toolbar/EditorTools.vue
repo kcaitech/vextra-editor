@@ -1,7 +1,7 @@
 <script setup lang="ts">
-import {onMounted, onUnmounted, ref, computed, nextTick} from "vue";
-import {Context} from '@/context';
-import {Selection} from '@/context/selection';
+import { onMounted, onUnmounted, ref, computed, nextTick } from "vue";
+import { Context } from '@/context';
+import { Selection } from '@/context/selection';
 import Cursor from "./Buttons/Cursor.vue";
 import Frame from "./Buttons/Frame.vue";
 import GroupUngroup from "./GroupUngroup.vue";
@@ -102,8 +102,8 @@ function applyForEdit() {
 <template>
     <div v-if="isEdit && !isLable && !is_path_edit" class="editor-tools" @dblclick.stop>
         <Cursor @select="select" :d="selected" :active="selected === Action.AutoV || selected === Action.AutoK"
-                :is_lable="isLable" :edit="isEdit"></Cursor>
-        <div class="vertical-line"/>
+            :is_lable="isLable" :edit="isEdit"></Cursor>
+        <div class="vertical-line" />
         <Frame :context="props.context" :active="selected === Action.AddFrame" @select="select"></Frame>
         <Rect @select="select" :active="selected === Action.AddRect"></Rect>
         <Ellipse @select="select" :active="selected === Action.AddEllipse"></Ellipse>
@@ -114,7 +114,7 @@ function applyForEdit() {
         <Table @select="select" :active="selected === Action.AddTable" :context="props.context"></Table>
         <Contact @select="select" :active="selected === Action.AddContact" :context="props.context"></Contact>
         <Cutout @select="select" :active="selected === Action.AddCutout"></Cutout>
-        <div class="vertical-line"/>
+        <div class="vertical-line" />
         <CreateComps @select="select" :context="props.context"></CreateComps>
         <Comment @select="select" :active="selected === Action.AddComment" :workspace="workspace"></Comment>
         <GroupUngroup :context="props.context" :selection="props.selection"></GroupUngroup>
@@ -122,17 +122,16 @@ function applyForEdit() {
     <div v-if="isread || canComment || isLable" class="editor-tools" @dblclick.stop>
         <span style="color: #ffffff;">{{ t('apply.read_only') }}</span>
         <div class="button">
-            <button class="el" style="background-color: #865DFF;" @click="applyForEdit">{{ t('apply.apply_for_edit') }}</button>
+            <button class="el" style="background-color: #865DFF;" @click="applyForEdit">{{ t('apply.apply_for_edit')
+            }}</button>
         </div>
         <Cursor @select="select" :d="selected" :active="selected === Action.AutoV || selected === Action.AutoK"
-                :is_lable="isLable" :edit="isEdit"></Cursor>
-        <div class="vertical-line"/>
-        <Comment @select="select" :active="selected === Action.AddComment" :workspace="workspace"
-                 v-if="!isread"></Comment>
+            :is_lable="isLable" :edit="isEdit"></Cursor>
+        <div class="vertical-line" />
+        <Comment @select="select" :active="selected === Action.AddComment" :workspace="workspace" v-if="!isread"></Comment>
     </div>
     <PathEditTool v-if="isEdit && is_path_edit" class="editor-tools" :context="props.context" @select="select"
-                  :selected="selected"
-    ></PathEditTool>
+        :selected="selected"></PathEditTool>
 </template>
 
 <style scoped lang="scss">
@@ -145,7 +144,6 @@ function applyForEdit() {
     position: absolute;
     left: 50%;
     transform: translateX(-50%);
-    overflow: hidden;
 
     .vertical-line {
         width: 1px;

@@ -76,44 +76,44 @@ export function makeVarWatcher(obj: any): VarWatcher {
     return obj;
 }
 
-export function initCommonShape(props: { data: Shape, varsContainer?: (SymbolRefShape | SymbolShape)[] }, updater?: () => void) {
+export function initCommonShape(props: { data: Shape, varsContainer?: (SymbolRefShape | SymbolShape)[] }, updater?: (...args: any[]) => void) {
     const _reflush = ref(0);
-    const __var_onwatch = new Map<string, Variable[]>();
+    // const __var_onwatch = new Map<string, Variable[]>();
 
-    const watcher = () => {
+    const watcher = (...args: any[]) => {
         _reflush.value++;
-        if (updater) updater();
+        if (updater) updater(...args);
     }
 
-    const _watch_vars = (slot: string, vars: Variable[]) => {
-        const old = __var_onwatch.get(slot);
-        if (!old) {
-            vars.forEach((v) => v.watch(watcher));
-            __var_onwatch.set(slot, vars);
-            return;
-        }
-        if (old.length > vars.length) {
-            for (let i = vars.length, len = old.length; i < len; ++i) {
-                const v = old[i];
-                v.unwatch(watcher);
-            }
-        }
-        old.length = vars.length;
-        for (let i = 0, len = old.length; i < len; ++i) {
-            const o = old[i];
-            const v = vars[i];
-            if (o && o.id === v.id) continue;
-            if (o) o.unwatch(watcher);
-            v.watch(watcher);
-            old[i] = v;
-        }
-    }
-    const _var_on_removed = () => {
-        __var_onwatch.forEach((v: Variable[]) => {
-            v.forEach((v) => v.unwatch(watcher));
-        })
-        __var_onwatch.clear();
-    }
+    // const _watch_vars = (slot: string, vars: Variable[]) => {
+    //     const old = __var_onwatch.get(slot);
+    //     if (!old) {
+    //         vars.forEach((v) => v.watch(watcher));
+    //         __var_onwatch.set(slot, vars);
+    //         return;
+    //     }
+    //     if (old.length > vars.length) {
+    //         for (let i = vars.length, len = old.length; i < len; ++i) {
+    //             const v = old[i];
+    //             v.unwatch(watcher);
+    //         }
+    //     }
+    //     old.length = vars.length;
+    //     for (let i = 0, len = old.length; i < len; ++i) {
+    //         const o = old[i];
+    //         const v = vars[i];
+    //         if (o && o.id === v.id) continue;
+    //         if (o) o.unwatch(watcher);
+    //         v.watch(watcher);
+    //         old[i] = v;
+    //     }
+    // }
+    // const _var_on_removed = () => {
+    //     __var_onwatch.forEach((v: Variable[]) => {
+    //         v.forEach((v) => v.unwatch(watcher));
+    //     })
+    //     __var_onwatch.clear();
+    // }
 
     const ret = {
         get reflush() {
@@ -125,12 +125,12 @@ export function initCommonShape(props: { data: Shape, varsContainer?: (SymbolRef
         incReflush() {
             _reflush.value++;
         },
-        watchVars(consumedVars: { slot: string, vars: Variable[] }[]) {
-            for (let i = 0, len = consumedVars.length; i < len; ++i) {
-                const _vi = consumedVars[i];
-                _watch_vars(_vi.slot, _vi.vars);
-            }
-        }
+        // watchVars(consumedVars: { slot: string, vars: Variable[] }[]) {
+        //     for (let i = 0, len = consumedVars.length; i < len; ++i) {
+        //         const _vi = consumedVars[i];
+        //         _watch_vars(_vi.slot, _vi.vars);
+        //     }
+        // }
     };
 
     // watch varsContainer
@@ -151,7 +151,7 @@ export function initCommonShape(props: { data: Shape, varsContainer?: (SymbolRef
     })
     onUnmounted(() => {
         props.data.unwatch(watcher);
-        _var_on_removed();
+        // _var_on_removed();
         if (props.varsContainer) props.varsContainer.forEach((v) => v.unwatch(watcher));
     })
 

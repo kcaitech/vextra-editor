@@ -8,3 +8,5 @@ export * from "./myteam"
 export * from "./shadow"
 export * from "./cutout"
 export * from "./component"
+export * from "./report"
+
