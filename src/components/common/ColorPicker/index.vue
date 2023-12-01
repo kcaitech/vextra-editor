@@ -1,15 +1,14 @@
 <script setup lang="ts">
-import {ref, nextTick, reactive, onMounted, onUnmounted, computed, watch} from 'vue';
-import {Color} from '@kcdesign/data';
-import {useI18n} from 'vue-i18n';
-import {Context} from '@/context';
-import {WorkSpace} from '@/context/workspace';
-import {ClientXY, Selection} from '@/context/selection';
-import {simpleId} from '@/utils/common';
-import {Eyedropper} from './eyedropper';
+import { ref, nextTick, reactive, onMounted, onUnmounted, computed, watch } from 'vue';
+import { Color, Gradient } from '@kcdesign/data';
+import { useI18n } from 'vue-i18n';
+import { Context } from '@/context';
+import { WorkSpace } from '@/context/workspace';
+import { ClientXY, Selection } from '@/context/selection';
+import { simpleId } from '@/utils/common';
+import { Eyedropper } from './eyedropper';
 import {
     drawTooltip,
-    toRGBA,
     updateRecently,
     parseColorFormStorage,
     key_storage,
@@ -20,18 +19,23 @@ import {
     HSB2RGB,
     RGB2HSL,
     HSL2RGB,
-    getColorsFromDoc
+    getColorsFromDoc,
+    block_style_generator,
+    gradient_channel_generator,
+    StopEl,
+    stops_generator
 } from './utils';
-import {typical, model2label} from './typical';
-import {genOptions} from '@/utils/common';
-import Select, {SelectSource, SelectItem} from '@/components/common/Select.vue';
-import {Menu} from "@/context/menu";
+import { typical, model2label } from './typical';
+import { genOptions } from '@/utils/common';
+import Select, { SelectSource, SelectItem } from '@/components/common/Select.vue';
+import { Menu } from "@/context/menu";
 
 type RgbMeta = number[];
 
 interface Props {
     context: Context
     color: Color
+    gradient?: Gradient
     late?: number
     top?: number
     cell?: boolean
@@ -106,42 +110,43 @@ const HUE_WIDTH = 240;
 const HUE_HEIGHT = 180;
 const props = defineProps<Props>();
 const emit = defineEmits<Emits>();
-const {t} = useI18n();
+const { t } = useI18n();
 const modelOptions: SelectSource[] = genOptions([['RGB', 'RGB'], ['HSL', 'HSL'], ['HSB', 'HSB']]);
 const saturationEL = ref<HTMLElement>();
-const saturationELBounding: Bounding = {x: 0, y: 0, right: 0, bottom: 0};
+const saturationELBounding: Bounding = { x: 0, y: 0, right: 0, bottom: 0 };
 const typicalColor = ref<Color[]>(typical);
 const hueEl = ref<HTMLElement>();
 const alphaEl = ref<HTMLElement>();
 const blockId: string = simpleId();
-const lineAttribute: LineAttribute = {length: 196, begin: 0, end: 196};
+const lineAttribute: LineAttribute = { length: 196, begin: 0, end: 196 };
 const recent = ref<Color[]>([]);
 const document_colors = ref<{ times: number, color: Color }[]>([]);
 let inputTarget: HTMLInputElement;
 let handleIndex = 0;
-const mousedownPositon: ClientXY = {x: 0, y: 0};
+const mousedownPositon: ClientXY = { x: 0, y: 0 };
 let isDrag: boolean = false;
 const reflush = ref<number>(1);
 const data = reactive<Data>({
-    rgba: {R: 255, G: 0, B: 0, alpha: 1},
-    hueIndicatorAttr: {x: 0},
-    alphaIndicatorAttr: {x: lineAttribute.length - INDICATOR_WIDTH},
-    dotPosition: {left: HUE_WIDTH - DOT_WIDTH / 2, top: -DOT_WIDTH / 2}
+    rgba: { R: 255, G: 0, B: 0, alpha: 1 },
+    hueIndicatorAttr: { x: 0 },
+    alphaIndicatorAttr: { x: lineAttribute.length - INDICATOR_WIDTH },
+    dotPosition: { left: HUE_WIDTH - DOT_WIDTH / 2, top: -DOT_WIDTH / 2 }
 })
-const {rgba, hueIndicatorAttr, alphaIndicatorAttr, dotPosition} = data;
+const { rgba, hueIndicatorAttr, alphaIndicatorAttr, dotPosition } = data;
+const stop_els = ref<StopEl[]>([]);
 const h_rgb = computed<HRGB>(() => {
     const color = new Color(1, rgba.R, rgba.G, rgba.B);
     return getHRGB(RGB2H(color, hueIndicatorAttr.x / (lineAttribute.length - INDICATOR_WIDTH)));
 })
 const hsba = computed<HSBA>(() => {
-    const {R, G, B, alpha} = rgba;
-    const {h, s, b} = RGB2HSB(new Color(alpha, R, G, B));
-    return {H: h, S: s, V: b, alpha};
+    const { R, G, B, alpha } = rgba;
+    const { h, s, b } = RGB2HSB(new Color(alpha, R, G, B));
+    return { H: h, S: s, V: b, alpha };
 })
 const hsla = computed<HSLA>(() => {
-    const {R, G, B, alpha} = rgba;
-    const {h, s, l} = RGB2HSL(new Color(alpha, R, G, B));
-    return {H: h, S: s, L: l, alpha};
+    const { R, G, B, alpha } = rgba;
+    const { h, s, l } = RGB2HSL(new Color(alpha, R, G, B));
+    return { H: h, S: s, L: l, alpha };
 })
 const labels = computed(() => {
     return model2label.get(model.value.value as string) || ['R', 'G', 'B', 'A'];
@@ -170,7 +175,7 @@ const saturation = computed<number>(() => {
 const brightness = computed<number>(() => {
     return (1 - (dotPosition.top + DOT_WIDTH / 2) / HUE_HEIGHT);
 })
-const model = ref<SelectItem>({value: 'RGB', content: 'RGB'});
+const model = ref<SelectItem>({ value: 'RGB', content: 'RGB' });
 const sliders = ref<HTMLDivElement>();
 const block = ref<HTMLDivElement>();
 const popoverEl = ref<HTMLDivElement>();
@@ -179,7 +184,7 @@ const alphaIndicator = ref<HTMLDivElement>();
 const popoverVisible = ref<boolean>(false);
 const eyeDropper: Eyedropper = eyeDropperInit(); // 自制吸管🍉
 const need_update_recent = ref<boolean>(false);
-
+const gradient_channel_style = ref<any>({});
 function triggle() {
     const menu = props.context.menu;
     const exsit = menu.isColorPickerMount;
@@ -221,7 +226,7 @@ function colorPickerMount() {
             }
 
             const doc_height = document.documentElement.clientHeight;
-            const {height, y} = el.getBoundingClientRect();
+            const { height, y } = el.getBoundingClientRect();
 
             if (doc_height - y < height + 10) {
                 el.style.top = parseInt(el.style.top) - ((height + 20) - (doc_height - y)) + 'px'
@@ -240,6 +245,8 @@ function colorPickerMount() {
 }
 
 function removeCurColorPicker() {
+    console.log('COLOR-PICKER-UNMOUNT');
+
     if (need_update_recent.value) {
         update_recent_color();
         need_update_recent.value = false;
@@ -290,7 +297,7 @@ function is_drag(e: MouseEvent) {
 function setHueIndicatorPosition(e: MouseEvent) {
     if (sliders.value) {
         setMousedownPosition(e);
-        const {x, right} = sliders.value.getBoundingClientRect();
+        const { x, right } = sliders.value.getBoundingClientRect();
         lineAttribute.begin = x;
         lineAttribute.end = right;
         let placement = e.x - lineAttribute.begin;
@@ -326,7 +333,7 @@ function mousemove4Hue(e: MouseEvent) {
 function wheel(e: WheelEvent) {
     const wheel_step = 2;
     e.preventDefault();
-    const {deltaX, deltaY} = e;
+    const { deltaX, deltaY } = e;
     if (Math.abs(deltaX) + Math.abs(deltaY) < 150) { // 临时适配方案，需根据使用设备进一步完善适配
         // todo
     } else {
@@ -348,7 +355,7 @@ function wheel(e: WheelEvent) {
 function setAlphaIndicatorPosition(e: MouseEvent) {
     if (sliders.value) {
         setMousedownPosition(e);
-        const {x, right} = sliders.value.getBoundingClientRect();
+        const { x, right } = sliders.value.getBoundingClientRect();
         lineAttribute.begin = x;
         lineAttribute.end = right;
         let placement = e.x - lineAttribute.begin;
@@ -384,15 +391,15 @@ function mousemove4Alpha(e: MouseEvent) {
 function setDotPosition(e: MouseEvent) {
     if (saturationEL.value) {
         setMousedownPosition(e);
-        const {x: saturationX, y: saturationY, right, bottom} = saturationEL.value.getBoundingClientRect();
-        const {x: mx, y: my} = e;
+        const { x: saturationX, y: saturationY, right, bottom } = saturationEL.value.getBoundingClientRect();
+        const { x: mx, y: my } = e;
         dotPosition.left = mx - saturationX - 5;
         dotPosition.top = my - saturationY - 5;
         saturationELBounding.x = saturationX;
         saturationELBounding.y = saturationY;
         saturationELBounding.right = right;
         saturationELBounding.bottom = bottom;
-        const {R, G, B} = HSB2RGB(hue.value, saturation.value, brightness.value);
+        const { R, G, B } = HSB2RGB(hue.value, saturation.value, brightness.value);
         update(R, G, B);
         const color = new Color(rgba.alpha, Math.round(R), Math.round(G), Math.round(B));
         emit('change', color);
@@ -404,8 +411,8 @@ function setDotPosition(e: MouseEvent) {
 
 function mousemove4Dot(e: MouseEvent) {
     if (isDrag) {
-        const {x, y} = e;
-        const {x: saturationX, y: saturationY, right, bottom} = saturationELBounding;
+        const { x, y } = e;
+        const { x: saturationX, y: saturationY, right, bottom } = saturationELBounding;
         if (x >= saturationX && y <= bottom && x <= right && y >= saturationY) {
             dotPosition.left = x - saturationX - DOT_WIDTH / 2;
             dotPosition.top = y - saturationY - DOT_WIDTH / 2;
@@ -422,7 +429,7 @@ function mousemove4Dot(e: MouseEvent) {
             dotPosition.left = x - saturationX - DOT_WIDTH / 2;
             dotPosition.top = HUE_HEIGHT - (DOT_WIDTH / 2);
         }
-        const {R, G, B} = HSB2RGB(hue.value, saturation.value, brightness.value);
+        const { R, G, B } = HSB2RGB(hue.value, saturation.value, brightness.value);
         const color = new Color(rgba.alpha, Math.round(R), Math.round(G), Math.round(B));
         update(R, G, B);
         emit('change', color);
@@ -434,7 +441,7 @@ function mousemove4Dot(e: MouseEvent) {
 // set color
 function setRGB(indicator: number) {
     const h = (indicator / (lineAttribute.length - INDICATOR_WIDTH)) * 360;
-    const {R, G, B} = HSB2RGB(h, saturation.value, brightness.value);
+    const { R, G, B } = HSB2RGB(h, saturation.value, brightness.value);
     const color = new Color(rgba.alpha, Math.round(R), Math.round(G), Math.round(B));
     emit('change', color);
     update(R, G, B);
@@ -473,8 +480,8 @@ function mouseup() {
 
 function eyedropper() {
     if (!(window as any).EyeDropper) { // 不支持系统自带的接口，使用自实现的接口
-        const {x, y, right, bottom} = props.context.workspace.root;
-        eyeDropper.updateRoot({x, y, width: right - x, height: bottom - y});
+        const { x, y, right, bottom } = props.context.workspace.root;
+        eyeDropper.updateRoot({ x, y, width: right - x, height: bottom - y });
         eyeDropper.start(t('color.esc'));
     } else { // 调用系统自带的接口
         systemEyeDropper();
@@ -516,7 +523,7 @@ function eyeDropperInit(): Eyedropper {
         container: root,
         scale: 2,
         listener: {
-            onOk: ({color}) => {
+            onOk: ({ color }) => {
                 const rgb = hexToX(color);
                 rgba.R = rgb[0];
                 rgba.G = rgb[1];
@@ -605,8 +612,8 @@ function enter() {
                 rgba.alpha = Number(v) / 100;
             }
         } else if (model.value.value === 'HSB') {
-            const {H, S, V, alpha} = hsba.value;
-            const n = {H: H * 360, S, V, alpha};
+            const { H, S, V, alpha } = hsba.value;
+            const n = { H: H * 360, S, V, alpha };
             if (handleIndex === 0) {
                 n.H = Number(v);
             } else if (handleIndex === 1) {
@@ -622,8 +629,8 @@ function enter() {
             rgba.B = rgb_form_n.B;
             rgba.alpha = n.alpha;
         } else if (model.value.value === 'HSL') {
-            const {H, S, L, alpha} = hsla.value;
-            const n = {h: H, s: S, l: L, alpha};
+            const { H, S, L, alpha } = hsla.value;
+            const n = { h: H, s: S, l: L, alpha };
             if (handleIndex === 0) {
                 n.h = Number(v);
             } else if (handleIndex === 1) {
@@ -671,7 +678,7 @@ function update_recent_color() {
 }
 
 function update_dot_indicator_position(color: Color) {
-    const {h, s, b} = RGB2HSB(color);
+    const { h, s, b } = RGB2HSB(color);
     dotPosition.left = HUE_WIDTH * s - (DOT_WIDTH / 2);
     dotPosition.top = HUE_HEIGHT * (1 - b) - (DOT_WIDTH / 2);
     let hueIndicator = (lineAttribute.length * h) - (INDICATOR_WIDTH / 2);
@@ -685,11 +692,14 @@ function update_dot_indicator_position(color: Color) {
 }
 
 function init() {
-    const {red, green, blue, alpha} = props.color;
+    const { red, green, blue, alpha } = props.color;
     rgba.R = red;
     rgba.G = green;
     rgba.B = blue;
     rgba.alpha = alpha;
+    if (props.gradient) {
+        update_gradient(props.gradient);
+    }
     update_dot_indicator_position(props.color);
     update_alpha_indicator(props.color);
     let r = localStorage.getItem(key_storage);
@@ -699,11 +709,27 @@ function init() {
     for (let i = 0; i < r.length; i++) {
         recent.value.push(parseColorFormStorage(r[i]));
     }
+    if (popoverVisible.value) {
+        console.log('COLOR PICKER SHOW');
+    }
+}
+function update_gradient(gradient: Gradient) {
+    stop_els.value.length = 0;
+    gradient_channel_style.value = gradient_channel_generator(gradient);
+    stop_els.value = stops_generator(gradient, 148); // 148 条条的宽度 减去 一个圆的宽度
 }
 
 function update_alpha_indicator(color: Color) {
-    const {alpha} = color;
+    const { alpha } = color;
     alphaIndicatorAttr.x = (lineAttribute.length - INDICATOR_WIDTH) * alpha;
+}
+
+function _gradient_channel_down(e: MouseEvent) {
+    console.log('channel');
+}
+
+function _stop_down(e: MouseEvent) {
+    console.log('stop');
 }
 
 function selectionWatcher(t: any) {
@@ -721,7 +747,6 @@ function menu_watcher(t?: any, id?: string) {
 function window_blur() {
     isDrag = false;
 }
-
 onMounted(() => {
     props.context.selection.watch(selectionWatcher);
     props.context.menu.watch(menu_watcher);
@@ -734,11 +759,12 @@ onUnmounted(() => {
     props.context.selection.unwatch(selectionWatcher);
     props.context.menu.unwatch(menu_watcher);
     window.removeEventListener('blur', window_blur);
+    console.log('COLOR PICKER UNOMUNT');
 })
 </script>
 
 <template>
-    <div class="color-block" :style="{ backgroundColor: toRGBA(color) }" ref="block" @click="triggle">
+    <div class="color-block" :style="block_style_generator(color, gradient)" ref="block" @click="triggle">
         <div class="popover" ref="popoverEl" @click.stop v-if="popoverVisible" @wheel="wheel" @mousedown.stop>
             <!-- 头部 -->
             <div class="header">
@@ -747,9 +773,19 @@ onUnmounted(() => {
                     <svg-icon icon-class="close"></svg-icon>
                 </div>
             </div>
+            <!-- 渐变工具 -->
+            <div v-if="props.gradient" class="gradient-container">
+                <div class="line-container">
+                    <div class="line" :style="gradient_channel_style" @mousedown="_gradient_channel_down"></div>
+                    <div v-for="(item, i) in stop_els" :key="i" :class="item.is_active ? 'stop-active' : 'stop'"
+                        :style="{ left: item.left + 'px' }" @mousedown="_stop_down"></div>
+                </div>
+                <div class="reverse">翻转</div>
+                <div class="rotate">90度</div>
+            </div>
             <!-- 饱和度 -->
             <div class="saturation" @mousedown.stop="e => setDotPosition(e)"
-                 :style="{ backgroundColor: `rgba(${h_rgb.R}, ${h_rgb.G}, ${h_rgb.B}, 1)` }" ref="saturationEL">
+                :style="{ backgroundColor: `rgba(${h_rgb.R}, ${h_rgb.G}, ${h_rgb.B}, 1)` }" ref="saturationEL">
                 <div class="white"></div>
                 <div class="black"></div>
                 <div class="dot" :style="{ left: `${dotPosition.left}px`, top: `${dotPosition.top}px` }"></div>
@@ -757,7 +793,7 @@ onUnmounted(() => {
             <!-- 常用色 -->
             <div class="typical-container">
                 <div class="block" v-for="(c, idx) in typicalColor" :key="idx" @click="() => setColor(c as any)"
-                     :style="{ 'background-color': `rgba(${c.red}, ${c.green}, ${c.blue}, ${c.alpha * 100}%)` }"></div>
+                    :style="{ 'background-color': `rgba(${c.red}, ${c.green}, ${c.blue}, ${c.alpha * 100}%)` }"></div>
             </div>
             <div class="controller">
                 <div class="eyedropper">
@@ -771,9 +807,9 @@ onUnmounted(() => {
                     <!-- 透明度 -->
                     <div class="alpha-bacground">
                         <div class="alpha" @mousedown.stop="setAlphaIndicatorPosition" ref="alphaEl"
-                             :style="{ background: `linear-gradient(to right, rgba(${rgba.R}, ${rgba.G}, ${rgba.B}, 0) 0%, rgb(${rgba.R}, ${rgba.G}, ${rgba.B}) 100%)` }">
-                            <div class="alphaIndicator" ref="alphaIndicator"
-                                 :style="{ left: alphaIndicatorAttr.x + 'px' }"></div>
+                            :style="{ background: `linear-gradient(to right, rgba(${rgba.R}, ${rgba.G}, ${rgba.B}, 0) 0%, rgb(${rgba.R}, ${rgba.G}, ${rgba.B}) 100%)` }">
+                            <div class="alphaIndicator" ref="alphaIndicator" :style="{ left: alphaIndicatorAttr.x + 'px' }">
+                            </div>
                         </div>
                     </div>
                 </div>
@@ -787,7 +823,7 @@ onUnmounted(() => {
                     <div class="wrap">
                         <div class="value">
                             <div v-for="(i, idx) in values" :key="idx" class="item"><input :value="i"
-                                                                                           @click="(e) => inputClick(e, idx)"/>
+                                    @click="(e) => inputClick(e, idx)" />
                             </div>
                         </div>
                         <div class="label">
@@ -802,7 +838,8 @@ onUnmounted(() => {
                     <div class="header">{{ t('color.recently') }}</div>
                     <div class="typical-container">
                         <div class="block" v-for="(c, idx) in recent" :key="idx" @click="() => setColor(c as any)"
-                             :style="{ 'background-color': `rgba(${c.red}, ${c.green}, ${c.blue}, ${c.alpha * 100}%)` }"></div>
+                            :style="{ 'background-color': `rgba(${c.red}, ${c.green}, ${c.blue}, ${c.alpha * 100}%)` }">
+                        </div>
                     </div>
                 </div>
             </div>
@@ -812,9 +849,9 @@ onUnmounted(() => {
                     <div class="header">{{ t('color.documentc') }}</div>
                     <div class="documentc-container" @wheel.stop>
                         <div class="block" v-for="(c, idx) in document_colors" :key="idx"
-                             @click="() => setColor(c.color as any)"
-                             :title="t('color.times').replace('xx', c.times.toString())"
-                             :style="{ 'background-color': `rgba(${c.color.red}, ${c.color.green}, ${c.color.blue}, ${c.color.alpha * 100}%)` }">
+                            @click="() => setColor(c.color as any)"
+                            :title="t('color.times').replace('xx', c.times.toString())"
+                            :style="{ 'background-color': `rgba(${c.color.red}, ${c.color.green}, ${c.color.blue}, ${c.color.alpha * 100}%)` }">
                         </div>
                     </div>
                 </div>
@@ -842,7 +879,7 @@ onUnmounted(() => {
         box-shadow: 0 0px 10px 4px rgba($color: #000000, $alpha: 0.1);
         border-radius: 4px;
 
-        > .header {
+        >.header {
             width: 100%;
             height: 32px;
             position: relative;
@@ -858,7 +895,7 @@ onUnmounted(() => {
                 user-select: none;
             }
 
-            > .close {
+            >.close {
                 width: 16px;
                 height: 16px;
                 text-align: center;
@@ -871,35 +908,90 @@ onUnmounted(() => {
                 display: flex;
                 align-items: center;
 
-                > svg {
+                >svg {
                     width: 85%;
                     height: 85%;
                 }
             }
         }
 
-        > .saturation {
+        >.gradient-container {
+            display: flex;
+            align-items: center;
+            width: 100%;
+            height: 40px;
+            text-align: center;
+
+            .line-container {
+                flex: 1;
+                padding: 8px;
+                position: relative;
+
+                .line {
+                    width: 100%;
+                    height: 8px;
+                    border-radius: 4px;
+                    background-color: #222;
+                }
+
+                .stop {
+                    position: absolute;
+                    width: 8px;
+                    height: 8px;
+                    border: 1px solid #FCFCFC;
+                    border-radius: 50%;
+                    box-shadow: inset 0px 0px 0px 1px gray, 0px 0px 0px 1px gray;
+                    top: 12px;
+                    transform: translate(-50%, -50%);
+                }
+
+                .stop-active {
+                    position: absolute;
+                    width: 8px;
+                    height: 8px;
+                    border: 1px solid #FCFCFC;
+                    border-radius: 50%;
+                    box-shadow: inset 0px 0px 0px 1px var(--active-color-beta), 0px 0px 2px 2px var(--active-color-beta);
+                    top: 12px;
+                    transform: translate(-50%, -50%);
+                }
+            }
+
+            .reverse {
+                margin-left: 2px;
+                flex: 0 0 32px;
+                cursor: pointer;
+            }
+
+            .rotate {
+                margin-left: 2px;
+                flex: 0 0 32px;
+                cursor: pointer;
+            }
+        }
+
+        >.saturation {
             width: 100%;
             height: 180px;
             position: relative;
             cursor: pointer;
             overflow: hidden;
 
-            > .white {
+            >.white {
                 position: absolute;
                 width: 100%;
                 height: 100%;
                 background: linear-gradient(90deg, #fff, hsla(0, 0%, 100%, 0));
             }
 
-            > .black {
+            >.black {
                 position: absolute;
                 width: 100%;
                 height: 100%;
                 background: linear-gradient(0deg, #000, hsla(0, 0%, 100%, 0));
             }
 
-            > .dot {
+            >.dot {
                 width: 10px;
                 height: 10px;
                 border-radius: 50%;
@@ -910,7 +1002,7 @@ onUnmounted(() => {
             }
         }
 
-        > .typical-container {
+        >.typical-container {
             width: 100%;
             display: flex;
             flex-direction: row;
@@ -919,7 +1011,7 @@ onUnmounted(() => {
             padding: 10px 10px 0 10px;
             box-sizing: border-box;
 
-            > .block {
+            >.block {
                 width: 16px;
                 height: 16px;
                 border-radius: 2px;
@@ -928,7 +1020,7 @@ onUnmounted(() => {
             }
         }
 
-        > .controller {
+        >.controller {
             width: 100%;
             height: 52px;
             display: flex;
@@ -938,11 +1030,11 @@ onUnmounted(() => {
             box-sizing: border-box;
             justify-content: space-around;
 
-            > .sliders-container {
+            >.sliders-container {
                 width: 196px;
                 height: 32px;
 
-                > .hue {
+                >.hue {
                     position: relative;
                     width: 100%;
                     height: 10px;
@@ -950,7 +1042,7 @@ onUnmounted(() => {
                     border-radius: 5px 5px 5px 5px;
                     cursor: pointer;
 
-                    > .hueIndicator {
+                    >.hueIndicator {
                         top: -1px;
                         width: 12px;
                         height: 12px;
@@ -962,7 +1054,7 @@ onUnmounted(() => {
                     }
                 }
 
-                > .alpha-bacground {
+                >.alpha-bacground {
                     margin-top: 8px;
                     width: 100%;
                     height: 10px;
@@ -972,13 +1064,13 @@ onUnmounted(() => {
                     cursor: pointer;
                     box-sizing: border-box;
 
-                    > .alpha {
+                    >.alpha {
                         position: relative;
                         width: 100%;
                         height: 100%;
                         border-radius: 5px 5px 5px 5px;
 
-                        > .alphaIndicator {
+                        >.alphaIndicator {
                             top: -1px;
                             width: 12px;
                             height: 12px;
@@ -993,7 +1085,7 @@ onUnmounted(() => {
                 }
             }
 
-            > .eyedropper {
+            >.eyedropper {
                 width: 20px;
                 height: 20px;
                 display: flex;
@@ -1002,7 +1094,7 @@ onUnmounted(() => {
                 border-radius: 2px;
                 transition: 0.1s;
 
-                > svg {
+                >svg {
                     width: 60%;
                     height: 60%;
                 }
@@ -1057,7 +1149,7 @@ onUnmounted(() => {
                             width: 25%;
                             text-align: center;
 
-                            > input {
+                            >input {
                                 width: 100%;
                                 height: 100%;
                                 border: none;
@@ -1085,7 +1177,7 @@ onUnmounted(() => {
             }
         }
 
-        > .recently-container {
+        >.recently-container {
             width: 100%;
             display: flex;
             flex-direction: row;
@@ -1102,14 +1194,14 @@ onUnmounted(() => {
                     padding: 4px 0 8px 0;
                 }
 
-                > .typical-container {
+                >.typical-container {
                     width: 100%;
                     display: flex;
                     flex-direction: row;
                     align-items: center;
                     box-sizing: border-box;
 
-                    > .block {
+                    >.block {
                         width: 16px;
                         height: 16px;
                         border-radius: 2px;
@@ -1117,14 +1209,14 @@ onUnmounted(() => {
                         cursor: -webkit-image-set(url('data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAADAAAAAwCAYAAABXAvmHAAAAAXNSR0IArs4c6QAABV9JREFUaEPtmG1oVXUcxz8+zpZbLgcuTHDOF6OYsGoTI3IyMG14Hex67waJFERBqdALfZNDDLIoexG9qCjyTTBQat7bwoXMXRTntm4OFnIFr2srkPWc7VG7M77z/1/zsrvOuWdXEe4fDmdnnHPu5/f0/f3Ofx73+Jp3j/OTNeBuRzAbgWwEPHogm0IeHej58WwEPLvQ4wuyEfDoQM+PZyPg2YUeX3AnIqDfmH4I+aY5JjzyZ3wanQ8sNMciQNeCTwD/ADfM3/pfWiuTERDsYmAJ8BDQBDwM/A58B+wGRoExY0xaRmTKgAUGPhd4HAib6+le7gJqgSFjiCLiemXCAAt/P/Ak0GxqYCa4o8B+4BowbtLLlRFzbYDgcwDBPw0cmwVeoD8BT5m0GjH1cFcMkCOs55cC1cDn/wMv0D+BSuAXk0qu0yjdCCRLoy1YeX4r8JlDN8ZMHfwM/G2K2eGjt25LxwArjfL4I8BlQBK5pKys7FBvb+/zDgmkQLuAKPCbiYDk1dVKxwDBSh7l5TLgVeVyeXn5hxcuXKhy+OvS/zeBL036KJUkp64bWzoGCP4+IAB8DMRLS0uvxWKxcofwyvN3jDr9CvwBDJum5roXuDVA91uVeQDwFxcXv93X1+eQfdLD703zvIWXhLr2fjo1oPxXZxX88rq6uj0tLS0vjo+Pc/OmI+cJ/gvAel5NTPCuc996zG0ElP/qrg8Gg8G9J0+e3LNy5cp5hw8fZseOHVy/fn22SLxv+sJ0eOV92vBuI6ChTN7Pa2ho2N3a2rq/qKhofkdHB/n5+USjUTZs2MCNG6rP21dJSUkkHo83moLVLGQ971r3k9/tNAKCV+4vra+vf7mtra2xsLBwCt6+VLWwdu1aJib+S+fS0tLeWCy2F5DWC96ODZ7hnUZgCr6hoeGFSCTyxrJlyxZYzyd75OrVq6xatYpEIkFxcfEPfX19rwCDxgDJpfR/TuCdGDAFHwgEnuvo6HgrLy9vYSr44eFhqqur6ezsZMWKFQwODg4ArwPdpnDVbVUojireibTNlkJTg1kwGKzv7Ow8kpubu2g2+M2bN3Pu3Dm2bdv2TTgc/h54TX0CeAn41uj9nHl/tgjIMDWspYFAYGs0Gv00JydncSr4kZERtmzZwpkzZwT/dTgc/sjMNhrUNNjtMyOH0seT6jgtYqWOum3B+vXre/r7+wsuXbo0qTbJa3R0lJqaGk6fPo3P5/sqFApJLpUq6q4akeVxXQte6XNHDJDi5Pt8vmdDodDRpqYmgsHgjPA+n49Tp05Z+CNmNBCwNF7AMsB+/0pj0+q4qephphpQt51sVn6/f9fx48cPxeNx1qxZc9s7xsbGqK2tpbW1dTq85nopjTxvva2CFbQ95qyAU9WAcl+58qjf7393YGDgCaVIY6P60K2l0aGuro6WlhYZEW5ubtaIIHjNNvK+xgN5fTrsnIKnGiXsrFOwcePGUCQSeayqqor29nYOHjzIzp076enp4cCBA1y8eNHCK23seGBTJxneiSKmdU9yCkk69VW1HLgieBXnpk2bJo2wa926daOrV68Oh0KhD8zHiNLmjsPPlEIyQN+0hdu3bz924sSJchuBmpqay4lEom1oaOjHs2fPnjcjwV/mrNnG0/5OWu6f4ZPSRqAAeKaysnJfV1dXSUVFxZXu7u5PAO3lCFYSac+Sx5lyPl0mV88lp5CtgTwz8+usCVQFKEjBCt5CS2k8bw+6Ik66OdkAXU9+oJtGpmampiYDBKs00SFoFaqVRi8Mnp5N1QfshqzOdkPWNiQLnhFZdGtNqmHO7vsI3i55226Lu/2djN3v9IMmYwBeX/wvm6rTQFcM4lMAAAAASUVORK5CYII=') 1.5x) 4 28, auto;
                     }
 
-                    > .block:not(:first-child) {
+                    >.block:not(:first-child) {
                         margin-left: 6.2px;
                     }
                 }
             }
         }
 
-        > .dc-container {
+        >.dc-container {
             width: 100%;
             display: flex;
             flex-direction: row;
@@ -1141,7 +1233,7 @@ onUnmounted(() => {
                     padding: 4px 0 8px 0;
                 }
 
-                > .documentc-container {
+                >.documentc-container {
                     width: 100%;
                     max-height: 56px;
                     padding: 2px 0px;
@@ -1171,7 +1263,7 @@ onUnmounted(() => {
                         background-color: none;
                     }
 
-                    > .block {
+                    >.block {
                         display: inline-block;
                         width: 16px;
                         height: 16px;

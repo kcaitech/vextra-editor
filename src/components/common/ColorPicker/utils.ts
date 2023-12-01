@@ -1,5 +1,5 @@
 export const Reg_HEX = /^#([0-9a-fA-F]{2})([0-9a-fA-F]{2})([0-9a-fA-F]{2})$/;
-import { Border, Color, Fill, GroupShape, ShapeType, TableShape, TextShape } from '@kcdesign/data';
+import { Border, Color, Fill, Gradient, GroupShape, ShapeType, TableShape, TextShape, Stop } from '@kcdesign/data';
 import type { IColors, Rect, IRgba } from './eyedropper';
 import { Context } from '@/context';
 export interface HSB {
@@ -579,4 +579,55 @@ function finder(context: Context, shape: GroupShape | TableShape, init?: Map<str
 }
 function c2s(c: Color) {
   return `${c.alpha}|${c.red}|${c.green}|${c.blue}`;
+}
+export function block_style_generator(color: Color, gradient?: Gradient) {
+  const style: any = {
+    'background-color': toRGBA(color)
+  }
+  if (!gradient) {
+    return style;
+  }
+  delete style['background-color'];
+  style['background'] = 'linear-gradient(217deg,rgba(255, 0, 0, 0.8), rgba(255, 0, 0, 0) 70.71% ), linear-gradient(127deg, rgba(0, 255, 0, 0.8), rgba(0, 255, 0, 0) 70.71%), linear-gradient(336deg, rgba(0, 0, 255, 0.8), rgba(0, 0, 255, 0) 70.71%)';
+  return style;
+}
+export function gradient_channel_generator(gradient: Gradient) {
+  const stops = gradient.stops;
+  const style: any = {};
+  if (!stops?.length) {
+    return style;
+  }
+  let lg = 'linear-gradient(to right, ';
+  for (let i = 0, l = stops.length; i < l; i++) {
+    const s = stops[i];
+    const c = toRGBA(s.color!);
+    lg += `${c} ${s.position * 100}%, `
+  }
+  lg = lg.slice(0, lg.length - 2);
+  lg += ')';
+  style['background'] = lg;
+  return style;
+}
+export interface StopEl {
+  left: number
+  is_active: boolean
+  index: number
+  stop: Stop
+}
+export function stops_generator(gradient: Gradient, width: number) {
+  const result: StopEl[] = [];
+  const stops = gradient.stops;
+  if (!stops.length) {
+    return result;
+  }
+  for (let i = 0, l = stops.length; i < l; i++) {
+    const stop = stops[i];
+    result.push({
+      left: stop.position * width + 12,
+      is_active: false,
+      index: i,
+      stop
+    });
+  }
+  return result;
 }
