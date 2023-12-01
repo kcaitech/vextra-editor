@@ -9,6 +9,7 @@ import ExportArguments from './ExportArguments.vue';
 import { v4 } from 'uuid';
 import { useI18n } from 'vue-i18n';
 import { Selection } from '@/context/selection';
+import { get_actions_add_export_format, get_actions_export_format_delete, get_actions_export_format_file_format, get_actions_export_format_name, get_actions_export_format_perfix, get_actions_export_format_scale, get_actions_export_format_unify, get_export_formats } from '@/utils/shape_style';
 const { t } = useI18n();
 interface Props {
     context: Context
@@ -80,7 +81,12 @@ function updateData() {
             }
         }
     } else if (len > 1) {
-
+        const _formats = get_export_formats(selected);
+        if (_formats === 'mixed') {
+            mixed.value = true;
+        } else {
+            preinstallArgus.push(..._formats.reverse());
+        }
     }
     reflush.value++;
 }
@@ -117,29 +123,53 @@ const preinstall = (v: string) => {
             }
             break;
         case 'default':
-            if (len === 1) {
-                const shape = props.shapes[0];
-                const editor = props.context.editor4Shape(shape);
-                const format = new ExportFormat(v4(), 0, ExportFileFormat.Png, '', ExportFormatNameingScheme.Prefix, 1, ExportVisibleScaleType.Scale);
-                editor.addExportFormat([format]);
-            }
+            addDefault(len);
             break;
     }
 }
+const addDefault = (len: number) => {
+    const format = new ExportFormat(v4(), 0, ExportFileFormat.Png, '', ExportFormatNameingScheme.Prefix, 1, ExportVisibleScaleType.Scale);
+    if (len === 1) {
+        const shape = props.shapes[0];
+        const editor = props.context.editor4Shape(shape);
+        editor.addExportFormat([format]);
+    } else if (len > 1) {
+        if (mixed.value) {
+            const actions = get_actions_export_format_unify(props.shapes);
+            const page = props.context.selection.selectedPage;
+            if (page) {
+                const editor = props.context.editor4Page(page);
+                editor.shapesExportFormatUnify(actions);
+            }
+        } else {
+            const actions = get_actions_add_export_format(props.shapes, format);
+            const page = props.context.selection.selectedPage;
+            if (page) {
+                const editor = props.context.editor4Page(page);
+                editor.shapesAddExportFormat(actions);
+            }
+        }
+    }
+}
 function first() {
-  if (preinstallArgus.length === 0 && !mixed.value) preinstall('default');
+    if (preinstallArgus.length === 0 && !mixed.value) preinstall('default');
 }
 const changeSize = (value: string, idx: number) => {
     const _idx = preinstallArgus.length - idx - 1;
     const selected = props.context.selection.selectedShapes;
     const len = selected.length;
-    console.log(value,'v');
-    
     if (len === 1) {
         const shape = selected[0];
         const editor = props.context.editor4Shape(shape);
         editor.setExportFormatScale(_idx, parseFloat(value));
+    }else if (len > 1) {
+    const actions = get_actions_export_format_scale(props.shapes, _idx, parseFloat(value));
+    const page = props.context.selection.selectedPage;
+    if (page) {
+      const editor = props.context.editor4Page(page);
+      editor.setShapesExportFormatScale(actions);
     }
+  }
 }
 const changePerfix = (index: number, idx: number) => {
     const _idx = preinstallArgus.length - idx - 1;
@@ -149,7 +179,14 @@ const changePerfix = (index: number, idx: number) => {
         const shape = selected[0];
         const editor = props.context.editor4Shape(shape);
         editor.setExportFormatPerfix(_idx, perfixItems[index]);
+    }else if (len > 1) {
+    const actions = get_actions_export_format_perfix(props.shapes, _idx, perfixItems[index]);
+    const page = props.context.selection.selectedPage;
+    if (page) {
+      const editor = props.context.editor4Page(page);
+      editor.setShapesExportFormatPerfix(actions);
     }
+  }
 }
 const changeFormat = (index: number, idx: number) => {
     const _idx = preinstallArgus.length - idx - 1;
@@ -159,7 +196,14 @@ const changeFormat = (index: number, idx: number) => {
         const shape = selected[0];
         const editor = props.context.editor4Shape(shape);
         editor.setExportFormatFileFormat(_idx, fileFormat[index]);
+    }else if (len > 1) {
+    const actions = get_actions_export_format_file_format(props.shapes, _idx, fileFormat[index]);
+    const page = props.context.selection.selectedPage;
+    if (page) {
+      const editor = props.context.editor4Page(page);
+      editor.setShapesExportFormatFileFormat(actions);
     }
+  }
 }
 const changeName = (value: string, idx: number) => {
     const _idx = preinstallArgus.length - idx - 1;
@@ -169,7 +213,14 @@ const changeName = (value: string, idx: number) => {
         const shape = selected[0];
         const editor = props.context.editor4Shape(shape);
         editor.setExportFormatName(_idx, value);
+    }else if (len > 1) {
+    const actions = get_actions_export_format_name(props.shapes, _idx, value);
+    const page = props.context.selection.selectedPage;
+    if (page) {
+      const editor = props.context.editor4Page(page);
+      editor.setShapesExportFormatName(actions);
     }
+  }
 }
 const deleteArgus = (idx: number) => {
     const _idx = preinstallArgus.length - idx - 1;
@@ -177,9 +228,17 @@ const deleteArgus = (idx: number) => {
     const len = selected.length;
     if (len === 1) {
         const shape = selected[0];
+        if (shape.type === ShapeType.Cutout && preinstallArgus.length === 1) return;
         const editor = props.context.editor4Shape(shape);
         editor.deleteExportFormat(_idx);
+    } else if (len > 1) {
+    const actions = get_actions_export_format_delete(props.shapes, _idx);
+    const page = props.context.selection.selectedPage;
+    if (page) {
+      const editor = props.context.editor4Page(page);
+      editor.shapesDeleteExportFormat(actions);
     }
+  }
 }
 
 const trimBackground = (v: boolean) => {
@@ -247,26 +306,32 @@ onUnmounted(() => {
                 </PreinstallSelect>
             </div>
         </div>
-        <div class="argus" v-if="preinstallArgus.length > 0" preinstallArgus.length>
-            <ExportArguments v-for="(argus, index) in preinstallArgus" :key="argus.id" :index="index" :argus="argus"
-                :context="context" :shapes="shapes" :sizeItems="sizeItems" :perfixItems="perfixItems"
-                :formatItems="formatItems" @change-size="changeSize" @changePerfix="changePerfix" @change-name="changeName"
-                @change-format="changeFormat" @delete="deleteArgus">
-            </ExportArguments>
+        <div class="tips-wrap" v-if="mixed">
+            <span class="mixed-tips">{{ t('attr.mixed_lang') }}</span>
         </div>
-        <template v-if="exportOption">
-            <div class="canvas-bgc" v-if="isShowCheckbox">
+        <div v-else-if="!mixed">
+            <div class="argus" v-if="preinstallArgus.length > 0" preinstallArgus.length>
+                <ExportArguments v-for="(argus, index) in preinstallArgus" :key="argus.id" :index="index" :argus="argus"
+                    :context="context" :shapes="shapes" :sizeItems="sizeItems" :perfixItems="perfixItems"
+                    :length="preinstallArgus.length" :formatItems="formatItems" @change-size="changeSize"
+                    @changePerfix="changePerfix" @change-name="changeName" @change-format="changeFormat"
+                    @delete="deleteArgus">
+                </ExportArguments>
+            </div>
+            <div class="canvas-bgc" v-if="isShowCheckbox && exportOption">
                 <el-checkbox :model-value="trim_bg" @change="trimBackground" label="修剪透明像素" />
             </div>
-            <div class="canvas-bgc" v-if="isShowCheckbox">
+            <div class="canvas-bgc" v-if="isShowCheckbox && exportOption">
                 <el-checkbox :model-value="canvas_bg" @change="canvasBackground" label="画布背景色" />
             </div>
-            <div class="export-box">
+            <div class="export-box" v-if="preinstallArgus.length > 0">
                 <div><span>导出</span></div>
             </div>
-            <Preview :context="context" :shapes="shapes" :unfold="previewUnfold" @preview-change="previewCanvas"
-                :canvas_bg="canvas_bg" :trim_bg="trim_bg"></Preview>
-        </template>
+            <Preview v-if="context.selection.selectedShapes.length === 1 && exportOption" :context="context"
+                :shapes="shapes" :unfold="previewUnfold" @preview-change="previewCanvas" :canvas_bg="canvas_bg"
+                :trim_bg="trim_bg">
+            </Preview>
+        </div>
     </div>
 </template>
 
@@ -372,6 +437,17 @@ onUnmounted(() => {
                 border: 1px solid #000;
             }
         }
+    }
+}
+
+.tips-wrap {
+    padding: 12px 0;
+
+    .mixed-tips {
+        display: block;
+        width: 100%;
+        text-align: center;
+        font-size: var(--font-default-fontsize);
     }
 }
 </style>

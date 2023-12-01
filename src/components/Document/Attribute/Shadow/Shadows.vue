@@ -121,7 +121,7 @@ function toggleVisible(idx: number) {
     const e = props.context.editor4Shape(props.context.selection.selectedShapes[0]);
     e.setShadowEnable(_idx, isEnabled)
   } else if (len > 1) {
-    const actions = get_actions_shadow_enabled(props.shapes, idx, isEnabled);
+    const actions = get_actions_shadow_enabled(props.shapes, _idx, isEnabled);
     const page = props.context.selection.selectedPage;
     if (page) {
       const editor = props.context.editor4Page(page);

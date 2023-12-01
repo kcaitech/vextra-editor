@@ -2,7 +2,7 @@
 import { ref, watchEffect } from 'vue';
 import ArgsSelect from './ArgsSelect.vue';
 import { Context } from '@/context';
-import { ExportFileFormat, ExportFormat, ExportFormatNameingScheme, Shape } from '@kcdesign/data';
+import { ExportFileFormat, ExportFormat, ExportFormatNameingScheme, Shape, ShapeType } from '@kcdesign/data';
 import { Menu } from '@/context/menu';
 import { FormatItems } from './index.vue';
 import { useI18n } from 'vue-i18n';
@@ -15,6 +15,7 @@ interface Props {
     perfixItems: ExportFormatNameingScheme[]
     formatItems: string[]
     index: number
+    length: number
 }
 const props = defineProps<Props>();
 const emits = defineEmits<{
@@ -132,7 +133,7 @@ watchEffect(() => {
     <div class="args_container">
         <div class="format">
             <div class="cutout_size_input cutout_export_input" ref="cutout_size_input">
-                <input :value="sizeValue" ref="scaleInput" @change="changeScale"  @focus="selectScale">
+                <input :value="sizeValue" ref="scaleInput" @change="changeScale" @focus="selectScale">
                 <div class="down-icon size" @click.stop="showCutoutSizeMenu">
                     <svg-icon icon-class="down"></svg-icon>
                 </div>
@@ -141,7 +142,8 @@ watchEffect(() => {
                 </ArgsSelect>
             </div>
             <div class="cutout_presuffix_input cutout_export_input" ref="cutout_perfix_input">
-                <input :placeholder="t(`cutoutExport.${perfixValue}`)" ref="nameInput" @focus="selectName" :value="name" @change="changeName">
+                <input :placeholder="t(`cutoutExport.${perfixValue}`)" ref="nameInput" @focus="selectName" :value="name"
+                    @change="changeName">
                 <div class="down-icon presuffix" @click.stop="showCutoutPerfixMenu">
                     <svg-icon icon-class="down"></svg-icon>
                 </div>
@@ -159,7 +161,8 @@ watchEffect(() => {
                     @select="selectFormat"></ArgsSelect>
             </div>
         </div>
-        <div class="delete" @click="deleteItem">
+        <div class="delete" @click="deleteItem"
+            :class="{ opacity: props.length === 1 && props.shapes[0].type === ShapeType.Cutout }">
             <svg-icon icon-class="delete"></svg-icon>
         </div>
     </div>
@@ -308,4 +311,8 @@ watchEffect(() => {
             background-color: rgba(0, 0, 0, 0.1);
         }
     }
+}
+
+.opacity {
+    opacity: 0.3;
 }</style>

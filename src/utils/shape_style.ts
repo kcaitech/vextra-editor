@@ -1,7 +1,8 @@
 import {
     Color, Fill, Shape, FillColorAction, FillEnableAction, FillAddAction, FillDeleteAction, FillsReplaceAction,
-    Border, BorderColorAction, BorderEnableAction, BorderAddAction, BorderDeleteAction, BordersReplaceAction, BorderThicknessAction, BorderPositionAction, BorderStyleAction, BorderPosition, BorderStyle, Shadow, ShadowReplaceAction, ShadowAddAction, ShadowDeleteAction, ShadowEnableAction, ShadowPositionAction, ShadowPosition, ShadowColorAction, ShadowBlurRadiusAction, ShadowSpreadAction, ShadowOffsetXAction, ShadowOffsetYAction
+    Border, BorderColorAction, BorderEnableAction, BorderAddAction, BorderDeleteAction, BordersReplaceAction, BorderThicknessAction, BorderPositionAction, BorderStyleAction, BorderPosition, BorderStyle, Shadow, ShadowReplaceAction, ShadowAddAction, ShadowDeleteAction, ShadowEnableAction, ShadowPositionAction, ShadowPosition, ShadowColorAction, ShadowBlurRadiusAction, ShadowSpreadAction, ShadowOffsetXAction, ShadowOffsetYAction, ExportFormat, ExportFormatReplaceAction, ExportFormatAddAction, ExportFileFormat, ExportFormatNameingScheme, ExportVisibleScaleType, ExportFormatDeleteAction, ExportFormatScaleAction, ExportFormatNameAction, ExportFormatPerfixAction, ExportFormatFileFormatAction
 } from "@kcdesign/data";
+import { Expr } from "aws-sdk/clients/cloudsearchdomain";
 import { v4 } from "uuid";
 interface FillItem {
     id: number,
@@ -14,6 +15,10 @@ interface BorderItem {
 interface ShadowItem {
     id: number,
     shadow: Shadow
+}
+interface FormatItems {
+    id: number,
+    format: ExportFormat
 }
 // fills
 export function get_fills(shapes: Shape[]): FillItem[] | 'mixed' {
@@ -334,6 +339,121 @@ export function get_actions_shadow_offsety(shapes: Shape[], index: number, offse
     const actions: ShadowOffsetYAction[] = [];
     for (let i = 0; i < shapes.length; i++) {
         actions.push({ target: shapes[i], index, value: offsety });
+    }
+    return actions;
+}
+
+//export cutout
+export function get_export_formats(shapes: Shape[]): FormatItems[] | 'mixed' {
+    const formats: FormatItems[] = [];
+    const shape = shapes[0];
+    const options = shape.exportOptions;
+    const compare_str: string[] = [];
+    if (options) {
+        for (let i = 0, len = options.exportFormats.length; i < len; i++) {
+            const format = options.exportFormats[i];
+            const s = { id: i, format };
+            formats.push(s);
+            const str = [
+                format.scale,
+                format.name,
+                format.namingScheme,
+                format.fileFormat
+            ].join('-');
+            compare_str.push(str);
+        }
+    }
+    for (let i = 1; i < shapes.length; i++) {
+        const shape = shapes[i];
+        const options = shape.exportOptions;
+        if (options) {
+            const len = options.exportFormats.length;
+            if (len !== formats.length) return 'mixed';
+            const s_bs = options.exportFormats;
+            for (let j = 0; j < len; j++) {
+                const format = s_bs[j];
+                const str = [
+                    format.scale,
+                    format.name,
+                    format.namingScheme,
+                    format.fileFormat].join('-');
+                if (str !== compare_str[j]) return 'mixed';
+            }
+        } else {
+            if (formats.length > 0) return 'mixed';
+        }
+    }
+    return formats;
+}
+
+export function get_actions_export_format_unify(shapes: Shape[]): ExportFormatReplaceAction[] {
+    const actions: ExportFormatReplaceAction[] = [];
+    const options = shapes[0].exportOptions;
+    if (options) {
+        for (let i = 1; i < shapes.length; i++) {
+            const new_formats: ExportFormat[] = [];
+            for (let i = 0; i < options.exportFormats.length; i++) {
+                const format = options.exportFormats[i];
+                const { scale, name, namingScheme, fileFormat, absoluteSize, visibleScaleType } = format;
+                const new_format = new ExportFormat(v4(), absoluteSize, fileFormat, name, namingScheme, scale, visibleScaleType);
+                new_formats.push(new_format);
+            }
+            actions.push({ target: shapes[i], value: new_formats });
+        }
+    } else {
+        for (let i = 0; i < shapes.length; i++) {
+            const format = new ExportFormat(v4(), 0, ExportFileFormat.Png, '', ExportFormatNameingScheme.Prefix, 1, ExportVisibleScaleType.Scale);
+            actions.push({ target: shapes[i], value: [format] });
+        }
+    }
+
+    return actions;
+}
+
+export function get_actions_add_export_format(shapes: Shape[], format: ExportFormat) {
+    const actions: ExportFormatAddAction[] = [];
+    for (let i = 0; i < shapes.length; i++) {
+        const { scale, name, namingScheme, fileFormat, absoluteSize, visibleScaleType } = format;
+        const new_format = new ExportFormat(v4(), absoluteSize, fileFormat, name, namingScheme, scale, visibleScaleType);
+        actions.push({ target: shapes[i], value: new_format });
+    }
+    return actions;
+}
+
+export function get_actions_export_format_delete(shapes: Shape[], index: number) {
+    const actions: ExportFormatDeleteAction[] = [];
+    for (let i = 0; i < shapes.length; i++) {
+        actions.push({ target: shapes[i], index });
+    }
+    return actions;
+}
+
+export function get_actions_export_format_scale(shapes: Shape[], index: number, scale: number) {
+    const actions: ExportFormatScaleAction[] = [];
+    for (let i = 0; i < shapes.length; i++) {
+        actions.push({ target: shapes[i], index, value: scale });
+    }
+    return actions;
+}
+
+export function get_actions_export_format_name(shapes: Shape[], index: number, name: string) {
+    const actions: ExportFormatNameAction[] = [];
+    for (let i = 0; i < shapes.length; i++) {
+        actions.push({ target: shapes[i], index, value: name });
+    }
+    return actions;
+}
+export function get_actions_export_format_perfix(shapes: Shape[], index: number, perfix: ExportFormatNameingScheme) {
+    const actions: ExportFormatPerfixAction[] = [];
+    for (let i = 0; i < shapes.length; i++) {
+        actions.push({ target: shapes[i], index, value: perfix });
+    }
+    return actions;
+}
+export function get_actions_export_format_file_format(shapes: Shape[], index: number, fileFormat: ExportFileFormat) {
+    const actions: ExportFormatFileFormatAction[] = [];
+    for (let i = 0; i < shapes.length; i++) {
+        actions.push({ target: shapes[i], index, value: fileFormat });
     }
     return actions;
 }
