@@ -423,7 +423,7 @@ async function confirm_to_modify_name() {
             } else {
                 // 5. 失败提醒
                 ElMessage.closeAll('error');
-                ElMessage.error({ duration: 1500, message: t('percenter.errortips1') });
+                ElMessage.error({ duration: 1500, message: result.message === '审核不通过' ? t('system.sensitive_reminder') : t('percenter.errortips1') });
             }
         } catch (error) {
             ElMessage.closeAll('error');

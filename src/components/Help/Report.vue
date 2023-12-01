@@ -56,6 +56,7 @@ import { computed, nextTick, ref } from 'vue';
 import select from '@/assets/select-icon.svg'
 import { useRoute } from 'vue-router';
 import { useI18n } from 'vue-i18n';
+import { SassString } from 'sass';
 
 const emits = defineEmits<{
     (event: 'close'): void

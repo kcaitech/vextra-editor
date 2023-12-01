@@ -299,22 +299,22 @@ const rename1 = async () => {
         newname.value = renameinput.value?.value
         if (newname.value != name)
             try {
-                const { code } = await user_api.Setfilename({ doc_id: id, name: newname.value })
+                const { code, message } = await user_api.Setfilename({ doc_id: id, name: newname.value })
                 if (code === 0) {
                     ElMessage.closeAll('success')
                     ElMessage.success({ duration: 1500, message: t('percenter.successtips') })
                     emits('getDoucment')
                     emits('getUserdata')
+                    dialogVisible.value = false
                 } else {
                     ElMessage.closeAll('error')
-                    ElMessage.error({ duration: 1500, message: t('percenter.errortips1') })
+                    ElMessage.error({ duration: 1500, message: message === '审核不通过' ? t('system.sensitive_reminder') : t('percenter.errortips1') })
                 }
             } catch (error) {
                 ElMessage.closeAll('error')
                 ElMessage.error({ duration: 1500, message: t('home.other_tips') })
             }
     }
-    dialogVisible.value = false
 }
 
 //右键创建副本

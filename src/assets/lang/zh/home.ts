@@ -62,7 +62,8 @@ export const system = {
     'license_key': '粤ICP备2023042416号',
     'phonetips': '移动端暂不支持登录，请在电脑端进行登录！',
     'btn_login': '登录',
-    'artboart_title_visible': '显示容器标题'
+    'artboart_title_visible': '显示容器标题',
+    sensitive_reminder:'含有敏感信息，请重新输入。'
 }
 
 export const home = {

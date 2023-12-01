@@ -30,7 +30,7 @@
             </div>
         </div>
         <div class="addteam">
-            <button type="submit" :disabled=isDisabled @click.stop.once="createTeam">{{ t('Createteam.add_team') }}</button>
+            <button type="submit" :disabled=isDisabled @click.stop="createTeam">{{ t('Createteam.add_team') }}</button>
         </div>
     </div>
 </template>
@@ -75,14 +75,16 @@ const createTeam = async () => {
                 router.push({ path: `teams/${data.id}` })
                 sessionStorage.setItem('index', '6')
             }
-
         } else {
-            ElMessage.error(message)
+            ElMessage.error(message === '审核不通过' ? t('system.sensitive_reminder') : message)
+            formData.delete('name');
+            formData.delete('description');
         }
     } catch (error) {
         emits('close')
         ElMessage.error('创建失败')
     }
+
 }
 
 const selectimg = (e: any) => {

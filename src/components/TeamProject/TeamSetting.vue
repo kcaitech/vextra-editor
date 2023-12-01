@@ -89,7 +89,7 @@
         @clode-dialog="closeDisband" @confirm="confirmQuit"></ProjectDialog>
 </template>
 <script setup lang="ts">
-import { Ref, computed, inject, nextTick, ref } from 'vue';
+import { Ref, computed, inject, nextTick, ref, watch } from 'vue';
 import { useI18n } from 'vue-i18n';
 import * as user_api from '@/request/users'
 import { router } from '@/router';
@@ -135,6 +135,8 @@ interface teamDataType {
     }
 }
 
+
+
 const isDisabled: any = computed(() => {
     return teamSelfPermType.value === 0 || teamSelfPermType.value === 1 ? false : true
 })
@@ -170,9 +172,6 @@ const midDateTeamData = (teamData: Array<teamDataType>, id: string, updates: Par
 
 //修改团队名称
 const midNameRequest = async () => {
-    formData.delete('team_id')
-    formData.delete('name')
-    formData.append('team_id', teamID.value)
     formData.append('name', textareaValue.value)
     try {
         const { code, message } = await user_api.Setteaminfo(formData)
@@ -180,12 +179,16 @@ const midNameRequest = async () => {
             upDateTeamData(midDateTeamData(teamData.value, teamID.value, { name: textareaValue.value }))
             teamUpdate(!is_team_upodate.value)
             showoverlay.value = false
+            formData.delete('name')
         } else {
-            ElMessage.success(message)
+            ElMessage.error(message === '审核不通过' ? t('system.sensitive_reminder') : message)
+            formData.delete('name')
         }
     } catch (error) {
 
     }
+
+
 }
 
 //修改团队头像
@@ -196,22 +199,20 @@ const midAvatarRequest = async (e: any) => {
         const fileExtension = fileName.substring(fileName.lastIndexOf('.')).toLowerCase()
         const maxSizeInBytes = 2 * 1024 * 1024; // 2MB
         if (file && file.size <= maxSizeInBytes && e.target.accept.includes(fileExtension)) {
-            formData.delete('team_id')
-            formData.delete('avatar')
-            formData.append('team_id', teamID.value)
             formData.append('avatar', file)
             try {
                 const { code, message, data } = await user_api.Setteaminfo(formData)
                 if (code === 0) {
                     upDateTeamData(midDateTeamData(teamData.value, teamID.value, { avatar: data.avatar }))
                     teamUpdate(!is_team_upodate.value)
+                    formData.delete('avatar')
                 } else {
-                    ElMessage.error(message)
+                    ElMessage.error(message === '头像审核不通过' ? t('system.sensitive_reminder') : message)
+                    formData.delete('avatar')
                 }
             } catch (error) {
                 ElMessage.error('修改失败')
             }
-
         } else {
             ElMessage.error(t('percenter.errortips'))
         }
@@ -220,18 +221,17 @@ const midAvatarRequest = async (e: any) => {
 
 //修改团队描述
 const midDescriptionRequest = async () => {
-    formData.delete('team_id')
-    formData.delete('description')
-    formData.append('team_id', teamID.value)
     formData.append('description', textareaValue.value)
     try {
         const { code, message } = await user_api.Setteaminfo(formData)
         if (code === 0) {
             upDateTeamData(midDateTeamData(teamData.value, teamID.value, { description: textareaValue.value }))
             teamUpdate(!is_team_upodate.value)
+            formData.delete('description')
             showoverlay.value = false
         } else {
-            ElMessage.success(message)
+            ElMessage.error(message === '审核不通过' ? t('system.sensitive_reminder') : message)
+            formData.delete('description')
         }
     } catch (error) {
 
@@ -319,6 +319,11 @@ const confirm = () => {
             return
     }
 }
+
+watch(teamID, () => {
+    formData.delete('team_id')
+    formData.append('team_id', teamID.value)
+})
 
 </script>
 <style lang="scss" scoped>
