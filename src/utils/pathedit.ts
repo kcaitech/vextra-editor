@@ -234,41 +234,6 @@ export interface Segment {
     index: number
     is_selected: boolean
 }
-export function get_segments(shape: PathShape, matrix: Matrix, segment_set: Set<number>): Segment[] {
-    const result_segments: Segment[] = [];
-    const points = shape.points;
-    if (!points?.length) {
-        console.log('points?.length');
-        return result_segments;
-    }
-    const m = new Matrix(matrix);
-    m.preScale(shape.frame.width, shape.frame.height);
-    for (let index = 0, l = points.length; index < l; index++) {
-        const point = points[index];
-        const next = __round_curve_point2(points, index).next;
-        if (point.hasTo) {
-            if (next.mode === CurveMode.Straight) { // 曲直
-                result_segments.push(c_s(m, point, next, index, segment_set));
-                continue;
-            }
-            if (next.hasTo) { // 曲曲
-                result_segments.push(c_c(m, point, next, index, segment_set));
-                continue;
-            }
-
-        } else {
-            if (next.mode === CurveMode.Straight) { // 直直
-                result_segments.push(s_s(m, point, next, index, segment_set));
-                continue;
-            }
-            if (next.hasTo) { // 直曲
-                result_segments.push(s_c(m, point, next, index, segment_set));
-                continue;
-            }
-        }
-    }
-    return result_segments;
-}
 function s_s(m: Matrix, point: CurvePoint, next: CurvePoint, index: number, segment_set: Set<number>): Segment {
     const _p = m.computeCoord2(point.x, point.y);
     const _next = m.computeCoord2(next.x, next.y);
@@ -333,4 +298,36 @@ function c_c(m: Matrix, point: CurvePoint, next: CurvePoint, index: number, segm
         index,
         is_selected: segment_set.has(index)
     }
+}
+function _segmeng_generator(m: Matrix, point: CurvePoint, next: CurvePoint, index: number, segment_set: Set<number>) {
+    if (point.hasTo) {
+        if (next.hasTo) {
+            return c_c(m, point, next, index, segment_set);
+        } else {
+            return c_s(m, point, next, index, segment_set);
+        }
+    } else {
+        if (next.hasTo) {
+            return s_c(m, point, next, index, segment_set);
+        } else {
+            return s_s(m, point, next, index, segment_set);
+        }
+    }
+}
+
+export function get_segments(shape: PathShape, matrix: Matrix, segment_set: Set<number>): Segment[] {
+    const result_segments: Segment[] = [];
+    const points = shape.points;
+    if (!points?.length) {
+        console.log('points?.length');
+        return result_segments;
+    }
+    const m = new Matrix(matrix);
+    m.preScale(shape.frame.width, shape.frame.height);
+    for (let index = 0, l = points.length; index < l; index++) {
+        const point = points[index];
+        const next = __round_curve_point2(points, index).next;
+        result_segments.push(_segmeng_generator(m, point, next, index, segment_set))
+    }
+    return result_segments;
 }
