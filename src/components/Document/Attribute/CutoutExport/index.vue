@@ -87,6 +87,20 @@ function updateData() {
         } else {
             preinstallArgus.push(..._formats.reverse());
         }
+    } else {
+        const page = props.context.selection.selectedPage;
+        if (page) {
+            const options = page.exportOptions;
+            if (options) {
+                exportOption.value = options;
+                previewUnfold.value = options.unfold;
+                for (let i = 0; i < options.exportFormats.length; i++) {
+                    const format = options.exportFormats[i];
+                    const f = { id: i, format };
+                    preinstallArgus.unshift(f);
+                }
+            }
+        }
     }
     reflush.value++;
 }
@@ -100,27 +114,10 @@ const preinstall = (v: string) => {
     const len = props.shapes.length;
     switch (v) {
         case 'ios':
-            if (len === 1) {
-                const shape = props.shapes[0];
-                const editor = props.context.editor4Shape(shape);
-                const format1 = new ExportFormat(v4(), 0, ExportFileFormat.Png, '', ExportFormatNameingScheme.Prefix, 1, ExportVisibleScaleType.Scale);
-                const format2 = new ExportFormat(v4(), 0, ExportFileFormat.Png, '@2x', ExportFormatNameingScheme.Suffix, 2, ExportVisibleScaleType.Scale);
-                const format3 = new ExportFormat(v4(), 0, ExportFileFormat.Png, '@3x', ExportFormatNameingScheme.Suffix, 3, ExportVisibleScaleType.Scale);
-                const formars = [format1, format2, format3]
-                editor.addExportFormat(formars);
-            }
+            addIos(len);
             break;
         case 'android':
-            if (len === 1) {
-                const shape = props.shapes[0];
-                const editor = props.context.editor4Shape(shape);
-                const format1 = new ExportFormat(v4(), 0, ExportFileFormat.Png, 'mdpi/', ExportFormatNameingScheme.Prefix, 1, ExportVisibleScaleType.Scale);
-                const format2 = new ExportFormat(v4(), 0, ExportFileFormat.Png, 'xhdpi/', ExportFormatNameingScheme.Prefix, 2, ExportVisibleScaleType.Scale);
-                const format3 = new ExportFormat(v4(), 0, ExportFileFormat.Png, 'xxhdpi/', ExportFormatNameingScheme.Prefix, 3, ExportVisibleScaleType.Scale);
-                const format4 = new ExportFormat(v4(), 0, ExportFileFormat.Png, 'xxxhdpi/', ExportFormatNameingScheme.Prefix, 4, ExportVisibleScaleType.Scale);
-                const formars = [format1, format2, format3, format4]
-                editor.addExportFormat(formars);
-            }
+            addAndroid(len);
             break;
         case 'default':
             addDefault(len);
@@ -129,20 +126,76 @@ const preinstall = (v: string) => {
 }
 const addDefault = (len: number) => {
     const format = new ExportFormat(v4(), 0, ExportFileFormat.Png, '', ExportFormatNameingScheme.Prefix, 1, ExportVisibleScaleType.Scale);
+    const formars = [format];
     if (len === 1) {
         const shape = props.shapes[0];
         const editor = props.context.editor4Shape(shape);
         editor.addExportFormat([format]);
     } else if (len > 1) {
         if (mixed.value) {
-            const actions = get_actions_export_format_unify(props.shapes);
+            const actions = get_actions_export_format_unify(props.shapes, formars);
             const page = props.context.selection.selectedPage;
             if (page) {
                 const editor = props.context.editor4Page(page);
                 editor.shapesExportFormatUnify(actions);
             }
         } else {
-            const actions = get_actions_add_export_format(props.shapes, format);
+            const actions = get_actions_add_export_format(props.shapes, formars);
+            const page = props.context.selection.selectedPage;
+            if (page) {
+                const editor = props.context.editor4Page(page);
+                editor.shapesAddExportFormat(actions);
+            }
+        }
+    }
+}
+const addAndroid = (len: number) => {
+    const format1 = new ExportFormat(v4(), 0, ExportFileFormat.Png, 'mdpi/', ExportFormatNameingScheme.Prefix, 1, ExportVisibleScaleType.Scale);
+    const format2 = new ExportFormat(v4(), 0, ExportFileFormat.Png, 'xhdpi/', ExportFormatNameingScheme.Prefix, 2, ExportVisibleScaleType.Scale);
+    const format3 = new ExportFormat(v4(), 0, ExportFileFormat.Png, 'xxhdpi/', ExportFormatNameingScheme.Prefix, 3, ExportVisibleScaleType.Scale);
+    const format4 = new ExportFormat(v4(), 0, ExportFileFormat.Png, 'xxxhdpi/', ExportFormatNameingScheme.Prefix, 4, ExportVisibleScaleType.Scale);
+    const formars = [format1, format2, format3, format4]
+    if (len === 1) {
+        const shape = props.shapes[0];
+        const editor = props.context.editor4Shape(shape);
+        editor.addExportFormat(formars);
+    } else if (len > 1) {
+        if (mixed.value) {
+            const actions = get_actions_export_format_unify(props.shapes, formars, true);
+            const page = props.context.selection.selectedPage;
+            if (page) {
+                const editor = props.context.editor4Page(page);
+                editor.shapesExportFormatUnify(actions);
+            }
+        } else {
+            const actions = get_actions_add_export_format(props.shapes, formars);
+            const page = props.context.selection.selectedPage;
+            if (page) {
+                const editor = props.context.editor4Page(page);
+                editor.shapesAddExportFormat(actions);
+            }
+        }
+    }
+}
+const addIos = (len: number) => {
+    const format1 = new ExportFormat(v4(), 0, ExportFileFormat.Png, '', ExportFormatNameingScheme.Prefix, 1, ExportVisibleScaleType.Scale);
+    const format2 = new ExportFormat(v4(), 0, ExportFileFormat.Png, '@2x', ExportFormatNameingScheme.Suffix, 2, ExportVisibleScaleType.Scale);
+    const format3 = new ExportFormat(v4(), 0, ExportFileFormat.Png, '@3x', ExportFormatNameingScheme.Suffix, 3, ExportVisibleScaleType.Scale);
+    const formars = [format1, format2, format3]
+    if (len === 1) {
+        const shape = props.shapes[0];
+        const editor = props.context.editor4Shape(shape);
+        editor.addExportFormat(formars);
+    } else if (len > 1) {
+        if (mixed.value) {
+            const actions = get_actions_export_format_unify(props.shapes, formars, true);
+            const page = props.context.selection.selectedPage;
+            if (page) {
+                const editor = props.context.editor4Page(page);
+                editor.shapesExportFormatUnify(actions);
+            }
+        } else {
+            const actions = get_actions_add_export_format(props.shapes, formars);
             const page = props.context.selection.selectedPage;
             if (page) {
                 const editor = props.context.editor4Page(page);
@@ -162,14 +215,14 @@ const changeSize = (value: string, idx: number) => {
         const shape = selected[0];
         const editor = props.context.editor4Shape(shape);
         editor.setExportFormatScale(_idx, parseFloat(value));
-    }else if (len > 1) {
-    const actions = get_actions_export_format_scale(props.shapes, _idx, parseFloat(value));
-    const page = props.context.selection.selectedPage;
-    if (page) {
-      const editor = props.context.editor4Page(page);
-      editor.setShapesExportFormatScale(actions);
+    } else if (len > 1) {
+        const actions = get_actions_export_format_scale(props.shapes, _idx, parseFloat(value));
+        const page = props.context.selection.selectedPage;
+        if (page) {
+            const editor = props.context.editor4Page(page);
+            editor.setShapesExportFormatScale(actions);
+        }
     }
-  }
 }
 const changePerfix = (index: number, idx: number) => {
     const _idx = preinstallArgus.length - idx - 1;
@@ -179,14 +232,14 @@ const changePerfix = (index: number, idx: number) => {
         const shape = selected[0];
         const editor = props.context.editor4Shape(shape);
         editor.setExportFormatPerfix(_idx, perfixItems[index]);
-    }else if (len > 1) {
-    const actions = get_actions_export_format_perfix(props.shapes, _idx, perfixItems[index]);
-    const page = props.context.selection.selectedPage;
-    if (page) {
-      const editor = props.context.editor4Page(page);
-      editor.setShapesExportFormatPerfix(actions);
+    } else if (len > 1) {
+        const actions = get_actions_export_format_perfix(props.shapes, _idx, perfixItems[index]);
+        const page = props.context.selection.selectedPage;
+        if (page) {
+            const editor = props.context.editor4Page(page);
+            editor.setShapesExportFormatPerfix(actions);
+        }
     }
-  }
 }
 const changeFormat = (index: number, idx: number) => {
     const _idx = preinstallArgus.length - idx - 1;
@@ -196,14 +249,14 @@ const changeFormat = (index: number, idx: number) => {
         const shape = selected[0];
         const editor = props.context.editor4Shape(shape);
         editor.setExportFormatFileFormat(_idx, fileFormat[index]);
-    }else if (len > 1) {
-    const actions = get_actions_export_format_file_format(props.shapes, _idx, fileFormat[index]);
-    const page = props.context.selection.selectedPage;
-    if (page) {
-      const editor = props.context.editor4Page(page);
-      editor.setShapesExportFormatFileFormat(actions);
+    } else if (len > 1) {
+        const actions = get_actions_export_format_file_format(props.shapes, _idx, fileFormat[index]);
+        const page = props.context.selection.selectedPage;
+        if (page) {
+            const editor = props.context.editor4Page(page);
+            editor.setShapesExportFormatFileFormat(actions);
+        }
     }
-  }
 }
 const changeName = (value: string, idx: number) => {
     const _idx = preinstallArgus.length - idx - 1;
@@ -213,14 +266,14 @@ const changeName = (value: string, idx: number) => {
         const shape = selected[0];
         const editor = props.context.editor4Shape(shape);
         editor.setExportFormatName(_idx, value);
-    }else if (len > 1) {
-    const actions = get_actions_export_format_name(props.shapes, _idx, value);
-    const page = props.context.selection.selectedPage;
-    if (page) {
-      const editor = props.context.editor4Page(page);
-      editor.setShapesExportFormatName(actions);
+    } else if (len > 1) {
+        const actions = get_actions_export_format_name(props.shapes, _idx, value);
+        const page = props.context.selection.selectedPage;
+        if (page) {
+            const editor = props.context.editor4Page(page);
+            editor.setShapesExportFormatName(actions);
+        }
     }
-  }
 }
 const deleteArgus = (idx: number) => {
     const _idx = preinstallArgus.length - idx - 1;
@@ -232,13 +285,13 @@ const deleteArgus = (idx: number) => {
         const editor = props.context.editor4Shape(shape);
         editor.deleteExportFormat(_idx);
     } else if (len > 1) {
-    const actions = get_actions_export_format_delete(props.shapes, _idx);
-    const page = props.context.selection.selectedPage;
-    if (page) {
-      const editor = props.context.editor4Page(page);
-      editor.shapesDeleteExportFormat(actions);
+        const actions = get_actions_export_format_delete(props.shapes, _idx);
+        const page = props.context.selection.selectedPage;
+        if (page) {
+            const editor = props.context.editor4Page(page);
+            editor.shapesDeleteExportFormat(actions);
+        }
     }
-  }
 }
 
 const trimBackground = (v: boolean) => {
@@ -281,6 +334,7 @@ function update_by_shapes() {
 }
 function selection_watcher(t: number) {
     if (t === Selection.CHANGE_SHAPE) update_by_shapes();
+    if (t === Selection.CHANGE_PAGE) update_by_shapes();
 }
 // hooks
 onMounted(() => {
@@ -327,9 +381,8 @@ onUnmounted(() => {
             <div class="export-box" v-if="preinstallArgus.length > 0">
                 <div><span>导出</span></div>
             </div>
-            <Preview v-if="context.selection.selectedShapes.length === 1 && exportOption" :context="context"
-                :shapes="shapes" :unfold="previewUnfold" @preview-change="previewCanvas" :canvas_bg="canvas_bg"
-                :trim_bg="trim_bg">
+            <Preview v-if="context.selection.selectedShapes.length <= 1 && exportOption" :context="context" :shapes="shapes"
+                :unfold="previewUnfold" @preview-change="previewCanvas" :canvas_bg="canvas_bg" :trim_bg="trim_bg">
             </Preview>
         </div>
     </div>

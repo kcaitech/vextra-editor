@@ -426,8 +426,10 @@ const RADIUS_SETTING = [
     ShapeType.Text
 ];
 const MULTI_RADIUS = [ShapeType.Rectangle, ShapeType.Artboard, ShapeType.Image];
+const cutout_setting = ref(true);
 function layout() {
     s_adapt = false, s_flip = true, s_radius = false, s_length = false;
+    cutout_setting.value = true;
     const selected = props.context.selection.selectedShapes;
     if (selected.length === 1) {
         const shape = selected[0];
@@ -438,6 +440,7 @@ function layout() {
         }
         if (shape.type === ShapeType.Table) s_flip = false;
         if (shape.type === ShapeType.Line || shape.type === ShapeType.Contact) s_length = true;
+        if(shape.type === ShapeType.Cutout) cutout_setting.value = false;
     } else {
         if (selected.find(i => i instanceof RectShape)) s_radius = true;
     }
@@ -521,7 +524,7 @@ onUnmounted(() => {
             </div>
             <div style="width: 22px;height: 22px;" v-else></div>
         </div>
-        <div class="tr" :reflush="reflush">
+        <div class="tr" :reflush="reflush" v-if="cutout_setting">
             <IconText class="td angle" svgicon="angle" :text="`${rotate}` + '°'" @onchange="onChangeRotate"
                 :frame="{ width: 14, height: 14 }" :disabled="model_disable_state.rotation" :context="context" />
             <Tooltip v-if="s_flip" :content="t('attr.flip_h')" :offset="15">

@@ -3,6 +3,7 @@ import {
     Border, BorderColorAction, BorderEnableAction, BorderAddAction, BorderDeleteAction, BordersReplaceAction, BorderThicknessAction, BorderPositionAction, BorderStyleAction, BorderPosition, BorderStyle, Shadow, ShadowReplaceAction, ShadowAddAction, ShadowDeleteAction, ShadowEnableAction, ShadowPositionAction, ShadowPosition, ShadowColorAction, ShadowBlurRadiusAction, ShadowSpreadAction, ShadowOffsetXAction, ShadowOffsetYAction, ExportFormat, ExportFormatReplaceAction, ExportFormatAddAction, ExportFileFormat, ExportFormatNameingScheme, ExportVisibleScaleType, ExportFormatDeleteAction, ExportFormatScaleAction, ExportFormatNameAction, ExportFormatPerfixAction, ExportFormatFileFormatAction
 } from "@kcdesign/data";
 import { Expr } from "aws-sdk/clients/cloudsearchdomain";
+import { bool } from "aws-sdk/clients/signer";
 import { v4 } from "uuid";
 interface FillItem {
     id: number,
@@ -386,10 +387,10 @@ export function get_export_formats(shapes: Shape[]): FormatItems[] | 'mixed' {
     return formats;
 }
 
-export function get_actions_export_format_unify(shapes: Shape[]): ExportFormatReplaceAction[] {
+export function get_actions_export_format_unify(shapes: Shape[], formats: ExportFormat[], option?: boolean): ExportFormatReplaceAction[] {
     const actions: ExportFormatReplaceAction[] = [];
     const options = shapes[0].exportOptions;
-    if (options) {
+    if (options && !option) {
         for (let i = 1; i < shapes.length; i++) {
             const new_formats: ExportFormat[] = [];
             for (let i = 0; i < options.exportFormats.length; i++) {
@@ -402,20 +403,17 @@ export function get_actions_export_format_unify(shapes: Shape[]): ExportFormatRe
         }
     } else {
         for (let i = 0; i < shapes.length; i++) {
-            const format = new ExportFormat(v4(), 0, ExportFileFormat.Png, '', ExportFormatNameingScheme.Prefix, 1, ExportVisibleScaleType.Scale);
-            actions.push({ target: shapes[i], value: [format] });
+            actions.push({ target: shapes[i], value: formats });
         }
     }
 
     return actions;
 }
 
-export function get_actions_add_export_format(shapes: Shape[], format: ExportFormat) {
+export function get_actions_add_export_format(shapes: Shape[], formats: ExportFormat[]) {
     const actions: ExportFormatAddAction[] = [];
     for (let i = 0; i < shapes.length; i++) {
-        const { scale, name, namingScheme, fileFormat, absoluteSize, visibleScaleType } = format;
-        const new_format = new ExportFormat(v4(), absoluteSize, fileFormat, name, namingScheme, scale, visibleScaleType);
-        actions.push({ target: shapes[i], value: new_format });
+        actions.push({ target: shapes[i], value: formats });
     }
     return actions;
 }
