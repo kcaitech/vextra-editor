@@ -327,10 +327,6 @@ onUnmounted(() => {
     fill: #555555;
 }
 
-// .point:hover {
-//     fill: #cccccc;
-// }
-
 .line {
     stroke: transparent;
     stroke-width: 8px;

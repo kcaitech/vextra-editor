@@ -202,3 +202,39 @@ export function __anther_side_xy(curve_point: CurvePoint, handle_site: XY, curre
     _a_xy.y = is_from ? curve_point.toY || 0 : curve_point.fromY || 0;
     return _a_xy;
 }
+
+export function __round_curve_point2(points: CurvePoint[], index: number) {
+    const previous_index = index === 0 ? points.length - 1 : index - 1;
+    const next_index = index === points.length - 1 ? 0 : index + 1;
+    return {
+        previous: points[previous_index],
+        next: points[next_index],
+    }
+}
+export interface Segment {
+    mode: CurveMode
+    start: XY
+    from: XY
+    to: XY
+    end: XY
+    add: XY
+    index: number
+    is_selected: boolean
+}
+export function get_segments(shape: PathShape, matrix: Matrix, segment_set: Set<number>) {
+    const result_segments: Segment[] = [];
+    const points = shape.points;
+    if (!points?.length) {
+        console.log('points?.length');
+        return result_segments;
+    }
+    for (let index = 0, l = points.length; index < l; index++) {
+        const point = points[index];
+        const { previous, next } = __round_curve_point2(points, index);
+        if (previous.mode === CurveMode.Straight && next.mode !==  CurveMode.Straight) { // 前直后曲
+            
+        }
+    }
+
+
+}
