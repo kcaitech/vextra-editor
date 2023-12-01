@@ -166,6 +166,7 @@ export class Asssit extends Watchable(Object) {
                 this.m_y_axis.set(p.y, [item]);
             }
         }
+        console.log('assit map:', this.m_path_pg);
     }
 
     get except() {
@@ -426,23 +427,21 @@ export class Asssit extends Watchable(Object) {
         const pre_target1: PT4P1 = { x: 0, sy: 0, delta: undefined };
         const pre_target2: PT4P2 = { y: 0, sx: 0, delta: undefined };
         this.m_path_pg.forEach((v, k) => {
-            if (indexes_set.has(k)) return;
+            if (indexes_set.has(k)) {
+                return;
+            }
             modify_pt_x_4_path_edit(pre_target1, v.p, points, this.stickness);
             modify_pt_y_4_path_edit(pre_target2, v.p, points, this.stickness);
         })
         if (pre_target1.delta !== undefined) {
             target.x = pre_target1.x;
             target.sticked_by_x = true;
-            this.m_nodes_x = (this.m_x_axis.get(target.x) || []).concat([
-                { p: { x: target.x, y: pre_target1.sy }, id: 'ex' }
-            ]);
+            this.m_nodes_y = [...(this.m_x_axis.get(target.x) || []), { p: { x: target.x, y: pre_target1.sy }, id: 'ex' }];
         }
         if (pre_target2.delta !== undefined) {
             target.y = pre_target2.y;
             target.sticked_by_y = true;
-            this.m_nodes_y = (this.m_y_axis.get(target.y) || []).concat([
-                { p: { x: pre_target2.sx, y: target.y }, id: 'ex' }
-            ]);
+            this.m_nodes_y = [...(this.m_y_axis.get(target.y) || []), { p: { x: pre_target2.sx, y: target.y }, id: 'ex' }];
         }
         this.notify(Asssit.UPDATE_ASSIST_PATH);
         return target;

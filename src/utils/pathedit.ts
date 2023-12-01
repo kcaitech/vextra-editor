@@ -178,9 +178,6 @@ export function __round_curve_point(shape: PathShape, index: number) {
 export function __angle(x1: number, y1: number, x2: number, y2: number) {
     return (Math.atan2(x2 - x1, y1 - y2) * (180 / Math.PI) + 360) % 360;
 }
-export function handleAction(e: MouseEvent) {
-
-}
 export function __anther_side_xy(curve_point: CurvePoint, handle_site: XY, current_side: 'from' | 'to') {
     const is_from = current_side === 'from';
     const _a_xy = { x: 0, y: 0 };

@@ -1,9 +1,9 @@
-import {Context} from "@/context";
-import {Asssit, PageXY2, PointGroup1, PointGroup2, PT1, PT2, PT4P1, PT4P2} from "@/context/assist";
-import {PageXY, XY} from "@/context/selection";
-import {GroupShape, Matrix, Shape, ShapeType} from "@kcdesign/data";
-import {debounce} from "lodash";
-import {XYsBounding} from "./common";
+import { Context } from "@/context";
+import { Asssit, PageXY2, PointGroup1, PointGroup2, PT1, PT2, PT4P1, PT4P2 } from "@/context/assist";
+import { PageXY, XY } from "@/context/selection";
+import { GroupShape, Matrix, Shape, ShapeType } from "@kcdesign/data";
+import { debounce } from "lodash";
+import { XYsBounding } from "./common";
 
 enum Align {
     LT_X = 'lt_x',
@@ -122,13 +122,13 @@ export function colloct_point_group(host: Shape): PointGroup1 {
     if (host.type === ShapeType.Line) {
         const apexX = [lt.x, rb.x, pivot.x];
         const apexY = [lt.y, rb.y, pivot.y];
-        return {lt, rb, pivot, apexX, apexY};
+        return { lt, rb, pivot, apexX, apexY };
     }
     const rt = m.computeCoord2(f.width, 0);
     const lb = m.computeCoord2(0, f.height);
     const apexX = [lt.x, rt.x, rb.x, lb.x, pivot.x];
     const apexY = [lt.y, rt.y, rb.y, lb.y, pivot.y];
-    const pg: PointGroup1 = {lt, rt, rb, lb, pivot, apexX, apexY};
+    const pg: PointGroup1 = { lt, rt, rb, lb, pivot, apexX, apexY };
     if (host.type === ShapeType.Artboard || host.type === ShapeType.Symbol) {
         const th = m.computeCoord2(f.width / 2, 0);
         const rh = m.computeCoord2(f.width, f.height / 2);
@@ -156,7 +156,7 @@ export function gen_match_points(host: Shape, multi?: boolean): PointGroup2 {
     const lb = m.computeCoord2(0, f.height);
     const apexX = [lt.x, rt.x, rb.x, lb.x, pivot.x];
     const apexY = [lt.y, rt.y, rb.y, lb.y, pivot.y];
-    const pg: PointGroup2 = {lt, rt, rb, lb, pivot};
+    const pg: PointGroup2 = { lt, rt, rb, lb, pivot };
     if (multi) {
         pg.top = Math.min(...apexY), pg.right = Math.max(...apexX), pg.bottom = Math.max(...apexY), pg.left = Math.min(...apexX), pg.cy = pivot.y, pg.cx = pivot.x;
     }
@@ -172,14 +172,14 @@ export interface PointsOffset {
 }
 
 export function gen_match_points_by_map(offset: PointsOffset, p: PageXY, multi?: boolean) {
-    const lt = {x: p.x + offset.lt.x, y: p.y + offset.lt.y};
-    const rb = {x: p.x + offset.rb.x, y: p.y + offset.rb.y};
-    const pivot = {x: p.x + offset.pivot.x, y: p.y + offset.pivot.y};
-    const rt = {x: p.x + offset.rt.x, y: p.y + offset.rt.y};
-    const lb = {x: p.x + offset.lb.x, y: p.y + offset.lb.y};
+    const lt = { x: p.x + offset.lt.x, y: p.y + offset.lt.y };
+    const rb = { x: p.x + offset.rb.x, y: p.y + offset.rb.y };
+    const pivot = { x: p.x + offset.pivot.x, y: p.y + offset.pivot.y };
+    const rt = { x: p.x + offset.rt.x, y: p.y + offset.rt.y };
+    const lb = { x: p.x + offset.lb.x, y: p.y + offset.lb.y };
     const apexX = [lt.x, rt.x, rb.x, lb.x, pivot.x];
     const apexY = [lt.y, rt.y, rb.y, lb.y, pivot.y];
-    const pg: PointGroup2 = {lt, rt, rb, lb, pivot};
+    const pg: PointGroup2 = { lt, rt, rb, lb, pivot };
     if (multi) {
         pg.top = Math.min(...apexY), pg.right = Math.max(...apexX), pg.bottom = Math.max(...apexY), pg.left = Math.min(...apexX), pg.cy = pivot.y, pg.cx = pivot.x;
     }
@@ -188,16 +188,16 @@ export function gen_match_points_by_map(offset: PointsOffset, p: PageXY, multi?:
 
 export function gen_match_points_by_map2(offset: XY[], p: PageXY) {
     return offset.map(i => {
-        return {x: p.x + i.x, y: p.y + i.y};
+        return { x: p.x + i.x, y: p.y + i.y };
     })
 }
 
 export function isShapeOut(context: Context, shape: Shape) {
-    const {x, y, bottom, right} = context.workspace.root;
-    const {width, height} = shape.frame;
+    const { x, y, bottom, right } = context.workspace.root;
+    const { width, height } = shape.frame;
     const m = shape.matrix2Root();
     m.multiAtLeft(context.workspace.matrix);
-    const point: { x: number, y: number }[] = [{x: 0, y: 0}, {x: width, y: 0}, {x: width, y: height}, {
+    const point: { x: number, y: number }[] = [{ x: 0, y: 0 }, { x: width, y: 0 }, { x: width, y: height }, {
         x: 0,
         y: height
     }];
@@ -216,7 +216,7 @@ export function finder(context: Context, scope: GroupShape, all_pg: Map<string, 
         all_pg.set(scope.id, pg);
         const pvs = Object.values(pg);
         for (let i = 0, len = pvs.length; i < len; i++) {
-            const p2 = {id: scope.id, p: pvs[i]};
+            const p2 = { id: scope.id, p: pvs[i] };
             const x = x_axis.get(p2.p.x);
             const y = y_axis.get(p2.p.y);
             if (x) x.push(p2); else x_axis.set(p2.p.x, [p2]);
@@ -232,7 +232,7 @@ export function finder(context: Context, scope: GroupShape, all_pg: Map<string, 
         all_pg.set(c.id, pg);
         const pvs = Object.values(pg);
         for (let i = 0, len = pvs.length; i < len; i++) {
-            const p2 = {id: c.id, p: pvs[i]};
+            const p2 = { id: c.id, p: pvs[i] };
             const x = x_axis.get(p2.p.x);
             const y = y_axis.get(p2.p.y);
             if (x) x.push(p2); else x_axis.set(p2.p.x, [p2]);
@@ -329,12 +329,13 @@ export function modify_pt_x4p(pre_target1: PT4P1, p: PageXY, apexX: number[], st
 
 export function modify_pt_x_4_path_edit(pre_target1: PT4P1, p: PageXY, ps: XY[], stickness: number) {
     for (let i = 0, len = ps.length; i < len; i++) {
-        const x = ps[i].x;
+        const __p = ps[i];
+        const x = __p.x;
         const delta = Math.abs(x - p.x);
         if (delta < stickness && (pre_target1.delta === undefined || delta < pre_target1.delta)) {
             pre_target1.delta = delta;
-            pre_target1.x = x;
-            pre_target1.sy = p.y;
+            pre_target1.x = p.x;
+            pre_target1.sy = __p.y;
         }
     }
 }
@@ -351,12 +352,13 @@ export function modify_pt_y4p(pre_target2: PT4P2, p: PageXY, apexY: number[], st
 
 export function modify_pt_y_4_path_edit(pre_target2: PT4P2, p: PageXY, ps: XY[], stickness: number) {
     for (let i = 0, len = ps.length; i < len; i++) {
-        const y = ps[i].y
+        const __p = ps[i];
+        const y = __p.y
         const delta = Math.abs(y - p.y);
         if (delta < stickness && (pre_target2.delta === undefined || delta < pre_target2.delta)) {
             pre_target2.delta = delta;
-            pre_target2.y = y
-            pre_target2.sx = p.x;
+            pre_target2.y = p.y
+            pre_target2.sx = __p.x;
         }
     }
 }
@@ -398,7 +400,7 @@ interface Point {
 
 export function get_pg_by_frame(frame: Point[], multi?: boolean): PointGroup2 { // 无旋转
     const lt = frame[0], rt = frame[1], rb = frame[2], lb = frame[3];
-    const pivot = {x: lt.x + (rb.x - lt.x) / 2, y: lt.y + (rb.y - lt.y) / 2};
+    const pivot = { x: lt.x + (rb.x - lt.x) / 2, y: lt.y + (rb.y - lt.y) / 2 };
     const apexX = [lt.x, rt.x, rb.x, lb.x, pivot.x];
     const apexY = [lt.y, rt.y, rb.y, lb.y, pivot.y];
     if (multi) {
@@ -412,7 +414,7 @@ export function get_pg_by_frame(frame: Point[], multi?: boolean): PointGroup2 { 
             cx: pivot.x
         }
     } else {
-        return {lt, rt, rb, lb, pivot};
+        return { lt, rt, rb, lb, pivot };
     }
 }
 
@@ -422,14 +424,14 @@ export function get_frame(shapes: Shape[]): Point[] {
         const s = shapes[i];
         const m = s.matrix2Root();
         const f = s.frame;
-        const ps: { x: number, y: number }[] = [{x: 0, y: 0}, {x: f.width, y: 0}, {x: f.width, y: f.height}, {
+        const ps: { x: number, y: number }[] = [{ x: 0, y: 0 }, { x: f.width, y: 0 }, { x: f.width, y: f.height }, {
             x: 0,
             y: f.height
         }];
         for (let i = 0; i < 4; i++) points.push(m.computeCoord3(ps[i]));
     }
     const b = XYsBounding(points);
-    return [{x: b.left, y: b.top}, {x: b.right, y: b.top}, {x: b.right, y: b.bottom}, {x: b.left, y: b.bottom}];
+    return [{ x: b.left, y: b.top }, { x: b.right, y: b.top }, { x: b.right, y: b.bottom }, { x: b.left, y: b.bottom }];
 }
 
 /**
@@ -480,4 +482,77 @@ export function pre_render_assist_line(context: Context, is_multi: boolean, shap
     }
     assist.notify(Asssit.UPDATE_ASSIST);
     assist.notify(Asssit.UPDATE_MAIN_LINE);
+}
+export class ActionEndGenerator {
+    private stickedX: boolean = false;
+    private stickedY: boolean = false;
+    private sticked_x_v: number = 0;
+    private sticked_y_v: number = 0;
+    private pre_target_x: number = 0
+    private pre_target_y: number = 0;
+    private offset_map: XY[] = [];
+    private context: Context;
+    private stickness: number;
+    constructor(context: Context, map: XY[]) {
+        this.context = context;
+        this.offset_map = map;
+        this.stickness = context.assist.stickness;
+    }
+
+    __gen(point: XY, f: Function) {
+        const target = f(point, this.offset_map);
+        if (!target) {
+            return point;
+        }
+        if (this.stickedX) {
+            if (Math.abs(point.x - this.sticked_x_v) >= this.stickness) {
+                this.stickedX = false
+            }
+            else {
+                if (this.pre_target_x === target.x) {
+                    point.x = this.sticked_x_v;
+                }
+                else if (target.sticked_by_x) {
+                    this.modify_fix_x(point, target.x);
+                }
+            }
+        }
+        else if (target.sticked_by_x) {
+            this.modify_fix_x(point, target.x);
+        }
+        if (this.stickedY) {
+            if (Math.abs(point.y - this.sticked_y_v) >= this.stickness) {
+                this.stickedY = false;
+            }
+            else {
+                if (this.pre_target_y === target.x) {
+                    point.y = this.sticked_y_v;
+                }
+                else if (target.sticked_by_y) {
+                    this.modify_fix_y(point, target.y);
+                }
+            }
+        }
+        else if (target.sticked_by_y) {
+            this.modify_fix_y(point, target.y);
+        }
+        return point;
+    }
+    __reset() {
+        this.stickedX = false;
+        this.stickedY = false;
+    }
+    modify_fix_x(p2: PageXY, fix: number) {
+        p2.x = fix;
+        this.sticked_x_v = p2.x;
+        this.stickedX = true;
+        this.pre_target_x = fix;
+    }
+
+    modify_fix_y(p2: PageXY, fix: number) {
+        p2.y = fix;
+        this.sticked_y_v = p2.y;
+        this.stickedY = true;
+        this.pre_target_y = fix;
+    }
 }

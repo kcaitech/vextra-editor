@@ -10,6 +10,7 @@ import { gen_offset_points_map2 } from "@/utils/mouse";
 import { modify_point_curve_mode } from "@/utils/pathedit";
 import { WorkSpace } from "@/context/workspace";
 import Handle from "../PathEdit/Handle.vue"
+import { ActionEndGenerator } from '@/utils/assist';
 
 interface Props {
     context: Context
@@ -45,6 +46,7 @@ let pathEditor: AsyncPathEditor | undefined;
 let cur_new_node: Line;
 let move: any;
 let offset_map: XY[] | undefined = [];
+let actionEndGenerator: ActionEndGenerator | undefined = undefined;
 
 function update() {
     if (!props.context.workspace.shouldSelectionViewUpdate) {
@@ -62,7 +64,9 @@ function update() {
  * @description down下任意一个已有的编辑点
  */
 function point_mousedown(event: MouseEvent, index: number) {
-    if (event.button !== 0) return;
+    if (event.button !== 0) {
+        return;
+    }
     if (dbl_action()) {
         modify_point_curve_mode(props.context, index, shape as PathShape);
     }
@@ -106,23 +110,23 @@ function point_mousemove(event: MouseEvent) {
             sub_matrix.reset(workspace.matrix.inverse);
             props.context.assist.set_points_map();
             offset_map = gen_offset_points_map2(props.context, startPosition2);
+            if (offset_map) {
+                actionEndGenerator = new ActionEndGenerator(props.context, offset_map);
+            }
         }
     }
 }
 
-function get_assist_point(__p: PageXY) {
-    const stickness = props.context.assist.stickness;
-    if (!offset_map) {
-        return __p;
-    }
-    return __p;
-}
 function __exe(pathEditor: AsyncPathEditor, _point: PageXY) {
     if (!offset_map) {
         console.log("!offset_map");
         return;
     }
-    let point = get_assist_point(_point);
+    if (!actionEndGenerator) {
+        return;
+    }
+    const f = props.context.assist.edit_mode_match.bind(props.context.assist);
+    const point = actionEndGenerator.__gen(_point, f);
     const m = props.context.path.matrix_unit_to_root;
     if (!m) {
         return;
@@ -134,7 +138,6 @@ function __exe(pathEditor: AsyncPathEditor, _point: PageXY) {
     }
     if (select_point.length === 1) {
         pathEditor.execute(current_curve_point_index.value, point);
-        console.log('execute');
         return;
     }
     const points = props.context.selection.pathshape?.points;
@@ -155,69 +158,6 @@ function __exe(pathEditor: AsyncPathEditor, _point: PageXY) {
     m2.multi(props.context.workspace.matrix.inverse);
     const origin_unit_point = m2.computeCoord3(origin_root_point);
     pathEditor.execute2(select_point, compute_unit_point.x - origin_unit_point.x, compute_unit_point.y - origin_unit_point.y);
-}
-
-let stickedX: boolean = false;
-let stickedY: boolean = false;
-let sticked_x_v: number = 0;
-let sticked_y_v: number = 0;
-let pre_target_x: number, pre_target_y: number;
-function execute(pathEditor: AsyncPathEditor, p2: PageXY) {
-    const stickness = props.context.assist.stickness;
-    if (!offset_map) {
-        return pathEditor.execute(current_curve_point_index.value, p2);
-    }
-    const target = props.context.assist.edit_mode_match(p2, offset_map);
-    if (!target) {
-        return pathEditor.execute(current_curve_point_index.value, p2);
-    }
-    if (stickedX) {
-        if (Math.abs(p2.x - sticked_x_v) >= stickness) {
-            stickedX = false
-        }
-        else {
-            if (pre_target_x === target.x) {
-                p2.x = sticked_x_v;
-            }
-            else if (target.sticked_by_x) {
-                modify_fix_x(p2, target.x);
-            }
-        }
-    }
-    else if (target.sticked_by_x) {
-        modify_fix_x(p2, target.x);
-    }
-    if (stickedY) {
-        if (Math.abs(p2.y - sticked_y_v) >= stickness) {
-            stickedY = false;
-        }
-        else {
-            if (pre_target_y === target.x) {
-                p2.y = sticked_y_v;
-            }
-            else if (target.sticked_by_y) {
-                modify_fix_y(p2, target.y);
-            }
-        }
-    }
-    else if (target.sticked_by_y) {
-        modify_fix_y(p2, target.y);
-    }
-    pathEditor.execute(current_curve_point_index.value, p2);
-}
-
-function modify_fix_x(p2: PageXY, fix: number) {
-    p2.x = fix;
-    sticked_x_v = p2.x;
-    stickedX = true;
-    pre_target_x = fix;
-}
-
-function modify_fix_y(p2: PageXY, fix: number) {
-    p2.y = fix;
-    sticked_y_v = p2.y;
-    stickedY = true;
-    pre_target_y = fix;
 }
 
 function line_enter(index: number) {
@@ -281,7 +221,9 @@ function n_point_mousemove(event: MouseEvent) {
  * @description 点击编辑点之后的抬起
  */
 function point_mouseup(event: MouseEvent) {
-    if (event.button !== 0) return;
+    if (event.button !== 0) {
+        return;
+    }
     if (isDragging) {
         isDragging = false;
         props.context.assist.reset();
@@ -293,6 +235,10 @@ function point_mouseup(event: MouseEvent) {
     if (pathEditor) {
         pathEditor.close();
         pathEditor = undefined;
+    }
+    if (actionEndGenerator) {
+        actionEndGenerator.__reset();
+        actionEndGenerator = undefined;
     }
     document.removeEventListener('mousemove', move);
     document.removeEventListener('mouseup', point_mouseup);
@@ -381,9 +327,9 @@ onUnmounted(() => {
     fill: #555555;
 }
 
-.point:hover {
-    fill: #cccccc;
-}
+// .point:hover {
+//     fill: #cccccc;
+// }
 
 .line {
     stroke: transparent;

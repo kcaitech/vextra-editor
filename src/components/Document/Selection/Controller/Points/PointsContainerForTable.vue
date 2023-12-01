@@ -200,7 +200,9 @@ function _migrate() {
     const targetParent = props.context.selection.getClosestContainer(p);
     const m = getCloesetContainer(props.shape).id !== targetParent.id;
     if (targetParent.id === props.shape.id) return;
-    if (m && asyncTransfer) asyncTransfer.migrate(targetParent as GroupShape, compare_layer_3(shapes));
+    if (m && asyncTransfer) {
+        asyncTransfer.migrate(targetParent as GroupShape, compare_layer_3(shapes), '');
+    }
 }
 const migrate: () => void = debounce(_migrate, 100);
 function getCloesetContainer(shape: Shape): Shape {

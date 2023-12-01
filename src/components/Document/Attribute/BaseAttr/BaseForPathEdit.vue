@@ -24,7 +24,7 @@ interface ModelState {
 const props = defineProps<Props>();
 const x = ref<number | string>('');
 const y = ref<number | string>('');
-const r = ref<number | string>(0);
+const r = ref<number | string>('');
 const curve_mode = ref<PointEditType>('INVALID');
 const model_state: ModelState = reactive({x: true, y: true, r: true, tool: true});
 const t = useI18n().t;
@@ -69,7 +69,7 @@ function exit() {
 function calc() {
     x.value = '';
     y.value = '';
-    r.value = 0;
+    r.value = '';
     const selected_points = props.context.path.selectedPoints;
     const l = selected_points.length;
     if (l === 1) {
@@ -214,7 +214,7 @@ onUnmounted(() => {
                 <Tooltip :content="t('attr.angular_symmetry')">
                     <div @mousedown.stop="() => onChangeCurveMode(CurveMode.Disconnected)"
                          :class="{item: true, active: curve_mode === CurveMode.Disconnected}">
-                        <svg-icon icon-class="unknown"></svg-icon>
+                        <svg-icon icon-class="disconnected"></svg-icon>
                     </div>
                 </Tooltip>
             </div>
