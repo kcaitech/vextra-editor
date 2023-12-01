@@ -67,7 +67,7 @@ onMounted(() => {
 <style lang="scss" scoped>
 .shortcut-keys {
     position: fixed;
-    bottom: 56px;
+    bottom: 66px;
     right: 20px;
     border-radius: 4px;
     background-color: white;

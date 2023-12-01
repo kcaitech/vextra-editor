@@ -65,8 +65,6 @@ const createTeam = async () => {
     }
     try {
         const { code, message, data } = await user_api.CreateTeam(formData)
-        console.log(formData);
-
         if (code === 0) {
             emits('close')
             state(true)  //改变updatestate的值为TRUE
