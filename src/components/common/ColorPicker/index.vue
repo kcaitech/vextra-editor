@@ -55,6 +55,7 @@ interface Emits {
     (e: 'choosecolor', color: number[]): void;
 
     (e: 'gradient-reverse'): void;
+    (e: 'gradient-rotate'): void;
 }
 
 export interface HRGB { // 色相
@@ -732,10 +733,21 @@ function init() {
 function update_gradient(gradient: Gradient) {
     stop_els.value.length = 0;
     gradient_channel_style.value = gradient_channel_generator(gradient);
-    stop_els.value = stops_generator(gradient, 159); // 148 条条的宽度 减去 一个圆的宽度
+    stop_els.value = stops_generator(gradient, 159); // 条条的宽度 减去 一个圆的宽度
     color_type.value = gradient.gradientType;
 }
-
+function reverse() {
+    emit('gradient-reverse');
+    nextTick(() => {
+        update_gradient(props.gradient!);
+    })
+}
+function rotate() {
+    emit('gradient-rotate');
+    nextTick(() => {
+        update_gradient(props.gradient!);
+    })
+}
 function update_alpha_indicator(color: Color) {
     const { alpha } = color;
     alphaIndicatorAttr.x = (lineAttribute.length - INDICATOR_WIDTH) * alpha;
@@ -801,12 +813,12 @@ onUnmounted(() => {
                     <div v-for="(item, i) in stop_els" :key="i" :class="item.is_active ? 'stop-active' : 'stop'"
                         :style="{ left: item.left + 'px' }" @mousedown="_stop_down"></div>
                 </div>
-                <div class="reverse" @click="() => emit('gradient-reverse')">
+                <div class="reverse" @click="reverse">
                     <Tooltip :content="t('color.reverse')">
                         <svg-icon icon-class="exchange"></svg-icon>
                     </Tooltip>
                 </div>
-                <div class="rotate">
+                <div class="rotate" @click="rotate">
                     <Tooltip :content="t('color.rotate')">
                         <svg-icon icon-class="rotate90"></svg-icon>
                     </Tooltip>
@@ -1002,25 +1014,27 @@ onUnmounted(() => {
 
             .reverse {
                 flex: 0 0 28px;
-                cursor: pointer;
                 display: flex;
                 align-items: center;
+                cursor: pointer;
 
                 svg {
                     width: 24px;
                     height: 24px;
+                    outline: none;
                 }
             }
 
             .rotate {
                 flex: 0 0 28px;
-                cursor: pointer;
                 display: flex;
                 align-items: center;
+                cursor: pointer;
 
                 svg {
                     width: 20px;
                     height: 20px;
+                    outline: none;
                 }
             }
         }

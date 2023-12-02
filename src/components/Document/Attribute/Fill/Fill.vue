@@ -463,6 +463,18 @@ function gradient_reverse(idx: number) {
     const actions = get_aciton_fill_gradient(selected, _idx);
     editor.reverseShapesGradient(actions);
 }
+/**
+ * @description 旋转渐变
+ * @param idx 
+ */
+function gradient_rotate(idx: number) {
+    const _idx = fills.length - idx - 1;
+    const selected = props.context.selection.selectedShapes;
+    const page = props.context.selection.selectedPage!;
+    const editor = props.context.editor4Page(page);
+    const actions = get_aciton_fill_gradient(selected, _idx);
+    editor.rotateShapesGradient(actions);
+}
 function update_by_shapes() {
     watchShapes();
     updateData();
@@ -563,7 +575,8 @@ onUnmounted(() => {
                 </div>
                 <div class="color">
                     <ColorPicker :color="f.fill.color" :context="props.context" :gradient="f.fill.gradient"
-                        @change="c => getColorFromPicker(idx, c)" @gradient-reverse="() => gradient_reverse(idx)">
+                        @change="c => getColorFromPicker(idx, c)" @gradient-reverse="() => gradient_reverse(idx)"
+                        @gradient-rotate="() => gradient_rotate(idx)">
                     </ColorPicker>
                     <input ref="colorFill" :value="toHex(f.fill.color.red, f.fill.color.green, f.fill.color.blue)"
                         :spellcheck="false" @change="(e) => onColorChange(idx, e)" @focus="selectColor(idx)" />
