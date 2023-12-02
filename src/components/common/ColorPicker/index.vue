@@ -53,6 +53,8 @@ interface Emits {
     (e: 'change', color: Color): void;
 
     (e: 'choosecolor', color: number[]): void;
+
+    (e: 'gradient-reverse'): void;
 }
 
 export interface HRGB { // 色相
@@ -799,7 +801,7 @@ onUnmounted(() => {
                     <div v-for="(item, i) in stop_els" :key="i" :class="item.is_active ? 'stop-active' : 'stop'"
                         :style="{ left: item.left + 'px' }" @mousedown="_stop_down"></div>
                 </div>
-                <div class="reverse">
+                <div class="reverse" @click="() => emit('gradient-reverse')">
                     <Tooltip :content="t('color.reverse')">
                         <svg-icon icon-class="exchange"></svg-icon>
                     </Tooltip>

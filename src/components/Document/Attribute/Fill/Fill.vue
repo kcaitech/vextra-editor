@@ -8,6 +8,7 @@ import { useI18n } from 'vue-i18n';
 import ColorPicker from '@/components/common/ColorPicker/index.vue';
 import { message } from "@/utils/message";
 import {
+    get_aciton_fill_gradient,
     get_actions_add_fill,
     get_actions_fill_color,
     get_actions_fill_delete,
@@ -450,7 +451,18 @@ const filterAlpha = (a: number) => {
         return alpha.toFixed(2); // 保留两位小数
     }
 }
-
+/**
+ * @description 翻转渐变
+ * @param idx 
+ */
+function gradient_reverse(idx: number) {
+    const _idx = fills.length - idx - 1;
+    const selected = props.context.selection.selectedShapes;
+    const page = props.context.selection.selectedPage!;
+    const editor = props.context.editor4Page(page);
+    const actions = get_aciton_fill_gradient(selected, _idx);
+    editor.reverseShapesGradient(actions);
+}
 function update_by_shapes() {
     watchShapes();
     updateData();
@@ -551,7 +563,7 @@ onUnmounted(() => {
                 </div>
                 <div class="color">
                     <ColorPicker :color="f.fill.color" :context="props.context" :gradient="f.fill.gradient"
-                        @change="c => getColorFromPicker(idx, c)">
+                        @change="c => getColorFromPicker(idx, c)" @gradient-reverse="() => gradient_reverse(idx)">
                     </ColorPicker>
                     <input ref="colorFill" :value="toHex(f.fill.color.red, f.fill.color.green, f.fill.color.blue)"
                         :spellcheck="false" @change="(e) => onColorChange(idx, e)" @focus="selectColor(idx)" />

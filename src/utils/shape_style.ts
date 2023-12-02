@@ -49,6 +49,13 @@ export function get_actions_add_fill(shapes: Shape[], fill: Fill) {
     }
     return actions;
 }
+export function get_aciton_fill_gradient(shapes: Shape[], index: number) {
+    const actions: BatchAction4[] = [];
+    for (let i = 0, l = shapes.length; i < l; i++) {
+        actions.push({ target: shapes[i], index, type: 'fills' });
+    }
+    return actions;
+}
 export function get_actions_fill_color(shapes: Shape[], index: number, color: Color) {
     const actions: BatchAction[] = [];
     for (let i = 0; i < shapes.length; i++) {
