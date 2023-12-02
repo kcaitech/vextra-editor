@@ -48,6 +48,7 @@ declare module '@vue/runtime-core' {
     ColInfo: typeof import('./src/components/Document/Toolbar/Collaboration/ColInfo.vue')['default']
     Collaborator: typeof import('./src/components/Document/Toolbar/Collaboration/Collaborator.vue')['default']
     ColorPicker: typeof import('./src/components/common/ColorPicker/index.vue')['default']
+    ColorType: typeof import('./src/components/common/ColorPicker/ColorType.vue')['default']
     ColSplitView: typeof import('./src/components/common/ColSplitView.vue')['default']
     Comment: typeof import('./src/components/Document/Toolbar/Buttons/Comment.vue')['default']
     CommentInput: typeof import('./src/components/Document/Content/CommentInput.vue')['default']

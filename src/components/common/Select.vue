@@ -10,6 +10,15 @@ export interface SelectSource {
     id: number,
     data: SelectItem
 }
+interface Props {
+    itemHeight: number
+    source: SelectSource[]
+    selected?: SelectItem
+    itemView?: any
+    valueView?: any
+    width?: number
+    type?: string
+}
 
 const emit = defineEmits<{
     (e: "select", value: SelectItem): void;
@@ -17,21 +26,15 @@ const emit = defineEmits<{
 const { t } = useI18n();
 const curValue = ref<SelectItem>();
 const curValueIndex = ref<number>(-1);
-const props = defineProps<{
-    itemHeight: number,
-    source: SelectSource[],
-    selected?: SelectItem,
-    itemView?: any,
-    valueView?: any
-    width?: number,
-    type?: string
-}>();
+const props = defineProps<Props>();
 const selectContainer = ref<HTMLDivElement>();
 const optionsContainer = ref<HTMLDivElement>();
 const optionsContainerVisible = ref<boolean>(false);
 const source = ref<SelectSource[]>([]);
 function toggle() {
-    if(props.type === 'table') return;
+    if (props.type === 'table') {
+        return;
+    }
     optionsContainerVisible.value = !optionsContainerVisible.value;
     nextTick(() => {
         if (optionsContainer.value && selectContainer.value) {
@@ -41,7 +44,6 @@ function toggle() {
             const optionsContainerRect = optionsContainer.value.getBoundingClientRect();
             const documentClientHeight = document.documentElement.clientHeight - 30;
             const optionsContainerTop = selectContainerRect.top - selectedToTop;
-
             const over = optionsContainerTop + optionsContainerRect.height - documentClientHeight;
             if (over > 0) {
                 optionsContainer.value.style.top = `${-(selectedToTop + over + 4)}px`;
@@ -84,13 +86,13 @@ function render() {
     if (props.selected && props.source.length) {
         curValue.value = props.selected;
         const index = source.value.findIndex((i: SelectSource) => i.data.value === curValue.value?.value);
-        if (index > -1) curValueIndex.value = index;
+        if (index > -1) {
+            curValueIndex.value = index;
+        }
     }
 }
 
-watch(() => props.selected, () => {
-    render();
-}, { immediate: true })
+watch(() => props.selected, render, { immediate: true });
 </script>
 <template>
     <div class="select-container" :style="{

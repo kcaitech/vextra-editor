@@ -1,6 +1,6 @@
 <script setup lang="ts">
 import { ref, nextTick, reactive, onMounted, onUnmounted, computed, watch } from 'vue';
-import { Color, Gradient } from '@kcdesign/data';
+import { Color, Gradient, GradientType } from '@kcdesign/data';
 import { useI18n } from 'vue-i18n';
 import { Context } from '@/context';
 import { WorkSpace } from '@/context/workspace';
@@ -29,7 +29,8 @@ import { typical, model2label } from './typical';
 import { genOptions } from '@/utils/common';
 import Select, { SelectSource, SelectItem } from '@/components/common/Select.vue';
 import { Menu } from "@/context/menu";
-
+import ColorType from "./ColorType.vue";
+import Tooltip from '../Tooltip.vue';
 type RgbMeta = number[];
 
 interface Props {
@@ -126,6 +127,18 @@ let handleIndex = 0;
 const mousedownPositon: ClientXY = { x: 0, y: 0 };
 let isDrag: boolean = false;
 const reflush = ref<number>(1);
+const model = ref<SelectItem>({ value: 'RGB', content: 'RGB' });
+const sliders = ref<HTMLDivElement>();
+const block = ref<HTMLDivElement>();
+const popoverEl = ref<HTMLDivElement>();
+const hueIndicator = ref<HTMLDivElement>();
+const alphaIndicator = ref<HTMLDivElement>();
+const popoverVisible = ref<boolean>(false);
+const eyeDropper: Eyedropper = eyeDropperInit(); // 自制吸管🍉
+const need_update_recent = ref<boolean>(false);
+const gradient_channel_style = ref<any>({});
+const color_type_select_show = ref<boolean>(false);
+const color_type = ref<'solid' | GradientType>('solid');
 const data = reactive<Data>({
     rgba: { R: 255, G: 0, B: 0, alpha: 1 },
     hueIndicatorAttr: { x: 0 },
@@ -175,16 +188,7 @@ const saturation = computed<number>(() => {
 const brightness = computed<number>(() => {
     return (1 - (dotPosition.top + DOT_WIDTH / 2) / HUE_HEIGHT);
 })
-const model = ref<SelectItem>({ value: 'RGB', content: 'RGB' });
-const sliders = ref<HTMLDivElement>();
-const block = ref<HTMLDivElement>();
-const popoverEl = ref<HTMLDivElement>();
-const hueIndicator = ref<HTMLDivElement>();
-const alphaIndicator = ref<HTMLDivElement>();
-const popoverVisible = ref<boolean>(false);
-const eyeDropper: Eyedropper = eyeDropperInit(); // 自制吸管🍉
-const need_update_recent = ref<boolean>(false);
-const gradient_channel_style = ref<any>({});
+
 function triggle() {
     const menu = props.context.menu;
     const exsit = menu.isColorPickerMount;
@@ -195,7 +199,17 @@ function triggle() {
         colorPickerMount();
     }
 }
-
+function type_triggle() {
+    color_type_select_show.value = !color_type_select_show.value;
+    if (color_type_select_show.value) {
+        props.context.esctask.save('color-type-select', _de_type_triggle);
+    }
+}
+function _de_type_triggle() {
+    const save = color_type_select_show.value;
+    color_type_select_show.value = false;
+    return save;
+}
 function colorPickerMount() {
     popoverVisible.value = true;
     props.context.menu.setupColorPicker(blockId);
@@ -246,7 +260,6 @@ function colorPickerMount() {
 
 function removeCurColorPicker() {
     console.log('COLOR-PICKER-UNMOUNT');
-
     if (need_update_recent.value) {
         update_recent_color();
         need_update_recent.value = false;
@@ -697,6 +710,7 @@ function init() {
     rgba.G = green;
     rgba.B = blue;
     rgba.alpha = alpha;
+    color_type.value = 'solid';
     if (props.gradient) {
         update_gradient(props.gradient);
     }
@@ -716,7 +730,8 @@ function init() {
 function update_gradient(gradient: Gradient) {
     stop_els.value.length = 0;
     gradient_channel_style.value = gradient_channel_generator(gradient);
-    stop_els.value = stops_generator(gradient, 148); // 148 条条的宽度 减去 一个圆的宽度
+    stop_els.value = stops_generator(gradient, 159); // 148 条条的宽度 减去 一个圆的宽度
+    color_type.value = gradient.gradientType;
 }
 
 function update_alpha_indicator(color: Color) {
@@ -768,11 +783,15 @@ onUnmounted(() => {
         <div class="popover" ref="popoverEl" @click.stop v-if="popoverVisible" @wheel="wheel" @mousedown.stop>
             <!-- 头部 -->
             <div class="header">
-                <div class="color-type">{{ t('color.solid') }}</div>
+                <div class="desc" @click="type_triggle">
+                    <div class="color-type">{{ t(`color.${color_type}`) }}</div>
+                    <svg-icon icon-class="down"></svg-icon>
+                </div>
                 <div @click="removeCurColorPicker" class="close">
                     <svg-icon icon-class="close"></svg-icon>
                 </div>
             </div>
+            <ColorType v-if="color_type_select_show" :color="color" :gradient="gradient"></ColorType>
             <!-- 渐变工具 -->
             <div v-if="props.gradient" class="gradient-container">
                 <div class="line-container">
@@ -780,8 +799,16 @@ onUnmounted(() => {
                     <div v-for="(item, i) in stop_els" :key="i" :class="item.is_active ? 'stop-active' : 'stop'"
                         :style="{ left: item.left + 'px' }" @mousedown="_stop_down"></div>
                 </div>
-                <div class="reverse">翻转</div>
-                <div class="rotate">90度</div>
+                <div class="reverse">
+                    <Tooltip :content="t('color.reverse')">
+                        <svg-icon icon-class="exchange"></svg-icon>
+                    </Tooltip>
+                </div>
+                <div class="rotate">
+                    <Tooltip :content="t('color.rotate')">
+                        <svg-icon icon-class="rotate90"></svg-icon>
+                    </Tooltip>
+                </div>
             </div>
             <!-- 饱和度 -->
             <div class="saturation" @mousedown.stop="e => setDotPosition(e)"
@@ -885,25 +912,39 @@ onUnmounted(() => {
             position: relative;
             color: #000000;
             border-bottom: 1px solid var(--grey-dark);
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            padding: 0 8px;
             box-sizing: border-box;
 
-            .color-type {
-                position: absolute;
-                left: 8px;
-                top: 8px;
-                color: var(--theme-color);
-                user-select: none;
+            >.desc {
+                display: flex;
+                align-items: center;
+                cursor: pointer;
+
+                .color-type {
+                    user-select: none;
+                }
+
+                >svg {
+                    transition: 0.3s;
+                    width: 10px;
+                    height: 10px;
+                    margin-left: 4px;
+                }
+
+                >svg:hover {
+                    transform: translateY(2px);
+                }
             }
 
             >.close {
-                width: 16px;
+                flex: 0 0 16px;
                 height: 16px;
                 text-align: center;
                 line-height: 16px;
                 border-radius: 4px;
-                position: absolute;
-                right: 8px;
-                top: 8px;
                 user-select: none;
                 display: flex;
                 align-items: center;
@@ -929,26 +970,26 @@ onUnmounted(() => {
 
                 .line {
                     width: 100%;
-                    height: 8px;
-                    border-radius: 4px;
+                    height: 10px;
+                    border-radius: 5px;
                     background-color: #222;
                 }
 
                 .stop {
                     position: absolute;
-                    width: 8px;
-                    height: 8px;
+                    width: 9px;
+                    height: 9px;
                     border: 1px solid #FCFCFC;
                     border-radius: 50%;
                     box-shadow: inset 0px 0px 0px 1px gray, 0px 0px 0px 1px gray;
-                    top: 12px;
+                    top: 13px;
                     transform: translate(-50%, -50%);
                 }
 
                 .stop-active {
                     position: absolute;
-                    width: 8px;
-                    height: 8px;
+                    width: 9px;
+                    height: 9px;
                     border: 1px solid #FCFCFC;
                     border-radius: 50%;
                     box-shadow: inset 0px 0px 0px 1px var(--active-color-beta), 0px 0px 2px 2px var(--active-color-beta);
@@ -958,15 +999,27 @@ onUnmounted(() => {
             }
 
             .reverse {
-                margin-left: 2px;
-                flex: 0 0 32px;
+                flex: 0 0 28px;
                 cursor: pointer;
+                display: flex;
+                align-items: center;
+
+                svg {
+                    width: 24px;
+                    height: 24px;
+                }
             }
 
             .rotate {
-                margin-left: 2px;
-                flex: 0 0 32px;
+                flex: 0 0 28px;
                 cursor: pointer;
+                display: flex;
+                align-items: center;
+
+                svg {
+                    width: 20px;
+                    height: 20px;
+                }
             }
         }
 
