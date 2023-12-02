@@ -1,5 +1,5 @@
 <script setup lang="ts">
-import { ref, nextTick, reactive, onMounted, onUnmounted, computed, watch } from 'vue';
+import { ref, nextTick, reactive, onMounted, onUnmounted, computed } from 'vue';
 import { Color, Gradient, GradientType } from '@kcdesign/data';
 import { useI18n } from 'vue-i18n';
 import { Context } from '@/context';
@@ -31,6 +31,7 @@ import Select, { SelectSource, SelectItem } from '@/components/common/Select.vue
 import { Menu } from "@/context/menu";
 import ColorType from "./ColorType.vue";
 import Tooltip from '../Tooltip.vue';
+import { ColorCtx } from '@/context/color';
 type RgbMeta = number[];
 
 interface Props {
@@ -707,8 +708,8 @@ function update_dot_indicator_position(color: Color) {
     hueIndicatorAttr.x = hueIndicator;
 }
 
-function init() {
-    const { red, green, blue, alpha } = props.color;
+function init(color = props.color) {
+    const { red, green, blue, alpha } = color;
     rgba.R = red;
     rgba.G = green;
     rgba.B = blue;
@@ -717,8 +718,8 @@ function init() {
     if (props.gradient) {
         update_gradient(props.gradient);
     }
-    update_dot_indicator_position(props.color);
-    update_alpha_indicator(props.color);
+    update_dot_indicator_position(color);
+    update_alpha_indicator(color);
     let r = localStorage.getItem(key_storage);
     r = JSON.parse(r || '[]');
     if (!r || !r.length) return;
@@ -731,10 +732,16 @@ function init() {
     }
 }
 function update_gradient(gradient: Gradient) {
-    stop_els.value.length = 0;
     gradient_channel_style.value = gradient_channel_generator(gradient);
-    stop_els.value = stops_generator(gradient, 159); // 条条的宽度 减去 一个圆的宽度
     color_type.value = gradient.gradientType;
+    update_stops();
+}
+function update_stops(selected = -1) {
+    stop_els.value.length = 0;
+    if (!props.gradient) {
+        return;
+    }
+    stop_els.value = stops_generator(props.gradient, 159, selected); // 条条的宽度 减去 一个圆的宽度
 }
 function reverse() {
     emit('gradient-reverse');
@@ -757,8 +764,9 @@ function _gradient_channel_down(e: MouseEvent) {
     console.log('channel');
 }
 
-function _stop_down(e: MouseEvent) {
+function _stop_down(e: MouseEvent, index: number) {
     console.log('stop');
+    props.context.color.select_stop(index);
 }
 
 function selectionWatcher(t: any) {
@@ -773,12 +781,19 @@ function menu_watcher(t?: any, id?: string) {
     }
 }
 
+function color_watch(t: number) {
+    if (t === ColorCtx.CHANGE_STOP && props.gradient) {
+        update_stops(props.context.color.selected_stop);
+    }
+}
+
 function window_blur() {
     isDrag = false;
 }
 onMounted(() => {
     props.context.selection.watch(selectionWatcher);
     props.context.menu.watch(menu_watcher);
+    props.context.color.watch(color_watch);
     init();
     window.addEventListener('blur', window_blur);
 })
@@ -787,6 +802,7 @@ onUnmounted(() => {
     blockUnmount();
     props.context.selection.unwatch(selectionWatcher);
     props.context.menu.unwatch(menu_watcher);
+    props.context.color.unwatch(color_watch);
     window.removeEventListener('blur', window_blur);
     console.log('COLOR PICKER UNOMUNT');
 })
@@ -811,7 +827,7 @@ onUnmounted(() => {
                 <div class="line-container">
                     <div class="line" :style="gradient_channel_style" @mousedown="_gradient_channel_down"></div>
                     <div v-for="(item, i) in stop_els" :key="i" :class="item.is_active ? 'stop-active' : 'stop'"
-                        :style="{ left: item.left + 'px' }" @mousedown="_stop_down"></div>
+                        :style="{ left: item.left + 'px' }" @mousedown="(e) => { _stop_down(e, i) }"></div>
                 </div>
                 <div class="reverse" @click="reverse">
                     <Tooltip :content="t('color.reverse')">
@@ -1007,7 +1023,7 @@ onUnmounted(() => {
                     border: 1px solid #FCFCFC;
                     border-radius: 50%;
                     box-shadow: inset 0px 0px 0px 1px var(--active-color-beta), 0px 0px 2px 2px var(--active-color-beta);
-                    top: 12px;
+                    top: 13px;
                     transform: translate(-50%, -50%);
                 }
             }

@@ -614,7 +614,7 @@ export interface StopEl {
   index: number
   stop: Stop
 }
-export function stops_generator(gradient: Gradient, width: number) {
+export function stops_generator(gradient: Gradient, width: number, selected = -1) {
   const result: StopEl[] = [];
   const stops = gradient.stops;
   if (!stops.length) {
@@ -624,7 +624,7 @@ export function stops_generator(gradient: Gradient, width: number) {
     const stop = stops[i];
     result.push({
       left: stop.position * width + 12,
-      is_active: false,
+      is_active: selected === i,
       index: i,
       stop
     });
