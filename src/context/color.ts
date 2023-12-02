@@ -1,8 +1,11 @@
-import { Watchable } from "@kcdesign/data";
+import { Watchable, Gradient } from "@kcdesign/data";
 
 export class ColorCtx extends Watchable(Object) {
     static CHANGE_STOP = 1;
+    static COLOR_EDITOR = 2;
     private m_selected_stop: number = -1;
+    private editor_mode: boolean = false;
+    private m_gradient: undefined | Gradient = undefined;
     constructor() {
         super();
     }
@@ -12,5 +15,16 @@ export class ColorCtx extends Watchable(Object) {
     }
     get selected_stop() {
         return this.m_selected_stop;
+    }
+    switch_editor_mode(val: boolean, gradient?: Gradient) {
+        this.editor_mode = val && !!gradient;
+        this.m_gradient = gradient;
+        this.notify(ColorCtx.COLOR_EDITOR);
+    }
+    get mode() {
+        return this.editor_mode;
+    }
+    get gradient() {
+        return this.m_gradient
     }
 }

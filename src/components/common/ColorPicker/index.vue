@@ -270,10 +270,14 @@ function removeCurColorPicker() {
     }
     popoverVisible.value = false;
     props.context.menu.clearColorPickerId();
+    props.context.color.switch_editor_mode(false);
 }
 
 function quit(e: MouseEvent) {
-    if (e.target instanceof Element && !e.target.closest('.color-block')) {
+    const need_quit = props.gradient
+        ? e.target instanceof Element && !e.target.closest('.color-block') && !e.target.closest('#content')
+        : e.target instanceof Element && !e.target.closest('.color-block');
+    if (need_quit) {
         popoverVisible.value = false;
         blockUnmount();
         document.removeEventListener('mousedown', quit);
@@ -707,34 +711,38 @@ function update_dot_indicator_position(color: Color) {
     }
     hueIndicatorAttr.x = hueIndicator;
 }
-
-function init(color = props.color) {
-    const { red, green, blue, alpha } = color;
-    rgba.R = red;
-    rgba.G = green;
-    rgba.B = blue;
-    rgba.alpha = alpha;
-    color_type.value = 'solid';
-    if (props.gradient) {
-        update_gradient(props.gradient);
-    }
-    update_dot_indicator_position(color);
-    update_alpha_indicator(color);
+function init_rescent() {
     let r = localStorage.getItem(key_storage);
     r = JSON.parse(r || '[]');
-    if (!r || !r.length) return;
+    if (!r || !r.length) {
+        return;
+    }
     recent.value = [];
     for (let i = 0; i < r.length; i++) {
         recent.value.push(parseColorFormStorage(r[i]));
     }
+}
+function init(color = props.color) {
+    const { red, green, blue, alpha } = color;
+    update(red, green, blue);
+    rgba.alpha = alpha;
+    color_type.value = 'solid';
+    update_gradient(props.gradient);
+    update_dot_indicator_position(color);
+    update_alpha_indicator(color);
+    init_rescent();
+    props.context.color.switch_editor_mode(true, props.gradient);
     if (popoverVisible.value) {
         console.log('COLOR PICKER SHOW');
     }
 }
-function update_gradient(gradient: Gradient) {
+function update_gradient(gradient: Gradient | undefined) {
+    if (!gradient) {
+        return;
+    }
     gradient_channel_style.value = gradient_channel_generator(gradient);
     color_type.value = gradient.gradientType;
-    update_stops();
+    update_stops(gradient.stops.length ? 0 : -1);
 }
 function update_stops(selected = -1) {
     stop_els.value.length = 0;
@@ -742,6 +750,13 @@ function update_stops(selected = -1) {
         return;
     }
     stop_els.value = stops_generator(props.gradient, 159, selected); // 条条的宽度 减去 一个圆的宽度
+    const c = stop_els.value[selected]?.stop.color;
+    if (!c) {
+        return;
+    }
+    update_dot_indicator_position(c as Color);
+    update(c.red, c.green, c.blue);
+    rgba.alpha = c.alpha;
 }
 function reverse() {
     emit('gradient-reverse');
@@ -804,6 +819,7 @@ onUnmounted(() => {
     props.context.menu.unwatch(menu_watcher);
     props.context.color.unwatch(color_watch);
     window.removeEventListener('blur', window_blur);
+    document.removeEventListener('mousedown', quit);
     console.log('COLOR PICKER UNOMUNT');
 })
 </script>
