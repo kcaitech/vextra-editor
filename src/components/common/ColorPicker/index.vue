@@ -23,7 +23,8 @@ import {
     block_style_generator,
     gradient_channel_generator,
     StopEl,
-    stops_generator
+    stops_generator,
+hexToX
 } from './utils';
 import { typical, model2label } from './typical';
 import { genOptions } from '@/utils/common';
@@ -32,7 +33,6 @@ import { Menu } from "@/context/menu";
 import ColorType from "./ColorType.vue";
 import Tooltip from '../Tooltip.vue';
 import { ColorCtx } from '@/context/color';
-type RgbMeta = number[];
 
 interface Props {
     context: Context
@@ -137,7 +137,7 @@ const block = ref<HTMLDivElement>();
 const popoverEl = ref<HTMLDivElement>();
 const hueIndicator = ref<HTMLDivElement>();
 const alphaIndicator = ref<HTMLDivElement>();
-const popoverVisible = ref<boolean>(false);
+const picker_visible = ref<boolean>(false);
 const eyeDropper: Eyedropper = eyeDropperInit(); // 自制吸管🍉
 const need_update_recent = ref<boolean>(false);
 const gradient_channel_style = ref<any>({});
@@ -193,18 +193,6 @@ const brightness = computed<number>(() => {
     return (1 - (dotPosition.top + DOT_WIDTH / 2) / HUE_HEIGHT);
 })
 
-function triggle() {
-    const menu = props.context.menu;
-    const exsit = menu.isColorPickerMount;
-    if (exsit) {
-        menu.removeColorPicker();
-        if (exsit !== blockId) {
-            colorPickerMount();
-        }
-    } else {
-        colorPickerMount();
-    }
-}
 /**
  * @description 色彩类型选择
  */
@@ -215,6 +203,10 @@ function type_triggle() {
         color_type_select_show.value = true;
         props.context.esctask.save('color-type-select', _de_type_triggle);
     }
+}
+function color_type_change(val: GradientType | 'solid') {
+    console.log("val:", val);
+    color_type_select_show.value = false;
 }
 function color_type_close() {
     color_type_select_show.value = false;
@@ -227,63 +219,45 @@ function _de_type_triggle() {
     color_type_select_show.value = false;
     return save;
 }
-function colorPickerMount() {
-    popoverVisible.value = true;
-    props.context.menu.setupColorPicker(blockId);
-    init();
-    document_colors.value = getColorsFromDoc(props.context);
-    nextTick(() => {
-        if (popoverEl.value && block.value) {
-            let el = popoverEl.value
-            let top = Math.min(document.documentElement.clientHeight - 76 - block.value.offsetTop - el.offsetHeight, 0);
-            const p_el = block.value.getBoundingClientRect();
-            const body_h = document.body.clientHeight;
-            let p_top;
-            const su = body_h - p_el.top;
-            const cur_t = su - el.clientHeight;
-            if (cur_t > 0) {
-                p_top = p_el.top;
-            } else {
-                p_top = p_el.top - Math.abs(cur_t - 10);
-            }
-
-            if (p_top - 40 < 0) {
-                p_top = 40
-            }
-            if (props.top) {
-                el.style.top = (top + props.top) + 'px';
-            } else {
-                el.style.top = p_top + 'px';
-            }
-
-            const doc_height = document.documentElement.clientHeight;
-            const { height, y } = el.getBoundingClientRect();
-
-            if (doc_height - y < height + 10) {
-                el.style.top = parseInt(el.style.top) - ((height + 20) - (doc_height - y)) + 'px'
-            }
-
-            if (props.late) {
-                el.style.left = p_el.left - el.clientWidth - 47 - props.late + 'px';
-            } else if (props.cell) {
-                el.style.left = 0 + 'px';
-            } else {
-                el.style.left = p_el.left - el.clientWidth - 47 + 'px';
-            }
-        }
-    })
-    document.addEventListener('mousedown', quit);
-}
-
-function removeCurColorPicker() {
-    console.log('COLOR-PICKER-UNMOUNT');
-    if (need_update_recent.value) {
-        update_recent_color();
-        need_update_recent.value = false;
+/**
+ * @description 调色板定位
+ */
+function locate() {
+    if (!(popoverEl.value && block.value)) {
+        return;
     }
-    popoverVisible.value = false;
-    props.context.menu.clearColorPickerId();
-    props.context.color.switch_editor_mode(false);
+    let el = popoverEl.value
+    let top = Math.min(document.documentElement.clientHeight - 76 - block.value.offsetTop - el.offsetHeight, 0);
+    const p_el = block.value.getBoundingClientRect();
+    const body_h = document.body.clientHeight;
+    let p_top;
+    const su = body_h - p_el.top;
+    const cur_t = su - el.clientHeight;
+    if (cur_t > 0) {
+        p_top = p_el.top;
+    } else {
+        p_top = p_el.top - Math.abs(cur_t - 10);
+    }
+    if (p_top - 40 < 0) {
+        p_top = 40
+    }
+    if (props.top) {
+        el.style.top = (top + props.top) + 'px';
+    } else {
+        el.style.top = p_top + 'px';
+    }
+    const doc_height = document.documentElement.clientHeight;
+    const { height, y } = el.getBoundingClientRect();
+    if (doc_height - y < height + 10) {
+        el.style.top = parseInt(el.style.top) - ((height + 20) - (doc_height - y)) + 'px'
+    }
+    if (props.late) {
+        el.style.left = p_el.left - el.clientWidth - 47 - props.late + 'px';
+    } else if (props.cell) {
+        el.style.left = 0 + 'px';
+    } else {
+        el.style.left = p_el.left - el.clientWidth - 47 + 'px';
+    }
 }
 
 function quit(e: MouseEvent) {
@@ -291,31 +265,10 @@ function quit(e: MouseEvent) {
         ? e.target instanceof Element && !e.target.closest('.color-block') && !e.target.closest('#content')
         : e.target instanceof Element && !e.target.closest('.color-block');
     if (need_quit) {
-        popoverVisible.value = false;
+        picker_visible.value = false;
         blockUnmount();
         document.removeEventListener('mousedown', quit);
     }
-}
-
-// 16进制色彩转10进制
-function hexToX(hex: string): RgbMeta {
-    hex = hex.slice(1);
-    let result: number[] = [];
-    if (hex.length === 3) {
-        let temp = hex.split('');
-        result = temp.map(v => {
-            return Number(eval(`0
-            x${v}${v}`).toString(10));
-        })
-    } else if (hex.length === 6) {
-        let temp = hex.split('');
-        for (let i = 0; i < 6; i = i + 2) {
-            result.push(Number(eval(`0
-            x
-            ${temp[i]}${temp[i + 1]}`).toString(10)));
-        }
-    }
-    return result
 }
 
 function setMousedownPosition(e: MouseEvent) {
@@ -434,7 +387,7 @@ function setDotPosition(e: MouseEvent) {
         saturationELBounding.right = right;
         saturationELBounding.bottom = bottom;
         const { R, G, B } = HSB2RGB(hue.value, saturation.value, brightness.value);
-        update(R, G, B);
+        update_rgb(R, G, B);
         const color = new Color(rgba.alpha, Math.round(R), Math.round(G), Math.round(B));
         emit('change', color);
         document.addEventListener('mousemove', mousemove4Dot);
@@ -465,7 +418,7 @@ function mousemove4Dot(e: MouseEvent) {
         }
         const { R, G, B } = HSB2RGB(hue.value, saturation.value, brightness.value);
         const color = new Color(rgba.alpha, Math.round(R), Math.round(G), Math.round(B));
-        update(R, G, B);
+        update_rgb(R, G, B);
         emit('change', color);
     } else {
         isDrag = is_drag(e);
@@ -478,7 +431,7 @@ function setRGB(indicator: number) {
     const { R, G, B } = HSB2RGB(h, saturation.value, brightness.value);
     const color = new Color(rgba.alpha, Math.round(R), Math.round(G), Math.round(B));
     emit('change', color);
-    update(R, G, B);
+    update_rgb(R, G, B);
     need_update_recent.value = true;
 }
 
@@ -519,14 +472,6 @@ function eyedropper() {
         eyeDropper.start(t('color.esc'));
     } else { // 调用系统自带的接口
         systemEyeDropper();
-    }
-}
-
-function blockUnmount() {
-    const menu = props.context.menu;
-    const exsit = menu.isColorPickerMount;
-    if (exsit === blockId) {
-        menu.clearColorPickerId();
     }
 }
 
@@ -628,12 +573,19 @@ function keyboardWatcher(e: KeyboardEvent) {
     }
 }
 
+function _gradient_channel_down(e: MouseEvent) {
+    console.log('channel');
+}
+function _stop_down(e: MouseEvent, index: number) {
+    console.log('stop');
+    props.context.color.select_stop(index);
+}
+
 // 输入框输入
 function enter() {
     let v: string | number = inputTarget.value;
     const valid = validate(model.value.value as any, handleIndex, Number(v));
     if (valid) {
-        props.context.workspace.notify(WorkSpace.CTRL_DISAPPEAR);
         if (model.value.value === 'RGB') {
             v = Math.floor(Number(v));
             if (handleIndex === 0) {
@@ -685,20 +637,93 @@ function enter() {
         update_dot_indicator_position(color);
         update_alpha_indicator(color);
         need_update_recent.value = true;
-        props.context.workspace.notify(WorkSpace.CTRL_APPEAR);
     } else {
         reflush.value++;
     }
     inputTarget.removeEventListener('keydown', keyboardWatcher);
     inputTarget.blur();
 }
-
-function update(R: number, G: number, B: number) {
+function triggle() {
+    const menu = props.context.menu;
+    const exsit = menu.isColorPickerMount;
+    if (exsit) {
+        menu.removeColorPicker();
+        if (exsit !== blockId) {
+            colorPickerMount();
+        }
+    } else {
+        colorPickerMount();
+    }
+}
+/**
+ * @description 打开调色板
+ */
+ function colorPickerMount() {
+    picker_visible.value = true;
+    props.context.menu.setupColorPicker(blockId);
+    update();
+    init_document_colors();
+    switch_editor_mode();
+    document.addEventListener('mousedown', quit);
+    nextTick(locate);
+}
+function blockUnmount() {
+    const menu = props.context.menu;
+    const exsit = menu.isColorPickerMount;
+    if (exsit === blockId) {
+        menu.clearColorPickerId();
+    }
+    props.context.color.switch_editor_mode(false);
+}
+/**
+ * @description 移除调色板
+ */
+ function removeCurColorPicker() {
+    if (need_update_recent.value) {
+        update_recent_color();
+        need_update_recent.value = false;
+    }
+    props.context.menu.clearColorPickerId();
+    props.context.color.switch_editor_mode(false);
+    picker_visible.value = false;
+}
+function switch_editor_mode() {
+    if (!(picker_visible.value && props.gradient)) {
+        return;
+    }
+    props.context.color.switch_editor_mode(true, props.gradient);
+}
+// init
+function init_rescent() {
+    let r = localStorage.getItem(key_storage);
+    r = JSON.parse(r || '[]');
+    if (!r || !r.length) {
+        return;
+    }
+    recent.value = [];
+    for (let i = 0; i < r.length; i++) {
+        recent.value.push(parseColorFormStorage(r[i]));
+    }
+}
+function init_document_colors() {
+    document_colors.value = getColorsFromDoc(props.context);
+}
+// update
+function update(color = props.color) {
+    const { red, green, blue, alpha } = color;
+    update_rgb(red, green, blue);
+    rgba.alpha = alpha;
+    color_type.value = 'solid';
+    update_gradient(props.gradient);
+    update_dot_indicator_position(color);
+    update_alpha_indicator(color);
+    init_rescent();
+}
+function update_rgb(R: number, G: number, B: number) {
     rgba.R = R;
     rgba.G = G;
     rgba.B = B;
 }
-
 function update_recent_color() {
     const color = new Color(rgba.alpha, Math.round(rgba.R), Math.round(rgba.G,), Math.round(rgba.B));
     let nVal = updateRecently(color) || JSON.stringify([]);
@@ -710,7 +735,6 @@ function update_recent_color() {
         }
     }
 }
-
 function update_dot_indicator_position(color: Color) {
     const { h, s, b } = RGB2HSB(color);
     dotPosition.left = HUE_WIDTH * s - (DOT_WIDTH / 2);
@@ -723,31 +747,6 @@ function update_dot_indicator_position(color: Color) {
         hueIndicator = lineAttribute.length - INDICATOR_WIDTH;
     }
     hueIndicatorAttr.x = hueIndicator;
-}
-function init_rescent() {
-    let r = localStorage.getItem(key_storage);
-    r = JSON.parse(r || '[]');
-    if (!r || !r.length) {
-        return;
-    }
-    recent.value = [];
-    for (let i = 0; i < r.length; i++) {
-        recent.value.push(parseColorFormStorage(r[i]));
-    }
-}
-function init(color = props.color) {
-    const { red, green, blue, alpha } = color;
-    update(red, green, blue);
-    rgba.alpha = alpha;
-    color_type.value = 'solid';
-    update_gradient(props.gradient);
-    update_dot_indicator_position(color);
-    update_alpha_indicator(color);
-    init_rescent();
-    props.context.color.switch_editor_mode(true, props.gradient);
-    if (popoverVisible.value) {
-        console.log('COLOR PICKER SHOW');
-    }
 }
 function update_gradient(gradient: Gradient | undefined) {
     if (!gradient) {
@@ -768,7 +767,7 @@ function update_stops(selected = -1) {
         return;
     }
     update_dot_indicator_position(c as Color);
-    update(c.red, c.green, c.blue);
+    update_rgb(c.red, c.green, c.blue);
     rgba.alpha = c.alpha;
 }
 function reverse() {
@@ -787,59 +786,47 @@ function update_alpha_indicator(color: Color) {
     const { alpha } = color;
     alphaIndicatorAttr.x = (lineAttribute.length - INDICATOR_WIDTH) * alpha;
 }
-
-function _gradient_channel_down(e: MouseEvent) {
-    console.log('channel');
-}
-
-function _stop_down(e: MouseEvent, index: number) {
-    console.log('stop');
-    props.context.color.select_stop(index);
-}
-
 function selectionWatcher(t: any) {
-    if (t === Selection.CHANGE_SHAPE) {
-        props.context.menu.removeColorPicker();
+    if (t === Selection.CHANGE_SHAPE && picker_visible.value) {
+        nextTick(update);
     }
 }
-
-function menu_watcher(t?: any, id?: string) {
+function menu_watcher(t: any, id: string) {
     if (t === Menu.REMOVE_COLOR_PICKER && id === blockId) {
         removeCurColorPicker();
     }
 }
-
 function color_watch(t: number) {
     if (t === ColorCtx.CHANGE_STOP && props.gradient) {
         update_stops(props.context.color.selected_stop);
     }
 }
-
 function window_blur() {
     isDrag = false;
 }
 onMounted(() => {
+    console.log('BLOCK MOUNT');
     props.context.selection.watch(selectionWatcher);
     props.context.menu.watch(menu_watcher);
     props.context.color.watch(color_watch);
-    init();
     window.addEventListener('blur', window_blur);
+    update();
 })
 onUnmounted(() => {
     eyeDropper.destroy();
-    blockUnmount();
     props.context.selection.unwatch(selectionWatcher);
     props.context.menu.unwatch(menu_watcher);
     props.context.color.unwatch(color_watch);
     window.removeEventListener('blur', window_blur);
     document.removeEventListener('mousedown', quit);
-    console.log('COLOR PICKER UNOMUNT');
+    blockUnmount();
+    console.log('BLOCK DESTROY');
 })
 </script>
 
 <template>
     <div class="color-block" :style="block_style_generator(color, gradient)" ref="block" @click="triggle">
-        <div class="popover" ref="popoverEl" @click.stop v-if="popoverVisible" @wheel="wheel" @mousedown.stop>
+        <div class="popover" v-if="picker_visible" ref="popoverEl" @click.stop @wheel="wheel" @mousedown.stop>
             <!-- 头部 -->
             <div class="header">
                 <div class="color-type-desc" @click="type_triggle">
@@ -850,7 +837,7 @@ onUnmounted(() => {
                     <svg-icon icon-class="close"></svg-icon>
                 </div>
             </div>
-            <ColorType v-if="color_type_select_show" :color="color" :gradient="gradient" @close="color_type_close"></ColorType>
+            <ColorType v-if="color_type_select_show" :color="color" :gradient="gradient" @change="color_type_change" @close="color_type_close"></ColorType>
             <!-- 渐变工具 -->
             <div v-if="props.gradient" class="gradient-container">
                 <div class="line-container">

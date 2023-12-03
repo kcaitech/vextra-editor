@@ -631,3 +631,23 @@ export function stops_generator(gradient: Gradient, width: number, selected = -1
   }
   return result;
 }
+// 16进制色彩转10进制
+export function hexToX(hex: string): number[] {
+  hex = hex.slice(1);
+  let result: number[] = [];
+  if (hex.length === 3) {
+    let temp = hex.split('');
+    result = temp.map(v => {
+      return Number(eval(`0
+          x${v}${v}`).toString(10));
+    })
+  } else if (hex.length === 6) {
+    let temp = hex.split('');
+    for (let i = 0; i < 6; i = i + 2) {
+      result.push(Number(eval(`0
+          x
+          ${temp[i]}${temp[i + 1]}`).toString(10)));
+    }
+  }
+  return result
+}
