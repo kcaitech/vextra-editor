@@ -9,6 +9,7 @@ interface Props {
 }
 interface Emits {
     (e: 'change', value: GradientType | 'solid'): void;
+    (e: 'close'): void;
 }
 const props = defineProps<Props>();
 const emits = defineEmits<Emits>();
@@ -29,11 +30,18 @@ function init() {
         return;
     }
     is_checked.value = props.gradient.gradientType;
+    wrapper.value?.focus();
+    wrapper.value?.addEventListener('blur', blur);
+}
+function blur() {
+    setTimeout(() => {
+        emits('close');
+    }, 10);
 }
 onMounted(init);
 </script>
 <template>
-    <div ref="wrapper" class="wrapper" :style="{ left: left + 'px', top: top + 'px' }">
+    <div ref="wrapper" class="color-type-wrapper" :style="{ left: left + 'px', top: top + 'px' }" :tabindex="-1" @blur="blur">
         <div class="item" @click.stop="() => { emits('change', 'solid') }">
             <div :class="{ check: true, is: is_checked === 'solid' }"></div>
             <div class="desc">
@@ -65,7 +73,7 @@ onMounted(init);
     </div>
 </template>
 <style scoped lang="scss">
-.wrapper {
+.color-type-wrapper {
     position: absolute;
     width: 112px;
     height: auto;
@@ -74,7 +82,7 @@ onMounted(init);
     border-radius: var(--default-radius);
     z-index: 1;
     background-color: var(--theme-color-anti);
-
+    outline: none;
     .item {
         width: 100%;
         height: 28px;

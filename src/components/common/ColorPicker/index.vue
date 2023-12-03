@@ -198,17 +198,30 @@ function triggle() {
     const exsit = menu.isColorPickerMount;
     if (exsit) {
         menu.removeColorPicker();
-        if (exsit !== blockId) colorPickerMount();
+        if (exsit !== blockId) {
+            colorPickerMount();
+        }
     } else {
         colorPickerMount();
     }
 }
+/**
+ * @description 色彩类型选择
+ */
 function type_triggle() {
-    color_type_select_show.value = !color_type_select_show.value;
     if (color_type_select_show.value) {
+        color_type_select_show.value = false;
+    } else {
+        color_type_select_show.value = true;
         props.context.esctask.save('color-type-select', _de_type_triggle);
     }
 }
+function color_type_close() {
+    color_type_select_show.value = false;
+}
+/**
+ * @description 关闭色彩类型选择
+ */
 function _de_type_triggle() {
     const save = color_type_select_show.value;
     color_type_select_show.value = false;
@@ -829,7 +842,7 @@ onUnmounted(() => {
         <div class="popover" ref="popoverEl" @click.stop v-if="popoverVisible" @wheel="wheel" @mousedown.stop>
             <!-- 头部 -->
             <div class="header">
-                <div class="desc" @click="type_triggle">
+                <div class="color-type-desc" @click="type_triggle">
                     <div class="color-type">{{ t(`color.${color_type}`) }}</div>
                     <svg-icon icon-class="down"></svg-icon>
                 </div>
@@ -837,7 +850,7 @@ onUnmounted(() => {
                     <svg-icon icon-class="close"></svg-icon>
                 </div>
             </div>
-            <ColorType v-if="color_type_select_show" :color="color" :gradient="gradient"></ColorType>
+            <ColorType v-if="color_type_select_show" :color="color" :gradient="gradient" @close="color_type_close"></ColorType>
             <!-- 渐变工具 -->
             <div v-if="props.gradient" class="gradient-container">
                 <div class="line-container">
@@ -964,7 +977,7 @@ onUnmounted(() => {
             padding: 0 8px;
             box-sizing: border-box;
 
-            >.desc {
+            >.color-type-desc {
                 display: flex;
                 align-items: center;
                 cursor: pointer;
