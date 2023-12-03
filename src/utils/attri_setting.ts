@@ -1,5 +1,5 @@
 import { RectShape, Shape, ShapeType } from "@kcdesign/data";
-import { PositonAdjust, ConstrainerProportionsAction, FrameAdjust, RotateAdjust, FlipAction } from "@kcdesign/data";
+import { PositonAdjust, FrameAdjust, BatchAction2 } from "@kcdesign/data";
 import { getHorizontalAngle } from "@/utils/common"
 
 export function is_mixed(shapes: Shape[]) {
@@ -66,8 +66,8 @@ export function is_mixed_for_radius(shapes: Shape[], cor: boolean) {
     }
   }
 }
-export function get_actions_constrainer_proportions(shapes: Shape[], value: boolean): ConstrainerProportionsAction[] {
-  const actions: ConstrainerProportionsAction[] = [];
+export function get_actions_constrainer_proportions(shapes: Shape[], value: boolean): BatchAction2[] {
+  const actions: BatchAction2[] = [];
   for (let i = 0; i < shapes.length; i++) {
     const shape = shapes[i];
     actions.push({ target: shape, value })
@@ -121,7 +121,7 @@ export function get_actions_frame_h(shapes: Shape[], value: number, isLock: bool
   return actions;
 }
 export function get_actions_rotate(shapes: Shape[], value: number) {
-  const actions: RotateAdjust[] = [];
+  const actions: BatchAction2[] = [];
   for (let i = 0; i < shapes.length; i++) {
     const shape = shapes[i];
     actions.push({ target: shape, value: value });
@@ -129,18 +129,18 @@ export function get_actions_rotate(shapes: Shape[], value: number) {
   return actions;
 }
 export function get_actions_flip_v(shapes: Shape[]) {
-  const actions: FlipAction[] = [];
+  const actions: BatchAction2[] = [];
   for (let i = 0; i < shapes.length; i++) {
     const shape = shapes[i];
-    actions.push({ target: shape, direction: 'vertical' });
+    actions.push({ target: shape, value: 'vertical' });
   }
   return actions;
 }
 export function get_actions_flip_h(shapes: Shape[]) {
-  const actions: FlipAction[] = [];
+  const actions: BatchAction2[] = [];
   for (let i = 0; i < shapes.length; i++) {
     const shape = shapes[i];
-    actions.push({ target: shape, direction: 'horizontal' });
+    actions.push({ target: shape, value: 'horizontal' });
   }
   return actions;
 }

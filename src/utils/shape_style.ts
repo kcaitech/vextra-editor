@@ -1,6 +1,7 @@
 import {
-    Color, Fill, Shape, FillColorAction, FillEnableAction, FillAddAction, FillDeleteAction, FillsReplaceAction,
-    Border, BorderColorAction, BorderEnableAction, BorderAddAction, BorderDeleteAction, BordersReplaceAction, BorderThicknessAction, BorderPositionAction, BorderStyleAction, BorderPosition, BorderStyle, Shadow, ShadowReplaceAction, ShadowAddAction, ShadowDeleteAction, ShadowEnableAction, ShadowPositionAction, ShadowPosition, ShadowColorAction, ShadowBlurRadiusAction, ShadowSpreadAction, ShadowOffsetXAction, ShadowOffsetYAction
+    Color, Fill, Shape,
+    Border, BorderPosition, BorderStyle, Shadow, ShadowPosition,
+    BatchAction, BatchAction2, BatchAction3, BatchAction4
 } from "@kcdesign/data";
 import { v4 } from "uuid";
 interface FillItem {
@@ -42,21 +43,28 @@ export function get_fills(shapes: Shape[]): FillItem[] | 'mixed' {
     return fills;
 }
 export function get_actions_add_fill(shapes: Shape[], fill: Fill) {
-    const actions: FillAddAction[] = [];
+    const actions: BatchAction2[] = [];
     for (let i = 0; i < shapes.length; i++) {
         actions.push({ target: shapes[i], value: fill });
     }
     return actions;
 }
+export function get_aciton_fill_gradient(shapes: Shape[], index: number) {
+    const actions: BatchAction4[] = [];
+    for (let i = 0, l = shapes.length; i < l; i++) {
+        actions.push({ target: shapes[i], index, type: 'fills' });
+    }
+    return actions;
+}
 export function get_actions_fill_color(shapes: Shape[], index: number, color: Color) {
-    const actions: FillColorAction[] = [];
+    const actions: BatchAction[] = [];
     for (let i = 0; i < shapes.length; i++) {
         actions.push({ target: shapes[i], index, value: color });
     }
     return actions;
 }
 export function get_actions_fill_unify(shapes: Shape[]) {
-    const actions: FillsReplaceAction[] = [];
+    const actions: BatchAction2[] = [];
     const fills = shapes[0].style.fills;
     for (let i = 1; i < shapes.length; i++) {
         const new_fills: Fill[] = [];
@@ -72,14 +80,14 @@ export function get_actions_fill_unify(shapes: Shape[]) {
     return actions;
 }
 export function get_actions_fill_enabled(shapes: Shape[], index: number, value: boolean) {
-    const actions: FillEnableAction[] = [];
+    const actions: BatchAction[] = [];
     for (let i = 0; i < shapes.length; i++) {
         actions.push({ target: shapes[i], index, value });
     }
     return actions;
 }
 export function get_actions_fill_delete(shapes: Shape[], index: number) {
-    const actions: FillDeleteAction[] = [];
+    const actions: BatchAction3[] = [];
     for (let i = 0; i < shapes.length; i++) {
         actions.push({ target: shapes[i], index });
     }
@@ -133,7 +141,7 @@ export function get_borders(shapes: Shape[]): BorderItem[] | 'mixed' {
     return borders;
 }
 export function get_actions_add_boder(shapes: Shape[], border: Border) {
-    const actions: BorderAddAction[] = [];
+    const actions: BatchAction2[] = [];
     for (let i = 0; i < shapes.length; i++) {
         const { isEnabled, fillType, color, position, thickness, borderStyle } = border;
         const new_border = new Border(v4(), isEnabled, fillType, color, position, thickness, borderStyle);
@@ -142,14 +150,14 @@ export function get_actions_add_boder(shapes: Shape[], border: Border) {
     return actions;
 }
 export function get_actions_border_color(shapes: Shape[], index: number, color: Color) {
-    const actions: BorderColorAction[] = [];
+    const actions: BatchAction[] = [];
     for (let i = 0; i < shapes.length; i++) {
         actions.push({ target: shapes[i], index, value: color });
     }
     return actions;
 }
 export function get_actions_border_unify(shapes: Shape[]) {
-    const actions: BordersReplaceAction[] = [];
+    const actions: BatchAction2[] = [];
     const borders = shapes[0].style.borders;
     for (let i = 1; i < shapes.length; i++) {
         const new_borders: Border[] = [];
@@ -164,35 +172,35 @@ export function get_actions_border_unify(shapes: Shape[]) {
     return actions;
 }
 export function get_actions_border_enabled(shapes: Shape[], index: number, value: boolean) {
-    const actions: BorderEnableAction[] = [];
+    const actions: BatchAction[] = [];
     for (let i = 0; i < shapes.length; i++) {
         actions.push({ target: shapes[i], index, value });
     }
     return actions;
 }
 export function get_actions_border_delete(shapes: Shape[], index: number) {
-    const actions: BorderDeleteAction[] = [];
+    const actions: BatchAction3[] = [];
     for (let i = 0; i < shapes.length; i++) {
         actions.push({ target: shapes[i], index });
     }
     return actions;
 }
 export function get_actions_border_thickness(shapes: Shape[], index: number, thickness: number) {
-    const actions: BorderThicknessAction[] = [];
+    const actions: BatchAction[] = [];
     for (let i = 0; i < shapes.length; i++) {
         actions.push({ target: shapes[i], index, value: thickness });
     }
     return actions;
 }
 export function get_actions_border_position(shapes: Shape[], index: number, position: BorderPosition) {
-    const actions: BorderPositionAction[] = [];
+    const actions: BatchAction[] = [];
     for (let i = 0; i < shapes.length; i++) {
         actions.push({ target: shapes[i], index, value: position });
     }
     return actions;
 }
 export function get_actions_border_style(shapes: Shape[], index: number, style: 'dash' | 'solid') {
-    const actions: BorderStyleAction[] = [];
+    const actions: BatchAction[] = [];
     for (let i = 0; i < shapes.length; i++) {
         const bs = new BorderStyle(0, 0);
         if (style === 'dash') {
@@ -251,7 +259,7 @@ export function get_shadows(shapes: Shape[]): ShadowItem[] | 'mixed' {
 }
 
 export function get_actions_shadow_unify(shapes: Shape[]) {
-    const actions: ShadowReplaceAction[] = [];
+    const actions: BatchAction2[] = [];
     const shadows = shapes[0].style.shadows;
     for (let i = 1; i < shapes.length; i++) {
         const new_shadows: Shadow[] = [];
@@ -267,7 +275,7 @@ export function get_actions_shadow_unify(shapes: Shape[]) {
 }
 
 export function get_actions_add_shadow(shapes: Shape[], shadow: Shadow) {
-    const actions: ShadowAddAction[] = [];
+    const actions: BatchAction2[] = [];
     for (let i = 0; i < shapes.length; i++) {
         const { isEnabled, blurRadius, color, position, spread, offsetX, offsetY } = shadow;
         const new_shadow = new Shadow(v4(), isEnabled, blurRadius, color, offsetX, offsetY, spread, position);
@@ -277,7 +285,7 @@ export function get_actions_add_shadow(shapes: Shape[], shadow: Shadow) {
 }
 
 export function get_actions_shadow_delete(shapes: Shape[], index: number) {
-    const actions: ShadowDeleteAction[] = [];
+    const actions: BatchAction3[] = [];
     for (let i = 0; i < shapes.length; i++) {
         actions.push({ target: shapes[i], index });
     }
@@ -285,7 +293,7 @@ export function get_actions_shadow_delete(shapes: Shape[], index: number) {
 }
 
 export function get_actions_shadow_enabled(shapes: Shape[], index: number, value: boolean) {
-    const actions: ShadowEnableAction[] = [];
+    const actions: BatchAction[] = [];
     for (let i = 0; i < shapes.length; i++) {
         actions.push({ target: shapes[i], index, value });
     }
@@ -293,7 +301,7 @@ export function get_actions_shadow_enabled(shapes: Shape[], index: number, value
 }
 
 export function get_actions_shadow_position(shapes: Shape[], index: number, position: ShadowPosition) {
-    const actions: ShadowPositionAction[] = [];
+    const actions: BatchAction[] = [];
     for (let i = 0; i < shapes.length; i++) {
         actions.push({ target: shapes[i], index, value: position });
     }
@@ -301,7 +309,7 @@ export function get_actions_shadow_position(shapes: Shape[], index: number, posi
 }
 
 export function get_actions_shadow_color(shapes: Shape[], index: number, color: Color) {
-    const actions: ShadowColorAction[] = [];
+    const actions: BatchAction[] = [];
     for (let i = 0; i < shapes.length; i++) {
         actions.push({ target: shapes[i], index, value: color });
     }
@@ -309,7 +317,7 @@ export function get_actions_shadow_color(shapes: Shape[], index: number, color: 
 }
 
 export function get_actions_shadow_blur(shapes: Shape[], index: number, blur: number) {
-    const actions: ShadowBlurRadiusAction[] = [];
+    const actions: BatchAction[] = [];
     for (let i = 0; i < shapes.length; i++) {
         actions.push({ target: shapes[i], index, value: blur });
     }
@@ -317,21 +325,21 @@ export function get_actions_shadow_blur(shapes: Shape[], index: number, blur: nu
 }
 
 export function get_actions_shadow_spread(shapes: Shape[], index: number, spread: number) {
-    const actions: ShadowSpreadAction[] = [];
+    const actions: BatchAction[] = [];
     for (let i = 0; i < shapes.length; i++) {
         actions.push({ target: shapes[i], index, value: spread });
     }
     return actions;
 }
 export function get_actions_shadow_offsetx(shapes: Shape[], index: number, offsetx: number) {
-    const actions: ShadowOffsetXAction[] = [];
+    const actions: BatchAction[] = [];
     for (let i = 0; i < shapes.length; i++) {
         actions.push({ target: shapes[i], index, value: offsetx });
     }
     return actions;
 }
 export function get_actions_shadow_offsety(shapes: Shape[], index: number, offsety: number) {
-    const actions: ShadowOffsetYAction[] = [];
+    const actions: BatchAction[] = [];
     for (let i = 0; i < shapes.length; i++) {
         actions.push({ target: shapes[i], index, value: offsety });
     }

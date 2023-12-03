@@ -1,13 +1,14 @@
 <script setup lang="ts">
-import {computed, onMounted, onUnmounted, reactive, ref, watch} from 'vue';
-import {Context} from '@/context';
-import {Color, Fill, FillType, Shape, ShapeType, TableCell, TableShape} from "@kcdesign/data";
-import {Reg_HEX} from "@/utils/RegExp";
+import { computed, onMounted, onUnmounted, reactive, ref, watch } from 'vue';
+import { Context } from '@/context';
+import { Color, Fill, FillType, Shape, ShapeType, TableCell, TableShape } from "@kcdesign/data";
+import { Reg_HEX } from "@/utils/RegExp";
 import TypeHeader from '../TypeHeader.vue';
-import {useI18n} from 'vue-i18n';
+import { useI18n } from 'vue-i18n';
 import ColorPicker from '@/components/common/ColorPicker/index.vue';
-import {message} from "@/utils/message";
+import { message } from "@/utils/message";
 import {
+    get_aciton_fill_gradient,
     get_actions_add_fill,
     get_actions_fill_color,
     get_actions_fill_delete,
@@ -15,9 +16,9 @@ import {
     get_actions_fill_unify,
     get_fills
 } from '@/utils/shape_style';
-import {v4} from 'uuid';
-import {TableSelection} from '@/context/tableselection';
-import {Selection} from "@/context/selection";
+import { v4 } from 'uuid';
+import { TableSelection } from '@/context/tableselection';
+import { Selection } from "@/context/selection";
 
 interface FillItem {
     id: number,
@@ -32,7 +33,7 @@ interface Props {
 const props = defineProps<Props>();
 const editor = computed(() => props.context.editor4Shape(props.shapes[0]));
 const len = computed<number>(() => props.shapes.length);
-const {t} = useI18n();
+const { t } = useI18n();
 const watchedShapes = new Map();
 const fills: FillItem[] = reactive([]);
 const alphaFill = ref<any>();
@@ -53,7 +54,7 @@ function watchShapes() {
         for (let i = 0, l = selectedShapes.length; i < l; i++) {
             const v = selectedShapes[i];
             if (v.isVirtualShape) {
-                let p =v.parent;
+                let p = v.parent;
                 while (p) {
                     if (p.type === ShapeType.SymbolRef) {
                         needWatchShapes.set(p.id, p);
@@ -113,7 +114,7 @@ function updateData() {
             const style = shape.style;
             for (let i = 0, len = style.fills.length; i < len; i++) {
                 const fill = style.fills[i];
-                const f = {id: i, fill};
+                const f = { id: i, fill };
                 fills.unshift(f);
             }
         }
@@ -450,7 +451,30 @@ const filterAlpha = (a: number) => {
         return alpha.toFixed(2); // 保留两位小数
     }
 }
-
+/**
+ * @description 翻转渐变
+ * @param idx 
+ */
+function gradient_reverse(idx: number) {
+    const _idx = fills.length - idx - 1;
+    const selected = props.context.selection.selectedShapes;
+    const page = props.context.selection.selectedPage!;
+    const editor = props.context.editor4Page(page);
+    const actions = get_aciton_fill_gradient(selected, _idx);
+    editor.reverseShapesGradient(actions);
+}
+/**
+ * @description 旋转渐变
+ * @param idx 
+ */
+function gradient_rotate(idx: number) {
+    const _idx = fills.length - idx - 1;
+    const selected = props.context.selection.selectedShapes;
+    const page = props.context.selection.selectedPage!;
+    const editor = props.context.editor4Page(page);
+    const actions = get_aciton_fill_gradient(selected, _idx);
+    editor.rotateShapesGradient(actions);
+}
 function update_by_shapes() {
     watchShapes();
     updateData();
@@ -550,14 +574,14 @@ onUnmounted(() => {
                     <svg-icon v-if="f.fill.isEnabled" icon-class="select"></svg-icon>
                 </div>
                 <div class="color">
-                    <ColorPicker :color="f.fill.color" :context="props.context"
-                                 @change="c => getColorFromPicker(idx, c)">
+                    <ColorPicker :color="f.fill.color" :context="props.context" :gradient="f.fill.gradient"
+                        @change="c => getColorFromPicker(idx, c)" @gradient-reverse="() => gradient_reverse(idx)"
+                        @gradient-rotate="() => gradient_rotate(idx)">
                     </ColorPicker>
                     <input ref="colorFill" :value="toHex(f.fill.color.red, f.fill.color.green, f.fill.color.blue)"
-                           :spellcheck="false" @change="(e) => onColorChange(idx, e)" @focus="selectColor(idx)"/>
-                    <input ref="alphaFill" style="text-align: center;"
-                           :value="filterAlpha(f.fill.color.alpha * 100) + '%'"
-                           @change="(e) => onAlphaChange(idx, e)" @focus="selectAlpha(idx)"/>
+                        :spellcheck="false" @change="(e) => onColorChange(idx, e)" @focus="selectColor(idx)" />
+                    <input ref="alphaFill" style="text-align: center;" :value="filterAlpha(f.fill.color.alpha * 100) + '%'"
+                        @change="(e) => onAlphaChange(idx, e)" @focus="selectAlpha(idx)" />
                 </div>
                 <div style="width: 22px;"></div>
                 <div class="delete" @click="deleteFill(idx)">
@@ -584,7 +608,7 @@ onUnmounted(() => {
         align-items: center;
         justify-content: center;
 
-        > svg {
+        >svg {
             width: 50%;
             height: 50%;
         }
@@ -619,7 +643,7 @@ onUnmounted(() => {
                 justify-content: center;
                 align-items: center;
 
-                > svg {
+                >svg {
                     width: 60%;
                     height: 60%;
                 }
@@ -653,7 +677,7 @@ onUnmounted(() => {
                     margin-left: 5px;
                 }
 
-                input + input {
+                input+input {
                     width: 45px;
                 }
             }
@@ -666,7 +690,7 @@ onUnmounted(() => {
                 width: 22px;
                 height: 22px;
 
-                > svg {
+                >svg {
                     width: 11px;
                     height: 11px;
                 }

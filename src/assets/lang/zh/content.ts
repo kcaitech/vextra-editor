@@ -20,8 +20,13 @@ shape[ShapeType.Rectangle] = '矩形';
 
 export const color = {
     solid: '纯色',
+    linear: '线性渐变',
+    radial: '径向渐变',
+    angular: '旋转渐变',
     esc: '按ESC退出',
     recently: '最近使用',
     documentc: '文档使用',
-    times: '使用xx次'
+    times: '使用xx次',
+    rotate: '旋转90度',
+    reverse: '翻转渐变'
 }
