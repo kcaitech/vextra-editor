@@ -917,7 +917,7 @@ onUnmounted(() => {
                 </div>
             </div>
             <!-- 文档使用 -->
-            <div class="dc-container" v-if="recent.length">
+            <div class="dc-container" v-if="document_colors.length">
                 <div class="inner">
                     <div class="header">{{ t('color.documentc') }}</div>
                     <div class="documentc-container" @wheel.stop>
