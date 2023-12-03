@@ -710,14 +710,14 @@ function init_document_colors() {
 }
 // update
 function update(color = props.color) {
+    init_rescent();
     const { red, green, blue, alpha } = color;
-    update_rgb(red, green, blue);
     rgba.alpha = alpha;
     color_type.value = 'solid';
+    update_rgb(red, green, blue);
     update_gradient(props.gradient);
     update_dot_indicator_position(color);
     update_alpha_indicator(color);
-    init_rescent();
 }
 function update_rgb(R: number, G: number, B: number) {
     rgba.R = R;
