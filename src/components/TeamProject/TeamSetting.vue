@@ -75,7 +75,8 @@
             </div>
             <div class="addproject">
                 <button class="bnt_confirm" type="submit" @click.stop="confirm">
-                    {{ teamSelfPermType === 3 ? t('teamsetting.confirm') : t('teamsetting.leave') }}
+                    <!-- {{ teamSelfPermType === 3 ? t('teamsetting.confirm') : t('teamsetting.leave') }} -->
+                    {{ t('teamsetting.confirm') }}
                 </button>
                 <button class="bnt_cancel" type="submit" @click.stop.once="showoverlay = false">{{
                     t('teamsetting.cancel')
@@ -89,7 +90,7 @@
         @clode-dialog="closeDisband" @confirm="confirmQuit"></ProjectDialog>
 </template>
 <script setup lang="ts">
-import { Ref, computed, inject, nextTick, ref, watch } from 'vue';
+import { Ref, computed, inject, nextTick, onMounted, ref, watch } from 'vue';
 import { useI18n } from 'vue-i18n';
 import * as user_api from '@/request/users'
 import { router } from '@/router';
@@ -322,6 +323,10 @@ const confirm = () => {
 
 watch(teamID, () => {
     formData.delete('team_id')
+    formData.append('team_id', teamID.value)
+})
+
+onMounted(() => {
     formData.append('team_id', teamID.value)
 })
 
