@@ -2,7 +2,7 @@
 import { Matrix, Page, ShapeType, Shape } from '@kcdesign/data';
 import { Context } from '@/context';
 import { Tool } from '@/context/tool';
-import { onMounted, onUnmounted, ref, watch } from 'vue';
+import { onMounted, onUnmounted, ref, watch, nextTick } from 'vue';
 import comsMap from './comsmap';
 import { v4 } from "uuid";
 import ShapeTitles from './ShapeTitles.vue';

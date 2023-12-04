@@ -1,6 +1,6 @@
 <script setup lang="ts">
-import { h, onUnmounted, watch } from 'vue';
-import { Shape, GroupShape, SymbolRefShape, SymbolShape, RenderTransform, Variable } from "@kcdesign/data";
+import { h, onMounted, onUnmounted, watch } from 'vue';
+import { GroupShape, SymbolRefShape, SymbolShape, RenderTransform } from "@kcdesign/data";
 import { renderBoolOpShape as opr } from "@kcdesign/data";
 import { renderGroup as normalR } from "@kcdesign/data";
 import comsMap from './comsmap';
@@ -10,53 +10,42 @@ const props = defineProps<{
     data: GroupShape, transx?: RenderTransform,
     varsContainer?: (SymbolRefShape | SymbolShape)[]
 }>();
-const common = initCommonShape(props);
-const consumed: Array<Shape> = [];
+
+let stopbubblewatch: (() => void) | undefined;
+const common = initCommonShape(props, () => { 
+    if (props.data.isBoolOpShape && !stopbubblewatch) stopbubblewatch = props.data.bubblewatch(watcher);
+});
+
 const watcher = () => {
     common.incReflush();
 }
 
-watch(() => props.data, (value, old) => {
-    for (let i = 0, len = consumed.length; i < len; i++) {
-        consumed[i].unwatch(watcher);
-    }
-    consumed.length = 0;
+onMounted(() => {
+    if (props.data.isBoolOpShape) stopbubblewatch = props.data.bubblewatch(watcher);
 })
-
-onUnmounted(() => {
-    for (let i = 0, len = consumed.length; i < len; i++) {
-        consumed[i].unwatch(watcher);
+watch(() => props.data, (data, old) => {
+    if (stopbubblewatch) {
+        stopbubblewatch();
+        stopbubblewatch = undefined
     }
-    consumed.length = 0;
+    if (props.data.isBoolOpShape) stopbubblewatch = props.data.bubblewatch(watcher);
+});
+onUnmounted(() => {
+    if (stopbubblewatch) {
+        stopbubblewatch();
+        stopbubblewatch = undefined
+    }
 })
 
 function render() {
-    const consumed0: Array<Shape> = [];
-        const consumedVars: { slot: string, vars: Variable[] }[] = [];
+
     const isBoolOpShape = props.data.isBoolOpShape;
-
-    const ret = isBoolOpShape ?
-        opr(h, props.data, props.transx, props.varsContainer, consumedVars, common.reflush, consumed0) :
-        normalR(h, props.data, comsMap, props.transx, props.varsContainer, consumedVars, common.reflush);
-
-        common.watchVars(consumedVars);
-
-    if (consumed0.length < consumed.length) {
-        for (let i = consumed0.length, len = consumed.length; i < len; i++) {
-            consumed[i].unwatch(watcher);
-        }
+    if (isBoolOpShape) {
+        const ret = opr(h, props.data, props.transx, props.varsContainer, common.reflush);
+        return ret;
     }
-    consumed.length = consumed0.length;
-    for (let i = 0, len = consumed.length; i < len; i++) {
-        const s0 = consumed0[i];
-        const s = consumed[i];
-        if (s && s.id == s0.id) {
-            continue;
-        }
-        if (s) s.unwatch(watcher);
-        s0.watch(watcher);
-        consumed[i] = s0;
-    }
+
+    const ret = normalR(h, props.data, comsMap, props.transx, props.varsContainer, common.reflush);
     return ret;
 }
 
