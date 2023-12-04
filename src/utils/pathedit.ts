@@ -305,7 +305,7 @@ function c_c(m: Matrix, point: CurvePoint, next: CurvePoint, index: number, segm
     }
 }
 function _segmeng_generator(m: Matrix, point: CurvePoint, next: CurvePoint, index: number, segment_set: Set<number>) {
-    if (point.hasTo) {
+    if (point.hasFrom) {
         if (next.hasTo) {
             return c_c(m, point, next, index, segment_set);
         } else {

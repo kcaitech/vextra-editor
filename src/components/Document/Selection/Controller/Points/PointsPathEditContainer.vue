@@ -173,7 +173,7 @@ function n_point_down(event: MouseEvent, index: number) {
             .asyncPathEditor(shape as PathShape, props.context.selection.selectedPage!);
 
         const idx = current_curve_point_index.value;
-        // pathEditor.addNode(idx, cur_new_node.point_raw);
+        pathEditor.addNode(idx);
         props.context.path.select_point(idx);
     }
     props.context.workspace.setCtrl('controller');
@@ -318,7 +318,6 @@ onUnmounted(() => {
 })
 </script>
 <template>
-    <Handle :context="props.context"></Handle>
     <g v-for="(p, i) in segments" :key="i" data-area="controller-element" @mouseenter="(e) => enter(e, i)"
         @mouseleave="leave">
         <g @mousedown="(e) => down_background_path(e, i)">
@@ -327,11 +326,11 @@ onUnmounted(() => {
                 :d="p.path">
             </path>
         </g>
-        <rect v-if="new_high_light === i"
-            :class="{ 'insert-point': true, 'insert-point-high-light': new_high_light === i, 'insert-point-selected': p.is_selected }"
+        <rect v-if="new_high_light === i" :class="{ 'insert-point': true, 'insert-point-selected': new_high_light === i }"
             :x="p.add.x - 4" :y="p.add.y - 4" rx="4" ry="4" @mousedown="(e) => n_point_down(e, i)">
         </rect>
     </g>
+    <Handle :context="props.context"></Handle>
     <rect v-for="(p, i) in dots" :key="i" :style="{ transform: `translate(${p.point.x - 4}px, ${p.point.y - 4}px)` }"
         class="point" rx="4" ry="4" data-area="controller-element" @mousedown.stop="(e) => point_mousedown(e, p.index)"
         :class="{ point: true, selected: p.selected }">
