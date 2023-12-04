@@ -298,7 +298,7 @@ watch(() => props.pageHeight, () => {
   nextTick(() => {
     if (card.value) {
       let el = card.value
-      el.style.top = Math.max(handleTop.value!, el.offsetHeight / 2) + 'px'
+      // el.style.top = Math.max(handleTop.value!, el.offsetHeight / 2) + 'px'
     }
   })
 })
@@ -309,7 +309,7 @@ watchEffect(() => {
     handleTop.value = props.pageHeight / 2
     if (card.value) {
       let el = card.value
-      el.style.top = Math.max(handleTop.value!, el.offsetHeight / 2) + 'px'
+      // el.style.top = Math.max(handleTop.value!, el.offsetHeight / 2) + 'px'
     }
   })
 })
@@ -341,13 +341,15 @@ onUnmounted(() => {
 
 </script>
 <template>
-  <div ref="card" class="card" :style="{ top: props.pageHeight / 2 }">
-    <el-card class="box-card" :style="{ width: 400 + 'px' }" v-if="!founder && docInfo">
+  <div ref="card" class="card">
+    <el-card class="box-card" v-if="!founder && docInfo">
       <!-- 标题 -->
       <template #header>
         <div class="card-header">
           <div class="title">{{ t('share.file_sharing') }}</div>
-          <CloseIcon :size="20" @close="emit('close')" />
+          <div class="close" @click.stop="emit('close')">
+            <svg-icon icon-class="close"></svg-icon>
+          </div>
         </div>
       </template>
       <!-- 内容 -->
@@ -408,7 +410,7 @@ onUnmounted(() => {
       </div>
     </el-card>
 
-    <el-card class="box-card" :style="{ width: 300 + 'px' }" v-if="founder && docInfo">
+    <el-card class="box-card" v-if="founder && docInfo">
       <!-- 标题 -->
       <template #header>
         <div class="card-header">
@@ -458,20 +460,41 @@ onUnmounted(() => {
   display: flex;
   justify-content: space-between;
   align-items: center;
+  height: 64px;
+  padding: 0;
 
   .title {
-    font-weight: var(--font-default-bold);
+    font-size: 16px;
+    font-weight: 500;
   }
+
+  .close {
+    width: 16px;
+    height: 16px;
+    padding: 4px;
+    border-radius: 6px;
+
+    &:hover {
+      background-color: rgb(243, 243, 245);
+      cursor: pointer;
+    }
+
+    svg {
+      width: 100%;
+      height: 100%;
+    }
+  }
+
 }
 
 :deep(.el-card__header) {
-  border-bottom: none;
-  padding: var(--default-padding);
-  padding-bottom: 0;
+  border: none;
+  padding: 0;
 }
 
 :deep(.el-card__body) {
-  padding: var(--default-padding-half) var(--default-padding)
+  border: none;
+  padding: 0;
 }
 
 :deep(.el-input) {
@@ -647,16 +670,32 @@ onUnmounted(() => {
 }
 
 .card {
-  position: fixed;
-  z-index: 1000;
+  position: absolute;
+  width: 400px;
+  top: 25%;
   left: 50%;
-  transform: translate(-50%, -50%);
+  
+  background-color: transparent;
+  
+  transform: translate(-50%, -25%);
+  
+  box-sizing: border-box;
+  z-index: 1000;
+
+
+  .box-card {
+    border-radius: 16px;
+  border: 1px solid #F0F0F0;
+    background-color: rgba(255, 255, 255, 1);
+    border: none;
+    box-shadow: none;
+    width: 100%;
+    padding: 0 24px;
+    box-sizing: border-box;
+  }
 }
 
-.box-card {
-  color: #3D3D3D;
-  width: 400px;
-}
+
 
 :deep(.el-button) {
   color: #fff;
