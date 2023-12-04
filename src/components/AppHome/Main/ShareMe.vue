@@ -9,7 +9,7 @@
     </div>
     <listrightmenu :items="items" :data="mydata" @ropen="openDocument" @r-sharefile="Sharefile" @r-starfile="Starfile"
         @r-exitshare="Exitshar" />
-    <FileShare v-if="showFileShare" @close="closeShare" :docId="docId" :selectValue="selectValue" :docUserId="docUserId"
+    <FileShare v-if="showFileShare" @close="closeShare" :docId="docId" :docName="docName" :selectValue="selectValue" :docUserId="docUserId"
         :userInfo="userInfo" @select-type="onSelectType" @switch-state="onSwitch" :shareSwitch="shareSwitch"
         :pageHeight="pageHeight" :projectPerm="projectPerm">
     </FileShare>
@@ -55,6 +55,7 @@ const docUserId = ref('')
 const selectValue = ref(1)
 const userInfo = ref<UserInfo | undefined>()
 const docId = ref('')
+const docName=ref('')
 const mydata = ref()
 const noNetwork = ref(false)
 let lists = ref<any[]>([])
@@ -171,6 +172,7 @@ const Sharefile = (data: data) => {
     docUserId.value = data.document.user_id
     userInfo.value = userData.value
     docId.value = data.document.id
+    docName.value=data.document.name
     selectValue.value = data.document.doc_type !== 0 ? data.document.doc_type : data.document.doc_type
     projectPerm.value = data.project_perm;
     showFileShare.value = true

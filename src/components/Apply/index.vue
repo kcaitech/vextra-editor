@@ -31,7 +31,7 @@ const promptMessage = () => {
         messages.value = t('apply.maximum_share')
         showNotification()
         const routeTimer = setTimeout(() => {
-            router.push('/')
+            router.push('/apphome')
             clearTimeout(routeTimer)
         }, 3000)
     } else {
@@ -112,7 +112,6 @@ watch(status, () => {
 getDocumentInfo()
 const postDocumentAuthority = async (data: { doc_id: any, perm_type: number, applicant_notes: any }) => {
     const res = await share_api.postDocumentAuthorityAPI(data)
-
     if (res.code === 400 && (res as any).message === '申请次数已达上限') {
         messages.value = t('apply.request_access')
         showNotification()
@@ -296,6 +295,7 @@ onUnmounted(() => {
             .textarea {
                 display: flex;
                 resize: none;
+
                 span {
                     display: block;
                     width: 60px;
