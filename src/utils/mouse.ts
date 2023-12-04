@@ -313,3 +313,7 @@ export function gen_assist_target(context: Context, shapes: Shape[], is_multi: b
 export function is_rid_stick(context: Context, a: number, b: number) {
     return Math.abs(a - b) >= context.assist.stickness;
 }
+
+export function is_up_from_ctrl_element(e: MouseEvent) {
+    return !!(e.target as Element)?.closest('[data-area="controller-element"]');
+}

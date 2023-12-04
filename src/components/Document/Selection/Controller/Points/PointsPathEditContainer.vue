@@ -3,7 +3,7 @@ import { Context } from '@/context';
 import { AsyncPathEditor, Matrix, PathShape, Shape } from '@kcdesign/data';
 import { onMounted, onUnmounted, reactive, ref } from 'vue';
 import { ClientXY, PageXY, XY } from '@/context/selection';
-import { get_conact_by_point, get_path_by_point } from './common';
+import { get_path_by_point } from './common';
 import { Path } from "@/context/path";
 import { dbl_action } from "@/utils/mouse_interactive";
 import { gen_offset_points_map2 } from "@/utils/mouse";
@@ -26,9 +26,10 @@ const matrix = new Matrix();
 const sub_matrix = new Matrix();
 const data: { dots: Dot[], segments: Segment[] } = reactive({ dots: [], segments: [] });
 const { dots, segments } = data;
-const show_index = ref<number>(-1); // 当前聚焦的编辑点
 const current_curve_point_index = ref<number>(-1);
+const current_segment_index = ref<number>(-1);
 const dragActiveDis = 3;
+const new_high_light = ref<number>(-1);
 let shape: Shape;
 let startPosition: ClientXY = { x: 0, y: 0 };
 let startPosition2: PageXY = { x: 0, y: 0 };
@@ -48,7 +49,9 @@ function update() {
     init_matrix();
     const points_set = new Set(props.context.path.selectedPoints);
     dots.push(...get_path_by_point(shape, matrix, points_set));
-    segments.push(...get_segments(shape as PathShape, matrix, new Set()));
+    const segs = new Set(props.context.path.selectedSides);
+    segments.push(...get_segments(shape as PathShape, matrix, segs));
+    props.context.path.set_segments(segments);
 }
 
 /**
@@ -62,12 +65,9 @@ function point_mousedown(event: MouseEvent, index: number) {
         modify_point_curve_mode(props.context, index, shape as PathShape);
     }
     event.stopPropagation();
-    const workspace = props.context.workspace;
-    const root = workspace.root;
-    startPosition = { x: event.clientX - root.x, y: event.clientY - root.y };
-    startPosition2 = workspace.matrix.inverseCoord(startPosition);
+    modify_start_position(event);
     current_curve_point_index.value = index;
-    workspace.setCtrl('controller');
+    props.context.workspace.setCtrl('controller');
     if (event.shiftKey) {
         props.context.path.adjust_points(current_curve_point_index.value)
     } else {
@@ -81,7 +81,12 @@ function point_mousedown(event: MouseEvent, index: number) {
     document.addEventListener('mouseup', point_mouseup);
     move = point_mousemove;
 }
-
+function modify_start_position(event: MouseEvent) {
+    const workspace = props.context.workspace;
+    const root = workspace.root;
+    startPosition = { x: event.clientX - root.x, y: event.clientY - root.y };
+    startPosition2 = workspace.matrix.inverseCoord(startPosition);
+}
 function point_mousemove(event: MouseEvent) {
     const workspace = props.context.workspace;
     const root = workspace.root;
@@ -151,14 +156,6 @@ function __exe(pathEditor: AsyncPathEditor, _point: PageXY) {
     pathEditor.execute2(select_point, compute_unit_point.x - origin_unit_point.x, compute_unit_point.y - origin_unit_point.y);
 }
 
-function line_enter(index: number) {
-    show_index.value = index;
-}
-
-function line_leave() {
-    show_index.value = -1;
-}
-
 /**
  * @description 新增一个编辑点
  */
@@ -212,6 +209,7 @@ function n_point_mousemove(event: MouseEvent) {
  * @description 点击编辑点之后的抬起
  */
 function point_mouseup(event: MouseEvent) {
+    clear_high_light();
     if (event.button !== 0) {
         return;
     }
@@ -239,6 +237,35 @@ function point_mouseup(event: MouseEvent) {
     workspace.setCtrl('page');
 }
 
+function down_background_path(event: MouseEvent, index: number) {
+    if (event.button !== 0) {
+        return;
+    }
+    event.stopPropagation();
+    modify_start_position(event);
+    current_segment_index.value = index;
+    props.context.workspace.setCtrl('controller');
+    const path = props.context.path;
+    if (event.shiftKey) {
+        path.adjust_sides(current_segment_index.value);
+    } else {
+        path.select_side(current_segment_index.value);
+    }
+}
+
+function enter(event: MouseEvent, index: number) {
+    if (props.context.path.no_hover) {
+        return;
+    }
+    new_high_light.value = index;
+}
+function leave(event: MouseEvent) {
+    clear_high_light();
+}
+function clear_high_light() {
+    new_high_light.value = -1;
+}
+// listener
 function window_blur() {
     const workspace = props.context.workspace;
     if (isDragging) {
@@ -265,6 +292,8 @@ function init_matrix() {
 function path_watcher(type: number) {
     if (type === Path.SELECTION_CHANGE) {
         update();
+    } else if (type === Path.CLEAR_HIGH_LIGHT) {
+        clear_high_light();
     }
 }
 
@@ -294,21 +323,21 @@ onUnmounted(() => {
 </script>
 <template>
     <Handle :context="props.context"></Handle>
-    <!--    line todo-->
-    <g v-for="(p, i) in segments" :key="i">
-        <path :d="`M ${p.start.x} ${p.start.y} C ${p.from.x} ${p.from.y} ${p.to.x} ${p.to.y} ${p.end.x} ${p.end.y}`"
-            stroke="orange" stroke-width="1" fill="none"></path>
-        <rect :x="p.add.x - 4" :y="p.add.y - 4" rx="4px" ry="4px" height="8px" width="8px" stroke="orange" fill="#fff">
+    <g v-for="(p, i) in segments" :key="i" data-area="controller-element" @mouseenter="(e) => enter(e, i)"
+        @mouseleave="leave">
+        <g @mousedown="(e) => down_background_path(e, i)">
+            <path class="background-path" :d="p.path"></path>
+            <path :class="{ path: true, 'path-high-light': new_high_light === i, 'path-selected': p.is_selected }"
+                :d="p.path">
+            </path>
+        </g>
+        <rect v-if="new_high_light === i"
+            :class="{ 'insert-point': true, 'insert-point-high-light': new_high_light === i, 'insert-point-selected': p.is_selected }"
+            :x="p.add.x - 4" :y="p.add.y - 4" rx="4" ry="4">
         </rect>
     </g>
-    <!-- <g v-for="(p, i) in lines" :key="i" @mouseenter="() => { line_enter(p.index) }" @mouseleave="line_leave">
-        <line :x1="p.apex1.x" :y1="p.apex1.y" :x2="p.apex2.x" :y2="p.apex2.y" class="line"></line>
-        <rect v-if="show_index === p.index" :x="p.point.x - 4" :y="p.point.y - 4" rx="4px" ry="4px" height="8px" width="8px"
-            @mousedown="n_point_down" class="point">
-        </rect>
-    </g> -->
     <rect v-for="(p, i) in dots" :key="i" :style="{ transform: `translate(${p.point.x - 4}px, ${p.point.y - 4}px)` }"
-        class="point" rx="4px" ry="4px" height="8px" width="8px" @mousedown.stop="(e) => point_mousedown(e, p.index)"
+        class="point" rx="4" ry="4" data-area="controller-element" @mousedown.stop="(e) => point_mousedown(e, p.index)"
         :class="{ point: true, selected: p.selected }">
     </rect>
 </template>
@@ -317,6 +346,8 @@ onUnmounted(() => {
     fill: #ffffff;
     stroke: #555555;
     stroke-width: 1.5px;
+    height: 8px;
+    width: 8px;
 }
 
 .selected {
@@ -324,9 +355,38 @@ onUnmounted(() => {
     fill: #555555;
 }
 
-.line {
+.background-path {
+    // stroke: rgba($color: #000000, $alpha: 0.2);
     stroke: transparent;
-    stroke-width: 8px;
+    stroke-width: 14px;
     fill: none;
+}
+
+.path {
+    stroke: gray;
+    fill: none;
+}
+
+.path-high-light {
+    stroke: rgba(255, 166, 0, 0.3);
+}
+
+.path-selected {
+    stroke: rgb(255, 166, 0);
+}
+
+.insert-point {
+    stroke: gray;
+    fill: #fff;
+    height: 8px;
+    width: 8px;
+}
+
+.insert-point-high-light {
+    stroke: rgba(255, 166, 0, 0.3);
+}
+
+.insert-point-selected {
+    stroke: rgb(255, 166, 0);
 }
 </style>

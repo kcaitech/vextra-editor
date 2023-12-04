@@ -233,6 +233,7 @@ export interface Segment {
     add: XY
     index: number
     is_selected: boolean
+    path: string
 }
 function s_s(m: Matrix, point: CurvePoint, next: CurvePoint, index: number, segment_set: Set<number>): Segment {
     const _p = m.computeCoord2(point.x, point.y);
@@ -246,7 +247,8 @@ function s_s(m: Matrix, point: CurvePoint, next: CurvePoint, index: number, segm
         end: _next,
         add,
         index,
-        is_selected: segment_set.has(index)
+        is_selected: segment_set.has(index),
+        path: `M ${_p.x} ${_p.y} L${_next.x} ${_next.y}`
     }
 
 }
@@ -263,7 +265,8 @@ function s_c(m: Matrix, point: CurvePoint, next: CurvePoint, index: number, segm
         end: _next,
         add,
         index,
-        is_selected: segment_set.has(index)
+        is_selected: segment_set.has(index),
+        path: `M ${_p.x} ${_p.y} C ${_p.x} ${_p.y} ${_next_to.x} ${_next_to.y} ${_next.x} ${_next.y}`
     }
 }
 function c_s(m: Matrix, point: CurvePoint, next: CurvePoint, index: number, segment_set: Set<number>): Segment {
@@ -279,7 +282,8 @@ function c_s(m: Matrix, point: CurvePoint, next: CurvePoint, index: number, segm
         end: _next,
         add,
         index,
-        is_selected: segment_set.has(index)
+        is_selected: segment_set.has(index),
+        path: `M ${_p.x} ${_p.y} C ${_point_from.x} ${_point_from.y} ${_next.x} ${_next.y} ${_next.x} ${_next.y}`
     }
 }
 function c_c(m: Matrix, point: CurvePoint, next: CurvePoint, index: number, segment_set: Set<number>): Segment {
@@ -296,7 +300,8 @@ function c_c(m: Matrix, point: CurvePoint, next: CurvePoint, index: number, segm
         end: _next,
         add,
         index,
-        is_selected: segment_set.has(index)
+        is_selected: segment_set.has(index),
+        path: `M ${_p.x} ${_p.y} C ${_point_from.x} ${_point_from.y} ${_next_to.x} ${_next_to.y} ${_next.x} ${_next.y}`
     }
 }
 function _segmeng_generator(m: Matrix, point: CurvePoint, next: CurvePoint, index: number, segment_set: Set<number>) {

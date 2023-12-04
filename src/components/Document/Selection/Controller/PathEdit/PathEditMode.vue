@@ -10,6 +10,7 @@ import { root_scale, root_trans } from "@/utils/content";
 import { WorkSpace } from "@/context/workspace";
 import CtrlPathEdit from "@/components/Document/Selection/Controller/CtrlPathEdit.vue";
 import PathAssist from "@/components/Document/Assist/PathAssist.vue";
+import { add_move_and_up_for_document, remove_move_and_up_from_document } from "@/utils/mouse";
 
 interface Props {
     context: Context
@@ -21,15 +22,14 @@ const selectorFrame = ref<SelectorFrame>({ top: 0, left: 0, width: 0, height: 0,
 const mousedownOnClientXY: XY = { x: 0, y: 0 }; // 鼠标在page中的坐标
 const matrix: Matrix = reactive(props.context.workspace.matrix as any);
 let matrix_inverse: Matrix = new Matrix();
-let main_button_is_down: boolean = false;
-
+let drag: boolean = false;
 function onMouseWheel(e: WheelEvent) { // 滚轮、触摸板事件
     e.preventDefault();
     const { ctrlKey, metaKey, deltaX, deltaY } = e;
     if (ctrlKey || metaKey) { // 缩放
         root_scale(props.context, e);
     } else {
-        if (Math.abs(deltaX) + Math.abs(deltaY) < 100) { // 临时适配方案，需根据使用设备进一步完善适配
+        if (Math.abs(deltaX) + Math.abs(deltaY) < 100) {
             matrix.trans(-deltaX, -deltaY);
         } else {
             root_trans(props.context, e, 50);
@@ -43,23 +43,34 @@ function down(e: MouseEvent) {
         return;
     }
     setMousedownXY(e);
-    main_button_is_down = true;
-    props.context.path.reset_points();
-    dbl_action() && exit();
+    props.context.path.reset();
+    if (dbl_action()) {
+        exit();
+    }
+    add_move_and_up_for_document(move2, up);
 }
 
 function move(e: MouseEvent) {
     if (e.buttons !== 1) {
         e.stopPropagation();
     }
-    if (main_button_is_down && props.context.tool.action === Action.AutoV) {
+}
+function move2(e: MouseEvent) {
+    if (!drag) {
+        const root = props.context.workspace.root;
+        if (Math.hypot(e.clientX - root.x - mousedownOnClientXY.x, e.clientY - root.y - mousedownOnClientXY.y) > 9) {
+            drag = true;
+            props.context.path.selecting(true);
+        }
+        return;
+    }
+    if (props.context.tool.action === Action.AutoV) {
         select(e);
     }
 }
 
-function up() {
-    selector_mount.value = false;
-    main_button_is_down = false;
+function up(e: MouseEvent) {
+    clear_state();
 }
 
 function setMousedownXY(e: MouseEvent) { // 记录鼠标在页面上的点击位置
@@ -98,9 +109,19 @@ function exit() {
     props.context.workspace.setPathEditMode(false);
 }
 
+function clear_state() {
+    selector_mount.value = false;
+    if (drag) {
+        drag = false;
+        props.context.path.clear_highlight();
+        props.context.path.selecting(false);
+    }
+    remove_move_and_up_from_document(move2, up);
+}
+
 function window_blur() {
     selector_mount.value = false;
-    // todo
+    clear_state();
 }
 
 watch(() => matrix, matrix_watcher, { deep: true });
@@ -117,7 +138,7 @@ onUnmounted(() => {
 })
 </script>
 <template>
-    <div class="wrapper" @wheel.stop @mousedown.stop="down" @mousemove="move" @mouseup="up" @wheel="onMouseWheel">
+    <div class="wrapper" @wheel.stop @mousedown.stop="down" @mousemove="move" @wheel="onMouseWheel">
         <CtrlPathEdit :context="props.context"></CtrlPathEdit>
         <Selector4PEM v-if="selector_mount" :context="props.context" :selector-frame="selectorFrame"></Selector4PEM>
         <PathAssist :context="props.context"></PathAssist>
@@ -126,7 +147,6 @@ onUnmounted(() => {
 <style scoped lang="scss">
 .wrapper {
     cursor: -webkit-image-set(url('data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAAEAAAABDCAYAAAAs/QNwAAAACXBIWXMAAAsTAAALEwEAmpwYAAAAAXNSR0IArs4c6QAAAARnQU1BAACxjwv8YQUAAAUxSURBVHgB7VrPT6NVFL1taYFCS6kg8mPGdqSj4o/pDPFXNBFdGDVB0YS1uHJlAkYTXYH+BbjSuBDWJiZs3GgiYW8EN7oEo44LSAAHhyEzw5tzvvcelI92Ap3S9uu8k5y8Thnod+999557L4g4ODg4ODg4ODg4ODg4ODg4ODg4ODg4ODhUFhnDukNEzh4hsBNcBlvB38Abcp8gNDMzE8bZBCrDVfB9pVRIGhnGQBofzWQyLTjX5NAJB44AQw3pDBo1Pj7OFGsGE+APfHtsbEzBIX5HvCI6VRoKNIgOYN6zBnwDKqSEIubm5vyOmAcvSAM5goYw9+OJRKIL50egmpiYUBarq6tqenq60AnWEdlGSAvvBvT09LThpAPeAFU+n1d+0BF0jBx1xOfgBXxZggqvCA4MDDAF0uCLoEqlUqoUijjCFsqwBDA1bA2gAnS2traew/kfqNbW1tTdsLy87N0UOeqIicClhXlgqkAKDhjA+TvfXlxcVCdBkUJJR7wqAZJOPmSss7OzA2cv+D2o5ufn1WlQTDFaWlqyEoC04ANGwURbW9tDOL8E1eTkpCoHVIwi0lnXjrDNEJXgQfBjMc1QubiLYtStdEZ6e3u9XiASibyJf3tRvFcERTHsDfCkMBaLPSXmgSsFOmJkZKTojCH1AKWvpSeFIJXgbzmBFJ4WJRTjHX6+qnEz5SkBSCXoB38C1cLCgqo0Njc3/f0DuZBMJtNS4kaEpQoYHh5WXV1d+/F4nA/EZkhwA6RSWFpakqmpKclms7KysmLf5ud8DX6Vy+WuYQijA2qSFnYoaocU9uD8QnxDUbnRnp2d9ec/+Qv4Gfgk2C16FI+ZWnTMAU1y9rAJqEKh0L7oGiBbW1tSDhhtpI+gmSr8GTvgd+DPorvNPfAGblwTCm8E80d4fX19X2oIej8ueip8ScqQwhLR/hX8FHwNfA68AlJpLoLnzY1LDg4Osh1nsGujDNwLmqnwAfBhMQbwGp8EPr2/Bn4Lvgc+Dz4DXqbEgo/h9SPgOWN8SrTj2Y1Wpd6VQthEgQ/EqdCTQk59pzD+X/BD8AXR0R6ORqN5nE+AOdFr9/729nZ2nKz6zP1WFGAaX7voG9D7dEAS7AN/lBMMRT7j3wWfhdGXRV/zx0VH+7zoQasLuZ7iAsYsYWNImSY57Axr6oCDoQjkUDQnBftBP5gaBfl+FRwDr5hOkvmdAfvNNU9DYhNst80t4+dEzDq+flpiMesx89CfSAkp9DUzVzE/0Pi8ye+MFERb9JDFaEdttJXuPOtvKDIPaPeD3lDk3w/6jRcd+Uvgo6JrR3c6nU76o60CsBw5WJFjKqQSHNsPFjH+bfBSc3PzRbNN4ve1g83GmV5jo3SfH4jtEHPSDkVH9oNFjH9LdOSZ7zSeVZ23J8bcDkLEj8EUJSuFHIr+ELMf9BuPSs/I58z/S/PKi5ayQG6HLUJDQ0OcCq0UevtBpoEcjfzTonW9r6Ojg7clbrQ80MZbRClZOKkE3n5QihiPnO83xrN79Iw/q2tf7fZQbWxsKHRrNPov8x6N/wDX/k+cuxhg/t/d3b2+vb3NvyG4iSmOQwwHqdpuNSoAqwRxowT8Vdk/4Oui29lBGM/UYMHzIl9vzcw9o2A/yOs9BL5MmRO92u4z7/PrhU1NQ4ER9Qoh0qDb6LsdYLzJraDgVe2Bqgaluxbm9K2dnZ095jpeX8dr5vsejL85Ojp6Ww6XKGeOWlwxpkG44CRuG+4bNjRsMWyyZG0wBe++gf3rsXDDVXqHgOEONuYyL5lnAxQAAAAASUVORK5CYII=') 2x) 13 13, auto !important;
-    // background-color: rgba(0, 0, 255, 0.1);
     width: 100%;
     height: 100%;
     position: absolute;

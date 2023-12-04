@@ -1,6 +1,7 @@
-import {Matrix, Watchable} from "@kcdesign/data";
-import {Context} from ".";
-import {CurveMode} from "@kcdesign/data";
+import { Matrix, Watchable } from "@kcdesign/data";
+import { Context } from ".";
+import { CurveMode } from "@kcdesign/data";
+import { Segment } from "@/utils/pathedit";
 
 export type PointEditType = CurveMode | 'INVALID'
 
@@ -9,25 +10,17 @@ export class Path extends Watchable(Object) {
     static SELECTION_CHANGE_P = 2;
     static SELECTION_CHANGE_S = 3;
     static POINT_TYPE_CHANGE = 4;
+    static CLEAR_HIGH_LIGHT = 5;
     private m_context: Context;
     private selected_points: number[] = [];
     private selected_sides: number[] = [];
-    private point_type: PointEditType = 'INVALID';
-
+    private is_selecting: boolean = false;
+    private is_editing: boolean = false;
+    private m_segments: Segment[] = [];
     constructor(context: Context) {
         super();
         this.m_context = context;
     }
-
-    get pointType() {
-        return this.point_type;
-    }
-
-    setPointType(v: PointEditType) {
-        // this.point_type = v;
-        // this.notify(Path.POINT_TYPE_CHANGE);
-    }
-
     get selectedPoints() {
         return this.selected_points;
     }
@@ -37,13 +30,13 @@ export class Path extends Watchable(Object) {
     }
 
     select_point(index: number) {
-        this.selected_points.length = 0;
+        this._reset();
         this.selected_points.push(index);
         this.notify(Path.SELECTION_CHANGE);
     }
 
     select_points(indexes: number[]) {
-        this.selected_points.length = 0;
+        this._reset();
         this.selected_points.push(...indexes);
         this.notify(Path.SELECTION_CHANGE);
     }
@@ -66,7 +59,9 @@ export class Path extends Watchable(Object) {
 
     push_after_sort_points(index: number) {
         for (let i = this.selected_points.length - 1; i > -1; i--) {
-            if (this.selected_points[i] >= index) this.selected_points[i]++;
+            if (this.selected_points[i] >= index) {
+                this.selected_points[i]++;
+            }
         }
         this.selected_points.push(index);
         this.notify(Path.SELECTION_CHANGE);
@@ -77,14 +72,18 @@ export class Path extends Watchable(Object) {
         this.notify(Path.SELECTION_CHANGE);
     }
 
+    get selectedSides() {
+        return this.selected_sides;
+    }
+
     select_side(index: number) {
-        this.selected_sides.length = 0;
+        this._reset();
         this.selected_sides.push(index);
         this.notify(Path.SELECTION_CHANGE);
     }
 
     select_sides(indexes: number[]) {
-        this.selected_sides.length = 0;
+        this._reset();
         this.selected_sides.push(...indexes);
         this.notify(Path.SELECTION_CHANGE);
     }
@@ -105,6 +104,27 @@ export class Path extends Watchable(Object) {
         this.notify(Path.SELECTION_CHANGE);
     }
 
+    select(indexes1: number[], indexes2: number[]) {
+        this._reset();
+        this.selected_points.push(...indexes1);
+        this.selected_sides.push(...indexes2);
+        this.notify(Path.SELECTION_CHANGE);
+    }
+
+    reset_sides() {
+        this.selected_sides.length = 0;
+        this.notify(Path.SELECTION_CHANGE);
+    }
+    _reset() {
+        this.selected_points.length = 0;
+        this.selected_sides.length = 0;
+    }
+    reset() {
+        this.selected_points.length = 0;
+        this.selected_sides.length = 0;
+        this.notify(Path.SELECTION_CHANGE);
+    }
+
     get matrix_unit_to_root() {
         const path_shape = this.m_context.selection.pathshape;
         if (!path_shape) return new Matrix();
@@ -113,5 +133,25 @@ export class Path extends Watchable(Object) {
         m.multiAtLeft(this.m_context.workspace.matrix);
         m.preScale(f.width, f.height);
         return m;
+    }
+
+    clear_highlight() {
+        this.notify(Path.CLEAR_HIGH_LIGHT);
+    }
+    selecting(_val: boolean) {
+        this.is_selecting = _val;
+    }
+    editing(_val: boolean) {
+        this.is_editing = _val;
+    }
+    get no_hover() {
+        return this.is_selecting || this.is_editing;
+    }
+
+    set_segments(segs: Segment[]) {
+        this.m_segments = segs;
+    }
+    get segments() {
+        return this.m_segments;
     }
 }

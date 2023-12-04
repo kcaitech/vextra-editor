@@ -97,7 +97,7 @@ export function keyboardHandle(e: KeyboardEvent, context: Context, t: Function) 
                 if (points.length) {
                     const editor = context.editor4Shape(shape);
                     const result = editor.removePoints(points);
-                    result && context.path.reset_points();
+                    result && context.path.reset();
                 }
             } else {
                 if (shape.type === ShapeType.Table) {
