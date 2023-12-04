@@ -89,7 +89,7 @@ function finder_segs() {
         if (selected_segs.has(i)) {
             continue;
         }
-        if (isBezierIntersectRect(segments[i])) {
+        if (is_target_segs(segments[i])) {
             selected_segs.add(i);
             s_changed = true;
         }
@@ -120,7 +120,7 @@ function remove_segs() {
     }
     const segments = props.context.path.segments;
     selected_segs.forEach(i => {
-        if (!isBezierIntersectRect(segments[i])) {
+        if (!is_target_segs(segments[i])) {
             selected_segs.delete(i);
             s_changed = true;
         }
@@ -132,7 +132,7 @@ function point_is_target(p: XY) {
     return scout.isPointInPath(path_string, p);
 }
 
-function isPointIntersectRect(x: number, y: number) {
+function isPointInsideRect(x: number, y: number) {
     const { left, top, width, height } = props.selectorFrame;
     return x >= left && x <= left + width &&
         y >= top && y <= top + height;
@@ -149,18 +149,32 @@ function cubicBezierPoint(t: number, p0: XY, p1: XY, p2: XY, p3: XY) {
     };
 }
 
-function isBezierIntersectRect(segs: Segment) {
+function is_target_segs(segs: Segment) {
+    return selected_points.size ? is_bezise_inside_rect(segs) : is_bezise_intersect_rect(segs);
+}
+
+function is_bezise_inside_rect(segs: Segment) { // 内包
     const { start, from, to, end } = segs;
     const step = 0.01;
     for (let t = 0; t <= 1; t += step) {
         const xy = cubicBezierPoint(t, start, from, to, end);
-        if (isPointIntersectRect(xy.x, xy.y)) {
+        if (!isPointInsideRect(xy.x, xy.y)) {
+            return false;
+        }
+    }
+    return true;
+}
+function is_bezise_intersect_rect(segs: Segment) { // 相交
+    const { start, from, to, end } = segs;
+    const step = 0.01;
+    for (let t = 0; t <= 1; t += step) {
+        const xy = cubicBezierPoint(t, start, from, to, end);
+        if (isPointInsideRect(xy.x, xy.y)) {
             return true;
         }
     }
     return false;
 }
-
 function reset() {
     selected_points.clear();
     selected_segs.clear();
