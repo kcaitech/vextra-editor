@@ -2,20 +2,21 @@
 import Describes from './Describes.vue'
 import Footer from './Footer.vue'
 import * as user_api from '@/request/users'
-import { nextTick, onMounted, onUnmounted, reactive, ref } from 'vue'
+import { computed, nextTick, onMounted, onUnmounted, reactive, ref, watch, watchEffect } from 'vue'
 import { router } from '@/router'
 import { useI18n } from 'vue-i18n';
-import { ElMessage } from 'element-plus'
+import { ElMessage, inputEmits } from 'element-plus'
 import { User } from '@/context/user'
 
 const { t } = useI18n()
 const isLoading = ref(false)
-const codeinput = ref()
-const codevalue = ref('')
 const failed = ref<boolean>(false)
 const loginshow = ref<boolean>(true)
 const userid = ref('')
 const Wxcode = ref('')
+const codeerror = ref<boolean>(false)
+const inputfocus = ref<any>([])
+const isComposing = ref<boolean>(false)
 
 function onmessage(e: any) {
     if (e.data?.type !== "GetWxCode") return
@@ -71,10 +72,6 @@ async function getlogin(code: string, invite_code: string = '', id: string = '')
             } else if (linfo.code === 400) {
                 userid.value = linfo.data.id
                 loginshow.value = false
-                nextTick(() => {
-                    codeinput.value.focus()
-                    codevalue.value = ''
-                })
             }
         }
     }).catch((linfo: any) => {
@@ -119,9 +116,7 @@ function clickaffirm() {
                     router.push({ name: 'apphome' })
                 }
             } else if (result.code === 400) {
-                codeinput.value.focus()
-                codevalue.value = ''
-                ElMessage.error({ duration: 1500, message: result.message })
+                codeerror.value = true
             }
         }
     }).catch((result: any) => {
@@ -162,15 +157,28 @@ const handleOpenNewWindow = (routeName: string) => {
     window.open(routeLocation.href, '_blank');
 }
 
+watchEffect(() => {
+    if (loginshow.value) {
+        setTimeout(() => {
+            isLoading.value = true
+            wxcode()
+            const login: any = document.querySelector('iframe')
+            login.addEventListener('load', function () {
+                isLoading.value = false
+            })
+        }, 500);
+    } else {
+        inputvalues.forEach(item => { item.value = ""; })
+        codeerror.value = false
+        setTimeout(() => {
+            inputfocus.value[0].focus()
+
+        }, 0)
+    }
+})
+
+
 onMounted(() => {
-    setTimeout(() => {
-        isLoading.value = true
-        wxcode()
-        const login: any = document.querySelector('iframe')
-        login.addEventListener('load', function () {
-            isLoading.value = false
-        })
-    }, 500);
     window.addEventListener('message', onmessage, false)
 })
 
@@ -189,21 +197,65 @@ const inputvalues = reactive([
     { value: "" },
 ])
 
-const keyword = (e: Event, index: number) => {
+const keydownevent = (index: number) => {
+    if (0 < index) {
+        setTimeout(() => {
+            (inputfocus.value[index - 1] as HTMLInputElement).focus()
+        }, 200);
+        if (codeerror.value) {
+            codeerror.value = false
+        }
+    }
+}
+
+const inputevent = (e: Event, index: number) => {
     const inputs = document.querySelectorAll('.inputitem')
-    console.log(e);
-    
-    if ((e.target! as HTMLInputElement).value === " "){
-        inputvalues[index].value=''
+    if (isComposing.value) return
+    if ((e.target! as HTMLInputElement).value === " ") {
+        inputvalues[index].value = ''
         return
-    } 
-    if (index < inputs.length - 1) {
+    }
+    if (index < inputs.length - 1 && (e.target! as HTMLInputElement).value !== "") {
         (inputs[index + 1] as HTMLInputElement).focus()
     }
-//     if((e as HTMLInputElement).inputType==='deleteContentBackward'){
-// console.log('1111');
+    if (e instanceof InputEvent && e.inputType === 'insertFromPaste') {
+        setTimeout(async () => {
+            try {
+                let pasteContent = await navigator.clipboard.readText();
+                if (pasteContent.length > 8) {
+                    pasteContent = pasteContent.slice(0, 8)
+                }
+                for (let i = 0; i < pasteContent.length; i++) {
+                    inputfocus.value[i].value = pasteContent[i]
+                    inputfocus.value[i].dispatchEvent(new Event('input'))
+                }
+                inputfocus.value[pasteContent.length - 1].focus()
+            } catch (error) {
+                console.error('Unable to read clipboard data:', error);
+            }
+        }, 0);
+    }
+}
 
-//     }
+const allValuesFilled = computed(() => {
+    return inputvalues.every(item => item.value !== "")
+})
+
+const codevalue = computed(() => {
+    return inputvalues.reduce((accumulator, item) => accumulator + item.value, "");
+});
+
+const handleCompositionStart = () => {
+    isComposing.value = true
+}
+
+const handleCompositionEnd = (e: any, index: number) => {
+    isComposing.value = false
+    inputfocus.value[index].value = ""
+    inputvalues[index].value = ""
+    inputfocus.value[index].focus()
+    console.log(inputvalues);
+
 }
 
 </script>
@@ -212,23 +264,32 @@ const keyword = (e: Event, index: number) => {
     <div class="main">
         <div class="all">
             <Describes></Describes>
-            <div class="login">
-                <div class="login-page" v-if="!loginshow">
+            <div class="login" :style="{ transform: `rotateY(${loginshow ? 0 : 180}deg)` }">
+                <div class="login-page" v-if="loginshow">
                     <span>{{ t('system.wx_login') }}</span>
                     <div id="login_container" :class="{ 'login_container_hover': failed }" v-loading="isLoading"></div>
-                    <p>{{ t('system.login_read') }}
+                    <p @click.stop="loginshow = false">{{ t('system.login_read') }}
                         <a href="" @click.prevent="handleOpenNewWindow('serviceagreement')">{{ t('system.read_TOS')
                         }}</a>&nbsp;
-                        <a href="" @click.prevent="handleOpenNewWindow('privacypolicy')">{{ t('system.read_Privacy') }}</a>
+                        <a href="" @click.prevent="handleOpenNewWindow('privacypolicy')">{{ t('system.read_Privacy')
+                        }}</a>
                     </p>
                 </div>
                 <div class="login-code" v-else>
+                    <div class="back" @click.stop="loginshow = true">
+                        <svg-icon icon-class="back-icon"></svg-icon>
+                    </div>
                     <span class="Invitation_code">{{ t('home.invitation_code_tips') }}</span>
                     <div class="inputs">
-                        <input class="inputitem" v-for="(input, index) in inputvalues" :key="index" v-model="input.value"
-                            maxlength="1" :autofocus="index === 0" @input="keyword($event, index)" />
+                        <input class="inputitem" type="text" ref="inputfocus" v-for="(input, index) in inputvalues"
+                            :key="index" v-model="input.value" maxlength="1" :autofocus="index === 0"
+                            @input="inputevent($event, index)" @compositionstart="handleCompositionStart"
+                            @compositionend="handleCompositionEnd($event, index)" @keydown.delete="keydownevent(index)" />
                     </div>
-                    <button class="affirm" @click="clickaffirm" ref="affirm" :disabled="codevalue == '' ? true : false">{{
+                    <Transition name="slide-up">
+                        <span v-if="codeerror" class="code_error_tips">验证码已被使用或不存在，请更换验证码</span>
+                    </Transition>
+                    <button class="affirm" @click="clickaffirm" ref="affirm" :disabled="!allValuesFilled">{{
                         t('percenter.affirm')
                     }}</button>
                 </div>
@@ -239,6 +300,22 @@ const keyword = (e: Event, index: number) => {
 </template>
 
 <style lang='scss' scoped>
+.slide-up-enter-active,
+.slide-up-leave-active {
+    transition: all 0.25s ease-out;
+}
+
+.slide-up-enter-from {
+    opacity: 0;
+    transform: translateY(-16px);
+}
+
+.slide-up-leave-to {
+    opacity: 0;
+    transform: translateY(16px);
+}
+
+
 .login_container_hover {
     background-color: #00000030;
     line-height: 300px;
@@ -298,6 +375,8 @@ const keyword = (e: Event, index: number) => {
         border: 1px solid #F0F0F0;
         box-shadow: 0px 20px 50px 0px rgba(12, 84, 178, 0.08);
         box-sizing: border-box;
+        transform-style: preserve-3d;
+        transition: transform 0.5s;
 
         .login-page {
             display: flex;
@@ -336,19 +415,47 @@ const keyword = (e: Event, index: number) => {
             height: 100%;
             display: flex;
             flex-direction: column;
-            justify-content: space-between;
+            justify-content: flex-start;
             align-items: center;
+            transform-style: preserve-3d;
+            transform: rotateY(180deg);
+
+            .back {
+                width: 28px;
+                height: 28px;
+                position: absolute;
+                top: 20px;
+                left: 16px;
+                padding: 4px;
+                border-radius: 6px;
+                box-sizing: border-box;
+
+                &:hover {
+                    background-color: rgba(240, 240, 240, 1);
+                }
+
+                &:active {
+                    background-color: rgba(243, 243, 245, 1);
+                }
+
+                svg {
+                    width: 100%;
+                    height: 100%;
+                }
+            }
 
             .Invitation_code {
                 font-size: 20px;
                 font-weight: 600;
                 color: rgba(67, 67, 67, 1);
+                margin: 74px 0 106px 0;
             }
 
             .inputs {
                 display: flex;
                 justify-content: space-between;
                 width: 344px;
+                margin-bottom: 56px;
 
                 input {
                     width: 36px;
@@ -365,6 +472,16 @@ const keyword = (e: Event, index: number) => {
                 }
             }
 
+            .code_error_tips {
+                position: absolute;
+                top: 260px;
+                left: 28px;
+                font-size: 12px;
+                font-weight: 400;
+                color: rgba(234, 0, 0, 1);
+
+            }
+
             .affirm {
                 width: 344px;
                 height: 44px;
@@ -374,6 +491,7 @@ const keyword = (e: Event, index: number) => {
                 background-color: rgba(24, 120, 245, 1);
                 color: white;
                 text-align: center;
+                outline: none;
 
                 &:hover {
                     background-color: rgba(66, 154, 255, 1);
