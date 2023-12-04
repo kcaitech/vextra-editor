@@ -23,7 +23,7 @@ const ProjectPage = () => import("@/components/TeamProject/ProjectPage.vue");
 const projectApply = () => import("@/components/TeamProject/ProjectFill/ProjectApply.vue");
 const ProjectShare = () => import('@/components/TeamProject/ProjectShare/ProjectSharePage.vue')
 
-const children=[
+const children = [
     {
         path: 'recently',
         name: 'recently',
@@ -119,7 +119,20 @@ const routes = [
         component: DocumentVue,
         meta: {
             requireAuth: true
-        }
+        },
+        beforeEnter: (to: any, from: any, next: any) => {
+            if (to.name === 'document' && to.query.id) {
+                const id = to.query.id
+                const newid = id ? (id.split(' ')[0] ? id.split(' ')[0] : id.split('%20')[0]) : '';
+                if (newid !== id) {
+                    next({ ...to, query: { ...to.query, id: newid } });
+                } else {
+                    next();
+                }
+            } else {
+                next();
+            }
+        },
     },
     {
         path: "/apphome",
@@ -160,10 +173,12 @@ const routes = [
     {
         path: '/:catchAll(.*)',
         redirect: '/',
+
     },
+
 ]
 
-export  const router = createRouter({
+export const router = createRouter({
     // history: createWebHistory(),
     history: createWebHashHistory(),
     scrollBehavior(to, from, savedPosition) {
