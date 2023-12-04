@@ -25,6 +25,19 @@ export class Path extends Watchable(Object) {
         return this.selected_points;
     }
 
+    get_synthetic_points(max: number) {
+        if (!this.selectedSides.length) {
+            return this.selected_points;
+        }
+        const points = [...this.selected_points];
+        for (let i = 0, l = this.selected_sides.length; i < l; i++) {
+            const index = this.selected_sides[i];
+            const anther = index === max ? 0 : index + 1;
+            points.push(index, anther);
+        }
+        return Array.from(new Set(points));
+    }
+
     is_selected(index: number) {
         return this.selectedPoints.findIndex((i) => i === index) > -1;
     }
@@ -56,7 +69,9 @@ export class Path extends Watchable(Object) {
         }
         this.notify(Path.SELECTION_CHANGE);
     }
-
+    is_selected_segs(index: number) {
+        return this.selected_sides.findIndex((i) => i === index) > -1;
+    }
     push_after_sort_points(index: number) {
         for (let i = this.selected_points.length - 1; i > -1; i--) {
             if (this.selected_points[i] >= index) {

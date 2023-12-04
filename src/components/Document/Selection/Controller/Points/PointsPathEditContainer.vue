@@ -81,6 +81,27 @@ function point_mousedown(event: MouseEvent, index: number) {
     document.addEventListener('mouseup', point_mouseup);
     move = point_mousemove;
 }
+function down_background_path(event: MouseEvent, index: number) {
+    if (event.button !== 0) {
+        return;
+    }
+    event.stopPropagation();
+    modify_start_position(event);
+    props.context.workspace.setCtrl('controller');
+    const path = props.context.path;
+    if (event.shiftKey) {
+        path.adjust_sides(index);
+    } else {
+        if (path.is_selected_segs(index)) {
+            // todo
+        } else {
+            path.select_side(index);
+        }
+    }
+    document.addEventListener('mousemove', point_mousemove);
+    document.addEventListener('mouseup', point_mouseup);
+    move = point_mousemove;
+}
 function modify_start_position(event: MouseEvent) {
     const workspace = props.context.workspace;
     const root = workspace.root;
@@ -102,10 +123,12 @@ function point_mousemove(event: MouseEvent) {
             pathEditor = props.context.editor
                 .controller()
                 .asyncPathEditor(shape as PathShape, props.context.selection.selectedPage!);
+
             isDragging = true;
             sub_matrix.reset(workspace.matrix.inverse);
             props.context.assist.set_points_map();
-            offset_map = gen_offset_points_map2(props.context, startPosition2);
+            const max = props.context.path.get_synthetic_points((shape as PathShape).points.length - 1);
+            offset_map = gen_offset_points_map2(props.context, startPosition2, max);
             if (offset_map) {
                 actionEndGenerator = new ActionEndGenerator(props.context, offset_map);
             }
@@ -122,12 +145,14 @@ function __exe(pathEditor: AsyncPathEditor, _point: PageXY) {
         return;
     }
     const f = props.context.assist.edit_mode_match.bind(props.context.assist);
-    const point = actionEndGenerator.__gen(_point, f);
+    // const point = actionEndGenerator.__gen(_point, f); // 开启辅助
+    const point = _point;
     const m = props.context.path.matrix_unit_to_root;
     if (!m) {
         return;
     }
-    const select_point = props.context.path.selectedPoints;
+    const max = (shape as PathShape).points.length - 1;
+    const select_point = props.context.path.get_synthetic_points(max);
     if (!select_point?.length) {
         console.log('!select_point?.length');
         return;
@@ -233,21 +258,6 @@ function point_mouseup(event: MouseEvent) {
     workspace.setCtrl('page');
 }
 
-function down_background_path(event: MouseEvent, index: number) {
-    if (event.button !== 0) {
-        return;
-    }
-    event.stopPropagation();
-    modify_start_position(event);
-    current_segment_index.value = index;
-    props.context.workspace.setCtrl('controller');
-    const path = props.context.path;
-    if (event.shiftKey) {
-        path.adjust_sides(current_segment_index.value);
-    } else {
-        path.select_side(current_segment_index.value);
-    }
-}
 
 function enter(event: MouseEvent, index: number) {
     if (props.context.path.no_hover) {

@@ -186,12 +186,12 @@ export function gen_offset_points_map(shapes: Shape[], down: PageXY) {
  * @description
  * @param down root坐标系上的一点
  */
-export function gen_offset_points_map2(context: Context, down: PageXY) {
+export function gen_offset_points_map2(context: Context, down: PageXY, points: number[]) {
     const path_shape = context.selection.pathshape;
     if (!path_shape) {
         return;
     }
-    const op = get_root_points(context, context.path.selectedPoints);
+    const op = get_root_points(context, points);
     if (!op) {
         return;
     }
