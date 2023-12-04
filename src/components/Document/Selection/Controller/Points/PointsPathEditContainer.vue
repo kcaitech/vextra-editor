@@ -6,7 +6,7 @@ import { ClientXY, PageXY, XY } from '@/context/selection';
 import { get_path_by_point } from './common';
 import { Path } from "@/context/path";
 import { dbl_action } from "@/utils/mouse_interactive";
-import { gen_offset_points_map2 } from "@/utils/mouse";
+import { add_move_and_up_for_document, gen_offset_points_map2 } from "@/utils/mouse";
 import { Segment, get_segments, modify_point_curve_mode } from "@/utils/pathedit";
 import { WorkSpace } from "@/context/workspace";
 import Handle from "../PathEdit/Handle.vue"
@@ -159,31 +159,27 @@ function __exe(pathEditor: AsyncPathEditor, _point: PageXY) {
 /**
  * @description 新增一个编辑点
  */
-function n_point_down(event: MouseEvent) {
-    // if (event.button !== 0) return;
-    // event.stopPropagation();
-    // const workspace = props.context.workspace;
-    // const root = workspace.root;
-    // startPosition = { x: event.clientX - root.x, y: event.clientY - root.y };
-    // cur_new_node = segments[show_index.value - 1];
-    // current_curve_point_index.value = show_index.value;
-    // if (!pathEditor) {
-    //     pathEditor = props.context.editor
-    //         .controller()
-    //         .asyncPathEditor(shape as PathShape, props.context.selection.selectedPage!);
-    //     pathEditor.addNode(current_curve_point_index.value, cur_new_node.point_raw);
-    //     if (event.shiftKey) {
-    //         props.context.path.push_after_sort_points(current_curve_point_index.value);
-    //     } else {
-    //         props.context.path.select_point(current_curve_point_index.value);
-    //     }
-    // }
-    // workspace.setCtrl('controller');
-    // document.addEventListener('mousemove', n_point_mousemove);
-    // document.addEventListener('mouseup', point_mouseup);
-    // move = n_point_mousemove;
-}
+function n_point_down(event: MouseEvent, index: number) {
+    if (event.button !== 0) {
+        return;
+    }
+    event.stopPropagation();
+    modify_start_position(event);
+    current_curve_point_index.value = index + 1;
+    cur_new_node = segments[index];
+    if (!pathEditor) {
+        pathEditor = props.context.editor
+            .controller()
+            .asyncPathEditor(shape as PathShape, props.context.selection.selectedPage!);
 
+        const idx = current_curve_point_index.value;
+        // pathEditor.addNode(idx, cur_new_node.point_raw);
+        props.context.path.select_point(idx);
+    }
+    props.context.workspace.setCtrl('controller');
+    add_move_and_up_for_document(n_point_mousemove, point_mouseup);
+    move = n_point_mousemove;
+}
 /**
  * @description 新增编辑点之后紧接的拖拽编辑
  */
@@ -333,7 +329,7 @@ onUnmounted(() => {
         </g>
         <rect v-if="new_high_light === i"
             :class="{ 'insert-point': true, 'insert-point-high-light': new_high_light === i, 'insert-point-selected': p.is_selected }"
-            :x="p.add.x - 4" :y="p.add.y - 4" rx="4" ry="4">
+            :x="p.add.x - 4" :y="p.add.y - 4" rx="4" ry="4" @mousedown="(e) => n_point_down(e, i)">
         </rect>
     </g>
     <rect v-for="(p, i) in dots" :key="i" :style="{ transform: `translate(${p.point.x - 4}px, ${p.point.y - 4}px)` }"
