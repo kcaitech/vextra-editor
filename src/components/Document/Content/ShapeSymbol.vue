@@ -1,7 +1,7 @@
 <script setup lang="ts">
 import { h } from 'vue';
 import comsMap from './comsmap'
-import { RenderTransform, SymbolShape, SymbolRefShape, Variable } from "@kcdesign/data";
+import { SymbolShape } from "@kcdesign/data";
 import { renderSymbol as r } from "@kcdesign/data";
 import { initCommonShape } from "./common";
 

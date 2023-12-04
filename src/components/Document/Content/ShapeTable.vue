@@ -11,54 +11,13 @@ const props = defineProps<{
 }>();
 
 const common = initCommonShape(props);
-// const watcher = (...args: any[]) => {
-//     if (args.indexOf('borders') >= 0) common.incReflush();
-// }
-// 
-// const consumed: Array<Shape | undefined> = [];
-// 
-// watch(() => props.data, (value, old) => {
-//     for (let i = 0, len = consumed.length; i < len; i++) {
-//         const cell = consumed[i];
-//         if (cell) cell.unwatch(watcher);
-//     }
-//     consumed.length = 0;
-// })
-// 
-// onUnmounted(() => {
-//     for (let i = 0, len = consumed.length; i < len; i++) {
-//         const cell = consumed[i];
-//         if (cell) cell.unwatch(watcher);
-//     }
-//     consumed.length = 0;
-// })
+
 function bubbleupdate() {
     common.incReflush();
 }
 
 function render() {
-    // const consumed0 = props.data.datas;
     const ret = r(h, props.data, comsMap, props.transx, props.varsContainer, bubbleupdate, common.reflush);
-    // if (consumed0.length < consumed.length) {
-    //     for (let i = consumed0.length, len = consumed.length; i < len; i++) {
-    //         const cell = consumed[i];
-    //         if (cell) cell.unwatch(watcher);
-    //     }
-    // }
-    // consumed.length = consumed0.length;
-    // for (let i = 0, len = consumed.length; i < len; i++) {
-    //     const s0 = consumed0[i];
-    //     const s = consumed[i];
-    //     if (s === undefined && s0 === undefined) {
-    //         continue;
-    //     }
-    //     if (s && s0 && s.id === s0.id) {
-    //         continue;
-    //     }
-    //     if (s) s.unwatch(watcher);
-    //     if (s0) s0.watch(watcher);
-    //     consumed[i] = s0;
-    // }
     return ret;
 }
 
