@@ -394,6 +394,7 @@ const getDocumentInfo = async () => {
       null_context.value = false;
       context.selection.watch(selectionWatcher);
       context.workspace.watch(workspaceWatcher);
+      context.component.watch(component_watcher);
       const docId = route.query.id as string;
       const token = localStorage.getItem("token") || "";
       if (await context.communication.docOp.start(token, docId, document, context.coopRepo, dataInfo.data.document.version_id ?? "")) {
@@ -635,8 +636,12 @@ const teamSelectionModifi = (docCommentOpData: DocSelectionOpData) => {
   }
 }
 function component_watcher(t: number) {
-  if (!context) return;
-  if (t === Component.BRIDGE_CHANGE) bridge.value = context.component.bridge;
+  if (!context) {
+    return;
+  }
+  if (t === Component.BRIDGE_CHANGE) {
+    bridge.value = context.component.bridge;
+  }
 }
 
 onMounted(() => {
