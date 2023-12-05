@@ -327,7 +327,9 @@ const getUserInfo = async () => {
 }
 
 onBeforeRouteUpdate((to, form, next) => {
-  router.go(0)
+  if (to.query.id?.includes(' ')) {
+    router.go(0)
+  }
 })
 
 //获取文档信息

@@ -8,8 +8,6 @@ const { t } = useI18n();
 
 <template>
   <div class="logo">
-    <!-- <img :src="avatar" alt="ProtoDesign" />
-    <p>{{ t('system.product_description') }}</p> -->
     <svg xmlns="http://www.w3.org/2000/svg" xmlns:xlink="http://www.w3.org/1999/xlink" fill="none" version="1.1"
       width="793" height="197" viewBox="0 0 793 197">
       <defs>

@@ -1,5 +1,6 @@
 <template>
-    <svg xmlns="http://www.w3.org/2000/svg" width="400" height="200" viewBox="0 0 400 200" fill="none">
+    <svg style="width: 36px;height: 20px;" xmlns="http://www.w3.org/2000/svg" width="400" height="200" viewBox="0 0 400 200"
+        fill="none">
         <path class="path-animation"
             d="M0 90C0 40.2944 40.2944 0 90 0H310C359.706 0 400 40.2944 400 90V110C400 159.706 359.706 200 310 200H90C40.2944 200 0 159.706 0 110V90Z"
             :fill="props.toggleoff ? props.bgcolor : '#8C8C8C'" />
@@ -16,11 +17,6 @@ const props = defineProps<{
 </script>
   
 <style>
-svg {
-    cursor: pointer;
-    width: 36px;
-    height: 20px;
-}
 
 .circle-animation {
     transition: cx 0.2s ease-in-out;

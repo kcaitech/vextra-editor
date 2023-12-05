@@ -37,7 +37,7 @@ enum permissions {
 }
 const route = useRoute()
 const docID = props.docId ? props.docId : route.query.id
-const url = route.path !== '/document' ? `https://protodesign.cn/#/document?id=${docID}` + " " + `邀请您进入《${props.docName}》，点击链接开始协作` : location.href + ' ' + `邀请您进入《${props.docInfo?.document.name}》，点击链接开始协作`
+const url = route.path !== '/document' ? `https://test.protodesign.cn/zbb/#/document?id=${docID}` + " " + `邀请您进入《${props.docName}》，点击链接开始协作` : location.href + ' ' + `邀请您进入《${props.docInfo?.document.name}》，点击链接开始协作`
 
 const value1 = ref(props.shareSwitch)
 const authority = ref(false)
@@ -361,7 +361,6 @@ onUnmounted(() => {
           <span class="type">{{ t('share.share_switch') }}：</span>
           <Switch :bgcolor="'rgba(24, 120, 245, 1)'" :toggleoff="value1"></Switch>
           <input class="my_switch" type="checkbox" v-model="value1">
-          <!-- <el-switch class="switch" size="small" v-model="value1" /> -->
         </div>
         <!-- 文件名 -->
         <div class="file-name">
