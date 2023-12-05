@@ -64,11 +64,15 @@ function move2(e: MouseEvent) {
         }
         return;
     }
-    if (props.context.tool.action === Action.AutoV) {
+
+    if (_allow_to_select()) {
         select(e);
     }
 }
-
+function _allow_to_select() {
+    const action = props.context.tool.action;
+    return [Action.AutoV, Action.Curve].includes(action);
+}
 function up(e: MouseEvent) {
     clear_state();
 }
