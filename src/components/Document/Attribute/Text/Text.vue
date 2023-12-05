@@ -651,7 +651,7 @@ onUnmounted(() => {
                             <input type="text" v-model="fonstSize" ref="textSize" class="input" @change="setTextSize"
                                    @focus="selectSizeValue">
                             <div class="down" @click="onShowSize">
-                                <svg-icon icon-class="down"></svg-icon>
+                                <svg-icon icon-class="down" style=""></svg-icon>
                             </div>
                         </div>
                         <div class="font-size-list" ref="sizeList" v-if="showSize">
@@ -742,7 +742,7 @@ onUnmounted(() => {
             </div>
             <!-- 字体颜色 -->
             <div class="text-color" v-if="!colorIsMulti && textColor" style="margin-bottom: 10px;">
-<!--                <div>{{ t('attr.font_color') }}</div>-->
+                <div style="font-family: HarmonyOS Sans;font-size: 12px;margin-right: 10px;">{{ t('attr.font_color') }}</div>
                 <div class="color">
                         <ColorPicker :color="textColor!" :context="props.context" :late="40"
                                      @change="c => getColorFromPicker(c, 'color')">
@@ -757,7 +757,7 @@ onUnmounted(() => {
             </div>
             <div class="text-colors" v-else-if="colorIsMulti" style="margin-bottom: 10px;">
                 <div class="color-title">
-<!--                    <div>{{ t('attr.font_color') }}</div>-->
+                    <div style="font-family: HarmonyOS Sans;font-size: 12px;">{{ t('attr.font_color') }}</div>
                     <div class="add" @click="addTextColor">
                         <svg-icon icon-class="add"></svg-icon>
                     </div>
@@ -773,7 +773,8 @@ onUnmounted(() => {
             </div>
             <!-- 高亮颜色 -->
             <div class="highlight-color" v-if="!highlightIsMulti && highlight">
-                <div :class="{ 'check': highlight, 'nocheck': !highlight }">{{ t('attr.highlight_color') }}</div>
+                <div style="font-family: HarmonyOS Sans;font-size: 12px;margin-right: 10px;"
+                     :class="{ 'check': highlight, 'nocheck': !highlight }">{{ t('attr.highlight_color') }}</div>
                 <div class="color">
                     <ColorPicker :color="highlight!" :context="props.context" :late="30"
                                  @change="c => getColorFromPicker(c, 'highlight')">
@@ -790,16 +791,18 @@ onUnmounted(() => {
             </div>
             <div class="text-colors" v-else-if="highlightIsMulti">
                 <div class="color-title">
-                    <div :class="{ 'check': highlight, 'nocheck': !highlight }">{{ t('attr.highlight_color') }}</div>
+                    <div style="font-family: HarmonyOS Sans;font-size: 12px;margin-right: 10px;"
+                        :class="{ 'check': highlight, 'nocheck': !highlight }">{{ t('attr.highlight_color') }}</div>
                     <div class="add" @click="addHighlight">
                         <svg-icon icon-class="add"></svg-icon>
                     </div>
                 </div>
-                <div class="color-text">{{ t('attr.multiple_colors') }}</div>
+                <div class="color-text" >{{ t('attr.multiple_colors') }}</div>
             </div>
             <div class="text-colors" v-else-if="!highlightIsMulti && !highlight">
                 <div class="color-title">
-                    <div :class="{ 'check': highlight, 'nocheck': !highlight }">{{ t('attr.highlight_color') }}</div>
+                    <div style="font-family: HarmonyOS Sans;font-size: 12px;margin-right: 10px;"
+                         :class="{ 'check': highlight, 'nocheck': !highlight }">{{ t('attr.highlight_color') }}</div>
                     <div class="color_border"></div>
                     <div class="add" @click="addHighlight">
                         <svg-icon icon-class="add"></svg-icon>
@@ -817,6 +820,7 @@ onUnmounted(() => {
     flex-direction: column;
     padding: 20px 8px 12px 8px;
     box-sizing: border-box;
+    border-bottom: 1px solid #F0F0F0;
 
     .trigger {
         width: 100%;
@@ -1007,7 +1011,7 @@ onUnmounted(() => {
                 height: 32px;
                 padding: 2px;
                 box-sizing: border-box;
-                border-radius: 4px;
+                border-radius: var(--default-radius);
             }
 
             .vertical-aligning {
@@ -1016,13 +1020,16 @@ onUnmounted(() => {
                 padding: 2px;
                 box-sizing: border-box;
                 margin-left: 11px;
+                border-radius: var(--default-radius);
             }
 
             .font-posi {
-                width: 25px;
-                height: 25px;
+                width: 29px;
+                height: 28px;
                 display: flex;
                 justify-content: center;
+                border-radius: 4px;
+                border: 1px solid #F0F0F0;
             }
         }
 
@@ -1032,7 +1039,7 @@ onUnmounted(() => {
 
             .color {
                 background-color: var(--input-background);
-                width: 224px;
+                width: 166px;
                 height: 32px;
                 padding: 8px;
                 border-radius: var(--default-radius);
@@ -1043,9 +1050,10 @@ onUnmounted(() => {
                 .sizeColor {
                     outline: none;
                     border: none;
-                    width: 54px;
+                    width: 88px;
                     background-color: transparent;
                     margin-left: 8px;
+                    font-size: 12px;
                 }
 
                 .alphaFill {
@@ -1053,7 +1061,7 @@ onUnmounted(() => {
                     border: none;
                     width: 30px;
                     background-color: transparent;
-                    margin-left: 45%;
+                    font-size: 12px;
                 }
 
                 input + input {
@@ -1068,7 +1076,7 @@ onUnmounted(() => {
 
             .color {
                 background-color: var(--input-background);
-                width: 148px;
+                width: 130px;
                 height: 32px;
                 padding: 8px;
                 border-radius: var(--default-radius);
@@ -1084,15 +1092,17 @@ onUnmounted(() => {
                     height: 14px;
                     margin-left: 8px;
                     flex: 1;
+                    font-size: 12px;
                 }
 
                 .alphaFill {
                     outline: none;
                     border: none;
                     background-color: transparent;
-                    width: 35px;
+                    width: 30px;
                     text-align: center;
-                    margin-left: -18px;
+                    margin-left: -28px;
+                    font-size: 12px;
                 }
 
                 input + input {
@@ -1131,7 +1141,7 @@ onUnmounted(() => {
                 }
 
                 .nocheck {
-                    color: rgba(0, 0, 0, 0.3);
+                    color: #737373;
                 }
             }
 
@@ -1147,11 +1157,16 @@ onUnmounted(() => {
             align-items: center;
             width: 28px;
             height: 28px;
+            margin-left: 8px;
+            border-radius: var(--default-radius);
 
             > svg {
                 height: 16px;
                 width: 16px;
             }
+        }
+        .perch:hover {
+            background-color: #F5F5F5;
         }
     }
 
@@ -1174,6 +1189,11 @@ onUnmounted(() => {
     border-radius: 4px;
     margin-right: 8px;
     box-sizing: border-box;
+
+    >svg {
+        width: 12px;
+        height: 12px;
+    }
 }
 
 :deep(.el-tooltip__trigger:focus) {

@@ -247,7 +247,7 @@ const flattenShape = () => {
 
     .vertical-line {
         width: 1px;
-        height: 28px;
+        height: 20px;
         background-color: grey;
         flex: 0 0 auto;
         margin-left: 5px;

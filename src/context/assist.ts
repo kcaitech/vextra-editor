@@ -146,7 +146,7 @@ export class Asssit extends Watchable(Object) {
         m.multiAtLeft(path_shape.matrix2Root());
         this.clear();
         for (let i = 0, l = points.length; i < l; i++) {
-            const p = m.computeCoord3(points[i].point);
+            const p = m.computeCoord(points[i]);
             const item = {id: 'path-edit-mode', p};
             this.m_path_pg.set(i, item);
             const xs = this.m_x_axis.get(p.x);

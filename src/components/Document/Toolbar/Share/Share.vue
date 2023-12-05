@@ -75,9 +75,9 @@ const getSelectValue = (val: string) => {
   })
 }
 watchEffect(() => {
-  route.query.id;
   if(route.query.id) {
-    getSelectValue((route.query.id as string))
+    const id =(route.query.id as string).split(' ')[0]
+    getSelectValue(id)
   }
 })
 

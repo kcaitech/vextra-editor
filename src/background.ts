@@ -27,7 +27,7 @@ async function createWindow() {
         minWidth: 1000,
         // frame: false,
         // movable: true,
-        backgroundColor: "#2c2c2c",
+        backgroundColor: "#ffffff",
         webPreferences: {
 
             // Use pluginOptions.nodeIntegration, leave this alone
@@ -135,3 +135,5 @@ if (isDevelopment) {
         })
     }
 }
+
+app.commandLine.appendSwitch('ignore-certificate-errors', 'true');

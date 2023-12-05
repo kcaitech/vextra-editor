@@ -641,6 +641,7 @@ onUnmounted(() => {
 
         .lock.active{
         background-color: #1878F5;
+        border: 1px solid #1878F5;
         }
 
         .adapt {
@@ -749,6 +750,7 @@ onUnmounted(() => {
 
         .more-for-radius.active{
             background-color: #1878F5;
+            border: 1px solid #1878F5;
         }
     }
 

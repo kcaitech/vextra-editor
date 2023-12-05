@@ -103,9 +103,9 @@
     </div>
     <listrightmenu :items="items" :data="mydata" @get-userdata="getUserdata" @r-starfile="Starfile" @r-sharefile="Sharefile"
         @r-removehistory="Removefile" @ropen="openDocument" />
-    <FileShare v-if="showFileShare" @close="closeShare" :docId="docId" @switch-state="onSwitch" :userInfo="userInfo"
-        :docUserId="docUserId" :project="is_project" :selectValue="selectValue" @select-type="onSelectType"
-        :shareSwitch="shareSwitch" :pageHeight="pageHeight" :projectPerm="projectPerm">
+    <FileShare v-if="showFileShare" @close="closeShare" :docId="docId" :docName="docName" @switch-state="onSwitch"
+        :userInfo="userInfo" :docUserId="docUserId" :project="is_project" :selectValue="selectValue"
+        @select-type="onSelectType" :shareSwitch="shareSwitch" :pageHeight="pageHeight" :projectPerm="projectPerm">
     </FileShare>
     <div v-if="showFileShare" class="overlay"></div>
 </template>
@@ -133,6 +133,7 @@ const lists = ref<any[]>([])
 const selectValue = ref(1)
 const userInfo = ref<UserInfo | undefined>()
 const docId = ref('')
+const docName = ref('')
 const docUserId = ref('')
 const mydata = ref()
 const noNetwork = ref(false)
@@ -278,6 +279,7 @@ const Sharefile = (data: data) => {
     docUserId.value = data.document.user_id
     userInfo.value = userData.value
     docId.value = data.document.id
+    docName.value = data.document.name
     selectValue.value = data.document.doc_type !== 0 ? data.document.doc_type : data.document.doc_type
     projectPerm.value = data.project_perm;
     showFileShare.value = true
@@ -470,6 +472,7 @@ onUnmounted(() => {
             align-items: center;
             margin-left: 14px;
             gap: 8px;
+
             .text {
                 white-space: nowrap;
                 overflow: hidden;

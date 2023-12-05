@@ -373,6 +373,7 @@ function stopEditing() {
                     border-radius: var(--default-radius);
                     box-sizing: border-box;
                     border: 1px solid #F4F5F5;
+                    padding: 4px 0 4px 10px;
                 }
 
                 .send {

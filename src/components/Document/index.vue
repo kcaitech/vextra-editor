@@ -12,7 +12,7 @@ import { Document, importDocument, Repository, Page, CoopRepository, IStorage } 
 import { SCREEN_SIZE } from '@/utils/setting';
 import * as share_api from '@/request/share'
 import * as user_api from '@/request/users'
-import { useRoute } from 'vue-router';
+import { onBeforeRouteUpdate, useRoute } from 'vue-router';
 import { router } from '@/router';
 import { useI18n } from 'vue-i18n';
 import { Warning } from '@element-plus/icons-vue';
@@ -33,7 +33,7 @@ import Bridge from "@/components/Document/Bridge.vue";
 import { Component } from '@/context/component';
 import { initpal } from './initpal';
 
-const { t } = useI18n();
+const {t} = useI18n();
 const curPage = shallowRef<Page | undefined>(undefined);
 let context: Context | undefined;
 const middleWidth = ref<number>(0.8);
@@ -284,7 +284,6 @@ const getDocumentAuthority = async () => {
       isEdit.value = true
     }
     permType.value = data.data.perm_type
-    console.log(permType.value, '文档权限接口的权限');
     context && context.workspace.setDocumentPerm(data.data.perm_type)
   } catch (err) {
     console.log(err);
@@ -306,7 +305,7 @@ const hideNotification = (type?: number) => {
   showHint.value = false;
   countdown.value = 10;
   if (type === 0) {
-    router.push('/')
+    router.push('/apphome')
   } else {
     router.go(0)
   }
@@ -325,6 +324,10 @@ const getUserInfo = async () => {
     localStorage.setItem('userId', data.id)
   }
 }
+
+onBeforeRouteUpdate((to, form, next) => {
+  router.go(0)
+})
 
 //获取文档信息
 const getDocumentInfo = async () => {
@@ -347,8 +350,6 @@ const getDocumentInfo = async () => {
     }
     const perm = dataInfo.data.document_permission.perm_type
     permType.value = perm;
-    console.log(perm, '文档信息的权限');
-
     //获取文档类型是否为私有文档且有无权限
     if (perm === 0) {
       router.push({
@@ -392,14 +393,13 @@ const getDocumentInfo = async () => {
       null_context.value = false;
       context.selection.watch(selectionWatcher);
       context.workspace.watch(workspaceWatcher);
-      context.component.watch(component_watcher);
       const docId = route.query.id as string;
       const token = localStorage.getItem("token") || "";
       if (await context.communication.docOp.start(token, docId, document, context.coopRepo, dataInfo.data.document.version_id ?? "")) {
         switchPage(context!.data.pagesList[0]?.id);
         loading.value = false;
       } else {
-        router.push("/");
+        router.push("/apphome");
         return;
       }
       if (perm === 3) await context.communication.docResourceUpload.start(token, docId);
@@ -433,8 +433,6 @@ async function upload(projectId: string) {
     // todo 上传失败处理
     return;
   }
-  console.log(result, '文档上传');
-
   const doc_id = result!.data.doc_id;
   router.replace({
     path: '/document',
@@ -480,7 +478,7 @@ function init_doc() {
       switchPage(((window as any).sketchDocument as Document).pagesList[0]?.id);
       document.addEventListener('keydown', keyboardEventHandler);
     } else {
-      router.push('/');
+      router.push('/apphome');
     }
   }
 }

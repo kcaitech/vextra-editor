@@ -664,7 +664,7 @@ onUnmounted(() => {
     width: 100%;
     display: flex;
     flex-direction: column;
-    padding: 12px 8px;
+    padding: 12px 8px 18px 8px;
     box-sizing: border-box;
     //border-top: 1px solid #F0F0F0;
     border-bottom: 1px solid #F0F0F0;
@@ -760,6 +760,7 @@ onUnmounted(() => {
                     height: 14px;
                     margin-left: 8px;
                     flex: 1;
+                    font-size: 12px;
                 }
 
                 .alphaBorder {
@@ -770,6 +771,7 @@ onUnmounted(() => {
                     //margin-left: 20%;
                     margin-left: -28px;
                     text-align: center;
+                    font-size: 12px;
                 }
 
                 input + input {

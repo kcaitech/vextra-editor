@@ -195,7 +195,7 @@ onMounted(() => {
     flex-flow: row;
     white-space: nowrap;
     overflow: hidden;
-    padding: 1px;
+    //padding: 1px;
     align-items: center;
     padding: 0 8px;
     box-sizing: border-box;
@@ -208,6 +208,8 @@ onMounted(() => {
         flex-shrink: 0;
         cursor: ew-resize;
         text-align: center;
+        padding: 1px;
+        box-sizing: border-box;
     }
 
     >.deicon {
@@ -242,6 +244,6 @@ onMounted(() => {
 }
 
 .actived {
-    border: 1px solid #0d99ff;
+    border: 1px solid #1878F5;
 }
 </style>

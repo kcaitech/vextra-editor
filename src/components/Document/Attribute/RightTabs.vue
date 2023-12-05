@@ -98,7 +98,9 @@ onUnmounted(() => {
         <template v-if="!isLable">
             <div ref="controllerRef" class="controller">
                 <div v-for="(i, index) in tabs" :class="{ tab: true, active: currentTab === i.id }" :key="index"
-                    :id="`tabs-id-${i.id}`" @click="toggle(i.id)">{{ i.title }}
+                    :id="`tabs-id-${i.id}`" @click="toggle(i.id)"
+                     :style="{ color: currentTab === i.id ? '#000000' : '#333333' }">
+                    {{ i.title }}
                 </div>
                 <div class="underline"
                     :style="{ width: underlineWidth + 'px', left: `${underlinePosition}px`, transform: `translateX(-50%)` }">
@@ -143,17 +145,16 @@ onUnmounted(() => {
             padding: 13px 14px 13px 14px;
             font-size: 12px;
             font-weight: 400;
-            font-feature-settings: "kern" on;
             color: #000000;
         }
 
-        >.tab:hover {
-            color: var(--theme-color);
-        }
+        //>.tab:hover {
+        //    color: var(--theme-color);
+        //}
 
         >.active {
             border-radius: 4px 4px 0 0;
-            color: var(--theme-color);
+            //color: var(--theme-color);
             font-weight: 500;
         }
 

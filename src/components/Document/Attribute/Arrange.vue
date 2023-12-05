@@ -7,6 +7,7 @@ import { align_left, align_cneter_x, align_right, align_top, align_cneter_y, ali
 import { WorkSpace } from '@/context/workspace';
 import { useI18n } from 'vue-i18n';
 import Tooltip from '@/components/common/Tooltip.vue';
+import Opacity from "@/components/Document/Attribute/Opacity/Opacity.vue";
 interface Props {
     context: Context
     shapes: Shape[]
@@ -212,7 +213,7 @@ onUnmounted(() => {
     display: flex;
     justify-content: center;
     align-items: center;
-    border-radius: 4px;
+    opacity: 1;
 
     >svg {
         color: var(--theme-color);
@@ -231,10 +232,9 @@ onUnmounted(() => {
     display: flex;
     justify-content: center;
     align-items: center;
-    border-radius: var(--default-radius);
+    opacity: 0.3;
 
     >svg {
-        opacity: 0.5;
         width: 28px;
         height: 28px;
     }

@@ -372,6 +372,56 @@ onUnmounted(() => {
         margin-top: -14px;
         margin-bottom: 3px;
 
+        .slider{
+            height: 20px;
+
+            input[type="range"]:focus {
+                outline: none;
+            }
+
+            input[type="range"] {
+                -webkit-appearance: none !important;
+                appearance: none !important;
+                outline: 0;
+                background-color: transparent;
+                width: 150px;
+                margin-right: 40px;
+            }
+
+            /* 火狐 外背景色 */
+            input[type=range]::-moz-range-progress {
+                background: #1878F5;
+                height: 3px;
+            }
+
+            /* 定义range控件容器的样式 */
+            input[type="range" i]::-webkit-slider-container {
+                height: 20px;
+                overflow: hidden;
+            }
+
+            input[type="range"]::-webkit-slider-thumb {
+                -webkit-appearance: none !important;
+                appearance: none !important;
+                width: 12px;
+                height: 12px;
+                border-radius: 8px;
+                background-color: #FFFFFF;
+                border: 1px solid transparent;
+                box-shadow: 0px 2px 6px 0px rgba(0, 0, 0, 0.12);
+                border-image: linear-gradient(#1878F5, #1878F5) 0 fill / 8 20 8 0 / 0px 0px 0 2000px;
+            }
+
+            .track {
+                height: 2px;
+                background: #D9D9D9;
+                width: 150px;
+                margin-top: -7%;
+                margin-left: 1%;
+            }
+
+        }
+
         input[type="text"] {
             width: 54px;
             height: 32px;
@@ -383,54 +433,9 @@ onUnmounted(() => {
             border-radius: var(--default-radius);
         }
 
-        input[type="range"]:focus {
-            outline: none;
-        }
-
         .input-text {
             border: none;
             outline: none;
-        }
-
-        input[type="range"] {
-            -webkit-appearance: none;
-            appearance: none;
-            outline: 0;
-            background-color: transparent;
-            width: 150px;
-            margin-right: 40px;
-        }
-
-        /* 火狐 外背景色 */
-        input[type=range]::-moz-range-progress {
-            background: #1878F5;
-            height: 3px;
-        }
-
-        /* 定义range控件容器的样式 */
-        input[type="range" i]::-webkit-slider-container {
-            height: 20px;
-            overflow: hidden;
-        }
-
-        input[type="range"]::-webkit-slider-thumb {
-            -webkit-appearance: none;
-            appearance: none;
-            width: 12px;
-            height: 12px;
-            border-radius: 8px;
-            background-color: #FFFFFF !important;
-            border: 1px solid transparent;
-            box-shadow: 0px 2px 6px 0px rgba(0, 0, 0, 0.12);
-            border-image: linear-gradient(#1878F5, #1878F5) 0 fill / 8 20 8 0 / 0px 0px 0 2000px;
-        }
-
-        .track {
-            height: 2px;
-            background: #D9D9D9;
-            width: 150px;
-            margin-top: -7%;
-            margin-left: 1%;
         }
     }
 

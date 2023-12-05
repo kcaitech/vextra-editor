@@ -17,22 +17,26 @@
                     <img class="code-image" :src="QRCode" alt="QRCode">
                 </div>
             </div>
+            <Report v-if="report" @close="report=false"></Report>
             <ShortCut v-if="shortcut" @close="shortcut = false" :b="shortcut"></ShortCut>
         </Teleport>
     </div>
+    <div v-if="report" class="overlay"></div>
 </template>
 <script setup lang="ts">
 import { onMounted, onUnmounted, ref } from 'vue';
 import { useRoute } from 'vue-router';
 import QRCode from '@/assets/qr-code.png';
 import ShortCut from './ShortCut.vue';
+import Report from './Report.vue'
 
 const route = useRoute()
 const showitem = ref(false)
 const qrcode = ref(false)
 const shortcut = ref(false)
-const items = ref<any[]>(['问题反馈', '快捷键介绍'])
-const itemsicon = ref<any[]>(['feedback-icon', 'shortcut-icon'])
+const report = ref(false)
+const items = ref<any[]>(['问题反馈', '举报', '快捷键介绍'])
+const itemsicon = ref<any[]>(['feedback-icon', 'report-icon', 'shortcut-icon'])
 
 const handleClickShowhelp = () => {
     if (qrcode.value) {
@@ -64,7 +68,13 @@ const handleClickShow = (index: number) => {
     if (index === 0) {
         qrcode.value = true
         shortcut.value = false
+        report.value = false
+    } else if (index === 1) {
+        qrcode.value = false
+        shortcut.value = false
+        report.value = true
     } else {
+        report.value = false
         qrcode.value = false
         shortcut.value = true
     }
@@ -83,6 +93,16 @@ onUnmounted(() => {
 
 </script>
 <style lang="scss" scoped>
+.overlay {
+    position: absolute;
+    top: 0;
+    left: 0;
+    width: 100%;
+    height: 100%;
+    z-index: 999;
+    background-color: var(--overlay-bg-color);
+}
+
 .help-container {
     position: fixed;
     bottom: 16px;
@@ -97,7 +117,7 @@ onUnmounted(() => {
         width: 32px;
         height: 32px;
         border-radius: 50%;
-        background-color:rgba(33, 33, 33, 1);
+        background-color: rgba(33, 33, 33, 1);
         box-shadow: 0px 4px 15px 0px rgba(0, 0, 0, 0.1);
 
         svg {
@@ -110,13 +130,13 @@ onUnmounted(() => {
 
 .help-item {
     position: fixed;
-    bottom: 56px;
+    bottom: 66px;
     right: 20px;
     font-size: 12px;
     display: flex;
     overflow: hidden;
     flex-direction: column;
-    border-radius: 4px;
+    border-radius: 8px;
     background-color: white;
     box-shadow: 0px 2px 5px 0px rgba(0, 0, 0, 0.3);
     box-sizing: border-box;
@@ -126,17 +146,17 @@ onUnmounted(() => {
         cursor: pointer;
         display: flex;
         align-items: center;
-        line-height: 32px;
-        padding: 0px 18px 0 12px;
+        line-height: 40px;
+        padding: 0 16px;
+        gap: 8px;
 
         svg {
             width: 20px;
             height: 20px;
-            margin-right: 6px;
         }
 
         &:hover {
-            background: #F3F3F5;
+            background: rgba(245, 245, 245, 1);
         }
     }
 }
@@ -144,7 +164,7 @@ onUnmounted(() => {
 
 .qq-grop-code {
     position: fixed;
-    bottom: 56px;
+    bottom: 66px;
     right: 20px;
     border-radius: 4px;
     background-color: white;
