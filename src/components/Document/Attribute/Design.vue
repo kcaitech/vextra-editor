@@ -1,9 +1,9 @@
 <script setup lang="ts">
-import {Context} from '@/context';
-import {Selection} from '@/context/selection';
-import {WorkSpace} from "@/context/workspace";
-import {onMounted, onUnmounted, shallowRef, ref, computed} from 'vue';
-import {ShapeType, Shape, TextShape, TableShape} from "@kcdesign/data"
+import { Context } from '@/context';
+import { Selection } from '@/context/selection';
+import { WorkSpace } from "@/context/workspace";
+import { onMounted, onUnmounted, shallowRef, ref, computed } from 'vue';
+import { ShapeType, Shape, TextShape, TableShape, SymbolRefShape } from "@kcdesign/data"
 import Arrange from './Arrange.vue';
 import ShapeBaseAttr from './BaseAttr/Index.vue';
 import Fill from './Fill/Fill.vue';
@@ -11,7 +11,7 @@ import Border from './Border/Border.vue';
 import Shadow from './Shadow/Shadows.vue';
 import PageBackgorund from './PageBackgorund.vue';
 import Text from './Text/Text.vue';
-import {throttle} from 'lodash';
+import { throttle } from 'lodash';
 import Module from './Module/Module.vue'
 import TableText from './Table/TableText.vue'
 import { TableSelection } from '@/context/tableselection';
@@ -22,6 +22,7 @@ import BaseForPathEdit from "@/components/Document/Attribute/BaseAttr/BaseForPat
 const props = defineProps<{ context: Context }>();
 const shapes = shallowRef<Shape[]>([]);
 const len = computed<number>(() => shapes.value.length);
+const opacity = ref<boolean>(false);
 const WITH_FILL = [
     ShapeType.Rectangle,
     ShapeType.Oval,
@@ -98,9 +99,20 @@ function _change(t: number) {
         baseAttr.value = true;
         editAttr.value = false;
         symbol_attribute.value = props.context.selection.selectedShapes.length < 2;
+        check_for_opacity();
     }
 }
-
+function check_for_opacity() {
+    opacity.value = false;
+    const selected_shapes = props.context.selection.selectedShapes;
+    for (let i = 0, l = selected_shapes.length; i < l; i++) {
+        const s = selected_shapes[i];
+        if (!s.isVirtualShape) {
+            opacity.value = true;
+            return;
+        }
+    }
+}
 const baseAttr = ref(true);
 const editAttr = ref<boolean>(false);
 const baseAttrVisible = () => {
@@ -156,21 +168,20 @@ onUnmounted(() => {
         <el-scrollbar>
             <div v-if="!len">
                 <PageBackgorund :context="props.context" v-if="props.context.selection.selectedPage"
-                                :page="props.context.selection.selectedPage"></PageBackgorund>
+                    :page="props.context.selection.selectedPage"></PageBackgorund>
             </div>
             <div v-else class="attr-wrapper">
                 <Arrange :context="props.context" :shapes="shapes"></Arrange>
                 <ShapeBaseAttr v-if="baseAttr" :context="props.context"></ShapeBaseAttr>
                 <BaseForPathEdit v-if="editAttr" :context="props.context"></BaseForPathEdit>
-                <Opacity :shapes="shapes" :context="props.context"></Opacity>
-                <Module v-if="symbol_attribute" :context="props.context" :shapeType="shapeType"
-                        :shapes="shapes"></Module>
+                <Opacity v-if="opacity" :shapes="shapes" :context="props.context"></Opacity>
+                <Module v-if="symbol_attribute" :context="props.context" :shapeType="shapeType" :shapes="shapes"></Module>
                 <Fill v-if="WITH_FILL.includes(shapeType)" :shapes="shapes" :context="props.context"></Fill>
                 <Border v-if="WITH_BORDER.includes(shapeType)" :shapes="shapes" :context="props.context"></Border>
                 <Text v-if="WITH_TEXT.includes(shapeType)" :shape="(shapes[0] as TextShape)"
-                      :textShapes="(textShapes as TextShape[])" :context="props.context"></Text>
+                    :textShapes="(textShapes as TextShape[])" :context="props.context"></Text>
                 <TableText v-if="WITH_TABLE.includes(shapeType)" :shape="(shapes[0] as TableShape)"
-                           :context="props.context">
+                    :context="props.context">
                 </TableText>
                 <Shadow v-if="WITH_SHADOW.includes(shapeType)" :shapes="shapes" :context="props.context">
                 </Shadow>
