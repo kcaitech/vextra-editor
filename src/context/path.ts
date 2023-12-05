@@ -2,6 +2,7 @@ import { Matrix, Watchable } from "@kcdesign/data";
 import { Context } from ".";
 import { CurveMode } from "@kcdesign/data";
 import { Segment } from "@/utils/pathedit";
+import { Action } from "./tool";
 
 export type PointEditType = CurveMode | 'INVALID'
 
@@ -11,12 +12,16 @@ export class Path extends Watchable(Object) {
     static SELECTION_CHANGE_S = 3;
     static POINT_TYPE_CHANGE = 4;
     static CLEAR_HIGH_LIGHT = 5;
+    static BRIDGING = 6;
+    static BRIDGING_COMPLETED = 7;
+
     private m_context: Context;
     private selected_points: number[] = [];
     private selected_sides: number[] = [];
     private is_selecting: boolean = false;
     private is_editing: boolean = false;
     private m_segments: Segment[] = [];
+    private m_bridging_events: { index: number, event: MouseEvent } | undefined = undefined;
     constructor(context: Context) {
         super();
         this.m_context = context;
@@ -163,10 +168,27 @@ export class Path extends Watchable(Object) {
         return this.is_selecting || this.is_editing;
     }
 
+    get no_add() {
+        const action = this.m_context.tool.action;
+        return this.no_hover || [Action.Curve, Action.PathClip].includes(action);
+    }
+
     set_segments(segs: Segment[]) {
         this.m_segments = segs;
     }
     get segments() {
         return this.m_segments;
+    }
+
+    bridging(event: { index: number, event: MouseEvent }) {
+        this.m_bridging_events = event;
+        this.notify(Path.BRIDGING);
+    }
+    bridging_completed() {
+        this.m_bridging_events = undefined;
+        this.notify(Path.BRIDGING_COMPLETED);
+    }
+    get bridging_events() {
+        return this.m_bridging_events;
     }
 }

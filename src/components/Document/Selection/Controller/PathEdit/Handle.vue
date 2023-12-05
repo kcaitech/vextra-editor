@@ -50,7 +50,6 @@ const __radius_next_from = ref<number>(0);
 const __radius_next_to = ref<number>(0);
 const next_index = ref<number>(-1);
 
-let matrix_at_down = new Matrix();
 let inverse_matrix_at_down = new Matrix();
 let action_curve_point: CurvePoint;
 let side: 'from' | 'to';
@@ -58,6 +57,12 @@ let drag: boolean = false;
 let down_site: XY = { x: 0, y: 0 };
 let asyncEditor: AsyncPathHandle | undefined = undefined;
 let down_index: number = -1;
+
+let is_bridging_action: boolean = false;
+
+let _move: any;
+let _up: any;
+
 function reset() {
     previous.value = false;
     previous_from.value = false;
@@ -156,9 +161,11 @@ function update() {
     }
 }
 
-function down(e: MouseEvent, side: ActionHandle) {
-    e.stopPropagation();
-    e.preventDefault();
+function modify_f_pointer(move: any, up: any) {
+    _move = move;
+    _up = up;
+}
+function modify_action_curve_point(side: ActionHandle) {
     if (side.startsWith('pre')) {
         action_curve_point = previous_curve_point.value!;
         down_index = previous_index.value;
@@ -169,10 +176,19 @@ function down(e: MouseEvent, side: ActionHandle) {
         action_curve_point = next_curve_point.value!;
         down_index = next_index.value;
     }
+}
+function down(e: MouseEvent, side: ActionHandle) {
+    e.stopPropagation();
+    e.preventDefault();
+    modify_action_curve_point(side);
     modify_side(side);
     modify_down_site(e);
-    inverse_matrix_at_down = new Matrix(props.context.path.matrix_unit_to_root.inverse);
+    modify_inverse_matrix_at_down();
     add_move_and_up_for_document(move, up);
+    modify_f_pointer(move, up);
+}
+function modify_inverse_matrix_at_down() {
+    inverse_matrix_at_down = new Matrix(props.context.path.matrix_unit_to_root.inverse);
 }
 function modify_side(s: ActionHandle) {
     if (s.endsWith('from')) {
@@ -196,27 +212,104 @@ function move(e: MouseEvent) {
         const to = current_is_from ? anther : current_handle_point;
         asyncEditor.execute(side, from, to);
     } else if (check_drag_action(down_site, { x: e.clientX, y: e.clientY })) {
-        const page = props.context.selection.selectedPage!;
-        const path_shape = props.context.selection.pathshape;
-        if (!path_shape) {
-            return;
-        }
-        asyncEditor = props.context.editor.controller().asyncPathHandle(path_shape, page, down_index);
+        init_editor(down_index);
         drag = true;
     }
 }
-function up() {
+function pre_bridging() {
+    const path_shape = props.context.selection.pathshape;
+    if (!path_shape) {
+        return;
+    }
+    const { event } = props.context.path.bridging_events || {};
+    if (!event) {
+        bridging_completed();
+        return;
+    }
+    event.stopPropagation();
+    event.preventDefault();
+    is_bridging_action = true;
+    modify_down_site(event);
+    modify_action_curve_point('current-from');
+    modify_inverse_matrix_at_down();
+    add_move_and_up_for_document(move2, up);
+    modify_f_pointer(move2, up);
+    init_editor(current_index.value);
+    __pre();
+    update();
+    modify_side2(event);
+}
+function init_editor(index: number) {
+    const path_shape = props.context.selection.pathshape;
+    if (!path_shape) {
+        console.log('!path_shape');
+        return;
+    }
+
+    const page = props.context.selection.selectedPage!;
+
+    asyncEditor = props.context.editor
+        .controller()
+        .asyncPathHandle(path_shape, page, index);
+}
+function __pre() {
+    if (!asyncEditor) {
+        console.log('!asyncEditor');
+        return;
+    }
+    asyncEditor.pre(current_index.value);
+}
+function __distance(e: MouseEvent, p: XY) {
+    const root = props.context.workspace.root;
+    return Math.hypot(e.clientX - root.x - p.x, e.clientY - root.y - p.y);
+}
+function modify_side2(e: MouseEvent) {
+    const distance_to_from = __distance(e, apex_location_from);
+    const distance_to_to = __distance(e, apex_location_to);
+    side = distance_to_from > distance_to_to ? 'to' : 'from';
+}
+function move2(e: MouseEvent) {
+    if (!asyncEditor) {
+        console.log('move2: !asyncEditor');
+        return;
+    }
+    const root = props.context.workspace.root;
+    const xy = { x: e.clientX - root.x, y: e.clientY - root.y };
+    const current_handle_point = inverse_matrix_at_down.computeCoord3(xy);
+    const anther = __anther_side_xy(action_curve_point, current_handle_point, side);
+    const current_is_from = side === 'from';
+    const from = current_is_from ? current_handle_point : anther;
+    const to = current_is_from ? anther : current_handle_point;
+    asyncEditor.execute(side, from, to);
+}
+function bridging_completed() {
+    props.context.path.bridging_completed();
+    is_bridging_action = false;
+}
+function clear_state() {
     drag = false;
     if (asyncEditor) {
         asyncEditor.close();
         asyncEditor = undefined;
     }
-    remove_move_and_up_from_document(move, up);
+    if (is_bridging_action) {
+        bridging_completed();
+    }
+    remove_move_and_up_from_document(_move, _up);
 }
-
+function up() {
+    clear_state();
+}
 function path_selection_watcher(t: number) {
-    if (t === Path.SELECTION_CHANGE) {
-        update();
+    switch (t) {
+        case Path.SELECTION_CHANGE:
+            update();
+            break;
+        case Path.BRIDGING:
+            pre_bridging();
+            break;
+        default:
+            break;
     }
 }
 
@@ -231,12 +324,7 @@ function matrix_watcher(t: number) {
 }
 
 function window_blur() {
-    drag = false;
-    if (asyncEditor) {
-        asyncEditor.abort();
-        asyncEditor = undefined;
-    }
-    remove_move_and_up_from_document(move, up);
+    clear_state();
 }
 
 onMounted(() => {

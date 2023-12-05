@@ -11,6 +11,7 @@ import { Segment, get_segments, modify_point_curve_mode } from "@/utils/pathedit
 import { WorkSpace } from "@/context/workspace";
 import Handle from "../PathEdit/Handle.vue"
 import { ActionEndGenerator } from '@/utils/assist';
+import { Action } from '@/context/tool';
 
 interface Props {
     context: Context
@@ -30,6 +31,7 @@ const current_curve_point_index = ref<number>(-1);
 const current_segment_index = ref<number>(-1);
 const dragActiveDis = 3;
 const new_high_light = ref<number>(-1);
+const add_rect = ref<number>(-1);
 let shape: Shape;
 let startPosition: ClientXY = { x: 0, y: 0 };
 let startPosition2: PageXY = { x: 0, y: 0 };
@@ -39,7 +41,7 @@ let cur_new_node: Segment;
 let move: any;
 let offset_map: XY[] | undefined = [];
 let actionEndGenerator: ActionEndGenerator | undefined = undefined;
-
+let bridged = false;
 function update() {
     if (!props.context.workspace.shouldSelectionViewUpdate) {
         return;
@@ -109,6 +111,9 @@ function modify_start_position(event: MouseEvent) {
     startPosition2 = workspace.matrix.inverseCoord(startPosition);
 }
 function point_mousemove(event: MouseEvent) {
+    if (bridged) {
+        return;
+    }
     const workspace = props.context.workspace;
     const root = workspace.root;
     const mouseOnClient: ClientXY = { x: event.clientX - root.x, y: event.clientY - root.y };
@@ -116,24 +121,43 @@ function point_mousemove(event: MouseEvent) {
         __exe(pathEditor, sub_matrix.computeCoord3(mouseOnClient));
         startPosition.x = mouseOnClient.x
         startPosition.y = mouseOnClient.y;
-    } else {
-        const { x: sx, y: sy } = startPosition;
-        const { x: mx, y: my } = mouseOnClient;
-        if (Math.hypot(mx - sx, my - sy) > dragActiveDis) {
-            pathEditor = props.context.editor
-                .controller()
-                .asyncPathEditor(shape as PathShape, props.context.selection.selectedPage!);
-
-            isDragging = true;
-            sub_matrix.reset(workspace.matrix.inverse);
-            props.context.assist.set_points_map();
-            const max = props.context.path.get_synthetic_points((shape as PathShape).points.length - 1);
-            offset_map = gen_offset_points_map2(props.context, startPosition2, max);
-            if (offset_map) {
-                actionEndGenerator = new ActionEndGenerator(props.context, offset_map);
-            }
-        }
+        return;
     }
+    const { x: sx, y: sy } = startPosition;
+    const { x: mx, y: my } = mouseOnClient;
+    if (Math.hypot(mx - sx, my - sy) < dragActiveDis) {
+        return;
+    }
+    if (is_curve_tool()) {
+        if (props.context.path.selectedSides.length) {
+            return;
+        }
+        bridged = true;
+        launch_bridging(event);
+        return;
+    }
+
+    pathEditor = props.context.editor
+        .controller()
+        .asyncPathEditor(shape as PathShape, props.context.selection.selectedPage!);
+
+    isDragging = true;
+    sub_matrix.reset(workspace.matrix.inverse);
+    props.context.assist.set_points_map();
+    const max = props.context.path.get_synthetic_points((shape as PathShape).points.length - 1);
+    offset_map = gen_offset_points_map2(props.context, startPosition2, max);
+    if (!offset_map) {
+        return;
+    }
+    actionEndGenerator = new ActionEndGenerator(props.context, offset_map);
+}
+
+function launch_bridging(event: MouseEvent) {
+    props.context.path.bridging({ index: -1, event });
+}
+
+function bridging_completed() {
+    bridged = false;
 }
 
 function __exe(pathEditor: AsyncPathEditor, _point: PageXY) {
@@ -257,19 +281,24 @@ function point_mouseup(event: MouseEvent) {
     workspace.rotating(false);
     workspace.setCtrl('page');
 }
-
-
 function enter(event: MouseEvent, index: number) {
-    if (props.context.path.no_hover) {
+    clear_high_light();
+    const path = props.context.path;
+    if (path.no_hover) {
         return;
     }
     new_high_light.value = index;
+    if (path.no_add) {
+        return;
+    }
+    add_rect.value = index;
 }
 function leave(event: MouseEvent) {
     clear_high_light();
 }
 function clear_high_light() {
     new_high_light.value = -1;
+    add_rect.value = -1;
 }
 // listener
 function window_blur() {
@@ -296,10 +325,18 @@ function init_matrix() {
 }
 
 function path_watcher(type: number) {
-    if (type === Path.SELECTION_CHANGE) {
-        update();
-    } else if (type === Path.CLEAR_HIGH_LIGHT) {
-        clear_high_light();
+    switch (type) {
+        case Path.SELECTION_CHANGE:
+            update();
+            break;
+        case Path.CLEAR_HIGH_LIGHT:
+            clear_high_light();
+            break;
+        case Path.BRIDGING_COMPLETED:
+            bridging_completed();
+            break;
+        default:
+            break;
     }
 }
 
@@ -307,6 +344,10 @@ function matrix_watcher(t: number) {
     if (t === WorkSpace.MATRIX_TRANSFORMATION) {
         update();
     }
+}
+
+function is_curve_tool() {
+    return props.context.tool.action === Action.Curve;
 }
 
 onMounted(() => {
@@ -336,7 +377,7 @@ onUnmounted(() => {
                 :d="p.path">
             </path>
         </g>
-        <rect v-if="new_high_light === i" :class="{ 'insert-point': true, 'insert-point-selected': new_high_light === i }"
+        <rect v-if="add_rect === i" :class="{ 'insert-point': true, 'insert-point-selected': add_rect === i }"
             :x="p.add.x - 4" :y="p.add.y - 4" rx="4" ry="4" @mousedown="(e) => n_point_down(e, i)">
         </rect>
     </g>
