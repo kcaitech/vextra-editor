@@ -197,11 +197,13 @@ const inputvalues = reactive([
     { value: "" },
 ])
 
+let timer: any
 const keydownevent = (index: number) => {
     if (0 < index) {
-        setTimeout(() => {
+        timer = setTimeout(() => {
             (inputfocus.value[index - 1] as HTMLInputElement).focus()
-        }, 200);
+            clearTimeout(timer)
+        }, 0);
         if (codeerror.value) {
             codeerror.value = false
         }
@@ -218,23 +220,6 @@ const inputevent = (e: Event, index: number) => {
     if (index < inputs.length - 1 && (e.target! as HTMLInputElement).value !== "") {
         (inputs[index + 1] as HTMLInputElement).focus()
     }
-    if (e instanceof InputEvent && e.inputType === 'insertFromPaste') {
-        setTimeout(async () => {
-            try {
-                let pasteContent = await navigator.clipboard.readText();
-                if (pasteContent.length > 8) {
-                    pasteContent = pasteContent.slice(0, 8)
-                }
-                for (let i = 0; i < pasteContent.length; i++) {
-                    inputfocus.value[i].value = pasteContent[i]
-                    inputfocus.value[i].dispatchEvent(new Event('input'))
-                }
-                inputfocus.value[pasteContent.length - 1].focus()
-            } catch (error) {
-                console.error('Unable to read clipboard data:', error);
-            }
-        }, 0);
-    }
 }
 
 const allValuesFilled = computed(() => {
@@ -242,8 +227,8 @@ const allValuesFilled = computed(() => {
 })
 
 const codevalue = computed(() => {
-    return inputvalues.reduce((accumulator, item) => accumulator + item.value, "");
-});
+    return inputvalues.reduce((accumulator, item) => accumulator + item.value, "")
+})
 
 const handleCompositionStart = () => {
     isComposing.value = true
@@ -251,10 +236,24 @@ const handleCompositionStart = () => {
 
 const handleCompositionEnd = (e: any, index: number) => {
     isComposing.value = false
-    inputfocus.value[index].value = ""
     inputvalues[index].value = ""
     inputfocus.value[index].focus()
-    console.log(inputvalues);
+}
+
+const pasteEvent = async (e: any) => {
+    e.preventDefault();
+    try {
+        let pasteContent = e.clipboardData.getData('text/plain') || await navigator.clipboard.readText();
+        if (pasteContent && pasteContent.length > 8) {
+            pasteContent = pasteContent.slice(0, 8)
+        }
+        for (let i = 0; i < pasteContent.length; i++) {
+            inputvalues[i].value = pasteContent[i]
+        }
+        inputfocus.value[pasteContent.length - 1].focus()
+    } catch (error) {
+        console.error('Unable to read clipboard data:', error);
+    }
 
 }
 
@@ -284,7 +283,8 @@ const handleCompositionEnd = (e: any, index: number) => {
                         <input class="inputitem" type="text" ref="inputfocus" v-for="(input, index) in inputvalues"
                             :key="index" v-model="input.value" maxlength="1" :autofocus="index === 0"
                             @input="inputevent($event, index)" @compositionstart="handleCompositionStart"
-                            @compositionend="handleCompositionEnd($event, index)" @keydown.delete="keydownevent(index)" />
+                            @compositionend="handleCompositionEnd($event, index)" @keydown.delete="keydownevent(index)"
+                            @paste="pasteEvent($event)" />
                     </div>
                     <Transition name="slide-up">
                         <span v-if="codeerror" class="code_error_tips">验证码已被使用或不存在，请更换验证码</span>
