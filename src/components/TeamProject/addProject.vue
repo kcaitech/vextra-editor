@@ -10,19 +10,26 @@
         </div>
         <div class="centent">
             <div class="project-name">
-                <div class="title">{{ t('Createteam.project_name') }}<span>{{ t('Createteam.required') }}</span></div>
-                <input ref="projectinput" type="text" :placeholder="t('Createteam.project_name_tips')" v-model="inputValue"
-                    maxlength="20" required>
+                <div class="title">
+                    {{ t('Createteam.project_name') }}
+                    <span>{{ t('Createteam.required') }}</span>
+                </div>
+                <input :style="{ backgroundColor: inputValue !== '' ? 'rgba(245, 245, 245, 1)' : '' }" ref="projectinput"
+                    type="text" :placeholder="t('Createteam.project_name_tips')" v-model="inputValue" maxlength="20"
+                    required>
             </div>
             <div class="project-description">
-                <div class="title">{{ t('Createteam.project_description') }}<span>{{ t('Createteam.optional') }}</span>
+                <div class="title">
+                    {{ t('Createteam.project_description') }}
+                    <span>{{ t('Createteam.optional') }}</span>
                 </div>
-                <textarea name="" id="" cols="30" rows="10" :placeholder="t('Createteam.project_description_tips')"
-                    v-model="textareaValue" maxlength="120" />
+                <textarea :style="{ backgroundColor: textareaValue !== '' ? 'rgba(245, 245, 245, 1)' : '' }" name="" id=""
+                    cols="30" rows="10" :placeholder="t('Createteam.project_description_tips')" v-model="textareaValue"
+                    maxlength="120"></textarea>
             </div>
         </div>
         <div class="addproject">
-            <button type="submit" :disabled=isDisabled @click.stop.once="createProject">{{t('projectlist.confirm1')}}</button>
+            <button type="button" :disabled=isDisabled @click.stop="createProject">{{ t('projectlist.confirm1') }}</button>
         </div>
     </div>
 </template>
@@ -81,46 +88,38 @@ const close = () => {
 <style lang="scss" scoped>
 .card-container {
     position: absolute;
-    background-color: white;
-    width: 420px;
-    border-radius: 5px;
-    top: 50%;
+    width: 400px;
+    top: 25%;
     left: 50%;
-    transform: translate(-50%, -50%);
-    padding: 12px;
-    font-size: 14px;
-    z-index: 1000;
-    box-shadow: 0px 2px 5px 0px rgba(0, 0, 0, 0.3);
+    transform: translate(-50%, -25%);
+    padding: 0 24px;
+    background-color: rgba(255, 255, 255, 1);
+    border-radius: 16px;
+    border: 1px solid #F0F0F0;
     box-sizing: border-box;
+    z-index: 1000;
 
     .heard {
         display: flex;
         align-items: center;
         justify-content: space-between;
+        height: 64px;
 
         .title {
-            font-size: 18px;
+            font-size: 16px;
             font-weight: 600;
-            color: #3D3D3D
+            color: rgba(61, 61, 61, 1);
         }
 
         .close {
-            width: 18px;
-            height: 18px;
+            width: 16px;
+            height: 16px;
             padding: 4px;
+            border-radius: 6px;
 
             &:hover {
-                background-color: #f3f0ff;
-                border-radius: 3px;
+                background-color: rgb(243, 243, 245);
                 cursor: pointer;
-
-                >svg {
-                    fill: #9775fa;
-                }
-            }
-
-            &:active>svg {
-                transform: scale(0.9);
             }
 
             svg {
@@ -131,87 +130,92 @@ const close = () => {
     }
 
     .centent {
-        margin-top: 16px;
 
         .project-name,
         .project-description {
-            margin-top: 12px;
-            color: #3D3D3D;
+            display: flex;
+            flex-direction: column;
+            gap: 8px;
+            margin: 12px 0;
 
             .title {
-                font-size: 14px;
-                font-weight: 600;
-                margin-bottom: 8px;
-
-                span {
-                    font-weight: 500;
-                }
+                font-size: 13px;
+                font-weight: 500;
             }
 
             input {
-                padding: 2px 8px;
+                padding: 7px 12px;
                 width: 100%;
-                height: 32px;
+                height: 36px;
                 border: none;
                 outline-style: none;
-                background-color: rgba(0, 0, 0, 0.08);
-                border-radius: 4px;
+                border-radius: 6px;
+                font-size: 13px;
+                border: 1px solid rgba(245, 245, 245, 1);
+                background-color: rgba(245, 245, 245, 1);
                 box-sizing: border-box;
 
+                &:hover {
+                    background-color: rgba(235, 235, 235, 1);
+                }
+
                 &:focus {
-                    border: 2px solid #9775fa;
-                    padding: 0px 6px;
+                    border: 1px solid #1878F5;
                 }
             }
 
             textarea {
-                padding: 8px;
+                padding: 7px 12px;
                 width: 100%;
-                height: 120px;
+                height: 80px;
                 border: none;
                 outline-style: none;
+                border-radius: 6px;
                 resize: none;
+                font-size: 13px;
                 font-family: none;
-                background-color: rgba(0, 0, 0, 0.08);
-                border-radius: 4px;
+                border: 1px solid rgba(245, 245, 245, 1);
+                background-color: rgba(245, 245, 245, 1);
                 box-sizing: border-box;
 
+                &:hover {
+                    background-color: rgba(235, 235, 235, 1);
+                }
+
                 &:focus {
-                    border: 2px solid #9775fa;
-                    padding: 6px;
+                    border: 1px solid #1878F5;
                 }
             }
         }
     }
 
     .addproject {
-        text-align: center;
-        margin-top: 12px;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        height: 64px;
 
         button {
             cursor: pointer;
             color: white;
             font-size: 14px;
-            letter-spacing: 1px;
-            width: 80px;
-            height: 32px;
+            font-weight: 500;
+            width: 214px;
+            height: 40px;
             border: none;
-            background-color: #9775fa;
-            box-shadow: 1px 1px 3px #b1b1b1, -1px -1px 3px #b1b1b1;
-            border-radius: 4px;
-            // box-shadow: 1px 1px 3px rgb(0, 0, 0);
+            border-radius: 6px;
+            background-color: rgba(24, 120, 245, 1);
 
             &:hover {
-                background-color: rgba(150, 117, 250, 0.862745098);
+                background-color: rgba(66, 154, 255, 1);
             }
 
             &:active {
-                background-color: #9775fa;
+                background-color: rgba(10, 89, 207, 1);
             }
 
             &:disabled {
-                background-color: rgba(98, 67, 237, 0.3);
-                box-shadow: none;
+                background-color: rgba(189, 226, 255, 1);
             }
         }
     }

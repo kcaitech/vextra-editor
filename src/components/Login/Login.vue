@@ -2,10 +2,10 @@
 import Describes from './Describes.vue'
 import Footer from './Footer.vue'
 import * as user_api from '@/request/users'
-import { computed, nextTick, onMounted, onUnmounted, reactive, ref, watch, watchEffect } from 'vue'
+import { computed, nextTick, onMounted, onUnmounted, reactive, ref, watchEffect } from 'vue'
 import { router } from '@/router'
 import { useI18n } from 'vue-i18n';
-import { ElMessage, inputEmits } from 'element-plus'
+import { ElMessage } from 'element-plus'
 import { User } from '@/context/user'
 
 const { t } = useI18n()
