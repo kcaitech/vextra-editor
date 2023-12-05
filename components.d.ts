@@ -271,6 +271,7 @@ declare module '@vue/runtime-core' {
     SubLoading: typeof import('./src/components/common/SubLoading.vue')['default']
     SubMenu: typeof import('./src/components/Document/Toolbar/DocumentMenu/SubMenu.vue')['default']
     SvgIcon: typeof import('./src/components/common/SvgIcon.vue')['default']
+    Switch: typeof import('./src/components/common/Switch.vue')['default']
     SymbolRef: typeof import('./src/components/Document/Content/SymbolRef.vue')['default']
     SymbolRefStatic: typeof import('./src/components/Document/ContentStatic/SymbolRefStatic.vue')['default']
     Table: typeof import('./src/components/Document/Toolbar/Buttons/Table/index.vue')['default']

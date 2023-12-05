@@ -8,6 +8,8 @@ import { ElMessage } from 'element-plus';
 import { useRoute } from 'vue-router';
 import { DocInfo } from "@/context/user"
 import CloseIcon from '@/components/common/CloseIcon.vue';
+import Switch from '@/components/common/Switch.vue';
+import Select, { SelectSource, SelectItem } from '@/components/common/Select.vue';
 const { t } = useI18n()
 const props = defineProps<{
   pageHeight: number,
@@ -356,22 +358,24 @@ onUnmounted(() => {
       <div class="contain">
         <!-- 开关 -->
         <div class="share-switch">
-          <span class="type">{{ t('share.share_switch') }}:</span>
-          <el-switch class="switch" size="small" v-model="value1" />
+          <span class="type">{{ t('share.share_switch') }}：</span>
+          <Switch :bgcolor="'rgba(24, 120, 245, 1)'" :toggleoff="value1"></Switch>
+          <input class="my_switch" type="checkbox" v-model="value1">
+          <!-- <el-switch class="switch" size="small" v-model="value1" /> -->
         </div>
         <!-- 文件名 -->
         <div class="file-name">
-          <span class="type">{{ t('share.file_name') }}:</span>
+          <span class="type">{{ t('share.file_name') }}：</span>
           <p class="name">{{ docInfo!.document.name }}</p>
         </div>
         <!-- 权限设置 -->
         <div class="purview">
           <span class="type">{{ t('share.permission_setting') }}:</span>
-          <el-select v-model="selectValue" style="width: 180px;" class="m-2" size="large" @visible-change="showselect">
+          <el-select v-model="selectValue" style="width: 122px;" class="m-2" size="large" @visible-change="showselect">
             <el-option style="font-size: 10px;" class="option" v-for="item in options" :key="item.value"
               :label="item.label" :value="item.label" />
           </el-select>
-          <el-button class="copybnt" color="#9775fa" @click="copyLink">{{ t('share.copy_link') }}</el-button>
+          <button class="copybnt" type="button" @click.stop="copyLink">{{ t('share.copy_link') }}</button>
         </div>
         <!-- 分享人 -->
         <div>
@@ -445,10 +449,6 @@ onUnmounted(() => {
 </template>
   
 <style scoped lang="scss">
-:deep(.copybnt) {
-  box-shadow: 1px 1px 3px #b1b1b1, -1px -1px 3px #b1b1b1;
-}
-
 .project {
   opacity: .5;
   display: flex;
@@ -465,7 +465,7 @@ onUnmounted(() => {
 
   .title {
     font-size: 16px;
-    font-weight: 500;
+    font-weight: 600;
   }
 
   .close {
@@ -507,42 +507,52 @@ onUnmounted(() => {
   .share-switch {
     display: flex;
     align-items: center;
-    margin: var(--default-margin-half) 0;
+    height: 38px;
+    gap: 6px;
 
     .type {
-      font-weight: var(--font-default-bold);
+      font-size: 13px;
+      font-weight: 500;
     }
 
-    .switch {
-      --el-switch-on-color: var(--active-color);
-      margin-left: 10px;
-
+    .my_switch {
+      position: relative;
+      width: 36px;
+      height: 20px;
+      margin: 0;
+      left: -42px;
+      opacity: 0;
     }
+
   }
 
   .file-name {
-    margin: var(--default-margin-half) 0;
     display: flex;
     align-items: center;
+    height: 38px;
+    gap: 19px;
 
     .type {
-      font-weight: var(--font-default-bold);
-      letter-spacing: 4px;
+      font-size: 13px;
+      font-weight: 500;
     }
 
     .name {
-      margin-left: 10px;
+      font-size: 13px;
+      font-weight: 600;
     }
   }
 
 
   .purview {
-    font-weight: var(--font-default-bold);
     display: flex;
     align-items: center;
+    height: 40px;
+    gap: 6px;
 
     .type {
-      font-weight: var(--font-default-bold);
+      font-size: 13px;
+      font-weight: 500;
     }
 
     .m-2 {
@@ -674,18 +684,14 @@ onUnmounted(() => {
   width: 400px;
   top: 25%;
   left: 50%;
-  
   background-color: transparent;
-  
   transform: translate(-50%, -25%);
-  
   box-sizing: border-box;
   z-index: 1000;
 
-
   .box-card {
     border-radius: 16px;
-  border: 1px solid #F0F0F0;
+    border: 1px solid #F0F0F0;
     background-color: rgba(255, 255, 255, 1);
     border: none;
     box-shadow: none;
