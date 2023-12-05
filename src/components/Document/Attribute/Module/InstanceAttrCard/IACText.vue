@@ -1,8 +1,8 @@
 <script setup lang="ts">
 import {get_vari_value_for_ref, modify_vari_value_for_ref, RefAttriListItem} from "@/utils/symbol";
-import {ref, onMounted, onUpdated, watch} from "vue";
+import {ref, onMounted, watch} from "vue";
 import {Context} from "@/context";
-import {OverrideType} from "../../../../../../../kcdesign-data/src";
+import {OverrideType} from "@kcdesign/data";
 
 interface Props {
     context: Context

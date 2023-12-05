@@ -131,7 +131,7 @@ onUnmounted(() => {
 .tab-container {
     position: relative;
     width: 100%;
-    box-shadow: -4px 0px 4px rgba($color: #000000, $alpha: 0.05);
+    border: 1px solid #F5F5F5;
 
     .controller {
         display: flex;
@@ -142,7 +142,7 @@ onUnmounted(() => {
             cursor: pointer;
             padding: 13px 14px 13px 14px;
             font-size: 12px;
-            font-weight: 500;
+            font-weight: 400;
             font-feature-settings: "kern" on;
             color: #000000;
         }
@@ -154,16 +154,17 @@ onUnmounted(() => {
         >.active {
             border-radius: 4px 4px 0 0;
             color: var(--theme-color);
+            font-weight: 500;
         }
 
         .underline {
-            border: 2px #000000 solid;
+            background-color: #000000;
             border-radius: 292px;
             position: absolute;
             bottom: 0;
             transition: left 0.3s ease-in-out;
             box-sizing: border-box;
-            height: 1px;
+            height: 2px;
             z-index: 1;
         }
     }

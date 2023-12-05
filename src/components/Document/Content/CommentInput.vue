@@ -223,17 +223,18 @@ onUnmounted(() => {
 
     .icon_left {
         position: absolute;
-        top: 8px;
+        top: 3px;
         left: -48px;
-        width: 35px;
-        height: 35px;
+        width: 32px;
+        height: 32px;
         border-radius: 16px 16px 16px 0;
-        border-bottom-left-radius: 0;
         background-color: #1878F5;
-        box-shadow: 0px 5px 10px rgba(0, 0, 0, 0.15);
+        box-shadow: 0px 3px 5px 0px rgba(0, 0, 0, 0.05);
         display: flex;
         justify-content: center;
         align-items: center;
+        padding: 4px;
+        box-sizing: border-box;
 
         >svg {
             color: #FFFFFF;
@@ -244,17 +245,18 @@ onUnmounted(() => {
 
     .icon_right {
         position: absolute;
-        top: 8px;
+        top: 3px;
         right: -48px;
-        width: 35px;
-        height: 35px;
+        width: 32px;
+        height: 32px;
         border-radius: 16px 16px 16px 0;
-        border-bottom-left-radius: 0;
         background-color: #1878F5;
-        box-shadow: 0px 5px 10px rgba(0, 0, 0, 0.15);
+        box-shadow: 0px 3px 5px 0px rgba(0, 0, 0, 0.05);
         display: flex;
         justify-content: center;
         align-items: center;
+        padding: 4px;
+        box-sizing: border-box;
 
         >svg {
             color: #FFFFFF;
@@ -266,10 +268,22 @@ onUnmounted(() => {
     .textarea {
         display: flex;
         align-items: self-end;
-        padding: 10px;
-        background-color: #fff;
-        box-shadow: 0px 5px 10px rgba(0, 0, 0, 0.15);
-        border-radius: 4px;
+        padding: 10px 8px;
+        background-color: #FFFFFF;
+        box-shadow: 0px 2px 6px 0px rgba(0, 0, 0, 0.05);
+        border-radius: var(--default-radius);
+        box-sizing: border-box;
+        border: 1px solid #EBEBEB;
+
+        .el-input--small {
+            display: flex;
+            font-size: 13px;
+            line-height: 22px;
+            align-items: center;
+            justify-content: center;
+            color: #CCCCCC;
+            font-family: HarmonyOS Sans;
+        }
 
         .send {
             color: #fff;

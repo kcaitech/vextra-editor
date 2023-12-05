@@ -107,7 +107,7 @@ onUnmounted(() => {
 </script>
 <template>
     <div class="wrap">
-        <div style="width: 224px;height: 30px;padding: 8px 0 8px 0">
+        <div style="width: 224px;height: 30px;margin-bottom: 6px">
         <span>{{ t('attr.background') }}</span></div>
         <div class="setting">
             <ColorPicker class="color" :color="(background_color as Color)" :context="props.context" :late="-24"
@@ -140,7 +140,7 @@ onUnmounted(() => {
         width: 224px;
         height: 32px;
         border-radius: 4px;
-        padding: 9px 0px;
+        padding: 8px 60px 8px 8px;
         box-sizing: border-box;
         display: flex;
         align-items: center;

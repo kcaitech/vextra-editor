@@ -268,9 +268,12 @@ onUnmounted(() => {
             </template>
         </TypeHeader>
         <div class="opacity-container">
-            <input type="range" class="input-range" :value="range()" @mousedown="e => down(e)" @input="input"
-                   @change="change2"
-                   @keydown="range_keyboard"/>
+            <div class="slider">
+                <input type="range" class="input-range" :value="range()" @mousedown="e => down(e)" @input="input"
+                       @change="change2"
+                       @keydown="range_keyboard"/>
+                <div class="track"></div>
+            </div>
             <input type="text" class="input-text" :value="typeof opacity === 'string' ? ipt() : `${ipt()}%`"
                    @click="focus" @change="change"/>
         </div>
@@ -281,8 +284,9 @@ onUnmounted(() => {
     width: 100%;
     display: flex;
     flex-direction: column;
-    padding: 10px 10px 12px 10px;
+    padding: 20px 8px 12px 8px;
     box-sizing: border-box;
+    border-top: 1px solid #F0F0F0;
 
     .icon {
         width: 10px;
@@ -365,21 +369,22 @@ onUnmounted(() => {
         display: flex;
         align-items: center;
         justify-content: center;
+        margin-top: -14px;
+        margin-bottom: 3px;
 
         input[type="text"] {
-            width: 50px;
-            height: 23px;
+            width: 54px;
+            height: 32px;
             text-align: center;
             margin-left: -33px;
             margin-top: 10px;
             border: none;
-            background-color: #D8D8D866;
+            background-color: #F4F5F5;
+            border-radius: var(--default-radius);
         }
 
-        input[type="range"] {
-            width: 150px;
-            margin-right: 42px;
-            margin-top: 10px;
+        input[type="range"]:focus {
+            outline: none;
         }
 
         .input-text {
@@ -387,25 +392,45 @@ onUnmounted(() => {
             outline: none;
         }
 
-        .input-range {
+        input[type="range"] {
             -webkit-appearance: none;
-            background: -webkit-linear-gradient(#D8D8D8, #D8D8D8) no-repeat, #ddd;
-            background-size: 75% 100%;
-            height: 4px;
+            appearance: none;
+            outline: 0;
+            background-color: transparent;
+            width: 150px;
+            margin-right: 40px;
         }
 
-        .input-range::-webkit-slider-thumb {
-            -webkit-appearance: none;
-            height: 14px;
-            width: 14px;
-            background: #000000d1;
-            border-radius: 100%;
-            border: solid 1px #ddd;
+        /* 火狐 外背景色 */
+        input[type=range]::-moz-range-progress {
+            background: #1878F5;
+            height: 3px;
         }
 
-        .input-range:disabled {
-            opacity: 0.5;
-            background-color: #e0e0e0;
+        /* 定义range控件容器的样式 */
+        input[type="range" i]::-webkit-slider-container {
+            height: 20px;
+            overflow: hidden;
+        }
+
+        input[type="range"]::-webkit-slider-thumb {
+            -webkit-appearance: none;
+            appearance: none;
+            width: 12px;
+            height: 12px;
+            border-radius: 8px;
+            background-color: #FFFFFF !important;
+            border: 1px solid transparent;
+            box-shadow: 0px 2px 6px 0px rgba(0, 0, 0, 0.12);
+            border-image: linear-gradient(#1878F5, #1878F5) 0 fill / 8 20 8 0 / 0px 0px 0 2000px;
+        }
+
+        .track {
+            height: 2px;
+            background: #D9D9D9;
+            width: 150px;
+            margin-top: -7%;
+            margin-left: 1%;
         }
     }
 

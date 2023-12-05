@@ -234,9 +234,9 @@ onUnmounted(() => {
     border-radius: var(--default-radius);
 
     >svg {
-        color: rgba(185, 185, 185, 1);
-        width: 70%;
-        height: 70%;
+        opacity: 0.5;
+        width: 28px;
+        height: 28px;
     }
 }
 </style>

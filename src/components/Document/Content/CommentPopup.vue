@@ -552,9 +552,10 @@ onUnmounted(() => {
         justify-content: space-between;
         align-items: center;
         height: 40px;
-        padding: 12px;
+        padding: 8px 14px;
         box-sizing: border-box;
-        border-bottom: 1px solid rgba(0, 0, 0, 0.15);
+        border-bottom: 1px solid #F0F0F0;
+        border-radius: 12px 12px 0px 0px;
 
         .button-shift {
             position: relative;
@@ -571,9 +572,9 @@ onUnmounted(() => {
             .button-icon {
                 width: 0;
                 height: 23px;
-                border-left: 1px solid rgba(0, 0, 0, 0.15);
+                border-left: 1px solid #F0F0F0;
                 position: absolute;
-                left: 34px;
+                left: 35px;
             }
 
             .el-button:hover {
@@ -668,7 +669,7 @@ onUnmounted(() => {
                 >svg {
                     width: 14px;
                     height: 14px;
-                    color: #169248;
+                    color: #555555;
                 }
             }
 
@@ -717,24 +718,36 @@ onUnmounted(() => {
     }
 
     .popup-footer {
+        padding: 0 14px;
+
         .textarea {
             display: flex;
-            align-items: self-end;
-            padding: 12px;
+            //align-items: self-end;
             background-color: #fff;
-            box-shadow: 0px 5px 10px rgba(0, 0, 0, 0.15);
-            border-radius: 4px;
+            //box-shadow: 0px 5px 10px rgba(0, 0, 0, 0.15);
+            border-radius: 12px;
+            box-sizing: border-box;
+            align-items: center;
+            padding: 13px 0;
+
+            .el-input--small {
+                font-family: HarmonyOS Sans;
+                font-size: 13px;
+                line-height: 22px;
+                color: #333333;
+            }
 
             .send {
                 color: #fff;
                 display: flex;
                 justify-content: center;
                 align-items: center;
-                width: 23px;
-                height: 22px;
+                width: 24px;
+                height: 24px;
                 background-color: #1878F5;
                 border-radius: 4px;
-                margin-right: 2px;
+                margin-right: 4px;
+                flex: 0 0 24px;
 
                 >svg {
                     width: 13px;

@@ -1,20 +1,20 @@
 <script setup lang="ts">
-import { ref, onMounted, onUnmounted } from "vue";
-import { Context } from "@/context";
+import {ref, onMounted, onUnmounted} from "vue";
+import {Context} from "@/context";
 import CommentItem from "./CommentItem.vue";
 import CommentMenu from "./CommentMenu.vue";
-import { useI18n } from 'vue-i18n';
+import {useI18n} from 'vue-i18n';
 import * as comment_api from '@/request/comment';
-import { useRoute } from 'vue-router';
-import { Action } from "@/context/tool";
-import { ElScrollbar } from 'element-plus'
-import { Selection } from "@/context/selection";
+import {useRoute} from 'vue-router';
+import {Action} from "@/context/tool";
+import {ElScrollbar} from 'element-plus'
+import {Selection} from "@/context/selection";
 import ShowHiddenLeft from "../ShowHiddenLeft.vue";
-import { watchEffect } from "vue";
-import { Comment } from "@/context/comment";
-import { DocCommentOpData, DocCommentOpType } from "@/communication/modules/doc_comment_op"
+import {watchEffect} from "vue";
+import {Comment} from "@/context/comment";
+import {DocCommentOpData, DocCommentOpType} from "@/communication/modules/doc_comment_op"
 
-const { t } = useI18n();
+const {t} = useI18n();
 const props = defineProps<{ context: Context, leftTriggleVisible: boolean, showLeft: boolean }>();
 type commentListMenu = {
     text: string
@@ -26,9 +26,9 @@ const emit = defineEmits<{ (e: 'showNavigation'): void }>()
 
 const commentMenu = ref<boolean>(false)
 const commentMenuItems = ref<commentListMenu[]>([
-    { text: `${t('comment.sort')}`, status_p: props.context.selection.commentPageSort},
-    { text: `${t('comment.show_about_me')}`, status_p: props.context.selection.commentAboutMe},
-    { text: `${t('comment.show_resolved_comments')}`, status_p: props.context.selection.commentStatus}
+    {text: `${t('comment.sort')}`, status_p: props.context.selection.commentPageSort},
+    {text: `${t('comment.show_about_me')}`, status_p: props.context.selection.commentAboutMe},
+    {text: `${t('comment.show_resolved_comments')}`, status_p: props.context.selection.commentStatus}
 ])
 const documentCommentList = ref<any[]>(props.context.comment.commentList)
 const commentAll = ref<any[]>() //没有转树的评论列表
@@ -37,7 +37,7 @@ const isPageSort = ref(props.context.selection.commentPageSort)
 const visibleComment = ref(props.context.comment.isVisibleComment)
 const action = ref()
 const showMenu = () => {
-    if(commentMenu.value) {
+    if (commentMenu.value) {
         commentMenu.value = false
         return
     }
@@ -49,12 +49,12 @@ const closeMenu = () => {
 
 const getPage = (status: boolean) => {
     const pages = props.context.data.pagesList
-    if(status) {
+    if (status) {
         const sortArr: any = []
         pages.forEach(item => {
             documentCommentList.value.forEach(comment => {
-                if(item.id === comment.page_id) {
-                    sortArr.push(comment)                    
+                if (item.id === comment.page_id) {
+                    sortArr.push(comment)
                 }
             })
         })
@@ -68,15 +68,15 @@ const aboutMe = () => {
     const userId = props.context.comment.isUserInfo?.id
     const commnetList = props.context.comment.not2treeComment
     commnetList.forEach((item: any) => {
-        if(item.user.id === userId) {
+        if (item.user.id === userId) {
             const rootId = item.root_id
-            if(rootId) {
+            if (rootId) {
                 commnetList.forEach((i: any) => {
-                    if(i.id === rootId) {
+                    if (i.id === rootId) {
                         aboutMeArr.push(i)
                     }
                 })
-            }else {
+            } else {
                 aboutMeArr.push(item)
             }
         }
@@ -86,48 +86,48 @@ const aboutMe = () => {
 }
 
 const handleMenuStatus = (status: boolean, index: number) => {
-    if(index === 2) {
+    if (index === 2) {
         props.context.selection.commentSolveMenuStatus(status)
     }
-    if(index === 0) {
+    if (index === 0) {
         getPage(status)
         props.context.selection.setPageSort(status)
     }
-    if(index === 1) {
+    if (index === 1) {
         props.context.selection.setCommentAboutMe(status)
     }
     commentMenuItems.value[index].status_p = status
 }
 
-const getDocumentComment = async(id :string) => {
+const getDocumentComment = async (id: string) => {
     try {
-       const {data} = await comment_api.getDocumentCommentAPI({doc_id: id})
-       data.forEach((obj: {children: any[]; commentMenu: any; }) => {
-        obj.commentMenu = commentMenuItems.value
-        obj.children = []
-       })
-       const list  = list2Tree(data, '') 
-       props.context.comment.setNot2TreeComment(data)
-       props.context.comment.setCommentList(list)
-       documentCommentList.value = props.context.comment.commentList
-    }catch(err) {
+        const {data} = await comment_api.getDocumentCommentAPI({doc_id: id})
+        data.forEach((obj: { children: any[]; commentMenu: any; }) => {
+            obj.commentMenu = commentMenuItems.value
+            obj.children = []
+        })
+        const list = list2Tree(data, '')
+        props.context.comment.setNot2TreeComment(data)
+        props.context.comment.setCommentList(list)
+        documentCommentList.value = props.context.comment.commentList
+    } catch (err) {
         console.log(err);
     }
 }
 
 // 列表转树
 const list2Tree = (list: any, rootValue: string) => {
-  const arr: any = []
-  list.forEach((item: any) => {
-    if (item.parent_id === rootValue) {
-      const children = list2Tree(list, item.id)
-      if (children.length) {
-        item.children = children
-      }
-      arr.push(item)
-    }
-  })
-  return arr
+    const arr: any = []
+    list.forEach((item: any) => {
+        if (item.parent_id === rootValue) {
+            const children = list2Tree(list, item.id)
+            if (children.length) {
+                item.children = children
+            }
+            arr.push(item)
+        }
+    })
+    return arr
 }
 
 const onResolve = (status: number, index: number) => {
@@ -135,7 +135,7 @@ const onResolve = (status: number, index: number) => {
     props.context.comment.setCommentList(documentCommentList.value)
 }
 
-const onDelete = (index:number) => {
+const onDelete = (index: number) => {
     documentCommentList.value.splice(index, 1)
     props.context.comment.setCommentList(documentCommentList.value)
 }
@@ -148,24 +148,24 @@ const update = (t: number) => {
     action.value = props.context.tool.action;
 }
 const selectedUpdate = (t: number) => {
-    if(t === Selection.PAGE_SORT) {
+    if (t === Selection.PAGE_SORT) {
         isPageSort.value = props.context.selection.commentPageSort
     }
 }
 const commentUpdate = (t: number) => {
-    if(t === Comment.SEND_COMMENT) {
+    if (t === Comment.SEND_COMMENT) {
         const timer = setTimeout(() => {
             getDocumentComment(docID)
             clearTimeout(timer)
         }, 150);
     }
-    if(t === Comment.UPDATE_COMMENT) {
+    if (t === Comment.UPDATE_COMMENT) {
         documentCommentList.value = props.context.comment.commentList
     }
-    if(t === Comment.SELECTE_COMMENT) {
+    if (t === Comment.SELECTE_COMMENT) {
         const curId = props.context.comment.isSelectCommentId
         const comment = document.querySelector(`[data-comment="${curId}"]`)
-        if(comment) {
+        if (comment) {
             scrollbarRef.value?.scrollTo({
                 top: (comment as HTMLDivElement).offsetTop,
                 behavior: "smooth"
@@ -181,23 +181,23 @@ watchEffect(() => {
 })
 
 const docComment = (comment: DocCommentOpData) => {
-    if(comment.comment.content) {
+    if (comment.comment.content) {
         comment.comment.content = comment.comment.content.replaceAll("\r\n", "<br/>").replaceAll("\n", "<br/>").replaceAll(" ", "&nbsp;")
     }
     const index = documentCommentList.value.findIndex(item => item.id === comment.comment.id)
-    if(comment.type === DocCommentOpType.Update) {
-        if(index !== -1) {
+    if (comment.type === DocCommentOpType.Update) {
+        if (index !== -1) {
             documentCommentList.value[index] = {
                 ...documentCommentList.value[index],
                 ...comment.comment
             }
         }
-    }else if (comment.type === DocCommentOpType.Del) {
-        if(index !== -1) {
+    } else if (comment.type === DocCommentOpType.Del) {
+        if (index !== -1) {
             documentCommentList.value.splice(index, 1)
         }
-    }else if (comment.type === DocCommentOpType.Add) {
-        if(!comment.comment.root_id) {
+    } else if (comment.type === DocCommentOpType.Add) {
+        if (!comment.comment.root_id) {
             documentCommentList.value.unshift(comment.comment)
         }
     }
@@ -224,28 +224,36 @@ const showHiddenLeft = () => {
 <template>
     <div class="comment-container">
         <div class="comment-title">
-            <div class="title">{{t('comment.comment_area')}}</div>
-            <div class="drop-dowm" @click.stop="showMenu">
-                <svg-icon icon-class="comment-dropdown"></svg-icon>
+            <div class="line">
+                <div class="title">{{ t('comment.comment_area') }}</div>
+                <div class="drop-dowm" @click.stop="showMenu">
+                    <svg-icon icon-class="comment-dropdown"></svg-icon>
+                </div>
             </div>
-            <CommentMenu v-if="commentMenu" :Items="commentMenuItems" @close="closeMenu" @comment-menu-status="handleMenuStatus"></CommentMenu>
+            <CommentMenu v-if="commentMenu" :Items="commentMenuItems" @close="closeMenu"
+                         @comment-menu-status="handleMenuStatus"></CommentMenu>
         </div>
+        <!--        <hr style="border: none;border-top: 1px solid #F0F0F0;width: 212px">-->
+
         <div class="no_comment" v-if="documentCommentList.length <= 0">
-            <div>{{t('comment.no_comment')}}</div>
-            <div>{{t('comment.leave_a_comment')}}</div>
+            <div>{{ t('comment.no_comment') }}</div>
+            <div>{{ t('comment.leave_a_comment') }}</div>
         </div>
         <div class="visible-comment" v-else-if="!visibleComment && action !== Action.AddComment">
-            <div>{{t('comment.comments_hide')}}</div>
-            <button @click="onVisibleComment">{{t('comment.show_comments')}}</button>
+            <div>{{ t('comment.comments_hide') }}</div>
+            <button @click="onVisibleComment">{{ t('comment.show_comments') }}</button>
         </div>
         <div class="comment-list" v-else>
             <el-scrollbar ref="scrollbarRef">
-                <CommentItem v-for="(item, index) in isPageSort ? getPage(true) : documentCommentList" :key="item.id" :commentItem="item" :index="index"
-                 :context="context" :pageId="item.page_id" @resolve="onResolve" @delete="onDelete" :data-comment="item.id" :myComment="aboutMe()" style="padding: 8px 6px"></CommentItem>
+                <CommentItem v-for="(item, index) in isPageSort ? getPage(true) : documentCommentList" :key="item.id"
+                             :commentItem="item" :index="index"
+                             :context="context" :pageId="item.page_id" @resolve="onResolve" @delete="onDelete"
+                             :data-comment="item.id" :myComment="aboutMe()"></CommentItem>
                 <div style="height: 30px;"></div>
             </el-scrollbar>
         </div>
-        <ShowHiddenLeft :showLeft="showLeft" :leftTriggleVisible="leftTriggleVisible" @showNavigation="showHiddenLeft"></ShowHiddenLeft>
+        <ShowHiddenLeft :showLeft="showLeft" :leftTriggleVisible="leftTriggleVisible"
+                        @showNavigation="showHiddenLeft"></ShowHiddenLeft>
     </div>
 </template>
 
@@ -263,38 +271,58 @@ const showHiddenLeft = () => {
         height: 40px;
         display: flex;
         align-items: center;
-        justify-content: space-between;
-        padding: 0 var(--default-padding);
-        //border-bottom: 1px solid var(--theme-color-line);
+        //justify-content: space-between;
+        padding: 0 12px;
         z-index: 1;
+        box-sizing: border-box;
 
-        .title {
-            margin-left: -3%;
-        }
-
-        .drop-dowm {
-            width: 28px;
-            height: 28px;
+        .line{
+            justify-content: space-between;
             display: flex;
-            justify-content: center;
             align-items: center;
-            margin-right: -5%;
-            padding: 6px 6px 6px 6px;
-            box-sizing: border-box;
+            height: 40px;
+            width: 216px;
+            border-bottom: 1px solid #F0F0F0;
 
-            >svg {
-                width: 16px;
-                height: 16px;
+            .title {
+                margin-left: 2px;
+                font-family: HarmonyOS Sans;
+                font-size: 12px;
+                font-weight: normal;
+                line-height: 12px;
+                letter-spacing: 0em;
+                font-feature-settings: "kern" on;
+                color: #000000;
+            }
+
+            .drop-dowm {
+                width: 28px;
+                height: 28px;
+                display: flex;
+                justify-content: center;
+                align-items: center;
+                //margin-right: -5%;
+                padding: 6px 6px 6px 6px;
+                box-sizing: border-box;
+                border-radius: var(--default-radius);
+
+                > svg {
+                    width: 16px;
+                    height: 16px;
+                }
+            }
+
+            .drop-dowm:hover {
+                background-color: #F3F3F5;
             }
         }
-        .drop-dowm:hover {
-            background-color: #F3F3F5;
-        }
     }
+
     .comment-list {
         position: relative;
         height: 100%;
     }
+
     .no_comment {
         height: 100%;
         display: flex;
@@ -303,6 +331,7 @@ const showHiddenLeft = () => {
         align-items: center;
         color: #999;
     }
+
     .visible-comment {
         display: flex;
         width: 100%;
@@ -310,7 +339,8 @@ const showHiddenLeft = () => {
         flex-direction: column;
         justify-content: center;
         align-items: center;
-        >button {
+
+        > button {
             margin-top: 10px;
             font-size: var(--font-default-fontsize);
             border: none;
@@ -322,6 +352,7 @@ const showHiddenLeft = () => {
         }
     }
 }
+
 .el-scrollbar {
     height: 100%;
     //padding-right: 10px;

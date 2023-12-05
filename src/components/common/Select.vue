@@ -132,8 +132,8 @@ watch(() => props.selected, () => {
         position: relative;
         display: flex;
         align-items: center;
-        width: 100%;
-        height: var(--default-input-height);
+        width: 68px;
+        height: 32px;
         background-color: var(--input-background);
         border-radius: var(--default-radius);
 
@@ -144,18 +144,20 @@ watch(() => props.selected, () => {
             line-height: var(--default-input-height);
             box-sizing: border-box;
             //padding: 0 var(--default-padding);
-            padding: 0px -1px 0px -1px;
+            margin-left: 6px;
+            margin-right: 8px;
         }
 
         >.svg-wrap {
             height: 100%;
-            flex: 0 0 24px;
+            flex: 0 0 18px;
             display: flex;
             align-items: center;
+            //margin-left: 8px;
 
             >svg {
-                width: 10px;
-                height: 10px;
+                width: 12px;
+                height: 12px;
                 transition: 0.3s;
             }
         }

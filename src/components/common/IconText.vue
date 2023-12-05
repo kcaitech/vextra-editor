@@ -242,6 +242,6 @@ onMounted(() => {
 }
 
 .actived {
-    border: 2px solid #0d99ff;
+    border: 1px solid #0d99ff;
 }
 </style>

@@ -156,6 +156,7 @@ function applyForEdit() {
     transform: translateX(-50%);
 
     :deep(.tool-button) {
+        width: 56px;
         height: 32px;
     }
 

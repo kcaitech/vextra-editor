@@ -221,7 +221,7 @@ onUnmounted(() => {
             height: 16px;
             color: #ffffff;
             cursor: pointer;
-            //overflow: hidden;
+            overflow: hidden;
             text-overflow: ellipsis;
             white-space: nowrap;
             font-family: HarmonyOS Sans;

@@ -626,7 +626,7 @@ onUnmounted(() => {
 
 <template>
     <div class="text-panel">
-        <TypeHeader :title="t('attr.text')" class="mt-24">
+        <TypeHeader :title="t('attr.text')" class="mt-24" :active="true">
             <template #tool>
                 <TextAdvancedSettings :context="props.context" :textShape="shape" :textShapes="props.textShapes">
                 </TextAdvancedSettings>
@@ -642,7 +642,7 @@ onUnmounted(() => {
                 </div>
                 <SelectFont v-if="showFont" @set-font="setFont" :fontName="fontName"
                             :context="props.context"></SelectFont>
-                <div class="perch"></div>
+<!--                <div class="perch"></div>-->
             </div>
             <div class="text-middle">
                 <div class="text-middle-size">
@@ -692,25 +692,25 @@ onUnmounted(() => {
             <div class="text-bottom">
                 <div class="text-bottom-align">
                     <div class="level-aligning jointly-text">
-                        <i class="jointly-text font-posi" :class="{ selected_bgc: selectLevel === 'left' }"
+                        <i class="jointly-text font-posi" :class="{ selected_bg: selectLevel === 'left' }"
                            @click="onSelectLevel(TextHorAlign.Left)">
                             <Tooltip :content="t('attr.align_left')" :offset="15">
                                 <svg-icon icon-class="text-left"></svg-icon>
                             </Tooltip>
                         </i>
-                        <i class="jointly-text font-posi" :class="{ selected_bgc: selectLevel === 'centered' }"
+                        <i class="jointly-text font-posi" :class="{ selected_bg: selectLevel === 'centered' }"
                            @click="onSelectLevel(TextHorAlign.Centered)">
                             <Tooltip :content="t('attr.align_center')" :offset="15">
                                 <svg-icon icon-class="text-center"></svg-icon>
                             </Tooltip>
                         </i>
-                        <i class="jointly-text font-posi" :class="{ selected_bgc: selectLevel === 'right' }"
+                        <i class="jointly-text font-posi" :class="{ selected_bg: selectLevel === 'right' }"
                            @click="onSelectLevel(TextHorAlign.Right)">
                             <Tooltip :content="t('attr.align_right')" :offset="15">
                                 <svg-icon icon-class="text-right"></svg-icon>
                             </Tooltip>
                         </i>
-                        <i class="jointly-text font-posi" :class="{ selected_bgc: selectLevel === 'natural' }"
+                        <i class="jointly-text font-posi" :class="{ selected_bg: selectLevel === 'natural' }"
                            @click="onSelectLevel(TextHorAlign.Natural)">
                             <Tooltip :content="t('attr.align_the_sides')" :offset="15">
                                 <svg-icon icon-class="text-justify"></svg-icon>
@@ -718,19 +718,19 @@ onUnmounted(() => {
                         </i>
                     </div>
                     <div class="vertical-aligning jointly-text">
-                        <i class="jointly-text font-posi" :class="{ selected_bgc: selectVertical === 'top' }"
+                        <i class="jointly-text font-posi" :class="{ selected_bg: selectVertical === 'top' }"
                            @click="onSelectVertical(TextVerAlign.Top)">
                             <Tooltip :content="t('attr.align_top')" :offset="15">
                                 <svg-icon icon-class="align-top"></svg-icon>
                             </Tooltip>
                         </i>
-                        <i class="jointly-text font-posi" :class="{ selected_bgc: selectVertical === 'middle' }"
+                        <i class="jointly-text font-posi" :class="{ selected_bg: selectVertical === 'middle' }"
                            @click="onSelectVertical(TextVerAlign.Middle)">
                             <Tooltip :content="t('attr.align_middle')" :offset="15">
                                 <svg-icon icon-class="align-middle"></svg-icon>
                             </Tooltip>
                         </i>
-                        <i class="jointly-text font-posi" :class="{ selected_bgc: selectVertical === 'bottom' }"
+                        <i class="jointly-text font-posi" :class="{ selected_bg: selectVertical === 'bottom' }"
                            @click="onSelectVertical(TextVerAlign.Bottom)">
                             <Tooltip :content="t('attr.align_bottom')" :offset="15">
                                 <svg-icon icon-class="align-bottom"></svg-icon>
@@ -753,7 +753,7 @@ onUnmounted(() => {
                     <input ref="alphaFill" class="alphaFill" @focus="selectAlphaValue" style="text-align: center;"
                         :value="(textColor!.alpha * 100) + '%'" @change="(e) => onAlphaChange(e, 'color')" />
                 </div>
-                <div class="perch"></div>
+<!--                <div class="perch"></div>-->
             </div>
             <div class="text-colors" v-else-if="colorIsMulti" style="margin-bottom: 10px;">
                 <div class="color-title">
@@ -766,23 +766,22 @@ onUnmounted(() => {
             </div>
             <div class="text-colors" v-else-if="!colorIsMulti && !textColor" style="margin-bottom: 10px;">
                 <div class="color-title">
-<!--                    <div>{{ t('attr.font_color') }}</div>-->
                     <div class="add" @click="addTextColor">
                         <svg-icon icon-class="add"></svg-icon>
                     </div>
                 </div>
             </div>
             <!-- 高亮颜色 -->
-            <div class="text-color" v-if="!highlightIsMulti && highlight">
-                <div>{{ t('attr.highlight_color') }}</div>
+            <div class="highlight-color" v-if="!highlightIsMulti && highlight">
+                <div :class="{ 'check': highlight, 'nocheck': !highlight }">{{ t('attr.highlight_color') }}</div>
                 <div class="color">
                     <ColorPicker :color="highlight!" :context="props.context" :late="30"
                                  @change="c => getColorFromPicker(c, 'highlight')">
                     </ColorPicker>
-                    <input ref="higlightColor" @focus="selectHiglightColor" :spellcheck="false"
+                    <input ref="higlightColor" class="colorFill" @focus="selectHiglightColor" :spellcheck="false"
                            :value="toHex(highlight!.red, highlight!.green, highlight!.blue)"
                            @change="(e) => onColorChange(e, 'highlight')"/>
-                    <input ref="higlighAlpha" @focus="selectHiglighAlpha" style="text-align: center;"
+                    <input ref="higlighAlpha" class="alphaFill" @focus="selectHiglighAlpha" style="text-align: center;"
                            :value="(highlight!.alpha * 100) + '%'" @change="(e) => onAlphaChange(e, 'highlight')"/>
                 </div>
                 <div class="perch" @click="deleteHighlight">
@@ -791,7 +790,7 @@ onUnmounted(() => {
             </div>
             <div class="text-colors" v-else-if="highlightIsMulti">
                 <div class="color-title">
-                    <div>{{ t('attr.highlight_color') }}</div>
+                    <div :class="{ 'check': highlight, 'nocheck': !highlight }">{{ t('attr.highlight_color') }}</div>
                     <div class="add" @click="addHighlight">
                         <svg-icon icon-class="add"></svg-icon>
                     </div>
@@ -800,7 +799,7 @@ onUnmounted(() => {
             </div>
             <div class="text-colors" v-else-if="!highlightIsMulti && !highlight">
                 <div class="color-title">
-                    <div>{{ t('attr.highlight_color') }}</div>
+                    <div :class="{ 'check': highlight, 'nocheck': !highlight }">{{ t('attr.highlight_color') }}</div>
                     <div class="color_border"></div>
                     <div class="add" @click="addHighlight">
                         <svg-icon icon-class="add"></svg-icon>
@@ -813,22 +812,22 @@ onUnmounted(() => {
 
 <style scoped lang="scss">
 .text-panel {
-    width: 110%;
+    width: 100%;
     display: flex;
     flex-direction: column;
-    padding: 12px 10px;
+    padding: 20px 8px 12px 8px;
     box-sizing: border-box;
 
     .trigger {
-        width: 22px;
-        height: 22px;
+        width: 100%;
+        height: 100%;
         display: flex;
         justify-content: center;
         align-items: center;
 
         > svg {
-            width: 50%;
-            height: 50%;
+            width: 16px;
+            height: 16px;
             transition: 0.3s;
         }
 
@@ -849,11 +848,14 @@ onUnmounted(() => {
             align-items: center;
 
             >svg {
-                width: 14px;
-                height: 14px;
+                width: 16px;
+                height: 16px;
                 overflow: visible !important;
             }
         }
+        //.jointly-text:hover {
+        //    background-color: #EBEBEB;
+        //}
 
         .text-top {
             position: relative;
@@ -862,13 +864,20 @@ onUnmounted(() => {
 
             .select-font {
                 flex: 1;
-                padding: 0 10px;
+                padding: 9px 12px;
+                box-sizing: border-box;
+                width: 224px;
+                height: 32px;
+                border-radius: 6px;
 
-                &:hover {
-                    .down {
-                        background-color: rgba(0, 0, 0, 0.08);
-                    }
-                }
+                //&:hover {
+                //    .down {
+                //        background-color: rgba(0, 0, 0, 0.08);
+                //    }
+                //}
+            }
+            .select-font:hover {
+                background: #EBEBEB;
             }
         }
 
@@ -883,28 +892,43 @@ onUnmounted(() => {
                 align-items: center;
                 justify-content: space-between;
                 flex: 1;
-
             }
 
             .text-size {
                 position: relative;
-                width: 70px;
-                padding: 0 10px;
+                //padding: 0 10px;
+                width: 62px;
+                height: 32px;
+                border-radius: 6px;
+                padding: 9px 0;
+                box-sizing: border-box;
 
                 .size_input {
                     display: flex;
                     justify-content: space-between;
                     align-items: center;
+                    padding-left: 12px;
+                    padding-right: 6px;
 
-                    &:hover {
-                        .down {
-                            background-color: rgba(0, 0, 0, 0.08);
+                    .down {
+                        width: 12px;
+                        height: 12px;
+
+                        >svg {
+                            width: 12px;
+                            height: 12px;
                         }
                     }
+
+                    //&:hover {
+                    //    .down {
+                    //        background-color: rgba(0, 0, 0, 0.08);
+                    //    }
+                    //}
                 }
 
                 .input {
-                    width: 43px;
+                    width: 24px;
                     background-color: transparent;
                     border: none;
                 }
@@ -957,6 +981,11 @@ onUnmounted(() => {
                 width: 32px;
                 display: flex;
                 justify-content: center;
+                margin-left: 9px;
+            }
+
+            .overbold:hover {
+                background-color: #EBEBEB;
             }
         }
 
@@ -974,13 +1003,19 @@ onUnmounted(() => {
             }
 
             .level-aligning {
-                width: 50%;
-                padding: 0 5px;
+                width: 124px;
+                height: 32px;
+                padding: 2px;
+                box-sizing: border-box;
+                border-radius: 4px;
             }
 
             .vertical-aligning {
-                width: 38%;
-                padding: 0 5px;
+                width: 90px;
+                height: 32px;
+                padding: 2px;
+                box-sizing: border-box;
+                margin-left: 11px;
             }
 
             .font-posi {
@@ -996,10 +1031,10 @@ onUnmounted(() => {
             align-items: center;
 
             .color {
-                background-color: rgba(#D8D8D8, 0.4);
-                width: 234px;
+                background-color: var(--input-background);
+                width: 224px;
                 height: 32px;
-                padding: 0px 3px;
+                padding: 8px;
                 border-radius: var(--default-radius);
                 box-sizing: border-box;
                 display: flex;
@@ -1010,7 +1045,7 @@ onUnmounted(() => {
                     border: none;
                     width: 54px;
                     background-color: transparent;
-                    margin-left: 17px;
+                    margin-left: 8px;
                 }
 
                 .alphaFill {
@@ -1027,6 +1062,45 @@ onUnmounted(() => {
             }
         }
 
+        .highlight-color {
+            display: flex;
+            align-items: center;
+
+            .color {
+                background-color: var(--input-background);
+                width: 148px;
+                height: 32px;
+                padding: 8px;
+                border-radius: var(--default-radius);
+                box-sizing: border-box;
+                display: flex;
+                align-items: center;
+
+                .colorFill {
+                    outline: none;
+                    border: none;
+                    background-color: transparent;
+                    width: 85px;
+                    height: 14px;
+                    margin-left: 8px;
+                    flex: 1;
+                }
+
+                .alphaFill {
+                    outline: none;
+                    border: none;
+                    background-color: transparent;
+                    width: 35px;
+                    text-align: center;
+                    margin-left: -18px;
+                }
+
+                input + input {
+                    width: 45px;
+                }
+            }
+        }
+
         .text-colors {
             .color-title {
                 display: flex;
@@ -1035,18 +1109,29 @@ onUnmounted(() => {
                 margin-bottom: 5px;
 
                 .add {
-                    width: 22px;
-                    height: 22px;
+                    width: 28px;
+                    height: 28px;
                     display: flex;
                     align-items: center;
                     justify-content: center;
+                    border-radius: var(--default-radius);
 
                     > svg {
-                        width: 50%;
-                        height: 50%;
+                        width: 16px;
+                        height: 16px;
                     }
 
                     transition: .2s;
+                }
+                .add:hover {
+                    background-color: #F5F5F5;
+                }
+                .check {
+                    color: #000000;
+                }
+
+                .nocheck {
+                    color: rgba(0, 0, 0, 0.3);
                 }
             }
 
@@ -1060,13 +1145,12 @@ onUnmounted(() => {
             display: flex;
             justify-content: center;
             align-items: center;
-            width: 22px;
-            height: 22px;
+            width: 28px;
+            height: 28px;
 
             > svg {
-                height: 70%;
-                width: 70%;
-                color: #000;
+                height: 16px;
+                width: 16px;
             }
         }
     }
@@ -1075,16 +1159,20 @@ onUnmounted(() => {
         background-color: var(--active-color) !important;
         color: #fff;
     }
+    .selected_bg {
+        background-color: #FFFFFF !important;
+        color: #000000;
+    }
 }
 
 .down {
-    height: 20px;
-    width: 20px;
+    height: 12px;
+    width: 12px;
     display: flex;
     align-items: center;
     justify-content: center;
     border-radius: 4px;
-    margin-right: 3px;
+    margin-right: 8px;
     box-sizing: border-box;
 }
 

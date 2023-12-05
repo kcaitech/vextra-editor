@@ -437,7 +437,7 @@ watchEffect(watcher)
         :class="{ hierarchy: ShowComment || commentScale === 1 ? true : false }">
         <div class="comment-mark" @mouseenter="hoverComment" @mouseleave="unHover" @mousedown="moveCommentPopup"
             :style="{ transform: `scale(${markScale})`, opacity: commentOpacity && !ShowComment ? '0.5' : '1' }"
-            :class="{ shadow: commentScale === 1 }">
+            :class="{ shadow: commentScale === 1, active: ShowComment }">
             <img @dragstart="dragstart" :src="commentInfo.user.avatar" alt="">
         </div>
         <HoverComment :context="props.context" :scale="commentScale" @showComment="showComment"
@@ -475,10 +475,10 @@ watchEffect(watcher)
         transition: 0.2s;
         transform-origin: left bottom;
         cursor: default;
-        border-radius: 16px 16px 16px 0px;
+        border-radius: 20px 20px 20px 0px;
         opacity: 1;
         background: #FFFFFF;
-        border: 2px solid #1878F5;
+        border: 1px solid #EBEBEB;
         box-shadow: 0px 2px 6px 0px rgba(0, 0, 0, 0.05);
 
         >img {
@@ -490,6 +490,12 @@ watchEffect(watcher)
 
     .shadow {
         box-shadow: none;
+        margin-top: -3px;
+        margin-left: 1px
+    }
+
+    .active {
+        border: 2px solid #1878F5;
     }
 }
 

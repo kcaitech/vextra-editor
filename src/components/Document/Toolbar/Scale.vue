@@ -74,8 +74,8 @@ onUnmounted(() => {
 </script>
 <template>
     <div class="scale-display-warp">
-        <span v-if="!cus" @click="input_cus" ref="inputSpan" style="height: 15px;font-size: 13px;" :style="{ width: inputWidth + 'px', minWidth: '33px' }">{{
-            scale }}%</span>
+        <span v-if="!cus" @click="input_cus" ref="inputSpan" style="height: 15px;font-size: 13px;display: flex;
+    align-items: center;justify-content: center;" :style="{ width: inputWidth + 'px', minWidth: '33px' }">{{ scale }}%</span>
         <input v-if="cus" type="text" ref="input" @input="onInputName"
             :style="{ width: inputWidth + 'px', minWidth: '32px' }">
         <span v-if="cus" style="position: absolute; visibility: hidden; top: 0px;" ref="inputSpan2"></span>

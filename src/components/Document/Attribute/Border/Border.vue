@@ -618,7 +618,7 @@ onUnmounted(() => {
 
 <template>
     <div class="border-panel">
-        <TypeHeader :title="t('attr.border')" class="mt-24" @click.stop="first">
+        <TypeHeader :title="t('attr.border')" class="mt-24" @click.stop="first" :active="!!borders.length">
             <template #tool>
                 <div class="add" @click.stop="addBorder">
                     <svg-icon icon-class="add"></svg-icon>
@@ -640,10 +640,10 @@ onUnmounted(() => {
                     <ColorPicker :color="b.border.color" :context="props.context"
                         @change="(c: Color) => getColorFromPicker(c, idx)" />
                     <input ref="colorBorder" class="colorBorder" :spellcheck="false" :value="(toHex(b.border.color)).slice(1)"
-                        @change="e => onColorChange(e, idx)" @focus="selectColor(idx)" />
+                        @change="e => onColorChange(e, idx)" @focus="selectColor(idx)" :class="{ 'check': b.border.isEnabled, 'nocheck': !b.border.isEnabled }" />
                     <input ref="alphaBorder" class="alphaBorder" style="text-align: center;"
                         :value="filterAlpha(b.border.color.alpha * 100) + '%'" @change="e => onAlphaChange(e, idx)"
-                        @focus="selectAlpha(idx)" />
+                        @focus="selectAlpha(idx)" :class="{ 'check': b.border.isEnabled, 'nocheck': !b.border.isEnabled }" />
                 </div>
                 <div class="extra-action">
                     <BorderDetail :context="props.context" :shapes="props.shapes" :border="b.border"
@@ -664,25 +664,29 @@ onUnmounted(() => {
     width: 100%;
     display: flex;
     flex-direction: column;
-    padding: 0 10px 12px 10px;
+    padding: 12px 8px;
     box-sizing: border-box;
+    //border-top: 1px solid #F0F0F0;
+    border-bottom: 1px solid #F0F0F0;
 
     .add {
-        width: 22px;
-        height: 22px;
+        width: 28px;
+        height: 28px;
         display: flex;
         align-items: center;
         justify-content: center;
         transition: .2s;
+        box-sizing: border-box;
+        border-radius: var(--default-radius);
 
         >svg {
-            width: 75%;
-            height: 75%;
+            width: 16px;
+            height: 16px;
         }
     }
 
     .add:hover {
-        background-color: #F4F5F5;
+        background-color: #F5F5F5;
     }
 
     .tips-wrap {
@@ -690,7 +694,8 @@ onUnmounted(() => {
 
         .mixed-tips {
             display: block;
-            width: 100%;
+            width: 218px;
+            height: 14px;
             text-align: center;
             font-size: var(--font-default-fontsize);
             color: #737373;
@@ -708,17 +713,16 @@ onUnmounted(() => {
             margin-top: 4px;
 
             .visibility {
-                flex: 0 0 16px;
-                height: 16px;
-                width: 16px;
+                flex: 0 0 14px;
+                height: 14px;
+                width: 14px;
                 background-color: var(--active-color);
-                border: 1px solid var(--input-background);
                 box-sizing: border-box;
                 color: #ffffff;
                 display: flex;
                 justify-content: center;
                 align-items: center;
-                border-radius: 3px;
+                border-radius: 4px;
 
                 > svg {
                     width: 60%;
@@ -727,20 +731,22 @@ onUnmounted(() => {
             }
 
             .hidden {
-                flex: 0 0 16px;
-                height: 16px;
-                width: 16px;
-                background-color: transparent;
-                border-radius: 3px;
-                border: 1px solid var(--input-background);
+                flex: 0 0 14px;
+                height: 14px;
+                width: 14px;
+                background: #FFFFFF;
+                border-radius: 4px;
+                border: 1px solid #EBEBEB;
                 box-sizing: border-box;
             }
 
             .color {
-                flex: 0 1 140px;
+                flex: 0 1 144px;
                 background-color: var(--input-background);
-                height: 100%;
-                padding: 0px 5px;
+                height: 32px;
+                width: 144px;
+                padding: 9px 8px;
+                margin-left: -11px;
                 border-radius: var(--default-radius);
                 box-sizing: border-box;
                 display: flex;
@@ -750,20 +756,32 @@ onUnmounted(() => {
                     outline: none;
                     border: none;
                     background-color: transparent;
-                    width: 85px;
-                    margin-left: 9%;
+                    width: 92px;
+                    height: 14px;
+                    margin-left: 8px;
+                    flex: 1;
                 }
 
                 .alphaBorder {
                     outline: none;
                     border: none;
                     background-color: transparent;
-                    width: 45px;
-                    margin-left: -9%;
+                    width: 37px;
+                    //margin-left: 20%;
+                    margin-left: -28px;
+                    text-align: center;
                 }
 
                 input + input {
                     width: 45px;
+                }
+
+                .check {
+                    color: #000000;
+                }
+
+                .nocheck {
+                    color: rgba(0, 0, 0, 0.3);
                 }
             }
 
@@ -774,23 +792,23 @@ onUnmounted(() => {
                 margin-left: 2px;
 
                 .delete {
-                    flex: 0 0 16px;
+                    flex: 0 0 28px;
                     display: flex;
                     align-items: center;
                     justify-content: center;
-                    width: 17px;
-                    height: 22px;
+                    width: 28px;
+                    height: 28px;
                     transition: 0.2s;
-                    margin-left: 15%;
+                    border-radius: var(--default-radius);
 
                     >svg {
-                        width: 13px;
-                        height: 13px;
+                        width: 16px;
+                        height: 16px;
                     }
                 }
 
                 .delete:hover {
-                    background-color: #F4F5F5;
+                    background-color: #F5F5F5;;
                 }
             }
         }
