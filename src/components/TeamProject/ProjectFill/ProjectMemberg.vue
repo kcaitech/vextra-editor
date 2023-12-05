@@ -235,9 +235,50 @@ const changemargin = () => {
         }
     })
 }
+
+const showpermlist = ref<boolean>(false)
+
 </script>
 
 <template>
+    <div class="container" v-if="isshow">
+        <div class="header">
+            <div class="title">{{ t('Createteam.membersed') }}</div>
+            <div class="close" @click.stop="emit('closeDialog')">
+                <svg-icon icon-class="close"></svg-icon>
+            </div>
+        </div>
+        <div class="content_title">
+            <div class="name_title">{{ t('Createteam.username') }}</div>
+            <div class="perm_title" @click="showpermlist = !showpermlist">
+                <span class="text">{{ t('Createteam.jurisdiction') }}</span>
+                <svg-icon icon-class="down"
+                    :style="{ transform: showpermlist ? 'rotate(-180deg)' : 'rotate(0deg)' }"></svg-icon>
+                <Transition name="el-zoom-in-top">
+                    <ul v-if="showpermlist" class="perm_list">
+                        <li class="perm_item" :style="{ color: index == permFilter ? '#000000' : '' }"
+                            v-for="(item, index) in permList" :key="index" @click.stop="handleCommand(index)">
+                            <div class="choose" :style="{ visibility: index == permFilter ? 'visible' : 'hidden' }">
+                            </div>
+                            {{ item }}
+                        </li>
+                    </ul>
+                </Transition>
+            </div>
+        </div>
+        <div class="content">
+            <div class="member-item1" v-for="(item, index) in memberList" :key="index">
+                <div class="name">
+                    <img :src="item.user.avatar" alt="user_avatar" />
+                    <span>{{ item.user.nickname }}</span>
+                </div>
+                <div class="type">
+                    <span>{{ permission[item.perm_type] }}</span>
+                </div>
+            </div>
+        </div>
+        <div class="footer"></div>
+    </div>
     <el-dialog v-model="isshow" width="350px" align-center :close-on-click-modal="false" :show-close="false"
         @open="changemargin" @close="emit('closeDialog')">
         <template #header>
@@ -270,9 +311,8 @@ const changemargin = () => {
             <el-scrollbar height="250px">
                 <div class="member-item" v-for="(item, index) in memberList" :key="index">
                     <div class="name">
-                        <img :src="item.user.avatar" alt="icon"
-                            style="width: 20px;height: 20px;;border-radius: 50%;margin-right: 4px;">
-                        {{ item.user.nickname }}
+                        <img :src="item.user.avatar" alt="icon">
+                        <span>{{ item.user.nickname }}</span>
                     </div>
                     <el-dropdown trigger="click" @command="handleCommandPerm"
                         :disabled="item.perm_type === 5 || (item.perm_type === 4 && props.currentProject.self_perm_type !== 5)">
@@ -348,6 +388,160 @@ const changemargin = () => {
 </template>
 
 <style scoped lang="scss">
+.container {
+    position: absolute;
+    top: 25%;
+    left: 50%;
+    transform: translate(-50%, -25%);
+    width: 400px;
+    padding: 0 24px;
+    border-radius: 16px;
+    background: #FFFFFF;
+    box-sizing: border-box;
+    border: 1px solid #F0F0F0;
+    z-index: 9999;
+
+    .header {
+        display: flex;
+        align-items: center;
+        justify-content: space-between;
+        height: 64px;
+
+        .title {
+            font-size: 16px;
+            font-weight: 600;
+            color: rgba(61, 61, 61, 1);
+        }
+
+        .close {
+            width: 16px;
+            height: 16px;
+            padding: 4px;
+            border-radius: 6px;
+
+            &:hover {
+                background-color: rgb(243, 243, 245);
+                cursor: pointer;
+            }
+
+            svg {
+                width: 100%;
+                height: 100%;
+            }
+        }
+    }
+
+    .content_title {
+        display: flex;
+        align-items: center;
+        justify-content: space-between;
+        height: 24px;
+        gap: 18px;
+        font-size: 12px;
+        color: rgba(140, 140, 140, 1);
+
+        .name_title {
+            width: 282px;
+        }
+
+        .perm_title {
+            width: 52px;
+            display: flex;
+            align-items: center;
+            gap: 4px;
+
+            .text {
+                font-size: 12px;
+                color: rgba(140, 140, 140, 1);
+            }
+
+            svg {
+                transition: 0.5s;
+                width: 12px;
+                height: 12px;
+            }
+
+            .perm_list {
+                position: absolute;
+                list-style-type: none;
+                padding: 0px;
+                margin: 0px;
+                top: 88px;
+                right: 6px;
+                box-shadow: 0px 2px 10px 0px rgba(0, 0, 0, 0.08);
+                width: 80px;
+                background-color: white;
+                border-radius: 6px;
+                box-sizing: border-box;
+
+                .perm_item {
+                    display: flex;
+                    align-items: center;
+                    height: 24px;
+                    padding: 6px 8px;
+                    box-sizing: border-box;
+
+                    .choose {
+                        box-sizing: border-box;
+                        width: 10px;
+                        height: 6px;
+                        margin-right: 4px;
+                        margin-left: 2px;
+                        border-width: 0 0 1px 1px;
+                        border-style: solid;
+                        transform: rotate(-45deg) translateY(-30%);
+                    }
+
+                    &:hover {
+                        background-color: rgba(245, 245, 245, 1);
+                    }
+                }
+            }
+        }
+    }
+
+    .content {
+        height: 240px;
+
+        .member-item1 {
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            height: 40px;
+            gap: 18px;
+
+            .name {
+                display: flex;
+                align-items: center;
+                width: 282px;
+                gap: 8px;
+                font-size: 12px;
+                font-weight: 600;
+                color: rgba(0, 0, 0, 1);
+
+                img {
+                    width: 24px;
+                    height: 24px;
+                    border-radius: 50%;
+                }
+            }
+
+            .type {
+                display: flex;
+                align-items: center;
+                width: 52px;
+                font-size: 12px;
+                font-weight: 500;
+                color: rgba(38, 38, 38, 1);
+            }
+        }
+    }
+
+    .footer {
+        height: 38px;
+    }
+}
+
 .my-header {
     display: flex;
     justify-content: space-between;
@@ -359,24 +553,24 @@ const changemargin = () => {
     }
 }
 
-.perm_title {
-    display: flex;
-    align-items: center;
-    justify-content: space-between;
-    color: #3D3D3D;
-    padding-right: 10px;
+// .perm_title {
+//     display: flex;
+//     align-items: center;
+//     justify-content: space-between;
+//     color: #3D3D3D;
+//     padding-right: 10px;
 
-    .name {
-        font-size: 14px;
-        font-weight: bold;
-    }
+//     .name {
+//         font-size: 14px;
+//         font-weight: bold;
+//     }
 
-    .el-dropdown-link {
-        font-size: 14px;
-        font-weight: bold;
-        color: #3D3D3D;
-    }
-}
+//     .el-dropdown-link {
+//         font-size: 14px;
+//         font-weight: bold;
+//         color: #3D3D3D;
+//     }
+// }
 
 .body {
     margin-top: 10px;
