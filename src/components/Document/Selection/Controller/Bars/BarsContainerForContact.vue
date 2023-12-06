@@ -1,6 +1,6 @@
 <script setup lang='ts'>
 import { Context } from '@/context';
-import { AsyncContactEditor, CurvePoint, Matrix, Shape, ShapeType } from '@kcdesign/data';
+import { AsyncContactEditor, CurvePoint, Matrix, PathShape, Shape, ShapeType } from '@kcdesign/data';
 import { onMounted, onUnmounted, watch, reactive, ref } from 'vue';
 import { ClientXY } from '@/context/selection';
 import { Point } from "../../SelectionView.vue";
@@ -40,12 +40,12 @@ function update_slice_path() {
     show.value = false;
     const s = props.shape;
     if (s.type !== ShapeType.Contact) return;
-    const points: CurvePoint[] = s.getPoints();
+    const points: CurvePoint[] = (s as PathShape).points;
     const m = new Matrix(matrix), f = s.frame;
     m.preScale(f.width, f.height);
     const view_points: ClientXY[] = [];
     for (let i = 0, len = points.length; i < len; i++) {
-        const p = points[i].point;
+        const p = points[i];
         view_points.push(m.computeCoord3(p));
     }
     slices.ver.length = 0;
@@ -57,8 +57,8 @@ function update_slice_path() {
         const cur = view_points[i];
         if (!pre || !cur) continue;
         if (get_length(pre, cur) <= 30) continue;
-        const r_p1 = points[i - 1].point;
-        const r_p2 = points[i].point;
+        const r_p1 = points[i - 1];
+        const r_p2 = points[i];
         if (!r_p1 || !r_p2) continue;
         const d = dir(r_p1, r_p2);
         if (!d) continue;
