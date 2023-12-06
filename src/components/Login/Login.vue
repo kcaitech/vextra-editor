@@ -2,23 +2,21 @@
 import Describes from './Describes.vue'
 import Footer from './Footer.vue'
 import * as user_api from '@/request/users'
-import { nextTick, onMounted, onUnmounted, ref } from 'vue'
+import { computed, nextTick, onMounted, onUnmounted, reactive, ref, watchEffect } from 'vue'
 import { router } from '@/router'
 import { useI18n } from 'vue-i18n';
 import { ElMessage } from 'element-plus'
-import avatar from '@/assets/pd-logo-svg.svg';
 import { User } from '@/context/user'
 
 const { t } = useI18n()
 const isLoading = ref(false)
-const codeinput = ref()
-const codevalue = ref('')
 const failed = ref<boolean>(false)
 const loginshow = ref<boolean>(true)
-const affirm = ref()
 const userid = ref('')
 const Wxcode = ref('')
-const isShow = ref(true)
+const codeerror = ref<boolean>(false)
+const inputfocus = ref<any>([])
+const isComposing = ref<boolean>(false)
 
 function onmessage(e: any) {
     if (e.data?.type !== "GetWxCode") return
@@ -74,10 +72,6 @@ async function getlogin(code: string, invite_code: string = '', id: string = '')
             } else if (linfo.code === 400) {
                 userid.value = linfo.data.id
                 loginshow.value = false
-                nextTick(() => {
-                    codeinput.value.focus()
-                    codevalue.value = ''
-                })
             }
         }
     }).catch((linfo: any) => {
@@ -122,9 +116,7 @@ function clickaffirm() {
                     router.push({ name: 'apphome' })
                 }
             } else if (result.code === 400) {
-                codeinput.value.focus()
-                codevalue.value = ''
-                ElMessage.error({ duration: 1500, message: result.message })
+                codeerror.value = true
             }
         }
     }).catch((result: any) => {
@@ -154,7 +146,7 @@ function wxcode() {
         redirect_uri: encodeURIComponent("https://protodesign.cn/html/GetCode.html"),
         state: "STATE",
         style: "",
-        href: 'data:text/css;base64,LmltcG93ZXJCb3ggLnRpdGxlIHtkaXNwbGF5OiBub25lO30KLmltcG93ZXJCb3ggLmluZm8ge2Rpc3BsYXk6IG5vbmU7fQouaW1wb3dlckJveCAucXJjb2RlIHtib3JkZXI6IG5vbmU7Ym9yZGVyLXJhZGl1czo2cHh9Ci5zdGF0dXNfaWNvbiB7ZGlzcGxheTogbm9uZTt9Ci5pbXBvd2VyQm94IC5zdGF0dXMge2Rpc3BsYXk6IG5vbmU7fQoud2ViX3FyY29kZV90eXBlX2lmcmFtZSB7d2lkdGg6IDMwMHB4O2hlaWdodDogMzAwcHg7fQ==',
+        href: 'data:text/css;base64,LmltcG93ZXJCb3ggLnRpdGxlIHtkaXNwbGF5OiBub25lO30KLmltcG93ZXJCb3ggLmluZm8ge2Rpc3BsYXk6IG5vbmU7fQouaW1wb3dlckJveCAucXJjb2RlIHtib3JkZXI6IG5vbmU7bWFyZ2luLXRvcDowcHg7Ym9yZGVyLXJhZGl1czo2cHg7d2lkdGg6MjAwcHg7fQouc3RhdHVzX2ljb24ge2Rpc3BsYXk6IG5vbmU7fQouaW1wb3dlckJveCAuc3RhdHVzIHtkaXNwbGF5OiBub25lO30KLndlYl9xcmNvZGVfdHlwZV9pZnJhbWUge3dpZHRoOiAyMDBweDtoZWlnaHQ6IDIwMHB4O30=',
     })
 }
 
@@ -165,185 +157,167 @@ const handleOpenNewWindow = (routeName: string) => {
     window.open(routeLocation.href, '_blank');
 }
 
-onMounted(() => {
-    setTimeout(() => {
-        isLoading.value = true
-        wxcode()
-        const login: any = document.querySelector('iframe')
-        login.addEventListener('load', function () {
-            isLoading.value = false
-        })
-    }, 500);
-    window.addEventListener('message', onmessage, false)
-    const userAgent = navigator.userAgent
-    for (const keyword of mobileKeywords) {
-        if (userAgent.includes(keyword)) {
-            const el = document.querySelector('.login')
-            el?.classList.add('loginmin')
-            return isShow.value = false
-        } else {
-            isShow.value = true
-        }
+watchEffect(() => {
+    if (loginshow.value) {
+        setTimeout(() => {
+            isLoading.value = true
+            wxcode()
+            const login: any = document.querySelector('iframe')
+            login.addEventListener('load', function () {
+                isLoading.value = false
+            })
+        }, 500);
+    } else {
+        inputvalues.forEach(item => { item.value = ""; })
+        codeerror.value = false
+        setTimeout(() => {
+            inputfocus.value[0].focus()
+
+        }, 0)
     }
 })
+
+
+onMounted(() => {
+    window.addEventListener('message', onmessage, false)
+})
+
 onUnmounted(() => {
     window.removeEventListener('message', onmessage)
 })
 
-const mobileKeywords = [
-    "Android",
-    "webOS",
-    "iPhone",
-    "iPad",
-    "iPod",
-    "BlackBerry",
-    "Windows Phone",
-]
+const inputvalues = reactive([
+    { value: "" },
+    { value: "" },
+    { value: "" },
+    { value: "" },
+    { value: "" },
+    { value: "" },
+    { value: "" },
+    { value: "" },
+])
+
+let timer: any
+const keydownevent = (index: number) => {
+    if (0 < index) {
+        timer = setTimeout(() => {
+            (inputfocus.value[index - 1] as HTMLInputElement).focus()
+            clearTimeout(timer)
+        }, 0);
+        if (codeerror.value) {
+            codeerror.value = false
+        }
+    }
+}
+
+const inputevent = (e: Event, index: number) => {
+    const inputs = document.querySelectorAll('.inputitem')
+    if (isComposing.value) return
+    if ((e.target! as HTMLInputElement).value === " ") {
+        inputvalues[index].value = ''
+        return
+    }
+    if (index < inputs.length - 1 && (e.target! as HTMLInputElement).value !== "") {
+        (inputs[index + 1] as HTMLInputElement).focus()
+    }
+}
+
+const allValuesFilled = computed(() => {
+    return inputvalues.every(item => item.value !== "")
+})
+
+const codevalue = computed(() => {
+    return inputvalues.reduce((accumulator, item) => accumulator + item.value, "")
+})
+
+const handleCompositionStart = () => {
+    isComposing.value = true
+}
+
+const handleCompositionEnd = (e: any, index: number) => {
+    isComposing.value = false
+    inputvalues[index].value = ""
+    inputfocus.value[index].focus()
+}
+
+const pasteEvent = async (e: any) => {
+    e.preventDefault();
+    try {
+        let pasteContent = e.clipboardData.getData('text/plain') || await navigator.clipboard.readText();
+        if (pasteContent && pasteContent.length > 8) {
+            pasteContent = pasteContent.slice(0, 8)
+        }
+        for (let i = 0; i < pasteContent.length; i++) {
+            inputvalues[i].value = pasteContent[i]
+        }
+        inputfocus.value[pasteContent.length - 1].focus()
+    } catch (error) {
+        console.error('Unable to read clipboard data:', error);
+    }
+
+}
 
 </script>
 
 <template>
     <div class="main">
-        <div class="all" v-if="loginshow">
-            <Describes v-if="isShow" />
-            <div class="login">
-                <div class="img-logo" v-if="!isShow">
-                    <img :src="avatar" alt="ProtoDesign">
+        <div class="all">
+            <Describes></Describes>
+            <div class="login" :style="{ transform: `rotateY(${loginshow ? 0 : 180}deg)` }">
+                <div class="login-page" v-if="loginshow">
+                    <span>{{ t('system.wx_login') }}</span>
+                    <div id="login_container" :class="{ 'login_container_hover': failed }" v-loading="isLoading"></div>
+                    <p>
+                        {{ t('system.login_read') }}
+                        <a href="" @click.prevent="handleOpenNewWindow('serviceagreement')">
+                            {{ t('system.read_TOS') }}
+                        </a>&nbsp;
+                        <a href="" @click.prevent="handleOpenNewWindow('privacypolicy')">
+                            {{ t('system.read_Privacy') }}
+                        </a>
+                    </p>
                 </div>
-                <span>{{ t('system.wx_login') }}</span>
-                <div id="login_container" :class="{ 'login_container_hover': failed }" v-loading="isLoading"></div>
-                <p>{{ t('system.login_read') }}
-                    <a href="" @click.prevent="handleOpenNewWindow('serviceagreement')">{{ t('system.read_TOS') }}</a>&nbsp;
-                    <a href="" @click.prevent="handleOpenNewWindow('privacypolicy')">{{ t('system.read_Privacy') }}</a>
-                </p>
-            </div>
-            <Footer v-if="isShow" />
-        </div>
-        <div class="code_input" v-else>
-            <div class="top">
-                <div class="img">
-                    <img :src="avatar" alt="ProtoDesign" />
+                <div class="login-code" v-else>
+                    <div class="back" @click.stop="loginshow = true">
+                        <svg-icon icon-class="back-icon"></svg-icon>
+                    </div>
+                    <span class="Invitation_code">{{ t('home.invitation_code_tips') }}</span>
+                    <div class="inputs">
+                        <input class="inputitem" type="text" ref="inputfocus" v-for="(input, index) in inputvalues"
+                            :key="index" v-model="input.value" maxlength="1" :autofocus="index === 0"
+                            @input="inputevent($event, index)" @compositionstart="handleCompositionStart"
+                            @compositionend="handleCompositionEnd($event, index)" @keydown.delete="keydownevent(index)"
+                            @paste="pasteEvent($event)" />
+                    </div>
+                    <Transition name="slide-up">
+                        <span v-if="codeerror" class="code_error_tips">验证码已被使用或不存在，请更换验证码</span>
+                    </Transition>
+                    <button class="affirm" @click="clickaffirm" ref="affirm" :disabled="!allValuesFilled">{{
+                        t('percenter.affirm')
+                    }}</button>
                 </div>
             </div>
-            <span class="Invitation_code">{{ t('home.invitation_code_tips') }}</span>
-            <input ref="codeinput" v-model="codevalue" maxlength="8" @keyup.enter="clickaffirm" />
-            <button class="affirm" @click="clickaffirm" ref="affirm" :disabled="codevalue == '' ? true : false">{{
-                t('percenter.affirm')
-            }}</button>
+            <Footer></Footer>
         </div>
     </div>
 </template>
 
 <style lang='scss' scoped>
-.loginmin {
-    margin: 0px !important;
-    width: 100% !important;
-    height: 100% !important;
-    border-radius: 0 !important;
-    background: conic-gradient(from 207deg at 100% 0%, rgba(73, 125, 202, 0) -113deg, #0062ff 93deg, rgba(84, 47, 219, 0.54) 155deg, rgba(84, 47, 219, 0.31) 195deg, rgba(73, 125, 202, 0) 247deg, #007dee 453deg) !important;
-    background-blend-mode: color-dodge !important;
-    color: white;
+.slide-up-enter-active,
+.slide-up-leave-active {
+    transition: all 0.25s ease-out;
 }
 
-.img-logo {
-    position: absolute;
-    top: 20px;
-    left: 20px;
+.slide-up-enter-from {
+    opacity: 0;
+    transform: translateY(-16px);
 }
 
-.main {
-    width: 100vw;
-    height: 100vh;
-    background: conic-gradient(from 207deg at 100% 0%, rgba(73, 125, 202, 0) -113deg, #0062ff 93deg, rgba(84, 47, 219, 0.54) 155deg, rgba(84, 47, 219, 0.31) 195deg, rgba(73, 125, 202, 0) 247deg, #007dee 453deg);
-    background-blend-mode: color-dodge;
+.slide-up-leave-to {
+    opacity: 0;
+    transform: translateY(16px);
 }
 
-.affirm {
-    width: 120px;
-    height: 48px;
-    font-size: 18px;
-    letter-spacing: 10px;
-    text-indent: 10px;
-    padding: 0;
-    border: 1px rgb(69, 69, 255) solid;
-    border-radius: 5px;
-    background: rgb(69, 69, 255);
-    color: white;
-    margin: 50px 0 200px 0;
-    text-align: center;
-
-    &:hover {
-        background: rgba(80, 80, 255, 0.884);
-    }
-
-    &[disabled] {
-        background: rgba(195, 195, 246, 0.884);
-        border: 1px rgba(195, 195, 246, 0.884) solid;
-    }
-}
-
-.code_input {
-    height: 100vh;
-    display: flex;
-    flex-direction: column;
-    justify-content: center;
-    align-items: center;
-    animation: moveup .5s;
-
-    .top {
-        position: absolute;
-        left: 0;
-        top: 0;
-
-        .img {
-            display: flex;
-            align-items: center;
-
-            span {
-                font-size: 48px;
-                font-weight: 600;
-                color: white;
-            }
-
-            img {
-                width: 300px;
-                height: 60px;
-            }
-        }
-    }
-
-    .Invitation_code {
-        font-size: 32px;
-        font-weight: 600;
-        margin: 0;
-        letter-spacing: 5px;
-        color: white;
-    }
-
-    input {
-        min-width: 20%;
-        height: 60px;
-        font-size: 36px;
-        color: rgba(0, 0, 0, 0.8);
-        text-align: center;
-        border-radius: 10px;
-        border: 2px rgb(50, 50, 255) solid;
-        outline: none;
-        margin-top: 50px;
-        letter-spacing: 20px;
-
-        &:hover {
-            border-radius: 10px;
-            border: 2px rgb(69, 69, 255) solid;
-        }
-
-        &:focus {
-            border-radius: 10px;
-            border: 2px rgb(69, 69, 255) solid;
-        }
-    }
-
-}
 
 .login_container_hover {
     background-color: #00000030;
@@ -355,81 +329,186 @@ const mobileKeywords = [
     background-color: #00000010;
 }
 
-.all {
-    overflow: auto;
-    display: flex;
-    align-items: center;
-    align-content: center;
-    justify-content: center;
-    flex-wrap: wrap;
+.main {
     width: 100vw;
     height: 100vh;
+    background-color: #ffffff;
+    backdrop-filter: blur(51px);
+    background-image:
+        url('@/assets/login-img1.svg'),
+        url("@/assets/login-img2.svg"),
+        url("@/assets/login-img3.svg"),
+        url("@/assets/login-img4.svg"),
+        url("@/assets/login-img5.svg");
+    background-position:
+        0, 80vw,
+        45vw -100vh,
+        30vw -30vh,
+        -55vw 25vh;
+    background-size:
+        80% 100%,
+        contain,
+        cover,
+        cover,
+        cover;
+    background-repeat: no-repeat;
+    box-sizing: border-box;
+
+}
+
+.all {
+    display: flex;
+    align-items: flex-start;
+    align-content: flex-start;
+    justify-content: center;
+    flex-wrap: nowrap;
+    width: 100%;
+    height: 100%;
+    overflow: hidden;
 
     .login {
-        display: flex;
-        flex-direction: column;
-        flex-wrap: nowrap;
-        justify-content: center;
-        align-items: center;
-        margin: 0 0 160px 100px;
+        position: relative;
+        top: 200px;
+        left: 40px;
         width: 400px;
+        min-width: 400px;
         height: 480px;
-        text-align: center;
         background: white;
-        border-radius: 6px;
-        z-index: 2;
-        box-shadow: rgba(17, 17, 26, 0.1) 0px 1px 0px, rgba(17, 17, 26, 0.1) 0px 8px 24px, rgba(17, 17, 26, 0.1) 0px 16px 48px;
-        animation: moveleft .5s;
+        border-radius: 10px;
+        border: 1px solid #F0F0F0;
+        box-shadow: 0px 20px 50px 0px rgba(12, 84, 178, 0.08);
+        box-sizing: border-box;
+        transform-style: preserve-3d;
+        transition: transform 0.5s;
 
-        #login_container {
-            width: 300px;
-            height: 300px;
+        .login-page {
+            display: flex;
+            flex-direction: column;
+            flex-wrap: nowrap;
+            align-items: center;
+
+
+            #login_container {
+                width: 200px;
+                height: 200px;
+            }
+
+
+            span {
+                font-size: 20px;
+                font-weight: 600;
+                margin-top: 74px;
+                margin-bottom: 46px;
+                color: rgba(67, 67, 67, 1);
+            }
+
+            p {
+                font-size: 13px;
+                font-weight: 500;
+                color: rgb(146 146 146);
+                margin-top: 24px;
+
+                a {
+                    font-weight: 600;
+                }
+            }
         }
 
+        .login-code {
+            height: 100%;
+            display: flex;
+            flex-direction: column;
+            justify-content: flex-start;
+            align-items: center;
+            transform-style: preserve-3d;
+            transform: rotateY(180deg);
 
-        span {
-            font-size: 18px;
-            font-weight: bold;
-            margin-top: 40px;
-            margin-bottom: 20px;
-            letter-spacing: 10px;
+            .back {
+                width: 28px;
+                height: 28px;
+                position: absolute;
+                top: 20px;
+                left: 16px;
+                padding: 4px;
+                border-radius: 6px;
+                box-sizing: border-box;
+
+                &:hover {
+                    background-color: rgba(240, 240, 240, 1);
+                }
+
+                &:active {
+                    background-color: rgba(243, 243, 245, 1);
+                }
+
+                svg {
+                    width: 100%;
+                    height: 100%;
+                }
+            }
+
+            .Invitation_code {
+                font-size: 20px;
+                font-weight: 600;
+                color: rgba(67, 67, 67, 1);
+                margin: 74px 0 106px 0;
+            }
+
+            .inputs {
+                display: flex;
+                justify-content: space-between;
+                width: 344px;
+                margin-bottom: 56px;
+
+                input {
+                    width: 36px;
+                    height: 48px;
+                    border-radius: 6px;
+                    font-size: 24px;
+                    font-weight: 600;
+                    color: rgba(0, 0, 0, 1);
+                    text-align: center;
+                    background-color: rgba(235, 235, 235, 1);
+                    border: 1px solid #EBEBEB;
+                    box-sizing: border-box;
+                    outline: none;
+                }
+            }
+
+            .code_error_tips {
+                position: absolute;
+                top: 260px;
+                left: 28px;
+                font-size: 12px;
+                font-weight: 400;
+                color: rgba(234, 0, 0, 1);
+
+            }
+
+            .affirm {
+                width: 344px;
+                height: 44px;
+                font-size: 14px;
+                border: none;
+                border-radius: 6px;
+                background-color: rgba(24, 120, 245, 1);
+                color: white;
+                text-align: center;
+                outline: none;
+
+                &:hover {
+                    background-color: rgba(66, 154, 255, 1);
+                }
+
+                &:active {
+                    background-color: rgba(10, 89, 207, 1);
+                }
+
+                &[disabled] {
+                    background-color: rgba(189, 226, 255, 1);
+                }
+            }
         }
-
-        p {
-            font-size: 12px;
-            font-weight: bold;
-            letter-spacing: 2px;
-            color: rgb(146 146 146);
-            margin-top: 20px;
-
-        }
-
-    }
-}
-
-
-
-@keyframes moveleft {
-    0% {
-        opacity: 0;
-        transform: translateX(200px);
-    }
-
-    100% {
-        opacity: 1;
-        transform: translateX(0);
-    }
-}
-
-@keyframes moveup {
-    0% {
-        opacity: 0;
-        transform: translateY(-100%);
-    }
-
-    100% {
-        opacity: 1;
-        transform: translateY(0);
     }
 }
 </style>

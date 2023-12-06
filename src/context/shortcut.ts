@@ -264,10 +264,12 @@ class ShortcutsService {
     }
 }
 
+//返回命中的快捷键数据
 export const selecttype = computed(() => {
     return (num: number) => {
         return ShortcutsService.getShortcutsByType(num);
     };
 });
 
-export const getTypeText = (num: KeysType) => ShortcutsService.typeTextMap[num];
+//返回标题
+export const getTypeText = (num: KeysType) => ShortcutsService.typeTextMap[num]; 

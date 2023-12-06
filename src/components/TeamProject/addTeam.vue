@@ -10,27 +10,39 @@
         </div>
         <div class="centent">
             <div class="team-name">
-                <div class="title">{{ t('Createteam.team_name') }}<span>{{ t('Createteam.required') }}</span></div>
-                <input ref="inputteam" type="text" :placeholder="t('Createteam.team_name_tips')" v-model="inputValue"
-                    maxlength="20" required>
+                <div class="title">
+                    {{ t('Createteam.team_name') }}
+                    <span>{{ t('Createteam.required') }}</span>
+                </div>
+                <input :style="{ backgroundColor: inputValue !== '' ? 'rgba(245, 245, 245, 1)' : '' }" ref="inputteam"
+                    type="text" :placeholder="t('Createteam.team_name_tips')" v-model="inputValue" maxlength="20" required>
             </div>
             <div class="team-description">
-                <div class="title">{{ t('Createteam.team_description') }}<span>{{ t('Createteam.optional') }}</span></div>
-                <textarea name="" id="" cols="30" rows="10" :placeholder="t('Createteam.team_description_tips')"
-                    v-model="textareaValue" maxlength="120" />
+                <div class="title">
+                    {{ t('Createteam.team_description') }}
+                    <span>{{ t('Createteam.optional') }}</span>
+                </div>
+                <textarea :style="{ backgroundColor: textareaValue !== '' ? 'rgba(245, 245, 245, 1)' : '' }" name="" id=""
+                    cols="30" rows="10" :placeholder="t('Createteam.team_description_tips')" v-model="textareaValue"
+                    maxlength="120"></textarea>
             </div>
             <div class="team-avatar">
-                <div class="title">{{ t('Createteam.team_avatar') }}<span>{{ t('Createteam.optional') }}</span></div>
-                <div class="avatar-content">
+                <div class="title">
+                    {{ t('Createteam.team_avatar') }}
+                    <span>{{ t('Createteam.optional') }}</span>
+                </div>
+                <div class="avatar-content" :style="{ backgroundColor: isshow ? '' : 'rgba(250, 250, 250, 1)' }">
                     <input type="file" accept=".jpg, .png" @change="selectimg($event)">
-                    <svg-icon v-if="isshow" icon-class="close"></svg-icon>
-                    <p v-if="isshow">{{ t('Createteam.avatar_restriction') }}</p>
-                    <img v-else :src=imgsrc alt="Team Avatar" style="width: 64px;height:64px;border-radius: 50%;">
+                    <div v-if="isshow" class="closediv">
+                        <svg-icon icon-class="close"></svg-icon>
+                    </div>
+                    <img v-else :src=imgsrc alt="Team Avatar" style="width: 56px;height:56px;border-radius: 50%;">
+                    <p>{{ t('Createteam.avatar_restriction') }}</p>
                 </div>
             </div>
         </div>
         <div class="addteam">
-            <button type="submit" :disabled=isDisabled @click.stop.once="createTeam">{{ t('Createteam.add_team') }}</button>
+            <button type="button" :disabled=isDisabled @click.stop="createTeam">{{ t('Createteam.add_team') }}</button>
         </div>
     </div>
 </template>
@@ -75,14 +87,16 @@ const createTeam = async () => {
                 router.push({ path: `teams/${data.id}` })
                 sessionStorage.setItem('index', '6')
             }
-
         } else {
-            ElMessage.error(message)
+            ElMessage.error(message === '审核不通过' ? t('system.sensitive_reminder') : message)
+            formData.delete('name');
+            formData.delete('description');
         }
     } catch (error) {
         emits('close')
         ElMessage.error('创建失败')
     }
+
 }
 
 const selectimg = (e: any) => {
@@ -117,45 +131,37 @@ const close = () => {
 .card-container {
     position: absolute;
     background-color: white;
-    width: 420px;
-    border-radius: 5px;
-    top: 50%;
+    width: 400px;
+    top: 25%;
     left: 50%;
-    transform: translate(-50%, -50%);
-    font-size: 14px;
-    padding: 12px;
-    z-index: 1000;
+    transform: translate(-50%, -25%);
+    padding: 0 24px;
+    border-radius: 16px;
+    border: 1px solid #F0F0F0;
     box-sizing: border-box;
-    box-shadow: 0px 2px 5px 0px rgba(0, 0, 0, 0.3);
+    z-index: 1000;
 
     .heard {
         display: flex;
         align-items: center;
         justify-content: space-between;
+        height: 64px;
 
         .title {
-            font-size: 18px;
+            font-size: 16px;
             font-weight: 600;
-            color: #3D3D3D
+            color: rgba(61, 61, 61, 1);
         }
 
         .close {
-            width: 18px;
-            height: 18px;
+            width: 16px;
+            height: 16px;
             padding: 4px;
+            border-radius: 6px;
 
             &:hover {
-                background-color: #f3f0ff;
-                border-radius: 3px;
+                background-color: rgb(243, 243, 245);
                 cursor: pointer;
-
-                >svg {
-                    fill: #9775fa;
-                }
-            }
-
-            &:active>svg {
-                transform: scale(0.9);
             }
 
             svg {
@@ -166,92 +172,110 @@ const close = () => {
     }
 
     .centent {
-        margin-top: 16px;
 
         .team-name,
         .team-description,
         .team-avatar {
-            margin-top: 12px;
-            color: #3D3D3D;
+            display: flex;
+            flex-direction: column;
+            gap: 8px;
+            margin: 12px 0;
 
             .title {
-                font-size: 14px;
-                font-weight: 600;
-                margin-bottom: 8px;
-
-                span {
-                    font-weight: 500;
-                }
+                font-size: 13px;
+                font-weight: 500;
             }
 
             input {
-                padding: 2px 8px;
+                padding: 7px 12px;
                 width: 100%;
-                height: 32px;
+                height: 36px;
                 border: none;
                 outline-style: none;
-                border-radius: 4px;
-                font-size: 14px;
-                background-color: rgba(0, 0, 0, 0.08);
+                border-radius: 6px;
+                font-size: 13px;
+                border: 1px solid rgba(245, 245, 245, 1);
+                background-color: rgba(245, 245, 245, 1);
                 box-sizing: border-box;
 
+                &:hover {
+                    background-color: rgba(235, 235, 235, 1);
+                }
+
                 &:focus {
-                    border: 2px solid #9775fa;
-                    padding: 0px 6px;
+                    border: 1px solid #1878F5;
                 }
             }
 
             textarea {
-                padding: 8px;
+                padding: 7px 12px;
                 width: 100%;
-                height: 120px;
+                height: 80px;
                 border: none;
                 outline-style: none;
-                border-radius: 4px;
+                border-radius: 6px;
                 resize: none;
-                font-size: 14px;
+                font-size: 13px;
                 font-family: none;
-                background-color: rgba(0, 0, 0, 0.08);
+                border: 1px solid rgba(245, 245, 245, 1);
+                background-color: rgba(245, 245, 245, 1);
                 box-sizing: border-box;
 
+                &:hover {
+                    background-color: rgba(235, 235, 235, 1);
+                }
+
                 &:focus {
-                    border: 2px solid #9775fa;
-                    padding: 6px;
+                    border: 1px solid #1878F5;
                 }
             }
 
             .avatar-content {
                 width: 100%;
-                height: 130px;
+                height: 136px;
                 display: flex;
                 flex-direction: column;
                 align-items: center;
                 justify-content: center;
-                border-radius: 4px;
-                background-color: rgba(0, 0, 0, 0.08);
+                border-radius: 6px;
+                background-color: rgba(255, 255, 255, 1);
+                border: 1px dashed #EBEBEB;
                 box-sizing: border-box;
 
                 &:hover {
-                    background-color: rgba(0, 0, 0, 0.1);
+                    background-color: rgba(250, 250, 250, 1);
                 }
 
-                svg {
-                    width: 32px;
-                    height: 32px;
-                    transform: rotateZ(45deg);
-                    fill: rgba(61, 61, 61, 0.6);
+                .closediv {
+                    display: flex;
+                    width: 56px;
+                    height: 56px;
+                    background-color: #F5F5F5;
+                    border-radius: 50%;
+                    border: 1px dashed #D9D9D9;
+                    box-sizing: border-box;
+
+                    svg {
+                        margin: auto;
+                        width: 16px;
+                        height: 16px;
+                        padding: 3px;
+                        transform: rotateZ(45deg);
+                        fill: rgba(38, 38, 38, 1);
+                    }
                 }
+
 
                 p {
-                    font-size: 14px;
-                    color: rgba(61, 61, 61, 0.5);
+                    font-size: 12px;
+                    color: rgba(38, 38, 38, 1);
                 }
 
                 input {
                     cursor: pointer;
                     position: absolute;
                     width: 100%;
-                    height: 130px;
+                    height: 136px;
                     box-sizing: border-box;
                     opacity: 0;
                     z-index: 999;
@@ -263,33 +287,32 @@ const close = () => {
     }
 
     .addteam {
-        text-align: center;
-        margin-top: 12px;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        height: 64px;
 
         button {
             cursor: pointer;
             color: white;
             font-size: 14px;
-            letter-spacing: 1px;
-            width: 80px;
-            height: 32px;
+            font-weight: 500;
+            width: 214px;
+            height: 40px;
             border: none;
-            background-color: #9775fa;
-            box-shadow: 1px 1px 3px #b1b1b1, -1px -1px 3px #b1b1b1;
-            border-radius: 4px;
-            // box-shadow: 1px 1px 3px rgb(0, 0, 0);
+            border-radius: 6px;
+            background-color: rgba(24, 120, 245, 1);
 
             &:hover {
-                background-color: rgba(150, 117, 250, 0.862745098);
+                background-color: rgba(66, 154, 255, 1);
             }
 
             &:active {
-                background-color: #9775fa;
+                background-color: rgba(10, 89, 207, 1);
             }
 
             &:disabled {
-                background-color: rgba(98, 67, 237, 0.3);
-                box-shadow: none;
+                background-color: rgba(189, 226, 255, 1);
             }
         }
     }
