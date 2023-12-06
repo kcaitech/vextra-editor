@@ -1,11 +1,11 @@
-import {Matrix, Shape, ShapeType, TableShape, Watchable} from "@kcdesign/data";
-import {Context} from "./index";
-import {adapt_page, Root} from "@/utils/content";
-import {Clipboard} from "@/utils/clipboard";
-import {PageXY} from "./selection";
-import {Action} from "@/context/tool";
-import {PointsOffset} from "@/utils/assist";
-import {message} from "@/utils/message";
+import { Matrix, Shape, ShapeType, TableShape, Watchable } from "@kcdesign/data";
+import { Context } from "./index";
+import { adapt_page, Root } from "@/utils/content";
+import { Clipboard } from "@/utils/clipboard";
+import { PageXY } from "./selection";
+import { Action } from "@/context/tool";
+import { PointsOffset } from "@/utils/assist";
+import { message } from "@/utils/message";
 
 interface Point {
     x: number
@@ -116,7 +116,7 @@ export class WorkSpace extends Watchable(Object) {
         width: 0,
         height: 0,
         element: undefined,
-        center: {x: 0, y: 0}
+        center: { x: 0, y: 0 }
     };
     private m_document_perm: number = 3;
     private m_should_selection_view_update: boolean = true;
@@ -139,11 +139,11 @@ export class WorkSpace extends Watchable(Object) {
 
     setPathEditMode(v: boolean) {
         this.m_path_edit_mode = v;
-        if (v) {
-            message('info', '编辑路径');
-        } else {
-            message('info', '退出编辑');
-        }
+        // if (v) {
+        //     message('info', '编辑路径');
+        // } else {
+        //     message('info', '退出编辑');
+        // }
         this.notify(WorkSpace.PATH_EDIT_MODE);
     }
 
@@ -159,8 +159,8 @@ export class WorkSpace extends Watchable(Object) {
             let content: any = document.querySelectorAll('#content');
             content = Array.from(content).find(i => (i as HTMLElement)?.dataset?.area === this.m_rootId);
             if (content) {
-                const {x, y, bottom, right} = content.getBoundingClientRect();
-                root.center = {x: (right - x) / 2, y: (bottom - y) / 2};
+                const { x, y, bottom, right } = content.getBoundingClientRect();
+                root.center = { x: (right - x) / 2, y: (bottom - y) / 2 };
                 root.x = x;
                 root.y = y;
                 root.bottom = bottom;
@@ -173,8 +173,8 @@ export class WorkSpace extends Watchable(Object) {
     }
 
     get center_on_page(): PageXY {
-        const {x, right, y, bottom} = this.root;
-        return this.matrix.inverseCoord({x: (right - x) / 2, y: (bottom - y) / 2});
+        const { x, right, y, bottom } = this.root;
+        return this.matrix.inverseCoord({ x: (right - x) / 2, y: (bottom - y) / 2 });
     }
 
     get pageView() {//return pageView HTMLElement
@@ -250,13 +250,13 @@ export class WorkSpace extends Watchable(Object) {
         const rt = frame[1];
         const rb = frame[2];
         const lb = frame[3];
-        const pivot = {x: (lt.x + rb.x) / 2, y: (lt.y + rb.y) / 2};
+        const pivot = { x: (lt.x + rb.x) / 2, y: (lt.y + rb.y) / 2 };
         this.__cache_map = {
-            lt: {x: lt.x - anchor.x, y: lt.y - anchor.y},
-            rb: {x: rb.x - anchor.x, y: rb.y - anchor.y},
-            pivot: {x: pivot.x - anchor.x, y: pivot.y - anchor.y},
-            rt: {x: rt.x - anchor.x, y: rt.y - anchor.y},
-            lb: {x: lb.x - anchor.x, y: lb.y - anchor.y}
+            lt: { x: lt.x - anchor.x, y: lt.y - anchor.y },
+            rb: { x: rb.x - anchor.x, y: rb.y - anchor.y },
+            pivot: { x: pivot.x - anchor.x, y: pivot.y - anchor.y },
+            rt: { x: rt.x - anchor.x, y: rt.y - anchor.y },
+            lb: { x: lb.x - anchor.x, y: lb.y - anchor.y }
         }
     }
 
@@ -265,10 +265,10 @@ export class WorkSpace extends Watchable(Object) {
         if (!this.__cache_map) return [];
         const map = this.__cache_map;
         this.m_controller_frame = [
-            {x: map.lt.x + achor.x, y: map.lt.y + achor.y},
-            {x: map.rt.x + achor.x, y: map.rt.y + achor.y},
-            {x: map.rb.x + achor.x, y: map.rb.y + achor.y},
-            {x: map.lb.x + achor.x, y: map.lb.y + achor.y},
+            { x: map.lt.x + achor.x, y: map.lt.y + achor.y },
+            { x: map.rt.x + achor.x, y: map.rt.y + achor.y },
+            { x: map.rb.x + achor.x, y: map.rb.y + achor.y },
+            { x: map.lb.x + achor.x, y: map.lb.y + achor.y },
         ]
     }
 
@@ -355,7 +355,7 @@ export class WorkSpace extends Watchable(Object) {
     }
 
     keyboardHandle(event: KeyboardEvent) {
-        const {ctrlKey, shiftKey, metaKey, target} = event;
+        const { ctrlKey, shiftKey, metaKey, target } = event;
         if (target instanceof HTMLInputElement) return; // 在输入框中输入时避免触发编辑器的键盘事件
         if (this.isFreeze) return;
         if (event.code === KeyboardKeys.A) {
@@ -485,7 +485,7 @@ export class WorkSpace extends Watchable(Object) {
 
     keydown_0(ctrl: boolean, meta: boolean) {
         if (ctrl || meta) {
-            const {center} = this.root;
+            const { center } = this.root;
             this.m_matrix.trans(-center.x, -center.y);
             const _s = 1 / this.m_matrix.m00;
             this.m_matrix.scale(_s);
