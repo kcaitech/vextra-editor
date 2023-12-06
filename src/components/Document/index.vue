@@ -392,8 +392,7 @@ const getDocumentInfo = async () => {
 
       context.comment.setDocumentInfo(dataInfo.data)
       null_context.value = false;
-      context.selection.watch(selectionWatcher);
-      context.workspace.watch(workspaceWatcher);
+      init_watcher();
       const docId = route.query.id as string;
       const token = localStorage.getItem("token") || "";
       if (await context.communication.docOp.start(token, docId, document, context.coopRepo, dataInfo.data.document.version_id ?? "")) {
@@ -458,6 +457,15 @@ function init_screen_size() {
   localStorage.setItem(SCREEN_SIZE.KEY, SCREEN_SIZE.NORMAL);
 }
 
+function init_watcher() {
+  if (!context) {
+    return;
+  }
+  context.selection.watch(selectionWatcher);
+  context.workspace.watch(workspaceWatcher);
+  context.component.watch(component_watcher);
+}
+
 function init_doc() {
   if (route.query.id) { // 从远端读取文件
     getDocumentInfo();
@@ -470,9 +478,7 @@ function init_doc() {
       context = new Context((window as any).sketchDocument as Document, ((window as any).skrepo as CoopRepository));
       null_context.value = false;
       getUserInfo();
-      context.selection.watch(selectionWatcher);
-      context.workspace.watch(workspaceWatcher);
-      context.component.watch(component_watcher);
+      init_watcher();
       const project_id = localStorage.getItem('project_id') || '';
       upload(project_id);
       localStorage.setItem('project_id', '');
