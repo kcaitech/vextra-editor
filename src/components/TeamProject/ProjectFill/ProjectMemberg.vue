@@ -246,6 +246,7 @@ const showpermlist = ref<boolean>(false)
             <div class="title">{{ t('Createteam.membersed') }}</div>
             <div class="close" @click.stop="emit('closeDialog')">
                 <svg-icon icon-class="close"></svg-icon>
+                <!-- 测试 -->
             </div>
         </div>
         <div class="content_title">
