@@ -60,7 +60,6 @@ function __init_m(shape: PathShape, container: Map<string, Matrix>) {
 }
 function down_background_path(index: number) {
     console.log('index:', index);
-
 }
 function enter(index: number) {
     new_high_light.value = index;
