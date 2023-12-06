@@ -7,7 +7,6 @@ import * as share_api from '@/request/share';
 import { ElMessage } from 'element-plus';
 import { useRoute } from 'vue-router';
 import { DocInfo } from "@/context/user"
-import CloseIcon from '@/components/common/CloseIcon.vue';
 import Switch from '@/components/common/Switch.vue';
 const { t } = useI18n()
 const props = defineProps<{
@@ -51,7 +50,6 @@ const founder = ref(false)
 const userInfo = ref<UserInfo | undefined>(props.userInfo)
 const shareList = ref<any[]>([])
 
-const handleTop = ref<number>()
 const posi = ref({
   top: 0,
   left: 0
@@ -66,26 +64,26 @@ enum docType {
 const popover = ref<HTMLDivElement>()
 const options = [
   {
-    value: 0,
+    value: 1,
     label: `${t('share.need_to_apply_for_confirmation')}`
   },
   {
-    value: 1,
+    value: 2,
     label: `${t('share.anyone_can_read_it')}`
   },
   {
-    value: 2,
+    value: 3,
     label: `${t('share.anyone_can_comment')}`
   },
   {
-    value: 3,
+    value: 4,
     label: `${t('share.anyone_can_edit_it')}`
   }
 ]
 
 const DocType = reactive([`${t('share.shareable')}`, `${t('share.need_to_apply_for_confirmation')}`, `${t('share.anyone_can_read_it')}`, `${t('share.anyone_can_comment')}`, `${t('share.anyone_can_edit_it')}`])
 const permission = reactive([`${t('share.no_authority')}`, `${t('share.readOnly')}`, `${t('share.reviewable')}`, `${t('share.editable')}`])
-const selectValue = ref(DocType[props.selectValue])
+const selectValue = ref(DocType[props.selectValue === 0 ? 1 : props.selectValue])
 
 const handlekeyup = (e: KeyboardEvent) => {
   e.stopPropagation()
@@ -206,23 +204,24 @@ watch(selectValue, (nVal, oVal) => {
   }
   emit('selectType', index)
 })
-// watch(value1, (nVal, oVal) => {
-//   if (nVal) {
-//     if (props.selectValue === docType.Critical) {
-//       setShateType(docType.Critical)
-//     } else if (props.selectValue === docType.Edit) {
-//       setShateType(docType.Edit)
-//     } else if (props.selectValue === docType.Read) {
-//       setShateType(docType.Read)
-//     } else if (props.selectValue === docType.Share) {
-//       setShateType(docType.Share)
-//     }
-//     emit('switchState', nVal)
-//   } else {
-//     setShateType(docType.Private)
-//     emit('switchState', nVal)
-//   }
-// })
+
+watch(value1, (nVal, oVal) => {
+  if (nVal) {
+    if (props.selectValue === docType.Critical) {
+      setShateType(docType.Critical)
+    } else if (props.selectValue === docType.Edit) {
+      setShateType(docType.Edit)
+    } else if (props.selectValue === docType.Read) {
+      setShateType(docType.Read)
+    } else if (props.selectValue === docType.Share) {
+      setShateType(docType.Share)
+    }
+    emit('switchState', nVal)
+  } else {
+    setShateType(docType.Private)
+    emit('switchState', nVal)
+  }
+})
 
 watchEffect(() => {
   props.projectPerm;
@@ -300,45 +299,34 @@ const copyLink = async () => {
     textArea.remove()
   }
 }
-handleTop.value = props.pageHeight / 2
-watch(() => props.pageHeight, () => {
-  handleTop.value = props.pageHeight / 2
-  nextTick(() => {
-    if (card.value) {
-      let el = card.value
-      // el.style.top = Math.max(handleTop.value!, el.offsetHeight / 2) + 'px'
-    }
-  })
-})
+
 watchEffect(() => {
   getDocumentInfo()
   if (!founder.value) getShareList()
-  nextTick(() => {
-    handleTop.value = props.pageHeight / 2
-    if (card.value) {
-      let el = card.value
-      // el.style.top = Math.max(handleTop.value!, el.offsetHeight / 2) + 'px'
-    }
-  })
 })
 
 onMounted(() => {
   document.addEventListener('keyup', handlekeyup);
   document.addEventListener('click', handleClick);
   if (!founder.value) {
-    if (!value1.value) {
-      setShateType(docType.Private)
-    } else {
-      if (props.selectValue === docType.Critical) {
-        setShateType(docType.Critical)
-      } else if (props.selectValue === docType.Edit) {
-        setShateType(docType.Edit)
-      } else if (props.selectValue === docType.Read) {
-        setShateType(docType.Read)
-      } else if (props.selectValue === docType.Share) {
-        setShateType(docType.Share)
-      }
+    console.log(props.selectValue);
+
+    if (props.selectValue === docType.Private) {
+      value1.value = false
+      emit('switchState', false)
     }
+    // if (props.selectValue === docType.Critical) {
+    //   setShateType(docType.Critical)
+    // } else if (props.selectValue === docType.Edit) {
+    //   setShateType(docType.Edit)
+    // } else if (props.selectValue === docType.Read) {
+    //   setShateType(docType.Read)
+    // } else if (props.selectValue === docType.Share) {
+    //   setShateType(docType.Share)
+    //   emit('switchState', false)
+    // }else if(props.selectValue === docType.Private){
+    //   emit('switchState', false)
+    // }
   }
 })
 
@@ -348,18 +336,14 @@ onUnmounted(() => {
 })
 
 const isSelectOpen = ref<boolean>(false)
-const selectedOption = ref('')
-
-enum Options {
-  ee,
-}
 
 const openSelect = () => {
-  isSelectOpen.value = true;
+  isSelectOpen.value = !isSelectOpen.value;
 }
-const selectOption = (option:any) => {
-  selectedOption.value = option
+const selectOption = (option: any) => {
+  selectValue.value = DocType[option]
   isSelectOpen.value = false
+  authority.value = false
 }
 
 </script>
@@ -390,23 +374,33 @@ const selectOption = (option:any) => {
         </div>
         <!-- 权限设置 -->
         <div class="purview">
-          <span class="type">{{ t('share.permission_setting') }}:</span>
-          <input type="text" v-model="selectedOption" @focus="openSelect" placeholder="Select an option" />
-          <ul v-show="isSelectOpen" class="options">
-            <li v-for="option in docType" :key="option" @click="selectOption(option)">
-              {{ option }}
-            </li>
-          </ul>
+          <span class="type">{{ t('share.permission_setting') }}：</span>
+          <div class="right">
+            <input type="text" v-model="selectValue" @click.stop="openSelect" placeholder="Select an option" readonly />
+            <div class="shrink" @click.stop="openSelect">
+              <svg-icon icon-class="down"
+                :style="{ transform: isSelectOpen ? 'rotate(-180deg)' : 'rotate(0deg)', color: '#666666' }"></svg-icon>
+            </div>
+            <transition name="el-zoom-in-top">
+              <ul v-show="isSelectOpen" class="options">
+                <li class="options_item" :style="{ fontWeight: option.label == selectValue ? 600 : 500 }"
+                  v-for="option in options" :key="option.value" @click.stop="selectOption(option.value)">
+                  <span>{{ option.label }}</span>
+                  <div class="choose" :style="{ visibility: option.label === selectValue ? 'visible' : 'hidden' }"></div>
+                </li>
+              </ul>
+            </transition>
+            <button class="copybnt" type="button" @click.stop="copyLink">{{ t('share.copy_link') }}</button>
+          </div>
         </div>
-        <el-select v-model="selectValue" style="width: 122px;" class="m-2" size="large" @visible-change="showselect">
+        <!-- <el-select v-model="selectValue" style="width: 122px;" class="m-2" size="large" @visible-change="showselect">
           <el-option style="font-size: 10px;" class="option" v-for="item in options" :key="item.value" :label="item.label"
             :value="item.label" />
-        </el-select>
-        <button class="copybnt" type="button" @click.stop="copyLink">{{ t('share.copy_link') }}</button>
+        </el-select> -->
       </div>
       <!-- 分享人 -->
-      <div>
-        <span class="type">{{ t('share.people_who_have_joined_the_share') }} ({{ t('share.share_limit') }}5) :</span>
+      <div class="share_user">
+        <span class="type">{{ t('share.people_who_have_joined_the_share') }} ({{ t('share.share_limit') }}5)：</span>
         <el-scrollbar height="300px" class="shared-by">
           <div class="scrollbar-demo-item">
             <div class="item-left">
@@ -445,7 +439,10 @@ const selectOption = (option:any) => {
       <template #header>
         <div class="card-header">
           <div class="title">{{ t('share.file_sharing') }}</div>
-          <CloseIcon :size="20" @close="emit('close')" />
+          <div class="close" @click.stop="emit('close')">
+            <svg-icon icon-class="close"></svg-icon>
+          </div>
+          <!-- <CloseIcon :size="20" @close="emit('close')" /> -->
         </div>
       </template>
       <div class="contain">
@@ -475,13 +472,6 @@ const selectOption = (option:any) => {
 </template>
   
 <style scoped lang="scss">
-.project {
-  opacity: .5;
-  display: flex;
-  justify-content: center;
-  margin-bottom: 8px;
-}
-
 .card-header {
   display: flex;
   justify-content: space-between;
@@ -581,84 +571,204 @@ const selectOption = (option:any) => {
       font-weight: 500;
     }
 
-    .m-2 {
-      margin-left: 10px;
-      margin-right: 5px;
-      box-sizing: border-box;
+    .right {
+      display: flex;
+      align-items: center;
+      gap: 8px;
+
+      .shrink {
+        position: absolute;
+        right: 190px;
+        width: 12px;
+        height: 12px;
+        color: rgba(102, 102, 102, 1);
+
+        >svg {
+          transition: 0.5s;
+          width: 100%;
+          height: 100%;
+        }
+      }
+
+      input {
+        width: 122px;
+        height: 32px;
+        font-size: 12px;
+        font-weight: 400;
+        outline: none;
+        border: none;
+        border-radius: 6px;
+        padding: 3px 3px 3px 12px;
+        background: #F5F5F5;
+        box-sizing: border-box;
+      }
+
+      .options {
+        position: absolute;
+        top: 180px;
+        right: 183px;
+        padding: 0;
+        margin: 0;
+        width: 122px;
+        background-color: white;
+        border-radius: 8px;
+        border: 1px solid #EBEBEB;
+        box-shadow: 0px 2px 10px 0px rgba(0, 0, 0, 0.08);
+        z-index: 1;
+        box-sizing: border-box;
+
+        .options_item {
+          display: flex;
+          align-items: center;
+          justify-content: space-between;
+          height: 40px;
+          padding: 0 0 0 12px;
+
+          &:hover {
+            background-color: rgba(245, 245, 245, 1);
+          }
+
+          .choose {
+            box-sizing: border-box;
+            width: 10px;
+            height: 6px;
+            margin-right: 4px;
+            margin-left: 2px;
+            border-width: 0 0 0.2em 0.2em;
+            border-style: solid;
+            border-color: rgb(0, 0, 0, .75);
+            transform: rotate(-45deg) translateY(-30%);
+          }
+        }
+      }
+
+
+      .copybnt {
+        margin: auto;
+        width: 80px;
+        height: 32px;
+        font-size: 13px;
+        font-weight: 500;
+        color: #FFFFFF;
+        ;
+        outline: none;
+        border: none;
+        border-radius: 6px;
+        background: #1878F5;
+        box-sizing: border-box;
+      }
     }
+
   }
+
+
 
   .bottom {
     margin: 5px 0 var(--default-margin) 0;
   }
 
-  .type {
-    font-weight: var(--font-default-bold);
-  }
+
 }
 
-
-
-
-
-.scrollbar-demo-item {
+.share_user {
   display: flex;
-  align-items: center;
-  justify-content: space-between;
-  height: 35px;
+  flex-direction: column;
 
-  .item-left {
+  .type {
     display: flex;
     align-items: center;
-    margin-left: var(--default-margin);
-    position: relative;
-    height: 100%;
-
-    .avatar {
-      height: 25px;
-      width: 25px;
-      border-radius: 50%;
-      margin-right: 10px;
-
-      >img {
-        height: 100%;
-        width: 100%;
-        border-radius: 50%;
-      }
-    }
+    height: 34px;
+    font-size: 13px;
+    font-weight: 500;
   }
 
-  .item-right {
-    display: flex;
-    align-items: center;
-    height: 100%;
+  .shared-by {
+    padding: 8px 12px;
+    border-radius: 6px;
+    background: #FFFFFF;
+    box-sizing: border-box;
+    border: 1px solid #EBEBEB;
 
-    .svgBox {
-      height: 10px;
-      width: 10px;
+    .scrollbar-demo-item {
       display: flex;
-      margin-left: 8px;
-      margin-right: 30px;
-      justify-content: center;
       align-items: center;
-      cursor: pointer;
+      justify-content: space-between;
+      height: 40px;
 
-      >.svg {
-        height: 10px;
-        width: 10px;
+      .item-left {
+        display: flex;
+        align-items: center;
+        justify-content: space-between;
+        gap: 8px;
+
+        .avatar {
+          height: 24px;
+          width: 24px;
+          border-radius: 50%;
+          overflow: hidden;
+
+          img {
+            height: 100%;
+            width: 100%;
+          }
+        }
+
+        .name {
+          font-size: 13px;
+          font-weight: 600;
+          color: rgba(0, 0, 0, 1);
+        }
+      }
+
+      .item-right {
+        display: flex;
+        align-items: center;
+
+        .founder {
+          font-size: 12px;
+          font-weight: 500px;
+        }
+
+        .svgBox {
+          height: 10px;
+          width: 10px;
+          display: flex;
+          margin-left: 8px;
+          margin-right: 30px;
+          justify-content: center;
+          align-items: center;
+          cursor: pointer;
+
+          >.svg {
+            height: 10px;
+            width: 10px;
+          }
+        }
       }
     }
   }
+
+  .project {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    height: 38px;
+    font-size: 13px;
+    font-weight: 500;
+    color: rgba(140, 140, 140, 1);
+  }
 }
 
-.purview {
-  margin: var(--default-margin-half) 0 var(--default-margin) 0
-}
 
-.shared-by {
-  margin: var(--default-margin-half) 0 var(--default-margin) 0;
-  border: 2px solid var(--theme-color-line);
-}
+
+
+
+
+// .purview {
+//   margin: var(--default-margin-half) 0 var(--default-margin) 0
+// }
+
+
 
 .popover {
   position: absolute;
