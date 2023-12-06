@@ -1,13 +1,15 @@
 <script setup lang="ts">
-import { Matrix, Page, ShapeType, Shape } from '@kcdesign/data';
+import { Matrix, Page, ShapeType } from '@kcdesign/data';
 import { Context } from '@/context';
+import { Selection } from '@/context/selection';
 import { Tool } from '@/context/tool';
-import { onMounted, onUnmounted, ref, watch, nextTick } from 'vue';
+import { onMounted, onUnmounted, ref, watch, h, nextTick } from 'vue';
 import comsMap from './comsmap';
 import { v4 } from "uuid";
 import ShapeTitles from './ShapeTitles.vue';
 import ComponentTitleContainer from './ComponentTitleContainer.vue';
 import { debounce } from 'lodash';
+import { RenderCtx } from './common';
 interface Props {
     context: Context
     data: Page
@@ -20,7 +22,7 @@ const rootId = ref<string>('pageview');
 const show_t = ref<boolean>(true);
 const width = ref<number>(100);
 const height = ref<number>(100);
-let renderItems: Shape[] = []; // 渲染数据，里面除了真实的data数据之外，还有工具对象
+const pageslot = ref<HTMLElement>();
 
 function pageViewRegister(mount: boolean) {
     if (mount) {
@@ -50,7 +52,6 @@ const stopWatchPage = watch(() => props.data, (value, old) => {
     value.__collect.watch(collect);
     pageViewRegister(true);
     page_watcher();
-    renderItems = props.data.childs;
 })
 const stop_watch_matrix = watch(() => props.matrix, page_watcher, { deep: true });
 function tool_watcher(t?: number) {
@@ -61,7 +62,7 @@ onMounted(() => {
     props.data.__collect.watch(collect);
     props.context.tool.watch(tool_watcher);
     pageViewRegister(true);
-    renderItems = props.data.childs;
+    props.context.selection.watch(selection_watcher);
 })
 onUnmounted(() => {
     props.data.unwatch(page_watcher);
@@ -70,20 +71,56 @@ onUnmounted(() => {
     pageViewRegister(false);
     stopWatchPage();
     stop_watch_matrix();
-    renderItems = [];
+    props.context.selection.unwatch(selection_watcher);
 })
+
+const renderCtx = new RenderCtx();
+function selection_watcher(...args: any[]) {
+    if (args.includes(Selection.CHANGE_SHAPE)) {
+        renderCtx.resetSelectShapePath(props.context.selection.selectedShapes[0]);
+    }
+}
+
+function render() {
+
+    // nextTick(() => {
+    //     console.log(pageslot.value?.tagName)
+    // });
+
+    const prop: any = {
+        version: "1.1",
+        xmlns: "http://www.w3.org/2000/svg",
+        "xmlns:xlink": "http://www.w3.org/1999/xlink",
+        "xmlns:xhtml": "http://www.w3.org/1999/xhtml",
+        preserveAspectRatio: "xMinYMin meet",
+        overflow: "visible"
+    }
+    prop.viewBox = `0 0 ${width.value} ${height.value}`;
+    prop.reflush = reflush.value !== 0 ? reflush.value : undefined;
+    prop.style = { transform: matrixWithFrame.toString() };
+    prop['data-area'] = rootId.value;
+    prop.width = width.value;
+    prop.height = height.value;
+
+    const childs = [];
+    const datachilds = props.data.childs;
+    for (let i = 0, len = datachilds.length; i < len; i++) {
+        const c = datachilds[i];
+        const com = comsMap.get(c.type) ?? comsMap.get(ShapeType.Rectangle);
+        const node = h(com, { data: c, key: c.id, renderCtx });
+        childs.push(node);
+    }
+
+    return h('svg', prop, childs)
+}
+
 </script>
 
 <template>
-    <svg version="1.1" xmlns="http://www.w3.org/2000/svg" xmlns:xlink="http://www.w3.org/1999/xlink"
-        xmlns:xhtml="http://www.w3.org/1999/xhtml" preserveAspectRatio="xMinYMin meet" :width="width" :height="height"
-        :viewBox="`0 0 ${width} ${height}`" overflow="visible" :reflush="reflush !== 0 ? reflush : undefined"
-        :style="{ transform: matrixWithFrame.toString() }" :data-area="rootId">
-        <component :is="comsMap.get(c.type) ?? comsMap.get(ShapeType.Rectangle)" v-for="c in renderItems" :key="c.id"
-            :data="c" />
-
-    </svg>
-
+    <!--- page slot -->
+    <div ref="pageslot">
+        <render></render>
+    </div>
     <ShapeTitles v-if="show_t" :context="props.context" :data="data" :matrix="matrixWithFrame.toArray()"></ShapeTitles>
     <ComponentTitleContainer :context="props.context" :data="data" :matrix="matrixWithFrame.toArray()">
     </ComponentTitleContainer>
