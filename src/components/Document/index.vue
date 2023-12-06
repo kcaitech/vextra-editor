@@ -326,13 +326,13 @@ const getUserInfo = async () => {
   }
 }
 
-onBeforeRouteUpdate((to, form, next) => {
-  if (to.query.id?.includes(' ') || to.query.id?.includes('%20')) {
-    router.go(0)
-  }else{
-    next()
-  }
-})
+// onBeforeRouteUpdate((to, form, next) => {
+//   if (to.query.id?.includes(' ') || to.query.id?.includes('%20')) {
+//     router.go(0)
+//   }else{
+//     next()
+//   }
+// })
 
 //获取文档信息
 const getDocumentInfo = async () => {

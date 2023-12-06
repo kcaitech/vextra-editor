@@ -35,7 +35,7 @@ enum permissions {
 }
 const route = useRoute()
 const docID = props.docId ? props.docId : route.query.id
-const url = route.path !== '/document' ? `https://protodesign.cn/#/document?id=${docID}` + " " + `邀请您进入《${props.docName}》，点击链接开始协作` : location.href + ' ' + `邀请您进入《${props.docInfo?.document.name}》，点击链接开始协作`
+const url = route.path !== '/document' ? `https://localhost:8080/zbb/#/document?id=${docID}` + " " + `邀请您进入《${props.docName}》，点击链接开始协作` : location.href + ' ' + `邀请您进入《${props.docInfo?.document.name}》，点击链接开始协作`
 
 const value1 = ref(props.shareSwitch)
 const authority = ref(false)
@@ -95,6 +95,7 @@ const handlekeyup = (e: KeyboardEvent) => {
 const handleClick = (e: MouseEvent) => {
   e.stopPropagation()
   e.target instanceof Element && !e.target.closest('.popover') && (authority.value = false)
+  e.target instanceof Element && !e.target.closest('.options') && (isSelectOpen.value = false)
 }
 
 const showselect = () => {
@@ -189,6 +190,7 @@ const setShateType = async (type: number) => {
 }
 
 watch(selectValue, (nVal, oVal) => {
+  console.log(props.selectValue, '页面监听');
   const index = DocType.findIndex(item => item === nVal)
   if (index === docType.Critical) {
     setShateType(docType.Critical)
@@ -206,20 +208,40 @@ watch(selectValue, (nVal, oVal) => {
 })
 
 watch(value1, (nVal, oVal) => {
+  console.log(nVal);
+  console.log(props.selectValue);
+  const index = DocType.findIndex(item => item === selectValue.value)
   if (nVal) {
-    if (props.selectValue === docType.Critical) {
+   
+    console.log('11111');
+    if (index === docType.Critical) {
       setShateType(docType.Critical)
-    } else if (props.selectValue === docType.Edit) {
+    } else if (index === docType.Edit) {
       setShateType(docType.Edit)
-    } else if (props.selectValue === docType.Read) {
+    } else if (index === docType.Read) {
       setShateType(docType.Read)
-    } else if (props.selectValue === docType.Share) {
+    } else if (index === docType.Share) {
       setShateType(docType.Share)
+    } else {
+      setShateType(docType.Private)
+      emit('switchState', true)
     }
-    emit('switchState', nVal)
+    emit('selectType', index)
+    // if (props.selectValue === docType.Critical) {
+    //   setShateType(docType.Critical)
+    // } else if (props.selectValue === docType.Edit) {
+    //   setShateType(docType.Edit)
+    // } else if (props.selectValue === docType.Read) {
+    //   setShateType(docType.Read)
+    // } else if (props.selectValue === docType.Share) {
+    //   setShateType(docType.Share)
+    // }
   } else {
+    console.log('22222');
+
     setShateType(docType.Private)
     emit('switchState', nVal)
+    emit('selectType', docType.Private)
   }
 })
 
@@ -309,12 +331,14 @@ onMounted(() => {
   document.addEventListener('keyup', handlekeyup);
   document.addEventListener('click', handleClick);
   if (!founder.value) {
-    console.log(props.selectValue);
-
     if (props.selectValue === docType.Private) {
       value1.value = false
       emit('switchState', false)
+    } else {
+      value1.value = true
     }
+    console.log(props.selectValue, '页面加载');
+
     // if (props.selectValue === docType.Critical) {
     //   setShateType(docType.Critical)
     // } else if (props.selectValue === docType.Edit) {
@@ -376,7 +400,8 @@ const selectOption = (option: any) => {
         <div class="purview">
           <span class="type">{{ t('share.permission_setting') }}：</span>
           <div class="right">
-            <input type="text" v-model="selectValue" @click.stop="openSelect" placeholder="Select an option" readonly />
+            <input type="text" v-model="selectValue" @click.stop="openSelect" placeholder="Select an option"
+              :disabled="props.selectValue === 0 ? true : false" readonly />
             <div class="shrink" @click.stop="openSelect">
               <svg-icon icon-class="down"
                 :style="{ transform: isSelectOpen ? 'rotate(-180deg)' : 'rotate(0deg)', color: '#666666' }"></svg-icon>
@@ -390,7 +415,9 @@ const selectOption = (option: any) => {
                 </li>
               </ul>
             </transition>
-            <button class="copybnt" type="button" @click.stop="copyLink">{{ t('share.copy_link') }}</button>
+            <button class="copybnt" type="button" @click.stop="copyLink"
+              :disabled="props.selectValue === 0 ? true : false">{{
+                t('share.copy_link') }}</button>
           </div>
         </div>
         <!-- <el-select v-model="selectValue" style="width: 122px;" class="m-2" size="large" @visible-change="showselect">
@@ -418,14 +445,36 @@ const selectOption = (option: any) => {
             </div>
             <div class="item-right" @click="(e: Event) => selectAuthority(ids, e)">
               <div class="authority">{{ permission[item.document_permission.perm_type] }}</div>
-              <div class="svgBox"><svg-icon class="svg" icon-class="bottom"></svg-icon></div>
-              <div class="popover" v-if="authority && index === ids" ref="popover"
-                :style="{ top: posi.top - 8 + 'px', right: 30 + 'px' }">
-                <div @click="onEditable(item.document_permission.id, permissions.editable, ids)">{{ editable }}</div>
-                <div @click="onReviewable(item.document_permission.id, permissions.reviewable, ids)">{{ reviewable }}
+              <div class="shrink">
+                <svg-icon icon-class="down"
+                  :style="{ transform: authority ? 'rotate(-180deg)' : 'rotate(0deg)', color: '#666666' }"></svg-icon>
+              </div>
+              <div class="popover" v-if="authority && index === ids" ref="popover">
+                <!-- :style="{ top: posi.top - 8 + 'px', right: 30 + 'px' }" -->
+                <div @click="onEditable(item.document_permission.id, permissions.editable, ids)">
+                  {{ editable }}
+                  <div class="choose"
+                    :style="{ visibility: editable === permission[item.document_permission.perm_type] ? 'visible' : 'hidden' }">
+                  </div>
                 </div>
-                <div @click="onReadOnly(item.document_permission.id, permissions.readOnly, ids)">{{ readOnly }}</div>
-                <div @click="onRemove(item.document_permission.id, ids)">{{ remove }}</div>
+                <div @click="onReviewable(item.document_permission.id, permissions.reviewable, ids)">
+                  {{ reviewable }}
+                  <div class="choose"
+                    :style="{ visibility: reviewable === permission[item.document_permission.perm_type] ? 'visible' : 'hidden' }">
+                  </div>
+                </div>
+                <div @click="onReadOnly(item.document_permission.id, permissions.readOnly, ids)">
+                  {{ readOnly }}
+                  <div class="choose"
+                    :style="{ visibility: readOnly === permission[item.document_permission.perm_type] ? 'visible' : 'hidden' }">
+                  </div>
+                </div>
+                <div @click="onRemove(item.document_permission.id, ids)">
+                  {{ remove }}
+                  <div class="choose"
+                    :style="{ visibility: remove === permission[item.document_permission.perm_type] ? 'visible' : 'hidden' }">
+                  </div>
+                </div>
               </div>
             </div>
           </div>
@@ -472,6 +521,11 @@ const selectOption = (option: any) => {
 </template>
   
 <style scoped lang="scss">
+:deep(.is-horizontal) {
+  display: none !important;
+  visibility: hidden !important;
+}
+
 .card-header {
   display: flex;
   justify-content: space-between;
@@ -601,6 +655,14 @@ const selectOption = (option: any) => {
         padding: 3px 3px 3px 12px;
         background: #F5F5F5;
         box-sizing: border-box;
+
+        &:hover {
+          background-color: rgba(235, 235, 235, 1);
+        }
+
+        &:focus {
+          background-color: rgba(235, 235, 235, 1);
+        }
       }
 
       .options {
@@ -650,24 +712,27 @@ const selectOption = (option: any) => {
         font-size: 13px;
         font-weight: 500;
         color: #FFFFFF;
-        ;
         outline: none;
         border: none;
         border-radius: 6px;
         background: #1878F5;
         box-sizing: border-box;
+
+        &:hover {
+          background-color: rgba(66, 154, 255, 1);
+        }
+
+        &:active {
+          background-color: rgba(10, 89, 207, 1);
+        }
+
+        &:disabled {
+          background-color: rgba(189, 226, 255, 1);
+        }
       }
     }
 
   }
-
-
-
-  .bottom {
-    margin: 5px 0 var(--default-margin) 0;
-  }
-
-
 }
 
 .share_user {
@@ -721,12 +786,68 @@ const selectOption = (option: any) => {
       }
 
       .item-right {
+        position: relative;
+        height: 40px;
         display: flex;
         align-items: center;
+        gap: 2px;
 
-        .founder {
+        .founder,
+        .authority {
           font-size: 12px;
-          font-weight: 500px;
+          font-weight: 500;
+        }
+
+        .shrink {
+          display: flex;
+          align-items: center;
+          width: 12px;
+          height: 12px;
+          color: rgba(102, 102, 102, 1);
+
+          >svg {
+            transition: 0.5s;
+            width: 100%;
+            height: 100%;
+          }
+        }
+
+        .popover {
+          position: absolute;
+          top: 40px;
+          right: 0px;
+          display: flex;
+          flex-direction: column;
+          width: 88px;
+          background-color: #fff;
+          border: 1px solid #EBEBEB;
+          border-radius: 8px;
+          box-shadow: 0px 2px 10px 0px rgba(0, 0, 0, 0.08);
+          box-sizing: border-box;
+
+          >div {
+            display: flex;
+            align-items: center;
+            justify-content: space-around;
+            height: 40px;
+            font-size: 12px;
+
+            .choose {
+              box-sizing: border-box;
+              width: 10px;
+              height: 6px;
+              margin-right: 4px;
+              margin-left: 2px;
+              border-width: 0 0 0.2em 0.2em;
+              border-style: solid;
+              border-color: rgb(0, 0, 0, .75);
+              transform: rotate(-45deg) translateY(-30%);
+            }
+
+            &:hover {
+              background-color: rgba(245, 245, 245, 1);
+            }
+          }
         }
 
         .svgBox {
@@ -770,26 +891,7 @@ const selectOption = (option: any) => {
 
 
 
-.popover {
-  position: absolute;
-  display: flex;
-  border: 1px solid var(--theme-color-line);
-  font-size: var(--font-default-fontsize);
-  background-color: #fff;
-  border-radius: 4px;
-  flex-direction: column;
-  width: 100px;
-  justify-content: space-around;
-  box-shadow: 2px 2px 5px rgba(0, 0, 0, 0.2);
 
-  >div {
-    padding: var(--default-margin-quarter) var(--default-padding-half);
-  }
-
-  >div:hover {
-    background-color: #f5f7fa
-  }
-}
 
 .unfounder {
   display: flex;
@@ -804,16 +906,7 @@ const selectOption = (option: any) => {
   }
 }
 
-.button {
-  display: flex;
-  align-items: center;
-  justify-content: center;
 
-}
-
-.founder {
-  margin-right: 48px;
-}
 
 .card {
   position: absolute;
@@ -832,14 +925,8 @@ const selectOption = (option: any) => {
     border: none;
     box-shadow: none;
     width: 100%;
-    padding: 0 24px;
+    padding: 0 24px 8px 24px;
     box-sizing: border-box;
   }
-}
-
-
-
-:deep(.el-button) {
-  color: #fff;
 }
 </style>
