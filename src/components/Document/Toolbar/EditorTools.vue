@@ -114,7 +114,7 @@ function applyForEdit() {
         <Table @select="select" :active="selected === Action.AddTable" :context="props.context"></Table>
         <Contact @select="select" :active="selected === Action.AddContact" :context="props.context"></Contact>
         <Cutout @select="select" :active="selected === Action.AddCutout"></Cutout>
-        <div class="vertical-line"/>
+        <div class="vertical-line" />
         <CreateComps @select="select" :context="props.context"></CreateComps>
         <Comment @select="select" :active="selected === Action.AddComment" :workspace="workspace"></Comment>
         <GroupUngroup :context="props.context" :selection="props.selection"></GroupUngroup>

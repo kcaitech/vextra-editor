@@ -29,9 +29,9 @@
         </div>
         <listrightmenu :items="items" :data="mydata" @get-doucment="getDoucment" @r-starfile="Starfile"
             @r-sharefile="Sharefile" @r-removefile="Deletefile" @ropen="openDocument" @moveFillAddress="moveFillAddress" />
-        <FileShare v-if="showFileShare" @close="closeShare" :docId="docId" :selectValue="selectValue" :userInfo="userInfo"
-            :docUserId="docUserId" @select-type="onSelectType" @switch-state="onSwitch" :shareSwitch="shareSwitch"
-            :pageHeight="pageHeight">
+        <FileShare v-if="showFileShare" @close="closeShare" :docId="docId" :docName="docName" :selectValue="selectValue"
+            :userInfo="userInfo" :docUserId="docUserId" @select-type="onSelectType" @switch-state="onSwitch"
+            :shareSwitch="shareSwitch" :pageHeight="pageHeight">
         </FileShare>
         <MoveProjectFill :title="t('Createteam.movetip')" :confirm-btn="t('Createteam.move')" :projectItem="projectItem"
             :doc="mydata" :projectVisible="moveVisible" @clodeDialog="clodeDialog" @moveFillSeccess="moveFillSeccess">
@@ -79,6 +79,7 @@ const showFileShare = ref<boolean>(false)
 const shareSwitch = ref(true)
 const pageHeight = ref(0)
 const docId = ref('')
+const docName = ref('')
 const mydata = ref()
 const selectValue = ref(1)
 const docUserId = ref('')
@@ -218,6 +219,7 @@ const Sharefile = (data: data) => {
     }
     docUserId.value = data.document.user_id
     docId.value = data.document.id
+    docName.value = data.document.name
     selectValue.value = data.document.doc_type !== 0 ? data.document.doc_type : data.document.doc_type
     userInfo.value = userData.value
     showFileShare.value = true
