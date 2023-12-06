@@ -1,18 +1,29 @@
 <script setup lang="ts">
-import { ref, reactive, onMounted, onUnmounted, watch, nextTick, watchEffect } from 'vue';
+import { ref, reactive, onMounted, onUnmounted, watch } from 'vue';
 import comsMap from '@/components/Document/Content/comsmap';
-import { ExportOptions, Matrix, Shape, ShapeType } from '@kcdesign/data';
+import { Shape, ShapeType } from '@kcdesign/data';
 import { Context } from '@/context';
 import { getCutoutShape, getShadowMax } from '@/utils/cutout';
 import { color2string } from '@/utils/content';
 import { Selection } from '@/context/selection';
 import { debounce } from 'lodash';
+import { nextTick } from 'vue';
+import { onUpdated } from 'vue';
 interface Props {
     context: Context
     shapes: Shape[]
     unfold: boolean
     canvas_bg: boolean
     trim_bg: boolean
+}
+interface SvgFormat {
+    id: string
+    width: number
+    height: number
+    x: number
+    y: number
+    background: string
+    shapes: Shape[]
 }
 const emits = defineEmits<{
     (e: 'previewChange', v: boolean): void;
@@ -32,81 +43,90 @@ const width = ref<number>(0);
 const height = ref<number>(0);
 const xy = ref<{ x: number, y: number }>({ x: 0, y: 0 });
 const background_color = ref<string>(DEFAULT_COLOR());
-let renderItems: Shape[] = [];
+let renderItems: Shape[] = reactive([]);
 const selectedShapes: Map<string, Shape> = new Map();
 const previewSvg = ref<SVGSVGElement>();
 const pngImage = ref();
 const trimImage = ref();
+const renderSvgs = ref<SvgFormat[]>([]);
 const toggleExpand = () => {
     isTriangle.value = !isTriangle.value;
     emits('previewChange', isTriangle.value);
-    if (isTriangle.value) getCanvasShape();
 }
-
-const getCanvasShape = () => {
-    if (!isTriangle.value) return;
+const _getCanvasShape = () => {
     const shapes = props.context.selection.selectedShapes;
     const shape = shapes[0];
-    if (!shapes.length) return;
+    if(shapes.length === 1 && shape.type !== ShapeType.Cutout) {
+        if(props.context.workspace.isTranslating) return;
+    }
     resetSvg();
     if (shapes.length === 1 && shape.type === ShapeType.Cutout) {
         selectedShapes.clear();
         getCutoutShape(shape, props.context.selection.selectedPage!, selectedShapes);
         getPosition(shape);
         renderItems = Array.from(selectedShapes.values());
-        reflush.value++;
-    } else {
+    } else if (shapes.length === 1) {
         getPosition(shape);
         renderItems = [shape];
+    } else if (shapes.length === 0) {
+        const page = props.context.selection.selectedPage;
+        if (page) {
+            width.value = page.frame.width;
+            height.value = page.frame.height;
+            xy.value.x = 0;
+            xy.value.y = 0;
+            renderItems = page.childs;
+        }
     }
+    reflush.value++;
     nextTick(() => {
-        getPreviewSvg();
+        if (previewSvg.value) {
+            getPreviewSvg(previewSvg.value);
+        }
     });
-
 }
-
-const getPreviewSvg = () => {
-    if (previewSvg.value) {
-        const canvas = document.createElement('canvas');
-        const context = canvas.getContext('2d');
-        canvas.width = previewSvg.value.clientWidth;
-        canvas.height = previewSvg.value.clientHeight;
-        const svgString = new XMLSerializer().serializeToString(previewSvg.value);
-        const img = new Image();
-        img.src = 'data:image/svg+xml;base64,' + btoa(unescape(encodeURIComponent(svgString)));
-        img.onload = () => {
-            context && context.drawImage(img, 0, 0);
-            const dataURL = canvas.toDataURL('image/png');
-            pngImage.value = dataURL;
-            if (props.trim_bg && context) {
-                const imageData = context.getImageData(0, 0, canvas.width, canvas.height);
-                const data = imageData.data;
-                let top = canvas.height, bottom = 0, left = canvas.width, right = 0;
-                for (let y = 0; y < canvas.height; y++) {
-                    for (let x = 0; x < canvas.width; x++) {
-                        const alpha = data[(y * canvas.width + x) * 4 + 3]; // 获取像素的透明度值
-                        if (alpha > 0) {
-                            top = Math.min(top, y);
-                            bottom = Math.max(bottom, y);
-                            left = Math.min(left, x);
-                            right = Math.max(right, x);
-                        }
+const getCanvasShape = debounce(_getCanvasShape, 100, { leading: true });
+const getPreviewSvg = (svg: SVGSVGElement) => {
+    const canvas = document.createElement('canvas');
+    const context = canvas.getContext('2d');
+    canvas.width = svg.clientWidth;
+    canvas.height = svg.clientHeight;
+    const svgString = new XMLSerializer().serializeToString(svg);
+    const img = new Image();
+    img.src = 'data:image/svg+xml;base64,' + btoa(unescape(encodeURIComponent(svgString)));
+    img.onload = () => {
+        context && context.drawImage(img, 0, 0);
+        const dataURL = canvas.toDataURL('image/png');
+        pngImage.value = dataURL;
+        if (props.trim_bg && context) {
+            const imageData = context.getImageData(0, 0, canvas.width, canvas.height);
+            const data = imageData.data;
+            let top = canvas.height, bottom = 0, left = canvas.width, right = 0;
+            for (let y = 0; y < canvas.height; y++) {
+                for (let x = 0; x < canvas.width; x++) {
+                    const alpha = data[(y * canvas.width + x) * 4 + 3]; // 获取像素的透明度值
+                    if (alpha > 0) {
+                        top = Math.min(top, y);
+                        bottom = Math.max(bottom, y);
+                        left = Math.min(left, x);
+                        right = Math.max(right, x);
                     }
                 }
-                const width = right - left;
-                const height = bottom - top;
-                // 创建一个新Canvas元素，用于存储裁剪后的图像
-                const newCanvas = document.createElement("canvas");
-                const outputCtx = newCanvas.getContext("2d");
-                newCanvas.width = width;
-                newCanvas.height = height;
-                // 在新Canvas上绘制裁剪后的图像
-                outputCtx && outputCtx.drawImage(img, left, top, width, height, 0, 0, width, height);
-                const newDataURL = newCanvas.toDataURL('image/png');
-                trimImage.value = newDataURL;
             }
-        };
-    }
+            const width = right - left;
+            const height = bottom - top;
+            // 创建一个新Canvas元素，用于存储裁剪后的图像
+            const newCanvas = document.createElement("canvas");
+            const outputCtx = newCanvas.getContext("2d");
+            newCanvas.width = width;
+            newCanvas.height = height;
+            // 在新Canvas上绘制裁剪后的图像
+            outputCtx && outputCtx.drawImage(img, left, top, width, height, 0, 0, width, height);
+            const newDataURL = newCanvas.toDataURL('image/png');
+            trimImage.value = newDataURL;
+        }
+        reflush.value++;
+    };
 }
 
 const getPosition = (shape: Shape) => {
@@ -148,17 +168,62 @@ function page_color() {
         } else {
             background_color.value = DEFAULT_COLOR();
         }
-        getCanvasShape();
+    }
+}
+const shape = ref<Shape | undefined>(props.shapes[0]);
+const select_watcher = (t: number) => {
+    if (t === Selection.CHANGE_SHAPE) {
+        const shapes = props.context.selection.selectedShapes;
+        const page = props.context.selection.selectedPage;
+        if (page && page.exportOptions && shapes.length === 0) {
+            isTriangle.value = page.exportOptions.unfold;
+        } else if (shapes.length === 1 && shapes[0].exportOptions) {
+            isTriangle.value = shapes[0].exportOptions.unfold;
+        }
+        page_color();
+        getCanvasShape(); 
+        if(shapes.length === 1) {
+            shape.value = shapes[0];
+        }else if(shapes.length === 0) {
+            shape.value = undefined;
+        }
     }
 }
 
-const select_watcher = (t: number) => {
-    if (t === Selection.CHANGE_SHAPE) {
-        isTriangle.value = props.unfold;
-        page_color();
-        getCanvasShape();
+const getShapesSvg = (shapes: Shape[]) => {
+    if (shapes.length > 0) {
+        let renderItems: SvgFormat[] = [];
+        for (let i = 0; i < shapes.length; i++) {
+            const shape = shapes[i];
+            let shapeItem: Shape[] = [];
+            let bgc = 'transparent';
+            if (shape.type === ShapeType.Cutout) {
+                selectedShapes.clear();
+                getCutoutShape(shape, props.context.selection.selectedPage!, selectedShapes);
+                shapeItem = Array.from(selectedShapes.values());
+                shape.exportOptions?.canvasBackground ? bgc = DEFAULT_COLOR() : bgc = 'transparent';
+            } else {
+                shapeItem = [shape];
+            }
+            getPosition(shape);
+
+            renderItems.push(
+                {
+                    id: shape.id + i,
+                    width: width.value,
+                    height: height.value,
+                    x: xy.value.x,
+                    y: xy.value.y,
+                    background: bgc,
+                    shapes: shapeItem
+                }
+            )
+        }
+        renderSvgs.value = renderItems;
     }
 }
+
+defineExpose({ getShapesSvg, renderSvgs })
 const img = ref();
 const startDrag = (e: DragEvent) => {
     if (img.value) {
@@ -169,28 +234,24 @@ const startDrag = (e: DragEvent) => {
 watch(() => props.canvas_bg, (v) => {
     page_color();
 })
+watch(() => shape.value, (v, o) => {
+    o && o.unwatch(getCanvasShape);
+    v && v.watch(getCanvasShape);
+}, { immediate: true })
 
-const updateCutoutCanvas = () => {
-    const selected = props.context.selection.selectedShapes;
-    if (selected.length === 1 && selected[0].type === ShapeType.Cutout) {
-        getCanvasShape();
-    }
-}
-const update = debounce(updateCutoutCanvas, 300, { leading: true });
-props.shapes[0].watch(update)
 onMounted(() => {
     page_color();
+    getCanvasShape();
     props.context.selection.watch(select_watcher);
 })
 onUnmounted(() => {
-    props.shapes[0].unwatch(updateCutoutCanvas)
-    props.context.selection.watch(select_watcher);
+    props.context.selection.unwatch(select_watcher);
 })
 
 </script>
 
 <template>
-    <div class="preview_box">
+    <div class="preview_box" v-if="props.context.selection.selectedShapes.length <= 1">
         <div class="title" @click="toggleExpand">
             <div class="triangle">
                 <div :class="{ 'triangle-right': !isTriangle, 'triangle-down': isTriangle }">
@@ -204,9 +265,8 @@ onUnmounted(() => {
             <component :is="comsMap.get(c.type) ?? comsMap.get(ShapeType.Rectangle)" v-for=" c  in  renderItems "
                 :key="c.id" :data="c" />
         </svg>
-        <div class="preview-canvas" v-if="isTriangle && !trimImage && pngImage"
-            :reflush="reflush !== 0 ? reflush : undefined">
-            <div class="preview-image">
+        <div class="preview-canvas" v-if="isTriangle && !trimImage && pngImage" :reflush="reflush !== 0 ? reflush : undefined">
+            <div class="preview-image" v-if="!trimImage && pngImage">
                 <img :src="pngImage" ref="img" alt="" v-if="pngImage" :draggable="true" @dragstart="startDrag">
             </div>
         </div>
@@ -319,5 +379,11 @@ onUnmounted(() => {
             object-fit: contain;
         }
     }
+}
+
+.exportsvg {
+    position: absolute;
+    opacity: 0;
+    z-index: -1;
 }
 </style>

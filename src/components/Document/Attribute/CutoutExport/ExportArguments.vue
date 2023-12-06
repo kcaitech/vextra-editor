@@ -114,6 +114,7 @@ const deleteItem = () => {
     emits('delete', props.index);
 }
 watchEffect(() => {
+    props.context.selection.selectedShapes
     if (props.argus.format.scale) {
         sizeValue.value = props.argus.format.scale + 'x';
     }
@@ -162,7 +163,7 @@ watchEffect(() => {
             </div>
         </div>
         <div class="delete" @click="deleteItem"
-            :class="{ opacity: props.length === 1 && props.shapes[0].type === ShapeType.Cutout }">
+            :class="{ opacity: props.shapes.length === 1 && props.shapes[0].type === ShapeType.Cutout }">
             <svg-icon icon-class="delete"></svg-icon>
         </div>
     </div>

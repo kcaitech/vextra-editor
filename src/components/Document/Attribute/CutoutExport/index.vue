@@ -1,6 +1,6 @@
 <script setup lang="ts">
 import { ExportFileFormat, ExportFormat, ExportFormatNameingScheme, ExportOptions, ExportVisibleScaleType, Shape, ShapeType } from '@kcdesign/data';
-import { ref, onMounted, onUnmounted, watch, reactive, computed } from 'vue';
+import { ref, onMounted, onUnmounted, watch, reactive, computed, nextTick } from 'vue';
 import { WorkSpace } from '@/context/workspace';
 import { Context } from '@/context';
 import PreinstallSelect from './PreinstallSelect.vue';
@@ -9,10 +9,22 @@ import ExportArguments from './ExportArguments.vue';
 import { v4 } from 'uuid';
 import { useI18n } from 'vue-i18n';
 import { Selection } from '@/context/selection';
+import comsMap from '@/components/Document/Content/comsmap';
 import { get_actions_add_export_format, get_actions_export_format_delete, get_actions_export_format_file_format, get_actions_export_format_name, get_actions_export_format_perfix, get_actions_export_format_scale, get_actions_export_format_unify, get_export_formats } from '@/utils/shape_style';
+import { downloadImages, exportSingleImage, getExportFillUrl, getPngImageData, getSvgImageData } from '@/utils/image';
+
 const { t } = useI18n();
 interface Props {
     context: Context
+    shapes: Shape[]
+}
+interface SvgFormat {
+    id: string
+    width: number
+    height: number
+    x: number
+    y: number
+    background: string
     shapes: Shape[]
 }
 export interface FormatItems {
@@ -34,6 +46,9 @@ const exportOption = ref<ExportOptions>();
 const trim_bg = ref(false);
 const canvas_bg = ref(false);
 const previewUnfold = ref(false);
+const preview = ref();
+
+let renderSvgs = ref<SvgFormat[]>([]);
 function watchShapes() {
     const needWatchShapes = new Map();
     const selection = props.context.selection;
@@ -65,6 +80,7 @@ function updateData() {
     exportOption.value = undefined;
     const selected = props.context.selection.selectedShapes;
     const len = selected.length;
+    renderSvgs.value = [];
     if (len === 1) {
         const shape = selected[0];
         const options = shape.exportOptions;
@@ -81,11 +97,15 @@ function updateData() {
             }
         }
     } else if (len > 1) {
+        const options = selected[0].exportOptions;
         const _formats = get_export_formats(selected);
         if (_formats === 'mixed') {
             mixed.value = true;
         } else {
             preinstallArgus.push(..._formats.reverse());
+            if (options) {
+                exportOption.value = options;
+            }
         }
     } else {
         const page = props.context.selection.selectedPage;
@@ -102,6 +122,12 @@ function updateData() {
             }
         }
     }
+    nextTick(() => {
+        if (preview.value) {
+            preview.value.getShapesSvg(selected);
+            renderSvgs.value = preview.value.renderSvgs;
+        }
+    })
     reflush.value++;
 }
 
@@ -147,6 +173,12 @@ const addDefault = (len: number) => {
                 editor.shapesAddExportFormat(actions);
             }
         }
+    } else {
+        // const page = props.context.selection.selectedPage;
+        // if (page) {
+        //     const editor = props.context.editor4Page(page);
+        //     editor.pageAddExportFormat(formars);
+        // }
     }
 }
 const addAndroid = (len: number) => {
@@ -175,6 +207,12 @@ const addAndroid = (len: number) => {
                 editor.shapesAddExportFormat(actions);
             }
         }
+    } else {
+        // const page = props.context.selection.selectedPage;
+        // if (page) {
+        //     const editor = props.context.editor4Page(page);
+        //     editor.pageAddExportFormat(formars);
+        // }
     }
 }
 const addIos = (len: number) => {
@@ -202,6 +240,12 @@ const addIos = (len: number) => {
                 editor.shapesAddExportFormat(actions);
             }
         }
+    } else {
+        // const page = props.context.selection.selectedPage;
+        // if (page) {
+        //     const editor = props.context.editor4Page(page);
+        //     editor.pageAddExportFormat(formars);
+        // }
     }
 }
 function first() {
@@ -327,6 +371,51 @@ const showCheckbox = () => {
     isShowCheckbox.value = props.context.selection.selectedShapes.length === 1 && props.context.selection.selectedShapes[0].type === ShapeType.Cutout;
 }
 
+const previewSvgs = ref<SVGSVGElement[]>();
+const pngImageUrls: Map<string, string> = new Map();
+const exportFill = () => {
+    pngImageUrls.clear();
+    const selected = props.context.selection.selectedShapes;
+    for (let i = 0; i < selected.length; i++) {
+        const shape = selected[i];
+        if (previewSvgs.value) {
+            const svg = previewSvgs.value[i];
+            shape.exportOptions!.exportFormats.forEach((format, idx) => {
+                const id = shape.id + format.id;
+                const { width, height } = svg.viewBox.baseVal
+                svg.setAttribute("width", `${width * format.scale}`);
+                svg.setAttribute("height", `${height * format.scale}`);
+                if (format.fileFormat === ExportFileFormat.Jpg || format.fileFormat === ExportFileFormat.Png) {
+                    getPngImageData(svg, shape.exportOptions!.trimTransparent, id, format, pngImageUrls);
+                }else if(format.fileFormat === ExportFileFormat.Svg) {
+                    getSvgImageData(svg, shape.exportOptions!.trimTransparent, id, format, pngImageUrls);
+                }
+            });
+        }
+    }
+    setTimeout(() => {
+        const page = props.context.selection.selectedPage;
+        const options = selected.length > 0 ? selected[0].exportOptions : page && page.exportOptions;
+        const formats = options!.exportFormats;
+        if (selected.length <= 1 && formats.length === 1 && !formats[0].name.includes('/')) {
+            const id = selected[0].id + formats[0].id;
+            const url = pngImageUrls.get(id);
+            if (url) {
+                let fileName;
+                if (formats[0].namingScheme === ExportFormatNameingScheme.Prefix) {
+                    fileName = formats[0].name + selected[0].name;
+                } else {
+                    fileName = selected[0].name + formats[0].name;
+                }
+                exportSingleImage(url, formats[0].fileFormat, fileName);
+            }
+        } else {
+            const imageUrls = getExportFillUrl(selected, pngImageUrls);
+            downloadImages(imageUrls);
+        }
+    }, 100)
+}
+
 function update_by_shapes() {
     watchShapes();
     updateData();
@@ -349,13 +438,13 @@ onUnmounted(() => {
 
 <template>
     <div class="cutout_export_box">
-        <div class="title" @click="first">
+        <div class="title" @click.stop="first">
             <div class="name">创建切图与导出</div>
             <div class="cutout_add_icon">
                 <div class="cutout-icon cutout-preinstall"
                     :style="{ backgroundColor: isPreinstall ? 'rgba(0, 0, 0, 0.2)' : '' }" @click="showPreinstall"><svg-icon
                         icon-class="text-justify"></svg-icon></div>
-                <div class="cutout-icon" @click="preinstall('default')"><svg-icon icon-class="add"></svg-icon></div>
+                <div class="cutout-icon" @click.stop="preinstall('default')"><svg-icon icon-class="add"></svg-icon></div>
                 <PreinstallSelect v-if="isPreinstall" @close="isPreinstall = false" @preinstall="preinstall">
                 </PreinstallSelect>
             </div>
@@ -379,17 +468,31 @@ onUnmounted(() => {
                 <el-checkbox :model-value="canvas_bg" @change="canvasBackground" label="画布背景色" />
             </div>
             <div class="export-box" v-if="preinstallArgus.length > 0">
-                <div><span>导出</span></div>
+                <div @click="exportFill"><span>导出</span></div>
             </div>
-            <Preview v-if="context.selection.selectedShapes.length <= 1 && exportOption" :context="context" :shapes="shapes"
-                :unfold="previewUnfold" @preview-change="previewCanvas" :canvas_bg="canvas_bg" :trim_bg="trim_bg">
+            <Preview ref="preview" v-if="exportOption && exportOption.exportFormats.length" :context="context"
+                :shapes="shapes" :unfold="previewUnfold" @preview-change="previewCanvas" :canvas_bg="canvas_bg"
+                :trim_bg="trim_bg">
             </Preview>
+        </div>
+        <div class="exportsvg">
+            <template v-for="(svg) in renderSvgs" :key="svg.id">
+                <svg version="1.1" ref="previewSvgs" xmlns="http://www.w3.org/2000/svg"
+                    xmlns:xlink="http://www.w3.org/1999/xlink" xmlns:xhtml="http://www.w3.org/1999/xhtml"
+                    preserveAspectRatio="xMinYMin meet" :width="svg.width" :height="svg.height"
+                    :viewBox="`${svg.x} ${svg.y} ${svg.width} ${svg.height}`"
+                    :style="{ 'background-color': svg.background }">
+                    <component :is="comsMap.get(c.type) ?? comsMap.get(ShapeType.Rectangle)" v-for=" c  in  svg.shapes "
+                        :key="c.id" :data="c" />
+                </svg>
+            </template>
         </div>
     </div>
 </template>
 
 <style scoped lang="scss">
 .cutout_export_box {
+    position: relative;
     width: 100%;
     display: flex;
     flex-direction: column;
@@ -502,5 +605,13 @@ onUnmounted(() => {
         text-align: center;
         font-size: var(--font-default-fontsize);
     }
+}
+
+.exportsvg {
+    position: fixed;
+    right: -1000px;
+    top: -1000px;
+    opacity: 0;
+    z-index: -1;
 }
 </style>

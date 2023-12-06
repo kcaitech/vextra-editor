@@ -286,21 +286,17 @@ const isLock = (shape: Shape) => {
 }
 
 const isRead = (read: boolean, shape: Shape) => {
-    let timer: any;
-    if (timer) {
-        clearTimeout(timer)
-    }
     const editor = props.context.editor4Shape(shape);
     editor.toggleVisible();
     if (!read) {
-        props.context.selection.unSelectShape(shape);
-        props.context.selection.unHoverShape();
-        props.context.workspace.translating(true);
-        timer = setTimeout(() => {
-            props.context.workspace.translating(false);
-            clearTimeout(timer);
-            timer = null;
-        }, 350)
+        // props.context.selection.unSelectShape(shape);
+        // props.context.selection.unHoverShape();
+        // props.context.workspace.translating(true);
+        // timer = setTimeout(() => {
+        //     props.context.workspace.translating(false);
+        //     clearTimeout(timer);
+        //     timer = null;
+        // }, 350)
     }
 }
 
