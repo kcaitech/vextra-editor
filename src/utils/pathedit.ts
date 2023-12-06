@@ -1,6 +1,6 @@
 import { Context } from "@/context";
 import { XY } from "@/context/selection";
-import { CurveMode, CurvePoint, Matrix, PathShape } from "@kcdesign/data";
+import { CurveMode, CurvePoint, GroupShape, Matrix, PathShape } from "@kcdesign/data";
 
 export function get_root_points(context: Context, indexes?: number[]) {
     const path_shape = context.selection.pathshape;
@@ -212,6 +212,14 @@ export function __round_curve_point2(points: CurvePoint[], index: number) {
     }
 }
 
+export function __next_points(points: CurvePoint[], index: number, is_cloesed: boolean) {
+    if (!is_cloesed && index === points.length - 1) {
+        return;
+    }
+    const next_index = index === points.length - 1 ? 0 : index + 1;
+    return points[next_index];
+}
+
 export function bezierCurvePoint(t: number, p0: XY, p1: XY, p2: XY, p3: XY): XY {
     return {
         x: Math.pow(1 - t, 3) * p0.x + 3 * Math.pow(1 - t, 2) * t * p1.x + 3 * (1 - t) * Math.pow(t, 2) * p2.x + Math.pow(t, 3) * p3.x,
@@ -335,4 +343,137 @@ export function get_segments(shape: PathShape, matrix: Matrix, segment_set: Set<
         result_segments.push(_segmeng_generator(m, point, next, index, segment_set))
     }
     return result_segments;
+}
+export interface Segment2 {
+    mode: CurveMode
+    start: XY
+    from: XY
+    to: XY
+    end: XY
+    index: number
+    path: string
+    shape: PathShape
+}
+function s_s2(m: Matrix, point: CurvePoint, next: CurvePoint, index: number, shape: PathShape): Segment2 {
+    const _p = m.computeCoord2(point.x, point.y);
+    const _next = m.computeCoord2(next.x, next.y);
+    return {
+        mode: point.mode,
+        start: _p,
+        from: _p,
+        to: _p,
+        end: _next,
+        index,
+        shape,
+        path: `M ${_p.x} ${_p.y} L${_next.x} ${_next.y}`
+    }
+
+}
+function s_c2(m: Matrix, point: CurvePoint, next: CurvePoint, index: number, shape: PathShape): Segment2 {
+    const _p = m.computeCoord2(point.x, point.y);
+    const _next_to = m.computeCoord2(next.toX || 0, next.toY || 0);
+    const _next = m.computeCoord2(next.x, next.y);
+    return {
+        mode: point.mode,
+        start: _p,
+        from: _p,
+        to: _next_to,
+        end: _next,
+        index,
+        shape,
+        path: `M ${_p.x} ${_p.y} C ${_p.x} ${_p.y} ${_next_to.x} ${_next_to.y} ${_next.x} ${_next.y}`
+    }
+}
+function c_s2(m: Matrix, point: CurvePoint, next: CurvePoint, index: number, shape: PathShape): Segment2 {
+    const _p = m.computeCoord2(point.x, point.y);
+    const _point_from = m.computeCoord2(point.fromX || 0, point.fromY || 0);
+    const _next = m.computeCoord2(next.x, next.y);
+    return {
+        mode: point.mode,
+        start: _p,
+        from: _point_from,
+        to: _next,
+        end: _next,
+        index,
+        shape,
+        path: `M ${_p.x} ${_p.y} C ${_point_from.x} ${_point_from.y} ${_next.x} ${_next.y} ${_next.x} ${_next.y}`
+    }
+}
+function c_c2(m: Matrix, point: CurvePoint, next: CurvePoint, index: number, shape: PathShape): Segment2 {
+    const _p = m.computeCoord2(point.x, point.y);
+    const _point_from = m.computeCoord2(point.fromX || 0, point.fromY || 0);
+    const _next_to = m.computeCoord2(next.toX || 0, next.toY || 0);
+    const _next = m.computeCoord2(next.x, next.y);
+    return {
+        mode: point.mode,
+        start: _p,
+        from: _point_from,
+        to: _next_to,
+        end: _next,
+        index,
+        shape,
+        path: `M ${_p.x} ${_p.y} C ${_point_from.x} ${_point_from.y} ${_next_to.x} ${_next_to.y} ${_next.x} ${_next.y}`
+    }
+}
+function _segmeng_generator2(m: Matrix, point: CurvePoint, next: CurvePoint, index: number, shape: PathShape) {
+    if (point.hasFrom) {
+        if (next.hasTo) {
+            return c_c2(m, point, next, index, shape);
+        } else {
+            return c_s2(m, point, next, index, shape);
+        }
+    } else {
+        if (next.hasTo) {
+            return s_c2(m, point, next, index, shape);
+        } else {
+            return s_s2(m, point, next, index, shape);
+        }
+    }
+}
+export function get_segments2(shape: PathShape | GroupShape, matrices: Map<string, Matrix>) {
+    const result_segments: Segment2[] = [];
+    if (shape instanceof PathShape) {
+        const m = matrices.get(shape.id);
+        if (!m) {
+            console.log('!m');
+            return result_segments;
+        }
+        _exe(shape, result_segments, m);
+        return result_segments;
+    }
+    const shapes = shape.childs;
+    if (!shapes?.length) {
+        console.log('points?.length');
+        return result_segments;
+    }
+    for (let i = 0, l = shapes.length; i < l; i++) {
+        const shape = shapes[i];
+        if (!(shape instanceof PathShape)) {
+            continue;
+        }
+        const m = matrices.get(shape.id);
+        if (!m) {
+            continue;
+        }
+        _exe(shape, result_segments, m);
+    }
+    return result_segments;
+
+    function _exe(__s: PathShape, container: Segment2[], matrix: Matrix) {
+        const points = __s.points;
+        if (!points?.length) {
+            console.log('points?.length');
+            return;
+        }
+        const m = new Matrix(matrix);
+        m.preScale(__s.frame.width, __s.frame.height);
+        for (let index = 0, l = points.length; index < l; index++) {
+            const point = points[index];
+            const next = __next_points(points, index, __s.isClosed);
+            if (!next) {
+                break;
+            }
+            container.push(_segmeng_generator2(m, point, next, index, __s));
+        }
+    }
 }

@@ -158,6 +158,7 @@ onUnmounted(() => {
 </script>
 <template>
     <div :class="{wrapper: true, 'clip-mode': clip_mode}" @wheel.stop @mousedown.stop="down" @mousemove="move" @wheel="onMouseWheel">
+        
         <CtrlPathEdit :context="props.context"></CtrlPathEdit>
         <Selector4PEM v-if="selector_mount" :context="props.context" :selector-frame="selectorFrame"></Selector4PEM>
         <PathAssist :context="props.context"></PathAssist>
