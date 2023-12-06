@@ -3,7 +3,7 @@ import { Context } from "@/context";
 import { computed, onMounted, onUnmounted, reactive, ref } from "vue";
 import { Matrix } from "@kcdesign/data";
 import { WorkSpace } from "@/context/workspace";
-
+import ClipSlice from "./Bars/ClipSlice.vue";
 interface Props {
     context: Context
 }
@@ -78,6 +78,7 @@ onUnmounted(() => {
         xmlns:xhtml="http://www.w3.org/1999/xhtml" preserveAspectRatio="xMinYMin meet" :width="width" :height="height"
         overflow="visible" :viewBox="genViewBox(bounds)"
         :style="{ transform: `translate(${bounds.left}px,${bounds.top}px)` }">
+        <ClipSlice :context="context"></ClipSlice>
     </svg>
 </template>
 <style lang="scss" scoped>
