@@ -361,7 +361,7 @@ function onChangeRotate(value: string) {
     value = Number.parseFloat(value).toFixed(fix);
     const newRotate: number = Number.parseFloat(value);
     if (isNaN(newRotate)) return;
-    const selected = props.context.selection.selectedShapes;
+    const selected = props.context.selection.selectedShapes.filter(shape => shape.type !== ShapeType.Cutout);
     if (selected.length) {
         const page = props.context.selection.selectedPage;
         if (page) {
@@ -372,7 +372,7 @@ function onChangeRotate(value: string) {
     }
 }
 const onChangeRadian = (value: string, type: 'rt' | 'lt' | 'rb' | 'lb') => {
-    const selected = props.context.selection.selectedShapes;
+    const selected = props.context.selection.selectedShapes.filter(shape => shape.type !== ShapeType.Cutout);
     if (selected.length === 1) {
         const e = props.context.editor4Shape(selected[0]);
         if (isMoreForRadius.value) {

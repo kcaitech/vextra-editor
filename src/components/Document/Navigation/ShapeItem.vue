@@ -301,7 +301,7 @@ onUnmounted(() => {
         <!-- 内容描述 -->
         <div class="text" :style="{ opacity: !visible_status ? 1 : .3, display: isInput ? 'none' : '' }">
             <div class="txt" @dblclick="onRename">{{ get_name(props.data.shape(), t('compos.dlt')) }}</div>
-            <div class="tool_icon"
+            <div class="tool_icon" @mousedown.stop
                  :style="{ visibility: `${is_tool_visible ? 'visible' : 'hidden'}`, width: `${is_tool_visible ? 66 + 'px' : lock_status || visible_status ? 66 + 'px' : 0}` }">
                 <div class="tool_lock tool" :class="{ 'visible': lock_status }" @click="(e: MouseEvent) => setLock(e)"
                      v-if="isEdit && !isLable">

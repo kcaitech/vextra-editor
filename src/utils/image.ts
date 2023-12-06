@@ -65,11 +65,11 @@ export const getExportFillUrl = (shapes: Shape[], urls: Map<string, string>) => 
   }
   const fileNameCount: any = {};
   fileUrls.forEach(item => {
-    if (fileNameCount[item.fileName] === undefined) {
-      fileNameCount[item.fileName] = 1;
+    if (fileNameCount[item.fileName + item.fileFormat] === undefined) {
+      fileNameCount[item.fileName + item.fileFormat] = 1;
     } else {
-      fileNameCount[item.fileName]++;
-      item.fileName += '-' + fileNameCount[item.fileName];
+      fileNameCount[item.fileName + item.fileFormat]++;
+      item.fileName += '-' + fileNameCount[item.fileName + item.fileFormat];
     }
   });
   return fileUrls;

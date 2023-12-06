@@ -8,7 +8,6 @@ import { color2string } from '@/utils/content';
 import { Selection } from '@/context/selection';
 import { debounce } from 'lodash';
 import { nextTick } from 'vue';
-import { onUpdated } from 'vue';
 interface Props {
     context: Context
     shapes: Shape[]
@@ -56,15 +55,15 @@ const toggleExpand = () => {
 const _getCanvasShape = () => {
     const shapes = props.context.selection.selectedShapes;
     const shape = shapes[0];
-    if(shapes.length === 1 && shape.type !== ShapeType.Cutout) {
-        if(props.context.workspace.isTranslating) return;
+    if (shapes.length === 1 && shape.type !== ShapeType.Cutout) {
+        if (props.context.workspace.isTranslating) return;
     }
     resetSvg();
     if (shapes.length === 1 && shape.type === ShapeType.Cutout) {
         selectedShapes.clear();
         getCutoutShape(shape, props.context.selection.selectedPage!, selectedShapes);
         getPosition(shape);
-        renderItems = Array.from(selectedShapes.values());
+        if (shape.isVisible) renderItems = Array.from(selectedShapes.values());
     } else if (shapes.length === 1) {
         getPosition(shape);
         renderItems = [shape];
@@ -181,10 +180,10 @@ const select_watcher = (t: number) => {
             isTriangle.value = shapes[0].exportOptions.unfold;
         }
         page_color();
-        getCanvasShape(); 
-        if(shapes.length === 1) {
+        getCanvasShape();
+        if (shapes.length === 1) {
             shape.value = shapes[0];
-        }else if(shapes.length === 0) {
+        } else if (shapes.length === 0) {
             shape.value = undefined;
         }
     }
@@ -265,7 +264,8 @@ onUnmounted(() => {
             <component :is="comsMap.get(c.type) ?? comsMap.get(ShapeType.Rectangle)" v-for=" c  in  renderItems "
                 :key="c.id" :data="c" />
         </svg>
-        <div class="preview-canvas" v-if="isTriangle && !trimImage && pngImage" :reflush="reflush !== 0 ? reflush : undefined">
+        <div class="preview-canvas" v-if="isTriangle && !trimImage && pngImage"
+            :reflush="reflush !== 0 ? reflush : undefined">
             <div class="preview-image" v-if="!trimImage && pngImage">
                 <img :src="pngImage" ref="img" alt="" v-if="pngImage" :draggable="true" @dragstart="startDrag">
             </div>
