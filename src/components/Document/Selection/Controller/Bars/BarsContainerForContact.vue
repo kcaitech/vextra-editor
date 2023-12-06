@@ -34,19 +34,25 @@ const dragActiveDis = 3;
 function update() {
     matrix.reset(props.matrix);
     update_slice_path();
+    console.log('slices:', slices);
+
 }
 function update_slice_path() {
-    if (!props.context.workspace.shouldSelectionViewUpdate) return;
+    if (!props.context.workspace.shouldSelectionViewUpdate) {
+        return;
+    }
     show.value = false;
     const s = props.shape;
-    if (s.type !== ShapeType.Contact) return;
-    const points: CurvePoint[] = (s as PathShape).points;
+    if (s.type !== ShapeType.Contact) {
+        return;
+    }
+    const points: CurvePoint[] = (s as PathShape).getPoints();
     const m = new Matrix(matrix), f = s.frame;
     m.preScale(f.width, f.height);
     const view_points: ClientXY[] = [];
     for (let i = 0, len = points.length; i < len; i++) {
         const p = points[i];
-        view_points.push(m.computeCoord3(p));
+        view_points.push(m.computeCoord2(p.x, p.y));
     }
     slices.ver.length = 0;
     slices.hor.length = 0;

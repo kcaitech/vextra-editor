@@ -153,6 +153,7 @@ onUnmounted(() => {
     props.context.selection.unwatch(selection_watcher);
     props.context.tool.unwatch(tool_watcher);
     props.context.tool.setAction(Action.AutoV);
+    props.context.path.reset();
     window.removeEventListener('blur', window_blur);
 })
 </script>
