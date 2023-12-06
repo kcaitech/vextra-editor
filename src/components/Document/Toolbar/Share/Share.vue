@@ -39,8 +39,8 @@ const closeShare = () => {
 }
 const onSwitch = (state: boolean) => {
   shareSwitch.value = state
-
 }
+
 const onSelectType = (type: number) => {
   selectValue.value = type
 }

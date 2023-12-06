@@ -79,11 +79,11 @@ const deleteimg = (index: number) => {
 const submitreport = () => {
     const mydata = new FormData()
     mydata.append('type', selectedOption.value)
-    mydata.append('text', textInput.value)
+    mydata.append('content', textInput.value)
     for (let i = 0; i < myfiles.value.length; i++) {
-        mydata.append('img[]', myfiles.value[i])
+        mydata.append('files', myfiles.value[i])
     }
-    if (filepath.value) mydata.append('filepath', filepath.value ? location.href : '')
+    mydata.append('page_url',location.href)
     nextTick(() => {
         mydata.forEach((value, key) => {
             console.log(`${key}:${value}`);

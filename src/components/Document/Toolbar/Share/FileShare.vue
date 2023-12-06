@@ -9,7 +9,6 @@ import { useRoute } from 'vue-router';
 import { DocInfo } from "@/context/user"
 import CloseIcon from '@/components/common/CloseIcon.vue';
 import Switch from '@/components/common/Switch.vue';
-import Select, { SelectSource, SelectItem } from '@/components/common/Select.vue';
 const { t } = useI18n()
 const props = defineProps<{
   pageHeight: number,
@@ -154,6 +153,8 @@ const getShareList = async () => {
     console.log(err);
   }
 }
+
+//设置分享权限
 const delShare = async (id: string) => {
   try {
     await share_api.delShareAuthorityAPI({ share_id: id })
@@ -162,6 +163,8 @@ const delShare = async (id: string) => {
     console.log(err);
   }
 }
+
+//设置分享权限
 const putShareAuthority = async (id: string, type: number) => {
   try {
     await share_api.putShareAuthorityAPI({ share_id: id, perm_type: type })
@@ -170,6 +173,8 @@ const putShareAuthority = async (id: string, type: number) => {
     console.log(err);
   }
 }
+
+//设置分享类型
 const setShateType = async (type: number) => {
   try {
     await share_api.setShateTypeAPI({ doc_id: docID, doc_type: type })
@@ -186,37 +191,38 @@ const setShateType = async (type: number) => {
 }
 
 watch(selectValue, (nVal, oVal) => {
-  if (value1.value) {
-    const index = DocType.findIndex(item => item === nVal)
-    if (index === docType.Critical) {
-      setShateType(docType.Critical)
-    } else if (index === docType.Edit) {
-      setShateType(docType.Edit)
-    } else if (index === docType.Read) {
-      setShateType(docType.Read)
-    } else if (index === docType.Share) {
-      setShateType(docType.Share)
-    }
-    emit('selectType', index)
-  }
-})
-watch(value1, (nVal, oVal) => {
-  if (nVal) {
-    if (props.selectValue === docType.Critical) {
-      setShateType(docType.Critical)
-    } else if (props.selectValue === docType.Edit) {
-      setShateType(docType.Edit)
-    } else if (props.selectValue === docType.Read) {
-      setShateType(docType.Read)
-    } else if (props.selectValue === docType.Share) {
-      setShateType(docType.Share)
-    }
-    emit('switchState', nVal)
+  const index = DocType.findIndex(item => item === nVal)
+  if (index === docType.Critical) {
+    setShateType(docType.Critical)
+  } else if (index === docType.Edit) {
+    setShateType(docType.Edit)
+  } else if (index === docType.Read) {
+    setShateType(docType.Read)
+  } else if (index === docType.Share) {
+    setShateType(docType.Share)
   } else {
     setShateType(docType.Private)
-    emit('switchState', nVal)
+    emit('switchState', true)
   }
+  emit('selectType', index)
 })
+// watch(value1, (nVal, oVal) => {
+//   if (nVal) {
+//     if (props.selectValue === docType.Critical) {
+//       setShateType(docType.Critical)
+//     } else if (props.selectValue === docType.Edit) {
+//       setShateType(docType.Edit)
+//     } else if (props.selectValue === docType.Read) {
+//       setShateType(docType.Read)
+//     } else if (props.selectValue === docType.Share) {
+//       setShateType(docType.Share)
+//     }
+//     emit('switchState', nVal)
+//   } else {
+//     setShateType(docType.Private)
+//     emit('switchState', nVal)
+//   }
+// })
 
 watchEffect(() => {
   props.projectPerm;
@@ -341,6 +347,21 @@ onUnmounted(() => {
   document.removeEventListener('click', handleClick);
 })
 
+const isSelectOpen = ref<boolean>(false)
+const selectedOption = ref('')
+
+enum Options {
+  ee,
+}
+
+const openSelect = () => {
+  isSelectOpen.value = true;
+}
+const selectOption = (option:any) => {
+  selectedOption.value = option
+  isSelectOpen.value = false
+}
+
 </script>
 <template>
   <div ref="card" class="card">
@@ -370,46 +391,52 @@ onUnmounted(() => {
         <!-- 权限设置 -->
         <div class="purview">
           <span class="type">{{ t('share.permission_setting') }}:</span>
-          <el-select v-model="selectValue" style="width: 122px;" class="m-2" size="large" @visible-change="showselect">
-            <el-option style="font-size: 10px;" class="option" v-for="item in options" :key="item.value"
-              :label="item.label" :value="item.label" />
-          </el-select>
-          <button class="copybnt" type="button" @click.stop="copyLink">{{ t('share.copy_link') }}</button>
+          <input type="text" v-model="selectedOption" @focus="openSelect" placeholder="Select an option" />
+          <ul v-show="isSelectOpen" class="options">
+            <li v-for="option in docType" :key="option" @click="selectOption(option)">
+              {{ option }}
+            </li>
+          </ul>
         </div>
-        <!-- 分享人 -->
-        <div>
-          <span class="type">{{ t('share.people_who_have_joined_the_share') }} ({{ t('share.share_limit') }}5) :</span>
-          <el-scrollbar height="300px" class="shared-by">
-            <div class="scrollbar-demo-item">
-              <div class="item-left">
-                <div class="avatar"><img :src="docInfo.user.avatar"></div>
-                <div class="name">{{ docInfo.user.nickname }}</div>
-              </div>
-              <div class="item-right">
-                <div class="founder">{{ t('share.founder') }}</div>
-              </div>
+        <el-select v-model="selectValue" style="width: 122px;" class="m-2" size="large" @visible-change="showselect">
+          <el-option style="font-size: 10px;" class="option" v-for="item in options" :key="item.value" :label="item.label"
+            :value="item.label" />
+        </el-select>
+        <button class="copybnt" type="button" @click.stop="copyLink">{{ t('share.copy_link') }}</button>
+      </div>
+      <!-- 分享人 -->
+      <div>
+        <span class="type">{{ t('share.people_who_have_joined_the_share') }} ({{ t('share.share_limit') }}5) :</span>
+        <el-scrollbar height="300px" class="shared-by">
+          <div class="scrollbar-demo-item">
+            <div class="item-left">
+              <div class="avatar"><img :src="docInfo.user.avatar"></div>
+              <div class="name">{{ docInfo.user.nickname }}</div>
             </div>
-            <div v-for="(item, ids) in shareList" :key="ids" class="scrollbar-demo-item">
-              <div class="item-left">
-                <div class="avatar"><img :src="item.user.avatar"></div>
-                <div class="name">{{ item.user.nickname }}</div>
-              </div>
-              <div class="item-right" @click="(e: Event) => selectAuthority(ids, e)">
-                <div class="authority">{{ permission[item.document_permission.perm_type] }}</div>
-                <div class="svgBox"><svg-icon class="svg" icon-class="bottom"></svg-icon></div>
-                <div class="popover" v-if="authority && index === ids" ref="popover"
-                  :style="{ top: posi.top - 8 + 'px', right: 30 + 'px' }">
-                  <div @click="onEditable(item.document_permission.id, permissions.editable, ids)">{{ editable }}</div>
-                  <div @click="onReviewable(item.document_permission.id, permissions.reviewable, ids)">{{ reviewable }}
-                  </div>
-                  <div @click="onReadOnly(item.document_permission.id, permissions.readOnly, ids)">{{ readOnly }}</div>
-                  <div @click="onRemove(item.document_permission.id, ids)">{{ remove }}</div>
+            <div class="item-right">
+              <div class="founder">{{ t('share.founder') }}</div>
+            </div>
+          </div>
+          <div v-for="(item, ids) in shareList" :key="ids" class="scrollbar-demo-item">
+            <div class="item-left">
+              <div class="avatar"><img :src="item.user.avatar"></div>
+              <div class="name">{{ item.user.nickname }}</div>
+            </div>
+            <div class="item-right" @click="(e: Event) => selectAuthority(ids, e)">
+              <div class="authority">{{ permission[item.document_permission.perm_type] }}</div>
+              <div class="svgBox"><svg-icon class="svg" icon-class="bottom"></svg-icon></div>
+              <div class="popover" v-if="authority && index === ids" ref="popover"
+                :style="{ top: posi.top - 8 + 'px', right: 30 + 'px' }">
+                <div @click="onEditable(item.document_permission.id, permissions.editable, ids)">{{ editable }}</div>
+                <div @click="onReviewable(item.document_permission.id, permissions.reviewable, ids)">{{ reviewable }}
                 </div>
+                <div @click="onReadOnly(item.document_permission.id, permissions.readOnly, ids)">{{ readOnly }}</div>
+                <div @click="onRemove(item.document_permission.id, ids)">{{ remove }}</div>
               </div>
             </div>
-          </el-scrollbar>
-          <div class="project" v-if="project || props.docInfo?.project">项目中所有成员均可访问</div>
-        </div>
+          </div>
+        </el-scrollbar>
+        <div class="project" v-if="project || props.docInfo?.project">项目中所有成员均可访问</div>
       </div>
     </el-card>
 
