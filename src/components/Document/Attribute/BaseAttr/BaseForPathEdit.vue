@@ -103,7 +103,6 @@ function modify_path_closed_status() {
         path_close_status.value = false;
         btn_string_for_status.value = t('attr.close_path');
     }
-    console.log('modify_path_closed_status', btn_string_for_status.value);
 }
 
 function modify_closed_status() {
