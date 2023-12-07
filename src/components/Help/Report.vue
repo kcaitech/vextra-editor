@@ -118,6 +118,18 @@ const handleImageUpload = (e: any) => {
 
 </script>
 <style lang="scss" scoped>
+@keyframes move {
+    from {
+        transform: translate(-50%, -20%);
+        opacity: 0;
+    }
+
+    to {
+        transform: translate(-50%, 0);
+        opacity: 1;
+    }
+}
+
 .disabled {
     opacity: 0.4;
     background-color: rgba(255, 255, 255, 1) !important;
@@ -125,9 +137,9 @@ const handleImageUpload = (e: any) => {
 
 .crad-box {
     position: absolute;
-    top: 50%;
+    top: 25%;
     left: 50%;
-    transform: translate(-50%, -50%);
+    transform: translate(-50%, 0%);
     width: 582px;
     height: auto;
     background-color: white;
@@ -138,6 +150,7 @@ const handleImageUpload = (e: any) => {
     box-sizing: border-box;
     font-size: 13px;
     z-index: 1000;
+    animation: move 0.25s ease-in-out;
 
     .title {
         display: flex;

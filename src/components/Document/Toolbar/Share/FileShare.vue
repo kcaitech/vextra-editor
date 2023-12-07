@@ -334,7 +334,7 @@ onUnmounted(() => {
 })
 
 const isSelectOpen = ref<boolean>(false)
-const inputselect=ref<HTMLInputElement>()
+const inputselect = ref<HTMLInputElement>()
 const openSelect = () => {
   isSelectOpen.value = !isSelectOpen.value;
 }
@@ -374,8 +374,8 @@ const selectOption = (option: any) => {
         <div class="purview">
           <span class="type">{{ t('share.permission_setting') }}：</span>
           <div class="right">
-            <input ref="inputselect" type="text" v-model="selectValue" @click.stop="openSelect" placeholder="Select an option"
-              :disabled="props.selectValue === 0 ? true : false" readonly />
+            <input ref="inputselect" type="text" v-model="selectValue" @click.stop="openSelect"
+              placeholder="Select an option" :disabled="props.selectValue === 0 ? true : false" readonly />
             <div class="shrink" @click.stop="inputselect?.click()">
               <svg-icon icon-class="down"
                 :style="{ transform: isSelectOpen ? 'rotate(-180deg)' : 'rotate(0deg)', color: '#666666' }"></svg-icon>
@@ -507,6 +507,18 @@ const selectOption = (option: any) => {
   padding: 0;
 }
 
+@keyframes move {
+  from {
+    transform: translate(-50%, -20%);
+    opacity: 0;
+  }
+
+  to {
+    transform: translate(-50%, 0);
+    opacity: 1;
+  }
+}
+
 .project {
   display: flex;
   align-items: center;
@@ -548,9 +560,10 @@ const selectOption = (option: any) => {
   top: 25%;
   left: 50%;
   background-color: transparent;
-  transform: translate(-50%, -25%);
+  transform: translate(-50%, 0%);
   box-sizing: border-box;
   z-index: 1000;
+  animation: move 0.25s ease-in-out;
 
   .box-card {
     border-radius: 16px;

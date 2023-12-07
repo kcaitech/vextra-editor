@@ -86,18 +86,31 @@ const close = () => {
 
 </script>
 <style lang="scss" scoped>
+@keyframes move {
+    from {
+        transform: translate(-50%, -20%);
+        opacity: 0;
+    }
+
+    to {
+        transform: translate(-50%, 0);
+        opacity: 1;
+    }
+}
+
 .card-container {
     position: absolute;
     width: 400px;
     top: 25%;
     left: 50%;
-    transform: translate(-50%, -25%);
+    transform: translate(-50%, 0);
     padding: 0 24px;
     background-color: rgba(255, 255, 255, 1);
     border-radius: 16px;
     border: 1px solid #F0F0F0;
     box-sizing: border-box;
     z-index: 1000;
+    animation: move 0.25s ease-in-out;
 
     .heard {
         display: flex;

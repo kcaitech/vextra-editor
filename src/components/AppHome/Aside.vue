@@ -745,13 +745,10 @@ onUnmounted(() => {
             </el-scrollbar>
         </el-col>
     </el-row>
-    <transition name="nested" :duration="550">
-        <div v-if="showoverlay" class="overlay">
-            <addTeam v-if="teamcard" class="inner" @close="showoverlay = false; teamcard = false" />
-            <addProject v-if="projectcard" class="inner" :teamid="teamid"
-                @close="showoverlay = false; projectcard = false" />
-        </div>
-    </transition>
+    <div v-if="showoverlay" class="overlay">
+        <addTeam v-if="teamcard" class="inner" @close="showoverlay = false; teamcard = false" />
+        <addProject v-if="projectcard" class="inner" :teamid="teamid" @close="showoverlay = false; projectcard = false" />
+    </div>
     <TeamProjectMenu v-if="showProjecrMenu" :items="menuItem" :data="projectItem" :top="top" :left="left" @close="closeMenu"
         ref="rightMenuEl" @delProject="onDelProject" @exitProject="onExitProject" @cancelFixed="menucancelFixed"
         @reName="inputCusname" @showMembergDialog="showMembergDialog" @projectSetting="showSettingDialog">
@@ -806,35 +803,6 @@ a {
 :deep(.el-collapse-item__wrap) {
     background-color: rgba(250, 250, 250, 1);
     border: none;
-}
-
-.nested-enter-active,
-.nested-leave-active {
-    transition: all 0.3s ease-in-out;
-}
-
-.nested-leave-active {
-    transition-delay: 0.1s;
-}
-
-.nested-enter-from,
-.nested-leave-to {
-    opacity: 0;
-}
-
-.nested-enter-active .inner,
-.nested-leave-active .inner {
-    transition: all 0.3s ease-in-out;
-}
-
-.nested-enter-active .inner {
-    transition-delay: 0.1s;
-}
-
-.nested-enter-from .inner,
-.nested-leave-to .inner {
-    top: calc(50% - 50px);
-    opacity: 0.5;
 }
 
 .overlay {

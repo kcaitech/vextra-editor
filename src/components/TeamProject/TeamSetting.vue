@@ -336,7 +336,17 @@ onMounted(() => {
     background-color: rgba(0, 0, 0, 0.5);
 }
 
+@keyframes move {
+    from {
+        transform: translate(-50%, -20%);
+        opacity: 0;
+    }
 
+    to {
+        transform: translate(-50%, 0);
+        opacity: 1;
+    }
+}
 
 .card-container {
     position: absolute;
@@ -344,7 +354,7 @@ onMounted(() => {
     left: 50%;
     width: 420px;
     padding: 0 24px;
-    transform: translate(-50%, -25%);
+    transform: translate(-50%, 0);
     background-color: white;
     border-radius: 14px;
     border: 1px solid #F0F0F0;
@@ -541,15 +551,5 @@ onMounted(() => {
 
 }
 
-@keyframes move {
-    from {
-        transform: translate(-50%, -50%);
-        opacity: 0;
-    }
 
-    to {
-        transform: translate(-50%, -25%);
-        opacity: 1;
-    }
-}
 </style>

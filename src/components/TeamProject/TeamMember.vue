@@ -17,7 +17,6 @@
                         </ul>
                     </transition>
                 </div>
-
             </div>
         </div>
         <div class="main">
@@ -59,20 +58,6 @@
                         </div>
                     </div>
                 </div>
-                <el-dialog v-model="dialogVisible" :title="t('teammember.change_teamname')" width="500" align-center>
-                    <span>{{ t('teammember.modifyNickname_title') }}</span>
-                    <input class="change" type="text" ref="changeinput" @keydown.enter="confirm_to_modify_name" />
-                    <template #footer>
-                        <span class="dialog-footer" style="text-align: center;">
-                            <el-button class="confirm" type="primary" style="background-color: none;"
-                                @click="confirm_to_modify_name" :loading="confirmLoading">
-                                {{ t('home.rename_ok') }}
-                            </el-button>
-                            <el-button class="cancel" @click="dialogVisible = false">{{ t('home.cancel')
-                            }}</el-button>
-                        </span>
-                    </template>
-                </el-dialog>
                 <Loading v-if="SearchList.length === 0 && searchvalue === '' && fontName === 4" :size="20" />
             </el-scrollbar>
             <div v-else class="empty">
@@ -91,6 +76,10 @@
     <ProjectDialog :projectVisible="exitTeamDialog" :context="t('teammember.exitTeamDialog_context')"
         :title="t('teammember.exitTeamDialog_title')" :confirm-btn="t('teammember.exitTeamDialog_confirm')"
         @clode-dialog="closeExitTeamDialog" @confirm="confirmExitTeamDialog"></ProjectDialog>
+    <ProjectDialog :projectVisible="dialogVisible" :context="t('teammember.modifyNickname_title')"
+        :title="t('teammember.change_teamname')" :showinput="true" :inputvalue="inputvalue"
+        :confirm-btn="t('home.rename_ok')" @clode-dialog="closeChangeName" @confirm="confirm_to_modify_name"
+        @updateinputvalue="changeinputvalue"></ProjectDialog>
 </template>
 <script setup lang="ts">
 import { onMounted, onUnmounted, ref, inject, Ref, watch, computed, nextTick } from 'vue';
@@ -130,7 +119,6 @@ const userid = ref()
 const { t } = useI18n()
 const dialogVisible = ref(false)
 const confirmLoading = ref(false)
-const changeinput = ref<HTMLInputElement>()
 const titles = [t('teammember.name'), t('teammember.team_permission')]
 const filteritems = [t('teammember.Readonly'), t('teammember.editable'), t('teammember.manager'), t('teammember.creator'), t('teammember.all')]
 const noNetwork = ref(false)
@@ -145,18 +133,12 @@ const outTeamDialog = ref(false);
 const exitTeamDialog = ref(false);
 const dialogData = ref<any>({});
 let user_id = '';
+const inputvalue = ref<any>()
+
 const openDialog = (name: string, userid: string) => {
+    inputvalue.value = name
     dialogVisible.value = true;
     user_id = userid;
-    nextTick(() => {
-        if (changeinput.value) {
-            changeinput.value.value = name;
-            setTimeout(() => {
-                changeinput.value?.select();
-                changeinput.value?.focus();
-            }, 100)
-        }
-    })
 };
 
 const { teamID, teamData, upDateTeamData, is_team_upodate, teamUpdate } = inject('shareData') as {
@@ -215,6 +197,10 @@ const closeExitTeamDialog = () => {
 const confirmExitTeamDialog = () => {
     exitTeamDialog.value = false;
     outteam(dialogData.value.team_id)
+}
+
+const closeChangeName = () => {
+    dialogVisible.value = false
 }
 
 const GetteamMember = async () => {
@@ -405,7 +391,7 @@ async function confirm_to_modify_name() {
     if (confirmLoading.value) { return; }
     const params = get_params_for_modify_name();
     // 1. 校验
-    if (changeinput.value && changeinput.value.value.length > 0 && changeinput.value.value.length < 20) {
+    if (inputvalue.value && inputvalue.value.length > 0 && inputvalue.value.length < 20) {
         confirmLoading.value = true;
         try {
             // 2. 执行修改接口
@@ -439,12 +425,16 @@ async function confirm_to_modify_name() {
 }
 function get_params_for_modify_name() {
     const params: any = {};
-    if (changeinput.value) {
-        params['nickname'] = (changeinput.value as HTMLInputElement).value;
+    if (inputvalue.value) {
+        params['nickname'] = inputvalue.value;
     }
     params['user_id'] = user_id;
     params['team_id'] = teamID.value;
     return params;
+}
+
+const changeinputvalue = (value: any) => {
+    inputvalue.value = value
 }
 
 watch(teamID, () => {

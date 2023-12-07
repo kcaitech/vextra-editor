@@ -121,18 +121,31 @@ onMounted(() => {
 
 </script>
 <style lang="scss" scoped>
+@keyframes move {
+    from {
+        transform: translate(-50%, -20%);
+        opacity: 0;
+    }
+
+    to {
+        transform: translate(-50%, 0);
+        opacity: 1;
+    }
+}
+
 .card-container {
     position: absolute;
     background-color: white;
     width: 420px;
     border-radius: 5px;
-    top: 50%;
+    top: 25%;
     left: 50%;
-    transform: translate(-50%, -50%);
+    transform: translate(-50%, 0%);
     padding: 12px;
     z-index: 1000;
     box-shadow: 0px 2px 5px 0px rgba(0, 0, 0, 0.3);
     box-sizing: border-box;
+    animation: move 0.25s ease-in-out;
 
     .heard {
         display: flex;
@@ -220,7 +233,7 @@ onMounted(() => {
             font-size: 14px;
             letter-spacing: 1px;
             width: 80px;
-            height:32px;
+            height: 32px;
             border: none;
             background-color: #9775fa;
             border-radius: 4px;
