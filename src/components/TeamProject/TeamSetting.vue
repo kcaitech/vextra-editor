@@ -65,26 +65,20 @@
             </div>
             <div class="centent">
                 <div class="textarea-container">
-                    <textarea v-if="textareashow" class="text-textarea" name="" id="" cols="30" rows="10"
-                        :placeholder="placeholdervalue" v-model="textareaValue" :maxlength="maxvalue" />
-                    <div v-else class="disbandtips">
-                        <p v-if="teamSelfPermType === 3">{{ t('teamsetting.disband_team_tipsB') }}</p>
-                        <p v-else>{{ t('teamsetting.leave_team_tips') }}</p>
-                    </div>
+                    <textarea class="text-textarea" :style="{ height: titlevalue === t('teamsetting.title_name1') ? 36 + 'px' : '' }"
+                        :placeholder="placeholdervalue" v-model="textareaValue" :maxlength="maxvalue"></textarea>
                 </div>
             </div>
             <div class="addproject">
-                <button class="bnt_confirm" type="submit" @click.stop="confirm">
-                    <!-- {{ teamSelfPermType === 3 ? t('teamsetting.confirm') : t('teamsetting.leave') }} -->
-                    {{ t('teamsetting.confirm') }}
-                </button>
                 <button class="bnt_cancel" type="submit" @click.stop.once="showoverlay = false">{{
                     t('teamsetting.cancel')
                 }}</button>
+                <button class="bnt_confirm" type="submit" @click.stop="confirm">
+                    {{ t('teamsetting.confirm') }}
+                </button>
             </div>
         </div>
     </div>
-
     <ProjectDialog :projectVisible="showDialog" :context="contenttext" :title="titlevalue"
         :confirm-btn="teamSelfPermType === 3 ? t('teamsetting.disband') : t('teamsetting.leave')"
         @clode-dialog="closeDisband" @confirm="confirmQuit"></ProjectDialog>
@@ -136,11 +130,11 @@ interface teamDataType {
     }
 }
 
-
-
 const isDisabled: any = computed(() => {
     return teamSelfPermType.value === 0 || teamSelfPermType.value === 1 ? false : true
 })
+
+
 
 //获取元素，设置焦点并全选内容
 const el = () => {
@@ -342,47 +336,44 @@ onMounted(() => {
     background-color: rgba(0, 0, 0, 0.5);
 }
 
+
+
 .card-container {
     position: absolute;
-    background-color: white;
-    width: 420px;
-    border-radius: 5px;
-    top: 50%;
+    top: 25%;
     left: 50%;
-    transform: translate(-50%, -50%);
-    padding: 12px;
-    z-index: 1000;
-    box-shadow: 0px 2px 5px 0px rgba(0, 0, 0, 0.3);
+    width: 420px;
+    padding: 0 24px;
+    transform: translate(-50%, -25%);
+    background-color: white;
+    border-radius: 14px;
+    border: 1px solid #F0F0F0;
+    box-shadow: 0px 12px 32px 4px rgba(0, 0, 0, 0.04), 0px 8px 20px rgba(0, 0, 0, 0.08);
     box-sizing: border-box;
+    animation: move 0.25s ease-in-out;
+    z-index: 1000;
 
     .heard {
         display: flex;
         align-items: center;
         justify-content: space-between;
+        height: 64px;
 
         .title {
-            font-size: 18px;
+            font-size: 16px;
             font-weight: 600;
-            color: #3D3D3D
+            color: rgba(61, 61, 61, 1);
         }
 
         .close {
-            width: 18px;
-            height: 18px;
-            padding: 4px;
+            width: 28px;
+            height: 28px;
+            padding: 6px;
+            border-radius: 6px;
+            box-sizing: border-box;
 
             &:hover {
-                background-color: #f3f0ff;
-                border-radius: 3px;
-                cursor: pointer;
-
-                >svg {
-                    fill: #9775fa;
-                }
-            }
-
-            &:active>svg {
-                transform: scale(0.9);
+                background-color: rgba(245, 245, 245, 1);
             }
 
             svg {
@@ -393,83 +384,73 @@ onMounted(() => {
     }
 
     .centent {
-        margin-top: 14px;
-
         .textarea-container {
-            margin-top: 12px;
-            color: #3D3D3D;
-
             .text-textarea {
-                padding: 6px;
+                height: 80px;
                 width: 100%;
-                height: 120px;
-                border: none;
+                padding: 7px 12px;
+                font-size: 13px;
+                background-color: rgba(245, 245, 245, 1);
                 outline-style: none;
-                border: 1px solid silver;
-                border-radius: 3px;
                 resize: none;
-                font-size: 14px;
+                border-radius: 6px;
+                border: 1px solid rgba(245, 245, 245, 1);
                 font-family: none;
                 box-sizing: border-box;
 
                 &:hover {
-                    border: 1px solid #e5dbff;
+                    background-color: rgba(235, 235, 235, 1);
                 }
 
                 &:focus {
-                    border: 1px solid #9775fa;
+                    border: 1px solid #1878F5;
+                    background-color: rgba(245, 245, 245, 1);
                 }
-            }
-
-            .disbandtips {
-                line-height: 120px;
             }
         }
     }
 
     .addproject {
         display: flex;
-        justify-content: space-evenly;
-        text-align: center;
-        margin-top: 12px;
+        align-items: center;
+        justify-content: flex-end;
+        gap: 11px;
+        height: 64px;
 
         button {
             cursor: pointer;
-            font-size: 14px;
-            letter-spacing: 1px;
-            width: 80px;
-            height: 32px;
+            font-size: 13px;
+            width: 70px;
+            height: 36px;
             border: none;
-            border-radius: 4px;
-            transition: all 0.2s ease-in-out;
-
-            &:active {
-                .bnt_confirm {
-                    background-color: #9775fa;
-                }
-            }
-
-            &:disabled {
-                background-color: rgba(98, 67, 237, 0.3);
-            }
+            border-radius: 6px;
+            box-sizing: border-box;
         }
 
         .bnt_confirm {
             color: white;
-            background-color: #9775fa;
+            background-color: rgba(24, 120, 245, 1);
 
             &:hover {
-                background-color: rgba(150, 117, 250, 0.862745098);
+                background-color: rgba(66, 154, 255, 1);
+            }
+
+            &:active {
+                background-color: rgba(10, 89, 207, 1);
             }
         }
 
         .bnt_cancel {
-            color: black;
-            background-color: white;
-            border: 1px solid #9775fa;
+            color: rgba(51, 51, 51, 1);
+            background-color: #FFFFFF;
+            border: 1px solid #F0F0F0;
 
             &:hover {
-                color: #9775fa;
+                background-color: rgba(247, 247, 249, 1);
+            }
+
+            &:active {
+                background-color: rgba(243, 243, 245, 1);
             }
         }
     }
@@ -558,5 +539,17 @@ onMounted(() => {
         }
     }
 
+}
+
+@keyframes move {
+    from {
+        transform: translate(-50%, -50%);
+        opacity: 0;
+    }
+
+    to {
+        transform: translate(-50%, -25%);
+        opacity: 1;
+    }
 }
 </style>

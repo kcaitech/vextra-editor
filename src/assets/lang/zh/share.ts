@@ -6,7 +6,7 @@ export const share = {
     anyone_can_read_it: '任何人均可阅读',
     anyone_can_edit_it: '任何人均可编辑',
     anyone_can_comment: '任何人均可评论',
-    shareable: '可分享',
+    shareable: '已关闭分享',
     no_authority: '无权限',
     copy_success: '复制成功',
     copy_failure: '复制失败',

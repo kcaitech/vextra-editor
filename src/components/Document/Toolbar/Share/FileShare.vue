@@ -1,5 +1,5 @@
 <script setup lang="ts">
-import { ref, onMounted, onUnmounted, nextTick, reactive, watch, watchEffect, } from 'vue';
+import { ref, onMounted, onUnmounted, reactive, watch, watchEffect, } from 'vue';
 import { useI18n } from 'vue-i18n';
 import { UserInfo } from '@/context/user';
 import { Context } from '@/context';
@@ -10,7 +10,6 @@ import { DocInfo } from "@/context/user"
 import Switch from '@/components/common/Switch.vue';
 const { t } = useI18n()
 const props = defineProps<{
-  pageHeight: number,
   shareSwitch: boolean,
   docId?: string,
   docName?: string,
@@ -50,10 +49,6 @@ const founder = ref(false)
 const userInfo = ref<UserInfo | undefined>(props.userInfo)
 const shareList = ref<any[]>([])
 
-const posi = ref({
-  top: 0,
-  left: 0
-})
 enum docType {
   Private,
   Share,
@@ -85,23 +80,8 @@ const DocType = reactive([`${t('share.shareable')}`, `${t('share.need_to_apply_f
 const permission = reactive([`${t('share.no_authority')}`, `${t('share.readOnly')}`, `${t('share.reviewable')}`, `${t('share.editable')}`])
 const selectValue = ref(DocType[props.selectValue === 0 ? 1 : props.selectValue])
 
-const handlekeyup = (e: KeyboardEvent) => {
-  e.stopPropagation()
-  if (e.key === 'Escape' || e.keyCode === 27) {
-    emit('close')
-  }
-}
 
-const handleClick = (e: MouseEvent) => {
-  e.stopPropagation()
-  e.target instanceof Element && !e.target.closest('.popover') && (authority.value = false)
-  e.target instanceof Element && !e.target.closest('.options') && (isSelectOpen.value = false)
-}
-
-const showselect = () => {
-  authority.value = false
-}
-
+//获取文档信息
 const getDocumentInfo = async () => {
   try {
     const { data } = await share_api.getDocumentInfoAPI({ doc_id: docID })
@@ -113,6 +93,7 @@ const getDocumentInfo = async () => {
   }
 }
 
+//是否显示权限编辑菜单
 const selectAuthority = (i: number, e: Event) => {
   e.stopPropagation()
   if (authority.value) {
@@ -121,27 +102,33 @@ const selectAuthority = (i: number, e: Event) => {
   }
   index.value = i
   authority.value = true
-  const el = (e.target as HTMLDivElement)
-  nextTick(() => {
-    posi.value.top = Math.max(el.parentElement!.offsetHeight, 35) * (i + 2)
-  })
 }
+
+//设置为可编辑权限
 const onEditable = (id: any, type: number, index: number) => {
   putShareAuthority(id, type)
   shareList.value[index].document_permission.perm_type = type
 }
+
+//设置为可评论权限
 const onReviewable = (id: any, type: number, index: number) => {
   putShareAuthority(id, type)
   shareList.value[index].document_permission.perm_type = type
 }
+
+//设置为只读权限
 const onReadOnly = (id: string, type: number, index: number) => {
   putShareAuthority(id, type)
   shareList.value[index].document_permission.perm_type = type
 }
+
+//移除分享列表（本地列表）
 const onRemove = (id: string, i: number) => {
   delShare(id)
   shareList.value.splice(i, 1)
 }
+
+//获取当前文件分享列表
 const getShareList = async () => {
   try {
     const { data } = await share_api.getShareListAPI({ doc_id: docID })
@@ -153,7 +140,7 @@ const getShareList = async () => {
   }
 }
 
-//设置分享权限
+//移除分享列表（服务端）
 const delShare = async (id: string) => {
   try {
     await share_api.delShareAuthorityAPI({ share_id: id })
@@ -189,8 +176,8 @@ const setShateType = async (type: number) => {
   }
 }
 
+//监听分享权限设置变化，并发送到服务端
 watch(selectValue, (nVal, oVal) => {
-  console.log(props.selectValue, '页面监听');
   const index = DocType.findIndex(item => item === nVal)
   if (index === docType.Critical) {
     setShateType(docType.Critical)
@@ -207,13 +194,12 @@ watch(selectValue, (nVal, oVal) => {
   emit('selectType', index)
 })
 
+//监听分享开关变化,
 watch(value1, (nVal, oVal) => {
-  console.log(nVal);
-  console.log(props.selectValue);
+
+  //获取当前选择权限类型的下标
   const index = DocType.findIndex(item => item === selectValue.value)
   if (nVal) {
-   
-    console.log('11111');
     if (index === docType.Critical) {
       setShateType(docType.Critical)
     } else if (index === docType.Edit) {
@@ -227,18 +213,7 @@ watch(value1, (nVal, oVal) => {
       emit('switchState', true)
     }
     emit('selectType', index)
-    // if (props.selectValue === docType.Critical) {
-    //   setShateType(docType.Critical)
-    // } else if (props.selectValue === docType.Edit) {
-    //   setShateType(docType.Edit)
-    // } else if (props.selectValue === docType.Read) {
-    //   setShateType(docType.Read)
-    // } else if (props.selectValue === docType.Share) {
-    //   setShateType(docType.Share)
-    // }
   } else {
-    console.log('22222');
-
     setShateType(docType.Private)
     emit('switchState', nVal)
     emit('selectType', docType.Private)
@@ -293,7 +268,7 @@ watchEffect(() => {
 })
 
 
-
+//复制分享链接
 const copyLink = async () => {
   if (navigator.clipboard && window.isSecureContext) {
     return navigator.clipboard.writeText(url).then(() => {
@@ -327,6 +302,19 @@ watchEffect(() => {
   if (!founder.value) getShareList()
 })
 
+const handlekeyup = (e: KeyboardEvent) => {
+  e.stopPropagation()
+  if (e.key === 'Escape' || e.keyCode === 27) {
+    emit('close')
+  }
+}
+
+const handleClick = (e: MouseEvent) => {
+  e.stopPropagation()
+  e.target instanceof Element && !e.target.closest('.popover') && (authority.value = false)
+  e.target instanceof Element && !e.target.closest('.options') && (isSelectOpen.value = false)
+}
+
 onMounted(() => {
   document.addEventListener('keyup', handlekeyup);
   document.addEventListener('click', handleClick);
@@ -337,20 +325,6 @@ onMounted(() => {
     } else {
       value1.value = true
     }
-    console.log(props.selectValue, '页面加载');
-
-    // if (props.selectValue === docType.Critical) {
-    //   setShateType(docType.Critical)
-    // } else if (props.selectValue === docType.Edit) {
-    //   setShateType(docType.Edit)
-    // } else if (props.selectValue === docType.Read) {
-    //   setShateType(docType.Read)
-    // } else if (props.selectValue === docType.Share) {
-    //   setShateType(docType.Share)
-    //   emit('switchState', false)
-    // }else if(props.selectValue === docType.Private){
-    //   emit('switchState', false)
-    // }
   }
 })
 
@@ -360,7 +334,7 @@ onUnmounted(() => {
 })
 
 const isSelectOpen = ref<boolean>(false)
-
+const inputselect=ref<HTMLInputElement>()
 const openSelect = () => {
   isSelectOpen.value = !isSelectOpen.value;
 }
@@ -400,17 +374,17 @@ const selectOption = (option: any) => {
         <div class="purview">
           <span class="type">{{ t('share.permission_setting') }}：</span>
           <div class="right">
-            <input type="text" v-model="selectValue" @click.stop="openSelect" placeholder="Select an option"
+            <input ref="inputselect" type="text" v-model="selectValue" @click.stop="openSelect" placeholder="Select an option"
               :disabled="props.selectValue === 0 ? true : false" readonly />
-            <div class="shrink" @click.stop="openSelect">
+            <div class="shrink" @click.stop="inputselect?.click()">
               <svg-icon icon-class="down"
                 :style="{ transform: isSelectOpen ? 'rotate(-180deg)' : 'rotate(0deg)', color: '#666666' }"></svg-icon>
             </div>
             <transition name="el-zoom-in-top">
               <ul v-show="isSelectOpen" class="options">
-                <li class="options_item" :style="{ fontWeight: option.label == selectValue ? 600 : 500 }"
-                  v-for="option in options" :key="option.value" @click.stop="selectOption(option.value)">
-                  <span>{{ option.label }}</span>
+                <li class="options_item" v-for="option in options" :key="option.value"
+                  @click.stop="selectOption(option.value)">
+                  <span :style="{ fontWeight: option.label == selectValue ? 600 : 500 }">{{ option.label }}</span>
                   <div class="choose" :style="{ visibility: option.label === selectValue ? 'visible' : 'hidden' }"></div>
                 </li>
               </ul>
@@ -420,10 +394,6 @@ const selectOption = (option: any) => {
                 t('share.copy_link') }}</button>
           </div>
         </div>
-        <!-- <el-select v-model="selectValue" style="width: 122px;" class="m-2" size="large" @visible-change="showselect">
-          <el-option style="font-size: 10px;" class="option" v-for="item in options" :key="item.value" :label="item.label"
-            :value="item.label" />
-        </el-select> -->
       </div>
       <!-- 分享人 -->
       <div class="share_user">
@@ -450,7 +420,6 @@ const selectOption = (option: any) => {
                   :style="{ transform: authority ? 'rotate(-180deg)' : 'rotate(0deg)', color: '#666666' }"></svg-icon>
               </div>
               <div class="popover" v-if="authority && index === ids" ref="popover">
-                <!-- :style="{ top: posi.top - 8 + 'px', right: 30 + 'px' }" -->
                 <div @click="onEditable(item.document_permission.id, permissions.editable, ids)">
                   {{ editable }}
                   <div class="choose"
@@ -513,7 +482,9 @@ const selectOption = (option: any) => {
         <div class="project" v-if="project || props.docInfo?.project">{{ t('Createteam.shareprojecttips') }}</div>
         <!-- 链接按钮 -->
         <div class="button bottom">
-          <el-button class="copybnt" color="#9775fa" @click="copyLink">{{ t('share.copy_link') }}</el-button>
+          <button class="copybnt" type="button" @click="copyLink"
+            :disabled="docInfo.document.doc_type !== 0 ? false : true">{{
+              t('share.copy_link') }}</button>
         </div>
       </div>
     </el-card>
@@ -526,37 +497,6 @@ const selectOption = (option: any) => {
   visibility: hidden !important;
 }
 
-.card-header {
-  display: flex;
-  justify-content: space-between;
-  align-items: center;
-  height: 64px;
-  padding: 0;
-
-  .title {
-    font-size: 16px;
-    font-weight: 600;
-  }
-
-  .close {
-    width: 16px;
-    height: 16px;
-    padding: 4px;
-    border-radius: 6px;
-
-    &:hover {
-      background-color: rgb(243, 243, 245);
-      cursor: pointer;
-    }
-
-    svg {
-      width: 100%;
-      height: 100%;
-    }
-  }
-
-}
-
 :deep(.el-card__header) {
   border: none;
   padding: 0;
@@ -567,346 +507,40 @@ const selectOption = (option: any) => {
   padding: 0;
 }
 
-:deep(.el-input) {
-  font-size: var(--font-default-fontsize);
-}
-
-.contain {
-  font-size: var(--font-default-fontsize);
-
-  .share-switch {
-    display: flex;
-    align-items: center;
-    height: 38px;
-    gap: 6px;
-
-    .type {
-      font-size: 13px;
-      font-weight: 500;
-    }
-
-    .my_switch {
-      position: relative;
-      width: 36px;
-      height: 20px;
-      margin: 0;
-      left: -42px;
-      opacity: 0;
-    }
-
-  }
-
-  .file-name {
-    display: flex;
-    align-items: center;
-    height: 38px;
-    gap: 19px;
-
-    .type {
-      font-size: 13px;
-      font-weight: 500;
-    }
-
-    .name {
-      font-size: 13px;
-      font-weight: 600;
-    }
-  }
-
-
-  .purview {
-    display: flex;
-    align-items: center;
-    height: 40px;
-    gap: 6px;
-
-    .type {
-      font-size: 13px;
-      font-weight: 500;
-    }
-
-    .right {
-      display: flex;
-      align-items: center;
-      gap: 8px;
-
-      .shrink {
-        position: absolute;
-        right: 190px;
-        width: 12px;
-        height: 12px;
-        color: rgba(102, 102, 102, 1);
-
-        >svg {
-          transition: 0.5s;
-          width: 100%;
-          height: 100%;
-        }
-      }
-
-      input {
-        width: 122px;
-        height: 32px;
-        font-size: 12px;
-        font-weight: 400;
-        outline: none;
-        border: none;
-        border-radius: 6px;
-        padding: 3px 3px 3px 12px;
-        background: #F5F5F5;
-        box-sizing: border-box;
-
-        &:hover {
-          background-color: rgba(235, 235, 235, 1);
-        }
-
-        &:focus {
-          background-color: rgba(235, 235, 235, 1);
-        }
-      }
-
-      .options {
-        position: absolute;
-        top: 180px;
-        right: 183px;
-        padding: 0;
-        margin: 0;
-        width: 122px;
-        background-color: white;
-        border-radius: 8px;
-        border: 1px solid #EBEBEB;
-        box-shadow: 0px 2px 10px 0px rgba(0, 0, 0, 0.08);
-        z-index: 1;
-        box-sizing: border-box;
-
-        .options_item {
-          display: flex;
-          align-items: center;
-          justify-content: space-between;
-          height: 40px;
-          padding: 0 0 0 12px;
-
-          &:hover {
-            background-color: rgba(245, 245, 245, 1);
-          }
-
-          .choose {
-            box-sizing: border-box;
-            width: 10px;
-            height: 6px;
-            margin-right: 4px;
-            margin-left: 2px;
-            border-width: 0 0 0.2em 0.2em;
-            border-style: solid;
-            border-color: rgb(0, 0, 0, .75);
-            transform: rotate(-45deg) translateY(-30%);
-          }
-        }
-      }
-
-
-      .copybnt {
-        margin: auto;
-        width: 80px;
-        height: 32px;
-        font-size: 13px;
-        font-weight: 500;
-        color: #FFFFFF;
-        outline: none;
-        border: none;
-        border-radius: 6px;
-        background: #1878F5;
-        box-sizing: border-box;
-
-        &:hover {
-          background-color: rgba(66, 154, 255, 1);
-        }
-
-        &:active {
-          background-color: rgba(10, 89, 207, 1);
-        }
-
-        &:disabled {
-          background-color: rgba(189, 226, 255, 1);
-        }
-      }
-    }
-
-  }
-}
-
-.share_user {
-  display: flex;
-  flex-direction: column;
-
-  .type {
-    display: flex;
-    align-items: center;
-    height: 34px;
-    font-size: 13px;
-    font-weight: 500;
-  }
-
-  .shared-by {
-    padding: 8px 12px;
-    border-radius: 6px;
-    background: #FFFFFF;
-    box-sizing: border-box;
-    border: 1px solid #EBEBEB;
-
-    .scrollbar-demo-item {
-      display: flex;
-      align-items: center;
-      justify-content: space-between;
-      height: 40px;
-
-      .item-left {
-        display: flex;
-        align-items: center;
-        justify-content: space-between;
-        gap: 8px;
-
-        .avatar {
-          height: 24px;
-          width: 24px;
-          border-radius: 50%;
-          overflow: hidden;
-
-          img {
-            height: 100%;
-            width: 100%;
-          }
-        }
-
-        .name {
-          font-size: 13px;
-          font-weight: 600;
-          color: rgba(0, 0, 0, 1);
-        }
-      }
-
-      .item-right {
-        position: relative;
-        height: 40px;
-        display: flex;
-        align-items: center;
-        gap: 2px;
-
-        .founder,
-        .authority {
-          font-size: 12px;
-          font-weight: 500;
-        }
-
-        .shrink {
-          display: flex;
-          align-items: center;
-          width: 12px;
-          height: 12px;
-          color: rgba(102, 102, 102, 1);
-
-          >svg {
-            transition: 0.5s;
-            width: 100%;
-            height: 100%;
-          }
-        }
-
-        .popover {
-          position: absolute;
-          top: 40px;
-          right: 0px;
-          display: flex;
-          flex-direction: column;
-          width: 88px;
-          background-color: #fff;
-          border: 1px solid #EBEBEB;
-          border-radius: 8px;
-          box-shadow: 0px 2px 10px 0px rgba(0, 0, 0, 0.08);
-          box-sizing: border-box;
-
-          >div {
-            display: flex;
-            align-items: center;
-            justify-content: space-around;
-            height: 40px;
-            font-size: 12px;
-
-            .choose {
-              box-sizing: border-box;
-              width: 10px;
-              height: 6px;
-              margin-right: 4px;
-              margin-left: 2px;
-              border-width: 0 0 0.2em 0.2em;
-              border-style: solid;
-              border-color: rgb(0, 0, 0, .75);
-              transform: rotate(-45deg) translateY(-30%);
-            }
-
-            &:hover {
-              background-color: rgba(245, 245, 245, 1);
-            }
-          }
-        }
-
-        .svgBox {
-          height: 10px;
-          width: 10px;
-          display: flex;
-          margin-left: 8px;
-          margin-right: 30px;
-          justify-content: center;
-          align-items: center;
-          cursor: pointer;
-
-          >.svg {
-            height: 10px;
-            width: 10px;
-          }
-        }
-      }
-    }
-  }
-
-  .project {
-    display: flex;
-    align-items: center;
-    justify-content: center;
-    height: 38px;
-    font-size: 13px;
-    font-weight: 500;
-    color: rgba(140, 140, 140, 1);
-  }
-}
-
-
-
-
-
-
-// .purview {
-//   margin: var(--default-margin-half) 0 var(--default-margin) 0
-// }
-
-
-
-
-
-.unfounder {
+.project {
   display: flex;
   align-items: center;
-
-  .type {
-    font-weight: 600;
-  }
-
-  .name {
-    margin-left: 10px;
-  }
+  justify-content: center;
+  font-size: 13px;
+  font-weight: 500;
+  color: rgba(140, 140, 140, 1);
 }
 
+.copybnt {
+  margin: auto;
+  width: 80px;
+  height: 32px;
+  font-size: 13px;
+  font-weight: 500;
+  color: #FFFFFF;
+  outline: none;
+  border: none;
+  border-radius: 6px;
+  background: #1878F5;
+  box-sizing: border-box;
 
+  &:hover {
+    background-color: rgba(66, 154, 255, 1);
+  }
+
+  &:active {
+    background-color: rgba(10, 89, 207, 1);
+  }
+
+  &:disabled {
+    background-color: rgba(189, 226, 255, 1);
+  }
+}
 
 .card {
   position: absolute;
@@ -927,6 +561,340 @@ const selectOption = (option: any) => {
     width: 100%;
     padding: 0 24px 8px 24px;
     box-sizing: border-box;
+
+    .card-header {
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      height: 64px;
+      padding: 0;
+
+      .title {
+        font-size: 16px;
+        font-weight: 600;
+      }
+
+      .close {
+        width: 16px;
+        height: 16px;
+        padding: 4px;
+        border-radius: 6px;
+
+        &:hover {
+          background-color: rgb(243, 243, 245);
+          cursor: pointer;
+        }
+
+        svg {
+          width: 100%;
+          height: 100%;
+        }
+      }
+
+    }
+
+    .contain {
+      display: flex;
+      flex-direction: column;
+
+      .share-switch {
+        display: flex;
+        align-items: center;
+        height: 38px;
+        gap: 6px;
+
+        .type {
+          min-width: 65px;
+          font-size: 13px;
+          font-weight: 500;
+        }
+
+        .my_switch {
+          position: relative;
+          width: 36px;
+          height: 20px;
+          margin: 0;
+          left: -42px;
+          opacity: 0;
+        }
+
+      }
+
+      .file-name {
+        display: flex;
+        align-items: center;
+        height: 38px;
+        gap: 6px;
+
+        .type {
+          min-width: 65px;
+          font-size: 13px;
+          font-weight: 500;
+        }
+
+        .name {
+          font-size: 13px;
+          font-weight: 600;
+          white-space: nowrap;
+          overflow: hidden;
+          text-overflow: ellipsis;
+        }
+      }
+
+      .purview {
+        display: flex;
+        align-items: center;
+        height: 40px;
+        gap: 6px;
+
+        .type {
+          min-width: 65px;
+          font-size: 13px;
+          font-weight: 500;
+        }
+
+        .right {
+          display: flex;
+          align-items: center;
+          gap: 8px;
+
+          input {
+            width: 122px;
+            height: 32px;
+            font-size: 12px;
+            font-weight: 400;
+            outline: none;
+            border: none;
+            border-radius: 6px;
+            padding: 3px 3px 3px 12px;
+            background: #F5F5F5;
+            box-sizing: border-box;
+
+            &:hover {
+              background-color: rgba(235, 235, 235, 1);
+            }
+
+            &:focus {
+              background-color: rgba(235, 235, 235, 1);
+            }
+
+            &:disabled {
+              background-color: rgba(240, 240, 240, 1) !important;
+            }
+          }
+
+          .shrink {
+            position: absolute;
+            display: flex;
+            align-items: center;
+            right: 190px;
+            width: 12px;
+            height: 12px;
+            color: rgba(102, 102, 102, 1);
+
+            svg {
+              transition: 0.5s;
+              width: 100%;
+              height: 100%;
+            }
+          }
+
+          .options {
+            position: absolute;
+            top: 180px;
+            right: 183px;
+            padding: 0;
+            margin: 0;
+            width: 122px;
+            background-color: white;
+            border-radius: 8px;
+            border: 1px solid #EBEBEB;
+            box-shadow: 0px 2px 10px 0px rgba(0, 0, 0, 0.08);
+            z-index: 1;
+            box-sizing: border-box;
+
+            .options_item {
+              display: flex;
+              align-items: center;
+              justify-content: space-between;
+              height: 40px;
+              padding: 0 0 0 12px;
+
+              &:hover {
+                background-color: rgba(245, 245, 245, 1);
+              }
+
+              span {
+                font-size: 12px;
+                font-weight: 400;
+              }
+
+              .choose {
+                box-sizing: border-box;
+                width: 10px;
+                height: 6px;
+                margin-right: 4px;
+                margin-left: 2px;
+                border-width: 0 0 0.2em 0.2em;
+                border-style: solid;
+                border-color: rgb(0, 0, 0, .75);
+                transform: rotate(-45deg) translateY(-30%);
+              }
+            }
+          }
+
+
+        }
+
+      }
+
+      .unfounder {
+        display: flex;
+        align-items: center;
+        height: 40px;
+        gap: 6px;
+
+        .type {
+          min-width: 65px;
+          font-size: 13px;
+          font-weight: 500;
+        }
+
+        .name {
+          font-size: 13px;
+          font-weight: 600;
+          white-space: nowrap;
+          overflow: hidden;
+          text-overflow: ellipsis;
+        }
+      }
+
+      .bottom {
+        display: flex;
+        height: 48px;
+      }
+    }
+
+
+    .share_user {
+      display: flex;
+      flex-direction: column;
+
+      .type {
+        display: flex;
+        align-items: center;
+        height: 34px;
+        font-size: 13px;
+        font-weight: 500;
+      }
+
+      .shared-by {
+        padding: 8px 12px;
+        border-radius: 6px;
+        background: #FFFFFF;
+        box-sizing: border-box;
+        border: 1px solid #EBEBEB;
+        margin-bottom: 6px;
+
+        .scrollbar-demo-item {
+          display: flex;
+          align-items: center;
+          justify-content: space-between;
+          height: 40px;
+
+          .item-left {
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            gap: 8px;
+
+            .avatar {
+              height: 24px;
+              width: 24px;
+              border-radius: 50%;
+              overflow: hidden;
+
+              img {
+                height: 100%;
+                width: 100%;
+              }
+            }
+
+            .name {
+              font-size: 13px;
+              font-weight: 600;
+              color: rgba(0, 0, 0, 1);
+            }
+          }
+
+          .item-right {
+            position: relative;
+            height: 40px;
+            display: flex;
+            align-items: center;
+            gap: 2px;
+
+            .founder,
+            .authority {
+              font-size: 12px;
+              font-weight: 500;
+            }
+
+            .shrink {
+              display: flex;
+              align-items: center;
+              width: 12px;
+              height: 12px;
+              color: rgba(102, 102, 102, 1);
+
+              svg {
+                transition: 0.5s;
+                width: 100%;
+                height: 100%;
+              }
+            }
+
+            .popover {
+              position: absolute;
+              top: 40px;
+              right: 0px;
+              display: flex;
+              flex-direction: column;
+              width: 88px;
+              background-color: #fff;
+              border: 1px solid #EBEBEB;
+              border-radius: 8px;
+              box-shadow: 0px 2px 10px 0px rgba(0, 0, 0, 0.08);
+              box-sizing: border-box;
+
+              >div {
+                display: flex;
+                align-items: center;
+                justify-content: space-around;
+                height: 40px;
+                font-size: 12px;
+
+                .choose {
+                  box-sizing: border-box;
+                  width: 10px;
+                  height: 6px;
+                  margin-right: 4px;
+                  margin-left: 2px;
+                  border-width: 0 0 0.2em 0.2em;
+                  border-style: solid;
+                  border-color: rgb(0, 0, 0, .75);
+                  transform: rotate(-45deg) translateY(-30%);
+                }
+
+                &:hover {
+                  background-color: rgba(245, 245, 245, 1);
+                }
+              }
+            }
+          }
+        }
+      }
+    }
   }
 }
 </style>
