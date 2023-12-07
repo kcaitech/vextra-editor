@@ -2,7 +2,7 @@
 import { Context } from '@/context';
 import { WorkSpace } from '@/context/workspace';
 import { Segment2, get_segments2 } from '@/utils/pathedit';
-import { GroupShape, Matrix, PathShape } from '@kcdesign/data';
+import { GroupShape, Matrix, PathShape, Shape } from '@kcdesign/data';
 import { onMounted, onUnmounted, reactive, ref } from 'vue';
 interface Props {
     context: Context
@@ -26,7 +26,6 @@ function update() {
     segments.push(...get_segments2(shape, matrices));
 }
 function confirm_shape() {
-    shape = props.context.selection.selectedShapes[0] as (PathShape | GroupShape);
     if (!shape) {
         console.log('!shape');
         return false;
@@ -43,9 +42,16 @@ function update_matrices() {
         __init_m(shape, matrices);
         return;
     }
-    const shapes = shape.childs;
+    __init_m_for_g(shape, matrices);
+}
+function __init_m_for_g(group: GroupShape, matrices: Map<string, Matrix>) {
+    const shapes = group.childs;
     for (let i = 0, l = shapes.length; i < l; i++) {
         const shape = shapes[i];
+        if (shape instanceof GroupShape) {
+            __init_m_for_g(shape, matrices);
+            continue;
+        }
         if (!(shape instanceof PathShape)) {
             continue;
         }
@@ -59,14 +65,23 @@ function __init_m(shape: PathShape, container: Map<string, Matrix>) {
     container.set(shape.id, m);
 }
 function down_background_path(index: number) {
-    console.log('index:', index);
     const seg = segments[index];
     if (!seg) {
         console.log('!seg');
         return;
     }
     const editor = props.context.editor4Shape(seg.shape);
-    editor.clipPathShape(index);
+    const code = editor.clipPathShape(index);
+    after_clip(code);
+}
+function after_clip(data: { code: number, ex: Shape | undefined }) {
+    if (data.code === 1) {
+        props.context.selection.resetSelectShapes();
+        props.context.workspace.setPathEditMode(false);
+    }
+    if (data.ex) {
+        props.context.selection.selectShape(data.ex);
+    }
 }
 function enter(index: number) {
     new_high_light.value = index;
@@ -93,9 +108,17 @@ function matrix_watcher(t: number) {
         update();
     }
 }
-
+function init_shape() {
+    shape = props.context.selection.selectedShapes[0] as (PathShape | GroupShape);
+    if (!shape) {
+        console.log('!shape');
+        return false;
+    }
+    return true;
+}
 onMounted(() => {
     props.context.workspace.watch(matrix_watcher);
+    init_shape();
     update();
     watch_at_once();
 })
@@ -105,10 +128,11 @@ onUnmounted(() => {
 })
 </script>
 <template>
-    <g v-for="(p, i) in segments" :key="i" data-area="controller-element" @mouseenter="() => enter(i)" @mouseleave="leave">
-        <g @mousedown.stop="() => down_background_path(i)">
-            <path class="background-path" :d="p.path"></path>
-            <path :class="{ path: true, 'path-high-light': new_high_light === i }" :d="p.path">
+    <g v-for="(seg, i) in segments" :key="i" data-area="controller-element" @mouseenter="() => enter(i)"
+        @mouseleave="leave">
+        <g @mousedown.stop="() => down_background_path(seg.index)">
+            <path class="background-path" :d="seg.path"></path>
+            <path :class="{ path: true, 'path-high-light': new_high_light === i }" :d="seg.path">
             </path>
         </g>
     </g>

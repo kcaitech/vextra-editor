@@ -57,12 +57,19 @@ export function get_parent_points(context: Context, indexes?: number[]) {
 
 export function get_value_from_point(context: Context, index: number) {
     const path_shape = context.selection.pathshape;
-    if (!path_shape) return;
+    if (!path_shape) {
+        console.log('!path_shape');
+        return;
+    }
     const f = path_shape.frame;
     const m = new Matrix();
     m.preScale(f.width, f.height);
     m.multiAtLeft(path_shape.matrix2Parent());
     const c = path_shape.points[index];
+    if (!c) {
+        console.log('!c:', index);
+        return;
+    }
     const p = m.computeCoord3(c);
     return {
         x: p.x,
@@ -339,7 +346,10 @@ export function get_segments(shape: PathShape, matrix: Matrix, segment_set: Set<
     m.preScale(shape.frame.width, shape.frame.height);
     for (let index = 0, l = points.length; index < l; index++) {
         const point = points[index];
-        const next = __round_curve_point2(points, index).next;
+        const next = __next_points(points, index, shape.isClosed);
+        if (!next) {
+            break;
+        }
         result_segments.push(_segmeng_generator(m, point, next, index, segment_set))
     }
     return result_segments;
@@ -448,6 +458,10 @@ export function get_segments2(shape: PathShape | GroupShape, matrices: Map<strin
     }
     for (let i = 0, l = shapes.length; i < l; i++) {
         const shape = shapes[i];
+        if (shape instanceof GroupShape) {
+            result_segments.push(...get_segments2(shape, matrices));
+            continue;
+        }
         if (!(shape instanceof PathShape)) {
             continue;
         }

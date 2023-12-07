@@ -1,14 +1,14 @@
 <script setup lang="ts">
 import IconText from "@/components/common/IconText.vue";
-import {onMounted, onUnmounted, reactive, ref} from "vue";
-import {Context} from "@/context";
-import {useI18n} from 'vue-i18n';
+import { onMounted, onUnmounted, reactive, ref } from "vue";
+import { Context } from "@/context";
+import { useI18n } from 'vue-i18n';
 import SvgIcon from "@/components/common/SvgIcon.vue";
 import Tooltip from "@/components/common/Tooltip.vue";
-import {Path, PointEditType} from "@/context/path";
-import {get_action_for_key_change, get_value_from_point, get_value_from_points} from "@/utils/pathedit";
-import {CurveMode, PathShape} from "@kcdesign/data";
-import {Selection} from "@/context/selection";
+import { Path, PointEditType } from "@/context/path";
+import { get_action_for_key_change, get_value_from_point, get_value_from_points } from "@/utils/pathedit";
+import { CurveMode, PathShape } from "@kcdesign/data";
+import { Selection } from "@/context/selection";
 
 interface Props {
     context: Context
@@ -26,7 +26,7 @@ const x = ref<number | string>('');
 const y = ref<number | string>('');
 const r = ref<number | string>('');
 const curve_mode = ref<PointEditType>('INVALID');
-const model_state: ModelState = reactive({x: true, y: true, r: true, tool: true});
+const model_state: ModelState = reactive({ x: true, y: true, r: true, tool: true });
 const t = useI18n().t;
 let path_shape: PathShape | undefined = undefined;
 
@@ -71,17 +71,21 @@ function calc() {
     y.value = '';
     r.value = '';
     const selected_points = props.context.path.selectedPoints;
-    const l = selected_points.length;
+    const l = selected_points.length;    
     if (l === 1) {
         const state = get_value_from_point(props.context, selected_points[0]);
-        if (!state) return;
+        if (!state) {
+            return;
+        }
         x.value = state.x;
         y.value = state.y;
         r.value = state.r;
         return;
     }
     const state = get_value_from_points(props.context, selected_points);
-    if (!state) return;
+    if (!state) {
+        return;
+    }
     x.value = state.x === 'mix' ? t('attr.more_value') : state.x;
     y.value = state.y === 'mix' ? t('attr.more_value') : state.y;
     r.value = state.r === 'mix' ? t('attr.more_value') : state.r;
@@ -180,40 +184,40 @@ onUnmounted(() => {
 <template>
     <div class="table">
         <div class="tr">
-            <IconText class="td position" ticon="X" :text="typeof (x) === 'number' ? x.toFixed(2) : x"
-                      @onchange="onChangeX" :disabled="model_state.x" :context="context"/>
+            <IconText class="td position" ticon="X" :text="typeof (x) === 'number' ? x.toFixed(2) : x" @onchange="onChangeX"
+                :disabled="model_state.x" :context="context" />
             <div class="space"></div>
-            <IconText class="td position" ticon="Y" :text="typeof (y) === 'number' ? y.toFixed(2) : y"
-                      @onchange="onChangeY" :disabled="model_state.y" :context="context"/>
+            <IconText class="td position" ticon="Y" :text="typeof (y) === 'number' ? y.toFixed(2) : y" @onchange="onChangeY"
+                :disabled="model_state.y" :context="context" />
             <div class="space"></div>
         </div>
         <div class="tr">
-            <IconText class="td position" ticon="R" :text="typeof (r) === 'number' ? r.toFixed(2) : r"
-                      @onchange="onChangeR" :disabled="model_state.r" :context="context"/>
+            <IconText class="td position" ticon="R" :text="typeof (r) === 'number' ? r.toFixed(2) : r" @onchange="onChangeR"
+                :disabled="model_state.r" :context="context" />
         </div>
         <div class="tr">
-            <div :class="{tool: true, tool_disabled: model_state.tool}">
+            <div :class="{ tool: true, tool_disabled: model_state.tool }">
                 <Tooltip :content="t('attr.right_angle')">
                     <div @mousedown.stop="() => onChangeCurveMode(CurveMode.Straight)"
-                         :class="{item: true, active: curve_mode === CurveMode.Straight}">
+                        :class="{ item: true, active: curve_mode === CurveMode.Straight }">
                         <svg-icon icon-class="straight"></svg-icon>
                     </div>
                 </Tooltip>
                 <Tooltip :content="t('attr.completely_symmetrical')">
                     <div @mousedown.stop="() => onChangeCurveMode(CurveMode.Mirrored)"
-                         :class="{item: true, active: curve_mode === CurveMode.Mirrored}">
+                        :class="{ item: true, active: curve_mode === CurveMode.Mirrored }">
                         <svg-icon icon-class="mirrored"></svg-icon>
                     </div>
                 </Tooltip>
                 <Tooltip :content="t('attr.asymmetric')">
                     <div @mousedown.stop="() => onChangeCurveMode(CurveMode.Asymmetric)"
-                         :class="{item: true, active: curve_mode === CurveMode.Asymmetric}">
+                        :class="{ item: true, active: curve_mode === CurveMode.Asymmetric }">
                         <svg-icon icon-class="asymmetric"></svg-icon>
                     </div>
                 </Tooltip>
                 <Tooltip :content="t('attr.angular_symmetry')">
                     <div @mousedown.stop="() => onChangeCurveMode(CurveMode.Disconnected)"
-                         :class="{item: true, active: curve_mode === CurveMode.Disconnected}">
+                        :class="{ item: true, active: curve_mode === CurveMode.Disconnected }">
                         <svg-icon icon-class="disconnected"></svg-icon>
                     </div>
                 </Tooltip>
@@ -255,7 +259,7 @@ onUnmounted(() => {
             width: 18px;
         }
 
-        > .icontext {
+        >.icontext {
             background-color: rgba(#D8D8D8, 0.4);
         }
 
@@ -286,7 +290,7 @@ onUnmounted(() => {
                 justify-content: center;
                 align-items: center;
 
-                > svg {
+                >svg {
                     height: 80%;
                     width: 80%;
                 }
@@ -314,5 +318,4 @@ onUnmounted(() => {
         }
     }
 }
-
 </style>

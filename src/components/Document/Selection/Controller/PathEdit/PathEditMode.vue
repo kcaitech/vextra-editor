@@ -118,9 +118,13 @@ function modify_cursor() {
     clip_mode.value = false;
     const action = props.context.tool.action;
     if (action === Action.PathClip) {
-        clip_mode.value = true;
-        props.context.esctask.save('clip-to-auto', quit);
+        switch_to_clip_mode();
     }
+}
+function switch_to_clip_mode() {
+    props.context.path.reset();
+    clip_mode.value = true;
+    props.context.esctask.save('clip-to-auto', quit);
 }
 function quit() {
     const action = props.context.tool.action;
