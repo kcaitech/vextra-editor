@@ -29,7 +29,8 @@ const curve_mode = ref<PointEditType>('INVALID');
 const model_state: ModelState = reactive({ x: true, y: true, r: true, tool: true });
 const t = useI18n().t;
 let path_shape: PathShape | undefined = undefined;
-
+const path_close_status = ref<boolean>(true);
+const btn_string_for_status = ref<string>(t('attr.de_close_path'));
 function execute_change_xy(key: 'x' | 'y', val: any) {
     val = Number(val);
     if (!path_shape || isNaN(val)) return;
@@ -71,7 +72,7 @@ function calc() {
     y.value = '';
     r.value = '';
     const selected_points = props.context.path.selectedPoints;
-    const l = selected_points.length;    
+    const l = selected_points.length;
     if (l === 1) {
         const state = get_value_from_point(props.context, selected_points[0]);
         if (!state) {
@@ -89,6 +90,29 @@ function calc() {
     x.value = state.x === 'mix' ? t('attr.more_value') : state.x;
     y.value = state.y === 'mix' ? t('attr.more_value') : state.y;
     r.value = state.r === 'mix' ? t('attr.more_value') : state.r;
+}
+
+function modify_path_closed_status() {
+    path_close_status.value = true;
+    btn_string_for_status.value = t('attr.de_close_path');
+    if (!path_shape) {
+        console.log('modify_path_closed_status: !path_shape');
+        return;
+    }
+    if (!path_shape.isClosed) {
+        path_close_status.value = false;
+        btn_string_for_status.value = t('attr.close_path');
+    }
+    console.log('modify_path_closed_status', btn_string_for_status.value);
+}
+
+function modify_closed_status() {
+    if (!path_shape) {
+        console.log('modify_closed_status: !path_shape');
+        return;
+    }
+    const editor = props.context.editor4Shape(path_shape);
+    editor.setPathClosedStatus(!path_close_status.value);
 }
 
 function modify_model_state() {
@@ -130,12 +154,14 @@ function get_current_curve_mode() {
 }
 
 function update() {
+    modify_path_closed_status();
     get_current_curve_mode();
     modify_model_state();
     calc();
 }
 
 function __update() {
+    modify_path_closed_status();
     get_current_curve_mode();
     calc();
 }
@@ -172,6 +198,7 @@ onMounted(() => {
     props.context.path.watch(path_watcher);
     props.context.selection.watch(selection_watcher);
     init_path_shape();
+    update();
 })
 onUnmounted(() => {
     props.context.path.unwatch(path_watcher);
@@ -223,8 +250,11 @@ onUnmounted(() => {
                 </Tooltip>
             </div>
         </div>
-        <div class="tr">
-            <div class="btn" @click="exit">
+        <div class="btns">
+            <div class="path-status" @click="modify_closed_status">
+                {{ btn_string_for_status }}
+            </div>
+            <div class="exit" @click="exit">
                 {{ t('attr.exit_path_edit') }}
             </div>
         </div>
@@ -305,9 +335,28 @@ onUnmounted(() => {
             opacity: 0.5;
             pointer-events: none;
         }
+    }
 
-        .btn {
-            width: 100%;
+    .btns {
+        position: relative;
+        width: 100%;
+        height: 30px;
+        display: grid;
+        grid-template-columns: repeat(2, calc(50% - 8px));
+        grid-gap: 16px;
+        margin: 4px 0;
+
+        .path-status {
+            height: 100%;
+            border-radius: 4px;
+            background-color: var(--input-background);
+            color: var(--theme-color);
+            text-align: center;
+            line-height: 30px;
+            cursor: pointer;
+        }
+
+        .exit {
             height: 100%;
             border-radius: 4px;
             background-color: var(--active-color-beta);

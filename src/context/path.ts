@@ -88,8 +88,11 @@ export class Path extends Watchable(Object) {
     }
 
     reset_points() {
+        const need_notify = this.selected_points.length;
         this.selected_points.length = 0;
-        this.notify(Path.SELECTION_CHANGE);
+        if (need_notify) {
+            this.notify(Path.SELECTION_CHANGE);
+        }
     }
 
     get selectedSides() {
@@ -132,17 +135,23 @@ export class Path extends Watchable(Object) {
     }
 
     reset_sides() {
+        const need_notify = this.selected_sides.length;
         this.selected_sides.length = 0;
-        this.notify(Path.SELECTION_CHANGE);
+        if (need_notify) {
+            this.notify(Path.SELECTION_CHANGE);
+        }
     }
     _reset() {
         this.selected_points.length = 0;
         this.selected_sides.length = 0;
     }
     reset() {
+        const need_notify = this.selected_points.length || this.selected_sides.length;
         this.selected_points.length = 0;
         this.selected_sides.length = 0;
-        this.notify(Path.SELECTION_CHANGE);
+        if (need_notify) {
+            this.notify(Path.SELECTION_CHANGE);
+        }
     }
 
     get matrix_unit_to_root() {
