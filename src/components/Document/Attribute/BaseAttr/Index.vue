@@ -3,7 +3,6 @@ import { onMounted, onUnmounted, ref, reactive } from 'vue'
 import { Shape, ShapeType, RectShape, GroupShape, PathShape, PathShape2, TextShape } from '@kcdesign/data';
 import IconText from '@/components/common/IconText.vue';
 import Position from '../PopoverMenu/Position.vue';
-import RadiusForIos from '../PopoverMenu/RadiusForIos.vue';
 import { debounce } from 'lodash';
 import { useI18n } from 'vue-i18n';
 import { Context } from '@/context';
@@ -84,7 +83,7 @@ function calc_attri() {
             w.value = Math.max(frame.width, 1);
             h.value = Math.max(frame.height, 1);
         }
-        const lt = shape.matrix2Root().computeCoord2(0, 0);
+        const lt = shape.matrix2Parent().computeCoord2(0, 0);
         x.value = lt.x;
         y.value = lt.y;
         rotate.value = get_rotation(shape);
@@ -93,7 +92,6 @@ function calc_attri() {
         const shape = props.context.selection.selectedShapes[0];
         const lt = shape.matrix2Root().computeCoord2(0, 0);
         const frame = shape.frame;
-
         const isMixed = is_mixed(props.context.selection.selectedShapes);
         if (x.value !== mixed) x.value = lt.x;
         if (y.value !== mixed) y.value = lt.y;
@@ -143,9 +141,9 @@ function _update_view() {
         check_model_state();
     }
     if (props.context.selection.selectedShapes.length > 1) check_mixed();
-    if(parentSymbolRef()) {
+    if (parentSymbolRef()) {
         all_disable();
-    }else {
+    } else {
         check_model_state();
     }
 }
@@ -544,19 +542,19 @@ onUnmounted(() => {
                 :disabled="model_disable_state.radius" :context="context" />
             <div class="td frame ml-24" v-if="!isMoreForRadius"></div>
             <IconText v-if="isMoreForRadius" class="td frame ml-24" svgicon="radius" :text="radius?.rt || 0"
-                :frame="{ width: 12, height: 12, rotate: 90 }" @onchange="e => onChangeRadian(e, 'rt')"
-                :context="context" :disabled="model_disable_state.radius" />
+                :frame="{ width: 12, height: 12, rotate: 90 }" @onchange="e => onChangeRadian(e, 'rt')" :context="context"
+                :disabled="model_disable_state.radius" />
             <div class="more-for-radius" @click="radiusToggle" v-if="s_radius && multiRadius">
                 <svg-icon :icon-class="isMoreForRadius ? 'more-for-radius' : 'more-for-radius'"></svg-icon>
             </div>
         </div>
         <div class="tr" v-if="isMoreForRadius">
             <IconText class="td frame" svgicon="radius" :text="radius?.lb || 0"
-                :frame="{ width: 12, height: 12, rotate: 270 }" @onchange="e => onChangeRadian(e, 'lb')"
-                :context="context" :disabled="model_disable_state.radius"/>
+                :frame="{ width: 12, height: 12, rotate: 270 }" @onchange="e => onChangeRadian(e, 'lb')" :context="context"
+                :disabled="model_disable_state.radius" />
             <IconText class="td frame ml-24" svgicon="radius" :text="radius?.rb || 0"
-                :frame="{ width: 12, height: 12, rotate: 180 }" @onchange="e => onChangeRadian(e, 'rb')"
-                :context="context" :disabled="model_disable_state.radius"/>
+                :frame="{ width: 12, height: 12, rotate: 180 }" @onchange="e => onChangeRadian(e, 'rb')" :context="context"
+                :disabled="model_disable_state.radius" />
             <!-- <RadiusForIos :context="props.context"></RadiusForIos> -->
             <div style="width: 22px;height: 22px;"></div>
         </div>
@@ -724,4 +722,5 @@ onUnmounted(() => {
             height: 90%;
         }
     }
-}</style>
+}
+</style>

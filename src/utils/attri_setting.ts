@@ -1,4 +1,4 @@
-import { RectShape, Shape, ShapeType } from "@kcdesign/data";
+import { Matrix, PathShape, RectShape, Shape, ShapeType } from "@kcdesign/data";
 import { PositonAdjust, ConstrainerProportionsAction, FrameAdjust, RotateAdjust, FlipAction } from "@kcdesign/data";
 import { getHorizontalAngle } from "@/utils/common"
 
@@ -12,7 +12,7 @@ export function is_mixed(shapes: Shape[]) {
     h: number | string,
     rotate: number | string,
     constrainerProportions: boolean | string,
-    type:  boolean | string,
+    type: boolean | string,
   } = {
     x: frame0.x,
     y: frame0.y,
@@ -33,7 +33,7 @@ export function is_mixed(shapes: Shape[]) {
     if (frame.height !== result.h) result.h = 'mixed';
     if ((shape.rotation || 0) !== result.rotate) result.rotate = 'mixed';
     if (shape.constrainerProportions !== result.constrainerProportions) result.constrainerProportions = 'mixed';
-    if(type_line !== result.type) result.type = 'mixed';
+    if (type_line !== result.type) result.type = 'mixed';
     if (Object.values(result).every(v => v === 'mixed')) return result;
   }
   if (result.rotate !== 'mixed') result.rotate = Number((result.rotate as number).toFixed(2));
@@ -147,11 +147,8 @@ export function get_actions_flip_h(shapes: Shape[]) {
 
 export function get_rotation(shape: Shape) {
   let rotation: number = Number(shape.rotation?.toFixed(2)) || 0;
-  if (shape.type === ShapeType.Line) {
-    const m = shape.matrix2Parent();
-    const lt = m.computeCoord(0, 0);
-    const rb = m.computeCoord(shape.frame.width, shape.frame.height);
-    rotation = Number(getHorizontalAngle(lt, rb).toFixed(2)) % 360;
+  if (is_straight(shape)) {
+    rotation = get_rotate_for_straight(shape as PathShape);
   }
   return rotation;
 }
@@ -159,4 +156,27 @@ export function get_straight_line_length(shape: Shape) {
   const f = shape.frame, m = shape.matrix2Root();
   const lt = m.computeCoord2(0, 0), rb = m.computeCoord2(f.width, f.height);
   return Math.hypot(rb.x - lt.x, rb.y - lt.y);
+}
+function is_straight(shape: Shape) {
+  if (!(shape instanceof PathShape)) {
+    return false;
+  }
+  if (shape.type === ShapeType.Contact) {
+    return false;
+  }
+  const points = shape.points;
+  if (points.length !== 2) {
+    return false;
+  }
+  return !points[0].hasFrom && !points[1].hasTo;
+}
+export function get_rotate_for_straight(shape: PathShape) {
+  const points = shape.points;
+  const p1 = points[0];
+  const p2 = points[1];
+  const m = new Matrix(shape.matrix2Parent());
+  m.preScale(shape.frame.width, shape.frame.height);
+  const lt = m.computeCoord2(p1.x, p1.y);
+  const rb = m.computeCoord2(p2.x, p2.y);
+  return Number(getHorizontalAngle(lt, rb).toFixed(2)) % 360;
 }

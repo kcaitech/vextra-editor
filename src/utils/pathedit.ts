@@ -1,6 +1,7 @@
 import { Context } from "@/context";
 import { XY } from "@/context/selection";
-import { CurveMode, CurvePoint, GroupShape, Matrix, PathShape } from "@kcdesign/data";
+import { CurveMode, CurvePoint, GroupShape, Matrix, PathShape, Shape, ShapeType } from "@kcdesign/data";
+import { getHorizontalAngle } from "./common";
 
 export function get_root_points(context: Context, indexes?: number[]) {
     const path_shape = context.selection.pathshape;

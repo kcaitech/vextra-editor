@@ -2,12 +2,13 @@
 import { Context } from '@/context';
 import { AsyncBaseAction, CtrlElementType, Matrix, PathShape, Shape } from '@kcdesign/data';
 import { onMounted, onUnmounted, watch, reactive, ref } from 'vue';
-import { ClientXY, PageXY } from '@/context/selection';
+import { ClientXY, PageXY, XY } from '@/context/selection';
 import { getAngle, getHorizontalAngle } from '@/utils/common';
 import { update_dot3 } from './common';
 import { Point } from "../../SelectionView.vue";
 import { Action } from '@/context/tool';
 import { get_direction } from '@/utils/controllerFn';
+import { get_rotate_for_straight } from '@/utils/attri_setting';
 
 interface Props {
     matrix: number[]
@@ -79,12 +80,7 @@ function point_mousemove(event: MouseEvent) {
     const { x: mx, y: my } = mouseOnClient;
     if (isDragging && asyncBaseAction) {
         if (cur_ctrl_type.endsWith('rotate')) {
-            let deg = 0;
-            const { x: ax, y: ay } = props.axle;
-            deg = getAngle([ax, ay, sx, sy], [ax, ay, mx, my]) || 0;
-            if (props.shape.isFlippedHorizontal) deg = -deg;
-            if (props.shape.isFlippedVertical) deg = -deg
-            asyncBaseAction.executeRotate(deg);
+            for_rotate(startPosition, mouseOnClient);
         } else {
             const action = props.context.tool.action;
             let p2: PageXY = submatrix.computeCoord2(mouseOnClient.x, mouseOnClient.y);
@@ -208,11 +204,7 @@ function point_mouseup(event: MouseEvent) {
 }
 function setCursor(t: CtrlElementType, force?: boolean) {
     const cursor = props.context.cursor;
-    const shape = props.shape;
-    const m = shape.matrix2Parent();
-    const lt = m.computeCoord(0, 0);
-    const rb = m.computeCoord(shape.frame.width, shape.frame.height);
-    let deg = Number(getHorizontalAngle(lt, rb).toFixed(2)) % 360;
+    let deg = get_rotate_for_straight(props.shape as PathShape);
     if (t === CtrlElementType.RectLT) {
         cursor.setType('extend-0', force);
     } else if (t === CtrlElementType.RectRB) {
@@ -223,6 +215,29 @@ function setCursor(t: CtrlElementType, force?: boolean) {
     } else if (t === CtrlElementType.RectRBR) {
         cursor.setType(`rotate-${deg}`, force);
     }
+}
+function for_rotate(p1: XY, p2: XY) {
+    if (dots.length !== 2) {
+        console.log('!dots.length !== 2');
+        return;
+    }
+    if (!asyncBaseAction) {
+        console.log('!asyncBaseAction');
+        return;
+    }
+    const __p1 = dots[0];
+    const __p2 = dots[1];
+    const ax = (__p1.point.x + __p2.point.x) / 2;
+    const ay = (__p1.point.y + __p2.point.y) / 2;
+    let deg = 0;
+    deg = getAngle([ax, ay, p1.x, p1.y], [ax, ay, p2.x, p2.y]) || 0;
+    if (props.shape.isFlippedHorizontal) {
+        deg = -deg;
+    }
+    if (props.shape.isFlippedVertical) {
+        deg = -deg;
+    }
+    asyncBaseAction.executeRotate(deg);
 }
 function point_mouseleave() {
     props.context.cursor.reset();
