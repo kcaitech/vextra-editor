@@ -52,6 +52,7 @@ watch(() => props.data, (v, o) => {
 })
 
 onMounted(() => {
+    getCutoutPath();
     props.data.watch(getCutoutPath);
     props.context.workspace.watch(workspaceUpdate);
 })

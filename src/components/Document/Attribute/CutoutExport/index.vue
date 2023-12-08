@@ -55,6 +55,9 @@ function watchShapes() {
     if (selection.hoveredShape) {
         needWatchShapes.set(selection.hoveredShape.id, selection.hoveredShape);
     }
+    if (selection.selectedPage) {
+        needWatchShapes.set(selection.selectedPage.id, selection.selectedPage);
+    }
     if (selection.selectedShapes.length > 0) {
         selection.selectedShapes.forEach((v) => {
             needWatchShapes.set(v.id, v);
@@ -113,7 +116,7 @@ function updateData() {
             const options = page.exportOptions;
             if (options) {
                 exportOption.value = options;
-                previewUnfold.value = options.unfold;
+                previewUnfold.value = options.unfold || false;
                 for (let i = 0; i < options.exportFormats.length; i++) {
                     const format = options.exportFormats[i];
                     const f = { id: i, format };
@@ -174,11 +177,11 @@ const addDefault = (len: number) => {
             }
         }
     } else {
-        // const page = props.context.selection.selectedPage;
-        // if (page) {
-        //     const editor = props.context.editor4Page(page);
-        //     editor.pageAddExportFormat(formars);
-        // }
+        const page = props.context.selection.selectedPage;
+        if (page) {
+            const editor = props.context.editor4Page(page);
+            editor.pageAddExportFormat(formars);
+        }
     }
 }
 const addAndroid = (len: number) => {
@@ -208,11 +211,11 @@ const addAndroid = (len: number) => {
             }
         }
     } else {
-        // const page = props.context.selection.selectedPage;
-        // if (page) {
-        //     const editor = props.context.editor4Page(page);
-        //     editor.pageAddExportFormat(formars);
-        // }
+        const page = props.context.selection.selectedPage;
+        if (page) {
+            const editor = props.context.editor4Page(page);
+            editor.pageAddExportFormat(formars);
+        }
     }
 }
 const addIos = (len: number) => {
@@ -241,11 +244,11 @@ const addIos = (len: number) => {
             }
         }
     } else {
-        // const page = props.context.selection.selectedPage;
-        // if (page) {
-        //     const editor = props.context.editor4Page(page);
-        //     editor.pageAddExportFormat(formars);
-        // }
+        const page = props.context.selection.selectedPage;
+        if (page) {
+            const editor = props.context.editor4Page(page);
+            editor.pageAddExportFormat(formars);
+        }
     }
 }
 function first() {
@@ -266,6 +269,12 @@ const changeSize = (value: string, idx: number) => {
             const editor = props.context.editor4Page(page);
             editor.setShapesExportFormatScale(actions);
         }
+    } else {
+        const page = props.context.selection.selectedPage;
+        if (page) {
+            const editor = props.context.editor4Page(page);
+            editor.setPageExportFormatScale(_idx, parseFloat(value));
+        }
     }
 }
 const changePerfix = (index: number, idx: number) => {
@@ -282,6 +291,12 @@ const changePerfix = (index: number, idx: number) => {
         if (page) {
             const editor = props.context.editor4Page(page);
             editor.setShapesExportFormatPerfix(actions);
+        }
+    } else {
+        const page = props.context.selection.selectedPage;
+        if (page) {
+            const editor = props.context.editor4Page(page);
+            editor.setPageExportFormatPerfix(_idx, perfixItems[index]);
         }
     }
 }
@@ -300,6 +315,12 @@ const changeFormat = (index: number, idx: number) => {
             const editor = props.context.editor4Page(page);
             editor.setShapesExportFormatFileFormat(actions);
         }
+    } else {
+        const page = props.context.selection.selectedPage;
+        if (page) {
+            const editor = props.context.editor4Page(page);
+            editor.setPageExportFormatFileFormat(_idx, fileFormat[index]);
+        }
     }
 }
 const changeName = (value: string, idx: number) => {
@@ -316,6 +337,12 @@ const changeName = (value: string, idx: number) => {
         if (page) {
             const editor = props.context.editor4Page(page);
             editor.setShapesExportFormatName(actions);
+        }
+    } else {
+        const page = props.context.selection.selectedPage;
+        if (page) {
+            const editor = props.context.editor4Page(page);
+            editor.setPageExportFormatName(_idx, value);
         }
     }
 }
@@ -334,6 +361,12 @@ const deleteArgus = (idx: number) => {
         if (page) {
             const editor = props.context.editor4Page(page);
             editor.shapesDeleteExportFormat(actions);
+        }
+    } else {
+        const page = props.context.selection.selectedPage;
+        if (page) {
+            const editor = props.context.editor4Page(page);
+            editor.pageDeleteExportFormat(_idx);
         }
     }
 }
@@ -364,6 +397,12 @@ const previewCanvas = (v: boolean) => {
         const shape = selected[0];
         const editor = props.context.editor4Shape(shape);
         editor.setExportPreviewUnfold(v);
+    } else if (len < 1) {
+        const page = props.context.selection.selectedPage;
+        if (page) {
+            const editor = props.context.editor4Page(page);
+            editor.setPageExportPreviewUnfold(v);
+        }
     }
 }
 const isShowCheckbox = ref(false);
@@ -377,6 +416,7 @@ const exportFill = () => {
     pngImageUrls.clear();
     const selected = props.context.selection.selectedShapes;
     for (let i = 0; i < selected.length; i++) {
+        if (selected.length === 0) break;
         const shape = selected[i];
         if (previewSvgs.value) {
             const svg = previewSvgs.value[i];
@@ -387,34 +427,61 @@ const exportFill = () => {
                 svg.setAttribute("height", `${height * format.scale}`);
                 if (format.fileFormat === ExportFileFormat.Jpg || format.fileFormat === ExportFileFormat.Png) {
                     getPngImageData(svg, shape.exportOptions!.trimTransparent, id, format, pngImageUrls, shape);
-                }else if(format.fileFormat === ExportFileFormat.Svg) {
+                } else if (format.fileFormat === ExportFileFormat.Svg) {
                     getSvgImageData(svg, shape.exportOptions!.trimTransparent, id, format, pngImageUrls, shape);
                 }
             });
         }
     }
+    if (selected.length === 0) {
+        exportPageImage();
+    }
     setTimeout(() => {
         const page = props.context.selection.selectedPage;
-        const options = selected.length > 0 ? selected[0].exportOptions : page && page.exportOptions;
+        if (!page) return;
+        const shape = selected.length > 0 ? selected[0] : page;
+        const options = shape.exportOptions;
         const formats = options!.exportFormats;
         if (selected.length <= 1 && formats.length === 1 && !formats[0].name.includes('/')) {
-            const id = selected[0].id + formats[0].id;
+            const id = shape.id + formats[0].id;
             const url = pngImageUrls.get(id);
             if (url) {
                 let fileName;
                 if (formats[0].namingScheme === ExportFormatNameingScheme.Prefix) {
-                    fileName = formats[0].name + selected[0].name;
+                    fileName = formats[0].name + shape.name;
                 } else {
-                    fileName = selected[0].name + formats[0].name;
+                    fileName = shape.name + formats[0].name;
                 }
                 exportSingleImage(url, formats[0].fileFormat, fileName);
             }
         } else {
-            const imageUrls = getExportFillUrl(selected, pngImageUrls);
+            const shapes = selected.length > 0? selected : [page];
+            const imageUrls = getExportFillUrl(shapes, pngImageUrls);
             downloadImages(imageUrls);
         }
     }, 100)
 }
+
+const exportPageImage = () => {
+    const page = props.context.selection.selectedPage;
+    if (!page || !page.exportOptions) return;
+    const options = page.exportOptions;
+    if (previewSvgs.value) {
+        const svg = previewSvgs.value[0];
+        options.exportFormats.forEach((format, idx) => {
+            const id = page.id + format.id;
+            const { width, height } = svg.viewBox.baseVal
+            svg.setAttribute("width", `${width * format.scale}`);
+            svg.setAttribute("height", `${height * format.scale}`);
+            if (format.fileFormat === ExportFileFormat.Jpg || format.fileFormat === ExportFileFormat.Png) {
+                getPngImageData(svg, options.trimTransparent, id, format, pngImageUrls, page);
+            } else if (format.fileFormat === ExportFileFormat.Svg) {
+                getSvgImageData(svg, options.trimTransparent, id, format, pngImageUrls, page);
+            }
+        });
+    }
+}
+
 
 function update_by_shapes() {
     watchShapes();
@@ -442,8 +509,9 @@ onUnmounted(() => {
             <div class="name">创建切图与导出</div>
             <div class="cutout_add_icon">
                 <div class="cutout-icon cutout-preinstall"
-                    :style="{ backgroundColor: isPreinstall ? 'rgba(0, 0, 0, 0.2)' : '' }" @click="showPreinstall"><svg-icon
-                        icon-class="text-justify"></svg-icon></div>
+                    :style="{ backgroundColor: isPreinstall ? 'rgba(0, 0, 0, 0.2)' : '' }" @click.stop="showPreinstall">
+                    <svg-icon icon-class="text-justify"></svg-icon>
+                </div>
                 <div class="cutout-icon" @click.stop="preinstall('default')"><svg-icon icon-class="add"></svg-icon></div>
                 <PreinstallSelect v-if="isPreinstall" @close="isPreinstall = false" @preinstall="preinstall">
                 </PreinstallSelect>
@@ -609,8 +677,8 @@ onUnmounted(() => {
 
 .exportsvg {
     position: fixed;
-    left: 0;
-    top: 0;
+    left: -1000px;
+    top: -1000px;
     opacity: 0;
     z-index: -1;
 }

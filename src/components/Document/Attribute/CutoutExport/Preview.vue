@@ -1,7 +1,7 @@
 <script setup lang="ts">
 import { ref, reactive, onMounted, onUnmounted, watch } from 'vue';
 import comsMap from '@/components/Document/Content/comsmap';
-import { ExportFileFormat, Shape, ShapeType } from '@kcdesign/data';
+import { ExportFileFormat, ExportFormat, Shape, ShapeType } from '@kcdesign/data';
 import { Context } from '@/context';
 import { getCutoutShape, getShadowMax, getShapeBorderMax } from '@/utils/cutout';
 import { color2string } from '@/utils/content';
@@ -83,8 +83,20 @@ const _getCanvasShape = () => {
     reflush.value++;
     nextTick(() => {
         if (previewSvg.value) {
-            const format = shape.exportOptions!.exportFormats[0];
-            const id = shape.id + format.id;
+            let format: ExportFormat;
+            let id = '';
+            let shape: Shape;
+            if (shapes.length === 1) {
+                shape = shapes[0];
+                format = shape.exportOptions!.exportFormats[0];
+                id = shape.id + format.id;
+            } else {
+                const page = props.context.selection.selectedPage;
+                if (!page || page.exportOptions!.exportFormats.length === 0) return;
+                shape = page;
+                format = page && page.exportOptions!.exportFormats[0];
+                id = page.id + format.id;
+            }
             const { width, height } = previewSvg.value.viewBox.baseVal
             previewSvg.value.setAttribute("width", `${width * format.scale}`);
             previewSvg.value.setAttribute("height", `${height * format.scale}`);
@@ -195,6 +207,22 @@ const getShapesSvg = (shapes: Shape[]) => {
             )
         }
         renderSvgs.value = renderItems;
+    } else if (shapes.length === 0) {
+        let renderItems: SvgFormat[] = [];
+        const page = props.context.selection.selectedPage;
+        if (!page) return;
+        renderItems.push(
+            {
+                id: page.id + 0,
+                width: page.frame.width,
+                height: page.frame.height,
+                x: 0,
+                y: 0,
+                background: 'transparent',
+                shapes: page.childs
+            }
+        )
+        renderSvgs.value = renderItems;
     }
 }
 
@@ -303,8 +331,8 @@ onUnmounted(() => {
 
     >svg {
         position: fixed;
-        left: 0;
-        top: 0;
+        left: -1000px;
+        top: -1000px;
         opacity: 0;
         z-index: -1;
     }
