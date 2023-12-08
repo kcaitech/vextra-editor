@@ -23,8 +23,8 @@ const matrixWithFrame = new Matrix();
 const reflush = ref(0);
 const rootId = ref<string>('pageview');
 const show_t = ref<boolean>(true);
-// const width = ref<number>(100);
-// const height = ref<number>(100);
+const width = ref<number>(100);
+const height = ref<number>(100);
 const pageslot = ref<HTMLElement>();
 
 function pageViewRegister(mount: boolean) {
@@ -43,9 +43,9 @@ const collect = debounce(_collect, 100);
 function page_watcher() {
     matrixWithFrame.reset(props.matrix);
     matrixWithFrame.preTrans(props.data.frame.x, props.data.frame.y);
-    // width.value = Math.ceil(Math.max(100, props.data.frame.width)), height.value = Math.ceil(Math.max(100, props.data.frame.height));
-    // if (width.value % 2) width.value++;
-    // if (height.value % 2) height.value++;
+    width.value = Math.ceil(Math.max(100, props.data.frame.width)), height.value = Math.ceil(Math.max(100, props.data.frame.height));
+    if (width.value % 2) width.value++;
+    if (height.value % 2) height.value++;
     reflush.value++;
 }
 const stopWatchPage = watch(() => props.data, (value, old) => {
@@ -98,12 +98,12 @@ function render() {
         preserveAspectRatio: "xMinYMin meet",
         overflow: "visible"
     }
-    // prop.viewBox = `0 0 ${width.value} ${height.value}`;
-    // prop.reflush = reflush.value !== 0 ? reflush.value : undefined;
-    // prop.style = { transform: matrixWithFrame.toString() };
-    // prop['data-area'] = rootId.value;
-    // prop.width = width.value;
-    // prop.height = height.value;
+    prop.viewBox = `0 0 ${width.value} ${height.value}`;
+    prop.reflush = reflush.value !== 0 ? reflush.value : undefined;
+    prop.style = { transform: matrixWithFrame.toString() };
+    prop['data-area'] = rootId.value;
+    prop.width = width.value;
+    prop.height = height.value;
 
     const childs = [];
     const datachilds = props.data.childs;
@@ -120,7 +120,7 @@ function render() {
 const domCtx = new VDomCtx();
 initComsMap(domCtx.comsMap);
 const dom: PageDom = new PageDom(domCtx, props);
-domCtx.dirtyset.set(dom.id(), dom);
+// domCtx.dirtyset.set(dom.id(), dom);
 
 onMounted(() => {
     // console.log("page mounted", pageslot.value?.tagName)

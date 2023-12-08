@@ -12,11 +12,13 @@ function makeEL(tag: string, attr?: { [key: string]: string }, childs?: EL | EL[
 }
 
 function recycleEL(el: EL) {
+    el.el = undefined;
+    el.childs.length = 0;
     _el_instance.push(el);
 }
 
 export class EL {
-    el?: HTMLElement;
+    el?: HTMLElement | SVGElement;
     tag: string;
     attr: { [key: string]: string };
     childs: EL[];
@@ -24,7 +26,7 @@ export class EL {
     reset(tag: string, attr?: { [key: string]: string }, childs?: EL | EL[]) {
         this.tag = tag;
         this.attr = attr || {};
-        this.childs = childs? (Array.isArray(childs)? childs : [childs]) : [];
+        this.childs = childs ? (Array.isArray(childs) ? childs : [childs]) : [];
     }
 
     constructor(tag: string, attr?: { [key: string]: string }, childs?: EL | EL[]) {
@@ -34,7 +36,6 @@ export class EL {
     }
 
     recycle() {
-        this.childs.length = 0;
         recycleEL(this);
     }
 }
@@ -59,12 +60,35 @@ export function elh(tag: string, attr?: any, childs?: EL | EL[]): EL {
     return makeEL(tag, attr, childs);
 }
 
+/**
+xmlns: "http://www.w3.org/2000/svg",
+"xmlns:xlink": "http://www.w3.org/1999/xlink",
+"xmlns:xhtml": "http://www.w3.org/1999/xhtml",
+ */
+const xmlns = "http://www.w3.org/2000/svg";
+const xlink = "http://www.w3.org/1999/xlink";
+const xhtml = "http://www.w3.org/1999/xhtml";
+
+export function createElement(tag: string): HTMLElement | SVGElement {
+    if (tag === "foreignObject") return document.createElement(tag);
+    if (tag === "div") return document.createElement("div");
+    return document.createElementNS(xmlns, tag);
+}
+
+export function setAttribute(el: HTMLElement | SVGElement, key: string, value: string) {
+    if (key === "xlink:href") {
+        el.setAttributeNS(xlink, key, value);
+    } else {
+        el.setAttribute(key, value);
+    }
+}
+
 export function elpatch(old: EL | undefined, nu: EL): EL {
     if (!old || !old.el || old.tag !== nu.tag) {
-        nu.el = document.createElement(nu.tag);
+        nu.el = createElement(nu.tag);
         if (!nu.el) throw new Error("can not create element: " + nu.tag);
         for (let key in nu.attr) {
-            nu.el.setAttribute(key, nu.attr[key]);
+            setAttribute(nu.el, key, nu.attr[key]);
         }
         for (let i = 0; i < nu.childs.length; i++) {
             elpatch(undefined, nu.childs[i]);
@@ -82,7 +106,7 @@ export function elpatch(old: EL | undefined, nu: EL): EL {
         const ov = old.attr[key];
         const cv = nu.attr[key];
         if (ov !== cv) {
-            old.el.setAttribute(key, cv);
+            setAttribute(old.el, key, cv);
         }
     }
     for (let i = 0; i < okeys.length; i++) {

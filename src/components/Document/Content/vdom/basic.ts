@@ -167,7 +167,7 @@ class Watchable {
 export class VDom extends Watchable {
     m_ctx: VDomCtx;
     m_data: Shape;
-    m_el?: HTMLElement; // bind
+    m_el?: HTMLElement | SVGElement; // bind
     m_children: VDom[] = [];
     m_parent: VDom | undefined;
     m_transx?: RenderTransform;
@@ -186,7 +186,7 @@ export class VDom extends Watchable {
         // todo update
         // this.m_transx = props.transx;
         // this.m_varsContainer = props.varsContainer;
-        this.update(props);
+        // this.update(props, true);
 
         this.onCreate();
 
@@ -196,6 +196,8 @@ export class VDom extends Watchable {
         if (this.m_varsContainer) {
             this.m_varsContainer.forEach((c) => c.watch(this._datawatcher));
         }
+
+        // build childs
     }
 
     private _datawatcher(...args: any[]) {
@@ -237,8 +239,10 @@ export class VDom extends Watchable {
     bind(node: HTMLElement /* old, for reuse */) { // 
         // if same tag, modify
         // else replace
+        if (this.m_el === node) return;
         if (this.m_el) this.m_el.remove();
         this.m_el = node;
+        this.m_ctx.dirtyset.set(this.id(), this);
     }
 
     unbind() {
@@ -250,7 +254,7 @@ export class VDom extends Watchable {
         // unbind childs
     }
 
-    update(props: PropsType) {
+    update(props: PropsType, force?: boolean) {
         // if (!this.m_isdirty) {
         //     return;
         // }
@@ -259,7 +263,7 @@ export class VDom extends Watchable {
     }
 
     // 
-    render(): HTMLElement | undefined {
+    render(): HTMLElement | SVGElement | undefined {
         throw new Error('not implement');
     }
 
