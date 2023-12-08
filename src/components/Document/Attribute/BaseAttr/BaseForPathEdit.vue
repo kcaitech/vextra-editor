@@ -33,10 +33,16 @@ const path_close_status = ref<boolean>(true);
 const btn_string_for_status = ref<string>(t('attr.de_close_path'));
 function execute_change_xy(key: 'x' | 'y', val: any) {
     val = Number(val);
-    if (!path_shape || isNaN(val)) return;
+    if (!path_shape || isNaN(val)) {
+        console.log('!path_shape || isNaN(val)');
+        return;
+    }
     const editor = props.context.editor4Shape(path_shape);
     const actions = get_action_for_key_change(props.context, val, key);
-    if (!actions) return;
+    if (!actions) {
+        console.log('!actions');
+        return;
+    }
     editor.modifyPointsXY(actions)
 }
 

@@ -114,9 +114,13 @@ export function get_value_from_points(context: Context, indexes: number[]) {
 
 export function get_action_for_key_change(context: Context, val: number, key: 'x' | 'y') {
     const path_shape = context.selection.pathshape;
-    if (!path_shape) return;
+    if (!path_shape) {
+        return;
+    }
     const indexes = context.path.selectedPoints;
-    if (!indexes.length) return;
+    if (!indexes.length) {
+        return;
+    }
     const __points = path_shape.points;
     const f = path_shape.frame;
     const m = new Matrix();
@@ -125,11 +129,12 @@ export function get_action_for_key_change(context: Context, val: number, key: 'x
     const actions: { x: number, y: number, index: number }[] = [];
     for (let i = 0, l = indexes.length; i < l; i++) {
         const index = indexes[i];
-        const _p = m.computeCoord3(__points[index]);
+        const __p = __points[index];
+        const _p = m.computeCoord2(__p.x, __p.y);
         const item = {
             x: _p.x,
             y: _p.y,
-            index: index
+            index
         }
         item[key] = val;
         actions.push(item);
