@@ -1,9 +1,9 @@
-import {Context} from "@/context";
-import {PageXY, XY} from "@/context/selection";
-import {GroupShape, Matrix, Shape, ShapeType, SymbolRefShape, SymbolShape} from "@kcdesign/data";
-import {v4 as uuid} from "uuid";
-import {isShapeOut} from "./assist";
-import {debounce} from "lodash";
+import { Context } from "@/context";
+import { PageXY, XY } from "@/context/selection";
+import { GroupShape, Matrix, PathShape, Shape, ShapeType, SymbolRefShape, SymbolShape } from "@kcdesign/data";
+import { v4 as uuid } from "uuid";
+import { isShapeOut } from "./assist";
+import { debounce } from "lodash";
 
 export interface Scout {
     path: SVGPathElement
@@ -30,25 +30,37 @@ export function scout(context: Context): Scout {
     function isPointInShape(shape: Shape, point: PageXY): boolean {
         const d = getPathOnPageString(shape);
         SVGPoint.x = point.x;
-        SVGPoint.y = point.y; // 根据鼠标位置确定point所处位置
+        SVGPoint.y = point.y;
         path.setAttributeNS(null, 'd', d);
-        let result: boolean = false;
-        if (shape.type === ShapeType.Line || shape.type === ShapeType.Contact) {
-            // 线条元素(不管是否闭合，都当不闭合)额外处理point是否在边框上
-            const thickness = Math.max((shape.style.borders[0]?.thickness || 1), 14 / context.workspace.matrix.m00);
-            path.setAttributeNS(null, 'stroke-width', `${thickness}`);
-            result = (path as SVGGeometryElement).isPointInStroke(SVGPoint);
+        if (shape instanceof PathShape) {
+            return for_path_shape(shape, path);
         } else {
-            // 判断point是否在闭合路径的填充中
-            result = (path as SVGGeometryElement).isPointInFill(SVGPoint);
+            return (path as SVGGeometryElement).isPointInFill(SVGPoint);
         }
-        return result;
+    }
+
+    function for_path_shape(shape: PathShape, path: SVGGeometryElement) {
+        if (shape.isClosed || shape.style.fills.length) {
+            return (path as SVGGeometryElement).isPointInFill(SVGPoint);
+        }
+        let max_thickness = 14 / context.workspace.matrix.m00;
+        const borders = shape.style.borders;
+        if (borders.length) {
+            for (let i = 0, l = borders.length; i < l; i++) {
+                const t = borders[i].thickness;
+                if (t > max_thickness) {
+                    max_thickness = t;
+                }
+            }
+        }
+        path.setAttributeNS(null, 'stroke-width', `${max_thickness}`);
+        return (path as SVGGeometryElement).isPointInStroke(SVGPoint);
     }
 
     function isPointInShape2(shape: Shape, point: PageXY): boolean {
         const d = getPathOnPageStringCustomOffset(shape, 1 / context.workspace.matrix.m00);
         SVGPoint.x = point.x;
-        SVGPoint.y = point.y; // 根据鼠标位置确定point所处位置
+        SVGPoint.y = point.y;
         path.setAttributeNS(null, 'd', d);
         return (path as SVGGeometryElement).isPointInFill(SVGPoint);
     }
@@ -71,7 +83,7 @@ export function scout(context: Context): Scout {
         if (s) document.body.removeChild(s);
     }
 
-    return {path, isPointInShape, isPointInShape2, remove, isPointInPath, isPointInStroke}
+    return { path, isPointInShape, isPointInShape2, remove, isPointInPath, isPointInStroke }
 }
 
 function createSVGGeometryElement(id: string): SVGElement {
