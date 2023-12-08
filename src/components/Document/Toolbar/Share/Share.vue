@@ -39,8 +39,8 @@ const closeShare = () => {
 }
 const onSwitch = (state: boolean) => {
   shareSwitch.value = state
-
 }
+
 const onSelectType = (type: number) => {
   selectValue.value = type
 }
@@ -49,9 +49,9 @@ async function documentInfo(id: any) {
     if (id) {
       const { data } = await share_api.getDocumentInfoAPI({ doc_id: id })
       docInfo.value = data;
-      if(data.project) {
+      if (data.project) {
         GetprojectLists(data.project.id);
-      }else {
+      } else {
         perm.value = true;
       }
       return data
@@ -75,8 +75,8 @@ const getSelectValue = (val: string) => {
   })
 }
 watchEffect(() => {
-  if(route.query.id) {
-    const id =(route.query.id as string).split(' ')[0]
+  if (route.query.id) {
+    const id = (route.query.id as string).split(' ')[0]
     getSelectValue(id)
   }
 })
@@ -107,12 +107,12 @@ onUnmounted(() => {
 
 <template>
   <div class="container" @dblclick.stop>
-    <button class="share" @click.stop="onShare">分享
-<!--      <svg-icon class="svg" icon-class="share-icon"></svg-icon>-->
-    </button>
-    <FileShare v-if="showFileShare" @close="closeShare" :shareSwitch="shareSwitch" :selectVaFlue="selectValue"
-      :docInfo="docInfo" :projectPerm="projectPerm" @select-type="onSelectType" @switch-state="onSwitch"
-      :pageHeight="pageHeight" :context="props.context" :userInfo="userInfo"></FileShare>
+      <button class="share" @click.stop="onShare">分享</button>
+    <Teleport to="body">
+      <FileShare v-if="showFileShare" @close="closeShare" :shareSwitch="shareSwitch" :selectValue="selectValue"
+        :docInfo="docInfo" :projectPerm="projectPerm" @select-type="onSelectType" @switch-state="onSwitch"
+        :pageHeight="pageHeight" :context="props.context" :userInfo="userInfo"></FileShare>
+    </Teleport>
   </div>
 </template>
 

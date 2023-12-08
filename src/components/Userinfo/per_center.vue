@@ -139,7 +139,7 @@ async function changename() {
                     shownicknameinput.value = false
                     localStorage.setItem('nickname', input.value)
                 } else {
-                    ElMessage.error(message)
+                    ElMessage.error(message === '审核不通过' ? t('system.sensitive_reminder') : t('percenter.errortips1'))
                 }
             } catch (error) {
                 ElMessage.error(t('home.other_tips'))

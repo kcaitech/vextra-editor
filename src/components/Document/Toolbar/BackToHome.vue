@@ -1,153 +1,156 @@
 <script setup lang="ts">
-import {useI18n} from 'vue-i18n';
-import {router} from '@/router';
-import {Context} from '@/context';
+import { useI18n } from 'vue-i18n';
+import { router } from '@/router';
+import { Context } from '@/context';
 import * as user_api from '@/request/users';
 import * as share_api from '@/request/share';
-import {nextTick, ref, onMounted, onUnmounted} from 'vue';
+import { nextTick, ref, onMounted, onUnmounted } from 'vue';
 import Saving from './Saving.vue';
-import {useRoute} from 'vue-router';
-import {WorkSpace, Perm} from '@/context/workspace';
-import {message} from '@/utils/message';
-import {ElMessageBox} from 'element-plus'
-import {Tool} from '@/context/tool';
+import { useRoute } from 'vue-router';
+import { WorkSpace, Perm } from '@/context/workspace';
+import { message } from '@/utils/message';
+import { ElMessage, ElMessageBox } from 'element-plus'
+import { Tool } from '@/context/tool';
 import DocumentMenu from './DocumentMenu/DocumentMenu.vue';
 import SvgIcon from "@/components/common/SvgIcon.vue";
 
 const route = useRoute();
 
 interface Props {
-    context: Context
+  context: Context
 }
 
 const props = defineProps<Props>();
 const ele = ref<number>(1);
 const input = ref<HTMLInputElement>();
 const name = ref<string>('');
-const {t} = useI18n();
+const { t } = useI18n();
 
 function home() {
-    if (props.context.communication.docOp.hasPendingSyncCmd()) return hasPendingSyncCmd();
-    window.document.title = t('product.name');
-    (window as any).sketchDocument = undefined;
-    (window as any).skrepo = undefined;
-    if (props.context.comment.isDocumentInfo?.project) {
-        router.push({path: '/apphome/project/' + props.context.comment.isDocumentInfo.project.id});
-    } else {
-        router.push({name: 'meshare'});
-        sessionStorage.setItem('index', '3')
-    }
+  if (props.context.communication.docOp.hasPendingSyncCmd()) return hasPendingSyncCmd();
+  window.document.title = t('product.name');
+  (window as any).sketchDocument = undefined;
+  (window as any).skrepo = undefined;
+  if (props.context.comment.isDocumentInfo?.project) {
+    router.push({ path: '/apphome/project/' + props.context.comment.isDocumentInfo.project.id });
+  } else {
+    router.push({ name: 'meshare' });
+    sessionStorage.setItem('index', '3')
+  }
 }
 
 const hasPendingSyncCmd = () => {
-    ElMessageBox.confirm(
-        `${t('message.unuploaded_msg')}`,
-        `${t('message.back_home')}`,
-        {
-            confirmButtonText: `${t('message.exit_document')}`,
-            cancelButtonText: `${t('message.cancel')}`,
-        }
-    )
-        .then(() => {
-            window.document.title = t('product.name');
-            (window as any).sketchDocument = undefined;
-            (window as any).skrepo = undefined;
-            if (props.context.comment.isDocumentInfo?.project) {
-                router.push({path: '/apphome/project/' + props.context.comment.isDocumentInfo.project.id});
-            } else {
-                router.push({name: 'meshare'});
-                sessionStorage.setItem('index', '3')
-            }
-        })
-        .catch(() => {
-            return
-        })
+  ElMessageBox.confirm(
+    `${t('message.unuploaded_msg')}`,
+    `${t('message.back_home')}`,
+    {
+      confirmButtonText: `${t('message.exit_document')}`,
+      cancelButtonText: `${t('message.cancel')}`,
+    }
+  )
+    .then(() => {
+      window.document.title = t('product.name');
+      (window as any).sketchDocument = undefined;
+      (window as any).skrepo = undefined;
+      if (props.context.comment.isDocumentInfo?.project) {
+        router.push({ path: '/apphome/project/' + props.context.comment.isDocumentInfo.project.id });
+      } else {
+        router.push({ name: 'meshare' });
+        sessionStorage.setItem('index', '3')
+      }
+    })
+    .catch(() => {
+      return
+    })
 }
 
 function rename() {
-    if (props.context.workspace.documentPerm !== Perm.isEdit) return;
-    if (props.context.tool.isLable) return;
-    ele.value = 2;
-    nextTick(() => {
-        if (input.value) {
-            input.value.value = name.value;
-            input.value.select();
-            input.value.addEventListener('blur', blur);
-        }
-    })
-    document.addEventListener('keydown', enter);
+  if (props.context.workspace.documentPerm !== Perm.isEdit) return;
+  if (props.context.tool.isLable) return;
+  ele.value = 2;
+  nextTick(() => {
+    if (input.value) {
+      input.value.value = name.value;
+      input.value.select();
+      input.value.addEventListener('blur', blur);
+    }
+  })
+  document.addEventListener('keydown', enter);
 
 }
 
 function enter(e: KeyboardEvent) {
-    if (e.code === 'Enter' || e.code === 'NumpadEnter') blur();
+  if (e.code === 'Enter' || e.code === 'NumpadEnter') blur();
 }
 
 async function blur() {
-    if (input.value) {
-        const p_name = input.value.value.trim();
-        if (p_name.length < 1) {
-            ele.value = 1;
-            message('info', props.context.workspace.t('system.null_file_name'));
-            return;
-        }
-        if (p_name.length > 50) {
-            ele.value = 1;
-            message('info', props.context.workspace.t('navi.overname'));
-            return;
-        }
-        if (p_name === name.value) {
-            ele.value = 1;
-            return;
-        }
-        try {
-            ele.value = 3;
-            await user_api.Setfilename({doc_id: route.query.id, name: p_name});
-            name.value = p_name;
-            window.document.title = name.value.length > 8 ? `${name.value.slice(0, 8)}... - ${t('product.name')}` : `${name.value} - ${t('product.name')}`
-            document.removeEventListener('keydown', enter);
-        } catch (error) {
-            console.log(error);
-            if ((error as any)?.data?.code == '403') {
-                message('info', props.context.workspace.t('permission.no_authority_to_rename'));
-            }
-        } finally {
-            ele.value = 1;
-        }
+  if (input.value) {
+    const p_name = input.value.value.trim();
+    if (p_name.length < 1) {
+      ele.value = 1;
+      message('info', props.context.workspace.t('system.null_file_name'));
+      return;
     }
+    if (p_name.length > 50) {
+      ele.value = 1;
+      message('info', props.context.workspace.t('navi.overname'));
+      return;
+    }
+    if (p_name === name.value) {
+      ele.value = 1;
+      return;
+    }
+    try {
+      ele.value = 3;
+      const { code, message } = await user_api.Setfilename({ doc_id: route.query.id, name: p_name });
+      if (code === 0) {
+        name.value = p_name;
+      } else {
+        ElMessage.error({ duration: 1500, message: message === '审核不通过' ? t('system.sensitive_reminder') : message })
+      }
+      window.document.title = name.value.length > 8 ? `${name.value.slice(0, 8)}... - ${t('product.name')}` : `${name.value} - ${t('product.name')}`
+      document.removeEventListener('keydown', enter);
+    } catch (error) {
+      console.log(error);
+      if ((error as any)?.data?.code == '403') {
+        message('info', props.context.workspace.t('permission.no_authority_to_rename'));
+      }
+    } finally {
+      ele.value = 1;
+    }
+  }
 }
 
 async function init_name() {
-    ele.value = 3;
-    const result = await share_api.getDocumentInfoAPI({doc_id: route.query.id});
-    if (result?.code === 0) {
-        name.value = result.data.document.name;
-    } else {
-        name.value = props.context?.data.name || '';
-    }
-    ele.value = 1;
+  ele.value = 3;
+  const result = await share_api.getDocumentInfoAPI({ doc_id: route.query.id });
+  if (result?.code === 0) {
+    name.value = result.data.document.name;
+  } else {
+    name.value = props.context?.data.name || '';
+  }
+  ele.value = 1;
 }
 
 function workspace_watcher(t?: any) {
-    if (t === WorkSpace.INIT_DOC_NAME) {
-        init_name();
-    }
+  if (t === WorkSpace.INIT_DOC_NAME) {
+    init_name();
+  }
 }
-
 const isLable = ref(props.context.tool.isLable);
 const tool_watcher = (t: number) => {
-    if (t === Tool.LABLE_CHANGE) {
-        isLable.value = props.context.tool.isLable;
-    }
+  if (t === Tool.LABLE_CHANGE) {
+    isLable.value = props.context.tool.isLable;
+  }
 }
 onMounted(() => {
-    init_name();
-    props.context.workspace.watch(workspace_watcher);
-    props.context.tool.watch(tool_watcher);
+  init_name();
+  props.context.workspace.watch(workspace_watcher);
+  props.context.tool.watch(tool_watcher);
 })
 onUnmounted(() => {
-    props.context.workspace.unwatch(workspace_watcher);
-    props.context.tool.unwatch(tool_watcher);
+  props.context.workspace.unwatch(workspace_watcher);
+  props.context.tool.unwatch(tool_watcher);
 })
 </script>
 <template>

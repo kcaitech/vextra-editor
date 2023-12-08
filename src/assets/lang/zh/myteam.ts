@@ -115,7 +115,7 @@ export const projectlist = {
     creator: '创建者',
     operation: '操作',
     enterproject: '进入项目',
-    confirm1: '确认',
+    confirm1: '新建项目',
 }
 
 export const projectpage = {
