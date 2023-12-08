@@ -57,12 +57,16 @@ export function useControllerCustom(context: Context, i18nT: Function) {
 
     function handleDblClick() {
         const selected = selection.selectedShapes;
-        if (selected.length !== 1) return;
+        if (selected.length !== 1) {
+            return;
+        }
         const shape = selected[0];
         if ([ShapeType.Group, ShapeType.Symbol, ShapeType.SymbolRef, ShapeType.Artboard].includes(shape.type)) {
             const scope: any = shape.type === ShapeType.SymbolRef ? shape.naviChilds : (shape as GroupShape).childs;
             const target = selection_penetrate(selection.scout!, scope, startPositionOnPage);
-            target && selection.selectShape(target);
+            if (target) {
+                selection.selectShape(target);
+            }
         } else if (shape instanceof PathShape && !shape.isVirtualShape) {
             // console.log('已关闭对象编辑');
             workspace.setPathEditMode(true); // --开启对象编辑
@@ -80,8 +84,12 @@ export function useControllerCustom(context: Context, i18nT: Function) {
         if (workspace.isEditing
             && is_mouse_on_content(e)
             && down_while_is_text_editing(e, context)
-        ) return;
-        if (workspace.isPageDragging) return;
+        ) {
+            return;
+        }
+        if (workspace.isPageDragging) {
+            return;
+        }
         if (is_ctrl_element(e, context)) {
             if (timer) {
                 handleDblClick();
@@ -251,7 +259,9 @@ export function useControllerCustom(context: Context, i18nT: Function) {
     }
 
     function mouseup(e: MouseEvent) {
-        if (e.button !== 0) return;
+        if (e.button !== 0) {
+            return;
+        }
         if (isDragging) {
             if (asyncTransfer) {
                 const mousePosition: ClientXY = get_current_position_client(context, e);
@@ -265,7 +275,9 @@ export function useControllerCustom(context: Context, i18nT: Function) {
             shapes_picker(e, context, startPositionOnPage);
         }
         workspace.setCtrl('page');
-        if (wheel) wheel = wheel.remove();
+        if (wheel) {
+            wheel = wheel.remove();
+        }
         remove_move_and_up_from_document(mousemove, mouseup);
         need_update_comment = update_comment(context, need_update_comment);
     }

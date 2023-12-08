@@ -41,6 +41,7 @@ let sticked_y_v: number = 0;
 const dragActiveDis = 3;
 let cur_ctrl_type: CtrlElementType = CtrlElementType.RectLT;
 let clear_stick = false
+let index = -1;
 function update() {
     matrix.reset(props.matrix);
     update_dot_path();
@@ -57,7 +58,7 @@ function update_dot_path() {
     const p2 = m.computeCoord3(points[1]);
     dots = dots.concat(update_dot3([p1, p2]));
 }
-function point_mousedown(event: MouseEvent, ele: CtrlElementType) {
+function point_mousedown(event: MouseEvent, ele: CtrlElementType, idx: number) {
     if (event.button !== 0) return;
     props.context.menu.menuMount();
     const workspace = props.context.workspace;
@@ -68,8 +69,10 @@ function point_mousedown(event: MouseEvent, ele: CtrlElementType) {
     const root = workspace.root;
     startPosition = { x: clientX - root.x, y: clientY - root.y };
     cur_ctrl_type = ele;
+    index = idx;
     document.addEventListener('mousemove', point_mousemove);
     document.addEventListener('mouseup', point_mouseup);
+
 }
 function point_mousemove(event: MouseEvent) {
     const { clientX, clientY } = event;
@@ -86,7 +89,7 @@ function point_mousemove(event: MouseEvent) {
             let p2: PageXY = submatrix.computeCoord2(mouseOnClient.x, mouseOnClient.y);
             clear_stick = false;
             if (event.shiftKey || props.shape.constrainerProportions || action === Action.AutoK) {
-                p2 = get_t(cur_ctrl_type, p2);
+                p2 = get_t(index, p2);
             }
             if (clear_stick) {
                 scale2(asyncBaseAction, p2);
@@ -106,59 +109,82 @@ function point_mousemove(event: MouseEvent) {
         }
     }
 }
-function get_t(cct: CtrlElementType, p2: PageXY): PageXY {
-    if (cct === CtrlElementType.RectLT) {
+function get_t(index: number, p2: PageXY): PageXY {
+    if (index === 0) {
         const m = props.shape.matrix2Root(), f = props.shape.frame
-        const rb = m.computeCoord2(f.width, f.height);
+        m.preScale(f.width, f.height);
+        const ap = (props.shape as PathShape).points[1];
+        const rb = m.computeCoord2(ap.x, ap.y);
         const type_d = get_direction(Math.floor(getHorizontalAngle(rb, p2)));
-        if (type_d === 0) p2.y = rb.y;
+        if (type_d === 0) {
+            p2.y = rb.y;
+        }
         else if (type_d === 45) {
             const len = Math.hypot(p2.x - rb.x, p2.y - rb.y);
             p2.x = rb.x + len * Math.cos(0.25 * Math.PI), p2.y = rb.y + len * Math.sin(0.25 * Math.PI);
             clear_stick = true;
-        } else if (type_d === 90) p2.x = rb.x;
+        } else if (type_d === 90) {
+            p2.x = rb.x;
+        }
         else if (type_d === 135) {
             const len = Math.hypot(p2.x - rb.x, p2.y - rb.y);
             p2.x = rb.x - len * Math.cos(0.25 * Math.PI), p2.y = rb.y + len * Math.sin(0.25 * Math.PI);
             clear_stick = true;
-        } else if (type_d === 180) p2.y = rb.y;
+        } else if (type_d === 180) {
+            p2.y = rb.y;
+        }
         else if (type_d === 225) {
             const len = Math.hypot(p2.x - rb.x, p2.y - rb.y);
             p2.x = rb.x - len * Math.cos(0.25 * Math.PI), p2.y = rb.y - len * Math.sin(0.25 * Math.PI);
             clear_stick = true;
-        } else if (type_d === 270) p2.x = rb.x;
+        } else if (type_d === 270) {
+            p2.x = rb.x;
+        }
         else if (type_d === 315) {
             const len = Math.hypot(p2.x - rb.x, p2.y - rb.y);
             p2.x = rb.x + len * Math.cos(0.25 * Math.PI), p2.y = rb.y - len * Math.sin(0.25 * Math.PI);
             clear_stick = true;
         }
         return p2;
-    } else if (cct === CtrlElementType.RectRB) {
-        const m = props.shape.matrix2Root(), lt = m.computeCoord2(0, 0);
+    } else if (index === 1) {
+        const m = props.shape.matrix2Root(), f = props.shape.frame
+        m.preScale(f.width, f.height);
+        const ap = (props.shape as PathShape).points[0];
+        const lt = m.computeCoord2(ap.x, ap.y);
         const type_d = get_direction(Math.floor(getHorizontalAngle(lt, p2)));
-        if (type_d === 0) p2.y = lt.y;
+        if (type_d === 0) {
+            p2.y = lt.y;
+        }
         else if (type_d === 45) {
             const len = Math.hypot(p2.x - lt.x, p2.y - lt.y);
             p2.x = lt.x + len * Math.cos(0.25 * Math.PI), p2.y = lt.y + len * Math.sin(0.25 * Math.PI);
             clear_stick = true;
-        } else if (type_d === 90) p2.x = lt.x;
+        } else if (type_d === 90) {
+            p2.x = lt.x;
+        }
         else if (type_d === 135) {
             const len = Math.hypot(p2.x - lt.x, p2.y - lt.y);
             p2.x = lt.x - len * Math.cos(0.25 * Math.PI), p2.y = lt.y + len * Math.sin(0.25 * Math.PI);
             clear_stick = true;
-        } else if (type_d === 180) p2.y = lt.y;
+        } else if (type_d === 180) {
+            p2.y = lt.y;
+        }
         else if (type_d === 225) {
             const len = Math.hypot(p2.x - lt.x, p2.y - lt.y);
             p2.x = lt.x - len * Math.cos(0.25 * Math.PI), p2.y = lt.y - len * Math.sin(0.25 * Math.PI);
             clear_stick = true;
-        } else if (type_d === 270) p2.x = lt.x;
+        } else if (type_d === 270) {
+            p2.x = lt.x;
+        }
         else if (type_d === 315) {
             const len = Math.hypot(p2.x - lt.x, p2.y - lt.y);
             p2.x = lt.x + len * Math.cos(0.25 * Math.PI), p2.y = lt.y - len * Math.sin(0.25 * Math.PI);
             clear_stick = true;
         }
         return p2;
-    } else return p2
+    } else {
+        return p2;
+    }
 }
 function scale(asyncBaseAction: AsyncBaseAction, p2: PageXY) {
     const stickness = props.context.assist.stickness;
@@ -181,11 +207,11 @@ function scale(asyncBaseAction: AsyncBaseAction, p2: PageXY) {
             stickedY = true;
         }
     }
-    asyncBaseAction.executeScale(cur_ctrl_type, p2);
+    asyncBaseAction.executeForLine(index, p2);
 }
 function scale2(asyncBaseAction: AsyncBaseAction, p2: PageXY) {
     props.context.assist.point_match(p2);
-    asyncBaseAction.executeScale(cur_ctrl_type, p2);
+    asyncBaseAction.executeForLine(index, p2);
 }
 function point_mouseup(event: MouseEvent) {
     if (event.button !== 0) return;
@@ -275,15 +301,15 @@ onUnmounted(() => {
 <template>
     <g :reflush="reflush">
         <g v-for="(p, i) in dots" :key="i" :style="`transform: ${p.r.transform};`">
-            <path :d="p.r.p" fill="transparent" stroke="transparent" @mousedown.stop="(e) => point_mousedown(e, p.type2)"
+            <path :d="p.r.p" fill="transparent" stroke="transparent" @mousedown.stop="(e) => point_mousedown(e, p.type2, i)"
                 @mouseenter="() => setCursor(p.type2)" @mouseleave="point_mouseleave">
             </path>
             <rect :x="p.extra.x" :y="p.extra.y" width="14px" height="14px" fill="transparent" stroke='transparent'
-                @mousedown.stop="(e) => point_mousedown(e, p.type)" @mouseenter="() => setCursor(p.type)"
+                @mousedown.stop="(e) => point_mousedown(e, p.type, i)" @mouseenter="() => setCursor(p.type)"
                 @mouseleave="point_mouseleave">
             </rect>
             <rect :x="p.point.x" :y="p.point.y" width="8px" height="8px" fill="#ffffff" stroke='#865dff'
-                stroke-width="1.5px" @mousedown.stop="(e) => point_mousedown(e, p.type)"
+                stroke-width="1.5px" @mousedown.stop="(e) => point_mousedown(e, p.type, i)"
                 @mouseenter="() => setCursor(p.type)" @mouseleave="point_mouseleave"></rect>
         </g>
     </g>

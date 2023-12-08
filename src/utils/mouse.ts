@@ -44,11 +44,9 @@ export function is_ctrl_element(e: MouseEvent, context: Context) {
     const root = workspace.root;
     const selection = context.selection;
     const selected = selection.selectedShapes;
-    if (selected.length === 1 && selected[0].type === ShapeType.Line) {
-        return selection.scout.isPointInStroke(workspace.ctrlPath, {
-            x: e.clientX - root.x,
-            y: e.clientY - root.y
-        })
+    if (selected.length === 1) {
+        const m = new Matrix(workspace.matrix.inverse);
+        return selection.scout.isPointInShape(selected[0], m.computeCoord2(e.clientX - root.x, e.clientY - root.y));
     } else {
         return selection.scout.isPointInPath(workspace.ctrlPath, {
             x: e.clientX - root.x,
