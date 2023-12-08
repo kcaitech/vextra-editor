@@ -3,7 +3,8 @@
     <div>
         <div class="rightmenu" ref="menu">
             <ul>
-                <li v-for="item in props.items " :key="item" @click.stop="EventHandler(item)" :class="item">
+                <li :style="{ borderBottom: item === rightmenuitem.newtabopen || item === rightmenuitem.target_star ? '1px solid rgba(0,0,0,0.04)' : '' }"
+                    v-for="item in props.items " :key="item" @click.stop="EventHandler(item)" :class="item">
                     {{ itemcontent(item) }}
                 </li>
             </ul>
@@ -392,6 +393,7 @@ onUnmounted(() => {
 <style lang="scss" scoped>
 .rightmenu {
     position: absolute;
+    min-width: 180px;
     background-color: white;
     border-radius: 8px;
     box-shadow: 0px 2px 10px 0px rgba(0, 0, 0, 0.08);
@@ -404,13 +406,12 @@ onUnmounted(() => {
         padding: 0;
 
         li {
-            cursor: pointer;
             display: flex;
             align-items: center;
             text-decoration: none;
             font-size: 13px;
             color: rgba(13, 13, 13, 0.9);
-            height: 32px;
+            height: 38px;
             padding: 0 24px;
             box-sizing: border-box;
 
@@ -418,14 +419,6 @@ onUnmounted(() => {
                 background-color: rgba(245, 245, 245, 1);
             }
         }
-
-        div {
-            height: 1px;
-            width: auto;
-            background: #f3f0ff;
-        }
-
-
     }
 }
 </style>

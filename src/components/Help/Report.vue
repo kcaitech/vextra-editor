@@ -12,10 +12,10 @@
                 <label for="selectOption">{{ t('report.type') }}<svg-icon icon-class="tips-icon"></svg-icon></label>
                 <select id="selectOption" v-model="selectedOption" required>
                     <option value="" disabled selected hidden>{{ t('report.type_normal') }}</option>
-                    <option value="option1">{{ t('report.type_value1') }}</option>
-                    <option value="option2">{{ t('report.type_value2') }}</option>
-                    <option value="option3">{{ t('report.type_value3') }}</option>
-                    <option value="option4">{{ t('report.type_value4') }}</option>
+                    <option value=0>{{ t('report.type_value1') }}</option>
+                    <option value=1>{{ t('report.type_value2') }}</option>
+                    <option value=2>{{ t('report.type_value3') }}</option>
+                    <option value=3>{{ t('report.type_value4') }}</option>
                 </select>
             </div>
             <div class="content">
@@ -56,6 +56,7 @@ import { computed, nextTick, ref } from 'vue';
 import select from '@/assets/select-icon.svg'
 import { useRoute } from 'vue-router';
 import { useI18n } from 'vue-i18n';
+import * as user_api from '@/request/users'
 
 const emits = defineEmits<{
     (event: 'close'): void
@@ -76,14 +77,26 @@ const deleteimg = (index: number) => {
     myfiles.value.splice(index, 1)
 }
 
-const submitreport = () => {
+const submitreport = async () => {
     const mydata = new FormData()
     mydata.append('type', selectedOption.value)
     mydata.append('content', textInput.value)
     for (let i = 0; i < myfiles.value.length; i++) {
         mydata.append('files', myfiles.value[i])
     }
-    mydata.append('page_url',location.href)
+    mydata.append('page_url', location.href)
+    try {
+        const { data, code, message } = await user_api.Feedback(mydata)
+        if (code === 0) {
+            emits('close')
+            console.log(data);
+
+            ElMessage.success('提交成功')
+        }
+    } catch (error) {
+        ElMessage.error('提交失败')
+    }
+
     nextTick(() => {
         mydata.forEach((value, key) => {
             console.log(`${key}:${value}`);

@@ -637,7 +637,7 @@ const selectOption = (option: any) => {
         display: flex;
         align-items: center;
         height: 38px;
-        gap: 6px;
+        gap: 8px;
 
         .type {
           min-width: 65px;
@@ -814,16 +814,19 @@ const selectOption = (option: any) => {
           align-items: center;
           justify-content: space-between;
           height: 40px;
+          gap: 8px;
 
           .item-left {
             display: flex;
             align-items: center;
-            justify-content: space-between;
             gap: 8px;
-
+            flex: 1;
+            overflow: hidden;
+            white-space: nowrap;
             .avatar {
               height: 24px;
               width: 24px;
+              min-width: 24px;
               border-radius: 50%;
               overflow: hidden;
 
@@ -834,6 +837,8 @@ const selectOption = (option: any) => {
             }
 
             .name {
+              overflow: hidden;
+              text-overflow: ellipsis;
               font-size: 13px;
               font-weight: 600;
               color: rgba(0, 0, 0, 1);

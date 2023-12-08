@@ -332,12 +332,12 @@ const rightmenu = (e: MouseEvent, data: data) => {
         } else {
             elstar.innerHTML = t('homerightmenu.target_star')
         }
-        if (user_id != localStorage.getItem('userId')) {
+        if (user_id !== localStorage.getItem('userId')) {
             elrename.style.display = "none"
             elcopyfile.style.display = "none"
         } else {
-            elrename.style.display = "block"
-            elcopyfile.style.display = "block"
+            elrename.style.display = ""
+            elcopyfile.style.display = ""
         }
     })
     docId.value = id
