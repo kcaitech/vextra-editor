@@ -212,6 +212,57 @@ onUnmounted(() => {
     // selection.unwatch 类似于 document.removeEventListener，大部分场景下，在挂载监听的时候都需要考虑移除监听的时机和处理
     props.context.selection.unwatch(selection_watcher);
 })
+// function updateBackgroundSize(event: MouseEvent) {
+//     const range = event.target as HTMLInputElement | null;
+//     if (range) {
+//         range.style.backgroundSize = `${range.value}% 100%`;
+//     }
+// }
+// interface RangeSliderConfig {
+//     min?: number;
+//     max?: number;
+//     step?: number;
+//     callback?: (input: HTMLInputElement) => void;
+// }
+//
+// class RangeSlider {
+//     private input: HTMLInputElement;
+//
+//     constructor(element: HTMLInputElement, config: RangeSliderConfig) {
+//         this.input = element;
+//         this.init(config);
+//     }
+//
+//     private init(config: RangeSliderConfig): void {
+//         const {min = 0, max = 100, step = 1, callback} = config;
+//
+//         this.input.setAttribute('min', min.toString());
+//         this.input.setAttribute('max', max.toString());
+//         this.input.setAttribute('step', step.toString());
+//
+//         this.input.addEventListener('input', (e) => {
+//             this.input.setAttribute('value', (e.target as HTMLInputElement).value);
+//             this.input.style.backgroundSize = (e.target as HTMLInputElement).value + '% 100%';
+//             if (callback) {
+//                 callback(this.input);
+//             }
+//         });
+//     }
+// }
+//
+// window.onload = function rangeSlider() {
+//     const myRangeInput = document.getElementById('Range2') as HTMLInputElement;
+//     if (myRangeInput) {
+//         const rangeSlider = new RangeSlider(myRangeInput, {
+//             min: 0,
+//             max: 100,
+//             step: 1,
+//             callback: (input) => {
+//                 console.log('Current value:', input.value);
+//             },
+//         });
+//     }
+// };
 </script>
 <template>
     <div class="opacity-panel">
@@ -271,9 +322,9 @@ onUnmounted(() => {
             <div class="slider">
                 <input type="range" class="input-range" :value="range()" @mousedown="e => down(e)" @input="input"
                        @change="change2"
-                       @keydown="range_keyboard"/>
-                <div class="track"></div>
-            </div>
+                       @keydown="range_keyboard" min="0" max="100" step="1"/>
+                                <div class="track"></div>
+        </div>
             <input type="text" class="input-text" :value="typeof opacity === 'string' ? ipt() : `${ipt()}%`"
                    @click="focus" @change="change"/>
         </div>
@@ -287,6 +338,10 @@ onUnmounted(() => {
     padding: 20px 8px 12px 8px;
     box-sizing: border-box;
     border-top: 1px solid #F0F0F0;
+
+    .clear {
+        overflow: hidden;
+    }
 
     .icon {
         width: 10px;
@@ -372,76 +427,76 @@ onUnmounted(() => {
         margin-top: -14px;
         margin-bottom: 3px;
 
-        .slider{
-            height: 20px;
-
-            input[type="range"]:focus {
-                outline: none;
-            }
-
-            input[type="range"] {
-                -webkit-appearance: none !important;
-                appearance: none !important;
-                outline: 0;
-                background-color: transparent;
-                width: 150px;
-                margin-right: 40px;
-            }
-
-            /* 火狐 外背景色 */
-            input[type=range]::-moz-range-progress {
-                background: #1878F5;
-                height: 3px;
-            }
-
-            /* 定义range控件容器的样式 */
-            input[type="range" i]::-webkit-slider-container {
-                height: 20px;
-                overflow: hidden;
-            }
-
-            input[type="range"]::-webkit-slider-thumb {
-                -webkit-appearance: none !important;
-                appearance: none !important;
-                width: 12px;
-                height: 12px;
-                border-radius: 8px;
-                background-color: #FFFFFF;
-                border: 1px solid transparent;
-                box-shadow: 0px 2px 6px 0px rgba(0, 0, 0, 0.12);
-                border-image: linear-gradient(#1878F5, #1878F5) 0 fill / 8 20 8 0 / 0px 0px 0 2000px;
-            }
-
-            .track {
-                height: 2px;
-                background: #D9D9D9;
-                width: 150px;
-                margin-top: -7%;
-                margin-left: 1%;
-            }
-
-        }
-
-        input[type="text"] {
-            width: 54px;
-            height: 32px;
-            text-align: center;
-            margin-left: -33px;
-            margin-top: 10px;
-            border: none;
-            background-color: #F4F5F5;
-            border-radius: var(--default-radius);
-        }
-
-        .input-text {
-            border: none;
-            outline: none;
+        .aj_tempt {
+            display: contents;
         }
     }
 
-    .opacity-container .el-slider {
-        margin-top: 9px;
-        margin-left: 12px;
+    input[type="text"] {
+        width: 54px;
+        height: 32px;
+        text-align: center;
+        margin-left: 4px;
+        margin-top: 10px;
+        border: none;
+        background-color: #F4F5F5;
+        border-radius: var(--default-radius);
+    }
+
+    .input-text {
+        border: none;
+        outline: none;
+    }
+
+    input[type="range"]:focus {
+        outline: none;
+    }
+
+    input[type="range"] {
+        -webkit-appearance: none !important;
+        appearance: none !important;
+        outline: 0;
+        background-color: transparent;
+        width: 150px;
+        margin-right: 10px;
+    }
+
+    /* 火狐 外背景色 */
+    input[type=range]::-moz-range-progress {
+        background: #1878F5;
+        height: 3px;
+    }
+
+    /* 定义range控件容器的样式 */
+    input[type="range" i]::-webkit-slider-container {
+        height: 20px;
+        overflow: hidden;
+    }
+
+    input[type="range"]::-webkit-slider-thumb {
+        -webkit-appearance: none !important;
+        appearance: none !important;
+        width: 12px;
+        height: 12px;
+        border-radius: 8px;
+        background-color: #FFFFFF;
+        border: 1px solid transparent;
+        box-shadow: 0px 2px 6px 0px rgba(0, 0, 0, 0.12);
+        border-image: linear-gradient(#1878F5, #1878F5) 0 fill / 8 20 8 0 / 0px 0px 0 2000px;
+    }
+
+    .track {
+        width: 150px;
+        height: 2px;
+        background-color: #D9D9D9;
+        margin-left: 2px;
+        margin-top: -14px
     }
 }
+
+.opacity-container .el-slider {
+    margin-top: 9px;
+    margin-left: 12px;
+}
+
 </style>
