@@ -4,17 +4,24 @@ import { WorkSpace } from '@/context/workspace';
 import { Segment2, get_segments2 } from '@/utils/pathedit';
 import { GroupShape, Matrix, PathShape, Shape } from '@kcdesign/data';
 import { onMounted, onUnmounted, reactive, ref } from 'vue';
+import { get_path_by_point } from '../Points/common';
 interface Props {
     context: Context
 }
+interface Dot {
+    point: { x: number, y: number }
+    index: number
+    selected: boolean
+}
 const props = defineProps<Props>();
-const data: { segments: Segment2[] } = reactive({ segments: [] });
-const segments = data.segments;
+const data: { segments: Segment2[], dots: Dot[] } = reactive({ segments: [], dots: [] });
+const { segments, dots } = data;
 const new_high_light = ref<number>(-1);
 const matrices: Map<string, Matrix> = new Map();
 let shape: PathShape | GroupShape;
 function update() {
     segments.length = 0;
+    dots.length = 0;
     if (!props.context.workspace.shouldSelectionViewUpdate) {
         return;
     }
@@ -23,6 +30,7 @@ function update() {
         console.log('!confirm_shape()');
         return;
     }
+    dots.push(...get_path_by_point(shape, matrices.get(shape.id)!, new Set()));
     segments.push(...get_segments2(shape, matrices));
 }
 function confirm_shape() {
@@ -136,6 +144,9 @@ onUnmounted(() => {
             </path>
         </g>
     </g>
+    <rect v-for="(p, i) in dots" :key="i" :style="{ transform: `translate(${p.point.x - 4}px, ${p.point.y - 4}px)` }"
+        class="point" rx="4" ry="4">
+    </rect>
 </template>
 <style scoped lang="scss">
 .background-path {
@@ -152,5 +163,13 @@ onUnmounted(() => {
 .path-high-light {
     stroke: orange;
     stroke-dasharray: 4 4;
+}
+
+.point {
+    fill: #ffffff;
+    stroke: #555555;
+    stroke-width: 1.5px;
+    height: 8px;
+    width: 8px;
 }
 </style>
