@@ -1,17 +1,17 @@
 <script setup lang='ts'>
-import {computed, onMounted, onUnmounted, watchEffect, ref, reactive} from "vue";
-import {Context} from "@/context";
-import {Matrix} from '@kcdesign/data';
-import {WorkSpace} from "@/context/workspace";
-import {Point} from "../SelectionView.vue";
-import {ClientXY, Selection} from "@/context/selection";
-import {useController} from "./controller";
-import {genRectPath} from "../common";
-import {Shape} from "@kcdesign/data";
+import { computed, onMounted, onUnmounted, watchEffect, ref, reactive } from "vue";
+import { Context } from "@/context";
+import { Matrix } from '@kcdesign/data';
+import { WorkSpace } from "@/context/workspace";
+import { Point } from "../SelectionView.vue";
+import { ClientXY, Selection } from "@/context/selection";
+import { useController } from "./controller";
+import { genRectPath } from "../common";
+import { Shape } from "@kcdesign/data";
 import ShapesStrokeContainer from "./ShapeStroke/ShapesStrokeContainer.vue";
 import BarsContainer from "./Bars/BarsContainer.SVG.vue";
 import PointsContainer from "./Points/PointsContainer.SVG.vue";
-import {getAxle} from "@/utils/common";
+import { getAxle } from "@/utils/common";
 interface Props {
     context: Context
     controllerFrame: Point[]
@@ -21,11 +21,11 @@ interface Props {
 }
 
 const props = defineProps<Props>();
-const {isDrag} = useController(props.context);
+const { isDrag } = useController(props.context);
 const visible = ref<boolean>(true);
 const editing = ref<boolean>(false);
 const boundrectPath = ref("");
-const bounds = reactive({left: 0, top: 0, right: 0, bottom: 0});
+const bounds = reactive({ left: 0, top: 0, right: 0, bottom: 0 });
 const matrix = new Matrix();
 const submatrix = reactive(new Matrix());
 let viewBox = '';
@@ -85,6 +85,10 @@ function workspace_watcher(t: number) {
     }
 }
 
+function check_status() {
+    visible.value = !props.context.workspace.is_path_edit_mode;
+}
+
 function mousedown(e: MouseEvent) {
     document.addEventListener('mousemove', mousemove);
     document.addEventListener('mouseup', mouseup);
@@ -108,6 +112,7 @@ onMounted(() => {
     props.context.selection.watch(selection_watcher);
     props.context.workspace.watch(workspace_watcher);
     window.addEventListener('blur', windowBlur);
+    check_status();
 })
 onUnmounted(() => {
     props.context.selection.unwatch(selection_watcher);
@@ -118,18 +123,16 @@ onUnmounted(() => {
 watchEffect(updateControllerView);
 </script>
 <template>
-    <svg version="1.1" xmlns="http://www.w3.org/2000/svg" xmlns:xlink="http://www.w3.org/1999/xlink"
-         data-area="controller"
-         xmlns:xhtml="http://www.w3.org/1999/xhtml" preserveAspectRatio="xMinYMin meet" :viewBox="viewBox"
-         :width="width"
-         :height="height" :class="{ 'un-visible': !visible }" @mousedown="mousedown" overflow="visible"
-         :style="{ transform: `translate(${bounds.left}px,${bounds.top}px)`, left: 0, top: 0, position: 'absolute' }">
+    <svg version="1.1" xmlns="http://www.w3.org/2000/svg" xmlns:xlink="http://www.w3.org/1999/xlink" data-area="controller"
+        xmlns:xhtml="http://www.w3.org/1999/xhtml" preserveAspectRatio="xMinYMin meet" :viewBox="viewBox" :width="width"
+        :height="height" :class="{ 'un-visible': !visible }" @mousedown="mousedown" overflow="visible"
+        :style="{ transform: `translate(${bounds.left}px,${bounds.top}px)`, left: 0, top: 0, position: 'absolute' }">
         <ShapesStrokeContainer :context="props.context" :matrix="props.matrix" color-hex="#865dff">
         </ShapesStrokeContainer>
         <BarsContainer :context="props.context" :matrix="submatrix.toArray()" :shape="props.shape"
-                       :c-frame="props.controllerFrame"></BarsContainer>
+            :c-frame="props.controllerFrame"></BarsContainer>
         <PointsContainer :context="props.context" :matrix="submatrix.toArray()" :shape="props.shape" :axle="axle"
-                         :c-frame="props.controllerFrame">
+            :c-frame="props.controllerFrame">
         </PointsContainer>
     </svg>
 </template>

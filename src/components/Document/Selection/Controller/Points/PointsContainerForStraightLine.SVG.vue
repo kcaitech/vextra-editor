@@ -1,13 +1,12 @@
 <script setup lang='ts'>
 import { Context } from '@/context';
-import { AsyncBaseAction, CtrlElementType, Matrix, Shape } from '@kcdesign/data';
+import { AsyncBaseAction, CtrlElementType, Matrix, PathShape, Shape } from '@kcdesign/data';
 import { onMounted, onUnmounted, watch, reactive, ref } from 'vue';
 import { ClientXY, PageXY } from '@/context/selection';
 import { getAngle, getHorizontalAngle } from '@/utils/common';
 import { update_dot3 } from './common';
 import { Point } from "../../SelectionView.vue";
 import { Action } from '@/context/tool';
-import { PointType } from '@/context/assist';
 import { get_direction } from '@/utils/controllerFn';
 
 interface Props {
@@ -34,7 +33,6 @@ let { dots } = data;
 let startPosition: ClientXY = { x: 0, y: 0 };
 let isDragging = false;
 let asyncBaseAction: AsyncBaseAction | undefined = undefined;
-let pointType: PointType = 'lt';
 let stickedX: boolean = false;
 let stickedY: boolean = false;
 let sticked_x_v: number = 0;
@@ -51,12 +49,12 @@ function update_dot_path() {
     if (!props.context.workspace.shouldSelectionViewUpdate) return;
     dots.length = 0;
     const f = props.shape.frame;
-    dots = dots.concat(update_dot3([matrix.computeCoord2(0, 0), matrix.computeCoord2(f.width, f.height)]));
-}
-function ct2pt(ct: CtrlElementType) {
-    if (ct === CtrlElementType.RectLT) return 'lt';
-    else if (ct === CtrlElementType.RectRB) return 'rb';
-    else return 'lt';
+    const m = new Matrix(matrix);
+    m.preScale(f.width, f.height);
+    const points = (props.shape as PathShape).points;
+    const p1 = m.computeCoord3(points[0]);
+    const p2 = m.computeCoord3(points[1]);
+    dots = dots.concat(update_dot3([p1, p2]));
 }
 function point_mousedown(event: MouseEvent, ele: CtrlElementType) {
     if (event.button !== 0) return;
@@ -69,7 +67,6 @@ function point_mousedown(event: MouseEvent, ele: CtrlElementType) {
     const root = workspace.root;
     startPosition = { x: clientX - root.x, y: clientY - root.y };
     cur_ctrl_type = ele;
-    pointType = ct2pt(cur_ctrl_type);
     document.addEventListener('mousemove', point_mousemove);
     document.addEventListener('mouseup', point_mouseup);
 }

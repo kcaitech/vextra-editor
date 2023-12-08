@@ -67,7 +67,12 @@ function updateControllerView() {
     viewBox = genViewBox(bounds);
 }
 function workspace_watcher(t?: number) {
-    if (t === WorkSpace.TRANSLATING) visible.value = !props.context.workspace.isTranslating;
+    if (t === WorkSpace.TRANSLATING) {
+        visible.value = !props.context.workspace.isTranslating;
+    }
+    else if (t === WorkSpace.PATH_EDIT_MODE) {
+        visible.value = !props.context.workspace.is_path_edit_mode;
+    }
 }
 function mousedown(e: MouseEvent) {
     const isdblc = isDblClick();
@@ -77,6 +82,9 @@ function mousedown(e: MouseEvent) {
 }
 function mousemove(e: MouseEvent) {
     if (isDrag()) visible.value = false;
+}
+function check_status() {
+    visible.value = !props.context.workspace.is_path_edit_mode;
 }
 function mouseup(e: MouseEvent) {
     document.removeEventListener('mousemove', mousemove);
@@ -93,6 +101,7 @@ onMounted(() => {
     props.context.selection.watch(selection_watcher);
     props.context.workspace.watch(workspace_watcher);
     window.addEventListener('blur', windowBlur);
+    check_status();
 })
 
 onUnmounted(() => {
@@ -116,9 +125,5 @@ watchEffect(updateControllerView)
 <style lang='scss' scoped>
 .un-visible {
     opacity: 0;
-}
-
-.editing {
-    background-color: rgba($color: #865dff, $alpha: 0.15);
 }
 </style>
