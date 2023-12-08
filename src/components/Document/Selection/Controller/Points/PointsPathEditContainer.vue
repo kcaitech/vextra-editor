@@ -171,10 +171,6 @@ function __exe(pathEditor: AsyncPathEditor, _point: PageXY) {
     const f = props.context.assist.edit_mode_match.bind(props.context.assist);
     // const point = actionEndGenerator.__gen(_point, f); // 开启辅助
     const point = _point;
-    const m = props.context.path.matrix_unit_to_root;
-    if (!m) {
-        return;
-    }
     const max = (shape as PathShape).points.length - 1;
     const select_point = props.context.path.get_synthetic_points(max);
     if (!select_point?.length) {
@@ -185,7 +181,7 @@ function __exe(pathEditor: AsyncPathEditor, _point: PageXY) {
         pathEditor.execute(current_curve_point_index.value, point);
         return;
     }
-    const points = props.context.selection.pathshape?.points;
+    const points = (shape as PathShape).points;
     if (!points?.length) {
         console.log('!points?.length');
         return;
@@ -195,14 +191,13 @@ function __exe(pathEditor: AsyncPathEditor, _point: PageXY) {
         console.log('!first_point');
         return;
     }
-    const origin_root_point = m.computeCoord2(first_point.x, first_point.y);
     const first_offset = offset_map[0];
     const compute_root_point = { x: point.x + first_offset.x, y: point.y + first_offset.y };
+    const m = shape.matrix2Root();
+    m.preScale(shape.frame.width, shape.frame.height);
     const m2 = new Matrix(m.inverse);
     const compute_unit_point = m2.computeCoord3(compute_root_point);
-    m2.multi(props.context.workspace.matrix.inverse);
-    const origin_unit_point = m2.computeCoord3(origin_root_point);
-    pathEditor.execute2(select_point, compute_unit_point.x - origin_unit_point.x, compute_unit_point.y - origin_unit_point.y);
+    pathEditor.execute2(select_point, compute_unit_point.x - first_point.x, compute_unit_point.y - first_point.y);
 }
 
 /**
@@ -419,6 +414,7 @@ onUnmounted(() => {
 
 .path-selected {
     stroke: rgb(255, 166, 0);
+    stroke-width: 2px;
 }
 
 .insert-point {
