@@ -1,5 +1,5 @@
-import { VDom } from "./basic";
+import { ShapeDom } from "./shape";
 
-export class ContactLineDom extends VDom {
+export class ContactLineDom extends ShapeDom {
 
 }

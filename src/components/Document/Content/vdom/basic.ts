@@ -1,9 +1,9 @@
-import { OverrideType, RenderTransform, Shape, SymbolRefShape, SymbolShape, Variable } from "@kcdesign/data";
+import { OverrideType, RenderTransform, Shape, ShapeType, SymbolRefShape, SymbolShape, Variable } from "@kcdesign/data";
 
 
-export function h(tag: string, attrs?: any, childs?: Array<string>): string;
-export function h(tag: string, childs?: Array<string>): string;
-export function h(...args: any[]): string {
+export function stringh(tag: string, attrs?: any, childs?: Array<string>): string;
+export function stringh(tag: string, childs?: Array<string>): string;
+export function stringh(...args: any[]): string {
     const tag = args[0];
     let attrs = args[1];
     let childs = args[2];
@@ -120,16 +120,27 @@ export function findOverrideAndVar(
     return _vars;
 }
 
+export interface ComType {
+    new(ctx: VDomCtx, props: PropsType): VDom;
+}
 
 export class VDomCtx {
+    comsMap: Map<ShapeType, ComType> = new Map();
     // 选区
     // 缩放监听
+
+    // 先更新数据再绘制
+    datachangeset: Map<string, VDom> = new Map();
+    // 要由上往下更新
+    dirtyset: Map<string, VDom> = new Map();
 }
+
+export type VarsContainer = (SymbolRefShape | SymbolShape)[];
 
 export interface PropsType {
     data: Shape;
     transx?: RenderTransform;
-    varsContainer?: (SymbolRefShape | SymbolShape)[];
+    varsContainer?: VarsContainer;
 }
 
 class Watchable {
@@ -156,13 +167,13 @@ class Watchable {
 export class VDom extends Watchable {
     m_ctx: VDomCtx;
     m_data: Shape;
-    m_dom?: HTMLElement;
+    m_el?: HTMLElement; // bind
     m_children: VDom[] = [];
     m_parent: VDom | undefined;
     m_transx?: RenderTransform;
     m_varsContainer?: (SymbolRefShape | SymbolShape)[];
 
-    m_isdirty: boolean = false;
+    // m_isdirty: boolean = false;
     m_isdistroyed: boolean = false;
 
     m_nodeCount: number = 1;
@@ -171,8 +182,11 @@ export class VDom extends Watchable {
         super();
         this.m_ctx = ctx;
         this.m_data = props.data;
-        this.m_transx = props.transx;
-        this.m_varsContainer = props.varsContainer;
+
+        // todo update
+        // this.m_transx = props.transx;
+        // this.m_varsContainer = props.varsContainer;
+        this.update(props);
 
         this.onCreate();
 
@@ -185,7 +199,7 @@ export class VDom extends Watchable {
     }
 
     private _datawatcher(...args: any[]) {
-        this.m_isdirty = true;
+        this.m_ctx.datachangeset.set(this.id(), this);
         this.onDataChange(...args);
         super.notify(...args);
     }
@@ -220,40 +234,32 @@ export class VDom extends Watchable {
     //        2.2.1 移动位置
     // 3. 销毁
 
-    // bind(parent: HTMLElement) { // 
-    //     // this.m_dom = dom;
-    //     // update
-    //     //
+    bind(node: HTMLElement /* old, for reuse */) { // 
+        // if same tag, modify
+        // else replace
+        if (this.m_el) this.m_el.remove();
+        this.m_el = node;
+    }
 
-    //     // dom.parentElement;
-    //     // dom.parentNode;
-
-    //     // dom.innerHTML;
-
-    //     const dom = this.render();
-    //     if (dom) {
-    //         parent.appendChild(dom);
-    //         this.m_dom = dom;
-    //     }
-    // }
-
-    // unbind() {
-    //     if (this.m_dom) {
-    //         this.m_dom.remove();
-    //         this.m_dom = undefined;
-    //     }
-    //     // unbind childs
-    // }
-
-    update() {
-        if (!this.m_isdirty) {
-            return;
+    unbind() {
+        if (this.m_el) {
+            this.m_el.remove();
+            this.m_el = undefined;
         }
+
+        // unbind childs
+    }
+
+    update(props: PropsType) {
+        // if (!this.m_isdirty) {
+        //     return;
+        // }
         // update
+        // update dom
     }
 
     // 
-    render() {
+    render(): HTMLElement | undefined {
         throw new Error('not implement');
     }
 
@@ -314,6 +320,24 @@ export class VDom extends Watchable {
         return dom;
     }
 
+    moveChild(child: VDom, toIdx: number) {
+        if (child.m_parent!== this) {
+            throw new Error("child not in this parent");
+        }
+        if (toIdx < 0 || toIdx >= this.m_children.length) {
+            throw new Error("invalid index");
+        }
+        const fIdx = this.m_children.indexOf(child);
+        if (fIdx === toIdx) {
+            return;
+        }
+        if (fIdx < 0) {
+            throw new Error("child not in this parent");
+        }
+        this.m_children.splice(fIdx, 1);
+        this.m_children.splice(toIdx, 0, child);
+    }
+
     removeChilds(idx: number, len: number) {
         const dom = this.m_children.splice(idx, len);
         if (dom) {
@@ -344,15 +368,19 @@ export class VDom extends Watchable {
         attrs.height = frame.height;
         attrs.viewBox = `${frame.x} ${frame.y} ${frame.width} ${frame.height}`;
         attrs.overflow = "visible";
-        return h('svg', attrs, [this.m_dom?.innerHTML || ""]);
+        return stringh('svg', attrs, [this.m_el?.innerHTML || ""]);
     }
 
     destory() {
         if (this.m_parent) throw new Error("parent is not null");
         if (this.m_isdistroyed) throw new Error("already distroyed");
-        if (this.m_dom) {
-            this.m_dom.remove();
-            this.m_dom = undefined;
+        const tid = this.id();
+        this.m_ctx.datachangeset.delete(tid);
+        this.m_ctx.dirtyset.delete(tid);
+
+        if (this.m_el) {
+            this.m_el.remove();
+            this.m_el = undefined;
         }
         this.m_data.unwatch(this._datawatcher);
         if (this.m_varsContainer) {

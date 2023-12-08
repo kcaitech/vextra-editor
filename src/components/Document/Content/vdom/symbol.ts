@@ -1,5 +1,5 @@
-import { VDom } from "./basic";
+import { GroupShapeDom } from "./groupshape";
 
-export class SymbolDom extends VDom {
+export class SymbolDom extends GroupShapeDom {
 
 }

@@ -10,6 +10,9 @@ import ShapeTitles from './ShapeTitles.vue';
 import ComponentTitleContainer from './ComponentTitleContainer.vue';
 import { debounce } from 'lodash';
 import { RenderCtx } from './common';
+import { PageDom } from './vdom/page';
+import { VDomCtx } from './vdom/basic';
+import { initComsMap } from './vdom/comsmap';
 interface Props {
     context: Context
     data: Page
@@ -20,8 +23,8 @@ const matrixWithFrame = new Matrix();
 const reflush = ref(0);
 const rootId = ref<string>('pageview');
 const show_t = ref<boolean>(true);
-const width = ref<number>(100);
-const height = ref<number>(100);
+// const width = ref<number>(100);
+// const height = ref<number>(100);
 const pageslot = ref<HTMLElement>();
 
 function pageViewRegister(mount: boolean) {
@@ -40,9 +43,9 @@ const collect = debounce(_collect, 100);
 function page_watcher() {
     matrixWithFrame.reset(props.matrix);
     matrixWithFrame.preTrans(props.data.frame.x, props.data.frame.y);
-    width.value = Math.ceil(Math.max(100, props.data.frame.width)), height.value = Math.ceil(Math.max(100, props.data.frame.height));
-    if (width.value % 2) width.value++;
-    if (height.value % 2) height.value++;
+    // width.value = Math.ceil(Math.max(100, props.data.frame.width)), height.value = Math.ceil(Math.max(100, props.data.frame.height));
+    // if (width.value % 2) width.value++;
+    // if (height.value % 2) height.value++;
     reflush.value++;
 }
 const stopWatchPage = watch(() => props.data, (value, old) => {
@@ -95,12 +98,12 @@ function render() {
         preserveAspectRatio: "xMinYMin meet",
         overflow: "visible"
     }
-    prop.viewBox = `0 0 ${width.value} ${height.value}`;
-    prop.reflush = reflush.value !== 0 ? reflush.value : undefined;
-    prop.style = { transform: matrixWithFrame.toString() };
-    prop['data-area'] = rootId.value;
-    prop.width = width.value;
-    prop.height = height.value;
+    // prop.viewBox = `0 0 ${width.value} ${height.value}`;
+    // prop.reflush = reflush.value !== 0 ? reflush.value : undefined;
+    // prop.style = { transform: matrixWithFrame.toString() };
+    // prop['data-area'] = rootId.value;
+    // prop.width = width.value;
+    // prop.height = height.value;
 
     const childs = [];
     const datachilds = props.data.childs;
@@ -114,13 +117,29 @@ function render() {
     return h('svg', prop, childs)
 }
 
+const domCtx = new VDomCtx();
+initComsMap(domCtx.comsMap);
+const dom: PageDom = new PageDom(domCtx, props);
+domCtx.dirtyset.set(dom.id(), dom);
+
+onMounted(() => {
+    // console.log("page mounted", pageslot.value?.tagName)
+    if (pageslot.value) {
+        dom.bind(pageslot.value);
+        dom.render();
+    }
+})
+
+onUnmounted(() => {
+    dom.unbind();
+    dom.destory(); // todo
+})
+
 </script>
 
 <template>
     <!--- page slot -->
-    <div ref="pageslot">
-        <render></render>
-    </div>
+    <svg ref="pageslot"></svg>
     <ShapeTitles v-if="show_t" :context="props.context" :data="data" :matrix="matrixWithFrame.toArray()"></ShapeTitles>
     <ComponentTitleContainer :context="props.context" :data="data" :matrix="matrixWithFrame.toArray()">
     </ComponentTitleContainer>
