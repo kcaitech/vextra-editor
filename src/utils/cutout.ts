@@ -3,6 +3,7 @@ import { Border, BorderPosition, Page, ShadowPosition, Shape, ShapeType } from "
 import { isTarget } from '@/utils/common';
 export function getCutoutShape(shape: Shape, page: Page, selectedShapes: Map<string, Shape>) {
     const matrix = shape.matrix2Root();
+    const p = shape.boundingBox()
     const { width, height } = shape.frame;
     const p1: XY = matrix.computeCoord2(0, 0); // lt
     const p2: XY = matrix.computeCoord2(width, 0); // rt
@@ -20,15 +21,16 @@ function finder(childs: Shape[], Points: [XY, XY, XY, XY, XY], selectedShapes: M
         const { width, height } = shape.frame;
         const max_border = getShapeBorderMax(shape);
         const { left, top, right, bottom } = getShadowMax(shape);
-        const _x = -(max_border + right);
-        const _y = -(max_border + top);
-        const _w = (max_border * 2) + right + left;
-        const _h = (max_border * 2) + top + bottom;
-        const ps: XY[] = [{ x: _x, y: _y }, { x: width + _w, y: _y }, { x: width + _w, y: height + _y }, { x: _x, y: height + _h }, { x: _x, y: _y }];
+        const _x = - (left + max_border);
+        const _y = - (top + max_border);
+        const _w = (left + max_border) + (right + max_border);
+        const _h = (top + max_border) + (bottom + max_border);
+        const ps: XY[] = [{ x: _x, y: _y }, { x: width + _w, y: _y }, { x: width + _w, y: height + _h }, { x: _x, y: height + _h }, { x: _x, y: _y }];
         for (let i = 0; i < 5; i++) {
             const p = ps[i];
             ps[i] = m.computeCoord3(p);
         }
+        
         if (isTarget(Points, ps)) {
             private_set(shape.id, shape, selectedShapes);
         }
@@ -40,7 +42,7 @@ function private_set(key: string, value: Shape, selectedShapes: Map<string, Shap
     selectedShapes.set(key, value);
 }
 
-const getShapeBorderMax = (shape: Shape) => {
+export const getShapeBorderMax = (shape: Shape) => {
     if (!shape.style.borders.length) return 0;
     const borders = shape.style.borders;
     const max_b = [0];
@@ -69,8 +71,8 @@ export const getShadowMax = (shape: Shape) => {
         const { offsetX, offsetY, blurRadius, spread } = shadow;
         if (shadow.position === ShadowPosition.Outer) {
             if (offsetX >= 0) {
-                const left = offsetX + blurRadius + spread;
-                const right = blurRadius + spread - offsetX;
+                const right = offsetX + blurRadius + spread;
+                const left = blurRadius + spread - offsetX;
                 max_l.push(left);
                 max_r.push(right);
             }
@@ -81,8 +83,8 @@ export const getShadowMax = (shape: Shape) => {
                 max_t.push(top);
             }
             if (offsetX < 0) {
-                const right = -(offsetX - blurRadius - spread);
-                const left = blurRadius + spread + offsetX;
+                const left = -(offsetX - blurRadius - spread);
+                const right = blurRadius + spread + offsetX;
                 max_r.push(right);
                 max_l.push(left);
             }

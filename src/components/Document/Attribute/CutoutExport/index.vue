@@ -386,9 +386,9 @@ const exportFill = () => {
                 svg.setAttribute("width", `${width * format.scale}`);
                 svg.setAttribute("height", `${height * format.scale}`);
                 if (format.fileFormat === ExportFileFormat.Jpg || format.fileFormat === ExportFileFormat.Png) {
-                    getPngImageData(svg, shape.exportOptions!.trimTransparent, id, format, pngImageUrls);
+                    getPngImageData(svg, shape.exportOptions!.trimTransparent, id, format, pngImageUrls, shape);
                 }else if(format.fileFormat === ExportFileFormat.Svg) {
-                    getSvgImageData(svg, shape.exportOptions!.trimTransparent, id, format, pngImageUrls);
+                    getSvgImageData(svg, shape.exportOptions!.trimTransparent, id, format, pngImageUrls, shape);
                 }
             });
         }
@@ -609,8 +609,8 @@ onUnmounted(() => {
 
 .exportsvg {
     position: fixed;
-    right: -1000px;
-    top: -1000px;
+    left: 0;
+    top: 0;
     opacity: 0;
     z-index: -1;
 }

@@ -1,4 +1,4 @@
-import { ExportFormatNameingScheme, Shape, ExportFormat } from '@kcdesign/data';
+import { ExportFormatNameingScheme, Shape, ExportFormat, ShapeType, Matrix } from '@kcdesign/data';
 import JSZip from 'jszip';
 export function get_frame(file: any) {
   const frame: { width: number, height: number } = { width: 100, height: 100 };
@@ -84,11 +84,28 @@ export const exportSingleImage = (imageUrl: string, type: string, name: string) 
   document.body.removeChild(a);
 }
 
-export const getPngImageData = (svg: SVGSVGElement, trim: boolean, id: string, format: ExportFormat, pngImageUrls: Map<string, string>) => {
+export const getPngImageData = (svg: SVGSVGElement, trim: boolean, id: string, format: ExportFormat, pngImageUrls: Map<string, string>, shape: Shape) => {
   const canvas = document.createElement('canvas');
   const context = canvas.getContext('2d');
-  canvas.width = svg.clientWidth;
-  canvas.height = svg.clientHeight;
+  const { width, height } = svg.getBoundingClientRect();
+  const diagonalLength = Math.sqrt(Math.pow(width, 2) + Math.pow(height, 2));
+  if (shape.type !== ShapeType.Cutout && shape.rotation) {
+    canvas.width = diagonalLength;
+    canvas.height = diagonalLength;
+    const el = svg.children[0] as SVGSVGElement;
+    if (el) {
+      const trans = el.style.transform.split(' ');
+      el.style.transform = `${trans[0]}${trans[1]} rotate(0deg) ${trans[3]} ${trans[4]}`;
+    }
+    if (context) {
+      context.translate(canvas.width / 2, canvas.height / 2);
+      context.rotate((shape.rotation * Math.PI) / 180);
+      context.translate(-width / 2, -height / 2);
+    }
+  } else {
+    canvas.width = width;
+    canvas.height = height;
+  }
   const svgString = new XMLSerializer().serializeToString(svg);
   const img = new Image();
   img.src = 'data:image/svg+xml;base64,' + btoa(unescape(encodeURIComponent(svgString)));
@@ -129,11 +146,28 @@ export const getPngImageData = (svg: SVGSVGElement, trim: boolean, id: string, f
   };
 }
 
-export const getSvgImageData = (svg: SVGSVGElement, trim: boolean, id: string, format: ExportFormat, svgImageUrls: Map<string, string>) => {
+export const getSvgImageData = (svg: SVGSVGElement, trim: boolean, id: string, format: ExportFormat, svgImageUrls: Map<string, string>, shape: Shape) => {
   const canvas = document.createElement('canvas');
   const ctx = canvas.getContext('2d');
-  canvas.width = svg.clientWidth;
-  canvas.height = svg.clientHeight;
+  const { width, height } = svg.getBoundingClientRect();
+  const diagonalLength = Math.sqrt(Math.pow(width, 2) + Math.pow(height, 2));
+  if (shape.type !== ShapeType.Cutout && shape.rotation) {
+    canvas.width = diagonalLength;
+    canvas.height = diagonalLength;
+    const el = svg.children[0] as SVGSVGElement;
+    if (el) {
+      const trans = el.style.transform.split(' ');
+      el.style.transform = `${trans[0]}${trans[1]} rotate(0deg) ${trans[3]} ${trans[4]}`;
+    }
+    if (ctx) {
+      ctx.translate(canvas.width / 2, canvas.height / 2);
+      ctx.rotate((shape.rotation * Math.PI) / 180);
+      ctx.translate(-width / 2, -height / 2);
+    }
+  } else {
+    canvas.width = width;
+    canvas.height = height;
+  }
   let imageUrl = '';
   const img = new Image();
   const svgString = new XMLSerializer().serializeToString(svg);
