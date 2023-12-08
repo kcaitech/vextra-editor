@@ -48,12 +48,18 @@ function update() {
     reflush.value++;
 }
 function update_dot_path() {
-    if (!props.context.workspace.shouldSelectionViewUpdate) return;
+    if (!props.context.workspace.shouldSelectionViewUpdate) {
+        return;
+    }
     dots.length = 0;
     const f = props.shape.frame;
     const m = new Matrix(matrix);
     m.preScale(f.width, f.height);
     const points = (props.shape as PathShape).points;
+    if (points.length < 2) {
+        console.log('points.length < 2');
+        return;
+    }
     const p1 = m.computeCoord3(points[0]);
     const p2 = m.computeCoord3(points[1]);
     dots = dots.concat(update_dot3([p1, p2]));

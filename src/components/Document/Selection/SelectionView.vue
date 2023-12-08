@@ -248,8 +248,8 @@ function for_virtual(shape: Shape) {
 }
 function for_path_shape(shape: PathShape) {
     const points = shape.points;
-    const is_straight_1 = !points[0].hasFrom;
-    const is_straight_2 = !points[1].hasTo;
+    const is_straight_1 = !points[0]?.hasFrom;
+    const is_straight_2 = !points[1]?.hasTo;
     if (points.length === 2 && is_straight_1 && is_straight_2) {
         controllerType.value = ControllerType.Line;
     } else {
@@ -300,8 +300,8 @@ function modify_rotate(shapes: Shape[]) {
         const shape = shapes[0];
         if (shape instanceof PathShape) {
             const points = shape.points;
-            const is_straight_1 = !points[0].hasFrom;
-            const is_straight_2 = !points[1].hasTo;
+            const is_straight_1 = !points[0]?.hasFrom;
+            const is_straight_2 = !points[1]?.hasTo;
             if (points.length === 2 && is_straight_1 && is_straight_2) {
                 rotate.value = getHorizontalAngle(controllerFrame.value[0], controllerFrame.value[2]);
                 return;
