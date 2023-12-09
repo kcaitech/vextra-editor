@@ -1,5 +1,5 @@
 import { VariableType, OverrideType, Variable, ShapeFrame, RenderTransform, SymbolRefShape, SymbolShape, Shape, renderFills, renderBorders, CurvePoint, Point2D } from "@kcdesign/data";
-import { PropsType, VDom, findOverrideAndVar, stringh } from "./basic";
+import { PropsType, VDom, VDomCtx, findOverrideAndVar, stringh } from "./basic";
 import { Matrix, Path, ResizingConstraints } from "@kcdesign/data";
 import { EL, createElement, elh, elpatch, recycleELArr, setAttribute } from "./el";
 
@@ -198,11 +198,15 @@ export class ShapeDom extends VDom {
     m_borders?: EL[];
     m_path?: string;
 
-    m_frame: ShapeFrame = new ShapeFrame(0, 0, 0, 0);
+    m_frame?: ShapeFrame;
     m_hflip?: boolean;
     m_vflip?: boolean;
     m_rotate?: number;
     m_fixedRadius?: number;
+
+    onCreate(): void {
+        this.m_frame = new ShapeFrame(0, 0, 0, 0);
+    }
 
     onDataChange(...args: any[]): void {
         if (args.includes('points')) this.m_path = undefined;
@@ -221,7 +225,7 @@ export class ShapeDom extends VDom {
     }
 
     getFrame() {
-        return this.m_frame;
+        return this.m_frame!;
     }
 
     isNoTransform() {
@@ -245,7 +249,7 @@ export class ShapeDom extends VDom {
 
     getPath() {
         if (this.m_path) return this.m_path;
-        this.m_path = this.m_data.getPathOfFrame(this.m_frame, this.m_fixedRadius).toString(); // todo fixedRadius
+        this.m_path = this.m_data.getPathOfFrame(this.getFrame(), this.m_fixedRadius).toString(); // todo fixedRadius
         return this.m_path;
     }
 
@@ -266,11 +270,12 @@ export class ShapeDom extends VDom {
 
     // =================== update ========================
     updateRenderArgs(frame: ShapeFrame, hflip: boolean | undefined, vflip: boolean | undefined, rotate: number | undefined, radius?: number) {
-        if (isDiffShapeFrame(this.m_frame, frame)) {
-            this.m_frame.x = frame.x;
-            this.m_frame.y = frame.y;
-            this.m_frame.width = frame.width;
-            this.m_frame.height = frame.height;
+        const _frame = this.getFrame();
+        if (isDiffShapeFrame(_frame, frame)) {
+            _frame.x = frame.x;
+            _frame.y = frame.y;
+            _frame.width = frame.width;
+            _frame.height = frame.height;
             this.m_path = undefined; // need update
             if (this.m_borders) {
                 recycleELArr(this.m_borders);
@@ -511,21 +516,21 @@ export class ShapeDom extends VDom {
     protected renderFills() {
         if (!this.m_fills) {
 
-            this.m_fills = renderFills(elh, this.getFills(), this.m_frame, this.getPath());
+            this.m_fills = renderFills(elh, this.getFills(), this.getFrame(), this.getPath());
         }
         return this.m_fills;
     }
 
     protected renderBorders() {
         if (!this.m_borders) {
-            this.m_borders = renderBorders(elh, this.getBorders(), this.m_frame, this.getPath());
+            this.m_borders = renderBorders(elh, this.getBorders(), this.getFrame(), this.getPath());
         }
         return this.m_borders;
     }
 
     protected renderProps() {
         const shape = this.m_data;
-        const frame = this.m_frame;
+        const frame = this.getFrame();
         // const path = this.getPath(); // cache
         const props: any = {}
 

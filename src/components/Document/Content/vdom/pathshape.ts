@@ -16,6 +16,7 @@ export class PathShapeDom extends ShapeDom {
         m.multiAtLeft(matrix2.inverse); // 反向投影到新的坐标系
 
         const points = transformPoints(shape.points, m); // 新的points
-        this.m_path = new Path(parsePath(points, shape.isClosed, 0, 0, this.m_frame.width, this.m_frame.height, shape.fixedRadius)).toString()
+        const frame = this.getFrame();
+        this.m_path = new Path(parsePath(points, shape.isClosed, 0, 0, frame.width, frame.height, shape.fixedRadius)).toString()
     }
 }

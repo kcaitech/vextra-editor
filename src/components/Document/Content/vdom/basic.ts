@@ -183,13 +183,6 @@ export class VDom extends Watchable {
         this.m_ctx = ctx;
         this.m_data = props.data;
 
-        // todo update
-        // this.m_transx = props.transx;
-        // this.m_varsContainer = props.varsContainer;
-        // this.update(props, true);
-
-        this.onCreate();
-
         this._datawatcher = this._datawatcher.bind(this);
         // watch data & varsContainer
         this.m_data.watch(this._datawatcher);
@@ -198,6 +191,8 @@ export class VDom extends Watchable {
         }
 
         // build childs
+        this.onCreate();
+        this.update(props, true);
     }
 
     private _datawatcher(...args: any[]) {
@@ -246,20 +241,10 @@ export class VDom extends Watchable {
     }
 
     unbind() {
-        if (this.m_el) {
-            this.m_el.remove();
-            this.m_el = undefined;
-        }
-
-        // unbind childs
+        if (this.m_el && this.m_el.parentNode) this.m_el.remove();
     }
 
     update(props: PropsType, force?: boolean) {
-        // if (!this.m_isdirty) {
-        //     return;
-        // }
-        // update
-        // update dom
     }
 
     // 
@@ -325,7 +310,7 @@ export class VDom extends Watchable {
     }
 
     moveChild(child: VDom, toIdx: number) {
-        if (child.m_parent!== this) {
+        if (child.m_parent !== this) {
             throw new Error("child not in this parent");
         }
         if (toIdx < 0 || toIdx >= this.m_children.length) {

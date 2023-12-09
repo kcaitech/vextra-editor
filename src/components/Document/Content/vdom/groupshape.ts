@@ -8,6 +8,7 @@ import { EL, elh, elpatch } from "./el";
 export class GroupShapeDom extends ShapeDom {
 
     onCreate(): void {
+        super.onCreate();
         // build childs
         // todo
         (this.m_data as GroupShape).childs.forEach((c) => {
@@ -15,9 +16,15 @@ export class GroupShapeDom extends ShapeDom {
             const Com = comsMap.get(c.type) || comsMap.get(ShapeType.Rectangle)!;
             const props = {data: c};
             const ins = new Com(this.m_ctx, props);
-            ins.update(props, true);
+            // ins.update(props, true);
             this.addChild(ins);
         });
+    }
+
+    onDataChange(...args: any[]): void {
+        if (args.includes('childs')) {
+            // relayout??
+        }
     }
 
     renderChilds(): VDom[] {
@@ -38,7 +45,7 @@ export class GroupShapeDom extends ShapeDom {
             const comsMap = this.m_ctx.comsMap;
             const Com = comsMap.get(child.type) || comsMap.get(ShapeType.Rectangle)!;
             cdom = new Com(this.m_ctx, props);
-            cdom.update(props, true);
+            // cdom.update(props, true);
             this.addChild(cdom, idx);
             return;
         }
@@ -57,7 +64,7 @@ export class GroupShapeDom extends ShapeDom {
                 dy: 0,
                 scaleX,
                 scaleY,
-                parentFrame: this.m_frame,
+                parentFrame: this.getFrame(),
                 vflip: false,
                 hflip: false,
                 rotate: 0
@@ -93,7 +100,7 @@ export class GroupShapeDom extends ShapeDom {
                 dy,
                 scaleX,
                 scaleY,
-                parentFrame: this.m_frame,
+                parentFrame: this.getFrame(),
                 vflip,
                 hflip,
                 rotate
