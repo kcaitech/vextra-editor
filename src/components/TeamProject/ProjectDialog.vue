@@ -87,6 +87,7 @@ watch(() => props.projectVisible, (newvalue) => {
     padding: 0 24px;
     border-radius: 14px;
     box-sizing: border-box;
+    z-index: 9999;
 
     .el-dialog__header {
         margin: 0;

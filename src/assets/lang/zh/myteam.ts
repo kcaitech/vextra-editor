@@ -38,7 +38,7 @@ export const Createteam = {
     projecttype: '项目类型',
     jurisdiction: '权限',
     jointips: '点击链接或扫描二维码申请加入',
-    invitation_switch: '邀请链接开关',
+    invitation_switch: '邀请链接：',
     copylink: '复制链接',
     confirm: '确定',
     cancel: '取消',

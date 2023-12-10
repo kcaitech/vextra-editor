@@ -1,8 +1,7 @@
 <script setup lang="ts">
 import { ElMessage } from 'element-plus'
-import { Ref, inject, nextTick, onMounted, ref, watch, watchEffect } from 'vue'
+import { Ref, computed, inject, onMounted, onUnmounted, ref, watch, watchEffect } from 'vue'
 import { useI18n } from 'vue-i18n'
-import CloseIcon from '@/components/common/CloseIcon.vue';
 import * as team_api from '@/request/team';
 
 const props = defineProps<{
@@ -84,6 +83,7 @@ const { projectList } = inject('shareData') as {
 }
 
 const onLinkSwitch = () => {
+    if (disabled.value) return
     const index = projectList.value.findIndex((item) => item.project.id === currentProject.value[0].project.id);
     params.invited_switch = linkSwitch.value;
     projectList.value[index].project.invited_switch = linkSwitch.value;
@@ -161,6 +161,7 @@ watch(projectPerm, (v) => {
 })
 
 watch(checked, (val) => {
+    if (disabled.value) return
     const index = projectList.value.findIndex((item) => item.project.id === currentProject.value[0].project.id);
     params.need_approval = val;
     projectList.value[index].project.need_approval = val;
@@ -204,192 +205,453 @@ onMounted(() => {
 
 })
 
-const changemargin = () => {
-    nextTick(() => {
-        let el = document.querySelectorAll('.el-dialog__header')
-        for (let i = 0; i<el.length;i++) {
-            (el[i] as HTMLElement).style.marginRight='0px'
-        }
-    })
+const inputTypeSelect = ref<HTMLInputElement>()
+const inputPermSelect = ref<HTMLInputElement>()
+const showTypeSelect = ref<boolean>(false)
+const showPermSelect = ref<boolean>(false)
 
+const openTypeSelect = () => {
+    if (disabled.value) return
+    showTypeSelect.value = !showTypeSelect.value;
+    showPermSelect.value=false
 }
+
+const openPermSelect = () => {
+    if (disabled.value) return
+    showPermSelect.value = !showPermSelect.value
+    showTypeSelect.value=false
+}
+
+const selectTypeOption = (data: any) => {
+    projectType.value = data.label
+    showTypeSelect.value = false
+}
+
+const selectPermOption = (data: any) => {
+    projectPerm.value = data.label
+    showPermSelect.value = false
+}
+
+const disabled = computed(() => {
+    return !(currentProject.value[0].self_perm_type === 4 || currentProject.value[0].self_perm_type === 5)
+})
+const handleClickOutside = (e: MouseEvent) => {
+    if (e.target instanceof Element && e.target.closest('.typeoptions') == null) {
+        console.log('执行1');
+        showTypeSelect.value = false
+    }
+    if (e.target instanceof Element && e.target.closest('.permoptions') == null) {
+        console.log('执行2');
+        showPermSelect.value = false
+    }
+}
+onMounted(() => {
+    document.addEventListener('click', handleClickOutside)
+})
+
+onUnmounted(() => {
+    document.removeEventListener('click', handleClickOutside)
+})
 
 </script>
 
 <template>
-    <el-dialog v-model="isshow" :width="width" align-center :append-to-body="true" :close-on-click-modal="false"
-        :show-close="false" @open="changemargin" :destroy-on-close="true" @close="emit('closeDialog')">
-        <template #header>
-            <div class="my-header">
-                <div class="title">{{ title }}</div>
-                <CloseIcon :size="20" @close="emit('closeDialog')" />
+    <div class="overlay"></div>
+    <div class="card-container">
+        <div class="heard">
+            <div class="title">
+                {{ title }}
             </div>
-        </template>
-        <div class="body">
-            <div class="project_type">
-                <p class="text">{{ t('Createteam.projecttype') }}</p>
-                <el-select v-model="projectType" class="m-2" style="width: 230px;" size="large"
-                    :disabled="!(currentProject[0].self_perm_type === 4 || currentProject[0].self_perm_type === 5)">
-                    <el-option v-for="item in projectOptions" :key="item.value" :label="item.label" :value="item.label" />
-                </el-select>
-            </div>
-            <div class="project_type" v-if="currentProject[0]">
-                <p class="text">{{ t('Createteam.jurisdiction') }}</p>
-                <el-select v-model="projectPerm" class="m-2" style="width: 230px;" size="large"
-                    :disabled="!(currentProject[0].self_perm_type === 4 || currentProject[0].self_perm_type === 5)">
-                    <el-option v-for="item in projectPerms" :key="item.value" :label="item.label" :value="item.label" />
-                </el-select>
-            </div>
-            <div v-if="currentProject[0] && projectType === projectOptions[1].label">
-                <div>{{ t('Createteam.jointips') }}</div>
-                <div class="share-switch"
-                    :style="{ opacity: currentProject[0].self_perm_type === 4 || currentProject[0].self_perm_type === 5 ? '1' : '.5' }">
-                    <span style="font-weight: 600;">{{ t('Createteam.invitation_switch') }}:</span>
-                    <el-switch class="switch" size="small" v-model="linkSwitch" @click="onLinkSwitch"
-                        :disabled="!(currentProject[0].self_perm_type === 4 || currentProject[0].self_perm_type === 5)" />
-                </div>
-                <div class="link" v-if="linkSwitch">
-                    <el-input :value="sharelink" :readonly="true" />
-                    <!-- <div class="qrcode" @click="produceQrcode"><svg-icon icon-class="qrcode"></svg-icon></div> -->
-                </div>
-                <div class="qrcode-box" v-if="!is_qrcode">
-                </div>
-                <div class="checked" v-if="linkSwitch"
-                    :style="{ opacity: currentProject[0].self_perm_type === 4 || currentProject[0].self_perm_type === 5 ? '1' : '.5' }">
-                    <el-checkbox v-model="checked"
-                        :disabled="!(currentProject[0].self_perm_type === 4 || currentProject[0].self_perm_type === 5)"></el-checkbox><span>申请后需管理员审批确认</span>
-                </div>
-                <div class="button" :style="{ opacity: linkSwitch ? '1' : '.5' }" @click="copyLink">
-                    <button>{{ t('Createteam.copylink') }}</button>
-                </div>
-            </div>
-            <div v-else>
-                <div class="button" @click.stop="emit('closeDialog')"><button>{{ t('Createteam.confirm') }}</button></div>
+            <div class="close" @click.stop="emit('closeDialog')">
+                <svg-icon icon-class="close"></svg-icon>
             </div>
         </div>
-    </el-dialog>
+
+        <div class="type-setting">
+            <span>{{ t('Createteam.projecttype') }}：</span>
+            <input ref="inputTypeSelect" class="typeinput" :style="{ opacity: disabled ? 0.6 : 1 }" type="text"
+                v-model="projectType" @click.stop="openTypeSelect" placeholder="Select an option" :disabled="disabled"
+                readonly />
+            <div class="shrink1" @click.stop="inputTypeSelect?.click()">
+                <svg-icon icon-class="down"
+                    :style="{ transform: showTypeSelect ? 'rotate(-180deg)' : 'rotate(0deg)', color: '#666666' }"></svg-icon>
+            </div>
+            <transition name="el-zoom-in-top">
+                <ul v-show="showTypeSelect" class="typeoptions">
+                    <li class="options_item" v-for="item in projectOptions" :key="item.value"
+                        @click.stop="selectTypeOption(item)">
+                        <span :style="{ fontWeight: item.label == projectType ? 600 : 500 }">{{ item.label }}</span>
+                        <div class="choose" :style="{ visibility: item.label === projectType ? 'visible' : 'hidden' }">
+                        </div>
+                    </li>
+                </ul>
+            </transition>
+        </div>
+        <div class="perm-setting" v-if="currentProject[0]">
+            <span>{{ t('Createteam.jurisdiction') }}：</span>
+            <input ref="inputPermSelect" class="perminput" :style="{ opacity: disabled ? 0.6 : 1 }" type="text"
+                v-model="projectPerm" @click.stop="openPermSelect" placeholder="Select an option" :disabled="disabled"
+                readonly />
+            <div class="shrink2" @click.stop="inputPermSelect?.click()">
+                <svg-icon icon-class="down"
+                    :style="{ transform: showPermSelect ? 'rotate(-180deg)' : 'rotate(0deg)', color: '#666666' }"></svg-icon>
+            </div>
+            <transition name="el-zoom-in-top">
+                <ul v-show="showPermSelect" class="permoptions">
+                    <li class="options_item" v-for="item in projectPerms" :key="item.value"
+                        @click.stop="selectPermOption(item)">
+                        <span :style="{ fontWeight: item.label == projectPerm ? 600 : 500 }">{{ item.label }}</span>
+                        <div class="choose" :style="{ visibility: item.label === projectPerm ? 'visible' : 'hidden' }">
+                        </div>
+                    </li>
+                </ul>
+            </transition>
+        </div>
+        <div class="centent" v-if="currentProject[0] && projectType === projectOptions[1].label">
+            <div class="permission-tips">{{ t('Createteam.jointips') }}</div>
+            <div class="permission-switch">
+                <span> {{ t('Createteam.invitation_switch') }}</span>
+                <el-switch v-model="linkSwitch" class="ml-2" style="--el-switch-on-color: #1878F5" size="small"
+                    @click="onLinkSwitch" :disabled="disabled" />
+            </div>
+            <input v-if="linkSwitch" class="switch" :style="{ opacity: disabled ? 0.6 : 1 }" type="text" v-model="sharelink"
+                :disabled="disabled" readonly>
+            <div v-if="linkSwitch" class="permission-tips1" :style="{ opacity: disabled ? 0.6 : 1 }">
+                <input type="checkbox" id="filetips" v-model="checked" :disabled="disabled">
+                <label for="filetips">申请后需管理员审批确认</label>
+            </div>
+            <div class="invitemember">
+                <button type="button" :disabled="!linkSwitch" @click.stop="copyLink">{{ t('Createteam.copylink')
+                }}</button>
+            </div>
+        </div>
+        <div class="cancel" v-else>
+            <button type="button" @click.stop="emit('closeDialog')">{{ t('Createteam.confirm') }}</button>
+        </div>
+    </div>
 </template>
 
 <style scoped lang="scss">
-:deep(.el-checkbox__input.is-checked .el-checkbox__inner) {
-    border-color: #9775fa;
-    background-color: #9775fa;
+.overlay {
+    position: absolute;
+    top: 0;
+    left: 0;
+    width: 100%;
+    height: 100%;
+    z-index: 999;
+    background-color: rgba(0, 0, 0, 0.5);
 }
 
-:deep(.el-dialog__body) {
-    padding: 16px !important;
-}
+@keyframes move {
+    from {
+        transform: translate(-50%, -20%);
+        opacity: 0;
+    }
 
-:deep(.el-input__inner) {
-    font-size: var(--font-default-fontsize);
-}
-
-:deep(.el-dialog__title) {
-    font-weight: bold;
-}
-
-.body {
-    font-size: var(--font-default-fontsize);
-}
-
-.my-header {
-    display: flex;
-    justify-content: space-between;
-    align-items: center;
-
-    .title {
-        color: #3D3D3D;
-        font-weight: 600;
+    to {
+        transform: translate(-50%, 0);
+        opacity: 1;
     }
 }
 
-.button {
-    display: flex;
-    justify-content: center;
-    margin-top: 10px;
+.card-container {
+    position: absolute;
+    background-color: white;
+    width: 420px;
+    border-radius: 16px;
+    top: 25%;
+    left: 50%;
+    transform: translate(-50%, 0%);
+    padding: 0 24px;
+    z-index: 9999;
+    border: 1px solid #F0F0F0;
+    box-sizing: border-box;
+    animation: move 0.25s ease-in-out;
 
-    button {
-        width: 80px;
-        height: 30px;
-        font-size: 12px;
-        border: none;
-        background-color: var(--active-color-beta);
-        color: #fff;
-        border: 1px solid var(--active-color-beta);
-        border-radius: 4px;
-        outline: none;
-    }
-}
+    .heard {
+        display: flex;
+        align-items: center;
+        justify-content: space-between;
+        height: 64px;
 
-.project_type {
-    display: flex;
-    align-items: center;
-    margin-bottom: 8px;
+        .title {
+            font-size: 16px;
+            font-weight: 600;
+            color: rgba(61, 61, 61, 1);
+        }
 
-    .text {
-        width: 60px;
-        font-weight: 600;
-    }
-}
+        .close {
+            width: 16px;
+            height: 16px;
+            padding: 4px;
+            border-radius: 6px;
 
-.share-switch {
-    margin-top: 10px;
-}
+            &:hover {
+                background-color: rgb(243, 243, 245);
+                cursor: pointer;
+            }
 
-.switch {
-    --el-switch-on-color: var(--active-color);
-    margin-left: 10px;
-
-}
-
-:deep(.el-input__inner) {
-    height: 30px;
-    font-size: 12px;
-}
-
-.link {
-    display: flex;
-    align-items: center;
-    margin-top: 10px;
-
-    .qrcode {
-        width: 25px;
-        height: 25px;
-        margin-left: 10px;
-
-        svg {
-            width: 100%;
-            height: 100%;
-            color: #9775fa;
+            svg {
+                color: #262626;
+                width: 100%;
+                height: 100%;
+            }
         }
     }
 
-    :deep(.el-input__inner) {
-        height: 30px;
-        font-size: 14px;
+    .type-setting,
+    .perm-setting {
+        position: relative;
+        display: flex;
+        align-items: center;
+        gap: 6px;
+        height: 40px;
+
+        span {
+            width: 65px;
+            font-size: 13px;
+            color: rgba(38, 38, 38, 1);
+        }
+
+        .typeinput {
+            width: 190px;
+        }
+
+        .perminput {
+            width: 70px;
+        }
+
+        input {
+            height: 32px;
+            font-size: 12px;
+            font-weight: 400;
+            outline: none;
+            border: none;
+            border-radius: 6px;
+            padding: 3px 3px 3px 12px;
+            background: #F5F5F5;
+            box-sizing: border-box;
+
+            &:hover {
+                background-color: rgba(235, 235, 235, 1);
+            }
+
+            &:focus {
+                background-color: rgba(235, 235, 235, 1);
+            }
+
+            &:disabled {
+                background-color: rgba(240, 240, 240, 1) !important;
+            }
+
+        }
+
+        .shrink1 {
+            right: 115px;
+        }
+
+        .shrink2 {
+            right: 235px;
+        }
+
+        .shrink1,
+        .shrink2 {
+            position: absolute;
+            display: flex;
+            align-items: center;
+            width: 12px;
+            height: 12px;
+            color: rgba(102, 102, 102, 1);
+
+            svg {
+                transition: 0.5s;
+                width: 100%;
+                height: 100%;
+            }
+        }
+
+        .typeoptions {
+            width: 190px;
+        }
+
+        .permoptions {
+            width: 70px;
+        }
+
+        .typeoptions,
+        .permoptions {
+            position: absolute;
+            top: 40px;
+            left: 71px;
+            padding: 0;
+            margin: 0;
+            background-color: white;
+            border-radius: 8px;
+            border: 1px solid #EBEBEB;
+            box-shadow: 0px 2px 10px 0px rgba(0, 0, 0, 0.08);
+            z-index: 1;
+            box-sizing: border-box;
+
+            .options_item {
+                display: flex;
+                align-items: center;
+                justify-content: space-between;
+                height: 40px;
+                padding: 0 0 0 12px;
+
+                &:hover {
+                    background-color: rgba(245, 245, 245, 1);
+                }
+
+                span {
+                    flex: 1;
+                    font-size: 12px;
+                    font-weight: 400;
+                }
+
+                .choose {
+                    box-sizing: border-box;
+                    width: 10px;
+                    height: 6px;
+                    margin-right: 4px;
+                    margin-left: 2px;
+                    border-width: 0 0 0.2em 0.2em;
+                    border-style: solid;
+                    border-color: rgb(0, 0, 0, .75);
+                    transform: rotate(-45deg) translateY(-30%);
+                }
+            }
+        }
     }
-}
 
-.qrcode-box {
-    display: flex;
-    align-items: center;
-    justify-content: center;
-    margin: 10px 0;
+    .centent {
+        display: flex;
+        flex-direction: column;
 
-    div {
-        width: 150px;
-        height: 150px;
-        background-color: aquamarine;
+        .permission-tips {
+            display: flex;
+            align-items: center;
+            height: 38px;
+            font-size: 12px;
+            color: rgba(140, 140, 140, 1);
+        }
+
+        .permission-switch {
+            display: flex;
+            align-items: center;
+            gap: 6px;
+            height: 35px;
+
+            span {
+                font-size: 13px;
+                color: rgba(38, 38, 38, 1);
+            }
+
+        }
+
+        .switch {
+            display: flex;
+            align-items: center;
+            height: 36px;
+            width: 100%;
+            padding: 7px 12px;
+            outline-style: none;
+            border: none;
+            background-color: rgba(245, 245, 245, 1);
+            border-radius: 6px;
+            box-sizing: border-box;
+        }
+
+        .permission-tips1 {
+            display: flex;
+            align-items: center;
+            height: 38px;
+            font-size: 12px;
+            color: rgba(38, 38, 38, 1);
+            gap: 6px;
+
+            input[type=checkbox] {
+                margin: 0;
+                padding: 0;
+                width: 14px;
+                height: 14px;
+                border-radius: 4px;
+            }
+
+            input[type=checkbox]:checked::after {
+                position: absolute;
+                width: 14px;
+                height: 14px;
+                margin: -1px 0 0 -1px;
+                content: "";
+                color: #FFFFFF;
+                border-radius: 4px;
+                border: 1px solid rgba(24, 120, 245, 1);
+                background-image: url('@/assets/select-icon.svg');
+                background-repeat: no-repeat;
+                background-position: center center;
+                background-size: 60% 40%;
+                background-color: rgba(24, 120, 245, 1);
+            }
+        }
+
+        .invitemember {
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            height: 64px;
+
+            button {
+                margin: auto;
+                width: 214px;
+                height: 40px;
+                font-size: 14px;
+                outline: none;
+                border: none;
+                border-radius: 6px;
+                color: #FFFFFF;
+                background: #1878F5;
+
+                &:hover {
+                    background-color: rgba(66, 154, 255, 1);
+                }
+
+                &:active {
+                    background-color: rgba(10, 89, 207, 1);
+                }
+
+                &:disabled {
+                    background-color: rgba(189, 226, 255, 1);
+                }
+            }
+        }
     }
-}
 
-.checked {
-    display: flex;
-    align-items: center;
-    margin-top: 10px;
+    .cancel {
+        display: flex;
+        align-items: center;
+        height: 64px;
 
-    span {
-        margin-left: 10px;
+        button {
+            width: 214px;
+            height: 40px;
+            border-radius: 6px;
+            border: none;
+            outline: none;
+            margin: auto;
+            color: rgba(255, 255, 255, 1);
+            background: #1878F5;
+
+            &:hover {
+                background-color: rgba(66, 154, 255, 1);
+            }
+
+            &:active {
+                background-color: rgba(10, 89, 207, 1);
+            }
+
+        }
     }
+
 }
 </style>

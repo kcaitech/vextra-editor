@@ -392,6 +392,7 @@ onUnmounted(() => {
 </script>
 <style lang="scss" scoped>
 .rightmenu {
+    display: none;
     position: absolute;
     min-width: 180px;
     background-color: white;

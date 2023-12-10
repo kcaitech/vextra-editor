@@ -39,7 +39,7 @@ const formatDate = computed(() => {
   return function (value: string): string {
     const lang = localStorage.getItem('locale') || 'zh'
     moment.locale(mapDateLang.get(lang) || 'zh-cn');
-    return filterDate(value);
+    return filterDate(value).replace(/\s*/g, '');
   }
 })
 
@@ -132,21 +132,26 @@ const getName = (user: any) => {
     <template #header>
       <div class="card-header">
         <span>{{ t('apply.notification_message') }}</span>
-        <el-button class="button" text @click="close">
-          <div class="close"> X </div>
-        </el-button>
+        <div class="close" @click.stop="close">
+          <svg-icon icon-class="close"></svg-icon>
+        </div>
       </div>
     </template>
     <el-tabs v-model="activeName" class="demo-tabs">
       <el-tab-pane name="fill">
         <template #label>
           <span class="custom-tabs-label">
-            <div v-if="fillnum"></div>
-            <span>{{ t('apply.fill') }}</span>
+            <div class="messagetips" v-if="fillnum"></div>
+            <span :style="{
+              fontWeight: activeName === 'fill' ? 600 : '',
+              color: activeName === 'fill' ? 'rgba(0, 0, 0, 1)' : ''
+            }">
+              {{ t('apply.fill') }}
+            </span>
           </span>
         </template>
         <div class="contain" v-if="activeName === 'fill'">
-          <el-scrollbar height="400px" style="padding-right: 10px;" @scroll="scrollFill">
+          <el-scrollbar height="400px" @scroll="scrollFill">
             <div class="inform-item" v-for="(item, i) in props.applyList" :key="i">
               <div class="avatar"><img :src="item.user.avatar" alt=""></div>
               <div class="item-container">
@@ -163,19 +168,23 @@ const getName = (user: any) => {
                     </div>
                   </template>
                   <div class="item-text" @mouseenter.stop="showFillTooltip(i)" @mouseleave.stop="hideFillTooltip">
-                    {{ t('apply.application_documents') }}"{{ item.document.name }}"，{{ t('apply.authority') }}：{{
-                      permission[item.apply.perm_type] }}，【{{ t('apply.remarks') }}】：{{ item.apply.applicant_notes }}</div>
+                    <span>{{ t('apply.application_documents') }}</span>"{{ item.document.name }}"
+                    <div class="purview">{{ permission[item.apply.perm_type] }}</div>
+                    <div class="notes">{{ t('apply.remarks') }}{{ item.apply.applicant_notes }}</div>
+                  </div>
                 </el-tooltip>
               </div>
               <div class="botton" v-if="item.apply.status === 0">
-                <el-button color="#0d99ff" size="small" @click="consent(item.apply.id, item)">{{ t('apply.agree')
-                }}</el-button>
-                <el-button plain size="small" style="margin-top: 5px;" @click="refuse(item.apply.id, item)">{{
-                  t('apply.refuse') }}</el-button>
+                <button class="bnt_confirm" type="button" @click.stop="consent(item.apply.id, item)">
+                  {{ t('apply.agree') }}
+                </button>
+                <button class="bnt_cancel" type="button" @click.stop="refuse(item.apply.id, item)">
+                  {{ t('apply.refuse') }}
+                </button>
               </div>
               <div class="botton" v-else>
-                <p v-if="item.apply.status === 1">{{ t('apply.have_agreed') }}</p>
-                <p v-else-if="item.apply.status === 2">{{ t('apply.rejected') }}</p>
+                <p class="agreed" v-if="item.apply.status === 1">{{ t('apply.have_agreed') }}</p>
+                <p class="rejected" v-else-if="item.apply.status === 2">{{ t('apply.rejected') }}</p>
               </div>
             </div>
             <div class="text" v-if="props.applyList.length === 0"><span>{{ t('apply.no_message_received') }}</span></div>
@@ -185,12 +194,17 @@ const getName = (user: any) => {
       <el-tab-pane name="team">
         <template #label>
           <span class="custom-tabs-label">
-            <div v-if="teamnum"></div>
-            <span>{{ t('apply.team') }}</span>
+            <div class="messagetips" v-if="teamnum"></div>
+            <span :style="{
+              fontWeight: activeName === 'team' ? 600 : '',
+              color: activeName === 'fill' ? 'rgba(0, 0, 0, 1)' : ''
+            }">
+              {{ t('apply.team') }}
+            </span>
           </span>
         </template>
         <div class="contain" v-if="activeName === 'team'">
-          <el-scrollbar height="400px" style="padding-right: 10px;" @scroll="scrollFill">
+          <el-scrollbar height="400px" @scroll="scrollFill">
             <div class="inform-item" v-for="(item, i) in props.teamApplyList" :key="i">
               <div class="avatar"><img :src="item.user ? item.user.avatar : getAvatar()" alt=""></div>
               <div class="item-container">
@@ -212,30 +226,38 @@ const getName = (user: any) => {
                   </template>
                   <div class="item-text" v-if="item.team && item.user" @mouseenter.stop="showFillTooltip(i)"
                     @mouseleave.stop="hideFillTooltip">
-                    {{ t('apply.apply_team') }}"{{ item.team.name }}"，{{ t('apply.authority') }}：{{
-                      permissionTeam[item.request.perm_type] }}</div>
+                    <span>{{ t('apply.apply_team') }}</span>{{ item.team.name }}
+                    <br>
+                    <span>{{ t('apply.authority') }}</span>{{ permissionTeam[item.request.perm_type] }}
+                  </div>
                   <div class="item-text" v-else-if="item.project && item.user" @mouseenter.stop="showFillTooltip(i)"
                     @mouseleave.stop="hideFillTooltip">
-                    {{ t('apply.apply_project') }}"{{ item.project.name }}"，{{ t('apply.authority') }}：{{
-                      permission[item.request.perm_type] }}</div>
+                    <span>{{ t('apply.apply_project') }}</span>{{ item.project.name }}
+                    <br>
+                    <span>{{ t('apply.authority') }}</span>{{ permission[item.request.perm_type] }}
+                  </div>
                   <div class="item-text" v-else-if="!item.user && item.request.status === 1">
                     {{ t('Createteam.welcome') }}{{ item.project ? t('Createteam.project') : t('Createteam.team') }}: {{
-                      item.project ? item.project.name : item.team.name }}</div>
+                      item.project ? item.project.name : item.team.name }}
+                  </div>
                   <div class="item-text" v-else-if="!item.user && item.request.status === 2">
                     {{ t('Createteam.rejectprompt1') }}{{ item.project ? t('Createteam.project') : t('Createteam.team')
-                    }}"{{ item.project ? item.project.name : item.team.name }}"{{ t('Createteam.rejectprompt2') }}</div>
+                    }}"{{ item.project ? item.project.name : item.team.name }}"{{ t('Createteam.rejectprompt2') }}
+                  </div>
                 </el-tooltip>
               </div>
               <div class="botton" v-if="item.request.status === 0 && item.user">
-                <el-button color="#0d99ff" size="small" @click="consentTeam(item.request.id, i, item)">{{ t('apply.agree')
-                }}</el-button>
-                <el-button plain size="small" style="margin-top: 5px;" @click="refuseTeam(item.request.id, i, item)">{{
-                  t('apply.refuse') }}</el-button>
+                <button class="bnt_confirm" type="button" @click.stop="consentTeam(item.request.id, i, item)">
+                  {{ t('apply.agree') }}
+                </button>
+                <button class="bnt_cancel" type="button" @click.stop="refuseTeam(item.request.id, i, item)">
+                  {{ t('apply.refuse') }}
+                </button>
               </div>
               <div class="botton" v-else-if="!item.user"></div>
               <div class="botton" v-else>
-                <p v-if="item.request.status === 1">{{ t('apply.have_agreed') }}</p>
-                <p v-else-if="item.request.status === 2">{{ t('apply.rejected') }}</p>
+                <p class="agreed" v-if="item.request.status === 1">{{ t('apply.have_agreed') }}</p>
+                <p class="rejected" v-else-if="item.request.status === 2">{{ t('apply.rejected') }}</p>
               </div>
             </div>
             <div class="text" v-if="props.teamApplyList.length === 0"><span>{{ t('apply.no_message_received') }}</span>
@@ -249,50 +271,62 @@ const getName = (user: any) => {
 
 <style lang="scss" scoped>
 :deep(.el-card__header) {
-  border-bottom: none;
-  padding: var(--default-padding-half) var(--default-padding);
-  padding-bottom: 0;
+  border: none;
+  padding: 0 16px;
+  margin: 0;
 }
 
 :deep(.el-card__body) {
-  padding: 0 var(--default-padding-quarter) var(--default-padding-half) var(--default-padding);
+  padding: 0;
+  margin: 0;
 }
 
-:deep(.el-button+.el-button) {
-  margin-left: 0;
+:deep(.el-tabs__header) {
+  padding: 0;
+  margin: 0 0 16px 0;
+}
+
+:deep(.el-tabs__nav-wrap) {
+  padding: 0 16px;
 }
 
 :deep(.el-tabs__nav-wrap::after) {
-  width: auto;
-  right: 12px;
+  height: 0.1em;
 }
 
-:deep(.el-tabs__item.is-active) {
-  color: #000;
-  font-weight: bold;
+:deep(.el-tabs__nav) {
+  display: flex;
+  gap: 32px;
 }
 
 :deep(.el-tabs__item) {
-  padding: 0 11px;
+  height: 32px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  padding: 0;
 }
 
-:deep(.el-tabs__item.is-top:last-child) {
-  padding-right: 8px;
-}
-
-.el-button.is-text:not(.is-disabled):hover {
-  background-color: #f3f0ff;
+:deep(.el-tabs__content) {
+  padding: 0 16px;
+  margin: 0;
 }
 
 .custom-tabs-label {
-  div {
+  .messagetips {
     position: absolute;
-    top: 10px;
-    right: 5px;
+    top: 6px;
+    right: -2px;
     width: 8px;
     height: 8px;
     background-color: red;
     border-radius: 50%;
+  }
+
+  span {
+    font-size: 12px;
+    font-weight: 500;
+    color: rgba(51, 51, 51, 1);
   }
 }
 
@@ -300,17 +334,30 @@ const getName = (user: any) => {
   display: flex;
   justify-content: space-between;
   align-items: center;
+  height: 54px;
 
   span {
-    font-size: 14px;
-    font-weight: var(--font-default-bold);
+    font-size: 13px;
+    font-weight: 600;
   }
 
   .close {
-    font-size: 14px;
-    color: black;
-  }
+    width: 16px;
+    height: 16px;
+    padding: 4px;
+    border-radius: 6px;
 
+    &:hover {
+      background-color: rgb(243, 243, 245);
+      cursor: pointer;
+    }
+
+    svg {
+      color: #262626;
+      width: 100%;
+      height: 100%;
+    }
+  }
 }
 
 .tooltip-base-box .box-item {
@@ -329,31 +376,80 @@ const getName = (user: any) => {
 .contain {
   font-size: var(--font-default-fontsize);
 
-  .scrollbar-demo-item {
-    display: flex;
-    align-items: center;
-    justify-content: center;
-    height: 50px;
-    margin: 10px;
-    text-align: center;
-    border-radius: 4px;
-    background: var(--el-color-primary-light-9);
-    color: var(--el-color-primary);
+  // .scrollbar-demo-item {
+  //   display: flex;
+  //   align-items: center;
+  //   justify-content: center;
+  //   height: 50px;
+  //   margin: 10px;
+  //   text-align: center;
+  //   border-radius: 4px;
+  //   background: var(--el-color-primary-light-9);
+  //   color: var(--el-color-primary);
 
-  }
+  // }
 }
 
 .inform-item {
   width: 100%;
-  height: 80px;
+  height: auto;
   display: flex;
   border-bottom: 1px solid var(--theme-color-line);
+  margin-bottom: 16px;
+  gap: 6px;
 
   .botton {
-    width: 45px;
+    white-space: nowrap;
     display: flex;
     flex-direction: column;
     justify-content: center;
+    align-items: center;
+    gap: 8px;
+
+    .agreed {
+      color: rgba(191, 191, 191, 1);
+    }
+
+    .rejected {
+      color: rgba(255, 199, 199, 1);
+    }
+
+    button {
+      cursor: pointer;
+      font-size: 11px;
+      width: 40px;
+      height: 22px;
+      border: none;
+      border-radius: 4px;
+      box-sizing: border-box;
+    }
+
+    .bnt_confirm {
+      color: white;
+      background-color: rgba(24, 120, 245, 1);
+
+      &:hover {
+        background-color: rgba(66, 154, 255, 1);
+      }
+
+      &:active {
+        background-color: rgba(10, 89, 207, 1);
+      }
+    }
+
+    .bnt_cancel {
+      color: rgba(51, 51, 51, 1);
+      background-color: #FFFFFF;
+      border: 1px solid #F0F0F0;
+
+      &:hover {
+        background-color: rgba(247, 247, 249, 1);
+      }
+
+      &:active {
+        background-color: rgba(243, 243, 245, 1);
+      }
+    }
   }
 }
 
@@ -367,14 +463,14 @@ const getName = (user: any) => {
 }
 
 .avatar {
-  width: 30px;
-  height: 30px;
+  width: 24px;
+  min-width: 24px;
+  height: 24px;
   border-radius: 50%;
   display: flex;
   justify-content: center;
   align-items: center;
   border: 1px solid #efefef;
-  margin-top: 5px;
 
   >img {
     width: 100%;
@@ -384,19 +480,25 @@ const getName = (user: any) => {
 }
 
 .item-container {
-  width: 180px;
-  padding: var(--default-padding-half);
+  width: 205px;
+  margin-bottom: 16px;
 
   .item-title {
     display: flex;
     justify-content: space-between;
+    align-items: center;
+    height: 24px;
+    gap: 4px;
 
     .date {
-      width: auto;
+      color: rgba(191, 191, 191, 1);
+      font-size: 12px;
+      white-space: nowrap;
     }
 
     .name {
-      width: calc(100% - 90px);
+      color: rgba(140, 140, 140, 1);
+      width: 120px;
       overflow: hidden;
       text-overflow: ellipsis;
       white-space: nowrap;
@@ -404,22 +506,36 @@ const getName = (user: any) => {
   }
 
   .item-text {
-    margin-top: 5px;
-    width: 180px;
+    font-size: 13px;
+    font-weight: 500;
     overflow: hidden;
     display: -webkit-box;
     -webkit-box-orient: vertical;
-    -webkit-line-clamp: 2;
-    line-clamp: 2;
+    // -webkit-line-clamp: 2;
+    // line-clamp: 2;
     text-overflow: ellipsis;
+
+
+    span {
+      color: rgba(140, 140, 140, 1);
+    }
+
+
+    .purview {
+      color: rgba(0, 0, 0, 1);
+    }
+
+    .notes {
+      color: rgba(140, 140, 140, 1)
+    }
   }
 }
 
 .box-card {
-  width: 300px;
+  width: 320px;
   z-index: 9;
   position: absolute;
-  top: 56px;
-  right: 130px;
+  border-radius: 8px;
+  box-sizing: border-box;
 }
 </style>

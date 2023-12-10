@@ -1,9 +1,8 @@
 <script setup lang="ts">
-import { ref, watch, onMounted, nextTick } from 'vue';
-import { ArrowDown, Check } from '@element-plus/icons-vue';
+import { ref, watch, onMounted } from 'vue';
 import * as team_api from '@/request/team';
 import { useI18n } from 'vue-i18n';
-import CloseIcon from '@/components/common/CloseIcon.vue';
+import ProjectDialog from '@/components/TeamProject/ProjectDialog.vue';
 
 const props = defineProps<{
     showcontainer: boolean,
@@ -313,35 +312,13 @@ const memberid = ref<number>()
                 <button type="button" @click="onExitProject">{{ t('Createteam.projectexittitle') }}</button>
             </div>
         </div>
-        <el-dialog v-model="innerVisible" width="250px" :title="t('Createteam.projectexittitle')" append-to-body
-            align-center :close-on-click-modal="false" :before-close="handleClose">
-            <div class="context">
-                {{ t('Createteam.projectexitcontext') }}
-            </div>
-            <template #footer>
-                <div class="dialog-footer">
-                    <el-button class="quit" @click="quitProject">{{ t('Createteam.ok_exit') }}</el-button>
-                    <el-button class="quit" @click="innerVisible = false">
-                        {{ t('Createteam.cancel') }}
-                    </el-button>
-                </div>
-            </template>
-        </el-dialog>
-        <el-dialog v-model="transferVisible" width="250px" :title="t('Createteam.projectexittitle')" append-to-body
-            align-center :close-on-click-modal="false" :before-close="transferClose">
-            <div class="context">
-                {{ t('Createteam.Transfertips') }}
-            </div>
-            <template #footer>
-                <div class="dialog-footer">
-                    <el-button class="quit" @click="transferProject">{{ t('Createteam.confirmTransfer') }}</el-button>
-                    <el-button class="quit" @click="transferVisible = false">
-                        {{ t('Createteam.cancel') }}
-                    </el-button>
-                </div>
-            </template>
-        </el-dialog>
     </div>
+    <ProjectDialog :projectVisible="innerVisible" :context="t('Createteam.projectexitcontext')"
+        :title="t('Createteam.projectexittitle')" :confirm-btn="t('Createteam.ok_exit')" @clode-dialog="handleClose"
+        @confirm="quitProject"></ProjectDialog>
+    <ProjectDialog :projectVisible="transferVisible" :context="t('Createteam.Transfertips')"
+        :title="t('Createteam.projectexittitle')" :confirm-btn="t('Createteam.confirmTransfer')" @clode-dialog="transferClose"
+        @confirm="transferProject"></ProjectDialog>
 </template>
 
 <style scoped lang="scss">
@@ -389,7 +366,7 @@ const memberid = ref<number>()
     background: #FFFFFF;
     box-sizing: border-box;
     border: 1px solid #F0F0F0;
-    z-index: 9999;
+    z-index: 999;
     animation: move 0.25s ease-in-out;
 
     .header {
@@ -608,6 +585,7 @@ const memberid = ref<number>()
 
             button {
                 cursor: pointer;
+                outline: none;
                 font-size: 13px;
                 width: 70px;
                 height: 36px;

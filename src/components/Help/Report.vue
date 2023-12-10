@@ -78,6 +78,7 @@ const deleteimg = (index: number) => {
 }
 
 const submitreport = async () => {
+    if (!isFormValid.value) return
     const mydata = new FormData()
     mydata.append('type', selectedOption.value)
     mydata.append('content', textInput.value)
@@ -86,22 +87,14 @@ const submitreport = async () => {
     }
     mydata.append('page_url', location.href)
     try {
-        const { data, code, message } = await user_api.Feedback(mydata)
+        const { code } = await user_api.Feedback(mydata)
         if (code === 0) {
             emits('close')
-            console.log(data);
-
             ElMessage.success('提交成功')
         }
     } catch (error) {
         ElMessage.error('提交失败')
     }
-
-    nextTick(() => {
-        mydata.forEach((value, key) => {
-            console.log(`${key}:${value}`);
-        })
-    })
 }
 
 const handleImageUpload = (e: any) => {
@@ -124,7 +117,7 @@ const handleImageUpload = (e: any) => {
         }
     }
     if (failfile.length > 0 || alreadyexists.length > 0) {
-        ElMessage.error({ duration: 1500, message: "图片格式不符或图片已存在" })
+        ElMessage.error({ duration: 3000, message: "图片格式不符或图片已存在" })
     }
     e.target.value = ''
 }

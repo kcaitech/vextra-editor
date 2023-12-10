@@ -486,8 +486,11 @@ onUnmounted(() => {
 
 
             .shrink {
+                position: relative;
+                display: flex;
+                align-items: center;
                 width: 14px;
-                height: 100%;
+                height: 14px;
 
                 >svg {
                     transition: 0.5s;
@@ -496,16 +499,17 @@ onUnmounted(() => {
                 }
 
                 .filterlist2 {
-                    position: relative;
+                    position: absolute;
                     list-style-type: none;
                     font-size: 12px;
-                    min-width: 72px;
-                    margin: 0;
-                    padding: 0 8px;
-                    right: 65px;
+                    padding: 0;
+                    top: 4px;
+                    right: -6px;
                     border-radius: 6px;
                     background-color: white;
-                    box-shadow: 0px 8px 16px 0px rgba(0, 0, 0, 0.2);
+                    box-shadow: 0px 2px 10px 0px rgba(0, 0, 0, 0.08);
+                    box-sizing: border-box;
+                    overflow: hidden;
                     z-index: 3;
 
                     .choose {
@@ -524,6 +528,11 @@ onUnmounted(() => {
                         display: flex;
                         align-items: center;
                         line-height: 32px;
+                        padding: 0 20px 0 8px;
+
+                        &:hover {
+                            background-color: rgba(245, 245, 245, 1);
+                        }
                     }
                 }
             }
@@ -589,8 +598,11 @@ onUnmounted(() => {
             white-space: nowrap;
 
             .shrink {
+                position: relative;
+                display: flex;
+                align-items: center;
                 width: 14px;
-                height: 100%;
+                height: 14px;
 
                 >svg {
                     transition: 0.5s;
@@ -599,27 +611,31 @@ onUnmounted(() => {
                 }
 
                 .filterlist {
-                    position: relative;
-                    display: flex;
-                    flex-direction: column;
-                    justify-content: center;
-                    align-items: center;
+                    position: absolute;
                     list-style-type: none;
                     font-size: 12px;
                     min-width: 88px;
+                    padding: 0;
                     margin: 0;
-                    padding: 0 6px;
-                    right: 70px;
+                    top: 18px;
+                    right: -14px;
                     border-radius: 6px;
                     background-color: white;
-                    box-shadow: 0px 8px 16px 0px rgba(0, 0, 0, 0.2);
+                    box-shadow: 0px 2px 10px 0px rgba(0, 0, 0, 0.08);
+                    box-sizing: border-box;
+                    box-sizing: border-box;
+                    overflow: hidden;
                     z-index: 2;
 
                     .item {
                         display: flex;
                         align-items: center;
                         line-height: 32px;
-                        margin-right: 12px;
+                        padding: 0 6px;
+
+                        &:hover {
+                            background-color: rgba(245, 245, 245, 1);
+                        }
 
                         .choose {
                             box-sizing: border-box;
@@ -650,66 +666,6 @@ onUnmounted(() => {
 
 .main {
     height: calc(100vh - 224px - 16.5px);
-
-    .change {
-        outline: none;
-        height: 30px;
-        width: 440px;
-        box-sizing: border-box;
-        margin-top: 22px;
-        border-radius: 4px;
-
-        &:hover {
-            border-radius: 2px;
-            border: 2px #f3f0ff solid;
-
-        }
-
-        &:focus {
-            border-radius: 2px;
-            border: 2px #9775fa solid;
-        }
-    }
-
-    .confirm {
-        background-color: #9775fa;
-        color: white;
-        border-color: #9775fa;
-
-        &:hover {
-            background: #9675fa91;
-            border-color: #9675fa91;
-        }
-
-        &:active {
-            background-color: #9775fa;
-            border-color: #9775fa;
-        }
-
-    }
-
-    .cancel {
-
-        &:hover {
-            background-color: #ffffff;
-            color: #9775fa;
-            border-color: #9775fa;
-        }
-
-        &:active {
-            background-color: #ffffff;
-        }
-
-        &:focus {
-            background-color: white;
-            color: #9775fa;
-            border-color: #9775fa;
-        }
-    }
-
-    :deep(.el-button--primary) {
-        background-color: #9775fa;
-    }
 
     .empty {
         height: 100%;
