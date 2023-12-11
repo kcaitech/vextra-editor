@@ -71,8 +71,9 @@ export const Createteam = {
     team: '团队',
 
     welcome: '欢迎加入',
-    rejectprompt1: '申请加入',
-    rejectprompt2: '被拒绝，如有疑问，请联系项目组管理员。',
+    rejectprompt1: '拒绝了',
+    rejectprompt2: '如有疑问，请联系团队管理员。',
+    rejectprompt3: '如有疑问，请联系项目管理员。',
     shareprojecttips: '项目中所有成员均可访问',
 }
 

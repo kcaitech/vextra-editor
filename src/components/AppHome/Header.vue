@@ -48,8 +48,8 @@ const closeInForm = () => {
 
 const getApplyList = async () => {
     try {
-        const { data } = await share_api.getApplyListAPI();
-        if (data) {
+        const { data } = await share_api.getApplyListAPI(); 
+        if (data) {           
             applyList.value = data;
             applynum.value = applyList.value.filter(item => item.apply.status === 0).length;
         }

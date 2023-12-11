@@ -117,9 +117,11 @@ const scrollFill = () => {
 const getAvatar = () => {
   return localStorage.getItem('avatar');
 }
-const getName = (user: any) => {
-  if (user) {
-    return user.nickname;
+const getName = (item: any) => {
+  if (item.approver) {
+    return item.approver.nickname;
+  } else if (item.user) {
+    return item.user.nickname;
   } else {
     return localStorage.getItem('nickname');
   }
@@ -206,10 +208,10 @@ const getName = (user: any) => {
         <div class="contain" v-if="activeName === 'team'">
           <el-scrollbar height="400px" @scroll="scrollFill">
             <div class="inform-item" v-for="(item, i) in props.teamApplyList" :key="i">
-              <div class="avatar"><img :src="item.user ? item.user.avatar : getAvatar()" alt=""></div>
+              <div class="avatar"><img :src="item.approver ? item.approver.avatar : item.user.avatar" alt=""></div>
               <div class="item-container">
                 <div class="item-title">
-                  <span class="name">{{ getName(item.user) }}</span>
+                  <span class="name">{{ getName(item) }}</span>
                   <span class="date">{{ formatDate(item.request.created_at) }}</span>
                 </div>
                 <el-tooltip class="box-item" :enterable="false" effect="light" placement="bottom-end"
@@ -241,8 +243,10 @@ const getName = (user: any) => {
                       item.project ? item.project.name : item.team.name }}
                   </div>
                   <div class="item-text" v-else-if="!item.user && item.request.status === 2">
-                    {{ t('Createteam.rejectprompt1') }}{{ item.project ? t('Createteam.project') : t('Createteam.team')
-                    }}"{{ item.project ? item.project.name : item.team.name }}"{{ t('Createteam.rejectprompt2') }}
+                    {{ t('Createteam.rejectprompt1') }}<span>您申请加入团队</span>"{{ item.project ? item.project.name :
+                      item.team.name }}"
+                    <br>
+                    <span>{{ item.project ? t('Createteam.rejectprompt3') : t('Createteam.rejectprompt2') }}</span>
                   </div>
                 </el-tooltip>
               </div>
@@ -514,6 +518,8 @@ const getName = (user: any) => {
     // -webkit-line-clamp: 2;
     // line-clamp: 2;
     text-overflow: ellipsis;
+    line-height: 24px;
+    word-break: break-all;
 
 
     span {
