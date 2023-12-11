@@ -1,6 +1,9 @@
+import { ArtboradView, EL, ShapeView } from "@kcdesign/data";
 import { GroupShapeDom } from "./groupshape";
+import { patch } from "./patch";
+import { DomBasic } from "./basic";
 
-export class ArtboradDom extends GroupShapeDom {
+export class ArtboradDom extends DomBasic(ArtboradView) {
 
     // 检查显示区域
     // 1. 太小时显示成image
@@ -21,7 +24,4 @@ export class ArtboradDom extends GroupShapeDom {
         this.m_data.unbubblewatch(this._bubblewatcher);
     }
 
-    toSVGString(): string {
-        return this.m_el?.outerHTML || "";
-    }
 }

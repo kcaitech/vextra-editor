@@ -1,5 +1,5 @@
 <script setup lang="ts">
-import { Matrix, Page, ShapeType } from '@kcdesign/data';
+import { Matrix, Page, ShapeType, DViewCtx } from '@kcdesign/data';
 import { Context } from '@/context';
 import { Selection } from '@/context/selection';
 import { Tool } from '@/context/tool';
@@ -11,7 +11,6 @@ import ComponentTitleContainer from './ComponentTitleContainer.vue';
 import { debounce } from 'lodash';
 import { RenderCtx } from './common';
 import { PageDom } from './vdom/page';
-import { VDomCtx } from './vdom/basic';
 import { initComsMap } from './vdom/comsmap';
 interface Props {
     context: Context
@@ -117,9 +116,10 @@ function render() {
     return h('svg', prop, childs)
 }
 
-const domCtx = new VDomCtx();
+const domCtx = new DViewCtx();
 initComsMap(domCtx.comsMap);
 const dom: PageDom = new PageDom(domCtx, props);
+dom.update(props, true);
 // domCtx.dirtyset.set(dom.id(), dom);
 
 onMounted(() => {
@@ -132,7 +132,7 @@ onMounted(() => {
 
 onUnmounted(() => {
     dom.unbind();
-    dom.destory(); // todo
+    dom.destroy(); // todo
 })
 
 </script>

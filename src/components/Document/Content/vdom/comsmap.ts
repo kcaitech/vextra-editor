@@ -1,4 +1,4 @@
-import { ShapeType } from "@kcdesign/data";
+import { DViewCtx, RenderTransform, Shape, ShapeType, SymbolRefShape, SymbolShape, DataView } from "@kcdesign/data";
 
 import { ArtboradDom } from "./artboard";
 import { ContactLineDom } from "./contactline";
@@ -11,10 +11,19 @@ import { SymbolRefDom } from "./symbolref";
 import { TableCellDom } from "./tablecell";
 import { TableDom } from "./table";
 import { TextShapeDom } from "./textshape";
-import { ComType, PropsType, VDom, VDomCtx } from "./basic";
 
 
-// const comsMap: Map<ShapeType, ComType> = new Map();
+interface ComType {
+    new(ctx: DViewCtx, props: PropsType): DataView;
+}
+
+type VarsContainer = (SymbolRefShape | SymbolShape)[];
+
+interface PropsType {
+    data: Shape;
+    transx?: RenderTransform;
+    varsContainer?: VarsContainer;
+}
 
 export function initComsMap(comsMap: Map<ShapeType, ComType>) {
     
