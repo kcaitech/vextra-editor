@@ -243,7 +243,7 @@ onUnmounted(() => {
 </template>
 <style lang='scss' scoped>
 .dot {
-    fill: #865dff75;
+    fill: #1878f575;
     cursor: pointer;
 }
 
@@ -255,12 +255,12 @@ onUnmounted(() => {
 
 .bar {
     stroke: none;
-    fill: #865dff45;
+    fill: #1878f545;
     cursor: pointer;
 }
 
 .bar:hover {
-    fill: #865dff75;
+    fill: #1878f575;
 }
 
 .line {
