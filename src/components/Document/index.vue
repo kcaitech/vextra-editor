@@ -33,7 +33,7 @@ import Bridge from "@/components/Document/Bridge.vue";
 import { Component } from '@/context/component';
 import { initpal } from './initpal';
 
-const {t} = useI18n();
+const { t } = useI18n();
 const curPage = shallowRef<Page | undefined>(undefined);
 let context: Context | undefined;
 const middleWidth = ref<number>(0.8);
@@ -328,7 +328,7 @@ const getUserInfo = async () => {
 onBeforeRouteUpdate((to, form, next) => {
   if (to.query.id?.includes(' ') || to.query.id?.includes('%20')) {
     router.go(0)
-  }else{
+  } else {
     next()
   }
 })
@@ -780,7 +780,6 @@ onUnmounted(() => {
 #center {
   display: flex;
   flex-flow: row nowrap;
-  flex: 1 1 auto;
   width: 100%;
   overflow: hidden;
   position: relative;
@@ -788,7 +787,6 @@ onUnmounted(() => {
   #navigation {
     height: 100%;
     background-color: var(--left-navi-bg-color);
-    z-index: 9;
   }
 
   #content {
