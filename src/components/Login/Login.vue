@@ -267,7 +267,7 @@ const pasteEvent = async (e: any) => {
                 <div class="login-page" v-if="loginshow">
                     <span>{{ t('system.wx_login') }}</span>
                     <div id="login_container" :class="{ 'login_container_hover': failed }" v-loading="isLoading"></div>
-                    <p>
+                    <p @click.stop="loginshow=!loginshow">
                         {{ t('system.login_read') }}
                         <a href="" @click.prevent="handleOpenNewWindow('serviceagreement')">
                             {{ t('system.read_TOS') }}
@@ -335,21 +335,22 @@ const pasteEvent = async (e: any) => {
     background-color: #ffffff;
     backdrop-filter: blur(51px);
     background-image:
-        url('@/assets/login-img1.svg'),
-        url("@/assets/login-img2.svg"),
-        url("@/assets/login-img3.svg"),
-        url("@/assets/login-img4.svg"),
-        url("@/assets/login-img5.svg");
-    background-position:
-        0, 80vw,
-        45vw -100vh,
-        30vw -30vh,
-        -55vw 25vh;
+        // url('@/assets/login-img1.svg'),
+        // url("@/assets/login-img2.svg"),
+        // url("@/assets/login-img3.svg"),
+        // url("@/assets/login-img4.svg"),
+        // url("@/assets/login-img5.svg");
+        url("@/assets/bgimg.svg");
+    // background-position:
+    //     0, 80vw,
+    //     45vw -100vh,
+    //     30vw -30vh,
+    //     -55vw 25vh;
     background-size:
-        80% 100%,
-        contain,
-        cover,
-        cover,
+        // 80% 100%,
+        // contain,
+        // cover,
+        // cover,
         cover;
     background-repeat: no-repeat;
     box-sizing: border-box;
@@ -358,18 +359,11 @@ const pasteEvent = async (e: any) => {
 
 .all {
     display: flex;
-    align-items: flex-start;
-    align-content: flex-start;
+    align-items: center;
     justify-content: center;
-    flex-wrap: nowrap;
     width: 100%;
     height: 100%;
-    overflow: hidden;
-
     .login {
-        position: relative;
-        top: 200px;
-        left: 40px;
         width: 400px;
         min-width: 400px;
         height: 480px;

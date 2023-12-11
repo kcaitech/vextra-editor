@@ -13,7 +13,7 @@
                 <div v-if="item.title" class="item-title">{{ item.title }}</div>
                 <div class="item-name" v-for="(i, index) in item.shortcutKey" :key="index">
                     {{ i.name }}
-                    <i class="item-key">{{ i.keys }}</i>
+                    <div class="item-key">{{ i.keys }}</div>
                 </div>
             </div>
         </div>
@@ -67,45 +67,58 @@ onMounted(() => {
 <style lang="scss" scoped>
 .shortcut-keys {
     position: fixed;
+    width: 600px;
     bottom: 66px;
     right: 20px;
-    border-radius: 4px;
+    border-radius: 8px;
     background-color: white;
-    box-shadow: 0px 2px 5px 0px rgba(0, 0, 0, 0.3);
+    box-shadow: 0px 2px 10px 0px rgba(0, 0, 0, 0.08);
     box-sizing: border-box;
     z-index: 9999;
 
     .title {
+        position: relative;
         display: flex;
-        height: 32px;
-        align-items: flex-end;
+        height: 40px;
+        align-items: center;
         padding: 0px 0px 0px 8px;
-        border-bottom: 1px solid #dddddd;
+        border-bottom: 1px solid rgba(245, 245, 245, 1);
 
         .indicator {
             position: absolute;
             height: 2px;
-            background-color: #9775fa;
-            border-radius: 2px;
+            top: 40px;
+            background-color: #000000;
+            border-radius: 292px;
             transition: all 0.2s ease-in-out;
         }
 
         .item {
             cursor: pointer;
             white-space: nowrap;
-            line-height: 32px;
-            margin-right: 32px;
-            font-size: 14px;
-            font-weight: 600;
-            color: #b1b1b1;
+            font-size: 13px;
+            font-weight: 500;
+            color: rgba(89, 89, 89, 1);
+            margin: 0 14px;
         }
 
         .close {
+            position: absolute;
+            right: 0;
             margin: 3px 6px 3px 0px;
+
+            &:hover {
+                background-color: rgba(247, 247, 249, 1);
+            }
+
+            &:active {
+                background-color: rgba(243, 243, 245, 1);
+            }
         }
 
         .activate {
-            color: black;
+            color: rgba(0, 0, 0, 1);
+            font-weight: 600;
             // border-bottom: 2px solid #9775fa;
         }
     }
@@ -115,7 +128,7 @@ onMounted(() => {
         width: 100%;
         display: grid;
         grid-template-columns: 1fr 1fr 1fr;
-        gap: 20px;
+        gap: 30px;
         font-size: 12px;
         padding: 6px 16px 6px 16px;
         box-sizing: border-box;
@@ -131,9 +144,10 @@ onMounted(() => {
             }
 
             .item-name {
-                color: #000000E6;
-                line-height: 20px;
-                margin-bottom: 12px;
+                font-size: 12px;
+                font-weight: 600;
+                color: rgba(89, 89, 89, 1);
+                line-height: 40px;
                 display: flex;
                 justify-content: space-between;
 

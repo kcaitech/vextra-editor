@@ -1,15 +1,17 @@
 import { computed } from "vue";
 
 export enum KeysType {
+    foundation,
     tool,
     view,
     zoom,
     text,
-    arrangement,
-    layers,
+    vector,
+    layer,
+    cursor,
     edit,
-    shape,
-    components,
+    // arrangement,
+    // components,
 }
 
 type TypeTextMap = {
@@ -19,37 +21,64 @@ type TypeTextMap = {
 class ShortcutsService {
 
     static typeTextMap: TypeTextMap = {
+        [KeysType.foundation]: '基础',
         [KeysType.tool]: '工具',
         [KeysType.view]: '视图',
         [KeysType.zoom]: '缩放',
         [KeysType.text]: '文本',
-        [KeysType.arrangement]: '排列',
-        [KeysType.layers]: '布局',
+        [KeysType.vector]: '矢量',
+        [KeysType.layer]: '图层',
+        [KeysType.cursor]: '光标',
         [KeysType.edit]: '编辑',
-        [KeysType.shape]: '形状',
-        [KeysType.components]: '组件'
+        // [KeysType.arrangement]: '排列',
+        // [KeysType.components]: '组件'
     };
 
+    static foundation = [
+        {
+            title: '',
+            shortcutKey: [
+                { name: '显示/隐藏操作界面', keys: "⌘ + /\/" },
+            ],
+        },
+        {
+            title: '',
+            shortcutKey: [
+                { name: '平移画布', keys: 'Space + Drag' },
+            ],
+        },
+        {
+            title: '',
+            shortcutKey: [
+                { name: '评论', keys: 'C' },
+
+            ],
+        },
+    ];
     static tool = [
         {
             title: '',
             shortcutKey: [
-                { name: '复制1', keys: 'Ctrl+C' },
-                { name: '复制2', keys: 'Ctrl+C' },
+                { name: '选择', keys: 'V' },
+                { name: '等比缩放', keys: 'K' },
+                { name: '容器', keys: 'F' },
             ],
         },
         {
             title: '',
             shortcutKey: [
-                { name: '复制1', keys: 'Ctrl+C' },
-                { name: '复制2', keys: 'Ctrl+C' },
+                { name: '矩形', keys: 'R' },
+                { name: '圆', keys: 'O' },
+                { name: '直线', keys: 'L' },
+                { name: '连接线', keys: 'X' },
+                { name: '文字', keys: 'T' },
             ],
         },
         {
             title: '',
             shortcutKey: [
-                { name: '复制1', keys: 'Ctrl+C' },
-                { name: '复制2', keys: 'Ctrl+C' },
+                { name: '评论', keys: 'C' },
+
             ],
         },
     ];
@@ -57,22 +86,20 @@ class ShortcutsService {
         {
             title: '',
             shortcutKey: [
-                { name: '复制1', keys: 'Ctrl+C' },
-                { name: '复制2', keys: 'Ctrl+C' },
-            ],
-        },
-        {
-            title: '测试标题',
-            shortcutKey: [
-                { name: '复制1', keys: 'Ctrl+C' },
-                { name: '复制2', keys: 'Ctrl+C' },
+                { name: '显示/隐藏评论', keys: '⇧ + C' },
+
             ],
         },
         {
             title: '',
             shortcutKey: [
-                { name: '复制1', keys: 'Ctrl+C' },
-                { name: '复制2', keys: 'Ctrl+C' },
+
+            ],
+        },
+        {
+            title: '',
+            shortcutKey: [
+
             ],
         },
     ];
@@ -80,22 +107,20 @@ class ShortcutsService {
         {
             title: '',
             shortcutKey: [
-                { name: '复制1', keys: 'Ctrl+C' },
-                { name: '复制2', keys: 'Ctrl+C' },
+                { name: '缩放到100%', keys: '⌘ + 0' },
+                { name: '适应画布', keys: '⌘ + 1' },
             ],
         },
         {
             title: '',
             shortcutKey: [
-                { name: '复制1', keys: 'Ctrl+C' },
-                { name: '复制2', keys: 'Ctrl+C' },
+
             ],
         },
         {
             title: '',
             shortcutKey: [
-                { name: '复制1', keys: 'Ctrl+C' },
-                { name: '复制2', keys: 'Ctrl+C' },
+
             ],
         },
     ];
@@ -103,22 +128,115 @@ class ShortcutsService {
         {
             title: '',
             shortcutKey: [
-                { name: '复制1', keys: 'Ctrl+C' },
-                { name: '复制2', keys: 'Ctrl+C' },
-            ],
-        },
-        {
-            title: '测试标题',
-            shortcutKey: [
-                { name: '复制1', keys: 'Ctrl+C' },
-                { name: '复制2', keys: 'Ctrl+C' },
+                { name: '加粗', keys: '⌘ + B' },
+                { name: '下划线', keys: '⌘ + U' },
+                { name: '删除线', keys: '⇧ + ⌘ + X' },
+                { name: '倾斜', keys: '⌘ + I' },
             ],
         },
         {
             title: '',
             shortcutKey: [
-                { name: '复制1', keys: 'Ctrl+C' },
-                { name: '复制2', keys: 'Ctrl+C' },
+
+            ],
+        },
+        {
+            title: '',
+            shortcutKey: [
+
+            ],
+        },
+    ];
+    static vector = [
+        {
+            title: '',
+            shortcutKey: [
+                { name: '选择', keys: 'V' },
+            ],
+        },
+        {
+            title: '',
+            shortcutKey: [
+
+            ],
+        },
+        {
+            title: '',
+            shortcutKey: [
+
+            ],
+        },
+    ];
+    static layer = [
+        {
+            title: '',
+            shortcutKey: [
+                { name: '全选', keys: '⌘ + A' },
+                { name: '反选', keys: '⇧ + ⌘ + A' },
+                { name: '取消选中', keys: 'ESC' },
+                { name: '显示/隐藏图层', keys: '⇧ + ⌘ + H' },
+                { name: '锁定/解锁图层', keys: '⇧ + ⌘ + L' },
+            ],
+        },
+        {
+            title: '',
+            shortcutKey: [
+                { name: '创建编组', keys: '⌘ + G' },
+                { name: '创建容器', keys: '⌥ + ⌘ + G' },
+                { name: '取消编组/容器/区域', keys: '⇧ + ⌘ + G' },
+            ],
+        },
+        {
+            title: '',
+            shortcutKey: [
+                { name: '上移一层', keys: '+' },
+                { name: '下移一层', keys: '-' },
+                { name: '移到顶层', keys: ']' },
+                { name: '移到底层', keys: '[' },
+                { name: '大步进移动图层', keys: '⇧ + Direction' },
+            ],
+        },
+    ];
+    static cursor = [
+        {
+            title: '',
+            shortcutKey: [
+                { name: '选择组合内图层', keys: '⌘ + Click' },
+            ],
+        },
+        {
+            title: '',
+            shortcutKey: [
+                { name: '拖拽复制', keys: '⌥ + Drag' },
+            ],
+        },
+        {
+            title: '',
+            shortcutKey: [
+
+            ],
+        },
+    ];
+    static edit = [
+        {
+            title: '',
+            shortcutKey: [
+                { name: '复制', keys: '⌘ + C' },
+                { name: '剪切', keys: '⌘ + X' },
+                { name: '粘贴', keys: '⌘ + V' },
+                { name: '粘贴并替换', keys: '⇧ + ⌘ + R' },
+            ],
+        },
+        {
+            title: '',
+            shortcutKey: [
+                { name: '大步进移动图层', keys: '⇧ + Direction' },
+            ],
+        },
+        {
+            title: '',
+            shortcutKey: [
+
             ],
         },
     ];
@@ -132,75 +250,6 @@ class ShortcutsService {
         },
         {
             title: '',
-            shortcutKey: [
-                { name: '复制1', keys: 'Ctrl+C' },
-                { name: '复制2', keys: 'Ctrl+C' },
-            ],
-        },
-        {
-            title: '',
-            shortcutKey: [
-                { name: '复制1', keys: 'Ctrl+C' },
-                { name: '复制2', keys: 'Ctrl+C' },
-            ],
-        },
-    ];
-    static layers = [
-        {
-            title: '',
-            shortcutKey: [
-                { name: '复制1', keys: 'Ctrl+C' },
-                { name: '复制2', keys: 'Ctrl+C' },
-            ],
-        },
-        {
-            title: '测试标题',
-            shortcutKey: [
-                { name: '复制1', keys: 'Ctrl+C' },
-                { name: '复制2', keys: 'Ctrl+C' },
-            ],
-        },
-        {
-            title: '',
-            shortcutKey: [
-                { name: '复制1', keys: 'Ctrl+C' },
-                { name: '复制2', keys: 'Ctrl+C' },
-            ],
-        },
-    ];
-    static edit = [
-        {
-            title: '',
-            shortcutKey: [
-                { name: '复制1', keys: 'Ctrl+C' },
-                { name: '复制2', keys: 'Ctrl+C' },
-            ],
-        },
-        {
-            title: '',
-            shortcutKey: [
-                { name: '复制1', keys: 'Ctrl+C' },
-                { name: '复制2', keys: 'Ctrl+C' },
-            ],
-        },
-        {
-            title: '',
-            shortcutKey: [
-                { name: '复制1', keys: 'Ctrl+C' },
-                { name: '复制2', keys: 'Ctrl+C' },
-            ],
-        },
-    ];
-    static shape = [
-        {
-            title: '',
-            shortcutKey: [
-                { name: '复制1', keys: 'Ctrl+C' },
-                { name: '复制2', keys: 'Ctrl+C' },
-            ],
-        },
-        {
-            title: '测试标题',
             shortcutKey: [
                 { name: '复制1', keys: 'Ctrl+C' },
                 { name: '复制2', keys: 'Ctrl+C' },
@@ -241,22 +290,26 @@ class ShortcutsService {
     static getShortcutsByType(type: number) {
         switch (type) {
             case 0:
-                return this.tool;
+                return this.foundation;
             case 1:
-                return this.view;
+                return this.tool;
             case 2:
-                return this.zoom;
+                return this.view;
             case 3:
-                return this.text;
+                return this.zoom;
             case 4:
-                return this.arrangement;
+                return this.text;
             case 5:
-                return this.layers;
+                return this.vector;
             case 6:
-                return this.edit;
+                return this.layer;
             case 7:
-                return this.shape;
+                return this.cursor;
             case 8:
+                return this.edit;
+            case 9:
+                return this.arrangement;
+            case 10:
                 return this.components;
             default:
                 return [];

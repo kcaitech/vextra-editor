@@ -111,7 +111,6 @@ const onMouseUp = (e: MouseEvent) => {
     isDrag.value = false;
     document.removeEventListener('mousemove', onMouseMove)
     document.removeEventListener('mouseup', onMouseUp)
-
 }
 
 const selectValue = () => {
