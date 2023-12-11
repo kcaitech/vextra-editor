@@ -18,8 +18,22 @@ export const DomBasic = <T extends Constructor>(SuperClass: T) =>
             // if (this.el && this.el.parentNode) {
             //     this.el.remove();
             // }
+
             this.el = undefined;
-            this.m_save_rrender = undefined;
+
+            const unbindel = (c: EL) => {
+                (c as any).el = undefined;
+                c.childs.forEach((c) => { unbindel(c) });
+            }
+            // m_save_rrender
+            if (this.m_save_rrender) {
+                this.m_save_rrender.childs.forEach((c) => {
+                    if (c instanceof EL) {
+                        unbindel(c);
+                    }
+                })
+                this.m_save_rrender = undefined;
+            }
             this.m_children.forEach((c: any) => (c as A).unbind());
         }
 

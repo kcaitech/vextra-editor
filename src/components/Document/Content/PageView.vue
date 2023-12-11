@@ -1,10 +1,9 @@
 <script setup lang="ts">
-import { Matrix, Page, ShapeType, DViewCtx } from '@kcdesign/data';
+import { Matrix, Page, DViewCtx } from '@kcdesign/data';
 import { Context } from '@/context';
 import { Selection } from '@/context/selection';
 import { Tool } from '@/context/tool';
-import { onMounted, onUnmounted, ref, watch, h, nextTick } from 'vue';
-import comsMap from './comsmap';
+import { onMounted, onUnmounted, ref, watch } from 'vue';
 import { v4 } from "uuid";
 import ShapeTitles from './ShapeTitles.vue';
 import ComponentTitleContainer from './ComponentTitleContainer.vue';
@@ -22,9 +21,7 @@ const matrixWithFrame = new Matrix();
 const reflush = ref(0);
 const rootId = ref<string>('pageview');
 const show_t = ref<boolean>(true);
-const width = ref<number>(100);
-const height = ref<number>(100);
-const pageslot = ref<HTMLElement>();
+const pagesvg = ref<HTMLElement>();
 
 function pageViewRegister(mount: boolean) {
     if (mount) {
@@ -42,9 +39,6 @@ const collect = debounce(_collect, 100);
 function page_watcher() {
     matrixWithFrame.reset(props.matrix);
     matrixWithFrame.preTrans(props.data.frame.x, props.data.frame.y);
-    width.value = Math.ceil(Math.max(100, props.data.frame.width)), height.value = Math.ceil(Math.max(100, props.data.frame.height));
-    if (width.value % 2) width.value++;
-    if (height.value % 2) height.value++;
     reflush.value++;
 }
 
@@ -70,8 +64,8 @@ const stopWatchPage = watch(() => props.data, (value, old) => {
         dom.unbind();
     }
     dom = props.context.vdom.get(props.data.id) || createVDom();
-    if (pageslot.value) {
-        dom.bind(pageslot.value);
+    if (pagesvg.value) {
+        dom.bind(pagesvg.value);
         dom.render();
     }
 })
@@ -103,59 +97,21 @@ function selection_watcher(...args: any[]) {
     }
 }
 
-function render() {
-
-    // nextTick(() => {
-    //     console.log(pageslot.value?.tagName)
-    // });
-
-    const prop: any = {
-        version: "1.1",
-        xmlns: "http://www.w3.org/2000/svg",
-        "xmlns:xlink": "http://www.w3.org/1999/xlink",
-        "xmlns:xhtml": "http://www.w3.org/1999/xhtml",
-        preserveAspectRatio: "xMinYMin meet",
-        overflow: "visible"
-    }
-    prop.viewBox = `0 0 ${width.value} ${height.value}`;
-    prop.reflush = reflush.value !== 0 ? reflush.value : undefined;
-    prop.style = { transform: matrixWithFrame.toString() };
-    prop['data-area'] = rootId.value;
-    prop.width = width.value;
-    prop.height = height.value;
-
-    const childs = [];
-    const datachilds = props.data.childs;
-    for (let i = 0, len = datachilds.length; i < len; i++) {
-        const c = datachilds[i];
-        const com = comsMap.get(c.type) ?? comsMap.get(ShapeType.Rectangle);
-        const node = h(com, { data: c, key: c.id, renderCtx });
-        childs.push(node);
-    }
-
-    return h('svg', prop, childs)
-}
-
-
-
 onMounted(() => {
-    // console.log("page mounted", pageslot.value?.tagName)
-    if (pageslot.value) {
-        dom.bind(pageslot.value);
+    if (pagesvg.value) {
+        dom.bind(pagesvg.value);
         dom.render();
     }
 })
 
 onUnmounted(() => {
     dom.unbind();
-    // dom.destory(); // todo
 })
 
 </script>
 
 <template>
-    <!--- page slot -->
-    <svg ref="pageslot"></svg>
+    <svg ref="pagesvg" :style = "{ transform: matrixWithFrame.toString() }" :data-area = "rootId" :reflush="reflush"></svg>
     <ShapeTitles v-if="show_t" :context="props.context" :data="data" :matrix="matrixWithFrame.toArray()"></ShapeTitles>
     <ComponentTitleContainer :context="props.context" :data="data" :matrix="matrixWithFrame.toArray()">
     </ComponentTitleContainer>
