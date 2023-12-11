@@ -357,7 +357,7 @@ onUnmounted(() => {
     }
 
     >div:hover {
-        background-color: rgba($color: #865dff, $alpha: 0.5);
+        background-color: rgba($color: #1878f5, $alpha: 0.5);
     }
 
     .hor {
@@ -382,6 +382,6 @@ onUnmounted(() => {
 }
 
 .selected_bgc {
-    background-color: rgba($color: #865dff, $alpha: 0.5);
+    background-color: rgba($color: #1878f5, $alpha: 0.5);
 }
 </style>

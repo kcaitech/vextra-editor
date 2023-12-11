@@ -831,9 +831,9 @@ onUnmounted(() => {
   left: 50%;
   transform: translateX(-50%);
   color: #f1f1f1;
-  background-color: var(--active-color-beta);
+  background-color: var(--active-color);
   padding: 7px 30px;
-  border: 1px solid var(--active-color-beta);
+  border: 1px solid var(--active-color);
   border-radius: 4px;
 
   .loading-spinner {

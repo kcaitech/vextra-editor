@@ -234,7 +234,7 @@ onUnmounted(() => {
 <template>
     <g>
         <g v-for="(b, i) in bars" :key="i">
-            <path :d="b.path" fill="none" stroke='#865dff' stroke-width="1.5px"
+            <path :d="b.path" fill="none" stroke='#1878f5' stroke-width="1.5px"
                 @mousedown.stop="(e) => bar_mousedown(e, b.type)" @mouseenter="() => setCursor(b.type)"
                 @mouseleave="bar_mouseleave">
             </path>

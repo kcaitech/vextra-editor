@@ -434,21 +434,21 @@ onUnmounted(() => {
     white-space: nowrap;
     margin-left: 13px;
     border-radius: 4px;
-    background-color: rgba($color: #865dff, $alpha: 0.1);
+    background-color: rgba($color: #1878f5, $alpha: 0.1);
     box-sizing: border-box;
     overflow: hidden;
     transition: 0.1s;
 
     .active {
-        color: var(--active-color-beta);
+        color: var(--active-color);
     }
 }
 
 .tips-wrap:hover {
-    background-color: rgba($color: #865dff, $alpha: 0.18);
+    background-color: rgba($color: #1878f5, $alpha: 0.18);
 }
 
 .tips-focus {
-    background-color: rgba($color: #865dff, $alpha: 0.4) !important;
+    background-color: rgba($color: #1878f5, $alpha: 0.4) !important;
 }
 </style>

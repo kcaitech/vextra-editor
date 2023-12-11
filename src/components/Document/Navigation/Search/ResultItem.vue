@@ -332,7 +332,7 @@ div.text {
         padding-left: 2px;
 
         .active {
-            color: var(--active-color-beta);
+            color: var(--active-color);
         }
     }
 }
