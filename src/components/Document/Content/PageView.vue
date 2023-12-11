@@ -47,6 +47,17 @@ function page_watcher() {
     if (height.value % 2) height.value++;
     reflush.value++;
 }
+
+function createVDom() {
+    const domCtx = new DViewCtx();
+    initComsMap(domCtx.comsMap);
+    const dom: PageDom = new PageDom(domCtx, props);
+    dom.update(props, true);
+    props.context.vdom.set(props.data.id, dom);
+    return dom;
+}
+let dom = createVDom();
+
 const stopWatchPage = watch(() => props.data, (value, old) => {
     old.unwatch(page_watcher);
     old.__collect.unwatch(collect);
@@ -54,6 +65,15 @@ const stopWatchPage = watch(() => props.data, (value, old) => {
     value.__collect.watch(collect);
     pageViewRegister(true);
     page_watcher();
+
+    if (dom) {
+        dom.unbind();
+    }
+    dom = props.context.vdom.get(props.data.id) || createVDom();
+    if (pageslot.value) {
+        dom.bind(pageslot.value);
+        dom.render();
+    }
 })
 const stop_watch_matrix = watch(() => props.matrix, page_watcher, { deep: true });
 function tool_watcher(t?: number) {
@@ -116,11 +136,7 @@ function render() {
     return h('svg', prop, childs)
 }
 
-const domCtx = new DViewCtx();
-initComsMap(domCtx.comsMap);
-const dom: PageDom = new PageDom(domCtx, props);
-dom.update(props, true);
-// domCtx.dirtyset.set(dom.id(), dom);
+
 
 onMounted(() => {
     // console.log("page mounted", pageslot.value?.tagName)
@@ -132,7 +148,7 @@ onMounted(() => {
 
 onUnmounted(() => {
     dom.unbind();
-    dom.destroy(); // todo
+    // dom.destory(); // todo
 })
 
 </script>

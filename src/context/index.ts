@@ -29,6 +29,7 @@ import {TableSelection} from "./tableselection";
 import {TextSelection} from "./textselection";
 import {Component} from "./component";
 import {Path} from "./path";
+import { PageDom } from "@/components/Document/Content/vdom/page";
 
 // 仅暴露必要的方法
 export class RepoWraper {
@@ -85,6 +86,8 @@ export class Context extends Watchable(Object) {
     private m_tableselection: TableSelection;
     private m_component: Component;
     private m_path: Path;
+
+    private m_vdom: Map<string, PageDom> = new Map();
 
     constructor(data: Document, repo: CoopRepository) {
         super();
@@ -266,5 +269,9 @@ export class Context extends Watchable(Object) {
 
     get path() {
         return this.m_path;
+    }
+
+    get vdom() {
+        return this.m_vdom;
     }
 }

@@ -44,6 +44,3 @@ export function initComsMap(comsMap: Map<ShapeType, ComType>) {
     comsMap.set(ShapeType.Contact, ContactLineDom);
     comsMap.set(ShapeType.TableCell, TableCellDom);
 }
-
-
-// export default comsMap;
