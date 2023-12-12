@@ -1,28 +1,25 @@
 <script setup lang="ts">
-import {ref, nextTick} from 'vue';
+import { ref, nextTick } from 'vue';
 import ToolButton from '../ToolButton.vue';
-import {useI18n} from 'vue-i18n';
+import { useI18n } from 'vue-i18n';
 import FrameChild from './FrameChild.vue'
-import {Action} from "@/context/tool";
+import { Action } from "@/context/tool";
 import Tooltip from '@/components/common/Tooltip.vue';
-import {Context} from '@/context';
+import { Context } from '@/context';
+import { watch } from 'vue';
 
 type Button = InstanceType<typeof ToolButton>
-
-const {t} = useI18n();
-const props = defineProps<{
-    context: Context,
-    active: boolean
-}>()
-const emit = defineEmits<{
+interface Props {
+    context: Context;
+    active: boolean;
+}
+interface Emits {
     (e: "select", action: Action): void;
-}>();
-const visible = ref(false)
-
-function select(action: Action) {
-    emit('select', action);
 }
 
+const { t } = useI18n();
+const props = defineProps<Props>();
+const emits = defineEmits<Emits>();
 const popoverVisible = ref<boolean>(false);
 const popover = ref<HTMLDivElement>();
 const button = ref<Button>();
@@ -30,8 +27,10 @@ const frame = ref<HTMLDivElement>();
 const hoverIndex = ref<number>(-1);
 
 function showMenu(e: MouseEvent) {
-    if (popoverVisible.value) return popoverVisible.value = false;
-    emit('select', Action.AutoV);
+    if (popoverVisible.value) {
+        return popoverVisible.value = false;
+    }
+
     if (button.value?.toolButtonEl) {
         let el = button.value?.toolButtonEl;
         popoverVisible.value = true;
@@ -43,6 +42,8 @@ function showMenu(e: MouseEvent) {
         })
         document.addEventListener('click', onMenuBlur);
     }
+
+    emits('select', Action.AutoV);
 }
 
 function onMenuBlur(e: MouseEvent) {
@@ -53,7 +54,6 @@ function onMenuBlur(e: MouseEvent) {
             document.removeEventListener('click', onMenuBlur);
         }, 10)
     }
-
 }
 
 const left = ref(0)
@@ -85,29 +85,27 @@ const closeFrame = () => {
     popoverVisible.value = false;
     hoverIndex.value = -1
 }
-const isSelect = () => {
-    select(Action.AddFrame)
-}
-var timer: any = null
-const onMouseenter = () => {
-    timer = setTimeout(() => {
-        visible.value = true
-        clearTimeout(timer)
-    }, 600)
-}
-const onMouseleave = () => {
-    clearTimeout(timer)
-    visible.value = false
-}
-
 const customFrame = () => {
-    isSelect()
+    emits('select', Action.AddFrame);
     popoverVisible.value = false;
 }
+watch(() => props.active, () => {
+    console.log('change');
 
+})
 </script>
 
 <template>
+    <ToolButton ref="button" :selected="props.active">
+        <Tooltip :content="`${t('shape.artboard')} &nbsp;&nbsp; F`" :offset="10">
+            <div class="svg-container" @click="() => { emits('select', Action.AddFrame) }">
+                <svg-icon icon-class="frame"></svg-icon>
+            </div>
+        </Tooltip>
+        <div class="menu-f" @click="showMenu">
+            <svg-icon icon-class="down"></svg-icon>
+        </div>
+    </ToolButton>
     <div ref="popover" class="popover-f" tabindex="-1" v-if="popoverVisible">
         <div>
             <span @click="customFrame">{{ t('frame.custom') }}</span>
@@ -117,23 +115,10 @@ const customFrame = () => {
                 <span>{{ t(`${item}`) }}</span>
                 <div class="triangle"></div>
                 <FrameChild :context="props.context" :childFrame="hoverIndex === i" :top="-8" :left="left"
-                            :framesChild="framesChild[i]" @closeFrame="closeFrame"></FrameChild>
+                    :framesChild="framesChild[i]" @closeFrame="closeFrame"></FrameChild>
             </div>
         </div>
     </div>
-    <el-tooltip class="box-item" effect="dark"
-                :content="`${t('shape.artboard')} &nbsp;&nbsp; F`" placement="bottom" :show-after="600" :offset="10"
-                :hide-after="0" :visible="popoverVisible ? false : visible">
-        <ToolButton ref="button" @click="isSelect" :selected="props.active" @mouseenter.stop="onMouseenter"
-                    @mouseleave.stop="onMouseleave">
-            <div class="svg-container">
-                <svg-icon icon-class="frame"></svg-icon>
-            </div>
-            <div class="menu-f" @click="showMenu">
-                <svg-icon icon-class="down"></svg-icon>
-            </div>
-        </ToolButton>
-    </el-tooltip>
 </template>
 
 <style scoped lang="scss">
@@ -148,7 +133,7 @@ const customFrame = () => {
     padding: 6px 6px 6px 6px;
     box-sizing: border-box;
 
-    > svg {
+    >svg {
         width: 20px;
         height: 20px;
     }
@@ -167,14 +152,14 @@ const customFrame = () => {
     padding: 10px 8px 10px 0;
     box-sizing: border-box;
 
-    > svg {
+    >svg {
         width: 12px;
         height: 12px;
     }
 }
 
 .menu-f:hover {
-    transform: translateY(4px);
+    transform: translateY(2px);
 }
 
 .popover-f {
@@ -189,8 +174,8 @@ const customFrame = () => {
     outline: none;
     padding: var(--default-padding-half) 0;
 
-    > div {
-        > span {
+    >div {
+        >span {
             padding: 4px var(--default-padding);
             height: 32px;
             width: 100%;
@@ -229,22 +214,4 @@ const customFrame = () => {
 
     }
 }
-
-// @keyframes bounce {
-//   0% {
-//     transform: translateY(0);
-//   }
-//   50% {
-//     transform: translateY(6px);
-//   }
-//   100% {
-//     transform: translateY(0);
-//   }
-// }
-// .button:hover {
-//   .menu > svg {
-//     animation-duration: .5s;
-//     animation-name: bounce;
-//   }
-// }
 </style>
