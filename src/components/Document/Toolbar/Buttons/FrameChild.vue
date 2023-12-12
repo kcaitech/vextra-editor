@@ -25,7 +25,8 @@ const addFrame = (t: string[]) => {
 
 </script>
 <template>
-  <div class="child" v-if="childFrame" :style="{ top: top + 'px', left: props.left + 'px' }">
+
+  <div class="child" v-if="childFrame" :style="{ top: top + 'px', left: props.left -4 + 'px' }">
     <div class="item" v-for="(item, i) in props.framesChild" :key="i" @click="addFrame(item)">
       <span>{{ item[0] }}</span>
       <span>{{ item[1] }}</span>

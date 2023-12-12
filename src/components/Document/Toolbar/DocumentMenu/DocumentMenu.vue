@@ -53,7 +53,7 @@ function showMenu(e: MouseEvent) {
     nextTick(() => {
         if (!popover.value) return;
         popover.value.style.left = el.offsetLeft + 'px';
-        popover.value.style.top = el.offsetHeight + 13 + 'px';
+        popover.value.style.top = el.offsetHeight + 12 + 'px';
     })
     document.addEventListener('click', onMenuBlur);
 }
@@ -132,16 +132,13 @@ const isDisabled: any = computed(() => {
         </div>
         <div ref="popover" class="popover-f" v-if="popoverVisible">
             <span @click="newFile">{{ t('fileMenu.create_new') }}</span>
-            <span @click="copiedFile" :class="{ 'disabled': without_editing_permissions }">{{
-                    t('fileMenu.create_copy')
-                }}</span>
+            <span @click="copiedFile" :class="{ 'disabled': without_editing_permissions }">{{t('fileMenu.create_copy') }}</span>
             <span @click="rename" :class="{ 'disabled': without_editing_permissions }">{{ t('fileMenu.rename') }}</span>
             <span @mouseenter="(e: MouseEvent) => showChildFileMenu(e)" @mouseleave="closeChildFileMenu">
                 {{ t('fileMenu.view') }}
                 <div class="childMenu">
 <!--                    <div class="triangle"></div>-->
                     <svg-icon icon-class="arrowhead"></svg-icon>
-
                     <SubMenu v-if="childMenuVisible" :context="props.context" :x="childMenuPosition.x"
                              :y="childMenuPosition.y" :width="180" :site="site" @close="close"></SubMenu>
                 </div>

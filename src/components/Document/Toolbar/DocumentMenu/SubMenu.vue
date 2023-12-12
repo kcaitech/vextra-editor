@@ -118,7 +118,7 @@ function comment() {
 .subMenu {
   position: absolute;
   z-index: 999;
-  left: 139px;
+  left: 138px;
   top: -2px;
   color: var(--theme-color-anti);
   width: 157px;
