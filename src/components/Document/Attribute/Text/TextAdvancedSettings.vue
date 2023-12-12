@@ -310,19 +310,19 @@ onUnmounted(() => {
           <div>
             <span>{{ t('attr.id_style') }}</span>
             <div class="vertical-aligning jointly-text">
-              <i class="jointly-text font-posi" :class="{ selected_bgc: selectId === 'none' }"
+              <i :class="{'jointly-text': true,'font-posi': true, selected_bg: selectId === 'none' }"
                 @click="onSelectId(BulletNumbersType.None)">
                 <Tooltip :content="t('attr.none_list')" :offset="15">
                   <svg-icon icon-class="text-no-list"></svg-icon>
                 </Tooltip>
               </i>
-              <i class="jointly-text font-posi" :class="{ selected_bgc: selectId === 'disorded' }"
+              <i :class="{'jointly-text': true,'font-posi': true, selected_bg: selectId === 'disorded' }"
                 @click="onSelectId(BulletNumbersType.Disorded)">
                 <Tooltip :content="t('attr.unordered_list')" :offset="15">
                   <svg-icon icon-class="text-bulleted-list"></svg-icon>
                 </Tooltip>
               </i>
-              <i class="jointly-text font-posi" :class="{ selected_bgc: selectId === 'ordered-1ai' }"
+              <i :class="{'jointly-text': true,'font-posi': true, selected_bg: selectId === 'ordered-1ai' }"
                 @click="onSelectId(BulletNumbersType.Ordered1Ai)">
                 <Tooltip :content="t('attr.ordered_list')" :offset="15">
                   <svg-icon icon-class="text-number-list"></svg-icon>
@@ -429,8 +429,8 @@ onUnmounted(() => {
         margin-bottom: 12px;
 
         .jointly-text {
-          height: 25px;
-          border-radius: 4px;
+          height: 32px;
+          border-radius: var(--default-radius);
           background-color: var(--input-background);
           display: flex;
           justify-content: space-between;
@@ -443,24 +443,36 @@ onUnmounted(() => {
         }
 
         >span {
-          font-weight: bold;
-          width: 40%;
+          width: 60px;
+          height: 14px;
+          font-size: var(--font-default-fontsize);
+          color: #737373;
         }
 
         .vertical-aligning {
-          padding: 0 5px;
+            padding: 2px;
+            box-sizing: border-box;
         }
 
         .level-aligning {
-          padding: 0 5px;
+            padding: 2px;
+            box-sizing: border-box;
         }
 
         .font-posi {
-          width: 25px;
-          height: 25px;
+          width: 30px;
+          height: 28px;
           display: flex;
           justify-content: center;
+          border-radius: 4px;
+          border: 1px solid #F4F5F5;
         }
+
+          .selected_bg {
+              background-color: #FFFFFF !important;
+              color: #000000;
+              border: 1px solid #F0F0F0;
+          }
 
         input[type="text"]::-webkit-inner-spin-button,
         input[type="text"]::-webkit-outer-spin-button {
@@ -471,13 +483,17 @@ onUnmounted(() => {
         input[type="text"] {
           -moz-appearance: textfield;
           appearance: textfield;
-          font-size: var(--font-default-fontsize);
-          width: 90px;
+          font-size: 13px;
+          width: 124px;
           border: none;
           background-color: var(--input-background);
-          height: 20px;
-          border-radius: 4px;
-          padding: 0 10px;
+          height: 32px;
+          border-radius: var(--default-radius);
+          padding: 9px 0 9px 12px;
+          box-sizing: border-box;
+          font-weight: 500;
+          line-height: 14px;
+          color: #000000;
         }
 
         input:focus {
@@ -489,8 +505,8 @@ onUnmounted(() => {
   }
 
   .selected_bgc {
-    background-color: var(--active-color) !important;
-    color: #fff;
+    background-color: #FFFFFF !important;
+    color: #000000;
   }
 
 }
