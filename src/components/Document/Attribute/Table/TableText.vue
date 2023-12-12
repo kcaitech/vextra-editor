@@ -735,7 +735,7 @@ onUnmounted(() => {
 
 <template>
     <div class="text-panel">
-        <TypeHeader :title="t('attr.text')" class="mt-24">
+        <TypeHeader :title="t('attr.text')" class="mt-24" :active="true">
             <template #tool>
                 <TableTextSetting :context="props.context" :textShape="props.shape"></TableTextSetting>
             </template>
