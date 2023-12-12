@@ -1,6 +1,4 @@
-import { ArtboradView, EL, ShapeView } from "@kcdesign/data";
-import { GroupShapeDom } from "./groupshape";
-import { patch } from "./patch";
+import { ArtboradView } from "@kcdesign/data";
 import { DomBasic } from "./basic";
 
 export class ArtboradDom extends DomBasic(ArtboradView) {
