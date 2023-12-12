@@ -25,7 +25,10 @@ const patterns = ((items: [string, Action, string][]) => (items.map(item => ({va
     ['line', Action.AddLine, 'L'],
     ['arrow', Action.AddArrow, 'Shift L']
 ]);
-
+const emits = defineEmits<Emits>();
+interface Emits {
+    (e: "select", action: Action): void;
+}
 const is_active = ref<boolean>(false);
 
 function is_base_active() {
@@ -92,6 +95,7 @@ function showMenu(e: MouseEvent) {
         })
         document.addEventListener('click', onMenuBlur)
     }
+    emits('select', Action.AutoV);
 }
 
 function onMenuBlur(e: MouseEvent) {
@@ -139,9 +143,9 @@ onUnmounted(() => {
     <el-tooltip class="box-item" effect="dark" :content="shortcut_keys" placement="bottom" :show-after="600"
                 :offset="10"
                 :hide-after="0" :visible="popoverVisible ? false : visible">
-        <ToolButton ref="button" @mouseenter.stop="onMouseenter" @mouseleave.stop="onMouseleave" @click="short"
+        <ToolButton ref="button" @mouseenter.stop="onMouseenter" @mouseleave.stop="onMouseleave"
                     :selected="is_active">
-            <div class="svg-container">
+            <div class="svg-container" @click="short">
                 <svg-icon :icon-class="cur_class"></svg-icon>
             </div>
             <div class="menu" @click="showMenu">
