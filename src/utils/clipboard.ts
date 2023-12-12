@@ -3,13 +3,13 @@ import {
     Shape, ShapeType, AsyncCreator, ShapeFrame, GroupShape, TextShape, Text,
     export_text, import_text, TextShapeEditor
 } from '@kcdesign/data';
-import {Context} from '@/context';
-import {PageXY} from '@/context/selection';
-import {Media, getName} from '@/utils/content';
-import {message} from './message';
-import {Action} from '@/context/tool';
-import {is_box_outer_view2} from './common';
-import {compare_layer_3} from './group_ungroup';
+import { Context } from '@/context';
+import { PageXY } from '@/context/selection';
+import { Media, getName } from '@/utils/content';
+import { message } from './message';
+import { Action } from '@/context/tool';
+import { is_box_outer_view2 } from './common';
+import { compare_layer_3 } from './group_ungroup';
 
 interface SystemClipboardItem {
     type: ShapeType
@@ -41,9 +41,9 @@ export class Clipboard {
             if (navigator.clipboard && ClipboardItem) { // 支持异步接口
                 const plain_text = text.getText(0, text.length);
                 const h = encode_html(paras, _text, plain_text);
-                const blob = new Blob([h || ''], {type: 'text/html'});
-                const blob_plain = new Blob([plain_text], {type: 'text/plain'});
-                const content = [new ClipboardItem({"text/plain": blob_plain, 'text/html': blob})];
+                const blob = new Blob([h || ''], { type: 'text/html' });
+                const blob_plain = new Blob([plain_text], { type: 'text/plain' });
+                const content = [new ClipboardItem({ "text/plain": blob_plain, 'text/html': blob })];
                 await navigator.clipboard.write(content);
                 return true;
             } else { // 不支持异步接口
@@ -77,8 +77,8 @@ export class Clipboard {
             if (navigator.clipboard && ClipboardItem) {
                 // 支持异步接口
                 const h = encode_html(identity, content);
-                const blob = new Blob([h || ''], {type: 'text/html'});
-                const item: any = {'text/html': blob};
+                const blob = new Blob([h || ''], { type: 'text/html' });
+                const item: any = { 'text/html': blob };
                 if (shapes.length === 1 && shapes[0].type === ShapeType.Text) {
                     // todo 直接复制图层里面的文本
                 }
@@ -241,20 +241,30 @@ export async function paster(context: Context, t: Function, xy?: PageXY) {
  * 从剪切板拿出数据替换掉src的内容，以src中每个图形的左上角为锚点
  * @returns
  */
-export async function replace(context: Context, t: Function, src: Shape[]) {
+export async function replace(context: Context, src: Shape[]) {
     try {
-        if (!navigator.clipboard) throw new Error('not supported');
-        context.workspace.setFreezeStatus(true);
+        if (!navigator.clipboard) {
+            throw new Error('not supported');
+        }
+        if (!src.length) {
+            throw new Error('null data');
+        }
+        // context.workspace.setFreezeStatus(true);
         const data = await navigator.clipboard.read();
-        if (!(data && data.length)) throw new Error('invalid data');
+        if (!(data && data.length)) {
+            throw new Error('invalid data');
+        }
         const is_inner_shape = data[0].types.length === 1 && data[0].types[0] === 'text/html';
-        if (!is_inner_shape) throw new Error('external data');
+        if (!is_inner_shape) {
+            throw new Error('external data');
+        }
         clipboard_text_html_replace(context, data[0], src);
-        context.workspace.setFreezeStatus(false);
+        // context.workspace.setFreezeStatus(false);
         return true;
     } catch (error) {
         console.log(error);
-        context.workspace.setFreezeStatus(false);
+        // context.workspace.setFreezeStatus(false);
+        const t = context.workspace.t;
         message('info', t('system.replace_failed'));
         return false;
     }
@@ -335,7 +345,7 @@ async function clipboard_text_html(context: Context, data: any, xy?: PageXY) {
             shape.frame.width = layout.contentWidth;
             shape.frame.height = layout.contentHeight;
             const _f = shape.frame;
-            const _xy = adjust_content_xy(context, {width: _f.width, height: _f.height});
+            const _xy = adjust_content_xy(context, { width: _f.width, height: _f.height });
             shape.frame.x = xy?.x || _xy.x;
             shape.frame.y = xy?.y || _xy.y;
             const editor = context.editor.editor4Page(page);
@@ -426,10 +436,10 @@ async function clipboard_text_html_replace(context: Context, data: any, src: Sha
  * @param _xy 插入位置
  */
 async function clipboard_image(context: Context, data: any, t: Function, _xy?: PageXY) {
-    const item: SystemClipboardItem = {type: ShapeType.Image, contentType: 'image/png', content: ''};
+    const item: SystemClipboardItem = { type: ShapeType.Image, contentType: 'image/png', content: '' };
     item.contentType = data.types[0];
     const val = await data.getType(item.contentType);
-    const frame: { width: number, height: number } = {width: 100, height: 100};
+    const frame: { width: number, height: number } = { width: 100, height: 100 };
     const img = new Image();
     img.onload = function () {
         frame.width = img.width;
@@ -441,7 +451,7 @@ async function clipboard_image(context: Context, data: any, t: Function, _xy?: P
                 fr.onload = function (event) {
                     const buff = event.target?.result;
                     if (base64 && buff) {
-                        item.content = {name: t('shape.image'), frame, buff: new Uint8Array(buff as any), base64};
+                        item.content = { name: t('shape.image'), frame, buff: new Uint8Array(buff as any), base64 };
                         const content = item!.content as Media;
                         const __xy = adjust_content_xy(context, content.frame);
                         const xy: PageXY = _xy || __xy;
@@ -463,7 +473,7 @@ async function clipboard_image(context: Context, data: any, t: Function, _xy?: P
  */
 async function clipboard_text_plain(context: Context, data: any, _xy?: PageXY) {
     try {
-        const frame: { width: number, height: number } = {width: 400, height: 100};
+        const frame: { width: number, height: number } = { width: 400, height: 100 };
         const val = await data.getType('text/plain');
         if (!val) throw new Error('invalid value');
         const text = await val.text();
@@ -498,7 +508,7 @@ function adjust_content_xy(context: Context, m: { width: number, height: number 
         }
     }
     const page_center = matrix.inverseCoord(root.center);
-    return {x: page_center.x - m.width / 2, y: page_center.y - m.height / 2};
+    return { x: page_center.x - m.width / 2, y: page_center.y - m.height / 2 };
 }
 
 /**
@@ -563,7 +573,7 @@ export function paster_short(context: Context, shapes: Shape[]): Shape[] {
         for (let j = 0, len2 = childs.length; j < len2; j++) {
             if (s.id === childs[j].id) {
                 pre_shapes.push(s);
-                actions.push({parent: p as GroupShape, index: j + 1});
+                actions.push({ parent: p as GroupShape, index: j + 1 });
                 break;
             }
         }

@@ -6,6 +6,7 @@ import { onMounted, onUnmounted, ref } from 'vue';
 import { string_by_sys } from '@/utils/common';
 import Tooltip from '@/components/common/Tooltip.vue';
 import { insert_imgs, Media } from '@/utils/content';
+import { Tool } from '@/context/tool';
 const { t } = useI18n();
 interface Porps {
     active: boolean
@@ -14,11 +15,9 @@ interface Porps {
 const props = defineProps<Porps>();
 const accept = 'image/png, image/jpeg, image/gif, image/svg+xml, image/icns';
 const picker = ref<HTMLInputElement>();
-function key(e: KeyboardEvent) {
-    if (props.context.workspace.isFreeze) return;
-    const { shiftKey, ctrlKey, metaKey, code } = e;
-    if (shiftKey && (ctrlKey || metaKey) && code === 'KeyK') {
-        e.preventDefault();
+
+function tool_watcher(t: number) {
+    if (t === Tool.SELECT_IMAGE) {
         const filepicker = document.getElementById('filepicker');
         if (filepicker) {
             filepicker.click();
@@ -134,10 +133,10 @@ function multiple(files: any) {
     }
 }
 onMounted(() => {
-    document.addEventListener('keydown', key);
+    props.context.tool.watch(tool_watcher);
 })
 onUnmounted(() => {
-    document.removeEventListener('keydown', key);
+    props.context.tool.unwatch(tool_watcher);
 })
 </script>
 <template>

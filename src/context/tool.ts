@@ -74,6 +74,7 @@ export class Tool extends Watchable(Object) {
     static LABLE_CHANGE = 10;
     static NEW_FILE = 9;
     static COMPONENT = 10;
+    static SELECT_IMAGE = 11;
     private m_current_action: Action = Action.AutoV;
     private m_context: Context;
     private m_show_title: boolean = true;

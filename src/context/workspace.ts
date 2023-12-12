@@ -91,6 +91,7 @@ export class WorkSpace extends Watchable(Object) {
     static CHANGE_NAVI = 24;
     static PRE_EDIT = 25;
     static PATH_EDIT_MODE = 26;
+
     private context: Context;
     private m_matrix: Matrix = new Matrix();
     private m_scaling: boolean = false; // 编辑器是否正在缩放图形
@@ -297,7 +298,7 @@ export class WorkSpace extends Watchable(Object) {
     }
 
     t(content: string) {
-        return this.m_t(content);
+        return this.m_t.call(this, content);
     }
 
     init(t: Function) {

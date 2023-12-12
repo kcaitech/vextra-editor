@@ -240,7 +240,7 @@ function useControllerCustom(context: Context, i18nT: Function) {
         }, TIMER)
     }
     function keyboardHandle(e: KeyboardEvent) {
-        handle(e, context, i18nT);
+        handle(e, context);
     }
     function selection_watcher(t?: number) {
         if (t === Selection.CHANGE_SHAPE || t === Selection.CHANGE_PAGE) initController();

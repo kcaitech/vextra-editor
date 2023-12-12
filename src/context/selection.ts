@@ -4,13 +4,14 @@ import {
     ShapeType,
     SymbolRefShape,
     SymbolShape,
+    TableShape,
     TextShape,
     Watchable
 } from "@kcdesign/data";
-import {Document} from "@kcdesign/data";
-import {Page} from "@kcdesign/data";
-import {Shape, Text} from "@kcdesign/data";
-import {cloneDeep} from "lodash";
+import { Document } from "@kcdesign/data";
+import { Page } from "@kcdesign/data";
+import { Shape, Text } from "@kcdesign/data";
+import { cloneDeep } from "lodash";
 import {
     scout,
     Scout,
@@ -19,9 +20,9 @@ import {
     finder_contact,
     selected_sym_ref_menber, finder_container
 } from "@/utils/scout";
-import {Context} from ".";
-import {TextSelectionLite} from "@/context/textselectionlite";
-import {is_symbol_or_union} from "@/utils/symbol";
+import { Context } from ".";
+import { TextSelectionLite } from "@/context/textselectionlite";
+import { is_symbol_or_union } from "@/utils/symbol";
 
 interface Saved {
     page: Page | undefined,
@@ -453,6 +454,19 @@ export class Selection extends Watchable(Object) implements ISave4Restore {
             const s = this.selectedShapes[0];
             if (s.type === ShapeType.SymbolRef) {
                 return s as SymbolRefShape;
+            } else {
+                return false;
+            }
+        } else {
+            return false;
+        }
+    }
+
+    get tableshape() {
+        if (this.selectedShapes.length === 1) {
+            const s = this.selectedShapes[0];
+            if (s instanceof TableShape) {
+                return s;
             } else {
                 return false;
             }

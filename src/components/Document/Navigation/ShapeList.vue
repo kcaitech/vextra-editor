@@ -1,26 +1,26 @@
 <script setup lang="ts">
-import {Context} from "@/context";
-import {Menu} from "@/context/menu";
-import {onMounted, onUnmounted, ref, watch, nextTick} from "vue";
-import ListView, {IDataIter, IDataSource} from "@/components/common/ListView.vue";
-import ShapeItem, {ItemData} from "./ShapeItem.vue";
-import {Page} from "@kcdesign/data";
-import {ShapeDirListIter, ShapeDirList} from "@kcdesign/data";
-import {Shape} from "@kcdesign/data";
-import {useI18n} from 'vue-i18n';
-import {ShapeType} from '@kcdesign/data';
-import {Selection} from '@/context/selection';
+import { Context } from "@/context";
+import { Menu } from "@/context/menu";
+import { onMounted, onUnmounted, ref, watch, nextTick } from "vue";
+import ListView, { IDataIter, IDataSource } from "@/components/common/ListView.vue";
+import ShapeItem, { ItemData } from "./ShapeItem.vue";
+import { Page } from "@kcdesign/data";
+import { ShapeDirListIter, ShapeDirList } from "@kcdesign/data";
+import { Shape } from "@kcdesign/data";
+import { useI18n } from 'vue-i18n';
+import { ShapeType } from '@kcdesign/data';
+import { Selection } from '@/context/selection';
 import ContextMenu from '@/components/common/ContextMenu.vue';
 import PageViewContextMenuItems from '@/components/Document/Menu/PageViewContextMenuItems.vue';
 import SearchPanel from "./Search/SearchPanel.vue";
-import {isInner} from "@/utils/content";
-import {debounce} from "lodash";
-import {is_shape_in_selection, selection_types, fit} from "@/utils/shapelist";
-import {Navi} from "@/context/navigate";
-import {Perm, WorkSpace} from "@/context/workspace"
+import { isInner } from "@/utils/content";
+import { debounce } from "lodash";
+import { is_shape_in_selection, selection_types, fit } from "@/utils/shapelist";
+import { Navi } from "@/context/navigate";
+import { Perm, WorkSpace } from "@/context/workspace"
 import ShapeTypes from "./Search/ShapeTypes.vue";
-import {adjust_layer, DragDetail} from "@/utils/listview";
-import {v4} from "uuid";
+import { adjust_layer, DragDetail } from "@/utils/listview";
+import { v4 } from "uuid";
 
 type List = InstanceType<typeof ListView>;
 type ContextMenuEl = InstanceType<typeof ContextMenu>;
@@ -70,12 +70,12 @@ class Iter implements IDataIter<ItemData> {
 }
 
 const props = defineProps<{ context: Context, page: Page, pageHeight: number }>();
-const {t} = useI18n();
+const { t } = useI18n();
 const itemHieght = 30;
 const MOUSE_RIGHT = 2;
 const shapeListMap: Map<string, ShapeDirList> = new Map();
 const chartMenu = ref<boolean>(false)
-const chartMenuPosition = ref<{ x: number, y: number }>({x: 0, y: 0}); //鼠标点击page所在的位置
+const chartMenuPosition = ref<{ x: number, y: number }>({ x: 0, y: 0 }); //鼠标点击page所在的位置
 let chartMenuItems: string[] = [];
 const contextMenuEl = ref<ContextMenuEl>();
 const shapeList = ref<HTMLDivElement>()
@@ -159,7 +159,7 @@ const stopWatch = watch(() => props.page, () => {
     (window as any).sd = shapeDirList;
     shapeDirList.watch(notifySourceChange)
     notifySourceChange();
-}, {immediate: true})
+}, { immediate: true })
 
 
 function search() {
@@ -321,10 +321,10 @@ function shapeScrollToContentView(shape: Shape) {
         return;
     }
     const workspace = props.context.workspace;
-    const {x: sx, y: sy, height, width} = shape.frame2Root();
+    const { x: sx, y: sy, height, width } = shape.frame2Root();
     const shapeCenter = workspace.matrix.computeCoord(sx + width / 2, sy + height / 2); // 计算shape中心点相对contenview的位置
-    const {x, y, bottom, right} = workspace.root;
-    const contentViewCenter = {x: (right - x) / 2, y: (bottom - y) / 2}; // 计算contentview中心点的位置
+    const { x, y, bottom, right } = workspace.root;
+    const contentViewCenter = { x: (right - x) / 2, y: (bottom - y) / 2 }; // 计算contentview中心点的位置
     const transX = contentViewCenter.x - shapeCenter.x, transY = contentViewCenter.y - shapeCenter.y;
     if (transX || transY) {
         props.context.selection.unHoverShape();
@@ -459,6 +459,8 @@ function navi_watcher(t: number) {
                 listviewSource.notify(0, 0, 0, Number.MAX_VALUE);
             }, 200)
         }
+    } else if (Navi.TO_SEARCH) {
+        to_search();
     }
 }
 
@@ -536,18 +538,11 @@ function input_blur() {
     }
 }
 
-function keyboard_watcher(e: KeyboardEvent) {
-    if (e.code === 'KeyF' && (e.metaKey || e.ctrlKey)) {
-        e.preventDefault();
-    }
-    if (e.target instanceof HTMLInputElement) return;
-    if (e.code === 'KeyF' && (e.metaKey || e.ctrlKey)) {
-        e.preventDefault();
-        if (search_el.value) {
-            search_el.value.focus();
-            search_el.value.select();
-            preto_search();
-        }
+function to_search() {
+    if (search_el.value) {
+        search_el.value.focus();
+        search_el.value.select();
+        preto_search();
     }
 }
 
@@ -602,7 +597,6 @@ onMounted(() => {
     props.context.selection.watch(notifySourceChange)
     props.context.menu.watch(menu_watcher);
     props.context.navi.watch(navi_watcher);
-    document.addEventListener('keydown', keyboard_watcher);
 });
 
 onUnmounted(() => {
@@ -613,7 +607,6 @@ onUnmounted(() => {
     if (shapeDirList) {
         shapeDirList.unwatch(notifySourceChange)
     }
-    document.removeEventListener('keydown', keyboard_watcher);
 });
 
 </script>
@@ -629,26 +622,23 @@ onUnmounted(() => {
                 <div class="menu-f" @click="show_types">
                     <svg-icon icon-class="down"></svg-icon>
                 </div>
-                <input ref="search_el" type="text" id="xpxp" v-model="keywords"
-                       :placeholder="t('home.search_layer') + '…'"
-                       @blur="leave_search" @click.stop="preto_search" @change="search" @input="inputing"
-                       @focus="input_focus">
+                <input ref="search_el" type="text" id="xpxp" v-model="keywords" :placeholder="t('home.search_layer') + '…'"
+                    @blur="leave_search" @click.stop="preto_search" @change="search" @input="inputing" @focus="input_focus">
                 <div @click="clear_text" class="close"
-                     :style="{ opacity: keywords ? 1 : 0, cursor: keywords ? 'pointer' : 'auto' }">
+                    :style="{ opacity: keywords ? 1 : 0, cursor: keywords ? 'pointer' : 'auto' }">
                     <svg-icon icon-class="close-x"></svg-icon>
                 </div>
                 <div :style="{ opacity: keywords ? 1 : 0, cursor: keywords ? 'pointer' : 'auto' }"
-                     :class="{ 'accurate': true, 'accurate-active': accurate }" @click="accurate_shift">
+                    :class="{ 'accurate': true, 'accurate-active': accurate }" @click="accurate_shift">
                     Aa
                 </div>
             </div>
             <div ref="popover" class="popover" tabindex="-1" v-if="popoverVisible">
-                <ShapeTypes :context="props.context" :selected="includes_type"
-                            @update-types="update_types"></ShapeTypes>
+                <ShapeTypes :context="props.context" :selected="includes_type" @update-types="update_types"></ShapeTypes>
             </div>
             <div class="blocks" v-if="includes_type.length">
                 <div class="block-wrap" v-for="(item, index) in includes_type" :key="index"
-                     @click="(e) => update_types(item, false, e.shiftKey)">
+                    @click="(e) => update_types(item, false, e.shiftKey)">
                     <div class="block">
                         <div class="content">{{ t(`shape.${item}`) }}</div>
                         <div class="close" @click.stop="(e) => update_types(item, false, e.shiftKey)">
@@ -665,18 +655,17 @@ onUnmounted(() => {
         </div>
         <div class="body" ref="listBody" @mousedown="reset_selection">
             <SearchPanel :keywords="keywords" :context="props.context" v-if="keywords || includes_type.length"
-                         :shape-types="includes_type" :accurate="accurate">
+                :shape-types="includes_type" :accurate="accurate">
             </SearchPanel>
-            <ListView v-else ref="shapelist" location="shapelist" :allow-drag="allow_to_drag()"
-                      :shapeHeight="shapeH" :source="listviewSource" :item-view="ShapeItem" :item-height="itemHieght"
-                      :item-width="0" :first-index="0" :context="props.context" @toggleexpand="toggleExpand"
-                      @selectshape="selectShape" @hovershape="hoverShape" @unhovershape="unHovershape"
-                      @scrolltoview="shapeScrollToContentView" @rename="rename" @set-visible="isRead" @set-lock="isLock"
-                      @item-mousedown="list_mousedown" orientation="vertical" @drag-start="start_to_drag"
-                      @after-drag-2="after_drag_2">
+            <ListView v-else ref="shapelist" location="shapelist" :allow-drag="allow_to_drag()" :shapeHeight="shapeH"
+                :source="listviewSource" :item-view="ShapeItem" :item-height="itemHieght" :item-width="0" :first-index="0"
+                :context="props.context" @toggleexpand="toggleExpand" @selectshape="selectShape" @hovershape="hoverShape"
+                @unhovershape="unHovershape" @scrolltoview="shapeScrollToContentView" @rename="rename" @set-visible="isRead"
+                @set-lock="isLock" @item-mousedown="list_mousedown" orientation="vertical" @drag-start="start_to_drag"
+                @after-drag-2="after_drag_2">
             </ListView>
             <ContextMenu v-if="chartMenu" :x="chartMenuPosition.x" :y="chartMenuPosition.y" @close="close"
-                         :context="props.context" ref="contextMenuEl" @click.stop>
+                :context="props.context" ref="contextMenuEl" @click.stop>
                 <PageViewContextMenuItems :items="chartMenuItems" :context="props.context" @close="close">
                 </PageViewContextMenuItems>
             </ContextMenu>
@@ -720,13 +709,13 @@ onUnmounted(() => {
             overflow: hidden;
             transition: 0.32s;
 
-            > .tool-container {
+            >.tool-container {
                 flex-shrink: 0;
                 display: flex;
                 align-items: center;
                 margin-left: 8px;
 
-                > svg {
+                >svg {
                     width: 12px;
                     height: 12px;
                 }
@@ -743,7 +732,7 @@ onUnmounted(() => {
                 transition: 0.3s;
                 cursor: pointer;
 
-                > svg {
+                >svg {
                     width: 80%;
                     height: 60%;
                 }
@@ -753,7 +742,7 @@ onUnmounted(() => {
                 transform: translateY(2px);
             }
 
-            > input {
+            >input {
                 flex: 1 1 auto;
                 border: none;
                 outline: none;
@@ -765,7 +754,7 @@ onUnmounted(() => {
                 transition: 0.3s;
             }
 
-            > .close {
+            >.close {
                 flex-shrink: 0;
                 width: 14px;
                 height: 14px;
@@ -776,14 +765,14 @@ onUnmounted(() => {
                 justify-content: center;
                 transition: 0.15s;
 
-                > svg {
+                >svg {
                     color: rgb(111, 111, 111);
                     width: 10px;
                     height: 10px;
                 }
             }
 
-            > .accurate {
+            >.accurate {
                 flex-shrink: 0;
                 user-select: none;
                 height: 100%;
@@ -846,7 +835,7 @@ onUnmounted(() => {
                         justify-content: flex-end;
                         margin-left: auto;
 
-                        > svg {
+                        >svg {
                             width: 12px;
                             height: 14px;
                         }
@@ -863,7 +852,7 @@ onUnmounted(() => {
                     width: 18px;
                     color: #fff;
 
-                    > svg {
+                    >svg {
                         text-align: center;
                         height: 18px;
                     }
@@ -877,7 +866,7 @@ onUnmounted(() => {
         width: 100%;
         overflow: hidden;
 
-        > .container {
+        >.container {
             height: 100%;
         }
     }

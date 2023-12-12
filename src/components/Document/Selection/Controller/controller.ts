@@ -326,7 +326,7 @@ export function useControllerCustom(context: Context, i18nT: Function) {
     }
 
     function keyboardHandle(e: KeyboardEvent) {
-        handle(e, context, i18nT);
+        handle(e, context);
     }
 
     function selection_watcher(t?: number) {
