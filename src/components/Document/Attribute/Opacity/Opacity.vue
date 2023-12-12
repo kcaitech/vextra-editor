@@ -266,7 +266,7 @@ onUnmounted(() => {
 </script>
 <template>
     <div class="opacity-panel">
-        <TypeHeader :title="t('attr.opacity')" class="mt-24">
+        <TypeHeader :title="t('attr.opacity')" class="mt-24" :active="true">
             <template #tool>
                 <!--                <div class="icon" @click="showMenu" ref="trigger">-->
                 <!--                    <input v-model="selectedOption">-->
