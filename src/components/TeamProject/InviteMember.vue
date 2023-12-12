@@ -18,7 +18,7 @@
                         :style="{ transform: isSelectOpen ? 'rotate(-180deg)' : 'rotate(0deg)', color: '#666666' }"></svg-icon>
                 </div>
                 <transition name="el-zoom-in-top">
-                    <ul v-show="isSelectOpen" class="options">
+                    <ul v-if="isSelectOpen" class="options">
                         <li class="options_item" v-for="{ id, label } in options" :key="id"
                             @click.stop="selectOption(id, label)">
                             <span :style="{ fontWeight: label == teamInvitePermission ? 600 : 500 }">{{ label }}</span>
@@ -142,7 +142,14 @@ const close = () => {
     emits('close')
 }
 
+const handleClickOutside = (e: MouseEvent) => {
+    if (e.target instanceof Element && e.target.closest('.options') == null) {
+        isSelectOpen.value = false
+    }
+}
+
 onMounted(() => {
+    document.addEventListener('click',handleClickOutside)
     Getteaminfo()
 })
 

@@ -250,15 +250,15 @@ const getElXY = (el: HTMLElement, elwidth: number = 0) => {
                 ${search}` : `${t('system.placeholder')}`" @focus="showSearchHistory = true" @input="screenout"
                 @blur="showSearchHistory = false">
                 <template #prefix>
-                    <el-icon v-if="isLoading" class="is-loading" size="18" color="red">
-                        <Loading :size="18" />
+                    <el-icon v-if="isLoading" class="is-loading" size="18">
+                        <Loading :size="18" :color="'#1878F5'" />
                     </el-icon>
                     <el-icon v-else size="18">
                         <svg-icon icon-class="search-icon" :color="showSearchHistory ? '#1878F5' : '#333333'"></svg-icon>
                     </el-icon>
                 </template>
                 <template #suffix>
-                    <el-icon v-if="search != ''" class="close" @click.stop="closeclick" size="18">
+                    <el-icon v-if="search !== ''" class="close" @click.stop="closeclick" size="18">
                         <Close />
                     </el-icon>
                 </template>
@@ -267,7 +267,7 @@ const getElXY = (el: HTMLElement, elwidth: number = 0) => {
         <div class="content">
             <div v-if="props.switch" class="bell">
                 <div ref="bell" class="notice" :class="{ 'menu-select': showInForm, 'menu-hover': !showInForm }"
-                    @click="showinform(bell!, 300)">
+                    @click="showinform(bell!, 320)">
                     <svg-icon icon-class="bell" :color="showInForm ? '#1878F5' : ''"></svg-icon>
                     <div class="num" v-if="total > 0" :class="{ after: total > 99 }"
                         :style="{ paddingRight: total > 99 ? 9 + 'px' : 4 + 'px' }">{{ total > 99 ? 99 : total }}</div>
@@ -309,7 +309,7 @@ const getElXY = (el: HTMLElement, elwidth: number = 0) => {
 }
 
 :deep(.el-input__wrapper) {
-    padding: 1 30px;
+    padding: 1px 15px 1px 32px;
     background-color: transparent;
     border-radius: 8px !important;
 
@@ -322,10 +322,6 @@ const getElXY = (el: HTMLElement, elwidth: number = 0) => {
     }
 }
 
-:deep(.is-focus) {
-    background-color: rgba(255, 255, 255, 1) !important;
-}
-
 .header {
     display: flex;
     align-items: center;
@@ -333,7 +329,8 @@ const getElXY = (el: HTMLElement, elwidth: number = 0) => {
     height: 60px;
 
     .search {
-        flex: 0.5;
+        width: 540px;
+        min-width: 300px;
         position: relative;
 
         .el-input {
@@ -364,7 +361,6 @@ const getElXY = (el: HTMLElement, elwidth: number = 0) => {
         justify-content: center;
         font-size: 12px;
         gap: 20px;
-
         .notice {
             flex: 1;
             position: relative;

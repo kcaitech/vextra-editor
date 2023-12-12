@@ -70,7 +70,7 @@ const targetProject = (project: any) => {
 }
 watch(activeNames, (v) => {
     active.value = '';
-    
+
 })
 const moveProjectTarget = async (params: any) => {
     try {
@@ -170,7 +170,15 @@ const disabled = computed(() => {
                         <div class="team-title" :class="{ 'is_active': activeNames === '1' }"
                             @click.stop="onactiveNames('1')" v-if="shareProject.length > 0">
                             <div class="left">
-                                <svg-icon icon-class="receive-fill" />
+                                <svg :style="{ padding: '4px' }" t="1702388143460" class="icon" viewBox="0 0 1024 1024"
+                                    version="1.1" xmlns="http://www.w3.org/2000/svg" p-id="20737" width="200" height="200">
+                                    <path
+                                        d="M896 896l-45.44-45.12A63.808 63.808 0 0 1 896 832a64 64 0 0 0 64-64V128a64 64 0 0 0-64-64H256a64 64 0 0 0-64 64v5.44c0 17.6-7.04 33.536-18.56 45.12L128 133.44V128A128 128 0 0 1 256 0h640a128 128 0 0 1 128 128v640a128 128 0 0 1-128 128zM64 256v640a64 64 0 0 0 64 64h640a64 64 0 0 0 64-64V256a64 64 0 0 0-64-64H128a64 64 0 0 0-64 64z m704-128a128 128 0 0 1 128 128v640a128 128 0 0 1-128 128H128A128 128 0 0 1 0 896V256a128 128 0 0 1 128-128h640z"
+                                        :fill="activeNames === '1' ? 'rgb(24, 120, 245)' : '#5A5A5A'" p-id="20738"></path>
+                                    <path
+                                        d="M160 256h384a32 32 0 0 1 0 64H160a32 32 0 0 1 0-64z m576 64a32 32 0 1 1 0-64 32 32 0 0 1 0 64zM64 384h768v64H64v-64z"
+                                        :fill="activeNames === '1' ? 'rgb(24, 120, 245)' : '#5A5A5A'" p-id="20739"></path>
+                                </svg>
                                 <div class="name">{{ t('moveprojectfill.share_Project') }}</div>
                             </div>
                         </div>
@@ -195,9 +203,9 @@ const disabled = computed(() => {
                 </div>
                 <div class="target_project">
                     <el-scrollbar>
-                        <div class="project" :class="{ 'is_active': item.project.id === active }" v-for="(item, i) in pList"
+                        <div v-for="(item, i) in pList" class="project" :class="{ 'is_active': item.project.id === active }"
                             :key="i" @click.stop="targetProject(item)">
-                            <div class="left">
+                            <div v-if="item.self_perm_type >= 3" class="left">
                                 <div class="name">{{ item.project.name }}</div>
                             </div>
                         </div>
@@ -209,13 +217,14 @@ const disabled = computed(() => {
                             </div>
                         </div>
                         <template v-for="(item, index) in shareProject" :key="index">
-                            <div class="project" :class="{ 'is_active': item.project.id === active }"
-                                v-if="activeNames === '1'" @click.stop="targetProject(item)">
+                            <div v-if="activeNames === '1' && item.self_perm_type >= 3" class="project"
+                                :class="{ 'is_active': item.project.id === active }" @click.stop="targetProject(item)">
                                 <div class="left">
                                     <div class="name">{{ item.project.name }}</div>
                                 </div>
                             </div>
-                            <div class="projectlocationtips" v-if="activeNames === '1' && shareProject.length === 0">
+                            <div class="projectlocationtips"
+                                v-if="activeNames === '1' && shareProject.filter(item => item.self_perm_type >= 3).length === 0">
                                 没有可移动的位置</div>
                         </template>
                     </el-scrollbar>
@@ -464,7 +473,7 @@ const disabled = computed(() => {
 
             button {
                 cursor: pointer;
-                font-size: 13px;
+                font-size: 14px;
                 width: 100px;
                 height: 40px;
                 border: none;
@@ -509,4 +518,5 @@ const disabled = computed(() => {
 .is_active {
     color: rgba(24, 120, 245, 1);
     background-color: rgba(24, 120, 245, 0.1) !important;
-}</style>
+}
+</style>

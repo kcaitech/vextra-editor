@@ -105,12 +105,21 @@ onMounted(() => {
         }
 
         .item {
-            cursor: pointer;
             white-space: nowrap;
             font-size: 13px;
             font-weight: 500;
             color: rgba(89, 89, 89, 1);
             margin: 0 14px;
+            position: relative;
+
+            &::after {
+                content: "";
+                position: absolute;
+                left: -14px;
+                right: -14px;
+                top: -14px;
+                bottom: -14px;
+            }
         }
 
         .close {

@@ -276,7 +276,7 @@ const getName = (item: any) => {
 <style lang="scss" scoped>
 :deep(.el-card__header) {
   border: none;
-  padding: 0 16px;
+  padding: 0 12px;
   margin: 0;
 }
 
@@ -287,11 +287,11 @@ const getName = (item: any) => {
 
 :deep(.el-tabs__header) {
   padding: 0;
-  margin: 0 0 16px 0;
+  margin: 0 0 12px 0;
 }
 
 :deep(.el-tabs__nav-wrap) {
-  padding: 0 16px;
+  padding: 0 12px;
 }
 
 :deep(.el-tabs__nav-wrap::after) {
@@ -312,7 +312,7 @@ const getName = (item: any) => {
 }
 
 :deep(.el-tabs__content) {
-  padding: 0 16px;
+  padding: 0 12px;
   margin: 0;
 }
 
@@ -543,5 +543,19 @@ const getName = (item: any) => {
   position: absolute;
   border-radius: 8px;
   box-sizing: border-box;
+  overflow: visible;
+
+  &::before {
+    content: "";
+    position: absolute;
+    width: 12px;
+    height: 12px;
+    background-color: #ffffff;
+    clear: both;
+    top: -3px;
+    right: 60px;
+    transform: rotate(45deg);
+  }
+
 }
 </style>
