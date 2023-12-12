@@ -72,9 +72,8 @@ const left = ref(0)
 const showChildFrame = (i: number) => {
     hoverIndex.value = i
     if (popover.value) {
-        left.value = popover.value.offsetWidth
+        left.value = popover.value.offsetWidth + 6
     }
-
 }
 
 const closeChildFrame = () => {
@@ -113,6 +112,7 @@ watch(() => props.active, () => {
             <div class="frame" @mouseenter="showChildFrame(i)" @mouseleave="closeChildFrame">
                 <span>{{ t(`${item}`) }}</span>
                 <div class="triangle"></div>
+                <div class="bridge"></div>
                 <FrameChild :context="props.context" :childFrame="hoverIndex === i" :top="-8" :left="left"
                     :framesChild="framesChild[i]" @closeFrame="closeFrame"></FrameChild>
             </div>
@@ -208,6 +208,14 @@ watch(() => props.active, () => {
                 border-top: 5px solid transparent;
                 border-bottom: 5px solid transparent;
                 border-left: 10px solid var(--theme-color-anti);
+            }
+
+            .bridge {
+                width: 100%;
+                height: 32px;
+                position: absolute;
+                left: 12px;
+                background-color: transparent;
             }
         }
 
