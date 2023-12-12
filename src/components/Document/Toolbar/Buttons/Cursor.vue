@@ -89,12 +89,6 @@ onUpdated(() => {
 </script>
 
 <template>
-  <div ref="popover" class="popover" tabindex="-1" v-if="popoverVisible">
-    <template v-for="item in patterns" :key="item.value">
-      <DropSelect @selector="selector" :lg="item.value" :quick="item.key" :d="d" :select="item.content" type="cursor">
-      </DropSelect>
-    </template>
-  </div>
   <el-tooltip class="box-item" effect="dark"
     :content="selects === 'drag' ? `${t('home.object_selector')} &nbsp;&nbsp; V` : `${t('home.scale')} &nbsp;&nbsp; K`"
     placement="bottom" :show-after="600" :offset="10" :hide-after="0" :visible="popoverVisible ? false : visible">
@@ -108,6 +102,12 @@ onUpdated(() => {
       </div>
     </ToolButton>
   </el-tooltip>
+    <div ref="popover" class="popover" tabindex="-1" v-if="popoverVisible">
+        <template v-for="item in patterns" :key="item.value">
+            <DropSelect @selector="selector" :lg="item.value" :quick="item.key" :d="d" :select="item.content" type="cursor">
+            </DropSelect>
+        </template>
+    </div>
 </template>
 
 <style scoped lang="scss">
