@@ -11,17 +11,6 @@ export class EscStack extends Watchable(Object) {
     constructor() {
         super();
     }
-
-    keyboardHandle(event: KeyboardEvent) {
-        const {code, shiftKey} = event;
-        if (code !== 'Escape') return;
-        if (shiftKey) {
-            this.clear_stack();
-        } else {
-            this.execute();
-        }
-    }
-
     save(key: string, call: Function) {
         if (this.m_stack_map.has(key)) { // 先删后加，保持先来的后出
             this.m_stack_map.delete(key);
