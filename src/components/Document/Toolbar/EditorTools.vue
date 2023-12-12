@@ -105,7 +105,7 @@ function applyForEdit() {
             <div class="vertical-line" />
         </div>
         <Frame :context="props.context" :active="selected === Action.AddFrame" @select="select"></Frame>
-        <Shape :context="context"></Shape>
+        <Shape :context="context" @select="select"></Shape>
         <CreateText @select="select" :active="selected === Action.AddText"></CreateText>
         <CreateImage :active="selected === Action.AddImage" :context="props.context"></CreateImage>
         <Table @select="select" :active="selected === Action.AddTable" :context="props.context"></Table>
