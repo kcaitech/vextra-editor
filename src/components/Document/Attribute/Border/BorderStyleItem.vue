@@ -15,8 +15,8 @@ onMounted(() => {})
 </script>
 <template>
     <div class="border-style-item-container" @click="select">
-       <span>{{ props.data.content }}</span>
        <svg-icon :icon-class="props.data.value"></svg-icon>
+        <span>{{ props.data.content }}</span>
     </div>
 </template>
 <style scoped lang="scss">

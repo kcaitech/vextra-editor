@@ -22,6 +22,7 @@ interface Props {
 
 const props = defineProps<Props>();
 const {t} = useI18n();
+const isActived = ref(false)
 const editor = computed(() => {
     return props.context.editor4Shape(props.shapes[0]);
 });
@@ -371,6 +372,9 @@ function selection_wather(t?: any) {
 const selectBorderThicknes = () => {
     borderThickness.value?.select()
 }
+function blur2() {
+    isActived.value = false
+}
 onMounted(() => {
     props.context.selection.watch(selection_wather);
     layout();
@@ -402,10 +406,10 @@ onUnmounted(() => {
                     <!-- 边框厚度 -->
                     <div>
                         <label>{{ t('attr.thickness') }}</label>
-                        <div class="thickness-container">
+                        <div class="thickness-container" :class="{actived: isActived}">
                             <svg-icon icon-class="thickness" @mousedown="onMouseDown"></svg-icon>
                             <input ref="borderThickness" type="text" :value="border.thickness"
-                                   @change="e => setThickness(e)"
+                                   @change="e => setThickness(e)" @blur="blur2"
                                    @focus="selectBorderThicknes">
                             <div class="up_down">
                                 <svg-icon icon-class="down" style="transform: rotate(180deg);"
@@ -456,28 +460,32 @@ onUnmounted(() => {
             display: flex;
             flex-direction: column;
             justify-content: space-between;
-            padding: var(--default-padding);
+            padding: 12px 12px 0 12px;
             box-sizing: border-box;
             height: 100%;
 
             > div {
                 display: flex;
                 align-items: center;
-                margin: 4px 0;
+                margin-bottom: 12px;
 
                 > label {
-                    flex: 0 0 72px;
-                    text-align: left;
+                    flex: 0 0 24px;
                     box-sizing: border-box;
-                    font-weight: var(--font-default-bold);
+                    width: 24px;
+                    height: 14px;
+                    font-family: HarmonyOS Sans;
+                    font-size: 12px;
+                    color: #737373;
+                    margin-right: 24px;
                 }
 
                 > .thickness-container {
                     box-sizing: border-box;
-                    padding: 0 14px;
+                    padding: 3px;
                     background-color: var(--input-background);
                     width: calc(100% - 72px);
-                    height: var(--default-input-height);
+                    height: 32px;
                     border-radius: var(--default-radius);
                     display: flex;
                     align-items: center;
@@ -486,25 +494,49 @@ onUnmounted(() => {
                         cursor: ew-resize;
                         flex: 0 0 24px;
                         height: 24px;
+                        margin-left: 9px;
                     }
 
                     > input {
                         outline: none;
                         border: none;
-                        width: calc(100% - 37px);
-                        margin-left: var(--default-margin-half);
+                        width: calc(100% - 68px);
+                        margin-left: 12px;
                         background-color: transparent;
                     }
 
+                    input::selection {
+                        color: #FFFFFF;
+                        background: #1878F5;
+                    }
+
+                    input::-moz-selection {
+                        color: #FFFFFF;
+                        background: #1878F5;
+                    }
+
                     .up_down {
-                        width: 10px;
+                        width: 19px;
                         height: 100%;
+                        color: #666666;
+                        text-align: center;
+                        display: flex;
+                        flex-direction: column;
+                        justify-content: space-around;
 
                         > svg {
-                            width: 10px;
-                            height: 10px;
+                            width: 12px;
+                            height: 12px;
                         }
                     }
+                }
+
+                .actived {
+                    border: 1px solid #1878F5;
+                }
+
+                > .thickness-container:hover {
+                    background-color: #EBEBEB;
                 }
             }
         }

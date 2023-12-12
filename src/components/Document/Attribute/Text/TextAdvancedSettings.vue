@@ -417,7 +417,7 @@ onUnmounted(() => {
       display: flex;
       flex-direction: column;
       justify-content: space-between;
-      padding: var(--default-padding);
+      padding: 12px 12px 0 12px;
       box-sizing: border-box;
       height: 100%;
 
@@ -426,7 +426,7 @@ onUnmounted(() => {
         align-items: center;
         justify-content: space-between;
         width: 100%;
-        margin: 4px 0;
+        margin-bottom: 12px;
 
         .jointly-text {
           height: 25px;
