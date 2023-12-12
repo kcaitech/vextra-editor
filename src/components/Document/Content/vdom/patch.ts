@@ -9,7 +9,18 @@ function createElement(tag: string): HTMLElement | SVGElement {
     return document.createElementNS(xmlns, tag);
 }
 
-function setAttribute(el: HTMLElement | SVGElement, key: string, value: string) {
+function setAttribute(el: HTMLElement | SVGElement, key: string, value: string | { [key: string]: string }) {
+    if (typeof value === 'object') {
+        // parse value
+        const attr = value as { [key: string]: string };
+
+        let style = ""
+        for (let b in attr) {
+            style += b + ':' + attr[b] + ';';
+        }
+
+        value = style;
+    }
     if (key === "xlink:href") {
         el.setAttributeNS(xlink, key, value);
     } else {
@@ -56,8 +67,19 @@ export function elpatch(tar: EL, old: EL | undefined) {
         }
     }
 
+    // string
+    if (!Array.isArray(_tar.childs)) {
+        _tar.el.innerHTML = _tar.childs;
+        // const childNodes = _tar.el.childNodes;
+        // if (childNodes.length > 0) {
+        //     let count = childNodes.length;
+        //     while (count--) _tar.el.removeChild(childNodes[childNodes.length - 1]);
+        // }
+        return;
+    }
+
     const reuse = new Map<string, EL & { el?: HTMLElement | SVGElement }>();
-    if (_old) _old.childs.forEach(c => {
+    if (_old && Array.isArray(_old.childs)) _old.childs.forEach(c => {
         if (c.isViewNode) reuse.set((c as ShapeView).id(), c);
     });
 

@@ -1,4 +1,4 @@
-import { DViewCtx, RenderTransform, Shape, ShapeType, SymbolRefShape, SymbolShape, DataView } from "@kcdesign/data";
+import { DViewCtx, RenderTransform, Shape, ShapeType, SymbolRefShape, SymbolShape } from "@kcdesign/data";
 
 import { ArtboradDom } from "./artboard";
 import { ContactLineDom } from "./contactline";
@@ -12,6 +12,9 @@ import { TableCellDom } from "./tablecell";
 import { TableDom } from "./table";
 import { TextShapeDom } from "./textshape";
 
+interface DataView {
+    id(): string;
+}
 
 interface ComType {
     new(ctx: DViewCtx, props: PropsType): DataView;
