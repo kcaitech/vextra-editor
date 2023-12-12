@@ -31,6 +31,8 @@ export function deleteUnits(context: Context) {
 
 function delete_for_path_edit() {
     // todo
+    console.log('keyboard units to delete for path edit mode');
+
 }
 
 function delete_shapes(context: Context, shapes: Shape[]) {
