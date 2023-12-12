@@ -114,32 +114,36 @@ const onMouseUp = (e: MouseEvent) => {
 .input-container {
     display: flex;
     white-space: nowrap;
-    width: 90px;
-    height: 30px;
+    width: 88px;
+    height: 32px;
     overflow: hidden;
-    padding: 1px;
+    padding: 3px 3px 3px 12px;
     align-items: center;
-    padding-left: 8px;
-    padding-right: 3px;
+    //padding-left: 12px;
+    //padding-right: 3px;
     box-sizing: border-box;
-    background-color: rgba(#D8D8D8, 0.4);
-    border-radius: 4px;
+    background-color: var(--input-background);
+    border-radius: var(--default-radius);
+    margin-left: 8px;
 
     .icon {
-        color: grey;
-        width: 14px;
         flex-shrink: 0;
         cursor: ew-resize;
         text-align: center;
+        width: 8px;
+        height: 14px;
+        font-family: HarmonyOS Sans;
+        font-size: 12px;
+        color: #8C8C8C;
     }
 
     input {
         width: 100%;
         flex: 1 1 auto;
         align-content: center;
-        margin-left: 2px;
-        color: var(--theme-color);
-        font-family: var(--font-family);
+        margin-left: 6px;
+        color: #000000;
+        font-family: HarmonyOS Sans;
         text-overflow: ellipsis;
         background-color: transparent;
         border: none;
@@ -148,10 +152,10 @@ const onMouseUp = (e: MouseEvent) => {
     }
 
     .adjust {
-        width: 20px;
+        width: 19px;
         height: 100%;
-        background-color: #fff;
-        margin-left: 5px;
+        //background-color: #fff;
+        //margin-left: 5px;
         display: flex;
         flex-direction: column;
         align-items: center;
@@ -160,9 +164,9 @@ const onMouseUp = (e: MouseEvent) => {
 
         >svg {
             cursor: pointer;
-            width: 10px;
+            width: 12px;
             height: 12px;
-            color: grey;
+            color: #666666;
         }
     }
 }

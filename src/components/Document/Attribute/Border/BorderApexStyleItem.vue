@@ -23,7 +23,7 @@ const isEnd = computed<boolean>(() => {
     height: var(--default-input-height);
     width: 64%;
     padding: 0 12px;
-    color: var(--theme-color);
+    color: #333333;
     margin-left: var(--default-margin-half);
     box-sizing: border-box;
     display: flex;

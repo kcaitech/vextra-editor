@@ -53,7 +53,7 @@ function showMenu(e: MouseEvent) {
     nextTick(() => {
         if (!popover.value) return;
         popover.value.style.left = el.offsetLeft + 'px';
-        popover.value.style.top = el.offsetHeight + 24 + 'px';
+        popover.value.style.top = el.offsetHeight + 13 + 'px';
     })
     document.addEventListener('click', onMenuBlur);
 }
@@ -139,7 +139,9 @@ const isDisabled: any = computed(() => {
             <span @mouseenter="(e: MouseEvent) => showChildFileMenu(e)" @mouseleave="closeChildFileMenu">
                 {{ t('fileMenu.view') }}
                 <div class="childMenu">
-                    <div class="triangle"></div>
+<!--                    <div class="triangle"></div>-->
+                    <svg-icon icon-class="arrowhead"></svg-icon>
+
                     <SubMenu v-if="childMenuVisible" :context="props.context" :x="childMenuPosition.x"
                              :y="childMenuPosition.y" :width="180" :site="site" @close="close"></SubMenu>
                 </div>
@@ -171,26 +173,27 @@ const isDisabled: any = computed(() => {
         position: absolute;
         color: #ffffff;
         z-index: 999;
-        width: 150px;
+        width: 136px;
         height: auto;
         font-size: var(--font-default-fontsize);
-        background-color: var(--theme-color);
+        background-color: #262626;
         border-radius: 4px;
         outline: none;
-        padding: var(--default-padding-half) 0;
+        padding: 4px 0;
+        box-shadow: 0px 2px 10px 0px rgba(0, 0, 0, 0.08);
 
         > div, > span {
             position: relative;
             width: 100%;
-            height: 28px;
-            padding: 0 var(--default-padding);
+            height: 32px;
+            padding: 9px 0 9px 28px;
             display: flex;
             flex-direction: row;
             align-items: center;
             box-sizing: border-box;
 
             &:hover {
-                background-color: var(--active-color);
+                background-color: #434343;
             }
         }
 
@@ -201,15 +204,22 @@ const isDisabled: any = computed(() => {
 
         .childMenu {
 
-            > .triangle {
-                width: 0;
-                height: 0;
-                padding: 0;
-                margin-left: 80px;
-                border-top: 5px solid transparent;
-                border-bottom: 5px solid transparent;
-                border-left: 10px solid var(--theme-color-anti);
-                transition: 0.35s;
+            //> .triangle {
+            //    width: 0;
+            //    height: 0;
+            //    padding: 0;
+            //    margin-left: 80px;
+            //    border-top: 5px solid transparent;
+            //    border-bottom: 5px solid transparent;
+            //    border-left: 10px solid var(--theme-color-anti);
+            //    transition: 0.35s;
+            //}
+            >svg {
+                height: 16px;
+                width: 16px;
+                margin-right: 8px;
+                margin-left: 60px;
+                margin-top: 4px;
             }
         }
     }

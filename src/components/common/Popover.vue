@@ -120,38 +120,40 @@ onUnmounted(() => {
     > .popover {
         position: fixed;
         outline: none;
-        box-shadow: 0 2px 10px rgba(0, 0, 0, 0.2);
-        background-color: #ffffff;
+        box-shadow: 0px 2px 16px 0px rgba(0, 0, 0, 0.08);
+        background-color: #FFFFFF;
         z-index: 1;
-        border-radius: 4px;
+        border-radius: 8px;
+        border: 1px solid #F0F0F0;
 
         > .header {
             width: 100%;
-            height: 32px;
-            border-bottom: 1px solid var(--grey-light);
+            height: 40px;
+            border-bottom: 1px solid #F5F5F5;
             display: flex;
             font-size: var(--font-default-fontsize);
-            padding: 0 var(--default-padding);
+            padding: 14px 12px;
             box-sizing: border-box;
             align-items: center;
 
             > .title {
-                line-height: 32px;
+                line-height: 12px;
                 font-weight: var(--font-default-bold);
+                color: #3D3D3D;
             }
 
             > .close {
-                width: 24px;
-                height: 24px;
+                width: 12px;
+                height: 12px;
                 position: absolute;
-                right: var(--default-padding);
+                right: 11px;
                 display: flex;
                 align-items: center;
                 justify-content: center;
 
                 > svg {
-                    width: 65%;
-                    height: 65%;
+                    width: 12px;
+                    height: 12px;
                 }
             }
         }

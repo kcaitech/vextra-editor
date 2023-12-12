@@ -229,13 +229,23 @@ onMounted(() => {
         flex: 1 1 auto;
         align-content: center;
         margin-left: 2px;
-        color: var(--theme-color);
+        //color: var(--theme-color);
         font-family: var(--font-family);
         text-overflow: ellipsis;
         background-color: transparent;
         border: none;
         font-size: var(--font-default-fontsize);
         outline: none;
+    }
+
+    input::selection {
+        color: #FFFFFF;
+        background: #1878F5;
+    }
+
+    input::-moz-selection {
+        color: #FFFFFF;
+        background: #1878F5;
     }
 }
 

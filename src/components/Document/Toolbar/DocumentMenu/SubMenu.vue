@@ -85,25 +85,31 @@ function comment() {
 <template>
   <div ref="subMenu" class="subMenu" @mousemove.stop>
     <div class="item" v-if="items.includes('half')" @click="(e: MouseEvent) => half(e)">
-      <span>50%</span>
+      <span style="margin-left: 20px">50%</span>
     </div>
     <div class="item" v-if="items.includes('hundred')" @click="(e: MouseEvent) => hundred(e)">
-      <span>100%</span>
+      <span style="margin-left: 20px">100%</span>
     </div>
     <div class="item" v-if="items.includes('double')" @click="(e: MouseEvent) => double(e)">
-      <span>200%</span>
+      <span style="margin-left: 20px">200%</span>
     </div>
     <div class="item" v-if="items.includes('canvas')" @click="canvas">
-      <span>{{ t('system.fit_canvas') }}</span>
+      <span style="margin-left: 20px">{{ t('system.fit_canvas') }}</span>
     </div>
     <div class="line" v-if="items.includes('cursor')"></div>
     <div class="item" v-if="items.includes('cursor')" @click="cursor">
-      <div class="choose" v-show="isCursor"></div>
-      <span>{{ t('system.show_many_cursor') }}</span>
+<!--      <div class="choose" v-show="isCursor"></div>-->
+        <div class="choose">
+            <svg-icon icon-class="choose" v-show="isCursor"></svg-icon>
+        </div>
+      <span :style="{ marginLeft: isCursor ? '8px' : '20px'}">{{ t('system.show_many_cursor') }}</span>
     </div>
     <div class="item" v-if="items.includes('comment')" @click="comment">
-      <div class="choose" v-show="isComment"></div>
-      <span>{{ t('system.show_comment') }}</span>
+<!--      <div class="choose" v-show="isComment"></div>-->
+        <div class="choose">
+            <svg-icon icon-class="choose" v-show="isComment"></svg-icon>
+        </div>
+      <span :style="{ marginLeft: isComment ? '8px' : '20px'}">{{ t('system.show_comment') }}</span>
     </div>
   </div>
   <div class="bottom"></div>
@@ -112,50 +118,61 @@ function comment() {
 .subMenu {
   position: absolute;
   z-index: 999;
-  left: 134px;
+  left: 139px;
   top: -2px;
   color: var(--theme-color-anti);
-  width: 150px;
+  width: 157px;
   display: flex;
   flex-direction: column;
   border-radius: 4px;
-  box-shadow: 4px 4px 10px rgba($color: #000000, $alpha: 0.2);
-  background-color: var(--theme-color);
+  box-shadow: 0px 2px 10px 0px rgba(0, 0, 0, 0.08);
+  background-color: #262626;
   overflow: hidden;
+  padding: 4px 0;
 
   .line {
     width: 100%;
-    height: 8px;
-    border-bottom: 1px solid gray;
-    margin-bottom: 8px;
+    border-bottom: 1px solid #434343;
+    margin-top: 4px;
+    margin-bottom: 4px;
     box-sizing: border-box;
   }
 
   .item {
     position: relative;
     width: 100%;
-    height: 28px;
-    padding: 0 var(--default-padding) 0 20px;
+    height: 32px;
+    padding: 9px 0 9px 8px;
     display: flex;
     flex-direction: row;
     align-items: center;
     box-sizing: border-box;
 
-    .choose {
-      position: absolute;
-      left: 7px;
-      box-sizing: border-box;
-      width: 10px;
-      height: 6px;
-      border-width: 0 0 2px 2px;
-      border-style: solid;
-      border-color: var(--theme-color-anti);
-      transform: rotate(-45deg) translateY(-4%);
-    }
+    //.choose {
+    //  position: absolute;
+    //  left: 7px;
+    //  box-sizing: border-box;
+    //  width: 10px;
+    //  height: 6px;
+    //  border-width: 0 0 2px 2px;
+    //  border-style: solid;
+    //  border-color: var(--theme-color-anti);
+    //  transform: rotate(-45deg) translateY(-4%);
+    //}
+      .choose {
+          width: 12px;
+          height: 12px;
+          display: contents;
+
+          svg {
+              width: 12px;
+              height: 12px;
+          }
+      }
   }
 
   .item:hover {
-    background-color: var(--active-color);
+    background-color:  #434343;
   }
 }
 </style>

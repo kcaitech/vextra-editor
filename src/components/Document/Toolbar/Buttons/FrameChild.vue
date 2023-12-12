@@ -35,15 +35,15 @@ const addFrame = (t: string[]) => {
 <style scoped lang="scss">
 .child {
   position: absolute;
-  width: 200px;
+  width: 188px;
   height: auto;
   z-index: 999;
   color: #ffffff;
   font-size: var(--font-default-fontsize);
-  background-color: var(--theme-color);
+  background-color: #262626;
   border-radius: 4px;
   outline: none;
-  padding: var(--default-padding-half) 0;
+  padding: 4px 0;
 
   .item {
     width: 100%;
@@ -52,11 +52,11 @@ const addFrame = (t: string[]) => {
     display: flex;
     align-items: center;
     justify-content: space-between;
-    padding: 4px var(--default-padding);
+    padding: 9px 16px;
   }
 
   .item:hover {
-    background-color: var(--active-color);
+    background-color: #434343;
   }
 }
 </style>
