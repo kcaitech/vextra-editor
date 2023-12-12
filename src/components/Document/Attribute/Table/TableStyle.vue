@@ -13,7 +13,7 @@ const props = defineProps<Props>();
 
 <template>
     <div class="table-panel">
-        <TypeHeader :title="t('table.table_style')" class="mt-24">
+        <TypeHeader :title="t('table.table_style')" class="mt-24" :active="true">
         </TypeHeader>
         <div class="table-container">
             <div class="box-falst">
