@@ -6,7 +6,6 @@ import FrameChild from './FrameChild.vue'
 import { Action } from "@/context/tool";
 import Tooltip from '@/components/common/Tooltip.vue';
 import { Context } from '@/context';
-import { watch } from 'vue';
 
 type Button = InstanceType<typeof ToolButton>
 interface Props {
