@@ -23,6 +23,7 @@ import { paster_image } from "./clipboard";
 import { landFinderOnPage, scrollToContentView } from './artboardFn'
 import { fit_no_transform, is_parent_locked, is_parent_unvisible } from "./shapelist";
 import { is_part_of_symbol, is_state, make_symbol, one_of_is_symbolref } from "@/utils/symbol";
+import { message } from "./message";
 
 export interface Media {
     name: string
@@ -988,5 +989,46 @@ export function component(context: Context) {
     const symbol = make_symbol(context, context.workspace.t);
     if (symbol) {
         context.selection.selectShape(symbol as unknown as Shape);
+    }
+}
+
+export function lower_layer(context: Context, layer?: number) {
+    const selection = context.selection;
+    if (selection.selectedShapes.length !== 1) {
+        return;
+    }
+
+    const page = selection.selectedPage;
+
+    if (!page) {
+        return;
+    }
+
+    const editor = context.editor4Page(page);
+    const result = editor.lower_layer(selection.selectedShapes[0], layer);
+
+    if (!result) {
+        message('info', context.workspace.t('homerightmenu.unable_lower'));
+    }
+}
+
+export function uppper_layer(context: Context, layer?: number) {
+    const selection = context.selection;
+
+    if (selection.selectedShapes.length !== 1) {
+        return;
+    }
+
+    const page = selection.selectedPage;
+
+    if (!page) {
+        return;
+    }
+
+    const editor = context.editor4Page(page);
+    const result = editor.uppper_layer(selection.selectedShapes[0], layer);
+
+    if (!result) {
+        message('info', context.workspace.t('homerightmenu.unable_upper'));
     }
 }

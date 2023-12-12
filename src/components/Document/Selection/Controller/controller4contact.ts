@@ -62,7 +62,7 @@ export function useControllerCustom(context: Context, i18nT: Function) {
         return Boolean(context.selection.scout?.isPointInStroke(context.workspace.ctrlPath, { x: e.clientX - root.x, y: e.clientY - root.y }));
     }
     function keyboardHandle(e: KeyboardEvent) {
-        handle(e, context, i18nT);
+        handle(e, context);
     }
     function selection_watcher(t?: number) {
         if (t === Selection.CHANGE_SHAPE) { // 选中的图形发生改变，初始化控件

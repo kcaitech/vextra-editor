@@ -1,9 +1,11 @@
 import { Context } from "@/context";
-import { component, select_all, set_lock_for_shapes, set_visible_for_shapes } from "./content";
+import { component, lower_layer, select_all, set_lock_for_shapes, set_visible_for_shapes, uppper_layer } from "./content";
 import { Perm, WorkSpace } from "@/context/workspace";
 import { Action, Tool } from "@/context/tool";
 import { Navi } from "@/context/navigate";
 import { Arrange } from "@/context/arrange";
+import { deleteUnits } from "./delete";
+import { replace } from "./clipboard";
 
 const keydownHandler: { [key: string]: (event: KeyboardEvent, context: Context) => any } = {};
 
@@ -187,6 +189,12 @@ keydownHandler['KeyO'] = function (event: KeyboardEvent, context: Context) {
 keydownHandler['KeyP'] = function (event: KeyboardEvent, context: Context) { }
 
 keydownHandler['KeyR'] = function (event: KeyboardEvent, context: Context) {
+    const is_ctrl = event.ctrlKey || event.metaKey;
+    if (is_ctrl && event.shiftKey) {
+        event.preventDefault();
+        replace(context, context.selection.selectedShapes); // 替换图形
+        return;
+    }
     context.tool.setAction(Action.AddRect); // 矩形工具
 }
 
@@ -230,6 +238,17 @@ keydownHandler['KeyX'] = function (event: KeyboardEvent, context: Context) {
     const is_ctrl = event.ctrlKey || event.metaKey;
     if (is_ctrl && event.shiftKey) {
         context.workspace.notify(WorkSpace.DELETE_LINE); // 下划线
+        return;
+    }
+    if (is_ctrl) {
+        context.workspace.clipboard
+            .cut()
+            .then((res) => {
+                if (!res) {
+                    return;
+                }
+                context.selection.resetSelectShapes(); // 剪切图形
+            })
     }
 }
 
@@ -281,4 +300,28 @@ keydownHandler['Backslash'] = function (event: KeyboardEvent, context: Context) 
     if (is_ctrl) {
         context.workspace.notify(WorkSpace.HIDDEN_UI);
     }
+}
+
+keydownHandler['Backspace'] = function (event: KeyboardEvent, context: Context) {
+    deleteUnits(context);
+}
+
+keydownHandler['Delete'] = function (event: KeyboardEvent, context: Context) {
+    deleteUnits(context);
+}
+
+keydownHandler['BracketRight'] = function (event: KeyboardEvent, context: Context) {
+    uppper_layer(context);
+}
+
+keydownHandler['BracketLeft'] = function (event: KeyboardEvent, context: Context) {
+    lower_layer(context);
+}
+
+keydownHandler['Equal'] = function (event: KeyboardEvent, context: Context) {
+    uppper_layer(context, 1);
+}
+
+keydownHandler['Minus'] = function (event: KeyboardEvent, context: Context) {
+    lower_layer(context, 1);
 }
