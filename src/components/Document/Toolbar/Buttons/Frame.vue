@@ -87,10 +87,6 @@ const customFrame = () => {
     emits('select', Action.AddFrame);
     popoverVisible.value = false;
 }
-watch(() => props.active, () => {
-    console.log('change');
-
-})
 </script>
 
 <template>
