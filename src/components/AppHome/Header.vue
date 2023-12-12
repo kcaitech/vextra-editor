@@ -48,8 +48,8 @@ const closeInForm = () => {
 
 const getApplyList = async () => {
     try {
-        const { data } = await share_api.getApplyListAPI(); 
-        if (data) {           
+        const { data } = await share_api.getApplyListAPI();
+        if (data) {
             applyList.value = data;
             applynum.value = applyList.value.filter(item => item.apply.status === 0).length;
         }
@@ -250,7 +250,7 @@ const getElXY = (el: HTMLElement, elwidth: number = 0) => {
                 ${search}` : `${t('system.placeholder')}`" @focus="showSearchHistory = true" @input="screenout"
                 @blur="showSearchHistory = false">
                 <template #prefix>
-                    <el-icon v-if="isLoading" class="is-loading" size="18">
+                    <el-icon v-if="isLoading" class="is-loading" size="18" color="red">
                         <Loading :size="18" />
                     </el-icon>
                     <el-icon v-else size="18">
@@ -309,12 +309,21 @@ const getElXY = (el: HTMLElement, elwidth: number = 0) => {
 }
 
 :deep(.el-input__wrapper) {
-    background-color: transparent !important;
+    padding: 1 30px;
+    background-color: transparent;
     border-radius: 8px !important;
 
     &:hover {
         background-color: rgba(255, 255, 255, 1) !important;
     }
+
+    &:focus {
+        background-color: rgba(255, 255, 255, 1) !important;
+    }
+}
+
+:deep(.is-focus) {
+    background-color: rgba(255, 255, 255, 1) !important;
 }
 
 .header {
@@ -332,13 +341,17 @@ const getElXY = (el: HTMLElement, elwidth: number = 0) => {
             min-width: 160px;
             font-size: 12px;
             --el-input-height: 32px;
-            --el-input-border-color: #F0F0F0;
+            --el-input-border-color: rgb(250, 250, 250);
             --el-input-hover-border-color: #F0F0F0;
             --el-input-focus-border-color: #1878F5;
 
+            &:focus {
+                background-color: white !important;
+            }
+
             .close:hover {
-                border-radius: 4px;
                 cursor: pointer;
+                border-radius: 4px;
                 background-color: rgba(243, 243, 245, 1);
             }
         }

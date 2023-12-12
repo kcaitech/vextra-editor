@@ -124,7 +124,7 @@ const Getteaminfo = async () => {
 }
 
 const teaminviteinfo = computed(() => {
-    return `https://localhost:8080/zbb/#/join?key=${teamInvitePermission.value}&teamid=${teamID.value}`
+    return `https://protodesign.cn/#/join?key=${teamInvitePermission.value}&teamid=${teamID.value}`
 })
 
 async function copyText() {

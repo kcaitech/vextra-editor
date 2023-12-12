@@ -181,17 +181,17 @@ const networkLinkError = () => {
   }, 3000)
 }
 const token = localStorage.getItem("token") || "";
-// const networkStatus = NetworkStatus.Make(token);
-// networkStatus.addOnChange((status: any) => {
-//   const s = (status.status) as any
-//   if (s === 1) {
-//     // 网络断开连接
-//     networkLinkError()
-//   } else {
-//     // 网络连接成功
-//     networkLinkSuccess()
-//   }
-// })
+const networkStatus = NetworkStatus.Make(token);
+networkStatus.addOnChange((status: any) => {
+  const s = (status.status) as any
+  if (s === 1) {
+    // 网络断开连接
+    networkLinkError()
+  } else {
+    // 网络连接成功
+    networkLinkSuccess()
+  }
+})
 
 const closeNetMsg = () => {
   insertNetworkInfo('netError', false, network_anomaly)
@@ -214,7 +214,7 @@ onUnmounted(() => {
   if (timer) {
     clearInterval(timer)
   }
-  // networkStatus.close()
+  networkStatus.close()
 })
 
 </script>

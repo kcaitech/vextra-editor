@@ -38,7 +38,7 @@ class ShortcutsService {
         {
             title: '',
             shortcutKey: [
-                { name: '显示/隐藏操作界面', keys: "⌘ + /\/" },
+                { name: '显示/隐藏操作界面', keys: "Ctrl + \\" },
             ],
         },
         {
@@ -86,7 +86,7 @@ class ShortcutsService {
         {
             title: '',
             shortcutKey: [
-                { name: '显示/隐藏评论', keys: '⇧ + C' },
+                { name: '显示/隐藏评论', keys: 'Shift + C' },
 
             ],
         },
@@ -107,8 +107,8 @@ class ShortcutsService {
         {
             title: '',
             shortcutKey: [
-                { name: '缩放到100%', keys: '⌘ + 0' },
-                { name: '适应画布', keys: '⌘ + 1' },
+                { name: '缩放到100%', keys: 'Ctrl + 0' },
+                { name: '适应画布', keys: 'Ctrl + 1' },
             ],
         },
         {
@@ -128,10 +128,10 @@ class ShortcutsService {
         {
             title: '',
             shortcutKey: [
-                { name: '加粗', keys: '⌘ + B' },
-                { name: '下划线', keys: '⌘ + U' },
-                { name: '删除线', keys: '⇧ + ⌘ + X' },
-                { name: '倾斜', keys: '⌘ + I' },
+                { name: '加粗', keys: 'Ctrl + B' },
+                { name: '下划线', keys: 'Ctrl + U' },
+                { name: '删除线', keys: 'Shift + Ctrl + X' },
+                { name: '倾斜', keys: 'Ctrl + I' },
             ],
         },
         {
@@ -171,19 +171,19 @@ class ShortcutsService {
         {
             title: '',
             shortcutKey: [
-                { name: '全选', keys: '⌘ + A' },
-                { name: '反选', keys: '⇧ + ⌘ + A' },
+                { name: '全选', keys: 'Ctrl + A' },
+                { name: '反选', keys: 'Shift + Ctrl + A' },
                 { name: '取消选中', keys: 'ESC' },
-                { name: '显示/隐藏图层', keys: '⇧ + ⌘ + H' },
-                { name: '锁定/解锁图层', keys: '⇧ + ⌘ + L' },
+                { name: '显示/隐藏图层', keys: 'Shift + Ctrl + H' },
+                { name: '锁定/解锁图层', keys: 'Shift + Ctrl + L' },
             ],
         },
         {
             title: '',
             shortcutKey: [
-                { name: '创建编组', keys: '⌘ + G' },
-                { name: '创建容器', keys: '⌥ + ⌘ + G' },
-                { name: '取消编组/容器/区域', keys: '⇧ + ⌘ + G' },
+                { name: '创建编组', keys: 'Ctrl + G' },
+                { name: '创建容器', keys: 'Alt + Ctrl + G' },
+                { name: '取消编组/容器/区域', keys: 'Shift + Ctrl + G' },
             ],
         },
         {
@@ -193,7 +193,7 @@ class ShortcutsService {
                 { name: '下移一层', keys: '-' },
                 { name: '移到顶层', keys: ']' },
                 { name: '移到底层', keys: '[' },
-                { name: '大步进移动图层', keys: '⇧ + Direction' },
+                { name: '大步进移动图层', keys: 'Shift + Direction' },
             ],
         },
     ];
@@ -201,13 +201,13 @@ class ShortcutsService {
         {
             title: '',
             shortcutKey: [
-                { name: '选择组合内图层', keys: '⌘ + Click' },
+                { name: '选择组合内图层', keys: 'Ctrl + Click' },
             ],
         },
         {
             title: '',
             shortcutKey: [
-                { name: '拖拽复制', keys: '⌥ + Drag' },
+                { name: '拖拽复制', keys: 'Alt + Drag' },
             ],
         },
         {
@@ -221,16 +221,16 @@ class ShortcutsService {
         {
             title: '',
             shortcutKey: [
-                { name: '复制', keys: '⌘ + C' },
-                { name: '剪切', keys: '⌘ + X' },
-                { name: '粘贴', keys: '⌘ + V' },
-                { name: '粘贴并替换', keys: '⇧ + ⌘ + R' },
+                { name: '复制', keys: 'Ctrl + C' },
+                { name: '剪切', keys: 'Ctrl + X' },
+                { name: '粘贴', keys: 'Ctrl + V' },
+                { name: '粘贴并替换', keys: 'Shift + Ctrl + R' },
             ],
         },
         {
             title: '',
             shortcutKey: [
-                { name: '大步进移动图层', keys: '⇧ + Direction' },
+                { name: '大步进移动图层', keys: 'Shift + Direction' },
             ],
         },
         {

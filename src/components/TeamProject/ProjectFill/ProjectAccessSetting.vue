@@ -201,7 +201,7 @@ onMounted(() => {
     params.invited_switch = project.invited_switch;
     params.need_approval = project.need_approval;
     params.perm_type = project.perm_type;
-    sharelink.value = `https://localhost:8080/zbb/#/apphome/project/${project.id}`
+    sharelink.value = `https://protodesign.cn/#/apphome/project/${project.id}`
 
 })
 
@@ -213,13 +213,13 @@ const showPermSelect = ref<boolean>(false)
 const openTypeSelect = () => {
     if (disabled.value) return
     showTypeSelect.value = !showTypeSelect.value;
-    showPermSelect.value=false
+    showPermSelect.value = false
 }
 
 const openPermSelect = () => {
     if (disabled.value) return
     showPermSelect.value = !showPermSelect.value
-    showTypeSelect.value=false
+    showTypeSelect.value = false
 }
 
 const selectTypeOption = (data: any) => {
@@ -237,11 +237,9 @@ const disabled = computed(() => {
 })
 const handleClickOutside = (e: MouseEvent) => {
     if (e.target instanceof Element && e.target.closest('.typeoptions') == null) {
-        console.log('执行1');
         showTypeSelect.value = false
     }
     if (e.target instanceof Element && e.target.closest('.permoptions') == null) {
-        console.log('执行2');
         showPermSelect.value = false
     }
 }

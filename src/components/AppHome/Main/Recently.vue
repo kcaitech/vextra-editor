@@ -354,8 +354,6 @@ const onSwitch = (state: boolean) => {
     shareSwitch.value = state
 }
 const onSelectType = (type: number) => {
-    console.log(type, '类型变了');
-
     selectValue.value = type
 }
 

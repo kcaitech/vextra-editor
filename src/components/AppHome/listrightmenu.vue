@@ -25,7 +25,6 @@ import ProjectDialog from '@/components/TeamProject/ProjectDialog.vue';
 
 const dialogVisible = ref(false)
 const newname = ref()
-const renameinput = ref<HTMLInputElement>()
 const menu = ref<HTMLElement>()
 const { t } = useI18n()
 
@@ -220,11 +219,6 @@ const EventHandler = (item: string) => {
     }
 }
 
-const changemargin = () => {
-    const el = document.querySelector('.el-dialog__header') as HTMLElement
-    el.style.marginRight = '0px'
-}
-
 //右键新窗口打开
 const openNewWindowDocument = (id: string) => {
     if (menu.value) {
@@ -261,11 +255,6 @@ const rrename = (name: string) => {
         dialogVisible.value = false
     } else {
         dialogVisible.value = true
-        tiemr = setTimeout(() => {
-            renameinput.value?.focus()
-            renameinput.value?.select()
-            clearTimeout(tiemr)
-        }, 0);
     }
     if (menu.value) {
         menu.value.style.display = 'none'
@@ -288,7 +277,6 @@ const rename1 = async () => {
     }
     if (props.data.document != undefined) {
         const { id, name } = props.data.document
-        newname.value = renameinput.value?.value
         if (newname.value != name)
             try {
                 const { code, message } = await user_api.Setfilename({ doc_id: id, name: newname.value })

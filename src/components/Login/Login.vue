@@ -267,7 +267,7 @@ const pasteEvent = async (e: any) => {
                 <div class="login-page" v-if="loginshow">
                     <span>{{ t('system.wx_login') }}</span>
                     <div id="login_container" :class="{ 'login_container_hover': failed }" v-loading="isLoading"></div>
-                    <p @click.stop="loginshow=!loginshow">
+                    <p>
                         {{ t('system.login_read') }}
                         <a href="" @click.prevent="handleOpenNewWindow('serviceagreement')">
                             {{ t('system.read_TOS') }}

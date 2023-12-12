@@ -52,11 +52,12 @@
 </template>
 <script setup lang="ts">
 import { ElMessage } from 'element-plus';
-import { computed, nextTick, ref } from 'vue';
+import { computed, ref } from 'vue';
 import select from '@/assets/select-icon.svg'
 import { useRoute } from 'vue-router';
 import { useI18n } from 'vue-i18n';
 import * as user_api from '@/request/users'
+
 
 const emits = defineEmits<{
     (event: 'close'): void

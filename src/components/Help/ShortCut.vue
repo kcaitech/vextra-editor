@@ -6,14 +6,21 @@
                 @click.stop="clickEvent(index, $event)">
                 {{ getTypeText(title) }}
             </div>
-            <CloseIcon @close="emits('close')"></CloseIcon>
+            <div class="close" @click.stop="emits('close')">
+                <svg-icon icon-class="close"></svg-icon>
+            </div>
         </div>
         <div class="shortcut-content">
             <div class="shortcut-item" v-for="(item, index) in selecttype(itemid)" :key="index">
                 <div v-if="item.title" class="item-title">{{ item.title }}</div>
                 <div class="item-name" v-for="(i, index) in item.shortcutKey" :key="index">
                     {{ i.name }}
-                    <div class="item-key">{{ i.keys }}</div>
+                    <div class="item-key">
+                        <span :style="{ color: (key === '+' && index !== 0) ? '#BFBFBF' : '' }"
+                            v-for="(key, index) in strArray(string_by_sys(i.keys))" :key="key">
+                            {{ key === "+" ? ` ${key} ` : key }}
+                        </span>
+                    </div>
                 </div>
             </div>
         </div>
@@ -21,8 +28,8 @@
 </template>
 <script setup lang="ts">
 import { nextTick, onMounted, ref, watch } from 'vue';
-import CloseIcon from '../common/CloseIcon.vue';
 import { selecttype, getTypeText, KeysType } from '@/context/shortcut'
+import { string_by_sys } from '@/utils/common'
 
 const props = defineProps<{
     b: boolean
@@ -36,6 +43,10 @@ const titles = ref<any[]>(Object.values(KeysType).filter(value => typeof value =
 const itemid = ref(0)
 const elwidth = ref()
 const elleft = ref()
+
+const strArray = (str: any) => {
+    return str.split(' ')
+}
 
 const clickEvent = (index: number, e: MouseEvent) => {
     itemid.value = index
@@ -67,7 +78,7 @@ onMounted(() => {
 <style lang="scss" scoped>
 .shortcut-keys {
     position: fixed;
-    width: 600px;
+    width: 700px;
     bottom: 66px;
     right: 20px;
     border-radius: 8px;
@@ -106,13 +117,19 @@ onMounted(() => {
             position: absolute;
             right: 0;
             margin: 3px 6px 3px 0px;
+            width: 16px;
+            height: 16px;
+            padding: 4px;
+            border-radius: 6px;
 
             &:hover {
-                background-color: rgba(247, 247, 249, 1);
+                background-color: rgb(243, 243, 245);
+                cursor: pointer;
             }
 
-            &:active {
-                background-color: rgba(243, 243, 245, 1);
+            svg {
+                width: 100%;
+                height: 100%;
             }
         }
 
@@ -146,13 +163,14 @@ onMounted(() => {
             .item-name {
                 font-size: 12px;
                 font-weight: 600;
-                color: rgba(89, 89, 89, 1);
+                color: #595959;
                 line-height: 40px;
                 display: flex;
                 justify-content: space-between;
+                gap: 12px;
 
                 .item-key {
-                    color: #000000E6;
+                    color: #434343;
                 }
             }
         }

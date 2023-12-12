@@ -99,10 +99,10 @@ export const joinTeam = {
 }
 
 export const moveprojectfill = {
-    name: '文件名称: ',
-    location: '当前位置: ',
+    name: '文件名称：',
+    location: '当前位置：',
     my_file: '我的文件',
-    move_to: '移动文件至: ',
+    move_to: '移动文件至：',
     private_file: '设为私有文件',
     share_Project: '收到的共享项目',
     cancel: '取消',
