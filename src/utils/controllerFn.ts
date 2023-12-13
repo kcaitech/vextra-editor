@@ -200,3 +200,7 @@ export function modify_shapes(context: Context, shapes: Shape[]) {
     }
     return context.selection.selectedShapes;
 }
+
+// export class DirectionCalc {
+//     private 
+// }

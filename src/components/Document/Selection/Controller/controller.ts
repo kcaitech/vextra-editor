@@ -78,7 +78,18 @@ export function useControllerCustom(context: Context, i18nT: Function) {
         if (event.target instanceof HTMLInputElement) { // 不处理输入框内的键盘事件
             return;
         }
-        console.log('emits by controller');
+
+        if (!asyncTransfer) {
+            shapes = modify_shapes(context, shapes);
+
+            asyncTransfer = context.editor
+                .controller()
+                .asyncTransfer(shapes, selection.selectedPage!);
+        } else {
+
+        }
+
+        console.log('emits by controller', event.code);
 
     }
 
@@ -139,17 +150,34 @@ export function useControllerCustom(context: Context, i18nT: Function) {
         if (isDragging && wheel && asyncTransfer && !workspace.isEditing) {
             speed = get_speed(t_e || e, e);
             t_e = e;
+
             let update_type = 0;
             const isOut = wheel.moving(e, { type: EffectType.TRANS, effect: asyncTransfer.transByWheel });
-            if (!isOut) update_type = transform(startPosition, mousePosition);
+            if (!isOut) {
+                update_type = transform(startPosition, mousePosition);
+            }
+
             modify_mouse_position_by_type(update_type, startPosition, mousePosition);
         } else if (check_drag_action(startPosition, mousePosition) && !workspace.isEditing) {
+            if (asyncTransfer) {
+                return;
+            }
+
             shapes = modify_shapes(context, shapes);
-            if (e.altKey) shapes = paster_short(context, shapes);
+
+            if (e.altKey) {
+                shapes = paster_short(context, shapes);
+            }
+
             reset_assist_before_translate(context, shapes);
+
             offset_map = gen_offset_points_map(shapes, startPositionOnPage);
+
             isDragging = true;
-            asyncTransfer = context.editor.controller().asyncTransfer(shapes, selection.selectedPage!);
+
+            asyncTransfer = context.editor
+                .controller()
+                .asyncTransfer(shapes, selection.selectedPage!);
         }
     }
 
@@ -401,6 +429,7 @@ export function useControllerCustom(context: Context, i18nT: Function) {
         selection.unwatch(selection_watcher);
         remove_blur_from_window(windowBlur);
         document.removeEventListener('keydown', keyboardHandle);
+        document.removeEventListener('keydown', keydown);
         document.removeEventListener('mousedown', mousedown);
         timerClear();
     }
