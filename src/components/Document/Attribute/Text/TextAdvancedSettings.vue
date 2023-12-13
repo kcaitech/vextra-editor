@@ -281,7 +281,7 @@ onUnmounted(() => {
 
 <template>
   <div class="text-detail-container">
-    <Popover :context="props.context" class="popover" ref="popover" :width="220" height="auto" :left="440"
+    <Popover :context="props.context" class="popover" ref="popover" :width="232" height="auto" :left="433"
       :title="t('attr.text_advanced_settings')">
       <template #trigger>
         <div class="trigger">
@@ -333,25 +333,25 @@ onUnmounted(() => {
           <div>
             <span>{{ t('attr.letter_case') }}</span>
             <div class="level-aligning jointly-text">
-              <i class="jointly-text font-posi" :class="{ selected_bgc: selectCase === 'none' }"
+              <i :class="{'jointly-text': true,'font-posi': true, selected_bg: selectCase === 'none' }"
                 @click="onSelectCase(TextTransformType.None)">
                 <Tooltip :content="t('attr.as_typed')" :offset="15">
                   <svg-icon icon-class="text-no-list"></svg-icon>
                 </Tooltip>
               </i>
-              <i class="jointly-text font-posi" :class="{ selected_bgc: selectCase === 'uppercase' }"
+              <i :class="{'jointly-text': true,'font-posi': true, selected_bg: selectCase === 'uppercase' }"
                 @click="onSelectCase(TextTransformType.Uppercase)">
                 <Tooltip :content="t('attr.uppercase')" :offset="15">
                   <svg-icon icon-class="text-uppercase"></svg-icon>
                 </Tooltip>
               </i>
-              <i class="jointly-text font-posi" :class="{ selected_bgc: selectCase === 'lowercase' }"
+              <i :class="{'jointly-text': true,'font-posi': true, selected_bg: selectCase === 'lowercase' }"
                 @click="onSelectCase(TextTransformType.Lowercase)">
                 <Tooltip :content="t('attr.lowercase')" :offset="15">
                   <svg-icon icon-class="text-lowercase"></svg-icon>
                 </Tooltip>
               </i>
-              <i class="jointly-text font-posi" :class="{ selected_bgc: selectCase === 'uppercase-first' }"
+              <i :class="{'jointly-text': true,'font-posi': true, selected_bg: selectCase === 'uppercase-first' }"
                 @click="onSelectCase(TextTransformType.UppercaseFirst)">
                 <Tooltip :content="t('attr.titlecase')" :offset="15">
                   <svg-icon icon-class="text-titlecase"></svg-icon>
@@ -362,19 +362,19 @@ onUnmounted(() => {
           <div>
             <span>{{ t('attr.text_style') }}</span>
             <div class="vertical-aligning jointly-text">
-              <i class="jointly-text font-posi" :class="{ selected_bgc: selectText === 'flexible' }"
+              <i :class="{'jointly-text': true,'font-posi': true, selected_bg: selectText === 'flexible' }"
                 @click="onSelectText(TextBehaviour.Flexible)">
                 <Tooltip :content="t('attr.autowidth')" :offset="15">
                   <svg-icon icon-class="text-autowidth"></svg-icon>
                 </Tooltip>
               </i>
-              <i class="jointly-text font-posi" :class="{ selected_bgc: selectText === 'fixed' }"
+              <i :class="{'jointly-text': true,'font-posi': true, selected_bg: selectText === 'fixed' }"
                 @click="onSelectText(TextBehaviour.Fixed)">
                 <Tooltip :content="t('attr.autoheight')" :offset="15">
                   <svg-icon icon-class="text-autoheight"></svg-icon>
                 </Tooltip>
               </i>
-              <i class="jointly-text font-posi" :class="{ selected_bgc: selectText === 'fixWidthAndHeight' }"
+              <i :class="{'jointly-text': true,'font-posi': true, selected_bg: selectText === 'fixWidthAndHeight' }"
                 @click="onSelectText(TextBehaviour.FixWidthAndHeight)">
                 <Tooltip :content="t('attr.fixedsize')" :offset="15">
                   <svg-icon icon-class="text-fixedsize"></svg-icon>

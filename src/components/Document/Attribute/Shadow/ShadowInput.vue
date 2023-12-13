@@ -14,7 +14,9 @@ const emits = defineEmits<{
     (e: 'onChange', value: number): void;
 }>();
 const input = ref<HTMLInputElement>();
+const isActived = ref(false)
 const selectValue = () => {
+    isActived.value = true
     if (input.value) {
         input.value.select()
     }
@@ -86,10 +88,13 @@ const onMouseUp = (e: MouseEvent) => {
     document.removeEventListener('mousemove', onMouseMove);
     document.removeEventListener('mouseup', onMouseUp);
 }
+function blur2() {
+    isActived.value = false
+}
 </script>
 
 <template>
-    <div class="input-container" :class="{ disabled: props.disabled }">
+    <div class="input-container" :class="{ disabled: props.disabled, actived: isActived }">
         <Tooltip v-if="props.tootip && !props.disabled" :content="props.tootip" :offset="12">
             <span class="icon" ref="icon" @mousedown="onMouseDown">{{ ticon }}</span>
         </Tooltip>
@@ -100,7 +105,7 @@ const onMouseUp = (e: MouseEvent) => {
                 :style="{ cursor: props.disabled ? 'default' : 'text' }" @change="onChange">
         </Tooltip>
         <input v-if="!props.disabled" ref="input" :value="props.shadowV" @focus="selectValue" :disabled="props.disabled"
-            :style="{ cursor: props.disabled ? 'default' : 'text' }" @change="onChange">
+            :style="{ cursor: props.disabled ? 'default' : 'text' }" @change="onChange" @blur="blur2">
         <div class="adjust">
             <svg-icon icon-class="down" style="transform: rotate(180deg);"
                 :style="{ cursor: props.disabled ? 'default' : 'pointer' }" @click="augment"></svg-icon>
@@ -151,9 +156,20 @@ const onMouseUp = (e: MouseEvent) => {
         outline: none;
     }
 
+    input::selection {
+        color: #FFFFFF;
+        background: #1878F5;
+    }
+
+    input::-moz-selection {
+        color: #FFFFFF;
+        background: #1878F5;
+    }
+
     .adjust {
         width: 19px;
         height: 100%;
+        flex: 0 0 19px;
         //background-color: #fff;
         //margin-left: 5px;
         display: flex;
@@ -161,6 +177,7 @@ const onMouseUp = (e: MouseEvent) => {
         align-items: center;
         justify-content: space-around;
         box-sizing: border-box;
+        border-radius: 4px;
 
         >svg {
             cursor: pointer;
@@ -169,9 +186,16 @@ const onMouseUp = (e: MouseEvent) => {
             color: #666666;
         }
     }
+
+    .adjust:hover {
+        background-color: #EBEBEB;
+    }
 }
 
 .disabled {
     opacity: 0.4;
+}
+.actived {
+    border: 1px solid #1878F5;
 }
 </style>

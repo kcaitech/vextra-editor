@@ -148,6 +148,7 @@ watch(() => props.selected, () => {
             //padding: 0 var(--default-padding);
             //margin-left: 6px;
             //margin-right: 8px;
+            font-weight: 500;
         }
 
         >.svg-wrap {

@@ -370,6 +370,7 @@ function selection_wather(t?: any) {
 }
 
 const selectBorderThicknes = () => {
+    isActived.value = true
     borderThickness.value?.select()
 }
 function blur2() {
@@ -523,11 +524,15 @@ onUnmounted(() => {
                         display: flex;
                         flex-direction: column;
                         justify-content: space-around;
+                        border-radius: 4px;
 
                         > svg {
                             width: 12px;
                             height: 12px;
                         }
+                    }
+                    .up_down:hover {
+                        background-color: #EBEBEB;
                     }
                 }
 
@@ -535,9 +540,6 @@ onUnmounted(() => {
                     border: 1px solid #1878F5;
                 }
 
-                > .thickness-container:hover {
-                    background-color: #EBEBEB;
-                }
             }
         }
     }

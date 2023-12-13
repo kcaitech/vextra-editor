@@ -182,8 +182,7 @@ onMounted(() => {
             cursor: (props.svgicon === 'radius' && props.multipleValues === true && !props.disabled) ? 'auto' : 'ew-resize'
         }"></svg-icon>
         <img :class="props.disabled ? 'deicon' : 'icon'" v-if="props.icon" :src="props.icon" />
-        <span @mousedown="onMouseDown" :class="props.disabled ? 'deicon' : 'icon'" v-if="!props.icon && props.ticon">{{
-            props.ticon }}</span>
+        <span @mousedown="onMouseDown" :class="props.disabled ? 'deicon' : 'icon'" v-if="!props.icon && props.ticon">{{props.ticon }}</span>
         <input ref="input" @click="onBlur" @focus="selectValue" @blur="blur2" :value="props.text" @keydown="onKeyBlur"
             :disabled="props.disabled" :style="{ cursor: props.disabled ? 'default' : 'text' }" v-on:change="onChange" />
     </div>

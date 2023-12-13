@@ -86,7 +86,7 @@ const createTable = (row?: number, col?: number) => {
         </div>
         <div class="table-button">
             <button @click="createTable(inputRow, inputCol)"
-                :style="{ opacity: inputRow && inputCol ? '1' : '.4' }">{{t('table.confirm')}}</button>
+                :style="{ background: inputRow && inputCol ? '#1878F5' : '#BDE2FF' }">{{t('table.confirm')}}</button>
         </div>
     </div>
 </template>
@@ -95,30 +95,41 @@ const createTable = (row?: number, col?: number) => {
 .table_container {
     position: absolute;
     z-index: 999;
-    width: 250px;
-    height: 380px;
+    width: 252px;
+    height: 394px;
     border-radius: 4px;
-    padding: 10px;
-    background-color: #fff;
-    border: 1px solid #ccc;
-    box-shadow: 2px 2px 10px rgba(0, 0, 0, 0.2);
+    padding: 4px 12px;
+    background-color: #FFFFFF;
+    border: 1px solid #F0F0F0;
+    box-shadow:  0px 2px 16px 0px rgba(0, 0, 0, 0.08);
     box-sizing: border-box;
     font-size: var(--font-default-fontsize);
 
     .table-title {
+        height: 40px;
+        padding: 14px 0;
+        box-sizing: border-box;
+        display: flex;
+        align-items: center;
+        justify-content: flex-start;
+
         >:first-child {
-            margin-right: 10px;
-            font-size: 13px;
+            margin-right: 12px;
+            font-weight: 500;
+            line-height: 12px;
+            color: #3D3D3D;
         }
 
         >:last-child {
-            color: #7D7D7D;
+            display: flex;
+            align-items: center;
+            color: #8C8C8C;
+            height: 12px;
         }
     }
 
     .grid-container {
         position: relative;
-        margin-top: 8px;
         display: flex;
         justify-content: center;
         align-items: center;
@@ -134,8 +145,8 @@ const createTable = (row?: number, col?: number) => {
 
 
     .grid-cell {
-        width: 17px;
-        height: 17px;
+        width: 18px;
+        height: 18px;
         border-radius: 3px;
         border-color: rgba(0, 0, 0, 0.3);
     }
@@ -146,27 +157,38 @@ const createTable = (row?: number, col?: number) => {
     }
 
     .table-state {
-        margin-top: 8px;
-        font-size: 13px;
+        font-size: 12px;
+        line-height: 12px;
+        padding: 16px 0 8px 0;
     }
 
     .table-input {
         display: flex;
-        margin-top: 8px;
+        justify-content: space-between;
 
         .row {
             display: flex;
             align-items: center;
-            margin-right: 10px;
+
+            >span {
+                width: 36px;
+                height: 12px;
+                font-family: HarmonyOS Sans;
+                font-size: 12px;
+                line-height: 12px;
+                color: #3D3D3D;
+            }
 
             >input {
-                margin-left: 5px;
-                width: 60px;
-                border-radius: 4px;
-                height: 20px;
-                border: 1px solid rgba(0, 0, 0, 0.3);
+                width: 72px;
+                border-radius: var(--default-radius);
+                height: 30px;
                 font-size: var(--font-default-fontsize);
-                padding-left: 5px;
+                box-sizing: border-box;
+                padding: 4px 27px 4px 12px;
+                line-height: 22px;
+                background: #F5F5F5;
+                border: none;
             }
 
             input:focus {
@@ -174,7 +196,7 @@ const createTable = (row?: number, col?: number) => {
             }
 
             input::placeholder {
-                color: rgba(0, 0, 0, 0.3);
+                color: #BFBFBF;
             }
         }
 
@@ -182,14 +204,25 @@ const createTable = (row?: number, col?: number) => {
             display: flex;
             align-items: center;
 
+            >span {
+                width: 36px;
+                height: 12px;
+                font-family: HarmonyOS Sans;
+                font-size: 12px;
+                line-height: 12px;
+                color: #3D3D3D;
+            }
+
             >input {
-                margin-left: 5px;
-                width: 60px;
-                border-radius: 4px;
-                height: 20px;
-                border: 1px solid rgba(0, 0, 0, 0.3);
+                width: 72px;
+                border-radius: var(--default-radius);
+                height: 30px;
                 font-size: var(--font-default-fontsize);
-                padding-left: 5px;
+                box-sizing: border-box;
+                padding: 4px 27px 4px 12px;
+                line-height: 22px;
+                background: #F5F5F5;
+                border: none;
             }
 
             input:focus {
@@ -197,7 +230,7 @@ const createTable = (row?: number, col?: number) => {
             }
 
             input::placeholder {
-                color: rgba(0, 0, 0, 0.3);
+                color: #BFBFBF;
             }
         }
     }
@@ -210,8 +243,8 @@ const createTable = (row?: number, col?: number) => {
         border: none;
 
         .hover-cell {
-            width: 20px;
-            height: 20px;
+            width: 21px;
+            height: 21px;
             border: none;
         }
     }
@@ -220,19 +253,18 @@ const createTable = (row?: number, col?: number) => {
         display: flex;
         align-items: center;
         justify-content: center;
-        margin-top: 15px;
+        box-sizing: border-box;
+        padding: 10px 0;
 
         button {
-            width: 70px;
-            height: 26px;
+            width: 228px;
+            height: 32px;
             display: flex;
             align-items: center;
             justify-content: center;
-            background-color: #fff;
-            border: 1px solid #ccc;
-            border-radius: 4px;
-            box-shadow: 2px 2px 8px rgba(0, 0, 0, 0.2);
-
+            border: none;
+            border-radius: var(--default-radius);
+            color: #FFFFFF;
         }
     }
 }</style>
