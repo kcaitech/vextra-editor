@@ -75,7 +75,7 @@ onUnmounted(() => {
 <template>
     <div class="scale-display-warp">
         <span v-if="!cus" @click="input_cus" ref="inputSpan" style="height: 15px;font-size: 13px;display: flex;
-    align-items: center;justify-content: center;" :style="{ width: inputWidth + 'px', minWidth: '33px' }">{{ scale }}%</span>
+    align-items: center;justify-content: center;" :style="{ width: '72px', minWidth: '33px' }">{{ scale }}%</span>
         <input v-if="cus" type="text" ref="input" @input="onInputName"
             :style="{ width: inputWidth + 'px', minWidth: '32px' }">
         <span v-if="cus" style="position: absolute; visibility: hidden; top: 0px;" ref="inputSpan2"></span>
@@ -93,7 +93,7 @@ onUnmounted(() => {
     cursor: pointer;
     background: rgba(255, 255, 255, 0.1);
     border-radius: var(--default-radius);
-    padding: 9px 19px 8px 20px;
+    //padding: 9px 19px 8px 20px;
     box-sizing: border-box;
 
     input {
