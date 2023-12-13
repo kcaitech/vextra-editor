@@ -1,10 +1,10 @@
-import { Shape, ShapeType, GroupShape, PathShape } from '@kcdesign/data';
+import { Shape, ShapeType, GroupShape, PathShape, AsyncPathEditor } from '@kcdesign/data';
 import { onMounted, onUnmounted } from "vue";
 import { Context } from "@/context";
 import { Matrix } from '@kcdesign/data';
 import { ClientXY, PageXY } from "@/context/selection";
 import { fourWayWheel, Wheel, EffectType } from "@/utils/wheel";
-import { get_speed, keyboardHandle as handle, modify_shapes } from "@/utils/controllerFn";
+import { DirectionCalc, get_speed, modify_shapes } from "@/utils/controllerFn";
 import { Selection } from "@/context/selection";
 import { selection_penetrate } from "@/utils/scout";
 import { WorkSpace } from "@/context/workspace";
@@ -47,13 +47,16 @@ export function useControllerCustom(context: Context, i18nT: Function) {
     let startPositionOnPage: PageXY = { x: 0, y: 0 };
     let wheel: Wheel | undefined = undefined;
     let shapes: Shape[] = [];
-    let asyncTransfer: AsyncTransfer | undefined = undefined;
     let need_update_comment: boolean = false;
     let t_e: MouseEvent | undefined;
     let speed: number = 0;
     const selection = context.selection;
     const workspace = context.workspace;
     let offset_map: PointsOffset | undefined;
+    const directionCalc: DirectionCalc = new DirectionCalc();
+
+    let asyncTransfer: AsyncTransfer | undefined = undefined;
+    let asyncPathEditor: AsyncPathEditor | undefined = undefined;
 
     function handleDblClick() {
         const selected = selection.selectedShapes;
@@ -79,23 +82,101 @@ export function useControllerCustom(context: Context, i18nT: Function) {
             return;
         }
 
+        if (isDragging) {
+            return;
+        }
+
+        if (!directionCalc.is_catfish(event.code)) {
+            return;
+        }
+
+        keydown_action(event);
+    }
+
+    function keydown_action(event: KeyboardEvent) {
+        const mode = context.workspace.is_path_edit_mode;
+        if (mode) {
+            keydown_action_for_path_edit(event);
+        } else {
+            keydown_action_for_trans(event);
+        }
+    }
+
+    function keydown_action_for_path_edit(event: KeyboardEvent) {
+        const pathshape = context.selection.pathshape;
+        if (!pathshape) {
+            return;
+        }
+
+        const points = context.path.get_synthetic_points(pathshape.points.length - 1);
+        if (!points?.length) {
+            return;
+        }
+
+        if (!asyncPathEditor) {
+            directionCalc.reset();
+
+            asyncPathEditor = context.editor
+                .controller()
+                .asyncPathEditor(pathshape, selection.selectedPage!)
+        }
+
+        if (!asyncPathEditor) {
+            return;
+        }
+
+        directionCalc.down(event);
+
+        let { x, y } = directionCalc.calc();
+
+        x = x / pathshape.frame.width;
+        y = y / pathshape.frame.height;
+
+        asyncPathEditor.execute2(points, x, y);
+    }
+
+    function keydown_action_for_trans(event: KeyboardEvent) {
         if (!asyncTransfer) {
+            directionCalc.reset();
+
             shapes = modify_shapes(context, shapes);
 
             asyncTransfer = context.editor
                 .controller()
                 .asyncTransfer(shapes, selection.selectedPage!);
-        } else {
-
         }
 
-        console.log('emits by controller', event.code);
+        if (!asyncTransfer) {
+            return;
+        }
 
+        directionCalc.down(event)
+
+        const { x, y } = directionCalc.calc();
+
+        asyncTransfer.stick(x, y);
     }
+
 
     function keyup(event: KeyboardEvent) {
         if (event.target instanceof HTMLInputElement) { // 不处理输入框内的键盘事件
             return;
+        }
+
+        const still_active = directionCalc.up(event);
+
+        if (still_active) {
+            return;
+        }
+
+        if (asyncTransfer) {
+            asyncTransfer.close();
+            asyncTransfer = undefined;
+        }
+
+        if (asyncPathEditor) {
+            asyncPathEditor.close();
+            asyncPathEditor = undefined;
         }
 
     }
@@ -373,10 +454,6 @@ export function useControllerCustom(context: Context, i18nT: Function) {
         return !!len;
     }
 
-    function keyboardHandle(e: KeyboardEvent) {
-        handle(e, context);
-    }
-
     function selection_watcher(t?: number) {
         if (t === Selection.CHANGE_SHAPE) { // 选中的图形发生改变，初始化控件
             const selected = selection.selectedShapes;
@@ -398,7 +475,15 @@ export function useControllerCustom(context: Context, i18nT: Function) {
     function windowBlur() {
         if (isDragging) { // 窗口失焦,此时鼠标事件(up,move)不再受系统管理, 此时需要手动关闭已开启的状态
             remove_move_and_up_from_document(mousemove, mouseup);
-            if (asyncTransfer) asyncTransfer = asyncTransfer.close();
+            if (asyncTransfer) {
+                asyncTransfer = asyncTransfer.close();
+                directionCalc.reset();
+            }
+            if (asyncPathEditor) {
+                asyncPathEditor.close();
+                asyncPathEditor = undefined;
+                directionCalc.reset();
+            }
             isDragging = false;
             end_transalte(context);
             reset_sticked();
@@ -415,8 +500,8 @@ export function useControllerCustom(context: Context, i18nT: Function) {
         workspace.watch(workspace_watcher);
         selection.watch(selection_watcher);
         add_blur_for_window(windowBlur);
-        document.addEventListener('keydown', keyboardHandle);
         document.addEventListener('keydown', keydown);
+        document.addEventListener('keyup', keyup);
         document.addEventListener('mousedown', mousedown);
         checkStatus();
         initController();
@@ -428,8 +513,8 @@ export function useControllerCustom(context: Context, i18nT: Function) {
         workspace.unwatch(workspace_watcher);
         selection.unwatch(selection_watcher);
         remove_blur_from_window(windowBlur);
-        document.removeEventListener('keydown', keyboardHandle);
         document.removeEventListener('keydown', keydown);
+        document.removeEventListener('keyup', keyup);
         document.removeEventListener('mousedown', mousedown);
         timerClear();
     }

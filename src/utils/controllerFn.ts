@@ -201,6 +201,100 @@ export function modify_shapes(context: Context, shapes: Shape[]) {
     return context.selection.selectedShapes;
 }
 
-// export class DirectionCalc {
-//     private 
-// }
+export class DirectionCalc {
+    static STEP = 1;
+    static FASTER = 10;
+    private m_up: boolean = false;
+    private m_down: boolean = false;
+    private m_left: boolean = false;
+    private m_right: boolean = false;
+    private m_faster: boolean = false;
+
+    is_catfish(code: string) {
+        return ['ArrowUp', 'ArrowDown', 'ArrowLeft', 'ArrowRight'].includes(code);
+    }
+
+    down(event: KeyboardEvent) {
+        switch (event.code) {
+            case 'ArrowUp':
+                this.m_up = true;
+                break;
+            case 'ArrowDown':
+                this.m_down = true;
+                break;
+            case 'ArrowLeft':
+                this.m_left = true;
+                break;
+            case 'ArrowRight':
+                this.m_right = true;
+                break;
+            default:
+                break;
+        }
+        if (event.shiftKey) {
+            this.m_faster = true;
+        }
+    }
+
+    up(event: KeyboardEvent) {
+        switch (event.code) {
+            case 'ArrowUp':
+                this.m_up = false;
+                break;
+            case 'ArrowDown':
+                this.m_down = false;
+                break;
+            case 'ArrowLeft':
+                this.m_left = false;
+                break;
+            case 'ArrowRight':
+                this.m_right = false;
+                break;
+            case 'ShiftLeft':
+                this.m_faster = false;
+                break;
+            case 'ShiftRight':
+                this.m_faster = false;
+                break;
+            default:
+                break;
+        }
+
+        return this.m_up || this.m_down || this.m_left || this.m_right;
+    }
+
+    reset() {
+        this.m_up = false;
+        this.m_down = false;
+        this.m_left = false;
+        this.m_right = false;
+        this.m_faster = false;
+    }
+
+    calc() {
+        let x = 0;
+        let y = 0;
+        if (this.m_up) {
+            y = y - DirectionCalc.STEP;
+        }
+
+        if (this.m_down) {
+            y = y + DirectionCalc.STEP;
+        }
+
+        if (this.m_left) {
+            x = x - DirectionCalc.STEP;
+        }
+
+        if (this.m_right) {
+            x = x + DirectionCalc.STEP;
+        }
+
+        if (this.m_faster) {
+            x *= DirectionCalc.FASTER;
+            y *= DirectionCalc.FASTER;
+        }
+
+        return { x, y };
+    }
+}
