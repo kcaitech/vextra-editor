@@ -43,7 +43,6 @@ const isTriangle = ref(props.unfold);
 const width = ref<number>(0);
 const height = ref<number>(0);
 const xy = ref<{ x: number, y: number }>({ x: 0, y: 0 });
-const rotate = ref<number>(0);
 const background_color = ref<string>(DEFAULT_COLOR());
 let renderItems: Shape[] = reactive([]);
 const selectedShapes: Map<string, Shape> = new Map();
@@ -113,14 +112,14 @@ const _getCanvasShape = () => {
             }
             setTimeout(() => {
                 pngImage.value = ImageUrls.get(id);
-            }, 10)
+            }, 50)
         }
     });
 }
 
 
 
-const getCanvasShape = debounce(_getCanvasShape, 100, { leading: true });
+const getCanvasShape = debounce(_getCanvasShape, 250, { leading: true });
 
 const getPosition = (shape: Shape) => {
     const p = shape.boundingBox()
@@ -132,20 +131,17 @@ const getPosition = (shape: Shape) => {
         xy.value.y = frame.y - page.frame.y;
         width.value = shape.frame.width;
         height.value = shape.frame.height;
-        rotate.value = 0;
     } else {
-        width.value = shape.frame.width;
-        height.value = shape.frame.height;
-        xy.value.x = shape.frame.x;
-        xy.value.y = shape.frame.y;
-        rotate.value = 0;
+        width.value = p.width;
+        height.value = p.height;
+        xy.value.x = p.x;
+        xy.value.y = p.y;
     }
     if (shape.type !== ShapeType.Cutout) {
         const { left, top, right, bottom } = getShadowMax(shape);
         const max_border = getShapeBorderMax(shape);
         xy.value.x -= (left + max_border);
         xy.value.y -= (top + max_border);
-        rotate.value = shape.rotation || 0;
         width.value += ((left + max_border) + (right + max_border));
         height.value += ((top + max_border) + (bottom + max_border));
     }
@@ -157,7 +153,6 @@ const resetSvg = () => {
     height.value = 0;
     xy.value.x = 0;
     xy.value.y = 0;
-    pngImage.value = undefined;
     reflush.value++;
 }
 function page_color() {
@@ -188,15 +183,15 @@ const select_watcher = (t: number) => {
             isTriangle.value = shapes[0].exportOptions.unfold;
         }
         page_color();
-        getCanvasShape();
+        _getCanvasShape();
         if (shapes.length === 1) {
             shape.value = shapes[0];
         } else if (shapes.length === 0) {
             shape.value = undefined;
         }
     }
-    if(t === Selection.CHANGE_PAGE) {
-        getCanvasShape();
+    if (t === Selection.CHANGE_PAGE) {
+        _getCanvasShape();
     }
 }
 
@@ -221,7 +216,6 @@ const getShapesSvg = (shapes: Shape[]) => {
                 shapeItem = [shape];
             }
             getPosition(shape);
-
             renderItems.push(
                 {
                     id: shape.id + i,
@@ -273,7 +267,7 @@ watch(() => shape.value, (v, o) => {
 
 onMounted(() => {
     page_color();
-    getCanvasShape();
+    _getCanvasShape();
     props.context.selection.watch(select_watcher);
 })
 onUnmounted(() => {
@@ -297,16 +291,14 @@ onUnmounted(() => {
             <component :is="comsMap.get(c.type) ?? comsMap.get(ShapeType.Rectangle)" v-for=" c  in  renderItems "
                 :key="c.id" :data="c" />
         </svg>
-        <div v-if="pngImage">
-            <div class="preview-canvas" v-if="isTriangle && !props.trim_bg" :reflush="reflush !== 0 ? reflush : undefined">
-                <div class="preview-image" v-if="pngImage">
-                    <img :src="pngImage" ref="img" alt="" :draggable="true" @dragstart="startDrag">
-                </div>
-            </div>
-            <div class="trim-canvas" v-if="isTriangle && props.trim_bg && pngImage"
-                :reflush="reflush !== 0 ? reflush : undefined">
+        <div class="preview-canvas" v-if="isTriangle && !props.trim_bg" :reflush="reflush !== 0 ? reflush : undefined">
+            <div class="preview-image" v-if="pngImage">
                 <img :src="pngImage" ref="img" alt="" :draggable="true" @dragstart="startDrag">
             </div>
+        </div>
+        <div class="trim-canvas" v-if="isTriangle && props.trim_bg && pngImage"
+            :reflush="reflush !== 0 ? reflush : undefined">
+            <img :src="pngImage" ref="img" alt="" :draggable="true" @dragstart="startDrag">
         </div>
     </div>
 </template>

@@ -19,10 +19,10 @@ interface Props {
 }
 const props = defineProps<Props>();
 const emits = defineEmits<{
-    (e: 'changeSize', value: string, argsi: number): void;
+    (e: 'changeSize', value: string, argsi: number, shapes: Shape[]): void;
     (e: 'changePerfix', index: number, argsi: number): void;
     (e: 'changeFormat', index: number, argsi: number): void;
-    (e: 'changeName', value: string, index: number): void;
+    (e: 'changeName', value: string, index: number, shapes: Shape[]): void;
     (e: 'delete', index: number): void;
 }>();
 const showCutoutSize = ref(false);
@@ -70,7 +70,8 @@ const showCutoutFormatMenu = () => {
 };
 const selectSize = (i: number) => {
     sizeValue.value = props.sizeItems[i];
-    emits('changeSize', props.sizeItems[i], props.index);
+    const shapes = props.context.selection.selectedShape;
+    emits('changeSize', props.sizeItems[i], props.index, shapes);
 }
 const selectPerfix = (i: number) => {
     perfixValue.value = props.perfixItems[i];
@@ -84,7 +85,8 @@ const nameInput = ref<HTMLInputElement>();
 const changeName = () => {
     const value = nameInput.value!.value;
     name.value = value;
-    emits('changeName', value, props.index);
+    const shapes = props.context.selection.selectedShape;
+    emits('changeName', value, props.index, shapes);
 }
 const scaleInput = ref<HTMLInputElement>();
 const changeScale = () => {
@@ -92,7 +94,8 @@ const changeScale = () => {
     const value = scaleInput.value!.value;
     if (regex.test(value)) {
         sizeValue.value = value;
-        emits('changeSize', value, props.index);
+        const shapes = props.context.selection.selectedShape;
+        emits('changeSize', value, props.index, shapes);
     } else {
         sizeValue.value = props.argus.format.scale + 'x';
         scaleInput.value!.value = sizeValue.value;
@@ -110,6 +113,7 @@ const selectName = () => {
         nameInput.value.select();
     }
 }
+
 const deleteItem = () => {
     emits('delete', props.index);
 }
@@ -143,7 +147,7 @@ watchEffect(() => {
                 </ArgsSelect>
             </div>
             <div class="cutout_presuffix_input cutout_export_input" ref="cutout_perfix_input">
-                <input :placeholder="t(`cutoutExport.${perfixValue}`)" ref="nameInput" @focus="selectName" :value="name"
+                <input class="presuffix_input" :placeholder="t(`cutoutExport.${perfixValue}`)" ref="nameInput" @focus="selectName" :value="name"
                     @change="changeName">
                 <div class="down-icon presuffix" @click.stop="showCutoutPerfixMenu">
                     <svg-icon icon-class="down"></svg-icon>

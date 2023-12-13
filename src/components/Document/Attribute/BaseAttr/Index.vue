@@ -361,7 +361,7 @@ function onChangeRotate(value: string) {
     value = Number.parseFloat(value).toFixed(fix);
     const newRotate: number = Number.parseFloat(value);
     if (isNaN(newRotate)) return;
-    const selected = props.context.selection.selectedShapes.filter(shape => shape.type !== ShapeType.Cutout);
+    const selected = props.context.selection.selectedShapes;
     if (selected.length) {
         const page = props.context.selection.selectedPage;
         if (page) {
@@ -524,16 +524,16 @@ onUnmounted(() => {
             </div>
             <div style="width: 22px;height: 22px;" v-else></div>
         </div>
-        <div class="tr" :reflush="reflush" v-if="cutout_setting">
+        <div class="tr" :reflush="reflush">
             <IconText class="td angle" svgicon="angle" :text="`${rotate}` + '°'" @onchange="onChangeRotate"
                 :frame="{ width: 14, height: 14 }" :disabled="model_disable_state.rotation" :context="context" />
-            <Tooltip v-if="s_flip" :content="t('attr.flip_h')" :offset="15">
+            <Tooltip v-if="s_flip || cutout_setting" :content="t('attr.flip_h')" :offset="15">
                 <div :class="{ flip: !model_disable_state.filpVertical, 'flip-disable': model_disable_state.filpVertical, 'ml-24': true }"
                     @click="fliph">
                     <svg-icon icon-class="fliph"></svg-icon>
                 </div>
             </Tooltip>
-            <Tooltip v-if="s_flip" :content="t('attr.flip_v')" :offset="15">
+            <Tooltip v-if="s_flip || cutout_setting" :content="t('attr.flip_v')" :offset="15">
                 <div :class="{ flip: !model_disable_state.filpVertical, 'flip-disable': model_disable_state.filpVertical, 'ml-12': true }"
                     @click="flipv">
                     <svg-icon icon-class="flipv"></svg-icon>

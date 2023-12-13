@@ -153,6 +153,8 @@ export const getSvgImageData = (svg: SVGSVGElement, trim: boolean, id: string, f
   const cloneSvg = svg.cloneNode(true) as SVGSVGElement;
   document.body.appendChild(cloneSvg);
   const { width, height } = cloneSvg.getBoundingClientRect();
+  console.log(width,height, 'svg');
+  
   const diagonalLength = Math.sqrt(Math.pow(width, 2) + Math.pow(height, 2));
   if (shape.type !== ShapeType.Cutout && shape.rotation) {
     canvas.width = diagonalLength;

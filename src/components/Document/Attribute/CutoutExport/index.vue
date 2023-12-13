@@ -76,6 +76,16 @@ function watchShapes() {
 }
 function watcher(...args: any[]) {
     if (args.length > 0 && args.includes('export-options')) updateData();
+    if (args.length > 0 && args.includes('shape-frame')) {
+        nextTick(() => {
+            if (preview.value) {
+                const selected = props.context.selection.selectedShapes;
+                preview.value.getShapesSvg(selected);
+                renderSvgs.value = preview.value.renderSvgs;
+            }
+        })
+        reflush.value++;
+    }
 }
 function updateData() {
     preinstallArgus.length = 0;
@@ -323,16 +333,16 @@ const changeFormat = (index: number, idx: number) => {
         }
     }
 }
-const changeName = (value: string, idx: number) => {
+const changeName = (value: string, idx: number, shapes: Shape[]) => {
     const _idx = preinstallArgus.length - idx - 1;
     const selected = props.context.selection.selectedShapes;
     const len = selected.length;
     if (len === 1) {
-        const shape = selected[0];
+        const shape = shapes[0];
         const editor = props.context.editor4Shape(shape);
         editor.setExportFormatName(_idx, value);
     } else if (len > 1) {
-        const actions = get_actions_export_format_name(props.shapes, _idx, value);
+        const actions = get_actions_export_format_name(shapes, _idx, value);
         const page = props.context.selection.selectedPage;
         if (page) {
             const editor = props.context.editor4Page(page);
@@ -455,7 +465,7 @@ const exportFill = () => {
                 exportSingleImage(url, formats[0].fileFormat, fileName);
             }
         } else {
-            const shapes = selected.length > 0? selected : [page];
+            const shapes = selected.length > 0 ? selected : [page];
             const imageUrls = getExportFillUrl(shapes, pngImageUrls);
             downloadImages(imageUrls);
         }

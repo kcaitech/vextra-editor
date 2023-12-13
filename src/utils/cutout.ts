@@ -2,13 +2,14 @@ import { XY } from "@/context/selection";
 import { Border, BorderPosition, Page, ShadowPosition, Shape, ShapeType } from "@kcdesign/data";
 import { isTarget } from '@/utils/common';
 export function getCutoutShape(shape: Shape, page: Page, selectedShapes: Map<string, Shape>) {
-    const matrix = shape.matrix2Root();
+    if(!shape.parent) return;
+    const matrix = shape.parent.matrix2Root();
     const p = shape.boundingBox()
     const { width, height } = shape.frame;
-    const p1: XY = matrix.computeCoord2(0, 0); // lt
-    const p2: XY = matrix.computeCoord2(width, 0); // rt
-    const p3: XY = matrix.computeCoord2(width, height); // rb
-    const p4: XY = matrix.computeCoord2(0, height); //lb
+    const p1: XY = matrix.computeCoord2(p.x, p.y); // lt
+    const p2: XY = matrix.computeCoord2(p.width + p.x, p.y); // rt
+    const p3: XY = matrix.computeCoord2(p.width + p.x, p.height + p.y); // rb
+    const p4: XY = matrix.computeCoord2(p.x, p.height + p.y); //lb
     const ps: [XY, XY, XY, XY, XY] = [p1, p2, p3, p4, p1]; // 5个点方便闭合循环
     finder(page.childs, ps, selectedShapes); // 再寻找框选区外的图形
 }
@@ -31,7 +32,7 @@ function finder(childs: Shape[], Points: [XY, XY, XY, XY, XY], selectedShapes: M
             ps[i] = m.computeCoord3(p);
         }
 
-        if (isTarget(Points, ps)) {
+        if (isTarget(Points, ps) || isTarget(ps as [XY, XY, XY, XY, XY], Points)) {
             private_set(shape.id, shape, selectedShapes);
         }
 
