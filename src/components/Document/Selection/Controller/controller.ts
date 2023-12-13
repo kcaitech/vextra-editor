@@ -74,6 +74,21 @@ export function useControllerCustom(context: Context, i18nT: Function) {
         }
     }
 
+    function keydown(event: KeyboardEvent) {
+        if (event.target instanceof HTMLInputElement) { // 不处理输入框内的键盘事件
+            return;
+        }
+        console.log('emits by controller');
+
+    }
+
+    function keyup(event: KeyboardEvent) {
+        if (event.target instanceof HTMLInputElement) { // 不处理输入框内的键盘事件
+            return;
+        }
+
+    }
+
     function exist_edit_mode() {
         const al = context.workspace.is_path_edit_mode;
         workspace.setPathEditMode(false);
@@ -283,13 +298,18 @@ export function useControllerCustom(context: Context, i18nT: Function) {
     }
 
     function checkStatus() {
-        if (workspace.isPreToTranslating) {
-            const start = workspace.startPoint;
-            if (!start) return;
-            pre_to_translate(start);
-            workspace.preToTranslating(false);
-            need_update_comment = true;
+        if (!workspace.isPreToTranslating) {
+            return;
         }
+
+        const start = workspace.startPoint;
+        if (!start) {
+            return;
+        }
+
+        pre_to_translate(start);
+        workspace.preToTranslating(false);
+        need_update_comment = true;
     }
 
     function initController() {
@@ -342,7 +362,9 @@ export function useControllerCustom(context: Context, i18nT: Function) {
     }
 
     function workspace_watcher(t?: number) {
-        if (t === WorkSpace.CHECKSTATUS) checkStatus();
+        if (t === WorkSpace.CHECKSTATUS) {
+            checkStatus();
+        }
     }
 
     function windowBlur() {
@@ -354,7 +376,9 @@ export function useControllerCustom(context: Context, i18nT: Function) {
             reset_sticked();
             workspace.setCtrl('page');
         }
-        if (wheel) wheel = wheel.remove();
+        if (wheel) {
+            wheel = wheel.remove();
+        }
         timerClear();
     }
 
@@ -364,6 +388,7 @@ export function useControllerCustom(context: Context, i18nT: Function) {
         selection.watch(selection_watcher);
         add_blur_for_window(windowBlur);
         document.addEventListener('keydown', keyboardHandle);
+        document.addEventListener('keydown', keydown);
         document.addEventListener('mousedown', mousedown);
         checkStatus();
         initController();
