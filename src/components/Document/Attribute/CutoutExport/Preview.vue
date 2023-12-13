@@ -3,7 +3,7 @@ import { ref, reactive, onMounted, onUnmounted, watch } from 'vue';
 import comsMap from '@/components/Document/Content/comsmap';
 import { ExportFileFormat, ExportFormat, Shape, ShapeType } from '@kcdesign/data';
 import { Context } from '@/context';
-import { getCutoutShape, getShadowMax, getShapeBorderMax } from '@/utils/cutout';
+import { getCutoutShape, getPageBounds, getShadowMax, getShapeBorderMax, parentIsArtboard } from '@/utils/cutout';
 import { color2string } from '@/utils/content';
 import { Selection } from '@/context/selection';
 import { debounce } from 'lodash';
@@ -63,20 +63,26 @@ const _getCanvasShape = () => {
     }
     resetSvg();
     if (shapes.length === 1 && shape.type === ShapeType.Cutout) {
-        selectedShapes.clear();
-        getCutoutShape(shape, props.context.selection.selectedPage!, selectedShapes);
+        const item = parentIsArtboard(shape);
         getPosition(shape);
-        if (shape.isVisible) renderItems = Array.from(selectedShapes.values());
+        if (shape.isVisible && item) {
+            renderItems = Array(item);
+        } else {
+            selectedShapes.clear();
+            getCutoutShape(shape, props.context.selection.selectedPage!, selectedShapes);
+            if (shape.isVisible) renderItems = Array.from(selectedShapes.values());
+        }
     } else if (shapes.length === 1) {
         getPosition(shape);
         renderItems = [shape]
     } else if (shapes.length === 0) {
         const page = props.context.selection.selectedPage;
         if (page) {
-            width.value = page.frame.width;
-            height.value = page.frame.height;
-            xy.value.x = 0;
-            xy.value.y = 0;
+            const { left, top, right, bottom } = getPageBounds(page);
+            width.value = page.frame.width + right + left;
+            height.value = page.frame.height + bottom + top;
+            xy.value.x = -left;
+            xy.value.y = -top;
             renderItems = page.childs;
         }
     }
@@ -111,15 +117,29 @@ const _getCanvasShape = () => {
         }
     });
 }
+
+
+
 const getCanvasShape = debounce(_getCanvasShape, 100, { leading: true });
 
 const getPosition = (shape: Shape) => {
     const p = shape.boundingBox()
-    width.value = shape.frame.width;
-    height.value = shape.frame.height;
-    xy.value.x = shape.frame.x;
-    xy.value.y = shape.frame.y;
-    rotate.value = 0;
+    const p_artboard = parentIsArtboard(shape);
+    if (p_artboard && shape.type === ShapeType.Cutout) {
+        const frame = shape.frame2Root();
+        const page = props.context.selection.selectedPage!;
+        xy.value.x = frame.x - page.frame.x;
+        xy.value.y = frame.y - page.frame.y;
+        width.value = shape.frame.width;
+        height.value = shape.frame.height;
+        rotate.value = 0;
+    } else {
+        width.value = shape.frame.width;
+        height.value = shape.frame.height;
+        xy.value.x = shape.frame.x;
+        xy.value.y = shape.frame.y;
+        rotate.value = 0;
+    }
     if (shape.type !== ShapeType.Cutout) {
         const { left, top, right, bottom } = getShadowMax(shape);
         const max_border = getShapeBorderMax(shape);
@@ -175,6 +195,9 @@ const select_watcher = (t: number) => {
             shape.value = undefined;
         }
     }
+    if(t === Selection.CHANGE_PAGE) {
+        getCanvasShape();
+    }
 }
 
 const getShapesSvg = (shapes: Shape[]) => {
@@ -185,9 +208,14 @@ const getShapesSvg = (shapes: Shape[]) => {
             let shapeItem: Shape[] = [];
             let bgc = 'transparent';
             if (shape.type === ShapeType.Cutout) {
-                selectedShapes.clear();
-                getCutoutShape(shape, props.context.selection.selectedPage!, selectedShapes);
-                shapeItem = Array.from(selectedShapes.values());
+                const item = parentIsArtboard(shape);
+                if (shape.isVisible && item) {
+                    shapeItem = Array(item);
+                } else {
+                    selectedShapes.clear();
+                    getCutoutShape(shape, props.context.selection.selectedPage!, selectedShapes);
+                    shapeItem = Array.from(selectedShapes.values());
+                }
                 shape.exportOptions?.canvasBackground ? bgc = DEFAULT_COLOR() : bgc = 'transparent';
             } else {
                 shapeItem = [shape];
@@ -211,13 +239,14 @@ const getShapesSvg = (shapes: Shape[]) => {
         let renderItems: SvgFormat[] = [];
         const page = props.context.selection.selectedPage;
         if (!page) return;
+        const { left, top, right, bottom } = getPageBounds(page);
         renderItems.push(
             {
                 id: page.id + 0,
-                width: page.frame.width,
-                height: page.frame.height,
-                x: 0,
-                y: 0,
+                width: page.frame.width + left + right,
+                height: page.frame.height + top + bottom,
+                x: -left,
+                y: -top,
                 background: 'transparent',
                 shapes: page.childs
             }

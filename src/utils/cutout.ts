@@ -30,7 +30,7 @@ function finder(childs: Shape[], Points: [XY, XY, XY, XY, XY], selectedShapes: M
             const p = ps[i];
             ps[i] = m.computeCoord3(p);
         }
-        
+
         if (isTarget(Points, ps)) {
             private_set(shape.id, shape, selectedShapes);
         }
@@ -101,4 +101,95 @@ export const getShadowMax = (shape: Shape) => {
     offsets.right = Math.max(...max_r);
     offsets.bottom = Math.max(...max_b);
     return offsets;
+}
+export const parentIsArtboard = (shape: Shape) => {
+    let result: Shape | undefined = undefined;
+    let p = shape.parent;
+    while (p && p.type !== ShapeType.Page) {
+        if (p.type === ShapeType.Artboard) {
+            result = p;
+            break;
+        }
+        p = p.parent;
+    }
+    return result;
+}
+
+export const getPageBounds = (page: Page) => {
+    const { width, height } = page.frame;
+    const shapes = page.childs;
+    const max_l = [0];
+    const max_b = [0];
+    const max_r = [0];
+    const max_t = [0];
+    const offsets = { left: 0, top: 0, right: 0, bottom: 0 };
+    if (!shapes.length) return offsets;
+    for (let i = 0; i < shapes.length; i++) {
+        const shape = shapes[i];
+        if (!shape.isVisible) continue;
+        const frame = shape.frame;
+        const max_border = getShapeBorderMax(shape);
+        const { left, top, right, bottom } = getShadowMax(shape);
+        const l = (left + max_border);
+        const t = (top + max_border);
+        const r = (left + max_border) + (right + max_border);
+        const b = (top + max_border) + (bottom + max_border);
+        if(shape.rotation) {
+            const p = shape.boundingBox();
+            const { x: newx, y: newy, width: newWidth, height: newHeight } = getShapeMaxBounds(shape, - l, - t, frame.width + r, frame.height + b);
+            // 旋转后的图形导出整个页面阴影会被裁剪掉            
+            if(frame.x - newx < 0) {
+                max_l.push(frame.x + newx);
+            }
+            if(frame.y - newy < 0) {
+                max_t.push(frame.y + newy);
+            }
+            if(newWidth > width) {
+                max_r.push(frame.x + newWidth);
+            }
+            if(newHeight > height) {
+                max_b.push(frame.y + newHeight);
+            }
+        }else {
+            if(frame.x - l < 0) {
+                max_l.push(frame.x + l);
+            }
+            if(frame.y - t < 0) {
+                max_t.push(frame.y + t);
+            }
+            if(frame.x + frame.width + r > width) {
+                max_r.push(frame.x + frame.width + r - width);
+            }
+            if(frame.y + frame.height + b > height) {
+                max_b.push(frame.y + frame.height + b - height);
+            }
+        }
+    }
+    offsets.left = Math.max(...max_l);
+    offsets.top = Math.max(...max_t);
+    offsets.right = Math.max(...max_r);
+    offsets.bottom = Math.max(...max_b);
+
+    return offsets;
+}
+
+export const getShapeMaxBounds = (shape: Shape, x: number, y: number, width: number, height: number) => {
+    let rotate = shape.rotation || 0;
+    if (shape.isFlippedHorizontal) rotate = 180 - rotate;
+    if (shape.isFlippedVertical) rotate = 360 - rotate;
+    rotate = (rotate < 0 ? rotate + 360 : rotate) % 360;
+    const radian = rotate * Math.PI / 180;
+    const sin = Math.sin(radian);
+    const cos = Math.cos(radian);
+    const newx = Math.abs(x * cos) + Math.abs(y * sin);
+    const newy = Math.abs(x * sin) + Math.abs(y * cos);
+    const newWidth = Math.abs(width * cos) + Math.abs(height * sin);
+    const newHeight = Math.abs(width * sin) + Math.abs(height * cos);
+    return {
+        x: newx,
+        y: newy,
+        width: newWidth,
+        height: newHeight,
+        rotate: rotate
+    };
 }
