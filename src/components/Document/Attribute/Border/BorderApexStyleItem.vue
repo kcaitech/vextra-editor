@@ -20,23 +20,27 @@ const isEnd = computed<boolean>(() => {
 </template>
 <style scoped lang="scss">
 .border-front-style-item-container {
-    height: var(--default-input-height);
-    width: 64%;
-    padding: 0 12px;
-    color: var(--theme-color);
-    margin-left: var(--default-margin-half);
+    height: 32px;
+    width: 68px;
+    padding: 0 8px 0 6px;
+    color: #333333;
     box-sizing: border-box;
     display: flex;
     align-items: center;
     justify-content: center;
 
     >svg {
-        width: 100%;
-        height: 100%;
+        width: 36px;
+        height: 32px;
+        margin-right: 6px;
     }
 
     >.isEnd {
         transform: rotate(180deg);
     }
+}
+.border-front-style-item-container:hover {
+    background-color: #1878F5;
+    color: #FFFFFF;
 }
 </style>

@@ -182,8 +182,7 @@ onMounted(() => {
             cursor: (props.svgicon === 'radius' && props.multipleValues === true && !props.disabled) ? 'auto' : 'ew-resize'
         }"></svg-icon>
         <img :class="props.disabled ? 'deicon' : 'icon'" v-if="props.icon" :src="props.icon" />
-        <span @mousedown="onMouseDown" :class="props.disabled ? 'deicon' : 'icon'" v-if="!props.icon && props.ticon">{{
-            props.ticon }}</span>
+        <span @mousedown="onMouseDown" :class="props.disabled ? 'deicon' : 'icon'" v-if="!props.icon && props.ticon">{{props.ticon }}</span>
         <input ref="input" @click="onBlur" @focus="selectValue" @blur="blur2" :value="props.text" @keydown="onKeyBlur"
             :disabled="props.disabled" :style="{ cursor: props.disabled ? 'default' : 'text' }" v-on:change="onChange" />
     </div>
@@ -229,13 +228,23 @@ onMounted(() => {
         flex: 1 1 auto;
         align-content: center;
         margin-left: 2px;
-        color: var(--theme-color);
+        //color: var(--theme-color);
         font-family: var(--font-family);
         text-overflow: ellipsis;
         background-color: transparent;
         border: none;
         font-size: var(--font-default-fontsize);
         outline: none;
+    }
+
+    input::selection {
+        color: #FFFFFF;
+        background: #1878F5;
+    }
+
+    input::-moz-selection {
+        color: #FFFFFF;
+        background: #1878F5;
     }
 }
 

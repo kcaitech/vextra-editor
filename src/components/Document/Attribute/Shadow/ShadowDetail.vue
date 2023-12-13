@@ -295,14 +295,14 @@ const disable = computed(() => {
             display: flex;
             flex-direction: column;
             justify-content: space-between;
-            padding: 8px var(--default-padding);
+            padding: 12px 12px 0 12px;
             box-sizing: border-box;
             height: 100%;
 
             >div {
                 display: flex;
                 align-items: center;
-                margin: 4px 0;
+                margin-bottom: 12px;
 
                 >label {
                     flex: 0 0 72px;
@@ -354,8 +354,8 @@ const disable = computed(() => {
     flex: 0 1 140px;
     background-color: var(--input-background);
     height: 100%;
-    padding: 0px 10px;
-    margin-left: 5px;
+    padding: 0px 8px;
+    margin-left: 8px;
     border-radius: var(--default-radius);
     box-sizing: border-box;
     display: flex;
@@ -367,7 +367,7 @@ const disable = computed(() => {
         box-sizing: border-box;
         background-color: transparent;
         width: 90px;
-        margin-left: 6px;
+        margin-left: 8px;
     }
 
     input+input {
@@ -377,14 +377,19 @@ const disable = computed(() => {
 
 .setting {
     width: 100%;
-    height: 30px;
+    height: 32px;
     display: flex;
     box-sizing: border-box;
     align-items: center;
-    justify-content: space-between;
+    //justify-content: space-between;
 
     .name-title {
-        width: 30px;
+        width: 24px;
+        height: 14px;
+        font-family: HarmonyOS Sans;
+        font-size: 12px;
+        color: #737373;
+        margin-right: 14px;
     }
 }
 

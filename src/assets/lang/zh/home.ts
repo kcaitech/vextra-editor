@@ -222,7 +222,7 @@ export const attr: any = {
     fixedTop: '顶部固定',
     fixedBottom: '底部固定',
     thickness: '厚度',
-    borderStyle: '边框样式',
+    borderStyle: '样式',
     dash: '虚线',
     solid: '实线',
     startMarkerType: '起点样式',
