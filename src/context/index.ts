@@ -7,7 +7,8 @@ import {
     TableShape,
     TableEditor,
     Text,
-    SymbolShape
+    SymbolShape,
+    DViewCtx
 } from "@kcdesign/data";
 import {Document} from "@kcdesign/data";
 import {Page} from "@kcdesign/data";
@@ -87,7 +88,7 @@ export class Context extends Watchable(Object) {
     private m_component: Component;
     private m_path: Path;
 
-    private m_vdom: Map<string, PageDom> = new Map();
+    private m_vdom: Map<string, { dom: PageDom, ctx: DViewCtx }> = new Map();
 
     constructor(data: Document, repo: CoopRepository) {
         super();

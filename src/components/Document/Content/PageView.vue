@@ -1,9 +1,9 @@
 <script setup lang="ts">
-import { Matrix, Page, DViewCtx } from '@kcdesign/data';
+import { Matrix, Page, DViewCtx, ShapeType } from '@kcdesign/data';
 import { Context } from '@/context';
 import { Selection } from '@/context/selection';
 import { Tool } from '@/context/tool';
-import { onMounted, onUnmounted, ref, watch } from 'vue';
+import { h, onMounted, onUnmounted, ref, watch } from 'vue';
 import { v4 } from "uuid";
 import ShapeTitles from './ShapeTitles.vue';
 import ComponentTitleContainer from './ComponentTitleContainer.vue';
@@ -11,6 +11,7 @@ import { debounce } from 'lodash';
 import { RenderCtx } from './common';
 import { PageDom } from './vdom/page';
 import { initComsMap } from './vdom/comsmap';
+import comsMap from './comsmap';
 interface Props {
     context: Context
     data: Page
@@ -22,6 +23,8 @@ const reflush = ref(0);
 const rootId = ref<string>('pageview');
 const show_t = ref<boolean>(true);
 const pagesvg = ref<HTMLElement>();
+const width = ref<number>(100);
+const height = ref<number>(100);
 
 function pageViewRegister(mount: boolean) {
     if (mount) {
@@ -40,6 +43,9 @@ function page_watcher() {
     matrixWithFrame.reset(props.matrix);
     matrixWithFrame.preTrans(props.data.frame.x, props.data.frame.y);
     reflush.value++;
+    width.value = Math.ceil(Math.max(100, props.data.frame.width)), height.value = Math.ceil(Math.max(100, props.data.frame.height));
+    if (width.value % 2) width.value++;
+    if (height.value % 2) height.value++;
 }
 
 function createVDom() {
@@ -47,8 +53,10 @@ function createVDom() {
     initComsMap(domCtx.comsMap);
     const dom: PageDom = new PageDom(domCtx, props);
     dom.update(props, true);
-    props.context.vdom.set(props.data.id, dom);
-    return dom;
+    // console.log("dom.nodeCount: " + dom.nodeCount);
+    const ret = { dom, ctx: domCtx }
+    props.context.vdom.set(props.data.id, ret);
+    return ret;
 }
 let dom = createVDom();
 
@@ -61,12 +69,14 @@ const stopWatchPage = watch(() => props.data, (value, old) => {
     page_watcher();
 
     if (dom) {
-        dom.unbind();
+        dom.ctx.stopLoop();
+        dom.dom.unbind();
     }
     dom = props.context.vdom.get(props.data.id) || createVDom();
     if (pagesvg.value) {
-        dom.bind(pagesvg.value);
-        dom.render();
+        dom.dom.bind(pagesvg.value);
+        dom.dom.render();
+        dom.ctx.loop(window.requestAnimationFrame);
     }
 })
 const stop_watch_matrix = watch(() => props.matrix, page_watcher, { deep: true });
@@ -99,19 +109,48 @@ function selection_watcher(...args: any[]) {
 
 onMounted(() => {
     if (pagesvg.value) {
-        dom.bind(pagesvg.value);
-        dom.render();
+        dom.dom.bind(pagesvg.value);
+        dom.dom.render();
+        dom.ctx.loop(window.requestAnimationFrame);
     }
 })
 
 onUnmounted(() => {
-    dom.unbind();
+    dom.ctx.stopLoop();
+    dom.dom.unbind();
 })
+
+function render() {
+    const prop: any = {
+        version: "1.1",
+        xmlns: "http://www.w3.org/2000/svg",
+        "xmlns:xlink": "http://www.w3.org/1999/xlink",
+        "xmlns:xhtml": "http://www.w3.org/1999/xhtml",
+        preserveAspectRatio: "xMinYMin meet",
+        overflow: "visible"
+    }
+    prop.viewBox = `0 0 ${width.value} ${height.value}`;
+    prop.reflush = reflush.value !== 0 ? reflush.value : undefined;
+    prop.style = { transform: matrixWithFrame.toString() };
+    prop['data-area'] = rootId.value;
+    prop.width = width.value;
+    prop.height = height.value;
+    const childs = [];
+    const datachilds = props.data.childs;
+    for (let i = 0, len = datachilds.length; i < len; i++) {
+        const c = datachilds[i];
+        const com = comsMap.get(c.type) ?? comsMap.get(ShapeType.Rectangle);
+        const node = h(com, { data: c, key: c.id, renderCtx });
+        childs.push(node);
+    }
+    return h('svg', prop, childs)
+}
 
 </script>
 
 <template>
-    <svg ref="pagesvg" :style = "{ transform: matrixWithFrame.toString() }" :data-area = "rootId" :reflush="reflush"></svg>
+    <svg ref="pagesvg" :style="{ transform: matrixWithFrame.toString() }" :data-area="rootId" :reflush="reflush"></svg>
+    <!-- <render></render> -->
     <ShapeTitles v-if="show_t" :context="props.context" :data="data" :matrix="matrixWithFrame.toArray()"></ShapeTitles>
     <ComponentTitleContainer :context="props.context" :data="data" :matrix="matrixWithFrame.toArray()">
     </ComponentTitleContainer>

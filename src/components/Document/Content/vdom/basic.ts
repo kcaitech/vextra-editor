@@ -1,4 +1,4 @@
-import { EL, ShapeView } from "@kcdesign/data";
+import { EL } from "@kcdesign/data";
 import { elpatch } from "./patch";
 
 type Constructor<T = Record<string, any>> = new (...args: any[]) => T;
