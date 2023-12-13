@@ -387,7 +387,7 @@ onUnmounted(() => {
 
 <template>
     <div class="border-detail-container" @mousedown.stop>
-        <Popover :context="props.context" class="popover" ref="popover" :width="240" height="auto" :left="445"
+        <Popover :context="props.context" class="popover" ref="popover" :width="240" height="auto" :left="418"
                  :title="t('attr.advanced_stroke')">
             <template #trigger>
                 <div class="trigger">

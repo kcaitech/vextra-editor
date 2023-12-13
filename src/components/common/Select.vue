@@ -33,7 +33,7 @@ const optionsContainer = ref<HTMLDivElement>();
 const optionsContainerVisible = ref<boolean>(false);
 const source = ref<SelectSource[]>([]);
 function toggle() {
-    if(props.type === 'table') return;
+    if (props.type === 'table') return;
     optionsContainerVisible.value = !optionsContainerVisible.value;
     nextTick(() => {
         if (optionsContainer.value && selectContainer.value) {
@@ -95,9 +95,10 @@ watch(() => props.selected, () => {
 }, { immediate: true })
 </script>
 <template>
-    <div class="select-container"  ref="selectContainer">
+    <div class="select-container" ref="selectContainer">
         <div class="trigger" @click="toggle" :style="{
-        width: props.width ? `${props.width}px` : '100%'}">
+            width: props.width ? `${props.width}px` : '100%'
+        }">
             <div class="value-wrap" v-if="!props.valueView">{{ curValue?.content }}</div>
             <div v-else class="value-wrap">
                 <component :is="props.valueView" :data="curValue" />
@@ -108,7 +109,8 @@ watch(() => props.selected, () => {
         </div>
 
         <div @click.stop class="options-container" ref="optionsContainer" tabindex="-1" :style="{
-        width: props.containerWidth ? `${props.containerWidth}px` : '100%'}" v-if="optionsContainerVisible">
+            width: props.containerWidth ? `${props.containerWidth}px` : '100%'
+        }" v-if="optionsContainerVisible">
             <div v-if="!source.length" class="no-data">
                 {{ t('system.empty') }}
             </div>
@@ -122,7 +124,7 @@ watch(() => props.selected, () => {
                 </div>
             </div>
             <div v-if="curValue" class="check"
-                :style="{ top: `${curValueIndex * props.itemHeight + props.itemHeight / 2.4}px` }">
+                :style="{ top: `${4 + curValueIndex * props.itemHeight + props.itemHeight / 2}px` }">
                 <svg-icon icon-class="choose"></svg-icon>
             </div>
         </div>
@@ -147,9 +149,6 @@ watch(() => props.selected, () => {
             margin-left: 12px;
             line-height: var(--default-input-height);
             box-sizing: border-box;
-            //padding: 0 var(--default-padding);
-            //margin-left: 6px;
-            //margin-right: 8px;
             font-weight: 500;
         }
 
@@ -158,7 +157,6 @@ watch(() => props.selected, () => {
             flex: 0 0 18px;
             display: flex;
             align-items: center;
-            //margin-left: 8px;
 
             >svg {
                 width: 12px;
@@ -217,17 +215,14 @@ watch(() => props.selected, () => {
             top: 0px;
             position: absolute;
             box-sizing: border-box;
-            //width: 10px;
-            //height: 6px;
-            //border-width: 0 0 2px 2px;
-            //border-style: solid;
-            //border-color: var(--theme-color);
-            left: 48px;
-            //transform: rotate(-45deg) translateY(-50%);
+            right: 8px;
+
             >svg {
                 width: 12px;
                 height: 12px;
             }
+
+            transform: translateY(-50%);
         }
     }
 }
