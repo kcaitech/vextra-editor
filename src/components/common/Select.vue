@@ -26,6 +26,7 @@ const props = defineProps<{
     valueView?: any
     width?: number,
     type?: string
+    containerWidth?: number
 }>();
 const selectContainer = ref<HTMLDivElement>();
 const optionsContainer = ref<HTMLDivElement>();
@@ -94,10 +95,9 @@ watch(() => props.selected, () => {
 }, { immediate: true })
 </script>
 <template>
-    <div class="select-container" :style="{
-        width: props.width ? `${props.width}px` : '100%'
-    }" ref="selectContainer">
-        <div class="trigger" @click="toggle">
+    <div class="select-container"  ref="selectContainer">
+        <div class="trigger" @click="toggle" :style="{
+        width: props.width ? `${props.width}px` : '100%'}">
             <div class="value-wrap" v-if="!props.valueView">{{ curValue?.content }}</div>
             <div v-else class="value-wrap">
                 <component :is="props.valueView" :data="curValue" />
@@ -106,7 +106,9 @@ watch(() => props.selected, () => {
                 <svg-icon icon-class="down"></svg-icon>
             </div>
         </div>
-        <div @click.stop class="options-container" ref="optionsContainer" tabindex="-1" v-if="optionsContainerVisible">
+
+        <div @click.stop class="options-container" ref="optionsContainer" tabindex="-1" :style="{
+        width: props.containerWidth ? `${props.containerWidth}px` : '100%'}" v-if="optionsContainerVisible">
             <div v-if="!source.length" class="no-data">
                 {{ t('system.empty') }}
             </div>

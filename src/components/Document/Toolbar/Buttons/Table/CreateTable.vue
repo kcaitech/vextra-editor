@@ -95,7 +95,7 @@ const createTable = (row?: number, col?: number) => {
 .table_container {
     position: absolute;
     z-index: 999;
-    width: 252px;
+    width: auto;
     height: auto;
     border-radius: 4px;
     padding: 4px 12px;
@@ -137,23 +137,23 @@ const createTable = (row?: number, col?: number) => {
     }
 
     .grid-table {
-        padding: 3px;
+        padding: 6px;
         border-color: rgba(0, 0, 0, 0.5);
         border-collapse: separate;
         border-radius: 2px;
+        border-spacing: 4px;
     }
 
-
     .grid-cell {
-        width: 18px;
-        height: 18px;
-        border-radius: 3px;
-        border-color: rgba(0, 0, 0, 0.3);
+        width: 21px;
+        height: 15px;
+        border-radius: 2px;
+        border: 1px solid #D9D9D9;
     }
 
     .highlighted {
-        background-color: var(--active-color);
-        opacity: 0.5;
+        background-color: #BDE2FF;
+        border: 1px solid #1878F5;
     }
 
     .table-state {
@@ -237,15 +237,15 @@ const createTable = (row?: number, col?: number) => {
 
     .hover-table {
         position: absolute;
-        top: 5px;
-        left: 5px;
         border-collapse: collapse;
         border: none;
 
         .hover-cell {
-            width: 21px;
-            height: 21px;
+            width: 19px;
+            height: 19px;
             border: none;
+            top: 9px;
+            left: 4px;
         }
     }
 

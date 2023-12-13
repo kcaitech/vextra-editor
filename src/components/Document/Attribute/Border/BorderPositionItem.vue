@@ -27,6 +27,7 @@ onMounted(() => { })
     //line-height: var(--default-input-height);
     padding: 9px 6px 9px 12px;
     box-sizing: border-box;
+    font-weight: 500;
 }
 .border-position-item-container:hover {
     background-color: #1878F5;

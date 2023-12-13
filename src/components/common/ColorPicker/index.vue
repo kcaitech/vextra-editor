@@ -781,7 +781,7 @@ onUnmounted(() => {
             <!-- model & values -->
             <div class="input-container">
                 <div class="model">
-                    <Select :itemHeight="32" :source="modelOptions" :selected="model" @select="switchModel"></Select>
+                    <Select :itemHeight="32" :source="modelOptions" :selected="model" @select="switchModel" :containerWidth="63"></Select>
                 </div>
                 <div class="values">
                     <div class="wrap">
@@ -1025,9 +1025,9 @@ onUnmounted(() => {
                 }
             }
 
-            .eyedropper:hover {
-                background-color: var(--grey-dark);
-            }
+            //.eyedropper:hover {
+            //    background-color: var(--grey-dark);
+            //}
         }
 
         .input-container {
@@ -1058,13 +1058,13 @@ onUnmounted(() => {
                 flex: 0 0 72%;
 
                 .wrap {
-                    width: 100%;
+                    width: 160px;
                     height: 100%;
                     padding: 0 3px;
                     box-sizing: border-box;
 
                     .value {
-                        width: 100%;
+                        width: 160px;
                         height: 32px;
                         display: flex;
                         align-items: center;
@@ -1095,7 +1095,7 @@ onUnmounted(() => {
                     }
 
                     .label {
-                        width: 100%;
+                        width: 160px;
                         height: 24px;
                         display: flex;
                         align-items: center;
@@ -1105,10 +1105,12 @@ onUnmounted(() => {
                         .item {
                             height: 100%;
                             width: 25%;
-                            text-align: center;
                             font-size: 12px;
                             font-weight: 500;
                             color: #8C8C8C;
+                            align-items: center;
+                            display: flex;
+                            justify-content: center;
                         }
                     }
                 }
@@ -1169,7 +1171,7 @@ onUnmounted(() => {
             flex-direction: row;
             align-items: center;
             justify-content: space-between;
-            padding: 12px;
+            padding: 12px 0 0 12px;
             box-sizing: border-box;
 
             .inner {

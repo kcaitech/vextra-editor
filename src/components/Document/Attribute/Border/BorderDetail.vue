@@ -399,10 +399,10 @@ onUnmounted(() => {
                     <!-- 边框位置 -->
                     <div v-if="show_position" :style="{ opacity: shapes[0].type === ShapeType.Table ? '.5' : '1' }">
                         <label>{{ t('attr.position') }}</label>
-                        <Select :selected="position" :item-view="BorderPositonItem" :item-height="30"
+                        <Select :selected="position" :item-view="BorderPositonItem" :item-height="32"
                                 :source="positonOptionsSource"
                                 @select="positionSelect"
-                                :type="shapes[0].type === ShapeType.Table ? 'table' : 'none'"></Select>
+                                :type="shapes[0].type === ShapeType.Table ? 'table' : 'none'" :width="128" :containerWidth="128"></Select>
                     </div>
                     <!-- 边框厚度 -->
                     <div>
@@ -423,8 +423,8 @@ onUnmounted(() => {
                     <div>
                         <label>{{ t('attr.borderStyle') }}</label>
                         <Select :selected="borderStyle" :item-view="BorderStyleItem" :value-view="BorderStyleSelected"
-                                :item-height="30" @select="borderStyleSelect"
-                                :source="borderStyleOptionsSource"></Select>
+                                :item-height="32" @select="borderStyleSelect"
+                                :source="borderStyleOptionsSource" :width="128" :containerWidth="128"></Select>
                     </div>
                 </div>
             </template>
@@ -485,7 +485,7 @@ onUnmounted(() => {
                     box-sizing: border-box;
                     padding: 3px;
                     background-color: var(--input-background);
-                    width: calc(100% - 72px);
+                    width: calc(100% - 88px);
                     height: 32px;
                     border-radius: var(--default-radius);
                     display: flex;
@@ -520,7 +520,7 @@ onUnmounted(() => {
                         width: 19px;
                         height: 100%;
                         color: #666666;
-                        text-align: center;
+                        align-items: center;
                         display: flex;
                         flex-direction: column;
                         justify-content: space-around;

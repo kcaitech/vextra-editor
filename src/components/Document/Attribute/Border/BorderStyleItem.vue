@@ -21,22 +21,24 @@ onMounted(() => {})
 </template>
 <style scoped lang="scss">
 .border-style-item-container {
-    height:  var(--default-input-height);
+    height:  32px;
     width: 100%;
-    color: var(--theme-color);
-    padding: 0 var(--default-padding);
-    margin-left: var(--default-margin-half);
+    padding: 4px 6px 4px 12px;
     box-sizing: border-box;
     display: flex;
     align-items: center;
     > span {
-        text-align: left;
-        line-height: var(--default-input-height);
+        font-family: HarmonyOS Sans;
+        font-size: 12px;
+        font-weight: 500;
         flex: 0 0 40px;
+        color: #000000;
     }
     > svg {
-        width: calc(100% - 48px);
+        width: calc(100% - 85px);
         height: 100%;
+        margin-right: 12px;
+        color: #BFBFBF;
     }
 }
 </style>
