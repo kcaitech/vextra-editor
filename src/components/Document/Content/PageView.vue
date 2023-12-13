@@ -52,7 +52,8 @@ function createVDom() {
     const domCtx = new DViewCtx();
     initComsMap(domCtx.comsMap);
     const dom: PageDom = new PageDom(domCtx, props);
-    dom.update(props, true);
+    // dom.update(props, true);
+    dom.onCreate();
     // console.log("dom.nodeCount: " + dom.nodeCount);
     const ret = { dom, ctx: domCtx }
     props.context.vdom.set(props.data.id, ret);

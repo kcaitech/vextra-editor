@@ -21,7 +21,7 @@ function setAttribute(el: HTMLElement | SVGElement, key: string, value: string |
 
         value = style;
     }
-    if (key === "xlink:href") {
+    if (key === "xlink:href" || key === "href") {
         el.setAttributeNS(xlink, key, value);
     } else {
         el.setAttribute(key, value);
