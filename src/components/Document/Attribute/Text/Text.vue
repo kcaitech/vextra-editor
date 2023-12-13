@@ -747,7 +747,7 @@ onUnmounted(() => {
                     }}
                 </div>
                 <div class="color">
-                    <ColorPicker :color="textColor!" :context="props.context" :late="33"
+                    <ColorPicker :color="textColor!" :context="props.context" :auto_to_right_line="true"
                                  @change="c => getColorFromPicker(c, 'color')">
                     </ColorPicker>
                     <input ref="sizeColor" class="sizeColor" @focus="selectColorValue" :spellcheck="false"
@@ -783,7 +783,7 @@ onUnmounted(() => {
                      :class="{ 'check': highlight, 'nocheck': !highlight }">{{ t('attr.highlight_color') }}
                 </div>
                 <div class="color">
-                    <ColorPicker :color="highlight!" :context="props.context" :late="33"
+                    <ColorPicker :color="highlight!" :context="props.context" :auto_to_right_line="true"
                                  @change="c => getColorFromPicker(c, 'highlight')">
                     </ColorPicker>
                     <input ref="higlightColor" class="colorFill" @focus="selectHiglightColor" :spellcheck="false"

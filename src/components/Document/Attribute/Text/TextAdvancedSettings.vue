@@ -281,7 +281,7 @@ onUnmounted(() => {
 
 <template>
   <div class="text-detail-container">
-    <Popover :context="props.context" class="popover" ref="popover" :width="232" height="auto" :left="433"
+    <Popover :context="props.context" class="popover" ref="popover" :width="232" :auto_to_right_line="true"
       :title="t('attr.text_advanced_settings')">
       <template #trigger>
         <div class="trigger">
@@ -310,19 +310,19 @@ onUnmounted(() => {
           <div>
             <span>{{ t('attr.id_style') }}</span>
             <div class="vertical-aligning jointly-text">
-              <i :class="{'jointly-text': true,'font-posi': true, selected_bg: selectId === 'none' }"
+              <i :class="{ 'jointly-text': true, 'font-posi': true, selected_bg: selectId === 'none' }"
                 @click="onSelectId(BulletNumbersType.None)">
                 <Tooltip :content="t('attr.none_list')" :offset="15">
                   <svg-icon icon-class="text-no-list"></svg-icon>
                 </Tooltip>
               </i>
-              <i :class="{'jointly-text': true,'font-posi': true, selected_bg: selectId === 'disorded' }"
+              <i :class="{ 'jointly-text': true, 'font-posi': true, selected_bg: selectId === 'disorded' }"
                 @click="onSelectId(BulletNumbersType.Disorded)">
                 <Tooltip :content="t('attr.unordered_list')" :offset="15">
                   <svg-icon icon-class="text-bulleted-list"></svg-icon>
                 </Tooltip>
               </i>
-              <i :class="{'jointly-text': true,'font-posi': true, selected_bg: selectId === 'ordered-1ai' }"
+              <i :class="{ 'jointly-text': true, 'font-posi': true, selected_bg: selectId === 'ordered-1ai' }"
                 @click="onSelectId(BulletNumbersType.Ordered1Ai)">
                 <Tooltip :content="t('attr.ordered_list')" :offset="15">
                   <svg-icon icon-class="text-number-list"></svg-icon>
@@ -333,25 +333,25 @@ onUnmounted(() => {
           <div>
             <span>{{ t('attr.letter_case') }}</span>
             <div class="level-aligning jointly-text">
-              <i :class="{'jointly-text': true,'font-posi': true, selected_bg: selectCase === 'none' }"
+              <i :class="{ 'jointly-text': true, 'font-posi': true, selected_bg: selectCase === 'none' }"
                 @click="onSelectCase(TextTransformType.None)">
                 <Tooltip :content="t('attr.as_typed')" :offset="15">
                   <svg-icon icon-class="text-no-list"></svg-icon>
                 </Tooltip>
               </i>
-              <i :class="{'jointly-text': true,'font-posi': true, selected_bg: selectCase === 'uppercase' }"
+              <i :class="{ 'jointly-text': true, 'font-posi': true, selected_bg: selectCase === 'uppercase' }"
                 @click="onSelectCase(TextTransformType.Uppercase)">
                 <Tooltip :content="t('attr.uppercase')" :offset="15">
                   <svg-icon icon-class="text-uppercase"></svg-icon>
                 </Tooltip>
               </i>
-              <i :class="{'jointly-text': true,'font-posi': true, selected_bg: selectCase === 'lowercase' }"
+              <i :class="{ 'jointly-text': true, 'font-posi': true, selected_bg: selectCase === 'lowercase' }"
                 @click="onSelectCase(TextTransformType.Lowercase)">
                 <Tooltip :content="t('attr.lowercase')" :offset="15">
                   <svg-icon icon-class="text-lowercase"></svg-icon>
                 </Tooltip>
               </i>
-              <i :class="{'jointly-text': true,'font-posi': true, selected_bg: selectCase === 'uppercase-first' }"
+              <i :class="{ 'jointly-text': true, 'font-posi': true, selected_bg: selectCase === 'uppercase-first' }"
                 @click="onSelectCase(TextTransformType.UppercaseFirst)">
                 <Tooltip :content="t('attr.titlecase')" :offset="15">
                   <svg-icon icon-class="text-titlecase"></svg-icon>
@@ -362,19 +362,19 @@ onUnmounted(() => {
           <div>
             <span>{{ t('attr.text_style') }}</span>
             <div class="vertical-aligning jointly-text">
-              <i :class="{'jointly-text': true,'font-posi': true, selected_bg: selectText === 'flexible' }"
+              <i :class="{ 'jointly-text': true, 'font-posi': true, selected_bg: selectText === 'flexible' }"
                 @click="onSelectText(TextBehaviour.Flexible)">
                 <Tooltip :content="t('attr.autowidth')" :offset="15">
                   <svg-icon icon-class="text-autowidth"></svg-icon>
                 </Tooltip>
               </i>
-              <i :class="{'jointly-text': true,'font-posi': true, selected_bg: selectText === 'fixed' }"
+              <i :class="{ 'jointly-text': true, 'font-posi': true, selected_bg: selectText === 'fixed' }"
                 @click="onSelectText(TextBehaviour.Fixed)">
                 <Tooltip :content="t('attr.autoheight')" :offset="15">
                   <svg-icon icon-class="text-autoheight"></svg-icon>
                 </Tooltip>
               </i>
-              <i :class="{'jointly-text': true,'font-posi': true, selected_bg: selectText === 'fixWidthAndHeight' }"
+              <i :class="{ 'jointly-text': true, 'font-posi': true, selected_bg: selectText === 'fixWidthAndHeight' }"
                 @click="onSelectText(TextBehaviour.FixWidthAndHeight)">
                 <Tooltip :content="t('attr.fixedsize')" :offset="15">
                   <svg-icon icon-class="text-fixedsize"></svg-icon>
@@ -450,13 +450,13 @@ onUnmounted(() => {
         }
 
         .vertical-aligning {
-            padding: 2px;
-            box-sizing: border-box;
+          padding: 2px;
+          box-sizing: border-box;
         }
 
         .level-aligning {
-            padding: 2px;
-            box-sizing: border-box;
+          padding: 2px;
+          box-sizing: border-box;
         }
 
         .font-posi {
@@ -468,11 +468,11 @@ onUnmounted(() => {
           border: 1px solid #F4F5F5;
         }
 
-          .selected_bg {
-              background-color: #FFFFFF !important;
-              color: #000000;
-              border: 1px solid #F0F0F0;
-          }
+        .selected_bg {
+          background-color: #FFFFFF !important;
+          color: #000000;
+          border: 1px solid #F0F0F0;
+        }
 
         input[type="text"]::-webkit-inner-spin-button,
         input[type="text"]::-webkit-outer-spin-button {

@@ -30,11 +30,14 @@ import { Menu } from "@/context/menu";
 type RgbMeta = number[];
 
 interface Props {
-    context: Context
-    color: Color
-    late?: number
-    top?: number
-    cell?: boolean
+    context: Context;
+    color: Color;
+
+    auto_to_right_line?: boolean;
+
+    late?: number;
+    top?: number;
+    cell?: boolean;
 }
 
 interface Data {
@@ -231,6 +234,9 @@ function colorPickerMount() {
                 el.style.left = p_el.left - el.clientWidth - 47 - props.late + 'px';
             } else if (props.cell) {
                 el.style.left = 0 + 'px';
+            } else if (props.auto_to_right_line) {
+                const r = props.context.workspace.root.right;
+                el.style.left = r - el.clientWidth - 4 + 'px';
             } else {
                 el.style.left = p_el.left - el.clientWidth - 40 + 'px';
             }

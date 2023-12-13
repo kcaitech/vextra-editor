@@ -1,17 +1,17 @@
 <script setup lang="ts">
 import Popover from '@/components/common/Popover.vue';
-import {ref, computed, watch, onMounted, onUnmounted} from 'vue';
-import {useI18n} from 'vue-i18n';
-import Select, {SelectItem, SelectSource} from '@/components/common/Select.vue';
+import { ref, computed, watch, onMounted, onUnmounted } from 'vue';
+import { useI18n } from 'vue-i18n';
+import Select, { SelectItem, SelectSource } from '@/components/common/Select.vue';
 import BorderPositonItem from './BorderPositionItem.vue';
 import BorderStyleItem from './BorderStyleItem.vue';
 import BorderStyleSelected from './BorderStyleSelected.vue';
-import {Context} from '@/context';
-import {Border, BorderPosition, BorderStyle, Shape, ShapeType, TableShape} from "@kcdesign/data";
-import {genOptions} from '@/utils/common';
-import {Selection} from '@/context/selection';
-import {get_actions_border_thickness, get_actions_border_position, get_actions_border_style} from '@/utils/shape_style';
-import {WorkSpace} from '@/context/workspace';
+import { Context } from '@/context';
+import { Border, BorderPosition, BorderStyle, Shape, ShapeType, TableShape } from "@kcdesign/data";
+import { genOptions } from '@/utils/common';
+import { Selection } from '@/context/selection';
+import { get_actions_border_thickness, get_actions_border_position, get_actions_border_style } from '@/utils/shape_style';
+import { WorkSpace } from '@/context/workspace';
 
 interface Props {
     context: Context
@@ -21,7 +21,7 @@ interface Props {
 }
 
 const props = defineProps<Props>();
-const {t} = useI18n();
+const { t } = useI18n();
 const isActived = ref(false)
 const editor = computed(() => {
     return props.context.editor4Shape(props.shapes[0]);
@@ -29,8 +29,8 @@ const editor = computed(() => {
 const len = computed(() => props.shapes.length);
 const popover = ref();
 const isDrag = ref(false)
-const curpt: { x: number } = {x: 0}
-const _curpt: { x: number } = {x: 0}
+const curpt: { x: number } = { x: 0 }
+const _curpt: { x: number } = { x: 0 }
 const scale = ref<{ axleX: number }>({
     axleX: 0
 })
@@ -38,12 +38,12 @@ const show_position = ref<boolean>(true);
 const showStartStyle = ref<boolean>(true)
 const showEndStyle = ref<boolean>(true)
 const borderThickness = ref<HTMLInputElement>();
-const borderStyle = ref<SelectItem>({value: 'dash', content: t('attr.dash')});
+const borderStyle = ref<SelectItem>({ value: 'dash', content: t('attr.dash') });
 const borderStyleOptionsSource: SelectSource[] = genOptions([
     ['solid', t('attr.solid')],
     ['dash', t('attr.dash')]
 ]);
-const position = ref<SelectItem>({value: 0, content: t('attr.center')});
+const position = ref<SelectItem>({ value: 0, content: t('attr.center') });
 const positonOptionsSource: SelectSource[] = genOptions([
     [BorderPosition.Outer, t(`attr.${BorderPosition.Outer}`)],
     [BorderPosition.Center, t(`attr.${BorderPosition.Center}`)],
@@ -79,9 +79,9 @@ function borderStyleSelect(selected: SelectItem) {
             if (table.tableRowStart > -1 || table.tableColStart > -1 || is_edting) {
                 let range
                 if (is_edting) {
-                    range = {rowStart: is_edting.index.row, rowEnd: is_edting.index.row, colStart: is_edting.index.col, colEnd: is_edting.index.col};
+                    range = { rowStart: is_edting.index.row, rowEnd: is_edting.index.row, colStart: is_edting.index.col, colEnd: is_edting.index.col };
                 } else {
-                    range = {rowStart: table.tableRowStart, rowEnd: table.tableRowEnd, colStart: table.tableColStart, colEnd: table.tableColEnd};
+                    range = { rowStart: table.tableRowStart, rowEnd: table.tableRowEnd, colStart: table.tableColStart, colEnd: table.tableColEnd };
                 }
                 e.setBorderStyle(props.index, bs, range)
             } else {
@@ -136,9 +136,9 @@ function setThickness(e: Event) {
             if (table.tableRowStart > -1 || table.tableColStart > -1 || is_edting) {
                 let range
                 if (is_edting) {
-                    range = {rowStart: is_edting.index.row, rowEnd: is_edting.index.row, colStart: is_edting.index.col, colEnd: is_edting.index.col};
+                    range = { rowStart: is_edting.index.row, rowEnd: is_edting.index.row, colStart: is_edting.index.col, colEnd: is_edting.index.col };
                 } else {
-                    range = {rowStart: table.tableRowStart, rowEnd: table.tableRowEnd, colStart: table.tableColStart, colEnd: table.tableColEnd};
+                    range = { rowStart: table.tableRowStart, rowEnd: table.tableRowEnd, colStart: table.tableColStart, colEnd: table.tableColEnd };
                 }
                 e.setBorderThickness(props.index, thickness, range)
             } else {
@@ -172,9 +172,9 @@ const augment = (e: Event) => {
                 if (table.tableRowStart > -1 || table.tableColStart > -1 || is_edting) {
                     let range
                     if (is_edting) {
-                        range = {rowStart: is_edting.index.row, rowEnd: is_edting.index.row, colStart: is_edting.index.col, colEnd: is_edting.index.col};
+                        range = { rowStart: is_edting.index.row, rowEnd: is_edting.index.row, colStart: is_edting.index.col, colEnd: is_edting.index.col };
                     } else {
-                        range = {rowStart: table.tableRowStart, rowEnd: table.tableRowEnd, colStart: table.tableColStart, colEnd: table.tableColEnd};
+                        range = { rowStart: table.tableRowStart, rowEnd: table.tableRowEnd, colStart: table.tableColStart, colEnd: table.tableColEnd };
                     }
                     e.setBorderThickness(props.index, thickness, range)
                 } else {
@@ -209,9 +209,9 @@ const decrease = (e: Event) => {
                 if (table.tableRowStart > -1 || table.tableColStart > -1 || is_edting) {
                     let range
                     if (is_edting) {
-                        range = {rowStart: is_edting.index.row, rowEnd: is_edting.index.row, colStart: is_edting.index.col, colEnd: is_edting.index.col};
+                        range = { rowStart: is_edting.index.row, rowEnd: is_edting.index.row, colStart: is_edting.index.col, colEnd: is_edting.index.col };
                     } else {
-                        range = {rowStart: table.tableRowStart, rowEnd: table.tableRowEnd, colStart: table.tableColStart, colEnd: table.tableColEnd};
+                        range = { rowStart: table.tableRowStart, rowEnd: table.tableRowEnd, colStart: table.tableColStart, colEnd: table.tableColEnd };
                     }
                     e.setBorderThickness(props.index, thickness, range)
                 } else {
@@ -236,7 +236,7 @@ const decrease = (e: Event) => {
 
 watch(() => props.border, () => {
     updater();
-}, {deep: true})
+}, { deep: true })
 
 const onMouseDown = (e: MouseEvent) => {
     e.stopPropagation()
@@ -268,9 +268,9 @@ const onMouseMove = (e: MouseEvent) => {
                             if (table.tableRowStart > -1 || table.tableColStart > -1 || is_edting) {
                                 let range
                                 if (is_edting) {
-                                    range = {rowStart: is_edting.index.row, rowEnd: is_edting.index.row, colStart: is_edting.index.col, colEnd: is_edting.index.col};
+                                    range = { rowStart: is_edting.index.row, rowEnd: is_edting.index.row, colStart: is_edting.index.col, colEnd: is_edting.index.col };
                                 } else {
-                                    range = {rowStart: table.tableRowStart, rowEnd: table.tableRowEnd, colStart: table.tableColStart, colEnd: table.tableColEnd};
+                                    range = { rowStart: table.tableRowStart, rowEnd: table.tableRowEnd, colStart: table.tableColStart, colEnd: table.tableColEnd };
                                 }
                                 e.setBorderThickness(props.index, thickness, range)
                             } else {
@@ -307,9 +307,9 @@ const onMouseMove = (e: MouseEvent) => {
                             if (table.tableRowStart > -1 || table.tableColStart > -1 || is_edting) {
                                 let range
                                 if (is_edting) {
-                                    range = {rowStart: is_edting.index.row, rowEnd: is_edting.index.row, colStart: is_edting.index.col, colEnd: is_edting.index.col};
+                                    range = { rowStart: is_edting.index.row, rowEnd: is_edting.index.row, colStart: is_edting.index.col, colEnd: is_edting.index.col };
                                 } else {
-                                    range = {rowStart: table.tableRowStart, rowEnd: table.tableRowEnd, colStart: table.tableColStart, colEnd: table.tableColEnd};
+                                    range = { rowStart: table.tableRowStart, rowEnd: table.tableRowEnd, colStart: table.tableColStart, colEnd: table.tableColEnd };
                                 }
                                 e.setBorderThickness(props.index, thickness, range)
                             } else {
@@ -387,8 +387,8 @@ onUnmounted(() => {
 
 <template>
     <div class="border-detail-container" @mousedown.stop>
-        <Popover :context="props.context" class="popover" ref="popover" :width="240" height="auto" :left="418"
-                 :title="t('attr.advanced_stroke')">
+        <Popover :context="props.context" class="popover" ref="popover" :width="240" :auto_to_right_line="true"
+            :title="t('attr.advanced_stroke')">
             <template #trigger>
                 <div class="trigger">
                     <svg-icon icon-class="gear" @click="showMenu"></svg-icon>
@@ -400,21 +400,19 @@ onUnmounted(() => {
                     <div v-if="show_position" :style="{ opacity: shapes[0].type === ShapeType.Table ? '.5' : '1' }">
                         <label>{{ t('attr.position') }}</label>
                         <Select :selected="position" :item-view="BorderPositonItem" :item-height="32"
-                                :source="positonOptionsSource"
-                                @select="positionSelect"
-                                :type="shapes[0].type === ShapeType.Table ? 'table' : 'none'" :width="128" :containerWidth="128"></Select>
+                            :source="positonOptionsSource" @select="positionSelect"
+                            :type="shapes[0].type === ShapeType.Table ? 'table' : 'none'" :width="128"
+                            :containerWidth="128"></Select>
                     </div>
                     <!-- 边框厚度 -->
                     <div>
                         <label>{{ t('attr.thickness') }}</label>
-                        <div class="thickness-container" :class="{actived: isActived}">
+                        <div class="thickness-container" :class="{ actived: isActived }">
                             <svg-icon icon-class="thickness" @mousedown="onMouseDown"></svg-icon>
                             <input ref="borderThickness" type="text" :value="border.thickness"
-                                   @change="e => setThickness(e)" @blur="blur2"
-                                   @focus="selectBorderThicknes">
+                                @change="e => setThickness(e)" @blur="blur2" @focus="selectBorderThicknes">
                             <div class="up_down">
-                                <svg-icon icon-class="down" style="transform: rotate(180deg);"
-                                          @click="augment"></svg-icon>
+                                <svg-icon icon-class="down" style="transform: rotate(180deg);" @click="augment"></svg-icon>
                                 <svg-icon icon-class="down" @click="decrease"></svg-icon>
                             </div>
                         </div>
@@ -423,8 +421,8 @@ onUnmounted(() => {
                     <div>
                         <label>{{ t('attr.borderStyle') }}</label>
                         <Select :selected="borderStyle" :item-view="BorderStyleItem" :value-view="BorderStyleSelected"
-                                :item-height="32" @select="borderStyleSelect"
-                                :source="borderStyleOptionsSource" :width="128" :containerWidth="128"></Select>
+                            :item-height="32" @select="borderStyleSelect" :source="borderStyleOptionsSource" :width="128"
+                            :containerWidth="128"></Select>
                     </div>
                 </div>
             </template>
@@ -434,7 +432,7 @@ onUnmounted(() => {
 
 <style scoped lang="scss">
 .border-detail-container {
-    > .popover {
+    >.popover {
         width: 16px;
         height: 16px;
 
@@ -446,13 +444,13 @@ onUnmounted(() => {
             align-items: center;
             margin-left: -10px;
 
-            > svg {
+            >svg {
                 width: 16px;
                 height: 16px;
                 transition: 0.5s;
             }
 
-            > svg:hover {
+            >svg:hover {
                 transform: rotate(90deg);
             }
         }
@@ -465,12 +463,12 @@ onUnmounted(() => {
             box-sizing: border-box;
             height: 100%;
 
-            > div {
+            >div {
                 display: flex;
                 align-items: center;
                 margin-bottom: 12px;
 
-                > label {
+                >label {
                     flex: 0 0 24px;
                     box-sizing: border-box;
                     width: 24px;
@@ -481,7 +479,7 @@ onUnmounted(() => {
                     margin-right: 24px;
                 }
 
-                > .thickness-container {
+                >.thickness-container {
                     box-sizing: border-box;
                     padding: 3px;
                     background-color: var(--input-background);
@@ -491,14 +489,14 @@ onUnmounted(() => {
                     display: flex;
                     align-items: center;
 
-                    > svg {
+                    >svg {
                         cursor: ew-resize;
                         flex: 0 0 24px;
                         height: 24px;
                         margin-left: 9px;
                     }
 
-                    > input {
+                    >input {
                         outline: none;
                         border: none;
                         width: calc(100% - 68px);
@@ -526,11 +524,12 @@ onUnmounted(() => {
                         justify-content: space-around;
                         border-radius: 4px;
 
-                        > svg {
+                        >svg {
                             width: 12px;
                             height: 12px;
                         }
                     }
+
                     .up_down:hover {
                         background-color: #EBEBEB;
                     }
