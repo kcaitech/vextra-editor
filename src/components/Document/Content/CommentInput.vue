@@ -61,10 +61,15 @@ const commentData = ref<Comment>({
 
 function handleClickOutside(event: MouseEvent) {
     event.stopPropagation()
-    const length = textarea.value.trim().length < 4
-    if (event.target instanceof Element && !event.target.closest('.comment-input') && length) {
+    if (event.target instanceof Element && event.target.closest('.comment-input')) {
+        return;
+    }
+
+    const mins = textarea.value.trim().length < 4;
+
+    if (mins) {
         emit('close', event);
-    } else if (event.target instanceof Element && !event.target.closest('.comment-input') && !length) {
+    } else {
         startShake()
         input.value && input.value.focus()
         input.value && input.value.select()
@@ -101,6 +106,7 @@ const mouseDownCommentInput = (e: MouseEvent) => {
 }
 
 const addComment = () => {
+    if(textarea.value.trim().length < 1) return;
     const timestamp = getCurrentTime()
     commentData.value.record_created_at = timestamp
     commentData.value.content = textarea.value
@@ -197,7 +203,7 @@ onUnmounted(() => {
 
 <template>
     <div ref="comment" class="comment-input"
-        :style="{ transform: `translate(${matrix.m02}px, ${matrix.m12}px)`, left: offside ? surplusX + 'px' : 38 + 'px', top: -43 + 'px' }">
+        :style="{ transform: `translate(${matrix.m02}px, ${matrix.m12}px)`, left: offside ? surplusX + 'px' : 48 + 'px', top: -33 + 'px' }">
         <div :class="{ icon_left: !offside, icon_right: offside }" ref="inputIcon" @mousedown="mouseDownCommentInput">
             <svg-icon icon-class="comment-add"></svg-icon>
         </div>

@@ -38,7 +38,7 @@ const rootHeight = ref(0)
 const rootWidth = ref(0)
 const comment = ref<HTMLDivElement>()
 const matrix = new Matrix();
-const documentCommentList = ref<any[]>(_comment.value.pageCommentList[props.index].children || [])
+const documentCommentList = ref<any[]>([])
 const commentOpacity = ref(_comment.value.isCommentOpacity)
 const reply = ref(props.context.selection.commentStatus)
 const commentLength = ref(props.context.comment.pageCommentList.length)
@@ -253,6 +253,8 @@ function setOrigin() { // 这个动作是让container与页面坐标系重合
 
 const getDocumentComment = async () => {
     try {
+        console.log('pageItem');
+        
         const { data } = await comment_api.getDocumentCommentAPI({ doc_id: props.commentInfo.doc_id, root_id: props.commentInfo.id })
         const list = data.map((item: any) => {
             item.content = item.content.replaceAll("\r\n", "<br/>").replaceAll("\n", "<br/>").replaceAll(" ", "&nbsp;")
