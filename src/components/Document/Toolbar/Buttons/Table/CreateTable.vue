@@ -96,7 +96,7 @@ const createTable = (row?: number, col?: number) => {
     position: absolute;
     z-index: 999;
     width: 252px;
-    height: 394px;
+    height: auto;
     border-radius: 4px;
     padding: 4px 12px;
     background-color: #FFFFFF;

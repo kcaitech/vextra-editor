@@ -952,6 +952,10 @@ onUnmounted(() => {
             > .sliders-container {
                 width: 196px;
                 height: 30px;
+                display: flex;
+                align-items: center;
+                flex-direction: column;
+                justify-content: center;
 
                 > .hue {
                     position: relative;
@@ -1185,15 +1189,15 @@ onUnmounted(() => {
 
                 > .documentc-container {
                     width: 100%;
-                    max-height: 56px;
+                    max-height: 80px;
                     overflow: scroll;
                     display: grid;
-                    grid-row-gap: 4px;
-                    grid-column-gap: 8px;
+                    grid-row-gap: 7px;
+                    grid-column-gap: 7px;
                     grid-template-columns: repeat(auto-fill, 16px);
 
                     &::-webkit-scrollbar {
-                        width: 0px;
+                        width: 5px;
                     }
 
                     &::-webkit-scrollbar-track {
@@ -1201,7 +1205,8 @@ onUnmounted(() => {
                     }
 
                     &::-webkit-scrollbar-thumb {
-                        background-color: none;
+                        background-color: #EBEBEB;
+                        border-radius: 150px;
                     }
 
                     &::-webkit-scrollbar-thumb:hover {
