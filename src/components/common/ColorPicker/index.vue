@@ -1191,7 +1191,7 @@ onUnmounted(() => {
 
                 > .documentc-container {
                     width: 100%;
-                    max-height: 80px;
+                    max-height: 82px;
                     overflow: scroll;
                     display: grid;
                     grid-row-gap: 7px;
