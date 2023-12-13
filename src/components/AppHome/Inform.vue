@@ -317,6 +317,17 @@ const getName = (item: any) => {
 }
 
 .custom-tabs-label {
+  position: relative;
+
+  &::before {
+    content: "";
+    position: absolute;
+    top: 0px;
+    left: -16px;
+    right: -16px;
+    bottom: 0px;
+  }
+
   .messagetips {
     position: absolute;
     top: 6px;
@@ -544,17 +555,18 @@ const getName = (item: any) => {
   border-radius: 8px;
   box-sizing: border-box;
   overflow: visible;
+  box-shadow: 0px 2px 10px 0px rgba(0, 0, 0, 0.08);
 
   &::before {
     content: "";
     position: absolute;
-    width: 12px;
-    height: 12px;
-    background-color: #ffffff;
     clear: both;
-    top: -3px;
+    top: -6px;
     right: 60px;
-    transform: rotate(45deg);
+    border-left: 9px solid transparent;
+    border-right: 9px solid transparent;
+    border-bottom: 10px solid #fff;
+    filter: drop-shadow(0px 0px 12px rgba(0, 0, 0, 0.12));
   }
 
 }

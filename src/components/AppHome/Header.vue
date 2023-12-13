@@ -273,7 +273,7 @@ const getElXY = (el: HTMLElement, elwidth: number = 0) => {
                         :style="{ paddingRight: total > 99 ? 9 + 'px' : 4 + 'px' }">{{ total > 99 ? 99 : total }}</div>
                 </div>
             </div>
-            <div ref="avatar" class="avatar-area" @click="showuserinfo(avatar!, 100)">
+            <div ref="avatar" class="avatar-area" @click="showuserinfo(avatar!, 120)">
                 <el-avatar v-if="circleUrl" :src="circleUrl" @error="errorHandler" fit="cover" :size="32">
                     <img src="https://cube.elemecdn.com/e/fd/0fc7d20532fdaf769a25683617711png.png" />
                 </el-avatar>
@@ -361,6 +361,7 @@ const getElXY = (el: HTMLElement, elwidth: number = 0) => {
         justify-content: center;
         font-size: 12px;
         gap: 20px;
+
         .notice {
             flex: 1;
             position: relative;
@@ -417,24 +418,40 @@ const getElXY = (el: HTMLElement, elwidth: number = 0) => {
 }
 
 .userinfo {
-    padding: 6px;
     background-color: white;
-    position: absolute;
-    box-shadow: 0px 8px 16px 0px rgba(0, 0, 0, 0.2);
-    border-radius: 4px;
+    position: relative;
+    box-shadow: 0px 2px 10px 0px rgba(0, 0, 0, 0.08);
+    border-radius: 8px;
     z-index: 9;
-    font-size: 12px;
+    padding: 8px 0;
+    font-size: 13px;
+    width: 120px;
+    overflow: visible;
 
     div {
-        padding: 4px 8px;
+        padding: 8px 12px;
         display: flex;
         align-items: center;
-        justify-content: center;
+        justify-content: space-evenly;
+        height: 40px;
+        box-sizing: border-box;
 
         &:hover {
             background-color: rgba(243, 243, 245, 1);
-            border-radius: 4px;
         }
+    }
+
+    &::before {
+        content: "";
+        position: absolute;
+        clear: both;
+        top: -7px;
+        right: 9px;
+        border-left: 6px solid transparent;
+        border-right: 6px solid transparent;
+        border-bottom: 7px solid #ffffff;
+        filter: drop-shadow(0px 0px 12px rgba(0, 0, 0, 0.12));
+
     }
 }
 </style>
