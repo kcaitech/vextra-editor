@@ -172,7 +172,9 @@ onUnmounted(() => {
                 <Saving></Saving>
             </div>
         </div>
-        <span v-if="isLable" style="margin-left: 10px; color: #fff; font-size: 12px; width: 35%">【开发模式】</span>
+        <div class="model" style="margin-left: 286px;margin-top: -37px">
+            <span v-if="isLable" style="color: #fff; font-size: 12px; width: 35%">【开发模式】</span>
+        </div>
     </div>
 </template>
 
