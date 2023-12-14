@@ -1,26 +1,27 @@
 <script setup lang="ts">
-import { Context } from '@/context';
-import { ClientXY, PageXY } from '@/context/selection';
-import { Action } from '@/context/tool';
-import { WorkSpace } from '@/context/workspace';
-import { collect } from '@/utils/artboardFn';
-import { getHorizontalAngle } from '@/utils/common';
-import { flattenShapes, init_contact_shape, init_insert_shape, init_shape, list2Tree } from '@/utils/content';
-import { get_direction } from '@/utils/controllerFn';
-import { EffectType, Wheel, fourWayWheel } from '@/utils/wheel';
-import { Artboard, AsyncCreator, ContactForm, GroupShape, Matrix, Shape, ShapeFrame, ShapeType } from '@kcdesign/data';
-import { onMounted, onUnmounted, reactive, ref } from 'vue';
-import { useI18n } from 'vue-i18n';
+import {Context} from '@/context';
+import {ClientXY, PageXY} from '@/context/selection';
+import {Action} from '@/context/tool';
+import {WorkSpace} from '@/context/workspace';
+import {collect} from '@/utils/artboardFn';
+import {getHorizontalAngle} from '@/utils/common';
+import {flattenShapes, init_contact_shape, init_insert_shape, init_shape, list2Tree} from '@/utils/content';
+import {get_direction} from '@/utils/controllerFn';
+import {EffectType, Wheel, fourWayWheel} from '@/utils/wheel';
+import {Artboard, AsyncCreator, ContactForm, GroupShape, Matrix, Shape, ShapeFrame, ShapeType} from '@kcdesign/data';
+import {onMounted, onUnmounted, reactive, ref} from 'vue';
+import {useI18n} from 'vue-i18n';
 import CommentInput from './Content/CommentInput.vue';
-import { useRoute } from 'vue-router';
-import { searchCommentShape } from '@/utils/comment';
+import {useRoute} from 'vue-router';
+import {searchCommentShape} from '@/utils/comment';
 import * as comment_api from '@/request/comment';
 import ContactInit from './Toolbar/ContactInit.vue';
-import { get_contact_environment } from '@/utils/contact';
+import {get_contact_environment} from '@/utils/contact';
 
 interface Props {
     context: Context
 }
+
 const props = defineProps<Props>();
 
 const dragActiveDis = 4; // 拖动 4px 后开始触发移动
@@ -32,22 +33,22 @@ let stickedX: boolean = false;
 let stickedY: boolean = false;
 let sticked_x_v: number = 0;
 let sticked_y_v: number = 0;
-let page_xy_1: PageXY = { x: 0, y: 0 };
-let client_xy_1: ClientXY = { x: 0, y: 0 };
+let page_xy_1: PageXY = {x: 0, y: 0};
+let client_xy_1: ClientXY = {x: 0, y: 0};
 let matrix1: Matrix = new Matrix(props.context.workspace.matrix.inverse);
 let isDrag: boolean = false;
 let just_search: boolean = false;
 
 // #region
 const commentInput = ref<boolean>(false);
-const commentPosition: ClientXY = reactive({ x: 0, y: 0 });
+const commentPosition: ClientXY = reactive({x: 0, y: 0});
 type CommentInputEl = InstanceType<typeof CommentInput>;
 const commentEl = ref<CommentInputEl>();
 const shapeID = ref('')
-const shapePosition: ClientXY = reactive({ x: 0, y: 0 });
+const shapePosition: ClientXY = reactive({x: 0, y: 0});
 const documentCommentList = ref<any[]>(props.context.comment.pageCommentList);
 const route = useRoute()
-const posi = ref({ x: 0, y: 0 });
+const posi = ref({x: 0, y: 0});
 const rootWidth = ref<number>(props.context.workspace.root.width);
 type commentListMenu = {
     text: string
@@ -55,10 +56,11 @@ type commentListMenu = {
 }
 // 左侧评论列表的菜单
 const commentMenuItems = ref<commentListMenu[]>([
-    { text: `${t('comment.sort')}`, status_p: false },
-    { text: `${t('comment.show_about_me')}`, status_p: false },
-    { text: `${t('comment.show_resolved_comments')}`, status_p: props.context.selection.commentStatus || false }
+    {text: `${t('comment.sort')}`, status_p: false},
+    {text: `${t('comment.show_about_me')}`, status_p: false},
+    {text: `${t('comment.show_resolved_comments')}`, status_p: props.context.selection.commentStatus || false}
 ])
+
 // #endregion
 
 function down(e: MouseEvent) {
@@ -72,6 +74,7 @@ function down(e: MouseEvent) {
         document.addEventListener("mouseup", up);
     }
 }
+
 function move(e: MouseEvent) {
     if (e.buttons === 1) {
         if (newShape) {
@@ -82,9 +85,11 @@ function move(e: MouseEvent) {
         }
     }
 }
+
 function move2(e: MouseEvent) {
     if (just_search || (e.buttons === 0 && props.context.tool.action === Action.AddContact)) search_apex(e);
 }
+
 function up(e: MouseEvent) {
     removeWheel();
     if (commentInput.value) commentInput.value = false;
@@ -97,14 +102,16 @@ function up(e: MouseEvent) {
             init_insert_shape(props.context, page_xy_1, t);
         }
     }
-    isDrag = false, just_search = false;
+    isDrag = false;
+    just_search = false;
     document.removeEventListener("mousemove", move);
     document.removeEventListener("mouseup", up);
 }
+
 // #region 评论
 const detectionShape = (e: MouseEvent) => {
     const workspace = props.context.workspace;
-    const { x, y } = workspace.root;
+    const {x, y} = workspace.root;
     const xy = matrix1.computeCoord2(e.clientX - x, e.clientY - y);
     const shapes = searchCommentShape(props.context, xy);
     if (shapes.length === 0) { //点击的位置是否有图形
@@ -114,12 +121,12 @@ const detectionShape = (e: MouseEvent) => {
     } else {
         const shape = shapes[0]
         const fp = shape.frame2Root();
-        const farmeXY = { x: fp.x, y: fp.y }
+        const farmeXY = {x: fp.x, y: fp.y}
         shapePosition.x = xy.x - farmeXY.x //评论输入框相对于shape的距离
         shapePosition.y = xy.y - farmeXY.y
         shapeID.value = shape.id
     }
-    return { x, y, xy }
+    return {x, y, xy}
 }
 const addComment = (e: MouseEvent) => {
     e.stopPropagation()
@@ -132,7 +139,7 @@ const addComment = (e: MouseEvent) => {
         return
     }
     if (commentInput.value) return
-    const { x, y, xy } = detectionShape(e)
+    const {x, y, xy} = detectionShape(e)
     commentPosition.x = xy.x; //评论输入框在页面的坐标
     commentPosition.y = xy.y;
     posi.value.x = e.clientX - x // 评论弹出框的位置坐标
@@ -141,7 +148,7 @@ const addComment = (e: MouseEvent) => {
     document.addEventListener('keydown', commentEsc);
 }
 const getCommentInputXY = (e: MouseEvent) => {
-    const { x, y, xy } = detectionShape(e)
+    const {x, y, xy} = detectionShape(e)
     commentPosition.x = xy.x;
     commentPosition.y = xy.y;
     posi.value.x = e.clientX - x
@@ -186,11 +193,11 @@ const editShapeComment = (index: number, x: number, y: number) => {
     const comment = documentCommentList.value[index]
     const id = comment.id
     const shapeId = comment.target_shape_id
-    const { x2, y2 } = comment.shape_frame
+    const {x2, y2} = comment.shape_frame
     const data = {
         id: id,
         target_shape_id: shapeId,
-        shape_frame: { x1: x, y1: y, x2: x2, y2: y2 }
+        shape_frame: {x1: x, y1: y, x2: x2, y2: y2}
     }
     editCommentShapePosition(data)
 }
@@ -221,7 +228,7 @@ const completed = () => {
 // 获取评论列表
 const getDocumentComment = async () => {
     try {
-        const { data } = await comment_api.getDocumentCommentAPI({ doc_id: route.query.id })
+        const {data} = await comment_api.getDocumentCommentAPI({doc_id: route.query.id})
         if (data) {
             data.forEach((obj: { children: any[]; commentMenu: any; }) => {
                 obj.commentMenu = commentMenuItems.value
@@ -254,7 +261,7 @@ let apex1: ContactForm | undefined, apex2: ContactForm | undefined;
 let page_xy2: PageXY | undefined;
 
 function search_apex(e: MouseEvent) {
-    const { x, y } = props.context.workspace.root;
+    const {x, y} = props.context.workspace.root;
     const xy = props.context.workspace.matrix.inverseCoord(e.clientX - x, e.clientY - y);
     const shapes = props.context.selection.getContactByXY(xy);
     if (shapes.length) {
@@ -263,10 +270,14 @@ function search_apex(e: MouseEvent) {
         props.context.tool.resetContactApex();
     }
 }
+
 function contact_init(e: MouseEvent, apex?: ContactForm, p2?: PageXY) {
     down(e);
-    apex1 = apex, page_xy2 = p2, just_search = true;
+    apex1 = apex;
+    page_xy2 = p2;
+    just_search = true;
 }
+
 function modify_contact_to(e: MouseEvent, ac: AsyncCreator) {
     const root = props.context.workspace.root;
     const p = matrix1.computeCoord2(e.clientX - root.x, e.clientY - root.y);
@@ -278,18 +289,21 @@ function modify_contact_to(e: MouseEvent, ac: AsyncCreator) {
     }
     ac.migrate(environment as GroupShape);
 }
+
 // #endregion
 function modify_page_xy_1(e: MouseEvent) {
-    const { x, y } = props.context.workspace.root;
+    const {x, y} = props.context.workspace.root;
     matrix1 = new Matrix(props.context.workspace.matrix.inverse);
     page_xy_1 = matrix1.computeCoord2(e.clientX - x, e.clientY - y);
 }
+
 function modify_client_xy_1(e: MouseEvent) {
     client_xy_1.x = e.clientX, client_xy_1.y = e.clientY;
 }
+
 function correct_page_xy(x: number, y: number) {
     const stickness = props.context.assist.stickness;
-    const target = props.context.assist.create_match({ x, y });
+    const target = props.context.assist.create_match({x, y});
     if (target) {
         if (stickedX) {
             if (Math.abs(x - sticked_x_v) >= stickness) stickedX = false;
@@ -308,49 +322,49 @@ function correct_page_xy(x: number, y: number) {
             stickedY = true;
         }
     }
-    return { x, y }
+    return {x, y}
 }
+
 /**
  * @description 等比设置frame
  */
 function er_frame(asyncCreator: AsyncCreator, x: number, y: number) {
     if (newShape && newShape.type === ShapeType.Line) {
-        const p2 = { x, y };
+        const p2 = {x, y};
         const m = newShape.matrix2Root(), lt = m.computeCoord2(0, 0);
         const type_d = get_direction(Math.floor(getHorizontalAngle(lt, p2)));
         if (type_d === 0) p2.y = lt.y;
         else if (type_d === 45) {
             const len = Math.hypot(p2.x - lt.x, p2.y - lt.y);
             p2.x = lt.x + len * Math.cos(0.25 * Math.PI), p2.y = lt.y + len * Math.sin(0.25 * Math.PI);
-        }
-        else if (type_d === 90) p2.x = lt.x;
+        } else if (type_d === 90) p2.x = lt.x;
         else if (type_d === 135) {
             const len = Math.hypot(p2.x - lt.x, p2.y - lt.y);
             p2.x = lt.x - len * Math.cos(0.25 * Math.PI), p2.y = lt.y + len * Math.sin(0.25 * Math.PI);
-        }
-        else if (type_d === 180) p2.y = lt.y;
+        } else if (type_d === 180) p2.y = lt.y;
         else if (type_d === 225) {
             const len = Math.hypot(p2.x - lt.x, p2.y - lt.y);
             p2.x = lt.x - len * Math.cos(0.25 * Math.PI), p2.y = lt.y - len * Math.sin(0.25 * Math.PI);
-        }
-        else if (type_d === 270) p2.x = lt.x;
+        } else if (type_d === 270) p2.x = lt.x;
         else if (type_d === 315) {
             const len = Math.hypot(p2.x - lt.x, p2.y - lt.y);
             p2.x = lt.x + len * Math.cos(0.25 * Math.PI), p2.y = lt.y - len * Math.sin(0.25 * Math.PI);
         }
-        asyncCreator.setFrame({ x: p2.x, y: p2.y });
+        asyncCreator.setFrame({x: p2.x, y: p2.y});
     } else {
         const del = x - page_xy_1.x;
         y = page_xy_1.y + del;
-        asyncCreator.setFrame({ x, y });
+        asyncCreator.setFrame({x, y});
     }
 }
+
 function wheelSetup() {
-    wheel = fourWayWheel(props.context, { rolling: undefined }, page_xy_1);
+    wheel = fourWayWheel(props.context, {rolling: undefined}, page_xy_1);
 }
+
 function gen_new_shape(e: MouseEvent) {
     const root = props.context.workspace.root;
-    const { x, y } = matrix1.computeCoord2(e.clientX - root.x, e.clientY - root.y);
+    const {x, y} = matrix1.computeCoord2(e.clientX - root.x, e.clientY - root.y);
     const shapeFrame = new ShapeFrame(x, y, 1, 1);
     if (props.context.tool.action === Action.AddContact) {
         const result = init_contact_shape(props.context, shapeFrame, page_xy_1, t, apex1, page_xy2);
@@ -367,11 +381,12 @@ function gen_new_shape(e: MouseEvent) {
         }
     }
 }
+
 function modify_new_shape_frame(e: MouseEvent) {
     const root = props.context.workspace.root;
-    const { x, y } = matrix1.computeCoord2(e.clientX - root.x, e.clientY - root.y);
+    const {x, y} = matrix1.computeCoord2(e.clientX - root.x, e.clientY - root.y);
     if (wheel && asyncCreator) {
-        const isOut = wheel.moving(e, { type: EffectType.NEW_SHAPE, effect: asyncCreator.setFrameByWheel });
+        const isOut = wheel.moving(e, {type: EffectType.NEW_SHAPE, effect: asyncCreator.setFrameByWheel});
         if (isOut) return;
         if (newShape && newShape.type === ShapeType.Contact) {
             modify_contact_to(e, asyncCreator);
@@ -382,28 +397,36 @@ function modify_new_shape_frame(e: MouseEvent) {
         }
     }
 }
+
 function e_contact_to(apex: ContactForm, p2: PageXY) {
     if (asyncCreator) {
         asyncCreator.contact_to(p2, apex);
     }
 }
+
 function removeWheel() {
     if (wheel) wheel = wheel.remove();
 }
+
 function shapeCreateEnd() {
     if (newShape) {
         if (newShape.type === ShapeType.Text) {
-            props.context.workspace.notify(WorkSpace.INIT_EDITOR);
+            props.context.workspace.notify(WorkSpace.INIT_EDITOR, 0);
         } else if (newShape.type === ShapeType.Artboard) {
-            const childs = collect(props.context);
+            const children = collect(props.context);
             const page = props.context.selection.selectedPage;
-            if (page && asyncCreator) asyncCreator.collect(page, childs, props.context.selection.selectedShapes[0] as Artboard);
+            if (page && asyncCreator) {
+                asyncCreator.collect(page, children, props.context.selection.selectedShapes[0] as Artboard);
+            }
         }
         removeCreator();
         props.context.assist.reset();
-        newShape = undefined, apex1 = undefined, page_xy2 = undefined;
+        newShape = undefined;
+        apex1 = undefined;
+        page_xy2 = undefined;
     }
 }
+
 function removeCreator() {
     if (asyncCreator) asyncCreator = asyncCreator.close();
     props.context.workspace.creating(false);
@@ -412,6 +435,7 @@ function removeCreator() {
         props.context.cursor.setType("auto-0");
     }
 }
+
 function windowBlur() {
     shapeCreateEnd();
     removeWheel();
@@ -419,6 +443,7 @@ function windowBlur() {
     document.removeEventListener('mousemove', move);
     document.removeEventListener('mouseup', up);
 }
+
 onMounted(() => {
     window.addEventListener('blur', windowBlur);
 })
@@ -429,9 +454,11 @@ onUnmounted(() => {
 <template>
     <div @mousedown.stop="down" @mousemove="move2" class="creator">
         <CommentInput v-if="commentInput" :context="props.context" :x1="commentPosition.x" :y1="commentPosition.y"
-            :pageID="props.context.selection.selectedPage!.id" :shapeID="shapeID" ref="commentEl" :rootWidth="rootWidth"
-            @close="closeComment" @mouseDownCommentInput="mouseDownCommentInput" :matrix="props.context.workspace.matrix"
-            :x2="shapePosition.x" :y2="shapePosition.y" @completed="completed" :posi="posi"></CommentInput>
+                      :pageID="props.context.selection.selectedPage!.id" :shapeID="shapeID" ref="commentEl"
+                      :rootWidth="rootWidth"
+                      @close="closeComment" @mouseDownCommentInput="mouseDownCommentInput"
+                      :matrix="props.context.workspace.matrix"
+                      :x2="shapePosition.x" :y2="shapePosition.y" @completed="completed" :posi="posi"></CommentInput>
         <ContactInit :context="props.context" @contact-init="contact_init" @contact-to="e_contact_to"></ContactInit>
     </div>
 </template>

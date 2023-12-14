@@ -62,7 +62,8 @@ export const system = {
     'license_key': '粤ICP备2023042416号',
     'phonetips': 'Mobile terminal does not support login, please login on the computer side!',
     'btn_login': 'Login',
-    'artboart_title_visible': 'Show artboard title'
+    'artboart_title_visible': 'Show artboard title',
+    sensitive_reminder:'Contains sensitive information, please re-enter.'
 }
 
 export const home = {
@@ -166,7 +167,8 @@ export const navi = {
     page: 'Page',
     add_page: 'Add new page',
     copy: 'copy',
-    development: 'Functional development…'
+    development: 'Functional development…',
+    overname: 'The maximum length of filenames is 50 characters'
 }
 
 export const frame = {
@@ -201,7 +203,9 @@ export const attr: any = {
     prototype: 'Prototype',
     inspect: 'Inspect',
     constraints: 'Constraints',
+    groupings: 'Groupings',
     border: 'Border',
+    opacity: 'Opacity',
     fill: 'Fill',
     text: 'Text',
     'follow_container_scaling': 'Follow container scaling',
@@ -210,6 +214,8 @@ export const attr: any = {
     'corner_smoothing': 'Cornor smoothing',
     vertical: 'Vertical',
     horizontal: 'Horizontal',
+    fixedWidth: 'FixedWidth',
+    fixedHeight: 'FixedHeight',
     fixedLeft: 'Left fixed',
     fixedRight: 'Right fixed',
     withContainer: 'Follow container scaling',
@@ -278,11 +284,16 @@ export const attr: any = {
     multiple_colors: 'There are many color values, click + can be unified set',
     unfold: 'Unfold',
     packup: 'Pack up',
-    'flip_v': '垂直翻转',
-    'flip_h': '水平翻转',
+    'flip_v': 'Flip Vertical',
+    'flip_h': 'Flip Horizontal',
     full_border: 'Full border',
     outer_border: 'border',
-    inner_border: 'Inner border'
+    inner_border: 'Inner border',
+    exit_path_edit: 'Exit Editing Mode(ESC)',
+    right_angle: "Right Angle",
+    completely_symmetrical: "Completely Symmetrical",
+    angular_symmetry: "Angular Symmetry",
+    asymmetric: "Asymmetric",
 }
 
 export const login = {
@@ -314,7 +325,26 @@ export const comment = {
 export const clipboard = {
     'invalid_data': 'invalid data'
 }
-
+export const opacity = {
+    normal: 'Normal',
+    become_dark: 'Become dark',
+    multiply: 'Multiply',
+    color_deepening: 'Color deepening',
+    become_bright: 'Become bright',
+    filter: 'Filter',
+    color_dodge: 'Color dodge',
+    superpose: 'Superpose',
+    soft_light: 'Soft light',
+    strong_light: 'Strong light',
+    difference: 'Difference',
+    exclude: 'Exclude',
+    hue: 'Hue',
+    saturation: 'Saturation',
+    color: 'Color',
+    lightness: 'Lightness',
+    darken: 'Darken',
+    brighten: 'Brighten'
+}
 export const message = {
     doc_notopen: "Network anomalies, the document can't open, please try again after checking the network.",
     list_for_failure: 'Network exception, file list acquisition failed, please check the network and try again.',

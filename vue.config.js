@@ -30,14 +30,11 @@ var configureWebpack = (config) => {
     config.module.rules.forEach(element => {
         if (!'.svg'.match(element.test)) {
             //
-        }
-        else if (!element.exclude) {
+        } else if (!element.exclude) {
             element.exclude = iconspath;
-        }
-        else if (element.exclude instanceof Array) {
+        } else if (element.exclude instanceof Array) {
             element.exclude.push(iconspath)
-        }
-        else {
+        } else {
             element.exclude = [element.exclude, iconspath]
         }
     });
@@ -118,14 +115,14 @@ var configureWebpack = (config) => {
             "node_modules\\/(?!(@kcdesign)\\/)",
             "communication\\/node_modules\\/)",
         ],
-        poll: 3000,
+        poll: 5000,
     }
 }
 
 var exports = defineConfig({
     transpileDependencies: true,
-    // publicPath: '/zbb',
     publicPath: './',
+    // publicPath: '/zbb',
     configureWebpack,
 
     pluginOptions: {
@@ -148,7 +145,7 @@ var exports = defineConfig({
                 //ws: true,
                 pathRewrite: {
                     '^/api': '/api'
-                    // '^/api/v1': '/' 
+                    // '^/api/v1': '/'
                 }
             }
         }
@@ -156,7 +153,5 @@ var exports = defineConfig({
 
 
 }
-
-
 )
 module.exports = exports

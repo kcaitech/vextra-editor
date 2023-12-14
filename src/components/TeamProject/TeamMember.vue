@@ -2,22 +2,22 @@
     <div v-if="!noNetwork" class="container" style="height: calc(100vh - 224px);">
         <div class="hearder-container">
             <div class="title" v-for="(item, index) in  titles " :key="index">
-                <div class="content">{{ item }}
-                    <div v-if="index === 1" class="shrink" @click.stop="fold = !fold, folds = false">
-                        <svg-icon icon-class="down"
-                            :style="{ transform: fold ? 'rotate(-180deg)' : 'rotate(0deg)', color: '#000000' }"></svg-icon>
-                        <transition name="el-zoom-in-top">
-                            <ul class="filterlist2" v-if="fold" ref="menu">
-                                <li class="item" :style="{ color: index == fontName ? '#000000' : '' }"
-                                    v-for="(item, index) in  filteritems " :key="index" @click.stop="filterEvent(index)">
-                                    <div class="choose" :style="{ visibility: index == fontName ? 'visible' : 'hidden' }">
-                                    </div>
-                                    {{ item }}
-                                </li>
-                            </ul>
-                        </transition>
-                    </div>
+                {{ item }}
+                <div v-if="index === 1" class="shrink" @click.stop="fold = !fold, folds = false">
+                    <svg-icon icon-class="down"
+                        :style="{ transform: fold ? 'rotate(-180deg)' : 'rotate(0deg)', color: '#000000' }"></svg-icon>
+                    <transition name="el-zoom-in-top">
+                        <ul class="filterlist2" v-if="fold" ref="menu">
+                            <li class="item" :style="{ color: index == fontName ? '#000000' : '' }"
+                                v-for="(item, index) in  filteritems " :key="index" @click.stop="filterEvent(index)">
+                                <div class="choose" :style="{ visibility: index == fontName ? 'visible' : 'hidden' }">
+                                </div>
+                                {{ item }}
+                            </li>
+                        </ul>
+                    </transition>
                 </div>
+
             </div>
         </div>
         <div class="main">
@@ -27,9 +27,9 @@
                     :key="id">
                     <div class="member-name">
                         <img :src="avatar" alt="icon" style="width: 32px;height: 32px;border-radius: 50%;">
-                        <div class="nametext"> {{ teamname }}</div>
+                        <div class="nametext"> {{ teamname ? teamname : nickname }}</div>
                         <div v-if="perm_type < usertype2 || id === userID" class="changeName"
-                            @click="() => openDialog(teamname, id)">
+                            @click="() => openDialog(teamname ? teamname : nickname, id)">
                             <el-tooltip class="tips" effect="dark" :content="`${t('teammember.change_name')}`"
                                 placement="bottom" :show-after="600" :offset="10" :hide-after="0">
                                 <svg-icon icon-class="editname"></svg-icon>
@@ -102,6 +102,7 @@ import { router } from '@/router';
 import ProjectDialog from './ProjectDialog.vue';
 import Loading from '../common/Loading.vue';
 import { setTeamMemberNicknameAPI } from '@/request/team';
+import PinyinMatch from 'pinyin-match'
 
 
 interface Emits {
@@ -257,34 +258,22 @@ const usertype2 = ref()
 
 //通过计算属性，筛选出与搜索匹配的成员
 const SearchList = computed(() => {
-    return ListData.value.filter((el: any) => {
+    return props.searchvalue.toLowerCase() ? ListData.value.filter((el: any) => {
         if (el.user.id === userID.value) {
             usertype2.value = el.perm_type
         }
-        return el.user.nickname.toLowerCase().includes(props.searchvalue.toLowerCase())
+        return PinyinMatch.match(el.team_member.nickname.toLowerCase(), props.searchvalue.toLowerCase())
+    }) : ListData.value.filter((el: any) => {
+        if (el.user.id === userID.value) {
+            usertype2.value = el.perm_type
+        }
+        return ListData.value
     })
 })
 
 //通过计算属性，筛选出符合当前权限类型的成员
 const ListData = computed(() => {
-    if (fontName.value < 4) {
-        const list = [];
-        for (let i = 0; i < teammemberdata.value.length; i++) {
-            const item = teammemberdata.value[i];
-            if (item.perm_type !== fontName.value) continue;
-            if (!item.team_member.nickname) item.team_member.nickname = item.user.nickname;
-            list.push(item);
-        }
-        return list;
-    } else {
-        const list = [];
-        for (let i = 0; i < teammemberdata.value.length; i++) {
-            const item = teammemberdata.value[i];
-            if (!item.team_member.nickname) item.team_member.nickname = item.user.nickname;
-            list.push(item);
-        }
-        return list;
-    }
+    return fontName.value === 4 ? teammemberdata.value : teammemberdata.value.filter(item => item.perm_type === fontName.value)
 })
 
 const filterEvent = (index: number = 4) => {
@@ -434,7 +423,7 @@ async function confirm_to_modify_name() {
             } else {
                 // 5. 失败提醒
                 ElMessage.closeAll('error');
-                ElMessage.error({ duration: 1500, message: t('percenter.errortips1') });
+                ElMessage.error({ duration: 1500, message: result.message === '审核不通过' ? t('system.sensitive_reminder') : t('percenter.errortips1') });
             }
         } catch (error) {
             ElMessage.closeAll('error');
@@ -464,7 +453,7 @@ watch(teamID, () => {
 
 const handleClickOutside = (event: MouseEvent) => {
     const list1 = document.querySelector('.member-jurisdiction-container .shrink .filterlist')!;
-    const list2 = document.querySelector('.content .shrink .filterlist2')!;
+    const list2 = document.querySelector('.title .shrink .filterlist2')!;
     function handleFoldState(list: Element, foldState: boolean) {
         if (list && event.target instanceof Element && event.target.closest('.filterlist') == null) {
             if (foldState) {
@@ -492,66 +481,64 @@ onUnmounted(() => {
     .hearder-container {
         display: flex;
         gap: 16px;
+        line-height: 24px;
+        height: 24px;
 
         .title {
             width: 362px;
             min-width: 200px;
+            font-size: 12px;
             display: flex;
             align-items: center;
+            gap: 4px;
+            color: rgba(168, 168, 168, 1);
+            white-space: nowrap;
 
-            .content {
-                font-size: 12px;
-                display: flex;
-                gap: 4px;
-                align-items: center;
-                justify-content: center;
-                color: rgba(168, 168, 168, 1);
-                white-space: nowrap;
 
-                .shrink {
-                    width: 14px;
-                    height: 14px;
+            .shrink {
+                width: 14px;
+                height: 100%;
 
-                    >svg {
-                        transition: 0.5s;
-                        width: 100%;
-                        height: 100%;
-                    }
-
-                    .filterlist2 {
-                        position: relative;
-                        list-style-type: none;
-                        font-size: 12px;
-                        min-width: 72px;
-                        margin: 0;
-                        padding: 0 8px;
-                        right: 65px;
-                        border-radius: 6px;
-                        background-color: white;
-                        box-shadow: 0px 8px 16px 0px rgba(0, 0, 0, 0.2);
-                        z-index: 3;
-
-                        .choose {
-                            box-sizing: border-box;
-                            width: 10px;
-                            height: 6px;
-                            margin-right: 4px;
-                            margin-left: 2px;
-                            border-width: 0 0 1px 1px;
-                            border-style: solid;
-                            border-color: rgb(0, 0, 0, .75);
-                            transform: rotate(-45deg) translateY(-30%);
-                        }
-
-                        .item {
-                            display: flex;
-                            align-items: center;
-                            line-height: 24px;
-                        }
-                    }
+                >svg {
+                    transition: 0.5s;
+                    width: 100%;
+                    height: 100%;
                 }
 
+                .filterlist2 {
+                    position: relative;
+                    list-style-type: none;
+                    font-size: 12px;
+                    min-width: 72px;
+                    margin: 0;
+                    padding: 0 8px;
+                    right: 65px;
+                    border-radius: 6px;
+                    background-color: white;
+                    box-shadow: 0px 8px 16px 0px rgba(0, 0, 0, 0.2);
+                    z-index: 3;
+
+                    .choose {
+                        box-sizing: border-box;
+                        width: 10px;
+                        height: 6px;
+                        margin-right: 4px;
+                        margin-left: 2px;
+                        border-width: 0 0 1px 1px;
+                        border-style: solid;
+                        border-color: rgb(0, 0, 0, .75);
+                        transform: rotate(-45deg) translateY(-30%);
+                    }
+
+                    .item {
+                        display: flex;
+                        align-items: center;
+                        line-height: 32px;
+                    }
+                }
             }
+
+
         }
     }
 
@@ -599,6 +586,8 @@ onUnmounted(() => {
     .member-jurisdiction {
         width: 362px;
         min-width: 200px;
+        line-height: 24px;
+        height: 24px;
         display: flex;
 
         .member-jurisdiction-container {
@@ -611,7 +600,7 @@ onUnmounted(() => {
 
             .shrink {
                 width: 14px;
-                height: 14px;
+                height: 100%;
 
                 >svg {
                     transition: 0.5s;
@@ -624,12 +613,13 @@ onUnmounted(() => {
                     display: flex;
                     flex-direction: column;
                     justify-content: center;
+                    align-items: center;
                     list-style-type: none;
                     font-size: 12px;
                     min-width: 88px;
                     margin: 0;
                     padding: 0 6px;
-                    right: 72px;
+                    right: 70px;
                     border-radius: 6px;
                     background-color: white;
                     box-shadow: 0px 8px 16px 0px rgba(0, 0, 0, 0.2);
@@ -638,7 +628,7 @@ onUnmounted(() => {
                     .item {
                         display: flex;
                         align-items: center;
-                        line-height: 24px;
+                        line-height: 32px;
                         margin-right: 12px;
 
                         .choose {

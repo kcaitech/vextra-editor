@@ -1,33 +1,36 @@
 <script setup lang="ts">
-import { onMounted, ref } from 'vue';
-const props = defineProps<{
-    content: string,
-    offset?: number,
-    placement?: string,
-    show? : number
-}>();
-const render_code = ref<string>(props.content);
+import {computed} from 'vue';
+
+interface Props {
+    content: string
+    offset?: number
+    placement?: any
+    show?: number
+}
+
+const props = defineProps<Props>();
+
 function is_mac() {
-  return /macintosh|mac os x/i.test(navigator.userAgent);
+    return /macintosh|mac os x/i.test(navigator.userAgent);
 }
-function init_code() {
-  if (is_mac()) {
-    let src = props.content;
-    src = src.replace(/ctrl|Ctrl/g, "⌘");
-    src = src.replace(/shift|Shift/g, "⇧");
-    src = src.replace(/alt|Alt/g, "⌥");
-    render_code.value = src;
-  }
-}
-onMounted(() => {
-  init_code();
+
+const render_code_computed = computed(() => {
+    if (is_mac()) {
+        let src = props.content;
+        src = src.replace(/ctrl|Ctrl/g, "⌘");
+        src = src.replace(/shift|Shift/g, "⇧");
+        src = src.replace(/alt|Alt/g, "⌥");
+        return src;
+    } else {
+        return props.content;
+    }
 })
 </script>
 
 <template>
-    <el-tooltip class="box-item" effect="dark" :content="render_code" :placement="placement || 'bottom'"
-    :show-after=" show || 500" :offset="offset || 10" :hide-after="0">
-        <slot />
+    <el-tooltip class="box-item" effect="dark" :content="render_code_computed" :placement="placement || 'bottom'"
+                :show-after=" show || 500" :offset="offset || 10" :hide-after="0">
+        <slot/>
     </el-tooltip>
 </template>
 

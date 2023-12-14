@@ -10,6 +10,16 @@
                 :style="{ color: active ? '#777777' : '#333333' }">
                 {{ t('home.recycling_station') }}</div>
         </div>
+        <div v-if="active" class="right">
+            <div class="newfile" @click="newFile">
+                <svg-icon icon-class="addfile-icon"></svg-icon>
+                {{ t('home.New_file') }}
+            </div>
+            <div class="openfile" @click="picker.invoke">
+                <svg-icon icon-class="open-icon"></svg-icon>
+                {{ t('home.open_local_file') }}
+            </div>
+        </div>
     </div>
     <div v-if="active">
         <div class="tatle" style="height: calc(100vh - 144px);">
@@ -19,9 +29,9 @@
         </div>
         <listrightmenu :items="items" :data="mydata" @get-doucment="getDoucment" @r-starfile="Starfile"
             @r-sharefile="Sharefile" @r-removefile="Deletefile" @ropen="openDocument" @moveFillAddress="moveFillAddress" />
-        <FileShare v-if="showFileShare" @close="closeShare" :docId="docId" :selectValue="selectValue" :userInfo="userInfo"
-            :docUserId="docUserId" @select-type="onSelectType" @switch-state="onSwitch" :shareSwitch="shareSwitch"
-            :pageHeight="pageHeight">
+        <FileShare v-if="showFileShare" @close="closeShare" :docId="docId" :docName="docName" :selectValue="selectValue"
+            :userInfo="userInfo" :docUserId="docUserId" @select-type="onSelectType" @switch-state="onSwitch"
+            :shareSwitch="shareSwitch" :pageHeight="pageHeight">
         </FileShare>
         <MoveProjectFill :title="t('Createteam.movetip')" :confirm-btn="t('Createteam.move')" :projectItem="projectItem"
             :doc="mydata" :projectVisible="moveVisible" @clodeDialog="clodeDialog" @moveFillSeccess="moveFillSeccess">
@@ -46,6 +56,8 @@ import MoveProjectFill from "@/components/TeamProject/MoveProjectFill.vue";
 import RecycleBin from './RecycleBin.vue'
 import Bus from '@/components/AppHome/bus'
 import { useRoute } from 'vue-router'
+import { newFile, picker } from '@/utils/neworopen';
+import PinyinMatch from 'pinyin-match'
 
 interface data {
     document: {
@@ -67,6 +79,7 @@ const showFileShare = ref<boolean>(false)
 const shareSwitch = ref(true)
 const pageHeight = ref(0)
 const docId = ref('')
+const docName = ref('')
 const mydata = ref()
 const selectValue = ref(1)
 const docUserId = ref('')
@@ -133,7 +146,8 @@ Bus.on('searchvalue', (str: string) => {
 })
 
 watchEffect(() => {
-    searchlists.value = lists.value.filter((el: any) => el.document.name.toLowerCase().includes(searchvalue.value.toLowerCase()))
+    if (!searchvalue.value) return searchlists.value = lists.value
+    searchlists.value = lists.value.filter((el: any) => PinyinMatch.match(el.document.name.toLowerCase(), searchvalue.value.toLowerCase()))
 })
 
 
@@ -205,6 +219,7 @@ const Sharefile = (data: data) => {
     }
     docUserId.value = data.document.user_id
     docId.value = data.document.id
+    docName.value = data.document.name
     selectValue.value = data.document.doc_type !== 0 ? data.document.doc_type : data.document.doc_type
     userInfo.value = userData.value
     showFileShare.value = true
@@ -326,6 +341,7 @@ onMounted(() => {
 
 onUnmounted(() => {
     window.removeEventListener('resize', getPageHeight)
+    picker.unmount
 })
 
 </script>
@@ -344,7 +360,7 @@ onUnmounted(() => {
     display: flex;
     align-items: center;
     justify-content: space-between;
-    margin: 0 8px 24px 8px;
+    margin: 24px 8px;
     box-sizing: border-box;
 
     .indicator {
@@ -362,9 +378,61 @@ onUnmounted(() => {
         gap: 24px;
         font-size: 18px;
         font-weight: 500;
-        letter-spacing: 2px;
         line-height: 36px;
         white-space: nowrap;
+    }
+
+    .right {
+        display: flex;
+        gap: 12px;
+        font-size: 14px;
+
+        .newfile,
+        .openfile {
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            gap: 4px;
+            width: 108px;
+            height: 36px;
+            border-radius: 6px;
+            box-sizing: border-box;
+        }
+
+        .newfile {
+            color: white;
+            border: 1px solid rgba(24, 120, 245, 1);
+            background-color: rgba(24, 120, 245, 1);
+
+            &:hover {
+                background-color: rgba(51, 140, 255, 1);
+            }
+
+            &:active {
+                background-color: rgba(12, 111, 240, 1);
+
+            }
+        }
+
+        .openfile {
+            border: 1px solid rgba(240, 240, 240, 1);
+            background-color: rgba(255, 255, 255, 0.1);
+
+            &:hover {
+                background-color: rgba(247, 247, 249, 1);
+            }
+
+            &:active {
+                background-color: rgba(243, 243, 245, 1);
+            }
+        }
+
+        svg {
+            width: 18px;
+            height: 18px;
+            padding: 2px;
+            box-sizing: border-box;
+        }
     }
 }
 </style>

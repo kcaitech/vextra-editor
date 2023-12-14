@@ -26,13 +26,12 @@ const { t } = useI18n();
     display: flex;
     align-items: center;
     justify-content: space-between;
-    margin: 0 8px 24px 8px;
+    margin: 24px 8px;
     box-sizing: border-box;
 
     .team-name {
         font-size: 18px;
         font-weight: 600;
-        letter-spacing: 2px;
         line-height: 36px;
         margin-right: 12px;
         color: #000;

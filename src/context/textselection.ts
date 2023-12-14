@@ -1,5 +1,5 @@
-import { Text, SpanAttr, Watchable } from "@kcdesign/data";
-import { Selection } from "./selection"
+import {Text, SpanAttr, Watchable} from "@kcdesign/data";
+import {Selection} from "./selection"
 
 export interface TextLocate {
     index: number
@@ -19,6 +19,7 @@ export class TextSelection extends Watchable(Object) {
         super();
         this.selection = selection;
     }
+
     notify(...args: any[]): void {
         this.selection.notify(...args);
     }
@@ -32,9 +33,11 @@ export class TextSelection extends Watchable(Object) {
     get cursorStart() {
         return this.m_cursorStart;
     }
+
     get cursorAtBefore() {
         return this.m_cursorAtBefore;
     }
+
     get cursorEnd() {
         return this.m_cursorEnd;
     }
@@ -82,8 +85,7 @@ export class TextSelection extends Watchable(Object) {
                 if (end > start) {
                     start++;
                     end++;
-                }
-                else {
+                } else {
                     start--;
                     end--;
                 }

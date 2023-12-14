@@ -39,8 +39,8 @@ const closeShare = () => {
 }
 const onSwitch = (state: boolean) => {
   shareSwitch.value = state
-
 }
+
 const onSelectType = (type: number) => {
   selectValue.value = type
 }
@@ -49,9 +49,9 @@ async function documentInfo(id: any) {
     if (id) {
       const { data } = await share_api.getDocumentInfoAPI({ doc_id: id })
       docInfo.value = data;
-      if(data.project) {
+      if (data.project) {
         GetprojectLists(data.project.id);
-      }else {
+      } else {
         perm.value = true;
       }
       return data
@@ -59,7 +59,7 @@ async function documentInfo(id: any) {
       console.log(t('share.no_document'));
     }
   } catch (err) {
-    return console.log(err);
+    return console.error(err); // 这里return了个undefined
   }
 }
 
@@ -69,15 +69,15 @@ const getPageHeight = () => {
 }
 const getSelectValue = (val: string) => {
   documentInfo(val).then((res: any) => {
-    if (res.document) {
+    if (res && res.document) {
       selectValue.value = res.document.doc_type !== 0 ? res.document.doc_type : res.document.doc_type
     }
   })
 }
 watchEffect(() => {
-  route.query.id;
-  if(route.query.id) {
-    getSelectValue((route.query.id as string))
+  if (route.query.id) {
+    const id = (route.query.id as string).split(' ')[0]
+    getSelectValue(id)
   }
 })
 
@@ -110,9 +110,11 @@ onUnmounted(() => {
     <div class="share" @click.stop="onShare">
       <svg-icon class="svg" icon-class="share"></svg-icon>
     </div>
-    <FileShare v-if="showFileShare" @close="closeShare" :shareSwitch="shareSwitch" :selectValue="selectValue"
-      :docInfo="docInfo" :projectPerm="projectPerm" @select-type="onSelectType" @switch-state="onSwitch"
-      :pageHeight="pageHeight" :context="props.context" :userInfo="userInfo"></FileShare>
+    <Teleport to="body">
+      <FileShare v-if="showFileShare" @close="closeShare" :shareSwitch="shareSwitch" :selectValue="selectValue"
+        :docInfo="docInfo" :projectPerm="projectPerm" @select-type="onSelectType" @switch-state="onSwitch"
+        :pageHeight="pageHeight" :context="props.context" :userInfo="userInfo"></FileShare>
+    </Teleport>
   </div>
 </template>
 

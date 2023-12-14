@@ -1,63 +1,54 @@
-import { Watchable } from "@kcdesign/data";
-export enum TaskType {
-  TOOL = 'tool',
-  MENU = 'menu',
-  EDIT = 'edit',
-  WINDOW = 'window',
-  SELECTION = 'selection',
-  COLOR = 'color'
+import {Watchable} from "@kcdesign/data";
+
+interface EscItem {
+    key: string
+    task: Function
 }
-export interface EscItem {
-  name: TaskType
-  call: () => boolean;
-}
+
 export class EscStack extends Watchable(Object) {
-  private m_stack_map: Map<string, Function> = new Map();
-  constructor() {
-    super();
-  }
+    private m_stack_map: Map<string, EscItem> = new Map();
 
-  keyboardHandle(event: KeyboardEvent) {
-    const { code, shiftKey } = event;
-    if (code !== 'Escape') return;
-    if (shiftKey) {
-      this.clear_stack();
-    } else {
-      this.excute();
+    constructor() {
+        super();
     }
-  }
 
-  save(task: TaskType, call: Function) {
-    if (this.m_stack_map.get(task)) { // 先删后加，保持先来的后出
-      this.m_stack_map.delete(task);
+    keyboardHandle(event: KeyboardEvent) {
+        const {code, shiftKey} = event;
+        if (code !== 'Escape') return;
+        if (shiftKey) {
+            this.clear_stack();
+        } else {
+            this.execute();
+        }
     }
-    this.m_stack_map.set(task, call);
-  }
 
-  remove(task: TaskType) {
-    this.m_stack_map.delete(task);
-  }
-
-  excute() {
-    const queue = Array.from(this.m_stack_map.keys());
-    let result: boolean = false;
-    while (!result && queue.length) {
-      const task = queue.pop();
-      if (!task) continue;
-      const call = this.m_stack_map.get(task);
-      this.m_stack_map.delete(task);
-      if (typeof call !== 'function') break;
-      result = call();
+    save(key: string, call: Function) {
+        if (this.m_stack_map.has(key)) { // 先删后加，保持先来的后出
+            this.m_stack_map.delete(key);
+        }
+        this.m_stack_map.set(key, {key: key, task: call});
     }
-  }
 
-  clear_stack() {
-    const queue = Array.from(this.m_stack_map.values());
-    let result: boolean = false;
-    while (queue.length) {
-      const f = queue.pop();
-      if (typeof f !== 'function') continue;
-      result = f();
+    remove(key: string) {
+        this.m_stack_map.delete(key);
     }
-  }
+
+    execute() {
+        const queue = Array.from(this.m_stack_map.values());
+        for (let i = queue.length - 1; i > -1; i--) {
+            const item = queue[i];
+            this.m_stack_map.delete(item.key);
+            if (typeof item.task !== 'function') continue;
+            if (item.task()) break;
+        }
+    }
+
+    clear_stack() {
+        const queue = Array.from(this.m_stack_map.values());
+        while (queue.length) {
+            const f = queue.pop()?.task;
+            if (typeof f !== 'function') continue;
+            f();
+        }
+    }
 }

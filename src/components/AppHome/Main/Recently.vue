@@ -8,7 +8,7 @@
                     <svg-icon icon-class="addfile-icon"></svg-icon>
                     {{ t('home.New_file') }}
                 </div>
-                <div class="openfile" @click="picker.invoke()">
+                <div class="openfile" @click="picker.invoke">
                     <svg-icon icon-class="open-icon"></svg-icon>
                     {{ t('home.open_local_file') }}
                 </div>
@@ -62,7 +62,7 @@
                 <svg-icon icon-class="add-icon"></svg-icon>
             </div>
         </div>
-        <div class="openfile" @click="picker.invoke()">
+        <div class="openfile" @click="picker.invoke">
             <div class="left">
                 <svg xmlns="http://www.w3.org/2000/svg" xmlns:xlink="http://www.w3.org/1999/xlink" fill="none" version="1.1"
                     width="24" height="24" viewBox="0 0 24 24">
@@ -103,9 +103,9 @@
     </div>
     <listrightmenu :items="items" :data="mydata" @get-userdata="getUserdata" @r-starfile="Starfile" @r-sharefile="Sharefile"
         @r-removehistory="Removefile" @ropen="openDocument" />
-    <FileShare v-if="showFileShare" @close="closeShare" :docId="docId" @switch-state="onSwitch" :userInfo="userInfo"
-        :docUserId="docUserId" :project="is_project" :selectValue="selectValue" @select-type="onSelectType"
-        :shareSwitch="shareSwitch" :pageHeight="pageHeight" :projectPerm="projectPerm">
+    <FileShare v-if="showFileShare" @close="closeShare" :docId="docId" :docName="docName" @switch-state="onSwitch"
+        :userInfo="userInfo" :docUserId="docUserId" :project="is_project" :selectValue="selectValue"
+        @select-type="onSelectType" :shareSwitch="shareSwitch" :pageHeight="pageHeight" :projectPerm="projectPerm">
     </FileShare>
     <div v-if="showFileShare" class="overlay"></div>
 </template>
@@ -120,11 +120,9 @@ import FileShare from '@/components/Document/Toolbar/Share/FileShare.vue'
 import tablelist from '@/components/AppHome/tablelist.vue'
 import { UserInfo } from '@/context/user';
 import listrightmenu from "../listrightmenu.vue"
-import { FilePicker } from '@/components/common/filepicker';
-import { LzDataLocal } from '@/basic/lzdatalocal'; // todo
-import { Repository, CoopRepository, Document, createDocument, DocEditor, importSketch } from '@kcdesign/data';
-import { Zip } from "@pal/zip";
 import Bus from '@/components/AppHome/bus';
+import { newFile, picker } from '@/utils/neworopen';
+import PinyinMatch from 'pinyin-match'
 
 const { t } = useI18n()
 const items = ['open', 'newtabopen', 'share', 'target_star', 'rename', 'copyfile', 'removefile']
@@ -135,6 +133,7 @@ const lists = ref<any[]>([])
 const selectValue = ref(1)
 const userInfo = ref<UserInfo | undefined>()
 const docId = ref('')
+const docName = ref('')
 const docUserId = ref('')
 const mydata = ref()
 const noNetwork = ref(false)
@@ -163,37 +162,10 @@ interface data {
     project_perm: number
 }
 
-function newFile() {
-    const repo = new Repository();
-    const nd = createDocument(t('system.new_file'), repo);
-    const coopRepo = new CoopRepository(nd, repo)
-    const editor = new DocEditor(nd, coopRepo);
-    const page = editor.create(t('system.page1'));
-    editor.insert(0, page);
-    window.document.title = nd.name;
-    (window as any).skrepo = coopRepo;
-    (window as any).sketchDocument = nd;
-    router.push({ name: 'document' });
-}
-
-const picker = new FilePicker('.sketch', (file) => {
-    if (!file) return;
-    const lzdata = new LzDataLocal(new Zip(file));
-    const repo = new Repository();
-    importSketch(file.name, lzdata, repo).then((document: Document) => {
-        window.document.title = document.name;
-        const coopRepo = new CoopRepository(document, repo);
-        (window as any).skrepo = coopRepo;
-        (window as any).sketchDocument = document;
-        router.push({ name: 'document' });
-    })
-});
-
 const show = ref<boolean>(true)
 Bus.on('showbnt', (b: boolean) => {
     show.value = b
 })
-
 
 //获取服务器我的文件列表
 async function getUserdata() {
@@ -241,7 +213,8 @@ Bus.on('searchvalue', (str: string) => {
 })
 
 watchEffect(() => {
-    searchlists.value = lists.value.filter((el: any) => el.document.name.toLowerCase().includes(searchvalue.value.toLowerCase()))
+    if (!searchvalue.value) return searchlists.value = lists.value
+    searchlists.value = lists.value.filter((el: any) => PinyinMatch.match(el.document.name.toLowerCase(), searchvalue.value.toLowerCase()))
 })
 
 function sizeTostr(size: any) {
@@ -306,6 +279,7 @@ const Sharefile = (data: data) => {
     docUserId.value = data.document.user_id
     userInfo.value = userData.value
     docId.value = data.document.id
+    docName.value = data.document.name
     selectValue.value = data.document.doc_type !== 0 ? data.document.doc_type : data.document.doc_type
     projectPerm.value = data.project_perm;
     showFileShare.value = true
@@ -385,7 +359,7 @@ onMounted(() => {
     window.addEventListener('resize', getPageHeight)
 })
 onUnmounted(() => {
-    picker.unmount();
+    picker.unmount;
     window.removeEventListener('resize', getPageHeight)
 })
 </script>
@@ -405,13 +379,12 @@ onUnmounted(() => {
     display: flex;
     align-items: center;
     justify-content: space-between;
-    margin: 0 8px 24px 8px;
+    margin: 24px 8px;
     box-sizing: border-box;
 
     .left {
         font-size: 18px;
         font-weight: 500;
-        letter-spacing: 2px;
         line-height: 36px;
         white-space: nowrap;
     }
@@ -462,8 +435,10 @@ onUnmounted(() => {
         }
 
         svg {
-            width: 16px;
-            height: 16px;
+            width: 18px;
+            height: 18px;
+            padding: 2px;
+            box-sizing: border-box;
         }
     }
 
@@ -495,7 +470,8 @@ onUnmounted(() => {
         .left {
             display: flex;
             align-items: center;
-            margin-left: 16px;
+            margin-left: 14px;
+            gap: 8px;
 
             .text {
                 white-space: nowrap;
@@ -505,8 +481,8 @@ onUnmounted(() => {
 
             svg {
                 color: rgba(51, 51, 51, 1);
-                width: 30px;
-                height: 30px;
+                width: 24px;
+                height: 24px;
             }
         }
 
@@ -516,8 +492,10 @@ onUnmounted(() => {
             margin-right: 16px;
 
             svg {
-                width: 16px;
-                height: 16px;
+                width: 18px;
+                height: 18px;
+                padding: 2px;
+                box-sizing: border-box;
             }
         }
 

@@ -29,7 +29,6 @@
 </template>
 <script setup lang="tsx">
 import { ref, watchEffect, Ref, inject, watch, computed } from 'vue'
-import { Share, Delete, Remove } from '@element-plus/icons-vue'
 import type { Column, RowClassNameGetter } from 'element-plus'
 import { useI18n } from 'vue-i18n'
 import NetworkError from '@/components/NetworkError.vue'
@@ -206,7 +205,6 @@ const columns: Column<any>[] = [
                     <el-icon style={"color: rgba(255, 185, 46, 1);display:flex;"}
                         onDblclick={(event: MouseEvent) => event.stopPropagation()}
                         onClick={(event: MouseEvent) => {
-
                             emits('updatestar', rowData)
                         }}>
                         <el-tooltip content={t('home.de_star')} show-after={1000} hide-after={0}>
@@ -257,10 +255,11 @@ const columns: Column<any>[] = [
     },
     {
         key: 'operations',
-        title: `${t('home.operation')}`,
+        // title: `${t('home.operation')}`,
+        title:'',
         dataKey: 'document',
-        width: 100,
-        minWidth: 100,
+        width: 120,
+        minWidth: 120,
         class: 'other',
         align: 'left',
         cellRenderer: ({ rowData }) => (
@@ -269,11 +268,10 @@ const columns: Column<any>[] = [
                     <el-icon
                         onDblclick={(event: MouseEvent) => event.stopPropagation()}
                         onClick={(event: MouseEvent) => {
-
                             emits('share', rowData)
                         }}>
                         <el-tooltip content={t('home.share')} show-after={1000} hide-after={0}>
-                            <Share />
+                           <svg-icon icon-class="share-icon"></svg-icon>
                         </el-tooltip>
                     </el-icon>
                 )}
@@ -282,11 +280,10 @@ const columns: Column<any>[] = [
                     <el-icon
                         onDblclick={(event: MouseEvent) => event.stopPropagation()}
                         onClick={(event: MouseEvent) => {
-
                             emits('deletefile', rowData)
                         }}>
                         <el-tooltip content={t('home.delete')} show-after={1000} hide-after={0}>
-                            <Delete />
+                            <svg-icon icon-class="delete-icon"></svg-icon>
                         </el-tooltip>
                     </el-icon>
                 )}
@@ -294,11 +291,10 @@ const columns: Column<any>[] = [
                     <el-icon
                         onDblclick={(event: MouseEvent) => event.stopPropagation()}
                         onClick={(event: MouseEvent) => {
-
                             emits('deletefile', rowData)
                         }}>
                         <el-tooltip content={t('home.delete')} show-after={1000} hide-after={0}>
-                            <Delete />
+                            <svg-icon icon-class="delete-icon"></svg-icon>
                         </el-tooltip>
                     </el-icon>
                 )}
@@ -307,11 +303,10 @@ const columns: Column<any>[] = [
                     <el-icon
                         onDblclick={(event: MouseEvent) => event.stopPropagation()}
                         onClick={(event: MouseEvent) => {
-
                             emits('remove', rowData)
                         }}>
                         <el-tooltip content={t('home.de_access_record')} show-after={1000} hide-after={0}>
-                            <Remove />
+                            <svg-icon icon-class="clear-icon"></svg-icon>
                         </el-tooltip>
                     </el-icon>
                 )}
@@ -320,12 +315,10 @@ const columns: Column<any>[] = [
                     <el-icon
                         onDblclick={(event: MouseEvent) => event.stopPropagation()}
                         onClick={(event: MouseEvent) => {
-
                             emits('restore', rowData)
-                        }}>
+                        }} style="padding:6px;">
                         <el-tooltip content={t('home.restore')} show-after={1000} hide-after={0}>
-                            <svg-icon class="svg restore" icon-class="restore">
-                            </svg-icon>
+                            <svg-icon icon-class="restore-icon" ></svg-icon>
                         </el-tooltip>
                     </el-icon>
                 )}
@@ -334,11 +327,10 @@ const columns: Column<any>[] = [
                     <el-icon
                         onDblclick={(event: MouseEvent) => event.stopPropagation()}
                         onClick={(event: MouseEvent) => {
-
                             emits('ndelete', rowData)
                         }}>
                         <el-tooltip content={t('home.completely_delete')} show-after={1000} hide-after={0}>
-                            <Delete />
+                            <svg-icon icon-class="delete-icon"></svg-icon>
                         </el-tooltip>
                     </el-icon>
                 )}
@@ -347,7 +339,6 @@ const columns: Column<any>[] = [
                     <el-icon
                         onDblclick={(event: MouseEvent) => event.stopPropagation()}
                         onClick={(event: MouseEvent) => {
-
                             emits('exit_share', rowData)
                         }}>
                         <el-tooltip content={t('home.exit_share')} show-after={1000} hide-after={0}>
@@ -459,9 +450,10 @@ watchEffect(() => {
             },
             {
                 key: 'name',
-                title: t('home.operation'),
+                // title: t('home.operation'),
+                title:'',
                 width: 120,
-                minWidth: 100,
+                minWidth: 120,
                 dataKey: 'project',
                 class: 'other',
                 align: 'left',
@@ -501,7 +493,7 @@ watchEffect(() => {
                                     emits('skipproject', rowData.project.id)
                                 }}>
                                 <el-tooltip content={t('projectlist.enterproject')} show-after={1000} hide-after={0}>
-                                    <svg-icon icon-class="entrance"></svg-icon>
+                                    <svg-icon icon-class="entrance-icon"></svg-icon>
                                 </el-tooltip>
                             </el-icon>
                         )}
@@ -514,7 +506,7 @@ watchEffect(() => {
                                     emits('onexitproject', rowData, rowIndex)
                                 }}>
                                 <el-tooltip content={t('teamprojectmenu.projectdeltitle')} show-after={1000} hide-after={0}>
-                                    <svg-icon icon-class="delete-project"></svg-icon>
+                                    <svg-icon icon-class="delete-icon"></svg-icon>
                                 </el-tooltip>
                             </el-icon>
                         )}
@@ -526,7 +518,7 @@ watchEffect(() => {
                                     emits('onexitproject', rowData, rowIndex)
                                 }}>
                                 <el-tooltip content={t('teamprojectmenu.projectexittitle')} show-after={1000} hide-after={0}>
-                                    <svg-icon icon-class="exit-project"></svg-icon>
+                                    <svg-icon icon-class="exit-icon"></svg-icon>
                                 </el-tooltip>
                             </el-icon>
                         )}

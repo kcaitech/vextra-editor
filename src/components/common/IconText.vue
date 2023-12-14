@@ -108,7 +108,7 @@ const onMouseMove = (e: MouseEvent) => {
     scale.value.degX = Number((mx / 5).toFixed(2))
 }
 const onMouseUp = (e: MouseEvent) => {
-    isDrag.value = false
+    isDrag.value = false;
     document.removeEventListener('mousemove', onMouseMove)
     document.removeEventListener('mouseup', onMouseUp)
 

@@ -1,23 +1,47 @@
 <script setup lang="ts">
-import { ref, computed, nextTick, InputHTMLAttributes, watch, onUnmounted, onMounted } from "vue";
-import { Shape, GroupShape, ShapeType, PathShape, RectShape, Matrix } from '@kcdesign/data';
-import { Context } from "@/context";
-import { is_parent_locked, is_parent_unvisible } from "@/utils/shapelist";
-import Abbrevition from "./Abbreviation.vue";
-import { Perm } from "@/context/workspace";
-import { XYsBounding } from "@/utils/common";
-import { Tool } from "@/context/tool";
+import {computed, InputHTMLAttributes, nextTick, onMounted, onUnmounted, ref, watch} from "vue";
+import {Shape, ShapeType} from '@kcdesign/data';
+import {Context} from "@/context";
+import {get_name, is_parent_locked, is_parent_unvisible} from "@/utils/shapelist";
+import {Perm} from "@/context/workspace";
+import {Tool} from "@/context/tool";
+import {useI18n} from 'vue-i18n';
+import {is_state} from "@/utils/symbol";
+
+
 export interface ItemData {
     id: string
-    shape: Shape
+    shape: () => Shape // 作用function，防止vue对shape内部数据进行proxy
     selected: boolean
     expand: boolean
     level: number
     context: Context
 }
+
 interface Props {
     data: ItemData
 }
+
+interface Emits {
+    (e: "toggleexpand", shape: Shape): void;
+
+    (e: "selectshape", shape: Shape, ctrl: boolean, meta: boolean, shift: boolean): void;
+
+    (e: "hovershape", shape: Shape): void;
+
+    (e: "unhovershape"): void;
+
+    (e: "set-lock", shape: Shape): void;
+
+    (e: "set-visible", val: boolean, shape: Shape): void;
+
+    (e: "rename", name: string, shape: Shape, event?: KeyboardEvent): void;
+
+    (e: "scrolltoview", shape: Shape): void;
+
+    (e: "item-mousedown", event: MouseEvent, shape: Shape): void;
+}
+
 const lock_status = ref<number>(0) // 1：锁 2：继承锁 -1：不锁
 const visible_status = ref<number>(1) // 1：隐藏 2： 继承隐藏 -1：显示
 const is_tool_visible = ref<boolean>()
@@ -28,24 +52,15 @@ const esc = ref<boolean>(false)
 const isread = ref(false)
 const canComment = ref(false)
 const isEdit = ref(false)
-const ph_width = computed(() => (props.data.level - 1) * 10);
-const d = ref<string>('');
-const emit = defineEmits<{
-    (e: "toggleexpand", shape: Shape): void;
-    (e: "selectshape", shape: Shape, ctrl: boolean, meta: boolean, shift: boolean): void;
-    (e: "hovershape", shape: Shape): void;
-    (e: "unhovershape"): void;
-    (e: "set-lock", shape: Shape): void;
-    (e: "set-visible", val: boolean, shape: Shape): void;
-    (e: "rename", name: string, shape: Shape, event?: KeyboardEvent): void;
-    (e: "scrolltoview", shape: Shape): void;
-    (e: "item-mousedown", event: MouseEvent, shape: Shape): void;
-}>();
+const ph_width = computed(() => (props.data.level - 1) * 12);
+const emit = defineEmits<Emits>();
 let showTriangle = ref<boolean>(false);
 const watchedShapes = new Map();
+const t = useI18n().t;
+
 function watchShapes() {
     const needWatchShapes = new Map();
-    let shape = props.data.shape;
+    let shape = props.data.shape();
     let p = shape.parent;
     while (p && p.type !== ShapeType.Page) {
         needWatchShapes.set(p.id, p);
@@ -62,67 +77,68 @@ function watchShapes() {
         watchedShapes.set(k, v);
     })
 }
-const stop = watch(() => props.data.shape, (value, old) => {
+
+const stop = watch(() => props.data.shape(), (value, old) => {
     old && old.unwatch(updater);
     value.watch(updater);
     watchShapes();
-}, { immediate: true })
+}, {immediate: true})
+
 function updater(t?: any) {
     if (t === 'shape-frame') return;
-    let shape = props.data.shape;
-    showTriangle.value = shape instanceof GroupShape && shape.childs.length > 0 && shape.childsVisible;
-    lock_status.value = props.data.shape.isLocked ? 1 : 0;
-    visible_status.value = props.data.shape.isVisible ? 0 : 1;
-    if (is_parent_locked(props.data.shape)) lock_status.value = 2;
-    if (is_parent_unvisible(props.data.shape)) visible_status.value = 2;
+    const shape = props.data.shape();
+    const naviChilds = shape.naviChilds;
+    showTriangle.value = Boolean(naviChilds && naviChilds.length > 0);
+    lock_status.value = shape.isLocked ? 1 : 0;
+    visible_status.value = shape.getVisible() ? 0 : 1;
+    if (is_parent_locked(shape)) lock_status.value = 2;
+    if (is_parent_unvisible(shape)) visible_status.value = 2;
 }
 
 function toggleExpand(e: Event) {
     if (!showTriangle.value) return;
     e.stopPropagation();
-    emit("toggleexpand", props.data.shape);
+    emit("toggleexpand", props.data.shape());
 }
 
 const toggleContainer = (e: MouseEvent) => {
     e.stopPropagation()
-    emit('scrolltoview', props.data.shape);
-}
-
-function selectShape(e: MouseEvent) {
-    e.stopPropagation();
-    const { ctrlKey, metaKey, shiftKey } = e;
-    emit("selectshape", props.data.shape, ctrlKey, metaKey, shiftKey);
+    emit('scrolltoview', props.data.shape());
 }
 
 function hoverShape(e: MouseEvent) {
     const working = !props.data.context.workspace.isTranslating;
     if (working) {
-        emit("hovershape", props.data.shape);
+        emit("hovershape", props.data.shape());
         is_tool_visible.value = true;
     }
 }
+
 function unHoverShape(e: MouseEvent) {
     e.stopPropagation();
     emit("unhovershape");
     is_tool_visible.value = false
 }
+
 const setLock = (e: MouseEvent) => {
     if (lock_status.value === 2) return; // 继承锁
     e.stopPropagation();
-    emit('set-lock', props.data.shape)
+    emit('set-lock', props.data.shape())
 }
 const setVisible = (e: MouseEvent) => {
     if (visible_status.value === 2) return; // 继承隐藏
     e.stopPropagation();
-    emit('set-visible', Boolean(visible_status.value < 0), props.data.shape)
+    emit('set-visible', Boolean(visible_status.value < 0), props.data.shape())
 }
 const onRename = () => {
-    if (!isEdit.value) return;
-    if(props.data.context.tool.isLable) return;
+    if (is_state(props.data.shape())
+        || !isEdit.value
+        || props.data.context.tool.isLable
+        || props.data.shape().isVirtualShape) return;
     isInput.value = true
     nextTick(() => {
         if (nameInput.value) {
-            (nameInput.value as HTMLInputElement).value = props.data.shape.name.trim();
+            (nameInput.value as HTMLInputElement).value = props.data.shape().name.trim();
             nameInput.value.focus();
             nameInput.value.select();
             nameInput.value?.addEventListener('blur', stopInput);
@@ -135,7 +151,7 @@ const onChangeName = (e: Event) => {
     const value = (e.target as InputHTMLAttributes).value
     if (esc.value) return
     if (value.length === 0 || value.length > 40 || value.trim().length === 0) return
-    emit('rename', value, props.data.shape);
+    emit('rename', value, props.data.shape());
 }
 
 const stopInput = () => {
@@ -163,10 +179,10 @@ const onInputBlur = (e: MouseEvent) => {
     }
 }
 const selectedChild = () => {
-    let parent = props.data.shape.parent
+    let parent = props.data.shape().parent
     let child
     while (parent) {
-        if (parent.type === 'page') break
+        if (parent.type === ShapeType.Page) break
         child = props.data.context.selection.isSelectedShape(parent)
         parent = parent.parent
         if (child) {
@@ -175,9 +191,43 @@ const selectedChild = () => {
     }
     return child
 }
+
+function is_component() {
+    let s: any = props.data.shape();
+    while (s) {
+        if (s.isVirtualShape) return true;
+        if (s.type === ShapeType.Page) return false;
+        if (s.type === ShapeType.SymbolRef) return true;
+        if (s.type === ShapeType.Symbol) return true;
+        if (s.type === ShapeType.SymbolUnion) return true;
+        s = s.parent;
+    }
+}
+
 const mousedown = (e: MouseEvent) => {
     e.stopPropagation();
-    emit('item-mousedown', e, props.data.shape)
+    if (e.button === 0) {
+        const shape = props.data.shape();
+        const {ctrlKey, metaKey, shiftKey} = e;
+        const selected = props.data.context.selection.selectedShapes;
+        if (selected.length > 1) {
+            for (let i = 0, l = selected.length; i < l; i++) {
+                if (selected[i].id === shape.id && !(e.ctrlKey || e.metaKey)) return;
+            }
+        }
+        emit("selectshape", shape, ctrlKey, metaKey, shiftKey);
+        selectedChild();
+    } else if (e.button === 2) {
+        emit('item-mousedown', e, props.data.shape())
+        selectedChild();
+    }
+}
+
+function mouseup(e: MouseEvent) {
+    if (e.button !== 0) return;
+    if (props.data.context.selection.selectedShapes.length < 2) return;
+    if (props.data.context.navi.is_item_dragging || e.metaKey || e.shiftKey || e.ctrlKey) return;
+    emit("selectshape", props.data.shape(), false, false, false);
     selectedChild();
 }
 
@@ -195,43 +245,66 @@ const hangdlePerm = () => {
         isEdit.value = true
     }
 }
+
+function icon_class() {
+    const shape = props.data.shape();
+    if (shape.type === ShapeType.Symbol) {
+        if (shape.isUnionSymbolShape) {
+            return 'pattern-symbol-union';
+        } else {
+            return 'pattern-component';
+        }
+    } else {
+        return `pattern-${shape.type}`;
+    }
+}
+
 const isLable = ref(props.data.context.tool.isLable);
 const tool_watcher = (t?: number) => {
-    if(t === Tool.LABLE_CHANGE) {
+    if (t === Tool.LABLE_CHANGE) {
         isLable.value = props.data.context.tool.isLable;
     }
 }
+
+function is_group() {
+    const type = props.data.shape().type;
+    return [ShapeType.Artboard, ShapeType.Group, ShapeType.Symbol].includes(type);
+}
+
 onMounted(() => {
     hangdlePerm()
     updater();
     props.data.context.tool.watch(tool_watcher);
-    // init_d();
 })
 onUnmounted(() => {
     props.data.context.tool.watch(tool_watcher);
+    props.data.shape().unwatch(updater);
     stop();
 })
 </script>
 
 <template>
-    <div :class="{ container: true, selected: props.data.selected, selectedChild: selectedChild() }" @click="selectShape"
-        @mousemove="hoverShape" @mouseleave="unHoverShape" @mousedown="mousedown">
-        <div class="ph" :style="{ width: `${ph_width}px`, height: '100%', minWidth: `${ph_width}px` }"></div>
-        <div :class="{ triangle: showTriangle, slot: !showTriangle }" @click="toggleExpand">
-            <div v-if="showTriangle" :class="{ 'triangle-right': !props.data.expand, 'triangle-down': props.data.expand }">
+    <div
+        :class="{ container: true, selected: props.data.selected, selectedChild: selectedChild(), component: is_component() }"
+        @mousemove="hoverShape" @mouseleave="unHoverShape" @mousedown="mousedown" @mouseup="mouseup">
+        <!-- 缩进 -->
+        <div class="ph" :style="{ width: `${ph_width}px` }"></div>
+        <!-- 开合 -->
+        <div :class="{ 'is-group': is_group(), triangle: showTriangle, slot: !showTriangle }" @click="toggleExpand">
+            <div v-if="showTriangle" :class="props.data.expand ? 'triangle-down' : 'triangle-right'">
             </div>
         </div>
-        <div class="container-svg" @dblclick="toggleContainer">
-            <!-- <Abbrevition v-if="d" :d="d"></Abbrevition>
-            <svg-icon v-else class="svg" :icon-class="`pattern-${props.data.shape.type}`"></svg-icon> -->
-            <svg-icon class="svg" :icon-class="`pattern-${props.data.shape.type}`"></svg-icon>
+        <!-- icon -->
+        <div class="container-svg zero-symbol" @dblclick="toggleContainer">
+            <svg-icon class="svg" :icon-class="icon_class()"></svg-icon>
         </div>
+        <!-- 内容描述 -->
         <div class="text" :style="{ opacity: !visible_status ? 1 : .3, display: isInput ? 'none' : '' }">
-            <div class="txt" @dblclick="onRename">{{ props.data.shape.name }}</div>
+            <div class="txt" @dblclick="onRename">{{ get_name(props.data.shape(), t('compos.dlt')) }}</div>
             <div class="tool_icon"
-                :style="{ visibility: `${is_tool_visible ? 'visible' : 'hidden'}`, width: `${is_tool_visible ? 66 + 'px' : lock_status || visible_status ? 66 + 'px' : 0}` }">
+                 :style="{ visibility: `${is_tool_visible ? 'visible' : 'hidden'}`, width: `${is_tool_visible ? 66 + 'px' : lock_status || visible_status ? 66 + 'px' : 0}` }">
                 <div class="tool_lock tool" :class="{ 'visible': lock_status }" @click="(e: MouseEvent) => setLock(e)"
-                    v-if="isEdit && !isLable">
+                     v-if="isEdit && !isLable">
                     <svg-icon v-if="lock_status === 0" class="svg-open" icon-class="lock-open"></svg-icon>
                     <svg-icon v-else-if="lock_status === 1" class="svg" icon-class="lock-lock"></svg-icon>
                     <div class="dot" v-else-if="lock_status === 2"></div>
@@ -239,8 +312,9 @@ onUnmounted(() => {
                 <div class="tool_lock tool" @click="toggleContainer">
                     <svg-icon class="svg-open" icon-class="locate"></svg-icon>
                 </div>
-                <div class="tool_eye tool" :class="{ 'visible': visible_status }" @click="(e: MouseEvent) => setVisible(e)"
-                    v-if="isEdit && !isLable">
+                <div class="tool_eye tool" :class="{ 'visible': visible_status }"
+                     @click="(e: MouseEvent) => setVisible(e)"
+                     v-if="isEdit && !isLable">
                     <svg-icon v-if="visible_status === 0" class="svg" icon-class="eye-open"></svg-icon>
                     <svg-icon v-else-if="visible_status === 1" class="svg" icon-class="eye-closed"></svg-icon>
                     <div class="dot" v-else-if="visible_status === 2"></div>
@@ -252,29 +326,31 @@ onUnmounted(() => {
 </template>
 
 <style scoped lang="scss">
+// 这整个样式表决定定位和计算结果,不可以轻易修改
 .container {
     display: flex;
     flex-flow: row;
     align-items: center;
     margin-left: 6px;
-    height: 30px;
     width: calc(100% - 12px);
     height: 30px;
     box-sizing: border-box;
-    transition: 0.08s;
+    //transition: 50ms;
 
-    >.ph {
-        margin-left: 6px;
+    > .ph {
+        height: 100%;
+        flex-shrink: 0;
+        flex-grow: 0;
     }
 
-    >.triangle {
-        width: 12px;
-        min-width: 12px;
+    > .triangle {
+        flex: 0 0 10px;
         height: 100%;
         display: flex;
         justify-content: center;
+        cursor: pointer;
 
-        >.triangle-right {
+        > .triangle-right {
             width: 0;
             height: 0;
             border-left: 5px solid gray;
@@ -285,7 +361,7 @@ onUnmounted(() => {
             top: 12px;
         }
 
-        >.triangle-down {
+        > .triangle-down {
             width: 0;
             height: 0;
             border-top: 5px solid gray;
@@ -297,19 +373,18 @@ onUnmounted(() => {
         }
     }
 
-    >.slot {
-        width: 15px;
-        min-width: 15px;
+    > .slot {
+        width: 10px;
         height: 100%;
     }
 
-    >.container-svg {
-        display: flex;
-        width: 10px;
+    > .container-svg {
+        flex: 0 0 14px;
         height: 10px;
+        display: flex;
         justify-content: center;
         align-items: center;
-        margin-left: 2px;
+        padding-left: 4px;
 
         .svg {
             width: 10px;
@@ -317,7 +392,7 @@ onUnmounted(() => {
         }
     }
 
-    >.text {
+    > .text {
         flex: 1;
         line-height: 30px;
         font-size: var(--font-default-fontsize);
@@ -333,7 +408,7 @@ onUnmounted(() => {
         color: var(--left-navi-font-color);
         background-color: transparent;
 
-        >.txt {
+        > .txt {
             width: 100%;
             height: 30px;
             line-height: 30px;
@@ -344,13 +419,13 @@ onUnmounted(() => {
             padding-left: 2px;
         }
 
-        >.tool_icon {
+        > .tool_icon {
             display: flex;
             align-items: center;
             width: 66px;
             height: 100%;
 
-            >.tool {
+            > .tool {
                 display: flex;
                 align-items: center;
                 justify-content: center;
@@ -359,7 +434,7 @@ onUnmounted(() => {
                 margin-right: 2px;
             }
 
-            >.tool_lock {
+            > .tool_lock {
                 display: flex;
                 align-items: center;
 
@@ -381,7 +456,7 @@ onUnmounted(() => {
                 }
             }
 
-            >.tool_eye {
+            > .tool_eye {
                 margin-right: 10px;
 
                 .svg {
@@ -403,7 +478,7 @@ onUnmounted(() => {
         }
     }
 
-    >.rename {
+    > .rename {
         flex: 1;
         height: 20px;
         width: 100%;
@@ -425,13 +500,22 @@ onUnmounted(() => {
 
 .selectedChild {
     z-index: 2;
-    border-radius: 0px !important;
+    border-radius: 0 !important;
     background-color: rgba($color: #865dff, $alpha: 0.18) !important;
 }
 
 .selected {
     z-index: 1;
-    border-radius: 0px !important;
+    border-radius: 0 !important;
     background-color: rgba($color: #865dff, $alpha: 0.4) !important;
+}
+
+.component {
+    color: var(--component-color);
+
+    & > .text > .txt,
+    & > .text > .tool_icon {
+        color: var(--component-color);
+    }
 }
 </style>

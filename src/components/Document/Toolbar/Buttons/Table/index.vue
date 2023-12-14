@@ -7,8 +7,8 @@ import { useI18n } from 'vue-i18n';
 import CreateTable from './CreateTable.vue';
 const { t } = useI18n()
 interface Props {
-    context: Context
-    active: boolean
+  context: Context
+  active: boolean
 }
 type Button = InstanceType<typeof ToolButton>;
 const props = defineProps<Props>();
@@ -17,10 +17,10 @@ const visible = ref(false);
 const popoverVisible = ref<boolean>(false);
 const popover = ref<HTMLDivElement>();
 const emit = defineEmits<{
-    (e: "select", action: Action): void;
+  (e: "select", action: Action): void;
 }>();
-function select(action: Action) {   
-    emit('select', action);
+function select(action: Action) {
+  emit('select', action);
 }
 
 function showTable(e: MouseEvent) {
@@ -78,7 +78,7 @@ const onMouseleave = () => {
     </div>
     <el-tooltip class="box-item" effect="dark" :content="`${t('table.table')}`" placement="bottom" :show-after="600"
     :offset="10" :hide-after="0" :visible="popoverVisible ? false : visible">
-    <ToolButton ref="button" :selected="props.active" 
+    <ToolButton ref="button" :selected="props.active"
             @mouseenter.stop="onMouseenter" @mouseleave.stop="onMouseleave">
             <div class="svg-table" @click="showTable">
                 <svg-icon icon-class="pattern-table"></svg-icon>
@@ -95,7 +95,8 @@ const onMouseleave = () => {
   justify-content: center;
   align-items: center;
   color: #ffffff;
-  > svg {
+
+  >svg {
     width: 14px;
     height: 14px;
   }

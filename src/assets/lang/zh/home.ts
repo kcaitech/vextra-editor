@@ -1,4 +1,4 @@
-import { BorderPosition } from "@kcdesign/data"
+import {BorderPosition} from "@kcdesign/data"
 
 export const product = {
     name: 'ProtoDesign'
@@ -62,7 +62,8 @@ export const system = {
     'license_key': '粤ICP备2023042416号',
     'phonetips': '移动端暂不支持登录，请在电脑端进行登录！',
     'btn_login': '登录',
-    'artboart_title_visible': '显示容器标题'
+    'artboart_title_visible': '显示容器标题',
+    sensitive_reminder:'含有敏感信息，请重新输入。'
 }
 
 export const home = {
@@ -89,9 +90,9 @@ export const home = {
     delete_file_time: '删除时间',
     size: '大小',
     operation: '操作',
-    filelocation:'文件位置',
-    creator:'创建者',
-    deleter:'删除人',
+    filelocation: '文件位置',
+    creator: '创建者',
+    deleter: '删除人',
     star_marking: '标星',
     share: '分享',
     delete: '删除',
@@ -165,7 +166,8 @@ export const navi = {
     page: '页面',
     add_page: '添加新页面',
     copy: '副本',
-    development: '功能开发中…'
+    development: '功能开发中…',
+    overname: '文件名最大长度50字符'
 
 }
 
@@ -201,15 +203,19 @@ export const attr: any = {
     prototype: '原型',
     inspect: '标注',
     constraints: '相对容器位置',
+    groupings: '相对编组位置及大小',
     border: '边框',
+    opacity: '不透明度',
     fill: '填充',
     text: '文本',
     'follow_container_scaling': '跟随容器缩放',
     'advanced_stroke': '边框设置',
     position: '位置',
     'corner_smoothing': '平滑圆角',
-    vertical: '垂直方向',
-    horizontal: '水平方向',
+    vertical: '垂直：',
+    horizontal: '水平：',
+    fixedWidth: '固定宽度',
+    fixedHeight: '固定高度',
     fixedLeft: '左部固定',
     fixedRight: '右部固定',
     withContainer: '跟随容器缩放',
@@ -282,7 +288,12 @@ export const attr: any = {
     'flip_h': '水平翻转',
     full_border: '全边框',
     outer_border: '外边框',
-    inner_border: '内边框'
+    inner_border: '内边框',
+    exit_path_edit: '退出编辑模式(ESC)',
+    right_angle: "直角",
+    completely_symmetrical: "完全对称",
+    angular_symmetry: "角度对称",
+    asymmetric: "不对称",
 }
 
 export const login = {
@@ -314,7 +325,26 @@ export const comment = {
 export const clipboard = {
     'invalid_data': '该内容无法解析'
 }
-
+export const opacity = {
+    normal: '正常',
+    become_dark: '变暗',
+    multiply: '正片叠底',
+    color_deepening: '颜色加深',
+    become_bright: '变亮',
+    filter: '滤色',
+    color_dodge: '颜色减淡',
+    superpose: '叠加',
+    soft_light: '柔光',
+    strong_light: '强光',
+    difference: '差值',
+    exclude: '排除',
+    hue: '色相',
+    saturation: '饱和度',
+    color: '颜色',
+    lightness: '明度',
+    darken: '加暗',
+    brighten: '提亮'
+}
 export const message = {
     doc_notopen: '网络异常，文档无法打开，请检查网络后重试。',
     list_for_failure: '网络异常，文件列表获取失败，请检查网络后重试。',

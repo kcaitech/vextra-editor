@@ -9,7 +9,10 @@ const props = defineProps<{
   matrix: number[]
   context: Context
 }>();
-
+function getText(shape: Shape & { text: Text }): Text {
+    if (shape.isVirtualShape) return shape.text;
+    return shape.getText();
+}
 const matrix = new Matrix();
 const selectPath = ref<string[]>([]);
 function update() {
@@ -19,7 +22,7 @@ function update() {
   if (!slice) return;
   for (let i = 0; i < slice.length; i++) {
     const s = slice[i];
-    selectPath.value.push(genRectPath(props.shape.text.locateRange(s[0], s[1]).map((point) => matrix.computeCoord(point.x, point.y))));
+    selectPath.value.push(genRectPath(getText(props.shape).locateRange(s[0], s[1]).map((point) => matrix.computeCoord(point.x, point.y))));
   }
 }
 

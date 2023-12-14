@@ -9,7 +9,7 @@ import Saving from './Saving.vue';
 import { useRoute } from 'vue-router';
 import { WorkSpace, Perm } from '@/context/workspace';
 import { message } from '@/utils/message';
-import { ElMessageBox } from 'element-plus'
+import { ElMessage, ElMessageBox } from 'element-plus'
 import { Tool } from '@/context/tool';
 import DocumentMenu from './DocumentMenu/DocumentMenu.vue';
 
@@ -101,8 +101,12 @@ async function blur() {
     }
     try {
       ele.value = 3;
-      await user_api.Setfilename({ doc_id: route.query.id, name: p_name });
-      name.value = p_name;
+      const { code, message } = await user_api.Setfilename({ doc_id: route.query.id, name: p_name });
+      if (code === 0) {
+        name.value = p_name;
+      } else {
+        ElMessage.error({ duration: 1500, message: message === '审核不通过' ? t('system.sensitive_reminder') : message })
+      }
       window.document.title = name.value.length > 8 ? `${name.value.slice(0, 8)}... - ${t('product.name')}` : `${name.value} - ${t('product.name')}`
       document.removeEventListener('keydown', enter);
     } catch (error) {

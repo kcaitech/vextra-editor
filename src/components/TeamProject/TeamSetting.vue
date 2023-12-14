@@ -1,6 +1,6 @@
 <template>
-        <div class="set-container" style="height: calc(100vh -  224px);">
-            <el-scrollbar height="100%">
+    <div class="set-container" style="height: calc(100vh - 208px);">
+        <el-scrollbar height="100%">
             <div class="name-container">
                 <div class="left">
                     <div class="title">{{ t('teamsetting.team_name') }}</div>
@@ -54,42 +54,43 @@
                 </div>
             </div>
         </el-scrollbar>
-        </div>
-        <div v-if="showoverlay" class="overlay" @keyup.esc="showoverlay = false">
-            <div class="card-container">
-                <div class="heard">
-                    <div class="title" v-text="titlevalue"></div>
-                    <div class="close" @click.stop="showoverlay = false">
-                        <svg-icon icon-class="close"></svg-icon>
-                    </div>
-                </div>
-                <div class="centent">
-                    <div class="textarea-container">
-                        <textarea v-if="textareashow" class="text-textarea" name="" id="" cols="30" rows="10"
-                            :placeholder="placeholdervalue" v-model="textareaValue" :maxlength="maxvalue" />
-                        <div v-else class="disbandtips">
-                            <p v-if="teamSelfPermType === 3">{{ t('teamsetting.disband_team_tipsB') }}</p>
-                            <p v-else>{{ t('teamsetting.leave_team_tips') }}</p>
-                        </div>
-                    </div>
-                </div>
-                <div class="addproject">
-                    <button class="bnt_confirm" type="submit" @click.stop="confirm">
-                        {{ teamSelfPermType === 3 ? t('teamsetting.confirm') : t('teamsetting.leave') }}
-                    </button>
-                    <button class="bnt_cancel" type="submit" @click.stop.once="showoverlay = false">{{
-                        t('teamsetting.cancel')
-                    }}</button>
+    </div>
+    <div v-if="showoverlay" class="overlay" @keyup.esc="showoverlay = false">
+        <div class="card-container">
+            <div class="heard">
+                <div class="title" v-text="titlevalue"></div>
+                <div class="close" @click.stop="showoverlay = false">
+                    <svg-icon icon-class="close"></svg-icon>
                 </div>
             </div>
+            <div class="centent">
+                <div class="textarea-container">
+                    <textarea v-if="textareashow" class="text-textarea" name="" id="" cols="30" rows="10"
+                        :placeholder="placeholdervalue" v-model="textareaValue" :maxlength="maxvalue" />
+                    <div v-else class="disbandtips">
+                        <p v-if="teamSelfPermType === 3">{{ t('teamsetting.disband_team_tipsB') }}</p>
+                        <p v-else>{{ t('teamsetting.leave_team_tips') }}</p>
+                    </div>
+                </div>
+            </div>
+            <div class="addproject">
+                <button class="bnt_confirm" type="submit" @click.stop="confirm">
+                    <!-- {{ teamSelfPermType === 3 ? t('teamsetting.confirm') : t('teamsetting.leave') }} -->
+                    {{ t('teamsetting.confirm') }}
+                </button>
+                <button class="bnt_cancel" type="submit" @click.stop.once="showoverlay = false">{{
+                    t('teamsetting.cancel')
+                }}</button>
+            </div>
         </div>
+    </div>
 
     <ProjectDialog :projectVisible="showDialog" :context="contenttext" :title="titlevalue"
         :confirm-btn="teamSelfPermType === 3 ? t('teamsetting.disband') : t('teamsetting.leave')"
         @clode-dialog="closeDisband" @confirm="confirmQuit"></ProjectDialog>
 </template>
 <script setup lang="ts">
-import { Ref, computed, inject, nextTick, ref } from 'vue';
+import { Ref, computed, inject, nextTick, onMounted, ref, watch } from 'vue';
 import { useI18n } from 'vue-i18n';
 import * as user_api from '@/request/users'
 import { router } from '@/router';
@@ -135,6 +136,8 @@ interface teamDataType {
     }
 }
 
+
+
 const isDisabled: any = computed(() => {
     return teamSelfPermType.value === 0 || teamSelfPermType.value === 1 ? false : true
 })
@@ -170,9 +173,6 @@ const midDateTeamData = (teamData: Array<teamDataType>, id: string, updates: Par
 
 //修改团队名称
 const midNameRequest = async () => {
-    formData.delete('team_id')
-    formData.delete('name')
-    formData.append('team_id', teamID.value)
     formData.append('name', textareaValue.value)
     try {
         const { code, message } = await user_api.Setteaminfo(formData)
@@ -180,12 +180,16 @@ const midNameRequest = async () => {
             upDateTeamData(midDateTeamData(teamData.value, teamID.value, { name: textareaValue.value }))
             teamUpdate(!is_team_upodate.value)
             showoverlay.value = false
+            formData.delete('name')
         } else {
-            ElMessage.success(message)
+            ElMessage.error(message === '审核不通过' ? t('system.sensitive_reminder') : message)
+            formData.delete('name')
         }
     } catch (error) {
 
     }
+
+
 }
 
 //修改团队头像
@@ -196,22 +200,20 @@ const midAvatarRequest = async (e: any) => {
         const fileExtension = fileName.substring(fileName.lastIndexOf('.')).toLowerCase()
         const maxSizeInBytes = 2 * 1024 * 1024; // 2MB
         if (file && file.size <= maxSizeInBytes && e.target.accept.includes(fileExtension)) {
-            formData.delete('team_id')
-            formData.delete('avatar')
-            formData.append('team_id', teamID.value)
             formData.append('avatar', file)
             try {
                 const { code, message, data } = await user_api.Setteaminfo(formData)
                 if (code === 0) {
                     upDateTeamData(midDateTeamData(teamData.value, teamID.value, { avatar: data.avatar }))
                     teamUpdate(!is_team_upodate.value)
+                    formData.delete('avatar')
                 } else {
-                    ElMessage.error(message)
+                    ElMessage.error(message === '头像审核不通过' ? t('system.sensitive_reminder') : message)
+                    formData.delete('avatar')
                 }
             } catch (error) {
                 ElMessage.error('修改失败')
             }
-
         } else {
             ElMessage.error(t('percenter.errortips'))
         }
@@ -220,18 +222,17 @@ const midAvatarRequest = async (e: any) => {
 
 //修改团队描述
 const midDescriptionRequest = async () => {
-    formData.delete('team_id')
-    formData.delete('description')
-    formData.append('team_id', teamID.value)
     formData.append('description', textareaValue.value)
     try {
         const { code, message } = await user_api.Setteaminfo(formData)
         if (code === 0) {
             upDateTeamData(midDateTeamData(teamData.value, teamID.value, { description: textareaValue.value }))
             teamUpdate(!is_team_upodate.value)
+            formData.delete('description')
             showoverlay.value = false
         } else {
-            ElMessage.success(message)
+            ElMessage.error(message === '审核不通过' ? t('system.sensitive_reminder') : message)
+            formData.delete('description')
         }
     } catch (error) {
 
@@ -319,6 +320,15 @@ const confirm = () => {
             return
     }
 }
+
+watch(teamID, () => {
+    formData.delete('team_id')
+    formData.append('team_id', teamID.value)
+})
+
+onMounted(() => {
+    formData.append('team_id', teamID.value)
+})
 
 </script>
 <style lang="scss" scoped>
@@ -474,10 +484,11 @@ const confirm = () => {
     .dissolve-container,
     .leave-container {
         display: flex;
-        align-items: flex-start;
+        align-items: center;
         justify-content: space-between;
         height: 89px;
         gap: 20px;
+        box-shadow: inset 0px -1px 0px 0px #F0F0F0;
 
         .left {
             display: flex;
@@ -486,7 +497,7 @@ const confirm = () => {
 
             .title {
                 font-size: 14px;
-                font-weight: 500;
+                font-weight: 600;
                 color: #000000;
             }
 
@@ -494,7 +505,7 @@ const confirm = () => {
                 line-height: 20px;
                 font-size: 13px;
                 font-weight: 400;
-                color: #777777;
+                color: #808080;
             }
         }
 

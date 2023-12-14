@@ -6,3 +6,6 @@ export * from "./homerightmenu"
 export * from "./table"
 export * from "./myteam"
 export * from "./shadow"
+export * from "./report"
+export * from "./component"
+

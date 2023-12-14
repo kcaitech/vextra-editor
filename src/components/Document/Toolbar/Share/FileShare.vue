@@ -8,11 +8,13 @@ import { ElMessage } from 'element-plus';
 import { useRoute } from 'vue-router';
 import { DocInfo } from "@/context/user"
 import CloseIcon from '@/components/common/CloseIcon.vue';
+import Switch from '@/components/common/Switch.vue';
 const { t } = useI18n()
 const props = defineProps<{
   pageHeight: number,
   shareSwitch: boolean,
   docId?: string,
+  docName?: string,
   selectValue: number,
   docUserId?: string,
   context?: Context,
@@ -34,7 +36,7 @@ enum permissions {
 }
 const route = useRoute()
 const docID = props.docId ? props.docId : route.query.id
-const url = route.path !== '/document' ? `https://protodesign.cn/#/document?id=${docID}` : location.href
+const url = route.path !== '/document' ? `https://protodesign.cn/#/document?id=${docID}` + " " + `邀请您进入《${props.docName}》，点击链接开始协作` : location.href + ' ' + `邀请您进入《${props.docInfo?.document.name}》，点击链接开始协作`
 
 const value1 = ref(props.shareSwitch)
 const authority = ref(false)
@@ -151,6 +153,8 @@ const getShareList = async () => {
     console.log(err);
   }
 }
+
+//设置分享权限
 const delShare = async (id: string) => {
   try {
     await share_api.delShareAuthorityAPI({ share_id: id })
@@ -159,6 +163,8 @@ const delShare = async (id: string) => {
     console.log(err);
   }
 }
+
+//设置分享权限
 const putShareAuthority = async (id: string, type: number) => {
   try {
     await share_api.putShareAuthorityAPI({ share_id: id, perm_type: type })
@@ -167,6 +173,8 @@ const putShareAuthority = async (id: string, type: number) => {
     console.log(err);
   }
 }
+
+//设置分享类型
 const setShateType = async (type: number) => {
   try {
     await share_api.setShateTypeAPI({ doc_id: docID, doc_type: type })
@@ -183,37 +191,38 @@ const setShateType = async (type: number) => {
 }
 
 watch(selectValue, (nVal, oVal) => {
-  if (value1.value) {
-    const index = DocType.findIndex(item => item === nVal)
-    if (index === docType.Critical) {
-      setShateType(docType.Critical)
-    } else if (index === docType.Edit) {
-      setShateType(docType.Edit)
-    } else if (index === docType.Read) {
-      setShateType(docType.Read)
-    } else if (index === docType.Share) {
-      setShateType(docType.Share)
-    }
-    emit('selectType', index)
-  }
-})
-watch(value1, (nVal, oVal) => {
-  if (nVal) {
-    if (props.selectValue === docType.Critical) {
-      setShateType(docType.Critical)
-    } else if (props.selectValue === docType.Edit) {
-      setShateType(docType.Edit)
-    } else if (props.selectValue === docType.Read) {
-      setShateType(docType.Read)
-    } else if (props.selectValue === docType.Share) {
-      setShateType(docType.Share)
-    }
-    emit('switchState', nVal)
+  const index = DocType.findIndex(item => item === nVal)
+  if (index === docType.Critical) {
+    setShateType(docType.Critical)
+  } else if (index === docType.Edit) {
+    setShateType(docType.Edit)
+  } else if (index === docType.Read) {
+    setShateType(docType.Read)
+  } else if (index === docType.Share) {
+    setShateType(docType.Share)
   } else {
     setShateType(docType.Private)
-    emit('switchState', nVal)
+    emit('switchState', true)
   }
+  emit('selectType', index)
 })
+// watch(value1, (nVal, oVal) => {
+//   if (nVal) {
+//     if (props.selectValue === docType.Critical) {
+//       setShateType(docType.Critical)
+//     } else if (props.selectValue === docType.Edit) {
+//       setShateType(docType.Edit)
+//     } else if (props.selectValue === docType.Read) {
+//       setShateType(docType.Read)
+//     } else if (props.selectValue === docType.Share) {
+//       setShateType(docType.Share)
+//     }
+//     emit('switchState', nVal)
+//   } else {
+//     setShateType(docType.Private)
+//     emit('switchState', nVal)
+//   }
+// })
 
 watchEffect(() => {
   props.projectPerm;
@@ -297,7 +306,7 @@ watch(() => props.pageHeight, () => {
   nextTick(() => {
     if (card.value) {
       let el = card.value
-      el.style.top = Math.max(handleTop.value!, el.offsetHeight / 2) + 'px'
+      // el.style.top = Math.max(handleTop.value!, el.offsetHeight / 2) + 'px'
     }
   })
 })
@@ -308,7 +317,7 @@ watchEffect(() => {
     handleTop.value = props.pageHeight / 2
     if (card.value) {
       let el = card.value
-      el.style.top = Math.max(handleTop.value!, el.offsetHeight / 2) + 'px'
+      // el.style.top = Math.max(handleTop.value!, el.offsetHeight / 2) + 'px'
     }
   })
 })
@@ -338,76 +347,100 @@ onUnmounted(() => {
   document.removeEventListener('click', handleClick);
 })
 
+const isSelectOpen = ref<boolean>(false)
+const selectedOption = ref('')
+
+enum Options {
+  ee,
+}
+
+const openSelect = () => {
+  isSelectOpen.value = true;
+}
+const selectOption = (option:any) => {
+  selectedOption.value = option
+  isSelectOpen.value = false
+}
+
 </script>
 <template>
-  <div ref="card" class="card" :style="{ top: props.pageHeight / 2 }">
-    <el-card class="box-card" :style="{ width: 400 + 'px' }" v-if="!founder && docInfo">
+  <div ref="card" class="card">
+    <el-card class="box-card" v-if="!founder && docInfo">
       <!-- 标题 -->
       <template #header>
         <div class="card-header">
           <div class="title">{{ t('share.file_sharing') }}</div>
-          <CloseIcon :size="20" @close="emit('close')" />
+          <div class="close" @click.stop="emit('close')">
+            <svg-icon icon-class="close"></svg-icon>
+          </div>
         </div>
       </template>
       <!-- 内容 -->
       <div class="contain">
         <!-- 开关 -->
         <div class="share-switch">
-          <span class="type">{{ t('share.share_switch') }}:</span>
-          <el-switch class="switch" size="small" v-model="value1" />
+          <span class="type">{{ t('share.share_switch') }}：</span>
+          <Switch :bgcolor="'rgba(24, 120, 245, 1)'" :toggleoff="value1"></Switch>
+          <input class="my_switch" type="checkbox" v-model="value1">
         </div>
         <!-- 文件名 -->
         <div class="file-name">
-          <span class="type">{{ t('share.file_name') }}:</span>
+          <span class="type">{{ t('share.file_name') }}：</span>
           <p class="name">{{ docInfo!.document.name }}</p>
         </div>
         <!-- 权限设置 -->
         <div class="purview">
           <span class="type">{{ t('share.permission_setting') }}:</span>
-          <el-select v-model="selectValue" style="width: 180px;" class="m-2" size="large" @visible-change="showselect">
-            <el-option style="font-size: 10px;" class="option" v-for="item in options" :key="item.value"
-              :label="item.label" :value="item.label" />
-          </el-select>
-          <el-button class="copybnt" color="#9775fa" @click="copyLink">{{ t('share.copy_link') }}</el-button>
+          <input type="text" v-model="selectedOption" @focus="openSelect" placeholder="Select an option" />
+          <ul v-show="isSelectOpen" class="options">
+            <li v-for="option in docType" :key="option" @click="selectOption(option)">
+              {{ option }}
+            </li>
+          </ul>
         </div>
-        <!-- 分享人 -->
-        <div>
-          <span class="type">{{ t('share.people_who_have_joined_the_share') }} ({{ t('share.share_limit') }}5) :</span>
-          <el-scrollbar height="300px" class="shared-by">
-            <div class="scrollbar-demo-item">
-              <div class="item-left">
-                <div class="avatar"><img :src="docInfo.user.avatar"></div>
-                <div class="name">{{ docInfo.user.nickname }}</div>
-              </div>
-              <div class="item-right">
-                <div class="founder">{{ t('share.founder') }}</div>
-              </div>
+        <el-select v-model="selectValue" style="width: 122px;" class="m-2" size="large" @visible-change="showselect">
+          <el-option style="font-size: 10px;" class="option" v-for="item in options" :key="item.value" :label="item.label"
+            :value="item.label" />
+        </el-select>
+        <button class="copybnt" type="button" @click.stop="copyLink">{{ t('share.copy_link') }}</button>
+      </div>
+      <!-- 分享人 -->
+      <div>
+        <span class="type">{{ t('share.people_who_have_joined_the_share') }} ({{ t('share.share_limit') }}5) :</span>
+        <el-scrollbar height="300px" class="shared-by">
+          <div class="scrollbar-demo-item">
+            <div class="item-left">
+              <div class="avatar"><img :src="docInfo.user.avatar"></div>
+              <div class="name">{{ docInfo.user.nickname }}</div>
             </div>
-            <div v-for="(item, ids) in shareList" :key="ids" class="scrollbar-demo-item">
-              <div class="item-left">
-                <div class="avatar"><img :src="item.user.avatar"></div>
-                <div class="name">{{ item.user.nickname }}</div>
-              </div>
-              <div class="item-right" @click="(e: Event) => selectAuthority(ids, e)">
-                <div class="authority">{{ permission[item.document_permission.perm_type] }}</div>
-                <div class="svgBox"><svg-icon class="svg" icon-class="bottom"></svg-icon></div>
-                <div class="popover" v-if="authority && index === ids" ref="popover"
-                  :style="{ top: posi.top - 8 + 'px', right: 30 + 'px' }">
-                  <div @click="onEditable(item.document_permission.id, permissions.editable, ids)">{{ editable }}</div>
-                  <div @click="onReviewable(item.document_permission.id, permissions.reviewable, ids)">{{ reviewable }}
-                  </div>
-                  <div @click="onReadOnly(item.document_permission.id, permissions.readOnly, ids)">{{ readOnly }}</div>
-                  <div @click="onRemove(item.document_permission.id, ids)">{{ remove }}</div>
+            <div class="item-right">
+              <div class="founder">{{ t('share.founder') }}</div>
+            </div>
+          </div>
+          <div v-for="(item, ids) in shareList" :key="ids" class="scrollbar-demo-item">
+            <div class="item-left">
+              <div class="avatar"><img :src="item.user.avatar"></div>
+              <div class="name">{{ item.user.nickname }}</div>
+            </div>
+            <div class="item-right" @click="(e: Event) => selectAuthority(ids, e)">
+              <div class="authority">{{ permission[item.document_permission.perm_type] }}</div>
+              <div class="svgBox"><svg-icon class="svg" icon-class="bottom"></svg-icon></div>
+              <div class="popover" v-if="authority && index === ids" ref="popover"
+                :style="{ top: posi.top - 8 + 'px', right: 30 + 'px' }">
+                <div @click="onEditable(item.document_permission.id, permissions.editable, ids)">{{ editable }}</div>
+                <div @click="onReviewable(item.document_permission.id, permissions.reviewable, ids)">{{ reviewable }}
                 </div>
+                <div @click="onReadOnly(item.document_permission.id, permissions.readOnly, ids)">{{ readOnly }}</div>
+                <div @click="onRemove(item.document_permission.id, ids)">{{ remove }}</div>
               </div>
             </div>
-          </el-scrollbar>
-          <div class="project" v-if="project || props.docInfo?.project">项目中所有成员均可访问</div>
-        </div>
+          </div>
+        </el-scrollbar>
+        <div class="project" v-if="project || props.docInfo?.project">项目中所有成员均可访问</div>
       </div>
     </el-card>
 
-    <el-card class="box-card" :style="{ width: 300 + 'px' }" v-if="founder && docInfo">
+    <el-card class="box-card" v-if="founder && docInfo">
       <!-- 标题 -->
       <template #header>
         <div class="card-header">
@@ -442,10 +475,6 @@ onUnmounted(() => {
 </template>
   
 <style scoped lang="scss">
-:deep(.copybnt) {
-  box-shadow: 1px 1px 3px #b1b1b1, -1px -1px 3px #b1b1b1;
-}
-
 .project {
   opacity: .5;
   display: flex;
@@ -457,20 +486,41 @@ onUnmounted(() => {
   display: flex;
   justify-content: space-between;
   align-items: center;
+  height: 64px;
+  padding: 0;
 
   .title {
-    font-weight: var(--font-default-bold);
+    font-size: 16px;
+    font-weight: 600;
   }
+
+  .close {
+    width: 16px;
+    height: 16px;
+    padding: 4px;
+    border-radius: 6px;
+
+    &:hover {
+      background-color: rgb(243, 243, 245);
+      cursor: pointer;
+    }
+
+    svg {
+      width: 100%;
+      height: 100%;
+    }
+  }
+
 }
 
 :deep(.el-card__header) {
-  border-bottom: none;
-  padding: var(--default-padding);
-  padding-bottom: 0;
+  border: none;
+  padding: 0;
 }
 
 :deep(.el-card__body) {
-  padding: var(--default-padding-half) var(--default-padding)
+  border: none;
+  padding: 0;
 }
 
 :deep(.el-input) {
@@ -483,42 +533,52 @@ onUnmounted(() => {
   .share-switch {
     display: flex;
     align-items: center;
-    margin: var(--default-margin-half) 0;
+    height: 38px;
+    gap: 6px;
 
     .type {
-      font-weight: var(--font-default-bold);
+      font-size: 13px;
+      font-weight: 500;
     }
 
-    .switch {
-      --el-switch-on-color: var(--active-color);
-      margin-left: 10px;
-
+    .my_switch {
+      position: relative;
+      width: 36px;
+      height: 20px;
+      margin: 0;
+      left: -42px;
+      opacity: 0;
     }
+
   }
 
   .file-name {
-    margin: var(--default-margin-half) 0;
     display: flex;
     align-items: center;
+    height: 38px;
+    gap: 19px;
 
     .type {
-      font-weight: var(--font-default-bold);
-      letter-spacing: 4px;
+      font-size: 13px;
+      font-weight: 500;
     }
 
     .name {
-      margin-left: 10px;
+      font-size: 13px;
+      font-weight: 600;
     }
   }
 
 
   .purview {
-    font-weight: var(--font-default-bold);
     display: flex;
     align-items: center;
+    height: 40px;
+    gap: 6px;
 
     .type {
-      font-weight: var(--font-default-bold);
+      font-size: 13px;
+      font-weight: 500;
     }
 
     .m-2 {
@@ -646,16 +706,28 @@ onUnmounted(() => {
 }
 
 .card {
-  position: fixed;
-  z-index: 1000;
+  position: absolute;
+  width: 400px;
+  top: 25%;
   left: 50%;
-  transform: translate(-50%, -50%);
+  background-color: transparent;
+  transform: translate(-50%, -25%);
+  box-sizing: border-box;
+  z-index: 1000;
+
+  .box-card {
+    border-radius: 16px;
+    border: 1px solid #F0F0F0;
+    background-color: rgba(255, 255, 255, 1);
+    border: none;
+    box-shadow: none;
+    width: 100%;
+    padding: 0 24px;
+    box-sizing: border-box;
+  }
 }
 
-.box-card {
-  color: #3D3D3D;
-  width: 400px;
-}
+
 
 :deep(.el-button) {
   color: #fff;

@@ -1,15 +1,24 @@
 <script setup lang="ts">
-import { ref, computed, onMounted, onUnmounted } from "vue";
-import { Context } from "@/context";
+import {ref, onMounted, onUnmounted} from "vue";
+import {Context} from "@/context";
 import ShapeTab from "@/components/Document/Navigation/ShapeTab.vue";
 import CompsTab from "@/components/Document/Navigation/CompsTab.vue";
 import CommentTab from "./Comment/CommentTab.vue";
-import { useI18n } from 'vue-i18n';
-import { Page } from "@kcdesign/data";
-import { Comment } from "@/context/comment";
-const { t } = useI18n();
+import {useI18n} from 'vue-i18n';
+import {Page} from "@kcdesign/data";
+import {Comment} from "@/context/comment";
+import {Action, Tool} from "@/context/tool";
 
-const props = defineProps<{ context: Context, page: Page, leftTriggleVisible: boolean, showLeft: boolean }>();
+const {t} = useI18n();
+
+interface Props {
+    context: Context
+    page: Page
+    leftTriggleVisible: boolean
+    showLeft: boolean
+}
+
+const props = defineProps<Props>();
 const emit = defineEmits<{ (e: 'showNavigation'): void }>()
 type Tab = "Shape" | "Comps" | "Resource" | "Comment"
 
@@ -28,19 +37,35 @@ const tabs: { title: string, id: Tab }[] = [
 ]
 
 function update(t: number) {
-    if (t === Comment.SELECT_LIST_TAB) currentTab.value = 'Comment';
+    if (t === Comment.SELECT_LIST_TAB) {
+        if(!props.showLeft) showHiddenLeft();
+        currentTab.value = 'Comment';
+    }
 }
+
 function toggle(id: Tab) {
-    currentTab.value = id
+    currentTab.value = id;
+    props.context.navi.set_current_navi_module(id);
 }
+
 const showHiddenLeft = () => {
     emit('showNavigation')
 }
+const tool_watch = (t: number) => {
+    if (t === Tool.COMPONENT) {
+        if(!props.showLeft) showHiddenLeft();
+        currentTab.value = 'Comps';
+        props.context.navi.set_current_navi_module(currentTab.value);
+    }
+}
 onMounted(() => {
+    props.context.navi.set_current_navi_module(currentTab.value);
     props.context.comment.watch(update);
+    props.context.tool.watch(tool_watch);
 });
 onUnmounted(() => {
     props.context.comment.unwatch(update);
+    props.context.tool.watch(tool_watch);
 })
 </script>
 
@@ -48,15 +73,17 @@ onUnmounted(() => {
     <div class="tab-container">
         <div class="tab-controller">
             <div :class="{ tab: true, active: currentTab === i.id }" v-for="(i, index) in tabs" :key="index"
-                @click="toggle(i.id)">{{ i.title }}</div>
+                 @click="toggle(i.id)">{{ i.title }}
+            </div>
         </div>
         <div class="body">
-            <ShapeTab :context="props.context" v-if="currentTab === 'Shape'" v-bind="$attrs" :page="page"
-                :showLeft="showLeft" :leftTriggleVisible="leftTriggleVisible" @showNavigation="showHiddenLeft"></ShapeTab>
-            <CompsTab :context="props.context" v-if="currentTab === 'Comps'" :showLeft="showLeft"
-                :leftTriggleVisible="leftTriggleVisible" @showNavigation="showHiddenLeft"></CompsTab>
-            <CommentTab :context="props.context" v-if="currentTab === 'Comment'" :showLeft="showLeft"
-                :leftTriggleVisible="leftTriggleVisible" @showNavigation="showHiddenLeft"></CommentTab>
+            <ShapeTab :context="props.context" v-show="currentTab === 'Shape'" v-bind="$attrs" :page="page"
+                      :showLeft="showLeft" :leftTriggleVisible="leftTriggleVisible"
+                      @showNavigation="showHiddenLeft"></ShapeTab>
+            <CompsTab :context="props.context" v-show="currentTab === 'Comps'" :showLeft="showLeft"
+                      :leftTriggleVisible="leftTriggleVisible" @showNavigation="showHiddenLeft"></CompsTab>
+            <CommentTab :context="props.context" v-show="currentTab === 'Comment'" :showLeft="showLeft"
+                        :leftTriggleVisible="leftTriggleVisible" @showNavigation="showHiddenLeft"></CommentTab>
         </div>
     </div>
 </template>
@@ -73,7 +100,7 @@ onUnmounted(() => {
         flex-direction: row;
         overflow: hidden;
 
-        >.tab {
+        > .tab {
             min-width: 24px;
             font-weight: var(--font-default-bold);
             font-size: var(--font-default-fontsize);
@@ -85,11 +112,11 @@ onUnmounted(() => {
             margin-left: 6px;
         }
 
-        >.tab:hover {
+        > .tab:hover {
             color: var(--theme-color);
         }
 
-        >.active {
+        > .active {
             color: var(--theme-color);
         }
 

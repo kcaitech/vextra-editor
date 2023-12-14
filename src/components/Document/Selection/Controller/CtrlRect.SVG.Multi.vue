@@ -108,7 +108,7 @@ watchEffect(updateControllerView);
         :height="height" :class="{ 'un-visible': !visible }" @mousedown="mousedown" overflow="visible"
         :style="{ transform: `translate(${bounds.left}px,${bounds.top}px)`, left: 0, top: 0, position: 'absolute' }">
         <path :d="boundrectPath" fill="none" stroke='#865dff' stroke-width="1.5px"></path>
-        <ShapesStrokeContainer :context="props.context" :matrix="props.matrix">
+        <ShapesStrokeContainer :context="props.context" :matrix="props.matrix" color-hex="#865dff">
         </ShapesStrokeContainer>
         <BarsContainer :context="props.context" :matrix="submatrix.toArray()" :frame="props.controllerFrame">
         </BarsContainer>

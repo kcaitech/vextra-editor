@@ -1,6 +1,6 @@
 <script setup lang="ts">
 import Popover from '@/components/common/Popover.vue';
-import { ref, onMounted, reactive, computed, onUnmounted, onBeforeUpdate } from 'vue';
+import { ref, onMounted, reactive, computed, onUnmounted } from 'vue';
 import { useI18n } from 'vue-i18n';
 import Select, { SelectItem, SelectSource } from '@/components/common/Select.vue';
 import { Context } from '@/context';
