@@ -54,6 +54,7 @@ const ImageUrls: Map<string, string> = new Map();
 const toggleExpand = () => {
     isTriangle.value = !isTriangle.value;
     emits('previewChange', isTriangle.value);
+    _getCanvasShape();
 }
 const _getCanvasShape = () => {
     const shapes = props.context.selection.selectedShapes;
@@ -132,7 +133,7 @@ const getPosition = (shape: Shape) => {
         xy.value.y = frame.y - page.frame.y;
         width.value = shape.frame.width;
         height.value = shape.frame.height;
-    } else {
+    } else if (shape.type === ShapeType.Cutout) {
         width.value = p.width;
         height.value = p.height;
         xy.value.x = p.x;
@@ -141,10 +142,10 @@ const getPosition = (shape: Shape) => {
     if (shape.type !== ShapeType.Cutout) {
         const { left, top, right, bottom } = getShadowMax(shape);
         const max_border = getShapeBorderMax(shape);
-        xy.value.x -= (left + max_border);
-        xy.value.y -= (top + max_border);
-        width.value += ((left + max_border) + (right + max_border));
-        height.value += ((top + max_border) + (bottom + max_border));
+        xy.value.x = -(shape.frame.x + left + max_border);
+        xy.value.y = -(shape.frame.x + top + max_border);
+        width.value = (shape.frame.width + (left + max_border) + (right + max_border));
+        height.value = (shape.frame.height + (top + max_border) + (bottom + max_border));
     }
 }
 
@@ -284,7 +285,7 @@ onUnmounted(() => {
                 <div :class="{ 'triangle-right': !isTriangle, 'triangle-down': isTriangle }">
                 </div>
             </div>
-            <span>{{t('cutoutExport.preview')}}</span>
+            <span>{{ t('cutoutExport.preview') }}</span>
         </div>
         <svg version="1.1" ref="previewSvg" xmlns="http://www.w3.org/2000/svg" xmlns:xlink="http://www.w3.org/1999/xlink"
             xmlns:xhtml="http://www.w3.org/1999/xhtml" preserveAspectRatio="xMinYMin meet" :width="width" :height="height"
