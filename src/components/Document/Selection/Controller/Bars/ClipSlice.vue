@@ -79,7 +79,7 @@ function down_background_path(index: number) {
         return;
     }
     const editor = props.context.editor4Shape(seg.shape);
-    const code = editor.clipPathShape(index);
+    const code = editor.clipPathShape(index, props.context.workspace.t('attr.path'));
     after_clip(code);
 }
 function after_clip(data: { code: number, ex: Shape | undefined }) {

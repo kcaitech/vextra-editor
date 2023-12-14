@@ -296,6 +296,7 @@ export const attr: any = {
     completely_symmetrical: "完全对称",
     angular_symmetry: "不对称",
     asymmetric: "角度对称",
+    path: '路径'
 }
 
 export const login = {
