@@ -79,6 +79,7 @@ const WITH_OPACITY = [
 const shapeType = ref();
 const textShapes = ref<Shape[]>([]);
 const symbol_attribute = ref<boolean>(true);
+const opacity = ref<boolean>(false);
 const getShapeType = () => {
     if (props.context.selection.selectedShapes.length === 1) {
         shapes.value = new Array(...props.context.selection.selectedShapes);
@@ -95,6 +96,18 @@ const getShapeType = () => {
     }
 }
 
+function check_for_opacity() {
+    opacity.value = false;
+    const selected_shapes = props.context.selection.selectedShapes;
+    for (let i = 0, l = selected_shapes.length; i < l; i++) {
+        const s = selected_shapes[i];
+        if (!s.isVirtualShape) {
+            opacity.value = true;
+            return;
+        }
+    }
+}
+
 function _change(t: number) {
     if (t === Selection.CHANGE_PAGE) {
         shapes.value = new Array();
@@ -104,6 +117,7 @@ function _change(t: number) {
         baseAttr.value = true;
         editAttr.value = false;
         symbol_attribute.value = props.context.selection.selectedShapes.length < 2;
+        check_for_opacity();
     }
 }
 
@@ -169,7 +183,7 @@ onUnmounted(() => {
                 <Arrange :context="props.context" :shapes="shapes"></Arrange>
                 <ShapeBaseAttr v-if="baseAttr" :context="props.context"></ShapeBaseAttr>
                 <BaseForPathEdit v-if="editAttr" :context="props.context"></BaseForPathEdit>
-                <Opacity v-if="!WITH_OPACITY.includes(shapeType)" :shapes="shapes" :context="props.context"></Opacity>
+                <Opacity v-if="!WITH_OPACITY.includes(shapeType) && opacity" :shapes="shapes" :context="props.context"></Opacity>
                 <Module v-if="symbol_attribute" :context="props.context" :shapeType="shapeType" :shapes="shapes"></Module>
                 <Fill v-if="WITH_FILL.includes(shapeType)" :shapes="shapes" :context="props.context"></Fill>
                 <Border v-if="WITH_BORDER.includes(shapeType)" :shapes="shapes" :context="props.context"></Border>

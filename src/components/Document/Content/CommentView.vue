@@ -136,7 +136,7 @@ const downMoveCommentPopup = (e: MouseEvent, index: number) => {
 };
 const commentReflush = ref(0)
 const isControls = (index: number) => {
-    if(userId === documentCommentList.value[index].user.id  || userId === comment.value.isDocumentInfo?.user.id) return true
+    if (userId === documentCommentList.value[index].user.id || userId === comment.value.isDocumentInfo?.user.id) return true
     else return false
 }
 const moveCommentPopup = (e: MouseEvent, index: number) => {
@@ -162,10 +162,10 @@ const updateShapeComment = (index: number) => {
     const shapes = props.context.selection.selectedPage!.shapes;
     const shape_frame = documentCommentList.value[index].shape_frame
     const shape = shapes.get(documentCommentList.value[index].target_shape_id);
-    if(shape) {
+    if (shape) {
         const { x, y } = shape.frame2Root()
         shape_frame.x1 = shape_frame.x2 + x
-        shape_frame.y1 = shape_frame.y2 + y    
+        shape_frame.y1 = shape_frame.y2 + y
         commentReflush.value++
     }
 }
@@ -351,23 +351,23 @@ function commentWatcher(type?: number) { // 更新编辑器状态，包括光标
 }
 
 const docComment = (comment: DocCommentOpData) => {
-    if(comment.comment.content) {
+    if (comment.comment.content) {
         comment.comment.content = comment.comment.content.replaceAll("\r\n", "<br/>").replaceAll("\n", "<br/>").replaceAll(" ", "&nbsp;")
     }
     const index = documentCommentList.value.findIndex(item => item.id === comment.comment.id)
-    if(comment.type === DocCommentOpType.Update) {
-        if(index !== -1) {
+    if (comment.type === DocCommentOpType.Update) {
+        if (index !== -1) {
             documentCommentList.value[index] = {
                 ...documentCommentList.value[index],
                 ...comment.comment
             }
         }
-    }else if (comment.type === DocCommentOpType.Del) {
-        if(index !== -1) {
+    } else if (comment.type === DocCommentOpType.Del) {
+        if (index !== -1) {
             documentCommentList.value.splice(index, 1)
         }
-    }else if (comment.type === DocCommentOpType.Add) {
-        if(!comment.comment.root_id) {
+    } else if (comment.type === DocCommentOpType.Add) {
+        if (!comment.comment.root_id) {
             documentCommentList.value.unshift(comment.comment)
         }
     }

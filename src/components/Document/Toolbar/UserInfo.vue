@@ -15,9 +15,9 @@ const props = defineProps<Props>();
 <template>
     <div class="user-info" @dblclick.stop>
         <Collaborator :context="props.context"></Collaborator>
-        <Share :context="props.context"></Share>
         <LableToggle :context="props.context"></LableToggle>
         <UserAvatar :context="props.context"></UserAvatar>
+        <Share :context="props.context"></Share>
         <Scale :context="props.context"></Scale>
     </div>
 </template>

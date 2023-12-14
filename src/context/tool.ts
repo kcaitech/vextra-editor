@@ -1,7 +1,7 @@
-import {Shape, ShapeType, Watchable} from "@kcdesign/data";
-import {Context} from ".";
-import {Comment} from "./comment";
-import {v4} from "uuid";
+import { Shape, ShapeType, Watchable } from "@kcdesign/data";
+import { Context } from ".";
+import { Comment } from "./comment";
+import { v4 } from "uuid";
 
 export enum Action {
     Auto = 'auto',
@@ -80,9 +80,9 @@ export class Tool extends Watchable(Object) {
     private m_current_action: Action = Action.AutoV;
     private m_context: Context;
     private m_show_title: boolean = true;
-    private m_frame_size: { width: number, height: number } = {width: 100, height: 100}; // 容器模版frame
+    private m_frame_size: { width: number, height: number } = { width: 100, height: 100 }; // 容器模版frame
     private m_frame_name: string = ''; // 容器模版名称
-    private m_table_size: { row: number, col: number } = {row: 3, col: 3};
+    private m_table_size: { row: number, col: number } = { row: 3, col: 3 };
     private m_contact_apex: Shape | undefined;
     private m_contact_from: boolean = false;
     private m_lable_status: boolean = false;
@@ -97,7 +97,7 @@ export class Tool extends Watchable(Object) {
     }
 
     keyhandle(e: KeyboardEvent) {
-        const {target, code, shiftKey, ctrlKey, metaKey, altKey} = e;
+        const { target, code, shiftKey, ctrlKey, metaKey, altKey } = e;
         if (target instanceof HTMLInputElement) return;
         if (code === 'KeyR') {
             if (!(ctrlKey || shiftKey)) e.preventDefault();
@@ -249,11 +249,11 @@ export class Tool extends Watchable(Object) {
     }
 
     get frameSize(): { size: { width: number, height: number }, name: string } {
-        return {size: this.m_frame_size, name: this.m_frame_name};
+        return { size: this.m_frame_size, name: this.m_frame_name };
     }
 
     setArtboardTemp(width: number, height: number, name: string) {
-        this.m_frame_size = {width, height};
+        this.m_frame_size = { width, height };
         this.m_frame_name = name;
         this.notify(Tool.INSERT_FRAME);
     }

@@ -313,9 +313,9 @@ const changemargin = () => {
         height: 30px;
         font-size: 12px;
         border: none;
-        background-color: var(--active-color-beta);
+        background-color: var(--active-color);
         color: #fff;
-        border: 1px solid var(--active-color-beta);
+        border: 1px solid var(--active-color);
         border-radius: 4px;
         outline: none;
     }

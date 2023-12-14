@@ -160,7 +160,7 @@ onUnmounted(() => {
 })
 </script>
 <template>
-    <path v-if="selection_path" :d="selection_path" fill="#865dff" fill-opacity="0.40" stroke='none'>
+    <path v-if="selection_path" :d="selection_path" fill="#1878f5" fill-opacity="0.40" stroke='none'>
     </path>
     <g v-if="triangle" :style="{ transform }">
         <path stroke-opacity="0.75" d="M20 10 v10 h-10 z" stroke="#444444" stroke-width="2px" fill="transparent"></path>

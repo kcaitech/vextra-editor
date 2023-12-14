@@ -137,9 +137,9 @@ onUnmounted(() => {
 })
 </script>
 <template>
-    <path v-if="isCursor" :d="cursorPath" fill="none" stroke='#865dff' stroke-width="2.5px" class="scan">
+    <path v-if="isCursor" :d="cursorPath" fill="none" stroke='#1878f5' stroke-width="2.5px" class="scan">
     </path>
-    <path v-if="!isCursor" :d="selectPath" fill="#865dff" fill-opacity="0.35" stroke='none'></path>
+    <path v-if="!isCursor" :d="selectPath" fill="#1878f5" fill-opacity="0.35" stroke='none'></path>
 </template>
 <style lang='scss' scoped>
 .scan {

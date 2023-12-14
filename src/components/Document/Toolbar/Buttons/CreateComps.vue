@@ -4,7 +4,6 @@ import { Action, Tool } from "@/context/tool";
 import { Context } from '@/context';
 import { useI18n } from 'vue-i18n';
 import Tooltip from '@/components/common/Tooltip.vue';
-import ComponentDialog from '../../Attribute/Module/ComponentDialog.vue';
 import { string_by_sys } from "@/utils/common";
 const { t } = useI18n()
 interface Props {
@@ -20,10 +19,6 @@ function select() {
 </script>
 
 <template>
-    <!-- <div ref="popover" class="popover" tabindex="-1" v-if="popoverVisible">
-        <ComponentDialog :context="context" right="-250px" top="0" @closeDialog="closeDialog">
-        </ComponentDialog>
-    </div> -->
     <Tooltip :content="string_by_sys(`${t('navi.comps')} &nbsp;&nbsp; Shift I`)">
         <ToolButton ref="button" @click="select">
             <div class="svg-component">

@@ -44,11 +44,11 @@ const controller = ref<boolean>(false);
 const rotate = ref<number>(0);
 const altKey = ref<boolean>(false);
 const tracing = ref<boolean>(false);
-const tracingStroke = ref<string>('#865dff');
+const tracingStroke = ref<string>('#1878F5');
 const traceEle = ref<Element>();
 const tracingFrame = ref<PathView>({ path: '', viewBox: '', height: 0, width: 0 });
 const placement = ref<boolean>(false);
-const placementStroke = ref<string>('#865dff');
+const placementStroke = ref<string>('#1878F5');
 const placementFrame = ref<PathView>({ path: '', viewBox: '', height: 0, width: 0 });
 const watchedShapes = new Map();
 const isCutout = ref(false);
@@ -160,7 +160,7 @@ function createShapeTracing() {
         if (hoveredShape.type === ShapeType.Symbol || hoveredShape.type === ShapeType.SymbolRef) {
             tracingStroke.value = '#ff9900';
         } else {
-            tracingStroke.value = '#865dff';
+            tracingStroke.value = '#1878F5';
         }
     }
 }
@@ -187,7 +187,7 @@ function createPalcement() {
         if (p.type === ShapeType.Symbol || p.type === ShapeType.SymbolRef) {
             placementStroke.value = '#ff9900';
         } else {
-            placementStroke.value = '#865dff';
+            placementStroke.value = '#1878F5';
         }
     }
 }
@@ -372,7 +372,7 @@ onUnmounted(() => {
         <path v-if="isCutout" :d="tracingFrame.path" style="fill: none; stroke: transparent; stroke-width: 16;"
             @mousedown="(e: MouseEvent) => pathMousedown(e)">
         </path>
-        <path :d="tracingFrame.path" :fill="isCutout ? 'none' : 'transparent'" style=" stroke: #865dff; stroke-width: 1.5;"
+        <path :d="tracingFrame.path" :fill="isCutout ? 'none' : 'transparent'" :style="{ stroke: tracingStroke }"
             @mousedown="(e: MouseEvent) => pathMousedown(e)">
         </path>
     </svg>

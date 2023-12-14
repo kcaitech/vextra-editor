@@ -501,13 +501,13 @@ onUnmounted(() => {
 .selectedChild {
     z-index: 2;
     border-radius: 0 !important;
-    background-color: rgba($color: #865dff, $alpha: 0.18) !important;
+    background-color: rgba($color: #1878f5, $alpha: 0.18) !important;
 }
 
 .selected {
     z-index: 1;
     border-radius: 0 !important;
-    background-color: rgba($color: #865dff, $alpha: 0.4) !important;
+    background-color: rgba($color: #1878f5, $alpha: 0.4) !important;
 }
 
 .component {

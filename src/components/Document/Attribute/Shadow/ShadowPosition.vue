@@ -95,14 +95,15 @@ onUnmounted(() => {
 .shadow-position {
     font-size: 12px;
     position: relative;
-    background-color: rgba(#D8D8D8, 0.4);
-    width: 100%;
-    height: 100%;
+    background-color: #F4F5F5;
+    width: 144px;
+    height: 32px;
     border-radius: var(--default-radius);
     box-sizing: border-box;
     display: flex;
     align-items: center;
-    padding-left: 10px;
+    padding: 9px 0 9px 12px;
+    color: #000000;
 
     &:hover {
         .down {

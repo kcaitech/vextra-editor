@@ -92,11 +92,13 @@ const sashEl = ref<HTMLElement>();
 }
 
 .draging {
-    background-color: darkgrey;
+    //background-color: darkgrey;
+    background-color: transparent;
 }
 
 .line {
-    background-color: var(--theme-color-line);
+    //background-color: var(--theme-color-line);
+    background-color: transparent;
     position: inherit;
 }
 </style>
