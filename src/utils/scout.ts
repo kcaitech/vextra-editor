@@ -14,6 +14,20 @@ export interface Scout {
     isPointInShape2: (shape: Shape, point: PageXY) => boolean
 }
 
+function get_max_thickness_border(shape: Shape) {
+    let max_thickness = 0;
+    const borders = shape.style.borders;
+    if (borders.length) {
+        for (let i = 0, l = borders.length; i < l; i++) {
+            const t = borders[i].thickness;
+            if (t > max_thickness) {
+                max_thickness = t;
+            }
+        }
+    }
+    return max_thickness;
+}
+
 // Ver.SVGGeometryElement，基于SVGGeometryElement的图形检索
 // 动态修改path路径对象的d属性。返回一个Scout对象， scout.isPointInShape(d, SVGPoint)用于判断一个点(SVGPoint)是否在一条路径(d)上
 export function scout(context: Context): Scout {
@@ -29,9 +43,12 @@ export function scout(context: Context): Scout {
 
     function isPointInShape(shape: Shape, point: PageXY): boolean {
         const d = getPathOnPageString(shape);
+
         SVGPoint.x = point.x;
         SVGPoint.y = point.y;
+
         path.setAttributeNS(null, 'd', d);
+
         if (shape instanceof PathShape) {
             return for_path_shape(shape, path);
         } else {
@@ -40,21 +57,22 @@ export function scout(context: Context): Scout {
     }
 
     function for_path_shape(shape: PathShape, path: SVGGeometryElement) {
-        if (shape.isClosed || shape.style.fills.length) {
-            return (path as SVGGeometryElement).isPointInFill(SVGPoint);
+        const is_point_in_fill = (path as SVGGeometryElement).isPointInFill(SVGPoint);
+
+        if (shape.isClosed) {
+            return is_point_in_fill;
         }
-        let max_thickness = 14 / context.workspace.matrix.m00;
-        const borders = shape.style.borders;
-        if (borders.length) {
-            for (let i = 0, l = borders.length; i < l; i++) {
-                const t = borders[i].thickness;
-                if (t > max_thickness) {
-                    max_thickness = t;
-                }
-            }
-        }
+
+        const max_thickness = Math.max(get_max_thickness_border(shape), 14 / context.workspace.matrix.m00);
         path.setAttributeNS(null, 'stroke-width', `${max_thickness}`);
-        return (path as SVGGeometryElement).isPointInStroke(SVGPoint);
+
+        const is_point_in_stroke = (path as SVGGeometryElement).isPointInStroke(SVGPoint);
+
+        if (shape.style.fills.length) {
+            return is_point_in_fill || is_point_in_stroke;
+        }
+
+        return is_point_in_stroke;
     }
 
     function isPointInShape2(shape: Shape, point: PageXY): boolean {
