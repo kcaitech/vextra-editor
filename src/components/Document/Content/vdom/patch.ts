@@ -34,28 +34,28 @@ export function elpatch(tar: EL, old: EL | undefined) {
 
     if (_tar === _old && _tar.el) return;
 
-    if (_tar.tag.length === 0) {
+    if (_tar.eltag.length === 0) {
         _tar.el = undefined;
         return;
     }
 
     if (!_tar.el) {
-        if (_old && _old.el && _old.tag === _tar.tag) {
+        if (_old && _old.el && _old.eltag === _tar.eltag) {
             _tar.el = _old.el;
         }
         else {
-            _tar.el = createElement(_tar.tag);
-            if (!_tar.el) throw new Error("can not create element: " + _tar.tag);
+            _tar.el = createElement(_tar.eltag);
+            if (!_tar.el) throw new Error("can not create element: " + _tar.eltag);
         }
     }
 
     // attr
-    const tkeys = Object.keys(_tar.attr);
-    const okeys = Object.keys(_old?.attr || {});
+    const tkeys = Object.keys(_tar.elattr);
+    const okeys = Object.keys(_old?.elattr || {});
     for (let i = 0; i < tkeys.length; i++) {
         const k = tkeys[i];
-        const oval = _old?.attr[k];
-        const tval = _tar.attr[k];
+        const oval = _old?.elattr[k];
+        const tval = _tar.elattr[k];
         if (oval !== tval) {
             setAttribute(_tar.el, k, tval);
         }
@@ -68,8 +68,8 @@ export function elpatch(tar: EL, old: EL | undefined) {
     }
 
     // string
-    if (!Array.isArray(_tar.childs)) {
-        _tar.el.innerHTML = _tar.childs;
+    if (!Array.isArray(_tar.elchilds)) {
+        _tar.el.innerHTML = _tar.elchilds;
         // const childNodes = _tar.el.childNodes;
         // if (childNodes.length > 0) {
         //     let count = childNodes.length;
@@ -79,19 +79,19 @@ export function elpatch(tar: EL, old: EL | undefined) {
     }
 
     const reuse = new Map<string, EL & { el?: HTMLElement | SVGElement }>();
-    if (_old && Array.isArray(_old.childs)) _old.childs.forEach(c => {
+    if (_old && Array.isArray(_old.elchilds)) _old.elchilds.forEach(c => {
         if (c.isViewNode) reuse.set((c as ShapeView).id, c);
     });
 
     const getResue = (tchild: EL, _old: EL | undefined, i: number) => {
         const r = tchild.isViewNode ? reuse.get((tchild as ShapeView).id) : undefined;
-        return r || _old?.childs[i];
+        return r || _old?.elchilds[i];
     }
 
     // childs
     let idx = 0;
-    for (let i = 0; i < _tar.childs.length; i++) { // 简单比较
-        const tchild = _tar.childs[i] as EL & { el?: HTMLElement | SVGElement };
+    for (let i = 0; i < _tar.elchilds.length; i++) { // 简单比较
+        const tchild = _tar.elchilds[i] as EL & { el?: HTMLElement | SVGElement };
         const ochild = getResue(tchild, _old, i) as EL & { el?: HTMLElement | SVGElement };
         elpatch(tchild, ochild);
         if (!tchild.el) {

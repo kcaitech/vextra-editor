@@ -31,6 +31,7 @@ import {TextSelection} from "./textselection";
 import {Component} from "./component";
 import {Path} from "./path";
 import { PageDom } from "@/components/Document/Content/vdom/page";
+import { initComsMap } from "@/components/Document/Content/vdom/comsmap";
 
 // 仅暴露必要的方法
 export class RepoWraper {
@@ -272,7 +273,21 @@ export class Context extends Watchable(Object) {
         return this.m_path;
     }
 
-    get vdom() {
-        return this.m_vdom;
+    private createVDom(page: Page) {
+        const domCtx = new DViewCtx();
+        initComsMap(domCtx.comsMap);
+        const dom: PageDom = new PageDom(domCtx, { data: page });
+        // dom.update(props, true);
+        dom.onCreate();
+        // console.log("dom.nodeCount: " + dom.nodeCount);
+        const ret = { dom, ctx: domCtx }
+        this.m_vdom.set(page.id, ret);
+        return ret;
+    }
+
+    getPageDom(page: Page): { dom: PageDom, ctx: DViewCtx } {
+        const ret = this.m_vdom.get(page.id);
+        if (ret) return ret;
+        return this.createVDom(page);
     }
 }

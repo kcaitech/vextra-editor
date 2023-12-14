@@ -1,4 +1,4 @@
-import { ComType, ShapeType } from "@kcdesign/data";
+import { ViewType, ShapeType } from "@kcdesign/data";
 
 import { ArtboradDom } from "./artboard";
 import { ContactLineDom } from "./contactline";
@@ -25,7 +25,7 @@ import { TextShapeDom } from "./textshape";
 //     new(ctx: DViewCtx, props: PropsType): DataView;
 // }
 
-export function initComsMap(comsMap: Map<ShapeType, ComType>) {
+export function initComsMap(comsMap: Map<ShapeType, ViewType>) {
     
     comsMap.set(ShapeType.Artboard, ArtboradDom);
     comsMap.set(ShapeType.Group, GroupShapeDom);
