@@ -47,6 +47,11 @@ function keyboard_down_watcher(e: KeyboardEvent) {
     }
     if (['MetaLeft', 'ControlLeft'].includes(e.code)) {
         o = props.context.tool.action;
+
+        if (o === Action.PathClip) {
+            return;
+        }
+
         if (o !== Action.Curve) {
             props.context.tool.setAction(Action.Curve);
             document.addEventListener('keyup', keyboard_up_watcher);

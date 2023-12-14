@@ -226,6 +226,7 @@ keydownHandler['KeyV'] = function (event: KeyboardEvent, context: Context) {
     if (event.altKey) {
         context.arrange.notify(Arrange.ITEMS_ALIGN_VER); // 图层中线对齐
     }
+    context.tool.setAction(Action.AutoV); // 自由光标
 }
 
 keydownHandler['KeyW'] = function (event: KeyboardEvent, context: Context) {
