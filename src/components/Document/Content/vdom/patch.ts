@@ -80,11 +80,11 @@ export function elpatch(tar: EL, old: EL | undefined) {
 
     const reuse = new Map<string, EL & { el?: HTMLElement | SVGElement }>();
     if (_old && Array.isArray(_old.childs)) _old.childs.forEach(c => {
-        if (c.isViewNode) reuse.set((c as ShapeView).id(), c);
+        if (c.isViewNode) reuse.set((c as ShapeView).id, c);
     });
 
     const getResue = (tchild: EL, _old: EL | undefined, i: number) => {
-        const r = tchild.isViewNode ? reuse.get((tchild as ShapeView).id()) : undefined;
+        const r = tchild.isViewNode ? reuse.get((tchild as ShapeView).id) : undefined;
         return r || _old?.childs[i];
     }
 
