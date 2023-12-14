@@ -236,7 +236,7 @@ onUnmounted(() => {
         input {
             display: block;
             max-width: 210px;
-            height: 16px;
+            height: 18px;
             border: none;
             outline: none;
             background-color: transparent;
