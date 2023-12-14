@@ -172,7 +172,7 @@ onUnmounted(() => {
                 <Saving></Saving>
             </div>
         </div>
-        <div class="model" style="margin-left: 286px;margin-top: -37px">
+        <div class="model">
             <span v-if="isLable" style="color: #fff; font-size: 12px; width: 35%">【开发模式】</span>
         </div>
     </div>
@@ -181,8 +181,8 @@ onUnmounted(() => {
 <style scoped lang="scss">
 .container {
     align-items: center;
-    justify-content: space-around;
-    width: 116px;
+    justify-content: space-between;
+    width: 362px;
     height: 32px;
 
     .home {
@@ -207,11 +207,9 @@ onUnmounted(() => {
     }
 
     .rename {
-        width: 224px;
+        max-width: 224px;
         height: 52px;
         flex: 1;
-        margin-left: 64px;
-        margin-top: -44px;
         box-sizing: border-box;
         padding: 18px 8px 18px 8px;
 
@@ -246,5 +244,8 @@ onUnmounted(() => {
         }
     }
 
+    .model {
+        flex: 0 0 72px;
+    }
 }
 </style>

@@ -185,10 +185,11 @@ function applyForEdit() {
         margin-left: 15px;
 
         .el {
-            height: 33px;
+            height: 32px;
             border-radius: 5px;
             color: #ffffff;
             background-color: #865DFF;
+            border: none;
         }
     }
 

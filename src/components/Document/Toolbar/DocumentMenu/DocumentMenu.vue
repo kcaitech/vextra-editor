@@ -153,8 +153,6 @@ const isDisabled: any = computed(() => {
         height: 32px;
         border-radius: 4px;
         flex: 0 0 32px;
-        margin-left: 30px;
-        margin-top: -32px;
 
         > svg {
             width: 32px;
