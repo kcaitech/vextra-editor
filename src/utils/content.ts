@@ -994,7 +994,7 @@ export function set_lock_for_shapes(context: Context) {
  * @param context 
  */
 export function component(context: Context) {
-    const symbol = make_symbol(context, context.workspace.t);
+    const symbol = make_symbol(context, context.workspace.t.bind(context.workspace));
     if (symbol) {
         context.selection.selectShape(symbol as unknown as Shape);
     }

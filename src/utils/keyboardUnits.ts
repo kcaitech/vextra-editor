@@ -200,8 +200,10 @@ keydownHandler['KeyR'] = function (event: KeyboardEvent, context: Context) {
 
 keydownHandler['KeyS'] = function (event: KeyboardEvent, context: Context) {
     if (event.altKey) {
-        context.arrange.notify(Arrange.FLEX_END_COL);
+        context.arrange.notify(Arrange.FLEX_END_COL); // 图层右侧对齐
+        return;
     }
+    context.tool.setAction(Action.AddCutout); // 切图工具
 }
 
 keydownHandler['KeyT'] = function (event: KeyboardEvent, context: Context) {
