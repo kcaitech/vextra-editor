@@ -137,7 +137,7 @@ const createTable = (row?: number, col?: number) => {
     }
 
     .grid-table {
-        padding: 6px;
+        padding: 3px;
         border-color: rgba(0, 0, 0, 0.5);
         border-collapse: separate;
         border-radius: 2px;
