@@ -153,7 +153,7 @@ const getName = (item: any) => {
           </span>
         </template>
         <div class="contain" v-if="activeName === 'fill'">
-          <el-scrollbar height="400px" @scroll="scrollFill">
+          <el-scrollbar height="574px" @scroll="scrollFill">
             <div class="inform-item" v-for="(item, i) in props.applyList" :key="i">
               <div class="avatar"><img :src="item.user.avatar" alt=""></div>
               <div class="item-container">
@@ -172,7 +172,9 @@ const getName = (item: any) => {
                   <div class="item-text" @mouseenter.stop="showFillTooltip(i)" @mouseleave.stop="hideFillTooltip">
                     <span>{{ t('apply.application_documents') }}</span>"{{ item.document.name }}"
                     <div class="purview">{{ permission[item.apply.perm_type] }}</div>
-                    <div class="notes">{{ t('apply.remarks') }}{{ item.apply.applicant_notes }}</div>
+                    <div class="notes" v-if="item.apply.applicant_notes !== ''">
+                      {{ t('apply.remarks') }}{{ item.apply.applicant_notes }}
+                    </div>
                   </div>
                 </el-tooltip>
               </div>
@@ -206,7 +208,7 @@ const getName = (item: any) => {
           </span>
         </template>
         <div class="contain" v-if="activeName === 'team'">
-          <el-scrollbar height="400px" @scroll="scrollFill">
+          <el-scrollbar height="574px" @scroll="scrollFill">
             <div class="inform-item" v-for="(item, i) in props.teamApplyList" :key="i">
               <div class="avatar"><img :src="item.approver ? item.approver.avatar : item.user.avatar" alt=""></div>
               <div class="item-container">
@@ -239,8 +241,9 @@ const getName = (item: any) => {
                     <span>{{ t('apply.authority') }}</span>{{ permission[item.request.perm_type] }}
                   </div>
                   <div class="item-text" v-else-if="!item.user && item.request.status === 1">
-                    {{ t('Createteam.welcome') }}{{ item.project ? t('Createteam.project') : t('Createteam.team') }}: {{
-                      item.project ? item.project.name : item.team.name }}
+                    <span>{{ t('Createteam.welcome') }}{{ item.project ? t('Createteam.project') : t('Createteam.team')
+                    }}：</span> {{
+  item.project ? item.project.name : item.team.name }}
                   </div>
                   <div class="item-text" v-else-if="!item.user && item.request.status === 2">
                     {{ t('Createteam.rejectprompt1') }}<span>您申请加入团队</span>"{{ item.project ? item.project.name :
@@ -485,7 +488,7 @@ const getName = (item: any) => {
   display: flex;
   justify-content: center;
   align-items: center;
-  border: 1px solid #efefef;
+
 
   >img {
     width: 100%;
@@ -500,10 +503,10 @@ const getName = (item: any) => {
 
   .item-title {
     display: flex;
-    justify-content: space-between;
+    justify-content: flex-start;
     align-items: center;
     height: 24px;
-    gap: 4px;
+    gap: 8px;
 
     .date {
       color: rgba(191, 191, 191, 1);
@@ -513,7 +516,7 @@ const getName = (item: any) => {
 
     .name {
       color: rgba(140, 140, 140, 1);
-      width: 120px;
+      max-width: 120px;
       overflow: hidden;
       text-overflow: ellipsis;
       white-space: nowrap;
@@ -560,13 +563,24 @@ const getName = (item: any) => {
   &::before {
     content: "";
     position: absolute;
-    clear: both;
     top: -6px;
     right: 60px;
-    border-left: 9px solid transparent;
-    border-right: 9px solid transparent;
-    border-bottom: 10px solid #fff;
-    filter: drop-shadow(0px 0px 12px rgba(0, 0, 0, 0.12));
+    width: 10px;
+    height: 10px;
+    background: #ffffff;
+    border: 1px solid #e4e7ed;
+    box-shadow: 0px 2px 10px 0px rgba(0, 0, 0, 0.08);
+    transform: rotate(45deg);
+  }
+
+  &::after {
+    content: "";
+    position: absolute;
+    top: 0px;
+    right: 58px;
+    width: 20px;
+    height: 20px;
+    background-color: #ffffff;
   }
 
 }

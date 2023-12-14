@@ -65,15 +65,16 @@
             </div>
             <div class="centent">
                 <div class="textarea-container">
-                    <textarea class="text-textarea" :style="{ height: titlevalue === t('teamsetting.title_name1') ? 36 + 'px' : '' }"
+                    <textarea v-if="!(titlevalue === t('teamsetting.title_name1'))" class="text-textarea"
                         :placeholder="placeholdervalue" v-model="textareaValue" :maxlength="maxvalue"></textarea>
+                    <input v-else class="text-input" type="text" v-model="textareaValue" :maxlength="maxvalue" required>
                 </div>
             </div>
             <div class="addproject">
                 <button class="bnt_cancel" type="submit" @click.stop.once="showoverlay = false">{{
                     t('teamsetting.cancel')
                 }}</button>
-                <button class="bnt_confirm" type="submit" @click.stop="confirm">
+                <button class="bnt_confirm" type="submit" @click.stop="confirm" :disabled="textareaValue === ''">
                     {{ t('teamsetting.confirm') }}
                 </button>
             </div>
@@ -142,6 +143,12 @@ const el = () => {
     el.focus()
     el.select()
 }
+
+const el2 = () => {
+    const el = document.querySelector('.text-input') as HTMLTextAreaElement
+    el.focus()
+    el.select()
+}
 //关闭弹窗
 const closeDisband = () => {
     showDialog.value = false;
@@ -167,6 +174,7 @@ const midDateTeamData = (teamData: Array<teamDataType>, id: string, updates: Par
 
 //修改团队名称
 const midNameRequest = async () => {
+    if (textareaValue.value) return
     formData.append('name', textareaValue.value)
     try {
         const { code, message } = await user_api.Setteaminfo(formData)
@@ -216,6 +224,7 @@ const midAvatarRequest = async (e: any) => {
 
 //修改团队描述
 const midDescriptionRequest = async () => {
+    if (textareaValue.value) return
     formData.append('description', textareaValue.value)
     try {
         const { code, message } = await user_api.Setteaminfo(formData)
@@ -274,7 +283,7 @@ const midname = () => {
     titlevalue.value = t('teamsetting.title_name1')
     textareaValue.value = teamName.value
     maxvalue.value = 20
-    nextTick(() => el())
+    nextTick(() => el2())
 }
 
 const middescription = () => {
@@ -395,8 +404,9 @@ onMounted(() => {
 
     .centent {
         .textarea-container {
+
+            .text-input,
             .text-textarea {
-                height: 80px;
                 width: 100%;
                 padding: 7px 12px;
                 font-size: 13px;
@@ -416,6 +426,14 @@ onMounted(() => {
                     border: 1px solid #1878F5;
                     background-color: rgba(245, 245, 245, 1);
                 }
+            }
+
+            .text-input {
+                height: 36px;
+            }
+
+            .text-textarea {
+                height: 80px;
             }
         }
     }
@@ -447,6 +465,10 @@ onMounted(() => {
 
             &:active {
                 background-color: rgba(10, 89, 207, 1);
+            }
+
+            &:disabled {
+                background-color: #BDE2FF !important;
             }
         }
 
@@ -550,6 +572,4 @@ onMounted(() => {
     }
 
 }
-
-
 </style>

@@ -10,7 +10,8 @@
         <form @submit.prevent="submitreport()">
             <div class="type">
                 <label for="selectOption">{{ t('report.type') }}<svg-icon icon-class="tips-icon"></svg-icon></label>
-                <select id="selectOption" v-model="selectedOption" required>
+                <select :style="{ color: selectedOption !== '' ? '#000000' : '#BFBFBF' }" id="selectOption"
+                    v-model="selectedOption" required>
                     <option value="" disabled selected hidden>{{ t('report.type_normal') }}</option>
                     <option value=0>{{ t('report.type_value1') }}</option>
                     <option value=1>{{ t('report.type_value2') }}</option>
@@ -20,8 +21,8 @@
             </div>
             <div class="content">
                 <label for="textInput">{{ t('report.report_content') }}<svg-icon icon-class="tips-icon"></svg-icon></label>
-                <textarea type="text" id="textInput" :placeholder="t('report.report_normal')" v-model="textInput"
-                    :maxlength="300" required></textarea>
+                <textarea :style="{ color: textInput !== '' ? '#000000' : '#BFBFBF' }" type="text" id="textInput"
+                    :placeholder="t('report.report_normal')" v-model="textInput" :maxlength="300" required></textarea>
             </div>
             <div class="imgs">
                 <div style="width: 58px;">{{ t('report.upload_img') }}</div>
@@ -138,7 +139,7 @@ const handleImageUpload = (e: any) => {
 }
 
 .disabled {
-    opacity: 0.4;
+    opacity: 0.6;
     background-color: rgba(255, 255, 255, 1) !important;
 }
 
@@ -195,7 +196,7 @@ const handleImageUpload = (e: any) => {
 
     .tips {
         line-height: 38px;
-        font-weight: 500;
+        font-weight: 400;
     }
 
     .type,
@@ -218,6 +219,10 @@ const handleImageUpload = (e: any) => {
             outline: none;
             border-radius: 6px;
             background: #F5F5F5;
+
+            option {
+                color: #262626;
+            }
 
             option:hover {
                 background-color: rgba(245, 245, 245, 1);
@@ -262,6 +267,7 @@ const handleImageUpload = (e: any) => {
             position: relative;
             right: 16px;
             font-size: 12px;
+            font-weight: 400;
             color: rgba(140, 140, 140, 1);
         }
 
@@ -275,7 +281,7 @@ const handleImageUpload = (e: any) => {
             border: 1px solid #F0F0F0;
             border-radius: 6px;
             font-size: 14px;
-            font-weight: 600;
+            font-weight: 500;
             color: rgba(51, 51, 51, 1);
             box-sizing: border-box;
 
@@ -288,8 +294,8 @@ const handleImageUpload = (e: any) => {
             }
 
             svg {
-                width: 14px;
-                height: 14px;
+                width: 12px;
+                height: 12px;
                 color: rgba(51, 51, 51, 1);
             }
         }

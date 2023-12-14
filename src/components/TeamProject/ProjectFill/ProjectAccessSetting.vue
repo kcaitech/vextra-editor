@@ -298,7 +298,7 @@ onUnmounted(() => {
                 <ul v-show="showPermSelect" class="permoptions">
                     <li class="options_item" v-for="item in projectPerms" :key="item.value"
                         @click.stop="selectPermOption(item)">
-                        <span :style="{ fontWeight: item.label == projectPerm ? 600 : 500 }">{{ item.label }}</span>
+                        <span :style="{ fontWeight: item.label == projectPerm ? 500 : 400 }">{{ item.label }}</span>
                         <div class="choose" :style="{ visibility: item.label === projectPerm ? 'visible' : 'hidden' }">
                         </div>
                     </li>
@@ -309,8 +309,10 @@ onUnmounted(() => {
             <div class="permission-tips">{{ t('Createteam.jointips') }}</div>
             <div class="permission-switch">
                 <span> {{ t('Createteam.invitation_switch') }}</span>
-                <el-switch v-model="linkSwitch" class="ml-2" style="--el-switch-on-color: #1878F5" size="small"
-                    @click="onLinkSwitch" :disabled="disabled" />
+                <!-- <el-switch v-model="linkSwitch" class="ml-2" style="--el-switch-on-color: #1878F5" size="small"
+                    @click="onLinkSwitch" :disabled="disabled" /> -->
+                <input id="switch" type="checkbox" v-model="linkSwitch" @change="onLinkSwitch" :disabled="disabled">
+                <label class="my_switch" for="switch"></label>
             </div>
             <input v-if="linkSwitch" class="switch" :style="{ opacity: disabled ? 0.6 : 1 }" type="text" v-model="sharelink"
                 :disabled="disabled" readonly>
@@ -360,7 +362,7 @@ onUnmounted(() => {
     top: 25%;
     left: 50%;
     transform: translate(-50%, 0%);
-    padding: 0 24px;
+    padding: 0 24px 8px;
     z-index: 9999;
     border: 1px solid #F0F0F0;
     box-sizing: border-box;
@@ -513,7 +515,7 @@ onUnmounted(() => {
                     height: 6px;
                     margin-right: 4px;
                     margin-left: 2px;
-                    border-width: 0 0 0.2em 0.2em;
+                    border-width: 0 0 0.1em 0.1em;
                     border-style: solid;
                     border-color: rgb(0, 0, 0, .75);
                     transform: rotate(-45deg) translateY(-30%);
@@ -543,6 +545,43 @@ onUnmounted(() => {
             span {
                 font-size: 13px;
                 color: rgba(38, 38, 38, 1);
+            }
+
+            .my_switch {
+                width: 36px;
+                height: 20px;
+                border-radius: 40px;
+                background-color: rgba(140, 140, 140, 1);
+                position: relative;
+                transition: all .3s ease-out;
+
+                &::before {
+                    position: absolute;
+                    content: "";
+                    width: 16px;
+                    height: 16px;
+                    background-color: #FFFFFF;
+                    border-radius: 8px;
+                    top: 2px;
+                    left: 2px;
+                    transition: all .3s ease-out;
+                }
+            }
+
+            input[type='checkbox'] {
+                display: none;
+            }
+
+            input[type='checkbox']:checked+label::before {
+                left: 18px;
+            }
+
+            input[type='checkbox']:checked+label {
+                background-color: rgba(24, 120, 245, 1);
+            }
+
+            input[type='checkbox']:disabled+label {
+                background-color: rgba(189, 226, 255, 1);
             }
 
         }

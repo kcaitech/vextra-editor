@@ -269,8 +269,7 @@ const getElXY = (el: HTMLElement, elwidth: number = 0) => {
                 <div ref="bell" class="notice" :class="{ 'menu-select': showInForm, 'menu-hover': !showInForm }"
                     @click="showinform(bell!, 320)">
                     <svg-icon icon-class="bell" :color="showInForm ? '#1878F5' : ''"></svg-icon>
-                    <div class="num" v-if="total > 0" :class="{ after: total > 99 }"
-                        :style="{ paddingRight: total > 99 ? 9 + 'px' : 4 + 'px' }">{{ total > 99 ? 99 : total }}</div>
+                    <div class="num after" v-if="total > 0" :class="{ after: total > 99 }">{{ total > 99 ? 99 : total }}</div>
                 </div>
             </div>
             <div ref="avatar" class="avatar-area" @click="showuserinfo(avatar!, 120)">
@@ -380,15 +379,14 @@ const getElXY = (el: HTMLElement, elwidth: number = 0) => {
 
             >.num {
                 position: absolute;
-                font-size: var(--font-default-fontsize);
+                font-size: 10px;
                 top: 0px;
                 left: 16px;
-                min-width: 8px;
-                padding: 0 4px 0 4px;
-                height: 14px;
+                min-width: 14px;
+                min-height: 14px;
                 background-color: red;
                 color: #fff;
-                border-radius: 7px;
+                border-radius: 100%;
                 display: flex;
                 justify-content: center;
                 align-items: center;

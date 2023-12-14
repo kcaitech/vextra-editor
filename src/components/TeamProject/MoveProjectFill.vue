@@ -163,14 +163,14 @@ const disabled = computed(() => {
                         <div class="team-title" :class="{ 'is_active': activeNames === '2' }"
                             @click.stop="onactiveNames('2')">
                             <div class="left">
-                                <svg-icon icon-class="file-normal"></svg-icon>
+                                <!-- <svg-icon icon-class="file-normal"></svg-icon> -->
                                 <div class="name">{{ t('moveprojectfill.my_file') }}</div>
                             </div>
                         </div>
                         <div class="team-title" :class="{ 'is_active': activeNames === '1' }"
                             @click.stop="onactiveNames('1')" v-if="shareProject.length > 0">
                             <div class="left">
-                                <svg :style="{ padding: '4px' }" t="1702388143460" class="icon" viewBox="0 0 1024 1024"
+                                <!-- <svg :style="{ padding: '4px' }" t="1702388143460" class="icon" viewBox="0 0 1024 1024"
                                     version="1.1" xmlns="http://www.w3.org/2000/svg" p-id="20737" width="200" height="200">
                                     <path
                                         d="M896 896l-45.44-45.12A63.808 63.808 0 0 1 896 832a64 64 0 0 0 64-64V128a64 64 0 0 0-64-64H256a64 64 0 0 0-64 64v5.44c0 17.6-7.04 33.536-18.56 45.12L128 133.44V128A128 128 0 0 1 256 0h640a128 128 0 0 1 128 128v640a128 128 0 0 1-128 128zM64 256v640a64 64 0 0 0 64 64h640a64 64 0 0 0 64-64V256a64 64 0 0 0-64-64H128a64 64 0 0 0-64 64z m704-128a128 128 0 0 1 128 128v640a128 128 0 0 1-128 128H128A128 128 0 0 1 0 896V256a128 128 0 0 1 128-128h640z"
@@ -178,7 +178,7 @@ const disabled = computed(() => {
                                     <path
                                         d="M160 256h384a32 32 0 0 1 0 64H160a32 32 0 0 1 0-64z m576 64a32 32 0 1 1 0-64 32 32 0 0 1 0 64zM64 384h768v64H64v-64z"
                                         :fill="activeNames === '1' ? 'rgb(24, 120, 245)' : '#5A5A5A'" p-id="20739"></path>
-                                </svg>
+                                </svg> -->
                                 <div class="name">{{ t('moveprojectfill.share_Project') }}</div>
                             </div>
                         </div>
@@ -187,14 +187,14 @@ const disabled = computed(() => {
                                 @click.stop="onactiveNames(data.team.id)">
                                 <!-- v-if="data.self_perm_type > 0" 移除此判断，团队只读，但项目可以是可编辑-->
                                 <div class="left">
-                                    <div class="team-avatar">
+                                    <!-- <div class="team-avatar">
                                         <div v-if="data.team.avatar.includes('http')" class="img">
                                             <img :src="data.team.avatar" alt="team avatar">
                                         </div>
                                         <div v-else class="text">
                                             <span>{{ data.team.name.slice(0, 1) }}</span>
                                         </div>
-                                    </div>
+                                    </div> -->
                                     <div class="name">{{ data.team.name }}</div>
                                 </div>
                             </div>
@@ -470,7 +470,7 @@ const disabled = computed(() => {
             justify-content: center;
             height: 64px;
             gap: 16px;
-
+            margin: 8px 0;
             button {
                 cursor: pointer;
                 font-size: 14px;

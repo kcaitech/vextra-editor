@@ -1,9 +1,9 @@
 <template>
     <div v-if="!noNetwork" class="container" style="height: calc(100vh - 224px);">
         <div class="hearder-container">
-            <div class="title" v-for="(item, index) in  titles " :key="index">
+            <div class="title" v-for="(item, index) in  titles " :key="index" @click.stop="fold = !fold, folds = false">
                 {{ item }}
-                <div v-if="index === 1" class="shrink" @click.stop="fold = !fold, folds = false">
+                <div v-if="index === 1" class="shrink">
                     <svg-icon icon-class="down"
                         :style="{ transform: fold ? 'rotate(-180deg)' : 'rotate(0deg)', color: '#000000' }"></svg-icon>
                     <transition name="el-zoom-in-top">
@@ -502,7 +502,7 @@ onUnmounted(() => {
                     position: absolute;
                     list-style-type: none;
                     font-size: 12px;
-                    padding: 0;
+                    padding: 6px 0;
                     top: 4px;
                     right: -6px;
                     border-radius: 6px;
@@ -604,6 +604,15 @@ onUnmounted(() => {
                 width: 14px;
                 height: 14px;
 
+                &::before {
+                    content: "";
+                    position: absolute;
+                    top: 0;
+                    left: -48px;
+                    right: 0px;
+                    bottom: 0;
+                }
+
                 >svg {
                     transition: 0.5s;
                     width: 100%;
@@ -615,14 +624,13 @@ onUnmounted(() => {
                     list-style-type: none;
                     font-size: 12px;
                     min-width: 88px;
-                    padding: 0;
+                    padding: 6px 0;
                     margin: 0;
                     top: 18px;
-                    right: -14px;
+                    right: -15px;
                     border-radius: 6px;
                     background-color: white;
                     box-shadow: 0px 2px 10px 0px rgba(0, 0, 0, 0.08);
-                    box-sizing: border-box;
                     box-sizing: border-box;
                     overflow: hidden;
                     z-index: 2;

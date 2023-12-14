@@ -224,8 +224,19 @@ watch(innerVisible, (v) => {
     }
 })
 
+function handleClickOutside(e: MouseEvent) {
+    const el = e.target as HTMLElement
+    if (el.closest('.perm_title') === null && el.closest('.perm_list') === null) {
+        showpermlist.value = false;
+    }
+    if (el.closest('.shrink') === null && el.closest('.member_list') === null) {
+        showmemberlist.value = false;
+    }
+}
+
 onMounted(() => {
     getProjectMemberList();
+    document.addEventListener('click', handleClickOutside)
 })
 
 const showpermlist = ref<boolean>(false)
@@ -240,7 +251,6 @@ const memberid = ref<number>()
             <div class="title">{{ t('Createteam.membersed') }}</div>
             <div class="close" @click.stop="emit('closeDialog')">
                 <svg-icon icon-class="close"></svg-icon>
-                <!-- 测试 -->
             </div>
         </div>
         <div class="content_title">
@@ -253,9 +263,9 @@ const memberid = ref<number>()
                     <ul v-if="showpermlist" class="perm_list">
                         <li class="perm_item" :style="{ color: index == permFilter ? '#000000' : '' }"
                             v-for="(item, index) in permList" :key="index" @click.stop="handleCommand(index)">
+                            {{ item }}
                             <div class="choose" :style="{ visibility: index == permFilter ? 'visible' : 'hidden' }">
                             </div>
-                            {{ item }}
                         </li>
                     </ul>
                 </Transition>
@@ -270,7 +280,7 @@ const memberid = ref<number>()
                     </div>
                     <div class="type">
                         <span>{{ permission[item.perm_type] }}</span>
-                        <div @click.stop="showmemberlist = !showmemberlist, memberid = index">
+                        <div class="shrink" @click.stop="showmemberlist = !showmemberlist, memberid = index">
                             <svg-icon
                                 v-if="(props.currentProject.self_perm_type === 5 && item.perm_type !== 5) || (props.currentProject.self_perm_type === 4 && (item.perm_type !== 4 && item.perm_type !== 5))"
                                 icon-class="down"
@@ -278,25 +288,39 @@ const memberid = ref<number>()
                         </div>
                         <Transition name="el-zoom-in-top">
                             <ul v-if="showmemberlist && memberid === index" class="member_list">
-                                <li class="member_item"
-                                    v-if="props.currentProject.self_perm_type === 5 && item.perm_type != 4"
+                                <li class="member_item" :style="{ fontWeight: item.perm_type == 4 ? 500 : '' }"
+                                    v-if="props.currentProject.self_perm_type === 5"
                                     @click.stop="handleCommandPerm({ member: item, perm: 4, command: 1, index })">
-                                    {{ t('Createteam.manager') }}</li>
-                                <li class="member_item"
+                                    {{ t('Createteam.manager') }}
+                                    <div class="choose" :style="{ visibility: item.perm_type == 4 ? 'visible' : 'hidden' }">
+                                    </div>
+                                </li>
+                                <li class="member_item" :style="{ fontWeight: item.perm_type == 3 ? 500 : '' }"
                                     @click.stop="handleCommandPerm({ member: item, perm: 3, command: 1, index })">{{
-                                        t('Createteam.editable') }}</li>
-                                <li class="member_item"
+                                        t('Createteam.editable') }}
+                                    <div class="choose" :style="{ visibility: item.perm_type == 3 ? 'visible' : 'hidden' }">
+                                    </div>
+                                </li>
+                                <li class="member_item" :style="{ fontWeight: item.perm_type == 2 ? 500 : '' }"
                                     @click.stop="handleCommandPerm({ member: item, perm: 2, command: 1, index })">{{
-                                        t('Createteam.reviewed') }}</li>
-                                <li class="member_item"
+                                        t('Createteam.reviewed') }}
+                                    <div class="choose" :style="{ visibility: item.perm_type == 2 ? 'visible' : 'hidden' }">
+                                    </div>
+                                </li>
+                                <li class="member_item" :style="{ fontWeight: item.perm_type == 1 ? 500 : '' }"
                                     @click.stop="handleCommandPerm({ member: item, perm: 1, command: 1, index })">{{
-                                        t('Createteam.Readonly') }}</li>
+                                        t('Createteam.Readonly') }}
+                                    <div class="choose" :style="{ visibility: item.perm_type == 1 ? 'visible' : 'hidden' }">
+                                    </div>
+                                </li>
                                 <li class="member_item" v-if="props.currentProject.self_perm_type === 5 && item.isTeam"
                                     @click.stop="handleCommandPerm({ member: item, perm: 0, command: 2, index })">{{
-                                        t('Createteam.transferor') }}</li>
+                                        t('Createteam.transferor') }}
+                                </li>
                                 <li class="member_item"
                                     @click.stop="handleCommandPerm({ member: item, perm: 0, command: 3, index })">{{
-                                        t('Createteam.moveoutproject') }}</li>
+                                        t('Createteam.moveoutproject') }}
+                                </li>
                             </ul>
                         </Transition>
                     </div>
@@ -317,8 +341,8 @@ const memberid = ref<number>()
         :title="t('Createteam.projectexittitle')" :confirm-btn="t('Createteam.ok_exit')" @clode-dialog="handleClose"
         @confirm="quitProject"></ProjectDialog>
     <ProjectDialog :projectVisible="transferVisible" :context="t('Createteam.Transfertips')"
-        :title="t('Createteam.projectexittitle')" :confirm-btn="t('Createteam.confirmTransfer')" @clode-dialog="transferClose"
-        @confirm="transferProject"></ProjectDialog>
+        :title="t('Createteam.projectexittitle')" :confirm-btn="t('Createteam.confirmTransfer')"
+        @clode-dialog="transferClose" @confirm="transferProject"></ProjectDialog>
 </template>
 
 <style scoped lang="scss">
@@ -328,8 +352,6 @@ const memberid = ref<number>()
 }
 
 .myscrollbar {
-    border: 1px solid #EBEBEB;
-    padding: 8px 12px;
     border-radius: 6px;
 }
 
@@ -413,10 +435,11 @@ const memberid = ref<number>()
         }
 
         .perm_title {
+            position: relative;
             width: 52px;
             display: flex;
             align-items: center;
-            justify-content: flex-end;
+            justify-content: flex-start;
             gap: 4px;
 
             .text {
@@ -433,21 +456,23 @@ const memberid = ref<number>()
             .perm_list {
                 position: absolute;
                 list-style-type: none;
-                padding: 0px;
+                padding: 8px 0px;
                 margin: 0px;
-                top: 88px;
-                right: 6px;
+                top: 24px;
+                right: 3px;
                 box-shadow: 0px 2px 10px 0px rgba(0, 0, 0, 0.08);
-                width: 80px;
+                width: 102px;
                 background-color: white;
                 border-radius: 6px;
+                border: 1px solid #EBEBEB;
                 box-sizing: border-box;
                 z-index: 3;
 
                 .perm_item {
                     display: flex;
                     align-items: center;
-                    height: 24px;
+                    justify-content: space-between;
+                    height: 32px;
                     padding: 6px 8px;
                     box-sizing: border-box;
 
@@ -508,14 +533,25 @@ const memberid = ref<number>()
                 position: relative;
                 display: flex;
                 align-items: center;
+                justify-content: flex-start;
                 width: 52px;
                 font-size: 12px;
                 font-weight: 500;
                 color: rgba(38, 38, 38, 1);
                 gap: 4px;
 
-                >div {
+                .shrink {
                     display: flex;
+                    position: relative;
+
+                    &::before {
+                        content: "";
+                        position: absolute;
+                        top: 0;
+                        left: -50px;
+                        right: 0;
+                        bottom: 0;
+                    }
                 }
 
                 svg {
@@ -527,22 +563,27 @@ const memberid = ref<number>()
                 .member_list {
                     position: absolute;
                     list-style-type: none;
-                    padding: 0px;
+                    padding: 8px 0;
                     margin: 0px;
                     top: 24px;
-                    right: 1px;
+                    right: 3px;
                     box-shadow: 0px 2px 10px 0px rgba(0, 0, 0, 0.08);
-                    width: 80px;
+                    width: 102px;
                     background-color: white;
                     border-radius: 6px;
+                    border: 1px solid #EBEBEB;
                     box-sizing: border-box;
+                    z-index: 4;
 
                     .member_item {
                         display: flex;
                         align-items: center;
-                        height: 24px;
+                        justify-content: space-between;
+                        height: 32px;
                         padding: 6px 8px;
                         box-sizing: border-box;
+                        gap: 4px;
+                        font-weight: 400;
 
                         .choose {
                             box-sizing: border-box;
@@ -575,7 +616,7 @@ const memberid = ref<number>()
             display: flex;
             align-items: center;
             font-size: 13px;
-            font-weight: 500;
+            font-weight: 400;
             color: rgba(140, 140, 140, 1);
         }
 

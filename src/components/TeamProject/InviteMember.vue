@@ -21,7 +21,7 @@
                     <ul v-if="isSelectOpen" class="options">
                         <li class="options_item" v-for="{ id, label } in options" :key="id"
                             @click.stop="selectOption(id, label)">
-                            <span :style="{ fontWeight: label == teamInvitePermission ? 600 : 500 }">{{ label }}</span>
+                            <span :style="{ fontWeight: label == teamInvitePermission ? 500 : 400 }">{{ label }}</span>
                             <div class="choose"
                                 :style="{ visibility: label === teamInvitePermission ? 'visible' : 'hidden' }"></div>
                         </li>
@@ -31,8 +31,12 @@
             <div class="permission-tips">{{ t('inviteMember.permission_tips') }}</div>
             <div class="permission-text">
                 <span> {{ t('inviteMember.permission_switch') }}</span>
-                <el-switch v-model="teamInviteSwitch" class="ml-2" style="--el-switch-on-color: #1878F5" size="small"
-                    @change="setTeamInviteSwitch(teamInviteSwitch)" :disabled="disabled" />
+                <!-- <el-switch v-model="teamInviteSwitch" class="ml-2" style="--el-switch-on-color: #1878F5" size="small"
+                    @change="setTeamInviteSwitch(teamInviteSwitch)" :disabled="disabled" /> -->
+
+                <input id="switch" type="checkbox" v-model="teamInviteSwitch"
+                    @change="setTeamInviteSwitch(teamInviteSwitch)" :disabled="disabled">
+                <label class="my_switch" for="switch"></label>
             </div>
             <input class="switch" v-if="teamInviteSwitch" type="text" v-model="teaminviteinfo" :disabled="disabled">
             <div class="permission-tips1">{{ t('inviteMember.permission_tipsA') }}</div>
@@ -149,7 +153,7 @@ const handleClickOutside = (e: MouseEvent) => {
 }
 
 onMounted(() => {
-    document.addEventListener('click',handleClickOutside)
+    document.addEventListener('click', handleClickOutside)
     Getteaminfo()
 })
 
@@ -175,7 +179,7 @@ onMounted(() => {
     top: 25%;
     left: 50%;
     transform: translate(-50%, 0%);
-    padding: 0 24px;
+    padding: 0 24px 8px;
     z-index: 1000;
     border: 1px solid #F0F0F0;
     box-sizing: border-box;
@@ -250,7 +254,12 @@ onMounted(() => {
 
                 &:disabled {
                     background-color: rgba(240, 240, 240, 1) !important;
+                    opacity: 0.6;
                 }
+            }
+
+            input[type='text']:disabled+.shrink {
+                opacity: 0.6;
             }
 
             .shrink {
@@ -305,7 +314,7 @@ onMounted(() => {
                         height: 6px;
                         margin-right: 4px;
                         margin-left: 2px;
-                        border-width: 0 0 0.2em 0.2em;
+                        border-width: 0 0 0.1em 0.1em;
                         border-style: solid;
                         border-color: rgb(0, 0, 0, .75);
                         transform: rotate(-45deg) translateY(-30%);
@@ -333,6 +342,44 @@ onMounted(() => {
                 color: rgba(38, 38, 38, 1);
             }
 
+            .my_switch {
+                width: 36px;
+                height: 20px;
+                border-radius: 40px;
+                background-color: rgba(140, 140, 140, 1);
+                position: relative;
+                transition: all .3s ease-out;
+
+                &::before {
+                    position: absolute;
+                    content: "";
+                    width: 16px;
+                    height: 16px;
+                    background-color: #FFFFFF;
+                    border-radius: 8px;
+                    top: 2px;
+                    left: 2px;
+                    transition: all .3s ease-out;
+                }
+            }
+
+            input[type='checkbox'] {
+                display: none;
+            }
+
+            input[type='checkbox']:checked+label::before {
+                left: 18px;
+            }
+
+            input[type='checkbox']:checked+label {
+                background-color: rgba(24, 120, 245, 1);
+            }
+
+            input[type='checkbox']:disabled+label {
+                background-color: rgba(189, 226, 255, 1);
+            }
+
+
         }
 
         .switch {
@@ -346,6 +393,10 @@ onMounted(() => {
             background-color: rgba(245, 245, 245, 1);
             border-radius: 6px;
             box-sizing: border-box;
+
+            &:disabled {
+                opacity: 0.6;
+            }
         }
 
         .permission-tips1 {

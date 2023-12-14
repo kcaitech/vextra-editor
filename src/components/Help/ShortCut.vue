@@ -83,6 +83,7 @@ onMounted(() => {
     right: 20px;
     border-radius: 8px;
     background-color: white;
+    border: 1px solid #EBEBEB;
     box-shadow: 0px 2px 10px 0px rgba(0, 0, 0, 0.08);
     box-sizing: border-box;
     z-index: 9999;

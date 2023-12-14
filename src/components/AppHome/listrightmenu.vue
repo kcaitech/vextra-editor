@@ -272,6 +272,7 @@ const rename1 = async () => {
                 name: newname.value
             }
             emits('projectrename', data)
+            dialogVisible.value = false
         }
 
     }

@@ -14,17 +14,20 @@
                     {{ t('Createteam.team_name') }}
                     <span>{{ t('Createteam.required') }}</span>
                 </div>
-                <input :style="{ backgroundColor: inputValue !== '' ? 'rgba(245, 245, 245, 1)' : '' }" ref="inputteam"
-                    type="text" :placeholder="t('Createteam.team_name_tips')" v-model="inputValue" maxlength="20" required>
+                <input
+                    :style="{ backgroundColor: inputValue !== '' ? 'rgba(245, 245, 245, 1)' : '', color: inputValue !== '' ? '#262626' : '' }"
+                    ref="inputteam" type="text" :placeholder="t('Createteam.team_name_tips')" v-model="inputValue"
+                    maxlength="20" required>
             </div>
             <div class="team-description">
                 <div class="title">
                     {{ t('Createteam.team_description') }}
                     <span>{{ t('Createteam.optional') }}</span>
                 </div>
-                <textarea :style="{ backgroundColor: textareaValue !== '' ? 'rgba(245, 245, 245, 1)' : '' }" name="" id=""
-                    cols="30" rows="10" :placeholder="t('Createteam.team_description_tips')" v-model="textareaValue"
-                    maxlength="120"></textarea>
+                <textarea
+                    :style="{ backgroundColor: textareaValue !== '' ? 'rgba(245, 245, 245, 1)' : '', color: textareaValue !== '' ? '#262626' : '' }"
+                    name="" id="" cols="30" rows="10" :placeholder="t('Createteam.team_description_tips')"
+                    v-model="textareaValue" maxlength="120"></textarea>
             </div>
             <div class="team-avatar">
                 <div class="title">
@@ -163,7 +166,7 @@ const close = () => {
         .title {
             font-size: 16px;
             font-weight: 600;
-            color: rgba(61, 61, 61, 1);
+            color: #3D3D3D;
         }
 
         .close {
@@ -191,45 +194,24 @@ const close = () => {
         .team-avatar {
             display: flex;
             flex-direction: column;
-            gap: 8px;
-            margin: 12px 0;
+            margin: 0 0 12px 0;
 
             .title {
                 font-size: 13px;
-                font-weight: 500;
+                font-weight: 400;
+                color: #262626;
+                line-height: 34px;
             }
 
-            input {
-                padding: 7px 12px;
-                width: 100%;
-                height: 36px;
-                border: none;
-                outline-style: none;
-                border-radius: 6px;
-                font-size: 13px;
-                border: 1px solid rgba(245, 245, 245, 1);
-                background-color: rgba(245, 245, 245, 1);
-                box-sizing: border-box;
-
-                &:hover {
-                    background-color: rgba(235, 235, 235, 1);
-                }
-
-                &:focus {
-                    border: 1px solid #1878F5;
-                }
-            }
-
+            input,
             textarea {
                 padding: 7px 12px;
                 width: 100%;
-                height: 80px;
                 border: none;
                 outline-style: none;
                 border-radius: 6px;
-                resize: none;
                 font-size: 13px;
-                font-family: none;
+                color: #BFBFBF;
                 border: 1px solid rgba(245, 245, 245, 1);
                 background-color: rgba(245, 245, 245, 1);
                 box-sizing: border-box;
@@ -240,7 +222,18 @@ const close = () => {
 
                 &:focus {
                     border: 1px solid #1878F5;
+                    background-color: rgba(245, 245, 245, 1) !important;
                 }
+            }
+
+            input {
+                height: 36px;
+            }
+
+            textarea {
+                height: 80px;
+                resize: none;
+                font-family: none;
             }
 
             .avatar-content {
@@ -304,6 +297,7 @@ const close = () => {
         align-items: center;
         justify-content: center;
         height: 64px;
+        margin-bottom: 8px;
 
         button {
             cursor: pointer;
@@ -329,5 +323,4 @@ const close = () => {
             }
         }
     }
-}
-</style>
+}</style>

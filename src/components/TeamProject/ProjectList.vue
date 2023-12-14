@@ -242,6 +242,7 @@ const setProjectInfo = async (params: any) => {
         if (code === 0) {
             const index = teamprojectlist.value.findIndex(item => item.project.id === params.project_id)
             teamprojectlist.value[index].project.name = params.name
+            
         } else {
             ElMessage.error(message)
         }

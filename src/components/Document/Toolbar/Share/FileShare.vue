@@ -7,7 +7,6 @@ import * as share_api from '@/request/share';
 import { ElMessage } from 'element-plus';
 import { useRoute } from 'vue-router';
 import { DocInfo } from "@/context/user"
-import Switch from '@/components/common/Switch.vue';
 const { t } = useI18n()
 const props = defineProps<{
   shareSwitch: boolean,
@@ -362,8 +361,9 @@ const selectOption = (option: any) => {
         <!-- 开关 -->
         <div class="share-switch">
           <span class="type">{{ t('share.share_switch') }}：</span>
-          <Switch :bgcolor="'rgba(24, 120, 245, 1)'" :toggleoff="value1"></Switch>
-          <input class="my_switch" type="checkbox" v-model="value1">
+          <input id="switch" type="checkbox" v-model="value1">
+          <label class="my_switch" for="switch"></label>
+
         </div>
         <!-- 文件名 -->
         <div class="file-name">
@@ -384,7 +384,7 @@ const selectOption = (option: any) => {
               <ul v-show="isSelectOpen" class="options">
                 <li class="options_item" v-for="option in options" :key="option.value"
                   @click.stop="selectOption(option.value)">
-                  <span :style="{ fontWeight: option.label == selectValue ? 600 : 500 }">{{ option.label }}</span>
+                  <span :style="{ fontWeight: option.label == selectValue ? 500 : 400 }">{{ option.label }}</span>
                   <div class="choose" :style="{ visibility: option.label === selectValue ? 'visible' : 'hidden' }"></div>
                 </li>
               </ul>
@@ -524,8 +524,8 @@ const selectOption = (option: any) => {
   align-items: center;
   justify-content: center;
   font-size: 13px;
-  font-weight: 500;
-  color: rgba(140, 140, 140, 1);
+  font-weight: 400;
+  color: #8C8C8C;
 }
 
 .copybnt {
@@ -619,16 +619,41 @@ const selectOption = (option: any) => {
         .type {
           min-width: 65px;
           font-size: 13px;
-          font-weight: 500;
+          font-weight: 400;
+          color: #8C8C8C;
         }
 
         .my_switch {
-          position: relative;
           width: 36px;
           height: 20px;
-          margin: 0;
-          left: -42px;
-          opacity: 0;
+          border-radius: 40px;
+          background-color: rgba(140, 140, 140, 1);
+          position: relative;
+          transition: all .3s ease-out;
+
+          &::before {
+            position: absolute;
+            content: "";
+            width: 16px;
+            height: 16px;
+            background-color: #F0F0F0;
+            border-radius: 8px;
+            top: 2px;
+            left: 2px;
+            transition: all .3s ease-out;
+          }
+        }
+
+        input[type='checkbox'] {
+          display: none;
+        }
+
+        input[type='checkbox']:checked+label::before {
+          left: 18px;
+        }
+
+        input[type='checkbox']:checked+label {
+          background-color: rgba(24, 120, 245, 1);
         }
 
       }
@@ -642,12 +667,13 @@ const selectOption = (option: any) => {
         .type {
           min-width: 65px;
           font-size: 13px;
-          font-weight: 500;
+          font-weight: 400;
+          color: #8C8C8C;
         }
 
         .name {
           font-size: 13px;
-          font-weight: 600;
+          font-weight: 500;
           white-space: nowrap;
           overflow: hidden;
           text-overflow: ellipsis;
@@ -663,7 +689,8 @@ const selectOption = (option: any) => {
         .type {
           min-width: 65px;
           font-size: 13px;
-          font-weight: 500;
+          font-weight: 400;
+          color: #8C8C8C;
         }
 
         .right {
@@ -748,7 +775,7 @@ const selectOption = (option: any) => {
                 height: 6px;
                 margin-right: 4px;
                 margin-left: 2px;
-                border-width: 0 0 0.2em 0.2em;
+                border-width: 0 0 0.1em 0.1em;
                 border-style: solid;
                 border-color: rgb(0, 0, 0, .75);
                 transform: rotate(-45deg) translateY(-30%);
@@ -770,12 +797,13 @@ const selectOption = (option: any) => {
         .type {
           min-width: 65px;
           font-size: 13px;
-          font-weight: 500;
+          font-weight: 400;
+          color: #8C8C8C;
         }
 
         .name {
           font-size: 13px;
-          font-weight: 600;
+          font-weight: 500;
           white-space: nowrap;
           overflow: hidden;
           text-overflow: ellipsis;
@@ -798,7 +826,8 @@ const selectOption = (option: any) => {
         align-items: center;
         height: 34px;
         font-size: 13px;
-        font-weight: 500;
+        font-weight: 400;
+        color: #8C8C8C;
       }
 
       .shared-by {
@@ -841,7 +870,7 @@ const selectOption = (option: any) => {
               overflow: hidden;
               text-overflow: ellipsis;
               font-size: 13px;
-              font-weight: 600;
+              font-weight: 500;
               color: rgba(0, 0, 0, 1);
             }
           }
@@ -856,7 +885,7 @@ const selectOption = (option: any) => {
             .founder,
             .authority {
               font-size: 12px;
-              font-weight: 500;
+              font-weight: 400;
             }
 
             .shrink {
@@ -892,6 +921,7 @@ const selectOption = (option: any) => {
                 justify-content: space-around;
                 height: 40px;
                 font-size: 12px;
+                font-weight: 500;
 
                 .choose {
                   box-sizing: border-box;
@@ -899,7 +929,7 @@ const selectOption = (option: any) => {
                   height: 6px;
                   margin-right: 4px;
                   margin-left: 2px;
-                  border-width: 0 0 0.2em 0.2em;
+                  border-width: 0 0 0.1em 0.1em;
                   border-style: solid;
                   border-color: rgb(0, 0, 0, .75);
                   transform: rotate(-45deg) translateY(-30%);
