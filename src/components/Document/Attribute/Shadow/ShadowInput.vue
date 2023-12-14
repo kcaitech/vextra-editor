@@ -106,7 +106,7 @@ function blur2() {
         </Tooltip>
         <input v-if="!props.disabled" ref="input" :value="props.shadowV" @focus="selectValue" :disabled="props.disabled"
             :style="{ cursor: props.disabled ? 'default' : 'text' }" @change="onChange" @blur="blur2">
-        <div class="adjust">
+        <div class="adjust" :class="{ active: isActived }">
             <svg-icon icon-class="down" style="transform: rotate(180deg);"
                 :style="{ cursor: props.disabled ? 'default' : 'pointer' }" @click="augment"></svg-icon>
             <svg-icon icon-class="down" :style="{ cursor: props.disabled ? 'default' : 'pointer' }"
@@ -190,6 +190,14 @@ function blur2() {
     .adjust:hover {
         background-color: #EBEBEB;
     }
+
+    .adjust.active {
+        background-color: #EBEBEB;
+    }
+
+    //.adjust.active {
+    //    background-color: #EBEBEB !important;
+    //}
 }
 
 .disabled {

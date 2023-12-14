@@ -411,7 +411,7 @@ onUnmounted(() => {
                             <svg-icon icon-class="thickness" @mousedown="onMouseDown"></svg-icon>
                             <input ref="borderThickness" type="text" :value="border.thickness"
                                 @change="e => setThickness(e)" @blur="blur2" @focus="selectBorderThicknes">
-                            <div class="up_down">
+                            <div class="up_down" :class="{ active: isActived }">
                                 <svg-icon icon-class="down" style="transform: rotate(180deg);" @click="augment"></svg-icon>
                                 <svg-icon icon-class="down" @click="decrease"></svg-icon>
                             </div>
@@ -531,6 +531,10 @@ onUnmounted(() => {
                     }
 
                     .up_down:hover {
+                        background-color: #EBEBEB;
+                    }
+
+                    .up_down.active {
                         background-color: #EBEBEB;
                     }
                 }
