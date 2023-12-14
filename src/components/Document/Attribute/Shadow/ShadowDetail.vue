@@ -366,7 +366,7 @@ const disable = computed(() => {
         border: none;
         box-sizing: border-box;
         background-color: transparent;
-        width: 90px;
+        width: 86px;
         margin-left: 8px;
     }
 
