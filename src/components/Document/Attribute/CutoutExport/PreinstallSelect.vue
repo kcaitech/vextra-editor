@@ -1,5 +1,7 @@
 <script lang="ts" setup>
 import { onMounted, onUnmounted, ref } from 'vue';
+import { useI18n } from 'vue-i18n';
+const { t } = useI18n();
 const emits = defineEmits<{
     (e: 'close'): void;
     (e: 'preinstall', v: string): void;
@@ -32,13 +34,13 @@ onUnmounted(() => {
 <template>
     <div class="per_select_menu" @click.stop>
         <div class="item" @click="defaultItem">
-            <div class="text">默认</div>
+            <div class="text">{{t('cutoutExport.defaule')}}</div>
         </div>
         <div class="item" @click="iosPreinstall">
-            <div class="text">iOS预设</div>
+            <div class="text">{{t('cutoutExport.ios_presets')}}</div>
         </div>
         <div class="item" @click="androidPreinstall">
-            <div class="text">Android预设</div>
+            <div class="text">{{t('cutoutExport.android_presets')}}</div>
         </div>
     </div>
 </template>

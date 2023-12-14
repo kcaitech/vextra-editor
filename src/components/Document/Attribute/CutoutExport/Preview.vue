@@ -8,8 +8,9 @@ import { color2string } from '@/utils/content';
 import { Selection } from '@/context/selection';
 import { debounce } from 'lodash';
 import { nextTick } from 'vue';
-import { ro } from 'element-plus/es/locale';
 import { getPngImageData, getSvgImageData } from '@/utils/image';
+import { useI18n } from 'vue-i18n';
+const { t } = useI18n();
 interface Props {
     context: Context
     shapes: Shape[]
@@ -283,7 +284,7 @@ onUnmounted(() => {
                 <div :class="{ 'triangle-right': !isTriangle, 'triangle-down': isTriangle }">
                 </div>
             </div>
-            <span>预览</span>
+            <span>{{t('cutoutExport.preview')}}</span>
         </div>
         <svg version="1.1" ref="previewSvg" xmlns="http://www.w3.org/2000/svg" xmlns:xlink="http://www.w3.org/1999/xlink"
             xmlns:xhtml="http://www.w3.org/1999/xhtml" preserveAspectRatio="xMinYMin meet" :width="width" :height="height"

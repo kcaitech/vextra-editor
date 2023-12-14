@@ -16,7 +16,7 @@ function select(action: Action) {
 }
 </script>
 <template>
-  <Tooltip :content="`${t('shape.oval')} &nbsp;&nbsp; O`">
+  <Tooltip :content="`${t('cutoutExport.cutout')} &nbsp;&nbsp; S`">
     <ToolButton ref="button" @click="() => {select(Action.AddCutout)}" :selected="props.active">
       <div class="svg-container">
         <svg-icon icon-class="cutout"></svg-icon>

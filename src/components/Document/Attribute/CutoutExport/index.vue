@@ -36,7 +36,7 @@ const isPreinstall = ref(false);
 
 const sizeItems: string[] = ['0.5x', '1x', '2x', '3x', '4x', '5x'];
 const perfixItems: ExportFormatNameingScheme[] = [ExportFormatNameingScheme.Prefix, ExportFormatNameingScheme.Suffix];
-const formatItems: string[] = ['PNG', 'JPG', 'SVG', 'PDF'];
+const formatItems: string[] = ['PNG', 'JPG', 'SVG'];
 const fileFormat: ExportFileFormat[] = [ExportFileFormat.Png, ExportFileFormat.Jpg, ExportFileFormat.Svg, ExportFileFormat.Pdf];
 const preinstallArgus: FormatItems[] = reactive([]);
 const reflush = ref<number>(0);
@@ -516,7 +516,7 @@ onUnmounted(() => {
 <template>
     <div class="cutout_export_box">
         <div class="title" @click.stop="first">
-            <div class="name">创建切图与导出</div>
+            <div class="name">{{t('cutoutExport.create_cut_chart_and_export')}}</div>
             <div class="cutout_add_icon">
                 <div class="cutout-icon cutout-preinstall"
                     :style="{ backgroundColor: isPreinstall ? 'rgba(0, 0, 0, 0.2)' : '' }" @click.stop="showPreinstall">
@@ -540,13 +540,13 @@ onUnmounted(() => {
                 </ExportArguments>
             </div>
             <div class="canvas-bgc" v-if="isShowCheckbox && exportOption">
-                <el-checkbox :model-value="trim_bg" @change="trimBackground" label="修剪透明像素" />
+                <el-checkbox :model-value="trim_bg" @change="trimBackground" :label="t('cutoutExport.trim_transparent_pixels')" />
             </div>
             <div class="canvas-bgc" v-if="isShowCheckbox && exportOption">
-                <el-checkbox :model-value="canvas_bg" @change="canvasBackground" label="画布背景色" />
+                <el-checkbox :model-value="canvas_bg" @change="canvasBackground" :label="t('cutoutExport.canvas_background_color')" />
             </div>
             <div class="export-box" v-if="preinstallArgus.length > 0">
-                <div @click="exportFill"><span>导出</span></div>
+                <div @click="exportFill"><span>{{t('cutoutExport.export')}}</span></div>
             </div>
             <Preview ref="preview" v-if="exportOption && exportOption.exportFormats.length" :context="context"
                 :shapes="shapes" :unfold="previewUnfold" @preview-change="previewCanvas" :canvas_bg="canvas_bg"
