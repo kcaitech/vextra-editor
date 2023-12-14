@@ -122,7 +122,6 @@ var configureWebpack = (config) => {
 var exports = defineConfig({
     transpileDependencies: true,
     publicPath: './',
-    // publicPath: '/tyx',
     configureWebpack,
 
     pluginOptions: {
