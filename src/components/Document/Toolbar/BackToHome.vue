@@ -173,16 +173,17 @@ onUnmounted(() => {
             </div>
         </div>
         <div class="model">
-            <span v-if="isLable" style="color: #fff; font-size: 12px; width: 35%">【开发模式】</span>
+            <span v-if="isLable" style="color: #fff; font-size: 12px">【开发模式】</span>
         </div>
     </div>
 </template>
 
 <style scoped lang="scss">
 .container {
+    display: flex;
     align-items: center;
     justify-content: space-between;
-    width: 362px;
+    width: auto;
     height: 32px;
 
     .home {
@@ -196,8 +197,8 @@ onUnmounted(() => {
         border-radius: 4px;
 
         > svg {
-            width: 32px;
-            height: 32px;
+            width: 18px;
+            height: 18px;
             color: #FFFFFF;
         }
     }
@@ -211,7 +212,7 @@ onUnmounted(() => {
         height: 52px;
         flex: 1;
         box-sizing: border-box;
-        padding: 18px 8px 18px 8px;
+        padding: 16px 8px;
 
         .save {
             width: 8px;
@@ -246,6 +247,8 @@ onUnmounted(() => {
 
     .model {
         flex: 0 0 72px;
+        display: flex;
+        align-items: center;
     }
 }
 </style>

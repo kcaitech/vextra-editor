@@ -235,8 +235,8 @@ const flattenShape = () => {
             transition: 0.1s;
 
             >svg {
-                height: 20px;
-                width: 20px;
+                height: 18px;
+                width: 18px;
             }
         }
 
