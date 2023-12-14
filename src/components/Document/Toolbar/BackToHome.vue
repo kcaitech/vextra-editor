@@ -221,7 +221,7 @@ onUnmounted(() => {
         span {
             display: block;
             max-width: 210px;
-            height: 16px;
+            height: 25px;
             color: #ffffff;
             cursor: pointer;
             overflow: hidden;
