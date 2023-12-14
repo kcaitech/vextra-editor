@@ -8,6 +8,7 @@ import { v4 } from "uuid";
 import ShapeTitles from './ShapeTitles.vue';
 import ComponentTitleContainer from './ComponentTitleContainer.vue';
 import { debounce } from 'lodash';
+import ShapeCutout from '../Cutout/ShapeCutout.vue';
 interface Props {
     context: Context
     data: Page
@@ -72,6 +73,7 @@ onUnmounted(() => {
     stop_watch_matrix();
     renderItems = [];
 })
+
 </script>
 
 <template>
@@ -81,9 +83,8 @@ onUnmounted(() => {
         :style="{ transform: matrixWithFrame.toString() }" :data-area="rootId">
         <component :is="comsMap.get(c.type) ?? comsMap.get(ShapeType.Rectangle)" v-for="c in renderItems" :key="c.id"
             :data="c" />
-
     </svg>
-
+    <ShapeCutout :context="props.context" :data="data" :matrix="props.matrix" :transform="matrixWithFrame.toArray()"></ShapeCutout>
     <ShapeTitles v-if="show_t" :context="props.context" :data="data" :matrix="matrixWithFrame.toArray()"></ShapeTitles>
     <ComponentTitleContainer :context="props.context" :data="data" :matrix="matrixWithFrame.toArray()">
     </ComponentTitleContainer>

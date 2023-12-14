@@ -19,8 +19,9 @@ export class Menu extends Watchable(Object) {
   static LABLE_PLATFROM_CHANGE = 11;
   static LABLE_MULRIPLE = 9;
   static SHUTDOWN_LABLE_MENU =  10;
-  static CLOSE_INSTANCE_ATTR_MENU = 11;
-  static SHADOW_POSITION_MENU = 12;
+  static SHADOW_POSITION_MENU = 11;
+  static SHADOW_CUTOUT_ARGS_MENU = 12;
+  static CLOSE_INSTANCE_ATTR_MENU = 13;
   private m_menu_mounted: string = '';
   private m_popover: boolean = false;
   private m_color_picker: string | undefined; // 编辑器是否已经有调色板🎨
