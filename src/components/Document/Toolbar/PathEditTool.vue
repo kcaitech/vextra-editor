@@ -16,7 +16,6 @@ const emit = defineEmits<{
 }>();
 
 const props = defineProps<Props>();
-const selected = ref<Action>(Action.AutoV);
 
 function select(action: Action) {
     emit("select", action);
