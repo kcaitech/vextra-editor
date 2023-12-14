@@ -73,7 +73,7 @@ onUnmounted(() => {
 
 <template>
     <div class="module_container">
-        <TypeHeader :title="t('compos.compos_state')" class="mt-24">
+        <TypeHeader :title="t('compos.compos_state')" class="mt-24" :active="true">
             <template #tool>
                 <div class="compos_state"></div>
             </template>

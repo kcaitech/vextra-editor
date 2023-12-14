@@ -119,7 +119,7 @@ onMounted(() => {
   }
 
   .type-block:hover {
-    background-color: var(--active-color-beta);
+    background-color: var(--active-color);
     color: var(--theme-color-anti);
   }
 }

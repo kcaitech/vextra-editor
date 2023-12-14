@@ -208,7 +208,7 @@ onUnmounted(() => {
         border-radius: 4px;
         width: 60px;
         height: 22px;
-        background-color: var(--active-color-beta);
+        background-color: var(--active-color);
         color: #fff;
         font-size: var(--font-default-fontsize);
     }
@@ -223,7 +223,7 @@ onUnmounted(() => {
 }
 
 :deep(.el-radio__input.is-checked .el-radio__inner) {
-    border-color: var(--active-color-beta);
-    background: var(--active-color-beta);
+    border-color: var(--active-color);
+    background: var(--active-color);
 }
 </style>

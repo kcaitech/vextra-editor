@@ -286,21 +286,17 @@ const isLock = (shape: Shape) => {
 }
 
 const isRead = (read: boolean, shape: Shape) => {
-    let timer: any;
-    if (timer) {
-        clearTimeout(timer)
-    }
     const editor = props.context.editor4Shape(shape);
     editor.toggleVisible();
     if (!read) {
-        props.context.selection.unSelectShape(shape);
-        props.context.selection.unHoverShape();
-        props.context.workspace.translating(true);
-        timer = setTimeout(() => {
-            props.context.workspace.translating(false);
-            clearTimeout(timer);
-            timer = null;
-        }, 350)
+        // props.context.selection.unSelectShape(shape);
+        // props.context.selection.unHoverShape();
+        // props.context.workspace.translating(true);
+        // timer = setTimeout(() => {
+        //     props.context.workspace.translating(false);
+        //     clearTimeout(timer);
+        //     timer = null;
+        // }, 350)
     }
 }
 
@@ -760,8 +756,8 @@ onUnmounted(() => {
                 margin-left: 4px;
                 background-color: transparent;
                 font-size: var(--font-default-fontsize);
-                caret-color: var(--active-color-beta);
-                color: var(--active-color-beta);
+                caret-color: var(--active-color);
+                color: var(--active-color);
                 transition: 0.3s;
             }
 
@@ -800,7 +796,7 @@ onUnmounted(() => {
             }
 
             .accurate-active {
-                background-color: var(--active-color-beta);
+                background-color: var(--active-color);
                 color: #fff;
             }
         }
@@ -811,7 +807,7 @@ onUnmounted(() => {
             .block-wrap {
                 display: inline-block;
                 border-radius: 4px;
-                background-color: rgba($color: #865dff, $alpha: 1);
+                background-color: rgba($color: #1878f5, $alpha: 1);
                 max-width: 96px;
                 padding: 2px 4px;
                 height: 20px;

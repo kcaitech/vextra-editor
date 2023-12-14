@@ -278,10 +278,11 @@ const disable = computed(() => {
             display: flex;
             justify-content: center;
             align-items: center;
+            margin-left: -7px;
 
             >svg {
-                width: 11px;
-                height: 11px;
+                width: 16px;
+                height: 16px;
                 transition: 0.5s;
             }
 

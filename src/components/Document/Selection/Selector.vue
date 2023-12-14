@@ -129,6 +129,6 @@ watchEffect(select);
 .selector {
     position: absolute;
     border: 1px solid var(--active-color);
-    background-color: rgba($color: #865dff, $alpha: 0.1);
+    background-color: rgba($color: #1878f5, $alpha: 0.1);
 }
 </style>
