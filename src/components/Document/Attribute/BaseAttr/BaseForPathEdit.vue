@@ -89,10 +89,12 @@ function calc() {
         r.value = state.r;
         return;
     }
+    
     const state = get_value_from_points(props.context, selected_points);
     if (!state) {
         return;
     }
+
     x.value = state.x === 'mix' ? t('attr.more_value') : state.x;
     y.value = state.y === 'mix' ? t('attr.more_value') : state.y;
     r.value = state.r === 'mix' ? t('attr.more_value') : state.r;
@@ -140,20 +142,36 @@ function get_current_curve_mode() {
     curve_mode.value = 'INVALID';
     const selected_points = props.context.path.selectedPoints;
     const l = selected_points.length;
-    if (!l) return;
+    if (!l) {
+        return;
+    }
     const __points = path_shape!.points;
-    if (!__points?.length) return;
+    if (!__points?.length) {
+        return;
+    }
     if (l === 1) {
         const __point = __points[selected_points[0]];
-        if (!__point) return;
+        if (!__point) {
+            return;
+        }
         curve_mode.value = __point.mode;
         return;
     }
-    const fcm: CurveMode = __points[selected_points[0]].mode;
+    const fcm: CurveMode = __points[selected_points[0]]?.mode;
+    if (!fcm) {
+        console.log('!fcm');
+        return;
+    }
     for (let i = 1, _l = selected_points.length; i < _l; i++) {
         const curve_point = __points[selected_points[i]];
-        if (!curve_point) continue;
-        if (curve_point.mode !== fcm) return;
+
+        if (!curve_point) {
+            continue;
+        }
+
+        if (curve_point.mode !== fcm) {
+            return;
+        }
     }
     curve_mode.value = fcm;
 }

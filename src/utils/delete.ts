@@ -43,7 +43,15 @@ function delete_for_path_edit(context: Context) {
 
     const editor = context.editor4Shape(path_shape);
 
-    editor.removePoints(points);
+    const result = editor.removePoints(points);
+
+    if (result === 1) {
+        context.path.reset();
+    } else if (result === 0) {
+        context.workspace.setPathEditMode(false);
+        context.path._reset();
+        context.selection.resetSelectShapes();
+    }
 }
 
 function delete_shapes(context: Context, shapes: Shape[]) {

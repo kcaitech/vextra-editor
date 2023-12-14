@@ -143,6 +143,10 @@ function modfiy_tracing_class(shape: Shape) {
         tracing_class.hollow_fill = true;
         tracing_class.thick_stroke = true;
     }
+
+    if (shape.style.fills.length) {
+        tracing_class.hollow_fill = false;
+    }
 }
 
 /**

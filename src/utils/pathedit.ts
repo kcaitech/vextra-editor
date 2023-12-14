@@ -87,24 +87,30 @@ export function get_num_by_event(e: Event) {
 
 export function get_value_from_points(context: Context, indexes: number[]) {
     const points = get_parent_points(context, indexes);
-    if (!points?.length) return;
+    if (!points?.length) {
+        return;
+    }
     let x: number | 'mix' = points[0].x;
     let y: number | 'mix' = points[0].y;
+
     for (let i = 1, l = points.length; i < l; i++) {
         const p = points[i];
         if (x !== 'mix' && p.x !== x) x = 'mix';
         if (y !== 'mix' && p.y !== y) y = 'mix';
         if (x === y && x === 'mix') break;
     }
+
     const __points = context.selection.pathshape!.points;
     let r: number | 'mix' = __points[indexes[0]].radius || 0;
     for (let i = 0, l = indexes.length; i < l; i++) {
         const index = indexes[i];
-        if (r !== __points[index].radius) {
+        const _r = __points[index].radius || 0;
+        if (r !== _r) {
             r = 'mix';
             break;
         }
     }
+    
     return {
         x,
         y,

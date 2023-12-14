@@ -60,10 +60,10 @@ function keyboard_down_watcher(e: KeyboardEvent) {
 }
 
 onMounted(() => {
-    document.addEventListener('keydown', keyboard_down_watcher);
+    // document.addEventListener('keydown', keyboard_down_watcher);
 })
 onUnmounted(() => {
-    document.removeEventListener('keydown', keyboard_down_watcher);
+    // document.removeEventListener('keydown', keyboard_down_watcher);
 })
 </script>
 <template>

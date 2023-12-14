@@ -28,7 +28,6 @@ const sub_matrix = new Matrix();
 const data: { dots: Dot[], segments: Segment[] } = reactive({ dots: [], segments: [] });
 const { dots, segments } = data;
 const current_curve_point_index = ref<number>(-1);
-const current_segment_index = ref<number>(-1);
 const dragActiveDis = 3;
 const new_high_light = ref<number>(-1);
 const add_rect = ref<number>(-1);
@@ -37,7 +36,6 @@ let startPosition: ClientXY = { x: 0, y: 0 };
 let startPosition2: PageXY = { x: 0, y: 0 };
 let isDragging = false;
 let pathEditor: AsyncPathEditor | undefined;
-let cur_new_node: Segment;
 let move: any;
 let offset_map: XY[] | undefined = [];
 let actionEndGenerator: ActionEndGenerator | undefined = undefined;
@@ -88,9 +86,15 @@ function down_background_path(event: MouseEvent, index: number) {
         return;
     }
     event.stopPropagation();
+
     modify_start_position(event);
+
+    clear_high_light();
+
     props.context.workspace.setCtrl('controller');
+
     const path = props.context.path;
+
     if (event.shiftKey) {
         path.adjust_sides(index);
     } else {
@@ -100,6 +104,7 @@ function down_background_path(event: MouseEvent, index: number) {
             path.select_side(index);
         }
     }
+
     document.addEventListener('mousemove', point_mousemove);
     document.addEventListener('mouseup', point_mouseup);
     move = point_mousemove;
@@ -117,17 +122,20 @@ function point_mousemove(event: MouseEvent) {
     const workspace = props.context.workspace;
     const root = workspace.root;
     const mouseOnClient: ClientXY = { x: event.clientX - root.x, y: event.clientY - root.y };
+
     if (isDragging && pathEditor) {
         __exe(pathEditor, sub_matrix.computeCoord3(mouseOnClient));
         startPosition.x = mouseOnClient.x
         startPosition.y = mouseOnClient.y;
         return;
     }
+
     const { x: sx, y: sy } = startPosition;
     const { x: mx, y: my } = mouseOnClient;
     if (Math.hypot(mx - sx, my - sy) < dragActiveDis) {
         return;
     }
+
     if (is_curve_tool()) {
         if (props.context.path.selectedSides.length) {
             return;
@@ -142,7 +150,9 @@ function point_mousemove(event: MouseEvent) {
         .asyncPathEditor(shape as PathShape, props.context.selection.selectedPage!);
 
     isDragging = true;
+
     sub_matrix.reset(workspace.matrix.inverse);
+
     props.context.assist.set_points_map();
     const max = props.context.path.get_synthetic_points((shape as PathShape).points.length - 1);
     offset_map = gen_offset_points_map2(props.context, startPosition2, max);
@@ -150,6 +160,8 @@ function point_mousemove(event: MouseEvent) {
         return;
     }
     actionEndGenerator = new ActionEndGenerator(props.context, offset_map);
+
+    props.context.path.editing(true);
 }
 
 function launch_bridging(event: MouseEvent) {
@@ -210,7 +222,7 @@ function n_point_down(event: MouseEvent, index: number) {
     event.stopPropagation();
     modify_start_position(event);
     current_curve_point_index.value = index + 1;
-    cur_new_node = segments[index];
+
     if (!pathEditor) {
         pathEditor = props.context.editor
             .controller()
@@ -220,6 +232,7 @@ function n_point_down(event: MouseEvent, index: number) {
         pathEditor.addNode(idx);
         props.context.path.select_point(idx);
     }
+
     props.context.workspace.setCtrl('controller');
     add_move_and_up_for_document(n_point_mousemove, point_mouseup);
     move = n_point_mousemove;
@@ -241,6 +254,7 @@ function n_point_mousemove(event: MouseEvent) {
         if (Math.hypot(mx - sx, my - sy) > dragActiveDis) {
             isDragging = true;
             sub_matrix.reset(workspace.matrix.inverse);
+            props.context.path.editing(true);
         }
     }
 }
@@ -253,6 +267,7 @@ function point_mouseup(event: MouseEvent) {
     if (event.button !== 0) {
         return;
     }
+
     if (isDragging) {
         isDragging = false;
         props.context.assist.reset();
@@ -261,20 +276,25 @@ function point_mouseup(event: MouseEvent) {
             props.context.path.select_point(current_curve_point_index.value);
         }
     }
+
     if (pathEditor) {
         pathEditor.close();
         pathEditor = undefined;
     }
+
     if (actionEndGenerator) {
         actionEndGenerator.__reset();
         actionEndGenerator = undefined;
     }
+
     document.removeEventListener('mousemove', move);
     document.removeEventListener('mouseup', point_mouseup);
+
     const workspace = props.context.workspace;
     workspace.scaling(false);
-    workspace.rotating(false);
     workspace.setCtrl('page');
+
+    props.context.path.editing(false);
 }
 function enter(event: MouseEvent, index: number) {
     clear_high_light();
@@ -306,10 +326,12 @@ function window_blur() {
         pathEditor.close();
         pathEditor = undefined;
     }
+
     workspace.scaling(false);
-    workspace.rotating(false);
     workspace.setCtrl('page');
+    props.context.path.editing(false);
     props.context.cursor.reset();
+
     document.removeEventListener('mousemove', point_mousemove);
     document.removeEventListener('mouseup', point_mouseup);
 }
@@ -408,7 +430,8 @@ onUnmounted(() => {
 }
 
 .path-high-light {
-    stroke: rgba($color: #1878f5, $alpha: 0.3);
+    stroke: rgba($color: #1878f5, $alpha: 0.5);
+    stroke-width: 2px;
 }
 
 .path-selected {
@@ -424,7 +447,7 @@ onUnmounted(() => {
 }
 
 .insert-point-high-light {
-    stroke: rgba($color: #1878f5, $alpha: 0.3);
+    stroke: rgba($color: #1878f5, $alpha: 0.5);
 }
 
 .insert-point-selected {
