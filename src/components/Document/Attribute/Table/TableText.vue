@@ -735,7 +735,7 @@ onUnmounted(() => {
 
 <template>
     <div class="text-panel">
-        <TypeHeader :title="t('attr.text')" class="mt-24">
+        <TypeHeader :title="t('attr.text')" class="mt-24" :active="true">
             <template #tool>
                 <TableTextSetting :context="props.context" :textShape="props.shape"></TableTextSetting>
             </template>
@@ -851,7 +851,7 @@ onUnmounted(() => {
             <div class="text-color" v-if="!colorIsMulti && textColor" style="margin-bottom: 10px;">
                 <div style="font-family: HarmonyOS Sans;font-size: 12px;margin-right: 10px;">{{ t('attr.font_color') }}</div>
                 <div class="color">
-                    <ColorPicker :color="textColor!" :context="props.context" :late="30"
+                    <ColorPicker :color="textColor!" :context="props.context" :auto_to_right_line="true"
                         @change="c => getColorFromPicker(c, 'color')">
                     </ColorPicker>
                     <input ref="sizeColor" class="sizeColor" @focus="selectColorValue" :spellcheck="false"
@@ -884,7 +884,7 @@ onUnmounted(() => {
                 <div style="font-family: HarmonyOS Sans;font-size: 12px;margin-right: 10px;"
                      :class="{ 'check': highlight, 'nocheck': !highlight }">{{ t('attr.highlight_color') }}</div>
                 <div class="color">
-                    <ColorPicker :color="highlight!" :context="props.context" :late="30"
+                    <ColorPicker :color="highlight!" :context="props.context" :auto_to_right_line="true"
                         @change="c => getColorFromPicker(c, 'highlight')">
                     </ColorPicker>
                     <input ref="higlightColor" class="colorFill" @focus="selectHiglightColor" :spellcheck="false"

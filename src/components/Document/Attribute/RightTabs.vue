@@ -31,10 +31,10 @@ const tabs: { title: string, id: Tab }[] = [
         title: t('attr.design'),
         id: 'Design'
     },
-    {
-        title: t('attr.inspect'),
-        id: 'Inspect'
-    }
+    // {
+    //     title: t('attr.inspect'),
+    //     id: 'Inspect'
+    // }
 ];
 const isLable = ref(props.context.tool.isLable);
 

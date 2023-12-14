@@ -551,7 +551,7 @@ onUnmounted(() => {
                     <svg-icon v-if="f.fill.isEnabled" icon-class="select"></svg-icon>
                 </div>
                 <div class="color">
-                    <ColorPicker :color="f.fill.color" :context="props.context"
+                    <ColorPicker :color="f.fill.color" :context="props.context" :auto_to_right_line="true"
                                  @change="c => getColorFromPicker(idx, c)">
                     </ColorPicker>
                     <input ref="colorFill" class="colorFill" :value="toHex(f.fill.color.red, f.fill.color.green, f.fill.color.blue)"

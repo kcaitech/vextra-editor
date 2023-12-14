@@ -34,8 +34,6 @@ const dragActiveDis = 3;
 function update() {
     matrix.reset(props.matrix);
     update_slice_path();
-    console.log('slices:', slices);
-
 }
 function update_slice_path() {
     if (!props.context.workspace.shouldSelectionViewUpdate) {

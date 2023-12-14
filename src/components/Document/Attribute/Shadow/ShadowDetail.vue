@@ -223,7 +223,7 @@ const disable = computed(() => {
 
 <template>
     <div class="border-detail-container" @mousedown.stop>
-        <Popover :context="props.context" class="popover" ref="popover" :width="260" height="auto" :left="445"
+        <Popover :context="props.context" class="popover" ref="popover" :width="260" :auto_to_right_line="true"
             :title="`${t('shadow.shadow_setting')}`">
             <template #trigger>
                 <div class="trigger" @click="showMenu">
@@ -233,25 +233,25 @@ const disable = computed(() => {
             <template #body>
                 <div class="options-container">
                     <div class="setting">
-                        <div class="name-title">{{t('shadow.position')}}</div>
+                        <div class="name-title">{{ t('shadow.position') }}</div>
                         <ShadowInput ticon="X" :shadow-v="shadow.offsetX" @on-change="setOffsetX" :reflush="reflush">
                         </ShadowInput>
                         <ShadowInput ticon="Y" :shadow-v="shadow.offsetY" @on-change="setOffsetY" :reflush="reflush">
                         </ShadowInput>
                     </div>
                     <div class="setting">
-                        <div class="name-title">{{t('shadow.effect')}}</div>
-                        <ShadowInput ticon="B" :shadow-v="shadow.blurRadius" @on-change="setBlurRadius" :tootip="`${t('shadow.blur')}`"
-                            :reflush="reflush">
+                        <div class="name-title">{{ t('shadow.effect') }}</div>
+                        <ShadowInput ticon="B" :shadow-v="shadow.blurRadius" @on-change="setBlurRadius"
+                            :tootip="`${t('shadow.blur')}`" :reflush="reflush">
                         </ShadowInput>
                         <ShadowInput ticon="S" :shadow-v="shadow.spread" @on-change="setSpread" :disabled="disable"
                             :tootip="`${t('shadow.extend')}`" :reflush="reflush">
                         </ShadowInput>
                     </div>
                     <div class="setting">
-                        <div class="name-title">{{t('shadow.color')}}</div>
+                        <div class="name-title">{{ t('shadow.color') }}</div>
                         <div class="color">
-                            <ColorPicker :color="(shadow.color as Color)" :context="props.context"
+                            <ColorPicker :color="(shadow.color as Color)" :context="props.context" :auto_to_right_line="true"
                                 @change="(c: Color) => getColorFromPicker(c)" />
                             <input ref="colorShadow" :spellcheck="false" :value="(toHex(shadow.color)).slice(1)"
                                 @change="e => onColorChange(e)" @focus="selectColor" />
