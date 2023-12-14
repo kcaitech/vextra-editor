@@ -12,6 +12,7 @@ export const shape: any = {
     input_text: 'Input text',
     table: 'Table',
     contact: 'Contact',
+    cutout: 'Cutout',
     shape_tool: 'Shape tool',
     symbol: 'Symbol',
     curve: "Curve",

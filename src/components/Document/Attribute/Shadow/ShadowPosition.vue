@@ -26,7 +26,6 @@ const showMenu = () => {
 const togglePositinon = (position: ShadowPosition) => {
     const _idx = props.length - props.idx - 1;
     const len = props.shapes.length;
-    console.log(_idx,'_idx');
     if (len === 1) {
         if (props.shadow.position === position) return close();
         const e = props.context.editor4Shape(props.context.selection.selectedShapes[0]);

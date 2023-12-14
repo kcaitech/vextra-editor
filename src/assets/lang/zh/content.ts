@@ -12,6 +12,7 @@ export const shape: any = {
     input_text: '输入文本',
     table: '表格',
     contact: '连接线',
+    cutout: '切图',
     shape_tool: '形状工具',
     symbol: '组件',
     curve: "曲线工具",

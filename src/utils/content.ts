@@ -151,6 +151,8 @@ export function init_shape(context: Context, frame: ShapeFrame, mousedownOnPageX
         asyncCreator = editor.asyncCreator(mousedownOnPageXY);
         if (action === Action.AddArrow) {
             new_shape = asyncCreator.init_arrow(page, (parent as GroupShape), name, frame);
+        } else if (action === Action.AddCutout) {
+            new_shape = asyncCreator.init_cutout(page, (parent as GroupShape), name, frame);
         } else {
             new_shape = asyncCreator.init(page, (parent as GroupShape), type, name, frame);
         }
@@ -204,6 +206,8 @@ export function init_insert_shape(context: Context, mousedownOnPageXY: PageXY, t
         asyncCreator = editor.asyncCreator(mousedownOnPageXY);
         if (action === Action.AddArrow) {
             new_shape = asyncCreator.init_arrow(page, (parent as GroupShape), name, frame);
+        } else if (action === Action.AddCutout) {
+            new_shape = asyncCreator.init_cutout(page, (parent as GroupShape), name, frame);
         } else {
             new_shape = asyncCreator.init(page, (parent as GroupShape), type, name, frame);
         }
@@ -394,7 +398,9 @@ export function adjust_content_xy(context: Context, m: Media) {
 export function drop(e: DragEvent, context: Context, t: Function) {
     e.preventDefault();
     const data = e?.dataTransfer?.files;
-    if (!data || !data.length || data[0]?.type.indexOf('image') !== -1) return;
+    if (!data?.length || data[0]?.type.indexOf('image') < 0) {
+        return;
+    }
     const item: SystemClipboardItem = { type: ShapeType.Image, contentType: 'image/png', content: '' };
     const file = data[0];
     item.contentType = file.type;
@@ -404,17 +410,17 @@ export function drop(e: DragEvent, context: Context, t: Function) {
         frame.width = img.width;
         frame.height = img.height;
         const ratio = frame.width / frame.height;
-        if (frame.width >= frame.height) {
-            if (frame.width > 600) {
-                frame.width = 600;
-                frame.height = frame.width / ratio;
-            }
-        } else {
-            if (frame.height > 600) {
-                frame.height = 600;
-                frame.width = 600 * ratio;
-            }
-        }
+        // if (frame.width >= frame.height) {
+        //     if (frame.width > 600) {
+        //         frame.width = 600;
+        //         frame.height = frame.width / ratio;
+        //     }
+        // } else {
+        //     if (frame.height > 600) {
+        //         frame.height = 600;
+        //         frame.width = 600 * ratio;
+        //     }
+        // }
         const fr = new FileReader();
         fr.onload = function (event) {
             const base64: any = event.target?.result;
@@ -430,6 +436,8 @@ export function drop(e: DragEvent, context: Context, t: Function) {
                             x: clientX - root.x,
                             y: clientY - root.y
                         });
+                        xy.x = xy.x - frame.width / 2;
+                        xy.y = xy.y - frame.height / 2;
                         paster_image(context, xy, t, content);
                     }
                 }
