@@ -11,6 +11,7 @@ import { v4 } from 'uuid';
 import { ElScrollbar } from 'element-plus'
 import { Selection } from '@/context/selection';
 import { Comment } from '@/context/comment';
+import SvgIcon from "@/components/common/SvgIcon.vue";
 const { t } = useI18n()
 const props = defineProps<{
     context: Context
@@ -466,29 +467,46 @@ onUnmounted(() => {
         :class="{ popup_left: offside, popup_right: !offside, 'shake': isShaking }">
         <div class="popup-heard" @mousedown="moveCommentPopup">
             <div class="button-shift">
-                <el-button plain class="custom-button" :style="{ opacity: disablePrevent ? '0.2' : '1' }"
-                    @click="previousArticle">{{ t('comment.last') }}</el-button>
+<!--                <el-button plain class="custom-button" :style="{ opacity: disablePrevent ? '0.2' : '1' }"-->
+<!--                    @click="previousArticle">{{ t('comment.last') }}</el-button>-->
+                <div class="comment-last" :style="{ opacity: disablePrevent ? '0.2' : '1' }" @click="previousArticle">
+                    <svg-icon icon-class="comment-last"></svg-icon>
+                </div>
                 <div class="button-icon"></div>
-                <el-button plain class="custom-button" :style="{ opacity: disableNext ? '0.2' : '1' }"
-                    @click="nextArticle">{{ t('comment.next') }}</el-button>
+<!--                <el-button plain class="custom-button" :style="{ opacity: disableNext ? '0.2' : '1' }"-->
+<!--                    @click="nextArticle">{{ t('comment.next') }}</el-button>-->
+                <div class="comment-next" :style="{ opacity: disablePrevent ? '0.2' : '1' }" @click="nextArticle">
+                    <svg-icon icon-class="comment-next"></svg-icon>
+                </div>
             </div>
             <div class="comment-commands">
                 <el-button-group class="ml-4">
                     <el-tooltip class="box-item" effect="dark" :content="`${t('comment.delete')}`" placement="bottom"
                         :show-after="1000" :offset="10" :hide-after="0" v-if="isControls">
-                        <el-button plain :icon="Delete" @click="onDelete" v-if="isControls" />
+<!--                        <el-button plain :icon="Delete" @click="onDelete" v-if="isControls" />-->
+                        <div class="onDelete" @click="onDelete" v-if="isControls">
+                            <svg-icon icon-class="comment-delete"></svg-icon>
+                        </div>
                     </el-tooltip>
                     <el-tooltip class="box-item" effect="dark" :content="`${t('comment.settled')}`" placement="bottom"
                         :show-after="1000" :offset="10" :hide-after="0" v-if="resolve && isControls">
-                        <el-button plain :icon="CircleCheck" @click="onResolve" v-if="isControls" />
-
+<!--                        <el-button plain :icon="CircleCheck" @click="onResolve" v-if="isControls" />-->
+                        <div class="onResolve" @click="onResolve" v-if="isControls">
+                            <svg-icon icon-class="comment-solve"></svg-icon>
+                        </div>
                     </el-tooltip>
                     <el-tooltip class="box-item" effect="dark" :content="`${t('comment.settled')}`" placement="bottom"
                         :show-after="1000" :offset="10" :hide-after="0" v-else-if="!resolve && isControls">
-                        <el-button class="custom-icon" plain :icon="CircleCheckFilled" @click="onResolve"
-                            v-if="isControls" />
+<!--                        <el-button class="custom-icon" plain :icon="CircleCheckFilled" @click="onResolve"-->
+<!--                            v-if="isControls" />-->
+                        <div class="onResolved" @click="onResolve" v-if="isControls">
+                            <svg-icon icon-class="comment-solved"></svg-icon>
+                        </div>
                     </el-tooltip>
-                    <el-button plain :icon="Close" @click="close" />
+<!--                    <el-button plain :icon="Close" @click="close" />-->
+                    <div class="close" @click="close" >
+                        <svg-icon icon-class="comment-close"></svg-icon>
+                    </div>
                 </el-button-group>
             </div>
         </div>
@@ -508,8 +526,9 @@ onUnmounted(() => {
                     type="textarea" :placeholder="t('comment.input_comments')" resize="none" size="small"
                     :input-style="{ overflow: scrollVisible ? 'visible' : 'hidden' }" @keydown="carriageReturn"
                     @input="handleInput" />
-                <div class="send" :style="{ opacity: sendBright ? '1' : '0.5' }" @click="addComment"><svg-icon
-                        icon-class="send"></svg-icon></div>
+                <div class="send" :style="{ background: sendBright ? '#1878F5' : 'transparent' }" @click="addComment">
+                    <svg-icon icon-class="send" :style="{ color: sendBright ? '#FFFFFF' : '#CCCCCC' }"></svg-icon>
+                </div>
             </div>
         </div>
     </div>
@@ -519,42 +538,83 @@ onUnmounted(() => {
 .container-popup {
     position: absolute;
     width: 330px;
-    background-color: #fff;
-    border-radius: 6px;
-    box-shadow: 0px 5px 10px rgba(0, 0, 0, 0.15);
+    max-height: 664px;
+    box-shadow: 0px 2px 6px 0px rgba(0, 0, 0, 0.05);
     z-index: 99;
     font-size: var(--font-default-fontsize);
     cursor: default;
+    border-radius: 12px;
+    background: #FFFFFF;
+    border: 1px solid #EBEBEB;
 
     .popup-heard {
         display: flex;
         justify-content: space-between;
         align-items: center;
-        height: 45px;
-        padding: 12px;
+        height: 40px;
+        padding: 8px 14px;
         box-sizing: border-box;
-        border-bottom: 1px solid rgba(0, 0, 0, 0.15);
+        border-bottom: 1px solid #F0F0F0;
+        border-radius: 12px 12px 0px 0px;
 
         .button-shift {
             position: relative;
-            width: 94px;
+            width: 72px;
             height: 24px;
-            border: 1px solid rgba(0, 0, 0, 0.15);
             display: flex;
             align-items: center;
             justify-content: space-between;
-            border-radius: 4px;
+            border-radius: 5px 5px 5px 5px;
+            background: #FFFFFF;
+            box-sizing: border-box;
+            border: 1px solid #F0F0F0;
 
             .button-icon {
                 width: 0;
-                height: 16px;
-                border-left: 1px solid rgba(0, 0, 0, 0.15);
+                height: 23px;
+                border-left: 1px solid #F0F0F0;
                 position: absolute;
-                left: 47px;
+                left: 35px;
             }
 
             .el-button:hover {
                 background-color: rgba(0, 0, 0, 0.08);
+            }
+
+            .comment-last {
+                width: 36px;
+                height: 24px;
+                display: flex;
+                align-items: center;
+                justify-content: center;
+                border-radius: 5px 0 0 5px;
+
+                >svg {
+                    width: 12px;
+                    height: 12px;
+                }
+            }
+
+            .comment-last:hover{
+                background-color: #EBEBED;
+            }
+
+            .comment-next {
+                width: 36px;
+                height: 24px;
+                display: flex;
+                align-items: center;
+                justify-content: center;
+                border-radius: 0 5px 5px 0;
+
+                >svg {
+                    width: 12px;
+                    height: 12px;
+                }
+            }
+
+            .comment-next:hover{
+                background-color: #EBEBED;
             }
         }
 
@@ -564,37 +624,130 @@ onUnmounted(() => {
             width: 90px;
             height: 30px;
 
-            .el-button {
-                border: none;
-                border-radius: 4px;
-                width: 30px;
-                height: 30px;
+            //.el-button {
+            //    border: none;
+            //    border-radius: 4px;
+            //    width: 30px;
+            //    height: 30px;
+            //
+            //    &:hover {
+            //        background-color: rgba(0, 0, 0, 0.08);
+            //    }
+            //}
 
-                &:hover {
-                    background-color: rgba(0, 0, 0, 0.08);
+            .onDelete {
+                width: 24px;
+                height: 24px;
+                margin-top: 4px;
+                margin-left: -50px;
+                display: flex;
+                align-items: center;
+                justify-content: center;
+                border-radius: var(--default-radius);
+
+                >svg {
+                    width: 14px;
+                    height: 14px;
+                    color: #555555;
                 }
+            }
+
+            .onDelete:hover{
+                background-color: #EBEBED;
+            }
+
+            .onResolve {
+                width: 24px;
+                height: 24px;
+                margin-top: -24px;
+                margin-left: -23px;
+                display: flex;
+                align-items: center;
+                justify-content: center;
+                border-radius: 4px;
+
+                >svg {
+                    width: 14px;
+                    height: 14px;
+                    color: #555555;
+                }
+            }
+
+            .onResolve:hover{
+                background-color: #EBEBED;
+            }
+
+            .onResolved {
+                width: 24px;
+                height: 24px;
+                margin-top: -24px;
+                margin-left: -23px;
+                display: flex;
+                align-items: center;
+                justify-content: center;
+                border-radius: var(--default-radius);
+
+                >svg {
+                    width: 14px;
+                    height: 14px;
+                    color: #169248;
+                }
+            }
+
+            .close {
+                width: 24px;
+                height: 24px;
+                margin-top: -24px;
+                margin-left: 3px;
+                display: flex;
+                align-items: center;
+                justify-content: center;
+                border-radius: var(--default-radius);
+
+                >svg {
+                    width: 14px;
+                    height: 14px;
+                    color: #555555;
+                }
+            }
+
+            .close:hover{
+                background-color: #EBEBED;
             }
         }
     }
 
     .popup-footer {
+        padding: 0 14px;
+
         .textarea {
             display: flex;
-            align-items: self-end;
-            padding: 12px;
+            //align-items: self-end;
             background-color: #fff;
-            box-shadow: 0px 5px 10px rgba(0, 0, 0, 0.15);
-            border-radius: 4px;
+            //box-shadow: 0px 5px 10px rgba(0, 0, 0, 0.15);
+            border-radius: 12px;
+            box-sizing: border-box;
+            align-items: center;
+            padding: 13px 0;
+
+            .el-input--small {
+                font-family: HarmonyOS Sans;
+                font-size: 13px;
+                line-height: 22px;
+                color: #333333;
+            }
 
             .send {
                 color: #fff;
                 display: flex;
                 justify-content: center;
                 align-items: center;
-                width: 23px;
-                height: 22px;
-                background-color: var(--active-color);
-                border-radius: 50%;
+                width: 24px;
+                height: 24px;
+                background-color: #1878F5;
+                border-radius: 4px;
+                margin-right: 4px;
+                flex: 0 0 24px;
 
                 >svg {
                     width: 13px;
@@ -680,8 +833,8 @@ onUnmounted(() => {
     padding-right: 10px;
 }
 
-.custom-icon {
-    color: green;
-    /* 设置颜色为绿色 */
-}
+//.custom-icon {
+//    color: green;
+//    /* 设置颜色为绿色 */
+//}
 </style>

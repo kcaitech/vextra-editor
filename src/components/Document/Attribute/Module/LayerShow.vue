@@ -124,7 +124,7 @@ onUnmounted(() => {
 </script>
 <template>
     <div style="position: relative; margin-bottom: 10px;" ref="atrrdialog">
-        <TypeHeader :title="t('compos.layer_isShow')" class="mt-24">
+        <TypeHeader :title="t('compos.layer_isShow')" class="mt-24" :active="true">
             <template #tool>
                 <div class="edit-comps">
                     <div class="edit_svg" @click="layerIsShow" v-if="!is_bind">

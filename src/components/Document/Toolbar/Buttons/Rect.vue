@@ -13,7 +13,7 @@ const emit = defineEmits<{
 }>();
 function select(action: Action) {    
     emit('select', action);
-}
+} 
 </script>
 <template>
   <Tooltip :content="`${t('home.rect')} &nbsp;&nbsp; R`">

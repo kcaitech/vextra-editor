@@ -6,6 +6,7 @@ import * as comment_api from '@/request/comment'
 import { useRoute } from 'vue-router';
 import { Matrix } from "@kcdesign/data";
 import { v4 } from 'uuid';
+import SvgIcon from "@/components/common/SvgIcon.vue";
 const { t } = useI18n()
 const props = defineProps<{
     context: Context
@@ -60,10 +61,15 @@ const commentData = ref<Comment>({
 
 function handleClickOutside(event: MouseEvent) {
     event.stopPropagation()
-    const length = textarea.value.trim().length < 4
-    if (event.target instanceof Element && !event.target.closest('.comment-input') && length) {
+    if (event.target instanceof Element && event.target.closest('.comment-input')) {
+        return;
+    }
+
+    const mins = textarea.value.trim().length < 4;
+
+    if (mins) {
         emit('close', event);
-    } else if (event.target instanceof Element && !event.target.closest('.comment-input') && !length) {
+    } else {
         startShake()
         input.value && input.value.focus()
         input.value && input.value.select()
@@ -100,6 +106,7 @@ const mouseDownCommentInput = (e: MouseEvent) => {
 }
 
 const addComment = () => {
+    if(textarea.value.trim().length < 1) return;
     const timestamp = getCurrentTime()
     commentData.value.record_created_at = timestamp
     commentData.value.content = textarea.value
@@ -196,18 +203,18 @@ onUnmounted(() => {
 
 <template>
     <div ref="comment" class="comment-input"
-        :style="{ transform: `translate(${matrix.m02}px, ${matrix.m12}px)`, left: offside ? surplusX + 'px' : 38 + 'px', top: -43 + 'px' }">
+        :style="{ transform: `translate(${matrix.m02}px, ${matrix.m12}px)`, left: offside ? surplusX + 'px' : 48 + 'px', top: -33 + 'px' }">
         <div :class="{ icon_left: !offside, icon_right: offside }" ref="inputIcon" @mousedown="mouseDownCommentInput">
-            <div class="line1"></div>
-            <div class="line2"></div>
+            <svg-icon icon-class="comment-add"></svg-icon>
         </div>
         <div class="textarea" ref="textareaEl" :class="{ 'shake': isShaking }">
             <el-input ref="input" class="input" v-model="textarea" :autosize="{ minRows: 1, maxRows: 10 }" type="textarea"
                 :placeholder="t('comment.input_comments')" resize="none" size="small"
                 :input-style="{ overflow: scrollVisible ? 'visible' : 'hidden' }" @keydown="carriageReturn"
                 @input="handleInput" />
-            <div class="send" :style="{ opacity: sendBright ? '1' : '0.5' }" @click="addComment"><svg-icon
-                    icon-class="send"></svg-icon></div>
+            <div class="send" :style="{ background: sendBright ? '#1878F5' : 'transparent' }" @click="addComment">
+                <svg-icon icon-class="send" :style="{ color: sendBright ? '#FFFFFF' : '#CCCCCC' }"></svg-icon>
+            </div>
         </div>
     </div>
 </template>
@@ -222,35 +229,67 @@ onUnmounted(() => {
 
     .icon_left {
         position: absolute;
-        top: 15px;
-        left: -40px;
-        width: 30px;
-        height: 30px;
-        border-radius: calc(13px);
-        border-bottom-left-radius: 0;
-        background-color: #fff;
-        box-shadow: 0px 5px 10px rgba(0, 0, 0, 0.15);
+        top: 3px;
+        left: -48px;
+        width: 32px;
+        height: 32px;
+        border-radius: 16px 16px 16px 0;
+        background-color: #1878F5;
+        box-shadow: 0px 3px 5px 0px rgba(0, 0, 0, 0.05);
+        display: flex;
+        justify-content: center;
+        align-items: center;
+        padding: 4px;
+        box-sizing: border-box;
+
+        >svg {
+            color: #FFFFFF;
+            width: 25px;
+            height: 25px;
+        }
     }
 
     .icon_right {
         position: absolute;
-        top: 15px;
-        right: -40px;
-        width: 30px;
-        height: 30px;
-        border-radius: calc(13px);
-        border-bottom-left-radius: 0;
-        background-color: #fff;
-        box-shadow: 0px 5px 10px rgba(0, 0, 0, 0.15);
+        top: 3px;
+        right: -48px;
+        width: 32px;
+        height: 32px;
+        border-radius: 16px 16px 16px 0;
+        background-color: #1878F5;
+        box-shadow: 0px 3px 5px 0px rgba(0, 0, 0, 0.05);
+        display: flex;
+        justify-content: center;
+        align-items: center;
+        padding: 4px;
+        box-sizing: border-box;
+
+        >svg {
+            color: #FFFFFF;
+            width: 25px;
+            height: 25px;
+        }
     }
 
     .textarea {
         display: flex;
         align-items: self-end;
-        padding: 10px;
-        background-color: #fff;
-        box-shadow: 0px 5px 10px rgba(0, 0, 0, 0.15);
-        border-radius: 4px;
+        padding: 10px 8px;
+        background-color: #FFFFFF;
+        box-shadow: 0px 2px 6px 0px rgba(0, 0, 0, 0.05);
+        border-radius: var(--default-radius);
+        box-sizing: border-box;
+        border: 1px solid #EBEBEB;
+
+        .el-input--small {
+            display: flex;
+            font-size: 13px;
+            line-height: 22px;
+            align-items: center;
+            justify-content: center;
+            color: #CCCCCC;
+            font-family: HarmonyOS Sans;
+        }
 
         .send {
             color: #fff;
@@ -258,10 +297,10 @@ onUnmounted(() => {
             justify-content: center;
             align-items: center;
             margin-left: 2px;
-            width: 25px;
-            height: 23px;
-            background-color: var(--active-color);
-            border-radius: 50%;
+            width: 24px;
+            height: 24px;
+            background-color: #1878F5;
+            border-radius: 4px;
 
             >svg {
                 width: 15px;
@@ -271,27 +310,27 @@ onUnmounted(() => {
     }
 }
 
-.line1 {
-    position: absolute;
-    left: 7px;
-    top: 11px;
-    width: 40%;
-    height: 3px;
-    border: 1px solid #fff;
-    box-sizing: border-box;
-    background-color: rgb(0, 0, 0, .8);
-}
-
-.line2 {
-    position: absolute;
-    left: 7px;
-    top: 16px;
-    width: 50%;
-    height: 3px;
-    border: 1px solid #fff;
-    box-sizing: border-box;
-    background-color: rgb(0, 0, 0, .8);
-}
+//.line1 {
+//    position: absolute;
+//    left: 7px;
+//    top: 11px;
+//    width: 40%;
+//    height: 3px;
+//    border: 1px solid #fff;
+//    box-sizing: border-box;
+//    background-color: rgb(0, 0, 0, .8);
+//}
+//
+//.line2 {
+//    position: absolute;
+//    left: 7px;
+//    top: 16px;
+//    width: 50%;
+//    height: 3px;
+//    border: 1px solid #fff;
+//    box-sizing: border-box;
+//    background-color: rgb(0, 0, 0, .8);
+//}
 
 @keyframes shake {
     0% {

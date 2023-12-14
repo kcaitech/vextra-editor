@@ -392,19 +392,19 @@ onUnmounted(() => {
 .text-detail-container {
 
   >.popover {
-    width: 18px;
-    height: 22px;
+    width: 16px;
+    height: 16px;
 
     .trigger {
-      width: 100%;
-      height: 100%;
+      width: 16px;
+      height: 16px;
       display: flex;
       justify-content: center;
       align-items: center;
 
       >svg {
-        width: 11px;
-        height: 11px;
+        width: 16px;
+        height: 16px;
         transition: 0.5s;
       }
 

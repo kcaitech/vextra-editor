@@ -74,13 +74,13 @@ const handleBoolean = (e: MouseEvent) => {
   justify-content: space-between;
   .svg-container {
     width: 32px;
-    height:  var(--default-input-height);
+      height: 32px;
     display: flex;
     justify-content: center;
     align-items: center;
     svg {
-      width: 50%;
-      height: 50%;
+      width: 20px;
+      height: 20px;
     }
   }
 }

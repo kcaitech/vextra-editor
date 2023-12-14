@@ -38,7 +38,7 @@ const rootHeight = ref(0)
 const rootWidth = ref(0)
 const comment = ref<HTMLDivElement>()
 const matrix = new Matrix();
-const documentCommentList = ref<any[]>(_comment.value.pageCommentList[props.index].children || [])
+const documentCommentList = ref<any[]>([])
 const commentOpacity = ref(_comment.value.isCommentOpacity)
 const reply = ref(props.context.selection.commentStatus)
 const commentLength = ref(props.context.comment.pageCommentList.length)
@@ -253,6 +253,8 @@ function setOrigin() { // 这个动作是让container与页面坐标系重合
 
 const getDocumentComment = async () => {
     try {
+        console.log('pageItem');
+        
         const { data } = await comment_api.getDocumentCommentAPI({ doc_id: props.commentInfo.doc_id, root_id: props.commentInfo.id })
         const list = data.map((item: any) => {
             item.content = item.content.replaceAll("\r\n", "<br/>").replaceAll("\n", "<br/>").replaceAll(" ", "&nbsp;")
@@ -437,7 +439,7 @@ watchEffect(watcher)
         :class="{ hierarchy: ShowComment || commentScale === 1 ? true : false }">
         <div class="comment-mark" @mouseenter="hoverComment" @mouseleave="unHover" @mousedown="moveCommentPopup"
             :style="{ transform: `scale(${markScale})`, opacity: commentOpacity && !ShowComment ? '0.5' : '1' }"
-            :class="{ shadow: commentScale === 1 }">
+            :class="{ shadow: commentScale === 1, active: ShowComment }">
             <img @dragstart="dragstart" :src="commentInfo.user.avatar" alt="">
         </div>
         <HoverComment :context="props.context" :scale="commentScale" @showComment="showComment"
@@ -466,15 +468,20 @@ watchEffect(watcher)
         display: flex;
         justify-content: center;
         align-items: center;
-        width: 35px;
-        height: 35px;
-        border-radius: calc(14px);
-        border-bottom-left-radius: 0;
-        background-color: #fff;
-        box-shadow: 0px 5px 10px rgba(0, 0, 0, 0.15);
+        width: 94.12%;
+        height: 94.12%;
+        //border-radius: calc(14px);
+        //border-bottom-left-radius: 0;
+        //background-color: #fff;
+        //box-shadow: 0px 5px 10px rgba(0, 0, 0, 0.15);
         transition: 0.2s;
         transform-origin: left bottom;
         cursor: default;
+        border-radius: 20px 20px 20px 0px;
+        opacity: 1;
+        background: #FFFFFF;
+        border: 1px solid #EBEBEB;
+        box-shadow: 0px 2px 6px 0px rgba(0, 0, 0, 0.05);
 
         >img {
             width: 80%;
@@ -485,6 +492,12 @@ watchEffect(watcher)
 
     .shadow {
         box-shadow: none;
+        margin-top: -3px;
+        margin-left: 1px
+    }
+
+    .active {
+        border: 2px solid #1878F5;
     }
 }
 

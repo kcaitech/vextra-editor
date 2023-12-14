@@ -825,14 +825,18 @@ onUnmounted(() => {
 
 <style lang="scss" scoped>
 .color-block {
-    position: relative;
-    z-index: 99;
-    width: 16px;
-    height: 16px;
-    border-radius: 2px;
-    border: 1px solid var(--grey-dark);
-    font-weight: 500;
-    font-size: var(--font-default-fontsize);
+  position: relative;
+  z-index: 99;
+  //left: 10px;
+  width: 16px;
+  height: 16px;
+  border-radius: 3px;
+  font-weight: 500;
+  font-size: var(--font-default-fontsize);
+  opacity: 1;
+  box-sizing: border-box;
+  border: 1px solid rgba(0, 0, 0, 0.1);
+  flex: 0 0 16px;
 
     .popover {
         position: fixed;

@@ -188,7 +188,7 @@ onUnmounted(() => {
 <template>
     <div style="position: relative; margin-bottom: 10px;" ref="atrrdialog">
         <!--header-->
-        <TypeHeader :title="t('compos.compos_attr')" class="mt-24" @click="selectCompsType">
+        <TypeHeader :title="t('compos.compos_attr')" class="mt-24" @click="selectCompsType" :active="true">
             <template #tool>
                 <div class="add-comps" @click.stop="selectCompsType">
                     <svg-icon icon-class="add"></svg-icon>

@@ -173,7 +173,7 @@ onUnmounted(() => {
 
 <template>
     <div style="margin-bottom: 10px;">
-        <TypeHeader :title="t('compos.instance_attr')" class="mt-24">
+        <TypeHeader :title="t('compos.instance_attr')" class="mt-24" :active="true">
             <template #tool>
                 <div class="edit-comps">
                     <div class="edit_svg" @click.stop="editComps" v-if="is_symbolref_disa(props.shapes)">
