@@ -138,7 +138,7 @@ const createTable = (row?: number, col?: number) => {
 
     .grid-table {
         padding: 3px;
-        border-color: rgba(0, 0, 0, 0.5);
+        border: 1px solid #BFBFBF;
         border-collapse: separate;
         border-radius: 2px;
         border-spacing: 4px;
@@ -241,7 +241,7 @@ const createTable = (row?: number, col?: number) => {
         border: none;
 
         .hover-cell {
-            width: 20px;
+            width: 19px;
             height: 20px;
             border: none;
             top: 9px;

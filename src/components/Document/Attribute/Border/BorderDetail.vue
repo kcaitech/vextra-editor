@@ -402,7 +402,7 @@ onUnmounted(() => {
                         <Select :selected="position" :item-view="BorderPositonItem" :item-height="32"
                             :source="positonOptionsSource" @select="positionSelect"
                             :type="shapes[0].type === ShapeType.Table ? 'table' : 'none'" :width="128"
-                            :containerWidth="128"></Select>
+                            ></Select>
                     </div>
                     <!-- 边框厚度 -->
                     <div>

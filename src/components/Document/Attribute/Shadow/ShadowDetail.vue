@@ -255,7 +255,7 @@ const disable = computed(() => {
                                 @change="(c: Color) => getColorFromPicker(c)" />
                             <input ref="colorShadow" :spellcheck="false" :value="(toHex(shadow.color)).slice(1)"
                                 @change="e => onColorChange(e)" @focus="selectColor" />
-                            <input ref="alphaShadow" style="text-align: center;"
+                            <input ref="alphaShadow" style="text-align: right;"
                                 :value="filterAlpha(shadow.color.alpha * 100) + '%'" @change="e => onAlphaChange(e)"
                                 @focus="selectAlpha" />
                         </div>
