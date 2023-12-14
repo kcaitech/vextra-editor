@@ -119,8 +119,8 @@ onUpdated(() => {
   align-items: center;
   margin-left: 3px;
   color: #ffffff;
-    padding: 6px 6px 6px 6px;
-    box-sizing: border-box;
+  padding: 6px 6px 6px 6px;
+  box-sizing: border-box;
 
   >svg {
     width: 20px;

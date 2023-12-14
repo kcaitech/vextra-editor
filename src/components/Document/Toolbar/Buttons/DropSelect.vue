@@ -80,8 +80,8 @@ const handleBoolean = (e: MouseEvent) => {
   height: 32px;
   align-items: center;
   justify-content: space-between;
-    padding: 9px 12px 9px 8px;
-    box-sizing: border-box;
+  padding: 9px 12px 9px 8px;
+  box-sizing: border-box;
 
     .choose {
         width: 12px;
@@ -95,13 +95,13 @@ const handleBoolean = (e: MouseEvent) => {
     }
 
   .svg-container {
-    width: 14px;
-      height: 14px;
-    display: flex;
-    justify-content: center;
-    align-items: center;
-      margin-left: 8px;
-      margin-right: 8px;
+        width: 14px;
+        height: 14px;
+        display: flex;
+        justify-content: center;
+        align-items: center;
+        margin-left: 8px;
+        margin-right: 8px;
 
     svg {
       width: 14px;

@@ -36,7 +36,7 @@ const addFrame = (t: string[]) => {
 <style scoped lang="scss">
 .child {
   position: absolute;
-  width: 188px;
+  width: 222px;
   height: auto;
   z-index: 999;
   color: #ffffff;

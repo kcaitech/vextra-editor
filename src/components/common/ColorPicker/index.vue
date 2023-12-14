@@ -850,8 +850,9 @@ onUnmounted(() => {
         width: 250px;
         box-sizing: border-box;
         background-color: #ffffff;
-        //box-shadow: 0 0px 10px 4px rgba($color: #000000, $alpha: 0.1);
+        box-shadow: 0 2px 16px 0 rgba(0, 0, 0, 0.08);
         border-radius: 8px;
+        border: 1px solid #F0F0F0;
 
         >.header {
             width: 100%;
@@ -1048,9 +1049,10 @@ onUnmounted(() => {
             align-items: flex-start;
             padding: 12px;
             box-sizing: border-box;
+            justify-content: space-between;
 
             .model {
-                flex: 0 0 25%;
+                flex: 0 0 27%;
                 border-radius: 6px;
                 box-sizing: border-box;
                 background: #F5F5F5;
@@ -1061,12 +1063,11 @@ onUnmounted(() => {
             }
 
             .values {
-                flex: 0 0 72%;
+                flex: 0 0 70%;
 
                 .wrap {
                     width: 160px;
                     height: 100%;
-                    padding: 0 3px;
                     box-sizing: border-box;
 
                     .value {
@@ -1105,7 +1106,7 @@ onUnmounted(() => {
                         height: 24px;
                         display: flex;
                         align-items: center;
-                        padding: 5px 0;
+                        padding: 5px;
                         box-sizing: border-box;
 
                         .item {

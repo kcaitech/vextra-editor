@@ -18,7 +18,7 @@ const showHiddenLeft = () => {
 <style lang="scss" scoped>
     .showHiddenL {
         position: absolute;
-        right: -16px;
+        right: -15px;
         top: 0%;
         transform: translateY(-50%);
         z-index: 9;
@@ -26,17 +26,18 @@ const showHiddenLeft = () => {
         display: flex;
         align-items: center;
         justify-content: center;
-        box-shadow: 4px 0px 4px rgba($color: #000000, $alpha: 0.05);
+        //box-shadow: 4px 0px 4px rgba($color: #000000, $alpha: 0.05);
         border-radius: 0px 8px 8px 0px;
         background: #FFFFFF;
         width: 16px;
         height: 44px;
         box-sizing: border-box;
         border: 1px solid #F0F0F0;
+        padding: 14px 0;
 
         >.svg {
-            width: 10px;
-            height: 10px;
+            width: 16px;
+            height: 16px;
         }
     }
 </style>
