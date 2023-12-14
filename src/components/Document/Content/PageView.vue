@@ -48,17 +48,6 @@ function page_watcher() {
     if (height.value % 2) height.value++;
 }
 
-// function createVDom() {
-//     const domCtx = new DViewCtx();
-//     initComsMap(domCtx.comsMap);
-//     const dom: PageDom = new PageDom(domCtx, props);
-//     // dom.update(props, true);
-//     dom.onCreate();
-//     // console.log("dom.nodeCount: " + dom.nodeCount);
-//     const ret = { dom, ctx: domCtx }
-//     props.context.vdom.set(props.data.id, ret);
-//     return ret;
-// }
 let dom = props.context.getPageDom(props.data);
 
 const stopWatchPage = watch(() => props.data, (value, old) => {

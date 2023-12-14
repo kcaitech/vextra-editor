@@ -278,7 +278,6 @@ export class Context extends Watchable(Object) {
         initComsMap(domCtx.comsMap);
         const dom: PageDom = new PageDom(domCtx, { data: page });
         // dom.update(props, true);
-        dom.onCreate();
         // console.log("dom.nodeCount: " + dom.nodeCount);
         const ret = { dom, ctx: domCtx }
         this.m_vdom.set(page.id, ret);

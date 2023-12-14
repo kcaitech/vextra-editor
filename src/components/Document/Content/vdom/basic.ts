@@ -35,9 +35,10 @@ export const DomBasic = <T extends Constructor>(SuperClass: T) =>
         render(): number {
             const version: number = super.render();
             if (version !== this.m_save_version || !this.el) {
-                elpatch(this as any, this.m_save_render);
+                const _this = this as any as EL;
+                elpatch(_this, this.m_save_render);
                 this.m_save_version = version;
-                this.m_save_render.reset(this.tag, this.attr, this.childs);
+                this.m_save_render.reset(_this.eltag, _this.elattr, _this.elchilds);
             }
             return version;
         }
