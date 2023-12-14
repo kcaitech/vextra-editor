@@ -8,7 +8,6 @@ import { WorkSpace } from '@/context/workspace';
 import { useI18n } from 'vue-i18n';
 import Tooltip from '@/components/common/Tooltip.vue';
 import { Arrange } from '@/context/arrange';
-import Opacity from "@/components/Document/Attribute/Opacity/Opacity.vue";
 interface Props {
     context: Context
     shapes: Shape[]
