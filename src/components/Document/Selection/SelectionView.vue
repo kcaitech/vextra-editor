@@ -361,10 +361,6 @@ function window_blur() {
     }
 }
 
-const is_cutout = (shape: Shape) => {
-    isCutout.value = shape.type === ShapeType.Cutout;
-}
-
 //标注线
 const isLableLine = ref(false);
 const lableLineStatus = () => {

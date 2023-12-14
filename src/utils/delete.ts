@@ -2,9 +2,9 @@ import { Context } from "@/context";
 import { Shape, TableShape } from "@kcdesign/data";
 
 export function deleteUnits(context: Context) {
-    const mode = context.workspace.is_path_edit_mode;
-    if (mode) {
-        delete_for_path_edit();
+    const path_edit_mode = context.workspace.is_path_edit_mode;
+    if (path_edit_mode) {
+        delete_for_path_edit(context);
         return;
     }
 
@@ -26,13 +26,24 @@ export function deleteUnits(context: Context) {
     }
 
     delete_shapes(context, selected);
-
 }
 
-function delete_for_path_edit() {
-    // todo
-    console.log('keyboard units to delete for path edit mode');
+function delete_for_path_edit(context: Context) {
+    const path_shape = context.selection.pathshape;
+    if (!path_shape) {
+        console.log('!path_shape');
+        return;
+    }
 
+    const points = context.path.get_synthetic_points(path_shape.points.length - 1);
+    if (!points.length) {
+        console.log('!points.length');
+        return;
+    }
+
+    const editor = context.editor4Shape(path_shape);
+
+    editor.removePoints(points);
 }
 
 function delete_shapes(context: Context, shapes: Shape[]) {
