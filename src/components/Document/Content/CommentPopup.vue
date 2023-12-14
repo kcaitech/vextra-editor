@@ -221,9 +221,10 @@ const onDeleteItem = (index: number, e: Event) => {
 }
 const onDeleteChild = (index: number, e: Event, id: string) => {
     e.stopPropagation()
-    emit('recover', index, id)
-    deleteComment(id)
-    commentPosition()
+    deleteComment(id).then(() => {
+        emit('recover', index, id)
+        commentPosition()
+    })
 }
 
 const setCommentStatus = async (status: number) => {
@@ -264,7 +265,9 @@ function commentUpdate(t?: number, p?: number) {
             clearTimeout(timeout)
         }, 10)
     } else if (t === Comment.UPDATE_COMMENT_CHILD) {
-        commentHtight()
+        setTimeout(() => {
+            commentHtight()
+        }, 1000);
     }
 }
 
@@ -330,9 +333,10 @@ const addComment = () => {
     commentData.value.root_id = props.commentInfo.id;
     const data = commentData.value;
     const info = { ...data, status: 0, user: props.commentInfo.user, id: '1' };
-    createComment(data);
+    createComment(data).then(() => {
+        emit('addComment', info);
+    });
     scrollMaxHeight.value = (props.rootHeight - 58 - 100) * 0.7
-    emit('addComment', info);
     commentHtight();
     nextTick(() => {
         scrollbarRef.value!.scrollTo(0, itemHeight.value!.clientHeight)
@@ -515,7 +519,7 @@ onUnmounted(() => {
                 <CommentPopupItem :context="props.context" @close="() => emit('close')" :commentInfo="props.commentInfo"
                     :index="props.index" @delete="onDeleteItem" @editComment="editComment" @quick-reply="quickReply">
                 </CommentPopupItem>
-                <CommentPopupItem v-for="(item, index) in props.documentCommentList" :key="index" :commentInfo="item"
+                <CommentPopupItem v-for="(item, index) in props.documentCommentList" :key="item.id" :commentInfo="item"
                     :index="index" :context="props.context" @close="() => emit('close')" @delete="onDeleteChild"
                     @editComment="editCommentChild" @quick-reply="quickReply"></CommentPopupItem>
             </div>

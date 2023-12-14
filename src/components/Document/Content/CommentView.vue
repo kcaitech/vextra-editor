@@ -274,27 +274,24 @@ const aboutMe = () => {
 
 // 删除评论
 const deleteComment = (index: number) => {
-    comment.value.sendComment()
     documentCommentList.value.splice(index, 1)
     props.context.comment.setCommentList(documentCommentList.value)
 }
 
 //解决评论
 const resolve = (status: number, index: number) => {
-    comment.value.sendComment()
     documentCommentList.value[index].status = status
     props.context.comment.setCommentList(documentCommentList.value)
 }
 
 //回复评论
 const recover = () => {
-    comment.value.sendComment()
+    props.context.comment.sendComment()
     props.context.comment.setCommentList(documentCommentList.value)
 }
 
 //修改评论内容
 const editComment = (index: number, text: string) => {
-    comment.value.sendComment()
     documentCommentList.value[index].content = text
     props.context.comment.setCommentList(documentCommentList.value)
 }
@@ -361,17 +358,43 @@ const docComment = (comment: DocCommentOpData) => {
                 ...documentCommentList.value[index],
                 ...comment.comment
             }
+        } else {
+            documentCommentList.value.forEach((item, i) => {
+                const _index = item.children.findIndex((child: any) => child.id === comment.comment.id)
+                if (_index !== -1) {
+                    documentCommentList.value[i].children = {
+                        ...documentCommentList.value[i].children,
+                        ...comment.comment
+                    }
+                    props.context.comment.setCommentList(documentCommentList.value);
+                    props.context.comment.onUpdateComment();
+                }
+            })
         }
     } else if (comment.type === DocCommentOpType.Del) {
         if (index !== -1) {
             documentCommentList.value.splice(index, 1)
+        } else {
+            documentCommentList.value.forEach((item, i) => {
+                const _index = item.children.findIndex((child: any) => child.id === comment.comment.id)
+                if (_index !== -1) {
+                    documentCommentList.value[i].children.splice(index, 1);
+                    props.context.comment.setCommentList(documentCommentList.value);
+                    props.context.comment.onUpdateComment();
+                }
+            })
         }
     } else if (comment.type === DocCommentOpType.Add) {
         if (!comment.comment.root_id) {
             documentCommentList.value.unshift(comment.comment)
+        } else {
+            const _index = documentCommentList.value.findIndex(item => item.id === comment.comment.root_id);
+            if (_index !== -1) {
+                documentCommentList.value[_index].children.unshift(comment.comment);
+                props.context.comment.onUpdateComment();
+            }
         }
     }
-    props.context.comment.onUpdateComment(comment)
 }
 onMounted(() => {
     const updateComment = props.context.communication.docCommentOp
@@ -390,7 +413,7 @@ onUnmounted(() => {
 <template>
     <PageCommentItem ref="commentItem" :context="props.context" @moveCommentPopup="downMoveCommentPopup"
         :matrix="matrix.toArray()" @delete-comment="deleteComment" @resolve="resolve" :reflush="commentReflush"
-        v-for="(item, index) in documentCommentList" :key="index" :commentInfo="item" :index="index" @recover="recover"
+        v-for="(item, index) in documentCommentList" :key="item.id" :commentInfo="item" :index="index" @recover="recover"
         @editComment="editComment" @updateShapeComment="updateShapeComment" :myComment="aboutMe()">
     </PageCommentItem>
 </template>

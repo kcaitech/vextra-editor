@@ -78,7 +78,7 @@ function handleClickOutside(event: MouseEvent) {
 
 const inputPosition = () => {
     offside.value = props.rootWidth! - props.posi.x < commentWidth
-    surplusX.value = -(commentWidth - 20)
+    surplusX.value = -(commentWidth - 12)
     input.value?.focus()
 }
 const sendBright = computed(() => textarea.value.trim().length > 0)
@@ -121,8 +121,9 @@ const addComment = () => {
     }
     commentData.value.shape_id = v4()
     const data = commentData.value
-    createComment(data)
-    emit('completed')
+    createComment(data).then(() => {
+        emit('completed');
+    })
 }
 const getCurrentTime = () => {
     const currentDate = new Date();
