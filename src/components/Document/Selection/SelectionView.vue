@@ -45,11 +45,11 @@ const controller = ref<boolean>(false);
 const rotate = ref<number>(0);
 const altKey = ref<boolean>(false);
 const tracing = ref<boolean>(false);
-const tracingStroke = ref<string>('#865dff');
+const tracingStroke = ref<string>('#1878F5');
 const traceEle = ref<Element>();
 const tracingFrame = ref<PathView>({ path: '', viewBox: '', height: 0, width: 0 });
 const placement = ref<boolean>(false);
-const placementStroke = ref<string>('#865dff');
+const placementStroke = ref<string>('#1878F5');
 const placementFrame = ref<PathView>({ path: '', viewBox: '', height: 0, width: 0 });
 const watchedShapes = new Map();
 
@@ -159,7 +159,7 @@ function createShapeTracing() {
         if (hoveredShape.type === ShapeType.Symbol || hoveredShape.type === ShapeType.SymbolRef) {
             tracingStroke.value = '#ff9900';
         } else {
-            tracingStroke.value = '#865dff';
+            tracingStroke.value = '#1878F5';
         }
     }
 }
@@ -186,7 +186,7 @@ function createPalcement() {
         if (p.type === ShapeType.Symbol || p.type === ShapeType.SymbolRef) {
             placementStroke.value = '#ff9900';
         } else {
-            placementStroke.value = '#865dff';
+            placementStroke.value = '#1878F5';
         }
     }
 }
@@ -393,14 +393,6 @@ onUnmounted(() => {
         :width="tracingFrame.width" :height="tracingFrame.height" :viewBox="tracingFrame.viewBox"
         @mousedown="(e: MouseEvent) => pathMousedown(e)" style="transform: translate(0px, 0px); position: absolute;">
         <path :d="tracingFrame.path" class="tracing" :style="{ stroke: tracingStroke }">
-        </path>
-    </svg>
-    <!-- 落点 -->
-    <svg v-if="placement" version="1.1" xmlns="http://www.w3.org/2000/svg" xmlns:xlink="http://www.w3.org/1999/xlink"
-        xmlns:xhtml="http://www.w3.org/1999/xhtml" preserveAspectRatio="xMinYMin meet" overflow="visible"
-        :width="placementFrame.width" :height="placementFrame.height" :viewBox="placementFrame.viewBox"
-        style="transform: translate(0px, 0px); position: absolute;">
-        <path :d="placementFrame.path" class="tracing" :style="{ stroke: placementStroke }">
         </path>
     </svg>
     <!-- 控制 -->

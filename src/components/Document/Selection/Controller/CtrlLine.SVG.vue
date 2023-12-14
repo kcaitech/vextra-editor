@@ -117,7 +117,7 @@ watchEffect(updateControllerView)
         :height="height"
         :style="{ transform: `translate(${bounds.left}px,${bounds.top}px)`, left: 0, top: 0, position: 'absolute' }"
         :class="{ 'un-visible': !visible }" @mousedown="mousedown" overflow="visible">
-        <path :d="line_path" fill="none" stroke='#865dff' stroke-width="1.5px"></path>
+        <path :d="line_path" fill="none" stroke='#1878f5' stroke-width="1.5px"></path>
         <PointContainerForStraightLine :context="props.context" :matrix="submatrix.toArray()" :shape="props.shape"
             :rotation="props.rotate" :axle="axle" :c-frame="props.controllerFrame"></PointContainerForStraightLine>
     </svg>

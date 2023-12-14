@@ -40,8 +40,8 @@ let context: Context | undefined;
 const middleWidth = ref<number>(0.8);
 const middleMinWidth = ref<number>(0.3);
 const route = useRoute();
-const Right = ref({ rightMin: 250, rightMinWidth: 0.1, rightWidth: 0.1 });
-const Left = ref({ leftMin: 250, leftWidth: 0.1, leftMinWidth: 0.1 });
+const Right = ref({ rightMin: 240, rightMinWidth: 0.1, rightWidth: 0.1 });
+const Left = ref({ leftMin: 240, leftWidth: 0.1, leftMinWidth: 0.1 });
 const showRight = ref<boolean>(true);
 const showLeft = ref<boolean>(true);
 const showTop = ref<boolean>(true);
@@ -675,7 +675,7 @@ onUnmounted(() => {
     <div id="visit">
       <ApplyFor></ApplyFor>
     </div>
-    <ColSplitView id="center" :style="{ height: showTop ? 'calc(100% - 40px)' : '100%' }"
+    <ColSplitView id="center" :style="{ height: showTop ? 'calc(100% - 52px)' : '100%' }"
       v-if="inited && !loading && !null_context"
       :left="{ width: Left.leftWidth, minWidth: Left.leftMinWidth, maxWidth: 0.5 }"
       :middle="{ width: middleWidth, minWidth: middleMinWidth, maxWidth: middleWidth }"
@@ -711,7 +711,7 @@ onUnmounted(() => {
       <span class="text" v-if="permissionChange === PermissionChange.update">{{ t('home.prompt') }}</span>
       <span class="text" v-if="permissionChange === PermissionChange.close">{{ t('home.visit') }}</span>
       <span class="text" v-if="permissionChange === PermissionChange.delete">{{ t('home.delete_file') }}</span>
-      <span style="color: #0d99ff;" v-if="countdown > 0">{{ countdown }}</span>
+      <span style="color: #1878F5;" v-if="countdown > 0">{{ countdown }}</span>
     </div>
     <Bridge v-if="bridge" :context="context!"></Bridge>
   </div>
@@ -735,13 +735,14 @@ onUnmounted(() => {
 <style scoped lang="scss">
 #top {
   display: flex;
-  position: relative;
   flex-flow: row nowrap;
   width: 100%;
-  height: 40px;
-  background-color: var(--top-toolbar-bg-color);
-  z-index: 10;
-  min-height: 40px;
+  height: 52px;
+  background: var(--theme-color);
+  padding: 10px 8px;
+  box-sizing: border-box;
+  position: relative;
+  z-index: 19;
 }
 
 .network {
@@ -763,7 +764,6 @@ onUnmounted(() => {
 #center {
   display: flex;
   flex-flow: row nowrap;
-  flex: 1 1 auto;
   width: 100%;
   overflow: hidden;
   position: relative;
@@ -771,7 +771,6 @@ onUnmounted(() => {
   #navigation {
     height: 100%;
     background-color: var(--left-navi-bg-color);
-    z-index: 9;
   }
 
   #content {
@@ -816,9 +815,9 @@ onUnmounted(() => {
   left: 50%;
   transform: translateX(-50%);
   color: #f1f1f1;
-  background-color: var(--active-color-beta);
+  background-color: var(--active-color);
   padding: 7px 30px;
-  border: 1px solid var(--active-color-beta);
+  border: 1px solid var(--active-color);
   border-radius: 4px;
 
   .loading-spinner {

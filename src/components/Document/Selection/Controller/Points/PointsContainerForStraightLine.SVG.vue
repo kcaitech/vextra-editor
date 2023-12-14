@@ -314,8 +314,8 @@ onUnmounted(() => {
                 @mousedown.stop="(e) => point_mousedown(e, p.type, i)" @mouseenter="() => setCursor(p.type)"
                 @mouseleave="point_mouseleave">
             </rect>
-            <rect :x="p.point.x" :y="p.point.y" width="8px" height="8px" fill="#ffffff" stroke='#865dff'
-                stroke-width="1.5px" @mousedown.stop="(e) => point_mousedown(e, p.type, i)"
+            <rect :x="p.point.x" :y="p.point.y" width="8px" height="8px" fill="#ffffff" stroke='#1878f5'
+                stroke-width="1.5px" @mousedown.stop="(e) => point_mousedown(e, p.type)"
                 @mouseenter="() => setCursor(p.type)" @mouseleave="point_mouseleave"></rect>
         </g>
     </g>

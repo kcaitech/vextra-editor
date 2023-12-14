@@ -150,9 +150,9 @@ onUnmounted(() => {
         width: 60px;
         border: none;
         height: 25px;
-        background-color: var(--active-color-beta);
+        background-color: var(--active-color);
         color: #fff;
-        border: 1px solid var(--active-color-beta);
+        border: 1px solid var(--active-color);
         border-radius: 4px;
     }
 }

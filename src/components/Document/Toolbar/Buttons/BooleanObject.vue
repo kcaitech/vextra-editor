@@ -153,17 +153,19 @@ onUnmounted(() => {
 
 <style lang="scss" scoped>
 .svg-container {
-  width: 28px;
-  height: 28px;
+  width: 32px;
+  height: 32px;
   display: flex;
   justify-content: center;
   align-items: center;
-  margin-left: 3px;
+  margin-left: 4px;
   color: #ffffff;
+    padding: 6px 6px 6px 6px;
+    box-sizing: border-box;
   
   >svg {
-    width: 17px;
-    height: 17px;
+    width: 20px;
+    height: 20px;
   }
 }
 .active {
@@ -171,19 +173,21 @@ onUnmounted(() => {
 }
 
 .menu {
-  width: 10px;
+  width: 20px;
   height: 28px;
   display: flex;
-  padding-right: 4px;
-  margin-right: 2px;
+  //padding-right: 4px;
+  //margin-right: 2px;
   justify-content: center;
   align-items: center;
   color: #ffffff;
   transition: 0.3s;
+    padding: 10px 8px 10px 0;
+    box-sizing: border-box;
 
   >svg {
-    width: 80%;
-    height: 60%;
+    width: 12px;
+    height: 12px;
   }
 }
 

@@ -141,7 +141,7 @@ onUnmounted(() => {
 </script>
 <template>
     <Tooltip :content="string_by_sys(`${t('home.picture')} &nbsp;&nbsp; Shift Ctrl K`)">
-        <ToolButton ref="button" @click="select" :selected="props.active">
+        <ToolButton ref="button" @click="select" :selected="props.active" style="width: 32px">
             <div class="svg-container">
                 <svg-icon icon-class="picture"></svg-icon>
             </div>
@@ -151,16 +151,18 @@ onUnmounted(() => {
 </template>
 <style scoped lang="scss">
 .svg-container {
-    width: 28px;
-    height: 28px;
+    width: 32px;
+    height: 32px;
     display: flex;
     justify-content: center;
     align-items: center;
     color: #ffffff;
+    padding: 6px 6px 6px 6px;
+    box-sizing: border-box;
 
     >svg {
-        width: 15px;
-        height: 15px;
+        width: 20px;
+        height: 20px;
     }
 }
 

@@ -73,15 +73,16 @@ onUnmounted(stop);
 <template>
     <div class="wrap">
         <div class="apex-select-wrap">
-            <Select style="z-index: 100;" :selected="borderFrontStyle" :item-view="BorderApexStyleItem"
+            <Select style="width: 68px; z-index: 100;left: -2%" :selected="borderFrontStyle" :item-view="BorderApexStyleItem"
                 :value-view="BorderApexStyleSelectedItem" :item-height="30" :source="borderFrontStyleOptionsSource"
+                @select="borderApexStyleSelect"></Select>
+            <div style="width: 14%"></div>
+            <Select style="width: 68px; z-index: 100;left: -11%" :selected="borderEndStyle" :item-view="BorderApexStyleItem"
+                :value-view="BorderApexStyleSelectedItem" :item-height="30" :source="borderEndStyleOptionsSource"
                 @select="borderApexStyleSelect"></Select>
             <div class="change" @click="exchange">
                 <svg-icon icon-class="exchange"></svg-icon>
             </div>
-            <Select style="z-index: 100;" :selected="borderEndStyle" :item-view="BorderApexStyleItem"
-                :value-view="BorderApexStyleSelectedItem" :item-height="30" :source="borderEndStyleOptionsSource"
-                @select="borderApexStyleSelect"></Select>
         </div>
 
     </div>
@@ -89,25 +90,26 @@ onUnmounted(stop);
 <style scoped lang="scss">
 .wrap {
     width: 100%;
-    margin: 8px 0px;
-    margin-left: 23px;
     box-sizing: border-box;
     display: flex;
+    margin: 12px 0;
+    margin-left: 23px;
 
     .apex-select-wrap {
-        width: 175.5px;
+        width: 176px;
         display: flex;
 
         .change {
-            width: 40px;
+            width: 16px;
             height: var(--default-input-height);
             display: flex;
             align-items: center;
             cursor: pointer;
+            margin-left: -12px;
 
             >svg {
-                width: 100%;
-                height: 100%;
+                width: 16px;
+                height: 16px;
             }
         }
     }

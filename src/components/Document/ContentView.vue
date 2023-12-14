@@ -376,8 +376,9 @@ function onMouseMove_CV(e: MouseEvent) {
 // mouseup(target：document)
 function onMouseUp(e: MouseEvent) {
     if (e.button == 0) {
-        if (spacePressed.value) pageViewDragEnd();
-        else {
+        if (spacePressed.value) {
+            pageViewDragEnd();
+        } else {
             isMouseLeftPress = false;
             selectEnd();
             saveShapeCommentXY();
@@ -385,7 +386,9 @@ function onMouseUp(e: MouseEvent) {
                 selectEnd();
             }
         }
-        if (wheel) wheel = wheel.remove();
+        if (wheel) {
+            wheel = wheel.remove();
+        }
         isDragging = false;
         clearInterval(timer);
         timer = null;

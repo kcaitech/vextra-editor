@@ -8,6 +8,7 @@ import { WorkSpace } from '@/context/workspace';
 import { useI18n } from 'vue-i18n';
 import Tooltip from '@/components/common/Tooltip.vue';
 import { Arrange } from '@/context/arrange';
+import Opacity from "@/components/Document/Attribute/Opacity/Opacity.vue";
 interface Props {
     context: Context
     shapes: Shape[]
@@ -231,8 +232,10 @@ onUnmounted(() => {
 .container {
     display: flex;
     justify-content: space-evenly;
-    padding: 4px 10px 0 10px;
+    padding: 6px 8px 6px 8px;
     box-sizing: border-box;
+    height: 40px;
+    border-bottom: 1px solid #F0F0F0;
 }
 
 .item {
@@ -241,12 +244,12 @@ onUnmounted(() => {
     display: flex;
     justify-content: center;
     align-items: center;
-    border-radius: 4px;
+    opacity: 1;
 
     >svg {
         color: var(--theme-color);
-        width: 70%;
-        height: 70%;
+        width: 28px;
+        height: 28px;
     }
 }
 
@@ -260,12 +263,11 @@ onUnmounted(() => {
     display: flex;
     justify-content: center;
     align-items: center;
-    border-radius: 4px;
+    opacity: 0.3;
 
     >svg {
-        color: rgba(185, 185, 185, 1);
-        width: 70%;
-        height: 70%;
+        width: 28px;
+        height: 28px;
     }
 }
 </style>

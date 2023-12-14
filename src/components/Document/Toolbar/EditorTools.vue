@@ -5,10 +5,6 @@ import { Selection } from '@/context/selection';
 import Cursor from "./Buttons/Cursor.vue";
 import Frame from "./Buttons/Frame.vue";
 import GroupUngroup from "./GroupUngroup.vue";
-import Rect from "./Buttons/Rect.vue";
-import Ellipse from "./Buttons/Ellipse.vue";
-import Line from "./Buttons/Path.vue";
-import Arrow from "./Buttons/Arrow.vue";
 import CreateText from "./Buttons/CreateText.vue";
 import CreateImage from "./Buttons/CreateImage.vue";
 import Table from "./Buttons/Table/index.vue"
@@ -22,6 +18,8 @@ import { message } from "@/utils/message";
 import PathEditTool from "@/components/Document/Toolbar/PathEditTool.vue";
 import { string_by_sys } from "@/utils/common";
 import { ElMessage } from "element-plus";
+import Shape from "./Buttons/Shape.vue";
+import ToolButton from "./ToolButton.vue";
 const { t } = useI18n();
 
 interface Props {
@@ -47,7 +45,7 @@ function select(action: Action) {
 }
 
 function selectComps() {
-    message('feature', t('navi.development'));
+    props.context.tool.notify(Tool.COMPONENT);
 }
 
 const isLable = ref(props.context.tool.isLable);
@@ -91,6 +89,7 @@ onUnmounted(() => {
     props.context.tool.unwatch(tool_watcher);
     props.context.tool.unwatch(workspace_watcher);
 })
+
 function applyForEdit() {
     ElMessage.success({
         message: '已发送权限申请',
@@ -104,31 +103,43 @@ function applyForEdit() {
     <div v-if="isEdit && !isLable && !is_path_edit" class="editor-tools" @dblclick.stop>
         <Cursor @select="select" :d="selected" :active="selected === Action.AutoV || selected === Action.AutoK"
             :is_lable="isLable" :edit="isEdit"></Cursor>
-        <div class="vertical-line" />
+        <div style="width: 16px;height: 52px;display: flex;align-items: center;justify-content: center;">
+            <div class="vertical-line" />
+        </div>
         <Frame :context="props.context" :active="selected === Action.AddFrame" @select="select"></Frame>
-        <Rect @select="select" :active="selected === Action.AddRect"></Rect>
-        <Ellipse @select="select" :active="selected === Action.AddEllipse"></Ellipse>
-        <Line @select="select" :active="selected === Action.AddLine"></Line>
-        <Arrow @select="select" :active="selected === Action.AddArrow"></Arrow>
+        <Shape :context="context" @select="select"></Shape>
         <CreateText @select="select" :active="selected === Action.AddText"></CreateText>
         <CreateImage :active="selected === Action.AddImage" :context="props.context"></CreateImage>
         <Table @select="select" :active="selected === Action.AddTable" :context="props.context"></Table>
         <Contact @select="select" :active="selected === Action.AddContact" :context="props.context"></Contact>
-        <div class="vertical-line" />
-        <CreateComps @select="select" :context="props.context"></CreateComps>
+        <div style="width: 16px;height: 52px;display: flex;align-items: center;justify-content: center;">
+            <div class="vertical-line" />
+        </div>
+        <el-tooltip class="box-item" effect="dark" :content="string_by_sys(`${t('navi.comps')} &nbsp;&nbsp; Shift I`)"
+            placement="bottom" :show-after="500" :offset="10" :hide-after="0">
+            <ToolButton style="width: 32px">
+                <div class="temp" @click="selectComps">
+                    <svg-icon icon-class="resource"></svg-icon>
+                </div>
+            </ToolButton>
+        </el-tooltip>
         <Comment @select="select" :active="selected === Action.AddComment" :workspace="workspace"></Comment>
         <GroupUngroup :context="props.context" :selection="props.selection"></GroupUngroup>
     </div>
     <div v-if="isread || canComment || isLable" class="editor-tools" @dblclick.stop>
         <span style="color: #ffffff;">{{ t('apply.read_only') }}</span>
         <div class="button">
-            <button class="el" style="background-color: #865DFF;" @click="applyForEdit">{{ t('apply.apply_for_edit')
-            }}</button>
+            <button class="el" style="background-color: #1878F5;" @click="applyForEdit">{{
+                t('apply.apply_for_edit')
+            }}
+            </button>
         </div>
         <Cursor @select="select" :d="selected" :active="selected === Action.AutoV || selected === Action.AutoK"
             :is_lable="isLable" :edit="isEdit"></Cursor>
-        <div class="vertical-line" />
-        <Comment v-if="!isread" @select="select" :active="selected === Action.AddComment" :workspace="workspace"></Comment>
+        <div style="width: 16px;height: 52px;display: flex;align-items: center;justify-content: center;">
+            <div class="vertical-line" />
+        </div>
+        <Comment @select="select" :active="selected === Action.AddComment" :workspace="workspace" v-if="!isread"></Comment>
     </div>
     <PathEditTool v-if="isEdit && is_path_edit" class="editor-tools" :context="props.context" @select="select"
         :selected="selected"></PathEditTool>
@@ -145,9 +156,63 @@ function applyForEdit() {
     left: 50%;
     transform: translateX(-50%);
 
+    :deep(.tool-button) {
+        width: 56px;
+        height: 32px;
+    }
+
+    &::-webkit-scrollbar {
+        width: 0px;
+        height: 0px;
+    }
+
+    &::-webkit-scrollbar-track {
+        background-color: none;
+    }
+
+    &::-webkit-scrollbar-thumb {
+        background-color: none;
+    }
+
+    &::-webkit-scrollbar-thumb:hover {
+        background-color: none;
+    }
+
+    &::-webkit-scrollbar-thumb:active {
+        background-color: none;
+    }
+
+    .button {
+        margin-left: 15px;
+
+        .el {
+            height: 33px;
+            border-radius: 5px;
+            color: #ffffff;
+            background-color: #865DFF;
+        }
+    }
+
+    .temp {
+        width: 32px;
+        height: 32px;
+        font-size: 12px;
+        color: #ffffff;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        padding: 6px 6px 6px 6px;
+        box-sizing: border-box;
+
+        >svg {
+            width: 20px;
+            height: 20px;
+        }
+    }
+
     .vertical-line {
         width: 1px;
-        height: 28px;
+        height: 20px;
         background-color: grey;
         flex: 0 0 auto;
         margin-left: 5px;

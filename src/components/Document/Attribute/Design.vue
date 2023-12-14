@@ -3,7 +3,7 @@ import { Context } from '@/context';
 import { Selection } from '@/context/selection';
 import { WorkSpace } from "@/context/workspace";
 import { onMounted, onUnmounted, shallowRef, ref, computed } from 'vue';
-import { ShapeType, Shape, TextShape, TableShape, SymbolRefShape } from "@kcdesign/data"
+import { ShapeType, Shape, TextShape, TableShape } from "@kcdesign/data"
 import Arrange from './Arrange.vue';
 import ShapeBaseAttr from './BaseAttr/Index.vue';
 import Fill from './Fill/Fill.vue';
@@ -22,7 +22,6 @@ import BaseForPathEdit from "@/components/Document/Attribute/BaseAttr/BaseForPat
 const props = defineProps<{ context: Context }>();
 const shapes = shallowRef<Shape[]>([]);
 const len = computed<number>(() => shapes.value.length);
-const opacity = ref<boolean>(false);
 const WITH_FILL = [
     ShapeType.Rectangle,
     ShapeType.Oval,
@@ -74,6 +73,7 @@ const WITH_SHADOW = [
 const shapeType = ref();
 const textShapes = ref<Shape[]>([]);
 const symbol_attribute = ref<boolean>(true);
+const opacity = ref<boolean>(false);
 const getShapeType = () => {
     if (props.context.selection.selectedShapes.length === 1) {
         shapes.value = new Array(...props.context.selection.selectedShapes);
@@ -90,6 +90,18 @@ const getShapeType = () => {
     }
 }
 
+function check_for_opacity() {
+    opacity.value = false;
+    const selected_shapes = props.context.selection.selectedShapes;
+    for (let i = 0, l = selected_shapes.length; i < l; i++) {
+        const s = selected_shapes[i];
+        if (!s.isVirtualShape) {
+            opacity.value = true;
+            return;
+        }
+    }
+}
+
 function _change(t: number) {
     if (t === Selection.CHANGE_PAGE) {
         shapes.value = new Array();
@@ -100,17 +112,6 @@ function _change(t: number) {
         editAttr.value = false;
         symbol_attribute.value = props.context.selection.selectedShapes.length < 2;
         check_for_opacity();
-    }
-}
-function check_for_opacity() {
-    opacity.value = false;
-    const selected_shapes = props.context.selection.selectedShapes;
-    for (let i = 0, l = selected_shapes.length; i < l; i++) {
-        const s = selected_shapes[i];
-        if (!s.isVirtualShape) {
-            opacity.value = true;
-            return;
-        }
     }
 }
 const baseAttr = ref(true);

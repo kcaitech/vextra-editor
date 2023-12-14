@@ -332,7 +332,7 @@ onUnmounted(() => {
             }
 
             .active {
-                background-color: var(--active-color-beta);
+                background-color: var(--active-color);
             }
         }
 
@@ -364,7 +364,7 @@ onUnmounted(() => {
         .exit {
             height: 100%;
             border-radius: 4px;
-            background-color: var(--active-color-beta);
+            background-color: var(--active-color);
             color: var(--theme-color-anti);
             text-align: center;
             line-height: 30px;
