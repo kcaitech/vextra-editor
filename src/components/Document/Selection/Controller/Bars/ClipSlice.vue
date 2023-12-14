@@ -161,7 +161,7 @@ onUnmounted(() => {
 }
 
 .path-high-light {
-    stroke: orange;
+    stroke: var(--active-color);
     stroke-dasharray: 4 4;
 }
 

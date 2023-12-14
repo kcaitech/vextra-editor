@@ -397,7 +397,6 @@ onUnmounted(() => {
 }
 
 .background-path {
-    // stroke: rgba($color: #000000, $alpha: 0.2);
     stroke: transparent;
     stroke-width: 14px;
     fill: none;
@@ -409,11 +408,11 @@ onUnmounted(() => {
 }
 
 .path-high-light {
-    stroke: rgba(255, 166, 0, 0.3);
+    stroke: rgba($color: #1878f5, $alpha: 0.3);
 }
 
 .path-selected {
-    stroke: rgb(255, 166, 0);
+    stroke: var(--active-color);
     stroke-width: 2px;
 }
 
@@ -425,10 +424,10 @@ onUnmounted(() => {
 }
 
 .insert-point-high-light {
-    stroke: rgba(255, 166, 0, 0.3);
+    stroke: rgba($color: #1878f5, $alpha: 0.3);
 }
 
 .insert-point-selected {
-    stroke: rgb(255, 166, 0);
+    stroke: var(--active-color);
 }
 </style>
