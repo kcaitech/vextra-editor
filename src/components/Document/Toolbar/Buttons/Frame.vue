@@ -104,12 +104,13 @@ const customFrame = () => {
             <span @click="customFrame">{{ t('frame.custom') }}</span>
         </div>
         <div ref="frame" v-for="(item, i) in frames" :key="i" style="position: relative;">
-            <div class="frame" @mouseenter="showChildFrame(i)" @mouseleave="closeChildFrame">
+<!--            @mouseleave="closeChildFrame"-->
+            <div class="frame" @mouseenter="showChildFrame(i)" >
                 <span>{{ t(`${item}`) }}</span>
                 <div class="triangle"></div>
                 <div class="bridge"></div>
-                <FrameChild :context="props.context" :childFrame="hoverIndex === i" :top="-8" :left="left"
-                    :framesChild="framesChild[i]" @closeFrame="closeFrame"></FrameChild>
+<!--                <FrameChild :context="props.context" :childFrame="hoverIndex === i" :top="-8" :left="left"-->
+<!--                    :framesChild="framesChild[i]" @closeFrame="closeFrame"></FrameChild>-->
 <!--                <div class="triangle"></div>-->
                 <svg-icon icon-class="arrowhead"></svg-icon>
                 <FrameChild :context="props.context" :childFrame="hoverIndex === i" :top="-1" :left="left"

@@ -49,7 +49,7 @@ const createTable = (row?: number, col?: number) => {
     <div class="table_container" @click.stop @mousedown.stop>
         <div class="table-title">
             <span>{{t('table.insert_table')}}</span>
-            <span><span>{{ highlightedRow + 1 }}{{ t('table.row') }}</span><strong style="font-size: 16px;"> · </strong><span>{{ highlightedCol +
+            <span><span>{{ highlightedRow + 1 }}{{ t('table.row') }}</span><strong style="font-size: 16px;font-weight: 400"> · </strong><span>{{ highlightedCol +
                 1 }}{{ t('table.col') }}</span></span>
         </div>
         <div class="table-cell">
@@ -146,7 +146,7 @@ const createTable = (row?: number, col?: number) => {
 
     .grid-cell {
         width: 21px;
-        height: 13px;
+        height: 14px;
         border-radius: 2px;
         border: 1px solid #D9D9D9;
     }

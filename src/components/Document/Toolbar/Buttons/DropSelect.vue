@@ -70,8 +70,6 @@ const handleBoolean = (e: MouseEvent) => {
 //}
 .select {
   font-size: var(--font-default-fontsize);
-    width: 48px;
-    height: 14px;
     font-family: HarmonyOS Sans;
     z-index: 2;
 }
