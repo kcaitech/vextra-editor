@@ -16,7 +16,7 @@ function select(action: Action) {
 </script>
 <template>
   <Tooltip :content="`${t('home.contact')} &nbsp;&nbsp; X`">
-    <ToolButton ref="button" @click="() => { select(Action.AddContact) }" :selected="props.active">
+    <ToolButton ref="button" @click="() => { select(Action.AddContact) }" :selected="props.active" style="width: 32px">
       <div class="svg-container">
         <svg-icon icon-class="pattern-contact"></svg-icon>
       </div>
@@ -25,16 +25,18 @@ function select(action: Action) {
 </template>
 <style scoped lang="scss">
 .svg-container {
-  width: 28px;
-  height: 28px;
+  width: 32px;
+  height: 32px;
   display: flex;
   justify-content: center;
   align-items: center;
   color: #ffffff;
+    padding: 6px 6px 6px 6px;
+    box-sizing: border-box;
 
   >svg {
-    width: 15px;
-    height: 15px;
+      width: 20px;
+      height: 20px;
   }
 }
 </style>

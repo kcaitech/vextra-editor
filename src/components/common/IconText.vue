@@ -26,6 +26,7 @@ const scale = ref<Scale>({
 })
 const isDrag = ref(false)
 const input = ref<HTMLInputElement>();
+const isActived = ref(false)
 
 function onChange(e: Event) {
     if (props.disabled) return;
@@ -114,6 +115,7 @@ const onMouseUp = (e: MouseEvent) => {
 }
 
 const selectValue = () => {
+    isActived.value = true
     if (input.value) {
         input.value.select()
     }
@@ -153,7 +155,9 @@ watch(scale, () => {
         emit("onchange", result!)
     }
 }, { deep: true });
-
+function blur2() {
+    isActived.value = false
+}
 watch(screenWidth, () => {
     screenWidth.value = window.innerWidth;
 })
@@ -169,7 +173,7 @@ onMounted(() => {
 </script>
 
 <template>
-    <div :class="{ icontext: true, disabled: props.disabled }">
+    <div :class="{ icontext: true, disabled: props.disabled, actived: isActived }">
         <svg-icon @mousedown="onMouseDown" class="icon" v-if="props.svgicon" :icon-class="props.svgicon" :style="{
             width: `${props.frame ? frame?.width : 18}px`,
             height: `${props.frame ? frame?.height : 18}px`,
@@ -179,7 +183,7 @@ onMounted(() => {
         <img :class="props.disabled ? 'deicon' : 'icon'" v-if="props.icon" :src="props.icon" />
         <span @mousedown="onMouseDown" :class="props.disabled ? 'deicon' : 'icon'" v-if="!props.icon && props.ticon">{{
             props.ticon }}</span>
-        <input ref="input" @click="onBlur" @focus="selectValue" :value="props.text" @keydown="onKeyBlur"
+        <input ref="input" @click="onBlur" @focus="selectValue" @blur="blur2" :value="props.text" @keydown="onKeyBlur"
             :disabled="props.disabled" :style="{ cursor: props.disabled ? 'default' : 'text' }" v-on:change="onChange" />
     </div>
 </template>
@@ -190,10 +194,11 @@ onMounted(() => {
     flex-flow: row;
     white-space: nowrap;
     overflow: hidden;
-    padding: 1px;
+    //padding: 1px;
     align-items: center;
     padding: 0 8px;
     box-sizing: border-box;
+
 
     >.icon {
         color: grey;
@@ -202,6 +207,8 @@ onMounted(() => {
         flex-shrink: 0;
         cursor: ew-resize;
         text-align: center;
+        padding: 1px;
+        box-sizing: border-box;
     }
 
     >.deicon {
@@ -233,5 +240,9 @@ onMounted(() => {
 
 .disabled {
     opacity: 0.4;
+}
+
+.actived {
+    border: 1px solid #1878F5;
 }
 </style>

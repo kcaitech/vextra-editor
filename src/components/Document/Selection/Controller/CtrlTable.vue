@@ -272,9 +272,9 @@ onUnmounted(() => {
         </PointsContainer>
         <!-- 列宽缩放 -->
         <g>
-            <line v-if="col_dash" :x1="m_x" :y1="y1" :x2="x2" :y2="y2" stroke="#865dff" stroke-dasharray="3 3"
+            <line v-if="col_dash" :x1="m_x" :y1="y1" :x2="x2" :y2="y2" stroke="#1878f5" stroke-dasharray="3 3"
                 stroke-width="3"></line>
-            <line v-if="row_dash" :x1="x1" :y1="m_y" :x2="x2" :y2="y2" stroke="#865dff" stroke-dasharray="3 3"
+            <line v-if="row_dash" :x1="x1" :y1="m_y" :x2="x2" :y2="y2" stroke="#1878f5" stroke-dasharray="3 3"
                 stroke-width="3"></line>
         </g>
     </svg>

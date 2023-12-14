@@ -1,20 +1,20 @@
 <script setup lang="ts">
-import {reactive, onMounted, onUnmounted, computed, ref, nextTick, watch, getCurrentInstance} from 'vue';
+import { reactive, onMounted, onUnmounted, computed, ref, nextTick, watch, getCurrentInstance } from 'vue';
 import PageView from './Content/PageView.vue';
 import SelectionView from './Selection/SelectionView.vue';
 import ContextMenu from '../common/ContextMenu.vue';
 import PageViewContextMenuItems from '@/components/Document/Menu/PageViewContextMenuItems.vue';
-import Selector, {SelectorFrame} from './Selection/Selector.vue';
+import Selector, { SelectorFrame } from './Selection/Selector.vue';
 import CommentView from './Content/CommentView.vue';
-import {Matrix, Shape, Page, Color, ShapeType} from '@kcdesign/data';
-import {Context} from '@/context';
-import {PageXY, ClientXY, ClientXYRaw} from '@/context/selection';
-import {KeyboardKeys, WorkSpace} from '@/context/workspace';
-import {collect_once} from '@/utils/assist';
-import {Menu} from '@/context/menu';
-import {debounce} from 'lodash';
-import {useI18n} from 'vue-i18n';
-import {v4} from "uuid";
+import { Matrix, Shape, Page, Color, ShapeType } from '@kcdesign/data';
+import { Context } from '@/context';
+import { PageXY, ClientXY, ClientXYRaw } from '@/context/selection';
+import { KeyboardKeys, WorkSpace } from '@/context/workspace';
+import { collect_once } from '@/utils/assist';
+import { Menu } from '@/context/menu';
+import { debounce } from 'lodash';
+import { useI18n } from 'vue-i18n';
+import { v4 } from "uuid";
 import {
     _updateRoot,
     is_drag,
@@ -28,18 +28,18 @@ import {
     init_insert_table,
     root_scale, root_trans
 } from '@/utils/content';
-import {paster} from '@/utils/clipboard';
-import {insertFrameTemplate} from '@/utils/artboardFn';
-import {Comment} from '@/context/comment';
+import { paster } from '@/utils/clipboard';
+import { insertFrameTemplate } from '@/utils/artboardFn';
+import { Comment } from '@/context/comment';
 import Placement from './Menu/Placement.vue';
 import TextSelection from './Selection/TextSelection.vue';
-import {Cursor} from "@/context/cursor";
-import {Action, Tool} from "@/context/tool";
+import { Cursor } from "@/context/cursor";
+import { Action, Tool } from "@/context/tool";
 import UsersSelection from './Selection/TeamWork/UsersSelection.vue';
 import CellSetting from '@/components/Document/Menu/TableMenu/CellSetting.vue';
 import * as comment_api from '@/request/comment';
 import Creator from './Creator.vue';
-import {Wheel, fourWayWheel} from '@/utils/wheel';
+import { Wheel, fourWayWheel } from '@/utils/wheel';
 import PathEditMode from "@/components/Document/Selection/Controller/PathEdit/PathEditMode.vue";
 
 interface Props {
@@ -48,7 +48,7 @@ interface Props {
 }
 
 type ContextMenuEl = InstanceType<typeof ContextMenu>;
-const {t} = useI18n();
+const { t } = useI18n();
 const props = defineProps<Props>();
 const STATE_NONE = 0;
 const STATE_CHECKMOVE = 1;
@@ -58,24 +58,24 @@ const comment = computed(() => props.context.comment);
 const wheel_step = 50;
 const spacePressed = ref<boolean>(false);
 const contextMenu = ref<boolean>(false);
-const contextMenuPosition: ClientXY = reactive({x: 0, y: 0});
+const contextMenuPosition: ClientXY = reactive({ x: 0, y: 0 });
 let state = STATE_NONE;
 const dragActiveDis = 4; // 拖动 4px 后开始触发移动
-const prePt: { x: number, y: number } = {x: 0, y: 0};
+const prePt: { x: number, y: number } = { x: 0, y: 0 };
 const matrix: Matrix = reactive(props.context.workspace.matrix as any);
 const matrixMap = new Map<string, { m: Matrix, x: number, y: number }>();
 const reflush = ref(0);
 const root = ref<HTMLDivElement>();
-const mousedownOnClientXY: ClientXY = {x: 0, y: 0}; // 鼠标在可视区中的坐标
-const mousedownOnPageXY: PageXY = {x: 0, y: 0}; // 鼠标在page中的坐标
-const mouseOnClient: ClientXYRaw = {x: 0, y: 0}; // 没有减去根部节点
+const mousedownOnClientXY: ClientXY = { x: 0, y: 0 }; // 鼠标在可视区中的坐标
+const mousedownOnPageXY: PageXY = { x: 0, y: 0 }; // 鼠标在page中的坐标
+const mouseOnClient: ClientXYRaw = { x: 0, y: 0 }; // 没有减去根部节点
 let shapesContainsMousedownOnPageXY: Shape[] = [];
 let contextMenuItems: string[] = [];
 const contextMenuEl = ref<ContextMenuEl>();
 const surplusY = ref<number>(0);
-const site: { x: number, y: number } = {x: 0, y: 0};
+const site: { x: number, y: number } = { x: 0, y: 0 };
 const selector_mount = ref<boolean>(false);
-const selectorFrame = ref<SelectorFrame>({top: 0, left: 0, width: 0, height: 0, includes: false});
+const selectorFrame = ref<SelectorFrame>({ top: 0, left: 0, width: 0, height: 0, includes: false });
 const cursor = ref<string>('');
 const rootId = ref<string>('content');
 let isMouseLeftPress: boolean = false; // 针对在contentview里面
@@ -105,8 +105,8 @@ function rootRegister(mount: boolean) {
 }
 
 function setMousedownXY(e: MouseEvent) { // 记录鼠标在页面上的点击位置
-    const {clientX, clientY} = e;
-    const {x, y} = workspace.value.root;
+    const { clientX, clientY } = e;
+    const { x, y } = workspace.value.root;
     const xy = matrix_inverse.computeCoord2(clientX - x, clientY - y);
     mousedownOnPageXY.x = xy.x;
     mousedownOnPageXY.y = xy.y; //页面坐标系上的点
@@ -117,7 +117,7 @@ function setMousedownXY(e: MouseEvent) { // 记录鼠标在页面上的点击位
 function onMouseWheel(e: WheelEvent) { // 滚轮、触摸板事件
     if (contextMenu.value) return; //右键菜单已打开
     e.preventDefault();
-    const {ctrlKey, metaKey, deltaX, deltaY} = e;
+    const { ctrlKey, metaKey, deltaX, deltaY } = e;
     if (ctrlKey || metaKey) { // 缩放
         root_scale(props.context, e);
     } else {
@@ -172,8 +172,8 @@ function insertFrame() {
 }
 
 function _search(auto: boolean) { // 支持阻止子元素冒泡的图形检索
-    const {x, y} = workspace.value.root;
-    const {x: mx, y: my} = mouseOnClient;
+    const { x, y } = workspace.value.root;
+    const { x: mx, y: my } = mouseOnClient;
     const xy: PageXY = matrix_inverse.computeCoord2(mx - x, my - y);
     const shapes = props.context.selection.getShapesByXY(xy, auto);
     selectShapes(props.context, shapes);
@@ -181,8 +181,8 @@ function _search(auto: boolean) { // 支持阻止子元素冒泡的图形检索
 
 function search(e: MouseEvent) { // 常规图形检索
     if (props.context.workspace.transforming) return; // 编辑器编辑过程中不再判断其他未选择的shape的hover状态
-    const {clientX, clientY, metaKey, ctrlKey} = e;
-    const {x, y} = workspace.value.root;
+    const { clientX, clientY, metaKey, ctrlKey } = e;
+    const { x, y } = workspace.value.root;
     const xy = matrix_inverse.computeCoord2(clientX - x, clientY - y);
     const shapes = props.context.selection.getShapesByXY(xy, metaKey || ctrlKey); // xy: PageXY
     selectShapes(props.context, shapes);
@@ -293,9 +293,9 @@ function select(e: MouseEvent) {
 }
 
 function createSelector(e: MouseEvent) { // 创建一个selector框选器
-    const {x: rx, y: ry} = workspace.value.root;
-    const {x: mx, y: my} = {x: e.clientX - rx, y: e.clientY - ry};
-    const {x: sx, y: sy} = mousedownOnClientXY;
+    const { x: rx, y: ry } = workspace.value.root;
+    const { x: mx, y: my } = { x: e.clientX - rx, y: e.clientY - ry };
+    const { x: sx, y: sy } = mousedownOnClientXY;
     const left = Math.min(sx, mx);
     const right = Math.max(mx, sx);
     const top = Math.min(my, sy);
@@ -309,7 +309,7 @@ function createSelector(e: MouseEvent) { // 创建一个selector框选器
 }
 
 function updateMouse(e: MouseEvent) {
-    const {clientX, clientY} = e;
+    const { clientX, clientY } = e;
     mouseOnClient.x = clientX;
     mouseOnClient.y = clientY;
 }
@@ -376,8 +376,9 @@ function onMouseMove_CV(e: MouseEvent) {
 // mouseup(target：document)
 function onMouseUp(e: MouseEvent) {
     if (e.button == 0) {
-        if (spacePressed.value) pageViewDragEnd();
-        else {
+        if (spacePressed.value) {
+            pageViewDragEnd();
+        } else {
             isMouseLeftPress = false;
             selectEnd();
             saveShapeCommentXY();
@@ -385,7 +386,9 @@ function onMouseUp(e: MouseEvent) {
                 selectEnd();
             }
         }
-        if (wheel) wheel = wheel.remove();
+        if (wheel) {
+            wheel = wheel.remove();
+        }
         isDragging = false;
         clearInterval(timer);
         timer = null;
@@ -434,11 +437,11 @@ const editShapeComment = (index: number, x: number, y: number) => {
     const comment = documentCommentList.value[index]
     const id = comment.id
     const shapeId = comment.target_shape_id
-    const {x2, y2} = comment.shape_frame
+    const { x2, y2 } = comment.shape_frame
     const data = {
         id: id,
         target_shape_id: shapeId,
-        shape_frame: {x1: x, y1: y, x2: x2, y2: y2}
+        shape_frame: { x1: x, y1: y, x2: x2, y2: y2 }
     }
     editCommentShapePosition(data)
 }
@@ -515,7 +518,7 @@ function initMatrix(cur: Page) {
     let info = matrixMap.get(cur.id);
     if (!info) {
         const m = new Matrix(adapt_page(props.context, true));
-        info = {m, x: cur.frame.x, y: cur.frame.y};
+        info = { m, x: cur.frame.x, y: cur.frame.y };
         matrixMap.set(cur.id, info);
     }
     matrix.reset(info.m.toArray());
@@ -531,8 +534,8 @@ const stopWatch = watch(() => props.page, (cur, old) => {
     const f = cur.style.fills[0];
     if (f) background_color.value = color2string(f.color);
 })
-watch(() => matrix, matrix_watcher, {deep: true});
-onMounted(() => {    
+watch(() => matrix, matrix_watcher, { deep: true });
+onMounted(() => {
     props.context.selection.scoutMount(props.context);
     props.context.workspace.watch(workspace_watcher);
     props.context.workspace.init(t.bind(getCurrentInstance()));
@@ -575,28 +578,27 @@ onUnmounted(() => {
 })
 </script>
 <template>
-    <div :class="cursor" :data-area="rootId" ref="root" :reflush="reflush !== 0 ? reflush : undefined"
-         @wheel="onMouseWheel" @mousedown="onMouseDown" @mousemove="onMouseMove_CV" @mouseleave="onMouseLeave"
-         @drop="(e: DragEvent) => { drop(e, props.context, t) }" @dragover.prevent
-         :style="{ 'background-color': background_color }">
-        <PageView :context="props.context" :data="(props.page as Page)" :matrix="matrix"/>
+    <div :class="cursor" :data-area="rootId" ref="root" :reflush="reflush !== 0 ? reflush : undefined" @wheel="onMouseWheel"
+        @mousedown="onMouseDown" @mousemove="onMouseMove_CV" @mouseleave="onMouseLeave"
+        @drop="(e: DragEvent) => { drop(e, props.context, t) }" @dragover.prevent
+        :style="{ 'background-color': background_color }">
+        <PageView :context="props.context" :data="(props.page as Page)" :matrix="matrix" />
         <TextSelection :context="props.context" :matrix="matrix"></TextSelection>
-        <UsersSelection :context="props.context" :matrix="matrix" v-if="avatarVisi"/>
-        <SelectionView :context="props.context" :matrix="matrix"/>
+        <UsersSelection :context="props.context" :matrix="matrix" v-if="avatarVisi" />
+        <SelectionView :context="props.context" :matrix="matrix" />
         <ContextMenu v-if="contextMenu" :x="contextMenuPosition.x" :y="contextMenuPosition.y" @mousedown.stop
-                     :context="props.context" @close="contextMenuUnmount" :site="site" ref="contextMenuEl">
+            :context="props.context" @close="contextMenuUnmount" :site="site" ref="contextMenuEl">
             <PageViewContextMenuItems :items="contextMenuItems" :layers="shapesContainsMousedownOnPageXY"
-                                      :context="props.context" @close="contextMenuUnmount" :site="site">
+                :context="props.context" @close="contextMenuUnmount" :site="site">
             </PageViewContextMenuItems>
         </ContextMenu>
-        <CellSetting v-if="cellSetting" :context="context" @close="closeModal"
-                     :addOrDivision="cellStatus"></CellSetting>
+        <CellSetting v-if="cellSetting" :context="context" @close="closeModal" :addOrDivision="cellStatus"></CellSetting>
         <Placement v-if="contextMenu" :x="contextMenuPosition.x" :y="contextMenuPosition.y" :context="props.context">
         </Placement>
         <Selector v-if="selector_mount" :selector-frame="selectorFrame" :context="props.context"></Selector>
         <CommentView :context="props.context" :pageId="page.id" :page="page" :root="root" :cursorClass="cursor">
         </CommentView>
-        <Creator v-if="creatorMode" :context="props.context"/>
+        <Creator v-if="creatorMode" :context="props.context" />
         <PathEditMode v-if="path_edit_mode" :context="props.context"></PathEditMode>
     </div>
 </template>

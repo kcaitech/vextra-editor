@@ -688,7 +688,7 @@ onUnmounted(() => {
 
         >.keywords {
           flex-grow: 1px;
-          color: var(--active-color-beta);
+          color: var(--active-color);
           overflow: hidden;
           white-space: nowrap;
           text-overflow: ellipsis;
@@ -696,7 +696,7 @@ onUnmounted(() => {
 
         >.end {
           flex-shrink: 0;
-          color: var(--active-color-beta);
+          color: var(--active-color);
         }
 
         >.shrink {

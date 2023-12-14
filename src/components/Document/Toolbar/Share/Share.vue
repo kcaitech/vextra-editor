@@ -107,9 +107,7 @@ onUnmounted(() => {
 
 <template>
   <div class="container" @dblclick.stop>
-    <div class="share" @click.stop="onShare">
-      <svg-icon class="svg" icon-class="share"></svg-icon>
-    </div>
+      <button class="share" @click.stop="onShare">分享</button>
     <Teleport to="body">
       <FileShare v-if="showFileShare" @close="closeShare" :shareSwitch="shareSwitch" :selectValue="selectValue"
         :docInfo="docInfo" :projectPerm="projectPerm" @select-type="onSelectType" @switch-state="onSwitch"
@@ -122,18 +120,24 @@ onUnmounted(() => {
 .container {
   .share {
     cursor: pointer;
-    width: 28px;
-    height: 28px;
-    border-radius: 50%;
+    width: 56px;
+    height: 32px;
     display: flex;
     align-items: center;
     justify-content: center;
-
-    >svg {
-      width: 54%;
-      height: 54%;
-      color: #fff;
-    }
+    border-radius: 6px;
+    background: #1878F5;
+      font-size: 13px;
+      color: #FFFFFF;
+      border: none;
+      font-family: HarmonyOS Sans;
+      font-feature-settings: "kern" on;
+      padding: 9px 15px 8px 15px;
+    //>svg {
+    //  width: 20px;
+    //  height: 20px;
+    //  color: #fff;
+    //}
   }
 }
 </style>

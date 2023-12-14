@@ -124,7 +124,7 @@ watchEffect(updateControllerView);
          :width="width"
          :height="height" :class="{ 'un-visible': !visible }" @mousedown="mousedown" overflow="visible"
          :style="{ transform: `translate(${bounds.left}px,${bounds.top}px)`, left: 0, top: 0, position: 'absolute' }">
-        <ShapesStrokeContainer :context="props.context" :matrix="props.matrix" color-hex="#865dff">
+        <ShapesStrokeContainer :context="props.context" :matrix="props.matrix" color-hex="#1878f5">
         </ShapesStrokeContainer>
         <BarsContainer :context="props.context" :matrix="submatrix.toArray()" :shape="props.shape"
                        :c-frame="props.controllerFrame"></BarsContainer>

@@ -107,7 +107,7 @@ const toggleSwitch = () => {
 
         .d-switch_action {
             left: 100%;
-            background: #865dff;
+            background: #1878f5;
             margin-left: -22px;
         }
     }

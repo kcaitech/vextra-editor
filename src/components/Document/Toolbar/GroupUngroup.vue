@@ -185,7 +185,9 @@ const flattenShape = () => {
 
 <template>
     <div class="container">
-        <div class="vertical-line"></div>
+        <div style="width: 16px;height: 52px;display: flex;align-items: center;justify-content: center;">
+            <div class="vertical-line"/>
+        </div>
         <Tooltip :content="string_by_sys(`${t('home.groups')} &nbsp;&nbsp; Ctrl G`)" :offset="5">
             <div class="group">
                 <ToolButton :onclick="(e: MouseEvent) => groupClick(e.altKey)" :valid="true" :selected="false"
@@ -223,17 +225,18 @@ const flattenShape = () => {
         height: 100%;
         width: 34.5px;
 
-        > div {
-            height: 100%;
+        >div {
+            height: 32px;
+            width: 32px;
             display: flex;
             justify-content: center;
             align-items: center;
             color: gray;
             transition: 0.1s;
 
-            > svg {
-                height: 55%;
-                width: 55%;
+            >svg {
+                height: 20px;
+                width: 20px;
             }
         }
 
@@ -244,7 +247,7 @@ const flattenShape = () => {
 
     .vertical-line {
         width: 1px;
-        height: 28px;
+        height: 20px;
         background-color: grey;
         flex: 0 0 auto;
         margin-left: 5px;

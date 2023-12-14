@@ -8,6 +8,7 @@ import moment = require('moment');
 import 'moment/locale/zh-cn';
 import { mapDateLang } from '@/utils/date_lang'
 import { Comment } from '@/context/comment';
+import SvgIcon from "@/components/common/SvgIcon.vue";
 const { t } = useI18n()
 const props = defineProps<{
     context: Context
@@ -151,6 +152,7 @@ onUnmounted(() => {
 </script>
 
 <template>
+
     <div class="container-hover" @mouseenter="hoverShape" @mouseleave="unHoverShape" @mousedown="moveCommentPopup"
          :style="{ transform: `scale(${scale && commentShow ? scale : 0})` }">
         <div class="avatar" @click="onReply">
@@ -163,24 +165,36 @@ onUnmounted(() => {
                     <div class="date">{{ formatDate(commentInfo.record_created_at) }}</div>
                 </div>
                 <div class="icon" :style="{ visibility: hover ? 'visible' : 'hidden' }">
-                    <el-button-group class="ml-4">
+<!--                    <el-button-group class="ml-4">-->
                         <el-tooltip class="box-item" effect="dark" :content="`${t('comment.reply')}`" placement="bottom"
                             :show-after="1000" :offset="10" :hide-after="0">
-                            <el-button plain :icon="ChatDotSquare" @click="onReply" style="margin-right: 5px;" />
+<!--                            <el-button plain :icon="ChatDotSquare" @click="onReply" style="margin-right: 5px;" />-->
+                            <div class="onReply" @click.stop="onReply">
+                                <svg-icon icon-class="comment-reply"></svg-icon>
+                            </div>
                         </el-tooltip>
                         <el-tooltip class="box-item" effect="dark" :content="`${t('comment.delete')}`" placement="bottom"
                             :show-after="1000" :offset="10" :hide-after="0" v-if="isControls">
-                            <el-button plain :icon="Delete" @click="onDelete" :style="{'margin-right': 5 +'px'}" v-if="isControls"/>
+<!--                            <el-button plain :icon="Delete" @click="onDelete" :style="{'margin-right': 5 +'px'}" v-if="isControls"/>-->
+                            <div class="onDelete" @click="onDelete" v-if="isControls">
+                                <svg-icon icon-class="comment-delete"></svg-icon>
+                            </div>
                         </el-tooltip>
                         <el-tooltip class="box-item" effect="dark" :content="`${t('comment.settled')}`" placement="bottom"
                             :show-after="1000" :offset="10" :hide-after="0" v-if="resolve && isControls">
-                            <el-button plain :icon="CircleCheck" @click="onResolve" @mouseup.stop @mousedown.stop v-if="isControls"/>
+<!--                            <el-button plain :icon="CircleCheck" @click="onResolve" @mouseup.stop @mousedown.stop v-if="isControls"/>-->
+                            <div class="onResolve" @click="onResolve" @mouseup.stop @mousedown.stop v-if="isControls">
+                                <svg-icon icon-class="comment-solve"></svg-icon>
+                            </div>
                         </el-tooltip>
                         <el-tooltip class="box-item" effect="dark" :content="`${t('comment.settled')}`" placement="bottom"
                             :show-after="1000" :offset="10" :hide-after="0" v-else-if="!resolve && isControls">
-                            <el-button class="custom-icon" plain :icon="CircleCheckFilled" @click="onResolve"  @mouseup.stop @mousedown.stop v-if="isControls"/>
+<!--                            <el-button class="custom-icon" plain :icon="CircleCheckFilled" @click="onResolve"  @mouseup.stop @mousedown.stop v-if="isControls"/>-->
+                            <div class="onResolved" @click="onResolve" @mouseup.stop @mousedown.stop v-if="isControls">
+                                <svg-icon icon-class="comment-solved"></svg-icon>
+                            </div>
                         </el-tooltip>
-                    </el-button-group>
+<!--                    </el-button-group>-->
                 </div>
             </div>
             <div class="box-context" v-html="commentInfo.content"></div>
@@ -200,19 +214,21 @@ onUnmounted(() => {
     box-sizing: border-box;
     display: flex;
     width: 330px;
-    padding: 12px;
+    padding: 16px 14px;
     background-color: #fff;
-    box-shadow: 0px 5px 10px rgba(0, 0, 0, 0.15);
-    border-radius: calc(6px);
+    border-radius: calc(12px);
     border-bottom-left-radius: 0;
     font-size: var(--font-default-fontsize);
     transition: 0.2s;
     transform-origin: left bottom;
     cursor: default;
+    background: #FFFFFF;
+    border: 1px solid #EBEBEB;
+    box-shadow: 0px 2px 6px 0px rgba(0, 0, 0, 0.05);
 
     .avatar {
-        width: 30px;
-        height: 30px;
+        width: 24px;
+        height: 24px;
         border-radius: 50%;
         display: flex;
         justify-content: center;
@@ -236,7 +252,7 @@ onUnmounted(() => {
         .box-heard {
             display: flex;
             justify-content: space-between;
-            margin: 5px 0;
+            //margin: 5px 0;
 
             .item_heard {
                     display: flex;
@@ -247,29 +263,113 @@ onUnmounted(() => {
                         overflow: hidden;
                         text-overflow: ellipsis;
                         white-space: nowrap;
+                        font-size: 12px;
+                        font-weight: 500;
+                        line-height: 12px;
+                        color: #000000;
                     }
                     .date {
-                        width: 120px;
+                        width: 92px;
+                        height: 12px;
                         white-space: nowrap;
+                        font-size: 12px;
+                        line-height: 12px;
+                        color: #333333;
                     }
                 }
 
             .icon {
                 display: flex;
                 justify-content: flex-end;
-                width: 70px;
-                height: 20px;
+                width: 72px;
+                height: 24px;
+                flex: 0 0 72px;
 
-                .el-button {
-                    border: none;
-                    padding: 0;
-                    border-radius: 2px;
-                    width: 20px;
-                    height: 20px;
+                //.el-button {
+                //    border: none;
+                //    padding: 0;
+                //    border-radius: 2px;
+                //    width: 20px;
+                //    height: 20px;
+                //
+                //    &:hover {
+                //        background-color: rgba(0, 0, 0, 0.08);
+                //    }
+                //}
+                .onReply {
+                    width: 24px;
+                    height: 24px;
+                    margin-left: -27px;
+                    display: flex;
+                    align-items: center;
+                    justify-content: center;
+                    border-radius: 4px;
 
-                    &:hover {
-                        background-color: rgba(0, 0, 0, 0.08);
+                    >svg {
+                        width: 14px;
+                        height: 14px;
+                        color: #555555;
                     }
+                }
+
+                .onReply:hover{
+                    background-color: #EBEBED;
+                }
+
+                .onDelete {
+                    width: 24px;
+                    height: 24px;
+                    display: flex;
+                    align-items: center;
+                    justify-content: center;
+                    border-radius: 4px;
+
+                    >svg {
+                        width: 14px;
+                        height: 14px;
+                        color: #555555;
+                    }
+                }
+
+                .onDelete:hover{
+                    background-color: #EBEBED;
+                }
+
+                .onResolve {
+                    width: 24px;
+                    height: 24px;
+                    display: flex;
+                    align-items: center;
+                    justify-content: center;
+                    border-radius: 4px;
+
+                    >svg {
+                        width: 14px;
+                        height: 14px;
+                        color: #555555;
+                    }
+                }
+
+                .onResolve:hover{
+                    background-color: #EBEBED;
+                }
+                .onResolved {
+                    width: 24px;
+                    height: 24px;
+                    display: flex;
+                    align-items: center;
+                    justify-content: center;
+                    border-radius: 4px;
+
+                    >svg {
+                        width: 14px;
+                        height: 14px;
+                        color: #169248;
+                    }
+                }
+
+                .onResolved:hover{
+                    background-color: #EBEBED;
                 }
             }
         }
@@ -282,27 +382,43 @@ onUnmounted(() => {
             -webkit-line-clamp: 2;
             line-clamp: 2;
             overflow: hidden;
+            margin-top: 11px;
+            color: #777777;
+            font-size: 13px;
+            font-family: HarmonyOS Sans;
         }
 
         .box-footer {
             display: flex;
-            margin-top: 10px;
+            margin-top: 5px;
             justify-content: space-between;
             align-items: center;
+            padding: 6px 0 6px 0;
 
             .reply {
-                color: rgba(0, 0, 0, .5);
+                font-family: HarmonyOS Sans;
+                font-size: 12px;
+                line-height: 12px;
+                font-feature-settings: "kern" on;
+                color: #000000;
             }
 
             .check {
-                width: 55px;
-                height: 25px;
-                font-weight: bold;
                 display: flex;
                 justify-content: center;
                 align-items: center;
-                border: 1px solid rgba(0, 0, 0, .5);
-                border-radius: 4px;
+                width: 48px;
+                height: 24px;
+                border-radius: 5px;
+                background: #FFFFFF;
+                box-sizing: border-box;
+                border: 1px solid #F0F0F0;
+                padding: 6px 12px;
+                font-family: Source Han Sans;
+                font-size: 11px;
+                font-weight: 500;
+                line-height: 12px;
+                color: #333333;
             }
         }
     }

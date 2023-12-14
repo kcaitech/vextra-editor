@@ -2,27 +2,29 @@
 import { onMounted, onUnmounted, ref } from "vue";
 import { Context } from "@/context";
 import Design from "@/components/Document/Attribute/Design.vue";
-import CompsTab from "@/components/Document/Navigation/CompsTab.vue";
 import ResourceTab from "@/components/Document/Navigation/ResourceTab.vue";
 import { useI18n } from 'vue-i18n';
 import { Perm } from "@/context/workspace";
 import { Tool } from "@/context/tool";
-import Lable from './Lable/index.vue'
+import Lable from './Lable/index.vue';
 const { t } = useI18n();
 
-const props = defineProps<{
+interface Props {
     context: Context
     rightTriggleVisible: boolean
     showRight: boolean
-}>();
-const emit = defineEmits<{
+}
+interface Emits {
     (e: 'showAttrbute'): void
-}>()
-
-// type Tab = "Design" | "Prototype" | "Inspect";
+}
 type Tab = "Design" | "Inspect";
 
-const perm = ref(props.context.workspace.documentPerm)
+const props = defineProps<Props>();
+const emit = defineEmits<Emits>();
+const controllerRef = ref<HTMLElement>();
+const underlineWidth = ref(0);
+const underlinePosition = ref(0);
+const perm = ref(props.context.workspace.documentPerm);
 const currentTab = ref<Tab>("Design");
 const tabs: { title: string, id: Tab }[] = [
     {
@@ -30,41 +32,61 @@ const tabs: { title: string, id: Tab }[] = [
         id: 'Design'
     },
     // {
-    //     title: t('attr.prototype'),
-    //     id: 'Prototype'
-    // },
-    {
-        title: t('attr.inspect'),
-        id: 'Inspect'
-    }
-]
+    //     title: t('attr.inspect'),
+    //     id: 'Inspect'
+    // }
+];
 const isLable = ref(props.context.tool.isLable);
 
 function toggle(id: Tab) {
-    if (id === 'Design') {
-        if (props.context.selection.selectedShapes.length === 1) {
-            props.context.selection.selectShape(props.context.selection.selectedShapes[0]);
-        }
-
-    }
     currentTab.value = id;
+    init();
+    updateUnderlinePosition();
 }
-
+function init() {
+    if (currentTab.value === 'Design') {
+        const selected = props.context.selection.selectedShapes;
+        if (selected.length) {
+            props.context.selection.rangeSelectShape(selected);
+        }
+    }
+}
 const showHiddenRight = () => {
     emit('showAttrbute')
 }
 
+function updateUnderlinePosition() {
+    underlinePosition.value = 0;
+    underlineWidth.value = 0;
+    if (!controllerRef.value) {
+        return;
+    }
+    const tabIndex = tabs.findIndex((tab) => tab.id === currentTab.value);
+    if (tabIndex < 0) {
+        return;
+    }
+    const key = tabs[tabIndex].id;
+    const dom = controllerRef.value.querySelector(`#tabs-id-${key}`);
+    if (!dom) {
+        return;
+    }
+    const width = (dom as HTMLDivElement).offsetWidth - 20;
+    const left = (dom as HTMLDivElement).offsetLeft + 10;
+    underlineWidth.value = width;
+    underlinePosition.value = left + width / 2;
+}
 const tool_watcher = (t: number) => {
-    if(t === Tool.LABLE_CHANGE) {
+    if (t === Tool.LABLE_CHANGE) {
         isLable.value = props.context.tool.isLable;
-        if(isLable.value && !props.showRight) {
+        if (isLable.value && !props.showRight) {
             emit('showAttrbute');
         }
     }
 }
-
 onMounted(() => {
-    props.context.tool.watch(tool_watcher)
+    props.context.tool.watch(tool_watcher);
+    init();
+    updateUnderlinePosition();
 })
 onUnmounted(() => {
     props.context.tool.unwatch(tool_watcher)
@@ -74,13 +96,18 @@ onUnmounted(() => {
 <template>
     <div class="tab-container">
         <template v-if="!isLable">
-            <div class="controller">
-                <div :class="{ tab: true, active: currentTab === i.id }" v-for="(i, index) in tabs" :key="index"
-                    @click="toggle(i.id)">{{ i.title }}</div>
+            <div ref="controllerRef" class="controller">
+                <div v-for="(i, index) in tabs" :class="{ tab: true, active: currentTab === i.id }" :key="index"
+                    :id="`tabs-id-${i.id}`" @click="toggle(i.id)"
+                     :style="{ color: currentTab === i.id ? '#000000' : '#333333' }">
+                    {{ i.title }}
+                </div>
+                <div class="underline"
+                    :style="{ width: underlineWidth + 'px', left: `${underlinePosition}px`, transform: `translateX(-50%)` }">
+                </div>
             </div>
             <div class="body">
                 <Design :context="props.context" v-if="currentTab === 'Design'"></Design>
-                <!-- <CompsTab :context="props.context" v-if="currentTab === 'Prototype'"></CompsTab> -->
                 <ResourceTab :context="props.context" v-if="currentTab === 'Inspect'"></ResourceTab>
                 <template v-if="perm === Perm.isEdit">
                     <div class="showHiddenR" @click="showHiddenRight" v-if="!showRight || rightTriggleVisible"
@@ -106,39 +133,45 @@ onUnmounted(() => {
 .tab-container {
     position: relative;
     width: 100%;
-    box-shadow: -4px 0px 4px rgba($color: #000000, $alpha: 0.05);
+    border: 1px solid #F5F5F5;
 
     .controller {
-        height: 32px;
-        width: 100%;
-        flex: 0 0 auto;
         display: flex;
-        flex-direction: row;
-        margin-left: 13px;
+        height: 40px;
+        position: relative;
 
         >.tab {
-            font-weight: var(--font-default-bold);
-            font-size: var(--font-default-fontsize);
-            min-width: 36px;
-            margin-right: 4px;
-            margin-top: 4px;
-            text-align: left;
-            line-height: 24px;
-            color: var(--grey-dark);
+            cursor: pointer;
+            padding: 13px 14px 13px 14px;
+            font-size: 12px;
+            font-weight: 400;
+            color: #000000;
         }
 
-        >.tab:hover {
-            color: var(--theme-color);
-        }
+        //>.tab:hover {
+        //    color: var(--theme-color);
+        //}
 
         >.active {
             border-radius: 4px 4px 0 0;
-            color: var(--theme-color);
+            //color: var(--theme-color);
+            font-weight: 500;
+        }
+
+        .underline {
+            background-color: #000000;
+            border-radius: 292px;
+            position: absolute;
+            bottom: 0;
+            transition: left 0.3s ease-in-out;
+            box-sizing: border-box;
+            height: 2px;
+            z-index: 1;
         }
     }
 
     .body {
-        border-top: 1px solid var(--theme-color);
+        border-top: 1px solid #F0F0F0;
         width: 100%;
         height: calc(100% - 36px);
         position: relative;
@@ -149,22 +182,26 @@ onUnmounted(() => {
 
 .showHiddenR {
     position: absolute;
-    left: -12px;
-    top: 50%;
+    left: -16px;
+    top: 0%;
     transform: translateY(-50%);
     z-index: 9;
     cursor: pointer;
-    height: 60px;
     background-color: var(--theme-color-anti);
     display: flex;
     align-items: center;
     justify-content: center;
-    border-radius: 4px 0px 0px 4px;
     box-shadow: -4px 0px 8px rgba($color: #000000, $alpha: 0.05);
+    width: 16px;
+    height: 44px;
+    border-radius: 8px 0px 0px 8px;
+    opacity: 1;
+    box-sizing: border-box;
+    border: 1px solid #F0F0F0;
 
     >.svg {
-        width: 12px;
-        height: 12px;
+        width: 10px;
+        height: 10px;
     }
 }
 
