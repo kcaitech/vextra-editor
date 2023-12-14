@@ -124,7 +124,7 @@ function point_mousemove(event: MouseEvent) {
     const mouseOnClient: ClientXY = { x: event.clientX - root.x, y: event.clientY - root.y };
 
     if (isDragging && pathEditor) {
-        __exe(pathEditor, sub_matrix.computeCoord3(mouseOnClient));
+        __exe(event, pathEditor, sub_matrix.computeCoord3(mouseOnClient));
         startPosition.x = mouseOnClient.x
         startPosition.y = mouseOnClient.y;
         return;
@@ -172,7 +172,30 @@ function bridging_completed() {
     bridged = false;
 }
 
-function __exe(pathEditor: AsyncPathEditor, _point: PageXY) {
+function direction_action(p: PageXY, index: number) {
+    const points = (shape as PathShape).points;
+
+    if (!points?.length) {
+        console.log('!points?.length');
+        return;
+    }
+    
+    const point = points[index];
+    const m = shape.matrix2Root();
+    m.preScale(shape.frame.width, shape.frame.height);
+
+    const o = m.computeCoord2(point.x, point.y);
+    const dx = Math.abs(o.x - p.x);
+    const dy = Math.abs(o.y - o.y);
+
+    if (dx > dy) {
+        p.y = o.y
+    } else {
+        p.x = o.x;
+    }
+}
+
+function __exe(event: MouseEvent, pathEditor: AsyncPathEditor, _point: PageXY) {
     if (!offset_map) {
         console.log("!offset_map");
         return;
@@ -190,6 +213,9 @@ function __exe(pathEditor: AsyncPathEditor, _point: PageXY) {
         return;
     }
     if (select_point.length === 1) {
+        if (event.shiftKey) {
+            direction_action(point, current_curve_point_index.value);
+        }
         pathEditor.execute(current_curve_point_index.value, point);
         return;
     }
@@ -209,6 +235,7 @@ function __exe(pathEditor: AsyncPathEditor, _point: PageXY) {
     m.preScale(shape.frame.width, shape.frame.height);
     const m2 = new Matrix(m.inverse);
     const compute_unit_point = m2.computeCoord3(compute_root_point);
+
     pathEditor.execute2(select_point, compute_unit_point.x - first_point.x, compute_unit_point.y - first_point.y);
 }
 

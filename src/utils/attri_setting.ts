@@ -132,7 +132,7 @@ export function get_actions_flip_v(shapes: Shape[]) {
   const actions: FlipAction[] = [];
   for (let i = 0; i < shapes.length; i++) {
     const shape = shapes[i];
-    if(shape.type === ShapeType.Cutout) continue;
+    if (shape.type === ShapeType.Cutout) continue;
     actions.push({ target: shape, direction: 'vertical' });
   }
   return actions;
@@ -141,7 +141,7 @@ export function get_actions_flip_h(shapes: Shape[]) {
   const actions: FlipAction[] = [];
   for (let i = 0; i < shapes.length; i++) {
     const shape = shapes[i];
-    if(shape.type === ShapeType.Cutout) continue;
+    if (shape.type === ShapeType.Cutout) continue;
     actions.push({ target: shape, direction: 'horizontal' });
   }
   return actions;
@@ -155,11 +155,22 @@ export function get_rotation(shape: Shape) {
   return rotation;
 }
 export function get_straight_line_length(shape: Shape) {
+  const points = (shape as PathShape).points;
+
   const f = shape.frame, m = shape.matrix2Root();
-  const lt = m.computeCoord2(0, 0), rb = m.computeCoord2(f.width, f.height);
+  m.preScale(f.width, f.height);
+  const p1 = points[0];
+  const p2 = points[1];
+
+  if (!p1 || !p2) {
+    return 0;
+  }
+  
+  const lt = m.computeCoord2(p1.x, p1.y);
+  const rb = m.computeCoord2(p2.x, p2.y);
   return Math.hypot(rb.x - lt.x, rb.y - lt.y);
 }
-function is_straight(shape: Shape) {
+export function is_straight(shape: Shape) {
   if (!(shape instanceof PathShape)) {
     return false;
   }

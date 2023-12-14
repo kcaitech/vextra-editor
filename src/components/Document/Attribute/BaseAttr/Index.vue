@@ -18,7 +18,8 @@ import {
     get_actions_frame_w, get_actions_frame_h,
     get_actions_flip_h,
     get_actions_flip_v,
-    get_straight_line_length
+    get_straight_line_length,
+    is_straight
 } from '@/utils/attri_setting';
 interface Props {
     context: Context
@@ -75,7 +76,7 @@ function calc_attri() {
     const len = props.context.selection.selectedShapes.length;
     if (len === 1) {
         const shape = props.context.selection.selectedShapes[0];
-        if (shape.type === ShapeType.Line) {
+        if (is_straight(shape)) {
             w.value = Math.max(get_straight_line_length(shape), 1);
             h.value = 0;
         } else {
@@ -359,15 +360,23 @@ function set_lines_length(value: string) {
 function onChangeRotate(value: string) {
     value = Number.parseFloat(value).toFixed(fix);
     const newRotate: number = Number.parseFloat(value);
-    if (isNaN(newRotate)) return;
+    if (isNaN(newRotate)) {
+        return;
+    }
     const selected = props.context.selection.selectedShapes;
-    if (selected.length) {
-        const page = props.context.selection.selectedPage;
-        if (page) {
-            const editor = props.context.editor4Page(page);
-            editor.setShapesRotate(selected, newRotate);
-            if (selected.length > 1) check_mixed();
-        }
+    if (!selected.length) {
+        return;
+    }
+
+    const page = props.context.selection.selectedPage;
+    if (!page) {
+        return;
+    }
+
+    const editor = props.context.editor4Page(page);
+    editor.setShapesRotate(selected, newRotate);
+    if (selected.length > 1) {
+        check_mixed();
     }
 }
 const onChangeRadian = (value: string, type: 'rt' | 'lt' | 'rb' | 'lb') => {
@@ -437,19 +446,30 @@ function layout() {
             multiRadius.value = MULTI_RADIUS.includes(shape.type);
             getRectShapeAttr(shape);
         }
-        if (shape.type === ShapeType.Table) s_flip = false;
-        if (shape.type === ShapeType.Line || shape.type === ShapeType.Contact) s_length = true;
-        if(shape.type === ShapeType.Cutout) cutout_setting.value = false;
+        if (shape.type === ShapeType.Table) {
+            s_flip = false;
+        }
+        if (is_straight(shape) || shape.type === ShapeType.Contact) {
+            s_length = true;
+        }
+        if (shape.type === ShapeType.Cutout) {
+            cutout_setting.value = false;
+        }
     } else {
-        if (selected.find(i => i instanceof RectShape)) s_radius = true;
+        if (selected.find(i => i instanceof RectShape)) {
+            s_radius = true;
+        }
     }
     reflush.value++;
 }
 function check_model_state() {
     reset_model_state();
     const shapes = props.context.selection.selectedShapes;
-    if (shapes.length !== 1) return;
+    if (shapes.length !== 1) {
+        return;
+    }
     const shape = shapes[0];
+    
     if (shape.type === ShapeType.Contact) {
         model_disable_state.x = true, model_disable_state.y = true;
         model_disable_state.width = true, model_disable_state.height = true;
@@ -457,7 +477,8 @@ function check_model_state() {
         model_disable_state.filpVertical = true, model_disable_state.flipHorizontal = true;
         model_disable_state.radius = false;
     }
-    if (shape.type === ShapeType.Line) {
+
+    if (is_straight(shape)) {
         model_disable_state.height = true;
     }
 }
@@ -504,11 +525,11 @@ onUnmounted(() => {
     <div class="table">
         <div class="tr">
             <IconText class="td positon" ticon="X" :text="typeof (x) === 'number' ? x.toFixed(fix) : x"
-                      @onchange="onChangeX" :disabled="model_disable_state.x"  :context="context"/>
-<!--            <div class="space"></div>-->
+                @onchange="onChangeX" :disabled="model_disable_state.x" :context="context" />
+            <!--            <div class="space"></div>-->
             <IconText class="td positon" ticon="Y" :text="typeof (y) === 'number' ? y.toFixed(fix) : y"
-                      @onchange="onChangeY" :disabled="model_disable_state.y"  :context="context"/>
-<!--            <Position :context="props.context" :shape="props.context.selection.selectedShapes[0]"></Position>-->
+                @onchange="onChangeY" :disabled="model_disable_state.y" :context="context" />
+            <!--            <Position :context="props.context" :shape="props.context.selection.selectedShapes[0]"></Position>-->
             <div class="adapt" v-if="s_adapt" :title="t('attr.adapt')" @click="adapt">
                 <svg-icon icon-class="adapt"></svg-icon>
             </div>
@@ -516,12 +537,13 @@ onUnmounted(() => {
         </div>
         <div class="tr" :reflush="reflush">
             <IconText class="td frame" ticon="W" :text="typeof (w) === 'number' ? w.toFixed(fix) : w" @onchange="onChangeW"
-                      :disabled="model_disable_state.width"  :context="context"/>
+                :disabled="model_disable_state.width" :context="context" />
 
             <IconText class="td frame" ticon="H" :text="typeof (h) === 'number' ? h.toFixed(fix) : h" @onchange="onChangeH"
-                      :disabled="model_disable_state.height"  :context="context"/>
+                :disabled="model_disable_state.height" :context="context" />
             <div class="lock" @click="lockToggle" :class="{ 'active': isLock }">
-                <svg-icon v-if="!s_length" :icon-class="isLock ? 'lock' : 'unlock'" :class="{ 'active': isLock }"></svg-icon>
+                <svg-icon v-if="!s_length" :icon-class="isLock ? 'lock' : 'unlock'"
+                    :class="{ 'active': isLock }"></svg-icon>
             </div>
 
         </div>
@@ -530,13 +552,13 @@ onUnmounted(() => {
                 :frame="{ width: 14, height: 14 }" :disabled="model_disable_state.rotation" :context="context" />
             <Tooltip v-if="s_flip || cutout_setting" :content="t('attr.flip_h')" :offset="15">
                 <div :class="{ flip: !model_disable_state.filpVertical, 'flip-disable': model_disable_state.filpVertical, 'ml-24': true }"
-                     @click="fliph">
+                    @click="fliph">
                     <svg-icon icon-class="fliph"></svg-icon>
                 </div>
             </Tooltip>
             <Tooltip v-if="s_flip || cutout_setting" :content="t('attr.flip_v')" :offset="15">
                 <div :class="{ flip: !model_disable_state.filpVertical, 'flip-disable': model_disable_state.filpVertical, 'ml-12': true }"
-                     @click="flipv">
+                    @click="flipv">
                     <svg-icon icon-class="flipv"></svg-icon>
                 </div>
             </Tooltip>
@@ -544,20 +566,25 @@ onUnmounted(() => {
         </div>
         <div class="tr" v-if="s_radius" :reflush="reflush">
             <IconText class="td frame" svgicon="radius" :multipleValues="multipleValues" :text="radius?.lt || 0"
-                      :frame="{ width: 12, height: 12 }" @onchange="e => onChangeRadian(e, 'lt')"
-                      :disabled="model_disable_state.radius"  :context="context"/>
+                :frame="{ width: 12, height: 12 }" @onchange="e => onChangeRadian(e, 'lt')"
+                :disabled="model_disable_state.radius" :context="context" />
             <div class="td frame ml-24" v-if="!isMoreForRadius"></div>
             <IconText v-if="isMoreForRadius" class="td frame ml-24" svgicon="radius" :text="radius?.rt || 0"
-                      :frame="{ width: 12, height: 12, rotate: 90 }" @onchange="e => onChangeRadian(e, 'rt')"  :context="context"/>
-            <div class="more-for-radius" @click="radiusToggle" v-if="s_radius && multiRadius" :class="{ 'active': isMoreForRadius }">
-                <svg-icon :icon-class="isMoreForRadius ? 'more-for-radius' : 'more-for-radius'" :class="{ 'active': isMoreForRadius }"></svg-icon>
+                :frame="{ width: 12, height: 12, rotate: 90 }" @onchange="e => onChangeRadian(e, 'rt')"
+                :context="context" />
+            <div class="more-for-radius" @click="radiusToggle" v-if="s_radius && multiRadius"
+                :class="{ 'active': isMoreForRadius }">
+                <svg-icon :icon-class="isMoreForRadius ? 'more-for-radius' : 'more-for-radius'"
+                    :class="{ 'active': isMoreForRadius }"></svg-icon>
             </div>
         </div>
         <div class="tr" v-if="isMoreForRadius">
             <IconText class="td frame" svgicon="radius" :text="radius?.lb || 0"
-                      :frame="{ width: 12, height: 12, rotate: 270 }" @onchange="e => onChangeRadian(e, 'lb')"  :context="context"/>
+                :frame="{ width: 12, height: 12, rotate: 270 }" @onchange="e => onChangeRadian(e, 'lb')"
+                :context="context" />
             <IconText class="td frame ml-24" svgicon="radius" :text="radius?.rb || 0"
-                      :frame="{ width: 12, height: 12, rotate: 180 }" @onchange="e => onChangeRadian(e, 'rb')"  :context="context"/>
+                :frame="{ width: 12, height: 12, rotate: 180 }" @onchange="e => onChangeRadian(e, 'rb')"
+                :context="context" />
             <!-- <RadiusForIos :context="props.context"></RadiusForIos> -->
             <div style="width: 32px;height: 32px;"></div>
         </div>
@@ -631,6 +658,7 @@ onUnmounted(() => {
                 width: 14px;
                 height: 14px;
             }
+
             >svg.active {
                 color: #FFFFFF;
             }
@@ -640,9 +668,9 @@ onUnmounted(() => {
             background: #F4F5F5;
         }
 
-        .lock.active{
-        background-color: #1878F5;
-        border: 1px solid #1878F5;
+        .lock.active {
+            background-color: #1878F5;
+            border: 1px solid #1878F5;
         }
 
         .adapt {
@@ -749,7 +777,7 @@ onUnmounted(() => {
             background: #F4F5F5;
         }
 
-        .more-for-radius.active{
+        .more-for-radius.active {
             background-color: #1878F5;
             border: 1px solid #1878F5;
         }

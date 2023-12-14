@@ -925,7 +925,10 @@ export function top_side(shape: Shape, matrix: Matrix) {
  */
 export function select_all(context: Context) {
     // todo 编辑模式
-
+    if (context.workspace.is_path_edit_mode) {
+        select_all_for_path_edit(context);
+        return;
+    }
 
     const selection = context.selection;
     const selected = selection.selectedShapes;
@@ -953,6 +956,17 @@ export function select_all(context: Context) {
     } else {
         selection.rangeSelectShape(Array.from(p_map.values())[0].childs);
     }
+}
+
+function select_all_for_path_edit(context: Context) {
+    const path_shape = context.selection.pathshape;
+    if (!path_shape) {
+        console.log('select_all_for_path_edit: !path_shape');
+        return;
+    }
+    const indexes = path_shape.points.map((_, idx) => idx);
+    context.path.select_points(indexes);
+    context.path.select_sides(indexes);
 }
 
 /**
