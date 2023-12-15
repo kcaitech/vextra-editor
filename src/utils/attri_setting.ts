@@ -165,7 +165,7 @@ export function get_straight_line_length(shape: Shape) {
   if (!p1 || !p2) {
     return 0;
   }
-  
+
   const lt = m.computeCoord2(p1.x, p1.y);
   const rb = m.computeCoord2(p2.x, p2.y);
   return Math.hypot(rb.x - lt.x, rb.y - lt.y);
@@ -192,4 +192,28 @@ export function get_rotate_for_straight(shape: PathShape) {
   const lt = m.computeCoord2(p1.x, p1.y);
   const rb = m.computeCoord2(p2.x, p2.y);
   return Number(getHorizontalAngle(lt, rb).toFixed(2)) % 360;
+}
+
+export function get_indexes(shape: PathShape, type: 'rt' | 'lt' | 'rb' | 'lb' | 'all') {
+  let result: number[] = [];
+  if (type === 'all') {
+    result = shape.points.map((_, index) => index);
+  }
+  switch (type) {
+    case 'rt':
+      result.push(1);
+      break;
+    case 'lt':
+      result.push(0);
+      break;
+    case 'rb':
+      result.push(2);
+      break;
+    case 'lb':
+      result.push(3);
+      break;
+    default:
+      break;
+  }
+  return result;
 }

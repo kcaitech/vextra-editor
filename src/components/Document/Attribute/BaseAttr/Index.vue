@@ -19,7 +19,8 @@ import {
     get_actions_flip_h,
     get_actions_flip_v,
     get_straight_line_length,
-    is_straight
+    is_straight,
+    get_indexes
 } from '@/utils/attri_setting';
 interface Props {
     context: Context
@@ -382,14 +383,20 @@ function onChangeRotate(value: string) {
 const onChangeRadian = (value: string, type: 'rt' | 'lt' | 'rb' | 'lb') => {
     const selected = props.context.selection.selectedShapes.filter(shape => shape.type !== ShapeType.Cutout);
     if (selected.length === 1) {
-        const e = props.context.editor4Shape(selected[0]);
-        if (isMoreForRadius.value) {
+        const shape = selected[0];
+        const e = props.context.editor4Shape(shape);
+        if (isMoreForRadius.value) {            
             value = Number.parseFloat(value).toFixed(fix);
-            const newRadian: number = Number.parseFloat(value) < Math.min((w.value as number), (h.value as number)) ? Number.parseFloat(value) : Math.min((w.value as number), (h.value as number))
-            if (!radius.value) return;
+            const newRadian: number = Number.parseFloat(value) < Math.min((w.value as number), (h.value as number)) ? Number.parseFloat(value) : Math.min((w.value as number), (h.value as number));
+
+            if (!radius.value) {
+                return;
+            }
             radius.value[type] = newRadian > 0 ? Number(newRadian.toFixed(fix)) : 0;
 
-            e.setRectRadius(+radius.value.lt, radius.value.rt, radius.value.rb, radius.value.lb);
+            const indexes = get_indexes(shape as PathShape, type);
+
+            e.modifyPointsCornerRadius(indexes, +radius.value[type]);
         } else {
             value = Number.parseFloat(value).toFixed(fix);
             const newRadian: number = Number.parseFloat(value) < (Math.min((w.value as number), (h.value as number)) / 2) ? Number.parseFloat(value) : Math.min((w.value as number), (h.value as number)) / 2
@@ -397,8 +404,10 @@ const onChangeRadian = (value: string, type: 'rt' | 'lt' | 'rb' | 'lb') => {
             const fixedRadius = newRadian > 0 ? Number(newRadian.toFixed(fix)) : 0;
             const shape = props.context.selection.selectedShapes[0];
             radius.value.lt = fixedRadius;
+            const indexes = get_indexes(shape as PathShape, 'all');
+
             if (shape instanceof RectShape) {
-                e.setRectRadius(fixedRadius, fixedRadius, fixedRadius, fixedRadius);
+                e.modifyPointsCornerRadius(indexes, fixedRadius);
             } else {
                 e.setFixedRadius(fixedRadius)
             }
@@ -410,13 +419,17 @@ const onChangeRadian = (value: string, type: 'rt' | 'lt' | 'rb' | 'lb') => {
             if (isMoreForRadius.value) {
                 value = Number.parseFloat(value).toFixed(fix);
                 const newRadian: number = Number.parseFloat(value) < Math.min((w.value as number), (h.value as number)) ? Number.parseFloat(value) : Math.min((w.value as number), (h.value as number))
-                if (!radius.value) return;
+                if (!radius.value) {
+                    return;
+                }
                 radius.value[type] = newRadian > 0 ? Number(newRadian.toFixed(fix)) : 0;
                 e.setShapesRadius(selected, +radius.value.lt, radius.value.rt, radius.value.rb, radius.value.lb);
             } else {
                 value = Number.parseFloat(value).toFixed(fix);
                 const newRadian: number = Number.parseFloat(value) < (Math.min((w.value as number), (h.value as number)) / 2) ? Number.parseFloat(value) : Math.min((w.value as number), (h.value as number)) / 2
-                if (!radius.value) return;
+                if (!radius.value) {
+                    return;
+                }
                 const fixedRadius = newRadian > 0 ? Number(newRadian.toFixed(fix)) : 0;
                 e.setShapesRadius(selected, fixedRadius, fixedRadius, fixedRadius, fixedRadius);
             }
@@ -425,7 +438,25 @@ const onChangeRadian = (value: string, type: 'rt' | 'lt' | 'rb' | 'lb') => {
 }
 function adapt() {
     const selected = props.context.selection.selectedShapes;
-    if (selected.length === 1 && selected[0].type === ShapeType.Artboard) props.context.editor4Shape(selected[0]).adapt();
+    if (selected.length === 1 && selected[0].type === ShapeType.Artboard) {
+        props.context
+            .editor4Shape(selected[0])
+            .adapt();
+    }
+}
+function modify_multi_radius(shape: Shape) {
+    multiRadius.value = false;
+    if (!(shape instanceof PathShape)) {
+        return;
+    }
+    if (!shape.isClosed) {
+        return;
+    }
+    const points = shape.points;
+    if (points.length !== 4) {
+        return;
+    }
+    multiRadius.value = true;
 }
 const RADIUS_SETTING = [
     ShapeType.Rectangle, ShapeType.Artboard,
@@ -443,7 +474,7 @@ function layout() {
         const shape = selected[0];
         s_radius = hasRadiusShape(shape, RADIUS_SETTING), s_adapt = shape.type === ShapeType.Artboard;
         if (s_radius) {
-            multiRadius.value = MULTI_RADIUS.includes(shape.type);
+            modify_multi_radius(shape);
             getRectShapeAttr(shape);
         }
         if (shape.type === ShapeType.Table) {
@@ -469,7 +500,7 @@ function check_model_state() {
         return;
     }
     const shape = shapes[0];
-    
+
     if (shape.type === ShapeType.Contact) {
         model_disable_state.x = true, model_disable_state.y = true;
         model_disable_state.width = true, model_disable_state.height = true;
