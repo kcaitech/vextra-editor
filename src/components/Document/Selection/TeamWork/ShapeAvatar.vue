@@ -255,7 +255,7 @@ onUnmounted(() => {
             width: 20px;
             height: 20px;
             border-radius: 50%;
-            background-color: var(--active-color-beta);
+            background-color: var(--active-color);
             box-sizing: border-box;
 
             >img {

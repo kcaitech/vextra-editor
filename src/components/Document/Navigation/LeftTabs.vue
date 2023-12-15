@@ -92,10 +92,10 @@ onUnmounted(() => {
 .tab-container {
     position: relative;
     width: 100%;
-    box-shadow: 4px 0px 4px rgba($color: #000000, $alpha: 0.05);
+    border: 1px solid #F5F5F5;
 
     .tab-controller {
-        height: 32px;
+        height: 40px;
         display: flex;
         flex-direction: row;
         overflow: hidden;
@@ -123,12 +123,13 @@ onUnmounted(() => {
     }
 
     .body {
-        border-top: 1px solid var(--theme-color);
+        border-top: 1px solid #F0F0F0;
         width: 100%;
         height: calc(100% - 32px);
         position: relative;
         flex: 1 1 auto;
         box-sizing: border-box;
+        box-shadow: inset 0px -1px 0px 0px #F0F0F0;
     }
 
 }

@@ -527,11 +527,12 @@ onUnmounted(() => {
     props.context.selection.unwatch(selection_watcher);
     watchedShapes.forEach(v => v.unwatch(watcher));
 })
+
 </script>
 
 <template>
     <div class="fill-panel">
-        <TypeHeader :title="t('attr.fill')" class="mt-24" @click.stop="first">
+        <TypeHeader :title="t('attr.fill')" class="mt-24" @click.stop="first" :active="!!fills.length">
             <template #tool>
                 <div class="add" @click.stop="addFill">
                     <svg-icon icon-class="add"></svg-icon>
@@ -553,13 +554,14 @@ onUnmounted(() => {
                     <ColorPicker :color="f.fill.color" :context="props.context"
                                  @change="c => getColorFromPicker(idx, c)">
                     </ColorPicker>
-                    <input ref="colorFill" :value="toHex(f.fill.color.red, f.fill.color.green, f.fill.color.blue)"
-                           :spellcheck="false" @change="(e) => onColorChange(idx, e)" @focus="selectColor(idx)"/>
-                    <input ref="alphaFill" style="text-align: center;"
-                           :value="filterAlpha(f.fill.color.alpha * 100) + '%'"
-                           @change="(e) => onAlphaChange(idx, e)" @focus="selectAlpha(idx)"/>
+                    <input ref="colorFill" class="colorFill" :value="toHex(f.fill.color.red, f.fill.color.green, f.fill.color.blue)"
+                        :spellcheck="false" @change="(e) => onColorChange(idx, e)" @focus="selectColor(idx)"
+                           :class="{ 'check': f.fill.isEnabled, 'nocheck': !f.fill.isEnabled }" />
+                    <input ref="alphaFill" class="alphaFill" :value="filterAlpha(f.fill.color.alpha * 100) + '%'"
+                        @change="(e) => onAlphaChange(idx, e)" @focus="selectAlpha(idx)"
+                           :class="{ 'check': f.fill.isEnabled, 'nocheck': !f.fill.isEnabled }"/>
                 </div>
-                <div style="width: 22px;"></div>
+                <div style="width: 4px;"></div>
                 <div class="delete" @click="deleteFill(idx)">
                     <svg-icon icon-class="delete"></svg-icon>
                 </div>
@@ -574,26 +576,29 @@ onUnmounted(() => {
     width: 100%;
     display: flex;
     flex-direction: column;
-    padding: 10px 10px 12px 10px;
+    padding: 12px 8px 18px 8px;
     box-sizing: border-box;
+    border-top: 1px solid #F0F0F0;
+    border-bottom: 1px solid #F0F0F0;
 
     .add {
-        width: 22px;
-        height: 22px;
+        width: 28px;
+        height: 28px;
         display: flex;
         align-items: center;
         justify-content: center;
+        box-sizing: border-box;
+        border-radius: var(--default-radius);
 
-        > svg {
-            width: 50%;
-            height: 50%;
+        >svg {
+            width: 16px;
+            height: 16px;
         }
 
         transition: .2s;
     }
-
     .add:hover {
-        transform: scale(1.25);
+        background-color: #F5F5F5;;
     }
 
     .fills-container {
@@ -607,17 +612,16 @@ onUnmounted(() => {
             margin-top: 4px;
 
             .visibility {
-                flex: 0 0 18px;
-                width: 18px;
-                height: 18px;
+                flex: 0 0 14px;
+                width: 14px;
+                height: 14px;
                 background-color: var(--active-color);
-                border-radius: var(--default-radius);
-                border: 1px solid #d8d8d8;
                 box-sizing: border-box;
                 color: #ffffff;
                 display: flex;
                 justify-content: center;
                 align-items: center;
+                border-radius: 4px;
 
                 > svg {
                     width: 60%;
@@ -626,56 +630,78 @@ onUnmounted(() => {
             }
 
             .hidden {
-                flex: 0 0 18px;
-                width: 18px;
-                height: 18px;
-                background-color: transparent;
-                border-radius: var(--default-radius);
-                border: 1px solid #d8d8d8;
+                flex: 0 0 14px;
+                width: 14px;
+                height: 14px;
+                background: #FFFFFF;
+                border-radius: 4px;
+                border: 1px solid #EBEBEB;
                 box-sizing: border-box;
             }
 
             .color {
-                background-color: rgba(#D8D8D8, 0.4);
-                height: 100%;
-                padding: 0px 5px;
+                background-color: var(--input-background);
+                height: 32px;
+                width: 172px;
+                padding: 9px 8px;
                 margin-left: 5px;
                 border-radius: var(--default-radius);
                 box-sizing: border-box;
                 display: flex;
                 align-items: center;
 
-                input {
+                .colorFill {
                     outline: none;
                     border: none;
                     background-color: transparent;
-                    width: 85px;
-                    margin-left: 5px;
+                    width: 92px;
+                    height: 14px;
+                    margin-left: 8px;
+                    flex: 1;
+                    font-size: 12px;
+                }
+
+                .alphaFill {
+                    outline: none;
+                    border: none;
+                    background-color: transparent;
+                    width: 37px;
+                    text-align: center;
+                    font-size: 12px;
                 }
 
                 input + input {
                     width: 45px;
                 }
+
+                .check {
+                    color: #000000;
+                }
+
+                .nocheck {
+                    color: rgba(0, 0, 0, 0.3);
+                }
             }
 
             .delete {
-                flex: 0 0 22px;
+                flex: 0 0 28px;
                 display: flex;
                 justify-content: center;
                 align-items: center;
-                width: 22px;
-                height: 22px;
+                width: 28px;
+                height: 28px;
+                border-radius: var(--default-radius);
 
-                > svg {
-                    width: 11px;
-                    height: 11px;
+                >svg {
+                    width: 16px;
+                    height: 16px;
                 }
 
                 transition: .2s;
             }
 
             .delete:hover {
-                color: #ff5555;
+                background-color: #F5F5F5;
             }
         }
     }
@@ -684,8 +710,10 @@ onUnmounted(() => {
         padding: 12px 0;
 
         .mixed-tips {
+            color: #737373;
             display: block;
-            width: 100%;
+            width: 218px;
+            height: 14px;
             text-align: center;
             font-size: var(--font-default-fontsize);
         }

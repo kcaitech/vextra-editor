@@ -107,8 +107,8 @@ watchEffect(updateControllerView);
         xmlns:xhtml="http://www.w3.org/1999/xhtml" preserveAspectRatio="xMinYMin meet" :viewBox="viewBox" :width="width"
         :height="height" :class="{ 'un-visible': !visible }" @mousedown="mousedown" overflow="visible"
         :style="{ transform: `translate(${bounds.left}px,${bounds.top}px)`, left: 0, top: 0, position: 'absolute' }">
-        <path :d="boundrectPath" fill="none" stroke='#865dff' stroke-width="1.5px"></path>
-        <ShapesStrokeContainer :context="props.context" :matrix="props.matrix" color-hex="#865dff">
+        <path :d="boundrectPath" fill="none" stroke='#1878f5' stroke-width="1.5px"></path>
+        <ShapesStrokeContainer :context="props.context" :matrix="props.matrix" color-hex="#1878f5">
         </ShapesStrokeContainer>
         <BarsContainer :context="props.context" :matrix="submatrix.toArray()" :frame="props.controllerFrame">
         </BarsContainer>
@@ -122,6 +122,6 @@ watchEffect(updateControllerView);
 }
 
 .editing {
-    background-color: rgba($color: #865dff, $alpha: 0.15);
+    background-color: rgba($color: #1878f5, $alpha: 0.15);
 }
 </style>

@@ -12,6 +12,7 @@ import { RenderCtx } from './common';
 import { PageDom } from './vdom/page';
 import { initComsMap } from './vdom/comsmap';
 import comsMap from './comsmap';
+import ShapeCutout from '../Cutout/ShapeCutout.vue';
 interface Props {
     context: Context
     data: Page
@@ -141,6 +142,7 @@ function render() {
 <template>
     <svg ref="pagesvg" :style="{ transform: matrixWithFrame.toString() }" :data-area="rootId" :reflush="reflush"></svg>
     <!-- <render></render> -->
+    <ShapeCutout :context="props.context" :data="data" :matrix="props.matrix" :transform="matrixWithFrame.toArray()"></ShapeCutout>
     <ShapeTitles v-if="show_t" :context="props.context" :data="data" :matrix="matrixWithFrame.toArray()"></ShapeTitles>
     <ComponentTitleContainer :context="props.context" :data="data" :matrix="matrixWithFrame.toArray()">
     </ComponentTitleContainer>

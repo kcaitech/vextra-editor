@@ -4,7 +4,7 @@ import {useI18n} from "vue-i18n";
 
 import {Context} from "@/context";
 import {onMounted, onUpdated, ref, watch} from "vue";
-import {OverrideType} from "../../../../../../../kcdesign-data/src";
+import {OverrideType} from "@kcdesign/data";
 
 const {t} = useI18n();
 

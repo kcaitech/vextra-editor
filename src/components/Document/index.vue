@@ -33,15 +33,14 @@ import Bridge from "@/components/Document/Bridge.vue";
 import { Component } from '@/context/component';
 import { initpal } from './initpal';
 
-
 const { t } = useI18n();
 const curPage = shallowRef<Page | undefined>(undefined);
 let context: Context | undefined;
 const middleWidth = ref<number>(0.8);
 const middleMinWidth = ref<number>(0.3);
 const route = useRoute();
-const Right = ref({ rightMin: 250, rightMinWidth: 0.1, rightWidth: 0.1 });
-const Left = ref({ leftMin: 250, leftWidth: 0.1, leftMinWidth: 0.1 });
+const Right = ref({ rightMin: 240, rightMinWidth: 0.1, rightWidth: 0.1 });
+const Left = ref({ leftMin: 240, leftWidth: 0.1, leftMinWidth: 0.1 });
 const showRight = ref<boolean>(true);
 const showLeft = ref<boolean>(true);
 const showTop = ref<boolean>(true);
@@ -327,76 +326,74 @@ const getUserInfo = async () => {
 }
 
 onBeforeRouteUpdate((to, form, next) => {
-  router.go(0)
+  if (to.query.id?.includes(' ') || to.query.id?.includes('%20')) {
+    router.go(0)
+  } else {
+    next()
+  }
 })
 
 //获取文档信息
 const getDocumentInfo = async () => {
   try {
     loading.value = true;
-    noNetwork.value = false
-    const dataInfo = await share_api.getDocumentInfoAPI({ doc_id: route.query.id });
-    docInfo.value = dataInfo.data;
-    if (dataInfo.code === 400) {
-      //无效链接
-      // ElMessage({ message: `${t('apply.link_not')}` });
-      // return router.push('/');
+    noNetwork.value = false;
+
+    const docInfoPromise = share_api.getDocumentInfoAPI({ doc_id: route.query.id });
+    const docKeyPromise = share_api.getDocumentKeyAPI({ doc_id: route.query.id });
+    const [docInfoRes, docKeyRes] = await Promise.all([docInfoPromise, docKeyPromise]);
+    if (docInfoRes.code !== 0 || docKeyRes.code !== 0) { // 打开文档失败
       router.push({
-        name: 'apply',
-        query: {
-          id: route.query.id
-        }
-      })
-      return
+        name: "apply",
+        query: { id: route.query.id }
+      });
+      return;
     }
-    const perm = dataInfo.data.document_permission.perm_type
+    const docInfoData = docInfoRes.data;
+    const docKeyData = docKeyRes.data;
+    const perm = docInfoData.document_permission.perm_type;
+    if (perm === 0) { // 无权限
+      router.push({
+        name: "apply",
+        query: { id: route.query.id }
+      });
+      return;
+    }
+
+    docInfo.value = docInfoData;
     permType.value = perm;
-    //获取文档类型是否为私有文档且有无权限
-    if (perm === 0) {
-      router.push({
-        name: 'apply',
-        query: {
-          id: route.query.id
-        }
-      })
-      return
-    }
-    const { data } = await share_api.getDocumentKeyAPI({ doc_id: route.query.id });
-    // documentKey.value = data
 
     const repo = new Repository();
     const storageOptions: StorageOptions = {
-      endPoint: data.endpoint,
-      region: data.region,
-      accessKey: data.access_key,
-      secretKey: data.secret_access_key,
-      sessionToken: data.session_token,
-      bucketName: data.bucket_name,
+      endPoint: docKeyData.endpoint,
+      region: docKeyData.region,
+      accessKey: docKeyData.access_key,
+      secretKey: docKeyData.secret_access_key,
+      sessionToken: docKeyData.session_token,
+      bucketName: docKeyData.bucket_name,
     }
     let storage: IStorage;
-    if (data.provider === "oss") {
+    if (docKeyData.provider === "oss") {
       storage = new OssStorage(storageOptions);
     } else {
       storage = new S3Storage(storageOptions);
     }
     const path = docInfo.value.document.path;
-    const document = await importDocument(storage, path, "", dataInfo.data.document.version_id ?? "", repo)
+    const document = await importDocument(storage, path, "", docInfoData.document.version_id ?? "", repo)
     if (document) {
-      const coopRepo = new CoopRepository(document, repo)
+      const coopRepo = new CoopRepository(document, repo);
       const file_name = docInfo.value.document?.name || document.name;
       window.document.title = file_name.length > 8 ? `${file_name.slice(0, 8)}... - ProtoDesign` : `${file_name} - ProtoDesign`;
       context = new Context(document, coopRepo);
-      context.workspace.setDocumentPerm(perm)
+      context.workspace.setDocumentPerm(perm);
       getDocumentAuthority();
-      getUserInfo()
-
-      context.comment.setDocumentInfo(dataInfo.data)
+      getUserInfo();
+      context.comment.setDocumentInfo(docInfoData);
       null_context.value = false;
-      context.selection.watch(selectionWatcher);
-      context.workspace.watch(workspaceWatcher);
+      init_watcher();
       const docId = route.query.id as string;
       const token = localStorage.getItem("token") || "";
-      if (await context.communication.docOp.start(token, docId, document, context.coopRepo, dataInfo.data.document.version_id ?? "")) {
+      if (await context.communication.docOp.start(token, docId, document, context.coopRepo, docInfoData.document.version_id ?? "")) {
         switchPage(context!.data.pagesList[0]?.id);
         loading.value = false;
       } else {
@@ -406,12 +403,12 @@ const getDocumentInfo = async () => {
       if (perm === 3) await context.communication.docResourceUpload.start(token, docId);
       if (perm >= 2) await context.communication.docCommentOp.start(token, docId);
       await context.communication.docSelectionOp.start(token, docId, context);
-      context.communication.docSelectionOp.addOnMessage(teamSelectionModifi)
+      context.communication.docSelectionOp.addOnMessage(teamSelectionModifi);
     }
   } catch (err) {
     loading.value = false;
-    noNetwork.value = true
-    console.log(err)
+    noNetwork.value = true;
+    console.log(err);
     throw err;
   }
 }
@@ -458,6 +455,15 @@ function init_screen_size() {
   localStorage.setItem(SCREEN_SIZE.KEY, SCREEN_SIZE.NORMAL);
 }
 
+function init_watcher() {
+  if (!context) {
+    return;
+  }
+  context.selection.watch(selectionWatcher);
+  context.workspace.watch(workspaceWatcher);
+  context.component.watch(component_watcher);
+}
+
 function init_doc() {
   if (route.query.id) { // 从远端读取文件
     getDocumentInfo();
@@ -470,9 +476,7 @@ function init_doc() {
       context = new Context((window as any).sketchDocument as Document, ((window as any).skrepo as CoopRepository));
       null_context.value = false;
       getUserInfo();
-      context.selection.watch(selectionWatcher);
-      context.workspace.watch(workspaceWatcher);
-      context.component.watch(component_watcher);
+      init_watcher();
       const project_id = localStorage.getItem('project_id') || '';
       upload(project_id);
       localStorage.setItem('project_id', '');
@@ -682,7 +686,7 @@ onUnmounted(() => {
     <div id="visit">
       <ApplyFor></ApplyFor>
     </div>
-    <ColSplitView id="center" :style="{ height: showTop ? 'calc(100% - 40px)' : '100%' }"
+    <ColSplitView id="center" :style="{ height: showTop ? 'calc(100% - 52px)' : '100%' }"
       v-if="inited && !loading && !null_context"
       :left="{ width: Left.leftWidth, minWidth: Left.leftMinWidth, maxWidth: 0.5 }"
       :middle="{ width: middleWidth, minWidth: middleMinWidth, maxWidth: middleWidth }"
@@ -718,7 +722,7 @@ onUnmounted(() => {
       <span class="text" v-if="permissionChange === PermissionChange.update">{{ t('home.prompt') }}</span>
       <span class="text" v-if="permissionChange === PermissionChange.close">{{ t('home.visit') }}</span>
       <span class="text" v-if="permissionChange === PermissionChange.delete">{{ t('home.delete_file') }}</span>
-      <span style="color: #0d99ff;" v-if="countdown > 0">{{ countdown }}</span>
+      <span style="color: #1878F5;" v-if="countdown > 0">{{ countdown }}</span>
     </div>
     <Bridge v-if="bridge" :context="context!"></Bridge>
   </div>
@@ -742,13 +746,14 @@ onUnmounted(() => {
 <style scoped lang="scss">
 #top {
   display: flex;
-  position: relative;
   flex-flow: row nowrap;
   width: 100%;
-  height: 40px;
-  background-color: var(--top-toolbar-bg-color);
-  z-index: 10;
-  min-height: 40px;
+  height: 52px;
+  background: var(--theme-color);
+  padding: 10px 8px;
+  box-sizing: border-box;
+  position: relative;
+  z-index: 19;
 }
 
 .network {
@@ -770,7 +775,6 @@ onUnmounted(() => {
 #center {
   display: flex;
   flex-flow: row nowrap;
-  flex: 1 1 auto;
   width: 100%;
   overflow: hidden;
   position: relative;
@@ -778,7 +782,6 @@ onUnmounted(() => {
   #navigation {
     height: 100%;
     background-color: var(--left-navi-bg-color);
-    z-index: 9;
   }
 
   #content {
@@ -823,9 +826,9 @@ onUnmounted(() => {
   left: 50%;
   transform: translateX(-50%);
   color: #f1f1f1;
-  background-color: var(--active-color-beta);
+  background-color: var(--active-color);
   padding: 7px 30px;
-  border: 1px solid var(--active-color-beta);
+  border: 1px solid var(--active-color);
   border-radius: 4px;
 
   .loading-spinner {

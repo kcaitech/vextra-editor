@@ -1,8 +1,8 @@
 <script setup lang="ts">
-import {Context} from '@/context';
-import {Matrix, Shape} from '@kcdesign/data';
-import {onMounted, onUnmounted, watch} from 'vue';
-import {XY} from "@/context/selection";
+import { Context } from '@/context';
+import { Matrix, Shape } from '@kcdesign/data';
+import { onMounted, onUnmounted, watch } from 'vue';
+import { XY } from "@/context/selection";
 
 export interface SelectorFrame {
     top: number
@@ -44,10 +44,10 @@ function modify_select_path() {
     const t = props.selectorFrame.top;
     const b = props.selectorFrame.top + props.selectorFrame.height;
     const _ps = [
-        {x: l, y: t},
-        {x: r, y: t},
-        {x: r, y: b},
-        {x: l, y: b},
+        { x: l, y: t },
+        { x: r, y: t },
+        { x: r, y: b },
+        { x: l, y: b },
     ].map(i => m.computeCoord3(i));
     const [lt, rt, rb, lb] = _ps;
     path_string = `M${lt.x} ${lt.y} L${rt.x} ${rt.y} L${rb.x} ${rb.y} L${lb.x} ${lb.y} z`;
@@ -64,7 +64,7 @@ function finder_points() {
     const points = path_shape.points;
     for (let i = 0, l = points.length; i < l; i++) {
         if (selected_points.has(i)) continue;
-        const p = m42Dp.computeCoord3(points[i].point);
+        const p = m42Dp.computeCoord3(points[i]);
         if (point_is_target(p)) {
             selected_points.add(i);
             changed = true;
@@ -82,7 +82,7 @@ function remove_points() {
     }
     const points = path_shape.points;
     selected_points.forEach(i => {
-        const p = m42Dp!.computeCoord3(points[i].point);
+        const p = m42Dp!.computeCoord3(points[i]);
         if (!point_is_target(p)) {
             selected_points.delete(i);
             changed = true;
@@ -99,7 +99,7 @@ function reset() {
     selected_points.clear();
 }
 
-watch(() => props.selectorFrame, select, {deep: true});
+watch(() => props.selectorFrame, select, { deep: true });
 // hooks
 onMounted(() => {
 });
@@ -107,8 +107,7 @@ onUnmounted(() => {
 });
 </script>
 <template>
-    <div class="selector"
-         :style="{
+    <div class="selector" :style="{
         top: `${props.selectorFrame.top}px`,
         left: `${props.selectorFrame.left}px`,
         width: `${props.selectorFrame.width}px`,

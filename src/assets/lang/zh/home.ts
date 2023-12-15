@@ -62,7 +62,8 @@ export const system = {
     'license_key': '粤ICP备2023042416号',
     'phonetips': '移动端暂不支持登录，请在电脑端进行登录！',
     'btn_login': '登录',
-    'artboart_title_visible': '显示容器标题'
+    'artboart_title_visible': '显示容器标题',
+    sensitive_reminder:'含有敏感信息，请重新输入。'
 }
 
 export const home = {
@@ -278,7 +279,7 @@ export const attr: any = {
     english_font: '英文字体',
     find_the_fonts: '查找不到相关字体',
     font_is_not: '本地不存在该字体，使用默认字体效果替代显示',
-    font_color: '字体颜色',
+    font_color: '字体色值',
     highlight_color: '高亮颜色',
     multiple_colors: '存在多种颜色值，点击+可统一设置',
     unfold: '展开',

@@ -132,6 +132,7 @@ export function get_actions_flip_v(shapes: Shape[]) {
   const actions: FlipAction[] = [];
   for (let i = 0; i < shapes.length; i++) {
     const shape = shapes[i];
+    if(shape.type === ShapeType.Cutout) continue;
     actions.push({ target: shape, direction: 'vertical' });
   }
   return actions;
@@ -140,6 +141,7 @@ export function get_actions_flip_h(shapes: Shape[]) {
   const actions: FlipAction[] = [];
   for (let i = 0; i < shapes.length; i++) {
     const shape = shapes[i];
+    if(shape.type === ShapeType.Cutout) continue;
     actions.push({ target: shape, direction: 'horizontal' });
   }
   return actions;

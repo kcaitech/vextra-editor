@@ -62,7 +62,8 @@ export const system = {
     'license_key': '粤ICP备2023042416号',
     'phonetips': 'Mobile terminal does not support login, please login on the computer side!',
     'btn_login': 'Login',
-    'artboart_title_visible': 'Show artboard title'
+    'artboart_title_visible': 'Show artboard title',
+    sensitive_reminder:'Contains sensitive information, please re-enter.'
 }
 
 export const home = {

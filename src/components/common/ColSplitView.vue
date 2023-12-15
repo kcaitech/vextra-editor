@@ -1,5 +1,5 @@
 <script setup lang="ts">
-import { ref, reactive, onMounted, onUnmounted, watchEffect, nextTick } from "vue";
+import { ref, reactive, onMounted, onUnmounted, watchEffect } from "vue";
 import Sash from "@/components/common/Sash.vue";
 import { Context } from "@/context";
 import { WorkSpace } from "@/context/workspace";
@@ -9,27 +9,35 @@ export interface SizeBound {
     minWidth: number,
     maxWidth: number
 }
-const emit = defineEmits<{
-    (e: 'changeLeftWidth', width: number): void
-}>()
-
+interface Divide {
+    left: SizeBoundEx
+    middle: SizeBoundEx
+    right: SizeBoundEx
+}
 interface SizeBoundEx extends SizeBound {
     userWidth: number // 用户调整的大小
 }
-const props = defineProps<{
-    left: SizeBound, // .1 .05 .50
-    middle: SizeBound, // .8 .3 .9
-    right: SizeBound // .1 .05 .5
-    rightMinWidthInPx: number,
-    leftMinWidthInPx: number,
+interface Emits {
+    (e: 'changeLeftWidth', width: number): void
+}
+interface Props {
+    left: SizeBound
+    middle: SizeBound
+    right: SizeBound
+    rightMinWidthInPx: number
+    leftMinWidthInPx: number
     context: Context
-}>();
+}
+interface Ctx {
+    col: string,
+    saveWidth: () => number,
+    onDragStart: () => void,
+    onDragOffset: (offset: number) => void
+}
+const emit = defineEmits<Emits>();
+const props = defineProps<Props>();
 
-const sizeBounds = reactive<{
-    left: SizeBoundEx,
-    middle: SizeBoundEx,
-    right: SizeBoundEx
-}>(
+const sizeBounds = reactive<Divide>(
     {
         left: {
             width: 0, // 当前宽度
@@ -52,9 +60,6 @@ const sizeBounds = reactive<{
     }
 );
 
-// function rightAdjust(preWidth: number, width: number) {
-
-// }
 // let preOffset = 0;
 function rightAdjust(saveWidth: number, offset: number) {
     const totalWidth = getRootWidth();
@@ -131,21 +136,7 @@ function leftAdjust(saveWidth: number, offset: number) {
 type AdjustsFun = { [key: string]: (saveWidth: number, offset: number) => void }
 const adjustsFun: AdjustsFun = {
     "left": leftAdjust,
-    // "middle": middleAdjust,
     "right": rightAdjust
-}
-
-// const saveLastUserWidth = {
-//     left: 0,
-//     middle: 0,
-//     right: 0
-// }
-
-interface Ctx {
-    col: string,
-    saveWidth: () => number,
-    onDragStart: () => void,
-    onDragOffset: (offset: number) => void
 }
 
 function createColumnCtx(bound: SizeBoundEx, col: string): Ctx {
@@ -168,7 +159,6 @@ function createColumnCtx(bound: SizeBoundEx, col: string): Ctx {
 }
 
 const leftCtx = createColumnCtx(sizeBounds.left, 'left');
-// const middleCtx = createColumnCtx(sizeBounds.middle, 'middle');
 const rightCtx = createColumnCtx(sizeBounds.right, 'right');
 
 const observer = new ResizeObserver(onSizeChange);
@@ -269,7 +259,6 @@ watchEffect(initSizeBounds);
         </div>
         <div class="column3" :style="`width:${sizeBounds.right.width}px; minWidth:${sizeBounds.right.width}px`">
             <slot name="slot3" />
-            <!-- <Sash  side="left" @dragStart="rightCtx.onDragStart" @offset="rightCtx.onDragOffset" /> -->
         </div>
     </div>
 </template>
