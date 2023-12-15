@@ -180,7 +180,7 @@ watchEffect(() => {
     display: flex;
     align-items: center;
     justify-content: space-between;
-    margin-top: 5px;
+    margin-top: 8px;
 
     .format {
         width: calc(100% - 22px);
@@ -194,19 +194,19 @@ watchEffect(() => {
         .cutout_size_input {
             position: relative;
             display: flex;
-            width: 62px;
-            height: 30px;
+            width: 56px;
+            height: 32px;
             padding: 1px;
             align-items: center;
             padding-left: 5px;
             padding-right: 2px;
             box-sizing: border-box;
-            background-color: rgba(#000, 0.04);
-            border-radius: 4px;
+            background-color: #F5F5F5;
+            border-radius: var(--default-radius);
 
             &:hover {
                 .size {
-                    background-color: rgba(0, 0, 0, 0.08);
+                    background-color: rgba(0, 0, 0, 0.09);
                 }
             }
 
@@ -216,18 +216,18 @@ watchEffect(() => {
             position: relative;
             display: flex;
             width: 75px;
-            height: 30px;
+            height: 32px;
             padding: 1px;
             align-items: center;
             padding-left: 5px;
             padding-right: 2px;
             box-sizing: border-box;
-            background-color: rgba(#000, 0.04);
-            border-radius: 4px;
+            background-color: #F5F5F5;
+            border-radius: var(--default-radius);
 
             &:hover {
                 .presuffix {
-                    background-color: rgba(0, 0, 0, 0.08);
+                    background-color: rgba(0, 0, 0, 0.09);
                 }
             }
         }
@@ -236,18 +236,18 @@ watchEffect(() => {
             position: relative;
             display: flex;
             width: 65px;
-            height: 30px;
+            height: 32px;
             padding: 1px;
             align-items: center;
             padding-left: 5px;
             padding-right: 3px;
             box-sizing: border-box;
-            background-color: rgba(#000, 0.04);
-            border-radius: 4px;
+            background-color: #F5F5F5;
+            border-radius: var(--default-radius);
 
             &:hover {
                 .format-i {
-                    background-color: rgba(0, 0, 0, 0.08);
+                    background-color: rgba(0, 0, 0, 0.09);
                 }
             }
 
@@ -267,11 +267,10 @@ watchEffect(() => {
         }
 
         input {
-            width: 52%;
+            width: 40%;
             height: 16px;
             flex: 1 1 auto;
             align-content: center;
-            margin-left: 2px;
             color: var(--theme-color);
             font-family: var(--font-family);
             white-space: nowrap;
@@ -287,13 +286,14 @@ watchEffect(() => {
             width: 24px;
             height: 24px;
             border-radius: 4px;
+            margin-right: 3px;
             display: flex;
             align-items: center;
             justify-content: center;
 
             >svg {
-                width: 10px;
-                height: 10px;
+                width: 12px;
+                height: 12px;
                 color: grey;
             }
         }
@@ -303,17 +303,17 @@ watchEffect(() => {
         display: flex;
         justify-content: center;
         align-items: center;
-        width: 22px;
-        height: 22px;
-        border-radius: 4px;
+        width: 28px;
+        height: 28px;
+        border-radius: var(--default-radius);
 
         >svg {
-            width: 11px;
-            height: 11px;
+            width: 16px;
+            height: 16px;
         }
 
         &:hover {
-            background-color: rgba(0, 0, 0, 0.1);
+            background-color:  #F5F5F5;
         }
     }
 }
