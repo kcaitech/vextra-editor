@@ -160,7 +160,7 @@ export class Comment extends Watchable(Object) {
     this.m_select_comment_id = id
     this.notify(Comment.SELECTE_COMMENT)
   }
-  editShapeComment(state: boolean, shapes?: Shape[]) {
+  editShapeComment(state: boolean, shapes: Shape[] | []) {
     this.m_shape_comment = state
     if (state) {
       this.m_comment_shape.push(...shapes!)

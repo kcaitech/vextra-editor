@@ -122,7 +122,7 @@ const commentPosition = () => {
             const computedStyle = window.getComputedStyle(text);
             iscommentTop.value = true;
             const _height = text.clientHeight + parseInt(computedStyle.paddingTop) + parseInt(computedStyle.paddingBottom);
-            height.value = Math.min(_height + 18, 214);
+            height.value = height.value ? Math.min(_height + 18, 214) : Math.min(_height, 214);
             inputPopup.value && inputPopup.value.focus();
             const p = matrix.computeCoord({ x: props.commentInfo.shape_frame.x1, y: props.commentInfo.shape_frame.y1 });
             offside.value = props.rootWidth! - p.x < 360;
@@ -147,6 +147,7 @@ const commentPosition = () => {
 const scrollVisible = ref(false)
 
 const handleInput = () => {
+    if (!scrollbarRef.value) return;
     scrollbarRef.value!.scrollTo(0, itemHeight.value!.clientHeight)
     nextTick(() => {
         if (textareaEl.value) {
@@ -161,8 +162,8 @@ const handleInput = () => {
             }
         }
         scrollbarRef.value!.scrollTo(0, itemHeight.value!.clientHeight)
-        commentPosition()
     })
+    commentPosition()
 }
 
 function handleClickOutside(event: MouseEvent) {
@@ -223,7 +224,6 @@ const onDeleteChild = (index: number, e: Event, id: string) => {
     e.stopPropagation()
     deleteComment(id).then(() => {
         emit('recover', index, id)
-        commentPosition()
     })
 }
 
@@ -265,9 +265,26 @@ function commentUpdate(t?: number, p?: number) {
             clearTimeout(timeout)
         }, 10)
     } else if (t === Comment.UPDATE_COMMENT_CHILD) {
-        setTimeout(() => {
-            commentHtight()
-        }, 1000);
+        scrollbarRef.value!.scrollTo(0, itemHeight.value!.clientHeight)
+        commentPosition()
+        nextTick(() => {
+            if (textareaEl.value) {
+                const text = inputPopup.value.$refs.textarea
+                if (text) {
+                    text.style.height = "auto"; // 重置高度，避免高度叠加
+                    text.style.height = text.scrollHeight + "px";
+                    const lineHeight = parseInt(getComputedStyle(text).lineHeight)
+                    const textareaHeight = text.clientHeight
+                    const numberOfLines = Math.ceil(textareaHeight / lineHeight)
+                    scrollVisible.value = numberOfLines > 10 ? true : false
+                }
+            }
+            setTimeout(() => {
+                scrollMaxHeight.value = (props.rootHeight - 55 - (height.value as number) - 30) * 0.7;
+                scrollHeight.value = Math.min(scrollMaxHeight.value, itemHeight.value!.clientHeight);
+                scrollbarRef.value!.scrollTo(0, itemHeight.value!.clientHeight);
+            }, 10)
+        })
     }
 }
 
@@ -307,17 +324,7 @@ const commentShow = () => {
             commentShowList.value && commentShowList.value.push(item)
         }
     })
-    if (textareaEl.value) {
-        const text = inputPopup.value.$refs.textarea
-        if (text) {
-            text.style.height = "auto"; // 重置高度，避免高度叠加
-            text.style.height = text.scrollHeight + "px";
-            const lineHeight = parseInt(getComputedStyle(text).lineHeight)
-            const textareaHeight = text.clientHeight
-            const numberOfLines = Math.ceil(textareaHeight / lineHeight)
-            scrollVisible.value = numberOfLines > 10 ? true : false
-        }
-    }
+    handleInput();
 }
 
 const addComment = () => {
@@ -336,12 +343,12 @@ const addComment = () => {
     createComment(data).then(() => {
         emit('addComment', info);
     });
-    scrollMaxHeight.value = (props.rootHeight - 58 - 100) * 0.7
-    commentHtight();
-    nextTick(() => {
-        scrollbarRef.value!.scrollTo(0, itemHeight.value!.clientHeight)
-        textarea.value = '';
-    })
+    // scrollMaxHeight.value = (props.rootHeight - 58 - 100) * 0.7
+    // commentHtight();
+    // nextTick(() => {
+    //     scrollbarRef.value!.scrollTo(0, itemHeight.value!.clientHeight)
+    // })
+    textarea.value = '';
 }
 
 const commentHtight = () => {
@@ -435,9 +442,10 @@ const update = (t: number) => {
         reply.value = props.context.selection.commentStatus
     }
 }
-watchEffect(() =>{
+watchEffect(() => {
     props.documentCommentList;
     commentHtight();
+    // commentPosition();
 })
 
 defineExpose({
@@ -471,15 +479,15 @@ onUnmounted(() => {
         :class="{ popup_left: offside, popup_right: !offside, 'shake': isShaking }">
         <div class="popup-heard" @mousedown="moveCommentPopup">
             <div class="button-shift">
-<!--                <el-button plain class="custom-button" :style="{ opacity: disablePrevent ? '0.2' : '1' }"-->
-<!--                    @click="previousArticle">{{ t('comment.last') }}</el-button>-->
+                <!--                <el-button plain class="custom-button" :style="{ opacity: disablePrevent ? '0.2' : '1' }"-->
+                <!--                    @click="previousArticle">{{ t('comment.last') }}</el-button>-->
                 <div class="comment-last" :style="{ opacity: disablePrevent ? '0.2' : '1' }" @click="previousArticle">
                     <svg-icon icon-class="comment-last"></svg-icon>
                 </div>
                 <div class="button-icon"></div>
-<!--                <el-button plain class="custom-button" :style="{ opacity: disableNext ? '0.2' : '1' }"-->
-<!--                    @click="nextArticle">{{ t('comment.next') }}</el-button>-->
-                <div class="comment-next" :style="{ opacity: disablePrevent ? '0.2' : '1' }" @click="nextArticle">
+                <!--                <el-button plain class="custom-button" :style="{ opacity: disableNext ? '0.2' : '1' }"-->
+                <!--                    @click="nextArticle">{{ t('comment.next') }}</el-button>-->
+                <div class="comment-next" :style="{ opacity: disableNext ? '0.2' : '1' }" @click="nextArticle">
                     <svg-icon icon-class="comment-next"></svg-icon>
                 </div>
             </div>
@@ -487,28 +495,28 @@ onUnmounted(() => {
                 <el-button-group class="ml-4">
                     <el-tooltip class="box-item" effect="dark" :content="`${t('comment.delete')}`" placement="bottom"
                         :show-after="1000" :offset="10" :hide-after="0" v-if="isControls">
-<!--                        <el-button plain :icon="Delete" @click="onDelete" v-if="isControls" />-->
+                        <!--                        <el-button plain :icon="Delete" @click="onDelete" v-if="isControls" />-->
                         <div class="onDelete" @click="onDelete" v-if="isControls">
                             <svg-icon icon-class="comment-delete"></svg-icon>
                         </div>
                     </el-tooltip>
                     <el-tooltip class="box-item" effect="dark" :content="`${t('comment.settled')}`" placement="bottom"
                         :show-after="1000" :offset="10" :hide-after="0" v-if="resolve && isControls">
-<!--                        <el-button plain :icon="CircleCheck" @click="onResolve" v-if="isControls" />-->
+                        <!--                        <el-button plain :icon="CircleCheck" @click="onResolve" v-if="isControls" />-->
                         <div class="onResolve" @click="onResolve" v-if="isControls">
                             <svg-icon icon-class="comment-solve"></svg-icon>
                         </div>
                     </el-tooltip>
                     <el-tooltip class="box-item" effect="dark" :content="`${t('comment.settled')}`" placement="bottom"
                         :show-after="1000" :offset="10" :hide-after="0" v-else-if="!resolve && isControls">
-<!--                        <el-button class="custom-icon" plain :icon="CircleCheckFilled" @click="onResolve"-->
-<!--                            v-if="isControls" />-->
+                        <!--                        <el-button class="custom-icon" plain :icon="CircleCheckFilled" @click="onResolve"-->
+                        <!--                            v-if="isControls" />-->
                         <div class="onResolved" @click="onResolve" v-if="isControls">
                             <svg-icon icon-class="comment-solved"></svg-icon>
                         </div>
                     </el-tooltip>
-<!--                    <el-button plain :icon="Close" @click="close" />-->
-                    <div class="close" @click="close" >
+                    <!--                    <el-button plain :icon="Close" @click="close" />-->
+                    <div class="close" @click="close">
                         <svg-icon icon-class="comment-close"></svg-icon>
                     </div>
                 </el-button-group>
@@ -542,7 +550,7 @@ onUnmounted(() => {
 .container-popup {
     position: absolute;
     width: 330px;
-    max-height: 664px;
+    // max-height: 664px;
     box-shadow: 0px 2px 6px 0px rgba(0, 0, 0, 0.05);
     z-index: 99;
     font-size: var(--font-default-fontsize);
@@ -599,7 +607,7 @@ onUnmounted(() => {
                 }
             }
 
-            .comment-last:hover{
+            .comment-last:hover {
                 background-color: #EBEBED;
             }
 
@@ -617,7 +625,7 @@ onUnmounted(() => {
                 }
             }
 
-            .comment-next:hover{
+            .comment-next:hover {
                 background-color: #EBEBED;
             }
         }
@@ -656,7 +664,7 @@ onUnmounted(() => {
                 }
             }
 
-            .onDelete:hover{
+            .onDelete:hover {
                 background-color: #EBEBED;
             }
 
@@ -677,7 +685,7 @@ onUnmounted(() => {
                 }
             }
 
-            .onResolve:hover{
+            .onResolve:hover {
                 background-color: #EBEBED;
             }
 
@@ -715,7 +723,7 @@ onUnmounted(() => {
                 }
             }
 
-            .close:hover{
+            .close:hover {
                 background-color: #EBEBED;
             }
         }

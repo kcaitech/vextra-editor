@@ -166,6 +166,8 @@ const updateShapeComment = (index: number) => {
         const { x, y } = shape.frame2Root()
         shape_frame.x1 = shape_frame.x2 + x
         shape_frame.y1 = shape_frame.y2 + y
+        const fp = { x1: shape_frame.x1, y1: shape_frame.y1, x2: shape_frame.x2, y2: shape_frame.y2 }
+        documentCommentList.value[index].shape_frame = fp;
         commentReflush.value++
     }
 }
@@ -197,7 +199,7 @@ const editCommentShapePosition = async (data: any) => {
 const editMoveCommentPosition = async (data: any) => {
     try {
         await comment_api.editCommentAPI(data)
-        getDocumentComment()
+        // getDocumentComment()
     } catch (err) {
         console.log(err);
     }
@@ -298,7 +300,7 @@ const editComment = (index: number, text: string) => {
 
 //移动shape时保存shape身上的评论坐标
 const saveShapeCommentXY = () => {
-    const shapes = comment.value.commentShape
+    const shapes = props.context.comment.commentShape
     const sleectShapes = flattenShapes(shapes)
     sleectShapes.forEach((item: any) => {
         documentCommentList.value.forEach((comment, i) => {
@@ -307,7 +309,7 @@ const saveShapeCommentXY = () => {
             }
         })
     })
-    comment.value.editShapeComment(false, undefined)
+    props.context.comment.editShapeComment(false, [])
 }
 
 // 递归函数，用于将数组扁平化处理

@@ -114,7 +114,7 @@ const unHoverComment = () => {
 const showComment = (e: MouseEvent) => {
     if (ShowComment.value) return;
     if (props.context.comment.isCommentMove) return
-    documentCommentList.value = [...props.commentInfo.children].reverse();
+    documentCommentList.value = props.commentInfo.children.length > 0 ? [...props.commentInfo.children].reverse() : [];
     const commentX = props.commentInfo.shape_frame.x1
     const commentY = props.commentInfo.shape_frame.y1
     const workspace = props.context.workspace;
@@ -149,8 +149,10 @@ const unHover = (e: MouseEvent) => {
 }
 
 const moveCommentPopup = (e: MouseEvent) => {
-    e.stopPropagation()
-    emit('moveCommentPopup', e, props.index)
+    e.stopPropagation();
+    if(props.commentInfo.user.id === props.context.comment.isUserInfo?.id) {
+        emit('moveCommentPopup', e, props.index)
+    }
 }
 
 const closeComment = (e?: MouseEvent) => {
@@ -174,14 +176,14 @@ const resolve = (status: number, index: number) => {
 
 const recover = (index?: number) => {
     emit('recover')
-    if (index) {
+    if (index || index === 0) {
         documentCommentList.value.splice(index, 1)
     }
 }
 const addComment = (info: any) => {
     emit('recover');
     documentCommentList.value.push(info);
-    // getDocumentComment();
+    getDocumentComment();
 }
 
 const editComment = (index: number, text: string) => {
@@ -252,7 +254,6 @@ const getDocumentComment = async () => {
             item.content = item.content.replaceAll("\r\n", "<br/>").replaceAll("\n", "<br/>").replaceAll(" ", "&nbsp;")
             return item
         })
-        documentCommentList.value = [];
         documentCommentList.value = list.reverse();
     } catch (err) {
         console.log(err);
@@ -314,7 +315,7 @@ const unfold = () => {
             rootWidth.value = comment.value.parentElement!.clientWidth
         }
         commentScale.value = 0
-        documentCommentList.value = [...props.commentInfo.children].reverse();
+        documentCommentList.value = props.commentInfo.children.length > 0 ? [...props.commentInfo.children].reverse() : [];
         ShowComment.value = true
         showScale.value = true
         props.context.comment.saveCommentId(props.commentInfo.id);

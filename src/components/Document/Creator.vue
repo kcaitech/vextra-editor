@@ -180,7 +180,7 @@ const saveShapeCommentXY = () => {
             }
         })
     })
-    comment.editShapeComment(false, undefined)
+    comment.editShapeComment(false, [])
 }
 //移动输入框
 const mouseDownCommentInput = (e: MouseEvent) => {
