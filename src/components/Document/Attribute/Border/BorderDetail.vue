@@ -387,7 +387,7 @@ onUnmounted(() => {
 
 <template>
     <div class="border-detail-container" @mousedown.stop>
-        <Popover :context="props.context" class="popover" ref="popover" :width="240" :auto_to_right_line="true"
+        <Popover :context="props.context" class="popover" ref="popover" :width="200" :auto_to_right_line="true"
             :title="t('attr.advanced_stroke')">
             <template #trigger>
                 <div class="trigger">
@@ -434,7 +434,7 @@ onUnmounted(() => {
 .border-detail-container {
     >.popover {
         width: 16px;
-        height: 16px;
+        height: 32px;
 
         .trigger {
             width: 100%;
@@ -483,7 +483,7 @@ onUnmounted(() => {
                     box-sizing: border-box;
                     padding: 3px;
                     background-color: var(--input-background);
-                    width: calc(100% - 88px);
+                    width: calc(100% - 48px);
                     height: 32px;
                     border-radius: var(--default-radius);
                     display: flex;

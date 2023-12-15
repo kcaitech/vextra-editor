@@ -223,7 +223,7 @@ const disable = computed(() => {
 
 <template>
     <div class="border-detail-container" @mousedown.stop>
-        <Popover :context="props.context" class="popover" ref="popover" :width="260" :auto_to_right_line="true"
+        <Popover :context="props.context" class="popover" ref="popover" :width="254" :auto_to_right_line="true"
             :title="`${t('shadow.shadow_setting')}`">
             <template #trigger>
                 <div class="trigger" @click="showMenu">

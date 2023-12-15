@@ -1179,7 +1179,7 @@ onUnmounted(() => {
             flex-direction: row;
             align-items: center;
             justify-content: space-between;
-            padding: 12px 0 0 12px;
+            padding: 12px 2px 2px 12px;
             box-sizing: border-box;
 
             .inner {
@@ -1199,7 +1199,7 @@ onUnmounted(() => {
 
                 >.documentc-container {
                     width: 100%;
-                    max-height: 82px;
+                    max-height: 87px;
                     overflow: scroll;
                     display: grid;
                     grid-row-gap: 7px;

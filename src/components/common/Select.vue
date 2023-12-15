@@ -221,7 +221,6 @@ watch(() => props.selected, () => {
                 width: 12px;
                 height: 12px;
             }
-
             transform: translateY(-50%);
         }
     }
