@@ -18,7 +18,7 @@ const showHiddenLeft = () => {
 <style lang="scss" scoped>
     .showHiddenL {
         position: absolute;
-        right: -15px;
+        right: -16px;
         top: 0%;
         transform: translateY(-50%);
         z-index: 9;

@@ -32,7 +32,7 @@ const isEnd = computed<boolean>(() => {
     >svg {
         width: 36px;
         height: 30px;
-        margin-right: 6px;
+        margin-right: 10px;
     }
 
     >.isEnd {

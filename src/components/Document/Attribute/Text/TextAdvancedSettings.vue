@@ -25,7 +25,9 @@ const charSpacing = ref<HTMLInputElement>()
 const lineHeight = ref<HTMLInputElement>()
 const paraSpacing = ref<HTMLInputElement>()
 // const selection = ref(props.context.selection)
-const isActived = ref(false)
+const isActived1 = ref(false)
+const isActived2 = ref(false)
+const isActived3 = ref(false)
 
 //获取选中字体的长度和下标
 const getTextIndexAndLen = () => {
@@ -172,13 +174,15 @@ const isSelectText = () => {
 }
 
 const selectCharSpacing = () => {
-  charSpacing.value && charSpacing.value.select()
+    isActived1.value = true
+    charSpacing.value && charSpacing.value.select()
 }
 const selectLineHeight = () => {
-  lineHeight.value && lineHeight.value.select()
+    isActived2.value = true
+    lineHeight.value && lineHeight.value.select()
 }
 const selectParaSpacing = () => {
-    isActived.value = true
+    isActived3.value = true
     paraSpacing.value && paraSpacing.value.select()
 }
 
@@ -267,7 +271,9 @@ function selection_wather(t: any) {
 }
 
 function blur2() {
-    isActived.value = false
+    isActived1.value = false
+    isActived2.value = false
+    isActived3.value = false
 }
 
 watchEffect(() => {
@@ -300,17 +306,19 @@ onUnmounted(() => {
         <div class="options-container">
           <div>
             <span>{{ t('attr.word_space') }}</span>
-            <div><input type="text" ref="charSpacing" @focus="selectCharSpacing" v-model="wordSpace" class="input"
-                @change="setWordSpace"></div>
+            <div :class="{ actived: isActived1 }" style="width: 124px;height: 32px;border-radius: 6px;box-sizing: border-box">
+                <input type="text" ref="charSpacing" @focus="selectCharSpacing" @blur="blur2" v-model="wordSpace" class="input"
+                @change="setWordSpace" style="width: 100%;height: 100%"></div>
           </div>
           <div>
             <span>{{ t('attr.row_height') }}</span>
-            <div><input type="text" ref="lineHeight" @focus="selectLineHeight" v-model="rowHeight"
-                :placeholder="row_height" class="input" @change="setRowHeight"></div>
+            <div :class="{ actived: isActived2 }" style="width: 124px;height: 32px;border-radius: 6px;box-sizing: border-box">
+                <input type="text" ref="lineHeight" @focus="selectLineHeight" @blur="blur2" v-model="rowHeight"
+                :placeholder="row_height" class="input" @change="setRowHeight" style="width: 100%;height: 100%"></div>
           </div>
           <div>
             <span>{{ t('attr.paragraph_space') }}</span>
-            <div :class="{ actived: isActived }" style="width: 124px;height: 32px;border-radius: 6px;box-sizing: border-box">
+            <div :class="{ actived: isActived3 }" style="width: 124px;height: 32px;border-radius: 6px;box-sizing: border-box">
                 <input type="text" ref="paraSpacing" @focus="selectParaSpacing" @blur="blur2" v-model="paragraphSpace" class="input"
                 @change="setParagraphSpace" style="width: 100%;height: 100%"></div>
           </div>
