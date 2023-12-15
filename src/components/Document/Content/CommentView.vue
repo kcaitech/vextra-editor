@@ -392,6 +392,10 @@ const docComment = (comment: DocCommentOpData) => {
         } else {
             const _index = documentCommentList.value.findIndex(item => item.id === comment.comment.root_id);
             if (_index !== -1) {
+                if(!documentCommentList.value[_index].children) {
+                    documentCommentList.value[_index].children = []
+                    documentCommentList.value[_index].commentMenu = commentMenuItems.value
+                }
                 documentCommentList.value[_index].children.unshift(comment.comment);
                 props.context.comment.onUpdateComment();
             }

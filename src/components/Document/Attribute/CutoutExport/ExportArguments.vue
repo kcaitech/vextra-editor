@@ -194,7 +194,7 @@ watchEffect(() => {
         .cutout_size_input {
             position: relative;
             display: flex;
-            width: 56px;
+            width: 28%;
             height: 32px;
             padding: 1px;
             align-items: center;
@@ -215,7 +215,7 @@ watchEffect(() => {
         .cutout_presuffix_input {
             position: relative;
             display: flex;
-            width: 75px;
+            width: 36%;
             height: 32px;
             padding: 1px;
             align-items: center;
@@ -235,7 +235,7 @@ watchEffect(() => {
         .cutout_format_input {
             position: relative;
             display: flex;
-            width: 65px;
+            width: 30%;
             height: 32px;
             padding: 1px;
             align-items: center;

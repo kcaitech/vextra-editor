@@ -17,7 +17,7 @@ function select(action: Action) {
 </script>
 <template>
   <Tooltip :content="`${t('cutoutExport.cutout')} &nbsp;&nbsp; S`">
-    <ToolButton ref="button" @click="() => {select(Action.AddCutout)}" :selected="props.active">
+    <ToolButton ref="button" @click="() => {select(Action.AddCutout)}" :selected="props.active" style="width: 32px">
       <div class="svg-container">
         <svg-icon icon-class="cutout"></svg-icon>
       </div>
@@ -26,15 +26,18 @@ function select(action: Action) {
 </template>
 <style scoped lang="scss">
 .svg-container {
-  width: 28px;
-  height: 28px;
+  width: 32px;
+  height: 32px;
   display: flex;
   justify-content: center;
   align-items: center;
   color: #ffffff;
-  > svg {
-    width: 15px;
-    height: 15px;
+    padding: 6px 6px 6px 6px;
+    box-sizing: border-box;
+
+  >svg {
+      width: 20px;
+      height: 20px;
   }
 }
 </style>

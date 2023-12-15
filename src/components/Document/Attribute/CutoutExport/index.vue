@@ -516,7 +516,7 @@ onUnmounted(() => {
 <template>
     <div class="cutout_export_box">
         <div class="title" @click.stop="first">
-            <div class="name" :class="{'checked': preinstallArgus.length > 0}">{{t('cutoutExport.create_cut_chart_and_export')}}</div>
+            <div class="name" :class="{'checked': preinstallArgus.length > 0}">{{t('cutoutExport.export')}}</div>
             <div class="cutout_add_icon">
                 <div class="cutout-icon cutout-preinstall"
                     :style="{ backgroundColor: isPreinstall ? 'rgba(0, 0, 0, 0.2)' : '' }" @click.stop="showPreinstall">
@@ -642,6 +642,9 @@ onUnmounted(() => {
 
         :deep(.el-checkbox__inner) {
             transition: none;
+        }
+        :deep(.el-checkbox__label) {
+            font-size: 12px;
         }
 
         :deep(.el-checkbox__input.is-checked .el-checkbox__inner) {
