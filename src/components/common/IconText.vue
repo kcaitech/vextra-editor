@@ -29,7 +29,9 @@ const input = ref<HTMLInputElement>();
 const isActived = ref(false)
 
 function onChange(e: Event) {
-    if (props.disabled) return;
+    if (props.disabled) {
+        return;
+    }
     let value = (e.currentTarget as any)['value']
     try {
         if (props.svgicon == 'angle' && input.value!.value.slice(-1) === '°') {

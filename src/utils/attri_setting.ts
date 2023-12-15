@@ -217,3 +217,29 @@ export function get_indexes(shape: PathShape, type: 'rt' | 'lt' | 'rb' | 'lb' | 
   }
   return result;
 }
+export function get_indexes2(type: 'rt' | 'lt' | 'rb' | 'lb') {
+  let result: number[] = [];
+  switch (type) {
+    case 'rt':
+      result.push(1);
+      break;
+    case 'lt':
+      result.push(0);
+      break;
+    case 'rb':
+      result.push(2);
+      break;
+    case 'lb':
+      result.push(3);
+      break;
+    default:
+      break;
+  }
+  return result;
+}
+export function is_rect(shape: Shape) {
+  return (shape instanceof PathShape)
+    && shape.isClosed
+    && shape.points.length === 4
+    && [ShapeType.Rectangle, ShapeType.Artboard, ShapeType.Image].includes(shape.type);
+}
