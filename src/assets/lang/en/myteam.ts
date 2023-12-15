@@ -72,7 +72,8 @@ export const Createteam = {
 
     welcome:'Welcome to',
     rejectprompt1:'The application to join',
-    rejectprompt2:'was rejected. If you have any questions, please contact the project team administrator.',
+    rejectprompt2:'If you have any questions, please contact the team administrator.',
+    rejectprompt3:'If you have any questions, please contact the project administrator.',
     shareprojecttips:'Accessible to all members of the project',
 }
 

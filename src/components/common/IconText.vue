@@ -114,7 +114,6 @@ const onMouseUp = (e: MouseEvent) => {
     isDrag.value = false;
     document.removeEventListener('mousemove', onMouseMove)
     document.removeEventListener('mouseup', onMouseUp)
-
 }
 
 const selectValue = () => {
@@ -128,7 +127,7 @@ watch(scale, () => {
     //input的值加上鼠标移动后的大小等于最终改变的值
     if (props.ticon) {
         const shapes = props.context.selection.selectedShapes;
-        if(shapes.length === 1) {
+        if (shapes.length === 1) {
             input.value!.value = String(Number(input.value!.value) + scale.value.axleX)
             if (props.ticon === 'W' || props.ticon === 'H') {
                 if (Number(input.value!.value) < 1) {
@@ -136,8 +135,8 @@ watch(scale, () => {
                 }
             }
             emit("onchange", input.value!.value);
-        }else if(shapes.length > 1) {
-            
+        } else if (shapes.length > 1) {
+
         }
     } else {
         const shapes = props.context.selection.selectedShapes;

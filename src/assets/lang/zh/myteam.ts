@@ -38,7 +38,7 @@ export const Createteam = {
     projecttype: '项目类型',
     jurisdiction: '权限',
     jointips: '点击链接或扫描二维码申请加入',
-    invitation_switch: '邀请链接开关',
+    invitation_switch: '邀请链接：',
     copylink: '复制链接',
     confirm: '确定',
     cancel: '取消',
@@ -71,8 +71,9 @@ export const Createteam = {
     team: '团队',
 
     welcome: '欢迎加入',
-    rejectprompt1: '申请加入',
-    rejectprompt2: '被拒绝，如有疑问，请联系项目组管理员。',
+    rejectprompt1: '拒绝了',
+    rejectprompt2: '如有疑问，请联系团队管理员。',
+    rejectprompt3: '如有疑问，请联系项目管理员。',
     shareprojecttips: '项目中所有成员均可访问',
 }
 
@@ -98,10 +99,10 @@ export const joinTeam = {
 }
 
 export const moveprojectfill = {
-    name: '文件名称: ',
-    location: '当前位置: ',
+    name: '文件名称：',
+    location: '当前位置：',
     my_file: '我的文件',
-    move_to: '移动文件至: ',
+    move_to: '移动文件至：',
     private_file: '设为私有文件',
     share_Project: '收到的共享项目',
     cancel: '取消',
