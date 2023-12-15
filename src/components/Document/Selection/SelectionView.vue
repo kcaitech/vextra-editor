@@ -51,6 +51,7 @@ const placement = ref<boolean>(false);
 const placementStroke = ref<string>('#1878F5');
 const placementFrame = ref<PathView>({ path: '', viewBox: '', height: 0, width: 0 });
 const watchedShapes = new Map();
+const isCutout = ref(false);
 
 function watchShapes() { // 监听选区相关shape的变化
     const needWatchShapes = new Map();
@@ -118,6 +119,7 @@ function selectionWatcher(t?: any) { // selection的部分动作可触发更新
         watchShapes();
     } else if (t === Selection.CHANGE_SHAPE_HOVER) {
         matrix.reset(props.matrix);
+        is_cutout();
         createShapeTracing();
         watchShapes();
     } else if (t === Selection.PLACEMENT_CHANGE) {
@@ -320,6 +322,16 @@ function window_blur() {
     }
 }
 
+const is_cutout = () => {
+    const selected = props.context.selection.hoveredShape;
+    if (!selected) return;
+    if (selected.type === ShapeType.Cutout) {
+        isCutout.value = true;
+    } else {
+        isCutout.value = false;
+    }
+}
+
 //标注线
 const isLableLine = ref(false);
 const lableLineStatus = () => {
@@ -356,8 +368,20 @@ onUnmounted(() => {
     <svg v-if="tracing" version="1.1" xmlns="http://www.w3.org/2000/svg" xmlns:xlink="http://www.w3.org/1999/xlink"
         xmlns:xhtml="http://www.w3.org/1999/xhtml" preserveAspectRatio="xMinYMin meet" overflow="visible"
         :width="tracingFrame.width" :height="tracingFrame.height" :viewBox="tracingFrame.viewBox"
-        @mousedown="(e: MouseEvent) => pathMousedown(e)" style="transform: translate(0px, 0px); position: absolute;">
-        <path :d="tracingFrame.path" class="tracing" :style="{ stroke: tracingStroke }">
+        style="transform: translate(0px, 0px); position: absolute;">
+        <path v-if="isCutout" :d="tracingFrame.path" style="fill: none; stroke: transparent; stroke-width: 16;"
+            @mousedown="(e: MouseEvent) => pathMousedown(e)">
+        </path>
+        <path :d="tracingFrame.path" :fill="isCutout ? 'none' : 'transparent'" :style="{ stroke: tracingStroke }"
+            @mousedown="(e: MouseEvent) => pathMousedown(e)">
+        </path>
+    </svg>
+    <!-- 落点 -->
+    <svg v-if="placement" version="1.1" xmlns="http://www.w3.org/2000/svg" xmlns:xlink="http://www.w3.org/1999/xlink"
+        xmlns:xhtml="http://www.w3.org/1999/xhtml" preserveAspectRatio="xMinYMin meet" overflow="visible"
+        :width="placementFrame.width" :height="placementFrame.height" :viewBox="placementFrame.viewBox"
+        style="transform: translate(0px, 0px); position: absolute;">
+        <path :d="placementFrame.path" class="tracing" :style="{ stroke: placementStroke }">
         </path>
     </svg>
     <!-- 控制 -->

@@ -3,31 +3,16 @@
     <div>
         <div class="rightmenu" ref="menu">
             <ul>
-                <li v-for="item in props.items " :key="item" @click.stop="EventHandler(item)" :class="item">
+                <li :style="{ borderBottom: item === rightmenuitem.newtabopen || item === rightmenuitem.target_star ? '1px solid rgba(0,0,0,0.04)' : '' }"
+                    v-for="item in props.items " :key="item" @click.stop="EventHandler(item)" :class="item">
                     {{ itemcontent(item) }}
                 </li>
             </ul>
         </div>
         <!-- 重命名弹框 -->
-        <el-dialog v-model="dialogVisible" width="500" align-center :show-close="false" :close-on-click-modal="false"
-            @open="changemargin">
-            <template #header>
-                <div class="my-header">
-                    <div class="title">{{ t('home.rename') }}</div>
-                    <CloseIcon :size="20" @close="dialogVisible = false" />
-                </div>
-            </template>
-            <input class="newname" type="text" v-model="newname" ref="renameinput" @keydown.enter="rename1" />
-            <template #footer>
-                <span class="dialog-footer">
-                    <el-button class="confirm" type="primary" style="background-color: none;" @click.stop="rename1"
-                        :disabled="newname.trim() == '' ? true : false">
-                        {{ t('home.rename_ok') }}
-                    </el-button>
-                    <el-button class="cancel" @click="dialogVisible = false">{{ t('home.cancel') }}</el-button>
-                </span>
-            </template>
-        </el-dialog>
+        <ProjectDialog :projectVisible="dialogVisible" :context="''" :title="t('home.rename')" :showinput="true"
+            :inputvalue="newname" :confirm-btn="t('home.rename_ok')" @clode-dialog="closeChangeName" @confirm="rename1"
+            @updateinputvalue="changeinputvalue"></ProjectDialog>
     </div>
 </template>
 <script setup lang="ts">
@@ -35,12 +20,11 @@ import { useI18n } from 'vue-i18n'
 import { router } from '@/router'
 import * as user_api from '@/request/users'
 import { ElMessage } from 'element-plus'
-import { onMounted, ref, onUnmounted, Ref, inject, watch, nextTick } from 'vue';
-import CloseIcon from '@/components/common/CloseIcon.vue';
+import { onMounted, ref, onUnmounted, Ref, inject, watch } from 'vue';
+import ProjectDialog from '@/components/TeamProject/ProjectDialog.vue';
 
 const dialogVisible = ref(false)
 const newname = ref()
-const renameinput = ref<HTMLInputElement>()
 const menu = ref<HTMLElement>()
 const { t } = useI18n()
 
@@ -142,6 +126,13 @@ const itemcontent = (item: string) => {
     }
 }
 
+const closeChangeName = () => {
+    dialogVisible.value = false
+}
+const changeinputvalue = (value: any) => {
+    newname.value = value
+}
+
 const EventHandler = (item: string) => {
     if (item === rightmenuitem.open) {
         if (props.data.document != undefined) {
@@ -228,11 +219,6 @@ const EventHandler = (item: string) => {
     }
 }
 
-const changemargin = () => {
-    const el = document.querySelector('.el-dialog__header') as HTMLElement
-    el.style.marginRight = '0px'
-}
-
 //右键新窗口打开
 const openNewWindowDocument = (id: string) => {
     if (menu.value) {
@@ -269,11 +255,6 @@ const rrename = (name: string) => {
         dialogVisible.value = false
     } else {
         dialogVisible.value = true
-        tiemr = setTimeout(() => {
-            renameinput.value?.focus()
-            renameinput.value?.select()
-            clearTimeout(tiemr)
-        }, 0);
     }
     if (menu.value) {
         menu.value.style.display = 'none'
@@ -291,12 +272,12 @@ const rename1 = async () => {
                 name: newname.value
             }
             emits('projectrename', data)
+            dialogVisible.value = false
         }
 
     }
     if (props.data.document != undefined) {
         const { id, name } = props.data.document
-        newname.value = renameinput.value?.value
         if (newname.value != name)
             try {
                 const { code, message } = await user_api.Setfilename({ doc_id: id, name: newname.value })
@@ -399,115 +380,35 @@ onUnmounted(() => {
 })
 </script>
 <style lang="scss" scoped>
-.my-header {
-    display: flex;
-    justify-content: space-between;
-    align-items: center;
-
-    .title {
-        color: #3D3D3D;
-        font-weight: 600;
-    }
-}
-
 .rightmenu {
     display: none;
-    min-width: 200px;
-    z-index: 999;
     position: absolute;
+    min-width: 180px;
     background-color: white;
-    padding: 10px 0;
-    border-radius: 5px;
-    box-shadow: 0px 8px 16px 0px rgba(0, 0, 0, 0.2);
+    border-radius: 8px;
+    box-shadow: 0px 2px 10px 0px rgba(0, 0, 0, 0.08);
+    box-sizing: border-box;
+    z-index: 999;
+    overflow: hidden;
 
     ul {
         margin: 0;
-        padding: 0 10px;
+        padding: 0;
 
         li {
-            display: block;
-            padding: 10px 10px;
-            font-size: 14px;
+            display: flex;
+            align-items: center;
             text-decoration: none;
+            font-size: 13px;
             color: rgba(13, 13, 13, 0.9);
-            border-radius: 2px;
-            cursor: pointer;
+            height: 38px;
+            padding: 0 24px;
+            box-sizing: border-box;
 
             &:hover {
-                background-color: #f3f0ff;
+                background-color: rgba(245, 245, 245, 1);
             }
         }
-
-        div {
-            height: 1px;
-            width: auto;
-            background: #f3f0ff;
-        }
-
-
     }
-}
-
-.newname {
-    outline: none;
-    height: 30px;
-    width: 460px;
-    box-sizing: border-box;
-
-    &:hover {
-        border-radius: 2px;
-        border: 2px #f3f0ff solid;
-
-    }
-
-    &:focus {
-        border-radius: 2px;
-        border: 2px #9775fa solid;
-    }
-
-}
-
-.confirm {
-    background-color: #9775fa;
-    color: white;
-    border-color: #9775fa;
-
-    &:hover {
-        background: #9675fa91;
-        border-color: #9675fa91;
-    }
-
-    &:active {
-        background-color: #9775fa;
-        border-color: #9775fa;
-    }
-
-    &[disabled] {
-        background: #e5dbff;
-        border: 1px #e5dbff solid;
-    }
-}
-
-.cancel {
-
-    &:hover {
-        background-color: #ffffff;
-        color: #9775fa;
-        border-color: #9775fa;
-    }
-
-    &:active {
-        background-color: #ffffff;
-    }
-
-    &:focus {
-        background-color: white;
-        color: #9775fa;
-        border-color: #9775fa;
-    }
-}
-
-:deep(.el-button--primary) {
-    background-color: #9775fa;
 }
 </style>

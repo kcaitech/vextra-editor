@@ -221,6 +221,7 @@ export function getProjectNoticeAPI(params = {}, ops = {}) {
     })
 }
 
+//获取团队的申请通知信息
 export function getTeamNoticeAPI(params = {}, ops = {}) {
     return httpRequest({
         url: '/documents/team/self_apply',

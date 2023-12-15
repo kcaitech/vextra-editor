@@ -15,8 +15,9 @@ export enum Action {
     AddText = 'add-text',
     AddComment = 'add-comment',
     AddImage = 'add-image',
-    AddTable = 'table',
+    AddTable = 'add-table',
     AddContact = 'add-contact',
+    AddCutout = 'add-cutout',
     Curve = 'curve',
     PathClip = 'path-clip'
 }
@@ -28,6 +29,7 @@ export enum KeyboardKeys { // 键盘按键类型
     V = 'KeyV',
     L = 'KeyL',
     Z = 'KeyZ',
+    S = 'KeyS',
     Up = 'ArrowUp',
     Down = 'ArrowDown',
     Left = 'ArrowLeft',
@@ -58,6 +60,7 @@ const A2R = new Map([
     [Action.AddArrow, ShapeType.Line],
     [Action.AddTable, ShapeType.Table],
     [Action.AddContact, ShapeType.Contact],
+    [Action.AddCutout, ShapeType.Cutout],
 ]);
 
 export const ResultByAction = (action: Action): ShapeType | undefined => A2R.get(action); // 参数action状态下新增图形会得到的图形类型
@@ -124,6 +127,9 @@ export class Tool extends Watchable(Object) {
         } else if (code === 'KeyX') {
             e.preventDefault();
             this.keydown_x(ctrlKey, shiftKey, metaKey);
+        }else if (code === 'KeyS') {
+            e.preventDefault();
+            this.keydown_s(ctrlKey, shiftKey, metaKey);
         } else if (code === KeyboardKeys.I) {
             e.preventDefault();
             this.keydown_i(ctrlKey, metaKey, shiftKey);
@@ -227,6 +233,10 @@ export class Tool extends Watchable(Object) {
     keydown_x(ctrl: boolean, meta: boolean, shift: boolean) {
         if (ctrl || meta || shift) return;
         this.setAction(Action.AddContact);
+    }
+    keydown_s(ctrl: boolean, meta: boolean, shift: boolean) {
+        if (ctrl || meta || shift) return;
+        this.setAction(Action.AddCutout);
     }
 
     get isShowTitle() {

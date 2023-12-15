@@ -373,7 +373,7 @@ function onChangeRotate(value: string) {
     }
 }
 const onChangeRadian = (value: string, type: 'rt' | 'lt' | 'rb' | 'lb') => {
-    const selected = props.context.selection.selectedShapes;
+    const selected = props.context.selection.selectedShapes.filter(shape => shape.type !== ShapeType.Cutout);
     if (selected.length === 1) {
         const e = props.context.editor4Shape(selected[0]);
         if (isMoreForRadius.value) {
@@ -427,8 +427,10 @@ const RADIUS_SETTING = [
     ShapeType.Text
 ];
 const MULTI_RADIUS = [ShapeType.Rectangle, ShapeType.Artboard, ShapeType.Image];
+const cutout_setting = ref(true);
 function layout() {
     s_adapt = false, s_flip = true, s_radius = false, s_length = false;
+    cutout_setting.value = true;
     const selected = props.context.selection.selectedShapes;
     if (selected.length === 1) {
         const shape = selected[0];
@@ -439,6 +441,7 @@ function layout() {
         }
         if (shape.type === ShapeType.Table) s_flip = false;
         if (shape.type === ShapeType.Line || shape.type === ShapeType.Contact) s_length = true;
+        if(shape.type === ShapeType.Cutout) cutout_setting.value = false;
     } else {
         if (selected.find(i => i instanceof RectShape)) s_radius = true;
     }
@@ -528,14 +531,14 @@ onUnmounted(() => {
         </div>
         <div class="tr" :reflush="reflush">
             <IconText class="td angle" svgicon="angle" :text="`${rotate}` + '°'" @onchange="onChangeRotate"
-                      :frame="{ width: 14, height: 14 }" :disabled="model_disable_state.rotation"  :context="context"/>
-            <Tooltip v-if="s_flip" :content="t('attr.flip_h')" :offset="15">
+                :frame="{ width: 14, height: 14 }" :disabled="model_disable_state.rotation" :context="context" />
+            <Tooltip v-if="s_flip || cutout_setting" :content="t('attr.flip_h')" :offset="15">
                 <div :class="{ flip: !model_disable_state.filpVertical, 'flip-disable': model_disable_state.filpVertical, 'ml-24': true }"
                      @click="fliph">
                     <svg-icon icon-class="fliph"></svg-icon>
                 </div>
             </Tooltip>
-            <Tooltip v-if="s_flip" :content="t('attr.flip_v')" :offset="15">
+            <Tooltip v-if="s_flip || cutout_setting" :content="t('attr.flip_v')" :offset="15">
                 <div :class="{ flip: !model_disable_state.filpVertical, 'flip-disable': model_disable_state.filpVertical, 'ml-12': true }"
                      @click="flipv">
                     <svg-icon icon-class="flipv"></svg-icon>

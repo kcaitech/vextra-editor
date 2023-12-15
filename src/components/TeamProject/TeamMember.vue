@@ -1,23 +1,21 @@
 <template>
     <div v-if="!noNetwork" class="container" style="height: calc(100vh - 224px);">
         <div class="hearder-container">
-            <div class="title" v-for="(item, index) in  titles " :key="index">
-                {{ item }}
-                <div v-if="index === 1" class="shrink" @click.stop="fold = !fold, folds = false">
+            <div class="title" v-for="item in titles " :key="item.type" @click.stop="titleClickEvent(item.type)">
+                {{ item.label }}
+                <div v-if="item.type === 1" class="shrink">
                     <svg-icon icon-class="down"
                         :style="{ transform: fold ? 'rotate(-180deg)' : 'rotate(0deg)', color: '#000000' }"></svg-icon>
-                    <transition name="el-zoom-in-top">
-                        <ul class="filterlist2" v-if="fold" ref="menu">
-                            <li class="item" :style="{ color: index == fontName ? '#000000' : '' }"
-                                v-for="(item, index) in  filteritems " :key="index" @click.stop="filterEvent(index)">
-                                <div class="choose" :style="{ visibility: index == fontName ? 'visible' : 'hidden' }">
-                                </div>
-                                {{ item }}
-                            </li>
-                        </ul>
-                    </transition>
                 </div>
-
+                <transition name="el-zoom-in-top">
+                    <ul class="filterlist2" v-if="item.type === 1 && fold" ref="menu">
+                        <li class="item" :style="{ fontWeight: item.type == fontName ? 500 : '',color: item.type == fontName ? '#262626' : '' }"
+                            v-for="item in  filteritems " :key="item.type" @click.stop="filterEvent(item.type)">
+                            {{ item.label }}
+                            <div class="choose" :style="{ visibility: item.type == fontName ? 'visible' : 'hidden' }"></div>
+                        </li>
+                    </ul>
+                </transition>
             </div>
         </div>
         <div class="main">
@@ -43,36 +41,22 @@
                                 class="shrink" @click.stop="folds = !folds, fold = false, userid = id">
                                 <svg-icon icon-class="down"
                                     :style="{ transform: folds && userid === id ? 'rotate(-180deg)' : 'rotate(0deg)' }"></svg-icon>
-                                <transition name="el-zoom-in-top">
-                                    <ul class="filterlist" v-if="userid === id && folds" ref="listmenu">
-                                        <li class="item"
-                                            v-for="(item, index) in typeitems((usertype2 === TeamPermisssions.adminstartors && userID === id) ? 1 : usertype2) "
-                                            :key="index" @click.stop="itemEvent(item, teamID, id, perm_type, nickname)">
-                                            <div class="choose"
-                                                :style="{ visibility: item === membertype(perm_type) ? 'visible' : 'hidden' }">
-                                            </div>
-                                            {{ item }}
-                                        </li>
-                                    </ul>
-                                </transition>
                             </div>
+                            <transition name="el-zoom-in-top">
+                                <ul class="filterlist" v-if="userid === id && folds" ref="listmenu">
+                                    <li class="item" :style="{ fontWeight: item === membertype(perm_type) ? 500 : '' }"
+                                        v-for="(item, index) in typeitems((usertype2 === TeamPermisssions.adminstartors && userID === id) ? 1 : usertype2) "
+                                        :key="index" @click.stop="itemEvent(item, teamID, id, perm_type, nickname)">
+                                        {{ item }}
+                                        <div class="choose"
+                                            :style="{ visibility: item === membertype(perm_type) ? 'visible' : 'hidden' }">
+                                        </div>
+                                    </li>
+                                </ul>
+                            </transition>
                         </div>
                     </div>
                 </div>
-                <el-dialog v-model="dialogVisible" :title="t('teammember.change_teamname')" width="500" align-center>
-                    <span>{{ t('teammember.modifyNickname_title') }}</span>
-                    <input class="change" type="text" ref="changeinput" @keydown.enter="confirm_to_modify_name" />
-                    <template #footer>
-                        <span class="dialog-footer" style="text-align: center;">
-                            <el-button class="confirm" type="primary" style="background-color: none;"
-                                @click="confirm_to_modify_name" :loading="confirmLoading">
-                                {{ t('home.rename_ok') }}
-                            </el-button>
-                            <el-button class="cancel" @click="dialogVisible = false">{{ t('home.cancel')
-                            }}</el-button>
-                        </span>
-                    </template>
-                </el-dialog>
                 <Loading v-if="SearchList.length === 0 && searchvalue === '' && fontName === 4" :size="20" />
             </el-scrollbar>
             <div v-else class="empty">
@@ -91,6 +75,10 @@
     <ProjectDialog :projectVisible="exitTeamDialog" :context="t('teammember.exitTeamDialog_context')"
         :title="t('teammember.exitTeamDialog_title')" :confirm-btn="t('teammember.exitTeamDialog_confirm')"
         @clode-dialog="closeExitTeamDialog" @confirm="confirmExitTeamDialog"></ProjectDialog>
+    <ProjectDialog :projectVisible="dialogVisible" :context="t('teammember.modifyNickname_title')"
+        :title="t('teammember.change_teamname')" :showinput="true" :inputvalue="inputvalue"
+        :confirm-btn="t('home.rename_ok')" @clode-dialog="closeChangeName" @confirm="confirm_to_modify_name"
+        @updateinputvalue="changeinputvalue"></ProjectDialog>
 </template>
 <script setup lang="ts">
 import { onMounted, onUnmounted, ref, inject, Ref, watch, computed, nextTick } from 'vue';
@@ -130,9 +118,17 @@ const userid = ref()
 const { t } = useI18n()
 const dialogVisible = ref(false)
 const confirmLoading = ref(false)
-const changeinput = ref<HTMLInputElement>()
-const titles = [t('teammember.name'), t('teammember.team_permission')]
-const filteritems = [t('teammember.Readonly'), t('teammember.editable'), t('teammember.manager'), t('teammember.creator'), t('teammember.all')]
+const titles = [
+    { type: 0, label: t('teammember.name') },
+    { type: 1, label: t('teammember.team_permission') }
+]
+const filteritems = [
+    { type: 4, label: t('teammember.all') },
+    { type: 3, label: t('teammember.creator') },
+    { type: 2, label: t('teammember.manager') },
+    { type: 1, label: t('teammember.editable') },
+    { type: 0, label: t('teammember.Readonly') },
+]
 const noNetwork = ref(false)
 const teammemberdata = ref<any[]>([])
 const fold = ref(false)
@@ -145,18 +141,20 @@ const outTeamDialog = ref(false);
 const exitTeamDialog = ref(false);
 const dialogData = ref<any>({});
 let user_id = '';
+const inputvalue = ref<any>()
+
+const titleClickEvent = (type: number) => {
+    if (type === 1) {
+        fold.value = !fold.value
+        folds.value = false
+    }
+    return
+}
+
 const openDialog = (name: string, userid: string) => {
+    inputvalue.value = name
     dialogVisible.value = true;
     user_id = userid;
-    nextTick(() => {
-        if (changeinput.value) {
-            changeinput.value.value = name;
-            setTimeout(() => {
-                changeinput.value?.select();
-                changeinput.value?.focus();
-            }, 100)
-        }
-    })
 };
 
 const { teamID, teamData, upDateTeamData, is_team_upodate, teamUpdate } = inject('shareData') as {
@@ -190,7 +188,7 @@ const typeitems = (num: number) => {
 }
 
 const emptytips = computed(() => {
-    return props.searchvalue !== '' ? '没有找到该成员' : fontName.value !== 4 ? `没有成员属于<b>[${filteritems[fontName.value]}]</b>权限类型` : ''
+    return props.searchvalue !== '' ? '没有找到该成员' : fontName.value !== 4 ? `没有成员属于<b>[${filteritems.filter(item => item.type === fontName.value)[0].label}]</b>权限类型` : ''
 })
 
 
@@ -215,6 +213,10 @@ const closeExitTeamDialog = () => {
 const confirmExitTeamDialog = () => {
     exitTeamDialog.value = false;
     outteam(dialogData.value.team_id)
+}
+
+const closeChangeName = () => {
+    dialogVisible.value = false
 }
 
 const GetteamMember = async () => {
@@ -405,7 +407,7 @@ async function confirm_to_modify_name() {
     if (confirmLoading.value) { return; }
     const params = get_params_for_modify_name();
     // 1. 校验
-    if (changeinput.value && changeinput.value.value.length > 0 && changeinput.value.value.length < 20) {
+    if (inputvalue.value && inputvalue.value.length > 0 && inputvalue.value.length < 20) {
         confirmLoading.value = true;
         try {
             // 2. 执行修改接口
@@ -439,12 +441,16 @@ async function confirm_to_modify_name() {
 }
 function get_params_for_modify_name() {
     const params: any = {};
-    if (changeinput.value) {
-        params['nickname'] = (changeinput.value as HTMLInputElement).value;
+    if (inputvalue.value) {
+        params['nickname'] = inputvalue.value;
     }
     params['user_id'] = user_id;
     params['team_id'] = teamID.value;
     return params;
+}
+
+const changeinputvalue = (value: any) => {
+    inputvalue.value = value
 }
 
 watch(teamID, () => {
@@ -452,8 +458,8 @@ watch(teamID, () => {
 })
 
 const handleClickOutside = (event: MouseEvent) => {
-    const list1 = document.querySelector('.member-jurisdiction-container .shrink .filterlist')!;
-    const list2 = document.querySelector('.title .shrink .filterlist2')!;
+    const list1 = document.querySelector('.member-jurisdiction-container .filterlist ')!;
+    const list2 = document.querySelector('.title .filterlist2')!;
     function handleFoldState(list: Element, foldState: boolean) {
         if (list && event.target instanceof Element && event.target.closest('.filterlist') == null) {
             if (foldState) {
@@ -485,6 +491,7 @@ onUnmounted(() => {
         height: 24px;
 
         .title {
+            position: relative;
             width: 362px;
             min-width: 200px;
             font-size: 12px;
@@ -496,48 +503,60 @@ onUnmounted(() => {
 
 
             .shrink {
+                display: flex;
+                align-items: center;
                 width: 14px;
-                height: 100%;
+                height: 14px;
 
                 >svg {
                     transition: 0.5s;
                     width: 100%;
                     height: 100%;
                 }
+            }
 
-                .filterlist2 {
-                    position: relative;
-                    list-style-type: none;
-                    font-size: 12px;
-                    min-width: 72px;
-                    margin: 0;
-                    padding: 0 8px;
-                    right: 65px;
-                    border-radius: 6px;
-                    background-color: white;
-                    box-shadow: 0px 8px 16px 0px rgba(0, 0, 0, 0.2);
-                    z-index: 3;
+            .filterlist2 {
+                position: absolute;
+                list-style-type: none;
+                font-size: 12px;
+                padding: 6px 0;
+                top: 16px;
+                min-width: 102px;
+                left: 0px;
+                border-radius: 6px;
+                background-color: white;
+                box-shadow: 0px 2px 10px 0px rgba(0, 0, 0, 0.08);
+                box-sizing: border-box;
+                overflow: hidden;
+                z-index: 3;
 
-                    .choose {
-                        box-sizing: border-box;
-                        width: 10px;
-                        height: 6px;
-                        margin-right: 4px;
-                        margin-left: 2px;
-                        border-width: 0 0 1px 1px;
-                        border-style: solid;
-                        border-color: rgb(0, 0, 0, .75);
-                        transform: rotate(-45deg) translateY(-30%);
-                    }
+                .choose {
+                    box-sizing: border-box;
+                    width: 10px;
+                    height: 6px;
+                    margin-right: 4px;
+                    margin-left: 2px;
+                    border-width: 0 0 1px 1px;
+                    border-style: solid;
+                    border-color: rgb(0, 0, 0, .75);
+                    transform: rotate(-45deg) translateY(-30%);
+                }
 
-                    .item {
-                        display: flex;
-                        align-items: center;
-                        line-height: 32px;
+                .item {
+                    display: flex;
+                    align-items: center;
+                    justify-content: space-between;
+                    height: 32px;
+                    font-weight: 400;
+                    padding: 8px 12px;
+                    box-sizing: border-box;
+                    // color: #262626;
+
+                    &:hover {
+                        background-color: rgba(245, 245, 245, 1);
                     }
                 }
             }
-
 
         }
     }
@@ -591,6 +610,7 @@ onUnmounted(() => {
         display: flex;
 
         .member-jurisdiction-container {
+            position: relative;
             display: flex;
             justify-content: center;
             align-items: center;
@@ -599,52 +619,69 @@ onUnmounted(() => {
             white-space: nowrap;
 
             .shrink {
+                position: relative;
+                display: flex;
+                align-items: center;
                 width: 14px;
-                height: 100%;
+                height: 14px;
+
+                &::before {
+                    content: "";
+                    position: absolute;
+                    top: 0;
+                    left: -48px;
+                    right: 0px;
+                    bottom: 0;
+                }
 
                 >svg {
                     transition: 0.5s;
                     width: 100%;
                     height: 100%;
                 }
+            }
 
-                .filterlist {
-                    position: relative;
+            .filterlist {
+                position: absolute;
+                list-style-type: none;
+                font-size: 12px;
+                min-width: 102px;
+                padding: 6px 0;
+                margin: 0;
+                top: 32px;
+                left: 0px;
+                border-radius: 6px;
+                background-color: white;
+                box-shadow: 0px 2px 10px 0px rgba(0, 0, 0, 0.08);
+                box-sizing: border-box;
+                overflow: hidden;
+                z-index: 2;
+
+                .item {
                     display: flex;
-                    flex-direction: column;
-                    justify-content: center;
                     align-items: center;
-                    list-style-type: none;
-                    font-size: 12px;
-                    min-width: 88px;
-                    margin: 0;
-                    padding: 0 6px;
-                    right: 70px;
-                    border-radius: 6px;
-                    background-color: white;
-                    box-shadow: 0px 8px 16px 0px rgba(0, 0, 0, 0.2);
-                    z-index: 2;
+                    justify-content: space-between;
+                    height: 32px;
+                    font-weight: 400;
+                    padding: 8px 12px;
+                    box-sizing: border-box;
 
-                    .item {
-                        display: flex;
-                        align-items: center;
-                        line-height: 32px;
-                        margin-right: 12px;
+                    &:hover {
+                        background-color: rgba(245, 245, 245, 1);
+                    }
 
-                        .choose {
-                            box-sizing: border-box;
-                            width: 10px;
-                            height: 6px;
-                            margin-right: 4px;
-                            margin-left: 2px;
-                            border-width: 0 0 1px 1px;
-                            border-style: solid;
-                            border-color: rgb(0, 0, 0, .75);
-                            transform: rotate(-45deg) translateY(-30%);
-                        }
+                    .choose {
+                        box-sizing: border-box;
+                        width: 10px;
+                        height: 6px;
+                        margin-right: 4px;
+                        margin-left: 2px;
+                        border-width: 0 0 1px 1px;
+                        border-style: solid;
+                        border-color: rgb(0, 0, 0, .75);
+                        transform: rotate(-45deg) translateY(-30%);
                     }
                 }
-
             }
         }
 
@@ -660,66 +697,6 @@ onUnmounted(() => {
 
 .main {
     height: calc(100vh - 224px - 16.5px);
-
-    .change {
-        outline: none;
-        height: 30px;
-        width: 440px;
-        box-sizing: border-box;
-        margin-top: 22px;
-        border-radius: 4px;
-
-        &:hover {
-            border-radius: 2px;
-            border: 2px #f3f0ff solid;
-
-        }
-
-        &:focus {
-            border-radius: 2px;
-            border: 2px #9775fa solid;
-        }
-    }
-
-    .confirm {
-        background-color: #9775fa;
-        color: white;
-        border-color: #9775fa;
-
-        &:hover {
-            background: #9675fa91;
-            border-color: #9675fa91;
-        }
-
-        &:active {
-            background-color: #9775fa;
-            border-color: #9775fa;
-        }
-
-    }
-
-    .cancel {
-
-        &:hover {
-            background-color: #ffffff;
-            color: #9775fa;
-            border-color: #9775fa;
-        }
-
-        &:active {
-            background-color: #ffffff;
-        }
-
-        &:focus {
-            background-color: white;
-            color: #9775fa;
-            border-color: #9775fa;
-        }
-    }
-
-    :deep(.el-button--primary) {
-        background-color: #9775fa;
-    }
 
     .empty {
         height: 100%;

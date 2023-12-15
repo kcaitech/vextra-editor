@@ -7,6 +7,7 @@ import DropSelect from "./DropSelect.vue"
 import { BoolOp, GroupShape, Shape, ShapeType } from '@kcdesign/data';
 import { useI18n } from 'vue-i18n'
 import Tooltip from '@/components/common/Tooltip.vue';
+import { message } from '@/utils/message';
 const { t } = useI18n()
 const props = defineProps<{ context: Context, selection: Selection }>();
 type Button = InstanceType<typeof ToolButton>
@@ -24,16 +25,21 @@ const emit = defineEmits<{
   (e: 'flattenShape'): void;
 }>();
 
-const patterns = ((items: [string, any, BoolOp][]) => (items.map(item => ({ value: item[0], content: item[1], bool: item[2]}))))([
-    ['union', 'union', BoolOp.Union],
-    ['subtract', 'subtract', BoolOp.Subtract],
-    ['intersection', 'intersection', BoolOp.Intersect],
-    ['difference','difference', BoolOp.Diff],
-    ['cohere', 'cohere', BoolOp.None]
+const patterns = ((items: [string, any, BoolOp][]) => (items.map(item => ({ value: item[0], content: item[1], bool: item[2] }))))([
+  ['union', 'union', BoolOp.Union],
+  ['subtract', 'subtract', BoolOp.Subtract],
+  ['intersection', 'intersection', BoolOp.Intersect],
+  ['difference', 'difference', BoolOp.Diff],
+  ['cohere', 'cohere', BoolOp.None]
 ]);
 
 function showMenu(e: MouseEvent) {
-    e.stopPropagation()
+  e.stopPropagation()
+  const selected = props.selection.selectedShapes;
+  if (selected.length > 0 && selected.some(s => s.type === ShapeType.Cutout)) {
+    message('feature', t('cutoutExport.cutoutNotBool'));
+    return;
+  }
   if (popoverVisible.value) return popoverVisible.value = false;
   if (button.value?.toolButtonEl) {
     const el = button.value?.toolButtonEl;
@@ -51,17 +57,17 @@ function showMenu(e: MouseEvent) {
 }
 
 const selector = (active: string, type: BoolOp) => {
-    if(active !== 'cohere') {
-      selectBool.value = active
-    }
-    boolType.value = type
-    popoverVisible.value = false;
-    boolName.value = active
-    if(active === 'cohere') {
-      emit('flattenShape')
-    }else {
-      emit('changeBool', type, boolName.value);
-    }
+  if (active !== 'cohere') {
+    selectBool.value = active
+  }
+  boolType.value = type
+  popoverVisible.value = false;
+  boolName.value = active
+  if (active === 'cohere') {
+    emit('flattenShape')
+  } else {
+    emit('changeBool', type, boolName.value);
+  }
 }
 
 function onMenuBlur(e: MouseEvent) {
@@ -87,36 +93,41 @@ const onMouseleave = () => {
 }
 
 const changeBool = () => {
-    emit('changeBool', boolType.value, boolName.value);
+  const selected = props.selection.selectedShapes;
+  if (selected.length > 0 && selected.some(s => s.type === ShapeType.Cutout)) {
+    message('info', t('cutoutExport.cutoutNotBool'));
+    return;
+  }
+  emit('changeBool', boolType.value, boolName.value);
 }
 
 const selectionWatch = (t?: number) => {
-  if(t === Selection.CHANGE_SHAPE) {
+  if (t === Selection.CHANGE_SHAPE) {
     const shapes = props.selection.selectedShapes
     getBoolGroupType(shapes)
   }
 }
 
 const getBoolGroupType = (shapes: Shape[]) => {
-  if(shapes.length === 1 && shapes[0].type === ShapeType.Group) {
-      const type = (shapes[0] as GroupShape).getBoolOp()
-      if(type.op === 'union') {
-        selectBool.value = 'union'
-      }else if (type.op === 'subtract') {
-        selectBool.value = 'subtract'
-      }else if (type.op === 'intersect') {
-        selectBool.value = 'intersection'
-      }else if (type.op === 'diff') {
-        selectBool.value = 'difference'
-      }
-      if (type.op === 'none') {
-        state.value = true
-      }else {
-        state.value = false
-      }
-    }else if(shapes.length > 1) {
-      state.value = true
+  if (shapes.length === 1 && shapes[0].type === ShapeType.Group) {
+    const type = (shapes[0] as GroupShape).getBoolOp()
+    if (type.op === 'union') {
+      selectBool.value = 'union'
+    } else if (type.op === 'subtract') {
+      selectBool.value = 'subtract'
+    } else if (type.op === 'intersect') {
+      selectBool.value = 'intersection'
+    } else if (type.op === 'diff') {
+      selectBool.value = 'difference'
     }
+    if (type.op === 'none') {
+      state.value = true
+    } else {
+      state.value = false
+    }
+  } else if (shapes.length > 1) {
+    state.value = true
+  }
 }
 
 onMounted(() => {
@@ -133,22 +144,23 @@ onUnmounted(() => {
 <template>
   <div ref="popover" class="popover" tabindex="-1" v-if="popoverVisible">
     <template v-for="(item, index) in patterns" :key="item.value">
-        <div class="line" v-if="index === 4"></div>
-        <DropSelect @selectBool="selector" :lg="item.value" :select="item.content" :bool="item.bool" type="bool" :d="selectBool" :state="state"></DropSelect>
+      <div class="line" v-if="index === 4"></div>
+      <DropSelect @selectBool="selector" :lg="item.value" :select="item.content" :bool="item.bool" type="bool"
+        :d="selectBool" :state="state"></DropSelect>
     </template>
   </div>
-  <el-tooltip class="box-item" effect="dark"
-    :content="t(`bool.${selectBool}`)" placement="bottom" :show-after="600" :offset="10" :hide-after="0" :visible="popoverVisible ? false : visible">
-      <ToolButton ref="button" @click="changeBool" :selected="false" @mouseenter.stop="onMouseenter"
-        @mouseleave.stop="onMouseleave">
-        <div class="svg-container" :class="{active: state}">
-            <svg-icon :icon-class="selectBool"></svg-icon>
-        </div>
-        <div class="menu" @click="showMenu">
-          <svg-icon icon-class="down"></svg-icon>
-        </div>
-      </ToolButton>
-    </el-tooltip >
+  <el-tooltip class="box-item" effect="dark" :content="t(`bool.${selectBool}`)" placement="bottom" :show-after="600"
+    :offset="10" :hide-after="0" :visible="popoverVisible ? false : visible">
+    <ToolButton ref="button" @click="changeBool" :selected="false" @mouseenter.stop="onMouseenter"
+      @mouseleave.stop="onMouseleave">
+      <div class="svg-container" :class="{ active: state }">
+        <svg-icon :icon-class="selectBool"></svg-icon>
+      </div>
+      <div class="menu" @click="showMenu">
+        <svg-icon icon-class="down"></svg-icon>
+      </div>
+    </ToolButton>
+  </el-tooltip>
 </template>
 
 <style lang="scss" scoped>
@@ -168,6 +180,7 @@ onUnmounted(() => {
     height: 18px;
   }
 }
+
 .active {
   color: gray;
 }
@@ -204,6 +217,7 @@ onUnmounted(() => {
   border-radius: 4px;
   outline: none;
   padding: var(--default-padding-half) 0;
+
   .line {
     width: 100%;
     height: 11px;
