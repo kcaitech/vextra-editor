@@ -32,19 +32,47 @@ const selectContainer = ref<HTMLDivElement>();
 const optionsContainer = ref<HTMLDivElement>();
 const optionsContainerVisible = ref<boolean>(false);
 const source = ref<SelectSource[]>([]);
+const highlight = ref<boolean>(true);
+function for_highlight(e: MouseEvent) {
+    highlight.value = false;
+
+    if (!optionsContainer.value || !curValue.value) {
+        return;
+    }
+
+    const y = optionsContainer.value.getBoundingClientRect().y;
+    const h = Math.abs(e.clientY - y);
+    const unit_height = props.itemHeight;
+    const area1 = 4 + unit_height * curValueIndex.value;
+    const area2 = 4 + unit_height * curValueIndex.value + unit_height;
+
+    if (!(area1 > h) && !(h > area2)) {
+        highlight.value = true;
+    }
+}
 function toggle() {
-    if (props.type === 'table') return;
+    if (props.type === 'table') {
+        return;
+    }
     optionsContainerVisible.value = !optionsContainerVisible.value;
+    if (!optionsContainerVisible.value) {
+        return;
+    }
+    highlight.value = true;
     nextTick(() => {
         if (optionsContainer.value && selectContainer.value) {
+
             const selectedToTop = curValueIndex.value * (props.itemHeight || 30);
             optionsContainer.value.style.top = `${-selectedToTop}px`;
+
             const selectContainerRect = selectContainer.value.getBoundingClientRect();
             const optionsContainerRect = optionsContainer.value.getBoundingClientRect();
-            const documentClientHeight = document.documentElement.clientHeight - 30;
+
+            const documentClientHeight = document.documentElement.clientHeight - 52;
             const optionsContainerTop = selectContainerRect.top - selectedToTop;
 
             const over = optionsContainerTop + optionsContainerRect.height - documentClientHeight;
+
             if (over > 0) {
                 optionsContainer.value.style.top = `${-(selectedToTop + over + 4)}px`;
             }
@@ -110,7 +138,7 @@ watch(() => props.selected, () => {
 
         <div @click.stop class="options-container" ref="optionsContainer" tabindex="-1" :style="{
             width: props.containerWidth ? `${props.containerWidth}px` : '100%'
-        }" v-if="optionsContainerVisible">
+        }" v-if="optionsContainerVisible" @mousemove="for_highlight">
             <div v-if="!source.length" class="no-data">
                 {{ t('system.empty') }}
             </div>
@@ -125,7 +153,7 @@ watch(() => props.selected, () => {
             </div>
             <div v-if="curValue" class="check"
                 :style="{ top: `${4 + curValueIndex * props.itemHeight + props.itemHeight / 2}px` }">
-                <svg-icon icon-class="choose"></svg-icon>
+                <svg-icon icon-class="choose" :style="{ color: highlight ? '#fff' : '#000' }"></svg-icon>
             </div>
         </div>
     </div>

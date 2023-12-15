@@ -92,7 +92,7 @@ function mouseenter(t: 'left' | 'right') {
 }
 
 function mouseleave(t: 'left' | 'right') {
-  const delay = 2000;
+  const delay = 80;
   if (t === 'left') {
     timerForLeft = setTimeout(() => {
       if (!timerForLeft) return;
@@ -700,13 +700,12 @@ onUnmounted(() => {
       <template #slot1>
         <Navigation v-if="curPage !== undefined && !null_context" id="navigation" :context="context!"
           @switchpage="switchPage" @mouseenter="() => { mouseenter('left') }" @showNavigation="showHiddenLeft"
-          @mouseleave="() => { mouseleave('left') }" :page="(curPage as Page)" :showLeft="showLeft"
-          :leftTriggleVisible="leftTriggleVisible">
+          :page="(curPage as Page)" :showLeft="showLeft" :leftTriggleVisible="leftTriggleVisible">
         </Navigation>
       </template>
       <template #slot2>
         <ContentView v-if="curPage !== undefined && !null_context" id="content" :context="context!"
-          :page="(curPage as Page)">
+          @mouseenter="() => { mouseleave('left') }" :page="(curPage as Page)">
         </ContentView>
       </template>
       <template #slot3>

@@ -251,7 +251,7 @@ const disable = computed(() => {
                     <div class="setting">
                         <div class="name-title">{{ t('shadow.color') }}</div>
                         <div class="color">
-                            <ColorPicker :color="(shadow.color as Color)" :context="props.context" :auto_to_right_line="true"
+                            <ColorPicker :color="(shadow.color as Color)" :context="props.context" :late="24"
                                 @change="(c: Color) => getColorFromPicker(c)" />
                             <input ref="colorShadow" :spellcheck="false" :value="(toHex(shadow.color)).slice(1)"
                                 @change="e => onColorChange(e)" @focus="selectColor" />
@@ -372,6 +372,10 @@ const disable = computed(() => {
 
     input+input {
         width: 50px;
+    }
+
+    :deep(.color-block > .popover) {
+        transform: translateY(-8px);
     }
 }
 

@@ -1,5 +1,5 @@
 <script lang="ts" setup>
-const props = defineProps<{ leftTriggleVisible: boolean, showLeft: boolean }>();
+defineProps<{ leftTriggleVisible: boolean, showLeft: boolean }>();
 const emit = defineEmits<{ (e: 'showNavigation'): void }>()
 const showHiddenLeft = () => {
     emit('showNavigation')

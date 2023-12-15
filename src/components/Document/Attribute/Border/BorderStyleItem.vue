@@ -11,34 +11,49 @@ function select() {
 }
 
 // hooks
-onMounted(() => {})
+onMounted(() => { })
 </script>
 <template>
     <div class="border-style-item-container" @click="select">
-       <svg-icon :icon-class="props.data.value"></svg-icon>
+        <svg-icon :icon-class="props.data.value"></svg-icon>
         <span>{{ props.data.content }}</span>
     </div>
 </template>
 <style scoped lang="scss">
 .border-style-item-container {
-    height:  32px;
+    height: 32px;
     width: 100%;
     padding: 4px 6px 4px 12px;
     box-sizing: border-box;
     display: flex;
     align-items: center;
-    > span {
+
+    >span {
         font-family: HarmonyOS Sans;
         font-size: 12px;
         font-weight: 500;
         flex: 0 0 40px;
         color: #000000;
     }
-    > svg {
+
+    >svg {
         width: calc(100% - 85px);
         height: 100%;
         margin-right: 12px;
         color: #BFBFBF;
+    }
+}
+
+.border-style-item-container:hover {
+    background-color: var(--active-color);
+    color: #fff;
+
+    >span {
+        color: #fff;
+    }
+
+    >svg {
+        color: #fff;
     }
 }
 </style>

@@ -853,6 +853,7 @@ onUnmounted(() => {
         box-shadow: 0 2px 16px 0 rgba(0, 0, 0, 0.08);
         border-radius: 8px;
         border: 1px solid #F0F0F0;
+        overflow: hidden;
 
         >.header {
             width: 100%;
@@ -1199,7 +1200,7 @@ onUnmounted(() => {
 
                 >.documentc-container {
                     width: 100%;
-                    max-height: 82px;
+                    max-height: 90px;
                     overflow: scroll;
                     display: grid;
                     grid-row-gap: 7px;

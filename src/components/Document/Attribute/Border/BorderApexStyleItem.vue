@@ -20,7 +20,7 @@ const isEnd = computed<boolean>(() => {
 </template>
 <style scoped lang="scss">
 .border-front-style-item-container {
-    height: 32px;
+    height: 30px;
     width: 68px;
     padding: 0 8px 0 6px;
     color: #333333;
@@ -31,7 +31,7 @@ const isEnd = computed<boolean>(() => {
 
     >svg {
         width: 36px;
-        height: 32px;
+        height: 30px;
         margin-right: 6px;
     }
 

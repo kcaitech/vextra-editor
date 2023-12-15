@@ -95,8 +95,8 @@ const handleBoolean = (e: MouseEvent) => {
     }
 
   .svg-container {
-        width: 14px;
-        height: 14px;
+        width: 16px;
+        height: 16px;
         display: flex;
         justify-content: center;
         align-items: center;
@@ -104,8 +104,8 @@ const handleBoolean = (e: MouseEvent) => {
         margin-right: 8px;
 
     svg {
-      width: 14px;
-      height: 14px;
+      width: 100%;
+      height: 100%;
     }
   }
 }
