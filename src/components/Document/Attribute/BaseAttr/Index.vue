@@ -522,7 +522,9 @@ onUnmounted(() => {
             <div class="lock" v-if="!s_length" @click="lockToggle" :class="{ 'active': isLock }">
                 <svg-icon :icon-class="isLock ? 'lock' : 'unlock'" :class="{ 'active': isLock }"></svg-icon>
             </div>
-            <div style="width: 32px;height: 32px;" v-else></div>
+            <div class="lock grayed" style="background-color: #F4F5F5;opacity: 0.4;" v-else>
+                <svg-icon :icon-class="isLock ? 'lock' : 'unlock'" :class="{ 'active': isLock }"></svg-icon>
+            </div>
         </div>
         <div class="tr" :reflush="reflush">
             <IconText class="td angle" svgicon="angle" :text="`${rotate}` + '°'" @onchange="onChangeRotate"
