@@ -6,7 +6,7 @@ export const share = {
     anyone_can_read_it: '任何人均可阅读',
     anyone_can_edit_it: '任何人均可编辑',
     anyone_can_comment: '任何人均可评论',
-    shareable: '可分享',
+    shareable: '已关闭分享',
     no_authority: '无权限',
     copy_success: '复制成功',
     copy_failure: '复制失败',
@@ -32,8 +32,8 @@ export const apply = {
     file_access_request: "文件访问申请",
     applicant: "申请人",
     access_file: "访问文件",
-    authority: '权限',
-    remarks: '备注',
+    authority: '权限：',
+    remarks: '备注：',
     agree: '同意',
     refuse: '拒绝',
     maximum_share: '该文件已达最大分享人数，请联系创建者处理',
@@ -47,7 +47,7 @@ export const apply = {
     file_deleted: '文件已被删除，或创建者已关闭分享',
     authorization_failure: '授权失败',
     notification_message: '通知消息',
-    application_documents: '申请文档：',
+    application_documents: '申请文档',
     have_agreed: '已同意',
     rejected: '已拒绝',
     no_message_received: '未收到任何消息',
@@ -58,6 +58,6 @@ export const apply = {
     team: '团队',
     team_apply: '加入团队申请',
     fill: '文件',
-    apply_team: '申请加入团队',
-    apply_project: '申请加入项目'
+    apply_team: '申请加入团队：',
+    apply_project: '申请加入项目：'
 }

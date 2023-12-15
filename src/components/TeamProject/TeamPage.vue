@@ -54,12 +54,10 @@
     <ProjectList v-if="itemid === 0" :searchvalue="search" @addproject="showoverlay = true" />
     <TeamMember v-if="itemid === 1" :searchvalue="search" />
     <TeamSetting v-if="itemid === 2" />
-    <transition name="nested" :duration="550">
-        <div v-if="showoverlay" class="overlay">
-            <addProject v-if="itemid === 0" class="inner" :teamid="teamID" @close="showoverlay = false" />
-            <InviteMember v-if="itemid === 1" class="inner" :teamid="teamID" @close="showoverlay = false" />
-        </div>
-    </transition>
+    <div v-if="showoverlay" class="overlay">
+        <addProject v-if="itemid === 0" class="inner" :teamid="teamID" @close="showoverlay = false" />
+        <InviteMember v-if="itemid === 1" class="inner" :teamid="teamID" @close="showoverlay = false" />
+    </div>
 </template>
 <script setup lang="ts">
 import { Ref, computed, inject, ref, onMounted, watch, onUnmounted } from 'vue'
@@ -152,36 +150,6 @@ onUnmounted(() => {
 })
 </script>
 <style lang="scss" scoped>
-.nested-enter-active,
-.nested-leave-active {
-    transition: all 0.3s ease-in-out;
-}
-
-.nested-leave-active {
-    transition-delay: 0.1s;
-}
-
-.nested-enter-from,
-.nested-leave-to {
-    opacity: 0;
-}
-
-.nested-enter-active .inner,
-.nested-leave-active .inner {
-    transition: all 0.3s ease-in-out;
-}
-
-.nested-enter-active .inner {
-    transition-delay: 0.1s;
-}
-
-.nested-enter-from .inner,
-.nested-leave-to .inner {
-    top: calc(50% - 50px);
-    // left: 50%;
-    // transform: translate(-50%, -50%) scale(0.8);
-    opacity: 0.5;
-}
 
 :deep(.el-input__wrapper) {
     border-radius: 8px;

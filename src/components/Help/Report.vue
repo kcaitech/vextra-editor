@@ -10,18 +10,19 @@
         <form @submit.prevent="submitreport()">
             <div class="type">
                 <label for="selectOption">{{ t('report.type') }}<svg-icon icon-class="tips-icon"></svg-icon></label>
-                <select id="selectOption" v-model="selectedOption" required>
+                <select :style="{ color: selectedOption !== '' ? '#000000' : '#BFBFBF' }" id="selectOption"
+                    v-model="selectedOption" required>
                     <option value="" disabled selected hidden>{{ t('report.type_normal') }}</option>
-                    <option value="option1">{{ t('report.type_value1') }}</option>
-                    <option value="option2">{{ t('report.type_value2') }}</option>
-                    <option value="option3">{{ t('report.type_value3') }}</option>
-                    <option value="option4">{{ t('report.type_value4') }}</option>
+                    <option value=0>{{ t('report.type_value1') }}</option>
+                    <option value=1>{{ t('report.type_value2') }}</option>
+                    <option value=2>{{ t('report.type_value3') }}</option>
+                    <option value=3>{{ t('report.type_value4') }}</option>
                 </select>
             </div>
             <div class="content">
                 <label for="textInput">{{ t('report.report_content') }}<svg-icon icon-class="tips-icon"></svg-icon></label>
-                <textarea type="text" id="textInput" :placeholder="t('report.report_normal')" v-model="textInput"
-                    :maxlength="300" required></textarea>
+                <textarea :style="{ color: textInput !== '' ? '#000000' : '#BFBFBF' }" type="text" id="textInput"
+                    :placeholder="t('report.report_normal')" v-model="textInput" :maxlength="300" required></textarea>
             </div>
             <div class="imgs">
                 <div style="width: 58px;">{{ t('report.upload_img') }}</div>
@@ -52,10 +53,12 @@
 </template>
 <script setup lang="ts">
 import { ElMessage } from 'element-plus';
-import { computed, nextTick, ref } from 'vue';
+import { computed, ref } from 'vue';
 import select from '@/assets/select-icon.svg'
 import { useRoute } from 'vue-router';
 import { useI18n } from 'vue-i18n';
+import * as user_api from '@/request/users'
+
 
 const emits = defineEmits<{
     (event: 'close'): void
@@ -76,19 +79,24 @@ const deleteimg = (index: number) => {
     myfiles.value.splice(index, 1)
 }
 
-const submitreport = () => {
+const submitreport = async () => {
+    if (!isFormValid.value) return
     const mydata = new FormData()
     mydata.append('type', selectedOption.value)
     mydata.append('content', textInput.value)
     for (let i = 0; i < myfiles.value.length; i++) {
         mydata.append('files', myfiles.value[i])
     }
-    mydata.append('page_url',location.href)
-    nextTick(() => {
-        mydata.forEach((value, key) => {
-            console.log(`${key}:${value}`);
-        })
-    })
+    mydata.append('page_url', location.href)
+    try {
+        const { code } = await user_api.Feedback(mydata)
+        if (code === 0) {
+            emits('close')
+            ElMessage.success('提交成功')
+        }
+    } catch (error) {
+        ElMessage.error('提交失败')
+    }
 }
 
 const handleImageUpload = (e: any) => {
@@ -111,23 +119,35 @@ const handleImageUpload = (e: any) => {
         }
     }
     if (failfile.length > 0 || alreadyexists.length > 0) {
-        ElMessage.error({ duration: 1500, message: "图片格式不符或图片已存在" })
+        ElMessage.error({ duration: 3000, message: "图片格式不符或图片已存在" })
     }
     e.target.value = ''
 }
 
 </script>
 <style lang="scss" scoped>
+@keyframes move {
+    from {
+        transform: translate(-50%, -20%);
+        opacity: 0;
+    }
+
+    to {
+        transform: translate(-50%, 0);
+        opacity: 1;
+    }
+}
+
 .disabled {
-    opacity: 0.4;
+    opacity: 0.6;
     background-color: rgba(255, 255, 255, 1) !important;
 }
 
 .crad-box {
     position: absolute;
-    top: 50%;
+    top: 25%;
     left: 50%;
-    transform: translate(-50%, -50%);
+    transform: translate(-50%, 0%);
     width: 582px;
     height: auto;
     background-color: white;
@@ -138,6 +158,7 @@ const handleImageUpload = (e: any) => {
     box-sizing: border-box;
     font-size: 13px;
     z-index: 1000;
+    animation: move 0.25s ease-in-out;
 
     .title {
         display: flex;
@@ -175,7 +196,7 @@ const handleImageUpload = (e: any) => {
 
     .tips {
         line-height: 38px;
-        font-weight: 500;
+        font-weight: 400;
     }
 
     .type,
@@ -198,6 +219,10 @@ const handleImageUpload = (e: any) => {
             outline: none;
             border-radius: 6px;
             background: #F5F5F5;
+
+            option {
+                color: #262626;
+            }
 
             option:hover {
                 background-color: rgba(245, 245, 245, 1);
@@ -242,6 +267,7 @@ const handleImageUpload = (e: any) => {
             position: relative;
             right: 16px;
             font-size: 12px;
+            font-weight: 400;
             color: rgba(140, 140, 140, 1);
         }
 
@@ -255,7 +281,7 @@ const handleImageUpload = (e: any) => {
             border: 1px solid #F0F0F0;
             border-radius: 6px;
             font-size: 14px;
-            font-weight: 600;
+            font-weight: 500;
             color: rgba(51, 51, 51, 1);
             box-sizing: border-box;
 
@@ -268,8 +294,8 @@ const handleImageUpload = (e: any) => {
             }
 
             svg {
-                width: 14px;
-                height: 14px;
+                width: 12px;
+                height: 12px;
                 color: rgba(51, 51, 51, 1);
             }
         }

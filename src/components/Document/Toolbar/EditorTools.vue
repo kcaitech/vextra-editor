@@ -130,7 +130,7 @@ function applyForEdit() {
     <div v-if="isread || canComment || isLable" class="editor-tools" @dblclick.stop>
         <span style="color: #ffffff;">{{ t('apply.read_only') }}</span>
         <div class="button">
-            <button class="el" style="background-color: #1878F5;" @click="applyForEdit">{{
+            <button class="el" style="background-color: #1878F5;margin-right: 4px" @click="applyForEdit">{{
                 t('apply.apply_for_edit')
             }}
             </button>
@@ -187,10 +187,11 @@ function applyForEdit() {
         margin-left: 15px;
 
         .el {
-            height: 33px;
+            height: 32px;
             border-radius: 5px;
             color: #ffffff;
             background-color: #865DFF;
+            border: none;
         }
     }
 
@@ -206,8 +207,8 @@ function applyForEdit() {
         box-sizing: border-box;
 
         >svg {
-            width: 20px;
-            height: 20px;
+            width: 18px;
+            height: 18px;
         }
     }
 
