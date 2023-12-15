@@ -141,9 +141,9 @@ function _update_view() {
         check_model_state();
     }
     if (props.context.selection.selectedShapes.length > 1) check_mixed();
-    if (parentSymbolRef()) {
+    if(parentSymbolRef()) {
         all_disable();
-    } else {
+    }else {
         check_model_state();
     }
 }
@@ -514,12 +514,11 @@ onUnmounted(() => {
                 :disabled="model_disable_state.width" :context="context" />
 
             <IconText class="frame" ticon="H" :text="typeof (h) === 'number' ? h.toFixed(fix) : h" @onchange="onChangeH"
-                :disabled="model_disable_state.height" :context="context" />
-            <div class="lock" @click="lockToggle" :class="{ 'active': isLock }">
-                <svg-icon v-if="!s_length" :icon-class="isLock ? 'lock' : 'unlock'"
-                    :class="{ 'active': isLock }"></svg-icon>
+                      :disabled="model_disable_state.height"  :context="context"/>
+            <div class="lock" v-if="!s_length" @click="lockToggle" :class="{ 'active': isLock }">
+                <svg-icon :icon-class="isLock ? 'lock' : 'unlock'" :class="{ 'active': isLock }"></svg-icon>
             </div>
-
+            <div style="width: 32px;height: 32px;" v-else></div>
         </div>
         <div class="tr" :reflush="reflush">
             <IconText class="angle" svgicon="angle" :text="`${rotate}` + '°'" @onchange="onChangeRotate"

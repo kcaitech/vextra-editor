@@ -151,13 +151,14 @@ const isDisabled: any = computed(() => {
         width: 32px;
         height: 32px;
         border-radius: 4px;
+        display: flex;
+        align-items: center;
+        justify-content: center;
         flex: 0 0 32px;
-        margin-left: 30px;
-        margin-top: -32px;
 
         > svg {
-            width: 32px;
-            height: 32px;
+            width: 18px;
+            height: 18px;
             color: #FFFFFF;
         }
     }
