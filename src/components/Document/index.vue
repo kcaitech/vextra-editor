@@ -343,10 +343,7 @@ const getDocumentInfo = async () => {
     const docKeyPromise = share_api.getDocumentKeyAPI({ doc_id: route.query.id });
     const [docInfoRes, docKeyRes] = await Promise.all([docInfoPromise, docKeyPromise]);
     if (docInfoRes.code !== 0 || docKeyRes.code !== 0) { // 打开文档失败
-      router.push({
-        name: "apply",
-        query: { id: route.query.id }
-      });
+      router.push("/apphome");
       return;
     }
     const docInfoData = docInfoRes.data;
@@ -355,7 +352,7 @@ const getDocumentInfo = async () => {
     if (perm === 0) { // 无权限
       router.push({
         name: "apply",
-        query: { id: route.query.id }
+        query: { id: route.query.id },
       });
       return;
     }
