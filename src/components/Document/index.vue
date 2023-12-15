@@ -337,68 +337,63 @@ onBeforeRouteUpdate((to, form, next) => {
 const getDocumentInfo = async () => {
   try {
     loading.value = true;
-    noNetwork.value = false
-    const dataInfo = await share_api.getDocumentInfoAPI({ doc_id: route.query.id });
-    docInfo.value = dataInfo.data;
-    if (dataInfo.code === 400) {
-      //无效链接
-      // ElMessage({ message: `${t('apply.link_not')}` });
-      // return router.push('/');
+    noNetwork.value = false;
+
+    const docInfoPromise = share_api.getDocumentInfoAPI({ doc_id: route.query.id });
+    const docKeyPromise = share_api.getDocumentKeyAPI({ doc_id: route.query.id });
+    const [docInfoRes, docKeyRes] = await Promise.all([docInfoPromise, docKeyPromise]);
+    if (docInfoRes.code !== 0 || docKeyRes.code !== 0) { // 打开文档失败
       router.push({
-        name: 'apply',
-        query: {
-          id: route.query.id
-        }
-      })
-      return
+        name: "apply",
+        query: { id: route.query.id }
+      });
+      return;
     }
-    const perm = dataInfo.data.document_permission.perm_type
+    const docInfoData = docInfoRes.data;
+    const docKeyData = docKeyRes.data;
+    const perm = docInfoData.document_permission.perm_type;
+    if (perm === 0) { // 无权限
+      router.push({
+        name: "apply",
+        query: { id: route.query.id }
+      });
+      return;
+    }
+
+    docInfo.value = docInfoData;
     permType.value = perm;
-    //获取文档类型是否为私有文档且有无权限
-    if (perm === 0) {
-      router.push({
-        name: 'apply',
-        query: {
-          id: route.query.id
-        }
-      })
-      return
-    }
-    const { data } = await share_api.getDocumentKeyAPI({ doc_id: route.query.id });
-    // documentKey.value = data
 
     const repo = new Repository();
     const storageOptions: StorageOptions = {
-      endPoint: data.endpoint,
-      region: data.region,
-      accessKey: data.access_key,
-      secretKey: data.secret_access_key,
-      sessionToken: data.session_token,
-      bucketName: data.bucket_name,
+      endPoint: docKeyData.endpoint,
+      region: docKeyData.region,
+      accessKey: docKeyData.access_key,
+      secretKey: docKeyData.secret_access_key,
+      sessionToken: docKeyData.session_token,
+      bucketName: docKeyData.bucket_name,
     }
     let storage: IStorage;
-    if (data.provider === "oss") {
+    if (docKeyData.provider === "oss") {
       storage = new OssStorage(storageOptions);
     } else {
       storage = new S3Storage(storageOptions);
     }
     const path = docInfo.value.document.path;
-    const document = await importDocument(storage, path, "", dataInfo.data.document.version_id ?? "", repo)
+    const document = await importDocument(storage, path, "", docInfoData.document.version_id ?? "", repo)
     if (document) {
-      const coopRepo = new CoopRepository(document, repo)
+      const coopRepo = new CoopRepository(document, repo);
       const file_name = docInfo.value.document?.name || document.name;
       window.document.title = file_name.length > 8 ? `${file_name.slice(0, 8)}... - ProtoDesign` : `${file_name} - ProtoDesign`;
       context = new Context(document, coopRepo);
-      context.workspace.setDocumentPerm(perm)
+      context.workspace.setDocumentPerm(perm);
       getDocumentAuthority();
-      getUserInfo()
-
-      context.comment.setDocumentInfo(dataInfo.data)
+      getUserInfo();
+      context.comment.setDocumentInfo(docInfoData);
       null_context.value = false;
       init_watcher();
       const docId = route.query.id as string;
       const token = localStorage.getItem("token") || "";
-      if (await context.communication.docOp.start(token, docId, document, context.coopRepo, dataInfo.data.document.version_id ?? "")) {
+      if (await context.communication.docOp.start(token, docId, document, context.coopRepo, docInfoData.document.version_id ?? "")) {
         switchPage(context!.data.pagesList[0]?.id);
         loading.value = false;
       } else {
@@ -408,12 +403,12 @@ const getDocumentInfo = async () => {
       if (perm === 3) await context.communication.docResourceUpload.start(token, docId);
       if (perm >= 2) await context.communication.docCommentOp.start(token, docId);
       await context.communication.docSelectionOp.start(token, docId, context);
-      context.communication.docSelectionOp.addOnMessage(teamSelectionModifi)
+      context.communication.docSelectionOp.addOnMessage(teamSelectionModifi);
     }
   } catch (err) {
     loading.value = false;
-    noNetwork.value = true
-    console.log(err)
+    noNetwork.value = true;
+    console.log(err);
     throw err;
   }
 }
