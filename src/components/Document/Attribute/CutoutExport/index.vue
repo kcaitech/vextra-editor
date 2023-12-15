@@ -516,11 +516,11 @@ onUnmounted(() => {
 <template>
     <div class="cutout_export_box">
         <div class="title" @click.stop="first">
-            <div class="name">{{t('cutoutExport.create_cut_chart_and_export')}}</div>
+            <div class="name" :class="{'checked': preinstallArgus.length > 0}">{{t('cutoutExport.export')}}</div>
             <div class="cutout_add_icon">
                 <div class="cutout-icon cutout-preinstall"
                     :style="{ backgroundColor: isPreinstall ? 'rgba(0, 0, 0, 0.2)' : '' }" @click.stop="showPreinstall">
-                    <svg-icon icon-class="text-justify"></svg-icon>
+                    <svg-icon icon-class="comment-dropdown"></svg-icon>
                 </div>
                 <div class="cutout-icon" @click.stop="preinstall('default')"><svg-icon icon-class="add"></svg-icon></div>
                 <PreinstallSelect v-if="isPreinstall" @close="isPreinstall = false" @preinstall="preinstall">
@@ -574,9 +574,9 @@ onUnmounted(() => {
     width: 100%;
     display: flex;
     flex-direction: column;
-    padding: 0 10px 12px 10px;
+    padding: 12px 8px 18px 8px;
     box-sizing: border-box;
-
+    border-bottom: 1px solid #F0F0F0;
     .title {
         display: flex;
         height: 30px;
@@ -585,8 +585,16 @@ onUnmounted(() => {
         justify-content: space-between;
 
         .name {
-            font-weight: 600;
             flex-shrink: 0;
+            height: 14px;
+            font-family: HarmonyOS Sans;
+            font-size: 12px;
+            font-weight: normal;
+            font-feature-settings: "kern" on;
+            color: #737373;
+        }
+        .checked {
+            color: #000000;
         }
 
         .cutout_add_icon {
@@ -595,20 +603,20 @@ onUnmounted(() => {
             position: relative;
 
             .cutout-icon {
-                width: 22px;
-                height: 22px;
+                width: 28px;
+                height: 28px;
                 display: flex;
                 align-items: center;
                 justify-content: center;
-                border-radius: 4px;
-
+                border-radius: var(--default-radius);
+                box-sizing: border-box;
                 &:hover {
-                    background-color: rgba(0, 0, 0, 0.1);
+                    background-color: #F5F5F5;
                 }
 
                 >svg {
-                    width: 50%;
-                    height: 50%;
+                    width: 16px;
+                    height: 16px;
                 }
             }
         }
@@ -635,6 +643,9 @@ onUnmounted(() => {
         :deep(.el-checkbox__inner) {
             transition: none;
         }
+        :deep(.el-checkbox__label) {
+            font-size: 12px;
+        }
 
         :deep(.el-checkbox__input.is-checked .el-checkbox__inner) {
             background-color: #fff;
@@ -655,7 +666,7 @@ onUnmounted(() => {
         height: 30px;
         width: 100%;
         align-items: center;
-        margin: 5px 0;
+        margin: 8px 0;
 
         div {
             font-weight: bold;

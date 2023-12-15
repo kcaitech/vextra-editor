@@ -1,20 +1,20 @@
 <script setup lang="ts">
-import {ref, onMounted, onUnmounted} from "vue";
-import {Context} from "@/context";
+import { ref, onMounted, onUnmounted } from "vue";
+import { Context } from "@/context";
 import CommentItem from "./CommentItem.vue";
 import CommentMenu from "./CommentMenu.vue";
-import {useI18n} from 'vue-i18n';
+import { useI18n } from 'vue-i18n';
 import * as comment_api from '@/request/comment';
-import {useRoute} from 'vue-router';
-import {Action} from "@/context/tool";
-import {ElScrollbar} from 'element-plus'
-import {Selection} from "@/context/selection";
+import { useRoute } from 'vue-router';
+import { Action } from "@/context/tool";
+import { ElScrollbar } from 'element-plus'
+import { Selection } from "@/context/selection";
 import ShowHiddenLeft from "../ShowHiddenLeft.vue";
-import {watchEffect} from "vue";
-import {Comment} from "@/context/comment";
-import {DocCommentOpData, DocCommentOpType} from "@/communication/modules/doc_comment_op"
+import { watchEffect } from "vue";
+import { Comment } from "@/context/comment";
+import { DocCommentOpData, DocCommentOpType } from "@/communication/modules/doc_comment_op"
 
-const {t} = useI18n();
+const { t } = useI18n();
 const props = defineProps<{ context: Context, leftTriggleVisible: boolean, showLeft: boolean }>();
 type commentListMenu = {
     text: string
@@ -26,9 +26,9 @@ const emit = defineEmits<{ (e: 'showNavigation'): void }>()
 
 const commentMenu = ref<boolean>(false)
 const commentMenuItems = ref<commentListMenu[]>([
-    {text: `${t('comment.sort')}`, status_p: props.context.selection.commentPageSort},
-    {text: `${t('comment.show_about_me')}`, status_p: props.context.selection.commentAboutMe},
-    {text: `${t('comment.show_resolved_comments')}`, status_p: props.context.selection.commentStatus}
+    { text: `${t('comment.sort')}`, status_p: props.context.selection.commentPageSort },
+    { text: `${t('comment.show_about_me')}`, status_p: props.context.selection.commentAboutMe },
+    { text: `${t('comment.show_resolved_comments')}`, status_p: props.context.selection.commentStatus }
 ])
 const documentCommentList = ref<any[]>(props.context.comment.commentList)
 const commentAll = ref<any[]>() //没有转树的评论列表
@@ -101,7 +101,7 @@ const handleMenuStatus = (status: boolean, index: number) => {
 
 const getDocumentComment = async (id: string) => {
     try {
-        const {data} = await comment_api.getDocumentCommentAPI({doc_id: id})
+        const { data } = await comment_api.getDocumentCommentAPI({ doc_id: id })
         data.forEach((obj: { children: any[]; commentMenu: any; }) => {
             obj.commentMenu = commentMenuItems.value
             obj.children = []
@@ -154,10 +154,7 @@ const selectedUpdate = (t: number) => {
 }
 const commentUpdate = (t: number) => {
     if (t === Comment.SEND_COMMENT) {
-        const timer = setTimeout(() => {
-            getDocumentComment(docID)
-            clearTimeout(timer)
-        }, 150);
+        getDocumentComment(docID)
     }
     if (t === Comment.UPDATE_COMMENT) {
         documentCommentList.value = props.context.comment.commentList
@@ -231,7 +228,7 @@ const showHiddenLeft = () => {
                 </div>
             </div>
             <CommentMenu v-if="commentMenu" :Items="commentMenuItems" @close="closeMenu"
-                         @comment-menu-status="handleMenuStatus"></CommentMenu>
+                @comment-menu-status="handleMenuStatus"></CommentMenu>
         </div>
         <!--        <hr style="border: none;border-top: 1px solid #F0F0F0;width: 212px">-->
 
@@ -246,14 +243,13 @@ const showHiddenLeft = () => {
         <div class="comment-list" v-else>
             <el-scrollbar ref="scrollbarRef">
                 <CommentItem v-for="(item, index) in isPageSort ? getPage(true) : documentCommentList" :key="item.id"
-                             :commentItem="item" :index="index"
-                             :context="context" :pageId="item.page_id" @resolve="onResolve" @delete="onDelete"
-                             :data-comment="item.id" :myComment="aboutMe()"></CommentItem>
+                    :commentItem="item" :index="index" :context="context" :pageId="item.page_id" @resolve="onResolve"
+                    @delete="onDelete" :data-comment="item.id" :myComment="aboutMe()"></CommentItem>
                 <div style="height: 30px;"></div>
             </el-scrollbar>
         </div>
-        <ShowHiddenLeft :showLeft="showLeft" :leftTriggleVisible="leftTriggleVisible"
-                        @showNavigation="showHiddenLeft"></ShowHiddenLeft>
+        <ShowHiddenLeft :showLeft="showLeft" :leftTriggleVisible="leftTriggleVisible" @showNavigation="showHiddenLeft">
+        </ShowHiddenLeft>
     </div>
 </template>
 
@@ -276,7 +272,7 @@ const showHiddenLeft = () => {
         z-index: 1;
         box-sizing: border-box;
 
-        .line{
+        .line {
             justify-content: space-between;
             display: flex;
             align-items: center;
@@ -306,7 +302,7 @@ const showHiddenLeft = () => {
                 box-sizing: border-box;
                 border-radius: var(--default-radius);
 
-                > svg {
+                >svg {
                     width: 16px;
                     height: 16px;
                 }
@@ -340,7 +336,7 @@ const showHiddenLeft = () => {
         justify-content: center;
         align-items: center;
 
-        > button {
+        >button {
             margin-top: 10px;
             font-size: var(--font-default-fontsize);
             border: none;
