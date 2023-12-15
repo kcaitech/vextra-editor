@@ -752,7 +752,7 @@ onUnmounted(() => {
   display: flex;
   flex-flow: row nowrap;
   width: 100%;
-  height: 52px;
+  height: 46px;
   background: var(--theme-color);
   padding: 10px 8px;
   box-sizing: border-box;

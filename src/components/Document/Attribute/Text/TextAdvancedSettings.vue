@@ -25,6 +25,7 @@ const charSpacing = ref<HTMLInputElement>()
 const lineHeight = ref<HTMLInputElement>()
 const paraSpacing = ref<HTMLInputElement>()
 // const selection = ref(props.context.selection)
+const isActived = ref(false)
 
 //获取选中字体的长度和下标
 const getTextIndexAndLen = () => {
@@ -177,7 +178,8 @@ const selectLineHeight = () => {
   lineHeight.value && lineHeight.value.select()
 }
 const selectParaSpacing = () => {
-  paraSpacing.value && paraSpacing.value.select()
+    isActived.value = true
+    paraSpacing.value && paraSpacing.value.select()
 }
 
 const shapeWatch = watch(() => props.textShape, (value, old) => {
@@ -264,6 +266,10 @@ function selection_wather(t: any) {
   }
 }
 
+function blur2() {
+    isActived.value = false
+}
+
 watchEffect(() => {
   textFormat()
 })
@@ -304,8 +310,9 @@ onUnmounted(() => {
           </div>
           <div>
             <span>{{ t('attr.paragraph_space') }}</span>
-            <div><input type="text" ref="paraSpacing" @focus="selectParaSpacing" v-model="paragraphSpace" class="input"
-                @change="setParagraphSpace"></div>
+            <div :class="{ actived: isActived }" style="width: 124px;height: 32px;border-radius: 6px;box-sizing: border-box">
+                <input type="text" ref="paraSpacing" @focus="selectParaSpacing" @blur="blur2" v-model="paragraphSpace" class="input"
+                @change="setParagraphSpace" style="width: 100%;height: 100%"></div>
           </div>
           <div>
             <span>{{ t('attr.id_style') }}</span>
@@ -342,19 +349,19 @@ onUnmounted(() => {
               <i :class="{ 'jointly-text': true, 'font-posi': true, selected_bg: selectCase === 'uppercase' }"
                 @click="onSelectCase(TextTransformType.Uppercase)">
                 <Tooltip :content="t('attr.uppercase')" :offset="15">
-                  <svg-icon icon-class="text-uppercase"></svg-icon>
+                  <svg-icon icon-class="text-uppercase" style="width: 17px;height: 14px"></svg-icon>
                 </Tooltip>
               </i>
               <i :class="{ 'jointly-text': true, 'font-posi': true, selected_bg: selectCase === 'lowercase' }"
                 @click="onSelectCase(TextTransformType.Lowercase)">
                 <Tooltip :content="t('attr.lowercase')" :offset="15">
-                  <svg-icon icon-class="text-lowercase"></svg-icon>
+                  <svg-icon icon-class="text-lowercase" style="width: 14px;height: 14px"></svg-icon>
                 </Tooltip>
               </i>
               <i :class="{ 'jointly-text': true, 'font-posi': true, selected_bg: selectCase === 'uppercase-first' }"
                 @click="onSelectCase(TextTransformType.UppercaseFirst)">
                 <Tooltip :content="t('attr.titlecase')" :offset="15">
-                  <svg-icon icon-class="text-titlecase"></svg-icon>
+                  <svg-icon icon-class="text-titlecase" style="width: 15px;height: 14px"></svg-icon>
                 </Tooltip>
               </i>
             </div>
@@ -437,8 +444,8 @@ onUnmounted(() => {
           align-items: center;
 
           >svg {
-            width: 13px;
-            height: 13px;
+            width: 16px;
+            height: 16px;
           }
         }
 
@@ -499,8 +506,21 @@ onUnmounted(() => {
         input:focus {
           outline: none;
         }
-      }
 
+          input::selection {
+              color: #FFFFFF;
+              background: #1878F5;
+          }
+
+          input::-moz-selection {
+              color: #FFFFFF;
+              background: #1878F5;
+          }
+
+          .actived {
+              border: 1px solid #1878F5;
+          }
+      }
     }
   }
 
