@@ -24,6 +24,7 @@ import {v4} from 'uuid';
 import Apex from './Apex.vue';
 import {TableSelection} from '@/context/tableselection';
 import {Selection} from "@/context/selection";
+import {tr} from "element-plus/es/locale";
 
 interface BorderItem {
     id: number
@@ -654,7 +655,7 @@ onUnmounted(() => {
                 </div>
             </div>
         </div>
-        <Apex v-if="show_apex" :context="props.context" :shapes="props.shapes"></Apex>
+        <Apex v-if="show_apex && !!borders.length" :context="props.context" :shapes="props.shapes"></Apex>
     </div>
 </template>
 
