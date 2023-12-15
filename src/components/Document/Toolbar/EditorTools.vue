@@ -110,6 +110,7 @@ function applyForEdit() {
         <CreateImage :active="selected === Action.AddImage" :context="props.context"></CreateImage>
         <Table @select="select" :active="selected === Action.AddTable" :context="props.context"></Table>
         <Contact @select="select" :active="selected === Action.AddContact" :context="props.context"></Contact>
+        <Cutout @select="select" :active="selected === Action.AddCutout"></Cutout>
         <div style="width: 16px;height: 52px;display: flex;align-items: center;justify-content: center;">
             <div class="vertical-line" />
         </div>

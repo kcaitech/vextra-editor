@@ -658,7 +658,7 @@ onUnmounted(() => {
                 </div>
             </div>
         </div>
-        <Apex v-if="show_apex" :context="props.context" :shapes="props.shapes"></Apex>
+        <Apex v-if="show_apex && !!borders.length" :context="props.context" :shapes="props.shapes"></Apex>
     </div>
 </template>
 
@@ -813,8 +813,7 @@ onUnmounted(() => {
                 }
 
                 .delete:hover {
-                    background-color: #F5F5F5;
-                    ;
+                    background-color: #F5F5F5;;
                 }
             }
         }

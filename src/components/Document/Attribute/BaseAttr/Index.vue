@@ -371,7 +371,7 @@ function onChangeRotate(value: string) {
     }
 }
 const onChangeRadian = (value: string, type: 'rt' | 'lt' | 'rb' | 'lb') => {
-    const selected = props.context.selection.selectedShapes;
+    const selected = props.context.selection.selectedShapes.filter(shape => shape.type !== ShapeType.Cutout);
     if (selected.length === 1) {
         const e = props.context.editor4Shape(selected[0]);
         if (isMoreForRadius.value) {
@@ -425,8 +425,10 @@ const RADIUS_SETTING = [
     ShapeType.Text
 ];
 const MULTI_RADIUS = [ShapeType.Rectangle, ShapeType.Artboard, ShapeType.Image];
+const cutout_setting = ref(true);
 function layout() {
     s_adapt = false, s_flip = true, s_radius = false, s_length = false;
+    cutout_setting.value = true;
     const selected = props.context.selection.selectedShapes;
     if (selected.length === 1) {
         const shape = selected[0];
@@ -437,6 +439,7 @@ function layout() {
         }
         if (shape.type === ShapeType.Table) s_flip = false;
         if (shape.type === ShapeType.Line || shape.type === ShapeType.Contact) s_length = true;
+        if(shape.type === ShapeType.Cutout) cutout_setting.value = false;
     } else {
         if (selected.find(i => i instanceof RectShape)) s_radius = true;
     }
@@ -518,7 +521,9 @@ onUnmounted(() => {
             <div class="lock" v-if="!s_length" @click="lockToggle" :class="{ 'active': isLock }">
                 <svg-icon :icon-class="isLock ? 'lock' : 'unlock'" :class="{ 'active': isLock }"></svg-icon>
             </div>
-            <div style="width: 32px;height: 32px;" v-else></div>
+            <div class="lock grayed" style="background-color: #F4F5F5;opacity: 0.4;" v-else>
+                <svg-icon :icon-class="isLock ? 'lock' : 'unlock'" :class="{ 'active': isLock }"></svg-icon>
+            </div>
         </div>
         <div class="tr" :reflush="reflush">
             <IconText class="angle" svgicon="angle" :text="`${rotate}` + '°'" @onchange="onChangeRotate"

@@ -81,27 +81,30 @@ onUnmounted(() => {
 
 <style lang="scss" scoped>
 .rightmenu {
-    min-width: 200px;
+    min-width: 122px;
     z-index: 999;
     position: absolute;
     background-color: white;
-    border-radius: 5px;
-    box-shadow: 0px 8px 16px 0px rgba(0, 0, 0, 0.2);
+    border-radius: 8px;
+    border: 1px solid #EBEBEB;
+    box-shadow: 0px 2px 10px 0px rgba(0, 0, 0, 0.08);
+    box-sizing: border-box;
 
     ul {
-        padding: 0;
-
+        padding: 4px 0;
+        margin: 0;
         li {
-            display: block;
-            padding: 10px 20px;
-            font-size: 14px;
-            text-decoration: none;
-            color: rgba(13, 13, 13, 0.9);
-            border-radius: 2px;
-            cursor: pointer;
+            display: flex;
+            align-items: center;
+            list-style: none;
+            padding: 0 12px;
+            margin: 0;
+            font-size: 12px;
+            height: 40px;
+            color: #262626;
 
             &:hover {
-                background-color: #f3f0ff;
+                background-color:rgba(245, 245, 245, 1);
             }
         }
         .line {

@@ -36,7 +36,7 @@ const showitem = ref(false)
 const qrcode = ref(false)
 const shortcut = ref(false)
 const report = ref(false)
-const items = ref<any[]>(['问题反馈', '举报'])//['问题反馈', '举报', '快捷键介绍']
+const items = ref<any[]>(['问题反馈', '举报', '快捷键介绍'])//['问题反馈', '举报', '快捷键介绍']
 const itemsicon = ref<any[]>(['feedback-icon', 'report-icon', 'shortcut-icon'])
 
 

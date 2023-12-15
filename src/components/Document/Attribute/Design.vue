@@ -14,8 +14,10 @@ import Text from './Text/Text.vue';
 import { throttle } from 'lodash';
 import Module from './Module/Module.vue'
 import TableText from './Table/TableText.vue'
-import { TableSelection } from '@/context/tableselection';
+import CutoutExport from './CutoutExport/index.vue'
+
 import { Tool } from '@/context/tool';
+import { TableSelection } from '@/context/tableselection';
 import BaseForPathEdit from "@/components/Document/Attribute/BaseAttr/BaseForPathEdit.vue";
 import Opacity from './Opacity/Opacity.vue';
 import TableStyle from './Table/TableStyle.vue'
@@ -70,6 +72,9 @@ const WITH_SHADOW = [
     ShapeType.Line,
     ShapeType.Symbol,
     ShapeType.SymbolUnion
+]
+const WITH_OPACITY = [
+    ShapeType.Cutout
 ]
 const shapeType = ref();
 const textShapes = ref<Shape[]>([]);
@@ -172,12 +177,13 @@ onUnmounted(() => {
             <div v-if="!len">
                 <PageBackgorund :context="props.context" v-if="props.context.selection.selectedPage"
                     :page="props.context.selection.selectedPage"></PageBackgorund>
+                <CutoutExport :shapes="shapes" :context="props.context"></CutoutExport>
             </div>
             <div v-else class="attr-wrapper">
                 <Arrange :context="props.context" :shapes="shapes"></Arrange>
                 <ShapeBaseAttr v-if="baseAttr" :context="props.context"></ShapeBaseAttr>
                 <BaseForPathEdit v-if="editAttr" :context="props.context"></BaseForPathEdit>
-                <Opacity v-if="opacity" :shapes="shapes" :context="props.context"></Opacity>
+                <Opacity v-if="!WITH_OPACITY.includes(shapeType) && opacity" :shapes="shapes" :context="props.context"></Opacity>
                 <Module v-if="symbol_attribute" :context="props.context" :shapeType="shapeType" :shapes="shapes"></Module>
                 <Fill v-if="WITH_FILL.includes(shapeType)" :shapes="shapes" :context="props.context"></Fill>
                 <Border v-if="WITH_BORDER.includes(shapeType)" :shapes="shapes" :context="props.context"></Border>
@@ -188,6 +194,7 @@ onUnmounted(() => {
                 </TableText>
                 <Shadow v-if="WITH_SHADOW.includes(shapeType)" :shapes="shapes" :context="props.context">
                 </Shadow>
+                <CutoutExport :shapes="shapes" :context="props.context"></CutoutExport>
             </div>
         </el-scrollbar>
     </section>
