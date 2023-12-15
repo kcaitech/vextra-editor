@@ -161,14 +161,6 @@ const getName = (item: any) => {
                   <span class="name">{{ item.user.nickname }}</span>
                   <span class="date">{{ formatDate(item.apply.created_at) }}</span>
                 </div>
-                <el-tooltip class="box-item" :enterable="false" effect="light" placement="bottom-end"
-                  :visible="hoveredFillIndex === i && tooltipTillVisible">
-                  <template #content>
-                    <div class="custom-tooltip">
-                      {{ t('apply.application_documents') }}"{{ item.document.name }}"，{{ t('apply.authority') }}：{{
-                        permission[item.apply.perm_type] }}，【{{ t('apply.remarks') }}】：{{ item.apply.applicant_notes }}
-                    </div>
-                  </template>
                   <div class="item-text" @mouseenter.stop="showFillTooltip(i)" @mouseleave.stop="hideFillTooltip">
                     <span>{{ t('apply.application_documents') }}</span>"{{ item.document.name }}"
                     <div class="purview">{{ permission[item.apply.perm_type] }}</div>
@@ -176,7 +168,6 @@ const getName = (item: any) => {
                       {{ t('apply.remarks') }}{{ item.apply.applicant_notes }}
                     </div>
                   </div>
-                </el-tooltip>
               </div>
               <div class="botton" v-if="item.apply.status === 0">
                 <button class="bnt_confirm" type="button" @click.stop="consent(item.apply.id, item)">
@@ -216,18 +207,6 @@ const getName = (item: any) => {
                   <span class="name">{{ getName(item) }}</span>
                   <span class="date">{{ formatDate(item.request.created_at) }}</span>
                 </div>
-                <el-tooltip class="box-item" :enterable="false" effect="light" placement="bottom-end"
-                  :visible="hoveredFillIndex === i && tooltipTillVisible">
-                  <template #content>
-                    <div class="custom-tooltip" v-if="item.team && item.user">
-                      {{ t('apply.apply_team') }}"{{ item.team.name }}"，{{ t('apply.authority') }}：{{
-                        permissionTeam[item.request.perm_type] }}
-                    </div>
-                    <div class="custom-tooltip" v-else-if="item.project && item.user">
-                      {{ t('apply.apply_project') }}"{{ item.project.name }}"，{{ t('apply.authority') }}：{{
-                        permission[item.request.perm_type] }}
-                    </div>
-                  </template>
                   <div class="item-text" v-if="item.team && item.user" @mouseenter.stop="showFillTooltip(i)"
                     @mouseleave.stop="hideFillTooltip">
                     <span>{{ t('apply.apply_team') }}</span>{{ item.team.name }}
@@ -251,7 +230,6 @@ const getName = (item: any) => {
                     <br>
                     <span>{{ item.project ? t('Createteam.rejectprompt3') : t('Createteam.rejectprompt2') }}</span>
                   </div>
-                </el-tooltip>
               </div>
               <div class="botton" v-if="item.request.status === 0 && item.user">
                 <button class="bnt_confirm" type="button" @click.stop="consentTeam(item.request.id, i, item)">
