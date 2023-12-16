@@ -6,11 +6,13 @@ import {
     Color,
     ContactForm,
     GroupShape,
+    ImageShape,
     Matrix,
     Page,
     Shape,
     ShapeFrame,
     ShapeType,
+    SymbolRefShape,
     SymbolShape,
     TextShape
 } from "@kcdesign/data";
@@ -22,6 +24,7 @@ import { paster_image } from "./clipboard";
 import { landFinderOnPage, scrollToContentView } from './artboardFn'
 import { fit_no_transform } from "./shapelist";
 import { is_part_of_symbol, is_state, one_of_is_symbolref } from "@/utils/symbol";
+import { Groups } from "aws-sdk/clients/budgets";
 
 export interface Media {
     name: string
@@ -97,7 +100,7 @@ export function get_symbol_ref_name(symbolname: string, symbolref: string, broth
     for (let i = 0, len = brothers.length; i < len; i++) {
         const shape = brothers[i];
         if (shape.type !== ShapeType.SymbolRef) continue;
-        if (shape.refId === symbolref) repeats++;
+        if ((shape as SymbolRefShape).refId === symbolref) repeats++;
     }
     return repeats > 1 ? `Ref-${symbolname}-${repeats}` : `Ref-${symbolname}`;
 }
@@ -145,7 +148,7 @@ export function init_shape(context: Context, frame: ShapeFrame, mousedownOnPageX
     let new_shape: Shape | undefined;
     if (page && parent && type) {
         const editor = context.editor.controller();
-        const name = getName(type, parent.childs, t);
+        const name = getName(type, (parent as GroupShape).childs, t);
         asyncCreator = editor.asyncCreator(mousedownOnPageXY);
         if (action === Action.AddArrow) {
             new_shape = asyncCreator.init_arrow(page, (parent as GroupShape), name, frame);
@@ -200,7 +203,7 @@ export function init_insert_shape(context: Context, mousedownOnPageXY: PageXY, t
     const frame = new ShapeFrame(mousedownOnPageXY.x, mousedownOnPageXY.y, 100, 100);
     if (page && parent && type) {
         const editor = context.editor.controller();
-        const name = getName(type, parent.childs, t);
+        const name = getName(type, (parent as GroupShape).childs, t);
         asyncCreator = editor.asyncCreator(mousedownOnPageXY);
         if (action === Action.AddArrow) {
             new_shape = asyncCreator.init_arrow(page, (parent as GroupShape), name, frame);
@@ -232,7 +235,7 @@ export function init_insert_shape2(context: Context, mousedownOnPageXY: PageXY, 
     const frame = new ShapeFrame(mousedownOnPageXY.x, mousedownOnPageXY.y, 100, 100);
     if (page && parent && type) {
         const editor = context.editor.editor4Page(page);
-        const name = getName(type, parent.childs, t);
+        const name = getName(type, (parent as GroupShape).childs, t);
         if (action === Action.AddArrow || action === Action.AddLine) {
             const r = 0.25 * Math.PI;
             frame.width = 100 * Math.cos(r), frame.height = 100 * Math.sin(r);
@@ -270,7 +273,7 @@ export function init_insert_table(context: Context, t: Function, land?: Shape, _
     let new_shape: Shape | undefined;
     if (page && parent && type) {
         const editor = context.editor.controller();
-        const name = getName(type, parent.childs, t);
+        const name = getName(type, (parent as GroupShape).childs, t);
         asyncCreator = editor.asyncCreator(PageXY);
         new_shape = asyncCreator.init_table(page, (parent as GroupShape), name, frame, table.row, table.col);
         if (new_shape) {
@@ -355,7 +358,7 @@ export async function insert_imgs(context: Context, t: Function, media: Media[])
         for (let i = 0; i < media.length; i++) {
             if (i > 0) xy.x = xy.x + media[i - 1].frame.width + 10;
             const img = init_insert_image(context, xy, t, media[i]);
-            if (img && await context.communication.docResourceUpload.upload(img.imageRef, media[i].buff.buffer.slice(0))) new_shapes.push(img);
+            if (img && await context.communication.docResourceUpload.upload((img as ImageShape).imageRef, media[i].buff.buffer.slice(0))) new_shapes.push(img);
         }
     }
     if (new_shapes.length) {
@@ -517,9 +520,9 @@ export const list2Tree = (list: any, rootValue: string) => {
 
 export function flattenShapes(shapes: any) {
     return shapes.reduce((result: any, item: Shape) => {
-        if (Array.isArray(item.childs)) {
+        if (Array.isArray((item as GroupShape).childs)) {
             // 如果当前项有子级数组，则递归调用flattenArray函数处理子级数组
-            result = result.concat(flattenShapes(item.childs));
+            result = result.concat(flattenShapes((item as GroupShape).childs));
         }
         return result.concat(item);
     }, []);
@@ -789,7 +792,7 @@ export function map_from_shapes(shapes: Shape[], init?: Map<string, Shape>) {
         const shape = shapes[i];
         map.set(shape.id, shape);
         if (shape.type === ShapeType.Table) continue;
-        const children = shape.type === ShapeType.SymbolRef ? (shape.naviChilds || []) : shape.childs;
+        const children = shape.type === ShapeType.SymbolRef ? (shape.naviChilds || []) : (shape as GroupShape).childs;
         if (!children?.length) continue;
         map_from_shapes(children, map);
     }
@@ -820,7 +823,7 @@ export function is_need_skip_to_render(shape: Shape, matrix: Matrix) { // 不是
  * @param shape
  */
 export function shape_track(context: Context, shape: Shape) {
-    const page = shape.getPage();
+    const page = shape.getPage() as Page;
     if (!page) return;
     const target = page.getShape(shape.id);
     if (!target) return;
@@ -874,7 +877,7 @@ export function ref_symbol(context: Context, position: PageXY, symbol: Shape) {
         let count = 1;
         for (let i = 0, len = childs.length; i < len; i++) {
             const item = childs[i];
-            if (item?.refId === id) count++;
+            if ((item as SymbolRefShape)?.refId === id) count++;
         }
         let ref: Shape | false = editor.refSymbol(context.data, `${name} ${count}`, frame, id);
         ref = editor.insert(parent, shapes.length, ref);

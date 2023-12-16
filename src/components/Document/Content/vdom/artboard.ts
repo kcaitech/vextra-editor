@@ -19,7 +19,7 @@ export class ArtboradDom extends DomBasic(ArtboradView) {
 
     onDestory(): void {
         super.onDestory();
-        this.m_data.unbubblewatch(this._bubblewatcher);
+        this.m_data.bubbleunwatch(this._bubblewatcher);
     }
 
 }

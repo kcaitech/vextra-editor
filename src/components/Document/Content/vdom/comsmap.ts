@@ -6,6 +6,7 @@ import { GroupShapeDom } from "./groupshape";
 import { ImageShapeDom } from "./imageshape";
 import { LineDom } from "./line";
 import { PathShapeDom } from "./pathshape";
+import { PathShapeDom2 } from "./pathshape2";
 import { SymbolDom } from "./symbol";
 import { SymbolRefDom } from "./symbolref";
 import { TableCellDom } from "./tablecell";
@@ -32,7 +33,7 @@ export function initComsMap(comsMap: Map<ShapeType, ViewType>) {
     comsMap.set(ShapeType.Image, ImageShapeDom);
     // comsMap.set(ShapeType.Page, ShapeGroup);
     comsMap.set(ShapeType.Path, PathShapeDom);
-    comsMap.set(ShapeType.Path2, PathShapeDom);
+    comsMap.set(ShapeType.Path2, PathShapeDom2);
     comsMap.set(ShapeType.Rectangle, PathShapeDom);
     comsMap.set(ShapeType.Oval, PathShapeDom);
     comsMap.set(ShapeType.Text, TextShapeDom);

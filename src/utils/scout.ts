@@ -1,6 +1,6 @@
 import {Context} from "@/context";
 import {PageXY, XY} from "@/context/selection";
-import {GroupShape, Matrix, Shape, ShapeType, SymbolRefShape, SymbolShape} from "@kcdesign/data";
+import {GroupShape, Matrix, Shape, ShapeType, SymbolRefShape, SymbolShape, SymbolUnionShape} from "@kcdesign/data";
 import {v4 as uuid} from "uuid";
 import {isShapeOut} from "./assist";
 import {debounce} from "lodash";
@@ -126,7 +126,7 @@ function isTarget2(scout: Scout, shape: Shape, p: PageXY): boolean {
 // 扁平化一个编组的树结构 tree -> list
 export function delayering(groupshape: Shape, flat?: Shape[]): Shape[] {
     let f: Shape[] = flat || [];
-    const childs: Shape[] = groupshape.type === ShapeType.SymbolRef ? (groupshape.naviChilds || []) : groupshape.childs;
+    const childs: Shape[] = groupshape.type === ShapeType.SymbolRef ? (groupshape.naviChilds || []) : (groupshape as GroupShape).childs;
     for (let i = 0, len = childs.length; i < len; i++) {
         const item = childs[i];
         if (item.type === ShapeType.Group || item.type === ShapeType.Symbol || item.type === ShapeType.SymbolRef) {
@@ -170,7 +170,7 @@ export function finder(context: Context, scout: Scout, g: Shape[], position: Pag
         const item = g[i];
         if (!canBeTarget(item)) continue; // 隐藏图层或已锁定
         if (isShapeOut(context, item)) continue; // 屏幕外图形，这里会判断每个图形是否在屏幕内，本身消耗较小，另外可以避免后面的部分不必要的更大消耗
-        if (item.isSymbolUnionShape) { // 组件状态集合
+        if (item.type === ShapeType.SymbolUnion) { // 组件状态集合
             result = finder_symbol_union(context, scout, item as GroupShape, position, selected, isCtrl);
             if (isTarget(scout, item, position)) break; // 只要进入集合，有无子元素选中都应该break
         } else if (item.type === ShapeType.Symbol || item.type === ShapeType.SymbolRef) { // 组件或引用
@@ -182,7 +182,7 @@ export function finder(context: Context, scout: Scout, g: Shape[], position: Pag
         if (item.type === ShapeType.Artboard) {
             result = finder_artboard(context, scout, item as GroupShape, position, selected, isCtrl);
         } else if (item.type === ShapeType.Group) {
-            result = finder_group(scout, item.childs, position, selected, isCtrl);
+            result = finder_group(scout, (item as GroupShape).childs, position, selected, isCtrl);
         } else {
             result = item;
         }
@@ -242,7 +242,7 @@ function finder_symbol_union(context: Context, scout: Scout, union: GroupShape, 
 }
 
 function finder_symbol(context: Context, scout: Scout, symbol: SymbolShape | SymbolRefShape, position: PageXY, selected: Shape, isCtrl: boolean) {
-    const children = symbol.type === ShapeType.SymbolRef ? (symbol.naviChilds || []) : symbol.childs;
+    const children = symbol.type === ShapeType.SymbolRef ? (symbol.naviChilds || []) : (symbol as SymbolShape).childs;
     if (!isTarget(scout, symbol, position)) { // 如果frame感应区的不被判定为目标，则还需要判定子元素
         return finder(context, scout, children, position, selected, isCtrl);
     }
@@ -266,7 +266,7 @@ export function finder_contact(scout: Scout, g: Shape[], position: PageXY, selec
         if ([ShapeType.Group, ShapeType.Artboard].includes(item.type)) {
             const isItemIsTarget = isTarget2(scout, item, position);
             if (!isItemIsTarget) continue;
-            const c = item.childs as Shape[];
+            const c = (item as GroupShape).childs as Shape[];
             if (item.type === ShapeType.Artboard) {
                 if (c.length) {
                     result.push(...finder_contact(scout, c, position, selected, result));
@@ -281,7 +281,7 @@ export function finder_contact(scout: Scout, g: Shape[], position: PageXY, selec
                     return result;
                 }
             } else if ([ShapeType.Group].includes(item.type)) { // 如果是编组，不用向下走了，让子元素往上走
-                const g = finder_group(scout, item.childs, position, selected, true);
+                const g = finder_group(scout, (item as GroupShape).childs, position, selected, true);
                 if (g) {
                     result.push(g);
                     return result;
@@ -310,7 +310,7 @@ export function finder_layers(scout: Scout, g: Shape[], position: PageXY): Shape
         const item = g[i];
         if (!isTarget(scout, item, position)) continue;
         if ([ShapeType.Group, ShapeType.Artboard, ShapeType.Symbol, ShapeType.SymbolRef].includes(item.type)) {
-            const c: Shape[] = item.type === ShapeType.SymbolRef ? item.naviChilds : item.childs;
+            const c: Shape[] | undefined = item.type === ShapeType.SymbolRef ? item.naviChilds : (item as GroupShape).childs;
             if (c?.length) {
                 result.push(...finder_layers(scout, c, position));
             }
@@ -328,7 +328,7 @@ function isPartSelect(shape: Shape, selected: Shape): boolean {
         for (let i = 0, len = c.length; i < len; i++) {
             const cur = c[i];
             if (cur.id === selected.id) return true;
-            if (cur?.childs?.length) result = isPartSelect(c[i], selected);
+            if ((cur as GroupShape)?.childs?.length) result = isPartSelect(c[i], selected);
             if (result) return true;
         }
     }
