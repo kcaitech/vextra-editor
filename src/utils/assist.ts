@@ -327,19 +327,6 @@ export function modify_pt_x4p(pre_target1: PT4P1, p: PageXY, apexX: number[], st
     }
 }
 
-export function modify_pt_x_4_path_edit(pre_target1: PT4P1, p: PageXY, ps: XY[], stickness: number) {
-    for (let i = 0, len = ps.length; i < len; i++) {
-        const __p = ps[i];
-        const x = __p.x;
-        const delta = Math.abs(x - p.x);
-        if (delta < stickness && (pre_target1.delta === undefined || delta < pre_target1.delta)) {
-            pre_target1.delta = delta;
-            pre_target1.x = p.x;
-            pre_target1.sy = __p.y;
-        }
-    }
-}
-
 export function modify_pt_y4p(pre_target2: PT4P2, p: PageXY, apexY: number[], stickness: number) {
     for (let i = 0, len = apexY.length; i < len; i++) {
         const y = apexY[i]
@@ -350,15 +337,34 @@ export function modify_pt_y4p(pre_target2: PT4P2, p: PageXY, apexY: number[], st
     }
 }
 
-export function modify_pt_y_4_path_edit(pre_target2: PT4P2, p: PageXY, ps: XY[], stickness: number) {
-    for (let i = 0, len = ps.length; i < len; i++) {
-        const __p = ps[i];
-        const y = __p.y
-        const delta = Math.abs(y - p.y);
+export function modify_pt_x_4_path_edit(pre_target1: any, point_of_map: XY, calc_points: XY[], stickness: number) {
+    for (let i = 0, len = calc_points.length; i < len; i++) {
+        const __p = calc_points[i];
+        const x = __p.x;
+
+        const delta = Math.abs(x - point_of_map.x);
+
+        if (delta < stickness && (pre_target1.delta === undefined || delta < pre_target1.delta)) {
+            pre_target1.delta = delta;
+            pre_target1.x = point_of_map.x;
+            pre_target1.sy = __p.y;
+            pre_target1.index = i;
+        }
+    }
+}
+
+export function modify_pt_y_4_path_edit(pre_target2: any, point_of_map: XY, calc_points: XY[], stickness: number) {
+    for (let i = 0, len = calc_points.length; i < len; i++) {
+        const __p = calc_points[i];
+        const y = __p.y;
+
+        const delta = Math.abs(y - point_of_map.y);
+
         if (delta < stickness && (pre_target2.delta === undefined || delta < pre_target2.delta)) {
             pre_target2.delta = delta;
-            pre_target2.y = p.y
             pre_target2.sx = __p.x;
+            pre_target2.y = point_of_map.y
+            pre_target2.index = i;
         }
     }
 }
@@ -493,66 +499,87 @@ export class ActionEndGenerator {
     private offset_map: XY[] = [];
     private context: Context;
     private stickness: number;
+
     constructor(context: Context, map: XY[]) {
         this.context = context;
         this.offset_map = map;
         this.stickness = context.assist.stickness;
     }
 
-    __gen(point: XY, f: Function) {
-        const target = f(point, this.offset_map);
-        if (!target) {
-            return point;
+    _break_free(a: number, b: number) {
+        return Math.abs(a - b) >= this.stickness;
+    }
+
+    modify_fix_x(p2: PageXY, fix: number) {
+        this.stickedX = true;
+        this.sticked_x_v = fix;
+        this.pre_target_x = fix;
+
+        p2.x = fix;
+    }
+
+    modify_fix_y(p2: PageXY, fix: number) {
+        this.stickedY = true;
+        this.sticked_y_v = fix;
+        this.pre_target_y = fix;
+
+        p2.y = fix;
+    }
+
+    modify_point_x(point: XY, target: any) {
+        if (this._break_free(point.x, this.sticked_x_v)) {
+            this.stickedX = false;
+            return;
         }
-        if (this.stickedX) {
-            if (Math.abs(point.x - this.sticked_x_v) >= this.stickness) {
-                this.stickedX = false
-            }
-            else {
-                if (this.pre_target_x === target.x) {
-                    point.x = this.sticked_x_v;
-                }
-                else if (target.sticked_by_x) {
-                    this.modify_fix_x(point, target.x);
-                }
-            }
+
+        if (this.pre_target_x === target.x) {
+            point.x = this.sticked_x_v;
         }
         else if (target.sticked_by_x) {
             this.modify_fix_x(point, target.x);
         }
-        if (this.stickedY) {
-            if (Math.abs(point.y - this.sticked_y_v) >= this.stickness) {
-                this.stickedY = false;
-            }
-            else {
-                if (this.pre_target_y === target.x) {
-                    point.y = this.sticked_y_v;
-                }
-                else if (target.sticked_by_y) {
-                    this.modify_fix_y(point, target.y);
-                }
-            }
+    }
+
+    modify_point_y(point: XY, target: any) {
+        if (this._break_free(point.y, this.sticked_y_v)) {
+            this.stickedY = false;
+            return;
+        }
+
+        if (this.pre_target_y === target.x) {
+            point.y = this.sticked_y_v;
         }
         else if (target.sticked_by_y) {
             this.modify_fix_y(point, target.y);
         }
+    }
+
+    __gen(point: XY, indexes: number[], f: Function) {
+        const target = f(point, indexes, this.offset_map);
+
+        if (!target) {
+            return point;
+        }
+
+        if (this.stickedX) {
+            this.modify_point_x(point, target);
+        }
+        else if (target.sticked_by_x) {
+            this.modify_fix_x(point, target.x);
+        }
+
+        if (this.stickedY) {
+            this.modify_point_y(point, target);
+        }
+        else if (target.sticked_by_y) {
+            this.modify_fix_y(point, target.y);
+        }
+
         return point;
     }
+
     __reset() {
         this.stickedX = false;
         this.stickedY = false;
-    }
-    modify_fix_x(p2: PageXY, fix: number) {
-        p2.x = fix;
-        this.sticked_x_v = p2.x;
-        this.stickedX = true;
-        this.pre_target_x = fix;
-    }
-
-    modify_fix_y(p2: PageXY, fix: number) {
-        p2.y = fix;
-        this.sticked_y_v = p2.y;
-        this.stickedY = true;
-        this.pre_target_y = fix;
     }
 }

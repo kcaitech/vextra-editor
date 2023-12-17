@@ -154,11 +154,17 @@ function point_mousemove(event: MouseEvent) {
     sub_matrix.reset(workspace.matrix.inverse);
 
     props.context.assist.set_points_map();
-    const max = props.context.path.get_synthetic_points((shape as PathShape).points.length - 1);
-    offset_map = gen_offset_points_map2(props.context, startPosition2, max);
+
+    const synthetic_points = props.context.path.get_synthetic_points((shape as PathShape).points.length - 1);
+
+    offset_map = gen_offset_points_map2(props.context, startPosition2, synthetic_points);
+
+    console.log('offset_map:', offset_map);
+
     if (!offset_map) {
         return;
     }
+
     actionEndGenerator = new ActionEndGenerator(props.context, offset_map);
 
     props.context.path.editing(true);
@@ -179,7 +185,7 @@ function direction_action(p: PageXY, index: number) {
         console.log('!points?.length');
         return;
     }
-    
+
     const point = points[index];
     const m = shape.matrix2Root();
     m.preScale(shape.frame.width, shape.frame.height);
@@ -200,18 +206,26 @@ function __exe(event: MouseEvent, pathEditor: AsyncPathEditor, _point: PageXY) {
         console.log("!offset_map");
         return;
     }
+
     if (!actionEndGenerator) {
         return;
     }
-    const f = props.context.assist.edit_mode_match.bind(props.context.assist);
-    // const point = actionEndGenerator.__gen(_point, f); // 开启辅助
-    const point = _point;
+
+
     const max = (shape as PathShape).points.length - 1;
     const select_point = props.context.path.get_synthetic_points(max);
+
     if (!select_point?.length) {
         console.log('!select_point?.length');
         return;
     }
+
+    const f = props.context.assist
+        .edit_mode_match
+        .bind(props.context.assist);
+
+    // const point = actionEndGenerator.__gen(_point, select_point, f); // 开启辅助
+    const point = _point;
     if (select_point.length === 1) {
         if (event.shiftKey) {
             direction_action(point, current_curve_point_index.value);
@@ -219,16 +233,19 @@ function __exe(event: MouseEvent, pathEditor: AsyncPathEditor, _point: PageXY) {
         pathEditor.execute(current_curve_point_index.value, point);
         return;
     }
+
     const points = (shape as PathShape).points;
     if (!points?.length) {
         console.log('!points?.length');
         return;
     }
+
     const first_point = points[select_point[0]];
     if (!first_point) {
         console.log('!first_point');
         return;
     }
+
     const first_offset = offset_map[0];
     const compute_root_point = { x: point.x + first_offset.x, y: point.y + first_offset.y };
     const m = shape.matrix2Root();

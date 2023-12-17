@@ -140,25 +140,32 @@ export class Asssit extends Watchable(Object) {
 
     set_points_map() {
         this.clear();
+
         const path_shape = this.m_context.selection.pathshape;
         if (!path_shape) {
             return;
         }
+
         const points = path_shape.points;
+
         const f = path_shape.frame;
         const m = new Matrix(path_shape.matrix2Root());
         m.preScale(f.width, f.height);
+
         for (let i = 0, l = points.length; i < l; i++) {
             const __p = points[i];
             const p = m.computeCoord2(__p.x, __p.y);
+
             const item = { id: __p.id, p };
             this.m_path_pg.set(i, item);
+
             const xs = this.m_x_axis.get(p.x);
             if (xs) {
                 xs.push(item);
             } else {
                 this.m_x_axis.set(p.x, [item]);
             }
+
             const ys = this.m_y_axis.get(p.y);
             if (ys) {
                 ys.push(item);
@@ -166,6 +173,7 @@ export class Asssit extends Watchable(Object) {
                 this.m_y_axis.set(p.y, [item]);
             }
         }
+
         console.log('assit map:', this.m_path_pg);
     }
 
@@ -414,35 +422,49 @@ export class Asssit extends Watchable(Object) {
         return target;
     }
 
-    edit_mode_match(point: PageXY, offsetMap: XY[]) {
-        const indexes = this.m_context.path.selectedPoints;
-        if (!indexes.length) {
-            return;
-        }
+    edit_mode_match(point: XY, indexes: number[], offsetMap: XY[]) {
         const indexes_set = new Set(indexes);
+
         this.m_nodes_x = [];
         this.m_nodes_y = [];
-        const points = gen_match_points_by_map2(offsetMap, point);
+
+        const calc_points = gen_match_points_by_map2(offsetMap, point);
+
         const target = { x: 0, y: 0, sticked_by_x: false, sticked_by_y: false };
-        const pre_target1: PT4P1 = { x: 0, sy: 0, delta: undefined };
-        const pre_target2: PT4P2 = { y: 0, sx: 0, delta: undefined };
+        const pre_target1 = { x: 0, sy: 0, delta: undefined, index: -1 };
+        const pre_target2 = { y: 0, sx: 0, delta: undefined, index: -1 };
+
         this.m_path_pg.forEach((v, k) => {
             if (indexes_set.has(k)) {
                 return;
             }
-            modify_pt_x_4_path_edit(pre_target1, v.p, points, this.stickness);
-            modify_pt_y_4_path_edit(pre_target2, v.p, points, this.stickness);
+
+            modify_pt_x_4_path_edit(pre_target1, v.p, calc_points, this.stickness);
+            modify_pt_y_4_path_edit(pre_target2, v.p, calc_points, this.stickness);
         })
-        if (pre_target1.delta !== undefined) {
-            target.x = pre_target1.x;
+
+
+
+        const offset_x = offsetMap[pre_target1.index];
+        if (offset_x) {
             target.sticked_by_x = true;
-            this.m_nodes_y = [...(this.m_x_axis.get(target.x) || []), { p: { x: target.x, y: pre_target1.sy }, id: 'ex' }];
+
+            this.m_nodes_x = [...(this.m_x_axis.get(pre_target1.x) || []), { p: { x: pre_target1.x, y: pre_target1.sy }, id: 'ex' }];
+
+            // target.x = pre_target1.x + offset_x.x;
+            target.x = pre_target1.x;
         }
-        if (pre_target2.delta !== undefined) {
-            target.y = pre_target2.y;
+
+        const offset_y = offsetMap[pre_target2.index];
+        if (offset_y) {
             target.sticked_by_y = true;
-            this.m_nodes_y = [...(this.m_y_axis.get(target.y) || []), { p: { x: pre_target2.sx, y: target.y }, id: 'ex' }];
+
+            this.m_nodes_y = [...(this.m_y_axis.get(pre_target2.y) || []), { p: { x: pre_target2.sx, y: pre_target2.y }, id: 'ex' }];
+
+            // target.y = pre_target2.y + offset_y.y;
+            target.y = pre_target2.y;
         }
+
         this.notify(Asssit.UPDATE_ASSIST_PATH);
         return target;
     }
