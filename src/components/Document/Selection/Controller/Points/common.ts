@@ -1,7 +1,7 @@
 import { XY } from "@/context/selection"
 import { getHorizontalAngle } from "@/utils/common"
 import { ContactShape, CtrlElementType, Matrix, PathShape, Point2D, Shape } from "@kcdesign/data"
-import { CurveMode } from "@kcdesign/data/src"
+import { CurveMode } from "@kcdesign/data"
 
 
 interface Dot {
