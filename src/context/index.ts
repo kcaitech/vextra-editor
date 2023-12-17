@@ -2,7 +2,7 @@ import {
     CoopRepository,
     TaskMgr,
     Task,
-    Watchable,
+    WatchableObject,
     TaskPriority,
     TableShape,
     TableEditor,
@@ -67,7 +67,7 @@ export class RepoWraper {
     }
 }
 
-export class Context extends Watchable(Object) {
+export class Context extends WatchableObject {
     private m_data: Document;
     private m_editor: Editor;
     private m_repo: RepoWraper;
@@ -88,6 +88,7 @@ export class Context extends Watchable(Object) {
     private m_tableselection: TableSelection;
     private m_component: Component;
     private m_path: Path;
+    private m_textselection: TextSelection;
 
     private m_vdom: Map<string, { dom: PageDom, ctx: DViewCtx }> = new Map();
 

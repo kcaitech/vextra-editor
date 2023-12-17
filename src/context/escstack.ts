@@ -1,11 +1,11 @@
-import {Watchable} from "@kcdesign/data";
+import {WatchableObject} from "@kcdesign/data";
 
 interface EscItem {
     key: string
     task: Function
 }
 
-export class EscStack extends Watchable(Object) {
+export class EscStack extends WatchableObject {
     private m_stack_map: Map<string, EscItem> = new Map();
 
     constructor() {

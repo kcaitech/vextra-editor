@@ -1,6 +1,6 @@
-import { TableCell, TableGridItem, Watchable, ShapeType, TableShape } from "@kcdesign/data";
+import { TableCell, TableGridItem, WatchableObject, ShapeType, TableShape } from "@kcdesign/data";
 import { Context } from ".";
-export class TableSelection extends Watchable(Object) {
+export class TableSelection extends WatchableObject {
     static CHANGE_TABLE_CELL = 1;
     static CHANGE_EDITING_CELL = 2;
     private m_tableRowStart: number = -1;
@@ -14,9 +14,9 @@ export class TableSelection extends Watchable(Object) {
         this.m_context = cxt;
     }
 
-    get shape() {
-        return this.m_shape;
-    }
+    // get shape() {
+    //     return this.m_shape;
+    // }
 
     get tableRowStart() {
         return this.m_tableRowStart;

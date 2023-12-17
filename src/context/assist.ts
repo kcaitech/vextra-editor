@@ -1,4 +1,4 @@
-import {GroupShape, Matrix, Shape, Watchable} from "@kcdesign/data";
+import {GroupShape, Matrix, Shape, WatchableObject} from "@kcdesign/data";
 import {PageXY, Selection, XY} from "./selection";
 import {Context} from ".";
 import {
@@ -105,7 +105,7 @@ export interface PageXY2 {
     p: PageXY
 }
 
-export class Asssit extends Watchable(Object) {
+export class Asssit extends WatchableObject {
     static UPDATE_ASSIST = 1;
     static UPDATE_MAIN_LINE = 2;
     static CLEAR = 3;

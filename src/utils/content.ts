@@ -782,7 +782,7 @@ export function skipUserSelectShapes(context: Context, shapes: Shape[]) {
     const del = { x: root.center.x - p_center.x, y: root.center.y - p_center.y };
     if (del.x || del.y) {
         matrix.trans(del.x, del.y);
-        context.workspace.matrixTransformation();
+        // context.workspace.matrixTransformation();
     }
 }
 

@@ -1,4 +1,4 @@
-import {Text, SpanAttr, Watchable} from "@kcdesign/data";
+import {Text, SpanAttr, WatchableObject} from "@kcdesign/data";
 import {Selection} from "./selection"
 
 export interface TextLocate {
@@ -8,7 +8,7 @@ export interface TextLocate {
     attr: SpanAttr | undefined
 }
 
-export class TextSelection extends Watchable(Object) {
+export class TextSelection extends WatchableObject {
     // text
     private m_cursorStart: number = -1;
     private m_cursorAtBefore: boolean = false;
