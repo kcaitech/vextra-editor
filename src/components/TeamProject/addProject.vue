@@ -14,18 +14,20 @@
                     {{ t('Createteam.project_name') }}
                     <span>{{ t('Createteam.required') }}</span>
                 </div>
-                <input :style="{ backgroundColor: inputValue !== '' ? 'rgba(245, 245, 245, 1)' : '' }" ref="projectinput"
-                    type="text" :placeholder="t('Createteam.project_name_tips')" v-model="inputValue" maxlength="20"
-                    required>
+                <input
+                    :style="{ backgroundColor: inputValue !== '' ? 'rgba(245, 245, 245, 1)' : '', color: inputValue !== '' ? '#262626' : '' }"
+                    ref="projectinput" type="text" :placeholder="t('Createteam.project_name_tips')" v-model="inputValue"
+                    maxlength="20" required>
             </div>
             <div class="project-description">
                 <div class="title">
                     {{ t('Createteam.project_description') }}
                     <span>{{ t('Createteam.optional') }}</span>
                 </div>
-                <textarea :style="{ backgroundColor: textareaValue !== '' ? 'rgba(245, 245, 245, 1)' : '' }" name="" id=""
-                    cols="30" rows="10" :placeholder="t('Createteam.project_description_tips')" v-model="textareaValue"
-                    maxlength="120"></textarea>
+                <textarea
+                    :style="{ backgroundColor: textareaValue !== '' ? 'rgba(245, 245, 245, 1)' : '', color: textareaValue !== '' ? '#262626' : '' }"
+                    name="" id="" cols="30" rows="10" :placeholder="t('Createteam.project_description_tips')"
+                    v-model="textareaValue" maxlength="120"></textarea>
             </div>
         </div>
         <div class="addproject">
@@ -86,18 +88,31 @@ const close = () => {
 
 </script>
 <style lang="scss" scoped>
+@keyframes move {
+    from {
+        transform: translate(-50%, -20%);
+        opacity: 0;
+    }
+
+    to {
+        transform: translate(-50%, 0);
+        opacity: 1;
+    }
+}
+
 .card-container {
     position: absolute;
     width: 400px;
     top: 25%;
     left: 50%;
-    transform: translate(-50%, -25%);
+    transform: translate(-50%, 0);
     padding: 0 24px;
     background-color: rgba(255, 255, 255, 1);
     border-radius: 16px;
     border: 1px solid #F0F0F0;
     box-sizing: border-box;
     z-index: 1000;
+    animation: move 0.25s ease-in-out;
 
     .heard {
         display: flex;
@@ -108,7 +123,7 @@ const close = () => {
         .title {
             font-size: 16px;
             font-weight: 600;
-            color: rgba(61, 61, 61, 1);
+            color:#3D3D3D;
         }
 
         .close {
@@ -135,45 +150,24 @@ const close = () => {
         .project-description {
             display: flex;
             flex-direction: column;
-            gap: 8px;
-            margin: 12px 0;
+            margin: 0 0 12px 0;
 
             .title {
+                line-height: 34px;
                 font-size: 13px;
-                font-weight: 500;
+                color: #262626;
+                font-weight: 400;
             }
 
-            input {
-                padding: 7px 12px;
-                width: 100%;
-                height: 36px;
-                border: none;
-                outline-style: none;
-                border-radius: 6px;
-                font-size: 13px;
-                border: 1px solid rgba(245, 245, 245, 1);
-                background-color: rgba(245, 245, 245, 1);
-                box-sizing: border-box;
-
-                &:hover {
-                    background-color: rgba(235, 235, 235, 1);
-                }
-
-                &:focus {
-                    border: 1px solid #1878F5;
-                }
-            }
-
+            input,
             textarea {
                 padding: 7px 12px;
                 width: 100%;
-                height: 80px;
+                font-size: 13px;
+                color: #BFBFBF;
                 border: none;
                 outline-style: none;
                 border-radius: 6px;
-                resize: none;
-                font-size: 13px;
-                font-family: none;
                 border: 1px solid rgba(245, 245, 245, 1);
                 background-color: rgba(245, 245, 245, 1);
                 box-sizing: border-box;
@@ -184,7 +178,18 @@ const close = () => {
 
                 &:focus {
                     border: 1px solid #1878F5;
+                    background-color: rgba(245, 245, 245, 1) !important;
                 }
+            }
+
+            input {
+                height: 36px;
+            }
+
+            textarea {
+                height: 80px;
+                resize: none;
+                font-family: none;
             }
         }
     }
@@ -194,6 +199,7 @@ const close = () => {
         align-items: center;
         justify-content: center;
         height: 64px;
+        margin-bottom: 8px;
 
         button {
             cursor: pointer;

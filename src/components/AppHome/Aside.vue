@@ -633,7 +633,16 @@ onUnmounted(() => {
                                                 <svg-icon icon-class="down" />
                                             </div>
                                             <div class="receive">
-                                                <svg-icon icon-class="receive-fill" />
+                                                <svg t="1702388143460" class="icon"
+                                                    viewBox="0 0 1024 1024" version="1.1" xmlns="http://www.w3.org/2000/svg"
+                                                    p-id="20737" width="200" height="200">
+                                                    <path
+                                                        d="M896 896l-45.44-45.12A63.808 63.808 0 0 1 896 832a64 64 0 0 0 64-64V128a64 64 0 0 0-64-64H256a64 64 0 0 0-64 64v5.44c0 17.6-7.04 33.536-18.56 45.12L128 133.44V128A128 128 0 0 1 256 0h640a128 128 0 0 1 128 128v640a128 128 0 0 1-128 128zM64 256v640a64 64 0 0 0 64 64h640a64 64 0 0 0 64-64V256a64 64 0 0 0-64-64H128a64 64 0 0 0-64 64z m704-128a128 128 0 0 1 128 128v640a128 128 0 0 1-128 128H128A128 128 0 0 1 0 896V256a128 128 0 0 1 128-128h640z"
+                                                        fill="#5A5A5A" p-id="20738"></path>
+                                                    <path
+                                                        d="M160 256h384a32 32 0 0 1 0 64H160a32 32 0 0 1 0-64z m576 64a32 32 0 1 1 0-64 32 32 0 0 1 0 64zM64 384h768v64H64v-64z"
+                                                        fill="#5A5A5A" p-id="20739"></path>
+                                                </svg>
                                             </div>
                                             <div class="name">{{ t('Createteam.sharetip') }}</div>
                                         </div>
@@ -745,13 +754,10 @@ onUnmounted(() => {
             </el-scrollbar>
         </el-col>
     </el-row>
-    <transition name="nested" :duration="550">
-        <div v-if="showoverlay" class="overlay">
-            <addTeam v-if="teamcard" class="inner" @close="showoverlay = false; teamcard = false" />
-            <addProject v-if="projectcard" class="inner" :teamid="teamid"
-                @close="showoverlay = false; projectcard = false" />
-        </div>
-    </transition>
+    <div v-if="showoverlay" class="overlay">
+        <addTeam v-if="teamcard" class="inner" @close="showoverlay = false; teamcard = false" />
+        <addProject v-if="projectcard" class="inner" :teamid="teamid" @close="showoverlay = false; projectcard = false" />
+    </div>
     <TeamProjectMenu v-if="showProjecrMenu" :items="menuItem" :data="projectItem" :top="top" :left="left" @close="closeMenu"
         ref="rightMenuEl" @delProject="onDelProject" @exitProject="onExitProject" @cancelFixed="menucancelFixed"
         @reName="inputCusname" @showMembergDialog="showMembergDialog" @projectSetting="showSettingDialog">
@@ -806,35 +812,6 @@ a {
 :deep(.el-collapse-item__wrap) {
     background-color: rgba(250, 250, 250, 1);
     border: none;
-}
-
-.nested-enter-active,
-.nested-leave-active {
-    transition: all 0.3s ease-in-out;
-}
-
-.nested-leave-active {
-    transition-delay: 0.1s;
-}
-
-.nested-enter-from,
-.nested-leave-to {
-    opacity: 0;
-}
-
-.nested-enter-active .inner,
-.nested-leave-active .inner {
-    transition: all 0.3s ease-in-out;
-}
-
-.nested-enter-active .inner {
-    transition-delay: 0.1s;
-}
-
-.nested-enter-from .inner,
-.nested-leave-to .inner {
-    top: calc(50% - 50px);
-    opacity: 0.5;
 }
 
 .overlay {

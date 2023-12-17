@@ -233,10 +233,12 @@ const flattenShape = () => {
             align-items: center;
             color: gray;
             transition: 0.1s;
+            margin: 0;
+            padding: 0;
 
             >svg {
-                height: 20px;
-                width: 20px;
+                height: 18px;
+                width: 18px;
             }
         }
 

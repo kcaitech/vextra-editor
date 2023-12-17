@@ -1,9 +1,7 @@
 <script lang="ts" setup>
 import { watch, ref, Ref, inject, computed, nextTick } from 'vue';
-import { Folder } from '@element-plus/icons-vue';
 import * as team_api from '@/request/team';
 import { useI18n } from 'vue-i18n';
-import CloseIcon from '../common/CloseIcon.vue';
 
 interface data {
     document: {
@@ -72,6 +70,7 @@ const targetProject = (project: any) => {
 }
 watch(activeNames, (v) => {
     active.value = '';
+
 })
 const moveProjectTarget = async (params: any) => {
     try {
@@ -127,69 +126,75 @@ const onactiveNames = (id: string) => {
     }
 }
 
-const changemargin = () => {
-    nextTick(() => {
-        let el = document.querySelectorAll('.el-dialog__header')
-        for (let i = 0; i < el.length; i++) {
-            (el[i] as HTMLElement).style.marginRight = '0px'
-        }
-    })
-}
+const disabled = computed(() => {
+    return activeNames.value !== '2' && activeNames.value !== '1' && pList.value.length === 0 ||
+        activeNames.value === '1' && shareProject.value.length === 0
+})
+
 </script>
 
 <template>
-    <el-dialog v-model="isshow" width="550px" align-center :close-on-click-modal="false" :before-close="handleClose"
-        :show-close="false" @open="changemargin">
+    <el-dialog class="movefile" v-model="isshow" width="550px" align-center :close-on-click-modal="false"
+        :before-close="handleClose" :show-close="false">
         <template #header>
             <div class="my-header">
                 <div class="title">{{ title }}</div>
-                <CloseIcon :size="20" @close="handleClose" />
+                <div class="close" @click.stop="handleClose">
+                    <svg-icon icon-class="close"></svg-icon>
+                </div>
             </div>
         </template>
         <div class="context">
-            <div class="name">
+            <div class="filename">
                 <span>{{ t('moveprojectfill.name') }}</span>
-                <span style="font-weight: bold; margin-left: 5px;">{{ props.doc!.document.name }}</span>
+                <span>{{ props.doc!.document.name }}</span>
             </div>
-            <div class="name">
+            <div class="filelocation">
                 <span>{{ t('moveprojectfill.location') }}</span>
-                <span v-if="projectItem" style="font-weight: bold;margin-left: 5px;">{{ teamName + ' / ' +
-                    projectItem.project.name }}</span>
-                <span v-else style="font-weight: bold;margin-left: 5px;">{{ t('moveprojectfill.my_file') }}</span>
+                <span v-if="projectItem">{{ teamName + ' / ' + projectItem.project.name }}</span>
+                <span v-else>{{ t('moveprojectfill.my_file') }}</span>
             </div>
-            <div>
+            <div class="tips">
                 {{ t('moveprojectfill.move_to') }}
             </div>
             <div class="conteiner">
                 <div class="target_fill">
-                    <el-scrollbar height="290px">
-                        <div class="team-title" @click="onactiveNames('2')">
-                            <div class="left" :class="{ 'is_active': activeNames === '2' }">
-                                <el-icon style="margin-right: 10px;">
-                                    <Folder />
-                                </el-icon>
+                    <el-scrollbar>
+                        <div class="team-title" :class="{ 'is_active': activeNames === '2' }"
+                            @click.stop="onactiveNames('2')">
+                            <div class="left">
+                                <!-- <svg-icon icon-class="file-normal"></svg-icon> -->
                                 <div class="name">{{ t('moveprojectfill.my_file') }}</div>
                             </div>
                         </div>
-                        <div class="team-title" @click="onactiveNames('1')" v-if="shareProject.length > 0">
-                            <div class="left" :class="{ 'is_active': activeNames === '1' }">
-                                <div class="receive">
-                                    <svg-icon icon-class="receive-fill" />
-                                </div>
+                        <div class="team-title" :class="{ 'is_active': activeNames === '1' }"
+                            @click.stop="onactiveNames('1')" v-if="shareProject.length > 0">
+                            <div class="left">
+                                <!-- <svg :style="{ padding: '4px' }" t="1702388143460" class="icon" viewBox="0 0 1024 1024"
+                                    version="1.1" xmlns="http://www.w3.org/2000/svg" p-id="20737" width="200" height="200">
+                                    <path
+                                        d="M896 896l-45.44-45.12A63.808 63.808 0 0 1 896 832a64 64 0 0 0 64-64V128a64 64 0 0 0-64-64H256a64 64 0 0 0-64 64v5.44c0 17.6-7.04 33.536-18.56 45.12L128 133.44V128A128 128 0 0 1 256 0h640a128 128 0 0 1 128 128v640a128 128 0 0 1-128 128zM64 256v640a64 64 0 0 0 64 64h640a64 64 0 0 0 64-64V256a64 64 0 0 0-64-64H128a64 64 0 0 0-64 64z m704-128a128 128 0 0 1 128 128v640a128 128 0 0 1-128 128H128A128 128 0 0 1 0 896V256a128 128 0 0 1 128-128h640z"
+                                        :fill="activeNames === '1' ? 'rgb(24, 120, 245)' : '#5A5A5A'" p-id="20738"></path>
+                                    <path
+                                        d="M160 256h384a32 32 0 0 1 0 64H160a32 32 0 0 1 0-64z m576 64a32 32 0 1 1 0-64 32 32 0 0 1 0 64zM64 384h768v64H64v-64z"
+                                        :fill="activeNames === '1' ? 'rgb(24, 120, 245)' : '#5A5A5A'" p-id="20739"></path>
+                                </svg> -->
                                 <div class="name">{{ t('moveprojectfill.share_Project') }}</div>
                             </div>
                         </div>
                         <template v-for="(data) in teamData" :key="data.team.id">
-                            <div class="team-title" @click="onactiveNames(data.team.id)" v-if="data.self_perm_type > 0">
-                                <div class="left" :class="{ 'is_active': activeNames === data.team.id }">
-                                    <div class="team-avatar">
+                            <div class="team-title" :class="{ 'is_active': activeNames === data.team.id }"
+                                @click.stop="onactiveNames(data.team.id)">
+                                <!-- v-if="data.self_perm_type > 0" 移除此判断，团队只读，但项目可以是可编辑-->
+                                <div class="left">
+                                    <!-- <div class="team-avatar">
                                         <div v-if="data.team.avatar.includes('http')" class="img">
                                             <img :src="data.team.avatar" alt="team avatar">
                                         </div>
                                         <div v-else class="text">
                                             <span>{{ data.team.name.slice(0, 1) }}</span>
                                         </div>
-                                    </div>
+                                    </div> -->
                                     <div class="name">{{ data.team.name }}</div>
                                 </div>
                             </div>
@@ -197,314 +202,321 @@ const changemargin = () => {
                     </el-scrollbar>
                 </div>
                 <div class="target_project">
-                    <el-scrollbar height="290px">
-                        <div class="project" v-for="(item, i) in pList" :key="i" @click="targetProject(item)">
-                            <div :class="{ 'is_active': item.project.id === active }">
-                                <el-icon style="margin-right: 10px;">
-                                    <Folder />
-                                </el-icon>
+                    <el-scrollbar>
+                        <div v-for="(item, i) in pList" class="project" :class="{ 'is_active': item.project.id === active }"
+                            :key="i" @click.stop="targetProject(item)">
+                            <div v-if="item.self_perm_type >= 3" class="left">
                                 <div class="name">{{ item.project.name }}</div>
                             </div>
                         </div>
-                        <div class="project" v-if="activeNames === '2'">
-                            <div :class="{ 'is_active': activeNames === '2' }">
-                                <el-icon style="margin-right: 10px;">
-                                    <Folder />
-                                </el-icon>
+                        <div class="teamlocationtips"
+                            v-if="activeNames !== '2' && activeNames !== '1' && pList.length === 0">没有可移动的位置</div>
+                        <div class="project" :class="{ 'is_active': activeNames === '2' }" v-if="activeNames === '2'">
+                            <div class="left">
                                 <div>{{ t('moveprojectfill.private_file') }}</div>
                             </div>
                         </div>
                         <template v-for="(item, index) in shareProject" :key="index">
-                            <div class="project" v-if="activeNames === '1'" @click="targetProject(item)">
-                                <div :class="{ 'is_active': item.project.id === active }">
-                                    <el-icon style="margin-right: 10px;">
-                                        <Folder />
-                                    </el-icon>
+                            <div v-if="activeNames === '1' && item.self_perm_type >= 3" class="project"
+                                :class="{ 'is_active': item.project.id === active }" @click.stop="targetProject(item)">
+                                <div class="left">
                                     <div class="name">{{ item.project.name }}</div>
                                 </div>
                             </div>
+                            <div class="projectlocationtips"
+                                v-if="activeNames === '1' && shareProject.filter(item => item.self_perm_type >= 3).length === 0">
+                                没有可移动的位置</div>
                         </template>
                     </el-scrollbar>
                 </div>
             </div>
         </div>
         <template #footer>
-            <div class="dialog-footer">
-                <el-button class="quit" :class="{ opacity: !active && activeNames !== '2' }" @click="quitProject"
-                    style="background-color: #9775fa; color: #fff;">{{ confirmBtn
-                    }}</el-button>
-                <el-button class="quit" style="background-color: #fff; color: #000;" @click="handleClose">
+            <div class="movefooter">
+                <button class="bnt_confirm" :class="{ opacity: !active && activeNames !== '2' }" type="button"
+                    @click.stop="quitProject" :disabled="disabled">
+                    {{ confirmBtn }}
+                </button>
+                <button class="bnt_cancel" type="button" @click.stop="handleClose">
                     {{ t('moveprojectfill.cancel') }}
-                </el-button>
+                </button>
+
             </div>
         </template>
     </el-dialog>
 </template>
 
-<style scoped lang="scss">
-:deep(.el-collapse) {
-    border: none;
-    margin: 0 10px;
+<style lang="scss">
+.opacity {
+    opacity: 0.6;
 }
 
-:deep(.el-collapse-item__header) {
-    border: none;
-    height: 40px;
-    border-radius: 4px;
-    margin-top: 5px;
-}
+.movefile {
+    padding: 0 24px;
+    margin: 0;
+    border-radius: 16px;
+    box-sizing: border-box;
 
-:deep(.el-collapse .el-collapse-item__arrow) {
-    display: none;
-}
+    .el-dialog__header {
+        padding: 0;
+        margin: 0;
 
-:deep(.el-collapse-item__header:hover) {
-    background-color: transparent;
-    cursor: pointer;
-
-    .right {
-        visibility: visible;
-    }
-}
-
-:deep(.el-collapse-item__wrap) {
-    border: none;
-}
-
-:deep(.el-scrollbar) {
-    margin-right: -10px;
-}
-.my-header {
-    display: flex;
-    justify-content: space-between;
-    align-items: center;
-
-    .title {
-        color: #3D3D3D;
-        font-weight: 600;
-    }
-}
-
-h6 {
-    width: 100%;
-    display: flex;
-    justify-content: center;
-    margin-right: 10px;
-}
-
-.context {
-    font-size: 14px;
-    color: #000;
-    padding-right: 10px;
-
-    >.name {
-        display: flex;
-        align-items: center;
-        margin-bottom: 10px;
-    }
-
-    .conteiner {
-        display: flex;
-        margin-top: 10px;
-        width: 100%;
-        height: 300px;
-        border: 1px solid rgba(0, 0, 0, .5);
-        border-radius: 4px;
-
-        .target_fill {
-            padding: 5px 10px;
-            width: 40%;
-            border-right: 1px solid rgba(0, 0, 0, .5);
-            box-sizing: border-box;
-        }
-
-        .target_project {
-            width: 60%;
-            ;
-            padding: 5px 10px;
-            box-sizing: border-box;
-        }
-    }
-}
-
-.team-title {
-    width: 100%;
-    height: 40px;
-    display: flex;
-    justify-content: space-between;
-    align-items: center;
-    border-radius: 4px;
-    margin-bottom: 5px;
-
-    .left {
-        display: flex;
-        align-items: center;
-        width: 100%;
-        padding-left: 8px;
-        margin-right: 10px;
-        border-radius: 4px;
-        height: 100%;
-
-        &:hover {
-            background-color: #f3f0ff;
-
-            .right {
-                visibility: visible;
-            }
-        }
-
-        .down {
+        .my-header {
             display: flex;
+            justify-content: space-between;
             align-items: center;
-            justify-content: center;
-            height: 16px;
-            width: 16px;
-            margin-right: 4px;
-            margin-left: 2px;
-            transition: .3s;
+            height: 64px;
 
-
-            svg {
-                width: 10px;
-                height: 10px;
+            .title {
+                font-size: 16px;
+                font-weight: 600;
             }
-        }
 
-        .team-avatar {
-            width: 24px;
-            height: 24px;
-            min-width: 24px;
-            background-color: #9775fa;
-            text-align: center;
-            border-radius: 50%;
-            overflow: hidden;
-            display: flex;
-            align-items: center;
-            justify-content: center;
-            margin-right: 6px;
+            .close {
+                width: 16px;
+                height: 16px;
+                padding: 4px;
+                border-radius: 6px;
 
-            .img {
-                width: 100%;
-                height: 100%;
-                line-height: 0;
+                &:hover {
+                    background-color: rgb(243, 243, 245);
+                    cursor: pointer;
+                }
 
-                img {
+                svg {
                     width: 100%;
                     height: 100%;
-                    object-fit: cover;
-                }
-            }
-
-            .text {
-                display: flex;
-
-                span {
-                    font-size: 12px;
-                    font-weight: 600;
-                    color: white;
                 }
             }
         }
+    }
 
-        .name {
+    .el-dialog__body {
+        padding: 0;
+        margin: 0;
+
+        .context {
+
+
+            .filename,
+            .filelocation {
+                display: flex;
+                align-items: center;
+                gap: 8px;
+                font-size: 13px;
+                height: 38px;
+
+                span:first-child {
+                    min-width: 65px;
+                    color: #8C8C8C;
+                }
+
+                span:nth-child(2) {
+                    white-space: nowrap;
+                    overflow: hidden;
+                    text-overflow: ellipsis;
+                    color: #000000;
+                    font-weight: 600;
+                }
+            }
+
+            .tips {
+                display: flex;
+                align-items: center;
+                height: 34px;
+                font-size: 13px;
+                color: #262626;
+                font-weight: 600;
+            }
+
+            .conteiner {
+                display: flex;
+                height: 348px;
+                border-radius: 6px;
+                border: 1px solid #EBEBEB;
+                box-sizing: border-box;
+
+                .target_fill {
+                    flex: 1;
+                    height: 348px;
+                    padding: 8px;
+                    border-right: 1px solid #EBEBEB;
+                    overflow: hidden;
+                    box-sizing: border-box;
+
+                    .team-title {
+                        display: flex;
+                        align-items: center;
+                        height: 40px;
+                        border-radius: 6px;
+                        padding: 0 0 0 8px;
+                        box-sizing: border-box;
+
+                        .left {
+                            display: flex;
+                            align-items: center;
+                            gap: 4px;
+                            overflow: hidden;
+
+                            svg {
+                                width: 24px;
+                                height: 24px;
+                                box-sizing: border-box;
+                            }
+
+                            .team-avatar {
+                                width: 24px;
+                                height: 24px;
+                                min-width: 24px;
+                                background-color: #3f00fc;
+                                text-align: center;
+                                border-radius: 50%;
+                                overflow: hidden;
+                                display: flex;
+                                align-items: center;
+                                justify-content: center;
+
+                                .img {
+                                    width: 100%;
+                                    height: 100%;
+                                    line-height: 0;
+
+                                    img {
+                                        width: 100%;
+                                        height: 100%;
+                                        object-fit: cover;
+                                    }
+                                }
+
+                                .text {
+                                    display: flex;
+
+                                    span {
+                                        font-size: 12px;
+                                        font-weight: 600;
+                                        color: white;
+                                    }
+                                }
+                            }
+
+                            .name {
+
+                                font-size: 13px;
+                                font-weight: 600;
+                                overflow: hidden;
+                                text-overflow: ellipsis;
+                                white-space: nowrap;
+                            }
+                        }
+                    }
+                }
+
+                .target_project {
+                    flex: 1;
+                    height: 348px;
+                    padding: 8px;
+                    overflow: hidden;
+                    box-sizing: border-box;
+
+                    .project {
+                        display: flex;
+                        align-items: center;
+                        height: 40px;
+                        border-radius: 6px;
+                        padding: 0 0 0 8px;
+                        box-sizing: border-box;
+
+                        .left {
+                            display: flex;
+                            align-items: center;
+                            gap: 4px;
+                            overflow: hidden;
+                        }
+
+                        .name {
+                            display: inline-block;
+                            overflow: hidden;
+                            text-overflow: ellipsis;
+                            white-space: nowrap;
+                        }
+
+                        &:hover {
+                            background-color: rgba(245, 245, 245, 1);
+                        }
+                    }
+
+                    .teamlocationtips,
+                    .projectlocationtips {
+                        font-size: 13px;
+                        font-weight: 600;
+                        display: flex;
+                        align-items: center;
+                        justify-content: center;
+                        height: 332px;
+                        opacity: 0.6;
+                    }
+                }
+            }
+        }
+    }
+
+    .el-dialog__footer {
+        padding: 0;
+        margin: 0;
+
+        .movefooter {
             display: flex;
             align-items: center;
-            overflow: hidden;
-            text-overflow: ellipsis;
-            white-space: nowrap;
-            height: 100%;
+            justify-content: center;
+            height: 64px;
+            gap: 16px;
+            margin: 8px 0;
+            button {
+                cursor: pointer;
+                font-size: 14px;
+                width: 100px;
+                height: 40px;
+                border: none;
+                border-radius: 6px;
+                box-sizing: border-box;
+            }
+
+            .bnt_confirm {
+                color: white;
+                background-color: rgba(24, 120, 245, 1);
+
+                &:hover {
+                    background-color: rgba(66, 154, 255, 1);
+                }
+
+                &:active {
+                    background-color: rgba(10, 89, 207, 1);
+                }
+
+                &:disabled {
+                    background-color: rgba(189, 226, 255, 1);
+                }
+            }
+
+            .bnt_cancel {
+                color: rgba(51, 51, 51, 1);
+                background-color: #FFFFFF;
+                border: 1px solid #F0F0F0;
+
+                &:hover {
+                    background-color: rgba(247, 247, 249, 1);
+                }
+
+                &:active {
+                    background-color: rgba(243, 243, 245, 1);
+                }
+            }
         }
     }
-}
-
-.project {
-    width: 100%;
-    display: flex;
-    align-items: center;
-    justify-content: space-between;
-    border-radius: 4px;
-    box-sizing: border-box;
-    cursor: pointer;
-    margin-bottom: 5px;
-    padding-right: 10px;
-
-    >div {
-        box-sizing: border-box;
-        display: flex;
-        align-items: center;
-        width: 100%;
-        height: 35px;
-        border-radius: 4px;
-        padding-left: 10px;
-        margin-right: 10px;
-
-        &:hover {
-            background-color: #f3f0ff;
-        }
-    }
-
-    .name {
-        display: inline-block;
-        overflow: hidden;
-        text-overflow: ellipsis;
-        white-space: nowrap;
-    }
-}
-
-.receive {
-    display: flex;
-    align-items: center;
-    justify-content: center;
-    margin: 0 5px;
-    width: 20px;
-    height: 100%;
-
-    >svg {
-        width: 16px;
-        height: 16px;
-    }
-}
-
-.opacity {
-    opacity: .5;
-}
-
-.dialog-footer {
-    display: flex;
-    align-items: center;
-    justify-content: center;
-}
-
-:deep(.el-button:focus, .el-button:hover) {
-    background-color: #9775fa;
-    border-color: #9775fa;
-    color: #fff;
-    outline: none;
-}
-
-:deep(.el-collapse-item__content) {
-    padding: 0;
-}
-
-:deep(.el-input__wrapper) {
-    height: 80%;
-    outline: none;
-    border: none;
-    box-shadow: none;
-    padding: 1px 5px;
-    border-radius: 0;
-    margin-right: 10px;
-    border-bottom: 1px solid #9775fa;
-    background-color: transparent;
-}
-
-:deep(.el-input__wrapper:hover) {
-    box-shadow: none;
 }
 
 .is_active {
-    font-weight: 600;
-    color: #9775fa;
-    background-color: #e5dbff !important;
+    color: rgba(24, 120, 245, 1);
+    background-color: rgba(24, 120, 245, 0.1) !important;
 }
 </style>

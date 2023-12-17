@@ -10,8 +10,8 @@
                     }}</strong>）</span>
                 </p>
                 <p>{{ t('joinTeam.jurisdiction') }}</p>
-                <button v-if="showjoinbnt" type="button"
-                    @click.stop="joinTeam(teaminfo?.id, undefined)">{{ t('joinTeam.jointeamtipsB') }}</button>
+                <button v-if="showjoinbnt" type="button" @click.stop="joinTeam(teaminfo?.id, undefined)">{{
+                    t('joinTeam.jointeamtipsB') }}</button>
                 <p v-else style="font-size: 18px;">{{ t('joinTeam.jointeamtipsC') }}{{ time
                 }}s{{ t('joinTeam.jointeamtipsC1') }}</p>
             </div>
@@ -53,16 +53,14 @@ const Getteaminfo = async (teamid: string) => {
                     return router.push({ path: '/apphome/teams/' + teamid });
                 }
             }
-        console.log(code, data,'ddd');
-
             teaminfo.value = data
             switchstate.value = teaminfo.value?.invited_switch
         } else {
             ElMessage.error(message)
-            router.push({name:'apphome'})
+            router.push({ name: 'apphome' })
         }
     } catch (error) {
-        
+
     }
 }
 
@@ -73,7 +71,7 @@ const tohome = (() => {
         if (time.value === 0) {
             router.push({ name: "apphome" })
             sessionStorage.setItem('index', '1');
-            if (timer) clearInterval(timer)
+            clearInterval(timer)
         }
     }, 1000)
 })
@@ -154,4 +152,5 @@ onMounted(() => {
             }
         }
     }
-}</style>
+}
+</style>

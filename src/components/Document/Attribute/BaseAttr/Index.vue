@@ -522,10 +522,12 @@ onUnmounted(() => {
 
             <IconText class="td frame" ticon="H" :text="typeof (h) === 'number' ? h.toFixed(fix) : h" @onchange="onChangeH"
                       :disabled="model_disable_state.height"  :context="context"/>
-            <div class="lock" @click="lockToggle" :class="{ 'active': isLock }">
-                <svg-icon v-if="!s_length" :icon-class="isLock ? 'lock' : 'unlock'" :class="{ 'active': isLock }"></svg-icon>
+            <div class="lock" v-if="!s_length" @click="lockToggle" :class="{ 'active': isLock }">
+                <svg-icon :icon-class="isLock ? 'lock' : 'unlock'" :class="{ 'active': isLock }"></svg-icon>
             </div>
-
+            <div class="lock grayed" style="background-color: #F4F5F5;opacity: 0.4;" v-else>
+                <svg-icon :icon-class="isLock ? 'lock' : 'unlock'" :class="{ 'active': isLock }"></svg-icon>
+            </div>
         </div>
         <div class="tr" :reflush="reflush">
             <IconText class="td angle" svgicon="angle" :text="`${rotate}` + '°'" @onchange="onChangeRotate"

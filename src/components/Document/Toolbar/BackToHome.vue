@@ -172,15 +172,18 @@ onUnmounted(() => {
                 <Saving></Saving>
             </div>
         </div>
-        <span v-if="isLable" style="margin-left: 10px; color: #fff; font-size: 12px; width: 35%">【开发模式】</span>
+        <div class="model">
+            <span v-if="isLable" style="color: #fff; font-size: 12px">【开发模式】</span>
+        </div>
     </div>
 </template>
 
 <style scoped lang="scss">
 .container {
+    display: flex;
     align-items: center;
-    justify-content: space-around;
-    width: 116px;
+    justify-content: space-between;
+    width: auto;
     height: 32px;
 
     .home {
@@ -194,8 +197,8 @@ onUnmounted(() => {
         border-radius: 4px;
 
         > svg {
-            width: 32px;
-            height: 32px;
+            width: 18px;
+            height: 18px;
             color: #FFFFFF;
         }
     }
@@ -205,13 +208,11 @@ onUnmounted(() => {
     }
 
     .rename {
-        width: 224px;
+        max-width: 224px;
         height: 52px;
         flex: 1;
-        margin-left: 64px;
-        margin-top: -44px;
         box-sizing: border-box;
-        padding: 18px 8px 18px 8px;
+        padding: 16px 8px;
 
         .save {
             width: 8px;
@@ -221,7 +222,7 @@ onUnmounted(() => {
         span {
             display: block;
             max-width: 210px;
-            height: 16px;
+            height: 25px;
             color: #ffffff;
             cursor: pointer;
             overflow: hidden;
@@ -234,7 +235,7 @@ onUnmounted(() => {
         input {
             display: block;
             max-width: 210px;
-            height: 16px;
+            height: 18px;
             border: none;
             outline: none;
             background-color: transparent;
@@ -244,5 +245,10 @@ onUnmounted(() => {
         }
     }
 
+    .model {
+        flex: 0 0 72px;
+        display: flex;
+        align-items: center;
+    }
 }
 </style>

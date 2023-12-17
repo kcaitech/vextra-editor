@@ -17,8 +17,8 @@ const docID = (route.query.id as string)
 const props = defineProps<Props>();
 const showFileShare = ref<boolean>(false);
 const pageHeight = ref(0)
-const shareSwitch = ref(true)
-const selectValue = ref(1)
+const shareSwitch = ref<boolean>(true)
+const selectValue = ref<number>(1)
 const userInfo = ref<UserInfo | undefined>()
 const docInfo = ref<DocInfo>()
 const projectPerm = ref()
@@ -70,7 +70,7 @@ const getPageHeight = () => {
 const getSelectValue = (val: string) => {
   documentInfo(val).then((res: any) => {
     if (res && res.document) {
-      selectValue.value = res.document.doc_type !== 0 ? res.document.doc_type : res.document.doc_type
+      selectValue.value = res.document.doc_type
     }
   })
 }

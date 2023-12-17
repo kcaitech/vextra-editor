@@ -5,7 +5,7 @@ import Design from "@/components/Document/Attribute/Design.vue";
 import ResourceTab from "@/components/Document/Navigation/ResourceTab.vue";
 import { useI18n } from 'vue-i18n';
 import { Perm } from "@/context/workspace";
-import { Tool } from "@/context/tool";
+import { Action, Tool } from "@/context/tool";
 import Lable from './Lable/index.vue';
 const { t } = useI18n();
 
@@ -83,6 +83,12 @@ const tool_watcher = (t: number) => {
         }
     }
 }
+const stopMouseDown = (e: MouseEvent) => {
+    const action = props.context.tool.action;
+    if (action === Action.AddComment) {
+        e.stopPropagation();
+    }
+}
 onMounted(() => {
     props.context.tool.watch(tool_watcher);
     init();
@@ -94,12 +100,12 @@ onUnmounted(() => {
 </script>
 
 <template>
-    <div class="tab-container">
+    <div class="tab-container" @mouseup="stopMouseDown">
         <template v-if="!isLable">
             <div ref="controllerRef" class="controller">
                 <div v-for="(i, index) in tabs" :class="{ tab: true, active: currentTab === i.id }" :key="index"
                     :id="`tabs-id-${i.id}`" @click="toggle(i.id)"
-                     :style="{ color: currentTab === i.id ? '#000000' : '#333333' }">
+                    :style="{ color: currentTab === i.id ? '#000000' : '#333333' }">
                     {{ i.title }}
                 </div>
                 <div class="underline"

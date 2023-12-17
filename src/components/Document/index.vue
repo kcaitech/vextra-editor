@@ -12,7 +12,7 @@ import { Document, importDocument, Repository, Page, CoopRepository, IStorage } 
 import { SCREEN_SIZE } from '@/utils/setting';
 import * as share_api from '@/request/share'
 import * as user_api from '@/request/users'
-import { onBeforeRouteUpdate, useRoute } from 'vue-router';
+import { useRoute } from 'vue-router';
 import { router } from '@/router';
 import { useI18n } from 'vue-i18n';
 import { Warning } from '@element-plus/icons-vue';
@@ -324,14 +324,6 @@ const getUserInfo = async () => {
     localStorage.setItem('userId', data.id)
   }
 }
-
-onBeforeRouteUpdate((to, form, next) => {
-  if (to.query.id?.includes(' ') || to.query.id?.includes('%20')) {
-    router.go(0)
-  } else {
-    next()
-  }
-})
 
 //获取文档信息
 const getDocumentInfo = async () => {
@@ -748,7 +740,7 @@ onUnmounted(() => {
   display: flex;
   flex-flow: row nowrap;
   width: 100%;
-  height: 52px;
+  height: 46px;
   background: var(--theme-color);
   padding: 10px 8px;
   box-sizing: border-box;
