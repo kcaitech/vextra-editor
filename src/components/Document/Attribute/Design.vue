@@ -73,7 +73,7 @@ const WITH_SHADOW = [
 const WITH_OPACITY = [
     ShapeType.Cutout,
     ShapeType.Table,
-    ShapeType.TableCell,
+    ShapeType.TableCell
 ]
 const shapeType = ref();
 const textShapes = ref<Shape[]>([]);
