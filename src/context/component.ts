@@ -1,7 +1,7 @@
-import {Shape, Variable, Watchable} from "@kcdesign/data";
+import {Shape, Variable, WatchableObject} from "@kcdesign/data";
 import {Context} from ".";
 
-export class Component extends Watchable(Object) {
+export class Component extends WatchableObject {
     static BRIDGE_CHANGE = 1;
     static WONDER_CHANGE = 2;
     static CARD_TYPE_CHANGE = 5;

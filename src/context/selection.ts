@@ -6,7 +6,7 @@ import {
     SymbolShape,
     TableShape,
     TextShape,
-    Watchable
+    WatchableObject
 } from "@kcdesign/data";
 import { Document } from "@kcdesign/data";
 import { Page } from "@kcdesign/data";
@@ -65,7 +65,7 @@ type TextShapeLike = Shape & { text: Text }
 export type ActionType = 'translate' | 'scale' | 'rotate';
 export type TableArea = 'invalid' | 'body' | 'content' | 'hover';
 
-export class Selection extends Watchable(Object) implements ISave4Restore {
+export class Selection extends WatchableObject implements ISave4Restore {
 
     static CHANGE_PAGE = 1;
     static CHANGE_SHAPE = 2;
@@ -116,10 +116,10 @@ export class Selection extends Watchable(Object) implements ISave4Restore {
         this.m_scout = scout(context);
     }
 
-    get artboarts() {
-        const abs = Array.from(this.m_artboart_list.values());
-        return abs;
-    }
+    // get artboarts() {
+    //     const abs = Array.from(this.m_artboart_list.values());
+    //     return abs;
+    // }
 
     get commentId() {
         return this.m_comment_id;
@@ -461,7 +461,7 @@ export class Selection extends Watchable(Object) implements ISave4Restore {
     get unionshape() {
         if (this.selectedShapes.length === 1) {
             const xs = this.selectedShapes[0];
-            if (xs.type === ShapeType.Symbol && xs.isSymbolUnionShape) {
+            if (xs.type === ShapeType.SymbolUnion) {
                 return xs as SymbolShape;
             } else {
                 return false;
@@ -474,7 +474,7 @@ export class Selection extends Watchable(Object) implements ISave4Restore {
     get symbolstate() {
         if (this.selectedShapes.length === 1) {
             const s = this.selectedShapes[0];
-            if (s.type === ShapeType.Symbol && s.parent?.isSymbolUnionShape) {
+            if (s.type === ShapeType.SymbolUnion) {
                 return s as SymbolShape;
             } else {
                 return false;

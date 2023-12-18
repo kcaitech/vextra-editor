@@ -1,11 +1,11 @@
-import {Shape, Watchable} from "@kcdesign/data";
+import {Shape, WatchableObject} from "@kcdesign/data";
 
 interface TextSelection {
     shape: Shape
     slice: [number, number][]
 }
 
-export class Navi extends Watchable(Object) {
+export class Navi extends WatchableObject {
     static SEARCH = 1;
     static SEARCH_FINISHED = 2;
     static SEARCH_PRE = 3;

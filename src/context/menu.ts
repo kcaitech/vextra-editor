@@ -1,4 +1,4 @@
-import { Watchable } from "@kcdesign/data";
+import { WatchableObject } from "@kcdesign/data";
 import { Context } from ".";
 import {v4} from "uuid";
 export enum CellMenu {
@@ -7,7 +7,7 @@ export enum CellMenu {
   selectCol = 'col' //选中整列单元格
 }
 
-export class Menu extends Watchable(Object) {
+export class Menu extends WatchableObject {
   static SHUTDOWN_MENU = 1;
   static SHUTDOWN_POPOVER = 2;
   static REMOVE_COLOR_PICKER = 3;
@@ -72,7 +72,7 @@ export class Menu extends Watchable(Object) {
     this.notify(Menu.CHANGE_USER_CURSOR);
   }
   setSplitCell(mount?: string) {
-    this.m_split_cell = mount || '';
+    // this.m_split_cell = mount || '';
     if (mount) {
       this.notify(Menu.OPEN_SPLIT_CELL, mount);
     }

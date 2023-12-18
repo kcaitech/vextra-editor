@@ -140,9 +140,9 @@ export function update_dot3(ps: { x: number, y: number, type?: CtrlElementType }
     return [path_obj_1, path_obj_3];
 }
 
-export function get_path_by_point(s: Shape, matrix: Matrix, set: Set<number>) {
+export function get_path_by_point(s: PathShape, matrix: Matrix, set: Set<number>) {
     const points = [];
-    const raw_p = (s as PathShape).points;
+    const raw_p = (s).points;
     const m = new Matrix(matrix);
     if (!raw_p?.length) {
         return [];
@@ -155,8 +155,8 @@ export function get_path_by_point(s: Shape, matrix: Matrix, set: Set<number>) {
     return points;
 }
 
-export function get_conact_by_point(s: Shape, matrix: Matrix) {
-    const points = [], raw_p = (s as PathShape).points, m = new Matrix(matrix);
+export function get_conact_by_point(s: PathShape, matrix: Matrix) {
+    const points = [], raw_p = s.points, m = new Matrix(matrix);
     if (!raw_p || !raw_p.length) return [];
     m.preScale(s.frame.width, s.frame.height);
     const len = raw_p.length - 1;
