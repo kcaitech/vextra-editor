@@ -29,10 +29,12 @@ export class ArtboradDom extends (ArtboradView) {
     render(): number {
         const version: number = super.render();
         if (version !== this.m_save_version || !this.el) {
-            elpatch(this, this.m_save_render);
+            elpatch(this, this.m_save_render); // 这里才转化为html或者svg节点
             this.m_save_version = version;
             this.m_save_render.reset(this.eltag, this.elattr, this.elchilds);
         }
+        // 当前是图片且没有修改要更新时
+        // todo
         return version;
     }
 
@@ -41,8 +43,11 @@ export class ArtboradDom extends (ArtboradView) {
     imageel?: HTMLElement | SVGElement;
     m_save_image_props: any;
 
-    switchIntoImage(): boolean {
-        if (!(this.el && (this.m_image_version !== this.m_save_version || this.m_childs_changed))) {
+    switchIntoImage(force: boolean): boolean {
+        if (!this.el) {
+            return false;
+        }
+        if (!((this.m_image_version !== this.m_save_version || this.m_childs_changed || force))) {
             return false;
         }
         //     const svg = exportInnerSvg(props.data);
@@ -53,13 +58,15 @@ export class ArtboradDom extends (ArtboradView) {
 
         // const startTime = Date.now();
 
-        const svg = this.el.outerHTML;
-        const href = "data:image/svg+xml," + ((svg.replaceAll("#", "%23")));
         const frame = this.frame;
         if (!this.imageel) this.imageel = createElement('image');
 
         const imageel = this.imageel;
-        setAttribute(imageel, "href", href);
+        if (this.m_image_version !== this.m_save_version || this.m_childs_changed) {
+            const svg = this.el.outerHTML;
+            const href = "data:image/svg+xml," + ((svg.replaceAll("#", "%23")));
+            setAttribute(imageel, "href", href);
+        }
 
         const props: any = {};
         props.x = frame.x;

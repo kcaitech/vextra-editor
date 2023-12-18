@@ -22,6 +22,7 @@ export class PageDom extends (PageView) {
     bind(node: HTMLElement /* old, for reuse */) { // 
         if (this.el) throw new Error("already binded");
         this.el = node;
+        this.m_first_bind = true;
     }
 
     unbind() {
@@ -48,11 +49,12 @@ export class PageDom extends (PageView) {
 
     m_has_image: boolean = false;
     m_last_focusid: string | undefined;
+    m_first_bind: boolean = false;
+
     onBeforeRender() {
         if (!this.m_has_image) {
             return;
         }
-
         if (this.nodeCount < MAX_NODE_SUPPORT / 2) {
             for (let i = 0, len = this.m_children.length; i < len; i++) {
                 const c = this.m_children[i];
@@ -72,7 +74,6 @@ export class PageDom extends (PageView) {
                 }
             }
         }
-
     }
 
     onRenderIdle(): boolean {
@@ -86,9 +87,11 @@ export class PageDom extends (PageView) {
         const frame_time = 40;
         const startTime = Date.now();
 
+        const force = this.m_first_bind;
+        this.m_first_bind = false;
         for (let i = 0, len = this.m_children.length; i < len; i++) {
             const c = this.m_children[i];
-            if (c instanceof ArtboradDom && c.id !== focusid && c.switchIntoImage()) {
+            if (c instanceof ArtboradDom && c.id !== focusid && c.switchIntoImage(force)) {
                 const endTime = Date.now();
                 if (endTime - startTime > frame_time) {
                     return true;
