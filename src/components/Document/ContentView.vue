@@ -399,7 +399,7 @@ function onMouseUp(e: MouseEvent) {
 
 //移动shape时保存shape身上的评论坐标
 const saveShapeCommentXY = () => {
-    const shapes = comment.value.commentShape
+    const shapes = props.context.comment.commentShape
     const sleectShapes = flattenShapes(shapes)
     const commentList = props.context.comment.pageCommentList
     sleectShapes.forEach((item: any) => {
@@ -409,7 +409,7 @@ const saveShapeCommentXY = () => {
             }
         })
     })
-    comment.value.editShapeComment(false, undefined)
+    props.context.comment.editShapeComment(false, [])
 }
 
 // mouseleave

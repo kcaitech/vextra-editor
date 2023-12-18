@@ -10,6 +10,7 @@ import * as comment_api from '@/request/comment';
 import { Selection } from '@/context/selection';
 import { Comment } from '@/context/comment';
 import { DocCommentOpData, DocCommentOpType } from "@/communication/modules/doc_comment_op"
+import { d } from '@kcdesign/data/dist/data/utils';
 type CommentViewEl = InstanceType<typeof CommentPopup>;
 const props = defineProps<{
     context: Context
@@ -91,7 +92,7 @@ const showAboutMe = () => {
 }
 
 const hoverComment = () => {
-    if(props.context.comment.isCommentMove) return;
+    if (props.context.comment.isCommentMove) return;
     if (!showScale.value) {
         props.context.comment.hoverComment(false);
         if (props.context.workspace.isTranslating) return;
@@ -111,9 +112,9 @@ const unHoverComment = () => {
     markScale.value = 1
 }
 const showComment = (e: MouseEvent) => {
-    if(ShowComment.value) return;
+    if (ShowComment.value) return;
     if (props.context.comment.isCommentMove) return
-    documentCommentList.value = [];
+    documentCommentList.value = props.commentInfo.children ? [...props.commentInfo.children].reverse() : [];
     const commentX = props.commentInfo.shape_frame.x1
     const commentY = props.commentInfo.shape_frame.y1
     const workspace = props.context.workspace;
@@ -131,10 +132,8 @@ const showComment = (e: MouseEvent) => {
     commentScale.value = 0
     rootHeight.value = comment.value!.parentElement!.clientHeight
     rootWidth.value = comment.value!.parentElement!.clientWidth
-    getDocumentComment().then(() => {
-        ShowComment.value = true
-        showScale.value = true
-    })
+    ShowComment.value = true
+    showScale.value = true
 }
 
 const unHover = (e: MouseEvent) => {
@@ -150,8 +149,10 @@ const unHover = (e: MouseEvent) => {
 }
 
 const moveCommentPopup = (e: MouseEvent) => {
-    e.stopPropagation()
-    emit('moveCommentPopup', e, props.index)
+    e.stopPropagation();
+    if(props.commentInfo.user.id === props.context.comment.isUserInfo?.id) {
+        emit('moveCommentPopup', e, props.index)
+    }
 }
 
 const closeComment = (e?: MouseEvent) => {
@@ -174,20 +175,15 @@ const resolve = (status: number, index: number) => {
 }
 
 const recover = (index?: number) => {
-    props.context.comment.editTabComment()
     emit('recover')
-    if (index) {
+    if (index || index === 0) {
         documentCommentList.value.splice(index, 1)
     }
 }
 const addComment = (info: any) => {
-    props.context.comment.editTabComment();
     emit('recover');
     documentCommentList.value.push(info);
-    const timer = setTimeout(() => {
-        getDocumentComment();
-        clearTimeout(timer);
-    }, 100);
+    getDocumentComment();
 }
 
 const editComment = (index: number, text: string) => {
@@ -253,14 +249,11 @@ function setOrigin() { // 这个动作是让container与页面坐标系重合
 
 const getDocumentComment = async () => {
     try {
-        console.log('pageItem');
-        
         const { data } = await comment_api.getDocumentCommentAPI({ doc_id: props.commentInfo.doc_id, root_id: props.commentInfo.id })
         const list = data.map((item: any) => {
             item.content = item.content.replaceAll("\r\n", "<br/>").replaceAll("\n", "<br/>").replaceAll(" ", "&nbsp;")
             return item
         })
-        documentCommentList.value = [];
         documentCommentList.value = list.reverse();
     } catch (err) {
         console.log(err);
@@ -288,34 +281,11 @@ const commentUpdate = (t: number, index?: number, me?: MouseEvent) => {
         visibleComment.value = props.context.comment.isVisibleComment
     }
     if (t === Comment.WATCH_COMMENT_CHANGE) {
-        const comment = props.context.comment.isUpdateComment
-        docComment(comment!)
+        docComment();
     }
 }
 
-const docComment = (comment: DocCommentOpData) => {
-    const index = documentCommentList.value.findIndex(item => item.id === comment.comment.id)
-    if (comment.type === DocCommentOpType.Update) {
-        if (index != -1) {
-            documentCommentList.value[index] = {
-                ...documentCommentList.value[index],
-                ...comment.comment
-            }
-            props.context.comment.sendComment()
-        }
-    } else if (comment.type === DocCommentOpType.Del) {
-        if (index != -1) {
-            documentCommentList.value.splice(index, 1)
-            props.context.comment.sendComment()
-        }
-    } else if (comment.type === DocCommentOpType.Add) {
-        if (comment.comment.root_id) {
-            documentCommentList.value.push(comment.comment);
-            props.context.comment.sendComment();
-            const list = documentCommentList.value.filter(item => item.id !== '1');
-            documentCommentList.value = [...list];
-        }
-    }
+const docComment = () => {
     props.context.comment.notify(Comment.UPDATE_COMMENT_CHILD);
 }
 
@@ -345,7 +315,7 @@ const unfold = () => {
             rootWidth.value = comment.value.parentElement!.clientWidth
         }
         commentScale.value = 0
-        getDocumentComment()
+        documentCommentList.value = props.commentInfo.children ? [...props.commentInfo.children].reverse() : [];
         ShowComment.value = true
         showScale.value = true
         props.context.comment.saveCommentId(props.commentInfo.id);

@@ -180,7 +180,7 @@ const saveShapeCommentXY = () => {
             }
         })
     })
-    comment.editShapeComment(false, undefined)
+    comment.editShapeComment(false, [])
 }
 //移动输入框
 const mouseDownCommentInput = (e: MouseEvent) => {
@@ -226,16 +226,13 @@ const closeComment = (e?: MouseEvent) => {
 }
 // 调用评论API，并通知listTab组件更新评论列表
 const completed = () => {
-    props.context.comment.sendComment()
-    const timer = setTimeout(() => {
-        // getDocumentComment()
-        clearTimeout(timer)
-        commentInput.value = false;
-    }, 150);
+    // props.context.comment.sendComment()
+    // getDocumentComment()
+    commentInput.value = false;
 }
 // 获取评论列表
 const getDocumentComment = async () => {
-    try {        
+    try {
         const { data } = await comment_api.getDocumentCommentAPI({ doc_id: route.query.id })
         if (data) {
             data.forEach((obj: { children: any[]; commentMenu: any; }) => {
