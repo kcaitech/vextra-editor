@@ -351,7 +351,6 @@ const getDocumentInfo = async () => {
       });
       return;
     }
-
     docInfo.value = docInfoData;
     permType.value = perm;
 

@@ -530,6 +530,7 @@ watchEffect(() => {
 
 </script>
 <style lang="scss" scoped>
+
 :deep(.other) {
     color: var(--active-color);
     display: flex;

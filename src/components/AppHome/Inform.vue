@@ -342,6 +342,7 @@ const getName = (item: any) => {
     height: 16px;
     padding: 4px;
     border-radius: 6px;
+    display: flex;
 
     &:hover {
       background-color: rgb(243, 243, 245);

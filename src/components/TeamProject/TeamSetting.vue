@@ -385,6 +385,7 @@ onMounted(() => {
         }
 
         .close {
+            display: flex;
             width: 28px;
             height: 28px;
             padding: 6px;
