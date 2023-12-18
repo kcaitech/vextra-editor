@@ -92,8 +92,7 @@ onUnmounted(stop);
     width: 100%;
     box-sizing: border-box;
     display: flex;
-    margin: 12px 0;
-    margin-left: 23px;
+    margin: 12px 0 12px 22px;
 
     .apex-select-wrap {
         width: 176px;

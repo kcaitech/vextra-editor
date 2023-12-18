@@ -22,7 +22,6 @@ import { ElMessage } from "element-plus";
 import Shape from "./Buttons/Shape.vue";
 import ToolButton from "./ToolButton.vue";
 const { t } = useI18n();
-
 interface Props {
     context: Context
     selection: Selection

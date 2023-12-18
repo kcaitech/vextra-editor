@@ -107,11 +107,13 @@ onUnmounted(() => {
 </script>
 <template>
     <div class="wrap">
-        <div style="width: 224px;height: 30px;margin-bottom: 6px;align-items: center;justify-content: flex-start;display: flex;">
-        <span>{{ t('attr.background') }}</span></div>
+        <div
+            style="width: 224px;height: 30px;margin-bottom: 6px;align-items: center;justify-content: flex-start;display: flex;">
+            <span>{{ t('attr.background') }}</span>
+        </div>
         <div class="setting">
-            <ColorPicker class="color" :color="(background_color as Color)" :context="props.context" :late="-24"
-                @change="c => colorChangeFromPicker(c)">
+            <ColorPicker class="color" :color="(background_color as Color)" :context="props.context"
+                :auto_to_right_line="true" @change="c => colorChangeFromPicker(c)">
             </ColorPicker>
             <input type="text" @change="(e: Event) => change_c(e)" :value="clr_v" id="clr" ref="clr_ele" @click="clr_click"
                 :spellcheck="false">

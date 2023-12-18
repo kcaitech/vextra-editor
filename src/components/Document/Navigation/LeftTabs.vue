@@ -97,7 +97,8 @@ onUnmounted(() => {
 .tab-container {
     position: relative;
     width: 100%;
-    border: 1px solid #F5F5F5;
+    border-right: 1px solid #EBEBEB;
+    box-sizing: border-box;
 
     .tab-controller {
         height: 40px;

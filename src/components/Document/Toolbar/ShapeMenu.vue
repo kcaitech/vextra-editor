@@ -26,7 +26,9 @@ function get_icon_class() {
 <template>
     <div class="container-change" @click="select">                                
         <div style="display: flex; align-items: center;">
-            <div class="choose" :style="{ visibility: isActive ? 'visible' : 'hidden' }"></div>
+            <div class="choose">
+                <svg-icon icon-class="choose" :style="{ visibility: isActive ? 'visible' : 'hidden' }"></svg-icon>
+            </div>
             <div class="svg-container">
                 <svg-icon :icon-class="get_icon_class()"></svg-icon>
             </div>
@@ -55,26 +57,46 @@ function get_icon_class() {
   display: flex;
   color: var(--theme-color-anti);
   width: 100%;
-  height:  var(--default-input-height);
+  height: 32px;
   align-items: center;
   justify-content: space-between;
+  padding: 9px 12px 9px 8px;
+  box-sizing: border-box;
+
+    .choose {
+        width: 12px;
+        height: 12px;
+        display: contents;
+
+        svg {
+            width: 12px;
+            height: 12px;
+        }
+    }
+
   .svg-container {
-    width: 32px;
-    height:  var(--default-input-height);
+    width: 14px;
+    height: 14px;
     display: flex;
     justify-content: center;
     align-items: center;
+    margin-left: 8px;
+    margin-right: 8px;
+
     svg {
-      width: 20px;
-      height: 20px;
+      width: 14px;
+      height: 14px;
     }
   }
 }
 .quick {
-  margin-right: var(--default-margin);
-  font-size: 14px;
+  height: 14px;
+  font-family: HarmonyOS Sans;
+  font-size: 12px;
+  font-weight: 500;
+  z-index: 1;
 }
-.container-change>div {
-  margin-left: var(--default-margin);
-}
+//.container-change>div {
+//  margin-left: var(--default-margin);
+//}
 </style>
