@@ -71,7 +71,9 @@ const WITH_SHADOW = [
     ShapeType.SymbolUnion
 ]
 const WITH_OPACITY = [
-    ShapeType.Cutout
+    ShapeType.Cutout,
+    ShapeType.Table,
+    ShapeType.TableCell,
 ]
 const shapeType = ref();
 const textShapes = ref<Shape[]>([]);
