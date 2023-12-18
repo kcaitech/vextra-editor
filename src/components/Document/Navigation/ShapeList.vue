@@ -13,15 +13,13 @@ import { Selection } from '@/context/selection';
 import ContextMenu from '@/components/common/ContextMenu.vue';
 import PageViewContextMenuItems from '@/components/Document/Menu/PageViewContextMenuItems.vue';
 import SearchPanel from "./Search/SearchPanel.vue";
-import { isInner } from "@/utils/content";
 import { debounce } from "lodash";
-import { is_shape_in_selection, selection_types, fit } from "@/utils/shapelist";
+import { is_shape_in_selection, selection_types } from "@/utils/shapelist";
 import { Navi } from "@/context/navigate";
-import { Perm, WorkSpace } from "@/context/workspace"
+import { Perm } from "@/context/workspace"
 import ShapeTypes from "./Search/ShapeTypes.vue";
-import { adjust_layer, DragDetail } from "@/utils/listview";
+import { DragDetail, hover, modify_after_drag, modify_shape_lock_status, modify_shape_visible_status, multi_select_shape, range_select_shape, scroll_to_view } from "@/utils/listview";
 import { v4 } from "uuid";
-import { compare_layer_3 } from "@/utils/group_ungroup";
 
 type List = InstanceType<typeof ListView>;
 type ContextMenuEl = InstanceType<typeof ContextMenu>;
@@ -88,7 +86,6 @@ const popoverVisible = ref<boolean>(false);
 const popover = ref<HTMLDivElement>();
 const search_wrap = ref<HTMLDivElement>();
 const accurate = ref<boolean>(false);
-let wait_fited = false;
 let shapeDirList: ShapeDirList;
 let listviewSource = new class implements IDataSource<ItemData> {
     private m_onchange?: (index: number, del: number, insert: number, modify: number) => void;
@@ -149,19 +146,6 @@ function _notifySourceChange(t?: number | string, shape?: Shape) {
 }
 
 const notifySourceChange = debounce(_notifySourceChange, 30);
-const stopWatch = watch(() => props.page, () => {
-    let source = shapeListMap.get(props.page.id)
-    if (!source) {
-        source = new ShapeDirList(props.page);
-        shapeListMap.set(props.page.id, source);
-    }
-    if (shapeDirList) shapeDirList.unwatch(notifySourceChange)
-    shapeDirList = source;
-    (window as any).sd = shapeDirList;
-    shapeDirList.watch(notifySourceChange)
-    notifySourceChange();
-}, { immediate: true })
-
 
 function search() {
     props.context.navi.notify(Navi.SEARCHING);
@@ -176,97 +160,23 @@ function toggleExpand(shape: Shape) {
     shapeDirList.toggleExpand(shape)
 }
 
-function selectShape(shape: Shape, ctrlKey: boolean, metaKey: boolean, shiftKey: boolean) {
+function selectShape(shape: Shape, is_ctrl: boolean, shiftKey: boolean) {
     if (shiftKey) {
-        selectShapeWhenShiftIsPressed(shape);
-    } else if (ctrlKey || metaKey) {
-        const selected_map: Map<string, Shape> = new Map();
-        const selected = props.context.selection.selectedShapes;
-        for (let i = 0; i < selected.length; i++) {
-            selected_map.set(selected[i].id, selected[i]);
-        }
-        if (selected_map.has(shape.id)) {
-            selected_map.delete(shape.id);
-            props.context.selection.unSelectShape(shape);
-            return;
-        }
-        let p = shape.parent;
-        while (p && p.type !== ShapeType.Page) { // 元素有父级被选中就不需要在选中了
-            if (selected_map.get(p.id)) return;
-            p = p.parent;
-        }
-        selected.push(shape);
-        selected_map.set(shape.id, shape);
-        for (let i = 0; i < selected.length; i++) {
-            const s = selected[i];
-            let need_remove = false;
-            let p = s.parent;
-            while (p && p.type !== ShapeType.Page) {
-                if (selected_map.get(p.id)) {
-                    need_remove = true;
-                    break;
-                }
-                p = p.parent;
-            }
-            if (need_remove) selected_map.delete(s.id);
-        }
-        props.context.selection.rangeSelectShape(Array.from(selected_map.values()));
-    } else {
-        props.context.selection.selectShape(shape);
+        range_select_shape(props.context, shapeDirList, listviewSource, shape);
+        return;
     }
-}
 
-function selectShapeWhenShiftIsPressed(shape: Shape) {
-    const to = shapeDirList.indexOf(shape);
-    const selectedShapes = props.context.selection.selectedShapes;
-    if (selectedShapes.length) {
-        const selectShapesIndex = getSelectShapesIndex(selectedShapes);
-        const from = selectShapesIndex.reduce((pre, cur) => {
-            return Math.abs(to - cur) < Math.abs(to - pre) ? cur : pre;
-        }, selectShapesIndex[0]);
-        const shapes = getShapeRange(from, to);
-        props.context.selection.rangeSelectShape(shapes);
-    } else {
-        props.context.selection.selectShape(shape);
+    if (is_ctrl) {
+        multi_select_shape(props.context, shape);
+        return;
     }
-}
-
-function getSelectShapesIndex(shapes: Shape[]): number[] {
-    return shapes.map(s => shapeDirList.indexOf(s));
-}
-
-function getShapeRange(start: number, end: number): Shape[] {
-    const from = Math.min(start, end);
-    const to = Math.max(start, end);
-    const range: Map<string, Shape> = new Map();
-    const it = listviewSource.iterAt(from);
-    for (let i = from; i <= to && it.hasNext(); i++) {
-        const shape = it.next().shape();
-        const childs = shape.childs;
-        if (childs && childs.length) {
-            for (let c_i = 0; c_i < childs.length; c_i++) {
-                range.delete(childs[c_i].id);
-            }
-        }
-        let need_set = true;
-        let p = shape.parent;
-        while (p && p.type !== ShapeType.Page) {
-            if (range.get(p.id)) {
-                need_set = false;
-                break;
-            }
-            p = p.parent;
-        }
-        if (need_set) {
-            range.set(shape.id, shape);
-        }
-    }
-    return Array.from(range.values());
+    
+    props.context.selection.selectShape(shape);
 }
 
 function hoverShape(shape: Shape) {
-    if (props.context.workspace.transforming) return;
-    props.context.selection.hoverShape(shape);
+    hover(props.context, shape);
+
     if (shapeList.value) {
         shapeH.value = shapeList.value.offsetHeight
     }
@@ -281,75 +191,26 @@ const rename = (value: string, shape: Shape) => {
     editor.setName(value)
 }
 
-const isLock = (shape: Shape) => {
-    const editor = props.context.editor4Shape(shape);
-    editor.toggleLock();
+const modify_lock_status = (shape: Shape) => {
+    modify_shape_lock_status(props.context, shape);
 }
 
-const isRead = (read: boolean, shape: Shape) => {
-    const editor = props.context.editor4Shape(shape);
-    editor.toggleVisible();
-    if (!read) {
-        // props.context.selection.unSelectShape(shape);
-        // props.context.selection.unHoverShape();
-        // props.context.workspace.translating(true);
-        // timer = setTimeout(() => {
-        //     props.context.workspace.translating(false);
-        //     clearTimeout(timer);
-        //     timer = null;
-        // }, 350)
-    }
+const modify_visible_status = (shape: Shape) => {
+    modify_shape_visible_status(props.context, shape);
 }
 
 function shapeScrollToContentView(shape: Shape) {
-    const is_p2 = props.context.navi.isPhase2(shape);
-    if (is_p2 && !wait_fited) {
-        wait_fited = true;
-        fit(props.context, shape);
-        const timer = setTimeout(() => {
-            wait_fited = false;
-            clearTimeout(timer);
-        }, 450);
-        return;
-    }
-    if (isInner(props.context, shape)) {
-        props.context.selection.selectShape(shape);
-        props.context.navi.set_phase(shape.id);
-        return;
-    }
-    const workspace = props.context.workspace;
-    const { x: sx, y: sy, height, width } = shape.frame2Root();
-    const shapeCenter = workspace.matrix.computeCoord(sx + width / 2, sy + height / 2); // 计算shape中心点相对contenview的位置
-    const { x, y, bottom, right } = workspace.root;
-    const contentViewCenter = { x: (right - x) / 2, y: (bottom - y) / 2 }; // 计算contentview中心点的位置
-    const transX = contentViewCenter.x - shapeCenter.x, transY = contentViewCenter.y - shapeCenter.y;
-    if (transX || transY) {
-        props.context.selection.unHoverShape();
-        props.context.selection.selectShape();
-        const pageViewEl = props.context.workspace.pageView;
-        if (pageViewEl) {
-            pageViewEl.classList.add('transition-400');
-            props.context.workspace.translating(true);
-            workspace.matrix.trans(transX, transY);
-            const timer = setTimeout(() => {
-                props.context.selection.selectShape(shape);
-                pageViewEl.classList.remove('transition-400');
-                props.context.workspace.translating(false);
-                clearTimeout(timer);
-            }, 400);
-        } else {
-            workspace.matrix.trans(transX, transY);
-        }
-        workspace.notify(WorkSpace.MATRIX_TRANSFORMATION);
-        props.context.navi.set_phase('');
-    }
+    scroll_to_view(props.context, shape);
 }
 
 function selectshape_right(shape: Shape, shiftKey: boolean) {
     const selection = props.context.selection;
-    if (is_shape_in_selection(selection.selectedShapes, shape)) return;
+    if (is_shape_in_selection(selection.selectedShapes, shape)) {
+        return;
+    }
+
     if (shiftKey) {
-        selectShapeWhenShiftIsPressed(shape);
+        range_select_shape(props.context, shapeDirList, listviewSource, shape);
     } else {
         selection.selectShape(shape);
     }
@@ -411,7 +272,9 @@ function menu_watcher(t: number) {
 
 function close() {
     let exe_result: boolean = false;
-    if (chartMenu.value) exe_result = true;
+    if (chartMenu.value) {
+        exe_result = true;
+    }
     chartMenu.value = false;
     return exe_result;
 }
@@ -527,11 +390,9 @@ function input_focus() {
 }
 
 function input_blur() {
-    if (search_wrap.value) {
-        if (!keywords.value.length) {
-            search_wrap.value.classList.remove('active-box-shadow');
-            props.context.navi.set_focus_text();
-        }
+    if (search_wrap.value && !keywords.value.length) {
+        search_wrap.value.classList.remove('active-box-shadow');
+        props.context.navi.set_focus_text();
     }
 }
 
@@ -557,52 +418,31 @@ function start_to_drag() {
     props.context.navi.set_dragging_status(true);
 }
 
-function after_drag_2(detail: DragDetail) {
-    props.context.navi.set_dragging_status(false);
-
-    let descend = props.context.selection.getShapeById(detail.descend);
-    if (!descend) {
-        return;
-    }
-    descend = adjust_layer(descend, detail.layer);
-
-    if (detail.layer < 0) {
-        detail.position = "lower";
-    }
-
-    const page = props.context.selection.selectedPage!;
-    const editor = props.context.editor4Page(page);
-    const shapes = compare_layer_3(props.context.selection.selectedShapes, -1);
-
-    editor.afterShapeListDrag(shapes, descend, detail.position);
-
-    const map = new Map<string, Shape>();
-    for (let i = 0, l = shapes.length; i < l; i++) {
-        const item = shapes[i];
-        map.set(item.id, item);
-    }
-
-    let need_adjust = false;
-    for (let i = 0, l = shapes.length; i < l; i++) {
-        const item = shapes[i];
-        let p = item.parent;
-        while (p) {
-            if (map.get(p.id)) {
-                map.delete(item.id);
-                need_adjust = true;
-                break;
-            }
-            p = p.parent;
-        }
-    }
-
-    if (need_adjust) {
-        props.context.selection.rangeSelectShape(Array.from(map.values()));
-    }
+function after_drag(detail: DragDetail) {
+    modify_after_drag(props.context, detail);
 }
+
 const allow_to_drag = () => {
     return props.context.workspace.documentPerm === Perm.isEdit && !props.context.tool.isLable;
 }
+
+const stopWatch = watch(() => props.page, () => {
+    let source = shapeListMap.get(props.page.id)
+    if (!source) {
+        source = new ShapeDirList(props.page);
+        shapeListMap.set(props.page.id, source);
+    }
+
+    if (shapeDirList) {
+        shapeDirList.unwatch(notifySourceChange);
+    }
+
+    shapeDirList = source;
+    (window as any).sd = shapeDirList;
+    shapeDirList.watch(notifySourceChange)
+    notifySourceChange();
+}, { immediate: true });
+
 onMounted(() => {
     props.context.selection.watch(notifySourceChange)
     props.context.menu.watch(menu_watcher);
@@ -670,9 +510,9 @@ onUnmounted(() => {
             <ListView v-else ref="shapelist" location="shapelist" :allow-drag="allow_to_drag()" :shapeHeight="shapeH"
                 :source="listviewSource" :item-view="ShapeItem" :item-height="itemHieght" :item-width="0" :first-index="0"
                 :context="props.context" @toggleexpand="toggleExpand" @selectshape="selectShape" @hovershape="hoverShape"
-                @unhovershape="unHovershape" @scrolltoview="shapeScrollToContentView" @rename="rename" @set-visible="isRead"
-                @set-lock="isLock" @item-mousedown="list_mousedown" orientation="vertical" @drag-start="start_to_drag"
-                @after-drag-2="after_drag_2">
+                @unhovershape="unHovershape" @scrolltoview="shapeScrollToContentView" @rename="rename"
+                @set-visible="modify_visible_status" @set-lock="modify_lock_status" @item-mousedown="list_mousedown"
+                orientation="vertical" @drag-start="start_to_drag" @after-drag-2="after_drag">
             </ListView>
             <ContextMenu v-if="chartMenu" :x="chartMenuPosition.x" :y="chartMenuPosition.y" @close="close"
                 :context="props.context" ref="contextMenuEl" @click.stop>

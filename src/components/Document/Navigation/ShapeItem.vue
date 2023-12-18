@@ -25,7 +25,7 @@ interface Props {
 interface Emits {
     (e: "toggleexpand", shape: Shape): void;
 
-    (e: "selectshape", shape: Shape, ctrl: boolean, meta: boolean, shift: boolean): void;
+    (e: "selectshape", shape: Shape, isCtrl: boolean, shift: boolean): void;
 
     (e: "hovershape", shape: Shape): void;
 
@@ -33,7 +33,7 @@ interface Emits {
 
     (e: "set-lock", shape: Shape): void;
 
-    (e: "set-visible", val: boolean, shape: Shape): void;
+    (e: "set-visible", shape: Shape): void;
 
     (e: "rename", name: string, shape: Shape, event?: KeyboardEvent): void;
 
@@ -68,15 +68,13 @@ function toggleExpand(e: Event) {
 }
 
 const toggleContainer = (e: MouseEvent) => {
-    e.stopPropagation()
+    e.stopPropagation();
     emits('scrolltoview', props.data.shape());
 }
 
 function hoverShape(e: MouseEvent) {
-    if (!props.data.context.workspace.isTranslating) {
-        emits("hovershape", props.data.shape());
-        is_tool_visible.value = true;
-    }
+    emits("hovershape", props.data.shape());
+    is_tool_visible.value = true;
 }
 
 function unHoverShape(e: MouseEvent) {
@@ -97,7 +95,7 @@ const setVisible = (e: MouseEvent) => {
         return; // 继承隐藏
     }
     e.stopPropagation();
-    emits('set-visible', Boolean(visible_status.value < 0), props.data.shape());
+    emits('set-visible', props.data.shape());
 }
 const onRename = () => {
     if (is_state(props.data.shape())
@@ -196,10 +194,12 @@ const mousedown = (e: MouseEvent) => {
         const selected = props.data.context.selection.selectedShapes;
         if (selected.length > 1) {
             for (let i = 0, l = selected.length; i < l; i++) {
-                if (selected[i].id === shape.id && !(e.ctrlKey || e.metaKey)) return;
+                if (selected[i].id === shape.id && !(e.ctrlKey || e.metaKey)) {
+                    return;
+                }
             }
         }
-        emits("selectshape", shape, ctrlKey, metaKey, shiftKey);
+        emits("selectshape", shape, ctrlKey || metaKey, shiftKey);
         selectedChild();
     } else if (e.button === 2) {
         emits('item-mousedown', e, props.data.shape())
@@ -217,7 +217,7 @@ function mouseup(e: MouseEvent) {
     if (props.data.context.navi.is_item_dragging || e.metaKey || e.shiftKey || e.ctrlKey) {
         return;
     }
-    emits("selectshape", props.data.shape(), false, false, false);
+    emits("selectshape", props.data.shape(), false, false);
     selectedChild();
 }
 

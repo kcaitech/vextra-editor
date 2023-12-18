@@ -1,4 +1,9 @@
-import {Shape, ShapeType} from "@kcdesign/data";
+import { Context } from "@/context";
+import { Shape, ShapeDirList, ShapeType } from "@kcdesign/data";
+import { fit } from "@/utils/shapelist";
+import { isInner } from "./content";
+import { WorkSpace } from "@/context/workspace";
+import { compare_layer_3 } from "./group_ungroup";
 
 type OffsetType = 'middle' | 'top' | 'bottom';
 
@@ -12,12 +17,12 @@ export function check_orientation_during_movement(element: Element, e: MouseEven
     let speed: 'slow' | 'fast' = 'fast'
     if (e.clientY < top) {
         if (e.clientY > top - 40) speed = "slow";
-        return {speed, offset: 'top'};
+        return { speed, offset: 'top' };
     } else if (e.clientY >= top && e.clientY < bottom) {
-        return {speed, offset: 'middle'};
+        return { speed, offset: 'middle' };
     } else {
         if (e.clientY < bottom + 40) speed = "slow";
-        return {speed, offset: 'bottom'};
+        return { speed, offset: 'bottom' };
     }
 }
 
@@ -42,7 +47,7 @@ export function get_part_of_target1(element: Element, e: MouseEvent) {
     let v: Ver = 'upper'; // 先计算上下
     const box = element.getBoundingClientRect();
     const trigger = element.querySelector('.is-group');
-    const drag_event: ItemDragEvent = {position: "upper", layer: 0, zero: 0, is_group: !!trigger, off: true};
+    const drag_event: ItemDragEvent = { position: "upper", layer: 0, zero: 0, is_group: !!trigger, off: true };
     if (trigger) { // 三层结构
         const y = box.y;
         const l = box.height / 3;
@@ -109,8 +114,8 @@ function __get_h(zero: number, v: number) {
 }
 
 export function get_destination_by_drag_event(event: ItemDragEvent, start_y: number, unit_height: number) {
-    const {zero, position, layer} = event;
-    const result: { x: number, y: number, type: 'aside' | 'insert' } = {x: zero, y: start_y, type: 'aside'};
+    const { zero, position, layer } = event;
+    const result: { x: number, y: number, type: 'aside' | 'insert' } = { x: zero, y: start_y, type: 'aside' };
     if (position === 'inner') {
         result.type = 'insert';
         return result;
@@ -147,4 +152,191 @@ export function adjust_layer(shape: Shape, layer: number) {
         s = s.parent;
     }
     return s;
+}
+
+export function hover(context: Context, shape: Shape) {
+    if (context.workspace.transforming) {
+        return;
+    }
+    context.selection.hoverShape(shape);
+}
+
+export function modify_shape_lock_status(context: Context, shape: Shape) {
+    const editor = context.editor4Shape(shape);
+    editor.toggleLock();
+}
+
+export function modify_shape_visible_status(context: Context, shape: Shape) {
+    const editor = context.editor4Shape(shape);
+    editor.toggleVisible();
+}
+
+export function scroll_to_view(context: Context, shape: Shape) {
+    const is_p2 = context.navi.isPhase2(shape);
+    if (is_p2) {
+        fit(context, shape);
+        return;
+    }
+
+    if (isInner(context, shape)) {
+        context.selection.selectShape(shape);
+        context.navi.set_phase(shape.id);
+        return;
+    }
+
+    const workspace = context.workspace;
+    const { x: sx, y: sy, height, width } = shape.frame2Root();
+    const shapeCenter = workspace.matrix.computeCoord(sx + width / 2, sy + height / 2); // 计算shape中心点相对contenview的位置
+    const { x, y, bottom, right } = workspace.root;
+    const contentViewCenter = { x: (right - x) / 2, y: (bottom - y) / 2 }; // 计算contentview中心点的位置
+    const transX = contentViewCenter.x - shapeCenter.x, transY = contentViewCenter.y - shapeCenter.y;
+
+    if (!transX && !transY) {
+        return;
+    }
+
+    context.selection.selectShape(shape);
+
+    workspace.matrix.trans(transX, transY);
+
+    context.navi.set_phase('');
+
+    workspace.notify(WorkSpace.MATRIX_TRANSFORMATION);
+}
+
+export function modify_after_drag(context: Context, detail: DragDetail) {
+    context.navi.set_dragging_status(false);
+
+    let descend = context.selection.getShapeById(detail.descend);
+    if (!descend) {
+        return;
+    }
+
+    descend = adjust_layer(descend, detail.layer);
+
+    if (detail.layer < 0) {
+        detail.position = "lower";
+    }
+
+    const page = context.selection.selectedPage!;
+    const editor = context.editor4Page(page);
+    const shapes = compare_layer_3(context.selection.selectedShapes, -1);
+
+    editor.afterShapeListDrag(shapes, descend, detail.position);
+
+    const map = new Map<string, Shape>();
+    for (let i = 0, l = shapes.length; i < l; i++) {
+        const item = shapes[i];
+        map.set(item.id, item);
+    }
+
+    let need_adjust = false;
+
+    for (let i = 0, l = shapes.length; i < l; i++) {
+        const item = shapes[i];
+        let p = item.parent;
+        while (p) {
+            if (map.get(p.id)) {
+                map.delete(item.id);
+                need_adjust = true;
+                break;
+            }
+            p = p.parent;
+        }
+    }
+
+    if (need_adjust) {
+        context.selection.rangeSelectShape(Array.from(map.values()));
+    }
+}
+
+function getSelectShapesIndex(shapeDirList: ShapeDirList, shapes: Shape[]): number[] {
+    return shapes.map(s => shapeDirList.indexOf(s));
+}
+
+function getShapeRange(listviewSource: any, start: number, end: number): Shape[] {
+    const from = Math.min(start, end);
+    const to = Math.max(start, end);
+    const range: Map<string, Shape> = new Map();
+    const it = listviewSource.iterAt(from);
+    for (let i = from; i <= to && it.hasNext(); i++) {
+        const shape = it.next().shape();
+        const childs = shape.childs;
+        if (childs && childs.length) {
+            for (let c_i = 0; c_i < childs.length; c_i++) {
+                range.delete(childs[c_i].id);
+            }
+        }
+        let need_set = true;
+        let p = shape.parent;
+        while (p && p.type !== ShapeType.Page) {
+            if (range.get(p.id)) {
+                need_set = false;
+                break;
+            }
+            p = p.parent;
+        }
+        if (need_set) {
+            range.set(shape.id, shape);
+        }
+    }
+    return Array.from(range.values());
+}
+
+export function range_select_shape(context: Context, shapeDirList: ShapeDirList, listviewSource: any, shape: Shape) {
+    const to = shapeDirList.indexOf(shape);
+    const selectedShapes = context.selection.selectedShapes;
+    if (selectedShapes.length) {
+        const selectShapesIndex = getSelectShapesIndex(shapeDirList, selectedShapes);
+        const from = selectShapesIndex.reduce((pre, cur) => {
+            return Math.abs(to - cur) < Math.abs(to - pre) ? cur : pre;
+        }, selectShapesIndex[0]);
+        const shapes = getShapeRange(listviewSource, from, to);
+        context.selection.rangeSelectShape(shapes);
+    } else {
+        context.selection.selectShape(shape);
+    }
+}
+
+export function multi_select_shape(context: Context, shape: Shape) {
+    const selected_map: Map<string, Shape> = new Map();
+    const selected = context.selection.selectedShapes;
+    for (let i = 0; i < selected.length; i++) {
+        selected_map.set(selected[i].id, selected[i]);
+    }
+
+    if (selected_map.has(shape.id)) {
+        selected_map.delete(shape.id);
+        context.selection.unSelectShape(shape);
+        return;
+    }
+
+    let p = shape.parent;
+    while (p && p.type !== ShapeType.Page) { // 元素有父级被选中就不需要在选中了
+        if (selected_map.get(p.id)) {
+            return;
+        }
+        p = p.parent;
+    }
+
+    selected.push(shape);
+    selected_map.set(shape.id, shape);
+
+    for (let i = 0; i < selected.length; i++) {
+        const s = selected[i];
+        let need_remove = false;
+        let p = s.parent;
+        while (p && p.type !== ShapeType.Page) {
+            if (selected_map.get(p.id)) {
+                need_remove = true;
+                break;
+            }
+            p = p.parent;
+        }
+        if (need_remove) {
+            selected_map.delete(s.id);
+        }
+    }
+    
+    context.selection.rangeSelectShape(Array.from(selected_map.values()));
 }

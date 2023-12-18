@@ -86,40 +86,23 @@ export function fit(context: Context, shape: Shape) {
     const ratio_w = width / w_max * 1.06, ratio_h = height / h_max * 1.12;
     const ratio = Math.max(ratio_h, ratio_w);
     if (ratio !== 1) {
-        const pageViewEl = context.workspace.pageView;
-        if (pageViewEl) {
-            pageViewEl.classList.add('transition-400');
-            context.selection.unHoverShape();
-            context.selection.selectShape();
-            const timer = setTimeout(() => {
-                context.selection.selectShape(shape);
-                pageViewEl.classList.remove('transition-400');
-                clearTimeout(timer);
-            }, 400);
-        }
         const p_center = { x: box.left + width / 2, y: box.top + height / 2 };
         const del = { x: root.center.x - p_center.x, y: root.center.y - p_center.y };
         matrix.trans(del.x, del.y);
         matrix.trans(-root.width / 2, -root.height / 2);
-        if (matrix.m00 * 1 / ratio > 0.02 && matrix.m00 * 1 / ratio < 7.2) matrix.scale(1 / ratio);
-        else {
-            if (matrix.m00 * 1 / ratio <= 0.02) matrix.scale(0.02 / matrix.m00);
-            else if (matrix.m00 * 1 / ratio >= 7.2) matrix.scale(7.2 / matrix.m00);
+        if (matrix.m00 * 1 / ratio > 0.02 && matrix.m00 * 1 / ratio < 7.2) {
+            matrix.scale(1 / ratio);
+        } else {
+            if (matrix.m00 * 1 / ratio <= 0.02) {
+                matrix.scale(0.02 / matrix.m00);
+            }
+            else if (matrix.m00 * 1 / ratio >= 7.2) {
+                matrix.scale(7.2 / matrix.m00);
+            }
         }
         matrix.trans(root.width / 2, root.height / 2);
         context.workspace.notify(WorkSpace.MATRIX_TRANSFORMATION);
     } else {
-        const pageViewEl = context.workspace.pageView;
-        if (pageViewEl) {
-            pageViewEl.classList.add('transition-400');
-            context.selection.unHoverShape();
-            context.selection.selectShape();
-            const timer = setTimeout(() => {
-                context.selection.selectShape(shape);
-                pageViewEl.classList.remove('transition-400');
-                clearTimeout(timer);
-            }, 400);
-        }
         const p_center = { x: box.left + width / 2, y: box.top + height / 2 };
         const del = { x: root.center.x - p_center.x, y: root.center.y - p_center.y };
         if (del.x || del.y) {
