@@ -1,16 +1,15 @@
 <script lang="ts" setup>
-import PointsPathEditContainer from "@/components/Document/Selection/Controller/Points/PointsPathEditContainer.vue";
-import {Context} from "@/context";
-import {computed, onMounted, onUnmounted, reactive, ref} from "vue";
-import {Matrix} from "@kcdesign/data";
-import {WorkSpace} from "@/context/workspace";
-
+import { Context } from "@/context";
+import { computed, onMounted, onUnmounted, reactive, ref } from "vue";
+import { Matrix } from "@kcdesign/data";
+import { WorkSpace } from "@/context/workspace";
+import ClipSlice from "./Bars/ClipSlice.vue";
 interface Props {
     context: Context
 }
 
 const props = defineProps<Props>();
-const bounds = reactive({left: 0, top: 0, right: 0, bottom: 0});
+const bounds = reactive({ left: 0, top: 0, right: 0, bottom: 0 });
 const width = computed(() => {
     const w = bounds.right - bounds.left;
     return w < 10 ? 10 : w;
@@ -26,22 +25,22 @@ function genViewBox(bounds: { left: number, top: number, right: number, bottom: 
 }
 
 function modify_matrix() {
-    const path_shape = props.context.selection.pathshape;
-    if (!path_shape) {
+    const shape = props.context.selection.selectedShapes[0];
+    if (!shape) {
         return;
     }
-    matrix.value = path_shape.matrix2Root();
+    matrix.value = shape.matrix2Root();
     matrix.value.multiAtLeft(props.context.workspace.matrix);
 }
 
 function update() {
-    const path_shape = props.context.selection.pathshape;
-    if (!path_shape) {
+    const shape = props.context.selection.selectedShapes[0];
+    if (!shape) {
         return;
     }
     modify_matrix();
-    const f = path_shape.frame;
-    const __points = [{x: 0, y: 0}, {x: f.width, y: 0}, {x: f.width, y: f.height}, {x: 0, y: f.height}];
+    const f = shape.frame;
+    const __points = [{ x: 0, y: 0 }, { x: f.width, y: 0 }, { x: f.width, y: f.height }, { x: 0, y: f.height }];
     for (let i = 0; i < __points.length; i++) {
         const p = __points[i];
         __points[i] = matrix.value.computeCoord3(p);
@@ -60,28 +59,26 @@ function matrix_watcher(t: number) {
 
 onMounted(() => {
     props.context.workspace.watch(matrix_watcher);
-    const path_shape = props.context.selection.pathshape;
-    if (path_shape) {
-        path_shape.watch(update);
+    const shape = props.context.selection.selectedShapes[0];
+    if (shape) {
+        shape.watch(update);
     }
     update();
 });
 onUnmounted(() => {
     props.context.workspace.unwatch(matrix_watcher);
-    const path_shape = props.context.selection.pathshape;
-    if (path_shape) {
-        path_shape.unwatch(update);
+    const shape = props.context.selection.selectedShapes[0];
+    if (shape) {
+        shape.unwatch(update);
     }
 })
 </script>
 <template>
-    <svg version="1.1" xmlns="http://www.w3.org/2000/svg" xmlns:xlink="http://www.w3.org/1999/xlink"
-         data-area="controller"
-         xmlns:xhtml="http://www.w3.org/1999/xhtml" preserveAspectRatio="xMinYMin meet"
-         :width="width" :height="height" overflow="visible" :viewBox="genViewBox(bounds)"
-         :style="{transform: `translate(${bounds.left}px,${bounds.top}px)`}"
-    >
-        <PointsPathEditContainer :context="props.context"></PointsPathEditContainer>
+    <svg version="1.1" xmlns="http://www.w3.org/2000/svg" xmlns:xlink="http://www.w3.org/1999/xlink" data-area="controller"
+        xmlns:xhtml="http://www.w3.org/1999/xhtml" preserveAspectRatio="xMinYMin meet" :width="width" :height="height"
+        overflow="visible" :viewBox="genViewBox(bounds)"
+        :style="{ transform: `translate(${bounds.left}px,${bounds.top}px)` }">
+        <ClipSlice :context="context"></ClipSlice>
     </svg>
 </template>
 <style lang="scss" scoped>

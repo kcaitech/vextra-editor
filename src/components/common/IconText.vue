@@ -29,7 +29,9 @@ const input = ref<HTMLInputElement>();
 const isActived = ref(false)
 
 function onChange(e: Event) {
-    if (props.disabled) return;
+    if (props.disabled) {
+        return;
+    }
     let value = (e.currentTarget as any)['value']
     try {
         if (props.svgicon == 'angle' && input.value!.value.slice(-1) === '°') {
@@ -86,16 +88,16 @@ const onKeyBlur = (e: KeyboardEvent) => {
     }
 }
 const onMouseDown = (e: MouseEvent) => {
-    if (props.disabled) return;
-    if (props.svgicon === 'radius' && props.multipleValues === true) {
-        return
-    }
-    isDrag.value = true
-    //鼠标按下时的位置
-    curpt.x = e.screenX
-    document.addEventListener('mousemove', onMouseMove)
-    document.addEventListener('mouseup', onMouseUp)
-
+    return; // 关闭拖动设值
+    // if (props.disabled) return;
+    // if (props.svgicon === 'radius' && props.multipleValues === true) {
+    //     return
+    // }
+    // isDrag.value = true
+    // //鼠标按下时的位置
+    // curpt.x = e.screenX
+    // document.addEventListener('mousemove', onMouseMove)
+    // document.addEventListener('mouseup', onMouseUp)
 }
 const onMouseMove = (e: MouseEvent) => {
     //鼠标移动的距离
@@ -204,7 +206,7 @@ onMounted(() => {
         width: 14px;
         height: 14px;
         flex-shrink: 0;
-        cursor: ew-resize;
+        // cursor: ew-resize; // 关闭拖拽设值
         text-align: center;
         padding: 1px;
         box-sizing: border-box;

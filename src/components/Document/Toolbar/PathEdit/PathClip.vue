@@ -20,7 +20,7 @@ function select(action: Action) {
     <Tooltip :content="t('shape.clip')">
         <ToolButton ref="button" @click="() => {select(Action.PathClip)}" :selected="props.active">
             <div class="svg-container">
-                <svg-icon icon-class="unknown"></svg-icon>
+                <svg-icon icon-class="clip-tool"></svg-icon>
             </div>
         </ToolButton>
     </Tooltip>
@@ -35,8 +35,8 @@ function select(action: Action) {
     color: #ffffff;
 
     > svg {
-        width: 14px;
-        height: 14px;
+        width: 18px;
+        height: 18px;
     }
 }
 </style>

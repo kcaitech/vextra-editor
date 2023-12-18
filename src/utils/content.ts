@@ -12,6 +12,7 @@ import {
     ShapeFrame,
     ShapeType,
     SymbolShape,
+    TableShape,
     TextShape
 } from "@kcdesign/data";
 import { Action, ResultByAction } from "@/context/tool";
@@ -20,8 +21,9 @@ import { is_mac, XYsBounding } from '@/utils/common';
 import { searchCommentShape as finder } from '@/utils/comment'
 import { paster_image } from "./clipboard";
 import { landFinderOnPage, scrollToContentView } from './artboardFn'
-import { fit_no_transform } from "./shapelist";
-import { is_part_of_symbol, is_state, one_of_is_symbolref } from "@/utils/symbol";
+import { fit_no_transform, is_parent_locked, is_parent_unvisible } from "./shapelist";
+import { is_part_of_symbol, is_state, make_symbol, one_of_is_symbolref } from "@/utils/symbol";
+import { message } from "./message";
 
 export interface Media {
     name: string
@@ -916,4 +918,139 @@ export function top_side(shape: Shape, matrix: Matrix) {
     const lt = matrix.computeCoord2(0, 0);
     const rt = matrix.computeCoord2(f.width, f.height);
     return Math.hypot(rt.x - lt.x, rt.y - lt.y)
+}
+
+/**
+ * @description 全选操作，ps:文本的全选操作不在这里处理
+ */
+export function select_all(context: Context) {
+    // todo 编辑模式
+    if (context.workspace.is_path_edit_mode) {
+        select_all_for_path_edit(context);
+        return;
+    }
+
+    const selection = context.selection;
+    const selected = selection.selectedShapes;
+    if (!selected.length) {
+        selection.rangeSelectShape(selection.selectedPage!.childs);
+        return;
+    }
+
+    // 表格内全选操作
+    if (selected.length === 1 && selected[0].type === ShapeType.Table) {
+        const table: TableShape = selected[0] as TableShape;
+        const ts = context.tableSelection;
+        const grid = table.getLayout().grid;
+        ts.selectTableCellRange(0, grid.rowCount - 1, 0, grid.colCount - 1, true);
+        return;
+    }
+
+    const p_map = new Map();
+    selected.forEach(s => {
+        if (s.parent) p_map.set(s.parent.id, s.parent)
+    });
+    if (p_map.size > 1) {
+        const page = selection.selectedPage;
+        if (page) selection.rangeSelectShape(page.childs);
+    } else {
+        selection.rangeSelectShape(Array.from(p_map.values())[0].childs);
+    }
+}
+
+function select_all_for_path_edit(context: Context) {
+    const path_shape = context.selection.pathshape;
+    if (!path_shape) {
+        console.log('select_all_for_path_edit: !path_shape');
+        return;
+    }
+    const indexes = path_shape.points.map((_, idx) => idx);
+    context.path.select_points(indexes);
+    context.path.select_sides(indexes);
+}
+
+/**
+ * @description 图层隐藏与显示
+ * @param context 
+ * @returns 
+ */
+export function set_visible_for_shapes(context: Context) {
+    let shapes = context.selection.selectedShapes;
+    const page = context.selection.selectedPage;
+    shapes = shapes.filter(s => !is_parent_unvisible(s));
+    if (!page) {
+        return;
+    }
+    const editor = context.editor4Page(page);
+    editor.toggleShapesVisible(shapes);
+    context.selection.resetSelectShapes();
+}
+
+/**
+ * @description 设置图层锁
+ * @param context 
+ * @returns 
+ */
+export function set_lock_for_shapes(context: Context) {
+    let shapes = context.selection.selectedShapes;
+    const page = context.selection.selectedPage;
+    shapes = shapes.filter(s => !is_parent_locked(s));
+    if (!page) {
+        return;
+    }
+    const editor = context.editor4Page(page);
+    editor.toggleShapesLock(shapes);
+    context.selection.resetSelectShapes();
+}
+
+/**
+ * @description 创建编组
+ * @param context 
+ */
+export function component(context: Context) {
+    const symbol = make_symbol(context, context.workspace.t.bind(context.workspace));
+    if (symbol) {
+        context.selection.selectShape(symbol as unknown as Shape);
+    }
+}
+
+export function lower_layer(context: Context, layer?: number) {
+    const selection = context.selection;
+    if (selection.selectedShapes.length !== 1) {
+        return;
+    }
+
+    const page = selection.selectedPage;
+
+    if (!page) {
+        return;
+    }
+
+    const editor = context.editor4Page(page);
+    const result = editor.lower_layer(selection.selectedShapes[0], layer);
+
+    if (!result) {
+        message('info', context.workspace.t('homerightmenu.unable_lower'));
+    }
+}
+
+export function uppper_layer(context: Context, layer?: number) {
+    const selection = context.selection;
+
+    if (selection.selectedShapes.length !== 1) {
+        return;
+    }
+
+    const page = selection.selectedPage;
+
+    if (!page) {
+        return;
+    }
+
+    const editor = context.editor4Page(page);
+    const result = editor.uppper_layer(selection.selectedShapes[0], layer);
+
+    if (!result) {
+        message('info', context.workspace.t('homerightmenu.unable_upper'));
+    }
 }

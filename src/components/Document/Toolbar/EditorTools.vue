@@ -1,7 +1,7 @@
 <script setup lang="ts">
-import {computed, nextTick, onMounted, onUnmounted, ref} from "vue";
-import {Context} from '@/context';
-import {Selection} from '@/context/selection';
+import { onMounted, onUnmounted, ref, computed, nextTick } from "vue";
+import { Context } from '@/context';
+import { Selection } from '@/context/selection';
 import Cursor from "./Buttons/Cursor.vue";
 import Frame from "./Buttons/Frame.vue";
 import GroupUngroup from "./GroupUngroup.vue";
@@ -10,15 +10,17 @@ import CreateImage from "./Buttons/CreateImage.vue";
 import Table from "./Buttons/Table/index.vue"
 import Comment from "./Buttons/Comment.vue"
 import Contact from "./Buttons/CreateContact.vue";
+import Cutout from "./Buttons/Cutout.vue";
+import CreateComps from "./Buttons/CreateComps.vue";
+import { WorkSpace, Perm } from "@/context/workspace";
+import { Action, Tool } from "@/context/tool";
+import { useI18n } from 'vue-i18n'
+import { message } from "@/utils/message";
 import PathEditTool from "@/components/Document/Toolbar/PathEditTool.vue";
-import {Perm, WorkSpace} from "@/context/workspace";
-import {Action, Tool} from "@/context/tool";
-import {useI18n} from 'vue-i18n'
-import {ElMessage} from "element-plus";
-import {string_by_sys} from "@/utils/common";
+import { string_by_sys } from "@/utils/common";
+import { ElMessage } from "element-plus";
 import Shape from "./Buttons/Shape.vue";
 import ToolButton from "./ToolButton.vue";
-
 const { t } = useI18n();
 interface Props {
     context: Context

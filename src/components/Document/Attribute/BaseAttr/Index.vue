@@ -9,6 +9,7 @@ import { Selection } from '@/context/selection';
 import { WorkSpace } from '@/context/workspace';
 import Tooltip from '@/components/common/Tooltip.vue';
 import { hasRadiusShape } from '@/utils/content'
+import Radius from './Radius.vue';
 import {
     get_rotation,
     is_mixed,
@@ -17,7 +18,9 @@ import {
     get_actions_frame_w, get_actions_frame_h,
     get_actions_flip_h,
     get_actions_flip_v,
-    get_straight_line_length
+    get_straight_line_length,
+    is_straight,
+    get_indexes
 } from '@/utils/attri_setting';
 interface Props {
     context: Context
@@ -74,7 +77,7 @@ function calc_attri() {
     const len = props.context.selection.selectedShapes.length;
     if (len === 1) {
         const shape = props.context.selection.selectedShapes[0];
-        if (shape.type === ShapeType.Line) {
+        if (is_straight(shape)) {
             w.value = Math.max(get_straight_line_length(shape), 1);
             h.value = 0;
         } else {
@@ -82,7 +85,7 @@ function calc_attri() {
             w.value = Math.max(frame.width, 1);
             h.value = Math.max(frame.height, 1);
         }
-        const lt = shape.matrix2Root().computeCoord2(0, 0);
+        const lt = shape.matrix2Parent().computeCoord2(0, 0);
         x.value = lt.x;
         y.value = lt.y;
         rotate.value = get_rotation(shape);
@@ -91,7 +94,6 @@ function calc_attri() {
         const shape = props.context.selection.selectedShapes[0];
         const lt = shape.matrix2Root().computeCoord2(0, 0);
         const frame = shape.frame;
-
         const isMixed = is_mixed(props.context.selection.selectedShapes);
         if (x.value !== mixed) x.value = lt.x;
         if (y.value !== mixed) y.value = lt.y;
@@ -140,14 +142,18 @@ function _update_view() {
         layout();
         check_model_state();
     }
-    if (props.context.selection.selectedShapes.length > 1) check_mixed();
-    if(parentSymbolRef()) {
+
+    if (props.context.selection.selectedShapes.length > 1) {
+        check_mixed();
+    }
+
+    if (parentSymbolRef()) {
         all_disable();
-    }else {
+    } else {
         check_model_state();
     }
 }
-const update_view = debounce(_update_view, 200);
+const update_view = debounce(_update_view, 200, { leading: true });
 // 检查是否多值
 function check_mixed() {
     const isMixed = is_mixed(props.context.selection.selectedShapes);
@@ -295,26 +301,6 @@ function lockToggle() {
     }
     isLock.value = val;
 }
-function radiusToggle() {
-    isMoreForRadius.value = !isMoreForRadius.value
-    if (!isMoreForRadius.value) {
-        if (radius.value) {
-            let { lt, rt, rb, lb } = radius.value
-            if (lt === rt && rb === lb && rt === rb) {
-                multipleValues.value = false
-            } else {
-                multipleValues.value = true
-                if (!radiusValuesMixed(radius.value)) {
-                    radius.value.lt = mixed
-                }
-            }
-        }
-    } else {
-        multipleValues.value = false
-        const shape = props.context.selection.selectedShapes[0];
-        getRectShapeAttr(shape)
-    }
-}
 function fliph() {
     if (model_disable_state.flipHorizontal) return;
     const selected = props.context.selection.selectedShapes;
@@ -359,64 +345,46 @@ function set_lines_length(value: string) {
 function onChangeRotate(value: string) {
     value = Number.parseFloat(value).toFixed(fix);
     const newRotate: number = Number.parseFloat(value);
-    if (isNaN(newRotate)) return;
-    const selected = props.context.selection.selectedShapes;
-    if (selected.length) {
-        const page = props.context.selection.selectedPage;
-        if (page) {
-            const editor = props.context.editor4Page(page);
-            editor.setShapesRotate(selected, newRotate);
-            if (selected.length > 1) check_mixed();
-        }
+    if (isNaN(newRotate)) {
+        return;
     }
-}
-const onChangeRadian = (value: string, type: 'rt' | 'lt' | 'rb' | 'lb') => {
-    const selected = props.context.selection.selectedShapes.filter(shape => shape.type !== ShapeType.Cutout);
-    if (selected.length === 1) {
-        const e = props.context.editor4Shape(selected[0]);
-        if (isMoreForRadius.value) {
-            value = Number.parseFloat(value).toFixed(fix);
-            const newRadian: number = Number.parseFloat(value) < Math.min((w.value as number), (h.value as number)) ? Number.parseFloat(value) : Math.min((w.value as number), (h.value as number))
-            if (!radius.value) return;
-            radius.value[type] = newRadian > 0 ? Number(newRadian.toFixed(fix)) : 0;
+    const selected = props.context.selection.selectedShapes;
+    if (!selected.length) {
+        return;
+    }
 
-            e.setRectRadius(+radius.value.lt, radius.value.rt, radius.value.rb, radius.value.lb);
-        } else {
-            value = Number.parseFloat(value).toFixed(fix);
-            const newRadian: number = Number.parseFloat(value) < (Math.min((w.value as number), (h.value as number)) / 2) ? Number.parseFloat(value) : Math.min((w.value as number), (h.value as number)) / 2
-            if (!radius.value) return;
-            const fixedRadius = newRadian > 0 ? Number(newRadian.toFixed(fix)) : 0;
-            const shape = props.context.selection.selectedShapes[0];
-            radius.value.lt = fixedRadius;
-            if (shape instanceof RectShape) {
-                e.setRectRadius(fixedRadius, fixedRadius, fixedRadius, fixedRadius);
-            } else {
-                e.setFixedRadius(fixedRadius)
-            }
-        }
-    } else if (selected.length > 1) {
-        const page = props.context.selection.selectedPage;
-        if (page) {
-            const e = props.context.editor4Page(page);
-            if (isMoreForRadius.value) {
-                value = Number.parseFloat(value).toFixed(fix);
-                const newRadian: number = Number.parseFloat(value) < Math.min((w.value as number), (h.value as number)) ? Number.parseFloat(value) : Math.min((w.value as number), (h.value as number))
-                if (!radius.value) return;
-                radius.value[type] = newRadian > 0 ? Number(newRadian.toFixed(fix)) : 0;
-                e.setShapesRadius(selected, +radius.value.lt, radius.value.rt, radius.value.rb, radius.value.lb);
-            } else {
-                value = Number.parseFloat(value).toFixed(fix);
-                const newRadian: number = Number.parseFloat(value) < (Math.min((w.value as number), (h.value as number)) / 2) ? Number.parseFloat(value) : Math.min((w.value as number), (h.value as number)) / 2
-                if (!radius.value) return;
-                const fixedRadius = newRadian > 0 ? Number(newRadian.toFixed(fix)) : 0;
-                e.setShapesRadius(selected, fixedRadius, fixedRadius, fixedRadius, fixedRadius);
-            }
-        }
+    const page = props.context.selection.selectedPage;
+    if (!page) {
+        return;
+    }
+
+    const editor = props.context.editor4Page(page);
+    editor.setShapesRotate(selected, newRotate);
+    if (selected.length > 1) {
+        check_mixed();
     }
 }
 function adapt() {
     const selected = props.context.selection.selectedShapes;
-    if (selected.length === 1 && selected[0].type === ShapeType.Artboard) props.context.editor4Shape(selected[0]).adapt();
+    if (selected.length === 1 && selected[0].type === ShapeType.Artboard) {
+        props.context
+            .editor4Shape(selected[0])
+            .adapt();
+    }
+}
+function modify_multi_radius(shape: Shape) {
+    multiRadius.value = false;
+    if (!(shape instanceof PathShape)) {
+        return;
+    }
+    if (!shape.isClosed) {
+        return;
+    }
+    const points = shape.points;
+    if (points.length !== 4) {
+        return;
+    }
+    multiRadius.value = true;
 }
 const RADIUS_SETTING = [
     ShapeType.Rectangle, ShapeType.Artboard,
@@ -424,7 +392,6 @@ const RADIUS_SETTING = [
     ShapeType.Path, ShapeType.Path2, ShapeType.Contact,
     ShapeType.Text
 ];
-const MULTI_RADIUS = [ShapeType.Rectangle, ShapeType.Artboard, ShapeType.Image];
 const cutout_setting = ref(true);
 function layout() {
     s_adapt = false, s_flip = true, s_radius = false, s_length = false;
@@ -434,22 +401,33 @@ function layout() {
         const shape = selected[0];
         s_radius = hasRadiusShape(shape, RADIUS_SETTING), s_adapt = shape.type === ShapeType.Artboard;
         if (s_radius) {
-            multiRadius.value = MULTI_RADIUS.includes(shape.type);
+            modify_multi_radius(shape);
             getRectShapeAttr(shape);
         }
-        if (shape.type === ShapeType.Table) s_flip = false;
-        if (shape.type === ShapeType.Line || shape.type === ShapeType.Contact) s_length = true;
-        if(shape.type === ShapeType.Cutout) cutout_setting.value = false;
+        if (shape.type === ShapeType.Table) {
+            s_flip = false;
+        }
+        if (is_straight(shape) || shape.type === ShapeType.Contact) {
+            s_length = true;
+        }
+        if (shape.type === ShapeType.Cutout) {
+            cutout_setting.value = false;
+        }
     } else {
-        if (selected.find(i => i instanceof RectShape)) s_radius = true;
+        if (selected.find(i => i instanceof RectShape)) {
+            s_radius = true;
+        }
     }
     reflush.value++;
 }
 function check_model_state() {
     reset_model_state();
     const shapes = props.context.selection.selectedShapes;
-    if (shapes.length !== 1) return;
+    if (shapes.length !== 1) {
+        return;
+    }
     const shape = shapes[0];
+
     if (shape.type === ShapeType.Contact) {
         model_disable_state.x = true, model_disable_state.y = true;
         model_disable_state.width = true, model_disable_state.height = true;
@@ -457,7 +435,8 @@ function check_model_state() {
         model_disable_state.filpVertical = true, model_disable_state.flipHorizontal = true;
         model_disable_state.radius = false;
     }
-    if (shape.type === ShapeType.Line) {
+
+    if (is_straight(shape)) {
         model_disable_state.height = true;
     }
 }
@@ -478,14 +457,14 @@ function all_disable() {
 function workspace_watcher(t?: any) {
     if (t === WorkSpace.CLAC_ATTRI) check_mixed();
 }
-function selection_wather(t: any) {
-    if (t === Selection.CHANGE_PAGE || t === Selection.CHANGE_SHAPE) {
-        watch_shapes();
-        update_view();
-        calc_attri();
+function selection_wather(t: number) {
+    if (t !== Selection.CHANGE_SHAPE) {
+        return;
     }
+    watch_shapes();
+    update_view();
+    calc_attri();
 }
-
 // hooks
 onMounted(() => {
     watch_shapes();
@@ -503,20 +482,20 @@ onUnmounted(() => {
 <template>
     <div class="table">
         <div class="tr">
-            <IconText class="positon" ticon="X" :text="typeof (x) === 'number' ? x.toFixed(fix) : x" @onchange="onChangeX"
-                :disabled="model_disable_state.x" :context="context" />
-            <IconText class="positon" ticon="Y" :text="typeof (y) === 'number' ? y.toFixed(fix) : y" @onchange="onChangeY"
-                :disabled="model_disable_state.y" :context="context" />
+            <IconText class="td positon" ticon="X" :text="typeof (x) === 'number' ? x.toFixed(fix) : x"
+                @onchange="onChangeX" :disabled="model_disable_state.x" :context="context" />
+            <IconText class="td positon" ticon="Y" :text="typeof (y) === 'number' ? y.toFixed(fix) : y"
+                @onchange="onChangeY" :disabled="model_disable_state.y" :context="context" />
             <div class="adapt" v-if="s_adapt" :title="t('attr.adapt')" @click="adapt">
                 <svg-icon icon-class="adapt"></svg-icon>
             </div>
             <div style="width: 32px;height: 32px;" v-else></div>
         </div>
         <div class="tr" :reflush="reflush">
-            <IconText class="frame" ticon="W" :text="typeof (w) === 'number' ? w.toFixed(fix) : w" @onchange="onChangeW"
+            <IconText class="td frame" ticon="W" :text="typeof (w) === 'number' ? w.toFixed(fix) : w" @onchange="onChangeW"
                 :disabled="model_disable_state.width" :context="context" />
 
-            <IconText class="frame" ticon="H" :text="typeof (h) === 'number' ? h.toFixed(fix) : h" @onchange="onChangeH"
+            <IconText class="td frame" ticon="H" :text="typeof (h) === 'number' ? h.toFixed(fix) : h" @onchange="onChangeH"
                       :disabled="model_disable_state.height"  :context="context"/>
             <div class="lock" v-if="!s_length" @click="lockToggle" :class="{ 'active': isLock }">
                 <svg-icon :icon-class="isLock ? 'lock' : 'unlock'" :class="{ 'active': isLock }"></svg-icon>
@@ -526,46 +505,23 @@ onUnmounted(() => {
             </div>
         </div>
         <div class="tr" :reflush="reflush">
-            <IconText class="angle" svgicon="angle" :text="`${rotate}` + '°'" @onchange="onChangeRotate"
+            <IconText class="td angle" svgicon="angle" :text="`${rotate}` + '°'" @onchange="onChangeRotate"
                 :frame="{ width: 14, height: 14 }" :disabled="model_disable_state.rotation" :context="context" />
-            <div class="flip-warpper">
-                <Tooltip v-if="s_flip" :content="t('attr.flip_h')" :offset="15">
-                    <div :class="{ flip: !model_disable_state.filpVertical, 'flip-disable': model_disable_state.filpVertical }"
-                        @click="fliph">
-                        <svg-icon icon-class="fliph"></svg-icon>
-                    </div>
-                </Tooltip>
-                <Tooltip v-if="s_flip" :content="t('attr.flip_v')" :offset="15">
-                    <div :class="{ flip: !model_disable_state.filpVertical, 'flip-disable': model_disable_state.filpVertical }"
-                        @click="flipv">
-                        <svg-icon icon-class="flipv"></svg-icon>
-                    </div>
-                </Tooltip>
-            </div>
-            <div style="width: 32px;height: 32px;"></div>
+            <Tooltip v-if="s_flip || cutout_setting" :content="t('attr.flip_h')" :offset="15">
+                <div :class="{ flip: !model_disable_state.filpVertical, 'flip-disable': model_disable_state.filpVertical, 'ml-24': true }"
+                    @click="fliph">
+                    <svg-icon icon-class="fliph"></svg-icon>
+                </div>
+            </Tooltip>
+            <Tooltip v-if="s_flip || cutout_setting" :content="t('attr.flip_v')" :offset="15">
+                <div :class="{ flip: !model_disable_state.filpVertical, 'flip-disable': model_disable_state.filpVertical, 'ml-12': true }"
+                    @click="flipv">
+                    <svg-icon icon-class="flipv"></svg-icon>
+                </div>
+            </Tooltip>
+            <div style="width: 32px;height: 32px;margin-left: 7px"></div>
         </div>
-        <div class="tr" v-if="s_radius" :reflush="reflush">
-            <IconText class="frame" svgicon="radius" :multipleValues="multipleValues" :text="radius?.lt || 0"
-                :frame="{ width: 12, height: 12 }" @onchange="e => onChangeRadian(e, 'lt')"
-                :disabled="model_disable_state.radius" :context="context" />
-            <div class="frame ml-24" v-if="!isMoreForRadius"></div>
-            <IconText v-if="isMoreForRadius" class="frame ml-24" svgicon="radius" :text="radius?.rt || 0"
-                :frame="{ width: 12, height: 12, rotate: 90 }" @onchange="e => onChangeRadian(e, 'rt')"
-                :context="context" />
-            <div class="more-for-radius" @click="radiusToggle" v-if="s_radius && multiRadius"
-                :class="{ 'active': isMoreForRadius }">
-                <svg-icon :icon-class="isMoreForRadius ? 'more-for-radius' : 'more-for-radius'"
-                    :class="{ 'active': isMoreForRadius }"></svg-icon>
-            </div>
-        </div>
-        <div class="tr" v-if="isMoreForRadius">
-            <IconText class="frame" svgicon="radius" :text="radius?.lb || 0" :frame="{ width: 12, height: 12, rotate: 270 }"
-                @onchange="e => onChangeRadian(e, 'lb')" :context="context" />
-            <IconText class="frame ml-24" svgicon="radius" :text="radius?.rb || 0"
-                :frame="{ width: 12, height: 12, rotate: 180 }" @onchange="e => onChangeRadian(e, 'rb')"
-                :context="context" />
-            <div style="width: 32px;height: 32px;"></div>
-        </div>
+        <Radius v-if="s_radius" :context="context" :disabled="model_disable_state.radius"></Radius>
     </div>
 </template>
 
