@@ -1,12 +1,12 @@
 <script setup lang="ts">
-import {computed, InputHTMLAttributes, nextTick, onMounted, onUnmounted, ref, watch} from "vue";
-import {Shape, ShapeType} from '@kcdesign/data';
-import {Context} from "@/context";
-import {get_name, is_parent_locked, is_parent_unvisible} from "@/utils/shapelist";
-import {Perm} from "@/context/workspace";
-import {Tool} from "@/context/tool";
-import {useI18n} from 'vue-i18n';
-import {is_state} from "@/utils/symbol";
+import { computed, InputHTMLAttributes, nextTick, onMounted, onUnmounted, ref, watch } from "vue";
+import { Shape, ShapeType } from '@kcdesign/data';
+import { Context } from "@/context";
+import { get_name, is_parent_locked, is_parent_unvisible } from "@/utils/shapelist";
+import { Perm } from "@/context/workspace";
+import { Tool } from "@/context/tool";
+import { useI18n } from 'vue-i18n';
+import { is_state } from "@/utils/symbol";
 
 
 export interface ItemData {
@@ -42,116 +42,93 @@ interface Emits {
     (e: "item-mousedown", event: MouseEvent, shape: Shape): void;
 }
 
+const props = defineProps<Props>();
+const emits = defineEmits<Emits>();
+
 const lock_status = ref<number>(0) // 1：锁 2：继承锁 -1：不锁
 const visible_status = ref<number>(1) // 1：隐藏 2： 继承隐藏 -1：显示
 const is_tool_visible = ref<boolean>()
 const isInput = ref<boolean>(false)
 const nameInput = ref<HTMLInputElement | null>(null)
-const props = defineProps<Props>();
 const esc = ref<boolean>(false)
 const isread = ref(false)
 const canComment = ref(false)
 const isEdit = ref(false)
 const ph_width = computed(() => (props.data.level - 1) * 12);
-const emit = defineEmits<Emits>();
 let showTriangle = ref<boolean>(false);
 const watchedShapes = new Map();
 const t = useI18n().t;
 
-function watchShapes() {
-    const needWatchShapes = new Map();
-    let shape = props.data.shape();
-    let p = shape.parent;
-    while (p && p.type !== ShapeType.Page) {
-        needWatchShapes.set(p.id, p);
-        p = p.parent;
-    }
-    watchedShapes.forEach((v, k) => {
-        if (needWatchShapes.has(k)) return;
-        v.unwatch(updater);
-        watchedShapes.delete(k);
-    })
-    needWatchShapes.forEach((v, k) => {
-        if (watchedShapes.has(k)) return;
-        v.watch(updater);
-        watchedShapes.set(k, v);
-    })
-}
-
-const stop = watch(() => props.data.shape(), (value, old) => {
-    old && old.unwatch(updater);
-    value.watch(updater);
-    watchShapes();
-}, {immediate: true})
-
-function updater(t?: any) {
-    if (t === 'shape-frame') return;
-    const shape = props.data.shape();
-    const naviChilds = shape.naviChilds;
-    showTriangle.value = Boolean(naviChilds && naviChilds.length > 0);
-    lock_status.value = shape.isLocked ? 1 : 0;
-    visible_status.value = shape.getVisible() ? 0 : 1;
-    if (is_parent_locked(shape)) lock_status.value = 2;
-    if (is_parent_unvisible(shape)) visible_status.value = 2;
-}
-
 function toggleExpand(e: Event) {
-    if (!showTriangle.value) return;
+    if (!showTriangle.value) {
+        return;
+    }
     e.stopPropagation();
-    emit("toggleexpand", props.data.shape());
+    emits("toggleexpand", props.data.shape());
 }
 
 const toggleContainer = (e: MouseEvent) => {
     e.stopPropagation()
-    emit('scrolltoview', props.data.shape());
+    emits('scrolltoview', props.data.shape());
 }
 
 function hoverShape(e: MouseEvent) {
-    const working = !props.data.context.workspace.isTranslating;
-    if (working) {
-        emit("hovershape", props.data.shape());
+    if (!props.data.context.workspace.isTranslating) {
+        emits("hovershape", props.data.shape());
         is_tool_visible.value = true;
     }
 }
 
 function unHoverShape(e: MouseEvent) {
     e.stopPropagation();
-    emit("unhovershape");
+    emits("unhovershape");
     is_tool_visible.value = false
 }
 
 const setLock = (e: MouseEvent) => {
-    if (lock_status.value === 2) return; // 继承锁
+    if (lock_status.value === 2) {
+        return; // 继承锁
+    }
     e.stopPropagation();
-    emit('set-lock', props.data.shape())
+    emits('set-lock', props.data.shape())
 }
 const setVisible = (e: MouseEvent) => {
-    if (visible_status.value === 2) return; // 继承隐藏
+    if (visible_status.value === 2) {
+        return; // 继承隐藏
+    }
     e.stopPropagation();
-    emit('set-visible', Boolean(visible_status.value < 0), props.data.shape())
+    emits('set-visible', Boolean(visible_status.value < 0), props.data.shape());
 }
 const onRename = () => {
     if (is_state(props.data.shape())
         || !isEdit.value
         || props.data.context.tool.isLable
-        || props.data.shape().isVirtualShape) return;
+        || props.data.shape().isVirtualShape
+    ) {
+        return;
+    }
     isInput.value = true
     nextTick(() => {
-        if (nameInput.value) {
-            (nameInput.value as HTMLInputElement).value = props.data.shape().name.trim();
-            nameInput.value.focus();
-            nameInput.value.select();
-            nameInput.value?.addEventListener('blur', stopInput);
-            nameInput.value?.addEventListener('keydown', keySaveInput);
+        if (!nameInput.value) {
+            return;
         }
+        (nameInput.value as HTMLInputElement).value = props.data.shape().name.trim();
+        nameInput.value.focus();
+        nameInput.value.select();
+        nameInput.value?.addEventListener('blur', stopInput);
+        nameInput.value?.addEventListener('keydown', keySaveInput);
     })
-    document.addEventListener('click', onInputBlur)
+    document.addEventListener('click', onInputBlur);
 }
 const onChangeName = (e: Event) => {
     const value = (e.target as InputHTMLAttributes).value
-    if (esc.value) return
-    if (value.length === 0 || value.length > 40 || value.trim().length === 0) return
-    emit('rename', value, props.data.shape());
+    if (esc.value) {
+        return;
+    }
+    if (value.length === 0 || value.length > 40 || value.trim().length === 0) {
+        return
+    }
+    emits('rename', value, props.data.shape());
 }
 
 const stopInput = () => {
@@ -171,10 +148,10 @@ const onInputBlur = (e: MouseEvent) => {
     if (e.target instanceof Element && !e.target.closest('.rename')) {
         var timer = setTimeout(() => {
             if (nameInput.value) {
-                (nameInput.value).blur()
+                (nameInput.value).blur();
             }
-            clearTimeout(timer)
             document.removeEventListener('click', onInputBlur);
+            clearTimeout(timer);
         }, 10)
     }
 }
@@ -182,7 +159,9 @@ const selectedChild = () => {
     let parent = props.data.shape().parent
     let child
     while (parent) {
-        if (parent.type === ShapeType.Page) break
+        if (parent.type === ShapeType.Page) {
+            break;
+        }
         child = props.data.context.selection.isSelectedShape(parent)
         parent = parent.parent
         if (child) {
@@ -195,11 +174,16 @@ const selectedChild = () => {
 function is_component() {
     let s: any = props.data.shape();
     while (s) {
-        if (s.isVirtualShape) return true;
-        if (s.type === ShapeType.Page) return false;
-        if (s.type === ShapeType.SymbolRef) return true;
-        if (s.type === ShapeType.Symbol) return true;
-        if (s.type === ShapeType.SymbolUnion) return true;
+        if (s.type === ShapeType.Page) {
+            return false;
+        }
+        if (s.isVirtualShape ||
+            s.type === ShapeType.SymbolRef ||
+            s.type === ShapeType.Symbol ||
+            s.type === ShapeType.SymbolUnion
+        ) {
+            return true;
+        }
         s = s.parent;
     }
 }
@@ -208,31 +192,37 @@ const mousedown = (e: MouseEvent) => {
     e.stopPropagation();
     if (e.button === 0) {
         const shape = props.data.shape();
-        const {ctrlKey, metaKey, shiftKey} = e;
+        const { ctrlKey, metaKey, shiftKey } = e;
         const selected = props.data.context.selection.selectedShapes;
         if (selected.length > 1) {
             for (let i = 0, l = selected.length; i < l; i++) {
                 if (selected[i].id === shape.id && !(e.ctrlKey || e.metaKey)) return;
             }
         }
-        emit("selectshape", shape, ctrlKey, metaKey, shiftKey);
+        emits("selectshape", shape, ctrlKey, metaKey, shiftKey);
         selectedChild();
     } else if (e.button === 2) {
-        emit('item-mousedown', e, props.data.shape())
+        emits('item-mousedown', e, props.data.shape())
         selectedChild();
     }
 }
 
 function mouseup(e: MouseEvent) {
-    if (e.button !== 0) return;
-    if (props.data.context.selection.selectedShapes.length < 2) return;
-    if (props.data.context.navi.is_item_dragging || e.metaKey || e.shiftKey || e.ctrlKey) return;
-    emit("selectshape", props.data.shape(), false, false, false);
+    if (e.button !== 0) {
+        return;
+    }
+    if (props.data.context.selection.selectedShapes.length < 2) {
+        return;
+    }
+    if (props.data.context.navi.is_item_dragging || e.metaKey || e.shiftKey || e.ctrlKey) {
+        return;
+    }
+    emits("selectshape", props.data.shape(), false, false, false);
     selectedChild();
 }
 
 //获取文档权限
-const hangdlePerm = () => {
+const handlePerm = () => {
     const perm = props.data.context.workspace.documentPerm
     if (perm === Perm.isRead) {
         isread.value = true
@@ -267,12 +257,62 @@ const tool_watcher = (t?: number) => {
 }
 
 function is_group() {
-    const type = props.data.shape().type;
-    return [ShapeType.Artboard, ShapeType.Group, ShapeType.Symbol].includes(type);
+    return [ShapeType.Artboard, ShapeType.Group, ShapeType.Symbol].includes(props.data.shape().type);
+}
+
+function updater(t?: any) {
+    if (t === 'shape-frame') {
+        return;
+    }
+
+    const shape = props.data.shape();
+
+    const naviChilds = shape.naviChilds || shape.childs;
+    showTriangle.value = Boolean(naviChilds && naviChilds.length > 0);
+
+    lock_status.value = shape.isLocked ? 1 : 0;
+    visible_status.value = shape.getVisible() ? 0 : 1;
+
+    if (is_parent_locked(shape)) {
+        lock_status.value = 2;
+    }
+    if (is_parent_unvisible(shape)) {
+        visible_status.value = 2;
+    }
+}
+
+const stop = watch(() => props.data.shape(), (value, old) => {
+    old && old.unwatch(updater);
+    value.watch(updater);
+    watchShapes();
+}, { immediate: true })
+
+function watchShapes() {
+    const needWatchShapes = new Map();
+    let shape = props.data.shape();
+    let p = shape.parent;
+    while (p && p.type !== ShapeType.Page) {
+        needWatchShapes.set(p.id, p);
+        p = p.parent;
+    }
+    watchedShapes.forEach((v, k) => {
+        if (needWatchShapes.has(k)) {
+            return;
+        }
+        v.unwatch(updater);
+        watchedShapes.delete(k);
+    })
+    needWatchShapes.forEach((v, k) => {
+        if (watchedShapes.has(k)) {
+            return;
+        }
+        v.watch(updater);
+        watchedShapes.set(k, v);
+    })
 }
 
 onMounted(() => {
-    hangdlePerm()
+    handlePerm()
     updater();
     props.data.context.tool.watch(tool_watcher);
 })
@@ -284,8 +324,7 @@ onUnmounted(() => {
 </script>
 
 <template>
-    <div
-        :class="{ container: true, selected: props.data.selected, selectedChild: selectedChild(), component: is_component() }"
+    <div :class="{ container: true, selected: props.data.selected, selectedChild: selectedChild(), component: is_component() }"
         @mousemove="hoverShape" @mouseleave="unHoverShape" @mousedown="mousedown" @mouseup="mouseup">
         <!-- 缩进 -->
         <div class="ph" :style="{ width: `${ph_width}px` }"></div>
@@ -302,9 +341,9 @@ onUnmounted(() => {
         <div class="text" :style="{ opacity: !visible_status ? 1 : .3, display: isInput ? 'none' : '' }">
             <div class="txt" @dblclick="onRename">{{ get_name(props.data.shape(), t('compos.dlt')) }}</div>
             <div class="tool_icon" @mousedown.stop
-                 :style="{ visibility: `${is_tool_visible ? 'visible' : 'hidden'}`, width: `${is_tool_visible ? 66 + 'px' : lock_status || visible_status ? 66 + 'px' : 0}` }">
+                :style="{ visibility: `${is_tool_visible ? 'visible' : 'hidden'}`, width: `${is_tool_visible ? 66 + 'px' : lock_status || visible_status ? 66 + 'px' : 0}` }">
                 <div class="tool_lock tool" :class="{ 'visible': lock_status }" @click="(e: MouseEvent) => setLock(e)"
-                     v-if="isEdit && !isLable">
+                    v-if="isEdit && !isLable">
                     <svg-icon v-if="lock_status === 0" class="svg-open" icon-class="lock-open"></svg-icon>
                     <svg-icon v-else-if="lock_status === 1" class="svg" icon-class="lock-lock"></svg-icon>
                     <div class="dot" v-else-if="lock_status === 2"></div>
@@ -312,9 +351,8 @@ onUnmounted(() => {
                 <div class="tool_lock tool" @click="toggleContainer">
                     <svg-icon class="svg-open" icon-class="locate"></svg-icon>
                 </div>
-                <div class="tool_eye tool" :class="{ 'visible': visible_status }"
-                     @click="(e: MouseEvent) => setVisible(e)"
-                     v-if="isEdit && !isLable">
+                <div class="tool_eye tool" :class="{ 'visible': visible_status }" @click="(e: MouseEvent) => setVisible(e)"
+                    v-if="isEdit && !isLable">
                     <svg-icon v-if="visible_status === 0" class="svg" icon-class="eye-open"></svg-icon>
                     <svg-icon v-else-if="visible_status === 1" class="svg" icon-class="eye-closed"></svg-icon>
                     <div class="dot" v-else-if="visible_status === 2"></div>
@@ -337,20 +375,20 @@ onUnmounted(() => {
     box-sizing: border-box;
     //transition: 50ms;
 
-    > .ph {
+    >.ph {
         height: 100%;
         flex-shrink: 0;
         flex-grow: 0;
     }
 
-    > .triangle {
+    >.triangle {
         flex: 0 0 10px;
         height: 100%;
         display: flex;
         justify-content: center;
         cursor: pointer;
 
-        > .triangle-right {
+        >.triangle-right {
             width: 0;
             height: 0;
             border-left: 5px solid gray;
@@ -361,7 +399,7 @@ onUnmounted(() => {
             top: 12px;
         }
 
-        > .triangle-down {
+        >.triangle-down {
             width: 0;
             height: 0;
             border-top: 5px solid gray;
@@ -373,12 +411,12 @@ onUnmounted(() => {
         }
     }
 
-    > .slot {
+    >.slot {
         width: 10px;
         height: 100%;
     }
 
-    > .container-svg {
+    >.container-svg {
         flex: 0 0 14px;
         height: 10px;
         display: flex;
@@ -392,7 +430,7 @@ onUnmounted(() => {
         }
     }
 
-    > .text {
+    >.text {
         flex: 1;
         line-height: 30px;
         font-size: var(--font-default-fontsize);
@@ -408,7 +446,7 @@ onUnmounted(() => {
         color: var(--left-navi-font-color);
         background-color: transparent;
 
-        > .txt {
+        >.txt {
             width: 100%;
             height: 30px;
             line-height: 30px;
@@ -419,13 +457,13 @@ onUnmounted(() => {
             padding-left: 2px;
         }
 
-        > .tool_icon {
+        >.tool_icon {
             display: flex;
             align-items: center;
             width: 66px;
             height: 100%;
 
-            > .tool {
+            >.tool {
                 display: flex;
                 align-items: center;
                 justify-content: center;
@@ -434,7 +472,7 @@ onUnmounted(() => {
                 margin-right: 2px;
             }
 
-            > .tool_lock {
+            >.tool_lock {
                 display: flex;
                 align-items: center;
 
@@ -456,7 +494,7 @@ onUnmounted(() => {
                 }
             }
 
-            > .tool_eye {
+            >.tool_eye {
                 margin-right: 10px;
 
                 .svg {
@@ -478,7 +516,7 @@ onUnmounted(() => {
         }
     }
 
-    > .rename {
+    >.rename {
         flex: 1;
         height: 20px;
         width: 100%;
@@ -513,8 +551,8 @@ onUnmounted(() => {
 .component {
     color: var(--component-color);
 
-    & > .text > .txt,
-    & > .text > .tool_icon {
+    &>.text>.txt,
+    &>.text>.tool_icon {
         color: var(--component-color);
     }
 }

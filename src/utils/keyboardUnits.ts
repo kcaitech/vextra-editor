@@ -105,6 +105,8 @@ keydownHandler['KeyF'] = function (event: KeyboardEvent, context: Context) {
 }
 
 keydownHandler['KeyG'] = function (event: KeyboardEvent, context: Context) {
+    event.preventDefault();
+
     const { ctrlKey, metaKey, shiftKey, altKey } = event;
     const is_ctrl = ctrlKey || metaKey;
 

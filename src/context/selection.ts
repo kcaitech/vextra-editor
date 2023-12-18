@@ -99,7 +99,6 @@ export class Selection extends Watchable(Object) implements ISave4Restore {
     private m_table_area: { id: TableArea, area: string }[] = [];
     private m_selected_sym_ref_menber: Shape | undefined;
     private m_selected_sym_ref_bros: Shape[] = [];
-    private m_placement: Shape | undefined;
     private m_context: Context;
     private m_is_new_shape_selection: boolean = false;
 
@@ -282,7 +281,6 @@ export class Selection extends Watchable(Object) implements ISave4Restore {
         if (!shape) {
             this.resetSelectShapes();
         } else {
-            if (shape.isLocked) return;
             this.m_selectShapes.length = 0;
             this.m_selectShapes.push(shape);
             this.m_hoverShape = undefined;
@@ -410,13 +408,50 @@ export class Selection extends Watchable(Object) implements ISave4Restore {
         throw new Error("Method not implemented.");
     }
 
+    get selectedSymOrRefMenber() {
+        return this.m_selected_sym_ref_menber;
+    }
+
+    setSelectSoRMenber(shape: Shape | undefined) {
+        this.m_selected_sym_ref_menber = shape;
+    }
+
+    get selectedSymRefBros() {
+        return this.m_selected_sym_ref_bros;
+    }
+
+    setSelectedSymRefBros(shapes: Shape[]) {
+        this.m_selected_sym_ref_bros = shapes;
+    }
+
+    get_closest_container(shape: Shape) {
+        let result: any = this.m_selectPage!;
+        let p = shape.parent;
+        while (p) {
+            if (p.type === ShapeType.Artboard) {
+                result = p;
+                break;
+            }
+            p = p.parent;
+        }
+        return result;
+    }
+
+    get isNewShapeSelection() {
+        return this.m_is_new_shape_selection;
+    }
+
+    setSelectionNewShapeStatus(v: boolean) {
+        this.m_is_new_shape_selection = v;
+    }
+
+    // #region 特殊类型shape的读取
     get textshape() {
-        return this.selectedShapes.length === 1 && this.selectedShapes[0].type === ShapeType.Text ? this.selectedShapes[0] as TextShape : undefined;
+        return (this.selectedShapes.length === 1 && this.selectedShapes[0] instanceof TextShape) ? this.selectedShapes[0] : undefined;
     }
 
     get pathshape() {
-        const s = this.selectedShapes[0];
-        return this.selectedShapes.length === 1 ? s instanceof PathShape ? s : undefined : undefined;
+        return (this.selectedShapes.length === 1 && (this.selectedShapes[0] instanceof PathShape)) ? this.selectedShapes[0] : undefined;
     }
 
     get symbolshape() {
@@ -474,50 +509,5 @@ export class Selection extends Watchable(Object) implements ISave4Restore {
             return false;
         }
     }
-
-    get selectedSymOrRefMenber() {
-        return this.m_selected_sym_ref_menber;
-    }
-
-    setSelectSoRMenber(shape: Shape | undefined) {
-        this.m_selected_sym_ref_menber = shape;
-    }
-
-    get selectedSymRefBros() {
-        return this.m_selected_sym_ref_bros;
-    }
-
-    setSelectedSymRefBros(shapes: Shape[]) {
-        this.m_selected_sym_ref_bros = shapes;
-    }
-
-    get placement() {
-        return this.m_placement;
-    }
-
-    setPlacement(shape?: Shape) {
-        this.m_placement = shape;
-        this.notify(Selection.PLACEMENT_CHANGE);
-    }
-
-    get_closest_container(shape: Shape) {
-        let result: any = this.m_selectPage!;
-        let p = shape.parent;
-        while (p) {
-            if (p.type === ShapeType.Artboard) {
-                result = p;
-                break;
-            }
-            p = p.parent;
-        }
-        return result;
-    }
-
-    get isNewShapeSelection() {
-        return this.m_is_new_shape_selection;
-    }
-
-    setSelectionNewShapeStatus(v: boolean) {
-        this.m_is_new_shape_selection = v;
-    }
+    // #endregion
 }
