@@ -357,7 +357,3 @@ export function is_component_class(shape: Shape) {
         s = s.parent;
     }
 }
-
-// export function rename(context: Context, shape: Shape) {
-
-// }

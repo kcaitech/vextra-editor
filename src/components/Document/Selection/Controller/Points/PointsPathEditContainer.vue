@@ -48,7 +48,7 @@ function update() {
     segments.length = 0;
     init_matrix();
     const points_set = new Set(props.context.path.selectedPoints);
-    dots.push(...get_path_by_point(shape, matrix, points_set));
+    dots.push(...get_path_by_point(shape as PathShape, matrix, points_set));
     const segs = new Set(props.context.path.selectedSides);
     segments.push(...get_segments(shape as PathShape, matrix, segs));
     props.context.path.set_segments(segments);

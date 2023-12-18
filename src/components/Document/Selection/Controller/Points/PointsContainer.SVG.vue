@@ -1,13 +1,13 @@
 <script setup lang='ts'>
-import {Context} from '@/context';
-import {AsyncBaseAction, CtrlElementType, Matrix, Shape} from '@kcdesign/data';
-import {onMounted, onUnmounted, watch, reactive} from 'vue';
-import {ClientXY, PageXY} from '@/context/selection';
-import {getAngle} from '@/utils/common';
-import {update_dot} from './common';
-import {Point} from "../../SelectionView.vue";
-import {Action} from '@/context/tool';
-import {PointType} from '@/context/assist';
+import { Context } from '@/context';
+import { AsyncBaseAction, CtrlElementType, Matrix, Shape } from '@kcdesign/data';
+import { onMounted, onUnmounted, watch, reactive } from 'vue';
+import { ClientXY, PageXY } from '@/context/selection';
+import { forbidden_to_modify_frame, getAngle } from '@/utils/common';
+import { update_dot } from './common';
+import { Point } from "../../SelectionView.vue";
+import { Action } from '@/context/tool';
+import { PointType } from '@/context/assist';
 
 interface Props {
     matrix: number[]
@@ -28,9 +28,9 @@ interface Dot {
 const props = defineProps<Props>();
 const matrix = new Matrix();
 const submatrix = new Matrix();
-const data: { dots: Dot[] } = reactive({dots: []});
-const {dots} = data;
-let startPosition: ClientXY = {x: 0, y: 0};
+const data: { dots: Dot[] } = reactive({ dots: [] });
+const { dots } = data;
+let startPosition: ClientXY = { x: 0, y: 0 };
 let isDragging = false;
 let asyncBaseAction: AsyncBaseAction | undefined = undefined;
 let pointType: PointType = 'lt';
@@ -68,15 +68,22 @@ function ct2pt(ct: CtrlElementType) {
 }
 
 function point_mousedown(event: MouseEvent, ele: CtrlElementType) {
-    if (event.button !== 0) return;
+    if (event.button !== 0) {
+        return;
+    }
     props.context.menu.menuMount();
+
+    if (forbidden_to_modify_frame(props.shape)) {
+        return;
+    }
+
     const workspace = props.context.workspace;
     event.stopPropagation();
     workspace.setCtrl('controller');
-    const {clientX, clientY} = event;
+    const { clientX, clientY } = event;
     matrix.reset(workspace.matrix);
     const root = workspace.root;
-    startPosition = {x: clientX - root.x, y: clientY - root.y};
+    startPosition = { x: clientX - root.x, y: clientY - root.y };
     cur_ctrl_type = ele;
     pointType = ct2pt(cur_ctrl_type);
     document.addEventListener('mousemove', point_mousemove);
@@ -84,19 +91,23 @@ function point_mousedown(event: MouseEvent, ele: CtrlElementType) {
 }
 
 function point_mousemove(event: MouseEvent) {
-    const {clientX, clientY} = event;
+    const { clientX, clientY } = event;
     const workspace = props.context.workspace;
     const root = workspace.root;
-    const mouseOnClient: ClientXY = {x: clientX - root.x, y: clientY - root.y};
-    const {x: sx, y: sy} = startPosition;
-    const {x: mx, y: my} = mouseOnClient;
+    const mouseOnClient: ClientXY = { x: clientX - root.x, y: clientY - root.y };
+    const { x: sx, y: sy } = startPosition;
+    const { x: mx, y: my } = mouseOnClient;
     if (isDragging && asyncBaseAction) {
         if (cur_ctrl_type.endsWith('rotate')) {
             let deg = 0;
-            const {x: ax, y: ay} = props.axle;
+            const { x: ax, y: ay } = props.axle;
             deg = getAngle([ax, ay, sx, sy], [ax, ay, mx, my]) || 0;
-            if (props.shape.isFlippedHorizontal) deg = -deg;
-            if (props.shape.isFlippedVertical) deg = -deg
+            if (props.shape.isFlippedHorizontal) {
+                deg = -deg;
+            }
+            if (props.shape.isFlippedVertical) {
+                deg = -deg;
+            }
             asyncBaseAction.executeRotate(deg);
         } else {
             const action = props.context.tool.action;
@@ -109,7 +120,7 @@ function point_mousemove(event: MouseEvent) {
                 scale(asyncBaseAction, p2);
             }
         }
-        startPosition = {...mouseOnClient};
+        startPosition = { ...mouseOnClient };
         setCursor(cur_ctrl_type, true);
     } else {
         if (Math.hypot(mx - sx, my - sy) > dragActiveDis) {
@@ -127,7 +138,7 @@ function get_t(cct: CtrlElementType, p1: PageXY, p2: PageXY): PageXY {
         const m = props.shape.matrix2Root();
         p1 = m.inverseCoord(p1.x, p1.y);
         p2 = m.inverseCoord(p2.x, p2.y);
-        const pre_delta = {x: p2.x - p1.x, y: p2.y - p1.y};
+        const pre_delta = { x: p2.x - p1.x, y: p2.y - p1.y };
         const f = props.shape.frame;
         const r = f.width / f.height;
         return m.computeCoord(pre_delta.x, pre_delta.x * (1 / r));
@@ -135,7 +146,7 @@ function get_t(cct: CtrlElementType, p1: PageXY, p2: PageXY): PageXY {
         const m = props.shape.matrix2Root();
         p1 = m.inverseCoord(p1.x, p1.y);
         p2 = m.inverseCoord(p2.x, p2.y);
-        const pre_delta = {x: p2.x - p1.x, y: p2.y - p1.y};
+        const pre_delta = { x: p2.x - p1.x, y: p2.y - p1.y };
         const f = props.shape.frame;
         const r = f.width / f.height;
         return m.computeCoord(f.width + pre_delta.x, -pre_delta.x * (1 / r));
@@ -143,7 +154,7 @@ function get_t(cct: CtrlElementType, p1: PageXY, p2: PageXY): PageXY {
         const m = props.shape.matrix2Root();
         p1 = m.inverseCoord(p1.x, p1.y);
         p2 = m.inverseCoord(p2.x, p2.y);
-        const pre_delta = {x: p2.x - p1.x, y: p2.y - p1.y};
+        const pre_delta = { x: p2.x - p1.x, y: p2.y - p1.y };
         const f = props.shape.frame;
         const r = f.width / f.height;
         return m.computeCoord(f.width + pre_delta.x, f.height + pre_delta.x * (1 / r));
@@ -151,7 +162,7 @@ function get_t(cct: CtrlElementType, p1: PageXY, p2: PageXY): PageXY {
         const m = props.shape.matrix2Root();
         p1 = m.inverseCoord(p1.x, p1.y);
         p2 = m.inverseCoord(p2.x, p2.y);
-        const pre_delta = {x: p2.x - p1.x, y: p2.y - p1.y};
+        const pre_delta = { x: p2.x - p1.x, y: p2.y - p1.y };
         const f = props.shape.frame;
         const r = f.width / f.height;
         return m.computeCoord(pre_delta.x, f.height - pre_delta.x * (1 / r));
@@ -308,16 +319,15 @@ onUnmounted(() => {
     <g>
         <g v-for="(p, i) in dots" :key="i" :style="`transform: ${p.r.transform};`">
             <path :d="p.r.p" fill="transparent" stroke="none" @mousedown.stop="(e) => point_mousedown(e, p.type2)"
-                  @mouseenter="() => setCursor(p.type2)" @mouseleave="point_mouseleave">
+                @mouseenter="() => setCursor(p.type2)" @mouseleave="point_mouseleave">
             </path>
             <rect :x="p.extra.x" :y="p.extra.y" width="14px" height="14px" fill="transparent" stroke='transparent'
-                  @mousedown.stop="(e) => point_mousedown(e, p.type)" @mouseenter="() => setCursor(p.type)"
-                  @mouseleave="point_mouseleave">
+                @mousedown.stop="(e) => point_mousedown(e, p.type)" @mouseenter="() => setCursor(p.type)"
+                @mouseleave="point_mouseleave">
             </rect>
             <rect :x="p.point.x" :y="p.point.y" width="8px" height="8px" fill="#ffffff" stroke='#1878f5'
-                  stroke-width="1.5px"
-                  @mousedown.stop="(e) => point_mousedown(e, p.type)" @mouseenter="() => setCursor(p.type)"
-                  @mouseleave="point_mouseleave"></rect>
+                stroke-width="1.5px" @mousedown.stop="(e) => point_mousedown(e, p.type)"
+                @mouseenter="() => setCursor(p.type)" @mouseleave="point_mouseleave"></rect>
         </g>
     </g>
 </template>

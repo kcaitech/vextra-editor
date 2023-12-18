@@ -171,7 +171,7 @@ const selectedChild = () => {
 }
 
 function is_component() {
-    is_component_class(props.data.shape());
+    return is_component_class(props.data.shape());
 }
 
 const mousedown = (e: MouseEvent) => {
