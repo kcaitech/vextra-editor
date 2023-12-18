@@ -165,7 +165,7 @@ function point_mousemove(event: MouseEvent) {
         return;
     }
 
-    actionEndGenerator = new ActionEndGenerator(props.context, offset_map);
+    actionEndGenerator = new ActionEndGenerator(props.context, offset_map, startPosition2);
 
     props.context.path.editing(true);
 }
@@ -176,29 +176,6 @@ function launch_bridging(event: MouseEvent) {
 
 function bridging_completed() {
     bridged = false;
-}
-
-function direction_action(p: PageXY, index: number) {
-    const points = (shape as PathShape).points;
-
-    if (!points?.length) {
-        console.log('!points?.length');
-        return;
-    }
-
-    const point = points[index];
-    const m = shape.matrix2Root();
-    m.preScale(shape.frame.width, shape.frame.height);
-
-    const o = m.computeCoord2(point.x, point.y);
-    const dx = Math.abs(o.x - p.x);
-    const dy = Math.abs(o.y - o.y);
-
-    if (dx > dy) {
-        p.y = o.y
-    } else {
-        p.x = o.x;
-    }
 }
 
 function __exe(event: MouseEvent, pathEditor: AsyncPathEditor, _point: PageXY) {
@@ -224,12 +201,9 @@ function __exe(event: MouseEvent, pathEditor: AsyncPathEditor, _point: PageXY) {
         .edit_mode_match
         .bind(props.context.assist);
 
-    // const point = actionEndGenerator.__gen(_point, select_point, f); // 开启辅助
-    const point = _point;
+    const point = actionEndGenerator.__gen(_point, select_point, f, event.shiftKey); // 开启辅助
+    // const point = _point;
     if (select_point.length === 1) {
-        if (event.shiftKey) {
-            direction_action(point, current_curve_point_index.value);
-        }
         pathEditor.execute(current_curve_point_index.value, point);
         return;
     }

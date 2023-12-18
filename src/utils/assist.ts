@@ -499,11 +499,13 @@ export class ActionEndGenerator {
     private offset_map: XY[] = [];
     private context: Context;
     private stickness: number;
+    private origin_position: XY;
 
-    constructor(context: Context, map: XY[]) {
+    constructor(context: Context, map: XY[], origin: XY) {
         this.context = context;
         this.offset_map = map;
         this.stickness = context.assist.stickness;
+        this.origin_position = origin;
     }
 
     _break_free(a: number, b: number) {
@@ -554,26 +556,36 @@ export class ActionEndGenerator {
         }
     }
 
-    __gen(point: XY, indexes: number[], f: Function) {
-        const target = f(point, indexes, this.offset_map);
+    get_direction(current: XY, origin: XY): 'x' | 'y' {
+        const dx = Math.abs(origin.x - current.x);
+        const dy = Math.abs(origin.y - current.y);
+        return dx > dy ? 'y' : 'x';
+    }
 
-        if (!target) {
-            return point;
+    __gen(point: XY, indexes: number[], f: Function, shift_key?: boolean) {
+        if (shift_key) {
+            const key = this.get_direction(point, this.origin_position);
+            point[key] = this.origin_position[key];
         }
+        // const target = f(point, indexes, this.offset_map);
 
-        if (this.stickedX) {
-            this.modify_point_x(point, target);
-        }
-        else if (target.sticked_by_x) {
-            this.modify_fix_x(point, target.x);
-        }
+        // if (!target) {
+        //     return point;
+        // }
 
-        if (this.stickedY) {
-            this.modify_point_y(point, target);
-        }
-        else if (target.sticked_by_y) {
-            this.modify_fix_y(point, target.y);
-        }
+        // if (this.stickedX) {
+        //     this.modify_point_x(point, target);
+        // }
+        // else if (target.sticked_by_x) {
+        //     this.modify_fix_x(point, target.x);
+        // }
+
+        // if (this.stickedY) {
+        //     this.modify_point_y(point, target);
+        // }
+        // else if (target.sticked_by_y) {
+        //     this.modify_fix_y(point, target.y);
+        // }
 
         return point;
     }
