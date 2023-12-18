@@ -1,12 +1,13 @@
 <script setup lang="ts">
 import { computed, InputHTMLAttributes, nextTick, onMounted, onUnmounted, ref, watch } from "vue";
-import { Shape, ShapeType } from '@kcdesign/data';
+import { Shape, ShapeType, SymbolUnionShape } from '@kcdesign/data';
 import { Context } from "@/context";
 import { get_name, is_parent_locked, is_parent_unvisible } from "@/utils/shapelist";
 import { Perm } from "@/context/workspace";
 import { Tool } from "@/context/tool";
 import { useI18n } from 'vue-i18n';
 import { is_state } from "@/utils/symbol";
+import { is_component_class } from "@/utils/listview";
 
 
 export interface ItemData {
@@ -170,20 +171,7 @@ const selectedChild = () => {
 }
 
 function is_component() {
-    let s: any = props.data.shape();
-    while (s) {
-        if (s.type === ShapeType.Page) {
-            return false;
-        }
-        if (s.isVirtualShape ||
-            s.type === ShapeType.SymbolRef ||
-            s.type === ShapeType.Symbol ||
-            s.type === ShapeType.SymbolUnion
-        ) {
-            return true;
-        }
-        s = s.parent;
-    }
+    is_component_class(props.data.shape());
 }
 
 const mousedown = (e: MouseEvent) => {
@@ -239,7 +227,7 @@ const handlePerm = () => {
 function icon_class() {
     const shape = props.data.shape();
     if (shape.type === ShapeType.Symbol) {
-        if (shape.isUnionSymbolShape) {
+        if (shape instanceof SymbolUnionShape) {
             return 'pattern-symbol-union';
         } else {
             return 'pattern-component';
@@ -267,7 +255,7 @@ function updater(t?: any) {
 
     const shape = props.data.shape();
 
-    const naviChilds = shape.naviChilds || shape.childs;
+    const naviChilds = shape.naviChilds || (shape as any).childs;
     showTriangle.value = Boolean(naviChilds && naviChilds.length > 0);
 
     lock_status.value = shape.isLocked ? 1 : 0;

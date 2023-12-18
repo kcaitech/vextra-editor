@@ -340,3 +340,24 @@ export function multi_select_shape(context: Context, shape: Shape) {
     
     context.selection.rangeSelectShape(Array.from(selected_map.values()));
 }
+
+export function is_component_class(shape: Shape) {
+    let s: any = shape;
+    while (s) {
+        if (s.type === ShapeType.Page) {
+            return false;
+        }
+        if (s.isVirtualShape ||
+            s.type === ShapeType.SymbolRef ||
+            s.type === ShapeType.Symbol ||
+            s.type === ShapeType.SymbolUnion
+        ) {
+            return true;
+        }
+        s = s.parent;
+    }
+}
+
+// export function rename(context: Context, shape: Shape) {
+
+// }
