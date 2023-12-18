@@ -17,10 +17,11 @@ function select(action: Action) {
 }
 </script>
 <template>
-    <Tooltip :content="`${t('shape.curve')} &nbsp;&nbsp; Ctrl`">
+    <Tooltip :content="t('shape.curve')">
+    <!-- <Tooltip :content="`${t('shape.curve')} &nbsp;&nbsp; Ctrl`"> -->
         <ToolButton ref="button" @click="() => {select(Action.Curve)}" :selected="props.active">
             <div class="svg-container">
-                <svg-icon icon-class="unknown"></svg-icon>
+                <svg-icon icon-class="curve-tool"></svg-icon>
             </div>
         </ToolButton>
     </Tooltip>
@@ -35,8 +36,8 @@ function select(action: Action) {
     color: #ffffff;
 
     > svg {
-        width: 14px;
-        height: 14px;
+        width: 18px;
+        height: 18px;
     }
 }
 </style>

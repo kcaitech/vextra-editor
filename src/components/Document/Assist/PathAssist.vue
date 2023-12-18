@@ -24,49 +24,60 @@ interface Data {
 const props = defineProps<Props>();
 const assist = ref<boolean>(false);
 const matrix = ref<Matrix>(props.context.workspace.matrix);
-const data = reactive<Data>({ nodesX: [], nodesY: [], lineX: '', lineY: '', exLineX: [], exLineY: [], exNodesX: [], exNodesY: [] });
+const data = reactive<Data>({
+    nodesX: [],
+    nodesY: [],
+    lineX: '',
+    lineY: '',
+    exLineX: [],
+    exLineY: [],
+    exNodesX: [],
+    exNodesY: []
+});
 let { lineX, nodesX, lineY, nodesY, exLineX, exLineY, exNodesX, exNodesY } = data;
 let ax = 0, ay = 0;
 
 function assist_watcher(t: number) {
-    if (t === Asssit.UPDATE_ASSIST) render();
-    if (t === Asssit.UPDATE_MAIN_LINE) update_main_line();
-    if (t === Asssit.CLEAR && assist.value) clear();
+    if (t === Asssit.UPDATE_ASSIST_PATH) {
+        render();
+    } else if (t === Asssit.UPDATE_MAIN_LINE_PATH) {
+        update_main_line();
+    } else if (t === Asssit.CLEAR && assist.value) {
+        clear();
+    }
 }
 
 function update_main_line() {
-    // const s1 = Date.now();
-
     const cpg = props.context.assist.CPG;
-    if (!cpg) return;
+    if (!cpg) {
+        return;
+    }
     clear4main_line();
     const ns_x = minus_nodes_x(props.context.assist.nodes_x);
     const ns_y = minus_nodes_y(props.context.assist.nodes_y);
-    if (ns_x.length) { // 绘制x轴线
+    if (ns_x.length) {
         ax = ns_x[0].x;
         nodesX = ns_x.concat(get_p_form_pg_by_x(cpg, ax)).map(n => matrix.value.computeCoord3(n));
         lineX = render_line_x(nodesX);
     }
-    if (ns_y.length) { // 绘制y轴线
+    if (ns_y.length) {
         ay = ns_y[0].y;
         nodesY = ns_y.concat(get_p_form_pg_by_y(cpg, ay)).map(n => matrix.value.computeCoord3(n));
         lineY = render_line_y(nodesY);
     }
-    // console.log('更新主辅助线:', Date.now() - s1);
 }
 
 function render() {
-    // const s = Date.now();
     clear();
     const ns_x = minus_nodes_x(props.context.assist.nodes_x);
     const ns_y = minus_nodes_y(props.context.assist.nodes_y);
-    if (ns_x.length) { // 绘制x轴线
+    if (ns_x.length) {
         ax = ns_x[0].x;
         points_to_client(ns_x, props.context.workspace.matrix, nodesX);
         lineX = render_line_x(nodesX);
         assist.value = true;
     }
-    if (ns_y.length) { // 绘制y轴线
+    if (ns_y.length) {
         ay = ns_y[0].y;
         points_to_client(ns_y, props.context.workspace.matrix, nodesY);
         lineY = render_line_y(nodesY);
@@ -74,7 +85,6 @@ function render() {
     }
     getExLineX();
     getExLineY();
-    // console.log('初次确定辅助线(ms):', Date.now() - s);
 }
 
 function points_to_client(points: { x: number, y: number }[], matrix: Matrix, local: { x: number, y: number }[]) {

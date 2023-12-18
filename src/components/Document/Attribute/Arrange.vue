@@ -7,7 +7,7 @@ import { align_left, align_cneter_x, align_right, align_top, align_cneter_y, ali
 import { WorkSpace } from '@/context/workspace';
 import { useI18n } from 'vue-i18n';
 import Tooltip from '@/components/common/Tooltip.vue';
-import Opacity from "@/components/Document/Attribute/Opacity/Opacity.vue";
+import { Arrange } from '@/context/arrange';
 interface Props {
     context: Context
     shapes: Shape[]
@@ -117,7 +117,7 @@ function keyboard_wather(e: KeyboardEvent) {
     if (altKey) {
         if (code === 'KeyA') {
             e.preventDefault();
-            flex_start();
+
         } else if (code === 'KeyH') {
             if (shiftKey) {
                 e.preventDefault();
@@ -146,11 +146,41 @@ function keyboard_wather(e: KeyboardEvent) {
         }
     }
 }
+function arrange_watcher(t: Number) {
+    switch (t) {
+        case Arrange.FLEX_START:
+            flex_start();
+            break;
+        case Arrange.SPACE_AROUND_HOR:
+            space_around_h();
+            break;
+        case Arrange.ITEMS_ALIGN:
+            justify_midle_h();
+            break;
+        case Arrange.FLEX_END:
+            flex_end();
+            break;
+        case Arrange.FLEX_START_COL:
+            flex_start_col();
+            break;
+        case Arrange.SPACE_AROUND_VER:
+            space_around_v();
+            break;
+        case Arrange.ITEMS_ALIGN_VER:
+            justify_midle_v();
+            break;
+        case Arrange.FLEX_END_COL:
+            flex_end_col();
+            break;
+        default:
+            break;
+    }
+}
 onMounted(() => {
-    document.addEventListener('keydown', keyboard_wather);
+    props.context.arrange.watch(arrange_watcher);
 })
 onUnmounted(() => {
-    document.removeEventListener('keydown', keyboard_wather);
+    props.context.arrange.unwatch(arrange_watcher);
 })
 </script>
 <template>

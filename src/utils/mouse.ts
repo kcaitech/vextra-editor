@@ -44,11 +44,9 @@ export function is_ctrl_element(e: MouseEvent, context: Context) {
     const root = workspace.root;
     const selection = context.selection;
     const selected = selection.selectedShapes;
-    if (selected.length === 1 && selected[0].type === ShapeType.Line) {
-        return selection.scout.isPointInStroke(workspace.ctrlPath, {
-            x: e.clientX - root.x,
-            y: e.clientY - root.y
-        })
+    if (selected.length === 1) {
+        const m = new Matrix(workspace.matrix.inverse);
+        return selection.scout.isPointInShape(selected[0], m.computeCoord2(e.clientX - root.x, e.clientY - root.y));
     } else {
         return selection.scout.isPointInPath(workspace.ctrlPath, {
             x: e.clientX - root.x,
@@ -186,11 +184,15 @@ export function gen_offset_points_map(shapes: Shape[], down: PageXY) {
  * @description
  * @param down root坐标系上的一点
  */
-export function gen_offset_points_map2(context: Context, down: PageXY) {
+export function gen_offset_points_map2(context: Context, down: PageXY, points: number[]) {
     const path_shape = context.selection.pathshape;
-    if (!path_shape) return;
-    const op = get_root_points(context, context.path.selectedPoints);
-    if (!op) return;
+    if (!path_shape) {
+        return;
+    }
+    const op = get_root_points(context, points);
+    if (!op) {
+        return;
+    }
     const offset: XY[] = [];
     for (let i = 0, l = op.length; i < l; i++) {
         const p = op[i];
@@ -308,4 +310,8 @@ export function gen_assist_target(context: Context, shapes: Shape[], is_multi: b
  */
 export function is_rid_stick(context: Context, a: number, b: number) {
     return Math.abs(a - b) >= context.assist.stickness;
+}
+
+export function is_up_from_ctrl_element(e: MouseEvent) {
+    return !!(e.target as Element)?.closest('[data-area="controller-element"]');
 }

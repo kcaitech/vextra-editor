@@ -188,7 +188,6 @@ function addBorder() {
         } else {
             const actions = get_actions_add_boder(props.shapes, border);
             const page = props.context.selection.selectedPage;
-            console.log('actions:', actions);
             if (page) {
                 const editor = props.context.editor4Page(page);
                 editor.shapesAddBorder(actions);

@@ -1,23 +1,26 @@
 import { Context } from "@/context";
-import { message } from "./message";
-import { replace } from "./clipboard";
-import { is_parent_locked, is_parent_unvisible } from "@/utils/shapelist";
 import { map_from_shapes, permIsEdit } from "./content";
 import { Action } from "@/context/tool";
-import { AsyncTransfer, GroupShape, Shape, ShapeType, TableShape } from "@kcdesign/data";
+import { AsyncTransfer, GroupShape, Shape, ShapeType } from "@kcdesign/data";
 import { ClientXY, PageXY } from "@/context/selection";
 import { debounce } from "lodash";
 import { WorkSpace } from "@/context/workspace";
 import { Menu } from "@/context/menu";
 import { compare_layer_3 } from "./group_ungroup";
-import { get_symbolref_by_layer, make_symbol } from "./symbol";
+import { get_symbolref_by_layer } from "./symbol";
 
-export function keyboardHandle(e: KeyboardEvent, context: Context, t: Function) {
-    if (!permIsEdit(context) || context.tool.action === Action.AddComment) return;
-    const { target, shiftKey, ctrlKey, metaKey, altKey } = e;
-    if (target instanceof HTMLInputElement) return;
+export function keyboardHandle(e: KeyboardEvent, context: Context) {
+    if (!permIsEdit(context)) {
+        return;
+    }
+    const { target, shiftKey } = e;
+    if (target instanceof HTMLInputElement) {
+        return;
+    }
     const shapes = context.selection.selectedShapes;
-    if (!shapes.length) return;
+    if (!shapes.length) {
+        return;
+    }
     const step = shiftKey ? 10 : 1;
     let dx: number = 0, dy: number = 0, transform: boolean = false;
     if (e.code === 'ArrowRight') {
@@ -36,128 +39,6 @@ export function keyboardHandle(e: KeyboardEvent, context: Context, t: Function) 
         dx = 0;
         dy = step;
         transform = true;
-    } else if (e.code === 'BracketRight') {
-        const selection = context.selection;
-        if (selection.selectedShapes.length !== 1) return;
-        const page = selection.selectedPage;
-        if (page) {
-            const editor = context.editor4Page(page);
-            const result = editor.uppper_layer(selection.selectedShapes[0]);
-            if (!result) {
-                message('info', t('homerightmenu.unable_upper'));
-            }
-        }
-    } else if (e.code === 'BracketLeft') {
-        const selection = context.selection;
-        if (selection.selectedShapes.length !== 1) return;
-        const page = selection.selectedPage;
-        if (page) {
-            const editor = context.editor4Page(page);
-            const result = editor.lower_layer(selection.selectedShapes[0]);
-            if (!result) {
-                message('info', t('homerightmenu.unable_lower'));
-            }
-        }
-    } else if (e.code === 'Minus') {
-        const selection = context.selection;
-        if (selection.selectedShapes.length !== 1) return;
-        const page = selection.selectedPage;
-        if (page) {
-            const editor = context.editor4Page(page);
-            const result = editor.lower_layer(selection.selectedShapes[0], 1);
-            if (!result) {
-                message('info', t('homerightmenu.unable_lower'));
-            }
-        }
-    } else if (e.code === 'Equal') {
-        const selection = context.selection;
-        if (selection.selectedShapes.length !== 1) return;
-        const page = selection.selectedPage;
-        if (selection.selectedShapes.length !== 1) return;
-        if (page) {
-            const editor = context.editor4Page(page);
-            const result = editor.uppper_layer(selection.selectedShapes[0], 1);
-            if (!result) {
-                message('info', t('homerightmenu.unable_upper'));
-            }
-        }
-    } else if (e.code === 'Backspace' || e.code === 'Delete') { // 删除图层
-        if (ctrlKey || metaKey) return;
-        if (shapes.length > 1) {
-            const page = context.selection.selectedPage;
-            if (page) {
-                const editor = context.editor4Page(page);
-                editor.delete_batch(shapes);
-            }
-            context.selection.resetSelectShapes();
-        } else if (shapes.length === 1) {
-            const shape = shapes[0];
-            if (context.workspace.is_path_edit_mode) {
-                const points = context.path.selectedPoints;
-                if (points.length) {
-                    const editor = context.editor4Shape(shape);
-                    const result = editor.removePoints(points);
-                    result && context.path.reset_points();
-                }
-            } else {
-                if (shape.type === ShapeType.Table) {
-                    const ts = context.tableSelection;
-                    const editor = context.editor4Table(shape as TableShape);
-                    if (ts.tableRowStart > -1 || ts.tableColStart > -1) {
-                        editor.resetCells(ts.tableRowStart, ts.tableRowEnd, ts.tableColStart, ts.tableColEnd);
-                        ts.resetSelection();
-                    } else {
-                        const editor = context.editor4Shape(shape);
-                        editor.delete();
-                        context.selection.resetSelectShapes();
-                    }
-                } else {
-                    const editor = context.editor4Shape(shape);
-                    editor.delete();
-                    context.selection.resetSelectShapes();
-                }
-            }
-        }
-    } else if (e.code === 'KeyR') {
-        if (shiftKey && (ctrlKey || metaKey)) {
-            e.preventDefault();
-            const selected = context.selection.selectedShapes;
-            if (selected.length) replace(context, t, selected);
-        }
-    } else if (e.code === 'KeyX') {
-        if (!(ctrlKey || metaKey) || shiftKey) return;
-        context.workspace.clipboard.cut().then((res) => {
-            if (res) {
-                context.selection.resetSelectShapes();
-            }
-        })
-    } else if (e.code === 'KeyH') {
-        if (shiftKey && (ctrlKey || metaKey)) {
-            let shapes = context.selection.selectedShapes;
-            const page = context.selection.selectedPage;
-            shapes = shapes.filter(s => !is_parent_unvisible(s));
-            if (!page) return;
-            const editor = context.editor4Page(page);
-            editor.toggleShapesVisible(shapes);
-            context.selection.resetSelectShapes();
-        }
-    } else if (e.code === 'KeyL') {
-        if (shiftKey && (ctrlKey || metaKey)) {
-            let shapes = context.selection.selectedShapes;
-            const page = context.selection.selectedPage;
-            shapes = shapes.filter(s => !is_parent_locked(s));
-            if (!page) return;
-            const editor = context.editor4Page(page);
-            editor.toggleShapesLock(shapes);
-            context.selection.resetSelectShapes();
-        }
-    } else if (e.code === 'KeyK') {
-        if (altKey && (ctrlKey || metaKey)) {
-            const symbol = make_symbol(context, t);
-            if (symbol) {
-                context.selection.selectShape(symbol as unknown as Shape);
-            }
-        }
     }
     if (transform) {
         for (let i = 0; i < shapes.length; i++) {
@@ -225,7 +106,6 @@ export function get_direction(rotation: number) {
     else if (rotation >= 338 && rotation <= 360) return 0;
     else return 0;
 }
-
 export function gen_offset_map(shape: Shape, down: PageXY) {
     const m = shape.matrix2Root(), f = shape.frame;
     const lt = m.computeCoord2(0, 0);
@@ -249,7 +129,6 @@ export function pre_translate(context: Context, shapes: Shape[]) {
     context.assist.set_trans_target(shapes);
     context.cursor.cursor_freeze(true); // 拖动过程中禁止鼠标光标切换
 }
-
 export function modify_mouse_position_by_type(update_type: number, startPosition: ClientXY, mousePosition: ClientXY,) {
     if (update_type === 3) startPosition.x = mousePosition.x, startPosition.y = mousePosition.y;
     else if (update_type === 2) startPosition.y = mousePosition.y;
@@ -290,7 +169,6 @@ export function end_transalte(context: Context) {
     context.workspace.setCtrl('page');
     context.cursor.cursor_freeze(false);
 }
-
 export function check_status(context: Context) {
     context.menu.menuMount(); // 关闭可能已经打开的右键菜单
     context.menu.notify(Menu.SHUTDOWN_POPOVER); // 关闭可能已经打开的弹窗
@@ -321,4 +199,102 @@ export function modify_shapes(context: Context, shapes: Shape[]) {
         context.selection.rangeSelectShape(Array.from(shape_map.values()));
     }
     return context.selection.selectedShapes;
+}
+
+export class DirectionCalc {
+    static STEP = 1;
+    static FASTER = 10;
+    private m_up: boolean = false;
+    private m_down: boolean = false;
+    private m_left: boolean = false;
+    private m_right: boolean = false;
+    private m_faster: boolean = false;
+
+    is_catfish(code: string) {
+        return ['ArrowUp', 'ArrowDown', 'ArrowLeft', 'ArrowRight'].includes(code);
+    }
+
+    down(event: KeyboardEvent) {
+        switch (event.code) {
+            case 'ArrowUp':
+                this.m_up = true;
+                break;
+            case 'ArrowDown':
+                this.m_down = true;
+                break;
+            case 'ArrowLeft':
+                this.m_left = true;
+                break;
+            case 'ArrowRight':
+                this.m_right = true;
+                break;
+            default:
+                break;
+        }
+        if (event.shiftKey) {
+            this.m_faster = true;
+        }
+    }
+
+    up(event: KeyboardEvent) {
+        switch (event.code) {
+            case 'ArrowUp':
+                this.m_up = false;
+                break;
+            case 'ArrowDown':
+                this.m_down = false;
+                break;
+            case 'ArrowLeft':
+                this.m_left = false;
+                break;
+            case 'ArrowRight':
+                this.m_right = false;
+                break;
+            case 'ShiftLeft':
+                this.m_faster = false;
+                break;
+            case 'ShiftRight':
+                this.m_faster = false;
+                break;
+            default:
+                break;
+        }
+
+        return this.m_up || this.m_down || this.m_left || this.m_right;
+    }
+
+    reset() {
+        this.m_up = false;
+        this.m_down = false;
+        this.m_left = false;
+        this.m_right = false;
+        this.m_faster = false;
+    }
+
+    calc() {
+        let x = 0;
+        let y = 0;
+        if (this.m_up) {
+            y = y - DirectionCalc.STEP;
+        }
+
+        if (this.m_down) {
+            y = y + DirectionCalc.STEP;
+        }
+
+        if (this.m_left) {
+            x = x - DirectionCalc.STEP;
+        }
+
+        if (this.m_right) {
+            x = x + DirectionCalc.STEP;
+        }
+
+        if (this.m_faster) {
+            x *= DirectionCalc.FASTER;
+            y *= DirectionCalc.FASTER;
+        }
+
+        return { x, y };
+    }
 }
