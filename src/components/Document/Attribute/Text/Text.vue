@@ -687,7 +687,7 @@ onUnmounted(() => {
                         </Tooltip>
                     </div>
                 </div>
-                <div class="perch"></div>
+<!--                <div class="perch"></div>-->
             </div>
             <div class="text-bottom">
                 <div class="text-bottom-align">
@@ -738,7 +738,7 @@ onUnmounted(() => {
                         </i>
                     </div>
                 </div>
-                <div class="perch"></div>
+<!--                <div class="perch"></div>-->
             </div>
             <!-- 字体颜色 -->
             <div class="text-color" v-if="!colorIsMulti && textColor" style="margin-bottom: 10px;">
@@ -760,9 +760,7 @@ onUnmounted(() => {
             </div>
             <div class="text-colors" v-else-if="colorIsMulti" style="margin-bottom: 10px;">
                 <div class="color-title">
-                    <div style="font-family: HarmonyOS Sans;font-size: 12px;margin-right: 10px;">{{
-                            t('attr.font_color')
-                        }}
+                    <div style="font-family: HarmonyOS Sans;font-size: 12px;margin-right: 10px;">{{t('attr.font_color') }}
                     </div>
                     <div class="add" @click="addTextColor">
                         <svg-icon icon-class="add"></svg-icon>
@@ -980,7 +978,7 @@ onUnmounted(() => {
                 width: 32px;
                 display: flex;
                 justify-content: center;
-                margin-left: 9px;
+                margin-left: 8px;
             }
 
             .overbold:hover {
@@ -1014,7 +1012,7 @@ onUnmounted(() => {
                 height: 32px;
                 padding: 2px;
                 box-sizing: border-box;
-                margin-left: 9px;
+                margin-left: 6px;
                 border-radius: var(--default-radius);
             }
 

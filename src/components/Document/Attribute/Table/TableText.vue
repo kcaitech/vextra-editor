@@ -794,7 +794,7 @@ onUnmounted(() => {
                         </Tooltip>
                     </div>
                 </div>
-                <div class="perch"></div>
+<!--                <div class="perch"></div>-->
             </div>
             <div class="text-bottom">
                 <div class="text-bottom-align">
@@ -845,7 +845,7 @@ onUnmounted(() => {
                         </i>
                     </div>
                 </div>
-                <div class="perch"></div>
+<!--                <div class="perch"></div>-->
             </div>
             <!-- 字体颜色 -->
             <div class="text-color" v-if="!colorIsMulti && textColor" style="margin-bottom: 10px;">
@@ -1077,7 +1077,7 @@ onUnmounted(() => {
                 width: 32px;
                 display: flex;
                 justify-content: center;
-                margin-left: 9px;
+                margin-left: 8px;
             }
 
             .overbold:hover {
@@ -1111,7 +1111,7 @@ onUnmounted(() => {
                 height: 32px;
                 padding: 2px;
                 box-sizing: border-box;
-                margin-left: 9px;
+                margin-left: 6px;
                 border-radius: var(--default-radius);
             }
 
