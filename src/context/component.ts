@@ -21,7 +21,7 @@ export class Component extends Watchable(Object) {
         return this.m_bridge;
     }
 
-    set_brige_status(status: boolean) {
+    set_brige_status(status: boolean) {        
         this.m_bridge = status;
         this.notify(Component.BRIDGE_CHANGE);
     }

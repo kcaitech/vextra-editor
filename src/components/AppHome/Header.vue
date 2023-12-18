@@ -251,14 +251,14 @@ const getElXY = (el: HTMLElement, elwidth: number = 0) => {
                 @blur="showSearchHistory = false">
                 <template #prefix>
                     <el-icon v-if="isLoading" class="is-loading" size="18">
-                        <Loading :size="18" />
+                        <Loading :size="18" :color="'#1878F5'" />
                     </el-icon>
                     <el-icon v-else size="18">
                         <svg-icon icon-class="search-icon" :color="showSearchHistory ? '#1878F5' : '#333333'"></svg-icon>
                     </el-icon>
                 </template>
                 <template #suffix>
-                    <el-icon v-if="search != ''" class="close" @click.stop="closeclick" size="18">
+                    <el-icon v-if="search !== ''" class="close" @click.stop="closeclick" size="18">
                         <Close />
                     </el-icon>
                 </template>
@@ -267,13 +267,12 @@ const getElXY = (el: HTMLElement, elwidth: number = 0) => {
         <div class="content">
             <div v-if="props.switch" class="bell">
                 <div ref="bell" class="notice" :class="{ 'menu-select': showInForm, 'menu-hover': !showInForm }"
-                    @click="showinform(bell!, 300)">
+                    @click="showinform(bell!, 320)">
                     <svg-icon icon-class="bell" :color="showInForm ? '#1878F5' : ''"></svg-icon>
-                    <div class="num" v-if="total > 0" :class="{ after: total > 99 }"
-                        :style="{ paddingRight: total > 99 ? 9 + 'px' : 4 + 'px' }">{{ total > 99 ? 99 : total }}</div>
+                    <div class="num after" v-if="total > 0" :class="{ after: total > 99 }">{{ total > 99 ? 99 : total }}</div>
                 </div>
             </div>
-            <div ref="avatar" class="avatar-area" @click="showuserinfo(avatar!, 100)">
+            <div ref="avatar" class="avatar-area" @click="showuserinfo(avatar!, 120)">
                 <el-avatar v-if="circleUrl" :src="circleUrl" @error="errorHandler" fit="cover" :size="32">
                     <img src="https://cube.elemecdn.com/e/fd/0fc7d20532fdaf769a25683617711png.png" />
                 </el-avatar>
@@ -309,10 +308,15 @@ const getElXY = (el: HTMLElement, elwidth: number = 0) => {
 }
 
 :deep(.el-input__wrapper) {
-    background-color: transparent !important;
+    padding: 1px 15px 1px 32px;
+    background-color: transparent;
     border-radius: 8px !important;
 
     &:hover {
+        background-color: rgba(255, 255, 255, 1) !important;
+    }
+
+    &:focus {
         background-color: rgba(255, 255, 255, 1) !important;
     }
 }
@@ -324,7 +328,8 @@ const getElXY = (el: HTMLElement, elwidth: number = 0) => {
     height: 60px;
 
     .search {
-        flex: 0.5;
+        width: 540px;
+        min-width: 300px;
         position: relative;
 
         .el-input {
@@ -332,13 +337,17 @@ const getElXY = (el: HTMLElement, elwidth: number = 0) => {
             min-width: 160px;
             font-size: 12px;
             --el-input-height: 32px;
-            --el-input-border-color: #F0F0F0;
+            --el-input-border-color: rgb(250, 250, 250);
             --el-input-hover-border-color: #F0F0F0;
             --el-input-focus-border-color: #1878F5;
 
+            &:focus {
+                background-color: white !important;
+            }
+
             .close:hover {
-                border-radius: 4px;
                 cursor: pointer;
+                border-radius: 4px;
                 background-color: rgba(243, 243, 245, 1);
             }
         }
@@ -370,15 +379,14 @@ const getElXY = (el: HTMLElement, elwidth: number = 0) => {
 
             >.num {
                 position: absolute;
-                font-size: var(--font-default-fontsize);
+                font-size: 10px;
                 top: 0px;
                 left: 16px;
-                min-width: 8px;
-                padding: 0 4px 0 4px;
-                height: 14px;
+                min-width: 14px;
+                min-height: 14px;
                 background-color: red;
                 color: #fff;
-                border-radius: 7px;
+                border-radius: 100%;
                 display: flex;
                 justify-content: center;
                 align-items: center;
@@ -408,24 +416,40 @@ const getElXY = (el: HTMLElement, elwidth: number = 0) => {
 }
 
 .userinfo {
-    padding: 6px;
     background-color: white;
-    position: absolute;
-    box-shadow: 0px 8px 16px 0px rgba(0, 0, 0, 0.2);
-    border-radius: 4px;
+    position: relative;
+    box-shadow: 0px 2px 10px 0px rgba(0, 0, 0, 0.08);
+    border-radius: 8px;
     z-index: 9;
-    font-size: 12px;
+    padding: 8px 0;
+    font-size: 13px;
+    width: 120px;
+    overflow: visible;
 
     div {
-        padding: 4px 8px;
+        padding: 8px 12px;
         display: flex;
         align-items: center;
-        justify-content: center;
+        justify-content: space-evenly;
+        height: 40px;
+        box-sizing: border-box;
 
         &:hover {
             background-color: rgba(243, 243, 245, 1);
-            border-radius: 4px;
         }
+    }
+
+    &::before {
+        content: "";
+        position: absolute;
+        clear: both;
+        top: -7px;
+        right: 9px;
+        border-left: 6px solid transparent;
+        border-right: 6px solid transparent;
+        border-bottom: 7px solid #ffffff;
+        filter: drop-shadow(0px 0px 12px rgba(0, 0, 0, 0.12));
+
     }
 }
 </style>

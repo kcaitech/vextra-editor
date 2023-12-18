@@ -318,5 +318,15 @@ export function CreateProject(data = {}, ops = {}) {
     })
 }
 
+//反馈
+export function Feedback(data = {}, ops = {}) {
+    return httpRequest({
+        url: '/documents/feedback',
+        method: 'post',
+        data: data,
+        ...ops
+    })
+}
+
 
 

@@ -161,7 +161,6 @@ function move(e: MouseEvent) {
         offset_map = gen_offset_map(shapes[0], map_anchor);
     }
 }
-
 function up(e: MouseEvent) {
     if (e.button !== 0) return;
     if (isDragging) {
@@ -176,7 +175,6 @@ function up(e: MouseEvent) {
     document.removeEventListener('mousemove', move);
     document.removeEventListener('mouseup', up);
 }
-
 function transform_f(start: ClientXY, end: ClientXY) {
     const ps: PageXY = matrix_inverse.computeCoord3(start);
     const pe: PageXY = matrix_inverse.computeCoord3(end);
@@ -243,7 +241,6 @@ function trans(asyncTransfer: AsyncTransfer, ps: PageXY, pe: PageXY): number {
         assist.notify(Asssit.UPDATE_MAIN_LINE);
     }
     return update_type;
-
     function modify_fix_x(target: any) {
         pre_target_x = target.x;
         const distance = distance2apex(compo, target.alignX);
@@ -256,7 +253,6 @@ function trans(asyncTransfer: AsyncTransfer, ps: PageXY, pe: PageXY): number {
         stickedX = true;
         need_multi += 1;
     }
-
     function modify_fix_y(target: any) {
         pre_target_y = target.y;
         const distance = distance2apex(compo, target.alignY);
@@ -271,12 +267,10 @@ function trans(asyncTransfer: AsyncTransfer, ps: PageXY, pe: PageXY): number {
         need_multi += 2;
     }
 }
-
 function modify_speed(e: MouseEvent) {
     speed = get_speed(t_e || e, e);
     t_e = e;
 }
-
 function move2(e: MouseEvent) {
     if (e.buttons === 0) e.stopPropagation();
 }

@@ -122,8 +122,11 @@ const { t } = useI18n();
 
 <style lang="scss" scoped>
 .logo {
-  position: relative;
-  top: 302px;
-  left: 40px;
+ width: 793px;
+ height: 197px;
+ svg{
+  width: 100%;
+  height: 100%;
+ }
 }
 </style >

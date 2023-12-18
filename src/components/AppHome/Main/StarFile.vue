@@ -207,7 +207,7 @@ const rightmenu = (e: MouseEvent, data: data) => {
         if (user_id != localStorage.getItem('userId')) {
             elrename.style.display = "none"
         } else {
-            elrename.style.display = "block"
+            elrename.style.display = ""
         }
     })
     docId.value = id

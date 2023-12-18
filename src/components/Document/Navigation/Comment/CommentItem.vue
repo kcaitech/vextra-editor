@@ -156,7 +156,6 @@ function isInner() {
 const onResolve = (e: Event) => {
     e.stopPropagation()
     if (!isControls.value) return
-    props.context.comment.editTabComment()
     const state = props.commentItem.status === 0 ? 1 : 0
     setCommentStatus(state)
     emit('resolve', state, props.index)
@@ -165,7 +164,6 @@ const onResolve = (e: Event) => {
 const onDelete = (e: Event) => {
     e.stopPropagation()
     if (!isControls.value) return
-    props.context.comment.editTabComment()
     props.context.comment.commentInput(false);
     deleteComment()
     emit('delete', props.index)

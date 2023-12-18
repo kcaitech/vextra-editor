@@ -266,6 +266,7 @@ const Starfile = async (data: data) => {
 }
 
 //分享入口
+let sharenumber = 0
 const Sharefile = (data: data) => {
     if (showFileShare.value) {
         showFileShare.value = false
@@ -280,9 +281,12 @@ const Sharefile = (data: data) => {
     userInfo.value = userData.value
     docId.value = data.document.id
     docName.value = data.document.name
-    selectValue.value = data.document.doc_type !== 0 ? data.document.doc_type : data.document.doc_type
-    projectPerm.value = data.project_perm;
+    if (sharenumber === 0) {
+        selectValue.value = data.document.doc_type
+    }
+    projectPerm.value = data.project_perm
     showFileShare.value = true
+    sharenumber += 1
 }
 
 //移除历史记录入口
@@ -328,12 +332,12 @@ const rightmenu = (e: MouseEvent, data: data) => {
         } else {
             elstar.innerHTML = t('homerightmenu.target_star')
         }
-        if (user_id != localStorage.getItem('userId')) {
+        if (user_id !== localStorage.getItem('userId')) {
             elrename.style.display = "none"
             elcopyfile.style.display = "none"
         } else {
-            elrename.style.display = "block"
-            elcopyfile.style.display = "block"
+            elrename.style.display = ""
+            elcopyfile.style.display = ""
         }
     })
     docId.value = id

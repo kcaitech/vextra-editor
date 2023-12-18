@@ -110,6 +110,7 @@ function update_by_shapes() {
 
 const teamworkWatcher = (t?: any) => {
     if (t === TeamWork.CHANGE_USER_STATE) {
+        shapes.value = [];
         usersSelectionList.value = props.context.teamwork.getUserSelection;
         const page = props.context.selection.selectedPage;
         props.context.teamwork.getUserSelection.forEach(item => {
@@ -137,6 +138,8 @@ const workspaceUpdate = (t: number) => {
 const selectionWatcher = (t: number) => {
     if (t === Selection.CHANGE_SHAPE) {
         createShapeTracing();
+    }else if (t === Selection.CHANGE_PAGE) {
+        watchShapes();
     }
 }
 let throttle = true;

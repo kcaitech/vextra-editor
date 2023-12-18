@@ -12,7 +12,7 @@ import { Document, importDocument, Repository, Page, CoopRepository, IStorage } 
 import { SCREEN_SIZE } from '@/utils/setting';
 import * as share_api from '@/request/share'
 import * as user_api from '@/request/users'
-import { onBeforeRouteUpdate, useRoute } from 'vue-router';
+import { useRoute } from 'vue-router';
 import { router } from '@/router';
 import { useI18n } from 'vue-i18n';
 import { Warning } from '@element-plus/icons-vue';
@@ -32,6 +32,7 @@ import { _updateRoot } from '@/utils/content';
 import Bridge from "@/components/Document/Bridge.vue";
 import { Component } from '@/context/component';
 import { initpal } from './initpal';
+import { setup as keyboardUints } from '@/utils/keyboardUnits';
 
 const { t } = useI18n();
 const curPage = shallowRef<Page | undefined>(undefined);
@@ -62,6 +63,7 @@ const canComment = ref(false);
 const isEdit = ref(true);
 const bridge = ref<boolean>(false);
 const inited = ref(false);
+let uninstall_keyboard_units: () => void = () => { };
 
 function screenSetting() {
   const element = document.documentElement;
@@ -140,33 +142,6 @@ function selectionWatcher(t: number) {
       switchPage(pageId)
     }
   }
-}
-
-function keyboardEventHandler(event: KeyboardEvent) {
-  const { target, code, ctrlKey, metaKey, shiftKey } = event;
-  if (target instanceof HTMLInputElement) return; // 在输入框中输入时避免触发编辑器的键盘事件
-  if (context) {
-    if (code === 'Backslash') {
-      if (ctrlKey || metaKey) {
-        shiftKey ? keyToggleTB() : keyToggleLR();
-      }
-    }
-    if (context.workspace.documentPerm !== Perm.isEdit) {
-      if (permKeyBoard(event)) {
-        context.workspace.keyboardHandle(event); // 只读可评论的键盘事件
-      }
-    } else {
-      context.esctask.keyboardHandle(event);
-      context.workspace.keyboardHandle(event); // 编辑器相关的键盘事件
-      context.tool.keyhandle(event);
-    }
-  }
-}
-
-const permKeyBoard = (e: KeyboardEvent) => {
-  const { code, ctrlKey, metaKey, shiftKey } = e;
-  if (code === 'KeyV' || code === 'KeyC' || code === 'KeyA' || code === 'Digit0 ' || ctrlKey || metaKey || shiftKey) return true
-  else false
 }
 
 const showHiddenRight = () => {
@@ -325,14 +300,6 @@ const getUserInfo = async () => {
   }
 }
 
-onBeforeRouteUpdate((to, form, next) => {
-  if (to.query.id?.includes(' ') || to.query.id?.includes('%20')) {
-    router.go(0)
-  } else {
-    next()
-  }
-})
-
 //获取文档信息
 const getDocumentInfo = async () => {
   try {
@@ -388,6 +355,7 @@ const getDocumentInfo = async () => {
       context.comment.setDocumentInfo(docInfoData);
       null_context.value = false;
       init_watcher();
+      init_keyboard_uints();
       const docId = route.query.id as string;
       const token = localStorage.getItem("token") || "";
       if (await context.communication.docOp.start(token, docId, document, context.coopRepo, docInfoData.document.version_id ?? "")) {
@@ -461,37 +429,41 @@ function init_watcher() {
   context.component.watch(component_watcher);
 }
 
+function init_keyboard_uints() {
+  if (!context) {
+    return;
+  }
+  uninstall_keyboard_units = keyboardUints(context)
+}
+
 function init_doc() {
   if (route.query.id) { // 从远端读取文件
     getDocumentInfo();
-    document.addEventListener('keydown', keyboardEventHandler);
     timer = setInterval(() => {
       getDocumentAuthority();
     }, 30000);
+  } else if ((window as any).sketchDocument) {
+    context = new Context((window as any).sketchDocument as Document, ((window as any).skrepo as CoopRepository));
+    null_context.value = false;
+    getUserInfo();
+    init_watcher();
+    init_keyboard_uints();
+    const project_id = localStorage.getItem('project_id') || '';
+    upload(project_id);
+    localStorage.setItem('project_id', '');
+    switchPage(((window as any).sketchDocument as Document).pagesList[0]?.id);
   } else {
-    if ((window as any).sketchDocument) {
-      context = new Context((window as any).sketchDocument as Document, ((window as any).skrepo as CoopRepository));
-      null_context.value = false;
-      getUserInfo();
-      init_watcher();
-      const project_id = localStorage.getItem('project_id') || '';
-      upload(project_id);
-      localStorage.setItem('project_id', '');
-      switchPage(((window as any).sketchDocument as Document).pagesList[0]?.id);
-      document.addEventListener('keydown', keyboardEventHandler);
-    } else {
-      router.push('/apphome');
-    }
+    router.push('/apphome');
   }
 }
 
-function workspaceWatcher(t: number) {
+function workspaceWatcher(t: number, o?: any) {
   if (t === WorkSpace.FREEZE) {
     sub_loading.value = true;
   } else if (t === WorkSpace.THAW) {
     sub_loading.value = false;
   } else if (t === WorkSpace.HIDDEN_UI) {
-    keyToggleTB();
+    o ? keyToggleLR() : keyToggleTB();
   }
 }
 
@@ -636,8 +608,12 @@ const teamSelectionModifi = (docCommentOpData: DocSelectionOpData) => {
   }
 }
 function component_watcher(t: number) {
-  if (!context) return;
-  if (t === Component.BRIDGE_CHANGE) bridge.value = context.component.bridge;
+  if (!context) {
+    return;
+  }
+  if (t === Component.BRIDGE_CHANGE) {
+    bridge.value = context.component.bridge;
+  }
 }
 
 onMounted(() => {
@@ -660,7 +636,6 @@ onUnmounted(() => {
   (window as any).skrepo = undefined;
   context?.selection.unwatch(selectionWatcher);
   context?.workspace.unwatch(workspaceWatcher);
-  document.removeEventListener('keydown', keyboardEventHandler);
   clearInterval(timer);
   localStorage.removeItem('docId')
   showHint.value = false;
@@ -671,6 +646,7 @@ onUnmounted(() => {
   clearInterval(netErr);
   networkStatus.close();
   context?.component.unwatch(component_watcher);
+  uninstall_keyboard_units();
 })
 </script>
 
@@ -745,7 +721,7 @@ onUnmounted(() => {
   display: flex;
   flex-flow: row nowrap;
   width: 100%;
-  height: 52px;
+  height: 46px;
   background: var(--theme-color);
   padding: 10px 8px;
   box-sizing: border-box;
