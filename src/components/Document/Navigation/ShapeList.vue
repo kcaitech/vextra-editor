@@ -21,6 +21,7 @@ import { Perm, WorkSpace } from "@/context/workspace"
 import ShapeTypes from "./Search/ShapeTypes.vue";
 import { adjust_layer, DragDetail } from "@/utils/listview";
 import { v4 } from "uuid";
+import { compare_layer_3 } from "@/utils/group_ungroup";
 
 type List = InstanceType<typeof ListView>;
 type ContextMenuEl = InstanceType<typeof ContextMenu>;
@@ -558,19 +559,29 @@ function start_to_drag() {
 
 function after_drag_2(detail: DragDetail) {
     props.context.navi.set_dragging_status(false);
+
     let descend = props.context.selection.getShapeById(detail.descend);
-    if (!descend) return;
+    if (!descend) {
+        return;
+    }
     descend = adjust_layer(descend, detail.layer);
-    if (detail.layer < 0) detail.position = "lower";
+
+    if (detail.layer < 0) {
+        detail.position = "lower";
+    }
+
     const page = props.context.selection.selectedPage!;
     const editor = props.context.editor4Page(page);
-    const shapes = props.context.selection.selectedShapes;
+    const shapes = compare_layer_3(props.context.selection.selectedShapes, -1);
+
     editor.afterShapeListDrag(shapes, descend, detail.position);
+
     const map = new Map<string, Shape>();
     for (let i = 0, l = shapes.length; i < l; i++) {
         const item = shapes[i];
         map.set(item.id, item);
     }
+
     let need_adjust = false;
     for (let i = 0, l = shapes.length; i < l; i++) {
         const item = shapes[i];
@@ -584,7 +595,10 @@ function after_drag_2(detail: DragDetail) {
             p = p.parent;
         }
     }
-    if (need_adjust) props.context.selection.rangeSelectShape(Array.from(map.values()));
+
+    if (need_adjust) {
+        props.context.selection.rangeSelectShape(Array.from(map.values()));
+    }
 }
 const allow_to_drag = () => {
     return props.context.workspace.documentPerm === Perm.isEdit && !props.context.tool.isLable;
