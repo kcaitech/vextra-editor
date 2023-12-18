@@ -1,19 +1,19 @@
 <script setup lang="ts">
-import {ref, nextTick, onMounted, onUnmounted} from 'vue';
-import {Context} from '@/context';
-import {WorkSpace} from '@/context/workspace';
-import {Tool} from '@/context/tool';
-import {Menu} from '@/context/menu';
-import {v4} from "uuid";
-
-const props = defineProps<{
-    title?: string,
-    top?: number,
-    left: number,
-    width?: number,
-    height?: string | number,
+import { ref, nextTick, onMounted, onUnmounted } from 'vue';
+import { Context } from '@/context';
+import { Menu } from '@/context/menu';
+interface Props {
     context: Context;
-}>();
+
+    auto_to_right_line?: boolean
+
+    title?: string;
+    top?: number;
+    left?: number;
+    width?: number;
+    height?: number,
+}
+const props = defineProps<Props>();
 defineExpose({
     show,
     focus,
@@ -33,35 +33,58 @@ function show() {
         props.context.menu.notify(Menu.SHUTDOWN_POPOVER);
         popoverClose();
     }
-    if (container.value) {
-        popoverVisible.value = true;
-        props.context.menu.setPopoverVisible(true);
-        container.value.focus();
-        document.addEventListener('mousedown', handleClickOutside);
-        nextTick(() => { // popver 挂载之后计算其布局位置
-            if (popover.value) {
-                const body_h = document.body.clientHeight;
-                const {height} = popover.value.getBoundingClientRect();
-                const {y: top, left, width} = container.value!.getBoundingClientRect();
-                let propsTop = top
-                const su = body_h - top;
-                const cur_t = su - height;
 
-                const propsLeft = left - width - props.left;
-                if (cur_t > 0) {
-                    propsTop = top;
-                } else {
-                    propsTop = top - Math.abs(cur_t - 10);
-                }
-                if (propsTop - 40 < 0) {
-                    propsTop = 40
-                }
-                popover.value.style.left = propsLeft + 'px';
-                popover.value.style.top = propsTop + 'px';
-                props.context.esctask.save(v4(), popoverClose);
-            }
-        })
+    if (!container.value) {
+        return;
     }
+
+    popoverVisible.value = true;
+    props.context.menu.setPopoverVisible(true);
+    container.value.focus();
+    document.addEventListener('mousedown', handleClickOutside);
+
+    nextTick(locate);  // popver 挂载之后计算其布局位置
+}
+
+function locate() {
+    if (!popover.value) {
+        return;
+    }
+    if (!container.value) {
+        return;
+    }
+    const body_h = document.body.clientHeight;
+
+    const { height, width } = popover.value.getBoundingClientRect();
+
+    const { y, x, } = container.value.getBoundingClientRect();
+
+    // y
+    let _top = y
+    const su = body_h - y;
+    const cur_t = su - height;
+
+    if (cur_t > 0) {
+        _top = y;
+    } else {
+        _top = y - Math.abs(cur_t - 10);
+    }
+    if (_top - 40 < 0) {
+        _top = 40
+    }
+
+    // x
+    let _left = x - width - (props.left || 0);
+
+    if (props.auto_to_right_line) {
+        const r = props.context.workspace.root.right;
+        _left = r - width - 4;
+    }
+
+    popover.value.style.left = _left + 'px';
+    popover.value.style.top = _top + 'px';
+
+    props.context.esctask.save(Math.random().toString(), popoverClose);
 }
 
 function handleClickOutside(event: MouseEvent) {
@@ -70,17 +93,21 @@ function handleClickOutside(event: MouseEvent) {
 
 function popoverClose() {
     let exe_result: boolean = false;
+
     if (popoverVisible.value) {
         exe_result = true;
     }
+
     popoverVisible.value = false;
     props.context.workspace.focusText();
     document.removeEventListener('click', handleClickOutside);
     return exe_result;
 }
 
-function menu_watcher(t?: number) {
-    if (t === Menu.SHUTDOWN_POPOVER) popoverClose();
+function menu_watcher(t: number) {
+    if (t === Menu.SHUTDOWN_POPOVER) {
+        popoverClose();
+    }
 }
 
 onMounted(() => {
@@ -94,10 +121,10 @@ onUnmounted(() => {
 <template>
     <div class="__popover-container" ref="container" tabindex="-1">
         <slot name="trigger"></slot>
-        <div :style="{
-      width: `${props.width ? props.width : 360}px`,
-      height: `${props.height ? props.height : 200}px`,
-    }" class="popover" ref="popover" v-if="popoverVisible">
+        <div ref="popover" v-if="popoverVisible" class="popover" :style="{
+            width: props.width ? props.width + 'px' : 'auto',
+            height: props.height ? props.height + 'px' : 'auto',
+        }">
             <div class="header">
                 <span class="title">{{ props.title }}</span>
                 <div @click="popoverClose" class="close">
@@ -117,46 +144,48 @@ onUnmounted(() => {
     outline: none;
     z-index: 99;
 
-    > .popover {
+    >.popover {
         position: fixed;
         outline: none;
-        box-shadow: 0 2px 10px rgba(0, 0, 0, 0.2);
-        background-color: #ffffff;
+        box-shadow: 0px 2px 16px 0px rgba(0, 0, 0, 0.08);
+        background-color: #FFFFFF;
         z-index: 1;
-        border-radius: 4px;
+        border-radius: 8px;
+        border: 1px solid #F0F0F0;
 
-        > .header {
+        >.header {
             width: 100%;
-            height: 32px;
-            border-bottom: 1px solid var(--grey-light);
+            height: 40px;
+            border-bottom: 1px solid #F5F5F5;
             display: flex;
             font-size: var(--font-default-fontsize);
-            padding: 0 var(--default-padding);
+            padding: 14px 12px;
             box-sizing: border-box;
             align-items: center;
 
-            > .title {
-                line-height: 32px;
+            >.title {
+                line-height: 12px;
                 font-weight: var(--font-default-bold);
+                color: #3D3D3D;
             }
 
-            > .close {
-                width: 24px;
-                height: 24px;
+            >.close {
+                width: 12px;
+                height: 12px;
                 position: absolute;
-                right: var(--default-padding);
+                right: 11px;
                 display: flex;
                 align-items: center;
                 justify-content: center;
 
-                > svg {
-                    width: 65%;
-                    height: 65%;
+                >svg {
+                    width: 12px;
+                    height: 12px;
                 }
             }
         }
 
-        > .body {
+        >.body {
             width: 100%;
             height: calc(100% - 32px);
             font-size: var(--font-default-fontsize);
