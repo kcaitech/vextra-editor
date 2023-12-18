@@ -2,12 +2,13 @@ import {
     CoopRepository,
     TaskMgr,
     Task,
-    Watchable,
+    WatchableObject,
     TaskPriority,
     TableShape,
     TableEditor,
     Text,
-    SymbolShape
+    SymbolShape,
+    DViewCtx
 } from "@kcdesign/data";
 import { Document } from "@kcdesign/data";
 import { Page } from "@kcdesign/data";
@@ -29,6 +30,8 @@ import { TableSelection } from "./tableselection";
 import { TextSelection } from "./textselection";
 import { Component } from "./component";
 import { Path } from "./path";
+import { PageDom } from "@/components/Document/Content/vdom/page";
+import { initComsMap } from "@/components/Document/Content/vdom/comsmap";
 import { Arrange } from "./arrange";
 
 // 仅暴露必要的方法
@@ -65,7 +68,7 @@ export class RepoWraper {
     }
 }
 
-export class Context extends Watchable(Object) {
+export class Context extends WatchableObject {
     private m_data: Document;
     private m_editor: Editor;
     private m_repo: RepoWraper;
@@ -86,6 +89,9 @@ export class Context extends Watchable(Object) {
     private m_tableselection: TableSelection;
     private m_component: Component;
     private m_path: Path;
+    private m_textselection: TextSelection;
+
+    private m_vdom: Map<string, { dom: PageDom, ctx: DViewCtx }> = new Map();
     private m_arrange: Arrange
 
     constructor(data: Document, repo: CoopRepository) {
@@ -269,6 +275,23 @@ export class Context extends Watchable(Object) {
 
     get path() {
         return this.m_path;
+    }
+
+    private createVDom(page: Page) {
+        const domCtx = new DViewCtx();
+        initComsMap(domCtx.comsMap);
+        const dom: PageDom = new PageDom(domCtx, { data: page });
+        // dom.update(props, true);
+        // console.log("dom.nodeCount: " + dom.nodeCount);
+        const ret = { dom, ctx: domCtx }
+        this.m_vdom.set(page.id, ret);
+        return ret;
+    }
+
+    getPageDom(page: Page): { dom: PageDom, ctx: DViewCtx } {
+        const ret = this.m_vdom.get(page.id);
+        if (ret) return ret;
+        return this.createVDom(page);
     }
 
     get arrange() {

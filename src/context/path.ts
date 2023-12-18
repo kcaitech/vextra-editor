@@ -1,4 +1,4 @@
-import { Matrix, Watchable } from "@kcdesign/data";
+import { Matrix, WatchableObject } from "@kcdesign/data";
 import { Context } from ".";
 import { CurveMode } from "@kcdesign/data";
 import { Segment } from "@/utils/pathedit";
@@ -6,7 +6,7 @@ import { Action } from "./tool";
 
 export type PointEditType = CurveMode | 'INVALID'
 
-export class Path extends Watchable(Object) {
+export class Path extends WatchableObject {
     static SELECTION_CHANGE = 1;
     static SELECTION_CHANGE_P = 2;
     static SELECTION_CHANGE_S = 3;

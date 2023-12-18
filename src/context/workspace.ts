@@ -1,4 +1,4 @@
-import { Matrix, Shape, ShapeType, TableShape, Watchable } from "@kcdesign/data";
+import { Matrix, Shape, ShapeType, TableShape, WatchableObject } from "@kcdesign/data";
 import { Context } from "./index";
 import { adapt_page, Root } from "@/utils/content";
 import { Clipboard } from "@/utils/clipboard";
@@ -64,7 +64,7 @@ export enum Perm {
     isEdit = 3 // 可编辑
 }
 
-export class WorkSpace extends Watchable(Object) {
+export class WorkSpace extends WatchableObject {
     static MATRIX_TRANSFORMATION = 1;
     static SELECTING = 2;
     static TEXT_FORMAT = 3;

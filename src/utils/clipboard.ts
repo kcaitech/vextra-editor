@@ -1,7 +1,7 @@
 import {
     export_shape, import_shape,
     Shape, ShapeType, AsyncCreator, ShapeFrame, GroupShape, TextShape, Text,
-    export_text, import_text, TextShapeEditor
+    export_text, import_text, TextShapeEditor, ImageShape
 } from '@kcdesign/data';
 import { Context } from '@/context';
 import { PageXY } from '@/context/selection';
@@ -533,7 +533,7 @@ export function paster_image(context: Context, mousedownOnPageXY: PageXY, t: Fun
     if (asyncCreator && new_shape) {
         asyncCreator = asyncCreator.close();
         selection.selectShape(new_shape);
-        context.communication.docResourceUpload.upload(new_shape.imageRef, media.buff.buffer.slice(0));
+        context.communication.docResourceUpload.upload((new_shape as ImageShape).imageRef, media.buff.buffer.slice(0));
     }
     context.tool.setAction(Action.AutoV);
     workspace.creating(false);

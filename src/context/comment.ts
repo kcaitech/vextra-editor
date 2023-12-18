@@ -1,4 +1,4 @@
-import { Shape, Watchable } from "@kcdesign/data";
+import { Shape, WatchableObject } from "@kcdesign/data";
 import { DocInfo, UserInfo } from "./user";
 import { DocCommentOpData, DocCommentOpType } from "@/communication/modules/doc_comment_op";
 
@@ -23,7 +23,7 @@ export type CommentInfo = {
   user: UserInfo;
 }
 
-export class Comment extends Watchable(Object) {
+export class Comment extends WatchableObject {
   static SHUTDOWN_COMMENT = 1;
   static SELECT_LIST_TAB = 2;
   static SEND_COMMENT = 3;

@@ -1,6 +1,6 @@
-import { Watchable } from "@kcdesign/data";
+import { WatchableObject } from "@kcdesign/data";
 
-export class Arrange extends Watchable(Object) {
+export class Arrange extends WatchableObject {
     static FLEX_START = 1;
     static SPACE_AROUND_HOR = 2;
     static ITEMS_ALIGN = 3;

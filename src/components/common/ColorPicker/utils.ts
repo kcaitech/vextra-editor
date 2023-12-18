@@ -565,7 +565,7 @@ function finder(context: Context, shape: GroupShape | TableShape, init?: Map<str
     }
     if (s.type === ShapeType.Text) {
       const editor = context.peekEditor4TextShape(s as TextShape);
-      const format = s.text.getTextFormat(0, Infinity, editor?.getCachedSpanAttr());
+      const format = (s as TextShape).text.getTextFormat(0, Infinity, editor?.getCachedSpanAttr());
       const c = format.color;
       if (format.colorIsMulti || !c) continue;
       const r = result.get(c2s(c));
