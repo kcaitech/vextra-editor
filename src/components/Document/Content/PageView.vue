@@ -1,7 +1,6 @@
 <script setup lang="ts">
 import { Matrix, Page, DViewCtx, ShapeType } from '@kcdesign/data';
 import { Context } from '@/context';
-import { Selection } from '@/context/selection';
 import { Tool } from '@/context/tool';
 import { h, onMounted, onUnmounted, ref, watch } from 'vue';
 import { v4 } from "uuid";
@@ -82,7 +81,7 @@ onMounted(() => {
     props.data.__collect.watch(collect);
     props.context.tool.watch(tool_watcher);
     pageViewRegister(true);
-    props.context.selection.watch(selection_watcher);
+    // props.context.selection.watch(selection_watcher);
 })
 onUnmounted(() => {
     props.data.unwatch(page_watcher);
@@ -91,15 +90,15 @@ onUnmounted(() => {
     pageViewRegister(false);
     stopWatchPage();
     stop_watch_matrix();
-    props.context.selection.unwatch(selection_watcher);
+    // props.context.selection.unwatch(selection_watcher);
 })
 
 const renderCtx = new RenderCtx();
-function selection_watcher(...args: any[]) {
-    if (args.includes(Selection.CHANGE_SHAPE)) {
-        renderCtx.resetSelectShapePath(props.context.selection.selectedShapes[0]);
-    }
-}
+// function selection_watcher(...args: any[]) {
+//     if (args.includes(Selection.CHANGE_SHAPE)) {
+//         renderCtx.resetSelectShapePath(props.context.selection.selectedShapes[0]);
+//     }
+// }
 
 onMounted(() => {
     if (dom && pagesvg.value) {

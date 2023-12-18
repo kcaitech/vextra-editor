@@ -34,9 +34,9 @@ onUnmounted(() => {
     }
 })
 
-const updater = () => {
-    common.incReflush();
-}
+// const updater = () => {
+//     common.incReflush();
+// }
 
 function render() {
 
@@ -54,9 +54,9 @@ function render() {
 
     // }
     // else {
-        const startTime = Date.now();
+        // const startTime = Date.now();
         const ret = r(h, props.data, comsMap, props.transx, props.varsContainer, common.reflush);
-        console.log("render " + props.data.name + " as native cost: " + (Date.now() - startTime) + "ms")
+        // console.log("render " + props.data.name + " as native cost: " + (Date.now() - startTime) + "ms")
         return ret;
     // }
 }
