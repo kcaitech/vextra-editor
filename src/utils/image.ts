@@ -1,5 +1,5 @@
-import { ExportFormatNameingScheme, Shape, ExportFormat, ShapeType, Matrix } from '@kcdesign/data';
-import { getShadowMax, getShapeBorderMax, getShapeMaxBounds } from '@/utils/cutout';
+import { ExportFormatNameingScheme, Shape, ExportFormat, ShapeType, GroupShape } from '@kcdesign/data';
+import { getShadowMax, getShapeBorderMax, getGroupChildBounds } from '@/utils/cutout';
 import JSZip from 'jszip';
 export function get_frame(file: any) {
   const frame: { width: number, height: number } = { width: 100, height: 100 };
@@ -91,15 +91,22 @@ export const getPngImageData = (svg: SVGSVGElement, trim: boolean, id: string, f
   const pcloneSvg = svg.cloneNode(true) as SVGSVGElement;
   document.body.appendChild(pcloneSvg);
   const { width, height } = pcloneSvg.getBoundingClientRect();
-  if (shape.type !== ShapeType.Cutout) {
+  if (shape.type !== ShapeType.Cutout && shape.rotation !== 0) {
     const el = pcloneSvg.children[0] as SVGSVGElement;
     let rotate = shape.rotation || 0;
     if (el) {
       const { width, height } = pcloneSvg.viewBox.baseVal
       const { left, top, right, bottom } = getShadowMax(shape);
+      let g_x = 0;
+      let g_y = 0;
+      if (shape.type === ShapeType.Group) {
+        const { x, y, width: _w, height: _h } = getGroupChildBounds(shape as GroupShape);
+        g_x = Math.abs(x);
+        g_y = Math.abs(y);
+      }
       const max_border = getShapeBorderMax(shape);
-      const x = left + max_border;
-      const y = top + max_border;
+      const x = left + max_border + g_x;
+      const y = top + max_border + g_y;
       el.style.transform = `rotate(0deg)`;
       let rotateY = 0;
       let rotateX = 0;
@@ -111,8 +118,8 @@ export const getPngImageData = (svg: SVGSVGElement, trim: boolean, id: string, f
       const cos = Math.cos(radian);
       const newWidth = Math.abs(width * cos) + Math.abs(height * sin);
       const newHeight = Math.abs(width * sin) + Math.abs(height * cos);
-      pcloneSvg.setAttribute("width", `${newWidth}`);
-      pcloneSvg.setAttribute("height", `${newHeight}`);
+      pcloneSvg.setAttribute("width", `${newWidth * format.scale}`);
+      pcloneSvg.setAttribute("height", `${newHeight * format.scale}`);
       pcloneSvg.setAttribute("viewBox", `0 0 ${newWidth} ${newHeight}`);
       el.style.transform = `translate(${newWidth / 2}px, ${newHeight / 2}px) rotateY(${rotateY}deg) rotateX(${rotateX}deg) rotate(${rotate}deg) translate(${-width / 2 + x}px, ${-height / 2 + y}px)`;
     }
@@ -170,15 +177,22 @@ export const getSvgImageData = (svg: SVGSVGElement, trim: boolean, id: string, f
   const cloneSvg = svg.cloneNode(true) as SVGSVGElement;
   document.body.appendChild(cloneSvg);
   const { width, height } = cloneSvg.getBoundingClientRect();
-  if (shape.type !== ShapeType.Cutout) {
+  if (shape.type !== ShapeType.Cutout && shape.rotation !== 0) {
     const el = cloneSvg.children[0] as SVGSVGElement;
     let rotate = shape.rotation || 0;
     if (el) {
       const { width, height } = cloneSvg.viewBox.baseVal
       const { left, top, right, bottom } = getShadowMax(shape);
+      let g_x = 0;
+      let g_y = 0;
+      if (shape.type === ShapeType.Group) {
+        const { x, y, width: _w, height: _h } = getGroupChildBounds(shape as GroupShape);
+        g_x = Math.abs(x);
+        g_y = Math.abs(y);
+      }
       const max_border = getShapeBorderMax(shape);
-      const x = left + max_border;
-      const y = top + max_border;
+      const x = left + max_border + g_x;
+      const y = top + max_border + g_y;
       el.style.transform = `rotate(0deg)`;
       let rotateY = 0;
       let rotateX = 0;
@@ -190,8 +204,8 @@ export const getSvgImageData = (svg: SVGSVGElement, trim: boolean, id: string, f
       const cos = Math.cos(radian);
       const newWidth = Math.abs(width * cos) + Math.abs(height * sin);
       const newHeight = Math.abs(width * sin) + Math.abs(height * cos);
-      cloneSvg.setAttribute("width", `${newWidth}`);
-      cloneSvg.setAttribute("height", `${newHeight}`);
+      cloneSvg.setAttribute("width", `${newWidth * format.scale}`);
+      cloneSvg.setAttribute("height", `${newHeight * format.scale}`);
       cloneSvg.setAttribute("viewBox", `0 0 ${newWidth} ${newHeight}`);
       el.style.transform = `translate(${newWidth / 2}px, ${newHeight / 2}px) rotateY(${rotateY}deg) rotateX(${rotateX}deg) rotate(${rotate}deg) translate(${-width / 2 + x}px, ${-height / 2 + y}px)`;
     }

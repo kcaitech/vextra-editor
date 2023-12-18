@@ -439,7 +439,7 @@ function layout() {
             multiRadius.value = MULTI_RADIUS.includes(shape.type);
             getRectShapeAttr(shape);
         }
-        if (shape.type === ShapeType.Table) s_flip = false;
+        if (shape.type === ShapeType.Table || shape.type === ShapeType.Cutout) s_flip = false;
         if (shape.type === ShapeType.Line || shape.type === ShapeType.Contact) s_length = true;
         if(shape.type === ShapeType.Cutout) cutout_setting.value = false;
     } else {
@@ -532,13 +532,13 @@ onUnmounted(() => {
         <div class="tr" :reflush="reflush">
             <IconText class="td angle" svgicon="angle" :text="`${rotate}` + '°'" @onchange="onChangeRotate"
                 :frame="{ width: 14, height: 14 }" :disabled="model_disable_state.rotation" :context="context" />
-            <Tooltip v-if="s_flip || cutout_setting" :content="t('attr.flip_h')" :offset="15">
+            <Tooltip v-if="s_flip" :content="t('attr.flip_h')" :offset="15">
                 <div :class="{ flip: !model_disable_state.filpVertical, 'flip-disable': model_disable_state.filpVertical, 'ml-24': true }"
                      @click="fliph">
                     <svg-icon icon-class="fliph"></svg-icon>
                 </div>
             </Tooltip>
-            <Tooltip v-if="s_flip || cutout_setting" :content="t('attr.flip_v')" :offset="15">
+            <Tooltip v-if="s_flip" :content="t('attr.flip_v')" :offset="15">
                 <div :class="{ flip: !model_disable_state.filpVertical, 'flip-disable': model_disable_state.filpVertical, 'ml-12': true }"
                      @click="flipv">
                     <svg-icon icon-class="flipv"></svg-icon>

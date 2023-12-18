@@ -1,9 +1,9 @@
 <script setup lang="ts">
 import { ref, reactive, onMounted, onUnmounted, watch } from 'vue';
 import comsMap from '@/components/Document/Content/comsmap';
-import { ExportFileFormat, ExportFormat, Shape, ShapeType } from '@kcdesign/data';
+import { ExportFileFormat, ExportFormat, GroupShape, Shape, ShapeType } from '@kcdesign/data';
 import { Context } from '@/context';
-import { getCutoutShape, getPageBounds, getShadowMax, getShapeBorderMax, parentIsArtboard } from '@/utils/cutout';
+import { getCutoutShape, getGroupChildBounds, getPageBounds, getShadowMax, getShapeBorderMax, parentIsArtboard } from '@/utils/cutout';
 import { color2string } from '@/utils/content';
 import { Selection } from '@/context/selection';
 import { debounce } from 'lodash';
@@ -79,16 +79,15 @@ const _getCanvasShape = () => {
     } else if (shapes.length === 0) {
         const page = props.context.selection.selectedPage;
         if (page) {
-            const { left, top, right, bottom } = getPageBounds(page);
-            width.value = page.frame.width + right + left;
-            height.value = page.frame.height + bottom + top;
-            xy.value.x = -left;
-            xy.value.y = -top;
+            const { x, y, width:_w, height: _h } = getPageBounds(page);
+            width.value = _w;
+            height.value = _h;
+            xy.value.x = x;
+            xy.value.y = y;
             renderItems = page.childs;
         }
     }
-    reflush.value++;
-    nextTick(() => {
+    setTimeout(() => {
         if (previewSvg.value) {
             let format: ExportFormat;
             let id = '';
@@ -114,9 +113,10 @@ const _getCanvasShape = () => {
             }
             setTimeout(() => {
                 pngImage.value = ImageUrls.get(id);
-            }, 50)
+                reflush.value++;
+            }, 100)
         }
-    });
+    }, 10);
 }
 
 
@@ -140,12 +140,22 @@ const getPosition = (shape: Shape) => {
         xy.value.y = p.y;
     }
     if (shape.type !== ShapeType.Cutout) {
-        const { left, top, right, bottom } = getShadowMax(shape);
-        const max_border = getShapeBorderMax(shape);
-        xy.value.x = -(shape.frame.x + left + max_border);
-        xy.value.y = -(shape.frame.x + top + max_border);
-        width.value = (shape.frame.width + (left + max_border) + (right + max_border));
-        height.value = (shape.frame.height + (top + max_border) + (bottom + max_border));
+        if (shape.type === ShapeType.Group) {
+            const { left, top, right, bottom } = getShadowMax(shape);
+            const max_border = getShapeBorderMax(shape);
+            const { x, y, width: _w, height: _h } = getGroupChildBounds(shape as GroupShape);
+            xy.value.x = shape.frame.x + x - (left + max_border);
+            xy.value.y = shape.frame.y + y - (top + max_border);
+            width.value = _w + (left + max_border) + (right + max_border);
+            height.value = _h + (top + max_border) + (bottom + max_border);
+        } else {
+            const { left, top, right, bottom } = getShadowMax(shape);
+            const max_border = getShapeBorderMax(shape);
+            xy.value.x = (shape.frame.x - left - max_border);
+            xy.value.y = (shape.frame.y - top - max_border);
+            width.value = (shape.frame.width + (left + max_border) + (right + max_border));
+            height.value = (shape.frame.height + (top + max_border) + (bottom + max_border));
+        }
     }
 }
 
@@ -235,14 +245,14 @@ const getShapesSvg = (shapes: Shape[]) => {
         let renderItems: SvgFormat[] = [];
         const page = props.context.selection.selectedPage;
         if (!page) return;
-        const { left, top, right, bottom } = getPageBounds(page);
+        const { x, y, width: _w, height: _h } = getPageBounds(page);
         renderItems.push(
             {
                 id: page.id + 0,
-                width: page.frame.width + left + right,
-                height: page.frame.height + top + bottom,
-                x: -left,
-                y: -top,
+                width: _w,
+                height: _h,
+                x: x,
+                y: y,
                 background: 'transparent',
                 shapes: page.childs
             }
@@ -353,9 +363,9 @@ onUnmounted(() => {
     }
 
     >svg {
-        position: fixed;
-        left: -1000px;
-        top: -1000px;
+        position: absolute;
+        left: -100000px;
+        top: -100000px;
         opacity: 0;
         z-index: -1;
     }
