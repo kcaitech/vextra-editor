@@ -48,7 +48,7 @@ function showMenu(e: MouseEvent) {
         nextTick(() => {
             if (popover.value) {
                 popover.value.style.left = el.offsetLeft + 'px';
-                popover.value.style.top = el.offsetHeight + 9 + 'px';
+                popover.value.style.top = el.offsetHeight + 16 + 'px';
             }
         })
         document.addEventListener('click', onMenuBlur);
@@ -104,12 +104,17 @@ const customFrame = () => {
             <span @click="customFrame">{{ t('frame.custom') }}</span>
         </div>
         <div ref="frame" v-for="(item, i) in frames" :key="i" style="position: relative;">
-            <div class="frame" @mouseenter="showChildFrame(i)" @mouseleave="closeChildFrame">
+<!--            @mouseleave="closeChildFrame"-->
+            <div class="frame" @mouseenter="showChildFrame(i)" >
                 <span>{{ t(`${item}`) }}</span>
                 <div class="triangle"></div>
                 <div class="bridge"></div>
-                <FrameChild :context="props.context" :childFrame="hoverIndex === i" :top="-8" :left="left"
-                    :framesChild="framesChild[i]" @closeFrame="closeFrame"></FrameChild>
+<!--                <FrameChild :context="props.context" :childFrame="hoverIndex === i" :top="-8" :left="left"-->
+<!--                    :framesChild="framesChild[i]" @closeFrame="closeFrame"></FrameChild>-->
+<!--                <div class="triangle"></div>-->
+                <svg-icon icon-class="arrowhead"></svg-icon>
+                <FrameChild :context="props.context" :childFrame="hoverIndex === i" :top="-1" :left="left"
+                            :framesChild="framesChild[i]" @closeFrame="closeFrame"></FrameChild>
             </div>
         </div>
     </div>
@@ -160,17 +165,19 @@ const customFrame = () => {
     position: absolute;
     color: #ffffff;
     z-index: 999;
-    width: 150px;
+    width: 136px;
     height: auto;
     font-size: var(--font-default-fontsize);
-    background-color: var(--theme-color);
+    background-color: #262626;
     border-radius: 4px;
     outline: none;
-    padding: var(--default-padding-half) 0;
+    padding: 4px 0;
+    box-shadow: 0px 2px 10px 0px rgba(0, 0, 0, 0.08);
 
-    >div {
-        >span {
-            padding: 4px var(--default-padding);
+    > div {
+
+        > span {
+            padding: 9px 0 9px 28px;
             height: 32px;
             width: 100%;
             box-sizing: border-box;
@@ -178,7 +185,7 @@ const customFrame = () => {
             align-items: center;
 
             &:hover {
-                background-color: var(--active-color);
+                background-color: #434343;
             }
         }
 
@@ -190,19 +197,26 @@ const customFrame = () => {
             display: flex;
             align-items: center;
             justify-content: space-between;
-            padding: 4px var(--default-padding);
+            padding: 9px 0 9px 28px;
 
             &:hover {
-                background-color: var(--active-color);
+                background-color: #434343;
             }
 
-            .triangle {
-                width: 0;
-                height: 0;
-                padding: 0;
-                border-top: 5px solid transparent;
-                border-bottom: 5px solid transparent;
-                border-left: 10px solid var(--theme-color-anti);
+            //.triangle {
+            //    width: 0;
+            //    height: 0;
+            //    padding: 0;
+            //    border-top: 5px solid transparent;
+            //    border-bottom: 5px solid transparent;
+            //    border-left: 10px solid var(--theme-color-anti);
+            //}
+            >svg {
+                height: 16px;
+                width: 16px;
+                margin-right: 8px;
+                margin-left: 60px;
+                margin-top: 4px;
             }
 
             .bridge {
