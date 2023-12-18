@@ -1,64 +1,6 @@
 import { Shape, SymbolRefShape, SymbolShape } from "@kcdesign/data";
 import { onMounted, onUnmounted, ref, watch } from "vue";
 
-export class RenderCtx {
-
-
-    started = false;
-    remainTime = 40;
-
-    reset() {
-        this.started = false;
-        this.remainTime = 40;
-    }
-
-    cousumeTime(time: number) {
-        this.remainTime -= time;
-    }
-
-    isExpired() {
-        return this.remainTime <= 0;
-    }
-
-    selectShapePath: Set<string> = new Set();
-
-    resetSelectShapePath(shape: Shape | undefined) {
-        this.selectShapePath.clear();
-        while (shape) {
-            this.selectShapePath.add(shape.id);
-            shape = shape.parent;
-        }
-    }
-
-    isInSelectShapePath(shape: Shape) {
-        return this.selectShapePath.has(shape.id);
-    }
-
-    static maxNativeRenderCount = 5;
-    nativeRenderShapes: { id: string, updater: () => void }[] = [];
-
-    checkRenderAsSvg(shape: Shape, updater: () => void) {
-        const needNative = this.isInSelectShapePath(shape);
-        if (!needNative) return true;
-
-        const idx = this.nativeRenderShapes.findIndex((v) => v.id === shape.id);
-        if (idx >= 0) {
-            if (idx !== this.nativeRenderShapes.length - 1) {
-                this.nativeRenderShapes.splice(idx, 1);
-                this.nativeRenderShapes.push({ id: shape.id, updater });
-            }
-        }
-        else {
-            if (this.nativeRenderShapes.length >= RenderCtx.maxNativeRenderCount) {
-                const first = this.nativeRenderShapes.shift();
-                if (first) first.updater();
-            }
-            this.nativeRenderShapes.push({ id: shape.id, updater });
-        }
-        return false;
-    }
-}
-
 export function initCommonShape(props: { data: Shape, varsContainer?: (SymbolRefShape | SymbolShape)[] }, updater?: (...args: any[]) => void) {
     const _reflush = ref(0);
 

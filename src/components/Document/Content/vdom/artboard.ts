@@ -1,5 +1,5 @@
 import { ArtboradView, DViewCtx, EL, PropsType } from "@kcdesign/data";
-import { elpatch } from "./patch";
+import { batchSetAttribute, createElement, elpatch, setAttribute } from "./patch";
 
 export class ArtboradDom extends (ArtboradView) {
 
@@ -14,7 +14,7 @@ export class ArtboradDom extends (ArtboradView) {
     }
 
     private _bubblewatcher(...args: any[]) {
-
+        this.m_childs_changed = true;
     }
 
     onDestory(): void {
@@ -34,5 +34,58 @@ export class ArtboradDom extends (ArtboradView) {
             this.m_save_render.reset(this.eltag, this.elattr, this.elchilds);
         }
         return version;
+    }
+
+    m_childs_changed: boolean = false;
+    m_image_version: number = -1;
+    imageel?: HTMLElement | SVGElement;
+    m_save_image_props: any;
+
+    switchIntoImage(): boolean {
+        if (!(this.el && (this.m_image_version !== this.m_save_version || this.m_childs_changed))) {
+            return false;
+        }
+        //     const svg = exportInnerSvg(props.data);
+        //     const href = "data:image/svg+xml," + ((svg.replaceAll("#", "%23")));
+        //     console.log("render " + props.data.name + " as svg cost: " + (Date.now() - startTime) + "ms")
+        //     const frame = props.data.frame;
+        //     const image = h('image', { href, x: frame.x, y: frame.y, width: frame.width, height: frame.height, reflush: common.reflush })
+
+        // const startTime = Date.now();
+
+        const svg = this.el.outerHTML;
+        const href = "data:image/svg+xml," + ((svg.replaceAll("#", "%23")));
+        const frame = this.frame;
+        if (!this.imageel) this.imageel = createElement('image');
+
+        const imageel = this.imageel;
+        setAttribute(imageel, "href", href);
+
+        const props: any = {};
+        props.x = frame.x;
+        props.y = frame.y;
+        props.width = frame.width;
+        props.height = frame.height;
+
+        batchSetAttribute(imageel, props, this.m_save_image_props);
+        this.m_save_image_props = props;
+
+        if (this.el.parentNode) {
+            this.el.parentNode.replaceChild(imageel, this.el);
+        }
+
+        this.m_image_version = this.m_save_version;
+        this.m_childs_changed = false;
+
+        // console.log(this.name, " switch into image use time: ", Date.now() - startTime);
+
+        return true;
+    }
+
+    switchOutImage(force: boolean) {
+        if (this.imageel && this.imageel.parentNode && (this.m_childs_changed || force)) {
+            if (this.el) this.imageel.parentNode.replaceChild(this.el, this.imageel);
+            else this.imageel.parentNode.removeChild(this.imageel);
+        }
     }
 }

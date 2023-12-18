@@ -3,13 +3,13 @@ const xmlns = "http://www.w3.org/2000/svg";
 const xlink = "http://www.w3.org/1999/xlink";
 const xhtml = "http://www.w3.org/1999/xhtml";
 
-function createElement(tag: string): HTMLElement | SVGElement {
+export function createElement(tag: string): HTMLElement | SVGElement {
     if (tag === "foreignObject") return document.createElement(tag);
     if (tag === "div") return document.createElement("div");
     return document.createElementNS(xmlns, tag);
 }
 
-function setAttribute(el: HTMLElement | SVGElement, key: string, value: string | { [key: string]: string }) {
+export function setAttribute(el: HTMLElement | SVGElement, key: string, value: string | { [key: string]: string }) {
     if (typeof value === 'object') {
         // parse value
         const attr = value as { [key: string]: string };
@@ -25,6 +25,25 @@ function setAttribute(el: HTMLElement | SVGElement, key: string, value: string |
         el.setAttributeNS(xlink, key, value);
     } else {
         el.setAttribute(key, value);
+    }
+}
+
+export function batchSetAttribute(el: HTMLElement | SVGElement, attrs: { [key: string]: string | { [key: string]: string } }, oldattrs: { [key: string]: string | { [key: string]: string } } = {}) {
+    const tkeys = Object.keys(attrs);
+    const okeys = Object.keys(oldattrs);
+    for (let i = 0; i < tkeys.length; i++) {
+        const k = tkeys[i];
+        const oval = oldattrs[k];
+        const tval = attrs[k];
+        if (oval !== tval) {
+            setAttribute(el, k, tval);
+        }
+    }
+    for (let i = 0; i < okeys.length; i++) {
+        const key = okeys[i];
+        if (tkeys.indexOf(key) < 0) {
+            el.removeAttribute(key);
+        }
     }
 }
 
@@ -50,22 +69,23 @@ export function elpatch(tar: EL, old: EL | undefined) {
     }
 
     // attr
-    const tkeys = Object.keys(_tar.elattr);
-    const okeys = Object.keys(_old?.elattr || {});
-    for (let i = 0; i < tkeys.length; i++) {
-        const k = tkeys[i];
-        const oval = _old?.elattr[k];
-        const tval = _tar.elattr[k];
-        if (oval !== tval) {
-            setAttribute(_tar.el, k, tval);
-        }
-    }
-    for (let i = 0; i < okeys.length; i++) {
-        const key = okeys[i];
-        if (tkeys.indexOf(key) < 0) {
-            _tar.el.removeAttribute(key);
-        }
-    }
+    batchSetAttribute(_tar.el, _tar.elattr, _old?.elattr);
+    // const tkeys = Object.keys(_tar.elattr);
+    // const okeys = Object.keys(_old?.elattr || {});
+    // for (let i = 0; i < tkeys.length; i++) {
+    //     const k = tkeys[i];
+    //     const oval = _old?.elattr[k];
+    //     const tval = _tar.elattr[k];
+    //     if (oval !== tval) {
+    //         setAttribute(_tar.el, k, tval);
+    //     }
+    // }
+    // for (let i = 0; i < okeys.length; i++) {
+    //     const key = okeys[i];
+    //     if (tkeys.indexOf(key) < 0) {
+    //         _tar.el.removeAttribute(key);
+    //     }
+    // }
 
     // string
     if (!Array.isArray(_tar.elchilds)) {
