@@ -24,6 +24,6 @@ const selection = shallowRef(props.context.selection);
     display: flex;
     align-items: center;
     justify-content: space-between;
-    min-width: 1160px
+    min-width: 960px
 }
 </style>
