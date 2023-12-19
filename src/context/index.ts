@@ -7,8 +7,7 @@ import {
     TableShape,
     TableEditor,
     Text,
-    SymbolShape,
-    DViewCtx
+    SymbolShape
 } from "@kcdesign/data";
 import { Document } from "@kcdesign/data";
 import { Page } from "@kcdesign/data";
@@ -33,6 +32,7 @@ import { Path } from "./path";
 import { PageDom } from "@/components/Document/Content/vdom/page";
 import { initComsMap } from "@/components/Document/Content/vdom/comsmap";
 import { Arrange } from "./arrange";
+import { DomCtx } from "@/components/Document/Content/vdom/domctx";
 
 // 仅暴露必要的方法
 export class RepoWraper {
@@ -91,7 +91,7 @@ export class Context extends WatchableObject {
     private m_path: Path;
     private m_textselection: TextSelection;
 
-    private m_vdom: Map<string, { dom: PageDom, ctx: DViewCtx }> = new Map();
+    private m_vdom: Map<string, { dom: PageDom, ctx: DomCtx }> = new Map();
     private m_arrange: Arrange
 
     constructor(data: Document, repo: CoopRepository) {
@@ -278,7 +278,7 @@ export class Context extends WatchableObject {
     }
 
     private createVDom(page: Page) {
-        const domCtx = new DViewCtx();
+        const domCtx = new DomCtx();
         initComsMap(domCtx.comsMap);
         const dom: PageDom = new PageDom(domCtx, { data: page });
         // dom.update(props, true);
@@ -288,7 +288,7 @@ export class Context extends WatchableObject {
         return ret;
     }
 
-    getPageDom(page: Page): { dom: PageDom, ctx: DViewCtx } {
+    getPageDom(page: Page): { dom: PageDom, ctx: DomCtx } {
         const ret = this.m_vdom.get(page.id);
         if (ret) return ret;
         return this.createVDom(page);

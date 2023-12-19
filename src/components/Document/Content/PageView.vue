@@ -7,10 +7,11 @@ import { v4 } from "uuid";
 import ShapeTitles from './ShapeTitles.vue';
 import ComponentTitleContainer from './ComponentTitleContainer.vue';
 import { debounce } from 'lodash';
-import { RenderCtx } from './common';
 import { PageDom } from './vdom/page';
 import comsMap from './comsmap';
 import ShapeCutout from '../Cutout/ShapeCutout.vue';
+import { Selection } from '@/context/selection';
+import { DomCtx } from './vdom/domctx';
 interface Props {
     context: Context
     data: Page
@@ -47,8 +48,8 @@ function page_watcher() {
     if (height.value % 2) height.value++;
 }
 
-const useCustomDom = false;
-function getCustomDom():  { dom: PageDom, ctx: DViewCtx } | undefined {
+const useCustomDom = true;
+function getCustomDom(): { dom: PageDom, ctx: DomCtx } | undefined {
     return useCustomDom ? props.context.getPageDom(props.data) : undefined;
 }
 let dom = getCustomDom();
@@ -63,6 +64,7 @@ const stopWatchPage = watch(() => props.data, (value, old) => {
 
     if (dom) {
         dom.ctx.stopLoop();
+        dom.ctx.updateFocusShape(undefined);
         dom.dom.unbind();
     }
     dom = getCustomDom();
@@ -81,7 +83,7 @@ onMounted(() => {
     props.data.__collect.watch(collect);
     props.context.tool.watch(tool_watcher);
     pageViewRegister(true);
-    // props.context.selection.watch(selection_watcher);
+    props.context.selection.watch(selection_watcher);
 })
 onUnmounted(() => {
     props.data.unwatch(page_watcher);
@@ -90,15 +92,16 @@ onUnmounted(() => {
     pageViewRegister(false);
     stopWatchPage();
     stop_watch_matrix();
-    // props.context.selection.unwatch(selection_watcher);
+    props.context.selection.unwatch(selection_watcher);
 })
 
-const renderCtx = new RenderCtx();
-// function selection_watcher(...args: any[]) {
-//     if (args.includes(Selection.CHANGE_SHAPE)) {
-//         renderCtx.resetSelectShapePath(props.context.selection.selectedShapes[0]);
-//     }
-// }
+function selection_watcher(...args: any[]) {
+    if (dom && args.includes(Selection.CHANGE_SHAPE)) {
+        const selectedShapes = props.context.selection.selectedShapes;
+        const focus = selectedShapes.length === 1 ? selectedShapes[0] : undefined;
+        dom.ctx.updateFocusShape(focus);
+    }
+}
 
 onMounted(() => {
     if (dom && pagesvg.value) {
@@ -111,6 +114,7 @@ onMounted(() => {
 onUnmounted(() => {
     if (dom) {
         dom.ctx.stopLoop();
+        dom.ctx.updateFocusShape(undefined);
         dom.dom.unbind();
     }
 })
@@ -135,7 +139,7 @@ function render() {
     for (let i = 0, len = datachilds.length; i < len; i++) {
         const c = datachilds[i];
         const com = comsMap.get(c.type) ?? comsMap.get(ShapeType.Rectangle);
-        const node = h(com, { data: c, key: c.id, renderCtx });
+        const node = h(com, { data: c, key: c.id });
         childs.push(node);
     }
     return h('svg', prop, childs);
@@ -144,9 +148,11 @@ function render() {
 </script>
 
 <template>
-    <svg ref="pagesvg" v-if="useCustomDom" :style="{ transform: matrixWithFrame.toString() }" :data-area="rootId" :reflush="reflush"></svg>
+    <svg ref="pagesvg" v-if="useCustomDom" :style="{ transform: matrixWithFrame.toString() }" :data-area="rootId"
+        :reflush="reflush"></svg>
     <render v-if="!useCustomDom"></render>
-    <ShapeCutout :context="props.context" :data="data" :matrix="props.matrix" :transform="matrixWithFrame.toArray()"></ShapeCutout>
+    <ShapeCutout :context="props.context" :data="data" :matrix="props.matrix" :transform="matrixWithFrame.toArray()">
+    </ShapeCutout>
     <ShapeTitles v-if="show_t" :context="props.context" :data="data" :matrix="matrixWithFrame.toArray()"></ShapeTitles>
     <ComponentTitleContainer :context="props.context" :data="data" :matrix="matrixWithFrame.toArray()">
     </ComponentTitleContainer>
