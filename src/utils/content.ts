@@ -1067,3 +1067,35 @@ export function scale_0(context: Context) {
     workspace.matrix.trans(center.x, center.y);
     workspace.notify(WorkSpace.MATRIX_TRANSFORMATION);
 }
+
+export function undo(context: Context) {
+    const repo = context.repo;
+    repo.canUndo() && repo.undo();
+    const selection = context.selection;
+    const shapes = context.selection.selectedShapes;
+    const page = context.selection.selectedPage!;
+    const flat = page.shapes;
+
+    if (shapes.length) {
+        for (let i = 0; i < shapes.length; i++) {
+            const item = shapes[i];
+            if (!flat.get(item.id)) {
+                selection.unSelectShape(item);
+            }
+        }
+    }
+
+    if (context.selection.selectedShapes.length > 1) {
+        context.workspace.notify(WorkSpace.CLAC_ATTRI);
+    }
+}
+
+export function redo(context: Context) {
+    const repo = context.repo;
+
+    repo.canRedo() && repo.redo();
+
+    if (context.selection.selectedShapes.length > 1) {
+        context.workspace.notify(WorkSpace.CLAC_ATTRI);
+    }
+}
