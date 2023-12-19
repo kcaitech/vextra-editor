@@ -420,6 +420,7 @@ function onMouseLeave() {
 // #endregion
 function selectEnd() {
     if (props.context.workspace.select) {
+        console.log('SELECT END');
         props.context.workspace.selecting(false);
         selector_mount.value = false;
     }

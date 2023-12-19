@@ -29,7 +29,9 @@ const input = ref<HTMLInputElement>();
 const isActived = ref(false)
 
 function onChange(e: Event) {
-    if (props.disabled) return;
+    if (props.disabled) {
+        return;
+    }
     let value = (e.currentTarget as any)['value']
     try {
         if (props.svgicon == 'angle' && input.value!.value.slice(-1) === '°') {
@@ -86,16 +88,16 @@ const onKeyBlur = (e: KeyboardEvent) => {
     }
 }
 const onMouseDown = (e: MouseEvent) => {
-    if (props.disabled) return;
-    if (props.svgicon === 'radius' && props.multipleValues === true) {
-        return
-    }
-    isDrag.value = true
-    //鼠标按下时的位置
-    curpt.x = e.screenX
-    document.addEventListener('mousemove', onMouseMove)
-    document.addEventListener('mouseup', onMouseUp)
-
+    return; // 关闭拖动设值
+    // if (props.disabled) return;
+    // if (props.svgicon === 'radius' && props.multipleValues === true) {
+    //     return
+    // }
+    // isDrag.value = true
+    // //鼠标按下时的位置
+    // curpt.x = e.screenX
+    // document.addEventListener('mousemove', onMouseMove)
+    // document.addEventListener('mouseup', onMouseUp)
 }
 const onMouseMove = (e: MouseEvent) => {
     //鼠标移动的距离
@@ -181,8 +183,7 @@ onMounted(() => {
             cursor: (props.svgicon === 'radius' && props.multipleValues === true && !props.disabled) ? 'auto' : 'ew-resize'
         }"></svg-icon>
         <img :class="props.disabled ? 'deicon' : 'icon'" v-if="props.icon" :src="props.icon" />
-        <span @mousedown="onMouseDown" :class="props.disabled ? 'deicon' : 'icon'" v-if="!props.icon && props.ticon">{{
-            props.ticon }}</span>
+        <span @mousedown="onMouseDown" :class="props.disabled ? 'deicon' : 'icon'" v-if="!props.icon && props.ticon">{{props.ticon }}</span>
         <input ref="input" @click="onBlur" @focus="selectValue" @blur="blur2" :value="props.text" @keydown="onKeyBlur"
             :disabled="props.disabled" :style="{ cursor: props.disabled ? 'default' : 'text' }" v-on:change="onChange" />
     </div>
@@ -205,7 +206,7 @@ onMounted(() => {
         width: 14px;
         height: 14px;
         flex-shrink: 0;
-        cursor: ew-resize;
+        // cursor: ew-resize; // 关闭拖拽设值
         text-align: center;
         padding: 1px;
         box-sizing: border-box;
@@ -228,13 +229,23 @@ onMounted(() => {
         flex: 1 1 auto;
         align-content: center;
         margin-left: 2px;
-        color: var(--theme-color);
+        //color: var(--theme-color);
         font-family: var(--font-family);
         text-overflow: ellipsis;
         background-color: transparent;
         border: none;
         font-size: var(--font-default-fontsize);
         outline: none;
+    }
+
+    input::selection {
+        color: #FFFFFF;
+        background: #1878F5;
+    }
+
+    input::-moz-selection {
+        color: #FFFFFF;
+        background: #1878F5;
     }
 }
 

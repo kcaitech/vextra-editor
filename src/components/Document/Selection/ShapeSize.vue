@@ -1,11 +1,10 @@
 <script setup lang="ts">
 import { Context } from '@/context';
-import { nextTick, onMounted, onUnmounted, ref } from 'vue';
+import { onMounted, onUnmounted, ref } from 'vue';
 import { ClientXY, Selection } from "@/context/selection";
 import { Matrix, Shape } from '@kcdesign/data';
 import { WorkSpace } from '@/context/workspace';
 import { XYsBounding } from '@/utils/common';
-import { tr } from 'element-plus/es/locale';
 import { Tool } from '@/context/tool';
 interface Point {
     x: number
@@ -100,35 +99,35 @@ function modify_anchor(shape: Shape, m2r: Matrix) {
         anchor = m2r.computeCoord2(frame.width / 2, frame.height);
         if (shape.isFlippedHorizontal && !shape.isFlippedVertical) {
             anchor = m2r.computeCoord2(frame.width, frame.height / 2);
-        }else if (!shape.isFlippedHorizontal && shape.isFlippedVertical) {
+        } else if (!shape.isFlippedHorizontal && shape.isFlippedVertical) {
             anchor = m2r.computeCoord2(frame.width, frame.height / 2);
         }
     } else if (rotate >= 45 && rotate < 135) {
         anchor = m2r.computeCoord2(frame.width, frame.height / 2);
         if (shape.isFlippedHorizontal && !shape.isFlippedVertical) {
             anchor = m2r.computeCoord2(frame.width / 2, 0);
-        }else if (!shape.isFlippedHorizontal && shape.isFlippedVertical) {
+        } else if (!shape.isFlippedHorizontal && shape.isFlippedVertical) {
             anchor = m2r.computeCoord2(frame.width / 2, 0);
         }
     } else if (rotate >= 135 && rotate < 225) {
         anchor = m2r.computeCoord2(frame.width / 2, 0);
         if (shape.isFlippedHorizontal && !shape.isFlippedVertical) {
             anchor = m2r.computeCoord2(0, frame.height / 2);
-        }else if (!shape.isFlippedHorizontal && shape.isFlippedVertical) {
+        } else if (!shape.isFlippedHorizontal && shape.isFlippedVertical) {
             anchor = m2r.computeCoord2(0, frame.height / 2);
         }
     } else if (rotate >= 225 && rotate < 315) {
         anchor = m2r.computeCoord2(0, frame.height / 2);
         if (shape.isFlippedHorizontal && !shape.isFlippedVertical) {
             anchor = m2r.computeCoord2(frame.width / 2, frame.height);
-        }else if (!shape.isFlippedHorizontal && shape.isFlippedVertical) {
+        } else if (!shape.isFlippedHorizontal && shape.isFlippedVertical) {
             anchor = m2r.computeCoord2(frame.width / 2, frame.height);
         }
     } else if (rotate >= 315 && rotate <= 360) {
         anchor = m2r.computeCoord2(frame.width / 2, frame.height);
         if (shape.isFlippedHorizontal && !shape.isFlippedVertical) {
-            anchor = m2r.computeCoord2(frame.width , frame.height / 2);
-        }else if (!shape.isFlippedHorizontal && shape.isFlippedVertical) {
+            anchor = m2r.computeCoord2(frame.width, frame.height / 2);
+        } else if (!shape.isFlippedHorizontal && shape.isFlippedVertical) {
             anchor = m2r.computeCoord2(frame.width, frame.height / 2);
         }
     }
@@ -140,7 +139,7 @@ function selectionWatcher(t: number) {
         watchShapes();
         getShapePositionSize();
         size_box_show();
-    }else if (t === Selection.CHANGE_PAGE) {
+    } else if (t === Selection.CHANGE_PAGE) {
         size_box_show();
     }
 }
@@ -154,7 +153,7 @@ const workspaceUpdate = (t: number) => {
     }
 }
 const tool_watcher = (t: number) => {
-    if(t === Tool.LABLE_CHANGE) {
+    if (t === Tool.LABLE_CHANGE) {
         size_box_show();
     }
 }
@@ -186,9 +185,9 @@ const size_box_show = () => {
     const isLable = props.context.tool.isLable;
     const shapes = props.context.selection.selectedShapes;
     const isTrans = props.context.workspace.isTranslating;
-    if(isLable && shapes.length > 0 && !isTrans) {
+    if (isLable && shapes.length > 0 && !isTrans) {
         isSizeBox.value = true;
-    }else {
+    } else {
         isSizeBox.value = false;
     }
 }

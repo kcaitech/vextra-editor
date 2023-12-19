@@ -8,8 +8,8 @@ const props = defineProps<{
 
 <template>
     <div class="item-container">
-        <span>{{ props.data?.content }}</span>
         <svg-icon :icon-class="props.data?.value || ''"></svg-icon>
+        <span>{{ props.data?.content }}</span>
     </div>
 </template>
 
@@ -19,15 +19,16 @@ const props = defineProps<{
     height: 100%;
     display: flex;
     align-items: center;
-    justify-content: center;
 
     >span {
         flex: 0 0 40px;
     }
 
     >svg {
-        width: calc(100% - 40px);
+        width: calc(100% - 74px);
         height: 100%;
+        color: #BFBFBF;
+        margin-right: 12px;
     }
 }
 </style>

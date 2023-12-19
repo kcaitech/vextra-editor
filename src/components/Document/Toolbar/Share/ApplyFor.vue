@@ -102,9 +102,12 @@ onUnmounted(() => {
       <template #header>
         <div class="card-header">
           <span>{{ t('apply.file_access_request') }}</span>
-          <el-button class="button" text @click="close(index, 'fill')">
-            <div class="close"> X </div>
-          </el-button>
+<!--          <el-button class="button" text @click="close(index, 'fill')">-->
+<!--            <div class="close"> X </div>-->
+<!--          </el-button>-->
+            <div class="close" @click="close(index, 'fill')">
+                <svg-icon icon-class="close"></svg-icon>
+            </div>
         </div>
       </template>
       <div class="contain" ref="container">
@@ -129,9 +132,15 @@ onUnmounted(() => {
         </div>
         <!-- 链接按钮 -->
         <div class="button">
-          <el-button color="#0d99ff" size="small" @click="consent(item.apply.id, index, 'fill')">{{ t('apply.agree')
-          }}</el-button>
-          <el-button plain size="small" @click="refuse(item.apply.id, index, 'fill')">{{ t('apply.refuse') }}</el-button>
+<!--          <el-button color="#0d99ff" size="small" @click="consent(item.apply.id, index, 'fill')">{{ t('apply.agree')-->
+<!--          }}</el-button>-->
+<!--          <el-button plain size="small" @click="refuse(item.apply.id, index, 'fill')">{{ t('apply.refuse') }}</el-button>-->
+            <button class="refuse" @click="refuse(applyList[0].apply.id, index, 'fill')">
+                <span style="font-size: 14px;font-weight: 500;color: #262626">{{ t('apply.refuse') }}</span>
+            </button>
+            <button class="agree" @click="consent(applyList[0].apply.id, index, 'fill')">
+                <span style="font-size: 14px;font-weight: 500;color: #FFFFFF">{{ t('apply.agree') }}</span>
+            </button>
         </div>
       </div>
     </el-card>
@@ -143,9 +152,12 @@ onUnmounted(() => {
       <template #header>
         <div class="card-header">
           <span>{{ t('apply.project_apply') }}</span>
-          <el-button class="button" text @click="close(index, 'project')">
-            <div class="close"> X </div>
-          </el-button>
+<!--          <el-button class="button" text @click="close(index, 'project')">-->
+<!--            <div class="close"> X </div>-->
+<!--          </el-button>-->
+            <div class="close" @click="close(index, 'project')">
+                <svg-icon icon-class="close"></svg-icon>
+            </div>
         </div>
       </template>
       <div class="contain" ref="container">
@@ -166,10 +178,16 @@ onUnmounted(() => {
         </div>
         <!-- 链接按钮 -->
         <div class="button">
-          <el-button color="#0d99ff" size="small" @click="consent(item.request.id, index, 'project')">{{ t('apply.agree')
-          }}</el-button>
-          <el-button plain size="small" @click="refuse(item.request.id, index, 'project')">{{ t('apply.refuse')
-          }}</el-button>
+<!--          <el-button color="#0d99ff" size="small" @click="consent(item.request.id, index, 'project')">{{ t('apply.agree')-->
+<!--          }}</el-button>-->
+<!--          <el-button plain size="small" @click="refuse(item.request.id, index, 'project')">{{ t('apply.refuse')-->
+<!--          }}</el-button>-->
+            <button class="refuse" @click="consent(item.request.id, index, 'project')">
+                <span style="font-size: 14px;font-weight: 500;color: #262626">{{ t('apply.refuse') }}</span>
+            </button>
+            <button class="agree" @click="refuse(item.request.id, index, 'project')">
+                <span style="font-size: 14px;font-weight: 500;color: #FFFFFF">{{ t('apply.agree') }}</span>
+            </button>
         </div>
       </div>
     </el-card>
@@ -181,9 +199,12 @@ onUnmounted(() => {
       <template #header>
         <div class="card-header">
           <span>{{ t('apply.team_apply') }}</span>
-          <el-button class="button" text @click="close(index, 'team')">
-            <div class="close"> X </div>
-          </el-button>
+<!--          <el-button class="button" text @click="close(index, 'team')">-->
+<!--            <div class="close"> X </div>-->
+<!--          </el-button>-->
+            <div class="close" @click="close(index, 'team')">
+                <svg-icon icon-class="close"></svg-icon>
+            </div>
         </div>
       </template>
       <div class="contain" ref="container">
@@ -204,10 +225,16 @@ onUnmounted(() => {
         </div>
         <!-- 链接按钮 -->
         <div class="button">
-          <el-button color="#0d99ff" size="small" @click="consent(item.request.id, index, 'team')">{{ t('apply.agree')
-          }}</el-button>
-          <el-button plain size="small" @click="refuse(item.request.id, index, 'team')">{{ t('apply.refuse')
-          }}</el-button>
+<!--          <el-button color="#0d99ff" size="small" @click="consent(item.request.id, index, 'team')">{{ t('apply.agree')-->
+<!--          }}</el-button>-->
+<!--          <el-button plain size="small" @click="refuse(item.request.id, index, 'team')">{{ t('apply.refuse')-->
+<!--          }}</el-button>-->
+            <button class="refuse" @click="consent(item.request.id, index, 'team')">
+                <span style="font-size: 14px;font-weight: 500;color: #262626">{{ t('apply.refuse') }}</span>
+            </button>
+            <button class="agree" @click="refuse(item.request.id, index, 'team')">
+                <span style="font-size: 14px;font-weight: 500;color: #FFFFFF">{{ t('apply.agree') }}</span>
+            </button>
         </div>
       </div>
     </el-card>
@@ -219,81 +246,143 @@ onUnmounted(() => {
   display: flex;
   justify-content: space-between;
   align-items: center;
+    height: 16px;
 
   span {
-    font-size: 14px;
+    font-size: 16px;
     font-weight: var(--font-default-bold);
+      line-height: 16px;
+      color: #3D3D3D;
+      font-family: HarmonyOS Sans;
   }
 
   .close {
-    font-size: 14px;
-    color: black;
+      width: 16px;
+      height: 16px;
+
+      >svg {
+          width: 16px;
+          height: 16px;
+      }
   }
 
 }
 
 :deep(.el-card__header) {
   border-bottom: none;
-  padding: var(--default-padding-half) var(--default-padding);
-  padding-bottom: 0;
+  padding: 24px;
+    box-sizing: border-box;
+    height: 64px;
 }
 
 :deep(.el-card__body) {
-  padding: var(--default-padding-half) var(--default-padding)
+  padding: 0 24px 8px 24px;
 }
 
 .contain {
-  font-size: var(--font-default-fontsize);
 
   .button {
     display: flex;
     justify-content: center;
-    margin: var(--default-margin);
+      height: 60px;
+      padding: 12px 0;
+      box-sizing: border-box;
+
+      .refuse {
+          width: 100px;
+          height: 36px;
+          border-radius: 6px;
+          display: flex;
+          flex-direction: row;
+          justify-content: center;
+          align-items: center;
+          padding: 8px 14px;
+          gap: 4px;
+          background: #FFFFFF;
+          box-sizing: border-box;
+          border: 1px solid #F0F0F0;
+          margin-right: 16px
+      }
+
+      .agree {
+          width: 100px;
+          height: 36px;
+          border-radius: 6px;
+          display: flex;
+          flex-direction: row;
+          justify-content: center;
+          align-items: center;
+          padding: 8px 14px;
+          gap: 4px;
+          background: #1878F5;
+          border: none;
+      }
   }
 }
 
 .unfounder {
   display: flex;
   align-items: center;
-  height: 30px;
+  height: 36px;
+    padding: 6px 0;
+    box-sizing: border-box;
 
   span {
     display: block;
-    width: 60px;
+    width: 65px;
+      font-size: 13px;
+      line-height: 24px;
+      color: #8C8C8C;
   }
 
   >.name {
-    margin-left: 10px;
+      height: 24px;
+      font-family: HarmonyOS Sans;
+      font-size: 13px;
+      line-height: 24px;
+      color: #000000;
+      margin: 0;
   }
 
   >.bold {
-    font-weight: bold;
+    font-weight: 500;
   }
 }
 
 .textarea {
   display: flex;
-  min-height: 30px;
+  min-height: 36px;
   max-height: 70px;
   height: auto;
+    padding: 6px 0;
+    box-sizing: border-box;
 
   span {
     display: block;
-    width: 60px;
-    margin-right: 10px;
+    width: 65px;
+      font-family: HarmonyOS Sans;
+      font-size: 13px;
+      line-height: 24px;
+      color: #8C8C8C;
   }
 
   >.text {
     flex: 1;
+      font-family: HarmonyOS Sans;
+      font-size: 13px;
+      font-weight: 500;
+      line-height: 24px;
+      color: #8C8C8C;
   }
 }
 
-.remarks {
-  margin-top: 10px;
-}
-
 .box-card {
-  width: 300px;
-  margin-bottom: 10px;
+  width: 380px;
+    margin-right: 5px;
+    margin-bottom: 16px;
+    border-radius: 16px;
+    background: #FFFFFF;
+    border: 1px solid #EBEBEB;
+    box-shadow: 0px 2px 16px 0px rgba(0, 0, 0, 0.08);
 }
 </style>

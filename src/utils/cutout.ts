@@ -201,8 +201,11 @@ const getMaxMinPoints = (shapes: Shape[]) => {
 }
 function flattenShapes(shapes: Shape[]): Shape[] {
     return shapes.reduce((result: any, item: Shape) => {
-        if (Array.isArray(item.childs)) {
-            result = result.concat(flattenShapes(item.childs));
+        if(item.type === ShapeType.Group) {
+            const childs = (item as GroupShape).childs as Shape[];
+            if (Array.isArray(childs)) {
+                result = result.concat(flattenShapes(childs));
+            }
         }
         return result.concat(item);
     }, []);

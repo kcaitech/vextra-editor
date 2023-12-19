@@ -14,14 +14,11 @@ import Text from './Text/Text.vue';
 import { throttle } from 'lodash';
 import Module from './Module/Module.vue'
 import TableText from './Table/TableText.vue'
-import CutoutExport from './CutoutExport/index.vue'
-
-import { Tool } from '@/context/tool';
 import { TableSelection } from '@/context/tableselection';
-import BaseForPathEdit from "@/components/Document/Attribute/BaseAttr/BaseForPathEdit.vue";
+import CutoutExport from './CutoutExport/index.vue'
+import { Tool } from '@/context/tool';
 import Opacity from './Opacity/Opacity.vue';
-import TableStyle from './Table/TableStyle.vue'
-
+import BaseForPathEdit from "@/components/Document/Attribute/BaseAttr/BaseForPathEdit.vue";
 const props = defineProps<{ context: Context }>();
 const shapes = shallowRef<Shape[]>([]);
 const len = computed<number>(() => shapes.value.length);
@@ -74,7 +71,9 @@ const WITH_SHADOW = [
     ShapeType.SymbolUnion
 ]
 const WITH_OPACITY = [
-    ShapeType.Cutout
+    ShapeType.Cutout,
+    ShapeType.Table,
+    ShapeType.TableCell
 ]
 const shapeType = ref();
 const textShapes = ref<Shape[]>([]);
@@ -120,7 +119,6 @@ function _change(t: number) {
         check_for_opacity();
     }
 }
-
 const baseAttr = ref(true);
 const editAttr = ref<boolean>(false);
 const baseAttrVisible = () => {

@@ -6,12 +6,15 @@ import {
     Color,
     ContactForm,
     GroupShape,
+    ImageShape,
     Matrix,
     Page,
     Shape,
     ShapeFrame,
     ShapeType,
+    SymbolRefShape,
     SymbolShape,
+    TableShape,
     TextShape
 } from "@kcdesign/data";
 import { Action, ResultByAction } from "@/context/tool";
@@ -20,8 +23,10 @@ import { is_mac, XYsBounding } from '@/utils/common';
 import { searchCommentShape as finder } from '@/utils/comment'
 import { paster_image } from "./clipboard";
 import { landFinderOnPage, scrollToContentView } from './artboardFn'
-import { fit_no_transform } from "./shapelist";
-import { is_part_of_symbol, is_state, one_of_is_symbolref } from "@/utils/symbol";
+import { fit_no_transform, is_parent_locked, is_parent_unvisible } from "./shapelist";
+import { is_part_of_symbol, is_state, make_symbol, one_of_is_symbolref } from "@/utils/symbol";
+import { Groups } from "aws-sdk/clients/budgets";
+import { message } from "./message";
 
 export interface Media {
     name: string
@@ -97,7 +102,7 @@ export function get_symbol_ref_name(symbolname: string, symbolref: string, broth
     for (let i = 0, len = brothers.length; i < len; i++) {
         const shape = brothers[i];
         if (shape.type !== ShapeType.SymbolRef) continue;
-        if (shape.refId === symbolref) repeats++;
+        if ((shape as SymbolRefShape).refId === symbolref) repeats++;
     }
     return repeats > 1 ? `Ref-${symbolname}-${repeats}` : `Ref-${symbolname}`;
 }
@@ -145,7 +150,7 @@ export function init_shape(context: Context, frame: ShapeFrame, mousedownOnPageX
     let new_shape: Shape | undefined;
     if (page && parent && type) {
         const editor = context.editor.controller();
-        const name = getName(type, parent.childs, t);
+        const name = getName(type, (parent as GroupShape).childs, t);
         asyncCreator = editor.asyncCreator(mousedownOnPageXY);
         if (action === Action.AddArrow) {
             new_shape = asyncCreator.init_arrow(page, (parent as GroupShape), name, frame);
@@ -200,7 +205,7 @@ export function init_insert_shape(context: Context, mousedownOnPageXY: PageXY, t
     const frame = new ShapeFrame(mousedownOnPageXY.x, mousedownOnPageXY.y, 100, 100);
     if (page && parent && type) {
         const editor = context.editor.controller();
-        const name = getName(type, parent.childs, t);
+        const name = getName(type, (parent as GroupShape).childs, t);
         asyncCreator = editor.asyncCreator(mousedownOnPageXY);
         if (action === Action.AddArrow) {
             new_shape = asyncCreator.init_arrow(page, (parent as GroupShape), name, frame);
@@ -232,7 +237,7 @@ export function init_insert_shape2(context: Context, mousedownOnPageXY: PageXY, 
     const frame = new ShapeFrame(mousedownOnPageXY.x, mousedownOnPageXY.y, 100, 100);
     if (page && parent && type) {
         const editor = context.editor.editor4Page(page);
-        const name = getName(type, parent.childs, t);
+        const name = getName(type, (parent as GroupShape).childs, t);
         if (action === Action.AddArrow || action === Action.AddLine) {
             const r = 0.25 * Math.PI;
             frame.width = 100 * Math.cos(r), frame.height = 100 * Math.sin(r);
@@ -270,7 +275,7 @@ export function init_insert_table(context: Context, t: Function, land?: Shape, _
     let new_shape: Shape | undefined;
     if (page && parent && type) {
         const editor = context.editor.controller();
-        const name = getName(type, parent.childs, t);
+        const name = getName(type, (parent as GroupShape).childs, t);
         asyncCreator = editor.asyncCreator(PageXY);
         new_shape = asyncCreator.init_table(page, (parent as GroupShape), name, frame, table.row, table.col);
         if (new_shape) {
@@ -355,7 +360,7 @@ export async function insert_imgs(context: Context, t: Function, media: Media[])
         for (let i = 0; i < media.length; i++) {
             if (i > 0) xy.x = xy.x + media[i - 1].frame.width + 10;
             const img = init_insert_image(context, xy, t, media[i]);
-            if (img && await context.communication.docResourceUpload.upload(img.imageRef, media[i].buff.buffer.slice(0))) new_shapes.push(img);
+            if (img && await context.communication.docResourceUpload.upload((img as ImageShape).imageRef, media[i].buff.buffer.slice(0))) new_shapes.push(img);
         }
     }
     if (new_shapes.length) {
@@ -517,9 +522,9 @@ export const list2Tree = (list: any, rootValue: string) => {
 
 export function flattenShapes(shapes: any) {
     return shapes.reduce((result: any, item: Shape) => {
-        if (Array.isArray(item.childs)) {
+        if (Array.isArray((item as GroupShape).childs)) {
             // 如果当前项有子级数组，则递归调用flattenArray函数处理子级数组
-            result = result.concat(flattenShapes(item.childs));
+            result = result.concat(flattenShapes((item as GroupShape).childs));
         }
         return result.concat(item);
     }, []);
@@ -779,7 +784,7 @@ export function skipUserSelectShapes(context: Context, shapes: Shape[]) {
     const del = { x: root.center.x - p_center.x, y: root.center.y - p_center.y };
     if (del.x || del.y) {
         matrix.trans(del.x, del.y);
-        context.workspace.matrixTransformation();
+        // context.workspace.matrixTransformation();
     }
 }
 
@@ -789,7 +794,7 @@ export function map_from_shapes(shapes: Shape[], init?: Map<string, Shape>) {
         const shape = shapes[i];
         map.set(shape.id, shape);
         if (shape.type === ShapeType.Table) continue;
-        const children = shape.type === ShapeType.SymbolRef ? (shape.naviChilds || []) : shape.childs;
+        const children = shape.type === ShapeType.SymbolRef ? (shape.naviChilds || []) : (shape as GroupShape).childs;
         if (!children?.length) continue;
         map_from_shapes(children, map);
     }
@@ -820,7 +825,7 @@ export function is_need_skip_to_render(shape: Shape, matrix: Matrix) { // 不是
  * @param shape
  */
 export function shape_track(context: Context, shape: Shape) {
-    const page = shape.getPage();
+    const page = shape.getPage() as Page;
     if (!page) return;
     const target = page.getShape(shape.id);
     if (!target) return;
@@ -874,7 +879,7 @@ export function ref_symbol(context: Context, position: PageXY, symbol: Shape) {
         let count = 1;
         for (let i = 0, len = childs.length; i < len; i++) {
             const item = childs[i];
-            if (item?.refId === id) count++;
+            if ((item as SymbolRefShape)?.refId === id) count++;
         }
         let ref: Shape | false = editor.refSymbol(context.data, `${name} ${count}`, frame, id);
         ref = editor.insert(parent, shapes.length, ref);
@@ -916,4 +921,139 @@ export function top_side(shape: Shape, matrix: Matrix) {
     const lt = matrix.computeCoord2(0, 0);
     const rt = matrix.computeCoord2(f.width, f.height);
     return Math.hypot(rt.x - lt.x, rt.y - lt.y)
+}
+
+/**
+ * @description 全选操作，ps:文本的全选操作不在这里处理
+ */
+export function select_all(context: Context) {
+    // todo 编辑模式
+    if (context.workspace.is_path_edit_mode) {
+        select_all_for_path_edit(context);
+        return;
+    }
+
+    const selection = context.selection;
+    const selected = selection.selectedShapes;
+    if (!selected.length) {
+        selection.rangeSelectShape(selection.selectedPage!.childs);
+        return;
+    }
+
+    // 表格内全选操作
+    if (selected.length === 1 && selected[0].type === ShapeType.Table) {
+        const table: TableShape = selected[0] as TableShape;
+        const ts = context.tableSelection;
+        const grid = table.getLayout().grid;
+        ts.selectTableCellRange(0, grid.rowCount - 1, 0, grid.colCount - 1, true);
+        return;
+    }
+
+    const p_map = new Map();
+    selected.forEach(s => {
+        if (s.parent) p_map.set(s.parent.id, s.parent)
+    });
+    if (p_map.size > 1) {
+        const page = selection.selectedPage;
+        if (page) selection.rangeSelectShape(page.childs);
+    } else {
+        selection.rangeSelectShape(Array.from(p_map.values())[0].childs);
+    }
+}
+
+function select_all_for_path_edit(context: Context) {
+    const path_shape = context.selection.pathshape;
+    if (!path_shape) {
+        console.log('select_all_for_path_edit: !path_shape');
+        return;
+    }
+    const indexes = path_shape.points.map((_, idx) => idx);
+    context.path.select_points(indexes);
+    context.path.select_sides(indexes);
+}
+
+/**
+ * @description 图层隐藏与显示
+ * @param context 
+ * @returns 
+ */
+export function set_visible_for_shapes(context: Context) {
+    let shapes = context.selection.selectedShapes;
+    const page = context.selection.selectedPage;
+    shapes = shapes.filter(s => !is_parent_unvisible(s));
+    if (!page) {
+        return;
+    }
+    const editor = context.editor4Page(page);
+    editor.toggleShapesVisible(shapes);
+    context.selection.resetSelectShapes();
+}
+
+/**
+ * @description 设置图层锁
+ * @param context 
+ * @returns 
+ */
+export function set_lock_for_shapes(context: Context) {
+    let shapes = context.selection.selectedShapes;
+    const page = context.selection.selectedPage;
+    shapes = shapes.filter(s => !is_parent_locked(s));
+    if (!page) {
+        return;
+    }
+    const editor = context.editor4Page(page);
+    editor.toggleShapesLock(shapes);
+    context.selection.resetSelectShapes();
+}
+
+/**
+ * @description 创建编组
+ * @param context 
+ */
+export function component(context: Context) {
+    const symbol = make_symbol(context, context.workspace.t.bind(context.workspace));
+    if (symbol) {
+        context.selection.selectShape(symbol as unknown as Shape);
+    }
+}
+
+export function lower_layer(context: Context, layer?: number) {
+    const selection = context.selection;
+    if (selection.selectedShapes.length !== 1) {
+        return;
+    }
+
+    const page = selection.selectedPage;
+
+    if (!page) {
+        return;
+    }
+
+    const editor = context.editor4Page(page);
+    const result = editor.lower_layer(selection.selectedShapes[0], layer);
+
+    if (!result) {
+        message('info', context.workspace.t('homerightmenu.unable_lower'));
+    }
+}
+
+export function uppper_layer(context: Context, layer?: number) {
+    const selection = context.selection;
+
+    if (selection.selectedShapes.length !== 1) {
+        return;
+    }
+
+    const page = selection.selectedPage;
+
+    if (!page) {
+        return;
+    }
+
+    const editor = context.editor4Page(page);
+    const result = editor.uppper_layer(selection.selectedShapes[0], layer);
+
+    if (!result) {
+        message('info', context.workspace.t('homerightmenu.unable_upper'));
+    }
 }

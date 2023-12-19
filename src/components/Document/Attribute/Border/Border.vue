@@ -1,17 +1,17 @@
 <script setup lang="ts">
-import {computed, onMounted, onUnmounted, reactive, ref, watch} from 'vue';
-import {Context} from '@/context';
-import {Shape, ShapeType, TableCell, TableShape} from '@kcdesign/data';
+import { computed, onMounted, onUnmounted, reactive, ref, watch } from 'vue';
+import { Context } from '@/context';
+import { Shape, ShapeType, TableCell, TableShape } from '@kcdesign/data';
 import TypeHeader from '../TypeHeader.vue';
 import BorderDetail from './BorderDetail.vue';
 import ColorPicker from '@/components/common/ColorPicker/index.vue';
-import {useI18n} from 'vue-i18n';
-import {Color, Border, BorderStyle} from '@kcdesign/data';
-import {FillType, BorderPosition} from '@kcdesign/data';
-import {Reg_HEX} from "@/utils/RegExp";
-import {message} from "@/utils/message";
-import {toHex} from "@/utils/color";
-import {WorkSpace} from '@/context/workspace';
+import { useI18n } from 'vue-i18n';
+import { Color, Border, BorderStyle } from '@kcdesign/data';
+import { FillType, BorderPosition } from '@kcdesign/data';
+import { Reg_HEX } from "@/utils/RegExp";
+import { message } from "@/utils/message";
+import { toHex } from "@/utils/color";
+import { WorkSpace } from '@/context/workspace';
 import {
     get_borders,
     get_actions_add_boder,
@@ -20,11 +20,10 @@ import {
     get_actions_border_enabled,
     get_actions_border_delete
 } from '@/utils/shape_style';
-import {v4} from 'uuid';
+import { v4 } from 'uuid';
 import Apex from './Apex.vue';
-import {TableSelection} from '@/context/tableselection';
-import {Selection} from "@/context/selection";
-import {tr} from "element-plus/es/locale";
+import { TableSelection } from '@/context/tableselection';
+import { Selection } from "@/context/selection";
 
 interface BorderItem {
     id: number
@@ -36,10 +35,10 @@ interface Props {
     shapes: Shape[]
 }
 
-const {t} = useI18n();
+const { t } = useI18n();
 const props = defineProps<Props>();
-const data: { borders: BorderItem[] } = reactive({borders: []});
-const {borders} = data;
+const data: { borders: BorderItem[] } = reactive({ borders: [] });
+const { borders } = data;
 const alphaBorder = ref<any>();
 const colorBorder = ref<any>()
 const mixed = ref<boolean>(false);
@@ -188,7 +187,6 @@ function addBorder() {
         } else {
             const actions = get_actions_add_boder(props.shapes, border);
             const page = props.context.selection.selectedPage;
-            console.log('actions:', actions);
             if (page) {
                 const editor = props.context.editor4Page(page);
                 editor.shapesAddBorder(actions);
@@ -368,7 +366,7 @@ function onAlphaChange(e: Event, idx: number) {
             }
             alpha = alpha.toFixed(2) / 100
             const border = borders[idx].border;
-            const {red, green, blue} = border.color
+            const { red, green, blue } = border.color
             const color = new Color(alpha, red, green, blue);
             const _idx = borders.length - idx - 1;
             if (len.value === 1) {
@@ -416,7 +414,7 @@ function onAlphaChange(e: Event, idx: number) {
                 }
                 alpha = Number((Number(alpha)).toFixed(2)) / 100
                 const border = borders[idx].border;
-                const {red, green, blue} = border.color
+                const { red, green, blue } = border.color
                 const color = new Color(alpha, red, green, blue);
                 const _idx = borders.length - idx - 1;
                 if (len.value === 1) {
@@ -638,17 +636,20 @@ onUnmounted(() => {
                     <svg-icon v-if="b.border.isEnabled" icon-class="select"></svg-icon>
                 </div>
                 <div class="color">
-                    <ColorPicker :color="b.border.color" :context="props.context"
+                    <ColorPicker :color="b.border.color" :context="props.context" :auto_to_right_line="true"
                         @change="(c: Color) => getColorFromPicker(c, idx)" />
-                    <input ref="colorBorder" class="colorBorder" :spellcheck="false" :value="(toHex(b.border.color)).slice(1)"
-                        @change="e => onColorChange(e, idx)" @focus="selectColor(idx)" :class="{ 'check': b.border.isEnabled, 'nocheck': !b.border.isEnabled }" />
+                    <input ref="colorBorder" class="colorBorder" :spellcheck="false"
+                        :value="(toHex(b.border.color)).slice(1)" @change="e => onColorChange(e, idx)"
+                        @focus="selectColor(idx)"
+                        :class="{ 'check': b.border.isEnabled, 'nocheck': !b.border.isEnabled }" />
                     <input ref="alphaBorder" class="alphaBorder" style="text-align: center;"
                         :value="filterAlpha(b.border.color.alpha * 100) + '%'" @change="e => onAlphaChange(e, idx)"
-                        @focus="selectAlpha(idx)" :class="{ 'check': b.border.isEnabled, 'nocheck': !b.border.isEnabled }" />
+                        @focus="selectAlpha(idx)"
+                        :class="{ 'check': b.border.isEnabled, 'nocheck': !b.border.isEnabled }" />
                 </div>
                 <div class="extra-action">
                     <BorderDetail :context="props.context" :shapes="props.shapes" :border="b.border"
-                                  :index="borders.length - idx - 1">
+                        :index="borders.length - idx - 1">
                     </BorderDetail>
                     <div class="delete" @click="deleteBorder(idx)">
                         <svg-icon icon-class="delete"></svg-icon>
@@ -725,7 +726,7 @@ onUnmounted(() => {
                 align-items: center;
                 border-radius: 4px;
 
-                > svg {
+                >svg {
                     width: 60%;
                     height: 60%;
                 }
@@ -775,7 +776,7 @@ onUnmounted(() => {
                     font-size: 12px;
                 }
 
-                input + input {
+                input+input {
                     width: 45px;
                 }
 
@@ -816,5 +817,4 @@ onUnmounted(() => {
             }
         }
     }
-}
-</style>
+}</style>

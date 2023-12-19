@@ -223,7 +223,7 @@ const disable = computed(() => {
 
 <template>
     <div class="border-detail-container" @mousedown.stop>
-        <Popover :context="props.context" class="popover" ref="popover" :width="260" height="auto" :left="445"
+        <Popover :context="props.context" class="popover" ref="popover" :width="254" :auto_to_right_line="true"
             :title="`${t('shadow.shadow_setting')}`">
             <template #trigger>
                 <div class="trigger" @click="showMenu">
@@ -233,29 +233,29 @@ const disable = computed(() => {
             <template #body>
                 <div class="options-container">
                     <div class="setting">
-                        <div class="name-title">{{t('shadow.position')}}</div>
+                        <div class="name-title">{{ t('shadow.position') }}</div>
                         <ShadowInput ticon="X" :shadow-v="shadow.offsetX" @on-change="setOffsetX" :reflush="reflush">
                         </ShadowInput>
                         <ShadowInput ticon="Y" :shadow-v="shadow.offsetY" @on-change="setOffsetY" :reflush="reflush">
                         </ShadowInput>
                     </div>
                     <div class="setting">
-                        <div class="name-title">{{t('shadow.effect')}}</div>
-                        <ShadowInput ticon="B" :shadow-v="shadow.blurRadius" @on-change="setBlurRadius" :tootip="`${t('shadow.blur')}`"
-                            :reflush="reflush">
+                        <div class="name-title">{{ t('shadow.effect') }}</div>
+                        <ShadowInput ticon="B" :shadow-v="shadow.blurRadius" @on-change="setBlurRadius"
+                            :tootip="`${t('shadow.blur')}`" :reflush="reflush">
                         </ShadowInput>
                         <ShadowInput ticon="S" :shadow-v="shadow.spread" @on-change="setSpread" :disabled="disable"
                             :tootip="`${t('shadow.extend')}`" :reflush="reflush">
                         </ShadowInput>
                     </div>
                     <div class="setting">
-                        <div class="name-title">{{t('shadow.color')}}</div>
+                        <div class="name-title">{{ t('shadow.color') }}</div>
                         <div class="color">
-                            <ColorPicker :color="(shadow.color as Color)" :context="props.context"
+                            <ColorPicker :color="(shadow.color as Color)" :context="props.context" :late="24"
                                 @change="(c: Color) => getColorFromPicker(c)" />
                             <input ref="colorShadow" :spellcheck="false" :value="(toHex(shadow.color)).slice(1)"
                                 @change="e => onColorChange(e)" @focus="selectColor" />
-                            <input ref="alphaShadow" style="text-align: center;"
+                            <input ref="alphaShadow" style="text-align: right;"
                                 :value="filterAlpha(shadow.color.alpha * 100) + '%'" @change="e => onAlphaChange(e)"
                                 @focus="selectAlpha" />
                         </div>
@@ -295,14 +295,14 @@ const disable = computed(() => {
             display: flex;
             flex-direction: column;
             justify-content: space-between;
-            padding: 8px var(--default-padding);
+            padding: 12px 12px 0 12px;
             box-sizing: border-box;
             height: 100%;
 
             >div {
                 display: flex;
                 align-items: center;
-                margin: 4px 0;
+                margin-bottom: 12px;
 
                 >label {
                     flex: 0 0 72px;
@@ -354,8 +354,8 @@ const disable = computed(() => {
     flex: 0 1 140px;
     background-color: var(--input-background);
     height: 100%;
-    padding: 0px 10px;
-    margin-left: 5px;
+    padding: 0px 8px;
+    margin-left: 8px;
     border-radius: var(--default-radius);
     box-sizing: border-box;
     display: flex;
@@ -366,25 +366,34 @@ const disable = computed(() => {
         border: none;
         box-sizing: border-box;
         background-color: transparent;
-        width: 90px;
-        margin-left: 6px;
+        width: 86px;
+        margin-left: 8px;
     }
 
     input+input {
         width: 50px;
     }
+
+    :deep(.color-block > .popover) {
+        transform: translateY(-8px);
+    }
 }
 
 .setting {
     width: 100%;
-    height: 30px;
+    height: 32px;
     display: flex;
     box-sizing: border-box;
     align-items: center;
-    justify-content: space-between;
+    //justify-content: space-between;
 
     .name-title {
-        width: 30px;
+        width: 24px;
+        height: 14px;
+        font-family: HarmonyOS Sans;
+        font-size: 12px;
+        color: #737373;
+        margin-right: 14px;
     }
 }
 

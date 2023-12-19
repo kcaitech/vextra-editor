@@ -1,8 +1,8 @@
 import {styleSheetController} from "@/utils/cursor";
-import {Watchable} from "@kcdesign/data";
+import {WatchableObject} from "@kcdesign/data";
 import {Context} from ".";
 
-export class Cursor extends Watchable(Object) {
+export class Cursor extends WatchableObject {
     static CHANGE_CURSOR = 1;
     static RESET = 2;
     private m_current_cursor_type: string = '';

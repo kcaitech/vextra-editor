@@ -1,10 +1,10 @@
 <script setup lang="ts">
-import {Context} from '@/context';
-import {Asssit, PageXY2} from '@/context/assist';
-import {ClientXY, PageXY} from '@/context/selection';
-import {Matrix} from '@kcdesign/data';
-import {onMounted, onUnmounted, reactive, ref} from 'vue';
-import {get_p_form_pg_by_x, get_p_form_pg_by_y} from '@/utils/assist';
+import { Context } from '@/context';
+import { Asssit, PageXY2 } from '@/context/assist';
+import { ClientXY, PageXY } from '@/context/selection';
+import { Matrix } from '@kcdesign/data';
+import { onMounted, onUnmounted, reactive, ref } from 'vue';
+import { get_p_form_pg_by_x, get_p_form_pg_by_y } from '@/utils/assist';
 
 interface Props {
     context: Context
@@ -24,8 +24,8 @@ interface Data {
 const props = defineProps<Props>();
 const assist = ref<boolean>(false);
 const matrix = ref<Matrix>(props.context.workspace.matrix);
-const data = reactive<Data>({nodesX: [], nodesY: [], lineX: '', lineY: '', exLineX: [], exLineY: [], exNodesX: [], exNodesY: []});
-let {lineX, nodesX, lineY, nodesY, exLineX, exLineY, exNodesX, exNodesY} = data;
+const data = reactive<Data>({ nodesX: [], nodesY: [], lineX: '', lineY: '', exLineX: [], exLineY: [], exNodesX: [], exNodesY: [] });
+let { lineX, nodesX, lineY, nodesY, exLineX, exLineY, exNodesX, exNodesY } = data;
 let ax = 0, ay = 0;
 
 function assist_watcher(t: number) {
@@ -85,7 +85,7 @@ function getExLineX() {
     const cpg = props.context.assist.CPG;
     if (!cpg) return;
     const xAxis = props.context.assist.xAxis;
-    const {left, cx, right} = cpg;
+    const { left, cx, right } = cpg;
     if (left !== undefined && Math.abs(left - ax) > 1) {
         let t = minus_nodes_x(xAxis.get(left) || []);
         if (t.length) {
@@ -126,7 +126,7 @@ function getExLineY() {
     const cpg = props.context.assist.CPG;
     if (!cpg) return;
     const yAxis = props.context.assist.yAxis;
-    const {top, cy, bottom} = cpg;
+    const { top, cy, bottom } = cpg;
     if (top !== undefined && Math.abs(top - ay) > 1) {
         let t = minus_nodes_y(yAxis.get(top) || []);
         if (t.length) {
@@ -265,21 +265,21 @@ onUnmounted(() => {
 </script>
 <template>
     <svg version="1.1" xmlns="http://www.w3.org/2000/svg" xmlns:xlink="http://www.w3.org/1999/xlink"
-         xmlns:xhtml="http://www.w3.org/1999/xhtml" preserveAspectRatio="xMinYMin meet" overflow="visible" :width="4"
-         :height="4" viewBox="0 0 4 4" style="position: absolute">
+        xmlns:xhtml="http://www.w3.org/1999/xhtml" preserveAspectRatio="xMinYMin meet" overflow="visible" width="4"
+        height="4" viewBox="0 0 4 4" style="position: absolute">
         <g id="node">
-            <path d="M -2 -2 L 2 2 z" style="stroke-width: inherit; stroke: inherit;"/>
-            <path d="M 2 -2 L -2 2 z" style="stroke-width: inherit; stroke: inherit;"/>
+            <path d="M -2 -2 L 2 2 z" style="stroke-width: inherit; stroke: inherit;" />
+            <path d="M 2 -2 L -2 2 z" style="stroke-width: inherit; stroke: inherit;" />
         </g>
         <g v-if="assist">
-            <use v-for="(n, i) in nodesX" :transform="`translate(${n.x}, ${n.y})`" xlink:href="#node" :key="i"/>
-            <use v-for="(n, i) in nodesY" :transform="`translate(${n.x}, ${n.y})`" xlink:href="#node" :key="i"/>
-            <use v-for="(n, i) in exNodesX" :transform="`translate(${n.x}, ${n.y})`" xlink:href="#node" :key="i"/>
-            <use v-for="(n, i) in exNodesY" :transform="`translate(${n.x}, ${n.y})`" xlink:href="#node" :key="i"/>
-            <path v-if="lineX" :d="lineX" class="a-path"/>
-            <path v-if="lineY" :d="lineY" class="a-path"/>
-            <path v-for="(el, i) in exLineX" :d="el" :key="i" class="a-path"/>
-            <path v-for="(el, i) in exLineY" :d="el" :key="i" class="a-path"/>
+            <use v-for="(n, i) in nodesX" :transform="`translate(${n.x}, ${n.y})`" xlink:href="#node" :key="i" />
+            <use v-for="(n, i) in nodesY" :transform="`translate(${n.x}, ${n.y})`" xlink:href="#node" :key="i" />
+            <use v-for="(n, i) in exNodesX" :transform="`translate(${n.x}, ${n.y})`" xlink:href="#node" :key="i" />
+            <use v-for="(n, i) in exNodesY" :transform="`translate(${n.x}, ${n.y})`" xlink:href="#node" :key="i" />
+            <path v-if="lineX" :d="lineX" class="a-path" />
+            <path v-if="lineY" :d="lineY" class="a-path" />
+            <path v-for="(el, i) in exLineX" :d="el" :key="i" class="a-path" />
+            <path v-for="(el, i) in exLineY" :d="el" :key="i" class="a-path" />
         </g>
     </svg>
 </template>

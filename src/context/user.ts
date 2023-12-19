@@ -1,10 +1,10 @@
-import { Watchable } from "@kcdesign/data";
+import { WatchableObject } from "@kcdesign/data";
 interface UserInfo {
     id: string
     nickname: string
     avatar: string
 }
-export class User extends Watchable(Object) {
+export class User extends WatchableObject {
     private m_username: string = ''
     private m_userinfo: UserInfo;
     constructor(info: UserInfo) {
@@ -57,7 +57,7 @@ interface DocInfo {
     application_count: number
     project: Project
 }
-export class DocumentInfo extends Watchable(Object) {
+export class DocumentInfo extends WatchableObject {
     private m_document_info: DocInfo;
     private m_document: Document | undefined;
     private m_user: DocUser | undefined;

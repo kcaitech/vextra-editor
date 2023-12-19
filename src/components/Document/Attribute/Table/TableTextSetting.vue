@@ -292,7 +292,7 @@ onUnmounted(() => {
 
 <template>
   <div class="text-detail-container" @click.stop @mousedown.stop>
-    <Popover :context="props.context" class="popover" ref="popover" :width="220" height="auto" :left="-450"
+    <Popover :context="props.context" class="popover" ref="popover" :width="220" :auto_to_right_line="true"
       :title="t('attr.text_advanced_settings')">
       <template #trigger>
         <div class="trigger">
@@ -361,21 +361,23 @@ onUnmounted(() => {
     height: 22px;
 
     .trigger {
-      width: 100%;
-      height: 100%;
+      width: 28px;
+      height: 28px;
       display: flex;
       justify-content: center;
       align-items: center;
+      margin-top: -11px;
+      margin-left: -10px;
+      border-radius: var(--default-radius);
 
       >svg {
-        width: 11px;
-        height: 11px;
-        transition: 0.5s;
+        width: 16px;
+        height: 16px;
       }
+    }
 
-      >svg:hover {
-        transform: rotate(90deg);
-      }
+    .trigger:hover {
+        background-color: #F5F5F5;
     }
 
     .options-container {

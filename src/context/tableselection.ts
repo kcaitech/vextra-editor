@@ -1,6 +1,6 @@
-import { TableCell, TableGridItem, Watchable, ShapeType } from "@kcdesign/data";
+import { TableCell, TableGridItem, WatchableObject, ShapeType, TableShape } from "@kcdesign/data";
 import { Context } from ".";
-export class TableSelection extends Watchable(Object) {
+export class TableSelection extends WatchableObject {
     static CHANGE_TABLE_CELL = 1;
     static CHANGE_EDITING_CELL = 2;
     private m_tableRowStart: number = -1;
@@ -14,9 +14,9 @@ export class TableSelection extends Watchable(Object) {
         this.m_context = cxt;
     }
 
-    get shape() {
-        return this.m_shape;
-    }
+    // get shape() {
+    //     return this.m_shape;
+    // }
 
     get tableRowStart() {
         return this.m_tableRowStart;
@@ -52,11 +52,12 @@ export class TableSelection extends Watchable(Object) {
     }[] {
         const shape = this.m_context.selection.selectedShapes[0];
         if (shape && shape.type === ShapeType.Table) {
-            if (visible) return shape.getVisibleCells(this.m_tableRowStart,
+            const _shape = shape as TableShape;
+            if (visible) return _shape.getVisibleCells(this.m_tableRowStart,
                 this.m_tableRowEnd,
                 this.m_tableColStart,
                 this.m_tableColEnd);
-            return shape.getCells(this.m_tableRowStart,
+            return _shape.getCells(this.m_tableRowStart,
                 this.m_tableRowEnd,
                 this.m_tableColStart,
                 this.m_tableColEnd);

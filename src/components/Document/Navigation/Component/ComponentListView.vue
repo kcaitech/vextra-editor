@@ -1,19 +1,19 @@
 <script setup lang="ts">
-import {Context} from '@/context';
+import { Context } from '@/context';
 import ComponentCardAlpha from './ComponentCardAlpha.vue';
 import ComponentCardBeta from './ComponentCardBeta.vue';
-import {computed, nextTick, onMounted, onUnmounted, ref, watch} from 'vue';
-import {GroupShape, Shape, SymbolShape} from '@kcdesign/data';
-import {shape_track} from '@/utils/content';
-import {ClientXY} from '@/context/selection';
-import {is_dbl_action} from '@/utils/action';
+import { computed, nextTick, onMounted, onUnmounted, ref, watch } from 'vue';
+import { GroupShape, Shape, SymbolShape } from '@kcdesign/data';
+import { shape_track } from '@/utils/content';
+import { ClientXY } from '@/context/selection';
+import { is_dbl_action } from '@/utils/action';
 import {
     add_blur_for_window, add_move_and_up_for_document, check_drag_action,
     get_current_position_client, modify_down_position_client, remove_blur_from_window,
     remove_move_and_up_from_document
 } from '@/utils/mouse_interactive';
-import {Component} from '@/context/component';
-import {is_state} from "@/utils/symbol";
+import { Component } from '@/context/component';
+import { is_state } from "@/utils/symbol";
 
 interface Props {
     context: Context
@@ -25,7 +25,7 @@ interface Props {
 
 const props = defineProps<Props>();
 let compo: Shape;
-let down_position: ClientXY = {x: 0, y: 0};
+let down_position: ClientXY = { x: 0, y: 0 };
 let is_drag: boolean = false;
 const reflush = ref<number>(0);
 const list_container_beta = ref<HTMLDivElement>();
@@ -54,7 +54,9 @@ function down(e: MouseEvent, shape: Shape) {
 
 function move(e: MouseEvent) {
     const curr_position = get_current_position_client(props.context, e);
-    if (is_drag) return;
+    if (is_drag) {
+        return;
+    }
     if (check_drag_action(down_position, curr_position)) {
         is_drag = true;
         props.context.component.set_brige_status(true);
@@ -63,7 +65,9 @@ function move(e: MouseEvent) {
 }
 
 function up() {
-    if (is_drag) is_drag = false;
+    if (is_drag) {
+        is_drag = false;
+    }
     remove_move_and_up_from_document(move, up);
 }
 
@@ -107,17 +111,16 @@ onUnmounted(() => {
 </script>
 <template>
     <div v-if="render_alpha" class="list-container-alpha">
-        <ComponentCardAlpha v-for="item in props.data" :key="item.id" :data="(item as GroupShape)"
-                            :context="props.context" @mousedown="(e: MouseEvent) => down(e, item as unknown as Shape)"
-                            :container="props.container" :is-attri="props.isAttri">
+        <ComponentCardAlpha v-for="item in props.data" :key="item.id" :data="(item as GroupShape)" :context="props.context"
+            @mousedown="(e: MouseEvent) => down(e, item as unknown as Shape)" :container="props.container"
+            :is-attri="props.isAttri">
         </ComponentCardAlpha>
     </div>
-    <div v-else class="list-container-beta" ref="list_container_beta"
-         :style="{ 'grid-template-columns': gen_columns() }"
-         :reflush="reflush">
-        <ComponentCardBeta v-for="item in props.data" :key="item.id" :data="(item as GroupShape)"
-                           :context="props.context" @mousedown="(e: MouseEvent) => down(e, item as unknown as Shape)"
-                           :container="props.container" :is-attri="props.isAttri">
+    <div v-else class="list-container-beta" ref="list_container_beta" :style="{ 'grid-template-columns': gen_columns() }"
+        :reflush="reflush">
+        <ComponentCardBeta v-for="item in props.data" :key="item.id" :data="(item as GroupShape)" :context="props.context"
+            @mousedown="(e: MouseEvent) => down(e, item as unknown as Shape)" :container="props.container"
+            :is-attri="props.isAttri">
         </ComponentCardBeta>
     </div>
 </template>

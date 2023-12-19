@@ -25,6 +25,9 @@ const charSpacing = ref<HTMLInputElement>()
 const lineHeight = ref<HTMLInputElement>()
 const paraSpacing = ref<HTMLInputElement>()
 // const selection = ref(props.context.selection)
+const isActived1 = ref(false)
+const isActived2 = ref(false)
+const isActived3 = ref(false)
 
 //获取选中字体的长度和下标
 const getTextIndexAndLen = () => {
@@ -171,13 +174,16 @@ const isSelectText = () => {
 }
 
 const selectCharSpacing = () => {
-  charSpacing.value && charSpacing.value.select()
+    isActived1.value = true
+    charSpacing.value && charSpacing.value.select()
 }
 const selectLineHeight = () => {
-  lineHeight.value && lineHeight.value.select()
+    isActived2.value = true
+    lineHeight.value && lineHeight.value.select()
 }
 const selectParaSpacing = () => {
-  paraSpacing.value && paraSpacing.value.select()
+    isActived3.value = true
+    paraSpacing.value && paraSpacing.value.select()
 }
 
 const shapeWatch = watch(() => props.textShape, (value, old) => {
@@ -264,6 +270,12 @@ function selection_wather(t: any) {
   }
 }
 
+function blur2() {
+    isActived1.value = false
+    isActived2.value = false
+    isActived3.value = false
+}
+
 watchEffect(() => {
   textFormat()
 })
@@ -281,7 +293,7 @@ onUnmounted(() => {
 
 <template>
   <div class="text-detail-container">
-    <Popover :context="props.context" class="popover" ref="popover" :width="220" height="auto" :left="440"
+    <Popover :context="props.context" class="popover" ref="popover" :width="232" :auto_to_right_line="true"
       :title="t('attr.text_advanced_settings')">
       <template #trigger>
         <div class="trigger">
@@ -294,35 +306,38 @@ onUnmounted(() => {
         <div class="options-container">
           <div>
             <span>{{ t('attr.word_space') }}</span>
-            <div><input type="text" ref="charSpacing" @focus="selectCharSpacing" v-model="wordSpace" class="input"
-                @change="setWordSpace"></div>
+            <div :class="{ actived: isActived1 }" style="width: 124px;height: 32px;border-radius: 6px;box-sizing: border-box">
+                <input type="text" ref="charSpacing" @focus="selectCharSpacing" @blur="blur2" v-model="wordSpace" class="input"
+                @change="setWordSpace" style="width: 100%;height: 100%"></div>
           </div>
           <div>
             <span>{{ t('attr.row_height') }}</span>
-            <div><input type="text" ref="lineHeight" @focus="selectLineHeight" v-model="rowHeight"
-                :placeholder="row_height" class="input" @change="setRowHeight"></div>
+            <div :class="{ actived: isActived2 }" style="width: 124px;height: 32px;border-radius: 6px;box-sizing: border-box">
+                <input type="text" ref="lineHeight" @focus="selectLineHeight" @blur="blur2" v-model="rowHeight"
+                :placeholder="row_height" class="input" @change="setRowHeight" style="width: 100%;height: 100%"></div>
           </div>
           <div>
             <span>{{ t('attr.paragraph_space') }}</span>
-            <div><input type="text" ref="paraSpacing" @focus="selectParaSpacing" v-model="paragraphSpace" class="input"
-                @change="setParagraphSpace"></div>
+            <div :class="{ actived: isActived3 }" style="width: 124px;height: 32px;border-radius: 6px;box-sizing: border-box">
+                <input type="text" ref="paraSpacing" @focus="selectParaSpacing" @blur="blur2" v-model="paragraphSpace" class="input"
+                @change="setParagraphSpace" style="width: 100%;height: 100%"></div>
           </div>
           <div>
             <span>{{ t('attr.id_style') }}</span>
             <div class="vertical-aligning jointly-text">
-              <i class="jointly-text font-posi" :class="{ selected_bgc: selectId === 'none' }"
+              <i :class="{ 'jointly-text': true, 'font-posi': true, selected_bg: selectId === 'none' }"
                 @click="onSelectId(BulletNumbersType.None)">
                 <Tooltip :content="t('attr.none_list')" :offset="15">
                   <svg-icon icon-class="text-no-list"></svg-icon>
                 </Tooltip>
               </i>
-              <i class="jointly-text font-posi" :class="{ selected_bgc: selectId === 'disorded' }"
+              <i :class="{ 'jointly-text': true, 'font-posi': true, selected_bg: selectId === 'disorded' }"
                 @click="onSelectId(BulletNumbersType.Disorded)">
                 <Tooltip :content="t('attr.unordered_list')" :offset="15">
                   <svg-icon icon-class="text-bulleted-list"></svg-icon>
                 </Tooltip>
               </i>
-              <i class="jointly-text font-posi" :class="{ selected_bgc: selectId === 'ordered-1ai' }"
+              <i :class="{ 'jointly-text': true, 'font-posi': true, selected_bg: selectId === 'ordered-1ai' }"
                 @click="onSelectId(BulletNumbersType.Ordered1Ai)">
                 <Tooltip :content="t('attr.ordered_list')" :offset="15">
                   <svg-icon icon-class="text-number-list"></svg-icon>
@@ -333,28 +348,28 @@ onUnmounted(() => {
           <div>
             <span>{{ t('attr.letter_case') }}</span>
             <div class="level-aligning jointly-text">
-              <i class="jointly-text font-posi" :class="{ selected_bgc: selectCase === 'none' }"
+              <i :class="{ 'jointly-text': true, 'font-posi': true, selected_bg: selectCase === 'none' }"
                 @click="onSelectCase(TextTransformType.None)">
                 <Tooltip :content="t('attr.as_typed')" :offset="15">
                   <svg-icon icon-class="text-no-list"></svg-icon>
                 </Tooltip>
               </i>
-              <i class="jointly-text font-posi" :class="{ selected_bgc: selectCase === 'uppercase' }"
+              <i :class="{ 'jointly-text': true, 'font-posi': true, selected_bg: selectCase === 'uppercase' }"
                 @click="onSelectCase(TextTransformType.Uppercase)">
                 <Tooltip :content="t('attr.uppercase')" :offset="15">
-                  <svg-icon icon-class="text-uppercase"></svg-icon>
+                  <svg-icon icon-class="text-uppercase" style="width: 17px;height: 14px"></svg-icon>
                 </Tooltip>
               </i>
-              <i class="jointly-text font-posi" :class="{ selected_bgc: selectCase === 'lowercase' }"
+              <i :class="{ 'jointly-text': true, 'font-posi': true, selected_bg: selectCase === 'lowercase' }"
                 @click="onSelectCase(TextTransformType.Lowercase)">
                 <Tooltip :content="t('attr.lowercase')" :offset="15">
-                  <svg-icon icon-class="text-lowercase"></svg-icon>
+                  <svg-icon icon-class="text-lowercase" style="width: 14px;height: 14px"></svg-icon>
                 </Tooltip>
               </i>
-              <i class="jointly-text font-posi" :class="{ selected_bgc: selectCase === 'uppercase-first' }"
+              <i :class="{ 'jointly-text': true, 'font-posi': true, selected_bg: selectCase === 'uppercase-first' }"
                 @click="onSelectCase(TextTransformType.UppercaseFirst)">
                 <Tooltip :content="t('attr.titlecase')" :offset="15">
-                  <svg-icon icon-class="text-titlecase"></svg-icon>
+                  <svg-icon icon-class="text-titlecase" style="width: 15px;height: 14px"></svg-icon>
                 </Tooltip>
               </i>
             </div>
@@ -362,19 +377,19 @@ onUnmounted(() => {
           <div>
             <span>{{ t('attr.text_style') }}</span>
             <div class="vertical-aligning jointly-text">
-              <i class="jointly-text font-posi" :class="{ selected_bgc: selectText === 'flexible' }"
+              <i :class="{ 'jointly-text': true, 'font-posi': true, selected_bg: selectText === 'flexible' }"
                 @click="onSelectText(TextBehaviour.Flexible)">
                 <Tooltip :content="t('attr.autowidth')" :offset="15">
                   <svg-icon icon-class="text-autowidth"></svg-icon>
                 </Tooltip>
               </i>
-              <i class="jointly-text font-posi" :class="{ selected_bgc: selectText === 'fixed' }"
+              <i :class="{ 'jointly-text': true, 'font-posi': true, selected_bg: selectText === 'fixed' }"
                 @click="onSelectText(TextBehaviour.Fixed)">
                 <Tooltip :content="t('attr.autoheight')" :offset="15">
                   <svg-icon icon-class="text-autoheight"></svg-icon>
                 </Tooltip>
               </i>
-              <i class="jointly-text font-posi" :class="{ selected_bgc: selectText === 'fixWidthAndHeight' }"
+              <i :class="{ 'jointly-text': true, 'font-posi': true, selected_bg: selectText === 'fixWidthAndHeight' }"
                 @click="onSelectText(TextBehaviour.FixWidthAndHeight)">
                 <Tooltip :content="t('attr.fixedsize')" :offset="15">
                   <svg-icon icon-class="text-fixedsize"></svg-icon>
@@ -396,28 +411,30 @@ onUnmounted(() => {
     height: 16px;
 
     .trigger {
-      width: 16px;
-      height: 16px;
+      width: 28px;
+      height: 28px;
       display: flex;
       justify-content: center;
       align-items: center;
+      margin-top: -11px;
+      margin-left: -12px;
+      border-radius: var(--default-radius);
 
       >svg {
         width: 16px;
         height: 16px;
-        transition: 0.5s;
-      }
-
-      >svg:hover {
-        transform: rotate(90deg);
       }
     }
+
+      .trigger:hover {
+          background-color: #F5F5F5;
+      }
 
     .options-container {
       display: flex;
       flex-direction: column;
       justify-content: space-between;
-      padding: var(--default-padding);
+      padding: 12px 12px 0 12px;
       box-sizing: border-box;
       height: 100%;
 
@@ -426,40 +443,52 @@ onUnmounted(() => {
         align-items: center;
         justify-content: space-between;
         width: 100%;
-        margin: 4px 0;
+        margin-bottom: 12px;
 
         .jointly-text {
-          height: 25px;
-          border-radius: 4px;
+          height: 32px;
+          border-radius: var(--default-radius);
           background-color: var(--input-background);
           display: flex;
           justify-content: space-between;
           align-items: center;
 
           >svg {
-            width: 13px;
-            height: 13px;
+            width: 16px;
+            height: 16px;
           }
         }
 
         >span {
-          font-weight: bold;
-          width: 40%;
+          width: 60px;
+          height: 14px;
+          font-size: var(--font-default-fontsize);
+          color: #737373;
         }
 
         .vertical-aligning {
-          padding: 0 5px;
+          padding: 2px;
+          box-sizing: border-box;
         }
 
         .level-aligning {
-          padding: 0 5px;
+          padding: 2px;
+          box-sizing: border-box;
         }
 
         .font-posi {
-          width: 25px;
-          height: 25px;
+          width: 30px;
+          height: 28px;
           display: flex;
           justify-content: center;
+          border-radius: 4px;
+          border: 1px solid #F4F5F5;
+        }
+
+        .selected_bg {
+          background-color: #FFFFFF !important;
+          color: #000000;
+          border: 1px solid #F0F0F0;
         }
 
         input[type="text"]::-webkit-inner-spin-button,
@@ -471,26 +500,43 @@ onUnmounted(() => {
         input[type="text"] {
           -moz-appearance: textfield;
           appearance: textfield;
-          font-size: var(--font-default-fontsize);
-          width: 90px;
+          font-size: 13px;
+          width: 124px;
           border: none;
           background-color: var(--input-background);
-          height: 20px;
-          border-radius: 4px;
-          padding: 0 10px;
+          height: 32px;
+          border-radius: var(--default-radius);
+          padding: 9px 0 9px 12px;
+          box-sizing: border-box;
+          font-weight: 500;
+          line-height: 14px;
+          color: #000000;
         }
 
         input:focus {
           outline: none;
         }
-      }
 
+          input::selection {
+              color: #FFFFFF;
+              background: #1878F5;
+          }
+
+          input::-moz-selection {
+              color: #FFFFFF;
+              background: #1878F5;
+          }
+
+          .actived {
+              border: 1px solid #1878F5;
+          }
+      }
     }
   }
 
   .selected_bgc {
-    background-color: var(--active-color) !important;
-    color: #fff;
+    background-color: #FFFFFF !important;
+    color: #000000;
   }
 
 }

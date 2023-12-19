@@ -20,13 +20,17 @@ onMounted(() => { })
 </template>
 <style scoped lang="scss">
 .border-position-item-container {
-    height: var(--default-input-height);
+    height: 32px;
     width: 100%;
-    color: var(--theme-color);
-    text-align: left;
-    line-height: var(--default-input-height);
-    padding: 0 var(--default-padding);
-    margin-left: var(--default-margin-half);
+    color: #262626;;
+    //text-align: left;
+    //line-height: var(--default-input-height);
+    padding: 9px 6px 9px 12px;
     box-sizing: border-box;
+    font-weight: 500;
+}
+.border-position-item-container:hover {
+    background-color: #1878F5;
+    color: #FFFFFF;
 }
 </style>

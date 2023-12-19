@@ -12,13 +12,13 @@ import Comment from "./Buttons/Comment.vue"
 import Contact from "./Buttons/CreateContact.vue";
 import Cutout from "./Buttons/Cutout.vue";
 import CreateComps from "./Buttons/CreateComps.vue";
-import PathEditTool from "@/components/Document/Toolbar/PathEditTool.vue";
 import { WorkSpace, Perm } from "@/context/workspace";
 import { Action, Tool } from "@/context/tool";
 import { useI18n } from 'vue-i18n'
 import { message } from "@/utils/message";
-import { ElMessage } from "element-plus";
+import PathEditTool from "@/components/Document/Toolbar/PathEditTool.vue";
 import { string_by_sys } from "@/utils/common";
+import { ElMessage } from "element-plus";
 import Shape from "./Buttons/Shape.vue";
 import ToolButton from "./ToolButton.vue";
 const { t } = useI18n();

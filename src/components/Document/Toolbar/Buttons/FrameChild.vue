@@ -25,7 +25,8 @@ const addFrame = (t: string[]) => {
 
 </script>
 <template>
-  <div class="child" v-if="childFrame" :style="{ top: top + 'px', left: props.left + 'px' }">
+
+  <div class="child" v-if="childFrame" :style="{ top: top + 'px', left: props.left -4 + 'px' }">
     <div class="item" v-for="(item, i) in props.framesChild" :key="i" @click="addFrame(item)">
       <span>{{ item[0] }}</span>
       <span>{{ item[1] }}</span>
@@ -35,15 +36,15 @@ const addFrame = (t: string[]) => {
 <style scoped lang="scss">
 .child {
   position: absolute;
-  width: 200px;
+  width: 222px;
   height: auto;
   z-index: 999;
   color: #ffffff;
   font-size: var(--font-default-fontsize);
-  background-color: var(--theme-color);
+  background-color: #262626;
   border-radius: 4px;
   outline: none;
-  padding: var(--default-padding-half) 0;
+  padding: 4px 0;
 
   .item {
     width: 100%;
@@ -52,11 +53,11 @@ const addFrame = (t: string[]) => {
     display: flex;
     align-items: center;
     justify-content: space-between;
-    padding: 4px var(--default-padding);
+    padding: 9px 16px;
   }
 
   .item:hover {
-    background-color: var(--active-color);
+    background-color: #434343;
   }
 }
 </style>

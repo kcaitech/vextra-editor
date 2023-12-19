@@ -1,4 +1,4 @@
-import {BorderPosition} from "@kcdesign/data"
+import { BorderPosition } from "@kcdesign/data"
 
 export const product = {
     name: 'ProtoDesign'
@@ -63,7 +63,7 @@ export const system = {
     'phonetips': '移动端暂不支持登录，请在电脑端进行登录！',
     'btn_login': '登录',
     'artboart_title_visible': '显示容器标题',
-    sensitive_reminder:'含有敏感信息，请重新输入。'
+    sensitive_reminder: '含有敏感信息，请重新输入。'
 }
 
 export const home = {
@@ -222,7 +222,7 @@ export const attr: any = {
     fixedTop: '顶部固定',
     fixedBottom: '底部固定',
     thickness: '厚度',
-    borderStyle: '边框样式',
+    borderStyle: '样式',
     dash: '虚线',
     solid: '实线',
     startMarkerType: '起点样式',
@@ -289,11 +289,14 @@ export const attr: any = {
     full_border: '全边框',
     outer_border: '外边框',
     inner_border: '内边框',
-    exit_path_edit: '退出编辑模式(ESC)',
+    exit_path_edit: '结束编辑',
+    close_path: '闭合路径',
+    de_close_path: '打开路径',
     right_angle: "直角",
     completely_symmetrical: "完全对称",
-    angular_symmetry: "角度对称",
-    asymmetric: "不对称",
+    angular_symmetry: "不对称",
+    asymmetric: "角度对称",
+    path: '路径'
 }
 
 export const login = {
