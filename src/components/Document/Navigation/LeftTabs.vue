@@ -19,6 +19,9 @@ interface Props {
 }
 
 const props = defineProps<Props>();
+const controllerRef = ref<HTMLElement>();
+const underlineWidth = ref(0);
+const underlinePosition = ref(0);
 const emit = defineEmits<{ (e: 'showNavigation'): void }>()
 type Tab = "Shape" | "Comps" | "Resource" | "Comment"
 
@@ -46,6 +49,28 @@ function update(t: number) {
 function toggle(id: Tab) {
     currentTab.value = id;
     props.context.navi.set_current_navi_module(id);
+    updateUnderlinePosition();
+}
+
+function updateUnderlinePosition() {
+    underlinePosition.value = 0;
+    underlineWidth.value = 0;
+    if (!controllerRef.value) {
+        return;
+    }
+    const tabIndex = tabs.findIndex((tab) => tab.id === currentTab.value);
+    if (tabIndex < 0) {
+        return;
+    }
+    const key = tabs[tabIndex].id;
+    const dom = controllerRef.value.querySelector(`#tabs-id-${key}`);
+    if (!dom) {
+        return;
+    }
+    const width = (dom as HTMLDivElement).offsetWidth - 20;
+    const left = (dom as HTMLDivElement).offsetLeft + 10;
+    underlineWidth.value = width;
+    underlinePosition.value = left + width / 2;
 }
 
 const showHiddenLeft = () => {
@@ -68,6 +93,7 @@ onMounted(() => {
     props.context.navi.set_current_navi_module(currentTab.value);
     props.context.comment.watch(update);
     props.context.tool.watch(tool_watch);
+    updateUnderlinePosition();
 });
 onUnmounted(() => {
     props.context.comment.unwatch(update);
@@ -77,9 +103,14 @@ onUnmounted(() => {
 
 <template>
     <div class="tab-container" @mouseup="stopMouseDown">
-        <div class="tab-controller">
-            <div :class="{ tab: true, active: currentTab === i.id }" v-for="(i, index) in tabs" :key="index"
-                @click="toggle(i.id)">{{ i.title }}
+        <div ref="controllerRef" class="controller">
+            <div v-for="(i, index) in tabs" :class="{ tab: true, active: currentTab === i.id }" :key="index"
+                :id="`tabs-id-${i.id}`" @click="toggle(i.id)"
+                :style="{ color: currentTab === i.id ? '#000000' : '#434343' }">
+                {{ i.title }}
+            </div>
+            <div class="underline"
+                :style="{ width: underlineWidth + 'px', left: `${underlinePosition}px`, transform: `translateX(-50%)` }">
             </div>
         </div>
         <div class="body">
@@ -100,32 +131,34 @@ onUnmounted(() => {
     border-right: 1px solid #EBEBEB;
     box-sizing: border-box;
 
-    .tab-controller {
-        height: 40px;
+    .controller {
         display: flex;
-        flex-direction: row;
-        overflow: hidden;
+        height: 40px;
+        position: relative;
 
         >.tab {
-            min-width: 24px;
-            font-weight: var(--font-default-bold);
-            font-size: var(--font-default-fontsize);
-            margin-right: 4px;
-            margin-top: 4px;
-            text-align: left;
-            line-height: 24px;
-            color: var(--grey-dark);
-            margin-left: 6px;
-        }
-
-        >.tab:hover {
-            color: var(--theme-color);
+            cursor: pointer;
+            padding: 13px 14px 13px 14px;
+            font-size: 12px;
+            font-weight: 400;
+            color: #000000;
         }
 
         >.active {
-            color: var(--theme-color);
+            border-radius: 4px 4px 0 0;
+            font-weight: 500;
         }
 
+        .underline {
+            background-color: #000000;
+            border-radius: 292px;
+            position: absolute;
+            bottom: 0;
+            transition: left 0.3s ease-in-out;
+            box-sizing: border-box;
+            height: 2px;
+            z-index: 1;
+        }
     }
 
     .body {
