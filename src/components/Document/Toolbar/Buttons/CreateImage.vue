@@ -7,6 +7,7 @@ import { string_by_sys } from '@/utils/common';
 import Tooltip from '@/components/common/Tooltip.vue';
 import { insert_imgs, Media } from '@/utils/content';
 import { Tool } from '@/context/tool';
+import { after_import } from '@/utils/clipboard';
 const { t } = useI18n();
 interface Porps {
     active: boolean
@@ -75,12 +76,14 @@ function multiple(files: any) {
     const media: Media[] = [];
     const len = files.length;
     let index = 0;
+    const container: any = {};
     try {
         iteration();
     } catch (error) {
         console.log(error);
         props.context.workspace.setFreezeStatus(false);
     }
+
     // 挨个加载，遇到错误资源跳一步
     function iteration() {
         const file = files[index];
@@ -105,8 +108,11 @@ function multiple(files: any) {
                                         iteration();
                                     } else {
                                         media.push({ name: file.name, frame, buff: new Uint8Array(buff), base64 });
-                                        insert_imgs(props.context, t, media);
-                                        if (picker.value) (picker.value as HTMLInputElement).value = '';
+                                        insert_imgs(props.context, t, media, container);
+                                        after_import(props.context, container);
+                                        if (picker.value) {
+                                            (picker.value as HTMLInputElement).value = '';
+                                        }
                                     }
                                 } else {
                                     index++;
