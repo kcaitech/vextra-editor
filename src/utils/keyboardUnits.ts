@@ -1,5 +1,5 @@
 import { Context } from "@/context";
-import { component, lower_layer, select_all, set_lock_for_shapes, set_visible_for_shapes, uppper_layer } from "./content";
+import { adapt_page, component, lower_layer, scale_0, select_all, set_lock_for_shapes, set_visible_for_shapes, uppper_layer } from "./content";
 import { Perm, WorkSpace } from "@/context/workspace";
 import { Action, Tool } from "@/context/tool";
 import { Navi } from "@/context/navigate";
@@ -284,6 +284,23 @@ keydownHandler['KeyZ'] = function (event: KeyboardEvent, context: Context) {
         if (context.selection.selectedShapes.length > 1) {
             context.workspace.notify(WorkSpace.CLAC_ATTRI);
         }
+        return;
+    }
+}
+
+keydownHandler['Digit0'] = function (event: KeyboardEvent, context: Context) {
+    const is_ctrl = event.ctrlKey || event.metaKey;
+    if (is_ctrl) {
+        scale_0(context);
+        return;
+    }
+}
+
+keydownHandler['Digit1'] = function (event: KeyboardEvent, context: Context) {
+    const is_ctrl = event.ctrlKey || event.metaKey;
+    if (is_ctrl) {
+        event.stopPropagation();
+        adapt_page(context);
         return;
     }
 }

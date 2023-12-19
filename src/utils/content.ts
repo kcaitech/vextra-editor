@@ -1057,3 +1057,13 @@ export function uppper_layer(context: Context, layer?: number) {
         message('info', context.workspace.t('homerightmenu.unable_upper'));
     }
 }
+
+export function scale_0(context: Context) {
+    const workspace = context.workspace;
+    const { center } = workspace.root;
+    workspace.matrix.trans(-center.x, -center.y);
+    const _s = 1 / workspace.matrix.m00;
+    workspace.matrix.scale(_s);
+    workspace.matrix.trans(center.x, center.y);
+    workspace.notify(WorkSpace.MATRIX_TRANSFORMATION);
+}
