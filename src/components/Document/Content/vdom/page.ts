@@ -9,7 +9,7 @@ export class PageDom extends (PageView) {
 
     el?: HTMLElement | SVGElement; // 不要改名，patch用到
     m_save_version: number = -1;
-    m_save_render: EL = EL.make("");
+    m_save_render: EL & { el?: HTMLElement | SVGElement } = EL.make("");
 
     constructor(ctx: DomCtx, props: PropsType) {
         super(ctx, props);
@@ -43,6 +43,7 @@ export class PageDom extends (PageView) {
             elpatch(this, this.m_save_render);
             this.m_save_version = version;
             this.m_save_render.reset(this.eltag, this.elattr, this.elchilds);
+            this.m_save_render.el = this.el;
         }
         return version;
     }

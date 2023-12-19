@@ -24,7 +24,7 @@ export class ArtboradDom extends (ArtboradView) {
 
     el?: HTMLElement | SVGElement; // 不要改名，patch用到
     m_save_version: number = -1;
-    m_save_render: EL = EL.make("");
+    m_save_render: EL & { el?: HTMLElement | SVGElement } = EL.make("");
 
     render(): number {
         const version: number = super.render();
@@ -32,6 +32,7 @@ export class ArtboradDom extends (ArtboradView) {
             elpatch(this, this.m_save_render); // 这里才转化为html或者svg节点
             this.m_save_version = version;
             this.m_save_render.reset(this.eltag, this.elattr, this.elchilds);
+            this.m_save_render.el = this.el;
         }
         // 当前是图片且没有修改要更新时
         // todo
