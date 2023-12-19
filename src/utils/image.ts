@@ -108,6 +108,8 @@ export const getPngImageData = (svg: SVGSVGElement, trim: boolean, id: string, f
       const x = left + max_border + g_x;
       const y = top + max_border + g_y;
       el.style.transform = `rotate(0deg)`;
+      el.setAttribute("x", '0px');
+      el.setAttribute("y", '0px');
       let rotateY = 0;
       let rotateX = 0;
       shape.isFlippedHorizontal ? rotateY = 180 : rotateY = 0;
