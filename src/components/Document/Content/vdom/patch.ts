@@ -89,7 +89,9 @@ export function elpatch(tar: EL, old: EL | undefined) {
 
     // string
     if (!Array.isArray(_tar.elchilds)) {
-        _tar.el.innerHTML = _tar.elchilds;
+        if (!_old || _old.elchilds !== _tar.elchilds) {
+            _tar.el.innerHTML = _tar.elchilds;
+        }
         // const childNodes = _tar.el.childNodes;
         // if (childNodes.length > 0) {
         //     let count = childNodes.length;
