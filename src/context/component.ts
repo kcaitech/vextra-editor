@@ -1,7 +1,7 @@
-import {Shape, Variable, Watchable} from "@kcdesign/data";
+import {Shape, Variable, WatchableObject} from "@kcdesign/data";
 import {Context} from ".";
 
-export class Component extends Watchable(Object) {
+export class Component extends WatchableObject {
     static BRIDGE_CHANGE = 1;
     static WONDER_CHANGE = 2;
     static CARD_TYPE_CHANGE = 5;
@@ -21,7 +21,7 @@ export class Component extends Watchable(Object) {
         return this.m_bridge;
     }
 
-    set_brige_status(status: boolean) {
+    set_brige_status(status: boolean) {        
         this.m_bridge = status;
         this.notify(Component.BRIDGE_CHANGE);
     }

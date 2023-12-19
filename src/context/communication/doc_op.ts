@@ -1,7 +1,7 @@
-import { Watchable, Document, CoopRepository, Cmd } from "@kcdesign/data"
+import { WatchableObject, Document, CoopRepository, Cmd } from "@kcdesign/data"
 import { Options, DocOp as _DocOp } from "@/communication/modules/doc_op"
 
-export class DocOp extends Watchable(Object) {
+export class DocOp extends WatchableObject {
     private docOp?: _DocOp
     private startPromise?: Promise<boolean>
     private startResolve?: (value: boolean) => void

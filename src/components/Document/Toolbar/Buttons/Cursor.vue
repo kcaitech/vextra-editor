@@ -41,7 +41,7 @@ function showMenu() {
     nextTick(() => {
       if (popover.value) {
         popover.value.style.left = el.offsetLeft + 'px';
-        popover.value.style.top = el.offsetHeight + 9 + 'px';
+        popover.value.style.top = el.offsetHeight + 16 + 'px';
 
       }
     })
@@ -119,12 +119,12 @@ onUpdated(() => {
   align-items: center;
   margin-left: 3px;
   color: #ffffff;
-    padding: 6px 6px 6px 6px;
-    box-sizing: border-box;
+  padding: 6px 6px 6px 6px;
+  box-sizing: border-box;
 
   >svg {
-    width: 20px;
-    height: 20px;
+    width: 18px;
+    height: 18px;
   }
 }
 
@@ -154,11 +154,12 @@ onUpdated(() => {
 .popover {
   position: absolute;
   z-index: 999;
-  width: 180px;
+  width: 157px;
   height: auto;
-  background-color: var(--theme-color);
+  background-color: #262626;
   border-radius: 4px;
   outline: none;
-  padding: var(--default-padding-half) 0;
+  padding: 4px 0;
+  box-shadow: 0px 2px 10px 0px rgba(0, 0, 0, 0.08);
 }
 </style>

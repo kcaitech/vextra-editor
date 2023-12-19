@@ -1,4 +1,4 @@
-import { Shape, ShapeType, Watchable } from "@kcdesign/data";
+import { Shape, ShapeType, WatchableObject } from "@kcdesign/data";
 import { Context } from ".";
 import { Comment } from "./comment";
 import { v4 } from "uuid";
@@ -65,7 +65,7 @@ const A2R = new Map([
 
 export const ResultByAction = (action: Action): ShapeType | undefined => A2R.get(action); // 参数action状态下新增图形会得到的图形类型
 
-export class Tool extends Watchable(Object) {
+export class Tool extends WatchableObject {
     static CHANGE_ACTION = 1;
     static GROUP = 2;
     static UNGROUP = 3;
@@ -77,6 +77,7 @@ export class Tool extends Watchable(Object) {
     static LABLE_CHANGE = 10;
     static NEW_FILE = 9;
     static COMPONENT = 10;
+    static SELECT_IMAGE = 11;
     private m_current_action: Action = Action.AutoV;
     private m_context: Context;
     private m_show_title: boolean = true;

@@ -18,21 +18,21 @@ const emits = defineEmits<{
 <style lang="scss" scoped>
 .close {
     display: flex;
-    padding: 4px;
-    margin: 2px 0 0 0;
+    //padding: 4px;
+    //margin: 2px 0 0 0;
 
-    &:hover {
-        background-color: #f3f0ff;
-        border-radius: 3px;
-        cursor: pointer;
-
-        >svg {
-            fill: #9775fa;
-        }
-    }
-
-    &:active>svg {
-        transform: scale(0.9);
-    }
+    //&:hover {
+    //    background-color: #f3f0ff;
+    //    border-radius: 3px;
+    //    cursor: pointer;
+    //
+    //    >svg {
+    //        fill: #9775fa;
+    //    }
+    //}
+    //
+    //&:active>svg {
+    //    transform: scale(0.9);
+    //}
 }
 </style>

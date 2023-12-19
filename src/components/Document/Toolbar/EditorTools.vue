@@ -12,13 +12,13 @@ import Comment from "./Buttons/Comment.vue"
 import Contact from "./Buttons/CreateContact.vue";
 import Cutout from "./Buttons/Cutout.vue";
 import CreateComps from "./Buttons/CreateComps.vue";
-import PathEditTool from "@/components/Document/Toolbar/PathEditTool.vue";
 import { WorkSpace, Perm } from "@/context/workspace";
 import { Action, Tool } from "@/context/tool";
 import { useI18n } from 'vue-i18n'
 import { message } from "@/utils/message";
-import { ElMessage } from "element-plus";
+import PathEditTool from "@/components/Document/Toolbar/PathEditTool.vue";
 import { string_by_sys } from "@/utils/common";
+import { ElMessage } from "element-plus";
 import Shape from "./Buttons/Shape.vue";
 import ToolButton from "./ToolButton.vue";
 const { t } = useI18n();
@@ -130,7 +130,7 @@ function applyForEdit() {
     <div v-if="isread || canComment || isLable" class="editor-tools" @dblclick.stop>
         <span style="color: #ffffff;">{{ t('apply.read_only') }}</span>
         <div class="button">
-            <button class="el" style="background-color: #1878F5;" @click="applyForEdit">{{
+            <button class="el" style="background-color: #1878F5;margin-right: 4px" @click="applyForEdit">{{
                 t('apply.apply_for_edit')
             }}
             </button>
@@ -187,10 +187,11 @@ function applyForEdit() {
         margin-left: 15px;
 
         .el {
-            height: 33px;
+            height: 32px;
             border-radius: 5px;
             color: #ffffff;
             background-color: #865DFF;
+            border: none;
         }
     }
 
@@ -206,8 +207,8 @@ function applyForEdit() {
         box-sizing: border-box;
 
         >svg {
-            width: 20px;
-            height: 20px;
+            width: 18px;
+            height: 18px;
         }
     }
 

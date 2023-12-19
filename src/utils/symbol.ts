@@ -68,9 +68,9 @@ function get_symbol_level_under(group: GroupShape) {
     const childs = group.childs;
     for (let i = childs.length - 1; i > -1; i--) {
         const item = childs[i];
-        if (item.isSymbolUnionShape) {
-            const children = item.childs;
-            children.length && symbols.push(children[0]);
+        if (item.type === ShapeType.SymbolUnion) {
+            const children = (item as SymbolUnionShape).childs;
+            children.length && symbols.push(children[0] as SymbolShape);
         } else if (item.type === ShapeType.Symbol) {
             symbols.push(item as SymbolShape);
         }
@@ -135,9 +135,9 @@ function check_symbol_level_artboard(artboard: GroupShape, init?: SymbolShape[])
     const childs = artboard.childs;
     for (let i = childs.length - 1; i > -1; i--) {
         const item = childs[i];
-        if (item.isSymbolUnionShape) {
-            const children = item.childs;
-            children.length && symbols.push(children[0]);
+        if (item.type === ShapeType.SymbolUnion) {
+            const children = (item as SymbolUnionShape).childs;
+            children.length && symbols.push(children[0] as SymbolShape);
         } else if (item.type === ShapeType.Symbol) {
             symbols.push(item as SymbolShape);
         }
@@ -354,7 +354,7 @@ export function is_state_selection(shapes: Shape[]) {
         if (shape.type !== ShapeType.Symbol
             || !shape.parent
             || shape.parent.id !== p.id
-            || !shape.parent.isSymbolUnionShape
+            || shape.parent.type !== ShapeType.SymbolUnion
         ) {
             return false;
         }
@@ -406,7 +406,7 @@ export function is_exist_invalid_shape(selected: Shape[]) {
     for (let i = 0, len = selected.length; i < len; i++) {
         const item = selected[i];
         if ([ShapeType.Contact, ShapeType.Table].includes(item.type)) return true;
-        if (item.childs?.length) result = is_exist_invalid_shape(item.childs);
+        if ((item as GroupShape).childs?.length) result = is_exist_invalid_shape((item as GroupShape).childs);
         if (result) return true;
     }
     return false;
@@ -453,8 +453,8 @@ export function make_state(context: Context, t: Function, hor?: number) {
     const page = context.selection.selectedPage;
     if (is_state(shape) && page) {
         let index = -1;
-        for (let i = 0, len = shape.parent!.childs.length; i < len; i++) {
-            if (shape.parent?.childs[i]?.id === shape.id) {
+        for (let i = 0, len = (shape.parent as GroupShape)!.childs.length; i < len; i++) {
+            if ((shape.parent as GroupShape)!.childs[i]?.id === shape.id) {
                 index = i;
                 break;
             }
@@ -476,7 +476,7 @@ export function create_visible_var(context: Context, symbol: SymbolShape, name: 
 /**
  * @description 为组件创建实例切换变量
  */
-export function create_ref_var(context: Context, symbol: SymbolShape, name: string, shapes: Shape[]) {
+export function create_ref_var(context: Context, symbol: SymbolShape, name: string, shapes: (SymbolRefShape)[]) {
     const editor = context.editor4Shape(symbol);
     editor.makeSymbolRefVar(symbol, name, shapes);
 }
@@ -501,7 +501,7 @@ export function create_var_by_type(context: Context, type: VariableType, name: s
         case VariableType.Visible:
             return create_visible_var(context, symbol, name, value, shapes);
         case VariableType.SymbolRef:
-            return create_ref_var(context, symbol, name, shapes);
+            return create_ref_var(context, symbol, name, shapes as SymbolRefShape[]);
         case VariableType.Text:
             return create_text_var(context, symbol, name, value, shapes);
         default:
@@ -641,7 +641,7 @@ export function get_options_from_symbol(symbol: SymbolShape, type: VariableType,
 }
 
 function de_check(item: Shape) {
-    return !item.childs || !item.childs.length || item.type === ShapeType.Table || item.type === ShapeType.SymbolRef
+    return !(item as GroupShape).childs || !(item as GroupShape).childs.length || item.type === ShapeType.Table || item.type === ShapeType.SymbolRef
 }
 
 /**
@@ -675,14 +675,14 @@ function get_ot_by_vt(vt: VariableType) {
 
 function get_x_type_option(symbol: Shape, group: Shape, type: VariableType, vari?: Variable, container?: Shape[]) {
     let shapes: Shape[] = [];
-    const childs = group.childs;
+    const childs = (group as GroupShape).childs;
     if (!childs?.length) return shapes;
     if (type === VariableType.Visible) {
         let slow_index = 0;
         for (let i = 0, len = childs.length; i < len; i++) {
             const item = childs[i];
             const canbe = !is_bind_x_type_var(symbol as SymbolShape, item, OverrideType.Visible, vari, container);
-            if (item.childs && item.childs.length && item.type !== ShapeType.Table) {
+            if ((item as GroupShape).childs && (item as GroupShape).childs.length && item.type !== ShapeType.Table) {
                 if (canbe) shapes.push(item);
                 shapes.push(...get_x_type_option(symbol, item, type, vari, container));
             } else {
@@ -698,7 +698,7 @@ function get_x_type_option(symbol: Shape, group: Shape, type: VariableType, vari
                 if (!is_bind_x_type_var(symbol as SymbolShape, item, get_ot_by_vt(type)!, vari, container)) {
                     shapes.push(item);
                 }
-            } else if (item.childs && item.childs.length && item.type !== ShapeType.Table) {
+            } else if ((item as GroupShape).childs && (item as GroupShape).childs.length && item.type !== ShapeType.Table) {
                 shapes.push(...get_x_type_option(symbol, item, type, vari, container));
             }
         }
@@ -723,7 +723,7 @@ export function get_var_for_ref(context: Context, symref: SymbolRefShape, t: Fun
     // const ref_id = symref.getRefId2(varsContainer);
     const sym = symref.symData;
     if (!sym) return false;
-    if (!sym.parent?.isSymbolUnionShape) { // 不存在可变组件
+    if (sym.parent?.type !== ShapeType.SymbolUnion) { // 不存在可变组件
         const variables = sym.variables;
         if (!variables) return false;
         let status_index: number = 0;
@@ -748,7 +748,7 @@ export function get_var_for_ref(context: Context, symref: SymbolRefShape, t: Fun
         const state = sym; // 先确定当前实例用的是哪个可变组件
         const usym = sym.parent;
         if (!usym) return false;
-        const variables = usym.variables;
+        const variables = (usym as SymbolUnionShape).variables;
         if (!variables) return false;
         variables.forEach((v: Variable) => {
             const item: RefAttriListItem = {variable: v, values: []};
@@ -783,7 +783,7 @@ function search_binds_for_state(
     state: Shape,
     variables_result: Map<string, Variable>
 ) {
-    const childs = state.childs;
+    const childs = (state as GroupShape).childs;
     if (!childs?.length) return;
     for (let i = 0, l = childs.length; i < l; i++) {
         const item = childs[i];
@@ -796,7 +796,7 @@ function search_binds_for_state(
         }
         const type = item.type;
         if (type === ShapeType.Table || type === ShapeType.SymbolRef) continue;
-        const cs = item.childs;
+        const cs = (item as GroupShape).childs;
         if (!cs?.length) continue;
         search_binds_for_state(variables, item, variables_result);
     }
@@ -836,16 +836,16 @@ export function modify_vari_value_for_ref(context: Context, vari: Variable, valu
  */
 function get_topology_map(shape: Shape) {
     const deps: { shape: string, ref: string }[] = [];
-    const childs = shape.type === ShapeType.SymbolRef ? shape.naviChilds : shape.childs;
+    const childs = shape.type === ShapeType.SymbolRef ? shape.naviChilds : (shape as GroupShape).childs;
     if (!childs?.length) return [];
     for (let i = 0, len = childs.length; i < len; i++) {
         const item = childs[i];
         const is_ref = item.type === ShapeType.SymbolRef
-        const c_childs = is_ref ? item.naviChilds : item.childs;
+        const c_childs = is_ref ? item.naviChilds : (item as GroupShape).childs;
         if (c_childs?.length || is_ref) {
             deps.push({
-                shape: shape.type === ShapeType.SymbolRef ? shape.refId : shape.id,
-                ref: is_ref ? item.refId : item.id
+                shape: shape.type === ShapeType.SymbolRef ? (shape as SymbolRefShape).refId : shape.id,
+                ref: is_ref ? (item as SymbolRefShape).refId : item.id
             });
         }
         if (!c_childs?.length) continue;

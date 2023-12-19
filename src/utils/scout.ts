@@ -1,9 +1,9 @@
-import {Context} from "@/context";
-import {PageXY, XY} from "@/context/selection";
-import {GroupShape, Matrix, Shape, ShapeType, SymbolRefShape, SymbolShape} from "@kcdesign/data";
-import {v4 as uuid} from "uuid";
-import {isShapeOut} from "./assist";
-import {debounce} from "lodash";
+import { Context } from "@/context";
+import { PageXY, XY } from "@/context/selection";
+import { GroupShape, Matrix, PathShape, Shape, ShapeType, SymbolRefShape, SymbolShape, SymbolUnionShape } from "@kcdesign/data";
+import { v4 as uuid } from "uuid";
+import { isShapeOut } from "./assist";
+import { debounce } from "lodash";
 
 export interface Scout {
     path: SVGPathElement
@@ -12,6 +12,20 @@ export interface Scout {
     isPointInPath: (d: string, point: PageXY) => boolean
     isPointInStroke: (d: string, point: PageXY) => boolean
     isPointInShape2: (shape: Shape, point: PageXY) => boolean
+}
+
+function get_max_thickness_border(shape: Shape) {
+    let max_thickness = 0;
+    const borders = shape.style.borders;
+    if (borders.length) {
+        for (let i = 0, l = borders.length; i < l; i++) {
+            const t = borders[i].thickness;
+            if (t > max_thickness) {
+                max_thickness = t;
+            }
+        }
+    }
+    return max_thickness;
 }
 
 // Ver.SVGGeometryElement，基于SVGGeometryElement的图形检索
@@ -29,26 +43,42 @@ export function scout(context: Context): Scout {
 
     function isPointInShape(shape: Shape, point: PageXY): boolean {
         const d = getPathOnPageString(shape);
+
         SVGPoint.x = point.x;
-        SVGPoint.y = point.y; // 根据鼠标位置确定point所处位置
+        SVGPoint.y = point.y;
+
         path.setAttributeNS(null, 'd', d);
-        let result: boolean = false;
-        if (shape.type === ShapeType.Line || shape.type === ShapeType.Contact || shape.type === ShapeType.Cutout) {
-            // 线条元素(不管是否闭合，都当不闭合)额外处理point是否在边框上
-            const thickness = Math.max((shape.style.borders[0]?.thickness || 1), 14 / context.workspace.matrix.m00);
-            path.setAttributeNS(null, 'stroke-width', `${thickness}`);
-            result = (path as SVGGeometryElement).isPointInStroke(SVGPoint);
+
+        if (shape instanceof PathShape) {
+            return for_path_shape(shape, path);
         } else {
-            // 判断point是否在闭合路径的填充中
-            result = (path as SVGGeometryElement).isPointInFill(SVGPoint);
+            return (path as SVGGeometryElement).isPointInFill(SVGPoint);
         }
-        return result;
+    }
+
+    function for_path_shape(shape: PathShape, path: SVGGeometryElement) {
+        const is_point_in_fill = (path as SVGGeometryElement).isPointInFill(SVGPoint);
+
+        if (shape.isClosed) {
+            return is_point_in_fill;
+        }
+
+        const max_thickness = Math.max(get_max_thickness_border(shape), 14 / context.workspace.matrix.m00);
+        path.setAttributeNS(null, 'stroke-width', `${max_thickness}`);
+
+        const is_point_in_stroke = (path as SVGGeometryElement).isPointInStroke(SVGPoint);
+
+        if (shape.style.fills.length) {
+            return is_point_in_fill || is_point_in_stroke;
+        }
+
+        return is_point_in_stroke;
     }
 
     function isPointInShape2(shape: Shape, point: PageXY): boolean {
         const d = getPathOnPageStringCustomOffset(shape, 1 / context.workspace.matrix.m00);
         SVGPoint.x = point.x;
-        SVGPoint.y = point.y; // 根据鼠标位置确定point所处位置
+        SVGPoint.y = point.y;
         path.setAttributeNS(null, 'd', d);
         return (path as SVGGeometryElement).isPointInFill(SVGPoint);
     }
@@ -126,7 +156,7 @@ function isTarget2(scout: Scout, shape: Shape, p: PageXY): boolean {
 // 扁平化一个编组的树结构 tree -> list
 export function delayering(groupshape: Shape, flat?: Shape[]): Shape[] {
     let f: Shape[] = flat || [];
-    const childs: Shape[] = groupshape.type === ShapeType.SymbolRef ? (groupshape.naviChilds || []) : groupshape.childs;
+    const childs: Shape[] = groupshape.type === ShapeType.SymbolRef ? (groupshape.naviChilds || []) : (groupshape as GroupShape).childs;
     for (let i = 0, len = childs.length; i < len; i++) {
         const item = childs[i];
         if (item.type === ShapeType.Group || item.type === ShapeType.Symbol || item.type === ShapeType.SymbolRef) {
@@ -170,7 +200,7 @@ export function finder(context: Context, scout: Scout, g: Shape[], position: Pag
         const item = g[i];
         if (!canBeTarget(item)) continue; // 隐藏图层或已锁定
         if (isShapeOut(context, item)) continue; // 屏幕外图形，这里会判断每个图形是否在屏幕内，本身消耗较小，另外可以避免后面的部分不必要的更大消耗
-        if (item.isSymbolUnionShape) { // 组件状态集合
+        if (item.type === ShapeType.SymbolUnion) { // 组件状态集合
             result = finder_symbol_union(context, scout, item as GroupShape, position, selected, isCtrl);
             if (isTarget(scout, item, position)) break; // 只要进入集合，有无子元素选中都应该break
         } else if (item.type === ShapeType.Symbol || item.type === ShapeType.SymbolRef) { // 组件或引用
@@ -182,7 +212,7 @@ export function finder(context: Context, scout: Scout, g: Shape[], position: Pag
         if (item.type === ShapeType.Artboard) {
             result = finder_artboard(context, scout, item as GroupShape, position, selected, isCtrl);
         } else if (item.type === ShapeType.Group) {
-            result = finder_group(scout, item.childs, position, selected, isCtrl);
+            result = finder_group(scout, (item as GroupShape).childs, position, selected, isCtrl);
         } else {
             result = item;
         }
@@ -242,7 +272,7 @@ function finder_symbol_union(context: Context, scout: Scout, union: GroupShape, 
 }
 
 function finder_symbol(context: Context, scout: Scout, symbol: SymbolShape | SymbolRefShape, position: PageXY, selected: Shape, isCtrl: boolean) {
-    const children = symbol.type === ShapeType.SymbolRef ? (symbol.naviChilds || []) : symbol.childs;
+    const children = symbol.type === ShapeType.SymbolRef ? (symbol.naviChilds || []) : (symbol as SymbolShape).childs;
     if (!isTarget(scout, symbol, position)) { // 如果frame感应区的不被判定为目标，则还需要判定子元素
         return finder(context, scout, children, position, selected, isCtrl);
     }
@@ -266,7 +296,7 @@ export function finder_contact(scout: Scout, g: Shape[], position: PageXY, selec
         if ([ShapeType.Group, ShapeType.Artboard].includes(item.type)) {
             const isItemIsTarget = isTarget2(scout, item, position);
             if (!isItemIsTarget) continue;
-            const c = item.childs as Shape[];
+            const c = (item as GroupShape).childs as Shape[];
             if (item.type === ShapeType.Artboard) {
                 if (c.length) {
                     result.push(...finder_contact(scout, c, position, selected, result));
@@ -281,7 +311,7 @@ export function finder_contact(scout: Scout, g: Shape[], position: PageXY, selec
                     return result;
                 }
             } else if ([ShapeType.Group].includes(item.type)) { // 如果是编组，不用向下走了，让子元素往上走
-                const g = finder_group(scout, item.childs, position, selected, true);
+                const g = finder_group(scout, (item as GroupShape).childs, position, selected, true);
                 if (g) {
                     result.push(g);
                     return result;
@@ -310,7 +340,7 @@ export function finder_layers(scout: Scout, g: Shape[], position: PageXY): Shape
         const item = g[i];
         if (!isTarget(scout, item, position)) continue;
         if ([ShapeType.Group, ShapeType.Artboard, ShapeType.Symbol, ShapeType.SymbolRef].includes(item.type)) {
-            const c: Shape[] = item.type === ShapeType.SymbolRef ? item.naviChilds : item.childs;
+            const c: Shape[] | undefined = item.type === ShapeType.SymbolRef ? item.naviChilds : (item as GroupShape).childs;
             if (c?.length) {
                 result.push(...finder_layers(scout, c, position));
             }
@@ -328,7 +358,7 @@ function isPartSelect(shape: Shape, selected: Shape): boolean {
         for (let i = 0, len = c.length; i < len; i++) {
             const cur = c[i];
             if (cur.id === selected.id) return true;
-            if (cur?.childs?.length) result = isPartSelect(c[i], selected);
+            if ((cur as GroupShape)?.childs?.length) result = isPartSelect(c[i], selected);
             if (result) return true;
         }
     }

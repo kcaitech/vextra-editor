@@ -1,5 +1,5 @@
 import {XY, PageXY} from '@/context/selection';
-import {Matrix, ShapeFrame, Shape, ShapeType} from '@kcdesign/data';
+import {Matrix, ShapeFrame, Shape, ShapeType, GroupShape, Artboard} from '@kcdesign/data';
 import {isTarget} from './common';
 import {Context} from '@/context';
 import {Action, Tool} from '@/context/tool';
@@ -132,7 +132,7 @@ export function collect(context: Context): Shape[] {
             {x: 0, y: frame.height},
             {x: 0, y: 0}
         ].map(p => m2r.computeCoord(p.x, p.y));
-        const scope = (artboard.parent || page).childs || [];
+        const scope = ((artboard.parent || page) as GroupShape).childs || [];
         return finder(context, scope, ps as [XY, XY, XY, XY, XY]);
     } else return [];
 }
@@ -158,8 +158,8 @@ function finder(context: Context, childs: Shape[], Points: [XY, XY, XY, XY, XY])
         if (shape.type === ShapeType.Artboard) { // 容器要判定为真的条件是完全被选区覆盖
             if (isTarget(Points, ps, true)) {
                 selectedShapes.set(shape.id, shape);
-                for (let i = 0; i < shape.childs.length; i++) {
-                    selectedShapes.delete(shape.childs[i].id);
+                for (let i = 0; i < (shape as Artboard).childs.length; i++) {
+                    selectedShapes.delete((shape as Artboard).childs[i].id);
                 }
             }
         } else if (shape.type === ShapeType.Line) {
@@ -178,7 +178,7 @@ export function get_artboard_list_by_point(context: Context, range: Shape[], poi
     let result: Shape[] = init || [context.selection.selectedPage!];
     const scout = context.selection.scout!;
     for (let i = 0, len = range.length; i < len; i++) {
-        const s = range[i];
+        const s = range[i] as Artboard;
         if (s.type !== ShapeType.Artboard) continue;
         if (scout.isPointInShape(s, point)) {
             result.push(s);

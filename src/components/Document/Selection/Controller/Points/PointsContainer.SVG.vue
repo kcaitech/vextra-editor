@@ -211,14 +211,14 @@ function point_mouseup(event: MouseEvent) {
 
 function modify_fix_x(p2: PageXY, fix: number) {
     p2.x = fix;
-    sticked_x_v = p2.x;
+    sticked_x_v = fix;
     stickedX = true;
     pre_target_x = fix;
 }
 
 function modify_fix_y(p2: PageXY, fix: number) {
     p2.y = fix;
-    sticked_y_v = p2.y;
+    sticked_y_v = fix;
     stickedY = true;
     pre_target_y = fix;
 }

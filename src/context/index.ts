@@ -2,33 +2,37 @@ import {
     CoopRepository,
     TaskMgr,
     Task,
-    Watchable,
+    WatchableObject,
     TaskPriority,
     TableShape,
     TableEditor,
     Text,
-    SymbolShape
+    SymbolShape,
+    DViewCtx
 } from "@kcdesign/data";
-import {Document} from "@kcdesign/data";
-import {Page} from "@kcdesign/data";
-import {Shape} from "@kcdesign/data";
-import {DocEditor, Editor, PageEditor} from "@kcdesign/data";
-import {ShapeEditor, TextShapeEditor} from "@kcdesign/data";
-import {Selection} from "./selection";
-import {WorkSpace} from "./workspace";
-import {Comment} from "./comment";
-import {Menu} from "./menu";
-import {Tool} from "./tool";
-import {Navi} from "./navigate";
-import {Communication} from "@/context/communication/communication";
-import {Cursor} from "./cursor";
-import {EscStack} from "./escstack";
-import {Asssit} from "./assist";
-import {TeamWork} from "./teamwork";
-import {TableSelection} from "./tableselection";
-import {TextSelection} from "./textselection";
-import {Component} from "./component";
-import {Path} from "./path";
+import { Document } from "@kcdesign/data";
+import { Page } from "@kcdesign/data";
+import { Shape } from "@kcdesign/data";
+import { DocEditor, Editor, PageEditor } from "@kcdesign/data";
+import { ShapeEditor, TextShapeEditor } from "@kcdesign/data";
+import { Selection } from "./selection";
+import { WorkSpace } from "./workspace";
+import { Comment } from "./comment";
+import { Menu } from "./menu";
+import { Tool } from "./tool";
+import { Navi } from "./navigate";
+import { Communication } from "@/context/communication/communication";
+import { Cursor } from "./cursor";
+import { EscStack } from "./escstack";
+import { Asssit } from "./assist";
+import { TeamWork } from "./teamwork";
+import { TableSelection } from "./tableselection";
+import { TextSelection } from "./textselection";
+import { Component } from "./component";
+import { Path } from "./path";
+import { PageDom } from "@/components/Document/Content/vdom/page";
+import { initComsMap } from "@/components/Document/Content/vdom/comsmap";
+import { Arrange } from "./arrange";
 
 // 仅暴露必要的方法
 export class RepoWraper {
@@ -64,7 +68,7 @@ export class RepoWraper {
     }
 }
 
-export class Context extends Watchable(Object) {
+export class Context extends WatchableObject {
     private m_data: Document;
     private m_editor: Editor;
     private m_repo: RepoWraper;
@@ -85,6 +89,10 @@ export class Context extends Watchable(Object) {
     private m_tableselection: TableSelection;
     private m_component: Component;
     private m_path: Path;
+    private m_textselection: TextSelection;
+
+    private m_vdom: Map<string, { dom: PageDom, ctx: DViewCtx }> = new Map();
+    private m_arrange: Arrange
 
     constructor(data: Document, repo: CoopRepository) {
         super();
@@ -109,6 +117,7 @@ export class Context extends Watchable(Object) {
         this.m_textselection = new TextSelection(this.m_selection); // 文字选区
         this.m_component = new Component(this);
         this.m_path = new Path(this);
+        this.m_arrange = new Arrange();
         const pagelist = data.pagesList.slice(0);
         const checkSymLoaded: (() => boolean)[] = [];
         const pageloadTask = new class implements Task { // page auto loader
@@ -266,5 +275,26 @@ export class Context extends Watchable(Object) {
 
     get path() {
         return this.m_path;
+    }
+
+    private createVDom(page: Page) {
+        const domCtx = new DViewCtx();
+        initComsMap(domCtx.comsMap);
+        const dom: PageDom = new PageDom(domCtx, { data: page });
+        // dom.update(props, true);
+        // console.log("dom.nodeCount: " + dom.nodeCount);
+        const ret = { dom, ctx: domCtx }
+        this.m_vdom.set(page.id, ret);
+        return ret;
+    }
+
+    getPageDom(page: Page): { dom: PageDom, ctx: DViewCtx } {
+        const ret = this.m_vdom.get(page.id);
+        if (ret) return ret;
+        return this.createVDom(page);
+    }
+
+    get arrange() {
+        return this.m_arrange;
     }
 }

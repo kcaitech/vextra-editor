@@ -33,7 +33,7 @@ function compare_layer_1(context: Context, selectedShapes: Shape[], reverse = 1)
 
     function deep(childs: Shape[]) {
         for (let i = childs.length - 1; i > -1; i--) {
-            const shape = childs[i];
+            const shape = childs[i] as GroupShape;
             if (origin_map.get(shape.id)) {
                 if (reverse < 0) {
                     sort_shapes.unshift(shape);

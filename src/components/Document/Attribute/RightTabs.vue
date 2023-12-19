@@ -5,8 +5,9 @@ import Design from "@/components/Document/Attribute/Design.vue";
 import ResourceTab from "@/components/Document/Navigation/ResourceTab.vue";
 import { useI18n } from 'vue-i18n';
 import { Perm } from "@/context/workspace";
-import { Tool } from "@/context/tool";
+import { Action, Tool } from "@/context/tool";
 import Lable from './Lable/index.vue';
+import PageAttr from "@/components/Document/Attribute/PageAttr.vue";
 const { t } = useI18n();
 
 interface Props {
@@ -83,6 +84,12 @@ const tool_watcher = (t: number) => {
         }
     }
 }
+const stopMouseDown = (e: MouseEvent) => {
+    const action = props.context.tool.action;
+    if (action === Action.AddComment) {
+        e.stopPropagation();
+    }
+}
 onMounted(() => {
     props.context.tool.watch(tool_watcher);
     init();
@@ -94,12 +101,12 @@ onUnmounted(() => {
 </script>
 
 <template>
-    <div class="tab-container">
+    <div class="tab-container" @mouseup="stopMouseDown">
         <template v-if="!isLable">
             <div ref="controllerRef" class="controller">
                 <div v-for="(i, index) in tabs" :class="{ tab: true, active: currentTab === i.id }" :key="index"
                     :id="`tabs-id-${i.id}`" @click="toggle(i.id)"
-                     :style="{ color: currentTab === i.id ? '#000000' : '#333333' }">
+                    :style="{ color: currentTab === i.id ? '#000000' : '#333333' }">
                     {{ i.title }}
                 </div>
                 <div class="underline"
@@ -133,7 +140,7 @@ onUnmounted(() => {
 .tab-container {
     position: relative;
     width: 100%;
-    border: 1px solid #F5F5F5;
+    border: 1px solid #EBEBEB;
 
     .controller {
         display: flex;
@@ -191,17 +198,18 @@ onUnmounted(() => {
     display: flex;
     align-items: center;
     justify-content: center;
-    box-shadow: -4px 0px 8px rgba($color: #000000, $alpha: 0.05);
+    //box-shadow: -4px 0px 8px rgba($color: #000000, $alpha: 0.05);
     width: 16px;
     height: 44px;
     border-radius: 8px 0px 0px 8px;
     opacity: 1;
     box-sizing: border-box;
     border: 1px solid #F0F0F0;
+    padding: 14px 0;
 
     >.svg {
-        width: 10px;
-        height: 10px;
+        width: 16px;
+        height: 16px;
     }
 }
 

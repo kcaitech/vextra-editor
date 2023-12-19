@@ -136,7 +136,7 @@ function _replace() {
     const selection = props.context.selection;
     const selected = selection.selectedShapes;
     if (selected.length) {
-        replace(props.context, t, selected);
+        replace(props.context, selected);
     }
     emit('close');
 }

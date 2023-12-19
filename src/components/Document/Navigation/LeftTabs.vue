@@ -1,15 +1,15 @@
 <script setup lang="ts">
-import {ref, onMounted, onUnmounted} from "vue";
-import {Context} from "@/context";
+import { ref, onMounted, onUnmounted } from "vue";
+import { Context } from "@/context";
 import ShapeTab from "@/components/Document/Navigation/ShapeTab.vue";
 import CompsTab from "@/components/Document/Navigation/CompsTab.vue";
 import CommentTab from "./Comment/CommentTab.vue";
-import {useI18n} from 'vue-i18n';
-import {Page} from "@kcdesign/data";
-import {Comment} from "@/context/comment";
-import {Action, Tool} from "@/context/tool";
+import { useI18n } from 'vue-i18n';
+import { Page } from "@kcdesign/data";
+import { Comment } from "@/context/comment";
+import { Action, Tool } from "@/context/tool";
 
-const {t} = useI18n();
+const { t } = useI18n();
 
 interface Props {
     context: Context
@@ -38,7 +38,7 @@ const tabs: { title: string, id: Tab }[] = [
 
 function update(t: number) {
     if (t === Comment.SELECT_LIST_TAB) {
-        if(!props.showLeft) showHiddenLeft();
+        if (!props.showLeft) showHiddenLeft();
         currentTab.value = 'Comment';
     }
 }
@@ -53,9 +53,15 @@ const showHiddenLeft = () => {
 }
 const tool_watch = (t: number) => {
     if (t === Tool.COMPONENT) {
-        if(!props.showLeft) showHiddenLeft();
+        if (!props.showLeft) showHiddenLeft();
         currentTab.value = 'Comps';
         props.context.navi.set_current_navi_module(currentTab.value);
+    }
+}
+const stopMouseDown = (e: MouseEvent) => {
+    const action = props.context.tool.action;
+    if (action === Action.AddComment) {
+        e.stopPropagation();
     }
 }
 onMounted(() => {
@@ -70,20 +76,19 @@ onUnmounted(() => {
 </script>
 
 <template>
-    <div class="tab-container">
+    <div class="tab-container" @mouseup="stopMouseDown">
         <div class="tab-controller">
             <div :class="{ tab: true, active: currentTab === i.id }" v-for="(i, index) in tabs" :key="index"
-                 @click="toggle(i.id)">{{ i.title }}
+                @click="toggle(i.id)">{{ i.title }}
             </div>
         </div>
         <div class="body">
             <ShapeTab :context="props.context" v-show="currentTab === 'Shape'" v-bind="$attrs" :page="page"
-                      :showLeft="showLeft" :leftTriggleVisible="leftTriggleVisible"
-                      @showNavigation="showHiddenLeft"></ShapeTab>
+                :showLeft="showLeft" :leftTriggleVisible="leftTriggleVisible" @showNavigation="showHiddenLeft"></ShapeTab>
             <CompsTab :context="props.context" v-show="currentTab === 'Comps'" :showLeft="showLeft"
-                      :leftTriggleVisible="leftTriggleVisible" @showNavigation="showHiddenLeft"></CompsTab>
+                :leftTriggleVisible="leftTriggleVisible" @showNavigation="showHiddenLeft"></CompsTab>
             <CommentTab :context="props.context" v-show="currentTab === 'Comment'" :showLeft="showLeft"
-                        :leftTriggleVisible="leftTriggleVisible" @showNavigation="showHiddenLeft"></CommentTab>
+                :leftTriggleVisible="leftTriggleVisible" @showNavigation="showHiddenLeft"></CommentTab>
         </div>
     </div>
 </template>
@@ -92,7 +97,8 @@ onUnmounted(() => {
 .tab-container {
     position: relative;
     width: 100%;
-    border: 1px solid #F5F5F5;
+    border-right: 1px solid #EBEBEB;
+    box-sizing: border-box;
 
     .tab-controller {
         height: 40px;
@@ -100,7 +106,7 @@ onUnmounted(() => {
         flex-direction: row;
         overflow: hidden;
 
-        > .tab {
+        >.tab {
             min-width: 24px;
             font-weight: var(--font-default-bold);
             font-size: var(--font-default-fontsize);
@@ -112,11 +118,11 @@ onUnmounted(() => {
             margin-left: 6px;
         }
 
-        > .tab:hover {
+        >.tab:hover {
             color: var(--theme-color);
         }
 
-        > .active {
+        >.active {
             color: var(--theme-color);
         }
 

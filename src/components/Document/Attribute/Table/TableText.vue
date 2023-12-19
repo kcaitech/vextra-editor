@@ -794,7 +794,7 @@ onUnmounted(() => {
                         </Tooltip>
                     </div>
                 </div>
-                <div class="perch"></div>
+<!--                <div class="perch"></div>-->
             </div>
             <div class="text-bottom">
                 <div class="text-bottom-align">
@@ -845,13 +845,13 @@ onUnmounted(() => {
                         </i>
                     </div>
                 </div>
-                <div class="perch"></div>
+<!--                <div class="perch"></div>-->
             </div>
             <!-- 字体颜色 -->
             <div class="text-color" v-if="!colorIsMulti && textColor" style="margin-bottom: 10px;">
                 <div style="font-family: HarmonyOS Sans;font-size: 12px;margin-right: 10px;">{{ t('attr.font_color') }}</div>
                 <div class="color">
-                    <ColorPicker :color="textColor!" :context="props.context" :late="30"
+                    <ColorPicker :color="textColor!" :context="props.context" :auto_to_right_line="true"
                         @change="c => getColorFromPicker(c, 'color')">
                     </ColorPicker>
                     <input ref="sizeColor" class="sizeColor" @focus="selectColorValue" :spellcheck="false"
@@ -884,7 +884,7 @@ onUnmounted(() => {
                 <div style="font-family: HarmonyOS Sans;font-size: 12px;margin-right: 10px;"
                      :class="{ 'check': highlight, 'nocheck': !highlight }">{{ t('attr.highlight_color') }}</div>
                 <div class="color">
-                    <ColorPicker :color="highlight!" :context="props.context" :late="30"
+                    <ColorPicker :color="highlight!" :context="props.context" :auto_to_right_line="true"
                         @change="c => getColorFromPicker(c, 'highlight')">
                     </ColorPicker>
                     <input ref="higlightColor" class="colorFill" @focus="selectHiglightColor" :spellcheck="false"
@@ -931,21 +931,23 @@ onUnmounted(() => {
     border-bottom: 1px solid #F0F0F0;
 
     .trigger {
-        width: 100%;
-        height: 100%;
+        width: 28px;
+        height: 28px;
         display: flex;
         justify-content: center;
         align-items: center;
+        margin-top: -11px;
+        margin-left: -12px;
+        border-radius: var(--default-radius);
 
         >svg {
             width: 16px;
             height: 16px;
-            transition: 0.3s;
         }
+    }
 
-        svg:hover {
-            transform: rotate(90deg);
-        }
+    .trigger:hover {
+        background-color: #F5F5F5;
     }
 
     .text-container {
@@ -1077,7 +1079,7 @@ onUnmounted(() => {
                 width: 32px;
                 display: flex;
                 justify-content: center;
-                margin-left: 9px;
+                margin-left: 8px;
             }
 
             .overbold:hover {
@@ -1111,7 +1113,7 @@ onUnmounted(() => {
                 height: 32px;
                 padding: 2px;
                 box-sizing: border-box;
-                margin-left: 9px;
+                margin-left: 6px;
                 border-radius: var(--default-radius);
             }
 

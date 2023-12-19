@@ -1,6 +1,6 @@
-import { Watchable } from "@kcdesign/data";
+import { WatchableObject } from "@kcdesign/data";
 import { DocSelectionData } from "@/communication/modules/doc_selection_op"
-export class TeamWork extends Watchable(Object) {
+export class TeamWork extends WatchableObject {
     static CHANGE_USER_STATE = 1;
 
     private userSelectionList: DocSelectionData[] = []
