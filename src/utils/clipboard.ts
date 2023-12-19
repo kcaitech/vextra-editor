@@ -11,6 +11,7 @@ import { Action } from '@/context/tool';
 import { is_box_outer_view2 } from './common';
 import { compare_layer_3 } from './group_ungroup';
 import { Document } from '@kcdesign/data';
+import { en } from 'element-plus/es/locale';
 
 interface SystemClipboardItem {
     type: ShapeType
@@ -186,7 +187,13 @@ export async function paster_inner_shape(context: Context, editor: TextShapeEdit
                 const start = selection.cursorStart;
                 const end = selection.cursorEnd;
                 const s = Math.min(start, end);
+
+                if (start !== end) {
+                    editor.deleteText(Math.min(start, end), Math.abs(start - end))
+                }
+
                 editor.insertText(text, s);
+
                 selection.setCursor(s + text.length, false);
             } else if (type === 'text/html') {
                 paster_html_or_plain_inner_shape(_d, context, editor, only_text);
