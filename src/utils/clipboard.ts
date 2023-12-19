@@ -561,6 +561,8 @@ async function clipboard_text_html_replace(context: Context, data: any, src: Sha
             throw new Error('invalid source');
         }
 
+        after_import(context, source.media);
+
         const page = context.selection.selectedPage;
 
         if (!page) {
