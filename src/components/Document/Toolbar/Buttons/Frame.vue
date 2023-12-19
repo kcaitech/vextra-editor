@@ -214,7 +214,7 @@ const customFrame = () => {
                 height: 16px;
                 width: 16px;
                 margin-right: 8px;
-                margin-left: 60px;
+                //margin-left: 60px;
                 margin-top: 4px;
             }
 
