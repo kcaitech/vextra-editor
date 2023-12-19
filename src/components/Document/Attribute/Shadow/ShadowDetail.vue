@@ -269,8 +269,8 @@ const disable = computed(() => {
 <style scoped lang="scss">
 .border-detail-container {
     >.popover {
-        width: 18px;
-        height: 22px;
+        width: 28px;
+        height: 28px;
 
         .trigger {
             width: 100%;
@@ -278,17 +278,16 @@ const disable = computed(() => {
             display: flex;
             justify-content: center;
             align-items: center;
-            margin-left: -7px;
+            border-radius: var(--default-radius);
 
             >svg {
                 width: 16px;
                 height: 16px;
-                transition: 0.5s;
             }
+        }
 
-            >svg:hover {
-                transform: rotate(90deg);
-            }
+        .trigger:hover {
+            background-color: #F5F5F5;
         }
 
         .options-container {
