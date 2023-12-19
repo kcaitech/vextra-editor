@@ -48,7 +48,7 @@ function showMenu(e: MouseEvent) {
         nextTick(() => {
             if (popover.value) {
                 popover.value.style.left = el.offsetLeft + 'px';
-                popover.value.style.top = el.offsetHeight + 16 + 'px';
+                popover.value.style.top = el.offsetHeight + 13 + 'px';
             }
         })
         document.addEventListener('click', onMenuBlur);
@@ -104,8 +104,7 @@ const customFrame = () => {
             <span @click="customFrame">{{ t('frame.custom') }}</span>
         </div>
         <div ref="frame" v-for="(item, i) in frames" :key="i" style="position: relative;">
-<!--            @mouseleave="closeChildFrame"-->
-            <div class="frame" @mouseenter="showChildFrame(i)" >
+            <div class="frame" @mouseenter="showChildFrame(i)" @mouseleave="closeChildFrame">
                 <span>{{ t(`${item}`) }}</span>
                 <div class="triangle"></div>
                 <div class="bridge"></div>
