@@ -269,15 +269,12 @@ function hexToX(hex: string): RgbMeta {
     if (hex.length === 3) {
         let temp = hex.split('');
         result = temp.map(v => {
-            return Number(eval(`0
-            x${v}${v}`).toString(10));
+            return Number(eval(`0x${v}${v}`).toString(10));
         })
     } else if (hex.length === 6) {
         let temp = hex.split('');
         for (let i = 0; i < 6; i = i + 2) {
-            result.push(Number(eval(`0
-            x
-            ${temp[i]}${temp[i + 1]}`).toString(10)));
+            result.push(Number(eval(`0x${temp[i]}${temp[i + 1]}`).toString(10)));
         }
     }
     return result
@@ -507,8 +504,8 @@ function systemEyeDropper() {
         const c = new Color(rgba.alpha, rgba.R, rgba.G, rgba.B);
         emit('change', c);
         update_dot_indicator_position(c);
-    }).catch(() => {
-        throw new Error("failed");
+    }).catch((e: any) => {
+        console.log("failed:", e);
     });
     const tooltip = drawTooltip(t('color.esc'));
     document.body.appendChild(tooltip);
