@@ -199,7 +199,7 @@ const getMaxMinPoints = (shapes: Shape[]) => {
     }
     return bounds_points;
 }
-function flattenShapes(shapes: Shape[]): Shape[] {
+export function flattenShapes(shapes: Shape[]): Shape[] {
     return shapes.reduce((result: any, item: Shape) => {
         if(item.type === ShapeType.Group) {
             const childs = (item as GroupShape).childs as Shape[];
