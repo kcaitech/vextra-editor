@@ -411,22 +411,24 @@ onUnmounted(() => {
     height: 16px;
 
     .trigger {
-      width: 16px;
-      height: 16px;
+      width: 28px;
+      height: 28px;
       display: flex;
       justify-content: center;
       align-items: center;
+      margin-top: -11px;
+      margin-left: -12px;
+      border-radius: var(--default-radius);
 
       >svg {
         width: 16px;
         height: 16px;
-        transition: 0.5s;
-      }
-
-      >svg:hover {
-        transform: rotate(90deg);
       }
     }
+
+      .trigger:hover {
+          background-color: #F5F5F5;
+      }
 
     .options-container {
       display: flex;

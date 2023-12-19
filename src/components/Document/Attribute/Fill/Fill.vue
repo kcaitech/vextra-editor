@@ -1,12 +1,12 @@
 <script setup lang="ts">
-import {computed, onMounted, onUnmounted, reactive, ref, watch} from 'vue';
-import {Context} from '@/context';
-import {Color, Fill, FillType, Shape, ShapeType, TableCell, TableShape} from "@kcdesign/data";
-import {Reg_HEX} from "@/utils/RegExp";
+import { computed, onMounted, onUnmounted, reactive, ref, watch } from 'vue';
+import { Context } from '@/context';
+import { Color, Fill, FillType, GroupShape, Shape, ShapeType, TableCell, TableShape } from "@kcdesign/data";
+import { Reg_HEX } from "@/utils/RegExp";
 import TypeHeader from '../TypeHeader.vue';
-import {useI18n} from 'vue-i18n';
+import { useI18n } from 'vue-i18n';
 import ColorPicker from '@/components/common/ColorPicker/index.vue';
-import {message} from "@/utils/message";
+import { message } from "@/utils/message";
 import {
     get_actions_add_fill,
     get_actions_fill_color,
@@ -15,9 +15,10 @@ import {
     get_actions_fill_unify,
     get_fills
 } from '@/utils/shape_style';
-import {v4} from 'uuid';
-import {TableSelection} from '@/context/tableselection';
-import {Selection} from "@/context/selection";
+import { v4 } from 'uuid';
+import { TableSelection } from '@/context/tableselection';
+import { Selection } from "@/context/selection";
+import { flattenShapes } from '@/utils/cutout';
 
 interface FillItem {
     id: number,
@@ -32,7 +33,7 @@ interface Props {
 const props = defineProps<Props>();
 const editor = computed(() => props.context.editor4Shape(props.shapes[0]));
 const len = computed<number>(() => props.shapes.length);
-const {t} = useI18n();
+const { t } = useI18n();
 const watchedShapes = new Map();
 const fills: FillItem[] = reactive([]);
 const alphaFill = ref<any>();
@@ -53,7 +54,7 @@ function watchShapes() {
         for (let i = 0, l = selectedShapes.length; i < l; i++) {
             const v = selectedShapes[i];
             if (v.isVirtualShape) {
-                let p =v.parent;
+                let p = v.parent;
                 while (p) {
                     if (p.type === ShapeType.SymbolRef) {
                         needWatchShapes.set(p.id, p);
@@ -81,7 +82,7 @@ function updateData() {
     fills.length = 0;
     mixed.value = false;
     mixed_cell.value = false;
-    if (props.shapes.length === 1) {
+    if (props.shapes.length === 1 && props.shapes[0].type !== ShapeType.Group) {
         const shape = props.shapes[0];
         const table = props.context.tableSelection;
         const is_edting = table.editingCell;
@@ -113,12 +114,21 @@ function updateData() {
             const style = shape.style;
             for (let i = 0, len = style.fills.length; i < len; i++) {
                 const fill = style.fills[i];
-                const f = {id: i, fill};
+                const f = { id: i, fill };
                 fills.unshift(f);
             }
         }
     } else if (props.shapes.length > 1) {
         const _fs = get_fills(props.shapes);
+        if (_fs === 'mixed') {
+            mixed.value = true;
+        } else {
+            fills.push(..._fs.reverse());
+        }
+    } else if (props.shapes.length === 1 && props.shapes[0].type === ShapeType.Group) {
+        const childs = (props.shapes[0] as GroupShape).childs;
+        const shapes = flattenShapes(childs).filter(s => s.type !== ShapeType.Group);
+        const _fs = get_fills(shapes);
         if (_fs === 'mixed') {
             mixed.value = true;
         } else {
@@ -134,8 +144,8 @@ function watcher(...args: any[]) {
 function addFill(): void {
     const color = new Color(0.2, 0, 0, 0);
     const fill = new Fill(v4(), true, FillType.SolidColor, color);
-    if (len.value === 1) {
-        const s = props.context.selection.selectedShapes[0];
+    const s = props.context.selection.selectedShapes[0];
+    if (len.value === 1 && s.type !== ShapeType.Group) {
         const e = props.context.editor4Shape(s);
         if (s.type === ShapeType.Table) {
             const table = props.context.tableSelection;
@@ -179,6 +189,24 @@ function addFill(): void {
             }
         } else {
             const actions = get_actions_add_fill(props.shapes, fill);
+            const page = props.context.selection.selectedPage;
+            if (page) {
+                const editor = props.context.editor4Page(page);
+                editor.shapesAddFill(actions);
+            }
+        }
+    } else if (len.value === 1 && s.type === ShapeType.Group) {
+        const childs = (s as GroupShape).childs;
+        const shapes = flattenShapes(childs).filter(s => s.type !== ShapeType.Group);
+        if (mixed.value) {
+            const actions = get_actions_fill_unify(shapes);
+            const page = props.context.selection.selectedPage;
+            if (page) {
+                const editor = props.context.editor4Page(page);
+                editor.shapesFillsUnify(actions);
+            }
+        } else {
+            const actions = get_actions_add_fill(shapes, fill);
             const page = props.context.selection.selectedPage;
             if (page) {
                 const editor = props.context.editor4Page(page);
@@ -552,14 +580,15 @@ onUnmounted(() => {
                 </div>
                 <div class="color">
                     <ColorPicker :color="f.fill.color" :context="props.context" :auto_to_right_line="true"
-                                 @change="c => getColorFromPicker(idx, c)">
+                        @change="c => getColorFromPicker(idx, c)">
                     </ColorPicker>
-                    <input ref="colorFill" class="colorFill" :value="toHex(f.fill.color.red, f.fill.color.green, f.fill.color.blue)"
-                        :spellcheck="false" @change="(e) => onColorChange(idx, e)" @focus="selectColor(idx)"
-                           :class="{ 'check': f.fill.isEnabled, 'nocheck': !f.fill.isEnabled }" />
+                    <input ref="colorFill" class="colorFill"
+                        :value="toHex(f.fill.color.red, f.fill.color.green, f.fill.color.blue)" :spellcheck="false"
+                        @change="(e) => onColorChange(idx, e)" @focus="selectColor(idx)"
+                        :class="{ 'check': f.fill.isEnabled, 'nocheck': !f.fill.isEnabled }" />
                     <input ref="alphaFill" class="alphaFill" :value="filterAlpha(f.fill.color.alpha * 100) + '%'"
                         @change="(e) => onAlphaChange(idx, e)" @focus="selectAlpha(idx)"
-                           :class="{ 'check': f.fill.isEnabled, 'nocheck': !f.fill.isEnabled }"/>
+                        :class="{ 'check': f.fill.isEnabled, 'nocheck': !f.fill.isEnabled }" />
                 </div>
                 <div style="width: 4px;"></div>
                 <div class="delete" @click="deleteFill(idx)">
@@ -597,8 +626,10 @@ onUnmounted(() => {
 
         transition: .2s;
     }
+
     .add:hover {
-        background-color: #F5F5F5;;
+        background-color: #F5F5F5;
+        ;
     }
 
     .fills-container {
@@ -623,7 +654,7 @@ onUnmounted(() => {
                 align-items: center;
                 border-radius: 4px;
 
-                > svg {
+                >svg {
                     width: 60%;
                     height: 60%;
                 }
@@ -670,7 +701,7 @@ onUnmounted(() => {
                     font-size: 12px;
                 }
 
-                input + input {
+                input+input {
                     width: 45px;
                 }
 
