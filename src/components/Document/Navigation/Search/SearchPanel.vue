@@ -140,7 +140,7 @@ function getShapeRange(start: number, end: number): Shape[] {
   const it = source_by_shape.iterAt(from);
   for (let i = from; i <= to && it.hasNext(); i++) {
     const shape = it.next().shape;
-    const childs = shape.childs;
+    const childs = (shape as any).childs;
     if (childs && childs.length) {
       for (let c_i = 0; c_i < childs.length; c_i++) {
         range.delete(childs[c_i].id);
