@@ -37,10 +37,10 @@ export class PageDom extends (PageView) {
         // ub(this as any);
     }
 
-    protected checkAndResetDirty(): boolean {
-        if (super.checkAndResetDirty()) return true;
-        return this.m_save_version < 0;
-    }
+    // protected checkAndResetDirty(): boolean {
+    //     if (super.checkAndResetDirty()) return true;
+    //     return this.m_save_version < 0;
+    // }
 
     render(): number {
         const version: number = super.render();
