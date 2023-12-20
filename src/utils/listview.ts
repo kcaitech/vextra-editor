@@ -51,7 +51,7 @@ export function get_part_of_target1(element: Element, e: MouseEvent) {
     if (trigger) { // 三层结构
         const y = box.y;
         const l = box.height / 3;
-        if (e.clientY >= y && e.clientY <= y + 10) {
+        if (e.clientY >= y && e.clientY <= y + l) {
             v = 'upper';
         } else if (e.clientY > (y + l) && e.clientY <= (y + (2 * l))) {
             v = 'inner';
@@ -81,25 +81,25 @@ export function get_part_of_target1(element: Element, e: MouseEvent) {
     let h = 0;
     const box2 = right_element.getBoundingClientRect();
     const zero_divide = box2.x;
-    drag_event.zero = zero_divide + 6;
+    drag_event.zero = zero_divide - 4;
     if (trigger) {
         if (v === "upper") {
-            h = __get_h(zero_divide - 10, e.clientX);
+            h = __get_h(zero_divide - 21, e.clientX);
         } else if (v === "inner") {
             h = 1;
         } else {
             const off = !!trigger.querySelector('.triangle-right');
             drag_event.off = off;
             if (off) {
-                h = __get_h(zero_divide - 10, e.clientX);
+                h = __get_h(zero_divide - 21, e.clientX);
             } else {
                 h = 1;
             }
         }
     } else {
-        h = __get_h(zero_divide - 10, e.clientX);
+        h = __get_h(zero_divide - 21, e.clientX);
     }
-    const max = -Math.floor((zero_divide - 16) / 12);
+    const max = -Math.floor((zero_divide - 20) / 18);
     drag_event.layer = Math.max(h, max);
     return drag_event;
 }
@@ -109,7 +109,7 @@ function __get_h(zero: number, v: number) {
     if (distance < 0) {
         return 0;
     } else {
-        return -Math.ceil(distance / 12);
+        return -Math.ceil(distance / 18);
     }
 }
 
@@ -125,9 +125,9 @@ export function get_destination_by_drag_event(event: ItemDragEvent, start_y: num
         if (event.is_group && !event.off) result.type = 'insert';
     }
     if (layer === 1) {
-        result.x += 12;
+        result.x += 18;
     } else if (layer < 0) {
-        result.x -= (-12 * layer);
+        result.x -= (-18 * layer);
     }
     return result;
 }

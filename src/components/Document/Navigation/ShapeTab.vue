@@ -29,7 +29,7 @@ function dragStart() {
     transition.value = '0s'
 }
 function onDragOffset(offset: number) {
-    const newheight = Math.min(containerHeight.value - 100, Math.max(70, structure.value.pagelistHeightBackup + Number(offset)));
+    const newheight = Math.min(containerHeight.value - 100, Math.max(76, structure.value.pagelistHeightBackup + Number(offset)));
     structure.value.pagelistHeight = newheight
 }
 function pageListFold(fold: boolean) {
@@ -53,7 +53,7 @@ function init_pagelist_height() {
         w_height = container.value.clientHeight;
     }
     let max_height = Math.max(w_height * 0.5 - 36, i_height);
-    let init_height = page_list * 30 + 64;
+    let init_height = page_list * 36 + 64;
     init_height = Math.max(init_height, i_height);
     structure.value.pagelistHeight = Math.min(init_height, max_height);
 }
@@ -75,13 +75,13 @@ onUnmounted(() => {
 
 <template>
     <div class="shapetab-container" ref="container">
-        <div class="page-navi" :style="{ height: isPagelistFold ? '30px' : `${structure.pagelistHeight}px`, transition }">
+        <div class="page-navi" :style="{ height: isPagelistFold ? '40px' : `${structure.pagelistHeight}px`, transition }">
             <PageList :context="props.context" v-bind="$attrs" @fold="pageListFold" :page="page"></PageList>
             <Sash v-if="!isPagelistFold" ref="sash" side="bottom" @dragStart="dragStart" @offset="onDragOffset"
                 @drag-end="end"></Sash>
         </div>
         <div class="page-navi"
-            :style="{ height: isPagelistFold ? 'calc(100% - 30px)' : `calc(100% - ${structure.pagelistHeight}px)` }">
+            :style="{ height: isPagelistFold ? 'calc(100% - 40px)' : `calc(100% - ${structure.pagelistHeight}px)` }">
             <ShapeList :context="props.context" :page="page" :pageHeight="structure.pagelistHeight"></ShapeList>
         </div>
         <ShowHiddenLeft :showLeft="showLeft" :leftTriggleVisible="leftTriggleVisible" @showNavigation="showHiddenLeft">
@@ -93,6 +93,7 @@ onUnmounted(() => {
 .shapetab-container {
     width: 100%;
     height: 100%;
+    box-sizing: border-box;
 
     >.page-navi {
         position: relative;

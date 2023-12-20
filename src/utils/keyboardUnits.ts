@@ -94,6 +94,8 @@ keydownHandler['KeyF'] = function (event: KeyboardEvent, context: Context) {
 
     if (ctrlKey || metaKey) {
         event.preventDefault();
+        console.log('ctrlKey');
+        
         context.navi.notify(Navi.TO_SEARCH); // 图层搜索
         return;
     }
