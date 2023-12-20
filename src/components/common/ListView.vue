@@ -544,7 +544,7 @@ function mouseMove(event: MouseEvent) {
     const _destination = get_destination_by_drag_event(position, start_y, props.itemHeight);
     if (_destination.type === "insert") {
         port_i_visible.value = true;
-        destination.value.x = 6;
+        destination.value.x = 27;
         destination.value.y = start_y;
     } else {
         port_a_visible.value = true;
