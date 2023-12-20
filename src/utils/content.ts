@@ -761,7 +761,7 @@ export function selectShapes(context: Context, shapes: Shape | undefined) {
 }
 
 export const permIsEdit = (context: Context) => {
-    return Boolean(context.workspace.documentPerm === Perm.isEdit && !context.tool.isLable);
+    return Boolean(context.workspace.documentPerm === Perm.isEdit);
 }
 
 export const hasRadiusShape = (shape: Shape, type: ShapeType[]) => {
@@ -1114,5 +1114,6 @@ export async function upload_image(context: Context, ref: string, buff: ArrayBuf
         return await context.communication.docResourceUpload.upload(ref, __buff.buffer);
     } catch (error) {
         console.log('upload_image:', error);
+        return false;
     }
 }
