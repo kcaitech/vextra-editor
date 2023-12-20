@@ -493,7 +493,7 @@ onUnmounted(() => {
                     width: 4px;
                     height: 4px;
                     border-radius: 50%;
-                    background-color: var(--theme-color);
+                    background-color: #8C8C8C;
                 }
             }
 
