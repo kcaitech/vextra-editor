@@ -1,17 +1,17 @@
 <script setup lang="ts">
-import {Selection} from "@/context/selection";
-import {Menu} from "@/context/menu";
-import {onMounted, onUnmounted, ref, nextTick} from "vue";
-import ListView, {IDataIter, IDataSource} from "@/components/common/ListView.vue";
-import PageItem, {ItemData} from "./PageItem.vue";
-import {Context} from "@/context";
-import {useI18n} from 'vue-i18n';
-import {Page} from "@kcdesign/data";
-import {Document, PageListItem} from "@kcdesign/data";
+import { Selection } from "@/context/selection";
+import { Menu } from "@/context/menu";
+import { onMounted, onUnmounted, ref, nextTick } from "vue";
+import ListView, { IDataIter, IDataSource } from "@/components/common/ListView.vue";
+import PageItem, { ItemData } from "./PageItem.vue";
+import { Context } from "@/context";
+import { useI18n } from 'vue-i18n';
+import { Page } from "@kcdesign/data";
+import { Document, PageListItem } from "@kcdesign/data";
 import ContextMenu from '@/components/common/ContextMenu.vue';
-import {Navi} from "@/context/navigate";
-import {Perm} from "@/context/workspace";
-import {Tool} from "@/context/tool";
+import { Navi } from "@/context/navigate";
+import { Perm } from "@/context/workspace";
+import { Tool } from "@/context/tool";
 
 type List = InstanceType<typeof ListView>;
 
@@ -30,7 +30,7 @@ interface MenuItem {
 }
 
 type ContextMenuEl = InstanceType<typeof ContextMenu>;
-const {t} = useI18n();
+const { t } = useI18n();
 const props = defineProps<Props>();
 const emit = defineEmits<Emits>();
 const pagelist = ref<List>();
@@ -40,7 +40,7 @@ const pageH = ref<number>(0)
 const fold = ref<boolean>(false)
 const MOUSE_RIGHT = 2
 const pageMenu = ref<boolean>(false)
-const pageMenuPosition = ref<{ x: number, y: number }>({x: 0, y: 0}); //鼠标点击page所在的位置
+const pageMenuPosition = ref<{ x: number, y: number }>({ x: 0, y: 0 }); //鼠标点击page所在的位置
 let pageMenuItems: MenuItem[] = [];
 const contextMenuEl = ref<ContextMenuEl>();
 const cur_page_name = ref<string>(props.context.selection.selectedPage?.name || t('navi.page'));
@@ -174,17 +174,17 @@ const pageMenuMount = (id: string, e: MouseEvent) => {
     pageMenuPosition.value.x = e.clientX
     pageMenuPosition.value.y = e.clientY - 75
     pageMenuItems = [
-        {name: 'copy_link', id: id, disable: false},
-        {name: 'duplicate', id: id, disable: false},
-        {name: 'rename', id: id, disable: false},
-        {name: 'delete', id: id, disable: false}
+        { name: 'copy_link', id: id, disable: false },
+        { name: 'duplicate', id: id, disable: false },
+        { name: 'rename', id: id, disable: false },
+        { name: 'delete', id: id, disable: false }
     ]
     if (props.context.data.pagesList.length === 1) {
         pageMenuItems[3].disable = true;
     }
     if (props.context.workspace.documentPerm !== Perm.isEdit || props.context.tool.isLable) {
         pageMenuItems = [
-            {name: 'copy_link', id: id, disable: false},
+            { name: 'copy_link', id: id, disable: false },
         ]
     }
     pageMenu.value = true
@@ -285,28 +285,26 @@ onUnmounted(() => {
     <div class="pagelist-wrap" ref="pageList">
         <div class="header">
             <div class="title">{{ fold ? cur_page_name : t('navi.page') }}</div>
-            <div class="space"></div>
             <div class="btn">
                 <div class="add" @click.stop="addPage" :title="t('navi.add_page')"
-                     v-if="isEdit === Perm.isEdit && !isLable">
+                    v-if="isEdit === Perm.isEdit && !isLable">
                     <svg-icon icon-class="add"></svg-icon>
                 </div>
                 <div class="shrink" @click="toggle">
-                    <svg-icon icon-class="down"
-                              :style="{ transform: fold ? 'rotate(-90deg)' : 'rotate(0deg)' }"></svg-icon>
+                    <svg-icon icon-class="down" :style="{ transform: fold ? 'rotate(-90deg)' : 'rotate(0deg)' }"></svg-icon>
                 </div>
             </div>
         </div>
-        <div class="body" ref="list_body" :style="{ height: fold ? 0 : 'calc(100% - 36px)' }">
+        <div class="body" ref="list_body" :style="{ height: fold ? 0 : 'calc(100% - 40px)' }">
             <ListView ref="pagelist" :source="pageSource" :item-view="PageItem" :item-width="0" :context="props.context"
-                      :pageHeight="pageH" :item-height="30" :first-index="0" v-bind="$attrs" orientation="vertical"
-                      :allowDrag="allow_to_drag()" location="pagelist" @rename="rename" @onMouseDown="mousedown"
-                      @after-drag="afterDrag">
+                :pageHeight="pageH" :item-height="36" :first-index="0" v-bind="$attrs" orientation="vertical"
+                :allowDrag="allow_to_drag()" location="pagelist" @rename="rename" @onMouseDown="mousedown"
+                @after-drag="afterDrag">
             </ListView>
             <ContextMenu v-if="pageMenu" :x="pageMenuPosition.x" :y="pageMenuPosition.y" ref="contextMenuEl"
-                         :context="props.context" @close="pageMenuUnmount">
+                :context="props.context" @close="pageMenuUnmount">
                 <div :class="item.disable ? 'items-wrap-disable' : 'items-wrap'" v-for="(item, index) in pageMenuItems"
-                     :key="index" @click="e => pageMenuUnmount(e, item.name, item.id)">
+                    :key="index" @click="e => pageMenuUnmount(e, item.name, item.id)">
                     <span>{{ t(`pageMenu.${item.name}`) }}</span>
                 </div>
             </ContextMenu>
@@ -318,70 +316,49 @@ onUnmounted(() => {
 .pagelist-wrap {
     height: 100%;
     box-sizing: border-box;
+    padding-left: 6px;
 
     .header {
         width: 100%;
+        height: 40px;
         display: flex;
+        padding-right: 6px;
         font-size: var(--font-default-fontsize);
         box-sizing: border-box;
-        position: relative;
         align-items: center;
-
-        > div:not(.space) {
-            flex-shrink: 0;
-        }
-
+        justify-content: space-between;
         overflow: hidden;
-
+        color: #434343;
         .title {
-            height: 36px;
-            font-weight: var(--font-default-bold);
-            line-height: 36px;
-            max-width: 150px;
+            height: 40px;
+            line-height: 40px;
+            max-width: calc(100% - 70px);
+            margin-left: 8px;
             text-overflow: ellipsis;
             white-space: nowrap;
             overflow: hidden;
-            margin-left: 6px;
         }
 
         .btn {
-            position: absolute;
-            right: 13px;
             display: flex;
-            flex-direction: row;
+            height: 100%;
+            align-items: center;
 
-            > div {
-                margin-left: 8px;
-            }
+            >div {
+                width: 28px;
+                height: 28px;
+                display: flex;
+                align-items: center;
+                justify-content: center;
+                border-radius: var(--default-radius);
 
-            .add {
-                height: 14px;
-                width: 14px;
-
-                > svg {
-                    width: 80%;
-                    height: 80%;
+                &:hover {
+                    background-color: #F5F5F5;
                 }
-            }
 
-            .file {
-                height: 14px;
-                width: 14px;
-
-                > svg {
-                    width: 80%;
-                    height: 80%;
-                }
-            }
-
-            .shrink {
-                height: 14px;
-                width: 14px;
-
-                > svg {
-                    transition: 0.5s;
-                    width: 80%;
-                    height: 80%;
+                >svg {
+                    width: 16px;
+                    height: 16px;
                 }
             }
         }
@@ -390,7 +367,7 @@ onUnmounted(() => {
     .body {
         height: calc(100% - 30px);
 
-        > .container {
+        >.container {
             height: 100%;
         }
     }
