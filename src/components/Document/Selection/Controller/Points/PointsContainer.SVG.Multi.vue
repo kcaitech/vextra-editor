@@ -5,7 +5,7 @@ import { onMounted, onUnmounted, reactive, watch } from 'vue';
 import { ClientXY } from '@/context/selection';
 import { Point } from '../../SelectionView.vue';
 import { update_dot } from './common';
-import { getAngle, getHorizontalAngle } from '@/utils/common';
+import { getAngle, getHorizontalAngle, shapes_organize } from '@/utils/common';
 import { Action } from '@/context/tool';
 import { WorkSpace } from '@/context/workspace';
 interface Props {
@@ -48,7 +48,9 @@ function passive_update() {
     dots.push(...update_dot(props.frame, 0));
 }
 function point_mousedown(event: MouseEvent, ele: CtrlElementType) {
-    if (event.button !== 0) return;
+    if (event.button !== 0) {
+        return;
+    }
     props.context.menu.menuMount()
     const workspace = props.context.workspace;
     event.stopPropagation();
@@ -84,14 +86,21 @@ function point_mousemove(event: MouseEvent) {
         workspace.notify(WorkSpace.SELECTION_VIEW_UPDATE);
     } else if (Math.hypot(mx - sx, my - sy) > dragActiveDis) {
         isDragging = true;
-        const shapes = props.context.selection.selectedShapes;
+
+        const shapes = shapes_organize(props.context.selection.selectedShapes);
         const page = props.context.selection.selectedPage;
-        asyncMultiAction = props.context.editor.controller().asyncMultiEditor(shapes, page!);
-        if (cur_ctrl_type.endsWith('rotate')) workspace.rotating(true);
-        else {
+
+        asyncMultiAction = props.context.editor
+            .controller()
+            .asyncMultiEditor(shapes, page!);
+
+        if (cur_ctrl_type.endsWith('rotate')) {
+            workspace.rotating(true);
+        } else {
             setCursor(cur_ctrl_type);
             workspace.scaling(true);
         }
+
         workspace.setSelectionViewUpdater(false);
         submatrix.reset(workspace.matrix.inverse);
     }
