@@ -33,8 +33,8 @@ function onMouseDown(e: MouseEvent) {
 }
 
 const onRename = () => {
-    if(props.data.context.workspace.documentPerm !== Perm.isEdit) return;
-    if(props.data.context.tool.isLable) return;
+    if (props.data.context.workspace.documentPerm !== Perm.isEdit) return;
+    if (props.data.context.tool.isLable) return;
     isInput.value = true
     nextTick(() => {
         if (nameInput.value) {
@@ -89,12 +89,14 @@ onUnmounted(() => {
 </script>
 
 <template>
-    <div class="pageItem"
-        :class="{ container: true, 'right-target': props.data.rightTarget && !props.data.selected, selected: props.data.selected }"
+    <div class="pageItem" :class="{ container: true, 'right-target': props.data.rightTarget && !props.data.selected }"
         @mousedown="onMouseDown">
-        <div class="ph"></div>
+        <div class="ph">
+            <svg-icon v-if="props.data.selected" icon-class="page-select"></svg-icon>
+        </div>
         <div class="item zero-symbol">
-            <div class="title" @dblclick="onRename" :style="{ display: isInput ? 'none' : '' }">{{ props.data.name }}</div>
+            <div class="title" @dblclick="onRename" :class="{ selected: props.data.selected }"
+                :style="{ display: isInput ? 'none' : '' }">{{ props.data.name }}</div>
             <input v-if="isInput" class="rename" @change="onChangeName" type="text" ref="nameInput">
         </div>
     </div>
@@ -102,31 +104,32 @@ onUnmounted(() => {
 
 <style scoped lang="scss">
 .container {
-    margin-left: 6px;
-    height: 30px;
-    width: calc(100% - 12px);
-    line-height: 30px;
-    color: var(--left-navi-font-color);
+    height: 36px;
+    width: calc(100% - 6px);
+    line-height: 36px;
+    font-weight: 500;
+    color: var(--left-font-color);
     background-color: var(--left-navi-bg-color);
-    font-size: var(--font-default-fontsize);
+    font-size: 14px;
     text-overflow: ellipsis;
     white-space: nowrap;
     overflow: visible;
     display: flex;
     flex-direction: row;
     position: relative;
+    border-radius: var(--default-radius);
     transition: 0.08s;
 
     .item {
         display: flex;
         align-items: center;
-        width: 100%;
+        width: calc(100% - 34px);
         position: relative;
 
         >.title {
             width: 100%;
             height: 100%;
-            font-size: var(--font-default-fontsize);
+            font-size: 14px;
             text-overflow: ellipsis;
             white-space: nowrap;
             overflow: hidden;
@@ -136,11 +139,7 @@ onUnmounted(() => {
 
 div.container:hover {
     cursor: default;
-    background-color: var(--left-navi-button-hover-color);
-}
-
-div.container.selected {
-    background-color: var(--left-navi-button-select-color);
+    background-color: #F5F5F5;
 }
 
 div.container.right-target {
@@ -148,23 +147,32 @@ div.container.right-target {
 }
 
 .ph {
-    width: 13px;
-    min-width: 13px;
+    width: 28px;
     height: 100%;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+
+    >svg {
+        width: 12px;
+        height: 12px;
+    }
 }
 
 div .rename {
     flex: 1;
     width: 100%;
-    height: 22px;
+    height: 26px;
     font-size: var(--font-default-fontsize);
     text-overflow: ellipsis;
     white-space: nowrap;
     overflow: hidden;
-    padding-left: 6px;
-    margin-right: 6px;
-    outline-style: none;
+    padding: 0 6px;
     border: 1px solid var(--left-navi-button-select-color);
+    border: none;
+    outline: none;
+    border-radius: var(--default-radius);
+    background-color: #F5F5F5;
 }
 
 .items-wrap {
@@ -173,5 +181,9 @@ div .rename {
     &:hover {
         background-color: var(--active-color);
     }
+}
+
+.selected {
+    color: #000;
 }
 </style>
