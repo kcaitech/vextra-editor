@@ -31,7 +31,7 @@ const promptMessage = () => {
         messages.value = t('apply.maximum_share')
         showNotification()
         const routeTimer = setTimeout(() => {
-            router.push('/apphome')
+            router.push('/files')
             clearTimeout(routeTimer)
         }, 3000)
     } else {

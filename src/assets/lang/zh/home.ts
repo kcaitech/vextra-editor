@@ -137,7 +137,7 @@ export const home = {
     login_failed: '登录失败',
     login_refresh: '点击刷新二维码',
     invitation_code_tips: '请输入试用邀请码',
-    table_empty_tips: '没有内容',
+    table_empty_tips: '当前列表没有文件',
     'align_left': '左对齐',
     'align_h_c': '左右居中对齐',
     'align_right': '右对齐',

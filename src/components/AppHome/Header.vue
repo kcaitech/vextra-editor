@@ -329,13 +329,12 @@ const getElXY = (el: HTMLElement, elwidth: number = 0) => {
     height: 60px;
 
     .search {
-        width: 540px;
+        width: 42%;
         min-width: 300px;
+        max-width: 668px;
         position: relative;
 
         .el-input {
-            max-width: 480px;
-            min-width: 160px;
             font-size: 12px;
             --el-input-height: 32px;
             --el-input-border-color: rgb(250, 250, 250);

@@ -33,7 +33,7 @@ function home() {
   (window as any).sketchDocument = undefined;
   (window as any).skrepo = undefined;
   if (props.context.comment.isDocumentInfo?.project) {
-    router.push({ path: '/apphome/project/' + props.context.comment.isDocumentInfo.project.id });
+    router.push({ path: '/files/project/' + props.context.comment.isDocumentInfo.project.id });
   } else {
     router.push({ name: 'meshare' });
     sessionStorage.setItem('index', '3')
@@ -55,7 +55,7 @@ const hasPendingSyncCmd = () => {
   (window as any).sketchDocument = undefined;
   (window as any).skrepo = undefined;
   if (props.context.comment.isDocumentInfo?.project) {
-    router.push({ path: '/apphome/project/' + props.context.comment.isDocumentInfo.project.id });
+    router.push({ path: '/files/project/' + props.context.comment.isDocumentInfo.project.id });
   } else {
     router.push({ name: 'meshare' });
     sessionStorage.setItem('index', '3')
@@ -110,7 +110,8 @@ async function blur() {
       } else {
         ElMessage.error({ duration: 1500, message: message === '审核不通过' ? t('system.sensitive_reminder') : message })
       }
-      window.document.title = name.value.length > 8 ? `${name.value.slice(0, 8)}... - ${t('product.name')}` : `${name.value} - ${t('product.name')}`
+      // window.document.title = name.value.length > 8 ? `${name.value.slice(0, 8)}... - ${t('product.name')}` : `${name.value} - ${t('product.name')}`
+      window.document.title = `${name.value} - ${t('product.name')}`
       document.removeEventListener('keydown', enter);
     } catch (error) {
       console.log(error);

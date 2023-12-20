@@ -3,10 +3,10 @@
     <div class="title">
         <div class="indicator" :style="{ width: elwidth + 'px', left: elleft + 'px' }"></div>
         <div class="left">
-            <div ref="myfile" @click="highlight(true, $event, '/apphome/meshare')"
+            <div ref="myfile" @click="highlight(true, $event, '/files/myfile')"
                 :style="{ color: active ? '#333333' : '#777777' }">
                 {{ t('home.file_shared') }}</div>
-            <div ref="mydel" @click="highlight(false, $event, '/apphome/recyclebin')"
+            <div ref="mydel" @click="highlight(false, $event, '/files/trash')"
                 :style="{ color: active ? '#777777' : '#333333' }">
                 {{ t('home.recycling_station') }}</div>
         </div>
@@ -297,7 +297,7 @@ watch(() => route.name, () => {
 
     if (route.name != undefined) {
         if (route.name === 'meshare' || route.name === 'recyclebin') {
-            if (route.path === '/apphome/meshare') {
+            if (route.path === '/files/myfile') {
                 getDoucment();
                 nextTick(() => {
                     highlight(true)
@@ -305,7 +305,7 @@ watch(() => route.name, () => {
                     elleft.value = myfile.value?.getBoundingClientRect().x
                 })
             }
-            if (route.path === '/apphome/recyclebin') {
+            if (route.path === '/files/trash') {
                 nextTick(() => {
                     highlight(false)
                     elwidth.value = mydel.value?.getBoundingClientRect().width
@@ -325,13 +325,13 @@ onMounted(() => {
     if (route.name === "recyclebin") {
         highlight(false)
     }
-    if (route.path === '/apphome/meshare') {
+    if (route.path === '/files/myfile') {
         nextTick(() => {
             elwidth.value = myfile.value?.getBoundingClientRect().width;
             elleft.value = myfile.value?.getBoundingClientRect().x;
         })
     }
-    if (route.path === '/apphome/recyclebin') {
+    if (route.path === '/files/trash') {
         nextTick(() => {
             elwidth.value = mydel.value?.getBoundingClientRect().width
             elleft.value = mydel.value?.getBoundingClientRect().x

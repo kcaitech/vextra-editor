@@ -41,7 +41,7 @@ const itemsicon = ref<any[]>(['feedback-icon', 'report-icon', 'shortcut-icon'])
 
 
 const showhelp = computed(() => {
-    return route.path.includes('/document') || route.path.includes('/apphome')
+    return route.path.includes('/document') || route.path.includes('/files')
 })
 
 const handleClickShowhelp = () => {

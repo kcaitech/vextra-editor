@@ -3,21 +3,22 @@
         <template #default="{ height, width }">
             <el-table-v2 v-if="height != 0" :columns="columns" :data=props.data :width="width" :height="height"
                 :row-class="rowClass" :row-event-handlers="rowHandleClick" @scroll="rightmenu" :header-height="24"
-                :row-height="56" :header-class="headerClass">
+                :row-height="56">
                 <template v-if="loading" #overlay>
                     <div class="el-loading-mask" style="display: flex; align-items: center; justify-content: center">
                         <Loading :size="20" />
                     </div>
                 </template>
                 <template #empty>
-                    <div v-if="props.addfile! > 2 && !loading && !noNetwork" class="datanull">
-                        <p>{{ t('Createteam.projectfilenull') }}</p>
+                    <div v-if="props.addfile! > 0 && !loading && !noNetwork" class="datanull">
+                        <p>{{ props.nulldata ? t('Createteam.projectfilesearchtips') : t('Createteam.projectfilenull') }}
+                        </p>
                     </div>
-                    <div v-else-if="props.addproject! > 0 && !loading && !noNetwork" class="datanull">
+                    <div v-else-if="props.addproject! >= 0 && !loading && !noNetwork" class="datanull">
                         <p>{{ props.nulldata ? t('search.search_results') : t('projectlist.datanull') }}</p>
                     </div>
-                    <div v-else-if="!noNetwork && empty" class="flex items-center justify-center h-100%">
-                        <el-empty :style="{ 'height': height - 50 + 'px' }" :description="t('home.table_empty_tips')" />
+                    <div v-else-if="!noNetwork && empty" class="datanull">
+                        <p>{{ props.nulldata ? t('search.search_results') : t('home.table_empty_tips') }}</p>
                     </div>
                     <div v-else-if="noNetwork" ref="net" class="flex items-center justify-center h-full">
                         <NetworkError @refreshDoc="refreshDoc"></NetworkError>
@@ -28,7 +29,7 @@
     </el-auto-resizer>
 </template>
 <script setup lang="tsx">
-import { ref, watchEffect, Ref, inject, watch, computed } from 'vue'
+import { ref, watchEffect, Ref, inject, watch } from 'vue'
 import type { Column, RowClassNameGetter } from 'element-plus'
 import { useI18n } from 'vue-i18n'
 import NetworkError from '@/components/NetworkError.vue'
@@ -52,15 +53,13 @@ const loading = ref(true)
 const empty = ref(false)
 const net = ref<HTMLDivElement>()
 const user_id = localStorage.getItem('userId');
-const x = ref(0)
+const shownewandopen = ref<boolean>(false)
 
 let timer: any
 watch(() => props.data, () => {
     clearTimeout(timer)
     if (props.data[0]) {
-
         loading.value = false
-
     } else {
         empty.value = true
         loading.value = false
@@ -113,20 +112,9 @@ const rightmenu = (e: any,) => {
             rightmenuElement.style.display = 'none'
         }
     }
-    x.value = e.scrollTop
+    shownewandopen.value = e.scrollTop > 0 ? false : true
+    Bus.emit('showbnt', shownewandopen.value)
 }
-
-const b = computed(() => {
-    return x.value > 0 ? false : true
-})
-
-watch(b, (newvalue) => {
-    if (newvalue) {
-        Bus.emit('showbnt', newvalue)
-    } else {
-        Bus.emit('showbnt', newvalue)
-    }
-})
 
 const rowHandleClick = ({
     onclick: ({ rowData }: any) => {
@@ -169,10 +157,6 @@ const rowClass = ({ rowData }: Parameters<RowClassNameGetter<any>>[0]) => {
             return 'selected'
         }
 }
-
-const headerClass = computed(() => {
-    return x.value > 0 ? 'test' : ''
-})
 
 const columns: Column<any>[] = [
     {
@@ -256,7 +240,7 @@ const columns: Column<any>[] = [
     {
         key: 'operations',
         // title: `${t('home.operation')}`,
-        title:'',
+        title: '',
         dataKey: 'document',
         width: 120,
         minWidth: 120,
@@ -271,7 +255,7 @@ const columns: Column<any>[] = [
                             emits('share', rowData)
                         }}>
                         <el-tooltip content={t('home.share')} show-after={1000} hide-after={0}>
-                           <svg-icon icon-class="share-icon"></svg-icon>
+                            <svg-icon icon-class="share-icon"></svg-icon>
                         </el-tooltip>
                     </el-icon>
                 )}
@@ -451,7 +435,7 @@ watchEffect(() => {
             {
                 key: 'name',
                 // title: t('home.operation'),
-                title:'',
+                title: '',
                 width: 120,
                 minWidth: 120,
                 dataKey: 'project',
@@ -530,7 +514,6 @@ watchEffect(() => {
 
 </script>
 <style lang="scss" scoped>
-
 :deep(.other) {
     color: var(--active-color);
     display: flex;
@@ -628,17 +611,20 @@ watchEffect(() => {
     text-overflow: ellipsis;
     color: #606266;
 }
-:deep(.el-table-v2__empty){
+
+:deep(.el-table-v2__empty) {
     height: 100%;
     display: flex;
     align-items: center;
     justify-content: center;
 }
+
 .datanull {
     display: flex;
     flex-direction: column;
     align-items: center;
     font-size: 14px;
-    font-weight: 600;
+    font-weight: 500;
+    color: rgb(191, 191, 191);
 }
 </style>

@@ -60,7 +60,7 @@ const cancelFixed = (project: any, state: boolean) => {
     updateFavor(!is_favor.value);
 }
 const skipProject = (id: string) => {
-    router.push({ path: '/apphome/project/' + id });
+    router.push({ path: '/files/project/' + id });
 }
 const dblclickskipProject = (row: any) => {
     skipProject(row.project.id);
@@ -121,7 +121,7 @@ const quitProject = () => {
     favoriteList.value.splice(f_index, 1);
     projectList.value.splice(index, 1);
     if (tableData.value.length > 0) {
-        router.push('/apphome/project_share');
+        router.push('/files/project_shared');
     } else {
         router.push({ name: "apphome" });
         sessionStorage.setItem('index', '1');

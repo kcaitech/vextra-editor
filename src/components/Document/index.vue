@@ -280,7 +280,7 @@ const hideNotification = (type?: number) => {
   showHint.value = false;
   countdown.value = 10;
   if (type === 0) {
-    router.push('/apphome')
+    router.push('/files')
   } else {
     router.go(0)
   }
@@ -349,7 +349,8 @@ const getDocumentInfo = async () => {
     if (document) {
       const coopRepo = new CoopRepository(document, repo);
       const file_name = docInfo.value.document?.name || document.name;
-      window.document.title = file_name.length > 8 ? `${file_name.slice(0, 8)}... - ProtoDesign` : `${file_name} - ProtoDesign`;
+      // window.document.title = file_name.length > 8 ? `${file_name.slice(0, 8)}... - ProtoDesign` : `${file_name} - ProtoDesign`;
+      window.document.title = `${file_name} - ProtoDesign`;
       context = new Context(document, coopRepo);
       context.workspace.setDocumentPerm(perm);
       getDocumentAuthority();
@@ -364,7 +365,7 @@ const getDocumentInfo = async () => {
         switchPage(context!.data.pagesList[0]?.id);
         loading.value = false;
       } else {
-        router.push("/apphome");
+        router.push("/files");
         return;
       }
       if (perm === 3) await context.communication.docResourceUpload.start(token, docId);
@@ -455,7 +456,7 @@ function init_doc() {
     localStorage.setItem('project_id', '');
     switchPage(((window as any).sketchDocument as Document).pagesList[0]?.id);
   } else {
-    router.push('/apphome');
+    router.push('/files');
   }
 }
 

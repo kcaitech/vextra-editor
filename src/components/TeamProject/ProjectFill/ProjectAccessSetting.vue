@@ -201,7 +201,7 @@ onMounted(() => {
     params.invited_switch = project.invited_switch;
     params.need_approval = project.need_approval;
     params.perm_type = project.perm_type;
-    sharelink.value = `https://protodesign.cn/#/apphome/project/${project.id}`
+    sharelink.value = `https://protodesign.cn/#/files/project/${project.id}`
 
 })
 
