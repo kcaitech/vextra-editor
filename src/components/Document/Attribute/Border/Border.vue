@@ -647,14 +647,14 @@ onUnmounted(() => {
                         @focus="selectAlpha(idx)"
                         :class="{ 'check': b.border.isEnabled, 'nocheck': !b.border.isEnabled }" />
                 </div>
-                <div class="extra-action">
+<!--                <div class="extra-action">-->
                     <BorderDetail :context="props.context" :shapes="props.shapes" :border="b.border"
                         :index="borders.length - idx - 1">
                     </BorderDetail>
                     <div class="delete" @click="deleteBorder(idx)">
                         <svg-icon icon-class="delete"></svg-icon>
                     </div>
-                </div>
+<!--                </div>-->
             </div>
         </div>
         <Apex v-if="show_apex && !!borders.length" :context="props.context" :shapes="props.shapes"></Apex>
@@ -711,7 +711,6 @@ onUnmounted(() => {
             display: flex;
             flex-direction: row;
             align-items: center;
-            justify-content: space-between;
             margin-top: 4px;
 
             .visibility {
@@ -725,6 +724,7 @@ onUnmounted(() => {
                 justify-content: center;
                 align-items: center;
                 border-radius: 4px;
+                margin-right: 5px;
 
                 >svg {
                     width: 60%;
@@ -740,6 +740,7 @@ onUnmounted(() => {
                 border-radius: 4px;
                 border: 1px solid #EBEBEB;
                 box-sizing: border-box;
+                margin-right: 5px;
             }
 
             .color {
@@ -748,11 +749,12 @@ onUnmounted(() => {
                 height: 32px;
                 width: 144px;
                 padding: 9px 8px;
-                margin-left: -11px;
+                //margin-left: -11px;
                 border-radius: var(--default-radius);
                 box-sizing: border-box;
                 display: flex;
                 align-items: center;
+                margin-right: 4px;
 
                 .colorBorder {
                     outline: none;
@@ -789,11 +791,11 @@ onUnmounted(() => {
                 }
             }
 
-            .extra-action {
-                display: flex;
-                align-items: center;
-                justify-content: center;
-                margin-left: 2px;
+            //.extra-action {
+            //    display: flex;
+            //    align-items: center;
+            //    justify-content: center;
+            //    margin-left: 2px;
 
                 .delete {
                     flex: 0 0 28px;
@@ -814,7 +816,7 @@ onUnmounted(() => {
                 .delete:hover {
                     background-color: #F5F5F5;;
                 }
-            }
+            //}
         }
     }
 }</style>

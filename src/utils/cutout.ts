@@ -1,8 +1,8 @@
 import { XY } from "@/context/selection";
-import { Border, BorderPosition, Page, ShadowPosition, Shape, ShapeType } from "@kcdesign/data";
+import { Border, BorderPosition, GroupShape, Page, ShadowPosition, Shape, ShapeType } from "@kcdesign/data";
 import { isTarget } from '@/utils/common';
 export function getCutoutShape(shape: Shape, page: Page, selectedShapes: Map<string, Shape>) {
-    if(!shape.parent) return;
+    if (!shape.parent) return;
     const matrix = shape.parent.matrix2Root();
     const p = shape.boundingBox()
     const { width, height } = shape.frame;
@@ -35,7 +35,6 @@ function finder(childs: Shape[], Points: [XY, XY, XY, XY, XY], selectedShapes: M
         if (isTarget(Points, ps) || isTarget(ps as [XY, XY, XY, XY, XY], Points)) {
             private_set(shape.id, shape, selectedShapes);
         }
-
     }
 }
 
@@ -117,61 +116,18 @@ export const parentIsArtboard = (shape: Shape) => {
 }
 
 export const getPageBounds = (page: Page) => {
-    const { width, height } = page.frame;
-    const shapes = page.childs;
-    const max_l = [0];
-    const max_b = [0];
-    const max_r = [0];
-    const max_t = [0];
-    const offsets = { left: 0, top: 0, right: 0, bottom: 0 };
-    if (!shapes.length) return offsets;
-    for (let i = 0; i < shapes.length; i++) {
-        const shape = shapes[i];
-        if (!shape.isVisible) continue;
-        const frame = shape.frame;
-        const max_border = getShapeBorderMax(shape);
-        const { left, top, right, bottom } = getShadowMax(shape);
-        const l = (left + max_border);
-        const t = (top + max_border);
-        const r = (left + max_border) + (right + max_border);
-        const b = (top + max_border) + (bottom + max_border);
-        if(shape.rotation) {
-            const p = shape.boundingBox();
-            const { x: newx, y: newy, width: newWidth, height: newHeight } = getShapeMaxBounds(shape, - l, - t, frame.width + r, frame.height + b);
-            // 旋转后的图形导出整个页面阴影会被裁剪掉            
-            if(frame.x - newx < 0) {
-                max_l.push(frame.x + newx);
-            }
-            if(frame.y - newy < 0) {
-                max_t.push(frame.y + newy);
-            }
-            if(newWidth > width) {
-                max_r.push(frame.x + newWidth);
-            }
-            if(newHeight > height) {
-                max_b.push(frame.y + newHeight);
-            }
-        }else {
-            if(frame.x - l < 0) {
-                max_l.push(frame.x + l);
-            }
-            if(frame.y - t < 0) {
-                max_t.push(frame.y + t);
-            }
-            if(frame.x + frame.width + r > width) {
-                max_r.push(frame.x + frame.width + r - width);
-            }
-            if(frame.y + frame.height + b > height) {
-                max_b.push(frame.y + frame.height + b - height);
-            }
-        }
-    }
-    offsets.left = Math.max(...max_l);
-    offsets.top = Math.max(...max_t);
-    offsets.right = Math.max(...max_r);
-    offsets.bottom = Math.max(...max_b);
-
-    return offsets;
+    const childs = page.childs as Shape[];
+    const { x, y, width, height } = page.frame;
+    if (!childs) return { x, y, width, height };
+    const page_bounds_points = getMaxMinPoints(childs);
+    const max_p = getMaxPoint(page_bounds_points);
+    const min_p = getMinPoint(page_bounds_points);
+    return {
+        x: min_p.x,
+        y: min_p.y,
+        width: max_p.x - min_p.x,
+        height: max_p.y - min_p.y
+    };
 }
 
 export const getShapeMaxBounds = (shape: Shape, x: number, y: number, width: number, height: number) => {
@@ -193,4 +149,95 @@ export const getShapeMaxBounds = (shape: Shape, x: number, y: number, width: num
         height: newHeight,
         rotate: rotate
     };
+}
+
+
+// 对图片上任意点(x,y)，绕一个坐标点(rx0,ry0)逆时针旋转a角度后的新的坐标设为(x0, y0)，公式：
+// x0= (x - rx0)*cos(a) - (y - ry0)*sin(a) + rx0 ;    y0= (x - rx0)*sin(a) + (y - ry0)*cos(a) + ry0 ;
+export const getGroupChildBounds = (shape: GroupShape) => {
+    const childs = shape.childs as Shape[];
+    const { x, y, width, height } = shape.frame;
+    if (!childs) return { x, y, width, height };
+    const shapes = flattenShapes(childs).filter(s => s.type !== ShapeType.Group);
+    const group_bounds_points = getMaxMinPoints(shapes);
+    const max_p = getMaxPoint(group_bounds_points);
+    const min_p = getMinPoint(group_bounds_points);
+    return {
+        x: min_p.x,
+        y: min_p.y,
+        width: max_p.x - min_p.x,
+        height: max_p.y - min_p.y
+    }
+}
+
+const getMaxMinPoints = (shapes: Shape[]) => {
+    const bounds_points = [];
+    for (let i = 0; i < shapes.length; i++) {
+        const shape = shapes[i];
+        const max_border = getShapeBorderMax(shape);
+        const { left, top, right, bottom } = getShadowMax(shape);
+        const l = (left + max_border);
+        const t = (top + max_border);
+        const r = (left + max_border) + (right + max_border);
+        const b = (top + max_border) + (bottom + max_border);
+        const frame = shape.frame;
+        const cx = (frame.x + frame.width) / 2;
+        const cy = (frame.y + frame.height) / 2;
+        let rotate = shape.rotation || 0;
+        if (shape.isFlippedHorizontal) rotate = 180 - rotate;
+        if (shape.isFlippedVertical) rotate = 360 - rotate;
+        rotate = (rotate < 0 ? rotate + 360 : rotate) % 360;
+        const points = [];
+        const p1 = getRotatePoint(frame.x - l, frame.y - t, rotate, cx, cy);
+        const p2 = getRotatePoint(frame.x + frame.width + r, frame.y - t, rotate, cx, cy);
+        const p3 = getRotatePoint(frame.x + frame.width + r, frame.y + frame.height + b, rotate, cx, cy);
+        const p4 = getRotatePoint(frame.x - l, frame.y + frame.height + b, rotate, cx, cy);
+        points.push(p1, p2, p3, p4);
+        const max_point = getMaxPoint(points);
+        const min_point = getMinPoint(points);
+        bounds_points.push(max_point, min_point);
+    }
+    return bounds_points;
+}
+export function flattenShapes(shapes: Shape[]): Shape[] {
+    return shapes.reduce((result: any, item: Shape) => {
+        if(item.type === ShapeType.Group) {
+            const childs = (item as GroupShape).childs as Shape[];
+            if (Array.isArray(childs)) {
+                result = result.concat(flattenShapes(childs));
+            }
+        }
+        return result.concat(item);
+    }, []);
+}
+
+// 一个点沿着另一个点旋转后的位置
+const getRotatePoint = (x: number, y: number, rotate: number, cx: number, cy: number) => {
+    const radian = rotate * Math.PI / 180;
+    const sin = Math.sin(radian);
+    const cos = Math.cos(radian);
+    const x0 = (x - cx) * cos - (y - cy) * sin + cx
+    const y0 = (x - cx) * sin + (y - cy) * cos + cy
+    return { x: x0, y: y0 }
+}
+
+const getMaxPoint = (points: { x: number, y: number }[]) => {
+    let max_x = 0;
+    let max_y = 0;
+    for (let i = 0; i < points.length; i++) {
+        const point = points[i];
+        if (point.x > max_x) max_x = point.x;
+        if (point.y > max_y) max_y = point.y;
+    }
+    return { x: max_x, y: max_y }
+}
+const getMinPoint = (points: { x: number, y: number }[]) => {
+    let min_x = 0;
+    let min_y = 0;
+    for (let i = 0; i < points.length; i++) {
+        const point = points[i];
+        if (point.x < min_x) min_x = point.x;
+        if (point.y < min_y) min_y = point.y;
+    }
+    return { x: min_x, y: min_y }
 }

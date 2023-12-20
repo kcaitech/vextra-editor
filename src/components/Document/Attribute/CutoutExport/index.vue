@@ -273,7 +273,7 @@ const changeSize = (value: string, idx: number) => {
         const editor = props.context.editor4Shape(shape);
         editor.setExportFormatScale(_idx, parseFloat(value));
     } else if (len > 1) {
-        const actions = get_actions_export_format_scale(props.shapes, _idx, parseFloat(value));
+        const actions = get_actions_export_format_scale(selected, _idx, parseFloat(value));
         const page = props.context.selection.selectedPage;
         if (page) {
             const editor = props.context.editor4Page(page);
@@ -296,7 +296,7 @@ const changePerfix = (index: number, idx: number) => {
         const editor = props.context.editor4Shape(shape);
         editor.setExportFormatPerfix(_idx, perfixItems[index]);
     } else if (len > 1) {
-        const actions = get_actions_export_format_perfix(props.shapes, _idx, perfixItems[index]);
+        const actions = get_actions_export_format_perfix(selected, _idx, perfixItems[index]);
         const page = props.context.selection.selectedPage;
         if (page) {
             const editor = props.context.editor4Page(page);
@@ -319,7 +319,7 @@ const changeFormat = (index: number, idx: number) => {
         const editor = props.context.editor4Shape(shape);
         editor.setExportFormatFileFormat(_idx, fileFormat[index]);
     } else if (len > 1) {
-        const actions = get_actions_export_format_file_format(props.shapes, _idx, fileFormat[index]);
+        const actions = get_actions_export_format_file_format(selected, _idx, fileFormat[index]);
         const page = props.context.selection.selectedPage;
         if (page) {
             const editor = props.context.editor4Page(page);
@@ -333,16 +333,16 @@ const changeFormat = (index: number, idx: number) => {
         }
     }
 }
-const changeName = (value: string, idx: number, shapes: Shape[]) => {
+const changeName = (value: string, idx: number) => {
     const _idx = preinstallArgus.length - idx - 1;
     const selected = props.context.selection.selectedShapes;
     const len = selected.length;
     if (len === 1) {
-        const shape = shapes[0];
+        const shape = selected[0];
         const editor = props.context.editor4Shape(shape);
         editor.setExportFormatName(_idx, value);
     } else if (len > 1) {
-        const actions = get_actions_export_format_name(shapes, _idx, value);
+        const actions = get_actions_export_format_name(selected, _idx, value);
         const page = props.context.selection.selectedPage;
         if (page) {
             const editor = props.context.editor4Page(page);
@@ -697,10 +697,11 @@ onUnmounted(() => {
 }
 
 .exportsvg {
-    position: fixed;
-    left: -1000px;
-    top: -1000px;
+    position: absolute;
+    left: -100000px;
+    top: -100000px;
     opacity: 0;
     z-index: -1;
+    overflow: hidden;
 }
 </style>

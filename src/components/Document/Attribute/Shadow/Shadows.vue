@@ -213,7 +213,6 @@ onUnmounted(stop);
       width: 100%;
       display: flex;
       flex-direction: row;
-      justify-content: space-between;
       align-items: center;
       box-sizing: border-box;
       margin-top: 4px;
@@ -229,6 +228,7 @@ onUnmounted(stop);
         justify-content: center;
         align-items: center;
         border-radius: 4px;
+        margin-right: 5px;
 
         >svg {
           width: 60%;
@@ -244,12 +244,13 @@ onUnmounted(stop);
         border-radius: 4px;
         border: 1px solid #EBEBEB;
         box-sizing: border-box;
+        margin-right: 5px
       }
 
       .shadow_posi {
         flex: 1;
         height: 100%;
-        padding: 0px 5px;
+        //padding: 0px 5px;
         box-sizing: border-box;
       }
 
@@ -271,12 +272,12 @@ onUnmounted(stop);
       }
 
       .detail {
-        flex: 0 0 22px;
+        flex: 0 0 28px;
         display: flex;
         justify-content: center;
         align-items: center;
-        width: 22px;
-        height: 22px;
+        width: 28px;
+        height: 28px;
       }
 
       .delete:hover {

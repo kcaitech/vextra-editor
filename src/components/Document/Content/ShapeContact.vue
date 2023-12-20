@@ -1,10 +1,10 @@
 <script setup lang="ts">
 import { ContactForm, ContactShape, Shape, ShapeType } from '@kcdesign/data';
 import { h, onMounted, onUnmounted, ref, watch } from 'vue';
-import { renderContact as r } from "@kcdesign/data";
+import { renderContact as r, Page } from "@kcdesign/data";
 const props = defineProps<{ data: Shape }>();
 const reflush = ref(0);
-let path = props.data.getPath2().toString();
+let path = props.data.getPath().toString();
 let stop1: any, stop2: any;
 let from: undefined | Shape, to: undefined | Shape;
 const watcher = () => {
@@ -30,7 +30,7 @@ function setParent(shape: Shape) {
 }
 function updateApex() {
     const self: ContactShape = props.data as ContactShape;
-    const page = props.data.page();
+    const page = props.data.getPage() as Page;
     if (self.from) {
         const nf = page.getShape((self.from as ContactForm).shapeId);
         if (nf) {
