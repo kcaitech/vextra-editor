@@ -26,6 +26,11 @@ export class ArtboradDom extends (ArtboradView) {
     m_save_version: number = -1;
     m_save_render: EL & { el?: HTMLElement | SVGElement } = EL.make("");
 
+    protected checkAndResetDirty(): boolean {
+        if (super.checkAndResetDirty()) return true;
+        return !this.el;
+    }
+
     render(): number {
         const version: number = super.render();
         if (version !== this.m_save_version || !this.el) {

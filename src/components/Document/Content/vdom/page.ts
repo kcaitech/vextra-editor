@@ -32,9 +32,14 @@ export class PageDom extends (PageView) {
         // todo 考虑不释放，切换页面就很快
         // const ub = (el: EL) => {
         //     delete (el as any).el;
-        //     el.childs.forEach((el) => ub(el));
+        //     if (Array.isArray(el.elchilds)) el.elchilds.forEach((el) => ub(el));
         // }
         // ub(this as any);
+    }
+
+    protected checkAndResetDirty(): boolean {
+        if (super.checkAndResetDirty()) return true;
+        return this.m_save_version < 0;
     }
 
     render(): number {

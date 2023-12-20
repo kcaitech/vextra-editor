@@ -16,4 +16,9 @@ export class TextShapeDom extends (TextShapeView) {
         }
         return version;
     }
+
+    protected checkAndResetDirty(): boolean {
+        if (super.checkAndResetDirty()) return true;
+        return !this.el;
+    }
 }
