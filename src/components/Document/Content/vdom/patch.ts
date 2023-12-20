@@ -126,7 +126,7 @@ function inner_elpatch(tar: EL, old: EL | undefined) {
     for (let i = 0; i < _tar.elchilds.length; i++) { // 简单比较
         const tchild = _tar.elchilds[i] as EL & { el?: HTMLElement | SVGElement };
         const ochild = getResue(tchild, _old, i) as EL & { el?: HTMLElement | SVGElement };
-        inner_elpatch(tchild, ochild);
+        if (!tchild.isViewNode) inner_elpatch(tchild, ochild); // 由view节点自己patch
         if (!tchild.el) {
             // 是可能的
             // throw new Error("something wrong");
