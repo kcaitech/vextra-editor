@@ -11,8 +11,7 @@ interface Props {
 const props = defineProps<Props>();
 
 const render = () => {
-    const consumedVars: { slot: string, vars: Variable[] }[] = [];
-    return r(h, props.data, IMAGE_DEFAULT, props.transx, props.varsContainer, consumedVars);
+    return r(h, props.data, IMAGE_DEFAULT, props.transx, props.varsContainer);
 }
 
 </script>

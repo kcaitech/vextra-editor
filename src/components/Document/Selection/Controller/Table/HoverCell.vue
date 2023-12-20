@@ -50,8 +50,11 @@ function onLoadImage(name: string, data: { buff: Uint8Array, base64: string }) {
     // const data = loadImage(name, buffer);
     const id = uuid();
     props.context.data.mediasMgr.add(id, data);
-    const editor = props.context.editor4Table(props.shape.parent as TableShape)
-    editor.setCellContentImage(props.shape, id);
+    const table = props.shape.parent as TableShape;
+    const editor = props.context.editor4Table(table);
+    const idx = table.indexOfCell(props.shape);
+    if (!idx) return;
+    editor.setCellContentImage(idx.rowIdx, idx.colIdx, id);
 }
 
 const pickImage = useImagePicker();

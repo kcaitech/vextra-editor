@@ -77,7 +77,7 @@ function opacityChange(value: number) {
     editor.modifyShapesContextSettingOpacity(selected, value);
 }
 
-function change(e: InputEvent) {
+function change(e: Event) {
     const value = limitValue(Number((e.target as HTMLInputElement).value)) / 100;
     if (isNaN(value) || value === 1 || value === 0) {
         (e.target as HTMLInputElement).value =
@@ -104,14 +104,14 @@ function down(e: MouseEvent) {
     opacity_editor.execute(value);
 }
 
-function input(e: InputEvent) {
+function input(e: Event) {
     const value = limitValue(Number((e.target as HTMLInputElement).value)) / 100;
     if (isNaN(value) || !opacity_editor) return;
     opacity.value = limitValue(Number(value));
     opacity_editor.execute(value);
 }
 
-function change2(e: InputEvent) {
+function change2(e: Event) {
     if (opacity_editor) {
         opacity_editor = opacity_editor.close();
     } else {
