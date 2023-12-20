@@ -16,4 +16,9 @@ export class SymbolDom extends (SymbolView) {
         }
         return version;
     }
+
+    protected checkAndResetDirty(): boolean {
+        if (super.checkAndResetDirty()) return true;
+        return !this.el;
+    }
 }

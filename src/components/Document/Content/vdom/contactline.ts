@@ -17,4 +17,9 @@ export class ContactLineDom extends (ContactLineView) {
         }
         return version;
     }
+
+    protected checkAndResetDirty(): boolean {
+        if (super.checkAndResetDirty()) return true;
+        return !this.el;
+    }
 }
