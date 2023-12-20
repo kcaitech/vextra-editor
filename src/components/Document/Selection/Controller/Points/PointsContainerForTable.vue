@@ -15,7 +15,8 @@ import { Comment } from '@/context/comment';
 import { permIsEdit } from '@/utils/content';
 import { Menu } from '@/context/menu';
 import { paster_short } from '@/utils/clipboard';
-import {compare_layer_3} from "@/utils/group_ungroup";
+import { compare_layer_3 } from "@/utils/group_ungroup";
+import { forbidden_to_modify_frame } from '@/utils/common';
 interface Props {
     matrix: number[]
     context: Context
@@ -49,25 +50,46 @@ function update_transform() {
     let rt = matrix.computeCoord2(frame.width, 0);
     let rb = matrix.computeCoord2(frame.width, frame.height);
     let lb = matrix.computeCoord2(0, frame.height);
+
     let mt = ''
-    if (shape.isFlippedHorizontal) mt += 'rotateY(180deg) ';
-    if (shape.isFlippedVertical) mt += 'rotateX(180deg) ';
-    if (shape.rotation) mt += `rotate(${shape.rotation}deg)`;
+    if (shape.isFlippedHorizontal) {
+        mt += 'rotateY(180deg) ';
+    }
+    if (shape.isFlippedVertical) {
+        mt += 'rotateX(180deg) ';
+    }
+    if (shape.rotation) {
+        mt += `rotate(${shape.rotation}deg)`;
+    }
+
     let t1 = `translate(${lt.x}px, ${lt.y}px) `;
     t1 += mt, t1 += `translate(${offest - 18}px, ${offest - 18}px) `;
     let t2 = `translate(${rb.x}px, ${rb.y}px) `;
     t2 += mt, t2 += `translate(${offest + 2}px, ${offest + 2}px) `;
+
     transform.value = t1, transform2.value = t2;
     const root = props.context.workspace.root;
+
     props.context.selection.setArea([
         { id: 'body', area: `M${lt.x} ${lt.y} L${rt.x} ${rt.y} L${rb.x} ${rb.y} L${lb.x} ${lb.y} z` },
         { id: 'content', area: `M0 0 h${root.width} v${root.height} h${-root.width} z` }
-    ])
-    if (!props.context.workspace.shouldSelectionViewUpdate) hidden.value = true;
+    ]);
+
+    if (!props.context.workspace.shouldSelectionViewUpdate) {
+        hidden.value = true;
+    }
 }
 function point_mousedown(event: MouseEvent) {
-    if (event.button !== 0) return;
+    if (event.button !== 0) {
+        return;
+    }
+
     props.context.menu.menuMount();
+
+    if (forbidden_to_modify_frame(props.shape)) {
+        return;
+    }
+
     const workspace = props.context.workspace;
     event.stopPropagation();
     workspace.setCtrl('controller');
@@ -76,6 +98,7 @@ function point_mousedown(event: MouseEvent) {
     table_selection.setEditingCell();
     table_selection.resetSelection();
     startPosition = { x: event.clientX - root.x, y: event.clientY - root.y };
+
     document.addEventListener('mousemove', point_mousemove);
     document.addEventListener('mouseup', point_mouseup);
     move = point_mousemove, up = point_mouseup;
@@ -150,23 +173,33 @@ function gen_offset_map(shape: Shape, down: PageXY) {
 function down(e: MouseEvent) {
     const context = props.context;
     const action = context.tool.action;
-    if (!permIsEdit(context)) return;
-    if (e.button === 0) { // 当前组件只处理左键事件，右键事件冒泡出去由父节点处理
-        context.cursor.cursor_freeze(true);
-        context.menu.menuMount(); // 取消右键事件
-        context.menu.notify(Menu.SHUTDOWN_POPOVER);
-        if (action == Action.AutoV || action == Action.AutoK) { 
-            context.workspace.setCtrl('controller');
-            const table_selection = props.context.tableSelection;
-            table_selection.setEditingCell();
-            table_selection.resetSelection();
-            startPosition = { x: e.clientX - root.x, y: e.clientY - root.y };
-            wheel = fourWayWheel(context, undefined, submatrix2.computeCoord(startPosition));           // mark: wheel等于什么
-            document.addEventListener('mousemove', mousemove4trans);
-            document.addEventListener('mouseup', mouseup4trans);
-            move = mousemove4trans, up = mouseup4trans;
-        }
+    if (!permIsEdit(context)) {
+        return;
     }
+    if (e.button !== 0) { // 当前组件只处理左键事件，右键事件冒泡出去由父节点处理
+        return;
+    }
+    context.cursor.cursor_freeze(true);
+    context.menu.menuMount(); // 取消右键事件
+    context.menu.notify(Menu.SHUTDOWN_POPOVER);
+    
+    if (!(action == Action.AutoV || action == Action.AutoK)) {
+        return;
+    }
+
+    if (forbidden_to_modify_frame(props.shape)) {
+        return;
+    }
+
+    context.workspace.setCtrl('controller');
+    const table_selection = props.context.tableSelection;
+    table_selection.setEditingCell();
+    table_selection.resetSelection();
+    startPosition = { x: e.clientX - root.x, y: e.clientY - root.y };
+    wheel = fourWayWheel(context, undefined, submatrix2.computeCoord(startPosition));           // mark: wheel等于什么
+    document.addEventListener('mousemove', mousemove4trans);
+    document.addEventListener('mouseup', mouseup4trans);
+    move = mousemove4trans, up = mouseup4trans;
 }
 function mousemove4trans(e: MouseEvent) {
     if (e.buttons !== 1) return;
@@ -181,17 +214,17 @@ function mousemove4trans(e: MouseEvent) {
         else if (update_type === 2) startPosition.y = mousePosition.y;
         else if (update_type === 1) startPosition.x = mousePosition.x;
     } else if (Math.hypot(mousePosition.x - startPosition.x, mousePosition.y - startPosition.y) > dragActiveDis) {   // mark：dragActiveDis是什么
-        shapes = selection.selectedShapes; 
+        shapes = selection.selectedShapes;
         if (e.altKey) shapes = paster_short(props.context, shapes);
         asyncTransfer = props.context.editor.controller().asyncTransfer(shapes, selection.selectedPage!);  // mark：asyncTransfer是什么
-        selection.unHoverShape();  
+        selection.unHoverShape();
         workspace.setSelectionViewUpdater(false);
         workspace.translating(true);  // mark：workspace.translating(true)的作用是什么
         props.context.assist.set_trans_target(shapes);
         submatrix2 = new Matrix(props.context.workspace.matrix.inverse);
         isDragging = true;
         const pe = submatrix2.computeCoord3(startPosition);
-        offset_map = gen_offset_map(shapes[0], pe);  
+        offset_map = gen_offset_map(shapes[0], pe);
     }
 }
 function _migrate() {

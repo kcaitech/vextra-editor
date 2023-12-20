@@ -3,7 +3,7 @@ import { Context } from '@/context';
 import { AsyncBaseAction, CtrlElementType, Matrix, Shape } from '@kcdesign/data';
 import { onMounted, onUnmounted, watch, reactive } from 'vue';
 import { ClientXY, PageXY } from '@/context/selection';
-import { getAngle } from '@/utils/common';
+import { forbidden_to_modify_frame, getAngle } from '@/utils/common';
 import { update_dot } from './common';
 import { Point } from "../../SelectionView.vue";
 import { Action } from '@/context/tool';
@@ -62,8 +62,15 @@ function ct2pt(ct: CtrlElementType) {
     else return 'lt';
 }
 function point_mousedown(event: MouseEvent, ele: CtrlElementType) {
-    if (event.button !== 0) return;
+    if (event.button !== 0) {
+        return;
+    }
     props.context.menu.menuMount();
+
+    if (forbidden_to_modify_frame(props.shape)) {
+        return;
+    }
+
     const workspace = props.context.workspace;
     event.stopPropagation();
     workspace.setCtrl('controller');

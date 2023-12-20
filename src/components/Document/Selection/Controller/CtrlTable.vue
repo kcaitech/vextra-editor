@@ -144,7 +144,9 @@ function move(e: MouseEvent) {
     }
 }
 function down(e: MouseEvent) {
-    if (e.button !== 0) return;
+    if (e.button !== 0) {
+        return;
+    }
     if (x_checked || y_checked) {
         const table_selection = props.context.tableSelection;
         table_selection.setEditingCell();

@@ -75,7 +75,7 @@ const contextMenuEl = ref<ContextMenuEl>();
 const surplusY = ref<number>(0);
 const site: { x: number, y: number } = { x: 0, y: 0 };
 const selector_mount = ref<boolean>(false);
-const selectorFrame = ref<SelectorFrame>({ top: 0, left: 0, width: 0, height: 0, includes: false });
+const selectorFrame = reactive<SelectorFrame>({ top: 0, left: 0, width: 0, height: 0, includes: false });
 const cursor = ref<string>('');
 const rootId = ref<string>('content');
 let isMouseLeftPress: boolean = false; // 针对在contentview里面
@@ -287,8 +287,9 @@ function contextMenuUnmount() {
 function select(e: MouseEvent) {
     if (props.context.workspace.select) {
         createSelector(e);
-    } else {
-        if (is_drag(props.context, e, mousedownOnPageXY, 3 * dragActiveDis)) props.context.workspace.selecting(true);
+    } else if (is_drag(props.context, e, mousedownOnPageXY, 3 * dragActiveDis)) {
+        selector_mount.value = true;
+        props.context.workspace.selecting(true);
     }
 }
 
@@ -300,12 +301,11 @@ function createSelector(e: MouseEvent) { // 创建一个selector框选器
     const right = Math.max(mx, sx);
     const top = Math.min(my, sy);
     const bottom = Math.max(my, sy);
-    selectorFrame.value.top = top;
-    selectorFrame.value.left = left;
-    selectorFrame.value.width = right - left;
-    selectorFrame.value.height = bottom - top;
-    selectorFrame.value.includes = e.altKey;
-    selector_mount.value = true;
+    selectorFrame.top = top;
+    selectorFrame.left = left;
+    selectorFrame.width = right - left;
+    selectorFrame.height = bottom - top;
+    selectorFrame.includes = e.altKey;
 }
 
 function updateMouse(e: MouseEvent) {
@@ -341,19 +341,22 @@ function onMouseDown(e: MouseEvent) {
 let timer: any = null;
 
 function onMouseMove(e: MouseEvent) {
-    if (workspace.value.controller == 'page') {
-        if (e.buttons == 1 && spacePressed.value) pageViewDragging(e); // 拖拽页面
-        if (isDragging && wheel) {
-            wheel.moving(e);
-            clearInterval(timer);
-            timer = null;
-            timer = setInterval(() => {
-                createSelector(e);
-            }, 6);
+    if (workspace.value.controller !== 'page') {
+        return;
+    }
+    if (e.buttons == 1 && spacePressed.value) {
+        pageViewDragging(e); // 拖拽页面
+    }
+    if (isDragging && wheel) {
+        wheel.moving(e);
+        clearInterval(timer);
+        timer = null;
+        timer = setInterval(() => {
             createSelector(e);
-        } else {
-            isDragging = true;
-        }
+        }, 6);
+        createSelector(e);
+    } else {
+        isDragging = true;
     }
 }
 
@@ -365,9 +368,13 @@ function onMouseMove_CV(e: MouseEvent) {
     if (workspace.value.controller === 'page' && !spacePressed.value) {
         const action = props.context.tool.action;
         if (e.buttons === 1) {
-            if (action === Action.AutoV && isMouseLeftPress) select(e);
+            if (action === Action.AutoV && isMouseLeftPress) {
+                select(e);
+            }
         } else if (e.buttons === 0) {
-            if (action === Action.AutoV || action === Action.AutoK) search(e); // 图形检索(hover)
+            if (action === Action.AutoV || action === Action.AutoK) {
+                search(e); // 图形检索(hover)
+            }
         }
     }
     updateMouse(e);
@@ -375,26 +382,27 @@ function onMouseMove_CV(e: MouseEvent) {
 
 // mouseup(target：document)
 function onMouseUp(e: MouseEvent) {
-    if (e.button == 0) {
-        if (spacePressed.value) {
-            pageViewDragEnd();
-        } else {
-            isMouseLeftPress = false;
-            selectEnd();
-            saveShapeCommentXY();
-            if (selector_mount.value) {
-                selectEnd();
-            }
-        }
-        if (wheel) {
-            wheel = wheel.remove();
-        }
-        isDragging = false;
-        clearInterval(timer);
-        timer = null;
-        document.removeEventListener('mousemove', onMouseMove);
-        document.removeEventListener('mouseup', onMouseUp);
+    if (e.button !== 0) {
+        return;
     }
+    if (spacePressed.value) {
+        pageViewDragEnd();
+    } else {
+        isMouseLeftPress = false;
+        selectEnd();
+        saveShapeCommentXY();
+        if (selector_mount.value) {
+            selectEnd();
+        }
+    }
+    if (wheel) {
+        wheel = wheel.remove();
+    }
+    isDragging = false;
+    clearInterval(timer);
+    timer = null;
+    document.removeEventListener('mousemove', onMouseMove);
+    document.removeEventListener('mouseup', onMouseUp);
 }
 
 //移动shape时保存shape身上的评论坐标
@@ -419,11 +427,15 @@ function onMouseLeave() {
 
 // #endregion
 function selectEnd() {
-    if (props.context.workspace.select) {
-        console.log('SELECT END');
-        props.context.workspace.selecting(false);
-        selector_mount.value = false;
+    if (!props.context.workspace.select) {
+        return;
     }
+    props.context.workspace.selecting(false);
+    selectorFrame.top = 0;
+    selectorFrame.left = 0;
+    selectorFrame.width = 0;
+    selectorFrame.height = 0;
+    selector_mount.value = false;
 }
 
 // 窗口失焦
@@ -533,7 +545,9 @@ const stopWatch = watch(() => props.page, (cur, old) => {
     info!.m.reset(matrix.toArray())
     initMatrix(cur);
     const f = cur.style.fills[0];
-    if (f) background_color.value = color2string(f.color);
+    if (f) {
+        background_color.value = color2string(f.color);
+    }
 })
 watch(() => matrix, matrix_watcher, { deep: true });
 onMounted(() => {
@@ -554,7 +568,9 @@ onMounted(() => {
     window.addEventListener('blur', windowBlur);
 
     nextTick(() => {
-        if (!root.value) return;
+        if (!root.value) {
+            return;
+        }
         resizeObserver.observe(root.value);
         _updateRoot(props.context, root.value); // 第一次记录root数据，所有需要root数据的方法，都需要在此之后
         initMatrix(props.page); // 初始化页面视图
