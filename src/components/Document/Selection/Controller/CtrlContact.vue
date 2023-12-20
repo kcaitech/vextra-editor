@@ -1,7 +1,7 @@
 <script setup lang='ts'>
 import { onMounted, onUnmounted, watchEffect, ref, reactive, computed } from "vue";
 import { Context } from "@/context";
-import { Matrix, Shape } from '@kcdesign/data';
+import { ContactShape, Matrix, Shape } from '@kcdesign/data';
 import { WorkSpace } from "@/context/workspace";
 import { Point } from "../SelectionView.vue";
 import { Selection } from "@/context/selection";
@@ -14,7 +14,7 @@ interface Props {
     controllerFrame: Point[]
     rotate: number
     matrix: Matrix
-    shape: Shape
+    shape: ContactShape
 }
 const props = defineProps<Props>();
 useController(props.context);

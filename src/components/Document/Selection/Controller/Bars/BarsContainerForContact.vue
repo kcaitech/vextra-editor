@@ -1,6 +1,6 @@
 <script setup lang='ts'>
 import { Context } from '@/context';
-import { AsyncContactEditor, CurvePoint, Matrix, PathShape, Shape, ShapeType } from '@kcdesign/data';
+import { AsyncContactEditor, ContactShape, CurvePoint, Matrix, ShapeType } from '@kcdesign/data';
 import { onMounted, onUnmounted, watch, reactive, ref } from 'vue';
 import { ClientXY } from '@/context/selection';
 import { Point } from "../../SelectionView.vue";
@@ -9,7 +9,7 @@ import { dir, get_length, get_locate } from './common';
 interface Props {
     matrix: number[]
     context: Context
-    shape: Shape
+    shape: ContactShape
     cFrame: Point[]
 }
 interface Slice {
@@ -44,7 +44,7 @@ function update_slice_path() {
     if (s.type !== ShapeType.Contact) {
         return;
     }
-    const points: CurvePoint[] = (s as PathShape).getPoints();
+    const points: CurvePoint[] = (s as ContactShape).getPoints();
     const m = new Matrix(matrix), f = s.frame;
     m.preScale(f.width, f.height);
     const view_points: ClientXY[] = [];

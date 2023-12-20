@@ -40,6 +40,7 @@ export function keyboardHandle(e: KeyboardEvent, context: Context) {
         dy = step;
         transform = true;
     }
+
     if (transform) {
         for (let i = 0; i < shapes.length; i++) {
             const editor = context.editor4Shape(shapes[i]);
@@ -185,6 +186,7 @@ export function check_status(context: Context) {
 export function modify_shapes(context: Context, shapes: Shape[]) {
     const shape_map = new Map<string, Shape>();
     let is_change = false;
+    
     for (let i = 0, l = shapes.length; i < l; i++) {
         const shape = shapes[i];
         const symref = get_symbolref_by_layer(shape);
@@ -195,9 +197,11 @@ export function modify_shapes(context: Context, shapes: Shape[]) {
             shape_map.set(shape.id, shape);
         }
     }
+
     if (is_change) {
         context.selection.rangeSelectShape(Array.from(shape_map.values()));
     }
+
     return context.selection.selectedShapes;
 }
 

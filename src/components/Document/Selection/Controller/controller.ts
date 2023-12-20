@@ -37,6 +37,7 @@ import {
     update_comment
 } from "@/utils/mouse";
 import { migrate_immediate, migrate_once } from "@/utils/migrate";
+import { forbidden_to_modify_frame, shapes_organize } from '@/utils/common';
 
 export function useControllerCustom(context: Context, i18nT: Function) {
     const matrix = new Matrix();
@@ -70,8 +71,11 @@ export function useControllerCustom(context: Context, i18nT: Function) {
             if (target) {
                 selection.selectShape(target);
             }
-        } else if (shape instanceof PathShape && !shape.isVirtualShape) {
-            // console.log('已关闭对象编辑');
+        } else if (shape instanceof PathShape) {
+            if (forbidden_to_modify_frame(shape)) {
+                return;
+            }
+
             workspace.setPathEditMode(true); // --开启对象编辑
             context.esctask.save('path-edit', exist_edit_mode);
         }
@@ -157,6 +161,17 @@ export function useControllerCustom(context: Context, i18nT: Function) {
         asyncTransfer.stick(x, y);
     }
 
+    function abortTransact() {
+        if (asyncTransfer) {
+            asyncTransfer.abort();
+            asyncTransfer = undefined;
+        }
+
+        if (asyncPathEditor) {
+            asyncPathEditor.abort();
+            asyncPathEditor = undefined;
+        }
+    }
 
     function keyup(event: KeyboardEvent) {
         if (event.target instanceof HTMLInputElement) { // 不处理输入框内的键盘事件
@@ -216,7 +231,10 @@ export function useControllerCustom(context: Context, i18nT: Function) {
 
     function pre_to_translate(e: MouseEvent) { // 移动之前做的准备
         shutdown_menu(e, context);
-        if (!context.workspace.can_translate(e)) return;
+        if (!context.workspace.can_translate(e)) {
+            return;
+        }
+
         shapes = selection.selectedShapes;
         matrix.reset(workspace.matrix.inverse);
         modify_down_position(e, context, startPosition, startPositionOnPage, matrix);
@@ -226,7 +244,9 @@ export function useControllerCustom(context: Context, i18nT: Function) {
     }
 
     function mousemove(e: MouseEvent) {
-        if (e.buttons !== 1) return;
+        if (e.buttons !== 1) {
+            return;
+        }
         const mousePosition: ClientXY = get_current_position_client(context, e);
         if (isDragging && wheel && asyncTransfer && !workspace.isEditing) {
             speed = get_speed(t_e || e, e);
@@ -246,6 +266,12 @@ export function useControllerCustom(context: Context, i18nT: Function) {
 
             shapes = modify_shapes(context, shapes);
 
+            shapes = shapes_organize(shapes);
+
+            if (!shapes.length) {
+                return;
+            }
+
             if (e.altKey) {
                 shapes = paster_short(context, shapes);
             }
@@ -254,11 +280,11 @@ export function useControllerCustom(context: Context, i18nT: Function) {
 
             offset_map = gen_offset_points_map(shapes, startPositionOnPage);
 
-            isDragging = true;
-
             asyncTransfer = context.editor
                 .controller()
                 .asyncTransfer(shapes, selection.selectedPage!);
+
+            isDragging = true;
         }
     }
 
@@ -517,6 +543,7 @@ export function useControllerCustom(context: Context, i18nT: Function) {
         document.removeEventListener('keyup', keyup);
         document.removeEventListener('mousedown', mousedown);
         timerClear();
+        abortTransact(); // 已经开启的事务需要关闭
     }
 
     return { isDblClick, isDrag, init, dispose };

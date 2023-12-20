@@ -19,10 +19,10 @@ interface Props {
 }
 const props = defineProps<Props>();
 const emits = defineEmits<{
-    (e: 'changeSize', value: string, argsi: number, shapes: Shape[]): void;
+    (e: 'changeSize', value: string, argsi: number): void;
     (e: 'changePerfix', index: number, argsi: number): void;
     (e: 'changeFormat', index: number, argsi: number): void;
-    (e: 'changeName', value: string, index: number, shapes: Shape[]): void;
+    (e: 'changeName', value: string, index: number): void;
     (e: 'delete', index: number): void;
 }>();
 const showCutoutSize = ref(false);
@@ -70,8 +70,7 @@ const showCutoutFormatMenu = () => {
 };
 const selectSize = (i: number) => {
     sizeValue.value = props.sizeItems[i];
-    const shapes = props.context.selection.selectedShape;
-    emits('changeSize', props.sizeItems[i], props.index, shapes);
+    emits('changeSize', props.sizeItems[i], props.index);
 }
 const selectPerfix = (i: number) => {
     perfixValue.value = props.perfixItems[i];
@@ -85,8 +84,7 @@ const nameInput = ref<HTMLInputElement>();
 const changeName = () => {
     const value = nameInput.value!.value;
     name.value = value;
-    const shapes = props.context.selection.selectedShape;
-    emits('changeName', value, props.index, shapes);
+    emits('changeName', value, props.index);
 }
 const scaleInput = ref<HTMLInputElement>();
 const changeScale = () => {
@@ -94,8 +92,7 @@ const changeScale = () => {
     const value = scaleInput.value!.value;
     if (regex.test(value)) {
         sizeValue.value = value;
-        const shapes = props.context.selection.selectedShape;
-        emits('changeSize', value, props.index, shapes);
+        emits('changeSize', value, props.index);
     } else {
         sizeValue.value = props.argus.format.scale + 'x';
         scaleInput.value!.value = sizeValue.value;

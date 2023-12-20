@@ -3,7 +3,7 @@ import { Context } from '@/context';
 import { AsyncBaseAction, CtrlElementType, Matrix, PathShape, Shape } from '@kcdesign/data';
 import { onMounted, onUnmounted, watch, reactive, ref } from 'vue';
 import { ClientXY, PageXY, XY } from '@/context/selection';
-import { getAngle, getHorizontalAngle } from '@/utils/common';
+import { forbidden_to_modify_frame, getAngle, getHorizontalAngle } from '@/utils/common';
 import { update_dot3 } from './common';
 import { Point } from "../../SelectionView.vue";
 import { Action } from '@/context/tool';
@@ -65,8 +65,16 @@ function update_dot_path() {
     dots = dots.concat(update_dot3([p1, p2]));
 }
 function point_mousedown(event: MouseEvent, ele: CtrlElementType, idx: number) {
-    if (event.button !== 0) return;
+    if (event.button !== 0) {
+        return;
+    }
+
     props.context.menu.menuMount();
+
+    if (forbidden_to_modify_frame(props.shape)) {
+        return;
+    }
+    
     const workspace = props.context.workspace;
     event.stopPropagation();
     workspace.setCtrl('controller');
