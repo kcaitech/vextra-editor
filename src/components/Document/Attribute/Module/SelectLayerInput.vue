@@ -5,7 +5,7 @@ import {ArrowDown} from '@element-plus/icons-vue';
 import {useI18n} from 'vue-i18n';
 import {onMounted, ref} from 'vue';
 import SelectLayer from '../PopoverMenu/ComposAttri/SelectLayer.vue';
-import {get_options_from_symbol} from "@/utils/symbol";
+import {get_options_from_symbol, is_symbol_or_union} from "@/utils/symbol";
 import {v4} from "uuid";
 
 const {t} = useI18n();
@@ -31,9 +31,18 @@ const isselectLayer = ref(false);
 
 const showSelectLayer = (e: MouseEvent) => {
     e.stopPropagation();
-    if (props.context.selection.selectedShapes[0].type !== ShapeType.SymbolUnion) return;
+    
+    const symbol = props.context.selection.symbolshape;
+    if (!symbol || !is_symbol_or_union(symbol)) {
+        return;
+    }
+
     selectoption.value = false;
-    if (isselectLayer.value) return isselectLayer.value = false;
+
+    if (isselectLayer.value) {
+        return isselectLayer.value = false;
+    }
+
     isselectLayer.value = true;
     props.context.esctask.save(v4(), de_show_select_layer);
 }

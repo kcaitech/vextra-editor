@@ -239,3 +239,21 @@ export function string_by_sys(str: string): string {
     return str;
   }
 }
+
+export function forbidden_to_modify_frame(shape: Shape) {
+  return shape.isLocked || shape.isVirtualShape;
+}
+
+export function shapes_organize(shapes: Shape[]) {
+  const result: Shape[] = [];
+  for (let i = 0, l = shapes.length; i < l; i++) {
+    const shape = shapes[i];
+
+    if (forbidden_to_modify_frame(shape)) {
+      continue;
+    }
+
+    result.push(shape);
+  }
+  return result;
+}

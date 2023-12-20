@@ -6,6 +6,7 @@ import { ClientXY, PageXY } from '@/context/selection';
 import { Action } from '@/context/tool';
 import { Point } from '../../SelectionView.vue';
 import { PointType } from '@/context/assist';
+import { forbidden_to_modify_frame } from '@/utils/common';
 interface Props {
     matrix: number[]
     context: Context
@@ -59,21 +60,29 @@ function ct2pt(ct: CtrlElementType) {
 }
 // mouse event flow: down -> move -> up
 function bar_mousedown(event: MouseEvent, ele: CtrlElementType) {
-    if (event.button === 0) {
-        props.context.menu.menuMount()
-        event.stopPropagation();
-        props.context.menu.menuMount()
-        cur_ctrl_type = ele;
-        pointType = ct2pt(cur_ctrl_type);
-        const workspace = props.context.workspace;
-        workspace.setCtrl('controller');
-        const { clientX, clientY } = event;
-        matrix.reset(workspace.matrix);
-        const root = workspace.root;
-        startPosition = { x: clientX - root.x, y: clientY - root.y }
-        document.addEventListener('mousemove', bar_mousemove);
-        document.addEventListener('mouseup', bar_mouseup);
+    if (event.button !== 0) {
+        return;
     }
+
+    props.context.menu.menuMount()
+    event.stopPropagation();
+    props.context.menu.menuMount()
+
+    if (forbidden_to_modify_frame(props.shape)) {
+        return;
+    }
+
+    cur_ctrl_type = ele;
+    pointType = ct2pt(cur_ctrl_type);
+    const workspace = props.context.workspace;
+    workspace.setCtrl('controller');
+    const { clientX, clientY } = event;
+    matrix.reset(workspace.matrix);
+    const root = workspace.root;
+    startPosition = { x: clientX - root.x, y: clientY - root.y };
+
+    document.addEventListener('mousemove', bar_mousemove);
+    document.addEventListener('mouseup', bar_mouseup);
 }
 function bar_mousemove(event: MouseEvent) {
     const workspace = props.context.workspace;
