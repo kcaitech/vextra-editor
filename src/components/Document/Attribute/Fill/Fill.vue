@@ -222,8 +222,8 @@ function first() {
 
 function deleteFill(idx: number) {
     const _idx = fills.length - idx - 1;
-    if (len.value === 1) {
-        const s = props.context.selection.selectedShapes[0];
+    const s = props.context.selection.selectedShapes[0];
+    if (len.value === 1 && s.type !== ShapeType.Group) {
         if (s.type === ShapeType.Table) {
             const table = props.context.tableSelection;
             const e = props.context.editor4Table(s as TableShape);
@@ -259,13 +259,22 @@ function deleteFill(idx: number) {
             const editor = props.context.editor4Page(page);
             editor.shapesDeleteFill(actions);
         }
+    } else if (len.value === 1 && s.type === ShapeType.Group) {
+        const childs = (s as GroupShape).childs;
+        const shapes = flattenShapes(childs).filter(s => s.type !== ShapeType.Group);
+        const actions = get_actions_fill_delete(shapes, _idx);
+        const page = props.context.selection.selectedPage;
+        if (page) {
+            const editor = props.context.editor4Page(page);
+            editor.shapesDeleteFill(actions);
+        }
     }
 }
 
 function toggleVisible(idx: number) {
     const _idx = fills.length - idx - 1;
-    if (len.value === 1) {
-        const s = props.context.selection.selectedShapes[0];
+    const s = props.context.selection.selectedShapes[0];
+    if (len.value === 1 && s.type !== ShapeType.Group) {
         if (s.type === ShapeType.Table) {
             const table = props.context.tableSelection;
             const e = props.context.editor4Table(s as TableShape);
@@ -302,6 +311,16 @@ function toggleVisible(idx: number) {
             const editor = props.context.editor4Page(page);
             editor.setShapesFillEnabled(actions);
         }
+    } else if (len.value === 1 && s.type === ShapeType.Group) {
+        const childs = (s as GroupShape).childs;
+        const shapes = flattenShapes(childs).filter(s => s.type !== ShapeType.Group);
+        const value = !shapes[0].style.fills[idx].isEnabled;
+        const actions = get_actions_fill_enabled(shapes, _idx, value);
+        const page = props.context.selection.selectedPage;
+        if (page) {
+            const editor = props.context.editor4Page(page);
+            editor.setShapesFillEnabled(actions);
+        }
     }
 }
 
@@ -315,8 +334,8 @@ function setColor(idx: number, clr: string, alpha: number) {
     const g = Number.parseInt(res[2], 16);
     const b = Number.parseInt(res[3], 16);
     const _idx = fills.length - idx - 1;
-    if (len.value === 1) {
-        const s = props.context.selection.selectedShapes[0];
+    const s = props.context.selection.selectedShapes[0];
+    if (len.value === 1 && s.type !== ShapeType.Group) {
         if (s.type === ShapeType.Table) {
             const table = props.context.tableSelection;
             const e = props.context.editor4Table(s as TableShape);
@@ -347,6 +366,15 @@ function setColor(idx: number, clr: string, alpha: number) {
         }
     } else if (len.value > 1) {
         const actions = get_actions_fill_color(props.shapes, _idx, new Color(alpha, r, g, b));
+        const page = props.context.selection.selectedPage;
+        if (page) {
+            const editor = props.context.editor4Page(page);
+            editor.setShapesFillColor(actions);
+        }
+    } else if (len.value === 1 && s.type === ShapeType.Group) {
+        const childs = (s as GroupShape).childs;
+        const shapes = flattenShapes(childs).filter(s => s.type !== ShapeType.Group);
+        const actions = get_actions_fill_color(shapes, _idx, new Color(alpha, r, g, b));
         const page = props.context.selection.selectedPage;
         if (page) {
             const editor = props.context.editor4Page(page);
@@ -418,8 +446,8 @@ function onAlphaChange(idx: number, e: Event) {
 
 function getColorFromPicker(idx: number, color: Color) {
     const _idx = fills.length - idx - 1;
-    if (len.value === 1) {
-        const s = props.context.selection.selectedShapes[0];
+    const s = props.context.selection.selectedShapes[0];
+    if (len.value === 1 && s.type !== ShapeType.Group) {
         if (s.type === ShapeType.Table) {
             const table = props.context.tableSelection;
             const e = props.context.editor4Table(s as TableShape);
@@ -450,6 +478,15 @@ function getColorFromPicker(idx: number, color: Color) {
         }
     } else if (len.value > 1) {
         const actions = get_actions_fill_color(props.shapes, _idx, color);
+        const page = props.context.selection.selectedPage;
+        if (page) {
+            const editor = props.context.editor4Page(page);
+            editor.setShapesFillColor(actions);
+        }
+    } else if (len.value === 1 && s.type === ShapeType.Group) {
+        const childs = (s as GroupShape).childs;
+        const shapes = flattenShapes(childs).filter(s => s.type !== ShapeType.Group);
+        const actions = get_actions_fill_color(shapes, _idx, color);
         const page = props.context.selection.selectedPage;
         if (page) {
             const editor = props.context.editor4Page(page);

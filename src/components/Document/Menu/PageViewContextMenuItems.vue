@@ -477,7 +477,7 @@ onUnmounted(() => {
              @click="paste_text">
             <span>{{ t('system.only_text') }}</span>
             <span class="shortkey">
-        <Key code="Ctrl Alt V"></Key>
+        <Key code="Alt Ctrl V"></Key>
       </span>
         </div>
         <div :class="invalid_items.includes('paste-here') ? 'invalid' : 'item'"
@@ -575,7 +575,7 @@ onUnmounted(() => {
         <div class="item" v-if="props.items.includes('container')" @click="container">
             <span>{{ t('system.create_container') }}</span>
             <span class="shortkey">
-        <Key code="Ctrl Alt G"></Key>
+        <Key code="Alt Ctrl G"></Key>
       </span>
         </div>
         <div class="item" v-if="props.items.includes('un_group')" @click="unGroup">
@@ -595,7 +595,7 @@ onUnmounted(() => {
         <div class="item" v-if="props.items.includes('component')" @click="component">
             <span>{{ t('system.create_component') }}</span>
             <span class="shortkey">
-        <Key code="Ctrl Alt K"></Key>
+        <Key code="Alt Ctrl K"></Key>
       </span>
         </div>
         <div class="item" v-if="props.items.includes('instance')" @click="instance">

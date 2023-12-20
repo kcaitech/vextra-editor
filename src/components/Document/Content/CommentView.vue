@@ -313,7 +313,7 @@ const saveShapeCommentXY = () => {
 }
 
 // 递归函数，用于将数组扁平化处理
-function flattenShapes(shapes: any[]) {
+function flattenShapes(shapes: any[]) { 
     return shapes.reduce((result: any, item: any) => {
         if (Array.isArray(item.childs)) {
             // 如果当前项有子级数组，则递归调用flattenArray函数处理子级数组

@@ -11,7 +11,6 @@ import { onUpdated } from "vue";
 import { Selection } from "@/context/selection";
 import { is_component_class } from "@/utils/listview";
 
-
 export interface ItemData {
     id: string
     shape: () => Shape // 作用function，防止vue对shape内部数据进行proxy
@@ -311,13 +310,13 @@ const current_node_radius = () => {
         const p_selected = previous && previous.classList.contains('selected') || previous && previous.classList.contains('selectedChild');
         const n_selected = next && next.classList.contains('selected') || next && next.classList.contains('selectedChild');
         if (!p_selected && isSelect) {
-            topAngle.value = true;            
-        }else if(p_selected){
+            topAngle.value = true;
+        } else if (p_selected) {
             topAngle.value = false;
         }
         if (!n_selected && isSelect) {
             bottomAngle.value = true;
-        }else if(n_selected){
+        } else if (n_selected) {
             bottomAngle.value = false;
         }
     }
@@ -336,9 +335,7 @@ const selectedWatcher = (t?: any) => {
 }
 
 onUpdated(() => {
-    nextTick(() => {
-        current_node_radius();
-    })
+    nextTick(current_node_radius);
 })
 onMounted(() => {
     handlePerm()
@@ -405,7 +402,6 @@ onUnmounted(() => {
     width: calc(100% - 6px);
     height: 36px;
     box-sizing: border-box;
-    //transition: 50ms;
 
     >.ph {
         height: 100%;
@@ -557,7 +553,8 @@ onUnmounted(() => {
 }
 
 .container:hover {
-    border-radius: var(--default-radius);
+    z-index: -1;
+    border-radius: 8px;
     background-color: #F5F5F5;
 }
 

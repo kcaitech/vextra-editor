@@ -99,7 +99,7 @@ onMounted(() => {
 });
 onUnmounted(() => {
     props.context.comment.unwatch(update);
-    props.context.tool.watch(tool_watch);
+    props.context.tool.unwatch(tool_watch);
 })
 </script>
 
