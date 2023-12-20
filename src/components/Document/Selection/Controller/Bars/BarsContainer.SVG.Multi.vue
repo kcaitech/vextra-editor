@@ -6,6 +6,7 @@ import { ClientXY } from '@/context/selection';
 import { Point } from '../../SelectionView.vue';
 import { Action } from '@/context/tool';
 import { WorkSpace } from '@/context/workspace';
+import { shapes_organize } from '@/utils/common';
 interface Props {
     matrix: number[]
     context: Context
@@ -55,18 +56,20 @@ function get_bar_path(s: { x: number, y: number }, e: { x: number, y: number }):
 }
 // mouse event flow: down -> move -> up
 function bar_mousedown(event: MouseEvent, ele: CtrlElementType) {
-    if (event.button === 0) {
-        props.context.menu.menuMount()
-        event.stopPropagation();
-        cur_ctrl_type = ele;
-        const workspace = props.context.workspace;
-        workspace.setCtrl('controller');
-        matrix.reset(workspace.matrix);
-        const root = workspace.root;
-        startPosition = { x: event.clientX - root.x, y: event.clientY - root.y }
-        document.addEventListener('mousemove', bar_mousemove);
-        document.addEventListener('mouseup', bar_mouseup);
+    if (event.button !== 0) {
+        return;
     }
+    
+    props.context.menu.menuMount()
+    event.stopPropagation();
+    cur_ctrl_type = ele;
+    const workspace = props.context.workspace;
+    workspace.setCtrl('controller');
+    matrix.reset(workspace.matrix);
+    const root = workspace.root;
+    startPosition = { x: event.clientX - root.x, y: event.clientY - root.y }
+    document.addEventListener('mousemove', bar_mousemove);
+    document.addEventListener('mouseup', bar_mouseup);
 }
 function bar_mousemove(event: MouseEvent) {
     const workspace = props.context.workspace;
@@ -80,12 +83,19 @@ function bar_mousemove(event: MouseEvent) {
     } else {
         if (Math.hypot(mx - sx, my - sy) > dragActiveDis) {
             const selection = props.context.selection
-            isDragging = true;
-            asyncMultiAction = props.context.editor.controller().asyncMultiEditor(selection.selectedShapes, selection.selectedPage!);
+            const shapes = shapes_organize(selection.selectedShapes);
+
+            asyncMultiAction = props.context.editor
+                .controller()
+                .asyncMultiEditor(shapes, selection.selectedPage!);
+
             submatrix.reset(workspace.matrix.inverse);
             setCursor(cur_ctrl_type);
+
             workspace.scaling(true);
             workspace.setSelectionViewUpdater(false);
+
+            isDragging = true;
         }
     }
 }

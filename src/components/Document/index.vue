@@ -662,7 +662,7 @@ onUnmounted(() => {
     <div id="visit">
       <ApplyFor></ApplyFor>
     </div>
-    <ColSplitView id="center" :style="{ height: showTop ? 'calc(100% - 52px)' : '100%' }"
+    <ColSplitView id="center" :style="{ height: showTop ? 'calc(100% - 46px)' : '100%' }"
       v-if="inited && !loading && !null_context"
       :left="{ width: Left.leftWidth, minWidth: Left.leftMinWidth, maxWidth: 0.5 }"
       :middle="{ width: middleWidth, minWidth: middleMinWidth, maxWidth: middleWidth }"

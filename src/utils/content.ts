@@ -352,7 +352,7 @@ export function init_insert_image(context: Context, mousedownOnPageXY: PageXY, t
     }
 }
 
-export async function insert_imgs(context: Context, t: Function, media: Media[]) {
+export function insert_imgs(context: Context, t: Function, media: Media[], upload_container?: any) {
     const selection = context.selection;
     const new_shapes: Shape[] = [];
     if (media && media.length) {
@@ -360,7 +360,15 @@ export async function insert_imgs(context: Context, t: Function, media: Media[])
         for (let i = 0; i < media.length; i++) {
             if (i > 0) xy.x = xy.x + media[i - 1].frame.width + 10;
             const img = init_insert_image(context, xy, t, media[i]);
-            if (img && await context.communication.docResourceUpload.upload((img as ImageShape).imageRef, media[i].buff.buffer.slice(0))) new_shapes.push(img);
+            if (img) {
+                new_shapes.push(img);
+            }
+
+            if (!upload_container) {
+                continue;
+            }
+
+            upload_container[(img as ImageShape).imageRef] = media[i];
         }
     }
     if (new_shapes.length) {
@@ -1055,5 +1063,56 @@ export function uppper_layer(context: Context, layer?: number) {
 
     if (!result) {
         message('info', context.workspace.t('homerightmenu.unable_upper'));
+    }
+}
+
+export function scale_0(context: Context) {
+    const workspace = context.workspace;
+    const { center } = workspace.root;
+    workspace.matrix.trans(-center.x, -center.y);
+    const _s = 1 / workspace.matrix.m00;
+    workspace.matrix.scale(_s);
+    workspace.matrix.trans(center.x, center.y);
+    workspace.notify(WorkSpace.MATRIX_TRANSFORMATION);
+}
+
+export function undo(context: Context) {
+    const repo = context.repo;
+    repo.canUndo() && repo.undo();
+    const selection = context.selection;
+    const shapes = context.selection.selectedShapes;
+    const page = context.selection.selectedPage!;
+    const flat = page.shapes;
+
+    if (shapes.length) {
+        for (let i = 0; i < shapes.length; i++) {
+            const item = shapes[i];
+            if (!flat.get(item.id)) {
+                selection.unSelectShape(item);
+            }
+        }
+    }
+
+    if (context.selection.selectedShapes.length > 1) {
+        context.workspace.notify(WorkSpace.CLAC_ATTRI);
+    }
+}
+
+export function redo(context: Context) {
+    const repo = context.repo;
+
+    repo.canRedo() && repo.redo();
+
+    if (context.selection.selectedShapes.length > 1) {
+        context.workspace.notify(WorkSpace.CLAC_ATTRI);
+    }
+}
+
+export async function upload_image(context: Context, ref: string, buff: ArrayBufferLike) {
+    try {
+        const __buff = new Uint8Array(buff);
+        return await context.communication.docResourceUpload.upload(ref, __buff.buffer);
+    } catch (error) {
+        console.log('upload_image:', error);
     }
 }

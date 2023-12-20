@@ -313,8 +313,8 @@ const saveShapeCommentXY = () => {
 }
 
 // 递归函数，用于将数组扁平化处理
-function flattenShapes(shapes: any) {
-    return shapes.reduce((result: any, item: Shape) => {
+function flattenShapes(shapes: any[]) {
+    return shapes.reduce((result: any, item: any) => {
         if (Array.isArray(item.childs)) {
             // 如果当前项有子级数组，则递归调用flattenArray函数处理子级数组
             result = result.concat(flattenShapes(item.childs));
@@ -378,11 +378,13 @@ const docComment = (comment: DocCommentOpData) => {
             documentCommentList.value.splice(index, 1)
         } else {
             documentCommentList.value.forEach((item, i) => {
-                const _index = item.children.findIndex((child: any) => child.id === comment.comment.id)
-                if (_index !== -1) {
-                    documentCommentList.value[i].children.splice(index, 1);
-                    props.context.comment.setCommentList(documentCommentList.value);
-                    props.context.comment.onUpdateComment();
+                if(item.children) {
+                    const _index = item.children.findIndex((child: any) => child.id === comment.comment.id)
+                    if (_index !== -1) {
+                        documentCommentList.value[i].children.splice(index, 1);
+                        props.context.comment.setCommentList(documentCommentList.value);
+                        props.context.comment.onUpdateComment();
+                    }
                 }
             })
         }
@@ -392,7 +394,7 @@ const docComment = (comment: DocCommentOpData) => {
         } else {
             const _index = documentCommentList.value.findIndex(item => item.id === comment.comment.root_id);
             if (_index !== -1) {
-                if(!documentCommentList.value[_index].children) {
+                if (!documentCommentList.value[_index].children) {
                     documentCommentList.value[_index].children = []
                     documentCommentList.value[_index].commentMenu = commentMenuItems.value
                 }

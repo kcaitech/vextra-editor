@@ -391,7 +391,9 @@ onUnmounted(() => {
             :title="t('attr.advanced_stroke')">
             <template #trigger>
                 <div class="trigger">
+                    <div class="bg">
                     <svg-icon icon-class="gear" @click="showMenu"></svg-icon>
+                </div>
                 </div>
             </template>
             <template #body>
@@ -433,7 +435,7 @@ onUnmounted(() => {
 <style scoped lang="scss">
 .border-detail-container {
     >.popover {
-        width: 16px;
+        width: 28px;
         height: 32px;
 
         .trigger {
@@ -442,16 +444,23 @@ onUnmounted(() => {
             display: flex;
             justify-content: center;
             align-items: center;
-            margin-left: -10px;
 
-            >svg {
-                width: 16px;
-                height: 16px;
-                transition: 0.5s;
+            .bg {
+                width: 28px;
+                height: 28px;
+                display: flex;
+                align-items: center;
+                justify-content: center;
+                border-radius: var(--default-radius);
+
+                >svg {
+                    width: 16px;
+                    height: 16px;
+                }
             }
 
-            >svg:hover {
-                transform: rotate(90deg);
+            .bg:hover {
+                background-color: #F5F5F5;
             }
         }
 

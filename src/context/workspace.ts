@@ -354,42 +354,44 @@ export class WorkSpace extends WatchableObject {
     setPageViewId(id: string) {
         this.m_pageViewId = id
     }
-
-    keyboardHandle(event: KeyboardEvent) {
-        const { ctrlKey, shiftKey, metaKey, target } = event;
-        if (target instanceof HTMLInputElement) return; // 在输入框中输入时避免触发编辑器的键盘事件
-        if (this.isFreeze) return;
-        if (event.code === KeyboardKeys.A) {
-            this.keydown_a(ctrlKey, metaKey);
-        } else if (event.code === KeyboardKeys.V) {
-            event.preventDefault();
-            this.keydown_v(ctrlKey, metaKey);
-        } else if (event.code === KeyboardKeys.Z) {
-            event.preventDefault();
-            this.keydown_z(this.context, ctrlKey, shiftKey, metaKey);
-        } else if (event.code === KeyboardKeys.Digit0) {
-            event.preventDefault();
-            this.keydown_0(ctrlKey, metaKey);
-        } else if (event.code === KeyboardKeys.C) {
-            event.preventDefault();
-            this.keydown_c(ctrlKey, metaKey, shiftKey);
-        } else if (event.code === KeyboardKeys.B) {
-            event.preventDefault();
-            this.keydown_b(ctrlKey, metaKey);
-        } else if (event.code === KeyboardKeys.I) {
-            event.preventDefault();
-            this.keydown_i(ctrlKey, metaKey);
-        } else if (event.code === KeyboardKeys.U) {
-            event.preventDefault();
-            this.keydown_u(ctrlKey, metaKey);
-        } else if (event.code === KeyboardKeys.X) {
-            event.preventDefault();
-            this.keydown_x(ctrlKey, metaKey, shiftKey);
-        } else if (event.code === KeyboardKeys.Digit1) {
-            event.preventDefault();
-            if (ctrlKey || metaKey) adapt_page(this.context);
-        }
-    }
+    /**
+     * @deprecated
+     */
+    // keyboardHandle(event: KeyboardEvent) {
+    //     const { ctrlKey, shiftKey, metaKey, target } = event;
+    //     if (target instanceof HTMLInputElement) return; // 在输入框中输入时避免触发编辑器的键盘事件
+    //     if (this.isFreeze) return;
+    //     if (event.code === KeyboardKeys.A) {
+    //         this.keydown_a(ctrlKey, metaKey);
+    //     } else if (event.code === KeyboardKeys.V) {
+    //         event.preventDefault();
+    //         this.keydown_v(ctrlKey, metaKey);
+    //     } else if (event.code === KeyboardKeys.Z) {
+    //         event.preventDefault();
+    //         this.keydown_z(this.context, ctrlKey, shiftKey, metaKey);
+    //     } else if (event.code === KeyboardKeys.Digit0) {
+    //         event.preventDefault();
+    //         this.keydown_0(ctrlKey, metaKey);
+    //     } else if (event.code === KeyboardKeys.C) {
+    //         event.preventDefault();
+    //         this.keydown_c(ctrlKey, metaKey, shiftKey);
+    //     } else if (event.code === KeyboardKeys.B) {
+    //         event.preventDefault();
+    //         this.keydown_b(ctrlKey, metaKey);
+    //     } else if (event.code === KeyboardKeys.I) {
+    //         event.preventDefault();
+    //         this.keydown_i(ctrlKey, metaKey);
+    //     } else if (event.code === KeyboardKeys.U) {
+    //         event.preventDefault();
+    //         this.keydown_u(ctrlKey, metaKey);
+    //     } else if (event.code === KeyboardKeys.X) {
+    //         event.preventDefault();
+    //         this.keydown_x(ctrlKey, metaKey, shiftKey);
+    //     } else if (event.code === KeyboardKeys.Digit1) {
+    //         event.preventDefault();
+    //         if (ctrlKey || metaKey) adapt_page(this.context);
+    //     }
+    // }
 
     scaling(v: boolean) {
         this.m_scaling = v;

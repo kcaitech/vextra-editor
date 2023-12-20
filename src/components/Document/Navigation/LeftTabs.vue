@@ -43,6 +43,7 @@ function update(t: number) {
     if (t === Comment.SELECT_LIST_TAB) {
         if (!props.showLeft) showHiddenLeft();
         currentTab.value = 'Comment';
+        updateUnderlinePosition();
     }
 }
 
@@ -81,6 +82,7 @@ const tool_watch = (t: number) => {
         if (!props.showLeft) showHiddenLeft();
         currentTab.value = 'Comps';
         props.context.navi.set_current_navi_module(currentTab.value);
+        updateUnderlinePosition();
     }
 }
 const stopMouseDown = (e: MouseEvent) => {

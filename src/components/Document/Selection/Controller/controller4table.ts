@@ -38,7 +38,9 @@ function useControllerCustom(context: Context, i18nT: Function) {
     let is_diposed: boolean = false;
 
     function mousedown(e: MouseEvent) {
-        if (context.workspace.isPageDragging) return;
+        if (context.workspace.isPageDragging) {
+            return;
+        }
         shapes = context.selection.selectedShapes;
         root = context.workspace.root;
         area = context.selection.getArea({ x: e.clientX - root.x, y: e.clientY - root.y });
@@ -47,12 +49,17 @@ function useControllerCustom(context: Context, i18nT: Function) {
             workspace.value.setCtrl('controller');
             down4body(e);
         } else if (area === 'content' || area === 'hover') {
-            if (is_diposed) return;
+            if (is_diposed) {
+                return;
+            }
             const selection = context.selection;
             const selected = selection.selectedShapes;
             const h = selection.hoveredShape;
-            if (!h) selection.resetSelectShapes();
-            else e.shiftKey ? selection.rangeSelectShape([...selected, h]) : selection.selectShape(h);
+            if (!h) {
+                selection.resetSelectShapes();
+            } else {
+                e.shiftKey ? selection.rangeSelectShape([...selected, h]) : selection.selectShape(h);
+            }
         } else {
             workspace.value.setCtrl('page');
         }
