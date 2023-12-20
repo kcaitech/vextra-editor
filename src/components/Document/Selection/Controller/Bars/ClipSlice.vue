@@ -30,7 +30,7 @@ function update() {
         console.log('!confirm_shape()');
         return;
     }
-    dots.push(...get_path_by_point(shape, matrices.get(shape.id)!, new Set()));
+    dots.push(...get_path_by_point(shape as PathShape, matrices.get(shape.id)!, new Set()));
     segments.push(...get_segments2(shape, matrices));
 }
 function confirm_shape() {
