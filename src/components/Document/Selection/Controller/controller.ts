@@ -161,6 +161,17 @@ export function useControllerCustom(context: Context, i18nT: Function) {
         asyncTransfer.stick(x, y);
     }
 
+    function abortTransact() {
+        if (asyncTransfer) {
+            asyncTransfer.abort();
+            asyncTransfer = undefined;
+        }
+
+        if (asyncPathEditor) {
+            asyncPathEditor.abort();
+            asyncPathEditor = undefined;
+        }
+    }
 
     function keyup(event: KeyboardEvent) {
         if (event.target instanceof HTMLInputElement) { // 不处理输入框内的键盘事件
@@ -532,6 +543,7 @@ export function useControllerCustom(context: Context, i18nT: Function) {
         document.removeEventListener('keyup', keyup);
         document.removeEventListener('mousedown', mousedown);
         timerClear();
+        abortTransact(); // 已经开启的事务需要关闭
     }
 
     return { isDblClick, isDrag, init, dispose };
