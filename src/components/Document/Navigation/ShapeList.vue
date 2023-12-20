@@ -455,7 +455,7 @@ function navi_watcher(t: number) {
                 listviewSource.notify(0, 0, 0, Number.MAX_VALUE);
             }, 200)
         }
-    } else if (Navi.TO_SEARCH) {
+    } else if (t === Navi.TO_SEARCH) {
         to_search();
     }
 }

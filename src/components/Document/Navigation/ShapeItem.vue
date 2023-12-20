@@ -9,6 +9,7 @@ import { useI18n } from 'vue-i18n';
 import { is_state } from "@/utils/symbol";
 import { onUpdated } from "vue";
 import { el } from "element-plus/es/locale";
+import { Selection } from "@/context/selection";
 
 
 export interface ItemData {
@@ -294,6 +295,19 @@ const current_node_radius = () => {
         }
     }
 }
+const hovered = ref(false);
+const selectedWatcher = (t?: any) => {
+    if (t === Selection.CHANGE_SHAPE_HOVER) {
+        const shape = props.data.shape();
+        const hoverShape = props.data.context.selection.hoveredShape;
+        if(hoverShape && shape.id === hoverShape.id) {
+            hovered.value = true;
+        }else {
+            hovered.value = false;
+        }
+    }
+}
+
 onUpdated(() => {
     nextTick(() => {
         current_node_radius();
@@ -303,17 +317,19 @@ onMounted(() => {
     hangdlePerm()
     updater();
     props.data.context.tool.watch(tool_watcher);
+    props.data.context.selection.watch(selectedWatcher);
 })
 onUnmounted(() => {
     props.data.context.tool.watch(tool_watcher);
     props.data.shape().unwatch(updater);
+    props.data.context.selection.unwatch(selectedWatcher);
     stop();
 })
 </script>
 
 <template>
     <div ref="shapeItem"
-        :class="{ container: true, selected: props.data.selected, selectedChild: selectedChild(), component: is_component(), firstAngle: topAngle, lastAngle: bottomAngle }"
+        :class="{ container: true, selected: props.data.selected, selectedChild: selectedChild(), component: is_component(), hovered: hovered, firstAngle: topAngle, lastAngle: bottomAngle }"
         :style="{ opacity: !visible_status ? 1 : .3 }" @mousemove="hoverShape" @mouseleave="unHoverShape"
         @mousedown="mousedown" @mouseup="mouseup">
         <!-- 缩进 -->
@@ -426,7 +442,8 @@ onUnmounted(() => {
             width: 100%;
             height: 30px;
             line-height: 30px;
-            font-size: var(--font-default-fontsize);
+            font-size: 14px;
+            color: #262626;
             text-overflow: ellipsis;
             white-space: nowrap;
             overflow: hidden;
@@ -528,6 +545,11 @@ onUnmounted(() => {
     z-index: 1;
     border-radius: 0 !important;
     background-color: rgba($color: #1878F5, $alpha: 0.2) !important;
+}
+
+.hovered {
+    border-radius: var(--default-radius);
+    background-color: #F5F5F5;
 }
 
 .component {
