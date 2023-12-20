@@ -82,11 +82,12 @@ function updateData() {
     fills.length = 0;
     mixed.value = false;
     mixed_cell.value = false;
-    if (props.shapes.length === 1 && props.shapes[0].type !== ShapeType.Group) {
-        const shape = props.shapes[0];
+    const s = props.context.selection.selectedShapes;
+    if (s.length === 1 && s[0].type !== ShapeType.Group) {
+        const shape = s[0];
         const table = props.context.tableSelection;
         const is_edting = table.editingCell;
-        if (shape.type === ShapeType.Table && table.tableRowStart > -1 || is_edting) {
+        if (shape.type === ShapeType.Table && (table.tableRowStart > -1 || is_edting)) {
             let cells = [], might_is_mixed = false;
             if (table.tableRowStart > -1) {
                 const _cs = table.getSelectedCells(true);
@@ -118,15 +119,15 @@ function updateData() {
                 fills.unshift(f);
             }
         }
-    } else if (props.shapes.length > 1) {
+    } else if (s.length > 1) {
         const _fs = get_fills(props.shapes);
         if (_fs === 'mixed') {
             mixed.value = true;
         } else {
             fills.push(..._fs.reverse());
         }
-    } else if (props.shapes.length === 1 && props.shapes[0].type === ShapeType.Group) {
-        const childs = (props.shapes[0] as GroupShape).childs;
+    } else if (s.length === 1 && s[0].type === ShapeType.Group) {
+        const childs = (s[0] as GroupShape).childs;
         const shapes = flattenShapes(childs).filter(s => s.type !== ShapeType.Group);
         const _fs = get_fills(shapes);
         if (_fs === 'mixed') {

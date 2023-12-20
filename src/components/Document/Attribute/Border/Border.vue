@@ -93,7 +93,7 @@ function updateData() {
     if (props.shapes.length === 1 && shape.type !== ShapeType.Group) {
         const table = props.context.tableSelection;
         const is_edting = table.editingCell;
-        if (shape.type === ShapeType.Table && table.tableRowStart > -1 || is_edting) {
+        if (shape.type === ShapeType.Table && (table.tableRowStart > -1 || is_edting)) {
             let cells = [], might_is_mixed = false;
             if (table.tableRowStart > -1) {
                 const _cs = table.getSelectedCells(true);
