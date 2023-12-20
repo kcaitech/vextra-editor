@@ -70,7 +70,7 @@ class Iter implements IDataIter<ItemData> {
 
 const props = defineProps<{ context: Context, page: Page, pageHeight: number }>();
 const { t } = useI18n();
-const itemHieght = 36;
+const itemHieght = 32;
 const MOUSE_RIGHT = 2;
 const shapeListMap: Map<string, ShapeDirList> = new Map();
 const chartMenu = ref<boolean>(false)
@@ -543,17 +543,18 @@ onUnmounted(() => {
         padding-left: 6px;
 
         .search {
-            height: 34px;
+            height: 32px;
             display: flex;
             align-items: center;
             background-color: var(--grey-light);
             border-radius: 8px;
             box-sizing: border-box;
-            padding: 8px;
+            padding: 6px;
             overflow: hidden;
             transition: 0.32s;
 
             >.tool-container {
+                margin-right: 2px;
                 flex-shrink: 0;
                 display: flex;
                 align-items: center;
@@ -569,7 +570,7 @@ onUnmounted(() => {
                 width: 12px;
                 height: 100%;
                 display: flex;
-                margin-left: 4px;
+                margin-left: 2px;
                 justify-content: center;
                 align-items: center;
                 transition: 0.3s;

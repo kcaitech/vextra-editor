@@ -87,16 +87,16 @@ function unHoverShape(e: MouseEvent) {
 }
 
 const setLock = (e: MouseEvent) => {
-    if (lock_status.value === 2) {
-        return; // 继承锁
-    }
+    // if (lock_status.value === 2) {
+    //     return; // 继承锁
+    // }
     e.stopPropagation();
     emits('set-lock', props.data.shape())
 }
 const setVisible = (e: MouseEvent) => {
-    if (visible_status.value === 2) {
-        return; // 继承隐藏
-    }
+    // if (visible_status.value === 2) {
+    //     return; // 继承隐藏
+    // }
     e.stopPropagation();
     emits('set-visible', props.data.shape());
 }
@@ -230,7 +230,7 @@ function icon_class() {
     const shape = props.data.shape();
     if (shape.type === ShapeType.Symbol) {
         if (shape instanceof SymbolUnionShape) {
-            return 'pattern-symbol-union';
+            return 'pattern-symbol-union'; 
         } else {
             return 'pattern-component';
         }
@@ -262,11 +262,10 @@ function updater(t?: any) {
 
     lock_status.value = shape.isLocked ? 1 : 0;
     visible_status.value = shape.getVisible() ? 0 : 1;
-
-    if (is_parent_locked(shape)) {
+    if (is_parent_locked(shape) && !lock_status.value) {
         lock_status.value = 2;
     }
-    if (is_parent_unvisible(shape)) {
+    if (is_parent_unvisible(shape) && !visible_status.value) {
         visible_status.value = 2;
     }
 }
@@ -354,7 +353,7 @@ onUnmounted(() => {
 <template>
     <div ref="shapeItem"
         :class="{ container: true, selected: props.data.selected, selectedChild: selectedChild(), component: is_component(), hovered: hovered, firstAngle: topAngle, lastAngle: bottomAngle }"
-        :style="{ opacity: !visible_status ? 1 : .3 }" @mousemove="hoverShape" @mouseleave="unHoverShape"
+         @mousemove="hoverShape" @mouseleave="unHoverShape"
         @mousedown="mousedown" @mouseup="mouseup">
         <!-- 缩进 -->
         <div class="ph" :style="{ width: `${ph_width}px` }"></div>
@@ -364,11 +363,11 @@ onUnmounted(() => {
                 :style="{ transform: props.data.expand ? 'rotate(0deg)' : 'rotate(-90deg)' }"></svg-icon>
         </div>
         <!-- icon -->
-        <div class="container-svg zero-symbol" @dblclick="toggleContainer">
+        <div class="container-svg zero-symbol" @dblclick="toggleContainer" :style="{ opacity: !visible_status ? 1 : .3 }">
             <svg-icon class="svg" :icon-class="icon_class()"></svg-icon>
         </div>
         <!-- 内容描述 -->
-        <div class="text" :style="{ display: isInput ? 'none' : '' }">
+        <div class="text" :style="{ display: isInput ? 'none' : '', opacity: !visible_status ? 1 : .3 }">
             <div class="txt" @dblclick="onRename">{{ get_name(props.data.shape(), t('compos.dlt')) }}</div>
             <div class="tool_icon" @mousedown.stop
                 :style="{ visibility: `${is_tool_visible ? 'visible' : 'hidden'}`, width: `${is_tool_visible ? 66 + 'px' : lock_status || visible_status ? 66 + 'px' : 0}` }">
@@ -400,7 +399,7 @@ onUnmounted(() => {
     flex-flow: row;
     align-items: center;
     width: calc(100% - 6px);
-    height: 36px;
+    height: 32px;
     box-sizing: border-box;
 
     >.ph {
@@ -410,6 +409,8 @@ onUnmounted(() => {
     }
 
     >.triangle {
+        box-sizing: border-box;
+        padding-left: 6px;
         width: 18px;
         height: 100%;
         display: flex;
@@ -431,16 +432,17 @@ onUnmounted(() => {
     }
 
     >.container-svg {
-        width: 12px;
+        width: 14px;
         height: 100%;
         display: flex;
         justify-content: center;
         align-items: center;
         margin-right: 3px;
+        color: #595959;
 
         .svg {
-            width: 12px;
-            height: 12px;
+            width: 14px;
+            height: 14px;
         }
     }
 
@@ -451,7 +453,6 @@ onUnmounted(() => {
         text-overflow: ellipsis;
         white-space: nowrap;
         overflow: hidden;
-        padding-left: 3px;
         display: flex;
         flex-flow: row;
         align-items: center;
@@ -464,7 +465,7 @@ onUnmounted(() => {
             width: 100%;
             height: 30px;
             line-height: 30px;
-            font-size: 14px;
+            font-size: 12px;
             color: #262626;
             text-overflow: ellipsis;
             white-space: nowrap;
@@ -491,18 +492,18 @@ onUnmounted(() => {
             >.tool_lock {
                 display: flex;
                 align-items: center;
-                color: #8C8C8C;
+                color: #595959;
 
                 .svg {
-                    width: 14px;
-                    height: 14px;
-                    color: #8C8C8C;
+                    width: 12px;
+                    height: 12px;
+                    color: #595959;
                 }
 
                 .svg-open {
-                    width: 14px;
-                    height: 14px;
-                    color: #8C8C8C;
+                    width: 12px;
+                    height: 12px;
+                    color: #595959;
                 }
 
                 .dot {
@@ -517,9 +518,9 @@ onUnmounted(() => {
                 margin-right: 10px;
 
                 .svg {
-                    width: 14px;
-                    height: 14px;
-                    color: #8C8C8C;
+                    width: 12px;
+                    height: 12px;
+                    color: #595959;
                 }
 
                 .dot {
@@ -545,7 +546,7 @@ onUnmounted(() => {
         white-space: nowrap;
         overflow: hidden;
         padding-left: 6px;
-        margin-right: 3px;
+        margin-right: 6px;
         outline-style: none;
         border: none;
         border-radius: 2px;
@@ -555,7 +556,7 @@ onUnmounted(() => {
 .container:hover {
     z-index: -1;
     border-radius: 8px;
-    background-color: #F5F5F5;
+    background-color: #efefef;
 }
 
 .selectedChild {
@@ -572,12 +573,11 @@ onUnmounted(() => {
 
 .hovered {
     border-radius: var(--default-radius);
-    background-color: #F5F5F5;
+    background-color: #efefef;
 }
 
 .component {
     color: var(--component-color);
-
     &>.text>.txt,
     &>.text>.tool_icon {
         color: var(--component-color);
