@@ -1,6 +1,8 @@
 import { Matrix, PathShape, RectShape, Shape, ShapeType } from "@kcdesign/data";
 import { PositonAdjust, ConstrainerProportionsAction, FrameAdjust, RotateAdjust, FlipAction } from "@kcdesign/data";
 import { getHorizontalAngle } from "@/utils/common"
+import { Context } from "@/context";
+import { is_equal } from "./assist";
 
 export function is_mixed(shapes: Shape[]) {
   const frame0 = shapes[0].frame2Root();
@@ -148,7 +150,7 @@ export function get_actions_flip_h(shapes: Shape[]) {
 }
 
 export function get_rotation(shape: Shape) {
-  let rotation: number = Number(shape.rotation?.toFixed(2)) || 0;
+  let rotation: number = Number((shape.rotation || 0).toFixed(2));
   if (is_straight(shape)) {
     rotation = get_rotate_for_straight(shape as PathShape);
   }
@@ -242,4 +244,109 @@ export function is_rect(shape: Shape) {
     && shape.isClosed
     && shape.points.length === 4
     && [ShapeType.Rectangle, ShapeType.Artboard, ShapeType.Image].includes(shape.type);
+}
+
+export function get_xy(shapes: Shape[], mixed: string) {
+  const first_shape = shapes[0];
+
+  const box = first_shape.boundingBox();
+
+  let fx: number | string = box.x;
+  let fy: number | string = box.y;
+
+  for (let i = 1, l = shapes.length; i < l; i++) {
+    const shape = shapes[i];
+    const { x, y } = shape.boundingBox();
+    if (typeof fx === 'number' && !is_equal(x, fx)) {
+      fx = mixed;
+    }
+    if (typeof fy === 'number' && !is_equal(y, fy)) {
+      fy = mixed;
+    }
+
+    if (fy === mixed && fx === mixed) {
+      break;
+    }
+  }
+  return { x: fx, y: fy };
+}
+export function get_width(shapes: Shape[], mixed: string) {
+  const first_shape = shapes[0];
+  const vs: any[] = [];
+
+  let first_width: number | string = shapes[0].frame.width;
+
+  if (is_straight(first_shape)) {
+    first_width = get_straight_line_length(first_shape);
+  }
+
+  for (let i = 1, l = shapes.length; i < l; i++) {
+    const shape = shapes[i];
+
+    if (is_straight(shape)) {
+      if (!is_equal(get_straight_line_length(shape), first_width)) {
+        first_width = mixed;
+        break;
+      }
+
+      continue;
+    }
+    if (shape.frame.width !== first_width) {
+      first_width = mixed;
+      break;
+    }
+  }
+  return first_width;
+}
+export function get_height(shapes: Shape[], mixed: string) {
+  const first_shape = shapes[0];
+
+  let first_height: number | string = first_shape.frame.height;
+
+  if (is_straight(first_shape)) {
+    first_height = 0;
+  }
+  for (let i = 1, l = shapes.length; i < l; i++) {
+    const shape = shapes[i];
+    if (is_straight(shape)) {
+      if (first_height !== 0) {
+        first_height = mixed;
+        break;
+      }
+
+      continue;
+    }
+    if (!is_equal(shape.frame.height, first_height)) {
+      first_height = mixed;
+      break;
+    }
+  }
+  return first_height;
+}
+
+export function get_constrainer_proportions(shapes: Shape[]) {
+  let constrainer_proportions = true;
+  for (let i = 0, l = shapes.length; i < l; i++) {
+    const s = shapes[i];
+
+    if (!s.constrainerProportions) {
+      constrainer_proportions = false;
+      break;
+    }
+  }
+  return constrainer_proportions;
+}
+
+export function get_shapes_rotation(shapes: Shape[], mixed: string) {
+  const first_shape = shapes[0];
+  let first_rotation: number | string = get_rotation(first_shape);
+
+  for (let i = 1, l = shapes.length; i < l; i++) {
+    if (!is_equal(get_rotation(shapes[i]), first_rotation)) {
+      first_rotation = mixed;
+      break;
+    }
+  }
+
+  return first_rotation;
 }

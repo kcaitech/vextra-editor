@@ -1,4 +1,5 @@
 import { EL, ShapeView } from "@kcdesign/data";
+import _ from "lodash";
 const xmlns = "http://www.w3.org/2000/svg";
 const xlink = "http://www.w3.org/1999/xlink";
 const xhtml = "http://www.w3.org/1999/xhtml";
@@ -48,7 +49,7 @@ export function batchSetAttribute(el: HTMLElement | SVGElement, attrs: { [key: s
 }
 
 function inner_elpatch(tar: EL, old: EL | undefined) {
-    const _old = old as EL & { el?: HTMLElement | SVGElement } | undefined;
+    let _old = old as EL & { el?: HTMLElement | SVGElement } | undefined;
     const _tar = tar as EL & { el?: HTMLElement | SVGElement };
 
     if (_tar === _old && _tar.el) return;
@@ -58,15 +59,14 @@ function inner_elpatch(tar: EL, old: EL | undefined) {
         return;
     }
 
-    let newel = false;
     if (!_tar.el) {
-        if (_old && _old.el && _old.eltag === _tar.eltag) {
+        if (_old && _old.el && _old.eltag === _tar.eltag) { // 也是要判断下的
             _tar.el = _old.el;
         }
         else {
             _tar.el = createElement(_tar.eltag);
             if (!_tar.el) throw new Error("can not create element: " + _tar.eltag);
-            newel = true;
+            _old = undefined;
         }
     }
     else if (_tar.el.tagName !== _tar.eltag) {
@@ -76,38 +76,17 @@ function inner_elpatch(tar: EL, old: EL | undefined) {
         //     _tar.el.parentNode.replaceChild(el, _tar.el);
         // }
         _tar.el = el;
-        newel = true;
+        _old = undefined;
     }
 
     // attr
-    batchSetAttribute(_tar.el, _tar.elattr, newel ? undefined : _old?.elattr);
-    // const tkeys = Object.keys(_tar.elattr);
-    // const okeys = Object.keys(_old?.elattr || {});
-    // for (let i = 0; i < tkeys.length; i++) {
-    //     const k = tkeys[i];
-    //     const oval = _old?.elattr[k];
-    //     const tval = _tar.elattr[k];
-    //     if (oval !== tval) {
-    //         setAttribute(_tar.el, k, tval);
-    //     }
-    // }
-    // for (let i = 0; i < okeys.length; i++) {
-    //     const key = okeys[i];
-    //     if (tkeys.indexOf(key) < 0) {
-    //         _tar.el.removeAttribute(key);
-    //     }
-    // }
+    batchSetAttribute(_tar.el, _tar.elattr, _old?.elattr);
 
     // string
     if (!Array.isArray(_tar.elchilds)) {
-        if (newel || !_old || _old.elchilds !== _tar.elchilds) {
+        if (!_old || _old.elchilds !== _tar.elchilds) {
             _tar.el.innerHTML = _tar.elchilds;
         }
-        // const childNodes = _tar.el.childNodes;
-        // if (childNodes.length > 0) {
-        //     let count = childNodes.length;
-        //     while (count--) _tar.el.removeChild(childNodes[childNodes.length - 1]);
-        // }
         return;
     }
 
@@ -118,7 +97,9 @@ function inner_elpatch(tar: EL, old: EL | undefined) {
 
     const getResue = (tchild: EL, _old: EL | undefined, i: number) => {
         const r = tchild.isViewNode ? reuse.get((tchild as ShapeView).id) : undefined;
-        return r || _old?.elchilds[i];
+        if (r || !_old) return r;
+        if (!Array.isArray(_old.elchilds)) return undefined;
+        return _old.elchilds[i];
     }
 
     // childs
@@ -154,7 +135,6 @@ function inner_elpatch(tar: EL, old: EL | undefined) {
     //     (el as EL & { el?: HTMLElement | SVGElement }).el = undefined;
     // });
 
-    // return _tar;
 }
 
 export function elpatch(tar: EL, old: EL | undefined) {

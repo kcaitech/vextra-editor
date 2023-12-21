@@ -53,7 +53,9 @@ function change(e: Event) {
                                         base64 = evt.target.result;
                                         if (buff && base64) {
                                             const media = { name: file.name, frame, buff: new Uint8Array(buff), base64 };
-                                            insert_imgs(props.context, t, [media]);
+                                            const container: any = {};
+                                            insert_imgs(props.context, t, [media], container);
+                                            after_import(props.context, container);
                                             if (picker.value) (picker.value as HTMLInputElement).value = '';
                                         }
                                     }

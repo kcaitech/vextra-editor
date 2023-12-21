@@ -1,26 +1,25 @@
 <script setup lang="ts">
 import { onMounted, onUnmounted, ref, reactive } from 'vue'
-import { Shape, ShapeType, RectShape, GroupShape, PathShape, PathShape2, TextShape } from '@kcdesign/data';
+import { Shape, ShapeType, RectShape, PathShape, ImageShape, Artboard } from '@kcdesign/data';
 import IconText from '@/components/common/IconText.vue';
 import { debounce } from 'lodash';
 import { useI18n } from 'vue-i18n';
 import { Context } from '@/context';
 import { Selection } from '@/context/selection';
-import { WorkSpace } from '@/context/workspace';
 import Tooltip from '@/components/common/Tooltip.vue';
 import { hasRadiusShape } from '@/utils/content'
 import Radius from './Radius.vue';
 import {
-    get_rotation,
-    is_mixed,
     get_actions_constrainer_proportions,
     get_actions_frame_x, get_actions_frame_y,
-    get_actions_frame_w, get_actions_frame_h,
     get_actions_flip_h,
     get_actions_flip_v,
-    get_straight_line_length,
     is_straight,
-    get_indexes
+    get_xy,
+    get_width,
+    get_height,
+    get_constrainer_proportions,
+    get_shapes_rotation
 } from '@/utils/attri_setting';
 interface Props {
     context: Context
@@ -49,64 +48,29 @@ const w = ref<number | string>(0);
 const h = ref<number | string>(0);
 const rotate = ref<number | string>(0);
 const isLock = ref<boolean>(false);
-const isMoreForRadius = ref<boolean>(false);
 const fix = 2;
-const points = ref<number>(0);
-const radius = ref<{ lt: number | string, rt: number, rb: number, lb: number }>({ lt: 0, rt: 0, rb: 0, lb: 0 });
 const multiRadius = ref(false)
-const multipleValues = ref<boolean>(false)
 const mixed = t('attr.mixed');
 const watchedShapes = new Map();
 const layout_options: LayoutOptions = reactive({ s_flip: true, s_radius: false, s_adapt: false, s_length: false });
 const model_disable_state: ModelState = reactive({ x: false, y: false, width: false, height: false, rotation: false, flipHorizontal: false, filpVertical: false, radius: false });
 let { s_flip, s_adapt, s_radius, s_length } = layout_options;
 const reflush = ref<number>(0);
-function watch_shapes() {
-    watchedShapes.forEach((v, k) => {
-        v.unwatch(calc_attri);
-        watchedShapes.delete(k);
-    })
-    const selectedShapes = props.context.selection.selectedShapes;
-    if (selectedShapes.length > 0) {
-        const first = selectedShapes[0];
-        watchedShapes.set(first.id, first);
-        watchedShapes.forEach((v) => { v.watch(calc_attri); });
-    }
-}
+
 function calc_attri() {
-    const len = props.context.selection.selectedShapes.length;
-    if (len === 1) {
-        const shape = props.context.selection.selectedShapes[0];
-        if (is_straight(shape)) {
-            w.value = Math.max(get_straight_line_length(shape), 1);
-            h.value = 0;
-        } else {
-            const frame = shape.frame;
-            w.value = Math.max(frame.width, 1);
-            h.value = Math.max(frame.height, 1);
-        }
-        const lt = shape.matrix2Parent().computeCoord2(0, 0);
-        x.value = lt.x;
-        y.value = lt.y;
-        rotate.value = get_rotation(shape);
-        isLock.value = Boolean(shape.constrainerProportions);
-    } else if (len > 1) {
-        const shape = props.context.selection.selectedShapes[0];
-        const lt = shape.matrix2Root().computeCoord2(0, 0);
-        const frame = shape.frame;
-        const isMixed = is_mixed(props.context.selection.selectedShapes);
-        if (x.value !== mixed) x.value = lt.x;
-        if (y.value !== mixed) y.value = lt.y;
-        if (w.value !== mixed) w.value = Math.max(frame.width, 1);
-        if (isMixed.type === 'mixed' || !isMixed.type) {
-            if (h.value !== mixed) h.value = Math.max(frame.height, 1);
-            if (isMixed.type === 'mixed') {
-                model_disable_state.height = true;
-            }
-        } else {
-            h.value = 0;
-        }
+    const selected = props.context.selection.selectedShapes;
+
+    if (!selected.length) {
+        return;
     }
+
+    const xy = get_xy(selected, mixed);
+    x.value = xy.x;
+    y.value = xy.y;
+    w.value = get_width(selected, mixed);
+    h.value = get_height(selected, mixed);
+    isLock.value = get_constrainer_proportions(selected);
+    rotate.value = get_shapes_rotation(selected, mixed);
 }
 
 const parentSymbolRef = () => {
@@ -143,63 +107,15 @@ function _update_view() {
         check_model_state();
     }
 
-    if (props.context.selection.selectedShapes.length > 1) {
-        check_mixed();
-    }
-
     if (parentSymbolRef()) {
         all_disable();
     } else {
         check_model_state();
     }
 }
-const update_view = debounce(_update_view, 200, { leading: true });
-// 检查是否多值
-function check_mixed() {
-    const isMixed = is_mixed(props.context.selection.selectedShapes);
-    isMixed.x === 'mixed' ? x.value = mixed : x.value = isMixed.x;
-    isMixed.y === 'mixed' ? y.value = mixed : y.value = isMixed.y;
-    isMixed.w === 'mixed' ? w.value = mixed : w.value = isMixed.w;
-    isMixed.rotate === 'mixed' ? rotate.value = mixed : rotate.value = isMixed.rotate;
-    isMixed.constrainerProportions === 'mixed' ? isLock.value = true : isLock.value = (isMixed.constrainerProportions as boolean)!;
-    if (isMixed.type === 'mixed' || !isMixed.type) {
-        isMixed.h === 'mixed' ? h.value = mixed : h.value = isMixed.h;
-        if (isMixed.type === 'mixed') {
-            model_disable_state.height = true;
-            h.value = mixed
-        }
-    } else {
-        h.value = 0;
-        model_disable_state.height = true;
-    }
-}
 
-function radiusValuesMixed(radius: any) {
-    const referenceValue = Object.values(radius)[0];
-    for (const value of Object.values(radius)) {
-        if (value !== referenceValue) return false;
-    }
-    return true;
-}
-function getRectShapeAttr(shape: Shape) {
-    points.value = (shape as RectShape).pointsCount || 0;
-    if (shape instanceof RectShape) {
-        radius.value = (shape as RectShape).getRectRadius();
-        if (!radiusValuesMixed(radius.value) && !isMoreForRadius.value) {
-            multipleValues.value = true
-            radius.value.lt = mixed
-        }
-    } else if (shape instanceof GroupShape ||
-        shape instanceof PathShape ||
-        shape instanceof PathShape2 ||
-        shape instanceof TextShape) {
-        const fixedRadius = shape.fixedRadius ?? 0;
-        radius.value.lt = fixedRadius;
-        radius.value.lb = fixedRadius;
-        radius.value.rt = fixedRadius;
-        radius.value.rb = fixedRadius;
-    }
-}
+const update_view = debounce(_update_view, 200, { leading: true });
+
 function onChangeX(value: string) {
     value = Number.parseFloat(value).toFixed(fix);
     const _x: number = Number.parseFloat(value);
@@ -216,7 +132,6 @@ function onChangeX(value: string) {
         if (page) {
             const editor = props.context.editor4Page(page);
             editor.arrange(actions);
-            check_mixed();
         }
     }
 }
@@ -236,73 +151,64 @@ function onChangeY(value: string) {
         if (page) {
             const editor = props.context.editor4Page(page);
             editor.arrange(actions);
-            check_mixed();
         }
     }
 }
 function onChangeW(value: string) {
-    if (s_length) {
-        set_lines_length(value);
+    value = Number
+        .parseFloat(value)
+        .toFixed(fix);
+
+    const _w: number = Number.parseFloat(value);
+    if (isNaN(_w)) {
         return;
     }
-    value = Number.parseFloat(value).toFixed(fix);
-    const _w: number = Number.parseFloat(value);
-    if (isNaN(_w)) return;
+
+    const page = props.context.selection.selectedPage!;
+
+    const editor = props.context.editor4Page(page);
+
     const selected = props.context.selection.selectedShapes;
-    if (selected.length === 1) {
-        const rate = _w / (w.value as number);
-        const shape = selected[0];
-        if (shape.frame.width.toFixed(fix) != value) {
-            const _h = isLock.value ? Number((rate * (h.value as number)).toFixed(fix)) : shape.frame.height;
-            const e = props.context.editor4Shape(shape)
-            e.expandTo(_w, _h);
-        }
-    } else if (selected.length > 1) {
-        const actions = get_actions_frame_w(props.context.selection.selectedShapes, _w, isLock.value);
-        const page = props.context.selection.selectedPage;
-        if (page) {
-            const editor = props.context.editor4Page(page);
-            editor.setShapesFrame(actions);
-            check_mixed();
-        }
-    }
+
+    editor.modifyShapesWidth(selected, _w);
 }
 function onChangeH(value: string) {
-    value = Number.parseFloat(value).toFixed(fix);
+    value = Number
+        .parseFloat(value)
+        .toFixed(fix);
+
     const _h: number = Number.parseFloat(value);
-    if (isNaN(_h)) return;
-    const selected = props.context.selection.selectedShapes;
-    if (selected.length === 1) {
-        const rate = _h / (h.value as number);
-        const shape = selected[0];
-        if (shape.frame.height.toFixed(fix) !== value) {
-            const _w = isLock.value ? Number((rate * (w.value as number)).toFixed(fix)) : shape.frame.width;
-            const e = props.context.editor4Shape(shape);
-            e.expandTo(_w, _h);
-        }
-    } else if (selected.length > 1) {
-        const actions = get_actions_frame_h(props.context.selection.selectedShapes, _h, isLock.value);
-        const page = props.context.selection.selectedPage;
-        if (page) {
-            const editor = props.context.editor4Page(page);
-            editor.setShapesFrame(actions);
-            check_mixed();
-        }
+    if (isNaN(_h)) {
+        return;
     }
+
+    const page = props.context.selection.selectedPage!;
+
+    const editor = props.context.editor4Page(page);
+
+    const selected = props.context.selection.selectedShapes;
+
+    editor.modifyShapesHeight(selected, _h);
 }
 function lockToggle() {
-    if (s_length) return;
+    if (s_length) {
+        return;
+    }
+
     const val = !isLock.value;
     const actions = get_actions_constrainer_proportions(props.context.selection.selectedShapes, val);
     const page = props.context.selection.selectedPage;
-    if (page) {
-        const editor = props.context.editor4Page(page);
-        editor.setShapesConstrainerProportions(actions);
+    if (!page) {
+        return;
     }
-    isLock.value = val;
+
+    const editor = props.context.editor4Page(page);
+    editor.setShapesConstrainerProportions(actions);
 }
 function fliph() {
-    if (model_disable_state.flipHorizontal) return;
+    if (model_disable_state.flipHorizontal) {
+        return;
+    }
     const selected = props.context.selection.selectedShapes;
     if (selected.length === 1) {
         const e = props.context.editor4Shape(selected[0]);
@@ -317,7 +223,9 @@ function fliph() {
     }
 }
 function flipv() {
-    if (model_disable_state.filpVertical) return;
+    if (model_disable_state.filpVertical) {
+        return;
+    }
     const selected = props.context.selection.selectedShapes;
     if (selected.length === 1) {
         const e = props.context.editor4Shape(selected[0]);
@@ -331,23 +239,17 @@ function flipv() {
         }
     }
 }
-function set_lines_length(value: string) {
-    const selected = props.context.selection.selectedShapes;
-    const page = props.context.selection.selectedPage;
-    value = Number.parseFloat(value).toFixed(fix);
-    const _l: number = Number.parseFloat(value);
-    if (isNaN(_l)) return;
-    if (page) {
-        const editor = props.context.editor4Page(page);
-        editor.setLinesLength(selected, _l);
-    }
-}
 function onChangeRotate(value: string) {
-    value = Number.parseFloat(value).toFixed(fix);
+    value = Number
+        .parseFloat(value)
+        .toFixed(fix);
+
     const newRotate: number = Number.parseFloat(value);
+
     if (isNaN(newRotate)) {
         return;
     }
+
     const selected = props.context.selection.selectedShapes;
     if (!selected.length) {
         return;
@@ -359,10 +261,8 @@ function onChangeRotate(value: string) {
     }
 
     const editor = props.context.editor4Page(page);
+
     editor.setShapesRotate(selected, newRotate);
-    if (selected.length > 1) {
-        check_mixed();
-    }
 }
 function adapt() {
     const selected = props.context.selection.selectedShapes;
@@ -393,27 +293,36 @@ const RADIUS_SETTING = [
     ShapeType.Text
 ];
 function layout() {
-    s_adapt = false, s_flip = true, s_radius = false, s_length = false;
+    reset_layout();
     const selected = props.context.selection.selectedShapes;
     if (selected.length === 1) {
         const shape = selected[0];
-        s_radius = hasRadiusShape(shape, RADIUS_SETTING), s_adapt = shape.type === ShapeType.Artboard;
+        s_radius = hasRadiusShape(shape, RADIUS_SETTING);
+        s_adapt = shape.type === ShapeType.Artboard;
+        
         if (s_radius) {
             modify_multi_radius(shape);
-            getRectShapeAttr(shape);
         }
+
         if (shape.type === ShapeType.Table || shape.type === ShapeType.Cutout) {
             s_flip = false;
         }
+
         if (is_straight(shape) || shape.type === ShapeType.Contact) {
             s_length = true;
         }
     } else {
-        if (selected.find(i => i instanceof RectShape)) {
+        if (selected.find(i => i instanceof RectShape || i instanceof ImageShape || i instanceof Artboard)) {
             s_radius = true;
         }
     }
     reflush.value++;
+}
+function reset_layout() {
+    s_adapt = false;
+    s_flip = true;
+    s_radius = false;
+    s_length = false;
 }
 function check_model_state() {
     reset_model_state();
@@ -449,9 +358,18 @@ function all_disable() {
     model_disable_state.filpVertical = true, model_disable_state.flipHorizontal = true;
     model_disable_state.radius = true;
 }
-function workspace_watcher(t?: any) {
-    if (t === WorkSpace.CLAC_ATTRI) check_mixed();
+
+function watch_shapes() {
+    watchedShapes.forEach((v, k) => {
+        v.unwatch(calc_attri);
+        watchedShapes.delete(k);
+    })
+    const selectedShapes = props.context.selection.selectedShapes;
+    if (selectedShapes.length > 0) {
+        selectedShapes.forEach((v) => { v.watch(calc_attri); });
+    }
 }
+
 function selection_wather(t: number) {
     if (t !== Selection.CHANGE_SHAPE) {
         return;
@@ -466,11 +384,9 @@ onMounted(() => {
     update_view();
     calc_attri();
     props.context.selection.watch(selection_wather);
-    props.context.workspace.watch(workspace_watcher);
 })
 onUnmounted(() => {
     props.context.selection.unwatch(selection_wather);
-    props.context.workspace.unwatch(workspace_watcher);
 })
 </script>
 

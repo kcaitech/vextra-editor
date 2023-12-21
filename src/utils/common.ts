@@ -257,3 +257,7 @@ export function shapes_organize(shapes: Shape[]) {
   }
   return result;
 }
+
+export function get_input_value(value: string, origin?: number | string, min?: number | string, max?: number | string) {
+
+}
