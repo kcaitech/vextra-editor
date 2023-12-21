@@ -7,7 +7,7 @@ import { ClientXY, PageXY } from '@/context/selection';
 import { useRoute } from 'vue-router';
 import { useI18n } from 'vue-i18n';
 import { searchCommentShape } from '@/utils/comment';
-import { Page, Shape } from "@kcdesign/data";
+import { GroupShape, Page, Shape } from "@kcdesign/data";
 import { Comment } from '@/context/comment';
 import { DocCommentOpData, DocCommentOpType } from "@/communication/modules/doc_comment_op"
 
@@ -313,11 +313,11 @@ const saveShapeCommentXY = () => {
 }
 
 // 递归函数，用于将数组扁平化处理
-function flattenShapes(shapes: any[]) { 
-    return shapes.reduce((result: any, item: any) => {
-        if (Array.isArray(item.childs)) {
+function flattenShapes(shapes: any) {
+    return shapes.reduce((result: any, item: Shape) => {
+        if (Array.isArray((item as GroupShape).childs)) {
             // 如果当前项有子级数组，则递归调用flattenArray函数处理子级数组
-            result = result.concat(flattenShapes(item.childs));
+            result = result.concat(flattenShapes((item as GroupShape).childs));
         }
         return result.concat(item);
     }, []);

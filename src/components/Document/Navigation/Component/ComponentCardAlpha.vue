@@ -1,7 +1,7 @@
 <script setup lang="ts">
 import {h, nextTick, onMounted, onUnmounted, ref} from 'vue';
 import comsMap from '@/components/Document/Content/comsmap';
-import {GroupShape} from "@kcdesign/data";
+import {GroupShape, ShapeType} from "@kcdesign/data";
 import {renderSymbolPreview as r} from "@kcdesign/data";
 import {initCommonShape} from "@/components/Document/Content/common";
 import {Context} from '@/context';
@@ -43,7 +43,7 @@ function check_selected_status() {
 }
 
 function check_render_item() {
-    if (!props.data.isSymbolUnionShape) return;
+    if (props.data.type !== ShapeType.SymbolUnion) return;
     render_item.value = (props.data?.childs[0] as GroupShape) || props.data;
     props.data.unwatch(shape_watcher);
     render_item.value.watch(shape_watcher);

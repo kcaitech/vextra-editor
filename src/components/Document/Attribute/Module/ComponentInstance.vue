@@ -49,7 +49,9 @@ const untie = () => {
     }
 }
 const editComps = () => {
-    const refId = props.context.selection.selectedShapes[0].refId;
+    const refShape = props.context.selection.selectedShapes[0];
+    const refId = refShape && (refShape instanceof SymbolRefShape) ? refShape.refId : undefined
+    if (!refId) return;
     const shape = get_shape_within_document(props.context, refId)
     if (shape) {
         shape_track(props.context, shape)

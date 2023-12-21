@@ -254,7 +254,7 @@ function for_path_shape(shape: PathShape) {
 }
 function modify_controller_type(shapes: Shape[],) {
     if (shapes.length === 1) {
-        if (!permIsEdit(props.context)) {
+        if (!permIsEdit(props.context) || props.context.tool.isLable) {
             controllerType.value = ControllerType.Readonly;
             return;
         }

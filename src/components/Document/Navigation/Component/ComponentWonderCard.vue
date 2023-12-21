@@ -1,12 +1,12 @@
 <script setup lang="ts">
 import { h } from 'vue';
 import comsMap from '@/components/Document/Content/comsmap';
-import { GroupShape } from "@kcdesign/data";
+import { SymbolShape } from "@kcdesign/data";
 import { renderSymbolPreview as r } from "@kcdesign/data";
 import { initCommonShape } from "@/components/Document/Content/common";
 
 interface Props {
-    data: GroupShape
+    data: SymbolShape
 }
 const props = defineProps<Props>();
 const common = initCommonShape(props);

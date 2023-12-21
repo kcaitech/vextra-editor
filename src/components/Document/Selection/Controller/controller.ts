@@ -161,6 +161,17 @@ export function useControllerCustom(context: Context, i18nT: Function) {
         asyncTransfer.stick(x, y);
     }
 
+    function abortTransact() {
+        if (asyncTransfer) {
+            asyncTransfer.abort();
+            asyncTransfer = undefined;
+        }
+
+        if (asyncPathEditor) {
+            asyncPathEditor.abort();
+            asyncPathEditor = undefined;
+        }
+    }
 
     function keyup(event: KeyboardEvent) {
         if (event.target instanceof HTMLInputElement) { // 不处理输入框内的键盘事件
@@ -198,9 +209,15 @@ export function useControllerCustom(context: Context, i18nT: Function) {
         ) {
             return;
         }
+
         if (workspace.isPageDragging) {
             return;
         }
+
+        matrix.reset(workspace.matrix.inverse);
+
+        modify_down_position(e, context, startPosition, startPositionOnPage, matrix);
+
         if (is_ctrl_element(e, context)) {
             if (timer) {
                 handleDblClick();
@@ -225,8 +242,7 @@ export function useControllerCustom(context: Context, i18nT: Function) {
         }
 
         shapes = selection.selectedShapes;
-        matrix.reset(workspace.matrix.inverse);
-        modify_down_position(e, context, startPosition, startPositionOnPage, matrix);
+        
         wheel = fourWayWheel(context, undefined, startPositionOnPage);
         workspace.setCtrl('controller');
         add_move_and_up_for_document(mousemove, mouseup);
@@ -236,7 +252,9 @@ export function useControllerCustom(context: Context, i18nT: Function) {
         if (e.buttons !== 1) {
             return;
         }
+
         const mousePosition: ClientXY = get_current_position_client(context, e);
+
         if (isDragging && wheel && asyncTransfer && !workspace.isEditing) {
             speed = get_speed(t_e || e, e);
             t_e = e;
@@ -304,13 +322,17 @@ export function useControllerCustom(context: Context, i18nT: Function) {
             context.assist.notify(Asssit.CLEAR);
             return update_type;
         }
-        if (!offset_map) return update_type;
+        if (!offset_map) {
+            return update_type;
+        }
         let need_multi = 0;
         const stick = { dx: 0, dy: 0, sticked_x: false, sticked_y: false };
         const len = shapes.length;
         const shape = shapes[0];
         const target = gen_assist_target(context, shapes, len > 1, offset_map, pe);
-        if (!target) return update_type;
+        if (!target) {
+            return update_type;
+        }
         if (stickedX) {
             if (is_rid_stick(context, ps.x, pe.x)) { // 挣脱吸附
                 stickedX = false;
@@ -431,6 +453,10 @@ export function useControllerCustom(context: Context, i18nT: Function) {
             return;
         }
 
+        matrix.reset(workspace.matrix.inverse);
+
+        modify_down_position(start, context, startPosition, startPositionOnPage, matrix);
+
         pre_to_translate(start);
         workspace.preToTranslating(false);
         need_update_comment = true;
@@ -532,6 +558,7 @@ export function useControllerCustom(context: Context, i18nT: Function) {
         document.removeEventListener('keyup', keyup);
         document.removeEventListener('mousedown', mousedown);
         timerClear();
+        abortTransact(); // 已经开启的事务需要关闭
     }
 
     return { isDblClick, isDrag, init, dispose };

@@ -247,6 +247,7 @@ keydownHandler['KeyX'] = function (event: KeyboardEvent, context: Context) {
         context.workspace.notify(WorkSpace.DELETE_LINE); // 下划线
         return;
     }
+    
     if (is_ctrl) {
         context.workspace.clipboard
             .cut()
@@ -255,8 +256,10 @@ keydownHandler['KeyX'] = function (event: KeyboardEvent, context: Context) {
                     return;
                 }
                 context.selection.resetSelectShapes(); // 剪切图形
-            })
+            });
+        return;
     }
+    context.tool.setAction(Action.AddContact); // 连接线功能
 }
 
 keydownHandler['KeyY'] = function (event: KeyboardEvent, context: Context) { }
