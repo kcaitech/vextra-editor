@@ -117,6 +117,11 @@ function point_mousedown(event: MouseEvent, slice: Slice) {
     move = point_mousemove;
 }
 
+function get_index() {
+    const d = props.shape.from ? 2 : 1;
+    return drag_index === 0 ? drag_index + d : drag_index;
+}
+
 function point_mousemove(event: MouseEvent) {
     const workspace = props.context.workspace;
     const root = workspace.root;
@@ -128,7 +133,7 @@ function point_mousemove(event: MouseEvent) {
         const p2 = submatrix.computeCoord3(mouseOnClient);
 
         let delta = 0;
-        const _idx = drag_index === 0 ? drag_index + 2 : drag_index;
+        const _idx = get_index();
 
         if (drag_type === 'hor') {
             delta = p2.y - p1.y;
