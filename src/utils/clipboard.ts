@@ -1,7 +1,7 @@
 import {
     export_shape, import_shape_from_clipboard,
     Shape, ShapeType, AsyncCreator, ShapeFrame, GroupShape, TextShape, Text,
-    export_text, import_text, TextShapeEditor, ImageShape, transform_data
+    export_text, import_text, TextShapeEditor, ImageShape, transform_data, ContactShape, CurvePoint, PathShape, BasicArray
 } from '@kcdesign/data';
 import { Context } from '@/context';
 import { PageXY } from '@/context/selection';
@@ -11,7 +11,6 @@ import { Action } from '@/context/tool';
 import { is_box_outer_view2 } from './common';
 import { compare_layer_3 } from './group_ungroup';
 import { Document } from '@kcdesign/data';
-import { en } from 'element-plus/es/locale';
 
 interface SystemClipboardItem {
     type: ShapeType
@@ -56,16 +55,20 @@ export class Clipboard {
             }
         } else { // 写入图层数据
             let shapes = compare_layer_3(this.context.selection.selectedShapes, -1); // 处理层级
-
+            
             if (!shapes.length) {
                 return false;
             }
 
             // 记录每个图形相对root位置
             const position_map: Map<string, PageXY> = new Map();
+            const points_map: Map<string, CurvePoint[]> = new Map();
             for (let i = 0, len = shapes.length; i < len; i++) {
                 const shape = shapes[i];
                 position_map.set(shape.id, shape.matrix2Root().computeCoord2(0, 0));
+                if (shape instanceof ContactShape) {
+                    points_map.set(shape.id, shape.getPoints());
+                }
             }
 
             // 先导出将要写入的数据
@@ -78,11 +81,15 @@ export class Clipboard {
             for (let i = 0, len = shapes.length; i < len; i++) {
                 const shape = shapes[i];
                 const root_frame = position_map.get(shape.id);
-                if (!root_frame) {
-                    continue;
+                if (root_frame) {
+                    shape.frame.x = root_frame.x;
+                    shape.frame.y = root_frame.y;
                 }
-                shape.frame.x = root_frame.x;
-                shape.frame.y = root_frame.y;
+
+                const points = points_map.get(shape.id);
+                if (points) {
+                    (shape as PathShape).points = points as BasicArray<CurvePoint>;
+                }
             }
 
             // 转义修改好的数据并写入
