@@ -338,8 +338,8 @@ function show_types() {
         popoverVisible.value = true;
         nextTick(() => {
             if (popover.value && search_el.value) {
-                popover.value.style.left = search_el.value.offsetLeft - 8 + 'px';
-                popover.value.style.top = search_el.value.offsetHeight + 54 + 'px';
+                popover.value.style.left = 6 + 'px';
+                popover.value.style.top = search_el.value.offsetHeight + 26 + 'px';
                 popover.value.style.height = 'auto';
             }
         })
@@ -639,19 +639,19 @@ onUnmounted(() => {
         }
 
         .blocks {
-            padding: 2px 13px;
+            padding: 0 6px;
 
             .block-wrap {
                 display: inline-block;
                 border-radius: 4px;
-                background-color: rgba($color: #1878f5, $alpha: 1);
+                background-color: rgba($color: #1878F5, $alpha: 1);
                 max-width: 96px;
                 padding: 2px 4px;
-                height: 20px;
+                height: 22px;
                 font-size: var(--font-default-fontsize);
                 box-sizing: border-box;
-                margin-right: 4px;
-                margin-bottom: 4px;
+                margin-right: 3px;
+                margin-top: 4px;
                 overflow: hidden;
 
                 .block {
@@ -718,20 +718,17 @@ onUnmounted(() => {
 
     .popover {
         position: absolute;
-        top: 0px;
-        left: 36px;
-        top: 50px;
-        height: 20px;
+        top: 42px;
+        left: 6px;
         color: #ffffff;
         z-index: 999;
-        width: 202px;
+        width: 106px;
         font-size: var(--font-default-fontsize);
-        background-color: var(--theme-color-anti);
-        box-shadow: 2px 2px 10px rgba(0, 0, 0, 0.2);
-        border: 1px solid #ccc;
-        border-radius: 4px;
+        background-color: #fff;
+        border: 1px solid #EBEBEB;
+        border-radius: 6px;
         outline: none;
-        padding: var(--default-padding-half) 0;
+        padding: 4px 0;
         transition: 0.3s;
     }
 }

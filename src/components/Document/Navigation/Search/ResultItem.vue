@@ -1,11 +1,12 @@
 <script setup lang="ts">
 import { ref, nextTick, InputHTMLAttributes, onMounted, onUnmounted, watch, onUpdated } from "vue";
-import { Shape, ShapeType } from '@kcdesign/data';
+import { Shape, ShapeType, SymbolUnionShape } from '@kcdesign/data';
 import { Context } from "@/context";
 import { Navi } from "@/context/navigate";
 import { is_parent_locked, is_parent_unvisible, is_valid_data } from "@/utils/shapelist";
 import { is_state } from "@/utils/symbol";
 import { Selection } from "@/context/selection";
+import { is_component_class } from "@/utils/listview";
 
 export interface ItemData {
     id: string
@@ -217,6 +218,19 @@ const setVisible = (e: MouseEvent) => {
     editor.toggleVisible();
 }
 
+function icon_class() {
+    const shape = props.data.shape;
+    if (shape.type === ShapeType.Symbol) {
+        if (shape instanceof SymbolUnionShape) {
+            return 'pattern-symbol-union'; 
+        } else {
+            return 'pattern-component';
+        }
+    } else {
+        return `pattern-${shape.type}`;
+    }
+}
+
 const topAngle = ref(false);
 const bottomAngle = ref(false);
 const resultItem = ref<HTMLDivElement | null>(null);
@@ -238,6 +252,10 @@ const current_node_radius = () => {
             bottomAngle.value = false;
         }
     }
+}
+
+function is_component() {
+    return is_component_class(props.data.shape);
 }
 
 const hovered = ref(false);
@@ -271,10 +289,10 @@ onUnmounted(() => {
 </script>
 
 <template>
-    <div ref="resultItem" class="contain" :class="{ container: true, selected:  props.data.selected, selectedChild: selectedChild(), hovered: hovered,firstAngle: topAngle, lastAngle: bottomAngle }" @click="selectShape"
+    <div ref="resultItem" class="contain" :class="{ container: true, component: is_component(), selected:  props.data.selected, selectedChild: selectedChild(), hovered: hovered,firstAngle: topAngle, lastAngle: bottomAngle }" @click="selectShape"
          @mousemove="hoverShape" @mouseleave="unHoverShape" @mousedown="mousedown">
-        <div class="container-svg" @dblclick="toggleContainer" :style="{ opacity: !visible_status ? 1 : .3 }">
-            <svg-icon class="svg" :icon-class="`pattern-${props.data.shape.type}`"></svg-icon>
+        <div class="container-svg" @dblclick="toggleContainer" :style="{ opacity: !visible_status ? 1 : .3 }" :class="{ color: !is_component() }">
+            <svg-icon class="svg" :icon-class="icon_class()"></svg-icon>
         </div>
         <div class="text" :class="{ container: true, selected: false }"
             :style="{ opacity: !visible_status ? 1 : .3, display: isInput ? 'none' : '' }">
@@ -348,7 +366,6 @@ div.container-svg {
     .svg {
         width: 13px;
         height: 13px;
-        color: #595959;
     }
 }
 
@@ -374,7 +391,7 @@ div.text {
         color: #262626;
 
         .active {
-            color: var(--active-color);
+            font-weight: bold;
         }
     }
 }
@@ -453,6 +470,17 @@ div .rename {
 .hovered {
     border-radius: var(--default-radius);
     background-color: #efefef;
+}
+.component {
+    color: var(--component-color);
+    &>.text>.txt,
+    &>.text>.tool_icon {
+        color: var(--component-color);
+    }
+}
+
+.color {
+    color:#595959;
 }
 
 .firstAngle {

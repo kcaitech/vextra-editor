@@ -86,7 +86,9 @@ const tool_watcher = (t: number) => {
 }
 const stopMouseDown = (e: MouseEvent) => {
     const action = props.context.tool.action;
-    if (action === Action.AddComment) {
+    const comment = props.context.comment;
+
+    if (action === Action.AddComment && !comment.isCommentInputMove) {
         e.stopPropagation();
     }
 }
