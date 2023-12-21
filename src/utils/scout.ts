@@ -199,17 +199,33 @@ export function finder(context: Context, scout: Scout, g: Shape[], position: Pag
     let result: Shape | undefined;
     for (let i = g.length - 1; i > -1; i--) { // 从最上层开始往下找(z-index：大 -> 小)
         const item = g[i];
-        if (!canBeTarget(item)) continue; // 隐藏图层或已锁定
-        if (isShapeOut(context, item)) continue; // 屏幕外图形，这里会判断每个图形是否在屏幕内，本身消耗较小，另外可以避免后面的部分不必要的更大消耗
+        if (!canBeTarget(item)) {
+            continue; // 隐藏图层或已锁定
+        }
+
+        if (item.type !== ShapeType.Contact && isShapeOut(context, item)) {
+            continue; // 屏幕外图形，这里会判断每个图形是否在屏幕内，本身消耗较小，另外可以避免后面的部分不必要的更大消耗
+        }
+
         if (item.type === ShapeType.SymbolUnion) { // 组件状态集合
             result = finder_symbol_union(context, scout, item as GroupShape, position, selected, isCtrl);
-            if (isTarget(scout, item, position)) break; // 只要进入集合，有无子元素选中都应该break
+            
+            if (isTarget(scout, item, position)) {
+                break; // 只要进入集合，有无子元素选中都应该break
+            }
         } else if (item.type === ShapeType.Symbol || item.type === ShapeType.SymbolRef) { // 组件或引用
             result = finder_symbol(context, scout, item as SymbolShape, position, selected, isCtrl);
         }
-        if (result) break;
+
+        if (result) {
+            break;
+        }
+
         const isItemIsTarget = isTarget(scout, item, position);
-        if (!isItemIsTarget) continue; // 以下图形类型自身不在感应区域内，则不再检索子节点
+        if (!isItemIsTarget) {
+            continue; // 以下图形类型自身不在感应区域内，则不再检索子节点
+        }
+
         if (item.type === ShapeType.Artboard) {
             result = finder_artboard(context, scout, item as GroupShape, position, selected, isCtrl);
         } else if (item.type === ShapeType.Group) {
@@ -217,7 +233,10 @@ export function finder(context: Context, scout: Scout, g: Shape[], position: Pag
         } else {
             result = item;
         }
-        if (result) break;
+
+        if (result) {
+            break;
+        }
     }
     return result;
 }
@@ -302,7 +321,6 @@ export function finder_contact(scout: Scout, g: Shape[], position: PageXY, selec
                 continue;
             }
             const c = item instanceof SymbolRefShape ? (item.naviChilds || []) : (item as GroupShape).childs as Shape[];
-            
             if (c.length) {
                 result.push(...finder_contact(scout, c, position, selected, result));
                 if (result.length) {
