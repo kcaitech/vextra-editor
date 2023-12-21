@@ -228,6 +228,7 @@ onUnmounted(() => {
     height: 22px;
     display: flex;
     align-items: center;
+    justify-content: flex-end;
 
     .rele_svg {
         width: 22px;

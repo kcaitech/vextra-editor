@@ -1,5 +1,5 @@
 <script setup lang="ts">
-import { ref, nextTick, InputHTMLAttributes, onMounted, onUnmounted, watch } from "vue";
+import { ref, nextTick, InputHTMLAttributes, onMounted, onUnmounted, watch, onUpdated } from "vue";
 import { Shape, ShapeType } from '@kcdesign/data';
 import { Context } from "@/context";
 import { Navi } from "@/context/navigate";
@@ -217,6 +217,29 @@ const setVisible = (e: MouseEvent) => {
     editor.toggleVisible();
 }
 
+const topAngle = ref(false);
+const bottomAngle = ref(false);
+const resultItem = ref<HTMLDivElement | null>(null);
+const current_node_radius = () => {
+    if (resultItem.value) {
+        const isSelect = resultItem.value.classList.contains('selected') || resultItem.value.classList.contains('selectedChild');
+        const previous = resultItem.value.previousElementSibling;
+        const next = resultItem.value.nextElementSibling;
+        const p_selected = previous && previous.classList.contains('selected') || previous && previous.classList.contains('selectedChild');
+        const n_selected = next && next.classList.contains('selected') || next && next.classList.contains('selectedChild');
+        if (!p_selected && isSelect) {
+            topAngle.value = true;
+        } else if (p_selected) {
+            topAngle.value = false;
+        }
+        if (!n_selected && isSelect) {
+            bottomAngle.value = true;
+        } else if (n_selected) {
+            bottomAngle.value = false;
+        }
+    }
+}
+
 const hovered = ref(false);
 const selectedWatcher = (t?: any) => {
     if (t === Selection.CHANGE_SHAPE_HOVER) {
@@ -229,6 +252,10 @@ const selectedWatcher = (t?: any) => {
         }
     }
 }
+
+onUpdated(() => {
+    nextTick(current_node_radius);
+})
 
 onMounted(() => {
     updater();
@@ -244,8 +271,8 @@ onUnmounted(() => {
 </script>
 
 <template>
-    <div class="contain" :class="{ container: true, selected: false, selectedChild: selectedChild(), hovered: hovered }" @click="selectShape"
-        @mousemove="hoverShape" @mouseleave="unHoverShape" @mousedown="mousedown">
+    <div ref="resultItem" class="contain" :class="{ container: true, selected:  props.data.selected, selectedChild: selectedChild(), hovered: hovered,firstAngle: topAngle, lastAngle: bottomAngle }" @click="selectShape"
+         @mousemove="hoverShape" @mouseleave="unHoverShape" @mousedown="mousedown">
         <div class="container-svg" @dblclick="toggleContainer" :style="{ opacity: !visible_status ? 1 : .3 }">
             <svg-icon class="svg" :icon-class="`pattern-${props.data.shape.type}`"></svg-icon>
         </div>
@@ -296,13 +323,11 @@ div.container {
 
 div.container.selectedChild {
     z-index: 2;
-    border-radius: 8px;
     background-color: rgba($color: #1878f5, $alpha: 0.08) ;
 }
 
 div.container.selected {
     z-index: 1;
-    border-radius: 8px;
     background-color: rgba($color: #1878F5, $alpha: 0.2);
 }
 
@@ -321,8 +346,8 @@ div.container-svg {
     margin-left: 10px;
 
     .svg {
-        width: 12px;
-        height: 12px;
+        width: 13px;
+        height: 13px;
         color: #595959;
     }
 }
@@ -385,14 +410,14 @@ div .rename {
 
     .tool_lock {
         .svg {
-            width: 12px;
-            height: 12px;
+            width: 13px;
+            height: 13px;
             color: #595959;
         }
 
         .svg-open {
-            width: 12px;
-            height: 12px;
+            width: 13px;
+            height: 13px;
             color: #595959;
         }
 
@@ -408,8 +433,8 @@ div .rename {
         margin-right: 10px;
 
         .svg {
-            width: 12px;
-            height: 12px;
+            width: 13px;
+            height: 13px;
             color: #595959;
         }
 
@@ -428,5 +453,15 @@ div .rename {
 .hovered {
     border-radius: var(--default-radius);
     background-color: #efefef;
+}
+
+.firstAngle {
+    border-top-left-radius: 8px !important;
+    border-top-right-radius: 8px !important;
+}
+
+.lastAngle {
+    border-bottom-left-radius: 8px !important;
+    border-bottom-right-radius: 8px !important;
 }
 </style>

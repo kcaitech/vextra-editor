@@ -89,8 +89,9 @@ function updateData() {
     borders.length = 0;
     mixed.value = false;
     mixed_cell.value = false;
-    const shape = props.shapes[0];
-    if (props.shapes.length === 1 && shape.type !== ShapeType.Group) {
+    const selecteds = props.context.selection.selectedShapes;
+    const shape = selecteds[0];
+    if (selecteds.length === 1 && shape.type !== ShapeType.Group) {
         const table = props.context.tableSelection;
         const is_edting = table.editingCell;
         if (shape.type === ShapeType.Table && table.tableRowStart > -1 || is_edting) {
@@ -128,14 +129,14 @@ function updateData() {
                 borders.unshift(b);
             }
         }
-    } else if (props.shapes.length > 1) {
-        const _bs = get_borders(props.shapes);
+    } else if (selecteds.length > 1) {
+        const _bs = get_borders(selecteds);
         if (_bs === 'mixed') {
             mixed.value = true;
         } else {
             borders.push(..._bs.reverse());
         }
-    } else if (props.shapes.length === 1 && shape.type === ShapeType.Group) {
+    } else if (selecteds.length === 1 && shape.type === ShapeType.Group) {
         const childs = (shape as GroupShape).childs;
         const shapes = flattenShapes(childs).filter(s => s.type !== ShapeType.Group);
         const _bs = get_borders(shapes);

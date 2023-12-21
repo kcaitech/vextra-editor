@@ -363,7 +363,7 @@ onUnmounted(() => {
                 :style="{ transform: props.data.expand ? 'rotate(0deg)' : 'rotate(-90deg)' }"></svg-icon>
         </div>
         <!-- icon -->
-        <div class="container-svg zero-symbol" @dblclick="toggleContainer" :style="{ opacity: !visible_status ? 1 : .3 }">
+        <div class="container-svg zero-symbol" @dblclick="toggleContainer" :style="{ opacity: !visible_status ? 1 : .3 }" :class="{ color: !is_component() }">
             <svg-icon class="svg" :icon-class="icon_class()"></svg-icon>
         </div>
         <!-- 内容描述 -->
@@ -438,11 +438,10 @@ onUnmounted(() => {
         justify-content: center;
         align-items: center;
         margin-right: 3px;
-        color: #595959;
 
         .svg {
-            width: 14px;
-            height: 14px;
+            width: 13px;
+            height: 13px;
         }
     }
 
@@ -495,14 +494,14 @@ onUnmounted(() => {
                 color: #595959;
 
                 .svg {
-                    width: 12px;
-                    height: 12px;
+                    width: 13px;
+                    height: 13px;
                     color: #595959;
                 }
 
                 .svg-open {
-                    width: 12px;
-                    height: 12px;
+                    width: 13px;
+                    height: 13px;
                     color: #595959;
                 }
 
@@ -518,8 +517,8 @@ onUnmounted(() => {
                 margin-right: 10px;
 
                 .svg {
-                    width: 12px;
-                    height: 12px;
+                    width: 13px;
+                    height: 13px;
                     color: #595959;
                 }
 
@@ -582,6 +581,10 @@ onUnmounted(() => {
     &>.text>.tool_icon {
         color: var(--component-color);
     }
+}
+
+.color {
+    color:#595959;
 }
 
 .firstAngle {
