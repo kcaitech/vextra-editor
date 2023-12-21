@@ -1,11 +1,11 @@
 <script lang="ts" setup>
-import {useI18n} from 'vue-i18n';
-import {Context} from '@/context';
+import { useI18n } from 'vue-i18n';
+import { Context } from '@/context';
 import TypeHeader from '../TypeHeader.vue';
-import {onMounted, onUnmounted, ref} from 'vue'
-import {get_shape_within_document, shape_track} from '@/utils/content';
-import {Shape, ShapeType, SymbolRefShape} from '@kcdesign/data';
-import {MoreFilled} from '@element-plus/icons-vue';
+import { onMounted, onUnmounted, ref } from 'vue'
+import { get_shape_within_document, shape_track } from '@/utils/content';
+import { Shape, ShapeType, SymbolRefShape } from '@kcdesign/data';
+import { MoreFilled } from '@element-plus/icons-vue';
 import {
     get_var_for_ref,
     is_able_to_unbind,
@@ -13,19 +13,19 @@ import {
     RefAttriListItem,
     reset_all_attr_for_ref
 } from "@/utils/symbol";
-import {cardmap} from "./InstanceAttrCard/map";
+import { cardmap } from "./InstanceAttrCard/map";
 import Status from "./InstanceAttrCard/IACStatus.vue"
 import Visible from "./InstanceAttrCard/IACVisible.vue"
-import {Selection} from '@/context/selection';
-import {v4} from "uuid";
-import {Menu} from '@/context/menu';
+import { Selection } from '@/context/selection';
+import { v4 } from "uuid";
+import { Menu } from '@/context/menu';
 
 interface Props {
     context: Context
     shapes: SymbolRefShape[]
 }
 
-const {t} = useI18n();
+const { t } = useI18n();
 const props = defineProps<Props>();
 const resetMenu = ref(false);
 const variables = ref<RefAttriListItem[]>([]);
@@ -88,6 +88,8 @@ const updateData = () => {
         if (!result) return;
         variables.value = result.variables;
         visible_variables.value = result.visible_variables;
+        console.log(visible_variables.value[0]);
+
     } else if (props.shapes.length > 1) {
         // todo
     }
@@ -177,12 +179,11 @@ onUnmounted(() => {
             <template #tool>
                 <div class="edit-comps">
                     <div class="edit_svg" @click.stop="editComps" v-if="is_symbolref_disa(props.shapes)">
-                        <svg-icon icon-class="edit-comp"></svg-icon>
+                        <svg-icon icon-class="edit_comp"></svg-icon>
                     </div>
-                    <div class="reset_svg" @click.stop="selectReset">
-                        <el-icon>
-                            <MoreFilled/>
-                        </el-icon>
+                    <div class="reset_svg" @click.stop="selectReset"
+                        :style="{ backgroundColor: resetMenu ? '#EBEBEB' : '' }">
+                        <svg-icon icon-class="reset_comp"></svg-icon>
                         <div class="reset_menu" v-if="resetMenu">
                             <div :class="{ untie, disabled: !untie_state }" @click="untie">
                                 <span>{{ t('compos.untie') }}</span>
@@ -197,19 +198,17 @@ onUnmounted(() => {
         <div>
             <div class="module_container" :style="{ marginBottom: variables.length > 0 ? '10px' : '0' }">
                 <component v-for="item in variables" :key="item.variable.id + props.shapes[0].id"
-                           :is="cardmap.get(item.variable.type) || Status" :context="props.context"
-                           :data="item"></component>
+                    :is="cardmap.get(item.variable.type) || Status" :context="props.context" :data="item"></component>
             </div>
             <div v-if="visible_variables.length" class="visible-var-container">
                 <div class="show">
-                    <div class="title">{{ t('compos.layer_show') }}:</div>
+                    <div class="title">{{ t('compos.layer_show') }}</div>
                     <div class="items-wrap">
                         <component v-for="item in visible_variables" :key="item.variable.id + props.shapes[0].id"
-                                   :is="Visible" :context="props.context"
-                                   :data="(item as RefAttriListItem)"></component>
+                            :is="Visible" :context="props.context" :data="(item as RefAttriListItem)"></component>
                     </div>
                 </div>
-                <div class="place"></div>
+                <!-- <div class="place"></div> -->
             </div>
         </div>
     </div>
@@ -217,50 +216,61 @@ onUnmounted(() => {
 
 <style lang="scss" scoped>
 .edit-comps {
-    width: 44px;
-    height: 22px;
     display: flex;
     align-items: center;
 
     .edit_svg {
-        width: 22px;
-        height: 22px;
+        width: 28px;
+        height: 28px;
         display: flex;
         align-items: center;
         justify-content: center;
+        border-radius: 6px;
+        box-sizing: border-box;
 
-        > svg {
-            width: 50%;
-            height: 50%;
+        >svg {
+            width: 100%;
+            height: 100%;
+        }
+
+        &:hover {
+            background-color: #EBEBEB;
         }
     }
 
     .reset_svg {
         position: relative;
-        width: 22px;
-        height: 22px;
+        width: 28px;
+        height: 28px;
         display: flex;
         align-items: center;
         justify-content: center;
+        border-radius: 6px;
+        box-sizing: border-box;
 
-        > svg {
-            width: 50%;
-            height: 50%;
+        >svg {
+            width: 100%;
+            height: 100%;
+        }
+
+        &:hover {
+            background-color: #EBEBEB;
         }
 
         .reset_menu {
             position: absolute;
-            top: 25px;
+            top: 28px;
             right: 0;
             width: 150px;
-            padding: 8px 0;
+            padding: 4px 0;
+            border: 1px solid #EBEBEB;
             background-color: #fff;
-            border-radius: 2px;
-            box-shadow: 1px 1px 5px rgba(0, 0, 0, 0.2);
+            border-radius: 6px;
+            box-shadow: 0px 2px 10px 0px rgba(0, 0, 0, 0.08);
             z-index: 100;
 
             .untie {
-                height: 30px;
+                height: 32px;
                 width: 100%;
                 display: flex;
                 align-items: center;
@@ -269,8 +279,7 @@ onUnmounted(() => {
                 box-sizing: border-box;
 
                 &:hover {
-                    background-color: var(--active-color);
-                    color: #fff;
+                    background-color: #F5F5F5;
                 }
             }
 
@@ -290,15 +299,19 @@ onUnmounted(() => {
 .visible-var-container {
     display: flex;
     width: 100%;
+    line-height: 20px;
+    margin-bottom: 8px;
 
     .show {
         display: flex;
-        width: calc(100% - 22px);
+        align-items: flex-start;
+        width: 100%;
+        gap: 12px;
 
         .title {
+            color: #595959;
             width: 40%;
-            line-height: 26px;
-            font-weight: 600;
+            line-height: 20px;
             padding-right: 10px;
         }
 

@@ -82,14 +82,14 @@ const selected_watcher = (t: number) => {
 }
 
 function selcet(index: number) {
-    if(index === props.data.values.length - 1) {
+    if (index === props.data.values.length - 1) {
         editAttrValue.value = true;
         attrValueInput.value = '新的值';
         nextTick(() => {
             (revalueInput.value as HTMLInputElement).focus();
             (revalueInput.value as HTMLInputElement).select();
         })
-    }else {
+    } else {
         const val = props.data.values[index];
         save_change(val);
     }
@@ -124,7 +124,7 @@ onUnmounted(() => {
                 <div class="state_value" v-if="!editAttrValue" @dblclick="onRevalue">
                     <div class="input" @mouseenter.stop="active = true" @mouseleave.stop="active = false">
                         <span>{{ statusValue }}</span>
-                        <el-icon @click.stop="showMenu" class="status-icon-down" :class="{active: active}">
+                        <el-icon @click.stop="showMenu" class="status-icon-down" :class="{ active: active }">
                             <ArrowDown
                                 :style="{ transform: selectoption ? 'rotate(180deg)' : 'rotate(0deg)', transition: '0.3s' }" />
                         </el-icon>
@@ -137,7 +137,7 @@ onUnmounted(() => {
                         @keydown.stop="onEditAttrValue" />
                 </div>
             </div>
-            <div class="delete"></div>
+            <!-- <div class="delete"></div> -->
         </div>
     </div>
 </template>
@@ -145,30 +145,29 @@ onUnmounted(() => {
 .module_state_item {
     display: flex;
     flex-direction: column;
-    margin-bottom: 3px;
+    min-height: 44px;
 
     .module_con {
         display: flex;
         align-items: center;
         justify-content: space-between;
-        height: 30px;
     }
 
     .state_item {
         display: flex;
         align-items: center;
-        width: calc(100% - 22px);
-        height: 30px;
+        // width: calc(100% - 22px);
+        width: 100%;
 
         .state_name {
             display: flex;
             align-items: center;
             width: 40%;
-            height: 100%;
             box-sizing: border-box;
             padding-right: 10px;
 
             span {
+                color: #595959;
                 overflow: hidden;
                 text-overflow: ellipsis;
                 white-space: nowrap;
@@ -179,10 +178,9 @@ onUnmounted(() => {
             position: relative;
             display: flex;
             align-items: center;
-            border-radius: 4px;
+            border-radius: 6px;
             width: 60%;
             flex: 1;
-            height: 100%;
             background-color: var(--grey-light);
 
             >svg {
@@ -251,6 +249,7 @@ onUnmounted(() => {
         height: 22px;
     }
 }
+
 .active {
     background-color: rgba($color: #000000, $alpha: 0.08);
 }
