@@ -89,7 +89,8 @@ onUnmounted(() => {
 </script>
 
 <template>
-    <div class="pageItem" :class="{ container: true, 'right-target': props.data.rightTarget && !props.data.selected }"
+    <div class="pageItem"
+        :class="{ container: true, 'right-target': props.data.rightTarget && !props.data.selected, select: isInput }"
         @mousedown="onMouseDown">
         <div class="ph">
             <svg-icon v-if="props.data.selected" icon-class="page-select"></svg-icon>
@@ -104,13 +105,13 @@ onUnmounted(() => {
 
 <style scoped lang="scss">
 .container {
-    height: 36px;
+    height: 32px;
     width: calc(100% - 6px);
-    line-height: 36px;
+    line-height: 32px;
     font-weight: 500;
     color: var(--left-font-color);
     background-color: var(--left-navi-bg-color);
-    font-size: 14px;
+    font-size: 12px;
     text-overflow: ellipsis;
     white-space: nowrap;
     overflow: visible;
@@ -123,13 +124,13 @@ onUnmounted(() => {
     .item {
         display: flex;
         align-items: center;
-        width: calc(100% - 34px);
+        width: calc(100% - 46px);
         position: relative;
 
         >.title {
             width: 100%;
             height: 100%;
-            font-size: 14px;
+            font-size: 12px;
             text-overflow: ellipsis;
             white-space: nowrap;
             overflow: hidden;
@@ -139,7 +140,7 @@ onUnmounted(() => {
 
 div.container:hover {
     cursor: default;
-    background-color: #F5F5F5;
+    background-color: #efefef;
 }
 
 div.container.right-target {
@@ -147,7 +148,9 @@ div.container.right-target {
 }
 
 .ph {
-    width: 28px;
+    padding-left: 15px;
+    box-sizing: border-box;
+    width: 40px;
     height: 100%;
     display: flex;
     align-items: center;
@@ -162,17 +165,15 @@ div.container.right-target {
 div .rename {
     flex: 1;
     width: 100%;
-    height: 26px;
+    height: 24px;
     font-size: var(--font-default-fontsize);
     text-overflow: ellipsis;
     white-space: nowrap;
     overflow: hidden;
-    padding: 0 6px;
-    border: 1px solid var(--left-navi-button-select-color);
+    padding-left: 6px;
     border: none;
     outline: none;
-    border-radius: var(--default-radius);
-    background-color: #F5F5F5;
+    border-radius: 2px;
 }
 
 .items-wrap {
@@ -185,5 +186,9 @@ div .rename {
 
 .selected {
     color: #000;
+}
+
+.select {
+    background-color: rgba($color: #1878F5, $alpha: 0.2) !important;
 }
 </style>

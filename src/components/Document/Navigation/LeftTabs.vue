@@ -79,6 +79,8 @@ const showHiddenLeft = () => {
 }
 const tool_watch = (t: number) => {
     if (t === Tool.COMPONENT) {
+        console.log("tool_watch", t);
+        
         if (!props.showLeft) showHiddenLeft();
         currentTab.value = 'Comps';
         props.context.navi.set_current_navi_module(currentTab.value);

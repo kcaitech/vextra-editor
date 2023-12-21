@@ -526,7 +526,7 @@ onUnmounted(() => {
         </div>
       </div>
       <div class="list-wrap">
-        <ListView v-if="valid_result_by_shape" :source="source_by_shape" :item-view="ResultItem" :item-height="30"
+        <ListView v-if="valid_result_by_shape" :source="source_by_shape" :item-view="ResultItem" :item-height="32"
           :item-width="0" :first-index="0" :context="props.context" @selectshape="selectShape" @hovershape="hoverShape"
           @unhovershape="unHovershape" @scrolltoview="shapeScrollToContentView_1" @rename="rename" @isRead="isRead" @isLock="isLock" @item-mousedown="list_mousedown" orientation="vertical">
         </ListView>

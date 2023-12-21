@@ -700,7 +700,7 @@ onUnmounted(() => {
             position: absolute;
             border: 2px solid var(--active-color);
             width: calc(100% - 6px);
-            height: 36px;
+            height: 32px;
             box-sizing: border-box;
             border-radius: 2px;
         }
