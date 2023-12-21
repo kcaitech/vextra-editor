@@ -1,4 +1,4 @@
-import { ArtboradView, DViewCtx, EL, PropsType } from "@kcdesign/data";
+import { ArtboradView, DViewCtx, EL, PropsType, stringh } from "@kcdesign/data";
 import { batchSetAttribute, createElement, elpatch, setAttribute } from "./patch";
 
 export class ArtboradDom extends (ArtboradView) {
@@ -39,8 +39,6 @@ export class ArtboradDom extends (ArtboradView) {
             this.m_save_render.reset(this.eltag, this.elattr, this.elchilds);
             this.m_save_render.el = this.el;
         }
-        // 当前是图片且没有修改要更新时
-        // todo
         return version;
     }
 
@@ -56,48 +54,49 @@ export class ArtboradDom extends (ArtboradView) {
         if (!((this.m_image_version !== this.m_save_version || this.m_childs_changed || force))) {
             return false;
         }
-        //     const svg = exportInnerSvg(props.data);
-        //     const href = "data:image/svg+xml," + ((svg.replaceAll("#", "%23")));
-        //     console.log("render " + props.data.name + " as svg cost: " + (Date.now() - startTime) + "ms")
-        //     const frame = props.data.frame;
-        //     const image = h('image', { href, x: frame.x, y: frame.y, width: frame.width, height: frame.height, reflush: common.reflush })
 
-        // const startTime = Date.now();
-
-        const frame = this.frame;
         if (!this.imageel) this.imageel = createElement('image');
-
         const imageel = this.imageel;
+
+        // 仅替换内部svg，以保留阴影
+        const svgnode = this.elchilds[this.elchilds.length - 1] as EL & { el?: HTMLElement | SVGElement };
+        if (!svgnode || !svgnode.el || svgnode.eltag !== 'svg') {
+            return false;
+        }
+
         if (this.m_image_version !== this.m_save_version || this.m_childs_changed) {
-            const svg = this.el.outerHTML;
-            const href = "data:image/svg+xml," + ((svg.replaceAll("#", "%23")));
+
+            const frame = this.frame;
+
+            const svg = svgnode.el.outerHTML.replaceAll("#", "%23");
+            const href = "data:image/svg+xml," + svg;
             setAttribute(imageel, "href", href);
+            const props: any = {};
+            props.x = 0;
+            props.y = 0;
+            props.width = frame.width;
+            props.height = frame.height;
+            batchSetAttribute(imageel, props, this.m_save_image_props);
+            this.m_save_image_props = props;
+
+            this.m_image_version = this.m_save_version;
+            this.m_childs_changed = false;
         }
 
-        const props: any = {};
-        props.x = frame.x;
-        props.y = frame.y;
-        props.width = frame.width;
-        props.height = frame.height;
-
-        batchSetAttribute(imageel, props, this.m_save_image_props);
-        this.m_save_image_props = props;
-
-        if (this.el.parentNode) {
-            this.el.parentNode.replaceChild(imageel, this.el);
+        if (svgnode.el && svgnode.el.parentNode) {
+            svgnode.el.parentNode.replaceChild(imageel, svgnode.el);
         }
-
-        this.m_image_version = this.m_save_version;
-        this.m_childs_changed = false;
-
-        // console.log(this.name, " switch into image use time: ", Date.now() - startTime);
 
         return true;
     }
 
     switchOutImage(force: boolean) {
         if (this.imageel && this.imageel.parentNode && (this.m_childs_changed || force)) {
-            if (this.el) this.imageel.parentNode.replaceChild(this.el, this.imageel);
+            const svgnode = this.elchilds[this.elchilds.length - 1] as EL & { el?: HTMLElement | SVGElement };
+            if (!svgnode || !svgnode.el || svgnode.eltag !== 'svg') {
+                return;
+            }
+            if (svgnode.el) this.imageel.parentNode.replaceChild(svgnode.el, this.imageel);
             else this.imageel.parentNode.removeChild(this.imageel);
         }
     }
