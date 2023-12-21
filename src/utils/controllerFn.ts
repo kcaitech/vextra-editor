@@ -10,7 +10,7 @@ import { compare_layer_3 } from "./group_ungroup";
 import { get_symbolref_by_layer } from "./symbol";
 
 export function keyboardHandle(e: KeyboardEvent, context: Context) {
-    if (!permIsEdit(context)) {
+    if (!permIsEdit(context) || context.tool.isLable) {
         return;
     }
     const { target, shiftKey } = e;
@@ -186,7 +186,7 @@ export function check_status(context: Context) {
 export function modify_shapes(context: Context, shapes: Shape[]) {
     const shape_map = new Map<string, Shape>();
     let is_change = false;
-    
+
     for (let i = 0, l = shapes.length; i < l; i++) {
         const shape = shapes[i];
         const symref = get_symbolref_by_layer(shape);

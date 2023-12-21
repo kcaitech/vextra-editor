@@ -173,7 +173,7 @@ function gen_offset_map(shape: Shape, down: PageXY) {
 function down(e: MouseEvent) {
     const context = props.context;
     const action = context.tool.action;
-    if (!permIsEdit(context)) {
+    if (!permIsEdit(context) || context.tool.isLable) {
         return;
     }
     if (e.button !== 0) { // 当前组件只处理左键事件，右键事件冒泡出去由父节点处理
@@ -182,7 +182,7 @@ function down(e: MouseEvent) {
     context.cursor.cursor_freeze(true);
     context.menu.menuMount(); // 取消右键事件
     context.menu.notify(Menu.SHUTDOWN_POPOVER);
-    
+
     if (!(action == Action.AutoV || action == Action.AutoK)) {
         return;
     }

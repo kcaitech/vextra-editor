@@ -127,7 +127,7 @@ function get_all_values(shapes: PathShape[]) {
         }
     }
 }
-function get_rect_shape_all_value(shape: Shape) {
+function get_rect_shape_all_value(shape: PathShape) {
     const rs = { lt: 0, rt: 0, rb: 0, lb: 0 };
     rs.lt = shape.points[0]?.radius || shape.fixedRadius || 0;
     rs.rt = shape.points[1]?.radius || shape.fixedRadius || 0;

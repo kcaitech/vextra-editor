@@ -1,6 +1,6 @@
 <script setup lang="ts">
 import { ref, nextTick, onMounted, onUnmounted } from 'vue'
-import { AsyncTransfer, Matrix, Shape } from "@kcdesign/data";
+import { AsyncTransfer, Matrix, Shape, SymbolShape } from "@kcdesign/data";
 import { Context } from "@/context";
 import { permIsEdit } from '@/utils/content';
 import { ClientXY, PageXY } from '@/context/selection';
@@ -33,6 +33,9 @@ let isDragging: boolean = false;
 const reflush = ref<number>(0);
 const watcher = (t: any) => { if (t !== 'shape-frame') reflush.value++; };
 const onRename = () => {
+    if (!permIsEdit(props.context) || props.context.tool.isLable) {
+        return;
+    }
     isInput.value = true
     nextTick(() => {
         if (nameInput.value) {
@@ -294,7 +297,7 @@ onUnmounted(() => {
         @mousemove="move2" data-area="controller">
         <div class="name-wrap" :style="{ maxWidth: props.maxWidth + 'px' }" @dblclick="onRename" v-if="!isInput">
             <svg width="306" height="306" viewBox="0 0 306 306" fill="none" xmlns="http://www.w3.org/2000/svg"
-                v-if="props.shape.isSymbolUnionShape">
+                v-if="(props.shape as SymbolShape).isSymbolUnionShape">
                 <rect x="8.07106" y="153.895" width="90" height="90" transform="rotate(-45.0629 8.07106 153.895)"
                     fill="#ff9900" stroke="#ff9900" stroke-width="10" />
                 <rect x="90.0054" y="71.7804" width="90" height="90" transform="rotate(-45.0629 90.0054 71.7804)"
@@ -321,7 +324,8 @@ onUnmounted(() => {
         </div>
         <input v-if="isInput" type="text" :style="{ maxWidth: props.maxWidth + 'px', width: inputWidth + 'px' }"
             ref="nameInput" class="rename" @input="onInputName" @change="ChangeReName" @mousemove="move3">
-        <span v-if="isInput" style="position: absolute; visibility: hidden; top: 0; font-size: 10px;" ref="inputSpan"></span>
+        <span v-if="isInput" style="position: absolute; visibility: hidden; top: 0; font-size: 10px;"
+            ref="inputSpan"></span>
     </div>
 </template>
 

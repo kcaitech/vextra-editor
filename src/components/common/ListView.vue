@@ -544,7 +544,7 @@ function mouseMove(event: MouseEvent) {
     const _destination = get_destination_by_drag_event(position, start_y, props.itemHeight);
     if (_destination.type === "insert") {
         port_i_visible.value = true;
-        destination.value.x = 6;
+        destination.value.x = 27;
         destination.value.y = start_y;
     } else {
         port_a_visible.value = true;
@@ -671,7 +671,7 @@ onUnmounted(() => {
     overflow: hidden;
     position: relative;
     outline: none;
-
+    box-sizing: border-box;
     > .horizontal,
     .vertical {
         > .list-item {
@@ -699,9 +699,8 @@ onUnmounted(() => {
         > .port-2 {
             position: absolute;
             border: 2px solid var(--active-color);
-            width: calc(100% - 12px);
-            height: 30px;
-            left: 6px;
+            width: calc(100% - 6px);
+            height: 36px;
             box-sizing: border-box;
             border-radius: 2px;
         }
@@ -728,7 +727,9 @@ onUnmounted(() => {
 
     .vertical {
         width: 100%;
+        padding-right: 6px;
         height: auto;
+        box-sizing: border-box;
     }
 
     .vertical + .scroll-track {

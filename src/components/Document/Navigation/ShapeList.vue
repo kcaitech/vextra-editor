@@ -70,7 +70,7 @@ class Iter implements IDataIter<ItemData> {
 
 const props = defineProps<{ context: Context, page: Page, pageHeight: number }>();
 const { t } = useI18n();
-const itemHieght = 30;
+const itemHieght = 36;
 const MOUSE_RIGHT = 2;
 const shapeListMap: Map<string, ShapeDirList> = new Map();
 const chartMenu = ref<boolean>(false)
@@ -128,10 +128,10 @@ function _notifySourceChange(t?: number | string, shape?: Shape) {
                 list_h.value = listBody.value.clientHeight //list可视高度
             }
             if (shapelist.value && indexItem >= 0) {
-                const itemScrollH = indexItem * 30
+                const itemScrollH = indexItem * 36
                 if (itemScrollH + 29 >= list_h.value - shapelist.value.scroll.y) {
-                    if ((itemScrollH) + shapelist.value.scroll.y < list_h.value - 30) return
-                    shapelist.value.clampScroll(0, -(itemScrollH + 30 - list_h.value))
+                    if ((itemScrollH) + shapelist.value.scroll.y < list_h.value - 36) return
+                    shapelist.value.clampScroll(0, -(itemScrollH + 36 - list_h.value))
                 } else if (itemScrollH < -(shapelist.value.scroll.y)) {
                     shapelist.value.clampScroll(0, -itemScrollH)
                 }
@@ -464,7 +464,6 @@ onUnmounted(() => {
 <template>
     <div class="shapelist-wrap" ref="shapeList">
         <div class="header" @click.stop="reset_selection">
-            <div class="title">{{ t('navi.shape') }}</div>
             <div class="search" ref="search_wrap">
                 <div class="tool-container" @click="preto_search">
                     <svg-icon icon-class="search"></svg-icon>
@@ -537,25 +536,20 @@ onUnmounted(() => {
         font-size: var(--font-default-fontsize);
         box-sizing: border-box;
         position: relative;
-        padding-bottom: 4px;
-
-        .title {
-            height: 36px;
-            font-weight: var(--font-default-bold);
-            line-height: 36px;
-            box-sizing: border-box;
-            overflow: hidden;
-            margin-left: 6px;
-        }
+        padding: 8px 0;
+        padding-right: 6px;
+        box-sizing: border-box;
+        border-top: 1px solid #F0F0F0;
+        padding-left: 6px;
 
         .search {
-            height: 26px;
-            margin: 3px 6px;
+            height: 34px;
             display: flex;
             align-items: center;
             background-color: var(--grey-light);
             border-radius: 4px;
             box-sizing: border-box;
+            padding: 8px;
             overflow: hidden;
             transition: 0.32s;
 
@@ -563,7 +557,6 @@ onUnmounted(() => {
                 flex-shrink: 0;
                 display: flex;
                 align-items: center;
-                margin-left: 8px;
 
                 >svg {
                     width: 12px;
@@ -573,8 +566,8 @@ onUnmounted(() => {
 
             .menu-f {
                 flex-shrink: 0;
-                width: 10px;
-                height: 28px;
+                width: 12px;
+                height: 100%;
                 display: flex;
                 margin-left: 4px;
                 justify-content: center;
@@ -583,8 +576,8 @@ onUnmounted(() => {
                 cursor: pointer;
 
                 >svg {
-                    width: 80%;
-                    height: 60%;
+                    width: 12px;
+                    height: 12px;
                 }
             }
 
@@ -593,10 +586,11 @@ onUnmounted(() => {
             }
 
             >input {
-                flex: 1 1 auto;
+                width: calc(100% - 64px);
                 border: none;
                 outline: none;
-                margin-left: 4px;
+                padding-left: 5px;
+                padding-right: 5px;
                 background-color: transparent;
                 font-size: var(--font-default-fontsize);
                 caret-color: var(--active-color);
@@ -635,7 +629,6 @@ onUnmounted(() => {
                 margin-left: 4px;
                 line-height: 18px;
                 height: 18px;
-                margin-right: 4px;
             }
 
             .accurate-active {
@@ -712,10 +705,11 @@ onUnmounted(() => {
     }
 
     .body {
+        padding-left: 6px;
         flex-grow: 1;
         width: 100%;
         overflow: hidden;
-
+        box-sizing: border-box;
         >.container {
             height: 100%;
         }
