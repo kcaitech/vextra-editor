@@ -76,6 +76,7 @@ export class ArtboradDom extends (ArtboradView) {
             props.y = 0;
             props.width = frame.width;
             props.height = frame.height;
+            props.filter = svgnode.elattr.filter; // 阴影
             batchSetAttribute(imageel, props, this.m_save_image_props);
             this.m_save_image_props = props;
 
