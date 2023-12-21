@@ -149,6 +149,7 @@ export function isTarget(scout: Scout, shape: Shape, p: PageXY): boolean {
     return scout.isPointInShape(shape, p);
 }
 
+// 胖一圈的判定
 function isTarget2(scout: Scout, shape: Shape, p: PageXY): boolean {
     return scout.isPointInShape2(shape, p);
 }
@@ -291,31 +292,28 @@ function finder_symbol(context: Context, scout: Scout, symbol: SymbolShape | Sym
 export function finder_contact(scout: Scout, g: Shape[], position: PageXY, selected: Shape, init?: Shape[]): Shape[] {
     const result = init || [];
     for (let i = g.length - 1; i > -1; i--) {
-        if (!canBeTarget(g[i]) || g[i].type === ShapeType.Contact) continue;
         const item = g[i];
-        if ([ShapeType.Group, ShapeType.Artboard].includes(item.type)) {
+        if (!canBeTarget(item) || item.type === ShapeType.Contact) {
+            continue;
+        }
+        if ([ShapeType.Group, ShapeType.Artboard, ShapeType.Symbol, ShapeType.SymbolUnion, ShapeType.SymbolRef].includes(item.type)) {
             const isItemIsTarget = isTarget2(scout, item, position);
-            if (!isItemIsTarget) continue;
-            const c = (item as GroupShape).childs as Shape[];
-            if (item.type === ShapeType.Artboard) {
-                if (c.length) {
-                    result.push(...finder_contact(scout, c, position, selected, result));
-                    if (result.length) {
-                        return result;
-                    } else {
-                        result.push(item);
-                        return result;
-                    }
+            if (!isItemIsTarget) {
+                continue;
+            }
+            const c = item instanceof SymbolRefShape ? (item.naviChilds || []) : (item as GroupShape).childs as Shape[];
+            
+            if (c.length) {
+                result.push(...finder_contact(scout, c, position, selected, result));
+                if (result.length) {
+                    return result;
                 } else {
                     result.push(item);
                     return result;
                 }
-            } else if ([ShapeType.Group].includes(item.type)) { // 如果是编组，不用向下走了，让子元素往上走
-                const g = finder_group(scout, (item as GroupShape).childs, position, selected, true);
-                if (g) {
-                    result.push(g);
-                    return result;
-                }
+            } else {
+                result.push(item);
+                return result;
             }
         } else {
             if (isTarget2(scout, item, position)) {
