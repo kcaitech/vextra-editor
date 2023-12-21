@@ -8,6 +8,7 @@ import ContextMenu from '@/components/common/ContextMenu.vue'
 import {Component} from '@/context/component';
 import {Shape} from '@kcdesign/data';
 import {shape_track} from '@/utils/content';
+import { SymbolListItem } from '@/utils/symbol';
 
 interface Props {
     context: Context
@@ -21,8 +22,8 @@ const props = defineProps<Props>();
 const {t} = useI18n();
 const top_wrapper = ref<Element | null>(null);
 const scroll_container = ref<Element | null>(null);
-const dlt_set = new Set();
-const null_data =  [];
+const dlt_set = new Set<string>();
+const null_data: SymbolListItem[] =  [];
 function register_container() {
     const el = props.root || top_wrapper.value;
     if (!el) return;

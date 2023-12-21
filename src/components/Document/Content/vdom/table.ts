@@ -16,4 +16,9 @@ export class TableDom extends (TableView) {
         }
         return version;
     }
+
+    protected checkAndResetDirty(): boolean {
+        if (super.checkAndResetDirty()) return true;
+        return !this.el;
+    }
 }

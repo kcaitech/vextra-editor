@@ -16,4 +16,9 @@ export class PathShapeDom2 extends (PathShapeView2) {
         }
         return version;
     }
+
+    protected checkAndResetDirty(): boolean {
+        if (super.checkAndResetDirty()) return true;
+        return !this.el;
+    }
 }

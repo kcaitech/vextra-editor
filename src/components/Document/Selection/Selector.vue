@@ -1,7 +1,7 @@
 <script setup lang="ts">
 import {Context} from '@/context';
 import {WorkSpace} from '@/context/workspace';
-import {Matrix, Shape, ShapeType} from '@kcdesign/data';
+import {GroupShape, Matrix, Shape, ShapeType} from '@kcdesign/data';
 import {watchEffect, onMounted, onUnmounted} from 'vue';
 import {XY} from '@/context/selection';
 import {isTarget} from '@/utils/common';
@@ -54,11 +54,12 @@ function finder(childs: Shape[], Points: [XY, XY, XY, XY, XY]) {
             ps[i] = m.computeCoord3(p);
         }
         if (shape.type === ShapeType.Artboard) { // 容器要判定为真的条件是完全被选区覆盖
+            const _shape = shape as GroupShape;
             if (isTarget(Points, ps, true)) {
                 private_set(shape.id, shape);
-                for (let i = 0; i < shape.childs.length; i++) private_delete(shape.childs[i].id);
+                for (let i = 0; i < _shape.childs.length; i++) private_delete(_shape.childs[i].id);
             } else {
-                finder(shape.childs, Points);
+                finder(_shape.childs, Points);
             }
         } else if (shape.type === ShapeType.Line) {
             if (isTarget(Points, [ps[0], ps[2]], props.selectorFrame.includes)) {

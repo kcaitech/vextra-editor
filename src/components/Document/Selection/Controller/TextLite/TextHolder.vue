@@ -18,8 +18,7 @@ const container = ref<HTMLDivElement>();
 const container_root = ref<{ x: number, y: number }>({x: 0, y: 0});
 
 function render() {
-    const consumedVars: { slot: string, vars: Variable[] }[] = [];
-    return r(h, props.shape, undefined, undefined, consumedVars, reflush.value, true);
+    return r(h, props.shape, undefined, undefined, reflush.value, true);
 }
 
 function wheel(e: WheelEvent) {

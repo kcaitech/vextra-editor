@@ -1,6 +1,6 @@
 <script setup lang='ts'>
 import { Context } from '@/context';
-import { Text, Shape } from '@kcdesign/data';
+import { Text, Shape, TextShape, TableCell } from '@kcdesign/data';
 import { Matrix } from '@kcdesign/data';
 import { ref, onMounted, onUnmounted, watch } from 'vue';
 import { genRectPath } from '../../common';
@@ -11,7 +11,7 @@ const props = defineProps<{
 }>();
 function getText(shape: Shape & { text: Text }): Text {
     if (shape.isVirtualShape) return shape.text;
-    return shape.getText();
+    return (shape as TextShape | TableCell).getText();
 }
 const matrix = new Matrix();
 const selectPath = ref<string[]>([]);
