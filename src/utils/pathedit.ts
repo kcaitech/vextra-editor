@@ -184,16 +184,38 @@ export function get_action_for_key_change(context: Context, val: number, key: 'x
     if (!path_shape) {
         return;
     }
+
     const indexes = context.path.selectedPoints;
     if (!indexes.length) {
         return;
     }
+
     const __points = path_shape.points;
+
+
+    const parent = path_shape.parent;
+
+    if (!parent) {
+        return;
+    }
+
+    if (parent.type === ShapeType.Page) {
+        const _m = new Matrix(parent.matrix2Root().inverse);
+        let _p = { x: 0, y: 0 };
+
+        _p[key] = val;
+
+        _p = _m.computeCoord3(_p);
+
+        val = _p[key];
+    }
+
     const f = path_shape.frame;
-    const m = new Matrix();
+    const m = new Matrix(path_shape.matrix2Parent());
     m.preScale(f.width, f.height);
-    m.multiAtLeft(path_shape.matrix2Parent());
+
     const actions: { x: number, y: number, index: number }[] = [];
+
     for (let i = 0, l = indexes.length; i < l; i++) {
         const index = indexes[i];
         const __p = __points[index];
