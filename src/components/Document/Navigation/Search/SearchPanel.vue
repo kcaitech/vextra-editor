@@ -440,7 +440,7 @@ function update() {
       }
     }
   }
-  if(result_by_shape.length && fold1.value)
+  
   if (!valid_result_by_shape.value && !valid_result_by_content.value) {
     height_shpae.value = '76px';
   }
@@ -563,7 +563,7 @@ onUnmounted(() => {
         </div>
       </div>
       <div class="list-wrap">
-        <ListView v-if="valid_result_by_content" :source="source_by_content" :item-view="TextResultItem" :item-height="50"
+        <ListView v-if="valid_result_by_content" :source="source_by_content" :item-view="TextResultItem" :item-height="64"
           :item-width="0" :first-index="0" :context="props.context" @selectshape="selectShape" @hovershape="hoverShape"
           @unhovershape="unHovershape" @scrolltoview="shapeScrollToContentView" @rename="rename" @isRead="isRead"
           @isLock="isLock" @item-mousedown="list_mousedown" orientation="vertical">

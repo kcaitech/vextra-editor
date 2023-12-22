@@ -681,7 +681,7 @@ onUnmounted(() => {
                 color: #262626;
             }
             &:hover {
-                border: 1px solid #000;
+                background-color: #F0F0F0;
             }
         }
     }
@@ -699,11 +699,11 @@ onUnmounted(() => {
 }
 
 .exportsvg {
-    position: absolute;
-    left: 10000px;
-    top: 10000px;
+    position: fixed;
+    left: 100000px;
+    top: 100000px;
     opacity: 0;
-    z-index: -1;
+    z-index: -2023;
     overflow: hidden;
 }
 </style>

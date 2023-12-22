@@ -77,12 +77,12 @@ function updater(t?: any) {
     if (t === 'shape-frame') return;
     lock_status.value = props.data.shape.isLocked ? 1 : 0;
     visible_status.value = props.data.shape.isVisible ? 0 : 1;
-    if (is_parent_locked(props.data.shape) && !lock_status.value) {
-        lock_status.value = 2;
-    }
-    if (is_parent_unvisible(props.data.shape) && !visible_status.value) {
-        visible_status.value = 2;
-    }
+    // if (is_parent_locked(props.data.shape) && !lock_status.value) {
+    //     lock_status.value = 2;
+    // }
+    // if (is_parent_unvisible(props.data.shape) && !visible_status.value) {
+    //     visible_status.value = 2;
+    // }
 }
 
 const toggleContainer = (e: MouseEvent) => {
@@ -341,7 +341,7 @@ div.container {
 
 div.container.selectedChild {
     z-index: 2;
-    background-color: rgba($color: #1878f5, $alpha: 0.08) ;
+    background-color: rgba($color: #1878f5, $alpha: 0.08);
 }
 
 div.container.selected {

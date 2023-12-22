@@ -31,8 +31,6 @@ const showCutoutFormat = ref(false);
 const cutout_size_input = ref<HTMLDivElement>();
 const cutout_perfix_input = ref<HTMLDivElement>();
 const cutout_format_input = ref<HTMLDivElement>();
-const top = ref(0);
-const left = ref(0);
 let sizeMenuItems: string[] = [];
 let perMenuItems: ExportFormatNameingScheme[] = [];
 let formatMenuItems: string[] = [];
@@ -44,27 +42,18 @@ const name = ref(props.argus.format.name);
 const showCutoutSizeMenu = () => {
     if (showCutoutSize.value) return showCutoutSize.value = false;
     props.context.menu.notify(Menu.SHADOW_CUTOUT_ARGS_MENU);
-    const { y, x } = cutout_size_input.value!.getBoundingClientRect();
-    top.value = y;
-    left.value = x;
     sizeMenuItems = props.sizeItems;
     showCutoutSize.value = true;
 };
 const showCutoutPerfixMenu = () => {
     if (showCutoutPerfix.value) return showCutoutPerfix.value = false;
     props.context.menu.notify(Menu.SHADOW_CUTOUT_ARGS_MENU);
-    const { y, x } = cutout_perfix_input.value!.getBoundingClientRect();
-    top.value = y;
-    left.value = x;
     perMenuItems = props.perfixItems;
     showCutoutPerfix.value = true;
 };
 const showCutoutFormatMenu = () => {
     if (showCutoutFormat.value) return showCutoutFormat.value = false;
     props.context.menu.notify(Menu.SHADOW_CUTOUT_ARGS_MENU);
-    const { y, x } = cutout_format_input.value!.getBoundingClientRect();
-    top.value = y;
-    left.value = x;
     formatMenuItems = props.formatItems;
     showCutoutFormat.value = true;
 };
@@ -139,8 +128,8 @@ watchEffect(() => {
                 <div class="export_down-icon size" @click.stop="showCutoutSizeMenu">
                     <svg-icon icon-class="down"></svg-icon>
                 </div>
-                <ArgsSelect v-if="showCutoutSize" :context="props.context" :menuItems="sizeMenuItems"
-                    :selectValue="sizeValue" @close="showCutoutSize = false" :top="top" :left="left" @select="selectSize">
+                <ArgsSelect v-if="showCutoutSize" :context="props.context" :menuItems="sizeMenuItems" :width="60"
+                    :selectValue="sizeValue" @close="showCutoutSize = false" @select="selectSize">
                 </ArgsSelect>
             </div>
             <div class="cutout_presuffix_input cutout_export_input" ref="cutout_perfix_input">
@@ -149,8 +138,8 @@ watchEffect(() => {
                 <div class="export_down-icon presuffix" @click.stop="showCutoutPerfixMenu">
                     <svg-icon icon-class="down"></svg-icon>
                 </div>
-                <ArgsSelect v-if="showCutoutPerfix" :context="props.context" :menuItems="perMenuItems"
-                    :selectValue="perfixValue" :i18n="true" @close="showCutoutPerfix = false" :top="top" :left="left"
+                <ArgsSelect v-if="showCutoutPerfix" :context="props.context" :menuItems="perMenuItems" :width="70"
+                    :selectValue="perfixValue" :i18n="true" @close="showCutoutPerfix = false"
                     @select="selectPerfix"></ArgsSelect>
             </div>
             <div class="cutout_format_input cutout_export_input" ref="cutout_format_input">
@@ -158,8 +147,8 @@ watchEffect(() => {
                 <div class="export_down-icon format-i" @click.stop="showCutoutFormatMenu">
                     <svg-icon icon-class="down"></svg-icon>
                 </div>
-                <ArgsSelect v-if="showCutoutFormat" :context="props.context" :menuItems="formatMenuItems"
-                    :selectValue="formatValue" @close="showCutoutFormat = false" :top="top" :left="left"
+                <ArgsSelect v-if="showCutoutFormat" :context="props.context" :menuItems="formatMenuItems" :width="60"
+                    :selectValue="formatValue" @close="showCutoutFormat = false"
                     @select="selectFormat"></ArgsSelect>
             </div>
         </div>

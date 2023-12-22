@@ -262,12 +262,12 @@ function updater(t?: any) {
 
     lock_status.value = shape.isLocked ? 1 : 0;
     visible_status.value = shape.getVisible() ? 0 : 1;
-    if (is_parent_locked(shape) && !lock_status.value) {
-        lock_status.value = 2;
-    }
-    if (is_parent_unvisible(shape) && !visible_status.value) {
-        visible_status.value = 2;
-    }
+    // if (is_parent_locked(shape) && !lock_status.value) {
+    //     lock_status.value = 2;
+    // }
+    // if (is_parent_unvisible(shape) && !visible_status.value) {
+    //     visible_status.value = 2;
+    // }
 }
 
 const stop = watch(() => props.data.shape(), (value, old) => {
@@ -378,13 +378,11 @@ onUnmounted(() => {
                     v-if="isEdit && !isLable">
                     <svg-icon v-if="lock_status === 0" class="svg-open" icon-class="lock-open"></svg-icon>
                     <svg-icon v-else-if="lock_status === 1" class="svg" icon-class="lock-lock"></svg-icon>
-                    <div class="dot" v-else-if="lock_status === 2"></div>
                 </div>
                 <div class="tool_eye tool" :class="{ 'visible': visible_status }" @click="(e: MouseEvent) => setVisible(e)"
                     v-if="isEdit && !isLable">
                     <svg-icon v-if="visible_status === 0" class="svg" icon-class="eye-open"></svg-icon>
                     <svg-icon v-else-if="visible_status === 1" class="svg" icon-class="eye-closed"></svg-icon>
-                    <div class="dot" v-else-if="visible_status === 2"></div>
                 </div>
             </div>
         </div>

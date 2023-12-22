@@ -129,8 +129,8 @@ export const getPngImageData = (svg: SVGSVGElement, trim: boolean, id: string, f
     canvas.width = width;
     canvas.height = height;
   } else {
-    canvas.width = width;
-    canvas.height = height;
+    canvas.width = svg.clientWidth;
+    canvas.height = svg.clientHeight;
   }
   const svgString = new XMLSerializer().serializeToString(pcloneSvg);
   const img = new Image();
@@ -220,8 +220,8 @@ export const getSvgImageData = (svg: SVGSVGElement, trim: boolean, id: string, f
       ctx.translate(-width / 2, -height / 2);
     }
   } else {
-    canvas.width = width;
-    canvas.height = height;
+    canvas.width = svg.clientWidth;
+    canvas.height = svg.clientHeight;
   }
   let imageUrl = '';
   const img = new Image();

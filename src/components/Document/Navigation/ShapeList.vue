@@ -639,7 +639,8 @@ onUnmounted(() => {
         }
 
         .blocks {
-            padding: 0 6px;
+            margin-top: 4px;
+            padding: 0 3px;
 
             .block-wrap {
                 display: inline-block;
@@ -693,12 +694,12 @@ onUnmounted(() => {
                     display: flex;
                     flex-direction: row;
                     align-items: center;
-                    width: 18px;
+                    width: 14px;
                     color: #fff;
 
                     >svg {
                         text-align: center;
-                        height: 18px;
+                        height: 14px;
                     }
                 }
             }
