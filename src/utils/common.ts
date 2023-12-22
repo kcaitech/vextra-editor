@@ -1,8 +1,9 @@
 import { XY } from '@/context/selection';
 import { v4 as uuid } from "uuid";
 import { debounce } from 'lodash';
-import { Shape } from '@kcdesign/data';
+import { ContactShape, PathShape, Shape, ShapeType } from '@kcdesign/data';
 import { Context } from '@/context';
+import { is_straight } from './attri_setting';
 // 打印
 function _debounceLog(mes: any, flag?: string) {
   console.log(flag ? `${flag} ${mes}` : mes);
@@ -208,6 +209,7 @@ export function isIntersect(p1: XY, q1: XY, p2: XY, q2: XY): boolean {
 // 判断形状是否被包涵
 export function isIncluded(selectorPoints: [XY, XY, XY, XY, XY], shapePoints: XY[]): boolean {
   const left = selectorPoints[0].x, top = selectorPoints[0].y, right = selectorPoints[2].x, bottom = selectorPoints[2].y;
+
   const { left: l, top: t, right: r, bottom: b } = XYsBounding(shapePoints);
   return l > left && r < right && t > top && b < bottom;
 }
@@ -224,6 +226,103 @@ export function isTarget(selectorPoints: [XY, XY, XY, XY, XY], shapePoints: XY[]
       for (let j = 0; j < shapePoints.length - 1; j++) {
         const p2 = shapePoints[j], q2 = shapePoints[j + 1];
         if (isIntersect(p1, q1, p2, q2)) return true;
+      }
+    }
+  }
+  return false;
+}
+interface Side {
+  start: XY
+  end: XY
+}
+export function get_side_by_points(points: XY[]) {
+  if (points.length <= 1) {
+    return [];
+  }
+  const sides: Side[] = [];
+  for (let i = 1, l = points.length; i < l; i++) {
+    const start = points[i - 1];
+    const end = points[i];
+    sides.push({ start, end });
+  }
+  return sides;
+}
+export function get_points_for_straight(shape: PathShape) {
+  const start = shape.points[0];
+  const end = shape.points[1];
+
+  if (!start || !end) {
+    return [];
+  }
+
+  const m = shape.matrix2Root();
+  const { width, height } = shape.frame;
+  m.preScale(width, height);
+
+  return [m.computeCoord2(start.x, start.y), m.computeCoord2(end.x, end.y)];
+}
+export function get_points_from_shape(shape: Shape) {
+  if (is_straight(shape)) {
+    return get_points_for_straight(shape as PathShape);
+  }
+
+  const m = shape.matrix2Root();
+  const { width, height } = shape.frame;
+
+  if (shape instanceof ContactShape) {
+    m.preScale(width, height);
+    return shape.getPoints().map(i => m.computeCoord2(i.x, i.y));
+  }
+
+  const ps: XY[] = [{ x: 0, y: 0 }, { x: width, y: 0 }, { x: width, y: height }, { x: 0, y: height }, { x: 0, y: 0 }];
+  for (let i = 0; i < 5; i++) {
+    const p = ps[i];
+    ps[i] = m.computeCoord3(p);
+  }
+  return ps;
+}
+export function isIncluded2(selectorPoints: XY[], shapePoints: XY[]): boolean {
+  const { left, top, right, bottom } = XYsBounding(selectorPoints);
+  const { left: l, top: t, right: r, bottom: b } = XYsBounding(shapePoints);
+  return l > left && r < right && t > top && b < bottom;
+}
+export function isTarget2(selectorPoints: [XY, XY, XY, XY, XY], shape: Shape, includes?: boolean) {
+  const points = get_points_from_shape(shape);
+
+  if (isIncluded2(selectorPoints, points)) {
+    return true;
+  }
+
+  if (shape.type !== ShapeType.Artboard && isIncluded2(points, selectorPoints)) {
+    return true;
+  }
+
+  if (includes) {
+    return false;
+  }
+
+  const selectorPointsSides = get_side_by_points(selectorPoints);
+  const shapeSides = get_side_by_points(points);
+
+
+  if (!shapeSides.length) {
+    return false;
+  }
+
+  for (let i = 0, l = selectorPointsSides.length; i < l; i++) {
+    const side = selectorPointsSides[i];
+
+    const p1 = side.start;
+    const q1 = side.end;
+
+    for (let j = 0, k = shapeSides.length; j < k; j++) {
+      const _side = shapeSides[j];
+
+      const p2 = _side.start
+      const q2 = _side.end;
+
+      if (isIntersect(p1, q1, p2, q2)) {
+        return true;
       }
     }
   }

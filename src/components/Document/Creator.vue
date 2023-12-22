@@ -453,12 +453,14 @@ function shapeCreateEnd() {
 }
 
 function removeCreator() {
-    if (asyncCreator) asyncCreator = asyncCreator.close();
-    props.context.workspace.creating(false);
-    if (props.context.tool.action !== Action.AddContact) {
-        props.context.tool.setAction(Action.AutoV);
-        props.context.cursor.setType("auto-0");
+    if (asyncCreator) {
+        asyncCreator = asyncCreator.close();
     }
+    props.context.workspace.creating(false);
+
+    props.context.tool.setAction(Action.AutoV);
+
+    props.context.cursor.setType("auto-0");
 }
 
 function windowBlur() {
@@ -469,7 +471,12 @@ function windowBlur() {
     document.removeEventListener('mouseup', up);
 }
 
+function init() {
+    props.context.selection.resetSelectShapes();
+}
+
 onMounted(() => {
+    init();
     window.addEventListener('blur', windowBlur);
 })
 onUnmounted(() => {
