@@ -7,19 +7,8 @@ export class ArtboradDom extends (ArtboradView) {
     // 1. 太小时显示成image
     // 2. 
 
-    constructor(ctx: DViewCtx, props: PropsType) {
-        super(ctx, props);
-        this._bubblewatcher = this._bubblewatcher.bind(this);
-        this.m_data.bubblewatch(this._bubblewatcher);
-    }
-
-    private _bubblewatcher(...args: any[]) {
+    protected onChildChange(...args: any[]) {
         this.m_childs_changed = true;
-    }
-
-    onDestory(): void {
-        super.onDestory();
-        this.m_data.bubbleunwatch(this._bubblewatcher);
     }
 
     el?: HTMLElement | SVGElement; // 不要改名，patch用到
