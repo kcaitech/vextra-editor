@@ -5,7 +5,7 @@ import SelectFont from './SelectFont.vue';
 import {onMounted, ref, onUnmounted, watchEffect, watch, computed, nextTick} from 'vue';
 import TextAdvancedSettings from './TextAdvancedSettings.vue'
 import {Context} from '@/context';
-import {TextShape, AttrGetter, TableShape} from "@kcdesign/data";
+import {TextShape, AttrGetter, TableShape, ShapeType} from "@kcdesign/data";
 import Tooltip from '@/components/common/Tooltip.vue';
 import {TextVerAlign, TextHorAlign, Color, UnderlineType, StrikethroughType} from "@kcdesign/data";
 import ColorPicker from '@/components/common/ColorPicker/index.vue';
@@ -260,19 +260,16 @@ const setTextSize = () => {
 
 }
 
-const shapeWatch = watch(() => props.shape, (value, old) => {
-    old.unwatch(textFormat);
-    value.watch(textFormat);
-})
-
 // 获取当前文字格式
 const textFormat = () => {
-    if (!props.shape || !props.shape.text) return
+    const shapes = props.context.selection.selectedShapes;
+    const t_shape = shapes.filter(item => item.type === ShapeType.Text) as TextShape[];
+    if (t_shape.length === 0 || !t_shape[0].text) return
     if (length.value) {
         const {textIndex, selectLength} = getTextIndexAndLen();
-        const editor = props.context.editor4TextShape(props.shape)
+        const editor = props.context.editor4TextShape(t_shape[0])
         let format: AttrGetter
-        const __text = props.shape.getText();
+        const __text = t_shape[0].getText();
         if (textIndex === -1) {
             format = __text.getTextFormat(0, Infinity, editor.getCachedSpanAttr())
         } else {
@@ -302,8 +299,8 @@ const textFormat = () => {
     } else {
         let formats: any[] = [];
         let format: any = {};
-        for (let i = 0; i < props.textShapes.length; i++) {
-            const text = props.textShapes[i];
+        for (let i = 0; i < t_shape.length; i++) {
+            const text = t_shape[i];
             const editor = props.context.editor4TextShape(text);
             const __text = text.getText();
             const format = __text.getTextFormat(0, Infinity, editor.getCachedSpanAttr());
@@ -606,6 +603,7 @@ const filterAlpha = (a: number) => {
     }
 }
 
+
 // watchEffect(() => {
 //     textFormat()
 // })
@@ -620,7 +618,6 @@ onUnmounted(() => {
     props.context.selection.unwatch(selection_wather);
     props.context.workspace.unwatch(workspace_wather);
     props.shape.unwatch(textFormat)
-    shapeWatch()
 })
 </script>
 

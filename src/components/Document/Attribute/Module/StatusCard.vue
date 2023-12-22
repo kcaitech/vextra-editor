@@ -164,7 +164,7 @@ onUnmounted(() => {
             align-items: center;
             width: 40%;
             box-sizing: border-box;
-            padding-right: 10px;
+            margin-right: 12px;
 
             span {
                 color: #595959;
@@ -184,8 +184,8 @@ onUnmounted(() => {
             background-color: var(--grey-light);
 
             >svg {
-                width: 10px;
-                height: 10px;
+                width: 12px;
+                height: 12px;
             }
 
             span {
@@ -202,20 +202,25 @@ onUnmounted(() => {
                 box-sizing: border-box;
                 display: flex;
                 align-items: center;
-                background-color: var(--grey-light);
+                background-color: #F5F5F5;
 
                 span {
                     flex: 1;
                 }
 
-                .el-icon {
-                    width: 24px;
-                    height: 24px;
+                .status-icon-down {
+                    width: 19px;
+                    height: 26px;
                     display: flex;
                     align-items: center;
                     justify-content: center;
-                    margin: 3px;
+                    margin-right: 3px;
                     border-radius: 4px;
+
+                    >svg {
+                        width: 12px;
+                        height: 12px;
+                    }
                 }
             }
         }

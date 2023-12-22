@@ -73,7 +73,7 @@ function up() {
 
 function gen_columns() {
     const repeat = Math.floor(((props.context.workspace.root.x - 16) / 106));
-    return `repeat(${repeat}, 100px)`;
+    return `repeat(${repeat}, 104px)`;
 }
 
 function init() {
@@ -132,5 +132,6 @@ onUnmounted(() => {
     grid-auto-rows: 100px;
     padding: 4px;
     box-sizing: border-box;
+    margin-bottom: 8px;
 }
 </style>

@@ -34,7 +34,7 @@ const isaddStateDialog = ref(false)
 const dialog_title = ref('');
 const atrrdialog = ref<HTMLDivElement>();
 const addType = ref<VariableType>(VariableType.Visible);
-const variables = ref<AttriListItem[]>();
+const variables = ref<AttriListItem[]>([]);
 const conflict = ref<boolean>(false);
 const selected = ref<string[]>([]);
 const var_name = ref<string>('');
@@ -186,14 +186,14 @@ onUnmounted(() => {
 </script>
 
 <template>
-    <div style="position: relative; margin-bottom: 10px;" ref="atrrdialog">
+    <div style="position: relative;margin-top: 12px;margin-bottom: 12px;box-sizing: border-box" ref="atrrdialog">
         <!--header-->
-        <TypeHeader :title="t('compos.compos_attr')" class="mt-24" @click="selectCompsType" :active="true">
+        <TypeHeader :title="t('compos.compos_attr')" class="mt-24" @click="selectCompsType" :active="!!variables.length">
             <template #tool>
-                <div class="add-comps" @click.stop="selectCompsType">
+                <div class="add-comps" @click.stop="selectCompsType" :class="{ 'clicked': compsType }">
                     <svg-icon icon-class="add"></svg-icon>
                     <div class="selectType" v-if="compsType" ref="selectComps" @click.stop>
-                        <div class="type-title">{{ t('compos.delect_attr_type') }}:</div>
+                        <div class="type-title">{{ t('compos.delect_attr_type') }}</div>
                         <div class="status" @click="addModuleState">
                             <div>
                                 <svg-icon icon-class="comp-state"></svg-icon>
@@ -208,14 +208,13 @@ onUnmounted(() => {
                         </div>
                         <div class="status" @click="examplesToggle">
                             <div>
-                                <svg-icon icon-class="pattern-rectangle"
-                                          style="transform: rotate(45deg);width: 10px; height: 10px;"></svg-icon>
+                                <svg-icon icon-class="lozenge"></svg-icon>
                             </div>
                             <span>{{ t('compos.instance_toggle') }}</span>
                         </div>
                         <div class="status" @click="addTextDialog">
                             <div>
-                                <svg-icon icon-class="text" style="width: 10px; height: 10px;"></svg-icon>
+                                <svg-icon icon-class="text"></svg-icon>
                             </div>
                             <span>{{ t('compos.text_content') }}</span>
                         </div>
@@ -262,64 +261,83 @@ onUnmounted(() => {
 <style lang="scss" scoped>
 .add-comps {
     position: relative;
-    width: 22px;
-    height: 22px;
+    width: 28px;
+    height: 28px;
     display: flex;
     align-items: center;
     justify-content: center;
+    border-radius: var(--default-radius);
 
     > svg {
-        width: 50%;
-        height: 50%;
+        width: 16px;
+        height: 16px;
     }
 
     .selectType {
         position: absolute;
-        top: 25px;
+        top: 32px;
         right: 0;
-        width: 120px;
-        background-color: #fff;
-        border: 1px solid #ccc;
-        border-radius: 4px;
-        padding: 5px 0;
-        box-shadow: 2px 2px 10px rgba(0, 0, 0, 0.2);
+        width: 140px;
+        background-color: #FFFFFF;
+        border: 1px solid #EBEBEB;
+        border-radius: var(--default-radius);
+        padding: 4px 0;
+        box-shadow: 0px 2px 10px 0px rgba(0, 0, 0, 0.08);
         z-index: 100;
 
         .type-title {
             display: flex;
             align-items: center;
-            height: 30px;
-            padding: 0 10px;
+            height: 32px;
+            padding: 9px 0px 9px 12px;
+            box-sizing: border-box;
+            color: #8C8C8C;
+            font-size: 12px;
+            font-weight: 500;
         }
 
         .status {
             display: flex;
             align-items: center;
-            height: 25px;
-            padding: 2px 10px;
+            height: 32px;
+            padding: 9px 0px 9px 12px;
+            box-sizing: border-box;
 
             div {
-                width: 20px;
-                height: 100%;
+                width: 14px;
+                height: 14px;
                 display: flex;
                 align-items: center;
                 justify-content: center;
-                margin-right: 5px;
+                margin-right: 4px;
             }
 
             svg {
                 width: 14px;
                 height: 14px;
+                color: #595959;
             }
 
             &:hover {
-                background-color: var(--active-color);
-                color: #fff;
+                background-color: #F5F5F5;
+            }
+
+            span {
+                font-size: 12px;
+                font-weight: 500;
+                color: #262626;
             }
         }
     }
 }
 
+.add-comps:hover {
+    background-color: #F5F5F5;
+}
+
+.add-comps.clicked {
+    background-color: #EBEBEB;
+}
 .conflict_warn {
     display: flex;
     width: 100%;

@@ -91,7 +91,8 @@ onUnmounted(() => {
 <style lang="scss" scoped>
 .module_container {
     font-size: var(--font-default-fontsize);
-    margin-bottom: 10px;
+    margin-bottom: 12px;
+    margin-top: 12px
 }
 
 .compos_state {
@@ -102,23 +103,25 @@ onUnmounted(() => {
 .conflict_warn {
     display: flex;
     width: 100%;
-    margin-top: 8px;
+    margin-top: 6px;
     font-size: var(--font-default-fontsize);
     box-sizing: border-box;
-    border: 0.5px solid rgba(0, 0, 0, 0.05);
-    border-radius: 4px;
-    padding: 10px;
+    border: 1px solid #F5F5F5;
+    border-radius: var(--default-radius);
+    padding: 8px;
 
     >div {
         display: flex;
         align-items: center;
         width: 20px;
         height: 20px;
-        margin-right: 10px;
+        margin-right: 8px;
+        color: #8C8C8C;
     }
 
     >p {
         margin: 0;
+        color: #262626;
     }
 }
 

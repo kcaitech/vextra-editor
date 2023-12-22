@@ -71,7 +71,8 @@ function is_state() {
     width: 100%;
     display: flex;
     flex-direction: column;
-    padding: 0 10px;
+    padding: 0 8px;
     box-sizing: border-box;
+    //border-top: 1px solid #F0F0F0;
 }
 </style>

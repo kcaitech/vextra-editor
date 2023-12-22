@@ -46,6 +46,8 @@ div>span {
 }
 
 .tail {
-    color:#262626;
+    font-size: 12px;
+    line-height: 14px;
+    color: #262626;
 }
 </scoped>

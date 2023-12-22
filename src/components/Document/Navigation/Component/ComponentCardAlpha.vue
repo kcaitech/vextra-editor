@@ -136,8 +136,8 @@ onUnmounted(() => {
     <div class="compo-preview-container" ref="preview_container">
         <div class="card-wrap" v-if="render_preview">
             <svg xmlns="http://www.w3.org/2000/svg" xmlns:xlink="http://www.w3.org/1999/xlink"
-                 xmlns:xhtml="http://www.w3.org/1999/xhtml" preserveAspectRatio="xMinYMin meet" width="36px"
-                 height="36px"
+                 xmlns:xhtml="http://www.w3.org/1999/xhtml" preserveAspectRatio="xMinYMin meet" width="28px"
+                 height="28px"
                  :viewBox='gen_view_box()' overflow="hidden" class="render-wrap">
                 <render></render>
             </svg>
@@ -149,7 +149,7 @@ onUnmounted(() => {
 <style scoped lang="scss">
 .compo-preview-container {
     width: 100%;
-    height: 40px;
+    height: 36px;
     position: relative;
 
     .card-wrap {
@@ -157,20 +157,26 @@ onUnmounted(() => {
         height: 100%;
         display: flex;
         align-items: center;
+        padding: 4px 0;
+        box-sizing: border-box;
 
         > .render-wrap {
             margin-left: 2px;
             background-color: var(--grey-light);
             // border: 1px solid var(--grey-dark);
             box-sizing: border-box;
-            border-radius: 4px;
+            border-radius: 2px;
             flex-shrink: 0;
         }
 
         > div {
-            margin-left: 8px;
+            margin-left: 4px;
             max-height: 100%;
             overflow: hidden;
+            font-size: 12px;
+            font-weight: 500;
+            line-height: 14px;
+            color: #000000;
         }
     }
 

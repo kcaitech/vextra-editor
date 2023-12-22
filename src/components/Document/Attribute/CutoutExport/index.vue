@@ -698,8 +698,8 @@ onUnmounted(() => {
 
 .exportsvg {
     position: absolute;
-    left: -100000px;
-    top: -100000px;
+    left: 10000px;
+    top: 10000px;
     opacity: 0;
     z-index: -1;
     overflow: hidden;

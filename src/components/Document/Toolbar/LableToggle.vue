@@ -43,7 +43,7 @@ const toggleSwitch = () => {
             :hide-after="0" :visible="vis ? false : visible">
             <div class="d-switch" :class="{ 'is-checked': isActive }" @mouseenter.stop="onMouseenter"
                 @mouseleave.stop="onMouseleave">
-                <input class="d-switch__input" ref="input" type="checkbox" :checked="isActive" @change="toggleSwitch"
+                <input class="d-switch__input" ref="input" type="checkbox" :checked="isActive" @change.stop="toggleSwitch"
                     :true-value="isActive" :false-value="!isActive" />
                 <span class="d-switch_action">
                     <Switch style="width: 14px; height: 14px;" />

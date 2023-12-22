@@ -5,6 +5,8 @@ import { Context } from '@/context';
 import { SymbolListItem } from '@/utils/symbol';
 import ComponentCollapseItemTitle from './ComponentCollapseItemTitle.vue';
 import Position from "@/components/Document/Attribute/PopoverMenu/Position.vue";
+import SvgIcon from "@/components/common/SvgIcon.vue";
+import JionTeam from "@/components/TeamProject/jionTeam.vue";
 
 interface Props {
     context: Context

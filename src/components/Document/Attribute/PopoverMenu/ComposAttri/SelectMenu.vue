@@ -67,7 +67,7 @@ onUnmounted(() => {
     z-index: 100;
 
     .untie {
-        height: 30px;
+        height: 32px;
         width: 100%;
         display: flex;
         align-items: center;
@@ -79,6 +79,7 @@ onUnmounted(() => {
             overflow: hidden;
             text-overflow: ellipsis;
             white-space: nowrap;
+            //color: #262626;
         }
 
         // &:hover {

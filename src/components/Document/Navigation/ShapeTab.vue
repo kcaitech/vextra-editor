@@ -29,7 +29,7 @@ function dragStart() {
     transition.value = '0s'
 }
 function onDragOffset(offset: number) {
-    const newheight = Math.min(containerHeight.value - 100, Math.max(70, structure.value.pagelistHeightBackup + Number(offset)));
+    const newheight = Math.min(containerHeight.value - 100, Math.max(76, structure.value.pagelistHeightBackup + Number(offset)));
     structure.value.pagelistHeight = newheight
 }
 function pageListFold(fold: boolean) {
