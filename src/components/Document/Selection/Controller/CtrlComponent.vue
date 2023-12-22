@@ -106,7 +106,7 @@ function windowBlur() {
 function modify_symbol_type() {
     const shape = props.shape;
     if (shape.type === ShapeType.Symbol) {
-        if (shape.parent && shape.parent.isSymbolUnionShape) {
+        if (shape.parent && shape.parent.type === ShapeType.SymbolUnion) {
             symbol_type.value = SymbolType.State;
         } else {
             symbol_type.value = SymbolType.Symbol;

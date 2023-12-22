@@ -1,10 +1,10 @@
 <script setup lang="ts">
-import {Context} from '@/context';
-import {WorkSpace} from '@/context/workspace';
-import {Matrix, Shape, ShapeType} from '@kcdesign/data';
-import {watchEffect, onMounted, onUnmounted} from 'vue';
-import {XY} from '@/context/selection';
-import {isTarget} from '@/utils/common';
+import { Context } from '@/context';
+import { WorkSpace } from '@/context/workspace';
+import { GroupShape, Matrix, Shape, ShapeType } from '@kcdesign/data';
+import { watchEffect, onMounted, onUnmounted } from 'vue';
+import { XY } from '@/context/selection';
+import { isTarget2 } from '@/utils/common';
 
 export interface SelectorFrame {
     top: number
@@ -27,17 +27,26 @@ function select() {
     const pageMatirx = new Matrix(props.context.workspace.matrix.inverse);
     const page = props.context.selection.selectedPage;
     const selection = props.context.selection;
-    if (page) {
-        const {top, left, width, height} = props.selectorFrame;
-        const p1: XY = pageMatirx.computeCoord2(left, top); // lt
-        const p2: XY = pageMatirx.computeCoord2(left + width, top); // rt
-        const p3: XY = pageMatirx.computeCoord2(left + width, top + height); // rb
-        const p4: XY = pageMatirx.computeCoord2(left, top + height); //lb
-        const ps: [XY, XY, XY, XY, XY] = [p1, p2, p3, p4, p1]; // 5个点方便闭合循环
-        changed = false;
-        if (selectedShapes.size) remove(selectedShapes, ps); // 先剔除已经不再框选区的图形
-        finder(page.childs, ps); // 再寻找框选区外的图形
-        if (changed) selection.rangeSelectShape(Array.from(selectedShapes.values()));
+    if (!page) {
+        return;
+    }
+
+    const { top, left, width, height } = props.selectorFrame;
+    const p1: XY = pageMatirx.computeCoord2(left, top); // lt
+    const p2: XY = pageMatirx.computeCoord2(left + width, top); // rt
+    const p3: XY = pageMatirx.computeCoord2(left + width, top + height); // rb
+    const p4: XY = pageMatirx.computeCoord2(left, top + height); //lb
+    const ps: [XY, XY, XY, XY, XY] = [p1, p2, p3, p4, p1]; // 5个点方便闭合循环
+    changed = false;
+
+    if (selectedShapes.size) {
+        remove(selectedShapes, ps); // 先剔除已经不再框选区的图形
+    }
+
+    finder(page.childs, ps); // 再寻找框选区外的图形
+
+    if (changed) {
+        selection.rangeSelectShape(Array.from(selectedShapes.values()));
     }
 }
 
@@ -45,26 +54,25 @@ function select() {
 function finder(childs: Shape[], Points: [XY, XY, XY, XY, XY]) {
     for (let ids = 0, len = childs.length; ids < len; ids++) {
         const shape = childs[ids];
-        if (selectedShapes.get(shape.id) || shape.isLocked || !shape.isVisible) continue;
-        const m = childs[ids].matrix2Root();
-        const {width, height} = shape.frame;
-        const ps: XY[] = [{x: 0, y: 0}, {x: width, y: 0}, {x: width, y: height}, {x: 0, y: height}, {x: 0, y: 0}];
-        for (let i = 0; i < 5; i++) {
-            const p = ps[i];
-            ps[i] = m.computeCoord3(p);
+
+        if (selectedShapes.get(shape.id) || shape.isLocked || !shape.isVisible) {
+            continue;
         }
+
         if (shape.type === ShapeType.Artboard) { // 容器要判定为真的条件是完全被选区覆盖
-            if (isTarget(Points, ps, true)) {
+            const _shape = shape as GroupShape;
+            if (isTarget2(Points, shape, true)) {
                 private_set(shape.id, shape);
-                for (let i = 0; i < shape.childs.length; i++) private_delete(shape.childs[i].id);
+                for (let i = 0; i < _shape.childs.length; i++) {
+                    private_delete(_shape.childs[i].id);
+                }
             } else {
-                finder(shape.childs, Points);
+                finder(_shape.childs, Points);
             }
-        } else if (shape.type === ShapeType.Line) {
-            if (isTarget(Points, [ps[0], ps[2]], props.selectorFrame.includes)) {
-                private_set(shape.id, shape);
-            }
-        } else if (isTarget(Points, ps, props.selectorFrame.includes)) {
+            continue;
+        }
+
+        if (isTarget2(Points, shape, props.selectorFrame.includes)) {
             private_set(shape.id, shape);
         }
     }
@@ -73,23 +81,12 @@ function finder(childs: Shape[], Points: [XY, XY, XY, XY, XY]) {
 // 剔除
 function remove(childs: Map<string, Shape>, Points: [XY, XY, XY, XY, XY]) {
     childs.forEach((value, key) => {
-        const m = value.matrix2Root();
-        const {width, height} = value.frame;
-        const ps: XY[] = [{x: 0, y: 0}, {x: width, y: 0}, {x: width, y: height}, {x: 0, y: height}, {x: 0, y: 0}];
-        for (let i = 0; i < 5; i++) {
-            const p = ps[i];
-            ps[i] = m.computeCoord2(p.x, p.y);
-        }
         if (value.type === ShapeType.Artboard) {
-            if (!isTarget(Points, ps, true)) {
-                private_delete(key);
-            }
-        } else if (value.type === ShapeType.Line) {
-            if (!isTarget(Points, [ps[0], ps[2]], props.selectorFrame.includes)) {
+            if (!isTarget2(Points, value, true)) {
                 private_delete(key);
             }
         } else {
-            if (!isTarget(Points, ps, props.selectorFrame.includes)) {
+            if (!isTarget2(Points, value, props.selectorFrame.includes)) {
                 private_delete(key);
             }
         }
@@ -122,7 +119,7 @@ watchEffect(select);
 </script>
 <template>
     <div class="selector"
-         :style="{ top: `${props.selectorFrame.top}px`, left: `${props.selectorFrame.left}px`, width: `${props.selectorFrame.width}px`, height: `${props.selectorFrame.height}px` }">
+        :style="{ top: `${props.selectorFrame.top}px`, left: `${props.selectorFrame.left}px`, width: `${props.selectorFrame.width}px`, height: `${props.selectorFrame.height}px` }">
     </div>
 </template>
 <style scoped lang="scss">

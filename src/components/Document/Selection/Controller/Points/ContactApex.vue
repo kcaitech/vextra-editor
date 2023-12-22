@@ -11,7 +11,7 @@ import { get_contact_environment } from '@/utils/contact';
 interface Props {
     matrix: number[]
     context: Context
-    shape: Shape
+    shape: ContactShape
     cFrame: Point[]
 }
 interface Apex {
@@ -109,7 +109,7 @@ function point_mousemove(event: MouseEvent) {
         }
     }
 }
-function migrate(shape: Shape) {
+function migrate(shape: ContactShape) {
     const points = shape.getPoints();
     const environment = get_contact_environment(props.context, shape, points);
     if (shape.parent?.id !== environment.id && contactEditor) {

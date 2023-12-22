@@ -11,7 +11,8 @@ import {
     ShapeType,
     SymbolRefShape,
     TableCellType,
-    TextShape
+    TextShape,
+    Text
 } from "@kcdesign/data";
 import Layers from './Layers.vue';
 import {Context} from '@/context';
@@ -52,19 +53,19 @@ function showLayerSubMenu(e: MouseEvent) {
     layerSubMenuVisiable.value = true;
 }
 
-function is_inner_textshape() {
+function is_inner_textshape(): Shape & { text: Text } | undefined {
     const selected = props.context.selection.selectedShapes;
     const isEditing = props.context.workspace.isEditing;
-    if (selected.length === 1 && selected[0].type === ShapeType.Text && selected[0].text && isEditing) {
-        return selected[0];
+    if (selected.length === 1 && selected[0].type === ShapeType.Text && (selected[0] as TextShape).text && isEditing) {
+        return selected[0] as TextShape;
     }
     if (selected.length === 1 && selected[0].type === ShapeType.Table) {
         const tableSelection = props.context.tableSelection;
         if (tableSelection.editingCell && tableSelection.editingCell.cell && tableSelection.editingCell.cell.cellType === TableCellType.Text) {
-            return tableSelection.editingCell.cell
+            return tableSelection.editingCell.cell as any as Shape & { text: Text }
         }
     }
-    return false;
+    // return false;
 }
 
 function copy() {
@@ -374,7 +375,9 @@ function reset() {
 }
 
 function edit() {
-    const refId = props.context.selection.selectedShapes[0].refId;
+    const refShape = props.context.selection.selectedShapes[0];
+    const refId = refShape && (refShape instanceof SymbolRefShape) ? refShape.refId : undefined;
+    if (!refId) return;
     const shape = get_shape_within_document(props.context, refId)
     if (shape) {
         shape_track(props.context, shape)

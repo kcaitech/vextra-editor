@@ -1,6 +1,6 @@
 <script setup lang='ts'>
 import {Context} from '@/context';
-import {Matrix} from '@kcdesign/data';
+import {Matrix, TableCell, TextShape} from '@kcdesign/data';
 import {Shape, Text} from '@kcdesign/data';
 import {onUnmounted, ref, watch, onMounted} from 'vue';
 import {Selection} from '@/context/selection';
@@ -9,7 +9,7 @@ import {handleKeyEvent} from './keyhandler';
 import {WorkSpace} from '@/context/workspace';
 import {TextSelectionLite} from "@/context/textselectionlite";
 
-type SelectionLike = Selection | TextSelectionLite;
+type SelectionLike = TextSelectionLite;
 
 interface Props {
     shape: Shape & { text: Text }
@@ -26,7 +26,7 @@ const props = defineProps<Props>();
 
 function getText(shape: Shape & { text: Text }): Text {
     if (shape.isVirtualShape) return shape.text;
-    return shape.getText();
+    return (shape as TextShape | TableCell).getText();
 }
 
 let editor = props.context.editor4TextShape(props.shape);

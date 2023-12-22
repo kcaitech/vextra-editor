@@ -30,7 +30,7 @@ const trigger = ref<HTMLDivElement>(); // 按钮 Dom
 const popover = ref<HTMLDivElement>(); // 菜单 Dom
 const childMenuPosition: XY = reactive({x: 0, y: 0});
 const route = useRoute();
-const without_editing_permissions = ref<boolean>(!permIsEdit(props.context));
+const without_editing_permissions = ref<boolean>(!permIsEdit(props.context) || props.context.tool.isLable);
 
 function showChildFileMenu(e: MouseEvent) {
     childMenuPosition.x = (e.target as Element).getBoundingClientRect().width;

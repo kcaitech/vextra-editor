@@ -89,7 +89,7 @@ function calc() {
         r.value = state.r;
         return;
     }
-    
+
     const state = get_value_from_points(props.context, selected_points);
     if (!state) {
         return;
@@ -192,8 +192,6 @@ function __update() {
 function path_watcher(t: number) {
     if (t === Path.SELECTION_CHANGE) {
         update();
-    } else if (Path.POINT_TYPE_CHANGE) {
-        curve_mode.value = props.context.path.pointType;
     }
 }
 

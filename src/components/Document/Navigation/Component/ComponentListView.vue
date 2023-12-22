@@ -3,7 +3,7 @@ import { Context } from '@/context';
 import ComponentCardAlpha from './ComponentCardAlpha.vue';
 import ComponentCardBeta from './ComponentCardBeta.vue';
 import { computed, nextTick, onMounted, onUnmounted, ref, watch } from 'vue';
-import { GroupShape, Shape, SymbolShape } from '@kcdesign/data';
+import { GroupShape, Shape, ShapeType, SymbolShape } from '@kcdesign/data';
 import { shape_track } from '@/utils/content';
 import { ClientXY } from '@/context/selection';
 import { is_dbl_action } from '@/utils/action';
@@ -39,7 +39,7 @@ function down(e: MouseEvent, shape: Shape) {
         props.context.component.notify(Component.SELECTED_VAL, is_state(shape) ? shape.parent! : shape);
         return;
     }
-    compo = shape.isSymbolUnionShape ? shape.childs[0] || shape : shape;
+    compo = shape.type === ShapeType.SymbolUnion ? (shape as SymbolShape).childs[0] || shape : shape;
     if (e.button === 2) {
         props.context.component.compMenuMount(is_state(compo) ? compo.parent! : compo, e);
         return;

@@ -8,7 +8,7 @@ import { getHorizontalAngle } from '@/utils/common';
 import { flattenShapes, init_contact_shape, init_insert_shape, init_shape, list2Tree } from '@/utils/content';
 import { get_direction } from '@/utils/controllerFn';
 import { EffectType, Wheel, fourWayWheel } from '@/utils/wheel';
-import { Artboard, AsyncCreator, ContactForm, GroupShape, Matrix, Shape, ShapeFrame, ShapeType } from '@kcdesign/data';
+import { Artboard, AsyncCreator, ContactForm, ContactShape, GroupShape, Matrix, Shape, ShapeFrame, ShapeType } from '@kcdesign/data';
 import { onMounted, onUnmounted, reactive, ref } from 'vue';
 import { useI18n } from 'vue-i18n';
 import CommentInput from './Content/CommentInput.vue';
@@ -287,7 +287,7 @@ function modify_contact_to(e: MouseEvent, ac: AsyncCreator) {
     const root = props.context.workspace.root;
     const p = matrix1.computeCoord2(e.clientX - root.x, e.clientY - root.y);
     ac.contact_to(p);
-    const points = newShape!.getPoints();
+    const points = (newShape as ContactShape)!.getPoints();
     const environment = get_contact_environment(props.context, newShape!, points);
     if (newShape!.parent?.id !== environment.id) {
         asyncCreator
@@ -338,19 +338,30 @@ function er_frame(asyncCreator: AsyncCreator, x: number, y: number) {
         const p2 = { x, y };
         const m = newShape.matrix2Root(), lt = m.computeCoord2(0, 0);
         const type_d = get_direction(Math.floor(getHorizontalAngle(lt, p2)));
-        if (type_d === 0) p2.y = lt.y;
+        if (type_d === 0) {
+            p2.y = lt.y;
+        }
         else if (type_d === 45) {
             const len = Math.hypot(p2.x - lt.x, p2.y - lt.y);
             p2.x = lt.x + len * Math.cos(0.25 * Math.PI), p2.y = lt.y + len * Math.sin(0.25 * Math.PI);
-        } else if (type_d === 90) p2.x = lt.x;
+        }
+        else if (type_d === 90) {
+            p2.x = lt.x;
+        }
         else if (type_d === 135) {
             const len = Math.hypot(p2.x - lt.x, p2.y - lt.y);
             p2.x = lt.x - len * Math.cos(0.25 * Math.PI), p2.y = lt.y + len * Math.sin(0.25 * Math.PI);
-        } else if (type_d === 180) p2.y = lt.y;
+        }
+        else if (type_d === 180) {
+            p2.y = lt.y;
+        }
         else if (type_d === 225) {
             const len = Math.hypot(p2.x - lt.x, p2.y - lt.y);
             p2.x = lt.x - len * Math.cos(0.25 * Math.PI), p2.y = lt.y - len * Math.sin(0.25 * Math.PI);
-        } else if (type_d === 270) p2.x = lt.x;
+        }
+        else if (type_d === 270) {
+            p2.x = lt.x;
+        }
         else if (type_d === 315) {
             const len = Math.hypot(p2.x - lt.x, p2.y - lt.y);
             p2.x = lt.x + len * Math.cos(0.25 * Math.PI), p2.y = lt.y - len * Math.sin(0.25 * Math.PI);
@@ -433,12 +444,14 @@ function shapeCreateEnd() {
 }
 
 function removeCreator() {
-    if (asyncCreator) asyncCreator = asyncCreator.close();
-    props.context.workspace.creating(false);
-    if (props.context.tool.action !== Action.AddContact) {
-        props.context.tool.setAction(Action.AutoV);
-        props.context.cursor.setType("auto-0");
+    if (asyncCreator) {
+        asyncCreator = asyncCreator.close();
     }
+    props.context.workspace.creating(false);
+
+    props.context.tool.setAction(Action.AutoV);
+
+    props.context.cursor.setType("auto-0");
 }
 
 function windowBlur() {
@@ -449,7 +462,12 @@ function windowBlur() {
     document.removeEventListener('mouseup', up);
 }
 
+function init() {
+    props.context.selection.resetSelectShapes();
+}
+
 onMounted(() => {
+    init();
     window.addEventListener('blur', windowBlur);
 })
 onUnmounted(() => {
