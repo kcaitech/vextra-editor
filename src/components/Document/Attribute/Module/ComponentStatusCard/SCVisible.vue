@@ -77,7 +77,7 @@ function _delete() {
         <div class="attr_con">
             <div class="module_item_left" @click="edit_visible">
                 <div class="module_name-2">
-                    <div style="width: 30px;" class="svg">
+                    <div style="width: 12px;margin-left: 8px" class="svg">
                         <svg-icon icon-class="eye-open"></svg-icon>
                     </div>
                     <div class="name">
@@ -118,15 +118,18 @@ function _delete() {
         display: flex;
         align-items: center;
         justify-content: space-between;
+        height: 44px;
+        padding: 6px 0;
+        box-sizing: border-box;
     }
 
     .module_item_left {
         display: flex;
         align-items: center;
-        border-radius: 4px;
-        background-color: var(--grey-light);
-        width: calc(100% - 22px);
-        height: 30px;
+        border-radius: var(--default-radius);
+        background-color: #F5F5F5;
+        width: calc(100% - 32px);
+        height: 32px;
 
         .module_name {
             display: flex;
@@ -159,6 +162,7 @@ function _delete() {
                 > svg {
                     width: 14px;
                     height: 14px;
+                    color: #595959;
                 }
             }
 
@@ -166,6 +170,7 @@ function _delete() {
                 flex: 1;
                 display: flex;
                 max-width: 100%;
+                margin-left: 8px;
                 >span {
                     display: block;
                     box-sizing: border-box;
@@ -202,19 +207,24 @@ function _delete() {
     }
 
     .delete {
-        flex: 0 0 22px;
+        flex: 0 0 28px;
         display: flex;
         justify-content: center;
         align-items: center;
-        width: 22px;
-        height: 22px;
+        width: 28px;
+        height: 28px;
+        border-radius: var(--default-radius);
 
         > svg {
-            width: 11px;
-            height: 11px;
+            width: 16px;
+            height: 16px;
         }
 
         transition: .2s;
+    }
+
+    .delete:hover {
+        background-color: #F5F5F5;
     }
 }
 

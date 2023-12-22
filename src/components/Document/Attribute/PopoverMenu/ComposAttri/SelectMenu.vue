@@ -58,25 +58,27 @@ onUnmounted(() => {
 .select_menu {
     position: absolute;
     right: 0;
-    padding: 8px 0;
+    padding: 4px 0;
     background-color: #fff;
-    border-radius: 2px;
-    box-shadow: 1px 1px 5px rgba(0, 0, 0, 0.2);
+    border-radius: 8px;
+    border: 1px solid #EBEBEB;
+    box-shadow: 0px 2px 10px 0px rgba(0, 0, 0, 0.08);
     z-index: 100;
 
     .untie {
-        height: 30px;
+        height: 32px;
         width: 100%;
         display: flex;
         align-items: center;
         justify-content: space-between;
-        padding: 0 16px;
+        padding: 9px 8px 9px 12px;
         box-sizing: border-box;
 
         span {
             overflow: hidden;
             text-overflow: ellipsis;
             white-space: nowrap;
+            //color: #262626;
         }
 
         // &:hover {

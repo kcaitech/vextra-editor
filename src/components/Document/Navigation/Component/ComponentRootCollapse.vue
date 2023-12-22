@@ -56,34 +56,37 @@ onMounted(() => {
 .component-lib-collapse {
     .component-lib-collapse-title {
         width: 100%;
-        height: 28px;
+        height: 32px;
         transition: 0.1s;
         border-radius: 4px;
         display: flex;
         align-items: center;
-        padding: 0 4px;
+        justify-content: space-between;
+        padding: 9px 12px;
         box-sizing: border-box;
         position: relative;
 
         > span {
-            font-weight: 600;
+            font-size: 12px;
+            font-weight: 500;
+            line-height: 14px;
         }
 
         .shrink {
-            position: absolute;
-            right: 0px;
+            //position: absolute;
+            //right: 0px;
             height: 14px;
             width: 14px;
 
             > svg {
-                width: 80%;
-                height: 80%;
+                width: 12px;
+                height: 12px;
             }
         }
     }
 
     .component-lib-collapse-title:hover {
-        background-color: var(--grey-light);
+        background-color: #F5F5F5;
     }
 
     .component-lib-collapse-content {

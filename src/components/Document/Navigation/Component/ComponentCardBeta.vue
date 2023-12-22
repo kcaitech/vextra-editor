@@ -148,11 +148,10 @@ onUnmounted(() => {
 </template>
 <style scoped lang="scss">
 .compo-preview-container {
-    width: 100px;
-    height: 100px;
-    background-color: var(--grey-light);
+    width: 104px;
+    height: 104px;
+    background-color: #EBEBEB;
     border-radius: 4px;
-    border: 2px solid var(--grey-dark);
     position: relative;
 
     .render-wrap {

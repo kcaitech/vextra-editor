@@ -637,6 +637,7 @@ onUnmounted(() => {
             display: flex;
             align-items: center;
             justify-content: space-between;
+            margin-left: 7px;
 
             .flip {
                 background-color: var(--input-background);

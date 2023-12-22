@@ -169,12 +169,12 @@ onUnmounted(() => {
     flex-direction: column;
     left: 0;
     bottom: 0;
-    width: 320px;
+    width: 236px;
     height: 450px;
     background-color: #fff;
-    border-radius: 4px;
-    border: 1px solid #ccc;
-    box-shadow: 2px 2px 10px rgba(0, 0, 0, 0.2);
+    border-radius: 8px;
+    border: 1px solid #F0F0F0;
+    box-shadow: 0px 2px 16px 0px rgba(0, 0, 0, 0.08);
     z-index: 99;
     outline: none;
 

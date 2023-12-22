@@ -639,8 +639,8 @@ onUnmounted(() => {
     .item {
         position: relative;
         width: 100%;
-        height: 28px;
-        padding: 0 var(--default-padding) 0 20px;
+        height: 32px;
+        padding: 9px 24px 9px 28px;
         display: flex;
         flex-direction: row;
         align-items: center;
@@ -658,19 +658,20 @@ onUnmounted(() => {
 
         > .shortkey {
             margin-left: auto;
+            color: #000000;
         }
     }
 
     .line {
         width: 100%;
-        height: 8px;
-        border-bottom: 1px solid gray;
-        margin-bottom: 8px;
+        height: 4px;
+        border-bottom: 1px solid #EBEBEB;
+        //margin-bottom: 8px;
         box-sizing: border-box;
     }
 
     .item:hover {
-        background-color: var(--active-color);
+        background-color: #F4F5F5;
 
         > .triangle {
             margin-left: auto;

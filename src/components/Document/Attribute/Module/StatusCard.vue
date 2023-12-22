@@ -124,10 +124,13 @@ onUnmounted(() => {
                 <div class="state_value" v-if="!editAttrValue" @dblclick="onRevalue">
                     <div class="input" @mouseenter.stop="active = true" @mouseleave.stop="active = false">
                         <span>{{ statusValue }}</span>
-                        <el-icon @click.stop="showMenu" class="status-icon-down" :class="{active: active}">
-                            <ArrowDown
-                                :style="{ transform: selectoption ? 'rotate(180deg)' : 'rotate(0deg)', transition: '0.3s' }" />
-                        </el-icon>
+                        <!--                        <el-icon @click.stop="showMenu" class="status-icon-down" :class="{active: active}">-->
+                        <div class="status-icon-down" @click.stop="showMenu" :class="{active: active}">
+                            <svg-icon icon-class="down" :style="{ transform: selectoption ? 'rotate(180deg)' : 'rotate(0deg)', transition: '0.3s' }">
+                                <ArrowDown />
+                            </svg-icon>
+                        </div>
+                        <!--                        </el-icon>-->
                     </div>
                     <SelectMenu v-if="selectoption" :top="33" width="100%" :menuItems="data.values" :context="context"
                         :menuIndex="menuIndex" @close="selectoption = false" @selectIndex="selcet"></SelectMenu>
@@ -145,28 +148,30 @@ onUnmounted(() => {
 .module_state_item {
     display: flex;
     flex-direction: column;
-    margin-bottom: 3px;
+    //margin-bottom: 3px;
 
     .module_con {
         display: flex;
         align-items: center;
         justify-content: space-between;
-        height: 30px;
+        height: 44px;
     }
 
     .state_item {
         display: flex;
         align-items: center;
-        width: calc(100% - 22px);
-        height: 30px;
+        width: 100%;
+        height: 44px;
+        padding: 6px 0;
+        box-sizing: border-box;
 
         .state_name {
             display: flex;
             align-items: center;
-            width: 40%;
-            height: 100%;
+            width: 86px;
+            height: 14px;
             box-sizing: border-box;
-            padding-right: 10px;
+            margin-right: 12px;
 
             span {
                 overflow: hidden;
@@ -180,14 +185,14 @@ onUnmounted(() => {
             display: flex;
             align-items: center;
             border-radius: 4px;
-            width: 60%;
+            width: 126px;
             flex: 1;
             height: 100%;
-            background-color: var(--grey-light);
+            background-color: #F5F5F5;
 
             >svg {
-                width: 10px;
-                height: 10px;
+                width: 12px;
+                height: 12px;
             }
 
             span {
@@ -204,20 +209,25 @@ onUnmounted(() => {
                 box-sizing: border-box;
                 display: flex;
                 align-items: center;
-                background-color: var(--grey-light);
+                background-color: #F5F5F5;
 
                 span {
                     flex: 1;
                 }
 
-                .el-icon {
-                    width: 24px;
-                    height: 24px;
+                .status-icon-down {
+                    width: 19px;
+                    height: 26px;
                     display: flex;
                     align-items: center;
                     justify-content: center;
-                    margin: 3px;
+                    margin-right: 3px;
                     border-radius: 4px;
+
+                    >svg {
+                        width: 12px;
+                        height: 12px;
+                    }
                 }
             }
         }

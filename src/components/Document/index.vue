@@ -719,6 +719,31 @@ onUnmounted(() => {
 }
 </style>
 <style scoped lang="scss">
+.main {
+    min-width: 1080px;
+    width: 100%;
+    overflow-x: auto;
+
+    @media (max-width: 1080px) {
+        overflow-x: scroll;
+    }
+
+    &::-webkit-scrollbar {
+        height: 10px;
+    }
+
+    &::-webkit-scrollbar-thumb {
+        border-radius: 150px;
+        -webkit-box-shadow: inset 0 0 5px rgba(0, 0, 0, 0.2);
+        background: rgba(0, 0, 0, 0.2);
+    }
+
+    &::-webkit-scrollbar-track {
+        -webkit-box-shadow: inset 0 0 5px rgba(0, 0, 0, 0.2);
+        border-radius: 0;
+        background: rgba(0, 0, 0, 0.1);
+    }
+
 #top {
   display: flex;
   flex-flow: row nowrap;
@@ -825,5 +850,6 @@ onUnmounted(() => {
       transform: rotate(360deg);
     }
   }
+}
 }
 </style>
