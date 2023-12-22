@@ -249,14 +249,48 @@ export function is_rect(shape: Shape) {
 export function get_xy(shapes: Shape[], mixed: string) {
   const first_shape = shapes[0];
 
-  const box = first_shape.boundingBox();
+  let fx: number | string = 0;
+  let fy: number | string = 0;
 
-  let fx: number | string = box.x;
-  let fy: number | string = box.y;
+  const fp = first_shape.parent;
+
+  if (!fp) {
+    return { x: fx, y: fy };
+  }
+  
+  if (fp.type === ShapeType.Page) {
+    const m = first_shape.matrix2Root();
+    const xy = m.computeCoord2(0, 0);
+    fx = xy.x;
+    fy = xy.y;
+  } else {
+    const xy = first_shape.boundingBox();
+    fx = xy.x;
+    fy = xy.y;
+  }
 
   for (let i = 1, l = shapes.length; i < l; i++) {
     const shape = shapes[i];
-    const { x, y } = shape.boundingBox();
+    let x = 0;
+    let y = 0;
+
+    const parent = shape.parent;
+
+    if (!parent) {
+      continue;
+    }
+
+    if (parent.type === ShapeType.Page) {
+      const m = shape.matrix2Root();
+      const xy = m.computeCoord2(0, 0);
+      x = xy.x;
+      y = xy.y;
+    } else {
+      const xy = shape.boundingBox();
+      x = xy.x;
+      y = xy.y;
+    }
+
     if (typeof fx === 'number' && !is_equal(x, fx)) {
       fx = mixed;
     }
@@ -272,7 +306,6 @@ export function get_xy(shapes: Shape[], mixed: string) {
 }
 export function get_width(shapes: Shape[], mixed: string) {
   const first_shape = shapes[0];
-  const vs: any[] = [];
 
   let first_width: number | string = shapes[0].frame.width;
 

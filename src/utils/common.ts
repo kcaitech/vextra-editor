@@ -4,6 +4,7 @@ import { debounce } from 'lodash';
 import { ContactShape, PathShape, Shape, ShapeType } from '@kcdesign/data';
 import { Context } from '@/context';
 import { is_straight } from './attri_setting';
+import { selectShapes } from './content';
 // 打印
 function _debounceLog(mes: any, flag?: string) {
   console.log(flag ? `${flag} ${mes}` : mes);
@@ -359,4 +360,12 @@ export function shapes_organize(shapes: Shape[]) {
 
 export function get_input_value(value: string, origin?: number | string, min?: number | string, max?: number | string) {
 
+}
+
+export function scout_once(context: Context, e: MouseEvent) {
+  const { clientX, clientY, metaKey, ctrlKey } = e;
+  const { x, y } = context.workspace.root;
+  const xy = context.workspace.matrix.inverseCoord(clientX - x, clientY - y);
+  const shapes = context.selection.getShapesByXY(xy, metaKey || ctrlKey);
+  selectShapes(context, shapes);
 }
