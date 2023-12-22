@@ -115,8 +115,3 @@ watchEffect(updateControllerView);
             :c-frame="props.controllerFrame"></BarsContainer>
     </svg>
 </template>
-<style lang='scss' scoped>
-svg {
-    background-color: rgba($color: #000000, $alpha: 0.08);
-}
-</style>
