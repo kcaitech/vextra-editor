@@ -1,6 +1,6 @@
 import { Context } from "@/context";
 import { PageXY, XY } from "@/context/selection";
-import { GroupShape, Matrix, PathShape, Shape, ShapeType, SymbolRefShape, SymbolShape, SymbolUnionShape } from "@kcdesign/data";
+import { GroupShape, Matrix, PathShape, Shape, ShapeType, SymbolRefShape, SymbolShape } from "@kcdesign/data";
 import { v4 as uuid } from "uuid";
 import { isShapeOut } from "./assist";
 import { debounce } from "lodash";
