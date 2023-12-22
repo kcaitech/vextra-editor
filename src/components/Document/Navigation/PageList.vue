@@ -288,7 +288,7 @@ onUnmounted(() => {
             <div class="title">{{ fold ? cur_page_name : t('navi.page') }}</div>
             <div class="btn">
                 <div class="add" @click.stop="addPage" :title="t('navi.add_page')"
-                    v-if="isEdit === Perm.isEdit && !isLable">
+                    v-if="context.workspace.documentPerm === Perm.isEdit && !isLable">
                     <svg-icon icon-class="add"></svg-icon>
                 </div>
                 <div class="shrink" @click="toggle">

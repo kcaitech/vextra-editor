@@ -122,8 +122,8 @@ const addComment = (succession: boolean, e?: MouseEvent) => {
     }
     commentData.value.shape_id = v4()
     const data = commentData.value
-    textarea.value = '';
     createComment(data).then(() => {
+        textarea.value = '';
         emit('completed', succession, e);
     })
 }

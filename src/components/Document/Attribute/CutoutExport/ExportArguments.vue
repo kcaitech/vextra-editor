@@ -136,7 +136,7 @@ watchEffect(() => {
         <div class="format">
             <div class="cutout_size_input cutout_export_input" ref="cutout_size_input">
                 <input :value="sizeValue" ref="scaleInput" @change="changeScale" @focus="selectScale">
-                <div class="down-icon size" @click.stop="showCutoutSizeMenu">
+                <div class="export_down-icon size" @click.stop="showCutoutSizeMenu">
                     <svg-icon icon-class="down"></svg-icon>
                 </div>
                 <ArgsSelect v-if="showCutoutSize" :context="props.context" :menuItems="sizeMenuItems"
@@ -146,7 +146,7 @@ watchEffect(() => {
             <div class="cutout_presuffix_input cutout_export_input" ref="cutout_perfix_input">
                 <input class="presuffix_input" :placeholder="t(`cutoutExport.${perfixValue}`)" ref="nameInput" @focus="selectName" :value="name"
                     @change="changeName">
-                <div class="down-icon presuffix" @click.stop="showCutoutPerfixMenu">
+                <div class="export_down-icon presuffix" @click.stop="showCutoutPerfixMenu">
                     <svg-icon icon-class="down"></svg-icon>
                 </div>
                 <ArgsSelect v-if="showCutoutPerfix" :context="props.context" :menuItems="perMenuItems"
@@ -155,7 +155,7 @@ watchEffect(() => {
             </div>
             <div class="cutout_format_input cutout_export_input" ref="cutout_format_input">
                 <div class="span" @click.stop="showCutoutFormatMenu">{{ formatValue }}</div>
-                <div class="down-icon format-i" @click.stop="showCutoutFormatMenu">
+                <div class="export_down-icon format-i" @click.stop="showCutoutFormatMenu">
                     <svg-icon icon-class="down"></svg-icon>
                 </div>
                 <ArgsSelect v-if="showCutoutFormat" :context="props.context" :menuItems="formatMenuItems"
@@ -196,14 +196,13 @@ watchEffect(() => {
             padding: 1px;
             align-items: center;
             padding-left: 5px;
-            padding-right: 2px;
             box-sizing: border-box;
             background-color: #F5F5F5;
             border-radius: var(--default-radius);
 
             &:hover {
                 .size {
-                    background-color: rgba(0, 0, 0, 0.09);
+                    background-color: #EBEBEB;
                 }
             }
 
@@ -217,14 +216,13 @@ watchEffect(() => {
             padding: 1px;
             align-items: center;
             padding-left: 5px;
-            padding-right: 2px;
             box-sizing: border-box;
             background-color: #F5F5F5;
             border-radius: var(--default-radius);
 
             &:hover {
                 .presuffix {
-                    background-color: rgba(0, 0, 0, 0.09);
+                    background-color: #EBEBEB;
                 }
             }
         }
@@ -237,14 +235,13 @@ watchEffect(() => {
             padding: 1px;
             align-items: center;
             padding-left: 5px;
-            padding-right: 3px;
             box-sizing: border-box;
             background-color: #F5F5F5;
             border-radius: var(--default-radius);
 
             &:hover {
                 .format-i {
-                    background-color: rgba(0, 0, 0, 0.09);
+                    background-color: #EBEBEB;
                 }
             }
 
@@ -279,9 +276,9 @@ watchEffect(() => {
             outline: none;
         }
 
-        .down-icon {
-            width: 24px;
-            height: 24px;
+        .export_down-icon {
+            width: 19px;
+            height: 26px;
             border-radius: 4px;
             margin-right: 3px;
             display: flex;
@@ -291,7 +288,7 @@ watchEffect(() => {
             >svg {
                 width: 12px;
                 height: 12px;
-                color: grey;
+                color: #666666;
             }
         }
     }

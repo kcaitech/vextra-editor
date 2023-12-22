@@ -711,6 +711,7 @@ onUnmounted(() => {
         width: 100%;
         overflow: hidden;
         box-sizing: border-box;
+
         >.container {
             height: 100%;
         }
@@ -730,6 +731,8 @@ onUnmounted(() => {
         outline: none;
         padding: 4px 0;
         transition: 0.3s;
+        box-shadow: 0px 2px 10px 0px rgba(0, 0, 0, 0.08);
+
     }
 }
 </style>

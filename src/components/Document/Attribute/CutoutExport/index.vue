@@ -519,8 +519,8 @@ onUnmounted(() => {
             <div class="name" :class="{'checked': preinstallArgus.length > 0}">{{t('cutoutExport.export')}}</div>
             <div class="cutout_add_icon">
                 <div class="cutout-icon cutout-preinstall"
-                    :style="{ backgroundColor: isPreinstall ? 'rgba(0, 0, 0, 0.2)' : '' }" @click.stop="showPreinstall">
-                    <svg-icon icon-class="comment-dropdown"></svg-icon>
+                    :style="{ backgroundColor: isPreinstall ? '#EBEBEB' : '' }" @click.stop="showPreinstall">
+                    <svg-icon icon-class="export-menu"></svg-icon>
                 </div>
                 <div class="cutout-icon" @click.stop="preinstall('default')"><svg-icon icon-class="add"></svg-icon></div>
                 <PreinstallSelect v-if="isPreinstall" @close="isPreinstall = false" @preinstall="preinstall">
@@ -663,7 +663,7 @@ onUnmounted(() => {
 
     .export-box {
         display: flex;
-        height: 30px;
+        height: 32px;
         width: 100%;
         align-items: center;
         margin: 8px 0;
@@ -672,12 +672,14 @@ onUnmounted(() => {
             font-weight: bold;
             width: 100%;
             height: 30px;
-            border-radius: 4px;
+            border-radius: 6px;
             display: flex;
             align-items: center;
             justify-content: center;
-            border: 1px solid #dcdfe6;
-
+            border: 1px solid #F0F0F0;
+            span {
+                color: #262626;
+            }
             &:hover {
                 border: 1px solid #000;
             }

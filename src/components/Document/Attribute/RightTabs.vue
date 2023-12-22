@@ -130,7 +130,7 @@ onUnmounted(() => {
         <div class="tab-lable" v-else>
             <Lable :context="context"></Lable>
             <div class="showHiddenR" @click="showHiddenRight" v-if="!showRight || rightTriggleVisible"
-                :style="{ opacity: showRight ? 1 : 0.6 }">
+                :style="{ opacity: showRight ? 1 : 0.6, transform:' translateY(50%)' }">
                 <svg-icon v-if="showRight" class="svg" icon-class="right"></svg-icon>
                 <svg-icon v-else class="svg" icon-class="left"></svg-icon>
             </div>
