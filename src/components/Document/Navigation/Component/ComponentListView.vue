@@ -130,7 +130,7 @@ onUnmounted(() => {
     display: grid;
     grid-gap: 8px;
     grid-auto-rows: 100px;
-    padding: 4px 0px 8px 0px;
+    padding: 4px;
     box-sizing: border-box;
 }
 </style>

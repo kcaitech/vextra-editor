@@ -1,12 +1,12 @@
 <script setup lang="ts">
-import {h, nextTick, onMounted, onUnmounted, ref} from 'vue';
+import { h, nextTick, onMounted, onUnmounted, ref } from 'vue';
 import comsMap from '@/components/Document/Content/comsmap';
-import {GroupShape} from "@kcdesign/data";
-import {renderSymbolPreview as r} from "@kcdesign/data";
-import {Context} from '@/context';
-import {Selection} from '@/context/selection';
-import {clear_scroll_target, is_circular_ref2, is_state} from '@/utils/symbol';
-import {debounce} from "lodash";
+import { GroupShape } from "@kcdesign/data";
+import { renderSymbolPreview as r } from "@kcdesign/data";
+import { Context } from '@/context';
+import { Selection } from '@/context/selection';
+import { clear_scroll_target, is_circular_ref2, is_state } from '@/utils/symbol';
+import { debounce } from "lodash";
 import Tooltip from '@/components/common/Tooltip.vue';
 
 interface Props {
@@ -136,9 +136,8 @@ onUnmounted(() => {
         <Tooltip :content="tip_name" v-if="render_preview">
             <div>
                 <svg v-if="render_preview" xmlns="http://www.w3.org/2000/svg" xmlns:xlink="http://www.w3.org/1999/xlink"
-                     xmlns:xhtml="http://www.w3.org/1999/xhtml" preserveAspectRatio="xMinYMin meet" width="96px"
-                     height="96px"
-                     :viewBox='gen_view_box()' overflow="hidden" class="render-wrap">
+                    xmlns:xhtml="http://www.w3.org/1999/xhtml" preserveAspectRatio="xMinYMin meet" width="96px"
+                    height="96px" :viewBox='gen_view_box()' overflow="hidden" class="render-wrap">
                     <render></render>
                 </svg>
                 <div :class="{ status: true, selected, danger }"></div>
@@ -150,9 +149,10 @@ onUnmounted(() => {
 .compo-preview-container {
     width: 100px;
     height: 100px;
-    background-color: var(--grey-light);
+    background-color: #EBEBEB;
     border-radius: 4px;
-    border: 2px solid var(--grey-dark);
+    // border: 2px solid var(--grey-dark);
+    box-sizing: border-box;
     position: relative;
 
     .render-wrap {
@@ -166,17 +166,19 @@ onUnmounted(() => {
         width: 100%;
         height: 100%;
         position: absolute;
-        left: -2px;
-        top: -2px;
+        left: 0;
+        top: 0;
     }
 
     .selected {
-        border: 2px solid var(--component-color);
+        // box-shadow: 0 0 3px 0 #1878F5;
+        border: 1px solid #1878F5;
     }
 
     .danger {
-        border: 2px solid #F56C6C;
-        background-color: rgba(245, 108, 108, 0.3);
+        // border: 2px solid #F56C6C;
+        background-color: #EBEBEB;
+        opacity: 0.3;
     }
 }
 </style>

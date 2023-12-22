@@ -37,6 +37,7 @@ onMounted(init_slice);
 </template>
 <scoped lang="scss" scoped>
 div>span {
+    
     white-space: pre;
 }
 
@@ -45,6 +46,6 @@ div>span {
 }
 
 .tail {
-    color: var(--theme-color);
+    color:#262626;
 }
 </scoped>

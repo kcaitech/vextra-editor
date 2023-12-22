@@ -34,60 +34,35 @@ onMounted(init);
 <template>
     <div v-if="props.data.isFolder" class="component-lib-collapse" @click.stop="toggle">
         <div class="component-lib-collapse-title">
-            <div class="triangle">
+            <svg-icon icon-class="triangle-icon" :style="{ transform: `rotate(${fold ? '-90deg' : '0deg'})` }"></svg-icon>
+            <!-- <div class="triangle">
                 <div :class="fold ? 'triangle-right' : 'triangle-down'"></div>
-            </div>
+            </div> -->
             <ComponentCollapseItemTitle :data="props.data"></ComponentCollapseItemTitle>
         </div>
     </div>
-    <ComponentListView v-else :context="props.context" :data="props.data.symbols" :container="props.container" :is-attri="props.isAttri" :card-type="props.cardType">
+    <ComponentListView v-else :context="props.context" :data="props.data.symbols" :container="props.container"
+        :is-attri="props.isAttri" :card-type="props.cardType">
     </ComponentListView>
 </template>
 <style scoped lang="scss">
 .component-lib-collapse {
     .component-lib-collapse-title {
         width: 100%;
-        height: 28px;
-        transition: 0.1s;
-        border-radius: 4px;
+        height: 32px;
         display: flex;
         align-items: center;
         box-sizing: border-box;
-        position: relative;
 
-        >.triangle {
-            width: 12px;
-            min-width: 12px;
-            height: 100%;
-            position: relative;
-
-            >div {
-                position: absolute;
-                left: 50%;
-                top: 50%;
-                transform: translate(-50%, -50%);
-            }
-
-            >.triangle-right {
-                width: 0;
-                height: 0;
-                border-left: 5px solid #c0c0c0;
-                border-top: 3px solid transparent;
-                border-bottom: 3px solid transparent;
-            }
-
-            >.triangle-down {
-                width: 0;
-                height: 0;
-                border-top: 5px solid var(--theme-color);
-                border-left: 3px solid transparent;
-                border-right: 3px solid transparent;
-            }
+        svg {
+            width: 14px;
+            height: 14px;
+            transition: all 0.3s;
         }
     }
 
     .component-lib-collapse-title:hover {
-        background-color: var(--grey-light);
+        // background-color: var(--grey-light);
     }
 }
 </style>
