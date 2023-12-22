@@ -1,7 +1,7 @@
 import {
     export_shape, import_shape_from_clipboard,
     Shape, ShapeType, AsyncCreator, ShapeFrame, GroupShape, TextShape, Text,
-    export_text, import_text, TextShapeEditor, ImageShape, transform_data, ContactShape, CurvePoint, PathShape, BasicArray
+    export_text, import_text, TextShapeEditor, ImageShape, transform_data, ContactShape, CurvePoint, PathShape
 } from '@kcdesign/data';
 import { Context } from '@/context';
 import { PageXY } from '@/context/selection';
@@ -11,6 +11,7 @@ import { Action } from '@/context/tool';
 import { is_box_outer_view2 } from './common';
 import { compare_layer_3 } from './group_ungroup';
 import { Document } from '@kcdesign/data';
+import { v4 } from 'uuid';
 
 interface SystemClipboardItem {
     type: ShapeType
@@ -55,7 +56,7 @@ export class Clipboard {
             }
         } else { // 写入图层数据
             let shapes = compare_layer_3(this.context.selection.selectedShapes, -1); // 处理层级
-            
+
             if (!shapes.length) {
                 return false;
             }
@@ -88,7 +89,7 @@ export class Clipboard {
 
                 const points = points_map.get(shape.id);
                 if (points) {
-                    (shape as PathShape).points = points as BasicArray<CurvePoint>;
+                    (shape as PathShape).points = points.map(i => new CurvePoint(v4(), i.x, i.y, i.mode)) as any;
                 }
             }
 
@@ -431,8 +432,6 @@ export function after_import(context: Context, media: any) {
         exe(index);
     }
 }
-
-
 
 /**
  * @description 从剪切板拿出图形数据并插入文档
