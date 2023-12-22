@@ -174,7 +174,7 @@ function createShapeTracing() {
         tracing.value = true;
 
         if (is_symbol_class(hoveredShape.type)) {
-            tracingStroke.value = '#ff9900';
+            tracingStroke.value = '#7F58F9';
         } else {
             tracingStroke.value = '#1878F5';
         }
