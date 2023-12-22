@@ -242,7 +242,7 @@ export function useControllerCustom(context: Context, i18nT: Function) {
         }
 
         shapes = selection.selectedShapes;
-        
+
         wheel = fourWayWheel(context, undefined, startPositionOnPage);
         workspace.setCtrl('controller');
         add_move_and_up_for_document(mousemove, mouseup);
@@ -458,6 +458,7 @@ export function useControllerCustom(context: Context, i18nT: Function) {
         modify_down_position(start, context, startPosition, startPositionOnPage, matrix);
 
         pre_to_translate(start);
+
         workspace.preToTranslating(false);
         need_update_comment = true;
     }

@@ -1,10 +1,9 @@
-import { computed, onMounted, onUnmounted } from "vue";
+import { onMounted, onUnmounted } from "vue";
 import { Context } from "@/context";
-import { keyboardHandle as handle } from "@/utils/controllerFn";
 import { Selection } from "@/context/selection";
 import { useI18n } from 'vue-i18n';
 
-export function useControllerCustom(context: Context, i18nT: Function) {
+function useControllerCustom(context: Context, i18nT: Function) {
     let timer: any;
     const duration: number = 250; // 双击判定时长 ms 
     let isDragging = false;
@@ -14,21 +13,32 @@ export function useControllerCustom(context: Context, i18nT: Function) {
         console.log('emit dbl');
     }
     function isMouseOnContent(e: MouseEvent): boolean {
-        return (e.target as Element)?.closest(`#content`) ? true : false;
+        return !!(e.target as Element)?.closest(`#content`);
     }
     function mousedown(e: MouseEvent) {
-        if (context.workspace.isPageDragging) return;
+        if (context.workspace.isPageDragging) {
+            return;
+        }
+
         if (isElement(e)) {
-            if (timer) handleDblClick();
-            initTimer();
-        } else if (isMouseOnContent(e)) {
-            const selection = context.selection;
-            if (!selection.hoveredShape) {
-                selection.resetSelectShapes();
-            } else {
-                selection.selectShape(selection.hoveredShape);
-                context.workspace.preToTranslating(e);
+            if (timer) {
+                handleDblClick();
             }
+
+            initTimer();
+            return;
+        }
+
+        if (!isMouseOnContent(e)) {
+            return;
+        }
+
+        const selection = context.selection;
+        if (!selection.hoveredShape) {
+            selection.resetSelectShapes();
+        } else {
+            selection.selectShape(selection.hoveredShape);
+            context.workspace.preToTranslating(e);
         }
     }
 
@@ -49,7 +59,7 @@ export function useControllerCustom(context: Context, i18nT: Function) {
         }
     }
     function isDblClick(): boolean {
-        return timer ? true : false;
+        return !!timer;
     }
     function isEditing() {
         return editing;
@@ -59,10 +69,16 @@ export function useControllerCustom(context: Context, i18nT: Function) {
     }
     function isElement(e: MouseEvent): boolean {
         const root = context.workspace.root;
-        return Boolean(context.selection.scout?.isPointInStroke(context.workspace.ctrlPath, { x: e.clientX - root.x, y: e.clientY - root.y }));
-    }
-    function keyboardHandle(e: KeyboardEvent) {
-        handle(e, context);
+        const scout = context.selection.scout;
+
+        if (!scout) {
+            return false;
+        }
+
+        return scout.isPointInStroke(
+            context.workspace.ctrlPath,
+            { x: e.clientX - root.x, y: e.clientY - root.y }
+        );
     }
     function selection_watcher(t?: number) {
         if (t === Selection.CHANGE_SHAPE) { // 选中的图形发生改变，初始化控件
@@ -79,15 +95,14 @@ export function useControllerCustom(context: Context, i18nT: Function) {
     function init() {
         context.selection.watch(selection_watcher);
         window.addEventListener('blur', windowBlur);
-        document.addEventListener('keydown', keyboardHandle);
         document.addEventListener('mousedown', mousedown);
         initController();
         context.workspace.contentEdit(false);
+        context.workspace.preToTranslating(false);
     }
     function dispose() {
         context.selection.unwatch(selection_watcher);
         window.removeEventListener('blur', windowBlur);
-        document.removeEventListener('keydown', keyboardHandle);
         document.removeEventListener('mousedown', mousedown);
         timerClear();
     }
@@ -98,6 +113,7 @@ export function useController(context: Context) {
     const { t } = useI18n();
 
     const ctrl = useControllerCustom(context, t);
+
     onMounted(() => {
         ctrl.init();
     })
