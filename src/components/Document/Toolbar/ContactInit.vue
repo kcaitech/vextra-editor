@@ -85,7 +85,13 @@ function workspace_watcher(t: number) {
         update_contact_apex();
     }
 }
-function window_blur() { }
+function window_blur() {
+    reset_status();
+}
+
+function reset_status() {
+    props.context.tool.resetContactApex();
+}
 // hooks
 onMounted(() => {
     props.context.tool.watch(tool_watcher);
@@ -96,6 +102,7 @@ onUnmounted(() => {
     props.context.tool.unwatch(tool_watcher);
     props.context.workspace.unwatch(workspace_watcher);
     window.removeEventListener('blur', window_blur);
+    reset_status();
 })
 </script>
 <template>
