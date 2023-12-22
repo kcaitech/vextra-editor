@@ -4,6 +4,7 @@ import { Context } from "@/context";
 import { Tool } from "@/context/tool";
 import { ContactForm, ContactType } from "@kcdesign/data";
 import { ClientXY, PageXY } from "@/context/selection";
+import { WorkSpace } from "@/context/workspace";
 interface Props {
     context: Context
 }
@@ -17,23 +18,31 @@ const emits = defineEmits<Emits>();
 const contact = ref<boolean>(false);
 const contact_points = ref<{ type: ContactType, point: ClientXY }[]>([]);
 function update_contact_apex() {
-    const contact_apex = props.context.tool.contactApex;
+    contact_points.value.length = 0;
     contact.value = false;
-    if (contact_apex) {
-        const m2r = contact_apex.matrix2Root(), wm = props.context.workspace.matrix, f = contact_apex.frame;
-        m2r.multiAtLeft(wm);
-        const points: { type: ContactType, point: ClientXY }[] = [
-            { type: ContactType.Top, point: { x: f.width / 2, y: 0 } },
-            { type: ContactType.Right, point: { x: f.width, y: f.height / 2 } },
-            { type: ContactType.Bottom, point: { x: f.width / 2, y: f.height } },
-            { type: ContactType.Left, point: { x: 0, y: f.height / 2 } },
-        ]
-        for (let i = 0; i < 4; i++) {
-            points[i].point = m2r.computeCoord3(points[i].point);
-        }
-        contact_points.value = points;
-        contact.value = true;
+
+    const contact_apex = props.context.tool.contactApex;
+    if (!contact_apex) {
+        return;
     }
+
+    const m2r = contact_apex.matrix2Root();
+    m2r.multiAtLeft(props.context.workspace.matrix);
+
+    const f = contact_apex.frame;
+    const points: { type: ContactType, point: ClientXY }[] = [
+        { type: ContactType.Top, point: { x: f.width / 2, y: 0 } },
+        { type: ContactType.Right, point: { x: f.width, y: f.height / 2 } },
+        { type: ContactType.Bottom, point: { x: f.width / 2, y: f.height } },
+        { type: ContactType.Left, point: { x: 0, y: f.height / 2 } },
+    ]
+
+    for (let i = 0; i < 4; i++) {
+        points[i].point = m2r.computeCoord3(points[i].point);
+    }
+
+    contact_points.value = points;
+    contact.value = true;
 }
 function contact_point_down(e: MouseEvent, type: ContactType) {
     const p = get_p(type);
@@ -67,18 +76,33 @@ function get_p(type: 'top' | 'right' | 'bottom' | 'left') {
     }
 }
 function tool_watcher(t: number) {
-    if (t === Tool.CHANGE_CONTACT_APEX) update_contact_apex();
+    if (t === Tool.CHANGE_CONTACT_APEX) {
+        update_contact_apex();
+    }
+}
+function workspace_watcher(t: number) {
+    if (t === WorkSpace.MATRIX_TRANSFORMATION) {
+        update_contact_apex();
+    }
+}
+function window_blur() {
+    reset_status();
 }
 
-function window_blur() { }
+function reset_status() {
+    props.context.tool.resetContactApex();
+}
 // hooks
 onMounted(() => {
     props.context.tool.watch(tool_watcher);
+    props.context.workspace.watch(workspace_watcher);
     window.addEventListener('blur', window_blur)
 })
 onUnmounted(() => {
     props.context.tool.unwatch(tool_watcher);
+    props.context.workspace.unwatch(workspace_watcher);
     window.removeEventListener('blur', window_blur);
+    reset_status();
 })
 </script>
 <template>

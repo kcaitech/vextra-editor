@@ -1,7 +1,7 @@
 <script setup lang='ts'>
 import { onMounted, onUnmounted, watchEffect, ref, reactive, computed } from "vue";
 import { Context } from "@/context";
-import { ContactShape, Matrix, Shape } from '@kcdesign/data';
+import { ContactShape, Matrix } from '@kcdesign/data';
 import { WorkSpace } from "@/context/workspace";
 import { Point } from "../SelectionView.vue";
 import { Selection } from "@/context/selection";
@@ -39,18 +39,34 @@ function genViewBox(bounds: { left: number, top: number, right: number, bottom: 
 }
 function updateControllerView() {
     const m2p = props.shape.matrix2Root();
+
     matrix.reset(m2p);
     matrix.multiAtLeft(props.matrix);
-    if (!submatrix.equals(matrix)) submatrix.reset(matrix)
+
+    if (!submatrix.equals(matrix)) {
+        submatrix.reset(matrix);
+    }
+
     const path = props.shape.getPath();
+
     path.transform(matrix);
+
     props.context.workspace.setCtrlPath(path.toString());
-    const framePoint = props.controllerFrame;
+
+    const m2 = new Matrix(matrix);
+    const f = props.shape.frame;
+    m2.preScale(f.width, f.height);
+
+    const framePoint = (props.shape as ContactShape)
+        .getPoints()
+        .map(i => m2.computeCoord2(i.x, i.y));
+
     const p0 = framePoint[0];
     bounds.left = p0.x;
     bounds.top = p0.y;
     bounds.right = p0.x;
     bounds.bottom = p0.y;
+
     framePoint.reduce((bounds, point) => {
         if (point.x < bounds.left) bounds.left = point.x;
         else if (point.x > bounds.right) bounds.right = point.x;
@@ -58,23 +74,32 @@ function updateControllerView() {
         else if (point.y > bounds.bottom) bounds.bottom = point.y;
         return bounds;
     }, bounds);
+
     viewBox = genViewBox(bounds);
 }
 // #endregion
 function selection_watcher(t: number) {
-    if (t == Selection.CHANGE_SHAPE) editing.value = false;
+    if (t == Selection.CHANGE_SHAPE) {
+        editing.value = false;
+    }
 }
 function workspace_watcher(t: number) {
-    if (t === WorkSpace.TRANSLATING) visible.value = !props.context.workspace.isTranslating;
-    else if (t === WorkSpace.PRE_EDIT) editing.value = props.context.workspace.isEditing;
+    if (t === WorkSpace.TRANSLATING) {
+        visible.value = !props.context.workspace.isTranslating;
+    }
+    else if (t === WorkSpace.PRE_EDIT) {
+        editing.value = props.context.workspace.isEditing;
+    }
 }
 onMounted(() => {
     props.context.selection.watch(selection_watcher);
     props.context.workspace.watch(workspace_watcher);
+    props.shape.watch(updateControllerView);
 })
 onUnmounted(() => {
     props.context.selection.unwatch(selection_watcher);
     props.context.workspace.unwatch(workspace_watcher);
+    props.shape.unwatch(updateControllerView);
     props.context.cursor.reset();
 })
 watchEffect(updateControllerView);
@@ -90,4 +115,3 @@ watchEffect(updateControllerView);
             :c-frame="props.controllerFrame"></BarsContainer>
     </svg>
 </template>
-<style lang='scss' scoped></style>

@@ -287,7 +287,6 @@ function useControllerCustom(context: Context, i18nT: Function) {
         document.removeEventListener('mousedown', mousedown);
         table.unwatch(get_matrix4table);
         is_diposed = true;
-        // console.log('dispose');
     }
     function m4table() {
         return matrix4table;
