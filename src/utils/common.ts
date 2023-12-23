@@ -294,17 +294,16 @@ export function isTarget2(selectorPoints: [XY, XY, XY, XY, XY], shape: Shape, in
     return true;
   }
 
-  if (shape.type !== ShapeType.Artboard && isIncluded2(points, selectorPoints)) {
-    return true;
-  }
-
   if (includes) {
     return false;
   }
 
+  if (shape.type !== ShapeType.Artboard && isIncluded2(points, selectorPoints)) {
+    return true;
+  }
+
   const selectorPointsSides = get_side_by_points(selectorPoints);
   const shapeSides = get_side_by_points(points);
-
 
   if (!shapeSides.length) {
     return false;
