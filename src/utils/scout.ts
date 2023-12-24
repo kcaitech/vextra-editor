@@ -157,15 +157,24 @@ function isTarget2(scout: Scout, shape: Shape, p: PageXY): boolean {
 // 扁平化一个编组的树结构 tree -> list
 export function delayering(groupshape: Shape, flat?: Shape[]): Shape[] {
     let f: Shape[] = flat || [];
-    const childs: Shape[] = groupshape.type === ShapeType.SymbolRef ? (groupshape.naviChilds || []) : (groupshape as GroupShape).childs;
+
+    const childs: Shape[] = groupshape.type === ShapeType.SymbolRef
+        ? (groupshape.naviChilds || [])
+        : (groupshape as GroupShape).childs;
+
     for (let i = 0, len = childs.length; i < len; i++) {
         const item = childs[i];
-        if (item.type === ShapeType.Group || item.type === ShapeType.Symbol || item.type === ShapeType.SymbolRef) {
+
+        if (item.type === ShapeType.Group
+            || item.type === ShapeType.Symbol
+            || item.type === ShapeType.SymbolRef
+        ) {
             f = [...delayering(item, f)];
         } else {
             f.push(item);
         }
     }
+
     return f;
 }
 
@@ -209,7 +218,7 @@ export function finder(context: Context, scout: Scout, g: Shape[], position: Pag
 
         if (item.type === ShapeType.SymbolUnion) { // 组件状态集合
             result = finder_symbol_union(context, scout, item as GroupShape, position, selected, isCtrl);
-            
+
             if (isTarget(scout, item, position)) {
                 break; // 只要进入集合，有无子元素选中都应该break
             }

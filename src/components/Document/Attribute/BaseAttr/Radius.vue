@@ -5,7 +5,7 @@ import { ref } from 'vue';
 import IconText from '@/components/common/IconText.vue';
 import { onMounted } from 'vue';
 import { onUnmounted } from 'vue';
-import { PathShape, Shape, ShapeType } from '@kcdesign/data';
+import { Artboard, PathShape, Shape, ShapeType } from '@kcdesign/data';
 import { reactive } from 'vue';
 import { get_indexes2, is_rect } from '@/utils/attri_setting';
 
@@ -63,13 +63,24 @@ function selection_wather(t: Number) {
 }
 function modify_can_be_rect() {
     can_be_rect.value = false;
+
+    const need_reset = rect.value;
+
+    rect.value = false;
+
     const selected = props.context.selection.selectedShapes;
+
     for (let i = 0, l = selected.length; i < l; i++) {
         const s = selected[i];
         if (!is_rect(s)) {
             return
         }
     }
+
+    if (need_reset) {
+        rect.value = true;
+    }
+
     can_be_rect.value = true;
 }
 
@@ -80,6 +91,10 @@ function reset_radius_value() {
     radius.lb = 0;
 }
 function get_radius_for_shape(shape: Shape) {
+    if (shape instanceof Artboard) {
+        return shape.fixedRadius || 0;
+    }
+
     if (!(shape instanceof PathShape)) {
         return 0;
     }

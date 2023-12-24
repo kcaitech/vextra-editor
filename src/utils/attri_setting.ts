@@ -80,18 +80,62 @@ export function get_actions_frame_x(shapes: Shape[], value: number) {
   const actions: PositonAdjust[] = [];
   for (let i = 0; i < shapes.length; i++) {
     const shape = shapes[i];
-    const frame = shape.frame2Root();
-    actions.push({ target: shape, transX: value - frame.x, transY: 0 });
+
+    const parent = shape.parent;
+
+    if (!parent) {
+      continue;
+    }
+
+    let transX = value;
+    const xy = shape
+      .matrix2Root()
+      .computeCoord2(0, 0);
+
+    if (parent.type === ShapeType.Page) {
+      transX = value - xy.x;
+    } else {
+      const _xy = parent
+        .matrix2Root()
+        .computeCoord2(value, shape.frame.y);
+
+      transX = _xy.x - xy.x;
+    }
+
+    actions.push({ target: shape, transX, transY: 0 });
   }
+
   return actions;
 }
 export function get_actions_frame_y(shapes: Shape[], value: number) {
   const actions: PositonAdjust[] = [];
   for (let i = 0; i < shapes.length; i++) {
     const shape = shapes[i];
-    const frame = shape.frame2Root();
-    actions.push({ target: shape, transX: 0, transY: value - frame.y });
+    const parent = shape.parent;
+
+    if (!parent) {
+      continue;
+    }
+
+    let transY = value;
+
+    const xy = shape
+      .matrix2Root()
+      .computeCoord2(0, 0);
+
+    if (parent.type === ShapeType.Page) {
+      transY = value - xy.y;
+    } else {
+      const _xy = parent
+        .matrix2Root()
+        .computeCoord2(shape.frame.x, value);
+
+      transY = _xy.y - xy.y;
+    }
+
+    actions.push({ target: shape, transX: 0, transY });
   }
+
   return actions;
 }
 export function get_actions_frame_w(shapes: Shape[], value: number, isLock: boolean) {
@@ -249,14 +293,48 @@ export function is_rect(shape: Shape) {
 export function get_xy(shapes: Shape[], mixed: string) {
   const first_shape = shapes[0];
 
-  const box = first_shape.boundingBox();
+  let fx: number | string = 0;
+  let fy: number | string = 0;
 
-  let fx: number | string = box.x;
-  let fy: number | string = box.y;
+  const fp = first_shape.parent;
+
+  if (!fp) {
+    return { x: fx, y: fy };
+  }
+
+  if (fp.type === ShapeType.Page) {
+    const m = first_shape.matrix2Root();
+    const xy = m.computeCoord2(0, 0);
+    fx = xy.x;
+    fy = xy.y;
+  } else {
+    const xy = first_shape.boundingBox();
+    fx = xy.x;
+    fy = xy.y;
+  }
 
   for (let i = 1, l = shapes.length; i < l; i++) {
     const shape = shapes[i];
-    const { x, y } = shape.boundingBox();
+    let x = 0;
+    let y = 0;
+
+    const parent = shape.parent;
+
+    if (!parent) {
+      continue;
+    }
+
+    if (parent.type === ShapeType.Page) {
+      const m = shape.matrix2Root();
+      const xy = m.computeCoord2(0, 0);
+      x = xy.x;
+      y = xy.y;
+    } else {
+      const xy = shape.boundingBox();
+      x = xy.x;
+      y = xy.y;
+    }
+
     if (typeof fx === 'number' && !is_equal(x, fx)) {
       fx = mixed;
     }
@@ -272,7 +350,6 @@ export function get_xy(shapes: Shape[], mixed: string) {
 }
 export function get_width(shapes: Shape[], mixed: string) {
   const first_shape = shapes[0];
-  const vs: any[] = [];
 
   let first_width: number | string = shapes[0].frame.width;
 
