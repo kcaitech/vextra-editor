@@ -122,10 +122,9 @@ const addComment = (succession: boolean, e?: MouseEvent) => {
     }
     commentData.value.shape_id = v4()
     const data = commentData.value
-    createComment(data).then(() => {
-        textarea.value = '';
-        emit('completed', succession, e);
-    })
+    createComment(data)
+    textarea.value = '';
+    emit('completed', succession, e);
 }
 const getCurrentTime = () => {
     const currentDate = new Date();

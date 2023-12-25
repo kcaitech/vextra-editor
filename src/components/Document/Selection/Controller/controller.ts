@@ -248,7 +248,7 @@ export function useControllerCustom(context: Context, i18nT: Function) {
         add_move_and_up_for_document(mousemove, mouseup);
     }
 
-    function mousemove(e: MouseEvent) {
+    function mousemove(e: MouseEvent) {        
         if (e.buttons !== 1) {
             return;
         }

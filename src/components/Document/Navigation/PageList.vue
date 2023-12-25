@@ -43,12 +43,19 @@ const pageMenu = ref<boolean>(false)
 const pageMenuPosition = ref<{ x: number, y: number }>({ x: 0, y: 0 }); //鼠标点击page所在的位置
 let pageMenuItems: MenuItem[] = [];
 const contextMenuEl = ref<ContextMenuEl>();
-const cur_page_name = ref<string>(props.context.selection.selectedPage?.name || t('navi.page'));
+const cur_page_name = ref<string>(t('navi.page'));
 const selectionWatcher = (type: number) => {
     if (type === Selection.CHANGE_PAGE) {
-        cur_page_name.value = props.context.selection.selectedPage?.name || t('navi.page');
+        getPageName();
         pageSource.notify(0, 0, 0, Number.MAX_VALUE);
     }
+}
+const getPageName = () => {
+    const page = props.context.selection.selectedPage;
+    if (!page) return;
+    const pages = props.context.data.pagesList
+    const name = pages.find(item => item.id === page.id)?.name
+    cur_page_name.value = name || t('navi.page');
 }
 const isEdit = ref(props.context.workspace.documentPerm);
 const isLable = ref(props.context.tool.isLable);
@@ -141,6 +148,7 @@ const addPage = () => {
 
 function toggle() {
     fold.value = !fold.value;
+    getPageName();
     emit('fold', fold.value)
 }
 
@@ -264,6 +272,7 @@ const allow_to_drag = () => {
     return props.context.workspace.documentPerm === Perm.isEdit && !props.context.tool.isLable;
 }
 onMounted(() => {
+    getPageName();
     props.context.selection.watch(selectionWatcher);
     props.context.data.watch(document_watcher);
     props.context.menu.watch(menu_watcher);
@@ -330,6 +339,7 @@ onUnmounted(() => {
         justify-content: space-between;
         overflow: hidden;
         color: #434343;
+
         .title {
             height: 40px;
             line-height: 40px;

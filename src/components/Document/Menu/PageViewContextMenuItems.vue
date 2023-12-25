@@ -336,14 +336,16 @@ function dissolution_container() {
  * 解除编组
  */
 function unGroup() {
-    const selection = props.context.selection;
-    if (selection.selectedShapes[0].type !== ShapeType.Group) return;
-    const page = selection.selectedPage;
+    const groups = props.context.selection.selectedShapes.filter(s => s.type === ShapeType.Group);
+    const saveSelectShape = props.context.selection.selectedShapes.filter(s => s.type !== ShapeType.Group);
+    if (groups.length === 0) return;
+    const page = props.context.selection.selectedPage;
     if (page) {
         const editor = props.context.editor4Page(page);
-        const shapes = editor.ungroup(selection.selectedShapes[0] as GroupShape);
+        const shapes = editor.ungroup(groups as GroupShape[]);
         if (shapes) {
-            selection.rangeSelectShape(shapes);
+            const selectShapes = [...saveSelectShape,...shapes]
+            props.context.selection.rangeSelectShape(selectShapes);
         }
     }
     emit('close');

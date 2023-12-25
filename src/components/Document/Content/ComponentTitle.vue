@@ -9,6 +9,7 @@ import { check_status, end_transalte, gen_offset_map, get_speed, migrate, migrat
 import { paster_short } from '@/utils/clipboard';
 import { PointsOffset, distance2apex, gen_match_points } from '@/utils/assist';
 import { Asssit } from '@/context/assist';
+import { forbidden_to_modify_frame } from '@/utils/common';
 interface Props {
     name: string
     index: number
@@ -132,6 +133,7 @@ function down(e: MouseEvent) {
         context.selection.selectShape(props.shape); // 先将图形设为选中状态，只有被选中才可以被拖动
         let root = props.context.workspace.root;// 盒子的信息(wrap的信息)
         startPosition = { x: e.clientX - root.x, y: e.clientY - root.y }; // 记录鼠标按下的点相对wrap的相对位移
+        if(forbidden_to_modify_frame(props.shape)) return;
         document.addEventListener('mousemove', move);
         document.addEventListener('mouseup', up);
     } else if (e.button === 2) { // 右键是打开菜单
