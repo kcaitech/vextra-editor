@@ -151,9 +151,10 @@ function move(e: MouseEvent) {
     const mousePosition: ClientXY = { x: e.clientX - root.x, y: e.clientY - root.y };
     if (isDragging && wheel && asyncTransfer) {
         modify_speed(e);
-        const isOut = wheel.moving(e, { type: EffectType.TRANS, effect: asyncTransfer.transByWheel });
+        // const isOut = wheel.moving(e, { type: EffectType.TRANS, effect: asyncTransfer.transByWheel });
         let update_type: number = 0;
-        if (!isOut) update_type = transform_f(startPosition, mousePosition);
+        // if (!isOut) update_type = transform_f(startPosition, mousePosition);
+        update_type = transform_f(startPosition, mousePosition);
         modify_mouse_position_by_type(update_type, startPosition, mousePosition);
     } else if (Math.hypot(mousePosition.x - startPosition.x, mousePosition.y - startPosition.y) > dragActiveDis) {
         matrix.reset(props.context.workspace.matrix);
