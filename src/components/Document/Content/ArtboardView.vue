@@ -33,7 +33,7 @@ onUnmounted(() => {
     }
 })
 
-function render() {
+function render() {    
     const ret = r(h, props.data, comsMap, props.transx, props.varsContainer, common.reflush);
     return ret;
 }

@@ -86,7 +86,9 @@ const tool_watcher = (t: number) => {
 }
 const stopMouseDown = (e: MouseEvent) => {
     const action = props.context.tool.action;
-    if (action === Action.AddComment) {
+    const comment = props.context.comment;
+
+    if (action === Action.AddComment && !comment.isCommentInputMove) {
         e.stopPropagation();
     }
 }
@@ -128,7 +130,7 @@ onUnmounted(() => {
         <div class="tab-lable" v-else>
             <Lable :context="context"></Lable>
             <div class="showHiddenR" @click="showHiddenRight" v-if="!showRight || rightTriggleVisible"
-                :style="{ opacity: showRight ? 1 : 0.6 }">
+                :style="{ opacity: showRight ? 1 : 0.6, transform:' translateY(50%)' }">
                 <svg-icon v-if="showRight" class="svg" icon-class="right"></svg-icon>
                 <svg-icon v-else class="svg" icon-class="left"></svg-icon>
             </div>

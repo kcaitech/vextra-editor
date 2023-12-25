@@ -287,7 +287,7 @@ function move2(e: MouseEvent) {
 <template>
     <div class="container-name" @mouseenter="hoverShape" @mouseleave="unHoverShape" @mousedown.stop="down"
         @mousemove="move2" data-area="controller">
-        <div class="name" :class="{ selected, active: hover }" :style="{ maxWidth: props.maxWidth + 'px' }"
+        <div v-if="!isInput" class="name" :class="{ selected, active: hover }" :style="{ maxWidth: props.maxWidth + 'px' }"
             @dblclick="onRename">{{ props.name }}
         </div>
         <input v-if="isInput" type="text" :style="{ maxWidth: props.maxWidth + 'px', width: inputWidth + 'px' }"

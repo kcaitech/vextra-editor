@@ -380,8 +380,8 @@ function update() {
   show_content.value = false;
   valid_result_by_shape.value = false;
   valid_result_by_content.value = false;
-  fold1.value = false;
-  fold2.value = false;
+  // fold1.value = false;
+  // fold2.value = false;
   result_by_shape = [];
   result_by_content = [];
   height_shpae.value = '50%';
@@ -419,8 +419,11 @@ function update() {
   }
   if (result_by_shape.length) {
     valid_result_by_shape.value = true;
-    if (!result_by_content.length) {
-      height_shpae.value = '100%';
+    if (!result_by_content.length && !fold1.value) {
+      height_shpae.value = 'calc(100% - 76px)';
+    }
+    if (!result_by_content.length && fold1.value) {
+      height_shpae.value = '56px';
     }
   }
   if (result_by_content.length) {
@@ -428,8 +431,16 @@ function update() {
     show_content.value = true;
     if (!result_by_shape.length) {
       height_shpae.value = '76px';
+    }else {
+      if(fold1.value) {
+        height_shpae.value = '56px';
+      }
+      if(fold2.value && !fold1.value) {
+        height_shpae.value = 'calc(100% - 76px)';
+      }
     }
   }
+  
   if (!valid_result_by_shape.value && !valid_result_by_content.value) {
     height_shpae.value = '76px';
   }
@@ -448,40 +459,41 @@ function close() {
 
 function toggle1() {
   fold1.value = !fold1.value;
-  if (fold1.value) {
-    height_shpae.value = '43px';
-    if (valid_result_by_content.value) {
-      if (fold2.value) {
-        fold2.value = false;
-      }
-    }
-  } else {
-    if (valid_result_by_content.value) {
-      if (fold2.value) {
-        height_shpae.value = 'calc(100% - 43px)';
-      } else {
-        height_shpae.value = '50%';
-      }
-    } else {
-      height_shpae.value = '100%';
-    }
-  }
+  update();
+  // if (fold1.value) {
+  //   height_shpae.value = '56px';
+  //   if (valid_result_by_content.value) {
+  //     if (fold2.value) {
+  //       fold2.value = false;
+  //     }
+  //   }
+  // } else {
+  //   if (valid_result_by_content.value) {
+  //     if (fold2.value) {
+  //       height_shpae.value = 'calc(100% - 56px)';
+  //     } else {
+  //       height_shpae.value = '50%';
+  //     }
+  //   } else {
+  //     height_shpae.value = '100%';
+  //   }
+  // }
 }
 function toggle2() {
-  if (!valid_result_by_shape.value) return;
   fold2.value = !fold2.value;
-  if (fold2.value) {
-    height_shpae.value = 'calc(100% - 43px)';
-    if (fold1.value) {
-      fold1.value = false;
-    }
-  } else {
-    if (fold1.value) {
-      height_shpae.value = '43px';
-    } else {
-      height_shpae.value = '50%';
-    }
-  }
+  update();
+  // if (fold2.value) {
+  //   height_shpae.value = 'calc(100% - 56px)';
+  //   if (fold1.value) {
+  //     fold1.value = false;
+  //   }
+  // } else {
+  //   if (fold1.value) {
+  //     height_shpae.value = '56px';
+  //   } else {
+  //     height_shpae.value = '50%';
+  //   }
+  // }
 }
 function selection_watcher(t?: number) {
   if (t === Selection.CHANGE_PAGE) {
@@ -526,9 +538,10 @@ onUnmounted(() => {
         </div>
       </div>
       <div class="list-wrap">
-        <ListView v-if="valid_result_by_shape" :source="source_by_shape" :item-view="ResultItem" :item-height="30"
+        <ListView v-if="valid_result_by_shape" :source="source_by_shape" :item-view="ResultItem" :item-height="32"
           :item-width="0" :first-index="0" :context="props.context" @selectshape="selectShape" @hovershape="hoverShape"
-          @unhovershape="unHovershape" @scrolltoview="shapeScrollToContentView_1" @rename="rename" @isRead="isRead" @isLock="isLock" @item-mousedown="list_mousedown" orientation="vertical">
+          @unhovershape="unHovershape" @scrolltoview="shapeScrollToContentView_1" @rename="rename" @isRead="isRead"
+          @isLock="isLock" @item-mousedown="list_mousedown" orientation="vertical">
         </ListView>
         <div v-else class="null-result">
           {{ t('search.search_results') }}
@@ -541,7 +554,7 @@ onUnmounted(() => {
           <div class="font">{{ t('system.content_includes') }}</div>
           <div class="keywords">“{{ props.keywords }}</div>
           <div class="end">”</div>
-          <div class="shrink" @click.stop="toggle2" v-if="valid_result_by_shape">
+          <div class="shrink" @click.stop="toggle2" v-if="valid_result_by_content">
             <svg-icon icon-class="down" :style="{ transform: fold2 ? 'rotate(-90deg)' : 'rotate(0deg)' }"></svg-icon>
           </div>
         </div>
@@ -550,7 +563,7 @@ onUnmounted(() => {
         </div>
       </div>
       <div class="list-wrap">
-        <ListView v-if="valid_result_by_content" :source="source_by_content" :item-view="TextResultItem" :item-height="50"
+        <ListView v-if="valid_result_by_content" :source="source_by_content" :item-view="TextResultItem" :item-height="64"
           :item-width="0" :first-index="0" :context="props.context" @selectshape="selectShape" @hovershape="hoverShape"
           @unhovershape="unHovershape" @scrolltoview="shapeScrollToContentView" @rename="rename" @isRead="isRead"
           @isLock="isLock" @item-mousedown="list_mousedown" orientation="vertical">
@@ -581,14 +594,15 @@ onUnmounted(() => {
       display: block;
       font-size: var(--font-default-fontsize);
       width: 100%;
-      box-sizing: border-box;
       border-top: 1px solid var(--grey-light);
+      box-sizing: border-box;
       flex-shrink: 0;
 
       .font-wrap {
         display: flex;
-        padding: 4px 6px 2px;
-        font-weight: 700;
+        height: 28px;
+        padding: 0 6px;
+        font-weight: 500;
         white-space: nowrap;
         width: 100%;
         box-sizing: border-box;
@@ -600,7 +614,7 @@ onUnmounted(() => {
 
         >.keywords {
           flex-grow: 1px;
-          color: var(--active-color);
+          color: #1878F5;
           overflow: hidden;
           white-space: nowrap;
           text-overflow: ellipsis;
@@ -608,7 +622,7 @@ onUnmounted(() => {
 
         >.end {
           flex-shrink: 0;
-          color: var(--active-color);
+          color: #1878F5;
         }
 
         >.shrink {
@@ -619,20 +633,23 @@ onUnmounted(() => {
 
           >svg {
             transition: 0.5s;
-            width: 80%;
-            height: 80%;
+            width: 12px;
+            height: 12px;
           }
         }
       }
 
       .result-count {
-        padding: 4px 6px 4px;
+        height: 28px;
+        padding: 0 6px;
         width: 100%;
+        display: flex;
+        align-items: center;
         overflow: hidden;
         white-space: nowrap;
         text-overflow: ellipsis;
-        font-size: 8px;
-        color: grey;
+        font-size: 10px;
+        color: #8C8C8C;
         box-sizing: border-box;
       }
 
@@ -651,8 +668,8 @@ onUnmounted(() => {
         width: 100%;
         text-align: center;
         margin-top: 16px;
-        font-size: 8px;
-        color: grey;
+        font-size: 10px;
+        color: #8C8C8C;
       }
     }
   }
@@ -675,8 +692,9 @@ onUnmounted(() => {
 
       .font-wrap {
         display: flex;
-        padding: 4px 6px 2px;
-        font-weight: 700;
+        height: 28px;
+        padding: 0 6px;
+        font-weight: 500;
         white-space: nowrap;
         width: 100%;
         box-sizing: border-box;
@@ -688,7 +706,7 @@ onUnmounted(() => {
 
         >.keywords {
           flex-grow: 1px;
-          color: var(--active-color);
+          color: #1878F5;
           overflow: hidden;
           white-space: nowrap;
           text-overflow: ellipsis;
@@ -696,7 +714,7 @@ onUnmounted(() => {
 
         >.end {
           flex-shrink: 0;
-          color: var(--active-color);
+          color: #1878F5;
         }
 
         >.shrink {
@@ -707,20 +725,23 @@ onUnmounted(() => {
 
           >svg {
             transition: 0.5s;
-            width: 80%;
-            height: 80%;
+            width: 12px;
+            height: 12px;
           }
         }
       }
 
       .result-count {
-        padding: 4px 6px 4px;
+        height: 28px;
+        padding: 0 6px;
         width: 100%;
+        display: flex;
+        align-items: center;
         overflow: hidden;
         white-space: nowrap;
         text-overflow: ellipsis;
-        font-size: 8px;
-        color: grey;
+        font-size: 10px;
+        color: #8C8C8C;
         box-sizing: border-box;
       }
 
@@ -740,8 +761,8 @@ onUnmounted(() => {
         width: 100%;
         text-align: center;
         margin-top: 16px;
-        font-size: 8px;
-        color: grey;
+        font-size: 10px;
+        color: #8C8C8C;
       }
     }
   }
