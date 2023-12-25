@@ -1,4 +1,4 @@
-import { Matrix, PathShape, RectShape, Shape, ShapeType } from "@kcdesign/data";
+import { Matrix, PathShape, RectShape, Shape, ShapeFrame, ShapeType } from "@kcdesign/data";
 import { PositonAdjust, ConstrainerProportionsAction, FrameAdjust, RotateAdjust, FlipAction } from "@kcdesign/data";
 import { getHorizontalAngle } from "@/utils/common"
 import { is_equal } from "./assist";
@@ -88,7 +88,7 @@ export function get_actions_frame_x(shapes: Shape[], value: number) {
 
     let transX = value;
 
-    const box = shape.boundingBox2();
+    const box = get_box(shape);
 
     if (parent.type === ShapeType.Page) {
       const xy = parent
@@ -122,7 +122,7 @@ export function get_actions_frame_y(shapes: Shape[], value: number) {
 
     let transY = value;
 
-    const box = shape.boundingBox2();
+    const box = get_box(shape);
 
     if (parent.type === ShapeType.Page) {
       const xy = parent
@@ -293,6 +293,30 @@ export function is_rect(shape: Shape) {
     && shape.points.length === 4
     && [ShapeType.Rectangle, ShapeType.Artboard, ShapeType.Image].includes(shape.type);
 }
+export function get_box(shape: Shape) {
+  const parent = shape.parent!;
+  if (shape.isNoTransform()) {
+    return shape.frame;
+  }
+
+  if (!parent) {
+    console.log('!parent');
+    return shape.frame;
+  }
+
+  const sf = shape.frame;
+
+  const m2p = shape.matrix2Parent();
+
+  const points = [{ x: 0, y: 0 }, { x: sf.width, y: 0 }, { x: sf.width, y: sf.height }, { x: 0, y: sf.height }]
+    .map(p => m2p.computeCoord3(p));
+  const minx = points.reduce((pre, cur) => Math.min(pre, cur.x), points[0].x);
+  const maxx = points.reduce((pre, cur) => Math.max(pre, cur.x), points[0].x);
+  const miny = points.reduce((pre, cur) => Math.min(pre, cur.y), points[0].y);
+  const maxy = points.reduce((pre, cur) => Math.max(pre, cur.y), points[0].y);
+
+  return new ShapeFrame(minx, miny, maxx - minx, maxy - miny);
+}
 export function get_xy(shapes: Shape[], mixed: string) {
   const first_shape = shapes[0];
 
@@ -308,13 +332,13 @@ export function get_xy(shapes: Shape[], mixed: string) {
   if (fp.type === ShapeType.Page) {
     const m = fp.matrix2Root();
 
-    const fbox = first_shape.boundingBox();
+    const fbox = get_box(first_shape);
 
     const xy = m.computeCoord2(fbox.x, fbox.y);
     fx = xy.x;
     fy = xy.y;
   } else {
-    const xy = first_shape.boundingBox();
+    const xy = get_box(first_shape);
     fx = xy.x;
     fy = xy.y;
   }
@@ -333,13 +357,13 @@ export function get_xy(shapes: Shape[], mixed: string) {
     if (parent.type === ShapeType.Page) {
       const m = parent.matrix2Root();
 
-      const box = shape.boundingBox();
+      const box = get_box(shape);
 
       const xy = m.computeCoord2(box.x, box.y);
       x = xy.x;
       y = xy.y;
     } else {
-      const xy = shape.boundingBox();
+      const xy = get_box(shape);
       x = xy.x;
       y = xy.y;
     }
