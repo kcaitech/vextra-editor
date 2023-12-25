@@ -1,7 +1,6 @@
 import { Matrix, PathShape, RectShape, Shape, ShapeType } from "@kcdesign/data";
 import { PositonAdjust, ConstrainerProportionsAction, FrameAdjust, RotateAdjust, FlipAction } from "@kcdesign/data";
 import { getHorizontalAngle } from "@/utils/common"
-import { Context } from "@/context";
 import { is_equal } from "./assist";
 
 export function is_mixed(shapes: Shape[]) {
@@ -88,16 +87,20 @@ export function get_actions_frame_x(shapes: Shape[], value: number) {
     }
 
     let transX = value;
-    const xy = shape
-      .matrix2Root()
-      .computeCoord2(0, 0);
+
+    const box = shape.boundingBox2();
 
     if (parent.type === ShapeType.Page) {
+      const xy = parent
+        .matrix2Root()
+        .computeCoord2(box.x, box.y);
+
       transX = value - xy.x;
     } else {
-      const _xy = parent
-        .matrix2Root()
-        .computeCoord2(value, shape.frame.y);
+      const mp2r = parent.matrix2Root();
+
+      const xy = mp2r.computeCoord2(box.x, box.y);
+      const _xy = mp2r.computeCoord2(value, box.y);
 
       transX = _xy.x - xy.x;
     }
@@ -119,16 +122,19 @@ export function get_actions_frame_y(shapes: Shape[], value: number) {
 
     let transY = value;
 
-    const xy = shape
-      .matrix2Root()
-      .computeCoord2(0, 0);
+    const box = shape.boundingBox2();
 
     if (parent.type === ShapeType.Page) {
+      const xy = parent
+        .matrix2Root()
+        .computeCoord2(box.x, box.y);
+
       transY = value - xy.y;
     } else {
-      const _xy = parent
-        .matrix2Root()
-        .computeCoord2(shape.frame.x, value);
+      const mp2r = parent.matrix2Root();
+
+      const xy = mp2r.computeCoord2(box.x, box.y);
+      const _xy = mp2r.computeCoord2(box.y, value);
 
       transY = _xy.y - xy.y;
     }
@@ -192,7 +198,6 @@ export function get_actions_flip_h(shapes: Shape[]) {
   }
   return actions;
 }
-
 export function get_rotation(shape: Shape) {
   let rotation: number = Number((shape.rotation || 0).toFixed(2));
   if (is_straight(shape)) {
@@ -239,7 +244,6 @@ export function get_rotate_for_straight(shape: PathShape) {
   const rb = m.computeCoord2(p2.x, p2.y);
   return Number(getHorizontalAngle(lt, rb).toFixed(2)) % 360;
 }
-
 export function get_indexes(shape: PathShape, type: 'rt' | 'lt' | 'rb' | 'lb' | 'all') {
   let result: number[] = [];
   if (type === 'all') {
@@ -289,7 +293,6 @@ export function is_rect(shape: Shape) {
     && shape.points.length === 4
     && [ShapeType.Rectangle, ShapeType.Artboard, ShapeType.Image].includes(shape.type);
 }
-
 export function get_xy(shapes: Shape[], mixed: string) {
   const first_shape = shapes[0];
 
@@ -303,8 +306,11 @@ export function get_xy(shapes: Shape[], mixed: string) {
   }
 
   if (fp.type === ShapeType.Page) {
-    const m = first_shape.matrix2Root();
-    const xy = m.computeCoord2(0, 0);
+    const m = fp.matrix2Root();
+
+    const fbox = first_shape.boundingBox();
+
+    const xy = m.computeCoord2(fbox.x, fbox.y);
     fx = xy.x;
     fy = xy.y;
   } else {
@@ -325,8 +331,11 @@ export function get_xy(shapes: Shape[], mixed: string) {
     }
 
     if (parent.type === ShapeType.Page) {
-      const m = shape.matrix2Root();
-      const xy = m.computeCoord2(0, 0);
+      const m = parent.matrix2Root();
+
+      const box = shape.boundingBox();
+
+      const xy = m.computeCoord2(box.x, box.y);
       x = xy.x;
       y = xy.y;
     } else {
