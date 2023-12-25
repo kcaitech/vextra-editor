@@ -98,6 +98,8 @@ function fourWayWheel(context: Context, effects?: Effects, setupPoint?: PageXY):
                     }
                     // #endregion
                 }, period)
+            } else {
+                workspace.notify(WorkSpace.NEW_ENV_MATRIX_CHANGE);
             }
             // console.log('所处区域发生变化了', `${op} -> ${np}`);
             op = np;

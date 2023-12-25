@@ -295,6 +295,11 @@ export function useControllerCustom(context: Context, i18nT: Function) {
         }
     }
 
+    function update_assist_by_workspace_change() {
+        context.assist.set_trans_target(shapes);
+        offset_map = gen_offset_points_map(shapes, startPositionOnPage);
+    }
+
     function transform(start: ClientXY, end: ClientXY) {
         const ps: PageXY = matrix.computeCoord3(start);
         const pe: PageXY = matrix.computeCoord3(end);
@@ -498,11 +503,6 @@ export function useControllerCustom(context: Context, i18nT: Function) {
 
     function selection_watcher(t?: number) {
         if (t === Selection.CHANGE_SHAPE) { // 选中的图形发生改变，初始化控件
-            const selected = selection.selectedShapes;
-            if (selected.length === 1) {
-                const type = selected[0].type;
-                if (type === ShapeType.Table || type === ShapeType.Contact) return dispose();
-            }
             initController();
             workspace.contentEdit(false);
         }
@@ -511,6 +511,8 @@ export function useControllerCustom(context: Context, i18nT: Function) {
     function workspace_watcher(t?: number) {
         if (t === WorkSpace.CHECKSTATUS) {
             checkStatus();
+        } else if (t === WorkSpace.NEW_ENV_MATRIX_CHANGE) {
+            update_assist_by_workspace_change();
         }
     }
 
