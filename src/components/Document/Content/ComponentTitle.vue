@@ -299,14 +299,14 @@ onUnmounted(() => {
             <!-- <svg width="306" height="306" viewBox="0 0 306 306" fill="none" xmlns="http://www.w3.org/2000/svg"
                 v-if="(props.shape as SymbolShape).isSymbolUnionShape">
                 <rect x="8.07106" y="153.895" width="90" height="90" transform="rotate(-45.0629 8.07106 153.895)"
-                    fill="#ff9900" stroke="#ff9900" stroke-width="10" />
+                    fill="#7F58F9" stroke="#7F58F9" stroke-width="10" />
                 <rect x="90.0054" y="71.7804" width="90" height="90" transform="rotate(-45.0629 90.0054 71.7804)"
-                    fill="#ff9900" stroke="#ff9900" stroke-width="10" />
+                    fill="#7F58F9" stroke="#7F58F9" stroke-width="10" />
                 <rect x="88.7697" y="234.416" width="90" height="90" transform="rotate(-45.0629 88.7697 234.416)"
-                    fill="#ff9900" stroke="#ff9900" stroke-width="10" />
+                    fill="#7F58F9" stroke="#7F58F9" stroke-width="10" />
                 <rect x="170.704" y="152.302" width="90" height="90" transform="rotate(-45.0629 170.704 152.302)"
-                    fill="#ff9900" stroke="#ff9900" stroke-width="10" />
-                <rect x="15" y="15" width="274" height="274" stroke="#ff9900" stroke-width="30" stroke-dasharray="50 50" />
+                    fill="#7F58F9" stroke="#7F58F9" stroke-width="10" />
+                <rect x="15" y="15" width="274" height="274" stroke="#7F58F9" stroke-width="30" stroke-dasharray="50 50" />
             </svg> -->
             <svg xmlns="http://www.w3.org/2000/svg" xmlns:xlink="http://www.w3.org/1999/xlink" fill="none" version="1.1"
                 width="16" height="16" viewBox="0 0 16 16" v-if="(props.shape as SymbolShape).isSymbolUnionShape">

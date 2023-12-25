@@ -274,6 +274,8 @@ export class Selection extends WatchableObject implements ISave4Restore {
      */
     getClosestContainer(position: PageXY, except?: Map<string, Shape>, scope?: Shape[]): Shape {
         const range: Shape[] = scope || this.selectedPage?.childs || [];
+        console.log('result:', finder_container(this.scout!, range, position, except) || this.selectedPage!);
+
         return finder_container(this.scout!, range, position, except) || this.selectedPage!;
     }
 

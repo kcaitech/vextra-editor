@@ -361,15 +361,23 @@ export function finder_contact(scout: Scout, g: Shape[], position: PageXY, selec
 export function finder_layers(scout: Scout, g: Shape[], position: PageXY): Shape[] {
     const result = [];
     for (let i = g.length - 1; i > -1; i--) {
-        if (!canBeTarget(g[i])) continue;
         const item = g[i];
-        if (!isTarget(scout, item, position)) continue;
-        if ([ShapeType.Group, ShapeType.Artboard, ShapeType.Symbol, ShapeType.SymbolRef].includes(item.type)) {
+
+        if (!canBeTarget(g[i])) {
+            continue;
+        }
+
+        if (!isTarget(scout, item, position)) {
+            continue;
+        }
+
+        if ([ShapeType.Group, ShapeType.Artboard, ShapeType.SymbolUnion, ShapeType.Symbol, ShapeType.SymbolRef].includes(item.type)) {
             const c: Shape[] | undefined = item.type === ShapeType.SymbolRef ? item.naviChilds : (item as GroupShape).childs;
             if (c?.length) {
                 result.push(...finder_layers(scout, c, position));
             }
         }
+
         result.push(item);
     }
     return result;
@@ -423,6 +431,7 @@ export function artboardFinder(scout: Scout, g: Shape[], position: PageXY, excep
  */
 export function finder_container(scout: Scout, g: Shape[], position: PageXY, except?: Map<string, Shape>) {
     const layers = finder_layers(scout, g, position);
+
     for (let i = 0, len = layers.length; i < len; i++) {
         const item = layers[i];
         if ([ShapeType.Artboard, ShapeType.Symbol, ShapeType.SymbolUnion].includes(item.type) && (!except || !except.get(item.id))) {
