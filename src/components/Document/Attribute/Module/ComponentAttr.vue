@@ -1,10 +1,10 @@
 <script lang="ts" setup>
-import {useI18n} from 'vue-i18n';
-import {Context} from '@/context';
+import { useI18n } from 'vue-i18n';
+import { Context } from '@/context';
 import TypeHeader from '../TypeHeader.vue';
-import {onMounted, onUnmounted, ref, watch} from 'vue'
+import { onMounted, onUnmounted, ref, watch } from 'vue'
 import CompLayerShow from '../PopoverMenu/ComposAttri/CompLayerShow.vue';
-import {SymbolShape, VariableType} from '@kcdesign/data';
+import { SymbolShape, VariableType } from '@kcdesign/data';
 import {
     AttriListItem,
     create_var_by_type,
@@ -14,13 +14,13 @@ import {
 } from "@/utils/symbol";
 import SelectLayerInput from "./SelectLayerInput.vue";
 import PopoverDefaultInput from './PopoverDefaultInput.vue';
-import {cardmap} from "./ComponentStatusCard/map";
+import { cardmap } from "./ComponentStatusCard/map";
 import Status from "./ComponentStatusCard/SCStatus.vue";
-import {Warning} from '@element-plus/icons-vue';
-import {message} from "@/utils/message";
-import {v4} from "uuid";
+import { Warning } from '@element-plus/icons-vue';
+import { message } from "@/utils/message";
+import { v4 } from "uuid";
 
-const {t} = useI18n();
+const { t } = useI18n();
 
 interface Props {
     context: Context
@@ -139,7 +139,7 @@ const saveLayerShow = (type: VariableType) => {
     isaddStateDialog.value = false;
 }
 
-const dialog_posi = ref({x: 0, y: 0});
+const dialog_posi = ref({ x: 0, y: 0 });
 /**
  * @description 根据触发元素获取弹窗位置
  */
@@ -225,34 +225,31 @@ onUnmounted(() => {
         <!--list container-->
         <div class="module_container">
             <component v-for="item in variables" :is="cardmap.get(item.variable.type) || Status" :key="item.variable.id"
-                       :context="props.context"
-                       :variable="item.variable" :item="item"></component>
+                :context="props.context" :variable="item.variable" :item="item"></component>
         </div>
         <div v-if="conflict" class="conflict_warn">
             <div>
                 <el-icon>
-                    <Warning/>
+                    <Warning />
                 </el-icon>
             </div>
-            <p>{{ t('compos.conflict')}}</p>
+            <p>{{ t('compos.conflict') }}</p>
         </div>
         <!--dialog-->
-        <CompLayerShow :context="context" v-if="isaddStateDialog" @close-dialog="isaddStateDialog = false" right="250px"
-                       :width="260" :addType="addType" :title="dialog_title" :dialog_posi="dialog_posi"
-                       @save-layer-show="saveLayerShow" @name-change="name_change" :selected_layer="selected">
+        <CompLayerShow :context="context" v-if="isaddStateDialog" @close-dialog="isaddStateDialog = false" right="244px"
+            :width="240" :addType="addType" :title="dialog_title" :dialog_posi="dialog_posi"
+            @save-layer-show="saveLayerShow" @name-change="name_change" :selected_layer="selected">
             <template #layer>
                 <SelectLayerInput
                     :title="addType === VariableType.SymbolRef ? t('compos.compos_instance') : t('compos.select_layer')"
                     :add-type="addType" :context="props.context"
                     :placeholder="addType === VariableType.SymbolRef ? t('compos.place_select_instance') : t('compos.place_select_layer')"
-                    @change="list_change"
-                >
+                    @change="list_change">
                 </SelectLayerInput>
             </template>
             <template #default_value>
                 <PopoverDefaultInput v-if="addType !== VariableType.SymbolRef" :context="context" :warn="warn"
-                                     :add-type="addType" @select="dlt_change"
-                                     @change="text_dlt_change"></PopoverDefaultInput>
+                    :add-type="addType" @select="dlt_change" @change="text_dlt_change"></PopoverDefaultInput>
             </template>
         </CompLayerShow>
     </div>
@@ -268,7 +265,7 @@ onUnmounted(() => {
     justify-content: center;
     border-radius: var(--default-radius);
 
-    > svg {
+    >svg {
         width: 16px;
         height: 16px;
     }
@@ -338,6 +335,7 @@ onUnmounted(() => {
 .add-comps.clicked {
     background-color: #EBEBEB;
 }
+
 .conflict_warn {
     display: flex;
     width: 100%;
@@ -347,7 +345,7 @@ onUnmounted(() => {
     border-radius: 4px;
     padding: 10px;
 
-    > div {
+    >div {
         display: flex;
         align-items: center;
         width: 20px;
@@ -355,7 +353,7 @@ onUnmounted(() => {
         margin-right: 10px;
     }
 
-    > p {
+    >p {
         margin: 0;
     }
 }
@@ -373,20 +371,23 @@ onUnmounted(() => {
             display: flex;
             align-items: center;
             justify-content: space-between;
+            height: 44px;
+            padding: 6px 0;
+            box-sizing: border-box;
         }
 
         .module_item_left {
             display: flex;
             align-items: center;
             border-radius: 4px;
-            background-color: var(--grey-light);
+            background-color: #F5F5F5;
             width: 100%;
-            height: 30px;
+            height: 32px;
 
             .module_name {
                 width: 45%;
 
-                > svg {
+                >svg {
                     width: 14px;
                     height: 14px;
                     margin: -2px 10px;
@@ -404,33 +405,39 @@ onUnmounted(() => {
             display: flex;
             align-items: center;
             width: 100%;
-            height: 30px;
+            height: 32px;
 
             .el-input {
                 font-size: 12px;
-                height: 30px;
+                height: 32px;
             }
         }
 
         .warn {
             color: red;
+            font-size: 12px;
             transform: scale(.9);
         }
 
         .delete {
-            flex: 0 0 22px;
+            flex: 0 0 28px;
             display: flex;
             justify-content: center;
             align-items: center;
-            width: 22px;
-            height: 22px;
+            width: 28px;
+            height: 28px;
+            border-radius: var(--default-radius);
 
-            > svg {
-                width: 11px;
-                height: 11px;
+            >svg {
+                width: 16px;
+                height: 16px;
             }
 
             transition: .2s;
+        }
+
+        .delete:hover {
+            background-color: #F5F5F5;
         }
     }
 }
@@ -441,4 +448,5 @@ onUnmounted(() => {
 
 :deep(.el-input__wrapper.is-focus) {
     box-shadow: 0 0 0 1px var(--active-color) inset;
-}</style>
+}
+</style>

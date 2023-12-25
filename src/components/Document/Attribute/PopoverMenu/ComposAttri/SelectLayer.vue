@@ -131,13 +131,19 @@ onUnmounted(() => {
                     <!-- 可变组件折叠 -->
                     <template v-for="(item, i) in selectList" :key="i">
                         <div class="collapse-title" @click="toggle(i)" v-if="selectList.length > 1" :reflush="reflush">
-                            <span>{{ item.state }}</span>
                             <div class="shrink">
+                                <svg-icon icon-class="triangle-icon"
+                                    :style="{ transform: `rotate(${!unfold.has(i) ? '-90deg' : '0deg'})` }"></svg-icon>
+                            </div>
+                            <span>{{ item.state }}</span>
+                            <!-- <div class="shrink">
                                 <svg-icon icon-class="down"
                                     :style="{ transform: !unfold.has(i) ? 'rotate(-90deg)' : 'rotate(0deg)' }"></svg-icon>
-                            </div>
+                            </div> -->
                         </div>
-                        <div class="demo-collapse" v-if="unfold.has(i)" :reflush="reflush">
+                        <div class="demo-collapse"
+                            :style="{ marginLeft: selectList.length > 1 ? '26px' : '12px', marginTop: selectList.length > 1 ? '0' : '4px' }"
+                            v-if="unfold.has(i)" :reflush="reflush">
                             <component v-if="scroll_container" :is="CompoSelectList" :context="context"
                                 :contents="item.data" @handleCheck="handleCheck" :layerId="props.layerId"
                                 :container="scroll_container">
@@ -145,9 +151,9 @@ onUnmounted(() => {
                         </div>
                     </template>
                 </el-scrollbar>
-                <div class="button" :style="{ opacity: checkList.length > 0 ? 1 : 0.5 }">
-                    <el-button @click.stop="confirmSelect">{{t('compos.confirm')}}
-                    </el-button>
+                <div class="button">
+                    <button type="button" @click.stop="confirmSelect" :disabled="checkList.length ? false : true">{{
+                        t('compos.confirm') }}</button>
                 </div>
             </div>
         </div>
@@ -180,8 +186,8 @@ onUnmounted(() => {
 
     .heard {
         width: 100%;
-        height: 32px;
-        border-bottom: 1px solid var(--grey-light);
+        height: 40px;
+        border-bottom: 1px solid #F5F5F5;
         display: flex;
         font-size: var(--font-default-fontsize);
         box-sizing: border-box;
@@ -190,17 +196,27 @@ onUnmounted(() => {
         padding-right: 5px;
 
         .title {
-            line-height: 32px;
+            color: #3D3D3D;
+            line-height: 40px;
             font-weight: var(--font-default-bold);
             margin-left: 10px;
         }
 
         .toggle_list {
-            width: 28px;
-            height: 100%;
+            width: 24px;
+            height: 24px;
             display: flex;
             align-items: center;
             justify-content: center;
+            border-radius: 6px;
+
+            &:hover {
+                background-color: #F5F5F5;
+            }
+
+            &:active {
+                background-color: #EBEBEB;
+            }
 
             svg {
                 width: 16px;
@@ -210,9 +226,9 @@ onUnmounted(() => {
     }
 
     .container {
-        padding-left: 10px;
+        // padding-left: 10px;
         flex: 1;
-        height: calc(100% - 42px);
+        height: calc(100% - 40px);
 
         .el-scrollbar {
             height: calc(100% - 40px);
@@ -223,17 +239,31 @@ onUnmounted(() => {
         }
 
         .button {
-            height: 40px;
-            width: 100%;
             display: flex;
             align-items: center;
             justify-content: center;
 
-            .el-button {
-                height: 30px;
-                box-sizing: border-box;
-                background-color: var(--active-color);
-                border-color: var(--active-color);
+            button {
+                outline: none;
+                border: none;
+                width: 140px;
+                height: 32px;
+                border-radius: 6px;
+                margin: auto;
+                background-color: #1878F5;
+                color: white;
+
+                &:hover {
+                    background-color: #429AFF;
+                }
+
+                &:active {
+                    background-color: #0A59CF;
+                }
+
+                &:disabled {
+                    background-color: #BDE2FF;
+                }
             }
         }
 
@@ -265,16 +295,17 @@ onUnmounted(() => {
 
 .collapse-title {
     width: 100%;
-    height: 28px;
+    height: 32px;
     transition: 0.1s;
-    border-radius: 4px;
+    // border-radius: 4px;
     display: flex;
     align-items: center;
-    padding: 0 4px;
+    padding: 0 8px;
     box-sizing: border-box;
     position: sticky;
     top: 0;
     background-color: var(--theme-color-anti);
+    gap: 4px;
     z-index: 9;
 
     //&:hover {
@@ -282,23 +313,28 @@ onUnmounted(() => {
     //}
 
     >span {
-        font-weight: 600;
+        font-weight: 500;
         overflow: hidden;
         text-overflow: ellipsis;
         white-space: nowrap;
     }
 
     .shrink {
-        position: absolute;
-        right: 5px;
-        height: 12px;
-        width: 12px;
+        height: 14px;
+        width: 14px;
 
         >svg {
-            width: 80%;
-            height: 80%;
+            width: 14px;
+            height: 14px;
+            transition: all 0.3s;
         }
     }
+}
+
+.demo-collapse {
+    display: flex;
+    flex-direction: column;
+    gap: 4px;
 }
 
 :deep(.el-scrollbar__bar.is-vertical) {

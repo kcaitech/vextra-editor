@@ -171,7 +171,7 @@ onUnmounted(() => {
 </script>
 <template>
     <section id="Design">
-        <el-scrollbar>
+        <el-scrollbar height="100%">
             <div v-if="!len">
                 <PageBackgorund :context="props.context" v-if="props.context.selection.selectedPage"
                     :page="props.context.selection.selectedPage"></PageBackgorund>

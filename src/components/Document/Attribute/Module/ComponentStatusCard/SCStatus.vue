@@ -1,9 +1,9 @@
 <script lang="ts" setup>
-import {Context} from "@/context";
-import {AttriListItem, delete_variable, is_status_allow_to_delete, is_valid_name} from "@/utils/symbol";
-import {nextTick, ref} from "vue";
-import {SymbolShape, Variable, VariableType} from "@kcdesign/data";
-import {useI18n} from "vue-i18n";
+import { Context } from "@/context";
+import { AttriListItem, delete_variable, is_status_allow_to_delete, is_valid_name } from "@/utils/symbol";
+import { nextTick, ref } from "vue";
+import { SymbolShape, Variable, VariableType } from "@kcdesign/data";
+import { useI18n } from "vue-i18n";
 
 interface Props {
     context: Context
@@ -17,7 +17,7 @@ const attrInput = ref('');
 const input_s = ref<HTMLInputElement>();
 const isWarnRepeat = ref(false);
 const isWarnNull = ref(false);
-const {t} = useI18n();
+const { t } = useI18n();
 
 function selectAllText(event: FocusEvent) {
     (event.target as HTMLInputElement).select(); // 选择输入框内的文本
@@ -94,15 +94,15 @@ function _delete() {
         <div class="attr_con">
             <div class="module_input" v-if="showRename">
                 <el-input ref="input_s" v-model="attrInput" @focus="selectAllText" class="input" @blur="blur"
-                          @keydown="keyboard_watcher"/>
+                    @keydown="keyboard_watcher" />
             </div>
             <div class="module_item_left" @dblclick="rename" v-else>
                 <div class="module_name">
                     <svg-icon icon-class="comp-state"></svg-icon>
                 </div>
                 <div class="name_i" :title="props.item.values.toString()">
-                    <span style="width: 48px;">{{ props.variable.name }}</span>
-                    <span style="width: 94px;">{{ props.item.values.toString() }}</span>
+                    <span style="width:40%;">{{ props.variable.name }}</span>
+                    <span style="width: 60%;">{{ props.item.values.toString() }}</span>
                 </div>
             </div>
             <div class="delete" @click="_delete">
@@ -110,7 +110,7 @@ function _delete() {
             </div>
         </div>
         <p class="warn" v-if="isWarnRepeat">{{ t('compos.duplicate_name') }}</p>
-        <p class="warn" v-if="isWarnNull">{{ t('compos.validate_info_2')}}</p>
+        <p class="warn" v-if="isWarnNull">{{ t('compos.validate_info_2') }}</p>
     </div>
 </template>
 <style scoped lang="scss">
@@ -146,7 +146,7 @@ function _delete() {
             color: #595959;
             margin-left: 8px;
 
-            > svg {
+            >svg {
                 width: 14px;
                 height: 14px;
             }
@@ -159,13 +159,13 @@ function _delete() {
             }
         }
 
-        > .name_i {
+        >.name_i {
             flex: 1;
             display: flex;
             max-width: 100%;
             margin-left: 8px;
 
-            > span {
+            >span {
                 display: block;
                 box-sizing: border-box;
                 overflow: hidden;
@@ -179,7 +179,7 @@ function _delete() {
             display: flex;
             align-items: center;
 
-            > svg {
+            >svg {
                 width: 14px;
                 height: 14px;
                 margin: 0px 10px;
@@ -218,7 +218,7 @@ function _delete() {
     }
 
     .warn {
-        font-size: 10px;
+        font-size: 12px;
         color: red;
         padding: 0;
         color: red;
@@ -234,7 +234,7 @@ function _delete() {
         height: 28px;
         border-radius: var(--default-radius);
 
-        > svg {
+        >svg {
             width: 16px;
             height: 16px;
         }

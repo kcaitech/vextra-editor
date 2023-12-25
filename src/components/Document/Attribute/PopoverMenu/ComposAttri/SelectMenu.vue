@@ -50,7 +50,8 @@ onUnmounted(() => {
             @mouseenter="hoverColor(index)" :class="{ active: isActive === index }">
             <span v-if="item !== 'add_new_value' || index !== menuItems.length - 1">{{ item }}</span>
             <span v-if="item === 'add_new_value' && index === menuItems.length - 1">{{ t('compos.add_new') }}</span>
-            <div class="choose" :style="{ borderColor: isActive === index ? '#fff' : '' }"></div>
+            <div v-if="props.menuIndex === index" class="choose" :style="{ borderColor: isActive === index ? '#fff' : '' }">
+            </div>
         </div>
     </div>
 </template>
@@ -68,11 +69,11 @@ onUnmounted(() => {
 
     .untie {
         height: 32px;
-        width: 100%;
+        width: calc(100% - 1px);
         display: flex;
         align-items: center;
         justify-content: space-between;
-        padding: 0 12px;
+        padding: 0 2px 0 12px;
         box-sizing: border-box;
 
         span {
