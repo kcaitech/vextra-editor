@@ -297,9 +297,16 @@ export function useControllerCustom(context: Context, i18nT: Function) {
         }
     }
 
-    function update_assist_by_workspace_change() {
+    function update_assist_by_workspace_change(event: MouseEvent) {
+        matrix.reset(workspace.matrix.inverse);
+
         context.assist.set_trans_target(shapes);
-        offset_map = gen_offset_points_map(shapes, startPositionOnPage);
+
+        const root = context.workspace.root;
+
+        const xy = matrix.computeCoord2(event.clientX - root.x, event.clientY - root.y);
+
+        offset_map = gen_offset_points_map(shapes, xy);
     }
 
     function transform(start: ClientXY, end: ClientXY, assit = true) {
@@ -520,11 +527,11 @@ export function useControllerCustom(context: Context, i18nT: Function) {
         }
     }
 
-    function workspace_watcher(t?: number) {
+    function workspace_watcher(t: number, param1: MouseEvent) {
         if (t === WorkSpace.CHECKSTATUS) {
             checkStatus();
         } else if (t === WorkSpace.NEW_ENV_MATRIX_CHANGE) {
-            update_assist_by_workspace_change();
+            update_assist_by_workspace_change(param1);
         }
     }
 

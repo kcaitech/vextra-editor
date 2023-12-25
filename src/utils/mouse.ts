@@ -75,6 +75,7 @@ export function modify_down_position(e: MouseEvent, context: Context, client_p: 
     const root = context.workspace.root;
     client_p.x = e.clientX - root.x;
     client_p.y = e.clientY - root.y;
+
     if (root_p && martix) {
         const _p = martix.computeCoord3(client_p);
         root_p.x = _p.x;
@@ -141,7 +142,7 @@ export function check_drag_action(start: { x: number, y: number }, current: { x:
  * @description 根据鼠标在client坐标系上的一点确定辅助对象的点图
  * @param down root坐标系上的一点
  */
-export function gen_offset_points_map(shapes: Shape[], down: PageXY) {
+export function gen_offset_points_map(shapes: Shape[], down: PageXY) {    
     let lt: { x: number, y: number }, rb: { x: number, y: number }, pivot: { x: number, y: number },
         rt: { x: number, y: number }, lb: { x: number, y: number };
     if (shapes.length === 1) {
