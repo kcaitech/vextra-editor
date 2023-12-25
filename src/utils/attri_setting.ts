@@ -433,7 +433,6 @@ export function get_height(shapes: Shape[], mixed: string) {
   }
   return first_height;
 }
-
 export function get_constrainer_proportions(shapes: Shape[]) {
   let constrainer_proportions = true;
   for (let i = 0, l = shapes.length; i < l; i++) {
@@ -446,7 +445,6 @@ export function get_constrainer_proportions(shapes: Shape[]) {
   }
   return constrainer_proportions;
 }
-
 export function get_shapes_rotation(shapes: Shape[], mixed: string) {
   const first_shape = shapes[0];
   let first_rotation: number | string = get_rotation(first_shape);
