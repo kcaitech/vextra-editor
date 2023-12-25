@@ -129,8 +129,8 @@ onUnmounted(() => {
     width: 100%;
     display: grid;
     grid-gap: 8px;
-    grid-auto-rows: 104px;
-    padding: 0 13px;
+    grid-auto-rows: 100px;
+    padding: 4px;
     box-sizing: border-box;
     margin-bottom: 8px;
 }

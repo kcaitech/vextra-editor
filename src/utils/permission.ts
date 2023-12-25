@@ -1,7 +1,6 @@
 import { router } from "@/router";
 import { Context } from "@/context";
 import { Perm } from "@/context/workspace";
-
 //守卫白名单
 const whiteList = ['/', '/login', '/404', '/privacypolicy', '/serviceagreement']
 router.beforeEach((to, from, next) => {
@@ -14,7 +13,7 @@ router.beforeEach((to, from, next) => {
     //判断是否存在token且有效
     if (token) {
         if (to.path === '/login') {
-            next('/apphome')
+            next('/files')
         } else {
             next(); // 继续路由跳转
         }

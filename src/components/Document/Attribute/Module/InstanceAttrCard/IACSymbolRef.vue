@@ -1,13 +1,13 @@
 <script setup lang="ts">
-import {get_vari_value_for_ref, is_circular_ref2, modify_vari_value_for_ref, RefAttriListItem} from "@/utils/symbol";
-import {onMounted, onUnmounted, onUpdated, ref, watch} from "vue";
-import {Context} from "@/context";
+import { get_vari_value_for_ref, is_circular_ref2, modify_vari_value_for_ref, RefAttriListItem } from "@/utils/symbol";
+import { onMounted, onUnmounted, onUpdated, ref, watch } from "vue";
+import { Context } from "@/context";
 import ComponentDialog from "@/components/Document/Attribute/Module/ComponentDialog.vue";
-import {OverrideType, Shape} from "@kcdesign/data";
-import {Component} from "@/context/component";
-import {message} from "@/utils/message";
-import {ArrowDown} from '@element-plus/icons-vue'
-import {useI18n} from "vue-i18n";
+import { OverrideType, Shape } from "@kcdesign/data";
+import { Component } from "@/context/component";
+import { message } from "@/utils/message";
+import { ArrowDown } from '@element-plus/icons-vue'
+import { useI18n } from "vue-i18n";
 
 
 interface Props {
@@ -18,7 +18,7 @@ interface Props {
 const props = defineProps<Props>();
 const showCompsDialog = ref(false);
 const comps = ref<HTMLDivElement>();
-const comps_posi = ref({x: 0, y: 0});
+const comps_posi = ref({ x: 0, y: 0 });
 const vari_value = ref<string>('');
 const vari_instance_from = ref<string>('');
 const t = useI18n().t;
@@ -89,19 +89,19 @@ onUnmounted(() => {
             <div class="state_name">
                 <span>{{ props.data.variable.name }}</span>
             </div>
-            <div class="state_value border" @click="compsDialog">
-                <span style="color: #606266;">{{ vari_value }}</span>
-                <div style="width: 30px;">
+            <div class="state_value border" @click="compsDialog"
+                :style="{ backgroundColor: showCompsDialog ? '#EBEBEB' : '' }">
+                <span>{{ vari_value }}</span>
+                <div>
                     <el-icon>
-                        <ArrowDown/>
+                        <ArrowDown :style="{ transform: showCompsDialog ? 'rotate(180deg)' : 'rotate(0deg)', transition: '0.3s' }" />
                     </el-icon>
                 </div>
             </div>
         </div>
-        <div class="delete"></div>
-        <ComponentDialog v-if="showCompsDialog" :context="context" right="250px" top="0" @closeDialog="closeDialog"
-                         :current-instance-from="vari_instance_from"
-                         :comps_posi="comps_posi">
+        <!-- <div class="delete"></div> -->
+        <ComponentDialog v-if="showCompsDialog" :context="context" right="244px" top="0" @closeDialog="closeDialog"
+            :current-instance-from="vari_instance_from" :comps_posi="comps_posi">
         </ComponentDialog>
     </div>
 </template>
@@ -110,23 +110,23 @@ onUnmounted(() => {
     position: relative;
     display: flex;
     align-items: center;
-    margin-bottom: 3px;
+    height: 44px;
 
     .state_item {
         display: flex;
         align-items: center;
-        width: calc(100% - 22px);
-        height: 30px;
+        // width: calc(100% - 22px);
+        width: 100%;
+        gap: 12px;
 
         .state_name {
             display: flex;
             align-items: center;
             width: 40%;
-            height: 100%;
             box-sizing: border-box;
-            padding-right: 10px;
 
             span {
+                color: #595959;
                 overflow: hidden;
                 text-overflow: ellipsis;
                 white-space: nowrap;
@@ -139,17 +139,17 @@ onUnmounted(() => {
             justify-content: space-between;
             box-sizing: border-box;
             width: 60%;
-            padding-left: 11px;
+            padding: 9px 12px;
             flex: 1;
-            height: 100%;
-            border-radius: 4px;
+            height: 32px;
+            border-radius: 6px;
 
-            > div {
+            >div {
                 display: flex;
                 align-items: center;
                 justify-content: center;
 
-                > svg {
+                >svg {
                     width: 12px;
                     height: 12px;
                 }
@@ -165,13 +165,11 @@ onUnmounted(() => {
             .input {
                 position: relative;
                 width: 100%;
-                height: 30px;
                 border-radius: 4px;
                 padding-left: 11px;
                 box-sizing: border-box;
                 display: flex;
                 align-items: center;
-                background-color: var(--grey-light);
 
                 span {
                     flex: 1;
@@ -187,11 +185,9 @@ onUnmounted(() => {
             }
 
             .el-select {
-                width: 100%;
-                height: 30px;
                 font-size: 12px;
 
-                > div {
+                >div {
                     height: 100%;
                 }
 
@@ -214,7 +210,6 @@ onUnmounted(() => {
 
             .el-input {
                 width: 100%;
-                height: 30px;
                 font-size: 12px;
 
                 :deep(.el-input__inner) {
@@ -239,7 +234,11 @@ onUnmounted(() => {
         }
 
         .border {
-            background-color: var(--grey-light);
+            background-color: #F5F5F5;
+
+            &:hover {
+                background-color: #EBEBEB;
+            }
         }
     }
 

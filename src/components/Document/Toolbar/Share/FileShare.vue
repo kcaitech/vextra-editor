@@ -83,9 +83,12 @@ const selectValue = ref(DocType[props.selectValue === 0 ? 1 : props.selectValue]
 //获取文档信息
 const getDocumentInfo = async () => {
   try {
-    const { data } = await share_api.getDocumentInfoAPI({ doc_id: docID })
-    if (data) {
+    const { code, data, message } = await share_api.getDocumentInfoAPI({ doc_id: docID })
+    if (code === 0) {
       docInfo.value = data
+    } else {
+      emit('close')
+      ElMessage.error(message === '审核不通过' ? t('system.sensitive_reminder') : message)
     }
   } catch (err) {
     console.log(err);
@@ -592,6 +595,7 @@ const selectOption = (option: any) => {
         height: 16px;
         padding: 4px;
         border-radius: 6px;
+        display: flex;
 
         &:hover {
           background-color: rgb(243, 243, 245);

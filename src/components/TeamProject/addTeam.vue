@@ -84,10 +84,10 @@ const createTeam = async () => {
             emits('close')
             state(true)  //改变updatestate的值为TRUE
             if (route.params.id) {
-                router.push({ path: `/apphome/teams/${data.id}` })
+                router.push({ path: `/files/team/${data.id}` })
                 sessionStorage.setItem('index', '6')
             } else {
-                router.push({ path: `teams/${data.id}` })
+                router.push({ path: `team/${data.id}` })
                 sessionStorage.setItem('index', '6')
             }
         } else {
@@ -170,6 +170,7 @@ const close = () => {
         }
 
         .close {
+            display: flex;
             width: 16px;
             height: 16px;
             padding: 4px;

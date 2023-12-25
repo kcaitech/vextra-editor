@@ -50,6 +50,8 @@ onUnmounted(() => {
             @mouseenter="hoverColor(index)" :class="{ active: isActive === index }">
             <span v-if="item !== 'add_new_value' || index !== menuItems.length - 1">{{ item }}</span>
             <span v-if="item === 'add_new_value' && index === menuItems.length - 1">{{ t('compos.add_new') }}</span>
+            <div v-if="props.menuIndex === index" class="choose" :style="{ borderColor: isActive === index ? '#fff' : '' }">
+            </div>
         </div>
     </div>
 </template>
@@ -60,18 +62,18 @@ onUnmounted(() => {
     right: 0;
     padding: 4px 0;
     background-color: #fff;
-    border-radius: 8px;
     border: 1px solid #EBEBEB;
+    border-radius: 6px;
     box-shadow: 0px 2px 10px 0px rgba(0, 0, 0, 0.08);
     z-index: 100;
 
     .untie {
         height: 32px;
-        width: 100%;
+        width: calc(100% - 1px);
         display: flex;
         align-items: center;
         justify-content: space-between;
-        padding: 9px 8px 9px 12px;
+        padding: 0 2px 0 12px;
         box-sizing: border-box;
 
         span {
@@ -85,6 +87,18 @@ onUnmounted(() => {
         //     background-color: var(--active-color);
         //     color: #fff;
         // }
+
+        .choose {
+            box-sizing: border-box;
+            width: 10px;
+            height: 6px;
+            margin-right: 4px;
+            margin-left: 2px;
+            border-width: 0 0 0.1em 0.1em;
+            border-style: solid;
+            border-color: rgb(0, 0, 0, .75);
+            transform: rotate(-45deg) translateY(-30%);
+        }
     }
 }
 

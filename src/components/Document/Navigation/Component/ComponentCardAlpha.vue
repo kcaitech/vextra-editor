@@ -161,8 +161,9 @@ onUnmounted(() => {
         box-sizing: border-box;
 
         > .render-wrap {
-            margin-left: 30px;
-            background-color: #EBEBEB;
+            margin-left: 2px;
+            background-color: var(--grey-light);
+            // border: 1px solid var(--grey-dark);
             box-sizing: border-box;
             border-radius: 2px;
             flex-shrink: 0;
@@ -190,12 +191,14 @@ onUnmounted(() => {
     }
 
     .selected {
-        border: 2px solid var(--component-color);
+        border: 1px solid #1878F5;
+        // box-shadow: 0 0 2px 0 #1878F5;
     }
 
     .danger {
-        border: 2px solid #F56C6C;
-        background-color: rgba(245, 108, 108, 0.3);
+        // border: 2px solid #F56C6C;
+        background-color: #EBEBEB;
+        opacity: 0.3;
     }
 }
 </style>

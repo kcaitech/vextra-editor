@@ -225,13 +225,13 @@ watch(is_team_upodate, () => {
 })
 
 const torouter = (id: string, index: number) => {
-    router.push({ path: '/apphome/teams/' + id });
+    router.push({ path: '/files/team/' + id });
     sessionStorage.setItem('index', '6');
     x.value = '6';
 }
 
 const skipProject = (item: any, e: MouseEvent) => {
-    router.push({ path: '/apphome/project/' + item.project.id });
+    router.push({ path: '/files/project/' + item.project.id });
     sessionStorage.setItem('index', '7');
     x.value = '7';
 }
@@ -306,11 +306,11 @@ const DelProject = () => {
     favoriteList.value.splice(f_index, 1);
     projectList.value.splice(index, 1);
     if (project.is_in_team) {
-        router.push({ path: '/apphome/teams/' + project.project.team_id });
+        router.push({ path: '/files/team/' + project.project.team_id });
     } else {
         const inshare = projectList.value.filter(item => !item.is_in_team).length;
         if (inshare > 0) {
-            router.push('/apphome/project_share');
+            router.push('/files/project_shared');
         } else {
             router.push({ name: "apphome" });
             sessionStorage.setItem('index', '1');
@@ -345,7 +345,7 @@ const ExitProject = () => {
     projectList.value.splice(index, 1);
     const inshare = projectList.value.filter(item => !item.is_in_team).length;
     if (inshare > 0) {
-        router.push('/apphome/project_share');
+        router.push('/files/project_shared');
     } else {
         router.push({ name: "apphome" });
         sessionStorage.setItem('index', '1');
@@ -406,7 +406,7 @@ const setProjectInfo = async (params: any) => {
 }
 
 const skipProjecrShare = () => {
-    router.push('/apphome/project_share');
+    router.push('/files/project_shared');
     sessionStorage.setItem('index', '9');
 }
 
@@ -573,7 +573,7 @@ onUnmounted(() => {
                 <div>
                     <el-menu :default-active="x" active-text-color="#ffd04b" class="el-menu-vertical-demo"
                         text-color="#000000">
-                        <router-link to="/apphome/recently"><el-menu-item index="1" :class="{ 'is_active': x == '1' }"
+                        <router-link to="/files/recently"><el-menu-item index="1" :class="{ 'is_active': x == '1' }"
                                 @click="Setindex(1, t('home.recently_opened'))" @mouseenter="hover = '1'"
                                 @mouseleave="hover = ''">
                                 <el-icon size="20">
@@ -582,7 +582,7 @@ onUnmounted(() => {
                                 </el-icon>
                                 <span>{{ t('home.recently_opened') }}</span>
                             </el-menu-item></router-link>
-                        <router-link to="/apphome/starfile"><el-menu-item index="2" :class="{ 'is_active': x == '2' }"
+                        <router-link to="/files/star"><el-menu-item index="2" :class="{ 'is_active': x == '2' }"
                                 @click="Setindex(2, t('home.star_file'))" @mouseenter="hover = '2'"
                                 @mouseleave="hover = ''">
                                 <el-icon size="20">
@@ -591,7 +591,7 @@ onUnmounted(() => {
                                 </el-icon>
                                 <span>{{ t('home.star_file') }}</span>
                             </el-menu-item></router-link>
-                        <router-link to="/apphome/meshare"><el-menu-item index="3" :class="{ 'is_active': x == '3' }"
+                        <router-link to="/files/myfile"><el-menu-item index="3" :class="{ 'is_active': x == '3' }"
                                 @click="Setindex(3, t('home.file_shared'))" @mouseenter="hover = '3'"
                                 @mouseleave="hover = ''">
                                 <el-icon size="20">
@@ -600,7 +600,7 @@ onUnmounted(() => {
                                 </el-icon>
                                 <span>{{ t('home.file_shared') }}</span>
                             </el-menu-item></router-link>
-                        <router-link to="/apphome/shareme"><el-menu-item index="4" :class="{ 'is_active': x == '4' }"
+                        <router-link to="/files/shared"><el-menu-item index="4" :class="{ 'is_active': x == '4' }"
                                 @click="Setindex(4, t('home.shared_file_received'))" @mouseenter="hover = '4'"
                                 @mouseleave="hover = ''">
                                 <el-icon size="20">

@@ -129,9 +129,9 @@ onUnmounted(() => {
     height: 100%;
 }
 
-//.el-scrollbar {
-//    padding-right: 10px;
-//}
+.el-scrollbar {
+    // padding-right: 10px;
+}
 
 .items-wrap {
     font-size: var(--font-default-fontsize);

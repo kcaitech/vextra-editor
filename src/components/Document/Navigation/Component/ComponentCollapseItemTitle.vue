@@ -37,6 +37,7 @@ onMounted(init_slice);
 </template>
 <scoped lang="scss" scoped>
 div>span {
+    
     white-space: pre;
 }
 

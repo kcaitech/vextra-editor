@@ -1,9 +1,9 @@
 <script lang="ts" setup>
-import {Context} from "@/context";
-import {AttriListItem, delete_variable, modify_variable} from "@/utils/symbol";
-import {nextTick, ref} from "vue";
-import {Variable, VariableType, Text} from "@kcdesign/data";
-import {useI18n} from "vue-i18n";
+import { Context } from "@/context";
+import { AttriListItem, delete_variable, modify_variable } from "@/utils/symbol";
+import { nextTick, ref } from "vue";
+import { Variable, VariableType, Text } from "@kcdesign/data";
+import { useI18n } from "vue-i18n";
 import CompLayerShow from "@/components/Document/Attribute/PopoverMenu/ComposAttri/CompLayerShow.vue";
 import SelectLayerInput from "@/components/Document/Attribute/Module/SelectLayerInput.vue";
 import PopoverDefaultInput from "@/components/Document/Attribute/Module/PopoverDefaultInput.vue";
@@ -17,9 +17,9 @@ interface Props {
 const props = defineProps<Props>();
 const showRename = ref(false);
 const input_s = ref<HTMLInputElement>();
-const {t} = useI18n();
+const { t } = useI18n();
 const card_ref = ref<HTMLDivElement>();
-const dialog_posi = ref({x: 0, y: 0});
+const dialog_posi = ref({ x: 0, y: 0 });
 const iseditText = ref(false);
 
 function rename() {
@@ -91,19 +91,17 @@ const getValue = (value: Text | string | undefined) => {
                 <svg-icon icon-class="delete"></svg-icon>
             </div>
         </div>
-        <CompLayerShow :context="context" v-if="iseditText" @close-dialog="iseditText = false" right="250px"
-                       :width="260"
-                       :add-type="VariableType.Text" :title="t('compos.text_content')" @save-layer-show="save_text"
-                       :dialog_posi="dialog_posi" :default_name="props.variable.name" :variable="props.variable">
+        <CompLayerShow :context="context" v-if="iseditText" @close-dialog="iseditText = false" right="250px" :width="260"
+            :add-type="VariableType.Text" :title="t('compos.text_content')" @save-layer-show="save_text"
+            :dialog_posi="dialog_posi" :default_name="props.variable.name" :variable="props.variable">
             <template #layer>
-                <SelectLayerInput :title="t('compos.select_layer')" :add-type="VariableType.Text"
-                                  :context="props.context" :placeholder="t('compos.place_select_layer')"
-                                  :variable="props.variable" @change="selectLayerId"></SelectLayerInput>
+                <SelectLayerInput :title="t('compos.select_layer')" :add-type="VariableType.Text" :context="props.context"
+                    :placeholder="t('compos.place_select_layer')" :variable="props.variable" @change="selectLayerId">
+                </SelectLayerInput>
             </template>
             <template #default_value>
-                <PopoverDefaultInput :context="context" :add-type="VariableType.Text"
-                                     :default_value="props.variable.value"
-                                     @change="text_dlt_change"></PopoverDefaultInput>
+                <PopoverDefaultInput :context="context" :add-type="VariableType.Text" :default_value="props.variable.value"
+                    @change="text_dlt_change"></PopoverDefaultInput>
             </template>
         </CompLayerShow>
     </div>
@@ -141,7 +139,7 @@ const getValue = (value: Text | string | undefined) => {
             color: #595959;
             margin-left: 8px;
 
-            > svg {
+            >svg {
                 width: 14px;
                 height: 14px;
             }
@@ -164,7 +162,7 @@ const getValue = (value: Text | string | undefined) => {
                 align-items: center;
                 justify-content: center;
 
-                > svg {
+                >svg {
                     width: 14px;
                     height: 14px;
                     margin: 0px 10px;
@@ -177,7 +175,7 @@ const getValue = (value: Text | string | undefined) => {
                 display: flex;
                 max-width: 100%;
 
-                > span {
+                >span {
                     display: block;
                     box-sizing: border-box;
                     overflow: hidden;
@@ -203,11 +201,11 @@ const getValue = (value: Text | string | undefined) => {
         display: flex;
         align-items: center;
         width: 100%;
-        height: 30px;
+        height: 32px;
 
         .el-input {
             font-size: 12px;
-            height: 30px;
+            height: 32px;
         }
     }
 
@@ -225,7 +223,7 @@ const getValue = (value: Text | string | undefined) => {
         height: 28px;
         border-radius: var(--default-radius);
 
-        > svg {
+        >svg {
             width: 16px;
             height: 16px;
         }
@@ -237,7 +235,9 @@ const getValue = (value: Text | string | undefined) => {
         background-color: #F5F5F5;
     }
 }
-
+.module_item_left:hover {
+        background-color: #EBEBEB;
+    }
 :deep(.el-input__inner) {
     --el-input-inner-height: 100%;
 }

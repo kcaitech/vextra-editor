@@ -82,14 +82,14 @@ const selected_watcher = (t: number) => {
 }
 
 function selcet(index: number) {
-    if(index === props.data.values.length - 1) {
+    if (index === props.data.values.length - 1) {
         editAttrValue.value = true;
         attrValueInput.value = '新的值';
         nextTick(() => {
             (revalueInput.value as HTMLInputElement).focus();
             (revalueInput.value as HTMLInputElement).select();
         })
-    }else {
+    } else {
         const val = props.data.values[index];
         save_change(val);
     }
@@ -124,13 +124,10 @@ onUnmounted(() => {
                 <div class="state_value" v-if="!editAttrValue" @dblclick="onRevalue">
                     <div class="input" @mouseenter.stop="active = true" @mouseleave.stop="active = false">
                         <span>{{ statusValue }}</span>
-                        <!--                        <el-icon @click.stop="showMenu" class="status-icon-down" :class="{active: active}">-->
-                        <div class="status-icon-down" @click.stop="showMenu" :class="{active: active}">
-                            <svg-icon icon-class="down" :style="{ transform: selectoption ? 'rotate(180deg)' : 'rotate(0deg)', transition: '0.3s' }">
-                                <ArrowDown />
-                            </svg-icon>
-                        </div>
-                        <!--                        </el-icon>-->
+                        <el-icon @click.stop="showMenu" class="status-icon-down" :class="{ active: active }">
+                            <ArrowDown
+                                :style="{ transform: selectoption ? 'rotate(180deg)' : 'rotate(0deg)', transition: '0.3s' }" />
+                        </el-icon>
                     </div>
                     <SelectMenu v-if="selectoption" :top="33" width="100%" :menuItems="data.values" :context="context"
                         :menuIndex="menuIndex" @close="selectoption = false" @selectIndex="selcet"></SelectMenu>
@@ -140,7 +137,7 @@ onUnmounted(() => {
                         @keydown.stop="onEditAttrValue" />
                 </div>
             </div>
-            <div class="delete"></div>
+            <!-- <div class="delete"></div> -->
         </div>
     </div>
 </template>
@@ -148,32 +145,29 @@ onUnmounted(() => {
 .module_state_item {
     display: flex;
     flex-direction: column;
-    //margin-bottom: 3px;
+    min-height: 44px;
 
     .module_con {
         display: flex;
         align-items: center;
         justify-content: space-between;
-        height: 44px;
     }
 
     .state_item {
         display: flex;
         align-items: center;
+        // width: calc(100% - 22px);
         width: 100%;
-        height: 44px;
-        padding: 6px 0;
-        box-sizing: border-box;
 
         .state_name {
             display: flex;
             align-items: center;
-            width: 86px;
-            height: 14px;
+            width: 40%;
             box-sizing: border-box;
             margin-right: 12px;
 
             span {
+                color: #595959;
                 overflow: hidden;
                 text-overflow: ellipsis;
                 white-space: nowrap;
@@ -184,11 +178,10 @@ onUnmounted(() => {
             position: relative;
             display: flex;
             align-items: center;
-            border-radius: 4px;
-            width: 126px;
+            border-radius: 6px;
+            width: 60%;
             flex: 1;
-            height: 100%;
-            background-color: #F5F5F5;
+            background-color: var(--grey-light);
 
             >svg {
                 width: 12px;
@@ -261,6 +254,7 @@ onUnmounted(() => {
         height: 22px;
     }
 }
+
 .active {
     background-color: rgba($color: #000000, $alpha: 0.08);
 }

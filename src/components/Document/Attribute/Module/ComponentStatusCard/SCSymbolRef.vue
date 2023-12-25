@@ -1,9 +1,9 @@
 <script lang="ts" setup>
-import {Context} from "@/context";
-import {AttriListItem, delete_variable, modify_variable} from "@/utils/symbol";
-import {nextTick, ref} from "vue";
-import {SymbolRefShape, Variable, VariableType} from "@kcdesign/data";
-import {useI18n} from "vue-i18n";
+import { Context } from "@/context";
+import { AttriListItem, delete_variable, modify_variable } from "@/utils/symbol";
+import { nextTick, ref } from "vue";
+import { SymbolRefShape, Variable, VariableType } from "@kcdesign/data";
+import { useI18n } from "vue-i18n";
 import CompLayerShow from "@/components/Document/Attribute/PopoverMenu/ComposAttri/CompLayerShow.vue";
 import SelectLayerInput from "@/components/Document/Attribute/Module/SelectLayerInput.vue";
 
@@ -16,8 +16,8 @@ interface Props {
 const props = defineProps<Props>();
 const showRename = ref(false);
 const input_s = ref<HTMLInputElement>();
-const {t} = useI18n();
-const dialog_posi = ref({x: 0, y: 0});
+const { t } = useI18n();
+const dialog_posi = ref({ x: 0, y: 0 });
 const instance_card = ref<HTMLDivElement>();
 const iseditToggle = ref(false);
 
@@ -80,7 +80,7 @@ function _delete() {
                 <div class="module_name-2">
                     <div style="width: 30px;" class="svg">
                         <svg-icon icon-class="pattern-rectangle"
-                                  style="width: 10px; height: 10px; transform: rotate(45deg); margin-top: 0;"></svg-icon>
+                            style="width: 10px; height: 10px; transform: rotate(45deg); margin-top: 0;"></svg-icon>
                     </div>
                     <div class="name">
                         <span style="width: 40%;">{{ props.variable.name }}</span>
@@ -93,14 +93,13 @@ function _delete() {
             </div>
         </div>
         <CompLayerShow :context="context" v-if="iseditToggle" @close-dialog="iseditToggle = false" right="250px"
-                       :width="260" :add-type="VariableType.SymbolRef" :title="t('compos.instance_toggle')"
-                       @save-layer-show="save_instance" :dialog_posi="dialog_posi" :default_name="props.variable.name"
-                       :variable="props.variable">
+            :width="260" :add-type="VariableType.SymbolRef" :title="t('compos.instance_toggle')"
+            @save-layer-show="save_instance" :dialog_posi="dialog_posi" :default_name="props.variable.name"
+            :variable="props.variable">
             <template #layer>
                 <SelectLayerInput :title="t('compos.compos_instance')" :add-type="VariableType.SymbolRef"
-                                  :context="props.context"
-                                  :placeholder="t('compos.place_select_instance')" :variable="props.variable"
-                                  @change="selectLayerId"></SelectLayerInput>
+                    :context="props.context" :placeholder="t('compos.place_select_instance')" :variable="props.variable"
+                    @change="selectLayerId"></SelectLayerInput>
             </template>
         </CompLayerShow>
     </div>
@@ -125,6 +124,10 @@ function _delete() {
     .module_item_left {
         display: flex;
         align-items: center;
+        border-radius: 4px;
+        background-color: #F5F5F5;
+        width: calc(100% - 32px);
+        height: 32px;
         border-radius: var(--default-radius);
         background-color: #F5F5F5;
         width: calc(100% - 32px);
@@ -161,7 +164,7 @@ function _delete() {
                 align-items: center;
                 justify-content: center;
 
-                > svg {
+                >svg {
                     width: 14px;
                     height: 14px;
                 }
@@ -173,7 +176,7 @@ function _delete() {
                 display: flex;
                 max-width: 100%;
 
-                > span {
+                >span {
                     display: block;
                     box-sizing: border-box;
                     overflow: hidden;
@@ -200,16 +203,16 @@ function _delete() {
         display: flex;
         align-items: center;
         width: 100%;
-        height: 30px;
+        height: 32px;
 
         .el-input {
             font-size: 12px;
-            height: 30px;
+            height: 32px;
         }
     }
 
     .warn {
-        font-size: 10px;
+        font-size: 12px;
         color: red;
     }
 
@@ -222,7 +225,7 @@ function _delete() {
         height: 28px;
         border-radius: var(--default-radius);
 
-        > svg {
+        >svg {
             width: 16px;
             height: 16px;
         }
@@ -234,6 +237,9 @@ function _delete() {
         background-color: #F5F5F5;
     }
 }
+.module_item_left:hover {
+        background-color: #EBEBEB;
+    }
 
 :deep(.el-input__inner) {
     --el-input-inner-height: 100%;

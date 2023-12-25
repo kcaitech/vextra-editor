@@ -1,8 +1,8 @@
 <script setup lang="ts">
-import {get_vari_value_for_ref, modify_vari_value_for_ref, RefAttriListItem} from "@/utils/symbol";
-import {ref, onMounted, watch} from "vue";
-import {Context} from "@/context";
-import {OverrideType} from "@kcdesign/data";
+import { get_vari_value_for_ref, modify_vari_value_for_ref, RefAttriListItem } from "@/utils/symbol";
+import { ref, onMounted, watch } from "vue";
+import { Context } from "@/context";
+import { OverrideType } from "@kcdesign/data";
 
 interface Props {
     context: Context
@@ -25,7 +25,7 @@ function get_value() {
 }
 
 const keysumbit = (e: KeyboardEvent) => {
-    const {shiftKey, ctrlKey, metaKey} = e;
+    const { shiftKey, ctrlKey, metaKey } = e;
     if (e.key === 'Enter') {
         if (ctrlKey || metaKey || shiftKey) {
             inputRef.value = inputRef.value + '\n'
@@ -53,10 +53,10 @@ onMounted(get_value);
             <div class="state_name"><span>{{ props.data.variable.name }}</span></div>
             <div class="state_value" style="padding: 0;">
                 <el-input ref="inputRef" v-model="textValue" type="textarea" :autosize="{ minRows: 1, maxRows: 4 }"
-                          resize="none" @focus="selectAllText" @change="change" @keydown.stop="keysumbit"/>
+                    resize="none" @focus="selectAllText" @change="change" @keydown.stop="keysumbit" />
             </div>
         </div>
-        <div class="delete"></div>
+        <!-- <div class="delete"></div> -->
     </div>
 </template>
 <style lang="scss" scoped>
@@ -64,22 +64,23 @@ onMounted(get_value);
     position: relative;
     display: flex;
     align-items: center;
-    margin-bottom: 3px;
+    min-height: 44px;
 
     .state_item {
         display: flex;
-        width: calc(100% - 22px);
-        min-height: 30px;
+        align-items: center;
+        // width: calc(100% - 22px);
+        width: 100%;
+        gap: 12px;
 
         .state_name {
             display: flex;
             align-items: center;
             width: 40%;
-            height: 30px;
             box-sizing: border-box;
-            padding-right: 10px;
 
             span {
+                color: #595959;
                 overflow: hidden;
                 text-overflow: ellipsis;
                 white-space: nowrap;
@@ -93,10 +94,9 @@ onMounted(get_value);
             padding: 0 11px;
             width: 60%;
             flex: 1;
-            height: 100%;
-            border-radius: 4px;
+            border-radius: 6px;
 
-            > svg {
+            >svg {
                 width: 10px;
                 height: 10px;
             }
@@ -104,13 +104,12 @@ onMounted(get_value);
             .input {
                 position: relative;
                 width: 100%;
-                height: 30px;
+                height: 32px;
                 border-radius: 4px;
                 padding-left: 11px;
                 box-sizing: border-box;
                 display: flex;
                 align-items: center;
-                background-color: var(--grey-light);
 
                 span {
                     flex: 1;
@@ -127,10 +126,10 @@ onMounted(get_value);
 
             .el-select {
                 width: 100%;
-                height: 30px;
+                height: 32px;
                 font-size: 12px;
 
-                > div {
+                >div {
                     height: 100%;
                 }
 
@@ -157,11 +156,20 @@ onMounted(get_value);
 
                 .el-textarea__inner {
                     font-size: 12px;
-                    min-height: 30px !important;
-                    background-color: var(--grey-light);
+                    padding: 5px 12px !important;
+                    min-height: 32px !important;
+                    background-color: #F5F5F5;
+                    line-height: 22px;
                     box-shadow: none;
+                    border-radius: 6px;
+                    color: #000000;
+
+                    &:hover {
+                        background-color: #EBEBEB;
+                    }
 
                     &:focus {
+                        background-color:  #F5F5F5 !important;
                         box-shadow: 0 0 0 1px var(--active-color) inset;
                     }
                 }
@@ -202,7 +210,7 @@ onMounted(get_value);
 }
 
 :deep(.el-textarea__inner::-webkit-scrollbar-thumb) {
-    border-radius: 3px;
+    border-radius: 6px;
     -moz-border-radius: 3px;
     -webkit-border-radius: 3px;
     background-color: #c3c3c3;

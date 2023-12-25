@@ -1,12 +1,12 @@
 <script setup lang="ts">
-import {Context} from '@/context';
-import {Text, VariableType} from '@kcdesign/data';
-import {useI18n} from 'vue-i18n';
+import { Context } from '@/context';
+import { Text, VariableType } from '@kcdesign/data';
+import { useI18n } from 'vue-i18n';
 import SelectMenu from '../PopoverMenu/ComposAttri/SelectMenu.vue';
-import {ArrowDown} from '@element-plus/icons-vue'
-import {onMounted, ref, watch} from 'vue';
+import { ArrowDown } from '@element-plus/icons-vue'
+import { onMounted, ref, watch } from 'vue';
 
-const {t} = useI18n();
+const { t } = useI18n();
 
 interface Props {
     context: Context,
@@ -40,7 +40,7 @@ watch(() => props.default_value, (v) => {
         menuIndex.value = 1;
         defaultValue.value = '隐藏';
     }
-}, {immediate: true})
+}, { immediate: true })
 const showMenu = () => {
     if (selectoption.value) return selectoption.value = false
     selectoption.value = true;
@@ -57,7 +57,7 @@ function change(v: string) {
 
 const input_v = ref();
 const keysumbit = (e: KeyboardEvent) => {
-    const {shiftKey, ctrlKey, metaKey} = e;
+    const { shiftKey, ctrlKey, metaKey } = e;
     if (e.key === 'Enter') {
         if (ctrlKey || metaKey || shiftKey) {
             input_v.value = input_v.value + '\n'
@@ -87,22 +87,24 @@ onMounted(() => {
 
 <template>
     <div class="container">
-        <span>默认值</span>
+        <span style="color: #737373;">默认值</span>
         <div v-if="props.addType === VariableType.Visible" class="show">
-            <div class="input" @click.stop="showMenu">
+            <div class="input" @click.stop="showMenu" :style="{ backgroundColor: selectoption ? '#EBEBEB' : '' }">
                 <span>{{ defaultValue }}</span>
                 <el-icon>
                     <ArrowDown
-                        :style="{ transform: selectoption ? 'rotate(180deg)' : 'rotate(0deg)', transition: '0.3s' }"/>
+                        :style="{ transform: selectoption ? 'rotate(180deg)' : 'rotate(0deg)', transition: '0.3s' }" />
                 </el-icon>
                 <SelectMenu v-if="selectoption" :top="33" width="100%" :menuItems="menuItems" :menuIndex="menuIndex"
-                            :context="context" @select-index="handleShow" @close="selectoption = false"></SelectMenu>
+                    :context="context" @select-index="handleShow" @close="selectoption = false"></SelectMenu>
             </div>
         </div>
         <div v-if="props.addType === VariableType.Text">
-            <el-input v-model="textDefaultValue" type="textarea" ref="input_v" :autosize="{ minRows: 1, maxRows: 4 }"
+            <!-- <el-input v-model="textDefaultValue" type="textarea" ref="input_v" :autosize="{ minRows: 1, maxRows: 4 }"
                       resize="none"
-                      :placeholder="t('compos.default_text_input')" @keydown.stop="keysumbit" @change="change"/>
+                      :placeholder="t('compos.default_text_input')" @keydown.stop="keysumbit" @change="change"/> -->
+            <input ref="input_v" type="text" v-model="textDefaultValue" :placeholder="t('compos.default_text_input')"
+                @keydown.stop="keysumbit" @change="change(textDefaultValue)" />
         </div>
     </div>
     <div class="warning" v-if="props.warn && props.addType === VariableType.Text">
@@ -124,24 +126,46 @@ onMounted(() => {
         width: 60px;
     }
 
-    > div {
+    >div {
         flex: 1;
-    }
 
-    :deep(.el-textarea) {
-        width: 100%;
-
-        .el-textarea__inner {
+        input {
+            outline: none;
+            border: none;
+            border: 1px solid #F5F5F5;
+            width: 100%;
+            height: 32px;
             font-size: 12px;
-            min-height: 28px !important;
-            background-color: var(--grey-light);
-            box-shadow: none;
+            border-radius: 6px;
+            padding: 7px 12px;
+            background-color: #F5F5F5;
+            box-sizing: border-box;
+
+            &:hover {
+                background-color: #EBEBEB;
+            }
 
             &:focus {
-                box-shadow: 0 0 0 1px var(--active-color) inset;
+                background-color: #F5F5F5 !important;
+                border: 1px solid #1878F5;
             }
         }
     }
+
+    // :deep(.el-textarea) {
+    //     width: 100%;
+
+    //     .el-textarea__inner {
+    //         font-size: 12px;
+    //         min-height: 28px !important;
+    //         background-color: var(--grey-light);
+    //         box-shadow: none;
+
+    //         &:focus {
+    //             box-shadow: 0 0 0 1px var(--active-color) inset;
+    //         }
+    //     }
+    // }
 
 }
 
@@ -153,7 +177,7 @@ onMounted(() => {
     box-sizing: border-box;
 
     .warn {
-        font-size: 10px;
+        font-size: 12px;
         padding: 0;
         color: red;
         margin: 3px;
@@ -165,14 +189,21 @@ onMounted(() => {
     .input {
         position: relative;
         width: 100%;
-        height: 30px;
-        border-radius: 4px;
-        border: 1px solid #dcdfe6;
+        height: 32px;
+        border-radius: 6px;
         padding-left: 11px;
         box-sizing: border-box;
         display: flex;
         align-items: center;
-        background-color: var(--grey-light);
+        background-color: #F5F5F5;
+
+        &:hover {
+            background-color: #EBEBEB;
+        }
+
+        &:active {
+            background-color: #EBEBEB;
+        }
 
         span {
             flex: 1;

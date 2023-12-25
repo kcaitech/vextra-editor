@@ -4,16 +4,16 @@ import {
     RefAttriListItem,
     switch_symref_state
 } from "@/utils/symbol";
-import {ref, watch} from "vue";
-import {Context} from "@/context";
-import {onMounted, onUpdated} from "vue";
+import { ref, watch } from "vue";
+import { Context } from "@/context";
+import { onMounted, onUpdated } from "vue";
 import SelectMenu from "@/components/Document/Attribute/PopoverMenu/ComposAttri/SelectMenu.vue";
-import {ArrowDown} from '@element-plus/icons-vue'
-import {Menu} from "@/context/menu";
-import {useI18n} from "vue-i18n";
-import {OverrideType, SymbolShape} from "@kcdesign/data";
+import { ArrowDown } from '@element-plus/icons-vue'
+import { Menu } from "@/context/menu";
+import { useI18n } from "vue-i18n";
+import { OverrideType, SymbolShape } from "@kcdesign/data";
 
-const {t} = useI18n();
+const { t } = useI18n();
 
 interface Props {
     context: Context
@@ -60,20 +60,20 @@ onMounted(() => {
     <div class="module_state_item">
         <div class="state_item">
             <div class="state_name"><span>{{ data.variable.name }}</span></div>
-            <div class="state_value" style="padding: 0;">
+            <div class="state_value">
                 <div class="input" @click.stop="show_menu">
                     <span>{{ status_value }}</span>
                     <el-icon>
                         <ArrowDown
-                            :style="{ transform: selectoption ? 'rotate(180deg)' : 'rotate(0deg)', transition: '0.3s' }"/>
+                            :style="{ transform: selectoption ? 'rotate(180deg)' : 'rotate(0deg)', transition: '0.3s' }" />
                     </el-icon>
-                    <SelectMenu v-if="selectoption" :top="33" width="100%" :menuItems="data.values" :context="context"
-                                @select-index="select" @close="selectoption = false">
+                    <SelectMenu v-if="selectoption" :top="0" width="100%" :menuItems="data.values" :context="context"
+                        @select-index="select" @close="selectoption = false">
                     </SelectMenu>
                 </div>
             </div>
         </div>
-        <div class="delete"></div>
+        <!-- <div class="delete"></div> -->
     </div>
 </template>
 <style lang="scss" scoped>
@@ -81,23 +81,23 @@ onMounted(() => {
     position: relative;
     display: flex;
     align-items: center;
-    margin-bottom: 3px;
+    height: 44px;
 
     .state_item {
         display: flex;
         align-items: center;
-        width: calc(100% - 22px);
-        height: 30px;
+        // width: calc(100% - 22px);
+        width: 100%;
+        gap: 12px;
 
         .state_name {
             display: flex;
             align-items: center;
             width: 40%;
-            height: 100%;
             box-sizing: border-box;
-            padding-right: 10px;
 
             span {
+                color: #595959;
                 overflow: hidden;
                 text-overflow: ellipsis;
                 white-space: nowrap;
@@ -109,12 +109,17 @@ onMounted(() => {
             align-items: center;
             justify-content: space-between;
             width: 60%;
-            padding: 0 11px;
+            padding: 0px;
             flex: 1;
-            height: 100%;
-            border-radius: 4px;
+            height: 32px;
+            border-radius: 6px;
+            background-color: #F5F5F5;
 
-            > svg {
+            &:hover{
+                background-color: #EBEBEB;
+            }
+
+            >svg {
                 width: 10px;
                 height: 10px;
             }
@@ -128,33 +133,30 @@ onMounted(() => {
             .input {
                 position: relative;
                 width: 100%;
-                height: 30px;
-                border-radius: 4px;
-                padding-left: 11px;
+                height: 32px;
+                padding: 9px 12px;
                 box-sizing: border-box;
                 display: flex;
                 align-items: center;
-                background-color: var(--grey-light);
 
                 span {
                     flex: 1;
                 }
 
                 .el-icon {
-                    width: 30px;
-                    height: 30px;
                     display: flex;
                     align-items: center;
                     justify-content: center;
                 }
+                
             }
 
             .el-select {
                 width: 100%;
-                height: 30px;
+                height: 32px;
                 font-size: 12px;
 
-                > div {
+                >div {
                     height: 100%;
                 }
 
@@ -177,7 +179,7 @@ onMounted(() => {
 
             .el-input {
                 width: 100%;
-                height: 30px;
+                height: 32px;
                 font-size: 12px;
 
                 :deep(.el-input__inner) {

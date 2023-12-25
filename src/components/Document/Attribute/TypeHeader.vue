@@ -19,15 +19,18 @@ const props = defineProps<{
 <style scoped lang="scss">
 .header-container {
     width: 100%;
-    min-height: 32px;
+    min-height: 44px;
     box-sizing: border-box;
     position: relative;
+    display: flex;
+    align-items: center;
 
     .header {
         display: flex;
         flex-direction: row;
         align-items: center;
         justify-content: space-between;
+        width: 100%;
 
         >.title {
             flex: 0 0 auto;

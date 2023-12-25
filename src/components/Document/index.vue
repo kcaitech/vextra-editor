@@ -266,6 +266,273 @@ watchEffect(() => {
       console.log(err);
     }
   }
+<<<<<<< HEAD
+}
+const permissionChange = ref(-1);
+// 权限被修改后的倒计时
+const startCountdown = (type?: number) => {
+  const timer = setInterval(() => {
+    if (countdown.value > 1) {
+      countdown.value--;
+    } else {
+      hideNotification(type);
+      clearInterval(timer);
+    }
+  }, 1000);
+}
+const hideNotification = (type?: number) => {
+  showHint.value = false;
+  countdown.value = 10;
+  if (type === 0) {
+    router.push('/files')
+  } else {
+    router.go(0)
+  }
+}
+const showNotification = (type?: number) => {
+  insertNetworkInfo('networkError', false, network_error);
+  showHint.value = true;
+  startCountdown(type);
+}
+const getUserInfo = async () => {
+  const { data } = await user_api.GetInfo()
+  if (context) {
+    context.comment.setUserInfo(data)
+    localStorage.setItem('avatar', data.avatar)
+    localStorage.setItem('nickname', data.nickname)
+    localStorage.setItem('userId', data.id)
+  }
+}
+
+//获取文档信息
+const getDocumentInfo = async () => {
+  try {
+    loading.value = true;
+    noNetwork.value = false;
+
+    const docInfoPromise = share_api.getDocumentInfoAPI({ doc_id: route.query.id });
+    const docKeyPromise = share_api.getDocumentKeyAPI({ doc_id: route.query.id });
+    const [docInfoRes, docKeyRes] = await Promise.all([docInfoPromise, docKeyPromise]);
+    if (docInfoRes.code !== 0 || docKeyRes.code !== 0) { // 打开文档失败
+      router.push({
+        name: "apply",
+        query: { id: route.query.id }
+      });
+      return;
+    }
+    const docInfoData = docInfoRes.data;
+    const docKeyData = docKeyRes.data;
+    const perm = docInfoData.document_permission.perm_type;
+    if (perm === 0) { // 无权限
+      router.push({
+        name: "apply",
+        query: { id: route.query.id }
+      });
+      return;
+    }
+    docInfo.value = docInfoData;
+    permType.value = perm;
+
+    const repo = new Repository();
+    const storageOptions: StorageOptions = {
+      endPoint: docKeyData.endpoint,
+      region: docKeyData.region,
+      accessKey: docKeyData.access_key,
+      secretKey: docKeyData.secret_access_key,
+      sessionToken: docKeyData.session_token,
+      bucketName: docKeyData.bucket_name,
+    }
+    let storage: IStorage;
+    if (docKeyData.provider === "oss") {
+      storage = new OssStorage(storageOptions);
+    } else {
+      storage = new S3Storage(storageOptions);
+    }
+    const path = docInfo.value.document.path;
+    const document = await importDocument(storage, path, "", docInfoData.document.version_id ?? "", repo)
+    if (document) {
+      const coopRepo = new CoopRepository(document, repo);
+      const file_name = docInfo.value.document?.name || document.name;
+      // window.document.title = file_name.length > 8 ? `${file_name.slice(0, 8)}... - ProtoDesign` : `${file_name} - ProtoDesign`;
+      window.document.title = `${file_name} - ProtoDesign`;
+      context = new Context(document, coopRepo);
+      context.workspace.setDocumentPerm(perm);
+      getDocumentAuthority();
+      getUserInfo();
+      context.comment.setDocumentInfo(docInfoData);
+      null_context.value = false;
+      init_watcher();
+      init_keyboard_uints();
+      const docId = route.query.id as string;
+      const token = localStorage.getItem("token") || "";
+      if (await context.communication.docOp.start(token, docId, document, context.coopRepo, docInfoData.document.version_id ?? "")) {
+        switchPage(context!.data.pagesList[0]?.id);
+        loading.value = false;
+      } else {
+        router.push("/files");
+        return;
+      }
+      if (perm === 3) await context.communication.docResourceUpload.start(token, docId);
+      if (perm >= 2) await context.communication.docCommentOp.start(token, docId);
+      await context.communication.docSelectionOp.start(token, docId, context);
+      context.communication.docSelectionOp.addOnMessage(teamSelectionModifi);
+    }
+  } catch (err) {
+    loading.value = false;
+    noNetwork.value = true;
+    console.log(err);
+    throw err;
+  }
+}
+
+async function upload(projectId: string) {
+  const token = localStorage.getItem("token");
+  if (!token || !context || !context.data) return;
+  if (!await context.communication.docUpload.start(token, projectId)) {
+    // todo 上传通道开启失败处理
+    return;
+  }
+  let result;
+  try {
+    result = await context.communication.docUpload.upload(context.data);
+  } catch (e) {
+    // todo 上传失败处理
+    return;
+  }
+  if (!result || result.status !== ResponseStatus.Success || !result.data?.doc_id || typeof result.data?.doc_id !== "string") {
+    // todo 上传失败处理
+    return;
+  }
+  const doc_id = result!.data.doc_id;
+  router.replace({
+    path: '/document',
+    query: { id: doc_id },
+  });
+  if (!await context.communication.docOp.start(token, doc_id, context!.data, context.coopRepo, result!.data.version_id ?? "")) {
+    // todo 文档操作通道开启失败处理
+  }
+  getDocumentAuthority().then(async () => {
+    if (!context) return;
+    if (permType.value === 3) context.communication.docResourceUpload.start(token, doc_id);
+    if (permType.value && permType.value >= 2) context.communication.docCommentOp.start(token, doc_id);
+    await context.communication.docSelectionOp.start(token, doc_id, context);
+    context.communication.docSelectionOp.addOnMessage(teamSelectionModifi);
+    context.workspace.notify(WorkSpace.INIT_DOC_NAME);
+  })
+}
+
+let timer: any = null;
+
+function init_screen_size() {
+  localStorage.setItem(SCREEN_SIZE.KEY, SCREEN_SIZE.NORMAL);
+}
+
+function init_watcher() {
+  if (!context) {
+    return;
+  }
+  context.selection.watch(selectionWatcher);
+  context.workspace.watch(workspaceWatcher);
+  context.component.watch(component_watcher);
+}
+
+function init_keyboard_uints() {
+  if (!context) {
+    return;
+  }
+  uninstall_keyboard_units = keyboardUints(context)
+}
+
+function init_doc() {
+  if (route.query.id) { // 从远端读取文件
+    getDocumentInfo();
+    timer = setInterval(() => {
+      getDocumentAuthority();
+    }, 30000);
+  } else if ((window as any).sketchDocument) {
+    context = new Context((window as any).sketchDocument as Document, ((window as any).skrepo as CoopRepository));
+    null_context.value = false;
+    getUserInfo();
+    init_watcher();
+    init_keyboard_uints();
+    const project_id = localStorage.getItem('project_id') || '';
+    upload(project_id);
+    localStorage.setItem('project_id', '');
+    switchPage(((window as any).sketchDocument as Document).pagesList[0]?.id);
+  } else {
+    router.push('/files');
+  }
+}
+
+function workspaceWatcher(t: number, o?: any) {
+  if (t === WorkSpace.FREEZE) {
+    sub_loading.value = true;
+  } else if (t === WorkSpace.THAW) {
+    sub_loading.value = false;
+  } else if (t === WorkSpace.HIDDEN_UI) {
+    o ? keyToggleLR() : keyToggleTB();
+  }
+}
+
+const autosave = t('message.autosave');
+const link_success = t('message.link_success');
+const network_anomaly = t('message.network_anomaly');
+const network_error = t('message.network_error');
+
+// 保存文档成功message信息
+const autoSaveSuccess = () => {
+  insertNetworkInfo('saveSuccess', true, autosave);
+  const timer = setTimeout(() => {
+    insertNetworkInfo('saveSuccess', false, autosave);
+    clearTimeout(timer)
+  }, 3000)
+}
+//网络连接成功message信息
+const networkLinkSuccess = () => {
+  insertNetworkInfo('netError', false, network_anomaly);
+  insertNetworkInfo('networkSuccess', true, link_success);
+  const timer = setTimeout(() => {
+    insertNetworkInfo('networkSuccess', false, link_success);
+    clearTimeout(timer)
+  }, 3000)
+}
+// 网络断开连接提示信息
+const networkLinkError = () => {
+  insertNetworkInfo('networkSuccess', false, link_success);
+  insertNetworkInfo('netError', true, network_anomaly);
+  const timer = setTimeout(() => {
+    insertNetworkInfo('netError', false, network_anomaly);
+    clearTimeout(timer);
+  }, 3000)
+}
+
+let previousStatus: NetworkStatusType = NetworkStatusType.Online
+const networkMessage = (status: NetworkStatusType) => {
+  if (status === previousStatus) return;
+  previousStatus = status
+  if (status === NetworkStatusType.Offline) {
+    networkLinkError()
+  } else {
+    networkLinkSuccess()
+  }
+}
+const networkDebounce = debounce(networkMessage, 1000)
+
+//文档获取失败 重试刷新页面
+const refreshDoc = () => {
+  location.reload();
+}
+
+const hasPendingSync = () => {
+  if (context && context.communication.docOp.hasPendingSyncCmd() && !netErr) {
+    insertNetworkInfo('networkError', true, network_error);
+    netErr = setInterval(() => {
+      if (context && !context.communication.docOp.hasPendingSyncCmd()) {
+        insertNetworkInfo('networkError', false, network_error);
+        autoSaveSuccess();
+        clearInterval(netErr);
+        netErr = null;
+=======
   const permissionChange = ref(-1);
   // 权限被修改后的倒计时
   const startCountdown = (type?: number) => {
@@ -275,6 +542,7 @@ watchEffect(() => {
       } else {
         hideNotification(type);
         clearInterval(timer);
+>>>>>>> 4577acb5cb85ba0d1f026b78cdc677cacbff4e65
       }
     }, 1000);
   }

@@ -174,7 +174,7 @@ const midDateTeamData = (teamData: Array<teamDataType>, id: string, updates: Par
 
 //修改团队名称
 const midNameRequest = async () => {
-    if (textareaValue.value) return
+    if (!textareaValue.value) return
     formData.append('name', textareaValue.value)
     try {
         const { code, message } = await user_api.Setteaminfo(formData)
@@ -224,7 +224,7 @@ const midAvatarRequest = async (e: any) => {
 
 //修改团队描述
 const midDescriptionRequest = async () => {
-    if (textareaValue.value) return
+    if (!textareaValue.value) return
     formData.append('description', textareaValue.value)
     try {
         const { code, message } = await user_api.Setteaminfo(formData)
@@ -385,6 +385,7 @@ onMounted(() => {
         }
 
         .close {
+            display: flex;
             width: 28px;
             height: 28px;
             padding: 6px;

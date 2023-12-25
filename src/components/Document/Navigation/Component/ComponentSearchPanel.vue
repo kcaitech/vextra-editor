@@ -47,15 +47,17 @@ onMounted(() => {
 .component-search-panel {
     width: 100%;
     height: 100%;
+    padding: 0 12px;
+    box-sizing: border-box;
 }
 
 .null-result {
     width: 100%;
     text-align: center;
-    margin-top: 82px;
+    margin-top: 16px;
     font-size: 12px;
-    color: #8C8C8C;
-    line-height: 14px;
+    color: grey;
+    font-weight: 500;
 }
 
 .el-scrollbar {

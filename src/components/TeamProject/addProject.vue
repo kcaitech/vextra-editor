@@ -68,7 +68,7 @@ const createProject = async () => {
             emits('close')
             updateprojectliststate(true)
             nextTick(() => {
-                router.push({ path: '/apphome/project/' + data.id });
+                router.push({ path: '/files/project/' + data.id });
             })
         } else {
             ElMessage.error(message)
@@ -127,6 +127,7 @@ const close = () => {
         }
 
         .close {
+            display: flex;
             width: 16px;
             height: 16px;
             padding: 4px;

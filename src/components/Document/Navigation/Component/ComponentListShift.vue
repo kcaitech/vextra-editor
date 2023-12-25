@@ -1,15 +1,15 @@
 <script lang="ts" setup>
-import {onMounted, ref} from 'vue';
-import {Search} from '@element-plus/icons-vue';
+import { onMounted, ref } from 'vue';
+import { Search } from '@element-plus/icons-vue';
 import ComponentContainer from './ComponentContainer.vue';
-import {Context} from '@/context';
-import {useI18n} from 'vue-i18n';
-import {get_search_symbol_list, search_symbol_by_keywords} from '@/utils/symbol';
-import {debounce} from 'lodash';
-import {Page, SymbolShape} from '@kcdesign/data';
+import { Context } from '@/context';
+import { useI18n } from 'vue-i18n';
+import { get_search_symbol_list, search_symbol_by_keywords } from '@/utils/symbol';
+import { debounce } from 'lodash';
+import { Page, SymbolShape } from '@kcdesign/data';
 import ComponentSearchPanel from './ComponentSearchPanel.vue';
 
-const {t} = useI18n();
+const { t } = useI18n();
 
 interface Props {
     context: Context
@@ -32,6 +32,7 @@ function set_card_type(v: 'alpha' | 'beta') {
         props.context.component.set_scroll_target(props.currentInstanceFrom);
     }
     card_type.value = v;
+    localStorage.setItem('card_type', v)
 }
 
 const search_result = ref<SymbolShape[]>([]);
@@ -52,6 +53,13 @@ const searching = debounce(_searching, 300);
 const close = () => {
     emit('close');
 }
+
+onMounted(() => {
+    if (localStorage.getItem('card_type')) {
+        card_type.value = localStorage.getItem('card_type') as 'alpha' | 'beta'
+    }
+
+})
 </script>
 
 <template>
@@ -64,42 +72,52 @@ const close = () => {
         </div>
         <div class="search_togger">
             <el-input v-model="search" class="w-50 m-2" :placeholder="t('compos.search_compos')" :prefix-icon="Search"
-                      @input="searching"/>
+                @input="searching" />
             <div class="toggle_list">
-                <svg-icon v-if="card_type === 'alpha'" icon-class="resource"
-                          @click.stop="() => set_card_type('beta')"></svg-icon>
+                <svg-icon v-if="card_type === 'alpha'" icon-class="resource-icon"
+                    @click.stop="() => set_card_type('beta')"></svg-icon>
                 <svg-icon v-if="card_type === 'beta'" icon-class="text-bulleted-list"
-                          @click.stop="() => set_card_type('alpha')"></svg-icon>
+                    @click.stop="() => set_card_type('alpha')"></svg-icon>
             </div>
         </div>
         <div class="body" ref="root" v-show="!search">
-            <ComponentContainer :context="context" :search="search" :is-attri="true"
-                                :card-type="card_type" :root="root"></ComponentContainer>
+            <ComponentContainer :context="context" :search="search" :is-attri="true" :card-type="card_type" :root="root">
+            </ComponentContainer>
         </div>
         <div class="body" ref="root2">
             <ComponentSearchPanel v-if="search" :context="props.context" :data="(search_result as SymbolShape[])"
-                                  :is-attri="true" :card-type="card_type" :root="root2">
+                :is-attri="true" :card-type="card_type" :root="root2">
             </ComponentSearchPanel>
         </div>
     </div>
 </template>
 
 <style scoped lang="scss">
+:deep(.el-input__inner) {
+    --el-input-inner-height: 32px !important;
+}
+
+:deep(.el-input__prefix) {
+    color: #333333;
+    height: 32px;
+}
+
 .container {
     height: 100%;
-    min-width: 250px;
-    padding: 8px 0 8px 8px;
+    min-width: 240px;
+    // padding: 0 12px;
     font-size: var(--font-default-fontsize);
     box-sizing: border-box;
 
     .header {
         width: 100%;
-        height: 32px;
-        border-bottom: 1px solid var(--grey-light);
+        height: 40px;
+        padding: 0 12px;
+        border-bottom: 1px solid #F5F5F5;
         display: flex;
         box-sizing: border-box;
         align-items: center;
-        margin-bottom: 10px;
+        justify-content: space-between;
 
         .title {
             line-height: 32px;
@@ -109,15 +127,24 @@ const close = () => {
         .close {
             width: 24px;
             height: 24px;
-            position: absolute;
-            right: var(--default-padding-half);
+            padding: 6px;
+            border-radius: 6px;
             display: flex;
             align-items: center;
             justify-content: center;
+            box-sizing: border-box;
 
-            > svg {
-                width: 65%;
-                height: 65%;
+            &:hover{
+                background-color: #F5F5F5;
+            }
+
+            &:active{
+                background-color: #EBEBEB;
+            }
+
+            >svg {
+                width: 100%;
+                height: 100%;
             }
         }
     }
@@ -126,39 +153,59 @@ const close = () => {
         display: flex;
         justify-content: space-between;
         align-items: center;
-        height: 28px;
-        margin-bottom: 10px;
+        height: 48px;
+        gap: 4px;
+        padding: 0 12px;
 
         .el-input {
-            height: 28px;
+            height: 32px;
             font-size: 12px;
-            line-height: 28px;
+            line-height: 32px;
 
             :deep(.el-input__wrapper) {
-                background-color: var(--grey-light);
+                background-color: #F5F5F5;
+                border: 1px solid #F5F5F5;
+                border-radius: 8px;
+                box-shadow: none;
+                box-sizing: border-box;
+
+                &:hover {
+                    background-color: #EBEBEB;
+                }
             }
 
             :deep(.el-input__wrapper.is-focus) {
-                box-shadow: 0 0 0 1px var(--active-color) inset !important;
+                border: 1px solid #1878F5;
+                background-color: #F5F5F5;
+                color: #262626;
+                box-shadow: none;
             }
         }
 
         .toggle_list {
             width: 28px;
-            height: 100%;
-            display: flex;
-            align-items: center;
-            justify-content: center;
+            height: 28px;
+            padding: 4px;
+            border-radius: 6px;
+            box-sizing: border-box;
+
+            &:hover {
+                background-color: #F5F5F5;
+            }
+
+            &:active {
+                background-color: #EBEBEB;
+            }
 
             svg {
-                width: 16px;
-                height: 16px;
+                width: 100%;
+                height: 100%;
             }
         }
     }
 
     .body {
-        height: calc(100% - 80px);
+        height: calc(100% - 88px);
         box-sizing: border-box;
     }
 }

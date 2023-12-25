@@ -60,7 +60,6 @@
                 <Loading v-if="SearchList.length === 0 && searchvalue === '' && fontName === 4" :size="20" />
             </el-scrollbar>
             <div v-else class="empty">
-                <svg-icon v-if="searchvalue !== '' || fontName !== 4" icon-class="member"></svg-icon>
                 <div v-html="emptytips"></div>
             </div>
         </div>
@@ -346,7 +345,7 @@ const outteam = async (T: string) => {
         const { code, message } = await user_api.Leaveteam({ team_id: T })
         if (code === 0) {
             ElMessage.success(message)
-            router.push({ path: '/apphome' })
+            router.push({ path: '/files' })
             sessionStorage.setItem('index', '1');
             upDateTeamData(teamData.value.filter(item => item.team.id != T))
             teamUpdate(!is_team_upodate.value)
@@ -704,7 +703,8 @@ onUnmounted(() => {
         align-items: center;
         justify-content: center;
         font-size: 14px;
-        font-weight: 500;
+        font-weight: 400;
+        color: rgb(191, 191, 191);
         gap: 4px;
 
         svg {
