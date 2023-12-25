@@ -15,7 +15,7 @@ export enum Action {
     AddText = 'add-text',
     AddComment = 'add-comment',
     AddImage = 'add-image',
-    AddTable = 'add-table',
+    AddTable = 'table',
     AddContact = 'add-contact',
     AddCutout = 'add-cutout',
     Curve = 'curve',
@@ -74,7 +74,7 @@ export class Tool extends WatchableObject {
     static INSERT_FRAME = 6;
     static INSERT_TABLE = 7;
     static CHANGE_CONTACT_APEX = 8;
-    static LABLE_CHANGE = 10;
+    static LABLE_CHANGE = 12;
     static NEW_FILE = 9;
     static COMPONENT = 10;
     static SELECT_IMAGE = 11;

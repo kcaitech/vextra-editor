@@ -151,6 +151,8 @@ const getPosition = (shape: Shape) => {
         } else {
             const { left, top, right, bottom } = getShadowMax(shape);
             const max_border = getShapeBorderMax(shape);
+            console.log(max_border);
+            
             xy.value.x = (shape.frame.x - left - max_border);
             xy.value.y = (shape.frame.y - top - max_border);
             width.value = (shape.frame.width + (left + max_border) + (right + max_border));
@@ -337,7 +339,7 @@ onUnmounted(() => {
             >.triangle-right {
                 width: 0;
                 height: 0;
-                border-left: 6px solid gray;
+                border-left: 5px solid #434343;
                 border-top: 3.5px solid transparent;
                 border-bottom: 3.5px solid transparent;
                 position: relative;
@@ -348,7 +350,7 @@ onUnmounted(() => {
             >.triangle-down {
                 width: 0;
                 height: 0;
-                border-top: 6px solid gray;
+                border-top: 5px solid #434343;
                 border-left: 3.5px solid transparent;
                 border-right: 3.5px solid transparent;
                 position: relative;
@@ -363,11 +365,11 @@ onUnmounted(() => {
     }
 
     >svg {
-        position: absolute;
-        left: 10000px;
-        top: 10000px;
+        position: fixed;
+        left: 100000px;
+        top: 100000px;
         opacity: 0;
-        z-index: -1;
+        z-index: -2023;
     }
 
     .preview-canvas {
@@ -379,7 +381,7 @@ onUnmounted(() => {
         background-position: 0 0, 8px 8px;
         background-size: 16px 16px;
         border-radius: 6px;
-        border: 1px solid rgba(0, 0, 0, 0.04);
+        border: 1px solid #EBEBEB;
         box-sizing: border-box;
         overflow: hidden;
 

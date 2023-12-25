@@ -71,8 +71,10 @@ onMounted(() => {
 <template>
   <div class="types-wrap">
     <div v-for="(item, index) in all_types" :key="index" class="type-block" @click="(e) => check(index, e)">
-      <div :class="item.selected ? 'check' : 'de-check'"> </div>
       <div class="content"> {{ t(`shape.${item.shapetype}`) }}</div>
+      <div class="de-check">
+        <svg-icon v-if="item.selected" icon-class="page-select"></svg-icon>
+      </div>
     </div>
   </div>
 </template>
@@ -83,44 +85,35 @@ onMounted(() => {
 
   .type-block {
     width: 100%;
-    height: 28px;
-    color: var(--theme-color);
-    padding: 2px 13px;
+    height: 34px;
+    color: #262626;
+    padding: 2px 5px;
     display: flex;
+    justify-content: space-between;
     box-sizing: border-box;
     align-items: center;
 
-    >.check {
-      box-sizing: border-box;
-      width: 10px;
-      height: 6px;
-      border-width: 0 0 2px 2px;
-      border-style: solid;
-      border-color: var(--theme-color);
-      left: 6px;
-      transform: rotate(-45deg) translateY(-20%);
-    }
-
     >.de-check {
-      box-sizing: border-box;
-      width: 10px;
-      height: 6px;
-      border-width: 0 0 2px 2px;
-      border-style: solid;
-      border-color: transparent;
-      left: 6px;
-      transform: rotate(-45deg) translateY(-20%);
+      width: 28px;
+      height: 28px;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      >svg {
+        width: 12px;
+        height: 12px;
+      }
     }
-
-    >.content {
-      margin-left: 6px;
+    .content {
+      flex: 1;
+      text-align: center;
     }
 
   }
 
   .type-block:hover {
-    background-color: var(--active-color);
-    color: var(--theme-color-anti);
+    background-color: #1878F5;
+    color: #fff;
   }
 }
 </style>
