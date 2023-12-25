@@ -117,25 +117,30 @@ function _delete() {
         display: flex;
         align-items: center;
         justify-content: space-between;
+        height: 44px;
+        padding: 6px 0;
+        box-sizing: border-box;
     }
 
     .module_item_left {
         display: flex;
         align-items: center;
-        border-radius: 4px;
-        background-color: var(--grey-light);
-        width: calc(100% - 22px);
-        height: 30px;
+        border-radius: var(--default-radius);
+        background-color: #F5F5F5;
+        width: calc(100% - 32px);
+        height: 32px;
 
         .module_name {
             display: flex;
             align-items: center;
-            width: 84px;
+            justify-content: center;
+            width: 14px;
+            color: #595959;
+            margin-left: 8px;
 
             > svg {
                 width: 14px;
                 height: 14px;
-                margin: 0px 10px;
             }
 
             .name {
@@ -186,6 +191,11 @@ function _delete() {
         }
     }
 
+    .module_item_left:hover {
+        background-color: #EBEBEB;
+    }
+
+
     .module_input {
         display: flex;
         align-items: center;
@@ -204,19 +214,24 @@ function _delete() {
     }
 
     .delete {
-        flex: 0 0 22px;
+        flex: 0 0 28px;
         display: flex;
         justify-content: center;
         align-items: center;
-        width: 22px;
-        height: 22px;
+        width: 28px;
+        height: 28px;
+        border-radius: var(--default-radius);
 
         > svg {
-            width: 11px;
-            height: 11px;
+            width: 16px;
+            height: 16px;
         }
 
         transition: .2s;
+    }
+
+    .delete:hover {
+        background-color: #F5F5F5;
     }
 }
 

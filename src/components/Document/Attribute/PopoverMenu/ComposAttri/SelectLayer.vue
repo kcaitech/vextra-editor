@@ -99,7 +99,7 @@ onMounted(() => {
                 top.value = -popover_h
             } else {
                 const s = popover_h - popover_y;
-                top.value = -(popover_y - s) - 20
+                top.value = -s + 40
             }
         }
     }
