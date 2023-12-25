@@ -1,6 +1,7 @@
 import { Context } from "@/context";
 import { ClientXY, PageXY } from "@/context/selection";
 import { WorkSpace } from "@/context/workspace";
+import { Matrix } from "@kcdesign/data";
 export enum EffectType {
     NEW_SHAPE = 'new shape',
     TRANS = 'trans'
@@ -13,6 +14,7 @@ export interface MoveEffect {
 interface Wheel {
     remove: () => undefined
     moving: (event: MouseEvent, effects?: MoveEffect) => boolean;
+    is_inner: (event: MouseEvent) => boolean;
 }
 interface Area {
     top: number
@@ -29,65 +31,99 @@ interface Effects {
 function fourWayWheel(context: Context, effects?: Effects, setupPoint?: PageXY): Wheel {
     const workspace = context.workspace;
     const innerArea: Area = { top: 0, right: 0, bottom: 0, left: 0 };
+
     let op = 'inner'; // 原先所处的区域
     let np = 'inner'; // 现在所处的区域
+
     let timer: any = null;
-    const period: number = 6; // 帧率 1000 / period; (这里的帧率指fireNotify调用的频率)
-    const step: number = 6; // 每秒滚动的距离为 (1000 / period) * step * 单位
+
+    const period: number = 20; // 帧率 = 1000 / period; (这里的帧率指fireNotify调用的频率)
+
+    const step: number = 5; // 每秒滚动的距离为 (1000 / period) * step * 单位
+
     const startPoint: PageXY = { x: 0, y: 0 }; // 安装轮子的位置（坐标系：Page）
     let curPoint: PageXY = { x: 0, y: 0 }; // 鼠标当前的位置（坐标系：Page）
+
     function setup() {
         // 根据contentView的Dom bounding生成一个内圈区域（这个内圈区域有一个宽度为padding的内圈缩减），在这内圈区域内，不会触发page滚动;
-        const { x, y, bottom, right } = workspace.root, padding = 5;
+        const { x, y, bottom, right } = workspace.root
+        const padding = 5;
+
         innerArea.top = y + padding;
         innerArea.right = right - padding;
         innerArea.bottom = bottom - padding;
         innerArea.left = x + padding;
+
         if (setupPoint) {
             startPoint.x = setupPoint.x, startPoint.y = setupPoint.y;
         }
+
         effects?.before && effects.before(context);
         // console.log('-wheel setup-');
     }
-    // retrun isOut;
-    function moving(event: MouseEvent, m_effects?: MoveEffect): boolean { // 鼠标移动触发
-        let isOut: boolean = false;
+    function modify_np(event: MouseEvent) {
         const { clientX, clientY } = event;
         const { top, right, bottom, left } = innerArea;
         let hp: string = ''; // 水平方位
         let vp: string = ''; // 垂直方位
+
         if (clientX > left && clientX < right && clientY > top && clientY < bottom) {
             np = 'inner';
-        } else {
-            isOut = true;
-            if (clientX <= left) {
-                hp = 'left';
-            } else if (clientX >= right) {
-                hp = 'right';
-            }
-            if (clientY <= top) {
-                vp = 'top';
-            } else if (clientY >= bottom) {
-                vp = 'bottom';
-            }
-            np = `${hp}-${vp}`;
-
+            return false;
         }
+
+        if (clientX <= left) {
+            hp = 'left';
+        } else if (clientX >= right) {
+            hp = 'right';
+        }
+        if (clientY <= top) {
+            vp = 'top';
+        } else if (clientY >= bottom) {
+            vp = 'bottom';
+        }
+
+        np = `${hp}-${vp}`;
+
+        return true;
+    }
+
+    function is_inner(event: MouseEvent) {
+        const { clientX, clientY } = event;
+        const { top, right, bottom, left } = innerArea;
+
+        return (clientX > left && clientX < right && clientY > top && clientY < bottom);
+    }
+
+    function moving(event: MouseEvent, m_effects?: MoveEffect): boolean { // 鼠标移动触发
+        let isOut: boolean = modify_np(event);
+
+        const { clientX, clientY } = event;
+
         const { x: wx, y: wy } = workspace.root;
-        curPoint = workspace.matrix.inverseCoord(clientX - wx, clientY - wy);
+
+        const inverse_wm = new Matrix(workspace.matrix.inverse);
+
+        curPoint = inverse_wm.computeCoord2(clientX - wx, clientY - wy);
+
         if (np !== op) {
             clearInterval(timer);
             timer = null;
+
             if (np !== 'inner') {
                 const { dx, dy } = getTxybyNp(np, step);
+
                 const scale = context.workspace.matrix.toArray()[0];
+
                 timer = setInterval(() => {
-                    workspace.matrix.trans(dx * scale, dy * scale); // 这里的dx,dy呢，固定单位为 1 * px
+                    workspace.matrix.trans(dx * scale, dy * scale);
                     workspace.notify(WorkSpace.MATRIX_TRANSFORMATION);
-                    curPoint = workspace.matrix.inverseCoord(clientX - wx, clientY - wy); // 这边还有一点问题，先放一下！！！！！！！！！！！！！！！！！！！！！！！！！！！！！！！！！！
-                    // #region 这个区域为动态副作用区域：滚动是一定要滚动的，至于滚动要伴随什么变化，交给传进来的effects?.rolling
+
+                    curPoint = inverse_wm.computeCoord2(clientX - wx, clientY - wy);
+
                     if (m_effects) {
                         const { type, effect: f } = m_effects;
+
                         if (type === EffectType.NEW_SHAPE) {
                             f(curPoint);
                         } else if (type === EffectType.TRANS) {
@@ -96,7 +132,6 @@ function fourWayWheel(context: Context, effects?: Effects, setupPoint?: PageXY):
                     } else if (effects?.rolling) {
                         effects.rolling(context, dx, dy, startPoint, curPoint);
                     }
-                    // #endregion
                 }, period)
             } else {
                 workspace.notify(WorkSpace.NEW_ENV_MATRIX_CHANGE);
@@ -111,11 +146,10 @@ function fourWayWheel(context: Context, effects?: Effects, setupPoint?: PageXY):
         clearInterval(timer);
         timer = null;
         effects?.tail && effects.tail(context);
-        // console.log('-wheel remove-');
         return undefined;
     }
     setup();
-    return { remove, moving }
+    return { remove, moving, is_inner }
 }
 
 function getTxybyNp(np: string, step: number): { dx: number, dy: number } {

@@ -260,10 +260,12 @@ export function useControllerCustom(context: Context, i18nT: Function) {
             t_e = e;
 
             let update_type = 0;
-            const isOut = wheel.moving(e, { type: EffectType.TRANS, effect: asyncTransfer.transByWheel });
-            if (!isOut) {
-                update_type = transform(startPosition, mousePosition);
-            }
+
+            const is_need_assit = wheel.is_inner(e);
+
+            update_type = transform(startPosition, mousePosition, is_need_assit);
+
+            wheel.moving(e, { type: EffectType.TRANS, effect: asyncTransfer.transByWheel }); // 滚轮动作
 
             modify_mouse_position_by_type(update_type, startPosition, mousePosition);
         } else if (check_drag_action(startPosition, mousePosition) && !workspace.isEditing) {
@@ -300,14 +302,24 @@ export function useControllerCustom(context: Context, i18nT: Function) {
         offset_map = gen_offset_points_map(shapes, startPositionOnPage);
     }
 
-    function transform(start: ClientXY, end: ClientXY) {
+    function transform(start: ClientXY, end: ClientXY, assit = true) {
         const ps: PageXY = matrix.computeCoord3(start);
         const pe: PageXY = matrix.computeCoord3(end);
         let update_type = 0;
-        if (asyncTransfer) {
-            update_type = trans_assistant(asyncTransfer, ps, pe);
-            migrate_once(context, asyncTransfer, shapes, end);
+
+        if (!asyncTransfer) {
+            return update_type;
         }
+
+        if (!assit) {
+            asyncTransfer.trans(ps, pe);
+            context.assist.notify(Asssit.CLEAR);
+            update_type = 3;
+            return update_type;
+        }
+
+        update_type = trans_assistant(asyncTransfer, ps, pe);
+        migrate_once(context, asyncTransfer, shapes, end);
         return update_type;
     }
 

@@ -146,7 +146,9 @@ export function gen_offset_points_map(shapes: Shape[], down: PageXY) {
         rt: { x: number, y: number }, lb: { x: number, y: number };
     if (shapes.length === 1) {
         const shape = shapes[0];
-        const m = shape.matrix2Root(), f = shape.frame;
+        const m = shape.matrix2Root();
+        const f = shape.frame;
+
         lt = m.computeCoord2(0, 0);
         rb = m.computeCoord2(f.width, f.height);
         pivot = m.computeCoord2(f.width / 2, f.height / 2);
@@ -162,7 +164,10 @@ export function gen_offset_points_map(shapes: Shape[], down: PageXY) {
                 x: 0,
                 y: f.height
             }];
-            for (let i = 0; i < 4; i++) points.push(m.computeCoord3(ps[i]));
+            
+            for (let i = 0; i < 4; i++) {
+                points.push(m.computeCoord3(ps[i]));
+            }
         }
         const box = XYsBounding(points);
         lt = { x: box.left, y: box.top };

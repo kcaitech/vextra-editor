@@ -586,3 +586,28 @@ export function get_segments2(shape: PathShape | GroupShape, matrices: Map<strin
         }
     }
 }
+
+export function enter_path_edit_mode(context: Context) {
+    const selected = context.selection.selectedShapes;
+
+    if (selected.length !== 1) {
+        console.log('enter_path_edit_mode: selected.length !== 1');
+        return;
+    }
+
+    const shape = selected[0];
+
+    if (!(shape instanceof PathShape)) {
+        console.log('enter_path_edit_mode: !(shape instanceof PathShape)');
+        return;
+    }
+
+    context.workspace.setPathEditMode(true); // --开启对象编辑
+    context.esctask.save('path-edit', exist_edit_mode);
+
+    function exist_edit_mode() {
+        const al = context.workspace.is_path_edit_mode;
+        context.workspace.setPathEditMode(false);
+        return al;
+    }
+}
