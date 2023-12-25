@@ -44,6 +44,7 @@ export class Comment extends WatchableObject {
   static HOVER_SHOW_COMMENT = 18;
   static UPDATE_COMMENT_CHILD = 19;
   static WATCH_COMMENT_CHANGE = 20;
+  static MOVE_COMMENT_INPUT = 21;
 
   private m_user_info: UserInfo | undefined;
   private m_comment_input: boolean = false;
@@ -60,6 +61,7 @@ export class Comment extends WatchableObject {
   private m_comment_shape: Shape[] = [] //保存移动shape上有评论的shape
   private m_not2tree_comment: any = [] //没有转树的评论列表
   private m_comment_visible: boolean = true; //是否显示评论
+  private m_comment_input_move: boolean = false; //是否正在移动评论输入框
   constructor() {
     super();
   }
@@ -107,6 +109,14 @@ export class Comment extends WatchableObject {
   }
   get isVisibleComment() {
     return this.m_comment_visible;
+  }
+  get isCommentInputMove() {
+    return this.m_comment_input_move;
+  }
+
+  moveCommentInput(v: boolean) {
+    this.m_comment_input_move = v;
+    this.notify(Comment.MOVE_COMMENT_INPUT)
   }
 
   onUpdateComment() {

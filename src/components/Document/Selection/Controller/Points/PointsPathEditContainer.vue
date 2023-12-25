@@ -159,7 +159,7 @@ function point_mousemove(event: MouseEvent) {
 
     offset_map = gen_offset_points_map2(props.context, startPosition2, synthetic_points);
 
-    console.log('offset_map:', offset_map);
+    // console.log('offset_map:', offset_map);
 
     if (!offset_map) {
         return;

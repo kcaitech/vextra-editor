@@ -16,8 +16,8 @@ import ShowHiddenLeft from "./ShowHiddenLeft.vue";
 import { Navi } from "@/context/navigate";
 const props = defineProps<{ context: Context, page: Page, leftTriggleVisible: boolean, showLeft: boolean }>();
 const emit = defineEmits<{ (e: 'showNavigation'): void }>()
-const i_height = 162;
-const structure = ref<{ pagelistHeight: number, pagelistHeightBackup: number }>({ pagelistHeight: i_height, pagelistHeightBackup: 36 });
+const i_height = 119;
+const structure = ref<{ pagelistHeight: number, pagelistHeightBackup: number }>({ pagelistHeight: i_height, pagelistHeightBackup: 32 });
 const container = ref<HTMLDivElement>();
 const sash = ref<HTMLDivElement>();
 const containerHeight = ref<number>(0);
@@ -29,7 +29,7 @@ function dragStart() {
     transition.value = '0s'
 }
 function onDragOffset(offset: number) {
-    const newheight = Math.min(containerHeight.value - 100, Math.max(70, structure.value.pagelistHeightBackup + Number(offset)));
+    const newheight = Math.min(containerHeight.value - 100, Math.max(74, structure.value.pagelistHeightBackup + Number(offset)));
     structure.value.pagelistHeight = newheight
 }
 function pageListFold(fold: boolean) {
@@ -52,10 +52,10 @@ function init_pagelist_height() {
     if (container.value) {
         w_height = container.value.clientHeight;
     }
-    let max_height = Math.max(w_height * 0.5 - 36, i_height);
-    let init_height = page_list * 36 + 64;
-    init_height = Math.max(init_height, i_height);
-    structure.value.pagelistHeight = Math.min(init_height, max_height);
+    let max_height = 5 * 32 + 40; // 页面自动新增高度最大为5个
+    let init_height = page_list * 32 + 56; // 页面自动新增高度空出16像素
+    init_height = Math.max(init_height, i_height); // 页面自动新增高度不能小于120像素
+    structure.value.pagelistHeight = Math.min(init_height, max_height); // 页面自动新增高度不能超过最大高度 max_height
 }
 function navi_watcher(t?: number) {
     if (t === Navi.ADD_PAGE) {

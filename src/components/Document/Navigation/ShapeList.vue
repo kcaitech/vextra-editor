@@ -70,7 +70,7 @@ class Iter implements IDataIter<ItemData> {
 
 const props = defineProps<{ context: Context, page: Page, pageHeight: number }>();
 const { t } = useI18n();
-const itemHieght = 36;
+const itemHieght = 32;
 const MOUSE_RIGHT = 2;
 const shapeListMap: Map<string, ShapeDirList> = new Map();
 const chartMenu = ref<boolean>(false)
@@ -338,8 +338,8 @@ function show_types() {
         popoverVisible.value = true;
         nextTick(() => {
             if (popover.value && search_el.value) {
-                popover.value.style.left = search_el.value.offsetLeft - 8 + 'px';
-                popover.value.style.top = search_el.value.offsetHeight + 54 + 'px';
+                popover.value.style.left = 6 + 'px';
+                popover.value.style.top = search_el.value.offsetHeight + 26 + 'px';
                 popover.value.style.height = 'auto';
             }
         })
@@ -543,17 +543,18 @@ onUnmounted(() => {
         padding-left: 6px;
 
         .search {
-            height: 34px;
+            height: 32px;
             display: flex;
             align-items: center;
             background-color: var(--grey-light);
-            border-radius: 4px;
+            border-radius: 8px;
             box-sizing: border-box;
-            padding: 8px;
+            padding: 6px;
             overflow: hidden;
             transition: 0.32s;
 
             >.tool-container {
+                margin-right: 2px;
                 flex-shrink: 0;
                 display: flex;
                 align-items: center;
@@ -569,7 +570,7 @@ onUnmounted(() => {
                 width: 12px;
                 height: 100%;
                 display: flex;
-                margin-left: 4px;
+                margin-left: 2px;
                 justify-content: center;
                 align-items: center;
                 transition: 0.3s;
@@ -638,19 +639,20 @@ onUnmounted(() => {
         }
 
         .blocks {
-            padding: 2px 13px;
+            margin-top: 4px;
+            padding: 0 3px;
 
             .block-wrap {
                 display: inline-block;
                 border-radius: 4px;
-                background-color: rgba($color: #1878f5, $alpha: 1);
+                background-color: rgba($color: #1878F5, $alpha: 1);
                 max-width: 96px;
                 padding: 2px 4px;
-                height: 20px;
+                height: 22px;
                 font-size: var(--font-default-fontsize);
                 box-sizing: border-box;
-                margin-right: 4px;
-                margin-bottom: 4px;
+                margin-right: 3px;
+                margin-top: 4px;
                 overflow: hidden;
 
                 .block {
@@ -692,12 +694,12 @@ onUnmounted(() => {
                     display: flex;
                     flex-direction: row;
                     align-items: center;
-                    width: 18px;
+                    width: 14px;
                     color: #fff;
 
                     >svg {
                         text-align: center;
-                        height: 18px;
+                        height: 14px;
                     }
                 }
             }
@@ -710,6 +712,7 @@ onUnmounted(() => {
         width: 100%;
         overflow: hidden;
         box-sizing: border-box;
+
         >.container {
             height: 100%;
         }
@@ -717,21 +720,20 @@ onUnmounted(() => {
 
     .popover {
         position: absolute;
-        top: 0px;
-        left: 36px;
-        top: 50px;
-        height: 20px;
+        top: 42px;
+        left: 6px;
         color: #ffffff;
         z-index: 999;
-        width: 202px;
+        width: 106px;
         font-size: var(--font-default-fontsize);
-        background-color: var(--theme-color-anti);
-        box-shadow: 2px 2px 10px rgba(0, 0, 0, 0.2);
-        border: 1px solid #ccc;
-        border-radius: 4px;
+        background-color: #fff;
+        border: 1px solid #EBEBEB;
+        border-radius: 6px;
         outline: none;
-        padding: var(--default-padding-half) 0;
+        padding: 4px 0;
         transition: 0.3s;
+        box-shadow: 0px 2px 10px 0px rgba(0, 0, 0, 0.08);
+
     }
 }
 </style>

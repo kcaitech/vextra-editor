@@ -7,6 +7,8 @@ import { useRoute } from 'vue-router';
 import { Matrix } from "@kcdesign/data";
 import { v4 } from 'uuid';
 import SvgIcon from "@/components/common/SvgIcon.vue";
+import { WorkSpace } from '@/context/workspace';
+import e from 'express';
 const { t } = useI18n()
 const props = defineProps<{
     context: Context
@@ -24,7 +26,7 @@ const props = defineProps<{
 const emit = defineEmits<{
     (e: 'close', event?: MouseEvent): void
     (e: 'mouseDownCommentInput', event: MouseEvent): void
-    (e: 'completed'): void
+    (e: 'completed', succession: boolean, event?: MouseEvent): void
 }>()
 interface Comment {
     doc_id: string
@@ -47,6 +49,7 @@ const input = ref()
 const textareaEl = ref<HTMLDivElement>()
 const inputIcon = ref<HTMLInputElement>()
 const isShaking = ref(false)
+const reflush = ref(0);
 const position = ref({ x: 0, y: 0 })
 
 const commentData = ref<Comment>({
@@ -65,14 +68,12 @@ function handleClickOutside(event: MouseEvent) {
         return;
     }
 
-    const mins = textarea.value.trim().length < 4;
+    const mins = textarea.value.trim().length < 1;
 
     if (mins) {
         emit('close', event);
     } else {
-        startShake()
-        input.value && input.value.focus()
-        input.value && input.value.select()
+        addComment(true, event);
     }
 }
 
@@ -91,7 +92,7 @@ const carriageReturn = (event: KeyboardEvent) => {
             textarea.value = textarea.value + '\n'
         } else {
             event.preventDefault()
-            addComment()
+            addComment(false)
         }
     } else if (code === 'Escape' && textarea.value.trim().length < 4) {
         emit('close')
@@ -105,8 +106,8 @@ const mouseDownCommentInput = (e: MouseEvent) => {
     emit('mouseDownCommentInput', e)
 }
 
-const addComment = () => {
-    if(textarea.value.trim().length < 1) return;
+const addComment = (succession: boolean, e?: MouseEvent) => {
+    if (textarea.value.trim().length < 1) return;
     const timestamp = getCurrentTime()
     commentData.value.record_created_at = timestamp
     commentData.value.content = textarea.value
@@ -122,7 +123,8 @@ const addComment = () => {
     commentData.value.shape_id = v4()
     const data = commentData.value
     createComment(data).then(() => {
-        emit('completed');
+        textarea.value = '';
+        emit('completed', succession, e);
     })
 }
 const getCurrentTime = () => {
@@ -179,6 +181,14 @@ const handleInput = () => {
     })
 }
 
+const workspaceUpdate = (t: number) => {
+    if (t === WorkSpace.MATRIX_TRANSFORMATION) {
+        matrix.reset(props.matrix);
+        matrix.preTrans(props.x1, props.y1);
+        reflush.value++;
+    }
+}
+
 defineExpose({
     comment
 })
@@ -192,18 +202,20 @@ watchEffect(() => {
 })
 
 onMounted(() => {
+    props.context.workspace.watch(workspaceUpdate);
     clickTimer = setTimeout(() => {
         document.addEventListener('click', handleClickOutside);
     }, 10)
 })
 onUnmounted(() => {
+    props.context.workspace.unwatch(workspaceUpdate);
     document.removeEventListener('click', handleClickOutside);
     clearTimeout(clickTimer)
 })
 </script>
 
 <template>
-    <div ref="comment" class="comment-input"
+    <div ref="comment" class="comment-input" :reflush="reflush"
         :style="{ transform: `translate(${matrix.m02}px, ${matrix.m12}px)`, left: offside ? surplusX + 'px' : 48 + 'px', top: -33 + 'px' }">
         <div :class="{ icon_left: !offside, icon_right: offside }" ref="inputIcon" @mousedown="mouseDownCommentInput">
             <svg-icon icon-class="comment-add"></svg-icon>
@@ -213,7 +225,7 @@ onUnmounted(() => {
                 :placeholder="t('comment.input_comments')" resize="none" size="small"
                 :input-style="{ overflow: scrollVisible ? 'visible' : 'hidden' }" @keydown="carriageReturn"
                 @input="handleInput" />
-            <div class="send" :style="{ background: sendBright ? '#1878F5' : 'transparent' }" @click="addComment">
+            <div class="send" :style="{ background: sendBright ? '#1878F5' : 'transparent' }" @click="addComment(false)">
                 <svg-icon icon-class="send" :style="{ color: sendBright ? '#FFFFFF' : '#CCCCCC' }"></svg-icon>
             </div>
         </div>

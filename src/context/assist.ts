@@ -174,7 +174,7 @@ export class Asssit extends WatchableObject {
             }
         }
 
-        console.log('assit map:', this.m_path_pg);
+        // console.log('assit map:', this.m_path_pg);
     }
 
     get except() {

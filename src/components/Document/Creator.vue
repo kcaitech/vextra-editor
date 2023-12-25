@@ -154,6 +154,7 @@ const addComment = (e: MouseEvent) => {
     commentInput.value = true;
     document.addEventListener('keydown', commentEsc);
 }
+
 const getCommentInputXY = (e: MouseEvent) => {
     const { x, y, xy } = detectionShape(e)
     commentPosition.x = xy.x;
@@ -185,6 +186,8 @@ const saveShapeCommentXY = () => {
 //移动输入框
 const mouseDownCommentInput = (e: MouseEvent) => {
     e.stopPropagation();
+    const comment = props.context.comment;
+    comment.moveCommentInput(true);
     document.addEventListener("mousemove", mouseMoveInput);
     document.addEventListener("mouseup", mouseUpCommentInput);
 }
@@ -194,9 +197,12 @@ const mouseMoveInput = (e: MouseEvent) => {
 }
 const mouseUpCommentInput = (e: MouseEvent) => {
     detectionShape(e)
+    const comment = props.context.comment;
     document.removeEventListener('mousemove', mouseMoveInput);
     document.removeEventListener('mouseup', mouseUpCommentInput);
+    comment.moveCommentInput(false);
 }
+
 const editShapeComment = (index: number, x: number, y: number) => {
     const comment = documentCommentList.value[index]
     const id = comment.id
@@ -225,10 +231,13 @@ const closeComment = (e?: MouseEvent) => {
     }
 }
 // 调用评论API，并通知listTab组件更新评论列表
-const completed = () => {
+const completed = (succession: boolean, event?: MouseEvent) => {
     // props.context.comment.sendComment()
-    // getDocumentComment()
+    // getDocumentComment()\
     commentInput.value = false;
+    if(succession && event) {
+        addComment(event);
+    }
 }
 // 获取评论列表
 const getDocumentComment = async () => {
@@ -444,12 +453,14 @@ function shapeCreateEnd() {
 }
 
 function removeCreator() {
-    if (asyncCreator) asyncCreator = asyncCreator.close();
-    props.context.workspace.creating(false);
-    if (props.context.tool.action !== Action.AddContact) {
-        props.context.tool.setAction(Action.AutoV);
-        props.context.cursor.setType("auto-0");
+    if (asyncCreator) {
+        asyncCreator = asyncCreator.close();
     }
+    props.context.workspace.creating(false);
+
+    props.context.tool.setAction(Action.AutoV);
+
+    props.context.cursor.setType("auto-0");
 }
 
 function windowBlur() {
@@ -460,7 +471,12 @@ function windowBlur() {
     document.removeEventListener('mouseup', up);
 }
 
+function init() {
+    props.context.selection.resetSelectShapes();
+}
+
 onMounted(() => {
+    init();
     window.addEventListener('blur', windowBlur);
 })
 onUnmounted(() => {

@@ -11,7 +11,8 @@ import {
     is_able_to_unbind,
     is_symbolref_disa,
     RefAttriListItem,
-    reset_all_attr_for_ref
+    reset_all_attr_for_ref,
+    is_part_of_symbol
 } from "@/utils/symbol";
 import {cardmap} from "./InstanceAttrCard/map";
 import Status from "./InstanceAttrCard/IACStatus.vue"
@@ -172,10 +173,10 @@ onUnmounted(() => {
 </script>
 
 <template>
-    <div style="margin-bottom: 10px;">
+    <div style="margin-bottom: 10px;" v-if="variables.length">
         <TypeHeader :title="t('compos.instance_attr')" class="mt-24" :active="true">
             <template #tool>
-                <div class="edit-comps">
+                <div class="edit-comps" v-if="!is_part_of_symbol(props.shapes[0])">
                     <div class="edit_svg" @click.stop="editComps" v-if="is_symbolref_disa(props.shapes)">
                         <svg-icon icon-class="edit-comp"></svg-icon>
                     </div>

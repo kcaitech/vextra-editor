@@ -1,6 +1,6 @@
 import { Context } from "@/context";
 import { PageXY, XY } from "@/context/selection";
-import { GroupShape, Matrix, PathShape, Shape, ShapeType, SymbolRefShape, SymbolShape, SymbolUnionShape } from "@kcdesign/data";
+import { GroupShape, Matrix, PathShape, Shape, ShapeType, SymbolRefShape, SymbolShape } from "@kcdesign/data";
 import { v4 as uuid } from "uuid";
 import { isShapeOut } from "./assist";
 import { debounce } from "lodash";
@@ -149,6 +149,7 @@ export function isTarget(scout: Scout, shape: Shape, p: PageXY): boolean {
     return scout.isPointInShape(shape, p);
 }
 
+// 胖一圈的判定
 function isTarget2(scout: Scout, shape: Shape, p: PageXY): boolean {
     return scout.isPointInShape2(shape, p);
 }
@@ -198,17 +199,33 @@ export function finder(context: Context, scout: Scout, g: Shape[], position: Pag
     let result: Shape | undefined;
     for (let i = g.length - 1; i > -1; i--) { // 从最上层开始往下找(z-index：大 -> 小)
         const item = g[i];
-        if (!canBeTarget(item)) continue; // 隐藏图层或已锁定
-        if (isShapeOut(context, item)) continue; // 屏幕外图形，这里会判断每个图形是否在屏幕内，本身消耗较小，另外可以避免后面的部分不必要的更大消耗
+        if (!canBeTarget(item)) {
+            continue; // 隐藏图层或已锁定
+        }
+
+        if (item.type !== ShapeType.Contact && isShapeOut(context, item)) {
+            continue; // 屏幕外图形，这里会判断每个图形是否在屏幕内，本身消耗较小，另外可以避免后面的部分不必要的更大消耗
+        }
+
         if (item.type === ShapeType.SymbolUnion) { // 组件状态集合
             result = finder_symbol_union(context, scout, item as GroupShape, position, selected, isCtrl);
-            if (isTarget(scout, item, position)) break; // 只要进入集合，有无子元素选中都应该break
+            
+            if (isTarget(scout, item, position)) {
+                break; // 只要进入集合，有无子元素选中都应该break
+            }
         } else if (item.type === ShapeType.Symbol || item.type === ShapeType.SymbolRef) { // 组件或引用
             result = finder_symbol(context, scout, item as SymbolShape, position, selected, isCtrl);
         }
-        if (result) break;
+
+        if (result) {
+            break;
+        }
+
         const isItemIsTarget = isTarget(scout, item, position);
-        if (!isItemIsTarget) continue; // 以下图形类型自身不在感应区域内，则不再检索子节点
+        if (!isItemIsTarget) {
+            continue; // 以下图形类型自身不在感应区域内，则不再检索子节点
+        }
+
         if (item.type === ShapeType.Artboard) {
             result = finder_artboard(context, scout, item as GroupShape, position, selected, isCtrl);
         } else if (item.type === ShapeType.Group) {
@@ -216,7 +233,10 @@ export function finder(context: Context, scout: Scout, g: Shape[], position: Pag
         } else {
             result = item;
         }
-        if (result) break;
+
+        if (result) {
+            break;
+        }
     }
     return result;
 }
@@ -291,31 +311,27 @@ function finder_symbol(context: Context, scout: Scout, symbol: SymbolShape | Sym
 export function finder_contact(scout: Scout, g: Shape[], position: PageXY, selected: Shape, init?: Shape[]): Shape[] {
     const result = init || [];
     for (let i = g.length - 1; i > -1; i--) {
-        if (!canBeTarget(g[i]) || g[i].type === ShapeType.Contact) continue;
         const item = g[i];
-        if ([ShapeType.Group, ShapeType.Artboard].includes(item.type)) {
+        if (!canBeTarget(item) || item.type === ShapeType.Contact) {
+            continue;
+        }
+        if ([ShapeType.Group, ShapeType.Artboard, ShapeType.Symbol, ShapeType.SymbolUnion, ShapeType.SymbolRef].includes(item.type)) {
             const isItemIsTarget = isTarget2(scout, item, position);
-            if (!isItemIsTarget) continue;
-            const c = (item as GroupShape).childs as Shape[];
-            if (item.type === ShapeType.Artboard) {
-                if (c.length) {
-                    result.push(...finder_contact(scout, c, position, selected, result));
-                    if (result.length) {
-                        return result;
-                    } else {
-                        result.push(item);
-                        return result;
-                    }
+            if (!isItemIsTarget) {
+                continue;
+            }
+            const c = item instanceof SymbolRefShape ? (item.naviChilds || []) : (item as GroupShape).childs as Shape[];
+            if (c.length) {
+                result.push(...finder_contact(scout, c, position, selected, result));
+                if (result.length) {
+                    return result;
                 } else {
                     result.push(item);
                     return result;
                 }
-            } else if ([ShapeType.Group].includes(item.type)) { // 如果是编组，不用向下走了，让子元素往上走
-                const g = finder_group(scout, (item as GroupShape).childs, position, selected, true);
-                if (g) {
-                    result.push(g);
-                    return result;
-                }
+            } else {
+                result.push(item);
+                return result;
             }
         } else {
             if (isTarget2(scout, item, position)) {
