@@ -4,7 +4,7 @@ import { AsyncBaseAction, CtrlElementType, Matrix, Shape } from '@kcdesign/data'
 import { onMounted, onUnmounted, watch, reactive } from 'vue';
 import { ClientXY, PageXY } from '@/context/selection';
 import { forbidden_to_modify_frame, getAngle } from '@/utils/common';
-import { get_real_rotation, update_dot } from './common';
+import { get_real_rotation, get_transform, update_dot } from './common';
 import { Point } from "../../SelectionView.vue";
 import { Action } from '@/context/tool';
 
@@ -228,30 +228,69 @@ function modify_fix_y(p2: PageXY, fix: number) {
     pre_target_y = fix;
 }
 
-function setCursor(t: CtrlElementType, force?: boolean) {
-    const cursor = props.context.cursor;
+// todo 后续优化
+// function setCursor(t: CtrlElementType, force?: boolean) {
+//     const cursor = props.context.cursor;
 
-    const deg = get_real_rotation(props.shape);
+//     const deg = get_real_rotation(props.shape);
 
-    if (t === CtrlElementType.RectLT) {
-        cursor.setType(`scale-${deg - 45}`, force);
-    } else if (t === CtrlElementType.RectRT) {
-        cursor.setType(`scale-${deg - 135}`, force);
-    } else if (t === CtrlElementType.RectRB) {
-        cursor.setType(`scale-${deg - 45}`, force);
-    } else if (t === CtrlElementType.RectLB) {
-        cursor.setType(`scale-${deg - 135}`, force);
-    } else if (t === CtrlElementType.RectLTR) {
-        cursor.setType(`rotate-${deg - 225}`, force);
-    } else if (t === CtrlElementType.RectRTR) {
-        cursor.setType(`rotate-${deg - 315}`, force);
-    } else if (t === CtrlElementType.RectRBR) {
-        cursor.setType(`rotate-${deg - 45}`, force);
-    } else if (t === CtrlElementType.RectLBR) {
-        cursor.setType(`rotate-${deg - 135}`, force);
-    }
+//     if (t === CtrlElementType.RectLT) {
+//         cursor.setType(`scale-${deg - 45}`, force);
+//     } else if (t === CtrlElementType.RectRT) {
+//         cursor.setType(`scale-${deg - 135}`, force);
+//     } else if (t === CtrlElementType.RectRB) {
+//         cursor.setType(`scale-${deg - 45}`, force);
+//     } else if (t === CtrlElementType.RectLB) {
+//         cursor.setType(`scale-${deg - 135}`, force);
+//     } else if (t === CtrlElementType.RectLTR) {
+//         cursor.setType(`rotate-${deg - 225}`, force);
+//     } else if (t === CtrlElementType.RectRTR) {
+//         cursor.setType(`rotate-${deg - 315}`, force);
+//     } else if (t === CtrlElementType.RectRBR) {
+//         cursor.setType(`rotate-${deg - 45}`, force);
+//     } else if (t === CtrlElementType.RectLBR) {
+//         cursor.setType(`rotate-${deg - 135}`, force);
+//     }
+// }
+
+function modify_rotate_before_set(deg: number, fh: boolean, fv: boolean) {
+    if (fh) deg = 180 - deg;
+    if (fv) deg = 360 - deg;
+
+    return Math.floor(deg);
 }
 
+function setCursor(t: CtrlElementType, force?: boolean) {
+    const cursor = props.context.cursor;
+    const { rotate, isFlippedHorizontal, isFlippedVertical } = get_transform(props.shape);
+    let deg = rotate;
+
+    if (t === CtrlElementType.RectLT) {
+        deg = modify_rotate_before_set(deg + 45, isFlippedHorizontal, isFlippedVertical);
+        cursor.setType(`scale-${deg}`, force);
+    } else if (t === CtrlElementType.RectRT) {
+        deg = modify_rotate_before_set(deg + 135, isFlippedHorizontal, isFlippedVertical);
+        cursor.setType(`scale-${deg}`, force);
+    } else if (t === CtrlElementType.RectRB) {
+        deg = modify_rotate_before_set(deg + 45, isFlippedHorizontal, isFlippedVertical);
+        cursor.setType(`scale-${deg}`, force);
+    } else if (t === CtrlElementType.RectLB) {
+        deg = modify_rotate_before_set(deg + 135, isFlippedHorizontal, isFlippedVertical);
+        cursor.setType(`scale-${deg}`, force);
+    } else if (t === CtrlElementType.RectLTR) {
+        deg = modify_rotate_before_set(deg + 225, isFlippedHorizontal, isFlippedVertical);
+        cursor.setType(`rotate-${deg}`, force);
+    } else if (t === CtrlElementType.RectRTR) {
+        deg = modify_rotate_before_set(deg + 315, isFlippedHorizontal, isFlippedVertical);
+        cursor.setType(`rotate-${deg}`, force);
+    } else if (t === CtrlElementType.RectRBR) {
+        deg = modify_rotate_before_set(deg + 45, isFlippedHorizontal, isFlippedVertical);
+        cursor.setType(`rotate-${deg}`, force);
+    } else if (t === CtrlElementType.RectLBR) {
+        deg = modify_rotate_before_set(deg + 135, isFlippedHorizontal, isFlippedVertical);
+        cursor.setType(`rotate-${deg}`, force);
+    }
+}
 function point_mouseleave() {
     props.context.cursor.reset();
 }
@@ -290,7 +329,7 @@ onUnmounted(() => {
 <template>
     <g>
         <g v-for="(p, i) in dots" :key="i" :style="`transform: ${p.r.transform};`">
-            <path :d="p.r.p" fill="transparent" stroke="none" @mousedown.stop="(e) => point_mousedown(e, p.type2)"
+            <path :d="p.r.p" fill="#ff0000" stroke="none" @mousedown.stop="(e) => point_mousedown(e, p.type2)"
                 @mouseenter="() => setCursor(p.type2)" @mouseleave="point_mouseleave">
             </path>
             <rect :x="p.extra.x" :y="p.extra.y" width="14px" height="14px" fill="transparent" stroke='transparent'
