@@ -244,7 +244,9 @@ function point_mouseup(event: MouseEvent) {
 }
 function setCursor(t: CtrlElementType, force?: boolean) {
     const cursor = props.context.cursor;
+    
     let deg = get_rotate_for_straight(props.shape as PathShape);
+
     if (t === CtrlElementType.RectLT) {
         cursor.setType('extend-0', force);
     } else if (t === CtrlElementType.RectRB) {

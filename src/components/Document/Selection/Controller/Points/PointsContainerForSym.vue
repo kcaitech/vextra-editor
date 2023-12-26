@@ -4,7 +4,7 @@ import { AsyncBaseAction, CtrlElementType, Matrix, Shape } from '@kcdesign/data'
 import { onMounted, onUnmounted, watch, reactive } from 'vue';
 import { ClientXY, PageXY } from '@/context/selection';
 import { forbidden_to_modify_frame, getAngle } from '@/utils/common';
-import { update_dot } from './common';
+import { get_real_rotation, update_dot } from './common';
 import { Point } from "../../SelectionView.vue";
 import { Action } from '@/context/tool';
 import { PointType } from '@/context/assist';
@@ -217,49 +217,28 @@ function modify_fix_y(p2: PageXY, fix: number) {
 }
 function setCursor(t: CtrlElementType, force?: boolean) {
     const cursor = props.context.cursor;
-    let deg = props.shape.rotation || 0;
+
+    const deg = get_real_rotation(props.shape);
+
     if (t === CtrlElementType.RectLT) {
-        deg = deg + 45;
-        if (props.shape.isFlippedHorizontal) deg = 180 - deg;
-        if (props.shape.isFlippedVertical) deg = 360 - deg;
-        cursor.setType(`scale-${deg}`, force);
+        cursor.setType(`scale-${deg + 45}`, force);
     } else if (t === CtrlElementType.RectRT) {
-        deg = deg + 135;
-        if (props.shape.isFlippedHorizontal) deg = 180 - deg;
-        if (props.shape.isFlippedVertical) deg = 360 - deg;
-        cursor.setType(`scale-${deg}`, force);
+        cursor.setType(`scale-${deg + 135}`, force);
     } else if (t === CtrlElementType.RectRB) {
-        deg = deg + 45;
-        if (props.shape.isFlippedHorizontal) deg = 180 - deg;
-        if (props.shape.isFlippedVertical) deg = 360 - deg;
-        cursor.setType(`scale-${deg}`, force);
+        cursor.setType(`scale-${deg + 45}`, force);
     } else if (t === CtrlElementType.RectLB) {
-        deg = deg + 135;
-        if (props.shape.isFlippedHorizontal) deg = 180 - deg;
-        if (props.shape.isFlippedVertical) deg = 360 - deg;
-        cursor.setType(`scale-${deg}`, force);
+        cursor.setType(`scale-${deg + 135}`, force);
     } else if (t === CtrlElementType.RectLTR) {
-        deg = deg + 225;
-        if (props.shape.isFlippedHorizontal) deg = 180 - deg;
-        if (props.shape.isFlippedVertical) deg = 360 - deg;
-        cursor.setType(`rotate-${deg}`, force);
+        cursor.setType(`rotate-${deg + 225}`, force);
     } else if (t === CtrlElementType.RectRTR) {
-        deg = deg + 315;
-        if (props.shape.isFlippedHorizontal) deg = 180 - deg;
-        if (props.shape.isFlippedVertical) deg = 360 - deg;
-        cursor.setType(`rotate-${deg}`, force);
+        cursor.setType(`rotate-${deg + 315}`, force);
     } else if (t === CtrlElementType.RectRBR) {
-        deg = deg + 45;
-        if (props.shape.isFlippedHorizontal) deg = 180 - deg;
-        if (props.shape.isFlippedVertical) deg = 360 - deg;
-        cursor.setType(`rotate-${deg}`, force);
+        cursor.setType(`rotate-${deg + 45}`, force);
     } else if (t === CtrlElementType.RectLBR) {
-        deg = deg + 135;
-        if (props.shape.isFlippedHorizontal) deg = 180 - deg;
-        if (props.shape.isFlippedVertical) deg = 360 - deg;
-        cursor.setType(`rotate-${deg}`, force);
+        cursor.setType(`rotate-${deg + 135}`, force);
     }
 }
+
 function point_mouseleave() {
     props.context.cursor.setType('auto-0');
 }

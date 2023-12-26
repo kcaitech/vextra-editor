@@ -246,7 +246,7 @@ onUnmounted(() => {
 <template>
     <g>
         <g v-for="(b, i) in paths" :key="i">
-            <path :d="b.path" class="path1" @mousedown.stop="(e) => bar_mousedown(e, b.type)"
+            <path :d="b.path" class="main-path" @mousedown.stop="(e) => bar_mousedown(e, b.type)"
                 @mouseenter="() => setCursor(b.type)" @mouseleave="bar_mouseleave">
             </path>
             <path :d="b.path" fill="none" stroke='transparent' stroke-width="10px"
@@ -257,9 +257,8 @@ onUnmounted(() => {
     </g>
 </template>
 <style lang='scss' scoped>
-.path1 {
+.main-path {
     fill: none;
     stroke: var(--component-color);
-    stroke-width: 1.5px;
 }
 </style>

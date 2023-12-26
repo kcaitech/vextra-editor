@@ -259,6 +259,5 @@ onUnmounted(() => {
 .main-path {
     fill: none;
     stroke: var(--active-color);
-    stroke-width: 2px;
 }
 </style>
