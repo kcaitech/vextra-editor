@@ -182,7 +182,7 @@ function setCursor(t: CtrlElementType, force?: boolean) {
     if (t === CtrlElementType.RectRight) {
         cursor.setType(`scale-${deg}`, force);
     } else if (t === CtrlElementType.RectBottom) {
-        cursor.setType(`scale-${deg + 90}`, force);
+        cursor.setType(`scale-${deg - 90}`, force);
     }
 }
 function bar_mouseup(event: MouseEvent) {

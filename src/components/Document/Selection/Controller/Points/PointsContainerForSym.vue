@@ -221,21 +221,21 @@ function setCursor(t: CtrlElementType, force?: boolean) {
     const deg = get_real_rotation(props.shape);
 
     if (t === CtrlElementType.RectLT) {
-        cursor.setType(`scale-${deg + 45}`, force);
+        cursor.setType(`scale-${deg - 45}`, force);
     } else if (t === CtrlElementType.RectRT) {
-        cursor.setType(`scale-${deg + 135}`, force);
+        cursor.setType(`scale-${deg - 135}`, force);
     } else if (t === CtrlElementType.RectRB) {
-        cursor.setType(`scale-${deg + 45}`, force);
+        cursor.setType(`scale-${deg - 45}`, force);
     } else if (t === CtrlElementType.RectLB) {
-        cursor.setType(`scale-${deg + 135}`, force);
+        cursor.setType(`scale-${deg - 135}`, force);
     } else if (t === CtrlElementType.RectLTR) {
-        cursor.setType(`rotate-${deg + 225}`, force);
+        cursor.setType(`rotate-${deg - 225}`, force);
     } else if (t === CtrlElementType.RectRTR) {
-        cursor.setType(`rotate-${deg + 315}`, force);
+        cursor.setType(`rotate-${deg - 315}`, force);
     } else if (t === CtrlElementType.RectRBR) {
-        cursor.setType(`rotate-${deg + 45}`, force);
+        cursor.setType(`rotate-${deg - 45}`, force);
     } else if (t === CtrlElementType.RectLBR) {
-        cursor.setType(`rotate-${deg + 135}`, force);
+        cursor.setType(`rotate-${deg - 135}`, force);
     }
 }
 

@@ -187,11 +187,11 @@ function setCursor(t: CtrlElementType, force?: boolean) {
     const deg = get_real_rotation(props.shape);
 
     if (t === CtrlElementType.RectTop) {
-        cursor.setType(`scale-${deg + 90}`, force);
+        cursor.setType(`scale-${deg - 90}`, force);
     } else if (t === CtrlElementType.RectRight) {
         cursor.setType(`scale-${deg}`, force);
     } else if (t === CtrlElementType.RectBottom) {
-        cursor.setType(`scale-${deg + 90}`, force);
+        cursor.setType(`scale-${deg - 90}`, force);
     } else if (t === CtrlElementType.RectLeft) {
         cursor.setType(`scale-${deg}`, force);
     }
