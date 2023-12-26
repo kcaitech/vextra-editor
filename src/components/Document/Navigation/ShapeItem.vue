@@ -258,11 +258,11 @@ function updater(t?: any) {
 
     const shape = props.data.shape();
 
-    const naviChilds = shape.naviChilds || (shape as any).childs;
+    const naviChilds = shape.naviChilds;
     showTriangle.value = Boolean(naviChilds && naviChilds.length > 0);
 
     lock_status.value = shape.isLocked ? 1 : 0;
-    visible_status.value = shape.getVisible() ? 0 : 1;
+    visible_status.value = shape.isVisible ? 0 : 1;
     // if (is_parent_locked(shape) && !lock_status.value) {
     //     lock_status.value = 2;
     // }
