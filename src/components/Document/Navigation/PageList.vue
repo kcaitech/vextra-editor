@@ -139,7 +139,10 @@ const addPage = () => {
                 pagelist.value.clampScroll(0, -itemScrollH)
             }
         }
-        props.context.navi.notify(Navi.ADD_PAGE);
+        if(_tail <= 5) {
+            props.context.navi.notify(Navi.ADD_PAGE);
+        }
+        pageSource.notify(0, 0, 0, Number.MAX_VALUE);
         nextTick(() => {
             props.context.selection.reName();
         })
