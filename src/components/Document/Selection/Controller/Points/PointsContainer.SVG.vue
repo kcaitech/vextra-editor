@@ -4,7 +4,7 @@ import { AsyncBaseAction, CtrlElementType, Matrix, Shape } from '@kcdesign/data'
 import { onMounted, onUnmounted, watch, reactive } from 'vue';
 import { ClientXY, PageXY } from '@/context/selection';
 import { forbidden_to_modify_frame, getAngle } from '@/utils/common';
-import { get_rotation, is_fh, is_fv, update_dot } from './common';
+import { get_transform, update_dot } from './common';
 import { Point } from "../../SelectionView.vue";
 import { Action } from '@/context/tool';
 
@@ -52,18 +52,19 @@ function update_dot_path() {
 
     dots.length = 0;
     const frame = props.shape.frame;
-    const s_r = get_rotation(props.shape, is_fh(props.shape), is_fv(props.shape)) || 0;
     let lt = matrix.computeCoord(0, 0);
     let rt = matrix.computeCoord(frame.width, 0);
     let rb = matrix.computeCoord(frame.width, frame.height);
     let lb = matrix.computeCoord(0, frame.height);
-    dots.push(...update_dot([lt, rt, rb, lb], s_r, is_fh(props.shape), is_fv(props.shape)));
+
+    dots.push(...update_dot([lt, rt, rb, lb], props.shape));
 }
 
 function point_mousedown(event: MouseEvent, ele: CtrlElementType) {
     if (event.button !== 0) {
         return;
     }
+
     props.context.menu.menuMount();
 
     if (forbidden_to_modify_frame(props.shape)) {
@@ -226,39 +227,40 @@ function modify_fix_y(p2: PageXY, fix: number) {
     stickedY = true;
     pre_target_y = fix;
 }
-function modify_rotate_before_set(deg: number) {
-    if (is_fh(props.shape)) deg = 180 - deg;
-    if (is_fv(props.shape)) deg = 360 - deg;
+function modify_rotate_before_set(deg: number, fh: boolean, fv: boolean) {
+    if (fh) deg = 180 - deg;
+    if (fv) deg = 360 - deg;
+
     return Math.floor(deg);
 }
 function setCursor(t: CtrlElementType, force?: boolean) {
     const cursor = props.context.cursor;
-
-    let deg = get_rotation(props.shape, is_fh(props.shape), is_fv(props.shape));
+    const { rotate, isFlippedHorizontal, isFlippedVertical } = get_transform(props.shape);
+    let deg = rotate;
 
     if (t === CtrlElementType.RectLT) {
-        deg = modify_rotate_before_set(deg + 45);
+        deg = modify_rotate_before_set(deg + 45, isFlippedHorizontal, isFlippedVertical);
         cursor.setType(`scale-${deg}`, force);
     } else if (t === CtrlElementType.RectRT) {
-        deg = modify_rotate_before_set(deg + 135);
+        deg = modify_rotate_before_set(deg + 135, isFlippedHorizontal, isFlippedVertical);
         cursor.setType(`scale-${deg}`, force);
     } else if (t === CtrlElementType.RectRB) {
-        deg = modify_rotate_before_set(deg + 45);
+        deg = modify_rotate_before_set(deg + 45, isFlippedHorizontal, isFlippedVertical);
         cursor.setType(`scale-${deg}`, force);
     } else if (t === CtrlElementType.RectLB) {
-        deg = modify_rotate_before_set(deg + 135);
+        deg = modify_rotate_before_set(deg + 135, isFlippedHorizontal, isFlippedVertical);
         cursor.setType(`scale-${deg}`, force);
     } else if (t === CtrlElementType.RectLTR) {
-        deg = modify_rotate_before_set(deg + 225);
+        deg = modify_rotate_before_set(deg + 225, isFlippedHorizontal, isFlippedVertical);
         cursor.setType(`rotate-${deg}`, force);
     } else if (t === CtrlElementType.RectRTR) {
-        deg = modify_rotate_before_set(deg + 315);
+        deg = modify_rotate_before_set(deg + 315, isFlippedHorizontal, isFlippedVertical);
         cursor.setType(`rotate-${deg}`, force);
     } else if (t === CtrlElementType.RectRBR) {
-        deg = modify_rotate_before_set(deg + 45);
+        deg = modify_rotate_before_set(deg + 45, isFlippedHorizontal, isFlippedVertical);
         cursor.setType(`rotate-${deg}`, force);
     } else if (t === CtrlElementType.RectLBR) {
-        deg = modify_rotate_before_set(deg + 135);
+        deg = modify_rotate_before_set(deg + 135, isFlippedHorizontal, isFlippedVertical);
         cursor.setType(`rotate-${deg}`, force);
     }
 }
