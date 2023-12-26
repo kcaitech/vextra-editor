@@ -236,32 +236,25 @@ function modify_rotate_before_set(deg: number, fh: boolean, fv: boolean) {
 function setCursor(t: CtrlElementType, force?: boolean) {
     const cursor = props.context.cursor;
     const { rotate, isFlippedHorizontal, isFlippedVertical } = get_transform(props.shape);
-    let deg = rotate;
+    
+    let deg = modify_rotate_before_set(rotate, isFlippedHorizontal, isFlippedVertical);
 
     if (t === CtrlElementType.RectLT) {
-        deg = modify_rotate_before_set(deg + 45, isFlippedHorizontal, isFlippedVertical);
-        cursor.setType(`scale-${deg}`, force);
+        cursor.setType(`scale-${deg + 45}`, force);
     } else if (t === CtrlElementType.RectRT) {
-        deg = modify_rotate_before_set(deg + 135, isFlippedHorizontal, isFlippedVertical);
-        cursor.setType(`scale-${deg}`, force);
+        cursor.setType(`scale-${deg + 135}`, force);
     } else if (t === CtrlElementType.RectRB) {
-        deg = modify_rotate_before_set(deg + 45, isFlippedHorizontal, isFlippedVertical);
-        cursor.setType(`scale-${deg}`, force);
+        cursor.setType(`scale-${deg + 45}`, force);
     } else if (t === CtrlElementType.RectLB) {
-        deg = modify_rotate_before_set(deg + 135, isFlippedHorizontal, isFlippedVertical);
-        cursor.setType(`scale-${deg}`, force);
+        cursor.setType(`scale-${deg + 135}`, force);
     } else if (t === CtrlElementType.RectLTR) {
-        deg = modify_rotate_before_set(deg + 225, isFlippedHorizontal, isFlippedVertical);
-        cursor.setType(`rotate-${deg}`, force);
+        cursor.setType(`rotate-${deg + 225}`, force);
     } else if (t === CtrlElementType.RectRTR) {
-        deg = modify_rotate_before_set(deg + 315, isFlippedHorizontal, isFlippedVertical);
-        cursor.setType(`rotate-${deg}`, force);
+        cursor.setType(`rotate-${deg + 315}`, force);
     } else if (t === CtrlElementType.RectRBR) {
-        deg = modify_rotate_before_set(deg + 45, isFlippedHorizontal, isFlippedVertical);
-        cursor.setType(`rotate-${deg}`, force);
+        cursor.setType(`rotate-${deg + 45}`, force);
     } else if (t === CtrlElementType.RectLBR) {
-        deg = modify_rotate_before_set(deg + 135, isFlippedHorizontal, isFlippedVertical);
-        cursor.setType(`rotate-${deg}`, force);
+        cursor.setType(`rotate-${deg + 135}`, force);
     }
 }
 

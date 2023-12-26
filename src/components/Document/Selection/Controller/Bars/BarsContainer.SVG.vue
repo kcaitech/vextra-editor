@@ -190,12 +190,10 @@ function modify_rotate_before_set(deg: number, fh: boolean, fv: boolean) {
 function setCursor(t: CtrlElementType, force?: boolean) {
     const cursor = props.context.cursor;
     const { rotate, isFlippedHorizontal, isFlippedVertical } = get_transform(props.shape);
-    let deg = rotate;
+
+    let deg = modify_rotate_before_set(rotate, isFlippedHorizontal, isFlippedVertical);
     
-    if (props.shape.isFlippedHorizontal) deg = 180 - deg;
-    if (props.shape.isFlippedVertical) deg = 360 - deg;
     if (t === CtrlElementType.RectTop) {
-        
         cursor.setType(`scale-${deg + 90}`, force);
     } else if (t === CtrlElementType.RectRight) {
         cursor.setType(`scale-${deg}`, force);
