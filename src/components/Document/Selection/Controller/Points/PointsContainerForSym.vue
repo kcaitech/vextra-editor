@@ -284,16 +284,16 @@ onUnmounted(() => {
                 @mouseleave="point_mouseleave">
             </rect>
             <rect :x="p.point.x" :y="p.point.y" @mousedown.stop="(e) => point_mousedown(e, p.type)"
-                @mouseenter="() => setCursor(p.type)" @mouseleave="point_mouseleave" class="rect1"></rect>
+                @mouseenter="() => setCursor(p.type)" @mouseleave="point_mouseleave" class="main-rect" rx="2px"></rect>
         </g>
     </g>
 </template>
 <style lang='scss' scoped>
-.rect1 {
+.main-rect {
     width: 8px;
     height: 8px;
     fill: #ffffff;
     stroke: var(--component-color);
-    stroke-width: 1.5px;
+    stroke-width: 1px;
 }
 </style>

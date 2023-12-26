@@ -74,7 +74,7 @@ function point_mousedown(event: MouseEvent, ele: CtrlElementType, idx: number) {
     if (forbidden_to_modify_frame(props.shape)) {
         return;
     }
-    
+
     const workspace = props.context.workspace;
     event.stopPropagation();
     workspace.setCtrl('controller');
@@ -244,7 +244,7 @@ function point_mouseup(event: MouseEvent) {
 }
 function setCursor(t: CtrlElementType, force?: boolean) {
     const cursor = props.context.cursor;
-    
+
     let deg = get_rotate_for_straight(props.shape as PathShape);
 
     if (t === CtrlElementType.RectLT) {
@@ -324,10 +324,17 @@ onUnmounted(() => {
                 @mousedown.stop="(e) => point_mousedown(e, p.type, i)" @mouseenter="() => setCursor(p.type)"
                 @mouseleave="point_mouseleave">
             </rect>
-            <rect :x="p.point.x" :y="p.point.y" width="8px" height="8px" fill="#ffffff" stroke='#1878f5'
-                stroke-width="1.5px" @mousedown.stop="(e) => point_mousedown(e, p.type, i)"
-                @mouseenter="() => setCursor(p.type)" @mouseleave="point_mouseleave"></rect>
+            <rect :x="p.point.x" :y="p.point.y" class="main-rect" rx="2px"
+                @mousedown.stop="(e) => point_mousedown(e, p.type, i)" @mouseenter="() => setCursor(p.type)"
+                @mouseleave="point_mouseleave"></rect>
         </g>
     </g>
 </template>
-<style lang='scss' scoped></style>
+<style lang='scss' scoped>
+.main-rect {
+    width: 8px;
+    height: 8px;
+    fill: #ffffff;
+    stroke: var(--active-color);
+}
+</style>
