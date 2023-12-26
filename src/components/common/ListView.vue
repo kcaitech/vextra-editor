@@ -80,6 +80,7 @@ relayout[Orientation.V] = () => {
             break;
         }
     }
+    clampScroll(scroll.x, scroll.y);
     scrollBar.length = Math.ceil((visibleHeight * visibleHeight) / measureHeight.value);
     scrollBar.mount = scrollBar.length < visibleHeight;
 }
@@ -97,6 +98,7 @@ relayout[Orientation.H] = () => {
             break;
         }
     }
+    clampScroll(scroll.x, scroll.y);
     scrollBar.length = Math.ceil((visibleWidth * visibleWidth) / measureHeight.value);
     scrollBar.length && scrollBar.length !== visibleWidth && (scrollBar.mount = true);
 }
@@ -623,7 +625,7 @@ const observer = new ResizeObserver(() => {
 onMounted(() => {
     container.value && observer.observe(container.value);
     viewMeasure[props.orientation]();
-    relayout[props.orientation]();
+    relayout[props.orientation]();    
     window.addEventListener('blur', window_blur);
 })
 onUnmounted(() => {

@@ -320,13 +320,16 @@ function container() {
  */
 function dissolution_container() {
     const selection = props.context.selection;
-    if (selection.selectedShapes[0].type !== ShapeType.Artboard) return;
+    const artboards = selection.selectedShapes.filter(s => s.type === ShapeType.Artboard);
+    const saveSelectShape = selection.selectedShapes.filter(s => s.type !== ShapeType.Artboard);
+    if (artboards.length === 0) return;
     const page = selection.selectedPage;
     if (page) {
         const editor = props.context.editor4Page(page);
-        const shapes = editor.dissolution_artboard(selection.selectedShapes[0] as Artboard);
+        const shapes = editor.dissolution_artboard(artboards as Artboard[]);
         if (shapes) {
-            selection.rangeSelectShape(shapes);
+            const selectShapes = [...saveSelectShape,...shapes]
+            props.context.selection.rangeSelectShape(selectShapes);
         }
     }
     emit('close');

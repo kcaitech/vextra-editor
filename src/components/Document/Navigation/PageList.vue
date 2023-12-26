@@ -149,7 +149,24 @@ const addPage = () => {
 function toggle() {
     fold.value = !fold.value;
     getPageName();
-    emit('fold', fold.value)
+    emit('fold', fold.value);
+    nextTick(() => {
+        const id = props.context.selection.selectedPage?.id;
+        const index = props.context.data.pagesList.findIndex((item) => item.id === id);
+        if (list_body.value) {
+            ListH.value = list_body.value.clientHeight
+        }
+        if (pagelist.value && index >= 0) {
+            const itemScrollH = index * 32
+            if (itemScrollH + 29 >= ListH.value - pagelist.value.scroll.y) {
+                if ((itemScrollH) + pagelist.value.scroll.y >= ListH.value) {
+                    pagelist.value.clampScroll(0, -(itemScrollH - ListH.value))
+                }
+            } else if (itemScrollH + 29 < -(pagelist.value.scroll.y)) {
+                pagelist.value.clampScroll(0, -itemScrollH)
+            }
+        }
+    })
 }
 
 function afterDrag(wandererId: string, hostId: string, offsetOverhalf: boolean) {

@@ -108,28 +108,17 @@ const ungroupClick = () => {
     const selection = props.selection;
     const shapes = selection.selectedShapes;
     if (!shapes.length) return;
-    const groups = shapes.filter(i => i.type === ShapeType.Group || i.type === ShapeType.Artboard);
+    const groups = shapes.filter(i => i.type === ShapeType.Group);
+    const artboards = shapes.filter(i => i.type === ShapeType.Artboard);
     const others: Shape[] = shapes.filter(i => i.type !== ShapeType.Group);
     if (!groups.length) return;
     const page = selection.selectedPage;
     if (!page) return;
     const editor = props.context.editor4Page(page);
-    const _groups = [];
-    for (let i = 0, len = groups.length; i < len; i++) {
-        const g = groups[i];
-        if (g.type === ShapeType.Group) {
-            _groups.push(g);
-        } else if (g.type === ShapeType.Artboard) {
-            const c = editor.dissolution_artboard(g as Artboard);
-            if (c) {
-                others.push(...c);
-            }
-        }
-    }
-    const s = editor.ungroup(_groups as GroupShape[]);
-    if (s) {
-        others.push(...s);
-    }
+    const a = editor.dissolution_artboard(artboards as Artboard[]);
+    if (a) others.push(...a);
+    const g = editor.ungroup(groups as GroupShape[]);
+    if (g) others.push(...g);
     if (others.length) {
         selection.rangeSelectShape(others);
     } else {
