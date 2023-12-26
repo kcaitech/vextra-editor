@@ -219,32 +219,6 @@ export function get_apexs(s: ContactShape, matrix: Matrix) {
     } = { point: m.computeCoord(raw_p[raw_p.length - 1]), type: 'to' };
     return { apex1, apex2 };
 }
-export function is_fh(shape: Shape) {
-    let f = !!shape.isFlippedHorizontal;
-
-    let p = shape.parent;
-
-    while (p) {
-        if (p.isFlippedHorizontal) {
-            f = !f;
-        }
-        p = p.parent;
-    }
-    return f;
-}
-export function is_fv(shape: Shape) {
-    let f = !!shape.isFlippedVertical;
-
-    let p = shape.parent;
-
-    while (p) {
-        if (p.isFlippedVertical) {
-            f = !f;
-        }
-        p = p.parent;
-    }
-    return f;
-}
 export function get_transform(shape: Shape) {
     const __r = shape.rotation || 0;
     const result = {
