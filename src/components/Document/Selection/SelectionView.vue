@@ -174,7 +174,7 @@ function createShapeTracing() {
         tracing.value = true;
 
         if (is_symbol_class(hoveredShape.type)) {
-            tracingStroke.value = '#ff9900';
+            tracingStroke.value = '#7F58F9';
         } else {
             tracingStroke.value = '#1878F5';
         }
@@ -397,6 +397,8 @@ onUnmounted(() => {
 })
 </script>
 <template>
+    <!-- 标注线 -->
+    <LableLine v-if="isLableLine" :context="props.context" :matrix="props.matrix"></LableLine>
     <!-- 描边 -->
     <svg v-if="tracing" version="1.1" xmlns="http://www.w3.org/2000/svg" xmlns:xlink="http://www.w3.org/1999/xlink"
         xmlns:xhtml="http://www.w3.org/1999/xhtml" preserveAspectRatio="xMinYMin meet" overflow="visible"
@@ -416,8 +418,6 @@ onUnmounted(() => {
     </component>
     <!-- 辅助 -->
     <Assist :context="props.context" :controller-frame="controllerFrame"></Assist>
-    <!-- 标注线 -->
-    <LableLine v-if="isLableLine" :context="props.context" :matrix="props.matrix"></LableLine>
     <!-- 选中大小 -->
     <ShapeSize :context="props.context" :controller-frame="controllerFrame"></ShapeSize>
 </template>
