@@ -7,6 +7,7 @@ import { Action } from '@/context/tool';
 import { Point } from '../../SelectionView.vue';
 import { PointType } from '@/context/assist';
 import { forbidden_to_modify_frame } from '@/utils/common';
+import { get_real_rotation } from '../Points/common';
 interface Props {
     matrix: number[]
     context: Context
@@ -81,7 +82,7 @@ function bar_mousedown(event: MouseEvent, ele: CtrlElementType) {
     matrix.reset(workspace.matrix);
     const root = workspace.root;
     startPosition = { x: clientX - root.x, y: clientY - root.y };
-    
+
     document.addEventListener('mousemove', bar_mousemove);
     document.addEventListener('mouseup', bar_mouseup);
 }
@@ -183,9 +184,9 @@ function getScale(type: CtrlElementType, shape: Shape, start: ClientXY, end: Cli
 }
 function setCursor(t: CtrlElementType, force?: boolean) {
     const cursor = props.context.cursor;
-    let deg = props.shape.rotation || 0;
-    if (props.shape.isFlippedHorizontal) deg = 180 - deg;
-    if (props.shape.isFlippedVertical) deg = 360 - deg;
+
+    const deg = get_real_rotation(props.shape);
+
     if (t === CtrlElementType.RectTop) {
         cursor.setType(`scale-${deg + 90}`, force);
     } else if (t === CtrlElementType.RectRight) {

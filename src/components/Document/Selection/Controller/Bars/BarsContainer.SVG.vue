@@ -7,7 +7,7 @@ import { Action } from '@/context/tool';
 import { Point } from '../../SelectionView.vue';
 import { PointType } from '@/context/assist';
 import { forbidden_to_modify_frame } from '@/utils/common';
-import { get_transform } from '../Points/common';
+import { get_real_rotation, get_transform } from '../Points/common';
 interface Props {
     matrix: number[]
     context: Context
@@ -181,18 +181,11 @@ function getScale(type: CtrlElementType, shape: Shape, start: ClientXY, end: Cli
         return (f.width - dx) / f.width;
     } else return 1
 }
-function modify_rotate_before_set(deg: number, fh: boolean, fv: boolean) {
-    if (fh) deg = 180 - deg;
-    if (fv) deg = 360 - deg;
-
-    return Math.floor(deg);
-}
 function setCursor(t: CtrlElementType, force?: boolean) {
     const cursor = props.context.cursor;
-    const { rotate, isFlippedHorizontal, isFlippedVertical } = get_transform(props.shape);
 
-    let deg = modify_rotate_before_set(rotate, isFlippedHorizontal, isFlippedVertical);
-    
+    const deg = get_real_rotation(props.shape);
+
     if (t === CtrlElementType.RectTop) {
         cursor.setType(`scale-${deg + 90}`, force);
     } else if (t === CtrlElementType.RectRight) {

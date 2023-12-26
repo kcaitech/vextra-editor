@@ -274,3 +274,17 @@ export function get_transform(shape: Shape) {
 
     return result
 }
+export function get_real_rotation(shape: Shape) {
+    const t = get_transform(shape);
+    let rotate = t.rotate;
+
+    if (t.isFlippedHorizontal) {
+        rotate = 180 - rotate;
+    }
+
+    if (t.isFlippedVertical) {
+        rotate = 360 - rotate;
+    }
+
+    return rotate;
+}

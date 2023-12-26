@@ -4,7 +4,7 @@ import { AsyncBaseAction, CtrlElementType, Matrix, Shape } from '@kcdesign/data'
 import { onMounted, onUnmounted, watch, reactive } from 'vue';
 import { ClientXY, PageXY } from '@/context/selection';
 import { forbidden_to_modify_frame, getAngle } from '@/utils/common';
-import { get_transform, update_dot } from './common';
+import { get_real_rotation, update_dot } from './common';
 import { Point } from "../../SelectionView.vue";
 import { Action } from '@/context/tool';
 
@@ -227,17 +227,11 @@ function modify_fix_y(p2: PageXY, fix: number) {
     stickedY = true;
     pre_target_y = fix;
 }
-function modify_rotate_before_set(deg: number, fh: boolean, fv: boolean) {
-    if (fh) deg = 180 - deg;
-    if (fv) deg = 360 - deg;
 
-    return Math.floor(deg);
-}
 function setCursor(t: CtrlElementType, force?: boolean) {
     const cursor = props.context.cursor;
-    const { rotate, isFlippedHorizontal, isFlippedVertical } = get_transform(props.shape);
-    
-    let deg = modify_rotate_before_set(rotate, isFlippedHorizontal, isFlippedVertical);
+
+    const deg = get_real_rotation(props.shape);
 
     if (t === CtrlElementType.RectLT) {
         cursor.setType(`scale-${deg + 45}`, force);
