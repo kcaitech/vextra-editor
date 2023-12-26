@@ -77,7 +77,7 @@ keydownHandler['KeyC'] = function (event: KeyboardEvent, context: Context) {
         context.comment.setVisibleComment(!context.comment.isVisibleComment); // 评论隐藏与显示
         return;
     }
-    context.workspace.notify(WorkSpace.COPY);
+    context.tool.setAction(Action.AddComment)
 }
 
 keydownHandler['KeyD'] = function (event: KeyboardEvent, context: Context) {

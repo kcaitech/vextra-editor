@@ -80,6 +80,7 @@ relayout[Orientation.V] = () => {
             break;
         }
     }
+    clampScroll(scroll.x, scroll.y);
     scrollBar.length = Math.ceil((visibleHeight * visibleHeight) / measureHeight.value);
     scrollBar.mount = scrollBar.length < visibleHeight;
 }
@@ -97,6 +98,7 @@ relayout[Orientation.H] = () => {
             break;
         }
     }
+    clampScroll(scroll.x, scroll.y);
     scrollBar.length = Math.ceil((visibleWidth * visibleWidth) / measureHeight.value);
     scrollBar.length && scrollBar.length !== visibleWidth && (scrollBar.mount = true);
 }
@@ -540,7 +542,7 @@ function mouseMove(event: MouseEvent) {
     // 计算终点位置
     const position = get_part_of_target1(currentHoverTarget.value, event);
     // console.log('position:', position);
-    const start_y = toIndex.value * props.itemHeight - 1 - (scroll.y % 30 === 0 ? scroll.y : scroll.y - scroll.y % 30);
+    const start_y = toIndex.value * props.itemHeight - 1 - (scroll.y % 32 === 0 ? scroll.y : scroll.y - scroll.y % 32);
     const _destination = get_destination_by_drag_event(position, start_y, props.itemHeight);
     if (_destination.type === "insert") {
         port_i_visible.value = true;
@@ -623,7 +625,7 @@ const observer = new ResizeObserver(() => {
 onMounted(() => {
     container.value && observer.observe(container.value);
     viewMeasure[props.orientation]();
-    relayout[props.orientation]();
+    relayout[props.orientation]();    
     window.addEventListener('blur', window_blur);
 })
 onUnmounted(() => {

@@ -19,6 +19,7 @@ import {
 import { paster_short } from '@/utils/clipboard';
 import { Asssit } from '@/context/assist';
 import { Perm } from '@/context/workspace';
+import { forbidden_to_modify_frame } from '@/utils/common';
 
 const props = defineProps<{
     name: string,
@@ -138,6 +139,7 @@ function down(e: MouseEvent) {
         context.selection.selectShape(props.shape);
         let root = props.context.workspace.root;
         startPosition = { x: e.clientX - root.x, y: e.clientY - root.y };
+        if(forbidden_to_modify_frame(props.shape)) return;
         document.addEventListener('mousemove', move);
         document.addEventListener('mouseup', up);
     } else if (e.button === 2) {
