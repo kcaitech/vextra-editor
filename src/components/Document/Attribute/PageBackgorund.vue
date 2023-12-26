@@ -127,6 +127,7 @@ onUnmounted(() => {
     padding: 12px 8px 18px 8px;
     box-sizing: border-box;
     height: auto;
+    border-bottom: 1px solid #F0F0F0;
 
     >span {
         width: 48px;

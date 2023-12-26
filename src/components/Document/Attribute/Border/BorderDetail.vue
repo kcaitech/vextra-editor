@@ -7,11 +7,12 @@ import BorderPositonItem from './BorderPositionItem.vue';
 import BorderStyleItem from './BorderStyleItem.vue';
 import BorderStyleSelected from './BorderStyleSelected.vue';
 import { Context } from '@/context';
-import { Border, BorderPosition, BorderStyle, Shape, ShapeType, TableShape } from "@kcdesign/data";
+import { Border, BorderPosition, BorderStyle, GroupShape, Shape, ShapeType, TableShape } from "@kcdesign/data";
 import { genOptions } from '@/utils/common';
 import { Selection } from '@/context/selection';
 import { get_actions_border_thickness, get_actions_border_position, get_actions_border_style } from '@/utils/shape_style';
 import { WorkSpace } from '@/context/workspace';
+import { flattenShapes } from '@/utils/cutout';
 
 interface Props {
     context: Context
@@ -69,12 +70,12 @@ function updater() {
 function borderStyleSelect(selected: SelectItem) {
     props.context.workspace.notify(WorkSpace.CTRL_DISAPPEAR);
     borderStyle.value = selected;
-    if (len.value === 1) {
+    const shape = props.shapes[0];
+    if (len.value === 1 && shape.type !== ShapeType.Group) {
         const bs = selected.value === 'dash' ? new BorderStyle(2, 2) : new BorderStyle(0, 0);
-        const shape = props.shapes[0] as TableShape;
         if (shape.type === ShapeType.Table) {
             const table = props.context.tableSelection;
-            const e = props.context.editor4Table(shape);
+            const e = props.context.editor4Table(shape as TableShape);
             const is_edting = table.editingCell;
             if (table.tableRowStart > -1 || table.tableColStart > -1 || is_edting) {
                 let range
@@ -99,6 +100,17 @@ function borderStyleSelect(selected: SelectItem) {
                 editor.setShapesBorderStyle(actions);
             }
         }
+    } else if (len.value === 1 && shape.type === ShapeType.Group) {
+        const childs = (shape as GroupShape).childs;
+        const shapes = flattenShapes(childs).filter(s => s.type !== ShapeType.Group);
+        const actions = get_actions_border_style(shapes, props.index, (selected.value as 'dash' | 'solid'));
+        if (actions && actions.length) {
+            const page = props.context.selection.selectedPage;
+            if (page) {
+                const editor = props.context.editor4Page(page);
+                editor.setShapesBorderStyle(actions);
+            }
+        }
     }
     popover.value.focus();
     props.context.workspace.notify(WorkSpace.CTRL_APPEAR);
@@ -107,11 +119,22 @@ function borderStyleSelect(selected: SelectItem) {
 function positionSelect(selected: SelectItem) {
     props.context.workspace.notify(WorkSpace.CTRL_DISAPPEAR);
     position.value = selected;
-    if (len.value === 1) {
+    if (len.value === 1 && props.shapes[0].type !== ShapeType.Group) {
         editor.value.setBorderPosition(props.index, selected.value as BorderPosition);
     } else if (len.value > 1) {
         if (props.shapes[0].type === ShapeType.Table) return;
         const actions = get_actions_border_position(props.shapes, props.index, selected.value as BorderPosition);
+        if (actions && actions.length) {
+            const page = props.context.selection.selectedPage;
+            if (page) {
+                const editor = props.context.editor4Page(page);
+                editor.setShapesBorderPosition(actions);
+            }
+        }
+    } else if (len.value === 1 && props.shapes[0].type === ShapeType.Group) {
+        const childs = (props.shapes[0] as GroupShape).childs;
+        const shapes = flattenShapes(childs).filter(s => s.type !== ShapeType.Group);
+        const actions = get_actions_border_position(shapes, props.index, selected.value as BorderPosition);
         if (actions && actions.length) {
             const page = props.context.selection.selectedPage;
             if (page) {
@@ -127,11 +150,11 @@ function positionSelect(selected: SelectItem) {
 function setThickness(e: Event) {
     props.context.workspace.notify(WorkSpace.CTRL_DISAPPEAR);
     const thickness = Number((e.target as HTMLInputElement).value);
-    if (len.value === 1) {
-        const shape = props.shapes[0] as TableShape;
+    const shape = props.shapes[0];
+    if (len.value === 1 && shape.type !== ShapeType.Group) {
         if (shape.type === ShapeType.Table) {
             const table = props.context.tableSelection;
-            const e = props.context.editor4Table(shape);
+            const e = props.context.editor4Table(shape as TableShape);
             const is_edting = table.editingCell;
             if (table.tableRowStart > -1 || table.tableColStart > -1 || is_edting) {
                 let range
@@ -156,6 +179,17 @@ function setThickness(e: Event) {
                 editor.setShapesBorderThickness(actions);
             }
         }
+    } else if (len.value === 1 && shape.type === ShapeType.Group) {
+        const childs = (shape as GroupShape).childs;
+        const shapes = flattenShapes(childs).filter(s => s.type !== ShapeType.Group);
+        const actions = get_actions_border_thickness(shapes, props.index, thickness);
+        if (actions && actions.length) {
+            const page = props.context.selection.selectedPage;
+            if (page) {
+                const editor = props.context.editor4Page(page);
+                editor.setShapesBorderThickness(actions);
+            }
+        }
     }
     props.context.workspace.notify(WorkSpace.CTRL_APPEAR);
 }
@@ -163,11 +197,11 @@ function setThickness(e: Event) {
 const augment = (e: Event) => {
     if (borderThickness.value) {
         const thickness = Number(borderThickness.value.value) + 1
-        if (len.value === 1) {
-            const shape = props.shapes[0] as TableShape;
+        const shape = props.shapes[0];
+        if (len.value === 1 && shape.type !== ShapeType.Group) {
             if (shape.type === ShapeType.Table) {
                 const table = props.context.tableSelection;
-                const e = props.context.editor4Table(shape);
+                const e = props.context.editor4Table(shape as TableShape);
                 const is_edting = table.editingCell;
                 if (table.tableRowStart > -1 || table.tableColStart > -1 || is_edting) {
                     let range
@@ -192,6 +226,17 @@ const augment = (e: Event) => {
                     editor.setShapesBorderThickness(actions);
                 }
             }
+        } else if (len.value === 1 && shape.type === ShapeType.Group) {
+            const childs = (shape as GroupShape).childs;
+            const shapes = flattenShapes(childs).filter(s => s.type !== ShapeType.Group);
+            const actions = get_actions_border_thickness(shapes, props.index, thickness);
+            if (actions && actions.length) {
+                const page = props.context.selection.selectedPage;
+                if (page) {
+                    const editor = props.context.editor4Page(page);
+                    editor.setShapesBorderThickness(actions);
+                }
+            }
         }
         borderThickness.value.value = String(Number(borderThickness.value.value) + 1)
     }
@@ -200,11 +245,11 @@ const decrease = (e: Event) => {
     if (borderThickness.value) {
         if (Number(borderThickness.value.value) === 0) return
         const thickness = Number(borderThickness.value.value) - 1;
-        if (len.value === 1) {
-            const shape = props.shapes[0] as TableShape;
+        const shape = props.shapes[0];
+        if (len.value === 1 && shape.type !== ShapeType.Group) {
             if (shape.type === ShapeType.Table) {
                 const table = props.context.tableSelection;
-                const e = props.context.editor4Table(shape);
+                const e = props.context.editor4Table(shape as TableShape);
                 const is_edting = table.editingCell;
                 if (table.tableRowStart > -1 || table.tableColStart > -1 || is_edting) {
                     let range
@@ -222,6 +267,17 @@ const decrease = (e: Event) => {
             }
         } else if (len.value > 1) {
             const actions = get_actions_border_thickness(props.shapes, props.index, thickness);
+            if (actions && actions.length) {
+                const page = props.context.selection.selectedPage;
+                if (page) {
+                    const editor = props.context.editor4Page(page);
+                    editor.setShapesBorderThickness(actions);
+                }
+            }
+        } else if (len.value === 1 && shape.type === ShapeType.Group) {
+            const childs = (shape as GroupShape).childs;
+            const shapes = flattenShapes(childs).filter(s => s.type !== ShapeType.Group);
+            const actions = get_actions_border_thickness(shapes, props.index, thickness);
             if (actions && actions.length) {
                 const page = props.context.selection.selectedPage;
                 if (page) {
@@ -259,11 +315,11 @@ const onMouseMove = (e: MouseEvent) => {
             if (mx > 0) {
                 if (borderThickness.value) {
                     const thickness = Number(borderThickness.value.value) + 1;
-                    if (len.value === 1) {
-                        const shape = props.shapes[0] as TableShape;
+                    const shape = props.shapes[0];
+                    if (len.value === 1 && shape.type !== ShapeType.Group) {
                         if (shape.type === ShapeType.Table) {
                             const table = props.context.tableSelection;
-                            const e = props.context.editor4Table(shape);
+                            const e = props.context.editor4Table(shape as TableShape);
                             const is_edting = table.editingCell;
                             if (table.tableRowStart > -1 || table.tableColStart > -1 || is_edting) {
                                 let range
@@ -288,6 +344,17 @@ const onMouseMove = (e: MouseEvent) => {
                                 editor.setShapesBorderThickness(actions);
                             }
                         }
+                    } else if (len.value === 1 && shape.type === ShapeType.Group) {
+                        const childs = (shape as GroupShape).childs;
+                        const shapes = flattenShapes(childs).filter(s => s.type !== ShapeType.Group);
+                        const actions = get_actions_border_thickness(shapes, props.index, thickness);
+                        if (actions && actions.length) {
+                            const page = props.context.selection.selectedPage;
+                            if (page) {
+                                const editor = props.context.editor4Page(page);
+                                editor.setShapesBorderThickness(actions);
+                            }
+                        }
                     }
                     borderThickness.value.value = String(Number(borderThickness.value.value) + 1)
                 }
@@ -298,11 +365,11 @@ const onMouseMove = (e: MouseEvent) => {
                         thickness = 0
                         _curpt.x = e.screenX
                     }
-                    if (len.value === 1) {
-                        const shape = props.shapes[0] as TableShape;
+                    const shape = props.shapes[0];
+                    if (len.value === 1 && shape.type !== ShapeType.Group) {
                         if (shape.type === ShapeType.Table) {
                             const table = props.context.tableSelection;
-                            const e = props.context.editor4Table(shape);
+                            const e = props.context.editor4Table(shape as TableShape);
                             const is_edting = table.editingCell;
                             if (table.tableRowStart > -1 || table.tableColStart > -1 || is_edting) {
                                 let range
@@ -320,6 +387,17 @@ const onMouseMove = (e: MouseEvent) => {
                         }
                     } else if (len.value > 1) {
                         const actions = get_actions_border_thickness(props.shapes, props.index, thickness);
+                        if (actions && actions.length) {
+                            const page = props.context.selection.selectedPage;
+                            if (page) {
+                                const editor = props.context.editor4Page(page);
+                                editor.setShapesBorderThickness(actions);
+                            }
+                        }
+                    } else if (len.value === 1 && shape.type === ShapeType.Group) {
+                        const childs = (shape as GroupShape).childs;
+                        const shapes = flattenShapes(childs).filter(s => s.type !== ShapeType.Group);
+                        const actions = get_actions_border_thickness(shapes, props.index, thickness);
                         if (actions && actions.length) {
                             const page = props.context.selection.selectedPage;
                             if (page) {
@@ -392,8 +470,8 @@ onUnmounted(() => {
             <template #trigger>
                 <div class="trigger">
                     <div class="bg">
-                    <svg-icon icon-class="gear" @click="showMenu"></svg-icon>
-                </div>
+                        <svg-icon icon-class="gear" @click="showMenu"></svg-icon>
+                    </div>
                 </div>
             </template>
             <template #body>
@@ -403,8 +481,7 @@ onUnmounted(() => {
                         <label>{{ t('attr.position') }}</label>
                         <Select :selected="position" :item-view="BorderPositonItem" :item-height="32"
                             :source="positonOptionsSource" @select="positionSelect"
-                            :type="shapes[0].type === ShapeType.Table ? 'table' : 'none'" :width="128"
-                            ></Select>
+                            :type="shapes[0].type === ShapeType.Table ? 'table' : 'none'" :width="128"></Select>
                     </div>
                     <!-- 边框厚度 -->
                     <div>

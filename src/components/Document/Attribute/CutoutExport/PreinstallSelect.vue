@@ -24,15 +24,15 @@ const handleClick = (e: MouseEvent) => {
     e.target instanceof Element && !e.target.closest('.per_select_menu') && !e.target.closest('.cutout-preinstall') &&  emits('close');
 }
 onMounted(() => {
-    document.addEventListener('click', handleClick);
+    document.addEventListener('mouseup', handleClick);
 })
 onUnmounted(() => {
-    document.removeEventListener('click', handleClick);
+    document.removeEventListener('mouseup', handleClick);
 })
 </script>
 
 <template>
-    <div class="per_select_menu" @click.stop>
+    <div class="per_select_menu" @mouseup.stop>
         <div class="item" @click="defaultItem">
             <div class="text">{{t('cutoutExport.defaule')}}</div>
         </div>
@@ -49,64 +49,35 @@ onUnmounted(() => {
 .per_select_menu {
     font-size: var(--font-default-fontsize);
     position: absolute;
-    top: 25px;
-    left: -100px;
-    width: 122px;
-    border-radius: 4px;
+    top: 30px;
+    left: -96px;
+    width: 123px;
+    border-radius: 6px;
     background-color: #fff;
-    box-shadow: 1px 1px 5px rgba(0, 0, 0, 0.2);
     z-index: 100;
-    padding: 10px 0;
+    padding: 4px 0;
+    border: 1px solid #EBEBEB;
+    box-shadow: 0px 2px 10px 0px rgba(0, 0, 0, 0.08);
+    color: #262626;
 
     .item {
         display: flex;
         align-items: center;
         width: 100%;
-        height: 30px;
-
-        .icon {
-            width: 30px;
-            height: 30px;
-            display: flex;
-            align-items: center;
-            justify-content: center;
-            margin: 0 3px;
-        }
+        height: 32px;
 
         .text {
             padding: 0 16px;
         }
 
         &:hover {
-            background-color: var(--active-color);
+            background-color: #1878F5;
             .text {
                 color: #fff;
             }
         }
     }
 
-    .choose {
-        box-sizing: border-box;
-        width: 10px;
-        height: 6px;
-        margin-left: 2px;
-        border-width: 0 0 1px 1px;
-        border-style: solid;
-        border-color: rgb(0, 0, 0, .75);
-        transform: rotate(-45deg) translateY(-30%);
-    }
 }
 
-.active-item {
-    background-color: var(--active-color);
-
-    >.icon {
-        >.choose {
-            border-color: #fff;
-        }
-    }
-
-    .text {
-        color: #fff;
-    }
-}</style>
+</style>

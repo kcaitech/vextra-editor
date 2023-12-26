@@ -59,15 +59,16 @@ onUnmounted(() => {
         right: 12px;
         width: 150px;
         font-size: var(--font-default-fontsize);
-        padding: 8px 0;
+        padding: 4px 0;
         background-color: #fff;
-        border: 1px solid var(--theme-color-line);
-        border-radius: 2px;
+        border: 1px solid #EBEBEB;
+        border-radius: 6px;
+        box-shadow: 0px 2px 10px 0px rgba(0, 0, 0, 0.08);
     }
     .menu-item {
         display: flex;
         align-items: center;
-        height: 30px;
+        height: 32px;
         padding: 0 var(--default-padding-half);
         
     }

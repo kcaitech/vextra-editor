@@ -123,10 +123,11 @@ const addPage = () => {
             ListH.value = list_body.value.clientHeight //list可视高度
         }
         if (pagelist.value && index + 1 >= 0) {
-            const itemScrollH = (index + 1) * 30  //page所在高度
+            const itemScrollH = (index + 1) * 32  //page所在高度
             if (itemScrollH + 29 >= ListH.value - pagelist.value.scroll.y) {
-                if ((itemScrollH) + pagelist.value.scroll.y < ListH.value) return
-                pagelist.value.clampScroll(0, -(itemScrollH + 30 - ListH.value))
+                if ((itemScrollH) + pagelist.value.scroll.y >= ListH.value) {
+                    pagelist.value.clampScroll(0, -(itemScrollH + 32 - ListH.value))
+                }
             } else if (itemScrollH + 29 < -(pagelist.value.scroll.y)) {
                 pagelist.value.clampScroll(0, -itemScrollH)
             }
@@ -287,7 +288,7 @@ onUnmounted(() => {
             <div class="title">{{ fold ? cur_page_name : t('navi.page') }}</div>
             <div class="btn">
                 <div class="add" @click.stop="addPage" :title="t('navi.add_page')"
-                    v-if="isEdit === Perm.isEdit && !isLable">
+                    v-if="context.workspace.documentPerm === Perm.isEdit && !isLable">
                     <svg-icon icon-class="add"></svg-icon>
                 </div>
                 <div class="shrink" @click="toggle">
@@ -297,7 +298,7 @@ onUnmounted(() => {
         </div>
         <div class="body" ref="list_body" :style="{ height: fold ? 0 : 'calc(100% - 40px)' }">
             <ListView ref="pagelist" :source="pageSource" :item-view="PageItem" :item-width="0" :context="props.context"
-                :pageHeight="pageH" :item-height="36" :first-index="0" v-bind="$attrs" orientation="vertical"
+                :pageHeight="pageH" :item-height="32" :first-index="0" v-bind="$attrs" orientation="vertical"
                 :allowDrag="allow_to_drag()" location="pagelist" @rename="rename" @onMouseDown="mousedown"
                 @after-drag="afterDrag">
             </ListView>

@@ -43,6 +43,7 @@ function update(t: number) {
     if (t === Comment.SELECT_LIST_TAB) {
         if (!props.showLeft) showHiddenLeft();
         currentTab.value = 'Comment';
+        updateUnderlinePosition();
     }
 }
 
@@ -78,14 +79,18 @@ const showHiddenLeft = () => {
 }
 const tool_watch = (t: number) => {
     if (t === Tool.COMPONENT) {
+        console.log("tool_watch", t);
+
         if (!props.showLeft) showHiddenLeft();
         currentTab.value = 'Comps';
         props.context.navi.set_current_navi_module(currentTab.value);
+        updateUnderlinePosition();
     }
 }
 const stopMouseDown = (e: MouseEvent) => {
     const action = props.context.tool.action;
-    if (action === Action.AddComment) {
+    const comment = props.context.comment;
+    if (action === Action.AddComment && !comment.isCommentInputMove) {
         e.stopPropagation();
     }
 }
@@ -97,7 +102,7 @@ onMounted(() => {
 });
 onUnmounted(() => {
     props.context.comment.unwatch(update);
-    props.context.tool.watch(tool_watch);
+    props.context.tool.unwatch(tool_watch);
 })
 </script>
 

@@ -8,8 +8,8 @@ import { Tool } from "@/context/tool";
 import { useI18n } from 'vue-i18n';
 import { is_state } from "@/utils/symbol";
 import { onUpdated } from "vue";
+import { Selection } from "@/context/selection";
 import { is_component_class } from "@/utils/listview";
-
 
 export interface ItemData {
     id: string
@@ -87,16 +87,16 @@ function unHoverShape(e: MouseEvent) {
 }
 
 const setLock = (e: MouseEvent) => {
-    if (lock_status.value === 2) {
-        return; // 继承锁
-    }
+    // if (lock_status.value === 2) {
+    //     return; // 继承锁
+    // }
     e.stopPropagation();
     emits('set-lock', props.data.shape())
 }
 const setVisible = (e: MouseEvent) => {
-    if (visible_status.value === 2) {
-        return; // 继承隐藏
-    }
+    // if (visible_status.value === 2) {
+    //     return; // 继承隐藏
+    // }
     e.stopPropagation();
     emits('set-visible', props.data.shape());
 }
@@ -230,7 +230,7 @@ function icon_class() {
     const shape = props.data.shape();
     if (shape.type === ShapeType.Symbol) {
         if (shape instanceof SymbolUnionShape) {
-            return 'pattern-symbol-union';
+            return 'pattern-symbol-union'; 
         } else {
             return 'pattern-component';
         }
@@ -262,13 +262,12 @@ function updater(t?: any) {
 
     lock_status.value = shape.isLocked ? 1 : 0;
     visible_status.value = shape.getVisible() ? 0 : 1;
-
-    if (is_parent_locked(shape)) {
-        lock_status.value = 2;
-    }
-    if (is_parent_unvisible(shape)) {
-        visible_status.value = 2;
-    }
+    // if (is_parent_locked(shape) && !lock_status.value) {
+    //     lock_status.value = 2;
+    // }
+    // if (is_parent_unvisible(shape) && !visible_status.value) {
+    //     visible_status.value = 2;
+    // }
 }
 
 const stop = watch(() => props.data.shape(), (value, old) => {
@@ -321,6 +320,19 @@ const current_node_radius = () => {
         }
     }
 }
+const hovered = ref(false);
+const selectedWatcher = (t?: any) => {
+    if (t === Selection.CHANGE_SHAPE_HOVER) {
+        const shape = props.data.shape();
+        const hoverShape = props.data.context.selection.hoveredShape;
+        if(hoverShape && shape.id === hoverShape.id) {
+            hovered.value = true;
+        }else {
+            hovered.value = false;
+        }
+    }
+}
+
 onUpdated(() => {
     nextTick(current_node_radius);
 })
@@ -328,18 +340,20 @@ onMounted(() => {
     handlePerm()
     updater();
     props.data.context.tool.watch(tool_watcher);
+    props.data.context.selection.watch(selectedWatcher);
 })
 onUnmounted(() => {
     props.data.context.tool.watch(tool_watcher);
     props.data.shape().unwatch(updater);
+    props.data.context.selection.unwatch(selectedWatcher);
     stop();
 })
 </script>
 
 <template>
     <div ref="shapeItem"
-        :class="{ container: true, selected: props.data.selected, selectedChild: selectedChild(), component: is_component(), firstAngle: topAngle, lastAngle: bottomAngle }"
-        :style="{ opacity: !visible_status ? 1 : .3 }" @mousemove="hoverShape" @mouseleave="unHoverShape"
+        :class="{ container: true, selected: props.data.selected, selectedChild: selectedChild(), component: is_component(), hovered: hovered, firstAngle: topAngle, lastAngle: bottomAngle }"
+         @mousemove="hoverShape" @mouseleave="unHoverShape"
         @mousedown="mousedown" @mouseup="mouseup">
         <!-- 缩进 -->
         <div class="ph" :style="{ width: `${ph_width}px` }"></div>
@@ -349,11 +363,11 @@ onUnmounted(() => {
                 :style="{ transform: props.data.expand ? 'rotate(0deg)' : 'rotate(-90deg)' }"></svg-icon>
         </div>
         <!-- icon -->
-        <div class="container-svg zero-symbol" @dblclick="toggleContainer">
+        <div class="container-svg zero-symbol" @dblclick="toggleContainer" :style="{ opacity: !visible_status ? 1 : .3 }" :class="{ color: !is_component() }">
             <svg-icon class="svg" :icon-class="icon_class()"></svg-icon>
         </div>
         <!-- 内容描述 -->
-        <div class="text" :style="{ display: isInput ? 'none' : '' }">
+        <div class="text" :style="{ display: isInput ? 'none' : '', opacity: !visible_status ? 1 : .3 }">
             <div class="txt" @dblclick="onRename">{{ get_name(props.data.shape(), t('compos.dlt')) }}</div>
             <div class="tool_icon" @mousedown.stop
                 :style="{ visibility: `${is_tool_visible ? 'visible' : 'hidden'}`, width: `${is_tool_visible ? 66 + 'px' : lock_status || visible_status ? 66 + 'px' : 0}` }">
@@ -364,13 +378,11 @@ onUnmounted(() => {
                     v-if="isEdit && !isLable">
                     <svg-icon v-if="lock_status === 0" class="svg-open" icon-class="lock-open"></svg-icon>
                     <svg-icon v-else-if="lock_status === 1" class="svg" icon-class="lock-lock"></svg-icon>
-                    <div class="dot" v-else-if="lock_status === 2"></div>
                 </div>
                 <div class="tool_eye tool" :class="{ 'visible': visible_status }" @click="(e: MouseEvent) => setVisible(e)"
                     v-if="isEdit && !isLable">
                     <svg-icon v-if="visible_status === 0" class="svg" icon-class="eye-open"></svg-icon>
                     <svg-icon v-else-if="visible_status === 1" class="svg" icon-class="eye-closed"></svg-icon>
-                    <div class="dot" v-else-if="visible_status === 2"></div>
                 </div>
             </div>
         </div>
@@ -385,7 +397,7 @@ onUnmounted(() => {
     flex-flow: row;
     align-items: center;
     width: calc(100% - 6px);
-    height: 36px;
+    height: 32px;
     box-sizing: border-box;
 
     >.ph {
@@ -395,6 +407,8 @@ onUnmounted(() => {
     }
 
     >.triangle {
+        box-sizing: border-box;
+        padding-left: 6px;
         width: 18px;
         height: 100%;
         display: flex;
@@ -416,7 +430,7 @@ onUnmounted(() => {
     }
 
     >.container-svg {
-        width: 12px;
+        width: 14px;
         height: 100%;
         display: flex;
         justify-content: center;
@@ -424,8 +438,8 @@ onUnmounted(() => {
         margin-right: 3px;
 
         .svg {
-            width: 12px;
-            height: 12px;
+            width: 13px;
+            height: 13px;
         }
     }
 
@@ -436,7 +450,6 @@ onUnmounted(() => {
         text-overflow: ellipsis;
         white-space: nowrap;
         overflow: hidden;
-        padding-left: 3px;
         display: flex;
         flex-flow: row;
         align-items: center;
@@ -449,7 +462,8 @@ onUnmounted(() => {
             width: 100%;
             height: 30px;
             line-height: 30px;
-            font-size: var(--font-default-fontsize);
+            font-size: 12px;
+            color: #262626;
             text-overflow: ellipsis;
             white-space: nowrap;
             overflow: hidden;
@@ -475,18 +489,18 @@ onUnmounted(() => {
             >.tool_lock {
                 display: flex;
                 align-items: center;
-                color: #8C8C8C;
+                color: #595959;
 
                 .svg {
-                    width: 14px;
-                    height: 14px;
-                    color: #8C8C8C;
+                    width: 13px;
+                    height: 13px;
+                    color: #595959;
                 }
 
                 .svg-open {
-                    width: 14px;
-                    height: 14px;
-                    color: #8C8C8C;
+                    width: 13px;
+                    height: 13px;
+                    color: #595959;
                 }
 
                 .dot {
@@ -501,9 +515,9 @@ onUnmounted(() => {
                 margin-right: 10px;
 
                 .svg {
-                    width: 14px;
-                    height: 14px;
-                    color: #8C8C8C;
+                    width: 13px;
+                    height: 13px;
+                    color: #595959;
                 }
 
                 .dot {
@@ -529,7 +543,7 @@ onUnmounted(() => {
         white-space: nowrap;
         overflow: hidden;
         padding-left: 6px;
-        margin-right: 3px;
+        margin-right: 6px;
         outline-style: none;
         border: none;
         border-radius: 2px;
@@ -539,7 +553,7 @@ onUnmounted(() => {
 .container:hover {
     z-index: -1;
     border-radius: 8px;
-    background-color: #F5F5F5;
+    background-color: #efefef;
 }
 
 .selectedChild {
@@ -554,13 +568,21 @@ onUnmounted(() => {
     background-color: rgba($color: #1878F5, $alpha: 0.2) !important;
 }
 
+.hovered {
+    border-radius: var(--default-radius);
+    background-color: #efefef;
+}
+
 .component {
     color: var(--component-color);
-
     &>.text>.txt,
     &>.text>.tool_icon {
         color: var(--component-color);
     }
+}
+
+.color {
+    color:#595959;
 }
 
 .firstAngle {

@@ -378,11 +378,13 @@ const docComment = (comment: DocCommentOpData) => {
             documentCommentList.value.splice(index, 1)
         } else {
             documentCommentList.value.forEach((item, i) => {
-                const _index = item.children.findIndex((child: any) => child.id === comment.comment.id)
-                if (_index !== -1) {
-                    documentCommentList.value[i].children.splice(index, 1);
-                    props.context.comment.setCommentList(documentCommentList.value);
-                    props.context.comment.onUpdateComment();
+                if(item.children) {
+                    const _index = item.children.findIndex((child: any) => child.id === comment.comment.id)
+                    if (_index !== -1) {
+                        documentCommentList.value[i].children.splice(index, 1);
+                        props.context.comment.setCommentList(documentCommentList.value);
+                        props.context.comment.onUpdateComment();
+                    }
                 }
             })
         }
@@ -392,7 +394,7 @@ const docComment = (comment: DocCommentOpData) => {
         } else {
             const _index = documentCommentList.value.findIndex(item => item.id === comment.comment.root_id);
             if (_index !== -1) {
-                if(!documentCommentList.value[_index].children) {
+                if (!documentCommentList.value[_index].children) {
                     documentCommentList.value[_index].children = []
                     documentCommentList.value[_index].commentMenu = commentMenuItems.value
                 }
