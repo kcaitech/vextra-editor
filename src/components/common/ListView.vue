@@ -542,7 +542,7 @@ function mouseMove(event: MouseEvent) {
     // 计算终点位置
     const position = get_part_of_target1(currentHoverTarget.value, event);
     // console.log('position:', position);
-    const start_y = toIndex.value * props.itemHeight - 1 - (scroll.y % 30 === 0 ? scroll.y : scroll.y - scroll.y % 30);
+    const start_y = toIndex.value * props.itemHeight - 1 - (scroll.y % 32 === 0 ? scroll.y : scroll.y - scroll.y % 32);
     const _destination = get_destination_by_drag_event(position, start_y, props.itemHeight);
     if (_destination.type === "insert") {
         port_i_visible.value = true;
