@@ -96,10 +96,10 @@ onMounted(() => {
             top.value = 33;
         } else {
             if (popover_y > popover_h) {
-                top.value = -popover_h
+                top.value = (popover_y - popover_h) * 2
             } else {
                 const s = popover_h - popover_y;
-                top.value = -(popover_y - s) - 20
+                top.value = -s + 40
             }
         }
     }
