@@ -74,5 +74,6 @@ function is_state() {
     padding: 0 8px;
     box-sizing: border-box;
     //border-top: 1px solid #F0F0F0;
+    border-bottom: 1px solid #F0F0F0;
 }
 </style>

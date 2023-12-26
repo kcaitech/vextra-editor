@@ -147,8 +147,8 @@ onUnmounted(() => {
 </template>
 <style scoped lang="scss">
 .compo-preview-container {
-    width: 100px;
-    height: 100px;
+    width: 104px;
+    height: 104px;
     background-color: #EBEBEB;
     border-radius: 4px;
     // border: 2px solid var(--grey-dark);
@@ -172,7 +172,7 @@ onUnmounted(() => {
 
     .selected {
         // box-shadow: 0 0 3px 0 #1878F5;
-        border: 1px solid #1878F5;
+        border: 1px solid #7F58F9;
     }
 
     .danger {

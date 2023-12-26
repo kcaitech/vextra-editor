@@ -301,6 +301,10 @@ onUnmounted(() => {
                 }
             }
 
+            input::placeholder {
+                color: #BFBFBF;
+            }
+
             // .el-input {
             //     width: 100%;
             //     height: 30px;

@@ -96,12 +96,14 @@ onMounted(() => {
             top.value = 33;
         } else {
             if (popover_y > popover_h) {
-                top.value = -popover_h
+                top.value = (popover_y - popover_h) * 2
             } else {
                 const s = popover_h - popover_y;
                 top.value = -s + 40
             }
         }
+        console.log(popover.value.getBoundingClientRect().y,'111')
+        console.log(popover.value.clientHeight,'222')
     }
     document.addEventListener('mouseup', handleClickOutside);
     register_container();
@@ -142,8 +144,9 @@ onUnmounted(() => {
                             </div> -->
                         </div>
                         <div class="demo-collapse"
-                            :style="{ marginLeft: selectList.length > 1 ? '26px' : '12px', marginTop: selectList.length > 1 ? '0' : '4px' }"
+                            :style="{  marginTop: selectList.length > 1 ? '0' : '4px' }"
                             v-if="unfold.has(i)" :reflush="reflush">
+<!--                            marginLeft: selectList.length > 1 ? '26px' : '12px',-->
                             <component v-if="scroll_container" :is="CompoSelectList" :context="context"
                                 :contents="item.data" @handleCheck="handleCheck" :layerId="props.layerId"
                                 :container="scroll_container">
@@ -231,7 +234,8 @@ onUnmounted(() => {
         height: calc(100% - 40px);
 
         .el-scrollbar {
-            height: calc(100% - 40px);
+            height: calc(100% - 52px);
+            margin-bottom: 12px;
 
             .el-collapse {
                 --el-collapse-border-color: none;

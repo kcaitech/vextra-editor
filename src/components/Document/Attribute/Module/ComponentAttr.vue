@@ -290,7 +290,6 @@ onUnmounted(() => {
             box-sizing: border-box;
             color: #8C8C8C;
             font-size: 12px;
-            font-weight: 500;
         }
 
         .status {
@@ -365,7 +364,7 @@ onUnmounted(() => {
         position: relative;
         display: flex;
         flex-direction: column;
-        margin-bottom: 5px;
+        //margin-bottom: 5px;
 
         .attr_con {
             display: flex;

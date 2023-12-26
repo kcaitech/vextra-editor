@@ -100,8 +100,8 @@ onMounted(() => {
     <div class="container">
         <span>{{ title }}</span>
         <div class="select-layer">
-            <div class="input_lay" @click="showSelectLayer"
-                :style="{ opacity: context.selection.selectedShapes[0].type !== ShapeType.Symbol ? '0.5' : '1' }">
+            <div class="input_lay" @click="showSelectLayer">
+<!--                :style="{ opacity: context.selection.selectedShapes[0].type !== ShapeType.Symbol ? '0.5' : '1' }"-->
                 <span v-if="selectLayerName" class="value" style="color: black;">{{ selectLayerName }}</span>
                 <span v-else style="color: #BFBFBF">{{ placeholder }}</span>
                 <el-icon color="#666666" :style="{ transform: `rotate(${isselectLayer ? '-180deg' : '0deg'})` }">

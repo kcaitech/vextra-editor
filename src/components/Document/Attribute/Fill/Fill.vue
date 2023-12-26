@@ -645,7 +645,7 @@ onUnmounted(() => {
     flex-direction: column;
     padding: 12px 8px 18px 8px;
     box-sizing: border-box;
-    border-top: 1px solid #F0F0F0;
+    //border-top: 1px solid #F0F0F0;
     border-bottom: 1px solid #F0F0F0;
 
     .add {

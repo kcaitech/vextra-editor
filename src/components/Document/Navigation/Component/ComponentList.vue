@@ -59,7 +59,7 @@ const searching = debounce(_searching, 300);
             <div class="toggle_list">
                 <svg-icon v-if="card_type === 'alpha'" icon-class="source"
                           @click.stop="() => set_card_type('beta')"></svg-icon>
-                <svg-icon v-if="card_type === 'beta'" icon-class="menu"
+                <svg-icon v-if="card_type === 'beta'" icon-class="list"
                           @click.stop="() => set_card_type('alpha')"></svg-icon>
             </div>
         </div>

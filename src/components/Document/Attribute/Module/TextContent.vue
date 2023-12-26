@@ -185,7 +185,7 @@ const getValue = (value: Text | string | undefined) => {
 }
 </script>
 <template>
-    <div style="position: relative; margin: 12px 0; padding: 8px 0; box-sizing: border-box" ref="atrrdialog">
+    <div style="position: relative; margin: 12px 0; box-sizing: border-box" ref="atrrdialog">
         <TypeHeader :title="t('compos.text_content')" class="mt-24" :active="true">
             <template #tool>
                 <div class="edit-comps">

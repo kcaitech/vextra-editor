@@ -180,7 +180,7 @@ onUnmounted(() => {
             <template #tool>
                 <div class="edit-comps" v-if="!is_part_of_symbol(props.shapes[0])">
                     <div class="edit_svg" @click.stop="editComps" v-if="is_symbolref_disa(props.shapes)">
-                        <svg-icon icon-class="edit_comp"></svg-icon>
+                        <svg-icon icon-class="comp-state"></svg-icon>
                     </div>
                     <div class="reset_svg" @click.stop="selectReset"
                         :style="{ backgroundColor: resetMenu ? '#EBEBEB' : '' }">
@@ -230,14 +230,16 @@ onUnmounted(() => {
         box-sizing: border-box;
 
         >svg {
-            width: 100%;
-            height: 100%;
+            width: 16px;
+            height: 16px;
         }
 
-        &:hover {
-            background-color: #EBEBEB;
-        }
     }
+
+    .edit_svg:hover {
+        background-color: #EBEBEB;
+    }
+
 
     .reset_svg {
         position: relative;
@@ -250,12 +252,8 @@ onUnmounted(() => {
         box-sizing: border-box;
 
         >svg {
-            width: 100%;
-            height: 100%;
-        }
-
-        &:hover {
-            background-color: #EBEBEB;
+            width: 16px;
+            height: 16px;
         }
 
         .reset_menu {
@@ -289,6 +287,10 @@ onUnmounted(() => {
                 opacity: 0.2;
             }
         }
+    }
+
+    .reset_svg:hover {
+        background-color: #EBEBEB;
     }
 
 }

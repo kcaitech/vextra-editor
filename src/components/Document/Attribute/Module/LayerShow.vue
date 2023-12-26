@@ -123,7 +123,7 @@ onUnmounted(() => {
 })
 </script>
 <template>
-    <div style="position: relative; margin: 12px 0; padding: 8px 0; box-sizing: border-box" ref="atrrdialog">
+    <div style="position: relative; margin: 12px 0; box-sizing: border-box" ref="atrrdialog">
         <TypeHeader :title="t('compos.layer_isShow')" class="mt-24" :active="true">
             <template #tool>
                 <div class="edit-comps">
@@ -209,9 +209,9 @@ onUnmounted(() => {
     display: flex;
     align-items: center;
     border-radius: 4px;
-    background-color: var(--grey-light);
-    width: calc(100% - 22px);
-    height: 30px;
+    background-color: #F5F5F5;
+    width: calc(100% - 32px);
+    height: 32px;
 
     .module_name {
         display: flex;
@@ -271,16 +271,16 @@ onUnmounted(() => {
 }
 
 .delete {
-    flex: 0 0 22px;
+    flex: 0 0 28px;
     display: flex;
     justify-content: center;
     align-items: center;
-    width: 22px;
-    height: 22px;
+    width: 28px;
+    height: 28px;
 
     > svg {
-        width: 11px;
-        height: 11px;
+        width: 16px;
+        height: 16px;
     }
 
     transition: .2s;

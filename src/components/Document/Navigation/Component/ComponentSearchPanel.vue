@@ -54,10 +54,9 @@ onMounted(() => {
 .null-result {
     width: 100%;
     text-align: center;
-    margin-top: 16px;
+    margin-top: 82px;
     font-size: 12px;
-    color: grey;
-    font-weight: 500;
+    color: #8C8C8C;
 }
 
 .el-scrollbar {

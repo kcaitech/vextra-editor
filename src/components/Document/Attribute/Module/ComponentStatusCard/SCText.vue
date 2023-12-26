@@ -79,7 +79,7 @@ const getValue = (value: Text | string | undefined) => {
             <div class="module_item_left" @click="edit_text">
                 <div class="module_name-2">
                     <div style="width: 30px;" class="svg">
-                        <svg-icon icon-class="text" style="width: 10px; height: 10px;"></svg-icon>
+                        <svg-icon icon-class="text"></svg-icon>
                     </div>
                     <div class="name">
                         <span style="width: 40%;">{{ props.variable.name }}</span>
@@ -111,7 +111,7 @@ const getValue = (value: Text | string | undefined) => {
     position: relative;
     display: flex;
     flex-direction: column;
-    margin-bottom: 5px;
+    //margin-bottom: 5px;
     width: 100%;
 
     .attr_con {
@@ -165,7 +165,7 @@ const getValue = (value: Text | string | undefined) => {
                 >svg {
                     width: 14px;
                     height: 14px;
-                    margin: 0px 10px;
+                    color: #595959;
                 }
             }
 
