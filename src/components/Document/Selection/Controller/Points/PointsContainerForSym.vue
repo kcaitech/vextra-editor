@@ -47,12 +47,11 @@ function update_dot_path() {
     if (!props.context.workspace.shouldSelectionViewUpdate) return;
     dots.length = 0;
     const frame = props.shape.frame;
-    const s_r = props.shape.rotation || 0;
     let lt = matrix.computeCoord(0, 0);
     let rt = matrix.computeCoord(frame.width, 0);
     let rb = matrix.computeCoord(frame.width, frame.height);
     let lb = matrix.computeCoord(0, frame.height);
-    dots.push(...update_dot([lt, rt, rb, lb], s_r, props.shape));
+    dots.push(...update_dot([lt, rt, rb, lb], props.shape));
 }
 function ct2pt(ct: CtrlElementType) {
     if (ct === CtrlElementType.RectLT) return 'lt';
