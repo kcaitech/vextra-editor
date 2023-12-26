@@ -1,5 +1,5 @@
 import { Context } from "@/context";
-import { Shape, ShapeDirList, ShapeType } from "@kcdesign/data";
+import { Shape, ShapeDirList2 as ShapeDirList, ShapeType } from "@kcdesign/data";
 import { fit } from "@/utils/shapelist";
 import { isInner } from "./content";
 import { WorkSpace } from "@/context/workspace";
@@ -251,7 +251,7 @@ export function modify_after_drag(context: Context, detail: DragDetail) {
 }
 
 function getSelectShapesIndex(shapeDirList: ShapeDirList, shapes: Shape[]): number[] {
-    return shapes.map(s => shapeDirList.indexOf(s));
+    return shapes.map(s => shapeDirList.indexOf(s.id));
 }
 
 function getShapeRange(listviewSource: any, start: number, end: number): Shape[] {
@@ -284,7 +284,7 @@ function getShapeRange(listviewSource: any, start: number, end: number): Shape[]
 }
 
 export function range_select_shape(context: Context, shapeDirList: ShapeDirList, listviewSource: any, shape: Shape) {
-    const to = shapeDirList.indexOf(shape);
+    const to = shapeDirList.indexOf(shape.id);
     const selectedShapes = context.selection.selectedShapes;
     if (selectedShapes.length) {
         const selectShapesIndex = getSelectShapesIndex(shapeDirList, selectedShapes);

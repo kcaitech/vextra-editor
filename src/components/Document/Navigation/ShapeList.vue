@@ -4,9 +4,8 @@ import { Menu } from "@/context/menu";
 import { onMounted, onUnmounted, ref, watch, nextTick } from "vue";
 import ListView, { IDataIter, IDataSource } from "@/components/common/ListView.vue";
 import ShapeItem, { ItemData } from "./ShapeItem.vue";
-import { Page } from "@kcdesign/data";
-import { ShapeDirListIter, ShapeDirList } from "@kcdesign/data";
-import { Shape } from "@kcdesign/data";
+import { Page, Shape, proxyView } from "@kcdesign/data";
+import { ShapeDirListIter2 as ShapeDirListIter, ShapeDirList2 as ShapeDirList, ShapeView } from "@kcdesign/data";
 import { useI18n } from 'vue-i18n';
 import { ShapeType } from '@kcdesign/data';
 import { Selection } from '@/context/selection';
@@ -27,7 +26,7 @@ type ContextMenuEl = InstanceType<typeof ContextMenu>;
 class Iter implements IDataIter<ItemData> {
     private __it: ShapeDirListIter | undefined;
     // 优化下level
-    private __preShape?: Shape;
+    private __preShape?: ShapeView;
     private __preLevel?: number;
 
     constructor(it: ShapeDirListIter | undefined) {
@@ -40,7 +39,7 @@ class Iter implements IDataIter<ItemData> {
 
     next(): ItemData {
         const data = (this.__it as ShapeDirListIter).next();
-        const shape = data.data;
+        const shape: ShapeView = data.data;
         let level = 0; // todo
         let p = shape.parent;
         const prep = this.__preShape?.parent;
@@ -54,12 +53,17 @@ class Iter implements IDataIter<ItemData> {
             this.__preShape = shape;
             this.__preLevel = level;
         }
+        const _shape = shape.isVirtualShape? proxyView(shape) : shape.data;
+        if (!_shape) throw new Error("shape data is null");
         const item = {
             id: shape.id,
             shape: () => {
+                return _shape;
+            },
+            shapeview: () => {
                 return shape
             },
-            selected: props.context.selection.isSelectedShape(shape),
+            selected: props.context.selection.isSelectedShape2(shape.id),
             expand: !data.fold,
             level,
             context: props.context
@@ -110,7 +114,7 @@ const shapelist = ref<List>();
 const listBody = ref<HTMLDivElement>()
 const list_h = ref<number>(0)
 
-function _notifySourceChange(t?: number | string, shape?: Shape) {
+function _notifySourceChange(t?: number | string, shape?: ShapeView) {
     if (t === Selection.CHANGE_SHAPE || t === 'changed') {
         const shapes = props.context.selection.selectedShapes
         shapes.forEach(item => {
@@ -121,9 +125,9 @@ function _notifySourceChange(t?: number | string, shape?: Shape) {
                 parent = parent.parent;
             }
             parents.forEach(p => {
-                p.type !== ShapeType.Page && !shapeDirList.isExpand(p) && toggleExpand(p);
+                p.type !== ShapeType.Page && !shapeDirList.isExpand(p.id) && toggleExpand(p.id);
             })
-            const indexItem = shapeDirList.indexOf(item)
+            const indexItem = shapeDirList.indexOf(item.id)
             if (listBody.value) {
                 list_h.value = listBody.value.clientHeight //list可视高度
             }
@@ -139,7 +143,7 @@ function _notifySourceChange(t?: number | string, shape?: Shape) {
         })
     } else if (t === Selection.EXTEND) {
         if (shape) {
-            toggleExpand(shape)
+            toggleExpand(shape.id)
         }
     }
     listviewSource.notify(0, 0, 0, Number.MAX_VALUE);
@@ -156,8 +160,8 @@ function inputing() {
     props.context.navi.notify(Navi.SEARCHING);
 }
 
-function toggleExpand(shape: Shape) {
-    shapeDirList.toggleExpand(shape)
+function toggleExpand(shape: string | Shape) {
+    shapeDirList.toggleExpand(typeof shape ==='string'? shape : shape.id)
 }
 
 function selectShape(shape: Shape, is_ctrl: boolean, shiftKey: boolean) {
@@ -429,7 +433,7 @@ const allow_to_drag = () => {
 const stopWatch = watch(() => props.page, () => {
     let source = shapeListMap.get(props.page.id)
     if (!source) {
-        source = new ShapeDirList(props.page);
+        source = new ShapeDirList(props.context.getPageDom(props.page).dom);
         shapeListMap.set(props.page.id, source);
     }
 
@@ -438,7 +442,8 @@ const stopWatch = watch(() => props.page, () => {
     }
 
     shapeDirList = source;
-    (window as any).sd = shapeDirList;
+    // for debug
+    (window as any).__sd = shapeDirList;
     shapeDirList.watch(notifySourceChange)
     notifySourceChange();
 }, { immediate: true });

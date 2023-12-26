@@ -1,6 +1,6 @@
 <script setup lang="ts">
 import { computed, InputHTMLAttributes, nextTick, onMounted, onUnmounted, ref, watch } from "vue";
-import { Shape, ShapeType, SymbolUnionShape } from '@kcdesign/data';
+import { Shape, ShapeType, ShapeView, SymbolUnionShape } from '@kcdesign/data';
 import { Context } from "@/context";
 import { get_name, is_parent_locked, is_parent_unvisible } from "@/utils/shapelist";
 import { Perm } from "@/context/workspace";
@@ -14,6 +14,7 @@ import { is_component_class } from "@/utils/listview";
 export interface ItemData {
     id: string
     shape: () => Shape // 作用function，防止vue对shape内部数据进行proxy
+    shapeview:() => ShapeView
     selected: boolean
     expand: boolean
     level: number
@@ -270,9 +271,11 @@ function updater(t?: any) {
     // }
 }
 
-const stop = watch(() => props.data.shape(), (value, old) => {
-    old && old.unwatch(updater);
-    value.watch(updater);
+let oldshape: Shape | undefined;
+const stop = watch(() => props.data.id, (value, old) => {
+    oldshape && oldshape.unwatch(updater);
+    oldshape = props.data.shape();
+    oldshape.watch(updater);
     watchShapes();
 }, { immediate: true })
 
@@ -344,7 +347,7 @@ onMounted(() => {
 })
 onUnmounted(() => {
     props.data.context.tool.watch(tool_watcher);
-    props.data.shape().unwatch(updater);
+    oldshape && oldshape.unwatch(updater);
     props.data.context.selection.unwatch(selectedWatcher);
     stop();
 })
