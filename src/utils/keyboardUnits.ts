@@ -8,6 +8,8 @@ import { deleteUnits } from "./delete";
 import { replace } from "./clipboard";
 import { enter_path_edit_mode } from "./pathedit";
 
+// todo 键盘事件的权限处理
+
 const keydownHandler: { [key: string]: (event: KeyboardEvent, context: Context) => any } = {};
 
 function keydown(event: KeyboardEvent, context: Context) {
