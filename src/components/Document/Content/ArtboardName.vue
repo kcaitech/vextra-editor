@@ -164,9 +164,14 @@ function move(e: MouseEvent) {
         wheel = fourWayWheel(props.context, undefined, matrix_inverse.computeCoord3(startPosition));
         const selection = props.context.selection;
         shapes = selection.selectedShapes;
-        if (e.altKey) shapes = paster_short(props.context, shapes);
+        
         asyncTransfer = props.context.editor.controller().asyncTransfer(shapes, selection.selectedPage!);
+        if (e.altKey) {
+            shapes = paster_short(props.context, shapes, asyncTransfer);
+        }
+
         pre_translate(props.context, shapes);
+        
         isDragging = true;
         const map_anchor = matrix_inverse.computeCoord3(startPosition);
         offset_map = gen_offset_map(shapes[0], map_anchor);

@@ -134,7 +134,7 @@ function down(e: MouseEvent) {
         context.selection.selectShape(props.shape); // 先将图形设为选中状态，只有被选中才可以被拖动
         let root = props.context.workspace.root;// 盒子的信息(wrap的信息)
         startPosition = { x: e.clientX - root.x, y: e.clientY - root.y }; // 记录鼠标按下的点相对wrap的相对位移
-        if(forbidden_to_modify_frame(props.shape)) return;
+        if (forbidden_to_modify_frame(props.shape)) return;
         document.addEventListener('mousemove', move);
         document.addEventListener('mouseup', up);
     } else if (e.button === 2) { // 右键是打开菜单
@@ -171,13 +171,14 @@ function move(e: MouseEvent) {
         const selection = props.context.selection; // selection, 是位于context中用于组件通信的一个模块，主要负责选区状态的通信；
         shapes = selection.selectedShapes;
 
-        if (e.altKey) {
-            shapes = paster_short(props.context, shapes); // 图形分身
-        }
+
         asyncTransfer = props.context.editor
             .controller()
             .asyncTransfer(shapes, selection.selectedPage!); // 创建属性编辑器
 
+        if (e.altKey) {
+            shapes = paster_short(props.context, shapes, asyncTransfer); // 图形分身
+        }
         pre_translate(props.context, shapes);
 
         isDragging = true;

@@ -12,6 +12,7 @@ import { is_box_outer_view2 } from './common';
 import { compare_layer_3 } from './group_ungroup';
 import { Document } from '@kcdesign/data';
 import { v4 } from 'uuid';
+import { AsyncTransfer } from "@kcdesign/data";
 
 interface SystemClipboardItem {
     type: ShapeType
@@ -729,7 +730,7 @@ function paster_text(context: Context, mousedownOnPageXY: PageXY, content: strin
 }
 
 // 不经过剪切板，直接复制(Shape[])
-export function paster_short(context: Context, shapes: Shape[]): Shape[] {
+export function paster_short(context: Context, shapes: Shape[], editor: AsyncTransfer): Shape[] {
     const pre_shapes: Shape[] = [], actions: { parent: GroupShape, index: number }[] = [];
     for (let i = 0, len = shapes.length; i < len; i++) {
         const s = shapes[i], p = s.parent;
@@ -755,12 +756,11 @@ export function paster_short(context: Context, shapes: Shape[]): Shape[] {
 
     let result: Shape[] = [];
 
-    const editor = context.editor4Page(page);
     if (new_source.length !== actions.length) {
         return [];
     }
 
-    const _r = editor.pasteShapes2(new_source, actions);
+    const _r = editor.shortPaste(new_source, actions);
     if (_r && _r.length) {
         result = _r;
     }
@@ -770,6 +770,6 @@ export function paster_short(context: Context, shapes: Shape[]): Shape[] {
     }
 
     context.selection.rangeSelectShape(result);
-
+    context.assist.collect();
     return result;
 }
