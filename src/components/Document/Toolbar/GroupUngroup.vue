@@ -50,6 +50,9 @@ function _updater(t?: number) {
             } else {
                 state.value = state.value ^ GROUP;
             }
+            if(shapes.some(s => s.type === ShapeType.Artboard)) {
+                isBoolGroup.value = false;
+            }
         }
     }
 }
