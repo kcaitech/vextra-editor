@@ -52,6 +52,7 @@ keydownHandler['KeyA'] = function (event: KeyboardEvent, context: Context) {
     }
     const { metaKey, ctrlKey } = event;
     if (metaKey || ctrlKey) {
+        event.preventDefault();
         select_all(context);
         return;
     }
@@ -63,11 +64,13 @@ keydownHandler['KeyB'] = function (event: KeyboardEvent, context: Context) {
         return;
     }
     if (metaKey || ctrlKey) {
+        event.preventDefault();
         context.workspace.notify(WorkSpace.BOLD); // 文本加粗
     }
 }
 
 keydownHandler['KeyC'] = function (event: KeyboardEvent, context: Context) {
+    event.preventDefault();
     const { metaKey, ctrlKey, shiftKey } = event;
     if ((ctrlKey || metaKey) && !shiftKey) {
         context.workspace.notify(WorkSpace.COPY); // 拷贝
@@ -82,6 +85,7 @@ keydownHandler['KeyC'] = function (event: KeyboardEvent, context: Context) {
 
 keydownHandler['KeyD'] = function (event: KeyboardEvent, context: Context) {
     if (event.altKey) {
+        event.preventDefault();
         context.arrange.notify(Arrange.FLEX_END) // 图层右对齐
     }
 }
@@ -95,6 +99,7 @@ keydownHandler['KeyF'] = function (event: KeyboardEvent, context: Context) {
 
     if (ctrlKey || metaKey) {
         event.preventDefault();
+        event.preventDefault();
         console.log('ctrlKey');
 
         context.navi.notify(Navi.TO_SEARCH); // 图层搜索
@@ -102,6 +107,7 @@ keydownHandler['KeyF'] = function (event: KeyboardEvent, context: Context) {
     }
 
     if (!shiftKey) {
+        event.preventDefault();
         context.tool.setAction(Action.AddFrame); // 容器工具
         return;
     }
@@ -114,11 +120,13 @@ keydownHandler['KeyG'] = function (event: KeyboardEvent, context: Context) {
     const is_ctrl = ctrlKey || metaKey;
 
     if (is_ctrl && !shiftKey) {
+        event.preventDefault();
         context.tool.notify(Tool.GROUP, altKey); // 创建编组或容器
         return;
     }
 
     if (is_ctrl && shiftKey) {
+        event.preventDefault();
         context.tool.notify(Tool.UNGROUP); // 解除编组或容器
     }
 }
@@ -126,14 +134,17 @@ keydownHandler['KeyG'] = function (event: KeyboardEvent, context: Context) {
 keydownHandler['KeyH'] = function (event: KeyboardEvent, context: Context) {
     const is_ctrl = event.ctrlKey || event.metaKey;
     if (is_ctrl && event.shiftKey) {
+        event.preventDefault();
         set_visible_for_shapes(context); // 图层隐藏与显示
         return;
     }
     if (event.altKey && event.shiftKey) {
+        event.preventDefault();
         context.arrange.notify(Arrange.SPACE_AROUND_HOR); // 图层水平等距分布
         return;
     }
     if (event.altKey) {
+        event.preventDefault();
         context.arrange.notify(Arrange.ITEMS_ALIGN); // 图层水平线对齐
     }
 }
@@ -141,10 +152,12 @@ keydownHandler['KeyH'] = function (event: KeyboardEvent, context: Context) {
 keydownHandler['KeyI'] = function (event: KeyboardEvent, context: Context) {
     const is_ctrl = event.ctrlKey || event.metaKey;
     if (is_ctrl) {
+        event.preventDefault();
         context.workspace.notify(WorkSpace.ITALIC); // 文字斜体
         return;
     }
     if (event.shiftKey) {
+        event.preventDefault();
         context.tool.notify(Tool.COMPONENT); // 组件工具
     }
 }
@@ -154,6 +167,7 @@ keydownHandler['KeyJ'] = function (event: KeyboardEvent, context: Context) {
 }
 
 keydownHandler['KeyK'] = function (event: KeyboardEvent, context: Context) {
+    event.preventDefault();
     const is_ctrl = event.ctrlKey || event.metaKey;
     if (is_ctrl && event.shiftKey) {
         context.tool.notify(Tool.SELECT_IMAGE) // 图片选择工具
@@ -167,6 +181,7 @@ keydownHandler['KeyK'] = function (event: KeyboardEvent, context: Context) {
 }
 
 keydownHandler['KeyL'] = function (event: KeyboardEvent, context: Context) {
+    event.preventDefault();
     const is_ctrl = event.ctrlKey || event.metaKey;
     if (is_ctrl && event.shiftKey) {
         set_lock_for_shapes(context); // 图层隐藏与显示
@@ -188,12 +203,14 @@ keydownHandler['KeyN'] = function (event: KeyboardEvent, context: Context) {
 }
 
 keydownHandler['KeyO'] = function (event: KeyboardEvent, context: Context) {
+    event.preventDefault();
     context.tool.setAction(Action.AddEllipse); // 椭圆工具
 }
 
 keydownHandler['KeyP'] = function (event: KeyboardEvent, context: Context) { }
 
 keydownHandler['KeyR'] = function (event: KeyboardEvent, context: Context) {
+    event.preventDefault();
     const is_ctrl = event.ctrlKey || event.metaKey;
     if (is_ctrl && event.shiftKey) {
         event.preventDefault();
@@ -204,6 +221,7 @@ keydownHandler['KeyR'] = function (event: KeyboardEvent, context: Context) {
 }
 
 keydownHandler['KeyS'] = function (event: KeyboardEvent, context: Context) {
+    event.preventDefault();
     if (event.altKey) {
         context.arrange.notify(Arrange.FLEX_END_COL); // 图层右侧对齐
         return;
@@ -212,16 +230,19 @@ keydownHandler['KeyS'] = function (event: KeyboardEvent, context: Context) {
 }
 
 keydownHandler['KeyT'] = function (event: KeyboardEvent, context: Context) {
+    event.preventDefault();
     context.tool.setAction(Action.AddText); // 文字工具
 }
 
 keydownHandler['KeyU'] = function (event: KeyboardEvent, context: Context) {
     if (event.ctrlKey || event.metaKey) {
+        event.preventDefault();
         context.workspace.notify(WorkSpace.UNDER_LINE); // 文字下划线
     }
 }
 
 keydownHandler['KeyV'] = function (event: KeyboardEvent, context: Context) {
+    event.preventDefault();
     if (event.ctrlKey || event.metaKey) {
         context.workspace.notify(WorkSpace.PASTE); // 复制图层（文本的复制不在这里处理）
         return;
@@ -238,11 +259,13 @@ keydownHandler['KeyV'] = function (event: KeyboardEvent, context: Context) {
 
 keydownHandler['KeyW'] = function (event: KeyboardEvent, context: Context) {
     if (event.altKey) {
+        event.preventDefault();
         context.arrange.notify(Arrange.FLEX_START_COL);
     }
 }
 
 keydownHandler['KeyX'] = function (event: KeyboardEvent, context: Context) {
+    event.preventDefault();
     const is_ctrl = event.ctrlKey || event.metaKey;
     if (is_ctrl && event.shiftKey) {
         context.workspace.notify(WorkSpace.DELETE_LINE); // 下划线
@@ -269,11 +292,13 @@ keydownHandler['KeyZ'] = function (event: KeyboardEvent, context: Context) {
     const is_ctrl = event.ctrlKey || event.metaKey;
 
     if (is_ctrl && event.shiftKey) { // 重做
+        event.preventDefault();
         redo(context);
         return;
     }
 
     if (is_ctrl) { // 撤销
+        event.preventDefault();
         undo(context);
     }
 }
@@ -282,6 +307,7 @@ keydownHandler['Digit0'] = function (event: KeyboardEvent, context: Context) {
     const is_ctrl = event.ctrlKey || event.metaKey;
 
     if (is_ctrl) {
+        event.preventDefault();
         scale_0(context);
         return;
     }
@@ -290,21 +316,24 @@ keydownHandler['Digit0'] = function (event: KeyboardEvent, context: Context) {
 keydownHandler['Digit1'] = function (event: KeyboardEvent, context: Context) {
     const is_ctrl = event.ctrlKey || event.metaKey;
     if (is_ctrl) {
-        event.stopPropagation();
+        event.preventDefault();
         adapt_page(context);
         return;
     }
 }
 
 keydownHandler['Enter'] = function (event: KeyboardEvent, context: Context) {
+    event.preventDefault();
     enter_path_edit_mode(context);
 }
 
 keydownHandler['NumpadEnter'] = function (event: KeyboardEvent, context: Context) {
+    event.preventDefault();
     enter_path_edit_mode(context);
 }
 
 keydownHandler['Escape'] = function (event: KeyboardEvent, context: Context) {
+    event.preventDefault();
     if (event.shiftKey) {
         context.esctask.clear_stack.call(context.esctask);
         return;
@@ -315,34 +344,42 @@ keydownHandler['Escape'] = function (event: KeyboardEvent, context: Context) {
 keydownHandler['Backslash'] = function (event: KeyboardEvent, context: Context) {
     const is_ctrl = event.ctrlKey || event.metaKey;
     if (is_ctrl && event.shiftKey) {
+        event.preventDefault();
         context.workspace.notify(WorkSpace.HIDDEN_UI, true);
         return;
     }
     if (is_ctrl) {
+        event.preventDefault();
         context.workspace.notify(WorkSpace.HIDDEN_UI);
     }
 }
 
 keydownHandler['Backspace'] = function (event: KeyboardEvent, context: Context) {
+    event.preventDefault();
     deleteUnits(context);
 }
 
 keydownHandler['Delete'] = function (event: KeyboardEvent, context: Context) {
+    event.preventDefault();
     deleteUnits(context);
 }
 
 keydownHandler['BracketRight'] = function (event: KeyboardEvent, context: Context) {
+    event.preventDefault();
     uppper_layer(context);
 }
 
 keydownHandler['BracketLeft'] = function (event: KeyboardEvent, context: Context) {
+    event.preventDefault();
     lower_layer(context);
 }
 
 keydownHandler['Equal'] = function (event: KeyboardEvent, context: Context) {
+    event.preventDefault();
     uppper_layer(context, 1);
 }
 
 keydownHandler['Minus'] = function (event: KeyboardEvent, context: Context) {
+    event.preventDefault();
     lower_layer(context, 1);
 }
