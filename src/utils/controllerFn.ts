@@ -108,7 +108,8 @@ export function get_direction(rotation: number) {
     else return 0;
 }
 export function gen_offset_map(shape: Shape, down: PageXY) {
-    const m = shape.matrix2Root(), f = shape.frame;
+    const m = shape.matrix2Root()
+    const f = shape.frame;
     const lt = m.computeCoord2(0, 0);
     const rb = m.computeCoord2(f.width, f.height);
     const pivot = m.computeCoord2(f.width / 2, f.height / 2);

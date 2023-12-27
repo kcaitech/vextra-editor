@@ -7,6 +7,7 @@ import { genRectPath } from '../../common';
 import { XYsBounding } from '@/utils/common';
 import { CellMenu } from '@/context/menu';
 import { TableSelection } from '@/context/tableselection';
+import { get_transform } from '../Points/common';
 
 interface Props {
     context: Context
@@ -27,14 +28,17 @@ function update_cell_selection(gen_menu_posi?: boolean) {
     emits("get-menu", 0, 0, CellMenu.MultiSelect, false);
     if (props.table && props.table.type === ShapeType.Table) {
         const table_selection = props.context.tableSelection;
-        if (!table_selection || table_selection.tableRowStart < 0) return;
+        if (!table_selection || table_selection.tableRowStart < 0) {
+            return;
+        }
         const cells = table_selection.getSelectedCells(true);
         gen_view(props.table, cells, gen_menu_posi);
     }
 }
 const t1 = () => update_cell_selection(true);
 function gen_view(table: Shape, cells: { cell: TableCell | undefined, rowIdx: number, colIdx: number }[], gen_menu_posi?: boolean) {
-    const t2r = table.matrix2Root(), m = props.context.workspace.matrix;
+    const t2r = table.matrix2Root();
+    const m = props.context.workspace.matrix;
     t2r.multiAtLeft(m);
     let points: ClientXY[] = [];
     const grid = (table as TableShape).getLayout().grid;
@@ -48,7 +52,9 @@ function gen_view(table: Shape, cells: { cell: TableCell | undefined, rowIdx: nu
         }
     }
     selection_path.value = genRectPath(points);
-    if (gen_menu_posi) _get_menu_position(points);
+    if (gen_menu_posi) {
+        _get_menu_position(points);
+    }
 }
 function update_triangle() {
     triangle.value = false;
@@ -65,11 +71,15 @@ function update_triangle() {
         const t2r = shape.matrix2Root(), m = props.context.workspace.matrix;
         t2r.multiAtLeft(m);
         const rb = t2r.computeCoord2(f.x + f.width, f.y + f.height);
+
+        const { rotate, isFlippedHorizontal, isFlippedVertical } = get_transform(shape);
+
         transform = `translate(${rb.x}px, ${rb.y}px) `;
-        if (shape.isFlippedHorizontal) transform += 'rotateY(180deg) ';
-        if (shape.isFlippedVertical) transform += 'rotateX(180deg) ';
-        if (shape.rotation) transform += `rotate(${shape.rotation}deg) `;
+        if (isFlippedHorizontal) transform += 'rotateY(180deg) ';
+        if (isFlippedVertical) transform += 'rotateX(180deg) ';
+        if (rotate) transform += `rotate(${rotate}deg) `;
         transform += `translate(-24px, -24px) `;
+
         triangle.value = true;
     }
 }

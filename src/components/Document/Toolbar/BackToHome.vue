@@ -32,11 +32,40 @@ function home() {
   window.document.title = t('product.name');
   (window as any).sketchDocument = undefined;
   (window as any).skrepo = undefined;
-  if (props.context.comment.isDocumentInfo?.project) {
-    router.push({ path: '/files/project/' + props.context.comment.isDocumentInfo.project.id });
+  const index = sessionStorage.getItem('index');
+  if (index) {
+    back(index);
   } else {
-    router.push({ name: 'meshare' });
-    sessionStorage.setItem('index', '3')
+    router.push({ name: 'recently' });
+    sessionStorage.setItem('index', '1')
+  }
+}
+
+const back = (index: string) => {
+  switch (index) {
+    case '1':
+      router.push({ name: 'recently' });
+      break;
+    case '2':
+      router.push({ name: 'starfile' });
+      break;
+    case '3':
+      router.push({ name: 'meshare' });
+      break;
+    case '4':
+      router.push({ name: 'shareme' });
+      break;
+    case '6':
+      router.push({ path: '/apphome/project/' + props.context.comment.isDocumentInfo?.project.id });
+      break;
+    case '7':
+      router.push({ path: '/apphome/project/' + props.context.comment.isDocumentInfo?.project.id });
+      break;
+    case '9':
+      router.push({ name: 'project_share' });
+      break;
+    default:
+      router.push({ name: 'recently' });
   }
 }
 
@@ -54,11 +83,12 @@ const hasPendingSyncCmd = () => {
   window.document.title = t('product.name');
   (window as any).sketchDocument = undefined;
   (window as any).skrepo = undefined;
-  if (props.context.comment.isDocumentInfo?.project) {
-    router.push({ path: '/files/project/' + props.context.comment.isDocumentInfo.project.id });
+  const index = sessionStorage.getItem('index');
+  if (index) {
+    back(index);
   } else {
-    router.push({ name: 'meshare' });
-    sessionStorage.setItem('index', '3')
+    router.push({ name: 'recently' });
+    sessionStorage.setItem('index', '1')
   }
   // })
   // .catch(() => {
@@ -256,6 +286,7 @@ onUnmounted(() => {
       font-family: HarmonyOS Sans;
       font-size: 14px;
     }
+  }
 
     .model {
       flex: 0 0 72px;
@@ -263,6 +294,5 @@ onUnmounted(() => {
       align-items: center;
     }
 
-  }
 }
 </style>

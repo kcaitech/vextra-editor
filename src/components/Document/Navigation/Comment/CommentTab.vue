@@ -267,17 +267,16 @@ const showHiddenLeft = () => {
         height: 40px;
         display: flex;
         align-items: center;
-        //justify-content: space-between;
         padding: 0 12px;
         z-index: 1;
         box-sizing: border-box;
 
         .line {
-            justify-content: space-between;
             display: flex;
             align-items: center;
+            justify-content: space-between;
             height: 40px;
-            width: 216px;
+            width: 100%;
             border-bottom: 1px solid #F0F0F0;
 
             .title {

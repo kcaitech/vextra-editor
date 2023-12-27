@@ -222,7 +222,7 @@ function icon_class() {
     const shape = props.data.shape;
     if (shape.type === ShapeType.Symbol) {
         if (shape instanceof SymbolUnionShape) {
-            return 'pattern-symbol-union'; 
+            return 'pattern-symbol-union';
         } else {
             return 'pattern-component';
         }
@@ -261,18 +261,21 @@ function is_component() {
 const hovered = ref(false);
 const selectedWatcher = (t?: any) => {
     if (t === Selection.CHANGE_SHAPE_HOVER) {
-        const shape = props.data.shape;
-        const hoverShape = props.data.context.selection.hoveredShape;
-        if(hoverShape && shape.id === hoverShape.id) {
-            hovered.value = true;
-        }else {
-            hovered.value = false;
-        }
+        getHovered();
     }
 }
-
+const getHovered = () => {
+    const shape = props.data.shape;
+    const hoverShape = props.data.context.selection.hoveredShape;
+    if (hoverShape && shape.id === hoverShape.id) {
+        hovered.value = true;
+    } else {
+        hovered.value = false;
+    }
+}
 onUpdated(() => {
     nextTick(current_node_radius);
+    getHovered();
 })
 
 onMounted(() => {
@@ -289,9 +292,11 @@ onUnmounted(() => {
 </script>
 
 <template>
-    <div ref="resultItem" class="contain" :class="{ container: true, component: is_component(), selected:  props.data.selected, selectedChild: selectedChild(), hovered: hovered,firstAngle: topAngle, lastAngle: bottomAngle }" @click="selectShape"
-         @mousemove="hoverShape" @mouseleave="unHoverShape" @mousedown="mousedown">
-        <div class="container-svg" @dblclick="toggleContainer" :style="{ opacity: !visible_status ? 1 : .3 }" :class="{ color: !is_component() }">
+    <div ref="resultItem" class="contain"
+        :class="{ container: true, component: is_component(), selected: props.data.selected, selectedChild: selectedChild(), hovered: hovered, firstAngle: topAngle, lastAngle: bottomAngle }"
+        @click="selectShape" @mousemove="hoverShape" @mouseleave="unHoverShape" @mousedown="mousedown">
+        <div class="container-svg" @dblclick="toggleContainer" :style="{ opacity: !visible_status ? 1 : .3 }"
+            :class="{ color: !is_component() }">
             <svg-icon class="svg" :icon-class="icon_class()"></svg-icon>
         </div>
         <div class="text" :class="{ container: true, selected: false }"
@@ -467,12 +472,15 @@ div .rename {
         visibility: visible;
     }
 }
+
 .hovered {
     border-radius: var(--default-radius);
     background-color: #efefef;
 }
+
 .component {
     color: var(--component-color);
+
     &>.text>.txt,
     &>.text>.tool_icon {
         color: var(--component-color);
@@ -480,7 +488,7 @@ div .rename {
 }
 
 .color {
-    color:#595959;
+    color: #595959;
 }
 
 .firstAngle {
@@ -491,5 +499,4 @@ div .rename {
 .lastAngle {
     border-bottom-left-radius: 8px !important;
     border-bottom-right-radius: 8px !important;
-}
-</style>
+}</style>

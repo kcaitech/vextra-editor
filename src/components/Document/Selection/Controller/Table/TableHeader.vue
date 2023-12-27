@@ -5,16 +5,19 @@ import { Point } from '../../SelectionView.vue';
 import { onMounted, onUnmounted, reactive, ref, watch } from 'vue';
 import { WorkSpace } from '@/context/workspace';
 import { CellMenu } from '@/context/menu'
+import { get_transform } from '../Points/common';
 interface Emits {
     (e: 'get-menu', x: number, y: number, type: CellMenu, cell_menu: boolean): void;
 }
+interface Props {
+    matrix: number[];
+    context: Context;
+    shape: Shape;
+    cFrame: Point[];
+}
 const emits = defineEmits<Emits>();
-const props = defineProps<{
-    matrix: number[]
-    context: Context
-    shape: Shape
-    cFrame: Point[]
-}>();
+const props = defineProps<Props>();
+
 interface FrameParams {
     x: number
     y: number
@@ -45,7 +48,8 @@ let offset: number = 0.5;
 function update_position() {
     if (props.context.workspace.shouldSelectionViewUpdate) {
         xbars = [], ybars = [], xs = [], ys = [];
-        const m = new Matrix(props.matrix), lt = m.computeCoord2(0, 0), mw = new Matrix(props.context.workspace.matrix);
+        const m = new Matrix(props.matrix), lt = m.computeCoord2(0, 0);
+        const mw = new Matrix(props.context.workspace.matrix);
         offset = mw.m00 * 0.5;
         const table: TableShape = props.shape as TableShape;
         layout = table.getLayout();
@@ -68,10 +72,11 @@ function update_position() {
     }
 }
 function modify_transform(shape: Shape, fps: FrameParams) {
+    const { rotate, isFlippedHorizontal, isFlippedVertical } = get_transform(props.shape);
     transform = `translate(${fps.x}px, ${fps.y}px) `;
-    if (shape.isFlippedHorizontal) transform += 'rotateY(180deg) ';
-    if (shape.isFlippedVertical) transform += 'rotateX(180deg) ';
-    if (shape.rotation) transform += `rotate(${shape.rotation}deg)`;
+    if (isFlippedHorizontal) transform += 'rotateY(180deg) ';
+    if (isFlippedVertical) transform += 'rotateX(180deg) ';
+    if (rotate) transform += `rotate(${rotate}deg)`;
 }
 function x_dot_mouseennter(x: number, ids: number) {
     if (selecting) return;

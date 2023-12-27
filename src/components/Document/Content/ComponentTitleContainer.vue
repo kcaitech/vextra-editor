@@ -1,5 +1,5 @@
 <script lang="ts" setup>
-import {onMounted, onUnmounted, reactive, watch} from "vue";
+import {onMounted, onUnmounted, reactive, watch, watchEffect} from "vue";
 import {Context} from "@/context";
 import {Matrix, Page, Shape, ShapeType} from "@kcdesign/data";
 import {ClientXY, Selection} from "@/context/selection";
@@ -29,7 +29,7 @@ const matrix = new Matrix(props.matrix);
 const titles: Title[] = reactive([]);
 const origin: ClientXY = {x: 0, y: 0};
 
-function updater(t: any) {
+function updater(t?: any) {
     setOrigin();
     setPosition();
     if (t === 'childs') watchShapes()
@@ -126,11 +126,13 @@ const watchedShapes = new Map();
 
 function watchShapes() { // 监听相关shape的变化
     const needWatchShapes = new Map();
-    const children_of_page = props.data.childs;
-    for (let i = 0, len = children_of_page.length; i < len; i++) {
-        const compo = children_of_page[i];
-        if (is_symbol_or_union(compo) && compo.isVisible) {
-            needWatchShapes.set(compo.id, compo);
+    const children_of_page = props.context.selection.selectedPage?.childs;
+    if (children_of_page) {
+        for (let i = 0, len = children_of_page.length; i < len; i++) {
+            const compo = children_of_page[i];
+            if (is_symbol_or_union(compo)) {
+                needWatchShapes.set(compo.id, compo);
+            }
         }
     }
     watchedShapes.forEach((v, k) => {
@@ -166,10 +168,13 @@ function selection_watcher(t: number) {
 
 watch(() => props.matrix, updater);
 onMounted(() => {
+    watchShapes();
     props.context.selection.watch(selection_watcher);
+    props.data.watch(updater);
 })
 onUnmounted(() => {
     props.context.selection.unwatch(selection_watcher);
+    props.data.unwatch(updater);
 })
 </script>
 <template>

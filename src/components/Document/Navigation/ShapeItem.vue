@@ -230,7 +230,7 @@ function icon_class() {
     const shape = props.data.shape();
     if (shape.type === ShapeType.Symbol) {
         if (shape instanceof SymbolUnionShape) {
-            return 'pattern-symbol-union'; 
+            return 'pattern-symbol-union';
         } else {
             return 'pattern-component';
         }
@@ -323,18 +323,21 @@ const current_node_radius = () => {
 const hovered = ref(false);
 const selectedWatcher = (t?: any) => {
     if (t === Selection.CHANGE_SHAPE_HOVER) {
-        const shape = props.data.shape();
-        const hoverShape = props.data.context.selection.hoveredShape;
-        if(hoverShape && shape.id === hoverShape.id) {
-            hovered.value = true;
-        }else {
-            hovered.value = false;
-        }
+        getHovered();
     }
 }
-
+const getHovered = () => {
+    const shape = props.data.shape();
+    const hoverShape = props.data.context.selection.hoveredShape;
+    if (hoverShape && shape.id === hoverShape.id) {
+        hovered.value = true;
+    } else {
+        hovered.value = false;
+    }
+}
 onUpdated(() => {
     nextTick(current_node_radius);
+    getHovered()
 })
 onMounted(() => {
     handlePerm()
@@ -352,9 +355,8 @@ onUnmounted(() => {
 
 <template>
     <div ref="shapeItem"
-        :class="{ container: true, selected: props.data.selected, selectedChild: selectedChild(), component: is_component(), hovered: hovered, firstAngle: topAngle, lastAngle: bottomAngle }"
-         @mousemove="hoverShape" @mouseleave="unHoverShape"
-        @mousedown="mousedown" @mouseup="mouseup">
+        :class="{ container: true, selected: props.data.selected, selectedChild: selectedChild(), component: is_component(), hovered: hovered && !props.data.selected, firstAngle: topAngle, lastAngle: bottomAngle }"
+        @mousemove="hoverShape" @mouseleave="unHoverShape" @mousedown="mousedown" @mouseup="mouseup">
         <!-- 缩进 -->
         <div class="ph" :style="{ width: `${ph_width}px` }"></div>
         <!-- 开合 -->
@@ -363,7 +365,8 @@ onUnmounted(() => {
                 :style="{ transform: props.data.expand ? 'rotate(0deg)' : 'rotate(-90deg)' }"></svg-icon>
         </div>
         <!-- icon -->
-        <div class="container-svg zero-symbol" @dblclick="toggleContainer" :style="{ opacity: !visible_status ? 1 : .3 }" :class="{ color: !is_component() }">
+        <div class="container-svg zero-symbol" @dblclick="toggleContainer" :style="{ opacity: !visible_status ? 1 : .3 }"
+            :class="{ color: !is_component() }">
             <svg-icon class="svg" :icon-class="icon_class()"></svg-icon>
         </div>
         <!-- 内容描述 -->
@@ -575,6 +578,7 @@ onUnmounted(() => {
 
 .component {
     color: var(--component-color);
+
     &>.text>.txt,
     &>.text>.tool_icon {
         color: var(--component-color);
@@ -582,7 +586,7 @@ onUnmounted(() => {
 }
 
 .color {
-    color:#595959;
+    color: #595959;
 }
 
 .firstAngle {

@@ -70,9 +70,8 @@ const WITH_SHADOW = [
     ShapeType.Symbol,
     ShapeType.SymbolUnion
 ]
-const WITH_OPACITY = [
+const WITHOUT_OPACITY = [
     ShapeType.Cutout,
-    ShapeType.Table,
     ShapeType.TableCell
 ]
 const shapeType = ref();
@@ -181,7 +180,7 @@ onUnmounted(() => {
                 <Arrange :context="props.context" :shapes="shapes"></Arrange>
                 <ShapeBaseAttr v-if="baseAttr" :context="props.context"></ShapeBaseAttr>
                 <BaseForPathEdit v-if="editAttr" :context="props.context"></BaseForPathEdit>
-                <Opacity v-if="!WITH_OPACITY.includes(shapeType) && opacity" :shapes="shapes" :context="props.context"></Opacity>
+                <Opacity v-if="opacity && !WITHOUT_OPACITY.includes(shapeType)" :shapes="shapes" :context="props.context"></Opacity>
                 <Module v-if="symbol_attribute" :context="props.context" :shapeType="shapeType" :shapes="shapes"></Module>
                 <Fill v-if="WITH_FILL.includes(shapeType)" :shapes="shapes" :context="props.context"></Fill>
                 <Border v-if="WITH_BORDER.includes(shapeType)" :shapes="shapes" :context="props.context"></Border>

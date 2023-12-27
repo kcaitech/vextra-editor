@@ -157,15 +157,24 @@ function isTarget2(scout: Scout, shape: Shape, p: PageXY): boolean {
 // 扁平化一个编组的树结构 tree -> list
 export function delayering(groupshape: Shape, flat?: Shape[]): Shape[] {
     let f: Shape[] = flat || [];
-    const childs: Shape[] = groupshape.type === ShapeType.SymbolRef ? (groupshape.naviChilds || []) : (groupshape as GroupShape).childs;
+
+    const childs: Shape[] = groupshape.type === ShapeType.SymbolRef
+        ? (groupshape.naviChilds || [])
+        : (groupshape as GroupShape).childs;
+
     for (let i = 0, len = childs.length; i < len; i++) {
         const item = childs[i];
-        if (item.type === ShapeType.Group || item.type === ShapeType.Symbol || item.type === ShapeType.SymbolRef) {
+
+        if (item.type === ShapeType.Group
+            || item.type === ShapeType.Symbol
+            || item.type === ShapeType.SymbolRef
+        ) {
             f = [...delayering(item, f)];
         } else {
             f.push(item);
         }
     }
+
     return f;
 }
 
@@ -209,7 +218,7 @@ export function finder(context: Context, scout: Scout, g: Shape[], position: Pag
 
         if (item.type === ShapeType.SymbolUnion) { // 组件状态集合
             result = finder_symbol_union(context, scout, item as GroupShape, position, selected, isCtrl);
-            
+
             if (isTarget(scout, item, position)) {
                 break; // 只要进入集合，有无子元素选中都应该break
             }
@@ -247,7 +256,7 @@ function finder_artboard(context: Context, scout: Scout, artboard: GroupShape, p
     if (childs.length) {
         result = finder(context, scout, childs, position, selected, isCtrl);
         if (result) return result;
-        else if (isCtrl) return artboard;
+        else if (isCtrl || context.tool.isLable) return artboard;
     } else {
         return artboard;
     }
@@ -352,15 +361,23 @@ export function finder_contact(scout: Scout, g: Shape[], position: PageXY, selec
 export function finder_layers(scout: Scout, g: Shape[], position: PageXY): Shape[] {
     const result = [];
     for (let i = g.length - 1; i > -1; i--) {
-        if (!canBeTarget(g[i])) continue;
         const item = g[i];
-        if (!isTarget(scout, item, position)) continue;
-        if ([ShapeType.Group, ShapeType.Artboard, ShapeType.Symbol, ShapeType.SymbolRef].includes(item.type)) {
+
+        if (!canBeTarget(g[i])) {
+            continue;
+        }
+
+        if (!isTarget(scout, item, position)) {
+            continue;
+        }
+
+        if ([ShapeType.Group, ShapeType.Artboard, ShapeType.SymbolUnion, ShapeType.Symbol, ShapeType.SymbolRef].includes(item.type)) {
             const c: Shape[] | undefined = item.type === ShapeType.SymbolRef ? item.naviChilds : (item as GroupShape).childs;
             if (c?.length) {
                 result.push(...finder_layers(scout, c, position));
             }
         }
+
         result.push(item);
     }
     return result;
@@ -414,6 +431,7 @@ export function artboardFinder(scout: Scout, g: Shape[], position: PageXY, excep
  */
 export function finder_container(scout: Scout, g: Shape[], position: PageXY, except?: Map<string, Shape>) {
     const layers = finder_layers(scout, g, position);
+
     for (let i = 0, len = layers.length; i < len; i++) {
         const item = layers[i];
         if ([ShapeType.Artboard, ShapeType.Symbol, ShapeType.SymbolUnion].includes(item.type) && (!except || !except.get(item.id))) {

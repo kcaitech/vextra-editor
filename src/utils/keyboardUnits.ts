@@ -6,6 +6,7 @@ import { Navi } from "@/context/navigate";
 import { Arrange } from "@/context/arrange";
 import { deleteUnits } from "./delete";
 import { replace } from "./clipboard";
+import { enter_path_edit_mode } from "./pathedit";
 
 const keydownHandler: { [key: string]: (event: KeyboardEvent, context: Context) => any } = {};
 
@@ -76,7 +77,7 @@ keydownHandler['KeyC'] = function (event: KeyboardEvent, context: Context) {
         context.comment.setVisibleComment(!context.comment.isVisibleComment); // 评论隐藏与显示
         return;
     }
-    context.workspace.notify(WorkSpace.COPY);
+    context.tool.setAction(Action.AddComment)
 }
 
 keydownHandler['KeyD'] = function (event: KeyboardEvent, context: Context) {
@@ -95,7 +96,7 @@ keydownHandler['KeyF'] = function (event: KeyboardEvent, context: Context) {
     if (ctrlKey || metaKey) {
         event.preventDefault();
         console.log('ctrlKey');
-        
+
         context.navi.notify(Navi.TO_SEARCH); // 图层搜索
         return;
     }
@@ -247,7 +248,7 @@ keydownHandler['KeyX'] = function (event: KeyboardEvent, context: Context) {
         context.workspace.notify(WorkSpace.DELETE_LINE); // 下划线
         return;
     }
-    
+
     if (is_ctrl) {
         context.workspace.clipboard
             .cut()
@@ -293,6 +294,14 @@ keydownHandler['Digit1'] = function (event: KeyboardEvent, context: Context) {
         adapt_page(context);
         return;
     }
+}
+
+keydownHandler['Enter'] = function (event: KeyboardEvent, context: Context) {
+    enter_path_edit_mode(context);
+}
+
+keydownHandler['NumpadEnter'] = function (event: KeyboardEvent, context: Context) {
+    enter_path_edit_mode(context);
 }
 
 keydownHandler['Escape'] = function (event: KeyboardEvent, context: Context) {

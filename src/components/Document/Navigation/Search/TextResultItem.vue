@@ -278,17 +278,21 @@ function navi_watcher(t: number) {
 const hovered = ref(false);
 const selectedWatcher = (t?: any) => {
     if (t === Selection.CHANGE_SHAPE_HOVER) {
-        const shape = props.data.shape;
-        const hoverShape = props.data.context.selection.hoveredShape;
-        if(hoverShape && shape.id === hoverShape.id) {
-            hovered.value = true;
-        }else {
-            hovered.value = false;
-        }
+        getHovered();
+    }
+}
+const getHovered = () => {
+    const shape = props.data.shape;
+    const hoverShape = props.data.context.selection.hoveredShape;
+    if (hoverShape && shape.id === hoverShape.id) {
+        hovered.value = true;
+    } else {
+        hovered.value = false;
     }
 }
 onUpdated(() => {
     nextTick(current_node_radius);
+    getHovered();
 })
 
 onMounted(() => {
@@ -305,9 +309,8 @@ onUnmounted(() => {
 </script>
 
 <template>
-    <div class="contain"
-        :class="{ component: is_component() }"
-        @click="selectShape" @mousemove="hoverShape" @mouseleave="unHoverShape" @mousedown="mousedown">
+    <div class="contain" :class="{ component: is_component() }" @click="selectShape" @mousemove="hoverShape"
+        @mouseleave="unHoverShape" @mousedown="mousedown">
         <div class="item-warp">
             <div class="container-svg" @dblclick="toggleContainer" :class="{ color: !is_component() }">
                 <svg-icon class="svg" :icon-class="icon_class()"></svg-icon>
@@ -339,8 +342,8 @@ onUnmounted(() => {
         </div>
         <div class="tips-wrap" :title="title" @click="toggleContainer" :class="{ 'tips-focus': props.data.focus }">
             <span v-for="(item, index) in tips" :key="index" :class="{ active: item.isKeywords }">{{
-                    item.content
-                }}</span>
+                item.content
+            }}</span>
         </div>
     </div>
 </template>
@@ -354,7 +357,7 @@ onUnmounted(() => {
     display: flex;
     flex-flow: row;
     align-items: center;
-    width:calc(100% - 6px);
+    width: calc(100% - 6px);
     height: 32px;
 }
 
@@ -505,10 +508,12 @@ onUnmounted(() => {
 .tips-focus {
     background-color: rgba($color: #1878f5, $alpha: 0.4) !important;
 }
+
 .hovered {
     border-radius: var(--default-radius);
     background-color: #efefef;
 }
+
 .selectedChild {
     z-index: 2;
     background-color: rgba($color: #1878f5, $alpha: 0.08);
@@ -518,13 +523,16 @@ onUnmounted(() => {
     z-index: 1;
     background-color: rgba($color: #1878F5, $alpha: 0.2);
 }
+
 .component {
     color: var(--component-color);
+
     &>.text>.txt,
     &>.text>.tool_icon {
         color: var(--component-color);
     }
 }
+
 .firstAngle {
     border-top-left-radius: 8px !important;
     border-top-right-radius: 8px !important;
@@ -533,5 +541,4 @@ onUnmounted(() => {
 .lastAngle {
     border-bottom-left-radius: 8px !important;
     border-bottom-right-radius: 8px !important;
-}
-</style>
+}</style>

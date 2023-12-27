@@ -62,7 +62,6 @@ const commentMenuItems = ref<commentListMenu[]>([
 ])
 
 // #endregion
-
 function down(e: MouseEvent) {
     if (e.button === 0) {
         const action = props.context.tool.action;

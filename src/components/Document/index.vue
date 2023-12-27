@@ -214,13 +214,25 @@ const isLable = ref<boolean>(false);
 
 //只读权限隐藏右侧属性栏
 watchEffect(() => {
-  if (isRead.value || canComment.value) {
+  if ((isRead.value || canComment.value) && !isLable.value) {
     Right.value.rightMin = 0
     Right.value.rightWidth = 0
     Right.value.rightMinWidth = 0
     middleWidth.value = middleWidth.value + 0.1
+  } else if (isLable.value && !isEdit.value) {
+    Right.value.rightMin = 250
+    Right.value.rightWidth = 0.1
+    Right.value.rightMinWidth = 0.1
+    middleWidth.value = middleWidth.value - 0.1
   }
 })
+
+const tool_watcher = (t: number) => {
+  if(!context) return;
+  if(t === Tool.LABLE_CHANGE) {
+    isLable.value = context.tool.isLable;
+  }
+}
 
 enum PermissionChange {
   update,
@@ -251,10 +263,13 @@ const getDocumentAuthority = async () => {
       }
     }
     if (data.data.perm_type === 1) {
-      isRead.value = true
+      isRead.value = true;
+      canComment.value = false;
+      isEdit.value = false;
     } else if (data.data.perm_type === 2) {
       isRead.value = false
-      canComment.value = true
+      canComment.value = true;
+      isEdit.value = false;
     } else if (data.data.perm_type === 3) {
       isRead.value = false
       canComment.value = false
@@ -431,6 +446,7 @@ function init_watcher() {
   context.selection.watch(selectionWatcher);
   context.workspace.watch(workspaceWatcher);
   context.component.watch(component_watcher);
+  context.tool.watch(tool_watcher);
 }
 
 function init_keyboard_uints() {
@@ -640,6 +656,7 @@ onUnmounted(() => {
   (window as any).skrepo = undefined;
   context?.selection.unwatch(selectionWatcher);
   context?.workspace.unwatch(workspaceWatcher);
+  context?.tool.unwatch(tool_watcher);
   clearInterval(timer);
   localStorage.removeItem('docId')
   showHint.value = false;
@@ -681,7 +698,7 @@ onUnmounted(() => {
         </ContentView>
       </template>
       <template #slot3>
-        <Attribute id="attributes" v-if="!null_context && !isRead" :context="context!"
+        <Attribute id="attributes" v-if="!null_context" :context="context!"
           @mouseenter="(e: Event) => { mouseenter('right') }" @mouseleave="() => { mouseleave('right') }"
           :showRight="showRight" :rightTriggleVisible="rightTriggleVisible" @showAttrbute="showHiddenRight">
         </Attribute>
