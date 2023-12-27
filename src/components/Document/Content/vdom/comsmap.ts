@@ -13,6 +13,7 @@ import { TableCellDom } from "./tablecell";
 import { TableDom } from "./table";
 import { TextShapeDom } from "./textshape";
 import { CutoutShapeDom } from "./cutout";
+import { RectShapeDom } from "./rect";
 
 // interface DataView {
 //     id: string;
@@ -35,7 +36,7 @@ export function initComsMap(comsMap: Map<ShapeType, ViewType>) {
     // comsMap.set(ShapeType.Page, ShapeGroup);
     comsMap.set(ShapeType.Path, PathShapeDom);
     comsMap.set(ShapeType.Path2, PathShapeDom2);
-    comsMap.set(ShapeType.Rectangle, PathShapeDom);
+    // comsMap.set(ShapeType.Rectangle, PathShapeDom);
     comsMap.set(ShapeType.Oval, PathShapeDom);
     comsMap.set(ShapeType.Text, TextShapeDom);
     comsMap.set(ShapeType.Symbol, SymbolDom);
@@ -46,4 +47,5 @@ export function initComsMap(comsMap: Map<ShapeType, ViewType>) {
     comsMap.set(ShapeType.Contact, ContactLineDom);
     comsMap.set(ShapeType.TableCell, TableCellDom);
     comsMap.set(ShapeType.Cutout, CutoutShapeDom);
+    comsMap.set(ShapeType.Rectangle, RectShapeDom);
 }

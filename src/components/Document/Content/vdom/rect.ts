@@ -1,7 +1,7 @@
-import { CutoutShapeView, EL } from "@kcdesign/data";
+import { EL, RectShapeView } from "@kcdesign/data";
 import { elpatch } from "./patch";
 
-export class CutoutShapeDom extends (CutoutShapeView) {
+export class RectShapeDom extends (RectShapeView) {
     el?: HTMLElement | SVGElement; // 不要改名，patch用到
     m_save_version: number = -1;
     m_save_render: EL & { el?: HTMLElement | SVGElement } = EL.make("");

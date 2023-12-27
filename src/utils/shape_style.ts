@@ -6,7 +6,7 @@ import {
     ShadowPosition, ShadowColorAction, ShadowBlurRadiusAction, ShadowSpreadAction, ShadowOffsetXAction,
     ShadowOffsetYAction, ExportFormat, ExportFormatReplaceAction, ExportFormatAddAction, ExportFileFormat,
     ExportFormatNameingScheme, ExportVisibleScaleType, ExportFormatDeleteAction, ExportFormatScaleAction,
-    ExportFormatNameAction, ExportFormatPerfixAction, ExportFormatFileFormatAction, ShapeType
+    ExportFormatNameAction, ExportFormatPerfixAction, ExportFormatFileFormatAction, ShapeType, ShapeView
 } from "@kcdesign/data";
 import { v4 } from "uuid";
 interface FillItem {
@@ -26,13 +26,13 @@ interface FormatItems {
     format: ExportFormat
 }
 // fills
-export function get_fills(shapes: Shape[]): FillItem[] | 'mixed' {
+export function get_fills(shapes: ShapeView[] | Shape[]): FillItem[] | 'mixed' {
     const fills: FillItem[] = [];
     const shape = shapes[0];
-    const style = shape.style;
+    const stylefills = shape.getFills();
     const compare_str: string[] = [];
-    for (let i = 0, len = style.fills.length; i < len; i++) {
-        const fill = style.fills[i];
+    for (let i = 0, len = stylefills.length; i < len; i++) {
+        const fill = stylefills[i];
         const f = { id: i, fill };
         fills.push(f);
         const str = [fill.isEnabled, fill.color.red, fill.color.green, fill.color.blue, fill.color.blue].join('-');
@@ -41,9 +41,10 @@ export function get_fills(shapes: Shape[]): FillItem[] | 'mixed' {
     for (let i = 1; i < shapes.length; i++) {
         const shape = shapes[i];
         if (shape.type === ShapeType.Cutout) continue;
-        const len = shape.style.fills.length;
+        const stylefills = shape.getFills();
+        const len = stylefills.length;
         if (len !== fills.length) return 'mixed';
-        const s_fs = shape.style.fills;
+        const s_fs = stylefills;
         for (let j = 0; j < len; j++) {
             const fill = s_fs[j];
             const str = [fill.isEnabled, fill.color.red, fill.color.green, fill.color.blue, fill.color.blue].join('-');
@@ -52,7 +53,7 @@ export function get_fills(shapes: Shape[]): FillItem[] | 'mixed' {
     }
     return fills;
 }
-export function get_actions_add_fill(shapes: Shape[], fill: Fill) {
+export function get_actions_add_fill(shapes: ShapeView[], fill: Fill) {
     const actions: FillAddAction[] = [];
     for (let i = 0; i < shapes.length; i++) {
         if (shapes[i].type === ShapeType.Cutout) continue;
@@ -63,7 +64,7 @@ export function get_actions_add_fill(shapes: Shape[], fill: Fill) {
     }
     return actions;
 }
-export function get_actions_fill_color(shapes: Shape[], index: number, color: Color) {
+export function get_actions_fill_color(shapes: ShapeView[], index: number, color: Color) {
     const actions: FillColorAction[] = [];
     for (let i = 0; i < shapes.length; i++) {
         if (shapes[i].type === ShapeType.Cutout) continue;
@@ -71,9 +72,9 @@ export function get_actions_fill_color(shapes: Shape[], index: number, color: Co
     }
     return actions;
 }
-export function get_actions_fill_unify(shapes: Shape[]) {
+export function get_actions_fill_unify(shapes: ShapeView[]) {
     const actions: FillsReplaceAction[] = [];
-    const fills = shapes[0].style.fills;
+    const fills = shapes[0].getFills();
     for (let i = 1; i < shapes.length; i++) {
         if (shapes[i].type === ShapeType.Cutout) continue;
         const new_fills: Fill[] = [];
@@ -88,7 +89,7 @@ export function get_actions_fill_unify(shapes: Shape[]) {
     }
     return actions;
 }
-export function get_actions_fill_enabled(shapes: Shape[], index: number, value: boolean) {
+export function get_actions_fill_enabled(shapes: ShapeView[], index: number, value: boolean) {
     const actions: FillEnableAction[] = [];
     for (let i = 0; i < shapes.length; i++) {
         if (shapes[i].type === ShapeType.Cutout) continue;
@@ -96,7 +97,7 @@ export function get_actions_fill_enabled(shapes: Shape[], index: number, value: 
     }
     return actions;
 }
-export function get_actions_fill_delete(shapes: Shape[], index: number) {
+export function get_actions_fill_delete(shapes: ShapeView[], index: number) {
     const actions: FillDeleteAction[] = [];
     for (let i = 0; i < shapes.length; i++) {
         if (shapes[i].type === ShapeType.Cutout) continue;
@@ -106,13 +107,13 @@ export function get_actions_fill_delete(shapes: Shape[], index: number) {
 }
 
 // borders
-export function get_borders(shapes: Shape[]): BorderItem[] | 'mixed' {
+export function get_borders(shapes: (ShapeView[] | Shape[])): BorderItem[] | 'mixed' {
     const borders: BorderItem[] = [];
     const shape = shapes[0];
-    const style = shape.style;
+    const styleborders = shape.getBorders();
     const compare_str: string[] = [];
-    for (let i = 0, len = style.borders.length; i < len; i++) {
-        const border = style.borders[i];
+    for (let i = 0, len = styleborders.length; i < len; i++) {
+        const border = styleborders[i];
         const b = { id: i, border };
         borders.push(b);
         const str = [
@@ -131,9 +132,10 @@ export function get_borders(shapes: Shape[]): BorderItem[] | 'mixed' {
     for (let i = 1; i < shapes.length; i++) {
         const shape = shapes[i];
         if (shapes[i].type === ShapeType.Cutout) continue;
-        const len = shape.style.borders.length;
+        const styleborders = shape.getBorders();
+        const len = styleborders.length;
         if (len !== borders.length) return 'mixed';
-        const s_bs = shape.style.borders;
+        const s_bs = styleborders;
         for (let j = 0; j < len; j++) {
             const border = s_bs[j];
             const str = [
@@ -152,7 +154,7 @@ export function get_borders(shapes: Shape[]): BorderItem[] | 'mixed' {
     }
     return borders;
 }
-export function get_actions_add_boder(shapes: Shape[], border: Border) {
+export function get_actions_add_boder(shapes: ShapeView[], border: Border) {
     const actions: BorderAddAction[] = [];
     for (let i = 0; i < shapes.length; i++) {
         if (shapes[i].type === ShapeType.Cutout) continue;
@@ -162,7 +164,7 @@ export function get_actions_add_boder(shapes: Shape[], border: Border) {
     }
     return actions;
 }
-export function get_actions_border_color(shapes: Shape[], index: number, color: Color) {
+export function get_actions_border_color(shapes: ShapeView[], index: number, color: Color) {
     const actions: BorderColorAction[] = [];
     for (let i = 0; i < shapes.length; i++) {
         if (shapes[i].type === ShapeType.Cutout) continue;
@@ -170,9 +172,9 @@ export function get_actions_border_color(shapes: Shape[], index: number, color: 
     }
     return actions;
 }
-export function get_actions_border_unify(shapes: Shape[]) {
+export function get_actions_border_unify(shapes: ShapeView[]) {
     const actions: BordersReplaceAction[] = [];
-    const borders = shapes[0].style.borders;
+    const borders = shapes[0].getBorders();
     for (let i = 1; i < shapes.length; i++) {
         if (shapes[i].type === ShapeType.Cutout) continue;
         const new_borders: Border[] = [];
@@ -186,7 +188,7 @@ export function get_actions_border_unify(shapes: Shape[]) {
     }
     return actions;
 }
-export function get_actions_border_enabled(shapes: Shape[], index: number, value: boolean) {
+export function get_actions_border_enabled(shapes: ShapeView[], index: number, value: boolean) {
     const actions: BorderEnableAction[] = [];
     for (let i = 0; i < shapes.length; i++) {
         if (shapes[i].type === ShapeType.Cutout) continue;
@@ -194,7 +196,7 @@ export function get_actions_border_enabled(shapes: Shape[], index: number, value
     }
     return actions;
 }
-export function get_actions_border_delete(shapes: Shape[], index: number) {
+export function get_actions_border_delete(shapes: ShapeView[], index: number) {
     const actions: BorderDeleteAction[] = [];
     for (let i = 0; i < shapes.length; i++) {
         if (shapes[i].type === ShapeType.Cutout) continue;
@@ -202,7 +204,7 @@ export function get_actions_border_delete(shapes: Shape[], index: number) {
     }
     return actions;
 }
-export function get_actions_border_thickness(shapes: Shape[], index: number, thickness: number) {
+export function get_actions_border_thickness(shapes: ShapeView[], index: number, thickness: number) {
     const actions: BorderThicknessAction[] = [];
     for (let i = 0; i < shapes.length; i++) {
         if (shapes[i].type === ShapeType.Cutout) continue;
@@ -210,7 +212,7 @@ export function get_actions_border_thickness(shapes: Shape[], index: number, thi
     }
     return actions;
 }
-export function get_actions_border_position(shapes: Shape[], index: number, position: BorderPosition) {
+export function get_actions_border_position(shapes: ShapeView[], index: number, position: BorderPosition) {
     const actions: BorderPositionAction[] = [];
     for (let i = 0; i < shapes.length; i++) {
         if (shapes[i].type === ShapeType.Cutout) continue;
@@ -218,7 +220,7 @@ export function get_actions_border_position(shapes: Shape[], index: number, posi
     }
     return actions;
 }
-export function get_actions_border_style(shapes: Shape[], index: number, style: 'dash' | 'solid') {
+export function get_actions_border_style(shapes: ShapeView[], index: number, style: 'dash' | 'solid') {
     const actions: BorderStyleAction[] = [];
     for (let i = 0; i < shapes.length; i++) {
         if (shapes[i].type === ShapeType.Cutout) continue;
@@ -378,10 +380,10 @@ export function get_actions_shadow_offsety(shapes: Shape[], index: number, offse
 }
 
 //export cutout
-export function get_export_formats(shapes: Shape[]): FormatItems[] | 'mixed' {
+export function get_export_formats(shapes: ShapeView[]): FormatItems[] | 'mixed' {
     const formats: FormatItems[] = [];
     const shape = shapes[0];
-    const options = shape.exportOptions;
+    const options = shape.data.exportOptions;
     const compare_str: string[] = [];
     if (options) {
         for (let i = 0, len = options.exportFormats.length; i < len; i++) {
@@ -399,7 +401,7 @@ export function get_export_formats(shapes: Shape[]): FormatItems[] | 'mixed' {
     }
     for (let i = 1; i < shapes.length; i++) {
         const shape = shapes[i];
-        const options = shape.exportOptions;
+        const options = shape.data.exportOptions;
         if (options) {
             const len = options.exportFormats.length;
             if (len !== formats.length) return 'mixed';
@@ -420,9 +422,9 @@ export function get_export_formats(shapes: Shape[]): FormatItems[] | 'mixed' {
     return formats;
 }
 
-export function get_actions_export_format_unify(shapes: Shape[], formats: ExportFormat[], option?: boolean): ExportFormatReplaceAction[] {
+export function get_actions_export_format_unify(shapes: ShapeView[], formats: ExportFormat[], option?: boolean): ExportFormatReplaceAction[] {
     const actions: ExportFormatReplaceAction[] = [];
-    const options = shapes[0].exportOptions;
+    const options = shapes[0].data.exportOptions;
     if (options && !option) {
         for (let i = 1; i < shapes.length; i++) {
             const new_formats: ExportFormat[] = [];
@@ -450,7 +452,7 @@ export function get_actions_export_format_unify(shapes: Shape[], formats: Export
     return actions;
 }
 
-export function get_actions_add_export_format(shapes: Shape[], formats: ExportFormat[]) {
+export function get_actions_add_export_format(shapes: ShapeView[], formats: ExportFormat[]) {
     const actions: ExportFormatAddAction[] = [];
     for (let i = 0; i < shapes.length; i++) {
         const new_formats: ExportFormat[] = [];
@@ -465,7 +467,7 @@ export function get_actions_add_export_format(shapes: Shape[], formats: ExportFo
     return actions;
 }
 
-export function get_actions_export_format_delete(shapes: Shape[], index: number) {
+export function get_actions_export_format_delete(shapes: ShapeView[], index: number) {
     const actions: ExportFormatDeleteAction[] = [];
     for (let i = 0; i < shapes.length; i++) {
         actions.push({ target: shapes[i], index });
@@ -473,7 +475,7 @@ export function get_actions_export_format_delete(shapes: Shape[], index: number)
     return actions;
 }
 
-export function get_actions_export_format_scale(shapes: Shape[], index: number, scale: number) {
+export function get_actions_export_format_scale(shapes: ShapeView[], index: number, scale: number) {
     const actions: ExportFormatScaleAction[] = [];
     for (let i = 0; i < shapes.length; i++) {
         actions.push({ target: shapes[i], index, value: scale });
@@ -481,21 +483,21 @@ export function get_actions_export_format_scale(shapes: Shape[], index: number, 
     return actions;
 }
 
-export function get_actions_export_format_name(shapes: Shape[], index: number, name: string) {
+export function get_actions_export_format_name(shapes: ShapeView[], index: number, name: string) {
     const actions: ExportFormatNameAction[] = [];
     for (let i = 0; i < shapes.length; i++) {
         actions.push({ target: shapes[i], index, value: name });
     }
     return actions;
 }
-export function get_actions_export_format_perfix(shapes: Shape[], index: number, perfix: ExportFormatNameingScheme) {
+export function get_actions_export_format_perfix(shapes: ShapeView[], index: number, perfix: ExportFormatNameingScheme) {
     const actions: ExportFormatPerfixAction[] = [];
     for (let i = 0; i < shapes.length; i++) {
         actions.push({ target: shapes[i], index, value: perfix });
     }
     return actions;
 }
-export function get_actions_export_format_file_format(shapes: Shape[], index: number, fileFormat: ExportFileFormat) {
+export function get_actions_export_format_file_format(shapes: ShapeView[], index: number, fileFormat: ExportFileFormat) {
     const actions: ExportFormatFileFormatAction[] = [];
     for (let i = 0; i < shapes.length; i++) {
         actions.push({ target: shapes[i], index, value: fileFormat });

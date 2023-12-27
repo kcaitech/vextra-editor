@@ -1,5 +1,5 @@
 <script setup lang="ts">
-import { Matrix, Shape } from "@kcdesign/data";
+import { Matrix, Shape, ShapeView } from "@kcdesign/data";
 import { XYsBounding } from "@/utils/common";
 import { WorkSpace } from '@/context/workspace'
 import { Selection } from '@/context/selection';
@@ -39,7 +39,7 @@ const contour = () => {
     dotted_line_point(select_shape_posi.value, hover_shape_posi.value);
 }
 
-const selectContour = (shapes: Shape[]) => {
+const selectContour = (shapes: ShapeView[]) => {
     const points: { x: number, y: number }[] = [];
     for (let index = 0; index < shapes.length; index++) {
         const s = shapes[index];
@@ -62,7 +62,7 @@ const selectContour = (shapes: Shape[]) => {
     tracingPath.value.push(borPath);
 }
 
-const hoveredContour = (shape: Shape) => {
+const hoveredContour = (shape: ShapeView) => {
     const points: { x: number, y: number }[] = [];
     const m = shape.matrix2Root();
     m.multiAtLeft(matrix);

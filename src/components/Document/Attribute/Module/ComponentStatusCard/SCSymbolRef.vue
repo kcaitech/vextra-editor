@@ -2,7 +2,7 @@
 import {Context} from "@/context";
 import {AttriListItem, delete_variable, modify_variable} from "@/utils/symbol";
 import {nextTick, ref} from "vue";
-import {SymbolRefShape, Variable, VariableType} from "@kcdesign/data";
+import {SymbolRefShape, SymbolRefView, Variable, VariableType} from "@kcdesign/data";
 import {useI18n} from "vue-i18n";
 import CompLayerShow from "@/components/Document/Attribute/PopoverMenu/ComposAttri/CompLayerShow.vue";
 import SelectLayerInput from "@/components/Document/Attribute/Module/SelectLayerInput.vue";
@@ -58,7 +58,7 @@ function save_instance(type: VariableType, name: string) {
     for (let i = 0, l = layerIds.value.length; i < l; i++) {
         const s = props.context.selection.getShapeById(layerIds.value[i]);
         if (!s) continue;
-        sym_ids.push((s as SymbolRefShape).refId);
+        sym_ids.push((s as SymbolRefView).refId);
     }
     modify_variable(props.context, symbol, props.variable, name, sym_ids[0], sym_ids);
     iseditToggle.value = false;

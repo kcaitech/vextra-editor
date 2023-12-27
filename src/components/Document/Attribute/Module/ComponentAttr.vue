@@ -78,7 +78,11 @@ function selectCompsType() {
 const addModuleState = () => {
     const make_result = make_status(props.context, t)
     if (make_result) {
-        props.context.selection.selectShape(make_result);
+        const page = props.context.selection.selectedPage;
+        page && props.context.nextTick(page, () => {
+            const v = page.getShape(make_result.id);
+            v && props.context.selection.selectShape(v);
+        })
     }
     close();
 }

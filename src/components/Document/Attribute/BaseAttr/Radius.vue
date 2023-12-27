@@ -5,7 +5,7 @@ import { ref } from 'vue';
 import IconText from '@/components/common/IconText.vue';
 import { onMounted } from 'vue';
 import { onUnmounted } from 'vue';
-import { PathShape, PathShapeView, Shape, ShapeType, ShapeView, adapt2Shape } from '@kcdesign/data';
+import { PathShapeView, ShapeView, adapt2Shape } from '@kcdesign/data';
 import { reactive } from 'vue';
 import { get_indexes2, is_rect } from '@/utils/attri_setting';
 
@@ -79,8 +79,8 @@ function reset_radius_value() {
     radius.rb = 0;
     radius.lb = 0;
 }
-function get_radius_for_shape(shape: Shape) {
-    if (!(shape instanceof PathShape)) {
+function get_radius_for_shape(shape: ShapeView) {
+    if (!(shape instanceof PathShapeView)) {
         return 0;
     }
 
@@ -104,7 +104,7 @@ function get_all_values(shapes: ShapeView[]) {
     if (!first_shape) {
         return;
     }
-    const f_r = get_rect_shape_all_value(first_shape);
+    const f_r = get_rect_shape_all_value(first_shape as PathShapeView);
     radius.lt = f_r.lt;
     radius.rt = f_r.rt;
     radius.rb = f_r.rb;
@@ -112,7 +112,7 @@ function get_all_values(shapes: ShapeView[]) {
 
     for (let i = 1, l = shapes.length; i < l; i++) {
         const shape = shapes[i];
-        const rs = get_rect_shape_all_value(shape);
+        const rs = get_rect_shape_all_value(shape as PathShapeView);
         if (rs.lt !== radius.lt) {
             radius.lt = mixed;
         }

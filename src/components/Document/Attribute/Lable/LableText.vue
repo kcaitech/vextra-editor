@@ -1,11 +1,11 @@
 <script  lang="ts" setup>
 import { Context } from '@/context';
 import LableType from './LableType.vue'
-import { nextTick, onMounted, onUnmounted, reactive, ref } from 'vue';
+import { onMounted, onUnmounted, ref } from 'vue';
 import { Selection } from '@/context/selection';
 import LableDropMenu from "./LableDropMenu.vue";
 import { ArrowDown } from '@element-plus/icons-vue';
-import { AttrGetter, Border, Color, Fill, Para, ShapeType, TextShape } from '@kcdesign/data';
+import { Color, Para, ShapeType, TextShape, TextShapeView } from '@kcdesign/data';
 import { RGB2HSL, RGB2HSB } from '@/components/common/ColorPicker/utils';
 import { isEqual, uniqWith } from 'lodash';
 import LableTootip from './LableTootip.vue';
@@ -44,7 +44,7 @@ const getTextFormat = () => {
     textFormat.value.length = 0;
     const shapes = props.context.selection.selectedShapes;
     if (shapes.length === 1 && shapes[0].type === ShapeType.Text) {
-        const shape: TextShape = shapes[0] as TextShape;
+        const shape: TextShapeView = shapes[0] as TextShapeView;
         text.value = shape.text.getText(0, Infinity).replace(/\n/g, '');
         const paras = shape.text.paras;
         const spans: any = [];

@@ -4,9 +4,8 @@ import LableType from './LableType.vue'
 import { onMounted, onUnmounted, ref } from 'vue';
 import { Selection } from '@/context/selection';
 import { get_rotation } from '@/utils/attri_setting';
-import { GroupShape, PathShape, PathShape2, RectShape, Shape, ShapeType, TextShape } from '@kcdesign/data';
+import { GroupShapeView, RectShapeView, PathShapeView, PathShapeView2, ShapeType, ShapeView, TextShapeView } from '@kcdesign/data';
 import { Menu } from '@/context/menu';
-import Tooltip from '@/components/common/Tooltip.vue';
 import LableTootip from './LableTootip.vue';
 import { useI18n } from 'vue-i18n'
 
@@ -57,17 +56,17 @@ const getShapeInfo = () => {
     }
 }
 
-const getRadius = (shape: Shape) => {
-    if (shape instanceof RectShape) {
-        const { lb, lt, rb, rt } = (shape as RectShape).getRectRadius();
+const getRadius = (shape: ShapeView) => {
+    if (shape.type === ShapeType.Rectangle) {
+        const { lb, lt, rb, rt } = (shape as RectShapeView).getRectRadius();
         radius.value.lb = lb * multiple.value;
         radius.value.lt = lt * multiple.value;
         radius.value.rb = rb * multiple.value;
         radius.value.rt = rt * multiple.value;
-    } else if (shape instanceof GroupShape ||
-        shape instanceof PathShape ||
-        shape instanceof PathShape2 ||
-        shape instanceof TextShape) {
+    } else if (shape instanceof GroupShapeView ||
+        shape instanceof PathShapeView ||
+        shape instanceof PathShapeView2 ||
+        shape instanceof TextShapeView) {
         const fixedRadius = shape.fixedRadius ?? 0;
         radius.value.lt = fixedRadius * multiple.value;
         radius.value.lb = fixedRadius * multiple.value;

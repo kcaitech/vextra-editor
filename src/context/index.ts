@@ -8,7 +8,10 @@ import {
     TableEditor,
     Text,
     SymbolShape,
-    PageView
+    PageView,
+    ShapeView,
+    adapt2Shape,
+    TableView
 } from "@kcdesign/data";
 import { Document } from "@kcdesign/data";
 import { Page } from "@kcdesign/data";
@@ -180,11 +183,13 @@ export class Context extends WatchableObject {
         return this.editor.editor4Doc();
     }
 
-    editor4Page(page: Page): PageEditor {
+    editor4Page(page: Page | PageView): PageEditor {
+        if (page instanceof PageView) page = adapt2Shape(page) as Page;
         return this.editor.editor4Page(page);
     }
 
-    editor4Shape(shape: Shape): ShapeEditor {
+    editor4Shape(shape: Shape | ShapeView): ShapeEditor {
+        if (shape instanceof ShapeView) shape = adapt2Shape(shape);
         return this.editor.editor4Shape(shape);
     }
 
@@ -203,7 +208,8 @@ export class Context extends WatchableObject {
         }
     }
 
-    editor4Table(shape: TableShape): TableEditor {
+    editor4Table(shape: TableShape | TableView): TableEditor {
+        if (shape instanceof TableView) shape = adapt2Shape(shape) as TableShape;
         return this.editor.editor4Table(shape);
     }
 

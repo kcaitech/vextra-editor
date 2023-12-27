@@ -6,6 +6,7 @@ import {
     Color,
     ContactForm,
     GroupShape,
+    GroupShapeView,
     ImageShape,
     Matrix,
     Page,
@@ -799,10 +800,10 @@ export const permIsEdit = (context: Context) => {
     return Boolean(context.workspace.documentPerm === Perm.isEdit);
 }
 
-export const hasRadiusShape = (shape: Shape, type: ShapeType[]) => {
+export const hasRadiusShape = (shape: ShapeView, type: ShapeType[]) => {
     const shapeType = shape.type
     if (shapeType === ShapeType.Group) {
-        if (!(shape as GroupShape).isBoolOpShape) return false;
+        if (!(shape as GroupShapeView).data.isBoolOpShape) return false;
     }
     if (!type.includes(shapeType)) return false;
     return true;
