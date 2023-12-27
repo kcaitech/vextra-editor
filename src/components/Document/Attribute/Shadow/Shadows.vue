@@ -1,7 +1,7 @@
 <script setup lang="ts">
 import { onMounted, onUnmounted, reactive, ref, watch } from 'vue';
 import { Context } from '@/context';
-import { Color, Shadow, ShadowPosition, Shape } from "@kcdesign/data";
+import { Color, Shadow, ShadowPosition, Shape, ShapeType } from "@kcdesign/data";
 import TypeHeader from '../TypeHeader.vue';
 import { useI18n } from 'vue-i18n';
 import ShadowDetail from './ShadowDetail.vue'
@@ -29,11 +29,25 @@ function watchShapes() {
   if (selection.hoveredShape) {
     needWatchShapes.set(selection.hoveredShape.id, selection.hoveredShape);
   }
-  if (selection.selectedShapes.length > 0) {
-    selection.selectedShapes.forEach((v) => {
-      needWatchShapes.set(v.id, v);
-    })
-  }
+
+const selectedShapes = props.context.selection.selectedShapes;
+if (selectedShapes.length > 0) {
+    for (let i = 0, l = selectedShapes.length; i < l; i++) {
+        const v = selectedShapes[i];
+        if (v.isVirtualShape) {
+            let p = v.parent;
+            while (p) {
+                if (p.type === ShapeType.SymbolRef) {
+                    needWatchShapes.set(p.id, p);
+                    break;
+                }
+                p = p.parent;
+            }
+        }
+        needWatchShapes.set(v.id, v);
+    }
+}
+  
   watchedShapes.forEach((v, k) => {
     if (needWatchShapes.has(k)) return;
     v.unwatch(watcher);
@@ -68,7 +82,7 @@ function updateData() {
   reflush.value++;
 }
 function watcher(...args: any[]) {
-  if (args.length > 0 && args.includes('style')) updateData();
+  if (args.length > 0 && (args.includes('style') || args.includes('variable'))) updateData();
 }
 function addShadow(): void {
   const len = props.shapes.length;

@@ -10,6 +10,7 @@ import { paster_short } from '@/utils/clipboard';
 import { PointsOffset, distance2apex, gen_match_points } from '@/utils/assist';
 import { Asssit } from '@/context/assist';
 import { WorkSpace } from '@/context/workspace';
+import { forbidden_to_modify_frame } from '@/utils/common';
 interface Props {
     name: string
     index: number
@@ -133,6 +134,7 @@ function down(e: MouseEvent) {
         context.selection.selectShape(props.shape); // 先将图形设为选中状态，只有被选中才可以被拖动
         let root = props.context.workspace.root;// 盒子的信息(wrap的信息)
         startPosition = { x: e.clientX - root.x, y: e.clientY - root.y }; // 记录鼠标按下的点相对wrap的相对位移
+        if (forbidden_to_modify_frame(props.shape)) return;
         document.addEventListener('mousemove', move);
         document.addEventListener('mouseup', up);
     } else if (e.button === 2) { // 右键是打开菜单
@@ -169,13 +171,14 @@ function move(e: MouseEvent) {
         const selection = props.context.selection; // selection, 是位于context中用于组件通信的一个模块，主要负责选区状态的通信；
         shapes = selection.selectedShapes;
 
-        if (e.altKey) {
-            shapes = paster_short(props.context, shapes); // 图形分身
-        }
+
         asyncTransfer = props.context.editor
             .controller()
             .asyncTransfer(shapes, selection.selectedPage!); // 创建属性编辑器
 
+        if (e.altKey) {
+            shapes = paster_short(props.context, shapes, asyncTransfer); // 图形分身
+        }
         pre_translate(props.context, shapes);
 
         isDragging = true;
@@ -340,18 +343,6 @@ onUnmounted(() => {
     <div :reflush="reflush" class="container-name" @mouseenter="hoverShape" @mouseleave="unHoverShape" @mousedown="down"
         @mousemove="move2" data-area="controller">
         <div class="name-wrap" :style="{ maxWidth: props.maxWidth + 'px' }" @dblclick="onRename" v-if="!isInput">
-            <!-- <svg width="306" height="306" viewBox="0 0 306 306" fill="none" xmlns="http://www.w3.org/2000/svg"
-                v-if="(props.shape as SymbolShape).isSymbolUnionShape">
-                <rect x="8.07106" y="153.895" width="90" height="90" transform="rotate(-45.0629 8.07106 153.895)"
-                    fill="#7F58F9" stroke="#7F58F9" stroke-width="10" />
-                <rect x="90.0054" y="71.7804" width="90" height="90" transform="rotate(-45.0629 90.0054 71.7804)"
-                    fill="#7F58F9" stroke="#7F58F9" stroke-width="10" />
-                <rect x="88.7697" y="234.416" width="90" height="90" transform="rotate(-45.0629 88.7697 234.416)"
-                    fill="#7F58F9" stroke="#7F58F9" stroke-width="10" />
-                <rect x="170.704" y="152.302" width="90" height="90" transform="rotate(-45.0629 170.704 152.302)"
-                    fill="#7F58F9" stroke="#7F58F9" stroke-width="10" />
-                <rect x="15" y="15" width="274" height="274" stroke="#7F58F9" stroke-width="30" stroke-dasharray="50 50" />
-            </svg> -->
             <svg xmlns="http://www.w3.org/2000/svg" xmlns:xlink="http://www.w3.org/1999/xlink" fill="none" version="1.1"
                 width="16" height="16" viewBox="0 0 16 16" v-if="(props.shape as SymbolShape).isSymbolUnionShape">
                 <defs>

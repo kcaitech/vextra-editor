@@ -19,6 +19,7 @@ import {
 import { paster_short } from '@/utils/clipboard';
 import { Asssit } from '@/context/assist';
 import { Perm } from '@/context/workspace';
+import { forbidden_to_modify_frame } from '@/utils/common';
 
 const props = defineProps<{
     name: string,
@@ -138,6 +139,7 @@ function down(e: MouseEvent) {
         context.selection.selectShape(props.shape);
         let root = props.context.workspace.root;
         startPosition = { x: e.clientX - root.x, y: e.clientY - root.y };
+        if(forbidden_to_modify_frame(props.shape)) return;
         document.addEventListener('mousemove', move);
         document.addEventListener('mouseup', up);
     } else if (e.button === 2) {
@@ -162,9 +164,14 @@ function move(e: MouseEvent) {
         wheel = fourWayWheel(props.context, undefined, matrix_inverse.computeCoord3(startPosition));
         const selection = props.context.selection;
         shapes = selection.selectedShapes;
-        if (e.altKey) shapes = paster_short(props.context, shapes);
+        
         asyncTransfer = props.context.editor.controller().asyncTransfer(shapes, selection.selectedPage!);
+        if (e.altKey) {
+            shapes = paster_short(props.context, shapes, asyncTransfer);
+        }
+
         pre_translate(props.context, shapes);
+        
         isDragging = true;
         const map_anchor = matrix_inverse.computeCoord3(startPosition);
         offset_map = gen_offset_map(shapes[0], map_anchor);

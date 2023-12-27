@@ -304,7 +304,7 @@ function layout() {
             modify_multi_radius(shape);
         }
 
-        if (shape.type === ShapeType.Table || shape.type === ShapeType.Cutout) {
+        if (shape.type === ShapeType.Cutout) {
             s_flip = false;
         }
 

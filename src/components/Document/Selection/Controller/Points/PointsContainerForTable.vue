@@ -17,6 +17,7 @@ import { Menu } from '@/context/menu';
 import { paster_short } from '@/utils/clipboard';
 import { compare_layer_3 } from "@/utils/group_ungroup";
 import { forbidden_to_modify_frame } from '@/utils/common';
+import { get_transform } from './common';
 interface Props {
     matrix: number[]
     context: Context
@@ -50,16 +51,16 @@ function update_transform() {
     let rt = matrix.computeCoord2(frame.width, 0);
     let rb = matrix.computeCoord2(frame.width, frame.height);
     let lb = matrix.computeCoord2(0, frame.height);
-
+    const { rotate, isFlippedHorizontal, isFlippedVertical } = get_transform(props.shape);
     let mt = ''
-    if (shape.isFlippedHorizontal) {
+    if (isFlippedHorizontal) {
         mt += 'rotateY(180deg) ';
     }
-    if (shape.isFlippedVertical) {
+    if (isFlippedVertical) {
         mt += 'rotateX(180deg) ';
     }
-    if (shape.rotation) {
-        mt += `rotate(${shape.rotation}deg)`;
+    if (rotate) {
+        mt += `rotate(${rotate}deg)`;
     }
 
     let t1 = `translate(${lt.x}px, ${lt.y}px) `;
@@ -226,12 +227,14 @@ function mousemove4trans(e: MouseEvent) {
         else if (update_type === 1) startPosition.x = mousePosition.x;
     } else if (Math.hypot(mousePosition.x - startPosition.x, mousePosition.y - startPosition.y) > dragActiveDis) {   // mark：dragActiveDis是什么
         shapes = selection.selectedShapes;
-        if (e.altKey) {
-            shapes = paster_short(props.context, shapes);
-        }
+
         asyncTransfer = props.context.editor
             .controller()
             .asyncTransfer(shapes, selection.selectedPage!);  // mark：asyncTransfer是什么
+
+        if (e.altKey) {
+            shapes = paster_short(props.context, shapes, asyncTransfer);
+        }
 
         selection.unHoverShape();
         workspace.setSelectionViewUpdater(false);

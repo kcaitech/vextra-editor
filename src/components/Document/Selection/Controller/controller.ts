@@ -281,10 +281,6 @@ export function useControllerCustom(context: Context, i18nT: Function) {
                 return;
             }
 
-            if (e.altKey) {
-                shapes = paster_short(context, shapes);
-            }
-
             reset_assist_before_translate(context, shapes);
 
             offset_map = gen_offset_points_map(shapes, startPositionOnPage);
@@ -292,6 +288,10 @@ export function useControllerCustom(context: Context, i18nT: Function) {
             asyncTransfer = context.editor
                 .controller()
                 .asyncTransfer(shapes, selection.selectedPage!);
+
+            if (e.altKey) {
+                shapes = paster_short(context, shapes, asyncTransfer);
+            }
 
             isDragging = true;
         }

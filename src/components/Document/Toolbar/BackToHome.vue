@@ -32,15 +32,50 @@ function home() {
   window.document.title = t('product.name');
   (window as any).sketchDocument = undefined;
   (window as any).skrepo = undefined;
+<<<<<<< HEAD
   if (props.context.comment.isDocumentInfo?.project) {
     router.push({ path: '/files/project/' + props.context.comment.isDocumentInfo.project.id });
+=======
+  const index = sessionStorage.getItem('index');
+  if (index) {
+    back(index);
+>>>>>>> aa45c0c322be77b0fe139a129fba3541667372b3
   } else {
-    router.push({ name: 'meshare' });
-    sessionStorage.setItem('index', '3')
+    router.push({ name: 'recently' });
+    sessionStorage.setItem('index', '1')
+  }
+}
+
+const back = (index: string) => {
+  switch (index) {
+    case '1':
+      router.push({ name: 'recently' });
+      break;
+    case '2':
+      router.push({ name: 'starfile' });
+      break;
+    case '3':
+      router.push({ name: 'meshare' });
+      break;
+    case '4':
+      router.push({ name: 'shareme' });
+      break;
+    case '6':
+      router.push({ path: '/apphome/project/' + props.context.comment.isDocumentInfo?.project.id });
+      break;
+    case '7':
+      router.push({ path: '/apphome/project/' + props.context.comment.isDocumentInfo?.project.id });
+      break;
+    case '9':
+      router.push({ name: 'project_share' });
+      break;
+    default:
+      router.push({ name: 'recently' });
   }
 }
 
 const hasPendingSyncCmd = () => {
+<<<<<<< HEAD
   showbackhometips.value = false
   // ElMessageBox.confirm(
   //   `${t('message.unuploaded_msg')}`,
@@ -64,6 +99,31 @@ const hasPendingSyncCmd = () => {
   // .catch(() => {
   //   return
   // })
+=======
+  ElMessageBox.confirm(
+    `${t('message.unuploaded_msg')}`,
+    `${t('message.back_home')}`,
+    {
+      confirmButtonText: `${t('message.exit_document')}`,
+      cancelButtonText: `${t('message.cancel')}`,
+    }
+  )
+    .then(() => {
+      window.document.title = t('product.name');
+      (window as any).sketchDocument = undefined;
+      (window as any).skrepo = undefined;
+      const index = sessionStorage.getItem('index');
+      if (index) {
+        back(index);
+      } else {
+        router.push({ name: 'recently' });
+        sessionStorage.setItem('index', '1')
+      }
+    })
+    .catch(() => {
+      return
+    })
+>>>>>>> aa45c0c322be77b0fe139a129fba3541667372b3
 }
 
 function rename() {
@@ -184,11 +244,14 @@ onUnmounted(() => {
       <span v-if="isLable" style="color: #fff; font-size: 12px">【开发模式】</span>
     </div>
   </div>
+<<<<<<< HEAD
   <Teleport to="body">
     <ProjectDialog :projectVisible="showbackhometips" :context="t('message.unuploaded_msg')"
       :title="t('message.back_home')" :confirm-btn="t('message.exit_document')" @clode-dialog="closeDisband"
       @confirm="hasPendingSyncCmd"></ProjectDialog>
   </Teleport>
+=======
+>>>>>>> aa45c0c322be77b0fe139a129fba3541667372b3
 </template>
 
 <style scoped lang="scss">
@@ -256,13 +319,21 @@ onUnmounted(() => {
       font-family: HarmonyOS Sans;
       font-size: 14px;
     }
+  }
 
+<<<<<<< HEAD
     .model {
       flex: 0 0 72px;
       display: flex;
       align-items: center;
     }
 
+=======
+  .model {
+    flex: 0 0 72px;
+    display: flex;
+    align-items: center;
+>>>>>>> aa45c0c322be77b0fe139a129fba3541667372b3
   }
 }
 </style>
