@@ -48,10 +48,12 @@ onMounted(get_value);
     display: flex;
     justify-content: space-between;
     align-items: center;
+    width: 100%;
+    box-sizing: border-box;
     margin-bottom: 8px;
-    gap: 8px;
 
     .name {
+        max-width: 82px;
         overflow: hidden;
         text-overflow: ellipsis;
         white-space: nowrap;

@@ -68,18 +68,18 @@ onMounted(get_value);
 
     .state_item {
         display: flex;
-        align-items: center;
-        // width: calc(100% - 22px);
         width: 100%;
-        gap: 12px;
+        justify-content: space-between;
+        margin-top: 6px;
 
         .state_name {
-            display: flex;
-            align-items: center;
-            width: 40%;
+            flex: 1;
+            max-width: 86px;
             box-sizing: border-box;
 
             span {
+                display: block;
+                width: 100%;
                 color: #595959;
                 overflow: hidden;
                 text-overflow: ellipsis;
@@ -92,62 +92,12 @@ onMounted(get_value);
             align-items: center;
             justify-content: space-between;
             padding: 0 11px;
-            width: 60%;
-            flex: 1;
+            flex: 0 0 126px;
             border-radius: 6px;
 
             >svg {
                 width: 10px;
                 height: 10px;
-            }
-
-            .input {
-                position: relative;
-                width: 100%;
-                height: 32px;
-                border-radius: 4px;
-                padding-left: 11px;
-                box-sizing: border-box;
-                display: flex;
-                align-items: center;
-
-                span {
-                    flex: 1;
-                }
-
-                .el-icon {
-                    width: 30px;
-                    height: 30px;
-                    display: flex;
-                    align-items: center;
-                    justify-content: center;
-                }
-            }
-
-            .el-select {
-                width: 100%;
-                height: 32px;
-                font-size: 12px;
-
-                >div {
-                    height: 100%;
-                }
-
-                .el-option {
-                    font-size: 12px
-                }
-
-                :deep(.el-input__wrapper) {
-                    height: 30px;
-                    font-size: 12px;
-                    background-color: var(--grey-light);
-                    box-shadow: none;
-
-                    &:hover {
-                        border-color: var(--grey-light);
-                        box-shadow: none;
-                    }
-                }
             }
 
             :deep(.el-textarea) {
@@ -169,25 +119,12 @@ onMounted(get_value);
                     }
 
                     &:focus {
-                        background-color:  #F5F5F5 !important;
+                        background-color: #F5F5F5 !important;
                         box-shadow: 0 0 0 1px var(--active-color) inset;
                     }
                 }
             }
         }
-
-        .border {
-            background-color: var(--grey-light);
-        }
-    }
-
-    .delete {
-        flex: 0 0 22px;
-        display: flex;
-        justify-content: center;
-        align-items: center;
-        width: 22px;
-        height: 22px;
     }
 }
 

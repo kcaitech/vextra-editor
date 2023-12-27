@@ -86,17 +86,17 @@ onMounted(() => {
     .state_item {
         display: flex;
         align-items: center;
-        // width: calc(100% - 22px);
         width: 100%;
-        gap: 12px;
+        justify-content: space-between;
 
         .state_name {
-            display: flex;
-            align-items: center;
-            width: 40%;
+            flex: 1;
+            max-width: 86px;
             box-sizing: border-box;
 
             span {
+                display: block;
+                width: 100%;
                 color: #595959;
                 overflow: hidden;
                 text-overflow: ellipsis;
@@ -108,14 +108,12 @@ onMounted(() => {
             display: flex;
             align-items: center;
             justify-content: space-between;
-            width: 60%;
-            padding: 0px;
-            flex: 1;
+            flex: 0 0 126px;
             height: 32px;
             border-radius: 6px;
             background-color: #F5F5F5;
 
-            &:hover{
+            &:hover {
                 background-color: #EBEBEB;
             }
 
@@ -148,7 +146,7 @@ onMounted(() => {
                     align-items: center;
                     justify-content: center;
                 }
-                
+
             }
 
             .el-select {

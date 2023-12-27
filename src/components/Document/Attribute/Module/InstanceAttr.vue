@@ -307,9 +307,8 @@ onUnmounted(() => {
 
     .show {
         display: flex;
-        align-items: flex-start;
+        justify-content: space-between;
         width: 100%;
-        gap: 12px;
 
         .title {
             color: #595959;
@@ -319,7 +318,7 @@ onUnmounted(() => {
         }
 
         .items-wrap {
-            width: 60%;
+            flex: 0 0 126px;
         }
     }
 
