@@ -1,11 +1,11 @@
 <script lang="ts" setup>
-import { onMounted, onUnmounted, ref, watchEffect } from 'vue';
-import { Context } from '@/context';
+import {onMounted, onUnmounted, ref, watchEffect} from 'vue';
+import {Context} from '@/context';
 import CompoSelectList from './CompoSelectList.vue';
-import { useI18n } from 'vue-i18n';
-import { VariableType } from '@kcdesign/data';
+import {useI18n} from 'vue-i18n';
+import {VariableType} from '@kcdesign/data';
 
-const { t } = useI18n();
+const {t} = useI18n();
 
 interface Tree {
     id: number
@@ -125,12 +125,13 @@ onUnmounted(() => {
 </script>
 
 <template>
-    <div class="select_layerbox" ref="popover" tabindex="-1" @keydown.stop="keyboard_watcher" :style="{ top: top + 'px' }">
+    <div class="select_layerbox" ref="popover" tabindex="-1" @keydown.stop="keyboard_watcher"
+         :style="{ top: top + 'px' }">
         <div class="heard">
             <span class="title">{{
-                props.type === VariableType.SymbolRef ? `${t('compos.compos_instance')}` :
-                `${t('compos.select_layer')}`
-            }}</span>
+                    props.type === VariableType.SymbolRef ? `${t('compos.compos_instance')}` :
+                        `${t('compos.select_layer')}`
+                }}</span>
             <div class="close">
                 <div class="toggle_list">
                     <svg-icon icon-class="close" @click.stop="emits('close');"></svg-icon>
@@ -151,33 +152,33 @@ onUnmounted(() => {
                             <span>{{ item.state }}</span>
                             <!-- <div class="shrink">
                                 <svg-icon icon-class="down"
-                                          :style="{ transform: !unfold.has(i) ? 'rotate(-90deg)' : 'rotate(0deg)' }"></svg-icon>
-                            </div>
+                                    :style="{ transform: !unfold.has(i) ? 'rotate(-90deg)' : 'rotate(0deg)' }"></svg-icon>
+                            </div> -->
                         </div>
                         <div class="demo-collapse"
                             :style="{  marginTop: selectList.length > 1 ? '0' : '4px' }"
                             v-if="unfold.has(i)" :reflush="reflush">
-                        marginLeft: selectList.length > 1 ? '26px' : '12px',-->
+<!--                            marginLeft: selectList.length > 1 ? '26px' : '12px',-->
                             <component v-if="scroll_container" :is="CompoSelectList" :context="context"
-                                :contents="item.data" @handleCheck="handleCheck" :layerId="props.layerId"
-                                :container="scroll_container">
+                                       :contents="item.data" @handleCheck="handleCheck" :layerId="props.layerId"
+                                       :container="scroll_container">
                             </component>
                         </div>
                     </template>
                 </el-scrollbar>
-                <div class="button" :style="{ opacity: checkList.length > 0 ? 1 : 0.5 }">
-                    <el-button @click.stop="confirmSelect">{{ t('compos.confirm') }}
-                    </el-button>
+                <div class="button">
+                    <button type="button" @click.stop="confirmSelect" :disabled="checkList.length ? false : true">{{
+                        t('compos.confirm') }}</button>
                 </div>
             </div>
         </div>
         <div class="null"
-            v-if="selectList.length === 0 && props.type === VariableType.Text || props.type === VariableType.Status">
+             v-if="selectList.length === 0 && props.type === VariableType.Text || props.type === VariableType.Status">
             {{ t('compos.text_layer_null') }}
         </div>
         <div class="null" v-if="selectList.length === 0 && props.type === VariableType.SymbolRef">{{
-            t('compos.instance_null')
-        }}
+                t('compos.instance_null')
+            }}
         </div>
     </div>
 </template>
@@ -328,7 +329,7 @@ onUnmounted(() => {
     //}
 
     >span {
-        font-weight: 600;
+        font-weight: 500;
         overflow: hidden;
         text-overflow: ellipsis;
         white-space: nowrap;
@@ -339,8 +340,9 @@ onUnmounted(() => {
         width: 14px;
 
         >svg {
-            width: 80%;
-            height: 80%;
+            width: 14px;
+            height: 14px;
+            transition: all 0.3s;
         }
     }
 }

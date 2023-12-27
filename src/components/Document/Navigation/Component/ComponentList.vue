@@ -23,7 +23,6 @@ const search_result = ref<SymbolShape[]>([]);
 const card_type = ref<'alpha' | 'beta'>('beta');
 const root = ref<Element | null>(null);
 const root2 = ref<Element | null>(null);
-// const isClick = ref(false);
 
 function set_card_type(v: 'alpha' | 'beta') {
     card_type.value = v;
@@ -40,9 +39,6 @@ function _searching() {
     const symbols = get_search_symbol_list(list);
     search_result.value = search_symbol_by_keywords(props.context, search.value, symbols);
 }
-// function toggleList() {
-//     isClick.value = !isClick.value;
-// }
 
 const searching = debounce(_searching, 300);
 </script>
