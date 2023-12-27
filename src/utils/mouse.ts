@@ -75,6 +75,7 @@ export function modify_down_position(e: MouseEvent, context: Context, client_p: 
     const root = context.workspace.root;
     client_p.x = e.clientX - root.x;
     client_p.y = e.clientY - root.y;
+
     if (root_p && martix) {
         const _p = martix.computeCoord3(client_p);
         root_p.x = _p.x;
@@ -141,12 +142,14 @@ export function check_drag_action(start: { x: number, y: number }, current: { x:
  * @description 根据鼠标在client坐标系上的一点确定辅助对象的点图
  * @param down root坐标系上的一点
  */
-export function gen_offset_points_map(shapes: Shape[], down: PageXY) {
+export function gen_offset_points_map(shapes: Shape[], down: PageXY) {    
     let lt: { x: number, y: number }, rb: { x: number, y: number }, pivot: { x: number, y: number },
         rt: { x: number, y: number }, lb: { x: number, y: number };
     if (shapes.length === 1) {
         const shape = shapes[0];
-        const m = shape.matrix2Root(), f = shape.frame;
+        const m = shape.matrix2Root();
+        const f = shape.frame;
+
         lt = m.computeCoord2(0, 0);
         rb = m.computeCoord2(f.width, f.height);
         pivot = m.computeCoord2(f.width / 2, f.height / 2);
@@ -162,7 +165,10 @@ export function gen_offset_points_map(shapes: Shape[], down: PageXY) {
                 x: 0,
                 y: f.height
             }];
-            for (let i = 0; i < 4; i++) points.push(m.computeCoord3(ps[i]));
+            
+            for (let i = 0; i < 4; i++) {
+                points.push(m.computeCoord3(ps[i]));
+            }
         }
         const box = XYsBounding(points);
         lt = { x: box.left, y: box.top };

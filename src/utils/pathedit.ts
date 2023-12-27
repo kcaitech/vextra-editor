@@ -1,7 +1,6 @@
 import { Context } from "@/context";
 import { XY } from "@/context/selection";
-import { CurveMode, CurvePoint, GroupShape, Matrix, PathShape, Shape, ShapeType } from "@kcdesign/data";
-import { getHorizontalAngle } from "./common";
+import { CurveMode, CurvePoint, GroupShape, Matrix, PathShape, ShapeType } from "@kcdesign/data";
 
 export function get_root_points(context: Context, indexes?: number[]) {
     const path_shape = context.selection.pathshape;
@@ -62,15 +61,32 @@ export function get_value_from_point(context: Context, index: number) {
         console.log('!path_shape');
         return;
     }
+
+    const parent = path_shape.parent;
+
+    if (!parent) {
+        console.log('get_value_from_point: !parent');
+        return;
+    }
+
+    let _m: Matrix;
+
+    if (parent.type === ShapeType.Page) {
+        _m = path_shape.matrix2Root();
+    } else {
+        _m = path_shape.matrix2Parent();
+    }
+
     const f = path_shape.frame;
-    const m = new Matrix();
+    const m = new Matrix(_m);
     m.preScale(f.width, f.height);
-    m.multiAtLeft(path_shape.matrix2Parent());
+
     const c = path_shape.points[index];
     if (!c) {
         console.log('!c:', index);
         return;
     }
+
     const p = m.computeCoord3(c);
     return {
         x: p.x,
@@ -85,8 +101,53 @@ export function get_num_by_event(e: Event) {
     return _val;
 }
 
+export function get_parent_points2(context: Context, indexes?: number[]) {
+    const path_shape = context.selection.pathshape;
+
+    if (!path_shape) {
+        return;
+    }
+
+    const parent = path_shape.parent;
+
+    if (!parent) {
+        return;
+    }
+
+    let _m: Matrix;
+
+    if (parent.type === ShapeType.Page) {
+        _m = path_shape.matrix2Root();
+    } else {
+        _m = path_shape.matrix2Parent();
+    }
+
+    const f = path_shape.frame;
+    const m = new Matrix(_m);
+    m.preScale(f.width, f.height);
+
+    const points = path_shape.points;
+    const result: XY[] = [];
+    if (indexes) {
+        for (let i = 0, l = indexes.length; i < l; i++) {
+            const _p = points[indexes[i]];
+            if (!_p) {
+                continue;
+            }
+
+            result.push(m.computeCoord3(_p));
+        }
+    } else {
+        for (let i = 0, l = points.length; i < l; i++) {
+            result.push(m.computeCoord(points[i]));
+        }
+    }
+    return result;
+}
+
 export function get_value_from_points(context: Context, indexes: number[]) {
-    const points = get_parent_points(context, indexes);
+    const points = get_parent_points2(context, indexes);
+
     if (!points?.length) {
         return;
     }
@@ -110,7 +171,7 @@ export function get_value_from_points(context: Context, indexes: number[]) {
             break;
         }
     }
-    
+
     return {
         x,
         y,
@@ -123,16 +184,38 @@ export function get_action_for_key_change(context: Context, val: number, key: 'x
     if (!path_shape) {
         return;
     }
+
     const indexes = context.path.selectedPoints;
     if (!indexes.length) {
         return;
     }
+
     const __points = path_shape.points;
+
+
+    const parent = path_shape.parent;
+
+    if (!parent) {
+        return;
+    }
+
+    if (parent.type === ShapeType.Page) {
+        const _m = new Matrix(parent.matrix2Root().inverse);
+        let _p = { x: 0, y: 0 };
+
+        _p[key] = val;
+
+        _p = _m.computeCoord3(_p);
+
+        val = _p[key];
+    }
+
     const f = path_shape.frame;
-    const m = new Matrix();
+    const m = new Matrix(path_shape.matrix2Parent());
     m.preScale(f.width, f.height);
-    m.multiAtLeft(path_shape.matrix2Parent());
+
     const actions: { x: number, y: number, index: number }[] = [];
+
     for (let i = 0, l = indexes.length; i < l; i++) {
         const index = indexes[i];
         const __p = __points[index];
@@ -501,5 +584,30 @@ export function get_segments2(shape: PathShape | GroupShape, matrices: Map<strin
             }
             container.push(_segmeng_generator2(m, point, next, index, __s));
         }
+    }
+}
+
+export function enter_path_edit_mode(context: Context) {
+    const selected = context.selection.selectedShapes;
+
+    if (selected.length !== 1) {
+        console.log('enter_path_edit_mode: selected.length !== 1');
+        return;
+    }
+
+    const shape = selected[0];
+
+    if (!(shape instanceof PathShape)) {
+        console.log('enter_path_edit_mode: !(shape instanceof PathShape)');
+        return;
+    }
+
+    context.workspace.setPathEditMode(true); // --开启对象编辑
+    context.esctask.save('path-edit', exist_edit_mode);
+
+    function exist_edit_mode() {
+        const al = context.workspace.is_path_edit_mode;
+        context.workspace.setPathEditMode(false);
+        return al;
     }
 }

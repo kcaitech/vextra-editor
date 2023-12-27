@@ -14,6 +14,7 @@ import {
     gen_match_points_by_map,
     PointsOffset, getClosestContainer, gen_match_points_by_map2, modify_pt_x_4_path_edit, modify_pt_y_4_path_edit
 } from "@/utils/assist";
+import { WorkSpace } from "./workspace";
 
 export interface PointGroup1 {
     lt: PageXY
@@ -220,22 +221,34 @@ export class Asssit extends WatchableObject {
         this.m_y_axis.clear();
     }
 
-    private selection_watcher(t?: any) {
-        if (t === Selection.CHANGE_SHAPE) {
-            this.m_collect_target = [];
-            const shapes = this.m_context.selection.selectedShapes;
-            if (shapes.length === 1) {
-                this.m_collect_target = [getClosestContainer(shapes[0])];
-            } else {
-                this.m_collect_target = [];
-            }
-        } else if (t === Selection.CHANGE_PAGE) {
+    private update_collect() {
+        this.m_collect_target = [];
+        const shapes = this.m_context.selection.selectedShapes;
+        if (shapes.length === 1) {
+            this.m_collect_target = [getClosestContainer(shapes[0])];
+        } else {
             this.m_collect_target = [];
         }
     }
 
+    private selection_watcher(t?: any) {
+        if (t === Selection.CHANGE_SHAPE) {
+            this.update_collect();
+        } else if (t === Selection.CHANGE_PAGE) {
+            this.m_collect_target = [];
+        }
+    }
+    private workspace_watcher(t?: any) {
+        if (t === WorkSpace.MATRIX_TRANSFORMATION) {
+            console.log('update collect map by MATRIX_TRANSFORMATION');
+
+            this.update_collect();
+        }
+    }
+
     init() {
-        this.m_context.selection.watch(this.selection_watcher.bind(this))
+        this.m_context.selection.watch(this.selection_watcher.bind(this));
+        // this.m_context.workspace.watch(this.workspace_watcher.bind(this))
     }
 
     set_collect_target(groups: GroupShape[], collect?: boolean) {
