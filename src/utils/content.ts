@@ -142,16 +142,22 @@ export function isInner(context: Context, shape: Shape) {
 export function init_shape(context: Context, frame: ShapeFrame, mousedownOnPageXY: PageXY, t: Function) {
     const selection = context.selection;
     const workspace = context.workspace;
+    
     const action = context.tool.action;
     const type = ResultByAction(action);
+
     const page = selection.selectedPage;
     const parent = selection.getClosestContainer(mousedownOnPageXY);
+
     let asyncCreator: AsyncCreator | undefined;
     let new_shape: Shape | undefined;
+
     if (page && parent && type) {
         const editor = context.editor.controller();
         const name = getName(type, (parent as GroupShape).childs, t);
+
         asyncCreator = editor.asyncCreator(mousedownOnPageXY);
+
         if (action === Action.AddArrow) {
             new_shape = asyncCreator.init_arrow(page, (parent as GroupShape), name, frame);
         } else if (action === Action.AddCutout) {
@@ -160,6 +166,7 @@ export function init_shape(context: Context, frame: ShapeFrame, mousedownOnPageX
             new_shape = asyncCreator.init(page, (parent as GroupShape), type, name, frame);
         }
     }
+    
     if (asyncCreator && new_shape) {
         selection.selectShape(new_shape);
         workspace.creating(true);

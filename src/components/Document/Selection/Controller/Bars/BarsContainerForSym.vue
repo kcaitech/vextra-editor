@@ -7,6 +7,7 @@ import { Action } from '@/context/tool';
 import { Point } from '../../SelectionView.vue';
 import { PointType } from '@/context/assist';
 import { forbidden_to_modify_frame } from '@/utils/common';
+import { get_transform } from '../Points/common';
 interface Props {
     matrix: number[]
     context: Context
@@ -81,7 +82,7 @@ function bar_mousedown(event: MouseEvent, ele: CtrlElementType) {
     matrix.reset(workspace.matrix);
     const root = workspace.root;
     startPosition = { x: clientX - root.x, y: clientY - root.y };
-    
+
     document.addEventListener('mousemove', bar_mousemove);
     document.addEventListener('mouseup', bar_mouseup);
 }
@@ -181,21 +182,33 @@ function getScale(type: CtrlElementType, shape: Shape, start: ClientXY, end: Cli
         return (f.width - dx) / f.width;
     } else return 1
 }
+function modify_rotate_before_set(deg: number, fh: boolean, fv: boolean) {
+    if (fh) deg = 180 - deg;
+    if (fv) deg = 360 - deg;
+
+    return Math.floor(deg);
+}
+
 function setCursor(t: CtrlElementType, force?: boolean) {
     const cursor = props.context.cursor;
-    let deg = props.shape.rotation || 0;
-    if (props.shape.isFlippedHorizontal) deg = 180 - deg;
-    if (props.shape.isFlippedVertical) deg = 360 - deg;
+    const { rotate, isFlippedHorizontal, isFlippedVertical } = get_transform(props.shape);
+    let deg = rotate;
+    
     if (t === CtrlElementType.RectTop) {
-        cursor.setType(`scale-${deg + 90}`, force);
+        deg = modify_rotate_before_set(deg + 90, isFlippedHorizontal, isFlippedVertical);
+        cursor.setType(`scale-${deg}`, force);
     } else if (t === CtrlElementType.RectRight) {
+        deg = modify_rotate_before_set(deg, isFlippedHorizontal, isFlippedVertical);
         cursor.setType(`scale-${deg}`, force);
     } else if (t === CtrlElementType.RectBottom) {
-        cursor.setType(`scale-${deg + 90}`, force);
+        deg = modify_rotate_before_set(deg + 90, isFlippedHorizontal, isFlippedVertical);
+        cursor.setType(`scale-${deg}`, force);
     } else if (t === CtrlElementType.RectLeft) {
+        deg = modify_rotate_before_set(deg, isFlippedHorizontal, isFlippedVertical);
         cursor.setType(`scale-${deg}`, force);
     }
 }
+
 function bar_mouseup(event: MouseEvent) {
     if (event.button !== 0) return;
     const workspace = props.context.workspace;
@@ -245,7 +258,7 @@ onUnmounted(() => {
 <template>
     <g>
         <g v-for="(b, i) in paths" :key="i">
-            <path :d="b.path" class="path1" @mousedown.stop="(e) => bar_mousedown(e, b.type)"
+            <path :d="b.path" class="main-path" @mousedown.stop="(e) => bar_mousedown(e, b.type)"
                 @mouseenter="() => setCursor(b.type)" @mouseleave="bar_mouseleave">
             </path>
             <path :d="b.path" fill="none" stroke='transparent' stroke-width="10px"
@@ -256,9 +269,8 @@ onUnmounted(() => {
     </g>
 </template>
 <style lang='scss' scoped>
-.path1 {
+.main-path {
     fill: none;
     stroke: var(--component-color);
-    stroke-width: 1.5px;
 }
 </style>

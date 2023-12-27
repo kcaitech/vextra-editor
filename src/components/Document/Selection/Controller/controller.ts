@@ -248,7 +248,7 @@ export function useControllerCustom(context: Context, i18nT: Function) {
         add_move_and_up_for_document(mousemove, mouseup);
     }
 
-    function mousemove(e: MouseEvent) {        
+    function mousemove(e: MouseEvent) {
         if (e.buttons !== 1) {
             return;
         }
@@ -260,10 +260,12 @@ export function useControllerCustom(context: Context, i18nT: Function) {
             t_e = e;
 
             let update_type = 0;
-            const isOut = wheel.moving(e, { type: EffectType.TRANS, effect: asyncTransfer.transByWheel });
-            if (!isOut) {
-                update_type = transform(startPosition, mousePosition);
-            }
+
+            const is_need_assit = wheel.is_inner(e);
+
+            update_type = transform(startPosition, mousePosition, is_need_assit);
+
+            wheel.moving(e, { type: EffectType.TRANS, effect: asyncTransfer.transByWheel }); // 滚轮动作
 
             modify_mouse_position_by_type(update_type, startPosition, mousePosition);
         } else if (check_drag_action(startPosition, mousePosition) && !workspace.isEditing) {
@@ -279,10 +281,6 @@ export function useControllerCustom(context: Context, i18nT: Function) {
                 return;
             }
 
-            if (e.altKey) {
-                shapes = paster_short(context, shapes);
-            }
-
             reset_assist_before_translate(context, shapes);
 
             offset_map = gen_offset_points_map(shapes, startPositionOnPage);
@@ -291,18 +289,44 @@ export function useControllerCustom(context: Context, i18nT: Function) {
                 .controller()
                 .asyncTransfer(shapes, selection.selectedPage!);
 
+            if (e.altKey) {
+                shapes = paster_short(context, shapes, asyncTransfer);
+            }
+
             isDragging = true;
         }
     }
 
-    function transform(start: ClientXY, end: ClientXY) {
+    function update_assist_by_workspace_change(event: MouseEvent) {
+        matrix.reset(workspace.matrix.inverse);
+
+        context.assist.set_trans_target(shapes);
+
+        const root = context.workspace.root;
+
+        const xy = matrix.computeCoord2(event.clientX - root.x, event.clientY - root.y);
+
+        offset_map = gen_offset_points_map(shapes, xy);
+    }
+
+    function transform(start: ClientXY, end: ClientXY, assit = true) {
         const ps: PageXY = matrix.computeCoord3(start);
         const pe: PageXY = matrix.computeCoord3(end);
         let update_type = 0;
-        if (asyncTransfer) {
-            update_type = trans_assistant(asyncTransfer, ps, pe);
-            migrate_once(context, asyncTransfer, shapes, end);
+
+        if (!asyncTransfer) {
+            return update_type;
         }
+
+        if (!assit) {
+            asyncTransfer.trans(ps, pe);
+            context.assist.notify(Asssit.CLEAR);
+            update_type = 3;
+            return update_type;
+        }
+
+        update_type = trans_assistant(asyncTransfer, ps, pe);
+        migrate_once(context, asyncTransfer, shapes, end);
         return update_type;
     }
 
@@ -498,19 +522,16 @@ export function useControllerCustom(context: Context, i18nT: Function) {
 
     function selection_watcher(t?: number) {
         if (t === Selection.CHANGE_SHAPE) { // 选中的图形发生改变，初始化控件
-            const selected = selection.selectedShapes;
-            if (selected.length === 1) {
-                const type = selected[0].type;
-                if (type === ShapeType.Table || type === ShapeType.Contact) return dispose();
-            }
             initController();
             workspace.contentEdit(false);
         }
     }
 
-    function workspace_watcher(t?: number) {
+    function workspace_watcher(t: number, param1: MouseEvent) {
         if (t === WorkSpace.CHECKSTATUS) {
             checkStatus();
+        } else if (t === WorkSpace.NEW_ENV_MATRIX_CHANGE) {
+            update_assist_by_workspace_change(param1);
         }
     }
 

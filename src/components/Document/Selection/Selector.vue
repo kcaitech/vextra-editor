@@ -5,6 +5,7 @@ import { GroupShape, Matrix, Shape, ShapeType } from '@kcdesign/data';
 import { watchEffect, onMounted, onUnmounted } from 'vue';
 import { XY } from '@/context/selection';
 import { isTarget2 } from '@/utils/common';
+import { delayering } from '@/utils/scout';
 
 export interface SelectorFrame {
     top: number
@@ -25,18 +26,22 @@ let changed: boolean = false;
 
 function select() {
     const pageMatirx = new Matrix(props.context.workspace.matrix.inverse);
-    const page = props.context.selection.selectedPage;
+
     const selection = props.context.selection;
+
+    const page = selection.selectedPage;
     if (!page) {
         return;
     }
 
     const { top, left, width, height } = props.selectorFrame;
+
     const p1: XY = pageMatirx.computeCoord2(left, top); // lt
     const p2: XY = pageMatirx.computeCoord2(left + width, top); // rt
     const p3: XY = pageMatirx.computeCoord2(left + width, top + height); // rb
     const p4: XY = pageMatirx.computeCoord2(left, top + height); //lb
     const ps: [XY, XY, XY, XY, XY] = [p1, p2, p3, p4, p1]; // 5个点方便闭合循环
+
     changed = false;
 
     if (selectedShapes.size) {
@@ -50,6 +55,21 @@ function select() {
     }
 }
 
+function is_target_for_group(shape: GroupShape, Points: [XY, XY, XY, XY, XY]): boolean {
+    if (props.selectorFrame.includes) {
+        return isTarget2(Points, shape, true);
+    }
+
+    const flats = delayering(shape);
+    for (let i = 0, l = flats.length; i < l; i++) {
+        if (isTarget2(Points, flats[i], false)) {
+            return true;
+        }
+    }
+
+    return false;
+}
+
 // 加入
 function finder(childs: Shape[], Points: [XY, XY, XY, XY, XY]) {
     for (let ids = 0, len = childs.length; ids < len; ids++) {
@@ -61,14 +81,25 @@ function finder(childs: Shape[], Points: [XY, XY, XY, XY, XY]) {
 
         if (shape.type === ShapeType.Artboard) { // 容器要判定为真的条件是完全被选区覆盖
             const _shape = shape as GroupShape;
-            if (isTarget2(Points, shape, true)) {
-                private_set(shape.id, shape);
+
+            if (isTarget2(Points, _shape, true)) {
+                private_set(_shape.id, _shape);
+
                 for (let i = 0; i < _shape.childs.length; i++) {
                     private_delete(_shape.childs[i].id);
                 }
             } else {
                 finder(_shape.childs, Points);
             }
+
+            continue;
+        }
+
+        if (shape.type === ShapeType.Group) {
+            if (is_target_for_group(shape as GroupShape, Points)) {
+                private_set(shape.id, shape);
+            }
+
             continue;
         }
 
@@ -83,6 +114,10 @@ function remove(childs: Map<string, Shape>, Points: [XY, XY, XY, XY, XY]) {
     childs.forEach((value, key) => {
         if (value.type === ShapeType.Artboard) {
             if (!isTarget2(Points, value, true)) {
+                private_delete(key);
+            }
+        } else if (value.type === ShapeType.Group) {
+            if (!is_target_for_group(value as GroupShape, Points)) {
                 private_delete(key);
             }
         } else {

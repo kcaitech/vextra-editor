@@ -117,7 +117,7 @@ watchEffect(updateControllerView)
         :height="height"
         :style="{ transform: `translate(${bounds.left}px,${bounds.top}px)`, left: 0, top: 0, position: 'absolute' }"
         :class="{ 'un-visible': !visible }" @mousedown="mousedown" overflow="visible">
-        <path :d="line_path" fill="none" stroke='#1878f5' stroke-width="1.5px"></path>
+        <path :d="line_path" class="main-path"></path>
         <PointContainerForStraightLine :context="props.context" :matrix="submatrix.toArray()" :shape="props.shape"
             :rotation="props.rotate" :axle="axle" :c-frame="props.controllerFrame"></PointContainerForStraightLine>
     </svg>
@@ -125,5 +125,10 @@ watchEffect(updateControllerView)
 <style lang='scss' scoped>
 .un-visible {
     opacity: 0;
+}
+
+.main-path {
+    stroke: var(--active-color);
+    fill: none;
 }
 </style>

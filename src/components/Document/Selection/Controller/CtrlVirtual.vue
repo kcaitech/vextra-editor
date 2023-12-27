@@ -92,8 +92,8 @@ watchEffect(updateControllerView);
          :width="bounds.right - bounds.left" :height="bounds.bottom - bounds.top"
          :style="{ transform: `translate(${bounds.left}px,${bounds.top}px)`, left: 0, top: 0, position: 'absolute' }"
          :class="{ 'un-visible': !visible }" @mousedown="mousedown" overflow="visible">
-        <path :d="boundrectPath" fill="none" stroke='#ff9900' stroke-width="1.5px"></path>
-        <ShapesStrokeContainer :context="props.context" :matrix="props.matrix" :shape="props.shape" color-hex="#ff9900">
+        <path :d="boundrectPath" fill="none" stroke='#7F58F9' stroke-width="1.5px"></path>
+        <ShapesStrokeContainer :context="props.context" :matrix="props.matrix" :shape="props.shape" color-hex="#7F58F9">
         </ShapesStrokeContainer>
     </svg>
 </template>
