@@ -469,8 +469,8 @@ onUnmounted(() => {
             :title="t('attr.advanced_stroke')">
             <template #trigger>
                 <div class="trigger">
-                    <div class="bg">
-                        <svg-icon icon-class="gear" @click="showMenu"></svg-icon>
+                    <div class="bg" @click="showMenu">
+                        <svg-icon icon-class="gear"></svg-icon>
                     </div>
                 </div>
             </template>

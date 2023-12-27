@@ -20,7 +20,7 @@ function finder(childs: Shape[], Points: [XY, XY, XY, XY, XY], selectedShapes: M
         if (selectedShapes.get(shape.id) || shape.isLocked || !shape.isVisible) continue;
         const m = childs[ids].matrix2Root();
         const { width, height } = shape.frame;
-        const max_border = getShapeBorderMax(shape);
+        const max_border = getShapeBorderMax(shape) * 6;
         const { left, top, right, bottom } = getShadowMax(shape);
         const _x = - (left + max_border);
         const _y = - (top + max_border);
@@ -119,7 +119,8 @@ export const getPageBounds = (page: Page) => {
     const childs = page.childs as Shape[];
     const { x, y, width, height } = page.frame;
     if (!childs) return { x, y, width, height };
-    const page_bounds_points = getMaxMinPoints(childs);
+    const shapes = flattenShapes(childs).filter(s => s.type !== ShapeType.Group);
+    const page_bounds_points = getMaxMinPoints(shapes);
     const max_p = getMaxPoint(page_bounds_points);
     const min_p = getMinPoint(page_bounds_points);
     return {
@@ -180,9 +181,9 @@ const getMaxMinPoints = (shapes: Shape[]) => {
         const t = (top + max_border);
         const r = (left + max_border) + (right + max_border);
         const b = (top + max_border) + (bottom + max_border);
-        const frame = shape.frame;
-        const cx = (frame.x + frame.width) / 2;
-        const cy = (frame.y + frame.height) / 2;
+        let frame = shape.frame;
+        const cx = (frame.x + frame.width - frame.x + 1) / 2 + frame.x;
+        const cy = (frame.y + frame.height - frame.y + 1) / 2 + frame.y;
         let rotate = shape.rotation || 0;
         if (shape.isFlippedHorizontal) rotate = 180 - rotate;
         if (shape.isFlippedVertical) rotate = 360 - rotate;
@@ -193,15 +194,34 @@ const getMaxMinPoints = (shapes: Shape[]) => {
         const p3 = getRotatePoint(frame.x + frame.width + r, frame.y + frame.height + b, rotate, cx, cy);
         const p4 = getRotatePoint(frame.x - l, frame.y + frame.height + b, rotate, cx, cy);
         points.push(p1, p2, p3, p4);
-        const max_point = getMaxPoint(points);
-        const min_point = getMinPoint(points);
+        let max_point = getMaxPoint(points);
+        let min_point = getMinPoint(points);
+        let p = shape.parent;
+        if (p && p.type !== ShapeType.Page) {
+            while (p) {
+                if (p.type === ShapeType.Page) {
+                    break;
+                }
+                if (!p) break;
+                const p_farme = p.frame;
+                max_point = {
+                    x: max_point.x + p_farme.x,
+                    y: max_point.y + p_farme.y
+                }
+                min_point = {
+                    x: min_point.x + p_farme.x,
+                    y: min_point.y + p_farme.y
+                }
+                p = p.parent;
+            }
+        }
         bounds_points.push(max_point, min_point);
     }
     return bounds_points;
 }
 export function flattenShapes(shapes: Shape[]): Shape[] {
     return shapes.reduce((result: any, item: Shape) => {
-        if(item.type === ShapeType.Group) {
+        if (item.type === ShapeType.Group) {
             const childs = (item as GroupShape).childs as Shape[];
             if (Array.isArray(childs)) {
                 result = result.concat(flattenShapes(childs));
