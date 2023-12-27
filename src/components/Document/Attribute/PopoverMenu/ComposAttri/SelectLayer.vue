@@ -1,10 +1,11 @@
 <script lang="ts" setup>
-import { onMounted, onUnmounted, ref, watchEffect } from 'vue';
-import { Context } from '@/context';
+import {onMounted, onUnmounted, ref, watchEffect} from 'vue';
+import {Context} from '@/context';
 import CompoSelectList from './CompoSelectList.vue';
-import { useI18n } from 'vue-i18n';
-import { VariableType } from '@kcdesign/data';
-const { t } = useI18n();
+import {useI18n} from 'vue-i18n';
+import {VariableType} from '@kcdesign/data';
+
+const {t} = useI18n();
 
 interface Tree {
     id: number
@@ -22,6 +23,7 @@ interface Props {
 
 interface Emits {
     (e: 'close'): void;
+
     (e: 'change', data: string[]): void;
 }
 
@@ -88,20 +90,31 @@ onMounted(() => {
     if (popover.value) {
         popover.value.focus();
         const body_h = document.body.clientHeight;
-        const popover_y = popover.value.getBoundingClientRect().y;
-        const popover_h = popover.value.clientHeight + 5;
-        const surplus = body_h - popover_y;
-        const height = surplus - popover_h;
-        if (height > 0) {
-            top.value = 33;
-        } else {
-            if (popover_y > popover_h) {
-                top.value = (popover_y - popover_h) * 2
-            } else {
-                const s = popover_h - popover_y;
-                top.value = -s + 40
-            }
+        const popover_y = popover.value?.getBoundingClientRect().top - 32;
+        // const popover_h = popover.value.clientHeight + 5;
+        // const surplus = body_h - popover_y;
+        // const height = surplus - popover_h;
+        // if (height > 0) {
+        //     top.value = 33;
+        // } else {
+        //     if (popover_y > popover_h) {
+        //         top.value = (popover_y - popover_h) * 2
+        //     } else {
+        //         const s = popover_h - popover_y;
+        //         top.value = -s + 40
+        //     }
+        // }
+        const popover_h = popover.value?.clientHeight;
+        const height = body_h - 10;
+        if (popover_y + popover_h > height) {
+            top.value = -(popover_y + popover_h - height);
         }
+
+        if (top.value < -popover_y + 46) {
+            top.value = -popover_y + 46;
+        }
+
+        console.log(body_h, popover_h, popover_y)
     }
     document.addEventListener('mouseup', handleClickOutside);
     register_container();
@@ -112,12 +125,13 @@ onUnmounted(() => {
 </script>
 
 <template>
-    <div class="select_layerbox" ref="popover" tabindex="-1" @keydown.stop="keyboard_watcher" :style="{ top: top + 'px' }">
+    <div class="select_layerbox" ref="popover" tabindex="-1" @keydown.stop="keyboard_watcher"
+         :style="{ top: top + 'px' }">
         <div class="heard">
             <span class="title">{{
-                props.type === VariableType.SymbolRef ? `${t('compos.compos_instance')}` :
-                `${t('compos.select_layer')}`
-            }}</span>
+                    props.type === VariableType.SymbolRef ? `${t('compos.compos_instance')}` :
+                        `${t('compos.select_layer')}`
+                }}</span>
             <div class="close">
                 <div class="toggle_list">
                     <svg-icon icon-class="close" @click.stop="emits('close');"></svg-icon>
@@ -134,30 +148,30 @@ onUnmounted(() => {
                             <span>{{ item.state }}</span>
                             <div class="shrink">
                                 <svg-icon icon-class="down"
-                                    :style="{ transform: !unfold.has(i) ? 'rotate(-90deg)' : 'rotate(0deg)' }"></svg-icon>
+                                          :style="{ transform: !unfold.has(i) ? 'rotate(-90deg)' : 'rotate(0deg)' }"></svg-icon>
                             </div>
                         </div>
                         <div class="demo-collapse" v-if="unfold.has(i)" :reflush="reflush">
                             <component v-if="scroll_container" :is="CompoSelectList" :context="context"
-                                :contents="item.data" @handleCheck="handleCheck" :layerId="props.layerId"
-                                :container="scroll_container">
+                                       :contents="item.data" @handleCheck="handleCheck" :layerId="props.layerId"
+                                       :container="scroll_container">
                             </component>
                         </div>
                     </template>
                 </el-scrollbar>
                 <div class="button" :style="{ opacity: checkList.length > 0 ? 1 : 0.5 }">
-                    <el-button @click.stop="confirmSelect">{{t('compos.confirm')}}
+                    <el-button @click.stop="confirmSelect">{{ t('compos.confirm') }}
                     </el-button>
                 </div>
             </div>
         </div>
         <div class="null"
-            v-if="selectList.length === 0 && props.type === VariableType.Text || props.type === VariableType.Status">
+             v-if="selectList.length === 0 && props.type === VariableType.Text || props.type === VariableType.Status">
             {{ t('compos.text_layer_null') }}
         </div>
         <div class="null" v-if="selectList.length === 0 && props.type === VariableType.SymbolRef">{{
-            t('compos.instance_null')
-        }}
+                t('compos.instance_null')
+            }}
         </div>
     </div>
 </template>
@@ -281,7 +295,7 @@ onUnmounted(() => {
     //    background-color: var(--grey-light);
     //}
 
-    >span {
+    > span {
         font-weight: 600;
         overflow: hidden;
         text-overflow: ellipsis;
@@ -294,7 +308,7 @@ onUnmounted(() => {
         height: 12px;
         width: 12px;
 
-        >svg {
+        > svg {
             width: 80%;
             height: 80%;
         }
