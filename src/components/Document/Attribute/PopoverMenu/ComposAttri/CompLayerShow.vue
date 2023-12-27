@@ -242,8 +242,8 @@ onUnmounted(() => {
             }
 
             >svg {
-                width: 65%;
-                height: 65%;
+                width: 12px;
+                height: 12px;
             }
         }
     }

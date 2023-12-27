@@ -102,8 +102,6 @@ onMounted(() => {
                 top.value = -s + 40
             }
         }
-        console.log(popover.value.getBoundingClientRect().y,'111')
-        console.log(popover.value.clientHeight,'222')
     }
     document.addEventListener('mouseup', handleClickOutside);
     register_container();
@@ -222,8 +220,8 @@ onUnmounted(() => {
             }
 
             svg {
-                width: 16px;
-                height: 16px;
+                width: 12px;
+                height: 12px;
             }
         }
     }
