@@ -159,7 +159,7 @@ onUnmounted(() => {
             border-radius: 292px;
             position: absolute;
             bottom: 0;
-            transition: left 0.3s ease-in-out;
+            // transition: left 0.3s ease-in-out;
             box-sizing: border-box;
             height: 2px;
             z-index: 1;

@@ -63,7 +63,6 @@ onMounted(get_value);
 .module_state_item {
     position: relative;
     display: flex;
-    align-items: center;
     min-height: 44px;
 
     .state_item {
@@ -76,6 +75,7 @@ onMounted(get_value);
             flex: 1;
             max-width: 86px;
             box-sizing: border-box;
+            margin-top: 8px;
 
             span {
                 display: block;
@@ -88,9 +88,6 @@ onMounted(get_value);
         }
 
         .state_value {
-            display: flex;
-            align-items: center;
-            justify-content: space-between;
             padding: 0 11px;
             flex: 0 0 126px;
             border-radius: 6px;

@@ -5,7 +5,6 @@ import TypeHeader from '../TypeHeader.vue';
 import { onMounted, onUnmounted, ref } from 'vue'
 import { get_shape_within_document, shape_track } from '@/utils/content';
 import { Shape, ShapeType, SymbolRefShape } from '@kcdesign/data';
-import { MoreFilled } from '@element-plus/icons-vue';
 import {
     get_var_for_ref,
     is_able_to_unbind,
@@ -76,20 +75,28 @@ const untie = () => {
 }
 
 const shape_watcher = (arg: any) => { // todo 优化updateData时机
-    if (arg !== 'shape-frame') updateData();
+    if (arg === 'shape-frame') {
+        return;
+    }
+
+    updateData();
 }
 
 const updateData = () => {
     if (props.shapes.length === 1) {
         const symref = props.context.selection.symbolrefshape;
-        if (!symref) return;
-        const result = get_var_for_ref(props.context, symref, t);
+        if (!symref) {
+            return;
+        }
+        const result = get_var_for_ref(symref, t);
         variables.value = [];
         visible_variables.value = [];
-        if (!result) return;
+        if (!result) {
+            return;
+        }
+
         variables.value = result.variables;
         visible_variables.value = result.visible_variables;
-        console.log(visible_variables.value[0]);
 
     } else if (props.shapes.length > 1) {
         // todo
@@ -175,8 +182,8 @@ onUnmounted(() => {
 </script>
 
 <template>
-    <div style="margin-bottom: 10px;" v-if="variables.length">
-        <TypeHeader :title="t('compos.instance_attr')" class="mt-24" :active="true">
+    <div style="margin-bottom: 10px;" v-if="variables.length || visible_variables.length">
+        <TypeHeader :title="t('compos.instance_attr')" :active="true">
             <template #tool>
                 <div class="edit-comps" v-if="!is_part_of_symbol(props.shapes[0])">
                     <div class="edit_svg" @click.stop="editComps" v-if="is_symbolref_disa(props.shapes)">
@@ -209,7 +216,6 @@ onUnmounted(() => {
                             :is="Visible" :context="props.context" :data="(item as RefAttriListItem)"></component>
                     </div>
                 </div>
-                <!-- <div class="place"></div> -->
             </div>
         </div>
     </div>
@@ -303,8 +309,8 @@ onUnmounted(() => {
     display: flex;
     width: 100%;
     line-height: 20px;
-    margin-bottom: 8px;
-
+    margin-bottom: 6px;
+    margin-top: 6px;
     .show {
         display: flex;
         justify-content: space-between;
