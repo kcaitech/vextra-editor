@@ -1,8 +1,6 @@
 import { XY } from "@/context/selection"
 import { getHorizontalAngle } from "@/utils/common"
 import { ContactShape, CtrlElementType, Matrix, PathShape, Point2D, Shape } from "@kcdesign/data"
-import { CurveMode } from "@kcdesign/data"
-
 
 interface Dot {
     point: { x: number, y: number }
@@ -12,14 +10,14 @@ interface Dot {
     type2: CtrlElementType
 }
 
-export function update_dot(ps: { x: number, y: number, type?: CtrlElementType }[], s_r: number, shape?: Shape): Dot[] {
+export function update_dot(ps: { x: number, y: number, type?: CtrlElementType }[], s_r: number, fh: boolean, fv: boolean): Dot[] {
     const bit_v = 4;
     const bit_v_d = 7;
     const [lt, rt, rb, lb] = ps;
     const r1 = get_r_path(lt);
     let transform1 = `translate(${lt.x}px, ${lt.y}px)`;
-    if (shape?.isFlippedHorizontal) transform1 += 'rotateY(180deg) ';
-    if (shape?.isFlippedVertical) transform1 += "rotateX(180deg) ";
+    if (fh) transform1 += 'rotateY(180deg) ';
+    if (fv) transform1 += "rotateX(180deg) ";
     transform1 += `rotate(${-180 + s_r}deg) translate(-${lt.x}px, -${lt.y}px)`;
     const path_obj_1 = {
         point: { x: lt.x - bit_v, y: lt.y - bit_v },
@@ -31,8 +29,8 @@ export function update_dot(ps: { x: number, y: number, type?: CtrlElementType }[
     //rt
     const r2 = get_r_path(rt);
     let transform2 = `translate(${rt.x}px, ${rt.y}px)`;
-    if (shape?.isFlippedHorizontal) transform2 += 'rotateY(180deg) ';
-    if (shape?.isFlippedVertical) transform2 += "rotateX(180deg) ";
+    if (fh) transform2 += 'rotateY(180deg) ';
+    if (fv) transform2 += "rotateX(180deg) ";
     transform2 += `rotate(${-90 + s_r}deg) translate(-${rt.x}px, -${rt.y}px)`;
     const path_obj_2 = {
         point: { x: rt.x - bit_v, y: rt.y - bit_v },
@@ -45,8 +43,8 @@ export function update_dot(ps: { x: number, y: number, type?: CtrlElementType }[
     //rb
     const r3 = get_r_path(rb);
     let transform3 = `translate(${rb.x}px, ${rb.y}px)`;
-    if (shape?.isFlippedHorizontal) transform3 += 'rotateY(180deg) ';
-    if (shape?.isFlippedVertical) transform3 += "rotateX(180deg) ";
+    if (fh) transform3 += 'rotateY(180deg) ';
+    if (fv) transform3 += "rotateX(180deg) ";
     transform3 += `rotate(${s_r}deg) translate(-${rb.x}px, -${rb.y}px)`;
     const path_obj_3 = {
         point: { x: rb.x - bit_v, y: rb.y - bit_v },
@@ -58,8 +56,8 @@ export function update_dot(ps: { x: number, y: number, type?: CtrlElementType }[
     //lb
     const r4 = get_r_path(lb);
     let transform4 = `translate(${lb.x}px, ${lb.y}px)`;
-    if (shape?.isFlippedHorizontal) transform4 += 'rotateY(180deg) ';
-    if (shape?.isFlippedVertical) transform4 += "rotateX(180deg) ";
+    if (fh) transform4 += 'rotateY(180deg) ';
+    if (fv) transform4 += "rotateX(180deg) ";
     transform4 += `rotate(${90 + s_r}deg) translate(-${lb.x}px, -${lb.y}px)`;
     const path_obj_4 = {
         point: { x: lb.x - bit_v, y: lb.y - bit_v },
@@ -68,7 +66,8 @@ export function update_dot(ps: { x: number, y: number, type?: CtrlElementType }[
         type: CtrlElementType.RectLB,
         type2: CtrlElementType.RectLBR
     };
-    return [path_obj_1, path_obj_2, path_obj_3, path_obj_4]
+
+    return [path_obj_1, path_obj_2, path_obj_3, path_obj_4];
 }
 
 function get_r_path(ps: { x: number, y: number }) {
@@ -194,4 +193,43 @@ export function get_apexs(s: ContactShape, matrix: Matrix) {
         type: 'from' | 'to'
     } = { point: m.computeCoord(raw_p[raw_p.length - 1]), type: 'to' };
     return { apex1, apex2 };
+}
+export function is_fh(shape: Shape) {
+    let f = !!shape.isFlippedHorizontal;
+
+    let p = shape.parent;
+
+    while (p) {
+        if (p.isFlippedHorizontal) {
+            f = !f;
+        }
+        p = p.parent;
+    }
+    return f;
+}
+export function is_fv(shape: Shape) {
+    let f = !!shape.isFlippedVertical;
+
+    let p = shape.parent;
+
+    while (p) {
+        if (p.isFlippedVertical) {
+            f = !f;
+        }
+        p = p.parent;
+    }
+    return f;
+}
+export function get_rotation(shape: Shape, fh: boolean, fv: boolean) {
+    let deg = shape.rotation || 0;
+    let p = shape.parent;
+
+    while (p) {
+        if (p.rotation) {
+            deg += p.rotation;
+        }
+        p = p.parent;
+    }
+
+    return deg;
 }

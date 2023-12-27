@@ -12,6 +12,7 @@ import CtrlPathEdit from "@/components/Document/Selection/Controller/CtrlPathEdi
 import PathAssist from "@/components/Document/Assist/PathAssist.vue";
 import { add_move_and_up_for_document, remove_move_and_up_from_document } from "@/utils/mouse";
 import ClipMode from "../../Controller/ClipMode.vue";
+import { scout_once } from "@/utils/common";
 interface Props {
     context: Context
 }
@@ -46,6 +47,7 @@ function down(e: MouseEvent) {
     setMousedownXY(e);
     props.context.path.reset();
     if (dbl_action()) {
+        scout_once(props.context, e);
         exit();
     }
     add_move_and_up_for_document(move2, up);
@@ -145,6 +147,8 @@ function selection_watcher(type: Number) {
 function tool_watcher(type: Number) {
     if (type === Tool.CHANGE_ACTION) {
         modify_cursor();
+    } else if (type === Tool.LABLE_CHANGE) {
+        props.context.workspace.setPathEditMode(false);
     }
 }
 

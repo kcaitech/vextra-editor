@@ -9,6 +9,7 @@ import { check_status, end_transalte, gen_offset_map, get_speed, migrate, migrat
 import { paster_short } from '@/utils/clipboard';
 import { PointsOffset, distance2apex, gen_match_points } from '@/utils/assist';
 import { Asssit } from '@/context/assist';
+import { WorkSpace } from '@/context/workspace';
 interface Props {
     name: string
     index: number
@@ -140,15 +141,24 @@ function down(e: MouseEvent) {
 }
 // 按下后移动
 function move(e: MouseEvent) {
-    if (e.buttons !== 1) return; // 注意，这里是buttons而不是button，通过mdn了解一下两者的区别
+    if (e.buttons !== 1) {
+        return; // 注意，这里是buttons而不是button，通过mdn了解一下两者的区别
+    }
+
     let root = props.context.workspace.root;// 盒子的信息(wrap的信息)
     const mousePosition: ClientXY = { x: e.clientX - root.x, y: e.clientY - root.y }; // 记录鼠标的当前位置
     if (isDragging && wheel && asyncTransfer) { // 满足这三个条件才可以拖动一个图形
         // 在这个if分支里面，图形已经正在移动了，不用关注具体代码内容，需要知道这里时移动过程中需要做的事情，包括对齐、判断所处wrap、迁移        
         modify_speed(e); // 更新当前鼠标移动速度
-        const isOut = wheel.moving(e, { type: EffectType.TRANS, effect: asyncTransfer.transByWheel });
         let update_type: number = 0;
-        if (!isOut) update_type = transform_f(startPosition, mousePosition);
+
+        // const is_need_assit = wheel.is_inner(e);
+
+        update_type = transform_f(startPosition, mousePosition);
+
+
+        // wheel.moving(e, { type: EffectType.TRANS, effect: asyncTransfer.transByWheel });
+
         modify_mouse_position_by_type(update_type, startPosition, mousePosition);
     } else if (Math.hypot(mousePosition.x - startPosition.x, mousePosition.y - startPosition.y) > dragActiveDis) { // 注意：这里判断一个图形被拖动的条件是鼠标拖动的距离大于3px，目的在于与单击事件做区分
         // 在这个if分支里面，做的都是图形开始移动前的准备工作
@@ -158,9 +168,16 @@ function move(e: MouseEvent) {
         wheel = fourWayWheel(props.context, undefined, matrix_inverse.computeCoord3(startPosition)); // 以鼠标在文档上的坐标为锚点，安装滚轮
         const selection = props.context.selection; // selection, 是位于context中用于组件通信的一个模块，主要负责选区状态的通信；
         shapes = selection.selectedShapes;
-        if (e.altKey) shapes = paster_short(props.context, shapes); // 图形分身
-        asyncTransfer = props.context.editor.controller().asyncTransfer(shapes, selection.selectedPage!); // 创建属性编辑器
+
+        if (e.altKey) {
+            shapes = paster_short(props.context, shapes); // 图形分身
+        }
+        asyncTransfer = props.context.editor
+            .controller()
+            .asyncTransfer(shapes, selection.selectedPage!); // 创建属性编辑器
+
         pre_translate(props.context, shapes);
+
         isDragging = true;
         const map_anchor = matrix_inverse.computeCoord3(startPosition);
         offset_map = gen_offset_map(shapes[0], map_anchor);
@@ -182,16 +199,36 @@ function up(e: MouseEvent) {
     document.removeEventListener('mouseup', up);
 }
 // 以下代码不用过多关注，但需知道这段代码功能为在移动过程中使图形与其他图形进行对齐
-function transform_f(start: ClientXY, end: ClientXY) {
+function transform_f(start: ClientXY, end: ClientXY, assist = true) {
     const ps: PageXY = matrix_inverse.computeCoord3(start);
     const pe: PageXY = matrix_inverse.computeCoord3(end);
 
     let update_type = 0;
-    if (asyncTransfer) {
-        update_type = trans(asyncTransfer, ps, pe);
-        migrate(props.context, asyncTransfer, shapes, shapes[0]);
+    if (!asyncTransfer) {
+        return update_type;
     }
+
+    if (!assist) {
+        asyncTransfer.trans(ps, pe);
+        props.context.assist.notify(Asssit.CLEAR);
+        update_type = 3;
+        return update_type;
+    }
+
+    update_type = trans(asyncTransfer, ps, pe);
+    migrate(props.context, asyncTransfer, shapes, shapes[0]);
     return update_type;
+}
+function update_assist_by_workspace_change(event: MouseEvent) {
+    const workspace = props.context.workspace;
+
+    matrix_inverse = new Matrix(workspace.matrix.inverse);
+
+    props.context.assist.set_trans_target(shapes);
+
+    const xy = matrix_inverse.computeCoord2(event.clientX, event.clientY);
+
+    offset_map = gen_offset_map(shapes[0], xy);
 }
 let pre_target_x: number, pre_target_y: number;
 let stickedX: boolean = false;
@@ -284,11 +321,18 @@ function move2(e: MouseEvent) {
 function move3(e: MouseEvent) {
     if (e.buttons === 1) e.stopPropagation();
 }
+// function workspace_watcher(t: number, param1: MouseEvent) {
+//     if (t === WorkSpace.NEW_ENV_MATRIX_CHANGE) {
+//         update_assist_by_workspace_change(param1);
+//     }
+// }
 onMounted(() => {
     props.shape.watch(watcher);
+    // props.context.workspace.watch(workspace_watcher);
 })
 onUnmounted(() => {
     props.shape.unwatch(watcher);
+    // props.context.workspace.unwatch(workspace_watcher);
 })
 </script>
 
@@ -299,14 +343,14 @@ onUnmounted(() => {
             <!-- <svg width="306" height="306" viewBox="0 0 306 306" fill="none" xmlns="http://www.w3.org/2000/svg"
                 v-if="(props.shape as SymbolShape).isSymbolUnionShape">
                 <rect x="8.07106" y="153.895" width="90" height="90" transform="rotate(-45.0629 8.07106 153.895)"
-                    fill="#ff9900" stroke="#ff9900" stroke-width="10" />
+                    fill="#7F58F9" stroke="#7F58F9" stroke-width="10" />
                 <rect x="90.0054" y="71.7804" width="90" height="90" transform="rotate(-45.0629 90.0054 71.7804)"
-                    fill="#ff9900" stroke="#ff9900" stroke-width="10" />
+                    fill="#7F58F9" stroke="#7F58F9" stroke-width="10" />
                 <rect x="88.7697" y="234.416" width="90" height="90" transform="rotate(-45.0629 88.7697 234.416)"
-                    fill="#ff9900" stroke="#ff9900" stroke-width="10" />
+                    fill="#7F58F9" stroke="#7F58F9" stroke-width="10" />
                 <rect x="170.704" y="152.302" width="90" height="90" transform="rotate(-45.0629 170.704 152.302)"
-                    fill="#ff9900" stroke="#ff9900" stroke-width="10" />
-                <rect x="15" y="15" width="274" height="274" stroke="#ff9900" stroke-width="30" stroke-dasharray="50 50" />
+                    fill="#7F58F9" stroke="#7F58F9" stroke-width="10" />
+                <rect x="15" y="15" width="274" height="274" stroke="#7F58F9" stroke-width="30" stroke-dasharray="50 50" />
             </svg> -->
             <svg xmlns="http://www.w3.org/2000/svg" xmlns:xlink="http://www.w3.org/1999/xlink" fill="none" version="1.1"
                 width="16" height="16" viewBox="0 0 16 16" v-if="(props.shape as SymbolShape).isSymbolUnionShape">

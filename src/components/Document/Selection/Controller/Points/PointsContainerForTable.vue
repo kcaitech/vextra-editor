@@ -155,7 +155,8 @@ let need_update_comment = false;
 let submatrix2 = new Matrix();
 let offset_map: PointsOffset | undefined;
 function gen_offset_map(shape: Shape, down: PageXY) {
-    const m = shape.matrix2Root(), f = shape.frame;
+    const m = shape.matrix2Root();
+    const f = shape.frame;
     const lt = m.computeCoord2(0, 0);
     const rb = m.computeCoord2(f.width, f.height);
     const pivot = m.computeCoord2(f.width / 2, f.height / 2);
@@ -196,43 +197,64 @@ function down(e: MouseEvent) {
     table_selection.setEditingCell();
     table_selection.resetSelection();
     startPosition = { x: e.clientX - root.x, y: e.clientY - root.y };
-    wheel = fourWayWheel(context, undefined, submatrix2.computeCoord(startPosition));           // mark: wheel等于什么
+
+    wheel = fourWayWheel(context, undefined, submatrix2.computeCoord3(startPosition));
+
     document.addEventListener('mousemove', mousemove4trans);
     document.addEventListener('mouseup', mouseup4trans);
     move = mousemove4trans, up = mouseup4trans;
 }
 function mousemove4trans(e: MouseEvent) {
-    if (e.buttons !== 1) return;
+    if (e.buttons !== 1) {
+        return;
+    }
+
     const mousePosition: ClientXY = { x: e.clientX - root.x, y: e.clientY - root.y };
     const workspace = props.context.workspace, selection = props.context.selection;
     if (isDragging && wheel && asyncTransfer) {
         speed = get_speed(t_e || e, e), t_e = e;
         let update_type = 0;
-        const isOut = wheel.moving(e, { type: EffectType.TRANS, effect: asyncTransfer.transByWheel });
-        if (!isOut) update_type = transform_f(startPosition, mousePosition);
+
+        const is_need_assit = wheel.is_inner(e);
+
+        update_type = transform_f(startPosition, mousePosition, is_need_assit);
+
+        wheel.moving(e, { type: EffectType.TRANS, effect: asyncTransfer.transByWheel });
+
         if (update_type === 3) startPosition = { ...mousePosition };        // mark：update_type不同的值对应的情况是什么
         else if (update_type === 2) startPosition.y = mousePosition.y;
         else if (update_type === 1) startPosition.x = mousePosition.x;
     } else if (Math.hypot(mousePosition.x - startPosition.x, mousePosition.y - startPosition.y) > dragActiveDis) {   // mark：dragActiveDis是什么
         shapes = selection.selectedShapes;
-        if (e.altKey) shapes = paster_short(props.context, shapes);
-        asyncTransfer = props.context.editor.controller().asyncTransfer(shapes, selection.selectedPage!);  // mark：asyncTransfer是什么
+        if (e.altKey) {
+            shapes = paster_short(props.context, shapes);
+        }
+        asyncTransfer = props.context.editor
+            .controller()
+            .asyncTransfer(shapes, selection.selectedPage!);  // mark：asyncTransfer是什么
+
         selection.unHoverShape();
         workspace.setSelectionViewUpdater(false);
         workspace.translating(true);  // mark：workspace.translating(true)的作用是什么
         props.context.assist.set_trans_target(shapes);
         submatrix2 = new Matrix(props.context.workspace.matrix.inverse);
         isDragging = true;
-        const pe = submatrix2.computeCoord3(startPosition);
-        offset_map = gen_offset_map(shapes[0], pe);
+        const p = submatrix2.computeCoord3(startPosition);
+        offset_map = gen_offset_map(shapes[0], p);
     }
 }
 function _migrate() {
-    if (!shapes.length) return;
+    if (!shapes.length) {
+        return;
+    }
+
     const p = props.shape.matrix2Root().computeCoord2(4, 4);
     const targetParent = props.context.selection.getClosestContainer(p);
     const m = getCloesetContainer(props.shape).id !== targetParent.id;
-    if (targetParent.id === props.shape.id) return;
+    if (targetParent.id === props.shape.id) {
+        return;
+    }
+
     if (m && asyncTransfer) {
         asyncTransfer.migrate(targetParent as GroupShape, compare_layer_3(shapes), '');
     }
@@ -247,15 +269,38 @@ function getCloesetContainer(shape: Shape): Shape {
     }
     return result
 }
-function transform_f(start: ClientXY, end: ClientXY) {
+function transform_f(start: ClientXY, end: ClientXY, assist = true) {
     const ps: PageXY = submatrix2.computeCoord2(start.x, start.y);
     const pe: PageXY = submatrix2.computeCoord2(end.x, end.y);
+
     let update_type = 0;
-    if (asyncTransfer) {
-        update_type = trans(asyncTransfer, ps, pe);
-        migrate();
+
+    if (!asyncTransfer) {
+        return update_type;
     }
+
+    if (!assist) {
+        asyncTransfer.trans(ps, pe);
+        props.context.assist.notify(Asssit.CLEAR);
+        update_type = 3;
+        return update_type;
+    }
+
+    update_type = trans(asyncTransfer, ps, pe);
+    migrate();
+
     return update_type;
+}
+function update_assist_by_workspace_change(event: MouseEvent) {
+    const workspace = props.context.workspace;
+
+    submatrix2 = new Matrix(workspace.matrix.inverse);
+
+    props.context.assist.set_trans_target(shapes);
+
+    const xy = submatrix2.computeCoord2(event.clientX, event.clientY);
+
+    offset_map = gen_offset_map(shapes[0], xy);
 }
 let pre_target_x2: number, pre_target_y2: number;
 function trans(asyncTransfer: AsyncTransfer, ps: PageXY, pe: PageXY): number {
@@ -428,10 +473,12 @@ function window_blur() {
     document.removeEventListener('mousemove', move);
     document.removeEventListener('mouseup', up);
 }
-function workspace_watcher(t?: number) {
+function workspace_watcher(t: number, param1: MouseEvent) {
     if (t === WorkSpace.SELECTION_VIEW_UPDATE) {
         hidden.value = false;
         update();
+    } else if (t === WorkSpace.NEW_ENV_MATRIX_CHANGE) {
+        update_assist_by_workspace_change(param1);
     }
 }
 watch(() => props.matrix, update);
