@@ -4,7 +4,7 @@
         <div class="left">
             <span>{{ t('home.recently_opened') }}</span>
             <Transition name="bounce2">
-                <div v-if="show" class="newandopen">
+                <div v-if="show && !searchvalue" class="newandopen">
                     <div class="newfile" @click="newFile">
                         <div class="left">
                             <svg xmlns="http://www.w3.org/2000/svg" xmlns:xlink="http://www.w3.org/1999/xlink" fill="none"
@@ -91,7 +91,7 @@
             </Transition>
         </div>
         <Transition name="bounce">
-            <div v-if="!show" class="right">
+            <div v-if="!show && !searchvalue" class="right">
                 <div class="newfile" @click="newFile">
                     <svg-icon icon-class="addfile-icon"></svg-icon>
                     {{ t('home.New_file') }}
@@ -217,11 +217,11 @@ let searchvalue = ref('');
 const searchlists = ref<any[]>([])
 const nulldata = ref(false)
 Bus.on('searchvalue', (str: string) => {
-    if (str !== '') {
-        show.value = false
-    } else {
-        show.value = true
-    }
+    // if (str !== '') {
+    //     show.value = false
+    // } else {
+    //     show.value = true
+    // }
     searchvalue.value = str
 })
 

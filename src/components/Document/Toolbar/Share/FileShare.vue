@@ -1,5 +1,5 @@
 <script setup lang="ts">
-import { ref, onMounted, onUnmounted, reactive, watch, watchEffect, } from 'vue';
+import { ref, onMounted, onUnmounted, reactive, watch, watchEffect, computed, } from 'vue';
 import { useI18n } from 'vue-i18n';
 import { UserInfo } from '@/context/user';
 import { Context } from '@/context';
@@ -31,13 +31,14 @@ enum permissions {
   reviewable,
   editable
 }
+
+const docInfo = ref<DocInfo>(props.docInfo!)
 const route = useRoute()
 const docID = props.docId ? props.docId : route.query.id
-const url = route.path !== '/document' ? `https://protodesign.cn/#/document?id=${docID}` + " " + `邀请您进入《${props.docName}》，点击链接开始协作` : location.href + ' ' + `邀请您进入《${props.docInfo?.document.name}》，点击链接开始协作`
+//const url = route.path !== '/document' ? `https://protodesign.cn/#/document?id=${docID}` + " " + `邀请您进入《${props.docName}》，点击链接开始协作` : location.href + ' ' + `邀请您进入《${docInfo.value.document.name}》，点击链接开始协作`
 
 const value1 = ref(props.shareSwitch)
 const authority = ref(false)
-const docInfo = ref<DocInfo>(props.docInfo!)
 const index = ref(0)
 const card = ref<HTMLDivElement>()
 const editable = ref(`${t('share.editable')}`)
@@ -78,6 +79,14 @@ const options = [
 const DocType = reactive([`${t('share.shareable')}`, `${t('share.need_to_apply_for_confirmation')}`, `${t('share.anyone_can_read_it')}`, `${t('share.anyone_can_comment')}`, `${t('share.anyone_can_edit_it')}`])
 const permission = reactive([`${t('share.no_authority')}`, `${t('share.readOnly')}`, `${t('share.reviewable')}`, `${t('share.editable')}`])
 const selectValue = ref(DocType[props.selectValue === 0 ? 1 : props.selectValue])
+
+const documentShareURL = computed(() => {
+  return route.path !== '/document'
+    ?
+    `https://protodesign.cn/#/document?id=${docID}` + " " + `邀请您进入《${props.docName}》，点击链接开始协作`
+    :
+    location.href + ' ' + `邀请您进入《${docInfo.value.document.name}》，点击链接开始协作`
+})
 
 
 //获取文档信息
@@ -273,7 +282,7 @@ watchEffect(() => {
 //复制分享链接
 const copyLink = async () => {
   if (navigator.clipboard && window.isSecureContext) {
-    return navigator.clipboard.writeText(url).then(() => {
+    return navigator.clipboard.writeText(documentShareURL.value).then(() => {
       ElMessage({
         message: `${t('share.copy_success')}`,
         type: 'success',
@@ -286,7 +295,7 @@ const copyLink = async () => {
     })
   } else {
     const textArea = document.createElement('textarea')
-    textArea.value = url
+    textArea.value = documentShareURL.value
     document.body.appendChild(textArea)
     textArea.focus()
     textArea.select()
@@ -562,15 +571,17 @@ const selectOption = (option: any) => {
   width: 400px;
   top: 25%;
   left: 50%;
-  background-color: transparent;
   transform: translate(-50%, 0%);
+  border: 1px solid #F0F0F0;
+  border-radius: 16px;
+  background-color: transparent;
   box-sizing: border-box;
+  overflow: hidden;
   z-index: 1000;
+  box-shadow: 0px 2px 16px 0px rgba(0, 0, 0, 0.08);
   animation: move 0.25s ease-in-out;
 
   .box-card {
-    border-radius: 16px;
-    border: 1px solid #F0F0F0;
     background-color: rgba(255, 255, 255, 1);
     border: none;
     box-shadow: none;

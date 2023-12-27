@@ -40,7 +40,9 @@ service.interceptors.response.use(function (response) {
         return Promise.resolve(dataAxios)
     } else if (dataAxios && dataAxios.code && dataAxios.code === -1) {
         return Promise.resolve(dataAxios)
-    } else {
+    }else if (dataAxios && dataAxios.code && dataAxios.code === 403) {
+        return Promise.resolve(dataAxios)
+    }  else {
         if (dataAxios && dataAxios.code && dataAxios.code === 401) {
             if (timer) {
                 clearTimeout(timer)

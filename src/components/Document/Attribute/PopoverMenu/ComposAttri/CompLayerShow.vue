@@ -162,7 +162,7 @@ onUnmounted(() => {
 <template>
     <div class="dialog_box" ref="comps" :style="{
         width: `${props.width ? props.width : 360}px`,
-        // left: props.dialog_posi.x - 10 + 'px',
+        left: props.dialog_posi.x - 10 + 'px',
         top: cur_p === 0 ? props.dialog_posi!.y + 10 + 'px' : cur_top + 'px'
     }" @mousedown.stop>
         <div class="header">
@@ -199,7 +199,7 @@ onUnmounted(() => {
 <style scoped lang="scss">
 .dialog_box {
     position: fixed;
-    right: 244px;
+    // right: 244px;
     outline: none;
     box-shadow: 0px 2px 16px 0px rgba(0, 0, 0, 0.08);
     background-color: #ffffff;

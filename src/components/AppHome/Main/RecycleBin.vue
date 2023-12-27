@@ -1,7 +1,7 @@
 <template>
     <div class="tatle" style="height: calc(100vh - 144px);">
         <tablelist :data="searchlists" :iconlist="iconlists" @restore="Restorefile" @ndelete="Deletefile"
-            @rightMeun="rightmenu" :noNetwork="noNetwork" @refreshDoc="refreshDoc" />
+            @rightMeun="rightmenu" :noNetwork="noNetwork" @refreshDoc="refreshDoc" :nulldata="nulldata" />
     </div>
     <listrightmenu :items="items" :data="mydata" @getrecycle-lists="GetrecycleLists" @r-deletefile="Deletefile"
         @r-restorefile="Restorefile" />
@@ -73,14 +73,17 @@ const refreshDoc = () => {
 }
 let searchlists = ref<any[]>([])
 const searchvalue = ref('');
-
+const nulldata = ref(false)
 Bus.on('searchvalue', (str: string) => {
     searchvalue.value = str
 })
 
 watchEffect(() => {
-    if (!searchvalue.value) return searchlists.value = lists.value
+    if (!searchvalue.value) return searchlists.value = lists.value, nulldata.value = false
     searchlists.value = lists.value.filter((el: any) => PinyinMatch.match(el.document.name.toLowerCase(), searchvalue.value.toLowerCase()))
+    if (searchlists.value.length === 0 && searchvalue.value !== '') {
+        nulldata.value = true
+    }
 })
 
 //转换文件大小
