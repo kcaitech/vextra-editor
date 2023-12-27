@@ -1,4 +1,4 @@
-import {Text, SpanAttr, WatchableObject} from "@kcdesign/data";
+import {Text, SpanAttr, WatchableObject, TextShapeView, TableCellView} from "@kcdesign/data";
 import {Selection} from "./selection"
 
 export interface TextLocate {
@@ -53,7 +53,8 @@ export class TextSelection extends WatchableObject {
         const xy = matrix.inverseCoord(x, y);
         x = xy.x;
         y = xy.y;
-        return ((shape as any).text as Text).locateText(x, y);
+
+        return (shape as TextShapeView | TableCellView).locateText(x, y);
     }
 
     setCursor(index: number, before: boolean, text?: Text) {

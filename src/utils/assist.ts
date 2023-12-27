@@ -1,7 +1,7 @@
 import { Context } from "@/context";
 import { Asssit, PageXY2, PointGroup1, PointGroup2, PT1, PT2, PT4P1, PT4P2 } from "@/context/assist";
 import { PageXY, XY } from "@/context/selection";
-import { GroupShape, Matrix, Shape, ShapeType } from "@kcdesign/data";
+import { GroupShape, Matrix, Shape, ShapeType, ShapeView } from "@kcdesign/data";
 import { debounce } from "lodash";
 import { XYsBounding } from "./common";
 
@@ -192,7 +192,7 @@ export function gen_match_points_by_map2(offset: XY[], p: PageXY) {
     })
 }
 
-export function isShapeOut(context: Context, shape: Shape) {
+export function isShapeOut(context: Context, shape: Shape | ShapeView) {
     const { x, y, bottom, right } = context.workspace.root;
     const { width, height } = shape.frame;
     const m = shape.matrix2Root();

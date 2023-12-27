@@ -1,4 +1,4 @@
-import {Shape, WatchableObject} from "@kcdesign/data";
+import {Shape, ShapeView, WatchableObject} from "@kcdesign/data";
 
 interface TextSelection {
     shape: Shape
@@ -46,7 +46,7 @@ export class Navi extends WatchableObject {
         this.m_phase1 = id;
     }
 
-    isPhase2(shape: Shape) {
+    isPhase2(shape: ShapeView) {
         return Boolean(shape.id === this.m_phase1);
     }
 

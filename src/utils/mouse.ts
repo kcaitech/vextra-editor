@@ -1,5 +1,5 @@
 import { Context } from "@/context";
-import { Matrix, Shape, ShapeType } from "@kcdesign/data";
+import { Matrix, Shape, ShapeType, ShapeView, adapt2Shape } from "@kcdesign/data";
 import { Menu } from "@/context/menu";
 import { ClientXY, PageXY, XY } from "@/context/selection";
 import { WorkSpace } from "@/context/workspace";
@@ -28,7 +28,7 @@ export function down_while_is_text_editing(e: MouseEvent, context: Context) {
         selection.resetSelectShapes();
         selection.rangeSelectShape(save);
     } else {
-        const editor = context.editor4Shape(shapes[0]);
+        const editor = context.editor4Shape(adapt2Shape(shapes[0]));
         editor.delete();
         selection.resetSelectShapes();
     }
@@ -229,7 +229,7 @@ export function modify_mouse_position_by_type(update_type: number, startPosition
 /**
  * @description 获取当前图形的最近 父级容器
  */
-export function get_closest_container(context: Context, shape: Shape): Shape {
+export function get_closest_container(context: Context, shape: ShapeView): ShapeView {
     let result = context.selection.selectedPage!
     let p = shape.parent;
     while (p) {

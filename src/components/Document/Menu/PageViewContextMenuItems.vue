@@ -12,7 +12,8 @@ import {
     SymbolRefShape,
     TableCellType,
     TextShape,
-    Text
+    Text,
+    ShapeView
 } from "@kcdesign/data";
 import Layers from './Layers.vue';
 import {Context} from '@/context';
@@ -31,7 +32,7 @@ const {t} = useI18n();
 
 interface Props {
     context: Context,
-    layers?: Shape[],
+    layers?: ShapeView[],
     items: string[],
     site?: { x: number, y: number }
 }

@@ -1,6 +1,6 @@
 import { Context } from "@/context";
 import { Navi } from "@/context/navigate";
-import { Shape, ShapeType, SymbolShape, SymbolUnionShape, VariableType } from "@kcdesign/data";
+import { Shape, ShapeType, ShapeView, SymbolShape, SymbolUnionShape, VariableType } from "@kcdesign/data";
 import { XYsBounding } from "./common";
 import { WorkSpace } from "@/context/workspace";
 
@@ -37,7 +37,7 @@ export function selection_types(shapes: Shape[]): number {
     return types;
 }
 
-export function is_parent_unvisible(shape: Shape): boolean {
+export function is_parent_unvisible(shape: ShapeView): boolean {
     let is_pu = false;
     let p = shape.parent;
     while (p && p.type !== ShapeType.Page) {
@@ -50,11 +50,11 @@ export function is_parent_unvisible(shape: Shape): boolean {
     return is_pu;
 }
 
-export function is_parent_locked(shape: Shape): boolean {
+export function is_parent_locked(shape: ShapeView): boolean {
     let is_pu = false;
     let p = shape.parent;
     while (p && p.type !== ShapeType.Page) {
-        if (p.isLocked) {
+        if (p.isLocked()) {
             is_pu = true;
             break;
         }
@@ -73,7 +73,7 @@ export function is_valid_data(context: Context, shape: Shape) {
     return true;
 }
 
-export function fit(context: Context, shape: Shape) {
+export function fit(context: Context, shape: ShapeView) {
     const m = shape.matrix2Root(), f = shape.frame, matrix = context.workspace.matrix, root = context.workspace.root;
     m.multiAtLeft(matrix);
     const points: { x: number, y: number }[] = [{ x: 0, y: 0 }, { x: f.width, y: 0 }, { x: f.width, y: f.height }, {
@@ -112,7 +112,7 @@ export function fit(context: Context, shape: Shape) {
     }
 }
 
-export function fit_no_transform(context: Context, shape: Shape) {
+export function fit_no_transform(context: Context, shape: ShapeView) {
     const m = shape.matrix2Root(), f = shape.frame, matrix = context.workspace.matrix, root = context.workspace.root;
     m.multiAtLeft(matrix);
     const points: { x: number, y: number }[] = [{ x: 0, y: 0 }, { x: f.width, y: 0 }, { x: f.width, y: f.height }, {

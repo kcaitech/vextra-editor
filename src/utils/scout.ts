@@ -1,6 +1,6 @@
 import { Context } from "@/context";
 import { PageXY, XY } from "@/context/selection";
-import { GroupShape, Matrix, PathShape, Shape, ShapeType, SymbolRefShape, SymbolShape } from "@kcdesign/data";
+import { GroupShapeView, Matrix, PathShapeView, ShapeType, ShapeView, SymbolRefView } from "@kcdesign/data";
 import { v4 as uuid } from "uuid";
 import { isShapeOut } from "./assist";
 import { debounce } from "lodash";
@@ -8,15 +8,15 @@ import { debounce } from "lodash";
 export interface Scout {
     path: SVGPathElement
     remove: () => void
-    isPointInShape: (shape: Shape, point: PageXY) => boolean
+    isPointInShape: (shape: ShapeView, point: PageXY) => boolean
     isPointInPath: (d: string, point: PageXY) => boolean
     isPointInStroke: (d: string, point: PageXY) => boolean
-    isPointInShape2: (shape: Shape, point: PageXY) => boolean
+    isPointInShape2: (shape: ShapeView, point: PageXY) => boolean
 }
 
-function get_max_thickness_border(shape: Shape) {
+function get_max_thickness_border(shape: ShapeView) {
     let max_thickness = 0;
-    const borders = shape.style.borders;
+    const borders = shape.getBorders();
     if (borders.length) {
         for (let i = 0, l = borders.length; i < l; i++) {
             const t = borders[i].thickness;
@@ -41,7 +41,7 @@ export function scout(context: Context): Scout {
     // 任意初始化一个point
     const SVGPoint = document.createElementNS("http://www.w3.org/2000/svg", "svg").createSVGPoint();
 
-    function isPointInShape(shape: Shape, point: PageXY): boolean {
+    function isPointInShape(shape: ShapeView, point: PageXY): boolean {
         const d = getPathOnPageString(shape);
 
         SVGPoint.x = point.x;
@@ -49,17 +49,17 @@ export function scout(context: Context): Scout {
 
         path.setAttributeNS(null, 'd', d);
 
-        if (shape instanceof PathShape) {
+        if (shape instanceof PathShapeView) {
             return for_path_shape(shape, path);
         } else {
             return (path as SVGGeometryElement).isPointInFill(SVGPoint);
         }
     }
 
-    function for_path_shape(shape: PathShape, path: SVGGeometryElement) {
+    function for_path_shape(shape: PathShapeView, path: SVGGeometryElement) {
         const is_point_in_fill = (path as SVGGeometryElement).isPointInFill(SVGPoint);
 
-        if (shape.isClosed) {
+        if (shape.data.isClosed) {
             return is_point_in_fill;
         }
 
@@ -68,14 +68,14 @@ export function scout(context: Context): Scout {
 
         const is_point_in_stroke = (path as SVGGeometryElement).isPointInStroke(SVGPoint);
 
-        if (shape.style.fills.length) {
+        if (shape.getFills().length) {
             return is_point_in_fill || is_point_in_stroke;
         }
 
         return is_point_in_stroke;
     }
 
-    function isPointInShape2(shape: Shape, point: PageXY): boolean {
+    function isPointInShape2(shape: ShapeView, point: PageXY): boolean {
         const d = getPathOnPageStringCustomOffset(shape, 1 / context.workspace.matrix.m00);
         SVGPoint.x = point.x;
         SVGPoint.y = point.y;
@@ -118,14 +118,14 @@ function createPath(path: string, id: string): SVGPathElement {
     return p;
 }
 
-export function getPathOnPageString(shape: Shape): string { // path坐标系：页面
-    const path = shape.getPath();
+export function getPathOnPageString(shape: ShapeView): string { // path坐标系：页面
+    const path = shape.getPath().clone();
     const m2page = shape.matrix2Root();
     path.transform(m2page);
     return path.toString();
 }
 
-function getPathOnPageStringCustomOffset(shape: Shape, s: number): string { // path坐标系：页面
+function getPathOnPageStringCustomOffset(shape: ShapeView, s: number): string { // path坐标系：页面
     const f = shape.frame;
     const offset = 20 * s;
     const scalex = (f.width + offset) / f.width, scaley = (f.height + offset) / f.height;
@@ -145,19 +145,19 @@ function getBoxPath(transformMatrix: Matrix) {
 }
 
 // 判定点是否在图形内
-export function isTarget(scout: Scout, shape: Shape, p: PageXY): boolean {
+export function isTarget(scout: Scout, shape: ShapeView, p: PageXY): boolean {
     return scout.isPointInShape(shape, p);
 }
 
 // 胖一圈的判定
-function isTarget2(scout: Scout, shape: Shape, p: PageXY): boolean {
+function isTarget2(scout: Scout, shape: ShapeView, p: PageXY): boolean {
     return scout.isPointInShape2(shape, p);
 }
 
 // 扁平化一个编组的树结构 tree -> list
-export function delayering(groupshape: Shape, flat?: Shape[]): Shape[] {
-    let f: Shape[] = flat || [];
-    const childs: Shape[] = groupshape.type === ShapeType.SymbolRef ? (groupshape.naviChilds || []) : (groupshape as GroupShape).childs;
+export function delayering(groupshape: ShapeView, flat?: ShapeView[]): ShapeView[] {
+    let f: ShapeView[] = flat || [];
+    const childs: ShapeView[] = groupshape.type === ShapeType.SymbolRef ? (groupshape.naviChilds || []) : (groupshape).childs;
     for (let i = 0, len = childs.length; i < len; i++) {
         const item = childs[i];
         if (item.type === ShapeType.Group || item.type === ShapeType.Symbol || item.type === ShapeType.SymbolRef) {
@@ -172,12 +172,12 @@ export function delayering(groupshape: Shape, flat?: Shape[]): Shape[] {
 /**
  * @description 点击穿透，穿透父级选区对子元素选区的覆盖
  */
-export function selection_penetrate(scout: Scout, scope: Shape[], position: PageXY): Shape | undefined {
+export function selection_penetrate(scout: Scout, scope: ShapeView[], position: PageXY): ShapeView | undefined {
     if (!scope?.length) return;
     for (let i = scope.length - 1; i > -1; i--) {
         const cur = scope[i];
         if ([ShapeType.Group, ShapeType.Symbol, ShapeType.SymbolRef].includes(cur.type)) {
-            const items: Shape[] = delayering(cur);
+            const items: ShapeView[] = delayering(cur);
             for (let j = items.length - 1; j > -1; j--) {
                 const item = items[j];
                 if (canBeTarget(item) && isTarget(scout, item, position)) return cur;
@@ -187,16 +187,17 @@ export function selection_penetrate(scout: Scout, scope: Shape[], position: Page
     }
 }
 
+
 /**
  * 图形检索规则以及实现
- * @param { Scout } scout 图形检索器，负责判定一个点(position)是否在一条path路径上(或路径的填充中)
+ * @param { Scout2 } scout 图形检索器，负责判定一个点(position)是否在一条path路径上(或路径的填充中)
  * @param { Shape[] } g 检索的范围，只会在该范围内进行上述匹配
  * @param { PageXY } position 一个点，在页面坐标系上的点
  * @param { boolean } isCtrl 深度挖掘⛏️，不为真的时候会有特殊判定，比如编组子元素会冒泡的编组、存在子元素容器无法被判定为目标...
  * @returns { Shape[] } 返回符合检索条件的图形
  */
-export function finder(context: Context, scout: Scout, g: Shape[], position: PageXY, selected: Shape, isCtrl: boolean): Shape | undefined {
-    let result: Shape | undefined;
+export function finder(context: Context, scout: Scout, g: ShapeView[], position: PageXY, selected: ShapeView, isCtrl: boolean): ShapeView | undefined {
+    let result: ShapeView | undefined;
     for (let i = g.length - 1; i > -1; i--) { // 从最上层开始往下找(z-index：大 -> 小)
         const item = g[i];
         if (!canBeTarget(item)) {
@@ -208,13 +209,13 @@ export function finder(context: Context, scout: Scout, g: Shape[], position: Pag
         }
 
         if (item.type === ShapeType.SymbolUnion) { // 组件状态集合
-            result = finder_symbol_union(context, scout, item as GroupShape, position, selected, isCtrl);
+            result = finder_symbol_union(context, scout, item as GroupShapeView, position, selected, isCtrl);
             
             if (isTarget(scout, item, position)) {
                 break; // 只要进入集合，有无子元素选中都应该break
             }
         } else if (item.type === ShapeType.Symbol || item.type === ShapeType.SymbolRef) { // 组件或引用
-            result = finder_symbol(context, scout, item as SymbolShape, position, selected, isCtrl);
+            result = finder_symbol(context, scout, item, position, selected, isCtrl);
         }
 
         if (result) {
@@ -227,9 +228,9 @@ export function finder(context: Context, scout: Scout, g: Shape[], position: Pag
         }
 
         if (item.type === ShapeType.Artboard) {
-            result = finder_artboard(context, scout, item as GroupShape, position, selected, isCtrl);
+            result = finder_artboard(context, scout, item as GroupShapeView, position, selected, isCtrl);
         } else if (item.type === ShapeType.Group) {
-            result = finder_group(scout, (item as GroupShape).childs, position, selected, isCtrl);
+            result = finder_group(scout, (item).childs, position, selected, isCtrl);
         } else {
             result = item;
         }
@@ -241,9 +242,9 @@ export function finder(context: Context, scout: Scout, g: Shape[], position: Pag
     return result;
 }
 
-function finder_artboard(context: Context, scout: Scout, artboard: GroupShape, position: PageXY, selected: Shape, isCtrl: boolean) {
+function finder_artboard(context: Context, scout: Scout, artboard: ShapeView, position: PageXY, selected: ShapeView, isCtrl: boolean) {
     const childs = artboard.childs;
-    let result: Shape | undefined;
+    let result: ShapeView | undefined;
     if (childs.length) {
         result = finder(context, scout, childs, position, selected, isCtrl);
         if (result) return result;
@@ -255,13 +256,13 @@ function finder_artboard(context: Context, scout: Scout, artboard: GroupShape, p
 
 // 编组：如果光标在一个编组A内，当光标在子元素(包括所有后代元素)上时，有且只有编组A被认为是target。
 // 注：在没有任何元素选中的情况下，子元素如果也是编组(编组B(编组C(编组D...)))的话都要冒泡到编组A上，如果已经有元素被选中，则只冒泡到同一层级兄弟元素
-export function finder_group(scout: Scout, g: Shape[], position: PageXY, selected: Shape, isCtrl: boolean): Shape | undefined {
-    let result: Shape | undefined;
+export function finder_group(scout: Scout, g: ShapeView[], position: PageXY, selected: ShapeView, isCtrl: boolean): ShapeView | undefined {
+    let result: ShapeView | undefined;
     for (let j = g.length - 1; j > -1; j--) { // 从最子集往父级冒泡
         const shape = g[j];
-        if (!shape.isVisible || shape.isLocked || !isTarget(scout, shape, position)) continue;
+        if (!shape.isVisible() || shape.isLocked() || !isTarget(scout, shape, position)) continue;
         if (ShapeType.Group === shape.type) {
-            const c: Shape[] = (shape as GroupShape).childs;
+            const c: ShapeView[] = (shape).childs;
             result = finder_group(scout, c, position, selected, isCtrl);
             if (result) return result;
         } else {
@@ -279,8 +280,8 @@ export function finder_group(scout: Scout, g: Shape[], position: PageXY, selecte
     return result;
 }
 
-function finder_symbol_union(context: Context, scout: Scout, union: GroupShape, position: PageXY, selected: Shape, isCtrl: boolean) {
-    let result: Shape | undefined;
+function finder_symbol_union(context: Context, scout: Scout, union: ShapeView, position: PageXY, selected: ShapeView, isCtrl: boolean) {
+    let result: ShapeView | undefined;
     const childs = union.childs;
     if (!childs.length) return;
     result = finder(context, scout, childs, position, selected, isCtrl);
@@ -291,14 +292,15 @@ function finder_symbol_union(context: Context, scout: Scout, union: GroupShape, 
     }
 }
 
-function finder_symbol(context: Context, scout: Scout, symbol: SymbolShape | SymbolRefShape, position: PageXY, selected: Shape, isCtrl: boolean) {
-    const children = symbol.type === ShapeType.SymbolRef ? (symbol.naviChilds || []) : (symbol as SymbolShape).childs;
+function finder_symbol(context: Context, scout: Scout, symbol: ShapeView, position: PageXY, selected: ShapeView, isCtrl: boolean) {
+    const children = symbol.type === ShapeType.SymbolRef ? (symbol.naviChilds || []) : (symbol).childs;
     if (!isTarget(scout, symbol, position)) { // 如果frame感应区的不被判定为目标，则还需要判定子元素
         return finder(context, scout, children, position, selected, isCtrl);
     }
     if (isCtrl) {
         return finder(context, scout, children, position, selected, true);
     }
+    // ???
     // frame感应区被判定为真
     if (!context.selection.selectedSymOrRefMenber) return symbol;
     const bros = context.selection.selectedSymRefBros;
@@ -308,7 +310,7 @@ function finder_symbol(context: Context, scout: Scout, symbol: SymbolShape | Sym
     }
 }
 
-export function finder_contact(scout: Scout, g: Shape[], position: PageXY, selected: Shape, init?: Shape[]): Shape[] {
+export function finder_contact(scout: Scout, g: ShapeView[], position: PageXY, selected: ShapeView, init?: ShapeView[]): ShapeView[] {
     const result = init || [];
     for (let i = g.length - 1; i > -1; i--) {
         const item = g[i];
@@ -320,7 +322,7 @@ export function finder_contact(scout: Scout, g: Shape[], position: PageXY, selec
             if (!isItemIsTarget) {
                 continue;
             }
-            const c = item instanceof SymbolRefShape ? (item.naviChilds || []) : (item as GroupShape).childs as Shape[];
+            const c = item instanceof SymbolRefView ? (item.naviChilds || []) : (item).childs as ShapeView[];
             if (c.length) {
                 result.push(...finder_contact(scout, c, position, selected, result));
                 if (result.length) {
@@ -345,18 +347,18 @@ export function finder_contact(scout: Scout, g: Shape[], position: PageXY, selec
 
 /**
  * 与finder相比，finder结果通常不会大于1，而这里通常可以大于1，代码上减少了逻辑判断，增大了遍历更多条目的概率
- * @param { Scout } scout 图形检索器，负责判定一个点(position)是否在一条path路径上(或路径的填充中)
+ * @param { Scout2 } scout 图形检索器，负责判定一个点(position)是否在一条path路径上(或路径的填充中)
  * @param { Shape[] } g 检索的范围，只会在该范围内进行上述匹配
  * @param { PageXY } position 一个点，在页面坐标系上的点
  */
-export function finder_layers(scout: Scout, g: Shape[], position: PageXY): Shape[] {
+export function finder_layers(scout: Scout, g: ShapeView[], position: PageXY): ShapeView[] {
     const result = [];
     for (let i = g.length - 1; i > -1; i--) {
         if (!canBeTarget(g[i])) continue;
         const item = g[i];
         if (!isTarget(scout, item, position)) continue;
         if ([ShapeType.Group, ShapeType.Artboard, ShapeType.Symbol, ShapeType.SymbolRef].includes(item.type)) {
-            const c: Shape[] | undefined = item.type === ShapeType.SymbolRef ? item.naviChilds : (item as GroupShape).childs;
+            const c: ShapeView[] | undefined = item.type === ShapeType.SymbolRef ? item.naviChilds : (item).childs;
             if (c?.length) {
                 result.push(...finder_layers(scout, c, position));
             }
@@ -367,36 +369,36 @@ export function finder_layers(scout: Scout, g: Shape[], position: PageXY): Shape
 }
 
 // 判断一个编组中是否已经有子元素被选中
-function isPartSelect(shape: Shape, selected: Shape): boolean {
+function isPartSelect(shape: ShapeView, selected: ShapeView): boolean {
     let result: boolean = false;
-    const c = shape instanceof GroupShape ? shape.childs : undefined;
+    const c = shape instanceof GroupShapeView ? shape.childs : undefined;
     if (c && c.length) {
         for (let i = 0, len = c.length; i < len; i++) {
             const cur = c[i];
             if (cur.id === selected.id) return true;
-            if ((cur as GroupShape)?.childs?.length) result = isPartSelect(c[i], selected);
+            if ((cur)?.childs?.length) result = isPartSelect(c[i], selected);
             if (result) return true;
         }
     }
     return false;
 }
 
-function is_part_select_for_symbol(shape: Shape, selected: Shape): boolean {
-    let result: boolean = false;
-    const c = shape instanceof GroupShape ? shape.childs : undefined;
-    return result;
-}
+// function is_part_select_for_symbol(shape: ShapeView, selected: ShapeView): boolean {
+//     let result: boolean = false;
+//     const c = shape instanceof GroupShapeView ? shape.childs : undefined;
+//     return result;
+// }
 
 // 寻找到最近的层级较高的那个容器
-export function artboardFinder(scout: Scout, g: Shape[], position: PageXY, except?: Map<string, Shape>): Shape | undefined {
-    let result: Shape | undefined = undefined;
+export function artboardFinder(scout: Scout, g: ShapeView[], position: PageXY, except?: Map<string, ShapeView>): ShapeView | undefined {
+    let result: ShapeView | undefined = undefined;
     for (let i = g.length - 1; i > -1; i--) {
         const item = g[i];
         if (except?.get(item.id)) continue;
         if (item.type !== ShapeType.Artboard) continue;
         if (item.type === ShapeType.Artboard) {
             if (isTarget(scout, item, position)) {
-                const c = (item as GroupShape)?.childs || [], length = c.length;
+                const c = (item)?.childs || [], length = c.length;
                 if (length) {
                     result = artboardFinder(scout, c, position, except);
                     if (result) break;
@@ -412,7 +414,7 @@ export function artboardFinder(scout: Scout, g: Shape[], position: PageXY, excep
 /**
  * @description 寻找到最近的层级较高的那个容器
  */
-export function finder_container(scout: Scout, g: Shape[], position: PageXY, except?: Map<string, Shape>) {
+export function finder_container(scout: Scout, g: ShapeView[], position: PageXY, except?: Map<string, ShapeView>) {
     const layers = finder_layers(scout, g, position);
     for (let i = 0, len = layers.length; i < len; i++) {
         const item = layers[i];
@@ -422,26 +424,26 @@ export function finder_container(scout: Scout, g: Shape[], position: PageXY, exc
     }
 }
 
-export function canBeTarget(shape: Shape): boolean { // 可以被判定为检索结果的前提是没有被锁定和isVisible可视
-    return shape.getVisible() && !shape.isLocked;
+export function canBeTarget(shape: ShapeView): boolean { // 可以被判定为检索结果的前提是没有被锁定和isVisible可视
+    return shape.isVisible() && !shape.isLocked();
 }
 
 /**
  * @description 是否有组成组件、组件实例的图形被选中
  * @param shapes
  */
-export function _selected_symbol_menber(context: Context, shapes: Shape[]) {
-    let result: Shape | undefined;
-    let bros: Shape[] = [];
+export function _selected_symbol_menber(context: Context, shapes: ShapeView[]) {
+    let result: ShapeView | undefined;
+    let bros: ShapeView[] = [];
     // if (shapes.length === 1) { // todo 多选的处理
     if (shapes.length) {
         let s = shapes[0];
-        let p: Shape | undefined = s.parent;
-        let parents: GroupShape[] = [];
-        let parents_map: Map<string, GroupShape> = new Map();
+        let p: ShapeView | undefined = s.parent;
+        let parents: ShapeView[] = [];
+        let parents_map: Map<string, ShapeView> = new Map();
         while (p) {
-            parents.push(p as GroupShape);
-            parents_map.set(p.id, p as GroupShape);
+            parents.push(p);
+            parents_map.set(p.id, p);
             if (p.type === ShapeType.Symbol || p.type === ShapeType.SymbolRef) {
                 result = s;
                 flat(parents, bros, parents_map);
@@ -454,10 +456,10 @@ export function _selected_symbol_menber(context: Context, shapes: Shape[]) {
     context.selection.setSelectSoRMenber(result);
 }
 
-function flat(parents: GroupShape[], bros: Shape[], parents_map: Map<string, GroupShape>) {
+function flat(parents: ShapeView[], bros: ShapeView[], parents_map: Map<string, ShapeView>) {
     let p = parents.pop()
     while (p) {
-        const childs = p.type === ShapeType.SymbolRef ? p.naviChilds : (p as SymbolShape).childs;
+        const childs = p.type === ShapeType.SymbolRef ? p.naviChilds : (p).childs;
         if (childs) {
             for (let i = 0, len = childs.length; i < len; i++) {
                 const c = childs[i];
@@ -470,7 +472,7 @@ function flat(parents: GroupShape[], bros: Shape[], parents_map: Map<string, Gro
 
 export const selected_sym_ref_menber = debounce(_selected_symbol_menber, 100);
 
-export function is_shape_in_selected(selected: Shape[], shape: Shape) {
+export function is_shape_in_selected(selected: ShapeView[], shape: ShapeView) {
     for (let i = 0, len = selected.length; i < len; i++) {
         if (selected[i].id === shape.id) return true;
     }

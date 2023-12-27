@@ -7,7 +7,8 @@ import {
     TableShape,
     TableEditor,
     Text,
-    SymbolShape
+    SymbolShape,
+    PageView
 } from "@kcdesign/data";
 import { Document } from "@kcdesign/data";
 import { Page } from "@kcdesign/data";
@@ -187,6 +188,7 @@ export class Context extends WatchableObject {
         return this.editor.editor4Shape(shape);
     }
 
+    // 在editor里缓存临时数据不太对，应缓存到textselection
     editor4TextShape(shape: Shape & { text: Text }): TextShapeEditor {
         if (this.m_textEditor && this.m_textEditor.shape.id === shape.id) {
             return this.m_textEditor;
@@ -296,5 +298,10 @@ export class Context extends WatchableObject {
 
     get arrange() {
         return this.m_arrange;
+    }
+
+    nextTick(page: PageView, cb: () => void) {
+        const ctx = this.getPageDom(page.data).ctx;
+        ctx.once('nextTick', cb);
     }
 }

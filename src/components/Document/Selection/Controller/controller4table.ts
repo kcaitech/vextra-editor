@@ -10,7 +10,7 @@ import { WorkSpace } from "@/context/workspace";
 import { AsyncTransfer } from "@kcdesign/data";
 import { useI18n } from 'vue-i18n';
 import { TableSelection } from '@/context/tableselection';
-import { TextSelection } from '@/context/textselection';
+import { TextSelectionLite } from '@/context/textselectionlite';
 
 function useControllerCustom(context: Context, i18nT: Function) {
     const workspace = computed(() => context.workspace);
@@ -29,7 +29,7 @@ function useControllerCustom(context: Context, i18nT: Function) {
     let down_item: (TableGridItem & { cell: TableCell | undefined }) | undefined;
     let table: TableShape = context.selection.selectedShapes[0] as TableShape;
     let table_selection: TableSelection;
-    let text_selection: TextSelection;
+    let text_selection: TextSelectionLite;
     let down_index: { index: number, before: boolean };
     let point_on_table: { x: number, y: number } = { x: 0, y: 0 };
     let down_type: number = 1; //针对主键 1 单击 2 双击 3 三次点击

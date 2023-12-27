@@ -1,7 +1,7 @@
 import { Context } from "@/context";
 import { map_from_shapes, permIsEdit } from "./content";
 import { Action } from "@/context/tool";
-import { AsyncTransfer, GroupShape, Shape, ShapeType } from "@kcdesign/data";
+import { AsyncTransfer, GroupShape, Shape, ShapeType, ShapeView, adapt2Shape } from "@kcdesign/data";
 import { ClientXY, PageXY } from "@/context/selection";
 import { debounce } from "lodash";
 import { WorkSpace } from "@/context/workspace";
@@ -43,7 +43,7 @@ export function keyboardHandle(e: KeyboardEvent, context: Context) {
 
     if (transform) {
         for (let i = 0; i < shapes.length; i++) {
-            const editor = context.editor4Shape(shapes[i]);
+            const editor = context.editor4Shape(adapt2Shape(shapes[i]));
             editor.translate(dx, dy);
         }
     }
@@ -136,7 +136,7 @@ export function modify_mouse_position_by_type(update_type: number, startPosition
     else if (update_type === 1) startPosition.x = mousePosition.x;
 }
 
-export function migrate_immediate(context: Context, asyncTransfer: AsyncTransfer, shapes: Shape[], shape: Shape) {
+export function migrate_immediate(context: Context, asyncTransfer: AsyncTransfer, shapes: ShapeView[], shape: ShapeView) {
     if (!shapes.length) return;
     const p = shape.matrix2Root().computeCoord2(4, 4);
     const map = map_from_shapes(shapes);
@@ -144,12 +144,12 @@ export function migrate_immediate(context: Context, asyncTransfer: AsyncTransfer
     if (targetParent.id === shape.id) return;
     const m = getCloesetContainer(context, shape).id !== targetParent.id;
     if (m && asyncTransfer) {
-        asyncTransfer.migrate(targetParent as GroupShape, compare_layer_3(shapes), context.workspace.t('compos.dlt'));
+        asyncTransfer.migrate(adapt2Shape(targetParent) as GroupShape, compare_layer_3(shapes).map(s => adapt2Shape(s)), context.workspace.t('compos.dlt'));
     }
 }
 
 // 判断当前所处的wrap
-function getCloesetContainer(context: Context, shape: Shape): Shape {
+function getCloesetContainer(context: Context, shape: ShapeView): ShapeView {
     let result = context.selection.selectedPage!
     let p = shape.parent;
     while (p) {
@@ -183,8 +183,8 @@ export function check_status(context: Context) {
  * @param shapes
  * @returns
  */
-export function modify_shapes(context: Context, shapes: Shape[]) {
-    const shape_map = new Map<string, Shape>();
+export function modify_shapes(context: Context, shapes: ShapeView[]) {
+    const shape_map = new Map<string, ShapeView>();
     let is_change = false;
 
     for (let i = 0, l = shapes.length; i < l; i++) {

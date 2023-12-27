@@ -1,7 +1,7 @@
 import {
     export_shape, import_shape_from_clipboard,
     Shape, ShapeType, AsyncCreator, ShapeFrame, GroupShape, TextShape, Text,
-    export_text, import_text, TextShapeEditor, ImageShape, transform_data, ContactShape, CurvePoint, PathShape
+    export_text, import_text, TextShapeEditor, ImageShape, transform_data, ContactShape, CurvePoint, PathShape, adapt2Shape, ShapeView
 } from '@kcdesign/data';
 import { Context } from '@/context';
 import { PageXY } from '@/context/selection';
@@ -12,6 +12,7 @@ import { is_box_outer_view2 } from './common';
 import { compare_layer_3 } from './group_ungroup';
 import { Document } from '@kcdesign/data';
 import { v4 } from 'uuid';
+import { pa } from 'element-plus/es/locale';
 
 interface SystemClipboardItem {
     type: ShapeType
@@ -73,14 +74,14 @@ export class Clipboard {
             }
 
             // 先导出将要写入的数据
-            shapes = export_shape(shapes);
-            if (!shapes) {
+            const _shapes = export_shape(shapes.map((s => adapt2Shape(s))));
+            if (!_shapes) {
                 return false;
             }
 
             // 修改写入数据的frame，使之在多选的情况下每个图形之间的相对位置不变
-            for (let i = 0, len = shapes.length; i < len; i++) {
-                const shape = shapes[i];
+            for (let i = 0, len = _shapes.length; i < len; i++) {
+                const shape = _shapes[i];
                 const root_frame = position_map.get(shape.id);
                 if (root_frame) {
                     shape.frame.x = root_frame.x;
@@ -95,10 +96,10 @@ export class Clipboard {
 
             // 转义修改好的数据并写入
             if (navigator.clipboard && ClipboardItem) {
-                const media = sort_media(this.context.data, shapes);
+                const media = sort_media(this.context.data, _shapes);
                 // 支持异步接口
                 const data = {
-                    shapes,
+                    shapes: _shapes,
                     media
                 }
 
@@ -106,7 +107,7 @@ export class Clipboard {
                 const blob = new Blob([h || ''], { type: 'text/html' });
                 const item: any = { 'text/html': blob };
 
-                if (shapes.length === 1 && shapes[0].type === ShapeType.Text) {
+                if (_shapes.length === 1 && _shapes[0].type === ShapeType.Text) {
                     // todo 直接复制图层里面的文本
                 }
 
@@ -132,8 +133,8 @@ export class Clipboard {
             return false;
         }
 
-        const editor = this.context.editor4Page(page);
-        const delete_res = editor.delete_batch(this.context.selection.selectedShapes);
+        const editor = this.context.editor4Page(page.data);
+        const delete_res = editor.delete_batch(this.context.selection.selectedShapes.map(s => adapt2Shape(s)));
 
         if (delete_res) {
             this.context.selection.resetSelectShapes();
@@ -317,7 +318,7 @@ export async function paster(context: Context, t: Function, xy?: PageXY) {
  * 从剪切板拿出数据替换掉src的内容，以src中每个图形的左上角为锚点
  * @returns
  */
-export async function replace(context: Context, src: Shape[]) {
+export async function replace(context: Context, src: ShapeView[]) {
     try {
         if (!navigator.clipboard) {
             throw new Error('not supported');
@@ -480,9 +481,12 @@ async function clipboard_text_html(context: Context, data: any, xy?: PageXY) {
             const _xy = adjust_content_xy(context, { width: _f.width, height: _f.height });
             shape.frame.x = xy?.x || _xy.x;
             shape.frame.y = xy?.y || _xy.y;
-            const editor = context.editor.editor4Page(page);
-            const r = editor.insert(page, page.childs.length, shape);
-            if (r) context.selection.selectShape(r);
+            const editor = context.editor.editor4Page(page.data);
+            const r = editor.insert(page.data, page.childs.length, shape);
+
+            context.getPageDom(page.data).ctx.once('nextTick', () => {
+                if (r) context.selection.selectShape(page.shapes.get(r.id));
+            })
         } else if (is_shape) {
             const data = JSON.parse(text_html.split(identity)[1]);
 
@@ -513,14 +517,23 @@ async function clipboard_text_html(context: Context, data: any, xy?: PageXY) {
                 return;
             }
 
-            const editor = context.editor.editor4Page(page);
+            const editor = context.editor.editor4Page(page.data);
 
-            const r = editor.pasteShapes1(page, shapes);
+            const r = editor.pasteShapes1(page.data, shapes);
             if (!r) {
                 return;
             }
 
-            context.selection.rangeSelectShape(r.shapes);
+            context.getPageDom(page.data).ctx.once('nextTick', () => {
+                if (r) {
+                    const selects: ShapeView[] = [];
+                    r.shapes.forEach((s) => {
+                        const v = page.shapes.get(s.id);
+                        if (v) selects.push(v);
+                    })
+                    context.selection.rangeSelectShape(selects);
+                }
+            })
         } else {
             message('info', context.workspace.t('clipboard.invalid_data'));
         }
@@ -547,7 +560,7 @@ function modify_frame_by_xy(xy: PageXY, shapes: Shape[]) {
  * @param data 剪切板拿出的数据
  * @param src 将被替换的内容
  */
-async function clipboard_text_html_replace(context: Context, data: any, src: Shape[]) {
+async function clipboard_text_html_replace(context: Context, data: any, src: ShapeView[]) {
     try {
         const val = await data.getType('text/html');
         if (!val) {
@@ -582,13 +595,22 @@ async function clipboard_text_html_replace(context: Context, data: any, src: Sha
             return;
         }
 
-        const editor = context.editor.editor4Page(page);
-        const r = editor.replace(context.data, shapes, src);
+        const editor = context.editor.editor4Page(page.data);
+        const r = editor.replace(context.data, shapes, src.map((s) => adapt2Shape(s)));
         if (!r) {
             return;
         }
 
-        context.selection.rangeSelectShape(r);
+        context.nextTick(page, () => {
+            if (r) {
+                const selects: ShapeView[] = [];
+                r.forEach((s) => {
+                    const v = page.shapes.get(s.id);
+                    if (v) selects.push(v);
+                })
+                context.selection.rangeSelectShape(selects);
+            }
+        })
     } catch (error) {
         console.log(error);
         message('info', context.workspace.t('system.replace_failed'));
@@ -693,11 +715,13 @@ export function paster_image(context: Context, mousedownOnPageXY: PageXY, t: Fun
         asyncCreator = editor.asyncCreator(mousedownOnPageXY);
         frame.height = media.frame.height;
         frame.width = media.frame.width;
-        new_shape = asyncCreator.init_media(page, (parent as GroupShape), name, frame, media);
+        new_shape = asyncCreator.init_media(page.data, (parent.data), name, frame, media);
     }
     if (asyncCreator && new_shape) {
         asyncCreator = asyncCreator.close();
-        selection.selectShape(new_shape);
+        page && context.nextTick(page, () => {
+            new_shape && selection.selectShape(page.shapes.get(new_shape.id));
+        })
         context.communication.docResourceUpload.upload((new_shape as ImageShape).imageRef, media.buff.buffer.slice(0));
     }
     context.tool.setAction(Action.AutoV);
@@ -718,11 +742,13 @@ function paster_text(context: Context, mousedownOnPageXY: PageXY, content: strin
     if (page && parent) {
         const editor = context.editor.controller();
         asyncCreator = editor.asyncCreator(mousedownOnPageXY);
-        new_shape = asyncCreator.init_text(page, parent, frame, content);
+        new_shape = asyncCreator.init_text(page.data, parent.data, frame, content);
     }
     if (asyncCreator && new_shape) {
         asyncCreator = asyncCreator.close();
-        selection.selectShape(new_shape);
+        page && context.nextTick(page, () => {
+            new_shape && selection.selectShape(page.shapes.get(new_shape.id));
+        })
     }
     context.tool.setAction(Action.AutoV);
     workspace.creating(false);
@@ -755,7 +781,7 @@ export function paster_short(context: Context, shapes: Shape[]): Shape[] {
 
     let result: Shape[] = [];
 
-    const editor = context.editor4Page(page);
+    const editor = context.editor4Page(page.data);
     if (new_source.length !== actions.length) {
         return [];
     }
@@ -769,7 +795,14 @@ export function paster_short(context: Context, shapes: Shape[]): Shape[] {
         return result;
     }
 
-    context.selection.rangeSelectShape(result);
+    page && context.nextTick(page, () => {
+        const selects: ShapeView[] = [];
+        result.forEach((s) => {
+            const v = page.shapes.get(s.id);
+            if (v) selects.push(v);
+        })
+        context.selection.rangeSelectShape(selects);
+    })
 
     return result;
 }

@@ -3,7 +3,9 @@ import {
     AsyncTransfer,
     GroupShape,
     Matrix,
-    Shape
+    Shape,
+    ShapeView,
+    adapt2Shape
 } from "@kcdesign/data";
 import { ClientXY, PageXY } from "@/context/selection";
 import { debounce } from "lodash";
@@ -16,7 +18,7 @@ import { get_state_name } from "./shapelist";
 /**
  * @description 立刻把一组图形从一个容器移动到另一个容器
  */
-export function migrate_immediate(context: Context, asyncTransfer: AsyncTransfer, shapes: Shape[], end: ClientXY) {
+export function migrate_immediate(context: Context, asyncTransfer: AsyncTransfer, shapes: ShapeView[], end: ClientXY) {
     if (!shapes.length) return;
     const matrix = new Matrix(context.workspace.matrix.inverse);
     const pe: PageXY = matrix.computeCoord3(end);
@@ -27,8 +29,9 @@ export function migrate_immediate(context: Context, asyncTransfer: AsyncTransfer
     }
     const emit_migrate = (get_closest_container(context, shapes[0]).id !== target_parent.id);
     if (emit_migrate) {
-        asyncTransfer.migrate(target_parent as GroupShape, compare_layer_3(shapes, -1), context.workspace.t('compos.dlt'));
-        context.assist.set_collect_target([target_parent as GroupShape], true);
+        const tg = adapt2Shape(target_parent) as GroupShape;
+        asyncTransfer.migrate(tg, compare_layer_3(shapes, -1).map((s) => adapt2Shape(s)), context.workspace.t('compos.dlt'));
+        context.assist.set_collect_target([tg], true);
     }
 }
 

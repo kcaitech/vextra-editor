@@ -1,4 +1,4 @@
-import {Text, SpanAttr, WatchableObject, TextShape} from "@kcdesign/data";
+import {Text, SpanAttr, WatchableObject, TextShape, TextShapeView, TableCellView} from "@kcdesign/data";
 import {Selection} from "./selection"
 
 export interface TextLocate {
@@ -13,9 +13,9 @@ export class TextSelectionLite extends WatchableObject {
     private m_cursorAtBefore: boolean = false;
     private m_cursorEnd: number = -1;
     private selection: Selection;
-    private m_shape: TextShape;
+    private m_shape: TextShapeView | TableCellView;
 
-    constructor(textShape: TextShape, selection: Selection) {
+    constructor(textShape: TextShapeView | TableCellView, selection: Selection) {
         super();
         this.m_shape = textShape;
         this.selection = selection;
@@ -53,12 +53,12 @@ export class TextSelectionLite extends WatchableObject {
      * @param y
      */
     locateText(x: number, y: number): TextLocate {
-        return this.m_shape.text.locateText(x, y);
+        return this.m_shape.locateText(x, y);
     }
 
     setCursor(index: number, before: boolean) {
         if (index < 0) index = 0;
-        const text = this.m_shape.text as Text
+        const text = this.m_shape.getText();
         const span = text.spanAt(index);
         if (span?.placeholder && span.length === 1) index++;
         const length = text.length;
@@ -76,7 +76,7 @@ export class TextSelectionLite extends WatchableObject {
 
     selectText(start: number, end: number) {
         // 不只选择'\n'
-        const text = this.m_shape.text as Text
+        const text = this.m_shape.getText() as Text
         if (Math.abs(start - end) === 1 && text.charAt(Math.min(start, end)) === '\n') {
             if (end > start) {
                 start++;

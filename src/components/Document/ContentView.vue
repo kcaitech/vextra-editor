@@ -6,7 +6,7 @@ import ContextMenu from '../common/ContextMenu.vue';
 import PageViewContextMenuItems from '@/components/Document/Menu/PageViewContextMenuItems.vue';
 import Selector, { SelectorFrame } from './Selection/Selector.vue';
 import CommentView from './Content/CommentView.vue';
-import { Matrix, Shape, Page, Color, ShapeType } from '@kcdesign/data';
+import { Matrix, Shape, Page, Color, ShapeType, ShapeView } from '@kcdesign/data';
 import { Context } from '@/context';
 import { PageXY, ClientXY, ClientXYRaw } from '@/context/selection';
 import { KeyboardKeys, WorkSpace } from '@/context/workspace';
@@ -69,7 +69,7 @@ const root = ref<HTMLDivElement>();
 const mousedownOnClientXY: ClientXY = { x: 0, y: 0 }; // 鼠标在可视区中的坐标
 const mousedownOnPageXY: PageXY = { x: 0, y: 0 }; // 鼠标在page中的坐标
 const mouseOnClient: ClientXYRaw = { x: 0, y: 0 }; // 没有减去根部节点
-let shapesContainsMousedownOnPageXY: Shape[] = [];
+let shapesContainsMousedownOnPageXY: ShapeView[] = [];
 let contextMenuItems: string[] = [];
 const contextMenuEl = ref<ContextMenuEl>();
 const surplusY = ref<number>(0);
