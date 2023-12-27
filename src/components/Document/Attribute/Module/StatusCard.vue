@@ -65,12 +65,18 @@ const statusValue = ref();
 const menuIndex = ref();
 const getVattagValue = () => {
     const shape = props.context.selection.symbolstate;
-    if (shape) {
-        let val = get_tag_value(shape, props.data.variable);
-        if (val === SymbolShape.Default_State) val = t('compos.dlt');
-        statusValue.value = val;
-        menuIndex.value = props.data.values.findIndex(v => v === val);
+    if (!shape) {
+        return;
     }
+    
+    let val = get_tag_value(shape, props.data.variable);
+
+    if (val === SymbolShape.Default_State) {
+        val = t('compos.dlt');
+    }
+
+    statusValue.value = val;
+    menuIndex.value = props.data.values.findIndex(v => v === val);
 }
 const selected_watcher = (t: number) => {
     if (t === Selection.CHANGE_SHAPE) {
