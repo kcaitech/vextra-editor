@@ -4,7 +4,7 @@ import { Menu } from "@/context/menu";
 import { onMounted, onUnmounted, ref, watch, nextTick } from "vue";
 import ListView, { IDataIter, IDataSource } from "@/components/common/ListView.vue";
 import ShapeItem, { ItemData } from "./ShapeItem.vue";
-import { Page, Shape, proxyView } from "@kcdesign/data";
+import { Page, PageView, Shape, proxyView } from "@kcdesign/data";
 import { ShapeDirListIter2 as ShapeDirListIter, ShapeDirList2 as ShapeDirList, ShapeView } from "@kcdesign/data";
 import { useI18n } from 'vue-i18n';
 import { ShapeType } from '@kcdesign/data';
@@ -72,7 +72,7 @@ class Iter implements IDataIter<ItemData> {
     }
 }
 
-const props = defineProps<{ context: Context, page: Page, pageHeight: number }>();
+const props = defineProps<{ context: Context, page: PageView, pageHeight: number }>();
 const { t } = useI18n();
 const itemHieght = 32;
 const MOUSE_RIGHT = 2;

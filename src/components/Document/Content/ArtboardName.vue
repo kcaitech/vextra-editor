@@ -1,6 +1,6 @@
 <script setup lang="ts">
 import { ref, nextTick } from 'vue'
-import { AsyncTransfer, Matrix, Shape } from "@kcdesign/data";
+import { AsyncTransfer, Matrix, Shape, ShapeView } from "@kcdesign/data";
 import { Context } from "@/context";
 import { ClientXY, PageXY } from '@/context/selection';
 import { EffectType, Wheel, fourWayWheel } from '@/utils/wheel';
@@ -25,13 +25,13 @@ const props = defineProps<{
     name: string,
     index: number,
     maxWidth: number,
-    shape: Shape,
+    shape: ShapeView,
     selected: boolean,
     context: Context
 }>()
 const emit = defineEmits<{
-    (e: 'rename', value: string, shape: Shape): void
-    (e: 'hover', shape: Shape): void
+    (e: 'rename', value: string, shape: ShapeView): void
+    (e: 'hover', shape: ShapeView): void
     (e: 'leave'): void
 }>()
 const isInput = ref<boolean>(false)
@@ -124,7 +124,7 @@ let asyncTransfer: AsyncTransfer | undefined;
 const dragActiveDis = 3;
 let speed: number = 0;
 let t_e: MouseEvent | undefined;
-let shapes: Shape[] = [];
+let shapes: ShapeView[] = [];
 let offset_map: PointsOffset | undefined;
 
 function down(e: MouseEvent) {

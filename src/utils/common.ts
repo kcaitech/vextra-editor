@@ -1,7 +1,7 @@
 import { XY } from '@/context/selection';
 import { v4 as uuid } from "uuid";
 import { debounce } from 'lodash';
-import { ContactShape, PathShape, Shape, ShapeType } from '@kcdesign/data';
+import { ContactShape, PathShape, Shape, ShapeType, ShapeView } from '@kcdesign/data';
 import { Context } from '@/context';
 import { is_straight } from './attri_setting';
 // 打印
@@ -339,12 +339,12 @@ export function string_by_sys(str: string): string {
   }
 }
 
-export function forbidden_to_modify_frame(shape: Shape) {
-  return shape.isLocked || shape.isVirtualShape;
+export function forbidden_to_modify_frame(shape: ShapeView) {
+  return shape.isLocked() || shape.isVirtualShape;
 }
 
-export function shapes_organize(shapes: Shape[]) {
-  const result: Shape[] = [];
+export function shapes_organize(shapes: ShapeView[]) {
+  const result: ShapeView[] = [];
   for (let i = 0, l = shapes.length; i < l; i++) {
     const shape = shapes[i];
 

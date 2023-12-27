@@ -18,43 +18,43 @@ enum Align {
     LB_Y = 'lb_y'
 }
 
-const get_pos: { [key: string]: (shape: Shape) => number } = {};
-get_pos[Align.LT_X] = function (shape: Shape) {
+const get_pos: { [key: string]: (shape: ShapeView) => number } = {};
+get_pos[Align.LT_X] = function (shape: ShapeView) {
     return shape.matrix2Root().computeCoord2(0, 0).x;
 }
-get_pos[Align.RT_X] = function (shape: Shape) {
+get_pos[Align.RT_X] = function (shape: ShapeView) {
     return shape.matrix2Root().computeCoord2(shape.frame.width, 0).x;
 }
-get_pos[Align.C_X] = function (shape: Shape) {
+get_pos[Align.C_X] = function (shape: ShapeView) {
     const f = shape.frame;
     return shape.matrix2Root().computeCoord2(f.width / 2, f.height / 2).x;
 }
-get_pos[Align.RB_X] = function (shape: Shape) {
+get_pos[Align.RB_X] = function (shape: ShapeView) {
     const f = shape.frame;
     return shape.matrix2Root().computeCoord2(f.width, f.height).x;
 }
-get_pos[Align.LB_X] = function (shape: Shape) {
+get_pos[Align.LB_X] = function (shape: ShapeView) {
     return shape.matrix2Root().computeCoord2(0, shape.frame.height).x;
 }
-get_pos[Align.LT_Y] = function (shape: Shape) {
+get_pos[Align.LT_Y] = function (shape: ShapeView) {
     return shape.matrix2Root().computeCoord2(0, 0).y;
 }
-get_pos[Align.RT_Y] = function (shape: Shape) {
+get_pos[Align.RT_Y] = function (shape: ShapeView) {
     return shape.matrix2Root().computeCoord2(shape.frame.width, 0).y;
 }
-get_pos[Align.C_Y] = function (shape: Shape) {
+get_pos[Align.C_Y] = function (shape: ShapeView) {
     const f = shape.frame;
     return shape.matrix2Root().computeCoord2(f.width / 2, f.height / 2).y;
 }
-get_pos[Align.RB_Y] = function (shape: Shape) {
+get_pos[Align.RB_Y] = function (shape: ShapeView) {
     const f = shape.frame;
     return shape.matrix2Root().computeCoord2(f.width, f.height).y;
 }
-get_pos[Align.LB_Y] = function (shape: Shape) {
+get_pos[Align.LB_Y] = function (shape: ShapeView) {
     return shape.matrix2Root().computeCoord2(0, shape.frame.height).y;
 }
 
-export function distance2apex(shape: Shape, align: Align): number {
+export function distance2apex(shape: ShapeView, align: Align): number {
     return get_pos[align](shape);
 }
 
@@ -94,7 +94,7 @@ export function distance2apex2(frame: Point[], align: Align): number {
     return get_pos2[align](frame);
 }
 
-export function get_apex(context: Context, shape: Shape, is_multi: boolean, align: Align) {
+export function get_apex(context: Context, shape: ShapeView, is_multi: boolean, align: Align) {
     if (!is_multi) {
         return distance2apex(shape, align);
     } else {
@@ -147,7 +147,7 @@ export function colloct_point_group(host: Shape): PointGroup1 {
 /**
  * @description 比对时使用
  */
-export function gen_match_points(host: Shape, multi?: boolean): PointGroup2 {
+export function gen_match_points(host: ShapeView, multi?: boolean): PointGroup2 {
     const m = host.matrix2Root(), f = host.frame;
     const lt = m.computeCoord2(0, 0);
     const rb = m.computeCoord2(f.width, f.height);
@@ -424,7 +424,7 @@ export function get_pg_by_frame(frame: Point[], multi?: boolean): PointGroup2 { 
     }
 }
 
-export function get_frame(shapes: Shape[]): Point[] {
+export function get_frame(shapes: ShapeView[]): Point[] {
     const points: { x: number, y: number }[] = [];
     for (let i = 0, len = shapes.length; i < len; i++) {
         const s = shapes[i];
@@ -470,7 +470,7 @@ export function get_p_form_pg_by_y(pg: PointGroup2, y: number): PageXY[] {
  * @description 辅助线预备渲染
  * @param is_multi
  */
-export function pre_render_assist_line(context: Context, is_multi: boolean, shape: Shape, shapes: Shape[]) {
+export function pre_render_assist_line(context: Context, is_multi: boolean, shape: ShapeView, shapes: ShapeView[]) {
     const assist = context.assist;
     if (is_multi) {
         const cache_map = context.workspace.cache_map;

@@ -1,4 +1,4 @@
-import { Matrix, PathShape, RectShape, Shape, ShapeType } from "@kcdesign/data";
+import { Matrix, PathShape, RectShape, Shape, ShapeType, ShapeView } from "@kcdesign/data";
 import { PositonAdjust, ConstrainerProportionsAction, FrameAdjust, RotateAdjust, FlipAction } from "@kcdesign/data";
 import { getHorizontalAngle } from "@/utils/common"
 import { Context } from "@/context";
@@ -239,7 +239,7 @@ export function get_indexes2(type: 'rt' | 'lt' | 'rb' | 'lb') {
   }
   return result;
 }
-export function is_rect(shape: Shape) {
+export function is_rect(shape: ShapeView) {
   return (shape instanceof PathShape)
     && shape.isClosed
     && shape.points.length === 4

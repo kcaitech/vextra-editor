@@ -1,12 +1,12 @@
 <script setup lang="ts">
 import { reactive, onMounted, onUnmounted, computed, ref, nextTick, watch, getCurrentInstance } from 'vue';
-import PageView from './Content/PageView.vue';
+import PageViewVue from './Content/PageView.vue';
 import SelectionView from './Selection/SelectionView.vue';
 import ContextMenu from '../common/ContextMenu.vue';
 import PageViewContextMenuItems from '@/components/Document/Menu/PageViewContextMenuItems.vue';
 import Selector, { SelectorFrame } from './Selection/Selector.vue';
 import CommentView from './Content/CommentView.vue';
-import { Matrix, Shape, Page, Color, ShapeType, ShapeView } from '@kcdesign/data';
+import { Matrix, Shape, Page, Color, ShapeType, ShapeView, PageView } from '@kcdesign/data';
 import { Context } from '@/context';
 import { PageXY, ClientXY, ClientXYRaw } from '@/context/selection';
 import { KeyboardKeys, WorkSpace } from '@/context/workspace';
@@ -44,7 +44,7 @@ import PathEditMode from "@/components/Document/Selection/Controller/PathEdit/Pa
 
 interface Props {
     context: Context
-    page: Page
+    page: PageView
 }
 
 type ContextMenuEl = InstanceType<typeof ContextMenu>;
@@ -91,7 +91,7 @@ let matrix_inverse: Matrix = new Matrix();
 
 function page_watcher(...args: any) {
     if (args.includes('style')) {
-        const f = props.page.style.fills[0];
+        const f = props.page.data.style.fills[0];
         if (f) background_color.value = color2string(f.color);
     }
     reflush.value++
@@ -527,7 +527,7 @@ function matrix_watcher(nm: Matrix) {
 }
 
 // hooks
-function initMatrix(cur: Page) {
+function initMatrix(cur: PageView) {
     let info = matrixMap.get(cur.id);
     if (!info) {
         const m = new Matrix(adapt_page(props.context, true));
@@ -544,7 +544,7 @@ const stopWatch = watch(() => props.page, (cur, old) => {
     let info = matrixMap.get(old.id);
     info!.m.reset(matrix.toArray())
     initMatrix(cur);
-    const f = cur.style.fills[0];
+    const f = cur.data.style.fills[0];
     if (f) {
         background_color.value = color2string(f.color);
     }
@@ -599,7 +599,7 @@ onUnmounted(() => {
         @mousedown="onMouseDown" @mousemove="onMouseMove_CV" @mouseleave="onMouseLeave"
         @drop="(e: DragEvent) => { drop(e, props.context, t) }" @dragover.prevent
         :style="{ 'background-color': background_color }">
-        <PageView :context="props.context" :data="(props.page as Page)" :matrix="matrix" />
+        <PageViewVue :context="props.context" :data="(props.page as PageView)" :matrix="matrix" />
         <TextSelection :context="props.context" :matrix="matrix"></TextSelection>
         <UsersSelection :context="props.context" :matrix="matrix" v-if="avatarVisi" />
         <SelectionView :context="props.context" :matrix="matrix" />

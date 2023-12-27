@@ -755,7 +755,7 @@ function paster_text(context: Context, mousedownOnPageXY: PageXY, content: strin
 }
 
 // 不经过剪切板，直接复制(Shape[])
-export function paster_short(context: Context, shapes: Shape[]): Shape[] {
+export async function paster_short(context: Context, shapes: ShapeView[]): Promise<ShapeView[]> {
     const pre_shapes: Shape[] = [], actions: { parent: GroupShape, index: number }[] = [];
     for (let i = 0, len = shapes.length; i < len; i++) {
         const s = shapes[i], p = s.parent;
@@ -763,11 +763,11 @@ export function paster_short(context: Context, shapes: Shape[]): Shape[] {
             continue;
         }
 
-        const childs = (p as GroupShape).childs;
+        const childs = (p).childs;
         for (let j = 0, len2 = childs.length; j < len2; j++) {
             if (s.id === childs[j].id) {
-                pre_shapes.push(s);
-                actions.push({ parent: p as GroupShape, index: j + 1 });
+                pre_shapes.push(adapt2Shape(s));
+                actions.push({ parent: adapt2Shape(p) as GroupShape, index: j + 1 });
                 break;
             }
         }
@@ -792,17 +792,22 @@ export function paster_short(context: Context, shapes: Shape[]): Shape[] {
     }
 
     if (!result.length) {
-        return result;
+        return [];
     }
 
-    page && context.nextTick(page, () => {
-        const selects: ShapeView[] = [];
-        result.forEach((s) => {
-            const v = page.shapes.get(s.id);
-            if (v) selects.push(v);
+    return new Promise<ShapeView[]>((resolve, reject) => {
+        if (!page) {
+            resolve([]);
+            return;
+        }
+        context.nextTick(page, () => {
+            const selects: ShapeView[] = [];
+            result.forEach((s) => {
+                const v = page.shapes.get(s.id);
+                if (v) selects.push(v);
+            })
+            context.selection.rangeSelectShape(selects);
+            resolve(selects);
         })
-        context.selection.rangeSelectShape(selects);
     })
-
-    return result;
 }

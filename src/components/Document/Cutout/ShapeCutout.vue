@@ -1,5 +1,5 @@
 <script setup lang="ts">
-import { CutoutShape, Matrix, Page, Shape, ShapeType } from '@kcdesign/data';
+import { CutoutShape, Matrix, Page, PageView, CutoutShapeView, ShapeType } from '@kcdesign/data';
 import { onMounted, onUnmounted, ref, watch } from 'vue';
 import { Context } from '@/context';
 import renderCutout from './renderCutout.vue';
@@ -8,16 +8,16 @@ import { reactive } from 'vue';
 
 const props = defineProps<{
     context: Context
-    data: Page,
+    data: PageView,
     matrix: Matrix,
     transform: number[],
 }>()
-let cutoutShapes: CutoutShape[] = reactive([]);
+let cutoutShapes: CutoutShapeView[] = reactive([]);
 const watcher = () => {
     const page = props.context.selection.selectedPage;
     if (page) {
         const shapes = page.childs || [];
-        cutoutShapes = shapes.filter(v => v.type === ShapeType.Cutout) as CutoutShape[];
+        cutoutShapes = shapes.filter(v => v.type === ShapeType.Cutout) as CutoutShapeView[];
     }
 }
 const stopWatch = watch(() => props.data, (value, old) => {
@@ -29,7 +29,7 @@ const selected_watcher = (t: number) => {
         const page = props.context.selection.selectedPage;
         if (page) {
             const shapes = page.childs || [];
-            cutoutShapes = shapes.filter(v => v.type === ShapeType.Cutout) as CutoutShape[];
+            cutoutShapes = shapes.filter(v => v.type === ShapeType.Cutout) as CutoutShapeView[];
         }
         
     }
@@ -49,7 +49,7 @@ onUnmounted(() => {
 
 <template>
     <component v-for="item in cutoutShapes" :key="item.id" :is="renderCutout" :context="context"
-        :data="(item as CutoutShape)" :matrix="matrix"></component>
+        :data="(item as CutoutShapeView)" :matrix="matrix"></component>
 </template>
 
 <style lang="scss" scoped></style>

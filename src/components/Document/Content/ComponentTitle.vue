@@ -1,6 +1,6 @@
 <script setup lang="ts">
 import { ref, nextTick, onMounted, onUnmounted } from 'vue'
-import { AsyncTransfer, Matrix, Shape, SymbolShape } from "@kcdesign/data";
+import { AsyncTransfer, Matrix, Shape, ShapeView, SymbolShape, SymbolView } from "@kcdesign/data";
 import { Context } from "@/context";
 import { permIsEdit } from '@/utils/content';
 import { ClientXY, PageXY } from '@/context/selection';
@@ -14,12 +14,12 @@ interface Props {
     name: string
     index: number
     maxWidth: number
-    shape: Shape
+    shape: ShapeView
     context: Context
 }
 interface Emits {
-    (e: 'rename', value: string, shape: Shape): void
-    (e: 'hover', shape: Shape): void
+    (e: 'rename', value: string, shape: ShapeView): void
+    (e: 'hover', shape: ShapeView): void
     (e: 'leave'): void
 }
 const props = defineProps<Props>();
@@ -119,7 +119,7 @@ let asyncTransfer: AsyncTransfer | undefined; // 属性修改器：它负责图�
 const dragActiveDis = 3;
 let speed: number = 0; // 记录鼠标移动的速度
 let t_e: MouseEvent | undefined;
-let shapes: Shape[] = [];
+let shapes: ShapeView[] = [];
 let offset_map: PointsOffset | undefined;
 // 鼠标按下
 function down(e: MouseEvent) {
@@ -299,7 +299,7 @@ onUnmounted(() => {
         @mousemove="move2" data-area="controller">
         <div class="name-wrap" :style="{ maxWidth: props.maxWidth + 'px' }" @dblclick="onRename" v-if="!isInput">
             <svg xmlns="http://www.w3.org/2000/svg" xmlns:xlink="http://www.w3.org/1999/xlink" fill="none" version="1.1"
-                width="16" height="16" viewBox="0 0 16 16" v-if="(props.shape as SymbolShape).isSymbolUnionShape">
+                width="16" height="16" viewBox="0 0 16 16" v-if="(props.shape as SymbolView).isSymbolUnionShape">
                 <defs>
                     <clipPath id="master_svg0_747_09671">
                         <rect x="0" y="0" width="16" height="16" rx="0" />

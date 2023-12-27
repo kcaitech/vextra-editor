@@ -844,7 +844,7 @@ export function map_from_shapes(shapes: ShapeView[], init?: Map<string, ShapeVie
     return map;
 }
 
-export function is_shape_out(context: Context, shape: Shape, matrix: Matrix) {
+export function is_shape_out(context: Context, shape: ShapeView, matrix: Matrix) {
     const { x, y, bottom, right } = context.workspace.root;
     const { width, height } = shape.frame;
     let point: { x: number, y: number }[] = [{ x: 0, y: 0 }, { x: width, y: 0 }, { x: width, y: height }, { x: 0, y: height }];
@@ -966,7 +966,7 @@ export function root_trans(context: Context, e: WheelEvent, step: number) {
     }
 }
 
-export function top_side(shape: Shape, matrix: Matrix) {
+export function top_side(shape: ShapeView, matrix: Matrix) {
     const f = shape.frame;
     const lt = matrix.computeCoord2(0, 0);
     const rt = matrix.computeCoord2(f.width, f.height);

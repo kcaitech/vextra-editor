@@ -1,7 +1,7 @@
 <script lang="ts" setup>
 import {watchEffect, onMounted, onUnmounted, computed, reactive} from "vue";
 import {Context} from "@/context";
-import {Matrix, Page, Shape, ShapeType} from "@kcdesign/data";
+import {Matrix, Page, PageView, Shape, ShapeType, ShapeView, adapt2Shape} from "@kcdesign/data";
 import {WorkSpace} from "@/context/workspace";
 import {ClientXY} from "@/context/selection";
 import ArtboardName from "./ArtboardName.vue";
@@ -9,7 +9,7 @@ import {is_shape_out, top_side} from "@/utils/content";
 
 const props = defineProps<{
     context: Context
-    data: Page,
+    data: PageView,
     matrix: number[]
 }>()
 
@@ -19,7 +19,7 @@ interface Title {
     x: number
     y: number
     width: number
-    shape: Shape
+    shape: ShapeView
     rotate: number
     maxWidth: number
     selected: boolean
@@ -46,13 +46,13 @@ function handleWorkspaceUpdate(t: any) {
 }
 
 const setPosition = () => {
-    const artboards: Shape[] = props.data.artboardList; // 只要遍历容器就可以了，直接拿这个，这个数组里面有全部容器，如果拿childs，会存在多余的遍历
+    const artboards: ShapeView[] = props.data.artboardList; // 只要遍历容器就可以了，直接拿这个，这个数组里面有全部容器，如果拿childs，会存在多余的遍历
     const len = artboards.length;
     if (len) {
         titles.length = 0;
         for (let i = 0; i < len; i++) {
             const artboard = artboards[i];
-            if (artboard.parent?.type === ShapeType.Page && artboard.isVisible) { // 只给页面的直接子元素上标题
+            if (artboard.parent?.type === ShapeType.Page && artboard.isVisible()) { // 只给页面的直接子元素上标题
                 const selecte = props.context.selection.selectedShapes;
                 const hovered = props.context.selection.hoveredShape;
                 let selected = false
@@ -89,7 +89,7 @@ const setPosition = () => {
     }
 }
 
-function pre_modify_anchor(shape: Shape) {
+function pre_modify_anchor(shape: ShapeView) {
     let rotate = shape.rotation || 0;
     if (shape.isFlippedHorizontal) rotate = rotate + 270;
     if (shape.isFlippedVertical) {
@@ -99,7 +99,7 @@ function pre_modify_anchor(shape: Shape) {
     return rotate;
 }
 
-function modify_rotate(shape: Shape) {
+function modify_rotate(shape: ShapeView) {
     let rotate = shape.rotation || 0;
     if (shape.isFlippedHorizontal) rotate = 180 - rotate;
     if (shape.isFlippedVertical) rotate = 360 - rotate;
@@ -116,7 +116,7 @@ function modify_rotate(shape: Shape) {
     return rotate;
 }
 
-function modify_anchor(shape: Shape, m2r: Matrix) {
+function modify_anchor(shape: ShapeView, m2r: Matrix) {
     const rotate = pre_modify_anchor(shape);
     const frame = shape.frame;
     let anchor = {x: 0, y: 0};
@@ -144,7 +144,7 @@ const watchedShapes = new Map();
 
 function watchShapes() { // 监听相关shape的变化
     const needWatchShapes = new Map();
-    const selection = props.context.selection.selectedPage?.childs;
+    const selection = props.data.childs;
     if (selection) {
         selection.forEach((v) => {
             needWatchShapes.set(v.id, v);
@@ -162,18 +162,20 @@ function watchShapes() { // 监听相关shape的变化
     })
 }
 
-const rename = (value: string, shape: Shape) => {
+const rename = (value: string, shape: ShapeView) => {
     const editor = computed(() => {
-        return props.context.editor4Shape(shape);
+        return props.context.editor4Shape(adapt2Shape(shape));
     });
     editor.value.setName(value)
     props.context.selection.rename();
 }
 
-function hover(shape: Shape) {
-    const s = props.context.selection.selectedPage?.artboards.get(shape.id);
-    if (s) {
-        props.context.selection.hoverShape(s);
+function hover(shape: ShapeView) {
+    const page = props.data;
+    const s = page.data.artboards.get(shape.id);
+    const _s = s && page.getShape(s.id);
+    if (_s) {
+        props.context.selection.hoverShape(_s);
     }
 }
 

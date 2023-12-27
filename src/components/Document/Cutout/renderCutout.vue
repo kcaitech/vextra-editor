@@ -1,6 +1,6 @@
 <script setup lang="ts">
 import { Context } from '@/context';
-import { CutoutShape, Matrix } from '@kcdesign/data';
+import { CutoutShape, CutoutShapeView, Matrix } from '@kcdesign/data';
 import { onMounted, onUnmounted, ref, watch } from 'vue';
 import { genRectPath } from '../Selection/common';
 import { WorkSpace } from '@/context/workspace';
@@ -10,7 +10,7 @@ import { Selection } from '@/context/selection';
 const props = defineProps<{
     context: Context
     matrix: Matrix
-    data: CutoutShape
+    data: CutoutShapeView
 }>();
 
 const cutoutPath = ref<string>();

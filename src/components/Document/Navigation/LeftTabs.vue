@@ -5,7 +5,7 @@ import ShapeTab from "@/components/Document/Navigation/ShapeTab.vue";
 import CompsTab from "@/components/Document/Navigation/CompsTab.vue";
 import CommentTab from "./Comment/CommentTab.vue";
 import { useI18n } from 'vue-i18n';
-import { Page } from "@kcdesign/data";
+import { Page, PageView } from "@kcdesign/data";
 import { Comment } from "@/context/comment";
 import { Action, Tool } from "@/context/tool";
 
@@ -13,7 +13,7 @@ const { t } = useI18n();
 
 interface Props {
     context: Context
-    page: Page
+    page: PageView
     leftTriggleVisible: boolean
     showLeft: boolean
 }

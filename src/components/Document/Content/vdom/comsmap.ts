@@ -12,6 +12,7 @@ import { SymbolRefDom } from "./symbolref";
 import { TableCellDom } from "./tablecell";
 import { TableDom } from "./table";
 import { TextShapeDom } from "./textshape";
+import { CutoutShapeDom } from "./cutout";
 
 // interface DataView {
 //     id: string;
@@ -44,4 +45,5 @@ export function initComsMap(comsMap: Map<ShapeType, ViewType>) {
     comsMap.set(ShapeType.Table, TableDom);
     comsMap.set(ShapeType.Contact, ContactLineDom);
     comsMap.set(ShapeType.TableCell, TableCellDom);
+    comsMap.set(ShapeType.Cutout, CutoutShapeDom);
 }

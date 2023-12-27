@@ -1,4 +1,4 @@
-import { GroupShape, Matrix, Shape, WatchableObject, adapt2Shape } from "@kcdesign/data";
+import { GroupShape, Matrix, Shape, ShapeView, WatchableObject, adapt2Shape } from "@kcdesign/data";
 import { PageXY, Selection, XY } from "./selection";
 import { Context } from ".";
 import {
@@ -308,7 +308,7 @@ export class Asssit extends WatchableObject {
     /**
      * @description 拖拽多个图形
      */
-    trans_match_multi(shapes: Shape[], offsetMap: PointsOffset, p: PageXY) {
+    trans_match_multi(shapes: ShapeView[], offsetMap: PointsOffset, p: PageXY) {
         // const st = Date.now();
         if (!this.m_except.size) return;
         this.m_nodes_x = [];

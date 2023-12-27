@@ -5,7 +5,7 @@ import { ref } from 'vue';
 import IconText from '@/components/common/IconText.vue';
 import { onMounted } from 'vue';
 import { onUnmounted } from 'vue';
-import { PathShape, Shape, ShapeType } from '@kcdesign/data';
+import { PathShape, PathShapeView, Shape, ShapeType, ShapeView, adapt2Shape } from '@kcdesign/data';
 import { reactive } from 'vue';
 import { get_indexes2, is_rect } from '@/utils/attri_setting';
 
@@ -33,9 +33,9 @@ function change(val: any, type: string) {
     }
     const page = props.context.selection.selectedPage!;
     const selected = props.context.selection.selectedShapes;
-    const editor = props.context.editor4Page(page);
+    const editor = props.context.editor4Page(page.data);
 
-    editor.shapesModifyFixedRadius(selected, val);
+    editor.shapesModifyFixedRadius(selected.map(s => adapt2Shape(s)), val);
 }
 function setting_for_extend(val: number, type: string) {
     const indexes = get_indexes2(type as 'rt' | 'lt' | 'rb' | 'lb');
@@ -43,8 +43,8 @@ function setting_for_extend(val: number, type: string) {
     const page = props.context.selection.selectedPage!;
     const selected = props.context.selection.selectedShapes;
 
-    const editor = props.context.editor4Page(page);
-    editor.shapesModifyPointRadius(selected, indexes, val);
+    const editor = props.context.editor4Page(page.data);
+    editor.shapesModifyPointRadius(selected.map(s => adapt2Shape(s)), indexes, val);
 }
 function rectToggle() {
     rect.value = !rect.value;
@@ -98,7 +98,7 @@ function get_radius_for_shape(shape: Shape) {
     }
     return _r;
 }
-function get_all_values(shapes: PathShape[]) {
+function get_all_values(shapes: ShapeView[]) {
     reset_radius_value();
     const first_shape = shapes[0];
     if (!first_shape) {
@@ -127,7 +127,7 @@ function get_all_values(shapes: PathShape[]) {
         }
     }
 }
-function get_rect_shape_all_value(shape: PathShape) {
+function get_rect_shape_all_value(shape: PathShapeView) {
     const rs = { lt: 0, rt: 0, rb: 0, lb: 0 };
     rs.lt = shape.points[0]?.radius || shape.fixedRadius || 0;
     rs.rt = shape.points[1]?.radius || shape.fixedRadius || 0;
@@ -144,7 +144,7 @@ function modify_radius_value() {
     }
 
     if (rect.value) {
-        get_all_values(selected as PathShape[]);
+        get_all_values(selected);
         return;
     }
 

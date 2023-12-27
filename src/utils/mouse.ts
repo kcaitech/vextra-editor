@@ -294,7 +294,7 @@ export function shapes_picker(e: MouseEvent, context: Context, p: { x: number, y
 /**
  * @description 获取移动辅助中心对象点图
  */
-export function gen_assist_target(context: Context, shapes: Shape[], is_multi: boolean, offset_map: any, pe: {
+export function gen_assist_target(context: Context, shapes: ShapeView[], is_multi: boolean, offset_map: any, pe: {
     x: number,
     y: number
 }) {
