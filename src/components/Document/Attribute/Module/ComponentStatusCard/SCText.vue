@@ -82,8 +82,8 @@ const getValue = (value: Text | string | undefined) => {
                         <svg-icon icon-class="text"></svg-icon>
                     </div>
                     <div class="name">
-                        <span style="width: 40%;">{{ props.variable.name }}</span>
-                        <span style="width: 60%;"> {{ getValue(props.variable.value) }}</span>
+                        <span style="width: 30%;">{{ props.variable.name }}</span>
+                        <span style="width: 70%;"> {{ getValue(props.variable.value) }}</span>
                     </div>
                 </div>
             </div>
