@@ -1,20 +1,20 @@
 <script setup lang="ts">
-import {Selection} from '@/context/selection';
-import {Shape, ShapeType, GroupShape, Artboard, BoolOp} from '@kcdesign/data';
-import {onMounted, onUnmounted, ref} from 'vue';
-import {Context} from '@/context';
+import { Selection } from '@/context/selection';
+import { Shape, ShapeType, GroupShape, Artboard, BoolOp } from '@kcdesign/data';
+import { onMounted, onUnmounted, ref } from 'vue';
+import { Context } from '@/context';
 import ToolButton from "./ToolButton.vue"
-import {useI18n} from 'vue-i18n';
-import {getName} from '@/utils/content';
-import {debounce} from 'lodash';
-import {compare_layer_3, filter_for_group1} from '@/utils/group_ungroup';
-import {string_by_sys} from '@/utils/common';
+import { useI18n } from 'vue-i18n';
+import { getName } from '@/utils/content';
+import { debounce } from 'lodash';
+import { compare_layer_3, filter_for_group1 } from '@/utils/group_ungroup';
+import { string_by_sys } from '@/utils/common';
 import Tooltip from '@/components/common/Tooltip.vue';
 import BooleanObject from "./Buttons/BooleanObject.vue"
-import {Tool} from '@/context/tool';
-import {WorkSpace} from '@/context/workspace';
+import { Tool } from '@/context/tool';
+import { WorkSpace } from '@/context/workspace';
 
-const {t} = useI18n();
+const { t } = useI18n();
 const props = defineProps<{ context: Context, selection: Selection }>();
 const NOGROUP = 0;
 const GROUP = 1;
@@ -108,26 +108,17 @@ const ungroupClick = () => {
     const selection = props.selection;
     const shapes = selection.selectedShapes;
     if (!shapes.length) return;
-    const groups = shapes.filter(i => i.type === ShapeType.Group || i.type === ShapeType.Artboard);
+    const groups = shapes.filter(i => i.type === ShapeType.Group);
+    const artboards = shapes.filter(i => i.type === ShapeType.Artboard);
     const others: Shape[] = shapes.filter(i => i.type !== ShapeType.Group);
     if (!groups.length) return;
     const page = selection.selectedPage;
     if (!page) return;
     const editor = props.context.editor4Page(page);
-    for (let i = 0, len = groups.length; i < len; i++) {
-        const g = groups[i];
-        if (g.type === ShapeType.Group) {
-            const c = editor.ungroup(g as GroupShape);
-            if (c) {
-                others.push(...c);
-            }
-        } else if (g.type === ShapeType.Artboard) {
-            const c = editor.dissolution_artboard(g as Artboard);
-            if (c) {
-                others.push(...c);
-            }
-        }
-    }
+    const a = editor.dissolution_artboard(artboards as Artboard[]);
+    if (a) others.push(...a);
+    const g = editor.ungroup(groups as GroupShape[]);
+    if (g) others.push(...g);
     if (others.length) {
         selection.rangeSelectShape(others);
     } else {
@@ -186,24 +177,23 @@ const flattenShape = () => {
 <template>
     <div class="container">
         <div style="width: 16px;height: 52px;display: flex;align-items: center;justify-content: center;">
-            <div class="vertical-line"/>
+            <div class="vertical-line" />
         </div>
         <Tooltip :content="string_by_sys(`${t('home.groups')} &nbsp;&nbsp; Ctrl G`)" :offset="5">
             <div class="group">
                 <ToolButton :onclick="(e: MouseEvent) => groupClick(e.altKey)" :valid="true" :selected="false"
-                            :class="{ active: state & GROUP }">
+                    :class="{ active: state & GROUP }">
                     <svg-icon icon-class="group"></svg-icon>
                 </ToolButton>
             </div>
         </Tooltip>
 
         <BooleanObject :context="context" :selection="selection" @changeBool="changeBoolgroup" v-if="isBoolGroup"
-                       @flatten-shape="flattenShape"></BooleanObject>
+            @flatten-shape="flattenShape"></BooleanObject>
 
         <Tooltip :content="string_by_sys(`${t('home.ungroup')} &nbsp;&nbsp; Ctrl Shift G`)" :offset="5">
             <div class="group">
-                <ToolButton :onclick="ungroupClick" :valid="true" :selected="false"
-                            :class="{ active: state & UNGROUP }">
+                <ToolButton :onclick="ungroupClick" :valid="true" :selected="false" :class="{ active: state & UNGROUP }">
                     <svg-icon icon-class="ungroup"></svg-icon>
                 </ToolButton>
             </div>
@@ -242,7 +232,7 @@ const flattenShape = () => {
             }
         }
 
-        > .active {
+        >.active {
             color: #ffffff;
         }
     }

@@ -132,10 +132,10 @@ function _notifySourceChange(t?: number | string, shape?: ShapeView) {
                 list_h.value = listBody.value.clientHeight //list可视高度
             }
             if (shapelist.value && indexItem >= 0) {
-                const itemScrollH = indexItem * 36
+                const itemScrollH = indexItem * 32
                 if (itemScrollH + 29 >= list_h.value - shapelist.value.scroll.y) {
-                    if ((itemScrollH) + shapelist.value.scroll.y < list_h.value - 36) return
-                    shapelist.value.clampScroll(0, -(itemScrollH + 36 - list_h.value))
+                    if ((itemScrollH) + shapelist.value.scroll.y < list_h.value - 32) return
+                    shapelist.value.clampScroll(0, -(itemScrollH + 32 - list_h.value))
                 } else if (itemScrollH < -(shapelist.value.scroll.y)) {
                     shapelist.value.clampScroll(0, -itemScrollH)
                 }
@@ -534,6 +534,7 @@ onUnmounted(() => {
     width: 100%;
     flex-direction: column;
     background-color: #fff;
+    padding-bottom: 8px;
     box-sizing: border-box;
 
     .header {

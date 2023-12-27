@@ -248,7 +248,7 @@ function finder_artboard(context: Context, scout: Scout, artboard: ShapeView, po
     if (childs.length) {
         result = finder(context, scout, childs, position, selected, isCtrl);
         if (result) return result;
-        else if (isCtrl) return artboard;
+        else if (isCtrl || context.tool.isLable) return artboard;
     } else {
         return artboard;
     }

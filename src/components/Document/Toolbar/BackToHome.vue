@@ -31,11 +31,40 @@ function home() {
   window.document.title = t('product.name');
   (window as any).sketchDocument = undefined;
   (window as any).skrepo = undefined;
-  if (props.context.comment.isDocumentInfo?.project) {
-    router.push({ path: '/apphome/project/' + props.context.comment.isDocumentInfo.project.id });
+  const index = sessionStorage.getItem('index');
+  if (index) {
+    back(index);
   } else {
-    router.push({ name: 'meshare' });
-    sessionStorage.setItem('index', '3')
+    router.push({ name: 'recently' });
+    sessionStorage.setItem('index', '1')
+  }
+}
+
+const back = (index: string) => {
+  switch (index) {
+    case '1':
+      router.push({ name: 'recently' });
+      break;
+    case '2':
+      router.push({ name: 'starfile' });
+      break;
+    case '3':
+      router.push({ name: 'meshare' });
+      break;
+    case '4':
+      router.push({ name: 'shareme' });
+      break;
+    case '6':
+      router.push({ path: '/apphome/project/' + props.context.comment.isDocumentInfo?.project.id });
+      break;
+    case '7':
+      router.push({ path: '/apphome/project/' + props.context.comment.isDocumentInfo?.project.id });
+      break;
+    case '9':
+      router.push({ name: 'project_share' });
+      break;
+    default:
+      router.push({ name: 'recently' });
   }
 }
 
@@ -52,11 +81,12 @@ const hasPendingSyncCmd = () => {
       window.document.title = t('product.name');
       (window as any).sketchDocument = undefined;
       (window as any).skrepo = undefined;
-      if (props.context.comment.isDocumentInfo?.project) {
-        router.push({ path: '/apphome/project/' + props.context.comment.isDocumentInfo.project.id });
+      const index = sessionStorage.getItem('index');
+      if (index) {
+        back(index);
       } else {
-        router.push({ name: 'meshare' });
-        sessionStorage.setItem('index', '3')
+        router.push({ name: 'recently' });
+        sessionStorage.setItem('index', '1')
       }
     })
     .catch(() => {
@@ -154,101 +184,101 @@ onUnmounted(() => {
 })
 </script>
 <template>
-    <div class="container" @dblclick.stop>
-        <div class="home" @click="home">
-<!--            <svg viewBox="0 0 1024 1024" version="1.1" xmlns="http://www.w3.org/2000/svg">-->
-<!--                <path-->
-<!--                    d="M946.751948 410.824772L527.008111 79.821076a28.047291 28.047291 0 0 0-34.717904 0L72.547395 410.824772c-12.15659 9.583567-14.25146 27.21692-4.654583 39.374534 9.596877 12.19857 27.271186 14.252484 39.37351 4.654582l48.518854-38.260546v513.949477c0 15.484218 12.540547 28.0391 28.038076 28.0391h651.65591c15.497528 0 28.038076-12.554882 28.038076-28.0391v-513.949477l48.51783 38.260546a27.917257 27.917257 0 0 0 17.331307 6.023518c8.296543 0 16.510151-3.655271 22.041179-10.679124 9.581519-12.15659 7.500984-29.789944-4.655606-39.37351z m-553.250292 490.379637V668.85616h232.323676v232.347225H393.501656z m413.937383 1.300334H681.899435V640.81706c0-15.484218-12.540547-28.0391-28.038075-28.039099h-288.39778c-15.497528 0-28.037052 12.554882-28.037052 28.039099v261.687683H211.85928V372.373782L509.649159 137.541587 807.439039 372.373782v530.130961z"-->
-<!--                    fill="#ffffff">-->
-<!--                </path>-->
-<!--            </svg>-->
-            <svg-icon icon-class="home"></svg-icon>
-        </div>
-        <DocumentMenu :context="props.context" @rename="rename"></DocumentMenu>
-        <div class="rename">
-            <span v-if="ele === 1" @click="rename">{{ name }}</span>
-            <input v-if="ele === 2" type="text" ref="input"/>
-            <div class="save" v-if="ele === 3">
-                <Saving></Saving>
-            </div>
-        </div>
-        <div class="model">
-            <span v-if="isLable" style="color: #fff; font-size: 12px">【开发模式】</span>
-        </div>
+  <div class="container" @dblclick.stop>
+    <div class="home" @click="home">
+      <!--            <svg viewBox="0 0 1024 1024" version="1.1" xmlns="http://www.w3.org/2000/svg">-->
+      <!--                <path-->
+      <!--                    d="M946.751948 410.824772L527.008111 79.821076a28.047291 28.047291 0 0 0-34.717904 0L72.547395 410.824772c-12.15659 9.583567-14.25146 27.21692-4.654583 39.374534 9.596877 12.19857 27.271186 14.252484 39.37351 4.654582l48.518854-38.260546v513.949477c0 15.484218 12.540547 28.0391 28.038076 28.0391h651.65591c15.497528 0 28.038076-12.554882 28.038076-28.0391v-513.949477l48.51783 38.260546a27.917257 27.917257 0 0 0 17.331307 6.023518c8.296543 0 16.510151-3.655271 22.041179-10.679124 9.581519-12.15659 7.500984-29.789944-4.655606-39.37351z m-553.250292 490.379637V668.85616h232.323676v232.347225H393.501656z m413.937383 1.300334H681.899435V640.81706c0-15.484218-12.540547-28.0391-28.038075-28.039099h-288.39778c-15.497528 0-28.037052 12.554882-28.037052 28.039099v261.687683H211.85928V372.373782L509.649159 137.541587 807.439039 372.373782v530.130961z"-->
+      <!--                    fill="#ffffff">-->
+      <!--                </path>-->
+      <!--            </svg>-->
+      <svg-icon icon-class="home"></svg-icon>
     </div>
+    <DocumentMenu :context="props.context" @rename="rename"></DocumentMenu>
+    <div class="rename">
+      <span v-if="ele === 1" @click="rename">{{ name }}</span>
+      <input v-if="ele === 2" type="text" ref="input" />
+      <div class="save" v-if="ele === 3">
+        <Saving></Saving>
+      </div>
+    </div>
+    <div class="model">
+      <span v-if="isLable" style="color: #fff; font-size: 12px">【开发模式】</span>
+    </div>
+  </div>
 </template>
 
 <style scoped lang="scss">
 .container {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  width: auto;
+  height: 32px;
+
+  .home {
+    cursor: pointer;
+    width: 32px;
+    height: 32px;
     display: flex;
     align-items: center;
-    justify-content: space-between;
-    width: auto;
-    height: 32px;
+    justify-content: center;
+    flex: 0 0 32px;
+    border-radius: 4px;
 
-    .home {
-        cursor: pointer;
-        width: 32px;
-        height: 32px;
-        display: flex;
-        align-items: center;
-        justify-content: center;
-        flex: 0 0 32px;
-        border-radius: 4px;
+    >svg {
+      width: 18px;
+      height: 18px;
+      color: #FFFFFF;
+    }
+  }
 
-        > svg {
-            width: 18px;
-            height: 18px;
-            color: #FFFFFF;
-        }
+  .home:hover {
+    background-color: rgba(255, 255, 255, 0.1);
+  }
+
+  .rename {
+    max-width: 224px;
+    height: 52px;
+    flex: 1;
+    box-sizing: border-box;
+    padding: 16px 8px;
+
+    .save {
+      width: 8px;
+      height: 8px;
     }
 
-    .home:hover {
-        background-color: rgba(255, 255, 255, 0.1);
+    span {
+      display: block;
+      max-width: 210px;
+      height: 25px;
+      color: #ffffff;
+      cursor: pointer;
+      overflow: hidden;
+      text-overflow: ellipsis;
+      white-space: nowrap;
+      font-family: HarmonyOS Sans;
+      font-size: 14px;
     }
 
-    .rename {
-        max-width: 224px;
-        height: 52px;
-        flex: 1;
-        box-sizing: border-box;
-        padding: 16px 8px;
-
-        .save {
-            width: 8px;
-            height: 8px;
-        }
-
-        span {
-            display: block;
-            max-width: 210px;
-            height: 25px;
-            color: #ffffff;
-            cursor: pointer;
-            overflow: hidden;
-            text-overflow: ellipsis;
-            white-space: nowrap;
-            font-family: HarmonyOS Sans;
-            font-size: 14px;
-        }
-
-        input {
-            display: block;
-            max-width: 210px;
-            height: 18px;
-            border: none;
-            outline: none;
-            background-color: transparent;
-            color: #FFFFFF;
-            font-family: HarmonyOS Sans;
-            font-size: 14px;
-        }
+    input {
+      display: block;
+      max-width: 210px;
+      height: 18px;
+      border: none;
+      outline: none;
+      background-color: transparent;
+      color: #FFFFFF;
+      font-family: HarmonyOS Sans;
+      font-size: 14px;
     }
+  }
 
-    .model {
-        flex: 0 0 72px;
-        display: flex;
-        align-items: center;
-    }
+  .model {
+    flex: 0 0 72px;
+    display: flex;
+    align-items: center;
+  }
 }
 </style>

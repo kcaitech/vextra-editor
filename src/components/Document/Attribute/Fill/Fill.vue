@@ -19,6 +19,7 @@ import { v4 } from 'uuid';
 import { TableSelection } from '@/context/tableselection';
 import { Selection } from "@/context/selection";
 import { flattenShapes } from '@/utils/cutout';
+import { onBeforeUnmount } from 'vue';
 
 interface FillItem {
     id: number,
@@ -78,7 +79,7 @@ function watchShapes() {
     })
 }
 
-function updateData() {
+function updateData() {    
     fills.length = 0;
     mixed.value = false;
     mixed_cell.value = false;
@@ -587,6 +588,7 @@ onMounted(() => {
     props.context.tableSelection.watch(table_selection_watcher);
     props.context.selection.watch(selection_watcher);
 })
+
 onUnmounted(() => {
     stop();
     props.context.tableSelection.unwatch(table_selection_watcher);
