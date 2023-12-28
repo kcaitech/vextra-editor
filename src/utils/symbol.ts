@@ -282,7 +282,6 @@ export function variable_sort(symbol: SymbolShape, t: Function) {
         }
     });
 
-    console.log('list:', list);
     return list;
 }
 

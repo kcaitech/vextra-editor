@@ -182,39 +182,36 @@ onUnmounted(() => {
 </script>
 
 <template>
-    <div style="margin-bottom: 10px;" v-if="variables.length || visible_variables.length">
-        <TypeHeader :title="t('compos.instance_attr')" :active="true">
-            <template #tool>
-                <div class="edit-comps" v-if="!is_part_of_symbol(props.shapes[0])">
-                    <div class="edit_svg" @click.stop="editComps" v-if="is_symbolref_disa(props.shapes)">
-                        <svg-icon icon-class="comp-state"></svg-icon>
-                    </div>
-                    <div class="reset_svg" @click.stop="selectReset"
-                        :style="{ backgroundColor: resetMenu ? '#EBEBEB' : '' }">
-                        <svg-icon icon-class="reset_comp"></svg-icon>
-                        <div class="reset_menu" v-if="resetMenu">
-                            <div :class="{ untie, disabled: !untie_state }" @click="untie">
-                                <span>{{ t('compos.untie') }}</span>
-                                <span>快捷键</span>
-                            </div>
-                            <div class="untie" @click="reset_all_attr">{{ t('compos.reset_all_attr') }}</div>
+    <TypeHeader :title="t('compos.instance_attr')" :active="!!(variables.length || visible_variables.length)">
+        <template #tool>
+            <div class="edit-comps" v-if="!is_part_of_symbol(props.shapes[0])">
+                <div class="edit_svg" @click.stop="editComps" v-if="is_symbolref_disa(props.shapes)">
+                    <svg-icon icon-class="comp-state"></svg-icon>
+                </div>
+                <div class="reset_svg" @click.stop="selectReset" :style="{ backgroundColor: resetMenu ? '#EBEBEB' : '' }">
+                    <svg-icon icon-class="reset_comp"></svg-icon>
+                    <div class="reset_menu" v-if="resetMenu">
+                        <div :class="{ untie, disabled: !untie_state }" @click="untie">
+                            <span>{{ t('compos.untie') }}</span>
+                            <span>快捷键</span>
                         </div>
+                        <div class="untie" @click="reset_all_attr">{{ t('compos.reset_all_attr') }}</div>
                     </div>
                 </div>
-            </template>
-        </TypeHeader>
-        <div>
-            <div class="module_container" :style="{ marginBottom: variables.length > 0 ? '10px' : '0' }">
-                <component v-for="item in variables" :key="item.variable.id + props.shapes[0].id"
-                    :is="cardmap.get(item.variable.type) || Status" :context="props.context" :data="item"></component>
             </div>
-            <div v-if="visible_variables.length" class="visible-var-container">
-                <div class="show">
-                    <div class="title">{{ t('compos.layer_show') }}</div>
-                    <div class="items-wrap">
-                        <component v-for="item in visible_variables" :key="item.variable.id + props.shapes[0].id"
-                            :is="Visible" :context="props.context" :data="(item as RefAttriListItem)"></component>
-                    </div>
+        </template>
+    </TypeHeader>
+    <div style="margin-bottom: 10px;">
+        <div class="module_container" :style="{ marginBottom: variables.length > 0 ? '10px' : '0' }">
+            <component v-for="item in variables" :key="item.variable.id + props.shapes[0].id"
+                :is="cardmap.get(item.variable.type) || Status" :context="props.context" :data="item"></component>
+        </div>
+        <div v-if="visible_variables.length" class="visible-var-container">
+            <div class="show">
+                <div class="title">{{ t('compos.layer_show') }}</div>
+                <div class="items-wrap">
+                    <component v-for="item in visible_variables" :key="item.variable.id + props.shapes[0].id" :is="Visible"
+                        :context="props.context" :data="(item as RefAttriListItem)"></component>
                 </div>
             </div>
         </div>
@@ -311,6 +308,7 @@ onUnmounted(() => {
     line-height: 20px;
     margin-bottom: 6px;
     margin-top: 6px;
+
     .show {
         display: flex;
         justify-content: space-between;
