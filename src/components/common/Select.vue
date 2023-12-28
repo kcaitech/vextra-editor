@@ -186,6 +186,7 @@ onMounted(render)
         position: relative;
         display: flex;
         align-items: center;
+        justify-content: space-between;
 
         background-color: #F5F5F5;
         border-radius: var(--default-radius);
@@ -194,12 +195,10 @@ onMounted(render)
 
         .value-wrap {
             flex: 1;
-            height: 100%;
-            font-weight: 500;
-            box-sizing: border-box;
 
-            display: flex;
-            align-items: center;
+            overflow: hidden;
+            text-overflow: ellipsis;
+            white-space: nowrap;
         }
 
         >.svg-wrap {

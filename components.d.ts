@@ -279,6 +279,7 @@ declare module '@vue/runtime-core' {
     StaticAbbrCard: typeof import('./src/components/Document/Attribute/PopoverMenu/ComposAttri/StaticAbbrCard.vue')['default']
     StatusBar: typeof import('./src/components/Document/StatusBar/index.vue')['default']
     StatusCard: typeof import('./src/components/Document/Attribute/Module/StatusCard.vue')['default']
+    StatusCardValueView: typeof import('./src/components/Document/Attribute/Module/StatusCardValueView.vue')['default']
     SubLoading: typeof import('./src/components/common/SubLoading.vue')['default']
     SubMenu: typeof import('./src/components/Document/Toolbar/DocumentMenu/SubMenu.vue')['default']
     SvgIcon: typeof import('./src/components/common/SvgIcon.vue')['default']
