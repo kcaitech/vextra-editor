@@ -96,11 +96,11 @@ export class DocSelectionOp extends WatchableObject {
         else selection.selectText(cursorStart, cursorEnd, (shape0 as TextShape).text);
     }
 
-    public async start(token: string, documentId: string, context: Context, options?: StartOptions): Promise<boolean> {
+    public async start(getToken: getTokenFuncAsync, documentId: string, context: Context, options?: StartOptions): Promise<boolean> {
         if (this.docSelectionOp) return true;
         if (this.startPromise) return await this.startPromise;
-        const docSelectionOp = _DocSelectionOp.Make(token, documentId)
-        const startParams = [token, documentId, context]
+        const docSelectionOp = _DocSelectionOp.Make(await getToken(), documentId)
+        const startParams = [getToken, documentId, context]
         docSelectionOp.setOnClose(async () => {
             const diff_time = 1000 - (Date.now() - (Number.isInteger(options?.last_time) ? options!.last_time! : 0))
             if (diff_time > 0) await new Promise(resolve => setTimeout(resolve, diff_time));

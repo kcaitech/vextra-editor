@@ -374,17 +374,17 @@ const getDocumentInfo = async () => {
       init_watcher();
       init_keyboard_uints();
       const docId = route.query.id as string;
-      const token = localStorage.getItem("token") || "";
-      if (await context.communication.docOp.start(token, docId, document, context.coopRepo, docInfoData.document.version_id ?? "")) {
+      const getToken = () => Promise.resolve(localStorage.getItem("token") || "");
+      if (await context.communication.docOp.start(getToken, docId, document, context.coopRepo, docInfoData.document.version_id ?? "")) {
         switchPage(context!.data.pagesList[0]?.id);
         loading.value = false;
       } else {
         router.push("/apphome");
         return;
       }
-      if (perm === 3) await context.communication.docResourceUpload.start(token, docId);
-      if (perm >= 2) await context.communication.docCommentOp.start(token, docId);
-      await context.communication.docSelectionOp.start(token, docId, context);
+      if (perm === 3) await context.communication.docResourceUpload.start(getToken, docId);
+      if (perm >= 2) await context.communication.docCommentOp.start(getToken, docId);
+      await context.communication.docSelectionOp.start(getToken, docId, context);
       context.communication.docSelectionOp.addOnMessage(teamSelectionModifi);
     }
   } catch (err) {
@@ -396,9 +396,9 @@ const getDocumentInfo = async () => {
 }
 
 async function upload(projectId: string) {
-  const token = localStorage.getItem("token");
-  if (!token || !context || !context.data) return;
-  if (!await context.communication.docUpload.start(token, projectId)) {
+  const getToken = () => Promise.resolve(localStorage.getItem("token") || "");
+  if (!await getToken() || !context || !context.data) return;
+  if (!await context.communication.docUpload.start(getToken, projectId)) {
     // todo 上传通道开启失败处理
     return;
   }
@@ -418,14 +418,14 @@ async function upload(projectId: string) {
     path: '/document',
     query: { id: doc_id },
   });
-  if (!await context.communication.docOp.start(token, doc_id, context!.data, context.coopRepo, result!.data.version_id ?? "")) {
+  if (!await context.communication.docOp.start(getToken, doc_id, context!.data, context.coopRepo, result!.data.version_id ?? "")) {
     // todo 文档操作通道开启失败处理
   }
   getDocumentAuthority().then(async () => {
     if (!context) return;
-    if (permType.value === 3) context.communication.docResourceUpload.start(token, doc_id);
-    if (permType.value && permType.value >= 2) context.communication.docCommentOp.start(token, doc_id);
-    await context.communication.docSelectionOp.start(token, doc_id, context);
+    if (permType.value === 3) context.communication.docResourceUpload.start(getToken, doc_id);
+    if (permType.value && permType.value >= 2) context.communication.docCommentOp.start(getToken, doc_id);
+    await context.communication.docSelectionOp.start(getToken, doc_id, context);
     context.communication.docSelectionOp.addOnMessage(teamSelectionModifi);
     context.workspace.notify(WorkSpace.INIT_DOC_NAME);
   })
