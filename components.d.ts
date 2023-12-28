@@ -39,7 +39,6 @@ declare module '@vue/runtime-core' {
     BorderApexStyleItem: typeof import('./src/components/Document/Attribute/Border/BorderApexStyleItem.vue')['default']
     BorderApexStyleSelectedItem: typeof import('./src/components/Document/Attribute/Border/BorderApexStyleSelectedItem.vue')['default']
     BorderDetail: typeof import('./src/components/Document/Attribute/Border/BorderDetail.vue')['default']
-    BorderPositionItem: typeof import('./src/components/Document/Attribute/Border/BorderPositionItem.vue')['default']
     BorderStyleItem: typeof import('./src/components/Document/Attribute/Border/BorderStyleItem.vue')['default']
     BorderStyleSelected: typeof import('./src/components/Document/Attribute/Border/BorderStyleSelected.vue')['default']
     Bridge: typeof import('./src/components/Document/Bridge.vue')['default']
