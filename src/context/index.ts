@@ -205,7 +205,7 @@ export class Context extends WatchableObject {
         return this.m_textEditor;
     }
 
-    peekEditor4TextShape(shape: Shape & { text: Text }): TextShapeEditor | undefined {
+    peekEditor4TextShape(shape: Shape & { text: Text } | TextShapeView | TableCellView): TextShapeEditor | undefined {
         if (this.m_textEditor && this.m_textEditor.shape.id === shape.id) {
             return this.m_textEditor;
         }

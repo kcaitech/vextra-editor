@@ -119,9 +119,9 @@ function updateData() {
                 }
             }
         } else {
-            const borders = shape.getBorders();
-            for (let i = 0, l = borders.length; i < l; i++) {
-                const border = borders[i];
+            const _borders = shape.getBorders();
+            for (let i = 0, l = _borders.length; i < l; i++) {
+                const border = _borders[i];
                 const b: BorderItem = {
                     id: i,
                     border: border

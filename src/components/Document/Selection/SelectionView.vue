@@ -2,7 +2,7 @@
 import { onMounted, onUnmounted, ref, watch } from "vue";
 import { Context } from "@/context";
 import { Selection } from "@/context/selection";
-import { Matrix, Path, PathShape, Shape, ShapeType } from "@kcdesign/data";
+import { Matrix, Path, PathShape, PathShapeView, Shape, ShapeType, ShapeView } from "@kcdesign/data";
 import { ControllerType, ctrlMap } from "./Controller/map";
 import { CtrlElementType, WorkSpace } from "@/context/workspace";
 import { Action, Tool } from "@/context/tool";
@@ -135,16 +135,16 @@ function tool_watcher(t: number) {
     }
 }
 
-function modfiy_tracing_class(shape: Shape) {
+function modfiy_tracing_class(shape: ShapeView) {
     tracing_class.thick_stroke = false;
     tracing_class.hollow_fill = false;
 
-    if (shape instanceof PathShape && !shape.isClosed) {
+    if (shape instanceof PathShapeView && !shape.isClosed) {
         tracing_class.hollow_fill = true;
         tracing_class.thick_stroke = true;
     }
 
-    if (shape.style.fills.length) {
+    if (shape.getFills().length) {
         tracing_class.hollow_fill = false;
     }
 }
@@ -153,7 +153,7 @@ function modfiy_tracing_class(shape: Shape) {
  * @description 创建描边
  */
 function createShapeTracing() {
-    const hoveredShape: Shape | undefined = props.context.selection.hoveredShape;
+    const hoveredShape: ShapeView | undefined = props.context.selection.hoveredShape;
     tracing.value = false;
 
     if (!hoveredShape) {
@@ -165,7 +165,7 @@ function createShapeTracing() {
     } else {
         const m = hoveredShape.matrix2Root();
         m.multiAtLeft(matrix);
-        const path = hoveredShape.getPath();
+        const path = hoveredShape.getPath().clone();
         path.transform(m);
         const { x, y, right, bottom } = props.context.workspace.root;
         const w = right - x;
@@ -192,7 +192,7 @@ function is_symbol_class(type: ShapeType) {
  */
 function createController() {
     // const s = Date.now();
-    const selection: Shape[] = props.context.selection.selectedShapes;
+    const selection: ShapeView[] = props.context.selection.selectedShapes;
     if (!selection.length) {
         controller.value = false;
         return;
@@ -204,7 +204,7 @@ function createController() {
     controller.value = true;
     // console.log('控件绘制用时(ms):', Date.now() - s);
 }
-function modify_controller_frame(shapes: Shape[]) {
+function modify_controller_frame(shapes: ShapeView[]) {
     if (shapes.length === 1) {
         const s = shapes[0], m = s.matrix2Root(), f = s.frame;
         const points = [{ x: 0, y: 0 }, { x: f.width, y: 0 }, { x: f.width, y: f.height }, { x: 0, y: f.height }];
@@ -235,14 +235,14 @@ function modify_controller_frame(shapes: Shape[]) {
         y: b.bottom
     }];
 }
-function for_virtual(shape: Shape) {
+function for_virtual(shape: ShapeView) {
     if (shape.type === ShapeType.Text) {
         controllerType.value = ControllerType.TextVirtual;
     } else {
         controllerType.value = ControllerType.Virtual;
     }
 }
-function for_path_shape(shape: PathShape) {
+function for_path_shape(shape: PathShapeView) {
     const points = shape.points;
     const is_straight_1 = !points[0]?.hasFrom;
     const is_straight_2 = !points[1]?.hasTo;
@@ -252,7 +252,7 @@ function for_path_shape(shape: PathShape) {
         controllerType.value = ControllerType.Rect;
     }
 }
-function modify_controller_type(shapes: Shape[],) {
+function modify_controller_type(shapes: ShapeView[],) {
     if (shapes.length === 1) {
         if (!permIsEdit(props.context) || props.context.tool.isLable) {
             controllerType.value = ControllerType.Readonly;
@@ -267,7 +267,7 @@ function modify_controller_type(shapes: Shape[],) {
             controllerType.value = ControllerType.Contact;
             return;
         }
-        if (shape instanceof PathShape) {
+        if (shape instanceof PathShapeView) {
             for_path_shape(shape);
             return;
         }
@@ -292,10 +292,10 @@ function modify_controller_type(shapes: Shape[],) {
     }
     controllerType.value = ControllerType.RectMulti;
 }
-function modify_rotate(shapes: Shape[]) {
+function modify_rotate(shapes: ShapeView[]) {
     if (shapes.length === 1) {
         const shape = shapes[0];
-        if (shape instanceof PathShape) {
+        if (shape instanceof PathShapeView) {
             const points = shape.points;
             const is_straight_1 = !points[0]?.hasFrom;
             const is_straight_2 = !points[1]?.hasTo;

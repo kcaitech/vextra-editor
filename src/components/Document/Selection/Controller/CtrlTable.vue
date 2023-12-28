@@ -251,7 +251,9 @@ onUnmounted(() => {
 // todo
 function adaptTableCell(cell: TableCell): TableCellView {
     const page = props.context.selection.selectedPage!;
-    return page.getShape(cell.id) as TableCellView;
+    const _cell = page.getShape(cell.id) as TableCellView;
+    if (!_cell) throw new Error("cell not found");
+    return _cell;
 }
 
 </script>
@@ -288,8 +290,8 @@ function adaptTableCell(cell: TableCell): TableCellView {
         </g>
     </svg>
     <!-- 输入 -->
-    <TextInput v-if="isEditingText()" :context="props.context" :shape="(editingCell!.cell as TextShape)"
-        :matrix="editingCellMatrix" :main-notify="Selection.CHANGE_TEXT" :selection="props.context.textSelection"></TextInput>
+    <TextInput v-if="isEditingText()" :context="props.context" :shape="adaptTableCell(editingCell!.cell!)"
+        :matrix="editingCellMatrix" :main-notify="Selection.CHANGE_TEXT" :selection="props.context.selection.getTextSelection(editingCell!.cell as any)"></TextInput>
     <!-- 小菜单 -->
     <TableCellsMenu :cells="[]" v-if="cell_menu" :context="props.context" @close="closeCellMenu"
         :position="{ x: cell_menu_posi.x, y: cell_menu_posi.y }" :cell-menu="cell_menu_type"></TableCellsMenu>

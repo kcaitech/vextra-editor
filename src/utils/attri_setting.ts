@@ -1,4 +1,4 @@
-import { Matrix, PathShape, PathShapeView, RectShape, Shape, ShapeType, ShapeView } from "@kcdesign/data";
+import { Matrix, PathShape, PathShapeView, RectShape, Shape, ShapeType, ShapeView, adapt2Shape } from "@kcdesign/data";
 import { PositonAdjust, ConstrainerProportionsAction, FrameAdjust, RotateAdjust, FlipAction } from "@kcdesign/data";
 import { getHorizontalAngle } from "@/utils/common"
 import { Context } from "@/context";
@@ -72,7 +72,7 @@ export function get_actions_constrainer_proportions(shapes: ShapeView[], value: 
   const actions: ConstrainerProportionsAction[] = [];
   for (let i = 0; i < shapes.length; i++) {
     const shape = shapes[i];
-    actions.push({ target: shape, value })
+    actions.push({ target: adapt2Shape(shape), value })
   }
   return actions;
 }
@@ -81,7 +81,7 @@ export function get_actions_frame_x(shapes: ShapeView[], value: number) {
   for (let i = 0; i < shapes.length; i++) {
     const shape = shapes[i];
     const frame = shape.frame2Root();
-    actions.push({ target: shape, transX: value - frame.x, transY: 0 });
+    actions.push({ target: adapt2Shape(shape), transX: value - frame.x, transY: 0 });
   }
   return actions;
 }
@@ -90,7 +90,7 @@ export function get_actions_frame_y(shapes: ShapeView[], value: number) {
   for (let i = 0; i < shapes.length; i++) {
     const shape = shapes[i];
     const frame = shape.frame2Root();
-    actions.push({ target: shape, transX: 0, transY: value - frame.y });
+    actions.push({ target: adapt2Shape(shape), transX: 0, transY: value - frame.y });
   }
   return actions;
 }
@@ -135,7 +135,7 @@ export function get_actions_flip_v(shapes: ShapeView[]) {
   for (let i = 0; i < shapes.length; i++) {
     const shape = shapes[i];
     if (shape.type === ShapeType.Cutout) continue;
-    actions.push({ target: shape, direction: 'vertical' });
+    actions.push({ target: adapt2Shape(shape), direction: 'vertical' });
   }
   return actions;
 }
@@ -144,7 +144,7 @@ export function get_actions_flip_h(shapes: ShapeView[]) {
   for (let i = 0; i < shapes.length; i++) {
     const shape = shapes[i];
     if (shape.type === ShapeType.Cutout) continue;
-    actions.push({ target: shape, direction: 'horizontal' });
+    actions.push({ target: adapt2Shape(shape), direction: 'horizontal' });
   }
   return actions;
 }

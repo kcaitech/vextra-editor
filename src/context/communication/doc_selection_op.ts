@@ -1,4 +1,4 @@
-import { WatchableObject, Cmd, cmdClone, cmdTransform, OpType, setCmdServerIdAndOpsOrder, ArrayOpSelection, TextShape, TableShape, TableCell, TableIndex } from "@kcdesign/data"
+import { WatchableObject, Cmd, cmdClone, cmdTransform, OpType, setCmdServerIdAndOpsOrder, ArrayOpSelection, TextShape, TableShape, TableCell, TableIndex, TextShapeView, TableCellView, TableView, ShapeView } from "@kcdesign/data"
 import { MyTextCmdSelection } from "@kcdesign/data"
 import {
     DocSelectionOp as _DocSelectionOp,
@@ -54,9 +54,9 @@ export class DocSelectionOp extends WatchableObject {
         if (!this.context) return;
         const _selection = this.context.selection;
         if (_selection.selectedShapes.length !== 1) return;
-        const shape0 = _selection.selectedShapes[0];
+        const shape0: ShapeView = _selection.selectedShapes[0];
 
-        if (!(shape0 instanceof TextShape) || !(shape0 instanceof TableCell)) return;
+        if (!(shape0 instanceof TextShapeView) || !(shape0 instanceof TableCellView)) return;
 
         const selection = this.context.textSelection;
         if (selection.cursorStart === -1 || selection.cursorEnd === -1) return;
@@ -65,8 +65,8 @@ export class DocSelectionOp extends WatchableObject {
         const originalCursorStart = selection.cursorStart
         const originalCursorEnd = selection.cursorEnd
 
-        const shapeId = (shape0 instanceof TableCell) ? ((() => {
-            const table = shape0.parent as TableShape;
+        const shapeId = ((shape0 as ShapeView) instanceof TableCellView) ? ((() => {
+            const table = (shape0 as ShapeView).parent as TableView;
             const index = table.indexOfCell(shape0);
             return [table.id, new TableIndex(index?.rowIdx ?? -1, index?.colIdx ?? -1)]
         })()) : [(shape0 as TextShape).id];

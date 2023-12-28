@@ -56,7 +56,7 @@ function update_paths(shapes: ShapeView[]) {
     paths.value.length = 0;
     for (let i = 0; i < shapes.length; i++) {
         const shape = shapes[i];
-        const path = shape.getPath();
+        const path = shape.getPath().clone();
         const m2r = shape.matrix2Root();
         m2r.multiAtLeft(props.matrix);
         path.transform(m2r);
