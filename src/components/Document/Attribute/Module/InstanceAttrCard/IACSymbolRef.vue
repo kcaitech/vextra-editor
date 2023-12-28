@@ -55,22 +55,29 @@ function get_value() {
 }
 
 function component_watcher(type: number, val: Shape) {
-    if (type === Component.SELECTED_VAL) {
-        const symbolref = props.context.selection.symbolrefshape;
-        if (!symbolref) return;
-        const sym = props.context.data.symbolsMgr.getSync(val.id);
-        if (!sym) {
-            message("info", t('compos.invalid_compos'));
-            return;
-        }
-        const is_circular = is_circular_ref2(sym, symbolref.refId);
-        if (is_circular) {
-            message("danger", t('compos.circle_warning'));
-            return;
-        }
-        modify_vari_value_for_ref(props.context, props.data.variable, val.id);
-        closeDialog();
+    if (type !== Component.SELECTED_VAL) {
+        return;
     }
+
+    const symbolref = props.context.selection.symbolrefshape;
+    if (!symbolref) {
+        return;
+    }
+
+    const sym = props.context.data.symbolsMgr.getSync(val.id);
+    if (!sym) {
+        message("info", t('compos.invalid_compos'));
+        return;
+    }
+
+    const is_circular = is_circular_ref2(sym, symbolref.refId);
+    if (is_circular) {
+        message("danger", t('compos.circle_warning'));
+        return;
+    }
+
+    modify_vari_value_for_ref(props.context, props.data.variable, val.id);
+    closeDialog();
 }
 
 watch(() => props.data, get_value);

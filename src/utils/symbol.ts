@@ -983,7 +983,7 @@ export function is_status_allow_to_delete(symbol: SymbolShape) {
  * @param shape
  */
 export function is_state(shape: Shape) {
-    return shape?.type === ShapeType.Symbol && shape?.parent?.type === ShapeType.SymbolUnion;
+    return shape instanceof SymbolShape && shape.parent instanceof SymbolUnionShape;
 }
 
 function is_sym(shape: Shape) {
