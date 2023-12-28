@@ -5,7 +5,7 @@ import TypeHeader from '../TypeHeader.vue';
 import SelectLayerInput from './SelectLayerInput.vue';
 import {ref, onUnmounted, onMounted, watch} from 'vue';
 import CompLayerShow from '../PopoverMenu/ComposAttri/CompLayerShow.vue';
-import {OverrideType, Shape, SymbolRefShape, SymbolShape, Variable} from '@kcdesign/data';
+import {OverrideType, Shape, ShapeView, SymbolRefShape, SymbolRefView, SymbolShape, SymbolView, Variable, adapt2Shape} from '@kcdesign/data';
 import {get_shape_within_document, shape_track} from '@/utils/content';
 import {MoreFilled} from '@element-plus/icons-vue';
 import {VariableType} from '@kcdesign/data';
@@ -21,7 +21,7 @@ import {Selection} from '@/context/selection';
 
 interface Props {
     context: Context
-    shapes: Shape[]
+    shapes: SymbolRefView[]
 }
 
 const props = defineProps<Props>();
@@ -41,16 +41,23 @@ const untie = () => {
     const page = selection.selectedPage;
     if (page) {
         const editor = props.context.editor4Page(page);
-        const shapes = editor.extractSymbol(props.shapes as SymbolRefShape[]);
+        const shapes = editor.extractSymbol(props.shapes.map(s => adapt2Shape(s)));
         if (shapes) {
-            selection.rangeSelectShape(shapes);
+            props.context.nextTick(page, () => {
+                const select = shapes.reduce((pre, cur) => {
+                    const s = page.getShape(cur.id)
+                    if (s) pre.push(s);
+                    return pre;
+                }, [] as ShapeView[]);
+                selection.rangeSelectShape(select);
+            })
             resetMenu.value = false;
         }
     }
 }
 const editComps = () => {
     const refShape = props.context.selection.selectedShapes[0];
-    const refId = refShape && (refShape instanceof SymbolRefShape) ? refShape.refId : undefined
+    const refId = refShape && (refShape instanceof SymbolRefView) ? refShape.refId : undefined
     if (!refId) return;
     const shape = get_shape_within_document(props.context, refId)
     if (shape) {
@@ -84,7 +91,7 @@ function reset_all_attr() {
 }
 
 const is_bind = ref<Variable>();
-const sym_layer = ref<SymbolShape>();
+const sym_layer = ref<SymbolView>();
 const default_name = ref('');
 const selectId = ref<string[]>([]);
 const shape = ref(props.context.selection.selectedShapes[0]);
@@ -112,7 +119,7 @@ function edit_instance() {
 function save_layer_show(type: VariableType, name: string) {
     if (is_bind.value) {
         if (!sym_layer.value) return;
-        modify_variable(props.context, sym_layer.value, is_bind.value, name, is_bind.value.value, [is_bind.value.value])
+        modify_variable(props.context, (sym_layer.value), is_bind.value, name, is_bind.value.value, [is_bind.value.value])
     } else {
         if (!name.trim()) {
             message('info', t('compos.validate_info_2'));
@@ -121,7 +128,7 @@ function save_layer_show(type: VariableType, name: string) {
         const shapes = props.context.selection.selectedShapes;
         const ids = shapes.map(item => item.id);
         if (!sym_layer.value) return;
-        create_var_by_type(props.context, VariableType.SymbolRef, name, undefined, ids, sym_layer.value);
+        create_var_by_type(props.context, VariableType.SymbolRef, name, undefined, ids, (sym_layer.value));
     }
     isInstanceShow.value = false;
 }

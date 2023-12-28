@@ -52,7 +52,7 @@ const selectLayerId = (ids: string[]) => {
 }
 
 function save_instance(type: VariableType, name: string) {
-    const symbol = props.context.selection.symbolshape;
+    const symbol = props.context.selection.symbolview;
     if (!(symbol && layerIds.value.length)) return;
     const sym_ids: string[] = [];
     for (let i = 0, l = layerIds.value.length; i < l; i++) {

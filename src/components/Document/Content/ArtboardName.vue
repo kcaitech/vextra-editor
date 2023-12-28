@@ -1,6 +1,6 @@
 <script setup lang="ts">
 import { ref, nextTick } from 'vue'
-import { AsyncTransfer, Matrix, Shape, ShapeView } from "@kcdesign/data";
+import { AsyncTransfer, Matrix, Shape, ShapeView, adapt2Shape } from "@kcdesign/data";
 import { Context } from "@/context";
 import { ClientXY, PageXY } from '@/context/selection';
 import { EffectType, Wheel, fourWayWheel } from '@/utils/wheel';
@@ -157,18 +157,33 @@ function move(e: MouseEvent) {
         let update_type: number = 0;
         if (!isOut) update_type = transform_f(startPosition, mousePosition);
         modify_mouse_position_by_type(update_type, startPosition, mousePosition);
-    } else if (Math.hypot(mousePosition.x - startPosition.x, mousePosition.y - startPosition.y) > dragActiveDis) {
+    } else if (!isDragging && Math.hypot(mousePosition.x - startPosition.x, mousePosition.y - startPosition.y) > dragActiveDis) {
         matrix.reset(props.context.workspace.matrix);
         matrix_inverse = new Matrix(matrix.inverse);
         wheel = fourWayWheel(props.context, undefined, matrix_inverse.computeCoord3(startPosition));
         const selection = props.context.selection;
         shapes = selection.selectedShapes;
-        if (e.altKey) shapes = paster_short(props.context, shapes);
-        asyncTransfer = props.context.editor.controller().asyncTransfer(shapes, selection.selectedPage!);
-        pre_translate(props.context, shapes);
         isDragging = true;
-        const map_anchor = matrix_inverse.computeCoord3(startPosition);
-        offset_map = gen_offset_map(shapes[0], map_anchor);
+
+        const action = (shapes: ShapeView[]) => {
+            asyncTransfer = props.context.editor.controller().asyncTransfer(shapes.map((s) => adapt2Shape(s)), selection.selectedPage!.data);
+            pre_translate(props.context, shapes);
+            const map_anchor = matrix_inverse.computeCoord3(startPosition);
+            offset_map = gen_offset_map(shapes[0], map_anchor);
+        }
+
+        if (e.altKey) {
+            paster_short(props.context, shapes).then((val) => {
+                shapes = val;
+                action(shapes);
+            }).catch((e) => {
+                console.log(e);
+                isDragging = false;
+            });
+        }
+        else {
+            action(shapes);
+        }
     }
 }
 function up(e: MouseEvent) {

@@ -5,7 +5,7 @@ import SelectFont from './SelectFont.vue';
 import {onMounted, ref, onUnmounted, watchEffect, watch, computed, nextTick} from 'vue';
 import TextAdvancedSettings from './TextAdvancedSettings.vue'
 import {Context} from '@/context';
-import {TextShape, AttrGetter, TableShape, ShapeType} from "@kcdesign/data";
+import {TextShape, AttrGetter, TableShape, ShapeType, TextShapeView} from "@kcdesign/data";
 import Tooltip from '@/components/common/Tooltip.vue';
 import {TextVerAlign, TextHorAlign, Color, UnderlineType, StrikethroughType} from "@kcdesign/data";
 import ColorPicker from '@/components/common/ColorPicker/index.vue';
@@ -263,7 +263,7 @@ const setTextSize = () => {
 // 获取当前文字格式
 const textFormat = () => {
     const shapes = props.context.selection.selectedShapes;
-    const t_shape = shapes.filter(item => item.type === ShapeType.Text) as TextShape[];
+    const t_shape = shapes.filter(item => item.type === ShapeType.Text) as TextShapeView[];
     if (t_shape.length === 0 || !t_shape[0].text) return
     if (length.value) {
         const {textIndex, selectLength} = getTextIndexAndLen();

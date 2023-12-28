@@ -107,7 +107,7 @@ export function get_direction(rotation: number) {
     else if (rotation >= 338 && rotation <= 360) return 0;
     else return 0;
 }
-export function gen_offset_map(shape: Shape, down: PageXY) {
+export function gen_offset_map(shape: ShapeView, down: PageXY) {
     const m = shape.matrix2Root(), f = shape.frame;
     const lt = m.computeCoord2(0, 0);
     const rb = m.computeCoord2(f.width, f.height);
@@ -123,7 +123,7 @@ export function gen_offset_map(shape: Shape, down: PageXY) {
     }
 }
 
-export function pre_translate(context: Context, shapes: Shape[]) {
+export function pre_translate(context: Context, shapes: ShapeView[]) {
     context.selection.unHoverShape();
     context.workspace.setSelectionViewUpdater(false);
     context.workspace.translating(true);

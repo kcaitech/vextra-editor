@@ -6,7 +6,7 @@ import { ClientXY, PageXY } from '@/context/selection';
 import { Action } from '@/context/tool';
 import { Point } from '../../SelectionView.vue';
 import { PointType } from '@/context/assist';
-import { forbidden_to_modify_frame } from '@/utils/common';
+import { forbidden_to_modify_frame, forbidden_to_modify_frame2 } from '@/utils/common';
 interface Props {
     matrix: number[]
     context: Context
@@ -65,7 +65,7 @@ function bar_mousedown(event: MouseEvent, ele: CtrlElementType) {
     event.stopPropagation();
     props.context.menu.menuMount();
 
-    if (forbidden_to_modify_frame(props.shape)) {
+    if (forbidden_to_modify_frame2(props.shape)) {
         return;
     }
 
@@ -103,11 +103,13 @@ function bar_mousemove(event: MouseEvent) {
     } else {
         if (Math.hypot(mouseOnPage.x - startPosition.x, mouseOnPage.y - startPosition.y) > dragActiveDis) {
             isDragging = true;
-            asyncBaseAction = props.context.editor.controller().asyncRectEditor(s, props.context.selection.selectedPage!);
+            const page = props.context.selection.selectedPage!;
+            asyncBaseAction = props.context.editor.controller().asyncRectEditor(s, page.data);
             submatrix.reset(workspace.matrix.inverse);
             setCursor(cur_ctrl_type, true);
             workspace.scaling(true);
-            props.context.assist.set_trans_target([props.shape]);
+            const sv = page.getShape(props.shape.id);
+            sv && props.context.assist.set_trans_target([sv]);
         }
     }
 }

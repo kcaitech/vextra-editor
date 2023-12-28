@@ -1,13 +1,13 @@
 import { Context } from "@/context";
 import { Navi } from "@/context/navigate";
-import { Shape, ShapeType, ShapeView, SymbolShape, SymbolUnionShape, VariableType } from "@kcdesign/data";
+import { Shape, ShapeType, ShapeView, SymbolShape, SymbolUnionShape, SymbolView, VariableType } from "@kcdesign/data";
 import { XYsBounding } from "./common";
 import { WorkSpace } from "@/context/workspace";
 
 export type Area = number | 'artboard' | 'group' | 'normal';
 
-export function is_shape_in_selection(shapes: Shape[], shape: Shape): boolean {
-    const map: Map<string, Shape> = new Map();
+export function is_shape_in_selection(shapes: ShapeView[], shape: ShapeView): boolean {
+    const map: Map<string, ShapeView> = new Map();
     for (let i = 0; i < shapes.length; i++) {
         if (shape.id === shapes[i].id) return true;
         map.set(shapes[i].id, shapes[i])
@@ -24,7 +24,7 @@ export function is_shape_in_selection(shapes: Shape[], shape: Shape): boolean {
     return false;
 }
 
-export function selection_types(shapes: Shape[]): number {
+export function selection_types(shapes: ShapeView[]): number {
     let types = 0;
     for (let i = 0; i < shapes.length; i++) {
         if (shapes[i].type === ShapeType.Artboard) {
@@ -63,7 +63,7 @@ export function is_parent_locked(shape: ShapeView): boolean {
     return is_pu;
 }
 
-export function is_valid_data(context: Context, shape: Shape) {
+export function is_valid_data(context: Context, shape: ShapeView) {
     const page = context.selection.selectedPage;
     if (!page) return false;
     if (!page.shapes.get(shape.id)) {
@@ -148,7 +148,7 @@ export function fit_no_transform(context: Context, shape: ShapeView) {
     }
 }
 
-export function get_state_name(state: SymbolShape, dlt: string) {
+export function get_state_name(state: SymbolView, dlt: string) {
     if (!(state.parent instanceof SymbolUnionShape)) {
         return state.name;
     }
@@ -164,10 +164,10 @@ export function get_state_name(state: SymbolShape, dlt: string) {
     return name_slice.toString();
 }
 
-export function get_name(shape: Shape, dlt: string) {
+export function get_name(shape: ShapeView, dlt: string) {
     if (shape.type !== ShapeType.Symbol) {
         return shape.name;
     } else {
-        return get_state_name(shape as SymbolShape, dlt);
+        return get_state_name(shape as SymbolView, dlt);
     }
 }

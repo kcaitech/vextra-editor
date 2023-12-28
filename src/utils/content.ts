@@ -868,7 +868,7 @@ export function is_need_skip_to_render(shape: Shape, matrix: Matrix) { // 不是
  * @param context
  * @param shape
  */
-export function shape_track(context: Context, shape: ShapeView) {
+export function shape_track(context: Context, shape: ShapeView | Shape) {
     const page = shape.getPage() as PageView;
     if (!page) return;
     const target = page.getShape(shape.id);
@@ -883,18 +883,20 @@ export function shape_track(context: Context, shape: ShapeView) {
     need_change_page ? setTimeout(track, 10) : track();
 
     function track() {
-        fit_no_transform(context, shape);
+        target && fit_no_transform(context, target);
     }
 }
 
 /**
  * @description 文档范围内通过id读取shape
  */
-export function get_shape_within_document(context: Context, id: string) {
+export function get_shape_within_document(context: Context, id: string): ShapeView | undefined {
     const pages = context.data.pagesMgr.resource;
     for (let i = 0, len = pages.length; i < len; i++) {
         const t = pages[i].getShape(id);
-        if (t) return t;
+        if (t) {
+            return context.getPageDom(pages[i]).dom.getShape(t.id);
+        }
     }
 }
 

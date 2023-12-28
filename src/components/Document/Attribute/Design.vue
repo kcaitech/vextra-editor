@@ -3,7 +3,7 @@ import { Context } from '@/context';
 import { Selection } from '@/context/selection';
 import { WorkSpace } from "@/context/workspace";
 import { onMounted, onUnmounted, shallowRef, ref, computed } from 'vue';
-import { ShapeType, Shape, TextShape, TableShape } from "@kcdesign/data"
+import { ShapeType, Shape, TextShape, TableShape, ShapeView, TextShapeView, TableView, adapt2Shape } from "@kcdesign/data"
 import Arrange from './Arrange.vue';
 import ShapeBaseAttr from './BaseAttr/Index.vue';
 import Fill from './Fill/Fill.vue';
@@ -20,7 +20,7 @@ import { Tool } from '@/context/tool';
 import Opacity from './Opacity/Opacity.vue';
 import BaseForPathEdit from "@/components/Document/Attribute/BaseAttr/BaseForPathEdit.vue";
 const props = defineProps<{ context: Context }>();
-const shapes = shallowRef<Shape[]>([]);
+const shapes = shallowRef<ShapeView[]>([]);
 const len = computed<number>(() => shapes.value.length);
 const WITH_FILL = [
     ShapeType.Rectangle,
@@ -75,7 +75,7 @@ const WITHOUT_OPACITY = [
     ShapeType.TableCell
 ]
 const shapeType = ref();
-const textShapes = ref<Shape[]>([]);
+const textShapes = ref<ShapeView[]>([]);
 const symbol_attribute = ref<boolean>(true);
 const opacity = ref<boolean>(false);
 const getShapeType = () => {
@@ -167,6 +167,13 @@ onUnmounted(() => {
     props.context.tool.unwatch(tool_watcher);
     props.context.workspace.unwatch(workspace_watcher);
 })
+
+// todo
+function adaptTextShape(v: ShapeView | ShapeView[]): TextShape | TextShape[]{
+    if (Array.isArray(v)) return v.map((s) => adapt2Shape(s) as TextShape);
+    return adapt2Shape(v) as TextShape;
+}
+
 </script>
 <template>
     <section id="Design">
@@ -184,9 +191,9 @@ onUnmounted(() => {
                 <Module v-if="symbol_attribute" :context="props.context" :shapeType="shapeType" :shapes="shapes"></Module>
                 <Fill v-if="WITH_FILL.includes(shapeType)" :shapes="shapes" :context="props.context"></Fill>
                 <Border v-if="WITH_BORDER.includes(shapeType)" :shapes="shapes" :context="props.context"></Border>
-                <Text v-if="WITH_TEXT.includes(shapeType)" :shape="(shapes[0] as TextShape)"
-                    :textShapes="(textShapes as TextShape[])" :context="props.context"></Text>
-                <TableText v-if="WITH_TABLE.includes(shapeType)" :shape="(shapes[0] as TableShape)"
+                <Text v-if="WITH_TEXT.includes(shapeType)" :shape="(adaptTextShape(shapes[0]) as TextShape)"
+                    :textShapes="(adaptTextShape(textShapes as ShapeView[]) as TextShape[])" :context="props.context"></Text>
+                <TableText v-if="WITH_TABLE.includes(shapeType)" :shape="(shapes[0] as TableView)"
                     :context="props.context">
                 </TableText>
                 <Shadow v-if="WITH_SHADOW.includes(shapeType)" :shapes="shapes" :context="props.context">

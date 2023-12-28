@@ -153,7 +153,7 @@ function point_mousemove(event: MouseEvent) {
 
             contactEditor = props.context.editor
                 .controller()
-                .asyncContactEditor(props.shape, props.context.selection.selectedPage!);
+                .asyncContactEditor(props.shape, props.context.selection.selectedPage!.data);
 
             contactEditor.before(drag_index);
 

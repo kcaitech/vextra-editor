@@ -6,7 +6,9 @@ import {
     ShapeType,
     ShapeView,
     SymbolRefShape,
+    SymbolRefView,
     SymbolShape,
+    SymbolView,
     TableCellView,
     TableShape,
     TableView,
@@ -326,11 +328,8 @@ export class Selection extends WatchableObject implements ISave4Restore {
         this.notify(Selection.CHANGE_SHAPE);
     }
 
-    isSelectedShape(shape: ShapeView) {
-        const ret = this.m_selectShapes.find(value => shape.id == value.id);
-        return ret !== undefined;
-    }
-    isSelectedShape2(shapeId: string) {
+    isSelectedShape(shape: ShapeView | Shape | string) {
+        const shapeId = typeof shape ==='string'? shape : shape.id;
         const ret = this.m_selectShapes.find(value => shapeId == value.id);
         return ret !== undefined;
     }
@@ -460,6 +459,9 @@ export class Selection extends WatchableObject implements ISave4Restore {
     get symbolshape() {
         return this.selectedShapes.length === 1 && is_symbol_or_union(this.selectedShapes[0]) ? adapt2Shape(this.selectedShapes[0]) as SymbolShape : undefined;
     }
+    get symbolview() {
+        return this.selectedShapes.length === 1 && is_symbol_or_union(this.selectedShapes[0]) ? (this.selectedShapes[0]) as SymbolView : undefined;
+    }
 
     // get unionshape() {
     //     if (this.selectedShapes.length === 1) {
@@ -474,24 +476,37 @@ export class Selection extends WatchableObject implements ISave4Restore {
     //     }
     // }
 
-    // get symbolstate() {
-    //     if (this.selectedShapes.length === 1) {
-    //         const s = this.selectedShapes[0];
-    //         if (s.type === ShapeType.SymbolUnion) {
-    //             return s as SymbolShape;
-    //         } else {
-    //             return false;
-    //         }
-    //     } else {
-    //         return false;
-    //     }
-    // }
+    get symbolstate() {
+        if (this.selectedShapes.length === 1) {
+            const s = this.selectedShapes[0];
+            if (s.type === ShapeType.SymbolUnion) {
+                return adapt2Shape(s) as SymbolShape;
+            }
+        }
+    }
+    get symbolstateview() {
+        if (this.selectedShapes.length === 1) {
+            const s = this.selectedShapes[0];
+            if (s.type === ShapeType.SymbolUnion) {
+                return (s) as SymbolView;
+            }
+        }
+    }
 
     get symbolrefshape() {
         if (this.selectedShapes.length === 1) {
             const s = this.selectedShapes[0];
             if (s.type === ShapeType.SymbolRef) {
                 return adapt2Shape(s) as SymbolRefShape;
+            }
+        }
+    }
+
+    get symbolrefview() {
+        if (this.selectedShapes.length === 1) {
+            const s = this.selectedShapes[0];
+            if (s.type === ShapeType.SymbolRef) {
+                return s as SymbolRefView;
             }
         }
     }

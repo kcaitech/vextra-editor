@@ -1,7 +1,7 @@
 import {Shape, ShapeView, WatchableObject} from "@kcdesign/data";
 
 interface TextSelection {
-    shape: Shape
+    shape: ShapeView
     slice: [number, number][]
 }
 

@@ -341,7 +341,7 @@ export function multi_select_shape(context: Context, shape: ShapeView) {
     context.selection.rangeSelectShape(Array.from(selected_map.values()));
 }
 
-export function is_component_class(shape: Shape) {
+export function is_component_class(shape: ShapeView) {
     let s: any = shape;
     while (s) {
         if (s.type === ShapeType.Page) {

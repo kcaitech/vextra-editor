@@ -1,6 +1,6 @@
 <script lang="ts" setup>
 import { Context } from '@/context';
-import { Shape } from '@kcdesign/data';
+import { Shape, ShapeView } from '@kcdesign/data';
 import { PositonAdjust } from "@kcdesign/data";
 import { computed, onMounted, onUnmounted } from 'vue';
 import { align_left, align_cneter_x, align_right, align_top, align_cneter_y, align_bottom, distribute_horizontally, vertical_uniform_distribution } from '@/utils/arrange';
@@ -10,7 +10,7 @@ import Tooltip from '@/components/common/Tooltip.vue';
 import { Arrange } from '@/context/arrange';
 interface Props {
     context: Context
-    shapes: Shape[]
+    shapes: ShapeView[]
 }
 const props = defineProps<Props>();
 const len = computed<number>(() => props.shapes.length);

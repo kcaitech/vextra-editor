@@ -389,10 +389,10 @@ export function modify_pt_y4create(pre_target2: PT4P2, p: PageXY, apexY: number[
     }
 }
 
-export function get_tree(shape: Shape, init: Map<string, Shape>) {
+export function get_tree(shape: ShapeView, init: Map<string, ShapeView>) {
     init.set(shape.id, shape);
     if (shape.type !== ShapeType.Table) {
-        const cs = (shape as GroupShape).childs;
+        const cs = (shape).childs;
         if (cs && cs.length) for (let i = 0, len = cs.length; i < len; i++) get_tree(cs[i], init);
     }
 }

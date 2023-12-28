@@ -1,6 +1,6 @@
 <script setup lang="ts">
 import { ref, nextTick, onMounted, onUnmounted } from 'vue'
-import { AsyncTransfer, Matrix, Shape, ShapeView, SymbolShape, SymbolView } from "@kcdesign/data";
+import { AsyncTransfer, Matrix, Shape, ShapeView, SymbolShape, SymbolView, adapt2Shape } from "@kcdesign/data";
 import { Context } from "@/context";
 import { permIsEdit } from '@/utils/content';
 import { ClientXY, PageXY } from '@/context/selection';
@@ -152,7 +152,7 @@ function move(e: MouseEvent) {
         let update_type: number = 0;
         if (!isOut) update_type = transform_f(startPosition, mousePosition);
         modify_mouse_position_by_type(update_type, startPosition, mousePosition);
-    } else if (Math.hypot(mousePosition.x - startPosition.x, mousePosition.y - startPosition.y) > dragActiveDis) { // 注意：这里判断一个图形被拖动的条件是鼠标拖动的距离大于3px，目的在于与单击事件做区分
+    } else if (!isDragging && Math.hypot(mousePosition.x - startPosition.x, mousePosition.y - startPosition.y) > dragActiveDis) { // 注意：这里判断一个图形被拖动的条件是鼠标拖动的距离大于3px，目的在于与单击事件做区分
         // 在这个if分支里面，做的都是图形开始移动前的准备工作
         matrix.reset(props.context.workspace.matrix); // 更新变换矩阵，确保最新状态
         matrix_inverse = new Matrix(matrix.inverse); // matrix的逆矩阵
@@ -160,12 +160,27 @@ function move(e: MouseEvent) {
         wheel = fourWayWheel(props.context, undefined, matrix_inverse.computeCoord3(startPosition)); // 以鼠标在文档上的坐标为锚点，安装滚轮
         const selection = props.context.selection; // selection, 是位于context中用于组件通信的一个模块，主要负责选区状态的通信；
         shapes = selection.selectedShapes;
-        if (e.altKey) shapes = paster_short(props.context, shapes); // 图形分身
-        asyncTransfer = props.context.editor.controller().asyncTransfer(shapes, selection.selectedPage!); // 创建属性编辑器
-        pre_translate(props.context, shapes);
         isDragging = true;
-        const map_anchor = matrix_inverse.computeCoord3(startPosition);
-        offset_map = gen_offset_map(shapes[0], map_anchor);
+
+        const action = (shapes: ShapeView[]) => {
+            asyncTransfer = props.context.editor.controller().asyncTransfer(shapes.map((s) => adapt2Shape(s)), selection.selectedPage!.data);
+            pre_translate(props.context, shapes);
+            const map_anchor = matrix_inverse.computeCoord3(startPosition);
+            offset_map = gen_offset_map(shapes[0], map_anchor);
+        }
+
+        if (e.altKey) {
+            paster_short(props.context, shapes).then((val) => {
+                shapes = val;
+                action(shapes);
+            }).catch((e) => {
+                console.log(e);
+                isDragging = false;
+            });
+        }
+        else {
+            action(shapes);
+        }
     }
 }
 // 移动后抬起：不用细致关注干了什么，但是需要知道每次拖动一个图形都要用如下方法进行收尾

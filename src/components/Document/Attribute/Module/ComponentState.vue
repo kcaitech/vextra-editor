@@ -4,13 +4,13 @@ import { Context } from '@/context';
 import { onMounted, onUnmounted, ref, watch } from "vue";
 import StatusCard from "@/components/Document/Attribute/Module/StatusCard.vue";
 import { is_conflict_comp, is_wrong_bind, states_tag_values_sort, StatusValueItem } from "@/utils/symbol";
-import { Shape, SymbolShape } from "@kcdesign/data"
+import { Shape, ShapeView, SymbolShape, SymbolView } from "@kcdesign/data"
 import TypeHeader from '../TypeHeader.vue';
 import { Warning } from '@element-plus/icons-vue';
 
 interface Props {
     context: Context
-    shapes: SymbolShape[]
+    shapes: SymbolView[]
 }
 
 const props = defineProps<Props>()
@@ -28,7 +28,7 @@ function update_list() {
 
 const is_conflict = () => {
     if (is_wrong_bind(props.shapes)) {
-        const conflict_comp = is_conflict_comp(props.shapes[0].parent as SymbolShape);
+        const conflict_comp = is_conflict_comp(props.shapes[0].parent as SymbolView);
         if (!conflict_comp) return;
         let is_conflict = false;
         conflict_comp.forEach((item: any[]) => {
@@ -50,13 +50,13 @@ watch(() => props.shapes, (v, o) => {
     update_list();
 })
 
-function watch_shapes(shapes: Shape[]) {
+function watch_shapes(shapes: ShapeView[]) {
     for (let i = 0, len = shapes.length; i < len; i++) {
         shapes[i].watch(update_list);
     }
 }
 
-function unwatch_shapes(shapes: Shape[]) {
+function unwatch_shapes(shapes: ShapeView[]) {
     for (let i = 0, len = shapes.length; i < len; i++) {
         shapes[i].unwatch(update_list);
     }

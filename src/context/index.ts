@@ -11,7 +11,8 @@ import {
     PageView,
     ShapeView,
     adapt2Shape,
-    TableView
+    TableView,
+    TextShapeView
 } from "@kcdesign/data";
 import { Document } from "@kcdesign/data";
 import { Page } from "@kcdesign/data";
@@ -194,7 +195,8 @@ export class Context extends WatchableObject {
     }
 
     // 在editor里缓存临时数据不太对，应缓存到textselection
-    editor4TextShape(shape: Shape & { text: Text }): TextShapeEditor {
+    editor4TextShape(shape: Shape & { text: Text } | TextShapeView): TextShapeEditor {
+        if (shape instanceof TextShapeView) shape = adapt2Shape(shape) as Shape & { text: Text };
         if (this.m_textEditor && this.m_textEditor.shape.id === shape.id) {
             return this.m_textEditor;
         }

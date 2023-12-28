@@ -4,7 +4,7 @@ import { ref, onMounted, reactive, computed, onUnmounted } from 'vue';
 import { useI18n } from 'vue-i18n';
 import Select, { SelectItem, SelectSource } from '@/components/common/Select.vue';
 import { Context } from '@/context';
-import { Shape } from '@kcdesign/data';
+import { ShapeView } from '@kcdesign/data';
 import { genOptions } from '@/utils/common';
 import { ResizingConstraints } from '@kcdesign/data';
 
@@ -19,12 +19,12 @@ interface Controller {
 }
 const props = defineProps<{
   context: Context,
-  shape: Shape,
+  shape: ShapeView,
 }>();
 const editor = computed(() => {
   return props.context.editor4Shape(props.shape);
 })
-let shape: Shape | undefined;
+let shape: ShapeView | undefined;
 const reflush = ref(0);
 const watcher = () => {
   reflush.value++;
@@ -76,7 +76,7 @@ function showMenu() {
   // popover.value?.show();
 }
 function setConstrain(side: Side) {
-  let resizingConstraint = props.shape.resizingConstraint as number;
+  let resizingConstraint = props.shape.data.resizingConstraint as number;
 
   switch (side) {
     case 'right':
@@ -113,7 +113,7 @@ function setConstrain(side: Side) {
   controllerInit();
 }
 function controllerInit() {
-  const init = props.shape.resizingConstraint as number;
+  const init = props.shape.data.resizingConstraint as number;
   controller.right = Boolean((~init & ResizingConstraints.Right));
   controller.width = Boolean((~init & ResizingConstraints.Width));
   controller.left = Boolean((~init & ResizingConstraints.Left));

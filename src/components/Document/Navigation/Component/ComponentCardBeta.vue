@@ -1,7 +1,7 @@
 <script setup lang="ts">
 import {h, nextTick, onMounted, onUnmounted, ref} from 'vue';
 import comsMap from '@/components/Document/Content/comsmap';
-import {GroupShape} from "@kcdesign/data";
+import {GroupShape, SymbolShape} from "@kcdesign/data";
 import {renderSymbolPreview as r} from "@kcdesign/data";
 import {Context} from '@/context';
 import {Selection} from '@/context/selection';
@@ -38,7 +38,7 @@ function selection_watcher(t: number) {
 }
 
 function check_selected_status() {
-    selected.value = props.context.selection.isSelectedShape(props.data);
+    selected.value = props.context.selection.isSelectedShape(props.data.id);
 }
 
 function _shape_watcher() {
@@ -47,7 +47,7 @@ function _shape_watcher() {
 }
 
 function check_render_item() {
-    if (!props.data.isSymbolUnionShape) return;
+    if (!(props.data as SymbolShape).isSymbolUnionShape) return;
     render_item.value = (props.data?.childs[0] as GroupShape) || props.data;
     props.data.unwatch(shape_watcher);
     render_item.value.watch(shape_watcher);

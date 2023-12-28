@@ -117,7 +117,7 @@ function matrix_watcher(t: number) {
     }
 }
 function init_shape() {
-    shape = props.context.selection.selectedShapes[0] as (PathShape | GroupShape);
+    shape = props.context.selection.selectedShapes[0];
     if (!shape) {
         console.log('!shape');
         return false;

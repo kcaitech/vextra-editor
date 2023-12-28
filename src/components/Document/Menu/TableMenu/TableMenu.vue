@@ -3,14 +3,14 @@ import { reactive, ref } from 'vue';
 import { useI18n } from 'vue-i18n';
 import ContextMenu from '@/components/common/ContextMenu.vue';
 import { XY, Selection } from '@/context/selection';
-import { Shape, TableShape } from "@kcdesign/data";
+import { Shape, ShapeView, TableShape, TableView } from "@kcdesign/data";
 import { Context } from '@/context';
 import { TableSelection } from '@/context/tableselection';
 
 const { t } = useI18n();
 interface Props {
   context: Context,
-  layers?: Shape[],
+  layers?: ShapeView[],
   items: string[],
   site?: { x: number, y: number }
 }
@@ -37,7 +37,7 @@ function showLayerSubMenu(e: MouseEvent, show: string) {
 const splitCell = (column: string) => {
   const shape = props.context.selection.selectedShapes[0]
   const table = props.context.tableSelection;
-  const editor = props.context.editor4Table(shape as TableShape)
+  const editor = props.context.editor4Table(shape as TableView)
   if (table.tableColEnd !== -1 && table.tableRowEnd !== -1) {
     if (column === 'row') {
       editor.horSplitCell(table.tableRowStart, table.tableColStart);
@@ -69,7 +69,7 @@ const mergeCell = () => {
   const shape = props.context.selection.selectedShapes[0]
   const table = props.context.tableSelection;
   if (table.tableColEnd !== -1 && table.tableRowEnd !== -1) {
-    const editor = props.context.editor4Table(shape as TableShape)
+    const editor = props.context.editor4Table(shape as TableView)
     editor.mergeCells(table.tableRowStart, table.tableRowEnd, table.tableColStart, table.tableColEnd)
   }
   reset(table, props.context);
@@ -78,7 +78,7 @@ const mergeCell = () => {
 const spliceRow = () => {
   const shape = props.context.selection.selectedShapes[0];
   const table = props.context.tableSelection;
-  const editor = props.context.editor4Table(shape as TableShape);
+  const editor = props.context.editor4Table(shape as TableView);
   let result: any = 0;
   if (table.editingCell) {
     result = editor.removeRow(table.editingCell.index.row);
@@ -93,7 +93,7 @@ const spliceRow = () => {
 const spliceCol = () => {
   const shape = props.context.selection.selectedShapes[0];
   const table = props.context.tableSelection;
-  const editor = props.context.editor4Table(shape as TableShape);
+  const editor = props.context.editor4Table(shape as TableView);
   let result: any = 0;
   if (table.editingCell) {
     result = editor.removeCol(table.editingCell.index.col);

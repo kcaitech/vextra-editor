@@ -1,6 +1,6 @@
 <script setup lang='ts'>
 import { Context } from '@/context';
-import { AsyncBaseAction, AsyncTransfer, CtrlElementType, GroupShape, Matrix, Shape, ShapeType, TableShape } from '@kcdesign/data';
+import { AsyncBaseAction, AsyncTransfer, CtrlElementType, GroupShape, Matrix, Shape, ShapeType, ShapeView, TableShape, adapt2Shape } from '@kcdesign/data';
 import { onMounted, onUnmounted, watch, ref } from 'vue';
 import { ClientXY, PageXY } from '@/context/selection';
 import { Point } from "../../SelectionView.vue";
@@ -20,7 +20,7 @@ import { forbidden_to_modify_frame } from '@/utils/common';
 interface Props {
     matrix: number[]
     context: Context
-    shape: Shape
+    shape: ShapeView
     cFrame: Point[]
 }
 const props = defineProps<Props>();
@@ -111,7 +111,7 @@ function point_mousemove(event: MouseEvent) {
         const action = props.context.tool.action;
         const p1: PageXY = submatrix.computeCoord(startPosition.x, startPosition.y);
         let p2: PageXY = submatrix.computeCoord(mouseOnClient.x - 10, mouseOnClient.y - 10);
-        if (event.shiftKey || props.shape.constrainerProportions || action === Action.AutoK) {
+        if (event.shiftKey || props.shape.data.constrainerProportions || action === Action.AutoK) {
             p2 = get_t(p1, p2);
             asyncBaseAction.executeScale(CtrlElementType.RectRB, p2);
         } else {
@@ -121,7 +121,7 @@ function point_mousemove(event: MouseEvent) {
     } else {
         if (Math.hypot(mx - sx, my - sy) > dragActiveDis) {
             submatrix.reset(workspace.matrix.inverse);
-            asyncBaseAction = props.context.editor.controller().asyncRectEditor(props.shape, props.context.selection.selectedPage!);
+            asyncBaseAction = props.context.editor.controller().asyncRectEditor(adapt2Shape(props.shape), props.context.selection.selectedPage!.data);
             props.context.assist.set_trans_target([props.shape]);
             isDragging = true;
         }
@@ -150,11 +150,11 @@ let stickedX2: boolean = false;
 let stickedY2: boolean = false;
 let t_e: MouseEvent | undefined;
 let speed: number = 0;
-let shapes: Shape[] = [];
+let shapes: ShapeView[] = [];
 let need_update_comment = false;
 let submatrix2 = new Matrix();
 let offset_map: PointsOffset | undefined;
-function gen_offset_map(shape: Shape, down: PageXY) {
+function gen_offset_map(shape: ShapeView, down: PageXY) {
     const m = shape.matrix2Root(), f = shape.frame;
     const lt = m.computeCoord2(0, 0);
     const rb = m.computeCoord2(f.width, f.height);
@@ -213,18 +213,32 @@ function mousemove4trans(e: MouseEvent) {
         if (update_type === 3) startPosition = { ...mousePosition };        // mark：update_type不同的值对应的情况是什么
         else if (update_type === 2) startPosition.y = mousePosition.y;
         else if (update_type === 1) startPosition.x = mousePosition.x;
-    } else if (Math.hypot(mousePosition.x - startPosition.x, mousePosition.y - startPosition.y) > dragActiveDis) {   // mark：dragActiveDis是什么
-        shapes = selection.selectedShapes;
-        if (e.altKey) shapes = paster_short(props.context, shapes);
-        asyncTransfer = props.context.editor.controller().asyncTransfer(shapes, selection.selectedPage!);  // mark：asyncTransfer是什么
-        selection.unHoverShape();
-        workspace.setSelectionViewUpdater(false);
-        workspace.translating(true);  // mark：workspace.translating(true)的作用是什么
-        props.context.assist.set_trans_target(shapes);
-        submatrix2 = new Matrix(props.context.workspace.matrix.inverse);
+    } else if (!isDragging && Math.hypot(mousePosition.x - startPosition.x, mousePosition.y - startPosition.y) > dragActiveDis) {   // mark：dragActiveDis是什么
         isDragging = true;
-        const pe = submatrix2.computeCoord3(startPosition);
-        offset_map = gen_offset_map(shapes[0], pe);
+        shapes = selection.selectedShapes;
+
+        const action = (shapes: ShapeView[]) => {
+            asyncTransfer = props.context.editor.controller().asyncTransfer(shapes.map(s => adapt2Shape(s)), selection.selectedPage!.data);  // mark：asyncTransfer是什么
+            selection.unHoverShape();
+            workspace.setSelectionViewUpdater(false);
+            workspace.translating(true);  // mark：workspace.translating(true)的作用是什么
+            props.context.assist.set_trans_target(shapes);
+            submatrix2 = new Matrix(props.context.workspace.matrix.inverse);
+            const pe = submatrix2.computeCoord3(startPosition);
+            offset_map = gen_offset_map(shapes[0], pe);
+        }
+        if (e.altKey) {
+            paster_short(props.context, shapes).then((val) => {
+                shapes = val;
+                action(shapes);
+            }).catch((e) => {
+                console.log(e);
+                isDragging = false;
+            });
+        }
+        else {
+            action(shapes);
+        }
     }
 }
 function _migrate() {
@@ -234,11 +248,11 @@ function _migrate() {
     const m = getCloesetContainer(props.shape).id !== targetParent.id;
     if (targetParent.id === props.shape.id) return;
     if (m && asyncTransfer) {
-        asyncTransfer.migrate(targetParent as GroupShape, compare_layer_3(shapes), '');
+        asyncTransfer.migrate(adapt2Shape(targetParent) as GroupShape, compare_layer_3(shapes).map(s => adapt2Shape(s)), '');
     }
 }
 const migrate: () => void = debounce(_migrate, 100);
-function getCloesetContainer(shape: Shape): Shape {
+function getCloesetContainer(shape: ShapeView): ShapeView {
     let result = props.context.selection.selectedPage!
     let p = shape.parent;
     while (p) {

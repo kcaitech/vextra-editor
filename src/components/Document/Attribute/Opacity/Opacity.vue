@@ -1,6 +1,6 @@
 <script setup lang="ts">
 import TypeHeader from '../TypeHeader.vue';
-import {AsyncOpacityEditor, Shape} from '@kcdesign/data';
+import {AsyncOpacityEditor, ShapeView, adapt2Shape} from '@kcdesign/data';
 import {useI18n} from 'vue-i18n';
 import {nextTick, onMounted, onUnmounted, ref} from 'vue';
 import {Context} from '@/context';
@@ -8,7 +8,7 @@ import {Selection} from '@/context/selection'
 
 interface Props {
     context: Context
-    shapes: Shape[]
+    shapes: ShapeView[]
 }
 
 const props = defineProps<Props>();
@@ -74,7 +74,7 @@ function opacityChange(value: number) {
     const page = props.context.selection.selectedPage!;
     const editor = props.context.editor4Page(page);
     const selected = props.context.selection.selectedShapes;
-    editor.modifyShapesContextSettingOpacity(selected, value);
+    editor.modifyShapesContextSettingOpacity(selected.map(s => adapt2Shape(s)), value);
 }
 
 function change(e: Event) {
@@ -100,7 +100,7 @@ function down(e: MouseEvent) {
     opacity.value = limitValue(Number(value));
     opacity_editor = props.context.editor
         .controller()
-        .asyncOpacityEditor(selected, page);
+        .asyncOpacityEditor(selected.map(s => adapt2Shape(s)), page.data);
     opacity_editor.execute(value);
 }
 
@@ -130,12 +130,12 @@ function update() {
     // 更新组件状态
     const shapes = props.context.selection.selectedShapes
     if (!shapes.length) return;
-    let firstOpacity = shapes[0].style.contextSettings?.opacity;
+    let firstOpacity = shapes[0].data.style.contextSettings?.opacity;
     firstOpacity = firstOpacity === undefined ? 1 : firstOpacity;
     let difference = false;
     if (shapes.length > 1) {
         for (let i = 1; i < shapes.length; i++) {
-            const randomOpacity = shapes[i].style.contextSettings?.opacity;
+            const randomOpacity = shapes[i].data.style.contextSettings?.opacity;
             if (randomOpacity !== firstOpacity) {
                 difference = true;
                 break;

@@ -26,23 +26,23 @@ interface Props {
 }
 
 interface Emits {
-    (e: "toggleexpand", shape: Shape): void;
+    (e: "toggleexpand", shape: ShapeView): void;
 
-    (e: "selectshape", shape: Shape, isCtrl: boolean, shift: boolean): void;
+    (e: "selectshape", shape: ShapeView, isCtrl: boolean, shift: boolean): void;
 
-    (e: "hovershape", shape: Shape): void;
+    (e: "hovershape", shape: ShapeView): void;
 
     (e: "unhovershape"): void;
 
-    (e: "set-lock", shape: Shape): void;
+    (e: "set-lock", shape: ShapeView): void;
 
-    (e: "set-visible", shape: Shape): void;
+    (e: "set-visible", shape: ShapeView): void;
 
-    (e: "rename", name: string, shape: Shape, event?: KeyboardEvent): void;
+    (e: "rename", name: string, shape: ShapeView, event?: KeyboardEvent): void;
 
-    (e: "scrolltoview", shape: Shape): void;
+    (e: "scrolltoview", shape: ShapeView): void;
 
-    (e: "item-mousedown", event: MouseEvent, shape: Shape): void;
+    (e: "item-mousedown", event: MouseEvent, shape: ShapeView): void;
 }
 
 const props = defineProps<Props>();
@@ -68,16 +68,16 @@ function toggleExpand(e: Event) {
         return;
     }
     e.stopPropagation();
-    emits("toggleexpand", props.data.shape());
+    emits("toggleexpand", props.data.shapeview());
 }
 
 const toggleContainer = (e: MouseEvent) => {
     e.stopPropagation();
-    emits('scrolltoview', props.data.shape());
+    emits('scrolltoview', props.data.shapeview());
 }
 
 function hoverShape(e: MouseEvent) {
-    emits("hovershape", props.data.shape());
+    emits("hovershape", props.data.shapeview());
     is_tool_visible.value = true;
 }
 
@@ -92,17 +92,17 @@ const setLock = (e: MouseEvent) => {
     //     return; // 继承锁
     // }
     e.stopPropagation();
-    emits('set-lock', props.data.shape())
+    emits('set-lock', props.data.shapeview())
 }
 const setVisible = (e: MouseEvent) => {
     // if (visible_status.value === 2) {
     //     return; // 继承隐藏
     // }
     e.stopPropagation();
-    emits('set-visible', props.data.shape());
+    emits('set-visible', props.data.shapeview());
 }
 const onRename = () => {
-    if (is_state(props.data.shape())
+    if (is_state(props.data.shapeview())
         || !isEdit.value
         || props.data.context.tool.isLable
         || props.data.shape().isVirtualShape
@@ -130,7 +130,7 @@ const onChangeName = (e: Event) => {
     if (value.length === 0 || value.length > 40 || value.trim().length === 0) {
         return
     }
-    emits('rename', value, props.data.shape());
+    emits('rename', value, props.data.shapeview());
 }
 
 const stopInput = () => {
@@ -158,7 +158,7 @@ const onInputBlur = (e: MouseEvent) => {
     }
 }
 const selectedChild = () => {
-    let parent = props.data.shape().parent
+    let parent = props.data.shapeview().parent
     let child
     while (parent) {
         if (parent.type === ShapeType.Page) {
@@ -174,13 +174,13 @@ const selectedChild = () => {
 }
 
 function is_component() {
-    return is_component_class(props.data.shape());
+    return is_component_class(props.data.shapeview());
 }
 
 const mousedown = (e: MouseEvent) => {
     e.stopPropagation();
     if (e.button === 0) {
-        const shape = props.data.shape();
+        const shape = props.data.shapeview();
         const { ctrlKey, metaKey, shiftKey } = e;
         const selected = props.data.context.selection.selectedShapes;
         if (selected.length > 1) {
@@ -193,7 +193,7 @@ const mousedown = (e: MouseEvent) => {
         emits("selectshape", shape, ctrlKey || metaKey, shiftKey);
         selectedChild();
     } else if (e.button === 2) {
-        emits('item-mousedown', e, props.data.shape())
+        emits('item-mousedown', e, props.data.shapeview())
         selectedChild();
     }
 }
@@ -208,7 +208,7 @@ function mouseup(e: MouseEvent) {
     if (props.data.context.navi.is_item_dragging || e.metaKey || e.shiftKey || e.ctrlKey) {
         return;
     }
-    emits("selectshape", props.data.shape(), false, false);
+    emits("selectshape", props.data.shapeview(), false, false);
     selectedChild();
 }
 
@@ -374,7 +374,7 @@ onUnmounted(() => {
         </div>
         <!-- 内容描述 -->
         <div class="text" :style="{ display: isInput ? 'none' : '', opacity: !visible_status ? 1 : .3 }">
-            <div class="txt" @dblclick="onRename">{{ get_name(props.data.shape(), t('compos.dlt')) }}</div>
+            <div class="txt" @dblclick="onRename">{{ get_name(props.data.shapeview(), t('compos.dlt')) }}</div>
             <div class="tool_icon" @mousedown.stop
                 :style="{ visibility: `${is_tool_visible ? 'visible' : 'hidden'}`, width: `${is_tool_visible ? 66 + 'px' : lock_status || visible_status ? 66 + 'px' : 0}` }">
                 <div class="tool_lock tool" @click="toggleContainer">

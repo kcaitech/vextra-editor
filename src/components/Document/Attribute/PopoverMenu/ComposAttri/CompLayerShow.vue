@@ -1,7 +1,7 @@
 <script setup lang="ts">
 import { onMounted, onUnmounted, ref, watch, watchEffect } from 'vue';
 import { Context } from '@/context';
-import { SymbolShape, Variable, VariableType } from '@kcdesign/data';
+import { SymbolShape, SymbolView, Variable, VariableType } from '@kcdesign/data';
 import { useI18n } from 'vue-i18n';
 import { is_valid_name } from "@/utils/symbol";
 
@@ -19,7 +19,7 @@ interface Props {
     selected_layer?: string[],
     default_name?: string,
     variable?: Variable,
-    symbol?: SymbolShape, // 图层所在的组件
+    symbol?: SymbolView, // 图层所在的组件
 }
 
 interface Emits {
@@ -103,7 +103,7 @@ function keyboard_watcher(e: KeyboardEvent) {
 }
 
 function save_name(v: string) {
-    const shape = props.context.selection.symbolshape || props.symbol;
+    const shape = props.context.selection.symbolview || props.symbol;
     const value = attrName.value !== props.default_name || '';
     if (!shape || !props.variable || !value) return;
     const editor = props.context.editor4Shape(shape);
@@ -112,7 +112,7 @@ function save_name(v: string) {
 
 const validate = () => {
     const len = attrName.value.trim().length > 0;
-    const shape = props.context.selection.symbolshape || props.symbol;
+    const shape = props.context.selection.symbolview || props.symbol;
     if (!shape) return false;
     if(props.default_name && attrName.value === props.default_name) return true;
     const repeat = is_valid_name(shape, attrName.value, props.addType);

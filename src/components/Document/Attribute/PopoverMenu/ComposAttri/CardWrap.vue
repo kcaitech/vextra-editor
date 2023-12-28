@@ -1,11 +1,11 @@
 <script setup lang="ts">
 import LevelName from "@/components/Document/Attribute/PopoverMenu/ComposAttri/LevelName.vue";
 import StaticAbbrCard from "@/components/Document/Attribute/PopoverMenu/ComposAttri/StaticAbbrCard.vue";
-import {Shape} from "@kcdesign/data";
+import {ShapeView} from "@kcdesign/data";
 import {onMounted, onUnmounted, ref} from "vue";
 
 interface Props {
-    data: Shape
+    data: ShapeView
     container: Element | null
 }
 

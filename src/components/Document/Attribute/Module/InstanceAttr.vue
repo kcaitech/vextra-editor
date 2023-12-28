@@ -4,7 +4,7 @@ import {Context} from '@/context';
 import TypeHeader from '../TypeHeader.vue';
 import {onMounted, onUnmounted, ref} from 'vue'
 import {get_shape_within_document, shape_track} from '@/utils/content';
-import {Shape, ShapeType, SymbolRefShape} from '@kcdesign/data';
+import {Shape, ShapeType, ShapeView, SymbolRefShape, SymbolRefView, adapt2Shape} from '@kcdesign/data';
 import {MoreFilled} from '@element-plus/icons-vue';
 import {
     get_var_for_ref,
@@ -23,7 +23,7 @@ import {Menu} from '@/context/menu';
 
 interface Props {
     context: Context
-    shapes: SymbolRefShape[]
+    shapes: SymbolRefView[]
 }
 
 const {t} = useI18n();
@@ -55,7 +55,7 @@ function close_popover() {
 }
 
 const editComps = () => {
-    let shape: Shape | undefined
+    let shape: ShapeView | undefined
     const symref = props.context.selection.symbolrefshape;
     if (!symref) return;
     let refId = symref.refId;
@@ -69,9 +69,18 @@ const untie = () => {
     const page = selection.selectedPage;
     if (!page) return;
     const editor = props.context.editor4Page(page);
-    const shapes = editor.extractSymbol(props.shapes);
+    const shapes = editor.extractSymbol(props.shapes.map(s => adapt2Shape(s)));
     if (!shapes) return;
-    selection.rangeSelectShape(shapes);
+    props.context.nextTick(page, () => {
+        const select = shapes.reduce((pre, cur) => {
+            const s = page.getShape(cur.id);
+            if (s) {
+                pre.push(s);
+            }
+            return pre;
+        }, [] as ShapeView[])
+        selection.rangeSelectShape(select);
+    })
     resetMenu.value = false;
 }
 
@@ -81,7 +90,7 @@ const shape_watcher = (arg: any) => { // todo 优化updateData时机
 
 const updateData = () => {
     if (props.shapes.length === 1) {
-        const symref = props.context.selection.symbolrefshape;
+        const symref = props.context.selection.symbolrefview;
         if (!symref) return;
         const result = get_var_for_ref(props.context, symref, t);
         variables.value = [];
@@ -123,7 +132,7 @@ function watchShapes() { // 监听选区相关shape的变化
         for (let i = 0, len = selection.selectedShapes.length; i < len; i++) {
             const v = selection.selectedShapes[i];
             if (v.type !== ShapeType.SymbolRef) continue;
-            const p = get_ref_ref(v as SymbolRefShape);
+            const p = get_ref_ref(v as SymbolRefView);
             if (p) needWatchShapes.set(p.id, p);
             needWatchShapes.set(v.id, v)
         }
@@ -142,7 +151,7 @@ function watchShapes() { // 监听选区相关shape的变化
     })
 }
 
-function get_ref_ref(symref: SymbolRefShape) {
+function get_ref_ref(symref: SymbolRefView) {
     if (!symref.isVirtualShape) return;
     let p = symref.parent;
     while (p) {

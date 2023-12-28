@@ -8,6 +8,7 @@ import {
     ShapeType,
     ShapeView,
     SymbolRefShape,
+    SymbolRefView,
     SymbolShape,
     SymbolUnionShape,
     SymbolView,
@@ -267,7 +268,7 @@ export interface AttriListItem {
  * @description 为组件整理变量列表
  * @param symbol
  */
-export function variable_sort(symbol: SymbolShape, t: Function) {
+export function variable_sort(symbol: SymbolView, t: Function) {
     const list: AttriListItem[] = [];
     if (!symbol.variables) return list;
     let status_index = 0;
@@ -289,10 +290,10 @@ export function variable_sort(symbol: SymbolShape, t: Function) {
  * @param symbol
  * @param variable
  */
-export function tag_values_sort(symbol: SymbolShape, variable: Variable, t: Function) {
+export function tag_values_sort(symbol: SymbolView | SymbolShape, variable: Variable, t: Function) {
     if (!symbol.isSymbolUnionShape) return [];
     const defaultVal = t('compos.dlt');
-    const childs: SymbolShape[] = symbol.childs as unknown as SymbolShape[];
+    const childs: (SymbolView | SymbolShape)[] = symbol.childs as (SymbolView | SymbolShape)[];
     const result_set: Set<string> = new Set();
     for (let i = 0, len = childs.length; i < len; i++) {
         const item = childs[i];
@@ -323,11 +324,11 @@ export interface StatusValueItem {
 /**
  * @description 为可变组件整理变量列表
  */
-export function states_tag_values_sort(shapes: SymbolShape[], t: Function) {
+export function states_tag_values_sort(shapes: SymbolView[], t: Function) {
     const result: StatusValueItem[] = [];
     if (shapes.length === 1) {
-        const par = shapes[0].parent as SymbolShape;
-        const bros: SymbolShape[] = par.childs as unknown as SymbolShape[];
+        const par = shapes[0].parent as SymbolView;
+        const bros: SymbolView[] = par.childs as SymbolView[];
         const variables = par.variables;
         if (!variables) return result;
         variables.forEach((v, k) => {
@@ -348,7 +349,7 @@ export function states_tag_values_sort(shapes: SymbolShape[], t: Function) {
  * @description 选区是否都为同一个组件下的可变组件
  * @param shapes
  */
-export function is_state_selection(shapes: Shape[]) {
+export function is_state_selection(shapes: ShapeView[]) {
     if (!shapes.length) return false;
     const p = shapes[0].parent;
     if (!p) return false;
@@ -492,7 +493,7 @@ export function create_text_var(context: Context, symbol: SymbolShape, name: str
     editor.makeTextVar(symbol, name, dlt, shapes.map((s) => adapt2Shape(s)));
 }
 
-export function create_var_by_type(context: Context, type: VariableType, name: string, value: any, values: any[], symbol: SymbolShape) {
+export function create_var_by_type(context: Context, type: VariableType, name: string, value: any, values: any[], symbol: SymbolView) {
     const selection = context.selection;
     const shapes: ShapeView[] = [];
     const page = selection.selectedPage!;
@@ -500,13 +501,14 @@ export function create_var_by_type(context: Context, type: VariableType, name: s
         const s = page.getShape(values[i]);
         if (s) shapes.push(s);
     }
+    const sym = adapt2Shape(symbol) as SymbolShape;
     switch (type) {
         case VariableType.Visible:
-            return create_visible_var(context, symbol, name, value, shapes);
+            return create_visible_var(context, sym, name, value, shapes);
         case VariableType.SymbolRef:
-            return create_ref_var(context, symbol, name, shapes);
+            return create_ref_var(context, sym, name, shapes);
         case VariableType.Text:
-            return create_text_var(context, symbol, name, value, shapes);
+            return create_text_var(context, sym, name, value, shapes);
         default:
             console.log('wrong action');
     }
@@ -542,12 +544,12 @@ export function gen_special_name_for_status(symbol: SymbolShape, dlt: string) {
 /**
  * @description 检查组件的可变组件之间的各个变量值之间的组合是否有重复情况
  */
-export function is_wrong_bind_sym(symbol: SymbolShape) {
+export function is_wrong_bind_sym(symbol: SymbolView) {
     if (symbol.childs.length < 2) return false;
     if (!symbol.variables) return false;
     const variables = symbol.variables;
     const values_set: Set<string> = new Set();
-    const childs = symbol.childs as unknown as SymbolShape[];
+    const childs = symbol.childs as SymbolView[];
     const p = v4();
     let _no_status = true;
     for (let i = 0, len = childs.length; i < len; i++) {
@@ -569,9 +571,9 @@ export function is_wrong_bind_sym(symbol: SymbolShape) {
 /**
  * @description 检测可变组件之间的各个变量值之间的组合是否有重复情况
  */
-export function is_wrong_bind(states: SymbolShape[]) {
+export function is_wrong_bind(states: SymbolView[]) {
     if (states.length === 1) { // 单选
-        return is_wrong_bind_sym(states[0].parent as SymbolShape);
+        return is_wrong_bind_sym(states[0].parent as SymbolView);
     } else { // 多选
         // todo
         return false;
@@ -581,11 +583,11 @@ export function is_wrong_bind(states: SymbolShape[]) {
 /**
  * @description 获取冲突的可变组件
  */
-export function is_conflict_comp(symbol: SymbolShape) {
+export function is_conflict_comp(symbol: SymbolView) {
     if (!symbol.variables) return;
     const variables = symbol.variables;
     let conflict_arr = [];
-    const childs = symbol.childs as unknown as SymbolShape[];
+    const childs = symbol.childs as SymbolView[];
     const p = v4();
     let _no_status = true;
     for (let i = 0, len = childs.length; i < len; i++) {
@@ -624,10 +626,10 @@ export function is_conflict_comp(symbol: SymbolShape) {
 // endregion
 export interface LCOption {
     state: string
-    data: Shape[]
+    data: ShapeView[]
 }
 
-export function get_options_from_symbol(symbol: SymbolShape, type: VariableType, dlt: string, vari?: Variable, container?: Shape[]) {
+export function get_options_from_symbol(symbol: SymbolView, type: VariableType, dlt: string, vari?: Variable, container?: ShapeView[]) {
     const result: LCOption[] = [];
     if (symbol.type !== ShapeType.Symbol && symbol.type !== ShapeType.SymbolUnion) return result;
     if (symbol.isSymbolUnionShape) { // 存在可变组件
@@ -643,14 +645,14 @@ export function get_options_from_symbol(symbol: SymbolShape, type: VariableType,
     }
 }
 
-function de_check(item: Shape) {
-    return !(item as GroupShape).childs || !(item as GroupShape).childs.length || item.type === ShapeType.Table || item.type === ShapeType.SymbolRef
+function de_check(item: ShapeView) {
+    return !(item).childs || !(item).childs.length || item.type === ShapeType.Table || item.type === ShapeType.SymbolRef
 }
 
 /**
  * @description 检查是否绑定过 x类型 的变量
  */
-function is_bind_x_type_var(symbol: SymbolShape, shape: Shape, type: OverrideType, vari?: Variable, container?: Shape[]) {
+function is_bind_x_type_var(symbol: SymbolView, shape: ShapeView, type: OverrideType, vari?: Variable, container?: ShapeView[]) {
     if (!shape.varbinds) return false;
     let result = false;
     shape.varbinds.forEach((v, k) => {
@@ -676,16 +678,16 @@ function get_ot_by_vt(vt: VariableType) {
     if (vt === VariableType.Text) return OverrideType.Text;
 }
 
-function get_x_type_option(symbol: Shape, group: Shape, type: VariableType, vari?: Variable, container?: Shape[]) {
-    let shapes: Shape[] = [];
-    const childs = (group as GroupShape).childs;
+function get_x_type_option(symbol: SymbolView, group: ShapeView, type: VariableType, vari?: Variable, container?: ShapeView[]) {
+    let shapes: ShapeView[] = [];
+    const childs = (group).childs;
     if (!childs?.length) return shapes;
     if (type === VariableType.Visible) {
         let slow_index = 0;
         for (let i = 0, len = childs.length; i < len; i++) {
             const item = childs[i];
-            const canbe = !is_bind_x_type_var(symbol as SymbolShape, item, OverrideType.Visible, vari, container);
-            if ((item as GroupShape).childs && (item as GroupShape).childs.length && item.type !== ShapeType.Table) {
+            const canbe = !is_bind_x_type_var(symbol, item, OverrideType.Visible, vari, container);
+            if ((item).childs && (item).childs.length && item.type !== ShapeType.Table) {
                 if (canbe) shapes.push(item);
                 shapes.push(...get_x_type_option(symbol, item, type, vari, container));
             } else {
@@ -698,10 +700,10 @@ function get_x_type_option(symbol: Shape, group: Shape, type: VariableType, vari
         for (let i = 0, len = childs.length; i < len; i++) {
             const item = childs[i];
             if (item.type === get_target_type_by_vt(type)) {
-                if (!is_bind_x_type_var(symbol as SymbolShape, item, get_ot_by_vt(type)!, vari, container)) {
+                if (!is_bind_x_type_var(symbol, item, get_ot_by_vt(type)!, vari, container)) {
                     shapes.push(item);
                 }
-            } else if ((item as GroupShape).childs && (item as GroupShape).childs.length && item.type !== ShapeType.Table) {
+            } else if ((item).childs && (item).childs.length && item.type !== ShapeType.Table) {
                 shapes.push(...get_x_type_option(symbol, item, type, vari, container));
             }
         }
@@ -719,7 +721,7 @@ export interface RefAttriListItem {
  * @param context
  * @param symref
  */
-export function get_var_for_ref(context: Context, symref: SymbolRefShape, t: Function) {
+export function get_var_for_ref(context: Context, symref: SymbolRefView, t: Function) {
     let result: RefAttriListItem[] = [];
     let result2: RefAttriListItem[] = [];
     // const varsContainer = symref.varsContainer;
@@ -926,7 +928,7 @@ export function is_circular_ref2(symbol: Shape, symbol2: string): boolean {
 /**
  * @description 检查属性名称是否有效，有效则返回true
  */
-export function is_valid_name(symbol: SymbolShape, name: string, type: VariableType) {
+export function is_valid_name(symbol: SymbolView, name: string, type: VariableType) {
     let valid: boolean = true;
     const variables = symbol.variables
     if (!variables) return valid;
@@ -965,7 +967,7 @@ export function is_status_allow_to_delete(symbol: SymbolShape) {
  * @description 是否为可变组件
  * @param shape
  */
-export function is_state(shape: ShapeView) {
+export function is_state(shape: ShapeView | Shape) {
     return shape?.type === ShapeType.Symbol && shape?.parent?.type === ShapeType.SymbolUnion;
 }
 
@@ -1135,7 +1137,7 @@ export function is_part_of_symbolref(shape: ShapeView) {
 /**
  * @description 判断选中的图层是否都是实例
  */
-export function is_shapes_if_symbolref(shapes: Shape[]) {
+export function is_shapes_if_symbolref(shapes: ShapeView[]) {
     let is_all_ref = true;
     for (let i = 0; i < shapes.length; i++) {
         const shape = shapes[i];
@@ -1163,7 +1165,7 @@ export function one_of_is_symbolref(shapes: ShapeView[]) {
 /**
  * @description 判断选中的实例是否是同一个组件
  */
-export function is_symbolref_disa(shapes: SymbolRefShape[]) {
+export function is_symbolref_disa(shapes: SymbolRefView[]) {
     let result = true;
     const firstId = shapes[0].refId;
     for (let i = 1; i < shapes.length; i++) {
@@ -1187,7 +1189,7 @@ export function is_symbolref_disa(shapes: SymbolRefShape[]) {
  */
 export function modify_variable(
     context: Context,
-    symbol: SymbolShape,
+    symbol: SymbolView,
     variable: Variable,
     new_name: string,
     new_dlt_value: any,
@@ -1209,7 +1211,7 @@ export function modify_variable(
         }
         __old_values = old_values;
     } else {
-        const _old_values: Shape[] = [];
+        const _old_values: ShapeView[] = [];
         get_x_type_option(symbol, symbol, variable.type, variable, _old_values);
         __old_values = _old_values.map(v => v.id);
         for (let i = 0, len = _old_values.length; i < len; i++) {
@@ -1240,10 +1242,10 @@ export function modify_variable(
     // 自此绑定列表、解绑列表整理完毕
 
     const editor = context.editor4Shape(symbol);
-    return editor.modifyVar(symbol, variable, new_name, new_dlt_value, need_bind_shapes.map((s) => adapt2Shape(s)), need_unbind_shapes.map((s) => adapt2Shape(s)));
+    return editor.modifyVar(adapt2Shape(symbol) as SymbolShape, variable, new_name, new_dlt_value, need_bind_shapes.map((s) => adapt2Shape(s)), need_unbind_shapes.map((s) => adapt2Shape(s)));
 }
 
-export function is_able_to_unbind(shapes: Shape[]) {
+export function is_able_to_unbind(shapes: ShapeView[]) {
     for (let i = 0, l = shapes.length; i < l; i++) {
         const s = shapes[i];
         if (s.type === ShapeType.SymbolRef && (s.parent && s.parent.type !== ShapeType.SymbolRef)) return true;

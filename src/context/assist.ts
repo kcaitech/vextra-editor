@@ -119,7 +119,7 @@ export class Asssit extends WatchableObject {
     private m_pg_inner: Map<string, PointGroup1> = new Map();
     private m_x_axis: Map<number, PageXY2[]> = new Map();
     private m_y_axis: Map<number, PageXY2[]> = new Map();
-    private m_except: Map<string, Shape> = new Map();
+    private m_except: Map<string, ShapeView> = new Map();
     private m_current_pg: PointGroup2 | undefined;
     private m_nodes_x: PageXY2[] = [];
     private m_nodes_y: PageXY2[] = [];
@@ -258,7 +258,7 @@ export class Asssit extends WatchableObject {
         // console.log('点位收集用时(ms):', e - s);
     }
 
-    set_trans_target(shapes: Shape[]) {
+    set_trans_target(shapes: ShapeView[]) {
         this.m_context.workspace.clear_cache_map();
         this.collect();
         this.m_except.clear();

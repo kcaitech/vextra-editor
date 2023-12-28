@@ -4,7 +4,7 @@ import {Context} from '@/context';
 import TypeHeader from '../TypeHeader.vue';
 import {onMounted, onUnmounted, ref, watch} from 'vue'
 import CompLayerShow from '../PopoverMenu/ComposAttri/CompLayerShow.vue';
-import {SymbolShape, VariableType} from '@kcdesign/data';
+import {SymbolShape, SymbolView, VariableType} from '@kcdesign/data';
 import {
     AttriListItem,
     create_var_by_type,
@@ -24,7 +24,7 @@ const {t} = useI18n();
 
 interface Props {
     context: Context
-    shape: SymbolShape
+    shape: SymbolView
 }
 
 const props = defineProps<Props>()
@@ -137,7 +137,7 @@ const saveLayerShow = (type: VariableType) => {
     if (typeof dlt_value.value === 'string' && dlt_value.value.trim().length < 1) {
         return warn.value = true;
     }
-    const symbolshape = props.context.selection.symbolshape;
+    const symbolshape = props.context.selection.symbolview;
     if (!symbolshape) return;
     create_var_by_type(props.context, type, var_name.value, dlt_value.value, selected.value, symbolshape);
     isaddStateDialog.value = false;

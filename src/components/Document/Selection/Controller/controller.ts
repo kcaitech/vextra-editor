@@ -248,7 +248,7 @@ export function useControllerCustom(context: Context, i18nT: Function) {
         add_move_and_up_for_document(mousemove, mouseup);
     }
 
-    function mousemove(e: MouseEvent) {        
+    function mousemove(e: MouseEvent) {
         if (e.buttons !== 1) {
             return;
         }
@@ -267,7 +267,7 @@ export function useControllerCustom(context: Context, i18nT: Function) {
 
             modify_mouse_position_by_type(update_type, startPosition, mousePosition);
         } else if (check_drag_action(startPosition, mousePosition) && !workspace.isEditing) {
-            if (asyncTransfer) {
+            if (asyncTransfer || isDragging) {
                 return;
             }
 
@@ -278,20 +278,25 @@ export function useControllerCustom(context: Context, i18nT: Function) {
             if (!shapes.length) {
                 return;
             }
-
-            if (e.altKey) {
-                shapes = paster_short(context, shapes);
-            }
-
-            reset_assist_before_translate(context, shapes);
-
-            offset_map = gen_offset_points_map(shapes, startPositionOnPage);
-
-            asyncTransfer = context.editor
-                .controller()
-                .asyncTransfer(shapes, selection.selectedPage!);
-
             isDragging = true;
+
+            const action = (shapes: ShapeView[]) => {
+                reset_assist_before_translate(context, shapes);
+                offset_map = gen_offset_points_map(shapes, startPositionOnPage);
+                asyncTransfer = context.editor.controller().asyncTransfer(shapes.map((s) => adapt2Shape(s)), selection.selectedPage!.data);
+            }
+            if (e.altKey) {
+                paster_short(context, shapes).then((val) => {
+                    shapes = val;
+                    action(shapes);
+                }).catch((e) => {
+                    console.log(e);
+                    isDragging = false;
+                });
+            }
+            else {
+                action(shapes);
+            }
         }
     }
 

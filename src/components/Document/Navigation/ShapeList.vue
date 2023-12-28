@@ -63,7 +63,7 @@ class Iter implements IDataIter<ItemData> {
             shapeview: () => {
                 return shape
             },
-            selected: props.context.selection.isSelectedShape2(shape.id),
+            selected: props.context.selection.isSelectedShape(shape.id),
             expand: !data.fold,
             level,
             context: props.context
@@ -164,7 +164,7 @@ function toggleExpand(shape: string | Shape) {
     shapeDirList.toggleExpand(typeof shape ==='string'? shape : shape.id)
 }
 
-function selectShape(shape: Shape, is_ctrl: boolean, shiftKey: boolean) {
+function selectShape(shape: ShapeView, is_ctrl: boolean, shiftKey: boolean) {
     if (shiftKey) {
         range_select_shape(props.context, shapeDirList, listviewSource, shape);
         return;
@@ -178,7 +178,7 @@ function selectShape(shape: Shape, is_ctrl: boolean, shiftKey: boolean) {
     props.context.selection.selectShape(shape);
 }
 
-function hoverShape(shape: Shape) {
+function hoverShape(shape: ShapeView) {
     hover(props.context, shape);
 
     if (shapeList.value) {
@@ -203,11 +203,11 @@ const modify_visible_status = (shape: Shape) => {
     modify_shape_visible_status(props.context, shape);
 }
 
-function shapeScrollToContentView(shape: Shape) {
+function shapeScrollToContentView(shape: ShapeView) {
     scroll_to_view(props.context, shape);
 }
 
-function selectshape_right(shape: Shape, shiftKey: boolean) {
+function selectshape_right(shape: ShapeView, shiftKey: boolean) {
     const selection = props.context.selection;
     if (is_shape_in_selection(selection.selectedShapes, shape)) {
         return;
@@ -220,7 +220,7 @@ function selectshape_right(shape: Shape, shiftKey: boolean) {
     }
 }
 
-const list_mousedown = (e: MouseEvent, shape: Shape) => {
+const list_mousedown = (e: MouseEvent, shape: ShapeView) => {
     const menu = props.context.menu;
     menu.menuMount();
     chartMenu.value = false
@@ -433,7 +433,7 @@ const allow_to_drag = () => {
 const stopWatch = watch(() => props.page, () => {
     let source = shapeListMap.get(props.page.id)
     if (!source) {
-        source = new ShapeDirList(props.context.getPageDom(props.page).dom);
+        source = new ShapeDirList(props.page);
         shapeListMap.set(props.page.id, source);
     }
 

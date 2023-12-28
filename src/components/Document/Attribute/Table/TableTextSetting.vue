@@ -4,13 +4,13 @@ import { ref, onMounted, onUnmounted, watch } from 'vue';
 import { useI18n } from 'vue-i18n';
 import { Context } from '@/context';
 import Tooltip from '@/components/common/Tooltip.vue';
-import { AttrGetter, TextTransformType, TableShape, TableCell } from "@kcdesign/data";
+import { AttrGetter, TextTransformType, TableView, TableCell } from "@kcdesign/data";
 import { Selection } from '@/context/selection';
 import { TableSelection } from '@/context/tableselection';
 const { t } = useI18n();
 interface Props {
   context: Context,
-  textShape: TableShape
+  textShape: TableView
 }
 const popover = ref();
 const props = defineProps<Props>();
@@ -218,7 +218,7 @@ const textFormat = () => {
   } else {
     let cells: (TableCell | undefined)[] = []
     if (table.tableRowStart < 0 || table.tableColStart < 0) {
-      cells = props.textShape.childs || [];
+      cells = props.textShape.data.childs || [];
     } else {
       cells = table.getSelectedCells(true).map(item => item.cell) || [];
     }

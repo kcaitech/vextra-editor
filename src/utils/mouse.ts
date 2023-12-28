@@ -141,7 +141,7 @@ export function check_drag_action(start: { x: number, y: number }, current: { x:
  * @description 根据鼠标在client坐标系上的一点确定辅助对象的点图
  * @param down root坐标系上的一点
  */
-export function gen_offset_points_map(shapes: Shape[], down: PageXY) {
+export function gen_offset_points_map(shapes: ShapeView[], down: PageXY) {
     let lt: { x: number, y: number }, rb: { x: number, y: number }, pivot: { x: number, y: number },
         rt: { x: number, y: number }, lb: { x: number, y: number };
     if (shapes.length === 1) {
@@ -204,7 +204,7 @@ export function gen_offset_points_map2(context: Context, down: PageXY, points: n
 /**
  * @description 判定下一次移动为数据正式修改时，设置控件更新状态、预设辅助线中心对象、以及其他一些编辑器状态
  */
-export function reset_assist_before_translate(context: Context, shapes: Shape[]) {
+export function reset_assist_before_translate(context: Context, shapes: ShapeView[]) {
     context.selection.unHoverShape();
     context.workspace.setSelectionViewUpdater(false);
     context.workspace.translating(true);
