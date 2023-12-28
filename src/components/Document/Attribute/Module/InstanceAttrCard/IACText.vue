@@ -70,7 +70,8 @@ onMounted(get_value);
         display: flex;
         width: 100%;
         justify-content: space-between;
-        margin-top: 6px;
+        align-items: center;
+        //margin-top: 6px;
 
         .state_name {
             flex: 1;

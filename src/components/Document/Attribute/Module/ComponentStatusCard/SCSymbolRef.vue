@@ -124,14 +124,10 @@ function _delete() {
     .module_item_left {
         display: flex;
         align-items: center;
-        border-radius: 4px;
         background-color: #F5F5F5;
         width: calc(100% - 32px);
         height: 32px;
         border-radius: var(--default-radius);
-        background-color: #F5F5F5;
-        width: calc(100% - 32px);
-        height: 32px;
 
         .module_name {
             display: flex;

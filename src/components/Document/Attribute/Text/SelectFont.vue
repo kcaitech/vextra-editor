@@ -5,6 +5,7 @@ import { Context } from '@/context';
 import { fontNameListEn, fontNameListZh, FontAvailable } from './FontNameList'
 import { InfoFilled } from '@element-plus/icons-vue'
 import Tooltip from '@/components/common/Tooltip.vue';
+import SvgIcon from "@/components/common/SvgIcon.vue";
 const { t } = useI18n();
 const emit = defineEmits<{
     (e: 'setFont', font: string): void
@@ -159,15 +160,17 @@ onMounted(() => {
                             @click="unfoldFontName(1)"></svg-icon></span>
                 </div>
                 <div class="item" v-for="item in fontList.used.success" :key="item"
-                    :style="{ fontFamily: item, height: isUnfoldUsed ? '25px' : '0px', transition: '0.2s' }"
+                    :style="{ fontFamily: item, height: isUnfoldUsed ? '32px' : '0px', transition: '0.2s' }"
                     @click="selectFont(item)">
-                    <div class="choose" :style="{ visibility: item == fontName ? 'visible' : 'hidden' }"></div>
+<!--                    <div class="choose" :style="{ visibility: item == fontName ? 'visible' : 'hidden' }"></div>-->
+                    <svg-icon icon-class="choose" :style="{ visibility: item == fontName ? 'visible' : 'hidden' }"></svg-icon>
                     <span> {{ item }}</span>
                 </div>
                 <div class="item failurel" v-for="item in fontList.used.failurel" :key="item"
-                    :style="{ fontFamily: item, height: isUnfoldUsed ? '25px' : '0px', transition: '0.2s' }"
+                    :style="{ fontFamily: item, height: isUnfoldUsed ? '32px' : '0px', transition: '0.2s' }"
                     @click="selectFont(item)">
-                    <div class="choose" :style="{ visibility: item == fontName ? 'visible' : 'hidden' }"></div>
+<!--                    <div class="choose" :style="{ visibility: item == fontName ? 'visible' : 'hidden' }"></div>-->
+                    <svg-icon icon-class="choose" :style="{ visibility: item == fontName ? 'visible' : 'hidden' }"></svg-icon>
                     <span> {{ item }}</span>
                     <Tooltip :content="`${t('attr.font_is_not')}`">
                         <el-icon>
@@ -186,9 +189,10 @@ onMounted(() => {
                             icon-class="down" @click="unfoldFontName(2)"></svg-icon></span>
                 </div>
                 <div class="item" v-for="item in fontList.ch" :key="item"
-                    :style="{ fontFamily: item, height: isUnfoldZh ? '25px' : '0px', transition: '0.2s' }"
+                    :style="{ fontFamily: item, height: isUnfoldZh ? '32px' : '0px', transition: '0.2s' }"
                     @click="selectFont(item)">
-                    <div class="choose" :style="{ visibility: item == fontName ? 'visible' : 'hidden' }"></div>
+<!--                    <div class="choose" :style="{ visibility: item == fontName ? 'visible' : 'hidden' }"></div>-->
+                    <svg-icon icon-class="choose" :style="{ visibility: item == fontName ? 'visible' : 'hidden' }"></svg-icon>
                     <span> {{ item }}</span>
                 </div>
                 <div class="line"></div>
@@ -198,9 +202,10 @@ onMounted(() => {
                             icon-class="down" @click="unfoldFontName(3)"></svg-icon></span>
                 </div>
                 <div class="item" v-for="item in fontList.en" :key="item"
-                    :style="{ fontFamily: item, height: isUnfoldEn ? '25px' : '0px', transition: '0.2s' }"
+                    :style="{ fontFamily: item, height: isUnfoldEn ? '32px' : '0px', transition: '0.2s' }"
                     @click="selectFont(item)">
-                    <div class="choose" :style="{ visibility: item == fontName ? 'visible' : 'hidden' }"></div>
+<!--                    <div class="choose" :style="{ visibility: item == fontName ? 'visible' : 'hidden' }"></div>-->
+                    <svg-icon icon-class="choose" :style="{ visibility: item == fontName ? 'visible' : 'hidden' }"></svg-icon>
                     <span> {{ item }}</span>
                 </div>
             </el-scrollbar>
@@ -214,16 +219,18 @@ onMounted(() => {
                 </div>
                 <template v-if="filterFontList.used.success.length !== 0 && filterFontList.used.failurel.length !== 0">
                     <div class="item" v-for="item in filterFontList.used.success" :key="item"
-                        :style="{ fontFamily: item, height: isUnfoldUsed ? '25px' : '0px', transition: '0.2s' }"
+                        :style="{ fontFamily: item, height: isUnfoldUsed ? '32px' : '0px', transition: '0.2s' }"
                         @click="selectFont(item)">
-                        <div class="choose" :style="{ visibility: item == fontName ? 'visible' : 'hidden' }"></div>
+<!--                        <div class="choose" :style="{ visibility: item == fontName ? 'visible' : 'hidden' }"></div>-->
+                        <svg-icon icon-class="choose" :style="{ visibility: item == fontName ? 'visible' : 'hidden' }"></svg-icon>
                         <span v-html="highlightText(item)"></span>
                     </div>
                 </template>
                 <div class="item failurel" v-for="item in filterFontList.used.failurel" :key="item"
-                    :style="{ fontFamily: item, height: isUnfoldUsed ? '25px' : '0px', transition: '0.2s' }"
+                    :style="{ fontFamily: item, height: isUnfoldUsed ? '32px' : '0px', transition: '0.2s' }"
                     @click="selectFont(item)">
-                    <div class="choose" :style="{ visibility: item == fontName ? 'visible' : 'hidden' }"></div>
+<!--                    <div class="choose" :style="{ visibility: item == fontName ? 'visible' : 'hidden' }"></div>-->
+                    <svg-icon icon-class="choose" :style="{ visibility: item == fontName ? 'visible' : 'hidden' }"></svg-icon>
                     <span v-html="highlightText(item)"></span>
                     <Tooltip :content="`${t('attr.font_is_not')}`">
                         <el-icon>
@@ -238,9 +245,10 @@ onMounted(() => {
                 </div>
                 <template v-if="filterFontList.ch.length !== 0">
                     <div class="item" v-for="item in filterFontList.ch" :key="item"
-                        :style="{ fontFamily: item, height: isUnfoldZh ? '25px' : '0px', transition: '0.2s' }"
+                        :style="{ fontFamily: item, height: isUnfoldZh ? '32px' : '0px', transition: '0.2s' }"
                         @click="selectFont(item)">
-                        <div class="choose" :style="{ visibility: item == fontName ? 'visible' : 'hidden' }"></div>
+<!--                        <div class="choose" :style="{ visibility: item == fontName ? 'visible' : 'hidden' }"></div>-->
+                        <svg-icon icon-class="choose" :style="{ visibility: item == fontName ? 'visible' : 'hidden' }"></svg-icon>
                         <span v-html="highlightText(item)"></span>
                     </div>
                 </template>
@@ -251,9 +259,10 @@ onMounted(() => {
                 </div>
                 <template v-if="filterFontList.en.length !== 0">
                     <div class="item" v-for="item in filterFontList.en" :key="item"
-                        :style="{ fontFamily: item, height: isUnfoldEn ? '25px' : '0px', transition: '0.2s' }"
+                        :style="{ fontFamily: item, height: isUnfoldEn ? '32px' : '0px', transition: '0.2s' }"
                         @click="selectFont(item)">
-                        <div class="choose" :style="{ visibility: item == fontName ? 'visible' : 'hidden' }"></div>
+<!--                        <div class="choose" :style="{ visibility: item == fontName ? 'visible' : 'hidden' }"></div>-->
+                        <svg-icon icon-class="choose" :style="{ visibility: item == fontName ? 'visible' : 'hidden' }"></svg-icon>
                         <span v-html="highlightText(item)"></span>
                     </div>
                 </template>
@@ -269,26 +278,25 @@ onMounted(() => {
 <style lang="scss" scoped>
 .font-container {
     position: absolute;
-    top: 30px;
-    right: 22px;
-    width: 208;
+    top: 36px;
+    width: 224px;
     height: 440px;
-    border-radius: 4px;
+    border-radius: 8px;
     background-color: #fff;
-    border: 1px solid #ccc;
-    box-shadow: 2px 2px 10px rgba(0, 0, 0, 0.2);
+    border: 1px solid #F0F0F0;
+    box-shadow: 0px 2px 16px 0px rgba(0, 0, 0, 0.08);
     z-index: 100;
 
     .search {
         width: auto;
-        height: 26px;
-        margin: 7px 10px;
+        height: 32px;
+        margin: 8px;
         display: flex;
         align-items: center;
         box-sizing: border-box;
-        background-color: var(--grey-light);
-        padding: 4px var(--default-padding-half);
-        border-radius: 4px;
+        background-color: #F5F5F5;
+        padding: 10px 0 8px 10px;
+        border-radius: 8px;
 
         >svg {
             width: 12px;
@@ -308,7 +316,7 @@ onMounted(() => {
     .font-scroll {
         height: 400px;
         box-sizing: border-box;
-        padding-bottom: 10px;
+        padding-bottom: 8px;
 
         .text_title {
             display: flex;
@@ -316,11 +324,11 @@ onMounted(() => {
             align-items: center;
 
             .title_svg {
-                margin-right: 20px;
+                margin-right: 8px;
 
                 >svg {
-                    width: 11px;
-                    height: 11px;
+                    width: 12px;
+                    height: 12px;
                 }
             }
         }
@@ -328,19 +336,20 @@ onMounted(() => {
         .font-title {
             display: flex;
             align-items: center;
-            padding: 0 10px;
-            height: 25px;
-            color: rgb(0, 0, 0, .5);
+            padding: 0 8px;
+            height: 32px;
+            line-height: 14px;
+            color: #8C8C8C;
         }
 
         .line {
             width: 100%;
-            height: 11px;
-            border-width: 5px 0 5px 0;
+            height: 8px;
+            border-width: 7px 0 0 0;
             border-style: solid;
             border-color: #fff;
             box-sizing: border-box;
-            background-color: rgb(0, 0, 0, .05);
+            background-color: #EBEBEB;
         }
 
         .item {
@@ -357,7 +366,8 @@ onMounted(() => {
                 overflow: hidden;
                 text-overflow: ellipsis;
                 white-space: nowrap;
-                margin-right: 5px
+                margin-right: 5px;
+                margin-left: 8px;
             }
 
             ;
@@ -366,16 +376,9 @@ onMounted(() => {
                 background-color: var(--input-background);
             }
 
-            .choose {
-                box-sizing: border-box;
-                width: 10px;
-                height: 6px;
-                margin-right: 10px;
-                margin-left: 2px;
-                border-width: 0 0 1px 1px;
-                border-style: solid;
-                border-color: rgb(0, 0, 0, .75);
-                transform: rotate(-45deg) translateY(-30%);
+            >svg {
+                width: 12px;
+                height: 12px;
             }
 
             .el-icon {
