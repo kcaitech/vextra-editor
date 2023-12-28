@@ -1,4 +1,4 @@
-import {Shape, Variable, WatchableObject} from "@kcdesign/data";
+import {Shape, ShapeView, Variable, WatchableObject} from "@kcdesign/data";
 import {Context} from ".";
 
 export class Component extends WatchableObject {
@@ -9,7 +9,7 @@ export class Component extends WatchableObject {
     static SELECTED_VAL = 7;
     private m_context: Context;
     private m_bridge: boolean = false;
-    private m_wonder: Shape | undefined;
+    private m_wonder: ShapeView | undefined;
     private m_into_view_after_mounted: string | undefined = undefined;
 
     constructor(context: Context) {
@@ -30,7 +30,7 @@ export class Component extends WatchableObject {
         return this.m_wonder;
     }
 
-    register_wonder(shape: Shape) {
+    register_wonder(shape: ShapeView) {
         this.m_wonder = shape;
         this.notify(Component.WONDER_CHANGE);
     }

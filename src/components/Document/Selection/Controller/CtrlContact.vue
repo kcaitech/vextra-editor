@@ -1,7 +1,7 @@
 <script setup lang='ts'>
 import { onMounted, onUnmounted, watchEffect, ref, reactive, computed } from "vue";
 import { Context } from "@/context";
-import { ContactShape, Matrix } from '@kcdesign/data';
+import { ContactLineView, ContactShape, Matrix } from '@kcdesign/data';
 import { WorkSpace } from "@/context/workspace";
 import { Point } from "../SelectionView.vue";
 import { Selection } from "@/context/selection";
@@ -14,7 +14,7 @@ interface Props {
     controllerFrame: Point[]
     rotate: number
     matrix: Matrix
-    shape: ContactShape
+    shape: ContactLineView
 }
 const props = defineProps<Props>();
 useController(props.context);
@@ -57,7 +57,7 @@ function updateControllerView() {
     const f = props.shape.frame;
     m2.preScale(f.width, f.height);
 
-    const framePoint = (props.shape as ContactShape)
+    const framePoint = (props.shape as ContactLineView)
         .getPoints()
         .map(i => m2.computeCoord2(i.x, i.y));
 

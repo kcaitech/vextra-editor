@@ -2,7 +2,7 @@
 import { Context } from '@/context';
 import { WorkSpace } from '@/context/workspace';
 import { Segment2, get_segments2 } from '@/utils/pathedit';
-import { GroupShape, Matrix, PathShape, Shape } from '@kcdesign/data';
+import { GroupShapeView, Matrix, PathShapeView, Shape, ShapeView } from '@kcdesign/data';
 import { onMounted, onUnmounted, reactive, ref } from 'vue';
 import { get_path_by_point } from '../Points/common';
 interface Props {
@@ -18,7 +18,7 @@ const data: { segments: Segment2[], dots: Dot[] } = reactive({ segments: [], dot
 const { segments, dots } = data;
 const new_high_light = ref<number>(-1);
 const matrices: Map<string, Matrix> = new Map();
-let shape: PathShape | GroupShape;
+let shape: ShapeView;
 function update() {
     segments.length = 0;
     dots.length = 0;
@@ -30,8 +30,8 @@ function update() {
         console.log('!confirm_shape()');
         return;
     }
-    dots.push(...get_path_by_point(shape as PathShape, matrices.get(shape.id)!, new Set()));
-    segments.push(...get_segments2(shape, matrices));
+    dots.push(...get_path_by_point(shape as PathShapeView, matrices.get(shape.id)!, new Set()));
+    segments.push(...get_segments2(shape as PathShapeView, matrices));
 }
 function confirm_shape() {
     if (!shape) {
@@ -46,27 +46,27 @@ function update_matrices() {
         console.log('!confirm_shape()');
         return;
     }
-    if (shape instanceof PathShape) {
+    if (shape instanceof PathShapeView) {
         __init_m(shape, matrices);
         return;
     }
-    __init_m_for_g(shape, matrices);
+    __init_m_for_g(shape as GroupShapeView, matrices);
 }
-function __init_m_for_g(group: GroupShape, matrices: Map<string, Matrix>) {
+function __init_m_for_g(group: GroupShapeView, matrices: Map<string, Matrix>) {
     const shapes = group.childs;
     for (let i = 0, l = shapes.length; i < l; i++) {
         const shape = shapes[i];
-        if (shape instanceof GroupShape) {
+        if (shape instanceof GroupShapeView) {
             __init_m_for_g(shape, matrices);
             continue;
         }
-        if (!(shape instanceof PathShape)) {
+        if (!(shape instanceof PathShapeView)) {
             continue;
         }
         __init_m(shape, matrices);
     }
 }
-function __init_m(shape: PathShape, container: Map<string, Matrix>) {
+function __init_m(shape: PathShapeView, container: Map<string, Matrix>) {
     const wm = props.context.workspace.matrix;
     const m = new Matrix(shape.matrix2Root());
     m.multiAtLeft(wm);
@@ -80,6 +80,7 @@ function down_background_path(index: number) {
     }
     const editor = props.context.editor4Shape(seg.shape);
     const code = editor.clipPathShape(index, props.context.workspace.t('attr.path'));
+
     after_clip(code);
 }
 function after_clip(data: { code: number, ex: Shape | undefined }) {
@@ -88,7 +89,8 @@ function after_clip(data: { code: number, ex: Shape | undefined }) {
         props.context.workspace.setPathEditMode(false);
     }
     if (data.ex) {
-        props.context.selection.selectShape(data.ex);
+        const s = props.context.selection.selectedPage!.getShape(data.ex.id);
+        s && props.context.selection.selectShape(s);
     }
 }
 function enter(index: number) {

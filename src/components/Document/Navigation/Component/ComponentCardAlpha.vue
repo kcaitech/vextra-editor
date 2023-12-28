@@ -39,7 +39,7 @@ function selection_watcher(t: number) {
 }
 
 function check_selected_status() {
-    selected.value = props.context.selection.isSelectedShape(props.data);
+    selected.value = props.context.selection.isSelectedShape(props.data.id);
 }
 
 function check_render_item() {

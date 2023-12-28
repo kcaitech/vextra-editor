@@ -1,6 +1,6 @@
 <script setup lang='ts'>
 import { Context } from '@/context';
-import { Matrix, Shape, TableCell, TableCellType, TableShape, Text, TableGridItem, TableLayout } from '@kcdesign/data';
+import { Matrix, Shape, TableCell, TableCellType, TableShape, Text, TableGridItem, TableLayout, TableView, TableCellView } from '@kcdesign/data';
 import { onMounted, onUnmounted, watch, ref, reactive, computed, shallowRef } from 'vue';
 import { genRectPath } from '../common';
 import { Point } from "../SelectionView.vue";
@@ -21,7 +21,7 @@ const props = defineProps<{
     controllerFrame: Point[],
     rotate: number,
     matrix: Matrix, // root->屏幕 变换矩阵
-    shape: TableShape
+    shape: TableView
 }>();
 useController(props.context);
 const matrix = new Matrix();
@@ -117,7 +117,7 @@ function move(e: MouseEvent) {
     x_checked = false, y_checked = false;
     const m4t = new Matrix(submatrix.inverse), root = props.context.workspace.root;
     const p = m4t.computeCoord2(e.clientX - root.x, e.clientY - root.y);
-    const cell = (props.shape as TableShape).locateCell(p.x, p.y);
+    const cell = (props.shape).locateCell(p.x, p.y);
     if (!cell) return;
     const frame = cell.frame;
     const trans_p = { x: p.x - frame.x, y: p.y - frame.y };
@@ -178,7 +178,7 @@ function move_x(e: MouseEvent) {
 function up_x() {
     const dx = down_x - m_x.value;
     const scale = props.context.workspace.matrix.m00;
-    const editor = props.context.editor4Table(props.shape as TableShape);
+    const editor = props.context.editor4Table(props.shape);
     editor.adjColWidth(m_col - 1, m_col, dx / scale);
     col_dash.value = false;
     document.removeEventListener('mousemove', move_x);
@@ -199,14 +199,14 @@ function up_y(e: MouseEvent) {
     const xy1 = submatrix.computeCoord2(0, y);
     const dy = down_y - xy1.y;
     const scale = props.context.workspace.matrix.m00;
-    const editor = props.context.editor4Table(props.shape as TableShape);
+    const editor = props.context.editor4Table(props.shape);
     editor.adjRowHeight(m_row - 1, m_row, dy / scale);
     row_dash.value = false;
     document.removeEventListener('mousemove', move_y);
     document.removeEventListener('mouseup', up_y);
 }
 function get_x_by_col(col: number) {
-    const table: TableShape = props.shape as TableShape;
+    const table = props.shape;
     layout = table.getLayout();
     const cols = layout.colWidths;
     let growx = 0;
@@ -217,7 +217,7 @@ function get_x_by_col(col: number) {
     down_x = xy1.x, m_x.value = xy1.x;
 }
 function get_y_by_row(row: number) {
-    const table: TableShape = props.shape as TableShape;
+    const table = props.shape;
     layout = table.getLayout();
     const rows = layout.rowHeights;
     let growy = 0;
@@ -247,6 +247,13 @@ onUnmounted(() => {
     props.context.tableSelection.unwatch(table_selection_watcher);
     props.shape.unwatch(update);
 })
+
+// todo
+function adaptTableCell(cell: TableCell): TableCellView {
+    const page = props.context.selection.selectedPage!;
+    return page.getShape(cell.id) as TableCellView;
+}
+
 </script>
 <template>
     <svg version="1.1" xmlns="http://www.w3.org/2000/svg" xmlns:xlink="http://www.w3.org/1999/xlink"
@@ -259,8 +266,8 @@ onUnmounted(() => {
             :table="props.shape" :matrix="submatrixArray">
         </TableSelectionView>
         <!-- 文本选区 -->
-        <SelectView v-if="isEditingText()" :context="props.context" :shape="(editingCell!.cell as TextShape)"
-            :matrix="editingCellMatrix" :main-notify="Selection.CHANGE_TEXT" :selection="props.context.textSelection"></SelectView>
+        <SelectView v-if="isEditingText()" :context="props.context" :shape="adaptTableCell(editingCell!.cell!)"
+            :matrix="editingCellMatrix" :main-notify="Selection.CHANGE_TEXT" :selection="props.context.selection.getTextSelection(editingCell!.cell as any)"></SelectView>
         <!-- 列宽缩放 -->
         <BarsContainer :context="props.context" :matrix="submatrixArray" :shape="props.shape"
             :c-frame="props.controllerFrame">

@@ -1,6 +1,6 @@
 <script setup lang='ts'>
 import {Context} from '@/context';
-import {Matrix, Shape} from '@kcdesign/data';
+import {Matrix, Shape, ShapeView} from '@kcdesign/data';
 import {ref, onMounted, onUnmounted, watch} from 'vue';
 import {Selection} from '@/context/selection';
 import {WorkSpace} from '@/context/workspace';
@@ -49,7 +49,7 @@ function selection_watcher(t?: number) {
     }
 }
 
-function update_paths(shapes: Shape[]) {
+function update_paths(shapes: ShapeView[]) {
     // const s = Date.now();
     const workspace = props.context.workspace;
     if (!workspace.shouldSelectionViewUpdate) return;

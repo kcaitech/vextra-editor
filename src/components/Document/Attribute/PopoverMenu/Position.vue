@@ -76,7 +76,7 @@ function showMenu() {
   // popover.value?.show();
 }
 function setConstrain(side: Side) {
-  let resizingConstraint = props.shape.data.resizingConstraint as number;
+  let resizingConstraint = props.shape.resizingConstraint as number;
 
   switch (side) {
     case 'right':
@@ -113,7 +113,7 @@ function setConstrain(side: Side) {
   controllerInit();
 }
 function controllerInit() {
-  const init = props.shape.data.resizingConstraint as number;
+  const init = props.shape.resizingConstraint as number;
   controller.right = Boolean((~init & ResizingConstraints.Right));
   controller.width = Boolean((~init & ResizingConstraints.Width));
   controller.left = Boolean((~init & ResizingConstraints.Left));

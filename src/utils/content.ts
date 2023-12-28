@@ -809,7 +809,7 @@ export const hasRadiusShape = (shape: ShapeView, type: ShapeType[]) => {
     return true;
 }
 
-export function skipUserSelectShapes(context: Context, shapes: Shape[]) {
+export function skipUserSelectShapes(context: Context, shapes: ShapeView[]) {
     if (!shapes.length) return new Matrix();
     const matrix = context.workspace.matrix;
     const points: ClientXY[] = [];
@@ -905,7 +905,7 @@ export function is_content(context: Context, e: MouseEvent) {
     return e.clientX > root.x && e.clientX < root.right && e.clientY > root.y && e.clientY < root.bottom;
 }
 
-export function ref_symbol(context: Context, position: PageXY, symbol: Shape) {
+export function ref_symbol(context: Context, position: PageXY, symbol: ShapeView) {
     const state = symbol;
     const selection = context.selection, workspace = context.workspace;
     const shapes: ShapeView[] = selection.selectedPage?.childs || [];

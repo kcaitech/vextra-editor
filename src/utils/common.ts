@@ -342,9 +342,6 @@ export function string_by_sys(str: string): string {
 export function forbidden_to_modify_frame(shape: ShapeView) {
   return shape.isLocked() || shape.isVirtualShape;
 }
-export function forbidden_to_modify_frame2(shape: Shape) {
-    return shape.isLocked || shape.isVirtualShape;
-}
 
 export function shapes_organize(shapes: ShapeView[]) {
   const result: ShapeView[] = [];

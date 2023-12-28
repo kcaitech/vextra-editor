@@ -2,7 +2,7 @@
 import { Context } from '@/context';
 import ComponentWonderCard from '@/components/Document/Navigation/Component/ComponentWonderCard.vue'
 import { onMounted, onUnmounted, ref } from 'vue';
-import { GroupShape, Shape } from '@kcdesign/data';
+import { GroupShape, GroupShapeView, Shape, ShapeView, SymbolShape, adapt2Shape } from '@kcdesign/data';
 import { Component } from '@/context/component';
 import { is_content, ref_symbol } from '@/utils/content';
 interface Props {
@@ -10,10 +10,10 @@ interface Props {
 }
 
 const props = defineProps<Props>();
-const wonder = ref<Shape>();
+const wonder = ref<ShapeView>();
 const wonder_card_x = ref<number>();
 const wonder_card_y = ref<number>();
-let wonder_stash: Shape;
+let wonder_stash: ShapeView;
 function component_watcher(t: number) {
     if (t === Component.WONDER_CHANGE) wonder.value = props.context.component.wonder;
 }
@@ -57,11 +57,14 @@ onMounted(() => {
 onUnmounted(() => {
     props.context.unwatch(component_watcher);
 })
+function adaptSymbol(v: ShapeView) {
+    return adapt2Shape(v) as SymbolShape;
+}
 </script>
 <template>
     <div class="bridge">
         <div class="wonder-wrap" :style="{ left: wonder_card_x + 'px', top: wonder_card_y + 'px' }">
-            <ComponentWonderCard v-if="wonder" :data="(wonder as GroupShape)"></ComponentWonderCard>
+            <ComponentWonderCard v-if="wonder" :data="adaptSymbol(wonder)"></ComponentWonderCard>
         </div>
     </div>
 </template>

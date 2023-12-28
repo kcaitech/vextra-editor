@@ -1,6 +1,6 @@
 <script setup lang='ts'>
 import { Context } from '@/context';
-import { AsyncBaseAction, CtrlElementType, Matrix, PathShape, Shape } from '@kcdesign/data';
+import { AsyncBaseAction, CtrlElementType, Matrix, PathShape, PathShapeView, Shape, ShapeView } from '@kcdesign/data';
 import { onMounted, onUnmounted, watch, reactive, ref } from 'vue';
 import { ClientXY, PageXY, XY } from '@/context/selection';
 import { forbidden_to_modify_frame, getAngle, getHorizontalAngle } from '@/utils/common';
@@ -13,7 +13,7 @@ import { get_rotate_for_straight } from '@/utils/attri_setting';
 interface Props {
     matrix: number[]
     context: Context
-    shape: Shape
+    shape: ShapeView
     axle: { x: number, y: number }
     cFrame: Point[]
     rotation: number
@@ -55,7 +55,7 @@ function update_dot_path() {
     const f = props.shape.frame;
     const m = new Matrix(matrix);
     m.preScale(f.width, f.height);
-    const points = (props.shape as PathShape).points;
+    const points = (props.shape as PathShapeView).points;
     if (points.length < 2) {
         console.log('points.length < 2');
         return;
@@ -127,7 +127,7 @@ function get_t(index: number, p2: PageXY): PageXY {
     if (index === 0) {
         const m = props.shape.matrix2Root(), f = props.shape.frame
         m.preScale(f.width, f.height);
-        const ap = (props.shape as PathShape).points[1];
+        const ap = (props.shape as PathShapeView).points[1];
         const rb = m.computeCoord2(ap.x, ap.y);
         const type_d = get_direction(Math.floor(getHorizontalAngle(rb, p2)));
         if (type_d === 0) {
@@ -163,7 +163,7 @@ function get_t(index: number, p2: PageXY): PageXY {
     } else if (index === 1) {
         const m = props.shape.matrix2Root(), f = props.shape.frame
         m.preScale(f.width, f.height);
-        const ap = (props.shape as PathShape).points[0];
+        const ap = (props.shape as PathShapeView).points[0];
         const lt = m.computeCoord2(ap.x, ap.y);
         const type_d = get_direction(Math.floor(getHorizontalAngle(lt, p2)));
         if (type_d === 0) {
@@ -244,7 +244,7 @@ function point_mouseup(event: MouseEvent) {
 }
 function setCursor(t: CtrlElementType, force?: boolean) {
     const cursor = props.context.cursor;
-    let deg = get_rotate_for_straight(props.shape as PathShape);
+    let deg = get_rotate_for_straight(props.shape as PathShapeView);
     if (t === CtrlElementType.RectLT) {
         cursor.setType('extend-0', force);
     } else if (t === CtrlElementType.RectRB) {

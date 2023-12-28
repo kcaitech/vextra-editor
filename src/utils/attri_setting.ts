@@ -329,7 +329,7 @@ export function get_constrainer_proportions(shapes: ShapeView[]) {
   for (let i = 0, l = shapes.length; i < l; i++) {
     const s = shapes[i];
 
-    if (!s.data.constrainerProportions) {
+    if (!s.constrainerProportions) {
       constrainer_proportions = false;
       break;
     }

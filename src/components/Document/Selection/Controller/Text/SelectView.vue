@@ -1,6 +1,6 @@
 <script setup lang='ts'>
 import { Context } from '@/context';
-import { Shape, TableCell, Text, TextShape } from '@kcdesign/data';
+import { Shape, TableCell, TableCellView, Text, TextShape, TextShapeView } from '@kcdesign/data';
 import { Matrix } from '@kcdesign/data';
 import { ref, reactive, onMounted, onUnmounted, watch } from 'vue';
 import { Selection } from '@/context/selection';
@@ -10,16 +10,15 @@ import { throttle } from '../../common';
 import {TextSelectionLite} from "@/context/textselectionlite";
 type SelectionLike = TextSelectionLite;
 interface Props {
-    shape: Shape & { text: Text }
+    shape: TextShapeView | TableCellView
     matrix: number[]
     context: Context
     mainNotify: number
     selection: SelectionLike
 }
 const props = defineProps<Props>();
-function getText(shape: Shape & { text: Text }): Text {
-    if (shape.isVirtualShape) return shape.text;
-    return (shape as TextShape | TableCell).getText();
+function getText(shape: TextShapeView | TableCellView): Text {
+    return shape.getText();
 }
 const matrix = new Matrix();
 const isCursor = ref(true);

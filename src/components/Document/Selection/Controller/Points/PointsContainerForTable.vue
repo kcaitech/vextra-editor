@@ -111,7 +111,7 @@ function point_mousemove(event: MouseEvent) {
         const action = props.context.tool.action;
         const p1: PageXY = submatrix.computeCoord(startPosition.x, startPosition.y);
         let p2: PageXY = submatrix.computeCoord(mouseOnClient.x - 10, mouseOnClient.y - 10);
-        if (event.shiftKey || props.shape.data.constrainerProportions || action === Action.AutoK) {
+        if (event.shiftKey || props.shape.constrainerProportions || action === Action.AutoK) {
             p2 = get_t(p1, p2);
             asyncBaseAction.executeScale(CtrlElementType.RectRB, p2);
         } else {

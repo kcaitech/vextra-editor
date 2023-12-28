@@ -1,7 +1,7 @@
 <script setup lang='ts'>
 import {watch, onMounted, onUnmounted, ref, reactive, onBeforeUnmount, computed} from 'vue';
 import {Selection} from '@/context/selection';
-import {Matrix} from '@kcdesign/data';
+import {Matrix, ShapeView, TextShapeView} from '@kcdesign/data';
 import {TextShape} from '@kcdesign/data';
 import {Shape} from "@kcdesign/data";
 import {Context} from '@/context';
@@ -18,7 +18,7 @@ interface Props {
     controllerFrame: Point[]
     rotate: number
     matrix: Matrix
-    shape: TextShape
+    shape: TextShapeView
 }
 
 const props = defineProps<Props>();
@@ -37,7 +37,7 @@ const boundrectPath = ref("");
 const bounds = reactive({left: 0, top: 0, right: 0, bottom: 0}); // viewbox
 const editing = ref<boolean>(false); // 是否进入路径编辑状态
 const visible = ref<boolean>(true);
-const input = ref<ProtoInput>(null);
+const input = ref<ProtoInput>();
 
 function update() {
     if (!props.context.workspace.shouldSelectionViewUpdate) return;
@@ -69,7 +69,7 @@ function update() {
     }, bounds)
 }
 
-function clear_null_shape(shape: Shape) {
+function clear_null_shape(shape: ShapeView) {
     const editor = props.context.editor4Shape(shape);
     editor.delete();
 }
@@ -162,7 +162,7 @@ function onMouseUp(e: MouseEvent) {
     props.context.workspace.setCtrl('page');
     document.removeEventListener("mousemove", onMouseMove);
     document.removeEventListener("mouseup", onMouseUp);
-    input.value.attention();
+    if (input.value) input.value.attention();
 }
 
 function mouseenter() {
@@ -217,14 +217,14 @@ onBeforeUnmount(() => {
          :style="{ transform: `translate(${bounds.left}px,${bounds.top}px)`, left: 0, top: 0, position: 'absolute' }"
          @mousedown="onMouseDown" overflow="visible"
          @mouseenter="mouseenter" @mouseleave="mouseleave" :class="{ 'un-visible': !visible }">
-        <SelectView :context="props.context" :shape="(props.shape as TextShape)" :matrix="submatrix.toArray()"
-                    :main-notify="Selection.CHANGE_TEXT" :selection="props.context.textSelection"></SelectView>
+        <SelectView :context="props.context" :shape="(props.shape)" :matrix="submatrix.toArray()"
+                    :main-notify="Selection.CHANGE_TEXT" :selection="props.context.selection.getTextSelection(props.shape)"></SelectView>
         <path v-if="editing" :d="boundrectPath" fill="none" stroke='#ff9900' stroke-width="1.5px"></path>
         <ShapesStrokeContainer :context="props.context" :matrix="props.matrix" :shape="props.shape" color-hex="#ff9900">
         </ShapesStrokeContainer>
     </svg>
-    <TextInput  ref="input" :context="props.context" :shape="(props.shape as TextShape)" :matrix="submatrix.toArray()"
-               :main-notify="Selection.CHANGE_TEXT" :selection="props.context.textSelection"></TextInput>
+    <TextInput  ref="input" :context="props.context" :shape="(props.shape)" :matrix="submatrix.toArray()"
+               :main-notify="Selection.CHANGE_TEXT" :selection="props.context.selection.getTextSelection(props.shape)"></TextInput>
 </template>
 <style lang='scss' scoped>
 .un-visible {

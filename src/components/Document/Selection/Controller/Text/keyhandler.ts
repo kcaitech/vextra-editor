@@ -168,8 +168,9 @@ const escape = throttle2((e: KeyboardEvent, context: Context, shapetext: Text, e
     if (selection.cursorStart > -1) {
         context.selection.resetSelectShapes();
         const timer = setTimeout(() => {
-            context.selection.selectShape(editor.shape);
-            clearTimeout(timer);
+            const s = context.selection.selectedPage?.getShape(editor.shape.id);
+            context.selection.selectShape(s);
+            // clearTimeout(timer);
         })
         context.cursor.reset();
         context.workspace.contentEdit(false);

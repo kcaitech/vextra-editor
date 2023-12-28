@@ -1,6 +1,6 @@
 import { XY } from "@/context/selection"
 import { getHorizontalAngle } from "@/utils/common"
-import { ContactShape, CtrlElementType, Matrix, PathShape, Point2D, Shape } from "@kcdesign/data"
+import { ContactLineView, ContactShape, CtrlElementType, Matrix, PathShape, PathShapeView, Point2D, Shape, ShapeView } from "@kcdesign/data"
 import { CurveMode } from "@kcdesign/data"
 
 
@@ -12,7 +12,7 @@ interface Dot {
     type2: CtrlElementType
 }
 
-export function update_dot(ps: { x: number, y: number, type?: CtrlElementType }[], s_r: number, shape?: Shape): Dot[] {
+export function update_dot(ps: { x: number, y: number, type?: CtrlElementType }[], s_r: number, shape?: ShapeView): Dot[] {
     const bit_v = 4;
     const bit_v_d = 7;
     const [lt, rt, rb, lb] = ps;
@@ -140,7 +140,7 @@ export function update_dot3(ps: { x: number, y: number, type?: CtrlElementType }
     return [path_obj_1, path_obj_3];
 }
 
-export function get_path_by_point(s: PathShape, matrix: Matrix, set: Set<number>) {
+export function get_path_by_point(s: PathShapeView, matrix: Matrix, set: Set<number>) {
     const points = [];
     const raw_p = (s).points;
     const m = new Matrix(matrix);
@@ -181,7 +181,7 @@ export function get_conact_by_point(s: PathShape, matrix: Matrix) {
     return points;
 }
 
-export function get_apexs(s: ContactShape, matrix: Matrix) {
+export function get_apexs(s: ContactLineView, matrix: Matrix) {
     const raw_p = s.getPoints(), m = new Matrix(matrix);
     if (!raw_p || raw_p.length < 2) return false;
     m.preScale(s.frame.width, s.frame.height);

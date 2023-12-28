@@ -279,7 +279,7 @@ function search_apex(e: MouseEvent) {
     const xy = props.context.workspace.matrix.inverseCoord(e.clientX - x, e.clientY - y);
     const shapes = props.context.selection.getContactByXY(xy);
     if (shapes.length) {
-        props.context.tool.setContactApex(adapt2Shape(shapes[0]));
+        props.context.tool.setContactApex((shapes[0]));
     } else {
         props.context.tool.resetContactApex();
     }
@@ -408,7 +408,7 @@ function gen_new_shape(e: MouseEvent) {
             const page = props.context.selection.selectedPage!;
             props.context.nextTick(page, () => {
                 newShape = page.getShape(result.new_shape.id);
-                props.context.assist.set_trans_target([adapt2Shape(newShape!)]);
+                props.context.assist.set_trans_target([(newShape!)]);
             })
         }
     }

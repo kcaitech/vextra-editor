@@ -1,6 +1,6 @@
 <script setup lang='ts'>
 import { Context } from '@/context';
-import { AsyncBaseAction, CtrlElementType, Matrix, Shape, ShapeView, adapt2Shape } from '@kcdesign/data';
+import { AsyncBaseAction, CtrlElementType, Matrix, ShapeView, adapt2Shape } from '@kcdesign/data';
 import { onMounted, onUnmounted, watch, reactive } from 'vue';
 import { ClientXY, PageXY } from '@/context/selection';
 import { Action } from '@/context/tool';
@@ -95,7 +95,7 @@ function bar_mousemove(event: MouseEvent) {
         matrix.reset(workspace.matrix);
         const p1OnPage: PageXY = submatrix.computeCoord(startPosition.x, startPosition.y); // page
         const p2Onpage: PageXY = submatrix.computeCoord(mouseOnPage.x, mouseOnPage.y);
-        if (event.shiftKey || s.data.constrainerProportions || action === Action.AutoK) {
+        if (event.shiftKey || s.constrainerProportions || action === Action.AutoK) {
             asyncBaseAction.executeErScale(cur_ctrl_type, getScale(cur_ctrl_type, s, p1OnPage, p2Onpage));
         } else {
             scale(asyncBaseAction, p2Onpage);

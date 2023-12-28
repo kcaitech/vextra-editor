@@ -1,16 +1,16 @@
 <script setup lang='ts'>
 import { Context } from '@/context';
-import { AsyncBaseAction, CtrlElementType, Matrix, Shape, TableShape } from '@kcdesign/data';
+import { AsyncBaseAction, CtrlElementType, Matrix, Shape, ShapeView, TableShape, adapt2Shape } from '@kcdesign/data';
 import { onMounted, onUnmounted, watch, reactive } from 'vue';
 import { ClientXY, PageXY } from '@/context/selection';
 import { Action } from '@/context/tool';
 import { Point } from '../../SelectionView.vue';
 import { PointType } from '@/context/assist';
-import { forbidden_to_modify_frame, forbidden_to_modify_frame2 } from '@/utils/common';
+import { forbidden_to_modify_frame } from '@/utils/common';
 interface Props {
     matrix: number[]
     context: Context
-    shape: Shape
+    shape: ShapeView
     cFrame: Point[]
 }
 interface Bar {
@@ -65,7 +65,7 @@ function bar_mousedown(event: MouseEvent, ele: CtrlElementType) {
     event.stopPropagation();
     props.context.menu.menuMount();
 
-    if (forbidden_to_modify_frame2(props.shape)) {
+    if (forbidden_to_modify_frame(props.shape)) {
         return;
     }
 
@@ -104,7 +104,7 @@ function bar_mousemove(event: MouseEvent) {
         if (Math.hypot(mouseOnPage.x - startPosition.x, mouseOnPage.y - startPosition.y) > dragActiveDis) {
             isDragging = true;
             const page = props.context.selection.selectedPage!;
-            asyncBaseAction = props.context.editor.controller().asyncRectEditor(s, page.data);
+            asyncBaseAction = props.context.editor.controller().asyncRectEditor(adapt2Shape(s), page.data);
             submatrix.reset(workspace.matrix.inverse);
             setCursor(cur_ctrl_type, true);
             workspace.scaling(true);
@@ -162,7 +162,7 @@ function modify_fix_y(p2: PageXY, fix: number) {
     stickedY = true;
     pre_target_y = fix;
 }
-function getScale(type: CtrlElementType, shape: Shape, start: ClientXY, end: ClientXY): number {
+function getScale(type: CtrlElementType, shape: ShapeView, start: ClientXY, end: ClientXY): number {
     const m = new Matrix(shape.matrix2Root().inverse);
     const f = shape.frame;
     const p1 = m.computeCoord(start.x, start.y);
