@@ -828,7 +828,7 @@ onUnmounted(() => {
 <style lang="scss" scoped>
 .color-block {
     position: relative;
-    z-index: 99;
+    // z-index: 99;
     width: 16px;
     height: 16px;
     border-radius: 3px;
