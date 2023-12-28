@@ -3,7 +3,7 @@ import { Context } from '@/context';
 import ComponentCardAlpha from './ComponentCardAlpha.vue';
 import ComponentCardBeta from './ComponentCardBeta.vue';
 import { computed, nextTick, onMounted, onUnmounted, ref, watch } from 'vue';
-import { GroupShape, Shape, ShapeType, SymbolShape } from '@kcdesign/data';
+import { GroupShape, Shape, ShapeType, SymbolShape, SymbolUnionShape } from '@kcdesign/data';
 import { shape_track } from '@/utils/content';
 import { ClientXY } from '@/context/selection';
 import { is_dbl_action } from '@/utils/action';
@@ -35,19 +35,33 @@ let observer = new ResizeObserver(() => {
 const render_alpha = computed<boolean>(() => props.cardType === 'alpha');
 
 function down(e: MouseEvent, shape: Shape) {
+    if (shape instanceof SymbolUnionShape) {
+        const c1 = shape.childs[0];
+        if (!c1) {
+            return;
+        }
+        compo = c1;
+    } else {
+        compo = shape;
+    }
+
     if (props.isAttri) { // 选择一个实例进行切换
-        props.context.component.notify(Component.SELECTED_VAL, is_state(shape) ? shape.parent! : shape);
+        props.context.component.notify(Component.SELECTED_VAL, compo);
         return;
     }
-    compo = shape.type === ShapeType.SymbolUnion ? (shape as SymbolShape).childs[0] || shape : shape;
+
+    const target = is_state(compo) ? compo.parent! : compo;
+
     if (e.button === 2) {
-        props.context.component.compMenuMount(is_state(compo) ? compo.parent! : compo, e);
+        props.context.component.compMenuMount(target, e);
         return;
     }
+
     if (is_dbl_action()) {
-        shape_track(props.context, is_state(compo) ? compo.parent! : compo);
+        shape_track(props.context, target);
         return;
     }
+    
     modify_down_position_client(props.context, e, down_position);
     add_move_and_up_for_document(move, up);
 }

@@ -2,10 +2,10 @@
 import { SelectItem } from '@/components/common/Select.vue';
 import { computed } from 'vue'
 const props = defineProps<{
-    data: SelectItem
+    data: SelectItem | null
 }>();
 const isEnd = computed(() => {
-    return props.data.content.startsWith('end');
+    return props.data?.content.startsWith('end');
 })
 </script>
 
@@ -21,7 +21,6 @@ const isEnd = computed(() => {
     height: 100%;
     display: flex;
     align-items: center;
-    justify-content: center;
 
     >svg {
         width: 100%;

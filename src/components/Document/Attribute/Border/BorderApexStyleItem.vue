@@ -1,13 +1,18 @@
 <script lang="ts" setup>
 import { computed } from 'vue'
 import { SelectItem } from '@/components/common/Select.vue'
-const props = defineProps<{ data: SelectItem }>();
-const emit = defineEmits<{
+interface Props {
+    data: SelectItem;
+    isCurValue: boolean;
+}
+interface Emits {
     (e: "select", data: SelectItem): void;
-}>();
+}
+const props = defineProps<Props>();
+const emits = defineEmits<Emits>();
 
 function select() {
-    emit('select', props.data);
+    emits('select', props.data);
 }
 const isEnd = computed<boolean>(() => {
     return props.data.content.startsWith('end');
@@ -16,31 +21,38 @@ const isEnd = computed<boolean>(() => {
 <template>
     <div class="border-front-style-item-container" @click="select">
         <svg-icon :class="{ isEnd }" :icon-class="props.data.value"></svg-icon>
+        <svg-icon class="check" v-show="props.isCurValue" icon-class="choose"></svg-icon>
     </div>
 </template>
 <style scoped lang="scss">
 .border-front-style-item-container {
-    height: 30px;
+    height: 32px;
     width: 68px;
-    padding: 0 8px 0 6px;
-    color: #333333;
+
+    padding: 0 6px;
     box-sizing: border-box;
+
     display: flex;
     align-items: center;
-    justify-content: center;
+    justify-content: space-between;
 
     >svg {
         width: 36px;
-        height: 30px;
-        margin-right: 10px;
+        height: 32px;
+    }
+
+    .check {
+        width: 12px;
+        height: 12px;
     }
 
     >.isEnd {
         transform: rotate(180deg);
     }
 }
+
 .border-front-style-item-container:hover {
-    background-color: #1878F5;
+    background-color: var(--active-color);
     color: #FFFFFF;
 }
 </style>
