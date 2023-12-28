@@ -12,7 +12,6 @@ async function refreshToken() {
         const expRemain = jwtPayload.exp * 1000 - Date.now();
         if (expRemain <= 0 || expRemain >= 1000 * 60 * 60) return;
         const res = await users_api.RefreshToken();
-        console.log("RefreshToken res", res)
         if (res.code === 0 && res.data.token) localStorage.setItem("token", res.data.token);
     } catch (e) {
         console.log("refresh token error", e);
