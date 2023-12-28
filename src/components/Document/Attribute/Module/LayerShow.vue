@@ -167,7 +167,6 @@ onUnmounted(() => {
             </template>
         </CompLayerShow>
     </div>
-    <div class="line" style="width: 240px;height: 1px;border-bottom: 1px solid #F0F0F0;margin-left: -8px;"></div>
 </template>
 <style lang="scss" scoped>
 .edit-comps {
