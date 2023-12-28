@@ -9,7 +9,7 @@ async function refreshToken() {
     if (jwtSplitRes.length !== 3) return;
     try {
         const jwtPayload = JSON.parse(atob(jwtSplitRes[1]));
-        const expRemain = jwtPayload.exp * 1000 - Date.now();
+        const expRemain = (jwtPayload.exp ?? 0) * 1000 - Date.now();
         if (expRemain <= 0 || expRemain >= 1000 * 60 * 60) return;
         const res = await users_api.RefreshToken();
         if (res.code === 0 && res.data.token) localStorage.setItem("token", res.data.token);
