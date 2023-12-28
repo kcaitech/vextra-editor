@@ -79,7 +79,7 @@ function move(e: MouseEvent) {
     if (e.buttons === 1) {
         if (newShape) {
             modify_new_shape_frame(e);
-        } else if (Math.hypot(e.clientX - client_xy_1.x, e.clientY - client_xy_1.y) > dragActiveDis) {
+        } else if (!isDrag && Math.hypot(e.clientX - client_xy_1.x, e.clientY - client_xy_1.y) > dragActiveDis) {
             gen_new_shape(e);
             isDrag = true;
         }
@@ -95,7 +95,7 @@ function up(e: MouseEvent) {
     // if (commentInput.value) commentInput.value = false;
     if (isDrag && newShape) {
         shapeCreateEnd();
-    } else if (props.context.tool.action.startsWith('add')) {
+    } else if (!isDrag && props.context.tool.action.startsWith('add')) {
         const action = props.context.tool.action;
         if (action === Action.AddComment) return addComment(e);
         if (action !== Action.AddContact && action !== Action.AddTable) {

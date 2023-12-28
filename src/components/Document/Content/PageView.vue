@@ -71,6 +71,7 @@ onMounted(() => {
     props.context.tool.watch(tool_watcher);
     pageViewRegister(true);
     props.context.selection.watch(selection_watcher);
+    page_watcher();
 })
 onUnmounted(() => {
     props.data.unwatch(page_watcher);
