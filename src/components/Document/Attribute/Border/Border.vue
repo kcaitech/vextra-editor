@@ -82,7 +82,9 @@ function watchShapes() {
 }
 
 function watcher(...args: any[]) {
-    if (args.length > 0 && (args.includes('style') || args.includes('variable'))) updateData();
+    if ((args.includes('style') || args.includes('variable'))) [
+        updateData()
+    ]
 }
 
 function updateData() {
