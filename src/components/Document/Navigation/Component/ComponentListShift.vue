@@ -1,6 +1,5 @@
 <script lang="ts" setup>
 import { onMounted, ref } from 'vue';
-import { Search } from '@element-plus/icons-vue';
 import ComponentContainer from './ComponentContainer.vue';
 import { Context } from '@/context';
 import { useI18n } from 'vue-i18n';
