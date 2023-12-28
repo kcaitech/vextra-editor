@@ -266,7 +266,10 @@ export interface AttriListItem {
  */
 export function variable_sort(symbol: SymbolShape, t: Function) {
     const list: AttriListItem[] = [];
-    if (!symbol.variables) return list;
+    if (!symbol.variables) {
+        return list;
+    }
+
     let status_index = 0;
     const resource = symbol.variables;
     resource.forEach(v => {
@@ -277,7 +280,9 @@ export function variable_sort(symbol: SymbolShape, t: Function) {
         } else {
             list.push(item);
         }
-    })
+    });
+
+    console.log('list:', list);
     return list;
 }
 
