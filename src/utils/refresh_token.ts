@@ -1,6 +1,6 @@
 import * as users_api from "@/request/users";
 
-let visibilityTimer: ReturnType<typeof setTimeout> | Parameters<typeof clearInterval>[0] = undefined;
+let visibilityTimer: ReturnType<typeof setInterval> | Parameters<typeof clearInterval>[0] = undefined;
 
 async function refreshToken() {
     const jwt = localStorage.getItem("token");
