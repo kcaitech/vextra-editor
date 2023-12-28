@@ -20,7 +20,7 @@ async function refreshToken() {
 
 export function startRefreshTokenTask(interval: number = 1000 * 60 * 3) {
     if (visibilityTimer) stopRefreshTokenTask();
-    if (document.visibilityState === "visible") refreshToken();
+    refreshToken();
     visibilityTimer = setInterval(() => document.visibilityState === "visible" && refreshToken(), interval);
 }
 
