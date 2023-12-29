@@ -167,7 +167,7 @@ const need_instance_attr_show = () => {
     if (shapes.value.length === 1) {
         const symref = props.context.selection.symbolrefshape;
         if (!symref) {
-            return;
+            return false;
         }
         if (!is_part_of_symbol(symref)) {
             return true;
@@ -175,7 +175,7 @@ const need_instance_attr_show = () => {
         const result = get_var_for_ref(symref, t);
 
         if (!result) {
-            return;
+            return false;
         }
 
         v = !!(result.variables.length || result.visible_variables.length);
