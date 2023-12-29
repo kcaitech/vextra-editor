@@ -111,19 +111,21 @@ onUnmounted(stop);
 
     .change {
         display: flex;
-
         width: 28px;
-        height: 32px;
-
+        height: 28px;
         align-items: center;
         justify-content: center;
-
         cursor: pointer;
+        border-radius: var(--default-radius);
 
         >svg {
             width: 16px;
             height: 16px;
         }
+    }
+
+    .change:hover {
+        background-color: #F5F5F5;
     }
 }
 </style>

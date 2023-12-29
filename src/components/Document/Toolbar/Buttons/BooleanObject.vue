@@ -48,7 +48,7 @@ function showMenu(e: MouseEvent) {
     nextTick(() => {
       if (popover.value) {
         popover.value.style.left = el.offsetLeft + 'px';
-        popover.value.style.top = el.offsetHeight + 9 + 'px';
+        popover.value.style.top = el.offsetHeight + 13 + 'px';
 
       }
     })

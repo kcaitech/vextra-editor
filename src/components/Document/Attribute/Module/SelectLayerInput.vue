@@ -7,6 +7,7 @@ import { onMounted, ref } from 'vue';
 import SelectLayer from '../PopoverMenu/ComposAttri/SelectLayer.vue';
 import { get_options_from_symbol, is_symbol_or_union } from "@/utils/symbol";
 import { v4 } from "uuid";
+import SvgIcon from "@/components/common/SvgIcon.vue";
 
 const { t } = useI18n();
 
@@ -104,9 +105,12 @@ onMounted(() => {
 <!--                :style="{ opacity: context.selection.selectedShapes[0].type !== ShapeType.Symbol ? '0.5' : '1' }"-->
                 <span v-if="selectLayerName" class="value" style="color: black;">{{ selectLayerName }}</span>
                 <span v-else style="color: #BFBFBF">{{ placeholder }}</span>
-                <el-icon color="#666666" :style="{ transform: `rotate(${isselectLayer ? '-180deg' : '0deg'})` }">
+<!--                <el-icon color="#666666" :style="{ transform: `rotate(${isselectLayer ? '-180deg' : '0deg'})` }">-->
+<!--                    <ArrowDown />-->
+<!--                </el-icon>-->
+                <svg-icon icon-class="down" :style="{ transform: `rotate(${isselectLayer ? '-180deg' : '0deg'})` }">
                     <ArrowDown />
-                </el-icon>
+                </svg-icon>
             </div>
             <SelectLayer v-if="isselectLayer" @close="isselectLayer = false" :type="props.addType" :context="context"
                 :selectList="selectList" @change="select_change" :layerId="selectLayerid"></SelectLayer>
@@ -208,13 +212,21 @@ onMounted(() => {
             white-space: nowrap;
         }
 
-        .el-icon {
-            width: 30px;
-            height: 30px;
-            display: flex;
-            align-items: center;
-            justify-content: center;
+        //.el-icon {
+        //    width: 30px;
+        //    height: 30px;
+        //    display: flex;
+        //    align-items: center;
+        //    justify-content: center;
+        //    transition: all 0.3s ease;
+        //}
+
+        >svg {
+            width: 12px;
+            height: 12px;
+            color: #666666;
             transition: all 0.3s ease;
+            margin-right: 7px;
         }
     }
 }
