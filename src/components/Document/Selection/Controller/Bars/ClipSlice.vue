@@ -156,19 +156,17 @@ onUnmounted(() => {
 }
 
 .path {
-    stroke: gray;
+    stroke: #f5f5f5;
     fill: none;
 }
 
 .path-high-light {
     stroke: var(--active-color);
-    stroke-dasharray: 4 4;
 }
 
 .point {
     fill: #ffffff;
-    stroke: #555555;
-    stroke-width: 1.5px;
+    stroke: var(--active-color);
     height: 8px;
     width: 8px;
 }

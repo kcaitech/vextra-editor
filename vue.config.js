@@ -116,12 +116,13 @@ var configureWebpack = (config) => {
             "communication\\/node_modules\\/)",
         ],
         poll: 5000,
-    }                   
+    }
 }
 
 var exports = defineConfig({
     transpileDependencies: true,
-    publicPath: './',
+    // publicPath: './',
+    publicPath: '/zrx',
     configureWebpack,
 
     pluginOptions: {
