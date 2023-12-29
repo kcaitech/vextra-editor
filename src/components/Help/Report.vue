@@ -278,6 +278,10 @@ onMounted(() => {
             background: #F5F5F5;
             resize: none;
             box-sizing: border-box;
+
+            &::placeholder{
+                color: #bfbfbf;
+            }
         }
 
         svg {
