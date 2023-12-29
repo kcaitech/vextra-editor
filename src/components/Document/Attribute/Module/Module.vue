@@ -1,15 +1,14 @@
 <script lang="ts" setup>
-import {useI18n} from 'vue-i18n';
-import {Context} from '@/context';
-import {computed} from 'vue'
+import { useI18n } from 'vue-i18n';
+import { Context } from '@/context';
+import { computed } from 'vue'
 import ComponentAttr from './ComponentAttr.vue';
 import ComponentState from './ComponentState.vue';
-import InstanceAttr from './InstanceAttr.vue';
 import LayerShow from './LayerShow.vue';
 import TextContent from './TextContent.vue';
 import ComponentInstance from './ComponentInstance.vue';
-import {Shape, ShapeType, SymbolRefShape, SymbolShape} from '@kcdesign/data';
-import {is_shapes_if_symbolref, is_state_selection} from "@/utils/symbol";
+import { Shape, ShapeType, SymbolRefShape, SymbolShape } from '@kcdesign/data';
+import { get_var_for_ref, is_shapes_if_symbolref, is_state_selection } from "@/utils/symbol";
 
 interface Props {
     context: Context
@@ -18,7 +17,7 @@ interface Props {
 }
 
 const props = defineProps<Props>();
-const {t} = useI18n();
+const { t } = useI18n();
 
 const p_symble = computed(() => {
     let isSymble = false;
@@ -40,10 +39,6 @@ const p_symble = computed(() => {
     return isSymble
 })
 
-const is_symbolref = () => {
-    return is_shapes_if_symbolref(props.shapes);
-}
-
 function is_state() {
     return is_state_selection(props.shapes);
 }
@@ -52,13 +47,10 @@ function is_state() {
 <template>
     <div class="module-panel">
         <ComponentAttr :context="context"
-                       v-if="(shapeType === ShapeType.Symbol || shapeType === ShapeType.SymbolUnion) && !is_state()"
-                       :shape="(shapes[0] as SymbolShape)">
+            v-if="(shapeType === ShapeType.Symbol || shapeType === ShapeType.SymbolUnion) && !is_state()"
+            :shape="(shapes[0] as SymbolShape)">
         </ComponentAttr>
         <ComponentState :context="context" v-if="is_state()" :shapes="props.shapes as SymbolShape[]"></ComponentState>
-        <InstanceAttr :context="context" v-if="is_symbolref()"
-                      :shapes="(shapes as SymbolRefShape[])">
-        </InstanceAttr>
         <LayerShow :context="context" v-if="p_symble && shapeType !== ShapeType.Symbol"></LayerShow>
         <TextContent :context="context" v-if="p_symble && shapeType === ShapeType.Text"></TextContent>
         <ComponentInstance :context="context" :shapes="shapes" v-if="p_symble && shapeType === ShapeType.SymbolRef">

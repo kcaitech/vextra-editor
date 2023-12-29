@@ -182,36 +182,39 @@ onUnmounted(() => {
 </script>
 
 <template>
-    <TypeHeader :title="t('compos.instance_attr')" :active="!!(variables.length || visible_variables.length)">
-        <template #tool>
-            <div class="edit-comps" v-if="!is_part_of_symbol(props.shapes[0])">
-                <div class="edit_svg" @click.stop="editComps" v-if="is_symbolref_disa(props.shapes)">
-                    <svg-icon icon-class="comp-state"></svg-icon>
-                </div>
-                <div class="reset_svg" @click.stop="selectReset" :style="{ backgroundColor: resetMenu ? '#EBEBEB' : '' }">
-                    <svg-icon icon-class="reset_comp"></svg-icon>
-                    <div class="reset_menu" v-if="resetMenu">
-                        <div :class="{ untie, disabled: !untie_state }" @click="untie">
-                            <span>{{ t('compos.untie') }}</span>
-                            <span>快捷键</span>
+    <div class="instance-attr">
+        <TypeHeader :title="t('compos.instance_attr')" :active="!!(variables.length || visible_variables.length)">
+            <template #tool>
+                <div class="edit-comps" v-if="!is_part_of_symbol(props.shapes[0])">
+                    <div class="edit_svg" @click.stop="editComps" v-if="is_symbolref_disa(props.shapes)">
+                        <svg-icon icon-class="comp-state"></svg-icon>
+                    </div>
+                    <div class="reset_svg" @click.stop="selectReset"
+                        :style="{ backgroundColor: resetMenu ? '#EBEBEB' : '' }">
+                        <svg-icon icon-class="reset_comp"></svg-icon>
+                        <div class="reset_menu" v-if="resetMenu">
+                            <div :class="{ untie, disabled: !untie_state }" @click="untie">
+                                <span>{{ t('compos.untie') }}</span>
+                                <span>快捷键</span>
+                            </div>
+                            <div class="untie" @click="reset_all_attr">{{ t('compos.reset_all_attr') }}</div>
                         </div>
-                        <div class="untie" @click="reset_all_attr">{{ t('compos.reset_all_attr') }}</div>
                     </div>
                 </div>
+            </template>
+        </TypeHeader>
+        <div>
+            <div class="module_container" :style="{ marginBottom: variables.length > 0 ? '10px' : '0' }">
+                <component v-for="item in variables" :key="item.variable.id + props.shapes[0].id"
+                    :is="cardmap.get(item.variable.type) || Status" :context="props.context" :data="item"></component>
             </div>
-        </template>
-    </TypeHeader>
-    <div style="margin-bottom: 10px;">
-        <div class="module_container" :style="{ marginBottom: variables.length > 0 ? '10px' : '0' }">
-            <component v-for="item in variables" :key="item.variable.id + props.shapes[0].id"
-                :is="cardmap.get(item.variable.type) || Status" :context="props.context" :data="item"></component>
-        </div>
-        <div v-if="visible_variables.length" class="visible-var-container">
-            <div class="show">
-                <div class="title">{{ t('compos.layer_show') }}</div>
-                <div class="items-wrap">
-                    <component v-for="item in visible_variables" :key="item.variable.id + props.shapes[0].id" :is="Visible"
-                        :context="props.context" :data="(item as RefAttriListItem)"></component>
+            <div v-if="visible_variables.length" class="visible-var-container">
+                <div class="show">
+                    <div class="title">{{ t('compos.layer_show') }}</div>
+                    <div class="items-wrap">
+                        <component v-for="item in visible_variables" :key="item.variable.id + props.shapes[0].id"
+                            :is="Visible" :context="props.context" :data="(item as RefAttriListItem)"></component>
+                    </div>
                 </div>
             </div>
         </div>
@@ -219,134 +222,142 @@ onUnmounted(() => {
 </template>
 
 <style lang="scss" scoped>
-.edit-comps {
-    display: flex;
-    align-items: center;
+.instance-attr {
+    width: 100%;
+    margin-bottom: 10px;
+    padding: 0 8px;
+    box-sizing: border-box;
+    border-bottom: 1px solid #F0F0F0;
 
-    .edit_svg {
-        width: 28px;
-        height: 28px;
+    .edit-comps {
         display: flex;
         align-items: center;
-        justify-content: center;
-        border-radius: 6px;
-        box-sizing: border-box;
 
-        >svg {
-            width: 16px;
-            height: 16px;
-        }
-
-    }
-
-    .edit_svg:hover {
-        background-color: #EBEBEB;
-    }
-
-
-    .reset_svg {
-        position: relative;
-        width: 28px;
-        height: 28px;
-        display: flex;
-        align-items: center;
-        justify-content: center;
-        border-radius: 6px;
-        box-sizing: border-box;
-
-        >svg {
-            width: 16px;
-            height: 16px;
-        }
-
-        .reset_menu {
-            position: absolute;
-            top: 28px;
-            right: 0;
-            width: 150px;
-            padding: 4px 0;
-            border: 1px solid #EBEBEB;
-            background-color: #fff;
+        .edit_svg {
+            width: 28px;
+            height: 28px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
             border-radius: 6px;
-            box-shadow: 0px 2px 10px 0px rgba(0, 0, 0, 0.08);
-            z-index: 100;
+            box-sizing: border-box;
 
-            .untie {
-                height: 32px;
-                width: 100%;
-                display: flex;
-                align-items: center;
-                justify-content: space-between;
-                padding: 0 16px;
-                box-sizing: border-box;
+            >svg {
+                width: 16px;
+                height: 16px;
+            }
 
-                &:hover {
-                    background-color: #F5F5F5;
+        }
+
+        .edit_svg:hover {
+            background-color: #EBEBEB;
+        }
+
+
+        .reset_svg {
+            position: relative;
+            width: 28px;
+            height: 28px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            border-radius: 6px;
+            box-sizing: border-box;
+
+            >svg {
+                width: 16px;
+                height: 16px;
+            }
+
+            .reset_menu {
+                position: absolute;
+                top: 28px;
+                right: 0;
+                width: 150px;
+                padding: 4px 0;
+                border: 1px solid #EBEBEB;
+                background-color: #fff;
+                border-radius: 6px;
+                box-shadow: 0px 2px 10px 0px rgba(0, 0, 0, 0.08);
+                z-index: 100;
+
+                .untie {
+                    height: 32px;
+                    width: 100%;
+                    display: flex;
+                    align-items: center;
+                    justify-content: space-between;
+                    padding: 0 16px;
+                    box-sizing: border-box;
+
+                    &:hover {
+                        background-color: #F5F5F5;
+                    }
+                }
+
+                .disabled {
+                    pointer-events: none;
+                    opacity: 0.2;
                 }
             }
+        }
 
-            .disabled {
-                pointer-events: none;
-                opacity: 0.2;
+        .reset_svg:hover {
+            background-color: #EBEBEB;
+        }
+
+    }
+
+    .module_container {
+        font-size: var(--font-default-fontsize);
+    }
+
+    .visible-var-container {
+        display: flex;
+        width: 100%;
+        line-height: 20px;
+        margin-bottom: 6px;
+        margin-top: 6px;
+
+        .show {
+            display: flex;
+            justify-content: space-between;
+            width: 100%;
+
+            .title {
+                color: #595959;
+                width: 40%;
+                line-height: 20px;
+                padding-right: 10px;
+            }
+
+            .items-wrap {
+                flex: 0 0 126px;
             }
         }
-    }
 
-    .reset_svg:hover {
-        background-color: #EBEBEB;
-    }
-
-}
-
-.module_container {
-    font-size: var(--font-default-fontsize);
-}
-
-.visible-var-container {
-    display: flex;
-    width: 100%;
-    line-height: 20px;
-    margin-bottom: 6px;
-    margin-top: 6px;
-
-    .show {
-        display: flex;
-        justify-content: space-between;
-        width: 100%;
-
-        .title {
-            color: #595959;
-            width: 40%;
-            line-height: 20px;
-            padding-right: 10px;
-        }
-
-        .items-wrap {
-            flex: 0 0 126px;
+        .place {
+            flex: 0 0 22px;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            width: 22px;
+            height: 22px;
         }
     }
 
-    .place {
-        flex: 0 0 22px;
-        display: flex;
-        justify-content: center;
-        align-items: center;
-        width: 22px;
-        height: 22px;
+    :deep(.el-select-dropdown__item.selected) {
+        color: #9775fa !important;
+        font-size: 12px;
     }
-}
 
-:deep(.el-select-dropdown__item.selected) {
-    color: #9775fa !important;
-    font-size: 12px;
-}
+    :deep(.el-select .el-input.is-focus .el-input__wrapper) {
+        box-shadow: 0 0 0 1px var(--active-color) inset !important;
+        background-color: var(--grey-light);
+    }
 
-:deep(.el-select .el-input.is-focus .el-input__wrapper) {
-    box-shadow: 0 0 0 1px var(--active-color) inset !important;
-    background-color: var(--grey-light);
-}
-
-:deep(.el-select .el-input__wrapper.is-focus) {
-    box-shadow: 0 0 0 1px var(--active-color) inset !important;
+    :deep(.el-select .el-input__wrapper.is-focus) {
+        box-shadow: 0 0 0 1px var(--active-color) inset !important;
+    }
 }
 </style>
