@@ -1,5 +1,5 @@
 <script setup lang="ts">
-import { ExportFileFormat, ExportFormat, ExportFormatNameingScheme, ExportOptions, ExportVisibleScaleType, ShapeType, ShapeView } from '@kcdesign/data';
+import { ExportFileFormat, ExportFormat, ExportFormatNameingScheme, ExportOptions, ExportVisibleScaleType, Shape, ShapeType, ShapeView, adapt2Shape } from '@kcdesign/data';
 import { ref, onMounted, onUnmounted, reactive, nextTick } from 'vue';
 import { Context } from '@/context';
 import PreinstallSelect from './PreinstallSelect.vue';
@@ -24,7 +24,7 @@ interface SvgFormat {
     x: number
     y: number
     background: string
-    shapes: ShapeView[]
+    shapes: Shape[]
 }
 export interface FormatItems {
     id: number,
@@ -510,6 +510,7 @@ onMounted(() => {
 onUnmounted(() => {
     props.context.selection.unwatch(selection_watcher);
 });
+
 </script>
 
 <template>

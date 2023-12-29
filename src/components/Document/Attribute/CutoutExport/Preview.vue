@@ -1,7 +1,7 @@
 <script setup lang="ts">
 import { ref, reactive, onMounted, onUnmounted, watch } from 'vue';
 import comsMap from '@/components/Document/Content/comsmap';
-import { ExportFileFormat, ExportFormat, ShapeType, ShapeView } from '@kcdesign/data';
+import { ExportFileFormat, ExportFormat, Shape, ShapeType, ShapeView, adapt2Shape } from '@kcdesign/data';
 import { Context } from '@/context';
 import { getCutoutShape, getGroupChildBounds, getPageBounds, getShadowMax, getShapeBorderMax, parentIsArtboard } from '@/utils/cutout';
 import { color2string } from '@/utils/content';
@@ -24,7 +24,7 @@ interface SvgFormat {
     x: number
     y: number
     background: string
-    shapes: ShapeView[]
+    shapes: Shape[]
 }
 const emits = defineEmits<{
     (e: 'previewChange', v: boolean): void;
@@ -44,7 +44,7 @@ const width = ref<number>(0);
 const height = ref<number>(0);
 const xy = ref<{ x: number, y: number }>({ x: 0, y: 0 });
 const background_color = ref<string>(DEFAULT_COLOR());
-let renderItems: ShapeView[] = reactive([]);
+let renderItems: Shape[] = reactive([]);
 const selectedShapes: Map<string, ShapeView> = new Map();
 const previewSvg = ref<SVGSVGElement>();
 const pngImage = ref();
@@ -66,15 +66,15 @@ const _getCanvasShape = () => {
         const item = parentIsArtboard(shape);
         getPosition(shape);
         if (shape.isVisible() && item) {
-            renderItems = Array(item);
+            renderItems = Array(adapt2Shape(item));
         } else {
             selectedShapes.clear();
             getCutoutShape(shape, props.context.selection.selectedPage!, selectedShapes);
-            if (shape.isVisible()) renderItems = Array.from(selectedShapes.values());
+            if (shape.isVisible()) renderItems = Array.from(selectedShapes.values()).map(s => adapt2Shape(s));
         }
     } else if (shapes.length === 1) {
         getPosition(shape);
-        renderItems = [shape]
+        renderItems = [shape].map(s => adapt2Shape(s));
     } else if (shapes.length === 0) {
         const page = props.context.selection.selectedPage;
         if (page) {
@@ -83,7 +83,7 @@ const _getCanvasShape = () => {
             height.value = _h;
             xy.value.x = x;
             xy.value.y = y;
-            renderItems = page.childs;
+            renderItems = page.childs.map(s => adapt2Shape(s));
         }
     }
     setTimeout(() => {
@@ -237,7 +237,7 @@ const getShapesSvg = (shapes: ShapeView[]) => {
                     x: xy.value.x,
                     y: xy.value.y,
                     background: bgc,
-                    shapes: shapeItem
+                    shapes: shapeItem.map(s => adapt2Shape(s))
                 }
             )
         }
@@ -255,7 +255,7 @@ const getShapesSvg = (shapes: ShapeView[]) => {
                 x: x,
                 y: y,
                 background: 'transparent',
-                shapes: page.childs
+                shapes: page.childs.map(s => adapt2Shape(s))
             }
         )
         renderSvgs.value = renderItems;

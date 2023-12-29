@@ -912,7 +912,7 @@ export function is_content(context: Context, e: MouseEvent) {
     return e.clientX > root.x && e.clientX < root.right && e.clientY > root.y && e.clientY < root.bottom;
 }
 
-export function ref_symbol(context: Context, position: PageXY, symbol: ShapeView) {
+export function ref_symbol(context: Context, position: PageXY, symbol: ShapeView | Shape) {
     const state = symbol;
     const selection = context.selection, workspace = context.workspace;
     const shapes: ShapeView[] = selection.selectedPage?.childs || [];

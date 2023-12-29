@@ -65,9 +65,9 @@ function updateData() {
   const len = props.shapes.length;
   if (len === 1) {
     const shape = props.shapes[0];
-    const shadows = shape.getShadows();
-    for (let i = 0, len = shadows.length; i < len; i++) {
-      const shadow = shadows[i];
+    const _shadows = shape.getShadows();
+    for (let i = 0, len = _shadows.length; i < len; i++) {
+      const shadow = _shadows[i];
       const s = { id: i, shadow };
       shadows.unshift(s);
     }

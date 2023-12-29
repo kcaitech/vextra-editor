@@ -104,6 +104,13 @@ function down(e: MouseEvent) {
     opacity_editor.execute(value);
 }
 
+function mouseup(e: MouseEvent) {
+    if (opacity_editor) {
+        opacity_editor.close();
+        opacity_editor = undefined;
+    }
+}
+
 function input(e: Event) {
     const value = limitValue(Number((e.target as HTMLInputElement).value)) / 100;
     if (isNaN(value) || !opacity_editor) return;
@@ -211,6 +218,7 @@ onMounted(() => {
 onUnmounted(() => {
     // selection.unwatch 类似于 document.removeEventListener，大部分场景下，在挂载监听的时候都需要考虑移除监听的时机和处理
     props.context.selection.unwatch(selection_watcher);
+    if (opacity_editor) opacity_editor.close();
 })
 // function updateBackgroundSize(event: MouseEvent) {
 //     const range = event.target as HTMLInputElement | null;
@@ -320,7 +328,7 @@ onUnmounted(() => {
         </TypeHeader>
         <div class="opacity-container">
             <div class="slider">
-                <input type="range" class="input-range" :value="range()" @mousedown="e => down(e)" @input="input"
+                <input type="range" class="input-range" :value="range()" @mousedown="down" @mouseup="mouseup" @mouseleave="mouseup" @input="input"
                        @change="change2"
                        @keydown="range_keyboard" min="0" max="100" step="1"/>
                                 <div class="track"></div>

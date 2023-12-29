@@ -1,7 +1,7 @@
 <script setup lang="ts">
-import {h, nextTick, onMounted, onUnmounted, ref} from 'vue';
+import {h, nextTick, onMounted, onUnmounted, ref, shallowRef} from 'vue';
 import comsMap from '@/components/Document/Content/comsmap';
-import {GroupShape, SymbolShape} from "@kcdesign/data";
+import {GroupShape, GroupShapeView, SymbolShape} from "@kcdesign/data";
 import {renderSymbolPreview as r} from "@kcdesign/data";
 import {Context} from '@/context';
 import {Selection} from '@/context/selection';
@@ -21,7 +21,7 @@ const selected = ref<boolean>(false);
 const render_preview = ref<boolean>(false);
 const preview_container = ref<Element>();
 const danger = ref<boolean>(false);
-const render_item = ref<GroupShape>(props.data);
+const render_item = shallowRef<GroupShape>(props.data);
 const tip_name = ref('');
 
 function gen_view_box() {
