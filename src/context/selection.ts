@@ -4,6 +4,7 @@ import {
     ShapeType,
     SymbolRefShape,
     SymbolShape,
+    SymbolUnionShape,
     TableShape,
     TextShape,
     WatchableObject
@@ -461,8 +462,8 @@ export class Selection extends WatchableObject implements ISave4Restore {
     get unionshape() {
         if (this.selectedShapes.length === 1) {
             const xs = this.selectedShapes[0];
-            if (xs.type === ShapeType.SymbolUnion) {
-                return xs as SymbolShape;
+            if (xs instanceof SymbolUnionShape) {
+                return xs;
             } else {
                 return false;
             }
@@ -474,11 +475,13 @@ export class Selection extends WatchableObject implements ISave4Restore {
     get symbolstate() {
         if (this.selectedShapes.length === 1) {
             const s = this.selectedShapes[0];
-            if (s.type === ShapeType.SymbolUnion) {
-                return s as SymbolShape;
-            } else {
+            const p = s.parent;
+
+            if (!(p instanceof SymbolUnionShape)) {
                 return false;
             }
+
+            return s as SymbolShape;
         } else {
             return false;
         }

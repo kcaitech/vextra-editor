@@ -3,6 +3,7 @@ import { ref, nextTick, watch } from 'vue';
 import { useI18n } from 'vue-i18n';
 import { cloneDeep } from 'lodash';
 import SvgIcon from "@/components/common/SvgIcon.vue";
+import { onMounted } from 'vue';
 export interface SelectItem {
     value: string | number,
     content: string
@@ -12,148 +13,163 @@ export interface SelectSource {
     data: SelectItem
 }
 
-const emit = defineEmits<{
+interface Props {
+    source: SelectSource[];
+    selected: SelectItem | null;
+
+    itemHeight?: number;
+    itemWidth?: number;
+
+    valueView?: any;
+    itemView?: any;
+}
+
+interface Emits {
     (e: "select", value: SelectItem): void;
-}>();
+}
+
+const DEFAULT_ITEM_HEIGHT = 32;
+const TOPBAR_HEIGHT = (() => {
+    const t = document.querySelector('#app > .main > #top');
+    return t?.clientHeight || 46;
+})();
+const PADDING = 10;
+const PADDING_TOP = 4;
+
+const props = defineProps<Props>();
+const emits = defineEmits<Emits>();
+
 const { t } = useI18n();
-const curValue = ref<SelectItem>();
+
+const curValue = ref<SelectItem | null>(null);
 const curValueIndex = ref<number>(-1);
-const props = defineProps<{
-    itemHeight: number,
-    source: SelectSource[],
-    selected?: SelectItem,
-    itemView?: any,
-    valueView?: any
-    width?: number,
-    type?: string
-    containerWidth?: number
-}>();
 const selectContainer = ref<HTMLDivElement>();
 const optionsContainer = ref<HTMLDivElement>();
 const optionsContainerVisible = ref<boolean>(false);
 const source = ref<SelectSource[]>([]);
-const highlight = ref<boolean>(true);
-function for_highlight(e: MouseEvent) {
-    highlight.value = false;
 
-    if (!optionsContainer.value || !curValue.value) {
-        return;
-    }
-
-    const y = optionsContainer.value.getBoundingClientRect().y;
-    const h = Math.abs(e.clientY - y);
-    const unit_height = props.itemHeight;
-    const area1 = 4 + unit_height * curValueIndex.value;
-    const area2 = 4 + unit_height * curValueIndex.value + unit_height;
-
-    if (!(area1 > h) && !(h > area2)) {
-        highlight.value = true;
-    }
-}
 function toggle() {
-    if (props.type === 'table') {
-        return;
-    }
     optionsContainerVisible.value = !optionsContainerVisible.value;
     if (!optionsContainerVisible.value) {
         return;
     }
-    highlight.value = true;
-    nextTick(() => {
-        if (optionsContainer.value && selectContainer.value) {
 
-            const selectedToTop = curValueIndex.value * (props.itemHeight || 30);
-            optionsContainer.value.style.top = `${-selectedToTop}px`;
-
-            const selectContainerRect = selectContainer.value.getBoundingClientRect();
-            const optionsContainerRect = optionsContainer.value.getBoundingClientRect();
-
-            const documentClientHeight = document.documentElement.clientHeight - 52;
-            const optionsContainerTop = selectContainerRect.top - selectedToTop;
-
-            const over = optionsContainerTop + optionsContainerRect.height - documentClientHeight;
-
-            if (over > 0) {
-                optionsContainer.value.style.top = `${-(selectedToTop + over + 4)}px`;
-            }
-            const top = optionsContainerTop - 40;
-            if (top < 0) {
-                optionsContainer.value.style.top = `${-(selectedToTop + top - 4)}px`;
-            }
-            optionsContainer.value.addEventListener('keydown', esc);
-            optionsContainer.value.addEventListener('blur', onBlur);
-            optionsContainer.value.focus();
-        }
-    })
+    nextTick(options);
 }
+
+function options() {
+    const oe = optionsContainer.value;
+    const se = selectContainer.value;
+    if (!oe || !se) {
+        return;
+    }
+
+    const wrap_rect = se.getBoundingClientRect();
+    const options_rect = oe.getBoundingClientRect();
+
+    const zero = wrap_rect.y;
+
+    const documnet_height = document.documentElement.clientHeight;
+
+    const item_height = props.itemHeight || DEFAULT_ITEM_HEIGHT;
+
+    let top = 0;
+
+    if (curValueIndex.value === -1) {
+        top = item_height;
+    } else {
+        top = curValueIndex.value * item_height;
+    }
+
+    const over = zero + options_rect.height + PADDING - documnet_height;
+
+    if (over > 0) {
+        top += over;
+    }
+    const TOP = zero - TOPBAR_HEIGHT
+    if (top > TOP) {
+        top = top - PADDING;
+    }
+
+    oe.style.top = `${-(top + PADDING_TOP)}px`;
+
+    oe.addEventListener('keydown', esc);
+    oe.addEventListener('blur', onBlur);
+    oe.focus();
+}
+
 function esc(e: KeyboardEvent) {
     e.stopPropagation();
     if (e.code === 'Escape') {
         optionsContainerVisible.value = false;
-        optionsContainer.value?.removeEventListener('keydown', esc);
+        clear_events();
     }
 }
-function onBlur() {
-    optionsContainerVisible.value = false;
-    optionsContainer.value?.removeEventListener('blur', onBlur);
-}
-function select(data: SelectItem) {
-    const index = source.value.findIndex((item: SelectSource) => item.data === data);
-    curValueIndex.value = index;
-    curValue.value = data;
-    emit('select', curValue.value);
-    optionsContainerVisible.value = false;
+
+function clear_events() {
     optionsContainer.value?.removeEventListener('keydown', esc);
     optionsContainer.value?.removeEventListener('blur', onBlur);
+}
+
+function onBlur() {
+    optionsContainerVisible.value = false;
+    clear_events();
+}
+
+function select(data: SelectItem) {
+    const index = source.value.findIndex((item: SelectSource) => item.data === data);
+
+    curValueIndex.value = index;
+    curValue.value = data;
+
+    emits('select', curValue.value);
+
+    optionsContainerVisible.value = false;
+    clear_events();
 }
 
 function render() {
     if (props.source.length) {
         source.value = cloneDeep(props.source);
     }
-    if (props.selected && props.source.length) {
-        curValue.value = props.selected;
-        const index = source.value.findIndex((i: SelectSource) => i.data.value === curValue.value?.value);
-        if (index > -1) curValueIndex.value = index;
+    if (props.selected && source.value.length) {
+        const index = source.value.findIndex(i => i.data.value === props.selected!.value);
+
+        if (index > -1) {
+            curValueIndex.value = index;
+            curValue.value = props.selected;
+        }
     }
 }
 
-watch(() => props.selected, () => {
-    render();
-}, { immediate: true })
+watch(() => props.selected, render);
+onMounted(render)
 </script>
 <template>
     <div class="select-container" ref="selectContainer">
-        <div class="trigger" @click="toggle" :style="{
-            width: props.width ? `${props.width}px` : '100%'
-        }">
-            <div class="value-wrap" v-if="!props.valueView">{{ curValue?.content }}</div>
+        <div class="trigger" @click="toggle">
+            <div v-if="!props.valueView" class="value-wrap">{{ curValue?.content }}</div>
             <div v-else class="value-wrap">
-                <component :is="props.valueView" :data="curValue" />
+                <component :is="props.valueView" v-bind="$attrs" :data="curValue" />
             </div>
-            <div class="svg-wrap" v-show="props.type !== 'table'">
+            <div class="svg-wrap">
                 <svg-icon icon-class="down"></svg-icon>
             </div>
         </div>
 
-        <div @click.stop class="options-container" ref="optionsContainer" tabindex="-1" :style="{
-            width: props.containerWidth ? `${props.containerWidth}px` : '100%'
-        }" v-if="optionsContainerVisible" @mousemove="for_highlight">
+        <div v-if="optionsContainerVisible" @click.stop class="options-container" ref="optionsContainer" tabindex="-1">
             <div v-if="!source.length" class="no-data">
                 {{ t('system.empty') }}
             </div>
             <div v-else-if="props.itemView">
-                <component :is="props.itemView" v-for="c in source" :key="c.id" :data="c.data" v-bind="$attrs"
-                    @select="select" />
+                <component v-for="(c, idx) in source" v-bind="$attrs" :is="props.itemView" :key="c.id" :data="c.data"
+                    :isCurValue="idx === curValueIndex" @select="select" />
             </div>
             <div v-else>
-                <div class="item-default" v-for="c in source" :key="c.id" v-bind="$attrs" @click="() => select(c.data)">
-                    {{ c.data.content }}
+                <div v-for="(c, idx) in source" class="item-default" :key="c.id" @click="() => select(c.data)">
+                    <div class="content-wrap"> {{ c.data.content }}</div>
+                    <svg-icon v-if="idx === curValueIndex" icon-class="choose"></svg-icon>
                 </div>
-            </div>
-            <div v-if="curValue" class="check"
-                :style="{ top: `${4 + curValueIndex * props.itemHeight + props.itemHeight / 2}px` }">
-                <svg-icon icon-class="choose" :style="{ color: highlight ? '#fff' : '#000' }"></svg-icon>
             </div>
         </div>
     </div>
@@ -162,32 +178,37 @@ watch(() => props.selected, () => {
 .select-container {
     position: relative;
 
+
     .trigger {
+        width: 100%;
+        height: 100%;
+
         position: relative;
         display: flex;
         align-items: center;
-        width: 68px;
-        height: 32px;
-        background-color: var(--input-background);
+        justify-content: space-between;
+
+        background-color: #F5F5F5;
         border-radius: var(--default-radius);
+        padding: 0 7px;
+        box-sizing: border-box;
 
         .value-wrap {
-            flex: 1 1 auto;
-            height: 100%;
-            margin-left: 12px;
-            line-height: var(--default-input-height);
-            box-sizing: border-box;
-            font-weight: 500;
+            flex: 1;
+
+            overflow: hidden;
+            text-overflow: ellipsis;
+            white-space: nowrap;
         }
 
         >.svg-wrap {
+            flex: 0 0 12px;
             height: 100%;
-            flex: 0 0 18px;
             display: flex;
             align-items: center;
 
             >svg {
-                width: 12px;
+                width: 100%;
                 height: 12px;
                 transition: 0.3s;
                 color: #666666;
@@ -202,7 +223,7 @@ watch(() => props.selected, () => {
     }
 
     .trigger:hover {
-        background-color: #EBEBEB !important;
+        background-color: #EBEBEB;
     }
 
     .options-container {
@@ -225,31 +246,33 @@ watch(() => props.selected, () => {
         }
 
         .item-default {
+            width: 100%;
             height: 32px;
-            color: #262626;
-            padding: 9px 0 9px 12px;
-            //text-align: left;
-            font-size: 12px;
+            font-size: var(--font-default-fontsize);
             font-weight: 500;
             box-sizing: border-box;
+            padding: 0 7px;
+            display: flex;
+
+            align-items: center;
+
+            .content-wrap {
+                flex: 1;
+
+                overflow: hidden;
+                text-overflow: ellipsis;
+                white-space: nowrap;
+            }
+
+            >svg {
+                flex: 0 0 12px;
+                height: 12px;
+            }
         }
 
         .item-default:hover {
-            background-color: #1878F5;
+            background-color: var(--active-color);
             color: #FFFFFF;
-        }
-
-        .check {
-            top: 0px;
-            position: absolute;
-            box-sizing: border-box;
-            right: 8px;
-
-            >svg {
-                width: 12px;
-                height: 12px;
-            }
-            transform: translateY(-50%);
         }
     }
 }

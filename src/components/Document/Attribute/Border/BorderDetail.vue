@@ -3,7 +3,6 @@ import Popover from '@/components/common/Popover.vue';
 import { ref, computed, watch, onMounted, onUnmounted } from 'vue';
 import { useI18n } from 'vue-i18n';
 import Select, { SelectItem, SelectSource } from '@/components/common/Select.vue';
-import BorderPositonItem from './BorderPositionItem.vue';
 import BorderStyleItem from './BorderStyleItem.vue';
 import BorderStyleSelected from './BorderStyleSelected.vue';
 import { Context } from '@/context';
@@ -479,9 +478,8 @@ onUnmounted(() => {
                     <!-- 边框位置 -->
                     <div v-if="show_position" :style="{ opacity: shapes[0].type === ShapeType.Table ? '.5' : '1' }">
                         <label>{{ t('attr.position') }}</label>
-                        <Select :selected="position" :item-view="BorderPositonItem" :item-height="32"
-                            :source="positonOptionsSource" @select="positionSelect"
-                            :type="shapes[0].type === ShapeType.Table ? 'table' : 'none'" :width="128"></Select>
+                        <Select class="select" :source="positonOptionsSource" :selected="position"
+                            @select="positionSelect"></Select>
                     </div>
                     <!-- 边框厚度 -->
                     <div>
@@ -499,9 +497,9 @@ onUnmounted(() => {
                     <!-- 边框样式 -->
                     <div>
                         <label>{{ t('attr.borderStyle') }}</label>
-                        <Select :selected="borderStyle" :item-view="BorderStyleItem" :value-view="BorderStyleSelected"
-                            :item-height="32" @select="borderStyleSelect" :source="borderStyleOptionsSource" :width="128"
-                            :containerWidth="128"></Select>
+                        <Select class="select" :source="borderStyleOptionsSource" :selected="borderStyle"
+                            :item-view="BorderStyleItem" :value-view="BorderStyleSelected"
+                            @select="borderStyleSelect"></Select>
                     </div>
                 </div>
             </template>
@@ -553,6 +551,11 @@ onUnmounted(() => {
                 display: flex;
                 align-items: center;
                 margin-bottom: 12px;
+
+                >.select {
+                    width: 128px;
+                    height: 32px;
+                }
 
                 >label {
                     flex: 0 0 24px;

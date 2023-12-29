@@ -53,7 +53,8 @@ function init_v() {
     const len = props.shapes.length;
     if (len === 1) {
         const s = props.shapes[0].style;
-        const sm = s.startMarkerType, em = s.endMarkerType;
+        const sm = s.startMarkerType;
+        const em = s.endMarkerType;
         borderFrontStyle.value = { value: sm || MarkerType.Line, content: sm || MarkerType.Line };
         borderEndStyle.value = { value: em || MarkerType.Line, content: `end-${em || MarkerType.Line}` };
     }
@@ -71,45 +72,57 @@ onMounted(init_v);
 onUnmounted(stop);
 </script>
 <template>
-    <div class="wrap">
-        <div class="apex-select-wrap">
-            <Select style="width: 68px; z-index: 100;left: -2%" :selected="borderFrontStyle" :item-view="BorderApexStyleItem"
-                :value-view="BorderApexStyleSelectedItem" :item-height="30" :source="borderFrontStyleOptionsSource"
+    <div class="apex-select-wrap">
+        <div class="select-wrap">
+            <Select class="select" :source="borderFrontStyleOptionsSource" :selected="borderFrontStyle"
+                @select="borderApexStyleSelect" :item-view="BorderApexStyleItem"
+                :value-view="BorderApexStyleSelectedItem"></Select>
+            <Select class="select" :selected="borderEndStyle" :item-view="BorderApexStyleItem"
+                :value-view="BorderApexStyleSelectedItem" :source="borderEndStyleOptionsSource"
                 @select="borderApexStyleSelect"></Select>
-            <div style="width: 14%"></div>
-            <Select style="width: 68px; z-index: 100;left: -11%" :selected="borderEndStyle" :item-view="BorderApexStyleItem"
-                :value-view="BorderApexStyleSelectedItem" :item-height="30" :source="borderEndStyleOptionsSource"
-                @select="borderApexStyleSelect"></Select>
-            <div class="change" @click="exchange">
-                <svg-icon icon-class="exchange"></svg-icon>
-            </div>
         </div>
 
+        <div class="change" @click="exchange">
+            <svg-icon icon-class="exchange"></svg-icon>
+        </div>
     </div>
 </template>
 <style scoped lang="scss">
-.wrap {
+.apex-select-wrap {
     width: 100%;
     box-sizing: border-box;
     display: flex;
-    margin: 12px 0 12px 22px;
+    padding: 6px 28px 6px 20px;
+    align-items: center;
+    justify-content: space-between;
 
-    .apex-select-wrap {
-        width: 176px;
+    .select-wrap {
+        display: flex;
+        align-items: center;
+        justify-content: space-between;
+        width: 144px;
+        height: 100%;
+
+        .select {
+            flex: 0 0 68px;
+            height: 32px;
+        }
+    }
+
+    .change {
         display: flex;
 
-        .change {
-            width: 16px;
-            height: var(--default-input-height);
-            display: flex;
-            align-items: center;
-            cursor: pointer;
-            margin-left: -12px;
+        width: 28px;
+        height: 32px;
 
-            >svg {
-                width: 16px;
-                height: 16px;
-            }
+        align-items: center;
+        justify-content: center;
+
+        cursor: pointer;
+
+        >svg {
+            width: 16px;
+            height: 16px;
         }
     }
 }

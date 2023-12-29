@@ -156,8 +156,9 @@ onUnmounted(() => {
                             </div> -->
                         </div>
                         <div class="demo-collapse"
-                            :style="{ marginLeft: selectList.length > 1 ? '26px' : '12px', marginTop: selectList.length > 1 ? '0' : '4px' }"
+                            :style="{  marginTop: selectList.length > 1 ? '0' : '4px' }"
                             v-if="unfold.has(i)" :reflush="reflush">
+<!--                            marginLeft: selectList.length > 1 ? '26px' : '12px',-->
                             <component v-if="scroll_container" :is="CompoSelectList" :context="context"
                                        :contents="item.data" @handleCheck="handleCheck" :layerId="props.layerId"
                                        :container="scroll_container">
@@ -233,8 +234,8 @@ onUnmounted(() => {
             }
 
             svg {
-                width: 16px;
-                height: 16px;
+                width: 12px;
+                height: 12px;
             }
         }
     }
@@ -245,7 +246,8 @@ onUnmounted(() => {
         height: calc(100% - 40px);
 
         .el-scrollbar {
-            height: calc(100% - 40px);
+            height: calc(100% - 52px);
+            margin-bottom: 12px;
 
             .el-collapse {
                 --el-collapse-border-color: none;
@@ -326,7 +328,11 @@ onUnmounted(() => {
     //    background-color: var(--grey-light);
     //}
 
+<<<<<<< HEAD
     > span {
+=======
+    >span {
+>>>>>>> dea2e4ddb278c9fea21e3b22637c50ba91107f13
         font-weight: 500;
         overflow: hidden;
         text-overflow: ellipsis;

@@ -1,6 +1,5 @@
 <script lang="ts" setup>
 import { onMounted, ref } from 'vue';
-import { Search } from '@element-plus/icons-vue';
 import ComponentContainer from './ComponentContainer.vue';
 import { Context } from '@/context';
 import { useI18n } from 'vue-i18n';
@@ -8,6 +7,7 @@ import { get_search_symbol_list, search_symbol_by_keywords } from '@/utils/symbo
 import { debounce } from 'lodash';
 import { Page, SymbolShape } from '@kcdesign/data';
 import ComponentSearchPanel from './ComponentSearchPanel.vue';
+import SvgIcon from "@/components/common/SvgIcon.vue";
 
 const { t } = useI18n();
 
@@ -66,13 +66,16 @@ onMounted(() => {
     <div class="container">
         <div class="header">
             <span class="title">{{ t('compos.compos') }}</span>
-            <div class="close">
-                <svg-icon icon-class="close" @click.stop="close"></svg-icon>
+            <div class="close" @click.stop="close">
+                <svg-icon icon-class="close"></svg-icon>
             </div>
         </div>
         <div class="search_togger">
-            <el-input v-model="search" class="w-50 m-2" :placeholder="t('compos.search_compos')" :prefix-icon="Search"
-                @input="searching" />
+            <el-input v-model="search" class="w-50 m-2" :placeholder="t('compos.search_compos')" @input="searching">
+                <template v-slot:prefix>
+                    <svg-icon icon-class="search" style="width: 12px;height: 12px"></svg-icon>
+                </template>
+            </el-input>
             <div class="toggle_list">
                 <svg-icon v-if="card_type === 'alpha'" icon-class="resource-icon"
                     @click.stop="() => set_card_type('beta')"></svg-icon>
@@ -134,11 +137,11 @@ onMounted(() => {
             justify-content: center;
             box-sizing: border-box;
 
-            &:hover{
+            &:hover {
                 background-color: #F5F5F5;
             }
 
-            &:active{
+            &:active {
                 background-color: #EBEBEB;
             }
 
@@ -155,10 +158,11 @@ onMounted(() => {
         align-items: center;
         height: 48px;
         gap: 4px;
-        padding: 0 12px;
+        padding: 0 10px;
 
         .el-input {
             height: 32px;
+            width: 192px;
             font-size: 12px;
             line-height: 32px;
 
@@ -185,9 +189,12 @@ onMounted(() => {
         .toggle_list {
             width: 28px;
             height: 28px;
-            padding: 4px;
+            //padding: 4px;
             border-radius: 6px;
             box-sizing: border-box;
+            display: flex;
+            align-items: center;
+            justify-content: center;
 
             &:hover {
                 background-color: #F5F5F5;
@@ -198,8 +205,8 @@ onMounted(() => {
             }
 
             svg {
-                width: 100%;
-                height: 100%;
+                width: 16px;
+                height: 16px;
             }
         }
     }

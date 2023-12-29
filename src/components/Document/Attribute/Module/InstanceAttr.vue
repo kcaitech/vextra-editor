@@ -5,7 +5,6 @@ import TypeHeader from '../TypeHeader.vue';
 import { onMounted, onUnmounted, ref } from 'vue'
 import { get_shape_within_document, shape_track } from '@/utils/content';
 import { Shape, ShapeType, SymbolRefShape } from '@kcdesign/data';
-import { MoreFilled } from '@element-plus/icons-vue';
 import {
     get_var_for_ref,
     is_able_to_unbind,
@@ -76,20 +75,28 @@ const untie = () => {
 }
 
 const shape_watcher = (arg: any) => { // todo 优化updateData时机
-    if (arg !== 'shape-frame') updateData();
+    if (arg === 'shape-frame') {
+        return;
+    }
+
+    updateData();
 }
 
 const updateData = () => {
     if (props.shapes.length === 1) {
         const symref = props.context.selection.symbolrefshape;
-        if (!symref) return;
-        const result = get_var_for_ref(props.context, symref, t);
+        if (!symref) {
+            return;
+        }
+        const result = get_var_for_ref(symref, t);
         variables.value = [];
         visible_variables.value = [];
-        if (!result) return;
+        if (!result) {
+            return;
+        }
+
         variables.value = result.variables;
         visible_variables.value = result.visible_variables;
-        console.log(visible_variables.value[0]);
 
     } else if (props.shapes.length > 1) {
         // todo
@@ -175,12 +182,12 @@ onUnmounted(() => {
 </script>
 
 <template>
-    <div style="margin-bottom: 10px;" v-if="variables.length">
-        <TypeHeader :title="t('compos.instance_attr')" class="mt-24" :active="true">
+    <div class="instance-attr">
+        <TypeHeader :title="t('compos.instance_attr')" :active="!!(variables.length || visible_variables.length)">
             <template #tool>
                 <div class="edit-comps" v-if="!is_part_of_symbol(props.shapes[0])">
                     <div class="edit_svg" @click.stop="editComps" v-if="is_symbolref_disa(props.shapes)">
-                        <svg-icon icon-class="edit_comp"></svg-icon>
+                        <svg-icon icon-class="comp-state"></svg-icon>
                     </div>
                     <div class="reset_svg" @click.stop="selectReset"
                         :style="{ backgroundColor: resetMenu ? '#EBEBEB' : '' }">
@@ -209,139 +216,148 @@ onUnmounted(() => {
                             :is="Visible" :context="props.context" :data="(item as RefAttriListItem)"></component>
                     </div>
                 </div>
-                <!-- <div class="place"></div> -->
             </div>
         </div>
     </div>
 </template>
 
 <style lang="scss" scoped>
-.edit-comps {
-    display: flex;
-    align-items: center;
+.instance-attr {
+    width: 100%;
+    margin-bottom: 10px;
+    padding: 0 8px;
+    box-sizing: border-box;
+    border-bottom: 1px solid #F0F0F0;
 
-    .edit_svg {
-        width: 28px;
-        height: 28px;
+    .edit-comps {
         display: flex;
         align-items: center;
-        justify-content: center;
-        border-radius: 6px;
-        box-sizing: border-box;
 
-        >svg {
-            width: 100%;
-            height: 100%;
-        }
-
-        &:hover {
-            background-color: #EBEBEB;
-        }
-    }
-
-    .reset_svg {
-        position: relative;
-        width: 28px;
-        height: 28px;
-        display: flex;
-        align-items: center;
-        justify-content: center;
-        border-radius: 6px;
-        box-sizing: border-box;
-
-        >svg {
-            width: 100%;
-            height: 100%;
-        }
-
-        &:hover {
-            background-color: #EBEBEB;
-        }
-
-        .reset_menu {
-            position: absolute;
-            top: 28px;
-            right: 0;
-            width: 150px;
-            padding: 4px 0;
-            border: 1px solid #EBEBEB;
-            background-color: #fff;
+        .edit_svg {
+            width: 28px;
+            height: 28px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
             border-radius: 6px;
-            box-shadow: 0px 2px 10px 0px rgba(0, 0, 0, 0.08);
-            z-index: 100;
+            box-sizing: border-box;
 
-            .untie {
-                height: 32px;
-                width: 100%;
-                display: flex;
-                align-items: center;
-                justify-content: space-between;
-                padding: 0 16px;
-                box-sizing: border-box;
+            >svg {
+                width: 16px;
+                height: 16px;
+            }
 
-                &:hover {
-                    background-color: #F5F5F5;
+        }
+
+        .edit_svg:hover {
+            background-color: #EBEBEB;
+        }
+
+
+        .reset_svg {
+            position: relative;
+            width: 28px;
+            height: 28px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            border-radius: 6px;
+            box-sizing: border-box;
+
+            >svg {
+                width: 16px;
+                height: 16px;
+            }
+
+            .reset_menu {
+                position: absolute;
+                top: 28px;
+                right: 0;
+                width: 150px;
+                padding: 4px 0;
+                border: 1px solid #EBEBEB;
+                background-color: #fff;
+                border-radius: 6px;
+                box-shadow: 0px 2px 10px 0px rgba(0, 0, 0, 0.08);
+                z-index: 100;
+
+                .untie {
+                    height: 32px;
+                    width: 100%;
+                    display: flex;
+                    align-items: center;
+                    justify-content: space-between;
+                    padding: 0 16px;
+                    box-sizing: border-box;
+
+                    &:hover {
+                        background-color: #F5F5F5;
+                    }
+                }
+
+                .disabled {
+                    pointer-events: none;
+                    opacity: 0.2;
                 }
             }
+        }
 
-            .disabled {
-                pointer-events: none;
-                opacity: 0.2;
+        .reset_svg:hover {
+            background-color: #EBEBEB;
+        }
+
+    }
+
+    .module_container {
+        font-size: var(--font-default-fontsize);
+    }
+
+    .visible-var-container {
+        display: flex;
+        width: 100%;
+        line-height: 20px;
+        margin-bottom: 6px;
+        margin-top: 6px;
+
+        .show {
+            display: flex;
+            justify-content: space-between;
+            width: 100%;
+
+            .title {
+                color: #595959;
+                width: 40%;
+                line-height: 20px;
+                padding-right: 10px;
+            }
+
+            .items-wrap {
+                flex: 0 0 126px;
             }
         }
-    }
 
-}
-
-.module_container {
-    font-size: var(--font-default-fontsize);
-}
-
-.visible-var-container {
-    display: flex;
-    width: 100%;
-    line-height: 20px;
-    margin-bottom: 8px;
-
-    .show {
-        display: flex;
-        align-items: flex-start;
-        width: 100%;
-        gap: 12px;
-
-        .title {
-            color: #595959;
-            width: 40%;
-            line-height: 20px;
-            padding-right: 10px;
-        }
-
-        .items-wrap {
-            width: 60%;
+        .place {
+            flex: 0 0 22px;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            width: 22px;
+            height: 22px;
         }
     }
 
-    .place {
-        flex: 0 0 22px;
-        display: flex;
-        justify-content: center;
-        align-items: center;
-        width: 22px;
-        height: 22px;
+    :deep(.el-select-dropdown__item.selected) {
+        color: #9775fa !important;
+        font-size: 12px;
     }
-}
 
-:deep(.el-select-dropdown__item.selected) {
-    color: #9775fa !important;
-    font-size: 12px;
-}
+    :deep(.el-select .el-input.is-focus .el-input__wrapper) {
+        box-shadow: 0 0 0 1px var(--active-color) inset !important;
+        background-color: var(--grey-light);
+    }
 
-:deep(.el-select .el-input.is-focus .el-input__wrapper) {
-    box-shadow: 0 0 0 1px var(--active-color) inset !important;
-    background-color: var(--grey-light);
-}
-
-:deep(.el-select .el-input__wrapper.is-focus) {
-    box-shadow: 0 0 0 1px var(--active-color) inset !important;
+    :deep(.el-select .el-input__wrapper.is-focus) {
+        box-shadow: 0 0 0 1px var(--active-color) inset !important;
+    }
 }
 </style>

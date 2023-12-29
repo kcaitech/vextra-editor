@@ -55,22 +55,29 @@ function get_value() {
 }
 
 function component_watcher(type: number, val: Shape) {
-    if (type === Component.SELECTED_VAL) {
-        const symbolref = props.context.selection.symbolrefshape;
-        if (!symbolref) return;
-        const sym = props.context.data.symbolsMgr.getSync(val.id);
-        if (!sym) {
-            message("info", t('compos.invalid_compos'));
-            return;
-        }
-        const is_circular = is_circular_ref2(sym, symbolref.refId);
-        if (is_circular) {
-            message("danger", t('compos.circle_warning'));
-            return;
-        }
-        modify_vari_value_for_ref(props.context, props.data.variable, val.id);
-        closeDialog();
+    if (type !== Component.SELECTED_VAL) {
+        return;
     }
+
+    const symbolref = props.context.selection.symbolrefshape;
+    if (!symbolref) {
+        return;
+    }
+
+    const sym = props.context.data.symbolsMgr.getSync(val.id);
+    if (!sym) {
+        message("info", t('compos.invalid_compos'));
+        return;
+    }
+
+    const is_circular = is_circular_ref2(sym, symbolref.refId);
+    if (is_circular) {
+        message("danger", t('compos.circle_warning'));
+        return;
+    }
+
+    modify_vari_value_for_ref(props.context, props.data.variable, val.id);
+    closeDialog();
 }
 
 watch(() => props.data, get_value);
@@ -94,7 +101,8 @@ onUnmounted(() => {
                 <span>{{ vari_value }}</span>
                 <div>
                     <el-icon>
-                        <ArrowDown :style="{ transform: showCompsDialog ? 'rotate(180deg)' : 'rotate(0deg)', transition: '0.3s' }" />
+                        <ArrowDown
+                            :style="{ transform: showCompsDialog ? 'rotate(180deg)' : 'rotate(0deg)', transition: '0.3s' }" />
                     </el-icon>
                 </div>
             </div>
@@ -114,18 +122,18 @@ onUnmounted(() => {
 
     .state_item {
         display: flex;
-        align-items: center;
-        // width: calc(100% - 22px);
         width: 100%;
-        gap: 12px;
+        justify-content: space-between;
+        align-items: center;
 
         .state_name {
-            display: flex;
-            align-items: center;
-            width: 40%;
+            flex: 1;
+            max-width: 86px;
             box-sizing: border-box;
 
             span {
+                display: block;
+                width: 100%;
                 color: #595959;
                 overflow: hidden;
                 text-overflow: ellipsis;
@@ -137,12 +145,11 @@ onUnmounted(() => {
             display: flex;
             align-items: center;
             justify-content: space-between;
-            box-sizing: border-box;
-            width: 60%;
-            padding: 9px 12px;
-            flex: 1;
+            flex: 0 0 126px;
             height: 32px;
             border-radius: 6px;
+            padding: 9px 12px;
+            box-sizing: border-box;
 
             >div {
                 display: flex;
@@ -156,32 +163,9 @@ onUnmounted(() => {
             }
 
             span {
-                flex: 1;
                 overflow: hidden;
                 text-overflow: ellipsis;
                 white-space: nowrap;
-            }
-
-            .input {
-                position: relative;
-                width: 100%;
-                border-radius: 4px;
-                padding-left: 11px;
-                box-sizing: border-box;
-                display: flex;
-                align-items: center;
-
-                span {
-                    flex: 1;
-                }
-
-                .el-icon {
-                    width: 30px;
-                    height: 30px;
-                    display: flex;
-                    align-items: center;
-                    justify-content: center;
-                }
             }
 
             .el-select {

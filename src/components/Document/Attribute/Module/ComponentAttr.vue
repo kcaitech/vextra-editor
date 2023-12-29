@@ -237,7 +237,7 @@ onUnmounted(() => {
         </div>
         <!--dialog-->
         <CompLayerShow :context="context" v-if="isaddStateDialog" @close-dialog="isaddStateDialog = false" right="244px"
-            :width="240" :addType="addType" :title="dialog_title" :dialog_posi="dialog_posi"
+            :width="260" :addType="addType" :title="dialog_title" :dialog_posi="dialog_posi"
             @save-layer-show="saveLayerShow" @name-change="name_change" :selected_layer="selected">
             <template #layer>
                 <SelectLayerInput
@@ -290,7 +290,6 @@ onUnmounted(() => {
             box-sizing: border-box;
             color: #8C8C8C;
             font-size: 12px;
-            font-weight: 500;
         }
 
         .status {
@@ -365,7 +364,7 @@ onUnmounted(() => {
         position: relative;
         display: flex;
         flex-direction: column;
-        margin-bottom: 5px;
+        //margin-bottom: 5px;
 
         .attr_con {
             display: flex;

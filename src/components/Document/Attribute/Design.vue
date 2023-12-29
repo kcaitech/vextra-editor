@@ -3,7 +3,7 @@ import { Context } from '@/context';
 import { Selection } from '@/context/selection';
 import { WorkSpace } from "@/context/workspace";
 import { onMounted, onUnmounted, shallowRef, ref, computed } from 'vue';
-import { ShapeType, Shape, TextShape, TableShape } from "@kcdesign/data"
+import { ShapeType, Shape, TextShape, TableShape, SymbolRefShape, SymbolShape } from "@kcdesign/data"
 import Arrange from './Arrange.vue';
 import ShapeBaseAttr from './BaseAttr/Index.vue';
 import Fill from './Fill/Fill.vue';
@@ -19,9 +19,14 @@ import CutoutExport from './CutoutExport/index.vue'
 import { Tool } from '@/context/tool';
 import Opacity from './Opacity/Opacity.vue';
 import BaseForPathEdit from "@/components/Document/Attribute/BaseAttr/BaseForPathEdit.vue";
+import InstanceAttr from './Module/InstanceAttr.vue';
+import { get_var_for_ref, is_part_of_symbol, is_shapes_if_symbolref } from '@/utils/symbol';
+import { useI18n } from 'vue-i18n';
+
 const props = defineProps<{ context: Context }>();
 const shapes = shallowRef<Shape[]>([]);
 const len = computed<number>(() => shapes.value.length);
+const { t } = useI18n();
 const WITH_FILL = [
     ShapeType.Rectangle,
     ShapeType.Oval,
@@ -154,6 +159,32 @@ function workspace_watcher(t: number) {
     }
 }
 
+const is_symbolref = () => {
+    return is_shapes_if_symbolref(shapes.value) && need_instance_attr_show();
+}
+const need_instance_attr_show = () => {
+    let v = false;
+    if (shapes.value.length === 1) {
+        const symref = props.context.selection.symbolrefshape;
+        if (!symref) {
+            return false;
+        }
+        if (!is_part_of_symbol(symref)) {
+            return true;
+        }
+        const result = get_var_for_ref(symref, t);
+
+        if (!result) {
+            return false;
+        }
+
+        v = !!(result.variables.length || result.visible_variables.length);
+    } else if (shapes.value.length > 1) {
+        // todo
+    }
+    return v;
+}
+
 onMounted(() => {
     props.context.selection.watch(selection_watcher);
     props.context.tableSelection.watch(table_selection_watcher);
@@ -180,8 +211,11 @@ onUnmounted(() => {
                 <Arrange :context="props.context" :shapes="shapes"></Arrange>
                 <ShapeBaseAttr v-if="baseAttr" :context="props.context"></ShapeBaseAttr>
                 <BaseForPathEdit v-if="editAttr" :context="props.context"></BaseForPathEdit>
-                <Opacity v-if="opacity && !WITHOUT_OPACITY.includes(shapeType)" :shapes="shapes" :context="props.context"></Opacity>
+                <Opacity v-if="opacity && !WITHOUT_OPACITY.includes(shapeType)" :shapes="shapes" :context="props.context">
+                </Opacity>
                 <Module v-if="symbol_attribute" :context="props.context" :shapeType="shapeType" :shapes="shapes"></Module>
+                <InstanceAttr :context="context" v-if="is_symbolref()" :shapes="(shapes as SymbolRefShape[])">
+                </InstanceAttr>
                 <Fill v-if="WITH_FILL.includes(shapeType)" :shapes="shapes" :context="props.context"></Fill>
                 <Border v-if="WITH_BORDER.includes(shapeType)" :shapes="shapes" :context="props.context"></Border>
                 <Text v-if="WITH_TEXT.includes(shapeType)" :shape="(shapes[0] as TextShape)"

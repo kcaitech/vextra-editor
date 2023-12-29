@@ -83,8 +83,8 @@ function _delete() {
                             style="width: 10px; height: 10px; transform: rotate(45deg); margin-top: 0;"></svg-icon>
                     </div>
                     <div class="name">
-                        <span style="width: 40%;">{{ props.variable.name }}</span>
-                        <span style="width: 60%;"> {{ getValue(props.variable.value) }}</span>
+                        <span style="width: 30%;">{{ props.variable.name }}</span>
+                        <span style="width: 70%;"> {{ getValue(props.variable.value) }}</span>
                     </div>
                 </div>
             </div>
@@ -109,7 +109,7 @@ function _delete() {
     position: relative;
     display: flex;
     flex-direction: column;
-    margin-bottom: 5px;
+    //margin-bottom: 5px;
     width: 100%;
 
     .attr_con {
@@ -124,20 +124,22 @@ function _delete() {
     .module_item_left {
         display: flex;
         align-items: center;
-        border-radius: 4px;
         background-color: #F5F5F5;
         width: calc(100% - 32px);
         height: 32px;
+        border-radius: var(--default-radius);
 
         .module_name {
             display: flex;
             align-items: center;
-            width: 84px;
+            justify-content: center;
+            width: 14px;
+            color: #595959;
+            margin-left: 8px;
 
-            >svg {
+            > svg {
                 width: 14px;
                 height: 14px;
-                margin: 0px 10px;
             }
 
             .name {
@@ -187,6 +189,11 @@ function _delete() {
             white-space: nowrap;
         }
     }
+
+    .module_item_left:hover {
+        background-color: #EBEBEB;
+    }
+
 
     .module_input {
         display: flex;

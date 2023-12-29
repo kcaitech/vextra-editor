@@ -50,7 +50,7 @@ watch(checkList, (v) => {
 }
 
 .container {
-    padding: 0 5px 0 0px;
+    padding: 0 5px 0 12px;
     box-sizing: border-box;
 
     .el-checkbox {
@@ -79,6 +79,10 @@ watch(checkList, (v) => {
             color: var(--active-color);
         }
     }
+}
+
+.container:hover {
+    background-color: #F5F5F5;
 }
 
 .component {

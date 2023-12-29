@@ -81,8 +81,8 @@ function _delete() {
                         <svg-icon icon-class="eye-open"></svg-icon>
                     </div>
                     <div class="name">
-                        <span style="width: 40%;">{{ props.variable.name }}</span>
-                        <span style="width: 60%;"> {{ props.variable.value ? '显示' : '隐藏' }}</span>
+                        <span style="width: 30%;">{{ props.variable.name }}</span>
+                        <span style="width: 70%;"> {{ props.variable.value ? '显示' : '隐藏' }}</span>
                     </div>
                 </div>
             </div>
@@ -111,7 +111,7 @@ function _delete() {
     position: relative;
     display: flex;
     flex-direction: column;
-    margin-bottom: 5px;
+    //margin-bottom: 5px;
     width: 100%;
 
     .attr_con {

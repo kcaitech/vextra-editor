@@ -19,7 +19,9 @@ const { t } = useI18n();
 const attrValueInput = ref('')
 const editAttrValue = ref(false)
 const revalueInput = ref();
-const active = ref(false);
+const top = ref<number>(0);
+const statusValue = ref();
+const menuIndex = ref();
 const onRevalue = (e: MouseEvent) => {
     e.stopPropagation();
     if (e.target instanceof Element && e.target.closest('.status-icon-down')) return;
@@ -57,20 +59,35 @@ const onEditAttrValue = (e: KeyboardEvent) => {
 }
 const selectoption = ref(false);
 const showMenu = (e: MouseEvent) => {
-    if (selectoption.value) return selectoption.value = false;
+    if (selectoption.value) {
+        return selectoption.value = false;
+    }
     props.context.menu.notify(Menu.CLOSE_COMP_MENU);
     selectoption.value = true;
+    nextTick(locate);
 }
-const statusValue = ref();
-const menuIndex = ref();
+function locate() {
+    if (menuIndex.value === -1) {
+        top.value = 30;
+    } else {
+        top.value = -(menuIndex.value * 32 + 4);
+    }
+}
+
 const getVattagValue = () => {
     const shape = props.context.selection.symbolstate;
-    if (shape) {
-        let val = get_tag_value(shape, props.data.variable);
-        if (val === SymbolShape.Default_State) val = t('compos.dlt');
-        statusValue.value = val;
-        menuIndex.value = props.data.values.findIndex(v => v === val);
+    if (!shape) {
+        return;
     }
+
+    let val = get_tag_value(shape, props.data.variable);
+
+    if (val === SymbolShape.Default_State) {
+        val = t('compos.dlt');
+    }
+
+    statusValue.value = val;
+    menuIndex.value = props.data.values.findIndex(v => v === val);
 }
 const selected_watcher = (t: number) => {
     if (t === Selection.CHANGE_SHAPE) {
@@ -80,6 +97,7 @@ const selected_watcher = (t: number) => {
         }
     }
 }
+
 
 function selcet(index: number) {
     if (index === props.data.values.length - 1) {
@@ -122,14 +140,14 @@ onUnmounted(() => {
             <div class="state_item">
                 <div class="state_name"><span>{{ data.variable.name }}</span></div>
                 <div class="state_value" v-if="!editAttrValue" @dblclick="onRevalue">
-                    <div class="input" @mouseenter.stop="active = true" @mouseleave.stop="active = false">
+                    <div class="input">
                         <span>{{ statusValue }}</span>
-                        <el-icon @click.stop="showMenu" class="status-icon-down" :class="{ active: active }">
+                        <el-icon @click.stop="showMenu" class="status-icon-down">
                             <ArrowDown
                                 :style="{ transform: selectoption ? 'rotate(180deg)' : 'rotate(0deg)', transition: '0.3s' }" />
                         </el-icon>
                     </div>
-                    <SelectMenu v-if="selectoption" :top="33" width="100%" :menuItems="data.values" :context="context"
+                    <SelectMenu v-if="selectoption" :top="top" width="100%" :menuItems="data.values" :context="context"
                         :menuIndex="menuIndex" @close="selectoption = false" @selectIndex="selcet"></SelectMenu>
                 </div>
                 <div class="module_input" v-if="editAttrValue">
@@ -222,6 +240,10 @@ onUnmounted(() => {
                         height: 12px;
                     }
                 }
+
+                .status-icon-down:hover {
+                    background-color: rgba($color: #000000, $alpha: 0.08);
+                }
             }
         }
     }
@@ -253,9 +275,5 @@ onUnmounted(() => {
         width: 22px;
         height: 22px;
     }
-}
-
-.active {
-    background-color: rgba($color: #000000, $alpha: 0.08);
 }
 </style>

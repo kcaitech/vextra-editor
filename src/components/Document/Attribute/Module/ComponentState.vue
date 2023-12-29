@@ -109,6 +109,7 @@ onUnmounted(() => {
     border: 1px solid #F5F5F5;
     border-radius: var(--default-radius);
     padding: 8px;
+    margin-bottom: 6px;
 
     >div {
         display: flex;

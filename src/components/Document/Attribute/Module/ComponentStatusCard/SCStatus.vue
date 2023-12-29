@@ -101,8 +101,8 @@ function _delete() {
                     <svg-icon icon-class="comp-state"></svg-icon>
                 </div>
                 <div class="name_i" :title="props.item.values.toString()">
-                    <span style="width:40%;">{{ props.variable.name }}</span>
-                    <span style="width: 60%;">{{ props.item.values.toString() }}</span>
+                    <span style="width:48px;">{{ props.variable.name }}</span>
+                    <span style="width: 94px;">{{ props.item.values.toString() }}</span>
                 </div>
             </div>
             <div class="delete" @click="_delete">
@@ -118,7 +118,7 @@ function _delete() {
     position: relative;
     display: flex;
     flex-direction: column;
-    margin-bottom: 5px;
+    //margin-bottom: 5px;
     width: 100%;
 
     .attr_con {
@@ -213,7 +213,12 @@ function _delete() {
 
         .el-input {
             font-size: 12px;
-            height: 30px;
+            height: 32px;
+
+            :deep(.el-input__wrapper) {
+                background-color: #F5F5F5;
+                border-radius: 6px;
+            }
         }
     }
 

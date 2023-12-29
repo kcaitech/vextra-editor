@@ -1,8 +1,7 @@
 <script lang="ts" setup>
 import { SelectItem } from '@/components/common/Select.vue';
-import { } from 'vue'
 const props = defineProps<{
-    data: SelectItem
+    data: SelectItem | null
 }>();
 </script>
 

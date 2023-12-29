@@ -1,7 +1,7 @@
 <script setup lang="ts">
 import { h, nextTick, onMounted, onUnmounted, ref } from 'vue';
 import comsMap from '@/components/Document/Content/comsmap';
-import { GroupShape } from "@kcdesign/data";
+import { GroupShape, SymbolUnionShape } from "@kcdesign/data";
 import { renderSymbolPreview as r } from "@kcdesign/data";
 import { Context } from '@/context';
 import { Selection } from '@/context/selection';
@@ -34,7 +34,9 @@ function render() {
 }
 
 function selection_watcher(t: number) {
-    if (t === Selection.CHANGE_SHAPE || t === Selection.CHANGE_PAGE) check_selected_status();
+    if (t === Selection.CHANGE_SHAPE || t === Selection.CHANGE_PAGE) {
+        check_selected_status();
+    }
 }
 
 function check_selected_status() {
@@ -47,7 +49,10 @@ function _shape_watcher() {
 }
 
 function check_render_item() {
-    if (!props.data.isSymbolUnionShape) return;
+    if (!(props.data instanceof SymbolUnionShape)) {
+        return;
+    }
+
     render_item.value = (props.data?.childs[0] as GroupShape) || props.data;
     props.data.unwatch(shape_watcher);
     render_item.value.watch(shape_watcher);
@@ -64,7 +69,10 @@ const options = {
 function intersection(entries: any) {
     render_preview.value = Boolean(entries[0]?.isIntersecting);
     if (render_preview.value) {
-        if (props.isAttri) danger_check();
+        if (props.isAttri) {
+            danger_check();
+        }
+
         check_selected_status();
         props.context.selection.watch(selection_watcher);
         props.data.watch(shape_watcher);
@@ -147,8 +155,8 @@ onUnmounted(() => {
 </template>
 <style scoped lang="scss">
 .compo-preview-container {
-    width: 100px;
-    height: 100px;
+    width: 104px;
+    height: 104px;
     background-color: #EBEBEB;
     border-radius: 4px;
     // border: 2px solid var(--grey-dark);
@@ -172,13 +180,12 @@ onUnmounted(() => {
 
     .selected {
         // box-shadow: 0 0 3px 0 #1878F5;
-        border: 1px solid #1878F5;
+        border: 1px solid #7F58F9;
     }
 
     .danger {
         // border: 2px solid #F56C6C;
-        background-color: #EBEBEB;
-        opacity: 0.3;
+        background-color: rgba(245, 108, 108, 0.3);
     }
 }
 </style>

@@ -3,6 +3,7 @@ import { Context } from '@/context';
 import { Menu } from '@/context/menu';
 import { onMounted, onUnmounted, ref } from 'vue';
 import { useI18n } from "vue-i18n";
+import SvgIcon from "@/components/common/SvgIcon.vue";
 const props = defineProps<{
     width: string
     top: number
@@ -50,7 +51,9 @@ onUnmounted(() => {
             @mouseenter="hoverColor(index)" :class="{ active: isActive === index }">
             <span v-if="item !== 'add_new_value' || index !== menuItems.length - 1">{{ item }}</span>
             <span v-if="item === 'add_new_value' && index === menuItems.length - 1">{{ t('compos.add_new') }}</span>
-            <div v-if="props.menuIndex === index" class="choose" :style="{ borderColor: isActive === index ? '#fff' : '' }">
+            <div class="choose" v-if="props.menuIndex === index" >
+<!--                 :style="{ borderColor: isActive === index ? '#fff' : '' }"-->
+                <svg-icon icon-class="choose"></svg-icon>
             </div>
         </div>
     </div>
@@ -73,7 +76,7 @@ onUnmounted(() => {
         display: flex;
         align-items: center;
         justify-content: space-between;
-        padding: 0 2px 0 12px;
+        padding: 0 8px 0 12px;
         box-sizing: border-box;
 
         span {
@@ -89,15 +92,20 @@ onUnmounted(() => {
         // }
 
         .choose {
-            box-sizing: border-box;
-            width: 10px;
-            height: 6px;
-            margin-right: 4px;
-            margin-left: 2px;
-            border-width: 0 0 0.1em 0.1em;
-            border-style: solid;
-            border-color: rgb(0, 0, 0, .75);
-            transform: rotate(-45deg) translateY(-30%);
+            //box-sizing: border-box;
+            width: 12px;
+            height: 12px;
+            //margin-right: 4px;
+            //margin-left: 2px;
+            //border-width: 0 0 0.1em 0.1em;
+            //border-style: solid;
+            //border-color: rgb(0, 0, 0, .75);
+            //transform: rotate(-45deg) translateY(-30%);
+
+            >svg {
+                width: 12px;
+                height: 12px;
+            }
         }
     }
 }

@@ -1,4 +1,4 @@
-import {Context} from "@/context";
+import { Context } from "@/context";
 import {
     Artboard,
     GroupShape,
@@ -12,14 +12,14 @@ import {
     Variable,
     VariableType
 } from "@kcdesign/data";
-import {getName} from "./content";
-import {compare_layer_3} from "./group_ungroup";
-import {debounce} from "lodash";
-import {v4} from "uuid";
-import {get_name} from "@/utils/shapelist";
-import {XY} from "@/context/selection";
-import {isTarget} from "@/utils/common";
-import {message} from "@/utils/message";
+import { getName } from "./content";
+import { compare_layer_3 } from "./group_ungroup";
+import { debounce } from "lodash";
+import { v4 } from "uuid";
+import { get_name } from "@/utils/shapelist";
+import { XY } from "@/context/selection";
+import { isTarget } from "@/utils/common";
+import { message } from "@/utils/message";
 
 export enum SymbolType {
     Symbol = 'symbol',
@@ -266,18 +266,22 @@ export interface AttriListItem {
  */
 export function variable_sort(symbol: SymbolShape, t: Function) {
     const list: AttriListItem[] = [];
-    if (!symbol.variables) return list;
+    if (!symbol.variables) {
+        return list;
+    }
+
     let status_index = 0;
     const resource = symbol.variables;
     resource.forEach(v => {
-        const item: { variable: Variable, values: any[] } = {variable: v, values: []};
+        const item: { variable: Variable, values: any[] } = { variable: v, values: [] };
         if (v.type === VariableType.Status) {
             item.values = tag_values_sort(symbol, v, t);
             list.splice(status_index++, 0, item);
         } else {
             list.push(item);
         }
-    })
+    });
+
     return list;
 }
 
@@ -595,7 +599,7 @@ export function is_conflict_comp(symbol: SymbolShape) {
             slices += (!t || t === SymbolShape.Default_State) ? p : t;
         })
         if (_no_status) return;
-        conflict_arr.push({id: item.id, equal: slices});
+        conflict_arr.push({ id: item.id, equal: slices });
     }
     let obj: any = {}, newArr: any[] = [];
     conflict_arr.forEach(function (item, suffix) {
@@ -631,12 +635,12 @@ export function get_options_from_symbol(symbol: SymbolShape, type: VariableType,
         const childs = symbol.childs;
         for (let i = 0, len = childs.length; i < len; i++) {
             const item = childs[i];
-            const lci = {state: get_name(item, dlt), data: get_x_type_option(symbol, item, type, vari, container)};
+            const lci = { state: get_name(item, dlt), data: get_x_type_option(symbol, item, type, vari, container) };
             result.push(lci);
         }
         return result;
     } else { // 不存在可变组件
-        return [{state: symbol.name, data: get_x_type_option(symbol, symbol, type, vari, container)}];
+        return [{ state: symbol.name, data: get_x_type_option(symbol, symbol, type, vari, container) }];
     }
 }
 
@@ -716,21 +720,63 @@ export interface RefAttriListItem {
  * @param context
  * @param symref
  */
-export function get_var_for_ref(context: Context, symref: SymbolRefShape, t: Function) {
+export function get_var_for_ref(symref: SymbolRefShape, t: Function) {
     let result: RefAttriListItem[] = [];
     let result2: RefAttriListItem[] = [];
-    // const varsContainer = symref.varsContainer;
-    // const ref_id = symref.getRefId2(varsContainer);
+
     const sym = symref.symData;
-    if (!sym) return false;
-    if (sym.parent?.type !== ShapeType.SymbolUnion) { // 不存在可变组件
+    if (!sym) {
+        return false;
+    }
+
+
+    const parent = sym.parent;
+
+    if (parent instanceof SymbolUnionShape) { // 存在可变组件
+        const state = sym; // 先确定当前实例用的是哪个可变组件
+        const usym = parent;
+        if (!usym) {
+            return false;
+        }
+
+        const variables = (usym as SymbolUnionShape).variables;
+        if (!variables) {
+            return false;
+        }
+
+        variables.forEach((v: Variable) => {
+            const item: RefAttriListItem = { variable: v, values: [] };
+            if (v.type === VariableType.Status) {
+                item.values = tag_values_sort(usym as SymbolShape, v, t);
+                result.push(item);
+            }
+        })
+        const sub_variables = new Map<string, Variable>(); // 查看当前可变组件下，绑定了哪些变量
+        search_binds_for_state(variables, state, sub_variables);
+        let instance_index: number = result.length;
+        let text_index: number = instance_index;
+        sub_variables.forEach((v: Variable) => { // 整理顺序
+            const item: RefAttriListItem = { variable: v, values: [] };
+            if (v.type === VariableType.Visible) {
+                result2.push(item);
+            } else if (v.type === VariableType.SymbolRef) {
+                result.splice(instance_index++, 0, item);
+            } else if (v.type === VariableType.Text) {
+                result.splice(instance_index + text_index++, 0, item);
+            }
+        })
+    } else {
         const variables = sym.variables;
-        if (!variables) return false;
+        if (!variables) {
+            return false;
+        }
+
         let status_index: number = 0;
         let instance_index: number = 0;
         let text_index: number = 0;
+
         variables.forEach((v: Variable) => {
-            const item: RefAttriListItem = {variable: v, values: []};
+            const item: RefAttriListItem = { variable: v, values: [] };
             if (v.type === VariableType.Visible) {
                 const overrides = symref.findOverride(v.id, OverrideType.Visible);
                 if (overrides) item.variable = overrides[overrides.length - 1];
@@ -744,35 +790,9 @@ export function get_var_for_ref(context: Context, symref: SymbolRefShape, t: Fun
                 result.splice(status_index + instance_index + text_index++, 0, item);
             }
         })
-    } else { // 存在可变组件
-        const state = sym; // 先确定当前实例用的是哪个可变组件
-        const usym = sym.parent;
-        if (!usym) return false;
-        const variables = (usym as SymbolUnionShape).variables;
-        if (!variables) return false;
-        variables.forEach((v: Variable) => {
-            const item: RefAttriListItem = {variable: v, values: []};
-            if (v.type === VariableType.Status) {
-                item.values = tag_values_sort(usym as SymbolShape, v, t);
-                result.push(item);
-            }
-        })
-        const sub_variables = new Map<string, Variable>(); // 查看当前可变组件下，绑定了哪些变量
-        search_binds_for_state(variables, state, sub_variables);
-        let instance_index: number = result.length;
-        let text_index: number = instance_index;
-        sub_variables.forEach((v: Variable) => { // 整理顺序
-            const item: RefAttriListItem = {variable: v, values: []};
-            if (v.type === VariableType.Visible) {
-                result2.push(item);
-            } else if (v.type === VariableType.SymbolRef) {
-                result.splice(instance_index++, 0, item);
-            } else if (v.type === VariableType.Text) {
-                result.splice(instance_index + text_index++, 0, item);
-            }
-        })
     }
-    return {variables: result, visible_variables: result2};
+
+    return { variables: result, visible_variables: result2 };
 }
 
 /**
@@ -963,7 +983,7 @@ export function is_status_allow_to_delete(symbol: SymbolShape) {
  * @param shape
  */
 export function is_state(shape: Shape) {
-    return shape?.type === ShapeType.Symbol && shape?.parent?.type === ShapeType.SymbolUnion;
+    return shape instanceof SymbolShape && shape.parent instanceof SymbolUnionShape;
 }
 
 function is_sym(shape: Shape) {
@@ -1034,22 +1054,22 @@ export function find_space_for_state(symbol: SymbolShape, state: SymbolShape) {
     while (!pure) {
         pure = true
         let selectorPoints: XY[] = [
-            {x: init_frame.x, y: init_frame.y},
-            {x: init_frame.x + init_frame.width, y: init_frame.y},
-            {x: init_frame.x + init_frame.width, y: init_frame.y + init_frame.height},
-            {x: init_frame.x, y: init_frame.y + init_frame.height},
-            {x: init_frame.x, y: init_frame.y},
+            { x: init_frame.x, y: init_frame.y },
+            { x: init_frame.x + init_frame.width, y: init_frame.y },
+            { x: init_frame.x + init_frame.width, y: init_frame.y + init_frame.height },
+            { x: init_frame.x, y: init_frame.y + init_frame.height },
+            { x: init_frame.x, y: init_frame.y },
         ];
         selectorPoints = selectorPoints.map(p => p2r.computeCoord3(p));
         for (let i = 0; i < targets.length; i++) {
             const m = targets[i].matrix2Root();
-            const {width: w, height: h} = targets[i].frame;
+            const { width: w, height: h } = targets[i].frame;
             const ps: XY[] = [
-                {x: 0, y: 0},
-                {x: w, y: 0},
-                {x: w, y: h},
-                {x: 0, y: h},
-                {x: 0, y: 0},
+                { x: 0, y: 0 },
+                { x: w, y: 0 },
+                { x: w, y: h },
+                { x: 0, y: h },
+                { x: 0, y: 0 },
             ].map(p => m.computeCoord3(p));
             if (isTarget(selectorPoints as any, ps) || isTarget(ps as any, selectorPoints)) {
                 pure = false; // 存在🍌

@@ -242,8 +242,8 @@ onUnmounted(() => {
             }
 
             >svg {
-                width: 65%;
-                height: 65%;
+                width: 12px;
+                height: 12px;
             }
         }
     }
@@ -299,6 +299,10 @@ onUnmounted(() => {
                     background-color: #F5F5F5 !important;
                     border: 1px solid #1878F5;
                 }
+            }
+
+            input::placeholder {
+                color: #BFBFBF;
             }
 
             // .el-input {

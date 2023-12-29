@@ -152,7 +152,7 @@ export const home = {
 }
 
 export const search = {
-    search_results: '没有匹配的结果',
+    search_results: '未搜索到相关组件',
     search_history: '没有搜索记录',
     search_history_title: '历史记录',
     search_history_clear: '清除',

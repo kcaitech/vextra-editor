@@ -79,11 +79,11 @@ const getValue = (value: Text | string | undefined) => {
             <div class="module_item_left" @click="edit_text">
                 <div class="module_name-2">
                     <div style="width: 30px;" class="svg">
-                        <svg-icon icon-class="text" style="width: 10px; height: 10px;"></svg-icon>
+                        <svg-icon icon-class="text"></svg-icon>
                     </div>
                     <div class="name">
-                        <span style="width: 40%;">{{ props.variable.name }}</span>
-                        <span style="width: 60%;"> {{ getValue(props.variable.value) }}</span>
+                        <span style="width: 30%;">{{ props.variable.name }}</span>
+                        <span style="width: 70%;"> {{ getValue(props.variable.value) }}</span>
                     </div>
                 </div>
             </div>
@@ -111,7 +111,7 @@ const getValue = (value: Text | string | undefined) => {
     position: relative;
     display: flex;
     flex-direction: column;
-    margin-bottom: 5px;
+    //margin-bottom: 5px;
     width: 100%;
 
     .attr_con {
@@ -126,7 +126,7 @@ const getValue = (value: Text | string | undefined) => {
     .module_item_left {
         display: flex;
         align-items: center;
-        border-radius: 4px;
+        border-radius: var(--default-radius);
         background-color: #F5F5F5;
         width: calc(100% - 32px);
         height: 32px;
@@ -134,12 +134,14 @@ const getValue = (value: Text | string | undefined) => {
         .module_name {
             display: flex;
             align-items: center;
-            width: 84px;
+            justify-content: center;
+            width: 14px;
+            color: #595959;
+            margin-left: 8px;
 
             >svg {
                 width: 14px;
                 height: 14px;
-                margin: 0px 10px;
             }
 
             .name {
@@ -163,7 +165,7 @@ const getValue = (value: Text | string | undefined) => {
                 >svg {
                     width: 14px;
                     height: 14px;
-                    margin: 0px 10px;
+                    color: #595959;
                 }
             }
 
@@ -189,6 +191,10 @@ const getValue = (value: Text | string | undefined) => {
             text-overflow: ellipsis;
             white-space: nowrap;
         }
+    }
+
+    .module_item_left:hover {
+        background-color: #EBEBEB;
     }
 
     .module_input {
