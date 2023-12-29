@@ -222,12 +222,12 @@ function icon_class() {
     const shape = props.data.shape;
     if (shape.type === ShapeType.Symbol) {
         if (shape instanceof SymbolUnionShape) {
-            return 'pattern-symbol-union';
+            return 'layer-symbol-union';
         } else {
-            return 'pattern-component';
+            return 'layer-component';
         }
     } else {
-        return `pattern-${shape.type}`;
+        return `layer-${shape.type}`;
     }
 }
 

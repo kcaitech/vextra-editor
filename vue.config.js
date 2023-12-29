@@ -62,7 +62,7 @@ var configureWebpack = (config) => {
                         plugins: [
                             {
                                 name: 'convertColors',
-                                params: { currentColor: true },
+                                // params: { currentColor: true },
                             },
                         ],
                     },

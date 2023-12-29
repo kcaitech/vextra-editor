@@ -98,7 +98,7 @@ onUpdated(() => {
         <svg-icon :icon-class="props.d === selected ? props.d : selects"></svg-icon>
       </div>
       <div class="menu" @click="showMenu" v-if="edit && !is_lable">
-        <svg-icon icon-class="down"></svg-icon>
+        <svg-icon icon-class="white-down"></svg-icon>
       </div>
     </ToolButton>
   </el-tooltip>

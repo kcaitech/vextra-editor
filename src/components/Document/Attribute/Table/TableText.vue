@@ -66,22 +66,14 @@ const onShowFontBlur = (e: Event) => {
         }, 10)
     }
 }
-
+const textSizes = ref([10, 12, 14, 16, 18, 24, 36, 48, 64]);
+const sizeSelectIndex = ref(2);
 const onShowSize = () => {
     props.context.workspace.focusText()
-    if (showSize.value) return showSize.value = false
+    if (showSize.value) return showSize.value = false;
+    const index = textSizes.value.findIndex(item => item === fonstSize.value);
+    if (index > -1) sizeSelectIndex.value = index;
     showSize.value = true;
-    nextTick(() => {
-        if (sizeList.value) {
-            const body_h = document.body.clientHeight;
-            const { y, height } = sizeList.value.getBoundingClientRect();
-            const su = body_h - y;
-            const cur_t = su - height;
-            if (cur_t - 10 < 0) {
-                sizeList.value.style.top = cur_t + 20 + 'px';
-            }
-        }
-    })
     document.addEventListener('click', onShowSizeBlur);
 }
 
@@ -761,16 +753,13 @@ onUnmounted(() => {
                                 <svg-icon icon-class="down"></svg-icon>
                             </div>
                         </div>
-                        <div class="font-size-list" ref="sizeList" v-if="showSize">
-                            <div @click="changeTextSize(10)">10</div>
-                            <div @click="changeTextSize(12)">12</div>
-                            <div @click="changeTextSize(14)">14</div>
-                            <div @click="changeTextSize(16)">16</div>
-                            <div @click="changeTextSize(18)">18</div>
-                            <div @click="changeTextSize(24)">24</div>
-                            <div @click="changeTextSize(36)">36</div>
-                            <div @click="changeTextSize(48)">48</div>
-                            <div @click="changeTextSize(64)">64</div>
+                        <div class="font-size-list" ref="sizeList" :style="{ top: -4 - sizeSelectIndex * 32 + 'px' }"
+                            v-if="showSize">
+                            <div v-for="(item, i) in textSizes" :key="i" @click="changeTextSize(item)">{{ item }}
+                                <div class="icon">
+                                    <svg-icon v-if="sizeSelectIndex === i" icon-class="page-select"></svg-icon>
+                                </div>
+                            </div>
                         </div>
                     </div>
                     <div class="overbold jointly-text" :class="{ selected_bgc: isBold }" @click="onBold">
@@ -1015,8 +1004,12 @@ onUnmounted(() => {
                     padding-right: 6px;
 
                     .down {
-                        width: 12px;
-                        height: 12px;
+                        width: 19px;
+                        height: 26px;
+                        margin-right: 3px;
+                        &:hover {
+                            background-color: #EBEBEB;
+                        }
 
                         >svg {
                             width: 12px;
@@ -1049,27 +1042,41 @@ onUnmounted(() => {
 
                 .font-size-list {
                     position: absolute;
-                    top: 30px;
                     left: 0px;
-                    width: 90px;
-                    height: 225px;
+                    width: 100%;
+                    border-radius: 6px;
                     background-color: #fff;
-                    border: 1px solid #ccc;
-                    border-radius: 4px;
-                    box-shadow: 2px 2px 10px rgba(0, 0, 0, 0.2);
-                    padding: 10px 0;
+                    box-shadow: 0px 2px 10px 0px rgba(0, 0, 0, 0.08);
+                    border: 1px solid #EBEBEB;
+                    color: #262626;
+                    padding: 4px 0;
                     z-index: 100;
 
                     >div {
                         display: flex;
                         align-items: center;
+                        justify-content: space-between;
                         width: 100%;
-                        padding: 0 10px;
-                        height: 25px;
+                        padding-left: 10px;
+                        height: 32px;
                         box-sizing: border-box;
 
+                        .icon {
+                            width: 30px;
+                            height: 30px;
+                            display: flex;
+                            align-items: center;
+                            justify-content: center;
+
+                            >svg {
+                                width: 12px;
+                                height: 12px;
+                            }
+                        }
+
                         &:hover {
-                            background-color: var(--input-background);
+                            background-color: #1878F5;
+                            color: #fff;
                         }
                     }
                 }

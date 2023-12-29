@@ -1,18 +1,18 @@
 <script setup lang="ts">
 import TypeHeader from '../TypeHeader.vue';
-import {useI18n} from 'vue-i18n';
+import { useI18n } from 'vue-i18n';
 import SelectFont from './SelectFont.vue';
-import {onMounted, ref, onUnmounted, watchEffect, watch, computed, nextTick} from 'vue';
+import { onMounted, ref, onUnmounted, watchEffect, watch, computed, nextTick } from 'vue';
 import TextAdvancedSettings from './TextAdvancedSettings.vue'
-import {Context} from '@/context';
-import {TextShape, AttrGetter, TableShape, ShapeType} from "@kcdesign/data";
+import { Context } from '@/context';
+import { TextShape, AttrGetter, TableShape, ShapeType } from "@kcdesign/data";
 import Tooltip from '@/components/common/Tooltip.vue';
-import {TextVerAlign, TextHorAlign, Color, UnderlineType, StrikethroughType} from "@kcdesign/data";
+import { TextVerAlign, TextHorAlign, Color, UnderlineType, StrikethroughType } from "@kcdesign/data";
 import ColorPicker from '@/components/common/ColorPicker/index.vue';
-import {Reg_HEX} from "@/utils/RegExp";
-import {Selection} from '@/context/selection';
-import {WorkSpace} from '@/context/workspace';
-import {message} from "@/utils/message";
+import { Reg_HEX } from "@/utils/RegExp";
+import { Selection } from '@/context/selection';
+import { WorkSpace } from '@/context/workspace';
+import { message } from "@/utils/message";
 
 interface Props {
     context: Context
@@ -21,7 +21,7 @@ interface Props {
 }
 
 const props = defineProps<Props>();
-const {t} = useI18n();
+const { t } = useI18n();
 const fonstSize = ref<any>(14)
 const showSize = ref(false)
 const sizeList = ref<HTMLDivElement>()
@@ -71,22 +71,14 @@ const onShowFontBlur = (e: Event) => {
         }, 10)
     }
 }
-
+const textSizes = ref([10, 12, 14, 16, 18, 24, 36, 48, 64]);
+const sizeSelectIndex = ref(2);
 const onShowSize = () => {
     props.context.workspace.focusText()
     if (showSize.value) return showSize.value = false
+    const index = textSizes.value.findIndex(item => item === fonstSize.value);
+    if (index > -1) sizeSelectIndex.value = index;
     showSize.value = true
-    nextTick(() => {
-        if (sizeList.value) {
-            const body_h = document.body.clientHeight;
-            const {y, height} = sizeList.value.getBoundingClientRect();
-            const su = body_h - y;
-            const cur_t = su - height;
-            if (cur_t - 10 < 0) {
-                sizeList.value.style.top = cur_t + 20 + 'px';
-            }
-        }
-    })
     document.addEventListener('click', onShowSizeBlur);
 }
 
@@ -107,7 +99,7 @@ const onBold = () => {
     isBold.value = !isBold.value;
     const editor = props.context.editor4TextShape(props.shape)
     if (length.value) {
-        const {textIndex, selectLength} = getTextIndexAndLen()
+        const { textIndex, selectLength } = getTextIndexAndLen()
         if (isSelectText()) {
             editor.setTextBold(isBold.value, 0, Infinity)
         } else {
@@ -123,7 +115,7 @@ const onTilt = () => {
     isTilt.value = !isTilt.value;
     const editor = props.context.editor4TextShape(props.shape)
     if (length.value) {
-        const {textIndex, selectLength} = getTextIndexAndLen()
+        const { textIndex, selectLength } = getTextIndexAndLen()
         if (isSelectText()) {
             editor.setTextItalic(isTilt.value, 0, Infinity)
         } else {
@@ -139,7 +131,7 @@ const onUnderlint = () => {
     isUnderline.value = !isUnderline.value;
     const editor = props.context.editor4TextShape(props.shape)
     if (length.value) {
-        const {textIndex, selectLength} = getTextIndexAndLen()
+        const { textIndex, selectLength } = getTextIndexAndLen()
         if (isSelectText()) {
             editor.setTextUnderline(isUnderline.value, 0, Infinity)
         } else {
@@ -155,7 +147,7 @@ const onDeleteline = () => {
     isDeleteline.value = !isDeleteline.value;
     const editor = props.context.editor4TextShape(props.shape)
     if (length.value) {
-        const {textIndex, selectLength} = getTextIndexAndLen()
+        const { textIndex, selectLength } = getTextIndexAndLen()
         if (isSelectText()) {
             editor.setTextStrikethrough(isDeleteline.value, 0, Infinity)
         } else {
@@ -171,7 +163,7 @@ const onSelectLevel = (icon: TextHorAlign) => {
     selectLevel.value = icon;
     const editor = props.context.editor4TextShape(props.shape)
     if (length.value) {
-        const {textIndex, selectLength} = getTextIndexAndLen()
+        const { textIndex, selectLength } = getTextIndexAndLen()
         if (isSelectText()) {
             editor.setTextHorAlign(icon, 0, Infinity)
         } else {
@@ -199,7 +191,7 @@ const changeTextSize = (size: number) => {
     showSize.value = false;
     const editor = props.context.editor4TextShape(props.shape)
     if (length.value) {
-        const {textIndex, selectLength} = getTextIndexAndLen()
+        const { textIndex, selectLength } = getTextIndexAndLen()
         if (isSelectText()) {
             editor.setTextFontSize(0, Infinity, size)
         } else {
@@ -216,7 +208,7 @@ const setFont = (font: string) => {
     showFont.value = false;
     const editor = props.context.editor4TextShape(props.shape)
     if (length.value) {
-        const {textIndex, selectLength} = getTextIndexAndLen()
+        const { textIndex, selectLength } = getTextIndexAndLen()
         if (isSelectText()) {
             editor.setTextFontName(0, Infinity, font)
         } else {
@@ -233,7 +225,7 @@ const getTextIndexAndLen = () => {
     const selection = props.context.textSelection;
     const textIndex = Math.min(selection.cursorEnd, selection.cursorStart)
     const selectLength = Math.abs(selection.cursorEnd - selection.cursorStart)
-    return {textIndex, selectLength}
+    return { textIndex, selectLength }
 }
 //判断是否选择文本框还是光标聚焦了
 const isSelectText = () => {
@@ -266,7 +258,7 @@ const textFormat = () => {
     const t_shape = shapes.filter(item => item.type === ShapeType.Text) as TextShape[];
     if (t_shape.length === 0 || !t_shape[0].text) return
     if (length.value) {
-        const {textIndex, selectLength} = getTextIndexAndLen();
+        const { textIndex, selectLength } = getTextIndexAndLen();
         const editor = props.context.editor4TextShape(t_shape[0])
         let format: AttrGetter
         const __text = t_shape[0].getText();
@@ -312,8 +304,8 @@ const textFormat = () => {
             let foundEqual = true;
             for (let i = 1; i < formats.length; i++) {
                 if (key === 'color' || key === 'highlight' && formats[i][key] && referenceValue) {
-                    const {alpha: alpha1, blue: blue1, green: green1, red: red1} = formats[i][key];
-                    const {alpha: alpha2, blue: blue2, green: green2, red: red2} = referenceValue;
+                    const { alpha: alpha1, blue: blue1, green: green1, red: red1 } = formats[i][key];
+                    const { alpha: alpha2, blue: blue2, green: green2, red: red2 } = referenceValue;
                     if (alpha1 !== alpha2 || blue1 !== blue2 || green1 !== green2 || red1 !== red2) {
                         foundEqual = false;
                         break;
@@ -474,7 +466,7 @@ function onColorChange(e: Event, type: string) {
 function getColorFromPicker(color: Color, type: string) {
     const editor = props.context.editor4TextShape(props.shape)
     if (length.value) {
-        const {textIndex, selectLength} = getTextIndexAndLen();
+        const { textIndex, selectLength } = getTextIndexAndLen();
         if (isSelectText()) {
             if (type === 'color') {
                 editor.setTextColor(0, Infinity, color)
@@ -509,7 +501,7 @@ function setColor(idx: number, clr: string, alpha: number, type: string) {
     const b = Number.parseInt(res[3], 16);
     const editor = props.context.editor4TextShape(props.shape)
     if (length.value) {
-        const {textIndex, selectLength} = getTextIndexAndLen();
+        const { textIndex, selectLength } = getTextIndexAndLen();
         if (isSelectText()) {
             if (type === 'color') {
                 editor.setTextColor(0, Infinity, new Color(alpha, r, g, b))
@@ -536,7 +528,7 @@ function setColor(idx: number, clr: string, alpha: number, type: string) {
 const deleteHighlight = () => {
     const editor = props.context.editor4TextShape(props.shape)
     if (length.value) {
-        const {textIndex, selectLength} = getTextIndexAndLen();
+        const { textIndex, selectLength } = getTextIndexAndLen();
         if (isSelectText()) {
             editor.setTextHighlightColor(0, Infinity, undefined)
         } else {
@@ -551,7 +543,7 @@ const deleteHighlight = () => {
 const addHighlight = () => {
     const editor = props.context.editor4TextShape(props.shape)
     if (length.value) {
-        const {textIndex, selectLength} = getTextIndexAndLen();
+        const { textIndex, selectLength } = getTextIndexAndLen();
         if (isSelectText()) {
             editor.setTextHighlightColor(0, Infinity, new Color(1, 216, 216, 216))
         } else {
@@ -565,7 +557,7 @@ const addHighlight = () => {
 const addTextColor = () => {
     const editor = props.context.editor4TextShape(props.shape)
     if (length.value) {
-        const {textIndex, selectLength} = getTextIndexAndLen();
+        const { textIndex, selectLength } = getTextIndexAndLen();
         if (isSelectText()) {
             editor.setTextColor(0, Infinity, new Color(1, 6, 6, 6))
         } else {
@@ -637,8 +629,7 @@ onUnmounted(() => {
                         <svg-icon icon-class="down"></svg-icon>
                     </div>
                 </div>
-                <SelectFont v-if="showFont" @set-font="setFont" :fontName="fontName"
-                            :context="props.context"></SelectFont>
+                <SelectFont v-if="showFont" @set-font="setFont" :fontName="fontName" :context="props.context"></SelectFont>
                 <!--                <div class="perch"></div>-->
             </div>
             <div class="text-middle">
@@ -646,21 +637,18 @@ onUnmounted(() => {
                     <div class="text-size jointly-text" style="padding-right: 0;">
                         <div class="size_input">
                             <input type="text" v-model="fonstSize" ref="textSize" class="input" @change="setTextSize"
-                                   @focus="selectSizeValue">
+                                @focus="selectSizeValue">
                             <div class="down" @click="onShowSize">
                                 <svg-icon icon-class="down" style=""></svg-icon>
                             </div>
                         </div>
-                        <div class="font-size-list" ref="sizeList" v-if="showSize">
-                            <div @click="changeTextSize(10)">10</div>
-                            <div @click="changeTextSize(12)">12</div>
-                            <div @click="changeTextSize(14)">14</div>
-                            <div @click="changeTextSize(16)">16</div>
-                            <div @click="changeTextSize(18)">18</div>
-                            <div @click="changeTextSize(24)">24</div>
-                            <div @click="changeTextSize(36)">36</div>
-                            <div @click="changeTextSize(48)">48</div>
-                            <div @click="changeTextSize(64)">64</div>
+                        <div class="font-size-list" ref="sizeList" :style="{ top: -4 - sizeSelectIndex * 32 + 'px' }"
+                            v-if="showSize">
+                            <div v-for="(item, i) in textSizes" :key="i" @click="changeTextSize(item)">{{ item }}
+                                <div class="icon">
+                                    <svg-icon v-if="sizeSelectIndex === i" icon-class="page-select"></svg-icon>
+                                </div>
+                            </div>
                         </div>
                     </div>
                     <div class="overbold jointly-text" :class="{ selected_bgc: isBold }" @click="onBold">
@@ -684,80 +672,80 @@ onUnmounted(() => {
                         </Tooltip>
                     </div>
                 </div>
-<!--                <div class="perch"></div>-->
+                <!--                <div class="perch"></div>-->
             </div>
             <div class="text-bottom">
                 <div class="text-bottom-align">
                     <div class="level-aligning jointly-text">
-                        <i :class="{'jointly-text': true,'font-posi': true, selected_bg: selectLevel === 'left' }"
-                           @click="onSelectLevel(TextHorAlign.Left)">
+                        <i :class="{ 'jointly-text': true, 'font-posi': true, selected_bg: selectLevel === 'left' }"
+                            @click="onSelectLevel(TextHorAlign.Left)">
                             <Tooltip :content="t('attr.align_left')" :offset="15">
                                 <svg-icon icon-class="text-left"></svg-icon>
                             </Tooltip>
                         </i>
-                        <i :class="{'jointly-text': true,'font-posi': true, selected_bg: selectLevel === 'centered' }"
-                           @click="onSelectLevel(TextHorAlign.Centered)">
+                        <i :class="{ 'jointly-text': true, 'font-posi': true, selected_bg: selectLevel === 'centered' }"
+                            @click="onSelectLevel(TextHorAlign.Centered)">
                             <Tooltip :content="t('attr.align_center')" :offset="15">
                                 <svg-icon icon-class="text-center"></svg-icon>
                             </Tooltip>
                         </i>
-                        <i :class="{'jointly-text': true,'font-posi': true, selected_bg: selectLevel === 'right' }"
-                           @click="onSelectLevel(TextHorAlign.Right)">
+                        <i :class="{ 'jointly-text': true, 'font-posi': true, selected_bg: selectLevel === 'right' }"
+                            @click="onSelectLevel(TextHorAlign.Right)">
                             <Tooltip :content="t('attr.align_right')" :offset="15">
                                 <svg-icon icon-class="text-right"></svg-icon>
                             </Tooltip>
                         </i>
-                        <i :class="{'jointly-text': true,'font-posi': true, selected_bg: selectLevel === 'natural' }"
-                           @click="onSelectLevel(TextHorAlign.Natural)">
+                        <i :class="{ 'jointly-text': true, 'font-posi': true, selected_bg: selectLevel === 'natural' }"
+                            @click="onSelectLevel(TextHorAlign.Natural)">
                             <Tooltip :content="t('attr.align_the_sides')" :offset="15">
                                 <svg-icon icon-class="text-justify"></svg-icon>
                             </Tooltip>
                         </i>
                     </div>
                     <div class="vertical-aligning jointly-text">
-                        <i :class="{'jointly-text': true,'font-posi': true, selected_bg: selectVertical === 'top' }"
-                           @click="onSelectVertical(TextVerAlign.Top)">
+                        <i :class="{ 'jointly-text': true, 'font-posi': true, selected_bg: selectVertical === 'top' }"
+                            @click="onSelectVertical(TextVerAlign.Top)">
                             <Tooltip :content="t('attr.align_top')" :offset="15">
                                 <svg-icon icon-class="align-top"></svg-icon>
                             </Tooltip>
                         </i>
-                        <i :class="{'jointly-text': true,'font-posi': true, selected_bg: selectVertical === 'middle' }"
-                           @click="onSelectVertical(TextVerAlign.Middle)">
+                        <i :class="{ 'jointly-text': true, 'font-posi': true, selected_bg: selectVertical === 'middle' }"
+                            @click="onSelectVertical(TextVerAlign.Middle)">
                             <Tooltip :content="t('attr.align_middle')" :offset="15">
                                 <svg-icon icon-class="align-middle"></svg-icon>
                             </Tooltip>
                         </i>
-                        <i :class="{'jointly-text': true,'font-posi': true, selected_bg: selectVertical === 'bottom' }"
-                           @click="onSelectVertical(TextVerAlign.Bottom)">
+                        <i :class="{ 'jointly-text': true, 'font-posi': true, selected_bg: selectVertical === 'bottom' }"
+                            @click="onSelectVertical(TextVerAlign.Bottom)">
                             <Tooltip :content="t('attr.align_bottom')" :offset="15">
                                 <svg-icon icon-class="align-bottom"></svg-icon>
                             </Tooltip>
                         </i>
                     </div>
                 </div>
-<!--                <div class="perch"></div>-->
+                <!--                <div class="perch"></div>-->
             </div>
             <!-- 字体颜色 -->
             <div class="text-color" v-if="!colorIsMulti && textColor" style="margin-bottom: 10px;">
                 <div style="font-family: HarmonyOS Sans;font-size: 12px;margin-right: 10px;">{{
-                        t('attr.font_color')
-                    }}
+                    t('attr.font_color')
+                }}
                 </div>
                 <div class="color">
                     <ColorPicker :color="textColor!" :context="props.context" :auto_to_right_line="true"
-                                 @change="c => getColorFromPicker(c, 'color')">
+                        @change="c => getColorFromPicker(c, 'color')">
                     </ColorPicker>
                     <input ref="sizeColor" class="sizeColor" @focus="selectColorValue" :spellcheck="false"
-                           :value="toHex(textColor!.red, textColor!.green, textColor!.blue)"
-                           @change="(e) => onColorChange(e, 'color')"/>
+                        :value="toHex(textColor!.red, textColor!.green, textColor!.blue)"
+                        @change="(e) => onColorChange(e, 'color')" />
                     <input ref="alphaFill" class="alphaFill" @focus="selectAlphaValue" style="text-align: center;"
-                           :value="(textColor!.alpha * 100) + '%'" @change="(e) => onAlphaChange(e, 'color')"/>
+                        :value="(textColor!.alpha * 100) + '%'" @change="(e) => onAlphaChange(e, 'color')" />
                 </div>
                 <!--                <div class="perch"></div>-->
             </div>
             <div class="text-colors" v-else-if="colorIsMulti" style="margin-bottom: 10px;">
                 <div class="color-title">
-                    <div style="font-family: HarmonyOS Sans;font-size: 12px;margin-right: 10px;">{{t('attr.font_color') }}
+                    <div style="font-family: HarmonyOS Sans;font-size: 12px;margin-right: 10px;">{{ t('attr.font_color') }}
                     </div>
                     <div class="add" @click="addTextColor">
                         <svg-icon icon-class="add"></svg-icon>
@@ -775,17 +763,17 @@ onUnmounted(() => {
             <!-- 高亮颜色 -->
             <div class="highlight-color" v-if="!highlightIsMulti && highlight">
                 <div style="font-family: HarmonyOS Sans;font-size: 12px;margin-right: 10px;"
-                     :class="{ 'check': highlight, 'nocheck': !highlight }">{{ t('attr.highlight_color') }}
+                    :class="{ 'check': highlight, 'nocheck': !highlight }">{{ t('attr.highlight_color') }}
                 </div>
                 <div class="color">
                     <ColorPicker :color="highlight!" :context="props.context" :auto_to_right_line="true"
-                                 @change="c => getColorFromPicker(c, 'highlight')">
+                        @change="c => getColorFromPicker(c, 'highlight')">
                     </ColorPicker>
                     <input ref="higlightColor" class="colorFill" @focus="selectHiglightColor" :spellcheck="false"
-                           :value="toHex(highlight!.red, highlight!.green, highlight!.blue)"
-                           @change="(e) => onColorChange(e, 'highlight')"/>
+                        :value="toHex(highlight!.red, highlight!.green, highlight!.blue)"
+                        @change="(e) => onColorChange(e, 'highlight')" />
                     <input ref="higlighAlpha" class="alphaFill" @focus="selectHiglighAlpha" style="text-align: center;"
-                           :value="(highlight!.alpha * 100) + '%'" @change="(e) => onAlphaChange(e, 'highlight')"/>
+                        :value="(highlight!.alpha * 100) + '%'" @change="(e) => onAlphaChange(e, 'highlight')" />
                 </div>
                 <div class="perch" @click="deleteHighlight">
                     <svg-icon class="svg" icon-class="delete"></svg-icon>
@@ -794,7 +782,7 @@ onUnmounted(() => {
             <div class="text-colors" v-else-if="highlightIsMulti">
                 <div class="color-title">
                     <div style="font-family: HarmonyOS Sans;font-size: 12px;margin-right: 10px;"
-                         :class="{ 'check': highlight, 'nocheck': !highlight }">{{ t('attr.highlight_color') }}
+                        :class="{ 'check': highlight, 'nocheck': !highlight }">{{ t('attr.highlight_color') }}
                     </div>
                     <div class="add" @click="addHighlight">
                         <svg-icon icon-class="add"></svg-icon>
@@ -805,7 +793,7 @@ onUnmounted(() => {
             <div class="text-colors" v-else-if="!highlightIsMulti && !highlight">
                 <div class="color-title">
                     <div style="font-family: HarmonyOS Sans;font-size: 12px;margin-right: 10px;"
-                         :class="{ 'check': highlight, 'nocheck': !highlight }">{{ t('attr.highlight_color') }}
+                        :class="{ 'check': highlight, 'nocheck': !highlight }">{{ t('attr.highlight_color') }}
                     </div>
                     <div class="color_border"></div>
                     <div class="add" @click="addHighlight">
@@ -833,7 +821,7 @@ onUnmounted(() => {
         justify-content: center;
         align-items: center;
 
-        > svg {
+        >svg {
             width: 16px;
             height: 16px;
             transition: 0.3s;
@@ -855,7 +843,7 @@ onUnmounted(() => {
             justify-content: space-between;
             align-items: center;
 
-            > svg {
+            >svg {
                 width: 16px;
                 height: 16px;
                 overflow: visible !important;
@@ -910,10 +898,14 @@ onUnmounted(() => {
                     padding-right: 6px;
 
                     .down {
-                        width: 12px;
-                        height: 12px;
+                        width: 19px;
+                        height: 26px;
+                        margin-right: 3px;
+                        &:hover {
+                            background-color: #EBEBEB;
+                        }
 
-                        > svg {
+                        >svg {
                             width: 12px;
                             height: 12px;
                         }
@@ -945,27 +937,41 @@ onUnmounted(() => {
 
                 .font-size-list {
                     position: absolute;
-                    top: 30px;
                     left: 0px;
-                    width: 90px;
-                    height: 225px;
+                    width: 100%;
+                    border-radius: 6px;
                     background-color: #fff;
-                    border: 1px solid #ccc;
-                    border-radius: 4px;
-                    box-shadow: 2px 2px 10px rgba(0, 0, 0, 0.2);
-                    padding: 10px 0;
+                    box-shadow: 0px 2px 10px 0px rgba(0, 0, 0, 0.08);
+                    border: 1px solid #EBEBEB;
+                    color: #262626;
+                    padding: 4px 0;
                     z-index: 100;
 
-                    > div {
+                    >div {
                         display: flex;
                         align-items: center;
+                        justify-content: space-between;
                         width: 100%;
-                        padding: 0 10px;
-                        height: 25px;
+                        padding-left: 10px;
+                        height: 32px;
                         box-sizing: border-box;
 
+                        .icon {
+                            width: 30px;
+                            height: 30px;
+                            display: flex;
+                            align-items: center;
+                            justify-content: center;
+
+                            >svg {
+                                width: 12px;
+                                height: 12px;
+                            }
+                        }
+
                         &:hover {
-                            background-color: var(--input-background);
+                            background-color: #1878F5;
+                            color: #fff;
                         }
                     }
                 }
@@ -1060,7 +1066,7 @@ onUnmounted(() => {
                     font-size: 12px;
                 }
 
-                input + input {
+                input+input {
                     width: 45px;
                 }
             }
@@ -1101,7 +1107,7 @@ onUnmounted(() => {
                     font-size: 12px;
                 }
 
-                input + input {
+                input+input {
                     width: 45px;
                 }
             }
@@ -1122,7 +1128,7 @@ onUnmounted(() => {
                     justify-content: center;
                     border-radius: var(--default-radius);
 
-                    > svg {
+                    >svg {
                         width: 16px;
                         height: 16px;
                     }
@@ -1158,7 +1164,7 @@ onUnmounted(() => {
             margin-left: 8px;
             border-radius: var(--default-radius);
 
-            > svg {
+            >svg {
                 height: 16px;
                 width: 16px;
             }
@@ -1185,7 +1191,7 @@ onUnmounted(() => {
     margin-right: 8px;
     box-sizing: border-box;
 
-    > svg {
+    >svg {
         width: 12px;
         height: 12px;
     }

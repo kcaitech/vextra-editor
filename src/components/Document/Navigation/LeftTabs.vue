@@ -140,6 +140,7 @@ onUnmounted(() => {
         display: flex;
         height: 40px;
         position: relative;
+        overflow: hidden;
 
         >.tab {
             cursor: pointer;

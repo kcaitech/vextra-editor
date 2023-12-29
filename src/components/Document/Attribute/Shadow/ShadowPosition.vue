@@ -72,7 +72,7 @@ onUnmounted(() => {
         <div class="down" @click="showMenu" :class="{ 'active-down': isMenu }">
             <svg-icon icon-class="down" />
         </div>
-        <div class="select_menu" v-if="isMenu">
+        <div class="select_menu" v-if="isMenu" :style="{top: shadow.position === ShadowPosition.Outer ? -4 + 'px': -32 + 'px'}">
             <div class="item" @click="togglePositinon(ShadowPosition.Outer)" @mouseenter="activeItem = ShadowPosition.Outer"
                 :class="{ 'active-item': activeItem === ShadowPosition.Outer }">
                 <div class="icon">
@@ -135,20 +135,19 @@ onUnmounted(() => {
 
     .select_menu {
         position: absolute;
-        top: 32px;
         left: 0px;
-        width: 85%;
+        width: 100%;
         border-radius: 4px;
         background-color: #fff;
         box-shadow: 1px 1px 5px rgba(0, 0, 0, 0.2);
         z-index: 100;
-        padding: 10px 0;
+        padding: 4px 0;
 
         .item {
             display: flex;
             align-items: center;
             width: 100%;
-            height: 30px;
+            height: 32px;
 
             .icon {
                 width: 30px;

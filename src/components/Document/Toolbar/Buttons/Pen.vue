@@ -51,7 +51,7 @@ function onMenuBlur() {
       <svg-icon icon-class="pen"></svg-icon>
     </div>
     <div class="menu" @click="showMenu">
-      <svg-icon icon-class="down"></svg-icon>
+      <svg-icon icon-class="white-down"></svg-icon>
     </div>
   </ToolButton>
 </template>
@@ -65,12 +65,12 @@ function onMenuBlur() {
   align-items: center;
   color: #ffffff;
   > svg {
-    width: 14px;
-    height: 14px;
+    width: 18px;
+    height: 18px;
   }
 }
 .menu {
-  width: 10px;
+  width: 20px;
   height: 32px;
   display: flex;
   justify-content: center;
@@ -78,8 +78,8 @@ function onMenuBlur() {
   color: #ffffff;
   transition: 0.3s;
   > svg {
-    width: 100%;
-    height: 80%;
+    width: 12px;
+    height: 12px;
   }
 }
 .menu:hover {

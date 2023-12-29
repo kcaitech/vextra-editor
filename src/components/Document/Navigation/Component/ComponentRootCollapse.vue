@@ -23,7 +23,7 @@ const props = defineProps<Props>();
 const emits = defineEmits<Emits>();
 const fold = ref<boolean>(true);
 
-function toggle() {
+function toggle() {    
     fold.value = !fold.value;
 }
 

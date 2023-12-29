@@ -207,7 +207,7 @@ const textFormat = () => {
     rowHeight.value = format.minimumLineHeight || ''
     paragraphSpace.value = format.paraSpacing || 0
     selectCase.value = format.transform
-    selectId.value = format.bulletNumbers?.type || ''
+    selectId.value = format.bulletNumbers?.type || 'none'
     if (format.minimumLineHeightIsMulti) rowHeight.value = `${t('attr.more_value')}`
     if (format.kerningIsMulti) wordSpace.value = `${t('attr.more_value')}`
     if (format.paraSpacingIsMulti) paragraphSpace.value = `${t('attr.more_value')}`
@@ -249,7 +249,7 @@ const textFormat = () => {
     paragraphSpace.value = format.paraSpacing || 0;
     selectCase.value = format.transform;
     selectText.value = format.textBehaviour;
-    selectId.value = format.bulletNumbers?.type || '';
+    selectId.value = format.bulletNumbers?.type || 'none';
     if (format.minimumLineHeight === 'unlikeness') rowHeight.value = `${t('attr.more_value')}`;
     if (format.minimumLineHeightIsMulti === 'unlikeness') rowHeight.value = `${t('attr.more_value')}`;
     if (format.kerningIsMulti === 'unlikeness') wordSpace.value = `${t('attr.more_value')}`;

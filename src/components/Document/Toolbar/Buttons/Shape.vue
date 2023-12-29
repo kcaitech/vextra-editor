@@ -149,7 +149,7 @@ onUnmounted(() => {
                 <svg-icon :icon-class="cur_class"></svg-icon>
             </div>
             <div class="menu" @click="showMenu">
-                <svg-icon icon-class="down"></svg-icon>
+                <svg-icon icon-class="white-down"></svg-icon>
             </div>
         </ToolButton>
     </el-tooltip>

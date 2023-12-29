@@ -31,10 +31,9 @@ function select(action: Action) {
   display: flex;
   justify-content: center;
   align-items: center;
-  color: #ffffff;
   > svg {
-    width: 13px;
-    height: 13px;
+    width: 18px;
+    height: 18px;
   }
 }
 </style>

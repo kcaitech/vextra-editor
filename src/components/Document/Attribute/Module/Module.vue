@@ -40,6 +40,10 @@ const p_symble = computed(() => {
     return isSymble
 })
 
+const is_module_attr = () => {
+    return p_symble.value || props.shapeType === ShapeType.Symbol || props.shapeType === ShapeType.SymbolUnion;
+}
+
 const is_symbolref = () => {
     return is_shapes_if_symbolref(props.shapes);
 }
@@ -50,7 +54,7 @@ function is_state() {
 </script>
 
 <template>
-    <div class="module-panel">
+    <div class="module-panel" v-if="is_module_attr()">
         <ComponentAttr :context="context"
                        v-if="(shapeType === ShapeType.Symbol || shapeType === ShapeType.SymbolUnion) && !is_state()"
                        :shape="(shapes[0] as SymbolShape)">

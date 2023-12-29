@@ -144,8 +144,8 @@ const getPosition = (shape: Shape) => {
         if (shape.type === ShapeType.Group) {
             const { left, top, right, bottom } = getShadowMax(shape);
             const { x, y, width: _w, height: _h } = getGroupChildBounds(shape as GroupShape);
-            xy.value.x = shape.frame.x + x - left;
-            xy.value.y = shape.frame.y + y - top;
+            xy.value.x = x - left;
+            xy.value.y = y - top;
             width.value = _w + left + right;
             height.value = _h + top + bottom;
         } else {

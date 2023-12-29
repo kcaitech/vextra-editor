@@ -163,6 +163,8 @@ export const getGroupChildBounds = (shape: GroupShape) => {
     const group_bounds_points = getMaxMinPoints(shapes);
     const max_p = getMaxPoint(group_bounds_points);
     const min_p = getMinPoint(group_bounds_points);
+    console.log(max_p, min_p);
+    
     return {
         x: min_p.x,
         y: min_p.y,
@@ -195,7 +197,7 @@ const getMaxMinPoints = (shapes: Shape[]) => {
         const p4 = getRotatePoint(frame.x - l, frame.y + frame.height + b, rotate, cx, cy);
         points.push(p1, p2, p3, p4);
         let max_point = getMaxPoint(points);
-        let min_point = getMinPoint(points);
+        let min_point = getMinPoint(points);        
         let p = shape.parent;
         if (p && p.type !== ShapeType.Page) {
             while (p) {
@@ -252,12 +254,12 @@ const getMaxPoint = (points: { x: number, y: number }[]) => {
     return { x: max_x, y: max_y }
 }
 const getMinPoint = (points: { x: number, y: number }[]) => {
-    let min_x = 0;
-    let min_y = 0;
+    let min_x = points[0].x;
+    let min_y = points[0].y;
     for (let i = 0; i < points.length; i++) {
         const point = points[i];
-        if (point.x < min_x) min_x = point.x;
-        if (point.y < min_y) min_y = point.y;
+        if (point.x <= min_x) min_x = point.x;
+        if (point.y <= min_y) min_y = point.y;
     }
     return { x: min_x, y: min_y }
 }
