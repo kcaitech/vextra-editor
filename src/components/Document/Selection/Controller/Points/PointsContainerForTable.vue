@@ -225,36 +225,29 @@ function mousemove4trans(e: MouseEvent) {
         if (update_type === 3) startPosition = { ...mousePosition };        // mark：update_type不同的值对应的情况是什么
         else if (update_type === 2) startPosition.y = mousePosition.y;
         else if (update_type === 1) startPosition.x = mousePosition.x;
-    } else if (Math.hypot(mousePosition.x - startPosition.x, mousePosition.y - startPosition.y) > dragActiveDis) {   // mark：dragActiveDis是什么
+    } else if (!isDragging && Math.hypot(mousePosition.x - startPosition.x, mousePosition.y - startPosition.y) > dragActiveDis) {   // mark：dragActiveDis是什么
         shapes = selection.selectedShapes;
 
         asyncTransfer = props.context.editor
             .controller()
             .asyncTransfer(shapes, selection.selectedPage!);  // mark：asyncTransfer是什么
 
+        isDragging = true;
         if (e.altKey) {
             paster_short(props.context, shapes, asyncTransfer).then((v) => {
                 shapes = v;
-                selection.unHoverShape();
-                workspace.setSelectionViewUpdater(false);
-                workspace.translating(true);  // mark：workspace.translating(true)的作用是什么
                 props.context.assist.set_trans_target(shapes);
-                submatrix2 = new Matrix(props.context.workspace.matrix.inverse);
-                isDragging = true;
-                const p = submatrix2.computeCoord3(startPosition);
-                offset_map = gen_offset_map(shapes[0], p);
             });
         }
         else {
-            selection.unHoverShape();
-            workspace.setSelectionViewUpdater(false);
-            workspace.translating(true);  // mark：workspace.translating(true)的作用是什么
             props.context.assist.set_trans_target(shapes);
-            submatrix2 = new Matrix(props.context.workspace.matrix.inverse);
-            isDragging = true;
-            const p = submatrix2.computeCoord3(startPosition);
-            offset_map = gen_offset_map(shapes[0], p);
         }
+        selection.unHoverShape();
+        workspace.setSelectionViewUpdater(false);
+        workspace.translating(true);  // mark：workspace.translating(true)的作用是什么
+        submatrix2 = new Matrix(props.context.workspace.matrix.inverse);
+        const p = submatrix2.computeCoord3(startPosition);
+        offset_map = gen_offset_map(shapes[0], p);
     }
 }
 function _migrate() {

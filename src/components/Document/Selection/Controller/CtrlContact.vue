@@ -47,7 +47,7 @@ function updateControllerView() {
         submatrix.reset(matrix);
     }
 
-    const path = props.shape.getPath();
+    const path = props.shape.getPath().clone();
 
     path.transform(matrix);
 

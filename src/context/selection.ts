@@ -406,7 +406,7 @@ export class Selection extends WatchableObject implements ISave4Restore {
         if (this.hoveredShape) {
             let m = this.hoveredShape.matrix2Root(), wm = this.m_context.workspace.matrix;
             m.multiAtLeft(wm);
-            let path = this.hoveredShape.getPath();
+            let path = this.hoveredShape.getPath().clone();
             path.transform(m);
             if (this.m_scout!.isPointInPath(path.toString(), p)) return 'hover';
         }

@@ -48,7 +48,7 @@ const selectContour = (shapes: ShapeView[]) => {
         const f = s.frame;
         const ps: { x: number, y: number }[] = [{ x: 0, y: 0 }, { x: f.width, y: 0 }, { x: f.width, y: f.height }, { x: 0, y: f.height }].map(p => m.computeCoord(p.x, p.y));
         points.push(...ps);
-        const path = s.getPath();
+        const path = s.getPath().clone();
         path.transform(m);
     }
     const b = XYsBounding(points);
@@ -69,7 +69,7 @@ const hoveredContour = (shape: ShapeView) => {
     const f = shape.frame;
     const ps: { x: number, y: number }[] = [{ x: 0, y: 0 }, { x: f.width, y: 0 }, { x: f.width, y: f.height }, { x: 0, y: f.height }].map(p => m.computeCoord(p.x, p.y));
     points.push(...ps);
-    const path = shape.getPath();
+    const path = shape.getPath().clone();
     path.transform(m);
     const b = XYsBounding(points);
     const framePoint = [{ x: b.left, y: b.top }, { x: b.right, y: b.top }, { x: b.right, y: b.bottom }, { x: b.left, y: b.bottom }];

@@ -48,7 +48,7 @@ function updateControllerView() {
     matrix.multiAtLeft(props.matrix);
     if (!submatrix.equals(matrix)) submatrix.reset(matrix)
     const framePoint = props.controllerFrame;
-    const path = props.shape.getPath();
+    const path = props.shape.getPath().clone();
     path.transform(matrix);
     line_path.value = path.toString();
     props.context.workspace.setCtrlPath(line_path.value);
