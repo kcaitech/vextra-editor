@@ -121,12 +121,7 @@ var configureWebpack = (config) => {
 
 var exports = defineConfig({
     transpileDependencies: true,
-<<<<<<< HEAD
-    // publicPath: './',
-    publicPath: '/zbb',
-=======
     publicPath: './',
->>>>>>> dea2e4ddb278c9fea21e3b22637c50ba91107f13
     configureWebpack,
 
     pluginOptions: {

@@ -328,11 +328,7 @@ onUnmounted(() => {
     //    background-color: var(--grey-light);
     //}
 
-<<<<<<< HEAD
-    > span {
-=======
     >span {
->>>>>>> dea2e4ddb278c9fea21e3b22637c50ba91107f13
         font-weight: 500;
         overflow: hidden;
         text-overflow: ellipsis;
