@@ -107,16 +107,31 @@ onUnmounted(() => {
 
 <template>
   <div class="container" @dblclick.stop>
-      <button class="share" @click.stop="onShare">分享</button>
-    <Teleport to="body">
-      <FileShare v-if="showFileShare" @close="closeShare" :shareSwitch="shareSwitch" :selectValue="selectValue"
-        :docInfo="docInfo" :projectPerm="projectPerm" @select-type="onSelectType" @switch-state="onSwitch"
-        :pageHeight="pageHeight" :context="props.context" :userInfo="userInfo"></FileShare>
-    </Teleport>
+    <button class="share" @click.stop="onShare">分享</button>
   </div>
+  <Teleport to="body">
+    <div v-if="showFileShare" class="overlay">
+      <FileShare @close="closeShare" :shareSwitch="shareSwitch" :selectValue="selectValue" :docInfo="docInfo"
+        :projectPerm="projectPerm" @select-type="onSelectType" @switch-state="onSwitch" :pageHeight="pageHeight"
+        :context="props.context" :userInfo="userInfo"></FileShare>
+    </div>
+  </Teleport>
 </template>
 
 <style scoped lang="scss">
+.overlay {
+  position: absolute;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  top: 0;
+  left: 0;
+  width: 100%;
+  height: 100%;
+  z-index: 999;
+  background-color:transparent;
+}
+
 .container {
   .share {
     cursor: pointer;
@@ -127,12 +142,12 @@ onUnmounted(() => {
     justify-content: center;
     border-radius: 6px;
     background: #1878F5;
-      font-size: 13px;
-      color: #FFFFFF;
-      border: none;
-      font-family: HarmonyOS Sans;
-      font-feature-settings: "kern" on;
-      padding: 9px 15px 8px 15px;
+    font-size: 13px;
+    color: #FFFFFF;
+    border: none;
+    font-family: HarmonyOS Sans;
+    font-feature-settings: "kern" on;
+    padding: 9px 15px 8px 15px;
     //>svg {
     //  width: 20px;
     //  height: 20px;

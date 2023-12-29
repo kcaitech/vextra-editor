@@ -1,5 +1,5 @@
 <script setup lang="ts">
-import { ref, onMounted, onUnmounted, reactive, watch, watchEffect, computed, } from 'vue';
+import { ref, onMounted, onUnmounted, reactive, watch, watchEffect, computed, nextTick, } from 'vue';
 import { useI18n } from 'vue-i18n';
 import { UserInfo } from '@/context/user';
 import { Context } from '@/context';
@@ -322,13 +322,22 @@ const handlekeyup = (e: KeyboardEvent) => {
 
 const handleClick = (e: MouseEvent) => {
   e.stopPropagation()
+  e.target instanceof Element && !e.target.closest('.card') && emit('close')
   e.target instanceof Element && !e.target.closest('.popover') && (authority.value = false)
   e.target instanceof Element && !e.target.closest('.options') && (isSelectOpen.value = false)
+
 }
 
 onMounted(() => {
+  let timer: any
+  if (timer) clearTimeout(timer)
+  timer = setTimeout(() => {
+    document.addEventListener('click', handleClick);
+    clearTimeout(timer)
+  }, 200);
+
   document.addEventListener('keyup', handlekeyup);
-  document.addEventListener('click', handleClick);
+
   if (!founder.value) {
     if (props.selectValue === docType.Private) {
       value1.value = false
@@ -519,14 +528,29 @@ const selectOption = (option: any) => {
   padding: 0;
 }
 
+@media (max-height: 550px) {
+  .card {
+    height: 100%;
+    overflow: auto !important;
+    animation: none !important;
+  }
+}
+
+@media (max-width: 400px) {
+  .card {
+    width: 100% !important;
+    overflow: auto !important;
+  }
+}
+
 @keyframes move {
   from {
-    transform: translate(-50%, -20%);
+    transform: translateY(-20px);
     opacity: 0;
   }
 
   to {
-    transform: translate(-50%, 0);
+    transform: translateY(0);
     opacity: 1;
   }
 }
@@ -569,9 +593,7 @@ const selectOption = (option: any) => {
 .card {
   position: absolute;
   width: 400px;
-  top: 25%;
-  left: 50%;
-  transform: translate(-50%, 0%);
+  transform: translateY(0);
   border: 1px solid #F0F0F0;
   border-radius: 16px;
   background-color: transparent;
@@ -611,6 +633,10 @@ const selectOption = (option: any) => {
         &:hover {
           background-color: rgb(243, 243, 245);
           cursor: pointer;
+        }
+
+        &:active{
+          background-color: #EBEBEB;
         }
 
         svg {

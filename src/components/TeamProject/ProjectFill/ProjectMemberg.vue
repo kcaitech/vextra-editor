@@ -245,95 +245,103 @@ const memberid = ref<number>()
 </script>
 
 <template>
-    <div class="overlay"></div>
-    <div class="container" v-if="isshow">
-        <div class="header">
-            <div class="title">{{ t('Createteam.membersed') }}</div>
-            <div class="close" @click.stop="emit('closeDialog')">
-                <svg-icon icon-class="close"></svg-icon>
-            </div>
-        </div>
-        <div class="content_title">
-            <div class="name_title">{{ t('Createteam.username') }}</div>
-            <div class="perm_title" @click="showpermlist = !showpermlist">
-                <span class="text">{{ t('Createteam.jurisdiction') }}</span>
-                <svg-icon icon-class="down"
-                    :style="{ transform: showpermlist ? 'rotate(-180deg)' : 'rotate(0deg)' }"></svg-icon>
-                <Transition name="el-zoom-in-top">
-                    <ul v-if="showpermlist" class="perm_list">
-                        <li class="perm_item" :style="{ color: index == permFilter ? '#000000' : '' }"
-                            v-for="(item, index) in permList" :key="index" @click.stop="handleCommand(index)">
-                            {{ item }}
-                            <div class="choose" :style="{ visibility: index == permFilter ? 'visible' : 'hidden' }">
-                            </div>
-                        </li>
-                    </ul>
-                </Transition>
-            </div>
-        </div>
-        <el-scrollbar class="myscrollbar" height="300px">
-            <div class="content">
-                <div class="member-item1" v-for="(item, index) in memberList" :key="index">
-                    <div class="name">
-                        <img :src="item.user.avatar" alt="user_avatar" />
-                        <span>{{ item.user.nickname }}</span>
-                    </div>
-                    <div class="type">
-                        <span>{{ permission[item.perm_type] }}</span>
-                        <div class="shrink" @click.stop="showmemberlist = !showmemberlist, memberid = index">
-                            <svg-icon
-                                v-if="(props.currentProject.self_perm_type === 5 && item.perm_type !== 5) || (props.currentProject.self_perm_type === 4 && (item.perm_type !== 4 && item.perm_type !== 5))"
-                                icon-class="down"
-                                :style="{ transform: showmemberlist ? 'rotate(-180deg)' : 'rotate(0deg)' }"></svg-icon>
-                        </div>
-                        <Transition name="el-zoom-in-top">
-                            <ul v-if="showmemberlist && memberid === index" class="member_list">
-                                <li class="member_item" :style="{ fontWeight: item.perm_type == 4 ? 500 : '' }"
-                                    v-if="props.currentProject.self_perm_type === 5"
-                                    @click.stop="handleCommandPerm({ member: item, perm: 4, command: 1, index })">
-                                    {{ t('Createteam.manager') }}
-                                    <div class="choose" :style="{ visibility: item.perm_type == 4 ? 'visible' : 'hidden' }">
-                                    </div>
-                                </li>
-                                <li class="member_item" :style="{ fontWeight: item.perm_type == 3 ? 500 : '' }"
-                                    @click.stop="handleCommandPerm({ member: item, perm: 3, command: 1, index })">{{
-                                        t('Createteam.editable') }}
-                                    <div class="choose" :style="{ visibility: item.perm_type == 3 ? 'visible' : 'hidden' }">
-                                    </div>
-                                </li>
-                                <li class="member_item" :style="{ fontWeight: item.perm_type == 2 ? 500 : '' }"
-                                    @click.stop="handleCommandPerm({ member: item, perm: 2, command: 1, index })">{{
-                                        t('Createteam.reviewed') }}
-                                    <div class="choose" :style="{ visibility: item.perm_type == 2 ? 'visible' : 'hidden' }">
-                                    </div>
-                                </li>
-                                <li class="member_item" :style="{ fontWeight: item.perm_type == 1 ? 500 : '' }"
-                                    @click.stop="handleCommandPerm({ member: item, perm: 1, command: 1, index })">{{
-                                        t('Createteam.Readonly') }}
-                                    <div class="choose" :style="{ visibility: item.perm_type == 1 ? 'visible' : 'hidden' }">
-                                    </div>
-                                </li>
-                                <li class="member_item" v-if="props.currentProject.self_perm_type === 5 && item.isTeam"
-                                    @click.stop="handleCommandPerm({ member: item, perm: 0, command: 2, index })">{{
-                                        t('Createteam.transferor') }}
-                                </li>
-                                <li class="member_item"
-                                    @click.stop="handleCommandPerm({ member: item, perm: 0, command: 3, index })">{{
-                                        t('Createteam.moveoutproject') }}
-                                </li>
-                            </ul>
-                        </Transition>
-                    </div>
+    <div class="overlay">
+        <div class="container" v-if="isshow">
+            <div class="header">
+                <div class="title">{{ t('Createteam.membersed') }}</div>
+                <div class="close" @click.stop="emit('closeDialog')">
+                    <svg-icon icon-class="close"></svg-icon>
                 </div>
             </div>
-        </el-scrollbar>
-        <div class="footer">
-            <div class="project_perm">
-                <div v-if="props.currentProject.project.public_switch">{{ t('Createteam.pertipsA') }}</div>
-                <div v-else>{{ t('Createteam.pertipsB') }}</div>
+            <div class="content_title">
+                <div class="name_title">{{ t('Createteam.username') }}</div>
+                <div class="perm_title" @click="showpermlist = !showpermlist">
+                    <span class="text">{{ t('Createteam.jurisdiction') }}</span>
+                    <svg-icon icon-class="down"
+                        :style="{ transform: showpermlist ? 'rotate(-180deg)' : 'rotate(0deg)' }"></svg-icon>
+                    <Transition name="el-zoom-in-top">
+                        <ul v-if="showpermlist" class="perm_list">
+                            <li class="perm_item" :style="{ color: index == permFilter ? '#000000' : '' }"
+                                v-for="(item, index) in permList" :key="index" @click.stop="handleCommand(index)">
+                                {{ item }}
+                                <div class="choose" :style="{ visibility: index == permFilter ? 'visible' : 'hidden' }">
+                                </div>
+                            </li>
+                        </ul>
+                    </Transition>
+                </div>
             </div>
-            <div class="exitbnt" v-if="props.currentProject.self_perm_type !== 5">
-                <button type="button" @click="onExitProject">{{ t('Createteam.projectexittitle') }}</button>
+            <el-scrollbar class="myscrollbar" height="300px">
+                <div class="content" :style="{ display: memberList.length === 0 ? 'flex' : '' }">
+                    <div class="member-item1" v-for="(item, index) in memberList" :key="index">
+                        <div class="name">
+                            <img :src="item.user.avatar" alt="user_avatar" />
+                            <span>{{ item.user.nickname }}</span>
+                        </div>
+                        <div class="type">
+                            <span>{{ permission[item.perm_type] }}</span>
+                            <div class="shrink" @click.stop="showmemberlist = !showmemberlist, memberid = index">
+                                <svg-icon
+                                    v-if="(props.currentProject.self_perm_type === 5 && item.perm_type !== 5) || (props.currentProject.self_perm_type === 4 && (item.perm_type !== 4 && item.perm_type !== 5))"
+                                    icon-class="down"
+                                    :style="{ transform: showmemberlist ? 'rotate(-180deg)' : 'rotate(0deg)' }"></svg-icon>
+                            </div>
+                            <Transition name="el-zoom-in-top">
+                                <ul v-if="showmemberlist && memberid === index" class="member_list">
+                                    <li class="member_item" :style="{ fontWeight: item.perm_type == 4 ? 500 : '' }"
+                                        v-if="props.currentProject.self_perm_type === 5"
+                                        @click.stop="handleCommandPerm({ member: item, perm: 4, command: 1, index })">
+                                        {{ t('Createteam.manager') }}
+                                        <div class="choose"
+                                            :style="{ visibility: item.perm_type == 4 ? 'visible' : 'hidden' }">
+                                        </div>
+                                    </li>
+                                    <li class="member_item" :style="{ fontWeight: item.perm_type == 3 ? 500 : '' }"
+                                        @click.stop="handleCommandPerm({ member: item, perm: 3, command: 1, index })">{{
+                                            t('Createteam.editable') }}
+                                        <div class="choose"
+                                            :style="{ visibility: item.perm_type == 3 ? 'visible' : 'hidden' }">
+                                        </div>
+                                    </li>
+                                    <li class="member_item" :style="{ fontWeight: item.perm_type == 2 ? 500 : '' }"
+                                        @click.stop="handleCommandPerm({ member: item, perm: 2, command: 1, index })">{{
+                                            t('Createteam.reviewed') }}
+                                        <div class="choose"
+                                            :style="{ visibility: item.perm_type == 2 ? 'visible' : 'hidden' }">
+                                        </div>
+                                    </li>
+                                    <li class="member_item" :style="{ fontWeight: item.perm_type == 1 ? 500 : '' }"
+                                        @click.stop="handleCommandPerm({ member: item, perm: 1, command: 1, index })">{{
+                                            t('Createteam.Readonly') }}
+                                        <div class="choose"
+                                            :style="{ visibility: item.perm_type == 1 ? 'visible' : 'hidden' }">
+                                        </div>
+                                    </li>
+                                    <li class="member_item" v-if="props.currentProject.self_perm_type === 5 && item.isTeam"
+                                        @click.stop="handleCommandPerm({ member: item, perm: 0, command: 2, index })">{{
+                                            t('Createteam.transferor') }}
+                                    </li>
+                                    <li class="member_item"
+                                        @click.stop="handleCommandPerm({ member: item, perm: 0, command: 3, index })">{{
+                                            t('Createteam.moveoutproject') }}
+                                    </li>
+                                </ul>
+                            </Transition>
+                        </div>
+                    </div>
+                    <div v-if="memberList.length === 0" class="nulldata">
+                        没有指定的成员
+                    </div>
+                </div>
+            </el-scrollbar>
+            <div class="footer">
+                <div class="project_perm">
+                    <div v-if="props.currentProject.project.public_switch">{{ t('Createteam.pertipsA') }}</div>
+                    <div v-else>{{ t('Createteam.pertipsB') }}</div>
+                </div>
+                <div class="exitbnt" v-if="props.currentProject.self_perm_type !== 5">
+                    <button type="button" @click="onExitProject">{{ t('Createteam.projectexittitle') }}</button>
+                </div>
             </div>
         </div>
     </div>
@@ -355,33 +363,50 @@ const memberid = ref<number>()
     border-radius: 6px;
 }
 
+@media (max-height: 480px) {
+    .container {
+        height: 100%;
+        overflow: auto !important;
+        animation: none !important;
+    }
+}
+
+@media (max-width: 400px) {
+    .container {
+        width: 100% !important;
+        overflow: auto !important;
+    }
+}
+
+
 @keyframes move {
     from {
-        transform: translate(-50%, -20%);
+        transform: translateY(-20px);
         opacity: 0;
     }
 
     to {
-        transform: translate(-50%, 0);
+        transform: translateY(0);
         opacity: 1;
     }
 }
 
 .overlay {
     position: absolute;
+    display: flex;
+    align-items: center;
+    justify-content: center;
     top: 0;
     left: 0;
-    width: 100%;
-    height: 100%;
+    bottom: 0;
+    right: 0;
     z-index: 999;
     background-color: rgba(0, 0, 0, 0.5);
 }
 
 .container {
     position: absolute;
-    top: 25%;
-    left: 50%;
-    transform: translate(-50%, 0);
+    transform: translateY(0);
     width: 400px;
     padding: 0 24px;
     border-radius: 16px;
@@ -498,6 +523,13 @@ const memberid = ref<number>()
 
     .content {
         height: 300px;
+
+        .nulldata {
+            margin: auto;
+            font-size: 12px;
+            font-weight: 500;
+            color:#8C8C8C;
+        }
 
         .member-item1 {
             display: flex;

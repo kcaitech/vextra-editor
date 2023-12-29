@@ -29,16 +29,17 @@
         </div>
         <listrightmenu :items="items" :data="mydata" @get-doucment="getDoucment" @r-starfile="Starfile"
             @r-sharefile="Sharefile" @r-removefile="Deletefile" @ropen="openDocument" @moveFillAddress="moveFillAddress" />
-        <FileShare v-if="showFileShare" @close="closeShare" :docId="docId" :docName="docName" :selectValue="selectValue"
-            :userInfo="userInfo" :docUserId="docUserId" @select-type="onSelectType" @switch-state="onSwitch"
-            :shareSwitch="shareSwitch" :pageHeight="pageHeight">
-        </FileShare>
         <MoveProjectFill :title="t('Createteam.movetip')" :confirm-btn="t('Createteam.move')" :projectItem="projectItem"
             :doc="mydata" :projectVisible="moveVisible" @clodeDialog="clodeDialog" @moveFillSeccess="moveFillSeccess">
         </MoveProjectFill>
     </div>
     <RecycleBin v-if="!active" />
-    <div v-if="showFileShare" class="overlay"></div>
+    <div v-if="showFileShare" class="overlay">
+        <FileShare @close="closeShare" :docId="docId" :docName="docName" :selectValue="selectValue" :userInfo="userInfo"
+            :docUserId="docUserId" @select-type="onSelectType" @switch-state="onSwitch" :shareSwitch="shareSwitch"
+            :pageHeight="pageHeight">
+        </FileShare>
+    </div>
 </template>
 
 <script setup lang="ts">
@@ -352,6 +353,9 @@ onUnmounted(() => {
 <style lang="scss" scoped>
 .overlay {
     position: absolute;
+    display: flex;
+    align-items: center;
+    justify-content: center;
     top: 0;
     left: 0;
     width: 100%;

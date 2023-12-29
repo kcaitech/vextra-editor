@@ -250,13 +250,6 @@ const setProjectInfo = async (params: any) => {
     }
 }
 
-const customRowClassName = () => {
-    return {
-        height: '50px',
-        'border-radius': '6px'
-    }
-}
-
 const noNetwork = ref(false)
 const iconlists = ref(['fixed', 'entrance', 'project'])
 </script>

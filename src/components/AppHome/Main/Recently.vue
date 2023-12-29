@@ -110,11 +110,12 @@
     </div>
     <listrightmenu :items="items" :data="mydata" @get-userdata="getUserdata" @r-starfile="Starfile" @r-sharefile="Sharefile"
         @r-removehistory="Removefile" @ropen="openDocument" />
-    <FileShare v-if="showFileShare" @close="closeShare" :docId="docId" :docName="docName" @switch-state="onSwitch"
-        :userInfo="userInfo" :docUserId="docUserId" :project="is_project" :selectValue="selectValue"
-        @select-type="onSelectType" :shareSwitch="shareSwitch" :pageHeight="pageHeight" :projectPerm="projectPerm">
-    </FileShare>
-    <div v-if="showFileShare" class="overlay"></div>
+    <div v-if="showFileShare" class="overlay">
+        <FileShare @close="closeShare" :docId="docId" :docName="docName" @switch-state="onSwitch" :userInfo="userInfo"
+            :docUserId="docUserId" :project="is_project" :selectValue="selectValue" @select-type="onSelectType"
+            :shareSwitch="shareSwitch" :pageHeight="pageHeight" :projectPerm="projectPerm">
+        </FileShare>
+    </div>
 </template>
 
 <script setup lang="ts">
@@ -303,6 +304,8 @@ const Sharefile = (data: data) => {
     projectPerm.value = data.project_perm
     showFileShare.value = true
     sharenumber += 1
+    console.log(showFileShare.value);
+
 }
 
 //移除历史记录入口
@@ -443,6 +446,9 @@ onUnmounted(() => {
 
 .overlay {
     position: absolute;
+    display: flex;
+    align-items: center;
+    justify-content: center;
     top: 0;
     left: 0;
     width: 100%;

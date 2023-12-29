@@ -8,11 +8,12 @@
             :nulldata="nulldata" />
     </div>
     <listrightmenu :items="items" :data="mydata" @ropen="openDocument" @r-sharefile="Sharefile" @r-starfile="Starfile" />
-    <FileShare v-if="showFileShare" @close="closeShare" :docId="docId" :docName="docName" :selectValue="selectValue"
-        :userInfo="userInfo" :project="is_project" @select-type="onSelectType" @switch-state="onSwitch"
-        :shareSwitch="shareSwitch" :pageHeight="pageHeight" :docUserId="docUserId" :projectPerm="projectPerm">
-    </FileShare>
-    <div v-if="showFileShare" class="overlay"></div>
+    <div v-if="showFileShare" class="overlay">
+        <FileShare @close="closeShare" :docId="docId" :docName="docName" :selectValue="selectValue" :userInfo="userInfo"
+            :project="is_project" @select-type="onSelectType" @switch-state="onSwitch" :shareSwitch="shareSwitch"
+            :pageHeight="pageHeight" :docUserId="docUserId" :projectPerm="projectPerm">
+        </FileShare>
+    </div>
 </template>
 <script setup lang="ts">
 import * as user_api from '@/request/users'
@@ -245,6 +246,9 @@ onUnmounted(() => {
 <style lang="scss" scoped>
 .overlay {
     position: absolute;
+    display: flex;
+    align-items: center;
+    justify-content: center;
     top: 0;
     left: 0;
     width: 100%;

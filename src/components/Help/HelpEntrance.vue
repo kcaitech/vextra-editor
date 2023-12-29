@@ -17,11 +17,12 @@
                     <img class="code-image" :src="QRCode" alt="QRCode">
                 </div>
             </div>
-            <Report v-if="report" @close="report = false"></Report>
+            <div v-if="report" class="overlay">
+                <Report @close="report = false"></Report>
+            </div>
             <ShortCut v-if="shortcut" @close="shortcut = false" :b="shortcut"></ShortCut>
         </Teleport>
     </div>
-    <div v-if="report" class="overlay"></div>
 </template>
 <script setup lang="ts">
 import { computed, ref, watch } from 'vue';
@@ -98,6 +99,9 @@ watch([qrcode, showitem], ([newvalue1, newvalue2]) => {
 <style lang="scss" scoped>
 .overlay {
     position: absolute;
+    display: flex;
+    align-items: center;
+    justify-content: center;
     top: 0;
     left: 0;
     width: 100%;
