@@ -25,17 +25,18 @@ function get_value_from_input(val: any) {
     value = Number(value.toFixed(0));
     return value;
 }
-function change(val: any, type: string) {
+function change(val: any, shapes: Shape[], type: string) {
     val = get_value_from_input(val);
     if (rect.value) {
         setting_for_extend(val, type);
         return;
     }
+    console.log(type, 'vale');
+    
     const page = props.context.selection.selectedPage!;
-    const selected = props.context.selection.selectedShapes;
     const editor = props.context.editor4Page(page);
 
-    editor.shapesModifyFixedRadius(selected, val);
+    editor.shapesModifyFixedRadius(shapes, val);
 }
 function setting_for_extend(val: number, type: string) {
     const indexes = get_indexes2(type as 'rt' | 'lt' | 'rb' | 'lb');
@@ -207,19 +208,19 @@ onUnmounted(() => {
 <template>
     <div class="tr">
         <IconText class="frame" svgicon="radius" :multipleValues="is_multi_values" :text="radius.lt"
-            :frame="{ width: 12, height: 12 }" @onchange="e => change(e, 'lt')" :disabled="disabled" :context="context" />
+            :frame="{ width: 12, height: 12 }" @onchange="(value, shapes) => change(value, shapes, 'lt')" :disabled="disabled" :context="context" />
         <div class="frame" v-if="!rect"></div>
         <IconText v-if="rect" class="frame" svgicon="radius" :text="radius.rt"
-            :frame="{ width: 12, height: 12, rotate: 90 }" @onchange="e => change(e, 'rt')" :context="context" />
+            :frame="{ width: 12, height: 12, rotate: 90 }" @onchange="(value, shapes) => change(value, shapes, 'rt')" :context="context" />
         <div class="more-for-radius" @click="rectToggle" v-if="can_be_rect" :class="{ 'active': rect }">
             <svg-icon :icon-class="rect ? 'more-for-radius' : 'more-for-radius'" :class="{ 'active': rect }"></svg-icon>
         </div>
     </div>
     <div class="tr" v-if="rect">
         <IconText class="frame" svgicon="radius" :text="radius.lb" :frame="{ width: 12, height: 12, rotate: 270 }"
-            @onchange="e => change(e, 'lb')" :context="context" />
+        @onchange="(value, shapes) => change(value, shapes, 'lb')" :context="context" />
         <IconText class="frame" svgicon="radius" :text="radius.rb" :frame="{ width: 12, height: 12, rotate: 180 }"
-            @onchange="e => change(e, 'rb')" :context="context" />
+        @onchange="(value, shapes) => change(value, shapes, 'rb')" :context="context" />
         <div style="width: 32px;height: 32px;"></div>
     </div>
 </template>

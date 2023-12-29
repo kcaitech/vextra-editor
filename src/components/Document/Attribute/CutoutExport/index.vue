@@ -264,29 +264,7 @@ const addIos = (len: number) => {
 function first() {
     if (preinstallArgus.length === 0 && !mixed.value) preinstall('default');
 }
-const changeSize = (value: string, idx: number) => {
-    const _idx = preinstallArgus.length - idx - 1;
-    const selected = props.context.selection.selectedShapes;
-    const len = selected.length;
-    if (len === 1) {
-        const shape = selected[0];
-        const editor = props.context.editor4Shape(shape);
-        editor.setExportFormatScale(_idx, parseFloat(value));
-    } else if (len > 1) {
-        const actions = get_actions_export_format_scale(selected, _idx, parseFloat(value));
-        const page = props.context.selection.selectedPage;
-        if (page) {
-            const editor = props.context.editor4Page(page);
-            editor.setShapesExportFormatScale(actions);
-        }
-    } else {
-        const page = props.context.selection.selectedPage;
-        if (page) {
-            const editor = props.context.editor4Page(page);
-            editor.setPageExportFormatScale(_idx, parseFloat(value));
-        }
-    }
-}
+
 const changePerfix = (index: number, idx: number) => {
     const _idx = preinstallArgus.length - idx - 1;
     const selected = props.context.selection.selectedShapes;
@@ -333,29 +311,7 @@ const changeFormat = (index: number, idx: number) => {
         }
     }
 }
-const changeName = (value: string, idx: number) => {
-    const _idx = preinstallArgus.length - idx - 1;
-    const selected = props.context.selection.selectedShapes;
-    const len = selected.length;
-    if (len === 1) {
-        const shape = selected[0];
-        const editor = props.context.editor4Shape(shape);
-        editor.setExportFormatName(_idx, value);
-    } else if (len > 1) {
-        const actions = get_actions_export_format_name(selected, _idx, value);
-        const page = props.context.selection.selectedPage;
-        if (page) {
-            const editor = props.context.editor4Page(page);
-            editor.setShapesExportFormatName(actions);
-        }
-    } else {
-        const page = props.context.selection.selectedPage;
-        if (page) {
-            const editor = props.context.editor4Page(page);
-            editor.setPageExportFormatName(_idx, value);
-        }
-    }
-}
+
 const deleteArgus = (idx: number) => {
     const _idx = preinstallArgus.length - idx - 1;
     const selected = props.context.selection.selectedShapes;
@@ -534,8 +490,8 @@ onUnmounted(() => {
             <div class="argus" v-if="preinstallArgus.length > 0" preinstallArgus.length>
                 <ExportArguments v-for="(argus, index) in preinstallArgus" :key="argus.id" :index="index" :argus="argus"
                     :context="context" :shapes="shapes" :sizeItems="sizeItems" :perfixItems="perfixItems"
-                    :length="preinstallArgus.length" :formatItems="formatItems" @change-size="changeSize"
-                    @changePerfix="changePerfix" @change-name="changeName" @change-format="changeFormat"
+                    :length="preinstallArgus.length" :formatItems="formatItems"
+                    @changePerfix="changePerfix" @change-format="changeFormat"
                     @delete="deleteArgus">
                 </ExportArguments>
             </div>

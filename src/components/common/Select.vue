@@ -153,7 +153,7 @@ watch(() => props.selected, () => {
             </div>
             <div v-if="curValue" class="check"
                 :style="{ top: `${4 + curValueIndex * props.itemHeight + props.itemHeight / 2}px` }">
-                <svg-icon icon-class="choose" :style="{ color: highlight ? '#fff' : '#000' }"></svg-icon>
+                <svg-icon :icon-class="highlight ? 'white-select' : 'page-select'"></svg-icon>
             </div>
         </div>
     </div>

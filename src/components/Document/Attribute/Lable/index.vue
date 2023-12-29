@@ -72,5 +72,6 @@ onUnmounted(() => {
     justify-content: center;
     align-items: center;
     color: #999;
+    overflow: hidden;
 }
 </style>

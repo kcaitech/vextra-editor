@@ -1,6 +1,8 @@
 <script setup lang="ts">
 import { Context } from "@/context";
 import { get_rotation } from "@/utils/attri_setting";
+import { Shape } from "@kcdesign/data";
+import { watchEffect } from "vue";
 import { watch, ref, onMounted } from "vue";
 type Scale = { axleX: number, degX: number }
 const props = defineProps<{
@@ -14,7 +16,7 @@ const props = defineProps<{
     context: Context
 }>();
 const emit = defineEmits<{
-    (e: "onchange", value: string): void;
+    (e: "onchange", value: string, shapes: Shape[]): void;
 }>();
 const curpt: { x: number, y: number } = { x: 0, y: 0 }
 const _curpt: { x: number, y: number } = { x: 0, y: 0 }
@@ -26,45 +28,53 @@ const scale = ref<Scale>({
 })
 const isDrag = ref(false)
 const input = ref<HTMLInputElement>();
-const isActived = ref(false)
-
+const inputValue = ref(props.text);
+const isActived = ref(false);
+const shapes = ref<Shape[]>([]);
+const saveValue = ref('');
 function onChange(e: Event) {
     if (props.disabled) {
         return;
     }
-    let value = (e.currentTarget as any)['value']
+    let value = String(saveValue.value)
     try {
-        if (props.svgicon == 'angle' && input.value!.value.slice(-1) === '°') {
-            const raduis = input.value!.value.slice(0, -1)
-            value = eval(raduis);
-            input.value!.value = value
+        if (props.svgicon == 'angle' && value.slice(-1) === '°') {
+            const raduis = value.slice(0, -1)
+            value = String(eval(raduis));
         } else {
-            value = eval(value);
-            input.value!.value = value
+            value = String(eval(value));
         }
     } catch (error) {
-        return input.value!.value = String(props.text)
+        return inputValue.value = String(props.text)
     }
     if (props.svgicon !== 'angle') {
-        if (isNaN(Number(input.value!.value))) {
-            return input.value!.value = String(props.text)
+        if (isNaN(Number(value))) {
+            return inputValue.value = String(props.text)
         }
     } else if (props.svgicon === 'angle') {
-        if (input.value!.value.slice(-1) !== '°' && isNaN(Number(input.value!.value))) {
-            return input.value!.value = String(props.text)
+        if (value.slice(-1) !== '°' && isNaN(Number(value))) {
+            return inputValue.value = String(props.text)
+        }else if (value.slice(-1) === '°' && isNaN(Number(value.slice(0, -1)))) {
+            return inputValue.value = String(props.text)
         }
     }
-    if (Number(input.value!.value) < 1 && props.ticon === 'W') {
-        input.value!.value = '1'
-    } else if (Number(input.value!.value) < 1 && props.ticon === 'H') {
-        input.value!.value = '1'
+    if (Number(value) < 1 && props.ticon === 'W') {
+        inputValue.value = '1'
+    } else if (Number(value) < 1 && props.ticon === 'H') {
+        inputValue.value = '1'
     }
-    if (value < 1 && props.ticon === 'W') {
-        value = 1
-    } else if (value < 1 && props.ticon === 'H') {
-        value = 1
+    if (+value < 1 && props.ticon === 'W') {
+        value = '1'
+    } else if (+value < 1 && props.ticon === 'H') {
+        value = '1'
     }
-    emit("onchange", value);
+    console.log(value, 'value');
+    
+    emit("onchange", value, shapes.value as Shape[]);
+}
+const saveInputValue = () => {
+    const value = input.value!.value;
+    saveValue.value = value;
 }
 const onBlur = (e: MouseEvent) => {
     if (props.disabled) return;
@@ -119,6 +129,7 @@ const onMouseUp = (e: MouseEvent) => {
 const selectValue = () => {
     isActived.value = true
     if (input.value) {
+        shapes.value = [...props.context.selection.selectedShapes];
         input.value.select()
     }
 }
@@ -134,7 +145,7 @@ watch(scale, () => {
                     input.value!.value = '1'
                 }
             }
-            emit("onchange", input.value!.value);
+            emit("onchange", input.value!.value, shapes);
         } else if (shapes.length > 1) {
 
         }
@@ -154,7 +165,7 @@ watch(scale, () => {
                 result = '0'
             }
         }
-        emit("onchange", result!)
+        emit("onchange", result!, shapes)
     }
 }, { deep: true });
 function blur2() {
@@ -165,6 +176,10 @@ watch(screenWidth, () => {
 })
 watch(screenHeight, () => {
     screenHeight.value = window.innerHeight;
+})
+watchEffect(() => {
+    props.text
+    inputValue.value = String(props.text)
 })
 onMounted(() => {
     window.addEventListener('resize', () => {
@@ -183,9 +198,10 @@ onMounted(() => {
             cursor: (props.svgicon === 'radius' && props.multipleValues === true && !props.disabled) ? 'auto' : 'ew-resize'
         }"></svg-icon>
         <img :class="props.disabled ? 'deicon' : 'icon'" v-if="props.icon" :src="props.icon" />
-        <span @mousedown="onMouseDown" :class="props.disabled ? 'deicon' : 'icon'" v-if="!props.icon && props.ticon">{{props.ticon }}</span>
-        <input ref="input" @click="onBlur" @focus="selectValue" @blur="blur2" :value="props.text" @keydown="onKeyBlur"
-            :disabled="props.disabled" :style="{ cursor: props.disabled ? 'default' : 'text' }" v-on:change="onChange" />
+        <span @mousedown="onMouseDown" :class="props.disabled ? 'deicon' : 'icon'"
+            v-if="!props.icon && props.ticon">{{ props.ticon }}</span>
+        <input ref="input" @click="onBlur" @focus="selectValue" @blur="blur2" :value="inputValue" @keydown="onKeyBlur"
+            :disabled="props.disabled" :style="{ cursor: props.disabled ? 'default' : 'text' }" v-on:change="onChange"  @input="saveInputValue"/>
     </div>
 </template>
 

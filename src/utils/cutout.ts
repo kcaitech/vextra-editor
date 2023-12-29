@@ -263,3 +263,15 @@ const getMinPoint = (points: { x: number, y: number }[]) => {
     }
     return { x: min_x, y: min_y }
 }
+
+export function compareArrays(s1: Shape[], s2: Shape[]) {
+    if(s1.length !== s2.length) {
+      return false;
+    }
+    for(let i = 0; i < s1.length; i++) {
+      if(s1[i].id !== s2[i].id) {
+        return false;
+      }
+    }
+    return true;
+  }
