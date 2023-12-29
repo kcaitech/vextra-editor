@@ -3,7 +3,7 @@ import { Context } from '@/context';
 import { Selection } from '@/context/selection';
 import { WorkSpace } from "@/context/workspace";
 import { onMounted, onUnmounted, shallowRef, ref, computed } from 'vue';
-import { ShapeType, Shape, TextShape, TableShape, SymbolRefShape } from "@kcdesign/data"
+import { ShapeType, Shape, TextShape, TableShape, SymbolRefShape, SymbolShape } from "@kcdesign/data"
 import Arrange from './Arrange.vue';
 import ShapeBaseAttr from './BaseAttr/Index.vue';
 import Fill from './Fill/Fill.vue';
@@ -20,7 +20,7 @@ import { Tool } from '@/context/tool';
 import Opacity from './Opacity/Opacity.vue';
 import BaseForPathEdit from "@/components/Document/Attribute/BaseAttr/BaseForPathEdit.vue";
 import InstanceAttr from './Module/InstanceAttr.vue';
-import { get_var_for_ref, is_shapes_if_symbolref } from '@/utils/symbol';
+import { get_var_for_ref, is_part_of_symbol, is_shapes_if_symbolref } from '@/utils/symbol';
 import { useI18n } from 'vue-i18n';
 
 const props = defineProps<{ context: Context }>();
@@ -168,6 +168,9 @@ const need_instance_attr_show = () => {
         const symref = props.context.selection.symbolrefshape;
         if (!symref) {
             return;
+        }
+        if (!is_part_of_symbol(symref)) {
+            return true;
         }
         const result = get_var_for_ref(symref, t);
 
