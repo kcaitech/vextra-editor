@@ -1,7 +1,7 @@
 <script lang="ts" setup>
 import { Context } from '@/context';
 import { ClientXY, Selection } from '@/context/selection';
-import { Shape, ShapeType, TableCell, TableShape, TableView } from '@kcdesign/data';
+import { Shape, ShapeType, TableCell, TableCellView, TableShape, TableView } from '@kcdesign/data';
 import { onMounted, onUnmounted, ref, watch } from 'vue';
 import { genRectPath } from '../../common';
 import { XYsBounding } from '@/utils/common';
@@ -10,7 +10,7 @@ import { TableSelection } from '@/context/tableselection';
 
 interface Props {
     context: Context
-    cell: TableCell | undefined
+    cell: TableCellView | undefined
     table: TableView
     matrix: number[]
 }

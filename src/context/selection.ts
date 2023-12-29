@@ -9,6 +9,7 @@ import {
     SymbolRefView,
     SymbolShape,
     SymbolView,
+    TableCell,
     TableCellView,
     TableShape,
     TableView,
@@ -29,6 +30,7 @@ import { Context } from ".";
 import { TextSelectionLite } from "@/context/textselectionlite";
 import { is_symbol_or_union } from "@/utils/symbol";
 import { finder, scout, Scout } from "@/utils/scout";
+import { TableSelection } from "./tableselection";
 
 interface Saved {
     page: Page | undefined,
@@ -88,13 +90,15 @@ export class Selection extends WatchableObject implements ISave4Restore {
     static ABOUT_ME = 13;
     static EXTEND = 14;
     static PLACEMENT_CHANGE = 15;
-    static CHANGE_TEXT_LITE = 16;
+    // static CHANGE_TEXT_LITE = 16;
 
     private m_selectPage?: PageView;
     private m_selectShapes: ShapeView[] = [];
     private m_hoverShape?: ShapeView;
     private m_document: Document;
     private m_scout: Scout | undefined;
+    private m_tableselection: TableSelection;
+    private m_textselection: TextSelectionLite;
 
     private m_comment_id: string = '';
     private m_comment_status: boolean = false;
@@ -112,6 +116,8 @@ export class Selection extends WatchableObject implements ISave4Restore {
         super();
         this.m_document = document;
         this.m_context = context;
+        this.m_tableselection = new TableSelection(context); // 表格选区
+        this.m_textselection = new TextSelectionLite(this); // 文字选区
     }
 
     get scout(): Scout {
@@ -149,6 +155,32 @@ export class Selection extends WatchableObject implements ISave4Restore {
 
     get commentAboutMe() { //评论显示关于我的
         return this.m_comment_about_me;
+    }
+
+    get tableSelection() {
+        return this.m_tableselection;
+    }
+
+    get textSelection() {
+        return this.m_textselection;
+    }
+
+    get focusTextShape(): TextShapeView | TableCellView | undefined {
+        const selected = this.selectedShapes;
+        if (selected.length !== 1) {
+            return;
+        }
+        const shape = selected[0];
+        if (shape instanceof TextShapeView) {
+            return shape;
+        }
+        if (shape instanceof TableView) {
+            const ts = this.tableSelection;
+            const cell = ts.editingCell;
+            if (cell?.cell) {
+                return shape.cells.get(cell.cell.id);
+            }
+        }
     }
 
     selectCommentPage(id: string) {
@@ -323,13 +355,15 @@ export class Selection extends WatchableObject implements ISave4Restore {
     }
 
     resetSelectShapes() {
+        this.m_textselection.reset();
+        this.m_tableselection.resetSelection();
         this.m_selectShapes.length = 0;
         selected_sym_ref_menber(this.m_context, this.m_selectShapes);
         this.notify(Selection.CHANGE_SHAPE);
     }
 
     isSelectedShape(shape: ShapeView | Shape | string) {
-        const shapeId = typeof shape ==='string'? shape : shape.id;
+        const shapeId = typeof shape === 'string' ? shape : shape.id;
         const ret = this.m_selectShapes.find(value => shapeId == value.id);
         return ret !== undefined;
     }
@@ -390,13 +424,9 @@ export class Selection extends WatchableObject implements ISave4Restore {
         this.m_table_area = table_area;
     }
 
-    private m_textSelection_lite?: TextSelectionLite;
-
+    /** @deprecated */
     getTextSelection(shape: TextShapeLike) {
-        if (!this.m_textSelection_lite || this.m_textSelection_lite.shape.id !== shape.id) {
-            this.m_textSelection_lite = new TextSelectionLite(shape, this);
-        }
-        return this.m_textSelection_lite;
+        return this.textSelection;
     }
 
     save() {

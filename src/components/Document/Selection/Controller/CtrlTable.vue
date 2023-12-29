@@ -33,6 +33,7 @@ const cell_menu = ref<boolean>(false);
 const cell_menu_type = ref<CellMenu>(CellMenu.MultiSelect);
 const cell_menu_posi = ref<ClientXY>({ x: 0, y: 0 });
 const editingCell = shallowRef<TableGridItem & { cell: TableCell | undefined }>();
+const editingCellView = shallowRef<TableCellView>();
 const editingCellMatrix = computed(() => {
     matrix.reset(submatrix.toArray());
     if (editingCell.value) {
@@ -77,6 +78,7 @@ function update() {
     }, bounds)
     if (editingCell.value && editingCell.value.cell) {
         editingCell.value = props.shape.locateCell2(editingCell.value.cell);
+        updateCellView();
     }
 }
 function genViewBox(bounds: { left: number, top: number, right: number, bottom: number }) {
@@ -86,7 +88,8 @@ function isEditingText() {
     return editingCell.value &&
         editingCell.value.cell &&
         editingCell.value.cell.cellType === TableCellType.Text &&
-        editingCell.value.cell.text;
+        editingCell.value.cell.text &&
+        editingCellView.value;
 }
 const closeCellMenu = () => {
     props.context.tableSelection.resetSelection();
@@ -97,8 +100,27 @@ function selection_watcher(t: number) {
     else if (t === Selection.CHANGE_PAGE) return init();
 }
 function table_selection_watcher(t: number) {
-    if (t === TableSelection.CHANGE_EDITING_CELL) editingCell.value = props.context.tableSelection.editingCell;
+    if (t === TableSelection.CHANGE_EDITING_CELL) {
+        editingCell.value = props.context.tableSelection.editingCell;
+        updateCellView();
+    }
 }
+
+function updateCellView() {
+    const cell = editingCell.value?.cell;
+    if (cell) {
+        editingCellView.value = props.shape.cells.get(cell.id);
+        if (!editingCellView.value) {
+            props.context.nextTick(props.context.selection.selectedPage!, () => {
+                editingCellView.value = props.shape.cells.get(cell.id);
+            })
+        }
+    }
+    else {
+        editingCellView.value = undefined;
+    }
+}
+
 function init() {
     props.context.tableSelection.resetSelection();
     editingCell.value = undefined;
@@ -248,14 +270,6 @@ onUnmounted(() => {
     props.shape.unwatch(update);
 })
 
-// todo
-function adaptTableCell(cell: TableCell): TableCellView {
-    const page = props.context.selection.selectedPage!;
-    const _cell = page.getShape(cell.id) as TableCellView;
-    if (!_cell) throw new Error("cell not found");
-    return _cell;
-}
-
 </script>
 <template>
     <svg version="1.1" xmlns="http://www.w3.org/2000/svg" xmlns:xlink="http://www.w3.org/1999/xlink"
@@ -264,12 +278,13 @@ function adaptTableCell(cell: TableCell): TableCellView {
         :transform="`translate(${bounds.left},${bounds.top})`" overflow="visible" @mousemove="move" @mousedown="down"
         @mouseleave="leave">
         <!-- 表格选区 -->
-        <TableSelectionView :context="props.context" @get-menu="update_menu_posi" :cell="editingCell?.cell"
-            :table="props.shape" :matrix="submatrixArray">
+        <TableSelectionView :context="props.context" @get-menu="update_menu_posi"
+            :cell="editingCellView" :table="props.shape" :matrix="submatrixArray">
         </TableSelectionView>
         <!-- 文本选区 -->
-        <SelectView v-if="isEditingText()" :context="props.context" :shape="adaptTableCell(editingCell!.cell!)"
-            :matrix="editingCellMatrix" :main-notify="Selection.CHANGE_TEXT" :selection="props.context.selection.getTextSelection(editingCell!.cell as any)"></SelectView>
+        <SelectView v-if="isEditingText()" :context="props.context" :shape="editingCellView!"
+            :matrix="editingCellMatrix" :main-notify="Selection.CHANGE_TEXT"
+            :selection="props.context.selection.textSelection"></SelectView>
         <!-- 列宽缩放 -->
         <BarsContainer :context="props.context" :matrix="submatrixArray" :shape="props.shape"
             :c-frame="props.controllerFrame">
@@ -290,8 +305,9 @@ function adaptTableCell(cell: TableCell): TableCellView {
         </g>
     </svg>
     <!-- 输入 -->
-    <TextInput v-if="isEditingText()" :context="props.context" :shape="adaptTableCell(editingCell!.cell!)"
-        :matrix="editingCellMatrix" :main-notify="Selection.CHANGE_TEXT" :selection="props.context.selection.getTextSelection(editingCell!.cell as any)"></TextInput>
+    <TextInput v-if="isEditingText()" :context="props.context" :shape="editingCellView!"
+        :matrix="editingCellMatrix" :main-notify="Selection.CHANGE_TEXT"
+        :selection="props.context.selection.textSelection"></TextInput>
     <!-- 小菜单 -->
     <TableCellsMenu :cells="[]" v-if="cell_menu" :context="props.context" @close="closeCellMenu"
         :position="{ x: cell_menu_posi.x, y: cell_menu_posi.y }" :cell-menu="cell_menu_type"></TableCellsMenu>

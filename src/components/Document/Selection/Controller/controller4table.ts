@@ -10,7 +10,7 @@ import { WorkSpace } from "@/context/workspace";
 import { AsyncTransfer } from "@kcdesign/data";
 import { useI18n } from 'vue-i18n';
 import { TableSelection } from '@/context/tableselection';
-import { TextSelection } from '@/context/textselection';
+import { TextSelectionLite as  TextSelection } from '@/context/textselectionlite';
 
 function useControllerCustom(context: Context, i18nT: Function) {
     const workspace = computed(() => context.workspace);
@@ -123,7 +123,7 @@ function useControllerCustom(context: Context, i18nT: Function) {
                     const text = editingCell.cell.text;
                     if (!text) return;
                     const m_index = text.locateText(xy.x, xy.y);
-                    text_selection.selectText(down_index.index, m_index.index, text);
+                    text_selection.selectText(down_index.index, m_index.index);
                 }
             } else {
                 if (m_item.cell?.id === down_item.cell?.id) {
@@ -164,7 +164,7 @@ function useControllerCustom(context: Context, i18nT: Function) {
                     if (!text) return;
                     down_index = text.locateText(xy.x, xy.y);
                     text_selection = context.textSelection;
-                    text_selection.setCursor(down_index.index, down_index.before, text);
+                    text_selection.setCursor(down_index.index, down_index.before);
                 } else if (down_item.cell.cellType === TableCellType.Image) {
                     // console.log('点到imagecell');
                     table_selection.setEditingCell();
@@ -198,7 +198,7 @@ function useControllerCustom(context: Context, i18nT: Function) {
         if (down_item && down_item.cell && down_item.cell.cellType === TableCellType.Text) {
             const text = down_item.cell.text, len: number = text?.length!;
             if (text && len !== 1) {
-                text_selection.selectText(0, len, text);
+                text_selection.selectText(0, len);
             } else {
                 table_selection.setEditingCell();
                 table_selection.selectTableCell(down_item.index.row, down_item.index.col);

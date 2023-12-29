@@ -1,5 +1,5 @@
-import {Text, SpanAttr, WatchableObject, TextShape, TextShapeView, TableCellView} from "@kcdesign/data";
-import {Selection} from "./selection"
+import { Text, SpanAttr, WatchableObject, TextShape, TextShapeView, TableCellView } from "@kcdesign/data";
+import { Selection } from "./selection"
 
 export interface TextLocate {
     index: number
@@ -12,28 +12,27 @@ export class TextSelectionLite extends WatchableObject {
     private m_cursorStart: number = -1;
     private m_cursorAtBefore: boolean = false;
     private m_cursorEnd: number = -1;
-    private selection: Selection;
-    private m_shape: TextShapeView | TableCellView;
+    private m_selection: Selection;
 
-    constructor(textShape: TextShapeView | TableCellView, selection: Selection) {
+    constructor(selection: Selection) {
         super();
-        this.m_shape = textShape;
-        this.selection = selection;
+        // this.m_shape = textShape;
+        this.m_selection = selection;
     }
 
     notify(...args: any[]): void {
-        this.selection.notify(...args);
+        this.m_selection.notify(...args);
     }
 
-    reset() {
+    reset(shape?: TextShapeView | TableCellView) {
         this.m_cursorStart = -1;
         this.m_cursorEnd = -1;
         this.m_cursorAtBefore = false;
-        this.notify(Selection.CHANGE_TEXT_LITE);
+        this.notify(Selection.CHANGE_TEXT);
     }
 
     get shape() {
-        return this.m_shape;
+        return this.m_selection.focusTextShape;
     }
 
     get cursorStart() {
@@ -53,12 +52,24 @@ export class TextSelectionLite extends WatchableObject {
      * @param y
      */
     locateText(x: number, y: number): TextLocate {
-        return this.m_shape.locateText(x, y);
+        const shape = this.shape;
+
+        if (shape) {
+            // translate x,y
+            const matrix = shape.matrix2Root();
+            const xy = matrix.inverseCoord(x, y);
+            x = xy.x;
+            y = xy.y;
+            return shape.locateText(x, y);
+        }
+        return { index: -1, before: false, placeholder: false, attr: undefined };
     }
 
     setCursor(index: number, before: boolean) {
+        const shape = this.shape;
+        if (!shape) return;
         if (index < 0) index = 0;
-        const text = this.m_shape.getText();
+        const text = shape.getText();
         const span = text.spanAt(index);
         if (span?.placeholder && span.length === 1) index++;
         const length = text.length;
@@ -70,13 +81,15 @@ export class TextSelectionLite extends WatchableObject {
             this.m_cursorStart = index;
             this.m_cursorEnd = index;
             this.m_cursorAtBefore = before;
-            this.notify(Selection.CHANGE_TEXT_LITE);
+            this.notify(Selection.CHANGE_TEXT);
         }
     }
 
     selectText(start: number, end: number) {
+        const shape = this.shape;
+        if (!shape) return;
         // 不只选择'\n'
-        const text = this.m_shape.getText() as Text
+        const text = shape.getText() as Text
         if (Math.abs(start - end) === 1 && text.charAt(Math.min(start, end)) === '\n') {
             if (end > start) {
                 start++;
@@ -99,7 +112,7 @@ export class TextSelectionLite extends WatchableObject {
             this.m_cursorStart = start;
             this.m_cursorEnd = end;
             this.m_cursorAtBefore = false;
-            this.notify(Selection.CHANGE_TEXT_LITE);
+            this.notify(Selection.CHANGE_TEXT);
         }
     }
 }

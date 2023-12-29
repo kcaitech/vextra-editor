@@ -105,11 +105,11 @@ onUnmounted(() => {
          :style="{ transform: matrix.toString() }" @mousedown="down"
     >
         <SelectView :context="props.context" :shape="(props.shape)"
-                    :matrix="o_matrix.toArray()" :main-notify="Selection.CHANGE_TEXT_LITE"
+                    :matrix="o_matrix.toArray()" :main-notify="Selection.CHANGE_TEXT"
                     :selection="text_selection_lite"></SelectView>
     </svg>
     <TextInput :context="props.context" :shape="(props.shape)" :matrix="o_matrix.toArray()"
-               :main-notify="Selection.CHANGE_TEXT_LITE" :selection="text_selection_lite" :root="root"></TextInput>
+               :main-notify="Selection.CHANGE_TEXT" :selection="text_selection_lite" :root="root"></TextInput>
 </template>
 <style scoped lang="scss">
 svg {

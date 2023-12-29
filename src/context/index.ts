@@ -31,8 +31,6 @@ import { Cursor } from "./cursor";
 import { EscStack } from "./escstack";
 import { Asssit } from "./assist";
 import { TeamWork } from "./teamwork";
-import { TableSelection } from "./tableselection";
-import { TextSelection } from "./textselection";
 import { Component } from "./component";
 import { Path } from "./path";
 import { PageDom } from "@/components/Document/Content/vdom/page";
@@ -92,10 +90,8 @@ export class Context extends WatchableObject {
     private m_escstack: EscStack;
     private m_assist: Asssit;
     private m_teamwork: TeamWork;
-    private m_tableselection: TableSelection;
     private m_component: Component;
     private m_path: Path;
-    private m_textselection: TextSelection;
 
     private m_vdom: Map<string, { dom: PageDom, ctx: DomCtx }> = new Map();
     private m_arrange: Arrange
@@ -119,8 +115,7 @@ export class Context extends WatchableObject {
         this.m_escstack = new EscStack(); // esc任务队列
         this.m_assist = new Asssit(this); // 辅助线相关
         this.m_teamwork = new TeamWork();
-        this.m_tableselection = new TableSelection(this); // 表格选区
-        this.m_textselection = new TextSelection(this.m_selection); // 文字选区
+
         this.m_component = new Component(this);
         this.m_path = new Path(this);
         this.m_arrange = new Arrange();
@@ -269,11 +264,11 @@ export class Context extends WatchableObject {
     }
 
     get tableSelection() {
-        return this.m_tableselection;
+        return this.m_selection.tableSelection;
     }
 
     get textSelection() {
-        return this.m_textselection;
+        return this.m_selection.textSelection;
     }
 
     get esctask() {

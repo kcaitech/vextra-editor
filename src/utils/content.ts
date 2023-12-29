@@ -338,8 +338,8 @@ export function init_insert_textshape(context: Context, mousedownOnPageXY: PageX
         page && context.nextTick(page, () => {
             const s = new_shape && page.shapes.get(new_shape.id);
             s && selection.selectShape(s);
+            context.textSelection.selectText(0, (new_shape as TextShape).text.length);
         })
-        context.textSelection.selectText(0, (new_shape as TextShape).text.length, (new_shape as TextShape).text);
     }
     context.selection.setSelectionNewShapeStatus(true);
     context.workspace.notify(WorkSpace.INIT_EDITOR);

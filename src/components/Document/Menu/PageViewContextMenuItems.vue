@@ -100,7 +100,7 @@ async function cut() {
         if (copy_result) {
             const editor = props.context.editor4TextShape(textlike as TextShape);
             if (editor.deleteText(Math.min(start, end), Math.abs(start - end))) {
-                selection.setCursor(Math.min(start, end), false, textlike.text);
+                selection.setCursor(Math.min(start, end), false);
             }
         }
     }
@@ -150,7 +150,7 @@ function selectAll() {
     if (textlike) {
         const text = textlike.text;
         const end = text.length;
-        props.context.textSelection.selectText(0, end, text);
+        props.context.textSelection.selectText(0, end);
     } else {
         props.context.workspace.keydown_a(true, true);
     }
