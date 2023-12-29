@@ -160,7 +160,7 @@ onMounted(() => {
 
 .show {
     .select {
-        width: 168px;
+        width: 148px;
         height: 32px;
     }
 }
