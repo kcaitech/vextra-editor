@@ -33,7 +33,7 @@ function change(val: any, type: string) {
     }
     const page = props.context.selection.selectedPage!;
     const selected = props.context.selection.selectedShapes;
-    const editor = props.context.editor4Page(page.data);
+    const editor = props.context.editor4Page(page);
 
     editor.shapesModifyFixedRadius(selected.map(s => adapt2Shape(s)), val);
 }
@@ -43,7 +43,7 @@ function setting_for_extend(val: number, type: string) {
     const page = props.context.selection.selectedPage!;
     const selected = props.context.selection.selectedShapes;
 
-    const editor = props.context.editor4Page(page.data);
+    const editor = props.context.editor4Page(page);
     editor.shapesModifyPointRadius(selected.map(s => adapt2Shape(s)), indexes, val);
 }
 function rectToggle() {

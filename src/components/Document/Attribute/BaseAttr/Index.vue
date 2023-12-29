@@ -166,7 +166,7 @@ function onChangeW(value: string) {
 
     const page = props.context.selection.selectedPage!;
 
-    const editor = props.context.editor4Page(page.data);
+    const editor = props.context.editor4Page(page);
 
     const selected = props.context.selection.selectedShapes;
 
@@ -184,7 +184,7 @@ function onChangeH(value: string) {
 
     const page = props.context.selection.selectedPage!;
 
-    const editor = props.context.editor4Page(page.data);
+    const editor = props.context.editor4Page(page);
 
     const selected = props.context.selection.selectedShapes;
 
@@ -202,7 +202,7 @@ function lockToggle() {
         return;
     }
 
-    const editor = props.context.editor4Page(page.data);
+    const editor = props.context.editor4Page(page);
     editor.setShapesConstrainerProportions(actions);
 }
 function fliph() {
@@ -217,7 +217,7 @@ function fliph() {
         const page = props.context.selection.selectedPage;
         if (page) {
             const actions = get_actions_flip_h(props.context.selection.selectedShapes);
-            const editor = props.context.editor4Page(page.data);
+            const editor = props.context.editor4Page(page);
             editor.shapesFlip(actions);
         }
     }
@@ -234,7 +234,7 @@ function flipv() {
         const page = props.context.selection.selectedPage;
         if (page) {
             const actions = get_actions_flip_v(props.context.selection.selectedShapes);
-            const editor = props.context.editor4Page(page.data);
+            const editor = props.context.editor4Page(page);
             editor.shapesFlip(actions);
         }
     }
@@ -260,7 +260,7 @@ function onChangeRotate(value: string) {
         return;
     }
 
-    const editor = props.context.editor4Page(page.data);
+    const editor = props.context.editor4Page(page);
 
     editor.setShapesRotate(selected.map(s => adapt2Shape(s)), newRotate);
 }
