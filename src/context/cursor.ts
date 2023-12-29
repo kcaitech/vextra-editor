@@ -33,7 +33,7 @@ export class Cursor extends WatchableObject {
         this.m_freeze = val;
     }
 
-    async setType(type: string, force = false) {
+    async setType(type: string, force = false) {        
         if (this.m_freeze) return;
         if (this.m_context.workspace.transforming && !force) return;
         this.m_reseted = false;

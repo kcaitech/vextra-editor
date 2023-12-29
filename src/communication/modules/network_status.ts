@@ -72,6 +72,6 @@ export class NetworkStatus {
     public close() {
         if (this.isClosed) return;
         this.isClosed = true
-        this._networkStatus?.close()
+        this._networkStatus?.close(false)
     }
 }

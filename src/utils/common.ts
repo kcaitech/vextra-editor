@@ -4,6 +4,7 @@ import { debounce } from 'lodash';
 import { ContactShape, PathShape, PathShapeView, Shape, ShapeType, ShapeView } from '@kcdesign/data';
 import { Context } from '@/context';
 import { is_straight } from './attri_setting';
+import { selectShapes } from './content';
 // 打印
 function _debounceLog(mes: any, flag?: string) {
   console.log(flag ? `${flag} ${mes}` : mes);
@@ -293,17 +294,16 @@ export function isTarget2(selectorPoints: [XY, XY, XY, XY, XY], shape: ShapeView
     return true;
   }
 
-  if (shape.type !== ShapeType.Artboard && isIncluded2(points, selectorPoints)) {
-    return true;
-  }
-
   if (includes) {
     return false;
   }
 
+  if (shape.type !== ShapeType.Artboard && isIncluded2(points, selectorPoints)) {
+    return true;
+  }
+
   const selectorPointsSides = get_side_by_points(selectorPoints);
   const shapeSides = get_side_by_points(points);
-
 
   if (!shapeSides.length) {
     return false;
@@ -359,4 +359,12 @@ export function shapes_organize(shapes: ShapeView[]) {
 
 export function get_input_value(value: string, origin?: number | string, min?: number | string, max?: number | string) {
 
+}
+
+export function scout_once(context: Context, e: MouseEvent) {
+  const { clientX, clientY, metaKey, ctrlKey } = e;
+  const { x, y } = context.workspace.root;
+  const xy = context.workspace.matrix.inverseCoord(clientX - x, clientY - y);
+  const shapes = context.selection.getShapesByXY(xy, metaKey || ctrlKey);
+  selectShapes(context, shapes);
 }

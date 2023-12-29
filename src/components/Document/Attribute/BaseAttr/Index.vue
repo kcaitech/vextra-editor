@@ -117,42 +117,42 @@ function _update_view() {
 const update_view = debounce(_update_view, 200, { leading: true });
 
 function onChangeX(value: string) {
-    value = Number.parseFloat(value).toFixed(fix);
+    value = Number
+        .parseFloat(value)
+        .toFixed(fix);
+
     const _x: number = Number.parseFloat(value);
-    if (isNaN(_x)) return;
-    const selected = props.context.selection.selectedShapes;
-    if (selected.length === 1) {
-        const shape = selected[0];
-        const xy = shape.frame2Root();
-        const e = props.context.editor4Shape(adapt2Shape(shape));
-        e.translateTo(_x, xy.y);
-    } else if (selected.length > 1) {
-        const actions = get_actions_frame_x(props.context.selection.selectedShapes, _x);
-        const page = props.context.selection.selectedPage;
-        if (page) {
-            const editor = props.context.editor4Page(page.data);
-            editor.arrange(actions);
-        }
+    if (isNaN(_x)) {
+        return;
     }
+
+    const actions = get_actions_frame_x(props.context.selection.selectedShapes, _x);
+    const page = props.context.selection.selectedPage;
+    if (!page) {
+        return;
+    }
+
+    const editor = props.context.editor4Page(page);
+    editor.arrange(actions);
 }
 function onChangeY(value: string) {
-    value = Number.parseFloat(value).toFixed(fix);
+    value = Number
+        .parseFloat(value)
+        .toFixed(fix);
+
     const _y: number = Number.parseFloat(value);
-    if (isNaN(_y)) return;
-    const selected = props.context.selection.selectedShapes;
-    if (selected.length === 1) {
-        const shape = selected[0];
-        const xy = shape.frame2Root();
-        const e = props.context.editor4Shape(adapt2Shape(shape));
-        e.translateTo(xy.x, _y);
-    } else if (selected.length > 1) {
-        const actions = get_actions_frame_y(props.context.selection.selectedShapes, _y);
-        const page = props.context.selection.selectedPage;
-        if (page) {
-            const editor = props.context.editor4Page(page.data);
-            editor.arrange(actions);
-        }
+    if (isNaN(_y)) {
+        return;
     }
+
+    const actions = get_actions_frame_y(props.context.selection.selectedShapes, _y);
+    const page = props.context.selection.selectedPage;
+    if (!page) {
+        return;
+    }
+
+    const editor = props.context.editor4Page(page);
+    editor.arrange(actions);
 }
 function onChangeW(value: string) {
     value = Number
@@ -299,12 +299,12 @@ function layout() {
         const shape = selected[0];
         s_radius = hasRadiusShape(shape, RADIUS_SETTING);
         s_adapt = shape.type === ShapeType.Artboard;
-        
+
         if (s_radius) {
             modify_multi_radius(shape);
         }
 
-        if (shape.type === ShapeType.Table || shape.type === ShapeType.Cutout) {
+        if (shape.type === ShapeType.Cutout) {
             s_flip = false;
         }
 

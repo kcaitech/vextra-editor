@@ -153,9 +153,10 @@ function move(e: MouseEvent) {
     const mousePosition: ClientXY = { x: e.clientX - root.x, y: e.clientY - root.y };
     if (isDragging && wheel && asyncTransfer) {
         modify_speed(e);
-        const isOut = wheel.moving(e, { type: EffectType.TRANS, effect: asyncTransfer.transByWheel });
+        // const isOut = wheel.moving(e, { type: EffectType.TRANS, effect: asyncTransfer.transByWheel });
         let update_type: number = 0;
-        if (!isOut) update_type = transform_f(startPosition, mousePosition);
+        // if (!isOut) update_type = transform_f(startPosition, mousePosition);
+        update_type = transform_f(startPosition, mousePosition);
         modify_mouse_position_by_type(update_type, startPosition, mousePosition);
     } else if (!isDragging && Math.hypot(mousePosition.x - startPosition.x, mousePosition.y - startPosition.y) > dragActiveDis) {
         matrix.reset(props.context.workspace.matrix);
@@ -163,17 +164,18 @@ function move(e: MouseEvent) {
         wheel = fourWayWheel(props.context, undefined, matrix_inverse.computeCoord3(startPosition));
         const selection = props.context.selection;
         shapes = selection.selectedShapes;
+
         isDragging = true;
 
+        asyncTransfer = props.context.editor.controller().asyncTransfer(shapes.map((s) => adapt2Shape(s)), selection.selectedPage!);
         const action = (shapes: ShapeView[]) => {
-            asyncTransfer = props.context.editor.controller().asyncTransfer(shapes.map((s) => adapt2Shape(s)), selection.selectedPage!.data);
             pre_translate(props.context, shapes);
             const map_anchor = matrix_inverse.computeCoord3(startPosition);
             offset_map = gen_offset_map(shapes[0], map_anchor);
         }
 
         if (e.altKey) {
-            paster_short(props.context, shapes).then((val) => {
+            paster_short(props.context, shapes, asyncTransfer).then((val) => {
                 shapes = val;
                 action(shapes);
             }).catch((e) => {

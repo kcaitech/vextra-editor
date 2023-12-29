@@ -158,14 +158,20 @@ function isTarget2(scout: Scout, shape: ShapeView, p: PageXY): boolean {
 export function delayering(groupshape: ShapeView, flat?: ShapeView[]): ShapeView[] {
     let f: ShapeView[] = flat || [];
     const childs: ShapeView[] = groupshape.type === ShapeType.SymbolRef ? (groupshape.naviChilds || []) : (groupshape).childs;
+
     for (let i = 0, len = childs.length; i < len; i++) {
         const item = childs[i];
-        if (item.type === ShapeType.Group || item.type === ShapeType.Symbol || item.type === ShapeType.SymbolRef) {
+
+        if (item.type === ShapeType.Group
+            || item.type === ShapeType.Symbol
+            || item.type === ShapeType.SymbolRef
+        ) {
             f = [...delayering(item, f)];
         } else {
             f.push(item);
         }
     }
+
     return f;
 }
 
@@ -209,8 +215,8 @@ export function finder(context: Context, scout: Scout, g: ShapeView[], position:
         }
 
         if (item.type === ShapeType.SymbolUnion) { // 组件状态集合
-            result = finder_symbol_union(context, scout, item as GroupShapeView, position, selected, isCtrl);
-            
+            result = finder_symbol_union(context, scout, item, position, selected, isCtrl);
+
             if (isTarget(scout, item, position)) {
                 break; // 只要进入集合，有无子元素选中都应该break
             }
@@ -354,15 +360,23 @@ export function finder_contact(scout: Scout, g: ShapeView[], position: PageXY, s
 export function finder_layers(scout: Scout, g: ShapeView[], position: PageXY): ShapeView[] {
     const result = [];
     for (let i = g.length - 1; i > -1; i--) {
-        if (!canBeTarget(g[i])) continue;
         const item = g[i];
-        if (!isTarget(scout, item, position)) continue;
-        if ([ShapeType.Group, ShapeType.Artboard, ShapeType.Symbol, ShapeType.SymbolRef].includes(item.type)) {
+
+        if (!canBeTarget(g[i])) {
+            continue;
+        }
+
+        if (!isTarget(scout, item, position)) {
+            continue;
+        }
+
+        if ([ShapeType.Group, ShapeType.Artboard, ShapeType.SymbolUnion, ShapeType.Symbol, ShapeType.SymbolRef].includes(item.type)) {
             const c: ShapeView[] | undefined = item.type === ShapeType.SymbolRef ? item.naviChilds : (item).childs;
             if (c?.length) {
                 result.push(...finder_layers(scout, c, position));
             }
         }
+
         result.push(item);
     }
     return result;
@@ -416,6 +430,7 @@ export function artboardFinder(scout: Scout, g: ShapeView[], position: PageXY, e
  */
 export function finder_container(scout: Scout, g: ShapeView[], position: PageXY, except?: Map<string, ShapeView>) {
     const layers = finder_layers(scout, g, position);
+
     for (let i = 0, len = layers.length; i < len; i++) {
         const item = layers[i];
         if ([ShapeType.Artboard, ShapeType.Symbol, ShapeType.SymbolUnion].includes(item.type) && (!except || !except.get(item.id))) {

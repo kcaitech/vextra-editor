@@ -13,6 +13,7 @@ import { compare_layer_3 } from './group_ungroup';
 import { Document } from '@kcdesign/data';
 import { v4 } from 'uuid';
 import { pa } from 'element-plus/es/locale';
+import { AsyncTransfer } from "@kcdesign/data";
 
 interface SystemClipboardItem {
     type: ShapeType
@@ -755,7 +756,7 @@ function paster_text(context: Context, mousedownOnPageXY: PageXY, content: strin
 }
 
 // 不经过剪切板，直接复制(Shape[])
-export async function paster_short(context: Context, shapes: ShapeView[]): Promise<ShapeView[]> {
+export async function paster_short(context: Context, shapes: ShapeView[], editor: AsyncTransfer): Promise<ShapeView[]> {
     const pre_shapes: Shape[] = [], actions: { parent: GroupShape, index: number }[] = [];
     for (let i = 0, len = shapes.length; i < len; i++) {
         const s = shapes[i], p = s.parent;
@@ -781,12 +782,11 @@ export async function paster_short(context: Context, shapes: ShapeView[]): Promi
 
     let result: Shape[] = [];
 
-    const editor = context.editor4Page(page.data);
     if (new_source.length !== actions.length) {
         return [];
     }
 
-    const _r = editor.pasteShapes2(new_source, actions);
+    const _r = editor.shortPaste(new_source, actions);
     if (_r && _r.length) {
         result = _r;
     }
@@ -807,6 +807,7 @@ export async function paster_short(context: Context, shapes: ShapeView[]): Promi
                 if (v) selects.push(v);
             })
             context.selection.rangeSelectShape(selects);
+            context.assist.collect();
             resolve(selects);
         })
     })

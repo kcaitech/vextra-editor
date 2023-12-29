@@ -91,6 +91,7 @@ export class WorkSpace extends WatchableObject {
     static CHANGE_NAVI = 24;
     static PRE_EDIT = 25;
     static PATH_EDIT_MODE = 26;
+    static NEW_ENV_MATRIX_CHANGE = 27;
 
     private context: Context;
     private m_matrix: Matrix = new Matrix();

@@ -123,12 +123,10 @@ onUnmounted(() => {
 watchEffect(updateControllerView);
 </script>
 <template>
-    <svg version="1.1" xmlns="http://www.w3.org/2000/svg" xmlns:xlink="http://www.w3.org/1999/xlink"
-         data-area="controller"
-         xmlns:xhtml="http://www.w3.org/1999/xhtml" preserveAspectRatio="xMinYMin meet" :viewBox="viewBox"
-         :width="width"
-         :height="height" :class="{ 'un-visible': !visible }" @mousedown="mousedown" overflow="visible"
-         :style="{ transform: `translate(${bounds.left}px,${bounds.top}px)`, left: 0, top: 0, position: 'absolute' }">
+    <svg version="1.1" xmlns="http://www.w3.org/2000/svg" xmlns:xlink="http://www.w3.org/1999/xlink" data-area="controller"
+        xmlns:xhtml="http://www.w3.org/1999/xhtml" preserveAspectRatio="xMinYMin meet" :viewBox="viewBox" :width="width"
+        :height="height" :class="{ 'un-visible': !visible }" @mousedown="mousedown" overflow="visible"
+        :style="{ transform: `translate(${bounds.left}px,${bounds.top}px)` }">
         <ShapesStrokeContainer :context="props.context" :matrix="props.matrix" color-hex="#1878f5">
         </ShapesStrokeContainer>
         <BarsContainer :context="props.context" :matrix="submatrix.toArray()" :shape="props.shape"
@@ -141,5 +139,9 @@ watchEffect(updateControllerView);
 <style lang='scss' scoped>
 .un-visible {
     opacity: 0;
+}
+
+svg {
+    position: absolute;
 }
 </style>

@@ -49,7 +49,6 @@ const tracingStroke = ref<string>('#1878F5');
 const traceEle = ref<Element>();
 const tracingFrame = ref<PathView>({ path: '', viewBox: '', height: 0, width: 0 });
 const watchedShapes = new Map();
-const isCutout = ref(false);
 const tracing_class = reactive({ thick_stroke: false, hollow_fill: false });
 
 function watchShapes() { // 监听选区相关shape的变化

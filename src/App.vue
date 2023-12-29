@@ -1,8 +1,9 @@
 <script setup lang="ts">
 import { RouterView } from 'vue-router';
 import { debounce } from 'lodash';
-import { onMounted } from "vue";
+import { onBeforeUnmount, onMounted } from "vue";
 import HelpEntrance from './components/Help/HelpEntrance.vue'
+import { startRefreshTokenTask, stopRefreshTokenTask } from "@/utils/refresh_token";
 
 const _ResizeObserver = window.ResizeObserver;
 window.ResizeObserver = class ResizeObserver extends _ResizeObserver {
@@ -14,6 +15,11 @@ window.ResizeObserver = class ResizeObserver extends _ResizeObserver {
 
 onMounted(() => {
   document.title = 'ProtoDesign';
+  startRefreshTokenTask();
+})
+
+onBeforeUnmount(() => {
+  stopRefreshTokenTask();
 })
 </script>
 
