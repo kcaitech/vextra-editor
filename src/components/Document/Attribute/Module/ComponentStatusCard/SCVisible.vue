@@ -63,7 +63,7 @@ function default_value(v: number) {
     v === 0 ? dlt_value.value = true : dlt_value.value = false;
 }
 function save_layer_show(type: VariableType, name: string) {
-    const symbol = props.context.selection.symbolshape;
+    const symbol = props.context.selection.symbolview;
     if (!symbol || !layerIds.value) return;
     modify_variable(props.context, symbol, props.variable, name, dlt_value.value, layerIds.value)
     iseditLayerShow.value = false;

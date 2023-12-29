@@ -126,14 +126,14 @@ onUnmounted(() => {
 <template>
     <div v-if="render_alpha" class="list-container-alpha">
         <ComponentCardAlpha v-for="item in props.data" :key="item.id" :data="(item as GroupShape)" :context="props.context"
-            @mousedown="(e: MouseEvent) => down(e, item as unknown as Shape)" :container="props.container"
+            @mousedown="(e: MouseEvent) => down(e, item as Shape)" :container="props.container"
             :is-attri="props.isAttri">
         </ComponentCardAlpha>
     </div>
     <div v-else class="list-container-beta" ref="list_container_beta" :style="{ 'grid-template-columns': gen_columns() }"
         :reflush="reflush">
         <ComponentCardBeta v-for="item in props.data" :key="item.id" :data="(item as GroupShape)" :context="props.context"
-            @mousedown="(e: MouseEvent) => down(e, item as unknown as Shape)" :container="props.container"
+            @mousedown="(e: MouseEvent) => down(e, item as Shape)" :container="props.container"
             :is-attri="props.isAttri">
         </ComponentCardBeta>
     </div>

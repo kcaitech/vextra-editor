@@ -8,7 +8,7 @@ import Attribute from './Attribute/RightTabs.vue';
 import Toolbar from './Toolbar/index.vue'
 import ColSplitView from '@/components/common/ColSplitView.vue';
 import ApplyFor from './Toolbar/Share/ApplyFor.vue';
-import { Document, importDocument, Repository, Page, CoopRepository, IStorage } from '@kcdesign/data';
+import { Document, importDocument, Repository, Page, CoopRepository, IStorage, PageView } from '@kcdesign/data';
 import { SCREEN_SIZE } from '@/utils/setting';
 import * as share_api from '@/request/share'
 import * as user_api from '@/request/users'
@@ -36,7 +36,7 @@ import { setup as keyboardUints } from '@/utils/keyboardUnits';
 import { Tool } from '@/context/tool';
 
 const { t } = useI18n();
-const curPage = shallowRef<Page | undefined>(undefined);
+const curPage = shallowRef<PageView | undefined>(undefined);
 let context: Context | undefined;
 const middleWidth = ref<number>(0.8);
 const middleMinWidth = ref<number>(0.3);
@@ -123,8 +123,9 @@ function switchPage(id?: string) {
         ctx.comment.toggleCommentPage()
         curPage.value = undefined;
         ctx.comment.commentMount(false)
-        ctx.selection.selectPage(page);
-        curPage.value = page;
+        const pagedom = ctx.getPageDom(page).dom;
+        ctx.selection.selectPage(pagedom);
+        curPage.value = pagedom;
       }
     })
   }
@@ -686,12 +687,12 @@ onUnmounted(() => {
       <template #slot1>
         <Navigation v-if="curPage !== undefined && !null_context" id="navigation" :context="context!"
           @switchpage="switchPage" @mouseenter="() => { mouseenter('left') }" @showNavigation="showHiddenLeft"
-          :page="(curPage as Page)" :showLeft="showLeft" :leftTriggleVisible="leftTriggleVisible">
+          :page="(curPage as PageView)" :showLeft="showLeft" :leftTriggleVisible="leftTriggleVisible">
         </Navigation>
       </template>
       <template #slot2>
         <ContentView v-if="curPage !== undefined && !null_context" id="content" :context="context!"
-          @mouseenter="() => { mouseleave('left') }" :page="(curPage as Page)">
+          @mouseenter="() => { mouseleave('left') }" :page="(curPage as PageView)">
         </ContentView>
       </template>
       <template #slot3>

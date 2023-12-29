@@ -1,9 +1,9 @@
 <script lang="ts" setup>
-import { Shape, ShapeType } from "@kcdesign/data";
-import { onMounted, ref } from "vue";
+import {ShapeView, ShapeType} from "@kcdesign/data";
+import {onMounted, ref} from "vue";
 
 interface Props {
-    data: Shape
+    data: ShapeView
 }
 
 const props = defineProps<Props>();

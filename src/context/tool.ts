@@ -1,4 +1,4 @@
-import { Shape, ShapeType, WatchableObject } from "@kcdesign/data";
+import { Shape, ShapeType, ShapeView, WatchableObject } from "@kcdesign/data";
 import { Context } from ".";
 import { Comment } from "./comment";
 import { v4 } from "uuid";
@@ -84,7 +84,7 @@ export class Tool extends WatchableObject {
     private m_frame_size: { width: number, height: number } = { width: 100, height: 100 }; // 容器模版frame
     private m_frame_name: string = ''; // 容器模版名称
     private m_table_size: { row: number, col: number } = { row: 3, col: 3 };
-    private m_contact_apex: Shape | undefined;
+    private m_contact_apex: ShapeView | undefined;
     private m_contact_from: boolean = false;
     private m_lable_status: boolean = false;
 
@@ -272,7 +272,7 @@ export class Tool extends WatchableObject {
         return this.m_contact_apex;
     }
 
-    setContactApex(shape: Shape) {
+    setContactApex(shape: ShapeView) {
         if (shape.id !== this.m_contact_apex?.id) {
             this.m_contact_apex = shape;
             this.notify(Tool.CHANGE_CONTACT_APEX);

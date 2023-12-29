@@ -1,4 +1,4 @@
-import { GroupShape, Matrix, Shape, WatchableObject } from "@kcdesign/data";
+import { GroupShape, Matrix, Shape, ShapeView, WatchableObject, adapt2Shape } from "@kcdesign/data";
 import { PageXY, Selection, XY } from "./selection";
 import { Context } from ".";
 import {
@@ -120,7 +120,7 @@ export class Asssit extends WatchableObject {
     private m_pg_inner: Map<string, PointGroup1> = new Map();
     private m_x_axis: Map<number, PageXY2[]> = new Map();
     private m_y_axis: Map<number, PageXY2[]> = new Map();
-    private m_except: Map<string, Shape> = new Map();
+    private m_except: Map<string, ShapeView> = new Map();
     private m_current_pg: PointGroup2 | undefined;
     private m_nodes_x: PageXY2[] = [];
     private m_nodes_y: PageXY2[] = [];
@@ -225,7 +225,7 @@ export class Asssit extends WatchableObject {
         this.m_collect_target = [];
         const shapes = this.m_context.selection.selectedShapes;
         if (shapes.length === 1) {
-            this.m_collect_target = [getClosestContainer(shapes[0])];
+            this.m_collect_target = [getClosestContainer(adapt2Shape(shapes[0]))];
         } else {
             this.m_collect_target = [];
         }
@@ -261,7 +261,7 @@ export class Asssit extends WatchableObject {
         const page = this.m_context.selection.selectedPage;
         if (page) {
             this.clear();
-            let target: GroupShape = page;
+            let target: GroupShape = page.data as GroupShape;
             if (this.m_collect_target.length) {
                 target = this.m_collect_target[0] || page;
             }
@@ -271,7 +271,7 @@ export class Asssit extends WatchableObject {
         // console.log('点位收集用时(ms):', e - s);
     }
 
-    set_trans_target(shapes: Shape[]) {
+    set_trans_target(shapes: ShapeView[]) {
         this.m_context.workspace.clear_cache_map();
         this.collect();
         this.m_except.clear();
@@ -321,7 +321,7 @@ export class Asssit extends WatchableObject {
     /**
      * @description 拖拽多个图形
      */
-    trans_match_multi(shapes: Shape[], offsetMap: PointsOffset, p: PageXY) {
+    trans_match_multi(shapes: ShapeView[], offsetMap: PointsOffset, p: PageXY) {
         // const st = Date.now();
         if (!this.m_except.size) return;
         this.m_nodes_x = [];

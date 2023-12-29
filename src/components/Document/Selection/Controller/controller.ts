@@ -1,4 +1,4 @@
-import { Shape, ShapeType, GroupShape, PathShape, AsyncPathEditor } from '@kcdesign/data';
+import { Shape, ShapeType, GroupShape, PathShape, AsyncPathEditor, ShapeView, adapt2Shape } from '@kcdesign/data';
 import { onMounted, onUnmounted } from "vue";
 import { Context } from "@/context";
 import { Matrix } from '@kcdesign/data';
@@ -47,7 +47,7 @@ export function useControllerCustom(context: Context, i18nT: Function) {
     let startPosition: ClientXY = { x: 0, y: 0 };
     let startPositionOnPage: PageXY = { x: 0, y: 0 };
     let wheel: Wheel | undefined = undefined;
-    let shapes: Shape[] = [];
+    let shapes: ShapeView[] = [];
     let need_update_comment: boolean = false;
     let t_e: MouseEvent | undefined;
     let speed: number = 0;
@@ -66,7 +66,7 @@ export function useControllerCustom(context: Context, i18nT: Function) {
         }
         const shape = selected[0];
         if ([ShapeType.Group, ShapeType.Symbol, ShapeType.SymbolRef, ShapeType.Artboard].includes(shape.type)) {
-            const scope: any = shape.type === ShapeType.SymbolRef ? shape.naviChilds : (shape as GroupShape).childs;
+            const scope: any = shape.type === ShapeType.SymbolRef ? shape.naviChilds : (shape).childs;
             const target = selection_penetrate(selection.scout!, scope, startPositionOnPage);
             if (target) {
                 selection.selectShape(target);
@@ -122,7 +122,7 @@ export function useControllerCustom(context: Context, i18nT: Function) {
 
             asyncPathEditor = context.editor
                 .controller()
-                .asyncPathEditor(pathshape, selection.selectedPage!)
+                .asyncPathEditor(pathshape, selection.selectedPage!.data)
         }
 
         if (!asyncPathEditor) {
@@ -147,7 +147,7 @@ export function useControllerCustom(context: Context, i18nT: Function) {
 
             asyncTransfer = context.editor
                 .controller()
-                .asyncTransfer(shapes, selection.selectedPage!);
+                .asyncTransfer(shapes.map((s) => adapt2Shape(s)), selection.selectedPage!.data);
         }
 
         if (!asyncTransfer) {
@@ -269,7 +269,7 @@ export function useControllerCustom(context: Context, i18nT: Function) {
 
             modify_mouse_position_by_type(update_type, startPosition, mousePosition);
         } else if (check_drag_action(startPosition, mousePosition) && !workspace.isEditing) {
-            if (asyncTransfer) {
+            if (asyncTransfer || isDragging) {
                 return;
             }
 
@@ -290,10 +290,14 @@ export function useControllerCustom(context: Context, i18nT: Function) {
                 .asyncTransfer(shapes, selection.selectedPage!);
 
             if (e.altKey) {
-                shapes = paster_short(context, shapes, asyncTransfer);
+                paster_short(context, shapes, asyncTransfer).then(v => {
+                    shapes = v;
+                });
+                // shapes = [];
             }
 
             isDragging = true;
+
         }
     }
 

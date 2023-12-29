@@ -5,7 +5,7 @@ import { WorkSpace } from '@/context/workspace';
 import { Action } from "@/context/tool";
 import HoverComment from './HoverComment.vue'
 import CommentPopup from './CommentPopup.vue'
-import { Matrix, Shape, ShapeType } from "@kcdesign/data";
+import { Matrix, Shape, ShapeType, ShapeView } from "@kcdesign/data";
 import * as comment_api from '@/request/comment';
 import { Selection } from '@/context/selection';
 import { Comment } from '@/context/comment';
@@ -371,7 +371,7 @@ function watchShapes() { // 监听评论相关shape的变化
     });
 }
 
-const update = (shape?: Shape) => {
+const update = (shape?: ShapeView) => {
     watcher()
     if (!shape) return
     emit('updateShapeComment', props.index)

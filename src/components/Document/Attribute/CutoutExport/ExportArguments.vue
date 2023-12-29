@@ -2,14 +2,14 @@
 import { ref, watchEffect } from 'vue';
 import ArgsSelect from './ArgsSelect.vue';
 import { Context } from '@/context';
-import { ExportFileFormat, ExportFormat, ExportFormatNameingScheme, Shape, ShapeType } from '@kcdesign/data';
+import { ExportFormatNameingScheme, ShapeType, ShapeView } from '@kcdesign/data';
 import { Menu } from '@/context/menu';
 import { FormatItems } from './index.vue';
 import { useI18n } from 'vue-i18n';
 const { t } = useI18n();
 interface Props {
     context: Context
-    shapes: Shape[]
+    shapes: ShapeView[]
     argus: FormatItems
     sizeItems: string[]
     perfixItems: ExportFormatNameingScheme[]

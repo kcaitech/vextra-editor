@@ -1,7 +1,7 @@
 <script lang="ts" setup>
 import { ref, onMounted, onUnmounted, reactive } from 'vue'
 import { Context } from '@/context'
-import { Matrix, Shape, TextShape } from "@kcdesign/data";
+import { Matrix, Shape, ShapeView, TextShape } from "@kcdesign/data";
 import { XYsBounding } from "@/utils/common";
 import { genRectPath } from '../common'
 import { WorkSpace } from '@/context/workspace'
@@ -29,7 +29,7 @@ const selectPath = ref<TextFillPath[]>([]);
 const multiSelect = ref<BorderPath[]>([]);
 const usersSelectionList = ref<DocSelectionData[]>(props.context.teamwork.getUserSelection);
 const matrix = new Matrix();
-const shapes = ref<Shape[]>([]);
+const shapes = ref<ShapeView[]>([]);
 const submatrix = reactive(new Matrix());
 const createShapeTracing = () => { // 描边 
     tracingPath.value = [];
@@ -38,11 +38,11 @@ const createShapeTracing = () => { // 描边
     const page = props.context.selection.selectedPage;
     if (!page) return;
     for (let i = 0; i < usersSelectionList.value.length; i++) {
-        const hoveredShape: Shape | undefined = props.context.selection.hoveredShape;
-        const selection: Shape[] = props.context.selection.selectedShapes;
+        const hoveredShape: ShapeView | undefined = props.context.selection.hoveredShape;
+        const selection: ShapeView[] = props.context.selection.selectedShapes;
         const userSelectInfo = usersSelectionList.value[i];
         if (page.id !== userSelectInfo.select_page_id) continue;
-        const shapes: Shape[] = [];
+        const shapes: ShapeView[] = [];
         const len = userSelectInfo.select_shape_id_list.length;
         for (let i = 0; i < len; i++) {
             const shape = page.shapes.get(userSelectInfo.select_shape_id_list[i]);
@@ -79,7 +79,7 @@ const createShapeTracing = () => { // 描边
                 const f = s.frame;
                 const ps: { x: number, y: number }[] = [{ x: 0, y: 0 }, { x: f.width, y: 0 }, { x: f.width, y: f.height }, { x: 0, y: f.height }].map(p => m.computeCoord(p.x, p.y));
                 points.push(...ps);
-                const path = s.getPath();
+                const path = s.getPath().clone();
                 path.transform(m);
                 const borPath = {path: path.toString(), color: userSelectColor[i]}
                 multiSelect.value.push(borPath);

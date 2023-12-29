@@ -1,6 +1,6 @@
 <script setup lang='ts'>
 import { Context } from '@/context';
-import { AsyncBaseAction, CtrlElementType, Matrix, Shape, TableShape } from '@kcdesign/data';
+import { AsyncBaseAction, CtrlElementType, Matrix, Shape, ShapeView, TableShape, adapt2Shape } from '@kcdesign/data';
 import { onMounted, onUnmounted, watch, reactive } from 'vue';
 import { ClientXY, PageXY } from '@/context/selection';
 import { Action } from '@/context/tool';
@@ -11,7 +11,7 @@ import { get_transform } from '../Points/common';
 interface Props {
     matrix: number[]
     context: Context
-    shape: Shape
+    shape: ShapeView
     cFrame: Point[]
 }
 interface Bar {
@@ -104,11 +104,13 @@ function bar_mousemove(event: MouseEvent) {
     } else {
         if (Math.hypot(mouseOnPage.x - startPosition.x, mouseOnPage.y - startPosition.y) > dragActiveDis) {
             isDragging = true;
-            asyncBaseAction = props.context.editor.controller().asyncRectEditor(s, props.context.selection.selectedPage!);
+            const page = props.context.selection.selectedPage!;
+            asyncBaseAction = props.context.editor.controller().asyncRectEditor(adapt2Shape(s), page.data);
             submatrix.reset(workspace.matrix.inverse);
             setCursor(cur_ctrl_type, true);
             workspace.scaling(true);
-            props.context.assist.set_trans_target([props.shape]);
+            const sv = page.getShape(props.shape.id);
+            sv && props.context.assist.set_trans_target([sv]);
         }
     }
 }
@@ -161,7 +163,7 @@ function modify_fix_y(p2: PageXY, fix: number) {
     stickedY = true;
     pre_target_y = fix;
 }
-function getScale(type: CtrlElementType, shape: Shape, start: ClientXY, end: ClientXY): number {
+function getScale(type: CtrlElementType, shape: ShapeView, start: ClientXY, end: ClientXY): number {
     const m = new Matrix(shape.matrix2Root().inverse);
     const f = shape.frame;
     const p1 = m.computeCoord(start.x, start.y);

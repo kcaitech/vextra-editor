@@ -59,7 +59,7 @@ function text_dlt_change(v: string) {
 }
 
 const save_text = (type: VariableType, name: string) => {
-    const symbol = props.context.selection.symbolshape;
+    const symbol = props.context.selection.symbolview;
     if (!symbol || !layerIds.value) return;
     modify_variable(props.context, symbol, props.variable, name, dlt_value.value, layerIds.value)
     iseditText.value = false;

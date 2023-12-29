@@ -1,7 +1,7 @@
 <script setup lang="ts">
 import { Context } from '@/context';
 import { WorkSpace } from '@/context/workspace';
-import { GroupShape, Matrix, Shape, ShapeType } from '@kcdesign/data';
+import { GroupShape, GroupShapeView, Matrix, Shape, ShapeType, ShapeView } from '@kcdesign/data';
 import { watchEffect, onMounted, onUnmounted } from 'vue';
 import { XY } from '@/context/selection';
 import { isTarget2 } from '@/utils/common';
@@ -21,7 +21,7 @@ interface Props {
 }
 
 const props = defineProps<Props>();
-const selectedShapes: Map<string, Shape> = new Map();
+const selectedShapes: Map<string, ShapeView> = new Map();
 let changed: boolean = false;
 
 function select() {
@@ -55,7 +55,7 @@ function select() {
     }
 }
 
-function is_target_for_group(shape: GroupShape, Points: [XY, XY, XY, XY, XY]): boolean {
+function is_target_for_group(shape: GroupShapeView, Points: [XY, XY, XY, XY, XY]): boolean {
     if (props.selectorFrame.includes) {
         return isTarget2(Points, shape, true);
     }
@@ -71,16 +71,16 @@ function is_target_for_group(shape: GroupShape, Points: [XY, XY, XY, XY, XY]): b
 }
 
 // 加入
-function finder(childs: Shape[], Points: [XY, XY, XY, XY, XY]) {
+function finder(childs: ShapeView[], Points: [XY, XY, XY, XY, XY]) {
     for (let ids = 0, len = childs.length; ids < len; ids++) {
         const shape = childs[ids];
 
-        if (selectedShapes.get(shape.id) || shape.isLocked || !shape.isVisible) {
+        if (selectedShapes.get(shape.id) || shape.isLocked() || !shape.isVisible()) {
             continue;
         }
 
         if (shape.type === ShapeType.Artboard) { // 容器要判定为真的条件是完全被选区覆盖
-            const _shape = shape as GroupShape;
+            const _shape = shape as GroupShapeView;
 
             if (isTarget2(Points, _shape, true)) {
                 private_set(_shape.id, _shape);
@@ -96,7 +96,7 @@ function finder(childs: Shape[], Points: [XY, XY, XY, XY, XY]) {
         }
 
         if (shape.type === ShapeType.Group) {
-            if (is_target_for_group(shape as GroupShape, Points)) {
+            if (is_target_for_group(shape as GroupShapeView, Points)) {
                 private_set(shape.id, shape);
             }
 
@@ -110,14 +110,14 @@ function finder(childs: Shape[], Points: [XY, XY, XY, XY, XY]) {
 }
 
 // 剔除
-function remove(childs: Map<string, Shape>, Points: [XY, XY, XY, XY, XY]) {
+function remove(childs: Map<string, ShapeView>, Points: [XY, XY, XY, XY, XY]) {
     childs.forEach((value, key) => {
         if (value.type === ShapeType.Artboard) {
             if (!isTarget2(Points, value, true)) {
                 private_delete(key);
             }
         } else if (value.type === ShapeType.Group) {
-            if (!is_target_for_group(value as GroupShape, Points)) {
+            if (!is_target_for_group(value as GroupShapeView, Points)) {
                 private_delete(key);
             }
         } else {
@@ -133,7 +133,7 @@ function private_delete(key: string) {
     changed = true;
 }
 
-function private_set(key: string, value: Shape) {
+function private_set(key: string, value: ShapeView) {
     selectedShapes.set(key, value);
     changed = true;
 }

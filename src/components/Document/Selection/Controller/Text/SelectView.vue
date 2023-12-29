@@ -1,6 +1,6 @@
 <script setup lang='ts'>
 import { Context } from '@/context';
-import { Shape, TableCell, Text, TextShape } from '@kcdesign/data';
+import { TableCellView, Text, TextShapeView } from '@kcdesign/data';
 import { Matrix } from '@kcdesign/data';
 import { ref, reactive, onMounted, onUnmounted, watch } from 'vue';
 import { Selection } from '@/context/selection';
@@ -10,17 +10,16 @@ import { throttle } from '../../common';
 import {TextSelectionLite} from "@/context/textselectionlite";
 type SelectionLike = TextSelectionLite;
 interface Props {
-    shape: Shape & { text: Text }
+    shape: TextShapeView | TableCellView
     matrix: number[]
     context: Context
     mainNotify: number
     selection: SelectionLike
 }
 const props = defineProps<Props>();
-function getText(shape: Shape & { text: Text }): Text {
-    if (shape.isVirtualShape) return shape.text;
-    return (shape as TextShape | TableCell).getText();
-}
+// function getText(shape: TextShapeView | TableCellView): Text {
+//     return shape.getText();
+// }
 const matrix = new Matrix();
 const isCursor = ref(true);
 const cursorPath = ref("");
@@ -61,13 +60,13 @@ function _update() {
         // selected range
         const start = text_selection.cursorStart;
         const end = text_selection.cursorEnd;
-        selectPath.value = genRectPath(getText(props.shape).locateRange(start, end).map((point) => matrix.computeCoord3(point)));
+        selectPath.value = genRectPath(props.shape.locateRange(start, end).map((point) => matrix.computeCoord3(point)));
     } else {
         isCursor.value = true;
         // cursor
         const cursorAtBefore = text_selection.cursorAtBefore;
         const index = text_selection.cursorStart;
-        const cursor = getText(props.shape).locateCursor(index, cursorAtBefore);
+        const cursor = props.shape.locateCursor(index, cursorAtBefore);
         if (!cursor) {
             cursor_points = [];
             cursorPath.value = "";

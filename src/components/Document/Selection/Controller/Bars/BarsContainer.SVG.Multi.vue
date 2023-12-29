@@ -1,6 +1,6 @@
 <script setup lang='ts'>
 import { Context } from '@/context';
-import { AsyncMultiAction, CtrlElementType, Matrix } from '@kcdesign/data';
+import { AsyncMultiAction, CtrlElementType, Matrix, adapt2Shape } from '@kcdesign/data';
 import { onMounted, onUnmounted, watch, reactive } from 'vue';
 import { ClientXY } from '@/context/selection';
 import { Point } from '../../SelectionView.vue';
@@ -87,7 +87,7 @@ function bar_mousemove(event: MouseEvent) {
 
             asyncMultiAction = props.context.editor
                 .controller()
-                .asyncMultiEditor(shapes, selection.selectedPage!);
+                .asyncMultiEditor(shapes.map(s => adapt2Shape(s)), selection.selectedPage!.data);
 
             submatrix.reset(workspace.matrix.inverse);
             setCursor(cur_ctrl_type);

@@ -1,4 +1,7 @@
 import { getHorizontalAngle } from "@/utils/common"
+import { ContactLineView, PathShapeView, ShapeView } from "@kcdesign/data"
+import { CurveMode } from "@kcdesign/data"
+
 import { ContactShape, CtrlElementType, Matrix, PathShape, Point2D, Shape } from "@kcdesign/data"
 
 interface Dot {
@@ -9,7 +12,7 @@ interface Dot {
     type2: CtrlElementType
 }
 
-export function update_dot(ps: { x: number, y: number, type?: CtrlElementType }[], shape: Shape): Dot[] {
+export function update_dot(ps: { x: number, y: number, type?: CtrlElementType }[], shape: ShapeView): Dot[] {
     const bit_v = 4;
     const bit_v_d = 7;
     const [lt, rt, rb, lb] = ps;
@@ -164,7 +167,7 @@ function get_r_path2(ps: { x: number, y: number }) {
     const bit_v_r = 18, r = Math.PI * 0.25, sx = bit_v_r * Math.cos(r), sy = bit_v_r * Math.sin(r);
     return `M${ps.x} ${ps.y} l${sx} ${-sy} a${bit_v_r},${bit_v_r} 0 0 1 0,${2 * sy} z`;
 }
-export function get_path_by_point(s: PathShape, matrix: Matrix, set: Set<number>) {
+export function get_path_by_point(s: PathShapeView, matrix: Matrix, set: Set<number>) {
     const points = [];
     const raw_p = (s).points;
     const m = new Matrix(matrix);
@@ -205,7 +208,7 @@ export function get_conact_by_point(s: PathShape, matrix: Matrix) {
     return points;
 }
 
-export function get_apexs(s: ContactShape, matrix: Matrix) {
+export function get_apexs(s: ContactLineView, matrix: Matrix) {
     const raw_p = s.getPoints(), m = new Matrix(matrix);
     if (!raw_p || raw_p.length < 2) return false;
     m.preScale(s.frame.width, s.frame.height);
@@ -219,7 +222,7 @@ export function get_apexs(s: ContactShape, matrix: Matrix) {
     } = { point: m.computeCoord(raw_p[raw_p.length - 1]), type: 'to' };
     return { apex1, apex2 };
 }
-export function get_transform(shape: Shape) {
+export function get_transform(shape: ShapeView) {
     const __r = shape.rotation || 0;
     const result = {
         rotate: __r,
@@ -234,7 +237,7 @@ export function get_transform(shape: Shape) {
 
     let ohflip = false;
     let ovflip = false;
-    let p: Shape | undefined = shape;
+    let p: ShapeView | undefined = shape;
 
     // flip
     while (p) {
@@ -270,7 +273,7 @@ export function get_transform(shape: Shape) {
 
     return result
 }
-export function get_real_rotation(shape: Shape) {
+export function get_real_rotation(shape: ShapeView) {
     const t = get_transform(shape);
     let rotate = t.rotate;
 

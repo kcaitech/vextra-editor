@@ -4,6 +4,7 @@ import { Context } from '@/context';
 import TypeHeader from '../TypeHeader.vue';
 import { onMounted, onUnmounted, ref, watch } from 'vue'
 import CompLayerShow from '../PopoverMenu/ComposAttri/CompLayerShow.vue';
+import { SymbolView} from '@kcdesign/data';
 import { SymbolShape, VariableType } from '@kcdesign/data';
 import {
     AttriListItem,
@@ -24,7 +25,7 @@ const { t } = useI18n();
 
 interface Props {
     context: Context
-    shape: SymbolShape
+    shape: SymbolView
 }
 
 const props = defineProps<Props>()
@@ -78,7 +79,11 @@ function selectCompsType() {
 const addModuleState = () => {
     const make_result = make_status(props.context, t)
     if (make_result) {
-        props.context.selection.selectShape(make_result);
+        const page = props.context.selection.selectedPage;
+        page && props.context.nextTick(page, () => {
+            const v = page.getShape(make_result.id);
+            v && props.context.selection.selectShape(v);
+        })
     }
     close();
 }
@@ -133,7 +138,7 @@ const saveLayerShow = (type: VariableType) => {
     if (typeof dlt_value.value === 'string' && dlt_value.value.trim().length < 1) {
         return warn.value = true;
     }
-    const symbolshape = props.context.selection.symbolshape;
+    const symbolshape = props.context.selection.symbolview;
     if (!symbolshape) return;
     create_var_by_type(props.context, type, var_name.value, dlt_value.value, selected.value, symbolshape);
     isaddStateDialog.value = false;

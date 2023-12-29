@@ -5,7 +5,7 @@ import TypeHeader from '../TypeHeader.vue';
 import {onMounted, onUnmounted, ref, watch} from 'vue';
 import CompLayerShow from '../PopoverMenu/ComposAttri/CompLayerShow.vue';
 import SelectLayerInput from './SelectLayerInput.vue';
-import {OverrideType, SymbolShape, Variable, VariableType} from '@kcdesign/data';
+import {OverrideType, SymbolShape, SymbolView, Variable, VariableType} from '@kcdesign/data';
 import PopoverDefaultInput from './PopoverDefaultInput.vue';
 import {create_var_by_type, get_symbol_by_layer, is_bind_x_vari, modify_variable} from '@/utils/symbol';
 import {message} from '@/utils/message';
@@ -43,7 +43,7 @@ function edit_visible() {
 }
 
 const is_bind = ref<Variable>();
-const sym_layer = ref<SymbolShape>();
+const sym_layer = ref<SymbolView>();
 const shape = ref(props.context.selection.selectedShapes[0]);
 const isBind = () => {
     const shapes = props.context.selection.selectedShapes;

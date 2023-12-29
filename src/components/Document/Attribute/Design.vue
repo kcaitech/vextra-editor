@@ -3,6 +3,7 @@ import { Context } from '@/context';
 import { Selection } from '@/context/selection';
 import { WorkSpace } from "@/context/workspace";
 import { onMounted, onUnmounted, shallowRef, ref, computed } from 'vue';
+import { ShapeView, TextShapeView, TableView, adapt2Shape, SymbolRefView } from "@kcdesign/data"
 import { ShapeType, Shape, TextShape, TableShape, SymbolRefShape, SymbolShape } from "@kcdesign/data"
 import Arrange from './Arrange.vue';
 import ShapeBaseAttr from './BaseAttr/Index.vue';
@@ -24,7 +25,7 @@ import { get_var_for_ref, is_part_of_symbol, is_shapes_if_symbolref } from '@/ut
 import { useI18n } from 'vue-i18n';
 
 const props = defineProps<{ context: Context }>();
-const shapes = shallowRef<Shape[]>([]);
+const shapes = shallowRef<ShapeView[]>([]);
 const len = computed<number>(() => shapes.value.length);
 const { t } = useI18n();
 const WITH_FILL = [
@@ -80,7 +81,7 @@ const WITHOUT_OPACITY = [
     ShapeType.TableCell
 ]
 const shapeType = ref();
-const textShapes = ref<Shape[]>([]);
+const textShapes = ref<ShapeView[]>([]);
 const symbol_attribute = ref<boolean>(true);
 const opacity = ref<boolean>(false);
 const getShapeType = () => {
@@ -165,7 +166,7 @@ const is_symbolref = () => {
 const need_instance_attr_show = () => {
     let v = false;
     if (shapes.value.length === 1) {
-        const symref = props.context.selection.symbolrefshape;
+        const symref = props.context.selection.symbolrefview;
         if (!symref) {
             return false;
         }
@@ -198,6 +199,13 @@ onUnmounted(() => {
     props.context.tool.unwatch(tool_watcher);
     props.context.workspace.unwatch(workspace_watcher);
 })
+
+// todo
+function adaptTextShape(v: ShapeView | ShapeView[]): TextShape | TextShape[]{
+    if (Array.isArray(v)) return v.map((s) => adapt2Shape(s) as TextShape);
+    return adapt2Shape(v) as TextShape;
+}
+
 </script>
 <template>
     <section id="Design">
@@ -214,13 +222,13 @@ onUnmounted(() => {
                 <Opacity v-if="opacity && !WITHOUT_OPACITY.includes(shapeType)" :shapes="shapes" :context="props.context">
                 </Opacity>
                 <Module v-if="symbol_attribute" :context="props.context" :shapeType="shapeType" :shapes="shapes"></Module>
-                <InstanceAttr :context="context" v-if="is_symbolref()" :shapes="(shapes as SymbolRefShape[])">
+                <InstanceAttr :context="context" v-if="is_symbolref()" :shapes="(shapes as SymbolRefView[])">
                 </InstanceAttr>
                 <Fill v-if="WITH_FILL.includes(shapeType)" :shapes="shapes" :context="props.context"></Fill>
                 <Border v-if="WITH_BORDER.includes(shapeType)" :shapes="shapes" :context="props.context"></Border>
-                <Text v-if="WITH_TEXT.includes(shapeType)" :shape="(shapes[0] as TextShape)"
-                    :textShapes="(textShapes as TextShape[])" :context="props.context"></Text>
-                <TableText v-if="WITH_TABLE.includes(shapeType)" :shape="(shapes[0] as TableShape)"
+                <Text v-if="WITH_TEXT.includes(shapeType)" :shape="((shapes[0]) as TextShapeView)"
+                    :textShapes="((textShapes) as TextShapeView[])" :context="props.context"></Text>
+                <TableText v-if="WITH_TABLE.includes(shapeType)" :shape="(shapes[0] as TableView)"
                     :context="props.context">
                 </TableText>
                 <Shadow v-if="WITH_SHADOW.includes(shapeType)" :shapes="shapes" :context="props.context">

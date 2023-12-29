@@ -2,7 +2,7 @@
 import { Context } from '@/context';
 import { ref, watch } from 'vue';
 import CardWrap from "./CardWrap.vue";
-import { Shape } from "@kcdesign/data";
+import {Shape, ShapeView} from "@kcdesign/data";
 
 interface Props {
     context: Context
@@ -20,7 +20,7 @@ const emits = defineEmits<Emits>();
 const checkList = ref(props.layerId || []);
 const detail = ref<boolean>(false);
 
-function hover_item(shape: Shape) {
+function hover_item(shape: ShapeView) {
     props.context.selection.hoverShape(shape);
 }
 

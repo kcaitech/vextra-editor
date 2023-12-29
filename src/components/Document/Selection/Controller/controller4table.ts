@@ -1,4 +1,4 @@
-import { Shape, ShapeType, TableShape, TableGridItem, TableCellType, TextShape, TableCell } from '@kcdesign/data';
+import { Shape, ShapeType, TableShape, TableGridItem, TableCellType, TextShape, TableCell, TableView, ShapeView } from '@kcdesign/data';
 import { computed, nextTick, onMounted, onUnmounted, ref, watch } from "vue";
 import { Context } from "@/context";
 import { Matrix } from '@kcdesign/data';
@@ -10,7 +10,7 @@ import { WorkSpace } from "@/context/workspace";
 import { AsyncTransfer } from "@kcdesign/data";
 import { useI18n } from 'vue-i18n';
 import { TableSelection } from '@/context/tableselection';
-import { TextSelection } from '@/context/textselection';
+import { TextSelectionLite as  TextSelection } from '@/context/textselectionlite';
 
 function useControllerCustom(context: Context, i18nT: Function) {
     const workspace = computed(() => context.workspace);
@@ -27,14 +27,14 @@ function useControllerCustom(context: Context, i18nT: Function) {
     let move: any, up: any;
     let matrix4table = new Matrix();
     let down_item: (TableGridItem & { cell: TableCell | undefined }) | undefined;
-    let table: TableShape = context.selection.selectedShapes[0] as TableShape;
+    let table: TableView = context.selection.selectedShapes[0] as TableView;
     let table_selection: TableSelection;
     let text_selection: TextSelection;
     let down_index: { index: number, before: boolean };
     let point_on_table: { x: number, y: number } = { x: 0, y: 0 };
     let down_type: number = 1; //针对主键 1 单击 2 双击 3 三次点击
     let down_timer: any = null;
-    let shapes: Shape[] = [];
+    let shapes: ShapeView[] = [];
     let is_diposed: boolean = false;
 
     function mousedown(e: MouseEvent) {
@@ -123,7 +123,7 @@ function useControllerCustom(context: Context, i18nT: Function) {
                     const text = editingCell.cell.text;
                     if (!text) return;
                     const m_index = text.locateText(xy.x, xy.y);
-                    text_selection.selectText(down_index.index, m_index.index, text);
+                    text_selection.selectText(down_index.index, m_index.index);
                 }
             } else {
                 if (m_item.cell?.id === down_item.cell?.id) {
@@ -146,7 +146,7 @@ function useControllerCustom(context: Context, i18nT: Function) {
         document.removeEventListener('mouseup', up);
     }
     function init_text_cell(cell: TableGridItem) {
-        const editor = context.editor.editor4Table(table);
+        const editor = context.editor4Table(table);
         editor.initTextCell(cell.index.row, cell.index.col)
     }
     function down(e: MouseEvent) {
@@ -164,7 +164,7 @@ function useControllerCustom(context: Context, i18nT: Function) {
                     if (!text) return;
                     down_index = text.locateText(xy.x, xy.y);
                     text_selection = context.textSelection;
-                    text_selection.setCursor(down_index.index, down_index.before, text);
+                    text_selection.setCursor(down_index.index, down_index.before);
                 } else if (down_item.cell.cellType === TableCellType.Image) {
                     // console.log('点到imagecell');
                     table_selection.setEditingCell();
@@ -198,7 +198,7 @@ function useControllerCustom(context: Context, i18nT: Function) {
         if (down_item && down_item.cell && down_item.cell.cellType === TableCellType.Text) {
             const text = down_item.cell.text, len: number = text?.length!;
             if (text && len !== 1) {
-                text_selection.selectText(0, len, text);
+                text_selection.selectText(0, len);
             } else {
                 table_selection.setEditingCell();
                 table_selection.selectTableCell(down_item.index.row, down_item.index.col);
@@ -225,7 +225,7 @@ function useControllerCustom(context: Context, i18nT: Function) {
         point_on_table = matrix4table.computeCoord2(startPosition.x, startPosition.y);
     }
     function initController() {
-        const t: TableShape = context.selection.selectedShapes[0] as TableShape;
+        const t: TableView = context.selection.selectedShapes[0] as TableView;
         if (t && t.type === ShapeType.Table) {
             table = t;
             get_matrix4table();

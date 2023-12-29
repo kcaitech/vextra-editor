@@ -1,18 +1,18 @@
 <script setup lang='ts'>
 import { Context } from '@/context';
-import { Text, Shape, TextShape, TableCell } from '@kcdesign/data';
+import { Text, Shape, TextShape, TableCell, ShapeView, TextShapeView, TableCellView } from '@kcdesign/data';
 import { Matrix } from '@kcdesign/data';
 import { ref, onMounted, onUnmounted, watch } from 'vue';
 import { genRectPath } from '../../common';
 const props = defineProps<{
-  shape: Shape & { text: Text },
+  shape: TextShapeView | TableCellView,
   matrix: number[]
   context: Context
 }>();
-function getText(shape: Shape & { text: Text }): Text {
-    if (shape.isVirtualShape) return shape.text;
-    return (shape as TextShape | TableCell).getText();
-}
+// function getText(shape: ShapeView & { text: Text }): Text {
+//     if (shape.isVirtualShape) return shape.text;
+//     return (shape as TextShapeView | TableCellView).getText();
+// }
 const matrix = new Matrix();
 const selectPath = ref<string[]>([]);
 function update() {
@@ -22,7 +22,7 @@ function update() {
   if (!slice) return;
   for (let i = 0; i < slice.length; i++) {
     const s = slice[i];
-    selectPath.value.push(genRectPath(getText(props.shape).locateRange(s[0], s[1]).map((point) => matrix.computeCoord(point.x, point.y))));
+    selectPath.value.push(genRectPath(props.shape.locateRange(s[0], s[1]).map((point) => matrix.computeCoord(point.x, point.y))));
   }
 }
 

@@ -1,5 +1,5 @@
 <script setup lang="ts">
-import { h, nextTick, onMounted, onUnmounted, ref } from 'vue';
+import {h, nextTick, onMounted, onUnmounted, ref, shallowRef} from 'vue';
 import comsMap from '@/components/Document/Content/comsmap';
 import { GroupShape, ShapeType, SymbolShape, SymbolUnionShape } from "@kcdesign/data";
 import { renderSymbolPreview as r } from "@kcdesign/data";
@@ -22,7 +22,7 @@ const selected = ref<boolean>(false);
 const render_preview = ref<boolean>(false);
 const preview_container = ref<Element>();
 const danger = ref<boolean>(false);
-const render_item = ref<GroupShape>(props.data);
+const render_item = shallowRef<GroupShape>(props.data);
 const name = ref<string>('');
 
 function gen_view_box() {

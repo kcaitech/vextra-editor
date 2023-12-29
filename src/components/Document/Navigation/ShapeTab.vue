@@ -11,10 +11,10 @@ import { Context } from "@/context";
 import ShapeList from "./ShapeList.vue";
 import PageList from "./PageList.vue";
 import Sash from "@/components/common/Sash.vue";
-import { Page } from "@kcdesign/data";
+import { Page, PageView } from "@kcdesign/data";
 import ShowHiddenLeft from "./ShowHiddenLeft.vue";
 import { Navi } from "@/context/navigate";
-const props = defineProps<{ context: Context, page: Page, leftTriggleVisible: boolean, showLeft: boolean }>();
+const props = defineProps<{ context: Context, page: PageView, leftTriggleVisible: boolean, showLeft: boolean }>();
 const emit = defineEmits<{ (e: 'showNavigation'): void }>()
 const i_height = 119;
 const structure = ref<{ pagelistHeight: number, pagelistHeightBackup: number }>({ pagelistHeight: i_height, pagelistHeightBackup: 32 });
