@@ -70,29 +70,30 @@ const back = (index: string) => {
 }
 
 const hasPendingSyncCmd = () => {
-  ElMessageBox.confirm(
-    `${t('message.unuploaded_msg')}`,
-    `${t('message.back_home')}`,
-    {
-      confirmButtonText: `${t('message.exit_document')}`,
-      cancelButtonText: `${t('message.cancel')}`,
-    }
-  )
-    .then(() => {
-      window.document.title = t('product.name');
-      (window as any).sketchDocument = undefined;
-      (window as any).skrepo = undefined;
-      const index = sessionStorage.getItem('index');
-      if (index) {
-        back(index);
-      } else {
-        router.push({ name: 'recently' });
-        sessionStorage.setItem('index', '1')
-      }
-    })
-    .catch(() => {
-      return
-    })
+  showbackhometips.value = false
+  // ElMessageBox.confirm(
+  //   `${t('message.unuploaded_msg')}`,
+  //   `${t('message.back_home')}`,
+  //   {
+  //     confirmButtonText: `${t('message.exit_document')}`,
+  //     cancelButtonText: `${t('message.cancel')}`,
+  //   }
+  // )
+  //   .then(() => {
+  window.document.title = t('product.name');
+  (window as any).sketchDocument = undefined;
+  (window as any).skrepo = undefined;
+  const index = sessionStorage.getItem('index');
+  if (index) {
+    back(index);
+  } else {
+    router.push({ name: 'recently' });
+    sessionStorage.setItem('index', '1')
+  }
+  // })
+  // .catch(() => {
+  //   return
+  // })
 }
 
 function rename() {
@@ -213,6 +214,11 @@ onUnmounted(() => {
       <span v-if="isLable" style="color: #fff; font-size: 12px">【开发模式】</span>
     </div>
   </div>
+  <Teleport to="body">
+    <ProjectDialog :projectVisible="showbackhometips" :context="t('message.unuploaded_msg')"
+      :title="t('message.back_home')" :confirm-btn="t('message.exit_document')" @clode-dialog="closeDisband"
+      @confirm="hasPendingSyncCmd"></ProjectDialog>
+  </Teleport>
 </template>
 
 <style scoped lang="scss">

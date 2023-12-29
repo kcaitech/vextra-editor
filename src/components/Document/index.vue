@@ -322,7 +322,6 @@ const getDocumentInfo = async () => {
   try {
     loading.value = true;
     noNetwork.value = false;
-
     const docInfoPromise = share_api.getDocumentInfoAPI({ doc_id: route.query.id });
     const docKeyPromise = share_api.getDocumentKeyAPI({ doc_id: route.query.id });
     const [docInfoRes, docKeyRes] = await Promise.all([docInfoPromise, docKeyPromise]);
@@ -736,136 +735,136 @@ onUnmounted(() => {
 </style>
 <style scoped lang="scss">
 .main {
-    min-width: 1080px;
-    width: 100%;
-    overflow-x: auto;
-
-    @media (max-width: 1080px) {
-        overflow-x: scroll;
-    }
-
-    &::-webkit-scrollbar {
-        height: 10px;
-    }
-
-    &::-webkit-scrollbar-thumb {
-        border-radius: 150px;
-        -webkit-box-shadow: inset 0 0 5px rgba(0, 0, 0, 0.2);
-        background: rgba(0, 0, 0, 0.2);
-    }
-
-    &::-webkit-scrollbar-track {
-        -webkit-box-shadow: inset 0 0 5px rgba(0, 0, 0, 0.2);
-        border-radius: 0;
-        background: rgba(0, 0, 0, 0.1);
-    }
-
-#top {
-  display: flex;
-  flex-flow: row nowrap;
+  min-width: 1080px;
   width: 100%;
-  height: 46px;
-  background: var(--theme-color);
-  padding: 10px 8px;
-  box-sizing: border-box;
-  position: relative;
-  z-index: 19;
-}
+  overflow-x: auto;
 
-.network {
-  position: absolute;
-  width: 100%;
-  height: 100%;
-  z-index: 9999;
-}
-
-#visit {
-  position: absolute;
-  top: 45px;
-  right: 10px;
-  z-index: 999;
-  overflow: hidden;
-  height: calc(100% - 45px);
-}
-
-#center {
-  display: flex;
-  flex-flow: row nowrap;
-  width: 100%;
-  overflow: hidden;
-  position: relative;
-
-  #navigation {
-    height: 100%;
-    background-color: var(--left-navi-bg-color);
+  @media (max-width: 1080px) {
+    overflow-x: scroll;
   }
 
-  #content {
+  &::-webkit-scrollbar {
+    height: 10px;
+  }
+
+  &::-webkit-scrollbar-thumb {
+    border-radius: 150px;
+    -webkit-box-shadow: inset 0 0 5px rgba(0, 0, 0, 0.2);
+    background: rgba(0, 0, 0, 0.2);
+  }
+
+  &::-webkit-scrollbar-track {
+    -webkit-box-shadow: inset 0 0 5px rgba(0, 0, 0, 0.2);
+    border-radius: 0;
+    background: rgba(0, 0, 0, 0.1);
+  }
+
+  #top {
+    display: flex;
+    flex-flow: row nowrap;
+    width: 100%;
+    height: 46px;
+    background: var(--theme-color);
+    padding: 10px 8px;
+    box-sizing: border-box;
+    position: relative;
+    z-index: 19;
+  }
+
+  .network {
+    position: absolute;
     width: 100%;
     height: 100%;
+    z-index: 9999;
+  }
+
+  #visit {
+    position: absolute;
+    top: 45px;
+    right: 10px;
+    z-index: 999;
+    overflow: hidden;
+    height: calc(100% - 45px);
+  }
+
+  #center {
+    display: flex;
+    flex-flow: row nowrap;
+    width: 100%;
     overflow: hidden;
     position: relative;
-  }
 
-  #attributes {
-    height: 100%;
-    background-color: var(--right-attr-bg-color);
-    z-index: 9;
-  }
-}
-
-.notification {
-  position: fixed;
-  font-size: var(--font-default-fontsize);
-  display: flex;
-  align-items: center;
-  top: 60px;
-  left: 50%;
-  transform: translateX(-50%);
-  color: red;
-  background-color: #fff;
-  border: 1px solid #ccc;
-  padding: 7px 30px;
-  border-radius: 4px;
-
-  .text {
-    margin: 0 15px 0 10px;
-  }
-}
-
-.network_error {
-  position: fixed;
-  font-size: var(--font-default-fontsize);
-  display: flex;
-  align-items: center;
-  top: 60px;
-  left: 50%;
-  transform: translateX(-50%);
-  color: #f1f1f1;
-  background-color: var(--active-color);
-  padding: 7px 30px;
-  border: 1px solid var(--active-color);
-  border-radius: 4px;
-
-  .loading-spinner {
-    >svg {
-      width: 15px;
-      height: 15px;
-      color: #000;
+    #navigation {
+      height: 100%;
+      background-color: var(--left-navi-bg-color);
     }
 
-    animation: spin 1s linear infinite;
-  }
-
-  @keyframes spin {
-    0% {
-      transform: rotate(0deg);
+    #content {
+      width: 100%;
+      height: 100%;
+      overflow: hidden;
+      position: relative;
     }
 
-    100% {
-      transform: rotate(360deg);
+    #attributes {
+      height: 100%;
+      background-color: var(--right-attr-bg-color);
+      z-index: 9;
     }
   }
-}
+
+  .notification {
+    position: fixed;
+    font-size: var(--font-default-fontsize);
+    display: flex;
+    align-items: center;
+    top: 60px;
+    left: 50%;
+    transform: translateX(-50%);
+    color: red;
+    background-color: #fff;
+    border: 1px solid #ccc;
+    padding: 7px 30px;
+    border-radius: 4px;
+
+    .text {
+      margin: 0 15px 0 10px;
+    }
+  }
+
+  .network_error {
+    position: fixed;
+    font-size: var(--font-default-fontsize);
+    display: flex;
+    align-items: center;
+    top: 60px;
+    left: 50%;
+    transform: translateX(-50%);
+    color: #f1f1f1;
+    background-color: var(--active-color);
+    padding: 7px 30px;
+    border: 1px solid var(--active-color);
+    border-radius: 4px;
+
+    .loading-spinner {
+      >svg {
+        width: 15px;
+        height: 15px;
+        color: #000;
+      }
+
+      animation: spin 1s linear infinite;
+    }
+
+    @keyframes spin {
+      0% {
+        transform: rotate(0deg);
+      }
+
+      100% {
+        transform: rotate(360deg);
+      }
+    }
+  }
 }
 </style>

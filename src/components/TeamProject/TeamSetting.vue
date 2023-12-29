@@ -337,6 +337,9 @@ onMounted(() => {
 <style lang="scss" scoped>
 .overlay {
     position: absolute;
+    display: flex;
+    align-items: center;
+    justify-content: center;
     top: 0;
     left: 0;
     width: 100%;
@@ -345,25 +348,38 @@ onMounted(() => {
     background-color: rgba(0, 0, 0, 0.5);
 }
 
+@media (max-height: 220px) {
+    .card-container {
+        height: 100%;
+        overflow: auto !important;
+        animation: none !important;
+    }
+}
+
+@media (max-width: 420px) {
+    .card-container {
+        width: 100% !important;
+        overflow: auto !important;
+    }
+}
+
 @keyframes move {
     from {
-        transform: translate(-50%, -20%);
+        transform: translateY(-20px);
         opacity: 0;
     }
 
     to {
-        transform: translate(-50%, 0);
+        transform: translate(0);
         opacity: 1;
     }
 }
 
 .card-container {
     position: absolute;
-    top: 25%;
-    left: 50%;
     width: 420px;
     padding: 0 24px;
-    transform: translate(-50%, 0);
+    transform: translateY(0);
     background-color: white;
     border-radius: 14px;
     border: 1px solid #F0F0F0;

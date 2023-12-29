@@ -254,86 +254,90 @@ onUnmounted(() => {
 </script>
 
 <template>
-    <div class="overlay"></div>
-    <div class="card-container">
-        <div class="heard">
-            <div class="title">
-                {{ title }}
+    <div class="overlay">
+        <div class="card-container">
+            <div class="heard">
+                <div class="title">
+                    {{ title }}
+                </div>
+                <div class="close" @click.stop="emit('closeDialog')">
+                    <svg-icon icon-class="close"></svg-icon>
+                </div>
             </div>
-            <div class="close" @click.stop="emit('closeDialog')">
-                <svg-icon icon-class="close"></svg-icon>
+            <div class="type-setting">
+                <span>{{ t('Createteam.projecttype') }}：</span>
+                <input ref="inputTypeSelect" class="typeinput" :style="{ opacity: disabled ? 0.6 : 1 }" type="text"
+                    v-model="projectType" @click.stop="openTypeSelect" placeholder="Select an option" :disabled="disabled"
+                    readonly />
+                <div class="shrink1" @click.stop="inputTypeSelect?.click()">
+                    <svg-icon icon-class="down"
+                        :style="{ transform: showTypeSelect ? 'rotate(-180deg)' : 'rotate(0deg)', color: '#666666' }"></svg-icon>
+                </div>
+                <transition name="el-zoom-in-top">
+                    <ul v-show="showTypeSelect" class="typeoptions">
+                        <li class="options_item" v-for="item in projectOptions" :key="item.value"
+                            @click.stop="selectTypeOption(item)">
+                            <span :style="{ fontWeight: item.label == projectType ? 600 : 500 }">{{ item.label }}</span>
+                            <div class="choose" :style="{ visibility: item.label === projectType ? 'visible' : 'hidden' }">
+                            </div>
+                        </li>
+                    </ul>
+                </transition>
+            </div>
+            <div class="perm-setting" v-if="currentProject[0]">
+                <span>{{ t('Createteam.jurisdiction') }}：</span>
+                <input ref="inputPermSelect" class="perminput" :style="{ opacity: disabled ? 0.6 : 1 }" type="text"
+                    v-model="projectPerm" @click.stop="openPermSelect" placeholder="Select an option" :disabled="disabled"
+                    readonly />
+                <div class="shrink2" @click.stop="inputPermSelect?.click()">
+                    <svg-icon icon-class="down"
+                        :style="{ transform: showPermSelect ? 'rotate(-180deg)' : 'rotate(0deg)', color: '#666666' }"></svg-icon>
+                </div>
+                <transition name="el-zoom-in-top">
+                    <ul v-show="showPermSelect" class="permoptions">
+                        <li class="options_item" v-for="item in projectPerms" :key="item.value"
+                            @click.stop="selectPermOption(item)">
+                            <span :style="{ fontWeight: item.label == projectPerm ? 500 : 400 }">{{ item.label }}</span>
+                            <div class="choose" :style="{ visibility: item.label === projectPerm ? 'visible' : 'hidden' }">
+                            </div>
+                        </li>
+                    </ul>
+                </transition>
+            </div>
+            <div class="centent" v-if="currentProject[0] && projectType === projectOptions[1].label">
+                <div class="permission-tips">{{ t('Createteam.jointips') }}</div>
+                <div class="permission-switch">
+                    <span> {{ t('Createteam.invitation_switch') }}</span>
+                    <!-- <el-switch v-model="linkSwitch" class="ml-2" style="--el-switch-on-color: #1878F5" size="small"
+                    @click="onLinkSwitch" :disabled="disabled" /> -->
+                    <input id="switch" type="checkbox" v-model="linkSwitch" @change="onLinkSwitch" :disabled="disabled">
+                    <label class="my_switch" for="switch"></label>
+                </div>
+                <input v-if="linkSwitch" class="switch" :style="{ opacity: disabled ? 0.6 : 1 }" type="text"
+                    v-model="sharelink" :disabled="disabled" readonly>
+                <div v-if="linkSwitch" class="permission-tips1" :style="{ opacity: disabled ? 0.6 : 1 }">
+                    <input type="checkbox" id="filetips" v-model="checked" :disabled="disabled">
+                    <label for="filetips">申请后需管理员审批确认</label>
+                </div>
+                <div class="invitemember">
+                    <button type="button" :disabled="!linkSwitch" @click.stop="copyLink">{{ t('Createteam.copylink')
+                    }}</button>
+                </div>
+            </div>
+            <div class="cancel" v-else>
+                <button type="button" @click.stop="emit('closeDialog')">{{ t('Createteam.confirm') }}</button>
             </div>
         </div>
 
-        <div class="type-setting">
-            <span>{{ t('Createteam.projecttype') }}：</span>
-            <input ref="inputTypeSelect" class="typeinput" :style="{ opacity: disabled ? 0.6 : 1 }" type="text"
-                v-model="projectType" @click.stop="openTypeSelect" placeholder="Select an option" :disabled="disabled"
-                readonly />
-            <div class="shrink1" @click.stop="inputTypeSelect?.click()">
-                <svg-icon icon-class="down"
-                    :style="{ transform: showTypeSelect ? 'rotate(-180deg)' : 'rotate(0deg)', color: '#666666' }"></svg-icon>
-            </div>
-            <transition name="el-zoom-in-top">
-                <ul v-show="showTypeSelect" class="typeoptions">
-                    <li class="options_item" v-for="item in projectOptions" :key="item.value"
-                        @click.stop="selectTypeOption(item)">
-                        <span :style="{ fontWeight: item.label == projectType ? 600 : 500 }">{{ item.label }}</span>
-                        <div class="choose" :style="{ visibility: item.label === projectType ? 'visible' : 'hidden' }">
-                        </div>
-                    </li>
-                </ul>
-            </transition>
-        </div>
-        <div class="perm-setting" v-if="currentProject[0]">
-            <span>{{ t('Createteam.jurisdiction') }}：</span>
-            <input ref="inputPermSelect" class="perminput" :style="{ opacity: disabled ? 0.6 : 1 }" type="text"
-                v-model="projectPerm" @click.stop="openPermSelect" placeholder="Select an option" :disabled="disabled"
-                readonly />
-            <div class="shrink2" @click.stop="inputPermSelect?.click()">
-                <svg-icon icon-class="down"
-                    :style="{ transform: showPermSelect ? 'rotate(-180deg)' : 'rotate(0deg)', color: '#666666' }"></svg-icon>
-            </div>
-            <transition name="el-zoom-in-top">
-                <ul v-show="showPermSelect" class="permoptions">
-                    <li class="options_item" v-for="item in projectPerms" :key="item.value"
-                        @click.stop="selectPermOption(item)">
-                        <span :style="{ fontWeight: item.label == projectPerm ? 500 : 400 }">{{ item.label }}</span>
-                        <div class="choose" :style="{ visibility: item.label === projectPerm ? 'visible' : 'hidden' }">
-                        </div>
-                    </li>
-                </ul>
-            </transition>
-        </div>
-        <div class="centent" v-if="currentProject[0] && projectType === projectOptions[1].label">
-            <div class="permission-tips">{{ t('Createteam.jointips') }}</div>
-            <div class="permission-switch">
-                <span> {{ t('Createteam.invitation_switch') }}</span>
-                <!-- <el-switch v-model="linkSwitch" class="ml-2" style="--el-switch-on-color: #1878F5" size="small"
-                    @click="onLinkSwitch" :disabled="disabled" /> -->
-                <input id="switch" type="checkbox" v-model="linkSwitch" @change="onLinkSwitch" :disabled="disabled">
-                <label class="my_switch" for="switch"></label>
-            </div>
-            <input v-if="linkSwitch" class="switch" :style="{ opacity: disabled ? 0.6 : 1 }" type="text" v-model="sharelink"
-                :disabled="disabled" readonly>
-            <div v-if="linkSwitch" class="permission-tips1" :style="{ opacity: disabled ? 0.6 : 1 }">
-                <input type="checkbox" id="filetips" v-model="checked" :disabled="disabled">
-                <label for="filetips">申请后需管理员审批确认</label>
-            </div>
-            <div class="invitemember">
-                <button type="button" :disabled="!linkSwitch" @click.stop="copyLink">{{ t('Createteam.copylink')
-                }}</button>
-            </div>
-        </div>
-        <div class="cancel" v-else>
-            <button type="button" @click.stop="emit('closeDialog')">{{ t('Createteam.confirm') }}</button>
-        </div>
     </div>
 </template>
 
 <style scoped lang="scss">
 .overlay {
     position: absolute;
+    display: flex;
+    align-items: center;
+    justify-content: center;
     top: 0;
     left: 0;
     width: 100%;
@@ -342,14 +346,29 @@ onUnmounted(() => {
     background-color: rgba(0, 0, 0, 0.5);
 }
 
+@media (max-height: 400px) {
+  .card-container {
+    height: 100%;
+    overflow: auto !important;
+    animation: none !important;
+  }
+}
+
+@media (max-width: 450px) {
+  .card-container {
+    width: 100% !important;
+    overflow: auto !important;
+  }
+}
+
 @keyframes move {
     from {
-        transform: translate(-50%, -20%);
+        transform: translateY(-20px);
         opacity: 0;
     }
 
     to {
-        transform: translate(-50%, 0);
+        transform: translateY(0);
         opacity: 1;
     }
 }
@@ -359,9 +378,7 @@ onUnmounted(() => {
     background-color: white;
     width: 420px;
     border-radius: 16px;
-    top: 25%;
-    left: 50%;
-    transform: translate(-50%, 0%);
+    transform: translateY(0);
     padding: 0 24px 8px;
     z-index: 9999;
     border: 1px solid #F0F0F0;

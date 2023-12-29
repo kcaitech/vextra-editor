@@ -165,7 +165,7 @@ const getName = (item: any) => {
                     <span>{{ t('apply.application_documents') }}</span>"{{ item.document.name }}"
                     <div class="purview">{{ permission[item.apply.perm_type] }}</div>
                     <div class="notes" v-if="item.apply.applicant_notes !== ''">
-                      {{ t('apply.remarks') }}{{ item.apply.applicant_notes }}
+                      {{ t('apply.remarks') }}：{{ item.apply.applicant_notes }}
                     </div>
                   </div>
               </div>

@@ -33,7 +33,7 @@ export const apply = {
     applicant: "申请人",
     access_file: "访问文件",
     authority: '权限：',
-    remarks: '备注：',
+    remarks: '备注',
     agree: '同意',
     refuse: '拒绝',
     maximum_share: '该文件已达最大分享人数，请联系创建者处理',

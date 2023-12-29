@@ -80,10 +80,6 @@ watch(() => props.projectVisible, (newvalue) => {
 
 <style  lang="scss">
 .my_content {
-    position: absolute;
-    top: 25%;
-    left: 50%;
-    transform: translate(-50%, 0);
     padding: 0 24px;
     border-radius: 14px;
     box-sizing: border-box;

@@ -10,7 +10,7 @@
                 :style="{ color: active ? '#777777' : '#333333' }">
                 {{ t('home.recycling_station') }}</div>
         </div>
-        <div v-if="active" class="right">
+        <div v-if="active && !searchvalue" class="right">
             <div class="newfile" @click="newFile">
                 <svg-icon icon-class="addfile-icon"></svg-icon>
                 {{ t('home.New_file') }}
@@ -25,20 +25,21 @@
         <div class="tatle" style="height: calc(100vh - 144px);">
             <tablelist :data="searchlists" :iconlist="iconlists" @share="Sharefile" @deletefile="Deletefile"
                 @dbclickopen="openDocument" @updatestar="Starfile" @rightMeun="rightmenu" :noNetwork="noNetwork"
-                @refreshDoc="refreshDoc" />
+                @refreshDoc="refreshDoc" :nulldata="nulldata" />
         </div>
         <listrightmenu :items="items" :data="mydata" @get-doucment="getDoucment" @r-starfile="Starfile"
             @r-sharefile="Sharefile" @r-removefile="Deletefile" @ropen="openDocument" @moveFillAddress="moveFillAddress" />
-        <FileShare v-if="showFileShare" @close="closeShare" :docId="docId" :docName="docName" :selectValue="selectValue"
-            :userInfo="userInfo" :docUserId="docUserId" @select-type="onSelectType" @switch-state="onSwitch"
-            :shareSwitch="shareSwitch" :pageHeight="pageHeight">
-        </FileShare>
         <MoveProjectFill :title="t('Createteam.movetip')" :confirm-btn="t('Createteam.move')" :projectItem="projectItem"
             :doc="mydata" :projectVisible="moveVisible" @clodeDialog="clodeDialog" @moveFillSeccess="moveFillSeccess">
         </MoveProjectFill>
     </div>
     <RecycleBin v-if="!active" />
-    <div v-if="showFileShare" class="overlay"></div>
+    <div v-if="showFileShare" class="overlay">
+        <FileShare @close="closeShare" :docId="docId" :docName="docName" :selectValue="selectValue" :userInfo="userInfo"
+            :docUserId="docUserId" @select-type="onSelectType" @switch-state="onSwitch" :shareSwitch="shareSwitch"
+            :pageHeight="pageHeight">
+        </FileShare>
+    </div>
 </template>
 
 <script setup lang="ts">
@@ -141,13 +142,17 @@ async function getDoucment() {
 
 const searchvalue = ref('');
 const searchlists = ref<any[]>([])
+const nulldata = ref(false)
 Bus.on('searchvalue', (str: string) => {
     searchvalue.value = str
 })
 
 watchEffect(() => {
-    if (!searchvalue.value) return searchlists.value = lists.value
+    if (!searchvalue.value) return searchlists.value = lists.value, nulldata.value = false
     searchlists.value = lists.value.filter((el: any) => PinyinMatch.match(el.document.name.toLowerCase(), searchvalue.value.toLowerCase()))
+    if (searchlists.value.length === 0 && searchvalue.value !== '') {
+        nulldata.value = true
+    }
 })
 
 
@@ -348,6 +353,9 @@ onUnmounted(() => {
 <style lang="scss" scoped>
 .overlay {
     position: absolute;
+    display: flex;
+    align-items: center;
+    justify-content: center;
     top: 0;
     left: 0;
     width: 100%;

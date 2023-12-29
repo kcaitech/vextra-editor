@@ -8,13 +8,13 @@
     </div>
     <listrightmenu :items="items" :data="mydata" @get-doucment="getDoucment" @r-starfile="Starfile" @r-sharefile="Sharefile"
         @r-removefile="Deletefile" @ropen="openDocument" @moveFillAddress="moveFillAddress" />
-
-    <div v-if="showFileShare" class="overlay"></div>
-    <FileShare v-if="showFileShare" @close="closeShare" :docId="docId" :docName="docName" :selectValue="selectValue"
-        :userInfo="userInfo" :docUserId="docUserId" @select-type="onSelectType" @switch-state="onSwitch"
-        :shareSwitch="shareSwitch" :pageHeight="pageHeight" :project="is_project"
-        :projectPerm="currentProject.self_perm_type">
-    </FileShare>
+    <div v-if="showFileShare" class="overlay">
+        <FileShare @close="closeShare" :docId="docId" :docName="docName" :selectValue="selectValue"
+            :userInfo="userInfo" :docUserId="docUserId" @select-type="onSelectType" @switch-state="onSwitch"
+            :shareSwitch="shareSwitch" :pageHeight="pageHeight" :project="is_project"
+            :projectPerm="currentProject.self_perm_type">
+        </FileShare>
+    </div>
     <MoveProjectFill :title="t('Createteam.movetip')" :confirm-btn="t('Createteam.move')" :projectItem="projectItem"
         :doc="mydata" :projectVisible="moveVisible" @clodeDialog="clodeDialog" @moveFillSeccess="moveFillSeccess">
     </MoveProjectFill>
@@ -316,6 +316,9 @@ onUnmounted(() => {
 <style lang="scss" scoped>
 .overlay {
     position: absolute;
+    display: flex;
+    align-items: center;
+    justify-content: center;
     top: 0;
     left: 0;
     width: 100%;
