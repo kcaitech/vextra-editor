@@ -5,18 +5,17 @@ import LableLayerInfo from "./LableLayerInfo.vue";
 import LableFill from "./LableFill.vue";
 import LableBorder from "./LableBorder.vue";
 import LableText from "./LableText.vue";
-import LableCode from "./LableCode.vue"
 import LableMultiSelect from "./LableMultiSelect.vue";
-import { computed, onMounted, onUnmounted, ref } from "vue";
+import { onMounted, onUnmounted, ref } from "vue";
 import { Selection } from '@/context/selection';
-import { Shape, ShapeType } from "@kcdesign/data";
+import { ShapeType, ShapeView } from "@kcdesign/data";
 import { useI18n } from 'vue-i18n'
 
 const {t} = useI18n();
 const props = defineProps<{
     context: Context
 }>();
-const shapes = ref<Shape[]>([]);
+const shapes = ref<ShapeView[]>([]);
 const len = ref(0);
 const shapeType = ref();
 const getShapeInfo = () => {
@@ -50,8 +49,8 @@ onUnmounted(() => {
             <PlatformSelected v-if="len === 1" :context="context"></PlatformSelected>
             <LableMultiSelect v-if="len > 1"></LableMultiSelect>
             <LableLayerInfo v-if="len === 1" :context="context"></LableLayerInfo>
-            <LableFill v-if="len === 1 && shapes[0].style.fills.length > 0" :context="context"></LableFill>
-            <LableBorder v-if="len === 1 && shapes[0].style.borders.length > 0" :context="context"></LableBorder>
+            <LableFill v-if="len === 1 && shapes[0].getFills().length > 0" :context="context"></LableFill>
+            <LableBorder v-if="len === 1 && shapes[0].getBorders().length > 0" :context="context"></LableBorder>
             <LableText v-if="len === 1 && shapeType === ShapeType.Text" :context="context"></LableText>
             <!-- <LableCode v-if="len > 0" :context="context"></LableCode> -->
         </el-scrollbar>

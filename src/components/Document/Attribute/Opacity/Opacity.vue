@@ -1,6 +1,6 @@
 <script setup lang="ts">
 import TypeHeader from '../TypeHeader.vue';
-import {AsyncOpacityEditor, Shape} from '@kcdesign/data';
+import {AsyncOpacityEditor, ShapeView, adapt2Shape} from '@kcdesign/data';
 import {useI18n} from 'vue-i18n';
 import {nextTick, onMounted, onUnmounted, ref} from 'vue';
 import {Context} from '@/context';
@@ -8,7 +8,7 @@ import {Selection} from '@/context/selection'
 
 interface Props {
     context: Context
-    shapes: Shape[]
+    shapes: ShapeView[]
 }
 
 const props = defineProps<Props>();
@@ -74,7 +74,7 @@ function opacityChange(value: number) {
     const page = props.context.selection.selectedPage!;
     const editor = props.context.editor4Page(page);
     const selected = props.context.selection.selectedShapes;
-    editor.modifyShapesContextSettingOpacity(selected, value);
+    editor.modifyShapesContextSettingOpacity(selected.map(s => adapt2Shape(s)), value);
 }
 
 function change(e: Event) {
@@ -100,8 +100,15 @@ function down(e: MouseEvent) {
     opacity.value = limitValue(Number(value));
     opacity_editor = props.context.editor
         .controller()
-        .asyncOpacityEditor(selected, page);
+        .asyncOpacityEditor(selected.map(s => adapt2Shape(s)), page.data);
     opacity_editor.execute(value);
+}
+
+function mouseup(e: MouseEvent) {
+    if (opacity_editor) {
+        opacity_editor.close();
+        opacity_editor = undefined;
+    }
 }
 
 function input(e: Event) {
@@ -130,12 +137,12 @@ function update() {
     // 更新组件状态
     const shapes = props.context.selection.selectedShapes
     if (!shapes.length) return;
-    let firstOpacity = shapes[0].style.contextSettings?.opacity;
+    let firstOpacity = shapes[0].data.style.contextSettings?.opacity;
     firstOpacity = firstOpacity === undefined ? 1 : firstOpacity;
     let difference = false;
     if (shapes.length > 1) {
         for (let i = 1; i < shapes.length; i++) {
-            const randomOpacity = shapes[i].style.contextSettings?.opacity;
+            const randomOpacity = shapes[i].data.style.contextSettings?.opacity;
             if (randomOpacity !== firstOpacity) {
                 difference = true;
                 break;
@@ -211,6 +218,7 @@ onMounted(() => {
 onUnmounted(() => {
     // selection.unwatch 类似于 document.removeEventListener，大部分场景下，在挂载监听的时候都需要考虑移除监听的时机和处理
     props.context.selection.unwatch(selection_watcher);
+    if (opacity_editor) opacity_editor.close();
 })
 // function updateBackgroundSize(event: MouseEvent) {
 //     const range = event.target as HTMLInputElement | null;
@@ -320,7 +328,7 @@ onUnmounted(() => {
         </TypeHeader>
         <div class="opacity-container">
             <div class="slider">
-                <input type="range" class="input-range" :value="range()" @mousedown="e => down(e)" @input="input"
+                <input type="range" class="input-range" :value="range()" @mousedown="down" @mouseup="mouseup" @mouseleave="mouseup" @input="input"
                        @change="change2"
                        @keydown="range_keyboard" min="0" max="100" step="1"/>
                                 <div class="track"></div>

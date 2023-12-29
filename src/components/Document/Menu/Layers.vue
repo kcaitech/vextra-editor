@@ -1,21 +1,21 @@
 <script setup lang='ts'>
-import { Shape } from "@kcdesign/data";
-import {computed, ref} from 'vue';
+import { Shape, ShapeView } from "@kcdesign/data";
+import { computed } from 'vue';
 import { Context } from '@/context'
 interface Props {
   context: Context,
-  layers?: Shape[],
+  layers?: ShapeView[],
 }
 const emit = defineEmits<{
   (e: 'close'): void
 }>();
 const selectedShapes = computed(() => props.context.selection.selectedShapes);
 const props = defineProps<Props>();
-function select(shape: Shape) {
+function select(shape: ShapeView) {
   props.context.selection.selectShape(shape);
   emit('close');
 }
-function mouseenter(shape: Shape) {
+function mouseenter(shape: ShapeView) {
   props.context.selection.hoverShape(shape);
 }
 function mouseout() {

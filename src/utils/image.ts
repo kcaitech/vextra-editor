@@ -1,4 +1,4 @@
-import { ExportFormatNameingScheme, Shape, ExportFormat, ShapeType, GroupShape } from '@kcdesign/data';
+import { ExportFormatNameingScheme, Shape, ExportFormat, ShapeType, GroupShape, ShapeView } from '@kcdesign/data';
 import { getShadowMax, getShapeBorderMax, getGroupChildBounds } from '@/utils/cutout';
 import JSZip from 'jszip';
 export function get_frame(file: any) {
@@ -38,11 +38,11 @@ export async function downloadImages(imageUrls: any[]) {
   link.click();
 }
 
-export const getExportFillUrl = (shapes: Shape[], urls: Map<string, string>) => {
+export const getExportFillUrl = (shapes: ShapeView[], urls: Map<string, string>) => {
   let fileUrls = [];
   for (let i = 0; i < shapes.length; i++) {
     const shape = shapes[i];
-    const options = shape.exportOptions;
+    const options = shape.data.exportOptions;
     if (options && options.exportFormats.length) {
       for (let f = 0; f < options.exportFormats.length; f++) {
         const format = options.exportFormats[f];
@@ -85,7 +85,7 @@ export const exportSingleImage = (imageUrl: string, type: string, name: string) 
   document.body.removeChild(a);
 }
 
-export const getPngImageData = (svg: SVGSVGElement, trim: boolean, id: string, format: ExportFormat, pngImageUrls: Map<string, string>, shape: Shape) => {
+export const getPngImageData = (svg: SVGSVGElement, trim: boolean, id: string, format: ExportFormat, pngImageUrls: Map<string, string>, shape: ShapeView) => {
   const canvas = document.createElement('canvas');
   const context = canvas.getContext('2d');
   const pcloneSvg = svg.cloneNode(true) as SVGSVGElement;
@@ -100,7 +100,7 @@ export const getPngImageData = (svg: SVGSVGElement, trim: boolean, id: string, f
       let g_x = 0;
       let g_y = 0;
       if (shape.type === ShapeType.Group) {
-        const { x, y, width: _w, height: _h } = getGroupChildBounds(shape as GroupShape);
+        const { x, y, width: _w, height: _h } = getGroupChildBounds(shape);
         g_x = Math.abs(x);
         g_y = Math.abs(y);
       }
@@ -173,7 +173,7 @@ export const getPngImageData = (svg: SVGSVGElement, trim: boolean, id: string, f
   };
 }
 
-export const getSvgImageData = (svg: SVGSVGElement, trim: boolean, id: string, format: ExportFormat, svgImageUrls: Map<string, string>, shape: Shape) => {
+export const getSvgImageData = (svg: SVGSVGElement, trim: boolean, id: string, format: ExportFormat, svgImageUrls: Map<string, string>, shape: ShapeView) => {
   const canvas = document.createElement('canvas');
   const ctx = canvas.getContext('2d');
   const cloneSvg = svg.cloneNode(true) as SVGSVGElement;
@@ -188,7 +188,7 @@ export const getSvgImageData = (svg: SVGSVGElement, trim: boolean, id: string, f
       let g_x = 0;
       let g_y = 0;
       if (shape.type === ShapeType.Group) {
-        const { x, y, width: _w, height: _h } = getGroupChildBounds(shape as GroupShape);
+        const { x, y, width: _w, height: _h } = getGroupChildBounds(shape);
         g_x = Math.abs(x);
         g_y = Math.abs(y);
       }

@@ -1,5 +1,5 @@
 import {XY, PageXY} from '@/context/selection';
-import {Matrix, ShapeFrame, Shape, ShapeType, GroupShape, Artboard} from '@kcdesign/data';
+import {Matrix, ShapeFrame, Shape, ShapeType, GroupShape, Artboard, ShapeView, GroupShapeView} from '@kcdesign/data';
 import {isTarget} from './common';
 import {Context} from '@/context';
 import {Action, Tool} from '@/context/tool';
@@ -11,7 +11,7 @@ import {WorkSpace} from '@/context/workspace';
 // 直到没有🍌为止，得到最后的XY;
 
 export function landFinderOnPage(pageMatrix: Matrix, context: Context, frame: ShapeFrame): PageXY {
-    const shapes: Shape[] = context.selection.selectedPage?.childs || [];
+    const shapes: Shape[] = context.selection.selectedPage?.data.childs || [];
     const {width, height} = frame;
     let center = context.workspace.root.center;
     center = pageMatrix.inverseCoord(center.x, center.y);
@@ -52,7 +52,7 @@ export function landFinderOnPage(pageMatrix: Matrix, context: Context, frame: Sh
 }
 
 // 使容器滚动到可视区域
-export function scrollToContentView(shape: Shape, context: Context) {
+export function scrollToContentView(shape: ShapeView, context: Context) {
     const selection = context.selection, workspace = context.workspace;
     const m2r = shape.matrix2Root(), f = shape.frame;
     m2r.multiAtLeft(workspace.matrix);
@@ -98,27 +98,36 @@ export function scrollToContentView(shape: Shape, context: Context) {
 
 export function insertFrameTemplate(context: Context) {
     const selection = context.selection, workspace = context.workspace, tool = context.tool;
-    const shapes: Shape[] = selection.selectedPage?.childs || [];
+    const shapes: ShapeView[] = selection.selectedPage?.childs || [];
     const type = ShapeType.Artboard;
     const parent = selection.selectedPage;
     if (parent) {
-        const editor = context.editor.editor4Page(parent), tf = tool.frameSize, matrix = workspace.matrix;
+        const editor = context.editor.editor4Page(parent.data), tf = tool.frameSize, matrix = workspace.matrix;
         const frame = new ShapeFrame(0, 0, tf.size.width, tf.size.height);
         const {x, y} = landFinderOnPage(matrix, context, frame);
         frame.x = x, frame.y = y;
         let artboard: Shape | false = editor.create(type, tf.name, frame);
-        artboard = editor.insert(parent, shapes.length, artboard);
-        if (artboard) {
-            const timer = setTimeout(() => {
-                artboard && scrollToContentView(artboard, context);
-                clearTimeout(timer);
-            }, 100)
-        }
+        artboard = editor.insert(parent.data, shapes.length, artboard);
+        context.getPageDom(parent.data).ctx.once('nextTick', () => {
+            if (artboard) {
+                const view = parent.shapes.get(artboard.id);
+                view && scrollToContentView(view, context);
+            }
+        })
+        // if (artboard) {
+        //     const timer = setTimeout(() => {
+        //         if (artboard) {
+        //             const view = parent.shapes.get(artboard.id);
+        //             view && scrollToContentView(view, context);
+        //         }
+        //         clearTimeout(timer);
+        //     }, 100)
+        // }
     }
     context.tool.setAction(Action.AutoV);
 }
 
-export function collect(context: Context): Shape[] {
+export function collect(context: Context): ShapeView[] {
     const selection = context.selection;
     const page = selection.selectedPage;
     const artboard = selection.selectedShapes[0];
@@ -132,17 +141,17 @@ export function collect(context: Context): Shape[] {
             {x: 0, y: frame.height},
             {x: 0, y: 0}
         ].map(p => m2r.computeCoord(p.x, p.y));
-        const scope = ((artboard.parent || page) as GroupShape).childs || [];
+        const scope = ((artboard.parent || page) as ShapeView).childs || [];
         return finder(context, scope, ps as [XY, XY, XY, XY, XY]);
     } else return [];
 }
 
-function finder(context: Context, childs: Shape[], Points: [XY, XY, XY, XY, XY]) {
+function finder(context: Context, childs: ShapeView[], Points: [XY, XY, XY, XY, XY]) {
     let ids = 0;
-    const selectedShapes: Map<string, Shape> = new Map();
+    const selectedShapes: Map<string, ShapeView> = new Map();
     while (ids < childs.length) {
         const shape = childs[ids];
-        if (shape.isLocked || !shape.isVisible) {
+        if (shape.isLocked() || !shape.isVisible()) {
             ids++;
             continue;
         }
@@ -158,8 +167,8 @@ function finder(context: Context, childs: Shape[], Points: [XY, XY, XY, XY, XY])
         if (shape.type === ShapeType.Artboard) { // 容器要判定为真的条件是完全被选区覆盖
             if (isTarget(Points, ps, true)) {
                 selectedShapes.set(shape.id, shape);
-                for (let i = 0; i < (shape as Artboard).childs.length; i++) {
-                    selectedShapes.delete((shape as Artboard).childs[i].id);
+                for (let i = 0; i < (shape).childs.length; i++) {
+                    selectedShapes.delete((shape).childs[i].id);
                 }
             }
         } else if (shape.type === ShapeType.Line) {
@@ -174,11 +183,11 @@ function finder(context: Context, childs: Shape[], Points: [XY, XY, XY, XY, XY])
     return compare_layer_3(Array.from(selectedShapes.values()));
 }
 
-export function get_artboard_list_by_point(context: Context, range: Shape[], point: PageXY, init?: Shape[]) {
-    let result: Shape[] = init || [context.selection.selectedPage!];
+export function get_artboard_list_by_point(context: Context, range: ShapeView[], point: PageXY, init?: ShapeView[]) {
+    let result: ShapeView[] = init || [context.selection.selectedPage!];
     const scout = context.selection.scout!;
     for (let i = 0, len = range.length; i < len; i++) {
-        const s = range[i] as Artboard;
+        const s = range[i];
         if (s.type !== ShapeType.Artboard) continue;
         if (scout.isPointInShape(s, point)) {
             result.push(s);
@@ -190,11 +199,11 @@ export function get_artboard_list_by_point(context: Context, range: Shape[], poi
     return result;
 }
 
-export function get_common_environment(shapes1: Shape[], shapes2: Shape[]) {
+export function get_common_environment(shapes1: ShapeView[], shapes2: ShapeView[]) {
     let longer = shapes1.length > shapes2.length ? shapes1 : shapes2;
     const anther = longer === shapes1 ? shapes2 : shapes1;
     longer = longer.slice(0, anther.length);
-    let result: Shape | undefined;
+    let result: ShapeView | undefined;
     for (let i = longer.length - 1; i > -1; i--) {
         const a1 = longer[i], a2 = anther[i];
         if (a1.id === a2.id) {

@@ -1,5 +1,5 @@
 <script setup lang="ts">
-import {Matrix, TextShape, Variable} from "@kcdesign/data";
+import {Matrix, TableCell, TableCellView, TextShape, TextShapeView, Variable, adapt2Shape} from "@kcdesign/data";
 import {ref, h, onMounted, onUnmounted} from "vue";
 import {renderTextStatic as r} from "@kcdesign/data"
 import {Context} from "@/context";
@@ -7,7 +7,7 @@ import Ctrl from "./Ctrl.vue";
 
 interface Props {
     context: Context
-    shape: TextShape
+    shape: TextShapeView | TableCellView
 }
 
 const props = defineProps<Props>();
@@ -18,7 +18,7 @@ const container = ref<HTMLDivElement>();
 const container_root = ref<{ x: number, y: number }>({x: 0, y: 0});
 
 function render() {
-    return r(h, props.shape, undefined, undefined, reflush.value, true);
+    return r(h, adapt2Shape(props.shape) as TextShape, undefined, undefined, reflush.value, true);
 }
 
 function wheel(e: WheelEvent) {

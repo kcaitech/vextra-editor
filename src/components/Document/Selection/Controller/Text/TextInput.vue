@@ -1,9 +1,8 @@
 <script setup lang='ts'>
 import {Context} from '@/context';
-import {Matrix, TableCell, TextShape} from '@kcdesign/data';
+import {Matrix, TableCell, TableCellView, TextShape, TextShapeView} from '@kcdesign/data';
 import {Shape, Text} from '@kcdesign/data';
 import {onUnmounted, ref, watch, onMounted} from 'vue';
-import {Selection} from '@/context/selection';
 import {throttle} from '../../common';
 import {handleKeyEvent} from './keyhandler';
 import {WorkSpace} from '@/context/workspace';
@@ -12,7 +11,7 @@ import {TextSelectionLite} from "@/context/textselectionlite";
 type SelectionLike = TextSelectionLite;
 
 interface Props {
-    shape: Shape & { text: Text }
+    shape: TextShapeView | TableCellView
     context: Context
     matrix: number[]
     mainNotify: number
@@ -24,9 +23,8 @@ defineExpose({attention});
 
 const props = defineProps<Props>();
 
-function getText(shape: Shape & { text: Text }): Text {
-    if (shape.isVirtualShape) return shape.text;
-    return (shape as TextShape | TableCell).getText();
+function getText(shape: TextShapeView | TableCellView): Text {
+    return (shape).getText();
 }
 
 let editor = props.context.editor4TextShape(props.shape);
@@ -115,7 +113,7 @@ function committext() {
 
     if (editor.isInComposingInput()) {
         if (editor.composingInputEnd(text)) {
-            selection.setCursor(composingStartIndex + text.length, true, getText(props.shape));
+            selection.setCursor(composingStartIndex + text.length, true);
         }
     } else {
         let index = selection.cursorStart;
@@ -127,7 +125,7 @@ function committext() {
         }
         const count = editor.insertText2(text, index, end - index);
         if (count !== 0) {
-            selection.setCursor(index + count, true, getText(props.shape));
+            selection.setCursor(index + count, true);
         }
     }
     inputel.value.value = ''
@@ -140,7 +138,7 @@ function oninput(e: Event) {
         const text = inputel.value.value;
         if (editor.composingInputUpdate(text)) {
             const selection = props.selection;
-            selection.setCursor(composingStartIndex + text.length, true, getText(props.shape));
+            selection.setCursor(composingStartIndex + text.length, true);
         }
     } else {
         committext();
@@ -167,7 +165,7 @@ function compositionend(e: Event) {
     if (!inputel.value) return;
     const text = inputel.value.value;
     if (editor.composingInputEnd(text)) {
-        props.selection.setCursor(composingStartIndex + text.length, true, getText(props.shape));
+        props.selection.setCursor(composingStartIndex + text.length, true);
     }
     inputel.value.value = ''
 }

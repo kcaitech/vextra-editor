@@ -1,4 +1,4 @@
-import { Shape, WatchableObject } from "@kcdesign/data";
+import { Shape, ShapeView, WatchableObject } from "@kcdesign/data";
 import { DocInfo, UserInfo } from "./user";
 import { DocCommentOpData, DocCommentOpType } from "@/communication/modules/doc_comment_op";
 
@@ -58,7 +58,7 @@ export class Comment extends WatchableObject {
   private m_hover_comment_id: string | undefined; //hover中的评论id
   private m_select_comment_id: string | undefined; //选中的评论id
   private m_shape_comment: boolean = false; //是否在编辑shape上的评论（移动shape修改评论位置）
-  private m_comment_shape: Shape[] = [] //保存移动shape上有评论的shape
+  private m_comment_shape: ShapeView[] = [] //保存移动shape上有评论的shape
   private m_not2tree_comment: any = [] //没有转树的评论列表
   private m_comment_visible: boolean = true; //是否显示评论
   private m_comment_input_move: boolean = false; //是否正在移动评论输入框
@@ -170,7 +170,7 @@ export class Comment extends WatchableObject {
     this.m_select_comment_id = id
     this.notify(Comment.SELECTE_COMMENT)
   }
-  editShapeComment(state: boolean, shapes: Shape[] | []) {
+  editShapeComment(state: boolean, shapes: ShapeView[] | []) {
     this.m_shape_comment = state
     if (state) {
       this.m_comment_shape.push(...shapes!)

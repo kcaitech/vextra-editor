@@ -1,7 +1,7 @@
 <script setup lang="ts">
 import { Context } from '@/context';
 import LableType from './LableType.vue'
-import { nextTick, onMounted, onUnmounted, reactive, ref } from 'vue';
+import { onMounted, onUnmounted, reactive, ref } from 'vue';
 import { Selection } from '@/context/selection';
 import LableDropMenu from "./LableDropMenu.vue";
 import { ArrowDown } from '@element-plus/icons-vue';
@@ -73,9 +73,9 @@ const getBordersData = () => {
     borders.length = 0;
     const shape = props.context.selection.selectedShapes[0];
     if (props.context.selection.selectedShapes.length === 1) {
-        const style = shape.style;
-        for (let i = 0, l = style.borders.length; i < l; i++) {
-            const border = style.borders[i];
+        const borders = shape.getBorders();
+        for (let i = 0, l = borders.length; i < l; i++) {
+            const border = borders[i];
             const b: BorderItem = {
                 id: i,
                 border: border

@@ -1,7 +1,7 @@
 <script setup lang="ts">
 import { onMounted, onUnmounted, reactive, ref, watch } from 'vue';
 import { Context } from '@/context';
-import { Color, Shadow, ShadowPosition, Shape, ShapeType } from "@kcdesign/data";
+import { Color, Shadow, ShadowPosition, ShapeView, ShapeType } from "@kcdesign/data";
 import TypeHeader from '../TypeHeader.vue';
 import { useI18n } from 'vue-i18n';
 import ShadowDetail from './ShadowDetail.vue'
@@ -15,7 +15,7 @@ interface ShadowItem {
 }
 interface Props {
   context: Context
-  shapes: Shape[]
+  shapes: ShapeView[]
 }
 const props = defineProps<Props>();
 const { t } = useI18n();
@@ -65,9 +65,9 @@ function updateData() {
   const len = props.shapes.length;
   if (len === 1) {
     const shape = props.shapes[0];
-    const style = shape.style;
-    for (let i = 0, len = style.shadows.length; i < len; i++) {
-      const shadow = style.shadows[i];
+    const _shadows = shape.getShadows();
+    for (let i = 0, len = _shadows.length; i < len; i++) {
+      const shadow = _shadows[i];
       const s = { id: i, shadow };
       shadows.unshift(s);
     }

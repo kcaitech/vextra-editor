@@ -1,6 +1,6 @@
 <script setup lang="ts">
-import { Context } from '@/context';
-import { Shape, ShapeType, Variable, VariableType } from '@kcdesign/data';
+import {Context} from '@/context';
+import {Shape, ShapeType, ShapeView, Variable, VariableType} from '@kcdesign/data';
 import { ArrowDown } from '@element-plus/icons-vue';
 import { useI18n } from 'vue-i18n';
 import { onMounted, ref } from 'vue';
@@ -33,7 +33,7 @@ const isselectLayer = ref(false);
 const showSelectLayer = (e: MouseEvent) => {
     e.stopPropagation();
 
-    const symbol = props.context.selection.symbolshape;
+    const symbol = props.context.selection.symbolview;
     if (!symbol || !is_symbol_or_union(symbol)) {
         return;
     }
@@ -55,9 +55,9 @@ function de_show_select_layer() {
 }
 
 const get_symbol_layer = () => {
-    const symbolshape = props.context.selection.symbolshape;
+    const symbolshape = props.context.selection.symbolview;
     if (!symbolshape) return;
-    const select: Shape[] = [];
+    const select: ShapeView[] = [];
     selectList.value = get_options_from_symbol(symbolshape, props.addType, t('compos.dlt'), props.variable, select);
     selectLayerid.value = select.map(item => item.id);
     selectLayerName.value = getShapesName(selectLayerid.value);

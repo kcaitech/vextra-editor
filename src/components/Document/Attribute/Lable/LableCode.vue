@@ -75,8 +75,9 @@ const getShapeInfo = () => {
         const witch = shape.frame.width.toFixed(2);
         const height = shape.frame.height.toFixed(2);
         let color = ''
-        if (shape.style.fills[0]) {
-            const fill = shape.style.fills[0].color
+        const fills = shape.getFills();
+        if (fills[0]) {
+            const fill = fills[0].color
             if (fill.alpha === 1) {
                 color = toHex(fill.red, fill.green, fill.blue);
             } else {

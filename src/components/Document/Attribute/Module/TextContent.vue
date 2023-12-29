@@ -4,7 +4,7 @@ import {Context} from '@/context';
 import TypeHeader from '../TypeHeader.vue';
 import {ref, onMounted, onUnmounted, watch} from 'vue';
 import CompLayerShow from '../PopoverMenu/ComposAttri/CompLayerShow.vue';
-import {OverrideType, SymbolShape, Variable, VariableType, Text} from '@kcdesign/data';
+import {OverrideType, SymbolShape, Variable, VariableType, Text, SymbolView} from '@kcdesign/data';
 import SelectLayerInput from './SelectLayerInput.vue';
 import {
     create_var_by_type,
@@ -48,7 +48,7 @@ const getDialogPosi = (div: HTMLDivElement | undefined) => {
 }
 
 const is_bind = ref<Variable>();
-const sym_layer = ref<SymbolShape>();
+const sym_layer = ref<SymbolView>();
 const default_name = ref('');
 const selectId = ref<string[]>([]);
 const textDefaultValue = ref('');

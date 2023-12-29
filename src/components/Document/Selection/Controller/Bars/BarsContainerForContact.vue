@@ -1,6 +1,6 @@
 <script setup lang='ts'>
 import { Context } from '@/context';
-import { AsyncContactEditor, ContactShape, CurvePoint, Matrix } from '@kcdesign/data';
+import { AsyncContactEditor, ContactLineView, ContactShape, CurvePoint, Matrix, adapt2Shape } from '@kcdesign/data';
 import { onMounted, onUnmounted, watch, reactive, ref } from 'vue';
 import { ClientXY } from '@/context/selection';
 import { Point } from "../../SelectionView.vue";
@@ -10,7 +10,7 @@ import { add_move_and_up_for_document, remove_move_and_up_from_document } from '
 interface Props {
     matrix: number[]
     context: Context
-    shape: ContactShape
+    shape: ContactLineView
     cFrame: Point[]
 }
 interface Slice {
@@ -44,7 +44,7 @@ function update_slice_path() {
     show.value = false;
 
     const s = props.shape;
-    if (!(s instanceof ContactShape)) {
+    if (!(s instanceof ContactLineView)) {
         return;
     }
 
@@ -118,7 +118,7 @@ function point_mousedown(event: MouseEvent, slice: Slice) {
 }
 
 function get_index() {
-    const d = props.shape.from ? 2 : 1;
+    const d = props.shape.data.from ? 2 : 1;
     return drag_index === 0 ? drag_index + d : drag_index;
 }
 
@@ -153,7 +153,7 @@ function point_mousemove(event: MouseEvent) {
 
             contactEditor = props.context.editor
                 .controller()
-                .asyncContactEditor(props.shape, props.context.selection.selectedPage!);
+                .asyncContactEditor(adapt2Shape(props.shape) as ContactShape, props.context.selection.selectedPage!.data);
 
             contactEditor.before(drag_index);
 

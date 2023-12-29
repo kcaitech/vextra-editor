@@ -1,6 +1,6 @@
 <script setup lang='ts'>
 import { Context } from '@/context';
-import { AsyncPathEditor, Matrix, PathShape, Shape } from '@kcdesign/data';
+import { AsyncPathEditor, Matrix, PathShape, PathShapeView, Shape, ShapeView } from '@kcdesign/data';
 import { onMounted, onUnmounted, reactive, ref } from 'vue';
 import { ClientXY, PageXY, XY } from '@/context/selection';
 import { get_path_by_point } from './common';
@@ -31,7 +31,7 @@ const current_curve_point_index = ref<number>(-1);
 const dragActiveDis = 3;
 const new_high_light = ref<number>(-1);
 const add_rect = ref<number>(-1);
-let shape: Shape;
+let shape: ShapeView;
 let startPosition: ClientXY = { x: 0, y: 0 };
 let startPosition2: PageXY = { x: 0, y: 0 };
 let isDragging = false;
@@ -48,9 +48,9 @@ function update() {
     segments.length = 0;
     init_matrix();
     const points_set = new Set(props.context.path.selectedPoints);
-    dots.push(...get_path_by_point(shape as PathShape, matrix, points_set));
+    dots.push(...get_path_by_point(shape as PathShapeView, matrix, points_set));
     const segs = new Set(props.context.path.selectedSides);
-    segments.push(...get_segments(shape as PathShape, matrix, segs));
+    segments.push(...get_segments(shape as PathShapeView, matrix, segs));
     props.context.path.set_segments(segments);
 }
 
@@ -62,7 +62,7 @@ function point_mousedown(event: MouseEvent, index: number) {
         return;
     }
     if (dbl_action()) {
-        modify_point_curve_mode(props.context, index, shape as PathShape);
+        modify_point_curve_mode(props.context, index, shape as PathShapeView);
     }
     event.stopPropagation();
     modify_start_position(event);
@@ -147,7 +147,7 @@ function point_mousemove(event: MouseEvent) {
 
     pathEditor = props.context.editor
         .controller()
-        .asyncPathEditor(shape as PathShape, props.context.selection.selectedPage!);
+        .asyncPathEditor(shape as PathShapeView, props.context.selection.selectedPage!);
 
     isDragging = true;
 
@@ -155,7 +155,7 @@ function point_mousemove(event: MouseEvent) {
 
     props.context.assist.set_points_map();
 
-    const synthetic_points = props.context.path.get_synthetic_points((shape as PathShape).points.length - 1);
+    const synthetic_points = props.context.path.get_synthetic_points((shape as PathShapeView).points.length - 1);
 
     offset_map = gen_offset_points_map2(props.context, startPosition2, synthetic_points);
 
@@ -189,7 +189,7 @@ function __exe(event: MouseEvent, pathEditor: AsyncPathEditor, _point: PageXY) {
     }
 
 
-    const max = (shape as PathShape).points.length - 1;
+    const max = (shape as PathShapeView).points.length - 1;
     const select_point = props.context.path.get_synthetic_points(max);
 
     if (!select_point?.length) {
@@ -208,7 +208,7 @@ function __exe(event: MouseEvent, pathEditor: AsyncPathEditor, _point: PageXY) {
         return;
     }
 
-    const points = (shape as PathShape).points;
+    const points = (shape as PathShapeView).points;
     if (!points?.length) {
         console.log('!points?.length');
         return;
@@ -244,7 +244,7 @@ function n_point_down(event: MouseEvent, index: number) {
     if (!pathEditor) {
         pathEditor = props.context.editor
             .controller()
-            .asyncPathEditor(shape as PathShape, props.context.selection.selectedPage!);
+            .asyncPathEditor(shape as PathShapeView, props.context.selection.selectedPage!);
 
         const idx = current_curve_point_index.value;
         pathEditor.addNode(idx);
@@ -387,7 +387,7 @@ function is_curve_tool() {
 
 onMounted(() => {
     props.context.workspace.watch(matrix_watcher);
-    shape = props.context.selection.pathshape!;
+    shape = props.context.selection.pathshapeview!;
     if (!shape) {
         return console.log('wrong shape');
     }
@@ -425,15 +425,14 @@ onUnmounted(() => {
 <style lang='scss' scoped>
 .point {
     fill: #ffffff;
-    stroke: #555555;
-    stroke-width: 1.5px;
+    stroke: var(--active-color);
     height: 8px;
     width: 8px;
 }
 
 .selected {
     stroke: #ffffff;
-    fill: #555555;
+    fill: var(--active-color);
 }
 
 .background-path {
@@ -449,12 +448,10 @@ onUnmounted(() => {
 
 .path-high-light {
     stroke: rgba($color: #1878f5, $alpha: 0.5);
-    stroke-width: 2px;
 }
 
 .path-selected {
     stroke: var(--active-color);
-    stroke-width: 2px;
 }
 
 .insert-point {
