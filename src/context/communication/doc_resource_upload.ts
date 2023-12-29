@@ -7,11 +7,11 @@ export class DocResourceUpload extends WatchableObject {
     private startResolve?: (value: boolean) => void
     private isClosed: boolean = false
 
-    public async start(token: string, documentId: string, options?: StartOptions): Promise<boolean> {
+    public async start(getToken: getTokenFuncAsync, documentId: string, options?: StartOptions): Promise<boolean> {
         if (this.docResourceUpload) return true;
         if (this.startPromise) return await this.startPromise;
-        const docResourceUpload = _DocResourceUpload.Make(token, documentId)
-        const startParams = [token, documentId]
+        const docResourceUpload = _DocResourceUpload.Make(await getToken(), documentId)
+        const startParams = [getToken, documentId]
         docResourceUpload.setOnClose(async () => {
             const diff_time = 1000 - (Date.now() - (Number.isInteger(options?.last_time) ? options!.last_time! : 0))
             if (diff_time > 0) await new Promise(resolve => setTimeout(resolve, diff_time));
