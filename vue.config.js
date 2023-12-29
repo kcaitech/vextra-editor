@@ -116,7 +116,7 @@ var configureWebpack = (config) => {
             "communication\\/node_modules\\/)",
         ],
         poll: 5000,
-    }                   
+    }
 }
 
 var exports = defineConfig({

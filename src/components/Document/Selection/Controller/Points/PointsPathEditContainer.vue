@@ -425,15 +425,14 @@ onUnmounted(() => {
 <style lang='scss' scoped>
 .point {
     fill: #ffffff;
-    stroke: #555555;
-    stroke-width: 1.5px;
+    stroke: var(--active-color);
     height: 8px;
     width: 8px;
 }
 
 .selected {
     stroke: #ffffff;
-    fill: #555555;
+    fill: var(--active-color);
 }
 
 .background-path {
@@ -449,12 +448,10 @@ onUnmounted(() => {
 
 .path-high-light {
     stroke: rgba($color: #1878f5, $alpha: 0.5);
-    stroke-width: 2px;
 }
 
 .path-selected {
     stroke: var(--active-color);
-    stroke-width: 2px;
 }
 
 .insert-point {

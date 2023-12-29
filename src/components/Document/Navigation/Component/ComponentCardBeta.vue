@@ -40,7 +40,39 @@ function selection_watcher(t: number) {
 }
 
 function check_selected_status() {
-    selected.value = props.context.selection.isSelectedShape(props.data.id);
+    selected.value = is_select();
+}
+
+function is_select() {
+    const selected = props.context.selection.selectedShapes;
+
+    if (!selected.length) {
+        return false;
+    }
+
+    const cur = props.data;
+
+    for (let i = 0, l = selected.length; i < l; i++) {
+        const s = selected[i];
+
+        if (s instanceof SymbolUnionShape) {
+            if (s.childs[0]?.id === cur.id) {
+                return true;
+            }
+        } else if (s instanceof SymbolShape) {
+            if (s.id === cur.id) {
+                return true;
+            }
+            const p = s.parent;
+            if (p instanceof SymbolUnionShape) {
+                if (p.childs[0]?.id === cur.id) {
+                    return true;
+                }
+            }
+        }
+    }
+
+    return false;
 }
 
 function _shape_watcher() {

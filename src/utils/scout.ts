@@ -315,12 +315,14 @@ function finder_symbol(context: Context, scout: Scout, symbol: ShapeView, positi
         if (canBeTarget(b) && isTarget(scout, b, position)) return b;
     }
 }
-
+export function canNotBeApex(shape: ShapeView): boolean { // 可以被判定为检索结果的前提是没有被锁定和isVisible可视
+    return shape.isVirtualShape || !shape.isVisible() || shape.isLocked() || shape.type === ShapeType.Contact;
+}
 export function finder_contact(scout: Scout, g: ShapeView[], position: PageXY, selected: ShapeView, init?: ShapeView[]): ShapeView[] {
     const result = init || [];
     for (let i = g.length - 1; i > -1; i--) {
         const item = g[i];
-        if (!canBeTarget(item) || item.type === ShapeType.Contact) {
+        if (canNotBeApex(item)) {
             continue;
         }
         if ([ShapeType.Group, ShapeType.Artboard, ShapeType.Symbol, ShapeType.SymbolUnion, ShapeType.SymbolRef].includes(item.type)) {
