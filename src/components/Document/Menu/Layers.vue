@@ -27,9 +27,10 @@ function mouseout() {
     <div class="item" v-for="shape in props.layers" :key="shape.id" @click="select(shape)"
       @mouseenter="() => mouseenter(shape)" @mouseleave="mouseout">
       <div>
-        <div class="check" v-if="selectedShapes.find(i => i.id === shape.id)"></div>
+<!--        <div class="check" v-if="selectedShapes.find(i => i.id === shape.id)"></div>-->
+          <svg-icon icon-class="choose" v-if="selectedShapes.find(i => i.id === shape.id)"></svg-icon>
       </div>
-      <span>{{ shape.name }}</span>
+      <span :style="{ marginLeft: selectedShapes ? '8px' : '20px'}">{{ shape.name }}</span>
     </div>
   </div>
 </template>
@@ -39,31 +40,29 @@ function mouseout() {
   font-size: var(--font-default-fontsize);
 
   .item {
-    height: 28px;
+    height: 32px;
     width: 100%;
-    color: var(--theme-color-anti);
+    color: #262626;
     box-sizing: border-box;
-    padding: 0 var(--default-padding);
+    padding: 9px 0 9px 8px;
     display: flex;
     align-items: center;
 
     >div {
-      width: 10px;
+      width: 12px;
+      display: flex;
+      align-items: center;
+      justify-content: center;
 
-      >.check {
-        box-sizing: border-box;
-        width: 10px;
-        height: 6px;
-        border-width: 0 0 2px 2px;
-        border-style: solid;
-        border-color: var(--theme-color-anti);
-        left: 6px;
-        transform: rotate(-45deg) translateY(-20%);
+      >svg {
+        width: 12px;
+        height: 12px;
+          //color: #000000;
       }
     }
 
     >span {
-      margin-left: var(--default-margin-half);
+      //margin-left: var(--default-margin-half);
       display: inline-block;
       overflow: hidden;
       width: 100%;
@@ -74,6 +73,7 @@ function mouseout() {
 
   .item:hover {
     background-color: var(--active-color);
+    color: #FFFFFF;
   }
 }
 </style>

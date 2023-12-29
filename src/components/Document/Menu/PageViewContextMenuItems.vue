@@ -29,6 +29,7 @@ import { Menu } from '@/context/menu';
 import TableMenu from "./TableMenu/TableMenu.vue"
 import { make_symbol } from '@/utils/symbol';
 import { Tool } from "@/context/tool";
+import SvgIcon from "@/components/common/SvgIcon.vue";
 
 const { t } = useI18n();
 
@@ -481,9 +482,11 @@ onUnmounted(() => {
         <div v-if="props.items.includes('layers')" class="item layer-select"
             @mouseenter="(e: MouseEvent) => showLayerSubMenu(e)" @mouseleave="closeLayerSubMenu">
             <span>{{ t('system.select_layer') }}</span>
-            <div class="triangle"></div>
-            <ContextMenu v-if="layerSubMenuVisiable" :x="layerSubMenuPosition.x" :y="layerSubMenuPosition.y" :width="180"
-                :site="site" :context="props.context">
+<!--            <div class="triangle"></div>-->
+            <svg-icon icon-class="down"></svg-icon>
+            <ContextMenu v-if="layerSubMenuVisiable" :x="layerSubMenuPosition.x" :y="layerSubMenuPosition.y"
+                         :width="174"
+                         :site="site" :context="props.context">
                 <Layers @close="emit('close')" :layers="props.layers" :context="props.context"></Layers>
             </ContextMenu>
         </div>
@@ -678,21 +681,18 @@ onUnmounted(() => {
     .item {
         position: relative;
         width: 100%;
-        height: 28px;
-        padding: 0 var(--default-padding) 0 20px;
+        height: 32px;
+        padding: 9px 24px 9px 28px;
         display: flex;
         flex-direction: row;
         align-items: center;
         box-sizing: border-box;
 
-        >.triangle {
-            margin-left: auto;
-            width: 0;
-            height: 0;
-            border-top: 3px solid transparent;
-            border-bottom: 3px solid transparent;
-            border-left: 6px solid var(--theme-color-anti);
-            transition: 0.35s;
+        >svg {
+            width: 12px;
+            height: 12px;
+            margin-left: 62px;
+            transform: rotate(-90deg);
         }
 
         >.shortkey {
@@ -702,23 +702,18 @@ onUnmounted(() => {
 
     .line {
         width: 100%;
-        height: 8px;
-        border-bottom: 1px solid gray;
-        margin-bottom: 8px;
+        height: 4px;
+        border-bottom: 1px solid #EBEBEB;
+        //margin-bottom: 8px;
         box-sizing: border-box;
     }
 
     .item:hover {
-        background-color: var(--active-color);
+        background-color: #1878F5;
+        color: #fff;
 
-        >.triangle {
-            margin-left: auto;
-            width: 0;
-            height: 0;
-            border-top: 3px solid transparent;
-            border-bottom: 3px solid transparent;
-            border-left: 6px solid var(--theme-color-anti);
-            transform: rotate(90deg);
+        >svg {
+            transform: rotate(0deg);
         }
     }
 

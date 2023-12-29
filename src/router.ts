@@ -1,6 +1,8 @@
-import { createRouter, createWebHashHistory, createWebHistory, onBeforeRouteLeave, onBeforeRouteUpdate } from "vue-router";
+import { createRouter, createWebHashHistory } from "vue-router";
 import { SKIP_LOGIN } from '@/utils/setting';
 import { Component } from "vue-property-decorator";
+import i18n from "./i18n";
+import _ from "lodash";
 
 const HomeVue = () => import("@/components/Home/index.vue");
 const DocumentVue = () => import("@/components/Document/index.vue");
@@ -23,34 +25,40 @@ const ProjectPage = () => import("@/components/TeamProject/ProjectPage.vue");
 const projectApply = () => import("@/components/TeamProject/ProjectFill/ProjectApply.vue");
 const ProjectShare = () => import('@/components/TeamProject/ProjectShare/ProjectSharePage.vue')
 
+let _t: any = i18n.global
+
 const children = [
     {
         path: 'recently',
         name: 'recently',
-        component: Recently
+        component: Recently,
+        meta: { title: _t.t('home.recently_opened') + ' - ' + _t.t('product.name') },
     },
     {
-        path: 'starfile',
+        path: 'star',
         name: 'starfile',
-        component: StarFile
+        component: StarFile,
+        meta: { title: _t.t('home.star_file') + ' - ' + _t.t('product.name') },
     },
     {
-        path: 'meshare',
+        path: 'myfile',
         name: 'meshare',
-        component: MeShare
+        component: MeShare,
+        meta: { title: _t.t('home.file_shared') + ' - ' + _t.t('product.name') },
     },
     {
-        path: 'shareme',
+        path: 'shared',
         name: 'shareme',
-        component: ShareMe
+        component: ShareMe,
+        meta: { title: _t.t('home.shared_file_received') + ' - ' + _t.t('product.name') },
     },
     {
-        path: 'recyclebin',
+        path: 'trash',
         name: 'recyclebin',
         component: MeShare
     },
     {
-        path: 'teams/:id',
+        path: 'team/:id',
         name: 'TeamPage',
         component: TeamPage,
         meta: {
@@ -58,9 +66,10 @@ const children = [
         }
     },
     {
-        path: 'project_share',
+        path: 'project_shared',
         name: 'ProjectShare',
-        component: ProjectShare
+        component: ProjectShare,
+        meta: { title: _t.t('Createteam.sharetip') + ' - ' + _t.t('product.name') },
     },
     {
         path: 'project/:id',
@@ -90,14 +99,14 @@ const routes = [
                 path: "privacypolicy",
                 name: "privacypolicy",
                 component: Privacypolicy,
-                meta: { title: '隐私协议' },
+                meta: { title: _t.t('system.read_Privacy') + ' - ' + _t.t('product.name') },
 
             },
             {
                 path: "serviceagreement",
                 name: "serviceagreement",
                 component: Serviceagreement,
-                meta: { title: '服务协议' },
+                meta: { title: _t.t('system.read_TOS') + ' - ' + _t.t('product.name') },
             },
         ]
     },
@@ -105,7 +114,7 @@ const routes = [
         path: "/login",
         name: "login",
         component: Login,
-        meta: { title: '登录' },
+        meta: { title: _t.t('system.btn_login') + ' - ' + _t.t('product.name') },
     },
     {
         path: "/home",
@@ -135,10 +144,10 @@ const routes = [
         },
     },
     {
-        path: "/apphome",
+        path: "/files",
         name: "apphome",
         component: Apphome,
-        redirect: '/apphome/recently',
+        redirect: '/files/recently',
         children: children
     },
     {
@@ -175,7 +184,6 @@ const routes = [
         redirect: '/',
 
     },
-
 ]
 
 export const router = createRouter({

@@ -12,16 +12,6 @@ const { t } = useI18n();
 
 </script>
 <style lang="scss" scoped>
-.overlay {
-    position: absolute;
-    top: 0;
-    left: 0;
-    width: 100%;
-    height: 100%;
-    z-index: 999;
-    background-color: rgba(0, 0, 0, 0.5);
-}
-
 .team {
     display: flex;
     align-items: center;
@@ -31,7 +21,7 @@ const { t } = useI18n();
 
     .team-name {
         font-size: 18px;
-        font-weight: 600;
+        font-weight: 500;
         line-height: 36px;
         margin-right: 12px;
         color: #000;

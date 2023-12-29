@@ -1,13 +1,13 @@
 <script setup lang="ts">
 import {h, nextTick, onMounted, onUnmounted, ref, shallowRef} from 'vue';
 import comsMap from '@/components/Document/Content/comsmap';
-import {GroupShape, ShapeType} from "@kcdesign/data";
-import {renderSymbolPreview as r} from "@kcdesign/data";
-import {initCommonShape} from "@/components/Document/Content/common";
-import {Context} from '@/context';
-import {Selection} from '@/context/selection';
-import {clear_scroll_target, is_circular_ref2, is_state} from '@/utils/symbol';
-import {debounce} from "lodash";
+import { GroupShape, ShapeType } from "@kcdesign/data";
+import { renderSymbolPreview as r } from "@kcdesign/data";
+import { initCommonShape } from "@/components/Document/Content/common";
+import { Context } from '@/context';
+import { Selection } from '@/context/selection';
+import { clear_scroll_target, is_circular_ref2, is_state } from '@/utils/symbol';
+import { debounce } from "lodash";
 
 interface Props {
     data: GroupShape
@@ -136,9 +136,8 @@ onUnmounted(() => {
     <div class="compo-preview-container" ref="preview_container">
         <div class="card-wrap" v-if="render_preview">
             <svg xmlns="http://www.w3.org/2000/svg" xmlns:xlink="http://www.w3.org/1999/xlink"
-                 xmlns:xhtml="http://www.w3.org/1999/xhtml" preserveAspectRatio="xMinYMin meet" width="36px"
-                 height="36px"
-                 :viewBox='gen_view_box()' overflow="hidden" class="render-wrap">
+                xmlns:xhtml="http://www.w3.org/1999/xhtml" preserveAspectRatio="xMinYMin meet" width="28px" height="28px"
+                :viewBox='gen_view_box()' overflow="hidden" class="render-wrap">
                 <render></render>
             </svg>
             <div>{{ name }}</div>
@@ -149,7 +148,7 @@ onUnmounted(() => {
 <style scoped lang="scss">
 .compo-preview-container {
     width: 100%;
-    height: 40px;
+    height: 36px;
     position: relative;
 
     .card-wrap {
@@ -157,20 +156,26 @@ onUnmounted(() => {
         height: 100%;
         display: flex;
         align-items: center;
+        padding: 4px 0;
+        box-sizing: border-box;
 
-        > .render-wrap {
+        >.render-wrap {
             margin-left: 2px;
             background-color: var(--grey-light);
-            border: 1px solid var(--grey-dark);
+            // border: 1px solid var(--grey-dark);
             box-sizing: border-box;
-            border-radius: 4px;
+            border-radius: 2px;
             flex-shrink: 0;
         }
 
-        > div {
-            margin-left: 8px;
+        >div {
+            margin-left: 4px;
             max-height: 100%;
             overflow: hidden;
+            font-size: 12px;
+            font-weight: 500;
+            line-height: 14px;
+            color: #000000;
         }
     }
 
@@ -185,11 +190,12 @@ onUnmounted(() => {
     }
 
     .selected {
-        border: 2px solid var(--component-color);
+        border: 1px solid #7F58F9;
+        // box-shadow: 0 0 2px 0 #1878F5;
     }
 
     .danger {
-        border: 2px solid #F56C6C;
+        // border: 2px solid #F56C6C;
         background-color: rgba(245, 108, 108, 0.3);
     }
 }

@@ -130,7 +130,7 @@ onUnmounted(() => {
 }
 
 .el-scrollbar {
-    padding-right: 10px;
+    // padding-right: 10px;
 }
 
 .items-wrap {

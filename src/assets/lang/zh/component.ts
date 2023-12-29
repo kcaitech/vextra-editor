@@ -21,7 +21,7 @@ export const compos: any = {
     toggle_instance: '切换实例',
     instance_toggle: '实例切换',
     compos_attr: '组件属性',
-    delect_attr_type: '请选择属性类型',
+    delect_attr_type: '选择新建属性类型',
     display_state: '显示状态',
     search_compos: '搜索组件',
     compos: '组件',

@@ -184,7 +184,7 @@ onUnmounted(() => {
                         <svg-icon icon-class="relevance"></svg-icon>
                     </div>
                     <div class="edit_svg" @click.stop="editComps">
-                        <svg-icon icon-class="edit-comp"></svg-icon>
+                        <svg-icon icon-class="comp-state"></svg-icon>
                     </div>
                     <div class="reset_svg" @click.stop="selectReset">
                         <el-icon>
@@ -233,50 +233,61 @@ onUnmounted(() => {
 
 <style scoped lang="scss">
 .edit-comps {
-    width: 66px;
-    height: 22px;
+    width: 84px;
+    height: 28px;
     display: flex;
     align-items: center;
     justify-content: flex-end;
 
     .rele_svg {
-        width: 22px;
-        height: 22px;
+        width: 28px;
+        height: 28px;
         display: flex;
         align-items: center;
         justify-content: center;
+        border-radius: var(--default-radius);
 
         > svg {
-            width: 70%;
-            height: 70%;
+            width: 16px;
+            height: 16px;
         }
     }
 
+    .rele_svg:hover {
+        background-color: #EBEBEB;
+    }
+
     .edit_svg {
-        width: 22px;
-        height: 22px;
+        width: 28px;
+        height: 28px;
         display: flex;
         align-items: center;
         justify-content: center;
+        border-radius: var(--default-radius);
 
         > svg {
-            width: 50%;
-            height: 50%;
+            width: 16px;
+            height: 16px;
         }
 
+    }
+
+    .edit_svg:hover {
+        background-color: #EBEBEB;
     }
 
     .reset_svg {
         position: relative;
-        width: 22px;
-        height: 22px;
+        width: 28px;
+        height: 28px;
         display: flex;
         align-items: center;
         justify-content: center;
+        border-radius: var(--default-radius);
 
         > svg {
-            width: 50%;
-            height: 50%;
+            width: 16px;
+            height: 16px;
         }
 
         .reset_menu {
@@ -305,6 +316,10 @@ onUnmounted(() => {
                 }
             }
         }
+    }
+
+    .reset_svg:hover {
+        background-color: #EBEBEB;
     }
 }
 

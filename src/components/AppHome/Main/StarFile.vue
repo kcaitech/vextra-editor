@@ -4,14 +4,16 @@
     </div>
     <div class="tatle" style="height:calc(100vh - 144px);">
         <tablelist :data="searchlists" :iconlist="iconlists" @share="Sharefile" @dbclickopen="openDocument"
-            @updatestar="Starfile" :address="true" @rightMeun="rightmenu" :noNetwork="noNetwork" @refreshDoc="refreshDoc" />
+            @updatestar="Starfile" :address="true" @rightMeun="rightmenu" :noNetwork="noNetwork" @refreshDoc="refreshDoc"
+            :nulldata="nulldata" />
     </div>
     <listrightmenu :items="items" :data="mydata" @ropen="openDocument" @r-sharefile="Sharefile" @r-starfile="Starfile" />
-    <FileShare v-if="showFileShare" @close="closeShare" :docId="docId" :docName="docName" :selectValue="selectValue" :userInfo="userInfo"
-        :project="is_project" @select-type="onSelectType" @switch-state="onSwitch" :shareSwitch="shareSwitch"
-        :pageHeight="pageHeight" :docUserId="docUserId" :projectPerm="projectPerm">
-    </FileShare>
-    <div v-if="showFileShare" class="overlay"></div>
+    <div v-if="showFileShare" class="overlay">
+        <FileShare @close="closeShare" :docId="docId" :docName="docName" :selectValue="selectValue" :userInfo="userInfo"
+            :project="is_project" @select-type="onSelectType" @switch-state="onSwitch" :shareSwitch="shareSwitch"
+            :pageHeight="pageHeight" :docUserId="docUserId" :projectPerm="projectPerm">
+        </FileShare>
+    </div>
 </template>
 <script setup lang="ts">
 import * as user_api from '@/request/users'
@@ -35,7 +37,7 @@ const selectValue = ref(1)
 const userInfo = ref<UserInfo | undefined>()
 let lists = ref<any[]>([])
 const docId = ref('')
-const docName=ref('')
+const docName = ref('')
 const mydata = ref()
 const docUserId = ref('')
 const noNetwork = ref(false)
@@ -101,13 +103,17 @@ async function getUserdata() {
 
 let searchvalue = ref('');
 const searchlists = ref<any[]>([])
+const nulldata = ref(false)
 Bus.on('searchvalue', (str: string) => {
     searchvalue.value = str
 })
 
 watchEffect(() => {
-    if (!searchvalue.value) return searchlists.value = lists.value
+    if (!searchvalue.value) return searchlists.value = lists.value, nulldata.value = false
     searchlists.value = lists.value.filter((el: any) => PinyinMatch.match(el.document.name.toLowerCase(), searchvalue.value.toLowerCase()))
+    if (searchlists.value.length === 0 && searchvalue.value !== '') {
+        nulldata.value = true
+    }
 })
 
 const refreshDoc = () => {
@@ -171,7 +177,7 @@ const Sharefile = (data: data) => {
     docUserId.value = data.document.user_id
     userInfo.value = userData.value
     docId.value = data.document.id
-    docName.value=data.document.name
+    docName.value = data.document.name
     selectValue.value = data.document.doc_type !== 0 ? data.document.doc_type : data.document.doc_type
     projectPerm.value = data.project_perm;
     showFileShare.value = true
@@ -240,6 +246,9 @@ onUnmounted(() => {
 <style lang="scss" scoped>
 .overlay {
     position: absolute;
+    display: flex;
+    align-items: center;
+    justify-content: center;
     top: 0;
     left: 0;
     width: 100%;

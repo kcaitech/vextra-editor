@@ -50,7 +50,7 @@ const Getteaminfo = async (teamid: string) => {
         if (code === 0) {
             if (data.self_perm_type != null && data.self_perm_type !== 255) {
                 if (data.self_perm_type >= data.invited_perm_type) {
-                    return router.push({ path: '/apphome/teams/' + teamid });
+                    return router.push({ path: '/files/team/' + teamid });
                 }
             }
             teaminfo.value = data
@@ -86,7 +86,7 @@ const joinTeam = async (id: any, notes?: any) => {
         } else if (code === 400) {
             if (data.code === 1) ElMessage.error('团队不存在')
             if (data.code === 2) switchstate.value = false
-            if (data.code === 3) router.push({ path: `/apphome/teams/${id}` })
+            if (data.code === 3) router.push({ path: `/files/team/${id}` })
             if (data.code === 4) showjoinbnt.value = false, tohome()
         } else {
             ElMessage.error(message)

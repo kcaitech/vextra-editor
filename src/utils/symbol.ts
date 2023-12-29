@@ -270,7 +270,10 @@ export interface AttriListItem {
  */
 export function variable_sort(symbol: SymbolView, t: Function) {
     const list: AttriListItem[] = [];
-    if (!symbol.variables) return list;
+    if (!symbol.variables) {
+        return list;
+    }
+
     let status_index = 0;
     const resource = symbol.variables;
     resource.forEach(v => {
@@ -281,7 +284,8 @@ export function variable_sort(symbol: SymbolView, t: Function) {
         } else {
             list.push(item);
         }
-    })
+    });
+
     return list;
 }
 
@@ -721,40 +725,30 @@ export interface RefAttriListItem {
  * @param context
  * @param symref
  */
-export function get_var_for_ref(context: Context, symref: SymbolRefView, t: Function) {
+export function get_var_for_ref(symref: SymbolRefView, t: Function) {
     let result: RefAttriListItem[] = [];
     let result2: RefAttriListItem[] = [];
-    // const varsContainer = symref.varsContainer;
-    // const ref_id = symref.getRefId2(varsContainer);
+
     const sym = symref.symData;
-    if (!sym) return false;
-    if (sym.parent?.type !== ShapeType.SymbolUnion) { // 不存在可变组件
-        const variables = sym.variables;
-        if (!variables) return false;
-        let status_index: number = 0;
-        let instance_index: number = 0;
-        let text_index: number = 0;
-        variables.forEach((v: Variable) => {
-            const item: RefAttriListItem = { variable: v, values: [] };
-            if (v.type === VariableType.Visible) {
-                const overrides = symref.findOverride(v.id, OverrideType.Visible);
-                if (overrides) item.variable = overrides[overrides.length - 1];
-                result2.push(item);
-            } else if (v.type === VariableType.Status) {
-                item.values = tag_values_sort(sym, v, t);
-                result.splice(status_index++, 0, item);
-            } else if (v.type === VariableType.SymbolRef) {
-                result.splice(status_index + instance_index++, 0, item);
-            } else if (v.type === VariableType.Text) {
-                result.splice(status_index + instance_index + text_index++, 0, item);
-            }
-        })
-    } else { // 存在可变组件
+    if (!sym) {
+        return false;
+    }
+
+
+    const parent = sym.parent;
+
+    if (parent instanceof SymbolUnionShape) { // 存在可变组件
         const state = sym; // 先确定当前实例用的是哪个可变组件
-        const usym = sym.parent;
-        if (!usym) return false;
+        const usym = parent;
+        if (!usym) {
+            return false;
+        }
+
         const variables = (usym as SymbolUnionShape).variables;
-        if (!variables) return false;
+        if (!variables) {
+            return false;
+        }
+
         variables.forEach((v: Variable) => {
             const item: RefAttriListItem = { variable: v, values: [] };
             if (v.type === VariableType.Status) {
@@ -776,7 +770,33 @@ export function get_var_for_ref(context: Context, symref: SymbolRefView, t: Func
                 result.splice(instance_index + text_index++, 0, item);
             }
         })
+    } else {
+        const variables = sym.variables;
+        if (!variables) {
+            return false;
+        }
+
+        let status_index: number = 0;
+        let instance_index: number = 0;
+        let text_index: number = 0;
+
+        variables.forEach((v: Variable) => {
+            const item: RefAttriListItem = { variable: v, values: [] };
+            if (v.type === VariableType.Visible) {
+                const overrides = symref.findOverride(v.id, OverrideType.Visible);
+                if (overrides) item.variable = overrides[overrides.length - 1];
+                result2.push(item);
+            } else if (v.type === VariableType.Status) {
+                item.values = tag_values_sort(sym, v, t);
+                result.splice(status_index++, 0, item);
+            } else if (v.type === VariableType.SymbolRef) {
+                result.splice(status_index + instance_index++, 0, item);
+            } else if (v.type === VariableType.Text) {
+                result.splice(status_index + instance_index + text_index++, 0, item);
+            }
+        })
     }
+
     return { variables: result, visible_variables: result2 };
 }
 
@@ -967,8 +987,8 @@ export function is_status_allow_to_delete(symbol: SymbolShape) {
  * @description 是否为可变组件
  * @param shape
  */
-export function is_state(shape: ShapeView | Shape) {
-    return shape?.type === ShapeType.Symbol && shape?.parent?.type === ShapeType.SymbolUnion;
+export function is_state(shape: Shape | ShapeView) {
+    return shape instanceof SymbolShape && shape.parent instanceof SymbolUnionShape;
 }
 
 function is_sym(shape: ShapeView) {

@@ -238,12 +238,13 @@ onUnmounted(() => {
 }
 
 .item {
-    width: 40px;
+    width: 28px;
     height: 28px;
     display: flex;
     justify-content: center;
     align-items: center;
     opacity: 1;
+    border-radius: var(--default-radius);
 
     >svg {
         color: var(--theme-color);

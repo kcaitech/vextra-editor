@@ -114,7 +114,7 @@ const validate = () => {
     const len = attrName.value.trim().length > 0;
     const shape = props.context.selection.symbolview || props.symbol;
     if (!shape) return false;
-    if(props.default_name && attrName.value === props.default_name) return true;
+    if (props.default_name && attrName.value === props.default_name) return true;
     const repeat = is_valid_name(shape, attrName.value, props.addType);
     if (!len || !repeat) {
         if (!len) isWarnNull.value = true;
@@ -176,19 +176,21 @@ onUnmounted(() => {
             <slot name="layer"></slot>
             <!-- 属性名 -->
             <div>
-                <span>{{ t('compos.attr_name') }}</span>
+                <span style="color: #737373;">{{ t('compos.attr_name') }}</span>
                 <div>
-                    <el-input v-model="attrName" ref="input" :placeholder="t('compos.attr_name_input')" @input="name_change"
-                        @keydown.stop="keyboard_watcher" @focus="focus" @change="validate()"/>
+                    <input ref="input" type="text" v-model="attrName" :placeholder="t('compos.attr_name_input')"
+                        @input="name_change" @keydown.stop="keyboard_watcher" @focus="focus" @change="validate()">
+                    <!-- <el-input v-model="attrName" ref="input" :placeholder="t('compos.attr_name_input')" @input="name_change"
+                        @keydown.stop="keyboard_watcher" @focus="focus" @change="validate()" /> -->
                 </div>
             </div>
             <p class="warn" v-if="isWarnRepeat">{{ t('compos.duplicate_name') }}</p>
-            <p class="warn" v-if="isWarnNull">{{ t('compos.validate_info_2')}}</p>
+            <p class="warn" v-if="isWarnNull">{{ t('compos.validate_info_2') }}</p>
             <!-- 默认值 -->
             <slot name="default_value"></slot>
         </div>
         <div class="footer">
-            <el-button :style="{backgroundColor: '#9775fa'}" @click="save">{{ t('compos.confirm')}}</el-button>
+            <button type="button" @click.stop="save">{{ t('compos.confirm') }}</button>
         </div>
     </div>
     <div class="overlay" @click.stop="isselectLayer = false" @mousedown.stop></div>
@@ -197,16 +199,18 @@ onUnmounted(() => {
 <style scoped lang="scss">
 .dialog_box {
     position: fixed;
+    // right: 244px;
     outline: none;
-    box-shadow: 0px 2px 10px rgba(0, 0, 0, 0.2);
+    box-shadow: 0px 2px 16px 0px rgba(0, 0, 0, 0.08);
     background-color: #ffffff;
-    border-radius: 4px;
+    border-radius: 8px;
+    box-sizing: border-box;
     z-index: 10004;
 
     .header {
         width: 100%;
-        height: 32px;
-        border-bottom: 1px solid var(--grey-light);
+        height: 40px;
+        border-bottom: 1px solid #F5F5F5;
         display: flex;
         font-size: var(--font-default-fontsize);
         padding: 0 var(--default-padding);
@@ -214,29 +218,39 @@ onUnmounted(() => {
         align-items: center;
 
         .title {
-            line-height: 32px;
-            font-weight: var(--font-default-bold);
+            color: #3D3D3D;
+            line-height: 40px;
+            font-weight: 500;
         }
 
         .close {
             width: 24px;
             height: 24px;
+            border-radius: 6px;
             position: absolute;
             right: var(--default-padding);
             display: flex;
             align-items: center;
             justify-content: center;
 
+            &:hover {
+                background-color: #F5F5F5;
+            }
+
+            &:active {
+                background-color: #EBEBEB;
+            }
+
             >svg {
-                width: 65%;
-                height: 65%;
+                width: 12px;
+                height: 12px;
             }
         }
     }
 
     .body {
         width: 100%;
-        height: calc(100% - 32px);
+        height: calc(100% - 40px);
         font-size: 12px;
         padding: 0 var(--default-padding);
         box-sizing: border-box;
@@ -249,7 +263,7 @@ onUnmounted(() => {
         }
 
         >div {
-            height: 30px;
+            height: 32px;
             width: 100%;
             margin-top: 10px;
             display: flex;
@@ -265,23 +279,50 @@ onUnmounted(() => {
                 flex: 1;
             }
 
-            .el-input {
+            input {
+                outline: none;
+                border: none;
+                border: 1px solid #F5F5F5;
                 width: 100%;
-                height: 30px;
+                height: 32px;
                 font-size: 12px;
+                border-radius: 6px;
+                padding: 7px 12px;
+                background-color: #F5F5F5;
+                box-sizing: border-box;
 
-                :deep(.el-input__wrapper) {
-                    background-color: var(--grey-light);
-                    box-shadow: none;
-                    .el-input__inner {
-                        line-height: 100%;
-                    }
+                &:hover {
+                    background-color: #EBEBEB;
                 }
 
-                :deep(.el-input__wrapper.is-focus) {
-                    box-shadow: 0 0 0 1px var(--active-color) inset;
+                &:focus {
+                    background-color: #F5F5F5 !important;
+                    border: 1px solid #1878F5;
                 }
             }
+
+            input::placeholder {
+                color: #BFBFBF;
+            }
+
+            // .el-input {
+            //     width: 100%;
+            //     height: 30px;
+            //     font-size: 12px;
+
+            //     :deep(.el-input__wrapper) {
+            //         background-color: #F5F5F5;
+            //         box-shadow: none;
+
+            //         .el-input__inner {
+            //             line-height: 100%;
+            //         }
+            //     }
+
+            //     :deep(.el-input__wrapper.is-focus) {
+            //         box-shadow: 0 0 0 1px var(--active-color) inset;
+            //     }
+            // }
         }
     }
 
@@ -291,18 +332,32 @@ onUnmounted(() => {
         align-items: center;
         justify-content: center;
         margin: 10px 0;
+
+        button {
+            outline: none;
+            border: none;
+            width: 140px;
+            height: 32px;
+            border-radius: 6px;
+            margin: auto;
+            background-color: #1878F5;
+            color: white;
+
+            &:hover {
+                background-color: #429AFF;
+            }
+
+            &:active {
+                background-color: #0A59CF;
+            }
+
+            &:disabled {
+                background-color: #BDE2FF;
+            }
+        }
     }
 }
-:deep(.el-button:focus, .el-button:hover) {
-    background-color: #9775fa;
-    border-color: #9775fa;
-    color: #fff;
-    outline: none;
-}
 
-:deep(.el-button) {
-    color: #fff;
-}
 
 :deep(.el-select-dropdown__item.selected) {
     color: #9775fa !important;

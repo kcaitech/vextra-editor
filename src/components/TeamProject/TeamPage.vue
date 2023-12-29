@@ -129,9 +129,13 @@ watch(teamData, (newvalue) => {
     if (a) {
         return
     } else {
-        router.push({ path: '/apphome' })
+        router.push({ path: '/files' })
         sessionStorage.setItem('index', '1');
     }
+})
+
+watch(teamName, (newvalue) => {
+    window.document.title = newvalue + ' - ' + t('product.name')
 })
 
 onMounted(() => {
@@ -143,6 +147,8 @@ onMounted(() => {
     const rect = items[itemid.value].getBoundingClientRect()
     elwidth.value = rect.width
     elleft.value = rect.x
+
+    window.document.title = teamName.value + ' - ' + t('product.name')
 })
 
 onUnmounted(() => {
@@ -150,13 +156,15 @@ onUnmounted(() => {
 })
 </script>
 <style lang="scss" scoped>
-
 :deep(.el-input__wrapper) {
     border-radius: 8px;
 }
 
 .overlay {
     position: absolute;
+    display: flex;
+    align-items: center;
+    justify-content: center;
     top: 0;
     left: 0;
     width: 100%;

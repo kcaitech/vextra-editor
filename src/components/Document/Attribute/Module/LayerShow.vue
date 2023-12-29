@@ -123,11 +123,11 @@ onUnmounted(() => {
 })
 </script>
 <template>
-    <div style="position: relative; margin-bottom: 10px;" ref="atrrdialog">
+    <div style="position: relative; margin: 12px 0; box-sizing: border-box" ref="atrrdialog">
         <TypeHeader :title="t('compos.layer_isShow')" class="mt-24" :active="true">
             <template #tool>
                 <div class="edit-comps">
-                    <div class="edit_svg" @click="layerIsShow" v-if="!is_bind">
+                    <div class="edit_svg" @click="layerIsShow" v-if="!is_bind" :class="{ 'clicked': isLayerShow }">
                         <svg-icon icon-class="relevance"></svg-icon>
                     </div>
                 </div>
@@ -170,22 +170,31 @@ onUnmounted(() => {
 </template>
 <style lang="scss" scoped>
 .edit-comps {
-    width: 22px;
-    height: 22px;
+    width: 28px;
+    height: 28px;
     display: flex;
     align-items: center;
 
     .edit_svg {
-        width: 22px;
-        height: 22px;
+        width: 28px;
+        height: 28px;
         display: flex;
         align-items: center;
         justify-content: center;
+        border-radius: var(--default-radius);
 
         > svg {
-            width: 70%;
-            height: 70%;
+            width: 16px;
+            height: 16px;
         }
+    }
+
+    .edit_svg:hover {
+        background-color: #F5F5F5;
+    }
+
+    .edit_svg.clicked {
+        background-color: #EBEBEB;
     }
 }
 
@@ -199,9 +208,9 @@ onUnmounted(() => {
     display: flex;
     align-items: center;
     border-radius: 4px;
-    background-color: var(--grey-light);
-    width: calc(100% - 22px);
-    height: 30px;
+    background-color: #F5F5F5;
+    width: calc(100% - 32px);
+    height: 32px;
 
     .module_name {
         display: flex;
@@ -261,16 +270,16 @@ onUnmounted(() => {
 }
 
 .delete {
-    flex: 0 0 22px;
+    flex: 0 0 28px;
     display: flex;
     justify-content: center;
     align-items: center;
-    width: 22px;
-    height: 22px;
+    width: 28px;
+    height: 28px;
 
     > svg {
-        width: 11px;
-        height: 11px;
+        width: 16px;
+        height: 16px;
     }
 
     transition: .2s;

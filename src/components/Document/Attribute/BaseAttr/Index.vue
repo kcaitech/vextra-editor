@@ -451,6 +451,7 @@ onUnmounted(() => {
     padding: 12px 8px 12px 8px;
     box-sizing: border-box;
     visibility: visible;
+    border-bottom: 1px solid #F0F0F0;
 
     .tr {
         position: relative;
@@ -553,6 +554,7 @@ onUnmounted(() => {
             display: flex;
             align-items: center;
             justify-content: space-between;
+            margin-left: 7px;
 
             .flip {
                 background-color: var(--input-background);
@@ -570,6 +572,10 @@ onUnmounted(() => {
                     width: 14px;
                     height: 14px;
                 }
+            }
+
+            .flip:hover {
+                background-color: #EBEBEB;
             }
 
             .flip-disable {

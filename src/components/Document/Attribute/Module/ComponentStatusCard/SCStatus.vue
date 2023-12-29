@@ -1,9 +1,9 @@
 <script lang="ts" setup>
-import {Context} from "@/context";
-import {AttriListItem, delete_variable, is_status_allow_to_delete, is_valid_name} from "@/utils/symbol";
-import {nextTick, ref} from "vue";
-import {SymbolShape, Variable, VariableType} from "@kcdesign/data";
-import {useI18n} from "vue-i18n";
+import { Context } from "@/context";
+import { AttriListItem, delete_variable, is_status_allow_to_delete, is_valid_name } from "@/utils/symbol";
+import { nextTick, ref } from "vue";
+import { SymbolShape, Variable, VariableType } from "@kcdesign/data";
+import { useI18n } from "vue-i18n";
 
 interface Props {
     context: Context
@@ -17,7 +17,7 @@ const attrInput = ref('');
 const input_s = ref<HTMLInputElement>();
 const isWarnRepeat = ref(false);
 const isWarnNull = ref(false);
-const {t} = useI18n();
+const { t } = useI18n();
 
 function selectAllText(event: FocusEvent) {
     (event.target as HTMLInputElement).select(); // 选择输入框内的文本
@@ -94,15 +94,15 @@ function _delete() {
         <div class="attr_con">
             <div class="module_input" v-if="showRename">
                 <el-input ref="input_s" v-model="attrInput" @focus="selectAllText" class="input" @blur="blur"
-                          @keydown="keyboard_watcher"/>
+                    @keydown="keyboard_watcher" />
             </div>
             <div class="module_item_left" @dblclick="rename" v-else>
                 <div class="module_name">
                     <svg-icon icon-class="comp-state"></svg-icon>
                 </div>
                 <div class="name_i" :title="props.item.values.toString()">
-                    <span style="width: 40%;">{{ props.variable.name }}</span>
-                    <span style="width: 60%;">{{ props.item.values.toString() }}</span>
+                    <span style="width:48px;">{{ props.variable.name }}</span>
+                    <span style="width: 94px;">{{ props.item.values.toString() }}</span>
                 </div>
             </div>
             <div class="delete" @click="_delete">
@@ -110,7 +110,7 @@ function _delete() {
             </div>
         </div>
         <p class="warn" v-if="isWarnRepeat">{{ t('compos.duplicate_name') }}</p>
-        <p class="warn" v-if="isWarnNull">{{ t('compos.validate_info_2')}}</p>
+        <p class="warn" v-if="isWarnNull">{{ t('compos.validate_info_2') }}</p>
     </div>
 </template>
 <style scoped lang="scss">
@@ -118,30 +118,35 @@ function _delete() {
     position: relative;
     display: flex;
     flex-direction: column;
-    margin-bottom: 5px;
+    //margin-bottom: 5px;
     width: 100%;
 
     .attr_con {
         display: flex;
         align-items: center;
         justify-content: space-between;
+        height: 44px;
+        padding: 6px 0;
+        box-sizing: border-box;
     }
 
     .module_item_left {
         display: flex;
         align-items: center;
-        border-radius: 4px;
-        background-color: var(--grey-light);
-        width: calc(100% - 22px);
-        height: 30px;
+        border-radius: var(--default-radius);
+        background-color: #F5F5F5;
+        width: calc(100% - 32px);
+        height: 32px;
 
         .module_name {
             display: flex;
             align-items: center;
             justify-content: center;
-            width: 30px;
+            width: 14px;
+            color: #595959;
+            margin-left: 8px;
 
-            > svg {
+            >svg {
                 width: 14px;
                 height: 14px;
             }
@@ -154,12 +159,13 @@ function _delete() {
             }
         }
 
-        > .name_i {
+        >.name_i {
             flex: 1;
             display: flex;
             max-width: 100%;
+            margin-left: 8px;
 
-            > span {
+            >span {
                 display: block;
                 box-sizing: border-box;
                 overflow: hidden;
@@ -173,7 +179,7 @@ function _delete() {
             display: flex;
             align-items: center;
 
-            > svg {
+            >svg {
                 width: 14px;
                 height: 14px;
                 margin: 0px 10px;
@@ -195,20 +201,29 @@ function _delete() {
         }
     }
 
+    .module_item_left:hover {
+        background-color: #EBEBEB;
+    }
+
     .module_input {
         display: flex;
         align-items: center;
-        width: 100%;
-        height: 30px;
+        width: 192px;
+        height: 32px;
 
         .el-input {
             font-size: 12px;
-            height: 30px;
+            height: 32px;
+
+            :deep(.el-input__wrapper) {
+                background-color: #F5F5F5;
+                border-radius: 6px;
+            }
         }
     }
 
     .warn {
-        font-size: 10px;
+        font-size: 12px;
         color: red;
         padding: 0;
         color: red;
@@ -216,19 +231,24 @@ function _delete() {
     }
 
     .delete {
-        flex: 0 0 22px;
+        flex: 0 0 28px;
         display: flex;
         justify-content: center;
         align-items: center;
-        width: 22px;
-        height: 22px;
+        width: 28px;
+        height: 28px;
+        border-radius: var(--default-radius);
 
-        > svg {
-            width: 11px;
-            height: 11px;
+        >svg {
+            width: 16px;
+            height: 16px;
         }
 
         transition: .2s;
+    }
+
+    .delete:hover {
+        background-color: #F5F5F5;
     }
 }
 

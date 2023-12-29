@@ -44,7 +44,7 @@ const getProjectInvitedInfo = async () => {
         projectInfo.value = data || '项目邀请已关闭';
         if(data) {
             if (data.self_perm_type != null && data.self_perm_type >= data.invited_perm_type) {
-                return router.push({ path: '/apphome/project/' + route.query.id });
+                return router.push({ path: '/files/project/' + route.query.id });
             }
         }
     } catch (error) {

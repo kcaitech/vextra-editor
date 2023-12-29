@@ -185,11 +185,12 @@ const getValue = (value: Text | string | undefined) => {
 }
 </script>
 <template>
-    <div style="position: relative; margin-bottom: 10px;" ref="atrrdialog">
+    <div class="line" style="width: 240px;height: 1px;border-bottom: 1px solid #F0F0F0;margin-left: -8px;"></div>
+    <div style="position: relative; margin: 12px 0; box-sizing: border-box" ref="atrrdialog">
         <TypeHeader :title="t('compos.text_content')" class="mt-24" :active="true">
             <template #tool>
                 <div class="edit-comps">
-                    <div class="edit_svg" @click="textDialog" v-if="!is_bind">
+                    <div class="edit_svg" @click="textDialog" v-if="!is_bind" :class="{ 'clicked': isTextShow }">
                         <svg-icon icon-class="relevance"></svg-icon>
                     </div>
                 </div>
@@ -202,7 +203,7 @@ const getValue = (value: Text | string | undefined) => {
             <div class="module_item_left" @click="edit_text">
                 <div class="module_name-2">
                     <div style="width: 30px;" class="svg">
-                        <svg-icon icon-class="text" style="width: 10px; height: 10px;"></svg-icon>
+                        <svg-icon icon-class="text"></svg-icon>
                     </div>
                     <div class="name">
                         <span style="width: 40%;">{{ is_bind?.name }}</span>
@@ -230,22 +231,31 @@ const getValue = (value: Text | string | undefined) => {
 </template>
 <style lang="scss" scoped>
 .edit-comps {
-    width: 22px;
-    height: 22px;
+    width: 28px;
+    height: 28px;
     display: flex;
     align-items: center;
 
     .edit_svg {
-        width: 22px;
-        height: 22px;
+        width: 28px;
+        height: 28px;
         display: flex;
         align-items: center;
         justify-content: center;
+        border-radius: var(--default-radius);
 
         > svg {
-            width: 70%;
-            height: 70%;
+            width: 16px;
+            height: 16px;
         }
+    }
+
+    .edit_svg:hover {
+        background-color: #F5F5F5;
+    }
+
+    .edit_svg.clicked {
+        background-color: #EBEBEB;
     }
 }
 
@@ -306,10 +316,10 @@ const getValue = (value: Text | string | undefined) => {
 .module_item_left {
     display: flex;
     align-items: center;
-    border-radius: 4px;
-    background-color: var(--grey-light);
-    width: calc(100% - 22px);
-    height: 30px;
+    border-radius: var(--default-radius);
+    background-color: #F5F5F5;
+    width: calc(100% - 32px);
+    height: 32px;
 
     .module_name {
         display: flex;
@@ -319,7 +329,6 @@ const getValue = (value: Text | string | undefined) => {
         > svg {
             width: 14px;
             height: 14px;
-            margin: 0px 10px;
         }
 
         .name {
@@ -343,7 +352,7 @@ const getValue = (value: Text | string | undefined) => {
             > svg {
                 width: 14px;
                 height: 14px;
-                margin: 0px 10px;
+                color: #595959;
             }
         }
 
@@ -371,19 +380,28 @@ const getValue = (value: Text | string | undefined) => {
     }
 }
 
+.module_item_left:hover {
+    background-color: #EBEBEB;
+}
+
 .delete {
-    flex: 0 0 22px;
+    flex: 0 0 28px;
     display: flex;
     justify-content: center;
     align-items: center;
-    width: 22px;
-    height: 22px;
+    width: 28px;
+    height: 28px;
+    border-radius: var(--default-radius);
 
     > svg {
-        width: 11px;
-        height: 11px;
+        width: 16px;
+        height: 16px;
     }
 
     transition: .2s;
+}
+
+.delete:hover {
+    background-color: #F5F5F5;
 }
 </style>

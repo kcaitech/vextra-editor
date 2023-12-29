@@ -11,6 +11,7 @@ import {
     SymbolView,
     TableCell,
     TableCellView,
+    SymbolUnionShape,
     TableShape,
     TableView,
     TextShape,
@@ -499,33 +500,34 @@ export class Selection extends WatchableObject implements ISave4Restore {
         return this.selectedShapes.length === 1 && is_symbol_or_union(this.selectedShapes[0]) ? (this.selectedShapes[0]) as SymbolView : undefined;
     }
 
-    // get unionshape() {
-    //     if (this.selectedShapes.length === 1) {
-    //         const xs = this.selectedShapes[0];
-    //         if (xs.type === ShapeType.SymbolUnion) {
-    //             return xs as SymbolShape;
-    //         } else {
-    //             return false;
-    //         }
-    //     } else {
-    //         return false;
-    //     }
-    // }
+    get unionshape() {
+        if (this.selectedShapes.length === 1) {
+            const xs = this.selectedShapes[0];
+            if (xs.data instanceof SymbolUnionShape) {
+                return adapt2Shape(xs) as SymbolUnionShape;
+            }
+        }
+    }
 
     get symbolstate() {
         if (this.selectedShapes.length === 1) {
             const s = this.selectedShapes[0];
-            if (s.type === ShapeType.SymbolUnion) {
-                return adapt2Shape(s) as SymbolShape;
+            const p = s.parent;
+            if (!p || !(p.data instanceof SymbolUnionShape)) {
+                return;
             }
+            return adapt2Shape(s) as SymbolShape;
         }
     }
+
     get symbolstateview() {
         if (this.selectedShapes.length === 1) {
             const s = this.selectedShapes[0];
-            if (s.type === ShapeType.SymbolUnion) {
-                return (s) as SymbolView;
+            const p = s.parent;
+            if (!p || !(p.data instanceof SymbolUnionShape)) {
+                return;
             }
+            return (s) as SymbolView;
         }
     }
 

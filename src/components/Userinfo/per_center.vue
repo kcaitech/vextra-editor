@@ -1,63 +1,54 @@
 <template>
     <div class="main">
         <div class="nav">
-            <div class="close" @click="closePersonalCenter">
-                <el-icon size="25">
-                    <Close />
-                </el-icon>
+            <div class="home" @click="closePersonalCenter">
+                <svg-icon icon-class="home"></svg-icon>
             </div>
-            <h1>{{ t('percenter.personal_center') }}</h1>
         </div>
-        <div class="icon">
+        <div class="container">
             <span class="jbxx">{{ t('percenter.essential_information') }}</span>
-            <div class="one">
-                <div class="two">
-                    <div class="three">
-                        <div class="tx">
-                            <el-avatar v-if="circleUrl" :src="circleUrl" @error="errorHandler">
-                                <img src="https://cube.elemecdn.com/e/fd/0fc7d20532fdaf769a25683617711png.png" />
-                            </el-avatar>
-                            <el-avatar v-else> {{ uname?.slice(0, 1) }} </el-avatar>
-                        </div>
-                        <div class="text">
-                            <span style="font-size: 14px;font-weight: bold;">{{ t('percenter.head_portrait') }}</span>
-                            <span style="font-size: 12px;color: #b3b3b3;">{{ t('percenter.avatar_restriction') }}</span>
-                        </div>
+            <div class="content">
+                <div class="left">
+                    <div class="avatar">
+                        <img v-if="circleUrl" :src="circleUrl" alt="avatar">
+                        <span v-else>{{ uname?.slice(0, 1) }}</span>
                     </div>
-                    <a href="" class="btn" @click.prevent="openDialog">{{ t('percenter.modify_profile_picture') }}</a>
+                    <div class="text">
+                        <div class="title">{{ t('percenter.head_portrait') }}</div>
+                        <div class="details">{{ t('percenter.avatar_restriction') }}</div>
+                    </div>
+                </div>
+                <div class="right">
+                    <button type="button" @click.prevent="openDialog">{{ t('percenter.modify_profile_picture') }}</button>
                 </div>
             </div>
-            <div class="one">
-                <div class="two">
-                    <div class="three">
-                        <div class="text">
-                            <span style="font-size: 14px;font-weight: bold;">{{ t('percenter.username') }}</span>
-                            <span style="font-size: 12px;color: #b3b3b3; line-height: 22px; margin-top: 2px;"
-                                v-if="!shownicknameinput">{{
-                                    uname }}</span>
-                            <div v-else>
-                                <input class="newname" type="text" :value=uname @input="tips" @keyup.enter="changename">
-                                <span></span>
-                            </div>
-
+            <div class="content">
+                <div class="left">
+                    <div class="text">
+                        <div class="title">{{ t('percenter.username') }}
                         </div>
-
+                        <div v-if="!shownicknameinput" class="details">{{ uname }}</div>
+                        <div v-else>
+                            <input class="newname" type="text" :value=uname @input="tips" @keyup.enter="changename">
+                            <span></span>
+                        </div>
                     </div>
-                    <a href="" class="btn" @click.prevent="updatename" v-if="!shownicknameinput">{{
-                        t('percenter.edit_user_name') }}</a>
-                    <div v-if="shownicknameinput">
-                        <button class="affirm" @click="changename">{{ t('percenter.affirm') }}</button>
-                        <button class="cancel" @click="shownicknameinput = false">{{ t('percenter.cancel') }}</button>
+                </div>
+                <div class="right">
+                    <button v-if="!shownicknameinput" type="button" @click.prevent="updatename">{{
+                        t('percenter.edit_user_name') }}</button>
+                    <div class="changeBtn" v-if="shownicknameinput">
+                        <button class="affirm" type="button" @click="changename">{{ t('percenter.affirm') }}</button>
+                        <button class="cancel" type="button" @click="shownicknameinput = false">{{
+                            t('percenter.cancel') }}</button>
                     </div>
                 </div>
             </div>
-            <div class="one">
-                <div class="two">
-                    <div class="three">
-                        <div class="text">
-                            <span style="font-size: 14px;font-weight: bold;">{{ t('percenter.userID') }}</span>
-                            <span style="font-size: 12px;color: #b3b3b3;">{{ id }}</span>
-                        </div>
+            <div class="content">
+                <div class="left">
+                    <div class="text">
+                        <div class="title">{{ t('percenter.userID') }}</div>
+                        <div class="details">{{ id }}</div>
                     </div>
                 </div>
             </div>
@@ -66,7 +57,6 @@
 </template>
 <script setup lang="ts">
 import { reactive, toRefs, ref } from 'vue'
-import { Close } from '@element-plus/icons-vue'
 import * as user_api from '@/request/users'
 import { ElMessage } from 'element-plus';
 import { useI18n } from 'vue-i18n';
@@ -79,7 +69,6 @@ const state = reactive({
     id: localStorage.getItem('userId')
 })
 const { circleUrl, uname, id } = toRefs(state)
-const errorHandler = () => true
 
 function openDialog() {
     const input = document.createElement('input')
@@ -168,32 +157,35 @@ function closePersonalCenter() {
 
 </script>
 <style lang="scss" scoped>
-.el-avatar {
-    --el-avatar-bg-color: #9775fa;
-    font-weight: 700;
-}
-
 .main {
     width: 100vw;
     height: 100vh;
-    background: rgba(213, 213, 213, 0.2);
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    background-color: #fff;
 }
 
 .newname {
     outline: none;
-    height: 22px;
+    max-width: 352px;
+    height: 36px;
+    padding: 7px 12px;
+    border-radius: 6px;
+    font-size: 13px;
+    color: #000000;
+    border: 1px solid #F5F5F5;
+    background-color: #F5F5F5;
     box-sizing: border-box;
 
     &:hover {
-        border-radius: 2px;
-        border: 2px rgb(69, 69, 255) solid;
-        border-color: rgb(69, 69, 255);
+        border: 1px solid #EBEBEB;
+        background-color: #EBEBEB;
     }
 
     &:focus {
-        border-radius: 2px;
-        border: 2px rgb(69, 69, 255) solid;
-        border-color: rgb(69, 69, 255);
+        border: 1px solid #1878F5;
+        background-color: #F5F5F5;
     }
 }
 
@@ -204,125 +196,178 @@ function closePersonalCenter() {
     color: red;
 }
 
-button {
-    width: 60px;
-    margin-left: 10px;
-    border: 1px silver solid;
-    border-radius: 2px;
-}
-
-
-.affirm {
-    background: rgb(69, 69, 255);
-    color: white;
-    border-color: rgb(69, 69, 255);
-
-    &:hover {
-        background: rgba(80, 80, 255, 0.884);
-    }
-}
-
-.cancel {
-    background: rgb(255, 255, 255);
-    color: black;
-
-    &:hover {
-        background: rgba(208, 208, 208, 0.167);
-    }
-}
-
-
 .nav {
     display: flex;
-    justify-content: space-between;
+    width: 100%;
+    height: 52px;
     align-items: center;
-    flex-direction: row-reverse;
-    margin: 0 0 20px 0;
-    border-radius: 5px;
-    background: rgb(255, 255, 255);
-    box-shadow: rgba(255, 255, 255, 0.9) 0px 1px 3px, rgba(0, 0, 0, 0.5) 0px 1px 2px;
+    border-bottom: 1px solid #EBEBEB;
 
-    .close {
-        margin: 0 20px;
-    }
+    .home {
+        width: 32px;
+        height: 32px;
+        padding: 6px;
+        margin-left: 8px;
+        border-radius: 6px;
+        box-sizing: border-box;
 
-    .close:hover {
-        color: rgb(69, 69, 255);
-        cursor: pointer;
+        &:hover {
+            background-color: #F5F5F5;
+        }
+
+        &:active {
+            background-color: #EBEBEB;
+        }
+
+        svg {
+            width: 100%;
+            height: 100%;
+        }
     }
 }
 
-h1 {
-    text-align: center;
-    letter-spacing: 5px;
-    margin: 10px 20px;
-}
 
-.icon {
-    width: 800px;
-    position: absolute;
-    top: 100px;
-    left: 50%;
-    padding: 20px;
-    transform: translate(-50%);
+.container {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    width: 700px;
     box-sizing: border-box;
-    border-radius: 5px;
-    background: white;
-    box-shadow: rgba(99, 99, 99, 0.2) 0px 2px 8px 0px;
+
 
     .jbxx {
-        display: inline-block;
-        font-weight: bold;
-        margin-bottom: 20px;
-
+        font-size: 18px;
+        font-weight: 700;
+        width: 100%;
+        height: 66px;
+        padding: 28px 0 12px 0;
+        box-sizing: border-box;
     }
 
-    .one {
-        width: auto;
-        height: auto;
-        padding: 0px 20px;
-        margin-bottom: 20px;
+    .content {
+        width: 100%;
+        height: 90px;
+        display: flex;
+        align-items: center;
+        justify-content: space-between;
+        box-sizing: border-box;
+        box-shadow: inset 0px -1px 0px 0px #F0F0F0;
+        gap: 8px;
 
-        .two {
+        .left {
             display: flex;
-            justify-content: space-between;
             align-items: center;
+            gap: 16px;
 
-            .three {
+            .avatar {
                 display: flex;
-                flex-direction: row;
                 align-items: center;
+                justify-content: center;
+                width: 48px;
+                height: 48px;
+                background-color: #1878F5;
+                border-radius: 100%;
+                box-sizing: border-box;
 
-                .tx {
-                    display: flex;
-                    margin-right: 10px;
+                img {
+                    width: 100%;
+                    height: 100%;
+                    border-radius: 100%;
+                    object-fit: cover;
                 }
 
-                .text {
-                    display: flex;
-                    flex-direction: column;
-                    box-sizing: border-box;
+                span {
+                    font-size: 16px;
+                    font-weight: 500;
+                    color: white;
+                }
+            }
 
+            .text {
+                display: flex;
+                flex-direction: column;
+                gap: 10px;
+
+                .title {
+                    font-size: 14px;
+                    font-weight: 500;
+                    color: #000000;
+                }
+
+                .details {
+                    font-size: 13px;
+                    font-weight: 400;
+                    color: #777777;
                 }
             }
         }
 
-        .btn {
-            font-size: 12px;
-            font-weight: 600;
-            width: auto;
-            height: 40px;
-            line-height: 40px;
-            color: rgb(55, 65, 252);
-            text-decoration: none
+        .right {
+            display: flex;
+            align-items: center;
+            gap: 8px;
+
+            button {
+                outline: none;
+                border: 1px solid #F0F0F0;
+                background-color: transparent;
+                font-size: 14px;
+                font-weight: 500;
+                margin: auto;
+                width: auto;
+                height: 36px;
+                border-radius: 6px;
+                color: #333333;
+                padding: 8px 14px;
+                box-sizing: border-box;
+
+                &:hover {
+                    background-color: #F5F5F5;
+                }
+
+                &:active {
+                    background-color: #EBEBEB;
+                }
+            }
+
+            .changeBtn {
+                display: flex;
+                align-items: center;
+                gap: 8px;
+
+                .affirm {
+                    color: #fff;
+                    background-color: #1878F5;
+
+                    &:hover {
+                        background-color: #429AFF;
+                    }
+
+                    &:active {
+                        background-color: #0A59CF;
+                    }
+                }
+
+                .cancel {
+                    background-color: transparent;
+
+                    &:hover {
+                        background-color: #F5F5F5;
+                    }
+
+                    &:active {
+                        background-color: #EBEBEB;
+                    }
+                }
+            }
         }
     }
 }
 
-@media screen and (max-width: 800px) {
-    .icon {
+@media (max-width:700px) {
+    .container {
         width: 100%;
+        padding: 0 12px;
     }
-
 }
 </style>

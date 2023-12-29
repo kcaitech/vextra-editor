@@ -34,17 +34,27 @@ onMounted(montage);
 .wrapper {
     display: flex;
     align-items: center;
-    >.prefix{
+
+    >.prefix {
         display: flex;
         align-items: center;
         color: var(--grey-dark);
+
         >div {
             white-space: pre;
         }
+
         >.split {
             font-weight: 900;
         }
     }
+
+    div {
+        color: #262626;
+        overflow: hidden;
+        white-space: nowrap;
+        text-overflow: ellipsis;
+    }
+
     font-size: var(--font-default-fontsize);
-}
-</style>
+}</style>

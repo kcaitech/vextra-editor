@@ -16,8 +16,8 @@ interface Props {
 const props = defineProps<Props>();
 const showRename = ref(false);
 const input_s = ref<HTMLInputElement>();
-const {t} = useI18n();
-const dialog_posi = ref({x: 0, y: 0});
+const { t } = useI18n();
+const dialog_posi = ref({ x: 0, y: 0 });
 const instance_card = ref<HTMLDivElement>();
 const iseditToggle = ref(false);
 
@@ -80,11 +80,11 @@ function _delete() {
                 <div class="module_name-2">
                     <div style="width: 30px;" class="svg">
                         <svg-icon icon-class="pattern-rectangle"
-                                  style="width: 10px; height: 10px; transform: rotate(45deg); margin-top: 0;"></svg-icon>
+                            style="width: 10px; height: 10px; transform: rotate(45deg); margin-top: 0;"></svg-icon>
                     </div>
                     <div class="name">
-                        <span style="width: 40%;">{{ props.variable.name }}</span>
-                        <span style="width: 60%;"> {{ getValue(props.variable.value) }}</span>
+                        <span style="width: 30%;">{{ props.variable.name }}</span>
+                        <span style="width: 70%;"> {{ getValue(props.variable.value) }}</span>
                     </div>
                 </div>
             </div>
@@ -93,14 +93,13 @@ function _delete() {
             </div>
         </div>
         <CompLayerShow :context="context" v-if="iseditToggle" @close-dialog="iseditToggle = false" right="250px"
-                       :width="260" :add-type="VariableType.SymbolRef" :title="t('compos.instance_toggle')"
-                       @save-layer-show="save_instance" :dialog_posi="dialog_posi" :default_name="props.variable.name"
-                       :variable="props.variable">
+            :width="260" :add-type="VariableType.SymbolRef" :title="t('compos.instance_toggle')"
+            @save-layer-show="save_instance" :dialog_posi="dialog_posi" :default_name="props.variable.name"
+            :variable="props.variable">
             <template #layer>
                 <SelectLayerInput :title="t('compos.compos_instance')" :add-type="VariableType.SymbolRef"
-                                  :context="props.context"
-                                  :placeholder="t('compos.place_select_instance')" :variable="props.variable"
-                                  @change="selectLayerId"></SelectLayerInput>
+                    :context="props.context" :placeholder="t('compos.place_select_instance')" :variable="props.variable"
+                    @change="selectLayerId"></SelectLayerInput>
             </template>
         </CompLayerShow>
     </div>
@@ -110,32 +109,37 @@ function _delete() {
     position: relative;
     display: flex;
     flex-direction: column;
-    margin-bottom: 5px;
+    //margin-bottom: 5px;
     width: 100%;
 
     .attr_con {
         display: flex;
         align-items: center;
         justify-content: space-between;
+        height: 44px;
+        padding: 6px 0;
+        box-sizing: border-box;
     }
 
     .module_item_left {
         display: flex;
         align-items: center;
-        border-radius: 4px;
-        background-color: var(--grey-light);
-        width: calc(100% - 22px);
-        height: 30px;
+        background-color: #F5F5F5;
+        width: calc(100% - 32px);
+        height: 32px;
+        border-radius: var(--default-radius);
 
         .module_name {
             display: flex;
             align-items: center;
-            width: 84px;
+            justify-content: center;
+            width: 14px;
+            color: #595959;
+            margin-left: 8px;
 
             > svg {
                 width: 14px;
                 height: 14px;
-                margin: 0px 10px;
             }
 
             .name {
@@ -156,7 +160,7 @@ function _delete() {
                 align-items: center;
                 justify-content: center;
 
-                > svg {
+                >svg {
                     width: 14px;
                     height: 14px;
                 }
@@ -168,7 +172,7 @@ function _delete() {
                 display: flex;
                 max-width: 100%;
 
-                > span {
+                >span {
                     display: block;
                     box-sizing: border-box;
                     overflow: hidden;
@@ -186,39 +190,52 @@ function _delete() {
         }
     }
 
+    .module_item_left:hover {
+        background-color: #EBEBEB;
+    }
+
+
     .module_input {
         display: flex;
         align-items: center;
         width: 100%;
-        height: 30px;
+        height: 32px;
 
         .el-input {
             font-size: 12px;
-            height: 30px;
+            height: 32px;
         }
     }
 
     .warn {
-        font-size: 10px;
+        font-size: 12px;
         color: red;
     }
 
     .delete {
-        flex: 0 0 22px;
+        flex: 0 0 28px;
         display: flex;
         justify-content: center;
         align-items: center;
-        width: 22px;
-        height: 22px;
+        width: 28px;
+        height: 28px;
+        border-radius: var(--default-radius);
 
-        > svg {
-            width: 11px;
-            height: 11px;
+        >svg {
+            width: 16px;
+            height: 16px;
         }
 
         transition: .2s;
     }
+
+    .delete:hover {
+        background-color: #F5F5F5;
+    }
 }
+.module_item_left:hover {
+        background-color: #EBEBEB;
+    }
 
 :deep(.el-input__inner) {
     --el-input-inner-height: 100%;

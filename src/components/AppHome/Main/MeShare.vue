@@ -3,14 +3,14 @@
     <div class="title">
         <div class="indicator" :style="{ width: elwidth + 'px', left: elleft + 'px' }"></div>
         <div class="left">
-            <div ref="myfile" @click="highlight(true, $event, '/apphome/meshare')"
+            <div ref="myfile" @click="highlight(true, $event, '/files/myfile')"
                 :style="{ color: active ? '#333333' : '#777777' }">
                 {{ t('home.file_shared') }}</div>
-            <div ref="mydel" @click="highlight(false, $event, '/apphome/recyclebin')"
+            <div ref="mydel" @click="highlight(false, $event, '/files/trash')"
                 :style="{ color: active ? '#777777' : '#333333' }">
                 {{ t('home.recycling_station') }}</div>
         </div>
-        <div v-if="active" class="right">
+        <div v-if="active && !searchvalue" class="right">
             <div class="newfile" @click="newFile">
                 <svg-icon icon-class="addfile-icon"></svg-icon>
                 {{ t('home.New_file') }}
@@ -25,20 +25,21 @@
         <div class="tatle" style="height: calc(100vh - 144px);">
             <tablelist :data="searchlists" :iconlist="iconlists" @share="Sharefile" @deletefile="Deletefile"
                 @dbclickopen="openDocument" @updatestar="Starfile" @rightMeun="rightmenu" :noNetwork="noNetwork"
-                @refreshDoc="refreshDoc" />
+                @refreshDoc="refreshDoc" :nulldata="nulldata" />
         </div>
         <listrightmenu :items="items" :data="mydata" @get-doucment="getDoucment" @r-starfile="Starfile"
             @r-sharefile="Sharefile" @r-removefile="Deletefile" @ropen="openDocument" @moveFillAddress="moveFillAddress" />
-        <FileShare v-if="showFileShare" @close="closeShare" :docId="docId" :docName="docName" :selectValue="selectValue"
-            :userInfo="userInfo" :docUserId="docUserId" @select-type="onSelectType" @switch-state="onSwitch"
-            :shareSwitch="shareSwitch" :pageHeight="pageHeight">
-        </FileShare>
         <MoveProjectFill :title="t('Createteam.movetip')" :confirm-btn="t('Createteam.move')" :projectItem="projectItem"
             :doc="mydata" :projectVisible="moveVisible" @clodeDialog="clodeDialog" @moveFillSeccess="moveFillSeccess">
         </MoveProjectFill>
     </div>
     <RecycleBin v-if="!active" />
-    <div v-if="showFileShare" class="overlay"></div>
+    <div v-if="showFileShare" class="overlay">
+        <FileShare @close="closeShare" :docId="docId" :docName="docName" :selectValue="selectValue" :userInfo="userInfo"
+            :docUserId="docUserId" @select-type="onSelectType" @switch-state="onSwitch" :shareSwitch="shareSwitch"
+            :pageHeight="pageHeight">
+        </FileShare>
+    </div>
 </template>
 
 <script setup lang="ts">
@@ -141,13 +142,17 @@ async function getDoucment() {
 
 const searchvalue = ref('');
 const searchlists = ref<any[]>([])
+const nulldata = ref(false)
 Bus.on('searchvalue', (str: string) => {
     searchvalue.value = str
 })
 
 watchEffect(() => {
-    if (!searchvalue.value) return searchlists.value = lists.value
+    if (!searchvalue.value) return searchlists.value = lists.value, nulldata.value = false
     searchlists.value = lists.value.filter((el: any) => PinyinMatch.match(el.document.name.toLowerCase(), searchvalue.value.toLowerCase()))
+    if (searchlists.value.length === 0 && searchvalue.value !== '') {
+        nulldata.value = true
+    }
 })
 
 
@@ -297,7 +302,7 @@ watch(() => route.name, () => {
 
     if (route.name != undefined) {
         if (route.name === 'meshare' || route.name === 'recyclebin') {
-            if (route.path === '/apphome/meshare') {
+            if (route.path === '/files/myfile') {
                 getDoucment();
                 nextTick(() => {
                     highlight(true)
@@ -305,7 +310,7 @@ watch(() => route.name, () => {
                     elleft.value = myfile.value?.getBoundingClientRect().x
                 })
             }
-            if (route.path === '/apphome/recyclebin') {
+            if (route.path === '/files/trash') {
                 nextTick(() => {
                     highlight(false)
                     elwidth.value = mydel.value?.getBoundingClientRect().width
@@ -325,13 +330,13 @@ onMounted(() => {
     if (route.name === "recyclebin") {
         highlight(false)
     }
-    if (route.path === '/apphome/meshare') {
+    if (route.path === '/files/myfile') {
         nextTick(() => {
             elwidth.value = myfile.value?.getBoundingClientRect().width;
             elleft.value = myfile.value?.getBoundingClientRect().x;
         })
     }
-    if (route.path === '/apphome/recyclebin') {
+    if (route.path === '/files/trash') {
         nextTick(() => {
             elwidth.value = mydel.value?.getBoundingClientRect().width
             elleft.value = mydel.value?.getBoundingClientRect().x
@@ -348,6 +353,9 @@ onUnmounted(() => {
 <style lang="scss" scoped>
 .overlay {
     position: absolute;
+    display: flex;
+    align-items: center;
+    justify-content: center;
     top: 0;
     left: 0;
     width: 100%;

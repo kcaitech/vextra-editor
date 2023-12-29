@@ -174,7 +174,7 @@ const midDateTeamData = (teamData: Array<teamDataType>, id: string, updates: Par
 
 //修改团队名称
 const midNameRequest = async () => {
-    if (textareaValue.value) return
+    if (!textareaValue.value) return
     formData.append('name', textareaValue.value)
     try {
         const { code, message } = await user_api.Setteaminfo(formData)
@@ -224,7 +224,7 @@ const midAvatarRequest = async (e: any) => {
 
 //修改团队描述
 const midDescriptionRequest = async () => {
-    if (textareaValue.value) return
+    if (!textareaValue.value) return
     formData.append('description', textareaValue.value)
     try {
         const { code, message } = await user_api.Setteaminfo(formData)
@@ -337,6 +337,9 @@ onMounted(() => {
 <style lang="scss" scoped>
 .overlay {
     position: absolute;
+    display: flex;
+    align-items: center;
+    justify-content: center;
     top: 0;
     left: 0;
     width: 100%;
@@ -345,25 +348,38 @@ onMounted(() => {
     background-color: rgba(0, 0, 0, 0.5);
 }
 
+@media (max-height: 220px) {
+    .card-container {
+        height: 100%;
+        overflow: auto !important;
+        animation: none !important;
+    }
+}
+
+@media (max-width: 420px) {
+    .card-container {
+        width: 100% !important;
+        overflow: auto !important;
+    }
+}
+
 @keyframes move {
     from {
-        transform: translate(-50%, -20%);
+        transform: translateY(-20px);
         opacity: 0;
     }
 
     to {
-        transform: translate(-50%, 0);
+        transform: translate(0);
         opacity: 1;
     }
 }
 
 .card-container {
     position: absolute;
-    top: 25%;
-    left: 50%;
     width: 420px;
     padding: 0 24px;
-    transform: translate(-50%, 0);
+    transform: translateY(0);
     background-color: white;
     border-radius: 14px;
     border: 1px solid #F0F0F0;
@@ -385,6 +401,7 @@ onMounted(() => {
         }
 
         .close {
+            display: flex;
             width: 28px;
             height: 28px;
             padding: 6px;

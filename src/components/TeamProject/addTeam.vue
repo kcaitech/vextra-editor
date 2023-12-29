@@ -84,10 +84,10 @@ const createTeam = async () => {
             emits('close')
             state(true)  //改变updatestate的值为TRUE
             if (route.params.id) {
-                router.push({ path: `/apphome/teams/${data.id}` })
+                router.push({ path: `/files/team/${data.id}` })
                 sessionStorage.setItem('index', '6')
             } else {
-                router.push({ path: `teams/${data.id}` })
+                router.push({ path: `team/${data.id}` })
                 sessionStorage.setItem('index', '6')
             }
         } else {
@@ -131,14 +131,29 @@ const close = () => {
 
 </script>
 <style lang="scss" scoped>
+@media (max-height: 550px) {
+    .card-container {
+        height: 100%;
+        overflow: auto !important;
+        animation: none !important;
+    }
+}
+
+@media (max-width: 400px) {
+    .card-container {
+        width: 100% !important;
+        overflow: auto !important;
+    }
+}
+
 @keyframes move {
     from {
-        transform: translate(-50%, -20%);
+        transform: translateY(-20px);
         opacity: 0;
     }
 
     to {
-        transform: translate(-50%, 0);
+        transform: translateY(0);
         opacity: 1;
     }
 }
@@ -147,9 +162,7 @@ const close = () => {
     position: absolute;
     background-color: white;
     width: 400px;
-    top: 25%;
-    left: 50%;
-    transform: translate(-50%, 0);
+    transform: translateY(0);
     padding: 0 24px;
     border-radius: 16px;
     border: 1px solid #F0F0F0;
@@ -170,6 +183,7 @@ const close = () => {
         }
 
         .close {
+            display: flex;
             width: 16px;
             height: 16px;
             padding: 4px;
@@ -178,6 +192,10 @@ const close = () => {
             &:hover {
                 background-color: rgb(243, 243, 245);
                 cursor: pointer;
+            }
+
+            &:active {
+                background-color: #EBEBEB;
             }
 
             svg {
@@ -323,4 +341,5 @@ const close = () => {
             }
         }
     }
-}</style>
+}
+</style>

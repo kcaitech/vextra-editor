@@ -5,7 +5,7 @@
                 <div class="title-p" v-if="!cusname">
                     <Tooltip :content="t('projectpage.back')" :offset="5">
                         <div class="back" @click="back(currentProject[0].project, currentProject[0].is_in_team)">
-                            <svg-icon icon-class="back-icon" ></svg-icon>
+                            <svg-icon icon-class="back-icon"></svg-icon>
                         </div>
                     </Tooltip>
                     <p @click="input_cusname(currentProject[0])"
@@ -94,7 +94,7 @@
         @confirm="ExitProject"></ProjectDialog>
 </template>
 <script setup lang="ts">
-import { Ref, nextTick, inject, ref, onMounted, watch, onUnmounted, DefineComponent } from 'vue'
+import { Ref, nextTick, inject, ref, onMounted, watch, onUnmounted, DefineComponent, watchEffect } from 'vue'
 import { useRoute } from 'vue-router'
 import { useI18n } from 'vue-i18n'
 import { router } from '@/router'
@@ -167,9 +167,9 @@ const closeMenu = () => {
 
 const back = (project: any, isTeam: boolean) => {
     if (isTeam) {
-        router.push({ path: '/apphome/teams/' + project.team_id });
+        router.push({ path: '/files/team/' + project.team_id });
     } else {
-        router.push('/apphome/project_share');
+        router.push('/files/project_shared');
     }
 }
 const closeDelVisible = () => {
@@ -197,7 +197,7 @@ const ExitProject = () => {
     projectList.value.splice(index, 1);
     const inshare = projectList.value.filter(item => !item.is_in_team).length;
     if (inshare > 0) {
-        router.push('/apphome/project_share');
+        router.push('/files/project_shared');
     } else {
         router.push({ name: "apphome" });
         sessionStorage.setItem('index', '1');
@@ -232,11 +232,11 @@ const DelProject = () => {
     favoriteList.value.splice(f_index, 1);
     projectList.value.splice(index, 1);
     if (project.is_in_team) {
-        router.push({ path: '/apphome/teams/' + project.project.team_id });
+        router.push({ path: '/files/team/' + project.project.team_id });
     } else {
         const inshare = projectList.value.filter(item => !item.is_in_team).length;
         if (inshare > 0) {
-            router.push('/apphome/project_share');
+            router.push('/files/project_shared');
         } else {
             router.push({ name: "apphome" });
             sessionStorage.setItem('index', '1');
@@ -321,7 +321,7 @@ const exitProject = (id: string, isTeam: boolean) => {
     favoriteList.value.splice(f_index, 1);
     projectList.value.splice(index, 1);
     if (isTeam) {
-        router.push({ path: '/apphome/teams/' + id });
+        router.push({ path: '/files/team/' + id });
     } else {
         router.push({ name: "apphome" })
         sessionStorage.setItem('index', '1');
@@ -530,12 +530,14 @@ watch(() => currentProject.value, (n) => {
 }, { deep: true });
 
 
-// watchEffect(() => {
-//     route.params.id;
-//     currentProject.value = projectList.value.filter((item) => item.project.id === route.params.id);
-// })
 watch(() => route.params.id, () => {
-    currentProject.value = projectList.value.filter((item) => item.project.id === route.params.id);
+    if (route.name === "ProjectPage") {
+        currentProject.value = projectList.value.filter((item) => item.project.id === route.params.id);
+    }
+})
+
+watch(currentProject, () => {
+    window.document.title = currentProject.value[0].project.name + ' - ' + t('product.name')
 })
 
 onMounted(() => {
@@ -620,8 +622,8 @@ onUnmounted(() => {
                     height: 14px;
                 }
 
-                .back{
-                    svg{
+                .back {
+                    svg {
                         width: 16px !important;
                         height: 16px !important;
                     }
