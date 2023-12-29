@@ -19,7 +19,7 @@ interface Title {
     x: number
     y: number
     width: number
-    shape: ShapeView
+    shape(): ShapeView
     rotate: number
     maxWidth: number
     selected: boolean
@@ -81,7 +81,7 @@ const setPosition = () => {
                 anchor.y -= 22; // 顶上去22像素
                 const width = f2p.width;
                 const maxWidth = frame.width
-                titles.push({id: artboard.id, content: artboard.name, x: anchor.x, y: anchor.y, width, shape: artboard, rotate: modify_rotate(artboard), maxWidth, selected});
+                titles.push({id: artboard.id, content: artboard.name, x: anchor.x, y: anchor.y, width, shape: () => artboard, rotate: modify_rotate(artboard), maxWidth, selected});
             }
         }
     } else {
@@ -202,7 +202,7 @@ watchEffect(() => updater());
              :style="{ top: `${t.y}px`, left: `${t.x}px`, 'max-width': `${t.maxWidth}px`, transform: `rotate(${t.rotate}deg)` }">
             <ArtboardName :context="props.context" :name="t.content" :index="index" :maxWidth="t.maxWidth"
                           @rename="rename"
-                          @hover="hover" @leave="leave" :shape="t.shape" :selected="t.selected"></ArtboardName>
+                          @hover="hover" @leave="leave" :shape="t.shape()" :selected="t.selected"></ArtboardName>
         </div>
     </div>
 </template>
