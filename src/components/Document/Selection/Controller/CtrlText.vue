@@ -243,7 +243,7 @@ onBeforeUnmount(() => {
          @mouseenter="mouseenter" @mouseleave="mouseleave" :class="{ 'un-visible': !visible }">
         <SelectView :context="props.context" :shape="(props.shape)" :matrix="submatrix.toArray()"
                     :main-notify="Selection.CHANGE_TEXT" :selection="props.context.selection.getTextSelection(props.shape)"></SelectView>
-        <path v-if="editing" :d="boundrectPath" fill="none" stroke='#1878f5' stroke-width="1.5px"></path>
+        <path v-if="editing" :d="boundrectPath" fill="none" stroke='#1878f5' stroke-width="1px" stroke-dasharray="2,2"></path>
         <BarsContainer v-if="!editing" :context="props.context" :matrix="submatrix.toArray()" :shape="props.shape"
                        :c-frame="props.controllerFrame">
         </BarsContainer>
