@@ -237,8 +237,8 @@ onBeforeUnmount(() => {
     <svg version="1.1" xmlns="http://www.w3.org/2000/svg" xmlns:xlink="http://www.w3.org/1999/xlink"
          data-area="controller"
          id="text-selection" xmlns:xhtml="http://www.w3.org/1999/xhtml" preserveAspectRatio="xMinYMin meet"
-         :viewBox=genViewBox(bounds) :width="bounds.right - bounds.left" :height="bounds.bottom - bounds.top"
-         :style="{ transform: `translate(${bounds.left}px,${bounds.top}px)`, left: 0, top: 0, position: 'absolute' }"
+         :viewBox=genViewBox(bounds) :width="width" :height="height"
+         :style="{ transform: `translate(${bounds.left}px,${bounds.top}px)` }"
          @mousedown="onMouseDown" overflow="visible"
          @mouseenter="mouseenter" @mouseleave="mouseleave" :class="{ 'un-visible': !visible }">
         <SelectView :context="props.context" :shape="(props.shape)" :matrix="submatrix.toArray()"
@@ -257,5 +257,8 @@ onBeforeUnmount(() => {
 <style lang='scss' scoped>
 .un-visible {
     opacity: 0;
+}
+svg {
+    position: absolute;
 }
 </style>
