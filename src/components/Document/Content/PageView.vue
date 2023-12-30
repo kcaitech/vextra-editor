@@ -87,13 +87,13 @@ function selection_watcher(...args: any[]) {
     if (args.includes(Selection.CHANGE_SHAPE)) {
         const selectedShapes = props.context.selection.selectedShapes;
         const focus = selectedShapes.length === 1 ? selectedShapes[0] : undefined;
-        const dom = props.context.getPageDom(props.data.data);
+        const dom = props.context.getPageDom(props.data);
         dom.ctx.updateFocusShape(focus ? adapt2Shape(focus) : undefined);
     }
 }
 
 onMounted(() => {
-    const dom = props.context.getPageDom(props.data.data);
+    const dom = props.context.getPageDom(props.data);
     if (dom && pagesvg.value) {
         dom.dom.bind(pagesvg.value);
         dom.dom.render();
@@ -102,7 +102,7 @@ onMounted(() => {
 })
 
 onUnmounted(() => {
-    const dom = props.context.getPageDom(props.data.data);
+    const dom = props.context.getPageDom(props.data);
     if (dom) {
         dom.ctx.stopLoop();
         dom.ctx.updateFocusShape(undefined);

@@ -104,7 +104,7 @@ function point_mousemove(event: MouseEvent) {
             submatrix.reset(workspace.matrix.inverse);
             search = true;
             const page = props.context.selection.selectedPage;
-            contactEditor = props.context.editor.controller().asyncContactEditor(adapt2Shape(props.shape) as ContactShape, page!.data);
+            contactEditor = props.context.editor.controller().asyncContactEditor(adapt2Shape(props.shape) as ContactShape, page!);
             contactEditor.pre();
         }
     }

@@ -114,7 +114,7 @@ export function is_equal(a: number, b: number) {
 /**
  * @description 收集时使用
  */
-export function colloct_point_group(host: Shape): PointGroup1 {
+export function colloct_point_group(host: ShapeView): PointGroup1 {
     const m = host.matrix2Root(), f = host.frame;
     const lt = m.computeCoord2(0, 0);
     const rb = m.computeCoord2(f.width, f.height);
@@ -208,8 +208,8 @@ export function isShapeOut(context: Context, shape: Shape | ShapeView) {
         Math.min(point[0].y, point[1].y, point[2].y, point[3].y) > bottom - y;
 }
 
-export function finder(context: Context, scope: GroupShape, all_pg: Map<string, PointGroup1>, x_axis: Map<number, PageXY2[]>, y_axis: Map<number, PageXY2[]>) {
-    let result: Shape[] = [];
+export function finder(context: Context, scope: ShapeView, all_pg: Map<string, PointGroup1>, x_axis: Map<number, PageXY2[]>, y_axis: Map<number, PageXY2[]>) {
+    let result: ShapeView[] = [];
     if (scope.type === ShapeType.Artboard || scope.type === ShapeType.Symbol) {
         result.push(scope);
         const pg = colloct_point_group(scope);
@@ -238,7 +238,7 @@ export function finder(context: Context, scope: GroupShape, all_pg: Map<string, 
             if (x) x.push(p2); else x_axis.set(p2.p.x, [p2]);
             if (y) y.push(p2); else y_axis.set(p2.p.y, [p2]);
         }
-        if (c instanceof GroupShape && c.type === ShapeType.Group) result = result.concat(finder(context, c, all_pg, x_axis, y_axis));
+        if (c.type === ShapeType.Group) result = result.concat(finder(context, c, all_pg, x_axis, y_axis));
     }
     return result;
 }
@@ -251,11 +251,11 @@ export function getClosestAB(shape: Shape) {
     return resust;
 }
 
-export function getClosestContainer(shape: Shape) {
-    let result: GroupShape = shape.parent as GroupShape;
+export function getClosestContainer(shape: ShapeView) {
+    let result: ShapeView | undefined = shape.parent;
     while (result) {
         if (result.type === ShapeType.Artboard || result.type === ShapeType.Symbol) break;
-        result = result.parent as GroupShape;
+        result = result.parent;
     }
     return result;
 }

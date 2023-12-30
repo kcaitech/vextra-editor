@@ -403,7 +403,7 @@ export function make_symbol(context: Context, t: Function) {
         message('info', t('compos.error_3'));
         return false;
     }
-    const editor = context.editor4Page(page.data);
+    const editor = context.editor4Page(page);
     const name = getName(ShapeType.Symbol, context.data.symbolsMgr.resource, t);
     const shapes: ShapeView[] = compare_layer_3(selected);
     return editor.makeSymbol(context.data, shapes.map((s) => adapt2Shape(s)), name);
@@ -428,7 +428,7 @@ export function make_status(context: Context, t: Function) {
     const shape = context.selection.symbolshape;
     const page = context.selection.selectedPage;
     if (shape && page) {
-        const editor = context.editor4Page(page.data);
+        const editor = context.editor4Page(page);
         const name = gen_special_name_for_status(shape, t('compos.attri'));
         if (!name) return;
         return editor.makeStatus(shape as SymbolShape, name, t('compos.dlt'), true);
@@ -445,7 +445,7 @@ export function make_default_state(context: Context, t: Function) {
     const shape = selected[0];
     const page = context.selection.selectedPage;
     if (shape && shape.type === ShapeType.SymbolUnion && page) {
-        const editor = context.editor4Page(page.data);
+        const editor = context.editor4Page(page);
         return editor.makeStateAt(adapt2Shape(shape) as SymbolUnionShape, t('compos.state'));
     }
 }
@@ -468,7 +468,7 @@ export function make_state(context: Context, t: Function, hor?: number) {
             }
         }
         if (index < 0) return;
-        const editor = context.editor4Page(page.data);
+        const editor = context.editor4Page(page);
         return editor.makeStateAt(adapt2Shape(shape.parent!) as SymbolShape, t('compos.state'), index, hor);
     }
 }
@@ -948,7 +948,7 @@ export function is_circular_ref2(symbol: Shape, symbol2: string): boolean {
 /**
  * @description 检查属性名称是否有效，有效则返回true
  */
-export function is_valid_name(symbol: SymbolView, name: string, type: VariableType) {
+export function is_valid_name(symbol: SymbolView | SymbolShape, name: string, type: VariableType) {
     let valid: boolean = true;
     const variables = symbol.variables
     if (!variables) return valid;

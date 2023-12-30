@@ -134,7 +134,7 @@ export class Clipboard {
             return false;
         }
 
-        const editor = this.context.editor4Page(page.data);
+        const editor = this.context.editor4Page(page);
         const delete_res = editor.delete_batch(this.context.selection.selectedShapes.map(s => adapt2Shape(s)));
 
         if (delete_res) {
@@ -482,10 +482,10 @@ async function clipboard_text_html(context: Context, data: any, xy?: PageXY) {
             const _xy = adjust_content_xy(context, { width: _f.width, height: _f.height });
             shape.frame.x = xy?.x || _xy.x;
             shape.frame.y = xy?.y || _xy.y;
-            const editor = context.editor.editor4Page(page.data);
+            const editor = context.editor4Page(page);
             const r = editor.insert(page.data, page.childs.length, shape);
 
-            context.getPageDom(page.data).ctx.once('nextTick', () => {
+            context.nextTick(page, () => {
                 if (r) context.selection.selectShape(page.shapes.get(r.id));
             })
         } else if (is_shape) {
@@ -518,14 +518,14 @@ async function clipboard_text_html(context: Context, data: any, xy?: PageXY) {
                 return;
             }
 
-            const editor = context.editor.editor4Page(page.data);
+            const editor = context.editor4Page(page);
 
             const r = editor.pasteShapes1(page.data, shapes);
             if (!r) {
                 return;
             }
 
-            context.getPageDom(page.data).ctx.once('nextTick', () => {
+            context.nextTick(page, () => {
                 if (r) {
                     const selects: ShapeView[] = [];
                     r.shapes.forEach((s) => {
@@ -596,7 +596,7 @@ async function clipboard_text_html_replace(context: Context, data: any, src: Sha
             return;
         }
 
-        const editor = context.editor.editor4Page(page.data);
+        const editor = context.editor4Page(page);
         const r = editor.replace(context.data, shapes, src.map((s) => adapt2Shape(s)));
         if (!r) {
             return;

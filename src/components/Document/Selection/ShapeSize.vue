@@ -2,7 +2,7 @@
 import { Context } from '@/context';
 import { onMounted, onUnmounted, ref } from 'vue';
 import { ClientXY, Selection } from "@/context/selection";
-import { Matrix, Shape } from '@kcdesign/data';
+import { Matrix, Shape, ShapeView } from '@kcdesign/data';
 import { WorkSpace } from '@/context/workspace';
 import { XYsBounding } from '@/utils/common';
 import { Tool } from '@/context/tool';
@@ -64,7 +64,7 @@ const getShapePositionSize = () => {
 
     }
 }
-function pre_modify_anchor(shape: Shape) {
+function pre_modify_anchor(shape: ShapeView) {
     let rotate = shape.rotation || 0;
     if (shape.isFlippedHorizontal) rotate = rotate + 270;
     if (shape.isFlippedVertical) {
@@ -74,7 +74,7 @@ function pre_modify_anchor(shape: Shape) {
     return rotate;
 }
 
-function modify_rotate(shape: Shape) {
+function modify_rotate(shape: ShapeView) {
     let rotate = shape.rotation || 0;
     if (shape.isFlippedHorizontal) rotate = 180 - rotate;
     if (shape.isFlippedVertical) rotate = 360 - rotate;
@@ -91,7 +91,7 @@ function modify_rotate(shape: Shape) {
     return rotate;
 }
 
-function modify_anchor(shape: Shape, m2r: Matrix) {
+function modify_anchor(shape: ShapeView, m2r: Matrix) {
     const rotate = pre_modify_anchor(shape);
     const frame = shape.frame;
     let anchor = { x: 0, y: 0 };

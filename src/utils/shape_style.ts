@@ -384,7 +384,7 @@ export function get_actions_shadow_offsety(shapes: ShapeView[], index: number, o
 export function get_export_formats(shapes: ShapeView[]): FormatItems[] | 'mixed' {
     const formats: FormatItems[] = [];
     const shape = shapes[0];
-    const options = shape.data.exportOptions;
+    const options = shape.exportOptions;
     const compare_str: string[] = [];
     if (options) {
         for (let i = 0, len = options.exportFormats.length; i < len; i++) {
@@ -402,7 +402,7 @@ export function get_export_formats(shapes: ShapeView[]): FormatItems[] | 'mixed'
     }
     for (let i = 1; i < shapes.length; i++) {
         const shape = shapes[i];
-        const options = shape.data.exportOptions;
+        const options = shape.exportOptions;
         if (options) {
             const len = options.exportFormats.length;
             if (len !== formats.length) return 'mixed';
@@ -425,7 +425,7 @@ export function get_export_formats(shapes: ShapeView[]): FormatItems[] | 'mixed'
 
 export function get_actions_export_format_unify(shapes: ShapeView[], formats: ExportFormat[], option?: boolean): ExportFormatReplaceAction[] {
     const actions: ExportFormatReplaceAction[] = [];
-    const options = shapes[0].data.exportOptions;
+    const options = shapes[0].exportOptions;
     if (options && !option) {
         for (let i = 1; i < shapes.length; i++) {
             const new_formats: ExportFormat[] = [];

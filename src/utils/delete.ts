@@ -57,7 +57,7 @@ function delete_for_path_edit(context: Context) {
 function delete_shapes(context: Context, shapes: ShapeView[]) {
     const page = context.selection.selectedPage;
     if (page) {
-        const editor = context.editor4Page(page.data);
+        const editor = context.editor4Page(page);
         editor.delete_batch(shapes.map((s => adapt2Shape(s))));
     }
     context.selection.resetSelectShapes();

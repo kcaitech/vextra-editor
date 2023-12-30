@@ -447,7 +447,7 @@ function shapeCreateEnd() {
             const children = collect(props.context);
             const page = props.context.selection.selectedPage;
             if (page && asyncCreator) {
-                asyncCreator.collect(page.data, children.map((s) => adapt2Shape(s)), adapt2Shape(props.context.selection.selectedShapes[0]) as Artboard);
+                asyncCreator.collect(page, children.map((s) => adapt2Shape(s)), adapt2Shape(props.context.selection.selectedShapes[0]) as Artboard);
             }
         }
         removeCreator();

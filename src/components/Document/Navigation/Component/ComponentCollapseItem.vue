@@ -63,8 +63,5 @@ onMounted(init);
         }
     }
 
-    .component-lib-collapse-title:hover {
-        // background-color: var(--grey-light);
-    }
 }
 </style>

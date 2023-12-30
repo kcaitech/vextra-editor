@@ -294,9 +294,10 @@ export class Context extends WatchableObject {
         return ret;
     }
 
-    getPageDom(page: Page): { dom: PageDom, ctx: DomCtx } {
+    getPageDom(page: Page | PageView): { dom: PageDom, ctx: DomCtx } {
         const ret = this.m_vdom.get(page.id);
         if (ret) return ret;
+        page = page instanceof PageView? page.data : page;
         return this.createVDom(page);
     }
 
