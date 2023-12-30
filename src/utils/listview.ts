@@ -254,13 +254,13 @@ function getSelectShapesIndex(shapeDirList: ShapeDirList, shapes: ShapeView[]): 
     return shapes.map(s => shapeDirList.indexOf(s.id));
 }
 
-function getShapeRange(listviewSource: any, start: number, end: number): ShapeView[] {
+function getShapeRange(listviewSource: IDataSource<ItemData>, start: number, end: number): ShapeView[] {
     const from = Math.min(start, end);
     const to = Math.max(start, end);
     const range: Map<string, ShapeView> = new Map();
     const it = listviewSource.iterAt(from);
     for (let i = from; i <= to && it.hasNext(); i++) {
-        const shape = it.next().shape();
+        const shape: ShapeView = it.next().shapeview();
         const childs = shape.childs;
         if (childs && childs.length) {
             for (let c_i = 0; c_i < childs.length; c_i++) {
@@ -283,7 +283,23 @@ function getShapeRange(listviewSource: any, start: number, end: number): ShapeVi
     return Array.from(range.values());
 }
 
-export function range_select_shape(context: Context, shapeDirList: ShapeDirList, listviewSource: any, shape: ShapeView) {
+export interface IDataIter<T extends { id: string }> {
+    hasNext(): boolean;
+    next(): T;
+}
+
+export interface IDataSource<T extends { id: string }> {
+    length(): number;
+    iterAt(index: number): IDataIter<T>;
+}
+
+export interface ItemData {
+    id: string
+    shape: () => Shape // 作用function，防止vue对shape内部数据进行proxy
+    shapeview:() => ShapeView
+}
+
+export function range_select_shape(context: Context, shapeDirList: ShapeDirList, listviewSource: IDataSource<ItemData>, shape: ShapeView) {
     const to = shapeDirList.indexOf(shape.id);
     const selectedShapes = context.selection.selectedShapes;
     if (selectedShapes.length) {

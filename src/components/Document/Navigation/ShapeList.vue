@@ -161,7 +161,7 @@ function inputing() {
 }
 
 function toggleExpand(shape: string | Shape) {
-    shapeDirList.toggleExpand(typeof shape ==='string'? shape : shape.id)
+    shapeDirList.toggleExpand(typeof shape === 'string' ? shape : shape.id)
 }
 
 function selectShape(shape: ShapeView, is_ctrl: boolean, shiftKey: boolean) {
