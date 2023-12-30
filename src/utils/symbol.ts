@@ -988,6 +988,7 @@ export function is_status_allow_to_delete(symbol: SymbolShape) {
  * @param shape
  */
 export function is_state(shape: Shape | ShapeView) {
+    if (shape instanceof ShapeView) shape = shape.data;
     return shape instanceof SymbolShape && shape.parent instanceof SymbolUnionShape;
 }
 
