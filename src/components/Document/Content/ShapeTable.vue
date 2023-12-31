@@ -6,7 +6,7 @@ import { initCommonShape } from './common';
 import comsMap from './comsmap';
 
 const props = defineProps<{
-    data: TableShape, transx?: RenderTransform,
+    data: TableShape, 
     varsContainer?: (SymbolRefShape | SymbolShape)[]
 }>();
 
@@ -17,7 +17,7 @@ function bubbleupdate() {
 }
 
 function render() {
-    const ret = r(h, props.data, comsMap, props.transx, props.varsContainer, bubbleupdate, common.reflush);
+    const ret = r(h, props.data, comsMap, props.varsContainer, bubbleupdate, common.reflush);
     return ret;
 }
 
