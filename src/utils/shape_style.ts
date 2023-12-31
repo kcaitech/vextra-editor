@@ -74,7 +74,7 @@ export function get_actions_fill_color(shapes: ShapeView[], index: number, color
 }
 export function get_actions_fill_unify(shapes: ShapeView[]) {
     const actions: FillsReplaceAction[] = [];
-    const fills = shapes[0].getFills();
+    const fills = shapes[0]?.getFills();
     for (let i = 1; i < shapes.length; i++) {
         if (shapes[i].type === ShapeType.Cutout) continue;
         const new_fills: Fill[] = [];
