@@ -145,9 +145,9 @@ export class Tool extends WatchableObject {
                 if (this.m_context.workspace.documentPerm === 1) return;
                 this.m_context.comment.commentInput(false);
                 this.m_context.comment.notify(Comment.SELECT_LIST_TAB);
-                this.m_context.cursor.setType('comment', 0);
+                // this.m_context.cursor.setType('comment', 0);
             } else {
-                this.m_context.cursor.setType('cross', 0);
+                // this.m_context.cursor.setType('cross', 0);
             }
 
         } else this.m_context.cursor.reset();
