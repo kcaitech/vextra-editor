@@ -140,17 +140,25 @@ export class Tool extends WatchableObject {
         this.m_current_action = action;
         if (action.startsWith('add')) {
             this.m_context.menu.menuMount();
+
             this.m_context.esctask.save('tool-action', this.reset.bind(this));
+
             if (action === Action.AddComment) {
-                if (this.m_context.workspace.documentPerm === 1) return;
+                if (this.m_context.workspace.documentPerm === 1) {
+                    return;
+                }
+
                 this.m_context.comment.commentInput(false);
                 this.m_context.comment.notify(Comment.SELECT_LIST_TAB);
-                // this.m_context.cursor.setType('comment', 0);
+                this.m_context.cursor.setType('comment', 0);
             } else {
-                // this.m_context.cursor.setType('cross', 0);
+                this.m_context.cursor.setType('cross', 0);
             }
 
-        } else this.m_context.cursor.reset();
+        } else {
+            this.m_context.cursor.reset();
+        }
+
         this.notify(Tool.CHANGE_ACTION);
     }
 

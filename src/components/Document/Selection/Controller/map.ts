@@ -1,5 +1,5 @@
-import CtrlRect from "./CtrlRect.SVG.vue";
-import CtrlRectMulti from "./CtrlRect.SVG.Multi.vue";
+import CtrlRect from "./CtrlNormal.vue";
+import CtrlRectMulti from "./CtrlForMulti.vue";
 import CtrlText from "./CtrlText.vue";
 import CtrlLine from "./CtrlLine.SVG.vue";
 import Readonly from "./Readonly.vue";

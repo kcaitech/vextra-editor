@@ -19,11 +19,13 @@ export class Cursor extends WatchableObject {
 
     async init() {
         await this.m_styler.setup();
-        this.m_auto = `auto-0-${this.m_styler.getId()}`;
+        
         const auto = await this.m_styler.getClass('auto', 0);
         if (!auto) {
             return;
         }
+
+        this.m_auto = auto;
 
         this.notify(Cursor.CHANGE_CURSOR, auto);
     }
@@ -36,33 +38,37 @@ export class Cursor extends WatchableObject {
         this.m_freeze = val;
     }
 
-    async setType(type: string, rotate: number, force = false) {
+    async setType(type: string, rotate: number) {
         if (this.m_freeze) {
-            console.log('this.m_freeze');
-
             return;
         }
-        if (this.m_context.workspace.transforming && !force) {
-            console.log('this.m_context.workspace.transforming && !force');
 
-            return;
-        }
-        this.m_reseted = false;
         let res = await this.m_styler.getClass(type, rotate) || this.m_auto;
-        if (this.m_reseted) {
-            res = this.m_auto;
-        }
-        this.m_current_cursor_type = res;
-        console.log('this.m_current_cursor_type:', this.m_current_cursor_type);
 
+        this.m_current_cursor_type = res;
+        this.notify(Cursor.CHANGE_CURSOR, res);
+    }
+
+    async setTypeForce(type: string, rotate: number) {
+        let res = await this.m_styler.getClass(type, rotate) || this.m_auto;
+
+        this.m_current_cursor_type = res;
         this.notify(Cursor.CHANGE_CURSOR, res);
     }
 
     reset() {
-        if (this.m_freeze) return;
-        if (this.m_context.workspace.transforming) return;
+        if (this.m_freeze) {
+            return;
+        }
+
         this.m_current_cursor_type = this.m_auto;
-        this.m_reseted = true;
+
+        this.notify(Cursor.CHANGE_CURSOR, this.m_auto);
+    }
+
+    resetForce() {
+        this.m_current_cursor_type = this.m_auto;
+
         this.notify(Cursor.CHANGE_CURSOR, this.m_auto);
     }
 }
