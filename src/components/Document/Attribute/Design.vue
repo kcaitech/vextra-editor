@@ -100,7 +100,6 @@ const updateShapeType = () => {
 }
 
 function check_for_opacity() {
-    console.log("check_for_opacity")
     opacity.value = false;
     const selected_shapes = props.context.selection.selectedShapes;
     for (let i = 0, l = selected_shapes.length; i < l; i++) {
@@ -152,7 +151,6 @@ function selection_watcher(t: number) {
 }
 
 function table_selection_watcher(t: number) {
-    console.log("table_selection_watcher", t)
     change(t);
 }
 
