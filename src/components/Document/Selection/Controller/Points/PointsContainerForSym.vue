@@ -4,7 +4,7 @@ import { AsyncBaseAction, CtrlElementType, Matrix, Shape, ShapeView } from '@kcd
 import { onMounted, onUnmounted, watch, reactive } from 'vue';
 import { ClientXY, PageXY } from '@/context/selection';
 import { forbidden_to_modify_frame, getAngle } from '@/utils/common';
-import { get_real_rotation, get_transform, update_dot } from './common';
+import { get_real_rotation, get_transform, modify_rotate_before_set, update_dot } from './common';
 import { Point } from "../../SelectionView.vue";
 import { Action } from '@/context/tool';
 import { PointType } from '@/context/assist';
@@ -214,12 +214,6 @@ function modify_fix_y(p2: PageXY, fix: number) {
     sticked_y_v = p2.y;
     stickedY = true;
     pre_target_y = fix;
-}
-function modify_rotate_before_set(deg: number, fh: boolean, fv: boolean) {
-    if (fh) deg = 180 - deg;
-    if (fv) deg = 360 - deg;
-
-    return Math.floor(deg);
 }
 
 function setCursor(t: CtrlElementType, force?: boolean) {

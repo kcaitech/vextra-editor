@@ -2,7 +2,7 @@ import { Matrix, Shape, ShapeType, ShapeView, TableShape, TableView, WatchableOb
 import { Context } from "./index";
 import { adapt_page, Root } from "@/utils/content";
 import { Clipboard } from "@/utils/clipboard";
-import { PageXY } from "./selection";
+import { PageXY, XY } from "./selection";
 import { Action } from "@/context/tool";
 import { PointsOffset } from "@/utils/assist";
 import { message } from "@/utils/message";
@@ -141,11 +141,6 @@ export class WorkSpace extends WatchableObject {
 
     setPathEditMode(v: boolean) {
         this.m_path_edit_mode = v;
-        // if (v) {
-        //     message('info', '编辑路径');
-        // } else {
-        //     message('info', '退出编辑');
-        // }
         this.notify(WorkSpace.PATH_EDIT_MODE);
     }
 
@@ -516,5 +511,9 @@ export class WorkSpace extends WatchableObject {
         return e.button === 0 && shapes.length > 0
             && (action === Action.AutoV || action === Action.AutoK)
             && this.m_document_perm === Perm.isEdit && !this.context.tool.isLable;
+    }
+
+    getContentXY(e: MouseEvent): XY {
+        return { x: e.clientX - this.root.x, y: e.clientY - this.root.y };
     }
 }

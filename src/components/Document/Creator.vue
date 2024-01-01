@@ -8,7 +8,7 @@ import { getHorizontalAngle } from '@/utils/common';
 import { flattenShapes, init_contact_shape, init_insert_shape, init_shape, list2Tree } from '@/utils/content';
 import { get_direction } from '@/utils/controllerFn';
 import { EffectType, Wheel, fourWayWheel } from '@/utils/wheel';
-import { Artboard, AsyncCreator, ContactForm, ContactLineView, ContactShape, GroupShape, Matrix, Shape, ShapeFrame, ShapeType, ShapeView, adapt2Shape } from '@kcdesign/data';
+import { Artboard, AsyncCreator, ContactForm, ContactLineView, GroupShape, Matrix, ShapeFrame, ShapeType, ShapeView, adapt2Shape } from '@kcdesign/data';
 import { onMounted, onUnmounted, reactive, ref } from 'vue';
 import { useI18n } from 'vue-i18n';
 import CommentInput from './Content/CommentInput.vue';
@@ -110,8 +110,8 @@ function up(e: MouseEvent) {
 // #region 评论
 const detectionShape = (e: MouseEvent) => {
     const workspace = props.context.workspace;
-    const { x, y } = workspace.root;
-    const xy = matrix1.computeCoord2(e.clientX - x, e.clientY - y);
+    const { x, y } = workspace.getContentXY(e);
+    const xy = matrix1.computeCoord2(x, y);
     const shapes = searchCommentShape(props.context, xy);
     if (shapes.length === 0) { //点击的位置是否有图形
         shapePosition.x = 0
@@ -305,9 +305,9 @@ function modify_contact_to(e: MouseEvent, ac: AsyncCreator) {
 
 // #endregion
 function modify_page_xy_1(e: MouseEvent) {
-    const { x, y } = props.context.workspace.root;
+    const { x, y } = props.context.workspace.getContentXY(e);
     matrix1 = new Matrix(props.context.workspace.matrix.inverse);
-    page_xy_1 = matrix1.computeCoord2(e.clientX - x, e.clientY - y);
+    page_xy_1 = matrix1.computeCoord2(x, y);
 }
 
 function modify_client_xy_1(e: MouseEvent) {
@@ -387,8 +387,9 @@ function wheelSetup() {
 }
 
 function gen_new_shape(e: MouseEvent) {
-    const root = props.context.workspace.root;
-    const { x, y } = matrix1.computeCoord2(e.clientX - root.x, e.clientY - root.y);
+    const _xy = props.context.workspace.getContentXY(e);
+    const { x, y } = matrix1.computeCoord2(_xy.x, _xy.y);
+
     const shapeFrame = new ShapeFrame(x, y, 1, 1);
     if (props.context.tool.action === Action.AddContact) {
         const result = init_contact_shape(props.context, shapeFrame, page_xy_1, t, apex1, page_xy2);
@@ -414,8 +415,9 @@ function gen_new_shape(e: MouseEvent) {
 }
 
 function modify_new_shape_frame(e: MouseEvent) {
-    const root = props.context.workspace.root;
-    const { x, y } = matrix1.computeCoord2(e.clientX - root.x, e.clientY - root.y);
+    const _xy = props.context.workspace.getContentXY(e);
+    const { x, y } = matrix1.computeCoord2(_xy.x, _xy.y);
+
     if (wheel && asyncCreator) {
         const isOut = wheel.moving(e, { type: EffectType.NEW_SHAPE, effect: asyncCreator.setFrameByWheel });
         if (isOut) return;
@@ -440,22 +442,24 @@ function removeWheel() {
 }
 
 function shapeCreateEnd() {
-    if (newShape) {
-        if (newShape.type === ShapeType.Text) {
-            props.context.workspace.notify(WorkSpace.INIT_EDITOR, 0);
-        } else if (newShape.type === ShapeType.Artboard) {
-            const children = collect(props.context);
-            const page = props.context.selection.selectedPage;
-            if (page && asyncCreator) {
-                asyncCreator.collect(page, children.map((s) => adapt2Shape(s)), adapt2Shape(props.context.selection.selectedShapes[0]) as Artboard);
-            }
-        }
-        removeCreator();
-        props.context.assist.reset();
-        newShape = undefined;
-        apex1 = undefined;
-        page_xy2 = undefined;
+    if (!newShape) {
+        return;
     }
+
+    if (newShape.type === ShapeType.Text) {
+        props.context.workspace.notify(WorkSpace.INIT_EDITOR, 0);
+    } else if (newShape.type === ShapeType.Artboard) {
+        const children = collect(props.context);
+        const page = props.context.selection.selectedPage;
+        if (page && asyncCreator) {
+            asyncCreator.collect(page, children.map((s) => adapt2Shape(s)), adapt2Shape(props.context.selection.selectedShapes[0]) as Artboard);
+        }
+    }
+    removeCreator();
+    props.context.assist.reset();
+    newShape = undefined;
+    apex1 = undefined;
+    page_xy2 = undefined;
 }
 
 function removeCreator() {
@@ -465,14 +469,13 @@ function removeCreator() {
     props.context.workspace.creating(false);
 
     props.context.tool.setAction(Action.AutoV);
-
-    props.context.cursor.setType("auto", 0);
 }
 
 function windowBlur() {
     shapeCreateEnd();
     removeWheel();
-    isDrag = false, just_search = false;
+    isDrag = false;
+    just_search = false;
     document.removeEventListener('mousemove', move);
     document.removeEventListener('mouseup', up);
 }

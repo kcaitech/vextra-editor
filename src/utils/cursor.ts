@@ -84,14 +84,21 @@ export function styleSheetController(): StyleSheetController {
     }
 
     async function getClassString(type: string, deg: number, id: string) {
-        let src: string = getBase64ByType.get(type) || auto;
-        const result = await rotateBase64Image(src, deg);
+        let source: string = getBase64ByType.get(type) || auto;
+
         let str = `.${type}-${deg}-${id} {`;
-        if (!result) return str + '}';
-        src = (result as string);
+
+        const result = await rotateBase64Image(source, deg);
+
+        if (!result) {
+            return str + '}';
+        }
+
+        source = (result as string);
+
         switch (type) {
             case 'auto':
-                str += `cursor: -webkit-image-set(url(${src}) 2x) ${hot[0] - 3} ${hot[1] - 3}, auto !important;`;
+                str += `cursor: -webkit-image-set(url(${source}) 2x) ${hot[0] - 3} ${hot[1] - 3}, auto !important;`;
                 break;
             case 'grab':
                 str += 'cursor: grab !important;';
@@ -100,9 +107,10 @@ export function styleSheetController(): StyleSheetController {
                 str += 'cursor: grabbing !important;';
                 break;
             default:
-                str += `cursor: -webkit-image-set(url(${src}) 2x) ${hot[0]} ${hot[1]}, auto !important;`;
+                str += `cursor: -webkit-image-set(url(${source}) 2x) ${hot[0]} ${hot[1]}, auto !important;`;
         }
         str += '}'
+        
         return str;
     }
 
