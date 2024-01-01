@@ -105,6 +105,8 @@ function point_mousemove(event: MouseEvent) {
             }
 
             asyncBaseAction.executeRotate(deg);
+
+            setCursor(cur_ctrl_type, true);
         } else {
             const p1: PageXY = submatrix.computeCoord3(startPosition);
             let p2: PageXY = submatrix.computeCoord3(mouseOnClient);
@@ -119,8 +121,6 @@ function point_mousemove(event: MouseEvent) {
         }
 
         startPosition = { ...mouseOnClient };
-
-        setCursor(cur_ctrl_type, true);
     } else if (Math.hypot(mx - sx, my - sy) > dragActiveDis) {
         set_status();
 
