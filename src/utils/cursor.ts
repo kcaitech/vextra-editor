@@ -46,7 +46,7 @@ export function styleSheetController(): StyleSheetController {
         // 预设一个auto
         style.innerHTML += await getClassString('auto', 0, styleSheetId);
         classList.add(`auto-0-${styleSheetId}`);
-        document.querySelector('head')?.appendChild(style);
+        document.querySelector('head')!.appendChild(style);
     }
 
     // 根据id移除一个<style>标签
@@ -58,7 +58,10 @@ export function styleSheetController(): StyleSheetController {
 
     // 向style标签里面插入class样式
     function appendClass(clsName: string, cls: string) {
-        if (!style) return
+        if (!style) {
+            return;
+        }
+        
         style.innerHTML += cls;
         classList.add(clsName);
     }
@@ -68,8 +71,12 @@ export function styleSheetController(): StyleSheetController {
         const deg = findNearestMultipleOf(Math.floor(((Number(arr[1] || -arr[2] || 0) % 360))), 6);
         const type = arr[0];
         clsName = `${type}-${deg}-${styleSheetId}`;
+
         // 如果获取的过程中无法从已有的样式库中取得样式，则先创建一个样式插入到样式库
-        if (classList.has(clsName)) return clsName;
+        if (classList.has(clsName)) {
+            return clsName;
+        }
+
         const cls: string = await getClassString(type, deg, styleSheetId);
         appendClass(clsName, cls);
         return clsName;
@@ -110,7 +117,6 @@ export function styleSheetController(): StyleSheetController {
     };
 }
 
-// image/svg+xml -rotate-> image/svg+xml;
 function rotateBase64Image(base64Image: string, angle: number) {
     return new Promise((resolve, reject) => {
         const image = new Image();
@@ -121,31 +127,39 @@ function rotateBase64Image(base64Image: string, angle: number) {
             if (!context) {
                 return reject('canvas api error');
             }
+
             const radians = angle * Math.PI / 180;
             const cos = Math.abs(Math.cos(radians));
             const sin = Math.abs(Math.sin(radians));
+
             const width = image.width * cos + image.height * sin;
             const height = image.width * sin + image.height * cos;
             canvas.width = width;
             canvas.height = height;
+
             context.translate(width / 2, height / 2);
             context.rotate(radians);
             context.drawImage(image, -image.width / 2, -image.height / 2);
             const rotatedBase64Image = canvas.toDataURL('image/png');
+
             resolve(rotatedBase64Image);
         };
+
         image.onerror = function () {
             reject('Invalid base64 image');
         }
     });
 }
 
-function findNearestMultipleOf(num: number, step?: number): number {
-    if (num < 0) num = num + 360;
-    step = step || 3
+function findNearestMultipleOf(num: number, step = 3): number {
+    if (num < 0) {
+        num = num + 360;
+    }
+
     let closest = Math.round(num / step) * step;
     if (closest < num) {
         closest += step;
     }
+
     return closest;
 }
