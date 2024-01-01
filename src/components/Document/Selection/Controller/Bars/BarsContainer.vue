@@ -5,7 +5,6 @@ import { onMounted, onUnmounted, watch, reactive } from 'vue';
 import { ClientXY, PageXY } from '@/context/selection';
 import { Action } from '@/context/tool';
 import { Point } from '../../SelectionView.vue';
-import { PointType } from '@/context/assist';
 import { forbidden_to_modify_frame } from '@/utils/common';
 import { get_transform, modify_rotate_before_set } from '../Points/common';
 interface Props {
@@ -27,7 +26,6 @@ let startPosition: ClientXY = { x: 0, y: 0 };
 let isDragging = false;
 let asyncBaseAction: AsyncBaseAction | undefined = undefined;
 let cur_ctrl_type: CtrlElementType = CtrlElementType.RectLT;
-let pointType: PointType = 'lt';
 let stickedX: boolean = false;
 let stickedY: boolean = false;
 let sticked_x_v: number = 0;
@@ -67,13 +65,6 @@ function update_dot_path() {
 function get_bar_path(s: { x: number, y: number }, e: { x: number, y: number }): string {
     return `M ${s.x} ${s.y} L ${e.x} ${e.y} z`;
 }
-function ct2pt(ct: CtrlElementType) {
-    if (ct === CtrlElementType.RectTop) return 'lt';
-    else if (ct === CtrlElementType.RectRight) return 'rt';
-    else if (ct === CtrlElementType.RectBottom) return 'rb';
-    else if (ct === CtrlElementType.RectLeft) return 'lb';
-    else return 'lt';
-}
 // mouse event flow: down -> move -> up
 function bar_mousedown(event: MouseEvent, ele: CtrlElementType) {
     if (event.button !== 0) {
@@ -89,7 +80,6 @@ function bar_mousedown(event: MouseEvent, ele: CtrlElementType) {
     }
 
     cur_ctrl_type = ele;
-    pointType = ct2pt(cur_ctrl_type);
     const workspace = props.context.workspace;
     workspace.setCtrl('controller');
     const { clientX, clientY } = event;
