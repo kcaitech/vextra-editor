@@ -91,7 +91,7 @@ let matrix_inverse: Matrix = new Matrix();
 
 function page_watcher(...args: any) {
     if (args.includes('style')) {
-        const f = props.page.data.style.fills[0];
+        const f = props.page.getFills()[0];
         if (f) background_color.value = color2string(f.color);
     }
     reflush.value++
@@ -544,7 +544,7 @@ const stopWatch = watch(() => props.page, (cur, old) => {
     let info = matrixMap.get(old.id);
     info!.m.reset(matrix.toArray())
     initMatrix(cur);
-    const f = cur.data.style.fills[0];
+    const f = cur.getFills()[0];
     if (f) {
         background_color.value = color2string(f.color);
     }

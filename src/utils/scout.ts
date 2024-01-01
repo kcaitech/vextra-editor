@@ -59,7 +59,7 @@ export function scout(context: Context): Scout {
     function for_path_shape(shape: PathShapeView, path: SVGGeometryElement) {
         const is_point_in_fill = (path as SVGGeometryElement).isPointInFill(SVGPoint);
 
-        if (shape.data.isClosed) {
+        if (shape.isClosed) {
             return is_point_in_fill;
         }
 

@@ -258,7 +258,7 @@ export function init_insert_shape2(context: Context, mousedownOnPageXY: PageXY, 
     let new_shape: Shape | undefined | false;
     const frame = new ShapeFrame(mousedownOnPageXY.x, mousedownOnPageXY.y, 100, 100);
     if (page && parent && type) {
-        const editor = context.editor.editor4Page(page.data);
+        const editor = context.editor4Page(page);
         const name = getName(type, (parent).childs, t);
         if (action === Action.AddArrow || action === Action.AddLine) {
             const r = 0.25 * Math.PI;
@@ -918,7 +918,7 @@ export function ref_symbol(context: Context, position: PageXY, symbol: ShapeView
     const shapes: ShapeView[] = selection.selectedPage?.childs || [];
     const page = selection.selectedPage;
     if (page) {
-        const editor = context.editor.editor4Page(page.data);
+        const editor = context.editor4Page(page);
         // const matrix = workspace.matrix;
         const frame = new ShapeFrame(0, 0, state.frame.width, state.frame.height);
         frame.x = position.x - state.frame.width / 2;
@@ -1044,7 +1044,7 @@ export function set_visible_for_shapes(context: Context) {
     if (!page) {
         return;
     }
-    const editor = context.editor4Page(page.data);
+    const editor = context.editor4Page(page);
     editor.toggleShapesVisible(shapes.map(s => adapt2Shape(s)));
     context.selection.resetSelectShapes();
 }
@@ -1061,7 +1061,7 @@ export function set_lock_for_shapes(context: Context) {
     if (!page) {
         return;
     }
-    const editor = context.editor4Page(page.data);
+    const editor = context.editor4Page(page);
     editor.toggleShapesLock(shapes.map(s => adapt2Shape(s)));
     context.selection.resetSelectShapes();
 }
@@ -1094,7 +1094,7 @@ export function lower_layer(context: Context, layer?: number) {
         return;
     }
 
-    const editor = context.editor4Page(page.data);
+    const editor = context.editor4Page(page);
     const result = editor.lower_layer(adapt2Shape(selection.selectedShapes[0]), layer);
 
     if (!result) {
@@ -1115,7 +1115,7 @@ export function uppper_layer(context: Context, layer?: number) {
         return;
     }
 
-    const editor = context.editor4Page(page.data);
+    const editor = context.editor4Page(page);
     const result = editor.uppper_layer(adapt2Shape(selection.selectedShapes[0]), layer);
 
     if (!result) {

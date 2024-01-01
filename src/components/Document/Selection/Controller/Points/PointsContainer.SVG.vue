@@ -121,7 +121,7 @@ function point_mousemove(event: MouseEvent) {
             isDragging = true;
             submatrix.reset(workspace.matrix.inverse);
             cur_ctrl_type.endsWith('rotate') ? workspace.rotating(true) : workspace.scaling(true);
-            asyncBaseAction = props.context.editor.controller().asyncRectEditor(adapt2Shape(props.shape), props.context.selection.selectedPage!.data);
+            asyncBaseAction = props.context.editor.controller().asyncRectEditor(adapt2Shape(props.shape), props.context.selection.selectedPage!);
             props.context.assist.set_trans_target([props.shape]);
         }
     }

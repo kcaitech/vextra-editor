@@ -105,7 +105,7 @@ function bar_mousemove(event: MouseEvent) {
     } else {
         if (Math.hypot(mouseOnPage.x - startPosition.x, mouseOnPage.y - startPosition.y) > dragActiveDis) {
             isDragging = true;
-            asyncBaseAction = props.context.editor.controller().asyncRectEditor(adapt2Shape(s), props.context.selection.selectedPage!.data);
+            asyncBaseAction = props.context.editor.controller().asyncRectEditor(adapt2Shape(s), props.context.selection.selectedPage!);
             submatrix.reset(workspace.matrix.inverse);
             setCursor(cur_ctrl_type, true);
             workspace.scaling(true);

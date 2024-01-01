@@ -181,12 +181,12 @@ function move(e: MouseEvent) {
                 shapes = v;
                 pre_translate(props.context, shapes);
                 const map_anchor = matrix_inverse.computeCoord3(startPosition);
-                offset_map = gen_offset_map(shapes[0], map_anchor);
+                offset_map = shapes[0] && gen_offset_map(shapes[0], map_anchor);
             }); // 图形分身
         } else {
             pre_translate(props.context, shapes);
             const map_anchor = matrix_inverse.computeCoord3(startPosition);
-            offset_map = gen_offset_map(shapes[0], map_anchor);
+            offset_map = shapes[0] && gen_offset_map(shapes[0], map_anchor);
         }
 
         isDragging = true;

@@ -122,7 +122,7 @@ export function useControllerCustom(context: Context, i18nT: Function) {
 
             asyncPathEditor = context.editor
                 .controller()
-                .asyncPathEditor(pathshape, selection.selectedPage!.data)
+                .asyncPathEditor(pathshape, selection.selectedPage!)
         }
 
         if (!asyncPathEditor) {
@@ -147,7 +147,7 @@ export function useControllerCustom(context: Context, i18nT: Function) {
 
             asyncTransfer = context.editor
                 .controller()
-                .asyncTransfer(shapes.map((s) => adapt2Shape(s)), selection.selectedPage!.data);
+                .asyncTransfer(shapes.map((s) => adapt2Shape(s)), selection.selectedPage!);
         }
 
         if (!asyncTransfer) {

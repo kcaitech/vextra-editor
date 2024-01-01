@@ -49,7 +49,7 @@ function is_state() {
 <template>
     <div class="module-panel">
         <ComponentAttr :context="context"
-            v-if="(shapeType === ShapeType.Symbol || shapeType === ShapeType.SymbolUnion) && !is_state()"
+            v-if="(shapeType === ShapeType.Symbol || shapeType === ShapeType.SymbolUnion)"
             :shape="(shapes[0] as SymbolView)">
         </ComponentAttr>
         <ComponentState :context="context" v-if="is_state()" :shapes="props.shapes as SymbolView[]"></ComponentState>

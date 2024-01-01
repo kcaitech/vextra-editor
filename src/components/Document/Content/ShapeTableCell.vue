@@ -1,11 +1,11 @@
 <script setup lang="ts">
-import { ShapeFrame, TableCell, RenderTransform, SymbolRefShape, SymbolShape } from '@kcdesign/data';
+import { ShapeFrame, TableCell, SymbolRefShape, SymbolShape } from '@kcdesign/data';
 import { h, onMounted } from 'vue';
 import { renderTableCell as r } from "@kcdesign/data";
 import { IMAGE_DEFAULT, initCommonShape } from './common';
 
 const props = defineProps<{
-    data: TableCell, frame: ShapeFrame, transx?: RenderTransform,
+    data: TableCell, frame: ShapeFrame, 
     varsContainer?: (SymbolRefShape | SymbolShape)[],
     bubbleupdate: () => void
 }>();
@@ -35,7 +35,7 @@ const common = initCommonShape(props, (...args: any[]) => {
 });
 
 function render() {
-    const ret = r(h, props.data, props.frame, IMAGE_DEFAULT, props.transx, props.varsContainer, common.reflush);
+    const ret = r(h, props.data, props.frame, IMAGE_DEFAULT, props.varsContainer, common.reflush);
     return ret;
 }
 </script>

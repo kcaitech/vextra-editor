@@ -100,7 +100,7 @@ function down(e: MouseEvent) {
     opacity.value = limitValue(Number(value));
     opacity_editor = props.context.editor
         .controller()
-        .asyncOpacityEditor(selected.map(s => adapt2Shape(s)), page.data);
+        .asyncOpacityEditor(selected.map(s => adapt2Shape(s)), page);
     opacity_editor.execute(value);
 }
 
@@ -137,12 +137,12 @@ function update() {
     // 更新组件状态
     const shapes = props.context.selection.selectedShapes
     if (!shapes.length) return;
-    let firstOpacity = shapes[0].data.style.contextSettings?.opacity;
+    let firstOpacity = shapes[0].contextSettings?.opacity;
     firstOpacity = firstOpacity === undefined ? 1 : firstOpacity;
     let difference = false;
     if (shapes.length > 1) {
         for (let i = 1; i < shapes.length; i++) {
-            const randomOpacity = shapes[i].data.style.contextSettings?.opacity;
+            const randomOpacity = shapes[i].contextSettings?.opacity;
             if (randomOpacity !== firstOpacity) {
                 difference = true;
                 break;
