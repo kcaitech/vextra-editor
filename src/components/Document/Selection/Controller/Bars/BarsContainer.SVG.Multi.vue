@@ -208,10 +208,10 @@ function bar_mouseup(event: MouseEvent) {
     }
 }
 function setCursor(t: CtrlElementType, force?: boolean) {
-    if (t === CtrlElementType.RectTop) props.context.cursor.setType('scale-90', force);
-    else if (t === CtrlElementType.RectRight) props.context.cursor.setType('scale-0', force);
-    else if (t === CtrlElementType.RectBottom) props.context.cursor.setType('scale-90', force);
-    else if (t === CtrlElementType.RectLeft) props.context.cursor.setType('scale-0', force);
+    if (t === CtrlElementType.RectTop) props.context.cursor.setType('scale', 90, force);
+    else if (t === CtrlElementType.RectRight) props.context.cursor.setType('scale', 0, force);
+    else if (t === CtrlElementType.RectBottom) props.context.cursor.setType('scale', 90, force);
+    else if (t === CtrlElementType.RectLeft) props.context.cursor.setType('scale', 0, force);
 }
 function bar_mouseleave() {
     props.context.cursor.reset();

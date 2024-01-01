@@ -90,7 +90,7 @@ function onMouseDown(e: MouseEvent) {
             }
             editing.value = true;
             workspace.contentEdit(editing.value);
-            props.context.cursor.setType('scan-0');
+            props.context.cursor.setType('scan', 0);
         }
         if (!editing.value) return;
         e.stopPropagation();
@@ -154,7 +154,7 @@ function onMouseUp(e: MouseEvent) {
 
 
 function mouseenter() {
-    if (editing.value) props.context.cursor.setType('scan-0');
+    if (editing.value) props.context.cursor.setType('scan', 0);
 }
 
 function mouseleave() {
@@ -170,7 +170,7 @@ function be_editor(index?: number) {
     const selection = props.context.textSelection;
     editing.value = true;
     workspace.contentEdit(editing.value);
-    props.context.cursor.setType('scan-0');
+    props.context.cursor.setType('scan', 0);
     if (index !== undefined) {
         downIndex = {index, before: true};
         selection.setCursor(index, true);

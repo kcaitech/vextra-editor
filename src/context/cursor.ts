@@ -20,7 +20,7 @@ export class Cursor extends WatchableObject {
     async init() {
         await this.m_styler.setup();
         this.m_auto = `auto-0-${this.m_styler.getId()}`;
-        const auto = await this.m_styler.getClass('auto-0');
+        const auto = await this.m_styler.getClass('auto', 0);
         if (!auto) {
             return;
         }
@@ -36,7 +36,7 @@ export class Cursor extends WatchableObject {
         this.m_freeze = val;
     }
 
-    async setType(type: string, force = false) {
+    async setType(type: string, rotate: number, force = false) {
         if (this.m_freeze) {
             console.log('this.m_freeze');
 
@@ -48,7 +48,7 @@ export class Cursor extends WatchableObject {
             return;
         }
         this.m_reseted = false;
-        let res = await this.m_styler.getClass(type) || this.m_auto;
+        let res = await this.m_styler.getClass(type, rotate) || this.m_auto;
         if (this.m_reseted) {
             res = this.m_auto;
         }

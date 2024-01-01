@@ -196,17 +196,15 @@ function setCursor(t: CtrlElementType, force?: boolean) {
 
     if (t === CtrlElementType.RectTop) {
         deg = modify_rotate_before_set(deg + 90, isFlippedHorizontal, isFlippedVertical);
-        cursor.setType(`scale-${deg}`, force);
     } else if (t === CtrlElementType.RectRight) {
         deg = modify_rotate_before_set(deg, isFlippedHorizontal, isFlippedVertical);
-        cursor.setType(`scale-${deg}`, force);
     } else if (t === CtrlElementType.RectBottom) {
         deg = modify_rotate_before_set(deg + 90, isFlippedHorizontal, isFlippedVertical);
-        cursor.setType(`scale-${deg}`, force);
     } else if (t === CtrlElementType.RectLeft) {
         deg = modify_rotate_before_set(deg, isFlippedHorizontal, isFlippedVertical);
-        cursor.setType(`scale-${deg}`, force);
     }
+
+    cursor.setType('scale', deg, force);
 }
 
 function bar_mouseup(event: MouseEvent) {

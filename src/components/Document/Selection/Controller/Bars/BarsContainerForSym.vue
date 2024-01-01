@@ -195,20 +195,17 @@ function setCursor(t: CtrlElementType, force?: boolean) {
     const cursor = props.context.cursor;
     const { rotate, isFlippedHorizontal, isFlippedVertical } = get_transform(props.shape);
     let deg = rotate;
-    
+
     if (t === CtrlElementType.RectTop) {
         deg = modify_rotate_before_set(deg + 90, isFlippedHorizontal, isFlippedVertical);
-        cursor.setType(`scale-${deg}`, force);
     } else if (t === CtrlElementType.RectRight) {
         deg = modify_rotate_before_set(deg, isFlippedHorizontal, isFlippedVertical);
-        cursor.setType(`scale-${deg}`, force);
     } else if (t === CtrlElementType.RectBottom) {
         deg = modify_rotate_before_set(deg + 90, isFlippedHorizontal, isFlippedVertical);
-        cursor.setType(`scale-${deg}`, force);
     } else if (t === CtrlElementType.RectLeft) {
         deg = modify_rotate_before_set(deg, isFlippedHorizontal, isFlippedVertical);
-        cursor.setType(`scale-${deg}`, force);
     }
+    cursor.setType('scale', deg, force);
 }
 
 function bar_mouseup(event: MouseEvent) {
@@ -226,7 +223,7 @@ function bar_mouseup(event: MouseEvent) {
     document.removeEventListener('mouseup', bar_mouseup);
 }
 function bar_mouseleave() {
-    props.context.cursor.setType('auto-0');
+    props.context.cursor.setType('auto', 0);
 }
 function window_blur() {
     if (isDragging) {

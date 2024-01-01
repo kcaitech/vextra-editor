@@ -157,7 +157,7 @@ function preToDragPage() { // 编辑器准备拖动页面
     workspace.value.setCtrl('page');
     workspace.value.pageDragging(true);
     props.context.selection.unHoverShape();
-    props.context.cursor.setType('grab-0');
+    props.context.cursor.setType('grab', 0);
 }
 
 function endDragPage() { // 编辑器完成拖动页面
@@ -213,12 +213,12 @@ function pageViewDragging(e: MouseEvent) {
         }
     }
     workspace.value.notify(WorkSpace.MATRIX_TRANSFORMATION);
-    props.context.cursor.setType('grabbing-0');
+    props.context.cursor.setType('grabbing', 0);
 }
 
 function pageViewDragEnd() {
     state = STATE_NONE;
-    props.context.cursor.setType('grab-0')
+    props.context.cursor.setType('grab', 0)
 }
 
 /**

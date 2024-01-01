@@ -234,7 +234,7 @@ const completed = (succession: boolean, event?: MouseEvent) => {
     // props.context.comment.sendComment()
     // getDocumentComment()\
     commentInput.value = false;
-    if(succession && event) {
+    if (succession && event) {
         addComment(event);
     }
 }
@@ -466,7 +466,7 @@ function removeCreator() {
 
     props.context.tool.setAction(Action.AutoV);
 
-    props.context.cursor.setType("auto-0");
+    props.context.cursor.setType("auto", 0);
 }
 
 function windowBlur() {

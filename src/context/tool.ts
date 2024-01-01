@@ -1,7 +1,6 @@
-import { Shape, ShapeType, ShapeView, WatchableObject } from "@kcdesign/data";
+import { ShapeType, ShapeView, WatchableObject } from "@kcdesign/data";
 import { Context } from ".";
 import { Comment } from "./comment";
-import { v4 } from "uuid";
 
 export enum Action {
     Auto = 'auto',
@@ -128,7 +127,7 @@ export class Tool extends WatchableObject {
         } else if (code === 'KeyX') {
             e.preventDefault();
             this.keydown_x(ctrlKey, shiftKey, metaKey);
-        }else if (code === 'KeyS') {
+        } else if (code === 'KeyS') {
             e.preventDefault();
             this.keydown_s(ctrlKey, shiftKey, metaKey);
         } else if (code === KeyboardKeys.I) {
@@ -146,9 +145,9 @@ export class Tool extends WatchableObject {
                 if (this.m_context.workspace.documentPerm === 1) return;
                 this.m_context.comment.commentInput(false);
                 this.m_context.comment.notify(Comment.SELECT_LIST_TAB);
-                this.m_context.cursor.setType('comment-0');
+                this.m_context.cursor.setType('comment', 0);
             } else {
-                this.m_context.cursor.setType('cross-0');
+                this.m_context.cursor.setType('cross', 0);
             }
 
         } else this.m_context.cursor.reset();

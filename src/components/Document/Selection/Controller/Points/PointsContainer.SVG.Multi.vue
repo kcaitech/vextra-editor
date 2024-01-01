@@ -80,7 +80,7 @@ function point_mousemove(event: MouseEvent) {
             const r = new Matrix();
             r.rotate(deg * (Math.PI / 180), root_axle.x, root_axle.y); // 控件旋转矩阵
             asyncMultiAction.executeRotate(deg, r);
-            props.context.cursor.setType(`rotate-${getHorizontalAngle(props.axle, { x: mx, y: my })}`, true);
+            props.context.cursor.setType('rotate', getHorizontalAngle(props.axle, { x: mx, y: my }), true);
         } else {
             const action = props.context.tool.action;
             (event.shiftKey || action === Action.AutoK) ? er_scale(asyncMultiAction, sx, sy, mx, my) : irregular_scale(asyncMultiAction, sx, sy, mx, my);
@@ -252,28 +252,28 @@ function setCursor(t: CtrlElementType, force?: boolean) {
     let deg = 0;
     if (t === CtrlElementType.RectLT) {
         deg = deg + 45;
-        cursor.setType(`scale-${deg}`, force);
+        cursor.setType('scale', deg, force);
     } else if (t === CtrlElementType.RectLTR) {
         deg = deg + 225;
-        cursor.setType(`rotate-${deg}`, force);
+        cursor.setType('rotate', deg, force);
     } else if (t === CtrlElementType.RectRT) {
         deg = deg + 135;
-        cursor.setType(`scale-${deg}`, force);
+        cursor.setType('scale', deg, force);
     } else if (t === CtrlElementType.RectRTR) {
         deg = deg + 315;
-        cursor.setType(`rotate-${deg}`, force);
+        cursor.setType('rotate', deg, force);
     } else if (t === CtrlElementType.RectRB) {
         deg = deg + 45;
-        cursor.setType(`scale-${deg}`, force);
+        cursor.setType('scale', deg, force);
     } else if (t === CtrlElementType.RectRBR) {
         deg = deg + 45;
-        cursor.setType(`rotate-${deg}`, force);
+        cursor.setType('rotate', deg, force);
     } else if (t === CtrlElementType.RectLB) {
         deg = deg + 135;
-        cursor.setType(`scale-${deg}`, force);
+        cursor.setType('scale', deg, force);
     } else if (t === CtrlElementType.RectLBR) {
         deg = deg + 135;
-        cursor.setType(`rotate-${deg}`, force);
+        cursor.setType('rotate', deg, force);
     }
 }
 function action_end() {

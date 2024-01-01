@@ -267,28 +267,28 @@ function setCursor(t: CtrlElementType, force?: boolean) {
 
     if (t === CtrlElementType.RectLT) {
         deg = modify_rotate_before_set(deg + 45, isFlippedHorizontal, isFlippedVertical);
-        cursor.setType(`scale-${deg}`, force);
+        cursor.setType('scale', deg, force);
     } else if (t === CtrlElementType.RectRT) {
         deg = modify_rotate_before_set(deg + 135, isFlippedHorizontal, isFlippedVertical);
-        cursor.setType(`scale-${deg}`, force);
+        cursor.setType('scale', deg, force);
     } else if (t === CtrlElementType.RectRB) {
         deg = modify_rotate_before_set(deg + 45, isFlippedHorizontal, isFlippedVertical);
-        cursor.setType(`scale-${deg}`, force);
+        cursor.setType('scale', deg, force);
     } else if (t === CtrlElementType.RectLB) {
         deg = modify_rotate_before_set(deg + 135, isFlippedHorizontal, isFlippedVertical);
-        cursor.setType(`scale-${deg}`, force);
+        cursor.setType('scale', deg, force);
     } else if (t === CtrlElementType.RectLTR) {
         deg = modify_rotate_before_set(deg + 225, isFlippedHorizontal, isFlippedVertical);
-        cursor.setType(`rotate-${deg}`, force);
+        cursor.setType('rotate', deg, force);
     } else if (t === CtrlElementType.RectRTR) {
         deg = modify_rotate_before_set(deg + 315, isFlippedHorizontal, isFlippedVertical);
-        cursor.setType(`rotate-${deg}`, force);
+        cursor.setType('rotate', deg, force);
     } else if (t === CtrlElementType.RectRBR) {
         deg = modify_rotate_before_set(deg + 45, isFlippedHorizontal, isFlippedVertical);
-        cursor.setType(`rotate-${deg}`, force);
+        cursor.setType('rotate', deg, force);
     } else if (t === CtrlElementType.RectLBR) {
         deg = modify_rotate_before_set(deg + 135, isFlippedHorizontal, isFlippedVertical);
-        cursor.setType(`rotate-${deg}`, force);
+        cursor.setType('rotate', deg, force);
     }
 }
 function point_mouseleave() {
