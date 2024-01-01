@@ -117,8 +117,10 @@ export class Selection extends WatchableObject implements ISave4Restore {
         super();
         this.m_document = document;
         this.m_context = context;
-        this.m_tableselection = new TableSelection(context); // 表格选区
         this.m_textselection = new TextSelectionLite(this); // 文字选区
+        this.m_tableselection = new TableSelection(context, () => {
+            this.m_textselection.reset();
+        }); // 表格选区
     }
 
     get scout(): Scout {
