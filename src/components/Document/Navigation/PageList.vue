@@ -125,7 +125,7 @@ const addPage = () => {
     const new_page = editor.insertPage(`${t('navi.page')} ${_tail}`, index + 1);
     props.context.comment.toggleCommentPage()
     if (new_page) {
-        props.context.selection.selectPage(new_page);
+        props.context.selection.selectPage(props.context.getPageDom(new_page).dom);
         if (list_body.value) {
             ListH.value = list_body.value.clientHeight //list可视高度
         }

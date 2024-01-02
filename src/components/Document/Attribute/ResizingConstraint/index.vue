@@ -1,5 +1,5 @@
 <script setup lang="ts">
-import { Shape } from '@kcdesign/data';
+import { ShapeView } from '@kcdesign/data';
 import { Context } from 'aws-sdk/clients/autoscaling';
 import { reactive, ref } from 'vue'
 import Select, { SelectItem, SelectSource } from '@/components/common/Select.vue';
@@ -8,7 +8,7 @@ import { useI18n } from 'vue-i18n';
 
 interface Props {
     context: Context
-    shapes: Shape[]
+    shapes: ShapeView[]
 }
 const { t } = useI18n();
 const props = defineProps<Props>();

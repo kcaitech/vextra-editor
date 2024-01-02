@@ -8,13 +8,13 @@ import PointContainerForStraightLine from "./Points/PointsContainerForStraightLi
 import { Selection } from "@/context/selection";
 import { WorkSpace } from "@/context/workspace";
 import { useController } from "./controller";
-import { Matrix, Shape } from "@kcdesign/data";
+import { Matrix, Shape, ShapeView } from "@kcdesign/data";
 interface Props {
     context: Context,
     controllerFrame: Point[],
     rotate: number,
     matrix: Matrix,
-    shape: Shape
+    shape: ShapeView
 }
 const props = defineProps<Props>();
 const { isDblClick, isDrag } = useController(props.context);
@@ -48,7 +48,7 @@ function updateControllerView() {
     matrix.multiAtLeft(props.matrix);
     if (!submatrix.equals(matrix)) submatrix.reset(matrix)
     const framePoint = props.controllerFrame;
-    const path = props.shape.getPath();
+    const path = props.shape.getPath().clone();
     path.transform(matrix);
     line_path.value = path.toString();
     props.context.workspace.setCtrlPath(line_path.value);

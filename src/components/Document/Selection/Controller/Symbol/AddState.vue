@@ -1,14 +1,14 @@
 <script setup lang='ts'>
 import {Context} from '@/context';
 import {find_space_for_state, make_default_state, make_state, SymbolType} from '@/utils/symbol';
-import {Matrix, Shape, SymbolShape} from '@kcdesign/data';
+import {Matrix, Shape, ShapeView, SymbolShape} from '@kcdesign/data';
 import {onMounted, onUnmounted, ref, watch} from 'vue';
 import {useI18n} from 'vue-i18n';
 
 interface Props {
     matrix: number[]
     context: Context
-    shape: Shape
+    shape: ShapeView
     symbolType: SymbolType
 }
 
@@ -58,7 +58,11 @@ function down(e: MouseEvent) {
         const result = find_space_for_state(symbol, state);
         make_result = make_state(props.context, t, result?.x);
         if (make_result) {
-            props.context.selection.selectShape(make_result);
+            const page = props.context.selection.selectedPage!;
+            props.context.nextTick(page, () => {
+                const s = make_result && page.getShape(make_result.id);
+                props.context.selection.selectShape(s);
+            })
         }
     }
 }

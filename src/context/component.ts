@@ -1,4 +1,4 @@
-import {Shape, Variable, WatchableObject} from "@kcdesign/data";
+import {Shape, ShapeView, Variable, WatchableObject} from "@kcdesign/data";
 import {Context} from ".";
 
 export class Component extends WatchableObject {

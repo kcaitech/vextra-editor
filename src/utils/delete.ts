@@ -1,5 +1,5 @@
 import { Context } from "@/context";
-import { Shape, TableShape } from "@kcdesign/data";
+import { Shape, ShapeView, TableShape, adapt2Shape } from "@kcdesign/data";
 
 export function deleteUnits(context: Context) {
     const path_edit_mode = context.workspace.is_path_edit_mode;
@@ -54,11 +54,11 @@ function delete_for_path_edit(context: Context) {
     }
 }
 
-function delete_shapes(context: Context, shapes: Shape[]) {
+function delete_shapes(context: Context, shapes: ShapeView[]) {
     const page = context.selection.selectedPage;
     if (page) {
         const editor = context.editor4Page(page);
-        editor.delete_batch(shapes);
+        editor.delete_batch(shapes.map((s => adapt2Shape(s))));
     }
     context.selection.resetSelectShapes();
 }

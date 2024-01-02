@@ -1,20 +1,17 @@
 <script setup lang="ts">
-import { Matrix, Page, DViewCtx, ShapeType } from '@kcdesign/data';
+import { Matrix, PageView, adapt2Shape } from '@kcdesign/data';
 import { Context } from '@/context';
 import { Tool } from '@/context/tool';
-import { h, onMounted, onUnmounted, ref, watch } from 'vue';
+import { onMounted, onUnmounted, ref, watch } from 'vue';
 import { v4 } from "uuid";
 import ShapeTitles from './ShapeTitles.vue';
 import ComponentTitleContainer from './ComponentTitleContainer.vue';
 import { debounce } from 'lodash';
-import { PageDom } from './vdom/page';
-import comsMap from './comsmap';
 import ShapeCutout from '../Cutout/ShapeCutout.vue';
 import { Selection } from '@/context/selection';
-import { DomCtx } from './vdom/domctx';
 interface Props {
     context: Context
-    data: Page
+    data: PageView
     matrix: Matrix
 }
 const props = defineProps<Props>();
@@ -23,8 +20,6 @@ const reflush = ref(0);
 const rootId = ref<string>('pageview');
 const show_t = ref<boolean>(true);
 const pagesvg = ref<HTMLElement>();
-const width = ref<number>(100);
-const height = ref<number>(100);
 
 function pageViewRegister(mount: boolean) {
     if (mount) {
@@ -43,31 +38,23 @@ function page_watcher() {
     matrixWithFrame.reset(props.matrix);
     matrixWithFrame.preTrans(props.data.frame.x, props.data.frame.y);
     reflush.value++;
-    width.value = Math.ceil(Math.max(100, props.data.frame.width)), height.value = Math.ceil(Math.max(100, props.data.frame.height));
-    if (width.value % 2) width.value++;
-    if (height.value % 2) height.value++;
 }
-
-const useCustomDom = true;
-function getCustomDom(): { dom: PageDom, ctx: DomCtx } | undefined {
-    return useCustomDom ? props.context.getPageDom(props.data) : undefined;
-}
-let dom = getCustomDom();
 
 const stopWatchPage = watch(() => props.data, (value, old) => {
     old.unwatch(page_watcher);
-    old.__collect.unwatch(collect);
+    old.data.__collect.unwatch(collect);
     value.watch(page_watcher);
-    value.__collect.watch(collect);
+    value.data.__collect.watch(collect);
     pageViewRegister(true);
     page_watcher();
 
-    if (dom) {
+    if (old) {
+        const dom = props.context.getPageDom(old.data);
         dom.ctx.stopLoop();
         dom.ctx.updateFocusShape(undefined);
         dom.dom.unbind();
     }
-    dom = getCustomDom();
+    const dom = props.context.getPageDom(value.data);
     if (dom && pagesvg.value) {
         dom.dom.bind(pagesvg.value);
         dom.dom.render();
@@ -80,14 +67,15 @@ function tool_watcher(t?: number) {
 }
 onMounted(() => {
     props.data.watch(page_watcher);
-    props.data.__collect.watch(collect);
+    props.data.data.__collect.watch(collect);
     props.context.tool.watch(tool_watcher);
     pageViewRegister(true);
     props.context.selection.watch(selection_watcher);
+    page_watcher();
 })
 onUnmounted(() => {
     props.data.unwatch(page_watcher);
-    props.data.__collect.unwatch(collect);
+    props.data.data.__collect.unwatch(collect);
     props.context.tool.unwatch(tool_watcher);
     pageViewRegister(false);
     stopWatchPage();
@@ -96,14 +84,16 @@ onUnmounted(() => {
 })
 
 function selection_watcher(...args: any[]) {
-    if (dom && args.includes(Selection.CHANGE_SHAPE)) {
+    if (args.includes(Selection.CHANGE_SHAPE)) {
         const selectedShapes = props.context.selection.selectedShapes;
         const focus = selectedShapes.length === 1 ? selectedShapes[0] : undefined;
-        dom.ctx.updateFocusShape(focus);
+        const dom = props.context.getPageDom(props.data);
+        dom.ctx.updateFocusShape(focus ? adapt2Shape(focus) : undefined);
     }
 }
 
 onMounted(() => {
+    const dom = props.context.getPageDom(props.data);
     if (dom && pagesvg.value) {
         dom.dom.bind(pagesvg.value);
         dom.dom.render();
@@ -112,6 +102,7 @@ onMounted(() => {
 })
 
 onUnmounted(() => {
+    const dom = props.context.getPageDom(props.data);
     if (dom) {
         dom.ctx.stopLoop();
         dom.ctx.updateFocusShape(undefined);
@@ -119,38 +110,11 @@ onUnmounted(() => {
     }
 })
 
-function render() {
-    const prop: any = {
-        version: "1.1",
-        xmlns: "http://www.w3.org/2000/svg",
-        "xmlns:xlink": "http://www.w3.org/1999/xlink",
-        "xmlns:xhtml": "http://www.w3.org/1999/xhtml",
-        preserveAspectRatio: "xMinYMin meet",
-        overflow: "visible"
-    }
-    prop.viewBox = `0 0 ${width.value} ${height.value}`;
-    prop.reflush = reflush.value !== 0 ? reflush.value : undefined;
-    prop.style = { transform: matrixWithFrame.toString() };
-    prop['data-area'] = rootId.value;
-    prop.width = width.value;
-    prop.height = height.value;
-    const childs = [];
-    const datachilds = props.data.childs;
-    for (let i = 0, len = datachilds.length; i < len; i++) {
-        const c = datachilds[i];
-        const com = comsMap.get(c.type) ?? comsMap.get(ShapeType.Rectangle);
-        const node = h(com, { data: c, key: c.id });
-        childs.push(node);
-    }
-    return h('svg', prop, childs);
-}
-
 </script>
 
 <template>
-    <svg ref="pagesvg" v-if="useCustomDom" :style="{ transform: matrixWithFrame.toString() }" :data-area="rootId"
+    <svg ref="pagesvg" :style="{ transform: matrixWithFrame.toString() }" :data-area="rootId"
         :reflush="reflush"></svg>
-    <render v-if="!useCustomDom"></render>
     <ShapeCutout :context="props.context" :data="data" :matrix="props.matrix" :transform="matrixWithFrame.toArray()">
     </ShapeCutout>
     <ShapeTitles v-if="show_t" :context="props.context" :data="data" :matrix="matrixWithFrame.toArray()"></ShapeTitles>

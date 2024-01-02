@@ -1,9 +1,7 @@
 <script setup lang='ts'>
 import {watch, onMounted, onUnmounted, ref, reactive, onBeforeUnmount, computed} from 'vue';
 import {ClientXY, Selection} from '@/context/selection';
-import {Matrix} from '@kcdesign/data';
-import {TextShape} from '@kcdesign/data';
-import {Shape} from "@kcdesign/data";
+import {Matrix, TextShapeView} from '@kcdesign/data';
 import {Context} from '@/context';
 import TextInput from './Text/TextInput.vue';
 import SelectView from "./Text/SelectView.vue";
@@ -20,7 +18,7 @@ interface Props {
     controllerFrame: Point[],
     rotate: number,
     matrix: Matrix,
-    shape: TextShape
+    shape: TextShapeView
 }
 
 type ProtoInput = InstanceType<typeof TextInput>;
@@ -33,7 +31,7 @@ const boundrectPath = ref("");
 const bounds = reactive({left: 0, top: 0, right: 0, bottom: 0}); // viewbox
 const editing = ref<boolean>(false); // 是否进入路径编辑状态
 const visible = ref<boolean>(true);
-const input = ref<ProtoInput>(null);
+const input = ref<ProtoInput>();
 const axle = computed<ClientXY>(() => {
     const [lt, rt, rb, lb] = props.controllerFrame;
     return getAxle(lt.x, lt.y, rt.x, rt.y, rb.x, rb.y, lb.x, lb.y);
@@ -78,7 +76,7 @@ function update() {
     }, bounds)
 }
 
-function clear_null_shape(shape: Shape) {
+function clear_null_shape(shape: TextShapeView) {
     props.context.editor4Shape(shape).delete();
 }
 
@@ -123,12 +121,12 @@ function onMouseMove(e: MouseEvent) {
     const locate = selection.locateText(xy.x, xy.y);
     if (downIndex.index === locate.index) {
         if (locate.placeholder) {
-            selection.setCursor(locate.index + 1, false, props.shape.text);
+            selection.setCursor(locate.index + 1, false);
         } else {
-            selection.setCursor(locate.index, locate.before, props.shape.text);
+            selection.setCursor(locate.index, locate.before);
         }
     } else {
-        selection.selectText(downIndex.index, locate.index, props.shape.text);
+        selection.selectText(downIndex.index, locate.index);
     }
 }
 
@@ -143,15 +141,15 @@ function onMouseUp(e: MouseEvent) {
     const xy = matrix.inverseCoord(clientX - root.x, clientY - root.y);
     const locate = selection.locateText(xy.x, xy.y);
     if (downIndex.index === locate.index) {
-        if (locate.placeholder) selection.setCursor(locate.index + 1, false, props.shape.text);
-        else selection.setCursor(locate.index, locate.before, props.shape.text);
+        if (locate.placeholder) selection.setCursor(locate.index + 1, false);
+        else selection.setCursor(locate.index, locate.before);
     } else {
-        selection.selectText(downIndex.index, locate.index, props.shape.text);
+        selection.selectText(downIndex.index, locate.index);
     }
     props.context.workspace.setCtrl('page');
     document.removeEventListener("mousemove", onMouseMove);
     document.removeEventListener("mouseup", onMouseUp);
-    input.value.attention();
+    if (input.value) input.value.attention();
 }
 
 
@@ -239,13 +237,13 @@ onBeforeUnmount(() => {
     <svg version="1.1" xmlns="http://www.w3.org/2000/svg" xmlns:xlink="http://www.w3.org/1999/xlink"
          data-area="controller"
          id="text-selection" xmlns:xhtml="http://www.w3.org/1999/xhtml" preserveAspectRatio="xMinYMin meet"
-         :viewBox=genViewBox(bounds) :width="bounds.right - bounds.left" :height="bounds.bottom - bounds.top"
-         :style="{ transform: `translate(${bounds.left}px,${bounds.top}px)`, left: 0, top: 0, position: 'absolute' }"
+         :viewBox=genViewBox(bounds) :width="width" :height="height"
+         :style="{ transform: `translate(${bounds.left}px,${bounds.top}px)` }"
          @mousedown="onMouseDown" overflow="visible"
          @mouseenter="mouseenter" @mouseleave="mouseleave" :class="{ 'un-visible': !visible }">
-        <SelectView :context="props.context" :shape="(props.shape as TextShape)" :matrix="submatrix.toArray()"
-                    :main-notify="Selection.CHANGE_TEXT" :selection="props.context.textSelection"></SelectView>
-        <path v-if="editing" :d="boundrectPath" fill="none" stroke='#1878f5' stroke-width="1.5px"></path>
+        <SelectView :context="props.context" :shape="(props.shape)" :matrix="submatrix.toArray()"
+                    :main-notify="Selection.CHANGE_TEXT" :selection="props.context.selection.getTextSelection(props.shape)"></SelectView>
+        <path v-if="editing" :d="boundrectPath" fill="none" stroke='#1878f5' stroke-width="1px" stroke-dasharray="2,2"></path>
         <BarsContainer v-if="!editing" :context="props.context" :matrix="submatrix.toArray()" :shape="props.shape"
                        :c-frame="props.controllerFrame">
         </BarsContainer>
@@ -253,11 +251,14 @@ onBeforeUnmount(() => {
                          :c-frame="props.controllerFrame" :axle="axle">
         </PointsContainer>
     </svg>
-    <TextInput ref="input" :context="props.context" :shape="(props.shape as TextShape)" :matrix="submatrix.toArray()"
-               :main-notify="Selection.CHANGE_TEXT" :selection="props.context.textSelection"></TextInput>
+    <TextInput ref="input" :context="props.context" :shape="(props.shape)" :matrix="submatrix.toArray()"
+               :main-notify="Selection.CHANGE_TEXT" :selection="props.context.selection.getTextSelection(props.shape)"></TextInput>
 </template>
 <style lang='scss' scoped>
 .un-visible {
     opacity: 0;
+}
+svg {
+    position: absolute;
 }
 </style>

@@ -1,6 +1,6 @@
 <script setup lang='ts'>
 import { Context } from '@/context';
-import { AsyncBaseAction, CtrlElementType, Matrix, Shape } from '@kcdesign/data';
+import { AsyncBaseAction, CtrlElementType, Matrix, Shape, ShapeView, adapt2Shape } from '@kcdesign/data';
 import { onMounted, onUnmounted, watch, reactive } from 'vue';
 import { ClientXY, PageXY } from '@/context/selection';
 import { forbidden_to_modify_frame, getAngle } from '@/utils/common';
@@ -11,7 +11,7 @@ import { Action } from '@/context/tool';
 interface Props {
     matrix: number[]
     context: Context
-    shape: Shape
+    shape: ShapeView
     axle: { x: number, y: number }
     cFrame: Point[]
 }
@@ -121,7 +121,7 @@ function point_mousemove(event: MouseEvent) {
             isDragging = true;
             submatrix.reset(workspace.matrix.inverse);
             cur_ctrl_type.endsWith('rotate') ? workspace.rotating(true) : workspace.scaling(true);
-            asyncBaseAction = props.context.editor.controller().asyncRectEditor(props.shape, props.context.selection.selectedPage!);
+            asyncBaseAction = props.context.editor.controller().asyncRectEditor(adapt2Shape(props.shape), props.context.selection.selectedPage!);
             props.context.assist.set_trans_target([props.shape]);
         }
     }

@@ -1,5 +1,5 @@
 import { Context } from "@/context";
-import { Matrix, Shape, ShapeType } from "@kcdesign/data";
+import { Matrix, Shape, ShapeType, ShapeView, adapt2Shape } from "@kcdesign/data";
 import { Menu } from "@/context/menu";
 import { ClientXY, PageXY, XY } from "@/context/selection";
 import { WorkSpace } from "@/context/workspace";
@@ -28,7 +28,7 @@ export function down_while_is_text_editing(e: MouseEvent, context: Context) {
         selection.resetSelectShapes();
         selection.rangeSelectShape(save);
     } else {
-        const editor = context.editor4Shape(shapes[0]);
+        const editor = context.editor4Shape(adapt2Shape(shapes[0]));
         editor.delete();
         selection.resetSelectShapes();
     }
@@ -142,7 +142,7 @@ export function check_drag_action(start: { x: number, y: number }, current: { x:
  * @description 根据鼠标在client坐标系上的一点确定辅助对象的点图
  * @param down root坐标系上的一点
  */
-export function gen_offset_points_map(shapes: Shape[], down: PageXY) {    
+export function gen_offset_points_map(shapes: ShapeView[], down: PageXY) {    
     let lt: { x: number, y: number }, rb: { x: number, y: number }, pivot: { x: number, y: number },
         rt: { x: number, y: number }, lb: { x: number, y: number };
     if (shapes.length === 1) {
@@ -210,7 +210,7 @@ export function gen_offset_points_map2(context: Context, down: PageXY, points: n
 /**
  * @description 判定下一次移动为数据正式修改时，设置控件更新状态、预设辅助线中心对象、以及其他一些编辑器状态
  */
-export function reset_assist_before_translate(context: Context, shapes: Shape[]) {
+export function reset_assist_before_translate(context: Context, shapes: ShapeView[]) {
     context.selection.unHoverShape();
     context.workspace.setSelectionViewUpdater(false);
     context.workspace.translating(true);
@@ -235,7 +235,7 @@ export function modify_mouse_position_by_type(update_type: number, startPosition
 /**
  * @description 获取当前图形的最近 父级容器
  */
-export function get_closest_container(context: Context, shape: Shape): Shape {
+export function get_closest_container(context: Context, shape: ShapeView): ShapeView {
     let result = context.selection.selectedPage!
     let p = shape.parent;
     while (p) {
@@ -300,7 +300,7 @@ export function shapes_picker(e: MouseEvent, context: Context, p: { x: number, y
 /**
  * @description 获取移动辅助中心对象点图
  */
-export function gen_assist_target(context: Context, shapes: Shape[], is_multi: boolean, offset_map: any, pe: {
+export function gen_assist_target(context: Context, shapes: ShapeView[], is_multi: boolean, offset_map: any, pe: {
     x: number,
     y: number
 }) {

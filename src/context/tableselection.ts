@@ -1,5 +1,6 @@
-import { TableCell, TableGridItem, WatchableObject, ShapeType, TableShape } from "@kcdesign/data";
+import { TableCell, TableGridItem, WatchableObject, ShapeType, TableView } from "@kcdesign/data";
 import { Context } from ".";
+
 export class TableSelection extends WatchableObject {
     static CHANGE_TABLE_CELL = 1;
     static CHANGE_EDITING_CELL = 2;
@@ -9,9 +10,11 @@ export class TableSelection extends WatchableObject {
     private m_tableColEnd: number = -1;
     private m_editing_cell: TableGridItem & { cell: TableCell | undefined } | undefined;
     private m_context: Context;
-    constructor(cxt: Context) {
+    private m_onCellChange: () => void;
+    constructor(cxt: Context, onCellChange: () => void) {
         super();
         this.m_context = cxt;
+        this.m_onCellChange = onCellChange;
     }
 
     // get shape() {
@@ -34,6 +37,7 @@ export class TableSelection extends WatchableObject {
         return this.m_editing_cell;
     }
     resetSelection() {
+        this.m_editing_cell = undefined;
         this.m_tableRowStart = -1;
         this.m_tableRowEnd = -1;
         this.m_tableColStart = -1;
@@ -41,8 +45,10 @@ export class TableSelection extends WatchableObject {
         this.notify(TableSelection.CHANGE_TABLE_CELL);
     }
     setEditingCell(cell?: TableGridItem & { cell: TableCell | undefined }) {
+        if (this.m_editing_cell === cell) return;
         if (cell) this.resetSelection(); // 进入编辑状态默认清除所有选区
         this.m_editing_cell = cell;
+        this.m_onCellChange();
         this.notify(TableSelection.CHANGE_EDITING_CELL);
     }
     getSelectedCells(visible: boolean = true): {
@@ -52,7 +58,7 @@ export class TableSelection extends WatchableObject {
     }[] {
         const shape = this.m_context.selection.selectedShapes[0];
         if (shape && shape.type === ShapeType.Table) {
-            const _shape = shape as TableShape;
+            const _shape = shape as TableView;
             if (visible) return _shape.getVisibleCells(this.m_tableRowStart,
                 this.m_tableRowEnd,
                 this.m_tableColStart,

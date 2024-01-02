@@ -1,6 +1,6 @@
 <script setup lang='ts'>
 import { Context } from '@/context';
-import { AsyncBaseAction, CtrlElementType, Matrix, Shape } from '@kcdesign/data';
+import { AsyncBaseAction, CtrlElementType, Matrix, Shape, ShapeView } from '@kcdesign/data';
 import { onMounted, onUnmounted, watch, reactive } from 'vue';
 import { ClientXY, PageXY } from '@/context/selection';
 import { forbidden_to_modify_frame, getAngle } from '@/utils/common';
@@ -12,7 +12,7 @@ import { PointType } from '@/context/assist';
 interface Props {
     matrix: number[]
     context: Context
-    shape: Shape
+    shape: ShapeView
     axle: { x: number, y: number }
     cFrame: Point[]
 }

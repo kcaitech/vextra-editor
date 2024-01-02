@@ -1,6 +1,6 @@
 <script setup lang="ts">
 import { Context } from '@/context';
-import { Matrix, Shape, TableLayout, TableShape } from '@kcdesign/data';
+import { Matrix, Shape, TableLayout, TableShape, TableView } from '@kcdesign/data';
 import { Point } from '../../SelectionView.vue';
 import { onMounted, onUnmounted, reactive, ref, watch } from 'vue';
 import { WorkSpace } from '@/context/workspace';
@@ -12,7 +12,7 @@ interface Emits {
 interface Props {
     matrix: number[];
     context: Context;
-    shape: Shape;
+    shape: TableView;
     cFrame: Point[];
 }
 const emits = defineEmits<Emits>();
@@ -51,7 +51,7 @@ function update_position() {
         const m = new Matrix(props.matrix), lt = m.computeCoord2(0, 0);
         const mw = new Matrix(props.context.workspace.matrix);
         offset = mw.m00 * 0.5;
-        const table: TableShape = props.shape as TableShape;
+        const table = props.shape;
         layout = table.getLayout();
         frame_params = { x: lt.x, y: lt.y, width: layout.width * mw.m00, height: layout.height * mw.m00 };
         const cols = layout.colWidths, rows = layout.rowHeights;
@@ -71,7 +71,7 @@ function update_position() {
         hidden.value = true;
     }
 }
-function modify_transform(shape: Shape, fps: FrameParams) {
+function modify_transform(shape: TableView, fps: FrameParams) {
     const { rotate, isFlippedHorizontal, isFlippedVertical } = get_transform(props.shape);
     transform = `translate(${fps.x}px, ${fps.y}px) `;
     if (isFlippedHorizontal) transform += 'rotateY(180deg) ';
@@ -96,14 +96,14 @@ function add_cols() {
     const table_selection = props.context.tableSelection;
     table_selection.setEditingCell();
     table_selection.resetSelection();
-    const editor = props.context.editor4Table(props.shape as TableShape);
+    const editor = props.context.editor4Table(props.shape);
     editor.insertCol(ids_x + 1, layout.colWidths[ids_x]);
 }
 function add_rows() {
     const table_selection = props.context.tableSelection;
     table_selection.setEditingCell();
     table_selection.resetSelection();
-    const editor = props.context.editor4Table(props.shape as TableShape);
+    const editor = props.context.editor4Table(props.shape);
     editor.insertRow(ids_y + 1, layout.rowHeights[ids_y]);
 }
 function select_col(index: number) {
@@ -141,7 +141,7 @@ function select_row(index: number) {
 function move_x(e: MouseEvent) {
     const root = props.context.workspace.root;
     const xy = m4table.computeCoord2(e.clientX - root.x, e.clientY - root.y);
-    const cell = (props.shape as TableShape).locateCell(xy.x, 1);
+    const cell = (props.shape).locateCell(xy.x, 1);
     if (!cell) return;
     if (cell.index.col !== m_index_col) select_cols(Math.min(index_col, cell.index.col), Math.max(index_col, cell.index.col));
     m_index_col = cell.index.col, selecting = true;
@@ -150,7 +150,7 @@ function move_x(e: MouseEvent) {
 function move_y(e: MouseEvent) {
     const root = props.context.workspace.root;
     const xy = m4table.computeCoord2(e.clientX - root.x, e.clientY - root.y);
-    const cell = (props.shape as TableShape).locateCell(1, xy.y);
+    const cell = (props.shape).locateCell(1, xy.y);
     if (!cell) return;
     if (cell.index.row !== m_index_row) select_rows(Math.min(index_row, cell.index.row), Math.max(index_row, cell.index.row));
     m_index_row = cell.index.row, selecting = true;

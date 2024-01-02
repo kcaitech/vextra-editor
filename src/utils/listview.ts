@@ -1,5 +1,5 @@
 import { Context } from "@/context";
-import { Shape, ShapeDirList, ShapeType } from "@kcdesign/data";
+import { Shape, ShapeDirList2 as ShapeDirList, ShapeType, ShapeView, adapt2Shape } from "@kcdesign/data";
 import { fit } from "@/utils/shapelist";
 import { isInner } from "./content";
 import { WorkSpace } from "@/context/workspace";
@@ -145,8 +145,8 @@ export function get_drag_detail(descend: string, position: ItemDragEvent, destin
     }
 }
 
-export function adjust_layer(shape: Shape, layer: number) {
-    let s: Shape | undefined = shape;
+export function adjust_layer(shape: ShapeView, layer: number) {
+    let s: ShapeView | undefined = shape;
     while (layer < 0 && s?.parent && s?.parent.type !== ShapeType.Page) {
         layer++;
         s = s.parent;
@@ -154,7 +154,7 @@ export function adjust_layer(shape: Shape, layer: number) {
     return s;
 }
 
-export function hover(context: Context, shape: Shape) {
+export function hover(context: Context, shape: ShapeView) {
     if (context.workspace.transforming) {
         return;
     }
@@ -171,7 +171,7 @@ export function modify_shape_visible_status(context: Context, shape: Shape) {
     editor.toggleVisible();
 }
 
-export function scroll_to_view(context: Context, shape: Shape) {
+export function scroll_to_view(context: Context, shape: ShapeView) {
     const is_p2 = context.navi.isPhase2(shape);
     if (is_p2) {
         fit(context, shape);
@@ -219,12 +219,12 @@ export function modify_after_drag(context: Context, detail: DragDetail) {
     }
 
     const page = context.selection.selectedPage!;
-    const editor = context.editor4Page(page);
+    const editor = context.editor4Page(page.data);
     const shapes = compare_layer_3(context.selection.selectedShapes, -1);
 
-    editor.afterShapeListDrag(shapes, descend, detail.position);
+    editor.afterShapeListDrag(shapes.map((s) => adapt2Shape(s)), adapt2Shape(descend), detail.position);
 
-    const map = new Map<string, Shape>();
+    const map = new Map<string, ShapeView>();
     for (let i = 0, l = shapes.length; i < l; i++) {
         const item = shapes[i];
         map.set(item.id, item);
@@ -250,17 +250,17 @@ export function modify_after_drag(context: Context, detail: DragDetail) {
     }
 }
 
-function getSelectShapesIndex(shapeDirList: ShapeDirList, shapes: Shape[]): number[] {
-    return shapes.map(s => shapeDirList.indexOf(s));
+function getSelectShapesIndex(shapeDirList: ShapeDirList, shapes: ShapeView[]): number[] {
+    return shapes.map(s => shapeDirList.indexOf(s.id));
 }
 
-function getShapeRange(listviewSource: any, start: number, end: number): Shape[] {
+function getShapeRange(listviewSource: IDataSource<ItemData>, start: number, end: number): ShapeView[] {
     const from = Math.min(start, end);
     const to = Math.max(start, end);
-    const range: Map<string, Shape> = new Map();
+    const range: Map<string, ShapeView> = new Map();
     const it = listviewSource.iterAt(from);
     for (let i = from; i <= to && it.hasNext(); i++) {
-        const shape = it.next().shape();
+        const shape: ShapeView = it.next().shapeview();
         const childs = shape.childs;
         if (childs && childs.length) {
             for (let c_i = 0; c_i < childs.length; c_i++) {
@@ -283,8 +283,24 @@ function getShapeRange(listviewSource: any, start: number, end: number): Shape[]
     return Array.from(range.values());
 }
 
-export function range_select_shape(context: Context, shapeDirList: ShapeDirList, listviewSource: any, shape: Shape) {
-    const to = shapeDirList.indexOf(shape);
+export interface IDataIter<T extends { id: string }> {
+    hasNext(): boolean;
+    next(): T;
+}
+
+export interface IDataSource<T extends { id: string }> {
+    length(): number;
+    iterAt(index: number): IDataIter<T>;
+}
+
+export interface ItemData {
+    id: string
+    shape: () => Shape // 作用function，防止vue对shape内部数据进行proxy
+    shapeview:() => ShapeView
+}
+
+export function range_select_shape(context: Context, shapeDirList: ShapeDirList, listviewSource: IDataSource<ItemData>, shape: ShapeView) {
+    const to = shapeDirList.indexOf(shape.id);
     const selectedShapes = context.selection.selectedShapes;
     if (selectedShapes.length) {
         const selectShapesIndex = getSelectShapesIndex(shapeDirList, selectedShapes);
@@ -298,8 +314,8 @@ export function range_select_shape(context: Context, shapeDirList: ShapeDirList,
     }
 }
 
-export function multi_select_shape(context: Context, shape: Shape) {
-    const selected_map: Map<string, Shape> = new Map();
+export function multi_select_shape(context: Context, shape: ShapeView) {
+    const selected_map: Map<string, ShapeView> = new Map();
     const selected = context.selection.selectedShapes;
     for (let i = 0; i < selected.length; i++) {
         selected_map.set(selected[i].id, selected[i]);
@@ -341,7 +357,7 @@ export function multi_select_shape(context: Context, shape: Shape) {
     context.selection.rangeSelectShape(Array.from(selected_map.values()));
 }
 
-export function is_component_class(shape: Shape) {
+export function is_component_class(shape: ShapeView) {
     let s: any = shape;
     while (s) {
         if (s.type === ShapeType.Page) {

@@ -3,7 +3,8 @@ import { Context } from '@/context';
 import { Selection } from '@/context/selection';
 import { WorkSpace } from "@/context/workspace";
 import { onMounted, onUnmounted, shallowRef, ref, computed } from 'vue';
-import { ShapeType, Shape, TextShape, TableShape, SymbolRefShape, SymbolShape } from "@kcdesign/data"
+import { ShapeView, TextShapeView, TableView, SymbolRefView } from "@kcdesign/data"
+import { ShapeType } from "@kcdesign/data"
 import Arrange from './Arrange.vue';
 import ShapeBaseAttr from './BaseAttr/Index.vue';
 import Fill from './Fill/Fill.vue';
@@ -11,10 +12,9 @@ import Border from './Border/Border.vue';
 import Shadow from './Shadow/Shadows.vue';
 import PageBackgorund from './PageBackgorund.vue';
 import Text from './Text/Text.vue';
-import { throttle } from 'lodash';
+import { debounce } from 'lodash';
 import Module from './Module/Module.vue'
 import TableText from './Table/TableText.vue'
-import { TableSelection } from '@/context/tableselection';
 import CutoutExport from './CutoutExport/index.vue'
 import { Tool } from '@/context/tool';
 import Opacity from './Opacity/Opacity.vue';
@@ -24,7 +24,7 @@ import { get_var_for_ref, is_part_of_symbol, is_shapes_if_symbolref } from '@/ut
 import { useI18n } from 'vue-i18n';
 
 const props = defineProps<{ context: Context }>();
-const shapes = shallowRef<Shape[]>([]);
+const shapes = shallowRef<ShapeView[]>([]);
 const len = computed<number>(() => shapes.value.length);
 const { t } = useI18n();
 const WITH_FILL = [
@@ -80,10 +80,10 @@ const WITHOUT_OPACITY = [
     ShapeType.TableCell
 ]
 const shapeType = ref();
-const textShapes = ref<Shape[]>([]);
+const textShapes = ref<ShapeView[]>([]);
 const symbol_attribute = ref<boolean>(true);
 const opacity = ref<boolean>(false);
-const getShapeType = () => {
+const updateShapeType = () => {
     if (props.context.selection.selectedShapes.length === 1) {
         shapes.value = new Array(...props.context.selection.selectedShapes);
         shapeType.value = shapes.value[0].type;
@@ -112,20 +112,24 @@ function check_for_opacity() {
 }
 
 function _change(t: number) {
-    if (t === Selection.CHANGE_PAGE) {
-        shapes.value = new Array();
-        textShapes.value = new Array();
-    } else if (t === Selection.CHANGE_SHAPE) {
-        getShapeType();
+    updateShapeType();
+    const selectedShapes = props.context.selection.selectedShapes;
+    if (selectedShapes.length > 0) {
         baseAttr.value = true;
         editAttr.value = false;
-        symbol_attribute.value = props.context.selection.selectedShapes.length < 2;
-        check_for_opacity();
+        symbol_attribute.value = selectedShapes.length < 2;
     }
+    if (selectedShapes.length === 1) {
+        const shape = selectedShapes[0];
+        if (shape.type === ShapeType.Table) {
+            updateBaseAttr();
+        }
+    }
+    check_for_opacity();
 }
 const baseAttr = ref(true);
 const editAttr = ref<boolean>(false);
-const baseAttrVisible = () => {
+const updateBaseAttr = () => {
     const shape = props.context.selection.selectedShapes[0]
     if (props.context.selection.selectedShapes.length === 1 && shape.type === ShapeType.Table) {
         const table = props.context.tableSelection;
@@ -136,10 +140,10 @@ const baseAttrVisible = () => {
     }
 }
 
-const change = throttle(_change, 100);
+const change = debounce(_change, 100);
 
 function tool_watcher(t: number) {
-    if (t === Tool.CHANGE_ACTION) getShapeType();
+    if (t === Tool.CHANGE_ACTION) updateShapeType();
 }
 
 function selection_watcher(t: number) {
@@ -147,8 +151,7 @@ function selection_watcher(t: number) {
 }
 
 function table_selection_watcher(t: number) {
-    if (t === TableSelection.CHANGE_TABLE_CELL) baseAttrVisible();
-    else if (t === TableSelection.CHANGE_EDITING_CELL) baseAttrVisible();
+    change(t);
 }
 
 function workspace_watcher(t: number) {
@@ -165,7 +168,7 @@ const is_symbolref = () => {
 const need_instance_attr_show = () => {
     let v = false;
     if (shapes.value.length === 1) {
-        const symref = props.context.selection.symbolrefshape;
+        const symref = props.context.selection.symbolrefview;
         if (!symref) {
             return false;
         }
@@ -198,6 +201,7 @@ onUnmounted(() => {
     props.context.tool.unwatch(tool_watcher);
     props.context.workspace.unwatch(workspace_watcher);
 })
+
 </script>
 <template>
     <section id="Design">
@@ -214,14 +218,13 @@ onUnmounted(() => {
                 <Opacity v-if="opacity && !WITHOUT_OPACITY.includes(shapeType)" :shapes="shapes" :context="props.context">
                 </Opacity>
                 <Module v-if="symbol_attribute" :context="props.context" :shapeType="shapeType" :shapes="shapes"></Module>
-                <InstanceAttr :context="context" v-if="is_symbolref()" :shapes="(shapes as SymbolRefShape[])">
+                <InstanceAttr :context="context" v-if="is_symbolref()" :shapes="(shapes as SymbolRefView[])">
                 </InstanceAttr>
                 <Fill v-if="WITH_FILL.includes(shapeType)" :shapes="shapes" :context="props.context"></Fill>
                 <Border v-if="WITH_BORDER.includes(shapeType)" :shapes="shapes" :context="props.context"></Border>
-                <Text v-if="WITH_TEXT.includes(shapeType)" :shape="(shapes[0] as TextShape)"
-                    :textShapes="(textShapes as TextShape[])" :context="props.context"></Text>
-                <TableText v-if="WITH_TABLE.includes(shapeType)" :shape="(shapes[0] as TableShape)"
-                    :context="props.context">
+                <Text v-if="WITH_TEXT.includes(shapeType)" :shape="((shapes[0]) as TextShapeView)"
+                    :textShapes="((textShapes) as TextShapeView[])" :context="props.context"></Text>
+                <TableText v-if="WITH_TABLE.includes(shapeType)" :shape="(shapes[0] as TableView)" :context="props.context">
                 </TableText>
                 <Shadow v-if="WITH_SHADOW.includes(shapeType)" :shapes="shapes" :context="props.context">
                 </Shadow>

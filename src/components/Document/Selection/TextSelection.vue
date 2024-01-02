@@ -1,6 +1,6 @@
 <script setup lang='ts'>
 import { onMounted, onUnmounted, ref, reactive, watch } from 'vue';
-import { Matrix, TextShape, Shape } from '@kcdesign/data';
+import { Matrix, TextShape, Shape, ShapeView, TextShapeView } from '@kcdesign/data';
 import { Context } from '@/context';
 import { WorkSpace } from '@/context/workspace';
 import SelectView from './Controller/Text/SelectBySearch.vue';
@@ -14,7 +14,7 @@ const props = defineProps<Props>();
 const matrix = new Matrix();
 const submatrix = reactive(new Matrix());
 const bounds = reactive({ left: 0, top: 0, right: 0, bottom: 0 }); // viewbox
-const focus_shape = ref<Shape>();
+const focus_shape = ref<ShapeView>();
 const visible = ref<boolean>(true);
 function update() {
   const shape = props.context.navi.focusText?.shape;
@@ -86,7 +86,7 @@ onUnmounted(() => {
     :viewBox=genViewBox(bounds) :width="bounds.right - bounds.left" :height="bounds.bottom - bounds.top"
     :style="{ transform: `translate(${bounds.left}px,${bounds.top}px)`, left: 0, top: 0, position: 'absolute' }"
     overflow="visible" :class="{ 'un-visible': !visible }">
-    <SelectView v-if="focus_shape" :context="props.context" :shape="(focus_shape as TextShape)"
+    <SelectView v-if="focus_shape" :context="props.context" :shape="(focus_shape as TextShapeView)"
       :matrix="submatrix.toArray()"></SelectView>
   </svg>
 </template>

@@ -8,7 +8,7 @@ import { getHorizontalAngle } from '@/utils/common';
 import { flattenShapes, init_contact_shape, init_insert_shape, init_shape, list2Tree } from '@/utils/content';
 import { get_direction } from '@/utils/controllerFn';
 import { EffectType, Wheel, fourWayWheel } from '@/utils/wheel';
-import { Artboard, AsyncCreator, ContactForm, ContactShape, GroupShape, Matrix, Shape, ShapeFrame, ShapeType } from '@kcdesign/data';
+import { Artboard, AsyncCreator, ContactForm, ContactLineView, ContactShape, GroupShape, Matrix, Shape, ShapeFrame, ShapeType, ShapeView, adapt2Shape } from '@kcdesign/data';
 import { onMounted, onUnmounted, reactive, ref } from 'vue';
 import { useI18n } from 'vue-i18n';
 import CommentInput from './Content/CommentInput.vue';
@@ -26,7 +26,7 @@ const props = defineProps<Props>();
 
 const dragActiveDis = 4; // 拖动 4px 后开始触发移动
 const t = useI18n().t;
-let newShape: Shape | undefined;
+let newShape: ShapeView | undefined;
 let wheel: Wheel | undefined;
 let asyncCreator: AsyncCreator | undefined;
 let stickedX: boolean = false;
@@ -78,7 +78,7 @@ function move(e: MouseEvent) {
     if (e.buttons === 1) {
         if (newShape) {
             modify_new_shape_frame(e);
-        } else if (Math.hypot(e.clientX - client_xy_1.x, e.clientY - client_xy_1.y) > dragActiveDis) {
+        } else if (!isDrag && Math.hypot(e.clientX - client_xy_1.x, e.clientY - client_xy_1.y) > dragActiveDis) {
             gen_new_shape(e);
             isDrag = true;
         }
@@ -94,7 +94,7 @@ function up(e: MouseEvent) {
     // if (commentInput.value) commentInput.value = false;
     if (isDrag && newShape) {
         shapeCreateEnd();
-    } else if (props.context.tool.action.startsWith('add')) {
+    } else if (!isDrag && props.context.tool.action.startsWith('add')) {
         const action = props.context.tool.action;
         if (action === Action.AddComment) return addComment(e);
         if (action !== Action.AddContact && action !== Action.AddTable) {
@@ -278,7 +278,7 @@ function search_apex(e: MouseEvent) {
     const xy = props.context.workspace.matrix.inverseCoord(e.clientX - x, e.clientY - y);
     const shapes = props.context.selection.getContactByXY(xy);
     if (shapes.length) {
-        props.context.tool.setContactApex(shapes[0]);
+        props.context.tool.setContactApex((shapes[0]));
     } else {
         props.context.tool.resetContactApex();
     }
@@ -295,12 +295,12 @@ function modify_contact_to(e: MouseEvent, ac: AsyncCreator) {
     const root = props.context.workspace.root;
     const p = matrix1.computeCoord2(e.clientX - root.x, e.clientY - root.y);
     ac.contact_to(p);
-    const points = (newShape as ContactShape)!.getPoints();
+    const points = (newShape as ContactLineView).getPoints();
     const environment = get_contact_environment(props.context, newShape!, points);
     if (newShape!.parent?.id !== environment.id) {
         asyncCreator
     }
-    ac.migrate(environment as GroupShape);
+    ac.migrate(adapt2Shape(environment) as GroupShape);
 }
 
 // #endregion
@@ -394,14 +394,21 @@ function gen_new_shape(e: MouseEvent) {
         const result = init_contact_shape(props.context, shapeFrame, page_xy_1, t, apex1, page_xy2);
         if (result) {
             asyncCreator = result.asyncCreator;
-            newShape = result.new_shape;
+            const page = props.context.selection.selectedPage!;
+            props.context.nextTick(page, () => {
+                newShape = page.getShape(result.new_shape.id);
+            })
+            // newShape = result.new_shape;
         }
     } else {
         const result = init_shape(props.context, shapeFrame, page_xy_1, t);
         if (result) {
             asyncCreator = result.asyncCreator;
-            newShape = result.new_shape;
-            props.context.assist.set_trans_target([newShape!]);
+            const page = props.context.selection.selectedPage!;
+            props.context.nextTick(page, () => {
+                newShape = page.getShape(result.new_shape.id);
+                props.context.assist.set_trans_target([(newShape!)]);
+            })
         }
     }
 }
@@ -440,7 +447,7 @@ function shapeCreateEnd() {
             const children = collect(props.context);
             const page = props.context.selection.selectedPage;
             if (page && asyncCreator) {
-                asyncCreator.collect(page, children, props.context.selection.selectedShapes[0] as Artboard);
+                asyncCreator.collect(page, children.map((s) => adapt2Shape(s)), adapt2Shape(props.context.selection.selectedShapes[0]) as Artboard);
             }
         }
         removeCreator();

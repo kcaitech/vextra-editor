@@ -1,9 +1,8 @@
 <script setup lang="ts">
-import { ImageShape, SymbolRefShape, SymbolShape, RenderTransform } from '@kcdesign/data';
+import { ImageShape, SymbolRefShape, SymbolShape } from '@kcdesign/data';
 
 interface Props {
     data: ImageShape
-    transx?: RenderTransform
     varsContainer?: (SymbolRefShape | SymbolShape)[]
 }
 const props = defineProps<Props>();

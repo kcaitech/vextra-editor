@@ -34,7 +34,8 @@ export class DomCtx extends DViewCtx {
     }
 
     protected onIdle(): boolean {
-        return this.idleCallback?.() ?? false;
+        const ret = super.onIdle();
+        return this.idleCallback?.() ?? ret;
     }
 
     protected aloop(): boolean {

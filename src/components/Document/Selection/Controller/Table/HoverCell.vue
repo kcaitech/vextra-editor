@@ -1,12 +1,12 @@
 <script setup lang='ts'>
 import { Context } from '@/context';
-import { TableCell, TableShape, TableCellType, Matrix, ShapeFrame } from '@kcdesign/data';
+import { TableCell, TableShape, TableCellType, Matrix, ShapeFrame, TableCellView, TableView } from '@kcdesign/data';
 import { reactive, ref, watchEffect } from 'vue';
 import { v4 as uuid } from "uuid"
 import { useImagePicker } from './loadimage';
 
 const props = defineProps<{
-    shape: TableCell,
+    shape: TableCellView,
     matrix: number[],
     context: Context,
     frame: ShapeFrame
@@ -50,7 +50,7 @@ function onLoadImage(name: string, data: { buff: Uint8Array, base64: string }) {
     // const data = loadImage(name, buffer);
     const id = uuid();
     props.context.data.mediasMgr.add(id, data);
-    const table = props.shape.parent as TableShape;
+    const table = props.shape.parent as TableView;
     const editor = props.context.editor4Table(table);
     const idx = table.indexOfCell(props.shape);
     if (!idx) return;

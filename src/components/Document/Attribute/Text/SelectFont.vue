@@ -94,7 +94,7 @@ function checkFontsAvailability(fontName: string[], fontList: FontName, lang: st
 }
 
 const getAllTextFontName = () => {
-    const pageFont = props.context.selection.selectedPage?.getUsedFontNames()
+    const pageFont = props.context.selection.selectedPage?.data.getUsedFontNames()
     if (pageFont) {
         const font = (Array.from(pageFont) as string[])
         const promises = font.map(name => FontAvailable(name));

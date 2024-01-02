@@ -1,12 +1,12 @@
 <script setup lang="ts">
-import { h, nextTick, onMounted, onUnmounted, ref } from 'vue';
+import {h, nextTick, onMounted, onUnmounted, ref, shallowRef} from 'vue';
 import comsMap from '@/components/Document/Content/comsmap';
-import { GroupShape, SymbolUnionShape } from "@kcdesign/data";
-import { renderSymbolPreview as r } from "@kcdesign/data";
-import { Context } from '@/context';
-import { Selection } from '@/context/selection';
-import { clear_scroll_target, is_circular_ref2, is_state } from '@/utils/symbol';
-import { debounce } from "lodash";
+import {GroupShape, GroupShapeView, SymbolShape, SymbolUnionShape} from "@kcdesign/data";
+import {renderSymbolPreview as r} from "@kcdesign/data";
+import {Context} from '@/context';
+import {Selection} from '@/context/selection';
+import {clear_scroll_target, is_circular_ref2, is_state} from '@/utils/symbol';
+import {debounce} from "lodash";
 import Tooltip from '@/components/common/Tooltip.vue';
 
 interface Props {
@@ -21,7 +21,7 @@ const selected = ref<boolean>(false);
 const render_preview = ref<boolean>(false);
 const preview_container = ref<Element>();
 const danger = ref<boolean>(false);
-const render_item = ref<GroupShape>(props.data);
+const render_item = shallowRef<GroupShape>(props.data);
 const tip_name = ref('');
 
 function gen_view_box() {
@@ -40,7 +40,39 @@ function selection_watcher(t: number) {
 }
 
 function check_selected_status() {
-    selected.value = props.context.selection.isSelectedShape(props.data);
+    selected.value = is_select();
+}
+
+function is_select() {
+    const selected = props.context.selection.selectedShapes;
+
+    if (!selected.length) {
+        return false;
+    }
+
+    const cur = props.data;
+
+    for (let i = 0, l = selected.length; i < l; i++) {
+        const s = selected[i];
+
+        if (s instanceof SymbolUnionShape) {
+            if (s.childs[0]?.id === cur.id) {
+                return true;
+            }
+        } else if (s instanceof SymbolShape) {
+            if (s.id === cur.id) {
+                return true;
+            }
+            const p = s.parent;
+            if (p instanceof SymbolUnionShape) {
+                if (p.childs[0]?.id === cur.id) {
+                    return true;
+                }
+            }
+        }
+    }
+
+    return false;
 }
 
 function _shape_watcher() {

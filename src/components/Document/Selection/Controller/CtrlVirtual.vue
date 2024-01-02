@@ -1,7 +1,7 @@
 <script setup lang='ts'>
 import { computed, onMounted, onUnmounted, watchEffect, ref, reactive } from "vue";
 import { Context } from "@/context";
-import { Matrix } from '@kcdesign/data';
+import { Matrix, ShapeView } from '@kcdesign/data';
 import { WorkSpace } from "@/context/workspace";
 import { Point } from "../SelectionView.vue";
 import { Selection } from "@/context/selection";
@@ -14,7 +14,7 @@ interface Props {
     controllerFrame: Point[]
     rotate: number
     matrix: Matrix
-    shape: Shape
+    shape: ShapeView
 }
 const props = defineProps<Props>();
 const { isDrag } = useController(props.context);
@@ -85,11 +85,19 @@ onUnmounted(() => {
     window.removeEventListener('blur', windowBlur);
 })
 watchEffect(updateControllerView);
+const width = computed(() => {
+    const w = bounds.right - bounds.left;
+    return w < 10 ? 10 : w;
+})
+const height = computed(() => {
+    const h = bounds.bottom - bounds.top;
+    return h < 10 ? 10 : h;
+})
 </script>
 <template>
     <svg version="1.1" xmlns="http://www.w3.org/2000/svg" xmlns:xlink="http://www.w3.org/1999/xlink" data-area="controller"
          xmlns:xhtml="http://www.w3.org/1999/xhtml" preserveAspectRatio="xMinYMin meet" :viewBox="viewBox"
-         :width="bounds.right - bounds.left" :height="bounds.bottom - bounds.top"
+         :width="width" :height="height"
          :style="{ transform: `translate(${bounds.left}px,${bounds.top}px)`, left: 0, top: 0, position: 'absolute' }"
          :class="{ 'un-visible': !visible }" @mousedown="mousedown" overflow="visible">
         <path :d="boundrectPath" fill="none" stroke='#7F58F9' stroke-width="1.5px"></path>

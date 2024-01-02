@@ -2,14 +2,14 @@
 import Select, { SelectItem, SelectSource } from '@/components/common/Select.vue';
 import BorderApexStyleItem from './BorderApexStyleItem.vue';
 import BorderApexStyleSelectedItem from './BorderApexStyleSelectedItem.vue';
-import { MarkerType, Shape } from '@kcdesign/data';
+import { MarkerType, ShapeView } from '@kcdesign/data';
 import { ref, onMounted, watch, onUnmounted } from 'vue';
 import { genOptions } from '@/utils/common';
 import { WorkSpace } from '@/context/workspace';
 import { Context } from '@/context';
 interface Props {
     context: Context
-    shapes: Shape[]
+    shapes: ShapeView[]
 }
 const props = defineProps<Props>();
 const borderFrontStyle = ref<SelectItem>({ value: MarkerType.Line, content: MarkerType.Line });
@@ -37,12 +37,12 @@ function borderApexStyleSelect(selected: SelectItem) {
     if (selected.content.startsWith('end')) {
         borderEndStyle.value = selected;
         if (props.shapes.length === 1) {
-            const e = props.context.editor.editor4Shape(props.shapes[0]);
+            const e = props.context.editor4Shape(props.shapes[0]);
             e.setMarkerType(selected.value as MarkerType, true);
         }
     } else {
         if (props.shapes.length === 1) {
-            const e = props.context.editor.editor4Shape(props.shapes[0]);
+            const e = props.context.editor4Shape(props.shapes[0]);
             e.setMarkerType(selected.value as MarkerType, false);
         }
         borderFrontStyle.value = selected;
@@ -62,7 +62,7 @@ function init_v() {
 function exchange() {
     const len = props.shapes.length;
     if (len === 1) {
-        const e = props.context.editor.editor4Shape(props.shapes[0]);
+        const e = props.context.editor4Shape(props.shapes[0]);
         e.exchangeMarkerType();
         init_v();
     }

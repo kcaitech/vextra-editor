@@ -2,7 +2,7 @@
 import { Context } from '@/context';
 import { Menu } from '@/context/menu';
 import { get_actions_shadow_position } from '@/utils/shape_style';
-import { Shadow, ShadowPosition, Shape } from '@kcdesign/data';
+import { Shadow, ShadowPosition, ShapeView } from '@kcdesign/data';
 import { onMounted, onUnmounted, ref, watch } from 'vue';
 import { useI18n } from 'vue-i18n';
 const { t } = useI18n();
@@ -11,7 +11,7 @@ const props = defineProps<{
     shadow: Shadow
     idx: number
     length: number
-    shapes: Shape[]
+    shapes: ShapeView[]
 }>();
 const isMenu = ref(false);
 const activeItem = ref(props.shadow.position);
