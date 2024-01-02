@@ -203,12 +203,12 @@ export function selection_penetrate(scout: Scout, g: ShapeView, position: PageXY
 
 
 /**
- * 图形检索规则以及实现
- * @param { Scout2 } scout 图形检索器，负责判定一个点(position)是否在一条path路径上(或路径的填充中)
- * @param { Shape[] } g 检索的范围，只会在该范围内进行上述匹配
- * @param { PageXY } position 一个点，在页面坐标系上的点
+ * @description 图形检索规则以及实现
+ * @param { Scout2 } scout 图形检索器，负责判定一个点(position)是否在一条path路径上(或闭合路径的填充中)
+ * @param { ShapeView[] } g 检索的范围，只会在该范围内进行上述匹配
+ * @param { PageXY } position 一个点，在root坐标系上的点
  * @param { boolean } isCtrl 深度挖掘⛏️，不为真的时候会有特殊判定，比如编组子元素会冒泡的编组、存在子元素容器无法被判定为目标...
- * @returns { Shape[] } 返回符合检索条件的图形
+ * @returns { ShapeView | undefined } 返回符合检索条件的层级最优先的图形
  */
 export function finder(context: Context, scout: Scout, g: ShapeView[], position: PageXY, selected: ShapeView, isCtrl: boolean): ShapeView | undefined {
     let result: ShapeView | undefined;
@@ -219,7 +219,7 @@ export function finder(context: Context, scout: Scout, g: ShapeView[], position:
         }
 
         if (item.type !== ShapeType.Contact && isShapeOut(context, item)) {
-            continue; // 屏幕外图形，这里会判断每个图形是否在屏幕内，本身消耗较小，另外可以避免后面的部分不必要的更大消耗
+            continue; // 屏幕外图形，判断图形(除连接线以外)是否在屏幕内，本身消耗较小，另外可以避免后面的部分不必要的更大消耗
         }
 
         if (item.type === ShapeType.SymbolUnion) { // 组件状态集合
