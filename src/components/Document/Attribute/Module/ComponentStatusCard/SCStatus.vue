@@ -84,9 +84,6 @@ function save_name(v: string) {
 
 function _delete() {
     const sym = props.context.selection.symbolshape;
-    console.log(!sym,);
-    console.log(!is_status_allow_to_delete(sym));
-
     if (!sym) return;
     if (!is_status_allow_to_delete(sym)) return;
     delete_variable(props.context, props.variable);
