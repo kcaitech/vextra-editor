@@ -484,7 +484,7 @@ function windowBlur() {
 }
 
 function init() {
-    props.context.selection.resetSelectShapes();
+    // props.context.selection.resetSelectShapes();
 }
 
 onMounted(() => {
