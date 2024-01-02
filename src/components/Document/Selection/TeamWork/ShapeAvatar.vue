@@ -1,7 +1,7 @@
 <script lang="ts" setup>
 import { onMounted, onUnmounted, ref } from "vue";
 import { Context } from "@/context";
-import { Matrix, Shape, ShapeType } from "@kcdesign/data";
+import { Matrix, Shape, ShapeType, ShapeView } from "@kcdesign/data";
 import { WorkSpace } from "@/context/workspace";
 import { ClientXY } from "@/context/selection"
 import { XYsBounding } from "@/utils/common";
@@ -17,14 +17,14 @@ interface Avatar {
     x: number
     y: number
     rotate: number
-    shape: Shape
+    shape: ShapeView
     avatar: string | undefined
     userSelectInfo: DocSelectionData
 }
 interface MultipShape {
     x: number
     y: number
-    shapes: Shape[]
+    shapes: ShapeView[]
     avatar: string | undefined
     userSelectInfo: DocSelectionData
     shapesIds: string
@@ -34,7 +34,7 @@ const matrix = new Matrix();
 const origin: ClientXY = { x: 0, y: 0 };
 const avatars = ref<Avatar[]>([]);
 const multipShape = ref<MultipShape[]>([]);
-const shapes = ref<Shape[]>([]);
+const shapes = ref<ShapeView[]>([]);
 const userSelectionInfo = ref<DocSelectionData[]>(props.context.teamwork.getUserSelection);
 const groupedShapes = ref();
 const multipShapeGroup = ref<any>({});
@@ -52,9 +52,9 @@ const setPosition = () => {
     if (!page) return;
     for (let i = 0; i < userSelectionInfo.value.length; i++) {
         const userSelectInfo = userSelectionInfo.value[i];
-        const selection: Shape[] = props.context.selection.selectedShapes;
+        const selection: ShapeView[] = props.context.selection.selectedShapes;
         if (page.id !== userSelectInfo.select_page_id) continue;
-        const shapes: Shape[] = [];
+        const shapes: ShapeView[] = [];
         const len = userSelectInfo.select_shape_id_list.length;
         for (let i = 0; i < len; i++) {
             const shape = page.shapes.get(userSelectInfo.select_shape_id_list[i]);
@@ -64,7 +64,7 @@ const setPosition = () => {
             if (selection.length > 0 && selection[0].id === shapes[0].id && props.context.workspace.isTranslating) continue
             const s = selection.find(v => v.id === shapes[0].id);
             if (s && props.context.workspace.isTranslating) continue;
-            const shape = (shapes[0] as Shape)
+            const shape = (shapes[0] as ShapeView)
             const m = shape.matrix2Root()
             const frame = shape.frame;
             const matrix = props.context.workspace.matrix

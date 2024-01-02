@@ -124,6 +124,7 @@ onMounted(() => {
         }
 
         .close {
+            display: flex;
             position: absolute;
             right: 0;
             margin: 3px 6px 3px 0px;

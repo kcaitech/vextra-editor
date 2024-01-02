@@ -1,4 +1,4 @@
-import { Matrix, Shape, ShapeType, TableShape, WatchableObject } from "@kcdesign/data";
+import { Matrix, Shape, ShapeType, ShapeView, TableShape, TableView, WatchableObject } from "@kcdesign/data";
 import { Context } from "./index";
 import { adapt_page, Root } from "@/utils/content";
 import { Clipboard } from "@/utils/clipboard";
@@ -246,7 +246,7 @@ export class WorkSpace extends WatchableObject {
         this.__cache_map = undefined;
     }
 
-    gen_chahe_map_by_shape_one(shape: Shape, frame: Point[]) {
+    gen_chahe_map_by_shape_one(shape: ShapeView, frame: Point[]) {
         const anchor = shape.matrix2Root().computeCoord2(0, 0);
         const lt = frame[0];
         const rt = frame[1];
@@ -262,7 +262,7 @@ export class WorkSpace extends WatchableObject {
         }
     }
 
-    revert_frame_by_map(shape: Shape) {
+    revert_frame_by_map(shape: ShapeView) {
         const achor = shape.matrix2Root().computeCoord2(0, 0);
         if (!this.__cache_map) return [];
         const map = this.__cache_map;
@@ -429,7 +429,7 @@ export class WorkSpace extends WatchableObject {
             const selection = this.context.selection, selected = selection.selectedShapes;
             if (selected.length) {
                 if (selected.length === 1 && selected[0].type === ShapeType.Table) {
-                    const table: TableShape = selected[0] as TableShape;
+                    const table: TableView = selected[0] as TableView;
                     const ts = this.context.tableSelection;
                     const grid = table.getLayout().grid;
                     ts.selectTableCellRange(0, grid.rowCount - 1, 0, grid.colCount - 1, true);

@@ -1,12 +1,12 @@
 <script lang="ts" setup>
-import { Shape, TableShape } from '@kcdesign/data';
+import { ShapeView } from '@kcdesign/data';
 import TypeHeader from '../TypeHeader.vue';
 import { useI18n } from 'vue-i18n';
 import { Context } from '@/context';
 const { t } = useI18n();
 interface Props {
     context: Context
-    shape: Shape 
+    shape: ShapeView 
 }
 const props = defineProps<Props>();
 </script>

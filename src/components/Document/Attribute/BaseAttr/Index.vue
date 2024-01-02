@@ -1,6 +1,6 @@
 <script setup lang="ts">
 import { onMounted, onUnmounted, ref, reactive } from 'vue'
-import { Shape, ShapeType, RectShape, PathShape, ImageShape, Artboard } from '@kcdesign/data';
+import { ShapeType, RectShape, PathShape, ImageShape, Artboard, adapt2Shape, ShapeView } from '@kcdesign/data';
 import IconText from '@/components/common/IconText.vue';
 import { debounce } from 'lodash';
 import { useI18n } from 'vue-i18n';
@@ -170,7 +170,7 @@ function onChangeW(value: string) {
 
     const selected = props.context.selection.selectedShapes;
 
-    editor.modifyShapesWidth(selected, _w);
+    editor.modifyShapesWidth(selected.map(s => adapt2Shape(s)), _w);
 }
 function onChangeH(value: string) {
     value = Number
@@ -188,7 +188,7 @@ function onChangeH(value: string) {
 
     const selected = props.context.selection.selectedShapes;
 
-    editor.modifyShapesHeight(selected, _h);
+    editor.modifyShapesHeight(selected.map(s => adapt2Shape(s)), _h);
 }
 function lockToggle() {
     if (s_length) {
@@ -211,7 +211,7 @@ function fliph() {
     }
     const selected = props.context.selection.selectedShapes;
     if (selected.length === 1) {
-        const e = props.context.editor4Shape(selected[0]);
+        const e = props.context.editor4Shape(adapt2Shape(selected[0]));
         e.flipH();
     } else if (selected.length > 1) {
         const page = props.context.selection.selectedPage;
@@ -228,7 +228,7 @@ function flipv() {
     }
     const selected = props.context.selection.selectedShapes;
     if (selected.length === 1) {
-        const e = props.context.editor4Shape(selected[0]);
+        const e = props.context.editor4Shape(adapt2Shape(selected[0]));
         e.flipV();
     } else if (selected.length > 1) {
         const page = props.context.selection.selectedPage;
@@ -262,17 +262,17 @@ function onChangeRotate(value: string) {
 
     const editor = props.context.editor4Page(page);
 
-    editor.setShapesRotate(selected, newRotate);
+    editor.setShapesRotate(selected.map(s => adapt2Shape(s)), newRotate);
 }
 function adapt() {
     const selected = props.context.selection.selectedShapes;
     if (selected.length === 1 && selected[0].type === ShapeType.Artboard) {
         props.context
-            .editor4Shape(selected[0])
+            .editor4Shape(adapt2Shape(selected[0]))
             .adapt();
     }
 }
-function modify_multi_radius(shape: Shape) {
+function modify_multi_radius(shape: ShapeView) {
     multiRadius.value = false;
     if (!(shape instanceof PathShape)) {
         return;
@@ -451,6 +451,7 @@ onUnmounted(() => {
     padding: 12px 8px 12px 8px;
     box-sizing: border-box;
     visibility: visible;
+    border-bottom: 1px solid #F0F0F0;
 
     .tr {
         position: relative;
@@ -553,6 +554,7 @@ onUnmounted(() => {
             display: flex;
             align-items: center;
             justify-content: space-between;
+            margin-left: 7px;
 
             .flip {
                 background-color: var(--input-background);
@@ -570,6 +572,10 @@ onUnmounted(() => {
                     width: 14px;
                     height: 14px;
                 }
+            }
+
+            .flip:hover {
+                background-color: #EBEBEB;
             }
 
             .flip-disable {

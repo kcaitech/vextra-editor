@@ -1,7 +1,6 @@
 <script setup lang="ts">
-import { ExportFileFormat, ExportFormat, ExportFormatNameingScheme, ExportOptions, ExportVisibleScaleType, Shape, ShapeType } from '@kcdesign/data';
-import { ref, onMounted, onUnmounted, watch, reactive, computed, nextTick } from 'vue';
-import { WorkSpace } from '@/context/workspace';
+import { ExportFileFormat, ExportFormat, ExportFormatNameingScheme, ExportOptions, ExportVisibleScaleType, Shape, ShapeType, ShapeView, adapt2Shape } from '@kcdesign/data';
+import { ref, onMounted, onUnmounted, reactive, nextTick } from 'vue';
 import { Context } from '@/context';
 import PreinstallSelect from './PreinstallSelect.vue';
 import Preview from './Preview.vue';
@@ -16,7 +15,7 @@ import { downloadImages, exportSingleImage, getExportFillUrl, getPngImageData, g
 const { t } = useI18n();
 interface Props {
     context: Context
-    shapes: Shape[]
+    shapes: ShapeView[]
 }
 interface SvgFormat {
     id: string
@@ -511,6 +510,7 @@ onMounted(() => {
 onUnmounted(() => {
     props.context.selection.unwatch(selection_watcher);
 });
+
 </script>
 
 <template>

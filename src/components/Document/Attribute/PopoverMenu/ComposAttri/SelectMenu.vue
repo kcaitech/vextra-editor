@@ -3,6 +3,7 @@ import { Context } from '@/context';
 import { Menu } from '@/context/menu';
 import { onMounted, onUnmounted, ref } from 'vue';
 import { useI18n } from "vue-i18n";
+import SvgIcon from "@/components/common/SvgIcon.vue";
 const props = defineProps<{
     width: string
     top: number
@@ -50,6 +51,10 @@ onUnmounted(() => {
             @mouseenter="hoverColor(index)" :class="{ active: isActive === index }">
             <span v-if="item !== 'add_new_value' || index !== menuItems.length - 1">{{ item }}</span>
             <span v-if="item === 'add_new_value' && index === menuItems.length - 1">{{ t('compos.add_new') }}</span>
+            <div class="choose" v-if="props.menuIndex === index" >
+<!--                 :style="{ borderColor: isActive === index ? '#fff' : '' }"-->
+                <svg-icon icon-class="choose"></svg-icon>
+            </div>
         </div>
     </div>
 </template>
@@ -58,31 +63,50 @@ onUnmounted(() => {
 .select_menu {
     position: absolute;
     right: 0;
-    padding: 8px 0;
+    padding: 4px 0;
     background-color: #fff;
-    border-radius: 2px;
-    box-shadow: 1px 1px 5px rgba(0, 0, 0, 0.2);
+    border: 1px solid #EBEBEB;
+    border-radius: 6px;
+    box-shadow: 0px 2px 10px 0px rgba(0, 0, 0, 0.08);
     z-index: 100;
 
     .untie {
-        height: 30px;
-        width: 100%;
+        height: 32px;
+        width: calc(100% - 1px);
         display: flex;
         align-items: center;
         justify-content: space-between;
-        padding: 0 16px;
+        padding: 0 8px 0 12px;
         box-sizing: border-box;
 
         span {
             overflow: hidden;
             text-overflow: ellipsis;
             white-space: nowrap;
+            //color: #262626;
         }
 
         // &:hover {
         //     background-color: var(--active-color);
         //     color: #fff;
         // }
+
+        .choose {
+            //box-sizing: border-box;
+            width: 12px;
+            height: 12px;
+            //margin-right: 4px;
+            //margin-left: 2px;
+            //border-width: 0 0 0.1em 0.1em;
+            //border-style: solid;
+            //border-color: rgb(0, 0, 0, .75);
+            //transform: rotate(-45deg) translateY(-30%);
+
+            >svg {
+                width: 12px;
+                height: 12px;
+            }
+        }
     }
 }
 

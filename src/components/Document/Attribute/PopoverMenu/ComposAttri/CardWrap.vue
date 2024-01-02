@@ -1,11 +1,11 @@
 <script setup lang="ts">
 import LevelName from "@/components/Document/Attribute/PopoverMenu/ComposAttri/LevelName.vue";
 import StaticAbbrCard from "@/components/Document/Attribute/PopoverMenu/ComposAttri/StaticAbbrCard.vue";
-import {Shape} from "@kcdesign/data";
+import {ShapeView} from "@kcdesign/data";
 import {onMounted, onUnmounted, ref} from "vue";
 
 interface Props {
-    data: Shape
+    data: ShapeView
     container: Element | null
 }
 
@@ -56,16 +56,17 @@ onUnmounted(() => {
         align-items: center;
         padding: 2px 0 2px 2px;
         width: 100%;
-        height: 30px;
-        border-radius: 4px;
+        height: 32px;
+        // border-radius: 4px;
+        box-sizing: border-box;
 
-        &:hover {
-            background-color: #e5dbff;
+        // &:hover {
+        //     background-color: #e5dbff;
 
-            .thumbnail {
-                opacity: .5;
-            }
-        }
+        //     .thumbnail {
+        //         opacity: .5;
+        //     }
+        // }
 
         .svg {
             width: 10px;
@@ -74,10 +75,10 @@ onUnmounted(() => {
         }
 
         .thumbnail {
-            border-radius: 4px;
-            height: 100%;
+            border-radius: 2px;
+            height: 30px;
             width: 30px;
-            margin-right: 8px;
+            margin-right: 4px;
             box-sizing: border-box;
             border: 1px solid var(--grey-light);
             background-image: url("data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAABAAAAAQCAYAAAAf8/9hAAAAAXNSR0IArs4c6QAAADBJREFUOE9jfPbs2X8GPEBSUhKfNAPjqAHDIgz+//+PNx08f/4cfzoYNYCBceiHAQC5flV5JzgrxQAAAABJRU5ErkJggg==");

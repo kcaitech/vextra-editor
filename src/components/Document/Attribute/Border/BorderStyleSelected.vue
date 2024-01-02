@@ -1,8 +1,7 @@
 <script lang="ts" setup>
 import { SelectItem } from '@/components/common/Select.vue';
-import { } from 'vue'
 const props = defineProps<{
-    data: SelectItem
+    data: SelectItem | null
 }>();
 </script>
 
@@ -16,7 +15,7 @@ const props = defineProps<{
 <style scoped lang="scss">
 .item-container {
     width: 100%;
-    height: 100%;
+    height: 55px;
     display: flex;
     align-items: center;
 

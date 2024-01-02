@@ -1,5 +1,5 @@
 <script setup lang="ts">
-import { Matrix, Shape } from "@kcdesign/data";
+import { Matrix, Shape, ShapeView } from "@kcdesign/data";
 import { XYsBounding } from "@/utils/common";
 import { WorkSpace } from '@/context/workspace'
 import { Selection } from '@/context/selection';
@@ -39,7 +39,7 @@ const contour = () => {
     dotted_line_point(select_shape_posi.value, hover_shape_posi.value);
 }
 
-const selectContour = (shapes: Shape[]) => {
+const selectContour = (shapes: ShapeView[]) => {
     const points: { x: number, y: number }[] = [];
     for (let index = 0; index < shapes.length; index++) {
         const s = shapes[index];
@@ -48,7 +48,7 @@ const selectContour = (shapes: Shape[]) => {
         const f = s.frame;
         const ps: { x: number, y: number }[] = [{ x: 0, y: 0 }, { x: f.width, y: 0 }, { x: f.width, y: f.height }, { x: 0, y: f.height }].map(p => m.computeCoord(p.x, p.y));
         points.push(...ps);
-        const path = s.getPath();
+        const path = s.getPath().clone();
         path.transform(m);
     }
     const b = XYsBounding(points);
@@ -62,14 +62,14 @@ const selectContour = (shapes: Shape[]) => {
     tracingPath.value.push(borPath);
 }
 
-const hoveredContour = (shape: Shape) => {
+const hoveredContour = (shape: ShapeView) => {
     const points: { x: number, y: number }[] = [];
     const m = shape.matrix2Root();
     m.multiAtLeft(matrix);
     const f = shape.frame;
     const ps: { x: number, y: number }[] = [{ x: 0, y: 0 }, { x: f.width, y: 0 }, { x: f.width, y: f.height }, { x: 0, y: f.height }].map(p => m.computeCoord(p.x, p.y));
     points.push(...ps);
-    const path = shape.getPath();
+    const path = shape.getPath().clone();
     path.transform(m);
     const b = XYsBounding(points);
     const framePoint = [{ x: b.left, y: b.top }, { x: b.right, y: b.top }, { x: b.right, y: b.bottom }, { x: b.left, y: b.bottom }];

@@ -29,6 +29,7 @@ export const Createteam = {
     projectsetting: 'Project access settings',
     membersetting: 'Member permission setting',
     projectfilenull: 'The project does not have any files',
+    projectfilesearchtips: 'No matching files',
     projectOptionsA: 'Public: Accessible to all team members',
     projectOptionsB: 'Non-public: Request access via link only',
     projectPermsA: 'Read only',

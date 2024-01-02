@@ -3,7 +3,7 @@ import { defineComponent, ref, onMounted, onUnmounted, watch } from 'vue';
 import { Context } from '@/context';
 import { Selection } from '@/context/selection';
 import { Close } from '@element-plus/icons-vue'
-import { TableShape } from '@kcdesign/data';
+import { TableShape, TableView, adapt2Shape } from '@kcdesign/data';
 import { useI18n } from 'vue-i18n';
 const { t } = useI18n();
 interface Props {
@@ -27,10 +27,10 @@ const escClose = (e: KeyboardEvent) => {
 }
 
 const InsertCell = (state: string) => {
-    const shape: TableShape = props.context.selection.selectedShapes[0] as TableShape;
-    const layout = (shape as TableShape).getLayout();
+    const shape: TableView = props.context.selection.selectedShapes[0] as TableView;
+    const layout = (shape as TableView).getLayout();
     const table = props.context.tableSelection;
-    const editor = props.context.editor4Table(shape as TableShape);
+    const editor = props.context.editor4Table(adapt2Shape(shape) as TableShape);
     if (table.tableColEnd !== -1 && table.tableRowEnd !== -1) {
         const grid = layout.grid.get(table.tableRowStart, table.tableColStart);
         if (state === 'top') {

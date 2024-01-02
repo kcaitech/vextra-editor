@@ -1,6 +1,6 @@
 <script setup lang='ts'>
 import {Context} from '@/context';
-import {Matrix, Shape} from '@kcdesign/data';
+import {Matrix, Shape, ShapeView} from '@kcdesign/data';
 import {ref, onMounted, onUnmounted, watch} from 'vue';
 import {Selection} from '@/context/selection';
 import {WorkSpace} from '@/context/workspace';
@@ -49,14 +49,14 @@ function selection_watcher(t?: number) {
     }
 }
 
-function update_paths(shapes: Shape[]) {
+function update_paths(shapes: ShapeView[]) {
     // const s = Date.now();
     const workspace = props.context.workspace;
     if (!workspace.shouldSelectionViewUpdate) return;
     paths.value.length = 0;
     for (let i = 0; i < shapes.length; i++) {
         const shape = shapes[i];
-        const path = shape.getPath();
+        const path = shape.getPath().clone();
         const m2r = shape.matrix2Root();
         m2r.multiAtLeft(props.matrix);
         path.transform(m2r);
@@ -79,7 +79,7 @@ function passive_update() {
     const shapes = props.context.selection.selectedShapes;
     for (let i = 0; i < shapes.length; i++) {
         const shape = shapes[i];
-        const path = shape.getPath();
+        const path = shape.getPath().clone();
         const m2r = shape.matrix2Root();
         m2r.multiAtLeft(props.matrix);
         path.transform(m2r);

@@ -1,5 +1,5 @@
 import {Context} from "@/context";
-import {GroupShape, Shape} from "@kcdesign/data";
+import {GroupShape, Shape, ShapeView} from "@kcdesign/data";
 import {is_part_of_symbolref, is_state} from "@/utils/symbol";
 
 /**
@@ -8,7 +8,7 @@ import {is_part_of_symbolref, is_state} from "@/utils/symbol";
  * @param {1 | -1} reverse 1 为正序，-1为逆序
  * @return {Shape[]} z轴层级有序的图形列表
  */
-export function sort_by_layer(context: Context, selectedShapes: Shape[], reverse = 1) {
+export function sort_by_layer(context: Context, selectedShapes: ShapeView[], reverse = 1) {
     return compare_layer_3(selectedShapes, reverse); // 方案三：按照节点路径的排序
     // return compare_layer_2(selectedShapes, reverse); // 方案二： 找共同父亲节点，在该节点下进行比较：速度取决于selectedShapes数组的长度，selectedShapes元素的深度，两个元素共同父亲子元素的长度
     // return compare_layer_1(context, selectedShapes, reverse); // 方案一：遍历，最糟糕的情况下会遍历整棵树，但通常只会遍历一小段
@@ -19,21 +19,21 @@ export function sort_by_layer(context: Context, selectedShapes: Shape[], reverse
  * @param {Shape[]} shapes z轴层级无序的图形列表
  * @return {Shape[]} z轴层级有序的图形列表
  */
-function compare_layer_1(context: Context, selectedShapes: Shape[], reverse = 1): Shape[] {
+function compare_layer_1(context: Context, selectedShapes: ShapeView[], reverse = 1): ShapeView[] {
     const origin_map = new Map();
     for (let i = 0; i < selectedShapes.length; i++) {
         origin_map.set(selectedShapes[i].id, selectedShapes[i]);
     }
-    const sort_shapes: Shape[] = [];
+    const sort_shapes: ShapeView[] = [];
     const page = context.selection.selectedPage;
     if (page) {
         deep(page.childs);
     }
     return sort_shapes;
 
-    function deep(childs: Shape[]) {
+    function deep(childs: ShapeView[]) {
         for (let i = childs.length - 1; i > -1; i--) {
-            const shape = childs[i] as GroupShape;
+            const shape = childs[i];
             if (origin_map.get(shape.id)) {
                 if (reverse < 0) {
                     sort_shapes.unshift(shape);
@@ -114,7 +114,7 @@ function compare_layer_a_b_1(shape: Shape, another: Shape) {
  * @param {1 | -1} reverse 1 为正序，-1为逆序
  * @return {Shape[]} z轴层级有序的图形列表
  */
-export function compare_layer_3(selectedShapes: Shape[], reverse = 1): Shape[] {
+export function compare_layer_3(selectedShapes: ShapeView[], reverse = 1): ShapeView[] {
     const path_map = new Map();
     for (let i = 0; i < selectedShapes.length; i++) {
         const shape = selectedShapes[i];
@@ -136,7 +136,7 @@ export function compare_layer_3(selectedShapes: Shape[], reverse = 1): Shape[] {
  * @param {Map<string, number[]>} paths 所有等待比较图形的节点路径集合
  * @return {boolean} 图形shape的z轴层级较高则为真
  */
-function compare_layer_a_b_2(shape: Shape, another: Shape, paths: Map<string, number[]>) {
+function compare_layer_a_b_2(shape: ShapeView, another: ShapeView, paths: Map<string, number[]>) {
     const path1 = paths.get(shape.id);
     const path2 = paths.get(another.id);
     if (!path1 || !path2) return false;
@@ -161,12 +161,12 @@ function compare_layer_a_b_2(shape: Shape, another: Shape, paths: Map<string, nu
  * @param {Shape} shape
  * @return {number[]} 图形shape的路径序列
  */
-function get_node_path(shape: Shape): number[] {
+function get_node_path(shape: ShapeView): number[] {
     const path: number[] = [];
     let self = shape;
     let p = self.parent;
     while (p) {
-        const childs = (p as GroupShape).childs;
+        const childs = (p).childs;
         for (let i = childs.length - 1; i > -1; i--) { // 从后面往前找更快，因为大多数情况下操作的是新生成的图形，即index靠近length的图形
             if (childs[i].id === self.id) {
                 path.unshift(i);
@@ -180,8 +180,8 @@ function get_node_path(shape: Shape): number[] {
     return path;
 }
 
-export function filter_for_group1(shapes: Shape[]) {
-    const result: Shape[] = [];
+export function filter_for_group1(shapes: ShapeView[]) {
+    const result: ShapeView[] = [];
     for (let i = 0, l = shapes.length; i < l; i++) {
         const item = shapes[i];
         if (is_part_of_symbolref(item) || is_state(item)) continue;

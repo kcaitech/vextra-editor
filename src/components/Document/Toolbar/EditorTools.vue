@@ -21,6 +21,7 @@ import { string_by_sys } from "@/utils/common";
 import { ElMessage } from "element-plus";
 import Shape from "./Buttons/Shape.vue";
 import ToolButton from "./ToolButton.vue";
+import * as share_api from '@/request/share'
 const { t } = useI18n();
 interface Props {
     context: Context
@@ -90,12 +91,34 @@ onUnmounted(() => {
     props.context.tool.unwatch(workspace_watcher);
 })
 
+const postDocumentAuthority = async (data: { doc_id: any, perm_type: number, applicant_notes: any }) => {
+    try {
+        const { code, message } = await share_api.postDocumentAuthorityAPI(data)
+        if (code === 400 && message === '申请次数已达上限') {
+            ElMessage.success({
+                message: message,
+                center: true,
+                duration: 3000
+            })
+        } else {
+            ElMessage.success({
+                message: '权限申请已发送',
+                center: true,
+                duration: 3000
+            })
+        }
+    } catch (error) {
+        ElMessage.success({
+            message: '未知异常',
+            center: true,
+            duration: 3000
+        })
+    }
+}
+
 function applyForEdit() {
-    ElMessage.success({
-        message: '已发送权限申请',
-        center: true,
-        duration: 3000
-    })
+    const documentID = props.context.comment.isDocumentInfo?.document.id
+    postDocumentAuthority({ doc_id: documentID, perm_type: 3, applicant_notes: '' })
 }
 </script>
 
@@ -130,15 +153,14 @@ function applyForEdit() {
     <div v-if="isread || canComment || isLable" class="editor-tools" @dblclick.stop>
         <span style="color: #ffffff;" v-if="!isLable">{{ t('apply.read_only') }}</span>
         <div class="button" v-if="!isLable">
-            <button class="el" style="background-color: #1878F5;margin-right: 4px" @click="applyForEdit">{{
-                t('apply.apply_for_edit')
-            }}
+            <button class="el" style="background-color: #1878F5;margin-right: 4px" @click.stop="applyForEdit">
+                {{ t('apply.apply_for_edit') }}
             </button>
         </div>
         <Cursor @select="select" :d="selected" :active="selected === Action.AutoV || selected === Action.AutoK"
             :is_lable="isLable" :edit="isEdit"></Cursor>
         <div style="width: 16px;height: 52px;display: flex;align-items: center;justify-content: center;">
-            <div class="vertical-line" v-if="!isread"/>
+            <div class="vertical-line" v-if="!isread" />
         </div>
         <Comment @select="select" :active="selected === Action.AddComment" :workspace="workspace" v-if="!isread"></Comment>
     </div>

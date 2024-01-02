@@ -1,7 +1,7 @@
 <script setup lang="ts">
 import { computed, onMounted, onUnmounted, reactive, ref, watch } from 'vue';
 import { Context } from '@/context';
-import { GroupShape, Shape, ShapeType, TableCell, TableShape } from '@kcdesign/data';
+import { Shape, ShapeType, ShapeView, TableCell, TableShape, TableView, adapt2Shape } from '@kcdesign/data';
 import TypeHeader from '../TypeHeader.vue';
 import BorderDetail from './BorderDetail.vue';
 import ColorPicker from '@/components/common/ColorPicker/index.vue';
@@ -33,7 +33,7 @@ interface BorderItem {
 
 interface Props {
     context: Context
-    shapes: Shape[]
+    shapes: ShapeView[]
 }
 
 const { t } = useI18n();
@@ -44,7 +44,7 @@ const alphaBorder = ref<any>();
 const colorBorder = ref<any>()
 const mixed = ref<boolean>(false);
 const mixed_cell = ref(false);
-const editor = computed(() => props.context.editor4Shape(props.shapes[0]));
+const editor = computed(() => props.context.editor4Shape(adapt2Shape(props.shapes[0])));
 const watchedShapes = new Map();
 const len = computed<number>(() => props.shapes.length);
 const show_apex = ref<boolean>(false);
@@ -82,7 +82,9 @@ function watchShapes() {
 }
 
 function watcher(...args: any[]) {
-    if (args.length > 0 && (args.includes('style') || args.includes('variable'))) updateData();
+    if ((args.includes('style') || args.includes('variable'))) [
+        updateData()
+    ]
 }
 
 function updateData() {
@@ -119,9 +121,9 @@ function updateData() {
                 }
             }
         } else {
-            const style = shape.style;
-            for (let i = 0, l = style.borders.length; i < l; i++) {
-                const border = style.borders[i];
+            const _borders = shape.getBorders();
+            for (let i = 0, l = _borders.length; i < l; i++) {
+                const border = _borders[i];
                 const b: BorderItem = {
                     id: i,
                     border: border
@@ -137,7 +139,7 @@ function updateData() {
             borders.push(..._bs.reverse());
         }
     } else if (selecteds.length === 1 && shape.type === ShapeType.Group) {
-        const childs = (shape as GroupShape).childs;
+        const childs = (shape).childs;
         const shapes = flattenShapes(childs).filter(s => s.type !== ShapeType.Group);
         const _bs = get_borders(shapes);
         if (_bs === 'mixed') {
@@ -154,7 +156,7 @@ function addBorder() {
     const borderStyle = new BorderStyle(0, 0);
     const border = new Border(v4(), true, FillType.SolidColor, color, BorderPosition.Outer, 1, borderStyle);
     if (len.value === 1 && props.shapes[0].type !== ShapeType.Group) {
-        const shape = props.shapes[0] as TableShape;
+        const shape = props.shapes[0] as TableView;
         if (shape.type === ShapeType.Table) {
             const table = props.context.tableSelection;
             const e = props.context.editor4Table(shape);
@@ -204,7 +206,7 @@ function addBorder() {
             }
         }
     } else if (len.value === 1 && props.shapes[0].type === ShapeType.Group) {
-        const childs = (props.shapes[0] as GroupShape).childs;
+        const childs = (props.shapes[0]).childs;
         const shapes = flattenShapes(childs).filter(s => s.type !== ShapeType.Group);
         if (mixed.value) {
             const actions = get_actions_border_unify(shapes);
@@ -236,7 +238,7 @@ function deleteBorder(idx: number) {
     if (len.value === 1 && shape.type !== ShapeType.Group) {
         const table = props.context.tableSelection;
         if (shape.type === ShapeType.Table) {
-            const e = props.context.editor4Table(shape as TableShape);
+            const e = props.context.editor4Table(shape as TableView);
             const is_edting = table.editingCell;
             if (table.tableRowStart > -1 || table.tableColStart > -1 || is_edting) {
                 let range
@@ -270,7 +272,7 @@ function deleteBorder(idx: number) {
             editor.shapesDeleteBorder(actions);
         }
     } else if (len.value === 1 && shape.type === ShapeType.Group) {
-        const childs = (shape as GroupShape).childs;
+        const childs = (shape).childs;
         const shapes = flattenShapes(childs).filter(s => s.type !== ShapeType.Group);
         const actions = get_actions_border_delete(shapes, _idx);
         const page = props.context.selection.selectedPage;
@@ -291,7 +293,7 @@ function toggleVisible(idx: number) {
     if (len.value === 1 && shape.type !== ShapeType.Group) {
         if (shape.type === ShapeType.Table) {
             const table = props.context.tableSelection;
-            const e = props.context.editor4Table(shape as TableShape);
+            const e = props.context.editor4Table(shape as TableView);
             const is_edting = table.editingCell;
             if (table.tableRowStart > -1 || table.tableColStart > -1 || is_edting) {
                 let range
@@ -325,7 +327,7 @@ function toggleVisible(idx: number) {
             editor.setShapesBorderEnabled(actions);
         }
     } else if (len.value === 1 && shape.type === ShapeType.Group) {
-        const childs = (shape as GroupShape).childs;
+        const childs = (shape).childs;
         const shapes = flattenShapes(childs).filter(s => s.type !== ShapeType.Group);
         const actions = get_actions_border_enabled(shapes, idx, isEnabled);
         const page = props.context.selection.selectedPage;
@@ -361,7 +363,7 @@ function onColorChange(e: Event, idx: number) {
     if (len.value === 1 && shape.type !== ShapeType.Group) {
         if (shape.type === ShapeType.Table) {
             const table = props.context.tableSelection;
-            const e = props.context.editor4Table(shape as TableShape);
+            const e = props.context.editor4Table(shape as TableView);
             const is_edting = table.editingCell;
             if (table.tableRowStart > -1 || table.tableColStart > -1 || is_edting) {
                 let range
@@ -395,7 +397,7 @@ function onColorChange(e: Event, idx: number) {
             editor.setShapesBorderColor(actions);
         }
     } else if (len.value === 1 && shape.type === ShapeType.Group) {
-        const childs = (shape as GroupShape).childs;
+        const childs = (shape).childs;
         const shapes = flattenShapes(childs).filter(s => s.type !== ShapeType.Group);
         const actions = get_actions_border_color(shapes, _idx, color);
         const page = props.context.selection.selectedPage;
@@ -429,7 +431,7 @@ function onAlphaChange(e: Event, idx: number) {
             if (len.value === 1 && shape.type !== ShapeType.Group) {
                 if (shape.type === ShapeType.Table) {
                     const table = props.context.tableSelection;
-                    const e = props.context.editor4Table(shape as TableShape);
+                    const e = props.context.editor4Table(shape as TableView);
                     const is_edting = table.editingCell;
                     if (table.tableRowStart > -1 || table.tableColStart > -1 || is_edting) {
                         let range
@@ -463,7 +465,7 @@ function onAlphaChange(e: Event, idx: number) {
                     editor.setShapesBorderColor(actions);
                 }
             } else if (len.value === 1 && shape.type === ShapeType.Group) {
-                const childs = (shape as GroupShape).childs;
+                const childs = (shape).childs;
                 const shapes = flattenShapes(childs).filter(s => s.type !== ShapeType.Group);
                 const actions = get_actions_border_color(shapes, _idx, color);
                 const page = props.context.selection.selectedPage;
@@ -486,7 +488,7 @@ function onAlphaChange(e: Event, idx: number) {
                 if (len.value === 1 && shape.type !== ShapeType.Group) {
                     if (shape.type === ShapeType.Table) {
                         const table = props.context.tableSelection;
-                        const e = props.context.editor4Table(shape as TableShape);
+                        const e = props.context.editor4Table(shape as TableView);
                         const is_edting = table.editingCell;
                         if (table.tableRowStart > -1 || table.tableColStart > -1 || is_edting) {
                             let range
@@ -520,7 +522,7 @@ function onAlphaChange(e: Event, idx: number) {
                         editor.setShapesBorderColor(actions);
                     }
                 } else if (len.value === 1 && shape.type === ShapeType.Group) {
-                    const childs = (shape as GroupShape).childs;
+                    const childs = (shape).childs;
                     const shapes = flattenShapes(childs).filter(s => s.type !== ShapeType.Group);
                     const actions = get_actions_border_color(shapes, _idx, color);
                     const page = props.context.selection.selectedPage;
@@ -544,7 +546,7 @@ function getColorFromPicker(color: Color, idx: number) {
     if (len.value === 1 && shape.type !== ShapeType.Group) {
         if (shape.type === ShapeType.Table) {
             const table = props.context.tableSelection;
-            const e = props.context.editor4Table(shape as TableShape);
+            const e = props.context.editor4Table(shape as TableView);
             const is_edting = table.editingCell;
             if (table.tableRowStart > -1 || table.tableColStart > -1 || is_edting) {
                 let range
@@ -578,7 +580,7 @@ function getColorFromPicker(color: Color, idx: number) {
             editor.setShapesBorderColor(actions);
         }
     } else if (len.value === 1 && shape.type === ShapeType.Group) {
-        const childs = (shape as GroupShape).childs;
+        const childs = (shape).childs;
         const shapes = flattenShapes(childs).filter(s => s.type !== ShapeType.Group);
         const actions = get_actions_border_color(shapes, _idx, color);
         const page = props.context.selection.selectedPage;
@@ -624,7 +626,7 @@ function update_by_shapes() {
     layout();
 }
 
-function shapes_watcher(v: Shape[]) {
+function shapes_watcher(v: ShapeView[]) {
     update_by_shapes();
     watchCells.forEach((v) => v.unwatch(updateData));
     watchCells.clear();

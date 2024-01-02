@@ -1,5 +1,5 @@
 <script lang="ts" setup>
-import {Matrix, TextShape} from "@kcdesign/data";
+import {Matrix, TableCellView, TextShape, TextShapeView} from "@kcdesign/data";
 import {Context} from "@/context";
 import TextInput from "@/components/Document/Selection/Controller/Text/TextInput.vue";
 import SelectView from "@/components/Document/Selection/Controller/Text/SelectView.vue";
@@ -11,7 +11,7 @@ import {check_orientation_during_movement} from "@/utils/listview";
 interface Props {
     matrix: number[]
     context: Context
-    shape: TextShape
+    shape: TextShapeView | TableCellView
     root: { x: number, y: number }
     viewBox: string
     container: Element
@@ -104,12 +104,12 @@ onUnmounted(() => {
          :viewBox="viewBox" overflow="hidden"
          :style="{ transform: matrix.toString() }" @mousedown="down"
     >
-        <SelectView :context="props.context" :shape="(props.shape as TextShape)"
-                    :matrix="o_matrix.toArray()" :main-notify="Selection.CHANGE_TEXT_LITE"
+        <SelectView :context="props.context" :shape="(props.shape)"
+                    :matrix="o_matrix.toArray()" :main-notify="Selection.CHANGE_TEXT"
                     :selection="text_selection_lite"></SelectView>
     </svg>
-    <TextInput :context="props.context" :shape="(props.shape as TextShape)" :matrix="o_matrix.toArray()"
-               :main-notify="Selection.CHANGE_TEXT_LITE" :selection="text_selection_lite" :root="root"></TextInput>
+    <TextInput :context="props.context" :shape="(props.shape)" :matrix="o_matrix.toArray()"
+               :main-notify="Selection.CHANGE_TEXT" :selection="text_selection_lite" :root="root"></TextInput>
 </template>
 <style scoped lang="scss">
 svg {

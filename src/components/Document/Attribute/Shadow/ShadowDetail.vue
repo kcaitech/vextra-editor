@@ -6,7 +6,7 @@ import ShadowInput from './ShadowInput.vue';
 import { useI18n } from 'vue-i18n';
 import ColorPicker from '@/components/common/ColorPicker/index.vue';
 import { toHex } from "@/utils/color";
-import { Color, Shadow, Shape, ShapeType } from '@kcdesign/data';
+import { Color, Shadow, ShapeView, ShapeType } from '@kcdesign/data';
 import { message } from "@/utils/message";
 import { Reg_HEX } from "@/utils/RegExp";
 import { get_actions_shadow_blur, get_actions_shadow_color, get_actions_shadow_offsetx, get_actions_shadow_offsety, get_actions_shadow_spread } from '@/utils/shape_style';
@@ -17,7 +17,7 @@ interface Props {
     shadow: Shadow
     idx: number
     length: number
-    shapes: Shape[]
+    shapes: ShapeView[]
 }
 const props = defineProps<Props>();
 const popover = ref();

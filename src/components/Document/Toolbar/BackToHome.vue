@@ -13,6 +13,7 @@ import { ElMessage, ElMessageBox } from 'element-plus'
 import { Tool } from '@/context/tool';
 import DocumentMenu from './DocumentMenu/DocumentMenu.vue';
 import SvgIcon from "@/components/common/SvgIcon.vue";
+import ProjectDialog from '@/components/TeamProject/ProjectDialog.vue';
 
 const route = useRoute();
 
@@ -25,9 +26,9 @@ const ele = ref<number>(1);
 const input = ref<HTMLInputElement>();
 const name = ref<string>('');
 const { t } = useI18n();
-
+const showbackhometips = ref(false)
 function home() {
-  if (props.context.communication.docOp.hasPendingSyncCmd()) return hasPendingSyncCmd();
+  if (props.context.communication.docOp.hasPendingSyncCmd()) return showbackhometips.value = true;
   window.document.title = t('product.name');
   (window as any).sketchDocument = undefined;
   (window as any).skrepo = undefined;
@@ -69,29 +70,30 @@ const back = (index: string) => {
 }
 
 const hasPendingSyncCmd = () => {
-  ElMessageBox.confirm(
-    `${t('message.unuploaded_msg')}`,
-    `${t('message.back_home')}`,
-    {
-      confirmButtonText: `${t('message.exit_document')}`,
-      cancelButtonText: `${t('message.cancel')}`,
-    }
-  )
-    .then(() => {
-      window.document.title = t('product.name');
-      (window as any).sketchDocument = undefined;
-      (window as any).skrepo = undefined;
-      const index = sessionStorage.getItem('index');
-      if (index) {
-        back(index);
-      } else {
-        router.push({ name: 'recently' });
-        sessionStorage.setItem('index', '1')
-      }
-    })
-    .catch(() => {
-      return
-    })
+  showbackhometips.value = false
+  // ElMessageBox.confirm(
+  //   `${t('message.unuploaded_msg')}`,
+  //   `${t('message.back_home')}`,
+  //   {
+  //     confirmButtonText: `${t('message.exit_document')}`,
+  //     cancelButtonText: `${t('message.cancel')}`,
+  //   }
+  // )
+  //   .then(() => {
+  window.document.title = t('product.name');
+  (window as any).sketchDocument = undefined;
+  (window as any).skrepo = undefined;
+  const index = sessionStorage.getItem('index');
+  if (index) {
+    back(index);
+  } else {
+    router.push({ name: 'recently' });
+    sessionStorage.setItem('index', '1')
+  }
+  // })
+  // .catch(() => {
+  //   return
+  // })
 }
 
 function rename() {
@@ -138,7 +140,8 @@ async function blur() {
       } else {
         ElMessage.error({ duration: 1500, message: message === '审核不通过' ? t('system.sensitive_reminder') : message })
       }
-      window.document.title = name.value.length > 8 ? `${name.value.slice(0, 8)}... - ${t('product.name')}` : `${name.value} - ${t('product.name')}`
+      // window.document.title = name.value.length > 8 ? `${name.value.slice(0, 8)}... - ${t('product.name')}` : `${name.value} - ${t('product.name')}`
+      window.document.title = `${name.value} - ${t('product.name')}`
       document.removeEventListener('keydown', enter);
     } catch (error) {
       console.log(error);
@@ -173,6 +176,11 @@ const tool_watcher = (t: number) => {
     isLable.value = props.context.tool.isLable;
   }
 }
+
+const closeDisband = () => {
+  showbackhometips.value = false;
+}
+
 onMounted(() => {
   init_name();
   props.context.workspace.watch(workspace_watcher);
@@ -206,6 +214,11 @@ onUnmounted(() => {
       <span v-if="isLable" style="color: #fff; font-size: 12px">【开发模式】</span>
     </div>
   </div>
+  <Teleport to="body">
+    <ProjectDialog :projectVisible="showbackhometips" :context="t('message.unuploaded_msg')"
+      :title="t('message.back_home')" :confirm-btn="t('message.exit_document')" @clode-dialog="closeDisband"
+      @confirm="hasPendingSyncCmd"></ProjectDialog>
+  </Teleport>
 </template>
 
 <style scoped lang="scss">

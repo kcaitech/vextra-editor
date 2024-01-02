@@ -1,7 +1,7 @@
-import { Shape } from "@kcdesign/data";
+import { Shape, ShapeView, adapt2Shape } from "@kcdesign/data";
 import { PositonAdjust } from "@kcdesign/data";
 // 群的最左端
-export function get_colony_left(shapes: Shape[]) {
+export function get_colony_left(shapes: ShapeView[]) {
     const _xs: number[] = [];
     for (let i = 0; i < shapes.length; i++) {
         const shape = shapes[i];
@@ -17,7 +17,7 @@ export function get_colony_left(shapes: Shape[]) {
     return Math.min(..._xs);
 }
 // 群的水平中心
-export function get_colony_center_x(shapes: Shape[]) {
+export function get_colony_center_x(shapes: ShapeView[]) {
     // todo
     const _xs: number[] = [];
     for (let i = 0; i < shapes.length; i++) {
@@ -39,7 +39,7 @@ export function get_colony_center_x(shapes: Shape[]) {
     return (Math.min(..._xs) + Math.max(..._xs)) / 2;
 }
 // 群的最右端
-export function get_colony_right(shapes: Shape[]) {
+export function get_colony_right(shapes: ShapeView[]) {
     const _xs: number[] = [];
     for (let i = 0; i < shapes.length; i++) {
         const shape = shapes[i];
@@ -60,7 +60,7 @@ export function get_colony_right(shapes: Shape[]) {
     return Math.max(..._xs);
 }
 // 群的最顶端
-export function get_colony_top(shapes: Shape[]) {
+export function get_colony_top(shapes: ShapeView[]) {
     const _ys: number[] = [];
     for (let i = 0; i < shapes.length; i++) {
         const shape = shapes[i];
@@ -81,7 +81,7 @@ export function get_colony_top(shapes: Shape[]) {
     return Math.min(..._ys);
 }
 // 群的垂直中心
-export function get_colony_center_y(shapes: Shape[]) {
+export function get_colony_center_y(shapes: ShapeView[]) {
     const _ys: number[] = [];
     for (let i = 0; i < shapes.length; i++) {
         const shape = shapes[i];
@@ -102,7 +102,7 @@ export function get_colony_center_y(shapes: Shape[]) {
     return (Math.min(..._ys) + Math.max(..._ys)) / 2;
 }
 // 群的最低端
-export function get_colony_bottom(shapes: Shape[]) {
+export function get_colony_bottom(shapes: ShapeView[]) {
     const _ys: number[] = [];
     for (let i = 0; i < shapes.length; i++) {
         const shape = shapes[i];
@@ -186,7 +186,7 @@ export function get_colony_height(shapes: Shape[]) {
     return Math.max(..._ys) - Math.min(..._ys);
 }
 // 个体的最左端
-export function get_individuality_left(shape: Shape) {
+export function get_individuality_left(shape: ShapeView) {
     const _xs: number[] = [];
     const frame = shape.frame;
     const m = shape.matrix2Root();
@@ -204,7 +204,7 @@ export function get_individuality_left(shape: Shape) {
     return Math.min(..._xs);
 }
 // 个体的水平中心
-export function get_individuality_center_x(shape: Shape) {
+export function get_individuality_center_x(shape: ShapeView) {
     const _xs: number[] = [];
     const frame = shape.frame;
     const m = shape.matrix2Root();
@@ -222,7 +222,7 @@ export function get_individuality_center_x(shape: Shape) {
     return (Math.min(..._xs) + Math.max(..._xs)) / 2;
 }
 // 个体的最右端
-export function get_individuality_right(shape: Shape) {
+export function get_individuality_right(shape: ShapeView) {
     const _xs: number[] = [];
     const frame = shape.frame;
     const m = shape.matrix2Root();
@@ -240,7 +240,7 @@ export function get_individuality_right(shape: Shape) {
     return Math.max(..._xs);
 }
 // 个体的最顶端
-export function get_individuality_top(shape: Shape) {
+export function get_individuality_top(shape: ShapeView) {
     const _ys: number[] = [];
     const frame = shape.frame;
     const m = shape.matrix2Root();
@@ -258,7 +258,7 @@ export function get_individuality_top(shape: Shape) {
     return Math.min(..._ys);
 }
 // 个体的垂直中心
-export function get_individuality_center_y(shape: Shape) {
+export function get_individuality_center_y(shape: ShapeView) {
     const _ys: number[] = [];
     const frame = shape.frame;
     const m = shape.matrix2Root();
@@ -276,7 +276,7 @@ export function get_individuality_center_y(shape: Shape) {
     return (Math.min(..._ys) + Math.max(..._ys)) / 2;
 }
 // 个体的最底端
-export function get_individuality_bottom(shape: Shape) {
+export function get_individuality_bottom(shape: ShapeView) {
     const _ys: number[] = [];
     const frame = shape.frame;
     const m = shape.matrix2Root();
@@ -294,7 +294,7 @@ export function get_individuality_bottom(shape: Shape) {
     return Math.max(..._ys);
 }
 // 获取个体左右
-export function get_individuality_l_r(shape: Shape) {
+export function get_individuality_l_r(shape: ShapeView) {
     const _xs: number[] = [];
     const frame = shape.frame;
     const m = shape.matrix2Root();
@@ -312,7 +312,7 @@ export function get_individuality_l_r(shape: Shape) {
     return { left: Math.min(..._xs), right: Math.max(..._xs) };
 }
 // 获取个体上下
-export function get_individuality_t_b(shape: Shape) {
+export function get_individuality_t_b(shape: ShapeView) {
     const _ys: number[] = [];
     const frame = shape.frame;
     const m = shape.matrix2Root();
@@ -331,78 +331,78 @@ export function get_individuality_t_b(shape: Shape) {
 }
 
 // 靠左对齐
-export function align_left(shapes: Shape[]) {
+export function align_left(shapes: ShapeView[]) {
     const c_apex = get_colony_left(shapes);
     const actions: PositonAdjust[] = [];
     for (let i = 0; i < shapes.length; i++) {
         const shape = shapes[i];
         const s_apex = get_individuality_left(shape);
-        actions.push({ target: shape, transX: c_apex - s_apex, transY: 0 });
+        actions.push({ target: adapt2Shape(shape), transX: c_apex - s_apex, transY: 0 });
     }
     return actions;
 }
 // 水平线对齐
-export function align_cneter_x(shapes: Shape[]) {
+export function align_cneter_x(shapes: ShapeView[]) {
     const c_apex = get_colony_center_x(shapes);
     const actions: PositonAdjust[] = [];
     for (let i = 0; i < shapes.length; i++) {
         const shape = shapes[i];
         const s_apex = get_individuality_center_x(shape);
-        actions.push({ target: shape, transX: c_apex - s_apex, transY: 0 });
+        actions.push({ target: adapt2Shape(shape), transX: c_apex - s_apex, transY: 0 });
     }
     return actions;
 }
 // 靠右对齐
-export function align_right(shapes: Shape[]) {
+export function align_right(shapes: ShapeView[]) {
     const c_apex = get_colony_right(shapes);
     const actions: PositonAdjust[] = [];
     for (let i = 0; i < shapes.length; i++) {
         const shape = shapes[i];
         const s_apex = get_individuality_right(shape);
-        actions.push({ target: shape, transX: c_apex - s_apex, transY: 0 });
+        actions.push({ target: adapt2Shape(shape), transX: c_apex - s_apex, transY: 0 });
     }
     return actions;
 }
 // 靠顶部对齐
-export function align_top(shapes: Shape[]) {
+export function align_top(shapes: ShapeView[]) {
     const c_apex = get_colony_top(shapes);
     const actions: PositonAdjust[] = [];
     for (let i = 0; i < shapes.length; i++) {
         const shape = shapes[i];
         const s_apex = get_individuality_top(shape);
-        actions.push({ target: shape, transX: 0, transY: c_apex - s_apex });
+        actions.push({ target: adapt2Shape(shape), transX: 0, transY: c_apex - s_apex });
     }
     return actions;
 }
 // 中线对齐
-export function align_cneter_y(shapes: Shape[]) {
+export function align_cneter_y(shapes: ShapeView[]) {
     const c_apex = get_colony_center_y(shapes);
     const actions: PositonAdjust[] = [];
     for (let i = 0; i < shapes.length; i++) {
         const shape = shapes[i];
         const s_apex = get_individuality_center_y(shape);
-        actions.push({ target: shape, transX: 0, transY: c_apex - s_apex });
+        actions.push({ target: adapt2Shape(shape), transX: 0, transY: c_apex - s_apex });
     }
     return actions;
 }
-export function align_bottom(shapes: Shape[]) {
+export function align_bottom(shapes: ShapeView[]) {
     const c_apex = get_colony_bottom(shapes);
     const actions: PositonAdjust[] = [];
     for (let i = 0; i < shapes.length; i++) {
         const shape = shapes[i];
         const s_apex = get_individuality_bottom(shape);
-        actions.push({ target: shape, transX: 0, transY: c_apex - s_apex });
+        actions.push({ target: adapt2Shape(shape), transX: 0, transY: c_apex - s_apex });
     }
     return actions;
 }
 
 // 水平均匀分布
-export function distribute_horizontally(shapes: Shape[]) {
+export function distribute_horizontally(shapes: ShapeView[]) {
     const new_shapes: { left: number, right: number, width: number, shape: Shape }[] = [];
     for (let i = 0; i < shapes.length; i++) {
         const shape = shapes[i];
         const { left, right } = get_individuality_l_r(shape);
-        new_shapes.push({ shape, left, right, width: right - left });
+        new_shapes.push({ shape: adapt2Shape(shape), left, right, width: right - left });
     }
     new_shapes.sort((a, b) => {
         if (a.left > b.left) {
@@ -440,12 +440,12 @@ export function distribute_horizontally(shapes: Shape[]) {
     }
 }
 // 垂直均匀分布
-export function vertical_uniform_distribution(shapes: Shape[]) {
+export function vertical_uniform_distribution(shapes: ShapeView[]) {
     const new_shapes: { top: number, bottom: number, height: number, shape: Shape }[] = [];
     for (let i = 0; i < shapes.length; i++) {
         const shape = shapes[i];
         const { top, bottom } = get_individuality_t_b(shape);
-        new_shapes.push({ shape, top, bottom, height: bottom - top });
+        new_shapes.push({ shape: adapt2Shape(shape), top, bottom, height: bottom - top });
     }
     new_shapes.sort((a, b) => {
         if (a.top > b.top) {

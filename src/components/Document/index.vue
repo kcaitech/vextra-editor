@@ -8,7 +8,7 @@ import Attribute from './Attribute/RightTabs.vue';
 import Toolbar from './Toolbar/index.vue'
 import ColSplitView from '@/components/common/ColSplitView.vue';
 import ApplyFor from './Toolbar/Share/ApplyFor.vue';
-import { Document, importDocument, Repository, Page, CoopRepository, IStorage } from '@kcdesign/data';
+import { Document, importDocument, Repository, Page, CoopRepository, IStorage, PageView } from '@kcdesign/data';
 import { SCREEN_SIZE } from '@/utils/setting';
 import * as share_api from '@/request/share'
 import * as user_api from '@/request/users'
@@ -36,7 +36,7 @@ import { setup as keyboardUints } from '@/utils/keyboardUnits';
 import { Tool } from '@/context/tool';
 
 const { t } = useI18n();
-const curPage = shallowRef<Page | undefined>(undefined);
+const curPage = shallowRef<PageView | undefined>(undefined);
 let context: Context | undefined;
 const middleWidth = ref<number>(0.8);
 const middleMinWidth = ref<number>(0.3);
@@ -123,8 +123,9 @@ function switchPage(id?: string) {
         ctx.comment.toggleCommentPage()
         curPage.value = undefined;
         ctx.comment.commentMount(false)
-        ctx.selection.selectPage(page);
-        curPage.value = page;
+        const pagedom = ctx.getPageDom(page).dom;
+        ctx.selection.selectPage(pagedom);
+        curPage.value = pagedom;
       }
     })
   }
@@ -322,7 +323,6 @@ const getDocumentInfo = async () => {
   try {
     loading.value = true;
     noNetwork.value = false;
-
     const docInfoPromise = share_api.getDocumentInfoAPI({ doc_id: route.query.id });
     const docKeyPromise = share_api.getDocumentKeyAPI({ doc_id: route.query.id });
     const [docInfoRes, docKeyRes] = await Promise.all([docInfoPromise, docKeyPromise]);
@@ -527,7 +527,12 @@ const networkMessage = (status: NetworkStatusType) => {
     networkLinkSuccess()
   }
 }
-const networkDebounce = debounce(networkMessage, 1000)
+const networkDebounce = (() => {
+    const df = debounce(networkMessage, 1000)
+    return (status: NetworkStatusType) => {
+        df(status).catch((e) => {console.log(e)});
+    }
+})();
 
 //文档获取失败 重试刷新页面
 const refreshDoc = () => {
@@ -687,12 +692,12 @@ onUnmounted(() => {
       <template #slot1>
         <Navigation v-if="curPage !== undefined && !null_context" id="navigation" :context="context!"
           @switchpage="switchPage" @mouseenter="() => { mouseenter('left') }" @showNavigation="showHiddenLeft"
-          :page="(curPage as Page)" :showLeft="showLeft" :leftTriggleVisible="leftTriggleVisible">
+          :page="(curPage as PageView)" :showLeft="showLeft" :leftTriggleVisible="leftTriggleVisible">
         </Navigation>
       </template>
       <template #slot2>
         <ContentView v-if="curPage !== undefined && !null_context" id="content" :context="context!"
-          @mouseenter="() => { mouseleave('left') }" :page="(curPage as Page)">
+          @mouseenter="() => { mouseleave('left') }" :page="(curPage as PageView)">
         </ContentView>
       </template>
       <template #slot3>
@@ -735,110 +740,136 @@ onUnmounted(() => {
 }
 </style>
 <style scoped lang="scss">
-#top {
-  display: flex;
-  flex-flow: row nowrap;
+.main {
+  min-width: 1080px;
   width: 100%;
-  height: 46px;
-  background: var(--theme-color);
-  padding: 10px 8px;
-  box-sizing: border-box;
-  position: relative;
-  z-index: 19;
-}
+  overflow-x: auto;
 
-.network {
-  position: absolute;
-  width: 100%;
-  height: 100%;
-  z-index: 9999;
-}
-
-#visit {
-  position: absolute;
-  top: 45px;
-  right: 10px;
-  z-index: 999;
-  overflow: hidden;
-  height: calc(100% - 45px);
-}
-
-#center {
-  display: flex;
-  flex-flow: row nowrap;
-  width: 100%;
-  overflow: hidden;
-  position: relative;
-
-  #navigation {
-    height: 100%;
-    background-color: var(--left-navi-bg-color);
+  @media (max-width: 1080px) {
+    overflow-x: scroll;
   }
 
-  #content {
+  &::-webkit-scrollbar {
+    height: 10px;
+  }
+
+  &::-webkit-scrollbar-thumb {
+    border-radius: 150px;
+    -webkit-box-shadow: inset 0 0 5px rgba(0, 0, 0, 0.2);
+    background: rgba(0, 0, 0, 0.2);
+  }
+
+  &::-webkit-scrollbar-track {
+    -webkit-box-shadow: inset 0 0 5px rgba(0, 0, 0, 0.2);
+    border-radius: 0;
+    background: rgba(0, 0, 0, 0.1);
+  }
+
+  #top {
+    display: flex;
+    flex-flow: row nowrap;
+    width: 100%;
+    height: 46px;
+    background: var(--theme-color);
+    padding: 10px 8px;
+    box-sizing: border-box;
+    position: relative;
+    z-index: 19;
+  }
+
+  .network {
+    position: absolute;
     width: 100%;
     height: 100%;
+    z-index: 9999;
+  }
+
+  #visit {
+    position: absolute;
+    top: 45px;
+    right: 10px;
+    z-index: 999;
+    overflow: hidden;
+    height: calc(100% - 45px);
+  }
+
+  #center {
+    display: flex;
+    flex-flow: row nowrap;
+    width: 100%;
     overflow: hidden;
     position: relative;
-  }
 
-  #attributes {
-    height: 100%;
-    background-color: var(--right-attr-bg-color);
-    z-index: 9;
-  }
-}
-
-.notification {
-  position: fixed;
-  font-size: var(--font-default-fontsize);
-  display: flex;
-  align-items: center;
-  top: 60px;
-  left: 50%;
-  transform: translateX(-50%);
-  color: red;
-  background-color: #fff;
-  border: 1px solid #ccc;
-  padding: 7px 30px;
-  border-radius: 4px;
-
-  .text {
-    margin: 0 15px 0 10px;
-  }
-}
-
-.network_error {
-  position: fixed;
-  font-size: var(--font-default-fontsize);
-  display: flex;
-  align-items: center;
-  top: 60px;
-  left: 50%;
-  transform: translateX(-50%);
-  color: #f1f1f1;
-  background-color: var(--active-color);
-  padding: 7px 30px;
-  border: 1px solid var(--active-color);
-  border-radius: 4px;
-
-  .loading-spinner {
-    >svg {
-      width: 15px;
-      height: 15px;
-      color: #000;
+    #navigation {
+      height: 100%;
+      background-color: var(--left-navi-bg-color);
     }
 
-    animation: spin 1s linear infinite;
-  }
-
-  @keyframes spin {
-    0% {
-      transform: rotate(0deg);
+    #content {
+      width: 100%;
+      height: 100%;
+      overflow: hidden;
+      position: relative;
     }
 
-    100% {
-      transform: rotate(360deg);
+    #attributes {
+      height: 100%;
+      background-color: var(--right-attr-bg-color);
+      z-index: 9;
+    }
+  }
+
+  .notification {
+    position: fixed;
+    font-size: var(--font-default-fontsize);
+    display: flex;
+    align-items: center;
+    top: 60px;
+    left: 50%;
+    transform: translateX(-50%);
+    color: red;
+    background-color: #fff;
+    border: 1px solid #ccc;
+    padding: 7px 30px;
+    border-radius: 4px;
+
+    .text {
+      margin: 0 15px 0 10px;
+    }
+  }
+
+  .network_error {
+    position: fixed;
+    font-size: var(--font-default-fontsize);
+    display: flex;
+    align-items: center;
+    top: 60px;
+    left: 50%;
+    transform: translateX(-50%);
+    color: #f1f1f1;
+    background-color: var(--active-color);
+    padding: 7px 30px;
+    border: 1px solid var(--active-color);
+    border-radius: 4px;
+
+    .loading-spinner {
+      >svg {
+        width: 15px;
+        height: 15px;
+        color: #000;
+      }
+
+      animation: spin 1s linear infinite;
+    }
+
+    @keyframes spin {
+      0% {
+        transform: rotate(0deg);
+      }
+
+      100% {
+        transform: rotate(360deg);
+      }
     }
   }
 }

@@ -2,7 +2,7 @@
 import { Context } from '@/context';
 import ColInfo from './ColInfo.vue';
 import { onMounted, onUnmounted, ref, nextTick } from 'vue';
-import { Shape } from '@kcdesign/data';
+import { Shape, ShapeView } from '@kcdesign/data';
 import { skipUserSelectShapes } from '@/utils/content';
 import { useI18n } from 'vue-i18n';
 import { DocSelectionData } from "@/communication/modules/doc_selection_op";
@@ -43,7 +43,7 @@ function skipUserSelectShape(data: DocSelectionData) {
     }
     nextTick(() => {
         const page = props.context.selection.selectedPage;        
-        const shapes: Shape[] = [];
+        const shapes: ShapeView[] = [];
         const len = data.select_shape_id_list.length;
         for (let i = 0; i < len; i++) {
             const shape = page!.shapes.get(data.select_shape_id_list[i]);

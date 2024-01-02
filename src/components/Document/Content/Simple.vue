@@ -1,8 +1,8 @@
 <script setup lang="ts">
-import { Matrix, Shape } from '@kcdesign/data';
+import { Matrix, Shape, ShapeView } from '@kcdesign/data';
 import { onMounted, ref } from 'vue';
 interface Props {
-    shape: Shape
+    shape: ShapeView
     matrix: Matrix
 }
 const props = defineProps<Props>();
@@ -19,8 +19,9 @@ function init() {
     p2r.multiAtLeft(props.matrix);
     const xy = p2r.computeCoord2(box.x, box.y), xy2 = p2r.computeCoord2(box.x + box.width, box.y + box.height);
     x.value = xy.x, y.value = xy.y, width.value = Math.abs(xy2.x - xy.x), height.value = Math.abs(xy2.y - xy.y);
-    if (s.style?.fills?.length) {
-        const fill = s.style.fills[0];
+    const fills = s.getFills();
+    if (fills.length) {
+        const fill = fills[0];
         if (!fill) return;
         const color = fill.color;
         background_color = `rgba(${color.red}, ${color.green}, ${color.blue}, ${color.alpha})`;

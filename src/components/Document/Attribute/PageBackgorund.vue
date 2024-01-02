@@ -3,12 +3,12 @@ import ColorPicker from "@/components/common/ColorPicker/index.vue";
 import { onMounted, onUnmounted, ref, watch } from "vue";
 import { useI18n } from "vue-i18n";
 import { Context } from "@/context";
-import { Color, Page } from "@kcdesign/data";
+import { Color, Page, PageView } from "@kcdesign/data";
 import { Reg_HEX } from "@/utils/color";
 import { message } from "@/utils/message";
 interface Props {
     context: Context
-    page: Page
+    page: PageView
 }
 const props = defineProps<Props>();
 const { t } = useI18n();
@@ -53,11 +53,11 @@ function change_c(e: Event) {
 function update() {
     const page = props.context.selection.selectedPage;
     if (!page) return;
-    const f = page.style.fills[0];
+    const f = page.getFills()[0];
     if (!f) {
         const editor = props.context.editor4Page(page);
         editor.setBackground(new Color(1, 239, 239, 239));
-        const c = page.style.fills[0].color;
+        const c = page.getFills()[0].color;
         init_value(c);
     } else {
         init_value(f.color);
@@ -93,7 +93,7 @@ function alpha_click() {
     if (alpha_ele.value) alpha_ele.value.select();
 }
 const stopWatch = watch(() => props.page, (cur) => {
-    const f = cur.style.fills[0];
+    const f = cur.getFills()[0];
     if (f) init_value(f.color);
 })
 onMounted(() => {

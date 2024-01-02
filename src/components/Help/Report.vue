@@ -53,7 +53,7 @@
 </template>
 <script setup lang="ts">
 import { ElMessage } from 'element-plus';
-import { computed, ref } from 'vue';
+import { computed, onMounted, ref } from 'vue';
 import select from '@/assets/select-icon.svg'
 import { useRoute } from 'vue-router';
 import { useI18n } from 'vue-i18n';
@@ -124,17 +124,47 @@ const handleImageUpload = (e: any) => {
     e.target.value = ''
 }
 
+const handleClick = (e: MouseEvent) => {
+    e.stopPropagation()
+    e.target instanceof Element && !e.target.closest('.crad-box') && emits('close')
+}
+
+onMounted(() => {
+    let timer: any
+    if (timer) clearTimeout(timer)
+    timer = setTimeout(() => {
+        document.addEventListener('click', handleClick)
+        clearTimeout(timer)
+    }, 200);
+
+})
+
 </script>
 <style lang="scss" scoped>
 @keyframes move {
     from {
-        transform: translate(-50%, -20%);
+        transform: translateY(-20px);
         opacity: 0;
     }
 
     to {
-        transform: translate(-50%, 0);
+        transform: translateY(0);
         opacity: 1;
+    }
+}
+
+@media (max-height: 500px) {
+    .crad-box {
+        height: 100% !important;
+        overflow: auto !important;
+        animation: none !important;
+    }
+}
+
+@media (max-width: 600px) {
+    .crad-box {
+        width: 100% !important;
+        overflow: auto !important;
     }
 }
 
@@ -145,9 +175,7 @@ const handleImageUpload = (e: any) => {
 
 .crad-box {
     position: absolute;
-    top: 25%;
-    left: 50%;
-    transform: translate(-50%, 0%);
+    transform: translateY(0);
     width: 582px;
     height: auto;
     background-color: white;
@@ -155,6 +183,7 @@ const handleImageUpload = (e: any) => {
     border-radius: 16px;
     border: 1px solid #F0F0F0;
     padding: 0 24px 8px 24px;
+    overflow: hidden;
     box-sizing: border-box;
     font-size: 13px;
     z-index: 1000;
@@ -180,11 +209,11 @@ const handleImageUpload = (e: any) => {
             box-sizing: border-box;
 
             &:hover {
-                background-color: rgba(247, 247, 249, 1);
+                background-color: #F5F5F5;
             }
 
             &:active {
-                background-color: rgba(243, 243, 245, 1);
+                background-color: #EBEBEB;
             }
 
             svg {

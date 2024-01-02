@@ -4,13 +4,13 @@ import { ref, onMounted, onUnmounted, watch } from 'vue';
 import { useI18n } from 'vue-i18n';
 import { Context } from '@/context';
 import Tooltip from '@/components/common/Tooltip.vue';
-import { AttrGetter, TextTransformType, TableShape, TableCell } from "@kcdesign/data";
+import { AttrGetter, TextTransformType, TableView, TableCell } from "@kcdesign/data";
 import { Selection } from '@/context/selection';
 import { TableSelection } from '@/context/tableselection';
 const { t } = useI18n();
 interface Props {
   context: Context,
-  textShape: TableShape
+  textShape: TableView
 }
 const popover = ref();
 const props = defineProps<Props>();
@@ -24,6 +24,9 @@ const lineHeight = ref<HTMLInputElement>()
 const paraSpacing = ref<HTMLInputElement>()
 const shape = ref<TableCell & { text: Text; }>()
 // const selection = ref(props.context.selection)
+const isActived1 = ref(false)
+const isActived2 = ref(false)
+const isActived3 = ref(false)
 
 //获取选中字体的长度和下标
 const getTextIndexAndLen = () => {
@@ -179,12 +182,15 @@ const isSelectText = () => {
 }
 
 const selectCharSpacing = () => {
+  isActived1.value = true
   charSpacing.value && charSpacing.value.select()
 }
 const selectLineHeight = () => {
+  isActived2.value = true
   lineHeight.value && lineHeight.value.select()
 }
 const selectParaSpacing = () => {
+  isActived3.value = true
   paraSpacing.value && paraSpacing.value.select()
 }
 
@@ -218,7 +224,7 @@ const textFormat = () => {
   } else {
     let cells: (TableCell | undefined)[] = []
     if (table.tableRowStart < 0 || table.tableColStart < 0) {
-      cells = props.textShape.childs || [];
+      cells = props.textShape.data.childs || [];
     } else {
       cells = table.getSelectedCells(true).map(item => item.cell) || [];
     }
@@ -276,6 +282,12 @@ function table_selection_watcher(t: any) {
   if (t === TableSelection.CHANGE_EDITING_CELL || TableSelection.CHANGE_TABLE_CELL) textFormat();
 }
 
+function blur2() {
+    isActived1.value = false
+    isActived2.value = false
+    isActived3.value = false
+}
+
 onMounted(() => {
   textFormat();
   props.textShape.watch(textFormat);
@@ -292,12 +304,12 @@ onUnmounted(() => {
 
 <template>
   <div class="text-detail-container" @click.stop @mousedown.stop>
-    <Popover :context="props.context" class="popover" ref="popover" :width="220" :auto_to_right_line="true"
+    <Popover :context="props.context" class="popover" ref="popover" :width="232" :auto_to_right_line="true"
       :title="t('attr.text_advanced_settings')">
       <template #trigger>
-        <div class="trigger">
+        <div class="trigger" @click="showMenu">
           <Tooltip :content="t('attr.text_advanced_settings')" :offset="15">
-            <svg-icon icon-class="gear" @click="showMenu"></svg-icon>
+            <svg-icon icon-class="gear"></svg-icon>
           </Tooltip>
         </div>
       </template>
@@ -305,44 +317,47 @@ onUnmounted(() => {
         <div class="options-container">
           <div>
             <span>{{ t('attr.word_space') }}</span>
-            <div><input type="text" ref="charSpacing" @focus="selectCharSpacing" v-model="wordSpace" class="input"
-                @change="setWordSpace"></div>
+            <div :class="{ actived: isActived1 }" style="width: 124px;height: 32px;border-radius: 6px;box-sizing: border-box">
+                <input type="text" ref="charSpacing" @focus="selectCharSpacing" @blur="blur2" v-model="wordSpace" class="input"
+                @change="setWordSpace" style="width: 100%;height: 100%"></div>
           </div>
           <div>
             <span>{{ t('attr.row_height') }}</span>
-            <div><input type="text" ref="lineHeight" @focus="selectLineHeight" v-model="rowHeight"
-                :placeholder="row_height" class="input" @change="setRowHeight"></div>
+            <div :class="{ actived: isActived2 }" style="width: 124px;height: 32px;border-radius: 6px;box-sizing: border-box">
+                <input type="text" ref="lineHeight" @focus="selectLineHeight" @blur="blur2" v-model="rowHeight"
+                :placeholder="row_height" class="input" @change="setRowHeight" style="width: 100%;height: 100%"></div>
           </div>
           <div>
             <span>{{ t('attr.paragraph_space') }}</span>
-            <div><input type="text" ref="paraSpacing" @focus="selectParaSpacing" v-model="paragraphSpace" class="input"
-                @change="setParagraphSpace"></div>
+            <div :class="{ actived: isActived3 }" style="width: 124px;height: 32px;border-radius: 6px;box-sizing: border-box">
+                <input type="text" ref="paraSpacing" @focus="selectParaSpacing" @blur="blur2" v-model="paragraphSpace" class="input"
+                @change="setParagraphSpace" style="width: 100%;height: 100%"></div>
           </div>
           <div>
             <span>{{ t('attr.letter_case') }}</span>
             <div class="level-aligning jointly-text">
-              <i class="jointly-text font-posi" :class="{ selected_bgc: selectCase === 'none' }"
+              <i :class="{ 'jointly-text': true, 'font-posi': true, selected_bgc: selectCase === 'none' }"
                 @click="onSelectCase(TextTransformType.None)">
                 <Tooltip :content="t('attr.as_typed')" :offset="15">
                   <svg-icon icon-class="text-no-list"></svg-icon>
                 </Tooltip>
               </i>
-              <i class="jointly-text font-posi" :class="{ selected_bgc: selectCase === 'uppercase' }"
+              <i :class="{ 'jointly-text': true, 'font-posi': true, selected_bgc: selectCase === 'uppercase' }"
                 @click="onSelectCase(TextTransformType.Uppercase)">
                 <Tooltip :content="t('attr.uppercase')" :offset="15">
-                  <svg-icon icon-class="text-uppercase"></svg-icon>
+                  <svg-icon icon-class="text-uppercase" style="width: 17px;height: 14px"></svg-icon>
                 </Tooltip>
               </i>
-              <i class="jointly-text font-posi" :class="{ selected_bgc: selectCase === 'lowercase' }"
+              <i :class="{ 'jointly-text': true, 'font-posi': true, selected_bgc: selectCase === 'lowercase' }"
                 @click="onSelectCase(TextTransformType.Lowercase)">
                 <Tooltip :content="t('attr.lowercase')" :offset="15">
-                  <svg-icon icon-class="text-lowercase"></svg-icon>
+                  <svg-icon icon-class="text-lowercase" style="width: 14px;height: 14px"></svg-icon>
                 </Tooltip>
               </i>
-              <i class="jointly-text font-posi" :class="{ selected_bgc: selectCase === 'uppercase-first' }"
+              <i :class="{ 'jointly-text': true, 'font-posi': true, selected_bgc: selectCase === 'uppercase-first' }"
                 @click="onSelectCase(TextTransformType.UppercaseFirst)">
                 <Tooltip :content="t('attr.titlecase')" :offset="15">
-                  <svg-icon icon-class="text-titlecase"></svg-icon>
+                  <svg-icon icon-class="text-titlecase" style="width: 15px;height: 14px"></svg-icon>
                 </Tooltip>
               </i>
             </div>
@@ -384,7 +399,7 @@ onUnmounted(() => {
       display: flex;
       flex-direction: column;
       justify-content: space-between;
-      padding: var(--default-padding);
+      padding: 12px 12px 0 12px;
       box-sizing: border-box;
       height: 100%;
 
@@ -393,25 +408,27 @@ onUnmounted(() => {
         align-items: center;
         justify-content: space-between;
         width: 100%;
-        margin: 4px 0;
+        margin-bottom: 12px;
 
         .jointly-text {
-          height: 25px;
-          border-radius: 4px;
+          height: 32px;
+          border-radius: var(--default-radius);
           background-color: var(--input-background);
           display: flex;
           justify-content: space-between;
           align-items: center;
 
           >svg {
-            width: 13px;
-            height: 13px;
+            width: 16px;
+            height: 16px;
           }
         }
 
         >span {
-          font-weight: bold;
-          width: 40%;
+          color: #737373;
+          width: 60px;
+          height: 14px;
+          font-size: var(--font-default-fontsize);
         }
 
         .vertical-aligning {
@@ -419,14 +436,23 @@ onUnmounted(() => {
         }
 
         .level-aligning {
-          padding: 0 5px;
+            padding: 2px;
+            box-sizing: border-box;
         }
 
         .font-posi {
-          width: 25px;
-          height: 25px;
+          width: 30px;
+          height: 28px;
+          border-radius: 4px;
           display: flex;
           justify-content: center;
+          border: 1px solid #F4F5F5;
+        }
+
+        .selected_bgc {
+          background-color: #FFFFFF !important;
+          color: #000000;
+          border: 1px solid #F0F0F0;
         }
 
         input[type="text"]::-webkit-inner-spin-button,
@@ -438,28 +464,39 @@ onUnmounted(() => {
         input[type="text"] {
           -moz-appearance: textfield;
           appearance: textfield;
-          font-size: 12px;
-          width: 90px;
+          font-size: 13px;
+          width: 124px;
           border: none;
           background-color: var(--input-background);
-          height: 20px;
-          border-radius: 4px;
-          padding: 0 10px;
+          height: 32px;
+          border-radius: var(--default-radius);
+          padding: 9px 0 9px 12px;
+          box-sizing: border-box;
+          font-weight: 500;
+          line-height: 14px;
+          color: #000000;
         }
 
         input:focus {
           outline: none;
         }
-      }
 
+          input::selection {
+              color: #FFFFFF;
+              background: #1878F5;
+          }
+
+          input::-moz-selection {
+              color: #FFFFFF;
+              background: #1878F5;
+          }
+
+          .actived {
+              border: 1px solid #1878F5;
+          }
+      }
     }
   }
-
-  .selected_bgc {
-    background-color: var(--active-color) !important;
-    color: #fff;
-  }
-
 }
 
 :deep(.el-tooltip__trigger:focus) {

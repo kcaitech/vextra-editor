@@ -1,6 +1,6 @@
 <script setup lang='ts'>
 import { Context } from '@/context';
-import { Matrix, Shape, TableCell, TableCellType, TableShape, Text, TableGridItem, TableLayout } from '@kcdesign/data';
+import { Matrix, Shape, TableCell, TableCellType, TableShape, Text, TableGridItem, TableLayout, TableView, TableCellView } from '@kcdesign/data';
 import { onMounted, onUnmounted, watch, ref, reactive, computed, shallowRef } from 'vue';
 import { genRectPath } from '../common';
 import { Point } from "../SelectionView.vue";
@@ -21,7 +21,7 @@ const props = defineProps<{
     controllerFrame: Point[],
     rotate: number,
     matrix: Matrix, // root->屏幕 变换矩阵
-    shape: TableShape
+    shape: TableView
 }>();
 useController(props.context);
 const matrix = new Matrix();
@@ -33,6 +33,7 @@ const cell_menu = ref<boolean>(false);
 const cell_menu_type = ref<CellMenu>(CellMenu.MultiSelect);
 const cell_menu_posi = ref<ClientXY>({ x: 0, y: 0 });
 const editingCell = shallowRef<TableGridItem & { cell: TableCell | undefined }>();
+const editingCellView = shallowRef<TableCellView>();
 const editingCellMatrix = computed(() => {
     matrix.reset(submatrix.toArray());
     if (editingCell.value) {
@@ -77,6 +78,7 @@ function update() {
     }, bounds)
     if (editingCell.value && editingCell.value.cell) {
         editingCell.value = props.shape.locateCell2(editingCell.value.cell);
+        updateCellView();
     }
 }
 function genViewBox(bounds: { left: number, top: number, right: number, bottom: number }) {
@@ -86,7 +88,8 @@ function isEditingText() {
     return editingCell.value &&
         editingCell.value.cell &&
         editingCell.value.cell.cellType === TableCellType.Text &&
-        editingCell.value.cell.text;
+        editingCell.value.cell.text &&
+        editingCellView.value;
 }
 const closeCellMenu = () => {
     props.context.tableSelection.resetSelection();
@@ -97,8 +100,27 @@ function selection_watcher(t: number) {
     else if (t === Selection.CHANGE_PAGE) return init();
 }
 function table_selection_watcher(t: number) {
-    if (t === TableSelection.CHANGE_EDITING_CELL) editingCell.value = props.context.tableSelection.editingCell;
+    if (t === TableSelection.CHANGE_EDITING_CELL) {
+        editingCell.value = props.context.tableSelection.editingCell;
+        updateCellView();
+    }
 }
+
+function updateCellView() {
+    const cell = editingCell.value?.cell;
+    if (cell) {
+        editingCellView.value = props.shape.cells.get(cell.id);
+        if (!editingCellView.value) {
+            props.context.nextTick(props.context.selection.selectedPage!, () => {
+                editingCellView.value = props.shape.cells.get(cell.id);
+            })
+        }
+    }
+    else {
+        editingCellView.value = undefined;
+    }
+}
+
 function init() {
     props.context.tableSelection.resetSelection();
     editingCell.value = undefined;
@@ -117,7 +139,7 @@ function move(e: MouseEvent) {
     x_checked = false, y_checked = false;
     const m4t = new Matrix(submatrix.inverse), root = props.context.workspace.root;
     const p = m4t.computeCoord2(e.clientX - root.x, e.clientY - root.y);
-    const cell = (props.shape as TableShape).locateCell(p.x, p.y);
+    const cell = (props.shape).locateCell(p.x, p.y);
     if (!cell) return;
     const frame = cell.frame;
     const trans_p = { x: p.x - frame.x, y: p.y - frame.y };
@@ -178,7 +200,7 @@ function move_x(e: MouseEvent) {
 function up_x() {
     const dx = down_x - m_x.value;
     const scale = props.context.workspace.matrix.m00;
-    const editor = props.context.editor4Table(props.shape as TableShape);
+    const editor = props.context.editor4Table(props.shape);
     editor.adjColWidth(m_col - 1, m_col, dx / scale);
     col_dash.value = false;
     document.removeEventListener('mousemove', move_x);
@@ -199,14 +221,14 @@ function up_y(e: MouseEvent) {
     const xy1 = submatrix.computeCoord2(0, y);
     const dy = down_y - xy1.y;
     const scale = props.context.workspace.matrix.m00;
-    const editor = props.context.editor4Table(props.shape as TableShape);
+    const editor = props.context.editor4Table(props.shape);
     editor.adjRowHeight(m_row - 1, m_row, dy / scale);
     row_dash.value = false;
     document.removeEventListener('mousemove', move_y);
     document.removeEventListener('mouseup', up_y);
 }
 function get_x_by_col(col: number) {
-    const table: TableShape = props.shape as TableShape;
+    const table = props.shape;
     layout = table.getLayout();
     const cols = layout.colWidths;
     let growx = 0;
@@ -217,7 +239,7 @@ function get_x_by_col(col: number) {
     down_x = xy1.x, m_x.value = xy1.x;
 }
 function get_y_by_row(row: number) {
-    const table: TableShape = props.shape as TableShape;
+    const table = props.shape;
     layout = table.getLayout();
     const rows = layout.rowHeights;
     let growy = 0;
@@ -247,20 +269,29 @@ onUnmounted(() => {
     props.context.tableSelection.unwatch(table_selection_watcher);
     props.shape.unwatch(update);
 })
+const width = computed(() => {
+    const w = bounds.right - bounds.left;
+    return w < 10 ? 10 : w;
+})
+const height = computed(() => {
+    const h = bounds.bottom - bounds.top;
+    return h < 10 ? 10 : h;
+})
 </script>
 <template>
     <svg version="1.1" xmlns="http://www.w3.org/2000/svg" xmlns:xlink="http://www.w3.org/1999/xlink"
         xmlns:xhtml="http://www.w3.org/1999/xhtml" preserveAspectRatio="xMinYMin meet" :viewBox=genViewBox(bounds)
-        :width="bounds.right - bounds.left" :height="bounds.bottom - bounds.top"
+        :width="width" :height="height"
         :transform="`translate(${bounds.left},${bounds.top})`" overflow="visible" @mousemove="move" @mousedown="down"
         @mouseleave="leave">
         <!-- 表格选区 -->
-        <TableSelectionView :context="props.context" @get-menu="update_menu_posi" :cell="editingCell?.cell"
-            :table="props.shape" :matrix="submatrixArray">
+        <TableSelectionView :context="props.context" @get-menu="update_menu_posi"
+            :cell="editingCellView" :table="props.shape" :matrix="submatrixArray">
         </TableSelectionView>
         <!-- 文本选区 -->
-        <SelectView v-if="isEditingText()" :context="props.context" :shape="(editingCell!.cell as TextShape)"
-            :matrix="editingCellMatrix" :main-notify="Selection.CHANGE_TEXT" :selection="props.context.textSelection"></SelectView>
+        <SelectView v-if="isEditingText()" :context="props.context" :shape="editingCellView!"
+            :matrix="editingCellMatrix" :main-notify="Selection.CHANGE_TEXT"
+            :selection="props.context.selection.textSelection"></SelectView>
         <!-- 列宽缩放 -->
         <BarsContainer :context="props.context" :matrix="submatrixArray" :shape="props.shape"
             :c-frame="props.controllerFrame">
@@ -281,8 +312,9 @@ onUnmounted(() => {
         </g>
     </svg>
     <!-- 输入 -->
-    <TextInput v-if="isEditingText()" :context="props.context" :shape="(editingCell!.cell as TextShape)"
-        :matrix="editingCellMatrix" :main-notify="Selection.CHANGE_TEXT" :selection="props.context.textSelection"></TextInput>
+    <TextInput v-if="isEditingText()" :context="props.context" :shape="editingCellView!"
+        :matrix="editingCellMatrix" :main-notify="Selection.CHANGE_TEXT"
+        :selection="props.context.selection.textSelection"></TextInput>
     <!-- 小菜单 -->
     <TableCellsMenu :cells="[]" v-if="cell_menu" :context="props.context" @close="closeCellMenu"
         :position="{ x: cell_menu_posi.x, y: cell_menu_posi.y }" :cell-menu="cell_menu_type"></TableCellsMenu>

@@ -7,7 +7,13 @@ import {
     TableShape,
     TableEditor,
     Text,
-    SymbolShape
+    SymbolShape,
+    PageView,
+    ShapeView,
+    adapt2Shape,
+    TableView,
+    TextShapeView,
+    TableCellView
 } from "@kcdesign/data";
 import { Document } from "@kcdesign/data";
 import { Page } from "@kcdesign/data";
@@ -25,8 +31,6 @@ import { Cursor } from "./cursor";
 import { EscStack } from "./escstack";
 import { Asssit } from "./assist";
 import { TeamWork } from "./teamwork";
-import { TableSelection } from "./tableselection";
-import { TextSelection } from "./textselection";
 import { Component } from "./component";
 import { Path } from "./path";
 import { PageDom } from "@/components/Document/Content/vdom/page";
@@ -86,10 +90,8 @@ export class Context extends WatchableObject {
     private m_escstack: EscStack;
     private m_assist: Asssit;
     private m_teamwork: TeamWork;
-    private m_tableselection: TableSelection;
     private m_component: Component;
     private m_path: Path;
-    private m_textselection: TextSelection;
 
     private m_vdom: Map<string, { dom: PageDom, ctx: DomCtx }> = new Map();
     private m_arrange: Arrange
@@ -113,8 +115,7 @@ export class Context extends WatchableObject {
         this.m_escstack = new EscStack(); // esc任务队列
         this.m_assist = new Asssit(this); // 辅助线相关
         this.m_teamwork = new TeamWork();
-        this.m_tableselection = new TableSelection(this); // 表格选区
-        this.m_textselection = new TextSelection(this.m_selection); // 文字选区
+
         this.m_component = new Component(this);
         this.m_path = new Path(this);
         this.m_arrange = new Arrange();
@@ -179,15 +180,19 @@ export class Context extends WatchableObject {
         return this.editor.editor4Doc();
     }
 
-    editor4Page(page: Page): PageEditor {
+    editor4Page(page: Page | PageView): PageEditor {
+        if (page instanceof PageView) page = adapt2Shape(page) as Page;
         return this.editor.editor4Page(page);
     }
 
-    editor4Shape(shape: Shape): ShapeEditor {
+    editor4Shape(shape: Shape | ShapeView): ShapeEditor {
+        if (shape instanceof ShapeView) shape = adapt2Shape(shape);
         return this.editor.editor4Shape(shape);
     }
 
-    editor4TextShape(shape: Shape & { text: Text }): TextShapeEditor {
+    // 在editor里缓存临时数据不太对，应缓存到textselection
+    editor4TextShape(shape: Shape & { text: Text } | TextShapeView | TableCellView): TextShapeEditor {
+        if (shape instanceof ShapeView) shape = adapt2Shape(shape) as Shape & { text: Text };
         if (this.m_textEditor && this.m_textEditor.shape.id === shape.id) {
             return this.m_textEditor;
         }
@@ -195,13 +200,14 @@ export class Context extends WatchableObject {
         return this.m_textEditor;
     }
 
-    peekEditor4TextShape(shape: Shape & { text: Text }): TextShapeEditor | undefined {
+    peekEditor4TextShape(shape: Shape & { text: Text } | TextShapeView | TableCellView): TextShapeEditor | undefined {
         if (this.m_textEditor && this.m_textEditor.shape.id === shape.id) {
             return this.m_textEditor;
         }
     }
 
-    editor4Table(shape: TableShape): TableEditor {
+    editor4Table(shape: TableShape | TableView): TableEditor {
+        if (shape instanceof TableView) shape = adapt2Shape(shape) as TableShape;
         return this.editor.editor4Table(shape);
     }
 
@@ -258,11 +264,11 @@ export class Context extends WatchableObject {
     }
 
     get tableSelection() {
-        return this.m_tableselection;
+        return this.m_selection.tableSelection;
     }
 
     get textSelection() {
-        return this.m_textselection;
+        return this.m_selection.textSelection;
     }
 
     get esctask() {
@@ -288,13 +294,19 @@ export class Context extends WatchableObject {
         return ret;
     }
 
-    getPageDom(page: Page): { dom: PageDom, ctx: DomCtx } {
+    getPageDom(page: Page | PageView): { dom: PageDom, ctx: DomCtx } {
         const ret = this.m_vdom.get(page.id);
         if (ret) return ret;
+        page = page instanceof PageView? page.data : page;
         return this.createVDom(page);
     }
 
     get arrange() {
         return this.m_arrange;
+    }
+
+    nextTick(page: PageView, cb: () => void) {
+        const ctx = this.getPageDom(page.data).ctx;
+        ctx.once('nextTick', cb);
     }
 }

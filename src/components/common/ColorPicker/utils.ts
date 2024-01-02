@@ -1,5 +1,5 @@
 export const Reg_HEX = /^#([0-9a-fA-F]{2})([0-9a-fA-F]{2})([0-9a-fA-F]{2})$/;
-import { Border, Color, Fill, GroupShape, ShapeType, TableShape, TextShape } from '@kcdesign/data';
+import { Border, Color, Fill, GroupShape, GroupShapeView, ShapeType, ShapeView, TableShape, TableView, TextShape, TextShapeView } from '@kcdesign/data';
 import type { IColors, Rect, IRgba } from './eyedropper';
 import { Context } from '@/context';
 export interface HSB {
@@ -551,29 +551,31 @@ export function getColorsFromDoc(context: Context) {
   return result;
 }
 
-function finder(context: Context, shape: GroupShape | TableShape, init?: Map<string, Color[]>) {
+function finder(context: Context, shape: ShapeView, init?: Map<string, Color[]>) {
   const cs = shape.childs;
   const result: Map<string, Color[]> = init || new Map();
   for (let i = 0; i < cs.length; i++) {
     const s = cs[i];
     if (!s) continue;
-    const fbs: Array<Fill | Border> = [...s.style.fills, ...s.style.borders];
+    const fills = s.getFills();
+    const borders = s.getBorders();
+    const fbs: Array<Fill | Border> = [...fills, ...borders];
     for (let j = 0; j < fbs.length; j++) {
       const r = result.get(c2s(fbs[j].color));
       if (r) r.push(fbs[j].color);
       else result.set(c2s(fbs[j].color), [fbs[j].color]);
     }
     if (s.type === ShapeType.Text) {
-      const editor = context.peekEditor4TextShape(s as TextShape);
-      const format = (s as TextShape).text.getTextFormat(0, Infinity, editor?.getCachedSpanAttr());
+      const editor = context.peekEditor4TextShape(s as TextShapeView);
+      const format = (s as TextShapeView).text.getTextFormat(0, Infinity, editor?.getCachedSpanAttr());
       const c = format.color;
       if (format.colorIsMulti || !c) continue;
       const r = result.get(c2s(c));
       if (r) r.push(c);
       else result.set(c2s(c), [c]);
     }
-    if (s instanceof GroupShape && s.childs.length) finder(context, s as GroupShape, result);
-    else if (s instanceof TableShape) finder(context, s as TableShape, result);
+    if (s instanceof GroupShape && s.childs.length) finder(context, s, result);
+    else if (s instanceof TableShape) finder(context, s, result);
   }
   return result;
 }

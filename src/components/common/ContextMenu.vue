@@ -52,7 +52,7 @@ onUnmounted(() => {
 </script>
 <template>
   <div ref="menu" class="__context-menu" @mousemove.stop
-    :style="{ top: `${props.y}px`, left: `${props.width && surplusX < 198 + props.width ? -props.width : props.x}px`, width: `${props.width || 198}px` }">
+    :style="{ top: `${props.y + 4}px`, left: `${props.width && surplusX < 174 + props.width ? -props.width : props.x }px`, width: `${props.width || 174}px` }">
     <div class="header"></div>
     <slot></slot>
     <div class="bottom"></div>
@@ -62,13 +62,14 @@ onUnmounted(() => {
 .__context-menu {
   position: absolute;
   z-index: 99;
-  color: var(--theme-color-anti);
+  color: #262626;
   width: 240px;
   display: flex;
   flex-direction: column;
-  border-radius: 2px;
-  box-shadow: 4px 4px 10px rgba($color: #000000, $alpha: 0.2);
-  background-color: rgba($color: #000000, $alpha: 0.82);
+  border-radius: 8px;
+  box-shadow: 0px 2px 10px 0px rgba(0, 0, 0, 0.08);
+  background-color: #FFFFFF;
+  border: 1px solid #EBEBEB;
 
   >.header {
     width: 100%;

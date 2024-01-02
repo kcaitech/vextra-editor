@@ -1,6 +1,6 @@
 <script setup lang="ts">
 import { Selection } from '@/context/selection';
-import { Shape, ShapeType, GroupShape, Artboard, BoolOp } from '@kcdesign/data';
+import { Shape, ShapeType, GroupShape, Artboard, BoolOp, adapt2Shape, ShapeView } from '@kcdesign/data';
 import { onMounted, onUnmounted, ref } from 'vue';
 import { Context } from '@/context';
 import ToolButton from "./ToolButton.vue"
@@ -81,24 +81,22 @@ const groupClick = (alt?: boolean) => {
     const bro = Array.from(page.shapes.values());
     const editor = props.context.editor4Page(page);
     shapes = compare_layer_3(shapes);
+    let newshape: Shape | false;
     if (alt) {
         const name = getName(ShapeType.Artboard, bro || [], t);
-        const artboard = editor.create_artboard(shapes, name);
-        if (artboard) {
-            props.selection.selectShape(artboard);
-            props.selection.notify(Selection.EXTEND, artboard);
-            state.value = 0;
-            state.value = state.value ^ UNGROUP ^ GROUP;
-        }
+        newshape = editor.create_artboard(shapes.map(s => adapt2Shape(s)), name);
     } else {
         const name = getName(ShapeType.Group, bro || [], t);
-        const group = editor.group(shapes, name);
-        if (group) {
-            props.selection.selectShape(group);
-            props.selection.notify(Selection.EXTEND, group);
-            state.value = 0;
-            state.value = state.value ^ UNGROUP ^ GROUP;
-        }
+        newshape = editor.group(shapes.map(s => adapt2Shape(s)), name);
+    }
+    if (newshape) {
+        props.context.nextTick(page, () => {
+            const group = newshape && page.getShape(newshape.id);
+            group && props.selection.selectShape(group);
+            group && props.selection.notify(Selection.EXTEND, group);
+        })
+        state.value = 0;
+        state.value = state.value ^ UNGROUP ^ GROUP;
     }
     props.context.workspace.setSelectionViewUpdater(true);
     props.context.workspace.notify(WorkSpace.SELECTION_VIEW_UPDATE);
@@ -110,17 +108,27 @@ const ungroupClick = () => {
     if (!shapes.length) return;
     const groups = shapes.filter(i => i.type === ShapeType.Group);
     const artboards = shapes.filter(i => i.type === ShapeType.Artboard);
-    const others: Shape[] = shapes.filter(i => i.type !== ShapeType.Group);
+    const others: (ShapeView | Shape)[] = shapes.filter(i => i.type !== ShapeType.Group);
     if (!groups.length) return;
     const page = selection.selectedPage;
     if (!page) return;
     const editor = props.context.editor4Page(page);
-    const a = editor.dissolution_artboard(artboards as Artboard[]);
+    const a = editor.dissolution_artboard(artboards.map(s => adapt2Shape(s)) as Artboard[]);
     if (a) others.push(...a);
-    const g = editor.ungroup(groups as GroupShape[]);
+    const g = editor.ungroup(groups.map(s => adapt2Shape(s)) as GroupShape[]);
     if (g) others.push(...g);
     if (others.length) {
-        selection.rangeSelectShape(others);
+        props.context.nextTick(page, () => {
+            const select = others.reduce((pre, cur) => {
+                if (cur instanceof ShapeView) pre.push(cur);
+                else {
+                    const c = page.getShape(cur.id);
+                    if (c) pre.push(c);
+                }
+                return pre;
+            }, [] as ShapeView[])
+            selection.rangeSelectShape(select);
+        })
     } else {
         selection.resetSelectShapes();
     }
@@ -141,9 +149,12 @@ const changeBoolgroup = (type: BoolOp, n: string) => {
         } else if (shapes.length > 1) {
             const shapessorted = compare_layer_3(filter_for_group1(shapes));
             const editor = props.context.editor4Page(page)
-            const g = editor.boolgroup(shapessorted, name, type)
+            const g = editor.boolgroup(shapessorted.map(s => adapt2Shape(s)), name, type)
             if (g) {
-                props.context.selection.selectShape(g)
+                props.context.nextTick(page, () => {
+                    const s = page.getShape(g.id);
+                    props.context.selection.selectShape(s)
+                })
             }
         }
     }
@@ -160,13 +171,19 @@ const flattenShape = () => {
         if (shapes.length === 1 && shapes[0] instanceof GroupShape) {
             const flatten = editor.flattenBoolShape(shapes[0])
             if (flatten) {
-                props.context.selection.selectShape(flatten)
+                props.context.nextTick(page, () => {
+                    const s = page.getShape(flatten.id);
+                    props.context.selection.selectShape(s)
+                })
             }
         } else if (shapes.length > 1) {
             const shapessorted = compare_layer_3(shapes);
-            const flatten = editor.flattenShapes(shapessorted)
+            const flatten = editor.flattenShapes(shapessorted.map(s => adapt2Shape(s)))
             if (flatten) {
-                props.context.selection.selectShape(flatten)
+                props.context.nextTick(page, () => {
+                    const s = page.getShape(flatten.id);
+                    props.context.selection.selectShape(s)
+                })
             }
         }
     }

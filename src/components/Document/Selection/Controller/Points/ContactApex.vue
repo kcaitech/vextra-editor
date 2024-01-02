@@ -1,6 +1,6 @@
 <script setup lang='ts'>
 import { Context } from '@/context';
-import { AsyncContactEditor, ContactForm, ContactShape, ContactType, GroupShape, Matrix, Shape } from '@kcdesign/data';
+import { AsyncContactEditor, ContactForm, ContactLineView, ContactShape, ContactType, GroupShape, Matrix, Shape, adapt2Shape } from '@kcdesign/data';
 import { onMounted, onUnmounted, watch, reactive, ref } from 'vue';
 import { ClientXY, PageXY } from '@/context/selection';
 import { Point } from "../../SelectionView.vue";
@@ -11,7 +11,7 @@ import { get_contact_environment } from '@/utils/contact';
 interface Props {
     matrix: number[]
     context: Context
-    shape: ContactShape
+    shape: ContactLineView
     cFrame: Point[]
 }
 interface Apex {
@@ -44,7 +44,7 @@ function update() {
 function update_dot_path() {
     if (!props.context.workspace.shouldSelectionViewUpdate) return;
     apex.value = false;
-    const result = get_apexs(props.shape as ContactShape, matrix);
+    const result = get_apexs(props.shape as ContactLineView, matrix);
     if (!result) return;
     apex.value = true, apex1 = result.apex1, apex2 = result.apex2
 }
@@ -104,16 +104,16 @@ function point_mousemove(event: MouseEvent) {
             submatrix.reset(workspace.matrix.inverse);
             search = true;
             const page = props.context.selection.selectedPage;
-            contactEditor = props.context.editor.controller().asyncContactEditor(props.shape, page!);
+            contactEditor = props.context.editor.controller().asyncContactEditor(adapt2Shape(props.shape) as ContactShape, page!);
             contactEditor.pre();
         }
     }
 }
-function migrate(shape: ContactShape) {
+function migrate(shape: ContactLineView) {
     const points = shape.getPoints();
     const environment = get_contact_environment(props.context, shape, points);
     if (shape.parent?.id !== environment.id && contactEditor) {
-        contactEditor.migrate(environment as GroupShape);
+        contactEditor.migrate(adapt2Shape(environment) as GroupShape);
     }
 }
 function point_mouseup(event: MouseEvent) {

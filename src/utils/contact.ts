@@ -1,8 +1,8 @@
-import { CurvePoint, Shape } from "@kcdesign/data";
+import { CurvePoint, Shape, ShapeView } from "@kcdesign/data";
 import { get_artboard_list_by_point, get_common_environment } from "./artboardFn";
 import { Context } from "@/context";
 
-export function get_contact_environment(context: Context, shape: Shape, points: CurvePoint[]) {
+export function get_contact_environment(context: Context, shape: ShapeView, points: CurvePoint[]) {
     let m = shape.matrix2Root(), f = shape.frame;
     m.preScale(f.width, f.height);
     const p1 = points[0];

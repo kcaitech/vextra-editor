@@ -4,13 +4,13 @@ import { ref, onMounted, onUnmounted, watch, watchEffect, computed } from 'vue';
 import { useI18n } from 'vue-i18n';
 import { Context } from '@/context';
 import Tooltip from '@/components/common/Tooltip.vue';
-import { AttrGetter, TextShape, TextTransformType, TextBehaviour, Shape, BulletNumbersType } from "@kcdesign/data";
+import { AttrGetter, TextShape, TextTransformType, TextBehaviour, Shape, BulletNumbersType, TextShapeView, adapt2Shape } from "@kcdesign/data";
 import { Selection } from '@/context/selection';
 const { t } = useI18n();
 interface Props {
   context: Context,
-  textShape: TextShape,
-  textShapes: TextShape[]
+  textShape: TextShapeView,
+  textShapes: TextShapeView[]
 }
 const popover = ref();
 const props = defineProps<Props>();
@@ -31,7 +31,7 @@ const isActived3 = ref(false)
 
 //获取选中字体的长度和下标
 const getTextIndexAndLen = () => {
-  const selection = props.context.textSelection;
+  const selection = props.context.selection.getTextSelection(props.textShape);
   const textIndex = Math.min(selection.cursorEnd, selection.cursorStart)
   const selectLength = Math.abs(selection.cursorEnd - selection.cursorStart)
   return { textIndex, selectLength }
@@ -56,7 +56,7 @@ const onSelectId = (icon: BulletNumbersType) => {
       editor.setTextBulletNumbers(icon, textIndex, selectLength)
     }
   } else {
-    editor.setTextBulletNumbersMulti(props.textShapes, icon);
+    editor.setTextBulletNumbersMulti(props.textShapes.map(s => adapt2Shape(s)), icon);
   }
 }
 
@@ -66,7 +66,7 @@ const onSelectText = (icon: TextBehaviour) => {
   if (length.value) {
     editor.setTextBehaviour(icon)
   } else {
-    editor.setTextBehaviourMulti(props.textShapes, icon);
+    editor.setTextBehaviourMulti(props.textShapes.map(s => adapt2Shape(s)), icon);
   }
 }
 const onSelectCase = (icon: TextTransformType) => {
@@ -81,7 +81,7 @@ const onSelectCase = (icon: TextTransformType) => {
     }
     props.context.workspace.focusText()
   } else {
-    editor.setTextTransformMulti(props.textShapes, icon);
+    editor.setTextTransformMulti(props.textShapes.map(s => adapt2Shape(s)), icon);
   }
 }
 
@@ -104,7 +104,7 @@ const setRowHeight = () => {
     }
   } else {
     if (!isNaN(Number(rowHeight.value))) {
-      editor.setLineHeightMulit(props.textShapes, Number(rowHeight.value));
+      editor.setLineHeightMulit(props.textShapes.map(s => adapt2Shape(s)), Number(rowHeight.value));
     } else {
       textFormat()
     }
@@ -133,7 +133,7 @@ const setWordSpace = () => {
     }
   } else {
     if (!isNaN(Number(wordSpace.value))) {
-      editor.setCharSpacingMulit(props.textShapes, Number(wordSpace.value))
+      editor.setCharSpacingMulit(props.textShapes.map(s => adapt2Shape(s)), Number(wordSpace.value))
     } else {
       textFormat()
     }
@@ -156,7 +156,7 @@ const setParagraphSpace = () => {
     }
   } else {
     if (!isNaN(Number(paragraphSpace.value))) {
-      editor.setParaSpacingMulit(props.textShapes, Number(paragraphSpace.value));
+      editor.setParaSpacingMulit(props.textShapes.map(s => adapt2Shape(s)), Number(paragraphSpace.value));
     } else {
       textFormat()
     }
@@ -165,7 +165,7 @@ const setParagraphSpace = () => {
 
 //判断是否选择文本框还是光标聚焦了
 const isSelectText = () => {
-  const selection = props.context.textSelection;
+  const selection = props.context.selection.getTextSelection(props.textShape);
   if ((selection.cursorEnd !== -1) && (selection.cursorStart !== -1)) {
     return false
   } else {
@@ -296,9 +296,9 @@ onUnmounted(() => {
     <Popover :context="props.context" class="popover" ref="popover" :width="232" :auto_to_right_line="true"
       :title="t('attr.text_advanced_settings')">
       <template #trigger>
-        <div class="trigger">
+        <div class="trigger" @click="showMenu">
           <Tooltip :content="t('attr.text_advanced_settings')" :offset="15">
-            <svg-icon icon-class="gear" @click="showMenu"></svg-icon>
+            <svg-icon icon-class="gear"></svg-icon>
           </Tooltip>
         </div>
       </template>

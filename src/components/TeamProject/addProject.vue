@@ -68,7 +68,7 @@ const createProject = async () => {
             emits('close')
             updateprojectliststate(true)
             nextTick(() => {
-                router.push({ path: '/apphome/project/' + data.id });
+                router.push({ path: '/files/project/' + data.id });
             })
         } else {
             ElMessage.error(message)
@@ -88,14 +88,29 @@ const close = () => {
 
 </script>
 <style lang="scss" scoped>
+@media (max-height: 350px) {
+    .card-container {
+        height: 100%;
+        overflow: auto !important;
+        animation: none !important;
+    }
+}
+
+@media (max-width: 400px) {
+    .card-container {
+        width: 100% !important;
+        overflow: auto !important;
+    }
+}
+
 @keyframes move {
     from {
-        transform: translate(-50%, -20%);
+        transform: translateY(-20px);
         opacity: 0;
     }
 
     to {
-        transform: translate(-50%, 0);
+        transform: translateY(0);
         opacity: 1;
     }
 }
@@ -103,9 +118,7 @@ const close = () => {
 .card-container {
     position: absolute;
     width: 400px;
-    top: 25%;
-    left: 50%;
-    transform: translate(-50%, 0);
+    transform: translateY(0);
     padding: 0 24px;
     background-color: rgba(255, 255, 255, 1);
     border-radius: 16px;
@@ -123,10 +136,11 @@ const close = () => {
         .title {
             font-size: 16px;
             font-weight: 600;
-            color:#3D3D3D;
+            color: #3D3D3D;
         }
 
         .close {
+            display: flex;
             width: 16px;
             height: 16px;
             padding: 4px;
@@ -135,6 +149,10 @@ const close = () => {
             &:hover {
                 background-color: rgb(243, 243, 245);
                 cursor: pointer;
+            }
+
+            &:active {
+                background-color: #EBEBEB;
             }
 
             svg {

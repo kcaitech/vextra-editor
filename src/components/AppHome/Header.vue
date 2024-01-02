@@ -269,7 +269,8 @@ const getElXY = (el: HTMLElement, elwidth: number = 0) => {
                 <div ref="bell" class="notice" :class="{ 'menu-select': showInForm, 'menu-hover': !showInForm }"
                     @click="showinform(bell!, 320)">
                     <svg-icon icon-class="bell" :color="showInForm ? '#1878F5' : ''"></svg-icon>
-                    <div class="num after" v-if="total > 0" :class="{ after: total > 99 }">{{ total > 99 ? 99 : total }}</div>
+                    <div class="num after" v-if="total > 0" :class="{ after: total > 99 }">{{ total > 99 ? 99 : total }}
+                    </div>
                 </div>
             </div>
             <div ref="avatar" class="avatar-area" @click="showuserinfo(avatar!, 120)">
@@ -328,13 +329,12 @@ const getElXY = (el: HTMLElement, elwidth: number = 0) => {
     height: 60px;
 
     .search {
-        width: 540px;
+        width: 42%;
         min-width: 300px;
+        max-width: 668px;
         position: relative;
 
         .el-input {
-            max-width: 480px;
-            min-width: 160px;
             font-size: 12px;
             --el-input-height: 32px;
             --el-input-border-color: rgb(250, 250, 250);

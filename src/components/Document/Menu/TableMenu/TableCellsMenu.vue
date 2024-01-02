@@ -2,7 +2,7 @@
 import { ref, onMounted, onUnmounted } from 'vue';
 import TableContextAlgin from './TableContextAlgin.vue';
 import ColorPicker from '@/components/common/ColorPicker/index.vue';
-import { Color, Fill, FillType, Shape, ShapeType, TableCell, TableShape, Text } from '@kcdesign/data';
+import { Color, Fill, FillType, Shape, ShapeType, TableCell, TableShape, TableView, Text } from '@kcdesign/data';
 import { Context } from '@/context';
 import { Delete } from '@element-plus/icons-vue'
 import { getFormatFromBase64, useImagePicker } from '../../Selection/Controller/Table/loadimage';
@@ -45,7 +45,7 @@ const getColorFromPicker = (c: Color) => {
     const shape = props.context.selection.selectedShapes[0]
     const table = props.context.tableSelection;
     if (table && table.tableColEnd !== -1 && table.tableRowEnd !== -1) {
-        const editor = props.context.editor4Table(shape as TableShape)
+        const editor = props.context.editor4Table(shape as TableView)
         const fill = new Fill(uuid(), true, FillType.SolidColor, c);
         editor.addFill4Multi(fill, { rowStart: table.tableRowStart, rowEnd: table.tableRowEnd, colStart: table.tableColStart, colEnd: table.tableColEnd });
     }
@@ -55,7 +55,7 @@ const mergeCells = () => {
     const shape = props.context.selection.selectedShapes[0]
     const table = props.context.tableSelection;
     if (table && table.tableColEnd !== -1 && table.tableRowEnd !== -1) {
-        const editor = props.context.editor4Table(shape as TableShape)
+        const editor = props.context.editor4Table(shape as TableView)
         editor.mergeCells(table.tableRowStart, table.tableRowEnd, table.tableColStart, table.tableColEnd)
     }
     emit('close');
@@ -65,7 +65,7 @@ const pickImage = useImagePicker();
 function onLoadImage(name: string, data: { buff: Uint8Array, base64: string }) {
     const format = getFormatFromBase64(data.base64);
     const ref = `${uuid()}.${format}`;
-    const shape = props.context.selection.selectedShapes[0] as TableShape
+    const shape = props.context.selection.selectedShapes[0] as TableView
     props.context.data.mediasMgr.add(ref, data);
     const editor = props.context.editor4Table(shape)
     const table = props.context.tableSelection;
@@ -83,11 +83,11 @@ const onPickImge = (e: MouseEvent) => {
 }
 
 const insertColumn = (dir: string) => {
-    const shape: TableShape = props.context.selection.selectedShapes[0] as TableShape;
+    const shape: TableView = props.context.selection.selectedShapes[0] as TableView;
     const table = props.context.tableSelection;
     if (table && table.tableColEnd !== -1 && table.tableRowEnd !== -1) {
-        const layout = (shape as TableShape).getLayout();
-        const editor = props.context.editor4Table(shape as TableShape);
+        const layout = (shape as TableView).getLayout();
+        const editor = props.context.editor4Table(shape as TableView);
         const grid = layout.grid.get(table.tableRowStart, table.tableColStart);
         if (props.cellMenu === CellMenu.SelectRow && dir === 'lt') {
             if (table.tableRowEnd === table.tableRowStart) {
@@ -125,7 +125,7 @@ const insertColumn = (dir: string) => {
 const deleteColumn = () => {
     const shape = props.context.selection.selectedShapes[0];
     const table = props.context.tableSelection
-    const editor = props.context.editor4Table(shape as TableShape);
+    const editor = props.context.editor4Table(shape as TableView);
     if (!table) return;
     let result: any = 0;
     if (props.cellMenu === CellMenu.SelectRow) {

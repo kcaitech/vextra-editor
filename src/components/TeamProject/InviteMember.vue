@@ -159,14 +159,29 @@ onMounted(() => {
 
 </script>
 <style lang="scss" scoped>
+@media (max-height: 350px) {
+    .card-container {
+        height: 100%;
+        overflow: auto !important;
+        animation: none !important;
+    }
+}
+
+@media (max-width: 450px) {
+    .card-container {
+        width: 100% !important;
+        overflow: auto !important;
+    }
+}
+
 @keyframes move {
     from {
-        transform: translate(-50%, -20%);
+        transform: translateY(-20px);
         opacity: 0;
     }
 
     to {
-        transform: translate(-50%, 0);
+        transform: translateY(0);
         opacity: 1;
     }
 }
@@ -176,9 +191,7 @@ onMounted(() => {
     background-color: white;
     width: 420px;
     border-radius: 16px;
-    top: 25%;
-    left: 50%;
-    transform: translate(-50%, 0%);
+    transform: translateY(0);
     padding: 0 24px 8px;
     z-index: 1000;
     border: 1px solid #F0F0F0;
@@ -198,6 +211,7 @@ onMounted(() => {
         }
 
         .close {
+            display: flex;
             width: 16px;
             height: 16px;
             padding: 4px;

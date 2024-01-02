@@ -6,7 +6,7 @@ import ResultItem, { ItemData } from "./ResultItem.vue";
 import TextResultItem, { TItemData } from "./TextResultItem.vue";
 import { Context } from '@/context';
 import { Selection } from '@/context/selection';
-import { Shape, ShapeType, TextShape } from '@kcdesign/data';
+import { Shape, ShapeType, ShapeView, TextShape, TextShapeView } from '@kcdesign/data';
 import { isInner } from '@/utils/content';
 import { is_shape_in_selection, selection_types, fit } from '@/utils/shapelist';
 import { Navi } from '@/context/navigate';
@@ -19,9 +19,9 @@ interface Props {
   accurate: boolean
 }
 class Iter implements IDataIter<ItemData> {
-  private __it: Shape[];
+  private __it: ShapeView[];
   private __index: number;
-  constructor(it: Shape[], index: number) {
+  constructor(it: ShapeView[], index: number) {
     this.__it = it;
     this.__index = index;
   }
@@ -29,7 +29,7 @@ class Iter implements IDataIter<ItemData> {
     return this.__index < this.__it.length;
   }
   next(): ItemData {
-    const shape: Shape = this.__it[this.__index];
+    const shape: ShapeView = this.__it[this.__index];
     this.__index++;
     const item = {
       id: shape.id,
@@ -43,9 +43,9 @@ class Iter implements IDataIter<ItemData> {
 }
 
 class TIter implements IDataIter<TItemData> {
-  private __it: Shape[];
+  private __it: ShapeView[];
   private __index: number;
-  constructor(it: Shape[], index: number) {
+  constructor(it: ShapeView[], index: number) {
     this.__it = it;
     this.__index = index;
   }
@@ -53,7 +53,7 @@ class TIter implements IDataIter<TItemData> {
     return this.__index < this.__it.length;
   }
   next(): TItemData {
-    const shape: Shape = this.__it[this.__index];
+    const shape: ShapeView = this.__it[this.__index];
     const focus = props.context.navi.focusText;
     this.__index++;
     const item = {
@@ -68,8 +68,8 @@ class TIter implements IDataIter<TItemData> {
 }
 const props = defineProps<Props>();
 const { t } = useI18n();
-let result_by_shape: Shape[] = [];
-let result_by_content: Shape[] = [];
+let result_by_shape: ShapeView[] = [];
+let result_by_content: ShapeView[] = [];
 const valid_result_by_shape = ref<boolean>(false);
 const valid_result_by_content = ref<boolean>(false);
 const loading_by_shape = ref<boolean>(false);
@@ -119,7 +119,7 @@ let source_by_content = new class implements IDataSource<TItemData> {
     this.m_onchange && this.m_onchange(index, del, insert, modify);
   }
 }
-function selectShapeWhenShiftIsPressed(shape: Shape) {
+function selectShapeWhenShiftIsPressed(shape: ShapeView) {
   const to = result_by_shape.findIndex(i => i.id === shape.id);
   const selectedShapes = props.context.selection.selectedShapes;
   if (selectedShapes.length) {
@@ -133,10 +133,10 @@ function selectShapeWhenShiftIsPressed(shape: Shape) {
     props.context.selection.selectShape(shape);
   }
 }
-function getShapeRange(start: number, end: number): Shape[] {
+function getShapeRange(start: number, end: number): ShapeView[] {
   const from = Math.min(start, end);
   const to = Math.max(start, end);
-  const range: Map<string, Shape> = new Map();
+  const range: Map<string, ShapeView> = new Map();
   const it = source_by_shape.iterAt(from);
   for (let i = from; i <= to && it.hasNext(); i++) {
     const shape = it.next().shape;
@@ -161,15 +161,15 @@ function getShapeRange(start: number, end: number): Shape[] {
   }
   return Array.from(range.values());
 }
-function getSelectShapesIndex(shapes: Shape[]): number[] {
+function getSelectShapesIndex(shapes: ShapeView[]): number[] {
   return shapes.map(s => result_by_shape.findIndex(i => i.id === s.id));
 }
-function selectShape(shape: Shape, ctrlKey: boolean, metaKey: boolean, shiftKey: boolean) {
+function selectShape(shape: ShapeView, ctrlKey: boolean, metaKey: boolean, shiftKey: boolean) {
   if (shiftKey) {
     selectShapeWhenShiftIsPressed(shape);
   } else {
     if (ctrlKey || metaKey) {
-      const selected_map: Map<string, Shape> = new Map();
+      const selected_map: Map<string, ShapeView> = new Map();
       const selected = props.context.selection.selectedShapes;
       for (let i = 0; i < selected.length; i++) {
         if (selected[i].id === shape.id) {
@@ -206,14 +206,14 @@ function selectShape(shape: Shape, ctrlKey: boolean, metaKey: boolean, shiftKey:
     }
   }
 }
-function hoverShape(shape: Shape) {
+function hoverShape(shape: ShapeView) {
   if (props.context.workspace.transforming) return;
   props.context.selection.hoverShape(shape);
 }
 function unHovershape() {
   props.context.selection.unHoverShape();
 }
-function shapeScrollToContentView_1(shape: Shape) {
+function shapeScrollToContentView_1(shape: ShapeView) {
   const is_p2 = props.context.navi.isPhase2(shape);
   if (is_p2 && !wait_fited) {
     wait_fited = true;
@@ -258,13 +258,13 @@ function shapeScrollToContentView_1(shape: Shape) {
   }
 
 }
-function set_focus(shape: Shape) {
-  const len = (shape as TextShape).text.length;
-  const src = (shape as TextShape).text.getText(0, len);
+function set_focus(shape: ShapeView) {
+  const len = (shape as TextShapeView).text.length;
+  const src = (shape as TextShapeView).text.getText(0, len);
   const slice = get_words_index_selection_sequence(src, props.keywords, props.accurate);
   props.context.navi.set_focus_text({ shape, slice });
 }
-function shapeScrollToContentView(shape: Shape) {
+function shapeScrollToContentView(shape: ShapeView) {
   const is_p2 = props.context.navi.isPhase2(shape);
   if (is_p2 && !wait_fited) {
     wait_fited = true;
@@ -317,16 +317,16 @@ function shapeScrollToContentView(shape: Shape) {
   }
 
 }
-function rename(value: string, shape: Shape) {
+function rename(value: string, shape: ShapeView) {
   const editor = props.context.editor4Shape(shape);
   editor.setName(value)
 }
-function isLock(lock: boolean, shape: Shape) {
+function isLock(lock: boolean, shape: ShapeView) {
   const editor = props.context.editor4Shape(shape);
   editor.toggleLock();
   source_by_shape.notify(0, 0, 0, Number.MAX_VALUE);
 }
-function selectshape_right(shape: Shape, shiftKey: boolean) {
+function selectshape_right(shape: ShapeView, shiftKey: boolean) {
   const selection = props.context.selection;
   if (is_shape_in_selection(selection.selectedShapes, shape)) return;
   if (shiftKey) {
@@ -335,7 +335,7 @@ function selectshape_right(shape: Shape, shiftKey: boolean) {
     selection.selectShape(shape);
   }
 }
-function list_mousedown(e: MouseEvent, shape: Shape) {
+function list_mousedown(e: MouseEvent, shape: ShapeView) {
   const menu = props.context.menu;
   menu.menuMount();
   chartMenu.value = false;
@@ -359,7 +359,7 @@ function chartMenuMount(e: MouseEvent) {
   e.stopPropagation()
   //  todo
 }
-function isRead(read: boolean, shape: Shape) {
+function isRead(read: boolean, shape: ShapeView) {
   let timer: any;
   timer && clearTimeout(timer);
   const editor = props.context.editor4Shape(shape);
@@ -409,8 +409,8 @@ function update() {
         result_by_shape.unshift(v);
       }
       if (v.type === ShapeType.Text) {
-        const length = (v as TextShape).text.length;
-        const text = (v as TextShape).text.getText(0, length).replaceAll('\n', '');
+        const length = (v as TextShapeView).text.length;
+        const text = (v as TextShapeView).text.getText(0, length).replaceAll('\n', '');
         if (text.search(reg) > -1) {
           result_by_content.unshift(v);
         }
