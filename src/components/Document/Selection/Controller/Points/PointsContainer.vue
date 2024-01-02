@@ -266,6 +266,8 @@ function point_mouseenter(t: CtrlElementType) {
 }
 
 function point_mouseleave() {
+    console.log('leave');
+    
     need_reset_cursor_after_transform = true;
     props.context.cursor.reset();
 }

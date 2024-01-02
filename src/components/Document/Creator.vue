@@ -9,7 +9,7 @@ import { flattenShapes, init_contact_shape, init_insert_shape, init_shape, list2
 import { get_direction } from '@/utils/controllerFn';
 import { EffectType, Wheel, fourWayWheel } from '@/utils/wheel';
 import { Artboard, AsyncCreator, ContactForm, ContactLineView, GroupShape, Matrix, ShapeFrame, ShapeType, ShapeView, adapt2Shape } from '@kcdesign/data';
-import { onMounted, onUnmounted, reactive, ref } from 'vue';
+import { nextTick, onMounted, onUnmounted, reactive, ref } from 'vue';
 import { useI18n } from 'vue-i18n';
 import CommentInput from './Content/CommentInput.vue';
 import { useRoute } from 'vue-router';
@@ -17,6 +17,7 @@ import { searchCommentShape } from '@/utils/comment';
 import * as comment_api from '@/request/comment';
 import ContactInit from './Toolbar/ContactInit.vue';
 import { get_contact_environment } from '@/utils/contact';
+import { Cursor } from '@/context/cursor';
 
 interface Props {
     context: Context
@@ -50,6 +51,7 @@ const documentCommentList = ref<any[]>(props.context.comment.pageCommentList);
 const route = useRoute()
 const posi = ref({ x: 0, y: 0 });
 const rootWidth = ref<number>(props.context.workspace.root.width);
+const cursor = ref<string>('');
 type commentListMenu = {
     text: string
     status_p: boolean
@@ -63,15 +65,18 @@ const commentMenuItems = ref<commentListMenu[]>([
 
 // #endregion
 function down(e: MouseEvent) {
-    if (e.button === 0) {
-        const action = props.context.tool.action;
-        modify_page_xy_1(e);
-        modify_client_xy_1(e);
-        wheelSetup();
-        if (action !== Action.AddComment) commentInput.value = false;
-        document.addEventListener("mousemove", move);
-        document.addEventListener("mouseup", up);
+    if (e.button !== 0) {
+        return;
     }
+    const action = props.context.tool.action;
+    modify_page_xy_1(e);
+    modify_client_xy_1(e);
+    wheelSetup();
+    if (action !== Action.AddComment) {
+        commentInput.value = false;
+    }
+    document.addEventListener("mousemove", move);
+    document.addEventListener("mouseup", up);
 }
 
 function move(e: MouseEvent) {
@@ -474,6 +479,12 @@ function removeCreator() {
     props.context.tool.setAction(Action.AutoV);
 }
 
+function cursor_watcher(t: number, type: string) {
+    if (t === Cursor.CHANGE_CURSOR && type) {
+        cursor.value = type;
+    }
+}
+
 function windowBlur() {
     shapeCreateEnd();
     removeWheel();
@@ -484,19 +495,30 @@ function windowBlur() {
 }
 
 function init() {
-    // props.context.selection.resetSelectShapes();
+    setTimeout(() => { // dom的进出事件竟然是先enter再leave，这边用定时器强行调整了一下init的顺序
+        const action = props.context.tool.action;
+        if (action === Action.AddComment) {
+            props.context.cursor.setType('comment', 0);
+        } else {
+            props.context.cursor.setType('cross', 0)
+        }
+
+        cursor.value = props.context.cursor.type;
+    }, 20);
 }
 
 onMounted(() => {
     init();
+    props.context.cursor.watch(cursor_watcher);
     window.addEventListener('blur', windowBlur);
 })
 onUnmounted(() => {
+    props.context.cursor.unwatch(cursor_watcher);
     window.removeEventListener('blur', windowBlur);
 })
 </script>
 <template>
-    <div @mousedown.stop="down" @mousemove="move2" class="creator">
+    <div @mousedown.stop="down" @mousemove="move2" :class="`creator ${cursor}`">
         <CommentInput v-if="commentInput" :context="props.context" :x1="commentPosition.x" :y1="commentPosition.y"
             :pageID="props.context.selection.selectedPage!.id" :shapeID="shapeID" ref="commentEl" :rootWidth="rootWidth"
             @close="closeComment" @mouseDownCommentInput="mouseDownCommentInput" :matrix="props.context.workspace.matrix"
