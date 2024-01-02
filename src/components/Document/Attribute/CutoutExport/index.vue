@@ -95,7 +95,7 @@ function updateData() {
     renderSvgs.value = [];
     if (len === 1) {
         const shape = selected[0];
-        const options = shape.data.exportOptions;
+        const options = shape.exportOptions;
         if (options) {
             exportOption.value = options;
             trim_bg.value = options.trimTransparent;
@@ -109,7 +109,7 @@ function updateData() {
             }
         }
     } else if (len > 1) {
-        const options = selected[0].data.exportOptions;
+        const options = selected[0].exportOptions;
         const _formats = get_export_formats(selected);
         if (_formats === 'mixed') {
             mixed.value = true;
@@ -122,7 +122,7 @@ function updateData() {
     } else {
         const page = props.context.selection.selectedPage;
         if (page) {
-            const options = page.data.exportOptions;
+            const options = page.exportOptions;
             if (options) {
                 exportOption.value = options;
                 previewUnfold.value = options.unfold || false;
@@ -429,15 +429,15 @@ const exportFill = () => {
         const shape = selected[i];
         if (previewSvgs.value) {
             const svg = previewSvgs.value[i];
-            shape.data.exportOptions!.exportFormats.forEach((format, idx) => {
+            shape.exportOptions!.exportFormats.forEach((format, idx) => {
                 const id = shape.id + format.id;
                 const { width, height } = svg.viewBox.baseVal
                 svg.setAttribute("width", `${width * format.scale}`);
                 svg.setAttribute("height", `${height * format.scale}`);
                 if (format.fileFormat === ExportFileFormat.Jpg || format.fileFormat === ExportFileFormat.Png) {
-                    getPngImageData(svg, shape.data.exportOptions!.trimTransparent, id, format, pngImageUrls, shape);
+                    getPngImageData(svg, shape.exportOptions!.trimTransparent, id, format, pngImageUrls, shape);
                 } else if (format.fileFormat === ExportFileFormat.Svg) {
-                    getSvgImageData(svg, shape.data.exportOptions!.trimTransparent, id, format, pngImageUrls, shape);
+                    getSvgImageData(svg, shape.exportOptions!.trimTransparent, id, format, pngImageUrls, shape);
                 }
             });
         }
@@ -449,7 +449,7 @@ const exportFill = () => {
         const page = props.context.selection.selectedPage;
         if (!page) return;
         const shape = selected.length > 0 ? selected[0] : page;
-        const options = shape.data.exportOptions;
+        const options = shape.exportOptions;
         const formats = options!.exportFormats;
         if (selected.length <= 1 && formats.length === 1 && !formats[0].name.includes('/')) {
             const id = shape.id + formats[0].id;
@@ -473,8 +473,8 @@ const exportFill = () => {
 
 const exportPageImage = () => {
     const page = props.context.selection.selectedPage;
-    if (!page || !page.data.exportOptions) return;
-    const options = page.data.exportOptions;
+    if (!page || !page.exportOptions) return;
+    const options = page.exportOptions;
     if (previewSvgs.value) {
         const svg = previewSvgs.value[0];
         options.exportFormats.forEach((format, idx) => {

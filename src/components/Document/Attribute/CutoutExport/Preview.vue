@@ -30,7 +30,7 @@ const emits = defineEmits<{
     (e: 'previewChange', v: boolean): void;
 }>();
 const DEFAULT_COLOR = () => {
-    const f = props.context.selection.selectedPage!.data.style.fills[0];
+    const f = props.context.selection.selectedPage?.getFills()[0];
     if (f) {
         return color2string(f.color);
     } else {
@@ -93,13 +93,13 @@ const _getCanvasShape = () => {
             let shape: ShapeView;
             if (shapes.length === 1) {
                 shape = shapes[0];
-                format = shape.data.exportOptions!.exportFormats[0];
+                format = shape.exportOptions!.exportFormats[0];
                 id = shape.id + format.id;
             } else {
                 const page = props.context.selection.selectedPage;
-                if (!page || page.data.exportOptions!.exportFormats.length === 0) return;
+                if (!page || page.exportOptions!.exportFormats.length === 0) return;
                 shape = page;
-                format = page && page.data.exportOptions!.exportFormats[0];
+                format = page && page.exportOptions!.exportFormats[0];
                 id = page.id + format.id;
             }
             const { width, height } = previewSvg.value.viewBox.baseVal
@@ -190,10 +190,10 @@ const select_watcher = (t: number) => {
     if (t === Selection.CHANGE_SHAPE) {
         const shapes = props.context.selection.selectedShapes;
         const page = props.context.selection.selectedPage;
-        if (page && page.data.exportOptions && shapes.length === 0) {
-            isTriangle.value = page.data.exportOptions.unfold;
-        } else if (shapes.length === 1 && shapes[0].data.exportOptions) {
-            isTriangle.value = shapes[0].data.exportOptions.unfold;
+        if (page && page.exportOptions && shapes.length === 0) {
+            isTriangle.value = page.exportOptions.unfold;
+        } else if (shapes.length === 1 && shapes[0].exportOptions) {
+            isTriangle.value = shapes[0].exportOptions.unfold;
         }
         page_color();
         _getCanvasShape();
@@ -224,7 +224,7 @@ const getShapesSvg = (shapes: ShapeView[]) => {
                     getCutoutShape(shape, props.context.selection.selectedPage!, selectedShapes);
                     shapeItem = Array.from(selectedShapes.values());
                 }
-                shape.data.exportOptions?.canvasBackground ? bgc = DEFAULT_COLOR() : bgc = 'transparent';
+                shape.exportOptions?.canvasBackground ? bgc = DEFAULT_COLOR() : bgc = 'transparent';
             } else {
                 shapeItem = [shape];
             }

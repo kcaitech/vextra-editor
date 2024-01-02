@@ -87,7 +87,7 @@ function bar_mousemove(event: MouseEvent) {
 
             asyncMultiAction = props.context.editor
                 .controller()
-                .asyncMultiEditor(shapes.map(s => adapt2Shape(s)), selection.selectedPage!.data);
+                .asyncMultiEditor(shapes.map(s => adapt2Shape(s)), selection.selectedPage!);
 
             submatrix.reset(workspace.matrix.inverse);
             setCursor(cur_ctrl_type);

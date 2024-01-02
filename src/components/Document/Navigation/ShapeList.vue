@@ -4,7 +4,7 @@ import { Menu } from "@/context/menu";
 import { onMounted, onUnmounted, ref, watch, nextTick } from "vue";
 import ListView, { IDataIter, IDataSource } from "@/components/common/ListView.vue";
 import ShapeItem, { ItemData } from "./ShapeItem.vue";
-import { Page, PageView, Shape, proxyView } from "@kcdesign/data";
+import { Page, PageView, Shape, adapt2Shape, proxyView } from "@kcdesign/data";
 import { ShapeDirListIter2 as ShapeDirListIter, ShapeDirList2 as ShapeDirList, ShapeView } from "@kcdesign/data";
 import { useI18n } from 'vue-i18n';
 import { ShapeType } from '@kcdesign/data';
@@ -53,7 +53,7 @@ class Iter implements IDataIter<ItemData> {
             this.__preShape = shape;
             this.__preLevel = level;
         }
-        const _shape = shape.isVirtualShape? proxyView(shape) : shape.data;
+        const _shape = adapt2Shape(shape);
         if (!_shape) throw new Error("shape data is null");
         const item = {
             id: shape.id,
@@ -161,7 +161,7 @@ function inputing() {
 }
 
 function toggleExpand(shape: string | Shape) {
-    shapeDirList.toggleExpand(typeof shape ==='string'? shape : shape.id)
+    shapeDirList.toggleExpand(typeof shape === 'string' ? shape : shape.id)
 }
 
 function selectShape(shape: ShapeView, is_ctrl: boolean, shiftKey: boolean) {

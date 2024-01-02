@@ -1,13 +1,13 @@
 <script setup lang="ts">
 import { h, onMounted, onUnmounted, watch } from 'vue';
-import { GroupShape, SymbolRefShape, SymbolShape, RenderTransform } from "@kcdesign/data";
+import { GroupShape, SymbolRefShape, SymbolShape } from "@kcdesign/data";
 import { renderBoolOpShape as opr } from "@kcdesign/data";
 import { renderGroup as normalR } from "@kcdesign/data";
 import comsMap from './comsmap';
 import { initCommonShape } from './common';
 
 const props = defineProps<{
-    data: GroupShape, transx?: RenderTransform,
+    data: GroupShape, 
     varsContainer?: (SymbolRefShape | SymbolShape)[]
 }>();
 
@@ -41,11 +41,11 @@ function render() {
 
     const isBoolOpShape = props.data.isBoolOpShape;
     if (isBoolOpShape) {
-        const ret = opr(h, props.data, props.transx, props.varsContainer, common.reflush);
+        const ret = opr(h, props.data, props.varsContainer, common.reflush);
         return ret;
     }
 
-    const ret = normalR(h, props.data, comsMap, props.transx, props.varsContainer, common.reflush);
+    const ret = normalR(h, props.data, comsMap, props.varsContainer, common.reflush);
     return ret;
 }
 

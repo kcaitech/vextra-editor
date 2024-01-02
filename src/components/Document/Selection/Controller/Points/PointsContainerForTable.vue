@@ -122,7 +122,7 @@ function point_mousemove(event: MouseEvent) {
     } else {
         if (Math.hypot(mx - sx, my - sy) > dragActiveDis) {
             submatrix.reset(workspace.matrix.inverse);
-            asyncBaseAction = props.context.editor.controller().asyncRectEditor(adapt2Shape(props.shape), props.context.selection.selectedPage!.data);
+            asyncBaseAction = props.context.editor.controller().asyncRectEditor(adapt2Shape(props.shape), props.context.selection.selectedPage!);
             props.context.assist.set_trans_target([props.shape]);
             isDragging = true;
         }

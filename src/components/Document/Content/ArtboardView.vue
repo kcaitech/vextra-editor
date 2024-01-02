@@ -1,13 +1,12 @@
 <script setup lang="ts">
 import { h, onMounted, onUnmounted, watch } from 'vue';
 import { Artboard, renderArtboard as r } from '@kcdesign/data';
-import { SymbolRefShape, SymbolShape, RenderTransform } from "@kcdesign/data";
+import { SymbolRefShape, SymbolShape } from "@kcdesign/data";
 import { initCommonShape } from './common';
 import comsMap from './comsmap';
 
 const props = defineProps<{
     data: Artboard,
-    transx?: RenderTransform,
     varsContainer?: (SymbolRefShape | SymbolShape)[]
 }>();
 
@@ -34,7 +33,7 @@ onUnmounted(() => {
 })
 
 function render() {    
-    const ret = r(h, props.data, comsMap, props.transx, props.varsContainer, common.reflush);
+    const ret = r(h, props.data, comsMap, props.varsContainer, common.reflush);
     return ret;
 }
 

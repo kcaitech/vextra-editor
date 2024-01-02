@@ -269,12 +269,19 @@ onUnmounted(() => {
     props.context.tableSelection.unwatch(table_selection_watcher);
     props.shape.unwatch(update);
 })
-
+const width = computed(() => {
+    const w = bounds.right - bounds.left;
+    return w < 10 ? 10 : w;
+})
+const height = computed(() => {
+    const h = bounds.bottom - bounds.top;
+    return h < 10 ? 10 : h;
+})
 </script>
 <template>
     <svg version="1.1" xmlns="http://www.w3.org/2000/svg" xmlns:xlink="http://www.w3.org/1999/xlink"
         xmlns:xhtml="http://www.w3.org/1999/xhtml" preserveAspectRatio="xMinYMin meet" :viewBox=genViewBox(bounds)
-        :width="bounds.right - bounds.left" :height="bounds.bottom - bounds.top"
+        :width="width" :height="height"
         :transform="`translate(${bounds.left},${bounds.top})`" overflow="visible" @mousemove="move" @mousedown="down"
         @mouseleave="leave">
         <!-- 表格选区 -->

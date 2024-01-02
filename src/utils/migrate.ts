@@ -29,8 +29,8 @@ export function migrate_immediate(context: Context, asyncTransfer: AsyncTransfer
     }
     const emit_migrate = (get_closest_container(context, shapes[0]).id !== target_parent.id);
     if (emit_migrate) {
-        const tg = adapt2Shape(target_parent) as GroupShape;
-        asyncTransfer.migrate(tg, compare_layer_3(shapes, -1).map((s) => adapt2Shape(s)), context.workspace.t('compos.dlt'));
+        const tg = (target_parent);
+        asyncTransfer.migrate(adapt2Shape(tg) as GroupShape, compare_layer_3(shapes, -1).map((s) => adapt2Shape(s)), context.workspace.t('compos.dlt'));
         context.assist.set_collect_target([tg], true);
     }
 }
