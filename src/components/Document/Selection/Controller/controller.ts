@@ -1,4 +1,4 @@
-import { Shape, ShapeType, GroupShape, PathShape, AsyncPathEditor, ShapeView, adapt2Shape } from '@kcdesign/data';
+import { ShapeType, AsyncPathEditor, ShapeView, adapt2Shape, PathShapeView } from '@kcdesign/data';
 import { onMounted, onUnmounted } from "vue";
 import { Context } from "@/context";
 import { Matrix } from '@kcdesign/data';
@@ -71,7 +71,7 @@ export function useControllerCustom(context: Context, i18nT: Function) {
             if (target) {
                 selection.selectShape(target);
             }
-        } else if (shape instanceof PathShape) {
+        } else if (shape instanceof PathShapeView) {
             if (forbidden_to_modify_frame(shape)) {
                 return;
             }

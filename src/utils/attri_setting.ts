@@ -289,7 +289,7 @@ export function get_indexes2(type: 'rt' | 'lt' | 'rb' | 'lb') {
   return result;
 }
 export function is_rect(shape: ShapeView) {
-  return (shape instanceof PathShape)
+  return (shape instanceof PathShapeView)
     && shape.isClosed
     && shape.points.length === 4
     && [ShapeType.Rectangle, ShapeType.Artboard, ShapeType.Image].includes(shape.type);
