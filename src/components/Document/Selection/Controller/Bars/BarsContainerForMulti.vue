@@ -70,14 +70,13 @@ function bar_mousedown(event: MouseEvent, ele: CtrlElementType) {
         return;
     }
 
-    props.context.menu.menuMount()
     event.stopPropagation();
-    cur_ctrl_type = ele;
-    const workspace = props.context.workspace;
-    workspace.setCtrl('controller');
-    matrix.reset(workspace.matrix);
 
-    startPosition = workspace.getContentXY(event)
+    cur_ctrl_type = ele;
+
+    set_status_on_down();
+
+    startPosition = props.context.workspace.getContentXY(event)
 
     document.addEventListener('mousemove', bar_mousemove);
     document.addEventListener('mouseup', bar_mouseup);
@@ -106,7 +105,7 @@ function bar_mousemove(event: MouseEvent) {
 
         submatrix.reset(workspace.matrix.inverse);
 
-        set_status();
+        set_status_before_action();
 
         isDragging = true;
     }
@@ -118,15 +117,19 @@ function bar_mouseup(event: MouseEvent) {
 
     clear_status();
 }
-function set_status() {
-    setCursor(cur_ctrl_type);
+function set_status_on_down() {
+    props.context.menu.menuMount();
 
+    props.context.cursor.cursor_freeze(true);
+
+    props.context.workspace.setCtrl('controller');
+}
+function set_status_before_action() {
     const workspace = props.context.workspace;
     workspace.scaling(true);
     workspace.setSelectionViewUpdater(false);
-
-    props.context.cursor.cursor_freeze(true);
 }
+
 function clear_status() {
     const workspace = props.context.workspace;
     if (isDragging) {

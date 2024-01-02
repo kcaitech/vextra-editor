@@ -71,9 +71,7 @@ function bar_mousedown(event: MouseEvent, ele: CtrlElementType) {
         return;
     }
 
-    props.context.menu.menuMount()
     event.stopPropagation();
-    props.context.menu.menuMount()
 
     if (forbidden_to_modify_frame(props.shape)) {
         return;
@@ -81,21 +79,16 @@ function bar_mousedown(event: MouseEvent, ele: CtrlElementType) {
 
     cur_ctrl_type = ele;
 
-    const workspace = props.context.workspace;
-    workspace.setCtrl('controller');
-    const { clientX, clientY } = event;
-    matrix.reset(workspace.matrix);
-    const root = workspace.root;
-    startPosition = { x: clientX - root.x, y: clientY - root.y };
+    set_status_on_down();
+
+    startPosition = props.context.workspace.getContentXY(event);
 
     document.addEventListener('mousemove', bar_mousemove);
     document.addEventListener('mouseup', bar_mouseup);
 }
 function bar_mousemove(event: MouseEvent) {
     const workspace = props.context.workspace;
-    const root = workspace.root;
-    const { clientX, clientY } = event;
-    const mouseOnPage: ClientXY = { x: clientX - root.x, y: clientY - root.y };
+    const mouseOnPage: ClientXY = props.context.workspace.getContentXY(event);
     const s = props.shape;
     if (isDragging && asyncBaseAction) {
         const action = props.context.tool.action;
@@ -109,7 +102,7 @@ function bar_mousemove(event: MouseEvent) {
         }
         startPosition = { ...mouseOnPage };
     } else if (Math.hypot(mouseOnPage.x - startPosition.x, mouseOnPage.y - startPosition.y) > dragActiveDis) {
-        set_status();
+        set_status_before_action();
 
         asyncBaseAction = props.context.editor
             .controller()
@@ -225,15 +218,21 @@ function bar_mouseleave() {
 function window_blur() {
     clear_status();
 }
-function set_status() {
-    setCursor(cur_ctrl_type);
 
-    props.context.workspace.scaling(true);
+function set_status_on_down() {
+    props.context.menu.menuMount();
 
-    props.context.assist.set_trans_target([props.shape]);
+    props.context.workspace.setCtrl('controller');
 
     props.context.cursor.cursor_freeze(true);
 }
+
+function set_status_before_action() {
+    props.context.workspace.scaling(true);
+
+    props.context.assist.set_trans_target([props.shape]);
+}
+
 function clear_status() {
     if (isDragging) {
         isDragging = false;

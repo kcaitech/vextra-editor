@@ -33,6 +33,7 @@ const dragActiveDis = 3;
 let cur_ctrl_type: CtrlElementType = CtrlElementType.RectLT;
 let need_reset_cursor_after_transform = true;
 
+// #region view
 function update() {
     // const s = Date.now();
     matrix.reset(props.matrix);
@@ -52,17 +53,21 @@ function passive_update() {
     dots.length = 0;
     dots.push(...update_dot2(props.frame));
 }
+// #endregion
+
+// #region main flow
 function point_mousedown(event: MouseEvent, ele: CtrlElementType) {
     if (event.button !== 0) {
         return;
     }
-    props.context.menu.menuMount()
-    const workspace = props.context.workspace;
     event.stopPropagation();
-    workspace.setCtrl('controller');
-    matrix.reset(workspace.matrix);
-    startPosition = workspace.getContentXY(event);
+
     cur_ctrl_type = ele;
+
+    set_status_on_down();
+
+    startPosition = props.context.workspace.getContentXY(event);
+
     document.addEventListener('mousemove', point_mousemove);
     document.addEventListener('mouseup', point_mouseup);
 }
@@ -93,14 +98,14 @@ function point_mousemove(event: MouseEvent) {
 
         workspace.notify(WorkSpace.SELECTION_VIEW_UPDATE);
     } else if (Math.hypot(mx - sx, my - sy) > dragActiveDis) {
-        set_status();
+        set_status_before_action();
+
         const shapes = shapes_organize(props.context.selection.selectedShapes);
-        const page = props.context.selection.selectedPage;
+        const page = props.context.selection.selectedPage!;
 
         asyncMultiAction = props.context.editor
             .controller()
-            .asyncMultiEditor(shapes.map((s) => adapt2Shape(s)), page!);
-
+            .asyncMultiEditor(shapes.map((s) => adapt2Shape(s)), page);
 
         submatrix.reset(workspace.matrix.inverse);
 
@@ -114,6 +119,9 @@ function point_mouseup(event: MouseEvent) {
 
     clear_status();
 }
+// #endregion
+
+// #region utils
 function er_scale(asyncMultiAction: AsyncMultiAction, sx: number, sy: number, mx: number, my: number) {
     if (cur_ctrl_type === CtrlElementType.RectLT) {
         const f_lt = submatrix.computeCoord(props.frame[0].x, props.frame[0].y);
@@ -228,9 +236,6 @@ function irregular_scale(asyncMultiAction: AsyncMultiAction, sx: number, sy: num
         asyncMultiAction.executeScale(f_lt, { x: f_lt.x + trans.x, y: f_lt.y }, _w / o_w, _h / o_h);
     }
 }
-function window_blur() {
-    clear_status();
-}
 function setCursor(t: CtrlElementType) {
     const cursor = props.context.cursor;
     let deg = 0;
@@ -255,8 +260,9 @@ function setCursor(t: CtrlElementType) {
 
     cursor.setType(type, deg);
 }
+function set_status_on_down() {
+    props.context.menu.menuMount()
 
-function set_status() {
     const workspace = props.context.workspace;
     if (cur_ctrl_type.endsWith('rotate')) {
         workspace.rotating(true);
@@ -264,10 +270,12 @@ function set_status() {
         setCursor(cur_ctrl_type);
         workspace.scaling(true);
     }
-    workspace.setSelectionViewUpdater(false);
+
     props.context.cursor.cursor_freeze(true);
 }
-
+function set_status_before_action() {
+    props.context.workspace.setSelectionViewUpdater(false);
+}
 function clear_status() {
     const workspace = props.context.workspace;
     workspace.scaling(false);
@@ -306,6 +314,12 @@ function frame_watcher() {
         passive_update();
     }
 }
+function window_blur() {
+    clear_status();
+}
+// #endregion
+
+// #region lifecycle hooks
 watch(() => props.frame, frame_watcher);
 watch(() => props.matrix, update);
 onMounted(() => {
@@ -315,6 +329,7 @@ onMounted(() => {
 onUnmounted(() => {
     window.removeEventListener('blur', window_blur);
 })
+// #endregion
 </script>
 <template>
     <g v-for="(p, i) in dots" :key="i" :style="`transform: ${p.r.transform};`">

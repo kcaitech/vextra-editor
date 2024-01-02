@@ -1,11 +1,10 @@
 <script setup lang='ts'>
 import { Context } from '@/context';
-import { AsyncBaseAction, CtrlElementType, Matrix, Shape, ShapeView, TableShape, adapt2Shape } from '@kcdesign/data';
+import { AsyncBaseAction, CtrlElementType, Matrix, ShapeView, adapt2Shape } from '@kcdesign/data';
 import { onMounted, onUnmounted, watch, reactive } from 'vue';
 import { ClientXY, PageXY } from '@/context/selection';
 import { Action } from '@/context/tool';
 import { Point } from '../../SelectionView.vue';
-import { PointType } from '@/context/assist';
 import { forbidden_to_modify_frame } from '@/utils/common';
 import { get_transform, modify_rotate_before_set } from '../Points/common';
 interface Props {
@@ -59,9 +58,7 @@ function bar_mousedown(event: MouseEvent, ele: CtrlElementType) {
         return;
     }
 
-    props.context.menu.menuMount();
     event.stopPropagation();
-    props.context.menu.menuMount();
 
     if (forbidden_to_modify_frame(props.shape)) {
         return;
@@ -70,12 +67,13 @@ function bar_mousedown(event: MouseEvent, ele: CtrlElementType) {
     const table_selection = props.context.tableSelection;
     table_selection.setEditingCell();
     table_selection.resetSelection();
+
     cur_ctrl_type = ele;
-    const workspace = props.context.workspace;
-    workspace.setCtrl('controller');
-    const { clientX, clientY } = event;
-    const root = workspace.root;
-    startPosition = { x: clientX - root.x, y: clientY - root.y }
+
+    set_status_on_down();
+
+    startPosition = props.context.workspace.getContentXY(event);
+
     document.addEventListener('mousemove', bar_mousemove);
     document.addEventListener('mouseup', bar_mouseup);
 }
@@ -104,7 +102,7 @@ function bar_mousemove(event: MouseEvent) {
 
         submatrix.reset(workspace.matrix.inverse);
 
-        set_status();
+        set_status_before_action();
 
         isDragging = true;
     }
@@ -194,16 +192,22 @@ function setCursor(t: CtrlElementType) {
     cursor.setType('scale', deg);
 }
 
-function set_status() {
-    props.context.workspace.scaling(true);
+function set_status_on_down() {
+    props.context.menu.menuMount();
 
-    setCursor(cur_ctrl_type);
+    props.context.workspace.setCtrl('controller');
+    
     props.context.cursor.cursor_freeze(true);
+}
+
+function set_status_before_action() {   
+    props.context.workspace.scaling(true);
 
     const page = props.context.selection.selectedPage!;
     const sv = page.getShape(props.shape.id);
     sv && props.context.assist.set_trans_target([sv]);
 }
+
 function clear_status() {
     if (isDragging) {
         isDragging = false;

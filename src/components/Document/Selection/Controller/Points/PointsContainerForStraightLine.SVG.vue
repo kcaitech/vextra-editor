@@ -71,22 +71,21 @@ function point_mousedown(event: MouseEvent, ele: CtrlElementType, idx: number) {
         return;
     }
 
-    props.context.menu.menuMount();
+    event.stopPropagation();
 
     if (forbidden_to_modify_frame(props.shape)) {
         return;
     }
 
-    const workspace = props.context.workspace;
-    event.stopPropagation();
-    workspace.setCtrl('controller');
-    matrix.reset(workspace.matrix);
-    startPosition = workspace.getContentXY(event);
     cur_ctrl_type = ele;
+
+    set_status_on_down();
+
+    startPosition = props.context.workspace.getContentXY(event);
     index = idx;
+
     document.addEventListener('mousemove', point_mousemove);
     document.addEventListener('mouseup', point_mouseup);
-
 }
 function point_mousemove(event: MouseEvent) {
     const workspace = props.context.workspace;
@@ -112,7 +111,7 @@ function point_mousemove(event: MouseEvent) {
         }
         startPosition = { ...mouseOnClient };
     } else if (Math.hypot(mx - sx, my - sy) > dragActiveDis) {
-        set_status();
+        set_status_before_action();
 
         submatrix.reset(workspace.matrix.inverse);
 
@@ -287,25 +286,37 @@ function point_mouseleave() {
 function window_blur() {
     clear_status();
 }
-function set_status() {
+function set_status_on_down() {
+    props.context.menu.menuMount();
+
+    props.context.cursor.cursor_freeze(true);
+
     const workspace = props.context.workspace;
-    cur_ctrl_type.endsWith('rotate') ? workspace.rotating(true) : workspace.scaling(true);
+    workspace.setCtrl('controller');
+    cur_ctrl_type
+        .endsWith('rotate')
+        ? workspace.rotating(true)
+        : workspace.scaling(true);
+}
+function set_status_before_action() {
     props.context.assist.set_trans_target([props.shape]);
 }
 function clear_status() {
     if (asyncBaseAction) {
         asyncBaseAction = asyncBaseAction.close();
     }
-    const workspace = props.context.workspace;
+
     if (isDragging) {
         props.context.assist.reset();
         isDragging = false;
     }
 
+    const workspace = props.context.workspace;
     workspace.scaling(false);
     workspace.rotating(false);
     workspace.setCtrl('page');
 
+    props.context.cursor.cursor_freeze(false);
     if (need_reset_cursor_after_transform) {
         props.context.cursor.reset();
     }

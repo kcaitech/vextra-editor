@@ -302,7 +302,6 @@ function clear_status() {
     workspace.setCtrl('page');
 
     props.context.cursor.cursor_freeze(false);
-
     if (need_reset_cursor_after_transform) {
         props.context.cursor.reset();
     }
@@ -333,7 +332,7 @@ onUnmounted(() => {
 </script>
 <template>
     <g v-for="(p, i) in dots" :key="i" :style="`transform: ${p.r.transform};`">
-        <path :d="p.r.p" fill="#ff0000" stroke="none" @mousedown.stop="(e) => point_mousedown(e, p.type2)"
+        <path :d="p.r.p" class="r-path" @mousedown.stop="(e) => point_mousedown(e, p.type2)"
             @mouseenter="() => point_mouseenter(p.type2)" @mouseleave="point_mouseleave">
         </path>
 
@@ -345,6 +344,11 @@ onUnmounted(() => {
     </g>
 </template>
 <style lang='scss' scoped>
+.r-path {
+    fill: #ff0000;
+    stroke: none;
+}
+
 .main-rect {
     width: 8px;
     height: 8px;
