@@ -94,7 +94,7 @@ declare module '@vue/runtime-core' {
     CtrlComponent: typeof import('./src/components/Document/Selection/Controller/CtrlComponent.vue')['default']
     CtrlContact: typeof import('./src/components/Document/Selection/Controller/CtrlContact.vue')['default']
     CtrlForMulti: typeof import('./src/components/Document/Selection/Controller/CtrlForMulti.vue')['default']
-    'CtrlLine.SVG': typeof import('./src/components/Document/Selection/Controller/CtrlLine.SVG.vue')['default']
+    CtrlLine: typeof import('./src/components/Document/Selection/Controller/CtrlLine.vue')['default']
     CtrlNormal: typeof import('./src/components/Document/Selection/Controller/CtrlNormal.vue')['default']
     CtrlPathEdit: typeof import('./src/components/Document/Selection/Controller/CtrlPathEdit.vue')['default']
     CtrlTable: typeof import('./src/components/Document/Selection/Controller/CtrlTable.vue')['default']
