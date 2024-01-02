@@ -345,7 +345,7 @@ onUnmounted(() => {
 </template>
 <style lang='scss' scoped>
 .r-path {
-    fill: #ff0000;
+    fill: transparent;
     stroke: none;
 }
 
@@ -361,6 +361,6 @@ onUnmounted(() => {
     width: 14px;
     height: 14px;
     stroke: transparent;
-    fill: rgba(0, 0, 0, 0.2);
+    fill: transparent;
 }
 </style>

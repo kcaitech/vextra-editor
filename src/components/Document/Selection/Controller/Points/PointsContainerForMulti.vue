@@ -346,7 +346,7 @@ onUnmounted(() => {
 <style lang="scss" scoped>
 .r-path {
     stroke: none;
-    fill: #ff0000;
+    fill: transparent;
 }
 
 .main-rect {
@@ -359,7 +359,7 @@ onUnmounted(() => {
 .assist-rect {
     width: 14px;
     height: 14px;
-    fill: rgba($color: #000000, $alpha: 0.2);
+    fill: transparent;
     stroke: transparent;
 }
 </style>
