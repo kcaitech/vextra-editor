@@ -13,21 +13,6 @@ export interface Scout {
     isPointInStroke: (d: string, point: PageXY) => boolean
     isPointInShape2: (shape: ShapeView, point: PageXY) => boolean
 }
-
-function get_max_thickness_border(shape: ShapeView) {
-    let max_thickness = 0;
-    const borders = shape.getBorders();
-    if (borders.length) {
-        for (let i = 0, l = borders.length; i < l; i++) {
-            const t = borders[i].thickness;
-            if (t > max_thickness) {
-                max_thickness = t;
-            }
-        }
-    }
-    return max_thickness;
-}
-
 // Ver.SVGGeometryElement，基于SVGGeometryElement的图形检索
 // 动态修改path路径对象的d属性。返回一个Scout对象， scout.isPointInShape(d, SVGPoint)用于判断一个点(SVGPoint)是否在一条路径(d)上
 export function scout(context: Context): Scout {
@@ -154,19 +139,19 @@ function isTarget2(scout: Scout, shape: ShapeView, p: PageXY): boolean {
     return scout.isPointInShape2(shape, p);
 }
 
-// 扁平化一个编组的树结构 tree -> list
+// 扁平化一个图层树 tree -> list
 export function delayering(groupshape: ShapeView, flat?: ShapeView[]): ShapeView[] {
     let f: ShapeView[] = flat || [];
-    const childs: ShapeView[] = groupshape.type === ShapeType.SymbolRef ? (groupshape.naviChilds || []) : (groupshape).childs;
 
-    for (let i = 0, len = childs.length; i < len; i++) {
-        const item = childs[i];
+    const children: ShapeView[] = groupshape.type === ShapeType.SymbolRef
+        ? (groupshape.naviChilds || [])
+        : (groupshape.childs || []);
 
-        if (item.type === ShapeType.Group
-            || item.type === ShapeType.Symbol
-            || item.type === ShapeType.SymbolRef
-        ) {
-            f = [...delayering(item, f)];
+    for (let i = 0, len = children.length; i < len; i++) {
+        const item = children[i];
+
+        if (is_layers_tree_unit(item)) {
+            f = delayering(item, f);
         } else {
             f.push(item);
         }
@@ -175,22 +160,45 @@ export function delayering(groupshape: ShapeView, flat?: ShapeView[]): ShapeView
     return f;
 }
 
+export function is_layers_tree_unit(shape: ShapeView) {
+    return [
+        ShapeType.Group,
+        ShapeType.Artboard,
+        ShapeType.SymbolUnion,
+        ShapeType.Symbol,
+        ShapeType.SymbolRef
+    ].includes(shape.type);
+}
+
 /**
  * @description 点击穿透，穿透父级选区对子元素选区的覆盖
  */
-export function selection_penetrate(scout: Scout, scope: ShapeView[], position: PageXY): ShapeView | undefined {
-    if (!scope?.length) return;
-    for (let i = scope.length - 1; i > -1; i--) {
-        const cur = scope[i];
-        if ([ShapeType.Group, ShapeType.Symbol, ShapeType.SymbolRef].includes(cur.type)) {
-            const items: ShapeView[] = delayering(cur);
-            for (let j = items.length - 1; j > -1; j--) {
-                const item = items[j];
-                if (canBeTarget(item) && isTarget(scout, item, position)) return cur;
-            }
-        }
-        if (canBeTarget(cur) && isTarget(scout, cur, position)) return cur;
+export function selection_penetrate(scout: Scout, g: ShapeView, position: PageXY): ShapeView | undefined {
+    const flat = delayering(g);
+
+    if (!flat.length) {
+        return;
     }
+
+    let target: ShapeView | undefined = undefined;
+
+    for (let j = flat.length - 1; j > -1; j--) {
+        const item = flat[j];
+        if (canBeTarget(item) && isTarget(scout, item, position)) {
+            target = item;
+            break;
+        }
+    }
+
+    if (!target) {
+        return;
+    }
+
+    while (target && target.parent && target.parent.id !== g.id) {
+        target = target.parent;
+    }
+
+    return target;
 }
 
 
@@ -494,4 +502,18 @@ export function is_shape_in_selected(selected: ShapeView[], shape: ShapeView) {
         if (selected[i].id === shape.id) return true;
     }
     return false;
+}
+
+function get_max_thickness_border(shape: ShapeView) {
+    let max_thickness = 0;
+    const borders = shape.getBorders();
+    if (borders.length) {
+        for (let i = 0, l = borders.length; i < l; i++) {
+            const t = borders[i].thickness;
+            if (t > max_thickness) {
+                max_thickness = t;
+            }
+        }
+    }
+    return max_thickness;
 }
