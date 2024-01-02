@@ -73,9 +73,9 @@ const getBordersData = () => {
     borders.length = 0;
     const shape = props.context.selection.selectedShapes[0];
     if (props.context.selection.selectedShapes.length === 1) {
-        const borders = shape.getBorders();
-        for (let i = 0, l = borders.length; i < l; i++) {
-            const border = borders[i];
+        const borders1 = shape.getBorders();
+        for (let i = 0, l = borders1.length; i < l; i++) {
+            const border = borders1[i];
             const b: BorderItem = {
                 id: i,
                 border: border
