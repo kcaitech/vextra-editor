@@ -19,8 +19,12 @@ const timestamp = Date.now()
 const permission = ref([`${t('share.no_authority')}`, `${t('share.readOnly')}`, `${t('share.reviewable')}`, `${t('share.editable')}`]);
 const teamPermission = ref([`${t('share.readOnly')}`, `${t('share.editable')}`]);
 const getApplyList = async (time?: number) => {
-  const { data } = await share_api.getApplyListAPI({ doc_id: route.query.id, start_time: time })
-  applyList.value = [...applyList.value, ...data]
+    try {
+        const { data } = await share_api.getApplyListAPI({ doc_id: route.query.id, start_time: time })
+        applyList.value = [...applyList.value, ...data]
+    } catch(e) {
+        console.log(e)
+    }
 }
 
 const getProjectApplyList = async (time?: number) => {

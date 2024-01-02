@@ -90,24 +90,26 @@ function inner_elpatch(tar: EL, old: EL | undefined) {
         return;
     }
 
-    const reuse = new Map<string, EL & { el?: HTMLElement | SVGElement }>();
-    if (_old && Array.isArray(_old.elchilds)) _old.elchilds.forEach(c => {
-        if (c.isViewNode) reuse.set((c as ShapeView).id, c);
-    });
+    // const reuse = new Map<string, EL & { el?: HTMLElement | SVGElement }>();
+    // if (_old && Array.isArray(_old.elchilds)) _old.elchilds.forEach(c => {
+    //     if (c.isViewNode) reuse.set((c as ShapeView).id, c);
+    // });
 
-    const getResue = (tchild: EL, _old: EL | undefined, i: number) => {
-        const r = tchild.isViewNode ? reuse.get((tchild as ShapeView).id) : undefined;
-        if (r || !_old) return r;
+    const getResue = (tchild: EL, _old: EL, i: number) => {
         if (!Array.isArray(_old.elchilds)) return undefined;
-        return _old.elchilds[i];
+        const oldchild = _old.elchilds[i];
+        if (!oldchild || oldchild.isViewNode) return undefined; // view节点不能用于普通节点的复用
+        return oldchild.eltag === tchild.eltag ? oldchild : undefined;
     }
 
     // childs
     let idx = 0;
     for (let i = 0; i < _tar.elchilds.length; i++) { // 简单比较
         const tchild = _tar.elchilds[i] as EL & { el?: HTMLElement | SVGElement };
-        const ochild = getResue(tchild, _old, i) as EL & { el?: HTMLElement | SVGElement };
-        if (!tchild.isViewNode) inner_elpatch(tchild, ochild); // 由view节点自己patch
+        if (!tchild.isViewNode) {
+            const ochild = _old && getResue(tchild, _old, i) as (EL & { el?: HTMLElement | SVGElement }) | undefined;
+            inner_elpatch(tchild, ochild); // 由view节点自己patch
+        }
         if (!tchild.el) {
             // 是可能的
             // throw new Error("something wrong");

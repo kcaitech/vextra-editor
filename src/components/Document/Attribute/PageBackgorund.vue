@@ -53,11 +53,11 @@ function change_c(e: Event) {
 function update() {
     const page = props.context.selection.selectedPage;
     if (!page) return;
-    const f = page.data.style.fills[0];
+    const f = page.getFills()[0];
     if (!f) {
         const editor = props.context.editor4Page(page);
         editor.setBackground(new Color(1, 239, 239, 239));
-        const c = page.data.style.fills[0].color;
+        const c = page.getFills()[0].color;
         init_value(c);
     } else {
         init_value(f.color);
@@ -93,7 +93,7 @@ function alpha_click() {
     if (alpha_ele.value) alpha_ele.value.select();
 }
 const stopWatch = watch(() => props.page, (cur) => {
-    const f = cur.data.style.fills[0];
+    const f = cur.getFills()[0];
     if (f) init_value(f.color);
 })
 onMounted(() => {

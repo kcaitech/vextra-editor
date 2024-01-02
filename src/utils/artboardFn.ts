@@ -11,7 +11,7 @@ import {WorkSpace} from '@/context/workspace';
 // 直到没有🍌为止，得到最后的XY;
 
 export function landFinderOnPage(pageMatrix: Matrix, context: Context, frame: ShapeFrame): PageXY {
-    const shapes: Shape[] = context.selection.selectedPage?.data.childs || [];
+    const shapes: ShapeView[] = context.selection.selectedPage?.childs || [];
     const {width, height} = frame;
     let center = context.workspace.root.center;
     center = pageMatrix.inverseCoord(center.x, center.y);
@@ -102,13 +102,13 @@ export function insertFrameTemplate(context: Context) {
     const type = ShapeType.Artboard;
     const parent = selection.selectedPage;
     if (parent) {
-        const editor = context.editor.editor4Page(parent.data), tf = tool.frameSize, matrix = workspace.matrix;
+        const editor = context.editor4Page(parent), tf = tool.frameSize, matrix = workspace.matrix;
         const frame = new ShapeFrame(0, 0, tf.size.width, tf.size.height);
         const {x, y} = landFinderOnPage(matrix, context, frame);
         frame.x = x, frame.y = y;
         let artboard: Shape | false = editor.create(type, tf.name, frame);
         artboard = editor.insert(parent.data, shapes.length, artboard);
-        context.getPageDom(parent.data).ctx.once('nextTick', () => {
+        context.nextTick(parent, () => {
             if (artboard) {
                 const view = parent.shapes.get(artboard.id);
                 view && scrollToContentView(view, context);

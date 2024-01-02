@@ -4,7 +4,7 @@ import { TextShapeEditor } from "@kcdesign/data";
 import { paster_inner_shape } from "@/utils/clipboard";
 import { WorkSpace } from "@/context/workspace";
 
-const keydelays = 150;
+const keydelays = 15;
 function throttle2<T extends (...args: any[]) => void>(func: T, delay: number): T {
     let timerId: number = 0;
     return function (...args: any[]) {

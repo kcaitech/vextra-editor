@@ -42,7 +42,7 @@ export const getExportFillUrl = (shapes: ShapeView[], urls: Map<string, string>)
   let fileUrls = [];
   for (let i = 0; i < shapes.length; i++) {
     const shape = shapes[i];
-    const options = shape.data.exportOptions;
+    const options = shape.exportOptions;
     if (options && options.exportFormats.length) {
       for (let f = 0; f < options.exportFormats.length; f++) {
         const format = options.exportFormats[f];

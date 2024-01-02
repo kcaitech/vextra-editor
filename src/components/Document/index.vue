@@ -529,7 +529,12 @@ const networkMessage = (status: NetworkStatusType) => {
     networkLinkSuccess()
   }
 }
-const networkDebounce = debounce(networkMessage, 1000)
+const networkDebounce = (() => {
+    const df = debounce(networkMessage, 1000)
+    return (status: NetworkStatusType) => {
+        df(status).catch((e) => {console.log(e)});
+    }
+})();
 
 //文档获取失败 重试刷新页面
 const refreshDoc = () => {

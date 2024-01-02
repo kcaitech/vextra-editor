@@ -177,8 +177,8 @@ function text_dlt_change(v: string) {
 }
 
 watch(() => props.shape, (v, o) => {
-    v.watch(variable_watcher);
     o.unwatch(variable_watcher);
+    v.watch(variable_watcher);
     variables.value = variable_sort(v, t);
 })
 onMounted(() => {

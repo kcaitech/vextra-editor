@@ -95,7 +95,7 @@ function point_mousemove(event: MouseEvent) {
 
         asyncMultiAction = props.context.editor
             .controller()
-            .asyncMultiEditor(shapes.map((s) => adapt2Shape(s)), page!.data);
+            .asyncMultiEditor(shapes.map((s) => adapt2Shape(s)), page!);
 
         if (cur_ctrl_type.endsWith('rotate')) {
             workspace.rotating(true);
