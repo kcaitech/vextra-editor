@@ -10,7 +10,7 @@ import { WorkSpace } from "@/context/workspace";
 import { AsyncTransfer } from "@kcdesign/data";
 import { useI18n } from 'vue-i18n';
 import { TableSelection } from '@/context/tableselection';
-import { TextSelectionLite as  TextSelection } from '@/context/textselectionlite';
+import { TextSelectionLite as TextSelection } from '@/context/textselectionlite';
 
 function useControllerCustom(context: Context, i18nT: Function) {
     const workspace = computed(() => context.workspace);
@@ -181,12 +181,11 @@ function useControllerCustom(context: Context, i18nT: Function) {
                 init_text_cell(down_item);
                 down_item = check_cell_on_point(e);
                 table_selection.setEditingCell(down_item);
-                // @ts-ignore
-                down_index = down_item.cell.text!.locateText(0, 0);
-                // @ts-ignore
+                down_index = down_item?.cell?.text!.locateText(0, 0) || { index: -1, before: false };
                 text_selection = context.textSelection;
-                // @ts-ignore
-                text_selection.setCursor(down_index.index, down_index.before, down_item.cell.text);
+                context.nextTick(context.selection.selectedPage!, () => {
+                    text_selection.setCursor(down_index.index, down_index.before);
+                })
             }
         }
         document.addEventListener('mousemove', mousemove4body);

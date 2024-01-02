@@ -1,7 +1,7 @@
 <script setup lang="ts">
 import { h, onUnmounted, shallowRef, watch } from 'vue';
 import comsMap from './comsmap'
-import { ArtboradView, ContactLineView, CutoutShapeView, DViewCtx, GroupShapeView, ImageShapeView, LineView, PathShapeView, PathShapeView2, RectShapeView, ShapeType, SymbolRefView, SymbolUnionShape, SymbolView, TableCellView, TableView, TextShapeView, adapt2Shape, renderSymbolRef as r } from "@kcdesign/data"
+import { ArtboradView, ContactLineView, CutoutShapeView, DViewCtx, GroupShapeView, ImageShapeView, LineView, PathShapeView, PathShapeView2, RectShapeView, ShapeType, SymbolRefView, SymbolUnionShape, SymbolView, TableCellView, TableView, TextShapeView, adapt2Shape, isAdaptedShape, renderSymbolRef as r } from "@kcdesign/data"
 import { SymbolRefShape, RenderTransform, SymbolShape } from '@kcdesign/data';
 import { initCommonShape } from './common';
 
@@ -106,7 +106,7 @@ watch(() => props.data, (val, old) => {
 function render() {
     if (!__data.value) return;
     const shape = props.data;
-    if (shape.isVirtualShape) {
+    if (shape.isVirtualShape || isAdaptedShape(shape)) {
         const ret = r(h, props.data, __data.value, comsMap, undefined, common.reflush);
         return ret;
     }

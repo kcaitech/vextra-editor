@@ -1,7 +1,7 @@
 <script setup lang="ts">
 import {h, onUnmounted, ref, shallowRef, watch} from 'vue';
 import comsMap from '../Content/comsmap'
-import {DViewCtx, SymbolRefView, adapt2Shape, renderSymbolRefStatic as r} from "@kcdesign/data"
+import {DViewCtx, SymbolRefView, adapt2Shape, isAdaptedShape, renderSymbolRefStatic as r} from "@kcdesign/data"
 import {SymbolRefShape, SymbolShape} from '@kcdesign/data';
 import { ArtboradView, ContactLineView, CutoutShapeView, GroupShapeView, ImageShapeView, LineView, PathShapeView, PathShapeView2, RectShapeView, ShapeType, SymbolView, TableCellView, TableView, TextShapeView } from "@kcdesign/data"
 
@@ -91,7 +91,7 @@ watch(() => props.data, (val, old) => {
 function render() {
     if (!__data.value) return;
     const shape = props.data;
-    if (shape.isVirtualShape) {
+    if (shape.isVirtualShape || isAdaptedShape(shape)) {
         const ret = r(h, props.data, __data.value, comsMap, undefined, reflush.value);
         return ret;
     }
