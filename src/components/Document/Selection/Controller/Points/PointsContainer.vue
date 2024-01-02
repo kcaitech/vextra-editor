@@ -67,17 +67,15 @@ function point_mousedown(event: MouseEvent, ele: CtrlElementType) {
         return;
     }
 
-    props.context.menu.menuMount();
+    event.stopPropagation();
 
     if (forbidden_to_modify_frame(props.shape)) {
         return;
     }
 
-    event.stopPropagation();
+    set_status_on_down();
 
-    const workspace = props.context.workspace;
-    workspace.setCtrl('controller');
-    startPosition = workspace.getContentXY(event);
+    startPosition = props.context.workspace.getContentXY(event);
     cur_ctrl_type = ele;
 
     document.addEventListener('mousemove', point_mousemove);
@@ -122,7 +120,7 @@ function point_mousemove(event: MouseEvent) {
 
         startPosition = { ...mouseOnClient };
     } else if (Math.hypot(mx - sx, my - sy) > dragActiveDis) {
-        set_status();
+        set_status_before_action();
 
         submatrix.reset(workspace.matrix.inverse);
 
@@ -262,17 +260,22 @@ function setCursor(t: CtrlElementType, active = false) {
 function point_mouseenter(t: CtrlElementType) {
     setCursor(t);
     need_reset_cursor_after_transform = false;
-
 }
 
 function point_mouseleave() {
-    console.log('leave');
-    
     need_reset_cursor_after_transform = true;
     props.context.cursor.reset();
 }
 
-function set_status() {
+function set_status_on_down() {
+    props.context.menu.menuMount();
+
+    props.context.cursor.cursor_freeze(true);
+
+    props.context.workspace.setCtrl('controller');
+}
+
+function set_status_before_action() {
     const workspace = props.context.workspace;
 
     cur_ctrl_type
@@ -281,8 +284,6 @@ function set_status() {
         : workspace.scaling(true);
 
     props.context.assist.set_trans_target([props.shape]);
-
-    props.context.cursor.cursor_freeze(true);
 }
 
 function clear_status() {

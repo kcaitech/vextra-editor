@@ -19,7 +19,7 @@ export class Cursor extends WatchableObject {
 
     async init() {
         await this.m_styler.setup();
-        
+
         const auto = await this.m_styler.getClass('auto', 0);
         if (!auto) {
             return;
@@ -32,6 +32,10 @@ export class Cursor extends WatchableObject {
 
     get type() {
         return this.m_current_cursor_type;
+    }
+
+    get is_freeze() {
+        return this.m_freeze;
     }
 
     cursor_freeze(val: boolean) {
