@@ -273,6 +273,7 @@ const disabled = computed(() => {
             }
 
             .close {
+                display: flex;
                 width: 16px;
                 height: 16px;
                 padding: 4px;

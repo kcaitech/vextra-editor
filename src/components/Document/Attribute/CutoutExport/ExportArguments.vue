@@ -2,7 +2,7 @@
 import { ref, watchEffect } from 'vue';
 import ArgsSelect from './ArgsSelect.vue';
 import { Context } from '@/context';
-import { ExportFileFormat, ExportFormat, ExportFormatNameingScheme, Shape, ShapeType } from '@kcdesign/data';
+import { ExportFormatNameingScheme, ShapeType, ShapeView } from '@kcdesign/data';
 import { Menu } from '@/context/menu';
 import { FormatItems } from './index.vue';
 import { useI18n } from 'vue-i18n';
@@ -11,7 +11,7 @@ import { compareArrays } from '@/utils/cutout'
 const { t } = useI18n();
 interface Props {
     context: Context
-    shapes: Shape[]
+    shapes: ShapeView[]
     argus: FormatItems
     sizeItems: string[]
     perfixItems: ExportFormatNameingScheme[]
@@ -74,16 +74,16 @@ const nameInput = ref<HTMLInputElement>();
 const nameValue = ref('');
 const changeName = () => {
     const sleecteds = props.context.selection.selectedShapes;
-    const is_same = compareArrays(sleecteds, shapes.value as Shape[]);
+    const is_same = compareArrays(sleecteds, shapes.value as ShapeView[]);
     const value = nameValue.value;
-    changeExportName(value, props.index, shapes.value as Shape[]);
+    changeExportName(value, props.index, shapes.value as ShapeView[]);
     if(nameInput.value && is_same) {
         sizeValue.value = props.argus.format.name;
         nameInput.value.value = sizeValue.value;
     }
 }
 
-const changeExportName = (value: string, idx: number, shapes: Shape[]) => {
+const changeExportName = (value: string, idx: number, shapes: ShapeView[]) => {
     const _idx = props.length - idx - 1;
     const len = shapes.length;
     if (len === 1) {
@@ -107,14 +107,14 @@ const changeExportName = (value: string, idx: number, shapes: Shape[]) => {
 }
 const scaleInput = ref<HTMLInputElement>();
 const scaleValue = ref('');
-const shapes = ref<Shape[]>([])
+const shapes = ref<ShapeView[]>([])
 const changeScale = () => {
     const sleecteds = props.context.selection.selectedShapes;
-    const is_same = compareArrays(sleecteds, shapes.value as Shape[]);
+    const is_same = compareArrays(sleecteds, shapes.value as ShapeView[]);
     const regex = /^(\d+|(\d+)x)$/;
     const value = scaleValue.value;
     if (regex.test(value)) {
-        changeSize(value, props.index, shapes.value as Shape[]);
+        changeSize(value, props.index, shapes.value as ShapeView[]);
     }
     if(scaleInput.value && (is_same || !regex.test(value))) {
         sizeValue.value = props.argus.format.scale + 'x';
@@ -125,7 +125,7 @@ const handleScaleInput = () => {
     const value = scaleInput.value!.value;
     scaleValue.value = value;
 }
-const changeSize = (value: string, idx: number, shapes: Shape[]) => {
+const changeSize = (value: string, idx: number, shapes: ShapeView[]) => {
     const _idx = props.length - idx - 1;
     const len = shapes.length;
     if (len === 1) {

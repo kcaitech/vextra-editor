@@ -307,7 +307,7 @@ const SearchList = computed(() => {
     })
 })
 
-watch(() => props.searchvalue, () => {
+watchEffect(() => {
     if (props.searchvalue.trim() !== '') {
         SearchList.value.length === 0 ? nulldata.value = true : ''
     } else {
@@ -316,7 +316,7 @@ watch(() => props.searchvalue, () => {
 })
 
 const skipProject = (id: string) => {
-    router.push({ path: '/apphome/project/' + id });
+    router.push({ path: '/files/project/' + id });
 }
 
 const setProjectIsFavorite = async (id: string, state: boolean) => {

@@ -1,7 +1,7 @@
 <script lang="ts" setup>
 import {onMounted, onUnmounted, reactive, watch, watchEffect} from "vue";
 import {Context} from "@/context";
-import {Matrix, Page, Shape, ShapeType} from "@kcdesign/data";
+import {Matrix, Page, PageView, Shape, ShapeType, ShapeView, adapt2Shape} from "@kcdesign/data";
 import {ClientXY, Selection} from "@/context/selection";
 import ComponentTitle from "./ComponentTitle.vue"
 import {is_shape_out, top_side} from "@/utils/content";
@@ -9,7 +9,7 @@ import {is_symbol_or_union} from "@/utils/symbol";
 
 interface Props {
     context: Context
-    data: Page
+    data: PageView
     matrix: number[]
 }
 
@@ -20,7 +20,7 @@ interface Title {
     content: string
     x: number
     y: number
-    shape: Shape
+    shape: ShapeView
     rotate: number
     maxWidth: number
 }
@@ -39,7 +39,7 @@ function updater(t?: any) {
 const setPosition = () => {
     // const st = Date.now();
     titles.length = 0;
-    const components: Shape[] = props.data.childs;
+    const components: ShapeView[] = props.data.childs;
     const l = components.length;
     for (let i = 0; i < l; i++) {
         const compo = components[i];
@@ -69,7 +69,7 @@ const setPosition = () => {
     // console.log('计算位置：(ms)', Date.now() - st);
 }
 
-function pre_modify_anchor(shape: Shape) {
+function pre_modify_anchor(shape: ShapeView) {
     let rotate = shape.rotation || 0;
     if (shape.isFlippedHorizontal) rotate = rotate + 270;
     if (shape.isFlippedVertical) {
@@ -79,7 +79,7 @@ function pre_modify_anchor(shape: Shape) {
     return rotate;
 }
 
-function modify_anchor(shape: Shape, m2r: Matrix) {
+function modify_anchor(shape: ShapeView, m2r: Matrix) {
     const rotate = pre_modify_anchor(shape);
     const frame = shape.frame;
     let anchor = {x: 0, y: 0};
@@ -97,7 +97,7 @@ function modify_anchor(shape: Shape, m2r: Matrix) {
     return anchor;
 }
 
-function modify_rotate(shape: Shape) {
+function modify_rotate(shape: ShapeView) {
     let rotate = shape.rotation || 0;
     if (shape.isFlippedHorizontal) rotate = 180 - rotate;
     if (shape.isFlippedVertical) rotate = 360 - rotate;
@@ -147,13 +147,13 @@ function watchShapes() { // 监听相关shape的变化
     })
 }
 
-const rename = (value: string, shape: Shape) => {
-    const editor = props.context.editor4Shape(shape);
+const rename = (value: string, shape: ShapeView) => {
+    const editor = props.context.editor4Shape(adapt2Shape(shape));
     editor.setName(value)
     props.context.selection.rename();
 }
 
-function hover(shape: Shape) {
+function hover(shape: ShapeView) {
     const s = props.context.selection.selectedPage!.shapes.get(shape.id);
     if (s) props.context.selection.hoverShape(s);
 }

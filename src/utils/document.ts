@@ -23,9 +23,9 @@ export async function new_file(context: Context, filename: string, pagename: str
   return true;
 }
 async function upload_file(context: Context, data: Document) {
-  const token = localStorage.getItem("token");
-  if (!token) return false;
-  if (!await context.communication.docUpload.start(token, '')) {
+  const getToken = () => Promise.resolve(localStorage.getItem("token") || "");
+  if (!await getToken()) return false;
+  if (!await context.communication.docUpload.start(getToken, '')) {
     // todo 上传通道开启失败处理
     return false;
   }

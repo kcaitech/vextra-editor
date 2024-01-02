@@ -1,7 +1,7 @@
 <script setup lang='ts'>
 import {computed, onMounted, onUnmounted, watchEffect, ref, reactive, watch} from "vue";
 import {Context} from "@/context";
-import {Matrix, ShapeType, Shape} from '@kcdesign/data';
+import {Matrix, ShapeType, Shape, ShapeView} from '@kcdesign/data';
 import {WorkSpace} from "@/context/workspace";
 import {Point} from "../SelectionView.vue";
 import {ClientXY, Selection} from "@/context/selection";
@@ -18,7 +18,7 @@ interface Props {
     controllerFrame: Point[]
     rotate: number
     matrix: Matrix
-    shape: Shape
+    shape: ShapeView
 }
 
 const props = defineProps<Props>();

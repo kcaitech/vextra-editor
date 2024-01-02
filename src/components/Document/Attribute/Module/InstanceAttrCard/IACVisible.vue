@@ -1,12 +1,12 @@
 <script setup lang="ts">
-import {get_vari_value_for_ref, modify_vari_value_for_ref, RefAttriListItem} from "@/utils/symbol";
-import {useI18n} from "vue-i18n";
+import { get_vari_value_for_ref, modify_vari_value_for_ref, RefAttriListItem } from "@/utils/symbol";
+import { useI18n } from "vue-i18n";
 
-import {Context} from "@/context";
-import {onMounted, onUpdated, ref, watch} from "vue";
-import {OverrideType} from "@kcdesign/data";
+import { Context } from "@/context";
+import { onMounted, onUpdated, ref, watch } from "vue";
+import { OverrideType } from "@kcdesign/data";
 
-const {t} = useI18n();
+const { t } = useI18n();
 
 interface Props {
     context: Context
@@ -40,8 +40,7 @@ onMounted(get_value);
 <template>
     <div class="item-wrap">
         <div class="name">{{ props.data.variable.name }}</div>
-        <el-switch v-model="open" size="small" style="margin-left: 10px;--el-switch-on-color: #9775fa"
-                   @change="change"/>
+        <el-switch v-model="open" size="small" style="--el-switch-on-color: #1878F5" @change="change" />
     </div>
 </template>
 <style lang="scss" scoped>
@@ -49,12 +48,36 @@ onMounted(get_value);
     display: flex;
     justify-content: space-between;
     align-items: center;
+    width: 100%;
+    box-sizing: border-box;
+    margin-bottom: 8px;
 
     .name {
-        flex: 0 0 84px;
+        max-width: 82px;
         overflow: hidden;
         text-overflow: ellipsis;
         white-space: nowrap;
     }
+}
+
+:deep(.el-switch--small) {
+    font-size: 12px;
+    line-height: 20px;
+    height: 20px;
+}
+
+:deep(.el-switch__core) {
+    min-width: 36px;
+    height: 20px;
+    border-radius: 100px;
+}
+
+:deep(.el-switch__action) {
+    width: 16px !important;
+    height: 16px !important;
+}
+
+:deep(.is-checked .el-switch__core .el-switch__action) {
+    left: calc(100% - 17px) !important;
 }
 </style>

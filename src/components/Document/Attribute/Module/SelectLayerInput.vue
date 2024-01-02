@@ -1,14 +1,14 @@
 <script setup lang="ts">
 import {Context} from '@/context';
-import {Shape, ShapeType, Variable, VariableType} from '@kcdesign/data';
-import {ArrowDown} from '@element-plus/icons-vue';
-import {useI18n} from 'vue-i18n';
-import {onMounted, ref} from 'vue';
+import {Shape, ShapeType, ShapeView, Variable, VariableType} from '@kcdesign/data';
+import { ArrowDown } from '@element-plus/icons-vue';
+import { useI18n } from 'vue-i18n';
+import { onMounted, ref } from 'vue';
 import SelectLayer from '../PopoverMenu/ComposAttri/SelectLayer.vue';
-import {get_options_from_symbol, is_symbol_or_union} from "@/utils/symbol";
-import {v4} from "uuid";
+import { get_options_from_symbol, is_symbol_or_union } from "@/utils/symbol";
+import { v4 } from "uuid";
 
-const {t} = useI18n();
+const { t } = useI18n();
 
 interface Props {
     title: string,
@@ -31,8 +31,8 @@ const isselectLayer = ref(false);
 
 const showSelectLayer = (e: MouseEvent) => {
     e.stopPropagation();
-    
-    const symbol = props.context.selection.symbolshape;
+
+    const symbol = props.context.selection.symbolview;
     if (!symbol || !is_symbol_or_union(symbol)) {
         return;
     }
@@ -54,9 +54,9 @@ function de_show_select_layer() {
 }
 
 const get_symbol_layer = () => {
-    const symbolshape = props.context.selection.symbolshape;
+    const symbolshape = props.context.selection.symbolview;
     if (!symbolshape) return;
-    const select: Shape[] = [];
+    const select: ShapeView[] = [];
     selectList.value = get_options_from_symbol(symbolshape, props.addType, t('compos.dlt'), props.variable, select);
     selectLayerid.value = select.map(item => item.id);
     selectLayerName.value = getShapesName(selectLayerid.value);
@@ -100,25 +100,25 @@ onMounted(() => {
     <div class="container">
         <span>{{ title }}</span>
         <div class="select-layer">
-            <div class="input_lay" @click="showSelectLayer"
-                 :style="{ opacity: context.selection.selectedShapes[0].type !== ShapeType.Symbol ? '0.5' : '1' }">
-                <span v-if="selectLayerName" class="value">{{ selectLayerName }}</span>
-                <span v-else style="opacity: 0.5">{{ placeholder }}</span>
-                <el-icon>
-                    <ArrowDown/>
+            <div class="input_lay" @click="showSelectLayer">
+<!--                :style="{ opacity: context.selection.selectedShapes[0].type !== ShapeType.Symbol ? '0.5' : '1' }"-->
+                <span v-if="selectLayerName" class="value" style="color: black;">{{ selectLayerName }}</span>
+                <span v-else style="color: #BFBFBF">{{ placeholder }}</span>
+                <el-icon color="#666666" :style="{ transform: `rotate(${isselectLayer ? '-180deg' : '0deg'})` }">
+                    <ArrowDown />
                 </el-icon>
             </div>
             <SelectLayer v-if="isselectLayer" @close="isselectLayer = false" :type="props.addType" :context="context"
-                         :selectList="selectList" @change="select_change" :layerId="selectLayerid"></SelectLayer>
+                :selectList="selectList" @change="select_change" :layerId="selectLayerid"></SelectLayer>
         </div>
     </div>
 </template>
 
 <style scoped lang="scss">
 .container {
-    height: 30px;
+    height: 32px;
     width: 100%;
-    margin-top: 10px;
+    margin-top: 12px;
     display: flex;
     justify-content: space-between;
     align-items: center;
@@ -126,15 +126,16 @@ onMounted(() => {
 
     span {
         width: 60px;
+        color: #737373;
     }
 
-    > div {
+    >div {
         flex: 1;
     }
 
     .el-input {
         width: 100%;
-        height: 30px;
+        height: 32px;
         font-size: 12px;
 
         :deep(.el-input__wrapper) {
@@ -152,7 +153,7 @@ onMounted(() => {
         height: 30px;
         font-size: 12px;
 
-        > div {
+        >div {
             height: 100%;
         }
 
@@ -181,13 +182,21 @@ onMounted(() => {
 
     .input_lay {
         width: 100%;
-        height: 30px;
-        border-radius: 4px;
-        background-color: var(--grey-light);
+        height: 32px;
+        border-radius: 6px;
+        background-color: #F5F5F5;
         padding-left: 10px;
         box-sizing: border-box;
         display: flex;
         align-items: center;
+
+        &:hover {
+            background-color: #EBEBEB;
+        }
+
+        &:active {
+            background-color: #EBEBEB;
+        }
 
         span {
             flex: 1;
@@ -205,6 +214,7 @@ onMounted(() => {
             display: flex;
             align-items: center;
             justify-content: center;
+            transition: all 0.3s ease;
         }
     }
 }

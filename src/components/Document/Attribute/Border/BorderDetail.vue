@@ -3,11 +3,10 @@ import Popover from '@/components/common/Popover.vue';
 import { ref, computed, watch, onMounted, onUnmounted } from 'vue';
 import { useI18n } from 'vue-i18n';
 import Select, { SelectItem, SelectSource } from '@/components/common/Select.vue';
-import BorderPositonItem from './BorderPositionItem.vue';
 import BorderStyleItem from './BorderStyleItem.vue';
 import BorderStyleSelected from './BorderStyleSelected.vue';
 import { Context } from '@/context';
-import { Border, BorderPosition, BorderStyle, GroupShape, Shape, ShapeType, TableShape } from "@kcdesign/data";
+import { Border, BorderPosition, BorderStyle, ShapeType, ShapeView, TableView } from "@kcdesign/data";
 import { genOptions } from '@/utils/common';
 import { Selection } from '@/context/selection';
 import { get_actions_border_thickness, get_actions_border_position, get_actions_border_style } from '@/utils/shape_style';
@@ -16,7 +15,7 @@ import { flattenShapes } from '@/utils/cutout';
 
 interface Props {
     context: Context
-    shapes: Shape[]
+    shapes: ShapeView[]
     border: Border
     index: number
 }
@@ -75,7 +74,7 @@ function borderStyleSelect(selected: SelectItem) {
         const bs = selected.value === 'dash' ? new BorderStyle(2, 2) : new BorderStyle(0, 0);
         if (shape.type === ShapeType.Table) {
             const table = props.context.tableSelection;
-            const e = props.context.editor4Table(shape as TableShape);
+            const e = props.context.editor4Table(shape as TableView);
             const is_edting = table.editingCell;
             if (table.tableRowStart > -1 || table.tableColStart > -1 || is_edting) {
                 let range
@@ -101,7 +100,7 @@ function borderStyleSelect(selected: SelectItem) {
             }
         }
     } else if (len.value === 1 && shape.type === ShapeType.Group) {
-        const childs = (shape as GroupShape).childs;
+        const childs = (shape).childs;
         const shapes = flattenShapes(childs).filter(s => s.type !== ShapeType.Group);
         const actions = get_actions_border_style(shapes, props.index, (selected.value as 'dash' | 'solid'));
         if (actions && actions.length) {
@@ -132,7 +131,7 @@ function positionSelect(selected: SelectItem) {
             }
         }
     } else if (len.value === 1 && props.shapes[0].type === ShapeType.Group) {
-        const childs = (props.shapes[0] as GroupShape).childs;
+        const childs = (props.shapes[0]).childs;
         const shapes = flattenShapes(childs).filter(s => s.type !== ShapeType.Group);
         const actions = get_actions_border_position(shapes, props.index, selected.value as BorderPosition);
         if (actions && actions.length) {
@@ -154,7 +153,7 @@ function setThickness(e: Event) {
     if (len.value === 1 && shape.type !== ShapeType.Group) {
         if (shape.type === ShapeType.Table) {
             const table = props.context.tableSelection;
-            const e = props.context.editor4Table(shape as TableShape);
+            const e = props.context.editor4Table(shape as TableView);
             const is_edting = table.editingCell;
             if (table.tableRowStart > -1 || table.tableColStart > -1 || is_edting) {
                 let range
@@ -180,7 +179,7 @@ function setThickness(e: Event) {
             }
         }
     } else if (len.value === 1 && shape.type === ShapeType.Group) {
-        const childs = (shape as GroupShape).childs;
+        const childs = (shape).childs;
         const shapes = flattenShapes(childs).filter(s => s.type !== ShapeType.Group);
         const actions = get_actions_border_thickness(shapes, props.index, thickness);
         if (actions && actions.length) {
@@ -201,7 +200,7 @@ const augment = (e: Event) => {
         if (len.value === 1 && shape.type !== ShapeType.Group) {
             if (shape.type === ShapeType.Table) {
                 const table = props.context.tableSelection;
-                const e = props.context.editor4Table(shape as TableShape);
+                const e = props.context.editor4Table(shape as TableView);
                 const is_edting = table.editingCell;
                 if (table.tableRowStart > -1 || table.tableColStart > -1 || is_edting) {
                     let range
@@ -227,7 +226,7 @@ const augment = (e: Event) => {
                 }
             }
         } else if (len.value === 1 && shape.type === ShapeType.Group) {
-            const childs = (shape as GroupShape).childs;
+            const childs = (shape).childs;
             const shapes = flattenShapes(childs).filter(s => s.type !== ShapeType.Group);
             const actions = get_actions_border_thickness(shapes, props.index, thickness);
             if (actions && actions.length) {
@@ -249,7 +248,7 @@ const decrease = (e: Event) => {
         if (len.value === 1 && shape.type !== ShapeType.Group) {
             if (shape.type === ShapeType.Table) {
                 const table = props.context.tableSelection;
-                const e = props.context.editor4Table(shape as TableShape);
+                const e = props.context.editor4Table(shape as TableView);
                 const is_edting = table.editingCell;
                 if (table.tableRowStart > -1 || table.tableColStart > -1 || is_edting) {
                     let range
@@ -275,7 +274,7 @@ const decrease = (e: Event) => {
                 }
             }
         } else if (len.value === 1 && shape.type === ShapeType.Group) {
-            const childs = (shape as GroupShape).childs;
+            const childs = (shape).childs;
             const shapes = flattenShapes(childs).filter(s => s.type !== ShapeType.Group);
             const actions = get_actions_border_thickness(shapes, props.index, thickness);
             if (actions && actions.length) {
@@ -319,7 +318,7 @@ const onMouseMove = (e: MouseEvent) => {
                     if (len.value === 1 && shape.type !== ShapeType.Group) {
                         if (shape.type === ShapeType.Table) {
                             const table = props.context.tableSelection;
-                            const e = props.context.editor4Table(shape as TableShape);
+                            const e = props.context.editor4Table(shape as TableView);
                             const is_edting = table.editingCell;
                             if (table.tableRowStart > -1 || table.tableColStart > -1 || is_edting) {
                                 let range
@@ -345,7 +344,7 @@ const onMouseMove = (e: MouseEvent) => {
                             }
                         }
                     } else if (len.value === 1 && shape.type === ShapeType.Group) {
-                        const childs = (shape as GroupShape).childs;
+                        const childs = (shape).childs;
                         const shapes = flattenShapes(childs).filter(s => s.type !== ShapeType.Group);
                         const actions = get_actions_border_thickness(shapes, props.index, thickness);
                         if (actions && actions.length) {
@@ -369,7 +368,7 @@ const onMouseMove = (e: MouseEvent) => {
                     if (len.value === 1 && shape.type !== ShapeType.Group) {
                         if (shape.type === ShapeType.Table) {
                             const table = props.context.tableSelection;
-                            const e = props.context.editor4Table(shape as TableShape);
+                            const e = props.context.editor4Table(shape as TableView);
                             const is_edting = table.editingCell;
                             if (table.tableRowStart > -1 || table.tableColStart > -1 || is_edting) {
                                 let range
@@ -395,7 +394,7 @@ const onMouseMove = (e: MouseEvent) => {
                             }
                         }
                     } else if (len.value === 1 && shape.type === ShapeType.Group) {
-                        const childs = (shape as GroupShape).childs;
+                        const childs = (shape).childs;
                         const shapes = flattenShapes(childs).filter(s => s.type !== ShapeType.Group);
                         const actions = get_actions_border_thickness(shapes, props.index, thickness);
                         if (actions && actions.length) {
@@ -479,9 +478,8 @@ onUnmounted(() => {
                     <!-- 边框位置 -->
                     <div v-if="show_position" :style="{ opacity: shapes[0].type === ShapeType.Table ? '.5' : '1' }">
                         <label>{{ t('attr.position') }}</label>
-                        <Select :selected="position" :item-view="BorderPositonItem" :item-height="32"
-                            :source="positonOptionsSource" @select="positionSelect"
-                            :type="shapes[0].type === ShapeType.Table ? 'table' : 'none'" :width="128"></Select>
+                        <Select class="select" :source="positonOptionsSource" :selected="position"
+                            @select="positionSelect"></Select>
                     </div>
                     <!-- 边框厚度 -->
                     <div>
@@ -499,9 +497,9 @@ onUnmounted(() => {
                     <!-- 边框样式 -->
                     <div>
                         <label>{{ t('attr.borderStyle') }}</label>
-                        <Select :selected="borderStyle" :item-view="BorderStyleItem" :value-view="BorderStyleSelected"
-                            :item-height="32" @select="borderStyleSelect" :source="borderStyleOptionsSource" :width="128"
-                            :containerWidth="128"></Select>
+                        <Select class="select" :source="borderStyleOptionsSource" :selected="borderStyle"
+                            :item-view="BorderStyleItem" :value-view="BorderStyleSelected"
+                            @select="borderStyleSelect"></Select>
                     </div>
                 </div>
             </template>
@@ -553,6 +551,11 @@ onUnmounted(() => {
                 display: flex;
                 align-items: center;
                 margin-bottom: 12px;
+
+                >.select {
+                    width: 128px;
+                    height: 32px;
+                }
 
                 >label {
                     flex: 0 0 24px;

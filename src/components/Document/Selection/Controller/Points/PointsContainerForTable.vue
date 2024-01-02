@@ -1,6 +1,6 @@
 <script setup lang='ts'>
 import { Context } from '@/context';
-import { AsyncBaseAction, AsyncTransfer, CtrlElementType, GroupShape, Matrix, Shape, ShapeType, TableShape } from '@kcdesign/data';
+import { AsyncBaseAction, AsyncTransfer, CtrlElementType, GroupShape, Matrix, Shape, ShapeType, ShapeView, TableShape, adapt2Shape } from '@kcdesign/data';
 import { onMounted, onUnmounted, watch, ref } from 'vue';
 import { ClientXY, PageXY } from '@/context/selection';
 import { Point } from "../../SelectionView.vue";
@@ -21,7 +21,7 @@ import { get_transform } from './common';
 interface Props {
     matrix: number[]
     context: Context
-    shape: Shape
+    shape: ShapeView
     cFrame: Point[]
 }
 const props = defineProps<Props>();
@@ -122,7 +122,7 @@ function point_mousemove(event: MouseEvent) {
     } else {
         if (Math.hypot(mx - sx, my - sy) > dragActiveDis) {
             submatrix.reset(workspace.matrix.inverse);
-            asyncBaseAction = props.context.editor.controller().asyncRectEditor(props.shape, props.context.selection.selectedPage!);
+            asyncBaseAction = props.context.editor.controller().asyncRectEditor(adapt2Shape(props.shape), props.context.selection.selectedPage!.data);
             props.context.assist.set_trans_target([props.shape]);
             isDragging = true;
         }
@@ -151,11 +151,11 @@ let stickedX2: boolean = false;
 let stickedY2: boolean = false;
 let t_e: MouseEvent | undefined;
 let speed: number = 0;
-let shapes: Shape[] = [];
+let shapes: ShapeView[] = [];
 let need_update_comment = false;
 let submatrix2 = new Matrix();
 let offset_map: PointsOffset | undefined;
-function gen_offset_map(shape: Shape, down: PageXY) {
+function gen_offset_map(shape: ShapeView, down: PageXY) {
     const m = shape.matrix2Root();
     const f = shape.frame;
     const lt = m.computeCoord2(0, 0);
@@ -225,23 +225,27 @@ function mousemove4trans(e: MouseEvent) {
         if (update_type === 3) startPosition = { ...mousePosition };        // mark：update_type不同的值对应的情况是什么
         else if (update_type === 2) startPosition.y = mousePosition.y;
         else if (update_type === 1) startPosition.x = mousePosition.x;
-    } else if (Math.hypot(mousePosition.x - startPosition.x, mousePosition.y - startPosition.y) > dragActiveDis) {   // mark：dragActiveDis是什么
+    } else if (!isDragging && Math.hypot(mousePosition.x - startPosition.x, mousePosition.y - startPosition.y) > dragActiveDis) {   // mark：dragActiveDis是什么
         shapes = selection.selectedShapes;
 
         asyncTransfer = props.context.editor
             .controller()
             .asyncTransfer(shapes, selection.selectedPage!);  // mark：asyncTransfer是什么
 
+        isDragging = true;
         if (e.altKey) {
-            shapes = paster_short(props.context, shapes, asyncTransfer);
+            paster_short(props.context, shapes, asyncTransfer).then((v) => {
+                shapes = v;
+                props.context.assist.set_trans_target(shapes);
+            });
         }
-
+        else {
+            props.context.assist.set_trans_target(shapes);
+        }
         selection.unHoverShape();
         workspace.setSelectionViewUpdater(false);
         workspace.translating(true);  // mark：workspace.translating(true)的作用是什么
-        props.context.assist.set_trans_target(shapes);
         submatrix2 = new Matrix(props.context.workspace.matrix.inverse);
-        isDragging = true;
         const p = submatrix2.computeCoord3(startPosition);
         offset_map = gen_offset_map(shapes[0], p);
     }
@@ -259,11 +263,11 @@ function _migrate() {
     }
 
     if (m && asyncTransfer) {
-        asyncTransfer.migrate(targetParent as GroupShape, compare_layer_3(shapes), '');
+        asyncTransfer.migrate(adapt2Shape(targetParent) as GroupShape, compare_layer_3(shapes).map(s => adapt2Shape(s)), '');
     }
 }
 const migrate: () => void = debounce(_migrate, 100);
-function getCloesetContainer(shape: Shape): Shape {
+function getCloesetContainer(shape: ShapeView): ShapeView {
     let result = props.context.selection.selectedPage!
     let p = shape.parent;
     while (p) {

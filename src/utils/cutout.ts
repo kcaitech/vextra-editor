@@ -1,7 +1,7 @@
 import { XY } from "@/context/selection";
-import { Border, BorderPosition, GroupShape, Page, ShadowPosition, Shape, ShapeType } from "@kcdesign/data";
+import { Border, BorderPosition, GroupShape, Page, PageView, ShadowPosition, Shape, ShapeType, ShapeView } from "@kcdesign/data";
 import { isTarget } from '@/utils/common';
-export function getCutoutShape(shape: Shape, page: Page, selectedShapes: Map<string, Shape>) {
+export function getCutoutShape(shape: ShapeView, page: PageView, selectedShapes: Map<string, ShapeView>) {
     if (!shape.parent) return;
     const matrix = shape.parent.matrix2Root();
     const p = shape.boundingBox()
@@ -14,10 +14,10 @@ export function getCutoutShape(shape: Shape, page: Page, selectedShapes: Map<str
     finder(page.childs, ps, selectedShapes); // 再寻找框选区外的图形
 }
 
-function finder(childs: Shape[], Points: [XY, XY, XY, XY, XY], selectedShapes: Map<string, Shape>) {
+function finder(childs: ShapeView[], Points: [XY, XY, XY, XY, XY], selectedShapes: Map<string, ShapeView>) {
     for (let ids = 0, len = childs.length; ids < len; ids++) {
         const shape = childs[ids];
-        if (selectedShapes.get(shape.id) || shape.isLocked || !shape.isVisible) continue;
+        if (selectedShapes.get(shape.id) || shape.isLocked() || !shape.isVisible) continue;
         const m = childs[ids].matrix2Root();
         const { width, height } = shape.frame;
         const max_border = getShapeBorderMax(shape) * 6;
@@ -38,13 +38,13 @@ function finder(childs: Shape[], Points: [XY, XY, XY, XY, XY], selectedShapes: M
     }
 }
 
-function private_set(key: string, value: Shape, selectedShapes: Map<string, Shape>) {
+function private_set(key: string, value: ShapeView, selectedShapes: Map<string, ShapeView>) {
     selectedShapes.set(key, value);
 }
 
-export const getShapeBorderMax = (shape: Shape) => {
-    if (!shape.style.borders.length) return 0;
-    const borders = shape.style.borders;
+export const getShapeBorderMax = (shape: ShapeView) => {
+    const borders = shape.getBorders();
+    if (!borders.length) return 0;
     const max_b = [0];
     for (let i = 0; i < borders.length; i++) {
         const border = borders[i];
@@ -58,10 +58,10 @@ export const getShapeBorderMax = (shape: Shape) => {
     return Math.max(...max_b);
 }
 
-export const getShadowMax = (shape: Shape) => {
+export const getShadowMax = (shape: ShapeView) => {
     const offsets = { left: 0, top: 0, right: 0, bottom: 0 };
-    if (!shape.style.shadows.length) return offsets;
-    const shadows = shape.style.shadows;
+    const shadows = shape.getShadows();
+    if (!shadows.length) return offsets;
     const max_l = [0];
     const max_b = [0];
     const max_r = [0];
@@ -102,8 +102,8 @@ export const getShadowMax = (shape: Shape) => {
     offsets.bottom = Math.max(...max_b);
     return offsets;
 }
-export const parentIsArtboard = (shape: Shape) => {
-    let result: Shape | undefined = undefined;
+export const parentIsArtboard = (shape: ShapeView) => {
+    let result: ShapeView | undefined = undefined;
     let p = shape.parent;
     while (p && p.type !== ShapeType.Page) {
         if (p.type === ShapeType.Artboard) {
@@ -115,8 +115,8 @@ export const parentIsArtboard = (shape: Shape) => {
     return result;
 }
 
-export const getPageBounds = (page: Page) => {
-    const childs = page.childs as Shape[];
+export const getPageBounds = (page: PageView) => {
+    const childs = page.childs as ShapeView[];
     const { x, y, width, height } = page.frame;
     if (!childs) return { x, y, width, height };
     const shapes = flattenShapes(childs).filter(s => s.type !== ShapeType.Group);
@@ -155,8 +155,8 @@ export const getShapeMaxBounds = (shape: Shape, x: number, y: number, width: num
 
 // 对图片上任意点(x,y)，绕一个坐标点(rx0,ry0)逆时针旋转a角度后的新的坐标设为(x0, y0)，公式：
 // x0= (x - rx0)*cos(a) - (y - ry0)*sin(a) + rx0 ;    y0= (x - rx0)*sin(a) + (y - ry0)*cos(a) + ry0 ;
-export const getGroupChildBounds = (shape: GroupShape) => {
-    const childs = shape.childs as Shape[];
+export const getGroupChildBounds = (shape: ShapeView) => {
+    const childs = shape.childs as ShapeView[];
     const { x, y, width, height } = shape.frame;
     if (!childs) return { x, y, width, height };
     const shapes = flattenShapes(childs).filter(s => s.type !== ShapeType.Group);
@@ -173,7 +173,7 @@ export const getGroupChildBounds = (shape: GroupShape) => {
     }
 }
 
-const getMaxMinPoints = (shapes: Shape[]) => {
+const getMaxMinPoints = (shapes: ShapeView[]) => {
     const bounds_points = [];
     for (let i = 0; i < shapes.length; i++) {
         const shape = shapes[i];
@@ -221,10 +221,10 @@ const getMaxMinPoints = (shapes: Shape[]) => {
     }
     return bounds_points;
 }
-export function flattenShapes(shapes: Shape[]): Shape[] {
-    return shapes.reduce((result: any, item: Shape) => {
-        if (item.type === ShapeType.Group) {
-            const childs = (item as GroupShape).childs as Shape[];
+export function flattenShapes(shapes: ShapeView[]): ShapeView[] {
+    return shapes.reduce((result: any, item: ShapeView) => {
+        if(item.type === ShapeType.Group) {
+            const childs = (item).childs as ShapeView[];
             if (Array.isArray(childs)) {
                 result = result.concat(flattenShapes(childs));
             }
@@ -264,7 +264,7 @@ const getMinPoint = (points: { x: number, y: number }[]) => {
     return { x: min_x, y: min_y }
 }
 
-export function compareArrays(s1: Shape[], s2: Shape[]) {
+export function compareArrays(s1: ShapeView[], s2: ShapeView[]) {
     if(s1.length !== s2.length) {
       return false;
     }

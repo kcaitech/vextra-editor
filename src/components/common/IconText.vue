@@ -1,7 +1,7 @@
 <script setup lang="ts">
 import { Context } from "@/context";
 import { get_rotation } from "@/utils/attri_setting";
-import { Shape } from "@kcdesign/data";
+import { ShapeView } from "@kcdesign/data";
 import { watchEffect } from "vue";
 import { watch, ref, onMounted } from "vue";
 type Scale = { axleX: number, degX: number }
@@ -16,7 +16,7 @@ const props = defineProps<{
     context: Context
 }>();
 const emit = defineEmits<{
-    (e: "onchange", value: string, shapes: Shape[]): void;
+    (e: "onchange", value: string, shapes: ShapeView[]): void;
 }>();
 const curpt: { x: number, y: number } = { x: 0, y: 0 }
 const _curpt: { x: number, y: number } = { x: 0, y: 0 }
@@ -30,7 +30,7 @@ const isDrag = ref(false)
 const input = ref<HTMLInputElement>();
 const inputValue = ref(props.text);
 const isActived = ref(false);
-const shapes = ref<Shape[]>([]);
+const shapes = ref<ShapeView[]>([]);
 const saveValue = ref('');
 function onChange(e: Event) {
     if (props.disabled) {
@@ -70,7 +70,7 @@ function onChange(e: Event) {
     }
     console.log(value, 'value');
     
-    emit("onchange", value, shapes.value as Shape[]);
+    emit("onchange", value, shapes.value as ShapeView[]);
 }
 const saveInputValue = () => {
     const value = input.value!.value;

@@ -1,7 +1,7 @@
 <script setup lang="ts">
 import { computed, onMounted, onUnmounted, reactive, ref, watch } from 'vue';
 import { Context } from '@/context';
-import { Color, Fill, FillType, GroupShape, Shape, ShapeType, TableCell, TableShape } from "@kcdesign/data";
+import { Color, Fill, FillType, Shape, ShapeType, ShapeView, TableCell, TableView } from "@kcdesign/data";
 import { Reg_HEX } from "@/utils/RegExp";
 import TypeHeader from '../TypeHeader.vue';
 import { useI18n } from 'vue-i18n';
@@ -19,7 +19,6 @@ import { v4 } from 'uuid';
 import { TableSelection } from '@/context/tableselection';
 import { Selection } from "@/context/selection";
 import { flattenShapes } from '@/utils/cutout';
-import { onBeforeUnmount } from 'vue';
 
 interface FillItem {
     id: number,
@@ -28,7 +27,7 @@ interface FillItem {
 
 interface Props {
     context: Context
-    shapes: Shape[]
+    shapes: ShapeView[]
 }
 
 const props = defineProps<Props>();
@@ -41,7 +40,7 @@ const alphaFill = ref<any>();
 const colorFill = ref<any>();
 const mixed = ref<boolean>(false);
 const mixed_cell = ref(false);
-let table: TableShape;
+let table: TableView;
 
 function toHex(r: number, g: number, b: number) {
     const hex = (n: number) => n.toString(16).toUpperCase().length === 1 ? `0${n.toString(16).toUpperCase()}` : n.toString(16).toUpperCase();
@@ -113,9 +112,9 @@ function updateData() {
                 }
             }
         } else {
-            const style = shape.style;
-            for (let i = 0, len = style.fills.length; i < len; i++) {
-                const fill = style.fills[i];
+            const stylefills = shape.getFills();
+            for (let i = 0, len = stylefills.length; i < len; i++) {
+                const fill = stylefills[i];
                 const f = { id: i, fill };
                 fills.unshift(f);
             }
@@ -128,7 +127,7 @@ function updateData() {
             fills.push(..._fs.reverse());
         }
     } else if (selecteds.length === 1 && selecteds[0].type === ShapeType.Group) {
-        const childs = (selecteds[0] as GroupShape).childs;
+        const childs = (selecteds[0]).childs;
         const shapes = flattenShapes(childs).filter(s => s.type !== ShapeType.Group);
         const _fs = get_fills(shapes);
         if (_fs === 'mixed') {
@@ -151,7 +150,7 @@ function addFill(): void {
         const e = props.context.editor4Shape(s);
         if (s.type === ShapeType.Table) {
             const table = props.context.tableSelection;
-            const editor = props.context.editor4Table(s as TableShape);
+            const editor = props.context.editor4Table(s as TableView);
             const is_edting = table.editingCell;
             if (table.tableRowStart > -1 || table.tableColStart > -1 || is_edting) {
                 let range
@@ -198,7 +197,7 @@ function addFill(): void {
             }
         }
     } else if (len.value === 1 && s.type === ShapeType.Group) {
-        const childs = (s as GroupShape).childs;
+        const childs = (s).childs;
         const shapes = flattenShapes(childs).filter(s => s.type !== ShapeType.Group);
         if (mixed.value) {
             const actions = get_actions_fill_unify(shapes);
@@ -228,7 +227,7 @@ function deleteFill(idx: number) {
     if (len.value === 1 && s.type !== ShapeType.Group) {
         if (s.type === ShapeType.Table) {
             const table = props.context.tableSelection;
-            const e = props.context.editor4Table(s as TableShape);
+            const e = props.context.editor4Table(s as TableView);
             const is_edting = table.editingCell;
             if (table.tableRowStart > -1 || table.tableColStart > -1 || is_edting) {
                 let range
@@ -262,7 +261,7 @@ function deleteFill(idx: number) {
             editor.shapesDeleteFill(actions);
         }
     } else if (len.value === 1 && s.type === ShapeType.Group) {
-        const childs = (s as GroupShape).childs;
+        const childs = (s).childs;
         const shapes = flattenShapes(childs).filter(s => s.type !== ShapeType.Group);
         const actions = get_actions_fill_delete(shapes, _idx);
         const page = props.context.selection.selectedPage;
@@ -279,7 +278,7 @@ function toggleVisible(idx: number) {
     if (len.value === 1 && s.type !== ShapeType.Group) {
         if (s.type === ShapeType.Table) {
             const table = props.context.tableSelection;
-            const e = props.context.editor4Table(s as TableShape);
+            const e = props.context.editor4Table(s as TableView);
             const is_edting = table.editingCell;
             if (table.tableRowStart > -1 || table.tableColStart > -1 || is_edting) {
                 let range
@@ -306,7 +305,8 @@ function toggleVisible(idx: number) {
             editor.value.setFillEnable(_idx, !fills[idx].fill.isEnabled);
         }
     } else if (len.value > 1) {
-        const value = !props.shapes[0].style.fills[idx].isEnabled;
+        const fills = props.shapes[0].getFills();
+        const value = !fills[idx].isEnabled;
         const actions = get_actions_fill_enabled(props.shapes, _idx, value);
         const page = props.context.selection.selectedPage;
         if (page) {
@@ -314,9 +314,10 @@ function toggleVisible(idx: number) {
             editor.setShapesFillEnabled(actions);
         }
     } else if (len.value === 1 && s.type === ShapeType.Group) {
-        const childs = (s as GroupShape).childs;
+        const childs = (s).childs;
         const shapes = flattenShapes(childs).filter(s => s.type !== ShapeType.Group);
-        const value = !shapes[0].style.fills[idx].isEnabled;
+        const fills = shapes[0].getFills();
+        const value = !fills[idx].isEnabled;
         const actions = get_actions_fill_enabled(shapes, _idx, value);
         const page = props.context.selection.selectedPage;
         if (page) {
@@ -340,7 +341,7 @@ function setColor(idx: number, clr: string, alpha: number) {
     if (len.value === 1 && s.type !== ShapeType.Group) {
         if (s.type === ShapeType.Table) {
             const table = props.context.tableSelection;
-            const e = props.context.editor4Table(s as TableShape);
+            const e = props.context.editor4Table(s as TableView);
             const is_edting = table.editingCell;
             if (table.tableRowStart > -1 || table.tableColStart > -1 || is_edting) {
                 let range
@@ -374,7 +375,7 @@ function setColor(idx: number, clr: string, alpha: number) {
             editor.setShapesFillColor(actions);
         }
     } else if (len.value === 1 && s.type === ShapeType.Group) {
-        const childs = (s as GroupShape).childs;
+        const childs = (s).childs;
         const shapes = flattenShapes(childs).filter(s => s.type !== ShapeType.Group);
         const actions = get_actions_fill_color(shapes, _idx, new Color(alpha, r, g, b));
         const page = props.context.selection.selectedPage;
@@ -452,7 +453,7 @@ function getColorFromPicker(idx: number, color: Color) {
     if (len.value === 1 && s.type !== ShapeType.Group) {
         if (s.type === ShapeType.Table) {
             const table = props.context.tableSelection;
-            const e = props.context.editor4Table(s as TableShape);
+            const e = props.context.editor4Table(s as TableView);
             const is_edting = table.editingCell;
             if (table.tableRowStart > -1 || table.tableColStart > -1 || is_edting) {
                 let range
@@ -486,7 +487,7 @@ function getColorFromPicker(idx: number, color: Color) {
             editor.setShapesFillColor(actions);
         }
     } else if (len.value === 1 && s.type === ShapeType.Group) {
-        const childs = (s as GroupShape).childs;
+        const childs = (s).childs;
         const shapes = flattenShapes(childs).filter(s => s.type !== ShapeType.Group);
         const actions = get_actions_fill_color(shapes, _idx, color);
         const page = props.context.selection.selectedPage;
@@ -523,7 +524,7 @@ function update_by_shapes() {
     updateData();
 }
 
-function shapes_watcher(v: Shape[]) {
+function shapes_watcher(v: ShapeView[]) {
     update_by_shapes();
     watchCells.forEach((v) => v.unwatch(updateData));
     watchCells.clear();
@@ -647,7 +648,6 @@ onUnmounted(() => {
     flex-direction: column;
     padding: 12px 8px 18px 8px;
     box-sizing: border-box;
-    border-top: 1px solid #F0F0F0;
     border-bottom: 1px solid #F0F0F0;
 
     .add {

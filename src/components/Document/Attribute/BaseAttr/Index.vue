@@ -1,6 +1,6 @@
 <script setup lang="ts">
 import { onMounted, onUnmounted, ref, reactive } from 'vue'
-import { Shape, ShapeType, RectShape, PathShape, ImageShape, Artboard } from '@kcdesign/data';
+import { ShapeType, RectShape, PathShape, ImageShape, Artboard, adapt2Shape, ShapeView } from '@kcdesign/data';
 import IconText from '@/components/common/IconText.vue';
 import { debounce } from 'lodash';
 import { useI18n } from 'vue-i18n';
@@ -116,7 +116,7 @@ function _update_view() {
 
 const update_view = debounce(_update_view, 200, { leading: true });
 
-function onChangeX(value: string, shapes: Shape[]) {
+function onChangeX(value: string, shapes: ShapeView[]) {
     value = Number
         .parseFloat(value)
         .toFixed(fix);
@@ -135,7 +135,7 @@ function onChangeX(value: string, shapes: Shape[]) {
     const editor = props.context.editor4Page(page);
     editor.arrange(actions);
 }
-function onChangeY(value: string, shapes: Shape[]) {
+function onChangeY(value: string, shapes: ShapeView[]) {
     value = Number
         .parseFloat(value)
         .toFixed(fix);
@@ -154,7 +154,7 @@ function onChangeY(value: string, shapes: Shape[]) {
     const editor = props.context.editor4Page(page);
     editor.arrange(actions);
 }
-function onChangeW(value: string, shapes: Shape[]) {
+function onChangeW(value: string, shapes: ShapeView[]) {
     value = Number
         .parseFloat(value)
         .toFixed(fix);
@@ -167,11 +167,10 @@ function onChangeW(value: string, shapes: Shape[]) {
     const page = props.context.selection.selectedPage!;
 
     const editor = props.context.editor4Page(page);
-    console.log(shapes, _w, '_w');
-    
-    editor.modifyShapesWidth(shapes, _w);
+
+    editor.modifyShapesWidth(shapes.map(s => adapt2Shape(s)), _w);
 }
-function onChangeH(value: string, shapes: Shape[]) {
+function onChangeH(value: string, shapes: ShapeView[]) {
     value = Number
         .parseFloat(value)
         .toFixed(fix);
@@ -185,7 +184,7 @@ function onChangeH(value: string, shapes: Shape[]) {
 
     const editor = props.context.editor4Page(page);
 
-    editor.modifyShapesHeight(shapes, _h);
+    editor.modifyShapesHeight(shapes.map(s => adapt2Shape(s)), _h);
 }
 function lockToggle() {
     if (s_length) {
@@ -208,7 +207,7 @@ function fliph() {
     }
     const selected = props.context.selection.selectedShapes;
     if (selected.length === 1) {
-        const e = props.context.editor4Shape(selected[0]);
+        const e = props.context.editor4Shape(adapt2Shape(selected[0]));
         e.flipH();
     } else if (selected.length > 1) {
         const page = props.context.selection.selectedPage;
@@ -225,7 +224,7 @@ function flipv() {
     }
     const selected = props.context.selection.selectedShapes;
     if (selected.length === 1) {
-        const e = props.context.editor4Shape(selected[0]);
+        const e = props.context.editor4Shape(adapt2Shape(selected[0]));
         e.flipV();
     } else if (selected.length > 1) {
         const page = props.context.selection.selectedPage;
@@ -236,7 +235,7 @@ function flipv() {
         }
     }
 }
-function onChangeRotate(value: string, shapes: Shape[]) {
+function onChangeRotate(value: string, shapes: ShapeView[]) {
     value = Number
         .parseFloat(value)
         .toFixed(fix);
@@ -258,17 +257,17 @@ function onChangeRotate(value: string, shapes: Shape[]) {
 
     const editor = props.context.editor4Page(page);
 
-    editor.setShapesRotate(shapes, newRotate);
+    editor.setShapesRotate(shapes.map(s => adapt2Shape(s)), newRotate);
 }
 function adapt() {
     const selected = props.context.selection.selectedShapes;
     if (selected.length === 1 && selected[0].type === ShapeType.Artboard) {
         props.context
-            .editor4Shape(selected[0])
+            .editor4Shape(adapt2Shape(selected[0]))
             .adapt();
     }
 }
-function modify_multi_radius(shape: Shape) {
+function modify_multi_radius(shape: ShapeView) {
     multiRadius.value = false;
     if (!(shape instanceof PathShape)) {
         return;
@@ -447,6 +446,7 @@ onUnmounted(() => {
     padding: 12px 8px 12px 8px;
     box-sizing: border-box;
     visibility: visible;
+    border-bottom: 1px solid #F0F0F0;
 
     .tr {
         position: relative;
@@ -549,6 +549,7 @@ onUnmounted(() => {
             display: flex;
             align-items: center;
             justify-content: space-between;
+            margin-left: 7px;
 
             .flip {
                 background-color: var(--input-background);
@@ -566,6 +567,10 @@ onUnmounted(() => {
                     width: 14px;
                     height: 14px;
                 }
+            }
+
+            .flip:hover {
+                background-color: #EBEBEB;
             }
 
             .flip-disable {

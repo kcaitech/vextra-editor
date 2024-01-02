@@ -1,9 +1,9 @@
 <script setup lang="ts">
-import {Shape, ShapeType} from "@kcdesign/data";
+import {ShapeView, ShapeType} from "@kcdesign/data";
 import {static_coms_map} from "../../../ContentStatic/static_coms_map";
 
 interface Props {
-    data: Shape
+    data: ShapeView
 }
 
 const props = defineProps<Props>();

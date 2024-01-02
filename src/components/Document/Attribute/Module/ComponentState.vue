@@ -4,13 +4,13 @@ import { Context } from '@/context';
 import { onMounted, onUnmounted, ref, watch } from "vue";
 import StatusCard from "@/components/Document/Attribute/Module/StatusCard.vue";
 import { is_conflict_comp, is_wrong_bind, states_tag_values_sort, StatusValueItem } from "@/utils/symbol";
-import { Shape, SymbolShape } from "@kcdesign/data"
+import { Shape, ShapeView, SymbolShape, SymbolView } from "@kcdesign/data"
 import TypeHeader from '../TypeHeader.vue';
 import { Warning } from '@element-plus/icons-vue';
 
 interface Props {
     context: Context
-    shapes: SymbolShape[]
+    shapes: SymbolView[]
 }
 
 const props = defineProps<Props>()
@@ -28,7 +28,7 @@ function update_list() {
 
 const is_conflict = () => {
     if (is_wrong_bind(props.shapes)) {
-        const conflict_comp = is_conflict_comp(props.shapes[0].parent as SymbolShape);
+        const conflict_comp = is_conflict_comp(props.shapes[0].parent as SymbolView);
         if (!conflict_comp) return;
         let is_conflict = false;
         conflict_comp.forEach((item: any[]) => {
@@ -50,13 +50,13 @@ watch(() => props.shapes, (v, o) => {
     update_list();
 })
 
-function watch_shapes(shapes: Shape[]) {
+function watch_shapes(shapes: ShapeView[]) {
     for (let i = 0, len = shapes.length; i < len; i++) {
         shapes[i].watch(update_list);
     }
 }
 
-function unwatch_shapes(shapes: Shape[]) {
+function unwatch_shapes(shapes: ShapeView[]) {
     for (let i = 0, len = shapes.length; i < len; i++) {
         shapes[i].unwatch(update_list);
     }
@@ -91,7 +91,8 @@ onUnmounted(() => {
 <style lang="scss" scoped>
 .module_container {
     font-size: var(--font-default-fontsize);
-    margin-bottom: 10px;
+    margin-bottom: 12px;
+    margin-top: 12px
 }
 
 .compos_state {
@@ -102,23 +103,26 @@ onUnmounted(() => {
 .conflict_warn {
     display: flex;
     width: 100%;
-    margin-top: 8px;
+    margin-top: 6px;
     font-size: var(--font-default-fontsize);
     box-sizing: border-box;
-    border: 0.5px solid rgba(0, 0, 0, 0.05);
-    border-radius: 4px;
-    padding: 10px;
+    border: 1px solid #F5F5F5;
+    border-radius: var(--default-radius);
+    padding: 8px;
+    margin-bottom: 6px;
 
     >div {
         display: flex;
         align-items: center;
         width: 20px;
         height: 20px;
-        margin-right: 10px;
+        margin-right: 8px;
+        color: #8C8C8C;
     }
 
     >p {
         margin: 0;
+        color: #262626;
     }
 }
 

@@ -1,7 +1,7 @@
 import { XY } from '@/context/selection';
 import { v4 as uuid } from "uuid";
 import { debounce } from 'lodash';
-import { ContactShape, PathShape, Shape, ShapeType } from '@kcdesign/data';
+import { ContactShape, PathShape, PathShapeView, Shape, ShapeType, ShapeView } from '@kcdesign/data';
 import { Context } from '@/context';
 import { is_straight } from './attri_setting';
 import { selectShapes } from './content';
@@ -248,7 +248,7 @@ export function get_side_by_points(points: XY[]) {
   }
   return sides;
 }
-export function get_points_for_straight(shape: PathShape) {
+export function get_points_for_straight(shape: PathShapeView) {
   const start = shape.points[0];
   const end = shape.points[1];
 
@@ -262,9 +262,9 @@ export function get_points_for_straight(shape: PathShape) {
 
   return [m.computeCoord2(start.x, start.y), m.computeCoord2(end.x, end.y)];
 }
-export function get_points_from_shape(shape: Shape) {
+export function get_points_from_shape(shape: ShapeView) {
   if (is_straight(shape)) {
-    return get_points_for_straight(shape as PathShape);
+    return get_points_for_straight(shape as PathShapeView);
   }
 
   const m = shape.matrix2Root();
@@ -287,7 +287,7 @@ export function isIncluded2(selectorPoints: XY[], shapePoints: XY[]): boolean {
   const { left: l, top: t, right: r, bottom: b } = XYsBounding(shapePoints);
   return l > left && r < right && t > top && b < bottom;
 }
-export function isTarget2(selectorPoints: [XY, XY, XY, XY, XY], shape: Shape, includes?: boolean) {
+export function isTarget2(selectorPoints: [XY, XY, XY, XY, XY], shape: ShapeView, includes?: boolean) {
   const points = get_points_from_shape(shape);
 
   if (isIncluded2(selectorPoints, points)) {
@@ -339,12 +339,12 @@ export function string_by_sys(str: string): string {
   }
 }
 
-export function forbidden_to_modify_frame(shape: Shape) {
-  return shape.isLocked || shape.isVirtualShape;
+export function forbidden_to_modify_frame(shape: ShapeView) {
+  return shape.isLocked() || shape.isVirtualShape;
 }
 
-export function shapes_organize(shapes: Shape[]) {
-  const result: Shape[] = [];
+export function shapes_organize(shapes: ShapeView[]) {
+  const result: ShapeView[] = [];
   for (let i = 0, l = shapes.length; i < l; i++) {
     const shape = shapes[i];
 

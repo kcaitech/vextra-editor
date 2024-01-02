@@ -1,6 +1,6 @@
 <script setup lang="ts">
 import { ref, nextTick, InputHTMLAttributes, onMounted, onUnmounted, watch, onUpdated } from "vue";
-import { Shape, ShapeType, SymbolUnionShape } from '@kcdesign/data';
+import { Shape, ShapeType, ShapeView, SymbolUnionShape } from '@kcdesign/data';
 import { Context } from "@/context";
 import { Navi } from "@/context/navigate";
 import { is_parent_locked, is_parent_unvisible, is_valid_data } from "@/utils/shapelist";
@@ -10,7 +10,7 @@ import { is_component_class } from "@/utils/listview";
 
 export interface ItemData {
     id: string
-    shape: Shape
+    shape: ShapeView
     selected: boolean
     context: Context
     keywords: string
@@ -35,15 +35,15 @@ const lock_status = ref<number>(0) // 1：锁 2：继承锁 -1：不锁
 const visible_status = ref<number>(1) // 1：隐藏 2： 继承隐藏 -1：显示
 const is_tool_visible = ref<boolean>()
 const emit = defineEmits<{
-    (e: "toggleexpand", shape: Shape): void;
-    (e: "selectshape", shape: Shape, ctrl: boolean, meta: boolean, shift: boolean): void;
-    (e: "hovershape", shape: Shape): void;
+    (e: "toggleexpand", shape: ShapeView): void;
+    (e: "selectshape", shape: ShapeView, ctrl: boolean, meta: boolean, shift: boolean): void;
+    (e: "hovershape", shape: ShapeView): void;
     (e: "unhovershape"): void;
-    (e: "isLock", isLock: boolean, shape: Shape): void;
-    (e: "isRead", isRead: boolean, shape: Shape): void;
-    (e: "rename", name: string, shape: Shape, event?: KeyboardEvent): void;
-    (e: "scrolltoview", shape: Shape): void;
-    (e: "item-mousedown", event: MouseEvent, shape: Shape): void;
+    (e: "isLock", isLock: boolean, shape: ShapeView): void;
+    (e: "isRead", isRead: boolean, shape: ShapeView): void;
+    (e: "rename", name: string, shape: ShapeView, event?: KeyboardEvent): void;
+    (e: "scrolltoview", shape: ShapeView): void;
+    (e: "item-mousedown", event: MouseEvent, shape: ShapeView): void;
 }>();
 const watchedShapes = new Map();
 
@@ -75,8 +75,8 @@ const stop = watch(() => props.data.shape, (value, old) => {
 
 function updater(t?: any) {
     if (t === 'shape-frame') return;
-    lock_status.value = props.data.shape.isLocked ? 1 : 0;
-    visible_status.value = props.data.shape.isVisible ? 0 : 1;
+    lock_status.value = props.data.shape.isLocked() ? 1 : 0;
+    visible_status.value = props.data.shape.isVisible() ? 0 : 1;
     // if (is_parent_locked(props.data.shape) && !lock_status.value) {
     //     lock_status.value = 2;
     // }
@@ -165,7 +165,7 @@ const selectedChild = () => {
     let child
     while (parent) {
         if (parent.type === 'page') break
-        child = props.data.context.selection.isSelectedShape(parent)
+        child = props.data.context.selection.isSelectedShape(parent.id)
         parent = parent.parent
         if (child) {
             return child

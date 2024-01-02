@@ -1,10 +1,10 @@
-import { Matrix, TableCell, TableCellType } from "@kcdesign/data";
+import { Matrix, TableCell, TableCellType, TableCellView } from "@kcdesign/data";
 import { Context } from '@/context';
 import { ref } from "vue";
 import { useControllerCustom } from "../controller";
 
 export function textState(props: {
-    shape: TableCell,
+    shape: TableCellView,
     matrix: number[],
     context: Context
 }, i18nT: Function) {
@@ -30,7 +30,7 @@ export function textState(props: {
             const root = workspace.root
             matrix.reset(props.matrix);
             const xy = matrix.inverseCoord(e.clientX - root.x, e.clientY - root.y);
-            downIndex = props.shape.text!.locateText(xy.x, xy.y);
+            downIndex = props.shape.locateText(xy.x, xy.y);
             e.stopPropagation();
             document.addEventListener("mousemove", onMouseMove);
             document.addEventListener("mouseup", onMouseUp);
@@ -57,13 +57,13 @@ export function textState(props: {
         const root = workspace.root;
         matrix.reset(props.matrix);
         const xy = matrix.inverseCoord(clientX - root.x, clientY - root.y);
-        const locate = props.shape.text!.locateText(xy.x, xy.y);
+        const locate = props.shape.locateText(xy.x, xy.y);
         if (downIndex.index === locate.index) {
-            if (locate.placeholder) selection.setCursor(locate.index + 1, false, props.shape.text);
-            else selection.setCursor(locate.index, locate.before, props.shape.text);
+            if (locate.placeholder) selection.setCursor(locate.index + 1, false);
+            else selection.setCursor(locate.index, locate.before);
         }
         else {
-            selection.selectText(downIndex.index, locate.index, props.shape.text);
+            selection.selectText(downIndex.index, locate.index);
         }
         props.context.workspace.setCtrl('page');
     }
@@ -77,13 +77,13 @@ export function textState(props: {
         const root = workspace.root;
         matrix.reset(props.matrix);
         const xy = matrix.inverseCoord(clientX - root.x, clientY - root.y);
-        const locate = props.shape.text!.locateText(xy.x, xy.y);
+        const locate = props.shape.locateText(xy.x, xy.y);
         if (downIndex.index === locate.index) {
-            if (locate.placeholder) selection.setCursor(locate.index + 1, false, props.shape.text);
-            else selection.setCursor(locate.index, locate.before, props.shape.text);
+            if (locate.placeholder) selection.setCursor(locate.index + 1, false);
+            else selection.setCursor(locate.index, locate.before);
         }
         else {
-            selection.selectText(downIndex.index, locate.index, props.shape.text);
+            selection.selectText(downIndex.index, locate.index);
         }
     }
     function onMouseEnter() {

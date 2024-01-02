@@ -1,12 +1,12 @@
 <script setup lang="ts">
-import {Context} from '@/context';
-import {Text, VariableType} from '@kcdesign/data';
-import {useI18n} from 'vue-i18n';
-import SelectMenu from '../PopoverMenu/ComposAttri/SelectMenu.vue';
-import {ArrowDown} from '@element-plus/icons-vue'
-import {onMounted, ref, watch} from 'vue';
+import { Context } from '@/context';
+import { Text, VariableType } from '@kcdesign/data';
+import { useI18n } from 'vue-i18n';
+import { onMounted, ref, watch } from 'vue';
+import Select, { SelectItem, SelectSource } from '@/components/common/Select.vue';
+import { genOptions } from '@/utils/common';
 
-const {t} = useI18n();
+const { t } = useI18n();
 
 interface Props {
     context: Context,
@@ -27,28 +27,28 @@ interface Emits {
 const props = defineProps<Props>();
 const emits = defineEmits<Emits>();
 const textDefaultValue = ref(props.default_value as string || '');
-const selectoption = ref(false);
-const menuItems = ['显示', '隐藏'];
-const defaultValue = ref('显示');
-const menuIndex = ref(0);
+const optionsSource: SelectSource[] = genOptions([
+    ['显示', '显示'],
+    ['隐藏', '隐藏'],
+]);
+const curVal = ref<SelectItem>(optionsSource[0].data);
+
 watch(() => props.default_value, (v) => {
-    if (!props.dft_show) return;
-    if (v) {
-        menuIndex.value = 0;
-        defaultValue.value = '显示';
-    } else {
-        menuIndex.value = 1;
-        defaultValue.value = '隐藏';
+    if (!props.dft_show) {
+        return;
     }
-}, {immediate: true})
-const showMenu = () => {
-    if (selectoption.value) return selectoption.value = false
-    selectoption.value = true;
-}
-const handleShow = (index: number) => {
-    defaultValue.value = menuItems[index];
-    menuIndex.value = index;
-    emits('select', index);
+
+    if (v) {
+        curVal.value = optionsSource[0].data;
+    } else {
+        curVal.value = optionsSource[1].data;
+    }
+}, { immediate: true })
+
+const handleShow = (val: SelectItem) => {
+    curVal.value = val;
+    const idx = val.value === '显示' ? 0 : 1;
+    emits('select', idx);
 }
 
 function change(v: string) {
@@ -57,7 +57,7 @@ function change(v: string) {
 
 const input_v = ref();
 const keysumbit = (e: KeyboardEvent) => {
-    const {shiftKey, ctrlKey, metaKey} = e;
+    const { shiftKey, ctrlKey, metaKey } = e;
     if (e.key === 'Enter') {
         if (ctrlKey || metaKey || shiftKey) {
             input_v.value = input_v.value + '\n'
@@ -87,22 +87,13 @@ onMounted(() => {
 
 <template>
     <div class="container">
-        <span>默认值</span>
+        <span style="color: #737373;">默认值</span>
         <div v-if="props.addType === VariableType.Visible" class="show">
-            <div class="input" @click.stop="showMenu">
-                <span>{{ defaultValue }}</span>
-                <el-icon>
-                    <ArrowDown
-                        :style="{ transform: selectoption ? 'rotate(180deg)' : 'rotate(0deg)', transition: '0.3s' }"/>
-                </el-icon>
-                <SelectMenu v-if="selectoption" :top="33" width="100%" :menuItems="menuItems" :menuIndex="menuIndex"
-                            :context="context" @select-index="handleShow" @close="selectoption = false"></SelectMenu>
-            </div>
+            <Select class="select" :source="optionsSource" :selected="curVal" @select="handleShow"></Select>
         </div>
         <div v-if="props.addType === VariableType.Text">
-            <el-input v-model="textDefaultValue" type="textarea" ref="input_v" :autosize="{ minRows: 1, maxRows: 4 }"
-                      resize="none"
-                      :placeholder="t('compos.default_text_input')" @keydown.stop="keysumbit" @change="change"/>
+            <input ref="input_v" type="text" v-model="textDefaultValue" :placeholder="t('compos.default_text_input')"
+                @keydown.stop="keysumbit" @change="change(textDefaultValue)" />
         </div>
     </div>
     <div class="warning" v-if="props.warn && props.addType === VariableType.Text">
@@ -124,25 +115,31 @@ onMounted(() => {
         width: 60px;
     }
 
-    > div {
+    >div {
         flex: 1;
-    }
 
-    :deep(.el-textarea) {
-        width: 100%;
-
-        .el-textarea__inner {
+        input {
+            outline: none;
+            border: none;
+            border: 1px solid #F5F5F5;
+            width: 100%;
+            height: 32px;
             font-size: 12px;
-            min-height: 28px !important;
-            background-color: var(--grey-light);
-            box-shadow: none;
+            border-radius: 6px;
+            padding: 7px 12px;
+            background-color: #F5F5F5;
+            box-sizing: border-box;
+
+            &:hover {
+                background-color: #EBEBEB;
+            }
 
             &:focus {
-                box-shadow: 0 0 0 1px var(--active-color) inset;
+                background-color: #F5F5F5 !important;
+                border: 1px solid #1878F5;
             }
         }
     }
-
 }
 
 .warning {
@@ -153,7 +150,7 @@ onMounted(() => {
     box-sizing: border-box;
 
     .warn {
-        font-size: 10px;
+        font-size: 12px;
         padding: 0;
         color: red;
         margin: 3px;
@@ -162,29 +159,9 @@ onMounted(() => {
 }
 
 .show {
-    .input {
-        position: relative;
-        width: 100%;
-        height: 30px;
-        border-radius: 4px;
-        border: 1px solid #dcdfe6;
-        padding-left: 11px;
-        box-sizing: border-box;
-        display: flex;
-        align-items: center;
-        background-color: var(--grey-light);
-
-        span {
-            flex: 1;
-        }
-
-        .el-icon {
-            width: 30px;
-            height: 30px;
-            display: flex;
-            align-items: center;
-            justify-content: center;
-        }
+    .select {
+        width: 168px;
+        height: 32px;
     }
 }
 

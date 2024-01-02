@@ -7,7 +7,7 @@ import { ClientXY, PageXY } from '@/context/selection';
 import { useRoute } from 'vue-router';
 import { useI18n } from 'vue-i18n';
 import { searchCommentShape } from '@/utils/comment';
-import { GroupShape, Page, Shape } from "@kcdesign/data";
+import { GroupShape, PageView, Shape } from "@kcdesign/data";
 import { Comment } from '@/context/comment';
 import { DocCommentOpData, DocCommentOpType } from "@/communication/modules/doc_comment_op"
 
@@ -19,7 +19,7 @@ const props = defineProps<{
     pageId: string,
     root: HTMLDivElement | undefined,
     cursorClass: string,
-    page: Page
+    page: PageView
 }>();
 const commentItem = ref<CommentView>();
 const commentInput = ref(false);

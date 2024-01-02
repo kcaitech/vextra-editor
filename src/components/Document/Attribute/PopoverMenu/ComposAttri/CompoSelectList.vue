@@ -1,8 +1,8 @@
 <script setup lang="ts">
-import {Context} from '@/context';
-import {ref, watch} from 'vue';
+import { Context } from '@/context';
+import { ref, watch } from 'vue';
 import CardWrap from "./CardWrap.vue";
-import {Shape} from "@kcdesign/data";
+import {Shape, ShapeView} from "@kcdesign/data";
 
 interface Props {
     context: Context
@@ -20,7 +20,7 @@ const emits = defineEmits<Emits>();
 const checkList = ref(props.layerId || []);
 const detail = ref<boolean>(false);
 
-function hover_item(shape: Shape) {
+function hover_item(shape: ShapeView) {
     props.context.selection.hoverShape(shape);
 }
 
@@ -30,7 +30,7 @@ function unhover() {
 
 watch(checkList, (v) => {
     emits('handleCheck', v)
-}, {immediate: true})
+}, { immediate: true })
 </script>
 <template>
     <div class="container" v-for="(item, index) in contents" :key="index">
@@ -43,25 +43,31 @@ watch(checkList, (v) => {
 </template>
 
 <style lang="scss" scoped>
+:deep(.el-checkbox__inner::after) {
+    border: 0.1em solid var(--el-checkbox-checked-icon-color);
+    border-left: 0;
+    border-top: 0;
+}
+
 .container {
-    padding-right: 5px;
+    padding: 0 5px 0 12px;
     box-sizing: border-box;
 
     .el-checkbox {
         width: 100%;
         display: flex;
-        margin: 5px 0;
 
         :deep(.el-checkbox__label) {
+            width: calc(100% - 18px);
             height: 100%;
             flex: 1;
+            padding-left: 4px;
         }
 
         :deep(.el-checkbox__input) {
             height: 100%;
             display: flex;
             align-items: center;
-            margin-left: 3px;
         }
 
         :deep(.el-checkbox__input.is-checked .el-checkbox__inner) {
@@ -75,6 +81,10 @@ watch(checkList, (v) => {
     }
 }
 
+.container:hover {
+    background-color: #F5F5F5;
+}
+
 .component {
     display: flex;
     align-items: center;
@@ -84,7 +94,7 @@ watch(checkList, (v) => {
     border-radius: 4px;
 
     &:hover {
-        background-color: #e5dbff;
+        // background-color: #e5dbff;
 
         .thumbnail {
             opacity: .5;

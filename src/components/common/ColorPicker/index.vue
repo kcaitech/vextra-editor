@@ -783,10 +783,7 @@ onUnmounted(() => {
             </div>
             <!-- model & values -->
             <div class="input-container">
-                <div class="model">
-                    <Select :itemHeight="32" :source="modelOptions" :selected="model" @select="switchModel"
-                        :containerWidth="63"></Select>
-                </div>
+                <Select class="model" :source="modelOptions" :selected="model" @select="switchModel"></Select>
                 <div class="values">
                     <div class="wrap">
                         <div class="value">
@@ -831,7 +828,7 @@ onUnmounted(() => {
 <style lang="scss" scoped>
 .color-block {
     position: relative;
-    z-index: 99;
+    // z-index: 99;
     width: 16px;
     height: 16px;
     border-radius: 3px;
@@ -845,12 +842,13 @@ onUnmounted(() => {
     .popover {
         position: fixed;
         width: 250px;
-        box-sizing: border-box;
         background-color: #ffffff;
         box-shadow: 0 2px 16px 0 rgba(0, 0, 0, 0.08);
         border-radius: 8px;
         border: 1px solid #F0F0F0;
         overflow: hidden;
+
+        // box-sizing: border-box;
 
         >.header {
             width: 100%;
@@ -1050,18 +1048,12 @@ onUnmounted(() => {
             justify-content: space-between;
 
             .model {
-                flex: 0 0 27%;
-                border-radius: 6px;
-                box-sizing: border-box;
-                background: #F5F5F5;
-
-                :deep(.select-container .trigger) {
-                    background-color: transparent;
-                }
+                flex: 0 0 62px;
+                height: 32px;
             }
 
             .values {
-                flex: 0 0 70%;
+                width: 160px;
 
                 .wrap {
                     width: 160px;

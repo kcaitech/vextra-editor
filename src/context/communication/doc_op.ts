@@ -7,11 +7,11 @@ export class DocOp extends WatchableObject {
     private startResolve?: (value: boolean) => void
     private isClosed: boolean = false
 
-    public async start(token: string, documentId: string, document: Document, repo: CoopRepository, versionId: string, options?: Options, startOptions?: StartOptions): Promise<boolean> {
+    public async start(getToken: getTokenFuncAsync, documentId: string, document: Document, repo: CoopRepository, versionId: string, options?: Options, startOptions?: StartOptions): Promise<boolean> {
         if (this.docOp) return true;
         if (this.startPromise) return await this.startPromise;
-        const docOp = _DocOp.Make(token, documentId, document, repo, versionId, options)
-        const startParams = [token, documentId, document, repo, versionId]
+        const docOp = _DocOp.Make(await getToken(), documentId, document, repo, versionId, options)
+        const startParams = [getToken, documentId, document, repo, versionId]
         docOp.setOnClose(async (options?: Options) => {
             const diff_time = 1000 - (Date.now() - (Number.isInteger(startOptions?.last_time) ? startOptions!.last_time! : 0))
             if (diff_time > 0) await new Promise(resolve => setTimeout(resolve, diff_time));

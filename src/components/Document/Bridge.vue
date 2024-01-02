@@ -1,8 +1,8 @@
 <script lang="ts" setup>
 import { Context } from '@/context';
 import ComponentWonderCard from '@/components/Document/Navigation/Component/ComponentWonderCard.vue'
-import { onMounted, onUnmounted, ref } from 'vue';
-import { GroupShape, Shape } from '@kcdesign/data';
+import { onMounted, onUnmounted, ref, shallowRef } from 'vue';
+import { GroupShape, GroupShapeView, Shape, ShapeView, SymbolShape, adapt2Shape } from '@kcdesign/data';
 import { Component } from '@/context/component';
 import { is_content, ref_symbol } from '@/utils/content';
 interface Props {
@@ -10,7 +10,7 @@ interface Props {
 }
 
 const props = defineProps<Props>();
-const wonder = ref<Shape>();
+const wonder = shallowRef<Shape>();
 const wonder_card_x = ref<number>();
 const wonder_card_y = ref<number>();
 let wonder_stash: Shape;
@@ -57,11 +57,12 @@ onMounted(() => {
 onUnmounted(() => {
     props.context.unwatch(component_watcher);
 })
+
 </script>
 <template>
     <div class="bridge">
         <div class="wonder-wrap" :style="{ left: wonder_card_x + 'px', top: wonder_card_y + 'px' }">
-            <ComponentWonderCard v-if="wonder" :data="(wonder as GroupShape)"></ComponentWonderCard>
+            <ComponentWonderCard v-if="wonder" :data="(wonder as SymbolShape)"></ComponentWonderCard>
         </div>
     </div>
 </template>

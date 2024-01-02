@@ -1,4 +1,4 @@
-import { WatchableObject, Cmd, cmdClone, cmdTransform, OpType, setCmdServerIdAndOpsOrder, ArrayOpSelection, TextShape, TableShape, TableCell, TableIndex } from "@kcdesign/data"
+import { WatchableObject, Cmd, cmdClone, cmdTransform, OpType, setCmdServerIdAndOpsOrder, ArrayOpSelection, TextShape, TableShape, TableCell, TableIndex, TextShapeView, TableCellView, TableView, ShapeView } from "@kcdesign/data"
 import { MyTextCmdSelection } from "@kcdesign/data"
 import {
     DocSelectionOp as _DocSelectionOp,
@@ -54,9 +54,9 @@ export class DocSelectionOp extends WatchableObject {
         if (!this.context) return;
         const _selection = this.context.selection;
         if (_selection.selectedShapes.length !== 1) return;
-        const shape0 = _selection.selectedShapes[0];
+        const shape0: ShapeView = _selection.selectedShapes[0];
 
-        if (!(shape0 instanceof TextShape) || !(shape0 instanceof TableCell)) return;
+        if (!(shape0 instanceof TextShapeView) || !(shape0 instanceof TableCellView)) return;
 
         const selection = this.context.textSelection;
         if (selection.cursorStart === -1 || selection.cursorEnd === -1) return;
@@ -65,8 +65,8 @@ export class DocSelectionOp extends WatchableObject {
         const originalCursorStart = selection.cursorStart
         const originalCursorEnd = selection.cursorEnd
 
-        const shapeId = (shape0 instanceof TableCell) ? ((() => {
-            const table = shape0.parent as TableShape;
+        const shapeId = ((shape0 as ShapeView) instanceof TableCellView) ? ((() => {
+            const table = (shape0 as ShapeView).parent as TableView;
             const index = table.indexOfCell(shape0);
             return [table.id, new TableIndex(index?.rowIdx ?? -1, index?.colIdx ?? -1)]
         })()) : [(shape0 as TextShape).id];
@@ -92,15 +92,15 @@ export class DocSelectionOp extends WatchableObject {
         }
         if (cursorStart === originalCursorStart && cursorEnd === originalCursorEnd) return;
         this.previousTextSelectionAfterTransform = { cursorStart: cursorStart, cursorEnd: cursorEnd, cursorAtBefore: selection.cursorAtBefore }
-        if (cursorStart === cursorEnd) selection.setCursor(cursorStart, selection.cursorAtBefore, (shape0 as TextShape).text);
-        else selection.selectText(cursorStart, cursorEnd, (shape0 as TextShape).text);
+        if (cursorStart === cursorEnd) selection.setCursor(cursorStart, selection.cursorAtBefore);
+        else selection.selectText(cursorStart, cursorEnd);
     }
 
-    public async start(token: string, documentId: string, context: Context, options?: StartOptions): Promise<boolean> {
+    public async start(getToken: getTokenFuncAsync, documentId: string, context: Context, options?: StartOptions): Promise<boolean> {
         if (this.docSelectionOp) return true;
         if (this.startPromise) return await this.startPromise;
-        const docSelectionOp = _DocSelectionOp.Make(token, documentId)
-        const startParams = [token, documentId, context]
+        const docSelectionOp = _DocSelectionOp.Make(await getToken(), documentId)
+        const startParams = [getToken, documentId, context]
         docSelectionOp.setOnClose(async () => {
             const diff_time = 1000 - (Date.now() - (Number.isInteger(options?.last_time) ? options!.last_time! : 0))
             if (diff_time > 0) await new Promise(resolve => setTimeout(resolve, diff_time));

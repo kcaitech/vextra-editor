@@ -4,7 +4,7 @@ import { useI18n } from 'vue-i18n';
 import SelectFont from '../Text/SelectFont.vue';
 import { onMounted, ref, onUnmounted, watchEffect, watch, nextTick } from 'vue';
 import { Context } from '@/context';
-import { AttrGetter, TableShape, TableCell, Text } from "@kcdesign/data";
+import { AttrGetter, TableView, TableCell, Text } from "@kcdesign/data";
 import Tooltip from '@/components/common/Tooltip.vue';
 import { TextVerAlign, TextHorAlign, Color, UnderlineType, StrikethroughType } from "@kcdesign/data";
 import ColorPicker from '@/components/common/ColorPicker/index.vue';
@@ -16,7 +16,7 @@ import TableTextSetting from './TableTextSetting.vue';
 import { TableSelection } from '@/context/tableselection';
 interface Props {
     context: Context
-    shape: TableShape
+    shape: TableView
 }
 
 const props = defineProps<Props>();
@@ -354,7 +354,7 @@ const textFormat = () => {
     } else {
         let cells: (TableCell | undefined)[] = []
         if (table.tableRowStart < 0 || table.tableColStart < 0) {
-            cells = props.shape.childs || [];
+            cells = props.shape.data.childs || [];
         } else {
             cells = table.getSelectedCells(true).map(item => item.cell) || [];
         }
@@ -915,7 +915,7 @@ onUnmounted(() => {
     width: 100%;
     display: flex;
     flex-direction: column;
-    padding: 20px 8px 12px 8px;
+    padding: 12px 8px 18px 8px;
     box-sizing: border-box;
     border-bottom: 1px solid #F0F0F0;
 

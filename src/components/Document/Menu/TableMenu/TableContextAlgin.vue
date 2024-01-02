@@ -3,7 +3,7 @@ import { useI18n } from 'vue-i18n';
 import { ref } from 'vue';
 import { Context } from '@/context';
 import Tooltip from '@/components/common/Tooltip.vue';
-import { TextVerAlign, TextHorAlign, TableCell, TableShape } from "@kcdesign/data";
+import { TextVerAlign, TextHorAlign, TableCell, TableShape, TableView } from "@kcdesign/data";
 import { Selection } from '@/context/selection';
 
 interface Props {
@@ -22,7 +22,7 @@ const selectLevel = ref('')
 const selectVertical = ref('')
 
 const onSelectLevel = (icon: TextHorAlign, svg: string,) => {
-    const shape = props.context.selection.selectedShapes[0] as TableShape;
+    const shape = props.context.selection.selectedShapes[0] as TableView;
     const table_Selection = props.context.tableSelection;
     const editor = props.context.editor4Table(shape);
     editor.setTextHorAlign(icon, { rowStart: table_Selection.tableRowStart, rowEnd: table_Selection.tableRowEnd, colStart: table_Selection.tableColStart, colEnd: table_Selection.tableColEnd });
@@ -30,7 +30,7 @@ const onSelectLevel = (icon: TextHorAlign, svg: string,) => {
     emit('textAlginHor', svg)
 }
 const onSelectVertical = (icon: TextVerAlign, svg: string) => {
-    const shape = props.context.selection.selectedShapes[0] as TableShape;
+    const shape = props.context.selection.selectedShapes[0] as TableView;
     const table_Selection = props.context.tableSelection;
     const editor = props.context.editor4Table(shape);
     editor.setTextVerAlign(icon, { rowStart: table_Selection.tableRowStart, rowEnd: table_Selection.tableRowEnd, colStart: table_Selection.tableColStart, colEnd: table_Selection.tableColEnd });

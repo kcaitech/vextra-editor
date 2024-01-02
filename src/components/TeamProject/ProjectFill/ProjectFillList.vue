@@ -1,19 +1,20 @@
 
 <template>
     <div class="tatle" style="height: calc(100vh - 224px);">
-        <tablelist :data="lists" :iconlist="iconlists" @share="Sharefile" @deletefile="Deletefile"
+        <tablelist :data="searchlists" :iconlist="iconlists" @share="Sharefile" @deletefile="Deletefile"
             @dbclickopen="openDocument" :addfile="currentProject.self_perm_type" @updatestar="Starfile"
             @rightMeun="rightmenu" :noNetwork="noNetwork" @refreshDoc="refreshDoc" @newProjectFill="newProjectFill"
-            :creator="true" :perm="currentProject.self_perm_type" />
+            :creator="true" :perm="currentProject.self_perm_type" :nulldata="nulldata" />
     </div>
     <listrightmenu :items="items" :data="mydata" @get-doucment="getDoucment" @r-starfile="Starfile" @r-sharefile="Sharefile"
         @r-removefile="Deletefile" @ropen="openDocument" @moveFillAddress="moveFillAddress" />
-
-    <div v-if="showFileShare" class="overlay"></div>
-    <FileShare v-if="showFileShare" @close="closeShare" :docId="docId" :docName="docName" :selectValue="selectValue" :userInfo="userInfo"
-        :docUserId="docUserId" @select-type="onSelectType" @switch-state="onSwitch" :shareSwitch="shareSwitch"
-        :pageHeight="pageHeight" :project="is_project" :projectPerm="currentProject.self_perm_type">
-    </FileShare>
+    <div v-if="showFileShare" class="overlay">
+        <FileShare @close="closeShare" :docId="docId" :docName="docName" :selectValue="selectValue"
+            :userInfo="userInfo" :docUserId="docUserId" @select-type="onSelectType" @switch-state="onSwitch"
+            :shareSwitch="shareSwitch" :pageHeight="pageHeight" :project="is_project"
+            :projectPerm="currentProject.self_perm_type">
+        </FileShare>
+    </div>
     <MoveProjectFill :title="t('Createteam.movetip')" :confirm-btn="t('Createteam.move')" :projectItem="projectItem"
         :doc="mydata" :projectVisible="moveVisible" @clodeDialog="clodeDialog" @moveFillSeccess="moveFillSeccess">
     </MoveProjectFill>
@@ -23,7 +24,7 @@
 import * as user_api from '@/request/users'
 import * as team_api from '@/request/team'
 import { ElMessage } from 'element-plus'
-import { onMounted, ref, onUnmounted, nextTick, Ref, inject, watch } from "vue"
+import { onMounted, ref, onUnmounted, nextTick, Ref, inject, watch, watchEffect } from "vue"
 import { useI18n } from 'vue-i18n'
 import { router } from '@/router';
 import { useRoute } from 'vue-router'
@@ -35,6 +36,8 @@ import MoveProjectFill from '../MoveProjectFill.vue';
 import { Repository, CoopRepository } from '@kcdesign/data';
 import { createDocument } from '@kcdesign/data';
 import { DocEditor } from '@kcdesign/data';
+import Bus from '@/components/AppHome/bus'
+import PinyinMatch from 'pinyin-match'
 
 interface data {
     document: {
@@ -62,7 +65,7 @@ const showFileShare = ref<boolean>(false)
 const shareSwitch = ref(true)
 const pageHeight = ref(0)
 const docId = ref('')
-const docName=ref('')
+const docName = ref('')
 const mydata = ref<data>()
 const selectValue = ref(1)
 const docUserId = ref('')
@@ -73,6 +76,7 @@ const iconlists = ref(['star', 'share', 'delete_p']);
 const moveVisible = ref(false);
 const projectItem = ref<any>({});
 const is_project = ref(false);
+const nulldata = ref(false)
 
 //获取服务器我的文件列表
 async function getDoucment(id: string) {
@@ -97,6 +101,20 @@ async function getDoucment(id: string) {
         noNetwork.value = true
     }
 }
+
+const searchvalue = ref('');
+const searchlists = ref<any[]>([])
+Bus.on('searchvalue', (str: string) => {
+    searchvalue.value = str
+})
+
+watchEffect(() => {
+    if (!searchvalue.value) return searchlists.value = lists.value, nulldata.value = false
+    searchlists.value = lists.value.filter((el: any) => PinyinMatch.match(el.document.name.toLowerCase(), searchvalue.value.toLowerCase()))
+    if (searchlists.value.length === 0 && searchvalue.value !== '') {
+        nulldata.value = true
+    }
+})
 
 const { projectList } = inject('shareData') as {
     projectList: Ref<any[]>;
@@ -195,7 +213,7 @@ const Sharefile = (data: data) => {
     }
     docUserId.value = data.document.user_id
     docId.value = data.document.id
-    docName.value=data.document.name
+    docName.value = data.document.name
     selectValue.value = data.document.doc_type !== 0 ? data.document.doc_type : data.document.doc_type
     userInfo.value = userData.value
     showFileShare.value = true
@@ -298,6 +316,9 @@ onUnmounted(() => {
 <style lang="scss" scoped>
 .overlay {
     position: absolute;
+    display: flex;
+    align-items: center;
+    justify-content: center;
     top: 0;
     left: 0;
     width: 100%;

@@ -69,11 +69,12 @@ onUnmounted(() => {
     flex-direction: column;
     position: fixed;
     outline: none;
-    width: 250px;
-    height: 450px;
-    box-shadow: 0px 2px 10px rgba(0, 0, 0, 0.2);
+    width: 240px;
+    height: 480px;
+    border: 1px solid #F0F0F0;
+    box-shadow: 0px 2px 16px 0px rgba(0, 0, 0, 0.08);
     background-color: #ffffff;
-    border-radius: 4px;
+    border-radius: 8px;
     box-sizing: border-box;
     z-index: 10004;
 

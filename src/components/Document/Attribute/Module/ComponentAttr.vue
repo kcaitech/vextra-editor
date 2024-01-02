@@ -1,10 +1,11 @@
 <script lang="ts" setup>
-import {useI18n} from 'vue-i18n';
-import {Context} from '@/context';
+import { useI18n } from 'vue-i18n';
+import { Context } from '@/context';
 import TypeHeader from '../TypeHeader.vue';
-import {onMounted, onUnmounted, ref, watch} from 'vue'
+import { onMounted, onUnmounted, ref, watch } from 'vue'
 import CompLayerShow from '../PopoverMenu/ComposAttri/CompLayerShow.vue';
-import {SymbolShape, VariableType} from '@kcdesign/data';
+import { SymbolView} from '@kcdesign/data';
+import { SymbolShape, VariableType } from '@kcdesign/data';
 import {
     AttriListItem,
     create_var_by_type,
@@ -14,17 +15,17 @@ import {
 } from "@/utils/symbol";
 import SelectLayerInput from "./SelectLayerInput.vue";
 import PopoverDefaultInput from './PopoverDefaultInput.vue';
-import {cardmap} from "./ComponentStatusCard/map";
+import { cardmap } from "./ComponentStatusCard/map";
 import Status from "./ComponentStatusCard/SCStatus.vue";
-import {Warning} from '@element-plus/icons-vue';
-import {message} from "@/utils/message";
-import {v4} from "uuid";
+import { Warning } from '@element-plus/icons-vue';
+import { message } from "@/utils/message";
+import { v4 } from "uuid";
 
-const {t} = useI18n();
+const { t } = useI18n();
 
 interface Props {
     context: Context
-    shape: SymbolShape
+    shape: SymbolView
 }
 
 const props = defineProps<Props>()
@@ -34,7 +35,7 @@ const isaddStateDialog = ref(false)
 const dialog_title = ref('');
 const atrrdialog = ref<HTMLDivElement>();
 const addType = ref<VariableType>(VariableType.Visible);
-const variables = ref<AttriListItem[]>();
+const variables = ref<AttriListItem[]>([]);
 const conflict = ref<boolean>(false);
 const selected = ref<string[]>([]);
 const var_name = ref<string>('');
@@ -78,7 +79,11 @@ function selectCompsType() {
 const addModuleState = () => {
     const make_result = make_status(props.context, t)
     if (make_result) {
-        props.context.selection.selectShape(make_result);
+        const page = props.context.selection.selectedPage;
+        page && props.context.nextTick(page, () => {
+            const v = page.getShape(make_result.id);
+            v && props.context.selection.selectShape(v);
+        })
     }
     close();
 }
@@ -133,13 +138,13 @@ const saveLayerShow = (type: VariableType) => {
     if (typeof dlt_value.value === 'string' && dlt_value.value.trim().length < 1) {
         return warn.value = true;
     }
-    const symbolshape = props.context.selection.symbolshape;
+    const symbolshape = props.context.selection.symbolview;
     if (!symbolshape) return;
     create_var_by_type(props.context, type, var_name.value, dlt_value.value, selected.value, symbolshape);
     isaddStateDialog.value = false;
 }
 
-const dialog_posi = ref({x: 0, y: 0});
+const dialog_posi = ref({ x: 0, y: 0 });
 /**
  * @description 根据触发元素获取弹窗位置
  */
@@ -186,14 +191,14 @@ onUnmounted(() => {
 </script>
 
 <template>
-    <div style="position: relative; margin-bottom: 10px;" ref="atrrdialog">
+    <div style="position: relative;margin-top: 12px;margin-bottom: 12px;box-sizing: border-box" ref="atrrdialog">
         <!--header-->
-        <TypeHeader :title="t('compos.compos_attr')" class="mt-24" @click="selectCompsType" :active="true">
+        <TypeHeader :title="t('compos.compos_attr')" class="mt-24" @click="selectCompsType" :active="!!variables.length">
             <template #tool>
-                <div class="add-comps" @click.stop="selectCompsType">
+                <div class="add-comps" @click.stop="selectCompsType" :class="{ 'clicked': compsType }">
                     <svg-icon icon-class="add"></svg-icon>
                     <div class="selectType" v-if="compsType" ref="selectComps" @click.stop>
-                        <div class="type-title">{{ t('compos.delect_attr_type') }}:</div>
+                        <div class="type-title">{{ t('compos.delect_attr_type') }}</div>
                         <div class="status" @click="addModuleState">
                             <div>
                                 <svg-icon icon-class="comp-state"></svg-icon>
@@ -208,14 +213,13 @@ onUnmounted(() => {
                         </div>
                         <div class="status" @click="examplesToggle">
                             <div>
-                                <svg-icon icon-class="pattern-rectangle"
-                                          style="transform: rotate(45deg);width: 10px; height: 10px;"></svg-icon>
+                                <svg-icon icon-class="lozenge"></svg-icon>
                             </div>
                             <span>{{ t('compos.instance_toggle') }}</span>
                         </div>
                         <div class="status" @click="addTextDialog">
                             <div>
-                                <svg-icon icon-class="text" style="width: 10px; height: 10px;"></svg-icon>
+                                <svg-icon icon-class="text"></svg-icon>
                             </div>
                             <span>{{ t('compos.text_content') }}</span>
                         </div>
@@ -226,34 +230,31 @@ onUnmounted(() => {
         <!--list container-->
         <div class="module_container">
             <component v-for="item in variables" :is="cardmap.get(item.variable.type) || Status" :key="item.variable.id"
-                       :context="props.context"
-                       :variable="item.variable" :item="item"></component>
+                :context="props.context" :variable="item.variable" :item="item"></component>
         </div>
         <div v-if="conflict" class="conflict_warn">
             <div>
                 <el-icon>
-                    <Warning/>
+                    <Warning />
                 </el-icon>
             </div>
-            <p>{{ t('compos.conflict')}}</p>
+            <p>{{ t('compos.conflict') }}</p>
         </div>
         <!--dialog-->
-        <CompLayerShow :context="context" v-if="isaddStateDialog" @close-dialog="isaddStateDialog = false" right="250px"
-                       :width="260" :addType="addType" :title="dialog_title" :dialog_posi="dialog_posi"
-                       @save-layer-show="saveLayerShow" @name-change="name_change" :selected_layer="selected">
+        <CompLayerShow :context="context" v-if="isaddStateDialog" @close-dialog="isaddStateDialog = false" right="244px"
+            :width="260" :addType="addType" :title="dialog_title" :dialog_posi="dialog_posi"
+            @save-layer-show="saveLayerShow" @name-change="name_change" :selected_layer="selected">
             <template #layer>
                 <SelectLayerInput
                     :title="addType === VariableType.SymbolRef ? t('compos.compos_instance') : t('compos.select_layer')"
                     :add-type="addType" :context="props.context"
                     :placeholder="addType === VariableType.SymbolRef ? t('compos.place_select_instance') : t('compos.place_select_layer')"
-                    @change="list_change"
-                >
+                    @change="list_change">
                 </SelectLayerInput>
             </template>
             <template #default_value>
                 <PopoverDefaultInput v-if="addType !== VariableType.SymbolRef" :context="context" :warn="warn"
-                                     :add-type="addType" @select="dlt_change"
-                                     @change="text_dlt_change"></PopoverDefaultInput>
+                    :add-type="addType" @select="dlt_change" @change="text_dlt_change"></PopoverDefaultInput>
             </template>
         </CompLayerShow>
     </div>
@@ -262,62 +263,81 @@ onUnmounted(() => {
 <style lang="scss" scoped>
 .add-comps {
     position: relative;
-    width: 22px;
-    height: 22px;
+    width: 28px;
+    height: 28px;
     display: flex;
     align-items: center;
     justify-content: center;
+    border-radius: var(--default-radius);
 
-    > svg {
-        width: 50%;
-        height: 50%;
+    >svg {
+        width: 16px;
+        height: 16px;
     }
 
     .selectType {
         position: absolute;
-        top: 25px;
+        top: 32px;
         right: 0;
-        width: 120px;
-        background-color: #fff;
-        border: 1px solid #ccc;
-        border-radius: 4px;
-        padding: 5px 0;
-        box-shadow: 2px 2px 10px rgba(0, 0, 0, 0.2);
+        width: 140px;
+        background-color: #FFFFFF;
+        border: 1px solid #EBEBEB;
+        border-radius: var(--default-radius);
+        padding: 4px 0;
+        box-shadow: 0px 2px 10px 0px rgba(0, 0, 0, 0.08);
         z-index: 100;
 
         .type-title {
             display: flex;
             align-items: center;
-            height: 30px;
-            padding: 0 10px;
+            height: 32px;
+            padding: 9px 0px 9px 12px;
+            box-sizing: border-box;
+            color: #8C8C8C;
+            font-size: 12px;
         }
 
         .status {
             display: flex;
             align-items: center;
-            height: 25px;
-            padding: 2px 10px;
+            height: 32px;
+            padding: 9px 0px 9px 12px;
+            box-sizing: border-box;
 
             div {
-                width: 20px;
-                height: 100%;
+                width: 14px;
+                height: 14px;
                 display: flex;
                 align-items: center;
                 justify-content: center;
-                margin-right: 5px;
+                margin-right: 4px;
             }
 
             svg {
                 width: 14px;
                 height: 14px;
+                color: #595959;
             }
 
             &:hover {
-                background-color: var(--active-color);
-                color: #fff;
+                background-color: #F5F5F5;
+            }
+
+            span {
+                font-size: 12px;
+                font-weight: 500;
+                color: #262626;
             }
         }
     }
+}
+
+.add-comps:hover {
+    background-color: #F5F5F5;
+}
+
+.add-comps.clicked {
+    background-color: #EBEBEB;
 }
 
 .conflict_warn {
@@ -329,7 +349,7 @@ onUnmounted(() => {
     border-radius: 4px;
     padding: 10px;
 
-    > div {
+    >div {
         display: flex;
         align-items: center;
         width: 20px;
@@ -337,7 +357,7 @@ onUnmounted(() => {
         margin-right: 10px;
     }
 
-    > p {
+    >p {
         margin: 0;
     }
 }
@@ -349,26 +369,29 @@ onUnmounted(() => {
         position: relative;
         display: flex;
         flex-direction: column;
-        margin-bottom: 5px;
+        //margin-bottom: 5px;
 
         .attr_con {
             display: flex;
             align-items: center;
             justify-content: space-between;
+            height: 44px;
+            padding: 6px 0;
+            box-sizing: border-box;
         }
 
         .module_item_left {
             display: flex;
             align-items: center;
             border-radius: 4px;
-            background-color: var(--grey-light);
+            background-color: #F5F5F5;
             width: 100%;
-            height: 30px;
+            height: 32px;
 
             .module_name {
                 width: 45%;
 
-                > svg {
+                >svg {
                     width: 14px;
                     height: 14px;
                     margin: -2px 10px;
@@ -386,33 +409,39 @@ onUnmounted(() => {
             display: flex;
             align-items: center;
             width: 100%;
-            height: 30px;
+            height: 32px;
 
             .el-input {
                 font-size: 12px;
-                height: 30px;
+                height: 32px;
             }
         }
 
         .warn {
             color: red;
+            font-size: 12px;
             transform: scale(.9);
         }
 
         .delete {
-            flex: 0 0 22px;
+            flex: 0 0 28px;
             display: flex;
             justify-content: center;
             align-items: center;
-            width: 22px;
-            height: 22px;
+            width: 28px;
+            height: 28px;
+            border-radius: var(--default-radius);
 
-            > svg {
-                width: 11px;
-                height: 11px;
+            >svg {
+                width: 16px;
+                height: 16px;
             }
 
             transition: .2s;
+        }
+
+        .delete:hover {
+            background-color: #F5F5F5;
         }
     }
 }
@@ -423,4 +452,5 @@ onUnmounted(() => {
 
 :deep(.el-input__wrapper.is-focus) {
     box-shadow: 0 0 0 1px var(--active-color) inset;
-}</style>
+}
+</style>

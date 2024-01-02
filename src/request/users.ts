@@ -328,5 +328,16 @@ export function Feedback(data = {}, ops = {}) {
     })
 }
 
+// 刷新token
+export function RefreshToken(params = {}, ops = {}) {
+    return httpRequest({
+        url: 'auth/refresh_token',
+        method: 'post',
+        data: params,
+        ...ops
+    })
+
+}
+
 
 

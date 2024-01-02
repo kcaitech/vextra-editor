@@ -4,8 +4,8 @@ import { useI18n } from 'vue-i18n';
 import SelectFont from './SelectFont.vue';
 import { onMounted, ref, onUnmounted, watchEffect, watch, computed, nextTick } from 'vue';
 import TextAdvancedSettings from './TextAdvancedSettings.vue'
-import { Context } from '@/context';
-import { TextShape, AttrGetter, TableShape, ShapeType } from "@kcdesign/data";
+import {Context} from '@/context';
+import {TextShape, AttrGetter, TableShape, ShapeType, TextShapeView, adapt2Shape} from "@kcdesign/data";
 import Tooltip from '@/components/common/Tooltip.vue';
 import { TextVerAlign, TextHorAlign, Color, UnderlineType, StrikethroughType } from "@kcdesign/data";
 import ColorPicker from '@/components/common/ColorPicker/index.vue';
@@ -16,8 +16,8 @@ import { message } from "@/utils/message";
 
 interface Props {
     context: Context
-    shape: TextShape
-    textShapes: TextShape[]
+    shape: TextShapeView
+    textShapes: TextShapeView[]
 }
 
 const props = defineProps<Props>();
@@ -107,7 +107,7 @@ const onBold = () => {
             textFormat()
         }
     } else {
-        editor.setTextBoldMulti(props.textShapes, isBold.value);
+        editor.setTextBoldMulti(props.textShapes.map(s => adapt2Shape(s)), isBold.value);
     }
 }
 // 设置文本倾斜
@@ -123,7 +123,7 @@ const onTilt = () => {
             textFormat()
         }
     } else {
-        editor.setTextItalicMulti(props.textShapes, isTilt.value);
+        editor.setTextItalicMulti(props.textShapes.map(s => adapt2Shape(s)), isTilt.value);
     }
 }
 //设置下划线
@@ -139,7 +139,7 @@ const onUnderlint = () => {
             textFormat()
         }
     } else {
-        editor.setTextUnderlineMulti(props.textShapes, isUnderline.value);
+        editor.setTextUnderlineMulti(props.textShapes.map(s => adapt2Shape(s)), isUnderline.value);
     }
 }
 // 设置删除线
@@ -155,7 +155,7 @@ const onDeleteline = () => {
             textFormat()
         }
     } else {
-        editor.setTextStrikethroughMulti(props.textShapes, isDeleteline.value);
+        editor.setTextStrikethroughMulti(props.textShapes.map(s => adapt2Shape(s)), isDeleteline.value);
     }
 }
 // 设置水平对齐
@@ -171,7 +171,7 @@ const onSelectLevel = (icon: TextHorAlign) => {
             textFormat()
         }
     } else {
-        editor.setTextHorAlignMulti(props.textShapes, icon);
+        editor.setTextHorAlignMulti(props.textShapes.map(s => adapt2Shape(s)), icon);
     }
 }
 //设置垂直对齐
@@ -182,7 +182,7 @@ const onSelectVertical = (icon: TextVerAlign) => {
         editor.setTextVerAlign(icon)
         textFormat()
     } else {
-        editor.setTextVerAlignMulti(props.textShapes, icon);
+        editor.setTextVerAlignMulti(props.textShapes.map(s => adapt2Shape(s)), icon);
     }
 }
 //设置字体大小
@@ -199,7 +199,7 @@ const changeTextSize = (size: number) => {
             textFormat()
         }
     } else {
-        editor.setTextFontSizeMulti(props.textShapes, size);
+        editor.setTextFontSizeMulti(props.textShapes.map(s => adapt2Shape(s)), size);
     }
 }
 //设置字体
@@ -216,20 +216,24 @@ const setFont = (font: string) => {
             textFormat()
         }
     } else {
-        editor.setTextFontNameMulti(props.textShapes, font);
+        editor.setTextFontNameMulti(props.textShapes.map(s => adapt2Shape(s)), font);
     }
+}
+
+function getTextSelection() {
+    return props.context.selection.getTextSelection(props.shape);
 }
 
 //获取选中字体的长度和开始下标
 const getTextIndexAndLen = () => {
-    const selection = props.context.textSelection;
+    const selection = getTextSelection();
     const textIndex = Math.min(selection.cursorEnd, selection.cursorStart)
     const selectLength = Math.abs(selection.cursorEnd - selection.cursorStart)
     return { textIndex, selectLength }
 }
 //判断是否选择文本框还是光标聚焦了
 const isSelectText = () => {
-    const selection = props.context.textSelection;
+    const selection = getTextSelection();
     if ((selection.cursorEnd !== -1) && (selection.cursorStart !== -1)) {
         return false
     } else {
@@ -255,7 +259,7 @@ const setTextSize = () => {
 // 获取当前文字格式
 const textFormat = () => {
     const shapes = props.context.selection.selectedShapes;
-    const t_shape = shapes.filter(item => item.type === ShapeType.Text) as TextShape[];
+    const t_shape = shapes.filter(item => item.type === ShapeType.Text) as TextShapeView[];
     if (t_shape.length === 0 || !t_shape[0].text) return
     if (length.value) {
         const { textIndex, selectLength } = getTextIndexAndLen();
@@ -483,9 +487,9 @@ function getColorFromPicker(color: Color, type: string) {
         textFormat()
     } else {
         if (type === 'color') {
-            editor.setTextColorMulti(props.textShapes, color)
+            editor.setTextColorMulti(props.textShapes.map(s => adapt2Shape(s)), color)
         } else {
-            editor.setTextHighlightColorMulti(props.textShapes, color)
+            editor.setTextHighlightColorMulti(props.textShapes.map(s => adapt2Shape(s)), color)
         }
     }
 }
@@ -518,9 +522,9 @@ function setColor(idx: number, clr: string, alpha: number, type: string) {
         textFormat()
     } else {
         if (type === 'color') {
-            editor.setTextColorMulti(props.textShapes, new Color(alpha, r, g, b))
+            editor.setTextColorMulti(props.textShapes.map(s => adapt2Shape(s)), new Color(alpha, r, g, b))
         } else {
-            editor.setTextHighlightColorMulti(props.textShapes, new Color(alpha, r, g, b))
+            editor.setTextHighlightColorMulti(props.textShapes.map(s => adapt2Shape(s)), new Color(alpha, r, g, b))
         }
     }
 }
@@ -536,7 +540,7 @@ const deleteHighlight = () => {
         }
         textFormat()
     } else {
-        editor.setTextHighlightColorMulti(props.textShapes, undefined);
+        editor.setTextHighlightColorMulti(props.textShapes.map(s => adapt2Shape(s)), undefined);
     }
 }
 
@@ -551,7 +555,7 @@ const addHighlight = () => {
         }
         textFormat()
     } else {
-        editor.setTextHighlightColorMulti(props.textShapes, new Color(1, 216, 216, 216))
+        editor.setTextHighlightColorMulti(props.textShapes.map(s => adapt2Shape(s)), new Color(1, 216, 216, 216))
     }
 }
 const addTextColor = () => {
@@ -565,7 +569,7 @@ const addTextColor = () => {
         }
         textFormat()
     } else {
-        editor.setTextColorMulti(props.textShapes, new Color(1, 6, 6, 6))
+        editor.setTextColorMulti(props.textShapes.map(s => adapt2Shape(s)), new Color(1, 6, 6, 6))
     }
 }
 const selectSizeValue = () => {
@@ -810,7 +814,7 @@ onUnmounted(() => {
     width: 100%;
     display: flex;
     flex-direction: column;
-    padding: 20px 8px 12px 8px;
+    padding: 12px 8px 18px 8px;
     box-sizing: border-box;
     border-bottom: 1px solid #F0F0F0;
 

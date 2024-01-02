@@ -1,11 +1,10 @@
 <script lang="ts" setup>
-import {useI18n} from 'vue-i18n';
-import {Context} from '@/context';
+import { useI18n } from 'vue-i18n';
+import { Context } from '@/context';
 import TypeHeader from '../TypeHeader.vue';
 import {onMounted, onUnmounted, ref} from 'vue'
 import {get_shape_within_document, shape_track} from '@/utils/content';
-import {Shape, ShapeType, SymbolRefShape} from '@kcdesign/data';
-import {MoreFilled} from '@element-plus/icons-vue';
+import {Shape, ShapeType, ShapeView, SymbolRefShape, SymbolRefView, adapt2Shape} from '@kcdesign/data';
 import {
     get_var_for_ref,
     is_able_to_unbind,
@@ -14,19 +13,19 @@ import {
     reset_all_attr_for_ref,
     is_part_of_symbol
 } from "@/utils/symbol";
-import {cardmap} from "./InstanceAttrCard/map";
+import { cardmap } from "./InstanceAttrCard/map";
 import Status from "./InstanceAttrCard/IACStatus.vue"
 import Visible from "./InstanceAttrCard/IACVisible.vue"
-import {Selection} from '@/context/selection';
-import {v4} from "uuid";
-import {Menu} from '@/context/menu';
+import { Selection } from '@/context/selection';
+import { v4 } from "uuid";
+import { Menu } from '@/context/menu';
 
 interface Props {
     context: Context
-    shapes: SymbolRefShape[]
+    shapes: SymbolRefView[]
 }
 
-const {t} = useI18n();
+const { t } = useI18n();
 const props = defineProps<Props>();
 const resetMenu = ref(false);
 const variables = ref<RefAttriListItem[]>([]);
@@ -55,7 +54,7 @@ function close_popover() {
 }
 
 const editComps = () => {
-    let shape: Shape | undefined
+    let shape: ShapeView | undefined
     const symref = props.context.selection.symbolrefshape;
     if (!symref) return;
     let refId = symref.refId;
@@ -69,26 +68,45 @@ const untie = () => {
     const page = selection.selectedPage;
     if (!page) return;
     const editor = props.context.editor4Page(page);
-    const shapes = editor.extractSymbol(props.shapes);
+    const shapes = editor.extractSymbol(props.shapes.map(s => adapt2Shape(s)));
     if (!shapes) return;
-    selection.rangeSelectShape(shapes);
+    props.context.nextTick(page, () => {
+        const select = shapes.reduce((pre, cur) => {
+            const s = page.getShape(cur.id);
+            if (s) {
+                pre.push(s);
+            }
+            return pre;
+        }, [] as ShapeView[])
+        selection.rangeSelectShape(select);
+    })
     resetMenu.value = false;
 }
 
 const shape_watcher = (arg: any) => { // todo 优化updateData时机
-    if (arg !== 'shape-frame') updateData();
+    if (arg === 'shape-frame') {
+        return;
+    }
+
+    updateData();
 }
 
 const updateData = () => {
     if (props.shapes.length === 1) {
-        const symref = props.context.selection.symbolrefshape;
-        if (!symref) return;
-        const result = get_var_for_ref(props.context, symref, t);
+        const symref = props.context.selection.symbolrefview;
+        if (!symref) {
+            return;
+        }
+        const result = get_var_for_ref(symref, t);
         variables.value = [];
         visible_variables.value = [];
-        if (!result) return;
+        if (!result) {
+            return;
+        }
+
         variables.value = result.variables;
         visible_variables.value = result.visible_variables;
+
     } else if (props.shapes.length > 1) {
         // todo
     }
@@ -123,7 +141,7 @@ function watchShapes() { // 监听选区相关shape的变化
         for (let i = 0, len = selection.selectedShapes.length; i < len; i++) {
             const v = selection.selectedShapes[i];
             if (v.type !== ShapeType.SymbolRef) continue;
-            const p = get_ref_ref(v as SymbolRefShape);
+            const p = get_ref_ref(v as SymbolRefView);
             if (p) needWatchShapes.set(p.id, p);
             needWatchShapes.set(v.id, v)
         }
@@ -142,7 +160,7 @@ function watchShapes() { // 监听选区相关shape的变化
     })
 }
 
-function get_ref_ref(symref: SymbolRefShape) {
+function get_ref_ref(symref: SymbolRefView) {
     if (!symref.isVirtualShape) return;
     let p = symref.parent;
     while (p) {
@@ -173,17 +191,16 @@ onUnmounted(() => {
 </script>
 
 <template>
-    <div style="margin-bottom: 10px;" v-if="variables.length">
-        <TypeHeader :title="t('compos.instance_attr')" class="mt-24" :active="true">
+    <div class="instance-attr">
+        <TypeHeader :title="t('compos.instance_attr')" :active="!!(variables.length || visible_variables.length)">
             <template #tool>
                 <div class="edit-comps" v-if="!is_part_of_symbol(props.shapes[0])">
                     <div class="edit_svg" @click.stop="editComps" v-if="is_symbolref_disa(props.shapes)">
-                        <svg-icon icon-class="edit-comp"></svg-icon>
+                        <svg-icon icon-class="comp-state"></svg-icon>
                     </div>
-                    <div class="reset_svg" @click.stop="selectReset">
-                        <el-icon>
-                            <MoreFilled/>
-                        </el-icon>
+                    <div class="reset_svg" @click.stop="selectReset"
+                        :style="{ backgroundColor: resetMenu ? '#EBEBEB' : '' }">
+                        <svg-icon icon-class="reset_comp"></svg-icon>
                         <div class="reset_menu" v-if="resetMenu">
                             <div :class="{ untie, disabled: !untie_state }" @click="untie">
                                 <span>{{ t('compos.untie') }}</span>
@@ -198,137 +215,158 @@ onUnmounted(() => {
         <div>
             <div class="module_container" :style="{ marginBottom: variables.length > 0 ? '10px' : '0' }">
                 <component v-for="item in variables" :key="item.variable.id + props.shapes[0].id"
-                           :is="cardmap.get(item.variable.type) || Status" :context="props.context"
-                           :data="item"></component>
+                    :is="cardmap.get(item.variable.type) || Status" :context="props.context" :data="item"></component>
             </div>
             <div v-if="visible_variables.length" class="visible-var-container">
                 <div class="show">
-                    <div class="title">{{ t('compos.layer_show') }}:</div>
+                    <div class="title">{{ t('compos.layer_show') }}</div>
                     <div class="items-wrap">
                         <component v-for="item in visible_variables" :key="item.variable.id + props.shapes[0].id"
-                                   :is="Visible" :context="props.context"
-                                   :data="(item as RefAttriListItem)"></component>
+                            :is="Visible" :context="props.context" :data="(item as RefAttriListItem)"></component>
                     </div>
                 </div>
-                <div class="place"></div>
             </div>
         </div>
     </div>
 </template>
 
 <style lang="scss" scoped>
-.edit-comps {
-    width: 44px;
-    height: 22px;
-    display: flex;
-    align-items: center;
+.instance-attr {
+    width: 100%;
+    margin-bottom: 10px;
+    padding: 0 8px;
+    box-sizing: border-box;
+    border-bottom: 1px solid #F0F0F0;
 
-    .edit_svg {
-        width: 22px;
-        height: 22px;
+    .edit-comps {
         display: flex;
         align-items: center;
-        justify-content: center;
 
-        > svg {
-            width: 50%;
-            height: 50%;
-        }
-    }
+        .edit_svg {
+            width: 28px;
+            height: 28px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            border-radius: 6px;
+            box-sizing: border-box;
 
-    .reset_svg {
-        position: relative;
-        width: 22px;
-        height: 22px;
-        display: flex;
-        align-items: center;
-        justify-content: center;
+            >svg {
+                width: 16px;
+                height: 16px;
+            }
 
-        > svg {
-            width: 50%;
-            height: 50%;
         }
 
-        .reset_menu {
-            position: absolute;
-            top: 25px;
-            right: 0;
-            width: 150px;
-            padding: 8px 0;
-            background-color: #fff;
-            border-radius: 2px;
-            box-shadow: 1px 1px 5px rgba(0, 0, 0, 0.2);
-            z-index: 100;
+        .edit_svg:hover {
+            background-color: #EBEBEB;
+        }
 
-            .untie {
-                height: 30px;
-                width: 100%;
-                display: flex;
-                align-items: center;
-                justify-content: space-between;
-                padding: 0 16px;
-                box-sizing: border-box;
 
-                &:hover {
-                    background-color: var(--active-color);
-                    color: #fff;
+        .reset_svg {
+            position: relative;
+            width: 28px;
+            height: 28px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            border-radius: 6px;
+            box-sizing: border-box;
+
+            >svg {
+                width: 16px;
+                height: 16px;
+            }
+
+            .reset_menu {
+                position: absolute;
+                top: 28px;
+                right: 0;
+                width: 150px;
+                padding: 4px 0;
+                border: 1px solid #EBEBEB;
+                background-color: #fff;
+                border-radius: 6px;
+                box-shadow: 0px 2px 10px 0px rgba(0, 0, 0, 0.08);
+                z-index: 100;
+
+                .untie {
+                    height: 32px;
+                    width: 100%;
+                    display: flex;
+                    align-items: center;
+                    justify-content: space-between;
+                    padding: 0 16px;
+                    box-sizing: border-box;
+
+                    &:hover {
+                        background-color: #F5F5F5;
+                    }
+                }
+
+                .disabled {
+                    pointer-events: none;
+                    opacity: 0.2;
                 }
             }
+        }
 
-            .disabled {
-                pointer-events: none;
-                opacity: 0.2;
+        .reset_svg:hover {
+            background-color: #EBEBEB;
+        }
+
+    }
+
+    .module_container {
+        font-size: var(--font-default-fontsize);
+    }
+
+    .visible-var-container {
+        display: flex;
+        width: 100%;
+        line-height: 20px;
+        margin-bottom: 6px;
+        margin-top: 6px;
+
+        .show {
+            display: flex;
+            justify-content: space-between;
+            width: 100%;
+
+            .title {
+                color: #595959;
+                width: 40%;
+                line-height: 20px;
+                padding-right: 10px;
+            }
+
+            .items-wrap {
+                flex: 0 0 126px;
             }
         }
-    }
 
-}
-
-.module_container {
-    font-size: var(--font-default-fontsize);
-}
-
-.visible-var-container {
-    display: flex;
-    width: 100%;
-
-    .show {
-        display: flex;
-        width: calc(100% - 22px);
-
-        .title {
-            width: 40%;
-            line-height: 26px;
-            font-weight: 600;
-            padding-right: 10px;
-        }
-
-        .items-wrap {
-            width: 60%;
+        .place {
+            flex: 0 0 22px;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            width: 22px;
+            height: 22px;
         }
     }
 
-    .place {
-        flex: 0 0 22px;
-        display: flex;
-        justify-content: center;
-        align-items: center;
-        width: 22px;
-        height: 22px;
+    :deep(.el-select-dropdown__item.selected) {
+        color: #9775fa !important;
+        font-size: 12px;
     }
-}
 
-:deep(.el-select-dropdown__item.selected) {
-    color: #9775fa !important;
-    font-size: 12px;
-}
+    :deep(.el-select .el-input.is-focus .el-input__wrapper) {
+        box-shadow: 0 0 0 1px var(--active-color) inset !important;
+        background-color: var(--grey-light);
+    }
 
-:deep(.el-select .el-input.is-focus .el-input__wrapper) {
-    box-shadow: 0 0 0 1px var(--active-color) inset !important;
-    background-color: var(--grey-light);
-}
-
-:deep(.el-select .el-input__wrapper.is-focus) {
-    box-shadow: 0 0 0 1px var(--active-color) inset !important;
+    :deep(.el-select .el-input__wrapper.is-focus) {
+        box-shadow: 0 0 0 1px var(--active-color) inset !important;
+    }
 }
 </style>

@@ -1,6 +1,6 @@
 <script setup lang="ts">
 import { Context } from '@/context';
-import { CutoutShape, Matrix } from '@kcdesign/data';
+import { CutoutShape, CutoutShapeView, Matrix } from '@kcdesign/data';
 import { onMounted, onUnmounted, ref, watch } from 'vue';
 import { genRectPath } from '../Selection/common';
 import { WorkSpace } from '@/context/workspace';
@@ -10,7 +10,7 @@ import { Selection } from '@/context/selection';
 const props = defineProps<{
     context: Context
     matrix: Matrix
-    data: CutoutShape
+    data: CutoutShapeView
 }>();
 
 const cutoutPath = ref<string>();
@@ -24,7 +24,7 @@ const getCutoutPath = () => {
     const f = props.data.frame;
     const ps: { x: number, y: number }[] = [{ x: 0, y: 0 }, { x: f.width, y: 0 }, { x: f.width, y: f.height }, { x: 0, y: f.height }].map(p => m.computeCoord(p.x, p.y));
     points.push(...ps);
-    const path = props.data.getPath();
+    const path = props.data.getPath().clone();
     path.transform(m);
     const b = XYsBounding(points);
     const framePoint = [{ x: b.left, y: b.top }, { x: b.right, y: b.top }, { x: b.right, y: b.bottom }, { x: b.left, y: b.bottom }];

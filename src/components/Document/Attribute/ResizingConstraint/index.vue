@@ -1,5 +1,5 @@
 <script setup lang="ts">
-import { Shape } from '@kcdesign/data';
+import { ShapeView } from '@kcdesign/data';
 import { Context } from 'aws-sdk/clients/autoscaling';
 import { reactive, ref } from 'vue'
 import Select, { SelectItem, SelectSource } from '@/components/common/Select.vue';
@@ -8,7 +8,7 @@ import { useI18n } from 'vue-i18n';
 
 interface Props {
     context: Context
-    shapes: Shape[]
+    shapes: ShapeView[]
 }
 const { t } = useI18n();
 const props = defineProps<Props>();
@@ -159,11 +159,10 @@ function fix_height() {
 </script>
 <template>
     <div class="wrap">
-            <h6 style="font-weight: 600;flex-shrink: 0;margin-left: 4%;height: 5%;">{{ t('attr.groupings') }}</h6> 
+        <h6 style="font-weight: 600;flex-shrink: 0;margin-left: 4%;height: 5%;">{{ t('attr.groupings') }}</h6>
         <div v-if="horizontal_position" class="horizontal-container">
             <label style="margin-left: 4%;">{{ t('attr.horizontal') }}</label>
-            <Select :selected="horizontalSelected" :item-height="30" :width="120" :source="horizontalOptions"
-                @select="horizontalSelect"></Select>
+            <Select :selected="horizontalSelected" :source="horizontalOptions" @select="horizontalSelect"></Select>
             <div class="checkbox1">
                 <div :class="checked1 ? 'visibility' : 'hidden'" @click="fix_width">
                     <svg-icon v-if="checked1" icon-class="select"></svg-icon>
@@ -173,8 +172,7 @@ function fix_height() {
         </div>
         <div v-if="vertical_position" class="vertical-container">
             <label style="margin-left: 4%;">{{ t('attr.vertical') }}</label>
-            <Select :selected="verticalSelected" :item-height="30" :width="120" :source="verticalOptions"
-                @select="verticalSelect"></Select>
+            <Select :selected="verticalSelected" :source="verticalOptions" @select="verticalSelect"></Select>
             <div class="checkbox2">
                 <div :class="checked2 ? 'visibility' : 'hidden'" @click="fix_height">
                     <svg-icon v-if="checked2" icon-class="select"></svg-icon>

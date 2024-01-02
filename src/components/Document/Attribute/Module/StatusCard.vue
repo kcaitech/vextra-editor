@@ -19,7 +19,9 @@ const { t } = useI18n();
 const attrValueInput = ref('')
 const editAttrValue = ref(false)
 const revalueInput = ref();
-const active = ref(false);
+const top = ref<number>(0);
+const statusValue = ref();
+const menuIndex = ref();
 const onRevalue = (e: MouseEvent) => {
     e.stopPropagation();
     if (e.target instanceof Element && e.target.closest('.status-icon-down')) return;
@@ -57,20 +59,35 @@ const onEditAttrValue = (e: KeyboardEvent) => {
 }
 const selectoption = ref(false);
 const showMenu = (e: MouseEvent) => {
-    if (selectoption.value) return selectoption.value = false;
+    if (selectoption.value) {
+        return selectoption.value = false;
+    }
     props.context.menu.notify(Menu.CLOSE_COMP_MENU);
     selectoption.value = true;
+    nextTick(locate);
 }
-const statusValue = ref();
-const menuIndex = ref();
+function locate() {
+    if (menuIndex.value === -1) {
+        top.value = 30;
+    } else {
+        top.value = -(menuIndex.value * 32 + 4);
+    }
+}
+
 const getVattagValue = () => {
     const shape = props.context.selection.symbolstate;
-    if (shape) {
-        let val = get_tag_value(shape, props.data.variable);
-        if (val === SymbolShape.Default_State) val = t('compos.dlt');
-        statusValue.value = val;
-        menuIndex.value = props.data.values.findIndex(v => v === val);
+    if (!shape) {
+        return;
     }
+
+    let val = get_tag_value(shape, props.data.variable);
+
+    if (val === SymbolShape.Default_State) {
+        val = t('compos.dlt');
+    }
+
+    statusValue.value = val;
+    menuIndex.value = props.data.values.findIndex(v => v === val);
 }
 const selected_watcher = (t: number) => {
     if (t === Selection.CHANGE_SHAPE) {
@@ -81,15 +98,16 @@ const selected_watcher = (t: number) => {
     }
 }
 
+
 function selcet(index: number) {
-    if(index === props.data.values.length - 1) {
+    if (index === props.data.values.length - 1) {
         editAttrValue.value = true;
         attrValueInput.value = '新的值';
         nextTick(() => {
             (revalueInput.value as HTMLInputElement).focus();
             (revalueInput.value as HTMLInputElement).select();
         })
-    }else {
+    } else {
         const val = props.data.values[index];
         save_change(val);
     }
@@ -122,14 +140,14 @@ onUnmounted(() => {
             <div class="state_item">
                 <div class="state_name"><span>{{ data.variable.name }}</span></div>
                 <div class="state_value" v-if="!editAttrValue" @dblclick="onRevalue">
-                    <div class="input" @mouseenter.stop="active = true" @mouseleave.stop="active = false">
+                    <div class="input">
                         <span>{{ statusValue }}</span>
-                        <el-icon @click.stop="showMenu" class="status-icon-down" :class="{active: active}">
+                        <el-icon @click.stop="showMenu" class="status-icon-down">
                             <ArrowDown
                                 :style="{ transform: selectoption ? 'rotate(180deg)' : 'rotate(0deg)', transition: '0.3s' }" />
                         </el-icon>
                     </div>
-                    <SelectMenu v-if="selectoption" :top="33" width="100%" :menuItems="data.values" :context="context"
+                    <SelectMenu v-if="selectoption" :top="top" width="100%" :menuItems="data.values" :context="context"
                         :menuIndex="menuIndex" @close="selectoption = false" @selectIndex="selcet"></SelectMenu>
                 </div>
                 <div class="module_input" v-if="editAttrValue">
@@ -137,7 +155,7 @@ onUnmounted(() => {
                         @keydown.stop="onEditAttrValue" />
                 </div>
             </div>
-            <div class="delete"></div>
+            <!-- <div class="delete"></div> -->
         </div>
     </div>
 </template>
@@ -145,30 +163,29 @@ onUnmounted(() => {
 .module_state_item {
     display: flex;
     flex-direction: column;
-    margin-bottom: 3px;
+    min-height: 44px;
 
     .module_con {
         display: flex;
         align-items: center;
         justify-content: space-between;
-        height: 30px;
     }
 
     .state_item {
         display: flex;
         align-items: center;
-        width: calc(100% - 22px);
-        height: 30px;
+        // width: calc(100% - 22px);
+        width: 100%;
 
         .state_name {
             display: flex;
             align-items: center;
             width: 40%;
-            height: 100%;
             box-sizing: border-box;
-            padding-right: 10px;
+            margin-right: 12px;
 
             span {
+                color: #595959;
                 overflow: hidden;
                 text-overflow: ellipsis;
                 white-space: nowrap;
@@ -179,15 +196,14 @@ onUnmounted(() => {
             position: relative;
             display: flex;
             align-items: center;
-            border-radius: 4px;
+            border-radius: 6px;
             width: 60%;
             flex: 1;
-            height: 100%;
             background-color: var(--grey-light);
 
             >svg {
-                width: 10px;
-                height: 10px;
+                width: 12px;
+                height: 12px;
             }
 
             span {
@@ -204,20 +220,29 @@ onUnmounted(() => {
                 box-sizing: border-box;
                 display: flex;
                 align-items: center;
-                background-color: var(--grey-light);
+                background-color: #F5F5F5;
 
                 span {
                     flex: 1;
                 }
 
-                .el-icon {
-                    width: 24px;
-                    height: 24px;
+                .status-icon-down {
+                    width: 19px;
+                    height: 26px;
                     display: flex;
                     align-items: center;
                     justify-content: center;
-                    margin: 3px;
+                    margin-right: 3px;
                     border-radius: 4px;
+
+                    >svg {
+                        width: 12px;
+                        height: 12px;
+                    }
+                }
+
+                .status-icon-down:hover {
+                    background-color: rgba($color: #000000, $alpha: 0.08);
                 }
             }
         }
@@ -250,8 +275,5 @@ onUnmounted(() => {
         width: 22px;
         height: 22px;
     }
-}
-.active {
-    background-color: rgba($color: #000000, $alpha: 0.08);
 }
 </style>

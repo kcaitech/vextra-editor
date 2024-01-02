@@ -1,9 +1,9 @@
 <script setup lang='ts'>
-import {onUnmounted, reactive, ref, watch} from 'vue';
-import {useI18n} from 'vue-i18n';
+import { onUnmounted, reactive, ref, watch } from 'vue';
+import { useI18n } from 'vue-i18n';
 import ContextMenu from '@/components/common/ContextMenu.vue';
 import Key from '@/components/common/Key.vue';
-import {XY} from '@/context/selection';
+import { XY } from '@/context/selection';
 import {
     Artboard,
     GroupShape,
@@ -12,26 +12,30 @@ import {
     SymbolRefShape,
     TableCellType,
     TextShape,
-    Text
+    Text,
+    ShapeView,
+    TextShapeView,
+    adapt2Shape
 } from "@kcdesign/data";
 import Layers from './Layers.vue';
-import {Context} from '@/context';
-import {WorkSpace} from '@/context/workspace';
-import {Selection} from '@/context/selection';
-import {adapt_page, getName, get_shape_within_document, shape_track} from '@/utils/content';
-import {message} from '@/utils/message';
-import {paster, paster_inner_shape, replace} from '@/utils/clipboard';
-import {compare_layer_3} from '@/utils/group_ungroup';
-import {Menu} from '@/context/menu';
+import { Context } from '@/context';
+import { WorkSpace } from '@/context/workspace';
+import { Selection } from '@/context/selection';
+import { adapt_page, getName, get_shape_within_document, shape_track } from '@/utils/content';
+import { message } from '@/utils/message';
+import { paster, paster_inner_shape, replace } from '@/utils/clipboard';
+import { compare_layer_3 } from '@/utils/group_ungroup';
+import { Menu } from '@/context/menu';
 import TableMenu from "./TableMenu/TableMenu.vue"
-import {make_symbol} from '@/utils/symbol';
-import {Tool} from "@/context/tool";
+import { make_symbol } from '@/utils/symbol';
+import { Tool } from "@/context/tool";
+import SvgIcon from "@/components/common/SvgIcon.vue";
 
-const {t} = useI18n();
+const { t } = useI18n();
 
 interface Props {
     context: Context,
-    layers?: Shape[],
+    layers?: ShapeView[],
     items: string[],
     site?: { x: number, y: number }
 }
@@ -40,7 +44,7 @@ const props = defineProps<Props>();
 const emit = defineEmits<{
     (e: 'close'): void;
 }>();
-const layerSubMenuPosition: XY = reactive({x: 0, y: 0});
+const layerSubMenuPosition: XY = reactive({ x: 0, y: 0 });
 const layerSubMenuVisiable = ref<boolean>(false);
 const isComment = ref<boolean>(props.context.comment.isVisibleComment);
 const isTitle = ref<boolean>(props.context.tool.isShowTitle);
@@ -53,11 +57,11 @@ function showLayerSubMenu(e: MouseEvent) {
     layerSubMenuVisiable.value = true;
 }
 
-function is_inner_textshape(): Shape & { text: Text } | undefined {
+function is_inner_textshape(): (ShapeView | Shape) & { text: Text } | undefined {
     const selected = props.context.selection.selectedShapes;
     const isEditing = props.context.workspace.isEditing;
-    if (selected.length === 1 && selected[0].type === ShapeType.Text && (selected[0] as TextShape).text && isEditing) {
-        return selected[0] as TextShape;
+    if (selected.length === 1 && selected[0].type === ShapeType.Text && (selected[0] as TextShapeView).text && isEditing) {
+        return selected[0] as TextShapeView;
     }
     if (selected.length === 1 && selected[0].type === ShapeType.Table) {
         const tableSelection = props.context.tableSelection;
@@ -97,7 +101,7 @@ async function cut() {
         if (copy_result) {
             const editor = props.context.editor4TextShape(textlike as TextShape);
             if (editor.deleteText(Math.min(start, end), Math.abs(start - end))) {
-                selection.setCursor(Math.min(start, end), false, textlike.text);
+                selection.setCursor(Math.min(start, end), false);
             }
         }
     }
@@ -147,7 +151,7 @@ function selectAll() {
     if (textlike) {
         const text = textlike.text;
         const end = text.length;
-        props.context.textSelection.selectText(0, end, text);
+        props.context.textSelection.selectText(0, end);
     } else {
         props.context.workspace.keydown_a(true, true);
     }
@@ -238,7 +242,7 @@ function forward() {
     const page = selection.selectedPage;
     if (page) {
         const editor = props.context.editor4Page(page);
-        const result = editor.uppper_layer(selection.selectedShapes[0], 1);
+        const result = editor.uppper_layer(adapt2Shape(selection.selectedShapes[0]), 1);
         if (!result) {
             message('info', props.context.workspace.t('homerightmenu.unable_upper'));
         } else {
@@ -256,7 +260,7 @@ function back() {
     const page = selection.selectedPage;
     if (page) {
         const editor = props.context.editor4Page(page);
-        const result = editor.lower_layer(selection.selectedShapes[0], 1);
+        const result = editor.lower_layer(adapt2Shape(selection.selectedShapes[0]), 1);
         if (!result) {
             message('info', props.context.workspace.t('homerightmenu.unable_lower'));
         } else {
@@ -273,7 +277,7 @@ function top() {
     const page = selection.selectedPage;
     if (page) {
         const editor = props.context.editor4Page(page);
-        const result = editor.uppper_layer(selection.selectedShapes[0]);
+        const result = editor.uppper_layer(adapt2Shape(selection.selectedShapes[0]));
         if (!result) {
             message('info', props.context.workspace.t('homerightmenu.unable_upper'));
         } else {
@@ -290,7 +294,7 @@ function bottom() {
     const page = selection.selectedPage;
     if (page) {
         const editor = props.context.editor4Page(page);
-        const result = editor.lower_layer(selection.selectedShapes[0]);
+        const result = editor.lower_layer(adapt2Shape(selection.selectedShapes[0]));
         if (!result) {
             message('info', props.context.workspace.t('homerightmenu.unable_lower'));
         } else {
@@ -326,10 +330,19 @@ function dissolution_container() {
     const page = selection.selectedPage;
     if (page) {
         const editor = props.context.editor4Page(page);
-        const shapes = editor.dissolution_artboard(artboards as Artboard[]);
+        const shapes = editor.dissolution_artboard(artboards.map(s => adapt2Shape(s)) as Artboard[]);
         if (shapes) {
-            const selectShapes = [...saveSelectShape,...shapes]
-            props.context.selection.rangeSelectShape(selectShapes);
+            const selectShapes = [...saveSelectShape, ...shapes]
+            props.context.nextTick(page, () => {
+                const select = selectShapes.reduce((pre, cur) => {
+                    const s = cur instanceof ShapeView ? cur : page.getShape(cur.id);
+                    if (s) {
+                        pre.push(s);
+                    }
+                    return pre;
+                }, [] as ShapeView[])
+                props.context.selection.rangeSelectShape(select);
+            })
         }
     }
     emit('close');
@@ -345,10 +358,19 @@ function unGroup() {
     const page = props.context.selection.selectedPage;
     if (page) {
         const editor = props.context.editor4Page(page);
-        const shapes = editor.ungroup(groups as GroupShape[]);
+        const shapes = editor.ungroup(groups.map(s => adapt2Shape(s)) as GroupShape[]);
         if (shapes) {
-            const selectShapes = [...saveSelectShape,...shapes]
-            props.context.selection.rangeSelectShape(selectShapes);
+            const selectShapes = [...saveSelectShape, ...shapes]
+            props.context.nextTick(page, () => {
+                const select = selectShapes.reduce((pre, cur) => {
+                    const s = cur instanceof ShapeView ? cur : page.getShape(cur.id);
+                    if (s) {
+                        pre.push(s);
+                    }
+                    return pre;
+                }, [] as ShapeView[])
+                props.context.selection.rangeSelectShape(select);
+            })
         }
     }
     emit('close');
@@ -357,7 +379,11 @@ function unGroup() {
 function component() {
     const symbol = make_symbol(props.context, t);
     if (symbol) {
-        props.context.selection.selectShape(symbol as unknown as Shape);
+        const page = props.context.selection.selectedPage;
+        page && props.context.nextTick(page, () => {
+            const select = page.getShape(symbol.id);
+            props.context.selection.selectShape(select);
+        })
     }
     emit('close');
 }
@@ -368,10 +394,19 @@ function instance() {
     const ref_shapes = selection.selectedShapes;
     if (page) {
         const editor = props.context.editor4Page(page);
-        const shapes = editor.extractSymbol(ref_shapes as SymbolRefShape[]);
+        const shapes = editor.extractSymbol(ref_shapes.map(s => adapt2Shape(s)) as SymbolRefShape[]);
         if (shapes) {
-            selection.rangeSelectShape(shapes);
-            emit('close');
+            props.context.nextTick(page, () => {
+                const select = shapes.reduce((pre, cur) => {
+                    const s = cur instanceof ShapeView ? cur : page.getShape(cur.id);
+                    if (s) {
+                        pre.push(s);
+                    }
+                    return pre;
+                }, [] as ShapeView[])
+                props.context.selection.rangeSelectShape(select);
+                emit('close');
+            })
         }
     }
 }
@@ -398,7 +433,7 @@ function visible() {
     const page = props.context.selection.selectedPage;
     if (!page) return emit('close');
     const editor = props.context.editor4Page(page);
-    editor.toggleShapesVisible(shapes);
+    editor.toggleShapesVisible(shapes.map(s => adapt2Shape(s)));
     props.context.selection.resetSelectShapes();
     emit('close');
 }
@@ -411,7 +446,7 @@ function lock() {
     const page = props.context.selection.selectedPage;
     if (!page) return emit('close');
     const editor = props.context.editor4Page(page);
-    editor.toggleShapesLock(shapes);
+    editor.toggleShapesLock(shapes.map(s => adapt2Shape(s)));
     props.context.selection.resetSelectShapes();
     emit('close');
 }
@@ -437,7 +472,7 @@ function menu_watcher() {
     // check();
 }
 
-const stop = watch(() => props.items, menu_watcher, {deep: true, immediate: true})
+const stop = watch(() => props.items, menu_watcher, { deep: true, immediate: true })
 onUnmounted(() => {
     stop();
 })
@@ -445,11 +480,12 @@ onUnmounted(() => {
 <template>
     <div class="items-wrap" @mousedown.stop @click.stop>
         <div v-if="props.items.includes('layers')" class="item layer-select"
-             @mouseenter="(e: MouseEvent) => showLayerSubMenu(e)" @mouseleave="closeLayerSubMenu">
+            @mouseenter="(e: MouseEvent) => showLayerSubMenu(e)" @mouseleave="closeLayerSubMenu">
             <span>{{ t('system.select_layer') }}</span>
-            <div class="triangle"></div>
+<!--            <div class="triangle"></div>-->
+            <svg-icon icon-class="down"></svg-icon>
             <ContextMenu v-if="layerSubMenuVisiable" :x="layerSubMenuPosition.x" :y="layerSubMenuPosition.y"
-                         :width="180"
+                         :width="174"
                          :site="site" :context="props.context">
                 <Layers @close="emit('close')" :layers="props.layers" :context="props.context"></Layers>
             </ContextMenu>
@@ -459,47 +495,45 @@ onUnmounted(() => {
         <div class="item" v-if="props.items.includes('all')" @click="selectAll">
             <span>{{ t('system.select_all') }}</span>
             <span class="shortkey">
-        <Key code="Ctrl A"></Key>
-      </span>
+                <Key code="Ctrl A"></Key>
+            </span>
         </div>
         <div class="item" v-if="props.items.includes('copy')" @click="copy">
             <span>{{ t('system.copy') }}</span>
             <span class="shortkey">
-        <Key code="Ctrl C"></Key>
-      </span>
+                <Key code="Ctrl C"></Key>
+            </span>
         </div>
         <div class="item" v-if="props.items.includes('cut')" @click="cut">
             <span>{{ t('system.cut') }}</span>
             <span class="shortkey">
-        <Key code="Ctrl X"></Key>
-      </span>
+                <Key code="Ctrl X"></Key>
+            </span>
         </div>
         <div :class="invalid_items.includes('paste') ? 'invalid' : 'item'" v-if="props.items.includes('paste')"
-             @click="paste">
+            @click="paste">
             <span>{{ t('system.paste') }}</span>
             <span class="shortkey">
-        <Key code="Ctrl V"></Key>
-      </span>
+                <Key code="Ctrl V"></Key>
+            </span>
         </div>
         <div :class="invalid_items.includes('only_text') ? 'invalid' : 'item'" v-if="props.items.includes('only_text')"
-             @click="paste_text">
+            @click="paste_text">
             <span>{{ t('system.only_text') }}</span>
             <span class="shortkey">
-        <Key code="Alt Ctrl V"></Key>
-      </span>
+                <Key code="Alt Ctrl V"></Key>
+            </span>
         </div>
-        <div :class="invalid_items.includes('paste-here') ? 'invalid' : 'item'"
-             v-if="props.items.includes('paste-here')"
-             @click="paste_here" @mouseenter="() => { show_placement(true) }"
-             @mouseleave="() => { show_placement(false) }">
+        <div :class="invalid_items.includes('paste-here') ? 'invalid' : 'item'" v-if="props.items.includes('paste-here')"
+            @click="paste_here" @mouseenter="() => { show_placement(true) }" @mouseleave="() => { show_placement(false) }">
             <span>{{ t('system.paste_here') }}</span>
         </div>
         <div :class="invalid_items.includes('replace') ? 'invalid' : 'item'" v-if="props.items.includes('replace')"
-             @click="_replace">
+            @click="_replace">
             <span>{{ t('system.replace') }}</span>
             <span class="shortkey">
-        <Key code="Shift Ctrl R"></Key>
-      </span>
+                <Key code="Shift Ctrl R"></Key>
+            </span>
         </div>
 
         <!-- 视图比例 -->
@@ -510,8 +544,8 @@ onUnmounted(() => {
         <div class="item" v-if="props.items.includes('hundred')" @click="(e: MouseEvent) => hundred(e)">
             <span>100%</span>
             <span class="shortkey">
-        <Key code="Ctrl 0"></Key>
-      </span>
+                <Key code="Ctrl 0"></Key>
+            </span>
         </div>
         <div class="item" v-if="props.items.includes('double')" @click="(e: MouseEvent) => double(e)">
             <span>200%</span>
@@ -519,8 +553,8 @@ onUnmounted(() => {
         <div class="item" v-if="props.items.includes('canvas')" @click="canvas">
             <span>{{ t('system.fit_canvas') }}</span>
             <span class="shortkey">
-        <Key code="Ctrl 1"></Key>
-      </span>
+                <Key code="Ctrl 1"></Key>
+            </span>
         </div>
         <!-- 协作 -->
         <div class="line" v-if="props.items.includes('cursor')"></div>
@@ -532,8 +566,8 @@ onUnmounted(() => {
             <div class="choose" v-show="isComment"></div>
             <span>{{ t('system.show_comment') }}</span>
             <span class="shortkey">
-        <Key code="Shift C"></Key>
-      </span>
+                <Key code="Shift C"></Key>
+            </span>
         </div>
         <!-- 界面显示 -->
         <div class="line" v-if="props.items.includes('ruler')"></div>
@@ -549,16 +583,16 @@ onUnmounted(() => {
         <div class="item" v-if="props.items.includes('operation')" @click="operation">
             <span>{{ t('system.hide_operation_interface') }}</span>
             <span class="shortkey">
-        <Key code="Ctrl(Shift) \"></Key>
-      </span>
+                <Key code="Ctrl(Shift) \"></Key>
+            </span>
         </div>
         <!-- 顺序调整 -->
         <div class="line" v-if="props.items.includes('forward')"></div>
         <div class="item" v-if="props.items.includes('forward')" @click="forward">
             <span>{{ t('system.bring_forward') }}</span>
             <span class="shortkey">
-        <Key code="+"></Key>
-      </span>
+                <Key code="+"></Key>
+            </span>
         </div>
         <div class="item" v-if="props.items.includes('back')" @click="back">
             <span>{{ t('system.send_backward') }}</span>
@@ -577,34 +611,34 @@ onUnmounted(() => {
         <div class="item" v-if="props.items.includes('groups')" @click="groups">
             <span>{{ t('system.creating_groups') }}</span>
             <span class="shortkey">
-        <Key code="Ctrl G"></Key>
-      </span>
+                <Key code="Ctrl G"></Key>
+            </span>
         </div>
         <div class="item" v-if="props.items.includes('container')" @click="container">
             <span>{{ t('system.create_container') }}</span>
             <span class="shortkey">
-        <Key code="Alt Ctrl G"></Key>
-      </span>
+                <Key code="Alt Ctrl G"></Key>
+            </span>
         </div>
         <div class="item" v-if="props.items.includes('un_group')" @click="unGroup">
             <span>{{ t('system.un_group') }}</span>
             <span class="shortkey">
-        <Key code="Shift Ctrl G"></Key>
-      </span>
+                <Key code="Shift Ctrl G"></Key>
+            </span>
         </div>
         <div class="item" v-if="props.items.includes('dissolution')" @click="dissolution_container">
             <span>{{ t('system.dissolution') }}</span>
             <span class="shortkey">
-        <Key code="Shift Ctrl G"></Key>
-      </span>
+                <Key code="Shift Ctrl G"></Key>
+            </span>
         </div>
         <!-- 组件操作 -->
         <div class="line" v-if="props.items.includes('component')"></div>
         <div class="item" v-if="props.items.includes('component')" @click="component">
             <span>{{ t('system.create_component') }}</span>
             <span class="shortkey">
-        <Key code="Alt Ctrl K"></Key>
-      </span>
+                <Key code="Alt Ctrl K"></Key>
+            </span>
         </div>
         <div class="item" v-if="props.items.includes('instance')" @click="instance">
             <span>{{ t('system.unbind_instance') }}</span>
@@ -623,14 +657,14 @@ onUnmounted(() => {
         <div class="item" v-if="props.items.includes('visible')" @click="visible">
             <span>{{ t('system.visible') }}</span>
             <span class="shortkey">
-        <Key code="Shift Ctrl H"></Key>
-      </span>
+                <Key code="Shift Ctrl H"></Key>
+            </span>
         </div>
         <div class="item" v-if="props.items.includes('lock')" @click="lock">
             <span>{{ t('system.Lock') }}</span>
             <span class="shortkey">
-        <Key code="Shift Ctrl L"></Key>
-      </span>
+                <Key code="Shift Ctrl L"></Key>
+            </span>
         </div>
         <div class="item" v-if="props.items.includes('title')" @click="toggle_title">
             <div class="choose" v-show="isTitle"></div>
@@ -647,47 +681,39 @@ onUnmounted(() => {
     .item {
         position: relative;
         width: 100%;
-        height: 28px;
-        padding: 0 var(--default-padding) 0 20px;
+        height: 32px;
+        padding: 9px 24px 9px 28px;
         display: flex;
         flex-direction: row;
         align-items: center;
         box-sizing: border-box;
 
-        > .triangle {
-            margin-left: auto;
-            width: 0;
-            height: 0;
-            border-top: 3px solid transparent;
-            border-bottom: 3px solid transparent;
-            border-left: 6px solid var(--theme-color-anti);
-            transition: 0.35s;
+        >svg {
+            width: 12px;
+            height: 12px;
+            margin-left: 62px;
+            transform: rotate(-90deg);
         }
 
-        > .shortkey {
+        >.shortkey {
             margin-left: auto;
         }
     }
 
     .line {
         width: 100%;
-        height: 8px;
-        border-bottom: 1px solid gray;
-        margin-bottom: 8px;
+        height: 4px;
+        border-bottom: 1px solid #EBEBEB;
+        //margin-bottom: 8px;
         box-sizing: border-box;
     }
 
     .item:hover {
-        background-color: var(--active-color);
+        background-color: #1878F5;
+        color: #fff;
 
-        > .triangle {
-            margin-left: auto;
-            width: 0;
-            height: 0;
-            border-top: 3px solid transparent;
-            border-bottom: 3px solid transparent;
-            border-left: 6px solid var(--theme-color-anti);
-            transform: rotate(90deg);
+        >svg {
+            transform: rotate(0deg);
         }
     }
 
@@ -703,7 +729,7 @@ onUnmounted(() => {
         background-color: var(--theme-color);
         color: grey;
 
-        > .shortkey {
+        >.shortkey {
             margin-left: auto;
         }
     }

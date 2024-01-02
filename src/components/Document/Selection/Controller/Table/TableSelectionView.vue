@@ -1,7 +1,7 @@
 <script lang="ts" setup>
 import { Context } from '@/context';
 import { ClientXY, Selection } from '@/context/selection';
-import { Shape, ShapeType, TableCell, TableShape } from '@kcdesign/data';
+import { Shape, ShapeType, TableCell, TableCellView, TableShape, TableView } from '@kcdesign/data';
 import { onMounted, onUnmounted, ref, watch } from 'vue';
 import { genRectPath } from '../../common';
 import { XYsBounding } from '@/utils/common';
@@ -11,8 +11,8 @@ import { get_transform } from '../Points/common';
 
 interface Props {
     context: Context
-    cell: TableCell | undefined
-    table: TableShape
+    cell: TableCellView | undefined
+    table: TableView
     matrix: number[]
 }
 interface Emits {
@@ -36,12 +36,12 @@ function update_cell_selection(gen_menu_posi?: boolean) {
     }
 }
 const t1 = () => update_cell_selection(true);
-function gen_view(table: Shape, cells: { cell: TableCell | undefined, rowIdx: number, colIdx: number }[], gen_menu_posi?: boolean) {
+function gen_view(table: TableView, cells: { cell: TableCell | undefined, rowIdx: number, colIdx: number }[], gen_menu_posi?: boolean) {
     const t2r = table.matrix2Root();
     const m = props.context.workspace.matrix;
     t2r.multiAtLeft(m);
     let points: ClientXY[] = [];
-    const grid = (table as TableShape).getLayout().grid;
+    const grid = (table).getLayout().grid;
     for (let i = 0, len = cells.length; i < len; i++) {
         const cell = cells[i];
         const f = grid.get(cell.rowIdx, cell.colIdx).frame;
@@ -64,7 +64,7 @@ function update_triangle() {
     if (shape && shape.type === ShapeType.Table && tableSelection) {
         const cell = tableSelection.editingCell;
         if (!cell) return false;
-        const grid = (shape as TableShape).getLayout().grid;
+        const grid = (shape as TableView).getLayout().grid;
         const g = grid.get(cell.index.row, cell.index.col);
         if (!g) return false;
         const f = grid.get(cell.index.row, cell.index.col).frame;

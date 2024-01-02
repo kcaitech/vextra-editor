@@ -1,6 +1,6 @@
 <script setup lang="ts">
 import { ref, nextTick, onMounted, onUnmounted } from 'vue'
-import { AsyncTransfer, Matrix, Shape, SymbolShape } from "@kcdesign/data";
+import { AsyncTransfer, Matrix, Shape, ShapeView, SymbolShape, SymbolView, adapt2Shape } from "@kcdesign/data";
 import { Context } from "@/context";
 import { permIsEdit } from '@/utils/content';
 import { ClientXY, PageXY } from '@/context/selection';
@@ -15,12 +15,12 @@ interface Props {
     name: string
     index: number
     maxWidth: number
-    shape: Shape
+    shape: ShapeView
     context: Context
 }
 interface Emits {
-    (e: 'rename', value: string, shape: Shape): void
-    (e: 'hover', shape: Shape): void
+    (e: 'rename', value: string, shape: ShapeView): void
+    (e: 'hover', shape: ShapeView): void
     (e: 'leave'): void
 }
 const props = defineProps<Props>();
@@ -120,7 +120,7 @@ let asyncTransfer: AsyncTransfer | undefined; // 属性修改器：它负责图�
 const dragActiveDis = 3;
 let speed: number = 0; // 记录鼠标移动的速度
 let t_e: MouseEvent | undefined;
-let shapes: Shape[] = [];
+let shapes: ShapeView[] = [];
 let offset_map: PointsOffset | undefined;
 // 鼠标按下
 function down(e: MouseEvent) {
@@ -162,7 +162,7 @@ function move(e: MouseEvent) {
         // wheel.moving(e, { type: EffectType.TRANS, effect: asyncTransfer.transByWheel });
 
         modify_mouse_position_by_type(update_type, startPosition, mousePosition);
-    } else if (Math.hypot(mousePosition.x - startPosition.x, mousePosition.y - startPosition.y) > dragActiveDis) { // 注意：这里判断一个图形被拖动的条件是鼠标拖动的距离大于3px，目的在于与单击事件做区分
+    } else if (!isDragging && Math.hypot(mousePosition.x - startPosition.x, mousePosition.y - startPosition.y) > dragActiveDis) { // 注意：这里判断一个图形被拖动的条件是鼠标拖动的距离大于3px，目的在于与单击事件做区分
         // 在这个if分支里面，做的都是图形开始移动前的准备工作
         matrix.reset(props.context.workspace.matrix); // 更新变换矩阵，确保最新状态
         matrix_inverse = new Matrix(matrix.inverse); // matrix的逆矩阵
@@ -177,13 +177,19 @@ function move(e: MouseEvent) {
             .asyncTransfer(shapes, selection.selectedPage!); // 创建属性编辑器
 
         if (e.altKey) {
-            shapes = paster_short(props.context, shapes, asyncTransfer); // 图形分身
+            paster_short(props.context, shapes, asyncTransfer).then((v) => {
+                shapes = v;
+                pre_translate(props.context, shapes);
+                const map_anchor = matrix_inverse.computeCoord3(startPosition);
+                offset_map = gen_offset_map(shapes[0], map_anchor);
+            }); // 图形分身
+        } else {
+            pre_translate(props.context, shapes);
+            const map_anchor = matrix_inverse.computeCoord3(startPosition);
+            offset_map = gen_offset_map(shapes[0], map_anchor);
         }
-        pre_translate(props.context, shapes);
 
         isDragging = true;
-        const map_anchor = matrix_inverse.computeCoord3(startPosition);
-        offset_map = gen_offset_map(shapes[0], map_anchor);
     }
 }
 // 移动后抬起：不用细致关注干了什么，但是需要知道每次拖动一个图形都要用如下方法进行收尾
@@ -344,7 +350,7 @@ onUnmounted(() => {
         @mousemove="move2" data-area="controller">
         <div class="name-wrap" :style="{ maxWidth: props.maxWidth + 'px' }" @dblclick="onRename" v-if="!isInput">
             <svg xmlns="http://www.w3.org/2000/svg" xmlns:xlink="http://www.w3.org/1999/xlink" fill="none" version="1.1"
-                width="16" height="16" viewBox="0 0 16 16" v-if="(props.shape as SymbolShape).isSymbolUnionShape">
+                width="16" height="16" viewBox="0 0 16 16" v-if="(props.shape as SymbolView).isSymbolUnionShape">
                 <defs>
                     <clipPath id="master_svg0_747_09671">
                         <rect x="0" y="0" width="16" height="16" rx="0" />

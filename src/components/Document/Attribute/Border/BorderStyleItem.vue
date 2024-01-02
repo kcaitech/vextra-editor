@@ -1,22 +1,27 @@
 <script lang="ts" setup>
-import { onMounted } from 'vue'
 import { SelectItem } from '@/components/common/Select.vue'
-const props = defineProps<{ data: SelectItem }>();
-const emit = defineEmits<{
+interface Props {
+    data: SelectItem;
+    isCurValue: boolean;
+}
+interface Emits {
     (e: "select", data: SelectItem): void;
-}>();
+}
+const props = defineProps<Props>();
+const emits = defineEmits<Emits>();
 
 function select() {
-    emit('select', props.data)
+    emits('select', props.data)
 }
 
-// hooks
-onMounted(() => { })
 </script>
 <template>
     <div class="border-style-item-container" @click="select">
-        <svg-icon :icon-class="props.data.value"></svg-icon>
-        <span>{{ props.data.content }}</span>
+        <div class="content">
+            <svg-icon :icon-class="props.data.value"></svg-icon>
+            <span>{{ props.data.content }}</span>
+        </div>
+        <svg-icon class="check" v-show="props.isCurValue" icon-class="choose"></svg-icon>
     </div>
 </template>
 <style scoped lang="scss">
@@ -27,20 +32,31 @@ onMounted(() => { })
     box-sizing: border-box;
     display: flex;
     align-items: center;
+    justify-content: space-between;
 
-    >span {
-        font-family: HarmonyOS Sans;
-        font-size: 12px;
-        font-weight: 500;
-        flex: 0 0 40px;
-        color: #000000;
+    .content {
+        width: 60px;
+        height: 100%;
+        display: flex;
+        align-items: center;
+        justify-content: space-between;
+
+        >svg {
+            width: 24px;
+            height: 100%;
+            color: #BFBFBF;
+        }
+
+        >span {
+            font-family: HarmonyOS Sans;
+            font-size: var(--font-default-fontsize);
+            font-weight: 500;
+        }
     }
 
-    >svg {
-        width: calc(100% - 85px);
-        height: 100%;
-        margin-right: 12px;
-        color: #BFBFBF;
+    .check {
+        width: 12px;
+        height: 12px;
     }
 }
 
@@ -48,12 +64,14 @@ onMounted(() => { })
     background-color: var(--active-color);
     color: #fff;
 
-    >span {
-        color: #fff;
-    }
+    .content {
+        >span {
+            color: #fff;
+        }
 
-    >svg {
-        color: #fff;
+        >svg {
+            color: #fff;
+        }
     }
 }
 </style>
