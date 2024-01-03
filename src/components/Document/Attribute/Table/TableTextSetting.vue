@@ -173,7 +173,7 @@ const setParagraphSpace = () => {
 const isSelectText = () => {
   if (shape.value) {
     const selection = props.context.textSelection;
-    if ((selection.cursorEnd !== -1) && (selection.cursorStart !== -1)) {
+    if ((selection.cursorEnd > 0) && (selection.cursorStart > 0)) {
       return false
     } else {
       return true

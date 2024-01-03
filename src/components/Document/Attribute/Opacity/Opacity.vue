@@ -16,6 +16,10 @@ const {t} = useI18n();
 const popoverVisible = ref<boolean>(false);
 const popover = ref<HTMLDivElement>();
 const selectedOption = ref('');
+const shapes = ref<ShapeView[]>([]);
+const opacityValue = ref(0);
+const opacityInput = ref<HTMLInputElement>();
+const executed = ref(true);
 let opacity_editor: AsyncOpacityEditor | undefined = undefined;
 
 function showMenu(e: MouseEvent) {
@@ -73,12 +77,13 @@ const ipt = () => {
 function opacityChange(value: number) {
     const page = props.context.selection.selectedPage!;
     const editor = props.context.editor4Page(page);
-    const selected = props.context.selection.selectedShapes;
-    editor.modifyShapesContextSettingOpacity(selected.map(s => adapt2Shape(s)), value);
+    editor.modifyShapesContextSettingOpacity((shapes.value as ShapeView[]).map(s => adapt2Shape(s)), value);
 }
 
 function change(e: Event) {
-    const value = limitValue(Number((e.target as HTMLInputElement).value)) / 100;
+    if(!executed.value) return;
+    executed.value = false;    
+    const value = opacityValue.value;
     if (isNaN(value) || value === 1 || value === 0) {
         (e.target as HTMLInputElement).value =
             typeof opacity.value === 'string'
@@ -87,8 +92,7 @@ function change(e: Event) {
 
         if (isNaN(value)) return;
     }
-    opacity.value = value;
-    opacityChange(opacity.value);
+    opacityChange(value);
 }
 
 function down(e: MouseEvent) {
@@ -126,9 +130,17 @@ function change2(e: Event) {
     }
 }
 
-const focus = (event: Event) => {
-    if (event.target instanceof HTMLInputElement) {
-        event.target.select();
+const handleOPacity = (e: Event) => {
+    executed.value = true;
+    const value = limitValue(Number((e.target as HTMLInputElement).value)) / 100;
+    opacityValue.value = value;
+}
+
+const focus = () => {
+    if (opacityInput.value) {
+        executed.value = true;
+        shapes.value = [...props.context.selection.selectedShapes];
+        opacityInput.value.select();
     }
 }
 
@@ -333,8 +345,8 @@ onUnmounted(() => {
                        @keydown="range_keyboard" min="0" max="100" step="1"/>
                                 <div class="track"></div>
         </div>
-            <input type="text" class="input-text" :value="typeof opacity === 'string' ? ipt() : `${ipt()}%`"
-                   @click="focus" @change="change"/>
+            <input type="text" ref="opacityInput" class="input-text" :value="typeof opacity === 'string' ? ipt() : `${ipt()}%`"
+                   @focus="focus" @change="change" @blur="change" @input="handleOPacity"/>
         </div>
     </div>
 </template>

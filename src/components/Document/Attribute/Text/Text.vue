@@ -4,8 +4,8 @@ import { useI18n } from 'vue-i18n';
 import SelectFont from './SelectFont.vue';
 import { onMounted, ref, onUnmounted, watchEffect, watch, computed, nextTick } from 'vue';
 import TextAdvancedSettings from './TextAdvancedSettings.vue'
-import {Context} from '@/context';
-import {TextShape, AttrGetter, TableShape, ShapeType, TextShapeView, adapt2Shape} from "@kcdesign/data";
+import { Context } from '@/context';
+import { TextShape, AttrGetter, TableShape, ShapeType, TextShapeView, adapt2Shape } from "@kcdesign/data";
 import Tooltip from '@/components/common/Tooltip.vue';
 import { TextVerAlign, TextHorAlign, Color, UnderlineType, StrikethroughType } from "@kcdesign/data";
 import ColorPicker from '@/components/common/ColorPicker/index.vue';
@@ -44,6 +44,8 @@ const highlight = ref<Color>()
 const textSize = ref<HTMLInputElement>()
 const higlightColor = ref<HTMLInputElement>()
 const higlighAlpha = ref<HTMLInputElement>()
+const sizeHoverIndex = ref(-1);
+const shapes = ref<TextShapeView[]>(props.textShapes);
 
 // const selection = ref(props.context.selection)
 function toHex(r: number, g: number, b: number) {
@@ -189,8 +191,8 @@ const onSelectVertical = (icon: TextVerAlign) => {
 const changeTextSize = (size: number) => {
     fonstSize.value = size
     showSize.value = false;
-    const editor = props.context.editor4TextShape(props.shape)
-    if (length.value) {
+    const editor = props.context.editor4TextShape(shapes.value[0] as TextShapeView)
+    if (shapes.value.length === 1) {
         const { textIndex, selectLength } = getTextIndexAndLen()
         if (isSelectText()) {
             editor.setTextFontSize(0, Infinity, size)
@@ -199,7 +201,7 @@ const changeTextSize = (size: number) => {
             textFormat()
         }
     } else {
-        editor.setTextFontSizeMulti(props.textShapes.map(s => adapt2Shape(s)), size);
+        editor.setTextFontSizeMulti((shapes.value as TextShapeView[]).map(s => adapt2Shape(s)), size);
     }
 }
 //设置字体
@@ -240,20 +242,28 @@ const isSelectText = () => {
         return true
     }
 }
-
+const sizeValue = ref('');
+const executed = ref(true);
 //输入框设置字体大小
 const setTextSize = () => {
-    fonstSize.value = fonstSize.value.trim()
-    if (fonstSize.value.length < 1) {
-        fonstSize.value = 1
+    if (!executed.value) return;
+    executed.value = false;
+    let value = sizeValue.value.trim();
+    if (value.length < 1) {
+        value = '1'
     }
-    if (!isNaN(Number(fonstSize.value)) && Number(fonstSize.value > 0)) {
-        changeTextSize(fonstSize.value)
+    if (!isNaN(Number(value)) && Number(value) > 0) {
+        changeTextSize(Number(value))
         textFormat()
     } else {
         textFormat()
     }
 
+}
+const handleSize = () => {
+    executed.value = true;
+    const value = textSize.value!.value;
+    sizeValue.value = value;
 }
 
 // 获取当前文字格式
@@ -373,9 +383,17 @@ function workspace_wather(t: number) {
         textFormat()
     }
 }
-
+const textColorValue = ref('');
+const texAlphaValue = ref('');
+const highlightColorValue = ref('');
+const highlightAlphaValue = ref('');
 function onAlphaChange(e: Event, type: string) {
-    let value = (e.currentTarget as any)['value'];
+    let value: any;
+    if (type === 'color') {
+        value = texAlphaValue.value
+    } else {
+        value = highlightAlphaValue.value
+    }
     if (value?.slice(-1) === '%') {
         value = Number(value?.slice(0, -1))
         if (value >= 0) {
@@ -383,24 +401,21 @@ function onAlphaChange(e: Event, type: string) {
                 value = 100
             }
             value = value.toFixed(2) / 100
-            let color
+            let color;
             if (type === 'color') {
-                color = textColor.value
+                color = textColorValue.value
             } else {
-                color = highlight.value
+                color = highlightColorValue.value
             }
-            if (!color) return
-            let clr = toHex(color.red, color.green, color.blue);
-            if (clr.slice(0, 1) !== '#') {
-                clr = "#" + clr
-            }
-            setColor(0, clr, value, type);
+            setColor(0, color, value, type);
             return
         } else {
             message('danger', t('system.illegal_input'));
             if (type === 'color') {
+                if (!textColor.value) return;
                 return (e.target as HTMLInputElement).value = (textColor.value!.alpha * 100) + '%'
             } else {
+                if (!highlight.value) return;
                 return (e.target as HTMLInputElement).value = (highlight.value!.alpha * 100) + '%'
             }
         }
@@ -410,61 +425,67 @@ function onAlphaChange(e: Event, type: string) {
                 value = 100
             }
             value = Number((Number(value)).toFixed(2)) / 100
-            let color
+            let color;
             if (type === 'color') {
-                color = textColor.value
+                color = textColorValue.value
             } else {
-                color = highlight.value
+                color = highlightColorValue.value
             }
-            if (!color) return
-            let clr = toHex(color.red, color.green, color.blue);
-            if (clr.slice(0, 1) !== '#') {
-                clr = "#" + clr
-            }
-            setColor(0, clr, value, type);
+            setColor(0, color, value, type);
             return
         } else {
             message('danger', t('system.illegal_input'));
             if (type === 'color') {
+                if (!textColor.value) return;
                 return (e.target as HTMLInputElement).value = (textColor.value!.alpha * 100) + '%'
             } else {
+                if (!highlight.value) return;
                 return (e.target as HTMLInputElement).value = (highlight.value!.alpha * 100) + '%'
             }
         }
     } else {
         message('danger', t('system.illegal_input'));
         if (type === 'color') {
+            if (!textColor.value) return;
             return (e.target as HTMLInputElement).value = (textColor.value!.alpha * 100) + '%'
         } else {
+            if (!highlight.value) return;
             return (e.target as HTMLInputElement).value = (highlight.value!.alpha * 100) + '%'
         }
     }
 }
 
 function onColorChange(e: Event, type: string) {
-    let value = (e.target as HTMLInputElement)?.value;
-    if (value.slice(0, 1) !== '#') {
-        value = "#" + value
-    }
-    if (value.length === 4) value = `#${value.slice(1).split('').map(i => `${i}${i}`).join('')}`;
-    if (value.length === 2) value = `#${value.slice(1).split('').map(i => `${i}${i}${i}${i}${i}${i}`).join('')}`;
     if (type === 'color') {
+        let value = getColorValue(textColorValue.value);
         if (Reg_HEX.test(value)) {
-            const alpha = textColor.value!.alpha;
+            let alpha = Number(texAlphaValue.value.slice(0, -1));
+            alpha = Number(alpha.toFixed(2)) / 100
             setColor(0, value, alpha, type);
         } else {
             message('danger', t('system.illegal_input'));
             return (e.target as HTMLInputElement).value = toHex(textColor.value!.red, textColor.value!.green, textColor.value!.blue);
         }
     } else {
+        let value = getColorValue(highlightColorValue.value);
         if (Reg_HEX.test(value)) {
-            const alpha = highlight.value!.alpha;
+            let alpha = Number(highlightAlphaValue.value.slice(0, -1));
+            alpha = Number(alpha.toFixed(2)) / 100
             setColor(0, value, alpha, type);
         } else {
             message('danger', t('system.illegal_input'));
             return (e.target as HTMLInputElement).value = toHex(highlight.value!.red, highlight.value!.green, highlight.value!.blue);
         }
     }
+}
+const getColorValue = (v: string) => {
+    let value = v;
+    if (value.slice(0, 1) !== '#') {
+        value = "#" + value
+    }
+    if (value.length === 4) value = `#${value.slice(1).split('').map(i => `${i}${i}`).join('')}`;
+    if (value.length === 2) value = `#${value.slice(1).split('').map(i => `${i}${i}${i}${i}${i}${i}`).join('')}`;
+    return value;
 }
 
 function getColorFromPicker(color: Color, type: string) {
@@ -503,7 +524,7 @@ function setColor(idx: number, clr: string, alpha: number, type: string) {
     const r = Number.parseInt(res[1], 16);
     const g = Number.parseInt(res[2], 16);
     const b = Number.parseInt(res[3], 16);
-    const editor = props.context.editor4TextShape(props.shape)
+    const editor = props.context.editor4TextShape(shapes.value[0] as TextShapeView)
     if (length.value) {
         const { textIndex, selectLength } = getTextIndexAndLen();
         if (isSelectText()) {
@@ -522,9 +543,9 @@ function setColor(idx: number, clr: string, alpha: number, type: string) {
         textFormat()
     } else {
         if (type === 'color') {
-            editor.setTextColorMulti(props.textShapes.map(s => adapt2Shape(s)), new Color(alpha, r, g, b))
+            editor.setTextColorMulti((shapes.value as TextShapeView[]).map(s => adapt2Shape(s)), new Color(alpha, r, g, b))
         } else {
-            editor.setTextHighlightColorMulti(props.textShapes.map(s => adapt2Shape(s)), new Color(alpha, r, g, b))
+            editor.setTextHighlightColorMulti((shapes.value as TextShapeView[]).map(s => adapt2Shape(s)), new Color(alpha, r, g, b))
         }
     }
 }
@@ -558,6 +579,20 @@ const addHighlight = () => {
         editor.setTextHighlightColorMulti(props.textShapes.map(s => adapt2Shape(s)), new Color(1, 216, 216, 216))
     }
 }
+const higAlphaInput = () => {
+    if (higlighAlpha.value && higlightColor.value) {
+        const value = higlighAlpha.value.value;
+        highlightColorValue.value = higlightColor.value.value;
+        highlightAlphaValue.value = value;
+    }
+}
+const higColorInput = () => {
+    if (higlightColor.value && higlighAlpha.value) {
+        const value = higlightColor.value.value;
+        highlightAlphaValue.value = higlighAlpha.value.value;
+        highlightColorValue.value = value;
+    }
+}
 const addTextColor = () => {
     const editor = props.context.editor4TextShape(props.shape)
     if (length.value) {
@@ -572,22 +607,58 @@ const addTextColor = () => {
         editor.setTextColorMulti(props.textShapes.map(s => adapt2Shape(s)), new Color(1, 6, 6, 6))
     }
 }
+const sizeColorInput = () => {
+    if (sizeColor.value && alphaFill.value) {
+        const value = sizeColor.value.value;
+        textColorValue.value = value;
+        texAlphaValue.value = alphaFill.value.value;
+    }
+}
 const selectSizeValue = () => {
-    textSize.value && textSize.value.select()
+    if (textSize.value) {
+        executed.value = true;
+        getTextShapes();
+        textSize.value.select();
+    }
 }
 const selectColorValue = () => {
-    sizeColor.value && sizeColor.value.select()
+    if (sizeColor.value) {
+        executed.value = true;
+        getTextShapes();
+        sizeColor.value.select();
+    }
 }
 const selectAlphaValue = () => {
-    alphaFill.value && alphaFill.value.select()
+    if (alphaFill.value) {
+        executed.value = true;
+        getTextShapes();
+        alphaFill.value.select();
+    }
+}
+const sizeAlphaInput = () => {
+    if (alphaFill.value && sizeColor.value) {
+        const value = alphaFill.value.value;
+        texAlphaValue.value = value;
+        textColorValue.value = sizeColor.value.value;
+    }
 }
 const selectHiglightColor = () => {
-    higlightColor.value && higlightColor.value.select()
+    if (higlightColor.value) {
+        executed.value = true;
+        getTextShapes();
+        higlightColor.value.select();
+    }
 }
 const selectHiglighAlpha = () => {
-    higlighAlpha.value && higlighAlpha.value.select()
+    if (higlighAlpha.value) {
+        executed.value = true;
+        getTextShapes();
+        higlighAlpha.value.select();
+    }
 }
-
+const getTextShapes = () => {
+    shapes.value = [...props.context.selection.selectedShapes].filter(s => s.type === ShapeType.Text) as TextShapeView[];
+}
 const filterAlpha = (a: number) => {
     let alpha = Math.round(a * 100) / 100;
     if (Number.isInteger(alpha)) {
@@ -641,38 +712,40 @@ onUnmounted(() => {
                     <div class="text-size jointly-text" style="padding-right: 0;">
                         <div class="size_input">
                             <input type="text" v-model="fonstSize" ref="textSize" class="input" @change="setTextSize"
-                                @focus="selectSizeValue">
+                                @focus="selectSizeValue" @input="handleSize" @blur="setTextSize">
                             <div class="down" @click="onShowSize">
                                 <svg-icon icon-class="down" style=""></svg-icon>
                             </div>
                         </div>
                         <div class="font-size-list" ref="sizeList" :style="{ top: -4 - sizeSelectIndex * 32 + 'px' }"
                             v-if="showSize">
-                            <div v-for="(item, i) in textSizes" :key="i" @click="changeTextSize(item)">{{ item }}
+                            <div v-for="(item, i) in textSizes" :key="i" @click="changeTextSize(item)"
+                                @mouseover="sizeHoverIndex = i" @mouseleave="sizeHoverIndex = -1">{{ item }}
                                 <div class="icon">
-                                    <svg-icon v-if="sizeSelectIndex === i" icon-class="page-select"></svg-icon>
+                                    <svg-icon v-if="sizeSelectIndex === i"
+                                        :icon-class="sizeHoverIndex === i ? 'white-select' : 'page-select'"></svg-icon>
                                 </div>
                             </div>
                         </div>
                     </div>
                     <div class="overbold jointly-text" :class="{ selected_bgc: isBold }" @click="onBold">
                         <Tooltip :content="`${t('attr.bold')} &nbsp;&nbsp; Ctrl B`" :offset="15">
-                            <svg-icon icon-class="text-bold"></svg-icon>
+                            <svg-icon :icon-class="isBold ? 'text-white-bold' : 'text-bold'"></svg-icon>
                         </Tooltip>
                     </div>
                     <div class="overbold jointly-text" :class="{ selected_bgc: isTilt }" @click="onTilt">
                         <Tooltip :content="`${t('attr.tilt')} &nbsp;&nbsp; Ctrl I`" :offset="15">
-                            <svg-icon icon-class="text-tilt"></svg-icon>
+                            <svg-icon :icon-class="isTilt ? 'text-white-tilt' : 'text-tilt'"></svg-icon>
                         </Tooltip>
                     </div>
                     <div class="overbold jointly-text" :class="{ selected_bgc: isUnderline }" @click="onUnderlint">
                         <Tooltip :content="`${t('attr.underline')} &nbsp;&nbsp; Ctrl U`" :offset="15">
-                            <svg-icon icon-class="text-underline"></svg-icon>
+                            <svg-icon :icon-class="isUnderline ? 'text-white-underline' : 'text-underline'"></svg-icon>
                         </Tooltip>
                     </div>
                     <div class="overbold jointly-text" :class="{ selected_bgc: isDeleteline }" @click="onDeleteline">
                         <Tooltip :content="`${t('attr.deleteline')} &nbsp;&nbsp; Ctrl Shift X`" :offset="15">
-                            <svg-icon icon-class="text-deleteline"></svg-icon>
+                            <svg-icon :icon-class="isDeleteline ? 'text-white-deleteline' : 'text-deleteline'"></svg-icon>
                         </Tooltip>
                     </div>
                 </div>
@@ -741,9 +814,10 @@ onUnmounted(() => {
                     </ColorPicker>
                     <input ref="sizeColor" class="sizeColor" @focus="selectColorValue" :spellcheck="false"
                         :value="toHex(textColor!.red, textColor!.green, textColor!.blue)"
-                        @change="(e) => onColorChange(e, 'color')" />
+                        @change="(e) => onColorChange(e, 'color')" @input="sizeColorInput" />
                     <input ref="alphaFill" class="alphaFill" @focus="selectAlphaValue" style="text-align: center;"
-                        :value="(textColor!.alpha * 100) + '%'" @change="(e) => onAlphaChange(e, 'color')" />
+                        :value="(textColor!.alpha * 100) + '%'" @change="(e) => onAlphaChange(e, 'color')"
+                        @input="sizeAlphaInput" />
                 </div>
                 <!--                <div class="perch"></div>-->
             </div>
@@ -775,9 +849,10 @@ onUnmounted(() => {
                     </ColorPicker>
                     <input ref="higlightColor" class="colorFill" @focus="selectHiglightColor" :spellcheck="false"
                         :value="toHex(highlight!.red, highlight!.green, highlight!.blue)"
-                        @change="(e) => onColorChange(e, 'highlight')" />
+                        @change="(e) => onColorChange(e, 'highlight')" @input="higColorInput" />
                     <input ref="higlighAlpha" class="alphaFill" @focus="selectHiglighAlpha" style="text-align: center;"
-                        :value="(highlight!.alpha * 100) + '%'" @change="(e) => onAlphaChange(e, 'highlight')" />
+                        :value="(highlight!.alpha * 100) + '%'" @change="(e) => onAlphaChange(e, 'highlight')"
+                        @input="higAlphaInput" />
                 </div>
                 <div class="perch" @click="deleteHighlight">
                     <svg-icon class="svg" icon-class="delete"></svg-icon>
@@ -905,6 +980,7 @@ onUnmounted(() => {
                         width: 19px;
                         height: 26px;
                         margin-right: 3px;
+
                         &:hover {
                             background-color: #EBEBEB;
                         }
@@ -1203,5 +1279,4 @@ onUnmounted(() => {
 
 :deep(.el-tooltip__trigger:focus) {
     outline: none !important;
-}
-</style>
+}</style>

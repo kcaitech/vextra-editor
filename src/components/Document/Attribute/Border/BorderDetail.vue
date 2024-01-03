@@ -6,7 +6,7 @@ import Select, { SelectItem, SelectSource } from '@/components/common/Select.vue
 import BorderStyleItem from './BorderStyleItem.vue';
 import BorderStyleSelected from './BorderStyleSelected.vue';
 import { Context } from '@/context';
-import { Border, BorderPosition, BorderStyle, ShapeType, ShapeView, TableView } from "@kcdesign/data";
+import { Border, BorderPosition, BorderStyle, GroupShapeView, ShapeType, ShapeView, TableView } from "@kcdesign/data";
 import { genOptions } from '@/utils/common';
 import { Selection } from '@/context/selection';
 import { get_actions_border_thickness, get_actions_border_position, get_actions_border_style } from '@/utils/shape_style';
@@ -70,7 +70,7 @@ function borderStyleSelect(selected: SelectItem) {
     props.context.workspace.notify(WorkSpace.CTRL_DISAPPEAR);
     borderStyle.value = selected;
     const shape = props.shapes[0];
-    if (len.value === 1 && shape.type !== ShapeType.Group) {
+    if (len.value === 1 && (shape.type !== ShapeType.Group || (shape as GroupShapeView).isBoolOpShape)) {
         const bs = selected.value === 'dash' ? new BorderStyle(2, 2) : new BorderStyle(0, 0);
         if (shape.type === ShapeType.Table) {
             const table = props.context.tableSelection;
@@ -99,7 +99,7 @@ function borderStyleSelect(selected: SelectItem) {
                 editor.setShapesBorderStyle(actions);
             }
         }
-    } else if (len.value === 1 && shape.type === ShapeType.Group) {
+    } else if (len.value === 1 && shape.type === ShapeType.Group && !(shape as GroupShapeView).isBoolOpShape) {
         const childs = (shape).childs;
         const shapes = flattenShapes(childs).filter(s => s.type !== ShapeType.Group);
         const actions = get_actions_border_style(shapes, props.index, (selected.value as 'dash' | 'solid'));
@@ -118,7 +118,7 @@ function borderStyleSelect(selected: SelectItem) {
 function positionSelect(selected: SelectItem) {
     props.context.workspace.notify(WorkSpace.CTRL_DISAPPEAR);
     position.value = selected;
-    if (len.value === 1 && props.shapes[0].type !== ShapeType.Group) {
+    if (len.value === 1 && (props.shapes[0].type !== ShapeType.Group || (props.shapes[0] as GroupShapeView).isBoolOpShape)) {
         editor.value.setBorderPosition(props.index, selected.value as BorderPosition);
     } else if (len.value > 1) {
         if (props.shapes[0].type === ShapeType.Table) return;
@@ -130,7 +130,7 @@ function positionSelect(selected: SelectItem) {
                 editor.setShapesBorderPosition(actions);
             }
         }
-    } else if (len.value === 1 && props.shapes[0].type === ShapeType.Group) {
+    } else if (len.value === 1 && props.shapes[0].type === ShapeType.Group && !(props.shapes[0] as GroupShapeView).isBoolOpShape) {
         const childs = (props.shapes[0]).childs;
         const shapes = flattenShapes(childs).filter(s => s.type !== ShapeType.Group);
         const actions = get_actions_border_position(shapes, props.index, selected.value as BorderPosition);
@@ -150,7 +150,7 @@ function setThickness(e: Event) {
     props.context.workspace.notify(WorkSpace.CTRL_DISAPPEAR);
     const thickness = Number((e.target as HTMLInputElement).value);
     const shape = props.shapes[0];
-    if (len.value === 1 && shape.type !== ShapeType.Group) {
+    if (len.value === 1 && (shape.type !== ShapeType.Group || (shape as GroupShapeView).isBoolOpShape)) {
         if (shape.type === ShapeType.Table) {
             const table = props.context.tableSelection;
             const e = props.context.editor4Table(shape as TableView);
@@ -178,7 +178,7 @@ function setThickness(e: Event) {
                 editor.setShapesBorderThickness(actions);
             }
         }
-    } else if (len.value === 1 && shape.type === ShapeType.Group) {
+    } else if (len.value === 1 && shape.type === ShapeType.Group && !(shape as GroupShapeView).isBoolOpShape) {
         const childs = (shape).childs;
         const shapes = flattenShapes(childs).filter(s => s.type !== ShapeType.Group);
         const actions = get_actions_border_thickness(shapes, props.index, thickness);
@@ -197,7 +197,7 @@ const augment = (e: Event) => {
     if (borderThickness.value) {
         const thickness = Number(borderThickness.value.value) + 1
         const shape = props.shapes[0];
-        if (len.value === 1 && shape.type !== ShapeType.Group) {
+        if (len.value === 1 && (shape.type !== ShapeType.Group || (shape as GroupShapeView).isBoolOpShape)) {
             if (shape.type === ShapeType.Table) {
                 const table = props.context.tableSelection;
                 const e = props.context.editor4Table(shape as TableView);
@@ -225,7 +225,7 @@ const augment = (e: Event) => {
                     editor.setShapesBorderThickness(actions);
                 }
             }
-        } else if (len.value === 1 && shape.type === ShapeType.Group) {
+        } else if (len.value === 1 && shape.type === ShapeType.Group && !(shape as GroupShapeView).isBoolOpShape) {
             const childs = (shape).childs;
             const shapes = flattenShapes(childs).filter(s => s.type !== ShapeType.Group);
             const actions = get_actions_border_thickness(shapes, props.index, thickness);
@@ -245,7 +245,7 @@ const decrease = (e: Event) => {
         if (Number(borderThickness.value.value) === 0) return
         const thickness = Number(borderThickness.value.value) - 1;
         const shape = props.shapes[0];
-        if (len.value === 1 && shape.type !== ShapeType.Group) {
+        if (len.value === 1 && (shape.type !== ShapeType.Group || (shape as GroupShapeView).isBoolOpShape)) {
             if (shape.type === ShapeType.Table) {
                 const table = props.context.tableSelection;
                 const e = props.context.editor4Table(shape as TableView);
@@ -273,7 +273,7 @@ const decrease = (e: Event) => {
                     editor.setShapesBorderThickness(actions);
                 }
             }
-        } else if (len.value === 1 && shape.type === ShapeType.Group) {
+        } else if (len.value === 1 && shape.type === ShapeType.Group && !(shape as GroupShapeView).isBoolOpShape) {
             const childs = (shape).childs;
             const shapes = flattenShapes(childs).filter(s => s.type !== ShapeType.Group);
             const actions = get_actions_border_thickness(shapes, props.index, thickness);
@@ -315,7 +315,7 @@ const onMouseMove = (e: MouseEvent) => {
                 if (borderThickness.value) {
                     const thickness = Number(borderThickness.value.value) + 1;
                     const shape = props.shapes[0];
-                    if (len.value === 1 && shape.type !== ShapeType.Group) {
+                    if (len.value === 1 && (shape.type !== ShapeType.Group || (shape as GroupShapeView).isBoolOpShape)) {
                         if (shape.type === ShapeType.Table) {
                             const table = props.context.tableSelection;
                             const e = props.context.editor4Table(shape as TableView);
@@ -343,7 +343,7 @@ const onMouseMove = (e: MouseEvent) => {
                                 editor.setShapesBorderThickness(actions);
                             }
                         }
-                    } else if (len.value === 1 && shape.type === ShapeType.Group) {
+                    } else if (len.value === 1 && shape.type === ShapeType.Group && !(shape as GroupShapeView).isBoolOpShape) {
                         const childs = (shape).childs;
                         const shapes = flattenShapes(childs).filter(s => s.type !== ShapeType.Group);
                         const actions = get_actions_border_thickness(shapes, props.index, thickness);
@@ -365,7 +365,7 @@ const onMouseMove = (e: MouseEvent) => {
                         _curpt.x = e.screenX
                     }
                     const shape = props.shapes[0];
-                    if (len.value === 1 && shape.type !== ShapeType.Group) {
+                    if (len.value === 1 && (shape.type !== ShapeType.Group || (shape as GroupShapeView).isBoolOpShape)) {
                         if (shape.type === ShapeType.Table) {
                             const table = props.context.tableSelection;
                             const e = props.context.editor4Table(shape as TableView);
@@ -393,7 +393,7 @@ const onMouseMove = (e: MouseEvent) => {
                                 editor.setShapesBorderThickness(actions);
                             }
                         }
-                    } else if (len.value === 1 && shape.type === ShapeType.Group) {
+                    } else if (len.value === 1 && shape.type === ShapeType.Group && !(shape as GroupShapeView).isBoolOpShape) {
                         const childs = (shape).childs;
                         const shapes = flattenShapes(childs).filter(s => s.type !== ShapeType.Group);
                         const actions = get_actions_border_thickness(shapes, props.index, thickness);
@@ -467,8 +467,8 @@ onUnmounted(() => {
         <Popover :context="props.context" class="popover" ref="popover" :width="200" :auto_to_right_line="true"
             :title="t('attr.advanced_stroke')">
             <template #trigger>
-                <div class="trigger">
-                    <div class="bg" @click="showMenu">
+                <div class="trigger" @click="showMenu">
+                    <div class="bg">
                         <svg-icon icon-class="gear"></svg-icon>
                     </div>
                 </div>

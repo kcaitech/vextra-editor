@@ -4,7 +4,7 @@ import { useI18n } from 'vue-i18n';
 import SelectFont from '../Text/SelectFont.vue';
 import { onMounted, ref, onUnmounted, watchEffect, watch, nextTick } from 'vue';
 import { Context } from '@/context';
-import { AttrGetter, TableView, TableCell, Text } from "@kcdesign/data";
+import { AttrGetter, TableView, TableCell, Text, ShapeType, TextShapeView } from "@kcdesign/data";
 import Tooltip from '@/components/common/Tooltip.vue';
 import { TextVerAlign, TextHorAlign, Color, UnderlineType, StrikethroughType } from "@kcdesign/data";
 import ColorPicker from '@/components/common/ColorPicker/index.vue';
@@ -42,6 +42,8 @@ const textSize = ref<HTMLInputElement>()
 const higlightColor = ref<HTMLInputElement>()
 const higlighAlpha = ref<HTMLInputElement>()
 const shape = ref<TableCell & { text: Text; }>()
+const table = ref<TableCell & { text: Text; }>()
+const sizeHoverIndex = ref(-1);
 // const selection = ref(props.context.selection) 
 
 function toHex(r: number, g: number, b: number) {
@@ -229,11 +231,10 @@ const onSelectVertical = (icon: TextVerAlign) => {
     textFormat();
 }
 //设置字体大小
-const changeTextSize = (size: number) => {
-    fonstSize.value = size
+const changeTextSize = (size: number, shape: TableCell & { text: Text; }) => {
     showSize.value = false;
-    if (shape.value) {
-        const editor = props.context.editor4TextShape(shape.value)
+    if (shape) {
+        const editor = props.context.editor4TextShape(shape)
         const { textIndex, selectLength } = getTextIndexAndLen()
         if (isSelectText()) {
             editor.setTextFontSize(0, Infinity, size)
@@ -290,26 +291,40 @@ const getTextIndexAndLen = () => {
 const isSelectText = () => {
     if (shape.value) {
         const selection = props.context.textSelection;
-        if ((selection.cursorEnd !== -1) && (selection.cursorStart !== -1)) {
+        if ((selection.cursorEnd > 0) && (selection.cursorStart > 0)) {
             return false;
         } else {
             return true;
         }
     }
 }
-
+const sizeValue = ref('');
+const executed = ref(true);
 //输入框设置字体大小
 const setTextSize = () => {
-    fonstSize.value = fonstSize.value.trim()
-    if (fonstSize.value.length < 1) {
-        fonstSize.value = 1
+    if (!executed.value) return;
+    executed.value = false;
+    let value = sizeValue.value.trim();
+    if (value.length < 1) {
+        value = '1'
     }
-    if (!isNaN(Number(fonstSize.value)) && Number(fonstSize.value > 0)) {
-        changeTextSize(fonstSize.value);
+    if (!isNaN(Number(value)) && Number(value) > 0) {
+        changeTextSize(Number(value), table.value as TableCell & { text: Text; });
         textFormat();
     } else {
         textFormat();
     }
+}
+//下拉选择字体大小
+const selectTextSize = (size: number) => {
+    fonstSize.value = size
+    showSize.value = false;
+    changeTextSize(size, shape.value as TableCell & { text: Text; });
+}
+const handleSize = () => {
+    executed.value = true;
+    const value = textSize.value!.value;
+    sizeValue.value = value;
 }
 
 const shapeWatch = watch(() => props.shape, (value, old) => {
@@ -320,6 +335,7 @@ const shapeWatch = watch(() => props.shape, (value, old) => {
 // 获取当前文字格式
 const textFormat = () => {
     const table = props.context.tableSelection;
+    shape.value = undefined;
     if (table.editingCell) {
         shape.value = table.editingCell?.cell as TableCell & { text: Text; };
         // 拿到某个单元格
@@ -536,8 +552,6 @@ function onColorChange(e: Event, type: string) {
     }
 }
 function getColorFromPicker(color: Color, type: string) {
-    console.log(shape.value, 'shape.value');
-
     if (shape.value) {
         const editor = props.context.editor4TextShape(shape.value);
         const { textIndex, selectLength } = getTextIndexAndLen();
@@ -693,7 +707,11 @@ const addTextColor = () => {
     textFormat();
 }
 const selectSizeValue = () => {
-    textSize.value && textSize.value.select();
+    if (textSize.value) {
+        executed.value = true;
+        table.value = shape.value;
+        textSize.value.select();
+    }
 }
 const selectColorValue = () => {
     sizeColor.value && sizeColor.value.select();
@@ -741,72 +759,74 @@ onUnmounted(() => {
                     </div>
                 </div>
                 <SelectFont v-if="showFont" @set-font="setFont" :fontName="fontName" :context="props.context"></SelectFont>
-<!--                <div class="perch"></div>-->
+                <!--                <div class="perch"></div>-->
             </div>
             <div class="text-middle">
                 <div class="text-middle-size">
                     <div class="text-size jointly-text" style="padding-right: 0;">
                         <div class="size_input">
                             <input type="text" v-model="fonstSize" ref="textSize" class="input" @change="setTextSize"
-                                @focus="selectSizeValue">
+                                @focus="selectSizeValue" @input="handleSize" @blur="setTextSize">
                             <div class="down" @click="onShowSize">
                                 <svg-icon icon-class="down"></svg-icon>
                             </div>
                         </div>
                         <div class="font-size-list" ref="sizeList" :style="{ top: -4 - sizeSelectIndex * 32 + 'px' }"
                             v-if="showSize">
-                            <div v-for="(item, i) in textSizes" :key="i" @click="changeTextSize(item)">{{ item }}
+                            <div v-for="(item, i) in textSizes" :key="i" @click="selectTextSize(item)"
+                                @mouseover="sizeHoverIndex = i" @mouseleave="sizeHoverIndex = -1">{{ item }}
                                 <div class="icon">
-                                    <svg-icon v-if="sizeSelectIndex === i" icon-class="page-select"></svg-icon>
+                                    <svg-icon v-if="sizeSelectIndex === i"
+                                        :icon-class="sizeHoverIndex === i ? 'white-select' : 'page-select'"></svg-icon>
                                 </div>
                             </div>
                         </div>
                     </div>
                     <div class="overbold jointly-text" :class="{ selected_bgc: isBold }" @click="onBold">
                         <Tooltip :content="`${t('attr.bold')} &nbsp;&nbsp; Ctrl B`" :offset="15">
-                            <svg-icon icon-class="text-bold"></svg-icon>
+                            <svg-icon :icon-class="isBold ? 'text-white-bold' : 'text-bold'"></svg-icon>
                         </Tooltip>
                     </div>
                     <div class="overbold jointly-text" :class="{ selected_bgc: isTilt }" @click="onTilt">
                         <Tooltip :content="`${t('attr.tilt')} &nbsp;&nbsp; Ctrl I`" :offset="15">
-                            <svg-icon icon-class="text-tilt"></svg-icon>
+                            <svg-icon :icon-class="isTilt ? 'text-white-tilt' : 'text-tilt'"></svg-icon>
                         </Tooltip>
                     </div>
                     <div class="overbold jointly-text" :class="{ selected_bgc: isUnderline }" @click="onUnderlint">
                         <Tooltip :content="`${t('attr.underline')} &nbsp;&nbsp; Ctrl U`" :offset="15">
-                            <svg-icon icon-class="text-underline"></svg-icon>
+                            <svg-icon :icon-class="isUnderline ? 'text-white-underline' : 'text-underline'"></svg-icon>
                         </Tooltip>
                     </div>
                     <div class="overbold jointly-text" :class="{ selected_bgc: isDeleteline }" @click="onDeleteline">
                         <Tooltip :content="`${t('attr.deleteline')} &nbsp;&nbsp; Ctrl Shift X`" :offset="15">
-                            <svg-icon icon-class="text-deleteline"></svg-icon>
+                            <svg-icon :icon-class="isDeleteline ? 'text-white-deleteline' : 'text-deleteline'"></svg-icon>
                         </Tooltip>
                     </div>
                 </div>
-<!--                <div class="perch"></div>-->
+                <!--                <div class="perch"></div>-->
             </div>
             <div class="text-bottom">
                 <div class="text-bottom-align">
                     <div class="level-aligning jointly-text">
-                        <i :class="{'jointly-text': true,'font-posi': true, selected_bg: selectLevel === 'left' }"
+                        <i :class="{ 'jointly-text': true, 'font-posi': true, selected_bg: selectLevel === 'left' }"
                             @click="onSelectLevel(TextHorAlign.Left)">
                             <Tooltip :content="t('attr.align_left')" :offset="15">
                                 <svg-icon icon-class="text-left"></svg-icon>
                             </Tooltip>
                         </i>
-                        <i :class="{'jointly-text': true,'font-posi': true, selected_bg: selectLevel === 'centered' }"
+                        <i :class="{ 'jointly-text': true, 'font-posi': true, selected_bg: selectLevel === 'centered' }"
                             @click="onSelectLevel(TextHorAlign.Centered)">
                             <Tooltip :content="t('attr.align_center')" :offset="15">
                                 <svg-icon icon-class="text-center"></svg-icon>
                             </Tooltip>
                         </i>
-                        <i :class="{'jointly-text': true,'font-posi': true, selected_bg: selectLevel === 'right' }"
+                        <i :class="{ 'jointly-text': true, 'font-posi': true, selected_bg: selectLevel === 'right' }"
                             @click="onSelectLevel(TextHorAlign.Right)">
                             <Tooltip :content="t('attr.align_right')" :offset="15">
                                 <svg-icon icon-class="text-right"></svg-icon>
                             </Tooltip>
                         </i>
-                        <i :class="{'jointly-text': true,'font-posi': true, selected_bg: selectLevel === 'natural' }"
+                        <i :class="{ 'jointly-text': true, 'font-posi': true, selected_bg: selectLevel === 'natural' }"
                             @click="onSelectLevel(TextHorAlign.Natural)">
                             <Tooltip :content="t('attr.align_the_sides')" :offset="15">
                                 <svg-icon icon-class="text-justify"></svg-icon>
@@ -814,19 +834,19 @@ onUnmounted(() => {
                         </i>
                     </div>
                     <div class="vertical-aligning jointly-text">
-                        <i :class="{'jointly-text': true,'font-posi': true, selected_bg: selectVertical === 'top' }"
+                        <i :class="{ 'jointly-text': true, 'font-posi': true, selected_bg: selectVertical === 'top' }"
                             @click="onSelectVertical(TextVerAlign.Top)">
                             <Tooltip :content="t('attr.align_top')" :offset="15">
                                 <svg-icon icon-class="align-top"></svg-icon>
                             </Tooltip>
                         </i>
-                        <i :class="{'jointly-text': true,'font-posi': true, selected_bg: selectVertical === 'middle' }"
+                        <i :class="{ 'jointly-text': true, 'font-posi': true, selected_bg: selectVertical === 'middle' }"
                             @click="onSelectVertical(TextVerAlign.Middle)">
                             <Tooltip :content="t('attr.align_middle')" :offset="15">
                                 <svg-icon icon-class="align-middle"></svg-icon>
                             </Tooltip>
                         </i>
-                        <i :class="{'jointly-text': true,'font-posi': true, selected_bg: selectVertical === 'bottom' }"
+                        <i :class="{ 'jointly-text': true, 'font-posi': true, selected_bg: selectVertical === 'bottom' }"
                             @click="onSelectVertical(TextVerAlign.Bottom)">
                             <Tooltip :content="t('attr.align_bottom')" :offset="15">
                                 <svg-icon icon-class="align-bottom"></svg-icon>
@@ -834,11 +854,12 @@ onUnmounted(() => {
                         </i>
                     </div>
                 </div>
-<!--                <div class="perch"></div>-->
+                <!--                <div class="perch"></div>-->
             </div>
             <!-- 字体颜色 -->
             <div class="text-color" v-if="!colorIsMulti && textColor" style="margin-bottom: 10px;">
-                <div style="font-family: HarmonyOS Sans;font-size: 12px;margin-right: 10px;">{{ t('attr.font_color') }}</div>
+                <div style="font-family: HarmonyOS Sans;font-size: 12px;margin-right: 10px;">{{ t('attr.font_color') }}
+                </div>
                 <div class="color">
                     <ColorPicker :color="textColor!" :context="props.context" :auto_to_right_line="true"
                         @change="c => getColorFromPicker(c, 'color')">
@@ -849,11 +870,12 @@ onUnmounted(() => {
                     <input ref="alphaFill" class="alphaFill" @focus="selectAlphaValue" style="text-align: center;"
                         :value="(textColor!.alpha * 100) + '%'" @change="(e) => onAlphaChange(e, 'color')" />
                 </div>
-<!--                <div class="perch"></div>-->
+                <!--                <div class="perch"></div>-->
             </div>
             <div class="text-colors" v-else-if="colorIsMulti" style="margin-bottom: 10px;">
                 <div class="color-title">
-                    <div style="font-family: HarmonyOS Sans;font-size: 12px;margin-right: 10px;">{{ t('attr.font_color') }}</div>
+                    <div style="font-family: HarmonyOS Sans;font-size: 12px;margin-right: 10px;">{{ t('attr.font_color') }}
+                    </div>
                     <div class="add" @click="addTextColor">
                         <svg-icon icon-class="add"></svg-icon>
                     </div>
@@ -862,7 +884,8 @@ onUnmounted(() => {
             </div>
             <div class="text-colors" v-else-if="!colorIsMulti && !textColor" style="margin-bottom: 10px;">
                 <div class="color-title">
-                    <div style="font-family: HarmonyOS Sans;font-size: 12px;margin-right: 10px;">{{ t('attr.font_color') }}</div>
+                    <div style="font-family: HarmonyOS Sans;font-size: 12px;margin-right: 10px;">{{ t('attr.font_color') }}
+                    </div>
                     <div class="add" @click="addTextColor">
                         <svg-icon icon-class="add"></svg-icon>
                     </div>
@@ -871,7 +894,7 @@ onUnmounted(() => {
             <!-- 高亮颜色 -->
             <div class="highlight-color" v-if="!highlightIsMulti && highlight">
                 <div style="font-family: HarmonyOS Sans;font-size: 12px;margin-right: 10px;"
-                     :class="{ 'check': highlight, 'nocheck': !highlight }">{{ t('attr.highlight_color') }}</div>
+                    :class="{ 'check': highlight, 'nocheck': !highlight }">{{ t('attr.highlight_color') }}</div>
                 <div class="color">
                     <ColorPicker :color="highlight!" :context="props.context" :auto_to_right_line="true"
                         @change="c => getColorFromPicker(c, 'highlight')">
@@ -889,7 +912,7 @@ onUnmounted(() => {
             <div class="text-colors" v-else-if="highlightIsMulti">
                 <div class="color-title">
                     <div style="font-family: HarmonyOS Sans;font-size: 12px;margin-right: 10px;"
-                         :class="{ 'check': highlight, 'nocheck': !highlight }">{{ t('attr.highlight_color') }}</div>
+                        :class="{ 'check': highlight, 'nocheck': !highlight }">{{ t('attr.highlight_color') }}</div>
                     <div class="add" @click="addHighlight">
                         <svg-icon icon-class="add"></svg-icon>
                     </div>
@@ -899,7 +922,7 @@ onUnmounted(() => {
             <div class="text-colors" v-else-if="!highlightIsMulti && !highlight">
                 <div class="color-title">
                     <div style="font-family: HarmonyOS Sans;font-size: 12px;margin-right: 10px;"
-                         :class="{ 'check': highlight, 'nocheck': !highlight }">{{ t('attr.highlight_color') }}</div>
+                        :class="{ 'check': highlight, 'nocheck': !highlight }">{{ t('attr.highlight_color') }}</div>
                     <div class="color_border"></div>
                     <div class="add" @click="addHighlight">
                         <svg-icon icon-class="add"></svg-icon>
@@ -970,6 +993,7 @@ onUnmounted(() => {
                 height: 32px;
                 border-radius: 6px;
             }
+
             .select-font:hover {
                 background: #EBEBEB;
             }
@@ -1007,6 +1031,7 @@ onUnmounted(() => {
                         width: 19px;
                         height: 26px;
                         margin-right: 3px;
+
                         &:hover {
                             background-color: #EBEBEB;
                         }
@@ -1220,7 +1245,7 @@ onUnmounted(() => {
                     font-size: 12px;
                 }
 
-                input + input {
+                input+input {
                     width: 45px;
                 }
             }
@@ -1248,9 +1273,11 @@ onUnmounted(() => {
 
                     transition: .2s;
                 }
+
                 .add:hover {
                     background-color: #F5F5F5;
                 }
+
                 .check {
                     color: #000000;
                 }
@@ -1280,6 +1307,7 @@ onUnmounted(() => {
                 width: 16px;
             }
         }
+
         .perch:hover {
             background-color: #F5F5F5;
         }

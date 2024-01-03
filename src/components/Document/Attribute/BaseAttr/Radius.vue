@@ -215,7 +215,7 @@ onUnmounted(() => {
         <IconText v-if="rect" class="frame" svgicon="radius" :text="radius.rt"
             :frame="{ width: 12, height: 12, rotate: 90 }" @onchange="(value, shapes) => change(value, shapes, 'rt')" :context="context" />
         <div class="more-for-radius" @click="rectToggle" v-if="can_be_rect" :class="{ 'active': rect }">
-            <svg-icon :icon-class="rect ? 'more-for-radius' : 'more-for-radius'" :class="{ 'active': rect }"></svg-icon>
+            <svg-icon :icon-class="rect ? 'white-for-radius' : 'more-for-radius'" :class="{ 'active': rect }"></svg-icon>
         </div>
     </div>
     <div class="tr" v-if="rect">

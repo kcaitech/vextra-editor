@@ -72,20 +72,23 @@ onUnmounted(() => {
         <div class="down" @click="showMenu" :class="{ 'active-down': isMenu }">
             <svg-icon icon-class="down" />
         </div>
-        <div class="select_menu" v-if="isMenu" :style="{top: shadow.position === ShadowPosition.Outer ? -4 + 'px': -32 + 'px'}">
+        <div class="select_menu" v-if="isMenu"
+            :style="{ top: shadow.position === ShadowPosition.Outer ? -4 + 'px' : -32 + 'px' }">
             <div class="item" @click="togglePositinon(ShadowPosition.Outer)" @mouseenter="activeItem = ShadowPosition.Outer"
                 :class="{ 'active-item': activeItem === ShadowPosition.Outer }">
+                <div class="text">{{ t(`shadow.outer`) }}</div>
                 <div class="icon">
-                    <div class="choose" v-if="shadow.position === ShadowPosition.Outer"></div>
+                    <svg-icon v-if="shadow.position === ShadowPosition.Outer"
+                        :icon-class="activeItem === ShadowPosition.Outer ? 'white-select' : 'page-select'"></svg-icon>
                 </div>
-                <div class="text">{{t(`shadow.outer`)}}</div>
             </div>
             <div class="item" @click="togglePositinon(ShadowPosition.Inner)" @mouseenter="activeItem = ShadowPosition.Inner"
                 :class="{ 'active-item': activeItem === ShadowPosition.Inner }">
+                <div class="text">{{ t(`shadow.inner`) }}</div>
                 <div class="icon">
-                    <div class="choose" v-if="shadow.position === ShadowPosition.Inner"></div>
+                    <svg-icon v-if="shadow.position === ShadowPosition.Inner"
+                        :icon-class="activeItem === ShadowPosition.Inner ? 'white-select' : 'page-select'"></svg-icon>
                 </div>
-                <div class="text">{{t(`shadow.inner`)}}</div>
             </div>
         </div>
     </div>
@@ -144,10 +147,13 @@ onUnmounted(() => {
         padding: 4px 0;
 
         .item {
+            box-sizing: border-box;
             display: flex;
             align-items: center;
+            justify-content: space-between;
             width: 100%;
             height: 32px;
+            padding-left: 10px;
 
             .icon {
                 width: 30px;
@@ -155,20 +161,14 @@ onUnmounted(() => {
                 display: flex;
                 align-items: center;
                 justify-content: center;
-                margin: 0 3px;
+
+                >svg {
+                    width: 12px;
+                    height: 12px;
+                }
             }
         }
 
-        .choose {
-            box-sizing: border-box;
-            width: 10px;
-            height: 6px;
-            margin-left: 2px;
-            border-width: 0 0 1px 1px;
-            border-style: solid;
-            border-color: rgb(0, 0, 0, .75);
-            transform: rotate(-45deg) translateY(-30%);
-        }
     }
 }
 
@@ -188,5 +188,4 @@ onUnmounted(() => {
     .text {
         color: #fff;
     }
-}
-</style>
+}</style>
