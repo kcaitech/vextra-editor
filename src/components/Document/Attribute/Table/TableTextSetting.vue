@@ -307,9 +307,9 @@ onUnmounted(() => {
     <Popover :context="props.context" class="popover" ref="popover" :width="232" :auto_to_right_line="true"
       :title="t('attr.text_advanced_settings')">
       <template #trigger>
-        <div class="trigger">
+        <div class="trigger" @click="showMenu">
           <Tooltip :content="t('attr.text_advanced_settings')" :offset="15">
-            <svg-icon icon-class="gear" @click="showMenu"></svg-icon>
+            <svg-icon icon-class="gear"></svg-icon>
           </Tooltip>
         </div>
       </template>
