@@ -269,8 +269,8 @@ export class Selection extends WatchableObject implements ISave4Restore {
         return result;
     }
 
-    private m_count = 0;
-    private m_total = 0;
+    // private m_count = 0;
+    // private m_total = 0;
 
     /**
      * @description 基于SVGGeometryElement的图形检索，与getLayers相比，getShapesByXY返回的结果长度最多为1，而这里可以大于1
@@ -280,7 +280,7 @@ export class Selection extends WatchableObject implements ISave4Restore {
      * @returns 符合检索条件的图形
      */
     getShapesByXY(position: PageXY, isCtrl: boolean, scope?: ShapeView[]): ShapeView | undefined {
-        const s = Date.now();
+        // const s = Date.now();
         let shape: ShapeView | undefined;
         if (this.scout) {
             const page = this.m_selectPage!;
@@ -288,13 +288,13 @@ export class Selection extends WatchableObject implements ISave4Restore {
             // shape = finder(this.m_context, this.scout, childs, position, this.selectedShapes[0], isCtrl)
             shape = finder2(this.m_context, this.scout, childs, position, this.selectedShapes, isCtrl, this.m_context.tool.isLable)
         }
-        this.m_count++;
-        this.m_total += Date.now() - s;
-        if (this.m_count > 100) {
-            console.log('computing: ', this.m_total / 100);
-            this.m_count = 0;
-            this.m_total = 0;
-        }
+        // this.m_count++;
+        // this.m_total += Date.now() - s;
+        // if (this.m_count > 100) {
+        //     console.log('computing: ', this.m_total / 100);
+        //     this.m_count = 0;
+        //     this.m_total = 0;
+        // }
         return shape;
     }
 
