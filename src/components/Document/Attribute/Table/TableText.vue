@@ -755,7 +755,7 @@ onUnmounted(() => {
                 <div class="select-font jointly-text" style="padding-right: 0;" @click="onShowFont">
                     <span>{{ fontName }}</span>
                     <div class="down">
-                        <svg-icon icon-class="down"></svg-icon>
+                        <svg-icon icon-class="down" style="width: 12px;height: 12px"></svg-icon>
                     </div>
                 </div>
                 <SelectFont v-if="showFont" @set-font="setFont" :fontName="fontName" :context="props.context"></SelectFont>

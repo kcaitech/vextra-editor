@@ -68,8 +68,6 @@ function onChange(e: Event) {
     } else if (+value < 1 && props.ticon === 'H') {
         value = '1'
     }
-    console.log(value, 'value');
-    
     emit("onchange", value, shapes.value as ShapeView[]);
 }
 const saveInputValue = () => {

@@ -5,7 +5,7 @@ import { ref } from 'vue';
 import IconText from '@/components/common/IconText.vue';
 import { onMounted } from 'vue';
 import { onUnmounted } from 'vue';
-import { ArtboradView, PathShapeView, ShapeView, adapt2Shape } from '@kcdesign/data';
+import { ArtboradView, PathShapeView, ShapeType, ShapeView, adapt2Shape } from '@kcdesign/data';
 import { reactive } from 'vue';
 import { get_indexes2, is_rect } from '@/utils/attri_setting';
 
@@ -28,24 +28,20 @@ function get_value_from_input(val: any) {
 function change(val: any, shapes: ShapeView[], type: string) {
     val = get_value_from_input(val);
     if (rect.value) {
-        setting_for_extend(val, type);
+        setting_for_extend(val, type, shapes);
         return;
     }
-    console.log(type, 'vale');
-    
     const page = props.context.selection.selectedPage!;
     const editor = props.context.editor4Page(page);
 
     editor.shapesModifyFixedRadius(shapes.map(s => adapt2Shape(s)), val);
 }
-function setting_for_extend(val: number, type: string) {
+function setting_for_extend(val: number, type: string, shapes: ShapeView[]) {
     const indexes = get_indexes2(type as 'rt' | 'lt' | 'rb' | 'lb');
-
     const page = props.context.selection.selectedPage!;
-    const selected = props.context.selection.selectedShapes;
 
     const editor = props.context.editor4Page(page);
-    editor.shapesModifyPointRadius(selected.map(s => adapt2Shape(s)), indexes, val);
+    editor.shapesModifyPointRadius(shapes.map(s => adapt2Shape(s)), indexes, val);
 }
 function rectToggle() {
     rect.value = !rect.value;
@@ -73,11 +69,12 @@ function modify_can_be_rect() {
 
     for (let i = 0, l = selected.length; i < l; i++) {
         const s = selected[i];
+        console.log(s instanceof PathShapeView);
+        
         if (!is_rect(s)) {
             return
         }
     }
-
     if (need_reset) {
         rect.value = true;
     }

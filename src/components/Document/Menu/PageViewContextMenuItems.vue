@@ -15,7 +15,8 @@ import {
     Text,
     ShapeView,
     TextShapeView,
-    adapt2Shape
+    adapt2Shape,
+GroupShapeView
 } from "@kcdesign/data";
 import Layers from './Layers.vue';
 import { Context } from '@/context';
@@ -352,8 +353,8 @@ function dissolution_container() {
  * 解除编组
  */
 function unGroup() {
-    const groups = props.context.selection.selectedShapes.filter(s => s.type === ShapeType.Group);
-    const saveSelectShape = props.context.selection.selectedShapes.filter(s => s.type !== ShapeType.Group);
+    const groups = props.context.selection.selectedShapes.filter(s => s.type === ShapeType.Group && !(s as GroupShapeView).data.isBoolOpShape);
+    const saveSelectShape = props.context.selection.selectedShapes.filter(s => s.type !== ShapeType.Group || (s as GroupShapeView).data.isBoolOpShape);
     if (groups.length === 0) return;
     const page = props.context.selection.selectedPage;
     if (page) {
@@ -364,6 +365,8 @@ function unGroup() {
             props.context.nextTick(page, () => {
                 const select = selectShapes.reduce((pre, cur) => {
                     const s = cur instanceof ShapeView ? cur : page.getShape(cur.id);
+                    console.log(page.getShape(cur.id), 'shape');
+                    
                     if (s) {
                         pre.push(s);
                     }
