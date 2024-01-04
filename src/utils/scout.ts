@@ -138,8 +138,13 @@ export function isTarget(scout: Scout, shape: ShapeView, p: PageXY): boolean {
 function isTarget2(scout: Scout, shape: ShapeView, p: PageXY): boolean {
     return scout.isPointInShape2(shape, p);
 }
-
-// 扁平化一个图层树 tree -> list
+/**
+ * @deprecated
+ * @description 扁平化一个图层树 tree -> list
+ * @param groupshape 
+ * @param flat 
+ * @returns 
+ */
 export function delayering(groupshape: ShapeView, flat?: ShapeView[]): ShapeView[] {
     let f: ShapeView[] = flat || [];
 
@@ -160,6 +165,36 @@ export function delayering(groupshape: ShapeView, flat?: ShapeView[]): ShapeView
     return f;
 }
 
+/**
+ * @description 扁平化一个图层树 tree -> list
+ * @param groupshape 
+ * @param flat 
+ * @returns 
+ */
+export function delayering2(groupshape: ShapeView, flat?: ShapeView[]): ShapeView[] {
+    let f: ShapeView[] = flat || [];
+
+    const children: ShapeView[] = groupshape.type === ShapeType.SymbolRef
+        ? (groupshape.naviChilds || [])
+        : (groupshape.childs || []);
+
+    for (let i = 0, len = children.length; i < len; i++) {
+        const item = children[i];
+
+        if (is_layers_tree_unit(item)) {
+            f = delayering2(item, f);
+
+            if (!is_hollow(item)) {
+                f.push(item);
+            }
+        } else {
+            f.push(item);
+        }
+    }
+
+    return f;
+}
+
 export function is_layers_tree_unit(shape: ShapeView) {
     return ShapeType.Group === shape.type
         || ShapeType.Artboard === shape.type
@@ -172,7 +207,7 @@ export function is_layers_tree_unit(shape: ShapeView) {
  * @description 点击穿透，穿透父级选区对子元素选区的覆盖
  */
 export function selection_penetrate(scout: Scout, g: ShapeView, position: PageXY): ShapeView | undefined {
-    const flat = delayering(g);
+    const flat = delayering2(g);
 
     if (!flat.length) {
         return;
@@ -540,6 +575,9 @@ export function finder2(context: Context, scout: Scout, scope: ShapeView[], hot:
     return for_standard(context, scout, scope, hot, m);
 }
 
+/**
+ * @description 穿透模式，优先级最高
+ */
 function for_pen(context: Context, scout: Scout, scope: ShapeView[], hot: PageXY): ShapeView | undefined {
     let result: ShapeView | undefined = undefined;
     for (let i = scope.length - 1; i > -1; i--) {
@@ -579,6 +617,9 @@ function for_pen(context: Context, scout: Scout, scope: ShapeView[], hot: PageXY
     }
 }
 
+/**
+ * @description 侦测已经选图形的所处环境，优先级高于标准模式
+ */
 function for_env(context: Context, scout: Scout, hot: PageXY) {
     const env = context.selection.envShapes;
 
@@ -596,6 +637,9 @@ function for_env(context: Context, scout: Scout, hot: PageXY) {
     }
 }
 
+/**
+ * @description 标准模式，内嵌标注模式
+ */
 function for_standard(context: Context, scout: Scout, scope: ShapeView[], hot: PageXY, m: boolean): ShapeView | undefined {
     let result: ShapeView | undefined = undefined;
 
@@ -616,17 +660,16 @@ function for_standard(context: Context, scout: Scout, scope: ShapeView[], hot: P
 
         if (is_fixed(item)) {
             result = for_fixed(context, scout, item, hot);
-            if (result) {
-                return result
-            }
 
             if (item.type === ShapeType.SymbolUnion) {
                 return item;
             }
 
-            if (item.type === ShapeType.Artboard && (m || !item.childs.length)) {
+            if (item.type === ShapeType.Artboard && !item.childs.length) {
                 return item;
             }
+
+            break;
         }
         else if (is_hollow(item)) {
             result = for_hollow(context, scout, item, hot);
@@ -661,9 +704,8 @@ function for_fixed(context: Context, scout: Scout, fixed: ShapeView, hot: PageXY
         }
 
         if (is_hollow(item)) {
-            const res = for_hollow(context, scout, item, hot)
-            if (res) {
-                return res;
+            if (for_hollow(context, scout, item, hot)) {
+                return item;
             }
         }
         else if (isTarget(scout, item, hot)) {
@@ -677,9 +719,12 @@ function for_fixed(context: Context, scout: Scout, fixed: ShapeView, hot: PageXY
  * @description 虚体侦测，不存在frame实体，区域由子对象撑开，包括页面下的GroupShape；
  */
 function for_hollow(context: Context, scout: Scout, hollow: ShapeView, hot: PageXY): ShapeView | undefined {
-    const flat = delayering(hollow);
-    for (let i = flat.length - 1; i > -1; i--) {
-        const item = flat[i];
+    const children = hollow.type === ShapeType.SymbolRef
+        ? (hollow.naviChilds || [])
+        : (hollow.childs || []);
+
+    for (let i = children.length - 1; i > -1; i--) {
+        const item = children[i];
 
         if (!canBeTarget(item)) {
             continue;
@@ -689,7 +734,15 @@ function for_hollow(context: Context, scout: Scout, hollow: ShapeView, hot: Page
             continue;
         }
 
-        if (isTarget(scout, item, hot)) {
+        if (!isTarget(scout, item, hot)) {
+            continue;
+        }
+
+        if (is_hollow(item)) {
+            if (for_hollow(context, scout, item, hot)) {
+                return hollow;
+            }
+        } else {
             return hollow;
         }
     }
@@ -719,19 +772,15 @@ function _set_env(context: Context, shapes: ShapeView[], m: boolean) {
 
         parents.add(parent);
 
-        sort_bros(parent, bros, parents, m);
+        sort_env(parent, bros, parents, m);
     }
 
     context.selection.setEnvShapes(Array.from(bros));
 
-    function sort_bros(g: ShapeView, bros: Set<ShapeView>, parents: Set<ShapeView>, m: boolean) {
+    function sort_env(g: ShapeView, bros: Set<ShapeView>, parents: Set<ShapeView>, m: boolean) {
         let p: ShapeView | undefined = g;
 
-        while (p) {
-            if (p.type === ShapeType.Page) {
-                break;
-            }
-
+        while (p && p.type !== ShapeType.Page) {
             if (is_fixed(p)) {
                 if (m) {
                     bros.add(p);
@@ -758,7 +807,7 @@ function _set_env(context: Context, shapes: ShapeView[], m: boolean) {
                 || p.type === ShapeType.SymbolRef
                 || p.type === ShapeType.SymbolUnion
             ) {
-                bros.add(p);
+                bros.add(p); // 添加实体
             }
 
             parents.add(p)
