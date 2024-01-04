@@ -34,6 +34,7 @@ import { Component } from '@/context/component';
 import { initpal } from './initpal';
 import { setup as keyboardUints } from '@/utils/keyboardUnits';
 import { Tool } from '@/context/tool';
+import { ElMessage } from 'element-plus';
 
 const { t } = useI18n();
 const curPage = shallowRef<PageView | undefined>(undefined);
@@ -229,8 +230,8 @@ watchEffect(() => {
 })
 
 const tool_watcher = (t: number) => {
-  if(!context) return;
-  if(t === Tool.LABLE_CHANGE) {
+  if (!context) return;
+  if (t === Tool.LABLE_CHANGE) {
     isLable.value = context.tool.isLable;
   }
 }
@@ -327,8 +328,28 @@ const getDocumentInfo = async () => {
     const docKeyPromise = share_api.getDocumentKeyAPI({ doc_id: route.query.id });
     const [docInfoRes, docKeyRes] = await Promise.all([docInfoPromise, docKeyPromise]);
     if (docInfoRes.code !== 0 || docKeyRes.code !== 0) { // 打开文档失败
-      router.push("/apphome");
-      return;
+      if (docKeyRes.code === 403) {
+        if (docKeyRes.message === "审核不通过") {
+          router.push("/files");
+          ElMessage.error({ duration: 3000, message: t('system.sensitive_reminder3') })
+          return;
+        }
+        if (docKeyRes.message === "无访问权限") {
+          router.push({
+            name: "apply",
+            query: { id: route.query.id },
+          });
+          return;
+        }
+        router.push("/files");
+        ElMessage.error({ duration: 3000, message: docKeyRes.message })
+        return;
+      } else {
+        console.log('1111');
+        router.push("/files");
+        ElMessage.error({ duration: 3000, message: docKeyRes.message })
+        return;
+      }
     }
     const docInfoData = docInfoRes.data;
     const docKeyData = docKeyRes.data;
@@ -343,7 +364,6 @@ const getDocumentInfo = async () => {
 
     docInfo.value = docInfoData;
     permType.value = perm;
-
     const repo = new Repository();
     const storageOptions: StorageOptions = {
       endPoint: docKeyData.endpoint,
@@ -379,7 +399,7 @@ const getDocumentInfo = async () => {
         switchPage(context!.data.pagesList[0]?.id);
         loading.value = false;
       } else {
-        router.push("/apphome");
+        router.push("/files");
         return;
       }
       if (perm === 3) await context.communication.docResourceUpload.start(getToken, docId);
@@ -471,7 +491,7 @@ function init_doc() {
     localStorage.setItem('project_id', '');
     switchPage(((window as any).sketchDocument as Document).pagesList[0]?.id);
   } else {
-    router.push('/apphome');
+    router.push('/files');
   }
 }
 
@@ -528,10 +548,10 @@ const networkMessage = (status: NetworkStatusType) => {
   }
 }
 const networkDebounce = (() => {
-    const df = debounce(networkMessage, 1000)
-    return (status: NetworkStatusType) => {
-        df(status).catch((e) => {console.log(e)});
-    }
+  const df = debounce(networkMessage, 1000)
+  return (status: NetworkStatusType) => {
+    df(status).catch((e) => { console.log(e) });
+  }
 })();
 
 //文档获取失败 重试刷新页面

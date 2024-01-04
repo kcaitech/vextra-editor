@@ -82,6 +82,8 @@ function modify_can_be_rect() {
     }
 
     can_be_rect.value = true;
+
+    
 }
 
 function reset_radius_value() {

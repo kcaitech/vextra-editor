@@ -63,7 +63,9 @@ export const system = {
     'phonetips': 'Mobile terminal does not support login, please login on the computer side!',
     'btn_login': 'Login',
     'artboart_title_visible': 'Show artboard title',
-    sensitive_reminder:'Contains sensitive information, please re-enter.'
+    sensitive_reminder:'Contains sensitive information, please re-enter.',
+    sensitive_reminder2: 'Contains sensitive information and cannot be shared.',
+    sensitive_reminder3: 'Contains sensitive information and cannot be accessed.'
 }
 
 export const home = {

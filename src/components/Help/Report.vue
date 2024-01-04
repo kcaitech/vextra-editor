@@ -45,7 +45,9 @@
                 <label for="filetips">{{ t('report.filet_ips') }}</label>
             </div>
             <div class="bottom">
-                <button class="confirm" type="submit" :disabled="!isFormValid">{{ t('report.submit') }}</button>
+                <button class="confirm" type="submit" :disabled="!isFormValid || upload">
+                    {{ t('report.submit') }}
+                </button>
                 <button class="cancel" type="button" @click.stop="emits('close')">{{ t('report.cancel') }}</button>
             </div>
         </form>
@@ -70,7 +72,7 @@ const selectedOption = ref("")
 const textInput = ref("")
 const myfiles = ref<any[]>([])
 const filepath = ref(route.name === 'document' ? true : false)
-
+const upload = ref<boolean>(false)
 const isFormValid = computed(() => {
     return selectedOption.value !== "" && textInput.value !== ""
 })
@@ -81,13 +83,14 @@ const deleteimg = (index: number) => {
 
 const submitreport = async () => {
     if (!isFormValid.value) return
+    upload.value = true
     const mydata = new FormData()
     mydata.append('type', selectedOption.value)
     mydata.append('content', textInput.value)
     for (let i = 0; i < myfiles.value.length; i++) {
         mydata.append('files', myfiles.value[i])
     }
-    mydata.append('page_url', location.href)
+    mydata.append('page_url', filepath.value ? location.href : " ")
     try {
         const { code } = await user_api.Feedback(mydata)
         if (code === 0) {
@@ -104,22 +107,26 @@ const handleImageUpload = (e: any) => {
     const types = e.target.accept
     const failfile = []
     const alreadyexists = []
+    const failsize = []
     const laveimg = myfiles.value.length
     if (files) {
         for (let i = 0; i < Math.min(files.length, 5 - laveimg); i++) {
             const imgtype = files[i].name.substring(files[i].name.lastIndexOf('.')).toLowerCase()
             const isFilePresent = myfiles.value.some(file => file.name === files[i].name);
-            if (myfiles.value.length < 5 && types.includes(imgtype) && !isFilePresent) {
+            const checkSize = files[i].size < 2 << 20
+            if (myfiles.value.length < 5 && types.includes(imgtype) && !isFilePresent && checkSize) {
                 myfiles.value.push(files[i])
             } else if (!types.includes(imgtype)) {
                 failfile.push(files[i].name)
+            } else if (!checkSize) {
+                failsize.push(files[i].name)
             } else {
                 alreadyexists.push(files[i].name)
             }
         }
     }
-    if (failfile.length > 0 || alreadyexists.length > 0) {
-        ElMessage.error({ duration: 3000, message: "图片格式不符或图片已存在" })
+    if (failfile.length > 0 || alreadyexists.length > 0 || failsize.length > 0) {
+        ElMessage.error({ duration: 3000, message: "图片格式或大小不符，或图片已存在" })
     }
     e.target.value = ''
 }
@@ -269,6 +276,7 @@ onMounted(() => {
         height: 188px;
 
         textarea {
+            font-family: none;
             width: 446px;
             height: 172px;
             padding: 9px 12px;
@@ -279,7 +287,7 @@ onMounted(() => {
             resize: none;
             box-sizing: border-box;
 
-            &::placeholder{
+            &::placeholder {
                 color: #bfbfbf;
             }
         }
