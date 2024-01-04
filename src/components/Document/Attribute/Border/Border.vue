@@ -40,8 +40,8 @@ const { t } = useI18n();
 const props = defineProps<Props>();
 const data: { borders: BorderItem[] } = reactive({ borders: [] });
 const { borders } = data;
-const alphaBorder = ref<any>();
-const colorBorder = ref<any>()
+const alphaBorder = ref<HTMLInputElement[]>();
+const colorBorder = ref<HTMLInputElement[]>()
 const mixed = ref<boolean>(false);
 const mixed_cell = ref(false);
 const editor = computed(() => props.context.editor4Shape(adapt2Shape(props.shapes[0])));
@@ -193,7 +193,7 @@ function addBorder() {
     } else if (len.value > 1) {
         if (mixed.value) {
             const actions = get_actions_border_unify(props.shapes);
-            const page = props.context.selection.selectedPage;
+            const page = props.context.selection.selectedPage;            
             if (page) {
                 const editor = props.context.editor4Page(page);
                 editor.shapesBordersUnify(actions);
@@ -321,7 +321,7 @@ function toggleVisible(idx: number) {
             editor.value.setBorderEnable(_idx, isEnabled);
         }
     } else if (len.value > 1) {
-        const actions = get_actions_border_enabled(props.shapes, idx, isEnabled);
+        const actions = get_actions_border_enabled(props.shapes, _idx, isEnabled);
         const page = props.context.selection.selectedPage;
         if (page) {
             const editor = props.context.editor4Page(page);
@@ -330,7 +330,7 @@ function toggleVisible(idx: number) {
     } else if (len.value === 1 && shape.type === ShapeType.Group && !(shape as GroupShapeView).data.isBoolOpShape) {
         const childs = (shape).childs;
         const shapes = flattenShapes(childs).filter(s => s.type !== ShapeType.Group);
-        const actions = get_actions_border_enabled(shapes, idx, isEnabled);
+        const actions = get_actions_border_enabled(shapes, _idx, isEnabled);
         const page = props.context.selection.selectedPage;
         if (page) {
             const editor = props.context.editor4Page(page);
@@ -358,22 +358,22 @@ function onColorChange(e: Event, idx: number) {
     if (value.length === 2) value = `#${value.slice(1).split('').map(i => `${i}${i}${i}${i}${i}${i}`).join('')}`;
     const hex = value.match(Reg_HEX);
     const shape = shapes.value[0] as ShapeView;
-    const border = shape.style.borders[idx];
+    const border = borders[idx].border;
     if (!hex) {
         message('danger', t('system.illegal_input'));
-        return colorBorder.value.value = (toHex(border.color)).slice(1)
+        if(!colorBorder.value) return;
+        return colorBorder.value[idx].value = (toHex(border.color)).slice(1)
     }
     const r = Number.parseInt(hex[1], 16);
     const g = Number.parseInt(hex[2], 16);
     const b = Number.parseInt(hex[3], 16);
     const alpha = border.color.alpha;
     const color = new Color(alpha, r, g, b);
-    const _idx = shape.style.borders.length - idx - 1;
+    const _idx = borders.length - idx - 1;
     const editor = props.context.editor4Shape(adapt2Shape(shape))
     if (shapes.value.length === 1 && (shape.type !== ShapeType.Group || (shape as GroupShapeView).data.isBoolOpShape)) {
         if (shape.type === ShapeType.Table) {
             const e = props.context.editor4Table(shape as TableView);
-            const table = props.context.tableSelection;
             const is_edting = tableSelect.value.editingCell;
             if (tableSelect.value.tableRowStart > -1 || tableSelect.value.tableColStart > -1 || is_edting) {
                 let range
@@ -397,8 +397,7 @@ function onColorChange(e: Event, idx: number) {
                     tableSelect.value.tableColStart,
                     tableSelect.value.tableColEnd);
                 if (tablecells.length > 0 && tablecells[0].cell) {
-                    const _b = tablecells[0].cell.style.borders[idx]
-                    e.setBorderColor(_idx, new Color(_b.color.alpha, r, g, b), range)
+                    e.setBorderColor(_idx, color, range)
                 }
             } else {
                 editor.setBorderColor(_idx, color);
@@ -435,14 +434,14 @@ function onAlphaChange(e: Event, idx: number) {
             alpha = Number(alpha?.slice(0, -1))
             if (isNaN(alpha) || alpha < 0) {
                 message('danger', t('system.illegal_input'));
-                return alphaBorder.value.value = (borders[idx].border.color.alpha * 100) + '%';
+                return alphaBorder.value[idx].value = (borders[idx].border.color.alpha * 100) + '%';
             }
             if (alpha > 100) {
                 alpha = 100;
             }
             alpha = alpha.toFixed(2) / 100
             const shape = shapes.value[0] as ShapeView;
-            const border = shape.style.borders[idx];
+            const border = borders[idx].border;
             const { red, green, blue } = border.color
             const color = new Color(alpha, red, green, blue);
             const _idx = borders.length - idx - 1;
@@ -450,7 +449,6 @@ function onAlphaChange(e: Event, idx: number) {
             if (shapes.value.length === 1 && (shape.type !== ShapeType.Group || (shape as GroupShapeView).data.isBoolOpShape)) {
                 if (shape.type === ShapeType.Table) {
                     const e = props.context.editor4Table(shape as TableView);
-                    const table = props.context.tableSelection;
                     const is_edting = tableSelect.value.editingCell;
                     if (tableSelect.value.tableRowStart > -1 || tableSelect.value.tableColStart > -1 || is_edting) {
                         let range
@@ -474,9 +472,7 @@ function onAlphaChange(e: Event, idx: number) {
                             tableSelect.value.tableColStart,
                             tableSelect.value.tableColEnd);
                         if (tablecells.length > 0 && tablecells[0].cell) {
-                            const b = tablecells[0].cell.style.borders[idx]
-                            const { red, green, blue } = b.color
-                            e.setBorderColor(_idx, new Color(alpha, red, green, blue), range)
+                            e.setBorderColor(_idx, color, range)
                         }
                     } else {
                         editor.setBorderColor(_idx, color);
@@ -508,14 +504,13 @@ function onAlphaChange(e: Event, idx: number) {
                 }
                 alpha = Number((Number(alpha)).toFixed(2)) / 100
                 const shape = shapes.value[0] as ShapeView;
-                const border = shape.style.borders[idx];
+                const border = borders[idx].border;
                 const { red, green, blue } = border.color
                 const color = new Color(alpha, red, green, blue);
-                const _idx = shape.style.borders.length - idx - 1;
+                const _idx = borders.length - idx - 1;
                 const editor = props.context.editor4Shape(adapt2Shape(shape))
                 if (shapes.value.length === 1 && (shape.type !== ShapeType.Group || (shape as GroupShapeView).data.isBoolOpShape)) {
                     if (shape.type === ShapeType.Table) {
-                        const table = props.context.tableSelection;
                         const e = props.context.editor4Table(shape as TableView);
                         const is_edting = tableSelect.value.editingCell;
                         if (tableSelect.value.tableRowStart > -1 || tableSelect.value.tableColStart > -1 || is_edting) {
@@ -540,9 +535,7 @@ function onAlphaChange(e: Event, idx: number) {
                                 tableSelect.value.tableColStart,
                                 tableSelect.value.tableColEnd);
                             if (tablecells.length > 0 && tablecells[0].cell) {
-                                const b = tablecells[0].cell.style.borders[idx]
-                                const { red, green, blue } = b.color
-                                e.setBorderColor(_idx, new Color(alpha, red, green, blue), range)
+                                e.setBorderColor(_idx, color, range)
                             }
                         } else {
                             editor.setBorderColor(_idx, color);
@@ -569,7 +562,7 @@ function onAlphaChange(e: Event, idx: number) {
                 }
             } else {
                 message('danger', t('system.illegal_input'));
-                return alphaBorder.value.value = (shape.style.borders[idx].color.alpha * 100) + '%'
+                return alphaBorder.value[idx].value = (borders[idx].border.color.alpha * 100) + '%'
             }
         }
     }
