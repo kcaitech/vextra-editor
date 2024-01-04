@@ -93,8 +93,8 @@ onUpdated(() => {
     :content="selects === 'drag' ? `${t('home.object_selector')} &nbsp;&nbsp; V` : `${t('home.scale')} &nbsp;&nbsp; K`"
     placement="bottom" :show-after="600" :offset="10" :hide-after="0" :visible="popoverVisible ? false : visible">
     <ToolButton ref="button" @click="() => { select(selects) }" :selected="props.active" @mouseenter.stop="onMouseenter"
-      @mouseleave.stop="onMouseleave">
-      <div class="svg-container">
+      @mouseleave.stop="onMouseleave" :style="{ width: !(edit && !is_lable) ? '32px' : '56px' }">
+      <div class="svg-container" :style="{ marginLeft: !(edit && !is_lable) ? '0px' : '3px' }">
         <svg-icon :icon-class="props.d === selected ? props.d : selects"></svg-icon>
       </div>
       <div class="menu" @click="showMenu" v-if="edit && !is_lable">

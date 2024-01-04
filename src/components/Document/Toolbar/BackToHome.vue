@@ -211,7 +211,7 @@ onUnmounted(() => {
       </div>
     </div>
     <div class="model">
-      <span v-if="isLable" style="color: #fff; font-size: 12px">【开发模式】</span>
+      <span v-if="isLable" style="color: #BFBFBF; font-size: 12px">【开发模式】</span>
     </div>
   </div>
   <Teleport to="body">

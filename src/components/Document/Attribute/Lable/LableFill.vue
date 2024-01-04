@@ -9,6 +9,7 @@ import { Color, Fill } from '@kcdesign/data';
 import { RGB2HSL, RGB2HSB } from '@/components/common/ColorPicker/utils';
 import LableTootip from './LableTootip.vue';
 import { useI18n } from 'vue-i18n'
+import SvgIcon from "@/components/common/SvgIcon.vue";
 
 const { t } = useI18n();
 const props = defineProps<{
@@ -175,10 +176,11 @@ onUnmounted(() => {
             <template #select>
                 <div class="fillunit-input" @click.stop="onSelected">
                     <span>{{ fillMenuItems[fill_i] }}</span>
-                    <el-icon>
-                        <ArrowDown
-                            :style="{ transform: selectoption ? 'rotate(180deg)' : 'rotate(0deg)', transition: '0.3s' }" />
-                    </el-icon>
+<!--                    <el-icon>-->
+<!--                        <ArrowDown-->
+<!--                            :style="{ transform: selectoption ? 'rotate(180deg)' : 'rotate(0deg)', transition: '0.3s' }" />-->
+<!--                    </el-icon>-->
+                    <svg-icon icon-class="down"></svg-icon>
                     <LableDropMenu v-if="selsectedShow" :context="context" :Items="fillMenuItems" :choose="fill_i"
                         @close="close" @listMenuStatus="listMenuStatus"></LableDropMenu>
                 </div>
@@ -186,7 +188,7 @@ onUnmounted(() => {
             <template #body>
                 <div class="row" v-for="(f) in fills" :key="f.id">
                     <span class="named">{{ t('lable.pure_color') }}</span>
-                    <div style="display: flex;">
+                    <div style="display: flex;font-weight: 500">
                         <div class="color"
                             :style="{ backgroundColor: toRGB(f.fill.color.red, f.fill.color.green, f.fill.color.blue) }">
                         </div>
@@ -197,7 +199,7 @@ onUnmounted(() => {
                         </LableTootip>
                         <LableTootip :copy_text="copy_text" :visible="_visible === f.id + 'alpha'"
                             v-if="fillMenuItems[fill_i] === 'HEX'">
-                            <span style="margin-left: 15px; cursor: pointer;" @click="(e) => copyLable(e, f.id + 'alpha')"
+                            <span style="margin-left: 16px; cursor: pointer;" @click="(e) => copyLable(e, f.id + 'alpha')"
                                 @mouseleave.stop="_visible = undefined, copy_text = false">{{
                                     filterAlpha(f.fill.color.alpha * 100) + '%' }}</span>
                         </LableTootip>
@@ -211,7 +213,7 @@ onUnmounted(() => {
 <style lang="scss" scoped>
 .fillunit-input {
     position: relative;
-    height: 30px;
+    height: 16px;
     border-radius: 4px;
     padding-left: 11px;
     box-sizing: border-box;
@@ -220,34 +222,36 @@ onUnmounted(() => {
 
     span {
         flex: 1;
+        color: #8C8C8C;
+        margin-right: 4px;
     }
 
-    .el-icon {
-        width: 30px;
-        height: 30px;
-        display: flex;
-        align-items: center;
-        justify-content: center;
+    >svg {
+        width: 12px;
+        height: 12px;
+        color: #BFBFBF;
+        margin-right: 4px;
     }
 }
 
 .named {
     display: block;
     width: 58px;
-    color: #a5a5a5;
+    color: #8C8C8C;
 }
 
 .row {
     display: flex;
-    margin: 10px 0;
-    color: #000;
+    padding: 9px 0;
+    color: #000000;
 
     .color {
-        margin-right: 5px;
-        width: 14px;
-        height: 14px;
-        border-radius: 2px;
-        border: 1px solid var(--grey-dark);
+        margin-right: 8px;
+        width: 16px;
+        height: 16px;
+        border-radius: 3px;
+        border: 1px solid rgba(0, 0, 0, 0.1);
+        box-sizing: border-box;
     }
 }
 

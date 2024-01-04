@@ -14,24 +14,27 @@ const props = defineProps<{
             <slot name="body"></slot>
         </div>
     </div>
+    <div class="line" style="width: 216px;height: 1px;background-color: #F5F5F5;margin-left: 12px;"></div>
 </template>
 
 <style scoped lang="scss">
 .container-type {
     width: 100%;
-    padding: 8px;
+    padding: 16px 12px;
     padding-right: 10px;
     box-sizing: border-box;
     .title {
         display: flex;
         justify-content: space-between;
         align-items: center;
+        margin-bottom: 16px;
+
         >span {
             font-weight: bold;
         }
     }
 }
 .border_t {
-    border-bottom: 1px solid rgba($color: #ccc, $alpha: 0.5);
+    //border-bottom: 1px solid rgba($color: #ccc, $alpha: 0.5);
 }
 </style>

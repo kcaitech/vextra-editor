@@ -159,9 +159,9 @@ function applyForEdit() {
         </div>
         <Cursor @select="select" :d="selected" :active="selected === Action.AutoV || selected === Action.AutoK"
             :is_lable="isLable" :edit="isEdit"></Cursor>
-        <div style="width: 16px;height: 52px;display: flex;align-items: center;justify-content: center;">
-            <div class="vertical-line" v-if="!isread" />
-        </div>
+<!--        <div style="width: 16px;height: 52px;display: flex;align-items: center;justify-content: center;">-->
+<!--            <div class="vertical-line" v-if="!isread" />-->
+<!--        </div>-->
         <Comment @select="select" :active="selected === Action.AddComment" :workspace="workspace" v-if="!isread"></Comment>
     </div>
     <PathEditTool v-if="isEdit && is_path_edit" class="editor-tools" :context="props.context" @select="select"

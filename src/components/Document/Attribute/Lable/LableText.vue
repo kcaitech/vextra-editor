@@ -11,6 +11,7 @@ import { isEqual, uniqWith } from 'lodash';
 import LableTootip from './LableTootip.vue';
 
 import { useI18n } from 'vue-i18n'
+import SvgIcon from "@/components/common/SvgIcon.vue";
 
 const { t } = useI18n();
 const props = defineProps<{
@@ -185,10 +186,11 @@ onUnmounted(() => {
             <template #select>
                 <div class="fillunit-input" @click.stop="onSelected">
                     <span>{{ textMenuItems[text_i] }}</span>
-                    <el-icon>
-                        <ArrowDown
-                            :style="{ transform: selectoption ? 'rotate(180deg)' : 'rotate(0deg)', transition: '0.3s' }" />
-                    </el-icon>
+<!--                    <el-icon>-->
+<!--                        <ArrowDown-->
+<!--                            :style="{ transform: selectoption ? 'rotate(180deg)' : 'rotate(0deg)', transition: '0.3s' }" />-->
+<!--                    </el-icon>-->
+                    <svg-icon icon-class="down"></svg-icon>
                     <LableDropMenu v-if="selsectedShow" :context="props.context" :Items="textMenuItems" :choose="text_i"
                         @close="close" @listMenuStatus="listMenuStatus"></LableDropMenu>
                 </div>
@@ -198,18 +200,18 @@ onUnmounted(() => {
                     <div class="named">{{ t('lable.content') }}</div>
                     <LableTootip :copy_text="copy_text" :visible="_visible === 'content'">
                         <div class="name" style="flex: 1;">
-                            <span style="width: 100%; cursor: pointer;" @click="(e) => copyLable(e, 'content')"
+                            <span style="width: 100%; cursor: pointer;font-weight: 500" @click="(e) => copyLable(e, 'content')"
                                 @mouseleave.stop="_visible = undefined, copy_text = false">{{ text }}</span>
                         </div>
                     </LableTootip>
                 </div>
-                <div class="line"></div>
+<!--                <div class="line"></div>-->
                 <template v-for="(item, index) in textFormat" :key="index">
                     <div class="row">
                         <span class="named">{{ t('lable.font') }}</span>
                         <div class="name" style="flex: 1;">
                             <LableTootip :copy_text="copy_text" :visible="_visible === 'font' + index">
-                                <span @click="(e) => copyLable(e, 'font' + index)" style="cursor: pointer;"
+                                <span @click="(e) => copyLable(e, 'font' + index)" style="cursor: pointer;font-weight: 500"
                                     @mouseleave.stop="_visible = undefined, copy_text = false">{{ item.fontName }}</span>
                             </LableTootip>
                         </div>
@@ -218,7 +220,7 @@ onUnmounted(() => {
                         <span class="named">{{ t('lable.type_size') }}</span>
                         <div style="flex: 1;">
                             <LableTootip :copy_text="copy_text" :visible="_visible === 'size' + index">
-                                <span @click="(e) => copyLable(e, 'size' + index)" style="cursor: pointer;"
+                                <span @click="(e) => copyLable(e, 'size' + index)" style="cursor: pointer;font-weight: 500"
                                     @mouseleave.stop="_visible = undefined, copy_text = false">{{ item.fontSize }}</span>
                             </LableTootip>
                         </div>
@@ -227,7 +229,7 @@ onUnmounted(() => {
                         <span class="named">{{ t('lable.word_weight') }}</span>
                         <div style="flex: 1;">
                             <LableTootip :copy_text="copy_text" :visible="_visible === 'weight' + index">
-                                <span @click="(e) => copyLable(e, 'weight' + index)" style="cursor: pointer;"
+                                <span @click="(e) => copyLable(e, 'weight' + index)" style="cursor: pointer;font-weight: 500"
                                     @mouseleave.stop="_visible = undefined, copy_text = false">{{ item.bold ? 700 : 400
                                     }}</span>
                             </LableTootip>
@@ -247,7 +249,7 @@ onUnmounted(() => {
                         <span class="named">{{ t('lable.line_height') }}</span>
                         <div style="flex: 1;">
                             <LableTootip :copy_text="copy_text" :visible="_visible === 'line' + index">
-                                <span @click="(e) => copyLable(e, 'line' + index)" style="cursor: pointer;"
+                                <span @click="(e) => copyLable(e, 'line' + index)" style="cursor: pointer;font-weight: 500"
                                     @mouseleave.stop="_visible = undefined, copy_text = false">{{ item.line_height ?
                                         item.line_height : 0 }}</span>
                             </LableTootip>
@@ -257,7 +259,7 @@ onUnmounted(() => {
                         <span class="named">{{ t('lable.para_spacing') }}</span>
                         <div style="flex: 1;">
                             <LableTootip :copy_text="copy_text" :visible="_visible === 'para' + index">
-                                <span @click="(e) => copyLable(e, 'para' + index)" style="cursor: pointer;"
+                                <span @click="(e) => copyLable(e, 'para' + index)" style="cursor: pointer;font-weight: 500"
                                     @mouseleave.stop="_visible = undefined, copy_text = false">{{ item.paraSpacing ?
                                         item.paraSpacing : 0 }}</span>
                             </LableTootip>
@@ -270,13 +272,13 @@ onUnmounted(() => {
                                 :style="{ backgroundColor: toRGB(item.color.red, item.color.green, item.color.blue) }">
                             </div>
                             <LableTootip :copy_text="copy_text" :visible="_visible === 'color' + index">
-                                <span class="name" @click="(e) => copyLable(e, 'color' + index)" style="cursor: pointer;"
+                                <span class="name" @click="(e) => copyLable(e, 'color' + index)" style="cursor: pointer;font-weight: 500"
                                     @mouseleave.stop="_visible = undefined, copy_text = false">{{ toColor(item.color,
                                         textMenuItems[text_i]) }}</span>
                             </LableTootip>
                             <LableTootip v-if="textMenuItems[text_i] === 'HEX'" :copy_text="copy_text"
                                 :visible="_visible === 'alpha' + index">
-                                <span style="margin-left: 15px; cursor: pointer;"
+                                <span style="margin-left: 15px; cursor: pointer;font-weight: 500"
                                     @click="(e) => copyLable(e, 'alpha' + index)" v-if="textMenuItems[text_i] === 'HEX'"
                                     @mouseleave.stop="_visible = undefined, copy_text = false">{{
                                         filterAlpha(item.color.alpha * 100) + '%' }}</span>
@@ -293,7 +295,7 @@ onUnmounted(() => {
 <style scoped lang="scss">
 .fillunit-input {
     position: relative;
-    height: 30px;
+    height: 16px;
     border-radius: 4px;
     padding-left: 11px;
     box-sizing: border-box;
@@ -302,34 +304,36 @@ onUnmounted(() => {
 
     span {
         flex: 1;
+        color: #8C8C8C;
+        margin-right: 4px;
     }
 
-    .el-icon {
-        width: 30px;
-        height: 30px;
-        display: flex;
-        align-items: center;
-        justify-content: center;
+    >svg {
+        width: 12px;
+        height: 12px;
+        color: #BFBFBF;
+        margin-right: 4px;
     }
 }
 
 .named {
     display: block;
     width: 58px;
-    color: #a5a5a5;
+    color: #8C8C8C;
 }
 
 .row {
     display: flex;
     align-items: center;
-    margin: 10px 0;
+    padding: 9px 0;
 
     .color {
-        margin-right: 5px;
-        width: 14px;
-        height: 14px;
-        border-radius: 2px;
-        border: 1px solid var(--grey-dark);
+        margin-right: 8px;
+        width: 16px;
+        height: 16px;
+        border-radius: 3px;
+        border: 1px solid rgba(0, 0, 0, 0.1);
+        box-sizing: border-box;
     }
 }
 

@@ -15,9 +15,9 @@ const props = defineProps<Props>();
 <template>
     <div class="user-info" @dblclick.stop>
         <Collaborator :context="props.context"></Collaborator>
-        <LableToggle :context="props.context"></LableToggle>
         <UserAvatar :context="props.context"></UserAvatar>
         <Share :context="props.context"></Share>
+        <LableToggle :context="props.context"></LableToggle>
         <Scale :context="props.context"></Scale>
     </div>
 </template>
@@ -28,10 +28,10 @@ const props = defineProps<Props>();
     display: flex;
     flex-direction: row;
     position: absolute;
-    right: 8px;
+    right: 0px;
 
     div {
-        margin: auto 4px;
+        margin: auto 0 auto 8px;
     }
 }
 </style>
