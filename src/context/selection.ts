@@ -1,6 +1,5 @@
 import {
     adapt2Shape,
-    exportExForm,
     ISave4Restore, PageView, PathShape,
     PathShapeView,
     ShapeType,
@@ -9,7 +8,6 @@ import {
     SymbolRefView,
     SymbolShape,
     SymbolView,
-    TableCell,
     TableCellView,
     SymbolUnionShape,
     TableShape,
@@ -20,12 +18,12 @@ import {
 } from "@kcdesign/data";
 import { Document } from "@kcdesign/data";
 import { Page } from "@kcdesign/data";
-import { Shape, Text } from "@kcdesign/data";
+import { Shape } from "@kcdesign/data";
 import { cloneDeep } from "lodash";
 import {
     finder_layers,
     finder_contact,
-    selected_sym_ref_menber, finder_container, finder2
+    finder_container, finder2,
 } from "@/utils/scout";
 import { Context } from ".";
 import { TextSelectionLite } from "@/context/textselectionlite";
@@ -328,14 +326,12 @@ export class Selection extends WatchableObject implements ISave4Restore {
             this.m_hoverShape = undefined;
             this.notify(Selection.CHANGE_SHAPE);
         }
-        selected_sym_ref_menber(this.m_context, this.m_selectShapes);
     }
 
     unSelectShape(shape: ShapeView) {
         const index = this.m_selectShapes.findIndex((s: ShapeView) => s.id === shape.id);
         if (index > -1) {
             this.m_selectShapes.splice(index, 1);
-            selected_sym_ref_menber(this.m_context, this.m_selectShapes);
             this.notify(Selection.CHANGE_SHAPE);
         }
     }
@@ -343,7 +339,6 @@ export class Selection extends WatchableObject implements ISave4Restore {
     rangeSelectShape(shapes: ShapeView[]) {
         this.m_selectShapes.length = 0;
         this.m_selectShapes.push(...shapes);
-        selected_sym_ref_menber(this.m_context, this.m_selectShapes);
         this.m_hoverShape = undefined;
         this.notify(Selection.CHANGE_SHAPE);
     }
@@ -354,7 +349,6 @@ export class Selection extends WatchableObject implements ISave4Restore {
             return;
         }
         this.m_selectShapes.push(shape);
-        selected_sym_ref_menber(this.m_context, this.m_selectShapes);
         this.notify(Selection.CHANGE_SHAPE);
     }
 
@@ -362,7 +356,6 @@ export class Selection extends WatchableObject implements ISave4Restore {
         this.m_textselection.reset();
         this.m_tableselection.resetSelection();
         this.m_selectShapes.length = 0;
-        selected_sym_ref_menber(this.m_context, this.m_selectShapes);
         this.notify(Selection.CHANGE_SHAPE);
     }
 
