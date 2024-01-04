@@ -36,8 +36,8 @@ const len = computed<number>(() => props.shapes.length);
 const { t } = useI18n();
 const watchedShapes = new Map();
 const fills: FillItem[] = reactive([]);
-const alphaFill = ref<any>();
-const colorFill = ref<any>();
+const alphaFill = ref<HTMLInputElement[]>();
+const colorFill = ref<HTMLInputElement[]>();
 const mixed = ref<boolean>(false);
 const mixed_cell = ref(false);
 const shapes = ref<ShapeView[]>([]);
@@ -374,12 +374,7 @@ function setColor(idx: number, clr: string, alpha: number, isColor: boolean) {
                     tableSelect.value.tableColStart,
                     tableSelect.value.tableColEnd);
                 if (tablecells.length > 0 && tablecells[0].cell) {
-                    const _b = tablecells[0].cell.style.fills[idx]
-                    const a = isColor ? _b.color.alpha : alpha;
-                    const blue = isColor ? b : _b.color.blue;
-                    const green = isColor ? g : _b.color.green;
-                    const red = isColor ? r : _b.color.red;
-                    e.setFillColor(_idx, new Color(a, red, green, blue), range)
+                    e.setFillColor(_idx, new Color(alpha, r, g, b), range)
                 }
             } else {
                 editor.setFillColor(_idx, new Color(alpha, r, g, b));
@@ -408,7 +403,6 @@ function setColor(idx: number, clr: string, alpha: number, isColor: boolean) {
 
 function onColorChange(idx: number, e: Event) {
     let value = colorValue.value;
-    const shape = shapes.value[0] as ShapeView;
     if (value.slice(0, 1) !== '#') {
         value = "#" + value
     }
@@ -419,13 +413,13 @@ function onColorChange(idx: number, e: Event) {
         setColor(idx, value, alpha, true);
     } else {
         message('danger', t('system.illegal_input'));
-        return colorFill.value.value = toHex(fills[idx].fill.color.red, fills[idx].fill.color.green, fills[idx].fill.color.blue);
+        if(!colorFill.value) return;
+        return colorFill.value[idx].value = toHex(fills[idx].fill.color.red, fills[idx].fill.color.green, fills[idx].fill.color.blue);
     }
 }
 
 function onAlphaChange(idx: number, e: Event) {
     let value: any = alphaValue.value;
-    const shape = shapes.value[0] as ShapeView;
     if (alphaFill.value) {
         if (value?.slice(-1) === '%') {
             value = Number(value?.slice(0, -1))
@@ -443,7 +437,7 @@ function onAlphaChange(idx: number, e: Event) {
                 return
             } else {
                 message('danger', t('system.illegal_input'));
-                return alphaFill.value.value = (fills[idx].fill.color.alpha * 100) + '%'
+                return alphaFill.value[idx].value = (fills[idx].fill.color.alpha * 100) + '%'
             }
         } else if (!isNaN(Number(value))) {
             if (value >= 0) {
@@ -460,11 +454,11 @@ function onAlphaChange(idx: number, e: Event) {
                 return
             } else {
                 message('danger', t('system.illegal_input'));
-                return alphaFill.value.value = (fills[idx].fill.color.alpha * 100) + '%'
+                return alphaFill.value[idx].value = (fills[idx].fill.color.alpha * 100) + '%'
             }
         } else {
             message('danger', t('system.illegal_input'));
-            return alphaFill.value.value = (fills[idx].fill.color.alpha * 100) + '%'
+            return alphaFill.value[idx].value = (fills[idx].fill.color.alpha * 100) + '%'
         }
     }
 }

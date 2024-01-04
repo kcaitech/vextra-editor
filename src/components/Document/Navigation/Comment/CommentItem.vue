@@ -266,41 +266,34 @@ onUnmounted(() => {
             <div class="bottom-info">
                 <div class="page">{{ pageName }}</div>
                 <div class="icon" v-if="hoverIcon" :style="{ visibility: hoverIcon ? 'visible' : 'hidden' }">
-                    <!--                    <el-button-group class="ml-4">-->
                     <el-tooltip class="box-item" effect="dark" :content="`${t('comment.reply')}`" placement="bottom"
                         :show-after="1000" :offset="10" :hide-after="0">
-                        <!--                            <el-button plain :icon="ChatDotSquare" @click.stop="onReply" style="margin-right: 5px;"/>-->
                         <div class="onReply" @click.stop="onReply" :class="{ checked: selectComment }">
                             <svg-icon icon-class="comment-reply"></svg-icon>
                         </div>
                     </el-tooltip>
                     <el-tooltip class="box-item" effect="dark" :content="`${t('comment.delete')}`" placement="bottom"
                         :show-after="1000" :offset="10" :hide-after="0" v-if="isControls">
-                        <!--                            <el-button plain :icon="Delete" @click="onDelete" :style="{'margin-right': 5 +'px'}" v-if="isControls"/>-->
                         <div class="onDelete" @click="onDelete" v-if="isControls" :class="{ checked: selectComment }">
                             <svg-icon icon-class="comment-delete"></svg-icon>
                         </div>
                     </el-tooltip>
                     <el-tooltip class="box-item" effect="dark" :content="`${t('comment.settled')}`" placement="bottom"
                         :show-after="1000" :offset="10" :hide-after="0" v-if="resolve && isControls">
-                        <!--                            <el-button plain :icon="CircleCheck" @click="onResolve" v-if="isControls"/>-->
                         <div class="onResolve" @click="onResolve" v-if="isControls" :class="{ checked: selectComment }">
                             <svg-icon icon-class="comment-solve"></svg-icon>
                         </div>
                     </el-tooltip>
                     <el-tooltip class="box-item" effect="dark" :content="`${t('comment.settled')}`" placement="bottom"
                         :show-after="1000" :offset="10" :hide-after="0" v-else-if="!resolve && isControls">
-                        <!--                            <el-button class="custom-icon" plain :icon="CircleCheckFilled" @click="onResolve" v-if="isControls"/>-->
                         <div class="onResolved" @click="onResolve" v-if="isControls" :class="{ checked: selectComment }">
                             <svg-icon icon-class="comment-solved"></svg-icon>
                         </div>
                     </el-tooltip>
-                    <!--                    </el-button-group>-->
                 </div>
                 <div class="icon" v-else>
                     <el-tooltip class="box-item" effect="dark" :content="`${t('comment.settled')}`" placement="bottom"
                         :show-after="1000" :offset="10" :hide-after="0" v-if="!resolve && isControls">
-                        <!--                            <el-button class="custom-icon" plain :icon="CircleCheckFilled" @click="onResolve" v-if="isControls"/>-->
                         <div class="onResolved" @click="onResolve" v-if="isControls" :class="{ checked: selectComment }">
                             <svg-icon icon-class="comment-solved"></svg-icon>
                         </div>

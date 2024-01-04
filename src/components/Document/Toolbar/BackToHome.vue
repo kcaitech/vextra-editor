@@ -98,7 +98,6 @@ const hasPendingSyncCmd = () => {
 
 function rename() {
   if (props.context.workspace.documentPerm !== Perm.isEdit) return;
-  if (props.context.tool.isLable) return;
   ele.value = 2;
   nextTick(() => {
     if (input.value) {
@@ -163,6 +162,7 @@ async function init_name() {
     name.value = props.context?.data.name || '';
   }
   ele.value = 1;
+  props.context.comment.setDocumentInfo(result.data);
 }
 
 function workspace_watcher(t?: any) {

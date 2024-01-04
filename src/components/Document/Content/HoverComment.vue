@@ -153,7 +153,7 @@ onUnmounted(() => {
 
 <template>
 
-    <div class="container-hover" @mouseenter="hoverShape" @mouseleave="unHoverShape" @mousedown="moveCommentPopup"
+    <div class="container-hover" @mouseenter="hoverShape" @mouseleave="unHoverShape" @mousedown="moveCommentPopup"  @click="onReply"
          :style="{ transform: `scale(${scale && commentShow ? scale : 0})` }">
         <div class="avatar" @click="onReply">
             <img :src="commentInfo.user.avatar" alt="">
@@ -200,7 +200,7 @@ onUnmounted(() => {
             <div class="box-context" v-html="commentInfo.content"></div>
             <div class="box-footer">
                 <div class="reply">{{ replyNum }} {{ t('comment.a_few_reply') }}</div>
-                <div class="check" @click="onReply">{{ t('comment.check') }}</div>
+                <div class="check" @click.stop="onReply">{{ t('comment.check') }}</div>
             </div>
         </div>
     </div>

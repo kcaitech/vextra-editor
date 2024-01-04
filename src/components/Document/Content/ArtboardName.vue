@@ -129,7 +129,7 @@ let offset_map: PointsOffset | undefined;
 
 function down(e: MouseEvent) {
     const context = props.context;
-    if ((context.workspace.documentPerm !== Perm.isEdit)) {
+    if ((context.workspace.documentPerm !== Perm.isEdit) || context.tool.isLable) {
         return;
     }
     if (!check_status(context)) {
