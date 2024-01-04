@@ -1,5 +1,5 @@
 <script setup lang="ts">
-import {ShapeView, ShapeType} from "@kcdesign/data";
+import {ShapeView, ShapeType, adapt2Shape} from "@kcdesign/data";
 import {static_coms_map} from "../../../ContentStatic/static_coms_map";
 
 interface Props {
@@ -19,7 +19,7 @@ function gen_view_box() {
          xmlns:xhtml="http://www.w3.org/1999/xhtml" preserveAspectRatio="xMinYMin meet" width="90%" height="90%"
          :viewBox='gen_view_box()' overflow="visible" class="render-wrap">
         <component :is="static_coms_map.get(props.data.type) ?? static_coms_map.get(ShapeType.Rectangle)"
-                   :data="props.data"/>
+                   :data="adapt2Shape(props.data)"/>
     </svg>
 </template>
 <style lang="scss" scoped>
