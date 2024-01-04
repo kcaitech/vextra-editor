@@ -61,7 +61,7 @@ export function useControllerCustom(context: Context, i18nT: Function) {
 
     function handleDblClick() {
         const selected = selection.selectedShapes;
-        if (selected.length !== 1) {
+        if (selected.length !== 1 || context.tool.isLable) {
             return;
         }
 

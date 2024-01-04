@@ -220,6 +220,5 @@ onUnmounted(() => {
     width: 100%;
     height: 100%;
     background-color: #fff;
-    box-shadow: -4px 0px 4px rgba($color: #000000, $alpha: 0.05);
 }
 </style>

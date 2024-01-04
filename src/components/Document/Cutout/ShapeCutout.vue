@@ -13,11 +13,11 @@ const props = defineProps<{
     transform: number[],
 }>()
 let cutoutShapes: CutoutShapeView[] = reactive([]);
-const watcher = () => {
+const watcher = (...args: any[]) => {
+    if(args.includes('shape-frame')) return;
     const page = props.context.selection.selectedPage;
     if (page) {
-        const shapes = page.childs || [];
-        cutoutShapes = shapes.filter(v => v.type === ShapeType.Cutout) as CutoutShapeView[];
+        cutoutShapes = Array.from(page.cutoutList.values());
     }
 }
 const stopWatch = watch(() => props.data, (value, old) => {
@@ -28,10 +28,8 @@ const selected_watcher = (t: number) => {
     if (t === Selection.CHANGE_PAGE) {
         const page = props.context.selection.selectedPage;
         if (page) {
-            const shapes = page.childs || [];
-            cutoutShapes = shapes.filter(v => v.type === ShapeType.Cutout) as CutoutShapeView[];
+            cutoutShapes = Array.from(page.cutoutList.values());
         }
-        
     }
 }
 onMounted(() => {

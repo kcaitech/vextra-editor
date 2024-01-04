@@ -232,7 +232,7 @@ const closeComment = (e?: MouseEvent) => {
 // 调用评论API，并通知listTab组件更新评论列表
 const completed = (succession: boolean, event?: MouseEvent) => {
     // props.context.comment.sendComment()
-    // getDocumentComment()\
+    getDocumentComment()
     commentInput.value = false;
     if(succession && event) {
         addComment(event);

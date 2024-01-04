@@ -4,6 +4,7 @@ import { ArrowDown } from '@element-plus/icons-vue';
 import { nextTick, onMounted, ref } from "vue";
 import LableDropMenu from "./LableDropMenu.vue";
 import { useI18n } from 'vue-i18n'
+import SvgIcon from "@/components/common/SvgIcon.vue";
 
 const { t } = useI18n();
 const props = defineProps<{
@@ -53,32 +54,33 @@ onMounted(() => {
         <div class="selected">
             <div class="platform-input" @click.stop="onSelected">
                 <span>{{ platformMenuItems[platform] }}</span>
-                <el-icon>
-                    <ArrowDown
-                        :style="{ transform: selectoption ? 'rotate(180deg)' : 'rotate(0deg)', transition: '0.3s' }" />
-                </el-icon>
+<!--                <el-icon>-->
+<!--                    <ArrowDown-->
+<!--                        :style="{ transform: selectoption ? 'rotate(180deg)' : 'rotate(0deg)', transition: '0.3s' }" />-->
+<!--                </el-icon>-->
+                <svg-icon icon-class="down"></svg-icon>
                 <LableDropMenu v-if="selsectedShow" :context="context" :Items="platformMenuItems" :pxItems="pxMenuItems"
                     :choose="platform" :choose2="multiple" @close="close" @listMenuStatus="listMenuStatus"
                     @pxMenuStatus="pxMenuStatus"></LableDropMenu>
             </div>
         </div>
     </div>
+    <div class="line" style="width: 216px;height: 1px;background-color: #F5F5F5;margin-left: 12px;"></div>
 </template>
 
 <style scoped lang="scss">
 .container {
     width: 100%;
-    height: 50px;
+    height: 64px;
     display: flex;
-    padding: 10px 8px;
-    padding-right: 10px;
+    padding: 16px 12px;
     justify-content: space-between;
     align-items: center;
     box-sizing: border-box;
 
     .name {
         font-weight: bold;
-        margin-right: 15px;
+        margin-right: 14px;
     }
 
     .selected {
@@ -87,25 +89,28 @@ onMounted(() => {
         .platform-input {
             position: relative;
             width: 100%;
-            height: 30px;
-            border-radius: 4px;
-            padding-left: 11px;
+            height: 32px;
+            border-radius: var(--default-radius);
+            padding-left: 12px;
             box-sizing: border-box;
             display: flex;
             align-items: center;
-            background-color: var(--grey-light);
+            background-color: #F5F5F5;
 
             span {
                 flex: 1;
             }
 
-            .el-icon {
-                width: 30px;
-                height: 30px;
-                display: flex;
-                align-items: center;
-                justify-content: center;
+            >svg {
+                width: 12px;
+                height: 12px;
+                color: #666666;
+                margin-right: 7px;
             }
+        }
+
+        .platform-input:hover {
+            background-color: #EBEBEB;
         }
     }
 }

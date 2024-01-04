@@ -305,7 +305,7 @@ export function range_select_shape(context: Context, shapeDirList: ShapeDirList,
     if (selectedShapes.length) {
         const selectShapesIndex = getSelectShapesIndex(shapeDirList, selectedShapes);
         const from = selectShapesIndex.reduce((pre, cur) => {
-            return Math.abs(to - cur) < Math.abs(to - pre) ? cur : pre;
+            return Math.abs(to - cur) > Math.abs(to - pre) ? cur : pre;
         }, selectShapesIndex[0]);
         const shapes = getShapeRange(listviewSource, from, to);
         context.selection.rangeSelectShape(shapes);

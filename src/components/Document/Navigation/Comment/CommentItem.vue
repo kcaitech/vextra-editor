@@ -1,19 +1,19 @@
 <script setup lang="ts">
-import {ref, onMounted, computed, onUnmounted} from "vue"
-import {ChatDotSquare, Delete, CircleCheck, CircleCheckFilled} from '@element-plus/icons-vue'
-import {Context} from "@/context";
-import {useI18n} from 'vue-i18n'
-import {Page} from '@kcdesign/data';
-import {Selection} from '@/context/selection'
+import { ref, onMounted, computed, onUnmounted } from "vue"
+import { ChatDotSquare, Delete, CircleCheck, CircleCheckFilled } from '@element-plus/icons-vue'
+import { Context } from "@/context";
+import { useI18n } from 'vue-i18n'
+import { Page } from '@kcdesign/data';
+import { Selection } from '@/context/selection'
 import * as comment_api from '@/request/comment';
 import moment = require('moment');
 import 'moment/locale/zh-cn';
-import {mapDateLang} from '@/utils/date_lang'
-import {Comment} from "@/context/comment";
-import {WorkSpace} from "@/context/workspace";
+import { mapDateLang } from '@/utils/date_lang'
+import { Comment } from "@/context/comment";
+import { WorkSpace } from "@/context/workspace";
 import SvgIcon from "@/components/common/SvgIcon.vue";
 
-const {t} = useI18n()
+const { t } = useI18n()
 const props = defineProps<{
     commentItem: any,
     index: number,
@@ -120,8 +120,8 @@ const onReply = () => {
         const cx = props.commentItem.shape_frame.x1
         const cy = props.commentItem.shape_frame.y1
         const commentCenter = workspace.matrix.computeCoord(cx, cy) // 计算评论相对contenview的位置
-        const {x, y, bottom, right} = workspace.root;
-        const contentViewCenter = {x: (right - x) / 2, y: (bottom - y) / 2}; // 计算contentview中心点的位置
+        const { x, y, bottom, right } = workspace.root;
+        const contentViewCenter = { x: (right - x) / 2, y: (bottom - y) / 2 }; // 计算contentview中心点的位置
         const transX = contentViewCenter.x - commentCenter.x, transY = contentViewCenter.y - commentCenter.y;
         props.context.selection.selectComment(props.commentItem.id)
 
@@ -140,7 +140,7 @@ const onReply = () => {
 // 判断评论是否在可视区域内
 function isInner() {
     const workspace = props.context.workspace;
-    const {x: rx, y: ry, bottom, right} = workspace.root;
+    const { x: rx, y: ry, bottom, right } = workspace.root;
     const cx = props.commentItem.shape_frame.x1
     const cy = props.commentItem.shape_frame.y1
     const commentCenter = workspace.matrix.computeCoord(cx, cy) //评论在视图上的位置
@@ -171,7 +171,7 @@ const onDelete = (e: Event) => {
 
 const setCommentStatus = async (status: number) => {
     try {
-        await comment_api.setCommentStatusAPI({id: props.commentItem.id, status: status})
+        await comment_api.setCommentStatusAPI({ id: props.commentItem.id, status: status })
     } catch (err) {
         console.log(err);
     }
@@ -179,7 +179,7 @@ const setCommentStatus = async (status: number) => {
 
 const deleteComment = async () => {
     try {
-        await comment_api.deleteCommentAPI({comment_id: props.commentItem.id})
+        await comment_api.deleteCommentAPI({ comment_id: props.commentItem.id })
     } catch (err) {
         console.log(err);
     }
@@ -239,22 +239,23 @@ onUnmounted(() => {
 })
 </script>
 <template>
-    <div class="comment-item-container" :class="{active: hoverComment, selected: selectComment}"
-         @mouseenter="hoverShape" @mouseleave="unHoverShape" @click="onReply" v-if="status">
+    <div class="comment-item-container" :class="{ active: hoverComment, selected: selectComment }" @mouseenter="hoverShape"
+        @mouseleave="unHoverShape" @click="onReply" v-if="status">
         <div class="content">
             <div class="item-title">
                 <div class="avatar">
                     <img :src="props.commentItem.user.avatar" alt="">
                 </div>
-                <div class="item_heard" :style="{width: hoverIcon ? 'calc(100% - 73px)' : 'calc(100% - 3px)'}">
-                    <div class="name" :style="{opacity: props.commentItem.status === 0 ? 1 : 0.5}">
+                <div class="item_heard" :style="{ width: hoverIcon ? 'calc(100% - 73px)' : 'calc(100% - 3px)' }">
+                    <div class="name" :style="{ opacity: props.commentItem.status === 0 ? 1 : 0.5 }">
                         {{ props.commentItem.user.nickname }}
                     </div>
                     <div class="date" style="width: 92px;height: 12px;white-space: nowrap;font-family: HarmonyOS Sans;font-size: 10px;
-                    line-height: 10px;text-align: left;color: #8C8C8C;margin-top: 6px;">{{ formatDate(props.commentItem.record_created_at) }}
+                    line-height: 10px;text-align: left;color: #8C8C8C;margin-top: 6px;">{{
+                        formatDate(props.commentItem.record_created_at) }}
                     </div>
                 </div>
-                <div class="reply" :style="{opacity: props.commentItem.status === 0 ? 1 : 0.5}">
+                <div class="reply" :style="{ opacity: props.commentItem.status === 0 ? 1 : 0.5 }">
                     <template v-if="replyNum > 0">
                         {{ replyNum }}
                         {{ t('comment.a_few_reply') }}
@@ -264,40 +265,46 @@ onUnmounted(() => {
             <div class="text" v-html="commentItem.content"></div>
             <div class="bottom-info">
                 <div class="page">{{ pageName }}</div>
-                <div class="icon" :style="{visibility: hoverIcon ? 'visible' : 'hidden'}">
+                <div class="icon" v-if="hoverIcon" :style="{ visibility: hoverIcon ? 'visible' : 'hidden' }">
                     <!--                    <el-button-group class="ml-4">-->
-                    <el-tooltip class="box-item" effect="dark" :content="`${t('comment.reply')}`"
-                                placement="bottom" :show-after="1000" :offset="10" :hide-after="0">
+                    <el-tooltip class="box-item" effect="dark" :content="`${t('comment.reply')}`" placement="bottom"
+                        :show-after="1000" :offset="10" :hide-after="0">
                         <!--                            <el-button plain :icon="ChatDotSquare" @click.stop="onReply" style="margin-right: 5px;"/>-->
-                        <div class="onReply" @click.stop="onReply" :class="{checked: selectComment}">
+                        <div class="onReply" @click.stop="onReply" :class="{ checked: selectComment }">
                             <svg-icon icon-class="comment-reply"></svg-icon>
                         </div>
                     </el-tooltip>
-                    <el-tooltip class="box-item" effect="dark" :content="`${t('comment.delete')}`"
-                                placement="bottom" :show-after="1000" :offset="10" :hide-after="0"
-                                v-if="isControls">
+                    <el-tooltip class="box-item" effect="dark" :content="`${t('comment.delete')}`" placement="bottom"
+                        :show-after="1000" :offset="10" :hide-after="0" v-if="isControls">
                         <!--                            <el-button plain :icon="Delete" @click="onDelete" :style="{'margin-right': 5 +'px'}" v-if="isControls"/>-->
-                        <div class="onDelete" @click="onDelete" v-if="isControls" :class="{checked: selectComment}">
+                        <div class="onDelete" @click="onDelete" v-if="isControls" :class="{ checked: selectComment }">
                             <svg-icon icon-class="comment-delete"></svg-icon>
                         </div>
                     </el-tooltip>
-                    <el-tooltip class="box-item" effect="dark" :content="`${t('comment.settled')}`"
-                                placement="bottom" :show-after="1000" :offset="10" :hide-after="0"
-                                v-if="resolve && isControls">
+                    <el-tooltip class="box-item" effect="dark" :content="`${t('comment.settled')}`" placement="bottom"
+                        :show-after="1000" :offset="10" :hide-after="0" v-if="resolve && isControls">
                         <!--                            <el-button plain :icon="CircleCheck" @click="onResolve" v-if="isControls"/>-->
-                        <div class="onResolve" @click="onResolve" v-if="isControls" :class="{checked: selectComment}">
+                        <div class="onResolve" @click="onResolve" v-if="isControls" :class="{ checked: selectComment }">
                             <svg-icon icon-class="comment-solve"></svg-icon>
                         </div>
                     </el-tooltip>
-                    <el-tooltip class="box-item" effect="dark" :content="`${t('comment.settled')}`"
-                                placement="bottom" :show-after="1000" :offset="10" :hide-after="0"
-                                v-else-if="!resolve && isControls">
+                    <el-tooltip class="box-item" effect="dark" :content="`${t('comment.settled')}`" placement="bottom"
+                        :show-after="1000" :offset="10" :hide-after="0" v-else-if="!resolve && isControls">
                         <!--                            <el-button class="custom-icon" plain :icon="CircleCheckFilled" @click="onResolve" v-if="isControls"/>-->
-                        <div class="onResolved" @click="onResolve" v-if="isControls" :class="{checked: selectComment}">
+                        <div class="onResolved" @click="onResolve" v-if="isControls" :class="{ checked: selectComment }">
                             <svg-icon icon-class="comment-solved"></svg-icon>
                         </div>
                     </el-tooltip>
                     <!--                    </el-button-group>-->
+                </div>
+                <div class="icon" v-else>
+                    <el-tooltip class="box-item" effect="dark" :content="`${t('comment.settled')}`" placement="bottom"
+                        :show-after="1000" :offset="10" :hide-after="0" v-if="!resolve && isControls">
+                        <!--                            <el-button class="custom-icon" plain :icon="CircleCheckFilled" @click="onResolve" v-if="isControls"/>-->
+                        <div class="onResolved" @click="onResolve" v-if="isControls" :class="{ checked: selectComment }">
+                            <svg-icon icon-class="comment-solved"></svg-icon>
+                        </div>
+                    </el-tooltip>
                 </div>
             </div>
         </div>
@@ -336,7 +343,7 @@ onUnmounted(() => {
                 align-items: center;
                 flex: 0 0 28px;
 
-                > img {
+                >img {
                     width: 100%;
                     height: 100%;
                     border-radius: 50%;
@@ -416,6 +423,7 @@ onUnmounted(() => {
                 justify-content: flex-end;
                 width: 72px;
                 height: 24px;
+
                 //.el-button {
                 //    border: none;
                 //    background-color: transparent;
@@ -435,7 +443,7 @@ onUnmounted(() => {
                     justify-content: center;
                     border-radius: 4px;
 
-                    > svg {
+                    >svg {
                         width: 12px;
                         height: 12px;
                         color: #555555;
@@ -454,7 +462,7 @@ onUnmounted(() => {
                     justify-content: center;
                     border-radius: 4px;
 
-                    > svg {
+                    >svg {
                         width: 12px;
                         height: 12px;
                         color: #555555;
@@ -473,7 +481,7 @@ onUnmounted(() => {
                     justify-content: center;
                     border-radius: 4px;
 
-                    > svg {
+                    >svg {
                         width: 12px;
                         height: 12px;
                         color: #555555;
@@ -492,9 +500,9 @@ onUnmounted(() => {
                     justify-content: center;
                     border-radius: 4px;
 
-                    > svg {
+                    >svg {
                         width: 12px;
-                        height: 12px;
+                        height: 14px;
                         color: #169248;
                     }
                 }
@@ -518,5 +526,4 @@ onUnmounted(() => {
 .selected {
     background-color: #E6F5FF;
 }
-
 </style>

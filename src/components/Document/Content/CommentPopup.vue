@@ -295,7 +295,7 @@ const previousArticle = () => {
         emit('previousArticle', index)
     } else {
         const index = commentShowList.value.findIndex(item => props.commentInfo.id === item.id)
-        if (index === 0) return
+        if (index === 0 || index === -1) return
         const { x1, y1 } = commentShowList.value[index - 1].shape_frame
         const id = commentShowList.value[index - 1].id
         emit('previousArticle', index, { x: x1, y: y1 }, id)
@@ -310,7 +310,7 @@ const nextArticle = () => {
     } else {
         const index = commentShowList.value.findIndex(item => props.commentInfo.id === item.id)
         const length = commentShowList.value.length
-        if (index === length - 1) return
+        if (index === length - 1 || index === -1) return
         const { x1, y1 } = commentShowList.value[index + 1].shape_frame
         const id = commentShowList.value[index + 1].id
         emit('nextArticle', index, { x: x1, y: y1 }, id)

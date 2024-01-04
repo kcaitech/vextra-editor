@@ -104,7 +104,7 @@ export const getPngImageData = (svg: SVGSVGElement, trim: boolean, id: string, f
         g_x = Math.abs(x);
         g_y = Math.abs(y);
       }
-      const max_border = getShapeBorderMax(shape);
+      const max_border = getShapeBorderMax(shape) * 6;
       const x = left + max_border + g_x;
       const y = top + max_border + g_y;
       el.style.transform = `rotate(0deg)`;
@@ -129,8 +129,9 @@ export const getPngImageData = (svg: SVGSVGElement, trim: boolean, id: string, f
     canvas.width = width;
     canvas.height = height;
   } else {
-    canvas.width = svg.clientWidth;
-    canvas.height = svg.clientHeight;
+    const { width, height } = pcloneSvg.viewBox.baseVal
+    canvas.width = width;
+    canvas.height = height;
   }
   const svgString = new XMLSerializer().serializeToString(pcloneSvg);
   const img = new Image();
@@ -140,7 +141,7 @@ export const getPngImageData = (svg: SVGSVGElement, trim: boolean, id: string, f
     context && context.drawImage(img, 0, 0);
     const dataURL = canvas.toDataURL(`image/${format.fileFormat}`);
     imageUrl = dataURL;
-    if (trim && context) {
+    if (context && (trim || shape.type !== ShapeType.Cutout) && shape.type !== ShapeType.Group) {
       const imageData = context.getImageData(0, 0, canvas.width, canvas.height);
       const data = imageData.data;
       let top = canvas.height, bottom = 0, left = canvas.width, right = 0;
@@ -155,9 +156,8 @@ export const getPngImageData = (svg: SVGSVGElement, trim: boolean, id: string, f
           }
         }
       }
-
-      const width = right - left;
-      const height = bottom - top;
+      const width = (right - left) + 2;
+      const height = (bottom - top) + 2;
       // 创建一个新Canvas元素，用于存储裁剪后的图像
       const newCanvas = document.createElement("canvas");
       const outputCtx = newCanvas.getContext("2d");
@@ -192,7 +192,7 @@ export const getSvgImageData = (svg: SVGSVGElement, trim: boolean, id: string, f
         g_x = Math.abs(x);
         g_y = Math.abs(y);
       }
-      const max_border = getShapeBorderMax(shape);
+      const max_border = getShapeBorderMax(shape) * 6;
       const x = left + max_border + g_x;
       const y = top + max_border + g_y;
       el.style.transform = `rotate(0deg)`;
@@ -220,8 +220,9 @@ export const getSvgImageData = (svg: SVGSVGElement, trim: boolean, id: string, f
       ctx.translate(-width / 2, -height / 2);
     }
   } else {
-    canvas.width = svg.clientWidth;
-    canvas.height = svg.clientHeight;
+    const { width, height } = cloneSvg.viewBox.baseVal
+    canvas.width = width;
+    canvas.height = height;
   }
   let imageUrl = '';
   const img = new Image();
@@ -230,7 +231,7 @@ export const getSvgImageData = (svg: SVGSVGElement, trim: boolean, id: string, f
   imageUrl = imgUrl;
   img.src = imgUrl;
   img.onload = () => {
-    if (trim && ctx) {
+    if (ctx && (trim || shape.type !== ShapeType.Cutout) && shape.type !== ShapeType.Group) {
       ctx.drawImage(img, 0, 0);
       const imageData = ctx.getImageData(0, 0, canvas.width, canvas.height);
       const data = imageData.data;
@@ -247,8 +248,8 @@ export const getSvgImageData = (svg: SVGSVGElement, trim: boolean, id: string, f
         }
       }
       const { x, y } = cloneSvg.viewBox.baseVal
-      const w = right - left;
-      const h = bottom - top;
+      const w = (right - left) + 2;
+      const h = (bottom - top) + 2;
       cloneSvg.setAttribute("width", `${w}`);
       cloneSvg.setAttribute("height", `${h}`);
       cloneSvg.setAttribute("viewBox", `${x + left / format.scale} ${y + top / format.scale} ${w / format.scale} ${h / format.scale}`);

@@ -71,7 +71,7 @@ onUnmounted(() => {
         <template v-for="(item, index) in props.pxItems" :key="index">
             <div class="menu-item" :class="{active: i === item}" @mouseenter="(e: MouseEvent) => hoverShape(e, item)" @mouseleave="(e: MouseEvent) => unHoverShape(e)" @click.stop="onPxClick(index)">
                 <div class="choose" :style="{visibility: choose2 === index ? 'visible' : 'hidden'}" :class="{choose_active: i === item}"></div>
-                <div>{{ item }}</div>
+                <div style="font-weight: 500">{{ item }}</div>
             </div>
         </template>
     </div>
@@ -82,25 +82,26 @@ onUnmounted(() => {
         position: absolute;
         top: 32px;
         right: 0;
-        width: 99%;
+        width: 154px;
         min-width: 75px;
         font-size: var(--font-default-fontsize);
-        padding: 8px 0;
+        padding: 4px 0;
         background-color: #fff;
-        border: 1px solid var(--theme-color-line);
-        border-radius: 2px;
-        box-shadow: 2px 2px 10px rgba(0, 0, 0, 0.2);
+        border: 1px solid #EBEBEB;
+        border-radius: 8px;
+        box-shadow: 0px 2px 10px 0px rgba(0, 0, 0, 0.08);
         z-index: 99;
     }
     .menu-item {
         display: flex;
         align-items: center;
-        height: 30px;
-        padding: 0 var(--default-padding-half);
+        height: 32px;
+        padding: 0 12px 0 8px;
         .text {
             flex: 1;
             display: flex;
             justify-content: space-between;
+            font-weight: 500;
         }
         
     }
@@ -117,12 +118,12 @@ onUnmounted(() => {
     }
     .line {
         width: 100%;
-        height: 11px;
-        border-width: 5px 0 5px 0;
+        height: 4px;
+        border-width: 3px 0 0 0;
         border-style: solid;
         border-color: #fff;
         box-sizing: border-box;
-        background-color:  rgb(0, 0, 0,.05);
+        background-color: #EBEBEB;
     }
     .active {
         background-color: var(--active-color);

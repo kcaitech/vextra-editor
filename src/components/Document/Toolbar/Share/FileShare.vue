@@ -784,7 +784,7 @@ const selectOption = (option: any) => {
             position: absolute;
             top: 180px;
             right: 183px;
-            padding: 0;
+            padding: 4px 0;
             margin: 0;
             width: 122px;
             background-color: white;
