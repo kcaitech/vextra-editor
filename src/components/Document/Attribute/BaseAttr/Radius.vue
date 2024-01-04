@@ -33,7 +33,6 @@ function change(val: any, shapes: ShapeView[], type: string) {
     }
     const page = props.context.selection.selectedPage!;
     const editor = props.context.editor4Page(page);
-
     editor.shapesModifyFixedRadius(shapes.map(s => adapt2Shape(s)), val);
 }
 function setting_for_extend(val: number, type: string, shapes: ShapeView[]) {
@@ -69,7 +68,6 @@ function modify_can_be_rect() {
 
     for (let i = 0, l = selected.length; i < l; i++) {
         const s = selected[i];
-        console.log(s instanceof PathShapeView);
         
         if (!is_rect(s)) {
             return
@@ -199,8 +197,6 @@ onMounted(() => {
     watch_shapes();
 });
 onUnmounted(() => {
-    console.log('unmount');
-    
     props.context.selection.unwatch(selection_wather);
 })
 </script>

@@ -365,8 +365,6 @@ function unGroup() {
             props.context.nextTick(page, () => {
                 const select = selectShapes.reduce((pre, cur) => {
                     const s = cur instanceof ShapeView ? cur : page.getShape(cur.id);
-                    console.log(page.getShape(cur.id), 'shape');
-                    
                     if (s) {
                         pre.push(s);
                     }

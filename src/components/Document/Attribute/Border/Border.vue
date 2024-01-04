@@ -83,9 +83,9 @@ function watchShapes() {
 }
 
 function watcher(...args: any[]) {
-    if ((args.includes('style') || args.includes('variable'))) [
+    if ((args.includes('style') || args.includes('variable'))) {
         updateData()
-    ]
+    }
 }
 
 function updateData() {
@@ -94,7 +94,7 @@ function updateData() {
     mixed_cell.value = false;
     const selecteds = props.context.selection.selectedShapes;
     const shape = selecteds[0];
-    if (selecteds.length === 1 && (shape.type !== ShapeType.Group || (shape as GroupShapeView).isBoolOpShape)) {
+    if (selecteds.length === 1 && (shape.type !== ShapeType.Group || (shape as GroupShapeView).data.isBoolOpShape)) {
         const table = props.context.tableSelection;
         const is_edting = table.editingCell;
         if (shape.type === ShapeType.Table && (table.tableRowStart > -1 || is_edting)) {
@@ -139,7 +139,7 @@ function updateData() {
         } else {
             borders.push(..._bs.reverse());
         }
-    } else if (selecteds.length === 1 && shape.type === ShapeType.Group && !(shape as GroupShapeView).isBoolOpShape) {
+    } else if (selecteds.length === 1 && shape.type === ShapeType.Group && !(shape as GroupShapeView).data.isBoolOpShape) {
         const childs = (shape).childs;
         const shapes = flattenShapes(childs).filter(s => s.type !== ShapeType.Group);
         const _bs = get_borders(shapes);
@@ -156,7 +156,7 @@ function addBorder() {
     const color = new Color(1, 0, 0, 0);
     const borderStyle = new BorderStyle(0, 0);
     const border = new Border(v4(), true, FillType.SolidColor, color, BorderPosition.Outer, 1, borderStyle);
-    if (len.value === 1 && (props.shapes[0].type !== ShapeType.Group || (props.shapes[0] as GroupShapeView).isBoolOpShape)) {
+    if (len.value === 1 && (props.shapes[0].type !== ShapeType.Group || (props.shapes[0] as GroupShapeView).data.isBoolOpShape)) {
         const shape = props.shapes[0] as TableView;
         if (shape.type === ShapeType.Table) {
             const table = props.context.tableSelection;
@@ -206,7 +206,7 @@ function addBorder() {
                 editor.shapesAddBorder(actions);
             }
         }
-    } else if (len.value === 1 && props.shapes[0].type === ShapeType.Group && !(props.shapes[0] as GroupShapeView).isBoolOpShape) {
+    } else if (len.value === 1 && props.shapes[0].type === ShapeType.Group && !(props.shapes[0] as GroupShapeView).data.isBoolOpShape) {
         const childs = (props.shapes[0]).childs;
         const shapes = flattenShapes(childs).filter(s => s.type !== ShapeType.Group);
         if (mixed.value) {
@@ -236,7 +236,7 @@ function deleteBorder(idx: number) {
     const _idx = borders.length - idx - 1;
     props.context.workspace.notify(WorkSpace.CTRL_DISAPPEAR);
     const shape = props.shapes[0];
-    if (len.value === 1 && (shape.type !== ShapeType.Group || (shape as GroupShapeView).isBoolOpShape)) {
+    if (len.value === 1 && (shape.type !== ShapeType.Group || (shape as GroupShapeView).data.isBoolOpShape)) {
         const table = props.context.tableSelection;
         if (shape.type === ShapeType.Table) {
             const e = props.context.editor4Table(shape as TableView);
@@ -272,7 +272,7 @@ function deleteBorder(idx: number) {
             const editor = props.context.editor4Page(page);
             editor.shapesDeleteBorder(actions);
         }
-    } else if (len.value === 1 && shape.type === ShapeType.Group && !(shape as GroupShapeView).isBoolOpShape) {
+    } else if (len.value === 1 && shape.type === ShapeType.Group && !(shape as GroupShapeView).data.isBoolOpShape) {
         const childs = (shape).childs;
         const shapes = flattenShapes(childs).filter(s => s.type !== ShapeType.Group);
         const actions = get_actions_border_delete(shapes, _idx);
@@ -291,7 +291,7 @@ function toggleVisible(idx: number) {
     const isEnabled = !border.isEnabled;
     const _idx = borders.length - idx - 1;
     const shape = props.shapes[0];
-    if (len.value === 1 && (shape.type !== ShapeType.Group || (shape as GroupShapeView).isBoolOpShape)) {
+    if (len.value === 1 && (shape.type !== ShapeType.Group || (shape as GroupShapeView).data.isBoolOpShape)) {
         if (shape.type === ShapeType.Table) {
             const table = props.context.tableSelection;
             const e = props.context.editor4Table(shape as TableView);
@@ -327,7 +327,7 @@ function toggleVisible(idx: number) {
             const editor = props.context.editor4Page(page);
             editor.setShapesBorderEnabled(actions);
         }
-    } else if (len.value === 1 && shape.type === ShapeType.Group && !(shape as GroupShapeView).isBoolOpShape) {
+    } else if (len.value === 1 && shape.type === ShapeType.Group && !(shape as GroupShapeView).data.isBoolOpShape) {
         const childs = (shape).childs;
         const shapes = flattenShapes(childs).filter(s => s.type !== ShapeType.Group);
         const actions = get_actions_border_enabled(shapes, idx, isEnabled);
@@ -370,7 +370,7 @@ function onColorChange(e: Event, idx: number) {
     const color = new Color(alpha, r, g, b);
     const _idx = shape.style.borders.length - idx - 1;
     const editor = props.context.editor4Shape(adapt2Shape(shape))
-    if (shapes.value.length === 1 && (shape.type !== ShapeType.Group || (shape as GroupShapeView).isBoolOpShape)) {
+    if (shapes.value.length === 1 && (shape.type !== ShapeType.Group || (shape as GroupShapeView).data.isBoolOpShape)) {
         if (shape.type === ShapeType.Table) {
             const e = props.context.editor4Table(shape as TableView);
             const table = props.context.tableSelection;
@@ -413,7 +413,7 @@ function onColorChange(e: Event, idx: number) {
             const editor = props.context.editor4Page(page);
             editor.setShapesBorderColor(actions);
         }
-    } else if (shapes.value.length === 1 && shape.type === ShapeType.Group && !(shape as GroupShapeView).isBoolOpShape) {
+    } else if (shapes.value.length === 1 && shape.type === ShapeType.Group && !(shape as GroupShapeView).data.isBoolOpShape) {
         const childs = shape.childs as ShapeView[];
         const shapes = flattenShapes(childs).filter(s => s.type !== ShapeType.Group);
         const actions = get_actions_border_color(shapes, _idx, color);
@@ -447,7 +447,7 @@ function onAlphaChange(e: Event, idx: number) {
             const color = new Color(alpha, red, green, blue);
             const _idx = borders.length - idx - 1;
             const editor = props.context.editor4Shape(adapt2Shape(shape))
-            if (shapes.value.length === 1 && (shape.type !== ShapeType.Group || (shape as GroupShapeView).isBoolOpShape)) {
+            if (shapes.value.length === 1 && (shape.type !== ShapeType.Group || (shape as GroupShapeView).data.isBoolOpShape)) {
                 if (shape.type === ShapeType.Table) {
                     const e = props.context.editor4Table(shape as TableView);
                     const table = props.context.tableSelection;
@@ -491,7 +491,7 @@ function onAlphaChange(e: Event, idx: number) {
                     const editor = props.context.editor4Page(page);
                     editor.setShapesBorderColor(actions);
                 }
-            } else if (shapes.value.length === 1 && shape.type === ShapeType.Group && !(shape as GroupShapeView).isBoolOpShape) {
+            } else if (shapes.value.length === 1 && shape.type === ShapeType.Group && !(shape as GroupShapeView).data.isBoolOpShape) {
                 const childs = (shape).childs as ShapeView[];
                 const shapes = flattenShapes(childs).filter(s => s.type !== ShapeType.Group);
                 const actions = get_actions_border_color(shapes, _idx, color);
@@ -513,7 +513,7 @@ function onAlphaChange(e: Event, idx: number) {
                 const color = new Color(alpha, red, green, blue);
                 const _idx = shape.style.borders.length - idx - 1;
                 const editor = props.context.editor4Shape(adapt2Shape(shape))
-                if (shapes.value.length === 1 && (shape.type !== ShapeType.Group || (shape as GroupShapeView).isBoolOpShape)) {
+                if (shapes.value.length === 1 && (shape.type !== ShapeType.Group || (shape as GroupShapeView).data.isBoolOpShape)) {
                     if (shape.type === ShapeType.Table) {
                         const table = props.context.tableSelection;
                         const e = props.context.editor4Table(shape as TableView);
@@ -557,7 +557,7 @@ function onAlphaChange(e: Event, idx: number) {
                         const editor = props.context.editor4Page(page);
                         editor.setShapesBorderColor(actions);
                     }
-                } else if (shapes.value.length === 1 && shape.type === ShapeType.Group && !(shape as GroupShapeView).isBoolOpShape) {
+                } else if (shapes.value.length === 1 && shape.type === ShapeType.Group && !(shape as GroupShapeView).data.isBoolOpShape) {
                     const childs = (shape).childs as ShapeView[];
                     const shapes = flattenShapes(childs).filter(s => s.type !== ShapeType.Group);
                     const actions = get_actions_border_color(shapes, _idx, color);
@@ -579,7 +579,7 @@ function onAlphaChange(e: Event, idx: number) {
 function getColorFromPicker(color: Color, idx: number) {
     const _idx = borders.length - idx - 1;
     const shape = props.shapes[0];
-    if (len.value === 1 && (shape.type !== ShapeType.Group || (shape as GroupShapeView).isBoolOpShape)) {
+    if (len.value === 1 && (shape.type !== ShapeType.Group || (shape as GroupShapeView).data.isBoolOpShape)) {
         if (shape.type === ShapeType.Table) {
             const table = props.context.tableSelection;
             const e = props.context.editor4Table(shape as TableView);
@@ -615,7 +615,7 @@ function getColorFromPicker(color: Color, idx: number) {
             const editor = props.context.editor4Page(page);
             editor.setShapesBorderColor(actions);
         }
-    } else if (len.value === 1 && shape.type === ShapeType.Group && !(shape as GroupShapeView).isBoolOpShape) {
+    } else if (len.value === 1 && shape.type === ShapeType.Group && !(shape as GroupShapeView).data.isBoolOpShape) {
         const childs = (shape).childs;
         const shapes = flattenShapes(childs).filter(s => s.type !== ShapeType.Group);
         const actions = get_actions_border_color(shapes, _idx, color);

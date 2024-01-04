@@ -1,6 +1,6 @@
 <script setup lang="ts">
 import { Selection } from '@/context/selection';
-import { Shape, ShapeType, GroupShape, Artboard, BoolOp, adapt2Shape, ShapeView } from '@kcdesign/data';
+import { Shape, ShapeType, GroupShape, Artboard, BoolOp, adapt2Shape, ShapeView, GroupShapeView } from '@kcdesign/data';
 import { onMounted, onUnmounted, ref } from 'vue';
 import { Context } from '@/context';
 import ToolButton from "./ToolButton.vue"
@@ -50,7 +50,7 @@ function _updater(t?: number) {
             } else {
                 state.value = state.value ^ GROUP;
             }
-            if(shapes.some(s => s.type === ShapeType.Artboard)) {
+            if (shapes.some(s => s.type === ShapeType.Artboard)) {
                 isBoolGroup.value = false;
             }
         }
@@ -111,15 +111,18 @@ const ungroupClick = () => {
     if (!shapes.length) return;
     const groups = shapes.filter(i => i.type === ShapeType.Group);
     const artboards = shapes.filter(i => i.type === ShapeType.Artboard);
-    const others: (ShapeView | Shape)[] = shapes.filter(i => i.type !== ShapeType.Group);
-    if (!groups.length) return;
+    const others: (ShapeView | Shape)[] = shapes.filter(i => i.type !== ShapeType.Group && i.type !== ShapeType.Artboard);
     const page = selection.selectedPage;
     if (!page) return;
     const editor = props.context.editor4Page(page);
-    const a = editor.dissolution_artboard(artboards.map(s => adapt2Shape(s)) as Artboard[]);
-    if (a) others.push(...a);
-    const g = editor.ungroup(groups.map(s => adapt2Shape(s)) as GroupShape[]);
-    if (g) others.push(...g);
+    if (artboards.length) {
+        const a = editor.dissolution_artboard(artboards.map(s => adapt2Shape(s)) as Artboard[]);
+        if (a) others.push(...a);
+    }
+    if (groups.length) {
+        const g = editor.ungroup(groups.map(s => adapt2Shape(s)) as GroupShape[]);
+        if (g) others.push(...g);
+    }
     if (others.length) {
         props.context.nextTick(page, () => {
             const select = others.reduce((pre, cur) => {
@@ -143,9 +146,11 @@ const changeBoolgroup = (type: BoolOp, n: string) => {
     const selection = props.selection;
     const shapes = selection.selectedShapes;
     const page = props.context.selection.selectedPage;
+    console.log(type, n, 'bool', shapes[0] instanceof GroupShape);
+
     const name = t(`bool.${n}`)
     if (shapes.length && page) {
-        if (shapes.length === 1 && shapes[0] instanceof GroupShape) {
+        if (shapes.length === 1 && shapes[0] instanceof GroupShapeView) {
             const editor = props.context.editor4Shape(shapes[0])
             editor.setBoolOp(type, name)
             props.context.selection.notify(Selection.CHANGE_SHAPE)
@@ -171,8 +176,8 @@ const flattenShape = () => {
     const shapes = compare_layer_3(filter_for_group1(selection.selectedShapes));
     if (page && shapes.length) {
         const editor = props.context.editor4Page(page)
-        if (shapes.length === 1 && shapes[0] instanceof GroupShape) {
-            const flatten = editor.flattenBoolShape(shapes[0])
+        if (shapes.length === 1 && shapes[0] instanceof GroupShapeView) {
+            const flatten = editor.flattenBoolShape(adapt2Shape(shapes[0]) as GroupShape)
             if (flatten) {
                 props.context.nextTick(page, () => {
                     const s = page.getShape(flatten.id);

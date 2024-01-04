@@ -79,7 +79,7 @@ function watchShapes() {
     })
 }
 
-function updateData() {    
+function updateData() {
     fills.length = 0;
     mixed.value = false;
     mixed_cell.value = false;
@@ -307,7 +307,7 @@ function toggleVisible(idx: number) {
         }
     } else if (len.value > 1) {
         const fills = props.shapes[0].getFills();
-        const value = !fills[idx].isEnabled;
+        const value = !fills[_idx].isEnabled;
         const actions = get_actions_fill_enabled(props.shapes, _idx, value);
         const page = props.context.selection.selectedPage;
         if (page) {
@@ -318,7 +318,7 @@ function toggleVisible(idx: number) {
         const childs = (s).childs;
         const shapes = flattenShapes(childs).filter(s => s.type !== ShapeType.Group);
         const fills = shapes[0].getFills();
-        const value = !fills[idx].isEnabled;
+        const value = !fills[_idx].isEnabled;
         const actions = get_actions_fill_enabled(shapes, _idx, value);
         const page = props.context.selection.selectedPage;
         if (page) {
@@ -346,11 +346,10 @@ function setColor(idx: number, clr: string, alpha: number, isColor: boolean) {
     const g = Number.parseInt(res[2], 16);
     const b = Number.parseInt(res[3], 16);
     const s = shapes.value[0] as ShapeView;
-    const _idx = s.style.fills.length - idx - 1;
+    const _idx = fills.length - idx - 1;
     const editor = props.context.editor4Shape(s)
     if (shapes.value.length === 1 && (s.type !== ShapeType.Group || (s as GroupShapeView).data.isBoolOpShape)) {
         if (s.type === ShapeType.Table) {
-            const table = props.context.tableSelection;
             const e = props.context.editor4Table(s as TableView);
             const is_edting = tableSelect.value.editingCell;
             if (tableSelect.value.tableRowStart > -1 || tableSelect.value.tableColStart > -1 || is_edting) {
@@ -374,12 +373,12 @@ function setColor(idx: number, clr: string, alpha: number, isColor: boolean) {
                     tableSelect.value.tableRowEnd,
                     tableSelect.value.tableColStart,
                     tableSelect.value.tableColEnd);
-                    if (tablecells.length > 0 && tablecells[0].cell) {
-                        const _b = tablecells[0].cell.style.fills[idx]
-                        const a = isColor ? _b.color.alpha : alpha;
-                        const blue = isColor? b : _b.color.blue;
-                        const green = isColor? g : _b.color.green;
-                        const red = isColor? r : _b.color.red;
+                if (tablecells.length > 0 && tablecells[0].cell) {
+                    const _b = tablecells[0].cell.style.fills[idx]
+                    const a = isColor ? _b.color.alpha : alpha;
+                    const blue = isColor ? b : _b.color.blue;
+                    const green = isColor ? g : _b.color.green;
+                    const red = isColor ? r : _b.color.red;
                     e.setFillColor(_idx, new Color(a, red, green, blue), range)
                 }
             } else {
@@ -416,11 +415,11 @@ function onColorChange(idx: number, e: Event) {
     if (value.length === 4) value = `#${value.slice(1).split('').map(i => `${i}${i}`).join('')}`;
     if (value.length === 2) value = `#${value.slice(1).split('').map(i => `${i}${i}${i}${i}${i}${i}`).join('')}`;
     if (Reg_HEX.test(value)) {
-        const alpha = shape.style.fills[idx].color.alpha;
+        const alpha = fills[idx].fill.color.alpha;
         setColor(idx, value, alpha, true);
     } else {
         message('danger', t('system.illegal_input'));
-        return colorFill.value.value = toHex(shape.style.fills[idx].color.red, shape.style.fills[idx].color.green, shape.style.fills[idx].color.blue);
+        return colorFill.value.value = toHex(fills[idx].fill.color.red, fills[idx].fill.color.green, fills[idx].fill.color.blue);
     }
 }
 
@@ -435,7 +434,7 @@ function onAlphaChange(idx: number, e: Event) {
                     value = 100
                 }
                 value = value.toFixed(2) / 100
-                const color = shape.style.fills[idx].color;
+                const color = fills[idx].fill.color;
                 let clr = toHex(color.red, color.green, color.blue);
                 if (clr.slice(0, 1) !== '#') {
                     clr = "#" + clr
@@ -444,7 +443,7 @@ function onAlphaChange(idx: number, e: Event) {
                 return
             } else {
                 message('danger', t('system.illegal_input'));
-                return alphaFill.value.value = (shape.style.fills[idx].color.alpha * 100) + '%'
+                return alphaFill.value.value = (fills[idx].fill.color.alpha * 100) + '%'
             }
         } else if (!isNaN(Number(value))) {
             if (value >= 0) {
@@ -452,7 +451,7 @@ function onAlphaChange(idx: number, e: Event) {
                     value = 100
                 }
                 value = Number((Number(value)).toFixed(2)) / 100
-                const color = shape.style.fills[idx].color;
+                const color = fills[idx].fill.color;
                 let clr = toHex(color.red, color.green, color.blue);
                 if (clr.slice(0, 1) !== '#') {
                     clr = "#" + clr
@@ -461,11 +460,11 @@ function onAlphaChange(idx: number, e: Event) {
                 return
             } else {
                 message('danger', t('system.illegal_input'));
-                return alphaFill.value.value = (shape.style.fills[idx].color.alpha * 100) + '%'
+                return alphaFill.value.value = (fills[idx].fill.color.alpha * 100) + '%'
             }
         } else {
             message('danger', t('system.illegal_input'));
-            return alphaFill.value.value = (shape.style.fills[idx].color.alpha * 100) + '%'
+            return alphaFill.value.value = (fills[idx].fill.color.alpha * 100) + '%'
         }
     }
 }

@@ -1,6 +1,7 @@
 import { XY } from "@/context/selection";
 import { Border, BorderPosition, GroupShape, GroupShapeView, Page, PageView, ShadowPosition, Shape, ShapeType, ShapeView } from "@kcdesign/data";
 import { isTarget } from '@/utils/common';
+import { Context } from '@/context';
 export function getCutoutShape(shape: ShapeView, page: PageView, selectedShapes: Map<string, ShapeView>) {
     if (!shape.parent) return;
     const matrix = shape.parent.matrix2Root();
@@ -163,7 +164,7 @@ export const getGroupChildBounds = (shape: ShapeView) => {
     const group_bounds_points = getMaxMinPoints(shapes);
     const max_p = getMaxPoint(group_bounds_points);
     const min_p = getMinPoint(group_bounds_points);
-    
+
     return {
         x: min_p.x,
         y: min_p.y,
@@ -196,7 +197,7 @@ const getMaxMinPoints = (shapes: ShapeView[]) => {
         const p4 = getRotatePoint(frame.x - l, frame.y + frame.height + b, rotate, cx, cy);
         points.push(p1, p2, p3, p4);
         let max_point = getMaxPoint(points);
-        let min_point = getMinPoint(points);        
+        let min_point = getMinPoint(points);
         let p = shape.parent;
         if (p && p.type !== ShapeType.Page) {
             while (p) {
@@ -222,7 +223,7 @@ const getMaxMinPoints = (shapes: ShapeView[]) => {
 }
 export function flattenShapes(shapes: ShapeView[]): ShapeView[] {
     return shapes.reduce((result: any, item: ShapeView) => {
-        if(item.type === ShapeType.Group) {
+        if (item.type === ShapeType.Group) {
             const childs = (item).childs as ShapeView[];
             if (Array.isArray(childs)) {
                 result = result.concat(flattenShapes(childs));
@@ -264,13 +265,13 @@ const getMinPoint = (points: { x: number, y: number }[]) => {
 }
 
 export function compareArrays(s1: ShapeView[], s2: ShapeView[]) {
-    if(s1.length !== s2.length) {
-      return false;
-    }
-    for(let i = 0; i < s1.length; i++) {
-      if(s1[i].id !== s2[i].id) {
+    if (s1.length !== s2.length) {
         return false;
-      }
+    }
+    for (let i = 0; i < s1.length; i++) {
+        if (s1[i].id !== s2[i].id) {
+            return false;
+        }
     }
     return true;
-  }
+}
