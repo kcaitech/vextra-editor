@@ -10,6 +10,7 @@ import { RGB2HSL, RGB2HSB } from '@/components/common/ColorPicker/utils';
 import { useI18n } from 'vue-i18n';
 import LableTootip from './LableTootip.vue';
 import { Menu } from '@/context/menu';
+import SvgIcon from "@/components/common/SvgIcon.vue";
 const { t } = useI18n();
 const props = defineProps<{
     context: Context
@@ -73,9 +74,9 @@ const getBordersData = () => {
     borders.length = 0;
     const shape = props.context.selection.selectedShapes[0];
     if (props.context.selection.selectedShapes.length === 1) {
-        const borders0 = shape.getBorders();
-        for (let i = 0, l = borders0.length; i < l; i++) {
-            const border = borders0[i];
+        const borders1 = shape.getBorders();
+        for (let i = 0, l = borders1.length; i < l; i++) {
+            const border = borders1[i];
             const b: BorderItem = {
                 id: i,
                 border: border
@@ -188,10 +189,11 @@ onUnmounted(() => {
             <template #select>
                 <div class="fillunit-input" @click.stop="onSelected">
                     <span>{{ fillMenuItems[fill_i] }}</span>
-                    <el-icon>
-                        <ArrowDown
-                            :style="{ transform: selectoption ? 'rotate(180deg)' : 'rotate(0deg)', transition: '0.3s' }" />
-                    </el-icon>
+<!--                    <el-icon>-->
+<!--                        <ArrowDown-->
+<!--                            :style="{ transform: selectoption ? 'rotate(180deg)' : 'rotate(0deg)', transition: '0.3s' }" />-->
+<!--                    </el-icon>-->
+                    <svg-icon icon-class="down"></svg-icon>
                     <LableDropMenu v-if="selsectedShow" :context="context" :Items="fillMenuItems" :choose="fill_i"
                         @close="close" @listMenuStatus="listMenuStatus"></LableDropMenu>
                 </div>
@@ -201,14 +203,14 @@ onUnmounted(() => {
                     <div class="row">
                         <span class="named">{{ t('lable.position') }}</span>
                         <LableTootip :copy_text="copy_text" :visible="_visible === b.id + 'address'">
-                            <div><span @click="(e) => copyLable(e, b.id + 'address')" style="cursor: pointer;"
+                            <div><span @click="(e) => copyLable(e, b.id + 'address')" style="cursor: pointer;font-weight: 500"
                                     @mouseleave.stop="_visible = undefined, copy_text = false">{{
                                         t(`attr.${b.border.position}`) }}</span></div>
                         </LableTootip>
                     </div>
                     <div class="color_row">
                         <span class="named">{{ t('lable.pure_color') }}</span>
-                        <div style="display: flex;">
+                        <div style="display: flex;font-weight: 500">
                             <div class="color"
                                 :style="{ backgroundColor: toRGB(b.border.color.red, b.border.color.green, b.border.color.blue) }">
                             </div>
@@ -228,7 +230,7 @@ onUnmounted(() => {
                     </div>
                     <div class="row">
                         <span class="named">{{ t('lable.thickness') }}</span>
-                        <div>
+                        <div style="font-weight: 500">
                             <LableTootip :copy_text="copy_text" :visible="_visible === b.id + 'top'">
                                 <span @click="(e) => copyLable(e, b.id + 'top')" style="cursor: pointer;"
                                     @mouseleave.stop="_visible = undefined, copy_text = false">{{ b.border.thickness *
@@ -255,7 +257,7 @@ onUnmounted(() => {
                         <span class="named">{{ t('lable.style') }}</span>
                         <div style="display: flex;">
                             <LableTootip :copy_text="copy_text" :visible="_visible === b.id + 'line'">
-                                <span style="color: #a5a5a5; cursor: pointer;" @click="(e) => copyLable(e, b.id + 'line')"
+                                <span style="color: #000000; cursor: pointer;font-weight: 500" @click="(e) => copyLable(e, b.id + 'line')"
                                     @mouseleave.stop="_visible = undefined, copy_text = false">{{
                                         b.border.borderStyle.gap > 0 ? `${t('lable.dotted_line')}` : `${t('lable.solid_line')}`
                                     }}</span>
@@ -276,7 +278,7 @@ onUnmounted(() => {
 <style lang="scss" scoped>
 .fillunit-input {
     position: relative;
-    height: 30px;
+    height: 16px;
     border-radius: 4px;
     padding-left: 11px;
     box-sizing: border-box;
@@ -285,39 +287,41 @@ onUnmounted(() => {
 
     span {
         flex: 1;
+        color: #8C8C8C;
+        margin-right: 4px;
     }
 
-    .el-icon {
-        width: 30px;
-        height: 30px;
-        display: flex;
-        align-items: center;
-        justify-content: center;
+    >svg {
+        width: 12px;
+        height: 12px;
+        color: #BFBFBF;
+        margin-right: 4px;
     }
 }
 
 .named {
     display: block;
     width: 58px;
-    color: #a5a5a5;
+    color: #8C8C8C;
 }
 
 .row {
     display: flex;
-    margin: 10px 0;
+    padding: 9px 0;
 }
 
 .color_row {
     display: flex;
-    margin: 10px 0;
+    padding: 9px 0;
     color: #000;
 
     .color {
-        margin-right: 5px;
-        width: 14px;
-        height: 14px;
-        border-radius: 2px;
-        border: 1px solid var(--grey-dark);
+        margin-right: 8px;
+        width: 16px;
+        height: 16px;
+        border-radius: 3px;
+        border: 1px solid rgba(0, 0, 0, 0.1);
+        box-sizing: border-box;
     }
 }
 
