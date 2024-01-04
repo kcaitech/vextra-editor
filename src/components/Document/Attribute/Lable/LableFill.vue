@@ -71,9 +71,9 @@ const getFillsData = () => {
     fills.length = 0;
     const shape = props.context.selection.selectedShapes[0];
     if (props.context.selection.selectedShapes.length === 1) {
-        const fills = shape.getFills();
-        for (let i = 0, len = fills.length; i < len; i++) {
-            const fill = fills[i];
+        const fills0 = shape.getFills();
+        for (let i = 0, len = fills0.length; i < len; i++) {
+            const fill = fills0[i];
             const f = { id: i, fill };
             fills.unshift(f);
         }
