@@ -34,8 +34,8 @@ export class Server {
     lastReceiveHeartbeatTime: number = 0
     lastSendHeartbeatTime: number = 0
     sendHeartbeatInterval?: number
-    receiveHeartbeatInterval?: number
-    offlineInterval?: number
+    receiveHeartbeatTimer?: number
+    offlineTimer?: number
     networkStatus: NetworkStatusType = NetworkStatusType.Offline
     onConnected: () => void = () => {}
 
@@ -117,7 +117,7 @@ export class Server {
             this.sendHeartbeatInterval = setInterval(() => {
                 this.sendHeartbeat()
             }, 1000) as any
-            this.receiveHeartbeatInterval = setTimeout(this._onNetworkOffline.bind(this), 3000) as any
+            this.receiveHeartbeatTimer = setTimeout(this._onNetworkOffline.bind(this), 3000) as any
         } else {
             this._onNetworkOnline()
         }
@@ -228,17 +228,17 @@ export class Server {
         if (this.isClosed || this.networkStatus === NetworkStatusType.Offline) return;
         this.networkStatus = NetworkStatusType.Offline
         this.onNetworkOffline()
-        this.offlineInterval = setTimeout(this.closeWs.bind(this), 60000) as any
+        this.offlineTimer = setTimeout(this.closeWs.bind(this), 60000) as any
     }
 
     _onNetworkOnline() {
-        if (this.receiveHeartbeatInterval !== undefined) clearTimeout(this.receiveHeartbeatInterval);
-        this.receiveHeartbeatInterval = setTimeout(this._onNetworkOffline.bind(this), 3000) as any
+        if (this.receiveHeartbeatTimer !== undefined) clearTimeout(this.receiveHeartbeatTimer);
+        this.receiveHeartbeatTimer = setTimeout(this._onNetworkOffline.bind(this), 3000) as any
         if (this.networkStatus === NetworkStatusType.Offline) {
             this.networkStatus = NetworkStatusType.Online
             this.onNetworkOnline()
         }
-        if (this.offlineInterval !== undefined) clearTimeout(this.offlineInterval);
+        if (this.offlineTimer !== undefined) clearTimeout(this.offlineTimer);
         this.lastReceiveHeartbeatTime = Date.now()
     }
 
@@ -271,9 +271,9 @@ export class Server {
             clearInterval(this.sendHeartbeatInterval)
             this.sendHeartbeatInterval = undefined
         }
-        if (this.receiveHeartbeatInterval !== undefined) {
-            clearTimeout(this.receiveHeartbeatInterval)
-            this.receiveHeartbeatInterval = undefined
+        if (this.receiveHeartbeatTimer !== undefined) {
+            clearTimeout(this.receiveHeartbeatTimer)
+            this.receiveHeartbeatTimer = undefined
         }
         this.isClosed = true
     }
