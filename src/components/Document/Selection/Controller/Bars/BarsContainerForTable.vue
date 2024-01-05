@@ -1,13 +1,12 @@
 <script setup lang='ts'>
 import { Context } from '@/context';
-import { AsyncBaseAction, CtrlElementType, Matrix, Shape, ShapeView, TableShape, adapt2Shape } from '@kcdesign/data';
+import { AsyncBaseAction, CtrlElementType, Matrix, ShapeView, adapt2Shape } from '@kcdesign/data';
 import { onMounted, onUnmounted, watch, reactive } from 'vue';
 import { ClientXY, PageXY } from '@/context/selection';
 import { Action } from '@/context/tool';
 import { Point } from '../../SelectionView.vue';
-import { PointType } from '@/context/assist';
 import { forbidden_to_modify_frame } from '@/utils/common';
-import { get_transform } from '../Points/common';
+import { get_transform, modify_rotate_before_set } from '../Points/common';
 interface Props {
     matrix: number[]
     context: Context
@@ -27,13 +26,14 @@ let startPosition: ClientXY = { x: 0, y: 0 };
 let isDragging = false;
 let asyncBaseAction: AsyncBaseAction | undefined = undefined;
 let cur_ctrl_type: CtrlElementType = CtrlElementType.RectLT;
-let pointType: PointType = 'lt';
 let stickedX: boolean = false;
 let stickedY: boolean = false;
 let sticked_x_v: number = 0;
 let sticked_y_v: number = 0;
 const dragActiveDis = 3;
 const types = [CtrlElementType.RectRight, CtrlElementType.RectBottom];
+let need_reset_cursor_after_transform = true;
+
 function update() {
     matrix.reset(props.matrix);
     update_dot_path();
@@ -51,20 +51,14 @@ function update_dot_path() {
 function get_bar_path(s: { x: number, y: number }, e: { x: number, y: number }): string {
     return `M ${s.x} ${s.y} L ${e.x} ${e.y}`;
 }
-function ct2pt(ct: CtrlElementType) {
-    if (ct === CtrlElementType.RectRight) return 'rt';
-    else if (ct === CtrlElementType.RectBottom) return 'rb';
-    else return 'lt';
-}
+
 // mouse event flow: down -> move -> up
 function bar_mousedown(event: MouseEvent, ele: CtrlElementType) {
     if (event.button !== 0) {
         return;
     }
 
-    props.context.menu.menuMount();
     event.stopPropagation();
-    props.context.menu.menuMount();
 
     if (forbidden_to_modify_frame(props.shape)) {
         return;
@@ -73,26 +67,24 @@ function bar_mousedown(event: MouseEvent, ele: CtrlElementType) {
     const table_selection = props.context.tableSelection;
     table_selection.setEditingCell();
     table_selection.resetSelection();
+
     cur_ctrl_type = ele;
-    pointType = ct2pt(cur_ctrl_type);
-    const workspace = props.context.workspace;
-    workspace.setCtrl('controller');
-    const { clientX, clientY } = event;
-    matrix.reset(workspace.matrix);
-    const root = workspace.root;
-    startPosition = { x: clientX - root.x, y: clientY - root.y }
+
+    set_status_on_down();
+
+    startPosition = props.context.workspace.getContentXY(event);
+
     document.addEventListener('mousemove', bar_mousemove);
     document.addEventListener('mouseup', bar_mouseup);
 }
 function bar_mousemove(event: MouseEvent) {
     const workspace = props.context.workspace;
-    const root = workspace.root;
-    const { clientX, clientY } = event;
-    const mouseOnPage: ClientXY = { x: clientX - root.x, y: clientY - root.y };
+
+    const mouseOnPage: ClientXY = workspace.getContentXY(event);
+
     const s = props.shape;
     if (isDragging && asyncBaseAction) {
         const action = props.context.tool.action;
-        matrix.reset(workspace.matrix);
         const p1OnPage: PageXY = submatrix.computeCoord(startPosition.x, startPosition.y); // page
         const p2Onpage: PageXY = submatrix.computeCoord(mouseOnPage.x, mouseOnPage.y);
         if (event.shiftKey || s.constrainerProportions || action === Action.AutoK) {
@@ -101,18 +93,26 @@ function bar_mousemove(event: MouseEvent) {
             scale(asyncBaseAction, p2Onpage);
         }
         startPosition = { ...mouseOnPage };
-    } else {
-        if (Math.hypot(mouseOnPage.x - startPosition.x, mouseOnPage.y - startPosition.y) > dragActiveDis) {
-            isDragging = true;
-            const page = props.context.selection.selectedPage!;
-            asyncBaseAction = props.context.editor.controller().asyncRectEditor(adapt2Shape(s), page);
-            submatrix.reset(workspace.matrix.inverse);
-            setCursor(cur_ctrl_type, true);
-            workspace.scaling(true);
-            const sv = page.getShape(props.shape.id);
-            sv && props.context.assist.set_trans_target([sv]);
-        }
+    } else if (Math.hypot(mouseOnPage.x - startPosition.x, mouseOnPage.y - startPosition.y) > dragActiveDis) {
+        const page = props.context.selection.selectedPage!;
+
+        asyncBaseAction = props.context.editor
+            .controller()
+            .asyncRectEditor(adapt2Shape(s), page);
+
+        submatrix.reset(workspace.matrix.inverse);
+
+        set_status_before_action();
+
+        isDragging = true;
     }
+}
+function bar_mouseup(event: MouseEvent) {
+    if (event.button !== 0) {
+        return;
+    }
+
+    clear_status();
 }
 let pre_target_x: number, pre_target_y: number;
 function scale(asyncBaseAction: AsyncBaseAction, p2: PageXY) {
@@ -176,54 +176,69 @@ function getScale(type: CtrlElementType, shape: ShapeView, start: ClientXY, end:
         return (f.height + dy) / f.height;
     } else return 1
 }
-function modify_rotate_before_set(deg: number, fh: boolean, fv: boolean) {
-    if (fh) deg = 180 - deg;
-    if (fv) deg = 360 - deg;
 
-    return Math.floor(deg);
-}
-function setCursor(t: CtrlElementType, force?: boolean) {
+function setCursor(t: CtrlElementType) {
     const cursor = props.context.cursor;
     const { rotate, isFlippedHorizontal, isFlippedVertical } = get_transform(props.shape);
     let deg = rotate;
 
     if (t === CtrlElementType.RectRight) {
         deg = modify_rotate_before_set(deg, isFlippedHorizontal, isFlippedVertical);
-        cursor.setType(`scale-${deg}`, force);
+
     } else if (t === CtrlElementType.RectBottom) {
         deg = modify_rotate_before_set(deg + 90, isFlippedHorizontal, isFlippedVertical);
-        cursor.setType(`scale-${deg}`, force);
     }
+
+    cursor.setType('scale', deg);
 }
-function bar_mouseup(event: MouseEvent) {
-    if (event.button !== 0) return;
-    const workspace = props.context.workspace;
-    workspace.scaling(false);
-    workspace.setCtrl('page');
-    props.context.cursor.reset();
+
+function set_status_on_down() {
+    props.context.menu.menuMount();
+
+    props.context.workspace.setCtrl('controller');
+    
+    props.context.cursor.cursor_freeze(true);
+}
+
+function set_status_before_action() {   
+    props.context.workspace.scaling(true);
+
+    const page = props.context.selection.selectedPage!;
+    const sv = page.getShape(props.shape.id);
+    sv && props.context.assist.set_trans_target([sv]);
+}
+
+function clear_status() {
     if (isDragging) {
         isDragging = false;
         props.context.assist.reset();
     }
-    if (asyncBaseAction) asyncBaseAction = asyncBaseAction.close();
+    if (asyncBaseAction) {
+        asyncBaseAction = asyncBaseAction.close();
+    }
+
+    const workspace = props.context.workspace;
+    workspace.scaling(false);
+    workspace.setCtrl('page');
+
+    props.context.cursor.cursor_freeze(false);
+    if (need_reset_cursor_after_transform) {
+        props.context.cursor.reset();
+    }
+
     document.removeEventListener('mousemove', bar_mousemove);
     document.removeEventListener('mouseup', bar_mouseup);
+}
+function bar_mouseenter(t: CtrlElementType) {
+    need_reset_cursor_after_transform = false;
+    setCursor(t);
 }
 function bar_mouseleave() {
     props.context.cursor.reset();
+    need_reset_cursor_after_transform = true;
 }
 function window_blur() {
-    if (isDragging) {
-        isDragging = false;
-        props.context.assist.reset();
-    }
-    if (asyncBaseAction) asyncBaseAction = asyncBaseAction.close();
-    const workspace = props.context.workspace;
-    workspace.scaling(false);
-    workspace.setCtrl('page');
-    props.context.cursor.reset();
-    document.removeEventListener('mousemove', bar_mousemove);
-    document.removeEventListener('mouseup', bar_mouseup);
+    clear_status();
 }
 watch(() => props.matrix, update);
 watch(() => props.shape, (value, old) => {
@@ -242,13 +257,14 @@ onUnmounted(() => {
 })
 </script>
 <template>
-    <g>
-        <g v-for="(b, i) in paths" :key="i">
-            <path :d="b.path" fill="none" stroke='transparent' stroke-width="10px"
-                @mousedown.stop="(e) => bar_mousedown(e, b.type)" @mouseenter="() => setCursor(b.type)"
-                @mouseleave="bar_mouseleave">
-            </path>
-        </g>
-    </g>
+    <path v-for="(b, i) in paths" :key="i" :d="b.path" class="main-path" @mousedown.stop="(e) => bar_mousedown(e, b.type)"
+        @mouseenter="() => bar_mouseenter(b.type)" @mouseleave="bar_mouseleave">
+    </path>
 </template>
-<style lang='scss' scoped></style>
+<style lang='scss' scoped>
+.main-path {
+    fill: none;
+    stroke: transparent;
+    stroke-width: 10px;
+}
+</style>

@@ -25,7 +25,6 @@ defineExpose({
     display: flex;
     align-items: center;
     justify-content: center;
-    margin: 0 2px;
     min-width: 28px;
     min-height: 28px;
     box-sizing: border-box;

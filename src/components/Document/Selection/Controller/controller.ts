@@ -1,4 +1,4 @@
-import { ShapeType, AsyncPathEditor, ShapeView, adapt2Shape, PathShapeView } from '@kcdesign/data';
+import { Shape, ShapeType, GroupShape, PathShape, AsyncPathEditor, ShapeView, adapt2Shape, PathShapeView } from '@kcdesign/data';
 import { onMounted, onUnmounted } from "vue";
 import { Context } from "@/context";
 import { Matrix } from '@kcdesign/data';

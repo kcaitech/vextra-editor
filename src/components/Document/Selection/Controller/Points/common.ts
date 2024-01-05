@@ -287,3 +287,15 @@ export function get_real_rotation(shape: ShapeView) {
 
     return rotate;
 }
+
+export function modify_rotate_before_set(deg: number, fh: boolean, fv: boolean) {
+    if (fh) {
+        deg = 180 - deg;
+    }
+
+    if (fv) {
+        deg = 360 - deg;
+    }
+
+    return Math.floor(deg) % 360;
+}
