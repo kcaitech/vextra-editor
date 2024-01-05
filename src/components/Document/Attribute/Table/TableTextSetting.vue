@@ -224,7 +224,7 @@ const textFormat = () => {
   } else {
     let cells: (TableCell | undefined)[] = []
     if (table.tableRowStart < 0 || table.tableColStart < 0) {
-      cells = props.textShape.data.childs || [];
+      cells = props.textShape.data.datas || [];
     } else {
       cells = table.getSelectedCells(true).map(item => item.cell) || [];
     }

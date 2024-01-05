@@ -51,9 +51,6 @@ let renderSvgs = ref<SvgFormat[]>([]);
 function watchShapes() {
     const needWatchShapes = new Map();
     const selection = props.context.selection;
-    if (selection.hoveredShape) {
-        needWatchShapes.set(selection.hoveredShape.id, selection.hoveredShape);
-    }
     if (selection.selectedPage) {
         needWatchShapes.set(selection.selectedPage.id, selection.selectedPage);
     }

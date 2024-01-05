@@ -31,6 +31,7 @@ import TableMenu from "./TableMenu/TableMenu.vue"
 import { make_symbol } from '@/utils/symbol';
 import { Tool } from "@/context/tool";
 import SvgIcon from "@/components/common/SvgIcon.vue";
+import { hover } from '@/utils/listview';
 
 const { t } = useI18n();
 
@@ -52,10 +53,11 @@ const isTitle = ref<boolean>(props.context.tool.isShowTitle);
 const isCursor = ref<boolean>(props.context.menu.isUserCursorVisible);
 const invalid_items = ref<string[]>([]);
 
-function showLayerSubMenu(e: MouseEvent) {
+function showLayerSubMenu(e: MouseEvent, type: string) {
     layerSubMenuPosition.x = (e.target as Element).getBoundingClientRect().width;
     layerSubMenuPosition.y = -10;
     layerSubMenuVisiable.value = true;
+    hoverItem.value = type;
 }
 
 function is_inner_textshape(): (ShapeView | Shape) & { text: Text } | undefined {
@@ -461,6 +463,7 @@ const mouseenter = (type: string) => {
  */
 function closeLayerSubMenu() {
     layerSubMenuVisiable.value = false;
+    hoverItem.value = '';
 }
 
 function show_placement(val: boolean) {
@@ -485,10 +488,11 @@ onUnmounted(() => {
 <template>
     <div class="items-wrap" @mousedown.stop @click.stop>
         <div v-if="props.items.includes('layers')" class="item layer-select"
-            @mouseenter="(e: MouseEvent) => showLayerSubMenu(e)" @mouseleave="closeLayerSubMenu">
+            @mouseenter="(e: MouseEvent) => showLayerSubMenu(e, 'layer-select')" @mouseleave="closeLayerSubMenu">
             <span>{{ t('system.select_layer') }}</span>
             <!--            <div class="triangle"></div>-->
-            <svg-icon icon-class="down" style="transform: rotate(-90deg);margin-left: 62px"></svg-icon>
+            <svg-icon :icon-class="hoverItem === 'layer-select' ? 'white-down' : 'down'"
+                style="transform: rotate(-90deg);margin-left: 62px"></svg-icon>
             <ContextMenu v-if="layerSubMenuVisiable" :x="layerSubMenuPosition.x" :y="layerSubMenuPosition.y" :width="174"
                 :site="site" :context="props.context">
                 <Layers @close="emit('close')" :layers="props.layers" :context="props.context"></Layers>

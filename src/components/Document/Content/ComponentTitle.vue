@@ -128,13 +128,13 @@ function down(e: MouseEvent) {
     if (context.workspace.isPageDragging) return;
     e.stopPropagation();
     if (isInput.value) return;
-    if (!permIsEdit(context) || context.tool.isLable) return; // 检查是否有权限编辑文档或者为标注模式， 没有则return；
+    if (!permIsEdit(context)) return; // 检查是否有权限编辑文档或者为标注模式， 没有则return；
     if (!check_status(context)) return; // 检查当前文档状态是否可以编辑；
     if (e.button === 0) { // 只允许左键进行拖动
         context.selection.selectShape(props.shape); // 先将图形设为选中状态，只有被选中才可以被拖动
         let root = props.context.workspace.root;// 盒子的信息(wrap的信息)
         startPosition = { x: e.clientX - root.x, y: e.clientY - root.y }; // 记录鼠标按下的点相对wrap的相对位移
-        if (forbidden_to_modify_frame(props.shape)) return;
+        if (forbidden_to_modify_frame(props.shape) || context.tool.isLable) return;
         document.addEventListener('mousemove', move);
         document.addEventListener('mouseup', up);
     } else if (e.button === 2) { // 右键是打开菜单

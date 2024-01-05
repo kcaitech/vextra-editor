@@ -1,6 +1,6 @@
 <script setup lang='ts'>
 import { Shape, ShapeView } from "@kcdesign/data";
-import { computed } from 'vue';
+import { computed, ref } from 'vue';
 import { Context } from '@/context'
 interface Props {
   context: Context,
@@ -11,15 +11,18 @@ const emit = defineEmits<{
 }>();
 const selectedShapes = computed(() => props.context.selection.selectedShapes);
 const props = defineProps<Props>();
+const hoverItem = ref('');
 function select(shape: ShapeView) {
   props.context.selection.selectShape(shape);
   emit('close');
 }
 function mouseenter(shape: ShapeView) {
   props.context.selection.hoverShape(shape);
+  hoverItem.value = shape.id;
 }
 function mouseout() {
   props.context.selection.unHoverShape();
+  hoverItem.value = '';
 }
 </script>
 <template>
@@ -27,8 +30,7 @@ function mouseout() {
     <div class="item" v-for="shape in props.layers" :key="shape.id" @click="select(shape)"
       @mouseenter="() => mouseenter(shape)" @mouseleave="mouseout">
       <div>
-<!--        <div class="check" v-if="selectedShapes.find(i => i.id === shape.id)"></div>-->
-          <svg-icon icon-class="choose" v-if="selectedShapes.find(i => i.id === shape.id)"></svg-icon>
+          <svg-icon :icon-class="hoverItem === shape.id ? 'white-select' : 'page-select'" v-if="selectedShapes.find(i => i.id === shape.id)"></svg-icon>
       </div>
       <span :style="{ marginLeft: selectedShapes ? '8px' : '20px'}">{{ shape.name }}</span>
     </div>
