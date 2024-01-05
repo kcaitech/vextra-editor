@@ -508,9 +508,12 @@ export class WorkSpace extends WatchableObject {
     can_translate(e: MouseEvent) {
         const shapes = this.context.selection.selectedShapes;
         const action = this.context.tool.action;
-        return e.button === 0 && shapes.length > 0
+        return e.button === 0
+            && shapes.length > 0
             && (action === Action.AutoV || action === Action.AutoK)
-            && this.m_document_perm === Perm.isEdit && !this.context.tool.isLable;
+            && this.m_document_perm === Perm.isEdit
+            && !this.context.tool.isLable
+            && !this.isEditing;
     }
 
     getContentXY(e: MouseEvent): XY {
