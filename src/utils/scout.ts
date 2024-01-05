@@ -661,11 +661,11 @@ function for_standard(context: Context, scout: Scout, scope: ShapeView[], hot: P
         if (is_fixed(item)) {
             result = for_fixed(context, scout, item, hot);
 
-            if (item.type === ShapeType.SymbolUnion) {
-                return item;
+            if (result) {
+                return result;
             }
 
-            if (item.type === ShapeType.Artboard && !item.childs.length) {
+            if (!item.childs.length) {
                 return item;
             }
 
