@@ -13,6 +13,7 @@ import { is_shape_in_selected } from "@/utils/scout";
 import ShapeSize from "./ShapeSize.vue";
 import LableLine from "../Assist/LableLine.vue";
 import { reactive } from "vue";
+import { multi_select_shape } from "@/utils/listview";
 
 export interface Point {
     x: number
@@ -331,7 +332,7 @@ function pathMousedown(e: MouseEvent) { // 点击图形描边以及描边内部�
     }
 
     if (e.shiftKey) {
-        selection.rangeSelectShape(selection.selectedShapes.concat(hoveredShape));
+        multi_select_shape(props.context, hoveredShape);
     } else {
         const workspace = props.context.workspace;
         selection.selectShape(hoveredShape);

@@ -304,8 +304,6 @@ const Sharefile = (data: data) => {
     projectPerm.value = data.project_perm
     showFileShare.value = true
     sharenumber += 1
-    console.log(showFileShare.value);
-
 }
 
 //移除历史记录入口

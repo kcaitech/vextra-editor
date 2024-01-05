@@ -196,7 +196,7 @@ onMounted(render)
 
         .value-wrap {
             flex: 1;
-
+            // height: 100%;
             overflow: hidden;
             text-overflow: ellipsis;
             white-space: nowrap;

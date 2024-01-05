@@ -490,7 +490,6 @@ onUnmounted(() => {
         <div v-if="props.items.includes('layers')" class="item layer-select"
             @mouseenter="(e: MouseEvent) => showLayerSubMenu(e, 'layer-select')" @mouseleave="closeLayerSubMenu">
             <span>{{ t('system.select_layer') }}</span>
-            <!--            <div class="triangle"></div>-->
             <svg-icon :icon-class="hoverItem === 'layer-select' ? 'white-down' : 'down'"
                 style="transform: rotate(-90deg);margin-left: 62px"></svg-icon>
             <ContextMenu v-if="layerSubMenuVisiable" :x="layerSubMenuPosition.x" :y="layerSubMenuPosition.y" :width="174"
@@ -568,13 +567,11 @@ onUnmounted(() => {
         <div class="line" v-if="props.items.includes('cursor')"></div>
         <div class="item" v-if="props.items.includes('cursor')" @click="cursor" @mouseenter="mouseenter('cursor')"
             @mouseleave="hoverItem = ''">
-            <!--            <div class="choose" v-show="isCursor"></div>-->
             <svg-icon :icon-class="hoverItem === 'cursor' ? 'white-select' : 'page-select'" v-show="isCursor"></svg-icon>
             <span :style="{ marginLeft: isCursor ? '8px' : '20px' }">{{ t('system.show_many_cursor') }}</span>
         </div>
         <div class="item" v-if="props.items.includes('comment')" @click="comment" @mouseenter="mouseenter('comment')"
             @mouseleave="hoverItem = ''">
-            <!--            <div class="choose" v-show="isComment"></div>-->
             <svg-icon :icon-class="hoverItem === 'comment' ? 'white-select' : 'page-select'" v-show="isComment"></svg-icon>
             <span :style="{ marginLeft: isComment ? '8px' : '20px' }">{{ t('system.show_comment') }}</span>
             <span class="shortkey">
@@ -680,7 +677,6 @@ onUnmounted(() => {
         </div>
         <div class="item" v-if="props.items.includes('title')" @click="toggle_title" @mouseenter="mouseenter('title')"
             @mouseleave="hoverItem = ''">
-            <!--            <div class="choose" v-show="isTitle"></div>-->
             <svg-icon :icon-class="hoverItem === 'title' ? 'white-select' : 'page-select'" v-show="isTitle"></svg-icon>
             <span :style="{ marginLeft: isTitle ? '8px' : '20px' }">{{ t('system.artboart_title_visible') }}</span>
         </div>

@@ -111,6 +111,7 @@ export const moveprojectfill = {
 
 export const projectlist = {
     datanull: 'No project is added',
+    datanull2: 'No matching items',
     addproject: 'New project',
     project_name: 'Project name',
     project_description: 'Project description',

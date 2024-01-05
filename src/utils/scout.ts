@@ -1,9 +1,9 @@
 import { Context } from "@/context";
 import { PageXY, XY } from "@/context/selection";
-import { GroupShapeView, Matrix, PathShapeView, ShapeType, ShapeView, SymbolRefView } from "@kcdesign/data";
+import { GroupShapeView, Matrix, PageView, PathShapeView, ShapeType, ShapeView, SymbolRefView } from "@kcdesign/data";
 import { v4 as uuid } from "uuid";
 import { isShapeOut } from "./assist";
-import { debounce } from "lodash";
+import { debounce, throttle } from "lodash";
 
 export interface Scout {
     path: SVGPathElement
@@ -13,21 +13,6 @@ export interface Scout {
     isPointInStroke: (d: string, point: PageXY) => boolean
     isPointInShape2: (shape: ShapeView, point: PageXY) => boolean
 }
-
-function get_max_thickness_border(shape: ShapeView) {
-    let max_thickness = 0;
-    const borders = shape.getBorders();
-    if (borders.length) {
-        for (let i = 0, l = borders.length; i < l; i++) {
-            const t = borders[i].thickness;
-            if (t > max_thickness) {
-                max_thickness = t;
-            }
-        }
-    }
-    return max_thickness;
-}
-
 // Ver.SVGGeometryElement，基于SVGGeometryElement的图形检索
 // 动态修改path路径对象的d属性。返回一个Scout对象， scout.isPointInShape(d, SVGPoint)用于判断一个点(SVGPoint)是否在一条路径(d)上
 export function scout(context: Context): Scout {
@@ -153,20 +138,25 @@ export function isTarget(scout: Scout, shape: ShapeView, p: PageXY): boolean {
 function isTarget2(scout: Scout, shape: ShapeView, p: PageXY): boolean {
     return scout.isPointInShape2(shape, p);
 }
-
-// 扁平化一个编组的树结构 tree -> list
+/**
+ * @deprecated
+ * @description 扁平化一个图层树 tree -> list
+ * @param groupshape 
+ * @param flat 
+ * @returns 
+ */
 export function delayering(groupshape: ShapeView, flat?: ShapeView[]): ShapeView[] {
     let f: ShapeView[] = flat || [];
-    const childs: ShapeView[] = groupshape.type === ShapeType.SymbolRef ? (groupshape.naviChilds || []) : (groupshape).childs;
 
-    for (let i = 0, len = childs.length; i < len; i++) {
-        const item = childs[i];
+    const children: ShapeView[] = groupshape.type === ShapeType.SymbolRef
+        ? (groupshape.naviChilds || [])
+        : (groupshape.childs || []);
 
-        if (item.type === ShapeType.Group
-            || item.type === ShapeType.Symbol
-            || item.type === ShapeType.SymbolRef
-        ) {
-            f = [...delayering(item, f)];
+    for (let i = 0, len = children.length; i < len; i++) {
+        const item = children[i];
+
+        if (is_layers_tree_unit(item)) {
+            f = delayering(item, f);
         } else {
             f.push(item);
         }
@@ -176,31 +166,81 @@ export function delayering(groupshape: ShapeView, flat?: ShapeView[]): ShapeView
 }
 
 /**
- * @description 点击穿透，穿透父级选区对子元素选区的覆盖
+ * @description 扁平化一个图层树 tree -> list
+ * @param groupshape 
+ * @param flat 
+ * @returns 
  */
-export function selection_penetrate(scout: Scout, scope: ShapeView[], position: PageXY): ShapeView | undefined {
-    if (!scope?.length) return;
-    for (let i = scope.length - 1; i > -1; i--) {
-        const cur = scope[i];
-        if ([ShapeType.Group, ShapeType.Symbol, ShapeType.SymbolRef].includes(cur.type)) {
-            const items: ShapeView[] = delayering(cur);
-            for (let j = items.length - 1; j > -1; j--) {
-                const item = items[j];
-                if (canBeTarget(item) && isTarget(scout, item, position)) return cur;
+export function delayering2(groupshape: ShapeView, flat?: ShapeView[]): ShapeView[] {
+    let f: ShapeView[] = flat || [];
+
+    const children: ShapeView[] = groupshape.type === ShapeType.SymbolRef
+        ? (groupshape.naviChilds || [])
+        : (groupshape.childs || []);
+
+    for (let i = 0, len = children.length; i < len; i++) {
+        const item = children[i];
+
+        if (is_layers_tree_unit(item)) {
+            f = delayering2(item, f);
+
+            if (!is_hollow(item)) {
+                f.push(item);
             }
+        } else {
+            f.push(item);
         }
-        if (canBeTarget(cur) && isTarget(scout, cur, position)) return cur;
     }
+
+    return f;
 }
 
+export function is_layers_tree_unit(shape: ShapeView) {
+    return ShapeType.Group === shape.type
+        || ShapeType.Artboard === shape.type
+        || ShapeType.SymbolUnion === shape.type
+        || ShapeType.Symbol === shape.type
+        || ShapeType.SymbolRef === shape.type
+}
 
 /**
- * 图形检索规则以及实现
- * @param { Scout2 } scout 图形检索器，负责判定一个点(position)是否在一条path路径上(或路径的填充中)
- * @param { Shape[] } g 检索的范围，只会在该范围内进行上述匹配
- * @param { PageXY } position 一个点，在页面坐标系上的点
+ * @description 点击穿透，穿透父级选区对子元素选区的覆盖
+ */
+export function selection_penetrate(scout: Scout, g: ShapeView, position: PageXY): ShapeView | undefined {
+    const flat = delayering2(g);
+
+    if (!flat.length) {
+        return;
+    }
+
+    let target: ShapeView | undefined = undefined;
+
+    for (let j = flat.length - 1; j > -1; j--) {
+        const item = flat[j];
+        if (canBeTarget(item) && isTarget(scout, item, position)) {
+            target = item;
+            break;
+        }
+    }
+
+    if (!target) {
+        return;
+    }
+
+    while (target && target.parent && target.parent.id !== g.id) {
+        target = target.parent;
+    }
+
+    return target;
+}
+
+/**
+ * @description 图形检索规则以及实现
+ * @param { Scout2 } scout 图形检索器，负责判定一个点(position)是否在一条path路径上(或闭合路径的填充中)
+ * @param { ShapeView[] } g 检索的范围，只会在该范围内进行上述匹配
+ * @param { PageXY } position 一个点，在root坐标系上的点
  * @param { boolean } isCtrl 深度挖掘⛏️，不为真的时候会有特殊判定，比如编组子元素会冒泡的编组、存在子元素容器无法被判定为目标...
- * @returns { Shape[] } 返回符合检索条件的图形
+ * @returns { ShapeView | undefined } 返回符合检索条件的层级最优先的图形
  */
 export function finder(context: Context, scout: Scout, g: ShapeView[], position: PageXY, selected: ShapeView, isCtrl: boolean): ShapeView | undefined {
     let result: ShapeView | undefined;
@@ -211,7 +251,7 @@ export function finder(context: Context, scout: Scout, g: ShapeView[], position:
         }
 
         if (item.type !== ShapeType.Contact && isShapeOut(context, item)) {
-            continue; // 屏幕外图形，这里会判断每个图形是否在屏幕内，本身消耗较小，另外可以避免后面的部分不必要的更大消耗
+            continue; // 屏幕外图形，判断图形(除连接线以外)是否在屏幕内，本身消耗较小，另外可以避免后面的部分不必要的更大消耗
         }
 
         if (item.type === ShapeType.SymbolUnion) { // 组件状态集合
@@ -495,3 +535,286 @@ export function is_shape_in_selected(selected: ShapeView[], shape: ShapeView) {
     }
     return false;
 }
+
+function get_max_thickness_border(shape: ShapeView) {
+    let max_thickness = 0;
+    const borders = shape.getBorders();
+    if (borders.length) {
+        for (let i = 0, l = borders.length; i < l; i++) {
+            const t = borders[i].thickness;
+            if (t > max_thickness) {
+                max_thickness = t;
+            }
+        }
+    }
+    return max_thickness;
+}
+/**
+ * @description 图形检索规则以及实现 2
+ * @param { Scout } scout 图形检索器，负责判定一个点(position)是否在一条path路径上(或闭合路径的填充中)
+ * @param { ShapeView[] } scope 检索的范围，只会在该范围内进行上述匹配
+ * @param { PageXY } hot 一个点，在root坐标系上的点
+ * @param { ShapeView[] } selected 已选图层
+ * @param { boolean } pen 穿透侦测
+ * @param { boolean } m 标注模式
+ * @returns { ShapeView | undefined } 返回符合检索条件的层级最优先的图形
+ */
+export function finder2(context: Context, scout: Scout, scope: ShapeView[], hot: PageXY, selected: ShapeView[], pen: boolean, m: boolean): ShapeView | undefined {
+    if (pen) {
+        return for_pen(context, scout, scope, hot);
+    }
+
+    set_env(context, selected, m);
+
+    let result: ShapeView | undefined = undefined;
+    result = for_env(context, scout, hot);
+    if (result) {
+        return result;
+    }
+
+    return for_standard(context, scout, scope, hot, m);
+}
+
+/**
+ * @description 穿透模式，优先级最高
+ */
+function for_pen(context: Context, scout: Scout, scope: ShapeView[], hot: PageXY): ShapeView | undefined {
+    let result: ShapeView | undefined = undefined;
+    for (let i = scope.length - 1; i > -1; i--) {
+        const item = scope[i];
+
+        if (!canBeTarget(item)) {
+            continue;
+        }
+
+        if (item.type !== ShapeType.Contact && isShapeOut(context, item)) {
+            continue;
+        }
+
+        if (!isTarget(scout, item, hot)) {
+            continue;
+        }
+
+        const children = item.type === ShapeType.SymbolRef ? (item.naviChilds || []) : (item.childs || []);
+        if (!children.length) {
+            return item;
+        } else {
+            result = for_pen(context, scout, children, hot);
+            const background =
+                item.type === ShapeType.Artboard
+                || item.type == ShapeType.Symbol
+                || item.type === ShapeType.SymbolUnion
+                || item.type === ShapeType.SymbolRef;
+
+            if (!result && background) {
+                return item;
+            }
+        }
+
+        if (result) {
+            return result;
+        }
+    }
+}
+
+/**
+ * @description 侦测已经选图形的所处环境，优先级高于标准模式
+ */
+function for_env(context: Context, scout: Scout, hot: PageXY) {
+    const env = context.selection.envShapes;
+
+    for (let i = 0, l = env.length; i < l; i++) {
+        const shape = env[i];
+
+        if (is_hollow(shape)) {
+            if (for_hollow(context, scout, shape, hot)) {
+                return shape;
+            }
+        }
+        else if (isTarget(scout, shape, hot)) {
+            return shape;
+        }
+    }
+}
+
+/**
+ * @description 标准模式，内嵌标注模式
+ */
+function for_standard(context: Context, scout: Scout, scope: ShapeView[], hot: PageXY, m: boolean): ShapeView | undefined {
+    let result: ShapeView | undefined = undefined;
+
+    for (let i = scope.length - 1; i > -1; i--) {
+        const item = scope[i];
+
+        if (!canBeTarget(item)) {
+            continue; // 隐藏图层或已锁定
+        }
+
+        if (item.type !== ShapeType.Contact && isShapeOut(context, item)) {
+            continue; // 屏幕外图形，判断图形(除连接线以外)是否在屏幕内，本身消耗较小，另外可以避免后面的部分不必要的更大消耗
+        }
+
+        if (!isTarget(scout, item, hot)) {
+            continue;
+        }
+
+        if (is_fixed(item)) {
+            result = for_fixed(context, scout, item, hot);
+
+            if (item.type === ShapeType.SymbolUnion) {
+                return item;
+            }
+
+            if (item.type === ShapeType.Artboard && !item.childs.length) {
+                return item;
+            }
+
+            break;
+        }
+        else if (is_hollow(item)) {
+            result = for_hollow(context, scout, item, hot);
+        }
+        else {
+            result = item;
+        }
+
+        if (result) {
+            return result;
+        }
+    }
+    return result;
+}
+
+/**
+ * @description 固定对象，必须是页面的直接子对象，存在frame实体，存在子对象时，实体在特定情况下隐藏，包括页面下的Artboard、Union；
+ * 开放式固定实体树：实体以外仍然需要侦测
+ * 封闭式固定实体树：实体外部会被裁剪，不需要侦测
+ */
+function for_fixed(context: Context, scout: Scout, fixed: ShapeView, hot: PageXY): ShapeView | undefined {
+    const sub = fixed.childs || [];
+    for (let i = sub.length - 1; i > -1; i--) {
+        const item = sub[i];
+
+        if (!canBeTarget(item)) {
+            continue;
+        }
+
+        if (item.type !== ShapeType.Contact && isShapeOut(context, item)) {
+            continue;
+        }
+
+        if (is_hollow(item)) {
+            if (for_hollow(context, scout, item, hot)) {
+                return item;
+            }
+        }
+        else if (isTarget(scout, item, hot)) {
+            return item;
+        }
+    }
+
+}
+
+/**
+ * @description 虚体侦测，不存在frame实体，区域由子对象撑开，包括页面下的GroupShape；
+ */
+function for_hollow(context: Context, scout: Scout, hollow: ShapeView, hot: PageXY): ShapeView | undefined {
+    const children = hollow.type === ShapeType.SymbolRef
+        ? (hollow.naviChilds || [])
+        : (hollow.childs || []);
+
+    for (let i = children.length - 1; i > -1; i--) {
+        const item = children[i];
+
+        if (!canBeTarget(item)) {
+            continue;
+        }
+
+        if (item.type !== ShapeType.Contact && isShapeOut(context, item)) {
+            continue;
+        }
+
+        if (!isTarget(scout, item, hot)) {
+            continue;
+        }
+
+        if (is_hollow(item)) {
+            if (for_hollow(context, scout, item, hot)) {
+                return hollow;
+            }
+        } else {
+            return hollow;
+        }
+    }
+}
+
+function is_hollow(shape: ShapeView) {
+    return shape.type === ShapeType.Group;
+}
+
+function is_fixed(shape: ShapeView) {
+    return (shape.type === ShapeType.Artboard || shape.type === ShapeType.SymbolUnion) && shape.parent?.type === ShapeType.Page;
+}
+
+function _set_env(context: Context, shapes: ShapeView[], m: boolean) {
+    const parents: Set<ShapeView> = new Set();
+
+    const bros: Set<ShapeView> = new Set();
+
+    for (let i = 0, l = shapes.length; i < l; i++) {
+        const shape = shapes[i];
+
+        const parent = shape.parent;
+
+        if (!parent || parents.has(parent)) {
+            continue;
+        }
+
+        parents.add(parent);
+
+        sort_env(parent, bros, parents, m);
+    }
+
+    context.selection.setEnvShapes(Array.from(bros));
+
+    function sort_env(g: ShapeView, bros: Set<ShapeView>, parents: Set<ShapeView>, m: boolean) {
+        let p: ShapeView | undefined = g;
+
+        while (p && p.type !== ShapeType.Page) {
+            if (is_fixed(p)) {
+                if (m) {
+                    bros.add(p);
+                    parents.add(p)
+                }
+
+                break;
+            }
+
+            const children = p instanceof SymbolRefView ? (p.naviChilds || []) : (p.childs || []);
+
+            for (let i = children.length - 1; i > -1; i--) {
+                const child = children[i];
+
+                if (parents.has(child)) {
+                    continue;
+                }
+
+                bros.add(child);
+            }
+
+            if (p.type === ShapeType.Artboard
+                || p.type === ShapeType.Symbol
+                || p.type === ShapeType.SymbolRef
+                || p.type === ShapeType.SymbolUnion
+            ) {
+                bros.add(p); // 添加实体
+            }
+
+            parents.add(p)
+
+            p = p.parent;
+        }
+    }
+}
+
+const set_env = throttle(_set_env, 200, { leading: true });

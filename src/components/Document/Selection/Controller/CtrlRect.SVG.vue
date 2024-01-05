@@ -51,10 +51,12 @@ function updateControllerView() {
     const m2r = props.shape.matrix2Root();
     matrix.reset(m2r);
     matrix.multiAtLeft(props.matrix);
-    if (!submatrix.equals(matrix)) submatrix.reset(matrix)
+    submatrix.reset(matrix);
+
     const framePoint = props.controllerFrame;
     boundrectPath.value = genRectPath(framePoint);
     props.context.workspace.setCtrlPath(boundrectPath.value);
+
     const p0 = framePoint[0];
     bounds.left = p0.x;
     bounds.top = p0.y;
