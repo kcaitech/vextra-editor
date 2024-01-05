@@ -626,6 +626,10 @@ function for_env(context: Context, scout: Scout, hot: PageXY) {
     for (let i = 0, l = env.length; i < l; i++) {
         const shape = env[i];
 
+        if (!canBeTarget(shape)) {
+            continue;
+        }
+
         if (is_hollow(shape)) {
             if (for_hollow(context, scout, shape, hot)) {
                 return shape;
