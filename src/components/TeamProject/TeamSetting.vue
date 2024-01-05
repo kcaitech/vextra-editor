@@ -132,7 +132,7 @@ interface teamDataType {
 }
 
 const isDisabled: any = computed(() => {
-    return (teamSelfPermType.value < 3 && teamSelfPermType.value !== 255) ? false : true
+    return (teamSelfPermType.value < 2 && teamSelfPermType.value !== 255) ? false : true
 })
 
 
