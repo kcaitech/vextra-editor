@@ -17,13 +17,11 @@ import {
 import { Asssit } from '@/context/assist';
 import {
     add_blur_for_window,
-    add_move_and_up_for_document,
     check_drag_action,
     down_while_is_text_editing,
     end_transalte,
     gen_assist_target,
     gen_offset_points_map,
-    get_current_position_client,
     is_ctrl_element,
     is_mouse_on_content,
     is_rid_stick,
@@ -61,7 +59,7 @@ export function useControllerCustom(context: Context, i18nT: Function) {
 
     function handleDblClick() {
         const selected = selection.selectedShapes;
-        if (selected.length !== 1 || context.tool.isLable) {
+        if (selected.length !== 1) {
             return;
         }
 
@@ -72,8 +70,14 @@ export function useControllerCustom(context: Context, i18nT: Function) {
             if (target) {
                 selection.selectShape(target);
             }
+            return;
         }
-        else if (shape instanceof PathShapeView) {
+
+        if (context.tool.isLable) {
+            return;
+        }
+
+        if (shape instanceof PathShapeView) {
             if (forbidden_to_modify_frame(shape)) {
                 return;
             }
@@ -245,15 +249,19 @@ export function useControllerCustom(context: Context, i18nT: Function) {
 
     function pre_to_translate(e: MouseEvent) {
         shutdown_menu(e, context);
+
+        document.addEventListener('mouseup', mouseup);
+
         if (!context.workspace.can_translate(e)) {
             return;
         }
+
+        document.addEventListener('mousemove', mousemove);
 
         shapes = selection.selectedShapes;
 
         wheel = fourWayWheel(context, undefined, startPositionOnPage);
         workspace.setCtrl('controller');
-        add_move_and_up_for_document(mousemove, mouseup);
     }
 
     function mousemove(e: MouseEvent) {
@@ -340,7 +348,7 @@ export function useControllerCustom(context: Context, i18nT: Function) {
         update_type = trans_assistant(asyncTransfer, ps, pe);
 
         migrate_once(context, asyncTransfer, shapes, end);
-        
+
         return update_type;
     }
 
