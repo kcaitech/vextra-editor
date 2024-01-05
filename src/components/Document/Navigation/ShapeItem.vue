@@ -256,13 +256,13 @@ function updater(t?: any) {
         return;
     }
 
-    const shape = props.data.shape();
+    const shape = props.data.shapeview();
 
     const naviChilds = shape.naviChilds;
     showTriangle.value = Boolean(naviChilds && naviChilds.length > 0);
 
-    lock_status.value = shape.isLocked ? 1 : 0;
-    visible_status.value = shape.isVisible ? 0 : 1;
+    lock_status.value = shape.isLocked() ? 1 : 0;
+    visible_status.value = shape.isVisible() ? 0 : 1;
     // if (is_parent_locked(shape) && !lock_status.value) {
     //     lock_status.value = 2;
     // }
