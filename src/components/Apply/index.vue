@@ -45,7 +45,7 @@ const promptMessage = () => {
     }
 }
 
-watch(radio,() => {
+watch(radio, () => {
     disabled.value = false
 })
 watch(textarea, () => {
@@ -384,6 +384,9 @@ label::before {
                 }
 
                 .name {
+                    white-space: nowrap;
+                    overflow: hidden;
+                    text-overflow: ellipsis;
                     font-size: 13px;
                     font-weight: 500;
                 }

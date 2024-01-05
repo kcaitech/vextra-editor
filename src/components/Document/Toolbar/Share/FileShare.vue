@@ -83,7 +83,7 @@ const selectValue = ref(DocType[props.selectValue === 0 ? 1 : props.selectValue]
 const documentShareURL = computed(() => {
   return route.path !== '/document'
     ?
-    `https://protodesign.cn/#/document?id=${docID}` + " " + `邀请您进入《${props.docName}》，点击链接开始协作`
+    location.origin + `/#/document?id=${docID}` + ' ' + `邀请您进入《${props.docName}》，点击链接开始协作`
     :
     location.href + ' ' + `邀请您进入《${docInfo.value.document.name}》，点击链接开始协作`
 })
@@ -97,7 +97,7 @@ const getDocumentInfo = async () => {
       docInfo.value = data
     } else {
       emit('close')
-      ElMessage.error(message === '审核不通过' ? t('system.sensitive_reminder') : message)
+      ElMessage.error(message === '审核不通过' ? t('system.sensitive_reminder2') : message)
     }
   } catch (err) {
     console.log(err);
@@ -366,150 +366,148 @@ const selectOption = (option: any) => {
 
 </script>
 <template>
-  <div ref="card" class="card">
-    <el-card class="box-card" v-if="!founder && docInfo">
-      <!-- 标题 -->
-      <template #header>
-        <div class="card-header">
-          <div class="title">{{ t('share.file_sharing') }}</div>
-          <div class="close" @click.stop="emit('close')">
-            <svg-icon icon-class="close"></svg-icon>
-          </div>
-        </div>
-      </template>
-      <!-- 内容 -->
-      <div class="contain">
-        <!-- 开关 -->
-        <div class="share-switch">
-          <span class="type">{{ t('share.share_switch') }}：</span>
-          <input id="switch" type="checkbox" v-model="value1">
-          <label class="my_switch" for="switch"></label>
-
-        </div>
-        <!-- 文件名 -->
-        <div class="file-name">
-          <span class="type">{{ t('share.file_name') }}：</span>
-          <p class="name">{{ docInfo!.document.name }}</p>
-        </div>
-        <!-- 权限设置 -->
-        <div class="purview">
-          <span class="type">{{ t('share.permission_setting') }}：</span>
-          <div class="right">
-            <input ref="inputselect" type="text" v-model="selectValue" @click.stop="openSelect"
-              placeholder="Select an option" :disabled="props.selectValue === 0 ? true : false" readonly />
-            <div class="shrink" @click.stop="inputselect?.click()">
-              <svg-icon icon-class="down"
-                :style="{ transform: isSelectOpen ? 'rotate(-180deg)' : 'rotate(0deg)', color: '#666666' }"></svg-icon>
-            </div>
-            <transition name="el-zoom-in-top">
-              <ul v-show="isSelectOpen" class="options">
-                <li class="options_item" v-for="option in options" :key="option.value"
-                  @click.stop="selectOption(option.value)">
-                  <span :style="{ fontWeight: option.label == selectValue ? 500 : 400 }">{{ option.label }}</span>
-                  <div class="choose" :style="{ visibility: option.label === selectValue ? 'visible' : 'hidden' }"></div>
-                </li>
-              </ul>
-            </transition>
-            <button class="copybnt" type="button" @click.stop="copyLink"
-              :disabled="props.selectValue === 0 ? true : false">{{
-                t('share.copy_link') }}</button>
-          </div>
+  <el-card class="box-card" v-if="!founder && docInfo">
+    <!-- 标题 -->
+    <template #header>
+      <div class="card-header">
+        <div class="title">{{ t('share.file_sharing') }}</div>
+        <div class="close" @click.stop="emit('close')">
+          <svg-icon icon-class="close"></svg-icon>
         </div>
       </div>
-      <!-- 分享人 -->
-      <div class="share_user">
-        <span class="type">{{ t('share.people_who_have_joined_the_share') }} ({{ t('share.share_limit') }}5)：</span>
-        <el-scrollbar height="300px" class="shared-by">
-          <div class="scrollbar-demo-item">
-            <div class="item-left">
-              <div class="avatar"><img :src="docInfo.user.avatar"></div>
-              <div class="name">{{ docInfo.user.nickname }}</div>
-            </div>
-            <div class="item-right">
-              <div class="founder">{{ t('share.founder') }}</div>
-            </div>
-          </div>
-          <div v-for="(item, ids) in shareList" :key="ids" class="scrollbar-demo-item">
-            <div class="item-left">
-              <div class="avatar"><img :src="item.user.avatar"></div>
-              <div class="name">{{ item.user.nickname }}</div>
-            </div>
-            <div class="item-right" @click="(e: Event) => selectAuthority(ids, e)">
-              <div class="authority">{{ permission[item.document_permission.perm_type] }}</div>
-              <div class="shrink">
-                <svg-icon icon-class="down"
-                  :style="{ transform: authority ? 'rotate(-180deg)' : 'rotate(0deg)', color: '#666666' }"></svg-icon>
-              </div>
-              <div class="popover" v-if="authority && index === ids" ref="popover">
-                <div @click="onEditable(item.document_permission.id, permissions.editable, ids)">
-                  {{ editable }}
-                  <div class="choose"
-                    :style="{ visibility: editable === permission[item.document_permission.perm_type] ? 'visible' : 'hidden' }">
-                  </div>
-                </div>
-                <div @click="onReviewable(item.document_permission.id, permissions.reviewable, ids)">
-                  {{ reviewable }}
-                  <div class="choose"
-                    :style="{ visibility: reviewable === permission[item.document_permission.perm_type] ? 'visible' : 'hidden' }">
-                  </div>
-                </div>
-                <div @click="onReadOnly(item.document_permission.id, permissions.readOnly, ids)">
-                  {{ readOnly }}
-                  <div class="choose"
-                    :style="{ visibility: readOnly === permission[item.document_permission.perm_type] ? 'visible' : 'hidden' }">
-                  </div>
-                </div>
-                <div @click="onRemove(item.document_permission.id, ids)">
-                  {{ remove }}
-                  <div class="choose"
-                    :style="{ visibility: remove === permission[item.document_permission.perm_type] ? 'visible' : 'hidden' }">
-                  </div>
-                </div>
-              </div>
-            </div>
-          </div>
-        </el-scrollbar>
-        <div class="project" v-if="project || props.docInfo?.project">项目中所有成员均可访问</div>
-      </div>
-    </el-card>
+    </template>
+    <!-- 内容 -->
+    <div class="contain">
+      <!-- 开关 -->
+      <div class="share-switch">
+        <span class="type">{{ t('share.share_switch') }}：</span>
+        <input id="switch" type="checkbox" v-model="value1">
+        <label class="my_switch" for="switch"></label>
 
-    <el-card class="box-card" v-if="founder && docInfo">
-      <!-- 标题 -->
-      <template #header>
-        <div class="card-header">
-          <div class="title">{{ t('share.file_sharing') }}</div>
-          <div class="close" @click.stop="emit('close')">
-            <svg-icon icon-class="close"></svg-icon>
+      </div>
+      <!-- 文件名 -->
+      <div class="file-name">
+        <span class="type">{{ t('share.file_name') }}：</span>
+        <p class="name">{{ docInfo!.document.name }}</p>
+      </div>
+      <!-- 权限设置 -->
+      <div class="purview">
+        <span class="type">{{ t('share.permission_setting') }}：</span>
+        <div class="right">
+          <input ref="inputselect" type="text" v-model="selectValue" @click.stop="openSelect"
+            placeholder="Select an option" :disabled="props.selectValue === 0 ? true : false" readonly />
+          <div class="shrink" @click.stop="inputselect?.click()">
+            <svg-icon icon-class="down"
+              :style="{ transform: isSelectOpen ? 'rotate(-180deg)' : 'rotate(0deg)', color: '#666666' }"></svg-icon>
           </div>
-          <!-- <CloseIcon :size="20" @close="emit('close')" /> -->
-        </div>
-      </template>
-      <div class="contain">
-        <!-- 文件名 -->
-        <div class="unfounder">
-          <div class="type">{{ t('share.file_name') }}:</div>
-          <p class="name">{{ docInfo!.document.name }}</p>
-        </div>
-        <!-- 创建者 -->
-        <div class="unfounder">
-          <div class="type">{{ t('share.founder') }}:</div>
-          <p class="name">{{ docInfo!.user.nickname }}</p>
-        </div>
-        <!-- 文档权限 -->
-        <div class="unfounder">
-          <div class="type">{{ t('share.document_permission') }}:</div>
-          <p class="name">{{ DocType[docInfo.document.doc_type] }}</p>
-        </div>
-        <div class="project" v-if="project || props.docInfo?.project">{{ t('Createteam.shareprojecttips') }}</div>
-        <!-- 链接按钮 -->
-        <div class="button bottom">
-          <button class="copybnt" type="button" @click="copyLink"
-            :disabled="docInfo.document.doc_type !== 0 ? false : true">{{
+          <transition name="el-zoom-in-top">
+            <ul v-show="isSelectOpen" class="options">
+              <li class="options_item" v-for="option in options" :key="option.value"
+                @click.stop="selectOption(option.value)">
+                <span :style="{ fontWeight: option.label == selectValue ? 500 : 400 }">{{ option.label }}</span>
+                <div class="choose" :style="{ visibility: option.label === selectValue ? 'visible' : 'hidden' }"></div>
+              </li>
+            </ul>
+          </transition>
+          <button class="copybnt" type="button" @click.stop="copyLink"
+            :disabled="props.selectValue === 0 ? true : false">{{
               t('share.copy_link') }}</button>
         </div>
       </div>
-    </el-card>
-  </div>
+    </div>
+    <!-- 分享人 -->
+    <div class="share_user">
+      <span class="type">{{ t('share.people_who_have_joined_the_share') }} ({{ t('share.share_limit') }}5)：</span>
+      <el-scrollbar height="300px" class="shared-by">
+        <div class="scrollbar-demo-item">
+          <div class="item-left">
+            <div class="avatar"><img :src="docInfo.user.avatar"></div>
+            <div class="name">{{ docInfo.user.nickname }}</div>
+          </div>
+          <div class="item-right">
+            <div class="founder">{{ t('share.founder') }}</div>
+          </div>
+        </div>
+        <div v-for="(item, ids) in shareList" :key="ids" class="scrollbar-demo-item">
+          <div class="item-left">
+            <div class="avatar"><img :src="item.user.avatar"></div>
+            <div class="name">{{ item.user.nickname }}</div>
+          </div>
+          <div class="item-right" @click="(e: Event) => selectAuthority(ids, e)">
+            <div class="authority">{{ permission[item.document_permission.perm_type] }}</div>
+            <div class="shrink">
+              <svg-icon icon-class="down"
+                :style="{ transform: authority ? 'rotate(-180deg)' : 'rotate(0deg)', color: '#666666' }"></svg-icon>
+            </div>
+            <div class="popover" v-if="authority && index === ids" ref="popover">
+              <div @click="onEditable(item.document_permission.id, permissions.editable, ids)">
+                {{ editable }}
+                <div class="choose"
+                  :style="{ visibility: editable === permission[item.document_permission.perm_type] ? 'visible' : 'hidden' }">
+                </div>
+              </div>
+              <div @click="onReviewable(item.document_permission.id, permissions.reviewable, ids)">
+                {{ reviewable }}
+                <div class="choose"
+                  :style="{ visibility: reviewable === permission[item.document_permission.perm_type] ? 'visible' : 'hidden' }">
+                </div>
+              </div>
+              <div @click="onReadOnly(item.document_permission.id, permissions.readOnly, ids)">
+                {{ readOnly }}
+                <div class="choose"
+                  :style="{ visibility: readOnly === permission[item.document_permission.perm_type] ? 'visible' : 'hidden' }">
+                </div>
+              </div>
+              <div @click="onRemove(item.document_permission.id, ids)">
+                {{ remove }}
+                <div class="choose"
+                  :style="{ visibility: remove === permission[item.document_permission.perm_type] ? 'visible' : 'hidden' }">
+                </div>
+              </div>
+            </div>
+          </div>
+        </div>
+      </el-scrollbar>
+      <div class="project" v-if="project || props.docInfo?.project">项目中所有成员均可访问</div>
+    </div>
+  </el-card>
+
+  <el-card class="box-card" v-if="founder && docInfo">
+    <!-- 标题 -->
+    <template #header>
+      <div class="card-header">
+        <div class="title">{{ t('share.file_sharing') }}</div>
+        <div class="close" @click.stop="emit('close')">
+          <svg-icon icon-class="close"></svg-icon>
+        </div>
+        <!-- <CloseIcon :size="20" @close="emit('close')" /> -->
+      </div>
+    </template>
+    <div class="contain">
+      <!-- 文件名 -->
+      <div class="unfounder">
+        <div class="type">{{ t('share.file_name') }}:</div>
+        <p class="name">{{ docInfo!.document.name }}</p>
+      </div>
+      <!-- 创建者 -->
+      <div class="unfounder">
+        <div class="type">{{ t('share.founder') }}:</div>
+        <p class="name">{{ docInfo!.user.nickname }}</p>
+      </div>
+      <!-- 文档权限 -->
+      <div class="unfounder">
+        <div class="type">{{ t('share.document_permission') }}:</div>
+        <p class="name">{{ DocType[docInfo.document.doc_type] }}</p>
+      </div>
+      <div class="project" v-if="project || props.docInfo?.project">{{ t('Createteam.shareprojecttips') }}</div>
+      <!-- 链接按钮 -->
+      <div class="button bottom">
+        <button class="copybnt" type="button" @click="copyLink"
+          :disabled="docInfo.document.doc_type !== 0 ? false : true">{{
+            t('share.copy_link') }}</button>
+      </div>
+    </div>
+  </el-card>
 </template>
   
 <style scoped lang="scss">
@@ -529,7 +527,7 @@ const selectOption = (option: any) => {
 }
 
 @media (max-height: 550px) {
-  .card {
+  .box-card {
     height: 100%;
     overflow: auto !important;
     animation: none !important;
@@ -537,7 +535,7 @@ const selectOption = (option: any) => {
 }
 
 @media (max-width: 400px) {
-  .card {
+  .box-card {
     width: 100% !important;
     overflow: auto !important;
   }
@@ -590,185 +588,343 @@ const selectOption = (option: any) => {
   }
 }
 
-.card {
-  position: absolute;
+
+
+.box-card {
   width: 400px;
+  padding: 0 24px 8px 24px;
+  margin: auto;
   transform: translateY(0);
   border: 1px solid #F0F0F0;
   border-radius: 16px;
-  background-color: transparent;
+  background-color: white;
   box-sizing: border-box;
   overflow: hidden;
   z-index: 1000;
   box-shadow: 0px 2px 16px 0px rgba(0, 0, 0, 0.08);
   animation: move 0.25s ease-in-out;
 
-  .box-card {
-    background-color: rgba(255, 255, 255, 1);
-    border: none;
-    box-shadow: none;
-    width: 100%;
-    padding: 0 24px 8px 24px;
-    box-sizing: border-box;
+  .card-header {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    height: 64px;
+    padding: 0;
 
-    .card-header {
+    .title {
+      font-size: 16px;
+      font-weight: 600;
+    }
+
+    .close {
+      width: 16px;
+      height: 16px;
+      padding: 4px;
+      border-radius: 6px;
       display: flex;
-      justify-content: space-between;
-      align-items: center;
-      height: 64px;
-      padding: 0;
 
-      .title {
-        font-size: 16px;
-        font-weight: 600;
+      &:hover {
+        background-color: rgb(243, 243, 245);
+        cursor: pointer;
       }
 
-      .close {
-        width: 16px;
-        height: 16px;
-        padding: 4px;
-        border-radius: 6px;
-        display: flex;
+      &:active {
+        background-color: #EBEBEB;
+      }
 
-        &:hover {
-          background-color: rgb(243, 243, 245);
-          cursor: pointer;
-        }
+      svg {
+        width: 100%;
+        height: 100%;
+      }
+    }
 
-        &:active{
-          background-color: #EBEBEB;
-        }
+  }
 
-        svg {
-          width: 100%;
-          height: 100%;
+  .contain {
+    display: flex;
+    flex-direction: column;
+
+    .share-switch {
+      display: flex;
+      align-items: center;
+      height: 38px;
+      gap: 6px;
+
+      .type {
+        min-width: 65px;
+        font-size: 13px;
+        font-weight: 400;
+        color: #8C8C8C;
+      }
+
+      .my_switch {
+        width: 36px;
+        height: 20px;
+        border-radius: 40px;
+        background-color: rgba(140, 140, 140, 1);
+        position: relative;
+        transition: all .3s ease-out;
+
+        &::before {
+          position: absolute;
+          content: "";
+          width: 16px;
+          height: 16px;
+          background-color: #F0F0F0;
+          border-radius: 8px;
+          top: 2px;
+          left: 2px;
+          transition: all .3s ease-out;
         }
+      }
+
+      input[type='checkbox'] {
+        display: none;
+      }
+
+      input[type='checkbox']:checked+label::before {
+        left: 18px;
+      }
+
+      input[type='checkbox']:checked+label {
+        background-color: rgba(24, 120, 245, 1);
       }
 
     }
 
-    .contain {
+    .file-name {
       display: flex;
-      flex-direction: column;
+      align-items: center;
+      height: 38px;
+      gap: 8px;
 
-      .share-switch {
+      .type {
+        min-width: 65px;
+        font-size: 13px;
+        font-weight: 400;
+        color: #8C8C8C;
+      }
+
+      .name {
+        font-size: 13px;
+        font-weight: 500;
+        white-space: nowrap;
+        overflow: hidden;
+        text-overflow: ellipsis;
+      }
+    }
+
+    .purview {
+      display: flex;
+      align-items: center;
+      height: 40px;
+      gap: 6px;
+
+      .type {
+        min-width: 65px;
+        font-size: 13px;
+        font-weight: 400;
+        color: #8C8C8C;
+      }
+
+      .right {
         display: flex;
         align-items: center;
-        height: 38px;
-        gap: 6px;
+        gap: 8px;
 
-        .type {
-          min-width: 65px;
-          font-size: 13px;
+        input {
+          width: 122px;
+          height: 32px;
+          font-size: 12px;
           font-weight: 400;
-          color: #8C8C8C;
-        }
+          outline: none;
+          border: none;
+          border-radius: 6px;
+          padding: 3px 3px 3px 12px;
+          background: #F5F5F5;
+          box-sizing: border-box;
 
-        .my_switch {
-          width: 36px;
-          height: 20px;
-          border-radius: 40px;
-          background-color: rgba(140, 140, 140, 1);
-          position: relative;
-          transition: all .3s ease-out;
+          &:hover {
+            background-color: rgba(235, 235, 235, 1);
+          }
 
-          &::before {
-            position: absolute;
-            content: "";
-            width: 16px;
-            height: 16px;
-            background-color: #F0F0F0;
-            border-radius: 8px;
-            top: 2px;
-            left: 2px;
-            transition: all .3s ease-out;
+          &:focus {
+            background-color: rgba(235, 235, 235, 1);
+          }
+
+          &:disabled {
+            background-color: rgba(240, 240, 240, 1) !important;
           }
         }
 
-        input[type='checkbox'] {
-          display: none;
+        .shrink {
+          position: absolute;
+          display: flex;
+          align-items: center;
+          right: 190px;
+          width: 12px;
+          height: 12px;
+          color: rgba(102, 102, 102, 1);
+
+          svg {
+            transition: 0.5s;
+            width: 100%;
+            height: 100%;
+          }
         }
 
-        input[type='checkbox']:checked+label::before {
-          left: 18px;
+        .options {
+          position: absolute;
+          top: 180px;
+          right: 183px;
+          padding: 0;
+          margin: 0;
+          width: 122px;
+          background-color: white;
+          border-radius: 8px;
+          border: 1px solid #EBEBEB;
+          box-shadow: 0px 2px 10px 0px rgba(0, 0, 0, 0.08);
+          z-index: 1;
+          box-sizing: border-box;
+
+          .options_item {
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            height: 40px;
+            padding: 0 0 0 12px;
+
+            &:hover {
+              background-color: rgba(245, 245, 245, 1);
+            }
+
+            span {
+              font-size: 12px;
+              font-weight: 400;
+            }
+
+            .choose {
+              box-sizing: border-box;
+              width: 10px;
+              height: 6px;
+              margin-right: 4px;
+              margin-left: 2px;
+              border-width: 0 0 0.1em 0.1em;
+              border-style: solid;
+              border-color: rgb(0, 0, 0, .75);
+              transform: rotate(-45deg) translateY(-30%);
+            }
+          }
         }
 
-        input[type='checkbox']:checked+label {
-          background-color: rgba(24, 120, 245, 1);
-        }
 
       }
 
-      .file-name {
+    }
+
+    .unfounder {
+      display: flex;
+      align-items: center;
+      height: 40px;
+      gap: 6px;
+
+      .type {
+        min-width: 65px;
+        font-size: 13px;
+        font-weight: 400;
+        color: #8C8C8C;
+      }
+
+      .name {
+        font-size: 13px;
+        font-weight: 500;
+        white-space: nowrap;
+        overflow: hidden;
+        text-overflow: ellipsis;
+      }
+    }
+
+    .bottom {
+      display: flex;
+      height: 48px;
+    }
+  }
+
+
+  .share_user {
+    display: flex;
+    flex-direction: column;
+
+    .type {
+      display: flex;
+      align-items: center;
+      height: 34px;
+      font-size: 13px;
+      font-weight: 400;
+      color: #8C8C8C;
+    }
+
+    .shared-by {
+      padding: 8px 12px;
+      border-radius: 6px;
+      background: #FFFFFF;
+      box-sizing: border-box;
+      border: 1px solid #EBEBEB;
+      margin-bottom: 6px;
+
+      .scrollbar-demo-item {
         display: flex;
         align-items: center;
-        height: 38px;
+        justify-content: space-between;
+        height: 40px;
         gap: 8px;
 
-        .type {
-          min-width: 65px;
-          font-size: 13px;
-          font-weight: 400;
-          color: #8C8C8C;
-        }
-
-        .name {
-          font-size: 13px;
-          font-weight: 500;
-          white-space: nowrap;
-          overflow: hidden;
-          text-overflow: ellipsis;
-        }
-      }
-
-      .purview {
-        display: flex;
-        align-items: center;
-        height: 40px;
-        gap: 6px;
-
-        .type {
-          min-width: 65px;
-          font-size: 13px;
-          font-weight: 400;
-          color: #8C8C8C;
-        }
-
-        .right {
+        .item-left {
           display: flex;
           align-items: center;
           gap: 8px;
+          flex: 1;
+          overflow: hidden;
+          white-space: nowrap;
 
-          input {
-            width: 122px;
-            height: 32px;
-            font-size: 12px;
-            font-weight: 400;
-            outline: none;
-            border: none;
-            border-radius: 6px;
-            padding: 3px 3px 3px 12px;
-            background: #F5F5F5;
-            box-sizing: border-box;
+          .avatar {
+            height: 24px;
+            width: 24px;
+            min-width: 24px;
+            border-radius: 50%;
+            overflow: hidden;
 
-            &:hover {
-              background-color: rgba(235, 235, 235, 1);
-            }
-
-            &:focus {
-              background-color: rgba(235, 235, 235, 1);
-            }
-
-            &:disabled {
-              background-color: rgba(240, 240, 240, 1) !important;
+            img {
+              height: 100%;
+              width: 100%;
             }
           }
 
+          .name {
+            overflow: hidden;
+            text-overflow: ellipsis;
+            font-size: 13px;
+            font-weight: 500;
+            color: rgba(0, 0, 0, 1);
+          }
+        }
+
+        .item-right {
+          position: relative;
+          height: 40px;
+          display: flex;
+          align-items: center;
+          gap: 2px;
+
+          .founder,
+          .authority {
+            font-size: 12px;
+            font-weight: 400;
+          }
+
           .shrink {
-            position: absolute;
             display: flex;
             align-items: center;
-            right: 190px;
             width: 12px;
             height: 12px;
             color: rgba(102, 102, 102, 1);
@@ -780,35 +936,26 @@ const selectOption = (option: any) => {
             }
           }
 
-          .options {
+          .popover {
             position: absolute;
-            top: 180px;
-            right: 183px;
-            padding: 4px 0;
-            margin: 0;
-            width: 122px;
-            background-color: white;
-            border-radius: 8px;
+            top: 40px;
+            right: 0px;
+            display: flex;
+            flex-direction: column;
+            width: 88px;
+            background-color: #fff;
             border: 1px solid #EBEBEB;
+            border-radius: 8px;
             box-shadow: 0px 2px 10px 0px rgba(0, 0, 0, 0.08);
-            z-index: 1;
             box-sizing: border-box;
 
-            .options_item {
+            >div {
               display: flex;
               align-items: center;
-              justify-content: space-between;
+              justify-content: space-around;
               height: 40px;
-              padding: 0 0 0 12px;
-
-              &:hover {
-                background-color: rgba(245, 245, 245, 1);
-              }
-
-              span {
-                font-size: 12px;
-                font-weight: 400;
-              }
+              font-size: 12px;
+              font-weight: 500;
 
               .choose {
                 box-sizing: border-box;
@@ -821,164 +968,9 @@ const selectOption = (option: any) => {
                 border-color: rgb(0, 0, 0, .75);
                 transform: rotate(-45deg) translateY(-30%);
               }
-            }
-          }
 
-
-        }
-
-      }
-
-      .unfounder {
-        display: flex;
-        align-items: center;
-        height: 40px;
-        gap: 6px;
-
-        .type {
-          min-width: 65px;
-          font-size: 13px;
-          font-weight: 400;
-          color: #8C8C8C;
-        }
-
-        .name {
-          font-size: 13px;
-          font-weight: 500;
-          white-space: nowrap;
-          overflow: hidden;
-          text-overflow: ellipsis;
-        }
-      }
-
-      .bottom {
-        display: flex;
-        height: 48px;
-      }
-    }
-
-
-    .share_user {
-      display: flex;
-      flex-direction: column;
-
-      .type {
-        display: flex;
-        align-items: center;
-        height: 34px;
-        font-size: 13px;
-        font-weight: 400;
-        color: #8C8C8C;
-      }
-
-      .shared-by {
-        padding: 8px 12px;
-        border-radius: 6px;
-        background: #FFFFFF;
-        box-sizing: border-box;
-        border: 1px solid #EBEBEB;
-        margin-bottom: 6px;
-
-        .scrollbar-demo-item {
-          display: flex;
-          align-items: center;
-          justify-content: space-between;
-          height: 40px;
-          gap: 8px;
-
-          .item-left {
-            display: flex;
-            align-items: center;
-            gap: 8px;
-            flex: 1;
-            overflow: hidden;
-            white-space: nowrap;
-
-            .avatar {
-              height: 24px;
-              width: 24px;
-              min-width: 24px;
-              border-radius: 50%;
-              overflow: hidden;
-
-              img {
-                height: 100%;
-                width: 100%;
-              }
-            }
-
-            .name {
-              overflow: hidden;
-              text-overflow: ellipsis;
-              font-size: 13px;
-              font-weight: 500;
-              color: rgba(0, 0, 0, 1);
-            }
-          }
-
-          .item-right {
-            position: relative;
-            height: 40px;
-            display: flex;
-            align-items: center;
-            gap: 2px;
-
-            .founder,
-            .authority {
-              font-size: 12px;
-              font-weight: 400;
-            }
-
-            .shrink {
-              display: flex;
-              align-items: center;
-              width: 12px;
-              height: 12px;
-              color: rgba(102, 102, 102, 1);
-
-              svg {
-                transition: 0.5s;
-                width: 100%;
-                height: 100%;
-              }
-            }
-
-            .popover {
-              position: absolute;
-              top: 40px;
-              right: 0px;
-              display: flex;
-              flex-direction: column;
-              width: 88px;
-              background-color: #fff;
-              border: 1px solid #EBEBEB;
-              border-radius: 8px;
-              box-shadow: 0px 2px 10px 0px rgba(0, 0, 0, 0.08);
-              box-sizing: border-box;
-
-              >div {
-                display: flex;
-                align-items: center;
-                justify-content: space-around;
-                height: 40px;
-                font-size: 12px;
-                font-weight: 500;
-
-                .choose {
-                  box-sizing: border-box;
-                  width: 10px;
-                  height: 6px;
-                  margin-right: 4px;
-                  margin-left: 2px;
-                  border-width: 0 0 0.1em 0.1em;
-                  border-style: solid;
-                  border-color: rgb(0, 0, 0, .75);
-                  transform: rotate(-45deg) translateY(-30%);
-                }
-
-                &:hover {
-                  background-color: rgba(245, 245, 245, 1);
-                }
+              &:hover {
+                background-color: rgba(245, 245, 245, 1);
               }
             }
           }
