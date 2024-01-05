@@ -88,12 +88,13 @@ export function get_part_of_target1(element: Element, e: MouseEvent) {
         } else if (v === "inner") {
             h = 1;
         } else {
-            const off = !!trigger.querySelector('.triangle-right');
+            const off = !!trigger.querySelector('#right');
             drag_event.off = off;
             if (off) {
                 h = __get_h(zero_divide - 21, e.clientX);
             } else {
                 h = 1;
+                drag_event.position = 'inner';
             }
         }
     } else {
@@ -296,7 +297,7 @@ export interface IDataSource<T extends { id: string }> {
 export interface ItemData {
     id: string
     shape: () => Shape // 作用function，防止vue对shape内部数据进行proxy
-    shapeview:() => ShapeView
+    shapeview: () => ShapeView
 }
 
 export function range_select_shape(context: Context, shapeDirList: ShapeDirList, listviewSource: IDataSource<ItemData>, shape: ShapeView) {
@@ -305,7 +306,7 @@ export function range_select_shape(context: Context, shapeDirList: ShapeDirList,
     if (selectedShapes.length) {
         const selectShapesIndex = getSelectShapesIndex(shapeDirList, selectedShapes);
         const from = selectShapesIndex.reduce((pre, cur) => {
-            return Math.abs(to - cur) < Math.abs(to - pre) ? cur : pre;
+            return Math.abs(to - cur) > Math.abs(to - pre) ? cur : pre;
         }, selectShapesIndex[0]);
         const shapes = getShapeRange(listviewSource, from, to);
         context.selection.rangeSelectShape(shapes);
@@ -353,7 +354,7 @@ export function multi_select_shape(context: Context, shape: ShapeView) {
             selected_map.delete(s.id);
         }
     }
-    
+
     context.selection.rangeSelectShape(Array.from(selected_map.values()));
 }
 

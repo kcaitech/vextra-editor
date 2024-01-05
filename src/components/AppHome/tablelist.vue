@@ -15,10 +15,10 @@
                         </p>
                     </div>
                     <div v-else-if="props.addproject! >= 0 && !loading && !noNetwork" class="datanull">
-                        <p>{{ props.nulldata ? t('search.search_results') : t('projectlist.datanull') }}</p>
+                        <p>{{ props.nulldata ? t('projectlist.datanull2') : t('projectlist.datanull') }}</p>
                     </div>
                     <div v-else-if="!noNetwork && empty" class="datanull">
-                        <p>{{ props.nulldata ? t('search.search_results') : t('home.table_empty_tips') }}</p>
+                        <p>{{ props.nulldata ? t('Createteam.projectfilesearchtips') : t('home.table_empty_tips') }}</p>
                     </div>
                     <div v-else-if="noNetwork" ref="net" class="flex items-center justify-center h-full">
                         <NetworkError @refreshDoc="refreshDoc"></NetworkError>

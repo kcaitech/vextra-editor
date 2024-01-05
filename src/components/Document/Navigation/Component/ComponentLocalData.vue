@@ -66,7 +66,7 @@ function document_watcher(t: string) {
 }
 const select_watch = (t: number) => {
     if(t === Selection.PAGE_RENAME) {
-        _list_loader()
+        _list_loader();
     }
 }
 

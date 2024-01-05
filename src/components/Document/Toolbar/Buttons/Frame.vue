@@ -96,7 +96,7 @@ const customFrame = () => {
             </div>
         </Tooltip>
         <div class="menu-f" @click="showMenu">
-            <svg-icon icon-class="down"></svg-icon>
+            <svg-icon icon-class="white-down"></svg-icon>
         </div>
     </ToolButton>
     <div ref="popover" class="popover-f" tabindex="-1" v-if="popoverVisible">
@@ -127,7 +127,6 @@ const customFrame = () => {
     justify-content: center;
     align-items: center;
     margin-left: 4px;
-    color: #ffffff;
     padding: 6px 6px 6px 6px;
     box-sizing: border-box;
 

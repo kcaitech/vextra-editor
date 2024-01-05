@@ -116,7 +116,7 @@ function _update_view() {
 
 const update_view = debounce(_update_view, 200, { leading: true });
 
-function onChangeX(value: string) {
+function onChangeX(value: string, shapes: ShapeView[]) {
     value = Number
         .parseFloat(value)
         .toFixed(fix);
@@ -126,16 +126,17 @@ function onChangeX(value: string) {
         return;
     }
 
-    const actions = get_actions_frame_x(props.context.selection.selectedShapes, _x);
+    const actions = get_actions_frame_x(shapes, _x);
+
     const page = props.context.selection.selectedPage;
     if (!page) {
         return;
     }
 
     const editor = props.context.editor4Page(page);
-    editor.arrange(actions);
+    editor.modifyShapesX(actions);
 }
-function onChangeY(value: string) {
+function onChangeY(value: string, shapes: ShapeView[]) {
     value = Number
         .parseFloat(value)
         .toFixed(fix);
@@ -145,16 +146,16 @@ function onChangeY(value: string) {
         return;
     }
 
-    const actions = get_actions_frame_y(props.context.selection.selectedShapes, _y);
+    const actions = get_actions_frame_y(shapes, _y);
     const page = props.context.selection.selectedPage;
     if (!page) {
         return;
     }
 
     const editor = props.context.editor4Page(page);
-    editor.arrange(actions);
+    editor.modifyShapesY(actions);
 }
-function onChangeW(value: string) {
+function onChangeW(value: string, shapes: ShapeView[]) {
     value = Number
         .parseFloat(value)
         .toFixed(fix);
@@ -168,11 +169,9 @@ function onChangeW(value: string) {
 
     const editor = props.context.editor4Page(page);
 
-    const selected = props.context.selection.selectedShapes;
-
-    editor.modifyShapesWidth(selected.map(s => adapt2Shape(s)), _w);
+    editor.modifyShapesWidth(shapes.map(s => adapt2Shape(s)), _w);
 }
-function onChangeH(value: string) {
+function onChangeH(value: string, shapes: ShapeView[]) {
     value = Number
         .parseFloat(value)
         .toFixed(fix);
@@ -186,9 +185,7 @@ function onChangeH(value: string) {
 
     const editor = props.context.editor4Page(page);
 
-    const selected = props.context.selection.selectedShapes;
-
-    editor.modifyShapesHeight(selected.map(s => adapt2Shape(s)), _h);
+    editor.modifyShapesHeight(shapes.map(s => adapt2Shape(s)), _h);
 }
 function lockToggle() {
     if (s_length) {
@@ -239,7 +236,7 @@ function flipv() {
         }
     }
 }
-function onChangeRotate(value: string) {
+function onChangeRotate(value: string, shapes: ShapeView[]) {
     value = Number
         .parseFloat(value)
         .toFixed(fix);
@@ -250,8 +247,7 @@ function onChangeRotate(value: string) {
         return;
     }
 
-    const selected = props.context.selection.selectedShapes;
-    if (!selected.length) {
+    if (!shapes.length) {
         return;
     }
 
@@ -262,7 +258,7 @@ function onChangeRotate(value: string) {
 
     const editor = props.context.editor4Page(page);
 
-    editor.setShapesRotate(selected.map(s => adapt2Shape(s)), newRotate);
+    editor.setShapesRotate(shapes.map(s => adapt2Shape(s)), newRotate);
 }
 function adapt() {
     const selected = props.context.selection.selectedShapes;

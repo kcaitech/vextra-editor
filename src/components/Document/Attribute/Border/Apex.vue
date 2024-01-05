@@ -94,7 +94,7 @@ onUnmounted(stop);
     display: flex;
     padding: 6px 28px 6px 20px;
     align-items: center;
-    justify-content: space-between;
+    //justify-content: space-between;
 
     .select-wrap {
         display: flex;
@@ -117,6 +117,7 @@ onUnmounted(stop);
         justify-content: center;
         cursor: pointer;
         border-radius: var(--default-radius);
+        margin-left: 4px;
 
         >svg {
             width: 16px;

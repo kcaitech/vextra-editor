@@ -111,6 +111,7 @@ export const moveprojectfill = {
 
 export const projectlist = {
     datanull: '未加入任何项目',
+    datanull2: '没有匹配的项目',
     addproject: '新建项目',
     project_name: '项目名称',
     project_description: '项目描述',

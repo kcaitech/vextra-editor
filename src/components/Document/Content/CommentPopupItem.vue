@@ -181,7 +181,7 @@ function stopEditing() {
                             <el-tooltip class="box-item" effect="dark" :content="`${t('comment.quick_reply')}`"
                                 placement="bottom" :show-after="1000" :offset="10" :hide-after="0">
 <!--                                <el-button plain @click="onQuickReply" style="margin-right: 5px;"><i style="font-size: 13px;">@</i></el-button>-->
-                                <div class="onQuickReply" @click="onQuickReply" v-if="isControls">
+                                <div class="onQuickReply" @click="onQuickReply">
                                     <svg-icon icon-class="comment-quick"></svg-icon>
                                 </div>
                             </el-tooltip>

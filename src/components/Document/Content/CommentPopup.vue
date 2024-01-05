@@ -295,7 +295,7 @@ const previousArticle = () => {
         emit('previousArticle', index)
     } else {
         const index = commentShowList.value.findIndex(item => props.commentInfo.id === item.id)
-        if (index === 0) return
+        if (index === 0 || index === -1) return
         const { x1, y1 } = commentShowList.value[index - 1].shape_frame
         const id = commentShowList.value[index - 1].id
         emit('previousArticle', index, { x: x1, y: y1 }, id)
@@ -310,7 +310,7 @@ const nextArticle = () => {
     } else {
         const index = commentShowList.value.findIndex(item => props.commentInfo.id === item.id)
         const length = commentShowList.value.length
-        if (index === length - 1) return
+        if (index === length - 1 || index === -1) return
         const { x1, y1 } = commentShowList.value[index + 1].shape_frame
         const id = commentShowList.value[index + 1].id
         emit('nextArticle', index, { x: x1, y: y1 }, id)
@@ -492,34 +492,32 @@ onUnmounted(() => {
                 </div>
             </div>
             <div class="comment-commands">
-                <el-button-group class="ml-4">
-                    <el-tooltip class="box-item" effect="dark" :content="`${t('comment.delete')}`" placement="bottom"
-                        :show-after="1000" :offset="10" :hide-after="0" v-if="isControls">
-                        <!--                        <el-button plain :icon="Delete" @click="onDelete" v-if="isControls" />-->
-                        <div class="onDelete" @click="onDelete" v-if="isControls">
-                            <svg-icon icon-class="comment-delete"></svg-icon>
-                        </div>
-                    </el-tooltip>
-                    <el-tooltip class="box-item" effect="dark" :content="`${t('comment.settled')}`" placement="bottom"
-                        :show-after="1000" :offset="10" :hide-after="0" v-if="resolve && isControls">
-                        <!--                        <el-button plain :icon="CircleCheck" @click="onResolve" v-if="isControls" />-->
-                        <div class="onResolve" @click="onResolve" v-if="isControls">
-                            <svg-icon icon-class="comment-solve"></svg-icon>
-                        </div>
-                    </el-tooltip>
-                    <el-tooltip class="box-item" effect="dark" :content="`${t('comment.settled')}`" placement="bottom"
-                        :show-after="1000" :offset="10" :hide-after="0" v-else-if="!resolve && isControls">
-                        <!--                        <el-button class="custom-icon" plain :icon="CircleCheckFilled" @click="onResolve"-->
-                        <!--                            v-if="isControls" />-->
-                        <div class="onResolved" @click="onResolve" v-if="isControls">
-                            <svg-icon icon-class="comment-solved"></svg-icon>
-                        </div>
-                    </el-tooltip>
-                    <!--                    <el-button plain :icon="Close" @click="close" />-->
-                    <div class="close" @click="close">
-                        <svg-icon icon-class="comment-close"></svg-icon>
+                <el-tooltip class="box-item" effect="dark" :content="`${t('comment.delete')}`" placement="bottom"
+                    :show-after="1000" :offset="10" :hide-after="0" v-if="isControls">
+                    <!--                        <el-button plain :icon="Delete" @click="onDelete" v-if="isControls" />-->
+                    <div class="onDelete" @click="onDelete" v-if="isControls">
+                        <svg-icon icon-class="comment-delete"></svg-icon>
                     </div>
-                </el-button-group>
+                </el-tooltip>
+                <el-tooltip class="box-item" effect="dark" :content="`${t('comment.settled')}`" placement="bottom"
+                    :show-after="1000" :offset="10" :hide-after="0" v-if="resolve && isControls">
+                    <!--                        <el-button plain :icon="CircleCheck" @click="onResolve" v-if="isControls" />-->
+                    <div class="onResolve" @click="onResolve" v-if="isControls">
+                        <svg-icon icon-class="comment-solve"></svg-icon>
+                    </div>
+                </el-tooltip>
+                <el-tooltip class="box-item" effect="dark" :content="`${t('comment.settled')}`" placement="bottom"
+                    :show-after="1000" :offset="10" :hide-after="0" v-else-if="!resolve && isControls">
+                    <!--                        <el-button class="custom-icon" plain :icon="CircleCheckFilled" @click="onResolve"-->
+                    <!--                            v-if="isControls" />-->
+                    <div class="onResolved" @click="onResolve" v-if="isControls">
+                        <svg-icon icon-class="comment-solved"></svg-icon>
+                    </div>
+                </el-tooltip>
+                <!--                    <el-button plain :icon="Close" @click="close" />-->
+                <div class="close" @click="close">
+                    <svg-icon icon-class="comment-close"></svg-icon>
+                </div>
             </div>
         </div>
         <el-scrollbar ref="scrollbarRef" :height="scrollHeight + 'px'" @wheel.stop @mousedown.stop>
@@ -633,6 +631,7 @@ onUnmounted(() => {
         .comment-commands {
             display: flex;
             justify-content: flex-end;
+            align-items: center;
             width: 90px;
             height: 30px;
 
@@ -650,8 +649,6 @@ onUnmounted(() => {
             .onDelete {
                 width: 24px;
                 height: 24px;
-                margin-top: 4px;
-                margin-left: -50px;
                 display: flex;
                 align-items: center;
                 justify-content: center;
@@ -671,8 +668,6 @@ onUnmounted(() => {
             .onResolve {
                 width: 24px;
                 height: 24px;
-                margin-top: -24px;
-                margin-left: -23px;
                 display: flex;
                 align-items: center;
                 justify-content: center;
@@ -692,8 +687,6 @@ onUnmounted(() => {
             .onResolved {
                 width: 24px;
                 height: 24px;
-                margin-top: -24px;
-                margin-left: -23px;
                 display: flex;
                 align-items: center;
                 justify-content: center;
@@ -709,8 +702,6 @@ onUnmounted(() => {
             .close {
                 width: 24px;
                 height: 24px;
-                margin-top: -24px;
-                margin-left: 3px;
                 display: flex;
                 align-items: center;
                 justify-content: center;

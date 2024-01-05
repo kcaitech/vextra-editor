@@ -14,7 +14,7 @@ import { is_component_class } from "@/utils/listview";
 export interface ItemData {
     id: string
     shape: () => Shape // 作用function，防止vue对shape内部数据进行proxy
-    shapeview:() => ShapeView
+    shapeview: () => ShapeView
     selected: boolean
     expand: boolean
     level: number
@@ -231,12 +231,12 @@ function icon_class() {
     const shape = props.data.shape();
     if (shape.type === ShapeType.Symbol) {
         if (shape instanceof SymbolUnionShape) {
-            return 'pattern-symbol-union';
+            return 'layer-symbol-union';
         } else {
-            return 'pattern-component';
+            return 'layer-component';
         }
     } else {
-        return `pattern-${shape.type}`;
+        return `layer-${shape.type}`;
     }
 }
 
@@ -364,7 +364,7 @@ onUnmounted(() => {
         <div class="ph" :style="{ width: `${ph_width}px` }"></div>
         <!-- 开合 -->
         <div :class="{ 'is-group': is_group(), triangle: showTriangle, slot: !showTriangle }" @click="toggleExpand">
-            <svg-icon v-if="showTriangle" icon-class="triangle-down"
+            <svg-icon v-if="showTriangle" icon-class="triangle-down" :id="props.data.expand ? 'down' : 'right'"
                 :style="{ transform: props.data.expand ? 'rotate(0deg)' : 'rotate(-90deg)' }"></svg-icon>
         </div>
         <!-- icon -->

@@ -148,7 +148,7 @@ export function isInner(context: Context, shape: ShapeView) {
 export function init_shape(context: Context, frame: ShapeFrame, mousedownOnPageXY: PageXY, t: Function) {
     const selection = context.selection;
     const workspace = context.workspace;
-    
+
     const action = context.tool.action;
     const type = ResultByAction(action);
 
@@ -172,7 +172,7 @@ export function init_shape(context: Context, frame: ShapeFrame, mousedownOnPageX
             new_shape = asyncCreator.init(page.data, (adapt2Shape(parent) as GroupShape), type, name, frame);
         }
     }
-    
+
     if (asyncCreator && new_shape) {
         page && context.nextTick(page, () => {
             const s = new_shape && page.shapes.get(new_shape.id);
@@ -677,71 +677,71 @@ const BASE_ITEM = ['all', 'copy'];
 export function get_menu_items(context: Context, area: "controller" | "text-selection" | "group" | "artboard" | "component" | "null" | "normal" | "table" | "table_cell" | "instance"): string[] {
     let contextMenuItems = []
     if (area === 'artboard') { // 点击在容器上
-        if (permIsEdit(context)) {
+        if (permIsEdit(context) && !context.tool.isLable) {
             contextMenuItems = ['all', 'copy', 'paste-here', 'replace', 'visible', 'component', 'lock', 'forward', 'back', 'top', 'bottom', 'groups', 'container', 'dissolution'];
         } else {
             contextMenuItems = BASE_ITEM;
         }
     } else if (area === 'group') { // 点击在编组上
-        if (permIsEdit(context)) {
+        if (permIsEdit(context) && !context.tool.isLable) {
             contextMenuItems = ['all', 'copy', 'paste-here', 'replace', 'visible', 'component', 'lock', 'forward', 'back', 'top', 'bottom', 'groups', 'container', 'un_group'];
         } else {
             contextMenuItems = BASE_ITEM;
         }
     } else if (area === 'component') {
-        if (permIsEdit(context)) {
+        if (permIsEdit(context) && !context.tool.isLable) {
             contextMenuItems = ['all', 'copy', 'paste-here', 'replace', 'visible', 'component', 'lock', 'forward', 'back', 'top', 'bottom', 'groups', 'container'];
         } else {
             contextMenuItems = BASE_ITEM;
         }
     } else if (area === 'instance') {
-        if (permIsEdit(context)) {
+        if (permIsEdit(context) && !context.tool.isLable) {
             contextMenuItems = ['all', 'copy', 'paste-here', 'replace', 'visible', 'component', 'lock', 'forward', 'back', 'top', 'bottom', 'groups', 'container', 'instance'];
         } else {
             contextMenuItems = BASE_ITEM;
         }
     } else if (area === 'controller') { // 点击在选区上
-        if (permIsEdit(context)) {
+        if (permIsEdit(context) && !context.tool.isLable) {
             contextMenuItems = ['all', 'copy', 'paste-here', 'replace', 'component', 'visible', 'lock', 'groups', 'container'];
         } else {
             contextMenuItems = BASE_ITEM;
         }
         const types = get_selected_types(context); // 点击在选区上时，需要判定选区内存在图形的类型
         if (types & 1) { // 存在容器
-            if (permIsEdit(context)) {
+            if (permIsEdit(context) && !context.tool.isLable) {
                 contextMenuItems.push('dissolution');
             }
         }
         if (types & 2) { // 存在编组
-            if (permIsEdit(context)) {
+            if (permIsEdit(context) && !context.tool.isLable) {
                 contextMenuItems.push('un_group');
             }
         }
         if (types & 4) { // 存在实例
             const shapes = context.selection.selectedShapes;
-            if (permIsEdit(context) && one_of_is_symbolref(shapes)) {
+            if (permIsEdit(context) && one_of_is_symbolref(shapes) && !context.tool.isLable) {
                 contextMenuItems.push('instance');
             }
         }
         if (types & 8) { // 存在组件
-            if (permIsEdit(context)) {
+            if (permIsEdit(context) && !context.tool.isLable) {
                 const index = contextMenuItems.findIndex((item) => item === 'component');
                 contextMenuItems.splice(index, 1);
             }
         }
         if (context.selection.selectedShapes.length <= 1) { // 当选区长度为1时，提供移动图层选项
-            if (permIsEdit(context)) {
+            if (permIsEdit(context) && !context.tool.isLable) {
                 contextMenuItems.push('forward', 'back', 'top', 'bottom');
             }
         }
     } else if (area === 'normal') { // 点击除了容器、编组以外的其他图形
-        if (permIsEdit(context)) {
+        if (permIsEdit(context) && !context.tool.isLable) {
             contextMenuItems = ['all', 'copy', 'paste-here', 'replace', 'visible', 'lock', 'component', 'forward', 'back', 'top', 'bottom', 'groups', 'container'];
         } else {
             contextMenuItems = BASE_ITEM;
         }
     } else if (area === 'text-selection') {
-        if (permIsEdit(context)) {
+        if (permIsEdit(context) && !context.tool.isLable) {
             const selection = context.textSelection;
             if (selection.cursorStart === selection.cursorEnd) {
                 contextMenuItems = ['all', 'paste', 'only_text'];
@@ -752,7 +752,7 @@ export function get_menu_items(context: Context, area: "controller" | "text-sele
             contextMenuItems = BASE_ITEM;
         }
     } else if (area === 'table') {
-        if (permIsEdit(context)) {
+        if (permIsEdit(context) && !context.tool.isLable) {
             const selection = context.textSelection;
             if (selection.cursorStart === selection.cursorEnd) {
                 contextMenuItems = ['all', 'paste', 'only_text', 'insert_column', 'delete_column', 'split_cell'];
@@ -764,13 +764,13 @@ export function get_menu_items(context: Context, area: "controller" | "text-sele
             contextMenuItems = BASE_ITEM;
         }
     } else if (area === 'table_cell') {
-        if (permIsEdit(context)) {
+        if (permIsEdit(context) && !context.tool.isLable) {
             contextMenuItems = ['insert_column', 'delete_column', 'merge_cell'];
         } else {
             contextMenuItems = BASE_ITEM;
         }
     } else {
-        if (permIsEdit(context)) {
+        if (permIsEdit(context) && !context.tool.isLable) {
             contextMenuItems = ['all', 'paste-here', 'half', 'hundred', 'double', 'canvas', 'operation', 'comment', 'cursor', 'title'];
         } else {
             contextMenuItems = ['all', 'half', 'hundred', 'double', 'canvas', 'operation', 'comment', 'cursor', 'title'];
@@ -1133,36 +1133,48 @@ export function scale_0(context: Context) {
     workspace.notify(WorkSpace.MATRIX_TRANSFORMATION);
 }
 
-export function undo(context: Context) {
-    const repo = context.repo;
-    repo.canUndo() && repo.undo();
+function modify_selection(context: Context) {
     const selection = context.selection;
     const shapes = context.selection.selectedShapes;
     const page = context.selection.selectedPage!;
-    const flat = page.shapes;
+    const new_selected: ShapeView[] = [];
+    context.nextTick(
+        page,
+        () => {
+            if (!shapes.length) {
+                return;
+            }
+            let changed = false;
 
-    if (shapes.length) {
-        for (let i = 0; i < shapes.length; i++) {
-            const item = shapes[i];
-            if (!flat.get(item.id)) {
-                selection.unSelectShape(item);
+            for (let i = 0; i < shapes.length; i++) {
+                const item = shapes[i];
+                if (!page.shapes.get(item.id)) {
+                    changed = true;
+                    continue;
+                }
+                new_selected.push(item);
+            }
+
+            if (changed) {
+                selection.rangeSelectShape(new_selected);
+                context.workspace.notify(WorkSpace.CLAC_ATTRI);
             }
         }
-    }
+    )
+}
 
-    if (context.selection.selectedShapes.length > 1) {
-        context.workspace.notify(WorkSpace.CLAC_ATTRI);
-    }
+export function undo(context: Context) {
+    const repo = context.repo;
+    repo.canUndo() && repo.undo();
+
+    modify_selection(context);
 }
 
 export function redo(context: Context) {
     const repo = context.repo;
-
     repo.canRedo() && repo.redo();
 
-    if (context.selection.selectedShapes.length > 1) {
-        context.workspace.notify(WorkSpace.CLAC_ATTRI);
-    }
+    modify_selection(context);
 }
 
 export async function upload_image(context: Context, ref: string, buff: ArrayBufferLike) {

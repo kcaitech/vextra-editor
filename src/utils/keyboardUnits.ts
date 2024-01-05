@@ -13,12 +13,12 @@ import { enter_path_edit_mode } from "./pathedit";
 const keydownHandler: { [key: string]: (event: KeyboardEvent, context: Context) => any } = {};
 
 function keydown(event: KeyboardEvent, context: Context) {
-    if (event.target instanceof HTMLInputElement) { // 不处理输入框内的键盘事件
+    if (event.target instanceof HTMLInputElement || event.target instanceof HTMLTextAreaElement) { // 不处理输入框内的键盘事件
         return;
     }
     if (context.workspace.documentPerm !== Perm.isEdit || context.tool.isLable) { // 非编辑状态下允许的动作
         const { code, ctrlKey, metaKey, shiftKey } = event;
-        if (!(code === 'KeyV' || code === 'KeyC' || code === 'KeyA' || code === 'Digit0 ' || ctrlKey || metaKey || shiftKey)) {
+        if (!(code === 'KeyV' || code === 'KeyC' || code === 'KeyA' || code === 'Digit0' || code === 'Escape' || ctrlKey || metaKey || shiftKey)) {
             return;
         }
     }

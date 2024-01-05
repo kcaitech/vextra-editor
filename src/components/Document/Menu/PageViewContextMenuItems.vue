@@ -15,7 +15,8 @@ import {
     Text,
     ShapeView,
     TextShapeView,
-    adapt2Shape
+    adapt2Shape,
+GroupShapeView
 } from "@kcdesign/data";
 import Layers from './Layers.vue';
 import { Context } from '@/context';
@@ -352,8 +353,8 @@ function dissolution_container() {
  * 解除编组
  */
 function unGroup() {
-    const groups = props.context.selection.selectedShapes.filter(s => s.type === ShapeType.Group);
-    const saveSelectShape = props.context.selection.selectedShapes.filter(s => s.type !== ShapeType.Group);
+    const groups = props.context.selection.selectedShapes.filter(s => s.type === ShapeType.Group && !(s as GroupShapeView).data.isBoolOpShape);
+    const saveSelectShape = props.context.selection.selectedShapes.filter(s => s.type !== ShapeType.Group || (s as GroupShapeView).data.isBoolOpShape);
     if (groups.length === 0) return;
     const page = props.context.selection.selectedPage;
     if (page) {
@@ -483,7 +484,7 @@ onUnmounted(() => {
             @mouseenter="(e: MouseEvent) => showLayerSubMenu(e)" @mouseleave="closeLayerSubMenu">
             <span>{{ t('system.select_layer') }}</span>
 <!--            <div class="triangle"></div>-->
-            <svg-icon icon-class="down"></svg-icon>
+            <svg-icon icon-class="down" style="transform: rotate(-90deg);margin-left: 62px"></svg-icon>
             <ContextMenu v-if="layerSubMenuVisiable" :x="layerSubMenuPosition.x" :y="layerSubMenuPosition.y"
                          :width="174"
                          :site="site" :context="props.context">
@@ -559,12 +560,14 @@ onUnmounted(() => {
         <!-- 协作 -->
         <div class="line" v-if="props.items.includes('cursor')"></div>
         <div class="item" v-if="props.items.includes('cursor')" @click="cursor">
-            <div class="choose" v-show="isCursor"></div>
-            <span>{{ t('system.show_many_cursor') }}</span>
+<!--            <div class="choose" v-show="isCursor"></div>-->
+            <svg-icon icon-class="choose" v-show="isCursor"></svg-icon>
+            <span :style="{ marginLeft: isCursor ? '8px' : '20px'}">{{ t('system.show_many_cursor') }}</span>
         </div>
         <div class="item" v-if="props.items.includes('comment')" @click="comment">
-            <div class="choose" v-show="isComment"></div>
-            <span>{{ t('system.show_comment') }}</span>
+<!--            <div class="choose" v-show="isComment"></div>-->
+            <svg-icon icon-class="choose" v-show="isComment"></svg-icon>
+            <span :style="{ marginLeft: isComment ? '8px' : '20px'}">{{ t('system.show_comment') }}</span>
             <span class="shortkey">
                 <Key code="Shift C"></Key>
             </span>
@@ -667,8 +670,9 @@ onUnmounted(() => {
             </span>
         </div>
         <div class="item" v-if="props.items.includes('title')" @click="toggle_title">
-            <div class="choose" v-show="isTitle"></div>
-            <span>{{ t('system.artboart_title_visible') }}</span>
+<!--            <div class="choose" v-show="isTitle"></div>-->
+            <svg-icon icon-class="choose" v-show="isTitle"></svg-icon>
+            <span :style="{ marginLeft: isTitle ? '8px' : '20px'}">{{ t('system.artboart_title_visible') }}</span>
         </div>
         <TableMenu :context="context" :layers="layers" :items="items" :site="site" @close="emit('close')"></TableMenu>
     </div>
@@ -682,17 +686,19 @@ onUnmounted(() => {
         position: relative;
         width: 100%;
         height: 32px;
-        padding: 9px 24px 9px 28px;
+        padding: 9px 24px 9px 8px;
         display: flex;
         flex-direction: row;
         align-items: center;
         box-sizing: border-box;
 
+        >span {
+            margin-left: 20px;
+        }
+
         >svg {
             width: 12px;
             height: 12px;
-            margin-left: 62px;
-            transform: rotate(-90deg);
         }
 
         >.shortkey {

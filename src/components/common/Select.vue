@@ -43,6 +43,7 @@ const { t } = useI18n();
 
 const curValue = ref<SelectItem | null>(null);
 const curValueIndex = ref<number>(-1);
+const curHoverValueIndex = ref<number>(-1);
 const selectContainer = ref<HTMLDivElement>();
 const optionsContainer = ref<HTMLDivElement>();
 const optionsContainerVisible = ref<boolean>(false);
@@ -166,9 +167,9 @@ onMounted(render)
                     :isCurValue="idx === curValueIndex" @select="select" />
             </div>
             <div v-else>
-                <div v-for="(c, idx) in source" class="item-default" :key="c.id" @click="() => select(c.data)">
+                <div v-for="(c, idx) in source" class="item-default" :key="c.id" @click="() => select(c.data)" @mouseover="curHoverValueIndex = idx" @mouseleave="curHoverValueIndex = -1">
                     <div class="content-wrap"> {{ c.data.content }}</div>
-                    <svg-icon v-if="idx === curValueIndex" icon-class="choose"></svg-icon>
+                    <svg-icon v-if="idx === curValueIndex" :icon-class="curHoverValueIndex === idx ? 'white-select': 'page-select'"></svg-icon>
                 </div>
             </div>
         </div>
@@ -195,7 +196,7 @@ onMounted(render)
 
         .value-wrap {
             flex: 1;
-
+            // height: 100%;
             overflow: hidden;
             text-overflow: ellipsis;
             white-space: nowrap;

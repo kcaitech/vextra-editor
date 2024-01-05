@@ -57,7 +57,7 @@ onUnmounted(() => {
             @click="selectItem(index)">
             <div class="text">{{ i18n ? t(`cutoutExport.${item}`) : item }}</div>
             <div class="icon">
-                <svg-icon v-if="selectValue === item" icon-class="page-select"></svg-icon>
+                <svg-icon v-if="selectValue === item" :icon-class="selectHoverItem === item ? 'white-select': 'page-select'"></svg-icon>
             </div>
         </div>
     </div>
@@ -100,12 +100,6 @@ onUnmounted(() => {
 
 .active-item {
     background-color: #1878F5;
-
-    >.icon {
-        >svg {
-            color: #ffffff;
-        }
-    }
 
     .text {
         color: #fff;

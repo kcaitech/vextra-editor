@@ -85,16 +85,16 @@ function comment() {
 <template>
   <div ref="subMenu" class="subMenu" @mousemove.stop>
     <div class="item" v-if="items.includes('half')" @click="(e: MouseEvent) => half(e)">
-      <span style="margin-left: 20px">50%</span>
+      <span>50%</span>
     </div>
     <div class="item" v-if="items.includes('hundred')" @click="(e: MouseEvent) => hundred(e)">
-      <span style="margin-left: 20px">100%</span>
+      <span>100%</span>
     </div>
     <div class="item" v-if="items.includes('double')" @click="(e: MouseEvent) => double(e)">
-      <span style="margin-left: 20px">200%</span>
+      <span>200%</span>
     </div>
     <div class="item" v-if="items.includes('canvas')" @click="canvas">
-      <span style="margin-left: 20px">{{ t('system.fit_canvas') }}</span>
+      <span>{{ t('system.fit_canvas') }}</span>
     </div>
     <div class="line" v-if="items.includes('cursor')"></div>
     <div class="item" v-if="items.includes('cursor')" @click="cursor">
@@ -147,6 +147,10 @@ function comment() {
     flex-direction: row;
     align-items: center;
     box-sizing: border-box;
+
+      >span {
+          margin-left: 20px;
+      }
 
     //.choose {
     //  position: absolute;

@@ -18,7 +18,7 @@ const isEnd = computed(() => {
 <style scoped lang="scss">
 .item-container {
     width: 100%;
-    height: 100%;
+    height: 32px;
     display: flex;
     align-items: center;
 

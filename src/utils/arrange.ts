@@ -1,4 +1,4 @@
-import { Shape, ShapeView, adapt2Shape } from "@kcdesign/data";
+import { Shape, ShapeType, ShapeView, adapt2Shape } from "@kcdesign/data";
 import { PositonAdjust } from "@kcdesign/data";
 // 群的最左端
 export function get_colony_left(shapes: ShapeView[]) {
@@ -330,9 +330,34 @@ export function get_individuality_t_b(shape: ShapeView) {
     return { top: Math.min(..._ys), bottom: Math.max(..._ys) };
 }
 
+export function is_container(shape: ShapeView) {
+    return [ShapeType.Artboard, ShapeType.Group, ShapeType.SymbolUnion, ShapeType.Symbol].includes(shape.type);
+}
+
 // 靠左对齐
 export function align_left(shapes: ShapeView[]) {
-    const c_apex = get_colony_left(shapes);
+    let c_apex = 0;
+    if (!shapes.length) {
+        return [];
+    }
+
+    const first = shapes[0];
+    const first_p = first.parent;
+
+    if (!first_p) {
+        return [];
+    }
+    if (shapes.length === 1 && is_container(first)) {
+        shapes = first.childs || [];
+        c_apex = get_colony_left(shapes);
+    }
+    else if (shapes.length === 1 && first_p.type !== ShapeType.Page) {
+        c_apex = get_colony_left([first, first_p]);
+    }
+    else {
+        c_apex = get_colony_left(shapes);
+    }
+
     const actions: PositonAdjust[] = [];
     for (let i = 0; i < shapes.length; i++) {
         const shape = shapes[i];
@@ -343,7 +368,28 @@ export function align_left(shapes: ShapeView[]) {
 }
 // 水平线对齐
 export function align_cneter_x(shapes: ShapeView[]) {
-    const c_apex = get_colony_center_x(shapes);
+    let c_apex = 0;
+    if (!shapes.length) {
+        return [];
+    }
+
+    const first = shapes[0];
+    const first_p = first.parent;
+
+    if (!first_p) {
+        return [];
+    }
+    if (shapes.length === 1 && is_container(first)) {
+        shapes = first.childs || [];
+        c_apex = get_colony_center_x(shapes);
+    }
+    else if (shapes.length === 1 && first_p.type !== ShapeType.Page) {
+        c_apex = get_colony_center_x([first, first_p]);
+    }
+    else {
+        c_apex = get_colony_center_x(shapes);
+    }
+
     const actions: PositonAdjust[] = [];
     for (let i = 0; i < shapes.length; i++) {
         const shape = shapes[i];
@@ -354,7 +400,28 @@ export function align_cneter_x(shapes: ShapeView[]) {
 }
 // 靠右对齐
 export function align_right(shapes: ShapeView[]) {
-    const c_apex = get_colony_right(shapes);
+    let c_apex = 0;
+    if (!shapes.length) {
+        return [];
+    }
+
+    const first = shapes[0];
+    const first_p = first.parent;
+
+    if (!first_p) {
+        return [];
+    }
+    if (shapes.length === 1 && is_container(first)) {
+        shapes = first.childs || [];
+        c_apex = get_colony_right(shapes);
+    }
+    else if (shapes.length === 1 && first_p.type !== ShapeType.Page) {
+        c_apex = get_colony_right([first, first_p]);
+    }
+    else {
+        c_apex = get_colony_right(shapes);
+    }
+
     const actions: PositonAdjust[] = [];
     for (let i = 0; i < shapes.length; i++) {
         const shape = shapes[i];
@@ -365,7 +432,28 @@ export function align_right(shapes: ShapeView[]) {
 }
 // 靠顶部对齐
 export function align_top(shapes: ShapeView[]) {
-    const c_apex = get_colony_top(shapes);
+    let c_apex = 0;
+    if (!shapes.length) {
+        return [];
+    }
+
+    const first = shapes[0];
+    const first_p = first.parent;
+
+    if (!first_p) {
+        return [];
+    }
+    if (shapes.length === 1 && is_container(first)) {
+        shapes = first.childs || [];
+        c_apex = get_colony_top(shapes);
+    }
+    else if (shapes.length === 1 && first_p.type !== ShapeType.Page) {
+        c_apex = get_colony_top([first, first_p]);
+    }
+    else {
+        c_apex = get_colony_top(shapes);
+    }
+
     const actions: PositonAdjust[] = [];
     for (let i = 0; i < shapes.length; i++) {
         const shape = shapes[i];
@@ -376,7 +464,28 @@ export function align_top(shapes: ShapeView[]) {
 }
 // 中线对齐
 export function align_cneter_y(shapes: ShapeView[]) {
-    const c_apex = get_colony_center_y(shapes);
+    let c_apex = 0;
+    if (!shapes.length) {
+        return [];
+    }
+
+    const first = shapes[0];
+    const first_p = first.parent;
+
+    if (!first_p) {
+        return [];
+    }
+    if (shapes.length === 1 && is_container(first)) {
+        shapes = first.childs || [];
+        c_apex = get_colony_center_y(shapes);
+    }
+    else if (shapes.length === 1 && first_p.type !== ShapeType.Page) {
+        c_apex = get_colony_center_y([first, first_p]);
+    }
+    else {
+        c_apex = get_colony_center_y(shapes);
+    }
+
     const actions: PositonAdjust[] = [];
     for (let i = 0; i < shapes.length; i++) {
         const shape = shapes[i];
@@ -386,7 +495,28 @@ export function align_cneter_y(shapes: ShapeView[]) {
     return actions;
 }
 export function align_bottom(shapes: ShapeView[]) {
-    const c_apex = get_colony_bottom(shapes);
+    let c_apex = 0;
+    if (!shapes.length) {
+        return [];
+    }
+
+    const first = shapes[0];
+    const first_p = first.parent;
+
+    if (!first_p) {
+        return [];
+    }
+    if (shapes.length === 1 && is_container(first)) {
+        shapes = first.childs || [];
+        c_apex = get_colony_bottom(shapes);
+    }
+    else if (shapes.length === 1 && first_p.type !== ShapeType.Page) {
+        c_apex = get_colony_bottom([first, first_p]);
+    }
+    else {
+        c_apex = get_colony_bottom(shapes);
+    }
+
     const actions: PositonAdjust[] = [];
     for (let i = 0; i < shapes.length; i++) {
         const shape = shapes[i];
@@ -398,6 +528,16 @@ export function align_bottom(shapes: ShapeView[]) {
 
 // 水平均匀分布
 export function distribute_horizontally(shapes: ShapeView[]) {
+    if (!shapes.length) {
+        return [];
+    }
+
+    const first = shapes[0];
+
+    if (shapes.length === 1 && is_container(first)) {
+        shapes = first.childs || [];
+    }
+
     const new_shapes: { left: number, right: number, width: number, shape: Shape }[] = [];
     for (let i = 0; i < shapes.length; i++) {
         const shape = shapes[i];
@@ -441,6 +581,16 @@ export function distribute_horizontally(shapes: ShapeView[]) {
 }
 // 垂直均匀分布
 export function vertical_uniform_distribution(shapes: ShapeView[]) {
+    if (!shapes.length) {
+        return [];
+    }
+
+    const first = shapes[0];
+
+    if (shapes.length === 1 && is_container(first)) {
+        shapes = first.childs || [];
+    }
+
     const new_shapes: { top: number, bottom: number, height: number, shape: Shape }[] = [];
     for (let i = 0; i < shapes.length; i++) {
         const shape = shapes[i];
