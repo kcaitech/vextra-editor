@@ -1,5 +1,5 @@
 <script setup lang="ts">
-import { Matrix, Shape, ShapeView } from "@kcdesign/data";
+import { Matrix, ShapeView } from "@kcdesign/data";
 import { XYsBounding } from "@/utils/common";
 import { WorkSpace } from '@/context/workspace'
 import { Selection } from '@/context/selection';
