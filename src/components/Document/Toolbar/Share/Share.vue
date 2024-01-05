@@ -131,6 +131,8 @@ onUnmounted(() => {
 }
 
 .container {
+    margin: auto 0 auto 8px;
+
   .share {
     cursor: pointer;
     width: 56px;

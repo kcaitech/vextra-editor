@@ -46,7 +46,8 @@ const toggleSwitch = () => {
                 <input class="d-switch__input" ref="input" type="checkbox" :checked="isActive" @change.stop="toggleSwitch"
                     :true-value="isActive" :false-value="!isActive" />
                 <span class="d-switch_action">
-                    <Switch style="width: 14px; height: 14px;" />
+<!--                    <Switch style="width: 14px; height: 14px;" />-->
+                <svg-icon icon-class="switch" style="width: 16px;height: 16px"></svg-icon>
                 </span>
             </div>
         </el-tooltip>
@@ -59,17 +60,17 @@ const toggleSwitch = () => {
     align-items: center;
     justify-content: center;
     height: 100%;
-    width: 50px;
+    width: 52px;
     margin: 0 10px;
 }
 
 .d-switch {
     position: relative;
-    height: 25px;
+    height: 30px;
     transition: background 0.2s;
-    width: 40px;
-    background: rgb(117, 117, 117);
-    border-radius: 10px;
+    width: 52px;
+    background: rgba(255, 255, 255, 0.1);
+    border-radius: 200px;
     display: inline-flex;
     align-items: center;
     vertical-align: middle;
@@ -89,11 +90,11 @@ const toggleSwitch = () => {
         align-items: center;
         justify-content: center;
         transition: 0.2s;
-        left: 2px;
-        top: 2px;
+        left: 6px;
+        top: 4px;
         z-index: 0;
-        height: 20px;
-        width: 20px;
+        height: 22px;
+        width: 22px;
         background: black;
         border-radius: 50%;
 
@@ -103,12 +104,12 @@ const toggleSwitch = () => {
     }
 
     &.is-checked {
-        background: rgb(117, 117, 117);
+        background: rgba(255, 255, 255, 0.1);
 
         .d-switch_action {
             left: 100%;
             background: #1878f5;
-            margin-left: -22px;
+            margin-left: -27px;
         }
     }
 }

@@ -57,7 +57,6 @@ function mouseout() {
       >svg {
         width: 12px;
         height: 12px;
-          //color: #000000;
       }
     }
 

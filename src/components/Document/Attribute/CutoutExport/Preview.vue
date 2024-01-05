@@ -9,6 +9,7 @@ import { Selection } from '@/context/selection';
 import { debounce } from 'lodash';
 import { getPngImageData, getSvgImageData } from '@/utils/image';
 import { useI18n } from 'vue-i18n';
+import { he } from 'element-plus/es/locale';
 const { t } = useI18n();
 interface Props {
     context: Context
@@ -141,17 +142,14 @@ const getPosition = (shape: ShapeView) => {
     if (shape.type !== ShapeType.Cutout) {
         if (shape.type === ShapeType.Group) {
             const { left, top, right, bottom } = getShadowMax(shape);
-            const max_border = getShapeBorderMax(shape);
             const { x, y, width: _w, height: _h } = getGroupChildBounds(shape);
-            xy.value.x = shape.frame.x + x - (left + max_border);
-            xy.value.y = shape.frame.y + y - (top + max_border);
-            width.value = _w + (left + max_border) + (right + max_border);
-            height.value = _h + (top + max_border) + (bottom + max_border);
+            xy.value.x = x - left;
+            xy.value.y = y - top;
+            width.value = _w + left + right;
+            height.value = _h + top + bottom;
         } else {
             const { left, top, right, bottom } = getShadowMax(shape);
-            const max_border = getShapeBorderMax(shape);
-            console.log(max_border);
-            
+            const max_border = getShapeBorderMax(shape) * 6;
             xy.value.x = (shape.frame.x - left - max_border);
             xy.value.y = (shape.frame.y - top - max_border);
             width.value = (shape.frame.width + (left + max_border) + (right + max_border));
@@ -172,6 +170,7 @@ function page_color() {
     background_color.value = DEFAULT_COLOR();
     const selected = props.context.selection.selectedShapes;
     if (!selected.length) {
+        background_color.value = 'transparent';
         return;
     }
     if (selected[0].type !== ShapeType.Cutout) {

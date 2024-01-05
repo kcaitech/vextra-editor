@@ -18,7 +18,7 @@ function keydown(event: KeyboardEvent, context: Context) {
     }
     if (context.workspace.documentPerm !== Perm.isEdit || context.tool.isLable) { // 非编辑状态下允许的动作
         const { code, ctrlKey, metaKey, shiftKey } = event;
-        if (!(code === 'KeyV' || code === 'KeyC' || code === 'KeyA' || code === 'Digit0 ' || ctrlKey || metaKey || shiftKey)) {
+        if (!(code === 'KeyV' || code === 'KeyC' || code === 'KeyA' || code === 'Digit0' || code === 'Escape' || ctrlKey || metaKey || shiftKey)) {
             return;
         }
     }

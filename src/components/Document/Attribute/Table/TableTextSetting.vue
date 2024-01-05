@@ -173,7 +173,7 @@ const setParagraphSpace = () => {
 const isSelectText = () => {
   if (shape.value) {
     const selection = props.context.textSelection;
-    if ((selection.cursorEnd !== -1) && (selection.cursorStart !== -1)) {
+    if ((selection.cursorEnd > 0) && (selection.cursorStart > 0)) {
       return false
     } else {
       return true
@@ -307,9 +307,9 @@ onUnmounted(() => {
     <Popover :context="props.context" class="popover" ref="popover" :width="232" :auto_to_right_line="true"
       :title="t('attr.text_advanced_settings')">
       <template #trigger>
-        <div class="trigger">
+        <div class="trigger" @click="showMenu">
           <Tooltip :content="t('attr.text_advanced_settings')" :offset="15">
-            <svg-icon icon-class="gear" @click="showMenu"></svg-icon>
+            <svg-icon icon-class="gear"></svg-icon>
           </Tooltip>
         </div>
       </template>

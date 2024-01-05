@@ -33,8 +33,8 @@ function select(action: Action) {
   align-items: center;
   color: #ffffff;
   > svg {
-    width: 15px;
-    height: 15px;
+    width: 18px;
+    height: 18px;
   }
 }
 </style>

@@ -38,8 +38,8 @@ function select() {
     color: #ffffff;
 
     >svg {
-        width: 14px;
-        height: 14px;
+        width: 18px;
+        height: 18px;
     }
 }
 

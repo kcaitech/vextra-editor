@@ -215,8 +215,8 @@ function keyToggleTB() {
 const isLable = ref<boolean>(false);
 
 //只读权限隐藏右侧属性栏
-watchEffect(() => {
-  if ((isRead.value || canComment.value) && !isLable.value) {
+const not_perm_hidden_right = () => {
+  if (!isEdit.value && !isLable.value) {
     Right.value.rightMin = 0
     Right.value.rightWidth = 0
     Right.value.rightMinWidth = 0
@@ -227,12 +227,13 @@ watchEffect(() => {
     Right.value.rightMinWidth = 0.1
     middleWidth.value = middleWidth.value - 0.1
   }
-})
+}
 
 const tool_watcher = (t: number) => {
   if (!context) return;
   if (t === Tool.LABLE_CHANGE) {
     isLable.value = context.tool.isLable;
+    not_perm_hidden_right();
   }
 }
 
@@ -277,6 +278,7 @@ const getDocumentAuthority = async () => {
       canComment.value = false
       isEdit.value = true
     }
+    not_perm_hidden_right();
     permType.value = data.data.perm_type
     context && context.workspace.setDocumentPerm(data.data.perm_type)
   } catch (err) {

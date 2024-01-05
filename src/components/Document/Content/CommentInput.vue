@@ -69,9 +69,9 @@ function handleClickOutside(event: MouseEvent) {
     }
 
     const mins = textarea.value.trim().length < 1;
-
+    
     if (mins) {
-        emit('close', event);
+        emit('completed', true, event);
     } else {
         addComment(true, event);
     }

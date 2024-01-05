@@ -94,7 +94,7 @@ onUnmounted(stop);
     display: flex;
     padding: 6px 28px 6px 20px;
     align-items: center;
-    justify-content: space-between;
+    //justify-content: space-between;
 
     .select-wrap {
         display: flex;
@@ -111,19 +111,22 @@ onUnmounted(stop);
 
     .change {
         display: flex;
-
         width: 28px;
-        height: 32px;
-
+        height: 28px;
         align-items: center;
         justify-content: center;
-
         cursor: pointer;
+        border-radius: var(--default-radius);
+        margin-left: 4px;
 
         >svg {
             width: 16px;
             height: 16px;
         }
+    }
+
+    .change:hover {
+        background-color: #F5F5F5;
     }
 }
 </style>

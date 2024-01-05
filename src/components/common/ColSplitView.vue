@@ -230,7 +230,9 @@ const handle_left = (t: number) => {
         if (sizeBounds.left.width !== 0) {
             props.context.workspace.matrix.trans(sizeBounds.left.width, 0)
         } else {
-            props.context.workspace.matrix.trans(-(0.1 * rootWidth), 0)
+            const leftMinWidthImportant = Number((250 / rootWidth));
+            const leftWidth = Math.max(leftMinWidthImportant, 0.1) * rootWidth
+            props.context.workspace.matrix.trans(-leftWidth, 0)
         }
         props.context.workspace.notify(WorkSpace.MATRIX_TRANSFORMATION);
     }
