@@ -6,7 +6,7 @@ import ContextMenu from '../common/ContextMenu.vue';
 import PageViewContextMenuItems from '@/components/Document/Menu/PageViewContextMenuItems.vue';
 import Selector, { SelectorFrame } from './Selection/Selector.vue';
 import CommentView from './Content/CommentView.vue';
-import { Matrix, Shape, Page, Color, ShapeType, ShapeView, PageView } from '@kcdesign/data';
+import { Matrix, Color, ShapeType, ShapeView, PageView } from '@kcdesign/data';
 import { Context } from '@/context';
 import { PageXY, ClientXY, ClientXYRaw } from '@/context/selection';
 import { KeyboardKeys, WorkSpace } from '@/context/workspace';
@@ -26,9 +26,9 @@ import {
     selectShapes,
     color2string,
     init_insert_table,
-    root_scale, root_trans, detectZoom
+    root_scale, root_trans
 } from '@/utils/content';
-import { paster } from '@/utils/clipboard';
+import { check_clipboard_read_permission, paster, paster2 } from '@/utils/clipboard';
 import { insertFrameTemplate } from '@/utils/artboardFn';
 import { Comment } from '@/context/comment';
 import Placement from './Menu/Placement.vue';
@@ -123,7 +123,7 @@ function onMouseWheel(e: WheelEvent) { // 滚轮、触摸板事件
     } else {
         root_trans(props.context, e, wheel_step);
     }
-    
+
     workspace.value.notify(WorkSpace.MATRIX_TRANSFORMATION);
     search_once(e) // 滚动过程进行常规图形检索
 }
@@ -564,6 +564,7 @@ onMounted(() => {
     rootRegister(true);
     document.addEventListener('keydown', onKeyDown);
     document.addEventListener('keyup', onKeyUp);
+    // document.addEventListener('paste', paster2)
     window.addEventListener('blur', windowBlur);
 
     nextTick(() => {
@@ -575,7 +576,7 @@ onMounted(() => {
         initMatrix(props.page); // 初始化页面视图
     });
 
-    (window as any).xxx = detectZoom;
+    (window as any).xxx = check_clipboard_read_permission;
 
     props.context.workspace.setFreezeStatus(false)
 

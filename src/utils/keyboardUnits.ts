@@ -244,11 +244,13 @@ keydownHandler['KeyU'] = function (event: KeyboardEvent, context: Context) {
 }
 
 keydownHandler['KeyV'] = function (event: KeyboardEvent, context: Context) {
-    event.preventDefault();
     if (event.ctrlKey || event.metaKey) {
+
         context.workspace.notify(WorkSpace.PASTE); // 复制图层（文本的复制不在这里处理）
         return;
     }
+
+    event.preventDefault();
     if (event.altKey && event.shiftKey) {
         context.arrange.notify(Arrange.SPACE_AROUND_VER); // 图层垂直方向等距分布
         return;
