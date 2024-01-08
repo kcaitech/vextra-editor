@@ -26,7 +26,7 @@ import {
     selectShapes,
     color2string,
     init_insert_table,
-    root_scale, root_trans
+    root_scale, root_trans, detectZoom
 } from '@/utils/content';
 import { paster } from '@/utils/clipboard';
 import { insertFrameTemplate } from '@/utils/artboardFn';
@@ -117,16 +117,13 @@ function setMousedownXY(e: MouseEvent) { // 记录鼠标在页面上的点击位
 function onMouseWheel(e: WheelEvent) { // 滚轮、触摸板事件
     if (contextMenu.value) return; //右键菜单已打开
     e.preventDefault();
-    const { ctrlKey, metaKey, deltaX, deltaY } = e;
+    const { ctrlKey, metaKey } = e;
     if (ctrlKey || metaKey) { // 缩放
         root_scale(props.context, e);
     } else {
-        if (Math.abs(deltaX) + Math.abs(deltaY) < 100) { // 临时适配方案，需根据使用设备进一步完善适配
-            matrix.trans(-deltaX, -deltaY);
-        } else {
-            root_trans(props.context, e, wheel_step);
-        }
+        root_trans(props.context, e, wheel_step);
     }
+    
     workspace.value.notify(WorkSpace.MATRIX_TRANSFORMATION);
     search_once(e) // 滚动过程进行常规图形检索
 }
@@ -577,6 +574,8 @@ onMounted(() => {
         _updateRoot(props.context, root.value); // 第一次记录root数据，所有需要root数据的方法，都需要在此之后
         initMatrix(props.page); // 初始化页面视图
     });
+
+    (window as any).xxx = detectZoom;
 
     props.context.workspace.setFreezeStatus(false)
 

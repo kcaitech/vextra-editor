@@ -966,6 +966,16 @@ export function root_scale(context: Context, e: WheelEvent) {
 }
 
 export function root_trans(context: Context, e: WheelEvent, step: number) {
+    const { deltaX, deltaY } = e;
+
+    if (Math.abs(deltaX) !== 0 && Math.abs(deltaY) !== 0) { // 判断当前行为是触控板行为还是滚轮行为，存在误判的可能，目前没有找到更好的解决方法
+        context.workspace.matrix.trans(-deltaX, -deltaY); // 触控板行为
+    } else {
+        root_trans_direction(context, e, step); // 滚轮行为
+    }
+}
+
+export function root_trans_direction(context: Context, e: WheelEvent, step: number) {
     if (e.shiftKey) {
         const _d = is_mac() ? e.deltaX : e.deltaY; // window的deltaX竟然有问题
         const delta = _d > 0 ? -step : step;
@@ -1185,4 +1195,29 @@ export async function upload_image(context: Context, ref: string, buff: ArrayBuf
         console.log('upload_image:', error);
         return false;
     }
+}
+
+export function detectZoom() {
+    let ratio = 0,
+        screen = window.screen as any,
+        ua = navigator.userAgent.toLowerCase();
+
+    if (window.devicePixelRatio !== undefined) {
+        ratio = window.devicePixelRatio;
+    }
+    else if (~ua.indexOf('msie')) {
+        if (screen.deviceXDPI && screen.logicalXDPI) {
+            ratio = screen.deviceXDPI / screen.logicalXDPI;
+        }
+    }
+    else if (window.outerWidth !== undefined && window.innerWidth !== undefined) {
+        ratio = window.outerWidth / window.innerWidth;
+    }
+
+    if (ratio) {
+        ratio = Math.round(ratio * 100);
+    }
+
+    console.log('ratio:', ratio);
+
 }
