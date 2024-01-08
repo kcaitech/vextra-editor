@@ -216,7 +216,6 @@ export function reset_assist_before_translate(context: Context, shapes: ShapeVie
     context.workspace.setSelectionViewUpdater(false);
     context.workspace.translating(true);
     context.assist.set_trans_target(shapes);
-    context.cursor.cursor_freeze(true); // 拖动过程中禁止鼠标光标切换
 }
 
 /**

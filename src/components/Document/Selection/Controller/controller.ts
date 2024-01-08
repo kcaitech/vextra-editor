@@ -256,6 +256,8 @@ export function useControllerCustom(context: Context, i18nT: Function) {
             return;
         }
 
+        context.cursor.cursor_freeze(true); // 拖动过程中禁止鼠标光标切换
+
         document.addEventListener('mousemove', mousemove);
 
         shapes = selection.selectedShapes;
