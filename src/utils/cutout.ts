@@ -164,7 +164,6 @@ export const getGroupChildBounds = (shape: ShapeView) => {
     const group_bounds_points = getMaxMinPoints(shapes);
     const max_p = getMaxPoint(group_bounds_points);
     const min_p = getMinPoint(group_bounds_points);
-
     return {
         x: min_p.x,
         y: min_p.y,
