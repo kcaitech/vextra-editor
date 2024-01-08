@@ -968,7 +968,9 @@ export function root_scale(context: Context, e: WheelEvent) {
 export function root_trans(context: Context, e: WheelEvent, step: number) {
     const { deltaX, deltaY } = e;
 
-    if (Math.abs(deltaX) !== 0 && Math.abs(deltaY) !== 0) { // 判断当前行为是触控板行为还是滚轮行为，存在误判的可能，目前没有找到更好的解决方法
+    const is_pad = Math.abs(deltaX) !== 0 && Math.abs(deltaY) !== 0; // 判断当前行为是触控板行为还是滚轮行为，存在误判的可能，目前没有找到更好的解决方法
+
+    if (is_pad) {
         context.workspace.matrix.trans(-deltaX, -deltaY); // 触控板行为
     } else {
         root_trans_direction(context, e, step); // 滚轮行为
