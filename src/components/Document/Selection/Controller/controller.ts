@@ -1,4 +1,4 @@
-import { Shape, ShapeType, GroupShape, PathShape, AsyncPathEditor, ShapeView, adapt2Shape } from '@kcdesign/data';
+import { ShapeType, AsyncPathEditor, ShapeView, adapt2Shape, PathShapeView } from '@kcdesign/data';
 import { onMounted, onUnmounted } from "vue";
 import { Context } from "@/context";
 import { Matrix } from '@kcdesign/data';
@@ -6,7 +6,7 @@ import { ClientXY, PageXY } from "@/context/selection";
 import { fourWayWheel, Wheel, EffectType } from "@/utils/wheel";
 import { DirectionCalc, get_speed, modify_shapes } from "@/utils/controllerFn";
 import { Selection } from "@/context/selection";
-import { selection_penetrate } from "@/utils/scout";
+import { is_layers_tree_unit, selection_penetrate } from "@/utils/scout";
 import { WorkSpace } from "@/context/workspace";
 import { AsyncTransfer } from "@kcdesign/data";
 import { paster_short } from '@/utils/clipboard';
@@ -64,14 +64,16 @@ export function useControllerCustom(context: Context, i18nT: Function) {
         if (selected.length !== 1 || context.tool.isLable) {
             return;
         }
+
         const shape = selected[0];
-        if ([ShapeType.Group, ShapeType.Symbol, ShapeType.SymbolRef, ShapeType.Artboard].includes(shape.type)) {
-            const scope: any = shape.type === ShapeType.SymbolRef ? shape.naviChilds : (shape).childs;
-            const target = selection_penetrate(selection.scout!, scope, startPositionOnPage);
+
+        if (is_layers_tree_unit(shape)) {
+            const target = selection_penetrate(selection.scout!, shape, startPositionOnPage);
             if (target) {
                 selection.selectShape(target);
             }
-        } else if (shape instanceof PathShape) {
+        }
+        else if (shape instanceof PathShapeView) {
             if (forbidden_to_modify_frame(shape)) {
                 return;
             }

@@ -4,7 +4,7 @@ import { Menu } from "@/context/menu";
 import { onMounted, onUnmounted, ref, watch, nextTick } from "vue";
 import ListView, { IDataIter, IDataSource } from "@/components/common/ListView.vue";
 import ShapeItem, { ItemData } from "./ShapeItem.vue";
-import { Page, PageView, Shape, adapt2Shape, proxyView } from "@kcdesign/data";
+import { PageView, Shape, adapt2Shape } from "@kcdesign/data";
 import { ShapeDirListIter2 as ShapeDirListIter, ShapeDirList2 as ShapeDirList, ShapeView } from "@kcdesign/data";
 import { useI18n } from 'vue-i18n';
 import { ShapeType } from '@kcdesign/data';

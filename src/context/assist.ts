@@ -14,7 +14,6 @@ import {
     gen_match_points_by_map,
     PointsOffset, getClosestContainer, gen_match_points_by_map2, modify_pt_x_4_path_edit, modify_pt_y_4_path_edit
 } from "@/utils/assist";
-import { WorkSpace } from "./workspace";
 
 export interface PointGroup1 {
     lt: PageXY
@@ -226,7 +225,7 @@ export class Asssit extends WatchableObject {
         const shapes = this.m_context.selection.selectedShapes;
         if (shapes.length === 1) {
             const container = getClosestContainer((shapes[0]));
-            this.m_collect_target =  container ? [container] : [];
+            this.m_collect_target = container ? [container] : [];
         } else {
             this.m_collect_target = [];
         }
@@ -237,13 +236,6 @@ export class Asssit extends WatchableObject {
             this.update_collect();
         } else if (t === Selection.CHANGE_PAGE) {
             this.m_collect_target = [];
-        }
-    }
-    private workspace_watcher(t?: any) {
-        if (t === WorkSpace.MATRIX_TRANSFORMATION) {
-            console.log('update collect map by MATRIX_TRANSFORMATION');
-
-            this.update_collect();
         }
     }
 
@@ -487,6 +479,7 @@ export class Asssit extends WatchableObject {
         this.m_nodes_x = [];
         this.m_nodes_y = [];
         this.m_except.clear();
+        this.m_current_pg = undefined;
         this.notify(Asssit.CLEAR);
     }
 }

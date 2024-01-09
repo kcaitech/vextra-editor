@@ -127,13 +127,14 @@ function onChangeX(value: string, shapes: ShapeView[]) {
     }
 
     const actions = get_actions_frame_x(shapes, _x);
+
     const page = props.context.selection.selectedPage;
     if (!page) {
         return;
     }
 
     const editor = props.context.editor4Page(page);
-    editor.arrange(actions);
+    editor.modifyShapesX(actions);
 }
 function onChangeY(value: string, shapes: ShapeView[]) {
     value = Number
@@ -152,7 +153,7 @@ function onChangeY(value: string, shapes: ShapeView[]) {
     }
 
     const editor = props.context.editor4Page(page);
-    editor.arrange(actions);
+    editor.modifyShapesY(actions);
 }
 function onChangeW(value: string, shapes: ShapeView[]) {
     value = Number

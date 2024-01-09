@@ -4,8 +4,9 @@ import { Menu } from "@/context/menu";
 import { ClientXY, PageXY, XY } from "@/context/selection";
 import { WorkSpace } from "@/context/workspace";
 import { Comment } from "@/context/comment";
-import { XYsBounding } from "@/utils/common";
+import { XYsBounding, scout_once } from "@/utils/common";
 import { get_root_points } from "@/utils/pathedit";
+import { multi_select_shape } from "./listview";
 
 /**
  * @description 判断落点是否在content上
@@ -142,7 +143,7 @@ export function check_drag_action(start: { x: number, y: number }, current: { x:
  * @description 根据鼠标在client坐标系上的一点确定辅助对象的点图
  * @param down root坐标系上的一点
  */
-export function gen_offset_points_map(shapes: ShapeView[], down: PageXY) {    
+export function gen_offset_points_map(shapes: ShapeView[], down: PageXY) {
     let lt: { x: number, y: number }, rb: { x: number, y: number }, pivot: { x: number, y: number },
         rt: { x: number, y: number }, lb: { x: number, y: number };
     if (shapes.length === 1) {
@@ -165,7 +166,7 @@ export function gen_offset_points_map(shapes: ShapeView[], down: PageXY) {
                 x: 0,
                 y: f.height
             }];
-            
+
             for (let i = 0; i < 4; i++) {
                 points.push(m.computeCoord3(ps[i]));
             }
@@ -283,14 +284,26 @@ export function shapes_picker(e: MouseEvent, context: Context, p: { x: number, y
     const hoveredShape = selection.hoveredShape;
     if (hoveredShape) {
         if (e.shiftKey) { // todo 当按下shift时选中的也需要hover
-            selection.rangeSelectShape([...selected, hoveredShape]);
+            multi_select_shape(context, hoveredShape);
         } else {
             selection.selectShape(hoveredShape);
         }
-    } else if (selected.length > 1) {
+
+        return;
+    }
+
+    if (selected.length > 1) {
         const shape = selection.getShapesByXY(p, e.metaKey || e.ctrlKey, selected);
         if (shape) {
-            selection.selectShape(shape);
+            if (e.shiftKey) {
+                const exist = selected.find(s => s.id === shape.id);
+                if (exist) {
+                    selection.unSelectShape(exist);
+                    scout_once(context, e);
+                }
+            } else {
+                selection.selectShape(shape);
+            }
         } else {
             selection.resetSelectShapes();
         }

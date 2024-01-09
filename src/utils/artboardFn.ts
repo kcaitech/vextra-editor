@@ -1,10 +1,10 @@
-import {XY, PageXY} from '@/context/selection';
-import {Matrix, ShapeFrame, Shape, ShapeType, GroupShape, Artboard, ShapeView, GroupShapeView} from '@kcdesign/data';
-import {isTarget} from './common';
-import {Context} from '@/context';
-import {Action, Tool} from '@/context/tool';
-import {compare_layer_3} from './group_ungroup';
-import {WorkSpace} from '@/context/workspace';
+import { XY, PageXY } from '@/context/selection';
+import { Matrix, ShapeFrame, Shape, ShapeType, GroupShape, Artboard, ShapeView, GroupShapeView } from '@kcdesign/data';
+import { isTarget, isTarget2 } from './common';
+import { Context } from '@/context';
+import { Action, Tool } from '@/context/tool';
+import { compare_layer_3 } from './group_ungroup';
+import { WorkSpace } from '@/context/workspace';
 // 寻找一块空白的区域；
 // 先寻找当前编辑器中心center在page上的位置，center、pageMatrix -> XY;
 // 以XY为start点，在start处建立一个width、height的矩形，在这里会获得isTarget的第一个传参selectorPoints，与所有图形Shapes(只要page的子元素就行)匹配是否🍌，一旦有图形🍌则XY向右移动offset = 40px；
@@ -12,33 +12,33 @@ import {WorkSpace} from '@/context/workspace';
 
 export function landFinderOnPage(pageMatrix: Matrix, context: Context, frame: ShapeFrame): PageXY {
     const shapes: ShapeView[] = context.selection.selectedPage?.childs || [];
-    const {width, height} = frame;
+    const { width, height } = frame;
     let center = context.workspace.root.center;
     center = pageMatrix.inverseCoord(center.x, center.y);
-    const start = {x: center.x - width / 2, y: center.y - height / 2}; // get start point
+    const start = { x: center.x - width / 2, y: center.y - height / 2 }; // get start point
     const offset = 40;
     let pure: boolean = false;
     let max = 0;
     while (!pure && max <= 100000) {
         pure = true;
-        const {x: sx, y: sy} = start, w = width, h = height;
+        const { x: sx, y: sy } = start, w = width, h = height;
         const selectorPoints: [XY, XY, XY, XY, XY] = [
-            {x: sx, y: sy},
-            {x: sx + w, y: sy},
-            {x: sx + w, y: sy + h},
-            {x: sx, y: sy + h},
-            {x: sx, y: sy},
+            { x: sx, y: sy },
+            { x: sx + w, y: sy },
+            { x: sx + w, y: sy + h },
+            { x: sx, y: sy + h },
+            { x: sx, y: sy },
         ];
 
         for (let i = 0; i < shapes.length; i++) {
             const m = shapes[i].matrix2Root();
-            const {width: w, height: h} = shapes[i].frame;
+            const { width: w, height: h } = shapes[i].frame;
             const ps: XY[] = [
-                {x: 0, y: 0},
-                {x: w, y: 0},
-                {x: w, y: h},
-                {x: 0, y: h},
-                {x: 0, y: 0},
+                { x: 0, y: 0 },
+                { x: w, y: 0 },
+                { x: w, y: h },
+                { x: 0, y: h },
+                { x: 0, y: 0 },
             ].map(p => m.computeCoord2(p.x, p.y));
             if (isTarget(selectorPoints, ps) || isTarget(ps as [XY, XY, XY, XY, XY], selectorPoints)) pure = false; // 存在🍌
         }
@@ -59,7 +59,7 @@ export function scrollToContentView(shape: ShapeView, context: Context) {
     const lt = m2r.computeCoord2(0, 0);
     const rb = m2r.computeCoord2(f.width, f.height);
     const w = rb.x - lt.x, h = rb.y - lt.y;
-    const shapeCenter = {x: lt.x + w / 2, y: lt.y + h / 2};
+    const shapeCenter = { x: lt.x + w / 2, y: lt.y + h / 2 };
     const contentViewCenter = workspace.root.center;
     const transX = contentViewCenter.x - shapeCenter.x, transY = contentViewCenter.y - shapeCenter.y;
     if (transX || transY) {
@@ -104,7 +104,7 @@ export function insertFrameTemplate(context: Context) {
     if (parent) {
         const editor = context.editor4Page(parent), tf = tool.frameSize, matrix = workspace.matrix;
         const frame = new ShapeFrame(0, 0, tf.size.width, tf.size.height);
-        const {x, y} = landFinderOnPage(matrix, context, frame);
+        const { x, y } = landFinderOnPage(matrix, context, frame);
         frame.x = x, frame.y = y;
         let artboard: Shape | false = editor.create(type, tf.name, frame);
         artboard = editor.insert(parent.data, shapes.length, artboard);
@@ -135,18 +135,21 @@ export function collect(context: Context): ShapeView[] {
         const m2r = artboard.matrix2Root();
         const frame = artboard.frame;
         const ps = [
-            {x: 0, y: 0},
-            {x: frame.width, y: 0},
-            {x: frame.width, y: frame.height},
-            {x: 0, y: frame.height},
-            {x: 0, y: 0}
+            { x: 0, y: 0 },
+            { x: frame.width, y: 0 },
+            { x: frame.width, y: frame.height },
+            { x: 0, y: frame.height },
+            { x: 0, y: 0 }
         ].map(p => m2r.computeCoord(p.x, p.y));
-        const scope = ((artboard.parent || page) as ShapeView).childs || [];
-        return finder(context, scope, ps as [XY, XY, XY, XY, XY]);
+
+        const scope = (((artboard.parent || page) as ShapeView).childs || [])
+            .filter(i => i.id !== artboard.id);
+
+        return finder(scope, ps as [XY, XY, XY, XY, XY]);
     } else return [];
 }
 
-function finder(context: Context, childs: ShapeView[], Points: [XY, XY, XY, XY, XY]) {
+function finder(childs: ShapeView[], Points: [XY, XY, XY, XY, XY]) {
     let ids = 0;
     const selectedShapes: Map<string, ShapeView> = new Map();
     while (ids < childs.length) {
@@ -155,29 +158,18 @@ function finder(context: Context, childs: ShapeView[], Points: [XY, XY, XY, XY, 
             ids++;
             continue;
         }
-        const m = childs[ids].matrix2Root();
-        const {width: w, height: h} = shape.frame;
-        const ps: XY[] = [
-            {x: 0, y: 0},
-            {x: w, y: 0},
-            {x: w, y: h},
-            {x: 0, y: h},
-            {x: 0, y: 0},
-        ].map(p => m.computeCoord3(p));
+
         if (shape.type === ShapeType.Artboard) { // 容器要判定为真的条件是完全被选区覆盖
-            if (isTarget(Points, ps, true)) {
+            if (isTarget2(Points, shape, true)) {
                 selectedShapes.set(shape.id, shape);
                 for (let i = 0; i < (shape).childs.length; i++) {
                     selectedShapes.delete((shape).childs[i].id);
                 }
             }
-        } else if (shape.type === ShapeType.Line) {
-            if (isTarget(Points, [ps[0], ps[2]], true)) {
-                selectedShapes.set(shape.id, shape);
-            }
-        } else if (isTarget(Points, ps, true)) {
+        } else if (isTarget2(Points, shape, true)) {
             selectedShapes.set(shape.id, shape);
         }
+
         ids++;
     }
     return compare_layer_3(Array.from(selectedShapes.values()));

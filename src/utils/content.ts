@@ -148,7 +148,7 @@ export function isInner(context: Context, shape: ShapeView) {
 export function init_shape(context: Context, frame: ShapeFrame, mousedownOnPageXY: PageXY, t: Function) {
     const selection = context.selection;
     const workspace = context.workspace;
-    
+
     const action = context.tool.action;
     const type = ResultByAction(action);
 
@@ -172,7 +172,7 @@ export function init_shape(context: Context, frame: ShapeFrame, mousedownOnPageX
             new_shape = asyncCreator.init(page.data, (adapt2Shape(parent) as GroupShape), type, name, frame);
         }
     }
-    
+
     if (asyncCreator && new_shape) {
         page && context.nextTick(page, () => {
             const s = new_shape && page.shapes.get(new_shape.id);
@@ -1133,36 +1133,48 @@ export function scale_0(context: Context) {
     workspace.notify(WorkSpace.MATRIX_TRANSFORMATION);
 }
 
-export function undo(context: Context) {
-    const repo = context.repo;
-    repo.canUndo() && repo.undo();
+function modify_selection(context: Context) {
     const selection = context.selection;
     const shapes = context.selection.selectedShapes;
     const page = context.selection.selectedPage!;
-    const flat = page.shapes;
+    const new_selected: ShapeView[] = [];
+    context.nextTick(
+        page,
+        () => {
+            if (!shapes.length) {
+                return;
+            }
+            let changed = false;
 
-    if (shapes.length) {
-        for (let i = 0; i < shapes.length; i++) {
-            const item = shapes[i];
-            if (!flat.get(item.id)) {
-                selection.unSelectShape(item);
+            for (let i = 0; i < shapes.length; i++) {
+                const item = shapes[i];
+                if (!page.shapes.get(item.id)) {
+                    changed = true;
+                    continue;
+                }
+                new_selected.push(item);
+            }
+
+            if (changed) {
+                selection.rangeSelectShape(new_selected);
+                context.workspace.notify(WorkSpace.CLAC_ATTRI);
             }
         }
-    }
+    )
+}
 
-    if (context.selection.selectedShapes.length > 1) {
-        context.workspace.notify(WorkSpace.CLAC_ATTRI);
-    }
+export function undo(context: Context) {
+    const repo = context.repo;
+    repo.canUndo() && repo.undo();
+
+    modify_selection(context);
 }
 
 export function redo(context: Context) {
     const repo = context.repo;
-
     repo.canRedo() && repo.redo();
 
-    if (context.selection.selectedShapes.length > 1) {
-        context.workspace.notify(WorkSpace.CLAC_ATTRI);
-    }
+    modify_selection(context);
 }
 
 export async function upload_image(context: Context, ref: string, buff: ArrayBufferLike) {
