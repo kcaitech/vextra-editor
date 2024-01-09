@@ -72,12 +72,12 @@ keydownHandler['KeyB'] = function (event: KeyboardEvent, context: Context) {
 }
 
 keydownHandler['KeyC'] = function (event: KeyboardEvent, context: Context) {
-    event.preventDefault();
     const { metaKey, ctrlKey, shiftKey } = event;
     if ((ctrlKey || metaKey) && !shiftKey) {
-        context.workspace.notify(WorkSpace.COPY); // 拷贝
+        // context.workspace.notify(WorkSpace.COPY); // 拷贝
         return
     }
+    event.preventDefault();
     if (shiftKey) {
         context.comment.setVisibleComment(!context.comment.isVisibleComment); // 评论隐藏与显示
         return;
@@ -245,8 +245,6 @@ keydownHandler['KeyU'] = function (event: KeyboardEvent, context: Context) {
 
 keydownHandler['KeyV'] = function (event: KeyboardEvent, context: Context) {
     if (event.ctrlKey || event.metaKey) {
-
-        context.workspace.notify(WorkSpace.PASTE); // 复制图层（文本的复制不在这里处理）
         return;
     }
 
@@ -269,22 +267,23 @@ keydownHandler['KeyW'] = function (event: KeyboardEvent, context: Context) {
 }
 
 keydownHandler['KeyX'] = function (event: KeyboardEvent, context: Context) {
-    event.preventDefault();
     const is_ctrl = event.ctrlKey || event.metaKey;
+
     if (is_ctrl && event.shiftKey) {
+        event.preventDefault();
         context.workspace.notify(WorkSpace.DELETE_LINE); // 下划线
         return;
     }
 
     if (is_ctrl) {
-        context.workspace.clipboard
-            .cut()
-            .then((res) => {
-                if (!res) {
-                    return;
-                }
-                context.selection.resetSelectShapes(); // 剪切图形
-            });
+        // context.workspace.clipboard
+        //     .cut()
+        //     .then((res) => {
+        //         if (!res) {
+        //             return;
+        //         }
+        //         context.selection.resetSelectShapes(); // 剪切图形
+        //     });
         return;
     }
     context.tool.setAction(Action.AddContact); // 连接线功能

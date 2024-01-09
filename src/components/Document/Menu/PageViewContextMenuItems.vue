@@ -16,16 +16,14 @@ import {
     ShapeView,
     TextShapeView,
     adapt2Shape,
-GroupShapeView
+    GroupShapeView
 } from "@kcdesign/data";
 import Layers from './Layers.vue';
 import { Context } from '@/context';
 import { WorkSpace } from '@/context/workspace';
-import { Selection } from '@/context/selection';
-import { adapt_page, getName, get_shape_within_document, shape_track } from '@/utils/content';
+import { adapt_page, get_shape_within_document, shape_track } from '@/utils/content';
 import { message } from '@/utils/message';
-import { paster, paster_inner_shape, replace } from '@/utils/clipboard';
-import { compare_layer_3 } from '@/utils/group_ungroup';
+import { paster_inner_shape, replace } from '@/utils/clipboard';
 import { Menu } from '@/context/menu';
 import TableMenu from "./TableMenu/TableMenu.vue"
 import { make_symbol } from '@/utils/symbol';
@@ -80,25 +78,28 @@ function copy() {
         const start = selection.cursorStart;
         const end = selection.cursorEnd;
         const s = Math.min(start, end);
-        const len = Math.abs(start - end);
-        if (s === end) return emit('close');
-        const t = textlike.text.getTextWithFormat(s, len);
-        props.context.workspace.clipboard.write_html(t);
+        if (s === end) {
+            return emit('close');
+        }
+        props.context.workspace.clipboard.write();
     } else {
-        props.context.workspace.clipboard.write_html();
+        props.context.workspace.clipboard.write();
     }
     emit('close');
 }
 
-async function cut() {
+function cut() {
     const textlike = is_inner_textshape();
     if (textlike) {
         const selection = props.context.textSelection;
         const start = selection.cursorStart;
         const end = selection.cursorEnd;
-        if (start === end) return emit('close');
-        const t = textlike.text.getTextWithFormat(Math.min(start, end), Math.abs(start - end));
-        const copy_result = await props.context.workspace.clipboard.write_html(t);
+        if (start === end) {
+            return emit('close');
+        }
+
+        const copy_result = props.context.workspace.clipboard.write();
+
         if (copy_result) {
             const editor = props.context.editor4TextShape(textlike as TextShape);
             if (editor.deleteText(Math.min(start, end), Math.abs(start - end))) {
@@ -110,13 +111,15 @@ async function cut() {
 }
 
 function paste() {
-    if (invalid_items.value.includes('paste')) return;
+    if (invalid_items.value.includes('paste')) {
+        return;
+    }
     const textlike = is_inner_textshape();
     if (textlike) {
         const editor = props.context.editor4TextShape(textlike as TextShape);
         paster_inner_shape(props.context, editor);
     } else {
-        paster(props.context, t);
+        props.context.workspace.clipboard.paster(t);
     }
     emit('close');
 }
@@ -132,7 +135,9 @@ function paste_text() {
 }
 
 function paste_here() {
-    if (invalid_items.value.includes('paste-here')) return;
+    if (invalid_items.value.includes('paste-here')) {
+        return;
+    }
     props.context.workspace.notify(WorkSpace.PASTE_RIGHT);
     emit('close');
 }
@@ -483,11 +488,10 @@ onUnmounted(() => {
         <div v-if="props.items.includes('layers')" class="item layer-select"
             @mouseenter="(e: MouseEvent) => showLayerSubMenu(e)" @mouseleave="closeLayerSubMenu">
             <span>{{ t('system.select_layer') }}</span>
-<!--            <div class="triangle"></div>-->
+            <!--            <div class="triangle"></div>-->
             <svg-icon icon-class="down" style="transform: rotate(-90deg);margin-left: 62px"></svg-icon>
-            <ContextMenu v-if="layerSubMenuVisiable" :x="layerSubMenuPosition.x" :y="layerSubMenuPosition.y"
-                         :width="174"
-                         :site="site" :context="props.context">
+            <ContextMenu v-if="layerSubMenuVisiable" :x="layerSubMenuPosition.x" :y="layerSubMenuPosition.y" :width="174"
+                :site="site" :context="props.context">
                 <Layers @close="emit('close')" :layers="props.layers" :context="props.context"></Layers>
             </ContextMenu>
         </div>
@@ -560,14 +564,14 @@ onUnmounted(() => {
         <!-- 协作 -->
         <div class="line" v-if="props.items.includes('cursor')"></div>
         <div class="item" v-if="props.items.includes('cursor')" @click="cursor">
-<!--            <div class="choose" v-show="isCursor"></div>-->
+            <!--            <div class="choose" v-show="isCursor"></div>-->
             <svg-icon icon-class="choose" v-show="isCursor"></svg-icon>
-            <span :style="{ marginLeft: isCursor ? '8px' : '20px'}">{{ t('system.show_many_cursor') }}</span>
+            <span :style="{ marginLeft: isCursor ? '8px' : '20px' }">{{ t('system.show_many_cursor') }}</span>
         </div>
         <div class="item" v-if="props.items.includes('comment')" @click="comment">
-<!--            <div class="choose" v-show="isComment"></div>-->
+            <!--            <div class="choose" v-show="isComment"></div>-->
             <svg-icon icon-class="choose" v-show="isComment"></svg-icon>
-            <span :style="{ marginLeft: isComment ? '8px' : '20px'}">{{ t('system.show_comment') }}</span>
+            <span :style="{ marginLeft: isComment ? '8px' : '20px' }">{{ t('system.show_comment') }}</span>
             <span class="shortkey">
                 <Key code="Shift C"></Key>
             </span>
@@ -670,9 +674,9 @@ onUnmounted(() => {
             </span>
         </div>
         <div class="item" v-if="props.items.includes('title')" @click="toggle_title">
-<!--            <div class="choose" v-show="isTitle"></div>-->
+            <!--            <div class="choose" v-show="isTitle"></div>-->
             <svg-icon icon-class="choose" v-show="isTitle"></svg-icon>
-            <span :style="{ marginLeft: isTitle ? '8px' : '20px'}">{{ t('system.artboart_title_visible') }}</span>
+            <span :style="{ marginLeft: isTitle ? '8px' : '20px' }">{{ t('system.artboart_title_visible') }}</span>
         </div>
         <TableMenu :context="context" :layers="layers" :items="items" :site="site" @close="emit('close')"></TableMenu>
     </div>

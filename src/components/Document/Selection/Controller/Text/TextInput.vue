@@ -1,12 +1,12 @@
 <script setup lang='ts'>
-import {Context} from '@/context';
-import {Matrix, TableCell, TableCellView, TextShape, TextShapeView} from '@kcdesign/data';
-import {Shape, Text} from '@kcdesign/data';
-import {onUnmounted, ref, watch, onMounted} from 'vue';
-import {throttle} from '../../common';
-import {handleKeyEvent} from './keyhandler';
-import {WorkSpace} from '@/context/workspace';
-import {TextSelectionLite} from "@/context/textselectionlite";
+import { Context } from '@/context';
+import { Matrix, TableCell, TableCellView, TextShape, TextShapeView } from '@kcdesign/data';
+import { Shape, Text } from '@kcdesign/data';
+import { onUnmounted, ref, watch, onMounted } from 'vue';
+import { throttle } from '../../common';
+import { handleKeyEvent } from './keyhandler';
+import { WorkSpace } from '@/context/workspace';
+import { TextSelectionLite } from "@/context/textselectionlite";
 
 type SelectionLike = TextSelectionLite;
 
@@ -19,7 +19,7 @@ interface Props {
     root?: { x: number, y: number }
 }
 
-defineExpose({attention});
+defineExpose({ attention });
 
 const props = defineProps<Props>();
 
@@ -40,7 +40,7 @@ watch(() => props.matrix, () => {
 })
 
 const inputel = ref<HTMLInputElement>();
-const inputpos = ref({left: 0, top: 0})
+const inputpos = ref({ left: 0, top: 0 })
 const matrix = new Matrix();
 
 const updateInputPos = throttle(_updateInputPos, 5);
@@ -90,11 +90,20 @@ function workspaceWatcher(t: number) {
         updateInputPos()
     }
 }
+function copy_watcher(event: ClipboardEvent) {
+    event.stopPropagation();
+    return props.context.workspace.clipboard.write(event);
+}
 
 onMounted(() => {
     props.shape.watch(updateInputPos)
     props.context.selection.watch(selectionWatcher);
     props.context.workspace.watch(workspaceWatcher);
+
+    if (inputel.value) {
+        inputel.value.addEventListener('copy', copy_watcher);
+    }
+
     updateInputPos();
 })
 
@@ -102,6 +111,10 @@ onUnmounted(() => {
     props.shape.unwatch(updateInputPos)
     props.context.selection.unwatch(selectionWatcher);
     props.context.workspace.unwatch(workspaceWatcher);
+
+    if (inputel.value) {
+        inputel.value.removeEventListener('copy', copy_watcher);
+    }
 })
 
 function committext() {
@@ -195,12 +208,10 @@ function onKeyPress(e: KeyboardEvent) {
 }
 </script>
 <template>
-    <input type="text" :tabindex="-1" class="input"
-           @focusout="onfocusout" @input="oninput"
-           @compositionstart="compositionstart" @compositionend="compositionend"
-           @compositionupdate="compositionupdate"
-           @keydown="onKeyDown" @keypress="onKeyPress" @keyup="onKeyUp"
-           :style="{ left: `${inputpos.left}px`, top: `${inputpos.top}px` }" ref="inputel"/>
+    <input type="text" :tabindex="-1" class="input" @focusout="onfocusout" @input="oninput"
+        @compositionstart="compositionstart" @compositionend="compositionend" @compositionupdate="compositionupdate"
+        @keydown="onKeyDown" @keypress="onKeyPress" @keyup="onKeyUp"
+        :style="{ left: `${inputpos.left}px`, top: `${inputpos.top}px` }" ref="inputel" />
 </template>
 <style lang='scss' scoped>
 .input {

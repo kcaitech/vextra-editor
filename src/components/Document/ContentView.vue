@@ -28,7 +28,6 @@ import {
     init_insert_table,
     root_scale, root_trans
 } from '@/utils/content';
-import { check_clipboard_read_permission, paster, paster2 } from '@/utils/clipboard';
 import { insertFrameTemplate } from '@/utils/artboardFn';
 import { Comment } from '@/context/comment';
 import Placement from './Menu/Placement.vue';
@@ -496,12 +495,8 @@ function tool_watcher(type: number) {
 function workspace_watcher(type?: number, param?: string | MouseEvent | Color) {
     if (type === WorkSpace.MATRIX_TRANSFORMATION) {
         matrix.reset(workspace.value.matrix);
-    } else if (type === WorkSpace.PASTE) {
-        paster(props.context, t);
     } else if (type === WorkSpace.PASTE_RIGHT) {
-        paster(props.context, t, mousedownOnPageXY);
-    } else if (type === WorkSpace.COPY) {
-        props.context.workspace.clipboard.write_html();
+        props.context.workspace.clipboard.paster(t, undefined, mousedownOnPageXY);
     } else if ((type === WorkSpace.ONARBOARD__TITLE_MENU) && param) {
         contextMenuMount((param as MouseEvent));
     } else if (type === WorkSpace.PATH_EDIT_MODE) {
@@ -523,6 +518,20 @@ function cursor_watcher(t: number, type: string) {
 function matrix_watcher(nm: Matrix) {
     matrix_inverse = new Matrix(nm.inverse);
     collect_once(props.context, nm);
+}
+
+function copy_watcher(event: ClipboardEvent) {
+    console.log('content view copy');
+    return props.context.workspace.clipboard.write(event);
+}
+
+function cut_watcher(event: ClipboardEvent) {
+    console.log('content view cut');
+    return props.context.workspace.clipboard.cut(event);
+}
+
+function paster_watcher(event: ClipboardEvent) {
+    return props.context.workspace.clipboard.paster(t, event);
 }
 
 // hooks
@@ -564,7 +573,9 @@ onMounted(() => {
     rootRegister(true);
     document.addEventListener('keydown', onKeyDown);
     document.addEventListener('keyup', onKeyUp);
-    // document.addEventListener('paste', paster2)
+    document.addEventListener('copy', copy_watcher);
+    document.addEventListener('cut', cut_watcher);
+    document.addEventListener('paste', paster_watcher);
     window.addEventListener('blur', windowBlur);
 
     nextTick(() => {
@@ -575,8 +586,6 @@ onMounted(() => {
         _updateRoot(props.context, root.value); // 第一次记录root数据，所有需要root数据的方法，都需要在此之后
         initMatrix(props.page); // 初始化页面视图
     });
-
-    (window as any).xxx = check_clipboard_read_permission;
 
     props.context.workspace.setFreezeStatus(false)
 
@@ -592,6 +601,9 @@ onUnmounted(() => {
     resizeObserver.disconnect();
     document.removeEventListener('keydown', onKeyDown);
     document.removeEventListener('keyup', onKeyUp);
+    document.removeEventListener('copy', copy_watcher);
+    document.removeEventListener('cut', cut_watcher);
+    document.removeEventListener('paste', paster_watcher);
     window.removeEventListener('blur', windowBlur);
     stopWatch();
 })
