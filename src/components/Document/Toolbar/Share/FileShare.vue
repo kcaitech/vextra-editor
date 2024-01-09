@@ -322,7 +322,7 @@ const handlekeyup = (e: KeyboardEvent) => {
 
 const handleClick = (e: MouseEvent) => {
   e.stopPropagation()
-  e.target instanceof Element && !e.target.closest('.card') && emit('close')
+  e.target instanceof Element && !e.target.closest('.box-card') && emit('close')
   e.target instanceof Element && !e.target.closest('.popover') && (authority.value = false)
   e.target instanceof Element && !e.target.closest('.options') && (isSelectOpen.value = false)
 
