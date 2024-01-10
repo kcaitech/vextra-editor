@@ -231,13 +231,20 @@ export class Clipboard {
     }
 
     async paste_async(t: Function, xy?: PageXY) {
-        if (navigator.clipboard && navigator.clipboard.read) {
+        try {
+            if (!navigator.clipboard?.read) {
+                throw new Error('Not support.');
+            }
             const data = await navigator.clipboard.read();
-            return this.paste_clipboard_items(data, t, xy);
-        }
+            if (!data) {
+                throw new Error('No valid data on clipboard.');
+            }
 
-        // 如果当前环境不支持 异步剪切板 则只能尝试缓存
-        this.paste_cache(t, xy);
+            this.paste_clipboard_items(data, t, xy);
+        } catch (error) {
+            console.log('paste_async error:', error);
+            this.paste_cache(t, xy);
+        }
     }
 
     paste_datatransfer_item_list(data: DataTransferItemList, t: Function, xy?: PageXY) {
@@ -260,9 +267,9 @@ export class Clipboard {
 
         const image = get_image(data);
         if (image) {
-            this.modify_cache('image', image);
             const file = image.getAsFile();
             const type = image.type;
+            this.modify_cache('image', { file, type });
             image_reader(this.context, file, type, t, xy);
         }
     }
@@ -310,7 +317,7 @@ export class Clipboard {
         } else if (type === 'plain-text') {
             clipboard_text_plain2(this.context, data, xy);
         } else if (type === 'image') {
-            image_reader(this.context, data.getAsFile(), data.type, t, xy)
+            image_reader(this.context, data.file, data.type, t, xy)
         } else if (type === 'double') {
             const text = data['text/plain'];
             clipboard_text_plain2(this.context, text, xy);
