@@ -178,10 +178,8 @@ const escape = throttle2((e: KeyboardEvent, context: Context, shapetext: Text, e
 
 }, keydelays);
 
-/**
- * @deprecated
- */
 function copy(e: KeyboardEvent, context: Context, shapetext: Text) {
+    context.menu.menuMount();
     // if (e.ctrlKey || e.metaKey) {
     //     e.preventDefault();
     //     const selection = context.textSelection;
@@ -195,10 +193,11 @@ function copy(e: KeyboardEvent, context: Context, shapetext: Text) {
     //     context.menu.menuMount();
     // }
 }
-/**
- * @deprecated
- */
 async function cut(e: KeyboardEvent, context: Context, shapetext: Text, editor: TextShapeEditor) {
+    if ((e.ctrlKey || e.metaKey) && e.shiftKey) {
+        context.workspace.notify(WorkSpace.DELETE_LINE);
+    }
+    context.menu.menuMount();
     // if ((e.ctrlKey || e.metaKey) && !e.shiftKey) {
     //     e.preventDefault();
     //     const selection = context.textSelection;
@@ -293,8 +292,8 @@ handler['arrowdown'] = enterArrowDown;
 handler['backspace'] = enterBackspace;
 handler['delete'] = enterDelete;
 handler['escape'] = escape;
-// handler['c'] = copy;
-// handler['x'] = cut;
+handler['c'] = copy;
+handler['x'] = cut;
 handler['v'] = paster;
 handler['√'] = paster;
 handler['a'] = select_all;

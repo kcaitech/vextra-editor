@@ -92,7 +92,34 @@ function workspaceWatcher(t: number) {
 }
 function copy_watcher(event: ClipboardEvent) {
     event.stopPropagation();
-    return props.context.workspace.clipboard.write(event);
+    props.context.workspace.clipboard.write(event);
+}
+function cut_watcher(event: ClipboardEvent) {
+    event.stopPropagation();
+
+    const write_result = props.context.workspace.clipboard.write(event);
+    if (!write_result) {
+        return;
+    }
+
+    const text_shape = props.context.selection.textshape;
+    if (!text_shape) {
+        return;
+    }
+
+    const selection = props.context.textSelection;
+    const start = selection.cursorStart;
+    const end = selection.cursorEnd;
+    if (start === end) {
+        return;
+    }
+
+    const editor = props.context.editor4TextShape(text_shape);
+    if (editor.deleteText(Math.min(start, end), Math.abs(start - end))) {
+        selection.setCursor(Math.min(start, end), false);
+    }
+
+    
 }
 
 onMounted(() => {
@@ -102,6 +129,7 @@ onMounted(() => {
 
     if (inputel.value) {
         inputel.value.addEventListener('copy', copy_watcher);
+        inputel.value.addEventListener('cut', cut_watcher);
     }
 
     updateInputPos();
@@ -114,6 +142,7 @@ onUnmounted(() => {
 
     if (inputel.value) {
         inputel.value.removeEventListener('copy', copy_watcher);
+        inputel.value.removeEventListener('cut', cut_watcher);
     }
 })
 

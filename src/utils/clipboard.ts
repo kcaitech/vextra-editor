@@ -359,7 +359,7 @@ function sort_media(document: Document, shapes: Shape[]) {
  */
 export async function paster_inner_shape(context: Context, editor: TextShapeEditor, only_text?: boolean) {
     try {
-        if (!navigator.clipboard) {
+        if (!navigator.clipboard?.read) {
             throw new Error('not supported');
         }
 
@@ -497,23 +497,6 @@ function encode_html(identity: string, data: any, text?: string): string {
 
     const html = `<meta charset="utf-8"><div id="carrier" data-buffer="${buffer}">${text || ""}</div>`;
 
-    return html;
-}
-
-function encode_html_beta(identity: string, data: any, text?: string): string {
-    const buffer = btoa(`${identity}${encodeURIComponent(JSON.stringify(data))}`);
-    const html = `<meta charset="utf-8"><div id="carrier" data-buffer="${buffer}">${text || ""}</div>`;
-
-    const t = document.createElement("textarea");
-    t.style.position = "fixed";
-    t.style.top = "-1000px";
-    t.value = html;
-
-    document.body.appendChild(t);
-    t.select();
-    console.log('copy', t.value);
-    document.execCommand("copy");
-    t.parentNode?.removeChild(t);
     return html;
 }
 
@@ -988,16 +971,6 @@ export function check_clipboard_read_permission() {
 
 function is_html(items: DataTransferItemList) {
     return items.length === 1 && items[0].type === 'text/html';
-}
-
-function is_image(items: DataTransferItemList) {
-    for (let i = 0; i < items.length; i++) {
-        if (items[i].type.indexOf('image') !== -1) {
-            return true;
-        }
-    }
-
-    return false;
 }
 
 function get_image(items: DataTransferItemList) {
