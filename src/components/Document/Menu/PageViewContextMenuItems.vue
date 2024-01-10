@@ -23,12 +23,13 @@ import { Context } from '@/context';
 import { WorkSpace } from '@/context/workspace';
 import { adapt_page, get_shape_within_document, shape_track } from '@/utils/content';
 import { message } from '@/utils/message';
-import { paster_inner_shape, replace } from '@/utils/clipboard';
+import { replace } from '@/utils/clipboard';
 import { Menu } from '@/context/menu';
 import TableMenu from "./TableMenu/TableMenu.vue"
 import { make_symbol } from '@/utils/symbol';
 import { Tool } from "@/context/tool";
 import SvgIcon from "@/components/common/SvgIcon.vue";
+import { string_by_sys } from '@/utils/common';
 
 const { t } = useI18n();
 
@@ -72,6 +73,10 @@ function is_inner_textshape(): (ShapeView | Shape) & { text: Text } | undefined 
 }
 
 function copy() {
+    if (!navigator.clipboard?.read) {
+        message('info', string_by_sys(t('clipboard.not_supported1')));
+        return;
+    }
     const textlike = is_inner_textshape();
     if (textlike) {
         const selection = props.context.textSelection;
@@ -89,6 +94,10 @@ function copy() {
 }
 
 function cut() {
+    if (!navigator.clipboard?.read) {
+        message('info', string_by_sys(t('clipboard.not_supported2')));
+        return;
+    }
     const textlike = is_inner_textshape();
     if (textlike) {
         const selection = props.context.textSelection;
@@ -116,10 +125,9 @@ function paste() {
     }
     const textlike = is_inner_textshape();
     if (textlike) {
-        const editor = props.context.editor4TextShape(textlike as TextShape);
-        paster_inner_shape(props.context, editor);
+        props.context.workspace.clipboard.paste_text();
     } else {
-        props.context.workspace.clipboard.paster(t);
+        props.context.workspace.clipboard.paste(t);
     }
     emit('close');
 }
@@ -128,8 +136,7 @@ function paste_text() {
     if (invalid_items.value.includes('paste-text')) return;
     const textlike = is_inner_textshape();
     if (textlike) {
-        const editor = props.context.editor4TextShape(textlike as TextShape);
-        paster_inner_shape(props.context, editor, true);
+        props.context.workspace.clipboard.paste_for_no_format_text();
     }
     emit('close');
 }

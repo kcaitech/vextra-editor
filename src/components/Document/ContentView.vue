@@ -496,7 +496,7 @@ function workspace_watcher(type?: number, param?: string | MouseEvent | Color) {
     if (type === WorkSpace.MATRIX_TRANSFORMATION) {
         matrix.reset(workspace.value.matrix);
     } else if (type === WorkSpace.PASTE_RIGHT) {
-        props.context.workspace.clipboard.paster(t, undefined, mousedownOnPageXY);
+        props.context.workspace.clipboard.paste(t, undefined, mousedownOnPageXY);
     } else if ((type === WorkSpace.ONARBOARD__TITLE_MENU) && param) {
         contextMenuMount((param as MouseEvent));
     } else if (type === WorkSpace.PATH_EDIT_MODE) {
@@ -538,7 +538,7 @@ function paster_watcher(event: ClipboardEvent) {
     if (event.target instanceof HTMLInputElement || event.target instanceof HTMLTextAreaElement) {
         return;
     }
-    return props.context.workspace.clipboard.paster(t, event);
+    return props.context.workspace.clipboard.paste(t, event);
 }
 
 // hooks

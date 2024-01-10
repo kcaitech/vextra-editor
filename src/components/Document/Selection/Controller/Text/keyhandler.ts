@@ -1,7 +1,6 @@
 import { Context } from "@/context";
-import { Text, Shape } from "@kcdesign/data";
+import { Text } from "@kcdesign/data";
 import { TextShapeEditor } from "@kcdesign/data";
-import { paster_inner_shape } from "@/utils/clipboard";
 import { WorkSpace } from "@/context/workspace";
 
 const keydelays = 15;
@@ -217,11 +216,12 @@ async function cut(e: KeyboardEvent, context: Context, shapetext: Text, editor: 
     // }
 }
 function paster(e: KeyboardEvent, context: Context, shapetext: Text, editor: TextShapeEditor) {
-    if (e.ctrlKey || e.metaKey) {
-        e.preventDefault(); // 阻止input的粘贴事件
-        paster_inner_shape(context, editor, e.altKey);
-        context.menu.menuMount();
-    }
+    // if (e.ctrlKey || e.metaKey) {
+    //     e.preventDefault(); // 阻止input的粘贴事件
+    //     paster_inner_shape(context, editor, e.altKey);
+    //     context.menu.menuMount();
+    // }
+    context.menu.menuMount();
 }
 function select_all(e: KeyboardEvent, context: Context, shapetext: Text) {
     if (e.ctrlKey || e.metaKey) {

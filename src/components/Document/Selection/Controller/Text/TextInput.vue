@@ -119,7 +119,13 @@ function cut_watcher(event: ClipboardEvent) {
         selection.setCursor(Math.min(start, end), false);
     }
 
-    
+
+}
+
+function paste_watcher(event: ClipboardEvent) {
+    event.stopPropagation();
+    event.preventDefault();
+    props.context.workspace.clipboard.paste_text(event);
 }
 
 onMounted(() => {
@@ -130,6 +136,7 @@ onMounted(() => {
     if (inputel.value) {
         inputel.value.addEventListener('copy', copy_watcher);
         inputel.value.addEventListener('cut', cut_watcher);
+        inputel.value.addEventListener('paste', paste_watcher);
     }
 
     updateInputPos();
@@ -143,6 +150,7 @@ onUnmounted(() => {
     if (inputel.value) {
         inputel.value.removeEventListener('copy', copy_watcher);
         inputel.value.removeEventListener('cut', cut_watcher);
+        inputel.value.addEventListener('paste', paste_watcher);
     }
 })
 

@@ -328,7 +328,9 @@ export const comment = {
     show_comments: '显示评论'
 }
 export const clipboard = {
-    'invalid_data': '该内容无法解析'
+    'invalid_data': '该内容无法解析',
+    'not_supported1': '当前浏览器不支持，请使用Ctrl C复制',
+    'not_supported2': '当前浏览器不支持，请使用Ctrl X剪切'
 }
 export const opacity = {
     normal: '正常',

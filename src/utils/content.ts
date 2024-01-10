@@ -674,13 +674,7 @@ export function get_selected_types(context: Context): number {
  */
 
 export function get_menu_items(context: Context, area: "controller" | "text-selection" | "group" | "artboard" | "component" | "null" | "normal" | "table" | "table_cell" | "instance"): string[] {
-    const BASE_ITEM = ['all'];
-
-    const is_clipboard_supported = Boolean(navigator.clipboard && navigator.clipboard.read);
-
-    if (is_clipboard_supported) {
-        BASE_ITEM.push('copy');
-    }
+    const BASE_ITEM = ['all', 'copy'];
 
     let contextMenuItems = []
     if (area === 'artboard') { // 点击在容器上
@@ -753,10 +747,7 @@ export function get_menu_items(context: Context, area: "controller" | "text-sele
             if (selection.cursorStart === selection.cursorEnd) {
                 contextMenuItems = ['all', 'paste', 'only_text'];
             } else {
-                contextMenuItems = [...BASE_ITEM, 'paste', 'only_text'];
-                if (is_clipboard_supported) {
-                    contextMenuItems.push('cut')
-                }
+                contextMenuItems = [...BASE_ITEM, 'cut', 'paste', 'only_text'];
             }
         } else {
             contextMenuItems = BASE_ITEM;
@@ -767,10 +758,7 @@ export function get_menu_items(context: Context, area: "controller" | "text-sele
             if (selection.cursorStart === selection.cursorEnd) {
                 contextMenuItems = ['all', 'paste', 'only_text', 'insert_column', 'delete_column', 'split_cell'];
             } else {
-                contextMenuItems = [...BASE_ITEM, 'paste', 'only_text', 'insert_column', 'delete_column', 'split_cell'];
-                if (is_clipboard_supported) {
-                    contextMenuItems.push('cut')
-                }
+                contextMenuItems = [...BASE_ITEM, 'cut', 'paste', 'only_text', 'insert_column', 'delete_column', 'split_cell'];
             }
         } else {
             contextMenuItems = BASE_ITEM;
