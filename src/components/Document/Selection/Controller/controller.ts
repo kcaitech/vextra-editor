@@ -495,6 +495,9 @@ export function useControllerCustom(context: Context, i18nT: Function) {
         if (wheel) {
             wheel = wheel.remove();
         }
+
+        context.cursor.cursor_freeze(false);
+
         remove_move_and_up_from_document(mousemove, mouseup);
         need_update_comment = update_comment(context, need_update_comment);
     }

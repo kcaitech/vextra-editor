@@ -260,7 +260,6 @@ export function end_transalte(context: Context) {
     context.workspace.setSelectionViewUpdater(true);
     context.workspace.notify(WorkSpace.SELECTION_VIEW_UPDATE);
     context.assist.reset();
-    context.cursor.cursor_freeze(false);
 }
 
 /**
