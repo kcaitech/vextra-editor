@@ -521,16 +521,23 @@ function matrix_watcher(nm: Matrix) {
 }
 
 function copy_watcher(event: ClipboardEvent) {
-    console.log('content view copy');
-    return props.context.workspace.clipboard.write(event);
+    if (event.target instanceof HTMLInputElement || event.target instanceof HTMLTextAreaElement) {
+        return;
+    }
+    props.context.workspace.clipboard.write(event);
 }
 
 function cut_watcher(event: ClipboardEvent) {
-    console.log('content view cut');
-    return props.context.workspace.clipboard.cut(event);
+    if (event.target instanceof HTMLInputElement || event.target instanceof HTMLTextAreaElement) {
+        return;
+    }
+    props.context.workspace.clipboard.cut(event);
 }
 
 function paster_watcher(event: ClipboardEvent) {
+    if (event.target instanceof HTMLInputElement || event.target instanceof HTMLTextAreaElement) {
+        return;
+    }
     return props.context.workspace.clipboard.paster(t, event);
 }
 

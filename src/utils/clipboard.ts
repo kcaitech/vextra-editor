@@ -24,7 +24,7 @@ export const identity = 'cn.protodesign';
 export const paras = 'cn.protodesign/paras'; // 文字段落
 export class Clipboard {
     private context: Context;
-    private cache: { type: 'h' | 'p' | 'i', data: any } | undefined;
+    private cache: { type: 'h' | 'p', data: any } | undefined;
 
     constructor(context: Context) {
         this.context = context;
@@ -51,6 +51,8 @@ export class Clipboard {
     }
 
     write(event?: ClipboardEvent): boolean {
+        console.log('clipboard write');
+
         const text = this.text;
         if (text) {
             return this.write_text(text, event);
@@ -60,9 +62,10 @@ export class Clipboard {
     }
 
     cut(event: ClipboardEvent) {
+        console.log('clipboard cut');
+
         const res = this.write(event);
         if (!res) {
-            console.log('cut: !res');
             return;
         }
 
@@ -211,9 +214,7 @@ export class Clipboard {
         event.clipboardData.setData('text/html', h);
         event.preventDefault();
 
-        this.cache = { type: 'h', data: decode_html(h) }
-
-        document.execCommand('copy');
+        this.cache = { type: 'h', data: decode_html(h) };
         return true;
     }
 
@@ -229,7 +230,7 @@ export class Clipboard {
                 return;
             }
 
-            this.handle_cache(t, xy);
+            this.handle_cache(xy);
 
             return;
         }
@@ -243,7 +244,7 @@ export class Clipboard {
             if (navigator.clipboard && navigator.clipboard.read) {
                 data = await navigator.clipboard.read();
             } else {
-                return this.handle_cache(t, xy);
+                return this.handle_cache(xy);
             }
 
             if (!data) {
@@ -267,6 +268,9 @@ export class Clipboard {
     }
 
     handle_datatransfer_item_list(data: DataTransferItemList, t: Function, xy?: PageXY) {
+        for (let i = 0; i < data.length; i++) {
+            console.log(i, data[i].type);
+        }
         if (is_html(data)) {
             data[0].getAsString(val => {
                 const html = decode_html(val);
@@ -293,7 +297,7 @@ export class Clipboard {
         }
     }
 
-    handle_cache(t: Function, xy?: PageXY) {
+    handle_cache(xy?: PageXY) {
         if (!this.cache) {
             return;
         }
@@ -304,10 +308,6 @@ export class Clipboard {
             handle_text_html_string(this.context, data, xy);
         } else if (type === 'p') {
             clipboard_text_plain2(this.context, data, xy);
-        } else if (type === 'i') {
-            const file = data.getAsFile();
-            const type = data.type;
-            image_reader(this.context, file, type, t, xy);
         }
     }
 
