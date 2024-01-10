@@ -51,8 +51,6 @@ export class Clipboard {
     }
 
     write(event?: ClipboardEvent): boolean {
-        console.log('clipboard write');
-
         const text = this.text;
         if (text) {
             return this.write_text(text, event);
@@ -62,8 +60,6 @@ export class Clipboard {
     }
 
     cut(event: ClipboardEvent) {
-        console.log('clipboard cut');
-
         const res = this.write(event);
         if (!res) {
             return;
@@ -133,8 +129,6 @@ export class Clipboard {
         event.clipboardData.setData('text/plain', plain_text);
         event.clipboardData.setData('text/html', h);
         event.preventDefault();
-
-        document.execCommand('copy');
 
         return true;
     }

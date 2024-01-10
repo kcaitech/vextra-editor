@@ -672,37 +672,44 @@ export function get_selected_types(context: Context): number {
  * @param { "controller" | "text-selection" | "group" | "artboard" | "component" | "null" | "normal" | "table" | "table_cell" | "instance" } area 点击的区域
  * @returns
  */
-const BASE_ITEM = ['all', 'copy'];
 
 export function get_menu_items(context: Context, area: "controller" | "text-selection" | "group" | "artboard" | "component" | "null" | "normal" | "table" | "table_cell" | "instance"): string[] {
+    const BASE_ITEM = ['all'];
+
+    const is_clipboard_supported = Boolean(navigator.clipboard && navigator.clipboard.read);
+
+    if (is_clipboard_supported) {
+        BASE_ITEM.push('copy');
+    }
+
     let contextMenuItems = []
     if (area === 'artboard') { // 点击在容器上
         if (permIsEdit(context) && !context.tool.isLable) {
-            contextMenuItems = ['all', 'copy', 'paste-here', 'replace', 'visible', 'component', 'lock', 'forward', 'back', 'top', 'bottom', 'groups', 'container', 'dissolution'];
+            contextMenuItems = [...BASE_ITEM, 'paste-here', 'replace', 'visible', 'component', 'lock', 'forward', 'back', 'top', 'bottom', 'groups', 'container', 'dissolution'];
         } else {
             contextMenuItems = BASE_ITEM;
         }
     } else if (area === 'group') { // 点击在编组上
         if (permIsEdit(context) && !context.tool.isLable) {
-            contextMenuItems = ['all', 'copy', 'paste-here', 'replace', 'visible', 'component', 'lock', 'forward', 'back', 'top', 'bottom', 'groups', 'container', 'un_group'];
+            contextMenuItems = [...BASE_ITEM, 'paste-here', 'replace', 'visible', 'component', 'lock', 'forward', 'back', 'top', 'bottom', 'groups', 'container', 'un_group'];
         } else {
             contextMenuItems = BASE_ITEM;
         }
     } else if (area === 'component') {
         if (permIsEdit(context) && !context.tool.isLable) {
-            contextMenuItems = ['all', 'copy', 'paste-here', 'replace', 'visible', 'component', 'lock', 'forward', 'back', 'top', 'bottom', 'groups', 'container'];
+            contextMenuItems = [...BASE_ITEM, 'paste-here', 'replace', 'visible', 'component', 'lock', 'forward', 'back', 'top', 'bottom', 'groups', 'container'];
         } else {
             contextMenuItems = BASE_ITEM;
         }
     } else if (area === 'instance') {
         if (permIsEdit(context) && !context.tool.isLable) {
-            contextMenuItems = ['all', 'copy', 'paste-here', 'replace', 'visible', 'component', 'lock', 'forward', 'back', 'top', 'bottom', 'groups', 'container', 'instance'];
+            contextMenuItems = [...BASE_ITEM, 'paste-here', 'replace', 'visible', 'component', 'lock', 'forward', 'back', 'top', 'bottom', 'groups', 'container', 'instance'];
         } else {
             contextMenuItems = BASE_ITEM;
         }
     } else if (area === 'controller') { // 点击在选区上
         if (permIsEdit(context) && !context.tool.isLable) {
-            contextMenuItems = ['all', 'copy', 'paste-here', 'replace', 'component', 'visible', 'lock', 'groups', 'container'];
+            contextMenuItems = [...BASE_ITEM, 'paste-here', 'replace', 'component', 'visible', 'lock', 'groups', 'container'];
         } else {
             contextMenuItems = BASE_ITEM;
         }
@@ -736,7 +743,7 @@ export function get_menu_items(context: Context, area: "controller" | "text-sele
         }
     } else if (area === 'normal') { // 点击除了容器、编组以外的其他图形
         if (permIsEdit(context) && !context.tool.isLable) {
-            contextMenuItems = ['all', 'copy', 'paste-here', 'replace', 'visible', 'lock', 'component', 'forward', 'back', 'top', 'bottom', 'groups', 'container'];
+            contextMenuItems = [...BASE_ITEM, 'paste-here', 'replace', 'visible', 'lock', 'component', 'forward', 'back', 'top', 'bottom', 'groups', 'container'];
         } else {
             contextMenuItems = BASE_ITEM;
         }
@@ -746,7 +753,10 @@ export function get_menu_items(context: Context, area: "controller" | "text-sele
             if (selection.cursorStart === selection.cursorEnd) {
                 contextMenuItems = ['all', 'paste', 'only_text'];
             } else {
-                contextMenuItems = ['all', 'copy', 'cut', 'paste', 'only_text'];
+                contextMenuItems = [...BASE_ITEM, 'paste', 'only_text'];
+                if (is_clipboard_supported) {
+                    contextMenuItems.push('cut')
+                }
             }
         } else {
             contextMenuItems = BASE_ITEM;
@@ -756,9 +766,11 @@ export function get_menu_items(context: Context, area: "controller" | "text-sele
             const selection = context.textSelection;
             if (selection.cursorStart === selection.cursorEnd) {
                 contextMenuItems = ['all', 'paste', 'only_text', 'insert_column', 'delete_column', 'split_cell'];
-
             } else {
-                contextMenuItems = ['all', 'copy', 'cut', 'paste', 'only_text', 'insert_column', 'delete_column', 'split_cell'];
+                contextMenuItems = [...BASE_ITEM, 'paste', 'only_text', 'insert_column', 'delete_column', 'split_cell'];
+                if (is_clipboard_supported) {
+                    contextMenuItems.push('cut')
+                }
             }
         } else {
             contextMenuItems = BASE_ITEM;
