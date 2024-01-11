@@ -595,6 +595,10 @@ function for_pen(context: Context, scout: Scout, scope: ShapeView[], hot: PageXY
             continue;
         }
 
+        if (item.type === ShapeType.Table) {
+            return item;
+        }
+
         const children = item.type === ShapeType.SymbolRef ? (item.naviChilds || []) : (item.childs || []);
         if (!children.length) {
             return item;
