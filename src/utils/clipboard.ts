@@ -14,6 +14,8 @@ import { Document } from '@kcdesign/data';
 import { v4 } from 'uuid';
 import { pa } from 'element-plus/es/locale';
 import { AsyncTransfer } from "@kcdesign/data";
+import { ElMessage } from 'element-plus';
+import { useI18n } from 'vue-i18n';
 
 interface SystemClipboardItem {
     type: ShapeType
@@ -812,3 +814,36 @@ export async function paster_short(context: Context, shapes: ShapeView[], editor
         })
     })
 }
+
+/***
+ * 
+ * 复制页面链接
+*/
+//复制分享链接
+export const copyLink = async (url: string, t: Function) => {
+    if (navigator.clipboard && window.isSecureContext) {
+      return navigator.clipboard.writeText(url).then(() => {
+        ElMessage({
+          message: `${t('share.copy_success')}`,
+          type: 'success',
+        })
+      }, () => {
+        ElMessage({
+          message: `${t('share.copy_failure')}`,
+          type: 'success',
+        })
+      })
+    } else {
+      const textArea = document.createElement('textarea')
+      textArea.value = url
+      document.body.appendChild(textArea)
+      textArea.focus()
+      textArea.select()
+      document.execCommand('copy')
+      ElMessage({
+        message: `${t('share.copy_success')}`,
+        type: 'success',
+      })
+      textArea.remove()
+    }
+  }

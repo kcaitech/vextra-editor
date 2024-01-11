@@ -1,6 +1,6 @@
 <script setup lang="ts">
 import { Context } from '@/context';
-import { CutoutShape, CutoutShapeView, Matrix } from '@kcdesign/data';
+import { CutoutShape, CutoutShapeView, Matrix, ShapeType } from '@kcdesign/data';
 import { onMounted, onUnmounted, ref, watch } from 'vue';
 import { genRectPath } from '../Selection/common';
 import { WorkSpace } from '@/context/workspace';
@@ -10,14 +10,16 @@ import { Selection } from '@/context/selection';
 const props = defineProps<{
     context: Context
     matrix: Matrix
-    data: CutoutShapeView
+    data: CutoutShape
 }>();
 
 const cutoutPath = ref<string>();
 const matrix = new Matrix();
 const isSelected = ref(false);
 const getCutoutPath = () => {
+    cutoutPath.value = '';
     const points: { x: number, y: number }[] = [];
+    if (!props.data.isVisible) return;
     matrix.reset(props.matrix);
     const m = props.data.matrix2Root();
     m.multiAtLeft(matrix);
@@ -47,20 +49,43 @@ const workspaceUpdate = (t: number) => {
         getCutoutPath();
     }
 }
-const selectedWatcher = ( t: number ) => {
+const selectedWatcher = (t: number) => {
     if (t === Selection.CHANGE_SHAPE) {
         const shapes = props.context.selection.selectedShapes;
         isSelected.value = shapes.some(v => v.id === props.data.id);
-    } 
+    }
 }
 
 watch(() => props.data, (v, o) => {
     o.unwatch(getCutoutPath);
     v.watch(getCutoutPath);
 })
+const watchedShapes = new Map();
+function watchShapes() {
+    const needWatchShapes = new Map();
+    const shape = props.data;
+    if (shape) {
+        let p = shape.parent;
+        while (p && p.type !== ShapeType.Page) {
+            needWatchShapes.set(p.id, p);
+            p = p.parent;
+        }
+    }
+    watchedShapes.forEach((v, k) => {
+        if (needWatchShapes.has(k)) return;
+        v.unwatch(getCutoutPath);
+        watchedShapes.delete(k);
+    })
+    needWatchShapes.forEach((v, k) => {
+        if (watchedShapes.has(k)) return;
+        v.watch(getCutoutPath);
+        watchedShapes.set(k, v);
+    })
+}
 
 onMounted(() => {
     getCutoutPath();
+    watchShapes();
     props.data.watch(getCutoutPath);
     props.context.workspace.watch(workspaceUpdate);
     props.context.selection.watch(selectedWatcher);
@@ -69,6 +94,7 @@ onUnmounted(() => {
     props.data.unwatch(getCutoutPath);
     props.context.workspace.unwatch(workspaceUpdate);
     props.context.selection.unwatch(selectedWatcher);
+    watchedShapes.forEach(v => v.unwatch(getCutoutPath));
 })
 </script>
 

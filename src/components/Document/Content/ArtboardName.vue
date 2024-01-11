@@ -101,7 +101,7 @@ const onInputName = (e: Event) => {
 const ChangeReName = (e: Event) => {
     const value = (e.target as HTMLInputElement).value
     if (esc.value) return
-    if (value.length === 0 || value.length > 40 || value.trim().length === 0) return
+    if (value.length === 0 || value.trim().length === 0) return
     emit('rename', value, props.shape)
 }
 

@@ -204,14 +204,14 @@ const textFormat = () => {
     }
     wordSpace.value = format.kerning || 0
     selectText.value = format.textBehaviour || 'flexible'
-    rowHeight.value = format.minimumLineHeight || ''
+    rowHeight.value = format.minimumLineHeight || 0
     paragraphSpace.value = format.paraSpacing || 0
     selectCase.value = format.transform
     selectId.value = format.bulletNumbers?.type || 'none'
     if (format.minimumLineHeightIsMulti) rowHeight.value = `${t('attr.more_value')}`
     if (format.kerningIsMulti) wordSpace.value = `${t('attr.more_value')}`
     if (format.paraSpacingIsMulti) paragraphSpace.value = `${t('attr.more_value')}`
-    if (format.transformIsMulti) selectCase.value = ''
+    if (format.transformIsMulti) selectCase.value = 'none'
   } else {
     let formats: any[] = [];
     let format: any = {};
@@ -245,7 +245,7 @@ const textFormat = () => {
       }
     }
     wordSpace.value = format.kerning || 0;
-    rowHeight.value = format.minimumLineHeight || ''
+    rowHeight.value = format.minimumLineHeight || 0;
     paragraphSpace.value = format.paraSpacing || 0;
     selectCase.value = format.transform;
     selectText.value = format.textBehaviour;
@@ -256,8 +256,8 @@ const textFormat = () => {
     if (format.kerning === 'unlikeness') wordSpace.value = `${t('attr.more_value')}`;
     if (format.paraSpacingIsMulti === 'unlikeness') paragraphSpace.value = `${t('attr.more_value')}`;
     if (format.paraSpacing === 'unlikeness') paragraphSpace.value = `${t('attr.more_value')}`;
-    if (format.transformIsMulti === 'unlikeness') selectCase.value = '';
-    if (format.transform === 'unlikeness') selectCase.value = '';
+    if (format.transformIsMulti === 'unlikeness') selectCase.value = 'none';
+    if (format.transform === 'unlikeness') selectCase.value = 'none';
     if (format.textBehaviour === 'unlikeness') selectText.value = '';
   }
 }

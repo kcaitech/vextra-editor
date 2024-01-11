@@ -2,7 +2,6 @@
 import { RouterView } from 'vue-router';
 import { debounce } from 'lodash';
 import { onBeforeUnmount, onMounted } from "vue";
-import HelpEntrance from './components/Help/HelpEntrance.vue'
 import { startRefreshTokenTask, stopRefreshTokenTask } from "@/utils/refresh_token";
 
 const _ResizeObserver = window.ResizeObserver;
@@ -25,7 +24,6 @@ onBeforeUnmount(() => {
 
 <template>
     <RouterView></RouterView>
-    <HelpEntrance />
 </template>
 
 <style lang="scss">

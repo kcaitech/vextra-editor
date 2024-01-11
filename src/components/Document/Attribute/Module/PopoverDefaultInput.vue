@@ -32,8 +32,12 @@ const optionsSource: SelectSource[] = genOptions([
     ['隐藏', '隐藏'],
 ]);
 const curVal = ref<SelectItem>(optionsSource[0].data);
+const fixed = ref(false);
 
 watch(() => props.default_value, (v) => {
+    if(!fixed.value && typeof v === 'string') {
+        textDefaultValue.value = v as string;
+    }
     if (!props.dft_show) {
         return;
     }
@@ -72,6 +76,7 @@ watch(() => props.warn, (v) => {
         input_v.value.focus();
     }
 })
+
 const get_text = () => {
     if (props.default_value && props.default_value instanceof Text) {
         textDefaultValue.value = props.default_value.getText(0, Infinity);
@@ -93,10 +98,10 @@ onMounted(() => {
         </div>
         <div v-if="props.addType === VariableType.Text">
             <input ref="input_v" type="text" v-model="textDefaultValue" :placeholder="t('compos.default_text_input')"
-                @keydown.stop="keysumbit" @change="change(textDefaultValue)" />
+                @keydown.stop="keysumbit" @change="change(textDefaultValue)" @input="fixed = true"/>
         </div>
     </div>
-    <div class="warning" v-if="props.warn && props.addType === VariableType.Text">
+    <div class="warning" v-if="props.warn && props.addType === VariableType.Text && textDefaultValue.trim().length < 1">
         <p class="warn">{{ t('compos.validate_info_3') }}</p>
     </div>
 </template>

@@ -39,7 +39,7 @@ interface Comment {
 }
 const matrix = new Matrix();
 const route = useRoute()
-const docID = (route.query.id as string)
+const docID = (props.context.comment.isDocumentInfo?.document.id || route.query.id as string)
 const textarea = ref('')
 const comment = ref<HTMLDivElement>()
 const surplusX = ref<number>(0)

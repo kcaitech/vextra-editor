@@ -22,6 +22,7 @@ const props = defineProps<{
     documentCommentList: any[]
     length: number
     reply: boolean
+    docList:any[]
 }>()
 const emit = defineEmits<{
     (e: 'close', event?: MouseEvent): void
@@ -318,7 +319,7 @@ const nextArticle = () => {
 }
 
 const commentShow = () => {
-    const commentList = props.context.comment.pageCommentList
+    const commentList = props.docList;
     commentList.forEach(item => {
         if (item.status === 0) {
             commentShowList.value && commentShowList.value.push(item)
@@ -479,14 +480,10 @@ onUnmounted(() => {
         :class="{ popup_left: offside, popup_right: !offside, 'shake': isShaking }">
         <div class="popup-heard" @mousedown="moveCommentPopup">
             <div class="button-shift">
-                <!--                <el-button plain class="custom-button" :style="{ opacity: disablePrevent ? '0.2' : '1' }"-->
-                <!--                    @click="previousArticle">{{ t('comment.last') }}</el-button>-->
                 <div class="comment-last" :style="{ opacity: disablePrevent ? '0.2' : '1' }" @click="previousArticle">
                     <svg-icon icon-class="comment-last"></svg-icon>
                 </div>
                 <div class="button-icon"></div>
-                <!--                <el-button plain class="custom-button" :style="{ opacity: disableNext ? '0.2' : '1' }"-->
-                <!--                    @click="nextArticle">{{ t('comment.next') }}</el-button>-->
                 <div class="comment-next" :style="{ opacity: disableNext ? '0.2' : '1' }" @click="nextArticle">
                     <svg-icon icon-class="comment-next"></svg-icon>
                 </div>
@@ -494,27 +491,22 @@ onUnmounted(() => {
             <div class="comment-commands">
                 <el-tooltip class="box-item" effect="dark" :content="`${t('comment.delete')}`" placement="bottom"
                     :show-after="1000" :offset="10" :hide-after="0" v-if="isControls">
-                    <!--                        <el-button plain :icon="Delete" @click="onDelete" v-if="isControls" />-->
                     <div class="onDelete" @click="onDelete" v-if="isControls">
                         <svg-icon icon-class="comment-delete"></svg-icon>
                     </div>
                 </el-tooltip>
                 <el-tooltip class="box-item" effect="dark" :content="`${t('comment.settled')}`" placement="bottom"
                     :show-after="1000" :offset="10" :hide-after="0" v-if="resolve && isControls">
-                    <!--                        <el-button plain :icon="CircleCheck" @click="onResolve" v-if="isControls" />-->
                     <div class="onResolve" @click="onResolve" v-if="isControls">
                         <svg-icon icon-class="comment-solve"></svg-icon>
                     </div>
                 </el-tooltip>
                 <el-tooltip class="box-item" effect="dark" :content="`${t('comment.settled')}`" placement="bottom"
                     :show-after="1000" :offset="10" :hide-after="0" v-else-if="!resolve && isControls">
-                    <!--                        <el-button class="custom-icon" plain :icon="CircleCheckFilled" @click="onResolve"-->
-                    <!--                            v-if="isControls" />-->
                     <div class="onResolved" @click="onResolve" v-if="isControls">
                         <svg-icon icon-class="comment-solved"></svg-icon>
                     </div>
                 </el-tooltip>
-                <!--                    <el-button plain :icon="Close" @click="close" />-->
                 <div class="close" @click="close">
                     <svg-icon icon-class="comment-close"></svg-icon>
                 </div>

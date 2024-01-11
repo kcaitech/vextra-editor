@@ -317,7 +317,7 @@ const textFormat = () => {
             const referenceValue = formats[0][key];
             let foundEqual = true;
             for (let i = 1; i < formats.length; i++) {
-                if (key === 'color' || key === 'highlight' && formats[i][key] && referenceValue) {
+                if ((key === 'color' || key === 'highlight') && formats[i][key] && referenceValue) {
                     const { alpha: alpha1, blue: blue1, green: green1, red: red1 } = formats[i][key];
                     const { alpha: alpha2, blue: blue2, green: green2, red: red2 } = referenceValue;
                     if (alpha1 !== alpha2 || blue1 !== blue2 || green1 !== green2 || red1 !== red2) {

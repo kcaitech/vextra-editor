@@ -377,51 +377,57 @@ const pngImageUrls: Map<string, string> = new Map();
 const exportFill = () => {
     pngImageUrls.clear();
     const selected = props.context.selection.selectedShapes;
-    for (let i = 0; i < selected.length; i++) {
-        if (selected.length === 0) break;
-        const shape = selected[i];
-        if (previewSvgs.value) {
-            const svg = previewSvgs.value[i];
-            shape.exportOptions!.exportFormats.forEach((format, idx) => {
-                const id = shape.id + format.id;
-                const { width, height } = svg.viewBox.baseVal
-                svg.setAttribute("width", `${width * format.scale}`);
-                svg.setAttribute("height", `${height * format.scale}`);
-                if (format.fileFormat === ExportFileFormat.Jpg || format.fileFormat === ExportFileFormat.Png) {
-                    getPngImageData(svg, shape.exportOptions!.trimTransparent, id, format, pngImageUrls, shape);
-                } else if (format.fileFormat === ExportFileFormat.Svg) {
-                    getSvgImageData(svg, shape.exportOptions!.trimTransparent, id, format, pngImageUrls, shape);
-                }
-            });
-        }
+    if (preview.value) {
+        preview.value.getShapesSvg(selected);
+        renderSvgs.value = preview.value.renderSvgs;
     }
-    if (selected.length === 0) {
-        exportPageImage();
-    }
-    setTimeout(() => {
-        const page = props.context.selection.selectedPage;
-        if (!page) return;
-        const shape = selected.length > 0 ? selected[0] : page;
-        const options = shape.exportOptions;
-        const formats = options!.exportFormats;
-        if (selected.length <= 1 && formats.length === 1 && !formats[0].name.includes('/')) {
-            const id = shape.id + formats[0].id;
-            const url = pngImageUrls.get(id);
-            if (url) {
-                let fileName;
-                if (formats[0].namingScheme === ExportFormatNameingScheme.Prefix) {
-                    fileName = formats[0].name + shape.name;
-                } else {
-                    fileName = shape.name + formats[0].name;
-                }
-                exportSingleImage(url, formats[0].fileFormat, fileName);
+    nextTick(() => {
+        for (let i = 0; i < selected.length; i++) {
+            if (selected.length === 0) break;
+            const shape = selected[i];
+            if (previewSvgs.value) {
+                const svg = previewSvgs.value[i];
+                shape.exportOptions!.exportFormats.forEach((format, idx) => {
+                    const id = shape.id + format.id;
+                    const { width, height } = svg.viewBox.baseVal
+                    svg.setAttribute("width", `${width * format.scale}`);
+                    svg.setAttribute("height", `${height * format.scale}`);
+                    if (format.fileFormat === ExportFileFormat.Jpg || format.fileFormat === ExportFileFormat.Png) {
+                        getPngImageData(svg, shape.exportOptions!.trimTransparent, id, format, pngImageUrls, shape);
+                    } else if (format.fileFormat === ExportFileFormat.Svg) {
+                        getSvgImageData(svg, shape.exportOptions!.trimTransparent, id, format, pngImageUrls, shape);
+                    }
+                });
             }
-        } else {
-            const shapes = selected.length > 0 ? selected : [page];
-            const imageUrls = getExportFillUrl(shapes, pngImageUrls);
-            downloadImages(imageUrls);
         }
-    }, 100)
+        if (selected.length === 0) {
+            exportPageImage();
+        }
+        setTimeout(() => {
+            const page = props.context.selection.selectedPage;
+            if (!page) return;
+            const shape = selected.length > 0 ? selected[0] : page;
+            const options = shape.exportOptions;
+            const formats = options!.exportFormats;
+            if (selected.length <= 1 && formats.length === 1 && !formats[0].name.includes('/')) {
+                const id = shape.id + formats[0].id;
+                const url = pngImageUrls.get(id);
+                if (url) {
+                    let fileName;
+                    if (formats[0].namingScheme === ExportFormatNameingScheme.Prefix) {
+                        fileName = formats[0].name + shape.name;
+                    } else {
+                        fileName = shape.name + formats[0].name;
+                    }
+                    exportSingleImage(url, formats[0].fileFormat, fileName);
+                }
+            } else {
+                const shapes = selected.length > 0 ? selected : [page];
+                const imageUrls = getExportFillUrl(shapes, pngImageUrls);
+                downloadImages(imageUrls);
+            }
+        }, 100)
+    })
 }
 
 const exportPageImage = () => {
@@ -469,10 +475,10 @@ onUnmounted(() => {
 <template>
     <div class="cutout_export_box">
         <div class="title" @click.stop="first">
-            <div class="name" :class="{'checked': preinstallArgus.length > 0}">{{t('cutoutExport.export')}}</div>
+            <div class="name" :class="{ 'checked': preinstallArgus.length > 0 }">{{ t('cutoutExport.export') }}</div>
             <div class="cutout_add_icon">
-                <div class="cutout-icon cutout-preinstall"
-                    :style="{ backgroundColor: isPreinstall ? '#EBEBEB' : '' }" @click.stop="showPreinstall">
+                <div class="cutout-icon cutout-preinstall" :style="{ backgroundColor: isPreinstall ? '#EBEBEB' : '' }"
+                    @click.stop="showPreinstall">
                     <svg-icon icon-class="export-menu"></svg-icon>
                 </div>
                 <div class="cutout-icon" @click.stop="preinstall('default')"><svg-icon icon-class="add"></svg-icon></div>
@@ -487,19 +493,20 @@ onUnmounted(() => {
             <div class="argus" v-if="preinstallArgus.length > 0" preinstallArgus.length>
                 <ExportArguments v-for="(argus, index) in preinstallArgus" :key="argus.id" :index="index" :argus="argus"
                     :context="context" :shapes="shapes" :sizeItems="sizeItems" :perfixItems="perfixItems"
-                    :length="preinstallArgus.length" :formatItems="formatItems"
-                    @changePerfix="changePerfix" @change-format="changeFormat"
-                    @delete="deleteArgus">
+                    :length="preinstallArgus.length" :formatItems="formatItems" @changePerfix="changePerfix"
+                    @change-format="changeFormat" @delete="deleteArgus">
                 </ExportArguments>
             </div>
             <div class="canvas-bgc" v-if="isShowCheckbox && exportOption">
-                <el-checkbox :model-value="trim_bg" @change="trimBackground" :label="t('cutoutExport.trim_transparent_pixels')" />
+                <el-checkbox :model-value="trim_bg" @change="trimBackground"
+                    :label="t('cutoutExport.trim_transparent_pixels')" />
             </div>
             <div class="canvas-bgc" v-if="isShowCheckbox && exportOption">
-                <el-checkbox :model-value="canvas_bg" @change="canvasBackground" :label="t('cutoutExport.canvas_background_color')" />
+                <el-checkbox :model-value="canvas_bg" @change="canvasBackground"
+                    :label="t('cutoutExport.canvas_background_color')" />
             </div>
             <div class="export-box" v-if="preinstallArgus.length > 0">
-                <div @click="exportFill"><span>{{t('cutoutExport.export')}}</span></div>
+                <div @click="exportFill"><span>{{ t('cutoutExport.export') }}</span></div>
             </div>
             <Preview ref="preview" v-if="exportOption && exportOption.exportFormats.length" :context="context"
                 :shapes="shapes" :unfold="previewUnfold" @preview-change="previewCanvas" :canvas_bg="canvas_bg"
@@ -530,6 +537,7 @@ onUnmounted(() => {
     padding: 12px 8px 18px 8px;
     box-sizing: border-box;
     border-bottom: 1px solid #F0F0F0;
+
     .title {
         display: flex;
         height: 30px;
@@ -546,6 +554,7 @@ onUnmounted(() => {
             font-feature-settings: "kern" on;
             color: #737373;
         }
+
         .checked {
             color: #000000;
         }
@@ -563,6 +572,7 @@ onUnmounted(() => {
                 justify-content: center;
                 border-radius: var(--default-radius);
                 box-sizing: border-box;
+
                 &:hover {
                     background-color: #F5F5F5;
                 }
@@ -596,6 +606,7 @@ onUnmounted(() => {
         :deep(.el-checkbox__inner) {
             transition: none;
         }
+
         :deep(.el-checkbox__label) {
             font-size: 12px;
         }
@@ -630,9 +641,11 @@ onUnmounted(() => {
             align-items: center;
             justify-content: center;
             border: 1px solid #F0F0F0;
+
             span {
                 color: #262626;
             }
+
             &:hover {
                 background-color: #F0F0F0;
             }

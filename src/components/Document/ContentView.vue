@@ -236,7 +236,7 @@ function contextMenuMount(e: MouseEvent) {
     setMousedownXY(e); // 更新鼠标定位
     contextMenuItems = [];
     const area = right_select(e, mousedownOnPageXY, props.context); // 判断点击环境
-    contextMenuItems = get_menu_items(props.context, area); // 根据点击环境确定菜单选项
+    contextMenuItems = get_menu_items(props.context, area, e); // 根据点击环境确定菜单选项
     const shapes = selection.getLayers(mousedownOnPageXY);
     if (shapes.length > 1 && (area !== 'text-selection' && area !== 'table_cell')) {
         shapesContainsMousedownOnPageXY = shapes;
@@ -407,13 +407,25 @@ function onMouseUp(e: MouseEvent) {
 
 //移动shape时保存shape身上的评论坐标
 const saveShapeCommentXY = () => {
-    const shapes = props.context.comment.commentShape
+    const shapesId = props.context.comment.commentShape;
+    const page = props.context.selection.selectedPage;
+    if (!page) return;
+    const shapes: ShapeView[] = []
+    shapesId.forEach((id: string) => {
+        const shape = page.getShape(id);
+        if (shape) {
+            shapes.push(shape);
+        }
+    })
     const sleectShapes = flattenShapes(shapes)
     const commentList = props.context.comment.pageCommentList
-    sleectShapes.forEach((item: any) => {
+    sleectShapes.forEach((item: ShapeView) => {
         commentList.forEach((comment: any, i: number) => {
             if (comment.target_shape_id === item.id) {
-                editShapeComment(i, comment.shape_frame.x1, comment.shape_frame.y1)
+                const { x, y } = item.frame2Root()                
+                const x1 = comment.shape_frame.x2 + x;
+                const y1 = comment.shape_frame.y2 + y;
+                editShapeComment(i, x1, y1);
             }
         })
     })

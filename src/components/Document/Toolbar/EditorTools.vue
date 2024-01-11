@@ -151,7 +151,7 @@ function applyForEdit() {
         <GroupUngroup :context="props.context" :selection="props.selection"></GroupUngroup>
     </div>
     <div v-if="isread || canComment || isLable" class="editor-tools" @dblclick.stop>
-        <span style="color: #ffffff;" v-if="!isLable">{{ t('apply.read_only') }}</span>
+        <span style="color: #ffffff;" v-if="!isLable">{{ isread ? t('apply.read_only') : t('share.reviewable') }}</span>
         <div class="button" v-if="!isLable">
             <button class="el" style="background-color: #1878F5;margin-right: 4px" @click.stop="applyForEdit">
                 {{ t('apply.apply_for_edit') }}

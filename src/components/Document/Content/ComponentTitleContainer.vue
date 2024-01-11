@@ -1,10 +1,10 @@
 <script lang="ts" setup>
-import {onMounted, onUnmounted, reactive, watch, watchEffect} from "vue";
+import {onMounted, onUnmounted, reactive, watch} from "vue";
 import {Context} from "@/context";
-import {Matrix, Page, PageView, Shape, ShapeType, ShapeView, adapt2Shape} from "@kcdesign/data";
+import {Matrix, Page, PageView, ShapeView, adapt2Shape} from "@kcdesign/data";
 import {ClientXY, Selection} from "@/context/selection";
 import ComponentTitle from "./ComponentTitle.vue"
-import {is_shape_out, top_side} from "@/utils/content";
+import {is_shape_out, pre_modify_anchor} from "@/utils/content";
 import {is_symbol_or_union} from "@/utils/symbol";
 
 interface Props {
@@ -49,13 +49,12 @@ const setPosition = () => {
         const matrix_compo = new Matrix(matrix_compo_root);
         matrix_compo.multiAtLeft(matrix_page_client);
         if (is_shape_out(props.context, compo, matrix_compo)) continue;
-        const top_side_l = top_side(compo, matrix_compo);
-        if (top_side_l < 72) continue;
+        const maxWidth = shape_title_width(compo, matrix_compo);
+        if (maxWidth < 24) continue;
         let anchor = modify_anchor(compo, matrix_compo_root);
         anchor = matrix_page_client.computeCoord3(anchor);
         anchor.y = anchor.y - origin.y - 16;
         anchor.x -= origin.x;
-        const maxWidth = top_side_l;
         titles.push({
             id: compo.id,
             content: compo.name,
@@ -67,16 +66,6 @@ const setPosition = () => {
         });
     }
     // console.log('计算位置：(ms)', Date.now() - st);
-}
-
-function pre_modify_anchor(shape: ShapeView) {
-    let rotate = shape.rotation || 0;
-    if (shape.isFlippedHorizontal) rotate = rotate + 270;
-    if (shape.isFlippedVertical) {
-        rotate = shape.isFlippedHorizontal ? rotate -= 90 : rotate += 90;
-    }
-    rotate = (rotate < 0 ? rotate + 360 : rotate) % 360;
-    return rotate;
 }
 
 function modify_anchor(shape: ShapeView, m2r: Matrix) {
@@ -112,6 +101,31 @@ function modify_rotate(shape: ShapeView) {
     } else if (rotate > 315 && rotate <= 360) {
     }
     return rotate;
+}
+function shape_title_width(shape: ShapeView, matrix: Matrix) {
+    let rotate = pre_modify_anchor(shape);
+    if (shape.isFlippedHorizontal) rotate = rotate + 270;
+    if (shape.isFlippedVertical) {
+        rotate = shape.isFlippedHorizontal ? rotate -= 90 : rotate += 90;
+    }
+    rotate = (rotate < 0 ? rotate + 360 : rotate) % 360;
+    const f = shape.frame;
+    let width = 0;
+    const lt = matrix.computeCoord2(0, 0);
+    const rt = matrix.computeCoord2(f.width, 0);
+    const lb = matrix.computeCoord2(0, f.height);
+    if (rotate >= 0 && rotate < 45) {
+        width = Math.hypot(rt.x - lt.x, rt.y - lt.y);
+    } else if (rotate >= 45 && rotate < 135) {
+        width = Math.hypot(lb.x - lt.x, lb.y - lt.y);
+    } else if (rotate >= 135 && rotate < 225) {
+        width = Math.hypot(rt.x - lt.x, rt.y - lt.y);
+    } else if (rotate >= 225 && rotate < 315) {
+        width = Math.hypot(lb.x - lt.x, lb.y - lt.y);
+    } else if (rotate >= 315 && rotate <= 360) {
+        width = Math.hypot(rt.x - lt.x, rt.y - lt.y);
+    }
+    return width;
 }
 
 // ↑

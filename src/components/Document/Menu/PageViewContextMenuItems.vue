@@ -16,7 +16,8 @@ import {
     ShapeView,
     TextShapeView,
     adapt2Shape,
-    GroupShapeView
+    GroupShapeView,
+SymbolRefView
 } from "@kcdesign/data";
 import Layers from './Layers.vue';
 import { Context } from '@/context';
@@ -31,7 +32,6 @@ import TableMenu from "./TableMenu/TableMenu.vue"
 import { make_symbol } from '@/utils/symbol';
 import { Tool } from "@/context/tool";
 import SvgIcon from "@/components/common/SvgIcon.vue";
-import { hover } from '@/utils/listview';
 
 const { t } = useI18n();
 
@@ -417,11 +417,14 @@ function instance() {
 function reset() {
 }
 
-function edit() {
+function editComps() {
     const refShape = props.context.selection.selectedShapes[0];
-    const refId = refShape && (refShape instanceof SymbolRefShape) ? refShape.refId : undefined;
+    const refId = refShape && (refShape instanceof SymbolRefView) ? refShape.refId : undefined
     if (!refId) return;
     const shape = get_shape_within_document(props.context, refId)
+    if (shape) {
+        shape_track(props.context, shape)
+    }
     if (shape) {
         shape_track(props.context, shape)
         emit('close');
@@ -651,13 +654,13 @@ onUnmounted(() => {
         </div>
         <div class="item" v-if="props.items.includes('instance')" @click="instance">
             <span>{{ t('system.unbind_instance') }}</span>
-            <span></span>
+            <span class="shortkey"><Key code="Alt Ctrl B"></Key></span>
         </div>
         <div class="item" v-if="props.items.includes('reset')" @click="reset">
             <span>{{ t('system.reset_instance_roperties') }}</span>
             <span></span>
         </div>
-        <div class="item" v-if="props.items.includes('edit')" @click="edit">
+        <div class="item" v-if="props.items.includes('edit')" @click="editComps">
             <span>{{ t('system.edit_component') }}</span>
             <span></span>
         </div>

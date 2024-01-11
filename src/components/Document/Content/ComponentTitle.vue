@@ -93,7 +93,7 @@ const onInputName = (e: Event) => {
 const ChangeReName = (e: Event) => {
     const value = (e.target as HTMLInputElement).value;
     if (esc.value) return;
-    if (value.length === 0 || value.length > 40 || value.trim().length === 0) return;
+    if (value.length === 0 || value.trim().length === 0) return;
     emit('rename', value, props.shape)
 }
 
@@ -347,7 +347,7 @@ onUnmounted(() => {
 
 <template>
     <div :reflush="reflush" class="container-name" @mouseenter="hoverShape" @mouseleave="unHoverShape" @mousedown="down"
-        @mousemove="move2" data-area="controller">
+        @mousemove="move2" data-area="controller" data-title="symbol-title">
         <div class="name-wrap" :style="{ maxWidth: props.maxWidth + 'px' }" @dblclick="onRename" v-if="!isInput">
             <svg xmlns="http://www.w3.org/2000/svg" xmlns:xlink="http://www.w3.org/1999/xlink" fill="none" version="1.1"
                 width="16" height="16" viewBox="0 0 16 16" v-if="(props.shape as SymbolView).isSymbolUnionShape">

@@ -10,6 +10,7 @@ import {Perm} from '@/context/workspace';
 import {permIsEdit} from '@/utils/content';
 import {ElMessage} from 'element-plus';
 import SvgIcon from "@/components/common/SvgIcon.vue";
+import { Menu } from '@/context/menu';
 
 const {t} = useI18n();
 
@@ -95,6 +96,7 @@ function close() {
 
 const guide = () => {
     // todo
+    props.context.menu.notify(Menu.OPEN_SHORTCUTS);
     popoverVisible.value = false;
 }
 
