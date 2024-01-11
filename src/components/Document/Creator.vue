@@ -8,7 +8,7 @@ import { getHorizontalAngle } from '@/utils/common';
 import { flattenShapes, init_contact_shape, init_insert_shape, init_shape, list2Tree } from '@/utils/content';
 import { get_direction } from '@/utils/controllerFn';
 import { EffectType, Wheel, fourWayWheel } from '@/utils/wheel';
-import { Artboard, AsyncCreator, ContactForm, ContactLineView, ContactShape, GroupShape, Matrix, Shape, ShapeFrame, ShapeType, ShapeView, adapt2Shape } from '@kcdesign/data';
+import { Artboard, AsyncCreator, ContactForm, ContactLineView, GroupShape, Matrix, ShapeFrame, ShapeType, ShapeView, adapt2Shape } from '@kcdesign/data';
 import { onMounted, onUnmounted, reactive, ref } from 'vue';
 import { useI18n } from 'vue-i18n';
 import CommentInput from './Content/CommentInput.vue';
@@ -17,6 +17,7 @@ import { searchCommentShape } from '@/utils/comment';
 import * as comment_api from '@/request/comment';
 import ContactInit from './Toolbar/ContactInit.vue';
 import { get_contact_environment } from '@/utils/contact';
+import { Cursor } from '@/context/cursor';
 
 interface Props {
     context: Context
@@ -50,6 +51,7 @@ const documentCommentList = ref<any[]>(props.context.comment.pageCommentList);
 const route = useRoute()
 const posi = ref({ x: 0, y: 0 });
 const rootWidth = ref<number>(props.context.workspace.root.width);
+const cursor = ref<string>('');
 type commentListMenu = {
     text: string
     status_p: boolean
@@ -63,15 +65,18 @@ const commentMenuItems = ref<commentListMenu[]>([
 
 // #endregion
 function down(e: MouseEvent) {
-    if (e.button === 0) {
-        const action = props.context.tool.action;
-        modify_page_xy_1(e);
-        modify_client_xy_1(e);
-        wheelSetup();
-        if (action !== Action.AddComment) commentInput.value = false;
-        document.addEventListener("mousemove", move);
-        document.addEventListener("mouseup", up);
+    if (e.button !== 0) {
+        return;
     }
+    const action = props.context.tool.action;
+    modify_page_xy_1(e);
+    modify_client_xy_1(e);
+    wheelSetup();
+    if (action !== Action.AddComment) {
+        commentInput.value = false;
+    }
+    document.addEventListener("mousemove", move);
+    document.addEventListener("mouseup", up);
 }
 
 function move(e: MouseEvent) {
@@ -110,8 +115,8 @@ function up(e: MouseEvent) {
 // #region 评论
 const detectionShape = (e: MouseEvent) => {
     const workspace = props.context.workspace;
-    const { x, y } = workspace.root;
-    const xy = matrix1.computeCoord2(e.clientX - x, e.clientY - y);
+    const { x, y } = workspace.getContentXY(e);
+    const xy = matrix1.computeCoord2(x, y);
     const shapes = searchCommentShape(props.context, xy);
     if (shapes.length === 0) { //点击的位置是否有图形
         shapePosition.x = 0
@@ -234,7 +239,7 @@ const completed = (succession: boolean, event?: MouseEvent) => {
     // props.context.comment.sendComment()
     getDocumentComment()
     commentInput.value = false;
-    if(succession && event) {
+    if (succession && event) {
         addComment(event);
     }
 }
@@ -306,9 +311,9 @@ function modify_contact_to(e: MouseEvent, ac: AsyncCreator) {
 
 // #endregion
 function modify_page_xy_1(e: MouseEvent) {
-    const { x, y } = props.context.workspace.root;
+    const { x, y } = props.context.workspace.getContentXY(e);
     matrix1 = new Matrix(props.context.workspace.matrix.inverse);
-    page_xy_1 = matrix1.computeCoord2(e.clientX - x, e.clientY - y);
+    page_xy_1 = matrix1.computeCoord2(x, y);
 }
 
 function modify_client_xy_1(e: MouseEvent) {
@@ -388,8 +393,9 @@ function wheelSetup() {
 }
 
 function gen_new_shape(e: MouseEvent) {
-    const root = props.context.workspace.root;
-    const { x, y } = matrix1.computeCoord2(e.clientX - root.x, e.clientY - root.y);
+    const _xy = props.context.workspace.getContentXY(e);
+    const { x, y } = matrix1.computeCoord2(_xy.x, _xy.y);
+
     const shapeFrame = new ShapeFrame(x, y, 1, 1);
     if (props.context.tool.action === Action.AddContact) {
         const result = init_contact_shape(props.context, shapeFrame, page_xy_1, t, apex1, page_xy2);
@@ -415,8 +421,9 @@ function gen_new_shape(e: MouseEvent) {
 }
 
 function modify_new_shape_frame(e: MouseEvent) {
-    const root = props.context.workspace.root;
-    const { x, y } = matrix1.computeCoord2(e.clientX - root.x, e.clientY - root.y);
+    const _xy = props.context.workspace.getContentXY(e);
+    const { x, y } = matrix1.computeCoord2(_xy.x, _xy.y);
+
     if (wheel && asyncCreator) {
         const isOut = wheel.moving(e, { type: EffectType.NEW_SHAPE, effect: asyncCreator.setFrameByWheel });
         if (isOut) return;
@@ -441,57 +448,78 @@ function removeWheel() {
 }
 
 function shapeCreateEnd() {
-    if (newShape) {
-        if (newShape.type === ShapeType.Text) {
-            props.context.workspace.notify(WorkSpace.INIT_EDITOR, 0);
-        } else if (newShape.type === ShapeType.Artboard) {
-            const children = collect(props.context);
-            const page = props.context.selection.selectedPage;
-            if (page && asyncCreator) {
-                asyncCreator.collect(page, children.map((s) => adapt2Shape(s)), adapt2Shape(props.context.selection.selectedShapes[0]) as Artboard);
-            }
-        }
-        removeCreator();
-        props.context.assist.reset();
-        newShape = undefined;
-        apex1 = undefined;
-        page_xy2 = undefined;
+    if (!newShape) {
+        return;
     }
+
+    if (newShape.type === ShapeType.Text) {
+        props.context.workspace.notify(WorkSpace.INIT_EDITOR, 0);
+    } else if (newShape.type === ShapeType.Artboard) {
+        const children = collect(props.context);
+        const page = props.context.selection.selectedPage;
+        if (page && asyncCreator) {
+            asyncCreator.collect(page, children.map((s) => adapt2Shape(s)), adapt2Shape(props.context.selection.selectedShapes[0]) as Artboard);
+        }
+    }
+    removeCreator();
+    props.context.assist.reset();
+    newShape = undefined;
+    apex1 = undefined;
+    page_xy2 = undefined;
 }
 
 function removeCreator() {
     if (asyncCreator) {
         asyncCreator = asyncCreator.close();
     }
+
+    props.context.cursor.setType("auto", 0);
+
     props.context.workspace.creating(false);
 
     props.context.tool.setAction(Action.AutoV);
+}
 
-    props.context.cursor.setType("auto-0");
+function cursor_watcher(t: number, type: string) {
+    if (t === Cursor.CHANGE_CURSOR && type) {
+        cursor.value = type;
+    }
 }
 
 function windowBlur() {
     shapeCreateEnd();
     removeWheel();
-    isDrag = false, just_search = false;
+    isDrag = false;
+    just_search = false;
     document.removeEventListener('mousemove', move);
     document.removeEventListener('mouseup', up);
 }
 
 function init() {
-    props.context.selection.resetSelectShapes();
+    setTimeout(() => { // dom的进出事件竟然是先enter再leave，这边用定时器强行调整了一下init的顺序
+        const action = props.context.tool.action;
+        if (action === Action.AddComment) {
+            props.context.cursor.setType('comment', 0);
+        } else {
+            props.context.cursor.setType('cross', 0)
+        }
+
+        cursor.value = props.context.cursor.type;
+    }, 20);
 }
 
 onMounted(() => {
     init();
+    props.context.cursor.watch(cursor_watcher);
     window.addEventListener('blur', windowBlur);
 })
 onUnmounted(() => {
+    props.context.cursor.unwatch(cursor_watcher);
     window.removeEventListener('blur', windowBlur);
 })
 </script>
 <template>
-    <div @mousedown.stop="down" @mousemove="move2" class="creator">
+    <div @mousedown.stop="down" @mousemove="move2" :class="`creator ${cursor}`">
         <CommentInput v-if="commentInput" :context="props.context" :x1="commentPosition.x" :y1="commentPosition.y"
             :pageID="props.context.selection.selectedPage!.id" :shapeID="shapeID" ref="commentEl" :rootWidth="rootWidth"
             @close="closeComment" @mouseDownCommentInput="mouseDownCommentInput" :matrix="props.context.workspace.matrix"

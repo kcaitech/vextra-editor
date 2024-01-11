@@ -33,7 +33,7 @@ function pageViewRegister(mount: boolean) {
 function _collect(t?: any) {
     if (typeof t === 'string' && t === 'collect') props.context.assist.collect();
 }
-const collect = debounce(_collect, 100);
+const collect = debounce(_collect, 240);
 function page_watcher() {
     matrixWithFrame.reset(props.matrix);
     matrixWithFrame.preTrans(props.data.frame.x, props.data.frame.y);
@@ -113,8 +113,7 @@ onUnmounted(() => {
 </script>
 
 <template>
-    <svg ref="pagesvg" :style="{ transform: matrixWithFrame.toString() }" :data-area="rootId"
-        :reflush="reflush"></svg>
+    <svg ref="pagesvg" :style="{ transform: matrixWithFrame.toString() }" :data-area="rootId" :reflush="reflush"></svg>
     <ShapeCutout :context="props.context" :data="data" :matrix="props.matrix" :transform="matrixWithFrame.toArray()">
     </ShapeCutout>
     <ShapeTitles v-if="show_t" :context="props.context" :data="data" :matrix="matrixWithFrame.toArray()"></ShapeTitles>

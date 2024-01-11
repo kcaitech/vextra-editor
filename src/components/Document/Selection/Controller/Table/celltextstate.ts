@@ -23,7 +23,7 @@ export function textState(props: {
                 }
                 editing.value = true;
                 workspace.contentEdit(editing.value);
-                props.context.cursor.setType('scan-0');
+                props.context.cursor.setType('scan', 0);
             }
             if (!editing.value) return;
             workspace.setCtrl('controller');
@@ -44,7 +44,7 @@ export function textState(props: {
         const workspace = props.context.workspace;
         editing.value = true;
         workspace.contentEdit(editing.value);
-        props.context.cursor.setType('scan-0');
+        props.context.cursor.setType('scan', 0);
     }
     function onMouseUp(e: MouseEvent) {
         e.stopPropagation();
@@ -88,7 +88,7 @@ export function textState(props: {
     }
     function onMouseEnter() {
         if (editing.value) {
-            props.context.cursor.setType('scan-0');
+            props.context.cursor.setType('scan', 0);
         }
     }
     function onMouseLeave() {

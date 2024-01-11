@@ -159,9 +159,9 @@ function move(e: MouseEvent) {
         if (props.shape.isFlippedHorizontal) deg = 180 - deg;
         if (props.shape.isFlippedVertical) deg = 360 - deg;
         if (x_checked) {
-            props.context.cursor.setType(`scale-${deg}`);
+            props.context.cursor.setType('scale', deg);
         } else if (y_checked) {
-            props.context.cursor.setType(`scale-${90 + deg}`);
+            props.context.cursor.setType('scale', 90 + deg);
         }
     }
 }

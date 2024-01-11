@@ -75,5 +75,6 @@ onUnmounted(() => {
 <style scoped lang="scss">
 .wrapper {
     height: 100%;
+    width: 96px;
 }
 </style>

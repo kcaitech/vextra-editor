@@ -672,37 +672,38 @@ export function get_selected_types(context: Context): number {
  * @param { "controller" | "text-selection" | "group" | "artboard" | "component" | "null" | "normal" | "table" | "table_cell" | "instance" } area 点击的区域
  * @returns
  */
-const BASE_ITEM = ['all', 'copy'];
 
 export function get_menu_items(context: Context, area: "controller" | "text-selection" | "group" | "artboard" | "component" | "null" | "normal" | "table" | "table_cell" | "instance", e: MouseEvent): string[] {
+    const BASE_ITEM = ['all', 'copy'];
+
     let contextMenuItems = []
     if (area === 'artboard') { // 点击在容器上
         if (permIsEdit(context) && !context.tool.isLable) {
-            contextMenuItems = ['all', 'copy', 'paste-here', 'replace', 'visible', 'component', 'lock', 'forward', 'back', 'top', 'bottom', 'groups', 'container', 'dissolution'];
+            contextMenuItems = [...BASE_ITEM, 'paste-here', 'replace', 'visible', 'component', 'lock', 'forward', 'back', 'top', 'bottom', 'groups', 'container', 'dissolution'];
         } else {
             contextMenuItems = BASE_ITEM;
         }
     } else if (area === 'group') { // 点击在编组上
         if (permIsEdit(context) && !context.tool.isLable) {
-            contextMenuItems = ['all', 'copy', 'paste-here', 'replace', 'visible', 'component', 'lock', 'forward', 'back', 'top', 'bottom', 'groups', 'container', 'un_group'];
+            contextMenuItems = [...BASE_ITEM, 'paste-here', 'replace', 'visible', 'component', 'lock', 'forward', 'back', 'top', 'bottom', 'groups', 'container', 'un_group'];
         } else {
             contextMenuItems = BASE_ITEM;
         }
     } else if (area === 'component') {
         if (permIsEdit(context) && !context.tool.isLable) {
-            contextMenuItems = ['all', 'copy', 'paste-here', 'replace', 'visible', 'lock', 'forward', 'back', 'top', 'bottom', 'groups', 'container'];
+            contextMenuItems = [...BASE_ITEM, 'paste-here', 'replace', 'visible', 'lock', 'forward', 'back', 'top', 'bottom', 'groups', 'container'];
         } else {
             contextMenuItems = BASE_ITEM;
         }
     } else if (area === 'instance') {
         if (permIsEdit(context) && !context.tool.isLable) {
-            contextMenuItems = ['all', 'copy', 'paste-here', 'replace', 'visible', 'component', 'lock', 'forward', 'back', 'top', 'bottom', 'groups', 'container', 'instance'];
+            contextMenuItems = [...BASE_ITEM, 'paste-here', 'replace', 'visible', 'component', 'lock', 'forward', 'back', 'top', 'bottom', 'groups', 'container', 'instance'];
         } else {
             contextMenuItems = BASE_ITEM;
         }
     } else if (area === 'controller') { // 点击在选区上
         if (permIsEdit(context) && !context.tool.isLable) {
-            contextMenuItems = ['all', 'copy', 'paste-here', 'replace', 'component', 'visible', 'lock', 'groups', 'container'];
+            contextMenuItems = [...BASE_ITEM, 'paste-here', 'replace', 'component', 'visible', 'lock', 'groups', 'container'];
         } else {
             contextMenuItems = BASE_ITEM;
         }
@@ -727,7 +728,7 @@ export function get_menu_items(context: Context, area: "controller" | "text-sele
         if (types & 8) { // 存在组件
             if (permIsEdit(context) && !context.tool.isLable) {
                 const index = contextMenuItems.findIndex((item) => item === 'component');
-                if(index > -1) contextMenuItems.splice(index, 1);
+                if (index > -1) contextMenuItems.splice(index, 1);
             }
         }
         const shapes = context.selection.selectedShapes;
@@ -737,12 +738,12 @@ export function get_menu_items(context: Context, area: "controller" | "text-sele
             }
             if ((e.target as Element).closest('[data-title="symbol-title"]') || shapes[0].type === ShapeType.Symbol || shapes[0].type === ShapeType.SymbolUnion) { // 点在了组件上
                 const index = contextMenuItems.findIndex((item) => item === 'component');
-                if(index > -1) contextMenuItems.splice(index, 1);
+                if (index > -1) contextMenuItems.splice(index, 1);
             }
         }
     } else if (area === 'normal') { // 点击除了容器、编组以外的其他图形
         if (permIsEdit(context) && !context.tool.isLable) {
-            contextMenuItems = ['all', 'copy', 'paste-here', 'replace', 'visible', 'lock', 'component', 'forward', 'back', 'top', 'bottom', 'groups', 'container'];
+            contextMenuItems = [...BASE_ITEM, 'paste-here', 'replace', 'visible', 'lock', 'component', 'forward', 'back', 'top', 'bottom', 'groups', 'container'];
         } else {
             contextMenuItems = BASE_ITEM;
         }
@@ -752,7 +753,7 @@ export function get_menu_items(context: Context, area: "controller" | "text-sele
             if (selection.cursorStart === selection.cursorEnd) {
                 contextMenuItems = ['all', 'paste', 'only_text'];
             } else {
-                contextMenuItems = ['all', 'copy', 'cut', 'paste', 'only_text'];
+                contextMenuItems = [...BASE_ITEM, 'cut', 'paste', 'only_text'];
             }
         } else {
             contextMenuItems = BASE_ITEM;
@@ -762,9 +763,8 @@ export function get_menu_items(context: Context, area: "controller" | "text-sele
             const selection = context.textSelection;
             if (selection.cursorStart === selection.cursorEnd) {
                 contextMenuItems = ['all', 'paste', 'only_text', 'insert_column', 'delete_column', 'split_cell'];
-
             } else {
-                contextMenuItems = ['all', 'copy', 'cut', 'paste', 'only_text', 'insert_column', 'delete_column', 'split_cell'];
+                contextMenuItems = [...BASE_ITEM, 'cut', 'paste', 'only_text', 'insert_column', 'delete_column', 'split_cell'];
             }
         } else {
             contextMenuItems = BASE_ITEM;
@@ -972,6 +972,18 @@ export function root_scale(context: Context, e: WheelEvent) {
 }
 
 export function root_trans(context: Context, e: WheelEvent, step: number) {
+    const { deltaX, deltaY } = e;
+
+    const is_pad = Math.abs(deltaX) !== 0 && Math.abs(deltaY) !== 0; // 判断当前行为是触控板行为还是滚轮行为，存在误判的可能，目前没有找到更好的解决方法
+
+    if (is_pad) {
+        context.workspace.matrix.trans(-deltaX, -deltaY); // 触控板行为
+    } else {
+        root_trans_direction(context, e, step); // 滚轮行为
+    }
+}
+
+export function root_trans_direction(context: Context, e: WheelEvent, step: number) {
     if (e.shiftKey) {
         const _d = is_mac() ? e.deltaX : e.deltaY; // window的deltaX竟然有问题
         const delta = _d > 0 ? -step : step;
@@ -1219,4 +1231,29 @@ export async function upload_image(context: Context, ref: string, buff: ArrayBuf
         console.log('upload_image:', error);
         return false;
     }
+}
+
+export function detectZoom() {
+    let ratio = 0,
+        screen = window.screen as any,
+        ua = navigator.userAgent.toLowerCase();
+
+    if (window.devicePixelRatio !== undefined) {
+        ratio = window.devicePixelRatio;
+    }
+    else if (~ua.indexOf('msie')) {
+        if (screen.deviceXDPI && screen.logicalXDPI) {
+            ratio = screen.deviceXDPI / screen.logicalXDPI;
+        }
+    }
+    else if (window.outerWidth !== undefined && window.innerWidth !== undefined) {
+        ratio = window.outerWidth / window.innerWidth;
+    }
+
+    if (ratio) {
+        ratio = Math.round(ratio * 100);
+    }
+
+    console.log('ratio:', ratio);
+
 }

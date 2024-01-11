@@ -17,21 +17,19 @@ import {
     TextShapeView,
     adapt2Shape,
     GroupShapeView,
-SymbolRefView
+    SymbolRefView
 } from "@kcdesign/data";
 import Layers from './Layers.vue';
 import { Context } from '@/context';
 import { WorkSpace } from '@/context/workspace';
-import { Selection } from '@/context/selection';
-import { adapt_page, getName, get_shape_within_document, shape_track } from '@/utils/content';
+import { adapt_page, get_shape_within_document, shape_track } from '@/utils/content';
 import { message } from '@/utils/message';
-import { paster, paster_inner_shape, replace } from '@/utils/clipboard';
-import { compare_layer_3 } from '@/utils/group_ungroup';
 import { Menu } from '@/context/menu';
 import TableMenu from "./TableMenu/TableMenu.vue"
 import { make_symbol } from '@/utils/symbol';
 import { Tool } from "@/context/tool";
 import SvgIcon from "@/components/common/SvgIcon.vue";
+import { string_by_sys } from '@/utils/common';
 
 const { t } = useI18n();
 
@@ -76,31 +74,42 @@ function is_inner_textshape(): (ShapeView | Shape) & { text: Text } | undefined 
 }
 
 function copy() {
+    if (!navigator.clipboard?.read) {
+        message('info', string_by_sys(t('clipboard.not_supported1')));
+        return;
+    }
     const textlike = is_inner_textshape();
     if (textlike) {
         const selection = props.context.textSelection;
         const start = selection.cursorStart;
         const end = selection.cursorEnd;
         const s = Math.min(start, end);
-        const len = Math.abs(start - end);
-        if (s === end) return emit('close');
-        const t = textlike.text.getTextWithFormat(s, len);
-        props.context.workspace.clipboard.write_html(t);
+        if (s === end) {
+            return emit('close');
+        }
+        props.context.workspace.clipboard.write();
     } else {
-        props.context.workspace.clipboard.write_html();
+        props.context.workspace.clipboard.write();
     }
     emit('close');
 }
 
-async function cut() {
+function cut() {
+    if (!navigator.clipboard?.read) {
+        message('info', string_by_sys(t('clipboard.not_supported2')));
+        return;
+    }
     const textlike = is_inner_textshape();
     if (textlike) {
         const selection = props.context.textSelection;
         const start = selection.cursorStart;
         const end = selection.cursorEnd;
-        if (start === end) return emit('close');
-        const t = textlike.text.getTextWithFormat(Math.min(start, end), Math.abs(start - end));
-        const copy_result = await props.context.workspace.clipboard.write_html(t);
+        if (start === end) {
+            return emit('close');
+        }
+
+        const copy_result = props.context.workspace.clipboard.write();
+
         if (copy_result) {
             const editor = props.context.editor4TextShape(textlike as TextShape);
             if (editor.deleteText(Math.min(start, end), Math.abs(start - end))) {
@@ -112,13 +121,14 @@ async function cut() {
 }
 
 function paste() {
-    if (invalid_items.value.includes('paste')) return;
+    if (invalid_items.value.includes('paste')) {
+        return;
+    }
     const textlike = is_inner_textshape();
     if (textlike) {
-        const editor = props.context.editor4TextShape(textlike as TextShape);
-        paster_inner_shape(props.context, editor);
+        props.context.workspace.clipboard.paste_text();
     } else {
-        paster(props.context, t);
+        props.context.workspace.clipboard.paste(t);
     }
     emit('close');
 }
@@ -127,25 +137,22 @@ function paste_text() {
     if (invalid_items.value.includes('paste-text')) return;
     const textlike = is_inner_textshape();
     if (textlike) {
-        const editor = props.context.editor4TextShape(textlike as TextShape);
-        paster_inner_shape(props.context, editor, true);
+        props.context.workspace.clipboard.paste_for_no_format_text();
     }
     emit('close');
 }
 
 function paste_here() {
-    if (invalid_items.value.includes('paste-here')) return;
+    if (invalid_items.value.includes('paste-here')) {
+        return;
+    }
     props.context.workspace.notify(WorkSpace.PASTE_RIGHT);
     emit('close');
 }
 
 function _replace() {
     if (invalid_items.value.includes('replace')) return;
-    const selection = props.context.selection;
-    const selected = selection.selectedShapes;
-    if (selected.length) {
-        replace(props.context, selected);
-    }
+    props.context.workspace.clipboard.replace();
     emit('close');
 }
 
@@ -654,7 +661,9 @@ onUnmounted(() => {
         </div>
         <div class="item" v-if="props.items.includes('instance')" @click="instance">
             <span>{{ t('system.unbind_instance') }}</span>
-            <span class="shortkey"><Key code="Alt Ctrl B"></Key></span>
+            <span class="shortkey">
+                <Key code="Alt Ctrl B"></Key>
+            </span>
         </div>
         <div class="item" v-if="props.items.includes('reset')" @click="reset">
             <span>{{ t('system.reset_instance_roperties') }}</span>

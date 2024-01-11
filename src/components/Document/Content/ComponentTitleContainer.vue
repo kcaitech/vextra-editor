@@ -1,11 +1,11 @@
 <script lang="ts" setup>
-import {onMounted, onUnmounted, reactive, watch} from "vue";
-import {Context} from "@/context";
-import {Matrix, Page, PageView, ShapeView, adapt2Shape} from "@kcdesign/data";
-import {ClientXY, Selection} from "@/context/selection";
+import { onMounted, onUnmounted, reactive, watch, watchEffect } from "vue";
+import { Context } from "@/context";
+import { Matrix, Page, PageView, Shape, ShapeType, ShapeView, adapt2Shape } from "@kcdesign/data";
+import { ClientXY, Selection } from "@/context/selection";
 import ComponentTitle from "./ComponentTitle.vue"
-import {is_shape_out, pre_modify_anchor} from "@/utils/content";
-import {is_symbol_or_union} from "@/utils/symbol";
+import { is_shape_out, pre_modify_anchor } from "@/utils/content";
+import { is_symbol_or_union } from "@/utils/symbol";
 
 interface Props {
     context: Context
@@ -27,7 +27,7 @@ interface Title {
 
 const matrix = new Matrix(props.matrix);
 const titles: Title[] = reactive([]);
-const origin: ClientXY = {x: 0, y: 0};
+const origin: ClientXY = { x: 0, y: 0 };
 
 function updater(t?: any) {
     setOrigin();
@@ -43,7 +43,7 @@ const setPosition = () => {
     const l = components.length;
     for (let i = 0; i < l; i++) {
         const compo = components[i];
-        if (!(is_symbol_or_union(compo)) || !compo.isVisible) continue;
+        if (!(is_symbol_or_union(compo)) || !compo.isVisible()) continue;
         const matrix_compo_root = compo.matrix2Root();
         const matrix_page_client = props.context.workspace.matrix;
         const matrix_compo = new Matrix(matrix_compo_root);
@@ -71,7 +71,7 @@ const setPosition = () => {
 function modify_anchor(shape: ShapeView, m2r: Matrix) {
     const rotate = pre_modify_anchor(shape);
     const frame = shape.frame;
-    let anchor = {x: 0, y: 0};
+    let anchor = { x: 0, y: 0 };
     if (rotate >= 0 && rotate < 45) {
         anchor = m2r.computeCoord2(0, 0);
     } else if (rotate >= 45 && rotate < 135) {
@@ -194,9 +194,9 @@ onUnmounted(() => {
 <template>
     <div class="container" :style="{ top: `${origin.y}px`, left: `${origin.x}px` }">
         <div class="title-container" v-for="(t, index) in titles" :key="t.id"
-             :style="{ top: `${t.y}px`, left: `${t.x}px`, 'max-width': `${t.maxWidth}px`, transform: `rotate(${t.rotate}deg)` }">
+            :style="{ top: `${t.y}px`, left: `${t.x}px`, 'max-width': `${t.maxWidth}px`, transform: `rotate(${t.rotate}deg)` }">
             <ComponentTitle :context="props.context" :name="t.content" :index="index" :maxWidth="t.maxWidth"
-                            @rename="rename" @hover="hover" @leave="leave" :shape="t.shape"></ComponentTitle>
+                @rename="rename" @hover="hover" @leave="leave" :shape="t.shape"></ComponentTitle>
         </div>
     </div>
 </template>

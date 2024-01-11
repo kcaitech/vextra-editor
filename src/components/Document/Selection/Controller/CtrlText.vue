@@ -1,17 +1,17 @@
 <script setup lang='ts'>
-import {watch, onMounted, onUnmounted, ref, reactive, onBeforeUnmount, computed} from 'vue';
-import {ClientXY, Selection} from '@/context/selection';
-import {Matrix, TextShapeView} from '@kcdesign/data';
-import {Context} from '@/context';
+import { watch, onMounted, onUnmounted, ref, reactive, onBeforeUnmount, computed } from 'vue';
+import { ClientXY, Selection } from '@/context/selection';
+import { Matrix, TextShapeView } from '@kcdesign/data';
+import { Context } from '@/context';
 import TextInput from './Text/TextInput.vue';
 import SelectView from "./Text/SelectView.vue";
-import {genRectPath} from '../common';
-import {useController} from '../Controller/controller';
-import {Point} from "../SelectionView.vue";
-import {WorkSpace} from '@/context/workspace';
-import BarsContainer from "./Bars/BarsContainer.SVG.vue";
-import PointsContainer from "./Points/PointsContainer.SVG.vue";
-import {getAxle} from '@/utils/common';
+import { genRectPath } from '../common';
+import { useController } from '../Controller/controller';
+import { Point } from "../SelectionView.vue";
+import { WorkSpace } from '@/context/workspace';
+import BarsContainer from "./Bars/BarsContainer.vue";
+import PointsContainer from "./Points/PointsContainer.vue";
+import { getAxle } from '@/utils/common';
 
 interface Props {
     context: Context,
@@ -24,11 +24,11 @@ interface Props {
 type ProtoInput = InstanceType<typeof TextInput>;
 
 const props = defineProps<Props>();
-const {isDblClick} = useController(props.context);
+const { isDblClick } = useController(props.context);
 const matrix = new Matrix();
 const submatrix = reactive(new Matrix());
 const boundrectPath = ref("");
-const bounds = reactive({left: 0, top: 0, right: 0, bottom: 0}); // viewbox
+const bounds = reactive({ left: 0, top: 0, right: 0, bottom: 0 }); // viewbox
 const editing = ref<boolean>(false); // 是否进入路径编辑状态
 const visible = ref<boolean>(true);
 const input = ref<ProtoInput>();
@@ -54,10 +54,10 @@ function update() {
     if (!submatrix.equals(matrix)) submatrix.reset(matrix)
     const frame = props.shape.frame;
     const points = [
-        {x: 0, y: 0}, // left top
-        {x: frame.width, y: 0}, //right top
-        {x: frame.width, y: frame.height}, // right bottom
-        {x: 0, y: frame.height}, // left bottom
+        { x: 0, y: 0 }, // left top
+        { x: frame.width, y: 0 }, //right top
+        { x: frame.width, y: frame.height }, // right bottom
+        { x: 0, y: frame.height }, // left bottom
     ];
     const boundrect = points.map((point) => matrix.computeCoord(point.x, point.y));
     boundrectPath.value = genRectPath(boundrect);
@@ -90,7 +90,7 @@ function onMouseDown(e: MouseEvent) {
             }
             editing.value = true;
             workspace.contentEdit(editing.value);
-            props.context.cursor.setType('scan-0');
+            props.context.cursor.setType('scan', 0);
         }
         if (!editing.value) return;
         e.stopPropagation();
@@ -114,7 +114,7 @@ function onMouseMove(e: MouseEvent) {
     if (!editing.value) return;
     const workspace = props.context.workspace;
     const selection = props.context.textSelection;
-    const {clientX, clientY} = e;
+    const { clientX, clientY } = e;
     const root = workspace.root;
     matrix.reset(props.matrix);
     const xy = matrix.inverseCoord(clientX - root.x, clientY - root.y);
@@ -135,7 +135,7 @@ function onMouseUp(e: MouseEvent) {
     if (!editing.value) return;
     const selection = props.context.textSelection;
     const workspace = props.context.workspace;
-    const {clientX, clientY} = e;
+    const { clientX, clientY } = e;
     const root = workspace.root;
     matrix.reset(props.matrix);
     const xy = matrix.inverseCoord(clientX - root.x, clientY - root.y);
@@ -154,7 +154,7 @@ function onMouseUp(e: MouseEvent) {
 
 
 function mouseenter() {
-    if (editing.value) props.context.cursor.setType('scan-0');
+    if (editing.value) props.context.cursor.setType('scan', 0);
 }
 
 function mouseleave() {
@@ -170,9 +170,9 @@ function be_editor(index?: number) {
     const selection = props.context.textSelection;
     editing.value = true;
     workspace.contentEdit(editing.value);
-    props.context.cursor.setType('scan-0');
+    props.context.cursor.setType('scan', 0);
     if (index !== undefined) {
-        downIndex = {index, before: true};
+        downIndex = { index, before: true };
         selection.setCursor(index, true);
     }
 }
@@ -203,7 +203,7 @@ function check_status() {
     }
 }
 
-watch(() => props.matrix, update, {deep: true});
+watch(() => props.matrix, update, { deep: true });
 
 watch(() => props.shape, (value, old) => {
     if (old.text.length === 1) {
@@ -234,30 +234,30 @@ onBeforeUnmount(() => {
 });
 </script>
 <template>
-    <svg version="1.1" xmlns="http://www.w3.org/2000/svg" xmlns:xlink="http://www.w3.org/1999/xlink"
-         data-area="controller"
-         id="text-selection" xmlns:xhtml="http://www.w3.org/1999/xhtml" preserveAspectRatio="xMinYMin meet"
-         :viewBox=genViewBox(bounds) :width="width" :height="height"
-         :style="{ transform: `translate(${bounds.left}px,${bounds.top}px)` }"
-         @mousedown="onMouseDown" overflow="visible"
-         @mouseenter="mouseenter" @mouseleave="mouseleave" :class="{ 'un-visible': !visible }">
+    <svg version="1.1" xmlns="http://www.w3.org/2000/svg" xmlns:xlink="http://www.w3.org/1999/xlink" data-area="controller"
+        id="text-selection" xmlns:xhtml="http://www.w3.org/1999/xhtml" preserveAspectRatio="xMinYMin meet"
+        :viewBox=genViewBox(bounds) :width="width" :height="height"
+        :style="{ transform: `translate(${bounds.left}px,${bounds.top}px)` }" @mousedown="onMouseDown" overflow="visible"
+        @mouseenter="mouseenter" @mouseleave="mouseleave" :class="{ 'un-visible': !visible }">
         <SelectView :context="props.context" :shape="(props.shape)" :matrix="submatrix.toArray()"
-                    :main-notify="Selection.CHANGE_TEXT" :selection="props.context.selection.getTextSelection(props.shape)"></SelectView>
-        <path v-if="editing" :d="boundrectPath" fill="none" stroke='#1878f5' stroke-width="1px" stroke-dasharray="2,2"></path>
+            :main-notify="Selection.CHANGE_TEXT" :selection="props.context.selection.getTextSelection(props.shape)">
+        </SelectView>
+        <path v-if="editing" :d="boundrectPath" fill="none" stroke='#1878f5' stroke-dasharray="2,2"></path>
         <BarsContainer v-if="!editing" :context="props.context" :matrix="submatrix.toArray()" :shape="props.shape"
-                       :c-frame="props.controllerFrame">
+            :c-frame="props.controllerFrame">
         </BarsContainer>
         <PointsContainer v-if="!editing" :context="props.context" :matrix="submatrix.toArray()" :shape="props.shape"
-                         :c-frame="props.controllerFrame" :axle="axle">
+            :c-frame="props.controllerFrame" :axle="axle">
         </PointsContainer>
     </svg>
     <TextInput ref="input" :context="props.context" :shape="(props.shape)" :matrix="submatrix.toArray()"
-               :main-notify="Selection.CHANGE_TEXT" :selection="props.context.selection.getTextSelection(props.shape)"></TextInput>
+        :main-notify="Selection.CHANGE_TEXT" :selection="props.context.selection.getTextSelection(props.shape)"></TextInput>
 </template>
 <style lang='scss' scoped>
 .un-visible {
     opacity: 0;
 }
+
 svg {
     position: absolute;
 }

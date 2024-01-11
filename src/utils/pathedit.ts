@@ -1,7 +1,7 @@
 import { Context } from "@/context";
 import { XY } from "@/context/selection";
 import { GroupShapeView, PathShapeView } from "@kcdesign/data";
-import { CurveMode, CurvePoint, GroupShape, Matrix, PathShape, ShapeType } from "@kcdesign/data";
+import { CurveMode, CurvePoint, Matrix, PathShape, ShapeType } from "@kcdesign/data";
 
 export function get_root_points(context: Context, indexes?: number[]) {
     const path_shape = context.selection.pathshape;
@@ -598,7 +598,7 @@ export function enter_path_edit_mode(context: Context) {
 
     const shape = selected[0];
 
-    if (!(shape instanceof PathShape)) {
+    if (!(shape instanceof PathShapeView)) {
         console.log('enter_path_edit_mode: !(shape instanceof PathShape)');
         return;
     }

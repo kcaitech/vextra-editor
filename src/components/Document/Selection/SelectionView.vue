@@ -253,11 +253,12 @@ function for_path_shape(shape: PathShapeView) {
     }
 }
 function modify_controller_type(shapes: ShapeView[],) {
+    if (!permIsEdit(props.context) || props.context.tool.isLable) {
+        controllerType.value = ControllerType.Readonly;
+        return;
+    }
+
     if (shapes.length === 1) {
-        if (!permIsEdit(props.context) || props.context.tool.isLable) {
-            controllerType.value = ControllerType.Readonly;
-            return;
-        }
         const shape = shapes[0];
         if (shape.isVirtualShape) {
             for_virtual(shape);
@@ -290,6 +291,7 @@ function modify_controller_type(shapes: ShapeView[],) {
             return;
         }
     }
+
     controllerType.value = ControllerType.RectMulti;
 }
 function modify_rotate(shapes: ShapeView[]) {
@@ -397,8 +399,6 @@ onUnmounted(() => {
 })
 </script>
 <template>
-     <!-- 标注线 -->
-     <LableLine v-if="isLableLine" :context="props.context" :matrix="props.matrix"></LableLine>
     <!-- 描边 -->
     <svg v-if="tracing" version="1.1" xmlns="http://www.w3.org/2000/svg" xmlns:xlink="http://www.w3.org/1999/xlink"
         xmlns:xhtml="http://www.w3.org/1999/xhtml" preserveAspectRatio="xMinYMin meet" overflow="visible"
@@ -416,8 +416,10 @@ onUnmounted(() => {
         :context="props.context" :controller-frame="controllerFrame" :rotate="rotate" :matrix="props.matrix"
         :shape="context.selection.selectedShapes[0]">
     </component>
-       <!-- 辅助 -->
+    <!-- 辅助 -->
     <Assist :context="props.context" :controller-frame="controllerFrame"></Assist>
+    <!-- 标注线 -->
+    <LableLine v-if="isLableLine" :context="props.context" :matrix="props.matrix"></LableLine>
     <!-- 选中大小 -->
     <ShapeSize :context="props.context" :controller-frame="controllerFrame"></ShapeSize>
 </template>

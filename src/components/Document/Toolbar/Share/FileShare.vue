@@ -327,7 +327,6 @@ const handleClick = (e: MouseEvent) => {
     !e.target.closest('.popover') && (authority.value = false)
     !e.target.closest('.options') && (isSelectOpen.value = false)
   }
-
 }
 
 onMounted(() => {

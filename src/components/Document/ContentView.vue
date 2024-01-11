@@ -6,7 +6,7 @@ import ContextMenu from '../common/ContextMenu.vue';
 import PageViewContextMenuItems from '@/components/Document/Menu/PageViewContextMenuItems.vue';
 import Selector, { SelectorFrame } from './Selection/Selector.vue';
 import CommentView from './Content/CommentView.vue';
-import { Matrix, Shape, Page, Color, ShapeType, ShapeView, PageView } from '@kcdesign/data';
+import { Matrix, Color, ShapeType, ShapeView, PageView } from '@kcdesign/data';
 import { Context } from '@/context';
 import { PageXY, ClientXY, ClientXYRaw } from '@/context/selection';
 import { KeyboardKeys, WorkSpace } from '@/context/workspace';
@@ -28,7 +28,6 @@ import {
     init_insert_table,
     root_scale, root_trans
 } from '@/utils/content';
-import { paster } from '@/utils/clipboard';
 import { insertFrameTemplate } from '@/utils/artboardFn';
 import { Comment } from '@/context/comment';
 import Placement from './Menu/Placement.vue';
@@ -117,16 +116,13 @@ function setMousedownXY(e: MouseEvent) { // 记录鼠标在页面上的点击位
 function onMouseWheel(e: WheelEvent) { // 滚轮、触摸板事件
     if (contextMenu.value) return; //右键菜单已打开
     e.preventDefault();
-    const { ctrlKey, metaKey, deltaX, deltaY } = e;
+    const { ctrlKey, metaKey } = e;
     if (ctrlKey || metaKey) { // 缩放
         root_scale(props.context, e);
     } else {
-        if (Math.abs(deltaX) + Math.abs(deltaY) < 100) { // 临时适配方案，需根据使用设备进一步完善适配
-            matrix.trans(-deltaX, -deltaY);
-        } else {
-            root_trans(props.context, e, wheel_step);
-        }
+        root_trans(props.context, e, wheel_step);
     }
+
     workspace.value.notify(WorkSpace.MATRIX_TRANSFORMATION);
     search_once(e) // 滚动过程进行常规图形检索
 }
@@ -157,7 +153,7 @@ function preToDragPage() { // 编辑器准备拖动页面
     workspace.value.setCtrl('page');
     workspace.value.pageDragging(true);
     props.context.selection.unHoverShape();
-    props.context.cursor.setType('grab-0');
+    props.context.cursor.setType('grab', 0);
 }
 
 function endDragPage() { // 编辑器完成拖动页面
@@ -213,12 +209,12 @@ function pageViewDragging(e: MouseEvent) {
         }
     }
     workspace.value.notify(WorkSpace.MATRIX_TRANSFORMATION);
-    props.context.cursor.setType('grabbing-0');
+    props.context.cursor.setType('grabbing', 0);
 }
 
 function pageViewDragEnd() {
     state = STATE_NONE;
-    props.context.cursor.setType('grab-0')
+    props.context.cursor.setType('grab', 0)
 }
 
 /**
@@ -511,12 +507,8 @@ function tool_watcher(type: number) {
 function workspace_watcher(type?: number, param?: string | MouseEvent | Color) {
     if (type === WorkSpace.MATRIX_TRANSFORMATION) {
         matrix.reset(workspace.value.matrix);
-    } else if (type === WorkSpace.PASTE) {
-        paster(props.context, t);
     } else if (type === WorkSpace.PASTE_RIGHT) {
-        paster(props.context, t, mousedownOnPageXY);
-    } else if (type === WorkSpace.COPY) {
-        props.context.workspace.clipboard.write_html();
+        props.context.workspace.clipboard.paste(t, undefined, mousedownOnPageXY);
     } else if ((type === WorkSpace.ONARBOARD__TITLE_MENU) && param) {
         contextMenuMount((param as MouseEvent));
     } else if (type === WorkSpace.PATH_EDIT_MODE) {
@@ -529,13 +521,36 @@ function frame_watcher() {
     _updateRoot(props.context, root.value);
 }
 
-function cursor_watcher(t?: number, type?: string) {
-    if ((t === Cursor.RESET || t === Cursor.CHANGE_CURSOR) && type) cursor.value = type;
+function cursor_watcher(t: number, type: string) {
+    if (t === Cursor.CHANGE_CURSOR && type) {
+        cursor.value = type;
+    }
 }
 
 function matrix_watcher(nm: Matrix) {
     matrix_inverse = new Matrix(nm.inverse);
     collect_once(props.context, nm);
+}
+
+function copy_watcher(event: ClipboardEvent) {
+    if (event.target instanceof HTMLInputElement || event.target instanceof HTMLTextAreaElement) {
+        return;
+    }
+    props.context.workspace.clipboard.write(event);
+}
+
+function cut_watcher(event: ClipboardEvent) {
+    if (event.target instanceof HTMLInputElement || event.target instanceof HTMLTextAreaElement) {
+        return;
+    }
+    props.context.workspace.clipboard.cut(event);
+}
+
+function paster_watcher(event: ClipboardEvent) {
+    if (event.target instanceof HTMLInputElement || event.target instanceof HTMLTextAreaElement) {
+        return;
+    }
+    return props.context.workspace.clipboard.paste(t, event);
 }
 
 // hooks
@@ -577,6 +592,9 @@ onMounted(() => {
     rootRegister(true);
     document.addEventListener('keydown', onKeyDown);
     document.addEventListener('keyup', onKeyUp);
+    document.addEventListener('copy', copy_watcher);
+    document.addEventListener('cut', cut_watcher);
+    document.addEventListener('paste', paster_watcher);
     window.addEventListener('blur', windowBlur);
 
     nextTick(() => {
@@ -602,6 +620,9 @@ onUnmounted(() => {
     resizeObserver.disconnect();
     document.removeEventListener('keydown', onKeyDown);
     document.removeEventListener('keyup', onKeyUp);
+    document.removeEventListener('copy', copy_watcher);
+    document.removeEventListener('cut', cut_watcher);
+    document.removeEventListener('paste', paster_watcher);
     window.removeEventListener('blur', windowBlur);
     stopWatch();
 })

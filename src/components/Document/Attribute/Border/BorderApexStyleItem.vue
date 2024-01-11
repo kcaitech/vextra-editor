@@ -54,6 +54,9 @@ const isEnd = computed<boolean>(() => {
 
 .border-front-style-item-container:hover {
     background-color: var(--active-color);
-    color: #FFFFFF;
+
+    >svg {
+        fill: #FFFFFF;
+    }
 }
 </style>

@@ -31,6 +31,9 @@ let isDragging = false;
 let asyncMultiAction: AsyncMultiAction | undefined = undefined;
 const dragActiveDis = 3;
 let cur_ctrl_type: CtrlElementType = CtrlElementType.RectLT;
+let need_reset_cursor_after_transform = true;
+
+// #region view
 function update() {
     // const s = Date.now();
     matrix.reset(props.matrix);
@@ -50,64 +53,75 @@ function passive_update() {
     dots.length = 0;
     dots.push(...update_dot2(props.frame));
 }
+// #endregion
+
+// #region main flow
 function point_mousedown(event: MouseEvent, ele: CtrlElementType) {
     if (event.button !== 0) {
         return;
     }
-    props.context.menu.menuMount()
-    const workspace = props.context.workspace;
     event.stopPropagation();
-    workspace.setCtrl('controller');
-    const { clientX, clientY } = event;
-    matrix.reset(workspace.matrix);
-    const root = workspace.root;
-    startPosition = { x: clientX - root.x, y: clientY - root.y };
+
     cur_ctrl_type = ele;
+
+    set_status_on_down();
+
+    startPosition = props.context.workspace.getContentXY(event);
+
     document.addEventListener('mousemove', point_mousemove);
     document.addEventListener('mouseup', point_mouseup);
 }
 function point_mousemove(event: MouseEvent) {
-    const { clientX, clientY } = event;
     const workspace = props.context.workspace;
-    const root = workspace.root;
     const { x: sx, y: sy } = startPosition;
-    const { x: mx, y: my } = { x: clientX - root.x, y: clientY - root.y };
+    const { x: mx, y: my } = workspace.getContentXY(event)
     const { x: ax, y: ay } = props.axle;
     if (isDragging && asyncMultiAction) {
         if (cur_ctrl_type.endsWith('rotate')) {
-            let deg = getAngle([ax, ay, sx, sy], [ax, ay, mx, my]) || 0;
-            const root_axle = submatrix.computeCoord(ax, ay); // 中心点在root的位置
+            const deg = getAngle([ax, ay, sx, sy], [ax, ay, mx, my]) || 0;
+            const root_axle = submatrix.computeCoord(ax, ay);
+
             const r = new Matrix();
-            r.rotate(deg * (Math.PI / 180), root_axle.x, root_axle.y); // 控件旋转矩阵
+            r.rotate(deg * (Math.PI / 180), root_axle.x, root_axle.y);
+
             asyncMultiAction.executeRotate(deg, r);
-            props.context.cursor.setType(`rotate-${getHorizontalAngle(props.axle, { x: mx, y: my })}`, true);
+
+            props.context.cursor.setTypeForce('rotate', getHorizontalAngle(props.axle, { x: mx, y: my }));
         } else {
             const action = props.context.tool.action;
-            (event.shiftKey || action === Action.AutoK) ? er_scale(asyncMultiAction, sx, sy, mx, my) : irregular_scale(asyncMultiAction, sx, sy, mx, my);
+            (event.shiftKey || action === Action.AutoK)
+                ? er_scale(asyncMultiAction, sx, sy, mx, my)
+                : irregular_scale(asyncMultiAction, sx, sy, mx, my);
         }
+
         startPosition = { x: mx, y: my };
+
         workspace.notify(WorkSpace.SELECTION_VIEW_UPDATE);
     } else if (Math.hypot(mx - sx, my - sy) > dragActiveDis) {
-        isDragging = true;
+        set_status_before_action();
 
         const shapes = shapes_organize(props.context.selection.selectedShapes);
-        const page = props.context.selection.selectedPage;
+        const page = props.context.selection.selectedPage!;
 
         asyncMultiAction = props.context.editor
             .controller()
-            .asyncMultiEditor(shapes.map((s) => adapt2Shape(s)), page!);
+            .asyncMultiEditor(shapes.map((s) => adapt2Shape(s)), page);
 
-        if (cur_ctrl_type.endsWith('rotate')) {
-            workspace.rotating(true);
-        } else {
-            setCursor(cur_ctrl_type);
-            workspace.scaling(true);
-        }
-
-        workspace.setSelectionViewUpdater(false);
         submatrix.reset(workspace.matrix.inverse);
+
+        isDragging = true;
     }
 }
+function point_mouseup(event: MouseEvent) {
+    if (event.button !== 0) {
+        return;
+    }
+
+    clear_status();
+}
+// #endregion
+
+// #region utils
 function er_scale(asyncMultiAction: AsyncMultiAction, sx: number, sy: number, mx: number, my: number) {
     if (cur_ctrl_type === CtrlElementType.RectLT) {
         const f_lt = submatrix.computeCoord(props.frame[0].x, props.frame[0].y);
@@ -222,71 +236,90 @@ function irregular_scale(asyncMultiAction: AsyncMultiAction, sx: number, sy: num
         asyncMultiAction.executeScale(f_lt, { x: f_lt.x + trans.x, y: f_lt.y }, _w / o_w, _h / o_h);
     }
 }
-function point_mouseup(event: MouseEvent) {
-    if (event.button === 0) {
-        if (isDragging) {
-            if (asyncMultiAction) {
-                asyncMultiAction.close();
-                asyncMultiAction = undefined;
-            }
-            isDragging = false;
-            props.context.workspace.setSelectionViewUpdater(true);
-        }
-        document.removeEventListener('mousemove', point_mousemove);
-        document.removeEventListener('mouseup', point_mouseup);
-        action_end();
-    }
-}
-function window_blur() {
-    if (isDragging) isDragging = false;
-    if (asyncMultiAction) {
-        asyncMultiAction.close();
-        asyncMultiAction = undefined;
-    }
-    document.removeEventListener('mousemove', point_mousemove);
-    document.removeEventListener('mouseup', point_mouseup);
-    action_end();
-}
-function setCursor(t: CtrlElementType, force?: boolean) {
+function setCursor(t: CtrlElementType) {
     const cursor = props.context.cursor;
     let deg = 0;
     if (t === CtrlElementType.RectLT) {
         deg = deg + 45;
-        cursor.setType(`scale-${deg}`, force);
     } else if (t === CtrlElementType.RectLTR) {
         deg = deg + 225;
-        cursor.setType(`rotate-${deg}`, force);
     } else if (t === CtrlElementType.RectRT) {
         deg = deg + 135;
-        cursor.setType(`scale-${deg}`, force);
     } else if (t === CtrlElementType.RectRTR) {
         deg = deg + 315;
-        cursor.setType(`rotate-${deg}`, force);
     } else if (t === CtrlElementType.RectRB) {
         deg = deg + 45;
-        cursor.setType(`scale-${deg}`, force);
     } else if (t === CtrlElementType.RectRBR) {
         deg = deg + 45;
-        cursor.setType(`rotate-${deg}`, force);
     } else if (t === CtrlElementType.RectLB) {
         deg = deg + 135;
-        cursor.setType(`scale-${deg}`, force);
     } else if (t === CtrlElementType.RectLBR) {
         deg = deg + 135;
-        cursor.setType(`rotate-${deg}`, force);
     }
+    const type = t.endsWith('rotate') ? 'rotate' : 'scale';
+
+    cursor.setType(type, deg);
 }
-function action_end() {
+function set_status_on_down() {
+    props.context.menu.menuMount()
+
+    const workspace = props.context.workspace;
+    if (cur_ctrl_type.endsWith('rotate')) {
+        workspace.rotating(true);
+    } else {
+        setCursor(cur_ctrl_type);
+        workspace.scaling(true);
+    }
+
+    props.context.cursor.cursor_freeze(true);
+}
+function set_status_before_action() {
+    props.context.workspace.setSelectionViewUpdater(false);
+}
+function clear_status() {
     const workspace = props.context.workspace;
     workspace.scaling(false);
     workspace.rotating(false);
     workspace.setCtrl('page');
-    props.context.cursor.reset();
+
+    if (isDragging) {
+        isDragging = false;
+    }
+
+    if (asyncMultiAction) {
+        asyncMultiAction.close();
+        asyncMultiAction = undefined;
+        workspace.setSelectionViewUpdater(true);
+    }
+
+
+    props.context.cursor.cursor_freeze(false);
+    if (need_reset_cursor_after_transform) {
+        props.context.cursor.reset();
+    }
+
+    document.removeEventListener('mousemove', point_mousemove);
+    document.removeEventListener('mouseup', point_mouseup);
+}
+function point_mouseenter(t: CtrlElementType) {
+    need_reset_cursor_after_transform = false;
+    setCursor(t);
 }
 function point_mouseleave() {
+    need_reset_cursor_after_transform = true;
     props.context.cursor.reset();
 }
-function frame_watcher() { if (!props.context.workspace.shouldSelectionViewUpdate) passive_update() }
+function frame_watcher() {
+    if (!props.context.workspace.shouldSelectionViewUpdate) {
+        passive_update();
+    }
+}
+function window_blur() {
+    clear_status();
+}
+// #endregion
+
+// #region lifecycle hooks
 watch(() => props.frame, frame_watcher);
 watch(() => props.matrix, update);
 onMounted(() => {
@@ -296,27 +329,37 @@ onMounted(() => {
 onUnmounted(() => {
     window.removeEventListener('blur', window_blur);
 })
+// #endregion
 </script>
 <template>
-    <g>
-        <g v-for="(p, i) in dots" :key="i" :style="`transform: ${p.r.transform};`">
-            <path :d="p.r.p" fill="transparent" stroke="none" @mousedown.stop="(e) => point_mousedown(e, p.type2)"
-                @mouseenter="() => setCursor(p.type2)" @mouseleave="point_mouseleave">
-            </path>
-            <rect :x="p.extra.x" :y="p.extra.y" width="14px" height="14px" fill="transparent" stroke='transparent'
-                @mousedown.stop="(e) => point_mousedown(e, p.type)" @mouseenter="() => setCursor(p.type)"
-                @mouseleave="point_mouseleave"></rect>
-            <rect :x="p.point.x" :y="p.point.y" class="main-rect" rx="2px"
-                @mousedown.stop="(e) => point_mousedown(e, p.type)" @mouseenter="() => setCursor(p.type)"
-                @mouseleave="point_mouseleave"></rect>
+    <g v-for="(p, i) in dots" :key="i" :style="`transform: ${p.r.transform};`">
+        <path :d="p.r.p" class="r-path" @mousedown.stop="(e) => point_mousedown(e, p.type2)"
+            @mouseenter="() => point_mouseenter(p.type2)" @mouseleave="point_mouseleave">
+        </path>
+        <g @mousedown.stop="(e) => point_mousedown(e, p.type)" @mouseenter="() => point_mouseenter(p.type)"
+            @mouseleave="point_mouseleave">
+            <rect :x="p.extra.x" :y="p.extra.y" class="assist-rect"></rect>
+            <rect :x="p.point.x" :y="p.point.y" class="main-rect" rx="2px"></rect>
         </g>
     </g>
 </template>
 <style lang="scss" scoped>
+.r-path {
+    stroke: none;
+    fill: transparent;
+}
+
 .main-rect {
     width: 8px;
     height: 8px;
     fill: #ffffff;
     stroke: var(--active-color);
+}
+
+.assist-rect {
+    width: 14px;
+    height: 14px;
+    fill: transparent;
+    stroke: transparent;
 }
 </style>
