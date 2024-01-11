@@ -30,6 +30,8 @@ import { TextSelectionLite } from "@/context/textselectionlite";
 import { is_symbol_or_union } from "@/utils/symbol";
 import { finder, scout, Scout } from "@/utils/scout";
 import { TableSelection } from "./tableselection";
+import { router } from "@/router";
+import { useRoute } from 'vue-router';
 
 interface Saved {
     page: Page | undefined,
@@ -218,6 +220,12 @@ export class Selection extends WatchableObject implements ISave4Restore {
         this.m_selectPage = p;
         this.m_selectShapes.length = 0;
         this.notify(Selection.CHANGE_PAGE);
+        if(p) {
+            router.replace({
+                path: '/document',
+                query: { id: this.m_context.comment.isDocumentInfo?.document.id, page_id: p.id.slice(0, 8) },
+            });
+        }
     }
 
     async deletePage(id: string, index: number) {

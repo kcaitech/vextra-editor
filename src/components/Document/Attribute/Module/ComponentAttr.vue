@@ -4,7 +4,7 @@ import { Context } from '@/context';
 import TypeHeader from '../TypeHeader.vue';
 import { onMounted, onUnmounted, ref, watch } from 'vue'
 import CompLayerShow from '../PopoverMenu/ComposAttri/CompLayerShow.vue';
-import { SymbolView} from '@kcdesign/data';
+import { SymbolView } from '@kcdesign/data';
 import { SymbolShape, VariableType } from '@kcdesign/data';
 import {
     AttriListItem,
@@ -40,6 +40,7 @@ const conflict = ref<boolean>(false);
 const selected = ref<string[]>([]);
 const var_name = ref<string>('');
 const dlt_value = ref<any>(true);
+const default_value = ref('');
 
 function close() {
     const is_achieve_expected_results = compsType.value;
@@ -162,6 +163,11 @@ function variable_watcher(args: any[]) {
 
 function list_change(data: string[]) {
     selected.value = data;
+    const page = props.context.selection.selectedPage;
+    if(page) {
+        const shape = page.getShape(data[0]);
+        if(shape) default_value.value = shape.name;
+    }
 }
 
 function name_change(v: string) {
@@ -253,7 +259,7 @@ onUnmounted(() => {
                 </SelectLayerInput>
             </template>
             <template #default_value>
-                <PopoverDefaultInput v-if="addType !== VariableType.SymbolRef" :context="context" :warn="warn"
+                <PopoverDefaultInput v-if="addType !== VariableType.SymbolRef" :context="context" :warn="warn" :default_value="default_value"
                     :add-type="addType" @select="dlt_change" @change="text_dlt_change"></PopoverDefaultInput>
             </template>
         </CompLayerShow>

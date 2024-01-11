@@ -6,6 +6,7 @@ import { Navi } from "@/context/navigate";
 import { Arrange } from "@/context/arrange";
 import { deleteUnits } from "./delete";
 import { enter_path_edit_mode } from "./pathedit";
+import { untie_instance } from "./symbol";
 
 // todo 键盘事件的权限处理
 
@@ -60,13 +61,17 @@ keydownHandler['KeyA'] = function (event: KeyboardEvent, context: Context) {
 }
 
 keydownHandler['KeyB'] = function (event: KeyboardEvent, context: Context) {
-    const { metaKey, ctrlKey } = event;
+    const { metaKey, ctrlKey, altKey } = event;
     if (event.repeat) {
         return;
     }
     if (metaKey || ctrlKey) {
         event.preventDefault();
         context.workspace.notify(WorkSpace.BOLD); // 文本加粗
+    }
+    if ((metaKey || ctrlKey) && altKey) {
+        untie_instance(context); // 创建组件
+        return;
     }
 }
 

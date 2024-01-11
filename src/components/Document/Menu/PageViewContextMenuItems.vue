@@ -16,7 +16,8 @@ import {
     ShapeView,
     TextShapeView,
     adapt2Shape,
-    GroupShapeView
+    GroupShapeView,
+    SymbolRefView
 } from "@kcdesign/data";
 import Layers from './Layers.vue';
 import { Context } from '@/context';
@@ -50,10 +51,11 @@ const isTitle = ref<boolean>(props.context.tool.isShowTitle);
 const isCursor = ref<boolean>(props.context.menu.isUserCursorVisible);
 const invalid_items = ref<string[]>([]);
 
-function showLayerSubMenu(e: MouseEvent) {
+function showLayerSubMenu(e: MouseEvent, type: string) {
     layerSubMenuPosition.x = (e.target as Element).getBoundingClientRect().width;
     layerSubMenuPosition.y = -10;
     layerSubMenuVisiable.value = true;
+    hoverItem.value = type;
 }
 
 function is_inner_textshape(): (ShapeView | Shape) & { text: Text } | undefined {
@@ -422,11 +424,14 @@ function instance() {
 function reset() {
 }
 
-function edit() {
+function editComps() {
     const refShape = props.context.selection.selectedShapes[0];
-    const refId = refShape && (refShape instanceof SymbolRefShape) ? refShape.refId : undefined;
+    const refId = refShape && (refShape instanceof SymbolRefView) ? refShape.refId : undefined
     if (!refId) return;
     const shape = get_shape_within_document(props.context, refId)
+    if (shape) {
+        shape_track(props.context, shape)
+    }
     if (shape) {
         shape_track(props.context, shape)
         emit('close');
@@ -458,12 +463,17 @@ function lock() {
     props.context.selection.resetSelectShapes();
     emit('close');
 }
+const hoverItem = ref('');
+const mouseenter = (type: string) => {
+    hoverItem.value = type;
+}
 
 /**
  * 关闭图层菜单
  */
 function closeLayerSubMenu() {
     layerSubMenuVisiable.value = false;
+    hoverItem.value = '';
 }
 
 function show_placement(val: boolean) {
@@ -488,10 +498,10 @@ onUnmounted(() => {
 <template>
     <div class="items-wrap" @mousedown.stop @click.stop>
         <div v-if="props.items.includes('layers')" class="item layer-select"
-            @mouseenter="(e: MouseEvent) => showLayerSubMenu(e)" @mouseleave="closeLayerSubMenu">
+            @mouseenter="(e: MouseEvent) => showLayerSubMenu(e, 'layer-select')" @mouseleave="closeLayerSubMenu">
             <span>{{ t('system.select_layer') }}</span>
-            <!--            <div class="triangle"></div>-->
-            <svg-icon icon-class="down" style="transform: rotate(-90deg);margin-left: 62px"></svg-icon>
+            <svg-icon :icon-class="hoverItem === 'layer-select' ? 'white-down' : 'down'"
+                style="transform: rotate(-90deg);margin-left: 62px"></svg-icon>
             <ContextMenu v-if="layerSubMenuVisiable" :x="layerSubMenuPosition.x" :y="layerSubMenuPosition.y" :width="174"
                 :site="site" :context="props.context">
                 <Layers @close="emit('close')" :layers="props.layers" :context="props.context"></Layers>
@@ -565,14 +575,14 @@ onUnmounted(() => {
         </div>
         <!-- 协作 -->
         <div class="line" v-if="props.items.includes('cursor')"></div>
-        <div class="item" v-if="props.items.includes('cursor')" @click="cursor">
-            <!--            <div class="choose" v-show="isCursor"></div>-->
-            <svg-icon icon-class="choose" v-show="isCursor"></svg-icon>
+        <div class="item" v-if="props.items.includes('cursor')" @click="cursor" @mouseenter="mouseenter('cursor')"
+            @mouseleave="hoverItem = ''">
+            <svg-icon :icon-class="hoverItem === 'cursor' ? 'white-select' : 'page-select'" v-show="isCursor"></svg-icon>
             <span :style="{ marginLeft: isCursor ? '8px' : '20px' }">{{ t('system.show_many_cursor') }}</span>
         </div>
-        <div class="item" v-if="props.items.includes('comment')" @click="comment">
-            <!--            <div class="choose" v-show="isComment"></div>-->
-            <svg-icon icon-class="choose" v-show="isComment"></svg-icon>
+        <div class="item" v-if="props.items.includes('comment')" @click="comment" @mouseenter="mouseenter('comment')"
+            @mouseleave="hoverItem = ''">
+            <svg-icon :icon-class="hoverItem === 'comment' ? 'white-select' : 'page-select'" v-show="isComment"></svg-icon>
             <span :style="{ marginLeft: isComment ? '8px' : '20px' }">{{ t('system.show_comment') }}</span>
             <span class="shortkey">
                 <Key code="Shift C"></Key>
@@ -651,13 +661,15 @@ onUnmounted(() => {
         </div>
         <div class="item" v-if="props.items.includes('instance')" @click="instance">
             <span>{{ t('system.unbind_instance') }}</span>
-            <span></span>
+            <span class="shortkey">
+                <Key code="Alt Ctrl B"></Key>
+            </span>
         </div>
         <div class="item" v-if="props.items.includes('reset')" @click="reset">
             <span>{{ t('system.reset_instance_roperties') }}</span>
             <span></span>
         </div>
-        <div class="item" v-if="props.items.includes('edit')" @click="edit">
+        <div class="item" v-if="props.items.includes('edit')" @click="editComps">
             <span>{{ t('system.edit_component') }}</span>
             <span></span>
         </div>
@@ -675,9 +687,9 @@ onUnmounted(() => {
                 <Key code="Shift Ctrl L"></Key>
             </span>
         </div>
-        <div class="item" v-if="props.items.includes('title')" @click="toggle_title">
-            <!--            <div class="choose" v-show="isTitle"></div>-->
-            <svg-icon icon-class="choose" v-show="isTitle"></svg-icon>
+        <div class="item" v-if="props.items.includes('title')" @click="toggle_title" @mouseenter="mouseenter('title')"
+            @mouseleave="hoverItem = ''">
+            <svg-icon :icon-class="hoverItem === 'title' ? 'white-select' : 'page-select'" v-show="isTitle"></svg-icon>
             <span :style="{ marginLeft: isTitle ? '8px' : '20px' }">{{ t('system.artboart_title_visible') }}</span>
         </div>
         <TableMenu :context="context" :layers="layers" :items="items" :site="site" @close="emit('close')"></TableMenu>

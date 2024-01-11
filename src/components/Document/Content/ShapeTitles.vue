@@ -5,7 +5,7 @@ import {Matrix, Page, PageView, Shape, ShapeType, ShapeView, adapt2Shape} from "
 import {WorkSpace} from "@/context/workspace";
 import {ClientXY} from "@/context/selection";
 import ArtboardName from "./ArtboardName.vue";
-import {is_shape_out, top_side} from "@/utils/content";
+import {is_shape_out, pre_modify_anchor, shape_title_width} from "@/utils/content";
 
 const props = defineProps<{
     context: Context
@@ -71,8 +71,8 @@ const setPosition = () => {
                 const matrix_artboard = new Matrix(matrix_artboard_root);
                 matrix_artboard.multiAtLeft(matrix);
                 if (is_shape_out(props.context, artboard, matrix_artboard)) continue;
-                const top_side_l = top_side(artboard, matrix_artboard);
-                if (top_side_l < 72) continue;
+                const maxWidth = shape_title_width(artboard, matrix_artboard);
+                if (maxWidth < 24) continue;
                 // let anchor = { x: 0, y: 0 }; // 锚点，其所在坐标系是page坐标系
                 let anchor = modify_anchor(artboard, matrix_artboard_root);
                 anchor = matrix.computeCoord({x: anchor.x, y: anchor.y}); //将锚点从 [页面坐标系] 转换到 [窗口坐标系]
@@ -80,23 +80,12 @@ const setPosition = () => {
                 anchor.x -= origin.x;
                 anchor.y -= 22; // 顶上去22像素
                 const width = f2p.width;
-                const maxWidth = frame.width
                 titles.push({id: artboard.id, content: artboard.name, x: anchor.x, y: anchor.y, width, shape: () => artboard, rotate: modify_rotate(artboard), maxWidth, selected});
             }
         }
     } else {
         titles.length = 0;
     }
-}
-
-function pre_modify_anchor(shape: ShapeView) {
-    let rotate = shape.rotation || 0;
-    if (shape.isFlippedHorizontal) rotate = rotate + 270;
-    if (shape.isFlippedVertical) {
-        rotate = shape.isFlippedHorizontal ? rotate -= 90 : rotate += 90;
-    }
-    rotate = (rotate < 0 ? rotate + 360 : rotate) % 360;
-    return rotate;
 }
 
 function modify_rotate(shape: ShapeView) {

@@ -77,7 +77,7 @@ function highlightText(text: string) {
 }
 
 function checkFontsAvailability(fontName: string[], fontList: FontName, lang: string) {
-    const promises = fontName.map(name => FontAvailable(name));
+    const promises = fontName.map(name => FontAvailable(name).length > 0);
     Promise.all(promises)
         .then(results => {
             if (lang === 'ch') {
@@ -97,7 +97,7 @@ const getAllTextFontName = () => {
     const pageFont = props.context.selection.selectedPage?.data.getUsedFontNames()
     if (pageFont) {
         const font = (Array.from(pageFont) as string[])
-        const promises = font.map(name => FontAvailable(name));
+        const promises = font.map(name => FontAvailable(name).length > 0);
         Promise.all(promises).then(res => {
             const usedSuccess = font.filter((name, index) => res[index]);
             fontList.used.success.push(...usedSuccess)

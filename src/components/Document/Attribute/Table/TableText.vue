@@ -370,12 +370,13 @@ const textFormat = () => {
     } else {
         let cells: (TableCell | undefined)[] = []
         if (table.tableRowStart < 0 || table.tableColStart < 0) {
-            cells = props.shape.data.childs || [];
+            cells = props.shape.data.datas || [];
         } else {
             cells = table.getSelectedCells(true).map(item => item.cell) || [];
         }
         shape.value = undefined
         const formats: any[] = [];
+        
         for (let i = 0; i < cells.length; i++) {
             const cell = cells[i];
             if (cell && cell.text) {

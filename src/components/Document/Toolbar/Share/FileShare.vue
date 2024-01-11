@@ -322,10 +322,11 @@ const handlekeyup = (e: KeyboardEvent) => {
 
 const handleClick = (e: MouseEvent) => {
   e.stopPropagation()
-  e.target instanceof Element && !e.target.closest('.box-card') && emit('close')
-  e.target instanceof Element && !e.target.closest('.popover') && (authority.value = false)
-  e.target instanceof Element && !e.target.closest('.options') && (isSelectOpen.value = false)
-
+  if (e.target instanceof Element) {
+    !e.target.closest('.file-share-box-card') && emit('close')
+    !e.target.closest('.popover') && (authority.value = false)
+    !e.target.closest('.options') && (isSelectOpen.value = false)
+  }
 }
 
 onMounted(() => {
@@ -366,7 +367,7 @@ const selectOption = (option: any) => {
 
 </script>
 <template>
-  <el-card class="box-card" v-if="!founder && docInfo">
+  <el-card class="file-share-box-card" v-if="!founder && docInfo">
     <!-- 标题 -->
     <template #header>
       <div class="card-header">
@@ -472,7 +473,7 @@ const selectOption = (option: any) => {
     </div>
   </el-card>
 
-  <el-card class="box-card" v-if="founder && docInfo">
+  <el-card class="file-share-box-card" v-if="founder && docInfo">
     <!-- 标题 -->
     <template #header>
       <div class="card-header">
@@ -527,7 +528,7 @@ const selectOption = (option: any) => {
 }
 
 @media (max-height: 550px) {
-  .box-card {
+  .file-share-box-card {
     height: 100%;
     overflow: auto !important;
     animation: none !important;
@@ -535,7 +536,7 @@ const selectOption = (option: any) => {
 }
 
 @media (max-width: 400px) {
-  .box-card {
+  .file-share-box-card {
     width: 100% !important;
     overflow: auto !important;
   }
@@ -590,7 +591,7 @@ const selectOption = (option: any) => {
 
 
 
-.box-card {
+.file-share-box-card {
   width: 400px;
   padding: 0 24px 8px 24px;
   margin: auto;

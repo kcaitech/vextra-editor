@@ -12,6 +12,7 @@ import ContextMenu from '@/components/common/ContextMenu.vue';
 import { Navi } from "@/context/navigate";
 import { Perm } from "@/context/workspace";
 import { Tool } from "@/context/tool";
+import { copyLink } from "@/utils/clipboard";
 
 type List = InstanceType<typeof ListView>;
 
@@ -258,6 +259,9 @@ function pageMenuUnmount(e?: MouseEvent, item?: string, id?: string) {
         })
     } else if (item === 'copy_link') {
         e?.stopPropagation();
+        const docInfo = props.context.comment.isDocumentInfo?.document;
+        const page_url = location.origin + `/#/document?id=${docInfo?.id}&page_id=${id?.slice(0, 8)}` + ' ' + `邀请您进入《${docInfo?.name}》，点击链接开始协作`
+        copyLink(page_url, t);
     } else if (item === 'delete') {
         e?.stopPropagation();
         props.context.comment.toggleCommentPage()

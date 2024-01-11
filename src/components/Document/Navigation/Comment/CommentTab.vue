@@ -21,7 +21,7 @@ type commentListMenu = {
     status_p: boolean
 }
 const route = useRoute()
-const docID = (route.query.id as string)
+const docID = props.context.comment.isDocumentInfo?.document.id || (route.query.id as string);
 const emit = defineEmits<{ (e: 'showNavigation'): void }>()
 
 const commentMenu = ref<boolean>(false)
@@ -31,7 +31,6 @@ const commentMenuItems = ref<commentListMenu[]>([
     { text: `${t('comment.show_resolved_comments')}`, status_p: props.context.selection.commentStatus }
 ])
 const documentCommentList = ref<any[]>(props.context.comment.commentList)
-const commentAll = ref<any[]>() //没有转树的评论列表
 const scrollbarRef = ref<InstanceType<typeof ElScrollbar>>()
 const isPageSort = ref(props.context.selection.commentPageSort)
 const visibleComment = ref(props.context.comment.isVisibleComment)
@@ -102,6 +101,7 @@ const handleMenuStatus = (status: boolean, index: number) => {
 const getDocumentComment = async (id: string) => {
     try {
         const { data } = await comment_api.getDocumentCommentAPI({ doc_id: id })
+        if(data.length === 0) return;
         data.forEach((obj: { children: any[]; commentMenu: any; }) => {
             obj.commentMenu = commentMenuItems.value
             obj.children = []

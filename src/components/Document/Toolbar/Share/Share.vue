@@ -112,7 +112,7 @@ onUnmounted(() => {
   <Teleport to="body">
     <div v-if="showFileShare" class="overlay">
       <FileShare @close="closeShare" :shareSwitch="shareSwitch" :selectValue="selectValue" :docInfo="docInfo"
-        :projectPerm="projectPerm" @select-type="onSelectType" @switch-state="onSwitch" :pageHeight="pageHeight"
+        :projectPerm="projectPerm" @select-type="onSelectType" @switch-state="onSwitch"
         :context="props.context" :userInfo="userInfo"></FileShare>
     </div>
   </Teleport>

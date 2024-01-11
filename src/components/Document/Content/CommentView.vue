@@ -7,10 +7,9 @@ import { ClientXY, PageXY } from '@/context/selection';
 import { useRoute } from 'vue-router';
 import { useI18n } from 'vue-i18n';
 import { searchCommentShape } from '@/utils/comment';
-import { GroupShape, PageView, Shape } from "@kcdesign/data";
+import { GroupShape, PageView, Shape, ShapeView } from "@kcdesign/data";
 import { Comment } from '@/context/comment';
 import { DocCommentOpData, DocCommentOpType } from "@/communication/modules/doc_comment_op"
-
 type CommentView = InstanceType<typeof PageCommentItem>;
 
 const { t } = useI18n();
@@ -109,6 +108,8 @@ const downMoveCommentPopup = (e: MouseEvent, index: number) => {
                         y2: 0
                     }
                 }
+                documentCommentList.value[index].shape_frame = data.shape_frame;
+                documentCommentList.value[index].target_shape_id = props.pageId;
                 editMoveCommentPosition(data)
             } else {
                 const shape = shapes[0]
@@ -124,6 +125,8 @@ const downMoveCommentPopup = (e: MouseEvent, index: number) => {
                         y2: shape_frame.y1 - farmeXY.y
                     }
                 }
+                documentCommentList.value[index].shape_frame = data.shape_frame;
+                documentCommentList.value[index].target_shape_id = shape.id;
                 editMoveCommentPosition(data)
             }
         }
@@ -197,6 +200,7 @@ const editCommentShapePosition = async (data: any) => {
     }
 }
 const editMoveCommentPosition = async (data: any) => {
+    props.context.comment.setCommentList(documentCommentList.value)
     try {
         await comment_api.editCommentAPI(data)
         // getDocumentComment()
@@ -208,7 +212,8 @@ const editMoveCommentPosition = async (data: any) => {
 // 获取评论列表
 const getDocumentComment = async () => {
     try {
-        const { data } = await comment_api.getDocumentCommentAPI({ doc_id: route.query.id })
+        const docInfo = props.context.comment.isDocumentInfo;
+        const { data } = await comment_api.getDocumentCommentAPI({ doc_id: docInfo?.document.id || route.query.id })
         if (data) {
             data.forEach((obj: { children: any[]; commentMenu: any; }) => {
                 obj.commentMenu = commentMenuItems.value
@@ -300,9 +305,18 @@ const editComment = (index: number, text: string) => {
 
 //移动shape时保存shape身上的评论坐标
 const saveShapeCommentXY = () => {
-    const shapes = props.context.comment.commentShape
+    const shapesId = props.context.comment.commentShape;
+    const page = props.context.selection.selectedPage;
+    if (!page) return;
+    const shapes: ShapeView[] = []
+    shapesId.forEach((id: string) => {
+        const shape = page.getShape(id);
+        if (shape) {
+            shapes.push(shape);
+        }
+    })
     const sleectShapes = flattenShapes(shapes)
-    sleectShapes.forEach((item: any) => {
+    sleectShapes.forEach((item: ShapeView) => {
         documentCommentList.value.forEach((comment, i) => {
             if (comment.target_shape_id === item.id) {
                 editShapeComment(i, comment.shape_frame.x1, comment.shape_frame.y1)
@@ -362,14 +376,16 @@ const docComment = (comment: DocCommentOpData) => {
             }
         } else {
             documentCommentList.value.forEach((item, i) => {
-                const _index = item.children.findIndex((child: any) => child.id === comment.comment.id)
-                if (_index !== -1) {
-                    documentCommentList.value[i].children = {
-                        ...documentCommentList.value[i].children,
-                        ...comment.comment
+                if(item.children && item.children.length) {
+                    const _index = item.children.findIndex((child: any) => child.id === comment.comment.id)
+                    if (_index !== -1) {
+                        documentCommentList.value[i].children = {
+                            ...documentCommentList.value[i].children,
+                            ...comment.comment
+                        }
+                        props.context.comment.setCommentList(documentCommentList.value);
+                        props.context.comment.onUpdateComment();
                     }
-                    props.context.comment.setCommentList(documentCommentList.value);
-                    props.context.comment.onUpdateComment();
                 }
             })
         }
@@ -378,7 +394,7 @@ const docComment = (comment: DocCommentOpData) => {
             documentCommentList.value.splice(index, 1)
         } else {
             documentCommentList.value.forEach((item, i) => {
-                if(item.children) {
+                if(item.children && item.children.length) {
                     const _index = item.children.findIndex((child: any) => child.id === comment.comment.id)
                     if (_index !== -1) {
                         documentCommentList.value[i].children.splice(index, 1);
@@ -422,7 +438,7 @@ onUnmounted(() => {
     <PageCommentItem ref="commentItem" :context="props.context" @moveCommentPopup="downMoveCommentPopup"
         :matrix="matrix.toArray()" @delete-comment="deleteComment" @resolve="resolve" :reflush="commentReflush"
         v-for="(item, index) in documentCommentList" :key="item.id" :commentInfo="item" :index="index" @recover="recover"
-        @editComment="editComment" @updateShapeComment="updateShapeComment" :myComment="aboutMe()">
+        @editComment="editComment" @updateShapeComment="updateShapeComment" :myComment="aboutMe()" :docList="documentCommentList" >
     </PageCommentItem>
 </template>
 

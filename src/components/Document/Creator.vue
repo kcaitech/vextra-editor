@@ -246,7 +246,8 @@ const completed = (succession: boolean, event?: MouseEvent) => {
 // 获取评论列表
 const getDocumentComment = async () => {
     try {
-        const { data } = await comment_api.getDocumentCommentAPI({ doc_id: route.query.id })
+        const docInfo = props.context.comment.isDocumentInfo;
+        const { data } = await comment_api.getDocumentCommentAPI({ doc_id:  docInfo?.document.id || route.query.id})
         if (data) {
             data.forEach((obj: { children: any[]; commentMenu: any; }) => {
                 obj.commentMenu = commentMenuItems.value

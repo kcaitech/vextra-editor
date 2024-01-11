@@ -9,8 +9,7 @@ import { Matrix, Shape, ShapeType, ShapeView } from "@kcdesign/data";
 import * as comment_api from '@/request/comment';
 import { Selection } from '@/context/selection';
 import { Comment } from '@/context/comment';
-import { DocCommentOpData, DocCommentOpType } from "@/communication/modules/doc_comment_op"
-import { d } from '@kcdesign/data/dist/data/utils';
+
 type CommentViewEl = InstanceType<typeof CommentPopup>;
 const props = defineProps<{
     context: Context
@@ -19,6 +18,7 @@ const props = defineProps<{
     index: number
     reflush: number
     myComment: any[]
+    docList: any[]
 }>()
 const emit = defineEmits<{
     (e: 'moveCommentPopup', event: MouseEvent, index: number): void
@@ -375,13 +375,12 @@ const update = (shape?: ShapeView) => {
     watcher()
     if (!shape) return
     emit('updateShapeComment', props.index)
-    props.context.comment.editShapeComment(true, [shape])
+    props.context.comment.editShapeComment(true, [shape.id])
 }
 
 function watcher() {
     watchShapes()
 }
-
 
 defineExpose({
     showComment
@@ -416,7 +415,7 @@ watchEffect(watcher)
             @unHoverComment="unHoverComment" :commentInfo="props.commentInfo" :index="props.index"
             @deleteComment="deleteComment" @resolve="resolve" @moveCommentPopup.stop="moveCommentPopup"></HoverComment>
         <CommentPopup v-if="ShowComment" ref="commentPopupEl" :rootHeight="rootHeight" :rootWidth="rootWidth"
-            :length="commentLength" :context="props.context" @close="closeComment" :commentInfo="props.commentInfo"
+            :length="commentLength" :context="props.context" @close="closeComment" :commentInfo="props.commentInfo" :docList="docList"
             :index="props.index" @resolve="resolve" @delete="deleteComment" @recover="recover" @editComment="editComment"
             @editCommentChild="editCommentChild" :documentCommentList="documentCommentList"
             @previousArticle="previousArticle" @next-article="nextArticle" :reply="reply"

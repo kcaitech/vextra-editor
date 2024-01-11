@@ -147,6 +147,9 @@ function tool_watcher(t: number) {
 }
 
 function selection_watcher(t: number) {
+    if (t !== Selection.CHANGE_SHAPE) {
+        return;
+    }
     change(t)
 }
 

@@ -79,11 +79,11 @@ const getValue = (value: Text | string | undefined) => {
             <div class="module_item_left" @click="edit_text">
                 <div class="module_name-2">
                     <div style="width: 30px;" class="svg">
-                        <svg-icon icon-class="text"></svg-icon>
+                        <svg-icon icon-class="layer-text"></svg-icon>
                     </div>
                     <div class="name">
-                        <span style="width: 30%;">{{ props.variable.name }}</span>
-                        <span style="width: 70%;"> {{ getValue(props.variable.value) }}</span>
+                        <span style="width: 35%;">{{ props.variable.name }}</span>
+                        <span style="width: 65%;"> {{ getValue(props.variable.value) }}</span>
                     </div>
                 </div>
             </div>
