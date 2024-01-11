@@ -23,7 +23,6 @@ import { Context } from '@/context';
 import { WorkSpace } from '@/context/workspace';
 import { adapt_page, get_shape_within_document, shape_track } from '@/utils/content';
 import { message } from '@/utils/message';
-import { replace } from '@/utils/clipboard';
 import { Menu } from '@/context/menu';
 import TableMenu from "./TableMenu/TableMenu.vue"
 import { make_symbol } from '@/utils/symbol';
@@ -151,11 +150,7 @@ function paste_here() {
 
 function _replace() {
     if (invalid_items.value.includes('replace')) return;
-    const selection = props.context.selection;
-    const selected = selection.selectedShapes;
-    if (selected.length) {
-        replace(props.context, selected);
-    }
+    props.context.workspace.clipboard.replace();
     emit('close');
 }
 

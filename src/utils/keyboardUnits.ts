@@ -5,7 +5,6 @@ import { Action, Tool } from "@/context/tool";
 import { Navi } from "@/context/navigate";
 import { Arrange } from "@/context/arrange";
 import { deleteUnits } from "./delete";
-import { replace } from "./clipboard";
 import { enter_path_edit_mode } from "./pathedit";
 
 // todo 键盘事件的权限处理
@@ -216,7 +215,7 @@ keydownHandler['KeyR'] = function (event: KeyboardEvent, context: Context) {
     const is_ctrl = event.ctrlKey || event.metaKey;
     if (is_ctrl && event.shiftKey) {
         event.preventDefault();
-        replace(context, context.selection.selectedShapes); // 替换图形
+        context.workspace.clipboard.replace() // 替换图形 // 替换图形
         return;
     }
     context.tool.setAction(Action.AddRect); // 矩形工具
