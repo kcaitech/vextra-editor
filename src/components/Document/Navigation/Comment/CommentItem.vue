@@ -1,6 +1,5 @@
 <script setup lang="ts">
 import { ref, onMounted, computed, onUnmounted } from "vue"
-import { ChatDotSquare, Delete, CircleCheck, CircleCheckFilled } from '@element-plus/icons-vue'
 import { Context } from "@/context";
 import { useI18n } from 'vue-i18n'
 import { Page } from '@kcdesign/data';

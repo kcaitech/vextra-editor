@@ -1,7 +1,6 @@
 <script setup lang="ts">
 import { ref, onMounted, onUnmounted, watchEffect, computed, nextTick, watch } from 'vue'
 import { Context } from '@/context';
-import { Close, Delete, CircleCheck, CircleCheckFilled } from '@element-plus/icons-vue'
 import CommentPopupItem from './CommentPopupItem.vue';
 import { Action } from "@/context/tool";
 import { Matrix } from "@kcdesign/data";
@@ -22,7 +21,7 @@ const props = defineProps<{
     documentCommentList: any[]
     length: number
     reply: boolean
-    docList:any[]
+    docList: any[]
 }>()
 const emit = defineEmits<{
     (e: 'close', event?: MouseEvent): void
@@ -64,6 +63,8 @@ const commentShowList = ref<any[]>([])
 const scrollbarRef = ref<InstanceType<typeof ElScrollbar>>()
 const reply = ref<boolean>(props.context.selection.commentStatus)
 const iscommentTop = ref(false);
+const lastHover = ref(false);
+const nextHover = ref(false);
 const close = (e: MouseEvent) => {
     emit('close', e)
     nextTick(() => {
@@ -480,11 +481,15 @@ onUnmounted(() => {
         :class="{ popup_left: offside, popup_right: !offside, 'shake': isShaking }">
         <div class="popup-heard" @mousedown="moveCommentPopup">
             <div class="button-shift">
-                <div class="comment-last" :style="{ opacity: disablePrevent ? '0.2' : '1' }" @click="previousArticle">
+                <div class="comment-last" :style="{ opacity: disablePrevent ? '0.2' : '1' }"
+                    :class="{ 'comment-last-hover': lastHover && !disablePrevent }" @click="previousArticle"
+                    @mouseenter="lastHover = true" @mouseleave="lastHover = false">
                     <svg-icon icon-class="comment-last"></svg-icon>
                 </div>
                 <div class="button-icon"></div>
-                <div class="comment-next" :style="{ opacity: disableNext ? '0.2' : '1' }" @click="nextArticle">
+                <div class="comment-next" :style="{ opacity: disableNext ? '0.2' : '1' }"
+                    :class="{ 'comment-last-hover': nextHover && !disableNext }" @click="nextArticle"
+                    @mouseenter="nextHover = true" @mouseleave="nextHover = false">
                     <svg-icon icon-class="comment-next"></svg-icon>
                 </div>
             </div>
@@ -597,10 +602,6 @@ onUnmounted(() => {
                 }
             }
 
-            .comment-last:hover {
-                background-color: #EBEBED;
-            }
-
             .comment-next {
                 width: 36px;
                 height: 24px;
@@ -615,7 +616,7 @@ onUnmounted(() => {
                 }
             }
 
-            .comment-next:hover {
+            .comment-last-hover {
                 background-color: #EBEBED;
             }
         }
@@ -831,5 +832,4 @@ onUnmounted(() => {
 //.custom-icon {
 //    color: green;
 //    /* 设置颜色为绿色 */
-//}
-</style>
+//}</style>
