@@ -9,8 +9,7 @@ import { Matrix, Shape, ShapeType, ShapeView } from "@kcdesign/data";
 import * as comment_api from '@/request/comment';
 import { Selection } from '@/context/selection';
 import { Comment } from '@/context/comment';
-import { DocCommentOpData, DocCommentOpType } from "@/communication/modules/doc_comment_op"
-import { d } from '@kcdesign/data/dist/data/utils';
+
 type CommentViewEl = InstanceType<typeof CommentPopup>;
 const props = defineProps<{
     context: Context
@@ -19,6 +18,7 @@ const props = defineProps<{
     index: number
     reflush: number
     myComment: any[]
+    docList: any[]
 }>()
 const emit = defineEmits<{
     (e: 'moveCommentPopup', event: MouseEvent, index: number): void
@@ -114,7 +114,7 @@ const unHoverComment = () => {
 const showComment = (e: MouseEvent) => {
     if (ShowComment.value) return;
     if (props.context.comment.isCommentMove) return
-    documentCommentList.value = props.commentInfo.children ? [...props.commentInfo.children].reverse() : [];
+    documentCommentList.value = props.commentInfo.children.length > 0 ? [...props.commentInfo.children].reverse() : [];
     const commentX = props.commentInfo.shape_frame.x1
     const commentY = props.commentInfo.shape_frame.y1
     const workspace = props.context.workspace;
@@ -128,7 +128,6 @@ const showComment = (e: MouseEvent) => {
         props.context.workspace.notify(WorkSpace.MATRIX_TRANSFORMATION);
     }
     props.context.comment.commentMount(false)
-    const { x, y } = props.context.workspace.root
     commentScale.value = 0
     rootHeight.value = comment.value!.parentElement!.clientHeight
     rootWidth.value = comment.value!.parentElement!.clientWidth
@@ -209,11 +208,11 @@ const nextArticle = (i: number, xy?: { x: number, y: number }, id?: string) => {
 
 const skipComment = (index: number, xy?: { x: number, y: number }, id?: string) => {
     const workspace = props.context.workspace;
-    const commentItem = props.context.comment.pageCommentList[index]
-    const cx = reply.value ? commentItem.shape_frame.x1 : xy?.x
-    const cy = reply.value ? commentItem.shape_frame.y1 : xy?.y
+    const commentItem = props.context.comment.pageCommentList[index];
+    const cx = reply.value ? commentItem.shape_frame.x1 : xy?.x;
+    const cy = reply.value ? commentItem.shape_frame.y1 : xy?.y;
     if (isInner(cx, cy)) {
-        props.context.selection.selectComment(reply.value ? commentItem.id : id)
+        props.context.selection.selectComment(reply.value ? commentItem.id : id);
         return
     }
     const commentCenter = workspace.matrix.computeCoord(cx, cy) // 计算评论相对contenview的位置
@@ -315,7 +314,7 @@ const unfold = () => {
             rootWidth.value = comment.value.parentElement!.clientWidth
         }
         commentScale.value = 0
-        documentCommentList.value = props.commentInfo.children ? [...props.commentInfo.children].reverse() : [];
+        documentCommentList.value = props.commentInfo.children.length > 0 ? [...props.commentInfo.children].reverse() : [];
         ShowComment.value = true
         showScale.value = true
         props.context.comment.saveCommentId(props.commentInfo.id);
@@ -375,13 +374,12 @@ const update = (shape?: ShapeView) => {
     watcher()
     if (!shape) return
     emit('updateShapeComment', props.index)
-    props.context.comment.editShapeComment(true, [shape])
+    props.context.comment.editShapeComment(true, [shape.id])
 }
 
 function watcher() {
     watchShapes()
 }
-
 
 defineExpose({
     showComment
@@ -416,7 +414,7 @@ watchEffect(watcher)
             @unHoverComment="unHoverComment" :commentInfo="props.commentInfo" :index="props.index"
             @deleteComment="deleteComment" @resolve="resolve" @moveCommentPopup.stop="moveCommentPopup"></HoverComment>
         <CommentPopup v-if="ShowComment" ref="commentPopupEl" :rootHeight="rootHeight" :rootWidth="rootWidth"
-            :length="commentLength" :context="props.context" @close="closeComment" :commentInfo="props.commentInfo"
+            :length="commentLength" :context="props.context" @close="closeComment" :commentInfo="props.commentInfo" :docList="docList"
             :index="props.index" @resolve="resolve" @delete="deleteComment" @recover="recover" @editComment="editComment"
             @editCommentChild="editCommentChild" :documentCommentList="documentCommentList"
             @previousArticle="previousArticle" @next-article="nextArticle" :reply="reply"

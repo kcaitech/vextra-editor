@@ -1,4 +1,4 @@
-import { ShapeType, AsyncPathEditor, ShapeView, adapt2Shape, PathShapeView } from '@kcdesign/data';
+import { AsyncPathEditor, ShapeView, adapt2Shape, PathShapeView } from '@kcdesign/data';
 import { onMounted, onUnmounted } from "vue";
 import { Context } from "@/context";
 import { Matrix } from '@kcdesign/data';
@@ -17,13 +17,11 @@ import {
 import { Asssit } from '@/context/assist';
 import {
     add_blur_for_window,
-    add_move_and_up_for_document,
     check_drag_action,
     down_while_is_text_editing,
     end_transalte,
     gen_assist_target,
     gen_offset_points_map,
-    get_current_position_client,
     is_ctrl_element,
     is_mouse_on_content,
     is_rid_stick,
@@ -61,7 +59,7 @@ export function useControllerCustom(context: Context, i18nT: Function) {
 
     function handleDblClick() {
         const selected = selection.selectedShapes;
-        if (selected.length !== 1 || context.tool.isLable) {
+        if (selected.length !== 1) {
             return;
         }
 
@@ -72,8 +70,14 @@ export function useControllerCustom(context: Context, i18nT: Function) {
             if (target) {
                 selection.selectShape(target);
             }
+            return;
         }
-        else if (shape instanceof PathShapeView) {
+
+        if (context.tool.isLable) {
+            return;
+        }
+
+        if (shape instanceof PathShapeView) {
             if (forbidden_to_modify_frame(shape)) {
                 return;
             }
@@ -84,7 +88,7 @@ export function useControllerCustom(context: Context, i18nT: Function) {
     }
 
     function keydown(event: KeyboardEvent) {
-        if (event.target instanceof HTMLInputElement) { // 不处理输入框内的键盘事件
+        if (event.target instanceof HTMLInputElement || event.target instanceof HTMLTextAreaElement) { // 不处理输入框内的键盘事件
             return;
         }
 
@@ -176,7 +180,7 @@ export function useControllerCustom(context: Context, i18nT: Function) {
     }
 
     function keyup(event: KeyboardEvent) {
-        if (event.target instanceof HTMLInputElement) { // 不处理输入框内的键盘事件
+        if (event.target instanceof HTMLInputElement || event.target instanceof HTMLTextAreaElement) { // 不处理输入框内的键盘事件
             return;
         }
 
@@ -226,28 +230,40 @@ export function useControllerCustom(context: Context, i18nT: Function) {
             }
             initTimer();
             pre_to_translate(e);
-        } else if (is_mouse_on_content(e)) {
-            const h = selection.hoveredShape;
-            if (h) {
-                selection.selectShape(h);
-                pre_to_translate(e);
-            } else {
-                selection.resetSelectShapes();
-            }
+        }
+        else if (is_mouse_on_content(e)) {
+            on_content(e);
         }
     }
 
-    function pre_to_translate(e: MouseEvent) { // 移动之前做的准备
+    function on_content(e: MouseEvent) {
+        const h = selection.hoveredShape;
+        if (h) {
+            selection.selectShape(h);
+            pre_to_translate(e);
+        }
+        else {
+            selection.resetSelectShapes();
+        }
+    }
+
+    function pre_to_translate(e: MouseEvent) {
         shutdown_menu(e, context);
+
+        document.addEventListener('mouseup', mouseup);
+
         if (!context.workspace.can_translate(e)) {
             return;
         }
+
+        context.cursor.cursor_freeze(true); // 拖动过程中禁止鼠标光标切换
+
+        document.addEventListener('mousemove', mousemove);
 
         shapes = selection.selectedShapes;
 
         wheel = fourWayWheel(context, undefined, startPositionOnPage);
         workspace.setCtrl('controller');
-        add_move_and_up_for_document(mousemove, mouseup);
     }
 
     function mousemove(e: MouseEvent) {
@@ -255,9 +271,9 @@ export function useControllerCustom(context: Context, i18nT: Function) {
             return;
         }
 
-        const mousePosition: ClientXY = get_current_position_client(context, e);
+        const mousePosition: ClientXY = workspace.getContentXY(e);
 
-        if (isDragging && wheel && asyncTransfer && !workspace.isEditing) {
+        if (isDragging && wheel && asyncTransfer) {
             speed = get_speed(t_e || e, e);
             t_e = e;
 
@@ -270,7 +286,7 @@ export function useControllerCustom(context: Context, i18nT: Function) {
             wheel.moving(e, { type: EffectType.TRANS, effect: asyncTransfer.transByWheel }); // 滚轮动作
 
             modify_mouse_position_by_type(update_type, startPosition, mousePosition);
-        } else if (check_drag_action(startPosition, mousePosition) && !workspace.isEditing) {
+        } else if (check_drag_action(startPosition, mousePosition)) {
             if (asyncTransfer || isDragging) {
                 return;
             }
@@ -332,37 +348,42 @@ export function useControllerCustom(context: Context, i18nT: Function) {
         }
 
         update_type = trans_assistant(asyncTransfer, ps, pe);
+
         migrate_once(context, asyncTransfer, shapes, end);
+
         return update_type;
     }
 
-    let pre_target_x: number, pre_target_y: number;
-    let stickedX: boolean = false, stickedY: boolean = false;
+    let pre_target_x: number;
+    let pre_target_y: number;
+    let stickedX: boolean = false;
+    let stickedY: boolean = false;
 
     // let count: number = 0, times: number = 0; // 性能测试
-
-    /**
-     * @description 计算对齐辅助线、辅助对齐。出于性能考虑，代码凌乱，一碰就会爆炸
-     */
     function trans_assistant(asyncTransfer: AsyncTransfer, ps: PageXY, pe: PageXY): number {
         // const s1 = Date.now();
         let update_type = 3;
+
         if (speed > 5) { // 如果速度过快，不进行移动辅助
             asyncTransfer.trans(ps, pe);
             context.assist.notify(Asssit.CLEAR);
             return update_type;
         }
+
         if (!offset_map) {
             return update_type;
         }
+
         let need_multi = 0;
         const stick = { dx: 0, dy: 0, sticked_x: false, sticked_y: false };
         const len = shapes.length;
         const shape = shapes[0];
+
         const target = gen_assist_target(context, shapes, len > 1, offset_map, pe);
         if (!target) {
             return update_type;
         }
+
         if (stickedX) {
             if (is_rid_stick(context, ps.x, pe.x)) { // 挣脱吸附
                 stickedX = false;
@@ -378,6 +399,7 @@ export function useControllerCustom(context: Context, i18nT: Function) {
         } else if (target.sticked_by_x) { // 吸附
             modify_fix_x(target);
         }
+
         if (stickedY) {
             if (is_rid_stick(context, ps.y, pe.y)) {
                 stickedY = false;
@@ -394,11 +416,13 @@ export function useControllerCustom(context: Context, i18nT: Function) {
         } else if (target.sticked_by_y) {
             modify_fix_y(target);
         }
+
         if (stick.sticked_x || stick.sticked_y) {
             asyncTransfer.stick(stick.dx, stick.dy);
         } else {
             asyncTransfer.trans(ps, pe);
         }
+
         if (need_multi) {
             pre_render_assist_line(context, len > 1, shape, shapes);
         }
@@ -455,20 +479,25 @@ export function useControllerCustom(context: Context, i18nT: Function) {
         }
         if (isDragging) {
             if (asyncTransfer) {
-                const mousePosition: ClientXY = get_current_position_client(context, e);
+                const mousePosition: ClientXY = workspace.getContentXY(e);
                 migrate_immediate(context, asyncTransfer, shapes, mousePosition);
                 asyncTransfer = asyncTransfer.close();
             }
+
             end_transalte(context);
             reset_sticked();
             isDragging = false;
         } else {
             shapes_picker(e, context, startPositionOnPage);
         }
+
         workspace.setCtrl('page');
         if (wheel) {
             wheel = wheel.remove();
         }
+
+        context.cursor.cursor_freeze(false);
+
         remove_move_and_up_from_document(mousemove, mouseup);
         need_update_comment = update_comment(context, need_update_comment);
     }
@@ -526,7 +555,7 @@ export function useControllerCustom(context: Context, i18nT: Function) {
         return !!len;
     }
 
-    function selection_watcher(t?: number) {
+    function selection_watcher(t: number) {
         if (t === Selection.CHANGE_SHAPE) { // 选中的图形发生改变，初始化控件
             initController();
             workspace.contentEdit(false);
@@ -543,7 +572,6 @@ export function useControllerCustom(context: Context, i18nT: Function) {
 
     function windowBlur() {
         if (isDragging) { // 窗口失焦,此时鼠标事件(up,move)不再受系统管理, 此时需要手动关闭已开启的状态
-            remove_move_and_up_from_document(mousemove, mouseup);
             if (asyncTransfer) {
                 asyncTransfer = asyncTransfer.close();
                 directionCalc.reset();
@@ -557,10 +585,14 @@ export function useControllerCustom(context: Context, i18nT: Function) {
             end_transalte(context);
             reset_sticked();
             workspace.setCtrl('page');
+
+            remove_move_and_up_from_document(mousemove, mouseup);
         }
+
         if (wheel) {
             wheel = wheel.remove();
         }
+
         timerClear();
     }
 

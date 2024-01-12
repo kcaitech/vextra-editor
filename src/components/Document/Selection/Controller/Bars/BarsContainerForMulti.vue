@@ -26,13 +26,23 @@ let isDragging = false;
 let asyncMultiAction: AsyncMultiAction | undefined = undefined;
 let cur_ctrl_type: CtrlElementType = CtrlElementType.RectLT;
 const dragActiveDis = 3;
-const types = [CtrlElementType.RectTop, CtrlElementType.RectRight, CtrlElementType.RectBottom, CtrlElementType.RectLeft];
+const types = [
+    CtrlElementType.RectTop,
+    CtrlElementType.RectRight,
+    CtrlElementType.RectBottom,
+    CtrlElementType.RectLeft
+];
+let need_reset_cursor_after_transform = true;
+
 function update() {
     matrix.reset(props.matrix);
     update_dot_path();
 }
 function update_dot_path() {
-    if (!props.context.workspace.shouldSelectionViewUpdate) return;
+    if (!props.context.workspace.shouldSelectionViewUpdate) {
+        return;
+    }
+
     bars.length = 0;
     const apex = props.frame.map(p => { return { x: p.x, y: p.y } });
     apex.push(apex[0]);
@@ -60,44 +70,87 @@ function bar_mousedown(event: MouseEvent, ele: CtrlElementType) {
         return;
     }
 
-    props.context.menu.menuMount()
     event.stopPropagation();
+
     cur_ctrl_type = ele;
-    const workspace = props.context.workspace;
-    workspace.setCtrl('controller');
-    matrix.reset(workspace.matrix);
-    const root = workspace.root;
-    startPosition = { x: event.clientX - root.x, y: event.clientY - root.y }
+
+    set_status_on_down();
+
+    startPosition = props.context.workspace.getContentXY(event)
+
     document.addEventListener('mousemove', bar_mousemove);
     document.addEventListener('mouseup', bar_mouseup);
 }
 function bar_mousemove(event: MouseEvent) {
     const workspace = props.context.workspace;
-    const root = workspace.root;
+
     const { x: sx, y: sy } = startPosition;
-    const { x: mx, y: my } = { x: event.clientX - root.x, y: event.clientY - root.y };
+    const { x: mx, y: my } = workspace.getContentXY(event);
+
     if (isDragging && asyncMultiAction) {
-        (event.shiftKey || props.context.tool.action === Action.AutoK) ? er_scale(asyncMultiAction, sx, sy, mx, my) : irregular_scale(asyncMultiAction, sx, sy, mx, my);
+        (event.shiftKey || props.context.tool.action === Action.AutoK)
+            ? er_scale(asyncMultiAction, sx, sy, mx, my)
+            : irregular_scale(asyncMultiAction, sx, sy, mx, my);
+
         workspace.notify(WorkSpace.SELECTION_VIEW_UPDATE);
+
         startPosition = { x: mx, y: my };
-    } else {
-        if (Math.hypot(mx - sx, my - sy) > dragActiveDis) {
-            const selection = props.context.selection
-            const shapes = shapes_organize(selection.selectedShapes);
+    } else if (Math.hypot(mx - sx, my - sy) > dragActiveDis) {
+        const selection = props.context.selection
+        const shapes = shapes_organize(selection.selectedShapes);
 
-            asyncMultiAction = props.context.editor
-                .controller()
-                .asyncMultiEditor(shapes.map(s => adapt2Shape(s)), selection.selectedPage!);
+        asyncMultiAction = props.context.editor
+            .controller()
+            .asyncMultiEditor(shapes.map(s => adapt2Shape(s)), selection.selectedPage!);
 
-            submatrix.reset(workspace.matrix.inverse);
-            setCursor(cur_ctrl_type);
+        submatrix.reset(workspace.matrix.inverse);
 
-            workspace.scaling(true);
-            workspace.setSelectionViewUpdater(false);
+        set_status_before_action();
 
-            isDragging = true;
-        }
+        isDragging = true;
     }
+}
+function bar_mouseup(event: MouseEvent) {
+    if (event.button !== 0) {
+        return;
+    }
+
+    clear_status();
+}
+function set_status_on_down() {
+    props.context.menu.menuMount();
+
+    props.context.cursor.cursor_freeze(true);
+
+    props.context.workspace.setCtrl('controller');
+}
+function set_status_before_action() {
+    const workspace = props.context.workspace;
+    workspace.scaling(true);
+    workspace.setSelectionViewUpdater(false);
+}
+
+function clear_status() {
+    const workspace = props.context.workspace;
+    if (isDragging) {
+        if (asyncMultiAction) {
+            asyncMultiAction.close();
+            asyncMultiAction = undefined;
+        }
+
+        workspace.setSelectionViewUpdater(true);
+        isDragging = false;
+    }
+    workspace.scaling(false);
+    workspace.setCtrl('page');
+
+    props.context.cursor.cursor_freeze(false);
+    if (need_reset_cursor_after_transform) {
+        props.context.cursor.reset();
+    }
+
+    document.removeEventListener('mousemove', bar_mousemove);
+    document.removeEventListener('mouseup', bar_mouseup);
 }
 function er_scale(asyncMultiAction: AsyncMultiAction, sx: number, sy: number, mx: number, my: number) {
     if (cur_ctrl_type === CtrlElementType.RectTop) {
@@ -189,48 +242,29 @@ function irregular_scale(asyncMultiAction: AsyncMultiAction, sx: number, sy: num
         asyncMultiAction.executeScale(f_lt, { x: f_lt.x + transx, y: f_lt.y }, _w / o_w, 1);
     }
 }
-function bar_mouseup(event: MouseEvent) {
-    if (event.button === 0) {
-        const workspace = props.context.workspace;
-        if (isDragging) {
-            if (asyncMultiAction) {
-                asyncMultiAction.close();
-                asyncMultiAction = undefined;
-            }
-            workspace.setSelectionViewUpdater(true);
-            isDragging = false;
-        }
-        document.removeEventListener('mousemove', bar_mousemove);
-        document.removeEventListener('mouseup', bar_mouseup);
-        workspace.scaling(false);
-        workspace.setCtrl('page');
-        props.context.cursor.reset();
-    }
+function setCursor(t: CtrlElementType) {
+    if (t === CtrlElementType.RectTop) props.context.cursor.setType('scale', 90);
+    else if (t === CtrlElementType.RectRight) props.context.cursor.setType('scale', 0);
+    else if (t === CtrlElementType.RectBottom) props.context.cursor.setType('scale', 90);
+    else if (t === CtrlElementType.RectLeft) props.context.cursor.setType('scale', 0);
 }
-function setCursor(t: CtrlElementType, force?: boolean) {
-    if (t === CtrlElementType.RectTop) props.context.cursor.setType('scale-90', force);
-    else if (t === CtrlElementType.RectRight) props.context.cursor.setType('scale-0', force);
-    else if (t === CtrlElementType.RectBottom) props.context.cursor.setType('scale-90', force);
-    else if (t === CtrlElementType.RectLeft) props.context.cursor.setType('scale-0', force);
+function bar_mouseenter(type: CtrlElementType) {
+    need_reset_cursor_after_transform = false;
+    setCursor(type);
 }
 function bar_mouseleave() {
+    need_reset_cursor_after_transform = true;
     props.context.cursor.reset();
 }
 function window_blur() {
-    if (isDragging) isDragging = false;
-    if (asyncMultiAction) {
-        asyncMultiAction.close();
-        asyncMultiAction = undefined;
+    clear_status();
+}
+function frame_watcher() {
+    if (!props.context.workspace.shouldSelectionViewUpdate) {
+        passive_update();
     }
-    const workspace = props.context.workspace;
-    workspace.scaling(false);
-    workspace.setCtrl('page');
-    props.context.cursor.reset();
-    document.removeEventListener('mousemove', bar_mousemove);
-    document.removeEventListener('mouseup', bar_mouseup);
 }
 
-function frame_watcher() { if (!props.context.workspace.shouldSelectionViewUpdate) passive_update() }
 watch(() => props.frame, frame_watcher);
 watch(() => props.matrix, update);
 onMounted(() => {
@@ -242,21 +276,23 @@ onUnmounted(() => {
 })
 </script>
 <template>
-    <g>
-        <g v-for="(b, i) in bars" :key="i">
-            <path :d="b.path" class="main-path" @mousedown.stop="(e) => bar_mousedown(e, b.type)"
-                @mouseenter="() => setCursor(b.type)" @mouseleave="bar_mouseleave">
-            </path>
-            <path :d="b.path" fill="none" stroke='transparent' stroke-width="10px"
-                @mousedown.stop="(e) => bar_mousedown(e, b.type)" @mouseenter="() => setCursor(b.type)"
-                @mouseleave="bar_mouseleave">
-            </path>
-        </g>
+    <g v-for="(b, i) in bars" :key="i" @mousedown.stop="(e) => bar_mousedown(e, b.type)"
+        @mouseenter="() => bar_mouseenter(b.type)" @mouseleave="bar_mouseleave">
+        <path :d="b.path" class="main-path">
+        </path>
+        <path :d="b.path" class="assist-path">
+        </path>
     </g>
 </template>
 <style lang='scss' scoped>
 .main-path {
     fill: none;
     stroke: var(--active-color);
+}
+
+.assist-path {
+    fill: none;
+    stroke: transparent;
+    stroke-width: 10px;
 }
 </style>

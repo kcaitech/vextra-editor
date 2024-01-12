@@ -1,4 +1,6 @@
-// 光标样式处理   ---.svg + 角度 = base64
+/**
+ * @description 光标样式处理
+ */
 import { v4 as uuid } from "uuid";
 
 const auto = 'data:image/png;base64,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';
@@ -17,7 +19,7 @@ export interface StyleSheetController {
     getId: Function
     setup: Function
     remove: Function
-    getClass: (c: string) => Promise<string | undefined>
+    getClass: (type: string, rotate: number) => Promise<string | undefined>
 }
 
 const getBase64ByType = new Map([
@@ -46,7 +48,7 @@ export function styleSheetController(): StyleSheetController {
         // 预设一个auto
         style.innerHTML += await getClassString('auto', 0, styleSheetId);
         classList.add(`auto-0-${styleSheetId}`);
-        document.querySelector('head')?.appendChild(style);
+        document.querySelector('head')!.appendChild(style);
     }
 
     // 根据id移除一个<style>标签
@@ -58,32 +60,45 @@ export function styleSheetController(): StyleSheetController {
 
     // 向style标签里面插入class样式
     function appendClass(clsName: string, cls: string) {
-        if (!style) return
+        if (!style) {
+            return;
+        }
+
         style.innerHTML += cls;
         classList.add(clsName);
     }
 
-    async function getClass(clsName: string) { //这个clsName是不带id的，只有类型和度数
-        const arr = clsName.split('-');
-        const deg = findNearestMultipleOf(Math.floor(((Number(arr[1] || -arr[2] || 0) % 360))), 6);
-        const type = arr[0];
-        clsName = `${type}-${deg}-${styleSheetId}`;
+    async function getClass(type: string, rotate: number) {
+        const deg = findNearestMultipleOf(rotate);
+
+        const clsName = `${type}-${deg}-${styleSheetId}`;
+
         // 如果获取的过程中无法从已有的样式库中取得样式，则先创建一个样式插入到样式库
-        if (classList.has(clsName)) return clsName;
+        if (classList.has(clsName)) {
+            return clsName;
+        }
+
         const cls: string = await getClassString(type, deg, styleSheetId);
         appendClass(clsName, cls);
         return clsName;
     }
 
     async function getClassString(type: string, deg: number, id: string) {
-        let src: string = getBase64ByType.get(type) || auto;
-        const result = await rotateBase64Image(src, deg);
+        let source: string = getBase64ByType.get(type) || auto;
+
         let str = `.${type}-${deg}-${id} {`;
-        if (!result) return str + '}';
-        src = (result as string);
+
+        const result = await rotateBase64Image(source, deg);
+
+        if (!result) {
+            return str + '}';
+        }
+
+        source = (result as string);
+
         switch (type) {
             case 'auto':
-                str += `cursor: -webkit-image-set(url(${src}) 2x) ${hot[0] - 3} ${hot[1] - 3}, auto !important;`;
+                str += `cursor: -webkit-image-set(url(${source}) 2x) ${hot[0] - 3} ${hot[1] - 3}, auto !important;`;
                 break;
             case 'grab':
                 str += 'cursor: grab !important;';
@@ -92,9 +107,10 @@ export function styleSheetController(): StyleSheetController {
                 str += 'cursor: grabbing !important;';
                 break;
             default:
-                str += `cursor: -webkit-image-set(url(${src}) 2x) ${hot[0]} ${hot[1]}, auto !important;`;
+                str += `cursor: -webkit-image-set(url(${source}) 2x) ${hot[0]} ${hot[1]}, auto !important;`;
         }
         str += '}'
+        
         return str;
     }
 
@@ -110,7 +126,6 @@ export function styleSheetController(): StyleSheetController {
     };
 }
 
-// image/svg+xml -rotate-> image/svg+xml;
 function rotateBase64Image(base64Image: string, angle: number) {
     return new Promise((resolve, reject) => {
         const image = new Image();
@@ -121,31 +136,39 @@ function rotateBase64Image(base64Image: string, angle: number) {
             if (!context) {
                 return reject('canvas api error');
             }
+
             const radians = angle * Math.PI / 180;
             const cos = Math.abs(Math.cos(radians));
             const sin = Math.abs(Math.sin(radians));
+
             const width = image.width * cos + image.height * sin;
             const height = image.width * sin + image.height * cos;
             canvas.width = width;
             canvas.height = height;
+
             context.translate(width / 2, height / 2);
             context.rotate(radians);
             context.drawImage(image, -image.width / 2, -image.height / 2);
             const rotatedBase64Image = canvas.toDataURL('image/png');
+
             resolve(rotatedBase64Image);
         };
+
         image.onerror = function () {
             reject('Invalid base64 image');
         }
     });
 }
 
-function findNearestMultipleOf(num: number, step?: number): number {
-    if (num < 0) num = num + 360;
-    step = step || 3
+function findNearestMultipleOf(num: number, step = 3): number {
+    if (num < 0) {
+        num = num + 360;
+    }
+
     let closest = Math.round(num / step) * step;
     if (closest < num) {
         closest += step;
     }
+
     return closest;
 }

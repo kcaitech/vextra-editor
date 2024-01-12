@@ -35,6 +35,7 @@ import { initpal } from './initpal';
 import { setup as keyboardUints } from '@/utils/keyboardUnits';
 import { Tool } from '@/context/tool';
 import { ElMessage } from 'element-plus';
+import HelpEntrance from '../Help/HelpEntrance.vue';
 
 const { t } = useI18n();
 const curPage = shallowRef<PageView | undefined>(undefined);
@@ -119,6 +120,8 @@ function switchPage(id?: string) {
   if (context) {
     const ctx: Context = context;
     const pagesMgr = ctx.data.pagesMgr;
+    const cur_page = context.selection.selectedPage;
+    if(cur_page && cur_page.id === id) return;
     pagesMgr.get(id).then((page: Page | undefined) => {
       if (page) {
         ctx.comment.toggleCommentPage()
@@ -301,7 +304,7 @@ const hideNotification = (type?: number) => {
   showHint.value = false;
   countdown.value = 10;
   if (type === 0) {
-    router.push('/apphome')
+    router.push('/files')
   } else {
     router.go(0)
   }
@@ -347,7 +350,6 @@ const getDocumentInfo = async () => {
         ElMessage.error({ duration: 3000, message: docKeyRes.message })
         return;
       } else {
-        console.log('1111');
         router.push("/files");
         ElMessage.error({ duration: 3000, message: docKeyRes.message })
         return;
@@ -398,7 +400,9 @@ const getDocumentInfo = async () => {
       const docId = route.query.id as string;
       const getToken = () => Promise.resolve(localStorage.getItem("token") || "");
       if (await context.communication.docOp.start(getToken, docId, document, context.coopRepo, docInfoData.document.version_id ?? "")) {
-        switchPage(context!.data.pagesList[0]?.id);
+        const route_p_id = route.query.page_id ? route.query.page_id as string : context!.data.pagesList[0]?.id;
+        const page = context!.data.pagesList.filter((item) => item.id.slice(0, 8) === route_p_id.slice(0, 8))[0];
+        switchPage(page.id || context!.data.pagesList[0]?.id);
         loading.value = false;
       } else {
         router.push("/files");
@@ -743,6 +747,7 @@ onUnmounted(() => {
       <span style="color: #1878F5;" v-if="countdown > 0">{{ countdown }}</span>
     </div>
     <Bridge v-if="bridge" :context="context!"></Bridge>
+    <HelpEntrance v-if="!null_context" :context="context!"/>
   </div>
 </template>
 <style>
@@ -772,19 +777,23 @@ onUnmounted(() => {
   }
 
   &::-webkit-scrollbar {
-    height: 10px;
-  }
-
-  &::-webkit-scrollbar-thumb {
-    border-radius: 150px;
-    -webkit-box-shadow: inset 0 0 5px rgba(0, 0, 0, 0.2);
-    background: rgba(0, 0, 0, 0.2);
+    display: none;
   }
 
   &::-webkit-scrollbar-track {
-    -webkit-box-shadow: inset 0 0 5px rgba(0, 0, 0, 0.2);
-    border-radius: 0;
-    background: rgba(0, 0, 0, 0.1);
+    display: none;
+  }
+
+  &::-webkit-scrollbar-thumb {
+    display: none;
+  }
+
+  &::-webkit-scrollbar-thumb:hover {
+    display: none;
+  }
+
+  &::-webkit-scrollbar-thumb:active {
+    display: none;
   }
 
   #top {

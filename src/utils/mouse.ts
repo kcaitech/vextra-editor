@@ -42,17 +42,17 @@ export function down_while_is_text_editing(e: MouseEvent, context: Context) {
  */
 export function is_ctrl_element(e: MouseEvent, context: Context) {
     const workspace = context.workspace;
-    const root = workspace.root;
     const selection = context.selection;
     const selected = selection.selectedShapes;
     if (selected.length === 1) {
-        const m = new Matrix(workspace.matrix.inverse);
-        return selection.scout.isPointInShape(selected[0], m.computeCoord2(e.clientX - root.x, e.clientY - root.y));
+        if (selected[0].type === ShapeType.Cutout) {
+            return selection.scout.isPointInPath(workspace.ctrlPath, workspace.getContentXY(e));
+        } else {
+            const m = new Matrix(workspace.matrix.inverse);
+            return selection.scout.isPointInShape(selected[0], m.computeCoord3(workspace.getContentXY(e)));
+        }
     } else {
-        return selection.scout.isPointInPath(workspace.ctrlPath, {
-            x: e.clientX - root.x,
-            y: e.clientY - root.y
-        });
+        return selection.scout.isPointInPath(workspace.ctrlPath, workspace.getContentXY(e));
     }
 }
 
@@ -216,7 +216,6 @@ export function reset_assist_before_translate(context: Context, shapes: ShapeVie
     context.workspace.setSelectionViewUpdater(false);
     context.workspace.translating(true);
     context.assist.set_trans_target(shapes);
-    context.cursor.cursor_freeze(true); // 拖动过程中禁止鼠标光标切换
 }
 
 /**
@@ -261,7 +260,6 @@ export function end_transalte(context: Context) {
     context.workspace.setSelectionViewUpdater(true);
     context.workspace.notify(WorkSpace.SELECTION_VIEW_UPDATE);
     context.assist.reset();
-    context.cursor.cursor_freeze(false);
 }
 
 /**
@@ -282,8 +280,9 @@ export function shapes_picker(e: MouseEvent, context: Context, p: { x: number, y
     const selection = context.selection;
     const selected = selection.selectedShapes;
     const hoveredShape = selection.hoveredShape;
+
     if (hoveredShape) {
-        if (e.shiftKey) { // todo 当按下shift时选中的也需要hover
+        if (e.shiftKey) {
             multi_select_shape(context, hoveredShape);
         } else {
             selection.selectShape(hoveredShape);

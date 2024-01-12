@@ -13,6 +13,7 @@
         </el-main>
       </el-container>
     </el-container>
+    <HelpEntrance />
   </div>
 </template>
 
@@ -25,7 +26,8 @@ import { ref, onUnmounted, provide, onMounted } from 'vue';
 import { useI18n } from 'vue-i18n';
 import { NetworkStatus } from '@/communication/modules/network_status'
 import { insertNetworkInfo } from "@/utils/message"
-import * as user_api from '@/request/users'
+import * as user_api from '@/request/users';
+import HelpEntrance from '../Help/HelpEntrance.vue';
 
 const { t } = useI18n();
 const searchtitle = ref('')

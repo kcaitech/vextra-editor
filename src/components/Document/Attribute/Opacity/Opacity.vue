@@ -1,10 +1,10 @@
 <script setup lang="ts">
 import TypeHeader from '../TypeHeader.vue';
-import {AsyncOpacityEditor, ShapeView, adapt2Shape} from '@kcdesign/data';
-import {useI18n} from 'vue-i18n';
-import {nextTick, onMounted, onUnmounted, ref} from 'vue';
-import {Context} from '@/context';
-import {Selection} from '@/context/selection'
+import { AsyncOpacityEditor, ShapeView, adapt2Shape } from '@kcdesign/data';
+import { useI18n } from 'vue-i18n';
+import { nextTick, onMounted, onUnmounted, ref } from 'vue';
+import { Context } from '@/context';
+import { Selection } from '@/context/selection'
 
 interface Props {
     context: Context
@@ -12,7 +12,7 @@ interface Props {
 }
 
 const props = defineProps<Props>();
-const {t} = useI18n();
+const { t } = useI18n();
 const popoverVisible = ref<boolean>(false);
 const popover = ref<HTMLDivElement>();
 const selectedOption = ref('');
@@ -81,8 +81,8 @@ function opacityChange(value: number) {
 }
 
 function change(e: Event) {
-    if(!executed.value) return;
-    executed.value = false;    
+    if (!executed.value) return;
+    executed.value = false;
     const value = opacityValue.value;
     if (isNaN(value) || value === 1 || value === 0) {
         (e.target as HTMLInputElement).value =
@@ -136,10 +136,12 @@ const handleOPacity = (e: Event) => {
     opacityValue.value = value;
 }
 
-const focus = () => {
+const focus = (e: Event) => {
     if (opacityInput.value) {
         executed.value = true;
         shapes.value = [...props.context.selection.selectedShapes];
+        const value = limitValue(Number((e.target as HTMLInputElement).value)) / 100;
+        opacityValue.value = value;
         opacityInput.value.select();
     }
 }
@@ -154,7 +156,8 @@ function update() {
     let difference = false;
     if (shapes.length > 1) {
         for (let i = 1; i < shapes.length; i++) {
-            const randomOpacity = shapes[i].contextSettings?.opacity;
+            const o = shapes[i].contextSettings;
+            const randomOpacity = o?.opacity === undefined ? 1 : o?.opacity;
             if (randomOpacity !== firstOpacity) {
                 difference = true;
                 break;
@@ -340,13 +343,14 @@ onUnmounted(() => {
         </TypeHeader>
         <div class="opacity-container">
             <div class="slider">
-                <input type="range" class="input-range" :value="range()" @mousedown="down" @mouseup="mouseup" @mouseleave="mouseup" @input="input"
-                       @change="change2"
-                       @keydown="range_keyboard" min="0" max="100" step="1"/>
-                                <div class="track"></div>
-        </div>
-            <input type="text" ref="opacityInput" class="input-text" :value="typeof opacity === 'string' ? ipt() : `${ipt()}%`"
-                   @focus="focus" @change="change" @blur="change" @input="handleOPacity"/>
+                <input type="range" class="input-range" :value="range()" @mousedown="down" @mouseup="mouseup"
+                    @mouseleave="mouseup" @input="input" @change="change2" @keydown="range_keyboard" min="0" max="100"
+                    step="1" />
+                <div class="track"></div>
+            </div>
+            <input type="text" ref="opacityInput" class="input-text"
+                :value="typeof opacity === 'string' ? ipt() : `${ipt()}%`" @focus="focus" @change="change" @blur="change"
+                @input="handleOPacity" />
         </div>
     </div>
 </template>
@@ -374,7 +378,7 @@ onUnmounted(() => {
         color: #000000;
         transition: 0.3s;
 
-        > input {
+        >input {
             width: 55px;
             height: 15px;
             margin-left: -79px;
@@ -384,7 +388,7 @@ onUnmounted(() => {
             font-size: 12px;
         }
 
-        > svg {
+        >svg {
             width: 80%;
             height: 60%;
             margin-left: -2px;
@@ -424,7 +428,7 @@ onUnmounted(() => {
             box-sizing: border-box;
         }
 
-        > span {
+        >span {
             position: relative;
             width: 100%;
             height: 28px;
@@ -518,5 +522,4 @@ onUnmounted(() => {
     margin-top: 9px;
     margin-left: 12px;
 }
-
 </style>

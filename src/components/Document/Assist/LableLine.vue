@@ -1,5 +1,5 @@
 <script setup lang="ts">
-import { Matrix, Shape, ShapeView } from "@kcdesign/data";
+import { Matrix, ShapeView } from "@kcdesign/data";
 import { XYsBounding } from "@/utils/common";
 import { WorkSpace } from '@/context/workspace'
 import { Selection } from '@/context/selection';
@@ -151,16 +151,17 @@ onUnmounted(() => {
 <template>
     <svg version="1.1" xmlns="http://www.w3.org/2000/svg" xmlns:xlink="http://www.w3.org/1999/xlink"
         xmlns:xhtml="http://www.w3.org/1999/xhtml" preserveAspectRatio="xMinYMin meet" overflow="visible" :width="100"
-        :height="100" viewBox="0 0 100 100" style="position: absolute;">
-        <path v-for="(p, i) in tracingPath" :key="i" :d="p" fill="transparent" stroke="#ff2200" stroke-width="1px"
-            opacity="0.8"></path>
+        :height="100" viewBox="0 0 100 100" style="position: absolute;  pointer-events: none;">
+        <path v-for="(p, i) in tracingPath" :key="i" :d="p" fill="transparent" stroke="#ff2200"></path>
         <line v-for="(p, i) in solid_point" :key="i" :x1="p.x1" :y1="p.y1" :x2="p.x2" :y2="p.y2" style="stroke:#ff2200;">
         </line>
         <line v-for="(p, i) in dotted_point" :key="i" :x1="p.x1" :y1="p.y1" :x2="p.x2" :y2="p.y2" stroke-dasharray="3 2"
             style="stroke:#ff2200;"></line>
     </svg>
     <template v-for="(item, index) in size_posi" :key="index">
-        <span class="size" v-if="+item.length.toFixed(0) !== 0" :style="{ top: item.y + 'px', left: item.x + 'px', transform: `translate(-${item.tran.x}%,-${item.tran.y}%)` }">{{ filterAlpha(item.length) }}</span>
+        <span class="size" v-if="+item.length.toFixed(0) !== 0"
+            :style="{ top: item.y + 'px', left: item.x + 'px', transform: `translate(-${item.tran.x}%,-${item.tran.y}%)` }">{{
+                filterAlpha(item.length) }}</span>
     </template>
 </template>
 

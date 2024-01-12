@@ -5,8 +5,8 @@ import { Action, Tool } from "@/context/tool";
 import { Navi } from "@/context/navigate";
 import { Arrange } from "@/context/arrange";
 import { deleteUnits } from "./delete";
-import { replace } from "./clipboard";
 import { enter_path_edit_mode } from "./pathedit";
+import { untie_instance } from "./symbol";
 
 // todo 键盘事件的权限处理
 
@@ -61,7 +61,7 @@ keydownHandler['KeyA'] = function (event: KeyboardEvent, context: Context) {
 }
 
 keydownHandler['KeyB'] = function (event: KeyboardEvent, context: Context) {
-    const { metaKey, ctrlKey } = event;
+    const { metaKey, ctrlKey, altKey } = event;
     if (event.repeat) {
         return;
     }
@@ -69,15 +69,19 @@ keydownHandler['KeyB'] = function (event: KeyboardEvent, context: Context) {
         event.preventDefault();
         context.workspace.notify(WorkSpace.BOLD); // 文本加粗
     }
+    if ((metaKey || ctrlKey) && altKey) {
+        untie_instance(context); // 创建组件
+        return;
+    }
 }
 
 keydownHandler['KeyC'] = function (event: KeyboardEvent, context: Context) {
-    event.preventDefault();
     const { metaKey, ctrlKey, shiftKey } = event;
     if ((ctrlKey || metaKey) && !shiftKey) {
-        context.workspace.notify(WorkSpace.COPY); // 拷贝
+        // context.workspace.notify(WorkSpace.COPY); // 拷贝
         return
     }
+    event.preventDefault();
     if (shiftKey) {
         context.comment.setVisibleComment(!context.comment.isVisibleComment); // 评论隐藏与显示
         return;
@@ -216,7 +220,7 @@ keydownHandler['KeyR'] = function (event: KeyboardEvent, context: Context) {
     const is_ctrl = event.ctrlKey || event.metaKey;
     if (is_ctrl && event.shiftKey) {
         event.preventDefault();
-        replace(context, context.selection.selectedShapes); // 替换图形
+        context.workspace.clipboard.replace() // 替换图形 // 替换图形
         return;
     }
     context.tool.setAction(Action.AddRect); // 矩形工具
@@ -244,11 +248,11 @@ keydownHandler['KeyU'] = function (event: KeyboardEvent, context: Context) {
 }
 
 keydownHandler['KeyV'] = function (event: KeyboardEvent, context: Context) {
-    event.preventDefault();
     if (event.ctrlKey || event.metaKey) {
-        context.workspace.notify(WorkSpace.PASTE); // 复制图层（文本的复制不在这里处理）
         return;
     }
+
+    event.preventDefault();
     if (event.altKey && event.shiftKey) {
         context.arrange.notify(Arrange.SPACE_AROUND_VER); // 图层垂直方向等距分布
         return;
@@ -267,22 +271,23 @@ keydownHandler['KeyW'] = function (event: KeyboardEvent, context: Context) {
 }
 
 keydownHandler['KeyX'] = function (event: KeyboardEvent, context: Context) {
-    event.preventDefault();
     const is_ctrl = event.ctrlKey || event.metaKey;
+
     if (is_ctrl && event.shiftKey) {
+        event.preventDefault();
         context.workspace.notify(WorkSpace.DELETE_LINE); // 下划线
         return;
     }
 
     if (is_ctrl) {
-        context.workspace.clipboard
-            .cut()
-            .then((res) => {
-                if (!res) {
-                    return;
-                }
-                context.selection.resetSelectShapes(); // 剪切图形
-            });
+        // context.workspace.clipboard
+        //     .cut()
+        //     .then((res) => {
+        //         if (!res) {
+        //             return;
+        //         }
+        //         context.selection.resetSelectShapes(); // 剪切图形
+        //     });
         return;
     }
     context.tool.setAction(Action.AddContact); // 连接线功能

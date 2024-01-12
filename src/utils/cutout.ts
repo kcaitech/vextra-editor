@@ -1,6 +1,6 @@
 import { XY } from "@/context/selection";
 import { Border, BorderPosition, GroupShape, GroupShapeView, Page, PageView, ShadowPosition, Shape, ShapeType, ShapeView } from "@kcdesign/data";
-import { isTarget } from '@/utils/common';
+import { isTarget, isTarget2 } from '@/utils/common';
 import { Context } from '@/context';
 export function getCutoutShape(shape: ShapeView, page: PageView, selectedShapes: Map<string, ShapeView>) {
     if (!shape.parent) return;
@@ -18,7 +18,7 @@ export function getCutoutShape(shape: ShapeView, page: PageView, selectedShapes:
 function finder(childs: ShapeView[], Points: [XY, XY, XY, XY, XY], selectedShapes: Map<string, ShapeView>) {
     for (let ids = 0, len = childs.length; ids < len; ids++) {
         const shape = childs[ids];
-        if (selectedShapes.get(shape.id) || shape.isLocked() || !shape.isVisible) continue;
+        if (selectedShapes.get(shape.id) || !shape.isVisible) continue;
         const m = childs[ids].matrix2Root();
         const { width, height } = shape.frame;
         const max_border = getShapeBorderMax(shape) * 6;
@@ -33,7 +33,7 @@ function finder(childs: ShapeView[], Points: [XY, XY, XY, XY, XY], selectedShape
             ps[i] = m.computeCoord3(p);
         }
 
-        if (isTarget(Points, ps) || isTarget(ps as [XY, XY, XY, XY, XY], Points)) {
+        if (isTarget2(Points, shape)) {
             private_set(shape.id, shape, selectedShapes);
         }
     }
@@ -164,7 +164,6 @@ export const getGroupChildBounds = (shape: ShapeView) => {
     const group_bounds_points = getMaxMinPoints(shapes);
     const max_p = getMaxPoint(group_bounds_points);
     const min_p = getMinPoint(group_bounds_points);
-
     return {
         x: min_p.x,
         y: min_p.y,

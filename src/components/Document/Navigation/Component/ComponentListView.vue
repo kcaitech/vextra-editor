@@ -14,6 +14,7 @@ import {
 } from '@/utils/mouse_interactive';
 import { Component } from '@/context/component';
 import { is_state } from "@/utils/symbol";
+import { Perm } from '@/context/workspace';
 
 interface Props {
     context: Context
@@ -61,12 +62,18 @@ function down(e: MouseEvent, shape: Shape) {
         shape_track(props.context, target);
         return;
     }
-    
+
     modify_down_position_client(props.context, e, down_position);
     add_move_and_up_for_document(move, up);
 }
 
 function move(e: MouseEvent) {
+    if (
+        props.context.workspace.documentPerm !== Perm.isEdit
+        || props.context.tool.isLable
+    ) {
+        return;
+    }
     const curr_position = get_current_position_client(props.context, e);
     if (is_drag) {
         return;
@@ -126,15 +133,13 @@ onUnmounted(() => {
 <template>
     <div v-if="render_alpha" class="list-container-alpha">
         <ComponentCardAlpha v-for="item in props.data" :key="item.id" :data="(item as GroupShape)" :context="props.context"
-            @mousedown="(e: MouseEvent) => down(e, item as Shape)" :container="props.container"
-            :is-attri="props.isAttri">
+            @mousedown="(e: MouseEvent) => down(e, item as Shape)" :container="props.container" :is-attri="props.isAttri">
         </ComponentCardAlpha>
     </div>
     <div v-else class="list-container-beta" ref="list_container_beta" :style="{ 'grid-template-columns': gen_columns() }"
         :reflush="reflush">
         <ComponentCardBeta v-for="item in props.data" :key="item.id" :data="(item as GroupShape)" :context="props.context"
-            @mousedown="(e: MouseEvent) => down(e, item as Shape)" :container="props.container"
-            :is-attri="props.isAttri">
+            @mousedown="(e: MouseEvent) => down(e, item as Shape)" :container="props.container" :is-attri="props.isAttri">
         </ComponentCardBeta>
     </div>
 </template>

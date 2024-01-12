@@ -270,7 +270,7 @@ export function is_rect(shape: ShapeView) {
     return (shape instanceof PathShapeView)
         && shape.isClosed
         && shape.points.length === 4
-        && [ShapeType.Rectangle, ShapeType.Artboard, ShapeType.Image].includes(shape.type);
+        && [ShapeType.Rectangle, ShapeType.Artboard].includes(shape.type);
 }
 export function get_box(shape: ShapeView) {
     const parent = shape.parent!;

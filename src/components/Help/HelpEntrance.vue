@@ -25,12 +25,18 @@
     </div>
 </template>
 <script setup lang="ts">
-import { computed, ref, watch } from 'vue';
+import { computed, onMounted, ref, watch } from 'vue';
 import { useRoute } from 'vue-router';
 import QRCode from '@/assets/qr-code.png';
 import ShortCut from './ShortCut.vue';
 import Report from './Report.vue'
+import { Context } from '@/context';
+import { onUnmounted } from 'vue';
+import { Menu } from '@/context/menu';
 
+const props = defineProps<{
+    context?: Context
+}>();
 
 const route = useRoute()
 const showitem = ref(false)
@@ -77,7 +83,7 @@ const handleClickShow = (index: number) => {
         qrcode.value = false
         shortcut.value = false
         report.value = true
-    } else {
+    } else if (index === 2) {
         report.value = false
         qrcode.value = false
         shortcut.value = true
@@ -93,7 +99,21 @@ watch([qrcode, showitem], ([newvalue1, newvalue2]) => {
         document.addEventListener("contextmenu", handleClickOutside);
     }
 })
-
+const menu_watcher = (t: number) => {
+    if(t === Menu.OPEN_SHORTCUTS) {
+        handleClickShow(2);
+    }
+}
+onMounted(() => {
+    if(props.context) {
+        props.context.menu.watch(menu_watcher);
+    }
+})
+onUnmounted(() => {
+    if(props.context) {
+        props.context.menu.unwatch(menu_watcher);
+    }
+})
 
 </script>
 <style lang="scss" scoped>

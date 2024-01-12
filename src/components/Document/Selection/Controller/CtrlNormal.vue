@@ -7,10 +7,9 @@ import { Point } from "../SelectionView.vue";
 import { ClientXY, Selection } from "@/context/selection";
 import { useController } from "./controller";
 import { genRectPath } from "../common";
-import { Shape } from "@kcdesign/data";
 import ShapesStrokeContainer from "./ShapeStroke/ShapesStrokeContainer.vue";
-import BarsContainer from "./Bars/BarsContainer.SVG.vue";
-import PointsContainer from "./Points/PointsContainer.SVG.vue";
+import BarsContainer from "./Bars/BarsContainer.vue";
+import PointsContainer from "./Points/PointsContainer.vue";
 import { getAxle } from "@/utils/common";
 interface Props {
     context: Context

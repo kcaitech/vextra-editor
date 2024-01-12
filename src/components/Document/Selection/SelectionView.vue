@@ -253,11 +253,12 @@ function for_path_shape(shape: PathShapeView) {
     }
 }
 function modify_controller_type(shapes: ShapeView[],) {
+    if (!permIsEdit(props.context) || props.context.tool.isLable) {
+        controllerType.value = ControllerType.Readonly;
+        return;
+    }
+
     if (shapes.length === 1) {
-        if (!permIsEdit(props.context) || props.context.tool.isLable) {
-            controllerType.value = ControllerType.Readonly;
-            return;
-        }
         const shape = shapes[0];
         if (shape.isVirtualShape) {
             for_virtual(shape);
@@ -290,6 +291,7 @@ function modify_controller_type(shapes: ShapeView[],) {
             return;
         }
     }
+
     controllerType.value = ControllerType.RectMulti;
 }
 function modify_rotate(shapes: ShapeView[]) {
@@ -376,6 +378,22 @@ const lableLineStatus = () => {
     }
 }
 
+function page_watcher() {
+    const page = props.context.selection.selectedPage;
+
+    if (page) {
+        page.watch(shapesWatcher);
+    }
+}
+
+function remove_page_watcher() {
+    const page = props.context.selection.selectedPage;
+
+    if (page) {
+        page.unwatch(shapesWatcher);
+    }
+}
+
 // hooks
 watch(() => props.matrix, update_by_matrix, { deep: true });
 
@@ -386,6 +404,7 @@ onMounted(() => {
     document.addEventListener('keydown', keyboard_down_watcher);
     document.addEventListener('keyup', keyboard_up_watcher);
     window.addEventListener('blur', window_blur)
+    page_watcher();
 })
 onUnmounted(() => {
     props.context.selection.unwatch(selectionWatcher);
@@ -394,11 +413,10 @@ onUnmounted(() => {
     document.removeEventListener('keydown', keyboard_down_watcher);
     document.removeEventListener('keyup', keyboard_up_watcher);
     window.removeEventListener('blur', window_blur);
+    remove_page_watcher();
 })
 </script>
 <template>
-    <!-- 标注线 -->
-    <LableLine v-if="isLableLine" :context="props.context" :matrix="props.matrix"></LableLine>
     <!-- 描边 -->
     <svg v-if="tracing" version="1.1" xmlns="http://www.w3.org/2000/svg" xmlns:xlink="http://www.w3.org/1999/xlink"
         xmlns:xhtml="http://www.w3.org/1999/xhtml" preserveAspectRatio="xMinYMin meet" overflow="visible"
@@ -418,6 +436,8 @@ onUnmounted(() => {
     </component>
     <!-- 辅助 -->
     <Assist :context="props.context" :controller-frame="controllerFrame"></Assist>
+    <!-- 标注线 -->
+    <LableLine v-if="isLableLine" :context="props.context" :matrix="props.matrix"></LableLine>
     <!-- 选中大小 -->
     <ShapeSize :context="props.context" :controller-frame="controllerFrame"></ShapeSize>
 </template>

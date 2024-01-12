@@ -1,9 +1,9 @@
 <script setup lang='ts'>
-import {Context} from '@/context';
-import {Matrix, Shape, ShapeView} from '@kcdesign/data';
-import {ref, onMounted, onUnmounted, watch} from 'vue';
-import {Selection} from '@/context/selection';
-import {WorkSpace} from '@/context/workspace';
+import { Context } from '@/context';
+import { Matrix, Shape, ShapeView } from '@kcdesign/data';
+import { ref, onMounted, onUnmounted, watch } from 'vue';
+import { Selection } from '@/context/selection';
+import { WorkSpace } from '@/context/workspace';
 
 const watchedShapes = new Map();
 
@@ -90,17 +90,35 @@ function passive_update() {
     }
 }
 
-watch(() => props.matrix, update, {deep: true})
+function page_watcher() {
+    const page = props.context.selection.selectedPage;
+
+    if (page) {
+        page.watch(update);
+    }
+}
+
+function remove_page_watcher() {
+    const page = props.context.selection.selectedPage;
+
+    if (page) {
+        page.unwatch(update);
+    }
+}
+
+watch(() => props.matrix, update, { deep: true })
 onMounted(() => {
     props.context.selection.watch(selection_watcher);
     props.context.workspace.watch(workspace_watcher);
     update();
     watchShapes();
+    page_watcher();
 })
 onUnmounted(() => {
     props.context.selection.unwatch(selection_watcher);
     props.context.workspace.unwatch(workspace_watcher);
     watchedShapes.forEach(v => v.unwatch(update));
+    remove_page_watcher();
 })
 </script>
 <template>

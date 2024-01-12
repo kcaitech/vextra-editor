@@ -9,8 +9,8 @@ import { useController } from "./controller";
 import { genRectPath } from "../common";
 import { Shape } from "@kcdesign/data";
 import ShapesStrokeContainer from "./ShapeStroke/ShapesStrokeContainer.vue";
-import BarsContainer from "./Bars/BarsContainer.SVG.Multi.vue";
-import PointsContainer from "./Points/PointsContainer.SVG.Multi.vue";
+import BarsContainer from "./Bars/BarsContainerForMulti.vue";
+import PointsContainer from "./Points/PointsContainerForMulti.vue";
 import { getAxle } from "@/utils/common";
 interface Props {
     context: Context

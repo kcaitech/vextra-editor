@@ -101,7 +101,7 @@ const onInputName = (e: Event) => {
 const ChangeReName = (e: Event) => {
     const value = (e.target as HTMLInputElement).value
     if (esc.value) return
-    if (value.length === 0 || value.length > 40 || value.trim().length === 0) return
+    if (value.length === 0 || value.trim().length === 0) return
     emit('rename', value, props.shape)
 }
 
@@ -129,7 +129,7 @@ let offset_map: PointsOffset | undefined;
 
 function down(e: MouseEvent) {
     const context = props.context;
-    if ((context.workspace.documentPerm !== Perm.isEdit) || context.tool.isLable) {
+    if ((context.workspace.documentPerm !== Perm.isEdit)) {
         return;
     }
     if (!check_status(context)) {
@@ -139,7 +139,7 @@ function down(e: MouseEvent) {
         context.selection.selectShape(props.shape);
         let root = props.context.workspace.root;
         startPosition = { x: e.clientX - root.x, y: e.clientY - root.y };
-        if(forbidden_to_modify_frame(props.shape)) return;
+        if(forbidden_to_modify_frame(props.shape) || context.tool.isLable) return;
         document.addEventListener('mousemove', move);
         document.addEventListener('mouseup', up);
     } else if (e.button === 2) {

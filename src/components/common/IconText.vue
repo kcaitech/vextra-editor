@@ -91,7 +91,7 @@ const onKeyBlur = (e: KeyboardEvent) => {
     if (props.disabled) return;
     if (e.key === 'Enter') {
         if (input.value) {
-            (e.currentTarget as HTMLInputElement).blur()
+            input.value.blur()
         }
     }
 }

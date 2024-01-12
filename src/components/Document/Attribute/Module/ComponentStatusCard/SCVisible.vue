@@ -77,12 +77,12 @@ function _delete() {
         <div class="attr_con">
             <div class="module_item_left" @click="edit_visible">
                 <div class="module_name-2">
-                    <div style="width: 14px;margin-left: 8px" class="svg">
+                    <div style="width: 30px;" class="svg">
                         <svg-icon icon-class="eye-open"></svg-icon>
                     </div>
                     <div class="name">
-                        <span style="width: 30%;">{{ props.variable.name }}</span>
-                        <span style="width: 70%;"> {{ props.variable.value ? '显示' : '隐藏' }}</span>
+                        <span style="width: 35%;">{{ props.variable.name }}</span>
+                        <span style="width: 65%;"> {{ props.variable.value ? '显示' : '隐藏' }}</span>
                     </div>
                 </div>
             </div>
@@ -170,7 +170,6 @@ function _delete() {
                 flex: 1;
                 display: flex;
                 max-width: 100%;
-                margin-left: 8px;
 
                 >span {
                     display: block;

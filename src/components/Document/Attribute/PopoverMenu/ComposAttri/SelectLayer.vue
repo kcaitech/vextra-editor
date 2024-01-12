@@ -65,11 +65,13 @@ function toggle(i: number) {
     }
     reflush.value = reflush.value++;
 }
-
-const handleCheck = (v: string[]) => {
+const selectLayer = new Map();
+const handleCheck = (v: string[], t: string) => {
     // 选中对象的id
-    checkList.value = v;
-    emits("change", v);
+    selectLayer.set(t, v);
+    const listArr = Array.from(selectLayer.values())
+    checkList.value = listArr.flat();
+    emits("change", listArr.flat());
 }
 watchEffect(() => {
     props.selectList.length;
@@ -91,19 +93,6 @@ onMounted(() => {
         popover.value.focus();
         const body_h = document.body.clientHeight;
         const popover_y = popover.value?.getBoundingClientRect().top - 32;
-        // const popover_h = popover.value.clientHeight + 5;
-        // const surplus = body_h - popover_y;
-        // const height = surplus - popover_h;
-        // if (height > 0) {
-        //     top.value = 33;
-        // } else {
-        //     if (popover_y > popover_h) {
-        //         top.value = (popover_y - popover_h) * 2
-        //     } else {
-        //         const s = popover_h - popover_y;
-        //         top.value = -s + 40
-        //     }
-        // }
         const popover_h = popover.value?.clientHeight;
         const height = body_h - 10;
         if (popover_y + popover_h > height) {
@@ -158,7 +147,7 @@ onUnmounted(() => {
                             v-if="unfold.has(i)" :reflush="reflush">
                             <!--                            marginLeft: selectList.length > 1 ? '26px' : '12px',-->
                             <component v-if="scroll_container" :is="CompoSelectList" :context="context"
-                                :contents="item.data" @handleCheck="handleCheck" :layerId="props.layerId"
+                                :contents="item.data" @handleCheck="(v) =>handleCheck(v, item.state)" :layerId="props.layerId"
                                 :container="scroll_container">
                             </component>
                         </div>

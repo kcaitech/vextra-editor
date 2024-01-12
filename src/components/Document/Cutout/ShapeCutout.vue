@@ -1,10 +1,9 @@
 <script setup lang="ts">
-import { CutoutShape, Matrix, Page, PageView, CutoutShapeView, ShapeType } from '@kcdesign/data';
+import { Matrix, PageView, CutoutShapeView, CutoutShape } from '@kcdesign/data';
 import { onMounted, onUnmounted, ref, watch } from 'vue';
 import { Context } from '@/context';
 import renderCutout from './renderCutout.vue';
 import { Selection } from '@/context/selection';
-import { reactive } from 'vue';
 
 const props = defineProps<{
     context: Context
@@ -12,26 +11,31 @@ const props = defineProps<{
     matrix: Matrix,
     transform: number[],
 }>()
-let cutoutShapes: CutoutShapeView[] = reactive([]);
-const watcher = (...args: any[]) => {
-    if(args.includes('shape-frame')) return;
+const cutoutShapes = ref<CutoutShape[]>([]);
+
+const getCutoutShape = () => {
     const page = props.context.selection.selectedPage;
     if (page) {
-        cutoutShapes = Array.from(page.cutoutList.values());
+        cutoutShapes.value = Array.from(page.data.cutouts.values());
     }
+}
+const watcher = (...args: any[]) => {
+    if (args.includes('shape-frame')) return;
+    getCutoutShape();
 }
 const stopWatch = watch(() => props.data, (value, old) => {
     old.unwatch(watcher);
     value.watch(watcher);
 })
+
 const selected_watcher = (t: number) => {
     if (t === Selection.CHANGE_PAGE) {
-        const page = props.context.selection.selectedPage;
-        if (page) {
-            cutoutShapes = Array.from(page.cutoutList.values());
-        }
+        getCutoutShape();
+    } else if (t === Selection.CHANGE_SHAPE) {
+        getCutoutShape();
     }
 }
+
 onMounted(() => {
     watcher();
     props.data.watch(watcher);
@@ -47,7 +51,7 @@ onUnmounted(() => {
 
 <template>
     <component v-for="item in cutoutShapes" :key="item.id" :is="renderCutout" :context="context"
-        :data="(item as CutoutShapeView)" :matrix="matrix"></component>
+        :data="(item as CutoutShape)" :matrix="matrix"></component>
 </template>
 
 <style lang="scss" scoped></style>

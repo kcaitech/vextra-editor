@@ -1,7 +1,6 @@
 import { Context } from "@/context";
-import { Text, Shape } from "@kcdesign/data";
+import { Text } from "@kcdesign/data";
 import { TextShapeEditor } from "@kcdesign/data";
-import { paster_inner_shape } from "@/utils/clipboard";
 import { WorkSpace } from "@/context/workspace";
 
 const keydelays = 15;
@@ -177,45 +176,52 @@ const escape = throttle2((e: KeyboardEvent, context: Context, shapetext: Text, e
     }
 
 }, keydelays);
+
 function copy(e: KeyboardEvent, context: Context, shapetext: Text) {
-    if (e.ctrlKey || e.metaKey) {
-        e.preventDefault();
-        const selection = context.textSelection;
-        const start = selection.cursorStart;
-        const end = selection.cursorEnd;
-        if (start === end) return;
-        const s = Math.min(start, end);
-        const len = Math.abs(start - end)
-        const text = shapetext.getTextWithFormat(s, len);
-        context.workspace.clipboard.write_html(text);
-        context.menu.menuMount();
-    }
+    context.menu.menuMount();
+    // if (e.ctrlKey || e.metaKey) {
+    //     e.preventDefault();
+    //     const selection = context.textSelection;
+    //     const start = selection.cursorStart;
+    //     const end = selection.cursorEnd;
+    //     if (start === end) return;
+    //     const s = Math.min(start, end);
+    //     const len = Math.abs(start - end)
+    //     const text = shapetext.getTextWithFormat(s, len);
+    //     context.workspace.clipboard.write2(e as unknown as ClipboardEvent, text);
+    //     context.menu.menuMount();
+    // }
 }
 async function cut(e: KeyboardEvent, context: Context, shapetext: Text, editor: TextShapeEditor) {
-    if ((e.ctrlKey || e.metaKey) && !e.shiftKey) {
-        e.preventDefault();
-        const selection = context.textSelection;
-        const start = selection.cursorStart;
-        const end = selection.cursorEnd;
-        if (start === end) return;
-        const text = shapetext.getTextWithFormat(Math.min(start, end), Math.abs(start - end));
-        const copy_result = await context.workspace.clipboard.write_html(text);
-        if (copy_result) {
-            if (editor.deleteText(Math.min(start, end), Math.abs(start - end))) {
-                selection.setCursor(Math.min(start, end), false);
-            }
-        }
-        context.menu.menuMount();
-    } else if ((e.ctrlKey || e.metaKey) && e.shiftKey) {
+    if ((e.ctrlKey || e.metaKey) && e.shiftKey) {
         context.workspace.notify(WorkSpace.DELETE_LINE);
     }
+    context.menu.menuMount();
+    // if ((e.ctrlKey || e.metaKey) && !e.shiftKey) {
+    //     e.preventDefault();
+    //     const selection = context.textSelection;
+    //     const start = selection.cursorStart;
+    //     const end = selection.cursorEnd;
+    //     if (start === end) return;
+    //     const text = shapetext.getTextWithFormat(Math.min(start, end), Math.abs(start - end));
+    //     const copy_result = await context.workspace.clipboard.write(text);
+    //     if (copy_result) {
+    //         if (editor.deleteText(Math.min(start, end), Math.abs(start - end))) {
+    //             selection.setCursor(Math.min(start, end), false);
+    //         }
+    //     }
+    //     context.menu.menuMount();
+    // } else if ((e.ctrlKey || e.metaKey) && e.shiftKey) {
+    //     context.workspace.notify(WorkSpace.DELETE_LINE);
+    // }
 }
 function paster(e: KeyboardEvent, context: Context, shapetext: Text, editor: TextShapeEditor) {
-    if (e.ctrlKey || e.metaKey) {
-        e.preventDefault(); // 阻止input的粘贴事件
-        paster_inner_shape(context, editor, e.altKey);
-        context.menu.menuMount();
-    }
+    // if (e.ctrlKey || e.metaKey) {
+    //     e.preventDefault(); // 阻止input的粘贴事件
+    //     paster_inner_shape(context, editor, e.altKey);
+    //     context.menu.menuMount();
+    // }
+    context.menu.menuMount();
 }
 function select_all(e: KeyboardEvent, context: Context, shapetext: Text) {
     if (e.ctrlKey || e.metaKey) {
@@ -255,7 +261,7 @@ const enterTab = throttle2((e: KeyboardEvent, context: Context, shapetext: Text,
 // 文本下划线
 const Underline = (e: KeyboardEvent, context: Context, shapetext: Text) => {
     const { ctrlKey, metaKey, shiftKey } = e;
-    if((ctrlKey || metaKey) && !shiftKey) {
+    if ((ctrlKey || metaKey) && !shiftKey) {
         e.preventDefault();
         context.workspace.notify(WorkSpace.UNDER_LINE);
     }
@@ -263,7 +269,7 @@ const Underline = (e: KeyboardEvent, context: Context, shapetext: Text) => {
 //文本倾斜
 const Italic = (e: KeyboardEvent, context: Context, shapetext: Text) => {
     const { ctrlKey, metaKey, shiftKey } = e;
-    if((ctrlKey || metaKey) && !shiftKey) {
+    if ((ctrlKey || metaKey) && !shiftKey) {
         e.preventDefault();
         context.workspace.notify(WorkSpace.ITALIC);
     }
@@ -271,7 +277,7 @@ const Italic = (e: KeyboardEvent, context: Context, shapetext: Text) => {
 //文本加粗
 const Bold = (e: KeyboardEvent, context: Context, shapetext: Text) => {
     const { ctrlKey, metaKey, shiftKey } = e;
-    if((ctrlKey || metaKey) && !shiftKey) {
+    if ((ctrlKey || metaKey) && !shiftKey) {
         e.preventDefault();
         context.workspace.notify(WorkSpace.BOLD);
     }

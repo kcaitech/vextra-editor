@@ -27,7 +27,8 @@ const emit = defineEmits<{
 const comment = computed(() => props.context.comment);
 const hover = ref(false)
 const commentShow = ref(props.context.comment.isHoverComment)
-const hoverCommentId = ref(comment.value.isHoverCommentId)
+const hoverCommentId = ref(comment.value.isHoverCommentId);
+const prePt = ref({ x: 0, y: 0 });
 const replyNum = computed(() => {
     if (props.commentInfo.children) {
         const child = props.commentInfo.children.length
@@ -40,12 +41,12 @@ const resolve = computed(() => {
     return props.commentInfo.status === 0 ? true : false
 })
 const isControls = computed(() => {
-    if(comment.value.isUserInfo?.id === props.commentInfo.user.id || comment.value.isUserInfo?.id === comment.value.isDocumentInfo?.user.id) return true
+    if (comment.value.isUserInfo?.id === props.commentInfo.user.id || comment.value.isUserInfo?.id === comment.value.isDocumentInfo?.user.id) return true
     else return false
 })
 
 const isControlsDel = computed(() => {
-    if(comment.value.isUserInfo?.id === props.commentInfo.user.id) return true
+    if (comment.value.isUserInfo?.id === props.commentInfo.user.id) return true
     else return false
 })
 
@@ -56,7 +57,7 @@ const hoverShape = (e: MouseEvent) => {
 }
 const unHoverShape = (e: MouseEvent) => {
     e.stopPropagation();
-    if(!props.context.comment.isCommentMove) {
+    if (!props.context.comment.isCommentMove) {
         comment.value.hoverComment(false, props.commentInfo.id)
     }
     hover.value = false
@@ -65,13 +66,17 @@ const unHoverShape = (e: MouseEvent) => {
 
 const onReply = (e: MouseEvent) => {
     e.stopPropagation()
-    hover.value = false
+    const dx = e.clientX - prePt.value.x;
+    const dy = e.clientY - prePt.value.y;
+    const diff = Math.hypot(dx, dy);
+    if(diff > 5) return;
+    hover.value = false;
     emit('showComment', e)
 }
 
 const onResolve = (e: Event) => {
     e.stopPropagation()
-    if(!isControls.value) return
+    if (!isControls.value) return
     const status = props.commentInfo.status === 0 ? 1 : 0
     setCommentStatus(status)
     emit('resolve', status, props.index)
@@ -79,14 +84,14 @@ const onResolve = (e: Event) => {
 
 const onDelete = (e: Event) => {
     e.stopPropagation()
-    if(!isControls.value) return
+    if (!isControls.value) return
     props.context.comment.hoverComment(false);
     props.context.comment.commentInput(false);
     let timeout = setTimeout(() => {
         emit('deleteComment', props.index)
         deleteComment()
         clearTimeout(timeout)
-    },150)
+    }, 150)
 }
 
 const onClick = (e: MouseEvent) => {
@@ -110,33 +115,34 @@ const setCommentStatus = async (status: number) => {
 }
 
 const moveCommentPopup = (e: MouseEvent) => {
-    e.stopPropagation()
+    e.stopPropagation();
+    prePt.value = { x: e.clientX, y: e.clientY };
     emit('moveCommentPopup', e, props.index)
 }
 
 const formatDate = computed(() => {
-  return function (value: string): string {
-    const lang = localStorage.getItem('locale') || 'zh'
-    moment.locale(mapDateLang.get(lang) || 'zh-cn');
-    return filterDate(value);
-  }
+    return function (value: string): string {
+        const lang = localStorage.getItem('locale') || 'zh'
+        moment.locale(mapDateLang.get(lang) || 'zh-cn');
+        return filterDate(value);
+    }
 })
 
 const filterDate = (time: string) => {
-  const date = new Date(time);
-  const hours = date.getHours();
-  const minutes = date.getMinutes();
-  return `${moment(date).format("MMM Do")} ${hours.toString().padStart(2, '0')}:${minutes.toString().padStart(2, '0')}`;
+    const date = new Date(time);
+    const hours = date.getHours();
+    const minutes = date.getMinutes();
+    return `${moment(date).format("MMM Do")} ${hours.toString().padStart(2, '0')}:${minutes.toString().padStart(2, '0')}`;
 }
 
 const commentUpdate = (t: number) => {
-    if(t === Comment.CURRENT_COMMENT) {
+    if (t === Comment.CURRENT_COMMENT) {
         hoverCommentId.value = comment.value.isHoverCommentId
     }
-    if(t === Comment.HOVER_COMMENT) {
+    if (t === Comment.HOVER_COMMENT) {
         commentShow.value = comment.value.isHoverComment
     }
-    if(t === Comment.HOVER_SHOW_COMMENT) {
+    if (t === Comment.HOVER_SHOW_COMMENT) {
         commentShow.value = comment.value.isHoverComment
     }
 }
@@ -152,9 +158,8 @@ onUnmounted(() => {
 </script>
 
 <template>
-
-    <div class="container-hover" @mouseenter="hoverShape" @mouseleave="unHoverShape" @mousedown="moveCommentPopup"  @click="onReply"
-         :style="{ transform: `scale(${scale && commentShow ? scale : 0})` }">
+    <div class="container-hover" @mouseenter="hoverShape" @mouseleave="unHoverShape" @mousedown="moveCommentPopup"
+        @click="onReply" :style="{ transform: `scale(${scale && commentShow ? scale : 0})` }">
         <div class="avatar" @click="onReply">
             <img :src="commentInfo.user.avatar" alt="">
         </div>
@@ -165,36 +170,36 @@ onUnmounted(() => {
                     <div class="date">{{ formatDate(commentInfo.record_created_at) }}</div>
                 </div>
                 <div class="icon" :style="{ visibility: hover ? 'visible' : 'hidden' }">
-<!--                    <el-button-group class="ml-4">-->
-                        <el-tooltip class="box-item" effect="dark" :content="`${t('comment.reply')}`" placement="bottom"
-                            :show-after="1000" :offset="10" :hide-after="0">
-<!--                            <el-button plain :icon="ChatDotSquare" @click="onReply" style="margin-right: 5px;" />-->
-                            <div class="onReply" @click.stop="onReply">
-                                <svg-icon icon-class="comment-reply"></svg-icon>
-                            </div>
-                        </el-tooltip>
-                        <el-tooltip class="box-item" effect="dark" :content="`${t('comment.delete')}`" placement="bottom"
-                            :show-after="1000" :offset="10" :hide-after="0" v-if="isControls">
-<!--                            <el-button plain :icon="Delete" @click="onDelete" :style="{'margin-right': 5 +'px'}" v-if="isControls"/>-->
-                            <div class="onDelete" @click="onDelete" v-if="isControls">
-                                <svg-icon icon-class="comment-delete"></svg-icon>
-                            </div>
-                        </el-tooltip>
-                        <el-tooltip class="box-item" effect="dark" :content="`${t('comment.settled')}`" placement="bottom"
-                            :show-after="1000" :offset="10" :hide-after="0" v-if="resolve && isControls">
-<!--                            <el-button plain :icon="CircleCheck" @click="onResolve" @mouseup.stop @mousedown.stop v-if="isControls"/>-->
-                            <div class="onResolve" @click="onResolve" @mouseup.stop @mousedown.stop v-if="isControls">
-                                <svg-icon icon-class="comment-solve"></svg-icon>
-                            </div>
-                        </el-tooltip>
-                        <el-tooltip class="box-item" effect="dark" :content="`${t('comment.settled')}`" placement="bottom"
-                            :show-after="1000" :offset="10" :hide-after="0" v-else-if="!resolve && isControls">
-<!--                            <el-button class="custom-icon" plain :icon="CircleCheckFilled" @click="onResolve"  @mouseup.stop @mousedown.stop v-if="isControls"/>-->
-                            <div class="onResolved" @click="onResolve" @mouseup.stop @mousedown.stop v-if="isControls">
-                                <svg-icon icon-class="comment-solved"></svg-icon>
-                            </div>
-                        </el-tooltip>
-<!--                    </el-button-group>-->
+                    <!--                    <el-button-group class="ml-4">-->
+                    <el-tooltip class="box-item" effect="dark" :content="`${t('comment.reply')}`" placement="bottom"
+                        :show-after="1000" :offset="10" :hide-after="0">
+                        <!--                            <el-button plain :icon="ChatDotSquare" @click="onReply" style="margin-right: 5px;" />-->
+                        <div class="onReply" @click.stop="onReply">
+                            <svg-icon icon-class="comment-reply"></svg-icon>
+                        </div>
+                    </el-tooltip>
+                    <el-tooltip class="box-item" effect="dark" :content="`${t('comment.delete')}`" placement="bottom"
+                        :show-after="1000" :offset="10" :hide-after="0" v-if="isControls">
+                        <!--                            <el-button plain :icon="Delete" @click="onDelete" :style="{'margin-right': 5 +'px'}" v-if="isControls"/>-->
+                        <div class="onDelete" @click="onDelete" v-if="isControls">
+                            <svg-icon icon-class="comment-delete"></svg-icon>
+                        </div>
+                    </el-tooltip>
+                    <el-tooltip class="box-item" effect="dark" :content="`${t('comment.settled')}`" placement="bottom"
+                        :show-after="1000" :offset="10" :hide-after="0" v-if="resolve && isControls">
+                        <!--                            <el-button plain :icon="CircleCheck" @click="onResolve" @mouseup.stop @mousedown.stop v-if="isControls"/>-->
+                        <div class="onResolve" @click="onResolve" @mouseup.stop @mousedown.stop v-if="isControls">
+                            <svg-icon icon-class="comment-solve"></svg-icon>
+                        </div>
+                    </el-tooltip>
+                    <el-tooltip class="box-item" effect="dark" :content="`${t('comment.settled')}`" placement="bottom"
+                        :show-after="1000" :offset="10" :hide-after="0" v-else-if="!resolve && isControls">
+                        <!--                            <el-button class="custom-icon" plain :icon="CircleCheckFilled" @click="onResolve"  @mouseup.stop @mousedown.stop v-if="isControls"/>-->
+                        <div class="onResolved" @click="onResolve" @mouseup.stop @mousedown.stop v-if="isControls">
+                            <svg-icon icon-class="comment-solved"></svg-icon>
+                        </div>
+                    </el-tooltip>
+                    <!--                    </el-button-group>-->
                 </div>
             </div>
             <div class="box-context" v-html="commentInfo.content"></div>
@@ -255,28 +260,30 @@ onUnmounted(() => {
             //margin: 5px 0;
 
             .item_heard {
-                    display: flex;
-                    align-items: center;
-                    width: calc(100% - 70px);
-                    .name {
-                        max-width: calc(100% - 103px);
-                        overflow: hidden;
-                        text-overflow: ellipsis;
-                        white-space: nowrap;
-                        font-size: 12px;
-                        font-weight: 500;
-                        line-height: 12px;
-                        color: #000000;
-                    }
-                    .date {
-                        width: 92px;
-                        height: 12px;
-                        white-space: nowrap;
-                        font-size: 12px;
-                        line-height: 12px;
-                        color: #333333;
-                    }
+                display: flex;
+                align-items: center;
+                width: calc(100% - 70px);
+
+                .name {
+                    max-width: calc(100% - 103px);
+                    overflow: hidden;
+                    text-overflow: ellipsis;
+                    white-space: nowrap;
+                    font-size: 12px;
+                    font-weight: 500;
+                    line-height: 12px;
+                    color: #000000;
                 }
+
+                .date {
+                    width: 92px;
+                    height: 12px;
+                    white-space: nowrap;
+                    font-size: 12px;
+                    line-height: 12px;
+                    color: #333333;
+                }
+            }
 
             .icon {
                 display: flex;
@@ -312,7 +319,7 @@ onUnmounted(() => {
                     }
                 }
 
-                .onReply:hover{
+                .onReply:hover {
                     background-color: #EBEBED;
                 }
 
@@ -331,7 +338,7 @@ onUnmounted(() => {
                     }
                 }
 
-                .onDelete:hover{
+                .onDelete:hover {
                     background-color: #EBEBED;
                 }
 
@@ -350,9 +357,10 @@ onUnmounted(() => {
                     }
                 }
 
-                .onResolve:hover{
+                .onResolve:hover {
                     background-color: #EBEBED;
                 }
+
                 .onResolved {
                     width: 24px;
                     height: 24px;
@@ -368,7 +376,7 @@ onUnmounted(() => {
                     }
                 }
 
-                .onResolved:hover{
+                .onResolved:hover {
                     background-color: #EBEBED;
                 }
             }

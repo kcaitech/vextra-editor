@@ -63,7 +63,7 @@ export const system = {
     'phonetips': 'Mobile terminal does not support login, please login on the computer side!',
     'btn_login': 'Login',
     'artboart_title_visible': 'Show artboard title',
-    sensitive_reminder:'Contains sensitive information, please re-enter.',
+    sensitive_reminder: 'Contains sensitive information, please re-enter.',
     sensitive_reminder2: 'Contains sensitive information and cannot be shared.',
     sensitive_reminder3: 'Contains sensitive information and cannot be accessed.'
 }
@@ -92,9 +92,9 @@ export const home = {
     delete_file_time: 'Deletion time',
     size: 'Size',
     operation: 'Operation',
-    filelocation:'File location',
-    creator:'Creator',
-    deleter:'Deleter',
+    filelocation: 'File location',
+    creator: 'Creator',
+    deleter: 'Deleter',
     star_marking: 'Star marking',
     share: 'Share',
     delete: 'Delete',
@@ -328,7 +328,9 @@ export const comment = {
     show_comments: 'Show comments'
 }
 export const clipboard = {
-    'invalid_data': 'invalid data'
+    'invalid_data': 'invalid data',
+    'not_supported1': 'The current browser does not support it, please use Ctrl C to copy',
+    'not_supported2': 'The current browser does not support it, please use ctrl X to cut'
 }
 export const opacity = {
     normal: 'Normal',

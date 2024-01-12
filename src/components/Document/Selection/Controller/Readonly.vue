@@ -1,13 +1,10 @@
 <script setup lang='ts'>
-import { computed, onMounted, onUnmounted, watchEffect, ref, reactive } from "vue";
+import { watchEffect, ref, reactive } from "vue";
 import { Context } from "@/context";
 import { Matrix, ShapeView } from '@kcdesign/data';
-import { WorkSpace } from "@/context/workspace";
 import { Point } from "../SelectionView.vue";
-import { Selection } from "@/context/selection";
 import { useController } from "./controller";
 import { genRectPath } from "../common";
-import { Shape } from "@kcdesign/data";
 import ShapesStrokeContainer from "./ShapeStroke/ShapesStrokeContainer.vue";
 interface Props {
     context: Context
@@ -17,10 +14,7 @@ interface Props {
     shape: ShapeView
 }
 const props = defineProps<Props>();
-const { isDrag } = useController(props.context);
-const workspace = computed(() => props.context.workspace);
-const visible = ref<boolean>(true);
-const editing = ref<boolean>(false); // 是否进入路径编辑状态
+useController(props.context);
 const boundrectPath = ref("");
 const bounds = reactive({ left: 0, top: 0, right: 0, bottom: 0 }); // viewbox
 const matrix = new Matrix();
@@ -37,6 +31,7 @@ function updateControllerView() {
     if (!submatrix.equals(matrix)) submatrix.reset(matrix)
     const framePoint = props.controllerFrame;
     boundrectPath.value = genRectPath(framePoint);
+    props.context.workspace.setCtrlPath(boundrectPath.value);
     const p0 = framePoint[0];
     bounds.left = p0.x;
     bounds.top = p0.y;
@@ -51,39 +46,7 @@ function updateControllerView() {
     }, bounds);
     viewBox = genViewBox(bounds);
 }
-// #endregion
-function workspace_watcher(t?: number) {
-    if (t === WorkSpace.TRANSLATING) visible.value = !workspace.value.isTranslating;
-}
-function mousedown(e: MouseEvent) {
-    document.addEventListener('mousemove', mousemove);
-    document.addEventListener('mouseup', mouseup);
-}
-function mousemove(e: MouseEvent) {
-    if (isDrag()) visible.value = false;
-}
-function mouseup(e: MouseEvent) {
-    document.removeEventListener('mousemove', mousemove);
-    document.removeEventListener('mouseup', mouseup);
-}
-function windowBlur() {
-    // 窗口失焦,此时鼠标事件(up,move)不再受系统管理, 此时需要手动关闭已开启的状态
-    document.removeEventListener('mousemove', mousemove);
-    document.removeEventListener('mouseup', mouseup);
-}
-function selection_watcher(t: number) {
-    if (t == Selection.CHANGE_SHAPE) editing.value = false;
-}
-onMounted(() => {
-    props.context.selection.watch(selection_watcher);
-    props.context.workspace.watch(workspace_watcher);
-    window.addEventListener('blur', windowBlur);
-})
-onUnmounted(() => {
-    props.context.selection.unwatch(selection_watcher);
-    props.context.workspace.unwatch(workspace_watcher);
-    window.removeEventListener('blur', windowBlur);
-})
+
 watchEffect(updateControllerView);
 </script>
 <template>
@@ -91,18 +54,10 @@ watchEffect(updateControllerView);
         xmlns:xhtml="http://www.w3.org/1999/xhtml" preserveAspectRatio="xMinYMin meet" :viewBox="viewBox"
         :width="bounds.right - bounds.left" :height="bounds.bottom - bounds.top"
         :style="{ transform: `translate(${bounds.left}px,${bounds.top}px)`, left: 0, top: 0, position: 'absolute' }"
-        :class="{ 'un-visible': !visible }" @mousedown="mousedown" overflow="visible">
-        <path :d="boundrectPath" fill="none" stroke='#1878f5' stroke-width="1.5px"></path>
+        overflow="visible">
+        <path :d="boundrectPath" fill="none" stroke='#1878f5'></path>
         <ShapesStrokeContainer :context="props.context" :matrix="props.matrix" :shape="props.shape" color-hex="#1878f5">
         </ShapesStrokeContainer>
     </svg>
 </template>
-<style lang='scss' scoped>
-.un-visible {
-    opacity: 0;
-}
-
-.editing {
-    background-color: rgba($color: #1878f5, $alpha: 0.15);
-}
-</style>
+<style lang='scss' scoped></style>
