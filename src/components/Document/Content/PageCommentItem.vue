@@ -128,7 +128,6 @@ const showComment = (e: MouseEvent) => {
         props.context.workspace.notify(WorkSpace.MATRIX_TRANSFORMATION);
     }
     props.context.comment.commentMount(false)
-    const { x, y } = props.context.workspace.root
     commentScale.value = 0
     rootHeight.value = comment.value!.parentElement!.clientHeight
     rootWidth.value = comment.value!.parentElement!.clientWidth

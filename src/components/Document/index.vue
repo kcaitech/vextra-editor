@@ -304,7 +304,7 @@ const hideNotification = (type?: number) => {
   showHint.value = false;
   countdown.value = 10;
   if (type === 0) {
-    router.push('/apphome')
+    router.push('/files')
   } else {
     router.go(0)
   }
@@ -350,7 +350,6 @@ const getDocumentInfo = async () => {
         ElMessage.error({ duration: 3000, message: docKeyRes.message })
         return;
       } else {
-        console.log('1111');
         router.push("/files");
         ElMessage.error({ duration: 3000, message: docKeyRes.message })
         return;

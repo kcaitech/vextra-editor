@@ -28,7 +28,7 @@ function unhover() {
     props.context.selection.unHoverShape();
 }
 
-watch(checkList, (v) => {
+watch(checkList, (v, o) => {
     emits('handleCheck', v)
 }, { immediate: true })
 </script>
