@@ -17,8 +17,8 @@ const props = defineProps<{
 }>()
 
 const emit = defineEmits<{
-    (e: 'close') : void
-    (e: 'delete', index: number, event: Event, id: string):void
+    (e: 'close'): void
+    (e: 'delete', index: number, event: Event, id: string): void
     (e: 'editComment', index: number, text: string): void
     (e: 'quickReply', name: string): void
 }>()
@@ -35,14 +35,17 @@ const isEditing = ref(false)
 const hoverShape = (e: MouseEvent) => {
     hover.value = true
 }
-
+const isEdit = computed(() => {
+    if (comment.value.isUserInfo?.id === props.commentInfo.user.id) return true
+    else return false
+})
 const isControls = computed(() => {
-    if(comment.value.isUserInfo?.id === props.commentInfo.user.id || comment.value.isUserInfo?.id === comment.value.isDocumentInfo?.user.id) return true
+    if (comment.value.isUserInfo?.id === props.commentInfo.user.id || comment.value.isUserInfo?.id === comment.value.isDocumentInfo?.user.id) return true
     else return false
 })
 
 const isControlsDel = computed(() => {
-    if(comment.value.isUserInfo?.id === props.commentInfo.user.id) return true
+    if (comment.value.isUserInfo?.id === props.commentInfo.user.id) return true
     else return false
 })
 
@@ -52,13 +55,13 @@ const unHoverShape = (e: MouseEvent) => {
 
 const onEditContext = (e: Event) => {
     e.stopPropagation()
-    if(!isControls.value) return
-    if(showEditComment.value) {
+    if (!isControls.value || !isEdit.value) return
+    if (showEditComment.value) {
         return input.value && input.value.focus()
     }
     textarea.value = props.commentInfo.content.replaceAll("<br/>", "\n").replaceAll("&nbsp;", " ")
     showEditComment.value = true
-    const p =  popupItem.value!.offsetTop - 10
+    const p = popupItem.value!.offsetTop - 10
     comment.value.notify(Comment.COMMENT_HANDLE_INPUT, p)
     nextTick(() => {
         input.value && input.value.focus()
@@ -68,7 +71,7 @@ const onEditContext = (e: Event) => {
 }
 
 const closeEdit = (e: Event) => {
-    if(e.target instanceof Element && e.target.closest('.textarea')) return
+    if (e.target instanceof Element && e.target.closest('.textarea')) return
     document.removeEventListener('click', closeEdit)
     comment.value.notify(Comment.COMMENT_HANDLE_INPUT)
     updateComment()
@@ -81,7 +84,7 @@ const onQuickReply = (e: Event) => {
 
 const onDelete = (e: Event) => {
     e.stopPropagation()
-    if(!isControls.value) return
+    if (!isControls.value) return
     emit('delete', props.index, e, props.commentInfo.id)
 }
 
@@ -89,14 +92,14 @@ const carriageReturn = (event: KeyboardEvent) => {
     event.stopPropagation()
     const { code, ctrlKey, metaKey } = event;
     comment.value.notify(Comment.COMMENT_HANDLE_INPUT)
-    if(event.key === 'Enter') {
-        if(ctrlKey || metaKey) {
+    if (event.key === 'Enter') {
+        if (ctrlKey || metaKey) {
             textarea.value = textarea.value + '\n'
-        }else {
+        } else {
             event.preventDefault()
             updateComment()
         }
-    }else if(code === 'Escape') {
+    } else if (code === 'Escape') {
         emit('close')
     }
 }
@@ -104,8 +107,10 @@ const carriageReturn = (event: KeyboardEvent) => {
 const updateComment = () => {
     const text = textarea.value.replaceAll("\r\n", "<br/>").replaceAll("\n", "<br/>").replaceAll(" ", "&nbsp;")
     comment.value.notify(Comment.COMMENT_HANDLE_INPUT)
-    emit('editComment', props.index, text)
-    editComment(text)
+    if (text.trim().length > 0) {
+        emit('editComment', props.index, text)
+        editComment(text)
+    }
     showEditComment.value = false
 }
 
@@ -118,46 +123,47 @@ const handleInput = () => {
     if (text) {
         const lineHeight = parseInt(getComputedStyle(text).lineHeight)
         const textareaHeight = text.clientHeight
-        const numberOfLines = Math.ceil(textareaHeight / lineHeight)    
+        const numberOfLines = Math.ceil(textareaHeight / lineHeight)
         scrollVisible.value = numberOfLines >= 9 ? true : false
-    } 
-    
+    }
+
 }
 
-const editComment = async(content: string) => {
-    try{
+const editComment = async (content: string) => {
+    try {
         const parent_id = props.commentInfo.parent_id
         const root_id = props.commentInfo.root_id
-        await comment_api.editCommentAPI({id: props.commentInfo.id, parent_id, root_id, content})
-    }catch (err) {
+        await comment_api.editCommentAPI({ id: props.commentInfo.id, parent_id, root_id, content })
+    } catch (err) {
         console.log(err);
     }
 }
 
 const formatDate = computed(() => {
-  return function (value: string): string {
-    const lang = localStorage.getItem('locale') || 'zh'
-    moment.locale(mapDateLang.get(lang) || 'zh-cn');
-    return filterDate(value);
-  }
+    return function (value: string): string {
+        const lang = localStorage.getItem('locale') || 'zh'
+        moment.locale(mapDateLang.get(lang) || 'zh-cn');
+        return filterDate(value);
+    }
 })
 
 const filterDate = (time: string) => {
-  const date = new Date(time);
-  const hours = date.getHours();
-  const minutes = date.getMinutes();
-  return `${moment(date).format("MMM Do")} ${hours.toString().padStart(2, '0')}:${minutes.toString().padStart(2, '0')}`;
+    const date = new Date(time);
+    const hours = date.getHours();
+    const minutes = date.getMinutes();
+    return `${moment(date).format("MMM Do")} ${hours.toString().padStart(2, '0')}:${minutes.toString().padStart(2, '0')}`;
 }
-function startEditing () {
+function startEditing() {
     isEditing.value = true
 }
 function stopEditing() {
-    isEditing.value = false
+    isEditing.value = false;
+    updateComment();
 }
 </script>
 
 <template>
-    <div class="popup-body" ref="popupItem"  @mouseenter="hoverShape" @mouseleave="unHoverShape">
+    <div class="popup-body" ref="popupItem" @mouseenter="hoverShape" @mouseleave="unHoverShape">
         <div class="container">
             <div class="avatar">
                 <img :src="commentInfo.user.avatar" alt="">
@@ -168,64 +174,48 @@ function stopEditing() {
                         <div class="name">{{ commentInfo.user.nickname }}</div>&nbsp;&nbsp;
                         <div class="date">{{ formatDate(commentInfo.record_created_at) }}</div>
                     </div>
-
-                    <div class="icon" :style="{visibility: hover ? 'visible' : 'hidden'}">
-<!--                        <el-button-group class="ml-4">-->
-                            <el-tooltip class="box-item" effect="dark" :content="`${t('comment.edit_content')}`"
-                                placement="bottom" :show-after="1000" :offset="10" :hide-after="0" v-if="isControls">
-<!--                                <el-button plain :icon="Edit" @click="onEditContext" :style="{'margin-right': 5 +'px'}" v-if="isControls"/>-->
-                                <div class="onEditContext" @click="onEditContext" v-if="isControls">
-                                    <svg-icon icon-class="comment-edit"></svg-icon>
-                                </div>
-                            </el-tooltip>
-                            <el-tooltip class="box-item" effect="dark" :content="`${t('comment.quick_reply')}`"
-                                placement="bottom" :show-after="1000" :offset="10" :hide-after="0">
-<!--                                <el-button plain @click="onQuickReply" style="margin-right: 5px;"><i style="font-size: 13px;">@</i></el-button>-->
-                                <div class="onQuickReply" @click="onQuickReply">
-                                    <svg-icon icon-class="comment-quick"></svg-icon>
-                                </div>
-                            </el-tooltip>
-                            <el-tooltip class="box-item" effect="dark" :content="`${t('comment.delete')}`"
-                                placement="bottom" :show-after="1000" :offset="10" :hide-after="0" v-if="isControls">
-<!--                                <el-button plain :icon="Delete" @click.stop="onDelete" v-if="isControls"/>-->
-                                <div class="onDelete" @click="onDelete" v-if="isControls">
-                                    <svg-icon icon-class="comment-delete"></svg-icon>
-                                </div>
-                            </el-tooltip>
-<!--                        </el-button-group>-->
+                    <div class="icon" :style="{ visibility: hover ? 'visible' : 'hidden' }">
+                        <el-tooltip class="box-item" effect="dark" :content="`${t('comment.edit_content')}`"
+                            placement="bottom" :show-after="1000" :offset="10" :hide-after="0" v-if="isControls && isEdit">
+                            <div class="onEditContext" @click="onEditContext" v-if="isControls && isEdit">
+                                <svg-icon icon-class="comment-edit"></svg-icon>
+                            </div>
+                        </el-tooltip>
+                        <el-tooltip class="box-item" effect="dark" :content="`${t('comment.quick_reply')}`"
+                            placement="bottom" :show-after="1000" :offset="10" :hide-after="0">
+                            <div class="onQuickReply" @click="onQuickReply">
+                                <svg-icon icon-class="comment-quick"></svg-icon>
+                            </div>
+                        </el-tooltip>
+                        <el-tooltip class="box-item" effect="dark" :content="`${t('comment.delete')}`" placement="bottom"
+                            :show-after="1000" :offset="10" :hide-after="0" v-if="isControls">
+                            <div class="onDelete" @click="onDelete" v-if="isControls">
+                                <svg-icon icon-class="comment-delete"></svg-icon>
+                            </div>
+                        </el-tooltip>
                     </div>
                 </div>
-                <div class="box-context" v-if="!showEditComment" @dblclick="onEditContext" v-html="commentInfo.content"></div>
+                <div class="box-context" v-if="!showEditComment" @dblclick="onEditContext" v-html="commentInfo.content">
+                </div>
                 <div class="textarea" v-if="showEditComment">
-                    <el-input
-                        ref="input"
-                        class="input"
-                        v-model="textarea"
-                        :autosize="{ minRows: 1, maxRows: 10 }"
-                        type="textarea"
-                        :placeholder="t('comment.input_comments')"
-                        resize="none"
-                        size="small"
-                        :input-style="{ overflow: scrollVisible ? 'visible' :'hidden', background: isEditing ? '#F4F5F5' : 'transparent', color: '#777777'}"
-                        @keydown="carriageReturn"
-                        @input="handleInput"
-                        @focus="startEditing"
-                        @blur="stopEditing"
-                    />
-                    <div class="send" :style="{background: sendBright ? '#1878F5' : 'transparent'}" @click="updateComment">
+                    <el-input ref="input" class="input" v-model="textarea" :autosize="{ minRows: 1, maxRows: 10 }"
+                        type="textarea" :placeholder="t('comment.input_comments')" resize="none" size="small"
+                        :input-style="{ overflow: scrollVisible ? 'visible' : 'hidden', background: isEditing ? '#F4F5F5' : 'transparent', color: '#777777' }"
+                        @keydown="carriageReturn" @input="handleInput" @focus="startEditing" @blur="stopEditing" />
+                    <div class="send" :style="{ background: sendBright ? '#1878F5' : 'transparent' }" @click="updateComment">
                         <svg-icon icon-class="send" :style="{ color: sendBright ? '#FFFFFF' : '#CCCCCC' }"></svg-icon>
                     </div>
                 </div>
             </div>
         </div>
-<!--        <i class="line"></i>-->
+        <!--        <i class="line"></i>-->
     </div>
 </template>
 
 <style scoped lang="scss">
- .popup-body {
-     padding: 14px 0 0 14px;
-     margin-left: -1px;
+.popup-body {
+    padding: 14px 0 0 14px;
+    margin-left: -1px;
 
     .container {
         display: flex;
@@ -248,10 +238,12 @@ function stopEditing() {
                 border-radius: 50%;
             }
         }
+
         .popup-body-context {
             width: 260px;
             display: flex;
             flex-direction: column;
+
             .box-heard {
                 height: 24px;
                 width: 267px;
@@ -275,6 +267,7 @@ function stopEditing() {
                         line-height: 12px;
                         color: #000000;
                     }
+
                     .date {
                         width: 92px;
                         height: 12px;
@@ -284,26 +277,27 @@ function stopEditing() {
                         color: #333333;
                     }
                 }
+
                 .icon {
                     width: 72px;
-                    height: 20px;
+                    height: 24px;
                     display: flex;
                     justify-content: flex-end;
                     align-items: center;
-                //    .el-button {
-                //    border: none;
-                //    padding: 0;
-                //    width: 20px;
-                //    border-radius: 2px;
-                //    height: 20px;
-                //    &:hover {
-                //        background-color: rgba(0,0,0,0.08);
-                //    }
-                //}
+
+                    //    .el-button {
+                    //    border: none;
+                    //    padding: 0;
+                    //    width: 20px;
+                    //    border-radius: 2px;
+                    //    height: 20px;
+                    //    &:hover {
+                    //        background-color: rgba(0,0,0,0.08);
+                    //    }
+                    //}
                     .onEditContext {
                         width: 24px;
                         height: 24px;
-                        margin-left: -1px;
                         display: flex;
                         align-items: center;
                         justify-content: center;
@@ -319,7 +313,6 @@ function stopEditing() {
                     .onQuickReply {
                         width: 24px;
                         height: 24px;
-                        margin-left: 9px;
                         display: flex;
                         align-items: center;
                         justify-content: center;
@@ -335,7 +328,6 @@ function stopEditing() {
                     .onDelete {
                         width: 24px;
                         height: 24px;
-                        margin-left: 7px;
                         display: flex;
                         align-items: center;
                         justify-content: center;
@@ -349,6 +341,7 @@ function stopEditing() {
                     }
                 }
             }
+
             .box-context {
                 width: 260px;
                 word-wrap: break-word;
@@ -359,11 +352,12 @@ function stopEditing() {
                 line-height: 22px;
                 color: #777777;
             }
+
             .textarea {
                 display: flex;
                 flex-direction: column;
                 width: 270px;
-                align-items:self-end ;
+                align-items: self-end;
                 margin-top: 5px;
 
                 .el-input--small {
@@ -388,6 +382,7 @@ function stopEditing() {
                     margin-top: 13px;
                     margin-right: 2px;
                     margin-bottom: 18px;
+
                     >svg {
                         width: 13px;
                         height: 13px;
@@ -396,19 +391,20 @@ function stopEditing() {
             }
         }
     }
-    
+
     .line {
         display: block;
         //margin: 0 15px;
         width: 300px;
-        border-bottom: 1px solid rgba(0,0,0,0.08);
+        border-bottom: 1px solid rgba(0, 0, 0, 0.08);
     }
 }
-  :deep(.el-textarea__inner) {
+
+:deep(.el-textarea__inner) {
     padding-left: 0;
     padding-top: 0;
     padding-bottom: 0;
     margin-right: 0;
     color: black;
-  }
+}
 </style>

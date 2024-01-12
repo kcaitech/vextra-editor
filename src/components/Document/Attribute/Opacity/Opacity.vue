@@ -156,7 +156,8 @@ function update() {
     let difference = false;
     if (shapes.length > 1) {
         for (let i = 1; i < shapes.length; i++) {
-            const randomOpacity = shapes[i].contextSettings?.opacity;
+            const o = shapes[i].contextSettings;
+            const randomOpacity = o?.opacity === undefined ? 1 : o?.opacity;
             if (randomOpacity !== firstOpacity) {
                 difference = true;
                 break;
