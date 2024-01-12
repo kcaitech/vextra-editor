@@ -19,6 +19,7 @@ import { Perm } from "@/context/workspace"
 import ShapeTypes from "./Search/ShapeTypes.vue";
 import { DragDetail, hover, modify_after_drag, modify_shape_lock_status, modify_shape_visible_status, multi_select_shape, range_select_shape, scroll_to_view } from "@/utils/listview";
 import { v4 } from "uuid";
+import { menu_locate2 } from "@/utils/common";
 
 type List = InstanceType<typeof ListView>;
 type ContextMenuEl = InstanceType<typeof ContextMenu>;
@@ -78,7 +79,6 @@ const itemHieght = 32;
 const MOUSE_RIGHT = 2;
 const shapeListMap: Map<string, ShapeDirList> = new Map();
 const chartMenu = ref<boolean>(false)
-const chartMenuPosition = ref<{ x: number, y: number }>({ x: 0, y: 0 }); //鼠标点击page所在的位置
 let chartMenuItems: string[] = [];
 const contextMenuEl = ref<ContextMenuEl>();
 const shapeList = ref<HTMLDivElement>()
@@ -245,26 +245,12 @@ const list_mousedown = (e: MouseEvent, shape: ShapeView) => {
 }
 
 const chartMenuMount = (e: MouseEvent) => {
-    e.stopPropagation()
-    chartMenuPosition.value.x = e.clientX
-    chartMenuPosition.value.y = e.clientY - props.pageHeight - listBody.value!.offsetTop - 12
+    e.stopPropagation();
     chartMenu.value = true;
     props.context.menu.menuMount('shapelist');
     nextTick(() => {
-        if (contextMenuEl.value) {
-            const el = contextMenuEl.value.menu;
-            let sy = document.documentElement.clientHeight - e.clientY //点击图形列表剩余的高度
-            if (el) {
-                const height = el.offsetHeight //菜单高度
-                if (sy < height) {
-                    let top = height - sy
-                    el.style.top = chartMenuPosition.value.y - top + 'px'
-                }
-                el.style.borderRadius = 4 + 'px'
-                el.style.width = 200 + 'px'
-            }
-            props.context.esctask.save(v4(), close);
-        }
+        menu_locate2(e, contextMenuEl.value?.menu, shapeList.value);
+        props.context.esctask.save(v4(), close);
     })
 }
 
@@ -518,8 +504,7 @@ onUnmounted(() => {
                 @set-visible="modify_visible_status" @set-lock="modify_lock_status" @item-mousedown="list_mousedown"
                 orientation="vertical" @drag-start="start_to_drag" @after-drag-2="after_drag">
             </ListView>
-            <ContextMenu v-if="chartMenu" :x="chartMenuPosition.x" :y="chartMenuPosition.y" @close="close"
-                :context="props.context" ref="contextMenuEl" @click.stop>
+            <ContextMenu v-if="chartMenu" @close="close" :context="props.context" ref="contextMenuEl" @click.stop>
                 <PageViewContextMenuItems :items="chartMenuItems" :context="props.context" @close="close">
                 </PageViewContextMenuItems>
             </ContextMenu>

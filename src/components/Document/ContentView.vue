@@ -40,6 +40,7 @@ import * as comment_api from '@/request/comment';
 import Creator from './Creator.vue';
 import { Wheel, fourWayWheel } from '@/utils/wheel';
 import PathEditMode from "@/components/Document/Selection/Controller/PathEdit/PathEditMode.vue";
+import { menu_locate } from '@/utils/common';
 
 interface Props {
     context: Context
@@ -71,7 +72,6 @@ const mouseOnClient: ClientXYRaw = { x: 0, y: 0 }; // 没有减去根部节点
 let shapesContainsMousedownOnPageXY: ShapeView[] = [];
 let contextMenuItems: string[] = [];
 const contextMenuEl = ref<ContextMenuEl>();
-const surplusY = ref<number>(0);
 const site: { x: number, y: number } = { x: 0, y: 0 };
 const selector_mount = ref<boolean>(false);
 const selectorFrame = reactive<SelectorFrame>({ top: 0, left: 0, width: 0, height: 0, includes: false });
@@ -253,20 +253,11 @@ function contextMenuMount(e: MouseEvent) {
     menu.menuMount('content');
     // 打开菜单之后调整菜单位置
     nextTick(() => {
-        if (!contextMenuEl.value) return;
+        if (!contextMenuEl.value) {
+            return;
+        }
         const el = contextMenuEl.value.menu;
-        surplusY.value = document.documentElement.clientHeight - site.y;
-        const root_height = props.context.workspace.root.height;
-        if (!el) return;
-        let height = el.offsetHeight;
-        if (height > root_height * 0.98) {
-            height = root_height * 0.98;
-            el.style.height = height + 'px';
-        }
-        if (surplusY.value - 4 < height) {
-            surplusY.value = document.documentElement.clientHeight - site.y - 4;
-            el.style.top = contextMenuPosition.y + surplusY.value - height + 'px';
-        }
+        menu_locate(props.context, contextMenuPosition, el)
         props.context.esctask.save(v4(), contextMenuUnmount); // 将关闭菜单事件加入到esc任务队列
     })
 }
@@ -418,7 +409,7 @@ const saveShapeCommentXY = () => {
     sleectShapes.forEach((item: ShapeView) => {
         commentList.forEach((comment: any, i: number) => {
             if (comment.target_shape_id === item.id) {
-                const { x, y } = item.frame2Root()                
+                const { x, y } = item.frame2Root()
                 const x1 = comment.shape_frame.x2 + x;
                 const y1 = comment.shape_frame.y2 + y;
                 editShapeComment(i, x1, y1);
@@ -636,15 +627,15 @@ onUnmounted(() => {
         <TextSelection :context="props.context" :matrix="matrix"></TextSelection>
         <UsersSelection :context="props.context" :matrix="matrix" v-if="avatarVisi" />
         <SelectionView :context="props.context" :matrix="matrix" />
-        <ContextMenu v-if="contextMenu" :x="contextMenuPosition.x" :y="contextMenuPosition.y" @mousedown.stop
-            :context="props.context" @close="contextMenuUnmount" :site="site" ref="contextMenuEl">
+        <Placement v-if="contextMenu" :x="contextMenuPosition.x" :y="contextMenuPosition.y" :context="props.context">
+        </Placement>
+        <ContextMenu v-if="contextMenu" @mousedown.stop :context="props.context" @close="contextMenuUnmount" :site="site"
+            ref="contextMenuEl">
             <PageViewContextMenuItems :items="contextMenuItems" :layers="shapesContainsMousedownOnPageXY"
                 :context="props.context" @close="contextMenuUnmount" :site="site">
             </PageViewContextMenuItems>
         </ContextMenu>
         <CellSetting v-if="cellSetting" :context="context" @close="closeModal" :addOrDivision="cellStatus"></CellSetting>
-        <Placement v-if="contextMenu" :x="contextMenuPosition.x" :y="contextMenuPosition.y" :context="props.context">
-        </Placement>
         <Selector v-if="selector_mount" :selector-frame="selectorFrame" :context="props.context"></Selector>
         <CommentView :context="props.context" :pageId="page.id" :page="page" :root="root" :cursorClass="cursor">
         </CommentView>

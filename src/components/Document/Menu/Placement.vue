@@ -102,6 +102,7 @@ onUnmounted(() => {
     height: 10px;
     background-color: transparent;
     transition: 0.32s;
+    z-index: 199;
 
     .dot {
         position: absolute;
