@@ -378,6 +378,22 @@ const lableLineStatus = () => {
     }
 }
 
+function page_watcher() {
+    const page = props.context.selection.selectedPage;
+
+    if (page) {
+        page.watch(shapesWatcher);
+    }
+}
+
+function remove_page_watcher() {
+    const page = props.context.selection.selectedPage;
+
+    if (page) {
+        page.unwatch(shapesWatcher);
+    }
+}
+
 // hooks
 watch(() => props.matrix, update_by_matrix, { deep: true });
 
@@ -388,6 +404,7 @@ onMounted(() => {
     document.addEventListener('keydown', keyboard_down_watcher);
     document.addEventListener('keyup', keyboard_up_watcher);
     window.addEventListener('blur', window_blur)
+    page_watcher();
 })
 onUnmounted(() => {
     props.context.selection.unwatch(selectionWatcher);
@@ -396,6 +413,7 @@ onUnmounted(() => {
     document.removeEventListener('keydown', keyboard_down_watcher);
     document.removeEventListener('keyup', keyboard_up_watcher);
     window.removeEventListener('blur', window_blur);
+    remove_page_watcher();
 })
 </script>
 <template>

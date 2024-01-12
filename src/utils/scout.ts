@@ -572,7 +572,7 @@ export function finder2(context: Context, scout: Scout, scope: ShapeView[], hot:
         return result;
     }
 
-    return for_standard(context, scout, scope, hot, m);
+    return for_standard(context, scout, scope, hot);
 }
 
 /**
@@ -646,9 +646,9 @@ function for_env(context: Context, scout: Scout, hot: PageXY) {
 }
 
 /**
- * @description 标准模式，内嵌标注模式
+ * @description 标准模式
  */
-function for_standard(context: Context, scout: Scout, scope: ShapeView[], hot: PageXY, m: boolean): ShapeView | undefined {
+function for_standard(context: Context, scout: Scout, scope: ShapeView[], hot: PageXY): ShapeView | undefined {
     let result: ShapeView | undefined = undefined;
 
     for (let i = scope.length - 1; i > -1; i--) {
@@ -789,15 +789,6 @@ function _set_env(context: Context, shapes: ShapeView[], m: boolean) {
         let p: ShapeView | undefined = g;
 
         while (p && p.type !== ShapeType.Page) {
-            if (is_fixed(p)) {
-                if (m) {
-                    bros.add(p);
-                    parents.add(p)
-                }
-
-                break;
-            }
-
             const children = p instanceof SymbolRefView ? (p.naviChilds || []) : (p.childs || []);
 
             for (let i = children.length - 1; i > -1; i--) {
@@ -808,6 +799,15 @@ function _set_env(context: Context, shapes: ShapeView[], m: boolean) {
                 }
 
                 bros.add(child);
+            }
+
+            if (is_fixed(p)) {
+                if (m) {
+                    bros.add(p);
+                    parents.add(p)
+                }
+
+                break;
             }
 
             if (p.type === ShapeType.Artboard
