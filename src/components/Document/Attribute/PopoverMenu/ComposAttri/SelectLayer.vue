@@ -105,6 +105,7 @@ onMounted(() => {
 
         console.log(body_h, popover_h, popover_y)
     }
+    props.selectList.forEach((_, index) => unfold.add(index));
     document.addEventListener('mouseup', handleClickOutside);
     register_container();
 })
@@ -147,8 +148,8 @@ onUnmounted(() => {
                             v-if="unfold.has(i)" :reflush="reflush">
                             <!--                            marginLeft: selectList.length > 1 ? '26px' : '12px',-->
                             <component v-if="scroll_container" :is="CompoSelectList" :context="context"
-                                :contents="item.data" @handleCheck="(v) =>handleCheck(v, item.state)" :layerId="props.layerId"
-                                :container="scroll_container">
+                                :contents="item.data" @handleCheck="(v) => handleCheck(v, item.state)"
+                                :layerId="props.layerId" :container="scroll_container">
                             </component>
                         </div>
                     </template>
