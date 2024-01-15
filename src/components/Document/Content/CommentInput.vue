@@ -8,7 +8,6 @@ import { Matrix } from "@kcdesign/data";
 import { v4 } from 'uuid';
 import SvgIcon from "@/components/common/SvgIcon.vue";
 import { WorkSpace } from '@/context/workspace';
-import e from 'express';
 const { t } = useI18n()
 const props = defineProps<{
     context: Context
