@@ -13,6 +13,8 @@ import { Navi } from "@/context/navigate";
 import { Perm } from "@/context/workspace";
 import { Tool } from "@/context/tool";
 import { copyLink } from "@/utils/clipboard";
+import { v4 } from "uuid";
+import { menu_locate2 } from "@/utils/common";
 
 type List = InstanceType<typeof ListView>;
 
@@ -61,6 +63,7 @@ const getPageName = () => {
 const isEdit = ref(props.context.workspace.documentPerm);
 const isLable = ref(props.context.tool.isLable);
 const rightTarget = ref<string>('');
+const pageList = ref<HTMLDivElement>()
 
 function document_watcher() {
     pageSource.notify(0, 0, 0, Number.MAX_VALUE);
@@ -140,7 +143,7 @@ const addPage = () => {
                 pagelist.value.clampScroll(0, -itemScrollH)
             }
         }
-        if(_tail <= 5) {
+        if (_tail <= 5) {
             props.context.navi.notify(Navi.ADD_PAGE);
         }
         pageSource.notify(0, 0, 0, Number.MAX_VALUE);
@@ -220,15 +223,18 @@ const pageMenuMount = (id: string, e: MouseEvent) => {
     pageMenu.value = true
     e.stopPropagation()
     document.addEventListener('keydown', Menuesc);
+    chartMenuMount(e);
+}
+
+const chartMenuMount = (e: MouseEvent) => {
+    e.stopPropagation();
+    props.context.menu.menuMount('pagelist');
     nextTick(() => {
         if (contextMenuEl.value) {
             const el = contextMenuEl.value.menu;
-            if (el) {
-                el.style.borderRadius = 4 + 'px'
-                el.style.width = 160 + 'px'
-            }
+            menu_locate2(e, el, pageList.value);
+            props.context.esctask.save(v4(), close);
         }
-
     })
 }
 
@@ -410,18 +416,23 @@ onUnmounted(() => {
 
 .items-wrap {
     font-size: var(--font-default-fontsize);
-    line-height: 30px;
-    padding: 0 10px;
+    height: 32px;
+    line-height: 32px;
+    padding: 0px 24px;
+    box-sizing: border-box;
 
     &:hover {
         background-color: var(--active-color);
+        color: #ffffff;
     }
 }
 
 .items-wrap-disable {
     font-size: var(--font-default-fontsize);
-    line-height: 30px;
-    padding: 0 10px;
+    height: 32px;
+    padding: 0px 24px;
+    line-height: 32px;
+    box-sizing: border-box;
     color: grey;
 }
 </style>
