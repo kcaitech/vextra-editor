@@ -4,8 +4,6 @@ import { Menu } from '@/context/menu';
 import { onMounted, onUnmounted, ref } from 'vue';
 
 interface Props {
-  x: number
-  y: number
   context: Context
   width?: number
   site?: { x: number, y: number }
@@ -43,16 +41,15 @@ if (props.site) {
 
 onMounted(() => {
   props.context.menu.watch(menu_watcher)
-  document.addEventListener('mousedown', handleClickOutside);  
+  document.addEventListener('mousedown', handleClickOutside);
 })
 onUnmounted(() => {
   props.context.menu.unwatch(menu_watcher);
-  document.removeEventListener('mousedown', handleClickOutside);  
+  document.removeEventListener('mousedown', handleClickOutside);
 })
 </script>
 <template>
-  <div ref="menu" class="__context-menu" @mousemove.stop
-    :style="{ top: `${props.y + 4}px`, left: `${props.width && surplusX < 174 + props.width ? -props.width : props.x }px`, width: `${props.width || 174}px` }">
+  <div ref="menu" class="__context-menu" @mousemove.stop :style="{ width: `${props.width || 174}px` }">
     <div class="header"></div>
     <slot></slot>
     <div class="bottom"></div>

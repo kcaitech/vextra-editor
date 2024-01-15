@@ -368,3 +368,63 @@ export function scout_once(context: Context, e: MouseEvent) {
     const shapes = context.selection.getShapesByXY(xy, metaKey || ctrlKey);
     selectShapes(context, shapes);
 }
+
+export function menu_locate(context: Context, site: XY, el: HTMLDivElement | undefined) {
+    if (!el) {
+        return;
+    }
+    const SPACE = 4;
+    const root = context.workspace.root;
+
+    const el_width = el.clientWidth;
+    const el_height = el.clientHeight;
+
+    let left = site.x;
+    let top = site.y;
+
+    const over_left = left + el_width - root.width + SPACE;
+    if (over_left > 0) {
+        left -= over_left;
+    }
+    if (left < SPACE) {
+        left = SPACE;
+    }
+
+    const over_top = top + el_height - root.height + SPACE;
+    if (over_top > 0) {
+        top -= over_top;
+    }
+    if (top < SPACE) {
+        top = SPACE;
+    }
+
+    el.style.left = left + 'px';
+    el.style.top = top + 'px';
+}
+
+
+export function menu_locate2(e: MouseEvent, el: HTMLDivElement | undefined, el_parent: HTMLDivElement | undefined) {
+    if (!el || !el_parent) {
+        return;
+    }
+
+    const box = el_parent.getBoundingClientRect();
+
+    let left = e.clientX - box.x;
+    let top = e.clientY - box.y;
+
+    const el_height = el.clientHeight;
+
+    const over_top = e.clientY + el_height - document.documentElement.clientHeight + 4;
+
+    if (over_top > 0) {
+        top -= over_top;
+    }
+
+    if (top * -1 > box.y - 46 - 4) {
+        top = - (box.y - 46 - 4);
+    }
+
+    el.style.left = left + 'px';
+    el.style.top = top + 'px';
+}

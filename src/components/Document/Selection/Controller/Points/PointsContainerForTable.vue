@@ -111,7 +111,7 @@ function point_mousemove(event: MouseEvent) {
     if (isDragging && asyncBaseAction) {
         const action = props.context.tool.action;
         const p1: PageXY = submatrix.computeCoord(startPosition.x, startPosition.y);
-        let p2: PageXY = submatrix.computeCoord(mouseOnClient.x - 10, mouseOnClient.y - 10);
+        let p2: PageXY = submatrix.computeCoord(mouseOnClient.x, mouseOnClient.y);
         if (event.shiftKey || props.shape.constrainerProportions || action === Action.AutoK) {
             p2 = get_t(p1, p2);
             asyncBaseAction.executeScale(CtrlElementType.RectRB, p2);
@@ -414,8 +414,14 @@ function mouseup4trans(e: MouseEvent) {
 }
 function get_t(p1: PageXY, p2: PageXY): PageXY {
     const m = props.shape.matrix2Root();
-    p1 = m.inverseCoord(p1.x, p1.y), p2 = m.inverseCoord(p2.x, p2.y);
-    const pre_delta = { x: p2.x - p1.x, y: p2.y - p1.y }, f = props.shape.frame, r = f.width / f.height;
+    const inverse = new Matrix(m.inverse);
+
+    p1 = inverse.inverseCoord(p1.x, p1.y);
+    p2 = inverse.inverseCoord(p2.x, p2.y);
+
+    const pre_delta = { x: p2.x - p1.x, y: p2.y - p1.y };
+    const f = props.shape.frame;
+    const r = f.width / f.height;
     return m.computeCoord(f.width + pre_delta.x, f.height + pre_delta.x * (1 / r));
 }
 let pre_target_x: number, pre_target_y: number;
