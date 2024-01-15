@@ -87,7 +87,11 @@ const compMenuUnmount = (e?: MouseEvent, name?: string, shape?: Shape) => {
     document.removeEventListener('keydown', Menuesc);
     if (name === 'gocomp') {
         if (shape) {
-            shape_track(props.context, shape);
+            const page = props.context.selection.selectedPage;
+            if(!page) return;
+            const s = page.getShape(shape.id);
+            if(!s) return;
+            shape_track(props.context, s);
         }
     } else if (name === 'datail') {
 

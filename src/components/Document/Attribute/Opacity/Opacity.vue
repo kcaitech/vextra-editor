@@ -4,7 +4,7 @@ import { AsyncOpacityEditor, ShapeView, adapt2Shape } from '@kcdesign/data';
 import { useI18n } from 'vue-i18n';
 import { nextTick, onMounted, onUnmounted, ref } from 'vue';
 import { Context } from '@/context';
-import { Selection } from '@/context/selection'
+import { Selection } from '@/context/selection';
 
 interface Props {
     context: Context
@@ -59,13 +59,6 @@ function limitValue(value: number): number {
 }
 
 const opacity = ref<number | string>(1);
-const range = () => {
-    if (typeof opacity.value === 'number') {
-        return (opacity.value * 100).toFixed(0);
-    } else {
-        return 100;
-    }
-}
 const ipt = () => {
     if (typeof opacity.value === 'number') {
         return (opacity.value * 100).toFixed(0);
@@ -95,11 +88,11 @@ function change(e: Event) {
     opacityChange(value);
 }
 
-function down(e: MouseEvent) {
+function down(v: number) {
     const selected = props.context.selection.selectedShapes;
     const page = props.context.selection.selectedPage;
     if (!selected.length || !page) return;
-    const value = limitValue(Number((e.target as HTMLInputElement).value)) / 100;
+    const value = limitValue(v) / 100;
     if (isNaN(value)) return;
     opacity.value = limitValue(Number(value));
     opacity_editor = props.context.editor
@@ -108,10 +101,55 @@ function down(e: MouseEvent) {
     opacity_editor.execute(value);
 }
 
-function mouseup(e: MouseEvent) {
+function mouseup() {
     if (opacity_editor) {
         opacity_editor.close();
         opacity_editor = undefined;
+    }
+}
+const progressBar = ref<HTMLDivElement>()
+const progress = ref<HTMLDivElement>()
+const progressBtn = ref<HTMLDivElement>()
+let isDragging = false
+const onMouseDown = (e: MouseEvent) => {
+    isDragging = true;
+    updateProgress(e.clientX);
+    down(opacity.value as number);
+    nextTick(() => {
+        if (progressBtn.value) {
+            document.addEventListener('mousemove', onMouseMove)
+            document.addEventListener('mouseup', onMouseUP)
+        }
+    })
+}
+const onMouseMove = (e: MouseEvent) => {
+    if (isDragging) {
+        updateProgress(e.clientX);
+        if (opacity_editor && typeof opacity.value === 'number') {
+            opacity_editor.execute(opacity.value / 100);
+        }
+    }
+}
+const onMouseUP = () => {
+    isDragging = false;
+    if (progressBtn.value) {
+        mouseup()
+        console.log(opacity_editor, 'opacity_editor');
+
+        document.removeEventListener('mousemove', onMouseMove)
+        document.removeEventListener('mouseup', onMouseUP)
+    }
+}
+function updateProgress(x: number) {
+    if (progressBar.value) {
+        const progressBarRect = progressBar.value.getBoundingClientRect();
+        const progressWidth = Math.min(Math.max(x - progressBarRect.left, 0), progressBarRect.width);
+        const progressPercentage = progressWidth / progressBarRect.width * 100;
+        if (progress.value) {
+            progress.value.style.width = progressPercentage + '%';
+            progressBtn.value!.style.left = progressPercentage - 4 + '%';
+            opacity.value = Number(progressPercentage.toFixed(0));
+        }
     }
 }
 
@@ -120,14 +158,6 @@ function input(e: Event) {
     if (isNaN(value) || !opacity_editor) return;
     opacity.value = limitValue(Number(value));
     opacity_editor.execute(value);
-}
-
-function change2(e: Event) {
-    if (opacity_editor) {
-        opacity_editor = opacity_editor.close();
-    } else {
-        change(e);
-    }
 }
 
 const handleOPacity = (e: Event) => {
@@ -143,6 +173,11 @@ const focus = (e: Event) => {
         const value = limitValue(Number((e.target as HTMLInputElement).value)) / 100;
         opacityValue.value = value;
         opacityInput.value.select();
+    }
+}
+const text_keyboard = (e: KeyboardEvent) => {
+    if(e.code === "Enter" || e.code === "NumpadEnter") {
+        opacityInput.value?.blur();
     }
 }
 
@@ -167,15 +202,9 @@ function update() {
     } else {
         opacity.value = firstOpacity;
     }
-}
-
-function range_keyboard(e: KeyboardEvent) {
-    if (e.repeat) return;
-    if (['ControlLeft', 'ControlRight', 'MetaLeft', 'MetaRight'].includes(e.code)) {
-        if (opacity_editor) {
-            opacity_editor = opacity_editor.close();
-        }
-        (e.target as HTMLInputElement).blur();
+    if (progressBar.value && progress.value) {
+        progress.value.style.width = (firstOpacity * 100) + '%';
+        progressBtn.value!.style.left = (firstOpacity * 100) - 4 + '%';
     }
 }
 
@@ -342,15 +371,15 @@ onUnmounted(() => {
             </template>
         </TypeHeader>
         <div class="opacity-container">
-            <div class="slider">
-                <input type="range" class="input-range" :value="range()" @mousedown="down" @mouseup="mouseup"
-                    @mouseleave="mouseup" @input="input" @change="change2" @keydown="range_keyboard" min="0" max="100"
-                    step="1" />
-                <div class="track"></div>
+            <div class="slider" @mousedown="onMouseDown">
+                <div ref="progressBar" class="progress-bar">
+                    <div ref="progress" class="progress"></div>
+                    <div ref="progressBtn" class="progress-button" @mousedown.stop="onMouseDown"></div>
+                </div>
             </div>
             <input type="text" ref="opacityInput" class="input-text"
                 :value="typeof opacity === 'string' ? ipt() : `${ipt()}%`" @focus="focus" @change="change" @blur="change"
-                @input="handleOPacity" />
+                @input="handleOPacity" @keydown="text_keyboard"/>
         </div>
     </div>
 </template>
@@ -447,7 +476,7 @@ onUnmounted(() => {
     .opacity-container {
         display: flex;
         align-items: center;
-        justify-content: center;
+        justify-content: space-between;
         margin-top: -14px;
         margin-bottom: 3px;
 
@@ -521,5 +550,43 @@ onUnmounted(() => {
 .opacity-container .el-slider {
     margin-top: 9px;
     margin-left: 12px;
+}
+
+.slider {
+    margin-top: 10px;
+    margin-left: 5px;
+    height: 32px;
+    display: flex;
+    align-items: center;
+}
+
+.progress-bar {
+    width: 150px;
+    height: 4px;
+    background-color: var(--grey-dark);
+    border-radius: 3px;
+    position: relative;
+
+}
+
+.progress {
+    width: 0%;
+    height: 100%;
+    background-color: var(--active-color);
+    border-radius: 5px;
+}
+
+.progress-button {
+    position: absolute;
+    left: 0%;
+    top: -4px;
+    width: 14px;
+    height: 14px;
+    border-radius: 7px;
+    background-color: #fff;
+    box-sizing: border-box;
+    cursor: pointer;
+    z-index: 1;
+    box-shadow: 0px 0px 4px 0px rgba(0, 0, 0, 0.2);
 }
 </style>
