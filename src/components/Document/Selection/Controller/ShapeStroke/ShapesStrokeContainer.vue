@@ -1,6 +1,6 @@
 <script setup lang='ts'>
 import { Context } from '@/context';
-import { Matrix, Shape, ShapeView } from '@kcdesign/data';
+import { Matrix, ShapeView } from '@kcdesign/data';
 import { ref, onMounted, onUnmounted, watch } from 'vue';
 import { Selection } from '@/context/selection';
 import { WorkSpace } from '@/context/workspace';
