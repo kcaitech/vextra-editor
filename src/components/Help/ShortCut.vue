@@ -17,8 +17,8 @@
                     {{ i.name }}
                     <div class="item-key">
                         <span :style="{ color: (key === '+' && index !== 0) ? '#BFBFBF' : '' }"
-                            v-for="(key, index) in strArray(string_by_sys(i.keys))" :key="key">
-                            {{ key === "+" ? ` ${key} ` : key }}
+                            v-for="(key, index) in strArray(string_by_sys(i.keys))" :key="index">
+                            {{ (key === "+" && index === 0) ? key : ` ${key} ` }}
                         </span>
                     </div>
                 </div>
