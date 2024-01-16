@@ -59,8 +59,9 @@ function showLayerSubMenu(e: MouseEvent, type: string) {
         if (!contextMenuEl.value) return;
         const el = contextMenuEl.value.menu;
         if (el) {
-            el.style.top = -4 + 'px';
-            el.style.left = props.menu_over_left &&  props.menu_over_left > -174 ?  -174 + 'px' : 174 + 'px';
+            const target = (e.target as HTMLElement);
+            el.style.top = -target.offsetTop + 'px';
+            el.style.left = props.menu_over_left &&  props.menu_over_left > -174 ?  -target.offsetWidth + 'px' : target.offsetWidth + 'px';
         }
     })
 }
@@ -369,8 +370,8 @@ function dissolution_container() {
  * 解除编组
  */
 function unGroup() {
-    const groups = props.context.selection.selectedShapes.filter(s => s.type === ShapeType.Group && !(s as GroupShapeView).data.isBoolOpShape);
-    const saveSelectShape = props.context.selection.selectedShapes.filter(s => s.type !== ShapeType.Group || (s as GroupShapeView).data.isBoolOpShape);
+    const groups = props.context.selection.selectedShapes.filter(s => s.type === ShapeType.Group);
+    const saveSelectShape = props.context.selection.selectedShapes.filter(s => s.type !== ShapeType.Group);
     if (groups.length === 0) return;
     const page = props.context.selection.selectedPage;
     if (page) {

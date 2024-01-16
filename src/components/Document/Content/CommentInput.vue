@@ -79,7 +79,7 @@ function handleClickOutside(event: MouseEvent) {
 const inputPosition = () => {
     offside.value = props.rootWidth! - props.posi.x < commentWidth
     surplusX.value = -(commentWidth - 12)
-    input.value?.focus()
+    input.value?.focus();
 }
 const sendBright = computed(() => textarea.value.trim().length > 0)
 const lastEscPress = ref(0);

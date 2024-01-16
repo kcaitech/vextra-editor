@@ -152,9 +152,8 @@ const addComment = (e: MouseEvent) => {
     commentPosition.x = xy.x; //评论输入框在页面的坐标
     commentPosition.y = xy.y;
 
-    posi.value.x = e.clientX - x // 评论弹出框的位置坐标
-    posi.value.y = e.clientY - y
-
+    posi.value.x = x // 评论弹出框的位置坐标
+    posi.value.y = y
     commentInput.value = true;
     document.addEventListener('keydown', commentEsc);
 }
@@ -163,8 +162,8 @@ const getCommentInputXY = (e: MouseEvent) => {
     const { x, y, xy } = detectionShape(e)
     commentPosition.x = xy.x;
     commentPosition.y = xy.y;
-    posi.value.x = e.clientX - x
-    posi.value.y = e.clientY - y
+    posi.value.x = x
+    posi.value.y = y
 }
 const commentEsc = (e: KeyboardEvent) => {
     if (e.code === 'Escape') {
@@ -498,7 +497,7 @@ onUnmounted(() => {
 .creator {
     width: 100%;
     height: 100%;
-    position: fixed;
+    position: absolute;
     z-index: 9;
 }
 </style>

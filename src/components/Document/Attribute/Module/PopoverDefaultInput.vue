@@ -37,6 +37,7 @@ const fixed = ref(false);
 watch(() => props.default_value, (v) => {
     if(!fixed.value && typeof v === 'string') {
         textDefaultValue.value = v as string;
+        emits("change", textDefaultValue.value);
     }
     if (!props.dft_show) {
         return;

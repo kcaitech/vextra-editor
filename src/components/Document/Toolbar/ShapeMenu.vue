@@ -27,7 +27,7 @@ function get_icon_class() {
     <div class="container-change" @click="select">                                
         <div style="display: flex; align-items: center;">
             <div class="choose">
-                <svg-icon icon-class="choose" :style="{ visibility: isActive ? 'visible' : 'hidden' }"></svg-icon>
+                <svg-icon icon-class="white-select" :style="{ visibility: isActive ? 'visible' : 'hidden' }"></svg-icon>
             </div>
             <div class="svg-container">
                 <svg-icon :icon-class="get_icon_class()"></svg-icon>

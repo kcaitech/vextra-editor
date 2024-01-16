@@ -134,8 +134,6 @@ const onMouseUP = () => {
     isDragging = false;
     if (progressBtn.value) {
         mouseup()
-        console.log(opacity_editor, 'opacity_editor');
-
         document.removeEventListener('mousemove', onMouseMove)
         document.removeEventListener('mouseup', onMouseUP)
     }

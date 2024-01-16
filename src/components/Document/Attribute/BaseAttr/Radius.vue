@@ -209,16 +209,16 @@ onUnmounted(() => {
         <IconText class="frame" svgicon="radius" :multipleValues="is_multi_values" :text="radius.lt"
             :frame="{ width: 12, height: 12 }" @onchange="(value, shapes) => change(value, shapes, 'lt')" :disabled="disabled" :context="context" />
         <div class="frame" v-if="!rect"></div>
-        <IconText v-if="rect" class="frame" svgicon="radius" :text="radius.rt"
+        <IconText v-if="rect" class="frame" svgicon="radius" :text="radius.rt" :disabled="disabled"
             :frame="{ width: 12, height: 12, rotate: 90 }" @onchange="(value, shapes) => change(value, shapes, 'rt')" :context="context" />
         <div class="more-for-radius" @click="rectToggle" v-if="can_be_rect" :class="{ 'active': rect }">
             <svg-icon :icon-class="rect ? 'white-for-radius' : 'more-for-radius'" :class="{ 'active': rect }"></svg-icon>
         </div>
     </div>
     <div class="tr" v-if="rect">
-        <IconText class="frame" svgicon="radius" :text="radius.lb" :frame="{ width: 12, height: 12, rotate: 270 }"
+        <IconText class="frame" svgicon="radius" :text="radius.lb" :frame="{ width: 12, height: 12, rotate: 270 }" :disabled="disabled"
         @onchange="(value, shapes) => change(value, shapes, 'lb')" :context="context" />
-        <IconText class="frame" svgicon="radius" :text="radius.rb" :frame="{ width: 12, height: 12, rotate: 180 }"
+        <IconText class="frame" svgicon="radius" :text="radius.rb" :frame="{ width: 12, height: 12, rotate: 180 }" :disabled="disabled"
         @onchange="(value, shapes) => change(value, shapes, 'rb')" :context="context" />
         <div style="width: 32px;height: 32px;"></div>
     </div>
