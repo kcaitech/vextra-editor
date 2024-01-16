@@ -1,8 +1,8 @@
 <script setup lang="ts">
 import { onMounted, onUnmounted, ref, watch } from "vue";
 import { Context } from "@/context";
-import { Selection } from "@/context/selection";
-import { Matrix, Path, PathShape, PathShapeView, Shape, ShapeType, ShapeView } from "@kcdesign/data";
+import { Selection, SelectionTheme } from "@/context/selection";
+import { Matrix, Path, PathShapeView, ShapeType, ShapeView } from "@kcdesign/data";
 import { ControllerType, ctrlMap } from "./Controller/map";
 import { CtrlElementType, WorkSpace } from "@/context/workspace";
 import { Action, Tool } from "@/context/tool";
@@ -14,6 +14,7 @@ import ShapeSize from "./ShapeSize.vue";
 import LableLine from "../Assist/LableLine.vue";
 import { reactive } from "vue";
 import { multi_select_shape } from "@/utils/listview";
+import { is_symbol_class } from "@/utils/controllerFn";
 
 export interface Point {
     x: number
@@ -46,11 +47,12 @@ const controller = ref<boolean>(false);
 const rotate = ref<number>(0);
 const altKey = ref<boolean>(false);
 const tracing = ref<boolean>(false);
-const tracingStroke = ref<string>('#1878F5');
 const traceEle = ref<Element>();
 const tracingFrame = ref<PathView>({ path: '', viewBox: '', height: 0, width: 0 });
 const watchedShapes = new Map();
 const tracing_class = reactive({ thick_stroke: false, hollow_fill: false });
+const theme = ref<SelectionTheme>(SelectionTheme.Normol);
+const tracingStroke = ref<SelectionTheme>(SelectionTheme.Normol);
 
 function watchShapes() { // 监听选区相关shape的变化
     const needWatchShapes = new Map();
@@ -147,6 +149,12 @@ function modfiy_tracing_class(shape: ShapeView) {
     if (shape.getFills().length) {
         tracing_class.hollow_fill = false;
     }
+
+    if (is_symbol_class(shape)) {
+        tracingStroke.value = SelectionTheme.Symbol;
+    } else {
+        tracingStroke.value = SelectionTheme.Normol;
+    }
 }
 
 /**
@@ -173,19 +181,11 @@ function createShapeTracing() {
         tracingFrame.value = { height: h, width: w, viewBox: `${0} ${0} ${w} ${h}`, path: path.toString() };
         tracing.value = true;
 
-        if (is_symbol_class(hoveredShape.type)) {
-            tracingStroke.value = '#7F58F9';
-        } else {
-            tracingStroke.value = '#1878F5';
-        }
-
         modfiy_tracing_class(hoveredShape);
     }
 }
 
-function is_symbol_class(type: ShapeType) {
-    return [ShapeType.Symbol, ShapeType.SymbolRef, ShapeType.SymbolUnion].includes(type);
-}
+
 
 /**
  * @description 创建控件
@@ -200,6 +200,7 @@ function createController() {
     modify_controller_frame(selection);
     modify_controller_type(selection);
     modify_rotate(selection);
+    modify_theme(selection);
     tracing.value = false;
     controller.value = true;
     // console.log('控件绘制用时(ms):', Date.now() - s);
@@ -277,8 +278,6 @@ function modify_controller_type(shapes: ShapeView[],) {
             controllerType.value = ControllerType.Text;
         } else if (__type === ShapeType.Table) {
             controllerType.value = ControllerType.Table;
-        } else if (is_symbol_class(__type)) {
-            controllerType.value = ControllerType.Symbol;
         } else {
             controllerType.value = ControllerType.Rect;
         }
@@ -309,6 +308,15 @@ function modify_rotate(shapes: ShapeView[]) {
         rotate.value = getHorizontalAngle(controllerFrame.value[0], controllerFrame.value[1]);
     }
     rotate.value = 0;
+}
+function modify_theme(shapes: ShapeView[]) {
+    theme.value = SelectionTheme.Normol;
+    if (shapes.length !== 1) {
+        return;
+    }
+    if (is_symbol_class(shapes[0])) {
+        theme.value = SelectionTheme.Symbol;
+    }
 }
 function pathMousedown(e: MouseEvent) { // 点击图形描边以及描边内部区域，将选中图形
     const action = props.context.tool.action;
@@ -422,7 +430,7 @@ onUnmounted(() => {
         xmlns:xhtml="http://www.w3.org/1999/xhtml" preserveAspectRatio="xMinYMin meet" overflow="visible"
         :width="tracingFrame.width" :height="tracingFrame.height" :viewBox="tracingFrame.viewBox"
         style="transform: translate(0px, 0px); position: absolute;">
-        <path v-if="tracing_class.thick_stroke" :d="tracingFrame.path" fill="none" stroke="transparent" :stroke-width="14"
+        <path v-if="tracing_class.thick_stroke" :d="tracingFrame.path" fill="none" stroke="transparent" stroke-width="14"
             @mousedown="(e: MouseEvent) => pathMousedown(e)">
         </path>
         <path :d="tracingFrame.path" :fill="tracing_class.hollow_fill ? 'none' : 'transparent'" :stroke="tracingStroke"
@@ -432,7 +440,7 @@ onUnmounted(() => {
     <!-- 控制 -->
     <component v-if="controller" :is="ctrlMap.get(controllerType) ?? ctrlMap.get(ControllerType.Rect)"
         :context="props.context" :controller-frame="controllerFrame" :rotate="rotate" :matrix="props.matrix"
-        :shape="context.selection.selectedShapes[0]">
+        :shape="context.selection.selectedShapes[0]" :theme="theme">
     </component>
     <!-- 辅助 -->
     <Assist :context="props.context" :controller-frame="controllerFrame"></Assist>

@@ -2,7 +2,7 @@
 import { Context } from '@/context';
 import { AsyncBaseAction, CtrlElementType, Matrix, PathShape, PathShapeView, Shape, ShapeView } from '@kcdesign/data';
 import { onMounted, onUnmounted, watch, reactive, ref } from 'vue';
-import { ClientXY, PageXY, XY } from '@/context/selection';
+import { ClientXY, PageXY, SelectionTheme, XY } from '@/context/selection';
 import { forbidden_to_modify_frame, getAngle, getHorizontalAngle } from '@/utils/common';
 import { update_dot3 } from './common';
 import { Point } from "../../SelectionView.vue";
@@ -17,6 +17,7 @@ interface Props {
     axle: { x: number, y: number }
     cFrame: Point[]
     rotation: number
+    theme: SelectionTheme
 }
 interface Dot {
     point: { x: number, y: number }
@@ -348,7 +349,7 @@ onUnmounted(() => {
         <g @mousedown.stop="(e) => point_mousedown(e, p.type, i)" @mouseenter="() => point_mouseenter(p.type)"
             @mouseleave="point_mouseleave">
             <rect :x="p.extra.x" :y="p.extra.y" class="assit-rect"></rect>
-            <rect :x="p.point.x" :y="p.point.y" class="main-rect" rx="2px"></rect>
+            <rect :x="p.point.x" :y="p.point.y" class="main-rect" rx="2px" :stroke="theme"></rect>
         </g>
     </g>
 </template>
@@ -362,7 +363,6 @@ onUnmounted(() => {
     width: 8px;
     height: 8px;
     fill: #ffffff;
-    stroke: var(--active-color);
 }
 
 .assit-rect {
