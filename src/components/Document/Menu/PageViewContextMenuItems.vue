@@ -1,5 +1,5 @@
 <script setup lang='ts'>
-import { onUnmounted, reactive, ref, watch } from 'vue';
+import { nextTick, onUnmounted, reactive, ref, watch } from 'vue';
 import { useI18n } from 'vue-i18n';
 import ContextMenu from '@/components/common/ContextMenu.vue';
 import Key from '@/components/common/Key.vue';
@@ -37,25 +37,33 @@ interface Props {
     context: Context,
     layers?: ShapeView[],
     items: string[],
-    site?: { x: number, y: number }
+    site?: { x: number, y: number },
+    menu_over_left?: number 
 }
-
+type ContextMenuEl = InstanceType<typeof ContextMenu>;
 const props = defineProps<Props>();
 const emit = defineEmits<{
     (e: 'close'): void;
 }>();
-const layerSubMenuPosition: XY = reactive({ x: 0, y: 0 });
 const layerSubMenuVisiable = ref<boolean>(false);
 const isComment = ref<boolean>(props.context.comment.isVisibleComment);
 const isTitle = ref<boolean>(props.context.tool.isShowTitle);
 const isCursor = ref<boolean>(props.context.menu.isUserCursorVisible);
 const invalid_items = ref<string[]>([]);
+const contextMenuEl = ref<ContextMenuEl>();
 
 function showLayerSubMenu(e: MouseEvent, type: string) {
-    layerSubMenuPosition.x = (e.target as Element).getBoundingClientRect().width;
-    layerSubMenuPosition.y = -10;
     layerSubMenuVisiable.value = true;
     hoverItem.value = type;
+    nextTick(() => {
+        if (!contextMenuEl.value) return;
+        const el = contextMenuEl.value.menu;
+        if (el) {
+            const target = (e.target as HTMLElement);
+            el.style.top = -target.offsetTop + 'px';
+            el.style.left = props.menu_over_left &&  props.menu_over_left > -174 ?  -target.offsetWidth + 'px' : target.offsetWidth + 'px';
+        }
+    })
 }
 
 function is_inner_textshape(): (ShapeView | Shape) & { text: Text } | undefined {
@@ -362,8 +370,8 @@ function dissolution_container() {
  * 解除编组
  */
 function unGroup() {
-    const groups = props.context.selection.selectedShapes.filter(s => s.type === ShapeType.Group && !(s as GroupShapeView).data.isBoolOpShape);
-    const saveSelectShape = props.context.selection.selectedShapes.filter(s => s.type !== ShapeType.Group || (s as GroupShapeView).data.isBoolOpShape);
+    const groups = props.context.selection.selectedShapes.filter(s => s.type === ShapeType.Group);
+    const saveSelectShape = props.context.selection.selectedShapes.filter(s => s.type !== ShapeType.Group);
     if (groups.length === 0) return;
     const page = props.context.selection.selectedPage;
     if (page) {
@@ -502,8 +510,7 @@ onUnmounted(() => {
             <span>{{ t('system.select_layer') }}</span>
             <svg-icon :icon-class="hoverItem === 'layer-select' ? 'white-down' : 'down'"
                 style="transform: rotate(-90deg);margin-left: 62px"></svg-icon>
-            <ContextMenu v-if="layerSubMenuVisiable" :x="layerSubMenuPosition.x" :y="layerSubMenuPosition.y" :width="174"
-                :site="site" :context="props.context">
+            <ContextMenu v-if="layerSubMenuVisiable" :width="174" ref="contextMenuEl" :site="site" :context="props.context">
                 <Layers @close="emit('close')" :layers="props.layers" :context="props.context"></Layers>
             </ContextMenu>
         </div>

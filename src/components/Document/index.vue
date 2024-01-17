@@ -121,7 +121,7 @@ function switchPage(id?: string) {
     const ctx: Context = context;
     const pagesMgr = ctx.data.pagesMgr;
     const cur_page = context.selection.selectedPage;
-    if(cur_page && cur_page.id === id) return;
+    if (cur_page && cur_page.id === id) return;
     pagesMgr.get(id).then((page: Page | undefined) => {
       if (page) {
         ctx.comment.toggleCommentPage()
@@ -340,9 +340,10 @@ const getDocumentInfo = async () => {
           return;
         }
         if (docKeyRes.message === "无访问权限") {
+          const query = route.query.page_id ? { id: route.query.id, page_id: route.query.page_id.slice(0, 8) } : { id: route.query.id };
           router.push({
             name: "apply",
-            query: { id: route.query.id },
+            query: query,
           });
           return;
         }
@@ -359,9 +360,10 @@ const getDocumentInfo = async () => {
     const docKeyData = docKeyRes.data;
     const perm = docInfoData.document_permission.perm_type;
     if (perm === 0) { // 无权限
+      const query = route.query.page_id ? { id: route.query.id, page_id: route.query.page_id.slice(0, 8) } : { id: route.query.id };
       router.push({
         name: "apply",
-        query: { id: route.query.id },
+        query: query,
       });
       return;
     }
@@ -747,7 +749,7 @@ onUnmounted(() => {
       <span style="color: #1878F5;" v-if="countdown > 0">{{ countdown }}</span>
     </div>
     <Bridge v-if="bridge" :context="context!"></Bridge>
-    <HelpEntrance v-if="!null_context" :context="context!"/>
+    <HelpEntrance v-if="!null_context" :context="context!" />
   </div>
 </template>
 <style>

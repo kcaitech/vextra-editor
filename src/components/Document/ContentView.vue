@@ -70,7 +70,7 @@ const mousedownOnClientXY: ClientXY = { x: 0, y: 0 }; // 鼠标在可视区中�
 const mousedownOnPageXY: PageXY = { x: 0, y: 0 }; // 鼠标在page中的坐标
 const mouseOnClient: ClientXYRaw = { x: 0, y: 0 }; // 没有减去根部节点
 let shapesContainsMousedownOnPageXY: ShapeView[] = [];
-let contextMenuItems: string[] = [];
+const contextMenuItems = ref<string[]>([]);
 const contextMenuEl = ref<ContextMenuEl>();
 const site: { x: number, y: number } = { x: 0, y: 0 };
 const selector_mount = ref<boolean>(false);
@@ -220,6 +220,7 @@ function pageViewDragEnd() {
 /**
  * @description 打开右键菜单
  */
+const menu_over_left = ref(0);
 function contextMenuMount(e: MouseEvent) {
     const workspace = props.context.workspace, selection = props.context.selection, menu = props.context.menu;
     menu.menuMount();
@@ -230,23 +231,23 @@ function contextMenuMount(e: MouseEvent) {
     contextMenuPosition.x = e.clientX - root.x;
     contextMenuPosition.y = e.clientY - root.y;
     setMousedownXY(e); // 更新鼠标定位
-    contextMenuItems = [];
+    contextMenuItems.value = [];
     const area = right_select(e, mousedownOnPageXY, props.context); // 判断点击环境
-    contextMenuItems = get_menu_items(props.context, area, e); // 根据点击环境确定菜单选项
+    contextMenuItems.value = get_menu_items(props.context, area, e); // 根据点击环境确定菜单选项
     const shapes = selection.getLayers(mousedownOnPageXY);
     if (shapes.length > 1 && (area !== 'text-selection' && area !== 'table_cell')) {
         shapesContainsMousedownOnPageXY = shapes;
-        contextMenuItems.push('layers');
+        contextMenuItems.value.push('layers');
     }
     const _shapes = selection.selectedShapes
     if (_shapes.length === 1 && _shapes[0].type === ShapeType.SymbolRef) {
-        contextMenuItems.push('edit');
+        contextMenuItems.value.push('edit');
     }
     if (area === 'table_cell') {
         const table = props.context.tableSelection;
         if (table.tableRowStart === table.tableRowEnd && table.tableColStart === table.tableColEnd) {
-            contextMenuItems.push('split_cell');
-            contextMenuItems = contextMenuItems.filter(item => item !== 'merge_cell');
+            contextMenuItems.value.push('split_cell');
+            contextMenuItems.value = contextMenuItems.value.filter(item => item !== 'merge_cell');
         }
     }
     contextMenu.value = true; // 数据准备就绪之后打开菜单
@@ -257,7 +258,7 @@ function contextMenuMount(e: MouseEvent) {
             return;
         }
         const el = contextMenuEl.value.menu;
-        menu_locate(props.context, contextMenuPosition, el)
+        menu_over_left.value = menu_locate(props.context, contextMenuPosition, el) || 0;
         props.context.esctask.save(v4(), contextMenuUnmount); // 将关闭菜单事件加入到esc任务队列
     })
 }
@@ -634,7 +635,7 @@ onUnmounted(() => {
         <ContextMenu v-if="contextMenu" @mousedown.stop :context="props.context" @close="contextMenuUnmount" :site="site"
             ref="contextMenuEl">
             <PageViewContextMenuItems :items="contextMenuItems" :layers="shapesContainsMousedownOnPageXY"
-                :context="props.context" @close="contextMenuUnmount" :site="site">
+                :context="props.context" @close="contextMenuUnmount" :site="site" :menu_over_left="menu_over_left">
             </PageViewContextMenuItems>
         </ContextMenu>
         <CellSetting v-if="cellSetting" :context="context" @close="closeModal" :addOrDivision="cellStatus"></CellSetting>

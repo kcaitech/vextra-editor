@@ -37,6 +37,8 @@ export function setup(context: Context) {
     document.addEventListener('keyup', up);
 
     const remove_keyboard_units = () => {
+        console.log(11);
+        
         document.removeEventListener('keydown', down);
         document.removeEventListener('keyup', up);
     }

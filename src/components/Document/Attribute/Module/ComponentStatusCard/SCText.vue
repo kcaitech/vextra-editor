@@ -118,8 +118,7 @@ const getValue = (value: Text | string | undefined) => {
         display: flex;
         align-items: center;
         justify-content: space-between;
-        height: 44px;
-        padding: 6px 0;
+        height: 38px;
         box-sizing: border-box;
     }
 
@@ -173,7 +172,7 @@ const getValue = (value: Text | string | undefined) => {
             .name {
                 flex: 1;
                 display: flex;
-                max-width: 100%;
+                max-width: calc(100% - 30px);
 
                 >span {
                     display: block;

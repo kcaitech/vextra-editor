@@ -59,7 +59,11 @@ function down(e: MouseEvent, shape: Shape) {
     }
 
     if (is_dbl_action()) {
-        shape_track(props.context, target);
+        const page = props.context.selection.selectedPage;
+        if(!page) return;
+        const shape = page.getShape(target.id);
+        if(!shape) return;
+        shape_track(props.context, shape);
         return;
     }
 

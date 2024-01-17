@@ -3,6 +3,7 @@ import { Navi } from "@/context/navigate";
 import { Shape, ShapeType, ShapeView, SymbolShape, SymbolUnionShape, SymbolView, VariableType } from "@kcdesign/data";
 import { XYsBounding } from "./common";
 import { WorkSpace } from "@/context/workspace";
+import { is_part_of_symbol } from "./symbol";
 
 export type Area = number | 'artboard' | 'group' | 'normal';
 
@@ -27,14 +28,20 @@ export function is_shape_in_selection(shapes: ShapeView[], shape: ShapeView): bo
 export function selection_types(shapes: ShapeView[]): number {
     let types = 0;
     for (let i = 0; i < shapes.length; i++) {
-        if (shapes[i].type === ShapeType.Artboard) {
-            types = types | 2;
-        } else if (shapes[i].type === ShapeType.Group) {
+        if (shapes[i].type === ShapeType.Group) {
             types = types | 1;
+        } else if (shapes[i].type === ShapeType.Artboard) {
+            types = types | 2;
+        }else if (shapes[i].type === ShapeType.SymbolRef) {
+            types = types | 4;
         }
-        if (types === 3) return types;
+        if (is_part_of_symbol(shapes[i])) {
+            types = types | 8;
+        }
+        if (types >= 15) return types;
     }
     return types;
+    
 }
 
 export function is_parent_unvisible(shape: ShapeView): boolean {

@@ -881,7 +881,7 @@ export function is_need_skip_to_render(shape: Shape, matrix: Matrix) { // 不是
  * @param context
  * @param shape
  */
-export function shape_track(context: Context, shape: ShapeView | Shape) {
+export function shape_track(context: Context, shape: ShapeView) {
     const page = shape.getPage() as PageView;
     if (!page) return;
     const target = page.getShape(shape.id);

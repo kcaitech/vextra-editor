@@ -1,10 +1,10 @@
 <script setup lang="ts">
 import { ref, watch } from 'vue'
-import { Switch } from '@element-plus/icons-vue'
 import { Context } from '@/context';
 import { useI18n } from 'vue-i18n'
+import { Action } from '@/context/tool';
 
-const {t} = useI18n();
+const { t } = useI18n();
 interface Props {
     context: Context
 }
@@ -13,9 +13,13 @@ const isLable = ref(false);
 const visible = ref(false)
 const vis = ref(false);
 const isActive = ref(false);
+const input = ref<HTMLInputElement>();
 watch(isActive, (v) => {
     props.context.tool.setLableSwitch(v);
     vis.value = true;
+    const active = props.context.tool.action;
+    if(!v || active === Action.AutoV || active === Action.AddComment) return;
+    props.context.tool.setAction(Action.AutoV);
 })
 
 var timer: any = null
@@ -33,21 +37,21 @@ const onMouseleave = () => {
 
 const toggleSwitch = () => {
     isActive.value = !isActive.value;
+    input.value?.blur();
 }
 
 </script>
 
 <template>
     <div class="content_lable">
-        <el-tooltip class="box-item" effect="dark" :content="t('lable.development')" placement="bottom" :show-after="600" :offset="10"
-            :hide-after="0" :visible="vis ? false : visible">
+        <el-tooltip class="box-item" effect="dark" :content="t('lable.development')" placement="bottom" :show-after="600"
+            :offset="10" :hide-after="0" :visible="vis ? false : visible">
             <div class="d-switch" :class="{ 'is-checked': isActive }" @mouseenter.stop="onMouseenter"
                 @mouseleave.stop="onMouseleave">
                 <input class="d-switch__input" ref="input" type="checkbox" :checked="isActive" @change.stop="toggleSwitch"
                     :true-value="isActive" :false-value="!isActive" />
                 <span class="d-switch_action">
-<!--                    <Switch style="width: 14px; height: 14px;" />-->
-                <svg-icon icon-class="switch" style="width: 16px;height: 16px"></svg-icon>
+                    <svg-icon icon-class="switch" style="width: 16px;height: 16px"></svg-icon>
                 </span>
             </div>
         </el-tooltip>
