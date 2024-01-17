@@ -172,21 +172,6 @@ const commentEsc = (e: KeyboardEvent) => {
         commentInput.value = false;
     }
 }
-//移动shape时保存shape身上的评论坐标
-const saveShapeCommentXY = () => {
-    const comment = props.context.comment;
-    const shapes = comment.commentShape
-    const sleectShapes = flattenShapes(shapes)
-    const commentList = props.context.comment.pageCommentList
-    sleectShapes.forEach((item: any) => {
-        commentList.forEach((comment: any, i: number) => {
-            if (comment.target_shape_id === item.id) {
-                editShapeComment(i, comment.shape_frame.x1, comment.shape_frame.y1)
-            }
-        })
-    })
-    comment.editShapeComment(false, [])
-}
 //移动输入框
 const mouseDownCommentInput = (e: MouseEvent) => {
     e.stopPropagation();
@@ -247,7 +232,7 @@ const completed = (succession: boolean, event?: MouseEvent) => {
 const getDocumentComment = async () => {
     try {
         const docInfo = props.context.comment.isDocumentInfo;
-        const { data } = await comment_api.getDocumentCommentAPI({ doc_id:  docInfo?.document.id || route.query.id})
+        const { data } = await comment_api.getDocumentCommentAPI({ doc_id: docInfo?.document.id || route.query.id })
         if (data) {
             data.forEach((obj: { children: any[]; commentMenu: any; }) => {
                 obj.commentMenu = commentMenuItems.value

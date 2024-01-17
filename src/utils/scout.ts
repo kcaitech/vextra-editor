@@ -475,6 +475,9 @@ export function finder_container(scout: Scout, g: ShapeView[], position: PageXY,
 
     for (let i = 0, len = layers.length; i < len; i++) {
         const item = layers[i];
+        if (item.isVirtualShape) {
+            continue;
+        }
         if ([ShapeType.Artboard, ShapeType.Symbol, ShapeType.SymbolUnion].includes(item.type) && (!except || !except.get(item.id))) {
             return item;
         }
