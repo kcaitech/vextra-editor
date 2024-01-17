@@ -278,6 +278,8 @@ function modify_controller_type(shapes: ShapeView[],) {
             controllerType.value = ControllerType.Text;
         } else if (__type === ShapeType.Table) {
             controllerType.value = ControllerType.Table;
+        } else if (__type === ShapeType.SymbolUnion || __type === ShapeType.Symbol) {
+            controllerType.value = ControllerType.Symbol;
         } else {
             controllerType.value = ControllerType.Rect;
         }

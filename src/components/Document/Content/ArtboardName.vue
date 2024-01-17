@@ -139,9 +139,11 @@ function down(e: MouseEvent) {
         context.selection.selectShape(props.shape);
         let root = props.context.workspace.root;
         startPosition = { x: e.clientX - root.x, y: e.clientY - root.y };
-        if(forbidden_to_modify_frame(props.shape) || context.tool.isLable) return;
+        if (forbidden_to_modify_frame(props.shape) || context.tool.isLable) return;
         document.addEventListener('mousemove', move);
         document.addEventListener('mouseup', up);
+        context.cursor.reset();
+        context.cursor.cursor_freeze(true);
     } else if (e.button === 2) {
         props.context.workspace.downArboardTitle(e);
     }

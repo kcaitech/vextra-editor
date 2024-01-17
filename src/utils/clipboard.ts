@@ -1091,22 +1091,36 @@ function paster_text(context: Context, mousedownOnPageXY: PageXY, content: strin
 
 // 不经过剪切板，直接复制(Shape[])
 export async function paster_short(context: Context, shapes: ShapeView[], editor: AsyncTransfer): Promise<ShapeView[]> {
-    const pre_shapes: Shape[] = [], actions: { parent: GroupShape, index: number }[] = [];
+    const pre_shapes: Shape[] = [];
+    const actions: { parent: GroupShape, index: number }[] = [];
+
     for (let i = 0, len = shapes.length; i < len; i++) {
-        const s = shapes[i], p = s.parent;
+        const s = shapes[i];
+        let _s = s;
+        let p = s.parent;
         if (!p) {
             continue;
         }
 
-        const childs = (p).childs;
+        if (p.type === ShapeType.SymbolUnion) {
+            _s = p;
+            p = p.parent;
+        }
+
+        if (!p) {
+            continue;
+        }
+
+        const childs = p.childs;
         for (let j = 0, len2 = childs.length; j < len2; j++) {
-            if (s.id === childs[j].id) {
+            if (_s.id === childs[j].id) {
                 pre_shapes.push(adapt2Shape(s));
                 actions.push({ parent: adapt2Shape(p) as GroupShape, index: j + 1 });
                 break;
             }
         }
     }
+
     const new_source = transform_data(context.data, pre_shapes);
 
     const page = context.selection.selectedPage;

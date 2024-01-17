@@ -277,6 +277,7 @@ function select(e: MouseEvent) {
     } else if (is_drag(props.context, e, mousedownOnPageXY, 3 * dragActiveDis)) {
         selector_mount.value = true;
         props.context.workspace.selecting(true);
+        props.context.cursor.cursor_freeze(true);
     }
 }
 
@@ -430,6 +431,7 @@ function selectEnd() {
         return;
     }
     props.context.workspace.selecting(false);
+    props.context.cursor.cursor_freeze(false);
     selectorFrame.top = 0;
     selectorFrame.left = 0;
     selectorFrame.width = 0;
