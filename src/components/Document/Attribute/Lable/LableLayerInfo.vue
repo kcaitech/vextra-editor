@@ -42,8 +42,15 @@ const getShapeInfo = () => {
     if (len === 1) {
         const shape = props.context.selection.selectedShapes[0];
         const posi = shape.matrix2Root().computeCoord2(0, 0);
-        xy.value.x = +(posi.x * multiple.value).toFixed(2);
-        xy.value.y = +(posi.y * multiple.value).toFixed(2);
+        const par_posi = shape.matrix2Parent().computeCoord2(0, 0);
+        const p = shape.parent;
+        if (p && p.type === ShapeType.Page) {
+            xy.value.x = +(posi.x * multiple.value).toFixed(2);
+            xy.value.y = +(posi.y * multiple.value).toFixed(2);
+        } else {
+            xy.value.x = +(par_posi.x * multiple.value).toFixed(2);
+            xy.value.y = +(par_posi.y * multiple.value).toFixed(2);
+        }
         rotate.value = get_rotation(shape);
         getRadius(shape);
         const frame = shape.frame;
@@ -149,7 +156,8 @@ onUnmounted(() => {
                 <div class="row">
                     <span class="named">{{ t('lable.name') }}</span>
                     <LableTootip :copy_text="copy_text" :visible="_visible === 'name'">
-                        <div><span class="name" @click="(e) => copyLable(e, 'name')" style="cursor: pointer;font-weight: 500;"
+                        <div><span class="name" @click="(e) => copyLable(e, 'name')"
+                                style="cursor: pointer;font-weight: 500;"
                                 @mouseleave.stop="_visible = undefined, copy_text = false">{{ name }}</span></div>
                     </LableTootip>
                 </div>
@@ -212,7 +220,8 @@ onUnmounted(() => {
                 <div class="row" v-if="innerRaduis(radius, unit[platfrom], true)">
                     <span class="named">{{ t('lable.raduis') }}</span>
                     <LableTootip :copy_text="copy_text" :visible="_visible === 'radius'">
-                        <div><span class="name" @click="(e) => copyLable(e, 'radius')" style="cursor: pointer;font-weight: 500;"
+                        <div><span class="name" @click="(e) => copyLable(e, 'radius')"
+                                style="cursor: pointer;font-weight: 500;"
                                 @mouseleave.stop="_visible = undefined, copy_text = false">{{ innerRaduis(radius,
                                     unit[platfrom]) }}</span></div>
                     </LableTootip>
@@ -235,7 +244,11 @@ onUnmounted(() => {
     color: #000;
 
     >div {
+        width: calc(100% - 58px);
         flex: 1;
+        overflow: hidden;
+        text-overflow: ellipsis;
+        white-space: nowrap;
     }
 }
 

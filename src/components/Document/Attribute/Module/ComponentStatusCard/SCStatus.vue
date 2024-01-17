@@ -125,8 +125,7 @@ function _delete() {
         display: flex;
         align-items: center;
         justify-content: space-between;
-        height: 44px;
-        padding: 6px 0;
+        height: 38px;
         box-sizing: border-box;
     }
 
@@ -162,7 +161,7 @@ function _delete() {
         >.name_i {
             flex: 1;
             display: flex;
-            max-width: 100%;
+            max-width: calc(100% - 30px);
 
             >span {
                 display: block;

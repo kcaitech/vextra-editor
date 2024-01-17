@@ -8,7 +8,6 @@ import { Matrix } from "@kcdesign/data";
 import { v4 } from 'uuid';
 import SvgIcon from "@/components/common/SvgIcon.vue";
 import { WorkSpace } from '@/context/workspace';
-import e from 'express';
 const { t } = useI18n()
 const props = defineProps<{
     context: Context
@@ -80,7 +79,7 @@ function handleClickOutside(event: MouseEvent) {
 const inputPosition = () => {
     offside.value = props.rootWidth! - props.posi.x < commentWidth
     surplusX.value = -(commentWidth - 12)
-    input.value?.focus()
+    input.value?.focus();
 }
 const sendBright = computed(() => textarea.value.trim().length > 0)
 const lastEscPress = ref(0);

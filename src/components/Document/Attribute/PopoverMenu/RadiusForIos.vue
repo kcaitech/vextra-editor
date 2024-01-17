@@ -58,7 +58,7 @@ function updateProgress(x: number) {
     <Popover :context="props.context" :left="450" :width="240" :height="100" ref="popover"
       :title="t('attr.corner_smoothing')" class="popover">
       <template #trigger>
-        <div class="trigger">
+        <div class="trigger" @click="showMenu">
           <svg-icon icon-class="gear"></svg-icon>
         </div>
       </template>

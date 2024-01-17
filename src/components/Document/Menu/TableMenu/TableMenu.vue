@@ -24,8 +24,9 @@ const isSplitCell = ref<boolean>(false);
 const splitCellOpen = ref(false);
 function showLayerSubMenu(e: MouseEvent, show: string) {
   e.stopPropagation();
-  const targetWidth = (e.target as Element).getBoundingClientRect().width;
-  layerSubMenuPosition.x = targetWidth;
+  const { width, left } = (e.target as Element).getBoundingClientRect();
+  const { width: width2, left: left2 } = props.context.workspace.root.element.getBoundingClientRect()
+  layerSubMenuPosition.x = (width2 + left2) - (width + left) > width ? width : -width;
   layerSubMenuPosition.y = -4;
   if (show === 'split') {
     isSplitCell.value = true;
@@ -126,9 +127,11 @@ function closeLayerSubMenu() {
   <div v-if="props.items.includes('delete_column')" class="item layer-select"
     @mouseenter="(e: MouseEvent) => showLayerSubMenu(e, 'delete')" @mouseleave="isDeleteColumn = false">
     <span>{{ t('table.del_column') }}</span>
-    <div class="layer-icon"><svg-icon icon-class="down"></svg-icon></div>
-    <ContextMenu v-if="isDeleteColumn" :x="layerSubMenuPosition.x" :y="layerSubMenuPosition.y" :width="180" :site="site"
-      :context="props.context">
+    <div class="layer-icon">
+      <svg-icon :icon-class="isDeleteColumn ? 'white-down' : 'down'"></svg-icon>
+    </div>
+    <ContextMenu v-if="isDeleteColumn" :x="layerSubMenuPosition.x" :y="layerSubMenuPosition.y" :width="174" :site="site"
+      :context="props.context" :style="{ left: layerSubMenuPosition.x + 'px', top: layerSubMenuPosition.y + 'px' }">
       <div class="item" @click="spliceRow">
         <span>{{ t('table.del_select_row') }}</span>
         <span></span>
@@ -146,9 +149,11 @@ function closeLayerSubMenu() {
   <div class="item layer-select" v-if="props.items.includes('split_cell')"
     @mouseenter="(e: MouseEvent) => showLayerSubMenu(e, 'split')" @mouseleave="isSplitCell = false">
     <span>{{ t('table.split_cell') }}</span>
-    <div class="layer-icon"><svg-icon icon-class="down"></svg-icon></div>
-    <ContextMenu v-if="isSplitCell" :x="layerSubMenuPosition.x" :y="layerSubMenuPosition.y" :width="180" :site="site"
-      :context="props.context">
+    <div class="layer-icon">
+      <svg-icon :icon-class="isSplitCell ? 'white-down' : 'down'"></svg-icon>
+    </div>
+    <ContextMenu v-if="isSplitCell" :x="layerSubMenuPosition.x" :y="layerSubMenuPosition.y" :width="174" :site="site"
+      :context="props.context" :style="{ left: layerSubMenuPosition.x + 'px', top: layerSubMenuPosition.y + 'px' }">
       <div class="item" @click="splitCell('row')">
         <span>{{ t('table.split_towrow') }}</span>
         <span></span>
@@ -172,12 +177,16 @@ function closeLayerSubMenu() {
 .item {
   position: relative;
   width: 100%;
-  height: 28px;
-  padding: 0 var(--default-padding) 0 20px;
+  height: 32px;
+  padding: 9px 24px 9px 8px;
   display: flex;
   flex-direction: row;
   align-items: center;
   box-sizing: border-box;
+
+  >span {
+    margin-left: 20px;
+  }
 
   >.triangle {
     margin-left: auto;
@@ -196,14 +205,14 @@ function closeLayerSubMenu() {
 
 .line {
   width: 100%;
-  height: 8px;
-  border-bottom: 1px solid gray;
-  margin-bottom: 8px;
+  height: 4px;
+  border-bottom: 1px solid #EBEBEB;
   box-sizing: border-box;
 }
 
 .item:hover {
   background-color: var(--active-color);
+  color: white;
 
   >.triangle {
     margin-left: auto;

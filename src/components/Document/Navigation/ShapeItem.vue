@@ -375,7 +375,7 @@ onUnmounted(() => {
         </div>
         <!-- icon -->
         <div class="container-svg zero-symbol" @dblclick="fitToggleContainer" :style="{ opacity: !visible_status ? 1 : .3 }"
-            :class="{ color: !is_component() }">
+            :class="{ color: !is_component(), stroke: data.shape().type === ShapeType.Oval && is_component(), no_stroke: !is_component() && data.shape().type === ShapeType.Oval }">
             <svg-icon class="svg" :icon-class="icon_class()"></svg-icon>
         </div>
         <!-- 内容描述 -->
@@ -587,6 +587,7 @@ onUnmounted(() => {
 
 .component {
     color: var(--component-color);
+    fill: var(--component-color);
 
     &>.text>.txt,
     &>.text>.tool_icon {
@@ -595,7 +596,15 @@ onUnmounted(() => {
 }
 
 .color {
-    color: #595959;
+    fill: #595959;
+}
+
+.stroke {
+    stroke: #7F58F9;
+}
+
+.no_stroke {
+    stroke: #595959;
 }
 
 .firstAngle {
@@ -606,5 +615,4 @@ onUnmounted(() => {
 .lastAngle {
     border-bottom-left-radius: 8px !important;
     border-bottom-right-radius: 8px !important;
-}
-</style>
+}</style>

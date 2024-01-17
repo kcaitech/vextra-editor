@@ -57,11 +57,10 @@ const getDocumentAuthority = async () => {
         if (data) {
             permType = data.perm_type
             if (permType !== 0) {
+                const query = route.query.page_id ? { id: route.query.id, page_id: route.query.page_id.slice(0, 8) } : { id: route.query.id };
                 router.push({
                     name: 'document',
-                    query: {
-                        id: route.query.id
-                    }
+                    query: query
                 })
             }
         }
@@ -295,6 +294,7 @@ label::before {
             }
 
             svg {
+                fill: #000000;
                 width: 100%;
                 height: 100%;
             }

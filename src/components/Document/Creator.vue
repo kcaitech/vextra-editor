@@ -152,9 +152,8 @@ const addComment = (e: MouseEvent) => {
     commentPosition.x = xy.x; //评论输入框在页面的坐标
     commentPosition.y = xy.y;
 
-    posi.value.x = e.clientX - x // 评论弹出框的位置坐标
-    posi.value.y = e.clientY - y
-
+    posi.value.x = x // 评论弹出框的位置坐标
+    posi.value.y = y
     commentInput.value = true;
     document.addEventListener('keydown', commentEsc);
 }
@@ -163,8 +162,8 @@ const getCommentInputXY = (e: MouseEvent) => {
     const { x, y, xy } = detectionShape(e)
     commentPosition.x = xy.x;
     commentPosition.y = xy.y;
-    posi.value.x = e.clientX - x
-    posi.value.y = e.clientY - y
+    posi.value.x = x
+    posi.value.y = y
 }
 const commentEsc = (e: KeyboardEvent) => {
     if (e.code === 'Escape') {
@@ -172,21 +171,7 @@ const commentEsc = (e: KeyboardEvent) => {
         commentInput.value = false;
     }
 }
-//移动shape时保存shape身上的评论坐标
-const saveShapeCommentXY = () => {
-    const comment = props.context.comment;
-    const shapes = comment.commentShape
-    const sleectShapes = flattenShapes(shapes)
-    const commentList = props.context.comment.pageCommentList
-    sleectShapes.forEach((item: any) => {
-        commentList.forEach((comment: any, i: number) => {
-            if (comment.target_shape_id === item.id) {
-                editShapeComment(i, comment.shape_frame.x1, comment.shape_frame.y1)
-            }
-        })
-    })
-    comment.editShapeComment(false, [])
-}
+
 //移动输入框
 const mouseDownCommentInput = (e: MouseEvent) => {
     e.stopPropagation();
@@ -207,25 +192,6 @@ const mouseUpCommentInput = (e: MouseEvent) => {
     comment.moveCommentInput(false);
 }
 
-const editShapeComment = (index: number, x: number, y: number) => {
-    const comment = documentCommentList.value[index]
-    const id = comment.id
-    const shapeId = comment.target_shape_id
-    const { x2, y2 } = comment.shape_frame
-    const data = {
-        id: id,
-        target_shape_id: shapeId,
-        shape_frame: { x1: x, y1: y, x2: x2, y2: y2 }
-    }
-    editCommentShapePosition(data)
-}
-const editCommentShapePosition = async (data: any) => {
-    try {
-        await comment_api.editCommentAPI(data)
-    } catch (err) {
-        console.log(err);
-    }
-}
 // 取消评论输入框
 const closeComment = (e?: MouseEvent) => {
     if (e && e.target instanceof Element && e.target.closest('#content') && !e.target.closest('.container-popup')) {

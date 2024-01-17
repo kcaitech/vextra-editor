@@ -125,7 +125,6 @@ const commentPosition = () => {
             iscommentTop.value = true;
             const _height = text.clientHeight + parseInt(computedStyle.paddingTop) + parseInt(computedStyle.paddingBottom);
             height.value = height.value ? Math.min(_height + 18, 214) : Math.min(_height, 214);
-            inputPopup.value && inputPopup.value.focus();
             const p = matrix.computeCoord({ x: props.commentInfo.shape_frame.x1, y: props.commentInfo.shape_frame.y1 });
             offside.value = props.rootWidth! - p.x < 360;
             let t = 0;
@@ -142,6 +141,7 @@ const commentPosition = () => {
                     }
                 }
                 scrollHeight.value = Math.min(scrollMaxHeight.value, itemHeight.value!.clientHeight)
+                inputPopup.value && inputPopup.value.focus();
             })
         }
     })
@@ -152,16 +152,16 @@ const handleInput = () => {
     if (!scrollbarRef.value) return;
     scrollbarRef.value!.scrollTo(0, itemHeight.value!.clientHeight)
     nextTick(() => {
-        if (textareaEl.value) {
-            const text = inputPopup.value.$refs.textarea
-            if (text) {
-                text.style.height = "auto"; // 重置高度，避免高度叠加
-                text.style.height = text.scrollHeight + "px";
-                const lineHeight = parseInt(getComputedStyle(text).lineHeight)
-                const textareaHeight = text.clientHeight
-                const numberOfLines = Math.ceil(textareaHeight / lineHeight)
-                scrollVisible.value = numberOfLines > 10 ? true : false
-            }
+    if (textareaEl.value) {
+    const text = inputPopup.value.$refs.textarea
+    if (text) {
+    text.style.height = "auto"; // 重置高度，避免高度叠加
+    text.style.height = text.scrollHeight + "px";
+    const lineHeight = parseInt(getComputedStyle(text).lineHeight)
+    const textareaHeight = text.clientHeight
+    const numberOfLines = Math.ceil(textareaHeight / lineHeight)
+    scrollVisible.value = numberOfLines > 10 ? true : false
+    }
         }
         scrollbarRef.value!.scrollTo(0, itemHeight.value!.clientHeight)
     })
@@ -303,7 +303,6 @@ const previousArticle = () => {
         emit('previousArticle', index, { x: x1, y: y1 }, id)
     }
 }
-
 const nextArticle = () => {
     if (reply.value) {
         const index = props.index
@@ -832,4 +831,5 @@ onUnmounted(() => {
 //.custom-icon {
 //    color: green;
 //    /* 设置颜色为绿色 */
-//}</style>
+//}
+</style>
