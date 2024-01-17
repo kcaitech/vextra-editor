@@ -266,7 +266,7 @@ function updater(t?: any) {
 
     const data = shape.data;
 
-    const children = data.naviChilds || (data as any).childs || [];
+    const children = data.naviChilds || (data as any).childs || shape.naviChilds || [];
     showTriangle.value = children.length > 0 && shape.type !== ShapeType.Table;
 
     lock_status.value = shape.isLocked() ? 1 : 0;

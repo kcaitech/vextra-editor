@@ -1,6 +1,6 @@
 <script setup lang='ts'>
 import {watch, onMounted, onUnmounted, ref, reactive, onBeforeUnmount, computed} from 'vue';
-import {Selection} from '@/context/selection';
+import {Selection, SelectionTheme} from '@/context/selection';
 import {Matrix, ShapeView, TextShapeView} from '@kcdesign/data';
 import {TextShape} from '@kcdesign/data';
 import {Shape} from "@kcdesign/data";
@@ -19,6 +19,7 @@ interface Props {
     rotate: number
     matrix: Matrix
     shape: TextShapeView
+    theme: SelectionTheme
 }
 
 const props = defineProps<Props>();
