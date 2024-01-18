@@ -22,7 +22,7 @@ import {
 import Layers from './Layers.vue';
 import { Context } from '@/context';
 import { WorkSpace } from '@/context/workspace';
-import { adapt_page, get_shape_within_document, shape_track } from '@/utils/content';
+import { adapt_page, get_shape_within_document, select_all, shape_track } from '@/utils/content';
 import { message } from '@/utils/message';
 import { Menu } from '@/context/menu';
 import TableMenu from "./TableMenu/TableMenu.vue"
@@ -38,7 +38,7 @@ interface Props {
     layers?: ShapeView[],
     items: string[],
     site?: { x: number, y: number },
-    menu_over_left?: number 
+    menu_over_left?: number
 }
 type ContextMenuEl = InstanceType<typeof ContextMenu>;
 const props = defineProps<Props>();
@@ -61,7 +61,7 @@ function showLayerSubMenu(e: MouseEvent, type: string) {
         if (el) {
             const target = (e.target as HTMLElement);
             el.style.top = -target.offsetTop + 'px';
-            el.style.left = props.menu_over_left &&  props.menu_over_left > -174 ?  -target.offsetWidth + 'px' : target.offsetWidth + 'px';
+            el.style.left = props.menu_over_left && props.menu_over_left > -174 ? -target.offsetWidth + 'px' : target.offsetWidth + 'px';
         }
     })
 }
@@ -171,7 +171,7 @@ function selectAll() {
         const end = text.length;
         props.context.textSelection.selectText(0, end);
     } else {
-        props.context.workspace.keydown_a(true, true);
+        select_all(props.context);
     }
     emit('close');
 }

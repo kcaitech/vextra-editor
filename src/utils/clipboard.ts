@@ -14,7 +14,6 @@ import { Document } from '@kcdesign/data';
 import { v4 } from 'uuid';
 import { AsyncTransfer } from "@kcdesign/data";
 import { ElMessage } from 'element-plus';
-import { useI18n } from 'vue-i18n';
 
 interface SystemClipboardItem {
     type: ShapeType
@@ -379,7 +378,7 @@ export class Clipboard {
         this.paste_for_no_format_text(plain);
     }
 
-    paste_text(event?: ClipboardEvent) {
+    paste_text(event?: ClipboardEvent) {        
         try {
             if (!event) {
                 return this.paste_text_async();
