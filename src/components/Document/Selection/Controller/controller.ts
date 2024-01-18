@@ -266,7 +266,7 @@ export function useControllerCustom(context: Context, i18nT: Function) {
         workspace.setCtrl('controller');
     }
 
-    async function mousemove(e: MouseEvent) {
+    function mousemove(e: MouseEvent) {
         if (e.buttons !== 1) {
             return;
         }
@@ -287,6 +287,10 @@ export function useControllerCustom(context: Context, i18nT: Function) {
 
             modify_mouse_position_by_type(update_type, startPosition, mousePosition);
         } else if (check_drag_action(startPosition, mousePosition)) {
+            if (asyncTransfer || isDragging) {
+                return;
+            }
+
             shapes = modify_shapes(context, shapes);
 
             shapes = shapes_organize(shapes);
@@ -295,18 +299,22 @@ export function useControllerCustom(context: Context, i18nT: Function) {
                 return;
             }
 
-            isDragging = true;
+            reset_assist_before_translate(context, shapes);
+
+            offset_map = gen_offset_points_map(shapes, startPositionOnPage);
 
             asyncTransfer = context.editor
                 .controller()
                 .asyncTransfer(shapes, selection.selectedPage!);
 
             if (e.altKey) {
-                shapes = await paster_short(context, shapes, asyncTransfer);
+                paster_short(context, shapes, asyncTransfer).then(v => {
+                    shapes = v;
+                });
             }
 
-            reset_assist_before_translate(context, shapes);
-            offset_map = gen_offset_points_map(shapes, startPositionOnPage);
+            isDragging = true;
+
         }
     }
 

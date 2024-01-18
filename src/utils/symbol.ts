@@ -139,7 +139,7 @@ function check_symbol_level_artboard(artboard: GroupShape, init?: (SymbolShape |
     for (let i = childs.length - 1; i > -1; i--) {
         const item = childs[i];
         if (item.type === ShapeType.SymbolUnion) {
-           symbols.push(item as SymbolUnionShape);
+            symbols.push(item as SymbolUnionShape);
         } else if (item.type === ShapeType.Symbol) {
             symbols.push(item as SymbolShape);
         }
@@ -691,6 +691,9 @@ function get_x_type_option(symbol: SymbolView, group: ShapeView, type: VariableT
         let slow_index = 0;
         for (let i = 0, len = childs.length; i < len; i++) {
             const item = childs[i];
+            if (item.isVirtualShape) {
+                continue;
+            }
             const canbe = !is_bind_x_type_var(symbol, item, OverrideType.Visible, vari, container);
             if ((item).childs && (item).childs.length && item.type !== ShapeType.Table) {
                 if (canbe) shapes.push(item);
@@ -704,6 +707,9 @@ function get_x_type_option(symbol: SymbolView, group: ShapeView, type: VariableT
         if (de_check(group)) return shapes;
         for (let i = 0, len = childs.length; i < len; i++) {
             const item = childs[i];
+            if (item.isVirtualShape) {
+                continue;
+            }
             if (item.type === get_target_type_by_vt(type)) {
                 if (!is_bind_x_type_var(symbol, item, get_ot_by_vt(type)!, vari, container)) {
                     shapes.push(item);

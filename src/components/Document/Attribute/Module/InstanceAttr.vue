@@ -251,7 +251,7 @@ onUnmounted(() => {
             justify-content: center;
             border-radius: 6px;
             box-sizing: border-box;
-
+            
             >svg {
                 width: 16px;
                 height: 16px;
