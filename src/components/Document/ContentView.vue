@@ -9,7 +9,7 @@ import CommentView from './Content/CommentView.vue';
 import { Matrix, Color, ShapeType, ShapeView, PageView } from '@kcdesign/data';
 import { Context } from '@/context';
 import { PageXY, ClientXY, ClientXYRaw } from '@/context/selection';
-import { KeyboardKeys, WorkSpace } from '@/context/workspace';
+import { WorkSpace } from '@/context/workspace';
 import { collect_once } from '@/utils/assist';
 import { Menu } from '@/context/menu';
 import { debounce } from 'lodash';
@@ -130,7 +130,7 @@ function onMouseWheel(e: WheelEvent) { // 滚轮、触摸板事件
 function onKeyDown(e: KeyboardEvent) { // 键盘监听
     if (e.target instanceof HTMLInputElement) return;
     if (e.repeat) return;
-    if (e.code === KeyboardKeys.Space) {
+    if (e.code === 'Space') {
         if (workspace.value.select || spacePressed.value) return;
         preToDragPage();
     } else if (e.code === 'MetaLeft' || e.code === 'ControlLeft') {
@@ -140,7 +140,7 @@ function onKeyDown(e: KeyboardEvent) { // 键盘监听
 
 function onKeyUp(e: KeyboardEvent) {
     if (e.target instanceof HTMLInputElement) return;
-    if (spacePressed.value && e.code === KeyboardKeys.Space) {
+    if (spacePressed.value && e.code === 'Space') {
         // overview.value = false;
         endDragPage();
     } else if (e.code === 'MetaLeft' || e.code === 'ControlLeft') {
