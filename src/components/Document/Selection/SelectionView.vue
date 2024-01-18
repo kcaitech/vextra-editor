@@ -109,7 +109,7 @@ function workspace_watcher(t?: any) {
     }
 }
 
-function selectionWatcher(t?: any) { // selection的部分动作可触发更新
+function selectionWatcher(t: number) { // selection的部分动作可触发更新
     if (t === Selection.CHANGE_PAGE) {
         watchedShapes.forEach(v => {
             v.unwatch(shapesWatcher)
@@ -278,7 +278,7 @@ function modify_controller_type(shapes: ShapeView[],) {
             controllerType.value = ControllerType.Text;
         } else if (__type === ShapeType.Table) {
             controllerType.value = ControllerType.Table;
-        } else if (__type === ShapeType.SymbolUnion || __type === ShapeType.Symbol) {
+        } else if (__type === ShapeType.SymbolUnion || __type === ShapeType.Symbol || __type === ShapeType.SymbolRef) {
             controllerType.value = ControllerType.Symbol;
         } else {
             controllerType.value = ControllerType.Rect;

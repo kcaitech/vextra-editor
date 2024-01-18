@@ -478,7 +478,7 @@ export function finder_container(scout: Scout, g: ShapeView[], position: PageXY,
         if (item.isVirtualShape) {
             continue;
         }
-        if ([ShapeType.Artboard, ShapeType.Symbol, ShapeType.SymbolUnion].includes(item.type) && (!except || !except.get(item.id))) {
+        if ([ShapeType.Artboard, ShapeType.Symbol].includes(item.type) && (!except || !except.get(item.id))) {
             return item;
         }
     }
