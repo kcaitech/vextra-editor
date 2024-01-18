@@ -1,5 +1,5 @@
 <script setup lang="ts">
-import {onMounted, reactive, ref, onUnmounted} from "vue";
+import { onMounted, reactive, ref, onUnmounted } from "vue";
 import {
     check_orientation_during_movement, DragDetail,
     get_destination_by_drag_event,
@@ -53,8 +53,8 @@ const emit = defineEmits<Emits>();
 const contents = ref<HTMLDivElement>();
 const container = ref<HTMLDivElement>();
 
-let containerPosition = ref<{ x: number, y: number }>({x: 0, y: 0});
-const scroll = reactive({x: 0, y: 0}); // 被滚走的内容长度，eg：'y: -100' -> '已经往上滚动100px'
+let containerPosition = ref<{ x: number, y: number }>({ x: 0, y: 0 });
+const scroll = reactive({ x: 0, y: 0 }); // 被滚走的内容长度，eg：'y: -100' -> '已经往上滚动100px'
 let layoutIndex = 0; // 当前Dom渲染列表中第一个Dom在整个list对应的Dom列表中的index
 const layoutResult = reactive(new Array<{ x: number, y: number, id: string, data: any }>()); // list
 let visibleWidth = 0;
@@ -63,7 +63,7 @@ const measureWidth = ref(0); // width of listView
 const measureHeight = ref(0); // height of listView
 const prepareCount = 10; //  多准备的
 const listMouseOver = ref<boolean>(false);
-defineExpose({container, clampScroll, scroll});
+defineExpose({ container, clampScroll, scroll });
 
 const relayout: { [key: string]: Function } = {};
 relayout[Orientation.V] = () => {
@@ -75,7 +75,7 @@ relayout[Orientation.V] = () => {
         const data = iter.next();
         const y = i * props.itemHeight;
         i++;
-        layoutResult.push({x: 0, y, id: data.id, data});
+        layoutResult.push({ x: 0, y, id: data.id, data });
         if (y + props.itemHeight + scroll.y > visibleHeight) {
             break;
         }
@@ -93,7 +93,7 @@ relayout[Orientation.H] = () => {
         const data = iter.next();
         const x = i * props.itemWidth;
         i++;
-        layoutResult.push({x, y: 0, id: data.id, data});
+        layoutResult.push({ x, y: 0, id: data.id, data });
         if (x + props.itemWidth + scroll.x > visibleWidth) {
             break;
         }
@@ -127,7 +127,7 @@ layoutUp[Orientation.V] = () => {
             const data = iter.next();
             const y = i * props.itemHeight;
             i++;
-            result.push({x: 0, y, id: data.id, data});
+            result.push({ x: 0, y, id: data.id, data });
         }
         layoutIndex = startIndex;
         layoutResult.splice(0, 0, ...result);
@@ -156,7 +156,7 @@ layoutUp[Orientation.H] = () => {
             const data = iter.next();
             const x = i * props.itemWidth;
             i++;
-            result.push({x, y: 0, id: data.id, data});
+            result.push({ x, y: 0, id: data.id, data });
         }
         layoutIndex = startIndex;
         layoutResult.splice(0, 0, ...result);
@@ -186,7 +186,7 @@ layoutDown[Orientation.V] = () => {
             const data = iter.next();
             const y = i * props.itemHeight;
             i++;
-            layoutResult.push({x: 0, y, id: data.id, data});
+            layoutResult.push({ x: 0, y, id: data.id, data });
         }
     }
 }
@@ -214,7 +214,7 @@ layoutDown[Orientation.H] = () => {
             const data = iter.next();
             const x = i * props.itemWidth;
             i++;
-            layoutResult.push({x, y: 0, id: data.id, data});
+            layoutResult.push({ x, y: 0, id: data.id, data });
         }
     }
     scrollBar.length = Math.ceil((visibleHeight * visibleHeight) / measureHeight.value);
@@ -391,15 +391,15 @@ function mouseleave() {
 }
 
 // #region 滚动条
-const scrollBar = reactive({length: 0, mount: false, x: 0, y: 0}); // 滚动条滑块对象 eg: 'y: 100' -> '滚动条滑块距离起始位置的距离为100px'
+const scrollBar = reactive({ length: 0, mount: false, x: 0, y: 0 }); // 滚动条滑块对象 eg: 'y: 100' -> '滚动条滑块距离起始位置的距离为100px'
 const scrollTrack = ref<HTMLDivElement>();
 const bar = ref<HTMLDivElement>();
-const mouseOffsetOfBar: { x: number, y: number } = {x: 0, y: 0}; // 鼠标相对滚动条滑块的位置
+const mouseOffsetOfBar: { x: number, y: number } = { x: 0, y: 0 }; // 鼠标相对滚动条滑块的位置
 const scrolling = ref<boolean>(false)
 
 function onScrollTrackClick(e: MouseEvent) {
     if (e.target !== scrollTrack.value) return;
-    const {offsetX, offsetY} = e;
+    const { offsetX, offsetY } = e;
     const H = props.orientation === Orientation.H;
 
     const pageSize = H ? visibleWidth : visibleHeight;
@@ -419,8 +419,8 @@ function onScrollTrackClick(e: MouseEvent) {
 }
 
 function onScrollBarMouseDown(e: MouseEvent) {
-    const {x: scrollBarX, y: scrollBarY} = scrollBar;
-    const {clientX: mouseX, clientY: mouseY} = e;
+    const { x: scrollBarX, y: scrollBarY } = scrollBar;
+    const { clientX: mouseX, clientY: mouseY } = e;
     mouseOffsetOfBar.x = mouseX - scrollBarX;
     mouseOffsetOfBar.y = mouseY - scrollBarY;
     document.addEventListener('mouseup', onScrollBarMouseUp);
@@ -430,9 +430,9 @@ function onScrollBarMouseDown(e: MouseEvent) {
 function mouseMoveAfterScrollBarMouseDown(e: MouseEvent) {
     scrolling.value = true;
 
-    const {clientX: mouseX, clientY: mouseY} = e;
-    const {x: scrollBarX, y: scrollBarY} = scrollBar;
-    const {x: mouseOffsetOfBarX, y: mouseOffsetOfBarY} = mouseOffsetOfBar;
+    const { clientX: mouseX, clientY: mouseY } = e;
+    const { x: scrollBarX, y: scrollBarY } = scrollBar;
+    const { x: mouseOffsetOfBarX, y: mouseOffsetOfBarY } = mouseOffsetOfBar;
 
     const deltaX = mouseX - scrollBarX - mouseOffsetOfBarX;
     const deltaY = mouseY - scrollBarY - mouseOffsetOfBarY;
@@ -473,8 +473,8 @@ const fromIndex = ref<number>(0);
 const toIndex = ref<number>(0);
 const wandererId = ref<string>('');
 const dragging = ref<boolean>(false);
-const mouseBegin: { x: number, y: number } = {x: 0, y: 0};
-const destination = ref<{ x: number, y: number, length: number }>({x: 0, y: 0, length: 20});
+const mouseBegin: { x: number, y: number } = { x: 0, y: 0 };
+const destination = ref<{ x: number, y: number, length: number }>({ x: 0, y: 0, length: 20 });
 const destinationMount = ref<boolean>(false);
 const port_a_visible = ref<boolean>(false);
 const port_i_visible = ref<boolean>(false);
@@ -503,7 +503,7 @@ function mouseMove(event: MouseEvent) {
     if (!container.value) return;
     if (!(currentHoverTarget.value && hoverItem.value)) return;
 
-    const {clientX, clientY} = event;
+    const { clientX, clientY } = event;
     if (!dragging.value) {
         const diff = Math.hypot(clientX - mouseBegin.x, clientY - mouseBegin.y);
         if (diff < 6) return;
@@ -625,7 +625,7 @@ const observer = new ResizeObserver(() => {
 onMounted(() => {
     container.value && observer.observe(container.value);
     viewMeasure[props.orientation]();
-    relayout[props.orientation]();    
+    relayout[props.orientation]();
     window.addEventListener('blur', window_blur);
 })
 onUnmounted(() => {
@@ -635,8 +635,7 @@ onUnmounted(() => {
 </script>
 
 <template>
-    <div class="container" @wheel.prevent="onMouseWheel" @mouseenter="mouseenter" @mouseleave="mouseleave"
-         ref="container">
+    <div class="container" @wheel.prevent="onMouseWheel" @mouseenter="mouseenter" @mouseleave="mouseleave" ref="container">
         <!-- items container -->
         <div :class="orientation" :style="{
             transform: 'translate(' + scroll.x + 'px ,' + scroll.y + 'px)',
@@ -644,15 +643,14 @@ onUnmounted(() => {
             height: orientation === 'vertical' ? measureHeight + 'px' : 'auto'
         }" ref="contents">
             <component class="list-item" :is="props.itemView" v-for="(c, i) in layoutResult" :key="c.id" :data="c.data"
-                       v-bind="$attrs" @mousedown.stop="(e: MouseEvent) => mouseDownOnItem(i, e)"
-                       @mouseover.stop="(e: MouseEvent) => itemOnHover(e, i)"
-                       :style="{ left: c.x + 'px', top: c.y + 'px' }"/>
+                v-bind="$attrs" @mousedown.stop="(e: MouseEvent) => mouseDownOnItem(i, e)"
+                @mouseover.stop="(e: MouseEvent) => itemOnHover(e, i)" :style="{ left: c.x + 'px', top: c.y + 'px' }" />
             <div class="port" v-if="port_a_visible" :style="{
-                            top: destination.y + 'px', left: destination.x + 'px'
-                        }"></div>
+                top: destination.y + 'px', left: destination.x + 'px'
+            }"></div>
             <div class="port-2" v-if="port_i_visible" :style="{
-                            top: destination.y + 'px'
-                        }"></div>
+                top: destination.y + 'px'
+            }"></div>
         </div>
         <!-- scroll -->
         <div ref="scrollTrack" class="scroll-track" @click="onScrollTrackClick" :style="{
@@ -674,13 +672,14 @@ onUnmounted(() => {
     position: relative;
     outline: none;
     box-sizing: border-box;
-    > .horizontal,
+
+    >.horizontal,
     .vertical {
-        > .list-item {
+        >.list-item {
             position: absolute;
         }
 
-        > .port {
+        >.port {
             position: absolute;
             background-color: var(--active-color);
             height: 2px;
@@ -688,7 +687,7 @@ onUnmounted(() => {
         }
 
 
-        > .port::before {
+        >.port::before {
             content: "";
             width: 2px;
             height: 14px;
@@ -698,7 +697,7 @@ onUnmounted(() => {
             background-color: var(--active-color);
         }
 
-        > .port-2 {
+        >.port-2 {
             position: absolute;
             border: 2px solid var(--active-color);
             width: calc(100% - 6px);
@@ -707,7 +706,7 @@ onUnmounted(() => {
             border-radius: 2px;
         }
 
-        > .substitute {
+        >.substitute {
             position: absolute;
             height: 32px;
             min-width: 40px;
@@ -734,7 +733,7 @@ onUnmounted(() => {
         box-sizing: border-box;
     }
 
-    .vertical + .scroll-track {
+    .vertical+.scroll-track {
         width: 6px;
         height: 100%;
         position: absolute;
@@ -742,14 +741,14 @@ onUnmounted(() => {
         right: 0;
         overflow: hidden;
 
-        > .scroll-bar {
+        >.scroll-bar {
             width: 100%;
             position: relative;
             background-color: #dddddd;
             border-radius: 6px;
         }
 
-        > .scroll-bar:hover {
+        >.scroll-bar:hover {
             background-color: #bbbbbb;
         }
     }

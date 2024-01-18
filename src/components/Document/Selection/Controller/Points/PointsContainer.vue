@@ -2,7 +2,7 @@
 import { Context } from '@/context';
 import { AsyncBaseAction, CtrlElementType, Matrix, ShapeView, adapt2Shape } from '@kcdesign/data';
 import { onMounted, onUnmounted, watch, reactive } from 'vue';
-import { ClientXY, PageXY } from '@/context/selection';
+import { ClientXY, PageXY, SelectionTheme } from '@/context/selection';
 import { forbidden_to_modify_frame, getAngle } from '@/utils/common';
 import { get_transform, modify_rotate_before_set, update_dot } from './common';
 import { Point } from "../../SelectionView.vue";
@@ -14,6 +14,7 @@ interface Props {
     shape: ShapeView
     axle: { x: number, y: number }
     cFrame: Point[]
+    theme: SelectionTheme
 }
 
 interface Dot {
@@ -339,7 +340,7 @@ onUnmounted(() => {
         <g @mousedown.stop="(e) => point_mousedown(e, p.type)" @mouseenter="() => point_mouseenter(p.type)"
             @mouseleave="point_mouseleave">
             <rect :x="p.extra.x" :y="p.extra.y" class="assist-rect"></rect>
-            <rect :x="p.point.x" :y="p.point.y" class="main-rect" rx="2px"></rect>
+            <rect :x="p.point.x" :y="p.point.y" class="main-rect" rx="2px" :stroke="theme"></rect>
         </g>
     </g>
 </template>
@@ -353,8 +354,6 @@ onUnmounted(() => {
     width: 8px;
     height: 8px;
     fill: #ffffff;
-    stroke: var(--active-color);
-    stroke-width: 1px;
 }
 
 .assist-rect {

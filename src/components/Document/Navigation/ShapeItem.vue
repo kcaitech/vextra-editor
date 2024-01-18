@@ -2,7 +2,7 @@
 import { computed, InputHTMLAttributes, nextTick, onMounted, onUnmounted, ref, watch } from "vue";
 import { Shape, ShapeType, ShapeView, SymbolUnionShape } from '@kcdesign/data';
 import { Context } from "@/context";
-import { get_name, is_parent_locked, is_parent_unvisible } from "@/utils/shapelist";
+import { get_name } from "@/utils/shapelist";
 import { Perm } from "@/context/workspace";
 import { Tool } from "@/context/tool";
 import { useI18n } from 'vue-i18n';
@@ -264,17 +264,13 @@ function updater(t?: any) {
 
     const shape = props.data.shapeview();
 
-    const naviChilds = shape.naviChilds;
-    showTriangle.value = Boolean(naviChilds && naviChilds.length > 0);
+    const data = shape.data;
+
+    const children = data.naviChilds || (data as any).childs || shape.naviChilds || [];
+    showTriangle.value = children.length > 0 && shape.type !== ShapeType.Table;
 
     lock_status.value = shape.isLocked() ? 1 : 0;
     visible_status.value = shape.isVisible() ? 0 : 1;
-    // if (is_parent_locked(shape) && !lock_status.value) {
-    //     lock_status.value = 2;
-    // }
-    // if (is_parent_unvisible(shape) && !visible_status.value) {
-    //     visible_status.value = 2;
-    // }
 }
 
 let oldshape: Shape | undefined;
@@ -615,4 +611,5 @@ onUnmounted(() => {
 .lastAngle {
     border-bottom-left-radius: 8px !important;
     border-bottom-right-radius: 8px !important;
-}</style>
+}
+</style>

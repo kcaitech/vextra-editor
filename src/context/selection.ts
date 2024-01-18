@@ -74,6 +74,11 @@ type TextShapeLike = TextShapeView | TableCellView;
 export type ActionType = 'translate' | 'scale' | 'rotate';
 export type TableArea = 'invalid' | 'body' | 'content' | 'hover';
 
+export const enum SelectionTheme  {
+    Normol = '#1878F5',
+    Symbol = '#7F58F9'
+}
+
 export class Selection extends WatchableObject implements ISave4Restore {
 
     static CHANGE_PAGE = 1;
