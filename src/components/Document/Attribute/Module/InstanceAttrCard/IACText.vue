@@ -76,7 +76,6 @@ onMounted(get_value);
             flex: 1;
             max-width: 86px;
             box-sizing: border-box;
-            margin-top: 8px;
 
             span {
                 display: block;

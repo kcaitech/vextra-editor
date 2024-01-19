@@ -397,9 +397,9 @@ export function menu_locate(context: Context, site: XY, el: HTMLDivElement | und
     if (top < SPACE) {
         top = SPACE;
     }
-
     el.style.left = left + 'px';
     el.style.top = top + 'px';
+    return over_left;
 }
 
 

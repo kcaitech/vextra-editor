@@ -3,8 +3,9 @@ import { TunnelType } from "@/communication/types"
 import { Document, CoopLocal, CoopRepository, Cmd } from "@kcdesign/data"
 
 export type Options = {
-    coopLocal: CoopLocal,
-    pendingSend: any[],
+    coopLocal?: CoopLocal,
+    pendingSend?: any[],
+    repoPendingCmdListBeforeStart?: Cmd[],
 }
 
 export class DocOp extends Communication {
@@ -33,6 +34,7 @@ export class DocOp extends Communication {
         docOp.onMessage = docOp._onMessage.bind(docOp)
         if (!options?.coopLocal) {
             docOp.coopLocal = new CoopLocal(document, repo, versionId, docOp.send.bind(docOp))
+            if (options?.repoPendingCmdListBeforeStart) docOp.coopLocal.pushCmdBeforeStart?.(...options.repoPendingCmdListBeforeStart)
         } else {
             docOp.coopLocal = options.coopLocal
             if (options.pendingSend) docOp.pendingSend = options.pendingSend;

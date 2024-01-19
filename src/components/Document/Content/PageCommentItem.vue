@@ -114,6 +114,11 @@ const unHoverComment = () => {
 const showComment = (e: MouseEvent) => {
     if (ShowComment.value) return;
     if (props.context.comment.isCommentMove) return
+<<<<<<< HEAD
+=======
+    console.log(props.commentInfo.children);
+
+>>>>>>> 1a62afe1e80f164d70d9f3b5f799c5005c5f581f
     documentCommentList.value = props.commentInfo.children && props.commentInfo.children.length > 0 ? [...props.commentInfo.children].reverse() : [];
     const commentX = props.commentInfo.shape_frame.x1
     const commentY = props.commentInfo.shape_frame.y1
@@ -149,7 +154,7 @@ const unHover = (e: MouseEvent) => {
 
 const moveCommentPopup = (e: MouseEvent) => {
     e.stopPropagation();
-    if(props.commentInfo.user.id === props.context.comment.isUserInfo?.id) {
+    if (props.commentInfo.user.id === props.context.comment.isUserInfo?.id) {
         emit('moveCommentPopup', e, props.index)
     }
 }
@@ -414,9 +419,9 @@ watchEffect(watcher)
             @unHoverComment="unHoverComment" :commentInfo="props.commentInfo" :index="props.index"
             @deleteComment="deleteComment" @resolve="resolve" @moveCommentPopup.stop="moveCommentPopup"></HoverComment>
         <CommentPopup v-if="ShowComment" ref="commentPopupEl" :rootHeight="rootHeight" :rootWidth="rootWidth"
-            :length="commentLength" :context="props.context" @close="closeComment" :commentInfo="props.commentInfo" :docList="docList"
-            :index="props.index" @resolve="resolve" @delete="deleteComment" @recover="recover" @editComment="editComment"
-            @editCommentChild="editCommentChild" :documentCommentList="documentCommentList"
+            :length="commentLength" :context="props.context" @close="closeComment" :commentInfo="props.commentInfo"
+            :docList="docList" :index="props.index" @resolve="resolve" @delete="deleteComment" @recover="recover"
+            @editComment="editComment" @editCommentChild="editCommentChild" :documentCommentList="documentCommentList"
             @previousArticle="previousArticle" @next-article="nextArticle" :reply="reply"
             @moveCommentPopup.stop="moveCommentPopup" @addComment="addComment"></CommentPopup>
     </div>

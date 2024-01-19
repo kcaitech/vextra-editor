@@ -2,7 +2,7 @@
 import { computed, InputHTMLAttributes, nextTick, onMounted, onUnmounted, ref, watch } from "vue";
 import { Shape, ShapeType, ShapeView, SymbolUnionShape } from '@kcdesign/data';
 import { Context } from "@/context";
-import { get_name, is_parent_locked, is_parent_unvisible } from "@/utils/shapelist";
+import { get_name } from "@/utils/shapelist";
 import { Perm } from "@/context/workspace";
 import { Tool } from "@/context/tool";
 import { useI18n } from 'vue-i18n';
@@ -264,17 +264,13 @@ function updater(t?: any) {
 
     const shape = props.data.shapeview();
 
-    const naviChilds = shape.naviChilds;
-    showTriangle.value = Boolean(naviChilds && naviChilds.length > 0);
+    const data = shape.data;
+
+    const children = data.naviChilds || (data as any).childs || shape.naviChilds || [];
+    showTriangle.value = children.length > 0 && shape.type !== ShapeType.Table;
 
     lock_status.value = shape.isLocked() ? 1 : 0;
     visible_status.value = shape.isVisible() ? 0 : 1;
-    // if (is_parent_locked(shape) && !lock_status.value) {
-    //     lock_status.value = 2;
-    // }
-    // if (is_parent_unvisible(shape) && !visible_status.value) {
-    //     visible_status.value = 2;
-    // }
 }
 
 let oldshape: Shape | undefined;
@@ -375,7 +371,7 @@ onUnmounted(() => {
         </div>
         <!-- icon -->
         <div class="container-svg zero-symbol" @dblclick="fitToggleContainer" :style="{ opacity: !visible_status ? 1 : .3 }"
-            :class="{ color: !is_component() }">
+            :class="{ color: !is_component(), stroke: data.shape().type === ShapeType.Oval && is_component(), no_stroke: !is_component() && data.shape().type === ShapeType.Oval }">
             <svg-icon class="svg" :icon-class="icon_class()"></svg-icon>
         </div>
         <!-- 内容描述 -->
@@ -587,6 +583,7 @@ onUnmounted(() => {
 
 .component {
     color: var(--component-color);
+    fill: var(--component-color);
 
     &>.text>.txt,
     &>.text>.tool_icon {
@@ -595,7 +592,15 @@ onUnmounted(() => {
 }
 
 .color {
-    color: #595959;
+    fill: #595959;
+}
+
+.stroke {
+    stroke: #7F58F9;
+}
+
+.no_stroke {
+    stroke: #595959;
 }
 
 .firstAngle {

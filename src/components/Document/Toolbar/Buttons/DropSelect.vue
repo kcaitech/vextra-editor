@@ -32,7 +32,7 @@ const handleBoolean = (e: MouseEvent) => {
       <div style="display: flex; align-items: center;">
 <!--        <div class="choose" :style="{ visibility: props.select === props.d ? 'visible' : 'hidden'  }"></div>-->
           <div class="choose">
-              <svg-icon icon-class="choose" :style="{ visibility: props.select === props.d ? 'visible' : 'hidden' }"></svg-icon>
+              <svg-icon icon-class="white-select" :style="{ visibility: props.select === props.d ? 'visible' : 'hidden' }"></svg-icon>
           </div>
         <div class="svg-container">
           <svg-icon :icon-class="select"></svg-icon>
@@ -46,7 +46,7 @@ const handleBoolean = (e: MouseEvent) => {
       <div style="display: flex; align-items: center;">
 <!--        <div class="choose" :style="{ visibility: props.select === props.d && !state ? 'visible' : 'hidden'  }"></div>-->
           <div class="choose">
-              <svg-icon icon-class="choose" :style="{ visibility: props.select === props.d && !state ? 'visible' : 'hidden' }"></svg-icon>
+              <svg-icon icon-class="white-select" :style="{ visibility: props.select === props.d && !state ? 'visible' : 'hidden' }"></svg-icon>
           </div>
         <div class="svg-container">
           <svg-icon :icon-class="select"></svg-icon>

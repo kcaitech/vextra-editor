@@ -6,12 +6,14 @@ import { Point } from "../SelectionView.vue";
 import { useController } from "./controller";
 import { genRectPath } from "../common";
 import ShapesStrokeContainer from "./ShapeStroke/ShapesStrokeContainer.vue";
+import { SelectionTheme } from "@/context/selection";
 interface Props {
     context: Context
     controllerFrame: Point[]
     rotate: number
     matrix: Matrix
     shape: ShapeView
+    theme: SelectionTheme
 }
 const props = defineProps<Props>();
 useController(props.context);

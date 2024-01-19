@@ -64,7 +64,7 @@ function default_value(v: number) {
 }
 function save_layer_show(type: VariableType, name: string) {
     const symbol = props.context.selection.symbolview;
-    if (!symbol || !layerIds.value) return;
+    if (!symbol || !layerIds.value?.length) return;
     modify_variable(props.context, symbol, props.variable, name, dlt_value.value, layerIds.value)
     iseditLayerShow.value = false;
 }
@@ -118,8 +118,7 @@ function _delete() {
         display: flex;
         align-items: center;
         justify-content: space-between;
-        height: 44px;
-        padding: 6px 0;
+        height: 38px;
         box-sizing: border-box;
     }
 
@@ -169,7 +168,7 @@ function _delete() {
             .name {
                 flex: 1;
                 display: flex;
-                max-width: 100%;
+                max-width: calc(100% - 30px);
 
                 >span {
                     display: block;

@@ -75,7 +75,8 @@ onUnmounted(() => {
 
 <template>
     <div class="shapetab-container" ref="container">
-        <div class="page-navi" :style="{ height: isPagelistFold ? '40px' : `${structure.pagelistHeight}px`, transition }">
+        <div class="page-navi" :style="{ height: isPagelistFold ? '40px' : `${structure.pagelistHeight}px` }">
+            <!-- <div class="page-navi" :style="{ height: isPagelistFold ? '40px' : `${structure.pagelistHeight}px`, transition }"> -->
             <PageList :context="props.context" v-bind="$attrs" @fold="pageListFold" :page="page"></PageList>
             <Sash v-if="!isPagelistFold" ref="sash" side="bottom" @dragStart="dragStart" @offset="onDragOffset"
                 @drag-end="end"></Sash>
@@ -97,7 +98,7 @@ onUnmounted(() => {
 
     >.page-navi {
         position: relative;
-        transition: all 0.3s ease 0s;
+        // transition: all 0.3s ease 0s;
     }
 }
 </style>
