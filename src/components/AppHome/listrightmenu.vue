@@ -303,8 +303,11 @@ const rcopyfile = async (id: string) => {
     if (menu.value) {
         menu.value.style.display = 'none'
     }
-    const { code } = await user_api.Copyfile({ doc_id: id })
+    const { code, data: { project } } = await user_api.Copyfile({ doc_id: id })
     if (code === 0) {
+        if (project !== null) {
+            router.push({ path: '/files/project/' + project.id })
+        }
         ElMessage.closeAll('success')
         ElMessage.success({ duration: 1500, message: t('homerightmenu.copyfile_ok') })
         emits('getDoucment')

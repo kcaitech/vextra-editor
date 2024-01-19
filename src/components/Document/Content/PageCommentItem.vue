@@ -114,7 +114,7 @@ const unHoverComment = () => {
 const showComment = (e: MouseEvent) => {
     if (ShowComment.value) return;
     if (props.context.comment.isCommentMove) return
-    documentCommentList.value = props.commentInfo.children.length > 0 ? [...props.commentInfo.children].reverse() : [];
+    documentCommentList.value = props.commentInfo.children && props.commentInfo.children.length > 0 ? [...props.commentInfo.children].reverse() : [];
     const commentX = props.commentInfo.shape_frame.x1
     const commentY = props.commentInfo.shape_frame.y1
     const workspace = props.context.workspace;
@@ -314,7 +314,7 @@ const unfold = () => {
             rootWidth.value = comment.value.parentElement!.clientWidth
         }
         commentScale.value = 0
-        documentCommentList.value = props.commentInfo.children.length > 0 ? [...props.commentInfo.children].reverse() : [];
+        documentCommentList.value = props.commentInfo.children && props.commentInfo.children.length > 0 ? [...props.commentInfo.children].reverse() : [];
         ShowComment.value = true
         showScale.value = true
         props.context.comment.saveCommentId(props.commentInfo.id);

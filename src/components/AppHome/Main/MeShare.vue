@@ -35,9 +35,7 @@
     </div>
     <RecycleBin v-if="!active" />
     <div v-if="showFileShare" class="overlay">
-        <FileShare @close="closeShare" :docId="docId" :docName="docName" :selectValue="selectValue" :userInfo="userInfo"
-            :docUserId="docUserId" @select-type="onSelectType" @switch-state="onSwitch" :shareSwitch="shareSwitch"
-            :pageHeight="pageHeight">
+        <FileShare @close="closeShare" :docId="docId">
         </FileShare>
     </div>
 </template>
@@ -51,7 +49,6 @@ import { useI18n } from 'vue-i18n'
 import { router } from '@/router'
 import FileShare from '@/components/Document/Toolbar/Share/FileShare.vue'
 import tablelist from '@/components/AppHome/tablelist.vue'
-import { UserInfo } from '@/context/user';
 import listrightmenu from "../listrightmenu.vue";
 import MoveProjectFill from "@/components/TeamProject/MoveProjectFill.vue";
 import RecycleBin from './RecycleBin.vue'
@@ -77,23 +74,16 @@ const items = ['open', 'newtabopen', 'share', 'target_star', 'movefill', 'rename
 const { t } = useI18n()
 const route = useRoute()
 const showFileShare = ref<boolean>(false)
-const shareSwitch = ref(true)
-const pageHeight = ref(0)
 const docId = ref('')
-const docName = ref('')
 const mydata = ref()
-const selectValue = ref(1)
-const docUserId = ref('')
 const noNetwork = ref(false)
 const lists = ref<any[]>([])
-const userInfo = ref<UserInfo | undefined>()
 const iconlists = ref(['star', 'share', 'delete'])
 const projectItem = ref<any>({});
 const moveVisible = ref(false);
 const { projectList } = inject('shareData') as {
     projectList: Ref<any[]>;
 };
-
 const myfile = ref<HTMLElement>()
 const mydel = ref<HTMLElement>()
 const elwidth = ref()
@@ -222,11 +212,7 @@ const Sharefile = (data: data) => {
         showFileShare.value = false
         return
     }
-    docUserId.value = data.document.user_id
     docId.value = data.document.id
-    docName.value = data.document.name
-    selectValue.value = data.document.doc_type !== 0 ? data.document.doc_type : data.document.doc_type
-    userInfo.value = userData.value
     showFileShare.value = true
 }
 
@@ -276,23 +262,8 @@ const rightmenu = (e: MouseEvent, data: data) => {
     projectItem.value = projectList.value.filter(item => item.project.id === data.document.project_id)[0];
 }
 
-const userData = ref({
-    avatar: localStorage.getItem('avatar') || '',
-    id: localStorage.getItem('userId') || '',
-    nickname: localStorage.getItem('nickname') || ''
-})
-
 const closeShare = () => {
     showFileShare.value = false
-}
-const getPageHeight = () => {
-    pageHeight.value = window.innerHeight
-}
-const onSwitch = (state: boolean) => {
-    shareSwitch.value = state
-}
-const onSelectType = (type: number) => {
-    selectValue.value = type
 }
 
 watch(() => route.name, () => {
@@ -325,8 +296,6 @@ watch(() => route.name, () => {
 
 onMounted(() => {
     getDoucment();
-    getPageHeight()
-    window.addEventListener('resize', getPageHeight)
     if (route.name === "recyclebin") {
         highlight(false)
     }
@@ -345,7 +314,6 @@ onMounted(() => {
 })
 
 onUnmounted(() => {
-    window.removeEventListener('resize', getPageHeight)
     picker.unmount
 })
 

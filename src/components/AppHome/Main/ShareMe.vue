@@ -10,21 +10,18 @@
     <listrightmenu :items="items" :data="mydata" @ropen="openDocument" @r-sharefile="Sharefile" @r-starfile="Starfile"
         @r-exitshare="Exitshar" />
     <div v-if="showFileShare" class="overlay">
-        <FileShare v-if="showFileShare" @close="closeShare" :docId="docId" :docName="docName" :selectValue="selectValue"
-            :docUserId="docUserId" :userInfo="userInfo" @select-type="onSelectType" @switch-state="onSwitch"
-            :shareSwitch="shareSwitch" :pageHeight="pageHeight" :projectPerm="projectPerm">
+        <FileShare @close="closeShare" :docId="docId" :projectPerm="projectPerm">
         </FileShare>
     </div>
 </template>
 <script setup lang="ts">
 import * as user_api from '@/request/users'
 import { ElMessage } from 'element-plus'
-import { ref, onMounted, onUnmounted, nextTick, watch, inject, Ref, watchEffect } from 'vue'
+import { ref, onMounted, nextTick, inject, Ref, watchEffect } from 'vue'
 import { router } from '@/router'
 import FileShare from '@/components/Document/Toolbar/Share/FileShare.vue'
 import tablelist from '@/components/AppHome/tablelist.vue'
 import { useI18n } from 'vue-i18n'
-import { UserInfo } from '@/context/user';
 import listrightmenu from "../listrightmenu.vue"
 import Bus from '@/components/AppHome/bus'
 import PinyinMatch from 'pinyin-match'
@@ -46,26 +43,14 @@ interface data {
     project_perm: number
 }
 
-const items = ['open', 'newtabopen', 'share', 'exit_share', 'target_star']
+let items = ['open', 'newtabopen', 'share', 'exit_share', 'target_star']
 const iconlists = ref(['star', 'share', 'EXshare'])
 const { t } = useI18n()
 const showFileShare = ref<boolean>(false);
-const shareSwitch = ref(true)
-const pageHeight = ref(0)
-const docUserId = ref('')
-const selectValue = ref(1)
-const userInfo = ref<UserInfo | undefined>()
 const docId = ref('')
-const docName = ref('')
 const mydata = ref()
 const noNetwork = ref(false)
 let lists = ref<any[]>([])
-
-const userData = ref({
-    avatar: localStorage.getItem('avatar') || '',
-    id: localStorage.getItem('userId') || '',
-    nickname: localStorage.getItem('nickname') || ''
-})
 const projectPerm = ref()
 const { projectList } = inject('shareData') as {
     projectList: Ref<any[]>;
@@ -173,11 +158,7 @@ const Sharefile = (data: data) => {
         showFileShare.value = false
         return
     }
-    docUserId.value = data.document.user_id
-    userInfo.value = userData.value
     docId.value = data.document.id
-    docName.value = data.document.name
-    selectValue.value = data.document.doc_type !== 0 ? data.document.doc_type : data.document.doc_type
     projectPerm.value = data.project_perm;
     showFileShare.value = true
 }
@@ -202,24 +183,21 @@ const Exitshar = async (data: data) => {
 //右键菜单入口
 const rightmenu = (e: MouseEvent, data: data) => {
     const elstar = document.querySelector('.target_star')! as HTMLElement
-    const { document: { id }, document_favorites: { is_favorite } } = data
+    const { document: { id,user_id }, document_favorites: { is_favorite }, project_perm } = data
     const viewportWidth = window.innerWidth || document.documentElement.clientWidth
     const viewportHeight = window.innerHeight || document.documentElement.clientHeight
     const rightmenu: any = document.querySelector('.rightmenu')
     const top = e.pageY
     const left = e.pageX
-
     nextTick(() => {
         const width = rightmenu.clientWidth
         const height = rightmenu.clientHeight
         rightmenu.style.left = left + width > viewportWidth ? (viewportWidth - width) + "px" : left + 'px'
         rightmenu.style.top = top + height > viewportHeight ? (viewportHeight - height) + 'px' : top + 'px'
     })
-
     if ((e.target as HTMLElement).closest('.el-table-v2__row')) {
         rightmenu.style.display = 'block'
     }
-
     nextTick(() => {
         if (is_favorite == true) {
             elstar.innerHTML = t('homerightmenu.unstar')
@@ -234,25 +212,11 @@ const rightmenu = (e: MouseEvent, data: data) => {
 const closeShare = () => {
     showFileShare.value = false
 }
-const getPageHeight = () => {
-    pageHeight.value = window.innerHeight
-}
-const onSwitch = (state: boolean) => {
-    shareSwitch.value = state
-}
-const onSelectType = (type: number) => {
-    selectValue.value = type
-}
 
 onMounted(() => {
     ShareLists()
-    getPageHeight()
-    window.addEventListener('resize', getPageHeight)
 })
 
-onUnmounted(() => {
-    window.removeEventListener('resize', getPageHeight)
-})
 </script>
 <style lang="scss" scoped>
 .overlay {

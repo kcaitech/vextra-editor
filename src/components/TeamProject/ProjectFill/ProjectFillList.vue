@@ -9,10 +9,9 @@
     <listrightmenu :items="items" :data="mydata" @get-doucment="getDoucment" @r-starfile="Starfile" @r-sharefile="Sharefile"
         @r-removefile="Deletefile" @ropen="openDocument" @moveFillAddress="moveFillAddress" />
     <div v-if="showFileShare" class="overlay">
-        <FileShare @close="closeShare" :docId="docId" :docName="docName" :selectValue="selectValue"
-            :userInfo="userInfo" :docUserId="docUserId" @select-type="onSelectType" @switch-state="onSwitch"
-            :shareSwitch="shareSwitch" :pageHeight="pageHeight" :project="is_project"
-            :projectPerm="currentProject.self_perm_type">
+        <FileShare @close="closeShare" :docId="docId" :docName="docName" :selectValue="selectValue" :userInfo="userInfo"
+            :docUserId="docUserId" @select-type="onSelectType" @switch-state="onSwitch" :shareSwitch="shareSwitch"
+            :pageHeight="pageHeight" :project="is_project" :projectPerm="currentProject.self_perm_type">
         </FileShare>
     </div>
     <MoveProjectFill :title="t('Createteam.movetip')" :confirm-btn="t('Createteam.move')" :projectItem="projectItem"
@@ -50,6 +49,7 @@ interface data {
     document_favorites: {
         is_favorite: boolean
     }
+    project_perm: number
 }
 
 let items = ['open', 'newtabopen', 'share', 'target_star']
@@ -94,6 +94,12 @@ async function getDoucment(id: string) {
                 let { document: { size }, document_access_record: { last_access_time } } = data[i]
                 data[i].document.size = sizeTostr(size)
                 data[i].document_access_record.last_access_time = last_access_time.slice(0, 19)
+                if (data[i].project) {
+                    const project = projectList.value.filter(item => item.project.id === data[i].project.id)[0];
+                    if (project) {
+                        data[i].project_perm = project.self_perm_type;
+                    }
+                }
             }
         }
         lists.value = Object.values(data)
@@ -116,9 +122,16 @@ watchEffect(() => {
     }
 })
 
+
+
 const { projectList } = inject('shareData') as {
     projectList: Ref<any[]>;
 };
+
+watch(projectList, () => {
+    console.log('监听有变化');
+    getDoucment(props.currentProject.project.id)
+})
 
 const refreshDoc = () => {
     getDoucment(props.currentProject.project.id)
@@ -237,7 +250,7 @@ const Deletefile = async (data: data) => {
 //右键菜单入口
 const rightmenu = (e: MouseEvent, data: data) => {
     const el = document.querySelector('.target_star')! as HTMLElement
-    const { document: { id, user_id, project_id }, document_favorites: { is_favorite } } = data
+    const { document: { id, user_id, project_id }, document_favorites: { is_favorite }, project_perm } = data
     const viewportWidth = window.innerWidth || document.documentElement.clientWidth
     const viewportHeight = window.innerHeight || document.documentElement.clientHeight
     const rightmenu: any = document.querySelector('.rightmenu')
@@ -262,12 +275,14 @@ const rightmenu = (e: MouseEvent, data: data) => {
     })
     items = ['open', 'newtabopen', 'share', 'target_star']
     const userId = localStorage.getItem('userId');
-    if (props.currentProject.self_perm_type > 3) {
+    if (project_perm > 3) {
         items.push('movefill', 'rename', 'copyfile', 'deletefile');
-    } else if (props.currentProject.self_perm_type === 3) {
+    } else if (project_perm === 3) {
         if (user_id === userId) {
             items.push('movefill', 'rename', 'copyfile', 'deletefile')
         }
+    } else if (project_perm < 3) {
+        items.push()
     } else {
         if (user_id === userId) {
             items.push('movefill', 'rename', 'copyfile', 'deletefile')

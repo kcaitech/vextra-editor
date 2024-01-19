@@ -1,53 +1,17 @@
 <script setup lang="ts">
-import { ref, onMounted, onUnmounted, reactive, watch, watchEffect, computed, nextTick, } from 'vue';
+import { ref, onMounted, onUnmounted, reactive, watchEffect, computed } from 'vue';
 import { useI18n } from 'vue-i18n';
-import { UserInfo } from '@/context/user';
-import { Context } from '@/context';
 import * as share_api from '@/request/share';
 import { ElMessage } from 'element-plus';
 import { useRoute } from 'vue-router';
 import { DocInfo } from "@/context/user"
-const { t } = useI18n()
-const props = defineProps<{
-  shareSwitch: boolean,
-  docId?: string,
-  docName?: string,
-  selectValue: number,
-  docUserId?: string,
-  context?: Context,
-  userInfo: UserInfo | undefined,
-  docInfo?: DocInfo,
-  project?: boolean,
-  projectPerm?: number | undefined
-}>()
-const emit = defineEmits<{
-  (e: 'close'): void,
-  (e: 'switchState', nVal: boolean): void,
-  (e: 'selectType', nVal: number): void
-}>()
+
 enum permissions {
   noAuthority,
   readOnly,
   reviewable,
   editable
 }
-
-const docInfo = ref<DocInfo>(props.docInfo!)
-const route = useRoute()
-const docID = props.docId ? props.docId : route.query.id
-//const url = route.path !== '/document' ? `https://protodesign.cn/#/document?id=${docID}` + " " + `邀请您进入《${props.docName}》，点击链接开始协作` : location.href + ' ' + `邀请您进入《${docInfo.value.document.name}》，点击链接开始协作`
-
-const value1 = ref(props.shareSwitch)
-const authority = ref(false)
-const index = ref(0)
-const card = ref<HTMLDivElement>()
-const editable = ref(`${t('share.editable')}`)
-const reviewable = ref(`${t('share.reviewable')}`)
-const readOnly = ref(`${t('share.readOnly')}`)
-const remove = ref(`${t('share.remove')}`)
-const founder = ref(false)
-const userInfo = ref<UserInfo | undefined>(props.userInfo)
-const shareList = ref<any[]>([])
 
 enum docType {
   Private,
@@ -56,7 +20,46 @@ enum docType {
   Critical,
   Edit
 }
-const popover = ref<HTMLDivElement>()
+
+const props = defineProps<{
+  docId: string,
+  projectPerm?: number | undefined
+}>()
+
+const emit = defineEmits<{
+  (e: 'close'): void,
+}>()
+
+const { t } = useI18n()
+const docInfo = ref<DocInfo>()
+const route = useRoute()
+const docID = props.docId ? props.docId : route.query.id
+const UserId = localStorage.getItem('userId') //当前用户ID
+const value1 = ref<boolean>()
+const authority = ref(false)
+const isSelectOpen = ref<boolean>(false)
+const index = ref(0)
+const editable = ref(`${t('share.editable')}`)
+const reviewable = ref(`${t('share.reviewable')}`)
+const readOnly = ref(`${t('share.readOnly')}`)
+const remove = ref(`${t('share.remove')}`)
+const founder = ref(false)
+const shareList = ref<any[]>([])
+const selectValue = ref<string>()
+const DocType = reactive([
+  `${t('share.shareable')}`,
+  `${t('share.need_to_apply_for_confirmation')}`,
+  `${t('share.anyone_can_read_it')}`,
+  `${t('share.anyone_can_comment')}`,
+  `${t('share.anyone_can_edit_it')}`
+])
+const permission = reactive([
+  `${t('share.no_authority')}`,
+  `${t('share.readOnly')}`,
+  `${t('share.reviewable')}`,
+  `${t('share.editable')}`
+])
+
 const options = [
   {
     value: 1,
@@ -76,25 +79,22 @@ const options = [
   }
 ]
 
-const DocType = reactive([`${t('share.shareable')}`, `${t('share.need_to_apply_for_confirmation')}`, `${t('share.anyone_can_read_it')}`, `${t('share.anyone_can_comment')}`, `${t('share.anyone_can_edit_it')}`])
-const permission = reactive([`${t('share.no_authority')}`, `${t('share.readOnly')}`, `${t('share.reviewable')}`, `${t('share.editable')}`])
-const selectValue = ref(DocType[props.selectValue === 0 ? 1 : props.selectValue])
-
 const documentShareURL = computed(() => {
   return route.path !== '/document'
     ?
-    location.origin + `/#/document?id=${docID}` + ' ' + `邀请您进入《${props.docName}》，点击链接开始协作`
+    location.origin + `/#/document?id=${docID}` + ' ' + `邀请您进入《${(docInfo.value as DocInfo).document.name}》，点击链接开始协作`
     :
-    location.href + ' ' + `邀请您进入《${docInfo.value.document.name}》，点击链接开始协作`
+    location.href + ' ' + `邀请您进入《${(docInfo.value as DocInfo).document.name}》，点击链接开始协作`
 })
-
 
 //获取文档信息
 const getDocumentInfo = async () => {
   try {
     const { code, data, message } = await share_api.getDocumentInfoAPI({ doc_id: docID })
     if (code === 0) {
-      docInfo.value = data
+      docInfo.value = data as DocInfo
+      value1.value = docInfo.value.document.doc_type === 0 ? false : true
+      selectValue.value = DocType[docInfo.value.document.doc_type === 0 ? 1 : docInfo.value.document.doc_type]
     } else {
       emit('close')
       ElMessage.error(message === '审核不通过' ? t('system.sensitive_reminder2') : message)
@@ -107,12 +107,9 @@ const getDocumentInfo = async () => {
 //是否显示权限编辑菜单
 const selectAuthority = (i: number, e: Event) => {
   e.stopPropagation()
-  if (authority.value) {
-    authority.value = false
-    return
-  }
+  if (isSelectOpen.value) isSelectOpen.value = false
+  authority.value = !authority.value
   index.value = i
-  authority.value = true
 }
 
 //设置为可编辑权限
@@ -187,97 +184,24 @@ const setShateType = async (type: number) => {
   }
 }
 
-//监听分享权限设置变化，并发送到服务端
-watch(selectValue, (nVal, oVal) => {
-  const index = DocType.findIndex(item => item === nVal)
-  if (index === docType.Critical) {
-    setShateType(docType.Critical)
-  } else if (index === docType.Edit) {
-    setShateType(docType.Edit)
-  } else if (index === docType.Read) {
-    setShateType(docType.Read)
-  } else if (index === docType.Share) {
-    setShateType(docType.Share)
-  } else {
-    setShateType(docType.Private)
-    emit('switchState', true)
-  }
-  emit('selectType', index)
-})
-
-//监听分享开关变化,
-watch(value1, (nVal, oVal) => {
-
-  //获取当前选择权限类型的下标
-  const index = DocType.findIndex(item => item === selectValue.value)
-  if (nVal) {
-    if (index === docType.Critical) {
-      setShateType(docType.Critical)
-    } else if (index === docType.Edit) {
-      setShateType(docType.Edit)
-    } else if (index === docType.Read) {
-      setShateType(docType.Read)
-    } else if (index === docType.Share) {
-      setShateType(docType.Share)
-    } else {
-      setShateType(docType.Private)
-      emit('switchState', true)
-    }
-    emit('selectType', index)
-  } else {
-    setShateType(docType.Private)
-    emit('switchState', nVal)
-    emit('selectType', docType.Private)
-  }
-})
-
 watchEffect(() => {
-  props.projectPerm;
-  if (route.query.id) {
-    const userId = props.userInfo?.id
-    if (props.projectPerm) {
-      if (props.projectPerm > 3) {
+  //文档所有者的ID
+  const docUserId = docInfo.value?.user.id
+  if (props.projectPerm) {
+    if (props.projectPerm > 3) {
+      return founder.value = false;
+    } else {
+      if (UserId === docUserId) {
         return founder.value = false;
-      } else if (props.projectPerm === 3) {
-        if (props.docInfo && props.docInfo.user.id === userId) {
-          return founder.value = false;
-        } else {
-          return founder.value = true;
-        }
       } else {
         return founder.value = true;
-      }
-    } else {
-      if (props.docUserId) {
-        props.docUserId != userId ? founder.value = true : founder.value = false
-      } else if (props.docInfo) {
-        props.docInfo.user.id != userId ? founder.value = true : founder.value = false
       }
     }
   } else {
-    const userId = props.userInfo?.id
-    if (props.projectPerm) {
-      if (props.projectPerm > 3) {
-        return founder.value = false;
-      } else if (props.projectPerm === 3) {
-        if (props.docUserId && props.docUserId === userId) {
-          return founder.value = false;
-        } else {
-          return founder.value = true;
-        }
-      } else {
-        return founder.value = true;
-      }
-    } else {
-      if (props.docUserId) {
-        props.docUserId != userId ? founder.value = true : founder.value = false
-      } else if (props.docInfo) {
-        props.docInfo.user.id != userId ? founder.value = true : founder.value = false
-      }
-    }
+    UserId !== docUserId ? founder.value = true : founder.value = false
   }
-})
 
+})
 
 //复制分享链接
 const copyLink = async () => {
@@ -336,17 +260,7 @@ onMounted(() => {
     document.addEventListener('click', handleClick);
     clearTimeout(timer)
   }, 200);
-
   document.addEventListener('keyup', handlekeyup);
-
-  if (!founder.value) {
-    if (props.selectValue === docType.Private) {
-      value1.value = false
-      emit('switchState', false)
-    } else {
-      value1.value = true
-    }
-  }
 })
 
 onUnmounted(() => {
@@ -354,15 +268,57 @@ onUnmounted(() => {
   document.removeEventListener('click', handleClick);
 })
 
-const isSelectOpen = ref<boolean>(false)
-const inputselect = ref<HTMLInputElement>()
+
+
 const openSelect = () => {
+  if (authority.value) authority.value = false
   isSelectOpen.value = !isSelectOpen.value;
 }
 const selectOption = (option: any) => {
   selectValue.value = DocType[option]
   isSelectOpen.value = false
   authority.value = false
+  const index = DocType.findIndex(item => item === selectValue.value)
+  switch (index) {
+    case docType.Share:
+      setShateType(docType.Share)
+      break;
+    case docType.Read:
+      setShateType(docType.Read)
+      break;
+    case docType.Critical:
+      setShateType(docType.Critical)
+      break;
+    case docType.Edit:
+      setShateType(docType.Edit)
+      break;
+    default: null
+      break;
+  }
+}
+
+const shareSwitch = () => {
+  const index = DocType.findIndex(item => item === selectValue.value)
+  if (value1.value) {
+    switch (index) {
+      case docType.Share:
+        setShateType(docType.Share)
+        break;
+      case docType.Read:
+        setShateType(docType.Read)
+        break;
+      case docType.Critical:
+        setShateType(docType.Critical)
+        break;
+      case docType.Edit:
+        setShateType(docType.Edit)
+        break;
+      default: null
+        break;
+    }
+  } else {
+    setShateType(docType.Private)
+  }
 }
 
 </script>
@@ -382,25 +338,25 @@ const selectOption = (option: any) => {
       <!-- 开关 -->
       <div class="share-switch">
         <span class="type">{{ t('share.share_switch') }}：</span>
-        <input id="switch" type="checkbox" v-model="value1">
+        <input id="switch" type="checkbox" v-model="value1" @change="shareSwitch">
         <label class="my_switch" for="switch"></label>
 
       </div>
       <!-- 文件名 -->
       <div class="file-name">
         <span class="type">{{ t('share.file_name') }}：</span>
-        <p class="name">{{ docInfo!.document.name }}</p>
+        <p class="name">{{ docInfo.document.name }}</p>
       </div>
       <!-- 权限设置 -->
       <div class="purview">
         <span class="type">{{ t('share.permission_setting') }}：</span>
         <div class="right">
-          <input ref="inputselect" type="text" v-model="selectValue" @click.stop="openSelect"
-            placeholder="Select an option" :disabled="props.selectValue === 0 ? true : false" readonly />
-          <div class="shrink" @click.stop="inputselect?.click()">
+          <input ref="inputselect" id="select" type="text" v-model="selectValue" @click.stop="openSelect"
+            placeholder="Select an option" :disabled="!value1 ? true : false" readonly />
+          <label for="select" class="shrink">
             <svg-icon icon-class="down"
               :style="{ transform: isSelectOpen ? 'rotate(-180deg)' : 'rotate(0deg)', color: '#666666' }"></svg-icon>
-          </div>
+          </label>
           <transition name="el-zoom-in-top">
             <ul v-show="isSelectOpen" class="options">
               <li class="options_item" v-for="option in options" :key="option.value"
@@ -410,9 +366,8 @@ const selectOption = (option: any) => {
               </li>
             </ul>
           </transition>
-          <button class="copybnt" type="button" @click.stop="copyLink"
-            :disabled="props.selectValue === 0 ? true : false">{{
-              t('share.copy_link') }}</button>
+          <button class="copybnt" type="button" @click.stop="copyLink" :disabled="!value1 ? true : false">{{
+            t('share.copy_link') }}</button>
         </div>
       </div>
     </div>
@@ -438,38 +393,40 @@ const selectOption = (option: any) => {
             <div class="authority">{{ permission[item.document_permission.perm_type] }}</div>
             <div class="shrink">
               <svg-icon icon-class="down"
-                :style="{ transform: authority ? 'rotate(-180deg)' : 'rotate(0deg)', color: '#666666' }"></svg-icon>
+                :style="{ transform: authority && index === ids ? 'rotate(-180deg)' : 'rotate(0deg)', color: '#666666' }"></svg-icon>
             </div>
-            <div class="popover" v-if="authority && index === ids" ref="popover">
-              <div @click="onEditable(item.document_permission.id, permissions.editable, ids)">
-                {{ editable }}
-                <div class="choose"
-                  :style="{ visibility: editable === permission[item.document_permission.perm_type] ? 'visible' : 'hidden' }">
+            <transition name="el-zoom-in-top">
+              <div class="popover" v-if="authority && index === ids" ref="popover">
+                <div @click="onEditable(item.document_permission.id, permissions.editable, ids)">
+                  {{ editable }}
+                  <div class="choose"
+                    :style="{ visibility: editable === permission[item.document_permission.perm_type] ? 'visible' : 'hidden' }">
+                  </div>
+                </div>
+                <div @click="onReviewable(item.document_permission.id, permissions.reviewable, ids)">
+                  {{ reviewable }}
+                  <div class="choose"
+                    :style="{ visibility: reviewable === permission[item.document_permission.perm_type] ? 'visible' : 'hidden' }">
+                  </div>
+                </div>
+                <div @click="onReadOnly(item.document_permission.id, permissions.readOnly, ids)">
+                  {{ readOnly }}
+                  <div class="choose"
+                    :style="{ visibility: readOnly === permission[item.document_permission.perm_type] ? 'visible' : 'hidden' }">
+                  </div>
+                </div>
+                <div @click="onRemove(item.document_permission.id, ids)">
+                  {{ remove }}
+                  <div class="choose"
+                    :style="{ visibility: remove === permission[item.document_permission.perm_type] ? 'visible' : 'hidden' }">
+                  </div>
                 </div>
               </div>
-              <div @click="onReviewable(item.document_permission.id, permissions.reviewable, ids)">
-                {{ reviewable }}
-                <div class="choose"
-                  :style="{ visibility: reviewable === permission[item.document_permission.perm_type] ? 'visible' : 'hidden' }">
-                </div>
-              </div>
-              <div @click="onReadOnly(item.document_permission.id, permissions.readOnly, ids)">
-                {{ readOnly }}
-                <div class="choose"
-                  :style="{ visibility: readOnly === permission[item.document_permission.perm_type] ? 'visible' : 'hidden' }">
-                </div>
-              </div>
-              <div @click="onRemove(item.document_permission.id, ids)">
-                {{ remove }}
-                <div class="choose"
-                  :style="{ visibility: remove === permission[item.document_permission.perm_type] ? 'visible' : 'hidden' }">
-                </div>
-              </div>
-            </div>
+            </transition>
           </div>
         </div>
       </el-scrollbar>
-      <div class="project" v-if="project || props.docInfo?.project">项目中所有成员均可访问</div>
+      <div class="project" v-if="docInfo.project !== null">项目中所有成员均可访问</div>
     </div>
   </el-card>
 
@@ -500,7 +457,7 @@ const selectOption = (option: any) => {
         <div class="type">{{ t('share.document_permission') }}:</div>
         <p class="name">{{ DocType[docInfo.document.doc_type] }}</p>
       </div>
-      <div class="project" v-if="project || props.docInfo?.project">{{ t('Createteam.shareprojecttips') }}</div>
+      <div class="project" v-if="docInfo.project !== null">{{ t('Createteam.shareprojecttips') }}</div>
       <!-- 链接按钮 -->
       <div class="button bottom">
         <button class="copybnt" type="button" @click="copyLink"
@@ -733,6 +690,7 @@ const selectOption = (option: any) => {
         align-items: center;
         gap: 8px;
 
+
         input {
           width: 122px;
           height: 32px;
@@ -756,6 +714,7 @@ const selectOption = (option: any) => {
           &:disabled {
             background-color: rgba(240, 240, 240, 1) !important;
           }
+
         }
 
         .shrink {
@@ -949,6 +908,7 @@ const selectOption = (option: any) => {
             border-radius: 8px;
             box-shadow: 0px 2px 10px 0px rgba(0, 0, 0, 0.08);
             box-sizing: border-box;
+            z-index: 1;
 
             >div {
               display: flex;
