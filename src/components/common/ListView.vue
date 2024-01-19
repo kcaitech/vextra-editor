@@ -613,8 +613,9 @@ function window_blur() {
 const observer = new ResizeObserver(() => {
     const el = container.value;
     if (el) {
-        containerPosition.value.x = el.getBoundingClientRect().x;
-        containerPosition.value.y = el.getBoundingClientRect().y;
+        const bounding = el.getBoundingClientRect();
+        containerPosition.value.x = bounding.x;
+        containerPosition.value.y = bounding.y;
         visibleHeight = el.clientHeight;
         visibleWidth = el.clientWidth;
         relayout[props.orientation]();
