@@ -5,7 +5,7 @@ import { Action } from '@/context/tool';
 import { WorkSpace } from '@/context/workspace';
 import { collect } from '@/utils/artboardFn';
 import { getHorizontalAngle } from '@/utils/common';
-import { flattenShapes, init_contact_shape, init_insert_shape, init_shape, list2Tree } from '@/utils/content';
+import { init_contact_shape, init_insert_shape, init_shape, list2Tree } from '@/utils/content';
 import { get_direction } from '@/utils/controllerFn';
 import { EffectType, Wheel, fourWayWheel } from '@/utils/wheel';
 import { Artboard, AsyncCreator, ContactForm, ContactLineView, GroupShape, Matrix, ShapeFrame, ShapeType, ShapeView, adapt2Shape } from '@kcdesign/data';
@@ -269,9 +269,8 @@ function modify_contact_to(e: MouseEvent, ac: AsyncCreator) {
     const points = (newShape as ContactLineView).getPoints();
     const environment = get_contact_environment(props.context, newShape!, points);
     if (newShape!.parent?.id !== environment.id) {
-        asyncCreator
+        ac.migrate(adapt2Shape(environment) as GroupShape);
     }
-    ac.migrate(adapt2Shape(environment) as GroupShape);
 }
 
 // #endregion

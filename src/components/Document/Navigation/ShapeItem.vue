@@ -12,6 +12,7 @@ import { Selection } from "@/context/selection";
 import { is_component_class } from "@/utils/listview";
 import Abbr from "@/components/common/Abbr.vue";
 import { debounce } from "lodash";
+import { shutdown_menu } from "@/utils/mouse";
 
 export interface ItemData {
     id: string
@@ -185,12 +186,9 @@ const selectedChild = () => {
     return child
 }
 
-function is_component() {
-    return is_component_class(props.data.shapeview());
-}
-
 const mousedown = (e: MouseEvent) => {
     e.stopPropagation();
+    shutdown_menu(e, props.data.context);
     if (e.button === 0) {
         const shape = props.data.shapeview();
         const { ctrlKey, metaKey, shiftKey } = e;
