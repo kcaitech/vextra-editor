@@ -486,7 +486,7 @@ function init_keyboard_uints() {
 
 type FuncType = (...args: any[]) => any;
 const repoPendingCmdListBeforeStart: Cmd[] = []; // 保存在start前repo产生的cmd
-const repoStopHandlerList: FuncType[] = []; // 保存repo stop时的handler
+const repoStopHandlerList: FuncType[] = [];
 function init_doc() {
   if (route.query.id) { // 从远端读取文件
     getDocumentInfo();
