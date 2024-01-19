@@ -13,7 +13,7 @@ import {
     adapt2Shape,
     TableView,
     TextShapeView,
-    TableCellView
+    TableCellView,
 } from "@kcdesign/data";
 import { Document } from "@kcdesign/data";
 import { Page } from "@kcdesign/data";
@@ -69,6 +69,14 @@ export class RepoWraper {
 
     unwatch(f: Function) {
         throw new Error("Not implemented")
+    }
+
+    onCommit(...args: Parameters<typeof this.m_repo.onCommit>): ReturnType<typeof this.m_repo.onCommit> {
+        return this.m_repo.onCommit(...args)
+    }
+
+    onUndoRedo(...args: Parameters<typeof this.m_repo.onUndoRedo>): ReturnType<typeof this.m_repo.onUndoRedo> {
+        return this.m_repo.onUndoRedo(...args)
     }
 }
 
