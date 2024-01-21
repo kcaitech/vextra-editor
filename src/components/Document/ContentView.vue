@@ -41,6 +41,7 @@ import Creator from './Creator.vue';
 import { Wheel, fourWayWheel } from '@/utils/wheel';
 import PathEditMode from "@/components/Document/Selection/Controller/PathEdit/PathEditMode.vue";
 import { menu_locate } from '@/utils/common';
+import Overview from './Content/Overview.vue';
 
 interface Props {
     context: Context
@@ -87,6 +88,7 @@ const creatorMode = ref<boolean>(false);
 const documentCommentList = ref<any[]>(comment.value.pageCommentList);
 const path_edit_mode = ref<boolean>(false);
 let matrix_inverse: Matrix = new Matrix();
+const overview = ref<boolean>(false);
 
 function page_watcher(...args: any) {
     if (args.includes('style')) {
@@ -132,6 +134,7 @@ function onKeyDown(e: KeyboardEvent) { // 键盘监听
     if (e.repeat) return;
     if (e.code === 'Space') {
         if (workspace.value.select || spacePressed.value) return;
+        overview.value = true;
         preToDragPage();
     } else if (e.code === 'MetaLeft' || e.code === 'ControlLeft') {
         _search(true); // 根据鼠标当前位置进行一次穿透式图形检索
@@ -141,7 +144,7 @@ function onKeyDown(e: KeyboardEvent) { // 键盘监听
 function onKeyUp(e: KeyboardEvent) {
     if (e.target instanceof HTMLInputElement) return;
     if (spacePressed.value && e.code === 'Space') {
-        // overview.value = false;
+        overview.value = false;
         endDragPage();
     } else if (e.code === 'MetaLeft' || e.code === 'ControlLeft') {
         _search(false);// 根据鼠标当前位置进行一次冒泡式图形检索
@@ -644,5 +647,6 @@ onUnmounted(() => {
         </CommentView>
         <Creator v-if="creatorMode" :context="props.context" />
         <PathEditMode v-if="path_edit_mode" :context="props.context"></PathEditMode>
+        <Overview :context="props.context" v-if="overview" :matrix="matrix.toArray()"></Overview>
     </div>
 </template>

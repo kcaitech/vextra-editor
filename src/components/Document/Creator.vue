@@ -76,6 +76,9 @@ function down(e: MouseEvent) {
     if (action !== Action.AddComment) {
         commentInput.value = false;
     }
+    if (action === Action.AddContact) {
+        just_search = true;
+    }
     document.addEventListener("mousemove", move);
     document.addEventListener("mouseup", up);
 }
@@ -260,7 +263,6 @@ function contact_init(e: MouseEvent, apex?: ContactForm, p2?: PageXY) {
     down(e);
     apex1 = apex;
     page_xy2 = p2;
-    just_search = true;
 }
 
 const m = debounce((ac: AsyncCreator, environment: ShapeView | PageView) => {
