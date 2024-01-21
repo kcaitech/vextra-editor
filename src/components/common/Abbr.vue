@@ -14,7 +14,8 @@ const props = defineProps<Props>();
 const path = ref<string>('');
 const flex_abbr = computed<boolean>(() => {
     const s = props.shape;
-    return [ShapeType.Oval, ShapeType.Rectangle, ShapeType.Line, ShapeType.Path].includes(s.type) || (s.type === ShapeType.Group && !!(s.data as GroupShape).isBoolOpShape);
+    return [ShapeType.Oval, ShapeType.Rectangle, ShapeType.Line, ShapeType.Path].includes(s.type)
+        || (s.type === ShapeType.Group && !!(s.data as GroupShape).isBoolOpShape);
 })
 
 function icon_class() {
@@ -69,7 +70,7 @@ onUnmounted(e);
 </script>
 <template>
     <div class="abbr-container">
-        <svg v-if="flex_abbr" width="13" height="13" viewBox="-12 -12 124 124">
+        <svg v-if="flex_abbr" viewBox="-12 -12 124 124">
             <path :d="path" stroke-width="10" fill="none" :stroke="theme"></path>
         </svg>
         <svg-icon v-else :icon-class="icon_class()" :fill="theme"></svg-icon>
@@ -83,9 +84,8 @@ onUnmounted(e);
     align-items: center;
 
     >svg {
-        width: 100%;
-        height: 100%;
-
+        width: 13px;
+        height: 13px;
     }
 }
 </style>
