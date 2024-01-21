@@ -8,7 +8,7 @@ import { getHorizontalAngle } from '@/utils/common';
 import { init_contact_shape, init_insert_shape, init_shape, list2Tree } from '@/utils/content';
 import { get_direction } from '@/utils/controllerFn';
 import { EffectType, Wheel, fourWayWheel } from '@/utils/wheel';
-import { Artboard, AsyncCreator, ContactForm, ContactLineView, GroupShape, Matrix, ShapeFrame, ShapeType, ShapeView, adapt2Shape } from '@kcdesign/data';
+import { Artboard, AsyncCreator, ContactForm, ContactLineView, GroupShape, Matrix, PageView, ShapeFrame, ShapeType, ShapeView, adapt2Shape } from '@kcdesign/data';
 import { onMounted, onUnmounted, reactive, ref } from 'vue';
 import { useI18n } from 'vue-i18n';
 import CommentInput from './Content/CommentInput.vue';
@@ -18,6 +18,7 @@ import * as comment_api from '@/request/comment';
 import ContactInit from './Toolbar/ContactInit.vue';
 import { get_contact_environment } from '@/utils/contact';
 import { Cursor } from '@/context/cursor';
+import { debounce } from 'lodash';
 
 interface Props {
     context: Context
@@ -262,6 +263,10 @@ function contact_init(e: MouseEvent, apex?: ContactForm, p2?: PageXY) {
     just_search = true;
 }
 
+const m = debounce((ac: AsyncCreator, environment: ShapeView | PageView) => {
+    ac.migrate(adapt2Shape(environment) as GroupShape);
+}, 200);
+
 function modify_contact_to(e: MouseEvent, ac: AsyncCreator) {
     const root = props.context.workspace.root;
     const p = matrix1.computeCoord2(e.clientX - root.x, e.clientY - root.y);
@@ -269,7 +274,7 @@ function modify_contact_to(e: MouseEvent, ac: AsyncCreator) {
     const points = (newShape as ContactLineView).getPoints();
     const environment = get_contact_environment(props.context, newShape!, points);
     if (newShape!.parent?.id !== environment.id) {
-        ac.migrate(adapt2Shape(environment) as GroupShape);
+        m(ac, environment);
     }
 }
 
