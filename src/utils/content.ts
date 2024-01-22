@@ -975,15 +975,14 @@ export function root_trans(context: Context, e: WheelEvent) {
 
     let stepx = Math.abs(e.deltaX) > MAX_STEP ? (MAX_STEP * (e.deltaX / Math.abs(e.deltaX))) : e.deltaX;
     let stepy = Math.abs(e.deltaY) > MAX_STEP ? (MAX_STEP * (e.deltaY / Math.abs(e.deltaY))) : e.deltaY;
-    
+
     if (e.shiftKey && !is_mac() && e.deltaX < 1) {
         stepx = stepy;
         stepy = 0;
     }
 
-    context.workspace.matrix.trans(-stepx, -stepy); // 触控板行为
+    context.workspace.matrix.trans(-stepx, -stepy);
 }
-
 
 export function root_trans_direction(context: Context, e: WheelEvent, step: number) {
     if (e.shiftKey) {
