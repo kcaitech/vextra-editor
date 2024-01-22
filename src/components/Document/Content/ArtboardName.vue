@@ -201,6 +201,7 @@ function up(e: MouseEvent) {
         asyncTransfer = asyncTransfer.close();
     }
     if (wheel) wheel = wheel.remove(); // 卸载滚轮
+    props.context.cursor.cursor_freeze(false);
     document.removeEventListener('mousemove', move);
     document.removeEventListener('mouseup', up);
 }

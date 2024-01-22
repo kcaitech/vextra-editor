@@ -12,13 +12,13 @@ const props = defineProps<Props>();
 const isLable = ref(false);
 const visible = ref(false)
 const vis = ref(false);
-const isActive = ref(false);
+const isActive = ref(props.context.tool.isLable);
 const input = ref<HTMLInputElement>();
 watch(isActive, (v) => {
     props.context.tool.setLableSwitch(v);
     vis.value = true;
     const active = props.context.tool.action;
-    if(!v || active === Action.AutoV || active === Action.AddComment) return;
+    if (!v || active === Action.AutoV || active === Action.AddComment) return;
     props.context.tool.setAction(Action.AutoV);
 })
 

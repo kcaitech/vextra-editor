@@ -1,5 +1,5 @@
 <script setup lang="ts">
-import { onMounted, onUnmounted, shallowRef, ref, watchEffect } from 'vue';
+import { onMounted, onUnmounted, shallowRef, ref, watch } from 'vue';
 import ContentView from "./ContentView.vue";
 import { Context } from '@/context';
 import Navigation from './Navigation/index.vue';
@@ -496,11 +496,11 @@ function init_doc() {
   } else if ((window as any).sketchDocument) {
     context = new Context((window as any).sketchDocument as Document, ((window as any).skrepo as CoopRepository));
     repoStopHandlerList.push(
-        context.repo.onCommit((cmd, isRemote) => {
-          if (isRemote) return;
-          repoPendingCmdListBeforeStart.push(cmd);
-        }).stop,
-        context.repo.onUndoRedo(() => undefined).stop, // start前禁止undo
+      context.repo.onCommit((cmd, isRemote) => {
+        if (isRemote) return;
+        repoPendingCmdListBeforeStart.push(cmd);
+      }).stop,
+      context.repo.onUndoRedo(() => undefined).stop, // start前禁止undo
     );
     null_context.value = false;
     getUserInfo();
@@ -679,6 +679,17 @@ function component_watcher(t: number) {
   }
 }
 
+const stop = watch(() => null_context.value, (v) => {
+  if (!v) {
+    const _name = context?.data.name || '';
+    const file_name = docInfo.value.document?.name || _name;
+    const timer = setTimeout(() => {
+      window.document.title = file_name.length > 8 ? `${file_name.slice(0, 8)}... - ProtoDesign` : `${file_name} - ProtoDesign`;
+      clearTimeout(timer);
+    }, 500)
+  }
+})
+
 onMounted(() => {
   window.addEventListener('beforeunload', onBeforeUnload);
   window.addEventListener('unload', onUnload);
@@ -711,6 +722,7 @@ onUnmounted(() => {
   networkStatus.close();
   context?.component.unwatch(component_watcher);
   uninstall_keyboard_units();
+  stop();
 })
 </script>
 

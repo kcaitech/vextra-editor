@@ -9,7 +9,7 @@ import CommentView from './Content/CommentView.vue';
 import { Matrix, Color, ShapeType, ShapeView, PageView } from '@kcdesign/data';
 import { Context } from '@/context';
 import { PageXY, ClientXY, ClientXYRaw } from '@/context/selection';
-import { KeyboardKeys, WorkSpace } from '@/context/workspace';
+import { WorkSpace } from '@/context/workspace';
 import { collect_once } from '@/utils/assist';
 import { Menu } from '@/context/menu';
 import { debounce } from 'lodash';
@@ -41,6 +41,7 @@ import Creator from './Creator.vue';
 import { Wheel, fourWayWheel } from '@/utils/wheel';
 import PathEditMode from "@/components/Document/Selection/Controller/PathEdit/PathEditMode.vue";
 import { menu_locate } from '@/utils/common';
+import Overview from './Content/Overview.vue';
 
 interface Props {
     context: Context
@@ -87,6 +88,7 @@ const creatorMode = ref<boolean>(false);
 const documentCommentList = ref<any[]>(comment.value.pageCommentList);
 const path_edit_mode = ref<boolean>(false);
 let matrix_inverse: Matrix = new Matrix();
+const overview = ref<boolean>(false);
 
 function page_watcher(...args: any) {
     if (args.includes('style')) {
@@ -130,8 +132,9 @@ function onMouseWheel(e: WheelEvent) { // 滚轮、触摸板事件
 function onKeyDown(e: KeyboardEvent) { // 键盘监听
     if (e.target instanceof HTMLInputElement) return;
     if (e.repeat) return;
-    if (e.code === KeyboardKeys.Space) {
+    if (e.code === 'Space') {
         if (workspace.value.select || spacePressed.value) return;
+        overview.value = true;
         preToDragPage();
     } else if (e.code === 'MetaLeft' || e.code === 'ControlLeft') {
         _search(true); // 根据鼠标当前位置进行一次穿透式图形检索
@@ -140,8 +143,8 @@ function onKeyDown(e: KeyboardEvent) { // 键盘监听
 
 function onKeyUp(e: KeyboardEvent) {
     if (e.target instanceof HTMLInputElement) return;
-    if (spacePressed.value && e.code === KeyboardKeys.Space) {
-        // overview.value = false;
+    if (spacePressed.value && e.code === 'Space') {
+        overview.value = false;
         endDragPage();
     } else if (e.code === 'MetaLeft' || e.code === 'ControlLeft') {
         _search(false);// 根据鼠标当前位置进行一次冒泡式图形检索

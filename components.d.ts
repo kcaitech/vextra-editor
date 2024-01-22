@@ -9,6 +9,7 @@ export {}
 
 declare module '@vue/runtime-core' {
   export interface GlobalComponents {
+    Abbr: typeof import('./src/components/common/Abbr.vue')['default']
     Abbreviation: typeof import('./src/components/Document/Navigation/Abbreviation.vue')['default']
     AddProject: typeof import('./src/components/TeamProject/addProject.vue')['default']
     AddState: typeof import('./src/components/Document/Selection/Controller/Symbol/AddState.vue')['default']
