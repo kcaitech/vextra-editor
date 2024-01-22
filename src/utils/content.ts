@@ -970,7 +970,9 @@ export function root_scale(context: Context, e: WheelEvent) {
     matrix.scale(Math.sign(e.deltaY) <= 0 ? scale_delta : scale_delta_);
     matrix.trans(offsetX, offsetY);
 }
-export function root_trans(context: Context, e: WheelEvent, step: number) {
+export function root_trans(context: Context, e: WheelEvent) {
+    console.log('wheelevent:', e);
+
     const MAX_STEP = 120;
     const stepx = Math.abs(e.deltaX) > MAX_STEP ? (MAX_STEP * (e.deltaX / Math.abs(e.deltaX))) : e.deltaX;
     const stepy = Math.abs(e.deltaY) > MAX_STEP ? (MAX_STEP * (e.deltaY / Math.abs(e.deltaY))) : e.deltaY;

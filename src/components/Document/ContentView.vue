@@ -122,7 +122,7 @@ function onMouseWheel(e: WheelEvent) { // 滚轮、触摸板事件
     if (ctrlKey || metaKey) { // 缩放
         root_scale(props.context, e);
     } else {
-        root_trans(props.context, e, wheel_step);
+        root_trans(props.context, e);
     }
 
     workspace.value.notify(WorkSpace.MATRIX_TRANSFORMATION);
