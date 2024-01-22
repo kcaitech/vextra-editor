@@ -1,4 +1,4 @@
-import { debounce } from "lodash";
+import { debounce, throttle } from "lodash";
 import { Context } from "@/context";
 import { ClientXY, PageXY } from "@/context/selection";
 import {
@@ -970,18 +970,13 @@ export function root_scale(context: Context, e: WheelEvent) {
     matrix.scale(Math.sign(e.deltaY) <= 0 ? scale_delta : scale_delta_);
     matrix.trans(offsetX, offsetY);
 }
-
 export function root_trans(context: Context, e: WheelEvent, step: number) {
-    const { deltaX, deltaY } = e;
-
-    const is_pad = Math.abs(deltaX) !== 0 && Math.abs(deltaY) !== 0; // 判断当前行为是触控板行为还是滚轮行为，存在误判的可能，目前没有找到更好的解决方法
-
-    if (is_pad) {
-        context.workspace.matrix.trans(-deltaX, -deltaY); // 触控板行为
-    } else {
-        root_trans_direction(context, e, step); // 滚轮行为
-    }
+    const MAX_STEP = 120;
+    const stepx = Math.abs(e.deltaX) > MAX_STEP ? (MAX_STEP * (e.deltaX / Math.abs(e.deltaX))) : e.deltaX;
+    const stepy = Math.abs(e.deltaY) > MAX_STEP ? (MAX_STEP * (e.deltaY / Math.abs(e.deltaY))) : e.deltaY;
+    context.workspace.matrix.trans(-stepx, -stepy); // 触控板行为
 }
+
 
 export function root_trans_direction(context: Context, e: WheelEvent, step: number) {
     if (e.shiftKey) {

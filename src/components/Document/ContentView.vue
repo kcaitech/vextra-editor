@@ -115,7 +115,7 @@ function setMousedownXY(e: MouseEvent) { // 记录鼠标在页面上的点击位
     mousedownOnClientXY.y = clientY - y; // 用户端可视区上的点
 }
 
-function onMouseWheel(e: WheelEvent) { // 滚轮、触摸板事件
+function onMouseWheel(e: WheelEvent) { // 滚轮、触摸板事件    
     if (contextMenu.value) return; //右键菜单已打开
     e.preventDefault();
     const { ctrlKey, metaKey } = e;
