@@ -386,7 +386,8 @@ const getDocumentInfo = async () => {
       storage = new S3Storage(storageOptions);
     }
     const path = docInfo.value.document.path;
-    const document = await importDocument(storage, path, "", docInfoData.document.version_id ?? "", repo)
+    const versionId = docInfo.value.document.version_id ?? "";
+    const document = await importDocument(storage, path, "", versionId, repo)
     if (document) {
       const coopRepo = new CoopRepository(document, repo);
       const file_name = docInfo.value.document?.name || document.name;
@@ -402,7 +403,7 @@ const getDocumentInfo = async () => {
       const docId = route.query.id as string;
       const getToken = () => Promise.resolve(localStorage.getItem("token") || "");
       for (const stop of repoStopHandlerList) stop();
-      if (!await context.communication.docOp.start(getToken, docId, document, context.coopRepo, docInfoData.document.version_id ?? "", {
+      if (!await context.communication.docOp.start(getToken, docId, document, context.coopRepo, versionId, {
         repoPendingCmdListBeforeStart: repoPendingCmdListBeforeStart,
       })) {
         router.push("/files");
