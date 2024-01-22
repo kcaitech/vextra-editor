@@ -1,6 +1,6 @@
 <script setup lang="ts">
 import { ref, nextTick, reactive, onMounted, onUnmounted, computed } from 'vue';
-import { Color } from '@kcdesign/data';
+import { Color, FillType, Gradient, GradientType, Stop } from '@kcdesign/data';
 import { useI18n } from 'vue-i18n';
 import { Context } from '@/context';
 import { WorkSpace } from '@/context/workspace';
@@ -9,7 +9,6 @@ import { simpleId } from '@/utils/common';
 import { Eyedropper } from './eyedropper';
 import {
     drawTooltip,
-    toRGBA,
     updateRecently,
     parseColorFormStorage,
     key_storage,
@@ -20,24 +19,30 @@ import {
     HSB2RGB,
     RGB2HSL,
     HSL2RGB,
-    getColorsFromDoc
+    getColorsFromDoc,
+    block_style_generator,
+    gradient_channel_generator,
+    StopEl,
+    stops_generator,
+    hexToX,
 } from './utils';
 import { typical, model2label } from './typical';
 import { genOptions } from '@/utils/common';
 import Select, { SelectSource, SelectItem } from '@/components/common/Select.vue';
 import { Menu } from "@/context/menu";
-
-type RgbMeta = number[];
+import ColorType from "./ColorType.vue";
+import Tooltip from '../Tooltip.vue';
+import { ColorCtx } from '@/context/color';
 
 interface Props {
-    context: Context;
-    color: Color;
-
+    context: Context
+    color: Color
+    fillType?: FillType
+    gradient?: Gradient
+    late?: number
+    top?: number
     auto_to_right_line?: boolean;
-
-    late?: number;
-    top?: number;
-    cell?: boolean;
+    cell?: boolean
 }
 
 interface Data {
@@ -51,6 +56,14 @@ interface Emits {
     (e: 'change', color: Color): void;
 
     (e: 'choosecolor', color: number[]): void;
+
+    (e: 'gradient-reverse'): void;
+    (e: 'gradient-rotate'): void;
+    (e: 'gradient-add-stop', position: number, color: Color): void;
+    (e: 'gradient-type', type: GradientType | 'solid'): void;
+    (e: 'gradient-color-change', color: Color, index: number): void;
+    (e: 'gradient-stop-delete', index: number): void;
+    (e: 'gradient-stop-position', position: number, id: string): void;
 }
 
 export interface HRGB { // 色相
@@ -85,7 +98,7 @@ interface Indicator {
 }
 
 interface LineAttribute {
-    length: 184,
+    length: 196,
     begin: number,
     end: number
 }
@@ -117,7 +130,7 @@ const typicalColor = ref<Color[]>(typical);
 const hueEl = ref<HTMLElement>();
 const alphaEl = ref<HTMLElement>();
 const blockId: string = simpleId();
-const lineAttribute: LineAttribute = { length: 184, begin: 0, end: 184 };
+const lineAttribute: LineAttribute = { length: 196, begin: 0, end: 196 };
 const recent = ref<Color[]>([]);
 const document_colors = ref<{ times: number, color: Color }[]>([]);
 let inputTarget: HTMLInputElement;
@@ -125,6 +138,17 @@ let handleIndex = 0;
 const mousedownPositon: ClientXY = { x: 0, y: 0 };
 let isDrag: boolean = false;
 const reflush = ref<number>(1);
+const model = ref<SelectItem>({ value: 'RGB', content: 'RGB' });
+const sliders = ref<HTMLDivElement>();
+const block = ref<HTMLDivElement>();
+const popoverEl = ref<HTMLDivElement>();
+const hueIndicator = ref<HTMLDivElement>();
+const alphaIndicator = ref<HTMLDivElement>();
+const picker_visible = ref<boolean>(false);
+const eyeDropper: Eyedropper = eyeDropperInit(); // 自制吸管🍉
+const need_update_recent = ref<boolean>(false);
+const gradient_channel_style = ref<any>({});
+const gradient_type = ref<GradientType | 'solid'>();
 const data = reactive<Data>({
     rgba: { R: 255, G: 0, B: 0, alpha: 1 },
     hueIndicatorAttr: { x: 0 },
@@ -132,6 +156,7 @@ const data = reactive<Data>({
     dotPosition: { left: HUE_WIDTH - DOT_WIDTH / 2, top: -DOT_WIDTH / 2 }
 })
 const { rgba, hueIndicatorAttr, alphaIndicatorAttr, dotPosition } = data;
+const stop_els = ref<StopEl[]>([]);
 const h_rgb = computed<HRGB>(() => {
     const color = new Color(1, rgba.R, rgba.G, rgba.B);
     return getHRGB(RGB2H(color, hueIndicatorAttr.x / (lineAttribute.length - INDICATOR_WIDTH)));
@@ -173,111 +198,58 @@ const saturation = computed<number>(() => {
 const brightness = computed<number>(() => {
     return (1 - (dotPosition.top + DOT_WIDTH / 2) / HUE_HEIGHT);
 })
-const model = ref<SelectItem>({ value: 'RGB', content: 'RGB' });
-const sliders = ref<HTMLDivElement>();
-const block = ref<HTMLDivElement>();
-const popoverEl = ref<HTMLDivElement>();
-const hueIndicator = ref<HTMLDivElement>();
-const alphaIndicator = ref<HTMLDivElement>();
-const popoverVisible = ref<boolean>(false);
-const eyeDropper: Eyedropper = eyeDropperInit(); // 自制吸管🍉
-const need_update_recent = ref<boolean>(false);
 
-function triggle() {
-    const menu = props.context.menu;
-    const exsit = menu.isColorPickerMount;
-    if (exsit) {
-        menu.removeColorPicker();
-        if (exsit !== blockId) colorPickerMount();
+/**
+ * @description 调色板定位
+ */
+function locate() {
+    if (!(popoverEl.value && block.value)) {
+        return;
+    }
+    let el = popoverEl.value
+    let top = Math.min(document.documentElement.clientHeight - 76 - block.value.offsetTop - el.offsetHeight, 0);
+    const p_el = block.value.getBoundingClientRect();
+    const body_h = document.body.clientHeight;
+    let p_top;
+    const su = body_h - p_el.top;
+    const cur_t = su - el.clientHeight;
+    if (cur_t > 0) {
+        p_top = p_el.top;
     } else {
-        colorPickerMount();
+        p_top = p_el.top - Math.abs(cur_t - 10);
     }
-}
-
-function colorPickerMount() {
-    popoverVisible.value = true;
-    props.context.menu.setupColorPicker(blockId);
-    init();
-    document_colors.value = getColorsFromDoc(props.context);
-    nextTick(() => {
-        if (popoverEl.value && block.value) {
-            let el = popoverEl.value
-            let top = Math.min(document.documentElement.clientHeight - 76 - block.value.offsetTop - el.offsetHeight, 0);
-            const p_el = block.value.getBoundingClientRect();
-            const body_h = document.body.clientHeight;
-            let p_top;
-            const su = body_h - p_el.top;
-            const cur_t = su - el.clientHeight;
-            if (cur_t > 0) {
-                p_top = p_el.top;
-            } else {
-                p_top = p_el.top - Math.abs(cur_t - 10);
-            }
-
-            if (p_top - 40 < 0) {
-                p_top = 40
-            }
-            if (props.top) {
-                el.style.top = (top + props.top) + 'px';
-            } else {
-                el.style.top = p_top + 'px';
-            }
-
-            const doc_height = document.documentElement.clientHeight;
-            const { height, y } = el.getBoundingClientRect();
-
-            if (doc_height - y < height + 10) {
-                el.style.top = parseInt(el.style.top) - ((height + 20) - (doc_height - y)) + 'px'
-            }
-
-            if (props.late) {
-                el.style.left = p_el.left - el.clientWidth - 47 - props.late + 'px';
-            } else if (props.cell) {
-                el.style.left = 0 + 'px';
-            } else if (props.auto_to_right_line) {
-                const r = props.context.workspace.root.right;
-                el.style.left = r - el.clientWidth - 4 + 'px';
-            } else {
-                el.style.left = p_el.left - el.clientWidth - 40 + 'px';
-            }
-        }
-    })
-    document.addEventListener('mousedown', quit);
-}
-
-function removeCurColorPicker() {
-    if (need_update_recent.value) {
-        update_recent_color();
-        need_update_recent.value = false;
+    if (p_top - 40 < 0) {
+        p_top = 40
     }
-    popoverVisible.value = false;
-    props.context.menu.clearColorPickerId();
+    if (props.top) {
+        el.style.top = (top + props.top) + 'px';
+    } else {
+        el.style.top = p_top + 'px';
+    }
+    const doc_height = document.documentElement.clientHeight;
+    const { height, y } = el.getBoundingClientRect();
+    if (doc_height - y < height + 10) {
+        el.style.top = parseInt(el.style.top) - ((height + 20) - (doc_height - y)) + 'px'
+    }
+    if (props.late) {
+        el.style.left = p_el.left - el.clientWidth - 47 - props.late + 'px';
+    } else if (props.cell) {
+        el.style.left = 0 + 'px';
+    } else {
+        el.style.left = p_el.left - el.clientWidth - 47 + 'px';
+    }
 }
 
 function quit(e: MouseEvent) {
-    if (e.target instanceof Element && !e.target.closest('.color-block')) {
-        popoverVisible.value = false;
+    const need_quit = props.fillType === FillType.Gradient && props.gradient
+        ? e.target instanceof Element && !e.target.closest('.color-block') && !e.target.closest('#content')
+        : e.target instanceof Element && !e.target.closest('.color-block');
+    if (need_quit) {
+        picker_visible.value = false;
+        props.context.color.select_stop(-1);
         blockUnmount();
         document.removeEventListener('mousedown', quit);
     }
-}
-
-// 16进制色彩转10进制
-function hexToX(hex: string): RgbMeta {
-    hex = hex.slice(1);
-    let result: number[] = [];
-    if (hex.length === 3) {
-        let temp = hex.split('');
-        result = temp.map(v => {
-            return Number(eval(`0x${v}${v}`).toString(10));
-        })
-    } else if (hex.length === 6) {
-        let temp = hex.split('');
-        for (let i = 0; i < 6; i = i + 2) {
-            result.push(Number(eval(`0x${temp[i]}${temp[i + 1]}`).toString(10)));
-        }
-    }
-    return result
 }
 
 function setMousedownPosition(e: MouseEvent) {
@@ -396,9 +368,9 @@ function setDotPosition(e: MouseEvent) {
         saturationELBounding.right = right;
         saturationELBounding.bottom = bottom;
         const { R, G, B } = HSB2RGB(hue.value, saturation.value, brightness.value);
-        update(R, G, B);
+        update_rgb(R, G, B);
         const color = new Color(rgba.alpha, Math.round(R), Math.round(G), Math.round(B));
-        emit('change', color);
+        changeColor(color);
         document.addEventListener('mousemove', mousemove4Dot);
         document.addEventListener('mouseup', mouseup);
         props.context.workspace.notify(WorkSpace.CTRL_DISAPPEAR);
@@ -427,8 +399,8 @@ function mousemove4Dot(e: MouseEvent) {
         }
         const { R, G, B } = HSB2RGB(hue.value, saturation.value, brightness.value);
         const color = new Color(rgba.alpha, Math.round(R), Math.round(G), Math.round(B));
-        update(R, G, B);
-        emit('change', color);
+        update_rgb(R, G, B);
+        changeColor(color);
     } else {
         isDrag = is_drag(e);
     }
@@ -439,15 +411,15 @@ function setRGB(indicator: number) {
     const h = (indicator / (lineAttribute.length - INDICATOR_WIDTH)) * 360;
     const { R, G, B } = HSB2RGB(h, saturation.value, brightness.value);
     const color = new Color(rgba.alpha, Math.round(R), Math.round(G), Math.round(B));
-    emit('change', color);
-    update(R, G, B);
+    changeColor(color);
+    update_rgb(R, G, B);
     need_update_recent.value = true;
 }
 
 function setAlpha(indicator: number) {
     rgba.alpha = Number((indicator / (lineAttribute.length - INDICATOR_WIDTH)).toFixed(2));
     const color = new Color(rgba.alpha, Math.round(rgba.R), Math.round(rgba.G), Math.round(rgba.B));
-    emit('change', color);
+    changeColor(color);
     need_update_recent.value = true;
 }
 
@@ -457,17 +429,31 @@ function setColor(color: Color) {
     rgba.G = color.green;
     rgba.B = color.blue;
     rgba.alpha = color.alpha;
-    emit('change', color);
+    changeColor(color);
     update_dot_indicator_position(color);
     need_update_recent.value = true;
     props.context.workspace.notify(WorkSpace.CTRL_APPEAR);
 }
 
+const changeColor = (color: Color) => {
+    if (gradient_type.value === 'solid') {
+        emit('change', color);
+    } else {
+        let index = props.context.color.selected_stop;
+        if (index === -1) index = 0;
+        emit('gradient-color-change', color, index);
+        nextTick(() => {
+            update_gradient(props.gradient);
+        })
+    }
+}
+
 // 鼠标抬起
-function mouseup() {
+function mouseup(e: MouseEvent) {
     document.removeEventListener('mousemove', mousemove4Dot);
     document.removeEventListener('mousemove', mousemove4Alpha)
-    document.removeEventListener('mousemove', mousemove4Hue)
+    document.removeEventListener('mousemove', mousemove4Hue);
+    document.removeEventListener('mousemove', move_stop_position);
     document.removeEventListener('mouseup', mouseup)
     need_update_recent.value = true;
     props.context.workspace.notify(WorkSpace.CTRL_APPEAR);
@@ -484,14 +470,6 @@ function eyedropper() {
     }
 }
 
-function blockUnmount() {
-    const menu = props.context.menu;
-    const exsit = menu.isColorPickerMount;
-    if (exsit === blockId) {
-        menu.clearColorPickerId();
-    }
-}
-
 // 系统自带的取色器
 function systemEyeDropper() {
     const System_EyeDropper = (window as any).EyeDropper;
@@ -502,7 +480,7 @@ function systemEyeDropper() {
         rgba.G = rgb[1];
         rgba.B = rgb[2];
         const c = new Color(rgba.alpha, rgba.R, rgba.G, rgba.B);
-        emit('change', c);
+        changeColor(c);
         update_dot_indicator_position(c);
     }).catch((e: any) => {
         console.log("failed:", e);
@@ -525,7 +503,7 @@ function eyeDropperInit(): Eyedropper {
                 rgba.G = rgb[1];
                 rgba.B = rgb[2];
                 const c = new Color(rgba.alpha, rgba.R, rgba.G, rgba.B);
-                emit('change', c);
+                changeColor(c);
                 update_dot_indicator_position(c);
             }
         }
@@ -562,7 +540,7 @@ function keyboardWatcher(e: KeyboardEvent) {
                 rgba.B = Number(v) + 1;
             }
             const color = new Color(rgba.alpha, Math.floor(rgba.R), Math.floor(rgba.G), Math.floor(rgba.B));
-            emit('change', color);
+            changeColor(color);
             update_dot_indicator_position(color);
             need_update_recent.value = true;
             props.context.workspace.notify(WorkSpace.CTRL_APPEAR);
@@ -582,7 +560,7 @@ function keyboardWatcher(e: KeyboardEvent) {
                 rgba.B = Number(v) - 1;
             }
             const color = new Color(rgba.alpha, Math.floor(rgba.R), Math.floor(rgba.G), Math.floor(rgba.B));
-            emit('change', color);
+            changeColor(color);
             update_dot_indicator_position(color);
             need_update_recent.value = true;
             props.context.workspace.notify(WorkSpace.CTRL_APPEAR);
@@ -595,7 +573,6 @@ function enter() {
     let v: string | number = inputTarget.value;
     const valid = validate(model.value.value as any, handleIndex, Number(v));
     if (valid) {
-        props.context.workspace.notify(WorkSpace.CTRL_DISAPPEAR);
         if (model.value.value === 'RGB') {
             v = Math.floor(Number(v));
             if (handleIndex === 0) {
@@ -643,24 +620,98 @@ function enter() {
             rgba.alpha = n.alpha;
         }
         const color = new Color(rgba.alpha, Math.round(rgba.R), Math.round(rgba.G), Math.round(rgba.B));
-        emit('change', color);
+        changeColor(color);
         update_dot_indicator_position(color);
         update_alpha_indicator(color);
         need_update_recent.value = true;
-        props.context.workspace.notify(WorkSpace.CTRL_APPEAR);
     } else {
         reflush.value++;
     }
     inputTarget.removeEventListener('keydown', keyboardWatcher);
     inputTarget.blur();
 }
-
-function update(R: number, G: number, B: number) {
+function triggle() {
+    const menu = props.context.menu;
+    const exsit = menu.isColorPickerMount;
+    if (exsit) {
+        menu.removeColorPicker();
+        if (exsit !== blockId) {
+            colorPickerMount();
+        }
+    } else {
+        colorPickerMount();
+    }
+}
+/**
+ * @description 打开调色板
+ */
+function colorPickerMount() {
+    picker_visible.value = true;
+    props.context.menu.setupColorPicker(blockId);
+    update();
+    init_document_colors();
+    switch_editor_mode();
+    document.addEventListener('mousedown', quit);
+    get_gradient_type();
+    nextTick(locate);
+}
+function blockUnmount() {
+    const menu = props.context.menu;
+    const exsit = menu.isColorPickerMount;
+    if (exsit === blockId) {
+        menu.clearColorPickerId();
+    }
+    props.context.color.switch_editor_mode(false);
+}
+/**
+ * @description 移除调色板
+ */
+function removeCurColorPicker() {
+    if (need_update_recent.value) {
+        update_recent_color();
+        need_update_recent.value = false;
+    }
+    props.context.menu.clearColorPickerId();
+    props.context.color.switch_editor_mode(false);
+    picker_visible.value = false;
+    props.context.color.select_stop(-1);
+}
+function switch_editor_mode() {
+    if (!(picker_visible.value && props.gradient && props.fillType === FillType.Gradient)) {
+        return;
+    }
+    props.context.color.switch_editor_mode(true, props.gradient);
+}
+// init
+function init_rescent() {
+    let r = localStorage.getItem(key_storage);
+    r = JSON.parse(r || '[]');
+    if (!r || !r.length) {
+        return;
+    }
+    recent.value = [];
+    for (let i = 0; i < r.length; i++) {
+        recent.value.push(parseColorFormStorage(r[i]));
+    }
+}
+function init_document_colors() {
+    document_colors.value = getColorsFromDoc(props.context);
+}
+// update
+function update(color = props.color) {
+    init_rescent();
+    const { red, green, blue, alpha } = color;
+    rgba.alpha = alpha;
+    update_rgb(red, green, blue);
+    update_dot_indicator_position(color);
+    update_alpha_indicator(color);
+    update_gradient(props.gradient);
+}
+function update_rgb(R: number, G: number, B: number) {
     rgba.R = R;
     rgba.G = G;
     rgba.B = B;
 }
-
 function update_recent_color() {
     const color = new Color(rgba.alpha, Math.round(rgba.R), Math.round(rgba.G,), Math.round(rgba.B));
     let nVal = updateRecently(color) || JSON.stringify([]);
@@ -672,11 +723,11 @@ function update_recent_color() {
         }
     }
 }
-
 function update_dot_indicator_position(color: Color) {
     const { h, s, b } = RGB2HSB(color);
     dotPosition.left = HUE_WIDTH * s - (DOT_WIDTH / 2);
     dotPosition.top = HUE_HEIGHT * (1 - b) - (DOT_WIDTH / 2);
+
     let hueIndicator = (lineAttribute.length * h) - (INDICATOR_WIDTH / 2);
     if (hueIndicator < 0) {
         hueIndicator = 0;
@@ -687,69 +738,228 @@ function update_dot_indicator_position(color: Color) {
     hueIndicatorAttr.x = hueIndicator;
 }
 
-function init() {
-    const { red, green, blue, alpha } = props.color;
-    rgba.R = red;
-    rgba.G = green;
-    rgba.B = blue;
-    rgba.alpha = alpha;
-    update_dot_indicator_position(props.color);
-    update_alpha_indicator(props.color);
-    let r = localStorage.getItem(key_storage);
-    r = JSON.parse(r || '[]');
-    if (!r || !r.length) return;
-    recent.value = [];
-    for (let i = 0; i < r.length; i++) {
-        recent.value.push(parseColorFormStorage(r[i]));
+//渐变颜色
+function update_gradient(gradient: Gradient | undefined) {
+    if (!gradient || props.fillType !== FillType.Gradient) {
+        return;
     }
+    gradient_channel_style.value = gradient_channel_generator(gradient);
+    const index = props.context.color.selected_stop;
+    update_stops(index === -1 ? 0 : index);
+}
+const gradient_line = ref<HTMLDivElement>();
+//更新渐变颜色画板
+function update_stops(selected = -1) {
+    stop_els.value.length = 0;
+    if (!props.gradient || props.fillType !== FillType.Gradient) {
+        return;
+    }
+    stop_els.value = stops_generator(props.gradient, 166, selected); // 条条的宽度 减去 一个圆的宽度
+    const c = stop_els.value[selected]?.stop.color;
+    if (!c) {
+        return;
+    }
+    update_rgb(c.red, c.green, c.blue);
+    rgba.alpha = c.alpha;
+    update_dot_indicator_position(c as Color);
+    update_alpha_indicator(c as Color);
+}
+//新增渐变节点
+function _gradient_channel_down(e: MouseEvent) {
+    const target = e.target as HTMLInputElement;
+    const left = e.offsetX / target.clientWidth;
+    if (!props.gradient || props.fillType !== FillType.Gradient) return;
+    const stops = props.gradient.stops;
+    for (let i = 0; i < stops.length; i++) {
+        const stop = stops[i];
+        if (left < stop.position) {
+            const c = i === 0 ? stop.color : stops[i - 1].color;
+            const { red, green, blue, alpha } = c;
+            const n_alpha = i === 0 ? (alpha + 1) / 2 : (alpha + stop.color.alpha) / 2;
+            const color = new Color(n_alpha, red, green, blue);
+            emit('gradient-add-stop', left, color);
+            nextTick(() => {
+                props.context.color.select_stop(i);
+            })
+            break;
+        } else if (left > stops[i].position && i === stops.length - 1) {
+            const { red, green, blue, alpha } = stop.color;
+            const n_alpha = (alpha + 1) / 2;
+            const color = new Color(n_alpha, red, green, blue);
+            emit('gradient-add-stop', left, color);
+            nextTick(() => {
+                props.context.color.select_stop(i + 1);
+            })
+            break;
+        }
+    }
+}
+function delete_gradient_stop() {
+    if (stop_els.value.length === 1) return;
+    let index = props.context.color.selected_stop;
+    if (stop_els.value.length - 1 === index) {
+        props.context.color.select_stop(0);
+    }
+    stop_els.value.splice(index, 1);
+    emit('gradient-stop-delete', index === -1 ? 0 : index);
+    nextTick(() => {
+        update_gradient(props.gradient!);
+    })
+}
+// 选中渐变节点
+const stop_id = ref<string>('');
+function _stop_down(e: MouseEvent, index: number, id: string) {
+    props.context.color.select_stop(index);
+    stop_id.value = id;
+    document.addEventListener('mousemove', move_stop_position);
+    document.addEventListener('mouseup', mouseup);
+}
+
+function move_stop_position(e: MouseEvent) {
+    if (isDrag && gradient_line.value) {
+        const index = stop_els.value.findIndex((item) => item.stop.id === stop_id.value);
+        if (index === -1) return;
+        props.context.color.select_stop(index);
+        const line_rect = gradient_line.value.getBoundingClientRect();
+        const line_width = Math.min(Math.max(e.clientX - line_rect.left, 0), line_rect.width);
+        const stop_p = line_width / line_rect.width;
+        gradient_channel_style.value = gradient_channel_generator(props.gradient!);
+        stop_els.value[index].left = stop_p * 166 + 14
+        emit('gradient-stop-position', stop_p, stop_id.value);
+    } else {
+        isDrag = is_drag(e);
+    }
+}
+
+function color_type_change(val: GradientType | 'solid') {
+    if (gradient_type.value === val) return;
+    emit('gradient-type', val);
+    update_gradient_type(val);
+    nextTick(() => {
+        update();
+    })
+}
+// 切换渐变类型
+function update_gradient_type(type: GradientType | 'solid') {
+    if (type === 'solid') {
+        props.context.color.select_stop(-1);
+        props.context.color.switch_editor_mode(false);
+    } else {
+        props.context.color.switch_editor_mode(true, props.gradient);
+        const index = props.context.color.selected_stop;
+        props.context.color.select_stop(index === -1 ? 0 : index);
+    }
+    gradient_type.value = type;
+}
+// 获取渐变类型
+const get_gradient_type = () => {
+    if (props.fillType === FillType.Gradient) {
+        gradient_type.value = props.gradient?.gradientType;
+        const index = props.context.color.selected_stop;
+        props.context.color.select_stop(index === -1 ? 0 : index);
+    } else if (props.fillType === FillType.SolidColor) {
+        gradient_type.value = 'solid';
+        props.context.color.select_stop(-1);
+    }
+}
+// 渐变翻转
+function reverse() {
+    emit('gradient-reverse');
+    nextTick(() => {
+        update_gradient(props.gradient!);
+    })
+}
+// 渐变选中90度
+function rotate() {
+    emit('gradient-rotate');
+    nextTick(() => {
+        update_gradient(props.gradient!);
+    })
 }
 
 function update_alpha_indicator(color: Color) {
     const { alpha } = color;
     alphaIndicatorAttr.x = (lineAttribute.length - INDICATOR_WIDTH) * alpha;
 }
-
 function selectionWatcher(t: any) {
-    if (t === Selection.CHANGE_SHAPE) {
-        props.context.menu.removeColorPicker();
+    if (t === Selection.CHANGE_SHAPE && picker_visible.value) {
+        nextTick(() => {
+            update();
+            get_gradient_type();
+        });
     }
 }
-
-function menu_watcher(t?: any, id?: string) {
+function menu_watcher(t: any, id: string) {
     if (t === Menu.REMOVE_COLOR_PICKER && id === blockId) {
         removeCurColorPicker();
     }
 }
-
+function color_watch(t: number) {
+    if (t === ColorCtx.CHANGE_STOP && props.gradient) {
+        update_stops(props.context.color.selected_stop);
+    } else if (t === ColorCtx.STOP_DELETE) {
+        delete_gradient_stop();
+    }
+}
 function window_blur() {
     isDrag = false;
 }
-
 onMounted(() => {
     props.context.selection.watch(selectionWatcher);
     props.context.menu.watch(menu_watcher);
-    init();
+    props.context.color.watch(color_watch);
     window.addEventListener('blur', window_blur);
+    update();
 })
 onUnmounted(() => {
     eyeDropper.destroy();
-    blockUnmount();
     props.context.selection.unwatch(selectionWatcher);
     props.context.menu.unwatch(menu_watcher);
+    props.context.color.unwatch(color_watch);
     window.removeEventListener('blur', window_blur);
+    document.removeEventListener('mousedown', quit);
+    blockUnmount();
 })
 </script>
 
 <template>
-    <div class="color-block" :style="{ backgroundColor: toRGBA(color) }" ref="block" @click="triggle">
-        <div class="popover" ref="popoverEl" @click.stop v-if="popoverVisible" @wheel="wheel" @mousedown.stop>
+    <div class="color-block" :style="block_style_generator(color, gradient)" ref="block" @click="triggle">
+        <div class="popover" v-if="picker_visible" ref="popoverEl" @click.stop @wheel="wheel" @mousedown.stop>
             <!-- 头部 -->
             <div class="header">
-                <div class="color-type">{{ t('color.solid') }}</div>
+                <div class="color-type-desc">
+                    <div class="color-type">{{ t(`attr.fill`) }}</div>
+                    <!-- <svg-icon icon-class="down"></svg-icon> -->
+                </div>
                 <div @click="removeCurColorPicker" class="close">
                     <svg-icon icon-class="close"></svg-icon>
                 </div>
             </div>
+            <div class="color_type_container">
+                <ColorType :color="color" :gradient_type="gradient_type" @change="color_type_change"></ColorType>
+            </div>
+            <!-- 渐变工具 -->
+            <div v-if="gradient_type !== 'solid' && fillType === FillType.Gradient" class="gradient-container">
+                <div class="line-container">
+                    <div class="line" ref="gradient_line" :style="gradient_channel_style"
+                        @mouseup.stop="_gradient_channel_down"></div>
+                    <div class="stops" v-for="(item, i) in stop_els" :key="i" :style="{ left: item.left + 'px' }"
+                        @mousedown.stop="(e) => { _stop_down(e, i, item.stop.id) }">
+                        <div :class="item.is_active ? 'stop-active' : 'stop'"></div>
+                    </div>
+                </div>
+                <div class="reverse" @click="reverse">
+                    <Tooltip :content="t('color.reverse')">
+                        <svg-icon icon-class="exchange"></svg-icon>
+                    </Tooltip>
+                </div>
+                <div class="rotate" @click="rotate">
+                    <Tooltip :content="t('color.rotate')">
+                        <svg-icon icon-class="rotate90"></svg-icon>
+                    </Tooltip>
+                </div>
+            </div>
+            <div v-else style="width: 100%; height: 8px;"></div>
             <!-- 饱和度 -->
             <div class="saturation" @mousedown.stop="e => setDotPosition(e)"
                 :style="{ backgroundColor: `rgba(${h_rgb.R}, ${h_rgb.G}, ${h_rgb.B}, 1)` }" ref="saturationEL">
@@ -809,7 +1019,7 @@ onUnmounted(() => {
                 </div>
             </div>
             <!-- 文档使用 -->
-            <div class="dc-container" v-if="recent.length">
+            <div class="dc-container" v-if="document_colors.length">
                 <div class="inner">
                     <div class="header">{{ t('color.documentc') }}</div>
                     <div class="documentc-container" @wheel.stop>
@@ -848,13 +1058,16 @@ onUnmounted(() => {
         border: 1px solid #F0F0F0;
         overflow: hidden;
 
-        // box-sizing: border-box;
-
         >.header {
             width: 100%;
             height: 40px;
             position: relative;
-            border-radius: 8px 8px 0px 0px;
+            color: #000000;
+            border-bottom: 1px solid var(--grey-dark);
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            padding: 0 8px;
             box-sizing: border-box;
             border-width: 0px 0px 1px 0px;
             border-style: solid;
@@ -863,31 +1076,124 @@ onUnmounted(() => {
             display: flex;
             justify-content: space-between;
 
-            .color-type {
-                position: absolute;
-                color: #3D3D3D;
-                user-select: none;
-                font-size: 12px;
-                font-weight: 500;
-                line-height: 12px;
-                font-family: HarmonyOS Sans;
-                width: 24px;
-                height: 12px;
+            >.color-type-desc {
+                display: flex;
+                align-items: center;
+                cursor: pointer;
+
+                .color-type {
+                    user-select: none;
+                }
+
+                >svg {
+                    transition: 0.3s;
+                    width: 10px;
+                    height: 10px;
+                    margin-left: 4px;
+                }
+
+                >svg:hover {
+                    transform: translateY(2px);
+                }
             }
 
             >.close {
-                width: 12px;
-                height: 12px;
-                position: absolute;
-                right: 11px;
-                top: 13px;
+                flex: 0 0 16px;
+                height: 16px;
+                text-align: center;
+                line-height: 16px;
+                border-radius: 4px;
                 user-select: none;
                 display: flex;
                 align-items: center;
 
                 >svg {
+                    width: 85%;
+                    height: 85%;
+                }
+            }
+        }
+
+        .color_type_container {
+            width: 100%;
+            height: 32px;
+            display: flex;
+            margin-top: 8px;
+            box-sizing: border-box;
+        }
+
+        >.gradient-container {
+            display: flex;
+            align-items: center;
+            width: 100%;
+            height: 32px;
+            text-align: center;
+
+            .line-container {
+                flex: 1;
+                padding: 8px;
+                position: relative;
+
+                .line {
+                    width: 100%;
+                    height: 8px;
+                    border-radius: 4px;
+                    box-shadow: 0 0 1px 1px #efefef;
+                }
+
+                .stops {
+                    position: absolute;
+                    width: 20px;
+                    height: 20px;
+                    display: flex;
+                    align-items: center;
+                    justify-content: center;
+                    top: 12px;
+                    transform: translate(-50%, -50%);
+                }
+
+                .stop {
                     width: 12px;
                     height: 12px;
+                    border: 1px solid rgba(0, 0, 0, .2);
+                    border-radius: 50%;
+                    box-sizing: border-box;
+                    box-shadow: inset 0 0 0 2px #fff, inset 0 0 0 3px rgba(0, 0, 0, 0.2);
+                }
+
+                .stop-active {
+                    width: 14px;
+                    height: 14px;
+                    box-sizing: border-box;
+                    border: 2px solid var(--active-color);
+                    border-radius: 50%;
+                    box-shadow: inset 0 0 0 2px #fff, inset 0 0 0 3px rgba(0, 0, 0, 0.2);
+                }
+            }
+
+            .reverse {
+                flex: 0 0 28px;
+                display: flex;
+                align-items: center;
+                cursor: pointer;
+
+                svg {
+                    width: 24px;
+                    height: 24px;
+                    outline: none;
+                }
+            }
+
+            .rotate {
+                flex: 0 0 28px;
+                display: flex;
+                align-items: center;
+                cursor: pointer;
+
+                svg {
+                    width: 20px;
+                    height: 20px;
+                    outline: none;
                 }
             }
         }
@@ -914,13 +1220,12 @@ onUnmounted(() => {
             }
 
             >.dot {
-                width: 12px;
-                height: 12px;
+                width: 8px;
+                height: 8px;
                 border-radius: 50%;
                 border: 2px solid #fff;
                 position: absolute;
-                box-sizing: border-box;
-                box-shadow: 0 0 0 1px #fff, inset 0 0 1px 1px rgb(0 0 0 / 10%), 0 0 0px 1px rgb(0 0 0 / 10%);
+                box-shadow: inset 0 0 0 1px rgba(0, 0, 0, .2), 0 0 0 1px rgba(0, 0, 0, .2);
             }
         }
 
@@ -955,12 +1260,8 @@ onUnmounted(() => {
             justify-content: space-around;
 
             >.sliders-container {
-                width: 184px;
-                height: 30px;
-                display: flex;
-                align-items: center;
-                flex-direction: column;
-                justify-content: center;
+                width: 196px;
+                height: 32px;
 
                 >.hue {
                     position: relative;
@@ -971,20 +1272,18 @@ onUnmounted(() => {
                     cursor: pointer;
 
                     >.hueIndicator {
-                        top: 50%;
-                        transform: translateY(-50%);
-                        width: 13px;
-                        height: 13px;
+                        top: -2px;
+                        width: 8px;
+                        height: 8px;
                         border-radius: 50%;
-                        border: 3px solid #fff;
+                        border: 2px solid #fff;
                         position: absolute;
-                        box-sizing: border-box;
-                        box-shadow: 0 0 0 1px rgba(0, 0, 0, 0.1), inset 0 0 0 2px rgba(0, 0, 0, 0.1);
+                        box-shadow: inset 0 0 0 1px rgba(0, 0, 0, .2), 0 0 0 1px rgba(0, 0, 0, .2);
                     }
                 }
 
                 >.alpha-bacground {
-                    margin-top: 7px;
+                    margin-top: 8px;
                     width: 100%;
                     height: 8px;
                     background-image: url("data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAABAAAAAQCAYAAAAf8/9hAAAAAXNSR0IArs4c6QAAADBJREFUOE9jfPbs2X8GPEBSUhKfNAPjqAHDIgz+//+PNx08f/4cfzoYNYCBceiHAQC5flV5JzgrxQAAAABJRU5ErkJggg==");
@@ -1000,15 +1299,13 @@ onUnmounted(() => {
                         border-radius: 5px 5px 5px 5px;
 
                         >.alphaIndicator {
-                            top: 50%;
-                            transform: translateY(-50%);
-                            width: 13px;
-                            height: 13px;
+                            top: -2px;
+                            width: 8px;
+                            height: 8px;
                             border-radius: 50%;
-                            border: 3px solid #fff;
+                            border: 2px solid #fff;
                             position: absolute;
-                            box-sizing: border-box;
-                            box-shadow: 0 0 0 1px rgba(0, 0, 0, 0.1), inset 0 0 0 2px rgba(0, 0, 0, 0.1);
+                            box-shadow: inset 0 0 0 1px rgba(0, 0, 0, .2), 0 0 0 1px rgba(0, 0, 0, .2);
                         }
                     }
 
@@ -1029,6 +1326,7 @@ onUnmounted(() => {
                 >svg {
                     width: 18px;
                     height: 18px;
+                    cursor: pointer;
                 }
             }
 
@@ -1157,7 +1455,7 @@ onUnmounted(() => {
                     }
 
                     >.block:not(:first-child) {
-                        margin-left: 7px;
+                        margin-left: 6.2px;
                     }
                 }
             }

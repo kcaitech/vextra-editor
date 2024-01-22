@@ -31,12 +31,14 @@ import { Cursor } from "./cursor";
 import { EscStack } from "./escstack";
 import { Asssit } from "./assist";
 import { TeamWork } from "./teamwork";
-import { Component } from "./component";
-import { Path } from "./path";
 import { PageDom } from "@/components/Document/Content/vdom/page";
 import { initComsMap } from "@/components/Document/Content/vdom/comsmap";
 import { Arrange } from "./arrange";
 import { DomCtx } from "@/components/Document/Content/vdom/domctx";
+import { TableSelection } from "./tableselection";
+import { Component } from "./component";
+import { Path } from "./path";
+import { ColorCtx } from "./color";
 
 // 仅暴露必要的方法
 export class RepoWraper {
@@ -92,6 +94,7 @@ export class Context extends WatchableObject {
     private m_teamwork: TeamWork;
     private m_component: Component;
     private m_path: Path;
+    private m_color: ColorCtx;
 
     private m_vdom: Map<string, { dom: PageDom, ctx: DomCtx }> = new Map();
     private m_arrange: Arrange
@@ -119,6 +122,7 @@ export class Context extends WatchableObject {
         this.m_component = new Component(this);
         this.m_path = new Path(this);
         this.m_arrange = new Arrange();
+        this.m_color = new ColorCtx();
         const pagelist = data.pagesList.slice(0);
         const checkSymLoaded: (() => boolean)[] = [];
         const pageloadTask = new class implements Task { // page auto loader
@@ -308,5 +312,9 @@ export class Context extends WatchableObject {
     nextTick(page: PageView, cb: () => void) {
         const ctx = this.getPageDom(page.data).ctx;
         ctx.once('nextTick', cb);
+    }
+        
+    get color() {
+        return this.m_color;
     }
 }

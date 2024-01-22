@@ -1,0 +1,50 @@
+<script setup lang="ts">
+import { Context } from '@/context';
+import { GradientType, Matrix, ShapeView } from '@kcdesign/data';
+import { onMounted, ref } from 'vue';
+import { gradient_map } from "./map";
+import { dbl_action } from '@/utils/mouse_interactive';
+import { Selection } from '@/context/selection';
+import { onUnmounted } from 'vue';
+interface Props {
+    context: Context
+    matrix: Matrix
+}
+const props = defineProps<Props>();
+const _g_type = ref<GradientType>(GradientType.Linear);
+function init() {    
+    _g_type.value = props.context.color.gradient?.gradientType || GradientType.Linear;
+}
+function down(e: MouseEvent) {
+    e.stopPropagation();
+    if (dbl_action()) {
+        props.context.color.switch_editor_mode(false);
+    }
+}
+const selected_watcher = (t: number) => {
+    if(t === Selection.CHANGE_SHAPE) {
+        init();
+    }
+}
+onMounted(() => {
+    init();
+    props.context.selection.watch(selected_watcher);
+})
+onUnmounted(() => {
+    props.context.selection.unwatch(selected_watcher);
+})
+</script>
+<template>
+    <div class="gradient" @mousedown.stop="down">
+        <component :is="gradient_map.get(_g_type)" :context="props.context" :matrix="matrix"></component>
+    </div>
+</template>
+<style scoped lang="scss">
+.gradient {
+    width: 100%;
+    height: 100%;
+    background-color: rgba($color: #000000, $alpha: 0.3);
+    position: absolute;
+    z-index: 9;
+}
+</style>

@@ -1,0 +1,103 @@
+<script setup lang="ts">
+import { Color, Gradient, GradientType } from '@kcdesign/data';
+import { onMounted } from 'vue';
+import { ref } from 'vue';
+import { useI18n } from 'vue-i18n';
+interface Props {
+    color: Color
+    gradient_type?: GradientType | 'solid'
+}
+interface Emits {
+    (e: 'change', value: GradientType | 'solid'): void;
+}
+const props = defineProps<Props>();
+const emits = defineEmits<Emits>();
+const t = useI18n().t;
+
+
+onMounted(() => {
+});
+</script>
+<template>
+    <div class="color-type-wrapper">
+        <div class="item" @click.stop="() => { emits('change', 'solid') }" :class="{ selected: gradient_type === 'solid' }">
+            <svg-icon icon-class="fill-gradient"></svg-icon>
+        </div>
+        <div class="item" @click.stop="() => { emits('change', GradientType.Linear) }"
+            :class="{ selected: gradient_type === GradientType.Linear }">
+            <svg-icon icon-class="linear-gradient"></svg-icon>
+        </div>
+        <div class="item" @click.stop="() => { emits('change', GradientType.Radial) }"
+            :class="{ selected: gradient_type === GradientType.Radial }">
+            <svg-icon icon-class="radial-gradient"></svg-icon>
+        </div>
+        <div class="item" @click.stop="() => { emits('change', GradientType.Angular) }"
+            :class="{ selected: gradient_type === GradientType.Angular }">
+            <img src="../../../assets/angular-gradient.png">
+        </div>
+        <!-- <div class="item" @click.stop="() => { emits('change', GradientType.Angular) }"
+            :class="{ selected: is_checked === GradientType.Radial }">
+            <svg-icon icon-class="rhomb-gradient"></svg-icon>
+        </div>
+        <div class="item" @click.stop="() => { emits('change', GradientType.Angular) }"
+            :class="{ selected: is_checked === GradientType.Radial }">
+            <svg-icon icon-class="layer-image" style="fill: #595959;"></svg-icon>
+        </div> -->
+    </div>
+</template>
+<style scoped lang="scss">
+.color-type-wrapper {
+    width: 100%;
+    height: 100%;
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    border-radius: 6px;
+    background-color: #F5F5F5;
+    margin: 0 8px;
+    padding: 0 4px;
+    outline: none;
+    box-sizing: border-box;
+
+    .item {
+        width: 34px;
+        height: 24px;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        border-radius: 6px;
+        opacity: 0.7;
+
+        &:hover {
+            opacity: 1;
+        }
+
+        svg {
+            width: 14px;
+            height: 14px;
+        }
+
+        img {
+            width: 14px;
+            height: 14px;
+        }
+    }
+
+    .selected {
+        background-color: #dfdfdf;
+        opacity: 1;
+    }
+
+    .linear {
+        background: linear-gradient(var(--active-color-beta), var(--theme-color-anti));
+    }
+
+    .radial {
+        background: radial-gradient(var(--active-color-beta), var(--theme-color-anti));
+    }
+
+    .angular {
+        background: conic-gradient(var(--active-color-beta), var(--theme-color-anti));
+    }
+}
+</style>

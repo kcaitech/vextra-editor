@@ -41,7 +41,8 @@ import Creator from './Creator.vue';
 import { Wheel, fourWayWheel } from '@/utils/wheel';
 import PathEditMode from "@/components/Document/Selection/Controller/PathEdit/PathEditMode.vue";
 import { menu_locate } from '@/utils/common';
-
+import { ColorCtx } from '@/context/color';
+import Gradient from '@/components/Document/Selection/Controller/ColorEdit/Gradient.vue'
 interface Props {
     context: Context
     page: PageView
@@ -86,8 +87,8 @@ const cellStatus = ref();
 const creatorMode = ref<boolean>(false);
 const documentCommentList = ref<any[]>(comment.value.pageCommentList);
 const path_edit_mode = ref<boolean>(false);
+const color_edit_mode = ref<boolean>(false);
 let matrix_inverse: Matrix = new Matrix();
-
 function page_watcher(...args: any) {
     if (args.includes('style')) {
         const f = props.page.getFills()[0];
@@ -545,6 +546,15 @@ function paster_watcher(event: ClipboardEvent) {
     return props.context.workspace.clipboard.paste(t, event);
 }
 
+function color_watcher(t: number) {
+    if (t === ColorCtx.COLOR_EDITOR) {
+        color_edit_mode.value = false;
+        const mode = props.context.color.mode;
+        const gradient = props.context.color.gradient;
+        const selected = props.context.selection.selectedShapes;
+        color_edit_mode.value = mode && !!gradient && selected.length === 1;
+    }
+}
 // hooks
 function initMatrix(cur: PageView) {
     let info = matrixMap.get(cur.id);
@@ -580,6 +590,7 @@ onMounted(() => {
     props.context.cursor.init();
     props.context.tool.watch(tool_watcher);
     props.page.watch(page_watcher);
+    props.context.color.watch(color_watcher);
     props.context.assist.init();
     rootRegister(true);
     document.addEventListener('keydown', onKeyDown);
@@ -597,9 +608,7 @@ onMounted(() => {
         _updateRoot(props.context, root.value); // 第一次记录root数据，所有需要root数据的方法，都需要在此之后
         initMatrix(props.page); // 初始化页面视图
     });
-
     props.context.workspace.setFreezeStatus(false)
-
 })
 onUnmounted(() => {
     props.context.selection.scout?.remove();
@@ -609,6 +618,7 @@ onUnmounted(() => {
     props.context.cursor.unwatch(cursor_watcher);
     props.context.tool.unwatch(tool_watcher);
     props.page.unwatch(page_watcher);
+    props.context.color.unwatch(color_watcher);
     resizeObserver.disconnect();
     document.removeEventListener('keydown', onKeyDown);
     document.removeEventListener('keyup', onKeyUp);
@@ -642,5 +652,6 @@ onUnmounted(() => {
         </CommentView>
         <Creator v-if="creatorMode" :context="props.context" />
         <PathEditMode v-if="path_edit_mode" :context="props.context"></PathEditMode>
+        <Gradient v-if="color_edit_mode" :context="props.context" :matrix="matrix"></Gradient>
     </div>
 </template>

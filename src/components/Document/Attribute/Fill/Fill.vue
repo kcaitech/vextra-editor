@@ -1,17 +1,20 @@
 <script setup lang="ts">
 import { computed, onMounted, onUnmounted, reactive, ref, watch } from 'vue';
 import { Context } from '@/context';
-import { Color, Fill, FillType, GroupShapeView, Shape, ShapeType, ShapeView, TableCell, TableView } from "@kcdesign/data";
+import { Color, Fill, FillType, GroupShapeView, Shape, ShapeType, ShapeView, TableCell, TableView, TableShape, Stop, GradientType, adapt2Shape } from "@kcdesign/data";
 import { Reg_HEX } from "@/utils/RegExp";
 import TypeHeader from '../TypeHeader.vue';
 import { useI18n } from 'vue-i18n';
 import ColorPicker from '@/components/common/ColorPicker/index.vue';
 import { message } from "@/utils/message";
 import {
+    get_aciton_fill_gradient,
+    get_aciton_fill_gradient_stop,
     get_actions_add_fill,
     get_actions_fill_color,
     get_actions_fill_delete,
     get_actions_fill_enabled,
+    get_actions_fill_filltype,
     get_actions_fill_unify,
     get_fills
 } from '@/utils/shape_style';
@@ -413,7 +416,7 @@ function onColorChange(idx: number, e: Event) {
         setColor(idx, value, alpha, true);
     } else {
         message('danger', t('system.illegal_input'));
-        if(!colorFill.value) return;
+        if (!colorFill.value) return;
         return colorFill.value[idx].value = toHex(fills[idx].fill.color.red, fills[idx].fill.color.green, fills[idx].fill.color.blue);
     }
 }
@@ -564,7 +567,143 @@ const filterAlpha = (a: number) => {
         return alpha.toFixed(2); // 保留两位小数
     }
 }
+/**
+ * @description 翻转渐变
+ * @param idx 
+ */
+function gradient_reverse(idx: number) {
+    const _idx = fills.length - idx - 1;
+    const selected = props.context.selection.selectedShapes;
+    const page = props.context.selection.selectedPage!;
+    const editor = props.context.editor4Page(page);
+    const actions = get_aciton_fill_gradient(selected, _idx);
+    editor.reverseShapesGradient(actions);
+}
+/**
+ * @description 旋转渐变
+ * @param idx 
+ */
+function gradient_rotate(idx: number) {
+    const _idx = fills.length - idx - 1;
+    const selected = props.context.selection.selectedShapes;
+    const page = props.context.selection.selectedPage!;
+    const editor = props.context.editor4Page(page);
+    const actions = get_aciton_fill_gradient(selected, _idx);
+    editor.rotateShapesGradient(actions);
+}
+/**
+ * @description 添加渐变节点
+ * @param idx 
+ * @param position 
+ * @param color 
+ */
+function gradient_add_stop(idx: number, position: number, color: Color) {
+    const _idx = fills.length - idx - 1;
+    const selected = props.context.selection.selectedShapes;
+    const page = props.context.selection.selectedPage!;
+    const editor = props.context.editor4Page(page);
+    const stop = new Stop(position, color, v4());
+    const actions = get_aciton_fill_gradient_stop(selected, _idx, stop);
+    editor.addShapesGradientStop(actions);
+}
+/**
+ * @description 切换渐变类型
+ * @param idx 
+ */
+function togger_gradient_type(idx: number, type: GradientType | 'solid') {
+    const _idx = fills.length - idx - 1;
+    const selected = props.context.selection.selectedShapes;
+    const page = props.context.selection.selectedPage!;
+    const editor = props.context.editor4Page(page);
+    if (type === 'solid') {
+        toggle_fill_type(idx, FillType.SolidColor);
+    } else {
+        const actions = get_aciton_fill_gradient_stop(selected, _idx, type);
+        editor.toggerShapeGradientType(actions);
+    }
+}
+/**
+ * @description 修改节点颜色
+ * @param idx 
+ * @param color 
+ */
+function gradient_stop_color_change (idx: number, color: Color, index: number) {
+    const _idx = fills.length - idx - 1;
+    const selected = props.context.selection.selectedShapes;
+    const page = props.context.selection.selectedPage!;
+    const editor = props.context.editor4Page(page);
+    const actions = get_aciton_fill_gradient_stop(selected, _idx, {color, stop_i: index});
+    editor.setShapesGradientStopColor(actions);
+}
+/**
+ * @description 删除渐变节点
+ * @param idx 
+ * @param index 
+ */
+ function gradient_stop_delete (idx: number, index: number) {
+    const _idx = fills.length - idx - 1;
+    const selected = props.context.selection.selectedShapes;
+    const page = props.context.selection.selectedPage!;
+    const editor = props.context.editor4Page(page);
+    const actions = get_aciton_fill_gradient_stop(selected, _idx, index);
+    editor.deleteShapesGradientStop(actions);
+}
+/**
+ * @description 修改节点位置
+ * @param idx 
+ * @param position 
+ */
+function gradient_stop_position(idx: number, position: number, id: string) {
+    const _idx = fills.length - idx - 1;
+    const selected = props.context.selection.selectedShapes;
+    const page = props.context.selection.selectedPage!;
+    const editor = props.context.editor4Page(page);
+    const actions = get_aciton_fill_gradient_stop(selected, _idx, {position, id});
+    editor.setShapesGradientStopPosition(actions);
+}
 
+function toggle_fill_type(idx: number, fillType: FillType) {
+    const _idx = fills.length - idx - 1;
+    const s = props.context.selection.selectedShapes[0];
+    const page = props.context.selection.selectedPage;
+    if (len.value === 1 && s.type === ShapeType.Table) {
+        const table = props.context.tableSelection;
+        const e = props.context.editor4Table(s as TableView);
+        const is_edting = table.editingCell;
+        if (table.tableRowStart > -1 || table.tableColStart > -1 || is_edting) {
+            let range
+            if (is_edting) {
+                range = {
+                    rowStart: is_edting.index.row,
+                    rowEnd: is_edting.index.row,
+                    colStart: is_edting.index.col,
+                    colEnd: is_edting.index.col
+                };
+            } else {
+                range = {
+                    rowStart: table.tableRowStart,
+                    rowEnd: table.tableRowEnd,
+                    colStart: table.tableColStart,
+                    colEnd: table.tableColEnd
+                };
+            }
+            e.setFillType(_idx, fillType, range)
+        } else {
+            if (page) {
+                const editor = props.context.editor4Page(page);
+                editor.setShapesFillType([{ target: adapt2Shape(s), index: _idx, value: fillType }]);
+            }
+        }
+    } else if (len.value !== 1 || (len.value === 1 && s.type !== ShapeType.Table)) {
+        const selected = props.context.selection.selectedShapes;
+        const shapes = flattenShapes(selected).filter(s => s.type !== ShapeType.Group);
+        const actions = get_actions_fill_filltype(shapes, _idx, fillType);
+        if (page) {
+            const editor = props.context.editor4Page(page);
+            editor.setShapesFillType(actions);
+        }
+    }
+}
 function update_by_shapes() {
     watchShapes();
     updateData();
@@ -667,7 +806,14 @@ onUnmounted(() => {
                 </div>
                 <div class="color">
                     <ColorPicker :color="f.fill.color" :context="props.context" :auto_to_right_line="true"
-                        @change="c => getColorFromPicker(idx, c)">
+                        @change="c => getColorFromPicker(idx, c)" @gradient-reverse="() => gradient_reverse(idx)"
+                        :gradient="f.fill.gradient" :fillType="f.fill.fillType"
+                        @gradient-rotate="() => gradient_rotate(idx)"
+                        @gradient-add-stop="(p, c) => gradient_add_stop(idx, p, c)"
+                        @gradient-type="(type) => togger_gradient_type(idx, type)"
+                        @gradient-color-change="(c, index) => gradient_stop_color_change(idx, c, index)"
+                        @gradient-stop-delete="(index) => gradient_stop_delete(idx, index)"
+                        @gradient-stop-position="(position, index) => gradient_stop_position(idx, position, index)">
                     </ColorPicker>
                     <input ref="colorFill" class="colorFill"
                         :value="toHex(f.fill.color.red, f.fill.color.green, f.fill.color.blue)" :spellcheck="false"
