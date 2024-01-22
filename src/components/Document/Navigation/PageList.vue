@@ -174,6 +174,12 @@ function toggle() {
             }
         }
     })
+    if (!fold.value) {
+        const timer = setTimeout(() => {
+            pageSource.notify(0, 0, 0, Number.MAX_VALUE);
+            clearTimeout(timer);
+        }, 100);
+    }
 }
 
 function afterDrag(wandererId: string, hostId: string, offsetOverhalf: boolean) {

@@ -1,7 +1,7 @@
 import {
     export_shape, import_shape_from_clipboard,
     Shape, ShapeType, AsyncCreator, ShapeFrame, GroupShape, TextShape, Text,
-    export_text, import_text, TextShapeEditor, ImageShape, transform_data, ContactShape, CurvePoint, PathShape, adapt2Shape, ShapeView
+    export_text, import_text, TextShapeEditor, ImageShape, transform_data, ContactShape, CurvePoint, PathShape, adapt2Shape, ShapeView, TableCellType, TableShape
 } from '@kcdesign/data';
 import { Context } from '@/context';
 import { PageXY } from '@/context/selection';
@@ -14,7 +14,6 @@ import { Document } from '@kcdesign/data';
 import { v4 } from 'uuid';
 import { AsyncTransfer } from "@kcdesign/data";
 import { ElMessage } from 'element-plus';
-import { useI18n } from 'vue-i18n';
 
 interface SystemClipboardItem {
     type: ShapeType
@@ -33,23 +32,60 @@ export class Clipboard {
     }
 
     get text() {
-        const selection = this.context.textSelection;
-        const start = selection.cursorStart;
-        const end = selection.cursorEnd;
+        const textshape = this.context.selection.textshape;
+        if (textshape) {
+            const selection = this.context.textSelection;
+            const start = selection.cursorStart;
+            const end = selection.cursorEnd;
 
-        if (start === end) {
+            if (start === end) {
+                return;
+            }
+
+            const s = Math.min(start, end);
+            const len = Math.abs(start - end)
+            return textshape.text.getTextWithFormat(s, len);
+        }
+
+        const table = this.context.selection.tableshape;
+        if (!table) {
             return;
         }
 
-        const s = Math.min(start, end);
-        const len = Math.abs(start - end)
+        const ts = this.context.tableSelection;
 
-        const textshape = this.context.selection.textshape;
-        if (!textshape) {
-            return
+        if (ts.tableColStart < 0 && ts.tableRowStart < 0) {
+            return;
         }
 
-        return textshape.text.getTextWithFormat(s, len);
+        let _text = '';
+
+        const cells = ts.getSelectedCells(true);
+        let first_text: Text | undefined = undefined;
+        cells.forEach(i => {
+            if (i.cell?.cellType !== TableCellType.Text) {
+                return;
+            }
+            if (!first_text && i.cell.text) {
+                first_text = import_text(this.context.data, i.cell.text) as Text;
+            }
+            const t = i.cell.text?.getText(0, i.cell.text?.length || 0) || '';
+            if (!t.length) {
+                return;
+            }
+            _text += t;
+        })
+
+        if (!first_text || !_text) {
+            console.log('!first_text || !_text');
+            return;
+        }
+
+        const t = first_text as Text;
+        t.deleteText(0, t.length);
+        t.insertText(_text, 0);
+
+        return t;
     }
 
     modify_cache(type: CacheType, data: any) {
@@ -204,6 +240,15 @@ export class Clipboard {
                 if (editor.deleteText(Math.min(start, end), Math.abs(start - end))) {
                     selection.setCursor(Math.min(start, end), false);
                 }
+                return;
+            }
+
+            const table = this.context.selection.tableshape;
+            if (text && table) {
+                const editor = this.context.editor4Table(table as TableShape);
+                const ts = this.context.tableSelection;
+                editor.resetTextCells(ts.tableRowStart, ts.tableRowEnd, ts.tableColStart, ts.tableColEnd);
+                ts.resetSelection();
                 return;
             }
 
@@ -1091,22 +1136,36 @@ function paster_text(context: Context, mousedownOnPageXY: PageXY, content: strin
 
 // 不经过剪切板，直接复制(Shape[])
 export async function paster_short(context: Context, shapes: ShapeView[], editor: AsyncTransfer): Promise<ShapeView[]> {
-    const pre_shapes: Shape[] = [], actions: { parent: GroupShape, index: number }[] = [];
+    const pre_shapes: Shape[] = [];
+    const actions: { parent: GroupShape, index: number }[] = [];
+
     for (let i = 0, len = shapes.length; i < len; i++) {
-        const s = shapes[i], p = s.parent;
+        const s = shapes[i];
+        let _s = s;
+        let p = s.parent;
         if (!p) {
             continue;
         }
 
-        const childs = (p).childs;
+        if (p.type === ShapeType.SymbolUnion) {
+            _s = p;
+            p = p.parent;
+        }
+
+        if (!p) {
+            continue;
+        }
+
+        const childs = p.childs;
         for (let j = 0, len2 = childs.length; j < len2; j++) {
-            if (s.id === childs[j].id) {
+            if (_s.id === childs[j].id) {
                 pre_shapes.push(adapt2Shape(s));
                 actions.push({ parent: adapt2Shape(p) as GroupShape, index: j + 1 });
                 break;
             }
         }
     }
+
     const new_source = transform_data(context.data, pre_shapes);
 
     const page = context.selection.selectedPage;

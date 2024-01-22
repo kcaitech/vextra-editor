@@ -272,7 +272,6 @@ export function useControllerCustom(context: Context, i18nT: Function) {
         }
 
         const mousePosition: ClientXY = workspace.getContentXY(e);
-
         if (isDragging && wheel && asyncTransfer) {
             speed = get_speed(t_e || e, e);
             t_e = e;
@@ -311,7 +310,6 @@ export function useControllerCustom(context: Context, i18nT: Function) {
                 paster_short(context, shapes, asyncTransfer).then(v => {
                     shapes = v;
                 });
-                // shapes = [];
             }
 
             isDragging = true;

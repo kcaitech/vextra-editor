@@ -1,21 +1,20 @@
 <script setup lang='ts'>
 import { Context } from '@/context';
-import { Matrix, Shape, ShapeView } from '@kcdesign/data';
-import { ref, onMounted, onUnmounted, watch } from 'vue';
-import { Selection } from '@/context/selection';
+import { ref, onMounted, onUnmounted } from 'vue';
+import { Selection, SelectionTheme } from '@/context/selection';
 import { WorkSpace } from '@/context/workspace';
+import { reactive } from 'vue';
+import { is_symbol_class } from '@/utils/controllerFn';
 
 const watchedShapes = new Map();
 
 interface Props {
-    matrix: Matrix
     context: Context
-    colorHex: string
 }
 
 const props = defineProps<Props>();
-const matrix = new Matrix();
-const paths = ref<string[]>([]);
+const paths = ref<{ path: string, theme: SelectionTheme }[]>([]);
+const theme_map = reactive<Map<string, SelectionTheme>>(new Map());
 
 function watchShapes() { // 监听选区相关shape的变化
     const needWatchShapes = new Map();
@@ -27,66 +26,78 @@ function watchShapes() { // 监听选区相关shape的变化
     }
     watchedShapes.forEach((v, k) => {
         if (needWatchShapes.has(k)) return;
-        v.unwatch(update);
+        v.unwatch(update_paths);
         watchedShapes.delete(k);
     })
     needWatchShapes.forEach((v, k) => {
         if (watchedShapes.has(k)) return;
-        v.watch(update);
+        v.watch(update_paths);
         watchedShapes.set(k, v);
     })
 }
 
-function update() {
-    matrix.reset(props.matrix);
-    update_paths(props.context.selection.selectedShapes);
-}
-
 function selection_watcher(t?: number) {
     if (t === Selection.CHANGE_SHAPE) {
-        update();
         watchShapes();
+        update_themes();
+        update_paths();
     }
 }
 
-function update_paths(shapes: ShapeView[]) {
-    // const s = Date.now();
+function update_paths() {
+    const shapes = props.context.selection.selectedShapes;
     const workspace = props.context.workspace;
-    if (!workspace.shouldSelectionViewUpdate) return;
+    if (!workspace.shouldSelectionViewUpdate) {
+        return;
+    }
+
+    const m = workspace.matrix;
     paths.value.length = 0;
     for (let i = 0; i < shapes.length; i++) {
         const shape = shapes[i];
         const path = shape.getPath().clone();
         const m2r = shape.matrix2Root();
-        m2r.multiAtLeft(props.matrix);
+        m2r.multiAtLeft(m);
         path.transform(m2r);
-        paths.value.push(path.toString());
+        paths.value.push({ path: path.toString(), theme: theme_map.get(shape.id) || SelectionTheme.Normol });
     }
     if (shapes.length === 1 && paths.value.length === 1) {
-        workspace.setCtrlPath(paths.value[0]);
+        workspace.setCtrlPath(paths.value[0].path);
     }
-    // const e = Date.now();
-    // console.log('描边绘制用时(ms):', e - s);
 }
 
-function workspace_watcher(t?: number) {
-    if (t === WorkSpace.SELECTION_VIEW_UPDATE) passive_update();
+function update_themes() {
+    const shapes = props.context.selection.selectedShapes;
+    theme_map.clear();
+    for (let i = 0; i < shapes.length; i++) {
+        const shape = shapes[i];
+        const theme = is_symbol_class(shape) ? SelectionTheme.Symbol : SelectionTheme.Normol;
+        theme_map.set(shape.id, theme);
+    }
+}
+
+function workspace_watcher(t: number) {
+    if (t === WorkSpace.SELECTION_VIEW_UPDATE) {
+        passive_update();
+    } else if (t === WorkSpace.MATRIX_TRANSFORMATION) {
+        passive_update();
+    }
 }
 
 function passive_update() {
-    matrix.reset(props.matrix);
     paths.value.length = 0;
     const shapes = props.context.selection.selectedShapes;
+    const m = props.context.workspace.matrix;
     for (let i = 0; i < shapes.length; i++) {
         const shape = shapes[i];
         const path = shape.getPath().clone();
         const m2r = shape.matrix2Root();
-        m2r.multiAtLeft(props.matrix);
+        m2r.multiAtLeft(m);
         path.transform(m2r);
-        paths.value.push(path.toString());
+        paths.value.push({ path: path.toString(), theme: theme_map.get(shape.id) || SelectionTheme.Normol });
     }
     if (shapes.length === 1 && paths.value.length === 1) {
-        props.context.workspace.setCtrlPath(paths.value[0]);
+        props.context.workspace.setCtrlPath(paths.value[0].path);
     }
 }
 
@@ -94,7 +105,7 @@ function page_watcher() {
     const page = props.context.selection.selectedPage;
 
     if (page) {
-        page.watch(update);
+        page.watch(update_paths);
     }
 }
 
@@ -102,28 +113,28 @@ function remove_page_watcher() {
     const page = props.context.selection.selectedPage;
 
     if (page) {
-        page.unwatch(update);
+        page.unwatch(update_paths);
     }
 }
 
-watch(() => props.matrix, update, { deep: true })
 onMounted(() => {
     props.context.selection.watch(selection_watcher);
     props.context.workspace.watch(workspace_watcher);
-    update();
     watchShapes();
     page_watcher();
+    update_themes();
+    update_paths();
 })
 onUnmounted(() => {
     props.context.selection.unwatch(selection_watcher);
     props.context.workspace.unwatch(workspace_watcher);
-    watchedShapes.forEach(v => v.unwatch(update));
+    watchedShapes.forEach(v => v.unwatch(update_paths));
     remove_page_watcher();
 })
 </script>
 <template>
     <g>
-        <path v-for="(p, i) in paths" :key="i" :d="p" :stroke="colorHex" stroke-width="1px" fill="none"></path>
+        <path v-for="(p, i) in paths" :key="i" :d="p.path" :stroke="p.theme" fill="none"></path>
     </g>
 </template>
 <style lang='scss' scoped></style>

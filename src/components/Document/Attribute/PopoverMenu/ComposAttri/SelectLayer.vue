@@ -7,13 +7,6 @@ import { VariableType } from '@kcdesign/data';
 
 const { t } = useI18n();
 
-interface Tree {
-    id: number
-    label: string
-    pid: number | undefined
-    children?: Tree[]
-}
-
 interface Props {
     type: VariableType
     context: Context
@@ -23,13 +16,12 @@ interface Props {
 
 interface Emits {
     (e: 'close'): void;
-
     (e: 'change', data: string[]): void;
 }
 
 const props = defineProps<Props>();
 const emits = defineEmits<Emits>();
-const checkList = ref<string[]>([])
+const checkList = ref<string[]>(props.layerId || []);
 const top_wrapper = ref<HTMLDivElement>();
 const scroll_container = ref<Element | null>(null);
 const unfold = new Set();
@@ -53,7 +45,9 @@ const reflush = ref(0);
 const popover = ref<HTMLDivElement>();
 
 const confirmSelect = () => {
-    if (checkList.value.length === 0) return;
+    if (checkList.value.length === 0) {
+        return;
+    }
     emits('close');
 }
 
@@ -65,13 +59,17 @@ function toggle(i: number) {
     }
     reflush.value = reflush.value++;
 }
-const selectLayer = new Map();
-const handleCheck = (v: string[], t: string) => {
-    // 选中对象的id
-    selectLayer.set(t, v);
-    const listArr = Array.from(selectLayer.values())
-    checkList.value = listArr.flat();
-    emits("change", listArr.flat());
+const handleCheck = (v: string) => {
+
+    const i = checkList.value.findIndex(i => v === i);
+
+    if (i > -1) {
+        checkList.value.splice(i, 1);
+    } else {
+        checkList.value.push(v);
+    }
+
+    emits("change", checkList.value);
 }
 watchEffect(() => {
     props.selectList.length;
@@ -102,8 +100,6 @@ onMounted(() => {
         if (top.value < -popover_y + 46) {
             top.value = -popover_y + 46;
         }
-
-        console.log(body_h, popover_h, popover_y)
     }
     props.selectList.forEach((_, index) => unfold.add(index));
     document.addEventListener('mouseup', handleClickOutside);
@@ -139,17 +135,12 @@ onUnmounted(() => {
                                     :style="{ transform: `rotate(${!unfold.has(i) ? '-90deg' : '0deg'})` }"></svg-icon>
                             </div>
                             <span>{{ item.state }}</span>
-                            <!-- <div class="shrink">
-                                <svg-icon icon-class="down"
-                                    :style="{ transform: !unfold.has(i) ? 'rotate(-90deg)' : 'rotate(0deg)' }"></svg-icon>
-                            </div> -->
                         </div>
                         <div class="demo-collapse" :style="{ marginTop: selectList.length > 1 ? '0' : '4px' }"
                             v-if="unfold.has(i)" :reflush="reflush">
-                            <!--                            marginLeft: selectList.length > 1 ? '26px' : '12px',-->
                             <component v-if="scroll_container" :is="CompoSelectList" :context="context"
-                                :contents="item.data" @handleCheck="(v) => handleCheck(v, item.state)"
-                                :layerId="props.layerId" :container="scroll_container">
+                                :contents="item.data" @change="(v) => handleCheck(v)" :layerId="props.layerId"
+                                :container="scroll_container">
                             </component>
                         </div>
                     </template>

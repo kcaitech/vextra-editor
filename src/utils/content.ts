@@ -1253,7 +1253,4 @@ export function detectZoom() {
     if (ratio) {
         ratio = Math.round(ratio * 100);
     }
-
-    console.log('ratio:', ratio);
-
 }

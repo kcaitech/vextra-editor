@@ -49,6 +49,7 @@ const watchedShapes = new Map();
 const len = computed<number>(() => props.shapes.length);
 const show_apex = ref<boolean>(false);
 const shapes = ref<ShapeView[]>([]);
+const apex_view = ref<number>(0);
 let table: TableShape;
 
 function watchShapes() {
@@ -84,7 +85,8 @@ function watchShapes() {
 
 function watcher(...args: any[]) {
     if ((args.includes('style') || args.includes('variable'))) {
-        updateData()
+        updateData();
+        apex_view.value++;
     }
 }
 
@@ -193,7 +195,7 @@ function addBorder() {
     } else if (len.value > 1) {
         if (mixed.value) {
             const actions = get_actions_border_unify(props.shapes);
-            const page = props.context.selection.selectedPage;            
+            const page = props.context.selection.selectedPage;
             if (page) {
                 const editor = props.context.editor4Page(page);
                 editor.shapesBordersUnify(actions);
@@ -361,7 +363,7 @@ function onColorChange(e: Event, idx: number) {
     const border = borders[idx].border;
     if (!hex) {
         message('danger', t('system.illegal_input'));
-        if(!colorBorder.value) return;
+        if (!colorBorder.value) return;
         return colorBorder.value[idx].value = (toHex(border.color)).slice(1)
     }
     const r = Number.parseInt(hex[1], 16);
@@ -801,7 +803,8 @@ onUnmounted(() => {
                 <!--                </div>-->
             </div>
         </div>
-        <Apex v-if="show_apex && !!borders.length" :context="props.context" :shapes="props.shapes"></Apex>
+        <Apex v-if="show_apex && !!borders.length" :context="props.context" :shapes="props.shapes" :view="apex_view">
+        </Apex>
     </div>
 </template>
 

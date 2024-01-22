@@ -4,7 +4,7 @@ import { Context } from "@/context";
 import { ContactLineView, ContactShape, Matrix } from '@kcdesign/data';
 import { WorkSpace } from "@/context/workspace";
 import { Point } from "../SelectionView.vue";
-import { Selection } from "@/context/selection";
+import { Selection, SelectionTheme } from "@/context/selection";
 import { useController } from "./controller4contact";
 import ContactApex from "./Points/ContactApex.vue";
 import BarsContainer from "./Bars/BarsContainerForContact.vue";
@@ -15,6 +15,7 @@ interface Props {
     rotate: number
     matrix: Matrix
     shape: ContactLineView
+    theme: SelectionTheme
 }
 const props = defineProps<Props>();
 useController(props.context);

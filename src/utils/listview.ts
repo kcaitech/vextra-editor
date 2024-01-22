@@ -373,4 +373,5 @@ export function is_component_class(shape: ShapeView) {
         }
         s = s.parent;
     }
+    return false;
 }

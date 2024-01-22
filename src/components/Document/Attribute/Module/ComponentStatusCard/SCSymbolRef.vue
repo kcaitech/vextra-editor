@@ -60,6 +60,9 @@ function save_instance(type: VariableType, name: string) {
         if (!s) continue;
         sym_ids.push((s as SymbolRefView).refId);
     }
+    if (!sym_ids.length) {
+        return;
+    }
     modify_variable(props.context, symbol, props.variable, name, sym_ids[0], sym_ids);
     iseditToggle.value = false;
 }
