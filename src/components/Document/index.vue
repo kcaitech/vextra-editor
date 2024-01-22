@@ -402,7 +402,6 @@ const getDocumentInfo = async () => {
       init_keyboard_uints();
       const docId = route.query.id as string;
       const getToken = () => Promise.resolve(localStorage.getItem("token") || "");
-      for (const stop of repoStopHandlerList) stop();
       if (!await context.communication.docOp.start(getToken, docId, document, context.coopRepo, versionId, {
         repoPendingCmdListBeforeStart: repoPendingCmdListBeforeStart,
       })) {
@@ -449,6 +448,7 @@ async function upload(projectId: string) {
     path: '/document',
     query: { id: doc_id },
   });
+  for (const stop of repoStopHandlerList) stop();
   if (!await context.communication.docOp.start(getToken, doc_id, context!.data, context.coopRepo, result!.data.version_id ?? "")) {
     // todo 文档操作通道开启失败处理
   }
