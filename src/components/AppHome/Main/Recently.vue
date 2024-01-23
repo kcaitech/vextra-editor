@@ -111,9 +111,7 @@
     <listrightmenu :items="items" :data="mydata" @get-userdata="getUserdata" @r-starfile="Starfile" @r-sharefile="Sharefile"
         @r-removehistory="Removefile" @ropen="openDocument" />
     <div v-if="showFileShare" class="overlay">
-        <FileShare @close="closeShare" :docId="docId" :docName="docName" @switch-state="onSwitch" :userInfo="userInfo"
-            :docUserId="docUserId" :project="is_project" :selectValue="selectValue" @select-type="onSelectType"
-            :shareSwitch="shareSwitch" :pageHeight="pageHeight" :projectPerm="projectPerm">
+        <FileShare @close="closeShare" :docId="docId" :projectPerm="projectPerm">
         </FileShare>
     </div>
 </template>
@@ -121,28 +119,21 @@
 <script setup lang="ts">
 import * as user_api from '@/request/users'
 import { ElMessage } from 'element-plus'
-import { ref, onMounted, onUnmounted, nextTick, inject, Ref, watchEffect } from 'vue'
+import { ref, onMounted, onUnmounted, nextTick, inject, Ref, watchEffect, watch } from 'vue'
 import { useI18n } from 'vue-i18n'
 import { router } from '@/router'
 import FileShare from '@/components/Document/Toolbar/Share/FileShare.vue'
 import tablelist from '@/components/AppHome/tablelist.vue'
-import { UserInfo } from '@/context/user';
 import listrightmenu from "../listrightmenu.vue"
 import Bus from '@/components/AppHome/bus';
 import { newFile, picker } from '@/utils/neworopen';
 import PinyinMatch from 'pinyin-match'
 
 const { t } = useI18n()
-const items = ['open', 'newtabopen', 'share', 'target_star', 'rename', 'copyfile', 'removefile']
+let items = ['open', 'newtabopen', 'share', 'target_star', 'removefile']
 const showFileShare = ref<boolean>(false);
-const shareSwitch = ref(true)
-const pageHeight = ref(0)
 const lists = ref<any[]>([])
-const selectValue = ref(1)
-const userInfo = ref<UserInfo | undefined>()
 const docId = ref('')
-const docName = ref('')
-const docUserId = ref('')
 const mydata = ref()
 const noNetwork = ref(false)
 const iconlists = ref(['star', 'share', 'remove'])
@@ -151,7 +142,6 @@ const projectPerm = ref()
 const { projectList } = inject('shareData') as {
     projectList: Ref<any[]>;
 };
-
 
 interface data {
     document: {
@@ -190,7 +180,6 @@ async function getUserdata() {
                 let { document: { size }, document_access_record: { last_access_time } } = data[i]
                 data[i].document.size = sizeTostr(size)
                 data[i].document_access_record.last_access_time = last_access_time.slice(0, 19)
-
                 if (data[i].project) {
                     const project = projectList.value.filter(item => item.project.id === data[i].project.id)[0];
                     if (project) {
@@ -214,15 +203,14 @@ const refreshDoc = () => {
     getUserdata()
 }
 
+watch(projectList, () => {
+    getUserdata()
+})
+
 let searchvalue = ref('');
 const searchlists = ref<any[]>([])
 const nulldata = ref(false)
 Bus.on('searchvalue', (str: string) => {
-    // if (str !== '') {
-    //     show.value = false
-    // } else {
-    //     show.value = true
-    // }
     searchvalue.value = str
 })
 
@@ -246,12 +234,6 @@ function sizeTostr(size: any) {
     }
     return size
 }
-
-const userData = ref({
-    avatar: localStorage.getItem('avatar') || '',
-    id: localStorage.getItem('userId') || '',
-    nickname: localStorage.getItem('nickname') || ''
-})
 
 //右键打开或双击打开
 const openDocument = (id: string) => {
@@ -283,7 +265,6 @@ const Starfile = async (data: data) => {
 }
 
 //分享入口
-let sharenumber = 0
 const Sharefile = (data: data) => {
     if (showFileShare.value) {
         showFileShare.value = false
@@ -294,16 +275,9 @@ const Sharefile = (data: data) => {
     } else {
         is_project.value = false;
     }
-    docUserId.value = data.document.user_id
-    userInfo.value = userData.value
     docId.value = data.document.id
-    docName.value = data.document.name
-    if (sharenumber === 0) {
-        selectValue.value = data.document.doc_type
-    }
     projectPerm.value = data.project_perm
     showFileShare.value = true
-    sharenumber += 1
 }
 
 //移除历史记录入口
@@ -324,9 +298,7 @@ const Removefile = async (data: data) => {
 //右键菜单入口
 const rightmenu = (e: MouseEvent, data: data) => {
     const elstar = document.querySelector('.target_star')! as HTMLElement
-    const elrename = document.querySelector('.rename')! as HTMLElement
-    const elcopyfile = document.querySelector('.copyfile')! as HTMLElement
-    const { document: { id, user_id }, document_favorites: { is_favorite } } = data
+    const { document: { id, user_id }, document_favorites: { is_favorite }, project_perm } = data
     const viewportWidth = window.innerWidth || document.documentElement.clientWidth
     const viewportHeight = window.innerHeight || document.documentElement.clientHeight
     const rightmenu: any = document.querySelector('.rightmenu')
@@ -342,19 +314,27 @@ const rightmenu = (e: MouseEvent, data: data) => {
     if ((e.target as HTMLElement).closest('.el-table-v2__row')) {
         rightmenu.style.display = 'block'
     }
-
+    items = ['open', 'newtabopen', 'share', 'target_star', 'removefile']
+    if (project_perm !== undefined) {
+        if (project_perm > 3) {
+            items.splice(4, 0, 'rename', 'copyfile')
+        } else if (project_perm < 3) {
+            items.splice(4, 0)
+        } else {
+            if (user_id === localStorage.getItem('userId')) {
+                items.splice(4, 0, 'rename', 'copyfile')
+            }
+        }
+    } else {
+        if (user_id === localStorage.getItem('userId')) {
+            items.splice(4, 0, 'rename', 'copyfile')
+        }
+    }
     nextTick(() => {
         if (is_favorite == true) {
             elstar.innerHTML = t('homerightmenu.unstar')
         } else {
             elstar.innerHTML = t('homerightmenu.target_star')
-        }
-        if (user_id !== localStorage.getItem('userId')) {
-            elrename.style.display = "none"
-            elcopyfile.style.display = "none"
-        } else {
-            elrename.style.display = ""
-            elcopyfile.style.display = ""
         }
     })
     docId.value = id
@@ -364,24 +344,14 @@ const rightmenu = (e: MouseEvent, data: data) => {
 const closeShare = () => {
     showFileShare.value = false
 }
-const getPageHeight = () => {
-    pageHeight.value = window.innerHeight
-}
-const onSwitch = (state: boolean) => {
-    shareSwitch.value = state
-}
-const onSelectType = (type: number) => {
-    selectValue.value = type
-}
+
 
 onMounted(() => {
     getUserdata()
-    getPageHeight()
-    window.addEventListener('resize', getPageHeight)
+
 })
 onUnmounted(() => {
     picker.unmount;
-    window.removeEventListener('resize', getPageHeight)
 })
 </script>
 

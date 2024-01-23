@@ -1,5 +1,5 @@
 <script setup lang="ts">
-import { ref, watch, onMounted } from 'vue';
+import { ref, watch, onMounted, Ref, inject } from 'vue';
 import * as team_api from '@/request/team';
 import { useI18n } from 'vue-i18n';
 import ProjectDialog from '@/components/TeamProject/ProjectDialog.vue';
@@ -15,7 +15,6 @@ const emit = defineEmits<{
     (e: 'exitProject', id: string, state: boolean): void;
     (e: 'memberLength', num: number): void;
 }>();
-
 
 const { t } = useI18n();
 const innerVisible = ref(false)
@@ -42,7 +41,7 @@ const getProjectMemberList = async () => {
         getTeamMemberList();
     } catch (err) {
         console.log(err);
-    }
+    } 
 }
 
 const getTeamMemberList = async () => {
@@ -200,6 +199,8 @@ watch(() => props.projectMembergDialog, (v) => {
     if (v) {
         permFilter.value = 0;
         memberList.value = memberList2.value;
+        console.log(memberList.value);
+
     }
 })
 
@@ -528,7 +529,7 @@ const memberid = ref<number>()
             margin: auto;
             font-size: 12px;
             font-weight: 500;
-            color:#8C8C8C;
+            color: #8C8C8C;
         }
 
         .member-item1 {

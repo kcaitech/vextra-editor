@@ -7,23 +7,20 @@
             @updatestar="Starfile" :address="true" @rightMeun="rightmenu" :noNetwork="noNetwork" @refreshDoc="refreshDoc"
             :nulldata="nulldata" />
     </div>
-    <listrightmenu :items="items" :data="mydata" @ropen="openDocument" @r-sharefile="Sharefile" @r-starfile="Starfile" />
+    <listrightmenu :items="items" :data="mydata" @get-userdata="getUserdata" @ropen="openDocument" @r-sharefile="Sharefile" @r-starfile="Starfile" />
     <div v-if="showFileShare" class="overlay">
-        <FileShare @close="closeShare" :docId="docId" :docName="docName" :selectValue="selectValue" :userInfo="userInfo"
-            :project="is_project" @select-type="onSelectType" @switch-state="onSwitch" :shareSwitch="shareSwitch"
-            :pageHeight="pageHeight" :docUserId="docUserId" :projectPerm="projectPerm">
+        <FileShare @close="closeShare" :docId="docId" :projectPerm="projectPerm">
         </FileShare>
     </div>
 </template>
 <script setup lang="ts">
 import * as user_api from '@/request/users'
 import { ElMessage } from 'element-plus'
-import { ref, onMounted, onUnmounted, nextTick, watch, inject, Ref, watchEffect } from 'vue'
+import { ref, onMounted, nextTick, inject, Ref, watchEffect } from 'vue'
 import { useI18n } from 'vue-i18n'
 import { router } from '@/router'
 import FileShare from '@/components/Document/Toolbar/Share/FileShare.vue'
 import tablelist from '@/components/AppHome/tablelist.vue'
-import { UserInfo } from '@/context/user';
 import listrightmenu from "../listrightmenu.vue"
 import Bus from '@/components/AppHome/bus';
 import PinyinMatch from 'pinyin-match'
@@ -31,28 +28,16 @@ const { t } = useI18n()
 
 const items = ['open', 'newtabopen', 'share', 'target_star', 'rename']
 const showFileShare = ref<boolean>(false);
-const shareSwitch = ref(true)
-const pageHeight = ref(0)
-const selectValue = ref(1)
-const userInfo = ref<UserInfo | undefined>()
 let lists = ref<any[]>([])
 const docId = ref('')
-const docName = ref('')
 const mydata = ref()
-const docUserId = ref('')
 const noNetwork = ref(false)
 const iconlists = ref(['star', 'share'])
-const is_project = ref(false);
 const projectPerm = ref()
 const { projectList } = inject('shareData') as {
     projectList: Ref<any[]>;
 };
 
-const userData = ref({
-    avatar: localStorage.getItem('avatar') || '',
-    id: localStorage.getItem('userId') || '',
-    nickname: localStorage.getItem('nickname') || ''
-})
 
 interface data {
     document: {
@@ -169,16 +154,7 @@ const Sharefile = (data: data) => {
         showFileShare.value = false
         return
     }
-    if (data.document.project_id && data.document.project_id !== '0') {
-        is_project.value = true;
-    } else {
-        is_project.value = false;
-    }
-    docUserId.value = data.document.user_id
-    userInfo.value = userData.value
     docId.value = data.document.id
-    docName.value = data.document.name
-    selectValue.value = data.document.doc_type !== 0 ? data.document.doc_type : data.document.doc_type
     projectPerm.value = data.project_perm;
     showFileShare.value = true
 }
@@ -223,25 +199,11 @@ const rightmenu = (e: MouseEvent, data: data) => {
 const closeShare = () => {
     showFileShare.value = false
 }
-const getPageHeight = () => {
-    pageHeight.value = window.innerHeight
-}
-const onSwitch = (state: boolean) => {
-    shareSwitch.value = state
-}
-const onSelectType = (type: number) => {
-    selectValue.value = type
-}
 
 onMounted(() => {
     getUserdata()
-    getPageHeight()
-    window.addEventListener('resize', getPageHeight)
 })
 
-onUnmounted(() => {
-    window.removeEventListener('resize', getPageHeight)
-})
 </script>
 <style lang="scss" scoped>
 .overlay {
