@@ -247,11 +247,14 @@ const rightMenu = (item: any, e: MouseEvent) => {
         left.value = e.clientX;
         projectItem.value = item;
         menuItem = ['visit'];
-        if (item.self_perm_type === 5 || item.self_perm_type === 4) {
+        if (item.self_perm_type === 5) {
             menuItem.push('rename', 'del');
         }
+        if (item.self_perm_type === 4) {
+            menuItem.push('rename', 'exit');
+        }
         menuItem.push('no_fixed');
-        if (!item.is_in_team) {
+        if ((!item.is_in_team || item.is_invited) && item.self_perm_type < 5) {
             menuItem.push('exit');
         }
         if (item.is_invited || item.self_perm_type === 5) {

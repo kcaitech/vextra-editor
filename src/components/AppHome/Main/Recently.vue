@@ -297,7 +297,6 @@ const Removefile = async (data: data) => {
 
 //右键菜单入口
 const rightmenu = (e: MouseEvent, data: data) => {
-    console.log(data);
     const elstar = document.querySelector('.target_star')! as HTMLElement
     const { document: { id, user_id }, document_favorites: { is_favorite }, project_perm } = data
     const viewportWidth = window.innerWidth || document.documentElement.clientWidth

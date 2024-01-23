@@ -191,7 +191,7 @@ watchEffect(() => {
     if (props.projectPerm > 3) {
       return founder.value = false;
     } else {
-      if (UserId === docUserId) {
+      if (props.projectPerm === 3 && UserId === docUserId) {
         return founder.value = false;
       } else {
         return founder.value = true;

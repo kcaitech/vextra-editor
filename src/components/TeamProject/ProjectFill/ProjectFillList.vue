@@ -9,9 +9,7 @@
     <listrightmenu :items="items" :data="mydata" @get-doucment="getDoucment" @r-starfile="Starfile" @r-sharefile="Sharefile"
         @r-removefile="Deletefile" @ropen="openDocument" @moveFillAddress="moveFillAddress" />
     <div v-if="showFileShare" class="overlay">
-        <FileShare @close="closeShare" :docId="docId" :docName="docName" :selectValue="selectValue" :userInfo="userInfo"
-            :docUserId="docUserId" @select-type="onSelectType" @switch-state="onSwitch" :shareSwitch="shareSwitch"
-            :pageHeight="pageHeight" :project="is_project" :projectPerm="currentProject.self_perm_type">
+        <FileShare @close="closeShare" :docId="docId" :projectPerm="projectPerm">
         </FileShare>
     </div>
     <MoveProjectFill :title="t('Createteam.movetip')" :confirm-btn="t('Createteam.move')" :projectItem="projectItem"
@@ -23,7 +21,7 @@
 import * as user_api from '@/request/users'
 import * as team_api from '@/request/team'
 import { ElMessage } from 'element-plus'
-import { onMounted, ref, onUnmounted, nextTick, Ref, inject, watch, watchEffect } from "vue"
+import { onMounted, ref, nextTick, Ref, inject, watch, watchEffect } from "vue"
 import { useI18n } from 'vue-i18n'
 import { router } from '@/router';
 import { useRoute } from 'vue-router'
@@ -62,21 +60,15 @@ const props = defineProps<{
 const { t } = useI18n()
 const route = useRoute();
 const showFileShare = ref<boolean>(false)
-const shareSwitch = ref(true)
-const pageHeight = ref(0)
 const docId = ref('')
-const docName = ref('')
 const mydata = ref<data>()
-const selectValue = ref(1)
-const docUserId = ref('')
 const noNetwork = ref(false)
 const lists = ref<any[]>([])
-const userInfo = ref<UserInfo | undefined>()
 const iconlists = ref(['star', 'share', 'delete_p']);
 const moveVisible = ref(false);
 const projectItem = ref<any>({});
-const is_project = ref(false);
 const nulldata = ref(false)
+const projectPerm = ref()
 
 //获取服务器我的文件列表
 async function getDoucment(id: string) {
@@ -122,14 +114,11 @@ watchEffect(() => {
     }
 })
 
-
-
 const { projectList } = inject('shareData') as {
     projectList: Ref<any[]>;
 };
 
 watch(projectList, () => {
-    console.log('监听有变化');
     getDoucment(props.currentProject.project.id)
 })
 
@@ -219,16 +208,8 @@ const Sharefile = (data: data) => {
         showFileShare.value = false
         return
     }
-    if (data.document.project_id && data.document.project_id !== '0') {
-        is_project.value = true;
-    } else {
-        is_project.value = false;
-    }
-    docUserId.value = data.document.user_id
     docId.value = data.document.id
-    docName.value = data.document.name
-    selectValue.value = data.document.doc_type !== 0 ? data.document.doc_type : data.document.doc_type
-    userInfo.value = userData.value
+    projectPerm.value = data.project_perm
     showFileShare.value = true
 }
 
@@ -293,23 +274,8 @@ const rightmenu = (e: MouseEvent, data: data) => {
     projectItem.value = projectList.value.filter(item => item.project.id === project_id)[0];
 }
 
-const userData = ref({
-    avatar: localStorage.getItem('avatar') || '',
-    id: localStorage.getItem('userId') || '',
-    nickname: localStorage.getItem('nickname') || ''
-})
-
 const closeShare = () => {
     showFileShare.value = false
-}
-const getPageHeight = () => {
-    pageHeight.value = window.innerHeight
-}
-const onSwitch = (state: boolean) => {
-    shareSwitch.value = state
-}
-const onSelectType = (type: number) => {
-    selectValue.value = type
 }
 
 watch(() => route.params, (v) => {
@@ -319,12 +285,6 @@ watch(() => route.params, (v) => {
 onMounted(() => {
     const id = props.currentProject.project.id
     getDoucment(id)
-    getPageHeight()
-    window.addEventListener('resize', getPageHeight)
-})
-
-onUnmounted(() => {
-    window.removeEventListener('resize', getPageHeight)
 })
 
 </script>

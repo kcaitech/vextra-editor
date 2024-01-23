@@ -150,6 +150,7 @@ onUnmounted(() => {
     clearInterval(timer)
     showHint.value = false;
     countdown.value = 4;
+
 })
 </script>
 

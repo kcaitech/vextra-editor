@@ -114,11 +114,6 @@ const unHoverComment = () => {
 const showComment = (e: MouseEvent) => {
     if (ShowComment.value) return;
     if (props.context.comment.isCommentMove) return
-<<<<<<< HEAD
-=======
-    console.log(props.commentInfo.children);
-
->>>>>>> 1a62afe1e80f164d70d9f3b5f799c5005c5f581f
     documentCommentList.value = props.commentInfo.children && props.commentInfo.children.length > 0 ? [...props.commentInfo.children].reverse() : [];
     const commentX = props.commentInfo.shape_frame.x1
     const commentY = props.commentInfo.shape_frame.y1

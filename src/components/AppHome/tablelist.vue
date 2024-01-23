@@ -137,7 +137,6 @@ const rowHandleClick = ({
     },
 
     oncontextmenu: ({ event, rowData, rowIndex }: any) => {
-        console.log(rowData);
         if (props.projectshare) {
             selectedId.value = rowData.project.id
         } else {
@@ -240,7 +239,6 @@ const columns: Column<any>[] = [
     },
     {
         key: 'operations',
-        // title: `${t('home.operation')}`,
         title: '',
         dataKey: 'document',
         width: 120,
@@ -435,7 +433,6 @@ watchEffect(() => {
             },
             {
                 key: 'name',
-                // title: t('home.operation'),
                 title: '',
                 width: 120,
                 minWidth: 120,
@@ -561,10 +558,6 @@ watchEffect(() => {
 :deep(.el-table-v2__header-cell) {
     font-weight: 500 !important;
 }
-
-// :deep(.test) {
-//     box-shadow: 0 0 4px 0 rgb(0, 0, 0, 0.1) !important;
-// }
 
 :deep(.el-table-v2__row) {
     display: flex;
