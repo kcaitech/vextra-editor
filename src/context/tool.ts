@@ -21,33 +21,6 @@ export enum Action {
     PathClip = 'path-clip'
 }
 
-export enum KeyboardKeys { // 键盘按键类型
-    Space = 'Space',
-    A = 'KeyA',
-    R = 'KeyR',
-    V = 'KeyV',
-    L = 'KeyL',
-    Z = 'KeyZ',
-    S = 'KeyS',
-    Up = 'ArrowUp',
-    Down = 'ArrowDown',
-    Left = 'ArrowLeft',
-    Right = 'ArrowRight',
-    K = 'KeyK',
-    O = 'KeyO',
-    F = 'KeyF',
-    Digit0 = 'Digit0',
-    G = 'KeyG',
-    T = 'KeyT',
-    C = 'KeyC',
-    B = 'KeyB',
-    I = 'KeyI',
-    X = 'KeyX',
-    U = 'KeyU',
-    Digit1 = 'Digit1',
-    Backspace = 'Backspace',
-}
-
 const A2R = new Map([
     [Action.Auto, undefined],
     [Action.AddRect, ShapeType.Rectangle],
@@ -130,7 +103,7 @@ export class Tool extends WatchableObject {
         } else if (code === 'KeyS') {
             e.preventDefault();
             this.keydown_s(ctrlKey, shiftKey, metaKey);
-        } else if (code === KeyboardKeys.I) {
+        } else if (code === 'KeyI') {
             e.preventDefault();
             this.keydown_i(ctrlKey, metaKey, shiftKey);
         }

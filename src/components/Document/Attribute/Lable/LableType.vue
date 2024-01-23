@@ -5,7 +5,7 @@ const props = defineProps<{
 </script>
 
 <template>
-    <div class="container-type" :class="{border_t: true}">
+    <div class="container-type">
         <div class="title">
             <span>{{ title }}</span>
             <slot name="select"></slot>
@@ -23,6 +23,7 @@ const props = defineProps<{
     padding: 16px 12px;
     padding-right: 10px;
     box-sizing: border-box;
+
     .title {
         display: flex;
         justify-content: space-between;
@@ -33,8 +34,5 @@ const props = defineProps<{
             font-weight: bold;
         }
     }
-}
-.border_t {
-    //border-bottom: 1px solid rgba($color: #ccc, $alpha: 0.5);
 }
 </style>

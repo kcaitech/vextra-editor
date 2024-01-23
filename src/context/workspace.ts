@@ -1,11 +1,10 @@
-import { Matrix, Shape, ShapeType, ShapeView, TableShape, TableView, WatchableObject } from "@kcdesign/data";
+import { Matrix, ShapeView, WatchableObject } from "@kcdesign/data";
 import { Context } from "./index";
-import { adapt_page, Root } from "@/utils/content";
+import { Root } from "@/utils/content";
 import { Clipboard } from "@/utils/clipboard";
 import { PageXY, XY } from "./selection";
 import { Action } from "@/context/tool";
 import { PointsOffset } from "@/utils/assist";
-import { message } from "@/utils/message";
 
 interface Point {
     x: number
@@ -109,6 +108,8 @@ export class WorkSpace extends WatchableObject {
     private m_pre_to_translating: boolean = false;
     private m_mousedown_on_page: MouseEvent | undefined;
     private m_controller: 'page' | 'controller' = 'page';
+    private m_round: boolean = false;
+
     private m_root: Root = {
         init: false,
         x: 332,
@@ -350,44 +351,6 @@ export class WorkSpace extends WatchableObject {
     setPageViewId(id: string) {
         this.m_pageViewId = id
     }
-    /**
-     * @deprecated
-     */
-    keyboardHandle(event: KeyboardEvent) {
-        const { ctrlKey, shiftKey, metaKey, target } = event;
-        if (target instanceof HTMLInputElement) return; // 在输入框中输入时避免触发编辑器的键盘事件
-        if (this.isFreeze) return;
-        if (event.code === KeyboardKeys.A) {
-            this.keydown_a(ctrlKey, metaKey);
-        } else if (event.code === KeyboardKeys.V) {
-            event.preventDefault();
-            this.keydown_v(ctrlKey, metaKey);
-        } else if (event.code === KeyboardKeys.Z) {
-            event.preventDefault();
-            this.keydown_z(this.context, ctrlKey, shiftKey, metaKey);
-        } else if (event.code === KeyboardKeys.Digit0) {
-            event.preventDefault();
-            this.keydown_0(ctrlKey, metaKey);
-        } else if (event.code === KeyboardKeys.C) {
-            event.preventDefault();
-            this.keydown_c(ctrlKey, metaKey, shiftKey);
-        } else if (event.code === KeyboardKeys.B) {
-            event.preventDefault();
-            this.keydown_b(ctrlKey, metaKey);
-        } else if (event.code === KeyboardKeys.I) {
-            event.preventDefault();
-            this.keydown_i(ctrlKey, metaKey);
-        } else if (event.code === KeyboardKeys.U) {
-            event.preventDefault();
-            this.keydown_u(ctrlKey, metaKey);
-        } else if (event.code === KeyboardKeys.X) {
-            event.preventDefault();
-            this.keydown_x(ctrlKey, metaKey, shiftKey);
-        } else if (event.code === KeyboardKeys.Digit1) {
-            event.preventDefault();
-            if (ctrlKey || metaKey) adapt_page(this.context);
-        }
-    }
 
     scaling(v: boolean) {
         this.m_scaling = v;
@@ -415,96 +378,6 @@ export class WorkSpace extends WatchableObject {
         this.m_setting = v;
     }
 
-    keydown_v(ctrlKey: boolean, metaKey: boolean) {
-        if (ctrlKey || metaKey) this.notify(WorkSpace.PASTE);
-    }
-
-    keydown_a(ctrlKey: boolean, metaKey: boolean) {
-        if (ctrlKey || metaKey) {
-            const selection = this.context.selection, selected = selection.selectedShapes;
-            if (selected.length) {
-                if (selected.length === 1 && selected[0].type === ShapeType.Table) {
-                    const table: TableView = selected[0] as TableView;
-                    const ts = this.context.tableSelection;
-                    const grid = table.getLayout().grid;
-                    ts.selectTableCellRange(0, grid.rowCount - 1, 0, grid.colCount - 1, true);
-                } else {
-                    const p_map = new Map();
-                    selected.forEach(s => {
-                        if (s.parent) p_map.set(s.parent.id, s.parent)
-                    });
-                    if (p_map.size > 1) {
-                        const page = selection.selectedPage;
-                        if (page) selection.rangeSelectShape(page.childs);
-                    } else {
-                        selection.rangeSelectShape(Array.from(p_map.values())[0].childs);
-                    }
-                }
-            } else {
-                const page = selection.selectedPage;
-                if (page) selection.rangeSelectShape(page.childs);
-            }
-        }
-    }
-
-    keydown_i(ctrl: boolean, meta: boolean) {
-        if (ctrl || meta) this.notify(WorkSpace.ITALIC);
-    }
-
-    keydown_z(context: Context, ctrl?: boolean, shift?: boolean, meta?: boolean) {
-        const repo = context.repo;
-        if ((ctrl || meta) && !shift) {
-            repo.canUndo() && repo.undo();
-            const selection = context.selection;
-            const shapes = context.selection.selectedShapes;
-            const page = context.selection.selectedPage;
-            if (page) {
-                const flat = page.shapes;
-                if (shapes.length) {
-                    for (let i = 0; i < shapes.length; i++) {
-                        const item = shapes[i];
-                        if (!flat.get(item.id)) selection.unSelectShape(item);
-                    }
-                }
-            }
-            if (this.context.selection.selectedShapes.length > 1) this.notify(WorkSpace.CLAC_ATTRI);
-        } else if ((ctrl || meta) && shift) {
-            repo.canRedo() && repo.redo();
-            if (this.context.selection.selectedShapes.length > 1) this.notify(WorkSpace.CLAC_ATTRI);
-        }
-    }
-
-    keydown_c(ctrlKey?: boolean, metaKey?: boolean, shift?: boolean) {
-        if ((ctrlKey || metaKey) && !shift) {
-            this.notify(WorkSpace.COPY)
-        } else if (!(ctrlKey || metaKey) && shift) {
-            this.context.comment.setVisibleComment(!this.context.comment.isVisibleComment);
-        }
-    }
-
-    keydown_0(ctrl: boolean, meta: boolean) {
-        if (ctrl || meta) {
-            const { center } = this.root;
-            this.m_matrix.trans(-center.x, -center.y);
-            const _s = 1 / this.m_matrix.m00;
-            this.m_matrix.scale(_s);
-            this.m_matrix.trans(center.x, center.y);
-            this.notify(WorkSpace.MATRIX_TRANSFORMATION);
-        }
-    }
-
-    keydown_b(ctrl: boolean, meta: boolean) {
-        if (ctrl || meta) this.notify(WorkSpace.BOLD);
-    }
-
-    keydown_u(ctrl: boolean, meta: boolean) {
-        if (ctrl || meta) this.notify(WorkSpace.UNDER_LINE);
-    }
-
-    keydown_x(ctrl: boolean, meta: boolean, shift: boolean) {
-        if ((ctrl || meta) && shift) this.notify(WorkSpace.DELETE_LINE);
-    }
-
     can_translate(e: MouseEvent) {
         const shapes = this.context.selection.selectedShapes;
         const action = this.context.tool.action;
@@ -518,5 +391,13 @@ export class WorkSpace extends WatchableObject {
 
     getContentXY(e: MouseEvent): XY {
         return { x: e.clientX - this.root.x, y: e.clientY - this.root.y };
+    }
+
+    get isRoundMode() {
+        return this.m_round;
+    }
+
+    setRoundMode(v: boolean) {
+        this.m_round = v;
     }
 }

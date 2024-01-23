@@ -1,7 +1,7 @@
 <script setup lang='ts'>
 import { Context } from '@/context';
-import { AsyncBaseAction, CtrlElementType, Matrix, PathShape, PathShapeView, Shape, ShapeView } from '@kcdesign/data';
-import { onMounted, onUnmounted, watch, reactive, ref } from 'vue';
+import { AsyncBaseAction, CtrlElementType, Matrix, PathShapeView, ShapeView } from '@kcdesign/data';
+import { onMounted, onUnmounted, watch, reactive } from 'vue';
 import { ClientXY, PageXY, SelectionTheme, XY } from '@/context/selection';
 import { forbidden_to_modify_frame, getAngle, getHorizontalAngle } from '@/utils/common';
 import { update_dot3 } from './common';
@@ -30,7 +30,6 @@ const props = defineProps<Props>();
 const matrix = new Matrix();
 const submatrix = new Matrix();
 const data: { dots: Dot[] } = reactive({ dots: [] });
-const reflush = ref<number>(0);
 let { dots } = data;
 let startPosition: ClientXY = { x: 0, y: 0 };
 let isDragging = false;
@@ -48,7 +47,6 @@ let need_reset_cursor_after_transform = true;
 function update() {
     matrix.reset(props.matrix);
     update_dot_path();
-    reflush.value++;
 }
 function update_dot_path() {
     if (!props.context.workspace.shouldSelectionViewUpdate) {
@@ -65,7 +63,7 @@ function update_dot_path() {
     }
     const p1 = m.computeCoord3(points[0]);
     const p2 = m.computeCoord3(points[1]);
-    dots = dots.concat(update_dot3([p1, p2]));
+    dots.push(...update_dot3([p1, p2]));
 }
 function point_mousedown(event: MouseEvent, ele: CtrlElementType, idx: number) {
     if (event.button !== 0) {
