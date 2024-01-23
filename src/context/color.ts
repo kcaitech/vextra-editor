@@ -7,6 +7,7 @@ export class ColorCtx extends WatchableObject {
     private m_selected_stop: number = -1;
     private editor_mode: boolean = false;
     private m_gradient: undefined | Gradient = undefined;
+    private m_locat: { index: number, type: 'fills' | 'borders' } | undefined;
     constructor() {
         super();
     }
@@ -27,5 +28,14 @@ export class ColorCtx extends WatchableObject {
     }
     get gradient() {
         return this.m_gradient
+    }
+    gradinet_locat(locat: { index: number, type: 'fills' | 'borders' }) {
+        this.m_locat = locat;
+    }
+    get locat() {
+        return this.m_locat;
+    }
+    clear_locat() {
+        this.m_locat = undefined;
     }
 }

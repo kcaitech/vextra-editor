@@ -37,6 +37,7 @@ import { ColorCtx } from '@/context/color';
 interface Props {
     context: Context
     color: Color
+    locat?: { index: number, type: 'fills' | 'borders' }
     fillType?: FillType
     gradient?: Gradient
     late?: number
@@ -54,9 +55,7 @@ interface Data {
 
 interface Emits {
     (e: 'change', color: Color): void;
-
     (e: 'choosecolor', color: number[]): void;
-
     (e: 'gradient-reverse'): void;
     (e: 'gradient-rotate'): void;
     (e: 'gradient-add-stop', position: number, color: Color): void;
@@ -648,6 +647,7 @@ function triggle() {
 function colorPickerMount() {
     picker_visible.value = true;
     props.context.menu.setupColorPicker(blockId);
+    if (props.locat) props.context.color.gradinet_locat(props.locat);
     update();
     init_document_colors();
     switch_editor_mode();

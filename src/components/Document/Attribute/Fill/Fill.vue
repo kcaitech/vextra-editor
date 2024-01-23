@@ -805,7 +805,7 @@ onUnmounted(() => {
                     <svg-icon v-if="f.fill.isEnabled" icon-class="select"></svg-icon>
                 </div>
                 <div class="color">
-                    <ColorPicker :color="f.fill.color" :context="props.context" :auto_to_right_line="true"
+                    <ColorPicker :color="f.fill.color" :context="props.context" :auto_to_right_line="true" :locat="{ index: idx, type: 'fills'}"
                         @change="c => getColorFromPicker(idx, c)" @gradient-reverse="() => gradient_reverse(idx)"
                         :gradient="f.fill.gradient" :fillType="f.fill.fillType"
                         @gradient-rotate="() => gradient_rotate(idx)"
