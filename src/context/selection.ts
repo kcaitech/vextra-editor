@@ -24,7 +24,7 @@ import { cloneDeep } from "lodash";
 import {
     finder_layers,
     finder_contact,
-    finder_container, finder2,
+    finder_container, finder2, finder_env_for_migrate,
 } from "@/utils/scout";
 import { Context } from ".";
 import { TextSelectionLite } from "@/context/textselectionlite";
@@ -329,6 +329,11 @@ export class Selection extends WatchableObject implements ISave4Restore {
     getClosestContainer(position: PageXY, except?: Map<string, ShapeView>, scope?: ShapeView[]): ShapeView {
         const range: ShapeView[] = scope || this.selectedPage?.childs || [];
         return finder_container(this.scout!, range, position, except) || this.selectedPage!;
+    }
+
+    getEnvForMigrate(position: PageXY, except?: Map<string, ShapeView>, scope?: ShapeView[]): ShapeView {
+        const range: ShapeView[] = scope || this.selectedPage?.childs || [];
+        return finder_env_for_migrate(this.scout!, range, position, except) || this.selectedPage!;
     }
 
     selectShape(shape?: ShapeView) {

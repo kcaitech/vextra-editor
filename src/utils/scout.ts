@@ -468,7 +468,7 @@ export function artboardFinder(scout: Scout, g: ShapeView[], position: PageXY, e
 }
 
 /**
- * @description 寻找到最近的层级较高的那个容器
+ * @description 寻找到最近的层级较高的那个环境
  */
 export function finder_container(scout: Scout, g: ShapeView[], position: PageXY, except?: Map<string, ShapeView>) {
     const layers = finder_layers(scout, g, position);
@@ -478,7 +478,24 @@ export function finder_container(scout: Scout, g: ShapeView[], position: PageXY,
         if (item.isVirtualShape) {
             continue;
         }
-        if ([ShapeType.Artboard, ShapeType.Symbol].includes(item.type) && (!except || !except.get(item.id))) {
+        if ([ShapeType.Artboard, ShapeType.Symbol].includes(item.type) && (!except?.get(item.id))) {
+            return item;
+        }
+    }
+}
+
+/**
+ * @description 寻找到最近的层级较高的那个环境
+ */
+export function finder_env_for_migrate(scout: Scout, g: ShapeView[], position: PageXY, except?: Map<string, ShapeView>) {
+    const layers = finder_layers(scout, g, position);
+
+    for (let i = 0, len = layers.length; i < len; i++) {
+        const item = layers[i];
+        if (item.isVirtualShape) {
+            continue;
+        }
+        if ([ShapeType.Artboard, ShapeType.Symbol, ShapeType.SymbolUnion].includes(item.type) && (!except?.get(item.id))) {
             return item;
         }
     }

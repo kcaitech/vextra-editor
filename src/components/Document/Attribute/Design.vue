@@ -150,7 +150,7 @@ function selection_watcher(t: number) {
     if (t !== Selection.CHANGE_SHAPE) {
         return;
     }
-    change(t)
+    change(t);
 }
 
 function table_selection_watcher(t: number) {

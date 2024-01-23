@@ -852,7 +852,9 @@ export function map_from_shapes(shapes: ShapeView[], init?: Map<string, ShapeVie
         map.set(shape.id, shape);
         if (shape.type === ShapeType.Table) continue;
         const children = shape.type === ShapeType.SymbolRef ? (shape.naviChilds || []) : (shape).childs;
-        if (!children?.length) continue;
+        if (!children?.length) {
+            continue;
+        }
         map_from_shapes(children, map);
     }
     return map;

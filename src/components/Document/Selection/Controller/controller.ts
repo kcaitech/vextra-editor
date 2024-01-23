@@ -1,4 +1,4 @@
-import { AsyncPathEditor, ShapeView, adapt2Shape, PathShapeView } from '@kcdesign/data';
+import { AsyncPathEditor, ShapeView, adapt2Shape, PathShapeView, export_shape } from '@kcdesign/data';
 import { onMounted, onUnmounted } from "vue";
 import { Context } from "@/context";
 import { Matrix } from '@kcdesign/data';
@@ -34,7 +34,7 @@ import {
     shutdown_menu,
     update_comment
 } from "@/utils/mouse";
-import { migrate_immediate, migrate_once } from "@/utils/migrate";
+import { migrate_immediate, migrate_once, record_origin_env } from "@/utils/migrate";
 import { forbidden_to_modify_frame, shapes_organize } from '@/utils/common';
 
 export function useControllerCustom(context: Context, i18nT: Function) {
@@ -266,7 +266,7 @@ export function useControllerCustom(context: Context, i18nT: Function) {
         workspace.setCtrl('controller');
     }
 
-    function mousemove(e: MouseEvent) {
+    async function mousemove(e: MouseEvent) {
         if (e.buttons !== 1) {
             return;
         }
@@ -307,13 +307,12 @@ export function useControllerCustom(context: Context, i18nT: Function) {
                 .asyncTransfer(shapes, selection.selectedPage!);
 
             if (e.altKey) {
-                paster_short(context, shapes, asyncTransfer).then(v => {
-                    shapes = v;
-                });
+                shapes = await paster_short(context, shapes, asyncTransfer);
             }
 
-            isDragging = true;
+            asyncTransfer.setEnvs(record_origin_env(shapes));
 
+            isDragging = true;
         }
     }
 
