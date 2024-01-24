@@ -118,6 +118,7 @@ export class Selection extends WatchableObject implements ISave4Restore {
     private m_selected_sym_ref_bros: ShapeView[] = [];
     private m_context: Context;
     private m_is_new_shape_selection: boolean = false;
+    private m_shapes_set: Set<string> = new Set();
 
     constructor(document: Document, context: Context) {
         super();
@@ -320,6 +321,16 @@ export class Selection extends WatchableObject implements ISave4Restore {
         return shapes;
     }
 
+    get shapesSet() {
+        return this.m_shapes_set;
+    }
+
+    setShapesSet(shapes: ShapeView[]) {
+        for (let i = 0, l = shapes.length; i < l; i++) {
+            this.m_shapes_set.add(adapt2Shape(shapes[i]).id);
+        }
+    }
+
     /**
      * @description 获取点上最近的可插入图形
      * @param position
@@ -331,9 +342,9 @@ export class Selection extends WatchableObject implements ISave4Restore {
         return finder_container(this.scout!, range, position, except) || this.selectedPage!;
     }
 
-    getEnvForMigrate(position: PageXY, except?: Map<string, ShapeView>, scope?: ShapeView[]): ShapeView {
+    getEnvForMigrate(position: PageXY, scope?: ShapeView[]): ShapeView {
         const range: ShapeView[] = scope || this.selectedPage?.childs || [];
-        return finder_env_for_migrate(this.scout!, range, position, except) || this.selectedPage!;
+        return finder_env_for_migrate(this.scout!, range, position, this.m_shapes_set) || this.selectedPage!;
     }
 
     selectShape(shape?: ShapeView) {

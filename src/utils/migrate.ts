@@ -17,22 +17,22 @@ export function migrate_immediate(context: Context, asyncTransfer: AsyncTransfer
     if (!shapes.length) {
         return;
     }
-
-    const matrix = new Matrix(context.workspace.matrix.inverse);
-    const pe: PageXY = matrix.computeCoord3(end);
+    const pe: PageXY = context.workspace.matrix.inverseCoord(end);
 
     const target_parent = context.selection.getEnvForMigrate(pe);
 
     const except = asyncTransfer.getExceptEnvs();
 
-    if (except.findIndex(v => v.id === target_parent.id) > -1) {
-        return asyncTransfer.backToStartEnv(context.workspace.t('compos.dlt'));
+    const o_env = except.find(v => v.id === target_parent.id);
+
+    if (o_env) {
+        asyncTransfer.backToStartEnv(o_env.data, context.workspace.t('compos.dlt'));
+    } else {
+        const tp = adapt2Shape(target_parent) as GroupShape;
+        const _shapes = compare_layer_3(shapes, -1).map((s) => adapt2Shape(s));
+        asyncTransfer.migrate(tp, _shapes, context.workspace.t('compos.dlt'));
     }
 
-    const tp = adapt2Shape(target_parent) as GroupShape;
-    const _shapes = compare_layer_3(shapes, -1).map((s) => adapt2Shape(s));
-
-    asyncTransfer.migrate(tp, _shapes, context.workspace.t('compos.dlt'));
     context.assist.set_collect_target([target_parent], true);
 }
 
@@ -46,20 +46,24 @@ export function record_origin_env(shapes: ShapeView[]) {
     for (let i = 0, l = shapes.length; i < l; i++) {
         const shape = shapes[i];
         const parent = shape.parent;
+
         if (!parent) {
             continue;
         }
+
+        const data = adapt2Shape(parent);
+
         const item = {
-            index: (parent.data as GroupShape).indexOfChild(shape.data),
+            index: (data as GroupShape).indexOfChild(adapt2Shape(shape)),
             shape
         }
 
-        const arr = envs.get(parent.data.id);
+        const arr = envs.get(data.id);
         if (arr) {
             arr.push(item);
         }
         else {
-            envs.set(parent.data.id, [item]);
+            envs.set(data.id, [item]);
         }
     }
     envs.forEach(v => {

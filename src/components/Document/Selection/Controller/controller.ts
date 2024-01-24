@@ -1,4 +1,4 @@
-import { AsyncPathEditor, ShapeView, adapt2Shape, PathShapeView, export_shape } from '@kcdesign/data';
+import { AsyncPathEditor, ShapeView, adapt2Shape, PathShapeView, Page, Shape } from '@kcdesign/data';
 import { onMounted, onUnmounted } from "vue";
 import { Context } from "@/context";
 import { Matrix } from '@kcdesign/data';
@@ -34,7 +34,7 @@ import {
     shutdown_menu,
     update_comment
 } from "@/utils/mouse";
-import { migrate_immediate, migrate_once, record_origin_env } from "@/utils/migrate";
+import { find_except_envs, migrate_immediate, migrate_once, record_origin_env } from "@/utils/migrate";
 import { forbidden_to_modify_frame, shapes_organize } from '@/utils/common';
 
 export function useControllerCustom(context: Context, i18nT: Function) {
@@ -310,7 +310,11 @@ export function useControllerCustom(context: Context, i18nT: Function) {
                 shapes = await paster_short(context, shapes, asyncTransfer);
             }
 
+            // context.selection.setShapesSet(shapes);
             asyncTransfer.setEnvs(record_origin_env(shapes));
+            const except_envs = find_except_envs(context, shapes, e);
+            asyncTransfer.setExceptEnvs(except_envs);
+            asyncTransfer.setCurrentEnv(except_envs[0].data as Page | Shape);
 
             isDragging = true;
         }
