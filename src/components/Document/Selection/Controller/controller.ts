@@ -310,7 +310,7 @@ export function useControllerCustom(context: Context, i18nT: Function) {
                 shapes = await paster_short(context, shapes, asyncTransfer);
             }
 
-            // context.selection.setShapesSet(shapes);
+            context.selection.setShapesSet(shapes);
             asyncTransfer.setEnvs(record_origin_env(shapes));
             const except_envs = find_except_envs(context, shapes, e);
             asyncTransfer.setExceptEnvs(except_envs);
