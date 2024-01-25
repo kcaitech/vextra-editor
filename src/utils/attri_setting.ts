@@ -1,7 +1,6 @@
 import { PathShapeView, ShapeView, adapt2Shape } from "@kcdesign/data";
 import { Matrix, PathShape, RectShape, Shape, ShapeFrame, ShapeType } from "@kcdesign/data";
-import { PositonAdjust, FrameAdjust, BatchAction2, ConstrainerProportionsAction, RotateAdjust, FlipAction } from "@kcdesign/data";
-import {  } from "@kcdesign/data";
+import { PositonAdjust, FrameAdjust, BatchAction2 } from "@kcdesign/data";
 import { getHorizontalAngle } from "@/utils/common"
 import { is_equal } from "./assist";
 
