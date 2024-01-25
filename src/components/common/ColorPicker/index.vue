@@ -33,6 +33,7 @@ import { Menu } from "@/context/menu";
 import ColorType from "./ColorType.vue";
 import Tooltip from '../Tooltip.vue';
 import { ColorCtx } from '@/context/color';
+import { get_add_gradient_color } from '@/components/Document/Selection/Controller/ColorEdit/gradient_utils';
 
 interface Props {
     context: Context
@@ -770,29 +771,12 @@ function _gradient_channel_down(e: MouseEvent) {
     const left = e.offsetX / target.clientWidth;
     if (!props.gradient || props.fillType !== FillType.Gradient) return;
     const stops = props.gradient.stops;
-    for (let i = 0; i < stops.length; i++) {
-        const stop = stops[i];
-        if (left < stop.position) {
-            const c = i === 0 ? stop.color : stops[i - 1].color;
-            const { red, green, blue, alpha } = c;
-            const n_alpha = i === 0 ? (alpha + 1) / 2 : (alpha + stop.color.alpha) / 2;
-            const color = new Color(n_alpha, red, green, blue);
-            emit('gradient-add-stop', left, color);
-            nextTick(() => {
-                props.context.color.select_stop(i);
-            })
-            break;
-        } else if (left > stops[i].position && i === stops.length - 1) {
-            const { red, green, blue, alpha } = stop.color;
-            const n_alpha = (alpha + 1) / 2;
-            const color = new Color(n_alpha, red, green, blue);
-            emit('gradient-add-stop', left, color);
-            nextTick(() => {
-                props.context.color.select_stop(i + 1);
-            })
-            break;
-        }
-    }
+    const stop = get_add_gradient_color(stops, left);
+    if (!stop) return;
+    emit('gradient-add-stop', left, stop.color);
+    nextTick(() => {
+        props.context.color.select_stop(stop.index);
+    })
 }
 function delete_gradient_stop() {
     if (stop_els.value.length === 1) return;
@@ -836,6 +820,14 @@ function color_type_change(val: GradientType | 'solid') {
     emit('gradient-type', val);
     update_gradient_type(val);
     nextTick(() => {
+        if (val === 'solid') {
+            props.context.color.set_gradient_type(undefined);
+            props.context.color.switch_editor_mode(false);
+        } else {
+            props.context.color.set_gradient_type(val);
+            props.context.color.switch_editor_mode(true, props.gradient);
+        }
+        if (props.locat) props.context.color.gradinet_locat(props.locat);
         update();
     })
 }
@@ -843,9 +835,7 @@ function color_type_change(val: GradientType | 'solid') {
 function update_gradient_type(type: GradientType | 'solid') {
     if (type === 'solid') {
         props.context.color.select_stop(-1);
-        props.context.color.switch_editor_mode(false);
     } else {
-        props.context.color.switch_editor_mode(true, props.gradient);
         const index = props.context.color.selected_stop;
         props.context.color.select_stop(index === -1 ? 0 : index);
     }
@@ -856,11 +846,16 @@ const get_gradient_type = () => {
     if (props.fillType === FillType.Gradient) {
         gradient_type.value = props.gradient?.gradientType;
         const index = props.context.color.selected_stop;
+        props.context.color.set_gradient_type(gradient_type.value);
+        props.context.color.switch_editor_mode(true, props.gradient);
         props.context.color.select_stop(index === -1 ? 0 : index);
     } else if (props.fillType === FillType.SolidColor) {
         gradient_type.value = 'solid';
         props.context.color.select_stop(-1);
+        props.context.color.set_gradient_type(undefined);
+        props.context.color.switch_editor_mode(false);
     }
+    if (props.locat) props.context.color.gradinet_locat(props.locat);
 }
 // 渐变翻转
 function reverse() {

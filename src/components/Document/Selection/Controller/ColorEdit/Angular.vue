@@ -4,22 +4,24 @@ import { ColorCtx } from '@/context/color';
 import { ClientXY, Selection } from '@/context/selection';
 import { WorkSpace } from '@/context/workspace';
 import { get_add_gradient_color, get_gradient, get_temporary_stop, to_rgba } from './gradient_utils';
-import { AsyncGradientEditor, Color, Matrix, Point2D, ShapeView, Stop, adapt2Shape } from '@kcdesign/data';
-import { nextTick, onMounted, onUnmounted, ref, watch } from 'vue';
+import { AsyncGradientEditor, Color, Matrix, ShapeView, Stop, adapt2Shape } from '@kcdesign/data';
+import { nextTick, onMounted, onUnmounted, ref } from 'vue';
 import trans_bgc from '@/assets/trans_bgc3.png';
 import { getHorizontalAngle } from '@/utils/common';
 import { get_aciton_fill_gradient_stop } from '@/utils/shape_style';
 import { v4 } from 'uuid';
 import TemporaryStop from './TemporaryStop.vue';
 import Percent from './Percent.vue';
+import { computed } from 'vue';
 interface Props {
     context: Context
     matrix: Matrix
 }
 const props = defineProps<Props>();
 const matrix = new Matrix();
+type DotType = 'from' | 'to' | 'ellipse';
 interface Dot {
-    x: number, y: number, type: 'from' | 'to'
+    x: number, y: number, type: DotType
 }
 interface Stops {
     x: number, y: number, color: Color
@@ -27,16 +29,20 @@ interface Stops {
 
 const dot1 = ref<Dot>({ x: 0, y: 0, type: 'from' });
 const dot2 = ref<Dot>({ x: 0, y: 0, type: 'to' });
+const dot3 = ref<Dot>({ x: 0, y: 0, type: 'ellipse' });
 const dot = ref(false);
 const stops = ref<Stops[]>([]);
 let startPosition: ClientXY = { x: 0, y: 0 };
-let dot_type: 'from' | 'to' = 'to';
+let dot_type: DotType = 'to';
 let isDragging = false;
 let gradientEditor: AsyncGradientEditor | undefined;
 const dragActiveDis = 3;
 const active = ref(0);
 const shapes = ref<ShapeView[]>([]);
 const rotate = ref(0);
+const rotate_r = computed<number>(() => {
+    return rotate.value * Math.PI / 180;
+})
 const line_length = ref<number>(1);
 const temporary_stop = ref<Stops>();
 const temporary = ref(false);
@@ -44,6 +50,9 @@ const enter_stop = ref(false);
 const percent_posi = ref({ x: 0, y: 0 });
 const percent = ref(0);
 const percent_show = ref(false);
+const ellipse_length = ref<number>(1);
+const ellipseL = ref(1);
+const ellipse_show = ref(false);
 const get_linear_points = () => {
     dot.value = false;
     stops.value = [];
@@ -54,23 +63,32 @@ const get_linear_points = () => {
     active.value = props.context.color.selected_stop;
     const frame = shape.frame;
     const m = shape.matrix2Root();
+    m.preScale(frame.width, frame.height);
     m.multiAtLeft(matrix);
-    const d1 = m.computeCoord3({ x: frame.width * gradient.from.x, y: frame.height * gradient.from.y });
-    const d2 = m.computeCoord3({ x: frame.width * gradient.to.x, y: frame.height * gradient.to.y });
+    const d1 = m.computeCoord3({ x: gradient.from.x, y: gradient.from.y });
+    const d2 = m.computeCoord3({ x: gradient.to.x, y: gradient.to.y });
     dot1.value = { x: d1.x, y: d1.y, type: 'from' }
     dot2.value = { x: d2.x, y: d2.y, type: 'to' }
     line_length.value = Math.sqrt(Math.pow(d2.x - d1.x, 2) + Math.pow(d2.y - d1.y, 2));
     rotate.value = getHorizontalAngle({ x: d1.x, y: d1.y }, { x: d2.x, y: d2.y });
-    for (let i = 0; i < gradient.stops.length; i++) {
-        const stop = gradient.stops[i];
-        const x1 = d1.x + ((d2.x - d1.x) * stop.position);
-        const y1 = d1.y + ((d2.y - d1.y) * stop.position);
-        stops.value.push({ x: x1, y: y1, color: stop.color as Color });
-    }
+    dot3.value = { type: 'ellipse', ...m.computeCoord3(get_elipse_point(gradient.elipseLength || 0, gradient.from, gradient.to, frame.width, frame.height)) };
+
+    ellipseL.value = gradient.elipseLength || 0;
+    ellipse_length.value = Math.sqrt(Math.pow(dot3.value.x - dot1.value.x, 2) + Math.pow(dot3.value.y - dot1.value.y, 2));
     dot.value = true;
 }
 
-const dot_mousedown = (e: MouseEvent, type: 'from' | 'to') => {
+function get_elipse_point(ellipseLength: number, from: { x: number, y: number }, to: { x: number, y: number }, w: number, height: number) {
+    const __r = getHorizontalAngle({ x: from.x, y: from.y }, { x: to.x, y: to.y });
+    const ellipse = { x: 0, y: ellipseLength * 0.5 };
+
+    const m = new Matrix();
+    m.rotate(__r * Math.PI / 180);
+    m.trans(from.x, from.y);
+    return m.computeCoord3(ellipse);
+}
+const down_ellipse = ref(false);
+const dot_mousedown = (e: MouseEvent, type: DotType) => {
     if (e.button !== 0) return;
     e.stopPropagation();
     const workspace = props.context.workspace;
@@ -78,6 +96,9 @@ const dot_mousedown = (e: MouseEvent, type: 'from' | 'to') => {
     document.addEventListener('mousemove', dot_mousemove);
     document.addEventListener('mouseup', dot_mouseup);
     dot_type = type;
+    if (type === 'ellipse') {
+        down_ellipse.value = true;
+    }
 }
 
 const dot_mousemove = (e: MouseEvent) => {
@@ -104,6 +125,16 @@ const dot_mousemove = (e: MouseEvent) => {
             gradientEditor.execute_from(posi);
         } else if (dot_type === 'to') {
             gradientEditor.execute_to(posi);
+        } else if (dot_type === 'ellipse') {
+            update_ellipse_dot(e);
+            const m_p = props.context.workspace.getContentXY(e);
+            const m = new Matrix();
+            m.trans(-dot1.value.x, -dot1.value.y);
+            m.rotate(-rotate_r.value);
+            const p = m.computeCoord3(m_p).y;
+            console.log(p, 'p');
+            
+            // gradientEditor.execute_elipselength(Math.abs(p));
         }
     } else {
         if (Math.hypot(dx, dy) > dragActiveDis) {
@@ -121,38 +152,12 @@ const dot_mouseup = (e: MouseEvent) => {
         gradientEditor.close();
         gradientEditor = undefined;
     }
+    down_ellipse.value = false;
+    ellipse_show.value = false;
     document.removeEventListener('mousemove', dot_mousemove);
     document.removeEventListener('mouseup', dot_mouseup);
 }
 
-const rect_enter = (e: MouseEvent) => {
-    if (e.buttons !== 0) return;
-    const posi = get_stop_position(e);
-    const shape = shapes.value[0] as ShapeView;
-    temporary_stop.value = get_temporary_stop(posi, dot1.value, dot2.value, shape, props.context);
-    temporary.value = true;
-    get_percent_posi(e);
-    percent_show.value = true;
-}
-const rect_leave = () => {
-    if (!enter_stop.value) {
-        temporary.value = false;
-    }
-    percent_show.value = false;
-}
-
-const rect_mousemove = (e: MouseEvent) => {
-    if (e.buttons !== 0) {
-        return;
-    }
-    const posi = get_stop_position(e);
-    const shape = shapes.value[0] as ShapeView;
-    const r_p = props.context.workspace.getContentXY(e);
-    percent_posi.value.x = r_p.x + 20;
-    percent_posi.value.y = r_p.y + 20;
-    percent.value = +(posi * 100).toFixed(0);
-    temporary_stop.value = get_temporary_stop(posi, dot1.value, dot2.value, shape, props.context);
-}
 const stop_enter = (e: MouseEvent, index: number) => {
     if (e.buttons !== 0) return;
     const shape = shapes.value[0] as ShapeView;
@@ -160,12 +165,13 @@ const stop_enter = (e: MouseEvent, index: number) => {
     if (!gradient) return;
     const position = gradient.stops[index].position;
     percent.value = +(position * 100).toFixed(0);
-    get_percent_posi(e);
     enter_stop.value = true;
 }
 const updata_percent = (e: MouseEvent) => {
     if (e.buttons !== 0) return;
-    get_percent_posi(e);
+    const r_p = props.context.workspace.getContentXY(e);
+    percent_posi.value.x = r_p.x + 20;
+    percent_posi.value.y = r_p.y + 20;
 }
 const down_stop_id = ref<string>('');
 const add_stop = (e: MouseEvent) => {
@@ -195,7 +201,7 @@ const get_stop_position = (e: MouseEvent) => {
     const m_p = props.context.workspace.getContentXY(e);
     const m = new Matrix();
     m.trans(-dot1.value.x, -dot1.value.y);
-    m.rotate(-rotate.value * Math.PI / 180);
+    m.rotate(-rotate_r.value);
     const p = m.computeCoord3(m_p).x / line_length.value
     const posi = Math.min(Math.max(p, 0), 1);
     return posi;
@@ -216,12 +222,6 @@ const down_stop = (e: MouseEvent, index: number) => {
     startPosition = workspace.getContentXY(e);
     document.addEventListener('mousemove', stop_mousemove);
     document.addEventListener('mouseup', stop_mouseup);
-}
-
-const get_percent_posi = (e: MouseEvent) => {
-    const r_p = props.context.workspace.getContentXY(e);
-    percent_posi.value.x = r_p.x + 20;
-    percent_posi.value.y = r_p.y + 20;
 }
 
 const stop_mousemove = (e: MouseEvent) => {
@@ -251,6 +251,12 @@ const stop_mousemove = (e: MouseEvent) => {
     }
 }
 
+const get_percent_posi = (e: MouseEvent) => {
+    const r_p = props.context.workspace.getContentXY(e);
+    percent_posi.value.x = r_p.x + 20;
+    percent_posi.value.y = r_p.y + 20;
+}
+
 const stop_mouseup = (e: MouseEvent) => {
     if (e.button !== 0) return;
     if (isDragging) isDragging = false;
@@ -261,13 +267,30 @@ const stop_mouseup = (e: MouseEvent) => {
     document.removeEventListener('mousemove', stop_mousemove);
     document.removeEventListener('mouseup', stop_mouseup);
 }
-
 const stop_content_enter = (e: MouseEvent) => {
     if (e.buttons !== 0) return;
     get_percent_posi(e);
     percent_show.value = true;
 }
 
+const ellipse_dot = (e: MouseEvent) => {
+    if (e.buttons !== 0) return;
+    update_ellipse_dot(e);
+    ellipse_show.value = true;
+}
+
+const update_ellipse_dot = (e: MouseEvent) => {
+    const r_p = props.context.workspace.getContentXY(e);
+    percent_posi.value.x = r_p.x + 20;
+    percent_posi.value.y = r_p.y + 20;
+    const gradient = get_gradient(props.context, shapes.value[0] as ShapeView);
+    if (!gradient) return;
+    percent.value = +((gradient.elipseLength || 0) * 100).toFixed(0);
+}
+const leave_ellipse_dot = () => {
+    if (down_ellipse.value) return;
+    ellipse_show.value = false;
+}
 const watcher = () => {
     matrix.reset(props.matrix);
     get_linear_points();
@@ -305,6 +328,7 @@ const color_watcher = (t: number) => {
         active.value = props.context.color.selected_stop;
     }
 }
+
 const selected_watcher = (t: number) => {
     if (t === Selection.CHANGE_SHAPE) {
         watcher();
@@ -320,8 +344,8 @@ onMounted(() => {
 })
 onUnmounted(() => {
     props.context.workspace.unwatch(workspace_watcher);
-    props.context.selection.unwatch(selected_watcher);
     props.context.color.unwatch(color_watcher);
+    props.context.selection.unwatch(selected_watcher);
 })
 </script>
 <template>
@@ -330,17 +354,21 @@ onUnmounted(() => {
         :height="100" viewBox="0 0 100 100" style="transform: translate(0px, 0px); position: absolute;">
         <g v-if="dot">
             <TemporaryStop v-if="temporary" :stop="temporary_stop!" :rotate="rotate"></TemporaryStop>
-            <rect width="20" :height="line_length" ref="stop_container"
-                :style="{ transform: `translate(${dot1.x}px, ${dot1.y}px) rotate(${rotate - 90}deg)` }" fill="transparent"
-                @mousemove.stop="(e) => rect_mousemove(e)" @mousedown.stop="(e) => add_stop(e)"
-                @mouseenter.stop="rect_enter" @mouseleave.stop="rect_leave">
-            </rect>
+            <ellipse :cx="dot1.x" :cy="dot1.y" :rx="ellipse_length" :ry="line_length" fill="none" stroke="#000000"
+                stroke-width="3"
+                :style="{ transform: `translate(${dot1.x}px, ${dot1.y}px) rotate(${rotate - 90}deg) translate(${-dot1.x}px, ${-dot1.y}px)` }" />
+            <ellipse :cx="dot1.x" :cy="dot1.y" :rx="ellipse_length" :ry="line_length" fill="none" stroke="#ffffff"
+                stroke-width="2"
+                :style="{ transform: `translate(${dot1.x}px, ${dot1.y}px) rotate(${rotate - 90}deg) translate(${-dot1.x}px, ${-dot1.y}px)` }" />
             <line :x1="dot1.x" :y1="dot1.y" :x2="dot2.x" :y2="dot2.y" stroke="black" stroke-width="3" />
             <line :x1="dot1.x" :y1="dot1.y" :x2="dot2.x" :y2="dot2.y" stroke="white" stroke-width="2" />
             <circle r="4" fill="white" stroke="#595959" stroke-width="1" :cx="dot1.x" :cy="dot1.y"
                 @mousedown.stop="(e) => dot_mousedown(e, dot1.type)"></circle>
             <circle r="4" fill="white" stroke="#595959" stroke-width="1" :cx="dot2.x" :cy="dot2.y"
                 @mousedown.stop="(e) => dot_mousedown(e, dot2.type)"></circle>
+            <circle r="4" fill="white" stroke="#595959" stroke-width="1" :cx="dot3.x" :cy="dot3.y"
+                @mousedown.stop="(e) => dot_mousedown(e, dot3.type)" @mouseenter="ellipse_dot"
+                @mouseleave="leave_ellipse_dot"></circle>
             <g v-for="(stop, index) in stops" :key="index" @mouseenter="stop_content_enter"
                 @mouseleave="percent_show = false"
                 :style="{ transform: `translate(${stop.x + 1.5}px, ${stop.y}px) rotate(${rotate - 90}deg) translate(0px, -11px)` }">
@@ -368,5 +396,6 @@ onUnmounted(() => {
         </g>
     </svg>
     <Percent v-if="percent_show" :x="percent_posi.x" :y="percent_posi.y" :size="percent"></Percent>
+    <Percent v-if="ellipse_show" :x="percent_posi.x" :y="percent_posi.y" :size="percent"></Percent>
 </template>
 <style scoped lang="scss"></style>

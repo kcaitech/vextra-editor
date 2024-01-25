@@ -6,14 +6,15 @@ import { gradient_map } from "./map";
 import { dbl_action } from '@/utils/mouse_interactive';
 import { Selection } from '@/context/selection';
 import { onUnmounted } from 'vue';
+import { ColorCtx } from '@/context/color';
 interface Props {
     context: Context
     matrix: Matrix
 }
 const props = defineProps<Props>();
 const _g_type = ref<GradientType>(GradientType.Linear);
-function init() {    
-    _g_type.value = props.context.color.gradient?.gradientType || GradientType.Linear;
+function init() {
+    _g_type.value = props.context.color.gradient_type || GradientType.Linear;
 }
 function down(e: MouseEvent) {
     e.stopPropagation();
@@ -26,12 +27,19 @@ const selected_watcher = (t: number) => {
         init();
     }
 }
+const color_watcher = (t: number) => {
+    if(t === ColorCtx.CHANGE_GRADIENT_TYPE) {
+        init();
+    }
+}
 onMounted(() => {
     init();
     props.context.selection.watch(selected_watcher);
+    props.context.color.watch(color_watcher);
 })
 onUnmounted(() => {
     props.context.selection.unwatch(selected_watcher);
+    props.context.color.unwatch(color_watcher);
     props.context.color.clear_locat();
 })
 </script>
