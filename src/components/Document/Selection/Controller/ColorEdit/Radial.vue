@@ -71,7 +71,8 @@ const get_linear_points = () => {
     dot2.value = { x: d2.x, y: d2.y, type: 'to' }
     line_length.value = Math.sqrt(Math.pow(d2.x - d1.x, 2) + Math.pow(d2.y - d1.y, 2));
     rotate.value = getHorizontalAngle({ x: d1.x, y: d1.y }, { x: d2.x, y: d2.y });
-    dot3.value = { type: 'ellipse', ...m.computeCoord3(get_elipse_point(gradient.elipseLength || 0, gradient.from, gradient.to, frame.width, frame.height)) };
+    // dot3.value = { type: 'ellipse', ...m.computeCoord3(get_elipse_point(gradient.elipseLength || 0, gradient.from, gradient.to, frame.width, frame.height)) };
+    dot3.value = { type: 'ellipse', ...get_elipse_point2(gradient.elipseLength || 0, line_length.value, d1) };
 
     ellipseL.value = gradient.elipseLength || 0;
     ellipse_length.value = Math.sqrt(Math.pow(dot3.value.x - dot1.value.x, 2) + Math.pow(dot3.value.y - dot1.value.y, 2));
@@ -87,12 +88,30 @@ const get_linear_points = () => {
 
 function get_elipse_point(ellipseLength: number, from: { x: number, y: number }, to: { x: number, y: number }, w: number, height: number) {
     const l = Math.hypot(from.x - to.x, from.y - to.y);
-    const __r = getHorizontalAngle({ x: from.x, y: from.y }, { x: to.x, y: to.y });
-    const ellipse = { x: 0, y: l * ellipseLength * (height / w) };
+    // const __r = getHorizontalAngle({ x: from.x, y: from.y }, { x: to.x, y: to.y });
+    const __r = getHorizontalAngle(from, to);
+    console.log('__r:', __r);
+    
+    // const ellipse = { x: 0, y: l * ellipseLength * (height / w) };
+    const ellipse = { x: l * ellipseLength, y: 0 };
 
     const m = new Matrix();
-    m.rotate(__r * Math.PI / 180);
+    // m.rotate(__r * Math.PI / 180);
+    m.rotate(Math.PI * 0.5 + (__r * Math.PI / 180));
     m.trans(from.x, from.y);
+    console.log('ellipse:', m.computeCoord3(ellipse));
+    
+    return m.computeCoord3(ellipse);
+}
+function get_elipse_point2(ellipseLength: number, main_apex_length:number, from: { x: number, y: number }) {
+    // const ellipse = { x: 0, y: l * ellipseLength * (height / w) };
+    const ellipse = { x: main_apex_length * ellipseLength, y: 0 };
+
+    const m = new Matrix();
+    // m.rotate(__r * Math.PI / 180);
+    m.rotate(Math.PI * 0.5 + rotate_r.value);
+    m.trans(from.x, from.y);
+    
     return m.computeCoord3(ellipse);
 }
 const down_ellipse = ref(false);
@@ -182,6 +201,7 @@ const rect_leave = () => {
 
 const rect_mousemove = (e: MouseEvent) => {
     if (e.buttons === 0) {
+        e.stopPropagation();
         const posi = get_stop_position(e);
         const shape = shapes.value[0] as ShapeView;
         const r_p = props.context.workspace.getContentXY(e);
@@ -389,7 +409,7 @@ onUnmounted(() => {
             <TemporaryStop v-if="temporary" :stop="temporary_stop!" :rotate="rotate"></TemporaryStop>
             <rect width="20" :height="line_length" ref="stop_container"
                 :style="{ transform: `translate(${dot1.x}px, ${dot1.y}px) rotate(${rotate - 90}deg)` }" fill="transparent"
-                @mousemove.stop="(e) => rect_mousemove(e)" @mousedown.stop="(e) => add_stop(e)"
+                @mousemove="(e) => rect_mousemove(e)" @mousedown.stop="(e) => add_stop(e)"
                 @mouseenter.stop="rect_enter" @mouseleave.stop="rect_leave">
             </rect>
             <ellipse :cx="dot1.x" :cy="dot1.y" :rx="ellipse_length" :ry="line_length" fill="none" stroke="#000000"
