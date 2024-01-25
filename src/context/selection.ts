@@ -29,10 +29,9 @@ import {
 import { Context } from ".";
 import { TextSelectionLite } from "@/context/textselectionlite";
 import { is_symbol_or_union } from "@/utils/symbol";
-import { finder, scout, Scout } from "@/utils/scout";
+import { scout, Scout } from "@/utils/scout";
 import { TableSelection } from "./tableselection";
 import { router } from "@/router";
-import { useRoute } from 'vue-router';
 
 interface Saved {
     page: Page | undefined,

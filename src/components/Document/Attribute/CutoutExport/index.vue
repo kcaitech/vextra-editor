@@ -1,5 +1,5 @@
 <script setup lang="ts">
-import { ExportFileFormat, ExportFormat, ExportFormatNameingScheme, ExportOptions, ExportVisibleScaleType, Shape, ShapeType, ShapeView, adapt2Shape } from '@kcdesign/data';
+import { ExportFileFormat, ExportFormat, ExportFormatNameingScheme, ExportOptions, ExportVisibleScaleType, Shape, ShapeType, ShapeView } from '@kcdesign/data';
 import { ref, onMounted, onUnmounted, reactive, nextTick } from 'vue';
 import { Context } from '@/context';
 import PreinstallSelect from './PreinstallSelect.vue';
@@ -9,7 +9,7 @@ import { v4 } from 'uuid';
 import { useI18n } from 'vue-i18n';
 import { Selection } from '@/context/selection';
 import comsMap from '@/components/Document/Content/comsmap';
-import { get_actions_add_export_format, get_actions_export_format_delete, get_actions_export_format_file_format, get_actions_export_format_name, get_actions_export_format_perfix, get_actions_export_format_scale, get_actions_export_format_unify, get_export_formats } from '@/utils/shape_style';
+import { get_actions_add_export_format, get_actions_export_format_delete, get_actions_export_format_file_format, get_actions_export_format_perfix, get_actions_export_format_scale, get_actions_export_format_unify, get_export_formats } from '@/utils/shape_style';
 import { downloadImages, exportSingleImage, getExportFillUrl, getPngImageData, getSvgImageData } from '@/utils/image';
 
 const { t } = useI18n();
@@ -71,8 +71,10 @@ function watchShapes() {
     })
 }
 function watcher(...args: any[]) {
-    if (args.length > 0 && args.includes('export-options')) updateData();
-    if (args.length > 0 && args.includes('shape-frame')) {
+    if (args.includes('export-options')) {
+        updateData();
+    }
+    if (args.includes('shape-frame')) {
         nextTick(() => {
             if (preview.value) {
                 const selected = props.context.selection.selectedShapes;
@@ -468,6 +470,7 @@ onMounted(() => {
 });
 onUnmounted(() => {
     props.context.selection.unwatch(selection_watcher);
+    watchedShapes.forEach(v => v.unwatch(watcher))
 });
 
 </script>

@@ -2,20 +2,19 @@
 import TypeHeader from '../TypeHeader.vue';
 import { AsyncOpacityEditor, ShapeView, adapt2Shape } from '@kcdesign/data';
 import { useI18n } from 'vue-i18n';
-import { nextTick, onMounted, onUnmounted, ref } from 'vue';
+import { nextTick, onMounted, onUnmounted, ref, watch } from 'vue';
 import { Context } from '@/context';
-import { Selection } from '@/context/selection';
+import { throttle } from 'lodash';
 
 interface Props {
     context: Context
-    shapes: ShapeView[]
+    change: number
 }
 
 const props = defineProps<Props>();
 const { t } = useI18n();
 const popoverVisible = ref<boolean>(false);
 const popover = ref<HTMLDivElement>();
-const selectedOption = ref('');
 const shapes = ref<ShapeView[]>([]);
 const opacityValue = ref(0);
 const opacityInput = ref<HTMLInputElement>();
@@ -41,11 +40,6 @@ function onMenuBlur(e: MouseEvent) {
             document.removeEventListener('click', onMenuBlur);
         }, 10)
     }
-}
-
-function selectOption(event: MouseEvent) {
-    selectedOption.value = (event.target as HTMLSpanElement).innerText;
-    popoverVisible.value = false;
 }
 
 function limitValue(value: number): number {
@@ -174,16 +168,16 @@ const focus = (e: Event) => {
     }
 }
 const text_keyboard = (e: KeyboardEvent) => {
-    if(e.code === "Enter" || e.code === "NumpadEnter") {
+    if (e.code === "Enter" || e.code === "NumpadEnter") {
         opacityInput.value?.blur();
     }
 }
 
-// 你还需要做的是todo，选区监听已经处理好了
-function update() {
-    // 更新组件状态
+function _update() {
     const shapes = props.context.selection.selectedShapes
-    if (!shapes.length) return;
+    if (!shapes.length) {
+        return;
+    }
     let firstOpacity = shapes[0].contextSettings?.opacity;
     firstOpacity = firstOpacity === undefined ? 1 : firstOpacity;
     let difference = false;
@@ -206,113 +200,17 @@ function update() {
     }
 }
 
-/**
- * @description 调整监听对象
- * eg: 第一次选中了A、B,这个时候组件监听了A、B。
- *     第二次从A、B到C、D，这个时候所选图形发生了变化，监听对象从A、B调整为C、D。
- *     在调整过程中对C、D挂载(watch)监听的同时，还对A、B的监听进行了卸载(unwatch);
- */
-const watchedShapes = new Map();
+const update = throttle(_update, 320, { leading: true });
 
-function watchShapes() {
-    const needWatchShapes = new Map();
-    const selection = props.context.selection;
-    if (selection.selectedShapes.length) {
-        for (let i = 0, len = selection.selectedShapes.length; i < len; i++) {
-            const v = selection.selectedShapes[i];
-            needWatchShapes.set(v.id, v)
-        }
-    }
-    watchedShapes.forEach((v, k) => {
-        if (!needWatchShapes.has(k)) {
-            v.unwatch(update);
-            watchedShapes.delete(k);
-        }
-    })
-    needWatchShapes.forEach((v, k) => {
-        if (!watchedShapes.has(k)) {
-            v.watch(update);
-            watchedShapes.set(k, v);
-        }
-    })
-}
+const stop = watch(() => props.change, update);
 
-/**
- * @description
- * @param type 选区的变化类型
- *              Selection.CHANGE_PAGE 切换页面
- *              Selection.CHANGE_SHAPE 切换所选图形，即更新context.selection.selectedShapes (这里要用的是这个)
- *              ...
- */
-function selection_watcher(type: number) {
-    if (type === Selection.CHANGE_SHAPE) { // 切换了所选图形
-        update(); // 更新组件状态
-        watchShapes(); // 调整监听对象。
-    }
-}
-
-onMounted(() => {
-    // 给选区挂载 监听函数 --selection_watcher
-    props.context.selection.watch(selection_watcher); // selection.watch 类似于 document.addEventListener
-    watchShapes(); // 组件产生，立马需要一次调整监听对象(第一次调整监听对象是从无 到 任意图形)
-    update();
-})
+onMounted(update)
 onUnmounted(() => {
-    // selection.unwatch 类似于 document.removeEventListener，大部分场景下，在挂载监听的时候都需要考虑移除监听的时机和处理
-    props.context.selection.unwatch(selection_watcher);
-    if (opacity_editor) opacity_editor.close();
+    if (opacity_editor) {
+        opacity_editor.close();
+    }
+    stop();
 })
-// function updateBackgroundSize(event: MouseEvent) {
-//     const range = event.target as HTMLInputElement | null;
-//     if (range) {
-//         range.style.backgroundSize = `${range.value}% 100%`;
-//     }
-// }
-// interface RangeSliderConfig {
-//     min?: number;
-//     max?: number;
-//     step?: number;
-//     callback?: (input: HTMLInputElement) => void;
-// }
-//
-// class RangeSlider {
-//     private input: HTMLInputElement;
-//
-//     constructor(element: HTMLInputElement, config: RangeSliderConfig) {
-//         this.input = element;
-//         this.init(config);
-//     }
-//
-//     private init(config: RangeSliderConfig): void {
-//         const {min = 0, max = 100, step = 1, callback} = config;
-//
-//         this.input.setAttribute('min', min.toString());
-//         this.input.setAttribute('max', max.toString());
-//         this.input.setAttribute('step', step.toString());
-//
-//         this.input.addEventListener('input', (e) => {
-//             this.input.setAttribute('value', (e.target as HTMLInputElement).value);
-//             this.input.style.backgroundSize = (e.target as HTMLInputElement).value + '% 100%';
-//             if (callback) {
-//                 callback(this.input);
-//             }
-//         });
-//     }
-// }
-//
-// window.onload = function rangeSlider() {
-//     const myRangeInput = document.getElementById('Range2') as HTMLInputElement;
-//     if (myRangeInput) {
-//         const rangeSlider = new RangeSlider(myRangeInput, {
-//             min: 0,
-//             max: 100,
-//             step: 1,
-//             callback: (input) => {
-//                 console.log('Current value:', input.value);
-//             },
-//         });
-//     }
-// };
 </script>
 <template>
     <div class="opacity-panel">
@@ -377,7 +275,7 @@ onUnmounted(() => {
             </div>
             <input type="text" ref="opacityInput" class="input-text"
                 :value="typeof opacity === 'string' ? ipt() : `${ipt()}%`" @focus="focus" @change="change" @blur="change"
-                @input="handleOPacity" @keydown="text_keyboard"/>
+                @input="handleOPacity" @keydown="text_keyboard" />
         </div>
     </div>
 </template>
