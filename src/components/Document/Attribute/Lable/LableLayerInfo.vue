@@ -3,7 +3,7 @@ import { Context } from '@/context';
 import LableType from './LableType.vue'
 import { onMounted, onUnmounted, ref } from 'vue';
 import { Selection } from '@/context/selection';
-import { get_rotation } from '@/utils/attri_setting';
+import { get_height, get_rotation, get_width, get_xy } from '@/utils/attri_setting';
 import { GroupShapeView, RectShapeView, PathShapeView, PathShapeView2, ShapeType, ShapeView, TextShapeView } from '@kcdesign/data';
 import { Menu } from '@/context/menu';
 import LableTootip from './LableTootip.vue';
@@ -38,27 +38,17 @@ function watch_shapes() {
     }
 }
 const getShapeInfo = () => {
-    const len = props.context.selection.selectedShapes.length;
+    const selected = props.context.selection.selectedShapes;
+    const len = selected.length;
     if (len === 1) {
-        const shape = props.context.selection.selectedShapes[0];
-        const posi = shape.matrix2Root().computeCoord2(0, 0);
-        const par_posi = shape.matrix2Parent().computeCoord2(0, 0);
-        const p = shape.parent;
-        if (p && p.type === ShapeType.Page) {
-            xy.value.x = +(posi.x * multiple.value).toFixed(2);
-            xy.value.y = +(posi.y * multiple.value).toFixed(2);
-        } else {
-            xy.value.x = +(par_posi.x * multiple.value).toFixed(2);
-            xy.value.y = +(par_posi.y * multiple.value).toFixed(2);
-        }
+        const shape = selected[0];
+        const _xy = get_xy(selected, '');
+        xy.value.x = +(_xy.x as number * multiple.value).toFixed(2);
+        xy.value.y = +(_xy.y as number * multiple.value).toFixed(2);
         rotate.value = get_rotation(shape);
         getRadius(shape);
-        const frame = shape.frame;
-        size.value.w = +(frame.width * multiple.value).toFixed(2);
-        size.value.h = +(frame.height * multiple.value).toFixed(2);
-        if (shape.type === ShapeType.Line) {
-            size.value.h = 0;
-        }
+        size.value.w = +(+get_width(selected, '') * multiple.value).toFixed(2);
+        size.value.h = +(+get_height(selected, '') * multiple.value).toFixed(2);
         name.value = shape.name;
     }
 }
@@ -82,7 +72,7 @@ const getRadius = (shape: ShapeView) => {
     }
 }
 function selection_wather(t: any) {
-    if (t === Selection.CHANGE_PAGE || t === Selection.CHANGE_SHAPE) {
+    if (t === Selection.CHANGE_SHAPE) {
         watch_shapes();
         getShapeInfo();
     }

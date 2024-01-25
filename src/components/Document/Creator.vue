@@ -5,10 +5,10 @@ import { Action } from '@/context/tool';
 import { WorkSpace } from '@/context/workspace';
 import { collect } from '@/utils/artboardFn';
 import { getHorizontalAngle } from '@/utils/common';
-import { flattenShapes, init_contact_shape, init_insert_shape, init_shape, list2Tree } from '@/utils/content';
+import { init_contact_shape, init_insert_shape, init_shape, list2Tree } from '@/utils/content';
 import { get_direction } from '@/utils/controllerFn';
 import { EffectType, Wheel, fourWayWheel } from '@/utils/wheel';
-import { Artboard, AsyncCreator, ContactForm, ContactLineView, GroupShape, Matrix, ShapeFrame, ShapeType, ShapeView, adapt2Shape } from '@kcdesign/data';
+import { Artboard, AsyncCreator, ContactForm, ContactLineView, GroupShape, Matrix, PageView, ShapeFrame, ShapeType, ShapeView, adapt2Shape } from '@kcdesign/data';
 import { onMounted, onUnmounted, reactive, ref } from 'vue';
 import { useI18n } from 'vue-i18n';
 import CommentInput from './Content/CommentInput.vue';
@@ -18,6 +18,7 @@ import * as comment_api from '@/request/comment';
 import ContactInit from './Toolbar/ContactInit.vue';
 import { get_contact_environment } from '@/utils/contact';
 import { Cursor } from '@/context/cursor';
+import { debounce } from 'lodash';
 
 interface Props {
     context: Context
@@ -74,6 +75,9 @@ function down(e: MouseEvent) {
     wheelSetup();
     if (action !== Action.AddComment) {
         commentInput.value = false;
+    }
+    if (action === Action.AddContact) {
+        just_search = true;
     }
     document.addEventListener("mousemove", move);
     document.addEventListener("mouseup", up);
@@ -171,7 +175,6 @@ const commentEsc = (e: KeyboardEvent) => {
         commentInput.value = false;
     }
 }
-
 //移动输入框
 const mouseDownCommentInput = (e: MouseEvent) => {
     e.stopPropagation();
@@ -213,7 +216,7 @@ const completed = (succession: boolean, event?: MouseEvent) => {
 const getDocumentComment = async () => {
     try {
         const docInfo = props.context.comment.isDocumentInfo;
-        const { data } = await comment_api.getDocumentCommentAPI({ doc_id:  docInfo?.document.id || route.query.id})
+        const { data } = await comment_api.getDocumentCommentAPI({ doc_id: docInfo?.document.id || route.query.id })
         if (data) {
             data.forEach((obj: { children: any[]; commentMenu: any; }) => {
                 obj.commentMenu = commentMenuItems.value
@@ -260,8 +263,11 @@ function contact_init(e: MouseEvent, apex?: ContactForm, p2?: PageXY) {
     down(e);
     apex1 = apex;
     page_xy2 = p2;
-    just_search = true;
 }
+
+const m = debounce((ac: AsyncCreator, environment: ShapeView | PageView) => {
+    ac.migrate(adapt2Shape(environment) as GroupShape);
+}, 200);
 
 function modify_contact_to(e: MouseEvent, ac: AsyncCreator) {
     const root = props.context.workspace.root;
@@ -270,9 +276,8 @@ function modify_contact_to(e: MouseEvent, ac: AsyncCreator) {
     const points = (newShape as ContactLineView).getPoints();
     const environment = get_contact_environment(props.context, newShape!, points);
     if (newShape!.parent?.id !== environment.id) {
-        asyncCreator
+        m(ac, environment);
     }
-    ac.migrate(adapt2Shape(environment) as GroupShape);
 }
 
 // #endregion

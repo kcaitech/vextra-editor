@@ -35,7 +35,7 @@ const curVal = ref<SelectItem>(optionsSource[0].data);
 const fixed = ref(false);
 
 watch(() => props.default_value, (v) => {
-    if(!fixed.value && typeof v === 'string') {
+    if (!fixed.value && typeof v === 'string') {
         textDefaultValue.value = v as string;
         emits("change", textDefaultValue.value);
     }
@@ -93,13 +93,13 @@ onMounted(() => {
 
 <template>
     <div class="container">
-        <span style="color: #737373;">默认值</span>
+        <span style="color: #737373;">{{ t('compos.dltv') }}</span>
         <div v-if="props.addType === VariableType.Visible" class="show">
             <Select class="select" :source="optionsSource" :selected="curVal" @select="handleShow"></Select>
         </div>
         <div v-if="props.addType === VariableType.Text">
             <input ref="input_v" type="text" v-model="textDefaultValue" :placeholder="t('compos.default_text_input')"
-                @keydown.stop="keysumbit" @change="change(textDefaultValue)" @input="fixed = true"/>
+                @keydown.stop="keysumbit" @change="change(textDefaultValue)" @input="fixed = true" />
         </div>
     </div>
     <div class="warning" v-if="props.warn && props.addType === VariableType.Text && textDefaultValue.trim().length < 1">
@@ -168,6 +168,10 @@ onMounted(() => {
     .select {
         width: 168px;
         height: 32px;
+
+        :deep(.trigger) {
+            padding: 0 12px;
+        }
     }
 }
 

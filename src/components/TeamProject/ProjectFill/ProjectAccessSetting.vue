@@ -304,12 +304,10 @@ onUnmounted(() => {
                     </ul>
                 </transition>
             </div>
-            <div class="centent" v-if="currentProject[0] && projectType === projectOptions[1].label">
+            <div class="centent" v-if="currentProject[0] && projectType === projectOptions[1].label && !disabled">
                 <div class="permission-tips">{{ t('Createteam.jointips') }}</div>
                 <div class="permission-switch">
                     <span> {{ t('Createteam.invitation_switch') }}</span>
-                    <!-- <el-switch v-model="linkSwitch" class="ml-2" style="--el-switch-on-color: #1878F5" size="small"
-                    @click="onLinkSwitch" :disabled="disabled" /> -->
                     <input id="switch" type="checkbox" v-model="linkSwitch" @change="onLinkSwitch" :disabled="disabled">
                     <label class="my_switch" for="switch"></label>
                 </div>
@@ -320,12 +318,19 @@ onUnmounted(() => {
                     <label for="filetips">申请后需管理员审批确认</label>
                 </div>
                 <div class="invitemember">
-                    <button type="button" :disabled="!linkSwitch" @click.stop="copyLink">{{ t('Createteam.copylink')
-                    }}</button>
+                    <button type="button" @click.stop="emit('closeDialog')">
+                        {{ t('Createteam.confirm') }}
+                    </button>
                 </div>
             </div>
             <div class="cancel" v-else>
-                <button type="button" @click.stop="emit('closeDialog')">{{ t('Createteam.confirm') }}</button>
+                <button type="button"
+                    @click.stop="disabled && linkSwitch && !currentProject[0].project.public_switch ? copyLink() : emit('closeDialog')">
+                    {{ disabled && linkSwitch && !currentProject[0].project.public_switch
+                        ?
+                        t('Createteam.copylink') :
+                        t('Createteam.confirm') }}
+                </button>
             </div>
         </div>
 
@@ -347,18 +352,18 @@ onUnmounted(() => {
 }
 
 @media (max-height: 400px) {
-  .card-container {
-    height: 100%;
-    overflow: auto !important;
-    animation: none !important;
-  }
+    .card-container {
+        height: 100%;
+        overflow: auto !important;
+        animation: none !important;
+    }
 }
 
 @media (max-width: 450px) {
-  .card-container {
-    width: 100% !important;
-    overflow: auto !important;
-  }
+    .card-container {
+        width: 100% !important;
+        overflow: auto !important;
+    }
 }
 
 @keyframes move {
@@ -599,7 +604,7 @@ onUnmounted(() => {
             }
 
             input[type='checkbox']:disabled+label {
-                background-color: rgba(189, 226, 255, 1);
+                opacity: 0.6;
             }
 
         }

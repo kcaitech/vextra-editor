@@ -4,7 +4,7 @@ import { Matrix, Shape, TableCell, TableCellType, Text, TableGridItem, TableLayo
 import { onMounted, onUnmounted, watch, ref, reactive, computed, shallowRef } from 'vue';
 import { genRectPath } from '../common';
 import { Point } from "../SelectionView.vue";
-import { ClientXY, Selection } from '@/context/selection';
+import { ClientXY, Selection, SelectionTheme } from '@/context/selection';
 import BarsContainer from "./Bars/BarsContainerForTable.vue";
 import PointsContainer from "./Points/PointsContainerForTable.vue";
 import { useController } from './controller4table';
@@ -21,7 +21,8 @@ const props = defineProps<{
     controllerFrame: Point[],
     rotate: number,
     matrix: Matrix, // root->屏幕 变换矩阵
-    shape: TableView
+    shape: TableView,
+    theme: SelectionTheme
 }>();
 useController(props.context);
 const matrix = new Matrix();

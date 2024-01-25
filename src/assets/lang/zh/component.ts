@@ -33,6 +33,7 @@ export const compos: any = {
     datail: '查看详情',
     attri_1: '属性 1',
     dlt: '默认',
+    dltv: '默认值',
     attri: '属性',
     add_new: '添加新值',
     error_1: '新的组件不能包含已有组件图层的组成图层',

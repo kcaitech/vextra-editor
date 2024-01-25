@@ -4,7 +4,7 @@ import { Context } from "@/context";
 import { Matrix, ShapeView } from '@kcdesign/data';
 import { WorkSpace } from "@/context/workspace";
 import { Point } from "../SelectionView.vue";
-import { ClientXY, Selection } from "@/context/selection";
+import { ClientXY, Selection, SelectionTheme } from "@/context/selection";
 import { useController } from "./controller";
 import { genRectPath } from "../common";
 import ShapesStrokeContainer from "./ShapeStroke/ShapesStrokeContainer.vue";
@@ -17,6 +17,7 @@ interface Props {
     rotate: number
     matrix: Matrix
     shape: ShapeView
+    theme: SelectionTheme
 }
 
 const props = defineProps<Props>();
@@ -128,12 +129,12 @@ watchEffect(updateControllerView);
         xmlns:xhtml="http://www.w3.org/1999/xhtml" preserveAspectRatio="xMinYMin meet" :viewBox="viewBox" :width="width"
         :height="height" :class="{ 'un-visible': !visible }" @mousedown="mousedown" overflow="visible"
         :style="{ transform: `translate(${bounds.left}px,${bounds.top}px)` }">
-        <ShapesStrokeContainer :context="props.context" :matrix="props.matrix" color-hex="#1878f5">
+        <ShapesStrokeContainer :context="props.context">
         </ShapesStrokeContainer>
         <BarsContainer :context="props.context" :matrix="submatrix.toArray()" :shape="props.shape"
-            :c-frame="props.controllerFrame"></BarsContainer>
+            :c-frame="props.controllerFrame" :theme="theme"></BarsContainer>
         <PointsContainer :context="props.context" :matrix="submatrix.toArray()" :shape="props.shape" :axle="axle"
-            :c-frame="props.controllerFrame">
+            :c-frame="props.controllerFrame" :theme="theme">
         </PointsContainer>
     </svg>
 </template>

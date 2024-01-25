@@ -1,7 +1,7 @@
 <template>
     <div class="tatle" style="height: calc(100vh - 224px);">
-        <tablelist :data="SearchList" :iconlist="iconlists" :nulldata="nulldata"
-            :projectshare="true" @onexitproject="onExitProject" @cancelfixed="cancelFixed" @on-addproject="onAddproject"
+        <tablelist :data="SearchList" :iconlist="iconlists" :nulldata="nulldata" :projectshare="true"
+            @onexitproject="onExitProject" @cancelfixed="cancelFixed" @on-addproject="onAddproject"
             @dbclickopen="dblclickskipProject" @skipproject="skipProject" @rightMeun="rightmenu" :noNetwork="noNetwork"
             :addproject="teamSelfPermType" />
     </div>
@@ -18,8 +18,8 @@
         @delproject="rdelProject" />
     <ProjectAccessSetting v-if="projectSettingDialog" :showcontainer="showcontainer" :title="t('Createteam.membertip')"
         :data="mydata" width="500px" @closeDialog="closeDialog" />
-    <ProjectMemberg v-if="projectMembergDialog" :showcontainer="showcontainer" :projectMembergDialog="projectMembergDialog" :currentProject="mydata"
-        @closeDialog="closeDialog" @exitProject="exitProject" />
+    <ProjectMemberg v-if="projectMembergDialog" :showcontainer="showcontainer" :projectMembergDialog="projectMembergDialog"
+        :currentProject="mydata" @closeDialog="closeDialog" @exitProject="exitProject" />
 </template>
 <script setup lang="ts">
 import { Ref, computed, inject, watchEffect, onMounted, ref, watch, nextTick } from 'vue';
@@ -130,7 +130,7 @@ const GetprojectLists = async () => {
         } else {
             ElMessage({ type: 'error', message: message })
         }
-    } catch (error:any) {
+    } catch (error: any) {
         if (error.data.code === 401) {
             return
         } else {
@@ -150,6 +150,9 @@ function updateItemsBasedOnFavor(data: any, sourceItems: any) {
         if (data.self_perm_type < 4) {
             updateItems = filterItemsByIndexes(updateItems, [0, 5])
         }
+        if (data.self_perm_type === 4) {
+            updateItems = filterItemsByIndexes(updateItems, [5])
+        }
         if (data.self_perm_type === 5) {
             updateItems = filterItemsByIndexes(updateItems, [4])
         }
@@ -160,6 +163,9 @@ function updateItemsBasedOnFavor(data: any, sourceItems: any) {
         updateItems = filterItemsByIndexes(updateItems, [4]);
         if (data.self_perm_type < 4) {
             updateItems = filterItemsByIndexes(updateItems, [0, 5])
+        }
+        if (data.self_perm_type === 4) {
+            updateItems = filterItemsByIndexes(updateItems, [5])
         }
         if (data.self_perm_type === 5) {
             updateItems = filterItemsByIndexes(updateItems, [4])
@@ -242,7 +248,7 @@ const setProjectInfo = async (params: any) => {
         if (code === 0) {
             const index = teamprojectlist.value.findIndex(item => item.project.id === params.project_id)
             teamprojectlist.value[index].project.name = params.name
-            
+
         } else {
             ElMessage.error(message)
         }
@@ -299,11 +305,11 @@ watch(is_favor, () => {
 
 //通过计算属性，筛选出与搜索匹配的项目
 const SearchList = computed(() => {
-    if(!props.searchvalue.toLowerCase()) return teamprojectlist.value
+    if (!props.searchvalue.toLowerCase()) return teamprojectlist.value
     return teamprojectlist.value.filter((el: any) => {
-        return PinyinMatch.match(el.project.name.toLowerCase(),props.searchvalue.trim().toLowerCase())
+        return PinyinMatch.match(el.project.name.toLowerCase(), props.searchvalue.trim().toLowerCase())
             ||
-            PinyinMatch.match(el.creator.nickname.toLowerCase(),props.searchvalue.trim().toLowerCase())
+            PinyinMatch.match(el.creator.nickname.toLowerCase(), props.searchvalue.trim().toLowerCase())
     })
 })
 

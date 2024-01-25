@@ -1,4 +1,4 @@
-import { Shape, ShapeType, ShapeView, adapt2Shape } from "@kcdesign/data";
+import { Page, PageView, Shape, ShapeType, ShapeView, adapt2Shape } from "@kcdesign/data";
 import { PositonAdjust } from "@kcdesign/data";
 // 群的最左端
 export function get_colony_left(shapes: ShapeView[]) {
@@ -331,7 +331,7 @@ export function get_individuality_t_b(shape: ShapeView) {
 }
 
 export function is_container(shape: ShapeView) {
-    return [ShapeType.Artboard, ShapeType.Group, ShapeType.SymbolUnion, ShapeType.Symbol].includes(shape.type);
+    return [ShapeType.Artboard, ShapeType.Group, ShapeType.SymbolUnion, ShapeType.Symbol].includes(shape.type) && shape.parent instanceof PageView;
 }
 
 // 靠左对齐

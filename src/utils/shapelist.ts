@@ -156,16 +156,25 @@ export function fit_no_transform(context: Context, shape: ShapeView) {
 }
 
 export function get_state_name(state: SymbolView, dlt: string) {
-    if (!(state.parent instanceof SymbolUnionShape)) {
+    if ((state.parent?.type !== ShapeType.SymbolUnion)) {
         return state.name;
     }
-    const variables = (state.parent as SymbolShape).variables;
-    if (!variables) return state.name;
+    const variables = (state.parent as unknown as SymbolShape)?.variables;
+    if (!variables) {
+        return state.name;
+    }
     let name_slice: string[] = [];
     variables.forEach((v, k) => {
-        if (v.type !== VariableType.Status) return;
+        if (v.type !== VariableType.Status) {
+            return;
+        }
+
         let slice = state.symtags?.get(k) || v.value;
-        if (slice === SymbolShape.Default_State) slice = dlt;
+
+        if (slice === SymbolShape.Default_State) {
+            slice = dlt;
+        }
+
         slice && name_slice.push(slice);
     })
     return name_slice.toString();

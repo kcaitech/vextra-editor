@@ -2,7 +2,7 @@
 import { Context } from '@/context';
 import { AsyncBaseAction, CtrlElementType, Matrix, ShapeView, adapt2Shape } from '@kcdesign/data';
 import { onMounted, onUnmounted, watch, reactive } from 'vue';
-import { ClientXY, PageXY } from '@/context/selection';
+import { ClientXY, PageXY, SelectionTheme } from '@/context/selection';
 import { Action } from '@/context/tool';
 import { Point } from '../../SelectionView.vue';
 import { forbidden_to_modify_frame } from '@/utils/common';
@@ -12,6 +12,7 @@ interface Props {
     context: Context
     shape: ShapeView
     cFrame: Point[]
+    theme: SelectionTheme
 }
 interface Bar {
     path: string
@@ -275,7 +276,7 @@ onUnmounted(() => {
 <template>
     <g v-for="(b, i) in paths" :key="i" @mousedown.stop="(e) => bar_mousedown(e, b.type)"
         @mouseenter="() => bar_mouseenter(b.type)" @mouseleave="bar_mouseleave">
-        <path :d="b.path" class="main-path">
+        <path :d="b.path" class="main-path" :stroke="theme">
         </path>
         <path :d="b.path" class="assist-path">
         </path>
@@ -284,7 +285,6 @@ onUnmounted(() => {
 <style lang='scss' scoped>
 .main-path {
     fill: none;
-    stroke: var(--active-color);
 }
 
 .assist-path {

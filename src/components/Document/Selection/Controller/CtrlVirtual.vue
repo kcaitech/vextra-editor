@@ -4,7 +4,7 @@ import { Context } from "@/context";
 import { Matrix, ShapeView } from '@kcdesign/data';
 import { WorkSpace } from "@/context/workspace";
 import { Point } from "../SelectionView.vue";
-import { Selection } from "@/context/selection";
+import { Selection, SelectionTheme } from "@/context/selection";
 import { useController } from "./controller";
 import { genRectPath } from "../common";
 import { Shape } from "@kcdesign/data";
@@ -15,6 +15,7 @@ interface Props {
     rotate: number
     matrix: Matrix
     shape: ShapeView
+    theme: SelectionTheme
 }
 const props = defineProps<Props>();
 const { isDrag } = useController(props.context);
