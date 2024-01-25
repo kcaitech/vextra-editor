@@ -34,7 +34,6 @@ onMounted(() => {
     tableData.value = projectList.value.filter(item => !item.is_in_team)
 })
 watchEffect(() => {
-
     tableData.value = projectList.value.filter(item => !item.is_in_team)
 })
 
@@ -166,6 +165,9 @@ function updateItemsBasedOnFavor(data: any, sourceItems: any) {
         if (data.self_perm_type < 4) {
             updateItems = filterItemsByIndexes(updateItems, [0, 5])
         }
+        if (data.self_perm_type === 4) {
+            updateItems = filterItemsByIndexes(updateItems, [5])
+        }
         if (data.self_perm_type === 5) {
             updateItems = filterItemsByIndexes(updateItems, [4])
         }
@@ -177,14 +179,14 @@ function updateItemsBasedOnFavor(data: any, sourceItems: any) {
         if (data.self_perm_type < 4) {
             updateItems = filterItemsByIndexes(updateItems, [0, 5])
         }
+        if (data.self_perm_type === 4) {
+            updateItems = filterItemsByIndexes(updateItems, [5])
+        }
         if (data.self_perm_type === 5) {
             updateItems = filterItemsByIndexes(updateItems, [4])
-            console.log(updateItems);
         }
         if (data.self_perm_type != 5 && data.is_invited != true) {
             updateItems = filterItemsByIndexes(updateItems, [1, 3])
-            console.log(updateItems);
-
         }
     }
     return updateItems
@@ -207,6 +209,8 @@ const rightmenu = (e: MouseEvent, row: any) => {
     if ((e.target as HTMLElement).closest('.el-table-v2__row')) {
         rightmenu.style.display = 'block'
     }
+    console.log(row);
+
     updateitems.value = updateItemsBasedOnFavor(row, items.value);
     mydata.value = row
     mydataindex.value = index

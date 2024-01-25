@@ -1,6 +1,6 @@
 import { Context } from "@/context";
 import { ColorCtx } from "@/context/color";
-import { Shape, ShapeView, TableShape, adapt2Shape } from "@kcdesign/data";
+import { Shape, ShapeView, TableCellType, TableShape, adapt2Shape } from "@kcdesign/data";
 
 export function deleteUnits(context: Context) {
     if(context.color.selected_stop > -1) {
@@ -71,9 +71,24 @@ function delete_shapes(context: Context, shapes: ShapeView[]) {
 function delete_for_table(context: Context, table: TableShape) {
     const ts = context.tableSelection;
     const editor = context.editor4Table(table as TableShape);
-    if (ts.tableRowStart > -1 || ts.tableColStart > -1) {
+    const rs = ts.tableRowStart;
+    const cs = ts.tableColStart;
+    if (rs > -1 || cs > -1) {
         editor.resetCells(ts.tableRowStart, ts.tableRowEnd, ts.tableColStart, ts.tableColEnd);
         ts.resetSelection();
+
+        context.nextTick(context.selection.selectedPage!, () => {
+            const ec = table.getCellAt(rs, cs);
+            if (!ec || ec.cellType === TableCellType.None) {
+                return;
+            }
+
+            const cell = table.locateCell2(ec);
+
+            ts.setEditingCell(cell);
+
+            context.textSelection.setCursor(0, false);
+        })
     } else {
         const editor = context.editor4Shape(table);
         editor.delete();

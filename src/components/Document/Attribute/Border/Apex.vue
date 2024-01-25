@@ -10,6 +10,7 @@ import { Context } from '@/context';
 interface Props {
     context: Context
     shapes: ShapeView[]
+    view: number
 }
 const props = defineProps<Props>();
 const borderFrontStyle = ref<SelectItem>({ value: MarkerType.Line, content: MarkerType.Line });
@@ -68,8 +69,13 @@ function exchange() {
     }
 }
 const stop = watch(() => props.shapes, init_v);
+const stop2 = watch(() => props.view, init_v);
+
 onMounted(init_v);
-onUnmounted(stop);
+onUnmounted(() => {
+    stop();
+    stop2();
+});
 </script>
 <template>
     <div class="apex-select-wrap">

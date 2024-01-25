@@ -1,20 +1,21 @@
 <script setup lang='ts'>
 import { computed, onMounted, onUnmounted, watchEffect, ref, reactive } from "vue";
 import { Context } from "@/context";
-import { ClientXY } from "@/context/selection";
+import { ClientXY, SelectionTheme } from "@/context/selection";
 import { Point } from "../SelectionView.vue";
 import { getAxle } from "@/utils/common";
 import PointContainerForStraightLine from "./Points/PointsContainerForStraightLine.SVG.vue"
 import { Selection } from "@/context/selection";
 import { WorkSpace } from "@/context/workspace";
 import { useController } from "./controller";
-import { Matrix, Shape, ShapeView } from "@kcdesign/data";
+import { Matrix, ShapeView } from "@kcdesign/data";
 interface Props {
-    context: Context,
-    controllerFrame: Point[],
-    rotate: number,
-    matrix: Matrix,
+    context: Context
+    controllerFrame: Point[]
+    rotate: number
+    matrix: Matrix
     shape: ShapeView
+    theme: SelectionTheme
 }
 const props = defineProps<Props>();
 const { isDblClick, isDrag } = useController(props.context);
@@ -117,9 +118,10 @@ watchEffect(updateControllerView)
         :height="height"
         :style="{ transform: `translate(${bounds.left}px,${bounds.top}px)`, left: 0, top: 0, position: 'absolute' }"
         :class="{ 'un-visible': !visible }" @mousedown="mousedown" overflow="visible">
-        <path :d="line_path" class="main-path"></path>
+        <path :d="line_path" class="main-path" :stroke="theme"></path>
         <PointContainerForStraightLine :context="props.context" :matrix="submatrix.toArray()" :shape="props.shape"
-            :rotation="props.rotate" :axle="axle" :c-frame="props.controllerFrame"></PointContainerForStraightLine>
+            :rotation="props.rotate" :axle="axle" :c-frame="props.controllerFrame" :theme="theme">
+        </PointContainerForStraightLine>
     </svg>
 </template>
 <style lang='scss' scoped>
@@ -128,7 +130,6 @@ watchEffect(updateControllerView)
 }
 
 .main-path {
-    stroke: var(--active-color);
     fill: none;
 }
 </style>

@@ -9,10 +9,7 @@
     <listrightmenu :items="items" :data="mydata" @get-doucment="getDoucment" @r-starfile="Starfile" @r-sharefile="Sharefile"
         @r-removefile="Deletefile" @ropen="openDocument" @moveFillAddress="moveFillAddress" />
     <div v-if="showFileShare" class="overlay">
-        <FileShare @close="closeShare" :docId="docId" :docName="docName" :selectValue="selectValue"
-            :userInfo="userInfo" :docUserId="docUserId" @select-type="onSelectType" @switch-state="onSwitch"
-            :shareSwitch="shareSwitch" :pageHeight="pageHeight" :project="is_project"
-            :projectPerm="currentProject.self_perm_type">
+        <FileShare @close="closeShare" :docId="docId" :projectPerm="projectPerm">
         </FileShare>
     </div>
     <MoveProjectFill :title="t('Createteam.movetip')" :confirm-btn="t('Createteam.move')" :projectItem="projectItem"
@@ -24,7 +21,7 @@
 import * as user_api from '@/request/users'
 import * as team_api from '@/request/team'
 import { ElMessage } from 'element-plus'
-import { onMounted, ref, onUnmounted, nextTick, Ref, inject, watch, watchEffect } from "vue"
+import { onMounted, ref, nextTick, Ref, inject, watch, watchEffect } from "vue"
 import { useI18n } from 'vue-i18n'
 import { router } from '@/router';
 import { useRoute } from 'vue-router'
@@ -50,6 +47,7 @@ interface data {
     document_favorites: {
         is_favorite: boolean
     }
+    project_perm: number
 }
 
 let items = ['open', 'newtabopen', 'share', 'target_star']
@@ -62,21 +60,15 @@ const props = defineProps<{
 const { t } = useI18n()
 const route = useRoute();
 const showFileShare = ref<boolean>(false)
-const shareSwitch = ref(true)
-const pageHeight = ref(0)
 const docId = ref('')
-const docName = ref('')
 const mydata = ref<data>()
-const selectValue = ref(1)
-const docUserId = ref('')
 const noNetwork = ref(false)
 const lists = ref<any[]>([])
-const userInfo = ref<UserInfo | undefined>()
 const iconlists = ref(['star', 'share', 'delete_p']);
 const moveVisible = ref(false);
 const projectItem = ref<any>({});
-const is_project = ref(false);
 const nulldata = ref(false)
+const projectPerm = ref()
 
 //获取服务器我的文件列表
 async function getDoucment(id: string) {
@@ -94,6 +86,12 @@ async function getDoucment(id: string) {
                 let { document: { size }, document_access_record: { last_access_time } } = data[i]
                 data[i].document.size = sizeTostr(size)
                 data[i].document_access_record.last_access_time = last_access_time.slice(0, 19)
+                if (data[i].project) {
+                    const project = projectList.value.filter(item => item.project.id === data[i].project.id)[0];
+                    if (project) {
+                        data[i].project_perm = project.self_perm_type;
+                    }
+                }
             }
         }
         lists.value = Object.values(data)
@@ -119,6 +117,10 @@ watchEffect(() => {
 const { projectList } = inject('shareData') as {
     projectList: Ref<any[]>;
 };
+
+watch(projectList, () => {
+    getDoucment(props.currentProject.project.id)
+})
 
 const refreshDoc = () => {
     getDoucment(props.currentProject.project.id)
@@ -206,16 +208,8 @@ const Sharefile = (data: data) => {
         showFileShare.value = false
         return
     }
-    if (data.document.project_id && data.document.project_id !== '0') {
-        is_project.value = true;
-    } else {
-        is_project.value = false;
-    }
-    docUserId.value = data.document.user_id
     docId.value = data.document.id
-    docName.value = data.document.name
-    selectValue.value = data.document.doc_type !== 0 ? data.document.doc_type : data.document.doc_type
-    userInfo.value = userData.value
+    projectPerm.value = data.project_perm
     showFileShare.value = true
 }
 
@@ -237,7 +231,7 @@ const Deletefile = async (data: data) => {
 //右键菜单入口
 const rightmenu = (e: MouseEvent, data: data) => {
     const el = document.querySelector('.target_star')! as HTMLElement
-    const { document: { id, user_id, project_id }, document_favorites: { is_favorite } } = data
+    const { document: { id, user_id, project_id }, document_favorites: { is_favorite }, project_perm } = data
     const viewportWidth = window.innerWidth || document.documentElement.clientWidth
     const viewportHeight = window.innerHeight || document.documentElement.clientHeight
     const rightmenu: any = document.querySelector('.rightmenu')
@@ -262,12 +256,14 @@ const rightmenu = (e: MouseEvent, data: data) => {
     })
     items = ['open', 'newtabopen', 'share', 'target_star']
     const userId = localStorage.getItem('userId');
-    if (props.currentProject.self_perm_type > 3) {
+    if (project_perm > 3) {
         items.push('movefill', 'rename', 'copyfile', 'deletefile');
-    } else if (props.currentProject.self_perm_type === 3) {
+    } else if (project_perm === 3) {
         if (user_id === userId) {
             items.push('movefill', 'rename', 'copyfile', 'deletefile')
         }
+    } else if (project_perm < 3) {
+        items.push()
     } else {
         if (user_id === userId) {
             items.push('movefill', 'rename', 'copyfile', 'deletefile')
@@ -278,23 +274,8 @@ const rightmenu = (e: MouseEvent, data: data) => {
     projectItem.value = projectList.value.filter(item => item.project.id === project_id)[0];
 }
 
-const userData = ref({
-    avatar: localStorage.getItem('avatar') || '',
-    id: localStorage.getItem('userId') || '',
-    nickname: localStorage.getItem('nickname') || ''
-})
-
 const closeShare = () => {
     showFileShare.value = false
-}
-const getPageHeight = () => {
-    pageHeight.value = window.innerHeight
-}
-const onSwitch = (state: boolean) => {
-    shareSwitch.value = state
-}
-const onSelectType = (type: number) => {
-    selectValue.value = type
 }
 
 watch(() => route.params, (v) => {
@@ -304,12 +285,6 @@ watch(() => route.params, (v) => {
 onMounted(() => {
     const id = props.currentProject.project.id
     getDoucment(id)
-    getPageHeight()
-    window.addEventListener('resize', getPageHeight)
-})
-
-onUnmounted(() => {
-    window.removeEventListener('resize', getPageHeight)
 })
 
 </script>

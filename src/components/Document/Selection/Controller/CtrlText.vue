@@ -1,6 +1,6 @@
 <script setup lang='ts'>
 import { watch, onMounted, onUnmounted, ref, reactive, onBeforeUnmount, computed } from 'vue';
-import { ClientXY, Selection } from '@/context/selection';
+import { ClientXY, Selection, SelectionTheme } from '@/context/selection';
 import { Matrix, TextShapeView } from '@kcdesign/data';
 import { Context } from '@/context';
 import TextInput from './Text/TextInput.vue';
@@ -14,11 +14,12 @@ import PointsContainer from "./Points/PointsContainer.vue";
 import { getAxle } from '@/utils/common';
 
 interface Props {
-    context: Context,
-    controllerFrame: Point[],
-    rotate: number,
-    matrix: Matrix,
+    context: Context
+    controllerFrame: Point[]
+    rotate: number
+    matrix: Matrix
     shape: TextShapeView
+    theme: SelectionTheme
 }
 
 type ProtoInput = InstanceType<typeof TextInput>;
@@ -242,12 +243,12 @@ onBeforeUnmount(() => {
         <SelectView :context="props.context" :shape="(props.shape)" :matrix="submatrix.toArray()"
             :main-notify="Selection.CHANGE_TEXT" :selection="props.context.selection.getTextSelection(props.shape)">
         </SelectView>
-        <path v-if="editing" :d="boundrectPath" fill="none" stroke='#1878f5' stroke-dasharray="2,2"></path>
+        <path v-if="editing" :d="boundrectPath" fill="none" :stroke="theme" stroke-dasharray="2,2"></path>
         <BarsContainer v-if="!editing" :context="props.context" :matrix="submatrix.toArray()" :shape="props.shape"
-            :c-frame="props.controllerFrame">
+            :c-frame="props.controllerFrame" :theme="theme">
         </BarsContainer>
         <PointsContainer v-if="!editing" :context="props.context" :matrix="submatrix.toArray()" :shape="props.shape"
-            :c-frame="props.controllerFrame" :axle="axle">
+            :c-frame="props.controllerFrame" :axle="axle" :theme="theme">
         </PointsContainer>
     </svg>
     <TextInput ref="input" :context="props.context" :shape="(props.shape)" :matrix="submatrix.toArray()"

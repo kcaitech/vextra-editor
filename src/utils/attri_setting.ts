@@ -81,19 +81,24 @@ export function get_actions_frame_x(shapes: ShapeView[], value: number) {
     for (let i = 0; i < shapes.length; i++) {
         const shape = shapes[i];
 
-        let x = value;
-
         const parent = shape.parent;
 
         if (!parent) {
             continue;
         }
 
-        if (parent.type === ShapeType.Page) {
-            const m = new Matrix(parent.matrix2Root().inverse);
+        let x = value;
+        let dx = 0;
+        const box = get_box(shape);
 
-            x = m.computeCoord2(value, 0).x;
+        if (parent.type === ShapeType.Page) {
+            const m = parent.matrix2Root();
+            dx = value - m.computeCoord2(box.x, 0).x;
+        } else {
+            dx = value - box.x;
         }
+
+        x = shape.frame.x + dx;
 
         actions.push({ target: adapt2Shape(shape), x });
     }
@@ -111,12 +116,17 @@ export function get_actions_frame_y(shapes: ShapeView[], value: number) {
         }
 
         let y = value;
+        let dy = 0;
+        const box = get_box(shape);
 
         if (parent.type === ShapeType.Page) {
-            const m = new Matrix(parent.matrix2Root().inverse);
-
-            y = m.computeCoord2(0, value).y;
+            const m = parent.matrix2Root();
+            dy = value - m.computeCoord2(0, box.y).y;
+        } else {
+            dy = value - box.y;
         }
+
+        y = shape.frame.y + dy;
 
         actions.push({ target: adapt2Shape(shape), y });
     }
@@ -289,6 +299,7 @@ export function get_box(shape: ShapeView) {
 
     const points = [{ x: 0, y: 0 }, { x: sf.width, y: 0 }, { x: sf.width, y: sf.height }, { x: 0, y: sf.height }]
         .map(p => m2p.computeCoord3(p));
+
     const minx = points.reduce((pre, cur) => Math.min(pre, cur.x), points[0].x);
     const maxx = points.reduce((pre, cur) => Math.max(pre, cur.x), points[0].x);
     const miny = points.reduce((pre, cur) => Math.min(pre, cur.y), points[0].y);

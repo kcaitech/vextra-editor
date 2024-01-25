@@ -431,6 +431,7 @@ function setColor(color: Color) {
     rgba.alpha = color.alpha;
     changeColor(color);
     update_dot_indicator_position(color);
+    update_alpha_indicator(color);
     need_update_recent.value = true;
     props.context.workspace.notify(WorkSpace.CTRL_APPEAR);
 }

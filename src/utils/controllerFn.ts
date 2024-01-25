@@ -303,3 +303,18 @@ export class DirectionCalc {
         return { x, y };
     }
 }
+
+export function is_symbol_class(shape: ShapeView) {
+    return shape.isVirtualShape
+        || [ShapeType.Symbol, ShapeType.SymbolRef, ShapeType.SymbolUnion].includes(shape.type)
+        || (function (shape: ShapeView) {
+            let p: ShapeView | undefined = shape;
+            while (p) {
+                if (ShapeType.Symbol === p.type) {
+                    return true;
+                }
+                p = p.parent;
+            }
+            return false;
+        }(shape));
+}

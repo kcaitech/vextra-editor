@@ -14,7 +14,8 @@ import {
     TableView,
     TextShape,
     TextShapeView,
-    WatchableObject
+    WatchableObject,
+    TableCellType
 } from "@kcdesign/data";
 import { Document } from "@kcdesign/data";
 import { Page } from "@kcdesign/data";
@@ -73,6 +74,11 @@ export interface ShapeXY { // 图形自身坐标系的xy
 type TextShapeLike = TextShapeView | TableCellView;
 export type ActionType = 'translate' | 'scale' | 'rotate';
 export type TableArea = 'invalid' | 'body' | 'content' | 'hover';
+
+export const enum SelectionTheme {
+    Normol = '#1878F5',
+    Symbol = '#7F58F9'
+}
 
 export class Selection extends WatchableObject implements ISave4Restore {
 
@@ -220,7 +226,7 @@ export class Selection extends WatchableObject implements ISave4Restore {
         this.m_selectPage = p;
         this.m_selectShapes.length = 0;
         this.notify(Selection.CHANGE_PAGE);
-        if(p) {
+        if (p) {
             router.replace({
                 path: '/document',
                 query: { id: this.m_context.comment.isDocumentInfo?.document.id, page_id: p.id.slice(0, 8) },
@@ -489,7 +495,25 @@ export class Selection extends WatchableObject implements ISave4Restore {
 
     // #region 特殊类型shape的读取
     get textshape() {
-        return (this.selectedShapes.length === 1 && this.selectedShapes[0] instanceof TextShapeView) ? adapt2Shape(this.selectedShapes[0]) as TextShape : undefined;
+        if (this.selectedShapes.length !== 1) {
+            return;
+        }
+        const _textshape = this.selectedShapes[0] instanceof TextShapeView ? adapt2Shape(this.selectedShapes[0]) as TextShape : undefined;
+
+        if (_textshape) {
+            return _textshape;
+        }
+        const _tabletext = (() => {
+            if (!(this.selectedShapes[0] instanceof TableView)) {
+                return
+            }
+            const tableSelection = this.m_context.tableSelection;
+            if (tableSelection.editingCell && tableSelection.editingCell.cell && tableSelection.editingCell.cell.cellType === TableCellType.Text) {
+                return tableSelection.editingCell.cell as any;
+            }
+        })();
+
+        return _tabletext as TextShape;
     }
 
     get pathshape() {

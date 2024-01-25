@@ -1,6 +1,6 @@
 <script setup lang="ts">
-import {Context} from '@/context';
-import {Shape, ShapeType, ShapeView, Variable, VariableType} from '@kcdesign/data';
+import { Context } from '@/context';
+import { ShapeView, Variable, VariableType } from '@kcdesign/data';
 import { ArrowDown } from '@element-plus/icons-vue';
 import { useI18n } from 'vue-i18n';
 import { onMounted, ref } from 'vue';
@@ -8,6 +8,7 @@ import SelectLayer from '../PopoverMenu/ComposAttri/SelectLayer.vue';
 import { get_options_from_symbol, is_symbol_or_union } from "@/utils/symbol";
 import { v4 } from "uuid";
 import SvgIcon from "@/components/common/SvgIcon.vue";
+import { computed } from 'vue';
 
 const { t } = useI18n();
 
@@ -29,6 +30,11 @@ const selectLayerName = ref('');
 const selectLayerid = ref<string[]>([]);
 const selectList = ref<any[]>([]);
 const isselectLayer = ref(false);
+
+const disabled = computed<boolean>(() => {
+    const symbol = props.context.selection.symbolview;
+    return !symbol || !is_symbol_or_union(symbol)
+});
 
 const showSelectLayer = (e: MouseEvent) => {
     e.stopPropagation();
@@ -101,13 +107,9 @@ onMounted(() => {
     <div class="container">
         <span>{{ title }}</span>
         <div class="select-layer">
-            <div class="input_lay" @click="showSelectLayer">
-<!--                :style="{ opacity: context.selection.selectedShapes[0].type !== ShapeType.Symbol ? '0.5' : '1' }"-->
+            <div :class="{ input_lay: true, disabled, }" @click="showSelectLayer">
                 <span v-if="selectLayerName" class="value" style="color: black;">{{ selectLayerName }}</span>
                 <span v-else style="color: #BFBFBF">{{ placeholder }}</span>
-<!--                <el-icon color="#666666" :style="{ transform: `rotate(${isselectLayer ? '-180deg' : '0deg'})` }">-->
-<!--                    <ArrowDown />-->
-<!--                </el-icon>-->
                 <svg-icon icon-class="down" :style="{ transform: `rotate(${isselectLayer ? '-180deg' : '0deg'})` }">
                     <ArrowDown />
                 </svg-icon>
@@ -228,6 +230,11 @@ onMounted(() => {
             transition: all 0.3s ease;
             margin-right: 7px;
         }
+    }
+
+    .disabled {
+        opacity: 0.5;
+        pointer-events: none;
     }
 }
 </style>

@@ -1,8 +1,8 @@
 <script setup lang="ts">
 import { computed, InputHTMLAttributes, nextTick, onMounted, onUnmounted, ref, watch } from "vue";
-import { Shape, ShapeType, ShapeView, SymbolUnionShape } from '@kcdesign/data';
+import { Shape, ShapeType, ShapeView } from '@kcdesign/data';
 import { Context } from "@/context";
-import { get_name, is_parent_locked, is_parent_unvisible } from "@/utils/shapelist";
+import { get_name } from "@/utils/shapelist";
 import { Perm } from "@/context/workspace";
 import { Tool } from "@/context/tool";
 import { useI18n } from 'vue-i18n';
@@ -10,6 +10,9 @@ import { is_state } from "@/utils/symbol";
 import { onUpdated } from "vue";
 import { Selection } from "@/context/selection";
 import { is_component_class } from "@/utils/listview";
+import Abbr from "@/components/common/Abbr.vue";
+import { debounce } from "lodash";
+import { shutdown_menu } from "@/utils/mouse";
 
 export interface ItemData {
     id: string
@@ -62,6 +65,10 @@ let showTriangle = ref<boolean>(false);
 const watchedShapes = new Map();
 const shapeItem = ref<HTMLDivElement | null>(null);
 const t = useI18n().t;
+const symbol_c = computed<boolean>(() => {
+    return is_component_class(props.data.shapeview());
+})
+const abbr_view = ref<number>(0);
 
 function toggleExpand(e: Event) {
     if (!showTriangle.value) {
@@ -179,12 +186,9 @@ const selectedChild = () => {
     return child
 }
 
-function is_component() {
-    return is_component_class(props.data.shapeview());
-}
-
 const mousedown = (e: MouseEvent) => {
     e.stopPropagation();
+    shutdown_menu(e, props.data.context);
     if (e.button === 0) {
         const shape = props.data.shapeview();
         const { ctrlKey, metaKey, shiftKey } = e;
@@ -233,19 +237,6 @@ const handlePerm = () => {
     }
 }
 
-function icon_class() {
-    const shape = props.data.shape();
-    if (shape.type === ShapeType.Symbol) {
-        if (shape instanceof SymbolUnionShape) {
-            return 'layer-symbol-union';
-        } else {
-            return 'layer-component';
-        }
-    } else {
-        return `layer-${shape.type}`;
-    }
-}
-
 const isLable = ref(props.data.context.tool.isLable);
 const tool_watcher = (t?: number) => {
     if (t === Tool.LABLE_CHANGE) {
@@ -257,24 +248,27 @@ function is_group() {
     return [ShapeType.Artboard, ShapeType.Group, ShapeType.Symbol].includes(props.data.shape().type);
 }
 
+function _updateAbbrView() {
+    abbr_view.value++;
+}
+
+const update_abbr_view = debounce(_updateAbbrView, 800);
+
 function updater(t?: any) {
-    if (t === 'shape-frame') {
+    if (t === 'shape-frame' || t === 'points') {
+        update_abbr_view();
         return;
     }
 
     const shape = props.data.shapeview();
 
-    const naviChilds = shape.naviChilds;
-    showTriangle.value = Boolean(naviChilds && naviChilds.length > 0);
+    const data = shape.data;
+
+    const children = data.naviChilds || (data as any).childs || shape.naviChilds || [];
+    showTriangle.value = children.length > 0 && shape.type !== ShapeType.Table;
 
     lock_status.value = shape.isLocked() ? 1 : 0;
     visible_status.value = shape.isVisible() ? 0 : 1;
-    // if (is_parent_locked(shape) && !lock_status.value) {
-    //     lock_status.value = 2;
-    // }
-    // if (is_parent_unvisible(shape) && !visible_status.value) {
-    //     visible_status.value = 2;
-    // }
 }
 
 let oldshape: Shape | undefined;
@@ -346,7 +340,7 @@ const getHovered = () => {
 }
 onUpdated(() => {
     nextTick(current_node_radius);
-    getHovered()
+    getHovered();
 })
 onMounted(() => {
     handlePerm()
@@ -364,7 +358,7 @@ onUnmounted(() => {
 
 <template>
     <div ref="shapeItem"
-        :class="{ container: true, selected: props.data.selected, selectedChild: selectedChild(), component: is_component(), hovered: hovered && !props.data.selected, firstAngle: topAngle, lastAngle: bottomAngle }"
+        :class="{ container: true, selected: props.data.selected, selectedChild: selectedChild(), component: symbol_c, hovered: hovered && !props.data.selected, firstAngle: topAngle, lastAngle: bottomAngle }"
         @mousemove="hoverShape" @mouseleave="unHoverShape" @mousedown="mousedown" @mouseup="mouseup">
         <!-- 缩进 -->
         <div class="ph" :style="{ width: `${ph_width}px` }"></div>
@@ -374,9 +368,9 @@ onUnmounted(() => {
                 :style="{ transform: props.data.expand ? 'rotate(0deg)' : 'rotate(-90deg)' }"></svg-icon>
         </div>
         <!-- icon -->
-        <div class="container-svg zero-symbol" @dblclick="fitToggleContainer" :style="{ opacity: !visible_status ? 1 : .3 }"
-            :class="{ color: !is_component(), stroke: data.shape().type === ShapeType.Oval && is_component(), no_stroke: !is_component() && data.shape().type === ShapeType.Oval }">
-            <svg-icon class="svg" :icon-class="icon_class()"></svg-icon>
+        <div class="container-svg zero-symbol" @dblclick="fitToggleContainer"
+            :style="{ opacity: !visible_status ? 1 : .3 }">
+            <Abbr :view="abbr_view" :shape="data.shapeview()" :theme="symbol_c ? '#7f58f9' : '#595959'"></Abbr>
         </div>
         <!-- 内容描述 -->
         <div class="text" :style="{ display: isInput ? 'none' : '', opacity: !visible_status ? 1 : .3 }">
@@ -448,11 +442,6 @@ onUnmounted(() => {
         justify-content: center;
         align-items: center;
         margin-right: 3px;
-
-        .svg {
-            width: 13px;
-            height: 13px;
-        }
     }
 
     >.text {
@@ -587,24 +576,11 @@ onUnmounted(() => {
 
 .component {
     color: var(--component-color);
-    fill: var(--component-color);
 
     &>.text>.txt,
     &>.text>.tool_icon {
         color: var(--component-color);
     }
-}
-
-.color {
-    fill: #595959;
-}
-
-.stroke {
-    stroke: #7F58F9;
-}
-
-.no_stroke {
-    stroke: #595959;
 }
 
 .firstAngle {
@@ -615,4 +591,5 @@ onUnmounted(() => {
 .lastAngle {
     border-bottom-left-radius: 8px !important;
     border-bottom-right-radius: 8px !important;
-}</style>
+}
+</style>
