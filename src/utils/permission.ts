@@ -6,9 +6,7 @@ const whiteList = ['/', '/login', '/404', '/privacypolicy', '/serviceagreement']
 router.beforeEach((to, from, next) => {
     const token = localStorage.getItem('token')
     if (to.meta.title) {
-        document.title = to.meta.title as string
-    } else {
-        document.title = 'ProtoDesign'
+        document.title = to.meta.title as string;
     }
     //判断是否存在token且有效
     if (token) {
