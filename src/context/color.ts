@@ -38,7 +38,7 @@ export class ColorCtx extends WatchableObject {
     get gradient() {
         return this.m_gradient
     }
-    gradinet_locat(locat: { index: number, type: 'fills' | 'borders' }) {
+    gradinet_locat(locat: { index: number, type: 'fills' | 'borders' } | undefined) {
         this.m_locat = locat;
     }
     get locat() {

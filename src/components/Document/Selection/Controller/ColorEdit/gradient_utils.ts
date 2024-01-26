@@ -30,7 +30,7 @@ export const get_add_gradient_color = (stops: Stop[], position: number) => {
 
 export const get_gradient = (context: Context, shape: ShapeView) => {
     const locat = context.color.locat;
-    if (!locat) return;
+    if (!locat || !shape || !shape.style) return;
     const gradient_type = shape.style[locat.type];
     const gradient = gradient_type[locat.index].gradient;
     return gradient;

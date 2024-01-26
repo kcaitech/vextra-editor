@@ -65,17 +65,17 @@ export function get_actions_add_fill(shapes: ShapeView[], fill: Fill) {
     }
     return actions;
 }
-export function get_aciton_fill_gradient(shapes: ShapeView[], index: number) {
+export function get_aciton_gradient(shapes: ShapeView[], index: number, type: 'fills' | 'borders') {
     const actions: BatchAction4[] = [];
     for (let i = 0, l = shapes.length; i < l; i++) {
-        actions.push({ target: adapt2Shape(shapes[i]), index, type: 'fills' });
+        actions.push({ target: adapt2Shape(shapes[i]), index, type });
     }
     return actions;
 }
-export function get_aciton_fill_gradient_stop(shapes: ShapeView[], index: number, value: any) {
+export function get_aciton_gradient_stop(shapes: ShapeView[], index: number, value: any, type: 'fills' | 'borders') {
     const actions: BatchAction5[] = [];
     for (let i = 0, l = shapes.length; i < l; i++) {
-        actions.push({ target: adapt2Shape(shapes[i]), index, value, type: 'fills' });
+        actions.push({ target: adapt2Shape(shapes[i]), index, value, type });
     }
     return actions;
 }
@@ -118,7 +118,7 @@ export function get_actions_fill_enabled(shapes: ShapeView[], index: number, val
     }
     return actions;
 }
-export function get_actions_fill_filltype(shapes: ShapeView[], index: number, value: FillType) {
+export function get_actions_filltype(shapes: ShapeView[], index: number, value: FillType) {
     const actions: BatchAction[] = [];
     for (let i = 0; i < shapes.length; i++) {
         if (shapes[i].type === ShapeType.Cutout) continue;

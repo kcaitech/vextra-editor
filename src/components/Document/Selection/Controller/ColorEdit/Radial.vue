@@ -8,7 +8,7 @@ import { AsyncGradientEditor, Color, Matrix, ShapeView, Stop, adapt2Shape } from
 import { nextTick, onMounted, onUnmounted, ref } from 'vue';
 import trans_bgc from '@/assets/trans_bgc3.png';
 import { getHorizontalAngle } from '@/utils/common';
-import { get_aciton_fill_gradient_stop } from '@/utils/shape_style';
+import { get_aciton_gradient_stop } from '@/utils/shape_style';
 import { v4 } from 'uuid';
 import TemporaryStop from './TemporaryStop.vue';
 import Percent from './Percent.vue';
@@ -153,12 +153,12 @@ const dot_mousemove = (e: MouseEvent) => {
         } else if (dot_type === 'to') {
             gradientEditor.execute_to(posi);
         } else if (dot_type === 'ellipse') {
-            update_ellipse_dot(e);
             const m_p = props.context.workspace.getContentXY(e);
             const m = new Matrix();
             m.trans(-dot1.value.x, -dot1.value.y);
             m.rotate(-rotate_r.value);
-            const p = m.computeCoord3(m_p).y / line_length.value
+            const p = m.computeCoord3(m_p).y / line_length.value;
+            update_ellipse_dot(e, p);
             gradientEditor.execute_elipselength(Math.abs(p));
         }
     } else {
@@ -243,7 +243,7 @@ const add_stop = (e: MouseEvent) => {
     const page = props.context.selection.selectedPage!;
     const editor = props.context.editor4Page(page);
     const stop = new Stop(posi, _stop.color, v4());
-    const actions = get_aciton_fill_gradient_stop(selected, idx, stop);
+    const actions = get_aciton_gradient_stop(selected, idx, stop, locat.type);
     editor.addShapesGradientStop(actions);
     nextTick(() => {
         down_stop(e, _stop.index);
@@ -332,13 +332,13 @@ const ellipse_dot = (e: MouseEvent) => {
     ellipse_show.value = true;
 }
 
-const update_ellipse_dot = (e: MouseEvent) => {
+const update_ellipse_dot = (e: MouseEvent, l?: number) => {
     const r_p = props.context.workspace.getContentXY(e);
     percent_posi.value.x = r_p.x + 20;
     percent_posi.value.y = r_p.y + 20;
     const gradient = get_gradient(props.context, shapes.value[0] as ShapeView);
     if (!gradient) return;
-    percent.value = +((gradient.elipseLength || 0) * 100).toFixed(0);
+    percent.value = +((l || gradient.elipseLength || 0) * 100).toFixed(0);
 }
 const leave_ellipse_dot = () => {
     if (down_ellipse.value) return;

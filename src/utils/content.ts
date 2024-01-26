@@ -33,6 +33,7 @@ import { fit_no_transform, is_parent_locked, is_parent_unvisible } from "./shape
 import { is_part_of_symbol, is_state, make_symbol, one_of_is_symbolref } from "@/utils/symbol";
 import { Groups } from "aws-sdk/clients/budgets";
 import { message } from "./message";
+import { TableSelection } from "@/context/tableselection";
 
 export interface Media {
     name: string
@@ -1253,4 +1254,30 @@ export function detectZoom() {
     if (ratio) {
         ratio = Math.round(ratio * 100);
     }
+}
+
+
+export const get_table_range = (table: TableSelection) => {
+    const is_edting = table.editingCell;
+    let range
+    if (is_edting) {
+        range = {
+            rowStart: is_edting.index.row,
+            rowEnd: is_edting.index.row,
+            colStart: is_edting.index.col,
+            colEnd: is_edting.index.col
+        };
+    } else {
+        range = {
+            rowStart: table.tableRowStart,
+            rowEnd: table.tableRowEnd,
+            colStart: table.tableColStart,
+            colEnd: table.tableColEnd
+        };
+    }
+    return range;
+}
+
+export const is_editing = (table: TableSelection) => {
+    return table.editingCell || table.tableRowStart > -1 || table.tableColStart > -1;
 }

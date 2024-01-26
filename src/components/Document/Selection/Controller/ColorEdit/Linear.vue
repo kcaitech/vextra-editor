@@ -8,7 +8,7 @@ import { AsyncGradientEditor, Color, Matrix, Point2D, ShapeView, Stop, adapt2Sha
 import { nextTick, onMounted, onUnmounted, ref, watch } from 'vue';
 import trans_bgc from '@/assets/trans_bgc3.png';
 import { getHorizontalAngle } from '@/utils/common';
-import { get_aciton_fill_gradient_stop } from '@/utils/shape_style';
+import { get_aciton_gradient_stop } from '@/utils/shape_style';
 import { v4 } from 'uuid';
 import TemporaryStop from './TemporaryStop.vue';
 import Percent from './Percent.vue';
@@ -184,7 +184,7 @@ const add_stop = (e: MouseEvent) => {
     const page = props.context.selection.selectedPage!;
     const editor = props.context.editor4Page(page);
     const stop = new Stop(posi, _stop.color, v4());
-    const actions = get_aciton_fill_gradient_stop(selected, idx, stop);
+    const actions = get_aciton_gradient_stop(selected, idx, stop, locat.type);
     editor.addShapesGradientStop(actions);
     nextTick(() => {
         down_stop(e, _stop.index);

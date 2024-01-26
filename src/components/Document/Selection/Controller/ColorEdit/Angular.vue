@@ -8,7 +8,7 @@ import { AsyncGradientEditor, Color, Matrix, ShapeView, Stop, adapt2Shape } from
 import { nextTick, onMounted, onUnmounted, ref } from 'vue';
 import trans_bgc from '@/assets/trans_bgc3.png';
 import { getHorizontalAngle } from '@/utils/common';
-import { get_aciton_fill_gradient_stop } from '@/utils/shape_style';
+import { get_aciton_gradient_stop } from '@/utils/shape_style';
 import { v4 } from 'uuid';
 import TemporaryStop from './TemporaryStop.vue';
 import Percent from './Percent.vue';
@@ -71,20 +71,19 @@ const get_linear_points = () => {
     dot2.value = { x: d2.x, y: d2.y, type: 'to' }
     line_length.value = Math.sqrt(Math.pow(d2.x - d1.x, 2) + Math.pow(d2.y - d1.y, 2));
     rotate.value = getHorizontalAngle({ x: d1.x, y: d1.y }, { x: d2.x, y: d2.y });
-    dot3.value = { type: 'ellipse', ...m.computeCoord3(get_elipse_point(gradient.elipseLength || 0, gradient.from, gradient.to, frame.width, frame.height)) };
+    dot3.value = { type: 'ellipse', ...get_elipse_point2(gradient.elipseLength || 0, line_length.value, d1) };
 
     ellipseL.value = gradient.elipseLength || 0;
     ellipse_length.value = Math.sqrt(Math.pow(dot3.value.x - dot1.value.x, 2) + Math.pow(dot3.value.y - dot1.value.y, 2));
     dot.value = true;
 }
 
-function get_elipse_point(ellipseLength: number, from: { x: number, y: number }, to: { x: number, y: number }, w: number, height: number) {
-    const __r = getHorizontalAngle({ x: from.x, y: from.y }, { x: to.x, y: to.y });
-    const ellipse = { x: 0, y: ellipseLength * 0.5 };
-
+function get_elipse_point2(ellipseLength: number, main_apex_length:number, from: { x: number, y: number }) {
+    const ellipse = { x: main_apex_length * ellipseLength, y: 0 };
     const m = new Matrix();
-    m.rotate(__r * Math.PI / 180);
+    m.rotate(Math.PI * 0.5 + rotate_r.value);
     m.trans(from.x, from.y);
+    
     return m.computeCoord3(ellipse);
 }
 const down_ellipse = ref(false);
@@ -190,7 +189,7 @@ const add_stop = (e: MouseEvent) => {
     const page = props.context.selection.selectedPage!;
     const editor = props.context.editor4Page(page);
     const stop = new Stop(posi, _stop.color, v4());
-    const actions = get_aciton_fill_gradient_stop(selected, idx, stop);
+    const actions = get_aciton_gradient_stop(selected, idx, stop, locat.type);
     editor.addShapesGradientStop(actions);
     nextTick(() => {
         down_stop(e, _stop.index);
