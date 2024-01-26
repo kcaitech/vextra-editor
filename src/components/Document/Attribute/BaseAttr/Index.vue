@@ -24,7 +24,6 @@ import { watch } from 'vue';
 import { format_value as format } from '@/utils/common';
 interface Props {
     context: Context
-    dataChange: number
     selectionChange: number
     triggle: any[]
 }
@@ -357,9 +356,6 @@ function selection_change() {
     calc_attri();
 }
 const stop1 = watch(() => props.selectionChange, selection_change);
-// const stop2 = watch(() => props.dataChange, () => {
-//     calc_attri('data-change');
-// });
 const stop3 = watch(() => props.triggle, v => {
     if (v.includes('layout')) {
         calc_attri();
@@ -369,7 +365,6 @@ const stop3 = watch(() => props.triggle, v => {
 onMounted(selection_change);
 onUnmounted(() => {
     stop1();
-    // stop2();
     stop3();
 })
 </script>

@@ -254,8 +254,8 @@ function _updateAbbrView() {
 
 const update_abbr_view = debounce(_updateAbbrView, 800);
 
-function updater(t?: any) {
-    if (t === 'shape-frame' || t === 'points') {
+function updater(...args: any[]) {
+    if (args.includes('shape-frame') || args.includes('points')) {
         update_abbr_view();
         return;
     }
@@ -281,10 +281,12 @@ const stop = watch(() => props.data.id, (value, old) => {
 
 function watchShapes() {
     const needWatchShapes = new Map();
-    let shape = props.data.shape();
+    let shape = props.data.shapeview();
     let p = shape.parent;
     while (p && p.type !== ShapeType.Page) {
-        needWatchShapes.set(p.id, p);
+        if (!p.__watcher.has(updater)) {
+            needWatchShapes.set(p.id, p);
+        }
         p = p.parent;
     }
     watchedShapes.forEach((v, k) => {

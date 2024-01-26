@@ -36,7 +36,8 @@ function pather() {
         return;
     }
 
-    const f = props.shape.data.boundingBox2();
+    const shape = props.shape.data;
+    const f = shape.frame;
 
     let max_length = f.width;
     let max_side = 'w';
@@ -50,16 +51,27 @@ function pather() {
 
     const o = { x: 0, y: 0 };
 
+    let new_h = 100;
+    let new_w = 100;
+
     if (max_side === 'h') {
-        o.x = (100 - f.width * ratio) / 2;
+        new_w = f.width * ratio;
+        o.x = (100 - new_w) / 2;
     } else {
-        o.y = (100 - f.height * ratio) / 2
+        new_h = f.height * ratio;
+        o.y = (100 - new_h) / 2
     }
 
     const m = new Matrix();
     m.scale(ratio);
+    if (!props.shape.isNoTransform()) {
+        m.trans(-new_w / 2, -new_h / 2);
+        if (shape.rotation) m.rotate(shape.rotation / 180 * Math.PI);
+        if (shape.isFlippedHorizontal) m.flipHoriz();
+        if (shape.isFlippedVertical) m.flipVert();
+        m.trans(new_w / 2, new_h / 2);
+    }
     m.trans(o.x, o.y);
-
     const _path = props.shape.getPath().clone();
     _path.transform(m);
     path.value = _path.toString();

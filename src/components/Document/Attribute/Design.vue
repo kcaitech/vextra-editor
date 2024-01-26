@@ -222,12 +222,12 @@ onUnmounted(() => {
             <div v-if="!shapes.length">
                 <PageBackgorund :context="props.context" v-if="props.context.selection.selectedPage"
                     :page="props.context.selection.selectedPage"></PageBackgorund>
-                <CutoutExport :shapes="shapes" :context="props.context"></CutoutExport>
+                <CutoutExport :shapes="shapes" :context="props.context" :trigger="reflush_trigger"></CutoutExport>
             </div>
             <div v-else class="attr-wrapper">
                 <Arrange :context="props.context" :shapes="shapes"></Arrange>
                 <ShapeBaseAttr v-if="baseAttr" :context="props.context" :selection-change="reflush_by_selection"
-                    :triggle="reflush_trigger" :dataChange="reflush_by_shapes"></ShapeBaseAttr>
+                    :triggle="reflush_trigger"></ShapeBaseAttr>
                 <BaseForPathEdit v-if="editAttr" :context="props.context"></BaseForPathEdit>
                 <Opacity v-if="opacity && !WITHOUT_OPACITY.includes(shapeType)" :context="props.context" :change="reflush">
                 </Opacity>
@@ -243,7 +243,7 @@ onUnmounted(() => {
                 </TableText>
                 <Shadow v-if="WITH_SHADOW.includes(shapeType)" :shapes="shapes" :context="props.context">
                 </Shadow>
-                <CutoutExport :shapes="shapes" :context="props.context"></CutoutExport>
+                <CutoutExport :shapes="shapes" :context="props.context" :trigger="reflush_trigger"></CutoutExport>
             </div>
         </el-scrollbar>
     </section>

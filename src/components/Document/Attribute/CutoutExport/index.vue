@@ -1,6 +1,6 @@
 <script setup lang="ts">
 import { ExportFileFormat, ExportFormat, ExportFormatNameingScheme, ExportOptions, ExportVisibleScaleType, Shape, ShapeType, ShapeView } from '@kcdesign/data';
-import { ref, onMounted, onUnmounted, reactive, nextTick } from 'vue';
+import { ref, onMounted, onUnmounted, reactive, nextTick, watch } from 'vue';
 import { Context } from '@/context';
 import PreinstallSelect from './PreinstallSelect.vue';
 import Preview from './Preview.vue';
@@ -16,6 +16,7 @@ const { t } = useI18n();
 interface Props {
     context: Context
     shapes: ShapeView[]
+    trigger: any[]
 }
 interface SvgFormat {
     id: string
@@ -39,7 +40,6 @@ const formatItems: string[] = ['PNG', 'JPG', 'SVG'];
 const fileFormat: ExportFileFormat[] = [ExportFileFormat.Png, ExportFileFormat.Jpg, ExportFileFormat.Svg, ExportFileFormat.Pdf];
 const preinstallArgus: FormatItems[] = reactive([]);
 const reflush = ref<number>(0);
-const watchedShapes = new Map();
 const mixed = ref<boolean>(false);
 const exportOption = ref<ExportOptions>();
 const trim_bg = ref(false);
@@ -48,33 +48,12 @@ const previewUnfold = ref(false);
 const preview = ref();
 
 let renderSvgs = ref<SvgFormat[]>([]);
-function watchShapes() {
-    const needWatchShapes = new Map();
-    const selection = props.context.selection;
-    if (selection.selectedPage) {
-        needWatchShapes.set(selection.selectedPage.id, selection.selectedPage);
-    }
-    if (selection.selectedShapes.length > 0) {
-        selection.selectedShapes.forEach((v) => {
-            needWatchShapes.set(v.id, v);
-        })
-    }
-    watchedShapes.forEach((v, k) => {
-        if (needWatchShapes.has(k)) return;
-        v.unwatch(watcher);
-        watchedShapes.delete(k);
-    })
-    needWatchShapes.forEach((v, k) => {
-        if (watchedShapes.has(k)) return;
-        v.watch(watcher);
-        watchedShapes.set(k, v);
-    })
-}
-function watcher(...args: any[]) {
+
+function update(args: any[]) {
     if (args.includes('export-options')) {
         updateData();
     }
-    if (args.includes('shape-frame')) {
+    if (args.includes('layout')) {
         nextTick(() => {
             if (preview.value) {
                 const selected = props.context.selection.selectedShapes;
@@ -454,7 +433,6 @@ const exportPageImage = () => {
 
 
 function update_by_shapes() {
-    watchShapes();
     updateData();
     showCheckbox();
 }
@@ -462,6 +440,9 @@ function selection_watcher(t: number) {
     if (t === Selection.CHANGE_SHAPE) update_by_shapes();
     if (t === Selection.CHANGE_PAGE) update_by_shapes();
 }
+const stop = watch(() => props.trigger, (v) => {
+    update(v);
+})
 // hooks
 onMounted(() => {
     update_by_shapes();
@@ -470,7 +451,7 @@ onMounted(() => {
 });
 onUnmounted(() => {
     props.context.selection.unwatch(selection_watcher);
-    watchedShapes.forEach(v => v.unwatch(watcher))
+    stop();
 });
 
 </script>
