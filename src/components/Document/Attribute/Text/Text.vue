@@ -20,7 +20,7 @@ interface Props {
     context: Context
     shape: TextShapeView
     textShapes: TextShapeView[]
-    dataChange: number
+    trigger: any[]
 }
 
 const props = defineProps<Props>();
@@ -363,7 +363,7 @@ const _textFormat = () => {
         if (format.highlightIsMulti === 'unlikeness') highlightIsMulti.value = true;
     }
 }
-const textFormat = throttle(_textFormat, 240, { leading: true })
+const textFormat = throttle(_textFormat, 320, { leading: true })
 
 function selection_wather(t: number) {
     if (t === Selection.CHANGE_TEXT) {
@@ -671,9 +671,14 @@ const filterAlpha = (a: number) => {
     }
 }
 
-const stop = watch(() => props.dataChange, textFormat);
+// const stop = watch(() => props.dataChange, textFormat);
 const stop2 = watch(() => props.textShapes, (v) => {
     shapes.value = v;
+})
+const stop3 = watch(() => props.trigger, v => {
+    if (v.includes('text')) {
+        textFormat();
+    }
 })
 onMounted(() => {
     props.context.selection.watch(selection_wather);
@@ -683,8 +688,9 @@ onMounted(() => {
 onUnmounted(() => {
     props.context.selection.unwatch(selection_wather);
     props.context.workspace.unwatch(workspace_wather);
-    stop();
+    // stop();
     stop2();
+    stop3();
 })
 </script>
 

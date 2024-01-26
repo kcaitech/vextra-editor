@@ -204,7 +204,7 @@ const update = throttle(_update, 320, { leading: true });
 
 const stop = watch(() => props.change, update);
 
-onMounted(update)
+onMounted(update);
 onUnmounted(() => {
     if (opacity_editor) {
         opacity_editor.close();

@@ -89,6 +89,7 @@ const editAttr = ref<boolean>(false);
 const reflush_by_selection = ref<number>(0);
 const reflush_by_shapes = ref<number>(0);
 const reflush = ref<number>(0);
+const reflush_trigger = ref<any[]>([]);
 
 function _selection_change() {
     baseAttr.value = true;
@@ -127,7 +128,8 @@ function _selection_change() {
 }
 const selection_change = debounce(_selection_change, 160, { leading: true });
 
-function update_by_shapes(t: any) {
+function update_by_shapes(...args: any[]) {
+    reflush_trigger.value = [...(args?.length ? args : [])];
     reflush_by_shapes.value++;
     reflush.value++;
 }
@@ -182,7 +184,7 @@ const need_instance_attr_show = () => {
     return v;
 }
 
-const watchedShapes = new Map();
+const watchedShapes = new Map<string, ShapeView>();
 function watch_shapes() {
     watchedShapes.forEach((v, k) => {
         v.unwatch(update_by_shapes);
@@ -195,7 +197,6 @@ function watch_shapes() {
         watchedShapes.set(v.id, v)
     });
 }
-
 
 onMounted(() => {
     props.context.selection.watch(selection_watcher);
@@ -225,8 +226,8 @@ onUnmounted(() => {
             </div>
             <div v-else class="attr-wrapper">
                 <Arrange :context="props.context" :shapes="shapes"></Arrange>
-                <ShapeBaseAttr v-if="baseAttr" :context="props.context" :data-change="reflush_by_shapes"
-                    :selection-change="reflush_by_selection"></ShapeBaseAttr>
+                <ShapeBaseAttr v-if="baseAttr" :context="props.context" :selection-change="reflush_by_selection"
+                    :triggle="reflush_trigger" :dataChange="reflush_by_shapes"></ShapeBaseAttr>
                 <BaseForPathEdit v-if="editAttr" :context="props.context"></BaseForPathEdit>
                 <Opacity v-if="opacity && !WITHOUT_OPACITY.includes(shapeType)" :context="props.context" :change="reflush">
                 </Opacity>
@@ -237,7 +238,7 @@ onUnmounted(() => {
                 <Border v-if="WITH_BORDER.includes(shapeType)" :shapes="shapes" :context="props.context"></Border>
                 <Text v-if="WITH_TEXT.includes(shapeType)" :shape="((textShapes[0]) as TextShapeView)"
                     :textShapes="((textShapes) as TextShapeView[])" :context="props.context"
-                    :data-change="reflush_by_shapes"></Text>
+                    :trigger="reflush_trigger"></Text>
                 <TableText v-if="WITH_TABLE.includes(shapeType)" :shape="(shapes[0] as TableView)" :context="props.context">
                 </TableText>
                 <Shadow v-if="WITH_SHADOW.includes(shapeType)" :shapes="shapes" :context="props.context">

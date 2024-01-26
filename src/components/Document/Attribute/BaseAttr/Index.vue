@@ -21,10 +21,12 @@ import {
     get_shapes_rotation
 } from '@/utils/attri_setting';
 import { watch } from 'vue';
+import { format_value as format } from '@/utils/common';
 interface Props {
     context: Context
     dataChange: number
     selectionChange: number
+    triggle: any[]
 }
 interface LayoutOptions {
     s_adapt: boolean
@@ -63,7 +65,6 @@ function _calc_attri() {
     if (!selected.length) {
         return;
     }
-
     const xy = get_xy(selected, mixed);
     x.value = xy.x;
     y.value = xy.y;
@@ -72,7 +73,8 @@ function _calc_attri() {
     isLock.value = get_constrainer_proportions(selected);
     rotate.value = get_shapes_rotation(selected, mixed);
 }
-const calc_attri = throttle(_calc_attri, 60, { leading: true });
+
+const calc_attri = throttle(_calc_attri, 96, { trailing: true });
 
 const parentSymbolRef = () => {
     const len = props.context.selection.selectedShapes.length;
@@ -355,31 +357,40 @@ function selection_change() {
     calc_attri();
 }
 const stop1 = watch(() => props.selectionChange, selection_change);
-const stop2 = watch(() => props.dataChange, calc_attri)
+// const stop2 = watch(() => props.dataChange, () => {
+//     calc_attri('data-change');
+// });
+const stop3 = watch(() => props.triggle, v => {
+    if (v.includes('layout')) {
+        calc_attri();
+    }
+});
+
 onMounted(selection_change);
 onUnmounted(() => {
     stop1();
-    stop2();
+    // stop2();
+    stop3();
 })
 </script>
 
 <template>
     <div class="table">
-        <div class="tr">
-            <IconText class="td positon" ticon="X" :text="typeof (x) === 'number' ? x.toFixed(fix) : x"
-                @onchange="onChangeX" :disabled="model_disable_state.x" :context="context" />
-            <IconText class="td positon" ticon="Y" :text="typeof (y) === 'number' ? y.toFixed(fix) : y"
-                @onchange="onChangeY" :disabled="model_disable_state.y" :context="context" />
+        <div class="tr" :reflush="reflush">
+            <IconText class="td positon" ticon="X" :text="format(x)" @onchange="onChangeX" :disabled="model_disable_state.x"
+                :context="context" />
+            <IconText class="td positon" ticon="Y" :text="format(y)" @onchange="onChangeY" :disabled="model_disable_state.y"
+                :context="context" />
             <div class="adapt" v-if="s_adapt" :title="t('attr.adapt')" @click="adapt">
                 <svg-icon icon-class="adapt"></svg-icon>
             </div>
             <div style="width: 32px;height: 32px;" v-else></div>
         </div>
         <div class="tr" :reflush="reflush">
-            <IconText class="td frame" ticon="W" :text="typeof (w) === 'number' ? w.toFixed(fix) : w" @onchange="onChangeW"
+            <IconText class="td frame" ticon="W" :text="format(w)" @onchange="onChangeW"
                 :disabled="model_disable_state.width" :context="context" />
 
-            <IconText class="td frame" ticon="H" :text="typeof (h) === 'number' ? h.toFixed(fix) : h" @onchange="onChangeH"
+            <IconText class="td frame" ticon="H" :text="format(h)" @onchange="onChangeH"
                 :disabled="model_disable_state.height" :context="context" />
             <div class="lock" v-if="!s_length" @click="lockToggle" :class="{ 'active': isLock }">
                 <svg-icon :icon-class="isLock ? 'lock' : 'unlock'" :class="{ 'active': isLock }"></svg-icon>
