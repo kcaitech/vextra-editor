@@ -1,7 +1,7 @@
 <script setup lang="ts">
 import { onMounted, onUnmounted, reactive, ref, watch } from 'vue';
 import { Context } from '@/context';
-import { Color, Shadow, ShadowPosition, ShapeView, ShapeType } from "@kcdesign/data";
+import { Color, Shadow, ShadowPosition, ShapeView, ShapeType, CrdtIndex } from "@kcdesign/data";
 import TypeHeader from '../TypeHeader.vue';
 import { useI18n } from 'vue-i18n';
 import ShadowDetail from './ShadowDetail.vue'
@@ -82,11 +82,11 @@ function updateData() {
   reflush.value++;
 }
 function watcher(...args: any[]) {
-  if (args.length > 0 && (args.includes('style') || args.includes('variable'))) updateData();
+  if (args.length > 0 && (args.includes('style') || args.includes('variables'))) updateData();
 }
 function addShadow(): void {
   const len = props.shapes.length;
-  const s = new Shadow(v4(), true, 10, new Color(0.3, 0, 0, 0), 0, 4, 0, ShadowPosition.Outer);
+  const s = new Shadow(new CrdtIndex([], 0), v4(), true, 10, new Color(0.3, 0, 0, 0), 0, 4, 0, ShadowPosition.Outer);
   if (len === 1) {
     const e = props.context.editor4Shape(props.context.selection.selectedShapes[0]);
     e.addShadow(s);

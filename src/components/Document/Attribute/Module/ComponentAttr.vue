@@ -157,7 +157,7 @@ const get_dialog_posi = (div: HTMLDivElement | undefined) => {
 }
 
 function variable_watcher(args: any[]) {
-    if (args && (args.includes('variable') || args.includes('childs'))) update_variable_list();
+    if (args && (args.includes('variables') || args.includes('childs'))) update_variable_list();
 }
 
 function list_change(data: string[]) {

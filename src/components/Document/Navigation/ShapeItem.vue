@@ -252,7 +252,7 @@ function is_group() {
 }
 
 function updater(t?: any) {
-    if (t === 'shape-frame') {
+    if (t === 'frame') {
         return;
     }
 

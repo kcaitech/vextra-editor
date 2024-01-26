@@ -296,7 +296,7 @@ handler['tab'] = enterTab;
 handler['u'] = Underline;
 handler['i'] = Italic;
 handler['b'] = Bold;
-
+// todo end home
 
 
 export function handleKeyEvent(e: KeyboardEvent, context: Context, shapetext: Text, editor: TextShapeEditor) {

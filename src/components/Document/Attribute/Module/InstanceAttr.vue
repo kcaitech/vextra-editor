@@ -84,7 +84,7 @@ const untie = () => {
 }
 
 const shape_watcher = (arg: any) => { // todo 优化updateData时机
-    if (arg === 'shape-frame') {
+    if (arg === 'frame') {
         return;
     }
 

@@ -102,6 +102,7 @@ const handleMenuStatus = (status: boolean, index: number) => {
 const getDocumentComment = async (id: string) => {
     try {
         const { data } = await comment_api.getDocumentCommentAPI({ doc_id: id })
+        if (!data) return;
         data.forEach((obj: { children: any[]; commentMenu: any; }) => {
             obj.commentMenu = commentMenuItems.value
             obj.children = []

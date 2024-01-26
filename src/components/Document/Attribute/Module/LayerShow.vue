@@ -90,7 +90,7 @@ const selected_watcher = (t: number) => {
 }
 
 function layer_watcher(args: any) {
-    if (args === 'variable' || args === 'map') isBind();
+    if (args === 'variables' || args === 'map') isBind();
 }
 
 watch(() => shape.value, (v, o) => {

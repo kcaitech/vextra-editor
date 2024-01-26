@@ -106,7 +106,7 @@ function update() {
 
 function text_watcher(args: any) {
     if (args === 'text') get_text();
-    if (args === 'variable' || args === 'map') isBind();
+    if (args === 'variables' || args === 'map') isBind();
 }
 
 watch(() => sym_layer.value, (v, o) => {

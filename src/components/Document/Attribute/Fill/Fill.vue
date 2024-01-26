@@ -1,7 +1,7 @@
 <script setup lang="ts">
 import { computed, onMounted, onUnmounted, reactive, ref, watch } from 'vue';
 import { Context } from '@/context';
-import { Color, Fill, FillType, Shape, ShapeType, ShapeView, TableCell, TableView } from "@kcdesign/data";
+import { Color, CrdtIndex, Fill, FillType, Shape, ShapeType, ShapeView, TableCell, TableView } from "@kcdesign/data";
 import { Reg_HEX } from "@/utils/RegExp";
 import TypeHeader from '../TypeHeader.vue';
 import { useI18n } from 'vue-i18n';
@@ -139,12 +139,12 @@ function updateData() {
 }
 
 function watcher(...args: any[]) {
-    if (args.length > 0 && (args.includes('style') || args.includes('variable'))) updateData();
+    if (args.length > 0 && (args.includes('style') || args.includes('variables'))) updateData();
 }
 
 function addFill(): void {
     const color = new Color(0.2, 0, 0, 0);
-    const fill = new Fill(v4(), true, FillType.SolidColor, color);
+    const fill = new Fill(new CrdtIndex([], 0), v4(), true, FillType.SolidColor, color);
     const s = props.context.selection.selectedShapes[0];
     if (len.value === 1 && s.type !== ShapeType.Group) {
         const e = props.context.editor4Shape(s);
