@@ -47,7 +47,15 @@ function pather() {
         if (shape.isFlippedHorizontal) m.flipHoriz();
         if (shape.isFlippedVertical) m.flipVert();
     }
-    const box = XYsBounding([{ x: 0, y: 0 }, { x: f.width, y: 0 }, { x: f.width, y: f.height }, { x: 0, y: f.height }].map(p => m.computeCoord3(p)));
+    const box = XYsBounding(
+        [
+            { x: 0, y: 0 },
+            { x: f.width, y: 0 },
+            { x: f.width, y: f.height },
+            { x: 0, y: f.height }
+        ].map(p => m.computeCoord3(p))
+    );
+
     const new_w = box.right - box.left;
     const new_h = box.bottom - box.top;
     let max_length = new_w;
@@ -58,7 +66,10 @@ function pather() {
     m.scale(ratio);
     m.trans(50, 50);
 
-    const _path = props.shape.getPath().clone();
+    const _path = props.shape
+        .getPath()
+        .clone();
+
     _path.transform(m);
     path.value = _path.toString();
 }
@@ -69,7 +80,7 @@ onUnmounted(e);
 <template>
     <div class="abbr-container">
         <svg v-if="flex_abbr" viewBox="-12 -12 124 124">
-            <path :d="path" stroke-width="10" fill="none" :stroke="theme"></path>
+            <path :d="path" stroke-width="10" fill="none" :stroke="theme" stroke-linejoin="round"></path>
         </svg>
         <svg-icon v-else :icon-class="icon_class()" :fill="theme"></svg-icon>
     </div>
