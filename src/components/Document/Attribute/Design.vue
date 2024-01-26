@@ -18,10 +18,13 @@ import TableText from './Table/TableText.vue'
 import CutoutExport from './CutoutExport/index.vue'
 import { Tool } from '@/context/tool';
 import Opacity from './Opacity/Opacity.vue';
+import ResizingConstraints from '@/components/Document/Attribute/ResizingConstraint/index.vue';
 import BaseForPathEdit from "@/components/Document/Attribute/BaseAttr/BaseForPathEdit.vue";
 import InstanceAttr from './Module/InstanceAttr.vue';
 import { get_var_for_ref, is_part_of_symbol, is_shapes_if_symbolref } from '@/utils/symbol';
 import { useI18n } from 'vue-i18n';
+import { ArtboradDom } from '../Content/vdom/artboard';
+import { SymbolDom } from '../Content/vdom/symbol';
 
 const props = defineProps<{ context: Context }>();
 const shapes = shallowRef<ShapeView[]>([]);
@@ -127,8 +130,14 @@ function _change(t: number) {
     }
     check_for_opacity();
 }
+function modify_cs() {
+    const selectedShapes = props.context.selection.selectedShapes;
+    constraintShow.value = selectedShapes.every(shape => shape.parent instanceof ArtboradDom || shape.parent instanceof SymbolDom)
+}
+
 const baseAttr = ref(true);
 const editAttr = ref<boolean>(false);
+const constraintShow = ref<boolean>(false)
 const updateBaseAttr = () => {
     const shape = props.context.selection.selectedShapes[0]
     if (props.context.selection.selectedShapes.length === 1 && shape.type === ShapeType.Table) {
@@ -151,6 +160,8 @@ function selection_watcher(t: number) {
         return;
     }
     change(t)
+    watch_shapes();
+    modify_cs()
 }
 
 function table_selection_watcher(t: number) {
@@ -191,7 +202,24 @@ const need_instance_attr_show = () => {
     return v;
 }
 
+const watchedShapes = new Map();
+
+function watch_shapes() {
+    watchedShapes.forEach((v, k) => {
+        v.unwatch(modify_cs);
+        watchedShapes.delete(k);
+    })
+    const selectedShapes = props.context.selection.selectedShapes;
+    if (selectedShapes.length > 0) {
+        selectedShapes.forEach((v) => {
+            v.watch(modify_cs);
+            watchedShapes.set(v.id, v);
+        });
+    }
+}
+
 onMounted(() => {
+    watch_shapes();
     props.context.selection.watch(selection_watcher);
     props.context.tableSelection.watch(table_selection_watcher);
     _change(Selection.CHANGE_SHAPE);
@@ -218,6 +246,7 @@ onUnmounted(() => {
                 <Arrange :context="props.context" :shapes="shapes"></Arrange>
                 <ShapeBaseAttr v-if="baseAttr" :context="props.context"></ShapeBaseAttr>
                 <BaseForPathEdit v-if="editAttr" :context="props.context"></BaseForPathEdit>
+                <ResizingConstraints v-if="constraintShow" :context="props.context" :shapes="shapes"></ResizingConstraints>
                 <Opacity v-if="opacity && !WITHOUT_OPACITY.includes(shapeType)" :shapes="shapes" :context="props.context">
                 </Opacity>
                 <Module v-if="symbol_attribute" :context="props.context" :shapeType="shapeType" :shapes="shapes"></Module>
