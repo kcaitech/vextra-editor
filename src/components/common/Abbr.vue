@@ -1,4 +1,5 @@
 <script setup lang="ts">
+import { XYsBounding } from '@/utils/common';
 import { GroupShape, Matrix, ShapeType, ShapeView, SymbolUnionShape } from '@kcdesign/data';
 import { onUnmounted } from 'vue';
 import { onMounted, ref, watch } from 'vue';
@@ -37,41 +38,26 @@ function pather() {
     }
 
     const shape = props.shape.data;
+
     const f = shape.frame;
-
-    let max_length = f.width;
-    let max_side = 'w';
-
-    if (f.height > f.width) {
-        max_length = f.height;
-        max_side = 'h';
-    }
-
-    const ratio = 100 / max_length;
-
-    const o = { x: 0, y: 0 };
-
-    let new_h = 100;
-    let new_w = 100;
-
-    if (max_side === 'h') {
-        new_w = f.width * ratio;
-        o.x = (100 - new_w) / 2;
-    } else {
-        new_h = f.height * ratio;
-        o.y = (100 - new_h) / 2
-    }
-
     const m = new Matrix();
-    m.scale(ratio);
+    m.trans(-f.width / 2, -f.height / 2);
     if (!props.shape.isNoTransform()) {
-        m.trans(-new_w / 2, -new_h / 2);
         if (shape.rotation) m.rotate(shape.rotation / 180 * Math.PI);
         if (shape.isFlippedHorizontal) m.flipHoriz();
         if (shape.isFlippedVertical) m.flipVert();
-        m.trans(new_w / 2, new_h / 2);
     }
-    m.trans(o.x, o.y);
+    const box = XYsBounding([{ x: 0, y: 0 }, { x: f.width, y: 0 }, { x: f.width, y: f.height }, { x: 0, y: f.height }].map(p => m.computeCoord3(p)));
+    const new_w = box.right - box.left;
+    const new_h = box.bottom - box.top;
+    let max_length = new_w;
+    if (new_h > new_w) {
+        max_length = new_h;
+    }
+    const ratio = 100 / max_length;
+    m.scale(ratio);
+    m.trans(50, 50);
+
     const _path = props.shape.getPath().clone();
     _path.transform(m);
     path.value = _path.toString();
