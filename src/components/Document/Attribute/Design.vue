@@ -147,7 +147,7 @@ function _modify_constraint_show() {
     );
 }
 
-const modify_constraint_show = throttle(_modify_constraint_show, 160);
+const modify_constraint_show = throttle(_modify_constraint_show, 160, { trailing: true });
 
 function tool_watcher(t: number) {
     // if (t === Tool.CHANGE_ACTION) updateShapeType();
