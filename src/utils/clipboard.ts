@@ -773,12 +773,12 @@ export async function paster_short(context: Context, shapes: ShapeView[], editor
             }
         }
     }
-    const new_source = transform_data(context.data, pre_shapes);
-
     const page = context.selection.selectedPage;
     if (!page) {
         return [];
     }
+    const new_source = transform_data(context.data, page.data,  pre_shapes);
+
 
     let result: Shape[] = [];
 

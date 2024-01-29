@@ -120,7 +120,6 @@ export class Context extends WatchableObject {
         this.m_path = new Path(this);
         this.m_arrange = new Arrange();
         const pagelist = data.pagesList.slice(0);
-        const checkSymLoaded: (() => boolean)[] = [];
         const pageloadTask = new class implements Task { // page auto loader
             isValid(): boolean {
                 return !this.isDone();
@@ -144,32 +143,12 @@ export class Context extends WatchableObject {
                 if (id) {
                     await data.pagesMgr.get(id);
                     pagelist.splice(0, 1);
-                    for (let i = 0; i < checkSymLoaded.length;) {
-                        if (checkSymLoaded[i]()) {
-                            checkSymLoaded.splice(i, 1);
-                        } else {
-                            ++i;
-                        }
-                    }
                 }
             }
         }
 
         this.m_taskMgr.add(pageloadTask, TaskPriority.normal);
         this.m_taskMgr.startLoop();
-
-        // symbol loader
-        data.symbolsMgr.setLoader(async (id: string): Promise<SymbolShape> => {
-            return new Promise((resolve, reject) => {
-                checkSymLoaded.push(() => {
-                    const sym = data.symbolsMgr.getSync(id);
-                    if (sym) resolve(sym);
-                    else if (pageloadTask.isDone()) reject();
-                    else return false;
-                    return true;
-                })
-            })
-        })
     }
 
     get editor(): Editor {
