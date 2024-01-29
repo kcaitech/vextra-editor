@@ -20,6 +20,10 @@ const reflush = ref(0);
 const rootId = ref<string>('pageview');
 const show_t = ref<boolean>(true);
 const pagesvg = ref<HTMLElement>();
+const width = ref<number>(100);
+const height = ref<number>(100);
+const viewbox = ref<string>('0 0 100 100');
+const WIDE = 1.12;
 
 function pageViewRegister(mount: boolean) {
     if (mount) {
@@ -37,7 +41,50 @@ const collect = debounce(_collect, 240);
 function page_watcher() {
     matrixWithFrame.reset(props.matrix);
     matrixWithFrame.preTrans(props.data.frame.x, props.data.frame.y);
+
+    width.value = props.data.frame.width;
+    height.value = props.data.frame.height;
+
+    modifySize();
+
     reflush.value++;
+}
+function modifySize() {
+    const scale = matrixWithFrame.m00;
+    const real_width = scale * width.value;
+    const real_height = scale * height.value;
+
+    const max_width = props.context.workspace.root.width * WIDE;
+    const max_height = props.context.workspace.root.height * WIDE;
+    let vx = 0;
+    let vy = 0;
+
+    if (real_width > max_width) {
+        const max_left = -(props.context.workspace.root.width * ((WIDE - 1) / 2));
+        const real_left = matrixWithFrame.m02;
+        const delta_vx = max_left - real_left;
+        if (delta_vx > 0) {
+            vx = delta_vx;
+            matrixWithFrame.preTrans(delta_vx, 0);
+        }
+
+        width.value = max_width / scale;
+    }
+
+    if (real_height > max_height) {
+        // todo
+    }
+
+    width.value = Math.ceil(Math.max(100, width.value));
+    if (width.value % 2) {
+        width.value++;
+    }
+    height.value = Math.ceil(Math.max(100, height.value));
+    if (height.value % 2) {
+        height.value++;
+    }
+
+    viewbox.value = `${vx} ${vy} ${width.value} ${height.value}`;
 }
 
 const stopWatchPage = watch(() => props.data, (value, old) => {
@@ -93,6 +140,8 @@ function selection_watcher(...args: any[]) {
 }
 
 onMounted(() => {
+    console.log('page mounted');
+
     const dom = props.context.getPageDom(props.data);
     if (dom && pagesvg.value) {
         dom.dom.bind(pagesvg.value);
@@ -113,7 +162,8 @@ onUnmounted(() => {
 </script>
 
 <template>
-    <svg ref="pagesvg" :style="{ transform: matrixWithFrame.toString() }" :data-area="rootId" :reflush="reflush"></svg>
+    <svg ref="pagesvg" :style="{ transform: matrixWithFrame.toString() }" :data-area="rootId" :reflush="reflush"
+        :width="width" :height="height" :viewBox="viewbox"></svg>
     <ShapeCutout :context="props.context" :data="data" :matrix="props.matrix" :transform="matrixWithFrame.toArray()">
     </ShapeCutout>
     <ShapeTitles v-if="show_t" :context="props.context" :data="data" :matrix="matrixWithFrame.toArray()"></ShapeTitles>
@@ -125,6 +175,7 @@ onUnmounted(() => {
 svg {
     position: absolute;
     transform-origin: top left;
+    background-color: rgba(0, 255, 0, 0.1);
 }
 
 .text {
