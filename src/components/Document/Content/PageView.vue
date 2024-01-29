@@ -23,7 +23,7 @@ const pagesvg = ref<HTMLElement>();
 const width = ref<number>(100);
 const height = ref<number>(100);
 const viewbox = ref<string>('0 0 100 100');
-const WIDE = 1.12;
+const WIDE = 1.10;
 
 function pageViewRegister(mount: boolean) {
     if (mount) {
@@ -65,21 +65,33 @@ function modifySize() {
         const delta_vx = max_left - real_left;
         if (delta_vx > 0) {
             vx = delta_vx;
-            matrixWithFrame.preTrans(delta_vx, 0);
+            const arr = matrixWithFrame.toArray();
+            arr[4] = max_left;
+            matrixWithFrame.reset(arr);
         }
 
         width.value = max_width / scale;
     }
 
     if (real_height > max_height) {
-        // todo
+        const max_top = -(props.context.workspace.root.height * ((WIDE - 1) / 2));
+        const real_top = matrixWithFrame.m12;
+        const delta_vy = max_top - real_top;
+        if (delta_vy > 0) {
+            vx = delta_vy;
+            const arr = matrixWithFrame.toArray();
+            arr[5] = max_top;
+            matrixWithFrame.reset(arr);
+        }
+
+        height.value = height.value / scale;
     }
 
-    width.value = Math.ceil(Math.max(100, width.value));
+    width.value = Math.ceil(Math.max(2, width.value));
     if (width.value % 2) {
         width.value++;
     }
-    height.value = Math.ceil(Math.max(100, height.value));
+    height.value = Math.ceil(Math.max(2, height.value));
     if (height.value % 2) {
         height.value++;
     }
