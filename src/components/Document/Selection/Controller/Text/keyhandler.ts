@@ -1,5 +1,5 @@
 import { Context } from "@/context";
-import { Text, Shape } from "@kcdesign/data";
+import { Text, Shape, TextShapeView, TableCellView } from "@kcdesign/data";
 import { TextShapeEditor } from "@kcdesign/data";
 import { paster_inner_shape } from "@/utils/clipboard";
 import { WorkSpace } from "@/context/workspace";
@@ -16,7 +16,7 @@ function throttle2<T extends (...args: any[]) => void>(func: T, delay: number): 
     } as T;
 }
 
-const enterNewLine = throttle2((e: KeyboardEvent, context: Context, shapetext: Text, editor: TextShapeEditor) => {
+const enterNewLine = throttle2((e: KeyboardEvent, context: Context, shape: TextShapeView | TableCellView, editor: TextShapeEditor) => {
     e.preventDefault();
     const selection = context.textSelection;
     let index = selection.cursorStart;
@@ -33,8 +33,9 @@ const enterNewLine = throttle2((e: KeyboardEvent, context: Context, shapetext: T
     }
 }, keydelays);
 
-const enterArrowLeft = throttle2((e: KeyboardEvent, context: Context, shapetext: Text, editor: TextShapeEditor) => {
+const enterArrowLeft = throttle2((e: KeyboardEvent, context: Context, shape: TextShapeView | TableCellView, editor: TextShapeEditor) => {
     e.preventDefault();
+    const shapetext = shape.getText();
     const selection = context.textSelection;
     let start = selection.cursorStart;
     let end = selection.cursorEnd;
@@ -55,8 +56,9 @@ const enterArrowLeft = throttle2((e: KeyboardEvent, context: Context, shapetext:
         selection.setCursor(end - 1, false);
     }
 }, keydelays);
-const enterArrowRight = throttle2((e: KeyboardEvent, context: Context, shapetext: Text, editor: TextShapeEditor) => {
+const enterArrowRight = throttle2((e: KeyboardEvent, context: Context, shape: TextShapeView | TableCellView, editor: TextShapeEditor) => {
     e.preventDefault();
+    const shapetext = shape.getText();
     const selection = context.textSelection;
     let start = selection.cursorStart;
     let end = selection.cursorEnd;
@@ -74,18 +76,17 @@ const enterArrowRight = throttle2((e: KeyboardEvent, context: Context, shapetext
         selection.setCursor(end + 1, false);
     }
 }, keydelays);
-const enterArrowUp = throttle2((e: KeyboardEvent, context: Context, shapetext: Text, editor: TextShapeEditor) => {
+const enterArrowUp = throttle2((e: KeyboardEvent, context: Context, shape: TextShapeView | TableCellView, editor: TextShapeEditor) => {
     e.preventDefault();
-    const text = shapetext;
     const selection = context.textSelection;
     const start = selection.cursorStart;
     const end = selection.cursorEnd;
     const cursorAtBefore = start === end && selection.cursorAtBefore;
-    const cursor = text.locateCursor(end, cursorAtBefore);
+    const cursor = shape.locateCursor(end, cursorAtBefore);
     if (!cursor || cursor.cursorPoints.length !== 2) return;
     const x = cursor.cursorPoints[0].x;
     const y = cursor.preLineY + (cursor.preLineHeight) / 2;
-    const locate = text.locateText(x, y);
+    const locate = shape.locateText(x, y);
     if (e.shiftKey) {
         selection.selectText(start, locate.index);
     }
@@ -94,18 +95,17 @@ const enterArrowUp = throttle2((e: KeyboardEvent, context: Context, shapetext: T
         else selection.setCursor(locate.index, locate.before);
     }
 }, keydelays);
-const enterArrowDown = throttle2((e: KeyboardEvent, context: Context, shapetext: Text, editor: TextShapeEditor) => {
+const enterArrowDown = throttle2((e: KeyboardEvent, context: Context, shape: TextShapeView | TableCellView, editor: TextShapeEditor) => {
     e.preventDefault();
-    const text = shapetext;
     const selection = context.textSelection;
     const start = selection.cursorStart;
     const end = selection.cursorEnd;
     const cursorAtBefore = start === end && selection.cursorAtBefore;
-    const cursor = text.locateCursor(end, cursorAtBefore);
+    const cursor = shape.locateCursor(end, cursorAtBefore);
     if (!cursor || cursor.cursorPoints.length !== 2) return;
     const x = cursor.cursorPoints[0].x;
     const y = cursor.nextLineY + (cursor.nextLineHeight) / 2;
-    const locate = text.locateText(x, y);
+    const locate = shape.locateText(x, y);
     if (e.shiftKey) {
         selection.selectText(start, locate.index);
     }
@@ -115,8 +115,9 @@ const enterArrowDown = throttle2((e: KeyboardEvent, context: Context, shapetext:
     }
 }, keydelays);
 
-const enterBackspace = throttle2((e: KeyboardEvent, context: Context, shapetext: Text, editor: TextShapeEditor) => {
+const enterBackspace = throttle2((e: KeyboardEvent, context: Context, shape: TextShapeView | TableCellView, editor: TextShapeEditor) => {
     e.preventDefault();
+    const shapetext = shape.getText();
     const selection = context.textSelection;
     const start = selection.cursorStart;
     const end = selection.cursorEnd;
@@ -145,7 +146,7 @@ const enterBackspace = throttle2((e: KeyboardEvent, context: Context, shapetext:
         }
     }
 }, keydelays);
-const enterDelete = throttle2((e: KeyboardEvent, context: Context, shapetext: Text, editor: TextShapeEditor) => {
+const enterDelete = throttle2((e: KeyboardEvent, context: Context, shape: TextShapeView | TableCellView, editor: TextShapeEditor) => {
     e.preventDefault();
     const selection = context.textSelection;
     const start = selection.cursorStart;
@@ -162,7 +163,7 @@ const enterDelete = throttle2((e: KeyboardEvent, context: Context, shapetext: Te
     }
 }, keydelays);
 
-const escape = throttle2((e: KeyboardEvent, context: Context, shapetext: Text, editor: TextShapeEditor) => {
+const escape = throttle2((e: KeyboardEvent, context: Context, shape: TextShapeView | TableCellView, editor: TextShapeEditor) => {
     e.preventDefault();
     const selection = context.textSelection;
     if (selection.cursorStart > -1) {
@@ -177,9 +178,10 @@ const escape = throttle2((e: KeyboardEvent, context: Context, shapetext: Text, e
     }
 
 }, keydelays);
-function copy(e: KeyboardEvent, context: Context, shapetext: Text) {
+function copy(e: KeyboardEvent, context: Context, shape: TextShapeView | TableCellView) {
     if (e.ctrlKey || e.metaKey) {
         e.preventDefault();
+        const shapetext = shape.getText();
         const selection = context.textSelection;
         const start = selection.cursorStart;
         const end = selection.cursorEnd;
@@ -191,13 +193,14 @@ function copy(e: KeyboardEvent, context: Context, shapetext: Text) {
         context.menu.menuMount();
     }
 }
-async function cut(e: KeyboardEvent, context: Context, shapetext: Text, editor: TextShapeEditor) {
+async function cut(e: KeyboardEvent, context: Context, shape: TextShapeView | TableCellView, editor: TextShapeEditor) {
     if ((e.ctrlKey || e.metaKey) && !e.shiftKey) {
         e.preventDefault();
         const selection = context.textSelection;
         const start = selection.cursorStart;
         const end = selection.cursorEnd;
         if (start === end) return;
+        const shapetext = shape.getText();
         const text = shapetext.getTextWithFormat(Math.min(start, end), Math.abs(start - end));
         const copy_result = await context.workspace.clipboard.write_html(text);
         if (copy_result) {
@@ -210,25 +213,27 @@ async function cut(e: KeyboardEvent, context: Context, shapetext: Text, editor: 
         context.workspace.notify(WorkSpace.DELETE_LINE);
     }
 }
-function paster(e: KeyboardEvent, context: Context, shapetext: Text, editor: TextShapeEditor) {
+function paster(e: KeyboardEvent, context: Context, shape: TextShapeView | TableCellView, editor: TextShapeEditor) {
     if (e.ctrlKey || e.metaKey) {
         e.preventDefault(); // 阻止input的粘贴事件
         paster_inner_shape(context, editor, e.altKey);
         context.menu.menuMount();
     }
 }
-function select_all(e: KeyboardEvent, context: Context, shapetext: Text) {
+function select_all(e: KeyboardEvent, context: Context, shape: TextShapeView | TableCellView) {
     if (e.ctrlKey || e.metaKey) {
         e.preventDefault();
+        const shapetext = shape.getText();
         const selection = context.textSelection;
         const end = shapetext.length;
         selection.selectText(0, end);
         context.menu.menuMount();
     }
 }
-function undo_redo(e: KeyboardEvent, context: Context, shapetext: Text) {
+function undo_redo(e: KeyboardEvent, context: Context, shape: TextShapeView | TableCellView) {
     const { ctrlKey, metaKey, shiftKey } = e;
     if (ctrlKey || metaKey) {
+        const shapetext = shape.getText();
         e.preventDefault();
         const repo = context.repo;
         if (shiftKey) {
@@ -244,7 +249,7 @@ function undo_redo(e: KeyboardEvent, context: Context, shapetext: Text) {
     }
 }
 
-const enterTab = throttle2((e: KeyboardEvent, context: Context, shapetext: Text, editor: TextShapeEditor) => {
+const enterTab = throttle2((e: KeyboardEvent, context: Context, shape: TextShapeView | TableCellView, editor: TextShapeEditor) => {
     const selection = context.textSelection;
     const start = Math.min(selection.cursorStart, selection.cursorEnd);
     const end = Math.max(selection.cursorStart, selection.cursorEnd);
@@ -253,7 +258,7 @@ const enterTab = throttle2((e: KeyboardEvent, context: Context, shapetext: Text,
 
 }, keydelays);
 // 文本下划线
-const Underline = (e: KeyboardEvent, context: Context, shapetext: Text) => {
+const Underline = (e: KeyboardEvent, context: Context, shape: TextShapeView | TableCellView) => {
     const { ctrlKey, metaKey, shiftKey } = e;
     if((ctrlKey || metaKey) && !shiftKey) {
         e.preventDefault();
@@ -261,7 +266,7 @@ const Underline = (e: KeyboardEvent, context: Context, shapetext: Text) => {
     }
 }
 //文本倾斜
-const Italic = (e: KeyboardEvent, context: Context, shapetext: Text) => {
+const Italic = (e: KeyboardEvent, context: Context, shape: TextShapeView | TableCellView) => {
     const { ctrlKey, metaKey, shiftKey } = e;
     if((ctrlKey || metaKey) && !shiftKey) {
         e.preventDefault();
@@ -269,7 +274,7 @@ const Italic = (e: KeyboardEvent, context: Context, shapetext: Text) => {
     }
 }
 //文本加粗
-const Bold = (e: KeyboardEvent, context: Context, shapetext: Text) => {
+const Bold = (e: KeyboardEvent, context: Context, shape: TextShapeView | TableCellView) => {
     const { ctrlKey, metaKey, shiftKey } = e;
     if((ctrlKey || metaKey) && !shiftKey) {
         e.preventDefault();
@@ -277,7 +282,7 @@ const Bold = (e: KeyboardEvent, context: Context, shapetext: Text) => {
     }
 }
 
-const handler: { [key: string]: (e: KeyboardEvent, context: Context, shapetext: Text, editor: TextShapeEditor) => void } = {}
+const handler: { [key: string]: (e: KeyboardEvent, context: Context, shape: TextShapeView | TableCellView, editor: TextShapeEditor) => void } = {}
 handler['enter'] = enterNewLine;
 handler['arrowleft'] = enterArrowLeft;
 handler['arrowright'] = enterArrowRight;
@@ -299,13 +304,13 @@ handler['b'] = Bold;
 // todo end home
 
 
-export function handleKeyEvent(e: KeyboardEvent, context: Context, shapetext: Text, editor: TextShapeEditor) {
+export function handleKeyEvent(e: KeyboardEvent, context: Context, shape: TextShapeView | TableCellView, editor: TextShapeEditor) {
     if (editor.isInComposingInput()) {
         return;
     }
     const key = e.key.toLowerCase();
     const h = handler[key];
     if (h) {
-        h(e, context, shapetext, editor);
+        h(e, context, shape, editor);
     }
 }
