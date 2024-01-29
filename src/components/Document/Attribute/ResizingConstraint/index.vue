@@ -190,11 +190,11 @@ function update() {
     updateSelectedOptions(shapes)
     if (!shapes.length) return;
     let firstConstraint = shapes[0].resizingConstraint as number
-    firstConstraint = firstConstraint === undefined ? 0 : firstConstraint;
+    firstConstraint = firstConstraint === undefined ? 63 : firstConstraint;
     let difference = firstConstraint;
     for (let i = 1; i < shapes.length; i++) {
         const value = shapes[i].resizingConstraint
-        const randomConstraint = value === undefined ? 0 : value;
+        const randomConstraint = value === undefined ? 63 : value;
         difference = difference & randomConstraint
     }
 
@@ -205,25 +205,33 @@ function update() {
     }
 
     if (firstConstraint === difference) {
-        const number = [1, 2, 4, 8, 16, 32]
-        let arr = [] as number[]
-        number.forEach(val => {
-            if ((difference & val) == val) {
-                arr.push(val)
-            }
-        })
-        console.log(arr);
-        
-        showHorizontalSelected(arr[0])
-        showVerticalSelected(arr[1])
+        if (difference === 63) {
+            showHorizontalSelected(-1)
+            showVerticalSelected(-1)
+        } else {
+            const number = [1, 2, 4, 8, 16, 32]
+            let arr = [] as number[]
+            number.forEach(val => {
+                if ((difference & val) == val) {
+                    arr.push(val)
+                }
+            })
+            console.log(arr);
+            showHorizontalSelected(arr[0])
+            showVerticalSelected(arr[1])
+        }
     }
 
     function showHorizontalSelected(value: number) {
         switch (value) {
+            case 0:
+                horizontalSelected.value = { value: 'hcenter', content: t('attr.center') }
+                break;
             case 1:
                 horizontalSelected.value = { value: 'right', content: t('attr.fixed_right') }
                 break;
             case 2:
+                checked1.value = true
                 horizontalSelected.value = { value: 'lrfixed', content: t('attr.fixed_left_right') }
                 break;
             case 4:
@@ -236,10 +244,14 @@ function update() {
     }
     function showVerticalSelected(value: number) {
         switch (value) {
+            case 0:
+                horizontalSelected.value = { value: 'vcenter', content: t('attr.center') }
+                break;
             case 8:
                 verticalSelected.value = { value: 'bottom', content: t('attr.fixed_bottom') }
                 break;
             case 16:
+                checked2.value = true
                 verticalSelected.value = { value: 'tbfixed', content: t('attr.fixed_top_bottom') }
                 break;
             case 32:
