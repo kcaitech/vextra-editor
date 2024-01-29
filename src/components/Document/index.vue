@@ -775,7 +775,6 @@ onUnmounted(() => {
         </div>
         <Bridge v-if="bridge" :context="context!"></Bridge>
         <HelpEntrance v-if="!null_context" :context="context!" />
-        <div class="rule"></div>
     </div>
 </template>
 <style>
@@ -930,17 +929,6 @@ onUnmounted(() => {
                 transform: rotate(360deg);
             }
         }
-    }
-
-    .rule {
-        height: 24px;
-        width: calc(650px * 1.12);
-        background-color: red;
-        position: fixed;
-        bottom: 0;
-        left: 50%;
-        transform: translateX(-50%);
-        z-index: 999;
     }
 }
 </style>

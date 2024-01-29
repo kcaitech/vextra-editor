@@ -954,16 +954,18 @@ export function ref_symbol(context: Context, position: PageXY, symbol: ShapeView
         }
     }
 }
-
-let scale_delta = 1.06;
-let scale_delta_ = 1 / scale_delta;
-
+const MAX = 25600;
+const MIN = 2;
 export function root_scale(context: Context, e: WheelEvent) {
-    if (Number((context.workspace.matrix.toArray()[0] * 100).toFixed(0)) <= 2) {
+    let scale_delta = 1.2;
+    let scale_delta_ = 1 / scale_delta;
+    const scale = Number((context.workspace.matrix.toArray()[0] * 100).toFixed(0));
+    if (scale <= MIN) {
         scale_delta_ = 1
-    } else {
-        scale_delta_ = 1 / scale_delta;
+    } else if (scale >= MAX) {
+        scale_delta = MAX / scale;
     }
+
     const matrix = context.workspace.matrix;
     const root = context.workspace.root;
     const offsetX = e.x - root.x;
