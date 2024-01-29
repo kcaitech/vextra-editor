@@ -9,6 +9,7 @@ import { Selection } from '@/context/selection';
 import { debounce } from 'lodash';
 import { getPngImageData, getSvgImageData } from '@/utils/image';
 import { useI18n } from 'vue-i18n';
+import { login } from '@/assets/lang/en';
 const { t } = useI18n();
 interface Props {
     context: Context
@@ -55,7 +56,7 @@ const toggleExpand = () => {
     emits('previewChange', isTriangle.value);
     getCanvasShape();
 }
-const _getCanvasShape = () => {
+const _getCanvasShape = () => {    
     const shapes = props.context.selection.selectedShapes;
     const shape = shapes[0];
     if (shapes.length === 1 && shape.type !== ShapeType.Cutout) {

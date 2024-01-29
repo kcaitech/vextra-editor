@@ -1,4 +1,5 @@
 <script setup lang="ts">
+import { XYsBounding } from '@/utils/common';
 import { GroupShape, Matrix, ShapeType, ShapeView, SymbolUnionShape } from '@kcdesign/data';
 import { onUnmounted } from 'vue';
 import { onMounted, ref, watch } from 'vue';
@@ -36,31 +37,39 @@ function pather() {
         return;
     }
 
-    const f = props.shape.data.boundingBox2();
+    const shape = props.shape.data;
 
-    let max_length = f.width;
-    let max_side = 'w';
-
-    if (f.height > f.width) {
-        max_length = f.height;
-        max_side = 'h';
-    }
-
-    const ratio = 100 / max_length;
-
-    const o = { x: 0, y: 0 };
-
-    if (max_side === 'h') {
-        o.x = (100 - f.width * ratio) / 2;
-    } else {
-        o.y = (100 - f.height * ratio) / 2
-    }
-
+    const f = shape.frame;
     const m = new Matrix();
-    m.scale(ratio);
-    m.trans(o.x, o.y);
+    m.trans(-f.width / 2, -f.height / 2);
+    if (!props.shape.isNoTransform()) {
+        if (shape.rotation) m.rotate(shape.rotation / 180 * Math.PI);
+        if (shape.isFlippedHorizontal) m.flipHoriz();
+        if (shape.isFlippedVertical) m.flipVert();
+    }
+    const box = XYsBounding(
+        [
+            { x: 0, y: 0 },
+            { x: f.width, y: 0 },
+            { x: f.width, y: f.height },
+            { x: 0, y: f.height }
+        ].map(p => m.computeCoord3(p))
+    );
 
-    const _path = props.shape.getPath().clone();
+    const new_w = box.right - box.left;
+    const new_h = box.bottom - box.top;
+    let max_length = new_w;
+    if (new_h > new_w) {
+        max_length = new_h;
+    }
+    const ratio = 100 / max_length;
+    m.scale(ratio);
+    m.trans(50, 50);
+
+    const _path = props.shape
+        .getPath()
+        .clone();
+
     _path.transform(m);
     path.value = _path.toString();
 }
@@ -71,7 +80,7 @@ onUnmounted(e);
 <template>
     <div class="abbr-container">
         <svg v-if="flex_abbr" viewBox="-12 -12 124 124">
-            <path :d="path" stroke-width="10" fill="none" :stroke="theme"></path>
+            <path :d="path" stroke-width="10" fill="none" :stroke="theme" stroke-linejoin="round"></path>
         </svg>
         <svg-icon v-else :icon-class="icon_class()" :fill="theme"></svg-icon>
     </div>
