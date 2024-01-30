@@ -17,7 +17,7 @@ import Module from './Module/Module.vue'
 import TableText from './Table/TableText.vue'
 import CutoutExport from './CutoutExport/index.vue'
 import Opacity from './Opacity/Opacity.vue';
-import ResizingConstraints from '@/components/Document/Attribute/ResizingConstraint/index.vue';
+import ResizingConstraints from '@/components/Document/Attribute/ResizingConstraint/index2.vue';
 import BaseForPathEdit from "@/components/Document/Attribute/BaseAttr/BaseForPathEdit.vue";
 import InstanceAttr from './Module/InstanceAttr.vue';
 import { get_var_for_ref, is_part_of_symbol, is_shapes_if_symbolref } from '@/utils/symbol';
@@ -245,7 +245,8 @@ onUnmounted(() => {
                 <ShapeBaseAttr v-if="baseAttr" :context="props.context" :selection-change="reflush_by_selection"
                     :triggle="reflush_trigger"></ShapeBaseAttr>
                 <BaseForPathEdit v-if="editAttr" :context="props.context"></BaseForPathEdit>
-                <ResizingConstraints v-if="constraintShow" :context="props.context" :shapes="shapes"></ResizingConstraints>
+                <ResizingConstraints v-if="constraintShow" :context="props.context" :trigger="reflush_trigger" :selection-change="reflush_by_selection">
+                </ResizingConstraints>
                 <Opacity v-if="opacity && !WITHOUT_OPACITY.includes(shapeType)" :context="props.context" :change="reflush">
                 </Opacity>
                 <Module v-if="symbol_attribute" :context="props.context" :shapeType="shapeType" :shapes="shapes"></Module>
