@@ -2,10 +2,10 @@
 import TypeHeader from '../TypeHeader.vue';
 import { useI18n } from 'vue-i18n';
 import SelectFont from './SelectFont.vue';
-import { onMounted, ref, onUnmounted, watchEffect, watch, computed, nextTick } from 'vue';
+import { onMounted, ref, onUnmounted, computed } from 'vue';
 import TextAdvancedSettings from './TextAdvancedSettings.vue'
 import { Context } from '@/context';
-import { TextShape, AttrGetter, TableShape, ShapeType, TextShapeView, adapt2Shape } from "@kcdesign/data";
+import { AttrGetter, ShapeType, TextShapeView, adapt2Shape } from "@kcdesign/data";
 import Tooltip from '@/components/common/Tooltip.vue';
 import { TextVerAlign, TextHorAlign, Color, UnderlineType, StrikethroughType } from "@kcdesign/data";
 import ColorPicker from '@/components/common/ColorPicker/index.vue';
@@ -13,11 +13,14 @@ import { Reg_HEX } from "@/utils/RegExp";
 import { Selection } from '@/context/selection';
 import { WorkSpace } from '@/context/workspace';
 import { message } from "@/utils/message";
+import { throttle } from 'lodash';
+import { watch } from 'vue';
 
 interface Props {
     context: Context
     shape: TextShapeView
     textShapes: TextShapeView[]
+    trigger: any[]
 }
 
 const props = defineProps<Props>();
@@ -47,7 +50,6 @@ const higlighAlpha = ref<HTMLInputElement>()
 const sizeHoverIndex = ref(-1);
 const shapes = ref<TextShapeView[]>(props.textShapes);
 
-// const selection = ref(props.context.selection)
 function toHex(r: number, g: number, b: number) {
     const hex = (n: number) => n.toString(16)
         .toUpperCase().length === 1
@@ -208,7 +210,7 @@ const changeTextSize = (size: number) => {
 const setFont = (font: string) => {
     fontName.value = font
     showFont.value = false;
-    const editor = props.context.editor4TextShape(props.shape)
+    const editor = props.context.editor4TextShape(props.shape);
     if (length.value) {
         const { textIndex, selectLength } = getTextIndexAndLen()
         if (isSelectText()) {
@@ -267,7 +269,7 @@ const handleSize = () => {
 }
 
 // 获取当前文字格式
-const textFormat = () => {
+const _textFormat = () => {
     const shapes = props.context.selection.selectedShapes;
     const t_shape = shapes.filter(item => item.type === ShapeType.Text) as TextShapeView[];
     if (t_shape.length === 0 || !t_shape[0].text) return
@@ -361,11 +363,10 @@ const textFormat = () => {
         if (format.highlightIsMulti === 'unlikeness') highlightIsMulti.value = true;
     }
 }
+const textFormat = throttle(_textFormat, 320, { leading: true })
 
 function selection_wather(t: number) {
     if (t === Selection.CHANGE_TEXT) {
-        textFormat()
-    } else if (t === Selection.CHANGE_SHAPE) {
         textFormat()
     }
 }
@@ -657,7 +658,7 @@ const selectHiglighAlpha = () => {
     }
 }
 const getTextShapes = () => {
-    shapes.value = [...props.context.selection.selectedShapes].filter(s => s.type === ShapeType.Text) as TextShapeView[];
+    shapes.value = props.textShapes;
 }
 const filterAlpha = (a: number) => {
     let alpha = Math.round(a * 100) / 100;
@@ -670,21 +671,26 @@ const filterAlpha = (a: number) => {
     }
 }
 
-
-// watchEffect(() => {
-//     textFormat()
-// })
+// const stop = watch(() => props.dataChange, textFormat);
+const stop2 = watch(() => props.textShapes, (v) => {
+    shapes.value = v;
+})
+const stop3 = watch(() => props.trigger, v => {
+    if (v.includes('text')) {
+        textFormat();
+    }
+})
 onMounted(() => {
-    // --组件中文字组成部分的变量传值有误
-    textFormat();
-    props.shape.watch(textFormat)
     props.context.selection.watch(selection_wather);
     props.context.workspace.watch(workspace_wather);
+    textFormat();
 })
 onUnmounted(() => {
     props.context.selection.unwatch(selection_wather);
     props.context.workspace.unwatch(workspace_wather);
-    props.shape.unwatch(textFormat)
+    // stop();
+    stop2();
+    stop3();
 })
 </script>
 
@@ -1279,4 +1285,5 @@ onUnmounted(() => {
 
 :deep(.el-tooltip__trigger:focus) {
     outline: none !important;
-}</style>
+}
+</style>

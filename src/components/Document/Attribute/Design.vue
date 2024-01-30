@@ -2,7 +2,7 @@
 import { Context } from '@/context';
 import { Selection } from '@/context/selection';
 import { WorkSpace } from "@/context/workspace";
-import { onMounted, onUnmounted, shallowRef, ref, computed } from 'vue';
+import { onMounted, onUnmounted, shallowRef, ref } from 'vue';
 import { ShapeView, TextShapeView, TableView, SymbolRefView } from "@kcdesign/data"
 import { ShapeType } from "@kcdesign/data"
 import Arrange from './Arrange.vue';
@@ -12,24 +12,17 @@ import Border from './Border/Border.vue';
 import Shadow from './Shadow/Shadows.vue';
 import PageBackgorund from './PageBackgorund.vue';
 import Text from './Text/Text.vue';
-import { debounce } from 'lodash';
+import { debounce, throttle } from 'lodash';
 import Module from './Module/Module.vue'
 import TableText from './Table/TableText.vue'
 import CutoutExport from './CutoutExport/index.vue'
-import { Tool } from '@/context/tool';
 import Opacity from './Opacity/Opacity.vue';
-import ResizingConstraints from '@/components/Document/Attribute/ResizingConstraint/index.vue';
+import ResizingConstraints from '@/components/Document/Attribute/ResizingConstraint/index2.vue';
 import BaseForPathEdit from "@/components/Document/Attribute/BaseAttr/BaseForPathEdit.vue";
 import InstanceAttr from './Module/InstanceAttr.vue';
 import { get_var_for_ref, is_part_of_symbol, is_shapes_if_symbolref } from '@/utils/symbol';
 import { useI18n } from 'vue-i18n';
-import { ArtboradDom } from '../Content/vdom/artboard';
-import { SymbolDom } from '../Content/vdom/symbol';
 
-const props = defineProps<{ context: Context }>();
-const shapes = shallowRef<ShapeView[]>([]);
-const len = computed<number>(() => shapes.value.length);
-const { t } = useI18n();
 const WITH_FILL = [
     ShapeType.Rectangle,
     ShapeType.Oval,
@@ -82,90 +75,94 @@ const WITHOUT_OPACITY = [
     ShapeType.Cutout,
     ShapeType.TableCell
 ]
-const shapeType = ref();
+
+const props = defineProps<{ context: Context }>();
+const shapes = shallowRef<ShapeView[]>([]);
 const textShapes = ref<ShapeView[]>([]);
+const { t } = useI18n();
+const shapeType = ref();
 const symbol_attribute = ref<boolean>(true);
 const opacity = ref<boolean>(false);
-const updateShapeType = () => {
-    if (props.context.selection.selectedShapes.length === 1) {
-        shapes.value = new Array(...props.context.selection.selectedShapes);
-        shapeType.value = shapes.value[0].type;
-        if (shapeType.value === ShapeType.Text) {
-            textShapes.value = shapes.value;
-        }
-    } else if (props.context.selection.selectedShapes.length > 1) {
-        shapes.value = new Array(...props.context.selection.selectedShapes);
-        textShapes.value = shapes.value.filter(item => item.type === ShapeType.Text);
-    } else {
-        shapes.value = new Array();
-        textShapes.value = new Array();
-    }
-}
-
-function check_for_opacity() {
-    opacity.value = false;
-    const selected_shapes = props.context.selection.selectedShapes;
-    for (let i = 0, l = selected_shapes.length; i < l; i++) {
-        const s = selected_shapes[i];
-        if (!s.isVirtualShape) {
-            opacity.value = true;
-            return;
-        }
-    }
-}
-
-function _change(t: number) {
-    updateShapeType();
-    const selectedShapes = props.context.selection.selectedShapes;
-    if (selectedShapes.length > 0) {
-        baseAttr.value = true;
-        editAttr.value = false;
-        symbol_attribute.value = selectedShapes.length < 2;
-    }
-    if (selectedShapes.length === 1) {
-        const shape = selectedShapes[0];
-        if (shape.type === ShapeType.Table) {
-            updateBaseAttr();
-        }
-    }
-    check_for_opacity();
-}
-function modify_cs() {
-    const selectedShapes = props.context.selection.selectedShapes;
-    constraintShow.value = selectedShapes.every(shape => shape.parent instanceof ArtboradDom || shape.parent instanceof SymbolDom)
-}
-
 const baseAttr = ref(true);
 const editAttr = ref<boolean>(false);
-const constraintShow = ref<boolean>(false)
-const updateBaseAttr = () => {
-    const shape = props.context.selection.selectedShapes[0]
-    if (props.context.selection.selectedShapes.length === 1 && shape.type === ShapeType.Table) {
-        const table = props.context.tableSelection;
-        const is_editing = props.context.tableSelection.editingCell;
-        baseAttr.value = table.tableColStart === -1 && !is_editing;
-    } else {
-        baseAttr.value = true;
+const constraintShow = ref<boolean>(true);
+
+const reflush_by_selection = ref<number>(0);
+const reflush_by_shapes = ref<number>(0);
+const reflush = ref<number>(0);
+const reflush_trigger = ref<any[]>([]);
+
+function _selection_change() {
+    baseAttr.value = true;
+    editAttr.value = false;
+    symbol_attribute.value = false;
+
+    const selectedShapes = props.context.selection.selectedShapes;
+    if (selectedShapes.length === 1) {
+        symbol_attribute.value = true;
+        const shape = selectedShapes[0];
+        shapeType.value = shape.type;
+        if (shape.type === ShapeType.Table) {
+            const table = props.context.tableSelection;
+            const is_editing = props.context.tableSelection.editingCell;
+            baseAttr.value = table.tableColStart === -1 && !is_editing;
+        }
     }
+
+    shapes.value = [];
+    textShapes.value = [];
+    opacity.value = false;
+    constraintShow.value = true;
+
+    for (let i = 0, l = selectedShapes.length; i < l; i++) {
+        const shape = selectedShapes[i];
+        shapes.value.push(shape);
+        if (shape.type === ShapeType.Text) {
+            textShapes.value.push(shape);
+        }
+        if (!shape.isVirtualShape) {
+            opacity.value = true;
+        }
+        if (![ShapeType.Artboard, ShapeType.Group, ShapeType.SymbolRef, ShapeType.SymbolRef].includes(shape.parent?.type || ShapeType.Rectangle)) {
+            constraintShow.value = false;
+        }
+    }
+
+    reflush_by_selection.value++;
+    reflush.value++;
+}
+const selection_change = debounce(_selection_change, 160, { leading: true });
+
+function update_by_shapes(...args: any[]) {
+    modify_constraint_show();
+    reflush_trigger.value = [...(args?.length ? args : [])];
+    reflush_by_shapes.value++;
+    reflush.value++;
 }
 
-const change = debounce(_change, 100);
+function _modify_constraint_show() {
+    constraintShow.value = props.context.selection.selectedShapes.every(
+        s => [ShapeType.Artboard, ShapeType.Group, ShapeType.SymbolRef, ShapeType.SymbolRef]
+            .includes(s.parent?.type || ShapeType.Rectangle)
+    );
+}
+
+const modify_constraint_show = throttle(_modify_constraint_show, 160, { trailing: true });
 
 function tool_watcher(t: number) {
-    if (t === Tool.CHANGE_ACTION) updateShapeType();
+    // if (t === Tool.CHANGE_ACTION) updateShapeType();
 }
 
 function selection_watcher(t: number) {
     if (t !== Selection.CHANGE_SHAPE) {
         return;
     }
-    change(t)
+    selection_change();
     watch_shapes();
-    modify_cs()
 }
 
-function table_selection_watcher(t: number) {
-    change(t);
+function table_selection_watcher() {
+    selection_change();
 }
 
 function workspace_watcher(t: number) {
@@ -202,65 +199,69 @@ const need_instance_attr_show = () => {
     return v;
 }
 
-const watchedShapes = new Map();
-
+const watchedShapes = new Map<string, ShapeView>();
 function watch_shapes() {
     watchedShapes.forEach((v, k) => {
-        v.unwatch(modify_cs);
+        v.unwatch(update_by_shapes);
         watchedShapes.delete(k);
     })
+
     const selectedShapes = props.context.selection.selectedShapes;
-    if (selectedShapes.length > 0) {
-        selectedShapes.forEach((v) => {
-            v.watch(modify_cs);
-            watchedShapes.set(v.id, v);
-        });
-    }
+    selectedShapes.forEach((v) => {
+        v.watch(update_by_shapes);
+        watchedShapes.set(v.id, v)
+    });
 }
 
 onMounted(() => {
     watch_shapes();
     props.context.selection.watch(selection_watcher);
     props.context.tableSelection.watch(table_selection_watcher);
-    _change(Selection.CHANGE_SHAPE);
     props.context.tool.watch(tool_watcher);
     props.context.workspace.watch(workspace_watcher);
+    _selection_change();
+    watch_shapes();
 })
 onUnmounted(() => {
     props.context.selection.unwatch(selection_watcher);
     props.context.tableSelection.unwatch(table_selection_watcher);
     props.context.tool.unwatch(tool_watcher);
     props.context.workspace.unwatch(workspace_watcher);
+    watchedShapes.forEach(v => {
+        v.unwatch(update_by_shapes);
+    });
 })
-
 </script>
 <template>
     <section id="Design">
         <el-scrollbar height="100%">
-            <div v-if="!len">
+            <div v-if="!shapes.length">
                 <PageBackgorund :context="props.context" v-if="props.context.selection.selectedPage"
                     :page="props.context.selection.selectedPage"></PageBackgorund>
-                <CutoutExport :shapes="shapes" :context="props.context"></CutoutExport>
+                <CutoutExport :shapes="shapes" :context="props.context" :trigger="reflush_trigger"></CutoutExport>
             </div>
             <div v-else class="attr-wrapper">
                 <Arrange :context="props.context" :shapes="shapes"></Arrange>
-                <ShapeBaseAttr v-if="baseAttr" :context="props.context"></ShapeBaseAttr>
+                <ShapeBaseAttr v-if="baseAttr" :context="props.context" :selection-change="reflush_by_selection"
+                    :triggle="reflush_trigger"></ShapeBaseAttr>
                 <BaseForPathEdit v-if="editAttr" :context="props.context"></BaseForPathEdit>
-                <ResizingConstraints v-if="constraintShow" :context="props.context" :shapes="shapes"></ResizingConstraints>
-                <Opacity v-if="opacity && !WITHOUT_OPACITY.includes(shapeType)" :shapes="shapes" :context="props.context">
+                <ResizingConstraints v-if="constraintShow" :context="props.context" :trigger="reflush_trigger" :selection-change="reflush_by_selection">
+                </ResizingConstraints>
+                <Opacity v-if="opacity && !WITHOUT_OPACITY.includes(shapeType)" :context="props.context" :change="reflush">
                 </Opacity>
                 <Module v-if="symbol_attribute" :context="props.context" :shapeType="shapeType" :shapes="shapes"></Module>
                 <InstanceAttr :context="context" v-if="is_symbolref()" :shapes="(shapes as SymbolRefView[])">
                 </InstanceAttr>
                 <Fill v-if="WITH_FILL.includes(shapeType)" :shapes="shapes" :context="props.context"></Fill>
                 <Border v-if="WITH_BORDER.includes(shapeType)" :shapes="shapes" :context="props.context"></Border>
-                <Text v-if="WITH_TEXT.includes(shapeType)" :shape="((shapes[0]) as TextShapeView)"
-                    :textShapes="((textShapes) as TextShapeView[])" :context="props.context"></Text>
+                <Text v-if="WITH_TEXT.includes(shapeType)" :shape="((textShapes[0]) as TextShapeView)"
+                    :textShapes="((textShapes) as TextShapeView[])" :context="props.context"
+                    :trigger="reflush_trigger"></Text>
                 <TableText v-if="WITH_TABLE.includes(shapeType)" :shape="(shapes[0] as TableView)" :context="props.context">
                 </TableText>
                 <Shadow v-if="WITH_SHADOW.includes(shapeType)" :shapes="shapes" :context="props.context">
                 </Shadow>
-                <CutoutExport :shapes="shapes" :context="props.context"></CutoutExport>
+                <CutoutExport :shapes="shapes" :context="props.context" :trigger="reflush_trigger"></CutoutExport>
             </div>
         </el-scrollbar>
     </section>

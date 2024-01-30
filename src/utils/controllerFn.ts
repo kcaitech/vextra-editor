@@ -1,7 +1,7 @@
 import { Context } from "@/context";
 import { map_from_shapes, permIsEdit } from "./content";
 import { Action } from "@/context/tool";
-import { AsyncTransfer, GroupShape, Shape, ShapeType, ShapeView, adapt2Shape } from "@kcdesign/data";
+import { AsyncTransfer, GroupShape, Matrix, Shape, ShapeType, ShapeView, adapt2Shape } from "@kcdesign/data";
 import { ClientXY, PageXY } from "@/context/selection";
 import { debounce } from "lodash";
 import { WorkSpace } from "@/context/workspace";

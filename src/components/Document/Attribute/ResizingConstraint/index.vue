@@ -96,11 +96,11 @@ function horizontalChange(side: Side) {
 
     switch (side) {
         case 'left':
-            setconstraint.fixedToLeft((shapes as ShapeView[]).map(s => adapt2Shape(s)), true)
+            // setconstraint.fixedToLeft((shapes as ShapeView[]).map(s => adapt2Shape(s)), true)
             console.log('左固定');
             break;
         case 'right':
-            setconstraint.fixedToRight((shapes as ShapeView[]).map(s => adapt2Shape(s)), true)
+            // setconstraint.fixedToRight((shapes as ShapeView[]).map(s => adapt2Shape(s)), true)
             console.log('右固定');
             break;
         case 'hcenter':
