@@ -88,7 +88,7 @@ function modifyhorizontalPositionStatus() {
 
     let commonRC = getGroupVal(shapes[0].resizingConstraint || 0);
     for (let i = 1, l = shapes.length; i < l; i++) {
-        let __rc = getGroupVal(shapes[1].resizingConstraint || 0);
+        let __rc = getGroupVal(shapes[i].resizingConstraint || 0);
         if (__rc !== commonRC) {
             horizontalPositionSelected.value = { value: 'mixed', content: mixed };
             return;
@@ -111,7 +111,7 @@ function modifyhorizontalPositionStatus() {
     }
 
     function getGroupVal(val: number) {
-        return (ResizingConstraints2.Mask ^ val & ResizingConstraints2.Left) + (ResizingConstraints2.Mask ^ val & ResizingConstraints2.Right);
+        return ((ResizingConstraints2.Mask ^ val) & ResizingConstraints2.Left) + ((ResizingConstraints2.Mask ^ val) & ResizingConstraints2.Right);
     }
 }
 function modifyWidthStatus() {
@@ -141,7 +141,7 @@ function modifyWidthStatus() {
     }
 
     function getGroupVal(val: number) {
-        return (ResizingConstraints2.Mask ^ val & ResizingConstraints2.Width);
+        return ((ResizingConstraints2.Mask ^ val) & ResizingConstraints2.Width);
     }
 }
 
