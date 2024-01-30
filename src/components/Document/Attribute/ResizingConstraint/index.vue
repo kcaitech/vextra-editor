@@ -107,7 +107,7 @@ function horizontalChange(side: Side) {
             state.value |= Codes1.HCenter;
             break;
         case 'lrfixed':
-            setconstraint.fixedToWidth((shapes as ShapeView[]).map(s => adapt2Shape(s)), true)
+            setconstraint.fixedToLR((shapes as ShapeView[]).map(s => adapt2Shape(s)), true)
             console.log('宽度固定');
             break;
         case 'hfollow':
@@ -159,7 +159,14 @@ function verticalSelect(selected: SelectItem) {
 }
 
 function fix_width() {
-    checked1.value = !checked1.value
+    console.log(checked1.value);
+
+    const page = props.context.selection.selectedPage!
+    const shapes = props.context.selection.selectedShapes
+    const setconstraint = props.context.editor.editor4ResizingConstraint(adapt2Shape(page) as Page)
+    console.log(shapes);
+    
+    setconstraint.fixedToWidth((shapes as ShapeView[]).map(s => adapt2Shape(s)), true)
 }
 function fix_height() {
     checked2.value = !checked2.value
@@ -186,39 +193,109 @@ function updateSelectedOptions(shapes: ShapeView[]) {
 
 function update() {
     console.log('更新了对象');
+    horizontalSelected.value = { value: 'hfollow', content: t('attr.follow_container') }
+    verticalSelected.value = { value: 'vfollow', content: t('attr.follow_container') }
+    checked1.value = false
+    checked2.value = false
     const shapes = props.context.selection.selectedShapes
     updateSelectedOptions(shapes)
     if (!shapes.length) return;
-    let firstConstraint = shapes[0].resizingConstraint as number
-    firstConstraint = firstConstraint === undefined ? 63 : firstConstraint;
-    let difference = firstConstraint;
-    for (let i = 1; i < shapes.length; i++) {
+    let difference: any[] = [];
+    let leftvalue = true
+    let rightvalue = true
+    let topvalue = true
+    let bottomvalue = true
+    let widthvalue = true
+    let heightvalue = true
+    for (let i = 0; i < shapes.length; i++) {
         const value = shapes[i].resizingConstraint
         const randomConstraint = value === undefined ? 63 : value;
-        difference = difference & randomConstraint
+        difference.push(randomConstraint)
+        leftvalue = !(randomConstraint & 4) && leftvalue
+        rightvalue = !(randomConstraint & 1) && rightvalue
+        topvalue = !(randomConstraint & 32) && topvalue
+        bottomvalue = !(randomConstraint & 8) && bottomvalue
+        widthvalue = !(randomConstraint & 2) && widthvalue
+        heightvalue = !(randomConstraint & 16) && heightvalue
+
     }
 
-    if (firstConstraint !== difference) {
-        console.log(difference);
-        showHorizontalSelected(difference)
-        showVerticalSelected(difference)
+
+
+    if (!difference.every((item: any) => item === difference[0])) {
+        if (shapes.length > 1) {
+            if (leftvalue) {
+                horizontalSelected.value = { value: 'left', content: t('attr.fixed_left') }
+            }
+            if (rightvalue) {
+                horizontalSelected.value = { value: 'right', content: t('attr.fixed_right') }
+            }
+            if (leftvalue && rightvalue) {
+                horizontalSelected.value = { value: 'lrfixed', content: t('attr.fixed_left_right') }
+            }
+            if (topvalue) {
+                verticalSelected.value = { value: 'top', content: t('attr.fixed_top') }
+            }
+            if (bottomvalue) {
+                verticalSelected.value = { value: 'bottom', content: t('attr.fixed_bottom') }
+            }
+            if (topvalue && bottomvalue) {
+                verticalSelected.value = { value: 'tbfixed', content: t('attr.fixed_top_bottom') }
+            }
+            if (widthvalue) {
+                checked1.value = true
+            }
+            if (heightvalue) {
+                checked2.value = true
+            }
+            if (!leftvalue && !rightvalue) {
+                horizontalSelected.value = { value: 'duo', content: '多值' }
+            }
+            if (!topvalue && !bottomvalue) {
+                verticalSelected.value = { value: 'duo', content: '多值' }
+            }
+        }
     }
 
-    if (firstConstraint === difference) {
-        if (difference === 63) {
+    if (difference.every((item: any) => item === difference[0])) {
+        if (difference[0] === 63) {
             showHorizontalSelected(-1)
             showVerticalSelected(-1)
         } else {
             const number = [1, 2, 4, 8, 16, 32]
             let arr = [] as number[]
             number.forEach(val => {
-                if ((difference & val) == val) {
+                if (!(difference[0] & val)) {
                     arr.push(val)
                 }
             })
             console.log(arr);
-            showHorizontalSelected(arr[0])
-            showVerticalSelected(arr[1])
+            if (arr.length) {
+                if (arr.includes(1)) {
+                    horizontalSelected.value = { value: 'right', content: t('attr.fixed_right') }
+                }
+                if (arr.includes(4)) {
+                    horizontalSelected.value = { value: 'left', content: t('attr.fixed_left') }
+                }
+                if (arr.includes(1) && arr.includes(4)) {
+                    horizontalSelected.value = { value: 'lrfixed', content: t('attr.fixed_left_right') }
+                }
+                if (arr.includes(8)) {
+                    verticalSelected.value = { value: 'bottom', content: t('attr.fixed_bottom') }
+                }
+                if (arr.includes(32)) {
+                    verticalSelected.value = { value: 'top', content: t('attr.fixed_top') }
+                }
+                if (arr.includes(8) && arr.includes(32)) {
+                    verticalSelected.value = { value: 'tbfixed', content: t('attr.fixed_top_bottom') }
+                }
+                if (arr.includes(2)) {
+                    checked1.value = true
+                }
+                if (arr.includes(16)) {
+                    checked2.value = true
+                }
+            }
         }
     }
 
@@ -232,10 +309,15 @@ function update() {
                 break;
             case 2:
                 checked1.value = true
-                horizontalSelected.value = { value: 'lrfixed', content: t('attr.fixed_left_right') }
                 break;
             case 4:
                 horizontalSelected.value = { value: 'left', content: t('attr.fixed_left') }
+                break;
+            case 5:
+                horizontalSelected.value = { value: 'lrfixed', content: t('attr.fixed_left_right') }
+                break;
+            case 6:
+
                 break;
             default:
                 horizontalSelected.value = { value: 'hfollow', content: t('attr.follow_container') }
