@@ -1,7 +1,7 @@
 import { XY } from '@/context/selection';
 import { v4 as uuid } from "uuid";
 import { debounce } from 'lodash';
-import { ContactShape, PathShape, PathShapeView, Shape, ShapeType, ShapeView } from '@kcdesign/data';
+import { ContactShape, PathShape, PathShapeView, Shape, ShapeType, ShapeView, adapt2Shape } from '@kcdesign/data';
 import { Context } from '@/context';
 import { is_straight } from './attri_setting';
 import { selectShapes } from './content';
@@ -443,4 +443,11 @@ export function format_value(val: number | string, fix = 2) {
     }
 
     return val.toFixed(fix);
+}
+
+export function modifyOpacity(context: Context, val: number) {
+    const page = context.selection.selectedPage!;
+    const shapes = context.selection.selectedShapes;
+    const editor = context.editor4Page(page);
+    editor.modifyShapesContextSettingOpacity((shapes as ShapeView[]).map(s => adapt2Shape(s)), val);
 }

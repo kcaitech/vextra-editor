@@ -5,6 +5,7 @@ import { useI18n } from 'vue-i18n';
 import { nextTick, onMounted, onUnmounted, ref, watch } from 'vue';
 import { Context } from '@/context';
 import { throttle } from 'lodash';
+import { modifyOpacity } from '@/utils/common';
 
 interface Props {
     context: Context
@@ -61,12 +62,6 @@ const ipt = () => {
     }
 }
 
-function opacityChange(value: number) {
-    const page = props.context.selection.selectedPage!;
-    const editor = props.context.editor4Page(page);
-    editor.modifyShapesContextSettingOpacity((shapes.value as ShapeView[]).map(s => adapt2Shape(s)), value);
-}
-
 function change(e: Event) {
     if (!executed.value) return;
     executed.value = false;
@@ -79,7 +74,8 @@ function change(e: Event) {
 
         if (isNaN(value)) return;
     }
-    opacityChange(value);
+
+    modifyOpacity(props.context, value);
 }
 
 function down(v: number) {
