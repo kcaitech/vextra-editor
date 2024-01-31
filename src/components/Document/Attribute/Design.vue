@@ -99,8 +99,6 @@ function _selection_change() {
     symbol_attribute.value = false;
 
     const selectedShapes = props.context.selection.selectedShapes;
-    console.log(selectedShapes);
-    
     if (selectedShapes.length === 1) {
         symbol_attribute.value = true;
         const shape = selectedShapes[0];
@@ -248,7 +246,8 @@ onUnmounted(() => {
                 <ShapeBaseAttr v-if="baseAttr" :context="props.context" :selection-change="reflush_by_selection"
                     :triggle="reflush_trigger"></ShapeBaseAttr>
                 <BaseForPathEdit v-if="editAttr" :context="props.context"></BaseForPathEdit>
-                <ResizingConstraints v-if="constraintShow" :context="props.context" :trigger="reflush_trigger" :selection-change="reflush_by_selection">
+                <ResizingConstraints v-if="constraintShow" :context="props.context" :trigger="reflush_trigger"
+                    :selection-change="reflush_by_selection">
                 </ResizingConstraints>
                 <Opacity v-if="opacity && !WITHOUT_OPACITY.includes(shapeType)" :context="props.context" :change="reflush">
                 </Opacity>
