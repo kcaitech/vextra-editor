@@ -22,7 +22,6 @@ import BaseForPathEdit from "@/components/Document/Attribute/BaseAttr/BaseForPat
 import InstanceAttr from './Module/InstanceAttr.vue';
 import { get_var_for_ref, is_part_of_symbol, is_shapes_if_symbolref } from '@/utils/symbol';
 import { useI18n } from 'vue-i18n';
-import { SymbolDom } from '../Content/vdom/symbol';
 
 const WITH_FILL = [
     ShapeType.Rectangle,
@@ -99,7 +98,6 @@ function _selection_change() {
     symbol_attribute.value = false;
 
     const selectedShapes = props.context.selection.selectedShapes;
-    console.log(selectedShapes);
 
     if (selectedShapes.length === 1) {
         symbol_attribute.value = true;
@@ -261,7 +259,7 @@ onUnmounted(() => {
                 </InstanceAttr>
                 <Fill v-if="WITH_FILL.includes(shapeType)" :shapes="shapes" :context="props.context"></Fill>
                 <Border v-if="WITH_BORDER.includes(shapeType)" :shapes="shapes" :context="props.context"></Border>
-                <Text v-if="WITH_TEXT.includes(shapeType)" :shape="((textShapes[0]) as TextShapeView)"
+                <Text v-if="textShapes.length" :shape="((textShapes[0]) as TextShapeView)"
                     :textShapes="((textShapes) as TextShapeView[])" :context="props.context"
                     :trigger="reflush_trigger"></Text>
                 <TableText v-if="WITH_TABLE.includes(shapeType)" :shape="(shapes[0] as TableView)" :context="props.context">
