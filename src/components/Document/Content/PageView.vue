@@ -115,8 +115,6 @@ function selection_watcher(...args: any[]) {
 }
 
 onMounted(() => {
-    console.log('page mounted');
-
     const dom = props.context.getPageDom(props.data);
     if (dom && pagesvg.value) {
         dom.dom.bind(pagesvg.value);
