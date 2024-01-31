@@ -135,7 +135,7 @@ function _selection_change() {
 const selection_change = debounce(_selection_change, 160, { leading: true });
 
 function is_constrainted(shape: ShapeView) {
-    return shape.isVirtualShape || ([ShapeType.Artboard, ShapeType.Group, ShapeType.Symbol, ShapeType.SymbolUnion].includes(shape.parent?.type || ShapeType.Rectangle))
+    return shape.isVirtualShape || ([ShapeType.Artboard, ShapeType.Symbol, ShapeType.SymbolUnion].includes(shape.parent?.type || ShapeType.Rectangle))
 }
 
 function update_by_shapes(...args: any[]) {
