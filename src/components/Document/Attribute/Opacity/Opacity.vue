@@ -8,8 +8,9 @@ import { throttle } from 'lodash';
 import { modifyOpacity } from '@/utils/common';
 
 interface Props {
-    context: Context
-    change: number
+    context: Context;
+    selectionChange: number;
+    trigger: any[]
 }
 
 const props = defineProps<Props>();
@@ -82,7 +83,7 @@ function down(v: number) {
     const selected = props.context.selection.selectedShapes;
     const page = props.context.selection.selectedPage;
     if (!selected.length || !page) return;
-    const value = limitValue(v) / 100;
+    const value = limitValue(v);
     if (isNaN(value)) return;
     opacity.value = limitValue(Number(value));
     opacity_editor = props.context.editor
@@ -116,7 +117,7 @@ const onMouseMove = (e: MouseEvent) => {
     if (isDragging) {
         updateProgress(e.clientX);
         if (opacity_editor && typeof opacity.value === 'number') {
-            opacity_editor.execute(opacity.value / 100);
+            opacity_editor.execute(opacity.value);
         }
     }
 }
@@ -136,7 +137,7 @@ function updateProgress(x: number) {
         if (progress.value) {
             progress.value.style.width = progressPercentage + '%';
             progressBtn.value!.style.left = progressPercentage - 4 + '%';
-            opacity.value = Number(progressPercentage.toFixed(0));
+            opacity.value = Number(progressPercentage.toFixed(0)) / 100;
         }
     }
 }
@@ -198,14 +199,23 @@ function _update() {
 
 const update = throttle(_update, 320, { leading: true });
 
-const stop = watch(() => props.change, update);
+const stop = watch(() => props.trigger, (v) => {
+    if (v.includes('context-settings')) {
+        update();
+    }
+});
+const stop2 = watch(() => props.selectionChange, () => {
+    update()
+});
 
 onMounted(update);
 onUnmounted(() => {
     if (opacity_editor) {
         opacity_editor.close();
     }
+
     stop();
+    stop2();
 })
 </script>
 <template>
@@ -458,7 +468,7 @@ onUnmounted(() => {
     background-color: var(--grey-dark);
     border-radius: 3px;
     position: relative;
-
+    cursor: pointer;
 }
 
 .progress {
@@ -466,6 +476,7 @@ onUnmounted(() => {
     height: 100%;
     background-color: var(--active-color);
     border-radius: 5px;
+    cursor: pointer;
 }
 
 .progress-button {
