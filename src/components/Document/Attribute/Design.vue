@@ -22,6 +22,7 @@ import BaseForPathEdit from "@/components/Document/Attribute/BaseAttr/BaseForPat
 import InstanceAttr from './Module/InstanceAttr.vue';
 import { get_var_for_ref, is_part_of_symbol, is_shapes_if_symbolref } from '@/utils/symbol';
 import { useI18n } from 'vue-i18n';
+import { SymbolDom } from '../Content/vdom/symbol';
 
 const WITH_FILL = [
     ShapeType.Rectangle,
@@ -98,6 +99,8 @@ function _selection_change() {
     symbol_attribute.value = false;
 
     const selectedShapes = props.context.selection.selectedShapes;
+    console.log(selectedShapes);
+    
     if (selectedShapes.length === 1) {
         symbol_attribute.value = true;
         const shape = selectedShapes[0];

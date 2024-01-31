@@ -16,7 +16,7 @@ export interface SelectSource {
 interface Props {
     source: SelectSource[];
     selected: SelectItem | null;
-
+    disabled?: boolean;
     itemHeight?: number;
     itemWidth?: number;
 }
@@ -46,6 +46,9 @@ const optionsContainerVisible = ref<boolean>(false);
 const source = ref<SelectSource[]>([]);
 
 function toggle() {
+    if (props.disabled) {
+        return
+    }
     optionsContainerVisible.value = !optionsContainerVisible.value;
     if (!optionsContainerVisible.value) {
         return;

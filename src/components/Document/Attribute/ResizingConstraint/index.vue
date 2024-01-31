@@ -1,7 +1,7 @@
 <script setup lang="ts">
-import { Page, ResizingConstraints2, adapt2Shape } from '@kcdesign/data';
+import { Page, ResizingConstraints2, ShapeType, adapt2Shape } from '@kcdesign/data';
 import { Context } from '@/context';
-import { onMounted, onUnmounted, ref, watch } from 'vue'
+import { computed, onMounted, onUnmounted, ref, watch } from 'vue'
 import Select, { SelectItem, SelectSource } from '@/components/common/Select2.vue';
 import { genOptions } from '@/utils/common';
 import { useI18n } from 'vue-i18n';
@@ -122,16 +122,18 @@ function handleVerticalSizeSelect(item: SelectItem) {
     }
 }
 
-// todo vertical
-// ...
+// const disabled = computed(() => {
+//     return props.context.selection.selectedShapes.every(item => item.parent?.type === ShapeType.SymbolRef)
+// })
+
+const disabled = ref(false)
 
 function _update() {
-    console.log(props.context.selection.selectedShapes);
-    
     modifyhorizontalPositionStatus();
     modifyverticalPositionStatus();
     modifyWidthStatus();
     modifyHeightStatus();
+    disabled.value = props.context.selection.selectedShapes.some(item => item.parent?.type === ShapeType.SymbolRef)
 }
 
 function modifyhorizontalPositionStatus() {
@@ -280,25 +282,31 @@ onUnmounted(() => {
     <div class="wrap">
         <TypeHeader :title="t('attr.constraints')" class="mt-24" :active="true">
         </TypeHeader>
-        <div class="row">
-            <label>{{ t('attr.horizontal') }}</label>
-            <Select :selected="horizontalPositionSelected" :source="horizontalPositionOptions"
-                @select="handleHorizontalPositionSelect"></Select>
-            <Select :selected="horizontalSizeSelected" :source="horizontalSizeOptions"
-                @select="handleHorizontalSizeSelect"></Select>
-        </div>
-        <div class="row">
-            <label>{{ t('attr.vertical') }}</label>
-            <Select :selected="VerticalPositionSelected" :source="VerticalPositionOptions"
-                @select="handleVerticalPositionSelect"></Select>
-            <Select :selected="VerticalSizeSelected" :source="VerticalSizeOptions"
-                @select="handleVerticalSizeSelect"></Select>
-            <!-- todo vertical -->
+        <div class="content" :class="{ 'disabled': disabled }">
+            <div class="row">
+                <label>{{ t('attr.horizontal') }}</label>
+                <Select :selected="horizontalPositionSelected" :source="horizontalPositionOptions"
+                    @select="handleHorizontalPositionSelect" :disabled="disabled"></Select>
+                <Select :selected="horizontalSizeSelected" :source="horizontalSizeOptions"
+                    @select="handleHorizontalSizeSelect" :disabled="disabled"></Select>
+            </div>
+            <div class="row">
+                <label>{{ t('attr.vertical') }}</label>
+                <Select :selected="VerticalPositionSelected" :source="VerticalPositionOptions"
+                    @select="handleVerticalPositionSelect" :disabled="disabled"></Select>
+                <Select :selected="VerticalSizeSelected" :source="VerticalSizeOptions" @select="handleVerticalSizeSelect"
+                    :disabled="disabled"></Select>
+            </div>
         </div>
     </div>
 </template>
 
 <style scoped lang="scss">
+.disabled {
+    opacity: 0.4;
+    z-index: -1;
+}
+
 .wrap {
     width: 100%;
     display: flex;
@@ -307,7 +315,7 @@ onUnmounted(() => {
     box-sizing: border-box;
     border-bottom: 1px solid #F0F0F0;
 
-    >.row {
+    .content>.row {
         width: 100%;
         display: flex;
         align-content: center;
