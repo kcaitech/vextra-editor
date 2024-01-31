@@ -72,9 +72,9 @@ const get_linear_points = () => {
     line_length.value = Math.sqrt(Math.pow(d2.x - d1.x, 2) + Math.pow(d2.y - d1.y, 2));
     rotate.value = getHorizontalAngle({ x: d1.x, y: d1.y }, { x: d2.x, y: d2.y });
     // dot3.value = { type: 'ellipse', ...m.computeCoord3(get_elipse_point(gradient.elipseLength || 0, gradient.from, gradient.to, frame.width, frame.height)) };
-    dot3.value = { type: 'ellipse', ...get_elipse_point2(gradient.elipseLength || 0, line_length.value, d1) };
+    dot3.value = { type: 'ellipse', ...get_elipse_point2(Math.abs(gradient.elipseLength || 0), line_length.value, d1) };
 
-    ellipseL.value = gradient.elipseLength || 0;
+    ellipseL.value = Math.abs(gradient.elipseLength || 0);
     ellipse_length.value = Math.sqrt(Math.pow(dot3.value.x - dot1.value.x, 2) + Math.pow(dot3.value.y - dot1.value.y, 2));
     for (let i = 0; i < gradient.stops.length; i++) {
         const stop = gradient.stops[i];
@@ -158,8 +158,8 @@ const dot_mousemove = (e: MouseEvent) => {
             m.trans(-dot1.value.x, -dot1.value.y);
             m.rotate(-rotate_r.value);
             const p = m.computeCoord3(m_p).y / line_length.value;
-            update_ellipse_dot(e, p);
-            gradientEditor.execute_elipselength(Math.abs(p));
+            update_ellipse_dot(e, Math.abs(p));
+            gradientEditor.execute_elipselength(p);
         }
     } else {
         if (Math.hypot(dx, dy) > dragActiveDis) {
@@ -185,6 +185,7 @@ const dot_mouseup = (e: MouseEvent) => {
 
 const rect_enter = (e: MouseEvent) => {
     if (e.buttons !== 0) return;
+    e.stopPropagation();
     const posi = get_stop_position(e);
     const shape = shapes.value[0] as ShapeView;
     get_percent_posi(e);
@@ -192,7 +193,9 @@ const rect_enter = (e: MouseEvent) => {
     temporary.value = true;
     percent_show.value = true;
 }
-const rect_leave = () => {
+const rect_leave = (e: MouseEvent) => {
+    if (e.buttons !== 0) return;
+    e.stopPropagation();
     if (!enter_stop.value) {
         temporary.value = false;
     }
@@ -213,6 +216,7 @@ const rect_mousemove = (e: MouseEvent) => {
 }
 const stop_enter = (e: MouseEvent, index: number) => {
     if (e.buttons !== 0) return;
+    e.stopPropagation();
     const shape = shapes.value[0] as ShapeView;
     const gradient = get_gradient(props.context, shape);
     if (!gradient) return;
@@ -320,9 +324,14 @@ const stop_mouseup = (e: MouseEvent) => {
     document.removeEventListener('mousemove', stop_mousemove);
     document.removeEventListener('mouseup', stop_mouseup);
 }
-const stop_content_enter = (e: MouseEvent) => {
+const stop_content_enter = (e: MouseEvent, index: number) => {
     if (e.buttons !== 0) return;
     get_percent_posi(e);
+    const shape = shapes.value[0] as ShapeView;
+    const gradient = get_gradient(props.context, shape);
+    if (!gradient) return;
+    const position = gradient.stops[index].position;
+    percent.value = +(position * 100).toFixed(0);
     percent_show.value = true;
 }
 
@@ -338,12 +347,22 @@ const update_ellipse_dot = (e: MouseEvent, l?: number) => {
     percent_posi.value.y = r_p.y + 20;
     const gradient = get_gradient(props.context, shapes.value[0] as ShapeView);
     if (!gradient) return;
-    percent.value = +((l || gradient.elipseLength || 0) * 100).toFixed(0);
+    percent.value = +((l || Math.abs(gradient.elipseLength || 0)) * 100).toFixed(0);
 }
-const leave_ellipse_dot = () => {
-    if (down_ellipse.value) return;
+const leave_ellipse_dot = (e: MouseEvent) => {
+    if (down_ellipse.value || e.buttons !== 0) return;
     ellipse_show.value = false;
 }
+const stop_leave = (e: MouseEvent) => {
+    if (e.buttons !== 0) return;
+    enter_stop.value = false;
+}
+
+const stop_content_leave = (e: MouseEvent) => {
+    if (e.buttons !== 0) return;
+    percent_show.value = false;
+}
+
 const watcher = () => {
     matrix.reset(props.matrix);
     get_linear_points();
@@ -410,7 +429,7 @@ onUnmounted(() => {
             <rect width="20" :height="line_length" ref="stop_container"
                 :style="{ transform: `translate(${dot1.x}px, ${dot1.y}px) rotate(${rotate - 90}deg)` }" fill="transparent"
                 @mousemove="(e) => rect_mousemove(e)" @mousedown.stop="(e) => add_stop(e)"
-                @mouseenter.stop="rect_enter" @mouseleave.stop="rect_leave">
+                @mouseenter="rect_enter" @mouseleave="rect_leave">
             </rect>
             <ellipse :cx="dot1.x" :cy="dot1.y" :rx="ellipse_length" :ry="line_length" fill="none" stroke="#000000"
                 stroke-width="3"
@@ -427,8 +446,8 @@ onUnmounted(() => {
             <circle r="4" fill="white" stroke="#595959" stroke-width="1" :cx="dot3.x" :cy="dot3.y"
                 @mousedown.stop="(e) => dot_mousedown(e, dot3.type)" @mouseenter="ellipse_dot"
                 @mouseleave="leave_ellipse_dot"></circle>
-            <g v-for="(stop, index) in stops" :key="index" @mouseenter="stop_content_enter"
-                @mouseleave="percent_show = false"
+            <g v-for="(stop, index) in stops" :key="index" @mouseenter="(e) => stop_content_enter(e, index)"
+                @mouseleave="stop_content_leave"
                 :style="{ transform: `translate(${stop.x + 1.5}px, ${stop.y}px) rotate(${rotate - 90}deg) translate(0px, -11px)` }">
                 <g
                     transform="matrix(0.70710688829422,0.7071067094802856,-0.7071066498756409,0.70710688829422,3.2218211561925614,-7.778166386438556)">
@@ -446,8 +465,8 @@ onUnmounted(() => {
                 <g
                     transform="matrix(0.7071068286895752,0.7071068286895752,-0.7071068286895752,0.7071068286895752,5.272466477774856,-6.870199048298332)">
                     <ellipse cx="16.58615016937256" cy="8.586184978485107" rx="5.656853675842285" ry="5.656853675842285"
-                        :fill="to_rgba(stop.color)" @mouseenter.stop="(e) => stop_enter(e, index)"
-                        @mouseleave.stop="enter_stop = false" @mousedown.stop="(e) => stop_mousedown(e, index)"
+                        :fill="to_rgba(stop.color)" @mouseenter="(e) => stop_enter(e, index)"
+                        @mouseleave="stop_leave" @mousedown.stop="(e) => stop_mousedown(e, index)"
                         @mousemove="updata_percent" />
                 </g>
             </g>

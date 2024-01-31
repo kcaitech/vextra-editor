@@ -134,7 +134,8 @@ const rect_enter = (e: MouseEvent) => {
     get_percent_posi(e);
     percent_show.value = true;
 }
-const rect_leave = () => {
+const rect_leave = (e: MouseEvent) => {
+    if (e.buttons !== 0) return;
     if (!enter_stop.value) {
         temporary.value = false;
     }

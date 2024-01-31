@@ -45,3 +45,31 @@ export const get_temporary_stop = (position: number, dot1: { x: number, y: numbe
     if (!stop) return
     return { x: x1, y: y1, color: stop.color };
 }
+/*
+ * 椭圆的周长
+ * @param a 椭圆的长轴
+ * @param b 椭圆的短轴
+ */
+export function calculateEllipsePerimeter(a: number, b: number) {
+    return Math.PI * (3 * (a + b) - Math.sqrt((3 * a + b) * (a + 3 * b)));
+}
+
+/**
+ * 计算椭圆弧的长度
+ * @param a 圆弧的长轴
+ * @param b 圆弧的短轴
+ * @param theta 圆弧的弧度
+ */
+export function calculateArcLengthAtAngle(a: number, b: number, theta: number) {
+    const stepSize = 0.01; // 分段大小
+    let arcLength = 0;
+    for (let t = 0; t < theta; t += stepSize) {
+        const x = a * Math.cos(t);
+        const y = b * Math.sin(t);
+        const derivativeX = -a * Math.sin(t);
+        const derivativeY = b * Math.cos(t);
+        const segmentLength = Math.hypot(derivativeX, derivativeY) * stepSize;
+        arcLength += segmentLength;
+    }
+    return arcLength;
+}

@@ -11,7 +11,7 @@ const props = defineProps<Props>();
 </script>
 
 <template>
-    <g :style="{ transform: `translate(${stop.x + 1.5}px, ${stop.y}px) rotate(${rotate - 90}deg) translate(0px, -11px)` }">
+    <g :style="{ transform: `translate(${stop.x + 1.5}px, ${stop.y}px) rotate(${rotate}deg) translate(0px, -11px)` }">
         <g
             transform="matrix(0.70710688829422,0.7071067094802856,-0.7071066498756409,0.70710688829422,3.2218211561925614,-7.778166386438556)">
             <path
