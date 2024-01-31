@@ -25,9 +25,6 @@ function keydown(event: KeyboardEvent, context: Context) {
         }
     }
 
-    console.log('code:', event.code);
-
-
     const f = keydownHandler[event.code];
     f && f(event, context);
 }
