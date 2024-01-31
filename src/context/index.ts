@@ -1,13 +1,10 @@
 import {
     CoopRepository,
     TaskMgr,
-    Task,
     WatchableObject,
-    TaskPriority,
     TableShape,
     TableEditor,
     Text,
-    SymbolShape,
     PageView,
     ShapeView,
     adapt2Shape,
@@ -37,6 +34,7 @@ import { PageDom } from "@/components/Document/Content/vdom/page";
 import { initComsMap } from "@/components/Document/Content/vdom/comsmap";
 import { Arrange } from "./arrange";
 import { DomCtx } from "@/components/Document/Content/vdom/domctx";
+import { startLoadTask } from "./loadtask";
 
 // 仅暴露必要的方法
 export class RepoWraper {
@@ -119,36 +117,7 @@ export class Context extends WatchableObject {
         this.m_component = new Component(this);
         this.m_path = new Path(this);
         this.m_arrange = new Arrange();
-        const pagelist = data.pagesList.slice(0);
-        const pageloadTask = new class implements Task { // page auto loader
-            isValid(): boolean {
-                return !this.isDone();
-            }
-
-            isDone(): boolean {
-                return pagelist.length <= 0;
-            }
-
-            async run(): Promise<void> {
-                let id;
-                while (pagelist.length > 0) {
-                    const i = pagelist[0];
-                    if (data.pagesMgr.getSync(i.id)) {
-                        pagelist.splice(0, 1);
-                    } else {
-                        id = i.id;
-                        break;
-                    }
-                }
-                if (id) {
-                    await data.pagesMgr.get(id);
-                    pagelist.splice(0, 1);
-                }
-            }
-        }
-
-        this.m_taskMgr.add(pageloadTask, TaskPriority.normal);
-        this.m_taskMgr.startLoop();
+        startLoadTask(data, this.m_taskMgr);
     }
 
     get editor(): Editor {
