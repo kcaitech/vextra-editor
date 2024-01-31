@@ -100,7 +100,7 @@ function _selection_change() {
 
     const selectedShapes = props.context.selection.selectedShapes;
     console.log(selectedShapes);
-    
+
     if (selectedShapes.length === 1) {
         symbol_attribute.value = true;
         const shape = selectedShapes[0];
@@ -126,7 +126,7 @@ function _selection_change() {
         if (!shape.isVirtualShape) {
             opacity.value = true;
         }
-        if (![ShapeType.Artboard, ShapeType.Group, ShapeType.SymbolRef, ShapeType.SymbolRef].includes(shape.parent?.type || ShapeType.Rectangle)) {
+        if (!is_constrainted(shape)) {
             constraintShow.value = false;
         }
     }
@@ -135,6 +135,10 @@ function _selection_change() {
     reflush.value++;
 }
 const selection_change = debounce(_selection_change, 160, { leading: true });
+
+function is_constrainted(shape: ShapeView) {
+    return shape.isVirtualShape || ([ShapeType.Artboard, ShapeType.Group, ShapeType.Symbol, ShapeType.SymbolUnion].includes(shape.parent?.type || ShapeType.Rectangle))
+}
 
 function update_by_shapes(...args: any[]) {
     modify_constraint_show();
@@ -145,8 +149,7 @@ function update_by_shapes(...args: any[]) {
 
 function _modify_constraint_show() {
     constraintShow.value = props.context.selection.selectedShapes.every(
-        s => [ShapeType.Artboard, ShapeType.Group, ShapeType.SymbolRef, ShapeType.SymbolRef]
-            .includes(s.parent?.type || ShapeType.Rectangle)
+        s => is_constrainted(s)
     );
 }
 
@@ -248,7 +251,8 @@ onUnmounted(() => {
                 <ShapeBaseAttr v-if="baseAttr" :context="props.context" :selection-change="reflush_by_selection"
                     :triggle="reflush_trigger"></ShapeBaseAttr>
                 <BaseForPathEdit v-if="editAttr" :context="props.context"></BaseForPathEdit>
-                <ResizingConstraints v-if="constraintShow" :context="props.context" :trigger="reflush_trigger" :selection-change="reflush_by_selection">
+                <ResizingConstraints v-if="constraintShow" :context="props.context" :trigger="reflush_trigger"
+                    :selection-change="reflush_by_selection">
                 </ResizingConstraints>
                 <Opacity v-if="opacity && !WITHOUT_OPACITY.includes(shapeType)" :context="props.context" :change="reflush">
                 </Opacity>

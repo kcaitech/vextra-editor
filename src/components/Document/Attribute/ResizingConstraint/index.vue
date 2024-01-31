@@ -1,7 +1,7 @@
 <script setup lang="ts">
-import { Page, ResizingConstraints2, ShapeType, adapt2Shape } from '@kcdesign/data';
+import { Page, ResizingConstraints2, adapt2Shape } from '@kcdesign/data';
 import { Context } from '@/context';
-import { computed, onMounted, onUnmounted, ref, watch } from 'vue'
+import { onMounted, onUnmounted, ref, watch } from 'vue'
 import Select, { SelectItem, SelectSource } from '@/components/common/Select2.vue';
 import { genOptions } from '@/utils/common';
 import { useI18n } from 'vue-i18n';
@@ -122,10 +122,6 @@ function handleVerticalSizeSelect(item: SelectItem) {
     }
 }
 
-// const disabled = computed(() => {
-//     return props.context.selection.selectedShapes.every(item => item.parent?.type === ShapeType.SymbolRef)
-// })
-
 const disabled = ref(false)
 
 function _update() {
@@ -133,7 +129,7 @@ function _update() {
     modifyverticalPositionStatus();
     modifyWidthStatus();
     modifyHeightStatus();
-    disabled.value = props.context.selection.selectedShapes.some(item => item.parent?.type === ShapeType.SymbolRef)
+    disabled.value = props.context.selection.selectedShapes.some(item => item.isVirtualShape);
 }
 
 function modifyhorizontalPositionStatus() {
@@ -280,7 +276,7 @@ onUnmounted(() => {
 </script>
 <template>
     <div class="wrap">
-        <TypeHeader :title="t('attr.constraints')" class="mt-24" :active="true">
+        <TypeHeader :title="t('attr.constraints')" class="mt-24" :active="!disabled">
         </TypeHeader>
         <div class="content" :class="{ 'disabled': disabled }">
             <div class="row">
