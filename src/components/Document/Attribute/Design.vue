@@ -17,7 +17,7 @@ import Module from './Module/Module.vue'
 import TableText from './Table/TableText.vue'
 import CutoutExport from './CutoutExport/index.vue'
 import Opacity from './Opacity/Opacity.vue';
-import ResizingConstraints from '@/components/Document/Attribute/ResizingConstraint/index2.vue';
+import ResizingConstraints from '@/components/Document/Attribute/ResizingConstraint/index.vue';
 import BaseForPathEdit from "@/components/Document/Attribute/BaseAttr/BaseForPathEdit.vue";
 import InstanceAttr from './Module/InstanceAttr.vue';
 import { get_var_for_ref, is_part_of_symbol, is_shapes_if_symbolref } from '@/utils/symbol';

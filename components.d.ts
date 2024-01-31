@@ -140,7 +140,6 @@ declare module '@vue/runtime-core' {
     ImageView: typeof import('./src/components/Document/Content/ImageView.vue')['default']
     ImageViewStatic: typeof import('./src/components/Document/ContentStatic/ImageViewStatic.vue')['default']
     Index: typeof import('./src/components/Document/Attribute/BaseAttr/Index.vue')['default']
-    Index2: typeof import('./src/components/Document/Attribute/ResizingConstraint/index2.vue')['default']
     Inform: typeof import('./src/components/AppHome/Inform.vue')['default']
     InstanceAttr: typeof import('./src/components/Document/Attribute/Module/InstanceAttr.vue')['default']
     InviteMember: typeof import('./src/components/TeamProject/InviteMember.vue')['default']
