@@ -9,7 +9,8 @@ import LableMultiSelect from "./LableMultiSelect.vue";
 import { onMounted, onUnmounted, ref } from "vue";
 import { Selection } from '@/context/selection';
 import { ShapeType, ShapeView } from "@kcdesign/data";
-import { useI18n } from 'vue-i18n'
+import { useI18n } from 'vue-i18n';
+import CutoutExport from "../CutoutExport/index.vue"
 
 const {t} = useI18n();
 const props = defineProps<{
@@ -53,6 +54,7 @@ onUnmounted(() => {
             <LableBorder v-if="len === 1 && shapes[0].getBorders().length > 0" :context="context"></LableBorder>
             <LableText v-if="len === 1 && shapeType === ShapeType.Text" :context="context"></LableText>
             <!-- <LableCode v-if="len > 0" :context="context"></LableCode> -->
+            <CutoutExport :shapes="(shapes as ShapeView[])" :context="props.context"></CutoutExport>
         </el-scrollbar>
         <div class="blank" v-if="len === 0">{{t('lable.selectLayer')}}</div>
     </div>

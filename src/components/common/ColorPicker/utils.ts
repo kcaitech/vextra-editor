@@ -1,7 +1,8 @@
 export const Reg_HEX = /^#([0-9a-fA-F]{2})([0-9a-fA-F]{2})([0-9a-fA-F]{2})$/;
-import { Border, Color, Fill, GroupShape, ShapeType, ShapeView, TableShape, TextShapeView, Gradient, Stop } from '@kcdesign/data';
+import { Border, Color, Fill, GroupShape, ShapeType, ShapeView, TableShape, TextShapeView, Gradient, Stop, GradientType } from '@kcdesign/data';
 import type { IColors, Rect, IRgba } from './eyedropper';
 import { Context } from '@/context';
+import { getHorizontalAngle } from '@/utils/common';
 export interface HSB {
   h: number
   s: number
@@ -590,9 +591,18 @@ export function block_style_generator(color: Color, gradient?: Gradient) {
     return style;
   }
   delete style['background-color'];
-  style['background'] = 'linear-gradient(217deg,rgba(255, 0, 0, 0.8), rgba(255, 0, 0, 0) 70.71% ), linear-gradient(127deg, rgba(0, 255, 0, 0.8), rgba(0, 255, 0, 0) 70.71%), linear-gradient(336deg, rgba(0, 0, 255, 0.8), rgba(0, 0, 255, 0) 70.71%)';
+  if (gradient.gradientType === GradientType.Linear) {
+    style['background'] = get_linear_gradient(gradient);
+  } else if (gradient.gradientType === GradientType.Radial) {
+    style['background-image'] = get_radial_gradient(gradient);
+  } else {
+    style['background'] = get_angular_gradient(gradient);
+    style['height'] = '-webkit-fill-available'
+    style['width'] = '-webkit-fill-available'
+  }
   return style;
 }
+
 export function gradient_channel_generator(gradient: Gradient) {
   const stops = gradient.stops;
   const style: any = {};
@@ -656,4 +666,75 @@ export function hexToX(hex: string): number[] {
     }
   }
   return result
+}
+
+function get_linear_gradient(gradient: Gradient) {
+  const { from, to, stops } = gradient;
+  const rotate = getHorizontalAngle({ x: from.x * 10, y: from.y * 10 }, { x: to.x * 10, y: to.y * 10 });
+  const colors = [];
+  for (let i = 0; i < stops.length; i++) {
+    const stop = stops[i];
+    const c = toRGBA(stop.color);
+    colors.push(`${c} ${stop.position * 100}%`)
+  }
+  const linear = `linear-gradient(${rotate + 90}deg, ${colors.join(', ')})`
+  return linear;
+}
+
+function get_radial_gradient(gradient: Gradient) {
+  const { from, to, stops } = gradient;
+  const colors = [];
+  for (let i = 0; i < stops.length; i++) {
+    const stop = stops[i];
+    const c = toRGBA(stop.color);
+    colors.push(`${c} ${stop.position * 100}%`)
+  }
+  const radial = `radial-gradient(circle closest-side, ${colors.join(', ')})`
+  return radial;
+}
+
+function get_angular_gradient(gradient: Gradient) {
+  const { from, to, stops } = gradient;
+  let angular_gradient = "";
+  const sc = stops.length;
+  const calcSmoothColor = () => {
+    const firstStop = stops[0];
+    const lastStop = stops[sc - 1];
+    const lastDistance = 1 - lastStop.position;
+    const firstDistance = firstStop.position;
+    const fColor = firstStop.color || 'white';
+    const lColor = lastStop.color || 'white';
+    const ratio = 1 / (firstDistance + lastDistance);
+    const fRatio = lastDistance * ratio;
+    const lRatio = firstDistance * ratio;
+    let r = (fColor.red * fRatio + lColor.red * lRatio);
+    let g = (fColor.green * fRatio + lColor.green * lRatio);
+    let b = (fColor.blue * fRatio + lColor.blue * lRatio);
+    let a = (fColor.alpha * fRatio + lColor.alpha * lRatio);
+    r = Math.min(Math.max(Math.round(r), 0), 255);
+    g = Math.min(Math.max(Math.round(g), 0), 255);
+    b = Math.min(Math.max(Math.round(b), 0), 255);
+    a = Math.min(Math.max(a, 0), 1);
+    return { r, g, b, a };
+  }
+  if (sc > 0 && stops[0].position > 0) {
+    const { r, g, b, a } = calcSmoothColor();
+    angular_gradient = "rgba(" + r + "," + g + "," + b + "," + a + ")" + " 0deg";
+  }
+  for (let i = 0; i < sc; i++) {
+    const stop = stops[i];
+    const color = stop.color || 'white';
+    const rgbColor = "rgba(" + color.red + "," + color.green + "," + color.blue + "," + color.alpha + ")";
+    const deg = Math.round(stop.position * 360)// % 360;
+    angular_gradient.length > 0 && (angular_gradient = angular_gradient + ",")
+    angular_gradient = angular_gradient + rgbColor + " " + deg + "deg";
+  }
+  if (sc > 0 && stops[sc - 1].position < 1) {
+    const { r, g, b, a } = calcSmoothColor();
+    angular_gradient = g + "," + "rgba(" + r + "," + g + "," + b + "," + a + ")" + " 360deg";
+  }
+  const rotate = Math.atan2((to.y * 10 - from.y * 10), (to.x * 10 - from.x * 10)) / Math.PI * 180 + 90;
+  const f = "from " + rotate + "deg at " + from.x * 100 + "% " + from.y * 100 + "%";
+  const angular = "conic-gradient(" + f + "," + angular_gradient + ")"
+  return angular;
 }

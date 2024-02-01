@@ -677,6 +677,7 @@ function removeCurColorPicker() {
     props.context.color.switch_editor_mode(false);
     picker_visible.value = false;
     props.context.color.select_stop(-1);
+    props.context.color.clear_locat();
 }
 function switch_editor_mode() {
     if (!(picker_visible.value && props.gradient && props.fillType === FillType.Gradient)) {
@@ -817,20 +818,27 @@ function move_stop_position(e: MouseEvent) {
 }
 
 function color_type_change(val: GradientType | 'solid') {
-    if (gradient_type.value === val) return;
+    if (gradient_type.value === val) {
+        set_gradient(val);
+        return;
+    }
     emit('gradient-type', val);
     update_gradient_type(val);
     nextTick(() => {
-        if (val === 'solid') {
-            props.context.color.set_gradient_type(undefined);
-            props.context.color.switch_editor_mode(false);
-        } else {
-            props.context.color.set_gradient_type(val);
-            props.context.color.switch_editor_mode(true, props.gradient);
-        }
+        set_gradient(val);
         if (props.locat) props.context.color.gradinet_locat(props.locat);
         update();
     })
+}
+const set_gradient = (val: GradientType | 'solid') => {
+    if (val === 'solid') {
+        props.context.color.set_gradient_type(undefined);
+        props.context.color.switch_editor_mode(false);
+    } else {
+        props.context.color.set_gradient_type(val);
+        props.context.color.switch_editor_mode(true, props.gradient);
+    }
+    if (props.locat) props.context.color.gradinet_locat(props.locat);
 }
 // 切换渐变类型
 function update_gradient_type(type: GradientType | 'solid') {
@@ -1042,7 +1050,6 @@ onUnmounted(() => {
     font-size: var(--font-default-fontsize);
     opacity: 1;
     box-sizing: border-box;
-    border: 1px solid rgba(0, 0, 0, 0.1);
     flex: 0 0 16px;
 
     .popover {

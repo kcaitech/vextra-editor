@@ -81,7 +81,7 @@ function borderStyleSelect(selected: SelectItem) {
         const range = get_table_range(table);
         e.setBorderStyle(props.index, bs, range)
     } else {
-        const shapes = flattenShapes(selecteds).filter(s => s.type !== ShapeType.Group);
+        const shapes = flattenShapes(selecteds).filter(s => s.type !== ShapeType.Group || (s as GroupShapeView).data.isBoolOpShape);
         const actions = get_actions_border_style(shapes, props.index, (selected.value as 'dash' | 'solid'));
         if (actions && actions.length) {
             const editor = props.context.editor4Page(page);
@@ -98,7 +98,7 @@ function positionSelect(selected: SelectItem) {
     const selecteds = props.context.selection.selectedShapes;
     const page = props.context.selection.selectedPage;
     if (!page || selecteds.length < 1) return;
-    const shapes = flattenShapes(selecteds).filter(s => s.type !== ShapeType.Group);
+    const shapes = flattenShapes(selecteds).filter(s => s.type !== ShapeType.Group || (s as GroupShapeView).data.isBoolOpShape);
     const actions = get_actions_border_position(shapes, props.index, selected.value as BorderPosition);
     if (actions && actions.length) {
         const editor = props.context.editor4Page(page);
@@ -121,7 +121,7 @@ function setThickness(e: Event) {
         const range = get_table_range(table);
         e.setBorderThickness(props.index, thickness, range)
     } else {
-        const shapes = flattenShapes(selecteds).filter(s => s.type !== ShapeType.Group);
+        const shapes = flattenShapes(selecteds).filter(s => s.type !== ShapeType.Group || (s as GroupShapeView).data.isBoolOpShape);
         const actions = get_actions_border_thickness(shapes, props.index, thickness);
         if (actions && actions.length) {
             const editor = props.context.editor4Page(page);
@@ -146,7 +146,7 @@ const augment = (e: Event) => {
             e.setBorderThickness(props.index, thickness, range)
 
         } else {
-            const shapes = flattenShapes(selecteds).filter(s => s.type !== ShapeType.Group);
+            const shapes = flattenShapes(selecteds).filter(s => s.type !== ShapeType.Group || (s as GroupShapeView).data.isBoolOpShape);
             const actions = get_actions_border_thickness(shapes, props.index, thickness);
             if (actions && actions.length) {
                 const editor = props.context.editor4Page(page);
@@ -172,7 +172,7 @@ const decrease = (e: Event) => {
             e.setBorderThickness(props.index, thickness, range)
 
         } else {
-            const shapes = flattenShapes(selecteds).filter(s => s.type !== ShapeType.Group);
+            const shapes = flattenShapes(selecteds).filter(s => s.type !== ShapeType.Group || (s as GroupShapeView).data.isBoolOpShape);
             const actions = get_actions_border_thickness(shapes, props.index, thickness);
             if (actions && actions.length) {
                 const editor = props.context.editor4Page(page);
@@ -219,7 +219,7 @@ const onMouseMove = (e: MouseEvent) => {
                         const range = get_table_range(table);
                         e.setBorderThickness(props.index, thickness, range)
                     } else {
-                        const shapes = flattenShapes(selecteds).filter(s => s.type !== ShapeType.Group);
+                        const shapes = flattenShapes(selecteds).filter(s => s.type !== ShapeType.Group || (s as GroupShapeView).data.isBoolOpShape);
                         const actions = get_actions_border_thickness(shapes, props.index, thickness);
                         if (actions && actions.length) {
                             const editor = props.context.editor4Page(page);
@@ -241,7 +241,7 @@ const onMouseMove = (e: MouseEvent) => {
                         const range = get_table_range(table);
                         e.setBorderThickness(props.index, thickness, range)
                     } else {
-                        const shapes = flattenShapes(selecteds).filter(s => s.type !== ShapeType.Group);
+                        const shapes = flattenShapes(selecteds).filter(s => s.type !== ShapeType.Group || (s as GroupShapeView).data.isBoolOpShape);
                         const actions = get_actions_border_thickness(shapes, props.index, thickness);
                         if (actions && actions.length) {
                             const editor = props.context.editor4Page(page);

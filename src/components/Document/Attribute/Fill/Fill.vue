@@ -117,7 +117,7 @@ function updateData() {
             }
         }
     } else {
-        const shapes = flattenShapes(selecteds).filter(s => s.type !== ShapeType.Group);
+        const shapes = flattenShapes(selecteds).filter(s => s.type !== ShapeType.Group || (s as GroupShapeView).data.isBoolOpShape);
         const _fs = get_fills(shapes);
         if (_fs === 'mixed') {
             mixed.value = true;
@@ -148,7 +148,7 @@ function addFill(): void {
             editor.addFill(fill, range);
         }
     } else {
-        const shapes = flattenShapes(selected).filter(s => s.type !== ShapeType.Group);
+        const shapes = flattenShapes(selected).filter(s => s.type !== ShapeType.Group || (s as GroupShapeView).data.isBoolOpShape);
         if (mixed.value) {
             const actions = get_actions_fill_unify(shapes);
             const editor = props.context.editor4Page(page);
@@ -176,7 +176,7 @@ function deleteFill(idx: number) {
         const range = get_table_range(table);
         e.deleteFill(_idx, range)
     } else {
-        const shapes = flattenShapes(selected).filter(s => s.type !== ShapeType.Group);
+        const shapes = flattenShapes(selected).filter(s => s.type !== ShapeType.Group || (s as GroupShapeView).data.isBoolOpShape);
         const actions = get_actions_fill_delete(shapes, _idx);
         if (page) {
             const editor = props.context.editor4Page(page);
@@ -196,7 +196,7 @@ function toggleVisible(idx: number) {
         e.setFillEnable(_idx, !fills[idx].fill.isEnabled, range)
 
     } else {
-        const shapes = flattenShapes(selected).filter(s => s.type !== ShapeType.Group);
+        const shapes = flattenShapes(selected).filter(s => s.type !== ShapeType.Group || (s as GroupShapeView).data.isBoolOpShape);
         const fills = shapes[0].getFills();
         const value = !fills[_idx].isEnabled;
         const actions = get_actions_fill_enabled(shapes, _idx, value);
@@ -241,7 +241,7 @@ function setColor(idx: number, clr: string, alpha: number, isColor: boolean) {
             e.setFillColor(_idx, new Color(alpha, r, g, b), range)
         }
     } else {
-        const shapes = flattenShapes(selected).filter(s => s.type !== ShapeType.Group);
+        const shapes = flattenShapes(selected).filter(s => s.type !== ShapeType.Group || (s as GroupShapeView).data.isBoolOpShape);
         const actions = get_actions_fill_color(shapes, _idx, new Color(alpha, r, g, b));
         if (page) {
             const editor = props.context.editor4Page(page);
@@ -323,7 +323,7 @@ function getColorFromPicker(idx: number, color: Color) {
         e.setFillColor(_idx, color, range)
     } else {
         const selected = props.context.selection.selectedShapes;
-        const shapes = flattenShapes(selected).filter(s => s.type !== ShapeType.Group);
+        const shapes = flattenShapes(selected).filter(s => s.type !== ShapeType.Group || (s as GroupShapeView).data.isBoolOpShape);
         const actions = get_actions_fill_color(shapes, _idx, color);
         if (page) {
             const editor = props.context.editor4Page(page);
@@ -488,7 +488,7 @@ function toggle_fill_type(idx: number, fillType: FillType) {
         e.setFillType(_idx, fillType, range)
     } else {
         const selected = props.context.selection.selectedShapes;
-        const shapes = flattenShapes(selected).filter(s => s.type !== ShapeType.Group);
+        const shapes = flattenShapes(selected).filter(s => s.type !== ShapeType.Group || (s as GroupShapeView).data.isBoolOpShape);
         const actions = get_actions_filltype(shapes, _idx, fillType);
         if (page) {
             const editor = props.context.editor4Page(page);

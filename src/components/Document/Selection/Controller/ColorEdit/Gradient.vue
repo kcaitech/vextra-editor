@@ -40,7 +40,6 @@ onMounted(() => {
 onUnmounted(() => {
     props.context.selection.unwatch(selected_watcher);
     props.context.color.unwatch(color_watcher);
-    props.context.color.clear_locat();
 })
 </script>
 <template>

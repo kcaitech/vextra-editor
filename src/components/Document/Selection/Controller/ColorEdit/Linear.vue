@@ -4,7 +4,7 @@ import { ColorCtx } from '@/context/color';
 import { ClientXY, Selection } from '@/context/selection';
 import { WorkSpace } from '@/context/workspace';
 import { get_add_gradient_color, get_gradient, get_temporary_stop, to_rgba } from './gradient_utils';
-import { AsyncGradientEditor, Color, Matrix, Point2D, ShapeView, Stop, adapt2Shape } from '@kcdesign/data';
+import { AsyncGradientEditor, Color, GradientType, Matrix, Point2D, ShapeView, Stop, adapt2Shape } from '@kcdesign/data';
 import { nextTick, onMounted, onUnmounted, ref, watch } from 'vue';
 import trans_bgc from '@/assets/trans_bgc3.png';
 import { getHorizontalAngle } from '@/utils/common';
@@ -50,7 +50,7 @@ const get_linear_points = () => {
     shapes.value = props.context.selection.selectedShapes;
     const shape = shapes.value[0] as ShapeView;
     const gradient = get_gradient(props.context, shape);
-    if (!gradient) return;
+    if (!gradient || gradient.gradientType !== GradientType.Linear) return;
     active.value = props.context.color.selected_stop;
     const frame = shape.frame;
     const m = shape.matrix2Root();
@@ -330,7 +330,7 @@ onUnmounted(() => {
         xmlns:xhtml="http://www.w3.org/1999/xhtml" preserveAspectRatio="xMinYMin meet" overflow="visible" :width="100"
         :height="100" viewBox="0 0 100 100" style="transform: translate(0px, 0px); position: absolute;">
         <g v-if="dot">
-            <TemporaryStop v-if="temporary" :stop="temporary_stop!" :rotate="rotate"></TemporaryStop>
+            <TemporaryStop v-if="temporary" :stop="temporary_stop!" :rotate="rotate - 90"></TemporaryStop>
             <rect width="20" :height="line_length" ref="stop_container"
                 :style="{ transform: `translate(${dot1.x}px, ${dot1.y}px) rotate(${rotate - 90}deg)` }" fill="transparent"
                 @mousemove.stop="(e) => rect_mousemove(e)" @mousedown.stop="(e) => add_stop(e)"

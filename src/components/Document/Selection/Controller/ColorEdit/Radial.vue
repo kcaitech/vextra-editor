@@ -4,7 +4,7 @@ import { ColorCtx } from '@/context/color';
 import { ClientXY, Selection } from '@/context/selection';
 import { WorkSpace } from '@/context/workspace';
 import { get_add_gradient_color, get_gradient, get_temporary_stop, to_rgba } from './gradient_utils';
-import { AsyncGradientEditor, Color, Matrix, ShapeView, Stop, adapt2Shape } from '@kcdesign/data';
+import { AsyncGradientEditor, Color, GradientType, Matrix, ShapeFrame, ShapeView, Stop, adapt2Shape } from '@kcdesign/data';
 import { nextTick, onMounted, onUnmounted, ref } from 'vue';
 import trans_bgc from '@/assets/trans_bgc3.png';
 import { getHorizontalAngle } from '@/utils/common';
@@ -59,7 +59,7 @@ const get_linear_points = () => {
     shapes.value = props.context.selection.selectedShapes;
     const shape = shapes.value[0] as ShapeView;
     const gradient = get_gradient(props.context, shape);
-    if (!gradient) return;
+    if (!gradient || gradient.gradientType !== GradientType.Radial) return;
     active.value = props.context.color.selected_stop;
     const frame = shape.frame;
     const m = shape.matrix2Root();
@@ -72,7 +72,7 @@ const get_linear_points = () => {
     line_length.value = Math.sqrt(Math.pow(d2.x - d1.x, 2) + Math.pow(d2.y - d1.y, 2));
     rotate.value = getHorizontalAngle({ x: d1.x, y: d1.y }, { x: d2.x, y: d2.y });
     // dot3.value = { type: 'ellipse', ...m.computeCoord3(get_elipse_point(gradient.elipseLength || 0, gradient.from, gradient.to, frame.width, frame.height)) };
-    dot3.value = { type: 'ellipse', ...get_elipse_point2(Math.abs(gradient.elipseLength || 0), line_length.value, d1) };
+    dot3.value = { type: 'ellipse', ...get_elipse_point2(Math.abs(gradient.elipseLength || 0), line_length.value, d1, frame) };
 
     ellipseL.value = Math.abs(gradient.elipseLength || 0);
     ellipse_length.value = Math.sqrt(Math.pow(dot3.value.x - dot1.value.x, 2) + Math.pow(dot3.value.y - dot1.value.y, 2));
@@ -91,7 +91,7 @@ function get_elipse_point(ellipseLength: number, from: { x: number, y: number },
     // const __r = getHorizontalAngle({ x: from.x, y: from.y }, { x: to.x, y: to.y });
     const __r = getHorizontalAngle(from, to);
     console.log('__r:', __r);
-    
+
     // const ellipse = { x: 0, y: l * ellipseLength * (height / w) };
     const ellipse = { x: l * ellipseLength, y: 0 };
 
@@ -100,18 +100,18 @@ function get_elipse_point(ellipseLength: number, from: { x: number, y: number },
     m.rotate(Math.PI * 0.5 + (__r * Math.PI / 180));
     m.trans(from.x, from.y);
     console.log('ellipse:', m.computeCoord3(ellipse));
-    
+
     return m.computeCoord3(ellipse);
 }
-function get_elipse_point2(ellipseLength: number, main_apex_length:number, from: { x: number, y: number }) {
+function get_elipse_point2(ellipseLength: number, main_apex_length: number, from: { x: number, y: number }, frame: ShapeFrame) {
     // const ellipse = { x: 0, y: l * ellipseLength * (height / w) };
-    const ellipse = { x: main_apex_length * ellipseLength, y: 0 };
+    const ellipse = { x: main_apex_length * ellipseLength * (frame.width / frame.height), y: 0 };
 
     const m = new Matrix();
     // m.rotate(__r * Math.PI / 180);
     m.rotate(Math.PI * 0.5 + rotate_r.value);
     m.trans(from.x, from.y);
-    
+
     return m.computeCoord3(ellipse);
 }
 const down_ellipse = ref(false);
@@ -157,7 +157,9 @@ const dot_mousemove = (e: MouseEvent) => {
             const m = new Matrix();
             m.trans(-dot1.value.x, -dot1.value.y);
             m.rotate(-rotate_r.value);
-            const p = m.computeCoord3(m_p).y / line_length.value;
+            const p = m.computeCoord3(m_p).y / line_length.value / (frame.width / frame.height);
+            console.log('p---', p);
+            
             update_ellipse_dot(e, Math.abs(p));
             gradientEditor.execute_elipselength(p);
         }
@@ -425,11 +427,11 @@ onUnmounted(() => {
         xmlns:xhtml="http://www.w3.org/1999/xhtml" preserveAspectRatio="xMinYMin meet" overflow="visible" :width="100"
         :height="100" viewBox="0 0 100 100" style="transform: translate(0px, 0px); position: absolute;">
         <g v-if="dot">
-            <TemporaryStop v-if="temporary" :stop="temporary_stop!" :rotate="rotate"></TemporaryStop>
+            <TemporaryStop v-if="temporary" :stop="temporary_stop!" :rotate="rotate - 90"></TemporaryStop>
             <rect width="20" :height="line_length" ref="stop_container"
                 :style="{ transform: `translate(${dot1.x}px, ${dot1.y}px) rotate(${rotate - 90}deg)` }" fill="transparent"
-                @mousemove="(e) => rect_mousemove(e)" @mousedown.stop="(e) => add_stop(e)"
-                @mouseenter="rect_enter" @mouseleave="rect_leave">
+                @mousemove="(e) => rect_mousemove(e)" @mousedown.stop="(e) => add_stop(e)" @mouseenter="rect_enter"
+                @mouseleave="rect_leave">
             </rect>
             <ellipse :cx="dot1.x" :cy="dot1.y" :rx="ellipse_length" :ry="line_length" fill="none" stroke="#000000"
                 stroke-width="3"
@@ -465,9 +467,8 @@ onUnmounted(() => {
                 <g
                     transform="matrix(0.7071068286895752,0.7071068286895752,-0.7071068286895752,0.7071068286895752,5.272466477774856,-6.870199048298332)">
                     <ellipse cx="16.58615016937256" cy="8.586184978485107" rx="5.656853675842285" ry="5.656853675842285"
-                        :fill="to_rgba(stop.color)" @mouseenter="(e) => stop_enter(e, index)"
-                        @mouseleave="stop_leave" @mousedown.stop="(e) => stop_mousedown(e, index)"
-                        @mousemove="updata_percent" />
+                        :fill="to_rgba(stop.color)" @mouseenter="(e) => stop_enter(e, index)" @mouseleave="stop_leave"
+                        @mousedown.stop="(e) => stop_mousedown(e, index)" @mousemove="updata_percent" />
                 </g>
             </g>
         </g>

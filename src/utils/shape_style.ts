@@ -139,7 +139,7 @@ export function get_actions_fill_delete(shapes: ShapeView[], index: number) {
 export function get_borders(shapes: (ShapeView[] | Shape[])): BorderItem[] | 'mixed' {
     const borders: BorderItem[] = [];
     const shape = shapes[0];
-    const styleborders = shape.getBorders();
+    const styleborders = shape.getBorders() || [];
     const compare_str: string[] = [];
     for (let i = 0, len = styleborders.length; i < len; i++) {
         const border = styleborders[i];

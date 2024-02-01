@@ -4,7 +4,7 @@ import { ColorCtx } from '@/context/color';
 import { ClientXY, Selection } from '@/context/selection';
 import { WorkSpace } from '@/context/workspace';
 import { calculateArcLengthAtAngle, calculateEllipsePerimeter, get_add_gradient_color, get_gradient, get_temporary_stop, to_rgba } from './gradient_utils';
-import { AsyncGradientEditor, Color, Matrix, ShapeView, Stop, adapt2Shape } from '@kcdesign/data';
+import { AsyncGradientEditor, Color, GradientType, Matrix, ShapeView, Stop, adapt2Shape } from '@kcdesign/data';
 import { nextTick, onMounted, onUnmounted, ref } from 'vue';
 import trans_bgc from '@/assets/trans_bgc3.png';
 import { getHorizontalAngle } from '@/utils/common';
@@ -60,7 +60,7 @@ const get_linear_points = () => {
     shapes.value = props.context.selection.selectedShapes;
     const shape = shapes.value[0] as ShapeView;
     const gradient = get_gradient(props.context, shape);
-    if (!gradient) return;
+    if (!gradient || gradient.gradientType !== GradientType.Angular) return;
     active.value = props.context.color.selected_stop;
     const frame = shape.frame;
     const m = shape.matrix2Root();
@@ -79,20 +79,19 @@ const get_linear_points = () => {
     for (let i = 0; i < gradient.stops.length; i++) {
         const stop = gradient.stops[i];
         const theta = stop.position * 360;
-        const point = calculateEllipsePoint(ellipse_length.value, line_length.value, -(270 - theta));
+        const point = calculateEllipsePoint(line_length.value, -(270 - theta));
         const r_p = rotatePoint(point.x, point.y, dot1.value.x, dot1.value.y, rotate.value - 90);
-        const p = calculateEllipsePoint(ellipse_length.value, line_length.value, theta + rotate.value);
-        const slope = ellipseTangentSlope(ellipse_length.value, line_length.value, p.x, p.y, d1.x, d1.y);
+        const p = calculateEllipsePoint(line_length.value, theta + rotate.value);
+        const slope = ellipseTangentSlope(line_length.value, p.x, p.y, d1.x, d1.y);
 
         const slope_r = Math.atan(slope) * (180 / Math.PI);
-        console.log(slope_r, '--slope_r--');
-        stops.value.push({ x: r_p.x, y: r_p.y, color: stop.color as Color, r: rotate.value });
+        stops.value.push({ x: r_p.x, y: r_p.y, color: stop.color as Color, r: 0 });
     }
     dot.value = true;
 }
 // 计算切线斜率
-function ellipseTangentSlope(a: number, b: number, x: number, y: number, h: number, k: number) {
-    return -(b ** 2 * (x - h)) / (a ** 2 * (y - k));
+function ellipseTangentSlope(a: number, x: number, y: number, h: number, k: number) {
+    return -(a ** 2 * (x - h)) / (a ** 2 * (y - k));
 }
 function get_elipse_point2(ellipseLength: number, main_apex_length: number, from: { x: number, y: number }) {
     const ellipse = { x: main_apex_length * ellipseLength, y: 0 };
@@ -102,10 +101,10 @@ function get_elipse_point2(ellipseLength: number, main_apex_length: number, from
 
     return m.computeCoord3(ellipse);
 }
-function calculateEllipsePoint(a: number, b: number, angle: number) {
+function calculateEllipsePoint(a: number, angle: number) {
     const theta = angle * (Math.PI / 180); // 将角度转换为弧度
     const x = a * Math.cos(theta);
-    const y = b * Math.sin(theta);
+    const y = a * Math.sin(theta);
     return { x: x, y: y };
 }
 function rotatePoint(x: number, y: number, centerX: number, centerY: number, rotationAngle: number) {
@@ -319,7 +318,7 @@ const stop_content_enter = (e: MouseEvent, index: number) => {
 
 const hover_ellipse_move = (e: MouseEvent) => {
     if (e.buttons !== 0) return;
-    if(enter_stop.value) enter_stop.value = false;
+    if (enter_stop.value) enter_stop.value = false;
     e.stopPropagation();
     const posi = get_stop_position(e);
     const shape = shapes.value[0] as ShapeView;
@@ -330,9 +329,9 @@ const hover_ellipse_move = (e: MouseEvent) => {
     if (!gradient) return;
     const stop = get_add_gradient_color(gradient.stops, posi);
     if (!stop) return
-    const point = calculateEllipsePoint(ellipse_length.value, line_length.value, -(270 - theta));
+    const point = calculateEllipsePoint(line_length.value, -(270 - theta));
     const r_p = rotatePoint(point.x, point.y, dot1.value.x, dot1.value.y, rotate.value - 90);
-    const slope = ellipseTangentSlope(ellipse_length.value, line_length.value, r_p.x, r_p.y, dot1.value.x, dot1.value.y)
+    const slope = ellipseTangentSlope(line_length.value, r_p.x, r_p.y, dot1.value.x, dot1.value.y)
     const r = Math.atan(slope) * (180 / Math.PI);
     slope_r.value = 90 - -r;
     temporary_stop.value = { x: r_p.x, y: r_p.y, color: stop.color };
@@ -349,9 +348,9 @@ const hover_ellipse_enter = (e: MouseEvent) => {
     if (!gradient) return;
     const stop = get_add_gradient_color(gradient.stops, posi);
     if (!stop) return
-    const point = calculateEllipsePoint(ellipse_length.value, line_length.value, -(270 - theta));
+    const point = calculateEllipsePoint(line_length.value, -(270 - theta));
     const r_p = rotatePoint(point.x, point.y, dot1.value.x, dot1.value.y, rotate.value - 90);
-    const slope = ellipseTangentSlope(ellipse_length.value, line_length.value, r_p.x, r_p.y, dot1.value.x, dot1.value.y)
+    const slope = ellipseTangentSlope(line_length.value, r_p.x, r_p.y, dot1.value.x, dot1.value.y)
     const r = Math.atan(slope) * (180 / Math.PI);
     slope_r.value = 90 - -r;
     temporary_stop.value = { x: r_p.x, y: r_p.y, color: stop.color };
@@ -457,15 +456,15 @@ onUnmounted(() => {
         xmlns:xhtml="http://www.w3.org/1999/xhtml" preserveAspectRatio="xMinYMin meet" overflow="visible" :width="100"
         :height="100" viewBox="0 0 100 100" style="transform: translate(0px, 0px); position: absolute;">
         <g v-if="dot">
-            <TemporaryStop v-if="temporary" :stop="temporary_stop!" :rotate="slope_r"></TemporaryStop>
-            <ellipse :cx="dot1.x" :cy="dot1.y" :rx="ellipse_length + 10" :ry="line_length + 12" fill="none" stroke="transparent"
-                stroke-width="20" @mousedown="add_stop" @mousemove="hover_ellipse_move" @mouseenter="hover_ellipse_enter"
-                @mouseleave="hover_ellipse_leave"
+            <TemporaryStop v-if="temporary" :stop="temporary_stop!" :rotate="0"></TemporaryStop>
+            <ellipse :cx="dot1.x" :cy="dot1.y" :rx="line_length + 10" :ry="line_length + 12" fill="none"
+                stroke="transparent" stroke-width="20" @mousedown="add_stop" @mousemove="hover_ellipse_move"
+                @mouseenter="hover_ellipse_enter" @mouseleave="hover_ellipse_leave"
                 :style="{ transform: `translate(${dot1.x}px, ${dot1.y}px) rotate(${rotate - 90}deg) translate(${-dot1.x}px,${-dot1.y}px)` }" />
-            <ellipse :cx="dot1.x" :cy="dot1.y" :rx="ellipse_length" :ry="line_length" fill="none" stroke="#000000"
+            <ellipse :cx="dot1.x" :cy="dot1.y" :rx="line_length" :ry="line_length" fill="none" stroke="#000000"
                 stroke-width="3"
                 :style="{ transform: `translate(${dot1.x}px, ${dot1.y}px) rotate(${rotate - 90}deg) translate(${-dot1.x}px, ${-dot1.y}px)` }" />
-            <ellipse :cx="dot1.x" :cy="dot1.y" :rx="ellipse_length" :ry="line_length" fill="none" stroke="#ffffff"
+            <ellipse :cx="dot1.x" :cy="dot1.y" :rx="line_length" :ry="line_length" fill="none" stroke="#ffffff"
                 stroke-width="2"
                 :style="{ transform: `translate(${dot1.x}px, ${dot1.y}px) rotate(${rotate - 90}deg) translate(${-dot1.x}px, ${-dot1.y}px)` }" />
             <line :x1="dot1.x" :y1="dot1.y" :x2="dot2.x" :y2="dot2.y" stroke="black" stroke-width="3" />
@@ -474,9 +473,9 @@ onUnmounted(() => {
                 @mousedown.stop="(e) => dot_mousedown(e, dot1.type)"></circle>
             <circle r="4" fill="white" stroke="#595959" stroke-width="1" :cx="dot2.x" :cy="dot2.y"
                 @mousedown.stop="(e) => dot_mousedown(e, dot2.type)"></circle>
-            <circle r="4" fill="white" stroke="#595959" stroke-width="1" :cx="dot3.x" :cy="dot3.y"
-                @mousedown.stop="(e) => dot_mousedown(e, dot3.type)" @mouseenter="ellipse_dot"
-                @mouseleave="leave_ellipse_dot"></circle>
+            <!-- <circle r="4" fill="white" stroke="#595959" stroke-width="1" :cx="dot3.x" :cy="dot3.y"
+                    @mousedown.stop="(e) => dot_mousedown(e, dot3.type)" @mouseenter="ellipse_dot"
+                    @mouseleave="leave_ellipse_dot"></circle> -->
             <g v-for="(stop, index) in stops" :key="index" @mouseenter="(e) => stop_content_enter(e, index)"
                 @mouseleave="stop_content_leave"
                 :style="{ transform: `translate(${stop.x + 1.5}px, ${stop.y}px) rotate(${stop.r}deg) translate(0px, -11px)` }">
