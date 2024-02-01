@@ -79,7 +79,7 @@ function finder(childs: ShapeView[], Points: [XY, XY, XY, XY, XY]) {
             continue;
         }
 
-        if (shape.type === ShapeType.Artboard) { // 容器要判定为真的条件是完全被选区覆盖
+        if (shape.type === ShapeType.Artboard && shape.childs.length) { // 容器要判定为真的条件是完全被选区覆盖
             const _shape = shape as GroupShapeView;
 
             if (isTarget2(Points, _shape, true)) {

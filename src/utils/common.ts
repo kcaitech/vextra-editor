@@ -287,17 +287,18 @@ export function isIncluded2(selectorPoints: XY[], shapePoints: XY[]): boolean {
     const { left: l, top: t, right: r, bottom: b } = XYsBounding(shapePoints);
     return l >= left && r <= right && t >= top && b <= bottom;
 }
+/**
+ * @param includes 需要全包含
+ */
 export function isTarget2(selectorPoints: [XY, XY, XY, XY, XY], shape: ShapeView, includes?: boolean) {
     const points = get_points_from_shape(shape);
 
     if (isIncluded2(selectorPoints, points)) {
         return true;
     }
-
     if (includes) {
         return false;
     }
-
     if (shape.type !== ShapeType.Artboard && isIncluded2(points, selectorPoints)) {
         return true;
     }
