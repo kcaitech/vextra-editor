@@ -1,5 +1,5 @@
 export const Reg_HEX = /^#([0-9a-fA-F]{2})([0-9a-fA-F]{2})([0-9a-fA-F]{2})$/;
-import { Border, Color, Fill, GroupShape, ShapeType, ShapeView, TableShape, TextShapeView, Gradient, Stop, GradientType } from '@kcdesign/data';
+import { Border, Color, Fill, GroupShape, ShapeType, ShapeView, TableShape, TextShapeView, Gradient, Stop, GradientType, FillType } from '@kcdesign/data';
 import type { IColors, Rect, IRgba } from './eyedropper';
 import { Context } from '@/context';
 import { getHorizontalAngle } from '@/utils/common';
@@ -583,22 +583,22 @@ function finder(context: Context, shape: ShapeView, init?: Map<string, Color[]>)
 function c2s(c: Color) {
   return `${c.alpha}|${c.red}|${c.green}|${c.blue}`;
 }
-export function block_style_generator(color: Color, gradient?: Gradient) {
-  const style: any = {
+export function block_style_generator(color: Color, gradient?: Gradient, fillType?: FillType) {
+  let style: any = {
     'background-color': toRGBA(color)
   }
-  if (!gradient) {
+  if (!gradient || !fillType) {
     return style;
   }
-  delete style['background-color'];
-  if (gradient.gradientType === GradientType.Linear) {
-    style['background'] = get_linear_gradient(gradient);
-  } else if (gradient.gradientType === GradientType.Radial) {
-    style['background-image'] = get_radial_gradient(gradient);
-  } else {
-    style['background'] = get_angular_gradient(gradient);
-    style['height'] = '-webkit-fill-available'
-    style['width'] = '-webkit-fill-available'
+  if(fillType === FillType.Gradient) {
+    delete style['background-color'];
+    if (gradient.gradientType === GradientType.Linear) {
+      style = get_linear_gradient(gradient);
+    } else if (gradient.gradientType === GradientType.Radial) {
+      style = get_radial_gradient(gradient);
+    } else {
+      style = get_angular_gradient(gradient);
+    }
   }
   return style;
 }
@@ -639,7 +639,7 @@ export function stops_generator(gradient: Gradient, width: number, selected = -1
   for (let i = 0, l = stops.length; i < l; i++) {
     const stop = stops[i];
     result.push({
-      left: stop.position * width + 14,
+      left: stop.position * width + 16,
       is_active: selected === i,
       index: i,
       stop
@@ -678,7 +678,9 @@ function get_linear_gradient(gradient: Gradient) {
     colors.push(`${c} ${stop.position * 100}%`)
   }
   const linear = `linear-gradient(${rotate + 90}deg, ${colors.join(', ')})`
-  return linear;
+  return {
+    'background': linear
+  }
 }
 
 function get_radial_gradient(gradient: Gradient) {
@@ -690,7 +692,9 @@ function get_radial_gradient(gradient: Gradient) {
     colors.push(`${c} ${stop.position * 100}%`)
   }
   const radial = `radial-gradient(circle closest-side, ${colors.join(', ')})`
-  return radial;
+  return {
+    'background-image': radial
+  }
 }
 
 function get_angular_gradient(gradient: Gradient) {
@@ -731,10 +735,14 @@ function get_angular_gradient(gradient: Gradient) {
   }
   if (sc > 0 && stops[sc - 1].position < 1) {
     const { r, g, b, a } = calcSmoothColor();
-    angular_gradient = g + "," + "rgba(" + r + "," + g + "," + b + "," + a + ")" + " 360deg";
+    angular_gradient = angular_gradient + "," + "rgba(" + r + "," + g + "," + b + "," + a + ")" + " 360deg";
   }
   const rotate = Math.atan2((to.y * 10 - from.y * 10), (to.x * 10 - from.x * 10)) / Math.PI * 180 + 90;
   const f = "from " + rotate + "deg at " + from.x * 100 + "% " + from.y * 100 + "%";
   const angular = "conic-gradient(" + f + "," + angular_gradient + ")"
-  return angular;
+  return {
+    'background': angular,
+    height: '-webkit-fill-available',
+    width: '-webkit-fill-available'
+  }
 }

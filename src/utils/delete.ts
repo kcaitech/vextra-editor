@@ -3,7 +3,9 @@ import { ColorCtx } from "@/context/color";
 import { Shape, ShapeView, TableCellType, TableShape, adapt2Shape } from "@kcdesign/data";
 
 export function deleteUnits(context: Context) {
-    if(context.color.selected_stop > -1) {
+    if(context.color.selected_stop !== undefined) {
+        console.log(context.color.selected_stop);
+        
         context.color.notify(ColorCtx.STOP_DELETE);
         return
     }

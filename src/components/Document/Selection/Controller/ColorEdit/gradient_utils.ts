@@ -1,5 +1,7 @@
 import { Context } from "@/context";
-import { Color, Stop, ShapeView } from "@kcdesign/data";
+import { flattenShapes } from "@/utils/cutout";
+import { Color, Stop, ShapeView, ShapeType, GroupShapeView } from "@kcdesign/data";
+import { v4 } from "uuid";
 
 export function to_rgba(options: {
     red: number,
@@ -18,12 +20,12 @@ export const get_add_gradient_color = (stops: Stop[], position: number) => {
             const { red, green, blue, alpha } = c;
             const n_alpha = i === 0 ? (alpha + 1) / 2 : (alpha + stop.color.alpha) / 2;
             const color = new Color(n_alpha, red, green, blue);
-            return { color, index: i };
+            return { color, index: i, id: v4() };
         } else if (position > stops[i].position && i === stops.length - 1) {
             const { red, green, blue, alpha } = stop.color;
             const n_alpha = (alpha + 1) / 2;
             const color = new Color(n_alpha, red, green, blue);
-            return { color, index: i + 1 };
+            return { color, index: i + 1, id: v4() };
         }
     }
 }
@@ -31,7 +33,11 @@ export const get_add_gradient_color = (stops: Stop[], position: number) => {
 export const get_gradient = (context: Context, shape: ShapeView) => {
     const locat = context.color.locat;
     if (!locat || !shape || !shape.style) return;
-    const gradient_type = shape.style[locat.type];
+    let gradient_type = shape.style[locat.type];
+    if(shape.type === ShapeType.Group && !(shape as GroupShapeView).data.isBoolOpShape) {
+        const shapes = flattenShapes(shape.childs).filter(s => s.type !== ShapeType.Group || (s as GroupShapeView).data.isBoolOpShape);
+        gradient_type = shapes[0].style[locat.type];
+    }
     const index = gradient_type.length - locat.index - 1;
     const gradient = gradient_type[index].gradient;
     return gradient;
@@ -45,14 +51,6 @@ export const get_temporary_stop = (position: number, dot1: { x: number, y: numbe
     const stop = get_add_gradient_color(gradient.stops, position);
     if (!stop) return
     return { x: x1, y: y1, color: stop.color };
-}
-/*
- * 椭圆的周长
- * @param a 椭圆的长轴
- * @param b 椭圆的短轴
- */
-export function calculateEllipsePerimeter(a: number, b: number) {
-    return Math.PI * (3 * (a + b) - Math.sqrt((3 * a + b) * (a + 3 * b)));
 }
 
 /**

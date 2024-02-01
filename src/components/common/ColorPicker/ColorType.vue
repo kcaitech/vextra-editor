@@ -54,37 +54,38 @@ onMounted(() => {
     justify-content: space-between;
     border-radius: 6px;
     background-color: #F5F5F5;
-    margin: 0 8px;
-    padding: 0 4px;
     outline: none;
     box-sizing: border-box;
+    padding: 0 2px;
 
     .item {
-        width: 34px;
-        height: 24px;
+        width: 38px;
+        height: 28px;
         display: flex;
         align-items: center;
         justify-content: center;
-        border-radius: 6px;
-        opacity: 0.7;
+        border-radius: 4px;
+        opacity: 0.8;
+        box-sizing: border-box;
 
         &:hover {
             opacity: 1;
         }
 
         svg {
-            width: 14px;
-            height: 14px;
+            width: 16px;
+            height: 16px;
         }
 
         img {
-            width: 14px;
-            height: 14px;
+            width: 16px;
+            height: 16px;
         }
     }
 
     .selected {
-        background-color: #dfdfdf;
+        border: 1px solid #EBEBEB;
+        background-color: #ffffff;
         opacity: 1;
     }
 

@@ -5,7 +5,7 @@ export class ColorCtx extends WatchableObject {
     static COLOR_EDITOR = 2;
     static STOP_DELETE = 3;
     static CHANGE_GRADIENT_TYPE = 4;
-    private m_selected_stop: number = -1;
+    private m_selected_stop: string | undefined = undefined;
     private editor_mode: boolean = false;
     private m_gradient: undefined | Gradient = undefined;
     private m_gradient_type: GradientType | undefined = undefined;
@@ -13,8 +13,8 @@ export class ColorCtx extends WatchableObject {
     constructor() {
         super();
     }
-    select_stop(index: number) {
-        this.m_selected_stop = index;
+    select_stop(id: string | undefined) {
+        this.m_selected_stop = id;
         this.notify(ColorCtx.CHANGE_STOP)
     }
     get selected_stop() {

@@ -59,7 +59,7 @@ interface Emits {
     (e: 'choosecolor', color: number[]): void;
     (e: 'gradient-reverse'): void;
     (e: 'gradient-rotate'): void;
-    (e: 'gradient-add-stop', position: number, color: Color): void;
+    (e: 'gradient-add-stop', position: number, color: Color, id: string): void;
     (e: 'gradient-type', type: GradientType | 'solid'): void;
     (e: 'gradient-color-change', color: Color, index: number): void;
     (e: 'gradient-stop-delete', index: number): void;
@@ -246,7 +246,7 @@ function quit(e: MouseEvent) {
         : e.target instanceof Element && !e.target.closest('.color-block');
     if (need_quit) {
         picker_visible.value = false;
-        props.context.color.select_stop(-1);
+        props.context.color.select_stop(undefined);
         blockUnmount();
         document.removeEventListener('mousedown', quit);
     }
@@ -440,8 +440,11 @@ const changeColor = (color: Color) => {
     if (gradient_type.value === 'solid') {
         emit('change', color);
     } else {
-        let index = props.context.color.selected_stop;
-        if (index === -1) index = 0;
+        if (!props.gradient) return;
+        let id = props.context.color.selected_stop;
+        const _id = props.gradient.stops[0].id;
+        if (id === undefined) id = _id;
+        const index = props.gradient.stops.findIndex(v => v.id === id);
         emit('gradient-color-change', color, index);
         nextTick(() => {
             update_gradient(props.gradient);
@@ -676,7 +679,7 @@ function removeCurColorPicker() {
     props.context.menu.clearColorPickerId();
     props.context.color.switch_editor_mode(false);
     picker_visible.value = false;
-    props.context.color.select_stop(-1);
+    props.context.color.select_stop(undefined);
     props.context.color.clear_locat();
 }
 function switch_editor_mode() {
@@ -747,18 +750,20 @@ function update_gradient(gradient: Gradient | undefined) {
         return;
     }
     gradient_channel_style.value = gradient_channel_generator(gradient);
-    const index = props.context.color.selected_stop;
-    update_stops(index === -1 ? 0 : index);
+    const id = props.context.color.selected_stop;
+    update_stops(id);
 }
 const gradient_line = ref<HTMLDivElement>();
 //更新渐变颜色画板
-function update_stops(selected = -1) {
+function update_stops(selected: string | undefined) {
     stop_els.value.length = 0;
     if (!props.gradient || props.fillType !== FillType.Gradient) {
         return;
     }
-    stop_els.value = stops_generator(props.gradient, 166, selected); // 条条的宽度 减去 一个圆的宽度
-    const c = stop_els.value[selected]?.stop.color;
+    let index = props.gradient.stops.findIndex((v) => v.id === selected);
+    if (selected === undefined) index = 0;
+    stop_els.value = stops_generator(props.gradient, 152, index); // 条条的宽度 减去 一个圆的宽度
+    const c = stop_els.value[index]?.stop.color;
     if (!c) {
         return;
     }
@@ -775,19 +780,21 @@ function _gradient_channel_down(e: MouseEvent) {
     const stops = props.gradient.stops;
     const stop = get_add_gradient_color(stops, left);
     if (!stop) return;
-    emit('gradient-add-stop', left, stop.color);
+    emit('gradient-add-stop', left, stop.color, stop.id);
     nextTick(() => {
-        props.context.color.select_stop(stop.index);
+        props.context.color.select_stop(stop.id);
     })
 }
 function delete_gradient_stop() {
-    if (stop_els.value.length === 1) return;
-    let index = props.context.color.selected_stop;
-    if (stop_els.value.length - 1 === index) {
-        props.context.color.select_stop(0);
+    if (stop_els.value.length <= 1) return;
+    let id = props.context.color.selected_stop;
+    if (stop_els.value[stop_els.value.length - 1].stop.id === id) {
+        props.context.color.select_stop(stop_els.value[0].stop.id);
     }
+    const index = stop_els.value.findIndex((item) => item.stop.id === id);
+    if (index === -1) return;
     stop_els.value.splice(index, 1);
-    emit('gradient-stop-delete', index === -1 ? 0 : index);
+    emit('gradient-stop-delete', index);
     nextTick(() => {
         update_gradient(props.gradient!);
     })
@@ -795,7 +802,7 @@ function delete_gradient_stop() {
 // 选中渐变节点
 const stop_id = ref<string>('');
 function _stop_down(e: MouseEvent, index: number, id: string) {
-    props.context.color.select_stop(index);
+    props.context.color.select_stop(id);
     stop_id.value = id;
     document.addEventListener('mousemove', move_stop_position);
     document.addEventListener('mouseup', mouseup);
@@ -805,12 +812,11 @@ function move_stop_position(e: MouseEvent) {
     if (isDrag && gradient_line.value) {
         const index = stop_els.value.findIndex((item) => item.stop.id === stop_id.value);
         if (index === -1) return;
-        props.context.color.select_stop(index);
         const line_rect = gradient_line.value.getBoundingClientRect();
         const line_width = Math.min(Math.max(e.clientX - line_rect.left, 0), line_rect.width);
         const stop_p = line_width / line_rect.width;
         gradient_channel_style.value = gradient_channel_generator(props.gradient!);
-        stop_els.value[index].left = stop_p * 166 + 14
+        stop_els.value[index].left = stop_p * 152 + 16
         emit('gradient-stop-position', stop_p, stop_id.value);
     } else {
         isDrag = is_drag(e);
@@ -843,24 +849,28 @@ const set_gradient = (val: GradientType | 'solid') => {
 // 切换渐变类型
 function update_gradient_type(type: GradientType | 'solid') {
     if (type === 'solid') {
-        props.context.color.select_stop(-1);
+        props.context.color.select_stop(undefined);
     } else {
-        const index = props.context.color.selected_stop;
-        props.context.color.select_stop(index === -1 ? 0 : index);
+        let id = props.context.color.selected_stop;
+        if (id === undefined) id = props.gradient?.stops[0].id;
+        props.context.color.select_stop(id);
     }
     gradient_type.value = type;
 }
 // 获取渐变类型
 const get_gradient_type = () => {
+    if (props.context.selection.selectedShapes.length < 1) return;
+
     if (props.fillType === FillType.Gradient) {
         gradient_type.value = props.gradient?.gradientType;
-        const index = props.context.color.selected_stop;
+        let id = props.context.color.selected_stop;
         props.context.color.set_gradient_type(gradient_type.value);
         props.context.color.switch_editor_mode(true, props.gradient);
-        props.context.color.select_stop(index === -1 ? 0 : index);
+        if (id === undefined) id = props.gradient?.stops[0].id;
+        props.context.color.select_stop(id);
     } else if (props.fillType === FillType.SolidColor) {
         gradient_type.value = 'solid';
-        props.context.color.select_stop(-1);
+        props.context.color.select_stop(undefined);
         props.context.color.set_gradient_type(undefined);
         props.context.color.switch_editor_mode(false);
     }
@@ -923,11 +933,14 @@ onUnmounted(() => {
     window.removeEventListener('blur', window_blur);
     document.removeEventListener('mousedown', quit);
     blockUnmount();
+    props.context.color.select_stop(undefined);
+    props.context.color.clear_locat();
+    props.context.color.switch_editor_mode(false);
 })
 </script>
 
 <template>
-    <div class="color-block" :style="block_style_generator(color, gradient)" ref="block" @click="triggle">
+    <div class="color-block" :style="block_style_generator(color, gradient, fillType)" ref="block" @click="triggle">
         <div class="popover" v-if="picker_visible" ref="popoverEl" @click.stop @wheel="wheel" @mousedown.stop>
             <!-- 头部 -->
             <div class="header">
@@ -939,7 +952,7 @@ onUnmounted(() => {
                     <svg-icon icon-class="close"></svg-icon>
                 </div>
             </div>
-            <div class="color_type_container">
+            <div class="color_type_container" v-if="fillType">
                 <ColorType :color="color" :gradient_type="gradient_type" @change="color_type_change"></ColorType>
             </div>
             <!-- 渐变工具 -->
@@ -963,7 +976,6 @@ onUnmounted(() => {
                     </Tooltip>
                 </div>
             </div>
-            <div v-else style="width: 100%; height: 8px;"></div>
             <!-- 饱和度 -->
             <div class="saturation" @mousedown.stop="e => setDotPosition(e)"
                 :style="{ backgroundColor: `rgba(${h_rgb.R}, ${h_rgb.G}, ${h_rgb.B}, 1)` }" ref="saturationEL">
@@ -1121,7 +1133,8 @@ onUnmounted(() => {
             width: 100%;
             height: 32px;
             display: flex;
-            margin-top: 8px;
+            margin: 10px 0;
+            padding: 0 12px;
             box-sizing: border-box;
         }
 
@@ -1129,14 +1142,19 @@ onUnmounted(() => {
             display: flex;
             align-items: center;
             width: 100%;
-            height: 32px;
+            height: 28px;
             text-align: center;
+            padding-right: 12px;
+            margin: 2px 0 12px 0;
+            box-sizing: border-box;
 
             .line-container {
                 flex: 1;
-                padding: 8px;
                 position: relative;
-
+                margin-left: 2px;
+                padding-left: 12px;
+                margin-right: 8px;
+                box-sizing: border-box;
                 .line {
                     width: 100%;
                     height: 8px;
@@ -1151,7 +1169,7 @@ onUnmounted(() => {
                     display: flex;
                     align-items: center;
                     justify-content: center;
-                    top: 12px;
+                    top: 4px;
                     transform: translate(-50%, -50%);
                 }
 
@@ -1178,12 +1196,11 @@ onUnmounted(() => {
                 flex: 0 0 28px;
                 display: flex;
                 align-items: center;
+                justify-content: center;
                 cursor: pointer;
-
                 svg {
-                    width: 24px;
-                    height: 24px;
-                    outline: none;
+                    width: 14px;
+                    height: 14px;
                 }
             }
 
@@ -1191,12 +1208,12 @@ onUnmounted(() => {
                 flex: 0 0 28px;
                 display: flex;
                 align-items: center;
+                justify-content: center;
                 cursor: pointer;
 
                 svg {
-                    width: 20px;
-                    height: 20px;
-                    outline: none;
+                    width: 14px;
+                    height: 14px;
                 }
             }
         }

@@ -389,9 +389,10 @@ const filterAlpha = (a: number) => {
 function gradient_reverse(idx: number) {
     const _idx = fills.length - idx - 1;
     const selected = props.context.selection.selectedShapes;
+    const shapes = flattenShapes(selected).filter(s => s.type !== ShapeType.Group || (s as GroupShapeView).data.isBoolOpShape);
     const page = props.context.selection.selectedPage!;
     const editor = props.context.editor4Page(page);
-    const actions = get_aciton_gradient(selected, _idx, 'fills');
+    const actions = get_aciton_gradient(shapes, _idx, 'fills');
     editor.reverseShapesGradient(actions);
 }
 /**
@@ -401,9 +402,10 @@ function gradient_reverse(idx: number) {
 function gradient_rotate(idx: number) {
     const _idx = fills.length - idx - 1;
     const selected = props.context.selection.selectedShapes;
+    const shapes = flattenShapes(selected).filter(s => s.type !== ShapeType.Group || (s as GroupShapeView).data.isBoolOpShape);
     const page = props.context.selection.selectedPage!;
     const editor = props.context.editor4Page(page);
-    const actions = get_aciton_gradient(selected, _idx, 'fills');
+    const actions = get_aciton_gradient(shapes, _idx, 'fills');
     editor.rotateShapesGradient(actions);
 }
 /**
@@ -412,13 +414,14 @@ function gradient_rotate(idx: number) {
  * @param position 
  * @param color 
  */
-function gradient_add_stop(idx: number, position: number, color: Color) {
+function gradient_add_stop(idx: number, position: number, color: Color, id: string) {
     const _idx = fills.length - idx - 1;
     const selected = props.context.selection.selectedShapes;
+    const shapes = flattenShapes(selected).filter(s => s.type !== ShapeType.Group || (s as GroupShapeView).data.isBoolOpShape);
     const page = props.context.selection.selectedPage!;
     const editor = props.context.editor4Page(page);
-    const stop = new Stop(position, color, v4());
-    const actions = get_aciton_gradient_stop(selected, _idx, stop, 'fills');
+    const stop = new Stop(position, color, id);
+    const actions = get_aciton_gradient_stop(shapes, _idx, stop, 'fills');
     editor.addShapesGradientStop(actions);
 }
 /**
@@ -428,12 +431,13 @@ function gradient_add_stop(idx: number, position: number, color: Color) {
 function togger_gradient_type(idx: number, type: GradientType | 'solid') {
     const _idx = fills.length - idx - 1;
     const selected = props.context.selection.selectedShapes;
+    const shapes = flattenShapes(selected).filter(s => s.type !== ShapeType.Group || (s as GroupShapeView).data.isBoolOpShape);
     const page = props.context.selection.selectedPage!;
     const editor = props.context.editor4Page(page);
     if (type === 'solid') {
         toggle_fill_type(idx, FillType.SolidColor);
     } else {
-        const actions = get_aciton_gradient_stop(selected, _idx, type, 'fills');
+        const actions = get_aciton_gradient_stop(shapes, _idx, type, 'fills');
         editor.toggerShapeGradientType(actions);
     }
 }
@@ -445,9 +449,10 @@ function togger_gradient_type(idx: number, type: GradientType | 'solid') {
 function gradient_stop_color_change(idx: number, color: Color, index: number) {
     const _idx = fills.length - idx - 1;
     const selected = props.context.selection.selectedShapes;
+    const shapes = flattenShapes(selected).filter(s => s.type !== ShapeType.Group || (s as GroupShapeView).data.isBoolOpShape);
     const page = props.context.selection.selectedPage!;
     const editor = props.context.editor4Page(page);
-    const actions = get_aciton_gradient_stop(selected, _idx, { color, stop_i: index }, 'fills');
+    const actions = get_aciton_gradient_stop(shapes, _idx, { color, stop_i: index }, 'fills');
     editor.setShapesGradientStopColor(actions);
 }
 /**
@@ -458,9 +463,10 @@ function gradient_stop_color_change(idx: number, color: Color, index: number) {
 function gradient_stop_delete(idx: number, index: number) {
     const _idx = fills.length - idx - 1;
     const selected = props.context.selection.selectedShapes;
+    const shapes = flattenShapes(selected).filter(s => s.type !== ShapeType.Group || (s as GroupShapeView).data.isBoolOpShape);
     const page = props.context.selection.selectedPage!;
     const editor = props.context.editor4Page(page);
-    const actions = get_aciton_gradient_stop(selected, _idx, index, 'fills');
+    const actions = get_aciton_gradient_stop(shapes, _idx, index, 'fills');
     editor.deleteShapesGradientStop(actions);
 }
 /**
@@ -471,9 +477,10 @@ function gradient_stop_delete(idx: number, index: number) {
 function gradient_stop_position(idx: number, position: number, id: string) {
     const _idx = fills.length - idx - 1;
     const selected = props.context.selection.selectedShapes;
+    const shapes = flattenShapes(selected).filter(s => s.type !== ShapeType.Group || (s as GroupShapeView).data.isBoolOpShape);
     const page = props.context.selection.selectedPage!;
     const editor = props.context.editor4Page(page);
-    const actions = get_aciton_gradient_stop(selected, _idx, { position, id }, 'fills');
+    const actions = get_aciton_gradient_stop(shapes, _idx, { position, id }, 'fills');
     editor.setShapesGradientStopPosition(actions);
 }
 
@@ -601,7 +608,7 @@ onUnmounted(() => {
                         :locat="{ index: idx, type: 'fills' }" @change="c => getColorFromPicker(idx, c)"
                         @gradient-reverse="() => gradient_reverse(idx)" :gradient="f.fill.gradient"
                         :fillType="f.fill.fillType" @gradient-rotate="() => gradient_rotate(idx)"
-                        @gradient-add-stop="(p, c) => gradient_add_stop(idx, p, c)"
+                        @gradient-add-stop="(p, c, id) => gradient_add_stop(idx, p, c, id)"
                         @gradient-type="(type) => togger_gradient_type(idx, type)"
                         @gradient-color-change="(c, index) => gradient_stop_color_change(idx, c, index)"
                         @gradient-stop-delete="(index) => gradient_stop_delete(idx, index)"
