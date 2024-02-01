@@ -18,20 +18,19 @@ import {
     SymbolRefShape,
     SymbolRefView,
     SymbolShape,
-    TableShape,
     TableView,
     TextShape,
     adapt2Shape
 } from "@kcdesign/data";
 import { Action, ResultByAction } from "@/context/tool";
 import { Perm, WorkSpace } from '@/context/workspace';
+import { Selection } from '@/context/selection';
 import { is_mac, XYsBounding } from '@/utils/common';
 import { searchCommentShape as finder } from '@/utils/comment'
 import { paster_image } from "./clipboard";
 import { landFinderOnPage, scrollToContentView } from './artboardFn'
 import { fit_no_transform, is_parent_locked, is_parent_unvisible } from "./shapelist";
-import { is_part_of_symbol, is_state, make_symbol, one_of_is_symbolref } from "@/utils/symbol";
-import { Groups } from "aws-sdk/clients/budgets";
+import { is_part_of_symbol, make_symbol, one_of_is_symbolref } from "@/utils/symbol";
 import { message } from "./message";
 
 export interface Media {
@@ -1258,4 +1257,8 @@ export function detectZoom() {
     if (ratio) {
         ratio = Math.round(ratio * 100);
     }
+}
+
+export function hidden_selection(context: Context) {
+    context.selection.notify(Selection.SELECTION_HIDDEN);
 }

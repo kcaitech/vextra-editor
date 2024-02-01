@@ -6,6 +6,7 @@ import { nextTick, onMounted, onUnmounted, ref, watch } from 'vue';
 import { Context } from '@/context';
 import { throttle } from 'lodash';
 import { modifyOpacity } from '@/utils/common';
+import { hidden_selection } from '@/utils/content';
 
 interface Props {
     context: Context;
@@ -112,6 +113,7 @@ const onMouseDown = (e: MouseEvent) => {
             document.addEventListener('mouseup', onMouseUP)
         }
     })
+    hidden_selection(props.context);
 }
 const onMouseMove = (e: MouseEvent) => {
     if (isDragging) {
@@ -120,6 +122,7 @@ const onMouseMove = (e: MouseEvent) => {
             opacity_editor.execute(opacity.value);
         }
     }
+    hidden_selection(props.context);
 }
 const onMouseUP = () => {
     isDragging = false;
@@ -147,6 +150,7 @@ function input(e: Event) {
     if (isNaN(value) || !opacity_editor) return;
     opacity.value = limitValue(Number(value));
     opacity_editor.execute(value);
+    hidden_selection(props.context);
 }
 
 const handleOPacity = (e: Event) => {

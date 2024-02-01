@@ -325,7 +325,7 @@ function get_opacity(val: number) {
             last_opacity = -1;
             clearTimeout(last_opacity_keeper);
             last_opacity_keeper = null;
-        }, 2000);
+        }, 1000);
         return (val ? val * 10 : 100) / 100;
     } else {
         clearTimeout(last_opacity_keeper);

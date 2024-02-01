@@ -19,6 +19,7 @@ import { v4 } from 'uuid';
 import { TableSelection } from '@/context/tableselection';
 import { Selection } from "@/context/selection";
 import { flattenShapes } from '@/utils/cutout';
+import { hidden_selection } from '@/utils/content';
 
 interface FillItem {
     id: number,
@@ -216,6 +217,7 @@ function addFill(): void {
             }
         }
     }
+    hidden_selection(props.context);
 }
 
 function first() {
@@ -271,6 +273,7 @@ function deleteFill(idx: number) {
             editor.shapesDeleteFill(actions);
         }
     }
+    hidden_selection(props.context);
 }
 
 function toggleVisible(idx: number) {
@@ -326,6 +329,7 @@ function toggleVisible(idx: number) {
             editor.setShapesFillEnabled(actions);
         }
     }
+    hidden_selection(props.context);
 }
 const colorValue = ref('');
 const alphaValue = ref('');
@@ -399,6 +403,7 @@ function setColor(idx: number, clr: string, alpha: number, isColor: boolean) {
             editor.setShapesFillColor(actions);
         }
     }
+    hidden_selection(props.context);
 }
 
 function onColorChange(idx: number, e: Event) {
@@ -413,7 +418,7 @@ function onColorChange(idx: number, e: Event) {
         setColor(idx, value, alpha, true);
     } else {
         message('danger', t('system.illegal_input'));
-        if(!colorFill.value) return;
+        if (!colorFill.value) return;
         return colorFill.value[idx].value = toHex(fills[idx].fill.color.red, fills[idx].fill.color.green, fills[idx].fill.color.blue);
     }
 }
@@ -512,6 +517,7 @@ function getColorFromPicker(idx: number, color: Color) {
             editor.setShapesFillColor(actions);
         }
     }
+    hidden_selection(props.context);
 }
 
 const selectColor = (id: number) => {

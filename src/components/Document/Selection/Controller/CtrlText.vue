@@ -31,7 +31,7 @@ const submatrix = reactive(new Matrix());
 const boundrectPath = ref("");
 const bounds = reactive({ left: 0, top: 0, right: 0, bottom: 0 }); // viewbox
 const editing = ref<boolean>(false); // 是否进入路径编辑状态
-const visible = ref<boolean>(true);
+const selection_hidden = ref<boolean>(false);
 const input = ref<ProtoInput>();
 const axle = computed<ClientXY>(() => {
     const [lt, rt, rb, lb] = props.controllerFrame;
@@ -153,7 +153,25 @@ function onMouseUp(e: MouseEvent) {
     if (input.value) input.value.attention();
 }
 
+let hidden_holder: any = null;
+function modify_selection_hidden() {
+    if (hidden_holder) {
+        clearTimeout(hidden_holder);
+    }
 
+    hidden_holder = setTimeout(() => {
+        selection_hidden.value = false;
+        clearTimeout(hidden_holder);
+        hidden_holder = null;
+    }, 1000);
+
+    selection_hidden.value = true;
+}
+function reset_hidden() {
+    selection_hidden.value = false;
+    clearTimeout(hidden_holder);
+    hidden_holder = null;
+}
 function mouseenter() {
     if (editing.value) props.context.cursor.setType('scan', 0);
 }
@@ -180,7 +198,7 @@ function be_editor(index?: number) {
 
 function workspace_watcher(t?: number, index?: number) {
     if (t === WorkSpace.TRANSLATING) {
-        visible.value = !props.context.workspace.isTranslating;
+        selection_hidden.value = props.context.workspace.isTranslating;
     } else if (t === WorkSpace.INIT_EDITOR) {
         be_editor(index);
     } else if (t === WorkSpace.SELECTION_VIEW_UPDATE) {
@@ -194,6 +212,9 @@ function selectionWatcher(...args: any[]) {
     } else if (args.indexOf(Selection.CHANGE_SHAPE) >= 0) {
         editing.value = false;
         check_status();
+        reset_hidden();
+    } else if (args.indexOf(Selection.SELECTION_HIDDEN) >= 0) {
+        modify_selection_hidden();
     }
 }
 
@@ -227,6 +248,7 @@ onUnmounted(() => {
     props.context.selection.unwatch(selectionWatcher);
     props.context.workspace.unwatch(workspace_watcher);
     props.context.cursor.reset();
+    reset_hidden();
 });
 onBeforeUnmount(() => {
     if (props.shape.text.length === 1) {
@@ -239,7 +261,7 @@ onBeforeUnmount(() => {
         id="text-selection" xmlns:xhtml="http://www.w3.org/1999/xhtml" preserveAspectRatio="xMinYMin meet"
         :viewBox=genViewBox(bounds) :width="width" :height="height"
         :style="{ transform: `translate(${bounds.left}px,${bounds.top}px)` }" @mousedown="onMouseDown" overflow="visible"
-        @mouseenter="mouseenter" @mouseleave="mouseleave" :class="{ 'un-visible': !visible }">
+        @mouseenter="mouseenter" @mouseleave="mouseleave" :class="{ hidden: selection_hidden }">
         <SelectView :context="props.context" :shape="(props.shape)" :matrix="submatrix.toArray()"
             :main-notify="Selection.CHANGE_TEXT" :selection="props.context.selection.getTextSelection(props.shape)">
         </SelectView>
@@ -255,7 +277,7 @@ onBeforeUnmount(() => {
         :main-notify="Selection.CHANGE_TEXT" :selection="props.context.selection.getTextSelection(props.shape)"></TextInput>
 </template>
 <style lang='scss' scoped>
-.un-visible {
+.hidden {
     opacity: 0;
 }
 

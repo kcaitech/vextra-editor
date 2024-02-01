@@ -4,7 +4,7 @@ import { debounce } from 'lodash';
 import { ContactShape, PathShape, PathShapeView, Shape, ShapeType, ShapeView, adapt2Shape } from '@kcdesign/data';
 import { Context } from '@/context';
 import { is_straight } from './attri_setting';
-import { selectShapes } from './content';
+import { hidden_selection, selectShapes } from './content';
 // 打印
 function _debounceLog(mes: any, flag?: string) {
     console.log(flag ? `${flag} ${mes}` : mes);
@@ -451,4 +451,5 @@ export function modifyOpacity(context: Context, val: number) {
     const shapes = context.selection.selectedShapes;
     const editor = context.editor4Page(page);
     editor.modifyShapesContextSettingOpacity((shapes as ShapeView[]).map(s => adapt2Shape(s)), val);
+    hidden_selection(context);
 }

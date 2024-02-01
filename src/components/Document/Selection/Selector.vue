@@ -1,11 +1,10 @@
 <script setup lang="ts">
 import { Context } from '@/context';
 import { WorkSpace } from '@/context/workspace';
-import { GroupShape, GroupShapeView, Matrix, Shape, ShapeType, ShapeView } from '@kcdesign/data';
+import { GroupShapeView, Matrix, ShapeType, ShapeView } from '@kcdesign/data';
 import { watchEffect, onMounted, onUnmounted } from 'vue';
 import { XY } from '@/context/selection';
 import { isTarget2 } from '@/utils/common';
-import { delayering } from '@/utils/scout';
 
 export interface SelectorFrame {
     top: number
