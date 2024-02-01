@@ -96,6 +96,8 @@ export class Selection extends WatchableObject implements ISave4Restore {
     static ABOUT_ME = 13;
     static EXTEND = 14;
     static PLACEMENT_CHANGE = 15;
+    static SELECTION_HIDDEN = 16;
+
     // static CHANGE_TEXT_LITE = 16;
 
     private m_selectPage?: PageView;

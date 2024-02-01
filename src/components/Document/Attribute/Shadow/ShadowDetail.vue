@@ -10,6 +10,7 @@ import { Color, Shadow, ShapeView, ShapeType } from '@kcdesign/data';
 import { message } from "@/utils/message";
 import { Reg_HEX } from "@/utils/RegExp";
 import { get_actions_shadow_blur, get_actions_shadow_color, get_actions_shadow_offsetx, get_actions_shadow_offsety, get_actions_shadow_spread } from '@/utils/shape_style';
+import { hidden_selection } from '@/utils/content';
 
 const { t } = useI18n();
 interface Props {
@@ -41,6 +42,7 @@ const setOffsetX = (value: number) => {
             }
         }
     }
+    hidden_selection(props.context);
 }
 const setOffsetY = (value: number) => {
     const _idx = props.length - props.idx - 1;
@@ -58,6 +60,7 @@ const setOffsetY = (value: number) => {
             }
         }
     }
+    hidden_selection(props.context);
 }
 const setBlurRadius = (value: number) => {
     const _idx = props.length - props.idx - 1;
@@ -75,6 +78,7 @@ const setBlurRadius = (value: number) => {
             }
         }
     }
+    hidden_selection(props.context);
 }
 const setSpread = (value: number) => {
     const _idx = props.length - props.idx - 1;
@@ -92,6 +96,7 @@ const setSpread = (value: number) => {
             }
         }
     }
+    hidden_selection(props.context);
 }
 
 function setColor(clr: string, alpha: number) {
@@ -116,6 +121,7 @@ function setColor(clr: string, alpha: number) {
             editor.setShapesShadowColor(actions);
         }
     }
+    hidden_selection(props.context);
 }
 function onColorChange(e: Event) {
     let value = (e.target as HTMLInputElement)?.value;
@@ -177,6 +183,8 @@ function getColorFromPicker(color: Color) {
             editor.setShapesShadowColor(actions);
         }
     }
+    hidden_selection(props.context);
+
 }
 
 const filterAlpha = (a: number) => {

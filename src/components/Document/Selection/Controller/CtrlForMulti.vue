@@ -23,7 +23,6 @@ interface Props {
 const props = defineProps<Props>();
 const { isDrag } = useController(props.context);
 const workspace = computed(() => props.context.workspace);
-const visible = ref<boolean>(true);
 const editing = ref<boolean>(false);
 const boundrectPath = ref("");
 const bounds = reactive({ left: 0, top: 0, right: 0, bottom: 0 });
@@ -42,6 +41,26 @@ const height = computed(() => {
     const h = bounds.bottom - bounds.top;
     return h < 10 ? 10 : h;
 })
+const selection_hidden = ref<boolean>(false);
+let hidden_holder: any = null;
+function modify_selection_hidden() {
+    if (hidden_holder) {
+        clearTimeout(hidden_holder);
+    }
+
+    hidden_holder = setTimeout(() => {
+        selection_hidden.value = false;
+        clearTimeout(hidden_holder);
+        hidden_holder = null;
+    }, 1000);
+
+    selection_hidden.value = true;
+}
+function reset_hidden() {
+    selection_hidden.value = false;
+    clearTimeout(hidden_holder);
+    hidden_holder = null;
+}
 // #region 绘制控件
 function genViewBox(bounds: { left: number, top: number, right: number, bottom: number }) {
     return "" + bounds.left + " " + bounds.top + " " + width.value + " " + height.value;
@@ -70,17 +89,22 @@ function updateControllerView() {
 }
 // #endregion
 function workspace_watcher(t: number) {
-    if (t === WorkSpace.TRANSLATING) visible.value = !workspace.value.isTranslating;
+    if (t === WorkSpace.TRANSLATING) selection_hidden.value = workspace.value.isTranslating;
 }
 function selection_watcher(t: number) {
-    if (t == Selection.CHANGE_SHAPE) editing.value = false;
+    if (t == Selection.CHANGE_SHAPE) {
+        editing.value = false;
+        reset_hidden();
+    } else if (t === Selection.SELECTION_HIDDEN) {
+        modify_selection_hidden();
+    }
 }
 function mousedown(e: MouseEvent) {
     document.addEventListener('mousemove', mousemove);
     document.addEventListener('mouseup', mouseup);
 }
 function mousemove(e: MouseEvent) {
-    if (isDrag()) visible.value = false;
+    if (isDrag()) selection_hidden.value = true;
 }
 function mouseup(e: MouseEvent) {
     document.removeEventListener('mousemove', mousemove);
@@ -100,13 +124,14 @@ onUnmounted(() => {
     props.context.workspace.unwatch(workspace_watcher);
     window.removeEventListener('blur', windowBlur);
     props.context.cursor.reset();
+    reset_hidden();
 })
 watchEffect(updateControllerView);
 </script>
 <template>
     <svg version="1.1" xmlns="http://www.w3.org/2000/svg" xmlns:xlink="http://www.w3.org/1999/xlink" data-area="controller"
         xmlns:xhtml="http://www.w3.org/1999/xhtml" preserveAspectRatio="xMinYMin meet" :viewBox="viewBox" :width="width"
-        :height="height" :class="{ 'un-visible': !visible }" @mousedown="mousedown" overflow="visible"
+        :height="height" :class="{ hidden: selection_hidden }" @mousedown="mousedown" overflow="visible"
         :style="{ transform: `translate(${bounds.left}px,${bounds.top}px)`, left: 0, top: 0, position: 'absolute' }">
         <path :d="boundrectPath" fill="none" stroke='#1878f5' stroke-width="1.5px"></path>
         <ShapesStrokeContainer :context="props.context" :matrix="props.matrix" color-hex="#1878f5">
@@ -118,7 +143,7 @@ watchEffect(updateControllerView);
     </svg>
 </template>
 <style lang='scss' scoped>
-.un-visible {
+.hidden {
     opacity: 0;
 }
 

@@ -1,10 +1,10 @@
 import { XY } from '@/context/selection';
 import { v4 as uuid } from "uuid";
 import { debounce } from 'lodash';
-import { ContactShape, PathShape, PathShapeView, Shape, ShapeType, ShapeView } from '@kcdesign/data';
+import { ContactShape, PathShape, PathShapeView, Shape, ShapeType, ShapeView, adapt2Shape } from '@kcdesign/data';
 import { Context } from '@/context';
 import { is_straight } from './attri_setting';
-import { selectShapes } from './content';
+import { hidden_selection, selectShapes } from './content';
 // 打印
 function _debounceLog(mes: any, flag?: string) {
     console.log(flag ? `${flag} ${mes}` : mes);
@@ -287,17 +287,18 @@ export function isIncluded2(selectorPoints: XY[], shapePoints: XY[]): boolean {
     const { left: l, top: t, right: r, bottom: b } = XYsBounding(shapePoints);
     return l >= left && r <= right && t >= top && b <= bottom;
 }
+/**
+ * @param includes 需要全包含
+ */
 export function isTarget2(selectorPoints: [XY, XY, XY, XY, XY], shape: ShapeView, includes?: boolean) {
     const points = get_points_from_shape(shape);
 
     if (isIncluded2(selectorPoints, points)) {
         return true;
     }
-
     if (includes) {
         return false;
     }
-
     if (shape.type !== ShapeType.Artboard && isIncluded2(points, selectorPoints)) {
         return true;
     }
@@ -443,4 +444,12 @@ export function format_value(val: number | string, fix = 2) {
     }
 
     return val.toFixed(fix);
+}
+
+export function modifyOpacity(context: Context, val: number) {
+    const page = context.selection.selectedPage!;
+    const shapes = context.selection.selectedShapes;
+    const editor = context.editor4Page(page);
+    editor.modifyShapesContextSettingOpacity((shapes as ShapeView[]).map(s => adapt2Shape(s)), val);
+    hidden_selection(context);
 }

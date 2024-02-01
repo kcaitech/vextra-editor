@@ -1,7 +1,7 @@
 <script setup lang='ts'>
 import { onMounted, onUnmounted, watchEffect, ref, reactive, computed } from "vue";
 import { Context } from "@/context";
-import { ContactLineView, ContactShape, Matrix } from '@kcdesign/data';
+import { ContactLineView, Matrix } from '@kcdesign/data';
 import { WorkSpace } from "@/context/workspace";
 import { Point } from "../SelectionView.vue";
 import { Selection, SelectionTheme } from "@/context/selection";
@@ -19,7 +19,6 @@ interface Props {
 }
 const props = defineProps<Props>();
 useController(props.context);
-const visible = ref<boolean>(true);
 const editing = ref<boolean>(false);
 const matrix = new Matrix();
 const submatrix = reactive(new Matrix());
@@ -35,6 +34,26 @@ const height = computed(() => {
     const h = bounds.bottom - bounds.top;
     return h < 10 ? 10 : h;
 })
+const selection_hidden = ref<boolean>(false);
+let hidden_holder: any = null;
+function modify_selection_hidden() {
+    if (hidden_holder) {
+        clearTimeout(hidden_holder);
+    }
+
+    hidden_holder = setTimeout(() => {
+        selection_hidden.value = false;
+        clearTimeout(hidden_holder);
+        hidden_holder = null;
+    }, 1000);
+
+    selection_hidden.value = true;
+}
+function reset_hidden() {
+    selection_hidden.value = false;
+    clearTimeout(hidden_holder);
+    hidden_holder = null;
+}
 function genViewBox(bounds: { left: number, top: number, right: number, bottom: number }) {
     return "" + bounds.left + " " + bounds.top + " " + width.value + " " + height.value;
 }
@@ -82,11 +101,14 @@ function updateControllerView() {
 function selection_watcher(t: number) {
     if (t == Selection.CHANGE_SHAPE) {
         editing.value = false;
+        reset_hidden();
+    } else if (t === Selection.SELECTION_HIDDEN) {
+        modify_selection_hidden();
     }
 }
 function workspace_watcher(t: number) {
     if (t === WorkSpace.TRANSLATING) {
-        visible.value = !props.context.workspace.isTranslating;
+        selection_hidden.value = props.context.workspace.isTranslating;
     }
     else if (t === WorkSpace.PRE_EDIT) {
         editing.value = props.context.workspace.isEditing;
@@ -102,17 +124,24 @@ onUnmounted(() => {
     props.context.workspace.unwatch(workspace_watcher);
     props.shape.unwatch(updateControllerView);
     props.context.cursor.reset();
+    reset_hidden();
 })
 watchEffect(updateControllerView);
 </script>
 <template>
     <svg version="1.1" xmlns="http://www.w3.org/2000/svg" xmlns:xlink="http://www.w3.org/1999/xlink" data-area="controller"
-        xmlns:xhtml="http://www.w3.org/1999/xhtml" preserveAspectRatio="xMinYMin meet" overflow="visible"
-        style=" position: absolute" :viewBox="viewBox" :width="width" :height="height"
-        :style="{ transform: `translate(${bounds.left}px,${bounds.top}px)`, position: 'absolute' }">
+        xmlns:xhtml="http://www.w3.org/1999/xhtml" preserveAspectRatio="xMinYMin meet" overflow="visible" :viewBox="viewBox"
+        :width="width" :height="height"
+        :style="{ transform: `translate(${bounds.left}px,${bounds.top}px)`, position: 'absolute' }"
+        :class="{ hidden: selection_hidden }">
         <ContactApex :context="props.context" :matrix="submatrix.toArray()" :shape="props.shape"
             :c-frame="props.controllerFrame"></ContactApex>
         <BarsContainer :context="props.context" :matrix="submatrix.toArray()" :shape="props.shape"
             :c-frame="props.controllerFrame"></BarsContainer>
     </svg>
 </template>
+<style lang='scss' scoped>
+.hidden {
+    opacity: 0;
+}
+</style>

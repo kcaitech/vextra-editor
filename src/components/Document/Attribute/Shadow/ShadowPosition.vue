@@ -1,6 +1,7 @@
 <script setup lang="ts">
 import { Context } from '@/context';
 import { Menu } from '@/context/menu';
+import { hidden_selection } from '@/utils/content';
 import { get_actions_shadow_position } from '@/utils/shape_style';
 import { Shadow, ShadowPosition, ShapeView } from '@kcdesign/data';
 import { onMounted, onUnmounted, ref, watch } from 'vue';
@@ -41,6 +42,7 @@ const togglePositinon = (position: ShadowPosition) => {
         }
     }
     close();
+    hidden_selection(props.context);
 }
 
 const close = () => {

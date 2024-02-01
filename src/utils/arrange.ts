@@ -349,7 +349,11 @@ export function align_left(shapes: ShapeView[]) {
     }
     if (shapes.length === 1 && is_container(first)) {
         shapes = first.childs || [];
-        c_apex = get_colony_left(shapes);
+        if (shapes.length === 1) {
+            c_apex = get_colony_left([first, first_p]);
+        } else {
+            c_apex = get_colony_left(shapes);
+        }
     }
     else if (shapes.length === 1 && first_p.type !== ShapeType.Page) {
         c_apex = get_colony_left([first, first_p]);
@@ -381,7 +385,11 @@ export function align_cneter_x(shapes: ShapeView[]) {
     }
     if (shapes.length === 1 && is_container(first)) {
         shapes = first.childs || [];
-        c_apex = get_colony_center_x(shapes);
+        if (shapes.length === 1) {
+            c_apex = get_colony_center_x([first, first_p]);
+        } else {
+            c_apex = get_colony_center_x(shapes);
+        }
     }
     else if (shapes.length === 1 && first_p.type !== ShapeType.Page) {
         c_apex = get_colony_center_x([first, first_p]);
@@ -413,7 +421,11 @@ export function align_right(shapes: ShapeView[]) {
     }
     if (shapes.length === 1 && is_container(first)) {
         shapes = first.childs || [];
-        c_apex = get_colony_right(shapes);
+        if (shapes.length === 1) {
+            c_apex = get_colony_right([first, first_p]);
+        } else {
+            c_apex = get_colony_right(shapes);
+        }
     }
     else if (shapes.length === 1 && first_p.type !== ShapeType.Page) {
         c_apex = get_colony_right([first, first_p]);
@@ -445,7 +457,11 @@ export function align_top(shapes: ShapeView[]) {
     }
     if (shapes.length === 1 && is_container(first)) {
         shapes = first.childs || [];
-        c_apex = get_colony_top(shapes);
+        if (shapes.length === 1) {
+            c_apex = get_colony_top([first, first_p]);
+        } else {
+            c_apex = get_colony_top(shapes);
+        }
     }
     else if (shapes.length === 1 && first_p.type !== ShapeType.Page) {
         c_apex = get_colony_top([first, first_p]);
@@ -477,7 +493,11 @@ export function align_cneter_y(shapes: ShapeView[]) {
     }
     if (shapes.length === 1 && is_container(first)) {
         shapes = first.childs || [];
-        c_apex = get_colony_center_y(shapes);
+        if (shapes.length === 1) {
+            c_apex = get_colony_center_y([first, first_p]);
+        } else {
+            c_apex = get_colony_center_y(shapes);
+        }
     }
     else if (shapes.length === 1 && first_p.type !== ShapeType.Page) {
         c_apex = get_colony_center_y([first, first_p]);
@@ -508,7 +528,11 @@ export function align_bottom(shapes: ShapeView[]) {
     }
     if (shapes.length === 1 && is_container(first)) {
         shapes = first.childs || [];
-        c_apex = get_colony_bottom(shapes);
+        if (shapes.length === 1) {
+            c_apex = get_colony_bottom([first, first_p]);
+        } else {
+            c_apex = get_colony_bottom(shapes);
+        }
     }
     else if (shapes.length === 1 && first_p.type !== ShapeType.Page) {
         c_apex = get_colony_bottom([first, first_p]);

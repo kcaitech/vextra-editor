@@ -1,11 +1,10 @@
 <script setup lang="ts">
 import { Context } from '@/context';
 import { WorkSpace } from '@/context/workspace';
-import { GroupShape, GroupShapeView, Matrix, Shape, ShapeType, ShapeView } from '@kcdesign/data';
+import { GroupShapeView, Matrix, ShapeType, ShapeView } from '@kcdesign/data';
 import { watchEffect, onMounted, onUnmounted } from 'vue';
 import { XY } from '@/context/selection';
 import { isTarget2 } from '@/utils/common';
-import { delayering } from '@/utils/scout';
 
 export interface SelectorFrame {
     top: number
@@ -60,14 +59,25 @@ function is_target_for_group(shape: GroupShapeView, Points: [XY, XY, XY, XY, XY]
         return isTarget2(Points, shape, true);
     }
 
-    const flats = delayering(shape);
-    for (let i = 0, l = flats.length; i < l; i++) {
-        if (isTarget2(Points, flats[i], false)) {
-            return true;
-        }
-    }
+    return deep(shape);
 
-    return false;
+    function deep(shape: GroupShapeView) {
+        const children = shape.childs;
+
+        for (let i = 0, l = children.length; i < l; i++) {
+            const s = children[i];
+            if (s.type === ShapeType.Group) {
+                if (deep(s as GroupShapeView)) {
+                    return true;
+                }
+            }
+            else if (isTarget2(Points, s, false)) {
+                return true;
+            }
+        }
+
+        return false;
+    }
 }
 
 // 加入
@@ -79,7 +89,7 @@ function finder(childs: ShapeView[], Points: [XY, XY, XY, XY, XY]) {
             continue;
         }
 
-        if (shape.type === ShapeType.Artboard) { // 容器要判定为真的条件是完全被选区覆盖
+        if (shape.type === ShapeType.Artboard && shape.childs.length) { // 容器要判定为真的条件是完全被选区覆盖
             const _shape = shape as GroupShapeView;
 
             if (isTarget2(Points, _shape, true)) {

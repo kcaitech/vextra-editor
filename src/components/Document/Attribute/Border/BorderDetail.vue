@@ -12,6 +12,7 @@ import { Selection } from '@/context/selection';
 import { get_actions_border_thickness, get_actions_border_position, get_actions_border_style } from '@/utils/shape_style';
 import { WorkSpace } from '@/context/workspace';
 import { flattenShapes } from '@/utils/cutout';
+import { hidden_selection } from '@/utils/content';
 
 interface Props {
     context: Context
@@ -67,7 +68,6 @@ function updater() {
 }
 
 function borderStyleSelect(selected: SelectItem) {
-    props.context.workspace.notify(WorkSpace.CTRL_DISAPPEAR);
     borderStyle.value = selected;
     const shape = props.shapes[0];
     if (len.value === 1 && (shape.type !== ShapeType.Group || (shape as GroupShapeView).data.isBoolOpShape)) {
@@ -112,11 +112,10 @@ function borderStyleSelect(selected: SelectItem) {
         }
     }
     popover.value.focus();
-    props.context.workspace.notify(WorkSpace.CTRL_APPEAR);
+    hidden_selection(props.context);
 }
 
 function positionSelect(selected: SelectItem) {
-    props.context.workspace.notify(WorkSpace.CTRL_DISAPPEAR);
     position.value = selected;
     if (len.value === 1 && (props.shapes[0].type !== ShapeType.Group || (props.shapes[0] as GroupShapeView).data.isBoolOpShape)) {
         editor.value.setBorderPosition(props.index, selected.value as BorderPosition);
@@ -143,11 +142,10 @@ function positionSelect(selected: SelectItem) {
         }
     }
     popover.value.focus();
-    props.context.workspace.notify(WorkSpace.CTRL_APPEAR);
+    hidden_selection(props.context);
 }
 
 function setThickness(e: Event) {
-    props.context.workspace.notify(WorkSpace.CTRL_DISAPPEAR);
     const thickness = Number((e.target as HTMLInputElement).value);
     const shape = props.shapes[0];
     if (len.value === 1 && (shape.type !== ShapeType.Group || (shape as GroupShapeView).data.isBoolOpShape)) {
@@ -190,7 +188,7 @@ function setThickness(e: Event) {
             }
         }
     }
-    props.context.workspace.notify(WorkSpace.CTRL_APPEAR);
+    hidden_selection(props.context);
 }
 
 const augment = (e: Event) => {
@@ -238,6 +236,7 @@ const augment = (e: Event) => {
             }
         }
         borderThickness.value.value = String(Number(borderThickness.value.value) + 1)
+        hidden_selection(props.context);
     }
 }
 const decrease = (e: Event) => {
@@ -287,6 +286,7 @@ const decrease = (e: Event) => {
         }
         borderThickness.value.value = String(Number(borderThickness.value.value) - 1)
     }
+    hidden_selection(props.context);
 }
 
 watch(() => props.border, () => {

@@ -1,17 +1,17 @@
 <script setup lang='ts'>
-import {computed, onMounted, onUnmounted, watchEffect, ref, reactive, watch} from "vue";
-import {Context} from "@/context";
-import {Matrix, ShapeType, Shape, ShapeView} from '@kcdesign/data';
-import {WorkSpace} from "@/context/workspace";
-import {Point} from "../SelectionView.vue";
-import {ClientXY, Selection} from "@/context/selection";
-import {useController} from "./controller";
-import {genRectPath} from "../common";
+import { computed, onMounted, onUnmounted, watchEffect, ref, reactive, watch } from "vue";
+import { Context } from "@/context";
+import { Matrix, ShapeType, Shape, ShapeView } from '@kcdesign/data';
+import { WorkSpace } from "@/context/workspace";
+import { Point } from "../SelectionView.vue";
+import { ClientXY, Selection } from "@/context/selection";
+import { useController } from "./controller";
+import { genRectPath } from "../common";
 import BarsContainer from "./Bars/BarsContainerForSym.vue";
 import PointsContainer from "./Points/PointsContainerForSym.vue";
-import {getAxle} from "@/utils/common";
+import { getAxle } from "@/utils/common";
 import AddState from "./Symbol/AddState.vue";
-import {SymbolType} from "@/utils/symbol";
+import { SymbolType } from "@/utils/symbol";
 
 interface Props {
     context: Context
@@ -22,11 +22,10 @@ interface Props {
 }
 
 const props = defineProps<Props>();
-const {isDrag} = useController(props.context);
-const visible = ref<boolean>(true);
+const { isDrag } = useController(props.context);
 const editing = ref<boolean>(false);
 const boundrectPath = ref("");
-const bounds = reactive({left: 0, top: 0, right: 0, bottom: 0});
+const bounds = reactive({ left: 0, top: 0, right: 0, bottom: 0 });
 const matrix = new Matrix();
 const submatrix = new Matrix();
 const symbol_type = ref<SymbolType>(SymbolType.Symbol);
@@ -43,6 +42,27 @@ const height = computed(() => {
     const h = bounds.bottom - bounds.top;
     return h < 10 ? 10 : h;
 })
+
+const selection_hidden = ref<boolean>(false);
+let hidden_holder: any = null;
+function modify_selection_hidden() {
+    if (hidden_holder) {
+        clearTimeout(hidden_holder);
+    }
+
+    hidden_holder = setTimeout(() => {
+        selection_hidden.value = false;
+        clearTimeout(hidden_holder);
+        hidden_holder = null;
+    }, 1000);
+
+    selection_hidden.value = true;
+}
+function reset_hidden() {
+    selection_hidden.value = false;
+    clearTimeout(hidden_holder);
+    hidden_holder = null;
+}
 
 // #region 绘制控件
 function genViewBox(bounds: { left: number, top: number, right: number, bottom: number }) {
@@ -74,11 +94,16 @@ function updateControllerView() {
 
 // #endregion
 function selection_watcher(t: number) {
-    if (t === Selection.CHANGE_SHAPE) editing.value = false;
+    if (t === Selection.CHANGE_SHAPE) {
+        editing.value = false;
+        reset_hidden();
+    } else if (t === Selection.SELECTION_HIDDEN) {
+        modify_selection_hidden();
+    }
 }
 
 function workspace_watcher(t: number) {
-    if (t === WorkSpace.TRANSLATING) visible.value = !props.context.workspace.isTranslating;
+    if (t === WorkSpace.TRANSLATING) selection_hidden.value = props.context.workspace.isTranslating;
     else if (t === WorkSpace.PRE_EDIT) {
         editing.value = props.context.workspace.isEditing;
     }
@@ -90,7 +115,7 @@ function mousedown(e: MouseEvent) {
 }
 
 function mousemove(e: MouseEvent) {
-    if (isDrag()) visible.value = false;
+    if (isDrag()) selection_hidden.value = true;
 }
 
 function mouseup(e: MouseEvent) {
@@ -138,29 +163,27 @@ onUnmounted(() => {
     props.context.cursor.reset();
     stop_shape_watch();
     props.shape.unwatch(modify_symbol_type);
+    reset_hidden();
 })
 watchEffect(updateControllerView);
 </script>
 <template>
-    <svg version="1.1" xmlns="http://www.w3.org/2000/svg" xmlns:xlink="http://www.w3.org/1999/xlink"
-         data-area="controller"
-         xmlns:xhtml="http://www.w3.org/1999/xhtml" preserveAspectRatio="xMinYMin meet" :viewBox="viewBox"
-         :width="width"
-         :height="height" :class="{ 'un-visible': !visible }" @mousedown="mousedown" overflow="visible"
-         :style="{ transform: `translate(${bounds.left}px,${bounds.top}px)`, left: 0, top: 0, position: 'absolute' }">
+    <svg version="1.1" xmlns="http://www.w3.org/2000/svg" xmlns:xlink="http://www.w3.org/1999/xlink" data-area="controller"
+        xmlns:xhtml="http://www.w3.org/1999/xhtml" preserveAspectRatio="xMinYMin meet" :viewBox="viewBox" :width="width"
+        :height="height" :class="{ hidden: selection_hidden }" @mousedown="mousedown" overflow="visible"
+        :style="{ transform: `translate(${bounds.left}px,${bounds.top}px)`, left: 0, top: 0, position: 'absolute' }">
         <BarsContainer :context="props.context" :matrix="submatrix.toArray()" :shape="props.shape"
-                       :c-frame="props.controllerFrame"></BarsContainer>
+            :c-frame="props.controllerFrame"></BarsContainer>
         <PointsContainer :context="props.context" :matrix="submatrix.toArray()" :shape="props.shape" :axle="axle"
-                         :c-frame="props.controllerFrame">
+            :c-frame="props.controllerFrame">
         </PointsContainer>
         <AddState v-if="symbol_type === SymbolType.State || symbol_type === SymbolType.Union" :context="props.context"
-                  :matrix="submatrix.toArray()" :shape="props.shape" :symbol-type="symbol_type"
-                  @checkout="modify_symbol_type">
+            :matrix="submatrix.toArray()" :shape="props.shape" :symbol-type="symbol_type" @checkout="modify_symbol_type">
         </AddState>
     </svg>
 </template>
 <style lang='scss' scoped>
-.un-visible {
+.hidden {
     opacity: 0;
 }
 </style>
