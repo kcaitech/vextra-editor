@@ -60,14 +60,25 @@ function is_target_for_group(shape: GroupShapeView, Points: [XY, XY, XY, XY, XY]
         return isTarget2(Points, shape, true);
     }
 
-    const flats = delayering(shape);
-    for (let i = 0, l = flats.length; i < l; i++) {
-        if (isTarget2(Points, flats[i], false)) {
-            return true;
-        }
-    }
+    return deep(shape);
 
-    return false;
+    function deep(shape: GroupShapeView) {
+        const children = shape.childs;
+
+        for (let i = 0, l = children.length; i < l; i++) {
+            const s = children[i];
+            if (s.type === ShapeType.Group) {
+                if (deep(s as GroupShapeView)) {
+                    return true;
+                }
+            }
+            else if (isTarget2(Points, s, false)) {
+                return true;
+            }
+        }
+
+        return false;
+    }
 }
 
 // 加入
