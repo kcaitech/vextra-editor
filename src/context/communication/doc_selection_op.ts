@@ -45,7 +45,6 @@ export class DocSelectionOp extends WatchableObject {
             cursor_start: textselection.cursorStart,
             cursor_end: textselection.cursorEnd,
             cursor_at_before: textselection.cursorAtBefore,
-            previous_cmd_id: this.context.communication.docOp.lastServerCmdId ?? this.context.data.lastCmdId,
         }).catch(err => { })
     }
 
@@ -124,7 +123,7 @@ export class DocSelectionOp extends WatchableObject {
         this.context = context
         if (this.isFirstStart) {
             context.selection.watch(this.selectionWatcherForOp)
-            context.communication.docOp.addOnLocalUpdateAsync(this.textSelectionTransform)
+            // context.communication.docOp.addOnLocalUpdateAsync(this.textSelectionTransform)
         }
         this.isFirstStart = false
         return true
@@ -150,8 +149,7 @@ export class DocSelectionOp extends WatchableObject {
         this.docSelectionOp.close()
         this.docSelectionOp = undefined
         this.startPromise = undefined
-        // this.updateHandlerSet.clear()
         this.context?.selection.unwatch(this.selectionWatcherForOp)
-        this.context?.communication.docOp.removeOnLocalUpdate(this.textSelectionTransform)
+        // this.context?.communication.docOp.removeOnLocalUpdate(this.textSelectionTransform)
     }
 }
