@@ -1,5 +1,5 @@
 <script setup lang="ts">
-import { onMounted, ref } from 'vue';
+import { onMounted, ref, watch } from 'vue';
 import FileShare from './FileShare.vue';
 import { Context } from '@/context';
 import { useI18n } from 'vue-i18n';
@@ -67,6 +67,10 @@ const GetprojectLists = async (id: string) => {
     console.log(err);
   }
 }
+
+watch(() => route.query.id, () => {
+  documentInfo(route.query.id)
+})
 
 onMounted(() => {
   documentInfo(docID);
