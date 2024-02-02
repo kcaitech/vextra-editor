@@ -411,16 +411,15 @@ onUnmounted(() => {
                     width: 38px;
                     border: 1px solid var(--color-icon, #333333);
                     border-radius: 1px;
+                    display: flex;
+                    align-items: center;
+                    justify-content: center;
 
                     .LR {
                         --height: 1px;
                         --width: 14px;
-                        position: absolute;
-                        --containerSize: 36px;
                         height: var(--height);
                         width: var(--width);
-                        top: calc((var(--containerSize) - var(--height))/2);
-                        left: calc((var(--containerSize) - var(--width))/2);
                         background-color: #333333;
                         position: relative;
 
@@ -442,14 +441,10 @@ onUnmounted(() => {
                     .TB {
                         --height: 14px;
                         --width: 1px;
-                        position: absolute;
-                        --containerSize: 36px;
                         height: var(--height);
                         width: var(--width);
-                        top: calc((var(--containerSize) - var(--height))/2);
-                        left: calc((var(--containerSize) - var(--width))/2);
                         background-color: #333333;
-                        position: relative;
+                        position: absolute;
 
                         &::before {
                             content: "";
@@ -549,4 +544,5 @@ onUnmounted(() => {
     }
 
 
-}</style>
+}
+</style>
