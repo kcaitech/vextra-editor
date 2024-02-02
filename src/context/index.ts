@@ -102,6 +102,7 @@ export class Context extends WatchableObject {
         this.m_repo = new RepoWraper(this.m_coopRepo);
         this.m_taskMgr = new TaskMgr();
         this.m_selection = new Selection(data, this); //选区相关
+        repo.setSelection(this.m_selection);
         this.m_workspace = new WorkSpace(this); // 编辑器状态
         this.m_comment = new Comment(); // 评论相关
         this.m_menu = new Menu(this); // 菜单相关
