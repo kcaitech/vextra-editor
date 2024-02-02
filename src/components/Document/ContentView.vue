@@ -647,6 +647,6 @@ onUnmounted(() => {
         </CommentView>
         <Creator v-if="creatorMode" :context="props.context" />
         <PathEditMode v-if="path_edit_mode" :context="props.context"></PathEditMode>
-        <Overview :context="props.context" v-if="overview" :matrix="matrix.toArray()"></Overview>
+        <!-- <Overview :context="props.context" v-if="overview" :matrix="matrix.toArray()"></Overview> -->
     </div>
 </template>
