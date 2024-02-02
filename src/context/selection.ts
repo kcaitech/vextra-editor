@@ -16,7 +16,10 @@ import {
     TableView,
     TextShape,
     TextShapeView,
-    WatchableObject
+    WatchableObject,
+    SelectionState,
+    ArrayOpSelection,
+    isDiffStringArr
 } from "@kcdesign/data";
 import { Document } from "@kcdesign/data";
 import { Page } from "@kcdesign/data";
@@ -32,6 +35,7 @@ import { TextSelectionLite } from "@/context/textselectionlite";
 import { is_symbol_or_union } from "@/utils/symbol";
 import { finder, scout, Scout } from "@/utils/scout";
 import { TableSelection } from "./tableselection";
+import { v4 } from "uuid";
 
 interface Saved {
     page: Page | undefined,
@@ -432,12 +436,44 @@ export class Selection extends WatchableObject implements ISave4Restore {
         return this.textSelection;
     }
 
-    save() {
-        throw new Error("Method not implemented.");
+    save(): SelectionState {
+        // throw new Error("Method not implemented.");
+        const state: SelectionState = {
+            shapes: []
+        }
+        if (this.selectedShapes.length > 0) {
+            state.shapes = this.selectedShapes.map(s => s.id);
+        }
+        // todo table
+        // text
+        const textShape = this.textSelection.shape;
+        if (this.textSelection.cursorStart >= 0 && this.textSelection.cursorEnd >= 0 && textShape) {
+            state.text = new ArrayOpSelection(v4(), textShape.text.getCrdtPath(), 
+            Number.MAX_SAFE_INTEGER, this.textSelection.cursorStart, 
+            this.textSelection.cursorEnd - this.textSelection.cursorStart)
+        }
+        return state;
     }
 
-    restore(saved: any): void {
-        throw new Error("Method not implemented.");
+    restore(state: SelectionState): void {
+        if (!this.selectedPage) return;
+        // throw new Error("Method not implemented.");
+        // text
+        if (state.text && (this.textSelection.cursorStart !== state.text.start || this.textSelection.cursorEnd !== (state.text.start + state.text.length))) {
+            if (state.text.length === 0) this.textSelection.setCursor(state.text.start, false);
+            else this.textSelection.selectText(state.text.start, state.text.start + state.text.length);
+        }
+        // todo table
+        // shape
+        const shapes = state.shapes.map(id => this.selectedPage?.getShape(id) as ShapeView);
+        if (shapes.findIndex((s) => s === undefined) >= 0) {
+            this.m_context.nextTick(this.selectedPage, () => {
+                const shapes = state.shapes.map(id => this.selectedPage?.getShape(id) as ShapeView).filter(s => s !== undefined);
+                this.rangeSelectShape(shapes);
+            })
+        } else if (isDiffStringArr(state.shapes, this.selectedShapes.map(s => s.id))) {
+            this.rangeSelectShape(shapes);
+        }
     }
 
     get selectedSymOrRefMenber() {
