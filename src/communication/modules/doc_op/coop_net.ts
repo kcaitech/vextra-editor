@@ -64,7 +64,7 @@ export class CoopNet implements ICoopNet {
                 return
             }
             for (const watcher of this.watcherList) watcher(data.cmds);
-        }  else if (data.type === "pullCmdsResult") { // 服务器返回的pullCmds结果
+        } else if (data.type === "pullCmdsResult") { // 服务器返回的pullCmds结果
             if (!Array.isArray(data.cmds) || typeof data.from !== "string" || typeof data.to !== "string") {
                 console.log("服务器数据格式错误")
                 return
