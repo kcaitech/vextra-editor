@@ -1,4 +1,4 @@
-import { Cmd, ICoopNet, serialCmds, parseCmds } from "@kcdesign/data"
+import { Cmd, ICoopNet, serialCmds, parseCmds, RadixConvert } from "@kcdesign/data"
 
 export class CoopNet implements ICoopNet {
 
@@ -10,6 +10,7 @@ export class CoopNet implements ICoopNet {
     private pullCmdsPromiseList: Record<string, {
         resolve: (value: Cmd[]) => void,
     }> = {}
+    private radixRevert: RadixConvert = new RadixConvert(62)
 
     constructor(versionId: string) {
         this.versionId = versionId
@@ -59,19 +60,25 @@ export class CoopNet implements ICoopNet {
     }
 
     onMessage(data: any): void {
+        const cmdsData = JSON.parse(data.cmds_data) as any[]
+        let cmds: Cmd[] | undefined
+        if (Array.isArray(cmdsData)) {
+            cmds = parseCmds(JSON.stringify(cmdsData.map(item => {
+                item.cmd.version = item.id
+                return item.cmd
+            })))
+        }
         if (data.type === "commitResult") { // 本地上传到服务器的返回结果
             if (data.status !== "success") {
 
             }
         } else if (data.type === "update") { // 服务器推送的cmd
-            const cmds = parseCmds(data.cmds)
             if (!Array.isArray(cmds)) {
                 console.log("服务器数据格式错误")
                 return
             }
             for (const watcher of this.watcherList) watcher(cmds);
         } else if (data.type === "pullCmdsResult") { // 服务器返回的pullCmds结果
-            const cmds = parseCmds(data.cmds)
             if (!Array.isArray(cmds) || typeof data.from !== "string" || typeof data.to !== "string") {
                 console.log("服务器数据格式错误")
                 return

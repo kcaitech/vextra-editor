@@ -1,10 +1,10 @@
-import { Communication } from "@/communication"
+import { Communication } from "@/communication/index"
 import { TunnelType } from "@/communication/types"
 import { CoopNet } from "@/communication/modules/doc_op/coop_net"
 import { Document, CoopRepository } from "@kcdesign/data"
 
 export type Options = {
-    coopNet?: CoopNet,
+
 }
 
 export class DocOp extends Communication {
@@ -30,7 +30,6 @@ export class DocOp extends Communication {
         docOp.onMessage = docOp._onMessage.bind(docOp)
         docOp.coopNet = new CoopNet(versionId)
         docOp.coopNet.setSend(docOp.send.bind(docOp))
-        if (options?.coopNet) for (const watcher of options.coopNet.getWatcherList()) docOp.coopNet.watchCmds(watcher);
         repo.setNet(docOp.coopNet)
         return docOp
     }
@@ -47,13 +46,14 @@ export class DocOp extends Communication {
     public setOnClose(onClose: (options?: Options) => void) {
         this.onClose = () => {
             onClose({
-                coopNet: this.coopNet,
+
             })
         }
     }
 
     public async start(): Promise<boolean> {
-        return await super.start(this.token)
-
+        const res = await super.start(this.token)
+        this.coopNet?.setConnected(res)
+        return res
     }
 }
