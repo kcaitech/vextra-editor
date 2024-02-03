@@ -1,4 +1,4 @@
-import { Cmd, ICoopNet, serialCmds } from "@kcdesign/data"
+import { Cmd, ICoopNet, serialCmds, parseCmds, RadixConvert } from "@kcdesign/data"
 
 export class CoopNet implements ICoopNet {
 
@@ -10,6 +10,7 @@ export class CoopNet implements ICoopNet {
     private pullCmdsPromiseList: Record<string, {
         resolve: (value: Cmd[]) => void,
     }> = {}
+    private radixRevert: RadixConvert = new RadixConvert(62)
 
     constructor(versionId: string) {
         this.versionId = versionId
@@ -30,6 +31,11 @@ export class CoopNet implements ICoopNet {
 
     async pullCmds(from: string, to: string): Promise<Cmd[]> {
         if (!this.isConnected) return [];
+        this.send?.({
+            type: "pullCmds",
+            from: from,
+            to: to,
+        })
         return new Promise<Cmd[]>(resolve => {
             this.pullCmdsPromiseList[`${from}-${to}`] = {
                 resolve: resolve,
@@ -54,24 +60,32 @@ export class CoopNet implements ICoopNet {
     }
 
     onMessage(data: any): void {
-        if (data.type === "commit") { // 本地上传到服务器的返回结果
+        const cmdsData = JSON.parse(data.cmds_data) as any[]
+        let cmds: Cmd[] | undefined
+        if (Array.isArray(cmdsData)) {
+            cmds = parseCmds(JSON.stringify(cmdsData.map(item => {
+                item.cmd.version = item.id
+                return item.cmd
+            })))
+        }
+        if (data.type === "commitResult") { // 本地上传到服务器的返回结果
             if (data.status !== "success") {
 
             }
         } else if (data.type === "update") { // 服务器推送的cmd
-            if (!Array.isArray(data.cmds)) {
+            if (!Array.isArray(cmds)) {
                 console.log("服务器数据格式错误")
                 return
             }
-            for (const watcher of this.watcherList) watcher(data.cmds);
+            for (const watcher of this.watcherList) watcher(cmds);
         } else if (data.type === "pullCmdsResult") { // 服务器返回的pullCmds结果
-            if (!Array.isArray(data.cmds) || typeof data.from !== "string" || typeof data.to !== "string") {
+            if (!Array.isArray(cmds) || typeof data.from !== "string" || typeof data.to !== "string") {
                 console.log("服务器数据格式错误")
                 return
             }
             const key = `${data.from}-${data.to}`
             if (!this.pullCmdsPromiseList[key]) return;
-            this.pullCmdsPromiseList[key].resolve(data.cmds)
+            this.pullCmdsPromiseList[key].resolve(cmds)
             delete this.pullCmdsPromiseList[key]
         }
     }
