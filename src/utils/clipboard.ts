@@ -91,7 +91,7 @@ export class Clipboard {
 
                 const points = points_map.get(shape.id);
                 if (points) {
-                    (shape as PathShape).points = points.map((i, idx) => new CurvePoint(new CrdtIndex([idx], 0), v4(), i.x, i.y, i.mode)) as any;
+                    (shape as PathShape).points = points.map((i, idx) => new CurvePoint(new CrdtIndex([idx]), v4(), i.x, i.y, i.mode)) as any;
                 }
             }
 

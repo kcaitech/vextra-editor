@@ -19,7 +19,8 @@ import {
     WatchableObject,
     SelectionState,
     ArrayOpSelection,
-    isDiffStringArr
+    isDiffStringArr,
+    SNumber
 } from "@kcdesign/data";
 import { Document } from "@kcdesign/data";
 import { Page } from "@kcdesign/data";
@@ -449,7 +450,7 @@ export class Selection extends WatchableObject implements ISave4Restore {
         const textShape = this.textSelection.shape;
         if (this.textSelection.cursorStart >= 0 && this.textSelection.cursorEnd >= 0 && textShape) {
             state.text = new ArrayOpSelection(v4(), textShape.text.getCrdtPath(), 
-            Number.MAX_SAFE_INTEGER, this.textSelection.cursorStart, 
+            SNumber.MAX_SAFE_INTEGER, this.textSelection.cursorStart, 
             this.textSelection.cursorEnd - this.textSelection.cursorStart)
         }
         return state;
