@@ -23,6 +23,7 @@ import { TableSelection } from '@/context/tableselection';
 import { Selection } from "@/context/selection";
 import { flattenShapes } from '@/utils/cutout';
 import { get_table_range, is_editing } from '@/utils/content';
+import { TypicaStop } from '@/components/common/ColorPicker/typical';
 
 interface FillItem {
     id: number,
@@ -88,7 +89,7 @@ function updateData() {
     mixed.value = false;
     mixed_cell.value = false;
     const selecteds = props.context.selection.selectedShapes;
-    if (selecteds.length < 1)  return;
+    if (selecteds.length < 1) return;
     const table = props.context.tableSelection;
     const shape = selecteds[0];
     if (selecteds.length === 1 && shape.type === ShapeType.Table && is_editing(table)) {
@@ -267,49 +268,73 @@ function onColorChange(idx: number, e: Event) {
     }
 }
 
-function onAlphaChange(idx: number, e: Event) {
+function onAlphaChange(idx: number, fill: Fill) {
     let value: any = alphaValue.value;
-    if (alphaFill.value) {
-        if (value?.slice(-1) === '%') {
-            value = Number(value?.slice(0, -1))
-            if (value >= 0) {
-                if (value > 100) {
-                    value = 100
-                }
-                value = value.toFixed(2) / 100
-                const color = fills[idx].fill.color;
-                let clr = toHex(color.red, color.green, color.blue);
-                if (clr.slice(0, 1) !== '#') {
-                    clr = "#" + clr
-                }
-                setColor(idx, clr, value, false);
-                return
-            } else {
-                message('danger', t('system.illegal_input'));
-                return alphaFill.value[idx].value = (fills[idx].fill.color.alpha * 100) + '%'
+    if (!alphaFill.value) return;
+    if (value?.slice(-1) === '%') {
+        value = Number(value?.slice(0, -1))
+        if (value >= 0) {
+            if (value > 100) {
+                value = 100
             }
-        } else if (!isNaN(Number(value))) {
-            if (value >= 0) {
-                if (value > 100) {
-                    value = 100
-                }
-                value = Number((Number(value)).toFixed(2)) / 100
-                const color = fills[idx].fill.color;
-                let clr = toHex(color.red, color.green, color.blue);
-                if (clr.slice(0, 1) !== '#') {
-                    clr = "#" + clr
-                }
+            value = value.toFixed(2) / 100
+            const color = fills[idx].fill.color;
+            let clr = toHex(color.red, color.green, color.blue);
+            if (clr.slice(0, 1) !== '#') {
+                clr = "#" + clr
+            }
+            if (fill.fillType === FillType.SolidColor) {
                 setColor(idx, clr, value, false);
-                return
-            } else {
-                message('danger', t('system.illegal_input'));
-                return alphaFill.value[idx].value = (fills[idx].fill.color.alpha * 100) + '%'
+            } else if (fill.gradient && fill.fillType === FillType.Gradient) {
+                set_gradient_opacity(idx, value);
             }
         } else {
-            message('danger', t('system.illegal_input'));
-            return alphaFill.value[idx].value = (fills[idx].fill.color.alpha * 100) + '%'
+            alpha_message(idx, fill);
         }
+    } else if (!isNaN(Number(value))) {
+        if (value >= 0) {
+            if (value > 100) {
+                value = 100
+            }
+            value = Number((Number(value)).toFixed(2)) / 100
+            const color = fills[idx].fill.color;
+            let clr = toHex(color.red, color.green, color.blue);
+            if (clr.slice(0, 1) !== '#') {
+                clr = "#" + clr
+            }
+            if (fill.fillType === FillType.SolidColor) {
+                setColor(idx, clr, value, false);
+            } else if (fill.gradient && fill.fillType === FillType.Gradient) {
+                set_gradient_opacity(idx, value);
+            }
+        } else {
+            alpha_message(idx, fill);
+        }
+    } else {
+        alpha_message(idx, fill);
     }
+}
+const alpha_message = (idx: number, fill: Fill) => {
+    if (!alphaFill.value) return;
+    message('danger', t('system.illegal_input'));
+    let alpha = 1;
+    if (fill.fillType === FillType.SolidColor) {
+        alpha = fill.color.alpha * 100;
+    } else if (fill.gradient && fill.fillType === FillType.Gradient) {
+        const opacity = fill.gradient.gradientOpacity || 1
+        alpha = opacity * 100;
+    }
+    alphaFill.value[idx].value = alpha + '%'
+}
+
+const set_gradient_opacity = (idx: number, opacity: number) => {
+    const _idx = fills.length - idx - 1;
+    const selected = props.context.selection.selectedShapes;
+    const shapes = flattenShapes(selected).filter(s => s.type !== ShapeType.Group || (s as GroupShapeView).data.isBoolOpShape);
+    const page = props.context.selection.selectedPage!;
+    const editor = props.context.editor4Page(page);
+    const actions = get_aciton_gradient_stop(shapes, _idx, opacity, 'fills');
+    editor.setGradientOpacity(actions);
 }
 
 function getColorFromPicker(idx: number, color: Color) {
@@ -372,7 +397,14 @@ const alphaInput = (i: number) => {
         alphaValue.value = value;
     }
 }
-const filterAlpha = (a: number) => {
+const filterAlpha = (fill: Fill) => {
+    let a: number = 100;
+    if (fill.fillType === FillType.SolidColor) {
+        a = fill.color.alpha * 100;
+    } else if (fill.gradient && fill.fillType === FillType.Gradient) {
+        const opacity = fill.gradient.gradientOpacity || 1
+        a = opacity * 100;
+    }
     let alpha = Math.round(a * 100) / 100;
     if (Number.isInteger(alpha)) {
         return alpha.toFixed(0); // 返回整数形式
@@ -469,20 +501,6 @@ function gradient_stop_delete(idx: number, index: number) {
     const actions = get_aciton_gradient_stop(shapes, _idx, index, 'fills');
     editor.deleteShapesGradientStop(actions);
 }
-/**
- * @description 修改节点位置
- * @param idx 
- * @param position 
- */
-function gradient_stop_position(idx: number, position: number, id: string) {
-    const _idx = fills.length - idx - 1;
-    const selected = props.context.selection.selectedShapes;
-    const shapes = flattenShapes(selected).filter(s => s.type !== ShapeType.Group || (s as GroupShapeView).data.isBoolOpShape);
-    const page = props.context.selection.selectedPage!;
-    const editor = props.context.editor4Page(page);
-    const actions = get_aciton_gradient_stop(shapes, _idx, { position, id }, 'fills');
-    editor.setShapesGradientStopPosition(actions);
-}
 
 function toggle_fill_type(idx: number, fillType: FillType) {
     const _idx = fills.length - idx - 1;
@@ -503,6 +521,17 @@ function toggle_fill_type(idx: number, fillType: FillType) {
         }
     }
 }
+
+function modif_gradient_stop(idx: number, stops: TypicaStop[]) {
+    const _idx = fills.length - idx - 1;
+    const selected = props.context.selection.selectedShapes;
+    const shapes = flattenShapes(selected).filter(s => s.type !== ShapeType.Group || (s as GroupShapeView).data.isBoolOpShape);
+    const page = props.context.selection.selectedPage!;
+    const editor = props.context.editor4Page(page);
+    const actions = get_aciton_gradient_stop(shapes, _idx, stops, 'fills');
+    editor.modifGradientStop(actions);
+}
+
 function update_by_shapes() {
     watchShapes();
     updateData();
@@ -612,14 +641,17 @@ onUnmounted(() => {
                         @gradient-type="(type) => togger_gradient_type(idx, type)"
                         @gradient-color-change="(c, index) => gradient_stop_color_change(idx, c, index)"
                         @gradient-stop-delete="(index) => gradient_stop_delete(idx, index)"
-                        @gradient-stop-position="(position, index) => gradient_stop_position(idx, position, index)">
+                        @modif_gradient_stop="(stops) => modif_gradient_stop(idx, stops)">
                     </ColorPicker>
-                    <input ref="colorFill" class="colorFill"
+                    <input ref="colorFill" class="colorFill" v-if="f.fill.fillType !== FillType.Gradient"
                         :value="toHex(f.fill.color.red, f.fill.color.green, f.fill.color.blue)" :spellcheck="false"
                         @change="(e) => onColorChange(idx, e)" @focus="selectColor(idx)" @input="colorInput(idx)"
                         :class="{ 'check': f.fill.isEnabled, 'nocheck': !f.fill.isEnabled }" />
-                    <input ref="alphaFill" class="alphaFill" :value="filterAlpha(f.fill.color.alpha * 100) + '%'"
-                        @change="(e) => onAlphaChange(idx, e)" @focus="selectAlpha(idx)" @input="alphaInput(idx)"
+                    <span class="colorFill" style="line-height: 14px;"
+                        v-else-if="f.fill.fillType === FillType.Gradient && f.fill.gradient">{{
+                            t(`color.${f.fill.gradient.gradientType}`) }}</span>
+                    <input ref="alphaFill" class="alphaFill" :value="filterAlpha(f.fill) + '%'"
+                        @change="(e) => onAlphaChange(idx, f.fill)" @focus="selectAlpha(idx)" @input="alphaInput(idx)"
                         :class="{ 'check': f.fill.isEnabled, 'nocheck': !f.fill.isEnabled }" />
                 </div>
                 <div style="width: 4px;"></div>

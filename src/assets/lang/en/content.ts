@@ -1,4 +1,4 @@
-import { ShapeType } from "@kcdesign/data";
+import { GradientType, ShapeType } from "@kcdesign/data";
 export const shape: any = {
     group: "Group",
     page: "Page",
@@ -33,3 +33,6 @@ export const color = {
     rotate: 'Rotate',
     reverse: 'Reverse'
 }
+color[GradientType.Linear] = 'Linear gradient';
+color[GradientType.Radial] = 'Radial gradient';
+color[GradientType.Angular] = 'Angular gradient';

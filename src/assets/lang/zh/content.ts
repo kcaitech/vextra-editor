@@ -1,4 +1,4 @@
-import { ShapeType } from "@kcdesign/data";
+import { GradientType, ShapeType } from "@kcdesign/data";
 export const shape: any = {
     group: "编组",
     page: "页面",
@@ -33,3 +33,6 @@ export const color = {
     rotate: '旋转90度',
     reverse: '翻转渐变'
 }
+color[GradientType.Linear] = '线性渐变';
+color[GradientType.Radial] = '径向渐变';
+color[GradientType.Angular] = '旋转渐变';

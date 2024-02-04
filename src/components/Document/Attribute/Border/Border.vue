@@ -29,6 +29,7 @@ import { TableSelection } from '@/context/tableselection';
 import { Selection } from "@/context/selection";
 import { flattenShapes } from '@/utils/cutout';
 import { get_table_range, is_editing } from '@/utils/content';
+import { TypicaStop } from '@/components/common/ColorPicker/typical';
 
 interface BorderItem {
     id: number
@@ -99,7 +100,7 @@ function updateData() {
     mixed.value = false;
     mixed_cell.value = false;
     const selecteds = props.context.selection.selectedShapes;
-    if (selecteds.length < 1)  return;
+    if (selecteds.length < 1) return;
     const shape = selecteds[0];
     const table = props.context.tableSelection;
     if (selecteds.length === 1 && shape.type === ShapeType.Table && is_editing(table)) {
@@ -240,10 +241,6 @@ function onColorChange(e: Event, idx: number) {
     if (value.length === 4) value = `#${value.slice(1).split('').map(i => `${i}${i}`).join('')}`;
     if (value.length === 2) value = `#${value.slice(1).split('').map(i => `${i}${i}${i}${i}${i}${i}`).join('')}`;
     const hex = value.match(Reg_HEX);
-    const selected = props.context.selection.selectedShapes;
-    const s = selected[0];
-    const page = props.context.selection.selectedPage;
-    const table = props.context.tableSelection;
     const border = borders[idx].border;
     if (!hex) {
         message('danger', t('system.illegal_input'));
@@ -255,7 +252,59 @@ function onColorChange(e: Event, idx: number) {
     const b = Number.parseInt(hex[3], 16);
     const alpha = border.color.alpha;
     const color = new Color(alpha, r, g, b);
+    setColor(idx, color);
+    props.context.workspace.notify(WorkSpace.CTRL_APPEAR);
+}
+
+function onAlphaChange(b: Border, idx: number) {
+    props.context.workspace.notify(WorkSpace.CTRL_DISAPPEAR);
+    let alpha: any = alphaValue.value;
+    if (alphaBorder.value) {
+        if (alpha.slice(-1) === '%') {
+            alpha = Number(alpha?.slice(0, -1))
+            if (isNaN(alpha) || alpha < 0) {
+                alpha_message(idx, b);
+            }
+            if (alpha > 100) {
+                alpha = 100;
+            }
+            alpha = alpha.toFixed(2) / 100
+            const border = borders[idx].border;
+            const { red, green, blue } = border.color
+            const color = new Color(alpha, red, green, blue);
+            if (b.fillType === FillType.SolidColor) {
+                setColor(idx, color);
+            } else if (b.gradient && b.fillType === FillType.Gradient) {
+                set_gradient_opacity(idx, alpha);
+            }
+        } else {
+            if (!isNaN(Number(alpha)) && alpha >= 0) {
+                if (alpha > 100) {
+                    alpha = 100
+                }
+                alpha = Number((Number(alpha)).toFixed(2)) / 100;
+                const border = borders[idx].border;
+                const { red, green, blue } = border.color
+                const color = new Color(alpha, red, green, blue);
+                if (b.fillType === FillType.SolidColor) {
+                    setColor(idx, color);
+                } else if (b.gradient && b.fillType === FillType.Gradient) {
+                    set_gradient_opacity(idx, alpha);
+                }
+            } else {
+                alpha_message(idx, b);
+            }
+        }
+    }
+    props.context.workspace.notify(WorkSpace.CTRL_APPEAR);
+}
+
+function setColor(idx: number, color: Color) {
+    const selected = props.context.selection.selectedShapes;
+    const page = props.context.selection.selectedPage;
+    const s = selected[0] as ShapeView;
     const _idx = borders.length - idx - 1;
+    const table = props.context.tableSelection;
     if (selected.length === 1 && s.type === ShapeType.Table && is_editing(table)) {
         const e = props.context.editor4Table(s as TableView);
         const range = get_table_range(table);
@@ -274,84 +323,29 @@ function onColorChange(e: Event, idx: number) {
             editor.setShapesBorderColor(actions);
         }
     }
-    props.context.workspace.notify(WorkSpace.CTRL_APPEAR);
 }
 
-function onAlphaChange(e: Event, idx: number) {
-    props.context.workspace.notify(WorkSpace.CTRL_DISAPPEAR);
-    let alpha: any = alphaValue.value;
-    const selected = props.context.selection.selectedShapes;
-    const s = selected[0];
-    const page = props.context.selection.selectedPage;
-    const table = props.context.tableSelection;
-    if (alphaBorder.value) {
-        if (alpha.slice(-1) === '%') {
-            alpha = Number(alpha?.slice(0, -1))
-            if (isNaN(alpha) || alpha < 0) {
-                message('danger', t('system.illegal_input'));
-                return alphaBorder.value[idx].value = (borders[idx].border.color.alpha * 100) + '%';
-            }
-            if (alpha > 100) {
-                alpha = 100;
-            }
-            alpha = alpha.toFixed(2) / 100
-            const border = borders[idx].border;
-            const { red, green, blue } = border.color
-            const color = new Color(alpha, red, green, blue);
-            const _idx = borders.length - idx - 1;
-            if (selected.length === 1 && s.type === ShapeType.Table && is_editing(table)) {
-                const e = props.context.editor4Table(s as TableView);
-                const range = get_table_range(table);
-                const tablecells = (s as TableView).getVisibleCells(table.tableRowStart,
-                    table.tableRowEnd,
-                    table.tableColStart,
-                    table.tableColEnd);
-                if (tablecells.length > 0 && tablecells[0].cell) {
-                    e.setBorderColor(_idx, color, range)
-                }
-            } else {
-                const shapes = flattenShapes(selected).filter(s => s.type !== ShapeType.Group || (s as GroupShapeView).data.isBoolOpShape);
-                const actions = get_actions_border_color(shapes, _idx, color);
-                if (page) {
-                    const editor = props.context.editor4Page(page);
-                    editor.setShapesBorderColor(actions);
-                }
-            }
-        } else {
-            if (!isNaN(Number(alpha)) && alpha >= 0) {
-                if (alpha > 100) {
-                    alpha = 100
-                }
-                alpha = Number((Number(alpha)).toFixed(2)) / 100;
-                const border = borders[idx].border;
-                const { red, green, blue } = border.color
-                const color = new Color(alpha, red, green, blue);
-                const _idx = borders.length - idx - 1;
-                if (selected.length === 1 && s.type === ShapeType.Table && is_editing(table)) {
-                    const e = props.context.editor4Table(s as TableView);
-                    const range = get_table_range(table);
-                    const tablecells = (s as TableView).getVisibleCells(table.tableRowStart,
-                        table.tableRowEnd,
-                        table.tableColStart,
-                        table.tableColEnd);
-                    if (tablecells.length > 0 && tablecells[0].cell) {
-                        e.setBorderColor(_idx, color, range)
-                    }
-                } else {
-                    const shapes = flattenShapes(selected).filter(s => s.type !== ShapeType.Group || (s as GroupShapeView).data.isBoolOpShape);
-                    const actions = get_actions_border_color(shapes, _idx, color);
-                    if (page) {
-                        const editor = props.context.editor4Page(page);
-                        editor.setShapesBorderColor(actions);
-                    }
-                }
-            } else {
-                message('danger', t('system.illegal_input'));
-                return alphaBorder.value[idx].value = (borders[idx].border.color.alpha * 100) + '%'
-            }
-        }
+const alpha_message = (idx: number, border: Border) => {
+    if (!alphaBorder.value) return;
+    message('danger', t('system.illegal_input'));
+    let alpha = 1;
+    if (border.fillType === FillType.SolidColor) {
+        alpha = border.color.alpha * 100;
+    } else if (border.gradient && border.fillType === FillType.Gradient) {
+        const opacity = border.gradient.gradientOpacity || 1;
+        alpha = opacity * 100;
     }
-    props.context.workspace.notify(WorkSpace.CTRL_APPEAR);
+    alphaBorder.value[idx].value = alpha + '%'
+}
+
+const set_gradient_opacity = (idx: number, opacity: number) => {
+    const _idx = borders.length - idx - 1;
+    const selected = props.context.selection.selectedShapes;
+    const shapes = flattenShapes(selected).filter(s => s.type !== ShapeType.Group || (s as GroupShapeView).data.isBoolOpShape);
+    const page = props.context.selection.selectedPage!;
+    const editor = props.context.editor4Page(page);
+    const actions = get_aciton_gradient_stop(shapes, _idx, opacity, 'borders');
+    editor.setGradientOpacity(actions);
 }
 
 function getColorFromPicker(color: Color, idx: number) {
@@ -414,7 +408,14 @@ const alphaInput = (i: number) => {
         alphaValue.value = value;
     }
 }
-const filterAlpha = (a: number) => {
+const filterAlpha = (border: Border) => {
+    let a: number = 100;
+    if (border.fillType === FillType.SolidColor) {
+        a = border.color.alpha * 100;
+    } else if (border.gradient && border.fillType === FillType.Gradient) {
+        const opacity = border.gradient.gradientOpacity || 1;
+        a = opacity * 100;
+    }
     let alpha = Math.round(a * 100) / 100;
     if (Number.isInteger(alpha)) {
         return alpha.toFixed(0); // 返回整数形式
@@ -512,20 +513,6 @@ function gradient_stop_delete(idx: number, index: number) {
     const actions = get_aciton_gradient_stop(shapes, _idx, index, 'borders');
     editor.deleteShapesGradientStop(actions);
 }
-/**
- * @description 修改节点位置
- * @param idx 
- * @param position 
- */
-function gradient_stop_position(idx: number, position: number, id: string) {
-    const _idx = borders.length - idx - 1;
-    const selected = props.context.selection.selectedShapes;
-    const shapes = flattenShapes(selected).filter(s => s.type !== ShapeType.Group || (s as GroupShapeView).data.isBoolOpShape);
-    const page = props.context.selection.selectedPage!;
-    const editor = props.context.editor4Page(page);
-    const actions = get_aciton_gradient_stop(shapes, _idx, { position, id }, 'borders');
-    editor.setShapesGradientStopPosition(actions);
-}
 
 function toggle_fill_type(idx: number, fillType: FillType) {
     const _idx = borders.length - idx - 1;
@@ -545,6 +532,16 @@ function toggle_fill_type(idx: number, fillType: FillType) {
             editor.setShapesBorderType(actions);
         }
     }
+}
+
+function modif_gradient_stop(idx: number, stops: TypicaStop[]) {
+    const _idx = borders.length - idx - 1;
+    const selected = props.context.selection.selectedShapes;
+    const shapes = flattenShapes(selected).filter(s => s.type !== ShapeType.Group || (s as GroupShapeView).data.isBoolOpShape);
+    const page = props.context.selection.selectedPage!;
+    const editor = props.context.editor4Page(page);
+    const actions = get_aciton_gradient_stop(shapes, _idx, stops, 'borders');
+    editor.modifGradientStop(actions);
 }
 
 function layout() {
@@ -664,13 +661,16 @@ onUnmounted(() => {
                         @gradient-type="(type) => togger_gradient_type(idx, type)"
                         @gradient-color-change="(c, index) => gradient_stop_color_change(idx, c, index)"
                         @gradient-stop-delete="(index) => gradient_stop_delete(idx, index)"
-                        @gradient-stop-position="(position, index) => gradient_stop_position(idx, position, index)" />
+                        @modif_gradient_stop="(stops) => modif_gradient_stop(idx, stops)" />
                     <input ref="colorBorder" class="colorBorder" :spellcheck="false"
-                        :value="(toHex(b.border.color)).slice(1)" @change="e => onColorChange(e, idx)"
-                        @focus="selectColor(idx)" @input="colorInput(idx)"
+                        v-if="b.border.fillType !== FillType.Gradient" :value="(toHex(b.border.color)).slice(1)"
+                        @change="e => onColorChange(e, idx)" @focus="selectColor(idx)" @input="colorInput(idx)"
                         :class="{ 'check': b.border.isEnabled, 'nocheck': !b.border.isEnabled }" />
+                    <span class="colorBorder" style="line-height: 14px;"
+                        v-else-if="b.border.fillType === FillType.Gradient && b.border.gradient">{{
+                            t(`color.${b.border.gradient.gradientType}`) }}</span>
                     <input ref="alphaBorder" class="alphaBorder" style="text-align: center;"
-                        :value="filterAlpha(b.border.color.alpha * 100) + '%'" @change="e => onAlphaChange(e, idx)"
+                        :value="filterAlpha(b.border) + '%'" @change="e => onAlphaChange(b.border, idx)"
                         @focus="selectAlpha(idx)" @input="alphaInput(idx)"
                         :class="{ 'check': b.border.isEnabled, 'nocheck': !b.border.isEnabled }" />
                 </div>

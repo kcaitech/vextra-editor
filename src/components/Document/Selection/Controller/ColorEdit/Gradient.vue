@@ -22,13 +22,18 @@ function down(e: MouseEvent) {
         props.context.color.switch_editor_mode(false);
     }
 }
+function move(e: MouseEvent) {
+    if (e.buttons !== 1) {
+        e.stopPropagation();
+    }
+}
 const selected_watcher = (t: number) => {
-    if(t === Selection.CHANGE_SHAPE) {
+    if (t === Selection.CHANGE_SHAPE) {
         init();
     }
 }
 const color_watcher = (t: number) => {
-    if(t === ColorCtx.CHANGE_GRADIENT_TYPE) {
+    if (t === ColorCtx.CHANGE_GRADIENT_TYPE) {
         init();
     }
 }
@@ -43,7 +48,7 @@ onUnmounted(() => {
 })
 </script>
 <template>
-    <div class="gradient" @mousedown.stop="down">
+    <div class="gradient" @mousedown.stop="down" @mousemove="move">
         <component :is="gradient_map.get(_g_type)" :context="props.context" :matrix="matrix"></component>
     </div>
 </template>

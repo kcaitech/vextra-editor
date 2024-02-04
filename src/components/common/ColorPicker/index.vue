@@ -1,6 +1,6 @@
 <script setup lang="ts">
 import { ref, nextTick, reactive, onMounted, onUnmounted, computed } from 'vue';
-import { Color, FillType, Gradient, GradientType, Stop } from '@kcdesign/data';
+import { AsyncGradientEditor, Color, FillType, Gradient, GradientType, GroupShapeView, ShapeType, ShapeView, adapt2Shape } from '@kcdesign/data';
 import { useI18n } from 'vue-i18n';
 import { Context } from '@/context';
 import { WorkSpace } from '@/context/workspace';
@@ -26,7 +26,7 @@ import {
     stops_generator,
     hexToX,
 } from './utils';
-import { typical, model2label } from './typical';
+import { typical, model2label, typical_gradient, TypicalGradient, TypicaStop } from './typical';
 import { genOptions } from '@/utils/common';
 import Select, { SelectSource, SelectItem } from '@/components/common/Select.vue';
 import { Menu } from "@/context/menu";
@@ -34,6 +34,7 @@ import ColorType from "./ColorType.vue";
 import Tooltip from '../Tooltip.vue';
 import { ColorCtx } from '@/context/color';
 import { get_add_gradient_color } from '@/components/Document/Selection/Controller/ColorEdit/gradient_utils';
+import { flattenShapes } from '@/utils/cutout';
 
 interface Props {
     context: Context
@@ -63,7 +64,7 @@ interface Emits {
     (e: 'gradient-type', type: GradientType | 'solid'): void;
     (e: 'gradient-color-change', color: Color, index: number): void;
     (e: 'gradient-stop-delete', index: number): void;
-    (e: 'gradient-stop-position', position: number, id: string): void;
+    (e: 'modif_gradient_stop', stops: TypicaStop[]): void;
 }
 
 export interface HRGB { // 色相
@@ -127,6 +128,7 @@ const modelOptions: SelectSource[] = genOptions([['RGB', 'RGB'], ['HSL', 'HSL'],
 const saturationEL = ref<HTMLElement>();
 const saturationELBounding: Bounding = { x: 0, y: 0, right: 0, bottom: 0 };
 const typicalColor = ref<Color[]>(typical);
+const typicalGradientColor = ref<TypicalGradient[]>(typical_gradient);
 const hueEl = ref<HTMLElement>();
 const alphaEl = ref<HTMLElement>();
 const blockId: string = simpleId();
@@ -457,7 +459,6 @@ function mouseup(e: MouseEvent) {
     document.removeEventListener('mousemove', mousemove4Dot);
     document.removeEventListener('mousemove', mousemove4Alpha)
     document.removeEventListener('mousemove', mousemove4Hue);
-    document.removeEventListener('mousemove', move_stop_position);
     document.removeEventListener('mouseup', mouseup)
     need_update_recent.value = true;
     props.context.workspace.notify(WorkSpace.CTRL_APPEAR);
@@ -800,27 +801,54 @@ function delete_gradient_stop() {
     })
 }
 // 选中渐变节点
+let stop_start_position: ClientXY = { x: 0, y: 0 };
+let gradientEditor: AsyncGradientEditor | undefined;
 const stop_id = ref<string>('');
 function _stop_down(e: MouseEvent, index: number, id: string) {
+    e.stopPropagation();
     props.context.color.select_stop(id);
     stop_id.value = id;
+    const workspace = props.context.workspace;
+    stop_start_position = workspace.getContentXY(e);
     document.addEventListener('mousemove', move_stop_position);
-    document.addEventListener('mouseup', mouseup);
+    document.addEventListener('mouseup', stop_mouseup);
 }
 
 function move_stop_position(e: MouseEvent) {
-    if (isDrag && gradient_line.value) {
+    const { x, y } = props.context.workspace.getContentXY(e);
+    const { x: sx, y: sy } = stop_start_position;
+    const dx = x - sx;
+    const dy = y - sy;
+    if (!props.locat) return;
+    if (isDrag && gradient_line.value && gradientEditor) {
+        stop_start_position.x = x, stop_start_position.y = y;
         const index = stop_els.value.findIndex((item) => item.stop.id === stop_id.value);
         if (index === -1) return;
         const line_rect = gradient_line.value.getBoundingClientRect();
         const line_width = Math.min(Math.max(e.clientX - line_rect.left, 0), line_rect.width);
         const stop_p = line_width / line_rect.width;
         gradient_channel_style.value = gradient_channel_generator(props.gradient!);
-        stop_els.value[index].left = stop_p * 152 + 16
-        emit('gradient-stop-position', stop_p, stop_id.value);
+        stop_els.value[index].left = stop_p * 152 + 16;
+        gradientEditor.execute_stop_position(stop_p, stop_id.value);
     } else {
-        isDrag = is_drag(e);
+        if (Math.hypot(dx, dy) > 3) {
+            isDrag = true;
+            const selected = props.context.selection.selectedShapes;
+            const page = props.context.selection.selectedPage;
+            const shapes = flattenShapes(selected).filter(s => s.type !== ShapeType.Group || (s as GroupShapeView).data.isBoolOpShape);
+            gradientEditor = props.context.editor.controller().asyncGradientEditor(shapes.map((s) => adapt2Shape(s as ShapeView)), page!, props.locat.index, props.locat.type);
+        }
     }
+}
+
+const stop_mouseup = () => {
+    isDrag = false;
+    if (gradientEditor) {
+        gradientEditor.close();
+        gradientEditor = undefined;
+    }
+    document.removeEventListener('mousemove', move_stop_position);
+    document.removeEventListener('mouseup', stop_mouseup);
 }
 
 function color_type_change(val: GradientType | 'solid') {
@@ -886,6 +914,13 @@ function reverse() {
 // 渐变选中90度
 function rotate() {
     emit('gradient-rotate');
+    nextTick(() => {
+        update_gradient(props.gradient!);
+    })
+}
+
+const setGradientColor = (stops: TypicaStop[]) => {
+    emit('modif_gradient_stop', stops);
     nextTick(() => {
         update_gradient(props.gradient!);
     })
@@ -987,6 +1022,11 @@ onUnmounted(() => {
             <div class="typical-container">
                 <div class="block" v-for="(c, idx) in typicalColor" :key="idx" @click="() => setColor(c as any)"
                     :style="{ 'background-color': `rgba(${c.red}, ${c.green}, ${c.blue}, ${c.alpha * 100}%)` }"></div>
+                <template v-for="(c, idx) in typicalGradientColor" :key="idx">
+                    <div v-if="fillType === FillType.Gradient" class="block_gradient"
+                        @click="() => setGradientColor((c as TypicalGradient).stops)" :style="{ 'background': c.gradient }">
+                    </div>
+                </template>
             </div>
             <div class="controller">
                 <div class="eyedropper">
@@ -1061,6 +1101,7 @@ onUnmounted(() => {
     font-weight: 500;
     font-size: var(--font-default-fontsize);
     opacity: 1;
+    border: 1px solid #bcbcbc;
     box-sizing: border-box;
     flex: 0 0 16px;
 
@@ -1155,6 +1196,7 @@ onUnmounted(() => {
                 padding-left: 12px;
                 margin-right: 8px;
                 box-sizing: border-box;
+
                 .line {
                     width: 100%;
                     height: 8px;
@@ -1198,6 +1240,7 @@ onUnmounted(() => {
                 align-items: center;
                 justify-content: center;
                 cursor: pointer;
+
                 svg {
                     width: 14px;
                     height: 14px;
@@ -1251,19 +1294,32 @@ onUnmounted(() => {
 
         >.typical-container {
             width: 100%;
-            height: 40px;
             display: flex;
             flex-direction: row;
+            flex-wrap: wrap;
             align-items: center;
             justify-content: space-between;
-            padding: 12px;
+            padding: 12px 6px;
+            padding-bottom: 6px;
             box-sizing: border-box;
 
             >.block {
+                margin: 0 3px;
                 width: 16px;
                 height: 16px;
+                margin-bottom: 6px;
                 border-radius: 3px;
                 border: 1px solid rgba(0, 0, 0, 0.1);
+                cursor: -webkit-image-set(url('data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAADAAAAAwCAYAAABXAvmHAAAAAXNSR0IArs4c6QAABV9JREFUaEPtmG1oVXUcxz8+zpZbLgcuTHDOF6OYsGoTI3IyMG14Hex67waJFERBqdALfZNDDLIoexG9qCjyTTBQat7bwoXMXRTntm4OFnIFr2srkPWc7VG7M77z/1/zsrvOuWdXEe4fDmdnnHPu5/f0/f3Ofx73+Jp3j/OTNeBuRzAbgWwEPHogm0IeHej58WwEPLvQ4wuyEfDoQM+PZyPg2YUeX3AnIqDfmH4I+aY5JjzyZ3wanQ8sNMciQNeCTwD/ADfM3/pfWiuTERDsYmAJ8BDQBDwM/A58B+wGRoExY0xaRmTKgAUGPhd4HAib6+le7gJqgSFjiCLiemXCAAt/P/Ak0GxqYCa4o8B+4BowbtLLlRFzbYDgcwDBPw0cmwVeoD8BT5m0GjH1cFcMkCOs55cC1cDn/wMv0D+BSuAXk0qu0yjdCCRLoy1YeX4r8JlDN8ZMHfwM/G2K2eGjt25LxwArjfL4I8BlQBK5pKys7FBvb+/zDgmkQLuAKPCbiYDk1dVKxwDBSh7l5TLgVeVyeXn5hxcuXKhy+OvS/zeBL036KJUkp64bWzoGCP4+IAB8DMRLS0uvxWKxcofwyvN3jDr9CvwBDJum5roXuDVA91uVeQDwFxcXv93X1+eQfdLD703zvIWXhLr2fjo1oPxXZxX88rq6uj0tLS0vjo+Pc/OmI+cJ/gvAel5NTPCuc996zG0ElP/qrg8Gg8G9J0+e3LNy5cp5hw8fZseOHVy/fn22SLxv+sJ0eOV92vBuI6ChTN7Pa2ho2N3a2rq/qKhofkdHB/n5+USjUTZs2MCNG6rP21dJSUkkHo83moLVLGQ971r3k9/tNAKCV+4vra+vf7mtra2xsLBwCt6+VLWwdu1aJib+S+fS0tLeWCy2F5DWC96ODZ7hnUZgCr6hoeGFSCTyxrJlyxZYzyd75OrVq6xatYpEIkFxcfEPfX19rwCDxgDJpfR/TuCdGDAFHwgEnuvo6HgrLy9vYSr44eFhqqur6ezsZMWKFQwODg4ArwPdpnDVbVUojireibTNlkJTg1kwGKzv7Ow8kpubu2g2+M2bN3Pu3Dm2bdv2TTgc/h54TX0CeAn41uj9nHl/tgjIMDWspYFAYGs0Gv00JydncSr4kZERtmzZwpkzZwT/dTgc/sjMNhrUNNjtMyOH0seT6jgtYqWOum3B+vXre/r7+wsuXbo0qTbJa3R0lJqaGk6fPo3P5/sqFApJLpUq6q4akeVxXQte6XNHDJDi5Pt8vmdDodDRpqYmgsHgjPA+n49Tp05Z+CNmNBCwNF7AMsB+/0pj0+q4qephphpQt51sVn6/f9fx48cPxeNx1qxZc9s7xsbGqK2tpbW1dTq85nopjTxvva2CFbQ95qyAU9WAcl+58qjf7393YGDgCaVIY6P60K2l0aGuro6WlhYZEW5ubtaIIHjNNvK+xgN5fTrsnIKnGiXsrFOwcePGUCQSeayqqor29nYOHjzIzp076enp4cCBA1y8eNHCK23seGBTJxneiSKmdU9yCkk69VW1HLgieBXnpk2bJo2wa926daOrV68Oh0KhD8zHiNLmjsPPlEIyQN+0hdu3bz924sSJchuBmpqay4lEom1oaOjHs2fPnjcjwV/mrNnG0/5OWu6f4ZPSRqAAeKaysnJfV1dXSUVFxZXu7u5PAO3lCFYSac+Sx5lyPl0mV88lp5CtgTwz8+usCVQFKEjBCt5CS2k8bw+6Ik66OdkAXU9+oJtGpmampiYDBKs00SFoFaqVRi8Mnp5N1QfshqzOdkPWNiQLnhFZdGtNqmHO7vsI3i55226Lu/2djN3v9IMmYwBeX/wvm6rTQFcM4lMAAAAASUVORK5CYII=') 1.5x) 4 28, auto;
+                box-sizing: border-box;
+            }
+
+            .block_gradient {
+                margin: 0 3px;
+                width: 16px;
+                height: 16px;
+                margin-bottom: 6px;
+                border-radius: 3px;
                 cursor: -webkit-image-set(url('data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAADAAAAAwCAYAAABXAvmHAAAAAXNSR0IArs4c6QAABV9JREFUaEPtmG1oVXUcxz8+zpZbLgcuTHDOF6OYsGoTI3IyMG14Hex67waJFERBqdALfZNDDLIoexG9qCjyTTBQat7bwoXMXRTntm4OFnIFr2srkPWc7VG7M77z/1/zsrvOuWdXEe4fDmdnnHPu5/f0/f3Ofx73+Jp3j/OTNeBuRzAbgWwEPHogm0IeHej58WwEPLvQ4wuyEfDoQM+PZyPg2YUeX3AnIqDfmH4I+aY5JjzyZ3wanQ8sNMciQNeCTwD/ADfM3/pfWiuTERDsYmAJ8BDQBDwM/A58B+wGRoExY0xaRmTKgAUGPhd4HAib6+le7gJqgSFjiCLiemXCAAt/P/Ak0GxqYCa4o8B+4BowbtLLlRFzbYDgcwDBPw0cmwVeoD8BT5m0GjH1cFcMkCOs55cC1cDn/wMv0D+BSuAXk0qu0yjdCCRLoy1YeX4r8JlDN8ZMHfwM/G2K2eGjt25LxwArjfL4I8BlQBK5pKys7FBvb+/zDgmkQLuAKPCbiYDk1dVKxwDBSh7l5TLgVeVyeXn5hxcuXKhy+OvS/zeBL036KJUkp64bWzoGCP4+IAB8DMRLS0uvxWKxcofwyvN3jDr9CvwBDJum5roXuDVA91uVeQDwFxcXv93X1+eQfdLD703zvIWXhLr2fjo1oPxXZxX88rq6uj0tLS0vjo+Pc/OmI+cJ/gvAel5NTPCuc996zG0ElP/qrg8Gg8G9J0+e3LNy5cp5hw8fZseOHVy/fn22SLxv+sJ0eOV92vBuI6ChTN7Pa2ho2N3a2rq/qKhofkdHB/n5+USjUTZs2MCNG6rP21dJSUkkHo83moLVLGQ971r3k9/tNAKCV+4vra+vf7mtra2xsLBwCt6+VLWwdu1aJib+S+fS0tLeWCy2F5DWC96ODZ7hnUZgCr6hoeGFSCTyxrJlyxZYzyd75OrVq6xatYpEIkFxcfEPfX19rwCDxgDJpfR/TuCdGDAFHwgEnuvo6HgrLy9vYSr44eFhqqur6ezsZMWKFQwODg4ArwPdpnDVbVUojireibTNlkJTg1kwGKzv7Ow8kpubu2g2+M2bN3Pu3Dm2bdv2TTgc/h54TX0CeAn41uj9nHl/tgjIMDWspYFAYGs0Gv00JydncSr4kZERtmzZwpkzZwT/dTgc/sjMNhrUNNjtMyOH0seT6jgtYqWOum3B+vXre/r7+wsuXbo0qTbJa3R0lJqaGk6fPo3P5/sqFApJLpUq6q4akeVxXQte6XNHDJDi5Pt8vmdDodDRpqYmgsHgjPA+n49Tp05Z+CNmNBCwNF7AMsB+/0pj0+q4qephphpQt51sVn6/f9fx48cPxeNx1qxZc9s7xsbGqK2tpbW1dTq85nopjTxvva2CFbQ95qyAU9WAcl+58qjf7393YGDgCaVIY6P60K2l0aGuro6WlhYZEW5ubtaIIHjNNvK+xgN5fTrsnIKnGiXsrFOwcePGUCQSeayqqor29nYOHjzIzp076enp4cCBA1y8eNHCK23seGBTJxneiSKmdU9yCkk69VW1HLgieBXnpk2bJo2wa926daOrV68Oh0KhD8zHiNLmjsPPlEIyQN+0hdu3bz924sSJchuBmpqay4lEom1oaOjHs2fPnjcjwV/mrNnG0/5OWu6f4ZPSRqAAeKaysnJfV1dXSUVFxZXu7u5PAO3lCFYSac+Sx5lyPl0mV88lp5CtgTwz8+usCVQFKEjBCt5CS2k8bw+6Ik66OdkAXU9+oJtGpmampiYDBKs00SFoFaqVRi8Mnp5N1QfshqzOdkPWNiQLnhFZdGtNqmHO7vsI3i55226Lu/2djN3v9IMmYwBeX/wvm6rTQFcM4lMAAAAASUVORK5CYII=') 1.5x) 4 28, auto;
                 box-sizing: border-box;
             }
