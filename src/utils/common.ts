@@ -430,7 +430,8 @@ export function menu_locate2(e: MouseEvent, el: HTMLDivElement | undefined, el_p
     el.style.top = top + 'px';
 }
 
-export function isInt(num: number) {
+export function isInt(num: number, fix = 2) {
+    num = Number(num.toFixed(fix));
     return (num | 0) === num;
 }
 
@@ -440,7 +441,7 @@ export function format_value(val: number | string, fix = 2) {
     }
 
     if (isInt(val)) {
-        return val;
+        return Number(val.toFixed(0));
     }
 
     return val.toFixed(fix);
