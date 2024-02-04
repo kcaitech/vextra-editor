@@ -297,45 +297,42 @@ const height = computed(() => {
 })
 </script>
 <template>
-    <template>
-        <svg version="1.1" xmlns="http://www.w3.org/2000/svg" xmlns:xlink="http://www.w3.org/1999/xlink"
-            xmlns:xhtml="http://www.w3.org/1999/xhtml" preserveAspectRatio="xMinYMin meet" :viewBox=genViewBox(bounds)
-            :width="width" :height="height" :transform="`translate(${bounds.left},${bounds.top})`" overflow="visible"
-            @mousemove="move" @mousedown="down" @mouseleave="leave">
-            <!-- 表格选区 -->
-            <TableSelectionView :context="props.context" @get-menu="update_menu_posi" :cell="editingCellView"
-                :table="props.shape" :matrix="submatrixArray">
-            </TableSelectionView>
-            <!-- 文本选区 -->
-            <SelectView v-if="isEditingText()" :context="props.context" :shape="editingCellView!"
-                :matrix="editingCellMatrix" :main-notify="Selection.CHANGE_TEXT"
-                :selection="props.context.selection.textSelection"></SelectView>
-            <!-- 列宽缩放 -->
-            <BarsContainer :context="props.context" :matrix="submatrixArray" :shape="props.shape"
-                :c-frame="props.controllerFrame">
-            </BarsContainer>
-            <!-- 表头 -->
-            <TableHeader :context="props.context" :matrix="submatrixArray" :shape="props.shape"
-                :c-frame="props.controllerFrame" @get-menu="update_menu_posi"></TableHeader>
-            <!-- 表格拖拽 -->
-            <PointsContainer :context="props.context" :matrix="submatrixArray" :shape="props.shape"
-                :c-frame="props.controllerFrame">
-            </PointsContainer>
-            <!-- 列宽缩放 -->
-            <g>
-                <line v-if="col_dash" :x1="m_x" :y1="y1" :x2="x2" :y2="y2" stroke="#1878f5" stroke-dasharray="3 3"
-                    stroke-width="3"></line>
-                <line v-if="row_dash" :x1="x1" :y1="m_y" :x2="x2" :y2="y2" stroke="#1878f5" stroke-dasharray="3 3"
-                    stroke-width="3"></line>
-            </g>
-        </svg>
-        <!-- 输入 -->
-        <TextInput v-if="isEditingText()" :context="props.context" :shape="editingCellView!" :matrix="editingCellMatrix"
-            :main-notify="Selection.CHANGE_TEXT" :selection="props.context.selection.textSelection"></TextInput>
-        <!-- 小菜单 -->
-        <TableCellsMenu :cells="[]" v-if="cell_menu" :context="props.context" @close="closeCellMenu"
-            :position="{ x: cell_menu_posi.x, y: cell_menu_posi.y }" :cell-menu="cell_menu_type"></TableCellsMenu>
-    </template>
+    <svg version="1.1" xmlns="http://www.w3.org/2000/svg" xmlns:xlink="http://www.w3.org/1999/xlink"
+        xmlns:xhtml="http://www.w3.org/1999/xhtml" preserveAspectRatio="xMinYMin meet" :viewBox=genViewBox(bounds)
+        :width="width" :height="height" :transform="`translate(${bounds.left},${bounds.top})`" overflow="visible"
+        @mousemove="move" @mousedown="down" @mouseleave="leave">
+        <!-- 表格选区 -->
+        <TableSelectionView :context="props.context" @get-menu="update_menu_posi" :cell="editingCellView"
+            :table="props.shape" :matrix="submatrixArray">
+        </TableSelectionView>
+        <!-- 文本选区 -->
+        <SelectView v-if="isEditingText()" :context="props.context" :shape="editingCellView!" :matrix="editingCellMatrix"
+            :main-notify="Selection.CHANGE_TEXT" :selection="props.context.selection.textSelection"></SelectView>
+        <!-- 列宽缩放 -->
+        <BarsContainer :context="props.context" :matrix="submatrixArray" :shape="props.shape"
+            :c-frame="props.controllerFrame">
+        </BarsContainer>
+        <!-- 表头 -->
+        <TableHeader :context="props.context" :matrix="submatrixArray" :shape="props.shape" :c-frame="props.controllerFrame"
+            @get-menu="update_menu_posi"></TableHeader>
+        <!-- 表格拖拽 -->
+        <PointsContainer :context="props.context" :matrix="submatrixArray" :shape="props.shape"
+            :c-frame="props.controllerFrame">
+        </PointsContainer>
+        <!-- 列宽缩放 -->
+        <g>
+            <line v-if="col_dash" :x1="m_x" :y1="y1" :x2="x2" :y2="y2" stroke="#1878f5" stroke-dasharray="3 3"
+                stroke-width="3"></line>
+            <line v-if="row_dash" :x1="x1" :y1="m_y" :x2="x2" :y2="y2" stroke="#1878f5" stroke-dasharray="3 3"
+                stroke-width="3"></line>
+        </g>
+    </svg>
+    <!-- 输入 -->
+    <TextInput v-if="isEditingText()" :context="props.context" :shape="editingCellView!" :matrix="editingCellMatrix"
+        :main-notify="Selection.CHANGE_TEXT" :selection="props.context.selection.textSelection"></TextInput>
+    <!-- 小菜单 -->
+    <TableCellsMenu :cells="[]" v-if="cell_menu" :context="props.context" @close="closeCellMenu"
+        :position="{ x: cell_menu_posi.x, y: cell_menu_posi.y }" :cell-menu="cell_menu_type"></TableCellsMenu>
 </template>
 <style lang='scss' scoped>
 svg {
