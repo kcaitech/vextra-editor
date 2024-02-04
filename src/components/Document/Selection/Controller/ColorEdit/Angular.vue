@@ -51,6 +51,7 @@ const percent_posi = ref({ x: 0, y: 0 });
 const percent = ref(0);
 const percent_show = ref(false);
 const ellipse_show = ref(false);
+const is_dot_down = ref(false);
 const slope_r = ref(0);
 const get_linear_points = () => {
     dot.value = false;
@@ -103,13 +104,14 @@ const dot_mousedown = (e: MouseEvent, type: DotType) => {
     e.stopPropagation();
     const workspace = props.context.workspace;
     startPosition = workspace.getContentXY(e);
+    is_dot_down.value = true;
     document.addEventListener('mousemove', dot_mousemove);
     document.addEventListener('mouseup', dot_mouseup);
     dot_type = type;
 }
 
 const dot_mousemove = (e: MouseEvent) => {
-    if (e.button !== 0) return;
+    if(!is_dot_down.value) return;
     const locat = props.context.color.locat;
     if (!locat) return;
     const { x, y } = props.context.workspace.getContentXY(e);
@@ -143,7 +145,7 @@ const dot_mousemove = (e: MouseEvent) => {
 }
 
 const dot_mouseup = (e: MouseEvent) => {
-    if (e.button !== 0) return;
+    is_dot_down.value = false;
     if (isDragging) isDragging = false;
     if (gradientEditor) {
         gradientEditor.close();
@@ -216,21 +218,23 @@ const stop_mousedown = (e: MouseEvent, id: string) => {
     e.stopPropagation();
     down_stop(e, id);
 }
-
+const is_stop_down = ref(false);
 const down_stop = (e: MouseEvent, id: string) => {
     const shape = shapes.value[0] as ShapeView;
     const gradient = get_gradient(props.context, shape);
     if (!gradient) return;
+    temporary.value = false;
     const workspace = props.context.workspace;
     props.context.color.select_stop(id);
     down_stop_id.value = id;
     startPosition = workspace.getContentXY(e);
+    is_stop_down.value = true;
     document.addEventListener('mousemove', stop_mousemove);
     document.addEventListener('mouseup', stop_mouseup);
 }
 
 const stop_mousemove = (e: MouseEvent) => {
-    if (e.button !== 0) return;
+    if(!is_stop_down.value) return;
     const locat = props.context.color.locat;
     if (!locat) return;
     const { x, y } = props.context.workspace.getContentXY(e);
@@ -262,7 +266,7 @@ const get_percent_posi = (e: MouseEvent) => {
 }
 
 const stop_mouseup = (e: MouseEvent) => {
-    if (e.button !== 0) return;
+    is_stop_down.value = false;
     if (isDragging) isDragging = false;
     if (gradientEditor) {
         gradientEditor.close();

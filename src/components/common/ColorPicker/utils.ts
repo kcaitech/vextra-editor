@@ -672,6 +672,11 @@ function get_linear_gradient(gradient: Gradient) {
   const { from, to, stops } = gradient;
   const rotate = getHorizontalAngle({ x: from.x * 10, y: from.y * 10 }, { x: to.x * 10, y: to.y * 10 });
   const colors = [];
+  if(stops.length === 1) {
+    return {
+      'background': toRGBA(stops[0].color)
+    }
+  }
   for (let i = 0; i < stops.length; i++) {
     const stop = stops[i];
     const c = toRGBA(stop.color);
@@ -684,8 +689,13 @@ function get_linear_gradient(gradient: Gradient) {
 }
 
 function get_radial_gradient(gradient: Gradient) {
-  const { from, to, stops } = gradient;
+  const { stops } = gradient;
   const colors = [];
+  if(stops.length === 1) {
+    return {
+      'background': toRGBA(stops[0].color)
+    }
+  }
   for (let i = 0; i < stops.length; i++) {
     const stop = stops[i];
     const c = toRGBA(stop.color);

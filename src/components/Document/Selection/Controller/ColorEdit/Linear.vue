@@ -45,6 +45,7 @@ const enter_stop = ref(false);
 const percent_posi = ref({ x: 0, y: 0 });
 const percent = ref(0);
 const percent_show = ref(false);
+const is_dot_down = ref(false);
 const get_linear_points = () => {
     dot.value = false;
     stops.value = [];
@@ -80,10 +81,11 @@ const dot_mousedown = (e: MouseEvent, type: 'from' | 'to') => {
     document.addEventListener('mousemove', dot_mousemove);
     document.addEventListener('mouseup', dot_mouseup);
     dot_type = type;
+    is_dot_down.value = true;
 }
 
 const dot_mousemove = (e: MouseEvent) => {
-    if (e.button !== 0) return;
+    if(!is_dot_down.value) return;
     const locat = props.context.color.locat;
     if (!locat) return;
     const { x, y } = props.context.workspace.getContentXY(e);
@@ -117,7 +119,7 @@ const dot_mousemove = (e: MouseEvent) => {
 }
 
 const dot_mouseup = (e: MouseEvent) => {
-    if (e.button !== 0) return;
+    is_dot_down.value = false;
     if (isDragging) isDragging = false;
     if (gradientEditor) {
         gradientEditor.close();
@@ -129,6 +131,7 @@ const dot_mouseup = (e: MouseEvent) => {
 
 const rect_enter = (e: MouseEvent) => {
     if (e.buttons !== 0) return;
+    e.stopPropagation();
     const posi = get_stop_position(e);
     const shape = shapes.value[0] as ShapeView;
     temporary_stop.value = get_temporary_stop(posi, dot1.value, dot2.value, shape, props.context);
@@ -138,6 +141,7 @@ const rect_enter = (e: MouseEvent) => {
 }
 const rect_leave = (e: MouseEvent) => {
     if (e.buttons !== 0) return;
+    e.stopPropagation();
     if (!enter_stop.value) {
         temporary.value = false;
     }
@@ -148,6 +152,7 @@ const rect_mousemove = (e: MouseEvent) => {
     if (e.buttons !== 0) {
         return;
     }
+    e.stopPropagation();
     const posi = get_stop_position(e);
     const shape = shapes.value[0] as ShapeView;
     const r_p = props.context.workspace.getContentXY(e);
@@ -158,6 +163,7 @@ const rect_mousemove = (e: MouseEvent) => {
 }
 const stop_enter = (e: MouseEvent, index: number) => {
     if (e.buttons !== 0) return;
+    e.stopPropagation();
     const shape = shapes.value[0] as ShapeView;
     const gradient = get_gradient(props.context, shape);
     if (!gradient) return;
@@ -168,6 +174,7 @@ const stop_enter = (e: MouseEvent, index: number) => {
 }
 const updata_percent = (e: MouseEvent) => {
     if (e.buttons !== 0) return;
+    e.stopPropagation();
     get_percent_posi(e);
 }
 const down_stop_id = ref<string>('');
@@ -209,15 +216,17 @@ const stop_mousedown = (e: MouseEvent, id: string) => {
     e.stopPropagation();
     down_stop(e, id);
 }
-
+const is_stop_down = ref(false);
 const down_stop = (e: MouseEvent, id: string) => {
     const shape = shapes.value[0] as ShapeView;
     const gradient = get_gradient(props.context, shape);
     if (!gradient) return;
+    temporary.value = false;
     const workspace = props.context.workspace;
     props.context.color.select_stop(id);
     down_stop_id.value = id;
     startPosition = workspace.getContentXY(e);
+    is_stop_down.value = true;
     document.addEventListener('mousemove', stop_mousemove);
     document.addEventListener('mouseup', stop_mouseup);
 }
@@ -229,7 +238,7 @@ const get_percent_posi = (e: MouseEvent) => {
 }
 
 const stop_mousemove = (e: MouseEvent) => {
-    if (e.button !== 0) return;
+    if(!is_stop_down.value) return;
     const locat = props.context.color.locat;
     if (!locat) return;
     const { x, y } = props.context.workspace.getContentXY(e);
@@ -242,6 +251,7 @@ const stop_mousemove = (e: MouseEvent) => {
         const gradient = get_gradient(props.context, shape);
         if (!gradient) return;
         const posi = get_stop_position(e);
+        get_percent_posi(e);
         percent.value = +(posi * 100).toFixed(0);
         gradientEditor.execute_stop_position(posi, down_stop_id.value);
     } else {
@@ -254,7 +264,7 @@ const stop_mousemove = (e: MouseEvent) => {
 }
 
 const stop_mouseup = (e: MouseEvent) => {
-    if (e.button !== 0) return;
+    is_stop_down.value = false;
     if (isDragging) isDragging = false;
     if (gradientEditor) {
         gradientEditor.close();
@@ -269,7 +279,15 @@ const stop_content_enter = (e: MouseEvent) => {
     get_percent_posi(e);
     percent_show.value = true;
 }
+const stop_content_leave = (e: MouseEvent) => {
+    if (e.buttons !== 0) return;
+    percent_show.value = false;
+}
 
+const stop_leave = (e: MouseEvent) => {
+    if (e.buttons !== 0) return;
+    enter_stop.value = false;
+}
 const watcher = () => {
     matrix.reset(props.matrix);
     get_linear_points();
@@ -334,8 +352,8 @@ onUnmounted(() => {
             <TemporaryStop v-if="temporary" :stop="temporary_stop!" :rotate="rotate - 90"></TemporaryStop>
             <rect width="20" :height="line_length" ref="stop_container"
                 :style="{ transform: `translate(${dot1.x}px, ${dot1.y}px) rotate(${rotate - 90}deg)` }" fill="transparent"
-                @mousemove.stop="(e) => rect_mousemove(e)" @mousedown.stop="(e) => add_stop(e)"
-                @mouseenter.stop="rect_enter" @mouseleave.stop="rect_leave">
+                @mousemove="(e) => rect_mousemove(e)" @mousedown.stop="(e) => add_stop(e)"
+                @mouseenter="rect_enter" @mouseleave="rect_leave">
             </rect>
             <line :x1="dot1.x" :y1="dot1.y" :x2="dot2.x" :y2="dot2.y" stroke="black" stroke-width="3" />
             <line :x1="dot1.x" :y1="dot1.y" :x2="dot2.x" :y2="dot2.y" stroke="white" stroke-width="2" />
@@ -344,7 +362,7 @@ onUnmounted(() => {
             <circle r="4" fill="white" stroke="#595959" stroke-width="1" :cx="dot2.x" :cy="dot2.y"
                 @mousedown.stop="(e) => dot_mousedown(e, dot2.type)"></circle>
             <g v-for="(stop, index) in stops" :key="index" @mouseenter="stop_content_enter"
-                @mouseleave="percent_show = false"
+                @mouseleave="stop_content_leave"
                 :style="{ transform: `translate(${stop.x + 1.5}px, ${stop.y}px) rotate(${rotate - 90}deg) translate(0px, -11px)` }">
                 <g
                     transform="matrix(0.70710688829422,0.7071067094802856,-0.7071066498756409,0.70710688829422,3.2218211561925614,-7.778166386438556)">
@@ -362,8 +380,8 @@ onUnmounted(() => {
                 <g
                     transform="matrix(0.7071068286895752,0.7071068286895752,-0.7071068286895752,0.7071068286895752,5.272466477774856,-6.870199048298332)">
                     <ellipse cx="16.58615016937256" cy="8.586184978485107" rx="5.656853675842285" ry="5.656853675842285"
-                        :fill="to_rgba(stop.color)" @mouseenter.stop="(e) => stop_enter(e, index)"
-                        @mouseleave.stop="enter_stop = false" @mousedown.stop="(e) => stop_mousedown(e, stop.id!)"
+                        :fill="to_rgba(stop.color)" @mouseenter="(e) => stop_enter(e, index)"
+                        @mouseleave="stop_leave" @mousedown.stop="(e) => stop_mousedown(e, stop.id!)"
                         @mousemove="updata_percent" />
                 </g>
             </g>

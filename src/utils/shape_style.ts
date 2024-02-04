@@ -6,7 +6,7 @@ import {
     ShadowOffsetYAction, ExportFormat, ExportFormatReplaceAction, ExportFormatAddAction, ExportFileFormat,
     ExportFormatNameingScheme, ExportVisibleScaleType, ExportFormatDeleteAction, ExportFormatScaleAction,
     ExportFormatNameAction, ExportFormatPerfixAction, ExportFormatFileFormatAction, ShapeType, ShapeView, adapt2Shape,
-    BatchAction, BatchAction2, BatchAction3, BatchAction4, Stop, BatchAction5, GradientType, FillType, GroupShapeView
+    BatchAction, BatchAction2, BatchAction3, BatchAction4, Stop, BatchAction5, GradientType, FillType, GroupShapeView, cloneGradient, Gradient
 } from "@kcdesign/data";
 import { v4 } from "uuid";
 import { flattenShapes } from "./cutout";
@@ -32,11 +32,18 @@ export function get_fills(shapes: ShapeView[] | Shape[]): FillItem[] | 'mixed' {
     const shape = shapes[0];
     const stylefills = shape?.getFills() || [];
     const compare_str: string[] = [];
+    const has_g_str: string[] = [];
     for (let i = 0, len = stylefills.length; i < len; i++) {
         const fill = stylefills[i];
         const f = { id: i, fill };
         fills.push(f);
-        const str = [fill.isEnabled, fill.color.red, fill.color.green, fill.color.blue, fill.color.blue].join('-');
+        const str = [fill.isEnabled, fill.color.red, fill.color.green, fill.color.blue, fill.color.blue, fill.fillType].join('-');
+        if(fill.gradient) {
+            const g_str = get_gradient_str(fill.gradient);
+            has_g_str.push(g_str);
+        }else {
+            has_g_str.push('undefined');
+        }
         compare_str.push(str);
     }
     for (let i = 1; i < shapes.length; i++) {
@@ -48,12 +55,28 @@ export function get_fills(shapes: ShapeView[] | Shape[]): FillItem[] | 'mixed' {
         const s_fs = stylefills;
         for (let j = 0; j < len; j++) {
             const fill = s_fs[j];
-            const str = [fill.isEnabled, fill.color.red, fill.color.green, fill.color.blue, fill.color.blue].join('-');
+            const str = [fill.isEnabled, fill.color.red, fill.color.green, fill.color.blue, fill.color.blue, fill.fillType].join('-');
             if (str !== compare_str[j]) return 'mixed';
+            if(fill.fillType === FillType.SolidColor) continue;
+            if(fill.gradient) {
+                if (has_g_str[j] !== get_gradient_str(fill.gradient)) return 'mixed';
+            }else {
+                if (has_g_str[j] !== 'undefined') return 'mixed';
+            }
         }
     }
     return fills;
 }
+
+function get_gradient_str (g: Gradient) {
+    const str = [g.elipseLength, g.gradientType, g.gradientOpacity, g.from.x, g.from.y, g.to.x, g.to.y];
+    for (let i = 0; i < g.stops.length; i++) {
+        const stop = g.stops[i];
+        str.push(stop.color.red, stop.color.green, stop.color.blue, stop.color.alpha, stop.position);
+    }
+    return str.join('-');
+}
+
 export function get_actions_add_fill(shapes: ShapeView[], fill: Fill) {
     const actions: BatchAction2[] = [];
     for (let i = 0; i < shapes.length; i++) {
@@ -103,6 +126,10 @@ export function get_actions_fill_unify(shapes: ShapeView[]) {
             const fill = fills[i];
             const { isEnabled, fillType, color, contextSettings } = fill;
             const new_fill = new Fill(v4(), isEnabled, fillType, color);
+            if (fill.gradient) {
+                const _g = cloneGradient(fill.gradient);
+                new_fill.gradient = _g;
+            }
             new_fill.contextSettings = contextSettings;
             new_fills.push(new_fill);
         }
@@ -141,6 +168,7 @@ export function get_borders(shapes: (ShapeView[] | Shape[])): BorderItem[] | 'mi
     const shape = shapes[0];
     const styleborders = shape.getBorders() || [];
     const compare_str: string[] = [];
+    const has_g_str: string[] = [];
     for (let i = 0, len = styleborders.length; i < len; i++) {
         const border = styleborders[i];
         const b = { id: i, border };
@@ -154,8 +182,15 @@ export function get_borders(shapes: (ShapeView[] | Shape[])): BorderItem[] | 'mi
             border.borderStyle.gap,
             border.borderStyle.length,
             border.thickness,
-            border.position
+            border.position,
+            border.fillType
         ].join('-');
+        if(border.gradient) {
+            const g_str = get_gradient_str(border.gradient);
+            has_g_str.push(g_str);
+        }else {
+            has_g_str.push('undefined');
+        }
         compare_str.push(str);
     }
     for (let i = 1; i < shapes.length; i++) {
@@ -176,9 +211,16 @@ export function get_borders(shapes: (ShapeView[] | Shape[])): BorderItem[] | 'mi
                 border.borderStyle.gap,
                 border.borderStyle.length,
                 border.thickness,
-                border.position
+                border.position,
+                border.fillType
             ].join('-');
             if (str !== compare_str[j]) return 'mixed';
+            if(border.fillType === FillType.SolidColor) continue;
+            if(border.gradient) {
+                if (has_g_str[j] !== get_gradient_str(border.gradient)) return 'mixed';
+            }else {
+                if (has_g_str[j] !== 'undefined') return 'mixed';
+            }
         }
     }
     return borders;
@@ -216,6 +258,10 @@ export function get_actions_border_unify(shapes: ShapeView[]) {
             const border = borders[i];
             const { isEnabled, fillType, color, position, thickness, borderStyle } = border;
             const new_border = new Border(v4(), isEnabled, fillType, color, position, thickness, borderStyle);
+            if (border.gradient) {
+                const _g = cloneGradient(border.gradient);
+                new_border.gradient = _g;
+            }
             new_borders.push(new_border);
         }
         actions.push({ target: adapt2Shape(shapes[i]), value: new_borders });

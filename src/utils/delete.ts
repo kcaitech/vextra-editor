@@ -4,8 +4,6 @@ import { Shape, ShapeView, TableCellType, TableShape, adapt2Shape } from "@kcdes
 
 export function deleteUnits(context: Context) {
     if(context.color.selected_stop !== undefined) {
-        console.log(context.color.selected_stop);
-        
         context.color.notify(ColorCtx.STOP_DELETE);
         return
     }

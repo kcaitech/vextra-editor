@@ -23,7 +23,6 @@ import { TableSelection } from '@/context/tableselection';
 import { Selection } from "@/context/selection";
 import { flattenShapes } from '@/utils/cutout';
 import { get_table_range, is_editing, hidden_selection } from '@/utils/content';
-import { TypicaStop } from '@/components/common/ColorPicker/typical';
 
 interface FillItem {
     id: number,
@@ -317,6 +316,7 @@ function onAlphaChange(idx: number, fill: Fill) {
     } else {
         alpha_message(idx, fill);
     }
+    alphaFill.value[idx].blur();
 }
 const alpha_message = (idx: number, fill: Fill) => {
     if (!alphaFill.value) return;
@@ -527,16 +527,6 @@ function toggle_fill_type(idx: number, fillType: FillType) {
     }
 }
 
-function modif_gradient_stop(idx: number, stops: TypicaStop[]) {
-    const _idx = fills.length - idx - 1;
-    const selected = props.context.selection.selectedShapes;
-    const shapes = flattenShapes(selected).filter(s => s.type !== ShapeType.Group || (s as GroupShapeView).data.isBoolOpShape);
-    const page = props.context.selection.selectedPage!;
-    const editor = props.context.editor4Page(page);
-    const actions = get_aciton_gradient_stop(shapes, _idx, stops, 'fills');
-    editor.modifGradientStop(actions);
-}
-
 function update_by_shapes() {
     watchShapes();
     updateData();
@@ -645,8 +635,7 @@ onUnmounted(() => {
                         @gradient-add-stop="(p, c, id) => gradient_add_stop(idx, p, c, id)"
                         @gradient-type="(type) => togger_gradient_type(idx, type)"
                         @gradient-color-change="(c, index) => gradient_stop_color_change(idx, c, index)"
-                        @gradient-stop-delete="(index) => gradient_stop_delete(idx, index)"
-                        @modif_gradient_stop="(stops) => modif_gradient_stop(idx, stops)">
+                        @gradient-stop-delete="(index) => gradient_stop_delete(idx, index)">
                     </ColorPicker>
                     <input ref="colorFill" class="colorFill" v-if="f.fill.fillType !== FillType.Gradient"
                         :value="toHex(f.fill.color.red, f.fill.color.green, f.fill.color.blue)" :spellcheck="false"

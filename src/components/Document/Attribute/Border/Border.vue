@@ -29,7 +29,6 @@ import { TableSelection } from '@/context/tableselection';
 import { Selection } from "@/context/selection";
 import { flattenShapes } from '@/utils/cutout';
 import { get_table_range, is_editing, hidden_selection } from '@/utils/content';
-import { TypicaStop } from '@/components/common/ColorPicker/typical';
 
 interface BorderItem {
     id: number
@@ -259,16 +258,30 @@ function onColorChange(e: Event, idx: number) {
 function onAlphaChange(b: Border, idx: number) {
     props.context.workspace.notify(WorkSpace.CTRL_DISAPPEAR);
     let alpha: any = alphaValue.value;
-    if (alphaBorder.value) {
-        if (alpha.slice(-1) === '%') {
-            alpha = Number(alpha?.slice(0, -1))
-            if (isNaN(alpha) || alpha < 0) {
-                alpha_message(idx, b);
-            }
+    if (!alphaBorder.value) return;
+    if (alpha.slice(-1) === '%') {
+        alpha = Number(alpha?.slice(0, -1))
+        if (isNaN(alpha) || alpha < 0) {
+            alpha_message(idx, b);
+        }
+        if (alpha > 100) {
+            alpha = 100;
+        }
+        alpha = alpha.toFixed(2) / 100
+        const border = borders[idx].border;
+        const { red, green, blue } = border.color
+        const color = new Color(alpha, red, green, blue);
+        if (b.fillType === FillType.SolidColor) {
+            setColor(idx, color);
+        } else if (b.gradient && b.fillType === FillType.Gradient) {
+            set_gradient_opacity(idx, alpha);
+        }
+    } else {
+        if (!isNaN(Number(alpha)) && alpha >= 0) {
             if (alpha > 100) {
-                alpha = 100;
+                alpha = 100
             }
-            alpha = alpha.toFixed(2) / 100
+            alpha = Number((Number(alpha)).toFixed(2)) / 100;
             const border = borders[idx].border;
             const { red, green, blue } = border.color
             const color = new Color(alpha, red, green, blue);
@@ -278,24 +291,10 @@ function onAlphaChange(b: Border, idx: number) {
                 set_gradient_opacity(idx, alpha);
             }
         } else {
-            if (!isNaN(Number(alpha)) && alpha >= 0) {
-                if (alpha > 100) {
-                    alpha = 100
-                }
-                alpha = Number((Number(alpha)).toFixed(2)) / 100;
-                const border = borders[idx].border;
-                const { red, green, blue } = border.color
-                const color = new Color(alpha, red, green, blue);
-                if (b.fillType === FillType.SolidColor) {
-                    setColor(idx, color);
-                } else if (b.gradient && b.fillType === FillType.Gradient) {
-                    set_gradient_opacity(idx, alpha);
-                }
-            } else {
-                alpha_message(idx, b);
-            }
+            alpha_message(idx, b);
         }
     }
+    alphaBorder.value[idx].blur();
     hidden_selection(props.context);
 }
 
@@ -535,16 +534,6 @@ function toggle_fill_type(idx: number, fillType: FillType) {
     }
 }
 
-function modif_gradient_stop(idx: number, stops: TypicaStop[]) {
-    const _idx = borders.length - idx - 1;
-    const selected = props.context.selection.selectedShapes;
-    const shapes = flattenShapes(selected).filter(s => s.type !== ShapeType.Group || (s as GroupShapeView).data.isBoolOpShape);
-    const page = props.context.selection.selectedPage!;
-    const editor = props.context.editor4Page(page);
-    const actions = get_aciton_gradient_stop(shapes, _idx, stops, 'borders');
-    editor.modifGradientStop(actions);
-}
-
 function layout() {
     show_apex.value = false;
     if (props.shapes.length === 1) {
@@ -661,8 +650,7 @@ onUnmounted(() => {
                         @gradient-add-stop="(p, c, id) => gradient_add_stop(idx, p, c, id)"
                         @gradient-type="(type) => togger_gradient_type(idx, type)"
                         @gradient-color-change="(c, index) => gradient_stop_color_change(idx, c, index)"
-                        @gradient-stop-delete="(index) => gradient_stop_delete(idx, index)"
-                        @modif_gradient_stop="(stops) => modif_gradient_stop(idx, stops)" />
+                        @gradient-stop-delete="(index) => gradient_stop_delete(idx, index)" />
                     <input ref="colorBorder" class="colorBorder" :spellcheck="false"
                         v-if="b.border.fillType !== FillType.Gradient" :value="(toHex(b.border.color)).slice(1)"
                         @change="e => onColorChange(e, idx)" @focus="selectColor(idx)" @input="colorInput(idx)"
