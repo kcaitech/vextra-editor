@@ -25,6 +25,7 @@ import Apex from './Apex.vue';
 import { TableSelection } from '@/context/tableselection';
 import { Selection } from "@/context/selection";
 import { flattenShapes } from '@/utils/cutout';
+import { hidden_selection } from '@/utils/content';
 
 interface BorderItem {
     id: number
@@ -227,7 +228,7 @@ function addBorder() {
             }
         }
     }
-    props.context.workspace.notify(WorkSpace.CTRL_APPEAR);
+    hidden_selection(props.context);
 }
 
 function first() {
@@ -284,7 +285,7 @@ function deleteBorder(idx: number) {
             editor.shapesDeleteBorder(actions);
         }
     }
-    props.context.workspace.notify(WorkSpace.CTRL_APPEAR);
+    hidden_selection(props.context);
 }
 
 function toggleVisible(idx: number) {
@@ -339,7 +340,7 @@ function toggleVisible(idx: number) {
             editor.setShapesBorderEnabled(actions);
         }
     }
-    props.context.workspace.notify(WorkSpace.CTRL_APPEAR);
+    hidden_selection(props.context);
 }
 const colorValue = ref('');
 const alphaValue = ref('');
@@ -424,7 +425,7 @@ function onColorChange(e: Event, idx: number) {
             editor.setShapesBorderColor(actions);
         }
     }
-    props.context.workspace.notify(WorkSpace.CTRL_APPEAR);
+    hidden_selection(props.context);
 }
 
 function onAlphaChange(e: Event, idx: number) {
@@ -568,7 +569,7 @@ function onAlphaChange(e: Event, idx: number) {
             }
         }
     }
-    props.context.workspace.notify(WorkSpace.CTRL_APPEAR);
+    hidden_selection(props.context);
 }
 
 function getColorFromPicker(color: Color, idx: number) {
@@ -620,6 +621,7 @@ function getColorFromPicker(color: Color, idx: number) {
             editor.setShapesBorderColor(actions);
         }
     }
+    hidden_selection(props.context);
 }
 
 const selectColor = (i: number) => {

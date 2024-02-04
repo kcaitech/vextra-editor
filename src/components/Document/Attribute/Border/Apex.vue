@@ -5,8 +5,8 @@ import BorderApexStyleSelectedItem from './BorderApexStyleSelectedItem.vue';
 import { MarkerType, ShapeView } from '@kcdesign/data';
 import { ref, onMounted, watch, onUnmounted } from 'vue';
 import { genOptions } from '@/utils/common';
-import { WorkSpace } from '@/context/workspace';
 import { Context } from '@/context';
+import { hidden_selection } from '@/utils/content';
 interface Props {
     context: Context
     shapes: ShapeView[]
@@ -34,7 +34,6 @@ const borderEndStyleOptionsSource: SelectSource[] = genOptions([
     [MarkerType.Round, `end-${MarkerType.Round}`]
 ]);
 function borderApexStyleSelect(selected: SelectItem) {
-    props.context.workspace.notify(WorkSpace.CTRL_DISAPPEAR);
     if (selected.content.startsWith('end')) {
         borderEndStyle.value = selected;
         if (props.shapes.length === 1) {
@@ -48,7 +47,7 @@ function borderApexStyleSelect(selected: SelectItem) {
         }
         borderFrontStyle.value = selected;
     }
-    props.context.workspace.notify(WorkSpace.CTRL_APPEAR);
+    hidden_selection(props.context);
 }
 function init_v() {
     const len = props.shapes.length;

@@ -20,12 +20,31 @@ interface Props {
 const props = defineProps<Props>();
 const { isDblClick, isDrag } = useController(props.context);
 const bounds = reactive({ left: 0, top: 0, right: 0, bottom: 0 });
-const visible = ref<boolean>(true);
 let viewBox = '';
 const line_path = ref("");
 const editing = ref<boolean>(false);
 const matrix = new Matrix();
 const submatrix = reactive(new Matrix());
+const selection_hidden = ref<boolean>(false);
+let hidden_holder: any = null;
+function modify_selection_hidden() {
+    if (hidden_holder) {
+        clearTimeout(hidden_holder);
+    }
+
+    hidden_holder = setTimeout(() => {
+        selection_hidden.value = false;
+        clearTimeout(hidden_holder);
+        hidden_holder = null;
+    }, 1000);
+
+    selection_hidden.value = true;
+}
+function reset_hidden() {
+    selection_hidden.value = false;
+    clearTimeout(hidden_holder);
+    hidden_holder = null;
+}
 // #region 绘制控件
 const axle = computed<ClientXY>(() => {
     const [lt, rt, rb, lb] = props.controllerFrame;
@@ -69,10 +88,10 @@ function updateControllerView() {
 }
 function workspace_watcher(t?: number) {
     if (t === WorkSpace.TRANSLATING) {
-        visible.value = !props.context.workspace.isTranslating;
+        selection_hidden.value = props.context.workspace.isTranslating;
     }
     else if (t === WorkSpace.PATH_EDIT_MODE) {
-        visible.value = !props.context.workspace.is_path_edit_mode;
+        selection_hidden.value = props.context.workspace.is_path_edit_mode;
     }
 }
 function mousedown(e: MouseEvent) {
@@ -82,18 +101,24 @@ function mousedown(e: MouseEvent) {
     document.addEventListener('mouseup', mouseup);
 }
 function mousemove(e: MouseEvent) {
-    if (isDrag()) visible.value = false;
+    if (isDrag()) selection_hidden.value = true;
 }
 function check_status() {
-    visible.value = !props.context.workspace.is_path_edit_mode;
+    selection_hidden.value = props.context.workspace.is_path_edit_mode;
 }
 function mouseup(e: MouseEvent) {
     document.removeEventListener('mousemove', mousemove);
     document.removeEventListener('mouseup', mouseup);
 }
 function selection_watcher(t: number) {
-    if (t === Selection.CHANGE_SHAPE) editing.value = false;
+    if (t === Selection.CHANGE_SHAPE) {
+        editing.value = false;
+        reset_hidden();
+    } else if (t === Selection.SELECTION_HIDDEN) {
+        modify_selection_hidden();
+    }
 }
+
 function windowBlur() {
     document.removeEventListener('mousemove', mousemove);
     document.removeEventListener('mouseup', mouseup);
@@ -109,6 +134,7 @@ onUnmounted(() => {
     props.context.selection.unwatch(selection_watcher);
     props.context.workspace.unwatch(workspace_watcher);
     window.removeEventListener('blur', windowBlur);
+    reset_hidden();
 })
 watchEffect(updateControllerView)
 </script>
@@ -117,7 +143,7 @@ watchEffect(updateControllerView)
         xmlns:xhtml="http://www.w3.org/1999/xhtml" preserveAspectRatio="xMinYMin meet" :viewBox="viewBox" :width="width"
         :height="height"
         :style="{ transform: `translate(${bounds.left}px,${bounds.top}px)`, left: 0, top: 0, position: 'absolute' }"
-        :class="{ 'un-visible': !visible }" @mousedown="mousedown" overflow="visible">
+        :class="{ hidden: selection_hidden }" @mousedown="mousedown" overflow="visible">
         <path :d="line_path" class="main-path" :stroke="theme"></path>
         <PointContainerForStraightLine :context="props.context" :matrix="submatrix.toArray()" :shape="props.shape"
             :rotation="props.rotate" :axle="axle" :c-frame="props.controllerFrame" :theme="theme">
@@ -125,7 +151,7 @@ watchEffect(updateControllerView)
     </svg>
 </template>
 <style lang='scss' scoped>
-.un-visible {
+.hidden {
     opacity: 0;
 }
 
