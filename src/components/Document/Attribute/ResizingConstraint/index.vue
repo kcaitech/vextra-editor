@@ -21,8 +21,13 @@ const horizontalPositionSelected = ref<SelectItem>({ value: 'left', content: t('
 const horizontalPositionOptions: SelectSource[] = genOptions([
     ['left', t('attr.fixed_left')],
     ['right', t('attr.fixed_right')],
-    ['hcenter', t('attr.center')],
     ['lrfixed', t('attr.fixed_left_right')],
+    ['hcenter', t('attr.center')],
+    ['hfollow', t('attr.follow_container')]
+]);
+const horizontalSizeSelected = ref<SelectItem>({ value: 'fixedWidth', content: t('attr.fixedWidth') });
+const horizontalSizeOptions: SelectSource[] = genOptions([
+    ['fixedWidth', t('attr.fixedWidth')],
     ['hfollow', t('attr.follow_container')]
 ]);
 
@@ -30,8 +35,13 @@ const VerticalPositionSelected = ref<SelectItem>({ value: 'top', content: t('att
 const VerticalPositionOptions: SelectSource[] = genOptions([
     ['top', t('attr.fixed_top')],
     ['bottom', t('attr.fixed_bottom')],
-    ['vcenter', t('attr.center')],
     ['tbfixed', t('attr.fixed_top_bottom')],
+    ['vcenter', t('attr.center')],
+    ['vfollow', t('attr.follow_container')]
+]);
+const VerticalSizeSelected = ref<SelectItem>({ value: 'fixedHeight', content: t('attr.fixedHeight') });
+const VerticalSizeOptions: SelectSource[] = genOptions([
+    ['fixedHeight', t('attr.fixedHeight')],
     ['vfollow', t('attr.follow_container')]
 ]);
 
@@ -65,6 +75,21 @@ function handleHorizontalPositionSelect(item: SelectItem) {
     }
 }
 
+function handleHorizontalSizeSelect(item: SelectItem) {
+    const e = createEditor();
+    const selected = props.context.selection.selectedShapes.map(s => adapt2Shape(s));
+    switch (item.value) {
+        case 'fixedWidth':
+            e.fixedToWidth(selected);
+            break;
+        case 'hfollow':
+            e.flexWidth(selected);
+            break;
+        default:
+            break;
+    }
+}
+
 function handleVerticalPositionSelect(item: SelectItem) {
     const e = createEditor();
     const selected = props.context.selection.selectedShapes.map(s => adapt2Shape(s));
@@ -89,20 +114,36 @@ function handleVerticalPositionSelect(item: SelectItem) {
     }
 }
 
+function handleVerticalSizeSelect(item: SelectItem) {
+    const e = createEditor();
+    const selected = props.context.selection.selectedShapes.map(s => adapt2Shape(s));
+    switch (item.value) {
+        case 'fixedHeight':
+            e.fixedToHeight(selected);
+            break;
+        case 'vfollow':
+            e.flexHeight(selected);
+            break;
+        default:
+            break;
+    }
+}
 
 const disabled = ref(false)
 const selected = ref()
 function _update() {
     modifyhorizontalPositionStatus();
     modifyverticalPositionStatus();
+    modifyWidthStatus();
+    modifyHeightStatus();
     disabled.value = props.context.selection.selectedShapes.some(item => item.isVirtualShape);
     selected.value = props.context.selection.selectedShapes.map(s => adapt2Shape(s));
 }
 
 function modifyhorizontalPositionStatus() {
-    left.value = false
-    right.value = false
-    hcenter.value = false
+    // left.value = false
+    // right.value = false
+    // hcenter.value = false
     const shapes = props.context.selection.selectedShapes;
     if (!shapes.length) {
         return;
@@ -124,17 +165,17 @@ function modifyhorizontalPositionStatus() {
 
     if (ResizingConstraints2.isFixedLeftAndRight(rc)) {
         horizontalPositionSelected.value = { value: 'lrfixed', content: t('attr.fixed_left_right') };
-        left.value = true
-        right.value = true
+        // left.value = true
+        // right.value = true
     } else if (ResizingConstraints2.isFixedToLeft(rc)) {
         horizontalPositionSelected.value = { value: 'left', content: t('attr.fixed_left') };
-        left.value = true
+        // left.value = true
     } else if (ResizingConstraints2.isFixedToRight(rc)) {
         horizontalPositionSelected.value = { value: 'right', content: t('attr.fixed_right') };
-        right.value = true
+        // right.value = true
     } else if (ResizingConstraints2.isHorizontalJustifyCenter(rc)) {
         horizontalPositionSelected.value = { value: 'hcenter', content: t('attr.center') };
-        hcenter.value = true
+        // hcenter.value = true
     } else if (ResizingConstraints2.isFlexWidth(rc)) {
         horizontalPositionSelected.value = { value: 'hfollow', content: t('attr.follow_container') }
     }
@@ -144,10 +185,43 @@ function modifyhorizontalPositionStatus() {
     }
 }
 
+function modifyWidthStatus() {
+    isCheckedwidth.value=false
+    const shapes = props.context.selection.selectedShapes;
+    if (!shapes.length) {
+        return;
+    }
+
+    let commonRC = getGroupVal(shapes[0].resizingConstraint || 0);
+    for (let i = 1, l = shapes.length; i < l; i++) {
+        let __rc = getGroupVal(shapes[i].resizingConstraint || 0);
+        if (__rc !== commonRC) {
+            horizontalSizeSelected.value = { value: 'mixed', content: mixed };
+            return;
+        }
+    }
+
+    let rc = shapes[0].resizingConstraint;
+    if (rc === undefined) {
+        rc = ResizingConstraints2.Mask;
+    }
+
+    if (ResizingConstraints2.isFixedWidth(rc)) {
+        isCheckedwidth.value=true
+        horizontalSizeSelected.value = { value: 'fixedWidth', content: t('attr.fixedWidth') };
+    } else {
+        horizontalSizeSelected.value = { value: 'hfollow', content: t('attr.follow_container') };
+    }
+
+    function getGroupVal(val: number) {
+        return (ResizingConstraints2.Mask ^ val & ResizingConstraints2.Width);
+    }
+}
+
 function modifyverticalPositionStatus() {
-    top.value = false
-    bottom.value = false
-    vcenter.value = false
+    // top.value = false
+    // bottom.value = false
+    // vcenter.value = false
     const shapes = props.context.selection.selectedShapes;
     if (!shapes.length) {
         return;
@@ -169,19 +243,19 @@ function modifyverticalPositionStatus() {
 
     if (ResizingConstraints2.isFixedTopAndBottom(rc)) {
         VerticalPositionSelected.value = { value: 'tbfixed', content: t('attr.fixed_top_bottom') };
-        top.value = true
-        bottom.value = true
+        // top.value = true
+        // bottom.value = true
     } else if (ResizingConstraints2.isFixedToTop(rc)) {
         VerticalPositionSelected.value = { value: 'top', content: t('attr.fixed_top') };
-        top.value = true
+        // top.value = true
     } else if (ResizingConstraints2.isFixedToBottom(rc)) {
         VerticalPositionSelected.value = { value: 'bottom', content: t('attr.fixed_bottom') };
-        bottom.value = true
+        // bottom.value = true
     } else if (ResizingConstraints2.isVerticalJustifyCenter(rc)) {
         VerticalPositionSelected.value = { value: 'vcenter', content: t('attr.center') };
-        vcenter.value = true
+        // vcenter.value = true
     } else if (ResizingConstraints2.isFlexHeight(rc)) {
-        VerticalPositionSelected.value = { value: 'hfollow', content: t('attr.follow_container') }
+        VerticalPositionSelected.value = { value: 'vfollow', content: t('attr.follow_container') }
     }
 
     function getGroupVal(val: number) {
@@ -189,18 +263,66 @@ function modifyverticalPositionStatus() {
     }
 }
 
-const left = ref(false)
-const right = ref(false)
-const top = ref(false)
-const bottom = ref(false)
-const hcenter = ref(false)
-const vcenter = ref(false)
+function modifyHeightStatus() {
+    isCheckedheight.value=false
+    const shapes = props.context.selection.selectedShapes;
+    if (!shapes.length) {
+        return;
+    }
+
+    let commonRC = getGroupVal(shapes[0].resizingConstraint || 0);
+    for (let i = 1, l = shapes.length; i < l; i++) {
+        let __rc = getGroupVal(shapes[i].resizingConstraint || 0);
+        if (__rc !== commonRC) {
+            VerticalSizeSelected.value = { value: 'mixed', content: mixed };
+            // isCheckedheight.value=true
+            return;
+        }
+    }
+
+    let rc = shapes[0].resizingConstraint;
+    if (rc === undefined) {
+        rc = ResizingConstraints2.Mask;
+    }
+
+    if (ResizingConstraints2.isFixedHeight(rc)) {
+        isCheckedheight.value=true
+        VerticalSizeSelected.value = { value: 'fixedHeight', content: t('attr.fixedHeight') };
+    } else {
+        VerticalSizeSelected.value = { value: 'vfollow', content: t('attr.follow_container') };
+    }
+
+    function getGroupVal(val: number) {
+        return (ResizingConstraints2.Mask ^ val & ResizingConstraints2.Height);
+    }
+}
+
+// const left = ref(false)
+// const right = ref(false)
+// const top = ref(false)
+// const bottom = ref(false)
+// const hcenter = ref(false)
+// const vcenter = ref(false)
 
 const update = throttle(_update, 120);
 
 // 这里在下代协作算法出来后可以优化
 const stop = watch(() => props.trigger, update); // 监听图层变化
 const stop2 = watch(() => props.selectionChange, update); // 监听选区变化
+
+// const test = () => {
+//     createEditor().fixedToWidth(selected.value)
+// }
+
+// const isChecked = ref(false)
+
+const isCheckedwidth=ref(false)
+const isCheckedheight=ref(false)
+
+watch(isCheckedwidth,(N)=>{
+    console.log(N);
+    createEditor().fixedToWidth(selected.value)
+})
 
 onMounted(update);
 onUnmounted(() => {
@@ -213,7 +335,7 @@ onUnmounted(() => {
         <TypeHeader :title="t('attr.constraints')" class="mt-24" :active="!disabled">
         </TypeHeader>
         <div class="content" :class="{ 'disabled': disabled }">
-            <div class="show">
+            <!-- <div class="show">
                 <div class="top">
                     <div class="one">
                         <div class="line" :class="{ action1: top }" @click="createEditor().fixedToTop(selected)"></div>
@@ -239,18 +361,28 @@ onUnmounted(() => {
                         </div>
                     </div>
                 </div>
-            </div>
+            </div> -->
             <div class="main">
                 <div class="row">
                     <label>{{ t('attr.horizontal') }}</label>
                     <Select :selected="horizontalPositionSelected" :source="horizontalPositionOptions"
                         @select="handleHorizontalPositionSelect" :disabled="disabled"></Select>
+                    <!-- <Select :selected="horizontalSizeSelected" :source="horizontalSizeOptions"
+                        @select="handleHorizontalSizeSelect" :disabled="disabled"></Select> -->
+                    <input type="checkbox" id="width" v-model="isCheckedwidth">
+                    <label for="width" :style="{ whiteSpace: 'nowrap' }">固定宽度</label>
                 </div>
                 <div class="row">
                     <label>{{ t('attr.vertical') }}</label>
                     <Select :selected="VerticalPositionSelected" :source="VerticalPositionOptions"
                         @select="handleVerticalPositionSelect" :disabled="disabled"></Select>
+                    <!-- <Select :selected="VerticalSizeSelected" :source="VerticalSizeOptions"
+                        @select="handleVerticalSizeSelect" :disabled="disabled"></Select> -->
+                    <input type="checkbox" id="height">
+                    <label for="height" :style="{ whiteSpace: 'nowrap' }">固定高度</label>
                 </div>
+                <!-- <input type="checkbox" id="widht" v-model="isChecked" @change="test()">
+                <label for="widht">固定宽度</label> -->
             </div>
 
         </div>
@@ -305,6 +437,10 @@ onUnmounted(() => {
                     flex: 0 1 84px;
                     height: 32px;
                 }
+
+                input[type="checked"]:checked {
+                    background-color: red;
+                }
             }
         }
 
@@ -336,7 +472,7 @@ onUnmounted(() => {
                     .line {
                         flex: 0 0 auto;
                         --height: 8px;
-                        --width: 1px;
+                        --width: 2px;
                         height: var(--height);
                         width: var(--width);
                         background-color: #333333;
@@ -348,8 +484,9 @@ onUnmounted(() => {
                         display: none;
                         position: absolute;
                         width: 6px;
-                        height: 8px;
-                        left: -2px;
+                        height: 13px;
+                        top: -2px;
+                        right: -2px;
                         background-color: rgba(17, 136, 255, 0.5);
                     }
 
@@ -378,7 +515,7 @@ onUnmounted(() => {
 
                     .line {
                         flex: 0 0 auto;
-                        --height: 1px;
+                        --height: 2px;
                         --width: 8px;
                         height: var(--height);
                         width: var(--width);
@@ -390,10 +527,10 @@ onUnmounted(() => {
                         content: "";
                         display: none;
                         position: absolute;
-                        width: 10px;
+                        width: 12px;
                         height: 5px;
-                        left: -1px;
                         top: -1px;
+                        right: -2px;
                         background-color: rgba(17, 136, 255, 0.5);
                     }
 
@@ -416,7 +553,7 @@ onUnmounted(() => {
                     justify-content: center;
 
                     .LR {
-                        --height: 1px;
+                        --height: 2px;
                         --width: 14px;
                         height: var(--height);
                         width: var(--width);
@@ -429,7 +566,7 @@ onUnmounted(() => {
                             position: absolute;
                             width: 14px;
                             height: 5px;
-                            top: -2px;
+                            top: -1px;
                             background-color: rgba(17, 136, 255, 0.5);
                         }
 
@@ -440,7 +577,7 @@ onUnmounted(() => {
 
                     .TB {
                         --height: 14px;
-                        --width: 1px;
+                        --width: 2px;
                         height: var(--height);
                         width: var(--width);
                         background-color: #333333;
@@ -450,9 +587,9 @@ onUnmounted(() => {
                             content: "";
                             display: none;
                             position: absolute;
-                            width: 5px;
+                            width: 6px;
                             height: 14px;
-                            left: -2px;
+                            right: -2px;
                             background-color: rgba(17, 136, 255, 0.5);
                         }
 
@@ -472,7 +609,7 @@ onUnmounted(() => {
 
                     .line {
                         flex: 0 0 auto;
-                        --height: 1px;
+                        --height: 2px;
                         --width: 8px;
                         height: var(--height);
                         width: var(--width);
@@ -484,10 +621,10 @@ onUnmounted(() => {
                         content: "";
                         display: none;
                         position: absolute;
-                        width: 10px;
+                        width: 12px;
                         height: 5px;
-                        left: -1px;
                         top: -1px;
+                        right: -2px;
                         background-color: rgba(17, 136, 255, 0.5);
                     }
 
@@ -516,7 +653,7 @@ onUnmounted(() => {
                     .line {
                         flex: 0 0 auto;
                         --height: 8px;
-                        --width: 1px;
+                        --width: 2px;
                         height: var(--height);
                         width: var(--width);
                         background-color: #333333;
@@ -528,8 +665,9 @@ onUnmounted(() => {
                         display: none;
                         position: absolute;
                         width: 6px;
-                        height: 8px;
-                        left: -2px;
+                        height: 13px;
+                        top: -2px;
+                        right: -2px;
                         background-color: rgba(17, 136, 255, 0.5);
                     }
 
