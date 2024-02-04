@@ -35,6 +35,8 @@ import Tooltip from '../Tooltip.vue';
 import { ColorCtx } from '@/context/color';
 import { get_add_gradient_color } from '@/components/Document/Selection/Controller/ColorEdit/gradient_utils';
 import { flattenShapes } from '@/utils/cutout';
+import angular from '@/assets/angular-gradient.png'
+
 
 interface Props {
     context: Context
@@ -988,7 +990,7 @@ onUnmounted(() => {
                 </div>
             </div>
             <div class="color_type_container" v-if="fillType">
-                <ColorType :color="color" :gradient_type="gradient_type" @change="color_type_change"></ColorType>
+                <ColorType :color="color" :gradient_type="gradient_type" @change="color_type_change" :angular="angular"></ColorType>
             </div>
             <!-- 渐变工具 -->
             <div v-if="gradient_type !== 'solid' && fillType === FillType.Gradient" class="gradient-container">

@@ -3,10 +3,10 @@ import { Color, Gradient, GradientType } from '@kcdesign/data';
 import { onMounted } from 'vue';
 import { ref } from 'vue';
 import { useI18n } from 'vue-i18n';
-import angular from '@/assets/angular-gradient.png'
 interface Props {
     color: Color
     gradient_type?: GradientType | 'solid'
+    angular: any
 }
 interface Emits {
     (e: 'change', value: GradientType | 'solid'): void;
