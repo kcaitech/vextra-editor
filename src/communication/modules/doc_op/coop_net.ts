@@ -9,7 +9,7 @@ export class CoopNet implements ICoopNet {
     private isConnected = false
     private pullCmdsPromiseList: Record<string, {
         resolve: (value: Cmd[]) => void,
-    }> = {}
+    }[]> = {}
     private radixRevert: RadixConvert = new RadixConvert(62)
 
     constructor(versionId: string) {
@@ -37,9 +37,10 @@ export class CoopNet implements ICoopNet {
             to: to,
         })
         return new Promise<Cmd[]>(resolve => {
-            this.pullCmdsPromiseList[`${from}-${to}`] = {
-                resolve: resolve,
-            }
+            const key = `${from}-${to}`
+            const promiseList = this.pullCmdsPromiseList[key]
+            if (!promiseList) this.pullCmdsPromiseList[key] = [];
+            promiseList.push({ resolve: resolve })
         })
     }
 
@@ -86,7 +87,7 @@ export class CoopNet implements ICoopNet {
             }
             const key = `${data.from}-${data.to}`
             if (!this.pullCmdsPromiseList[key]) return;
-            this.pullCmdsPromiseList[key].resolve(cmds)
+            for (const item of this.pullCmdsPromiseList[key]) item.resolve(cmds);
             delete this.pullCmdsPromiseList[key]
         }
     }
