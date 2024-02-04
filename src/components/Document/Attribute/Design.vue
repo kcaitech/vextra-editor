@@ -229,7 +229,8 @@ onUnmounted(() => {
                 <ShapeBaseAttr v-if="baseAttr" :context="props.context" :selection-change="reflush_by_selection"
                     :triggle="reflush_trigger"></ShapeBaseAttr>
                 <BaseForPathEdit v-if="editAttr" :context="props.context"></BaseForPathEdit>
-                <Opacity v-if="opacity && !WITHOUT_OPACITY.includes(shapeType)" :context="props.context" :change="reflush">
+                <Opacity v-if="opacity && !WITHOUT_OPACITY.includes(shapeType)" :context="props.context"
+                    :selection-change="reflush_by_selection" :trigger="reflush_trigger">
                 </Opacity>
                 <Module v-if="symbol_attribute" :context="props.context" :shapeType="shapeType" :shapes="shapes"></Module>
                 <InstanceAttr :context="context" v-if="is_symbolref()" :shapes="(shapes as SymbolRefView[])">

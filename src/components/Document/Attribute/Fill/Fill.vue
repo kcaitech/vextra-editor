@@ -22,7 +22,7 @@ import { v4 } from 'uuid';
 import { TableSelection } from '@/context/tableselection';
 import { Selection } from "@/context/selection";
 import { flattenShapes } from '@/utils/cutout';
-import { get_table_range, is_editing } from '@/utils/content';
+import { get_table_range, is_editing, hidden_selection } from '@/utils/content';
 import { TypicaStop } from '@/components/common/ColorPicker/typical';
 
 interface FillItem {
@@ -160,6 +160,7 @@ function addFill(): void {
             editor.shapesAddFill(actions);
         }
     }
+    hidden_selection(props.context);
 }
 
 function first() {
@@ -184,6 +185,7 @@ function deleteFill(idx: number) {
             editor.shapesDeleteFill(actions);
         }
     }
+    hidden_selection(props.context);
 }
 
 function toggleVisible(idx: number) {
@@ -207,6 +209,7 @@ function toggleVisible(idx: number) {
             editor.setShapesFillEnabled(actions);
         }
     }
+    hidden_selection(props.context);
 }
 const colorValue = ref('');
 const alphaValue = ref('');
@@ -249,6 +252,7 @@ function setColor(idx: number, clr: string, alpha: number, isColor: boolean) {
             editor.setShapesFillColor(actions);
         }
     }
+    hidden_selection(props.context);
 }
 
 function onColorChange(idx: number, e: Event) {
@@ -355,6 +359,7 @@ function getColorFromPicker(idx: number, color: Color) {
             editor.setShapesFillColor(actions);
         }
     }
+    hidden_selection(props.context);
 }
 
 const selectColor = (id: number) => {

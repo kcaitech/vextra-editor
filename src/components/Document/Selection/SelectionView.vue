@@ -185,8 +185,6 @@ function createShapeTracing() {
     }
 }
 
-
-
 /**
  * @description 创建控件
  */
@@ -440,8 +438,9 @@ onUnmounted(() => {
         </path>
     </svg>
     <!-- 控制 -->
-    <component v-if="controller" :is="ctrlMap.get(controllerType) ?? ctrlMap.get(ControllerType.Rect)"
-        :context="props.context" :controller-frame="controllerFrame" :rotate="rotate" :matrix="props.matrix"
+    <component v-if="controller"
+        :is="ctrlMap.get(controllerType) ?? ctrlMap.get(ControllerType.Rect)" :context="props.context"
+        :controller-frame="controllerFrame" :rotate="rotate" :matrix="props.matrix"
         :shape="context.selection.selectedShapes[0]" :theme="theme">
     </component>
     <!-- 辅助 -->

@@ -7,6 +7,7 @@ import { Arrange } from "@/context/arrange";
 import { deleteUnits } from "./delete";
 import { enter_path_edit_mode } from "./pathedit";
 import { untie_instance } from "./symbol";
+import { modifyOpacity } from "./common";
 
 // todo 键盘事件的权限处理
 
@@ -16,12 +17,14 @@ function keydown(event: KeyboardEvent, context: Context) {
     if (event.target instanceof HTMLInputElement || event.target instanceof HTMLTextAreaElement) { // 不处理输入框内的键盘事件
         return;
     }
+
     if (context.workspace.documentPerm !== Perm.isEdit || context.tool.isLable) { // 非编辑状态下允许的动作
         const { code, ctrlKey, metaKey, shiftKey } = event;
         if (!(code === 'KeyV' || code === 'KeyC' || code === 'KeyA' || code === 'Digit0' || code === 'Escape' || ctrlKey || metaKey || shiftKey)) {
             return;
         }
     }
+
     const f = keydownHandler[event.code];
     f && f(event, context);
 }
@@ -37,8 +40,6 @@ export function setup(context: Context) {
     document.addEventListener('keyup', up);
 
     const remove_keyboard_units = () => {
-        console.log(11);
-        
         document.removeEventListener('keydown', down);
         document.removeEventListener('keyup', up);
     }
@@ -312,6 +313,27 @@ keydownHandler['KeyZ'] = function (event: KeyboardEvent, context: Context) {
     }
 }
 
+let last_opacity = -1;
+let last_opacity_keeper: any = null;
+
+function get_opacity(val: number) {
+    let need_keep = !last_opacity_keeper;
+
+    if (need_keep) {
+        last_opacity = val;
+        last_opacity_keeper = setTimeout(() => {
+            last_opacity = -1;
+            clearTimeout(last_opacity_keeper);
+            last_opacity_keeper = null;
+        }, 1000);
+        return (val ? val * 10 : 100) / 100;
+    } else {
+        clearTimeout(last_opacity_keeper);
+        last_opacity_keeper = null;
+        return Number(last_opacity.toString() + val.toString()) / 100;
+    }
+}
+
 keydownHandler['Digit0'] = function (event: KeyboardEvent, context: Context) {
     const is_ctrl = event.ctrlKey || event.metaKey;
 
@@ -320,6 +342,24 @@ keydownHandler['Digit0'] = function (event: KeyboardEvent, context: Context) {
         scale_0(context);
         return;
     }
+    if (event.repeat) {
+        return;
+    }
+    modifyOpacity(context, get_opacity(0));
+}
+
+keydownHandler['Numpad0'] = function (event: KeyboardEvent, context: Context) {
+    const is_ctrl = event.ctrlKey || event.metaKey;
+
+    if (is_ctrl) {
+        event.preventDefault();
+        scale_0(context);
+        return;
+    }
+    if (event.repeat) {
+        return;
+    }
+    modifyOpacity(context, get_opacity(0));
 }
 
 keydownHandler['Digit1'] = function (event: KeyboardEvent, context: Context) {
@@ -329,6 +369,135 @@ keydownHandler['Digit1'] = function (event: KeyboardEvent, context: Context) {
         adapt_page(context);
         return;
     }
+    if (event.repeat) {
+        return;
+    }
+    modifyOpacity(context, get_opacity(1));
+}
+
+keydownHandler['Numpad1'] = function (event: KeyboardEvent, context: Context) {
+    const is_ctrl = event.ctrlKey || event.metaKey;
+    if (is_ctrl) {
+        event.preventDefault();
+        adapt_page(context);
+        return;
+    }
+    if (event.repeat) {
+        return;
+    }
+    modifyOpacity(context, get_opacity(1));
+}
+
+keydownHandler['Digit2'] = function (event: KeyboardEvent, context: Context) {
+    if (event.repeat) {
+        return;
+    }
+    modifyOpacity(context, get_opacity(2));
+}
+
+keydownHandler['Numpad2'] = function (event: KeyboardEvent, context: Context) {
+    if (event.repeat) {
+        return;
+    }
+    modifyOpacity(context, get_opacity(2));
+}
+
+keydownHandler['Digit3'] = function (event: KeyboardEvent, context: Context) {
+    if (event.repeat) {
+        return;
+    }
+    modifyOpacity(context, get_opacity(3));
+}
+
+keydownHandler['Numpad3'] = function (event: KeyboardEvent, context: Context) {
+    if (event.repeat) {
+        return;
+    }
+    modifyOpacity(context, get_opacity(3));
+}
+
+keydownHandler['Digit4'] = function (event: KeyboardEvent, context: Context) {
+    if (event.repeat) {
+        return;
+    }
+    modifyOpacity(context, get_opacity(4));
+}
+
+keydownHandler['Numpad4'] = function (event: KeyboardEvent, context: Context) {
+    if (event.repeat) {
+        return;
+    }
+    modifyOpacity(context, get_opacity(4));
+}
+
+keydownHandler['Digit5'] = function (event: KeyboardEvent, context: Context) {
+    if (event.repeat) {
+        return;
+    }
+    modifyOpacity(context, get_opacity(5));
+}
+
+keydownHandler['Numpad5'] = function (event: KeyboardEvent, context: Context) {
+    if (event.repeat) {
+        return;
+    }
+    modifyOpacity(context, get_opacity(5));
+}
+
+keydownHandler['Digit6'] = function (event: KeyboardEvent, context: Context) {
+    if (event.repeat) {
+        return;
+    }
+    modifyOpacity(context, get_opacity(6));
+}
+
+keydownHandler['Numpad6'] = function (event: KeyboardEvent, context: Context) {
+    if (event.repeat) {
+        return;
+    }
+    modifyOpacity(context, get_opacity(6));
+}
+
+keydownHandler['Digit7'] = function (event: KeyboardEvent, context: Context) {
+    if (event.repeat) {
+        return;
+    }
+    modifyOpacity(context, get_opacity(7));
+}
+
+keydownHandler['Numpad7'] = function (event: KeyboardEvent, context: Context) {
+    if (event.repeat) {
+        return;
+    }
+    modifyOpacity(context, get_opacity(7));
+}
+
+keydownHandler['Digit8'] = function (event: KeyboardEvent, context: Context) {
+    if (event.repeat) {
+        return;
+    }
+    modifyOpacity(context, get_opacity(8));
+}
+
+keydownHandler['Numpad8'] = function (event: KeyboardEvent, context: Context) {
+    if (event.repeat) {
+        return;
+    }
+    modifyOpacity(context, get_opacity(8));
+}
+
+keydownHandler['Digit9'] = function (event: KeyboardEvent, context: Context) {
+    if (event.repeat) {
+        return;
+    }
+    modifyOpacity(context, get_opacity(9));
+}
+
+keydownHandler['Numpad9'] = function (event: KeyboardEvent, context: Context) {
+    if (event.repeat) {
+        return;
+    }
+    modifyOpacity(context, get_opacity(9));
 }
 
 keydownHandler['Enter'] = function (event: KeyboardEvent, context: Context) {
@@ -391,4 +560,9 @@ keydownHandler['Equal'] = function (event: KeyboardEvent, context: Context) {
 keydownHandler['Minus'] = function (event: KeyboardEvent, context: Context) {
     event.preventDefault();
     lower_layer(context, 1);
+}
+
+keydownHandler['Tab'] = function (event: KeyboardEvent, context: Context) {
+    event.preventDefault();
+    // TODO 选区切换
 }

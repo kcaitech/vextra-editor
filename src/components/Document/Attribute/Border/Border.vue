@@ -28,7 +28,7 @@ import Apex from './Apex.vue';
 import { TableSelection } from '@/context/tableselection';
 import { Selection } from "@/context/selection";
 import { flattenShapes } from '@/utils/cutout';
-import { get_table_range, is_editing } from '@/utils/content';
+import { get_table_range, is_editing, hidden_selection } from '@/utils/content';
 import { TypicaStop } from '@/components/common/ColorPicker/typical';
 
 interface BorderItem {
@@ -169,7 +169,7 @@ function addBorder() {
             editor.shapesAddBorder(actions);
         }
     }
-    props.context.workspace.notify(WorkSpace.CTRL_APPEAR);
+    hidden_selection(props.context);
 }
 
 function first() {
@@ -196,7 +196,7 @@ function deleteBorder(idx: number) {
             editor.shapesDeleteBorder(actions);
         }
     }
-    props.context.workspace.notify(WorkSpace.CTRL_APPEAR);
+    hidden_selection(props.context);
 }
 
 function toggleVisible(idx: number) {
@@ -221,7 +221,7 @@ function toggleVisible(idx: number) {
             editor.setShapesBorderEnabled(actions);
         }
     }
-    props.context.workspace.notify(WorkSpace.CTRL_APPEAR);
+    hidden_selection(props.context);
 }
 const colorValue = ref('');
 const alphaValue = ref('');
@@ -233,7 +233,6 @@ const tableSelect = ref({
     tableColEnd: props.context.tableSelection.tableColEnd
 });
 function onColorChange(e: Event, idx: number) {
-    props.context.workspace.notify(WorkSpace.CTRL_DISAPPEAR);
     let value = colorValue.value;
     if (value.slice(0, 1) !== '#') {
         value = "#" + value
@@ -254,6 +253,7 @@ function onColorChange(e: Event, idx: number) {
     const color = new Color(alpha, r, g, b);
     setColor(idx, color);
     props.context.workspace.notify(WorkSpace.CTRL_APPEAR);
+    hidden_selection(props.context);
 }
 
 function onAlphaChange(b: Border, idx: number) {
@@ -296,7 +296,7 @@ function onAlphaChange(b: Border, idx: number) {
             }
         }
     }
-    props.context.workspace.notify(WorkSpace.CTRL_APPEAR);
+    hidden_selection(props.context);
 }
 
 function setColor(idx: number, color: Color) {
@@ -366,6 +366,7 @@ function getColorFromPicker(color: Color, idx: number) {
             editor.setShapesBorderColor(actions);
         }
     }
+    hidden_selection(props.context);
 }
 
 const selectColor = (i: number) => {
