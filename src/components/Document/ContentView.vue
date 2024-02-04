@@ -117,14 +117,14 @@ function setMousedownXY(e: MouseEvent) { // 记录鼠标在页面上的点击位
     mousedownOnClientXY.y = clientY - y; // 用户端可视区上的点
 }
 
-function onMouseWheel(e: WheelEvent) { // 滚轮、触摸板事件
+function onMouseWheel(e: WheelEvent) { // 滚轮、触摸板事件    
     if (contextMenu.value) return; //右键菜单已打开
     e.preventDefault();
     const { ctrlKey, metaKey } = e;
     if (ctrlKey || metaKey) { // 缩放
         root_scale(props.context, e);
     } else {
-        root_trans(props.context, e, wheel_step);
+        root_trans(props.context, e);
     }
 
     workspace.value.notify(WorkSpace.MATRIX_TRANSFORMATION);
@@ -659,5 +659,6 @@ onUnmounted(() => {
         <Creator v-if="creatorMode" :context="props.context" />
         <PathEditMode v-if="path_edit_mode" :context="props.context"></PathEditMode>
         <Gradient v-if="color_edit_mode" :context="props.context" :matrix="matrix"></Gradient>
+         <!-- <Overview :context="props.context" v-if="overview" :matrix="matrix.toArray()"></Overview> -->
     </div>
 </template>

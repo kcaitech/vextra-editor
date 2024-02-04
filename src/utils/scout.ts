@@ -1,6 +1,6 @@
 import { Context } from "@/context";
 import { PageXY, XY } from "@/context/selection";
-import { GroupShapeView, Matrix, PageView, PathShapeView, ShapeType, ShapeView, SymbolRefView } from "@kcdesign/data";
+import { GroupShapeView, Matrix, PageView, PathShapeView, ShapeType, ShapeView, SymbolRefView, adapt2Shape } from "@kcdesign/data";
 import { v4 as uuid } from "uuid";
 import { isShapeOut } from "./assist";
 import { debounce, throttle } from "lodash";
@@ -468,7 +468,7 @@ export function artboardFinder(scout: Scout, g: ShapeView[], position: PageXY, e
 }
 
 /**
- * @description 寻找到最近的层级较高的那个容器
+ * @description 寻找到最近的层级较高的那个环境
  */
 export function finder_container(scout: Scout, g: ShapeView[], position: PageXY, except?: Map<string, ShapeView>) {
     const layers = finder_layers(scout, g, position);
@@ -478,7 +478,36 @@ export function finder_container(scout: Scout, g: ShapeView[], position: PageXY,
         if (item.isVirtualShape) {
             continue;
         }
-        if ([ShapeType.Artboard, ShapeType.Symbol].includes(item.type) && (!except || !except.get(item.id))) {
+        if ([ShapeType.Artboard, ShapeType.Symbol].includes(item.type) && (!except?.get(item.id))) {
+            return item;
+        }
+    }
+}
+
+/**
+ * @description 寻找到最近的层级较高的那个环境
+ */
+export function finder_env_for_migrate(scout: Scout, g: ShapeView[], position: PageXY, shape4migrate: Set<string>) {
+    const layers = finder_layers(scout, g, position);
+
+    for (let i = 0, len = layers.length; i < len; i++) {
+        const item = layers[i];
+        if (item.isVirtualShape) {
+            continue;
+        }
+        let p: ShapeView | undefined = item;
+        let c = false;
+        while (p) {
+            if (shape4migrate.has(adapt2Shape(p).id)) {
+                c = true;
+                break;
+            }
+            p = p.parent;
+        }
+        if (c) {
+            continue;
+        }
+        if ([ShapeType.Artboard, ShapeType.Symbol, ShapeType.SymbolUnion].includes(item.type)) {
             return item;
         }
     }
@@ -487,50 +516,6 @@ export function finder_container(scout: Scout, g: ShapeView[], position: PageXY,
 export function canBeTarget(shape: ShapeView): boolean { // 可以被判定为检索结果的前提是没有被锁定和isVisible可视
     return shape.isVisible() && !shape.isLocked();
 }
-
-/**
- * @description 是否有组成组件、组件实例的图形被选中
- * @param shapes
- */
-export function _selected_symbol_menber(context: Context, shapes: ShapeView[]) {
-    let result: ShapeView | undefined;
-    let bros: ShapeView[] = [];
-    // if (shapes.length === 1) { // todo 多选的处理
-    if (shapes.length) {
-        let s = shapes[0];
-        let p: ShapeView | undefined = s.parent;
-        let parents: ShapeView[] = [];
-        let parents_map: Map<string, ShapeView> = new Map();
-        while (p) {
-            parents.push(p);
-            parents_map.set(p.id, p);
-            if (p.type === ShapeType.Symbol || p.type === ShapeType.SymbolRef) {
-                result = s;
-                flat(parents, bros, parents_map);
-                break;
-            }
-            p = p.parent;
-        }
-    }
-    context.selection.setSelectedSymRefBros(bros);
-    context.selection.setSelectSoRMenber(result);
-}
-
-function flat(parents: ShapeView[], bros: ShapeView[], parents_map: Map<string, ShapeView>) {
-    let p = parents.pop()
-    while (p) {
-        const childs = p.type === ShapeType.SymbolRef ? p.naviChilds : (p).childs;
-        if (childs) {
-            for (let i = 0, len = childs.length; i < len; i++) {
-                const c = childs[i];
-                !parents_map.get(c.id) && bros.push(c);
-            }
-        }
-        p = parents.pop();
-    }
-}
-
-export const selected_sym_ref_menber = debounce(_selected_symbol_menber, 100);
 
 export function is_shape_in_selected(selected: ShapeView[], shape: ShapeView) {
     for (let i = 0, len = selected.length; i < len; i++) {

@@ -13,12 +13,12 @@ window.ResizeObserver = class ResizeObserver extends _ResizeObserver {
 }
 
 onMounted(() => {
-  document.title = 'ProtoDesign';
-  startRefreshTokenTask();
+    document.title = 'ProtoDesign';
+    startRefreshTokenTask();
 })
 
 onBeforeUnmount(() => {
-  stopRefreshTokenTask();
+    stopRefreshTokenTask();
 })
 </script>
 
@@ -31,17 +31,18 @@ html,
 body {
     margin: 0;
     padding: 0;
-    background-color:rgba(250, 250, 250, 1);
+    background-color: rgba(250, 250, 250, 1);
+
     >body {
         font-family: var(--font-family);
         height: 100vh;
         user-select: none; //禁止复制内容
         position: relative;
 
-    &::-webkit-scrollbar {
-      height: 0;
-      width: 0;
-    }
+        &::-webkit-scrollbar {
+            height: 0;
+            width: 0;
+        }
 
         >#app {
             position: absolute;

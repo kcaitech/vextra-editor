@@ -3,39 +3,105 @@ import {
     AsyncTransfer,
     GroupShape,
     Matrix,
-    Shape,
     ShapeView,
     adapt2Shape
 } from "@kcdesign/data";
 import { ClientXY, PageXY } from "@/context/selection";
 import { debounce } from "lodash";
-import { map_from_shapes } from "@/utils/content";
 import { compare_layer_3 } from "@/utils/group_ungroup";
-import { get_closest_container } from "@/utils/mouse";
-import { is_part_of_symbolref } from "@/utils/symbol";
-import { get_state_name } from "./shapelist";
 
 /**
  * @description 立刻把一组图形从一个容器移动到另一个容器
  */
 export function migrate_immediate(context: Context, asyncTransfer: AsyncTransfer, shapes: ShapeView[], end: ClientXY) {
-    if (!shapes.length) return;
-    const matrix = new Matrix(context.workspace.matrix.inverse);
-    const pe: PageXY = matrix.computeCoord3(end);
-    const map = map_from_shapes(shapes);
-    const target_parent = context.selection.getClosestContainer(pe, map);
-    if (is_part_of_symbolref(target_parent)) {
-        return console.log('migrate error:', 4);
+    if (!shapes.length) {
+        return;
     }
-    const emit_migrate = (get_closest_container(context, shapes[0]).id !== target_parent.id);
-    if (emit_migrate) {
-        const tg = (target_parent);
-        asyncTransfer.migrate(adapt2Shape(tg) as GroupShape, compare_layer_3(shapes, -1).map((s) => adapt2Shape(s)), context.workspace.t('compos.dlt'));
-        context.assist.set_collect_target([tg], true);
+    const pe: PageXY = context.workspace.matrix.inverseCoord(end);
+
+    const target_parent = context.selection.getEnvForMigrate(pe);
+
+    const except = asyncTransfer.getExceptEnvs();
+
+    const o_env = except.find(v => v.id === target_parent.id);
+
+    if (o_env) {
+        asyncTransfer.backToStartEnv(o_env.data, context.workspace.t('compos.dlt'));
+    } else {
+        const tp = adapt2Shape(target_parent) as GroupShape;
+        const _shapes = compare_layer_3(shapes, -1).map((s) => adapt2Shape(s));
+        asyncTransfer.migrate(tp, _shapes, context.workspace.t('compos.dlt'));
     }
+
+    context.assist.set_collect_target([target_parent], true);
 }
 
 /**
  * @description 一组图形在另一个容器上方停留一段时间后，把这组图形从其原本的容器移动到该容器
  */
 export const migrate_once = debounce(migrate_immediate, 160);
+
+export function record_origin_env(shapes: ShapeView[]) {
+    const envs = new Map<string, { index: number, shape: ShapeView }[]>();
+    for (let i = 0, l = shapes.length; i < l; i++) {
+        const shape = shapes[i];
+        const parent = shape.parent;
+
+        if (!parent) {
+            continue;
+        }
+
+        const data = adapt2Shape(parent);
+
+        const item = {
+            index: (data as GroupShape).indexOfChild(adapt2Shape(shape)),
+            shape
+        }
+
+        const arr = envs.get(data.id);
+        if (arr) {
+            arr.push(item);
+        }
+        else {
+            envs.set(data.id, [item]);
+        }
+    }
+    envs.forEach(v => {
+        v.sort((a, b) => {
+            if (a.index < b.index) {
+                return -1;
+            } else {
+                return 1;
+            }
+        })
+    })
+    return envs;
+}
+
+export function find_except_envs(context: Context, shapes: ShapeView[], e: MouseEvent) {
+    const except: ShapeView[] = [];
+
+    const m = new Matrix(context.workspace.matrix.inverse);
+
+    const p = m.computeCoord3(context.workspace.getContentXY(e));
+
+    const env1 = context.selection.getEnvForMigrate(p);
+    except.push(env1);
+
+    if (shapes.length !== 1) {
+        return except;
+    }
+
+    const first_shape = shapes[0];
+    const parent = first_shape.parent;
+
+    if (!parent) {
+        return except;
+    }
+
+    if (except[0]?.id !== parent.id) {
+        except.push(parent);
+    }
+
+    return except;
+}

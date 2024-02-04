@@ -428,3 +428,19 @@ export function menu_locate2(e: MouseEvent, el: HTMLDivElement | undefined, el_p
     el.style.left = left + 'px';
     el.style.top = top + 'px';
 }
+
+export function isInt(num: number) {
+    return (num | 0) === num;
+}
+
+export function format_value(val: number | string, fix = 2) {
+    if (typeof val === 'string') {
+        return val;
+    }
+
+    if (isInt(val)) {
+        return val;
+    }
+
+    return val.toFixed(fix);
+}
