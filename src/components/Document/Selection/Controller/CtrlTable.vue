@@ -122,7 +122,7 @@ function updateCellView() {
 }
 
 function init() {
-    props.context.tableSelection.resetSelection();
+    // props.context.tableSelection.resetSelection();
     editingCell.value = undefined;
     update();
 }
