@@ -22,12 +22,8 @@ interface SystemClipboardItem {
 }
 class ExfContext {
     symbols = new Set<string>()
-    // artboards = new Set<string>()
-
     medias = new Set<string>()
     referenced = new Set<string>()
-    // allartboards = new Set<string>();
-    // allsymbols = new Set<string>();
 }
 type CacheType = 'inner-html' | 'plain-text' | 'double' | 'image';
 export const identity = 'cn.protodesign';
