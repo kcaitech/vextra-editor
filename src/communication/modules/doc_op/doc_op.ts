@@ -39,7 +39,7 @@ export class DocOp extends Communication {
     }
 
     private _onMessage(data: any) {
-        console.log("ot receive", data)
+        // console.log("ot receive", data)
         this.coopNet!.onMessage(data)
     }
 
