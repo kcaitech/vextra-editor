@@ -1,7 +1,7 @@
 import {
     export_shape, import_shape_from_clipboard,
     Shape, ShapeType, AsyncCreator, ShapeFrame, GroupShape, TextShape, Text,
-    export_text, import_text, TextShapeEditor, ImageShape, transform_data, ContactShape, CurvePoint, PathShape, adapt2Shape, ShapeView, CrdtIndex
+    export_text, import_text, TextShapeEditor, ImageShape, transform_data, ContactShape, CurvePoint, PathShape, adapt2Shape, ShapeView, BasicArray
 } from '@kcdesign/data';
 import { Context } from '@/context';
 import { PageXY } from '@/context/selection';
@@ -91,7 +91,7 @@ export class Clipboard {
 
                 const points = points_map.get(shape.id);
                 if (points) {
-                    (shape as PathShape).points = points.map((i, idx) => new CurvePoint(new CrdtIndex([idx]), v4(), i.x, i.y, i.mode)) as any;
+                    (shape as PathShape).points = points.map((i, idx) => new CurvePoint(([idx] as BasicArray<number>), v4(), i.x, i.y, i.mode)) as any;
                 }
             }
 

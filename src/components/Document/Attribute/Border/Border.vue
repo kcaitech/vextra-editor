@@ -1,7 +1,7 @@
 <script setup lang="ts">
 import { computed, onMounted, onUnmounted, reactive, ref, watch } from 'vue';
 import { Context } from '@/context';
-import { CrdtIndex, Shape, ShapeType, ShapeView, TableCell, TableShape, TableView, adapt2Shape } from '@kcdesign/data';
+import { BasicArray, Shape, ShapeType, ShapeView, TableCell, TableShape, TableView, adapt2Shape } from '@kcdesign/data';
 import TypeHeader from '../TypeHeader.vue';
 import BorderDetail from './BorderDetail.vue';
 import ColorPicker from '@/components/common/ColorPicker/index.vue';
@@ -154,7 +154,7 @@ function addBorder() {
     props.context.workspace.notify(WorkSpace.CTRL_DISAPPEAR);
     const color = new Color(1, 0, 0, 0);
     const borderStyle = new BorderStyle(0, 0);
-    const border = new Border(new CrdtIndex([], 0), v4(), true, FillType.SolidColor, color, BorderPosition.Outer, 1, borderStyle);
+    const border = new Border(new BasicArray(), v4(), true, FillType.SolidColor, color, BorderPosition.Outer, 1, borderStyle);
     if (len.value === 1 && props.shapes[0].type !== ShapeType.Group) {
         const shape = props.shapes[0] as TableView;
         if (shape.type === ShapeType.Table) {
