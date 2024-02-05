@@ -36,6 +36,7 @@ import { Path } from "./path";
 import { PageDom } from "@/components/Document/Content/vdom/page";
 import { initComsMap } from "@/components/Document/Content/vdom/comsmap";
 import { Arrange } from "./arrange";
+import { PdMedia } from "./medias";
 import { DomCtx } from "@/components/Document/Content/vdom/domctx";
 
 // 仅暴露必要的方法
@@ -100,6 +101,7 @@ export class Context extends WatchableObject {
     private m_teamwork: TeamWork;
     private m_component: Component;
     private m_path: Path;
+    private m_medias: PdMedia;
 
     private m_vdom: Map<string, { dom: PageDom, ctx: DomCtx }> = new Map();
     private m_arrange: Arrange
@@ -127,6 +129,7 @@ export class Context extends WatchableObject {
         this.m_component = new Component(this);
         this.m_path = new Path(this);
         this.m_arrange = new Arrange();
+        this.m_medias = new PdMedia(this);
         const pagelist = data.pagesList.slice(0);
         const checkSymLoaded: (() => boolean)[] = [];
         const pageloadTask = new class implements Task { // page auto loader
@@ -291,6 +294,10 @@ export class Context extends WatchableObject {
         return this.m_path;
     }
 
+    get medias() {
+        return this.m_medias;
+    }
+
     private createVDom(page: Page) {
         const domCtx = new DomCtx();
         initComsMap(domCtx.comsMap);
@@ -305,7 +312,7 @@ export class Context extends WatchableObject {
     getPageDom(page: Page | PageView): { dom: PageDom, ctx: DomCtx } {
         const ret = this.m_vdom.get(page.id);
         if (ret) return ret;
-        page = page instanceof PageView? page.data : page;
+        page = page instanceof PageView ? page.data : page;
         return this.createVDom(page);
     }
 
