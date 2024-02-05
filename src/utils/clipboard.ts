@@ -20,6 +20,15 @@ interface SystemClipboardItem {
     contentType: string
     content: Media | string
 }
+class ExfContext {
+    symbols = new Set<string>()
+    // artboards = new Set<string>()
+
+    medias = new Set<string>()
+    referenced = new Set<string>()
+    // allartboards = new Set<string>();
+    // allsymbols = new Set<string>();
+}
 type CacheType = 'inner-html' | 'plain-text' | 'double' | 'image';
 export const identity = 'cn.protodesign';
 export const paras = 'cn.protodesign/paras'; // 文字段落
@@ -164,7 +173,7 @@ export class Clipboard {
         }
 
         // 先导出将要写入的数据
-        const _shapes = export_shape(shapes.map((s => adapt2Shape(s))));
+        const { shapes: _shapes, ctx } = export_shape(shapes.map((s => adapt2Shape(s))));
         if (!_shapes) {
             return false;
         }
@@ -184,7 +193,7 @@ export class Clipboard {
             }
         }
 
-        const media = sort_media(this.context.data, _shapes);
+        const media = sort_media(this.context.data, ctx);
         const data = {
             shapes: _shapes,
             media
@@ -650,21 +659,15 @@ export class Clipboard {
 /**
  * @description 只存base64到剪切板
  */
-function sort_media(document: Document, shapes: Shape[]) {
+function sort_media(document: Document, exportCtx: ExfContext) {
     const media: any = {};
-    for (let i = 0, l = shapes.length; i < l; i++) {
-        const shape = shapes[i];
-        if (shape.type !== ShapeType.Image) {
-            continue;
-        }
-
-        const res = document.mediasMgr.getSync((shape as any).imageRef)?.base64;
+    exportCtx.medias.forEach(v => {
+        const res = document.mediasMgr.getSync(v)?.base64;
         if (!res) {
-            continue;
+            return;
         }
-
-        media[(shape as any).imageRef] = res;
-    }
+        media[v] = res;
+    });
     return media;
 }
 
