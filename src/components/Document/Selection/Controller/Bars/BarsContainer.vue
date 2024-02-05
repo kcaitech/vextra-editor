@@ -64,12 +64,11 @@ function update_dot_path() {
         paths.push({ path, type: types[i] });
     }
 
-    dashes.length = 0;
-    if (!is_constrainted()) {
-        return;
-    }
-
-    dashes.push(...get_dashes(props.context, props.shape, apex as [XY, XY, XY, XY]));
+    // dashes.length = 0;
+    // if (!is_constrainted()) {
+    //     return;
+    // }
+    // dashes.push(...get_dashes(props.context, props.shape, apex as [XY, XY, XY, XY]));
 }
 function is_constrainted() {
     return props.shape.parent?.type === ShapeType.Artboard;

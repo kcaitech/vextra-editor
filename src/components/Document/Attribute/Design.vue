@@ -92,7 +92,7 @@ const reflush_by_shapes = ref<number>(0);
 const reflush = ref<number>(0);
 const reflush_trigger = ref<any[]>([]);
 
-function _selection_change() {
+function selection_change() {
     baseAttr.value = true;
     editAttr.value = false;
     symbol_attribute.value = false;
@@ -128,10 +128,12 @@ function _selection_change() {
         }
     }
 
+    console.log('shapes.length:', shapes.value.length);
+
+
     reflush_by_selection.value++;
     reflush.value++;
 }
-const selection_change = debounce(_selection_change, 160, { leading: true });
 
 function is_constrainted(shape: ShapeView) {
     return shape.isVirtualShape || ([ShapeType.Artboard, ShapeType.Symbol, ShapeType.SymbolUnion].includes(shape.parent?.type || ShapeType.Rectangle))
@@ -150,7 +152,7 @@ function _modify_constraint_show() {
     );
 }
 
-const modify_constraint_show = throttle(_modify_constraint_show, 160, { trailing: true });
+const modify_constraint_show = throttle(_modify_constraint_show, 160, { leading: true });
 
 function tool_watcher(t: number) {
     // if (t === Tool.CHANGE_ACTION) updateShapeType();
@@ -218,16 +220,16 @@ function watch_shapes() {
 
 onMounted(() => {
     watch_shapes();
-    props.context.selection.watch(selection_watcher);
     props.context.tableSelection.watch(table_selection_watcher);
+    props.context.selection.watch(selection_watcher);
     props.context.tool.watch(tool_watcher);
     props.context.workspace.watch(workspace_watcher);
-    _selection_change();
+    selection_change();
     watch_shapes();
 })
 onUnmounted(() => {
-    props.context.selection.unwatch(selection_watcher);
     props.context.tableSelection.unwatch(table_selection_watcher);
+    props.context.selection.unwatch(selection_watcher);
     props.context.tool.unwatch(tool_watcher);
     props.context.workspace.unwatch(workspace_watcher);
     watchedShapes.forEach(v => {

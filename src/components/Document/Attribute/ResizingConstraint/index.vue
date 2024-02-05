@@ -25,11 +25,6 @@ const horizontalPositionOptions: SelectSource[] = genOptions([
     ['hcenter', t('attr.center')],
     ['hfollow', t('attr.follow_container')]
 ]);
-const horizontalSizeSelected = ref<SelectItem>({ value: 'fixedWidth', content: t('attr.fixedWidth') });
-const horizontalSizeOptions: SelectSource[] = genOptions([
-    ['fixedWidth', t('attr.fixedWidth')],
-    ['hfollow', t('attr.follow_container')]
-]);
 
 const VerticalPositionSelected = ref<SelectItem>({ value: 'top', content: t('attr.fixed_top') });
 const VerticalPositionOptions: SelectSource[] = genOptions([
@@ -39,12 +34,11 @@ const VerticalPositionOptions: SelectSource[] = genOptions([
     ['vcenter', t('attr.center')],
     ['vfollow', t('attr.follow_container')]
 ]);
-const VerticalSizeSelected = ref<SelectItem>({ value: 'fixedHeight', content: t('attr.fixedHeight') });
-const VerticalSizeOptions: SelectSource[] = genOptions([
-    ['fixedHeight', t('attr.fixedHeight')],
-    ['vfollow', t('attr.follow_container')]
-]);
 
+const fixedWidth = ref<boolean | string>(false);
+const disableToFixedWidth = ref<boolean>(false);
+const fixedHeight = ref<boolean | string>(false);
+const disableToFixedHeight = ref<boolean>(false);
 
 function createEditor() {
     const page = props.context.selection.selectedPage!;
@@ -68,25 +62,24 @@ function handleHorizontalPositionSelect(item: SelectItem) {
             e.fixedToLR(selected);
             break;
         case 'hfollow':
-            e.flexWidth(selected);
+            e.scaleByWidth(selected);
             break;
         default:
             break;
     }
 }
+function handleCheckboxChangeForWidth() {
+    if (fixedWidth.value === 'mixed') {
+        return;
+    }
 
-function handleHorizontalSizeSelect(item: SelectItem) {
     const e = createEditor();
     const selected = props.context.selection.selectedShapes.map(s => adapt2Shape(s));
-    switch (item.value) {
-        case 'fixedWidth':
-            e.fixedToWidth(selected);
-            break;
-        case 'hfollow':
-            e.flexWidth(selected);
-            break;
-        default:
-            break;
+
+    if (fixedWidth.value) {
+        e.flexWidth(selected);
+    } else {
+        e.fixedToWidth(selected);
     }
 }
 
@@ -107,25 +100,22 @@ function handleVerticalPositionSelect(item: SelectItem) {
             e.fixedToTB(selected);
             break;
         case 'vfollow':
-            e.flexHeight(selected);
+            e.scaleByHeight(selected);
             break;
         default:
             break;
     }
 }
-
-function handleVerticalSizeSelect(item: SelectItem) {
+function handleCheckboxChangeForHeight() {
+    if (fixedHeight.value === 'mixed') {
+        return;
+    }
     const e = createEditor();
     const selected = props.context.selection.selectedShapes.map(s => adapt2Shape(s));
-    switch (item.value) {
-        case 'fixedHeight':
-            e.fixedToHeight(selected);
-            break;
-        case 'vfollow':
-            e.flexHeight(selected);
-            break;
-        default:
-            break;
+    if (fixedHeight.value) {
+        e.flexHeight(selected);
+    } else {
+        e.fixedToHeight(selected);
     }
 }
 
@@ -141,9 +131,6 @@ function _update() {
 }
 
 function modifyhorizontalPositionStatus() {
-    // left.value = false
-    // right.value = false
-    // hcenter.value = false
     const shapes = props.context.selection.selectedShapes;
     if (!shapes.length) {
         return;
@@ -158,70 +145,55 @@ function modifyhorizontalPositionStatus() {
         }
     }
 
-    let rc = shapes[0].resizingConstraint;
-    if (rc === undefined) {
-        rc = ResizingConstraints2.Mask;
-    }
+    let rc = shapes[0].resizingConstraint || 0;
 
     if (ResizingConstraints2.isFixedLeftAndRight(rc)) {
         horizontalPositionSelected.value = { value: 'lrfixed', content: t('attr.fixed_left_right') };
-        // left.value = true
-        // right.value = true
     } else if (ResizingConstraints2.isFixedToLeft(rc)) {
         horizontalPositionSelected.value = { value: 'left', content: t('attr.fixed_left') };
-        // left.value = true
     } else if (ResizingConstraints2.isFixedToRight(rc)) {
         horizontalPositionSelected.value = { value: 'right', content: t('attr.fixed_right') };
-        // right.value = true
     } else if (ResizingConstraints2.isHorizontalJustifyCenter(rc)) {
         horizontalPositionSelected.value = { value: 'hcenter', content: t('attr.center') };
-        // hcenter.value = true
     } else if (ResizingConstraints2.isFlexWidth(rc)) {
         horizontalPositionSelected.value = { value: 'hfollow', content: t('attr.follow_container') }
     }
 
     function getGroupVal(val: number) {
-        return ((ResizingConstraints2.Mask ^ val) & ResizingConstraints2.Left) + ((ResizingConstraints2.Mask ^ val) & ResizingConstraints2.Right);
+        return (val & ResizingConstraints2.Left) + (val & ResizingConstraints2.Right) + (val & ResizingConstraints2.HCenter);
     }
 }
 
 function modifyWidthStatus() {
-    isCheckedwidth.value=false
+    disableToFixedWidth.value = false;
+    fixedWidth.value = false;
+
     const shapes = props.context.selection.selectedShapes;
     if (!shapes.length) {
         return;
     }
+    const rc0 = shapes[0].resizingConstraint || 0;
+    fixedWidth.value = ResizingConstraints2.isFixedWidth(rc0);
 
     let commonRC = getGroupVal(shapes[0].resizingConstraint || 0);
-    for (let i = 1, l = shapes.length; i < l; i++) {
-        let __rc = getGroupVal(shapes[i].resizingConstraint || 0);
+    for (let i = 0, l = shapes.length; i < l; i++) {
+        const rc = shapes[i].resizingConstraint || 0;
+        if (ResizingConstraints2.isFixedLeftAndRight(rc) || ResizingConstraints2.isHorizontalScale(rc)) {
+            disableToFixedWidth.value = true;
+        }
+
+        let __rc = getGroupVal(rc);
         if (__rc !== commonRC) {
-            horizontalSizeSelected.value = { value: 'mixed', content: mixed };
-            return;
+            fixedWidth.value = 'mixed';
         }
     }
 
-    let rc = shapes[0].resizingConstraint;
-    if (rc === undefined) {
-        rc = ResizingConstraints2.Mask;
-    }
-
-    if (ResizingConstraints2.isFixedWidth(rc)) {
-        isCheckedwidth.value=true
-        horizontalSizeSelected.value = { value: 'fixedWidth', content: t('attr.fixedWidth') };
-    } else {
-        horizontalSizeSelected.value = { value: 'hfollow', content: t('attr.follow_container') };
-    }
-
     function getGroupVal(val: number) {
-        return (ResizingConstraints2.Mask ^ val & ResizingConstraints2.Width);
+        return val & ResizingConstraints2.Width;
     }
 }
 
 function modifyverticalPositionStatus() {
-    // top.value = false
-    // bottom.value = false
-    // vcenter.value = false
     const shapes = props.context.selection.selectedShapes;
     if (!shapes.length) {
         return;
@@ -236,60 +208,47 @@ function modifyverticalPositionStatus() {
         }
     }
 
-    let rc = shapes[0].resizingConstraint;
-    if (rc === undefined) {
-        rc = ResizingConstraints2.Mask;
-    }
+    let rc = shapes[0].resizingConstraint || 0;
 
     if (ResizingConstraints2.isFixedTopAndBottom(rc)) {
         VerticalPositionSelected.value = { value: 'tbfixed', content: t('attr.fixed_top_bottom') };
-        // top.value = true
-        // bottom.value = true
     } else if (ResizingConstraints2.isFixedToTop(rc)) {
         VerticalPositionSelected.value = { value: 'top', content: t('attr.fixed_top') };
-        // top.value = true
     } else if (ResizingConstraints2.isFixedToBottom(rc)) {
         VerticalPositionSelected.value = { value: 'bottom', content: t('attr.fixed_bottom') };
-        // bottom.value = true
     } else if (ResizingConstraints2.isVerticalJustifyCenter(rc)) {
         VerticalPositionSelected.value = { value: 'vcenter', content: t('attr.center') };
-        // vcenter.value = true
     } else if (ResizingConstraints2.isFlexHeight(rc)) {
         VerticalPositionSelected.value = { value: 'vfollow', content: t('attr.follow_container') }
     }
 
     function getGroupVal(val: number) {
-        return ((ResizingConstraints2.Mask ^ val) & ResizingConstraints2.Top) + ((ResizingConstraints2.Mask ^ val) & ResizingConstraints2.Bottom);
+        return (val & ResizingConstraints2.Top) + (val & ResizingConstraints2.Bottom) + (val & ResizingConstraints2.VCenter);
     }
 }
 
 function modifyHeightStatus() {
-    isCheckedheight.value=false
+    disableToFixedHeight.value = false;
+    fixedHeight.value = false;
+
     const shapes = props.context.selection.selectedShapes;
     if (!shapes.length) {
         return;
     }
 
-    let commonRC = getGroupVal(shapes[0].resizingConstraint || 0);
-    for (let i = 1, l = shapes.length; i < l; i++) {
-        let __rc = getGroupVal(shapes[i].resizingConstraint || 0);
+    const rc0 = shapes[0].resizingConstraint || 0;
+    fixedHeight.value = ResizingConstraints2.isFixedHeight(rc0);
+
+    let commonRC = getGroupVal(rc0);
+    for (let i = 0, l = shapes.length; i < l; i++) {
+        const rc = shapes[i].resizingConstraint || 0;
+        let __rc = getGroupVal(rc);
         if (__rc !== commonRC) {
-            VerticalSizeSelected.value = { value: 'mixed', content: mixed };
-            // isCheckedheight.value=true
-            return;
+            fixedHeight.value = 'mixed';
         }
-    }
-
-    let rc = shapes[0].resizingConstraint;
-    if (rc === undefined) {
-        rc = ResizingConstraints2.Mask;
-    }
-
-    if (ResizingConstraints2.isFixedHeight(rc)) {
-        isCheckedheight.value=true
-        VerticalSizeSelected.value = { value: 'fixedHeight', content: t('attr.fixedHeight') };
-    } else {
-        VerticalSizeSelected.value = { value: 'vfollow', content: t('attr.follow_container') };
+        if (ResizingConstraints2.isFixedTopAndBottom(rc) || ResizingConstraints2.isVerticalScale(rc)) {
+            disableToFixedHeight.value = true;
+        }
     }
 
     function getGroupVal(val: number) {
@@ -297,32 +256,11 @@ function modifyHeightStatus() {
     }
 }
 
-// const left = ref(false)
-// const right = ref(false)
-// const top = ref(false)
-// const bottom = ref(false)
-// const hcenter = ref(false)
-// const vcenter = ref(false)
-
-const update = throttle(_update, 120);
+const update = throttle(_update, 160, { leading: true });
 
 // 这里在下代协作算法出来后可以优化
 const stop = watch(() => props.trigger, update); // 监听图层变化
 const stop2 = watch(() => props.selectionChange, update); // 监听选区变化
-
-// const test = () => {
-//     createEditor().fixedToWidth(selected.value)
-// }
-
-// const isChecked = ref(false)
-
-const isCheckedwidth=ref(false)
-const isCheckedheight=ref(false)
-
-watch(isCheckedwidth,(N)=>{
-    console.log(N);
-    createEditor().fixedToWidth(selected.value)
-})
 
 onMounted(update);
 onUnmounted(() => {
@@ -335,71 +273,47 @@ onUnmounted(() => {
         <TypeHeader :title="t('attr.constraints')" class="mt-24" :active="!disabled">
         </TypeHeader>
         <div class="content" :class="{ 'disabled': disabled }">
-            <!-- <div class="show">
-                <div class="top">
-                    <div class="one">
-                        <div class="line" :class="{ action1: top }" @click="createEditor().fixedToTop(selected)"></div>
-                    </div>
-                </div>
-                <div class="center">
-                    <div class="one">
-                        <div class="line" :class="{ action: left }" @click="createEditor().fixedToLeft(selected)"></div>
-                    </div>
-                    <div class="two">
-                        <div class="LR" :class="{ action: hcenter }"
-                            @click="createEditor().HorizontaljustifyCenter(selected)"></div>
-                        <div class="TB" :class="{ action1: vcenter }"
-                            @click="createEditor().VerticaljustifyCenter(selected)"></div>
-                    </div>
-                    <div class="three">
-                        <div class="line" :class="{ action: right }" @click="createEditor().fixedToRight(selected)"></div>
-                    </div>
-                </div>
-                <div class="bottom">
-                    <div class="one">
-                        <div class="line" :class="{ action1: bottom }" @click="createEditor().fixedToBottom(selected)">
-                        </div>
-                    </div>
-                </div>
-            </div> -->
             <div class="main">
                 <div class="row">
                     <label>{{ t('attr.horizontal') }}</label>
                     <Select :selected="horizontalPositionSelected" :source="horizontalPositionOptions"
                         @select="handleHorizontalPositionSelect" :disabled="disabled"></Select>
-                    <!-- <Select :selected="horizontalSizeSelected" :source="horizontalSizeOptions"
-                        @select="handleHorizontalSizeSelect" :disabled="disabled"></Select> -->
-                    <input type="checkbox" id="width" v-model="isCheckedwidth">
-                    <label for="width" :style="{ whiteSpace: 'nowrap' }">固定宽度</label>
+                    <div :class="{ checkboxWrap: true, disabledBox: disableToFixedWidth }"
+                        @click="handleCheckboxChangeForWidth">
+                        <div class="checkbox">
+                            <div v-if="fixedWidth === 'mixed'" class="mixed-status">
+                                <div class="mixed"></div>
+                            </div>
+                            <div v-else-if="fixedWidth" class="active">
+                                <svg-icon icon-class="select"></svg-icon>
+                            </div>
+                        </div>
+                        <span>{{ t('attr.fixedWidth') }}</span>
+                    </div>
                 </div>
                 <div class="row">
                     <label>{{ t('attr.vertical') }}</label>
                     <Select :selected="VerticalPositionSelected" :source="VerticalPositionOptions"
                         @select="handleVerticalPositionSelect" :disabled="disabled"></Select>
-                    <!-- <Select :selected="VerticalSizeSelected" :source="VerticalSizeOptions"
-                        @select="handleVerticalSizeSelect" :disabled="disabled"></Select> -->
-                    <input type="checkbox" id="height">
-                    <label for="height" :style="{ whiteSpace: 'nowrap' }">固定高度</label>
+                    <div :class="{ checkboxWrap: true, disabledBox: disableToFixedHeight }"
+                        @click="handleCheckboxChangeForHeight">
+                        <div class="checkbox">
+                            <div v-if="fixedHeight === 'mixed'" class="mixed-status">
+                                <div class="mixed"></div>
+                            </div>
+                            <div v-else-if="fixedHeight" class="active">
+                                <svg-icon icon-class="select"></svg-icon>
+                            </div>
+                        </div>
+                        <span>{{ t('attr.fixedHeight') }}</span>
+                    </div>
                 </div>
-                <!-- <input type="checkbox" id="widht" v-model="isChecked" @change="test()">
-                <label for="widht">固定宽度</label> -->
             </div>
-
         </div>
     </div>
 </template>
 
 <style scoped lang="scss">
-.action {
-    height: 2px !important;
-    background-color: #18f !important;
-}
-
-.action1 {
-    width: 2px !important;
-    background-color: #18f !important;
-}
-
 .disabled {
     opacity: 0.4;
     z-index: -1;
@@ -417,16 +331,18 @@ onUnmounted(() => {
         display: flex;
         align-items: center;
         gap: 12px;
+        width: 100%;
 
         .main {
             display: flex;
             flex-direction: column;
             gap: 8px;
+            width: 100%;
 
             .row {
                 width: 100%;
                 display: flex;
-                align-content: center;
+                align-items: center;
 
                 >label {
                     flex: 0 0 42px;
@@ -434,253 +350,71 @@ onUnmounted(() => {
                 }
 
                 >.select-container {
-                    flex: 0 1 84px;
+                    flex: 1 1 84px;
                     height: 32px;
                 }
 
-                input[type="checked"]:checked {
-                    background-color: red;
-                }
-            }
-        }
-
-        .show {
-            box-sizing: border-box;
-            isolation: isolate;
-            grid-column: 2 / span 8;
-            grid-row: 1 / span 2;
-            display: flex;
-            flex-direction: column;
-            position: relative;
-            border: 1px solid var(--color-border, #e5e5e5);
-            border-radius: 2px;
-
-            .top {
-                flex: 0 0 auto;
-                height: 12px;
-                display: flex;
-                justify-content: center;
-                align-items: center;
-
-                .one {
-                    flex: 0 0 25px;
-                    height: 12px;
+                .checkboxWrap {
+                    flex: 0 0 72px;
+                    height: 14px;
                     display: flex;
                     justify-content: center;
                     align-items: center;
+                    cursor: pointer;
 
-                    .line {
-                        flex: 0 0 auto;
-                        --height: 8px;
-                        --width: 2px;
-                        height: var(--height);
-                        width: var(--width);
-                        background-color: #333333;
-                        position: relative;
-                    }
+                    >.checkbox {
+                        box-sizing: border-box;
+                        border-radius: 4px;
+                        background-color: transparent;
+                        display: flex;
+                        align-items: center;
+                        justify-content: center;
+                        border: 1px solid #efefef;
+                        overflow: hidden;
+                        flex: 0 0 14px;
+                        height: 14px;
 
-                    .line::before {
-                        content: "";
-                        display: none;
-                        position: absolute;
-                        width: 6px;
-                        height: 13px;
-                        top: -2px;
-                        right: -2px;
-                        background-color: rgba(17, 136, 255, 0.5);
-                    }
-
-                    .line:hover {
-                        &::before {
-                            display: block;
-                        }
-                    }
-                }
-            }
-
-
-            .center {
-                flex: 1 0 auto;
-                display: flex;
-                justify-content: space-between;
-                align-items: center;
-
-                .one {
-                    flex: 0 0 auto;
-                    height: 25px;
-                    width: 12px;
-                    display: flex;
-                    justify-content: center;
-                    align-items: center;
-
-                    .line {
-                        flex: 0 0 auto;
-                        --height: 2px;
-                        --width: 8px;
-                        height: var(--height);
-                        width: var(--width);
-                        background-color: #333333;
-                        position: relative;
-                    }
-
-                    .line::before {
-                        content: "";
-                        display: none;
-                        position: absolute;
-                        width: 12px;
-                        height: 5px;
-                        top: -1px;
-                        right: -2px;
-                        background-color: rgba(17, 136, 255, 0.5);
-                    }
-
-                    .line:hover {
-                        &::before {
-                            display: block;
-                        }
-                    }
-                }
-
-                .two {
-                    flex: 0 0 auto;
-                    position: relative;
-                    height: 38px;
-                    width: 38px;
-                    border: 1px solid var(--color-icon, #333333);
-                    border-radius: 1px;
-                    display: flex;
-                    align-items: center;
-                    justify-content: center;
-
-                    .LR {
-                        --height: 2px;
-                        --width: 14px;
-                        height: var(--height);
-                        width: var(--width);
-                        background-color: #333333;
-                        position: relative;
-
-                        &::before {
-                            content: "";
-                            display: none;
-                            position: absolute;
+                        >.mixed-status {
                             width: 14px;
-                            height: 5px;
-                            top: -1px;
-                            background-color: rgba(17, 136, 255, 0.5);
-                        }
-
-                        &:hover::before {
-                            display: block;
-                        }
-                    }
-
-                    .TB {
-                        --height: 14px;
-                        --width: 2px;
-                        height: var(--height);
-                        width: var(--width);
-                        background-color: #333333;
-                        position: absolute;
-
-                        &::before {
-                            content: "";
-                            display: none;
-                            position: absolute;
-                            width: 6px;
                             height: 14px;
-                            right: -2px;
-                            background-color: rgba(17, 136, 255, 0.5);
+                            background-color: var(--active-color);
+                            display: flex;
+                            align-items: center;
+                            justify-content: center;
+
+                            >div {
+                                background-color: #ffffff;
+                                width: 7px;
+                                height: 1px;
+                            }
                         }
 
-                        &:hover::before {
-                            display: block;
+                        .active {
+                            width: 14px;
+                            height: 14px;
+                            background-color: var(--active-color);
+                            display: flex;
+                            align-items: center;
+                            justify-content: center;
+
+                            >svg {
+                                width: 60%;
+                                height: 60%;
+                            }
                         }
+                    }
+
+                    >span {
+                        margin-left: 4px;
                     }
                 }
 
-                .three {
-                    flex: 0 0 auto;
-                    height: 25px;
-                    width: 12px;
-                    display: flex;
-                    justify-content: center;
-                    align-items: center;
-
-                    .line {
-                        flex: 0 0 auto;
-                        --height: 2px;
-                        --width: 8px;
-                        height: var(--height);
-                        width: var(--width);
-                        background-color: #333333;
-                        position: relative;
-                    }
-
-                    .line::before {
-                        content: "";
-                        display: none;
-                        position: absolute;
-                        width: 12px;
-                        height: 5px;
-                        top: -1px;
-                        right: -2px;
-                        background-color: rgba(17, 136, 255, 0.5);
-                    }
-
-                    .line:hover {
-                        &::before {
-                            display: block;
-                        }
-                    }
-                }
-            }
-
-            .bottom {
-                flex: 0 0 auto;
-                height: 12px;
-                display: flex;
-                justify-content: center;
-                align-items: center;
-
-                .one {
-                    flex: 0 0 25px;
-                    height: 12px;
-                    display: flex;
-                    justify-content: center;
-                    align-items: center;
-
-                    .line {
-                        flex: 0 0 auto;
-                        --height: 8px;
-                        --width: 2px;
-                        height: var(--height);
-                        width: var(--width);
-                        background-color: #333333;
-                        position: relative;
-                    }
-
-                    .line::before {
-                        content: "";
-                        display: none;
-                        position: absolute;
-                        width: 6px;
-                        height: 13px;
-                        top: -2px;
-                        right: -2px;
-                        background-color: rgba(17, 136, 255, 0.5);
-                    }
-
-                    .line:hover {
-                        &::before {
-                            display: block;
-                        }
-                    }
+                >.disabledBox {
+                    pointer-events: none;
+                    opacity: 0.3;
                 }
             }
         }
     }
-
-
 }
 </style>

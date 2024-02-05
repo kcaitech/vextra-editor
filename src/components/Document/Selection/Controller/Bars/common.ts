@@ -70,7 +70,6 @@ function calculateSlope(point1: XY, point2: XY) {
 function findPerpendicularFoot(A: XY, B: XY, Q: XY) {
     // 计算直线AB的斜率
     let slopeAB = calculateSlope(A, B);
-    console.log('A:', A);
 
     if (slopeAB === Infinity) {
         return { x: A.x, y: Q.y };
