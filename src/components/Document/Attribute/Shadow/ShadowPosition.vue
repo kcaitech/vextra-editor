@@ -101,7 +101,6 @@ onUnmounted(() => {
     font-size: 12px;
     position: relative;
     background-color: #F4F5F5;
-    width: 144px;
     height: 32px;
     border-radius: var(--default-radius);
     box-sizing: border-box;

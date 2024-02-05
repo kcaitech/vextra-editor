@@ -761,10 +761,9 @@ onUnmounted(() => {
             }
 
             .color {
-                flex: 0 1 144px;
+                flex: 1;
                 background-color: var(--input-background);
                 height: 32px;
-                width: 144px;
                 padding: 9px 8px;
                 //margin-left: -11px;
                 border-radius: var(--default-radius);
@@ -777,7 +776,7 @@ onUnmounted(() => {
                     outline: none;
                     border: none;
                     background-color: transparent;
-                    width: 92px;
+                    width: 70px;
                     height: 14px;
                     margin-left: 8px;
                     flex: 1;
@@ -790,7 +789,6 @@ onUnmounted(() => {
                     background-color: transparent;
                     width: 37px;
                     //margin-left: 20%;
-                    margin-left: -28px;
                     text-align: center;
                     font-size: 12px;
                 }

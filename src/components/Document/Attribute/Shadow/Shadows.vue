@@ -268,6 +268,7 @@ onUnmounted(stop);
       .shadow_posi {
         flex: 1;
         height: 100%;
+        margin-right: 5px;
         //padding: 0px 5px;
         box-sizing: border-box;
       }

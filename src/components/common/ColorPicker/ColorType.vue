@@ -60,12 +60,13 @@ onMounted(() => {
     padding: 0 2px;
 
     .item {
-        width: 38px;
+        flex: 1;
         height: 28px;
         display: flex;
         align-items: center;
         justify-content: center;
         border-radius: 4px;
+        border: 1px solid #F5F5F5;
         opacity: 0.8;
         box-sizing: border-box;
 

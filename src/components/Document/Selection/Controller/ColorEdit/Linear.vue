@@ -270,6 +270,7 @@ const stop_mouseup = (e: MouseEvent) => {
         gradientEditor.close();
         gradientEditor = undefined;
     }
+    percent_show.value = false;
     document.removeEventListener('mousemove', stop_mousemove);
     document.removeEventListener('mouseup', stop_mouseup);
 }

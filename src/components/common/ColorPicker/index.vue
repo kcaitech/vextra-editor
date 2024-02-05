@@ -233,12 +233,15 @@ function locate() {
     if (doc_height - y < height + 10) {
         el.style.top = parseInt(el.style.top) - ((height + 20) - (doc_height - y)) + 'px'
     }
+    if (props.fillType && props.fillType === FillType.SolidColor) {
+        el.style.top = parseInt(el.style.top) - 38 + 'px';
+    }
     if (props.late) {
         el.style.left = p_el.left - el.clientWidth - 47 - props.late + 'px';
     } else if (props.cell) {
         el.style.left = 0 + 'px';
     } else {
-        el.style.left = p_el.left - el.clientWidth - 47 + 'px';
+        el.style.left = p_el.left - el.clientWidth - 40 + 'px';
     }
 }
 
@@ -439,7 +442,7 @@ function setColor(color: Color) {
 }
 
 const changeColor = (color: Color) => {
-    if (gradient_type.value === 'solid') {
+    if (gradient_type.value === 'solid' || !props.fillType) {
         emit('change', color);
     } else {
         if (!props.gradient) return;
@@ -793,7 +796,7 @@ function delete_gradient_stop() {
     if (index === -1) return;
     if (stop_els.value[stop_els.value.length - 1].stop.id === id) {
         props.context.color.select_stop(stop_els.value[0].stop.id);
-    }else {
+    } else {
         props.context.color.select_stop(stop_els.value[index + 1].stop.id);
     }
     stop_els.value.splice(index, 1);
@@ -864,6 +867,7 @@ function color_type_change(val: GradientType | 'solid') {
         set_gradient(val);
         if (props.locat) props.context.color.gradinet_locat(props.locat);
         update();
+        locate();
     })
 }
 const set_gradient = (val: GradientType | 'solid') => {
@@ -948,7 +952,9 @@ function color_watch(t: number) {
 function window_blur() {
     isDrag = false;
 }
+const observer = new ResizeObserver(locate);
 onMounted(() => {
+    if (document.body) observer.observe(document.body);
     props.context.selection.watch(selectionWatcher);
     props.context.menu.watch(menu_watcher);
     props.context.color.watch(color_watch);
@@ -956,6 +962,7 @@ onMounted(() => {
     update();
 })
 onUnmounted(() => {
+    observer.disconnect();
     eyeDropper.destroy();
     props.context.selection.unwatch(selectionWatcher);
     props.context.menu.unwatch(menu_watcher);
@@ -983,7 +990,8 @@ onUnmounted(() => {
                 </div>
             </div>
             <div class="color_type_container" v-if="fillType">
-                <ColorType :color="color" :gradient_type="gradient_type" @change="color_type_change" :angular="angular"></ColorType>
+                <ColorType :color="color" :gradient_type="gradient_type" @change="color_type_change" :angular="angular">
+                </ColorType>
             </div>
             <!-- 渐变工具 -->
             <div v-if="gradient_type !== 'solid' && fillType === FillType.Gradient" class="gradient-container">
@@ -1176,7 +1184,7 @@ onUnmounted(() => {
             height: 28px;
             text-align: center;
             padding-right: 12px;
-            margin: 2px 0 12px 0;
+            margin-bottom: 10px;
             box-sizing: border-box;
 
             .line-container {

@@ -648,7 +648,7 @@ onUnmounted(() => {
                         @change="(e) => onAlphaChange(idx, f.fill)" @focus="selectAlpha(idx)" @input="alphaInput(idx)"
                         :class="{ 'check': f.fill.isEnabled, 'nocheck': !f.fill.isEnabled }" />
                 </div>
-                <div style="width: 4px;"></div>
+                <div class="temporary"></div>
                 <div class="delete" @click="deleteFill(idx)">
                     <svg-icon icon-class="delete"></svg-icon>
                 </div>
@@ -710,6 +710,7 @@ onUnmounted(() => {
                 justify-content: center;
                 align-items: center;
                 border-radius: 4px;
+                margin-right: 5px;
 
                 >svg {
                     width: 60%;
@@ -725,14 +726,15 @@ onUnmounted(() => {
                 border-radius: 4px;
                 border: 1px solid #EBEBEB;
                 box-sizing: border-box;
+                margin-right: 5px;
             }
 
             .color {
+                flex: 1;
                 background-color: var(--input-background);
                 height: 32px;
-                width: 172px;
                 padding: 9px 8px;
-                margin-left: 5px;
+                margin-right: 5px;
                 border-radius: var(--default-radius);
                 box-sizing: border-box;
                 display: flex;
@@ -742,7 +744,7 @@ onUnmounted(() => {
                     outline: none;
                     border: none;
                     background-color: transparent;
-                    width: 92px;
+                    width: 70px;
                     height: 14px;
                     margin-left: 8px;
                     flex: 1;
@@ -769,6 +771,11 @@ onUnmounted(() => {
                 .nocheck {
                     color: rgba(0, 0, 0, 0.3);
                 }
+            }
+            .temporary {
+                flex: 0 0 28px;
+                width: 28px;
+                height: 28px;
             }
 
             .delete {
