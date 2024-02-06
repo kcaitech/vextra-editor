@@ -1,6 +1,7 @@
 import { Context } from "@/context";
 import { flattenShapes } from "@/utils/cutout";
-import { Color, Stop, ShapeView, ShapeType, GroupShapeView } from "@kcdesign/data";
+import { Color, Stop, ShapeView, ShapeType, GroupShapeView, Gradient, GradientType, BasicArray, Point2D } from "@kcdesign/data";
+import { importGradient } from "@kcdesign/data/dist/data/baseimport";
 import { v4 } from "uuid";
 
 export function to_rgba(options: {
@@ -34,7 +35,7 @@ export const get_gradient = (context: Context, shape: ShapeView) => {
     const locat = context.color.locat;
     if (!locat || !shape || !shape.style) return;
     let gradient_type = shape.style[locat.type];
-    if(shape.type === ShapeType.Group && !(shape as GroupShapeView).data.isBoolOpShape) {
+    if (shape.type === ShapeType.Group && !(shape as GroupShapeView).data.isBoolOpShape) {
         const shapes = flattenShapes(shape.childs).filter(s => s.type !== ShapeType.Group || (s as GroupShapeView).data.isBoolOpShape);
         gradient_type = shapes[0].style[locat.type];
     }
@@ -70,4 +71,35 @@ export function calculateArcLengthAtAngle(a: number, b: number, theta: number) {
         arcLength += segmentLength;
     }
     return arcLength;
+}
+
+export function getGradient(gradient: Gradient | undefined, grad_type: GradientType, color: Color) {
+    let new_gradient: Gradient | undefined;
+    if (gradient) {
+        new_gradient = importGradient(gradient);
+        new_gradient.gradientType = grad_type;
+        if (grad_type === GradientType.Linear && gradient.gradientType !== GradientType.Linear) {
+            new_gradient.from.y = new_gradient.from.y - (new_gradient.to.y - new_gradient.from.y);
+            new_gradient.from.x = new_gradient.from.x - (new_gradient.to.x - new_gradient.from.x);
+        } else if (gradient.gradientType === GradientType.Linear && grad_type !== GradientType.Linear) {
+            new_gradient.from.y = new_gradient.from.y + (new_gradient.to.y - new_gradient.from.y) / 2;
+            new_gradient.from.x = new_gradient.from.x + (new_gradient.to.x - new_gradient.from.x) / 2;
+        }
+        if (grad_type === GradientType.Radial && new_gradient.elipseLength === undefined) {
+            new_gradient.elipseLength = 1;
+        }
+        new_gradient.stops[0].color = color;
+    } else {
+        const stops = new BasicArray<Stop>();
+        const { alpha, red, green, blue } = color;
+        stops.push(new Stop(new BasicArray(0), v4(), 0, new Color(alpha, red, green, blue)), new Stop(new BasicArray(1), v4(), 1, new Color(0, red, green, blue)))
+        const from = grad_type === GradientType.Linear ? { x: 0.5, y: 0 } : { x: 0.5, y: 0.5 };
+        const to = { x: 0.5, y: 1 };
+        let elipseLength = undefined;
+        if (grad_type === GradientType.Radial) {
+            elipseLength = 1;
+        }
+        new_gradient = new Gradient(from as Point2D, to as Point2D, grad_type, stops, elipseLength);
+    }
+    return new_gradient;
 }

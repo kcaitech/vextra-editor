@@ -5,7 +5,7 @@ import SelectFont from './SelectFont.vue';
 import { onMounted, ref, onUnmounted, computed } from 'vue';
 import TextAdvancedSettings from './TextAdvancedSettings.vue'
 import { Context } from '@/context';
-import { AttrGetter, Fill, FillType, GradientType, ShapeType, TextShapeView, adapt2Shape } from "@kcdesign/data";
+import { AttrGetter, Fill, FillType, Gradient, GradientType, ShapeType, TextShapeView, adapt2Shape } from "@kcdesign/data";
 import Tooltip from '@/components/common/Tooltip.vue';
 import { TextVerAlign, TextHorAlign, Color, UnderlineType, StrikethroughType } from "@kcdesign/data";
 import ColorPicker from '@/components/common/ColorPicker/index.vue';
@@ -15,6 +15,7 @@ import { WorkSpace } from '@/context/workspace';
 import { message } from "@/utils/message";
 import { throttle } from 'lodash';
 import { watch } from 'vue';
+import { getGradient } from '../../Selection/Controller/ColorEdit/gradient_utils';
 
 interface Props {
     context: Context
@@ -45,6 +46,7 @@ const higMixed = ref<boolean>(false);
 const textColor = ref<Color>()
 const highlight = ref<Color>()
 const fillType = ref<FillType>(FillType.SolidColor);
+const gradient = ref<Gradient>();
 const textSize = ref<HTMLInputElement>()
 const higlightColor = ref<HTMLInputElement>()
 const higlighAlpha = ref<HTMLInputElement>()
@@ -297,7 +299,7 @@ const _textFormat = () => {
         fillType.value = format.fillType || FillType.SolidColor
         isBold.value = format.bold || false
         isTilt.value = format.italic || false
-
+        gradient.value = format.gradient;
         if (format.italicIsMulti) isTilt.value = false
         if (format.boldIsMulti) isBold.value = false
         if (colorIsMulti.value) mixed.value = true;
@@ -355,6 +357,7 @@ const _textFormat = () => {
         isTilt.value = format.italic || false;
         fillType.value = format.fillType || FillType.SolidColor
         textColor.value = format.color;
+        gradient.value = format.gradient;
         if (format.fontName === 'unlikeness') fontName.value = `${t('attr.more_value')}`;
         if (format.fontSize === 'unlikeness') fonstSize.value = `${t('attr.more_value')}`;
         if (format.alignment === 'unlikeness') selectLevel.value = '';
@@ -621,9 +624,19 @@ const togger_gradient_type = (type: GradientType | 'solid') => {
     if (length.value) {
         const { textIndex, selectLength } = getTextIndexAndLen()
         if (isSelectText()) {
-            editor.setTextFillType(fillType, 0, Infinity)
+            if(type === 'solid') {
+                editor.setTextFillType(fillType, 0, Infinity)
+            }else {
+                const g = getGradient(gradient.value, type, textColor.value!);
+                editor.setTextGradientType(g, 0, Infinity);
+            }
         } else {
-            editor.setTextFillType(fillType, textIndex, selectLength)
+            if(type === 'solid') {
+                editor.setTextFillType(fillType, textIndex, selectLength)
+            }else {
+                const g = getGradient(gradient.value, type, textColor.value!)
+                editor.setTextGradientType(g, textIndex, selectLength);
+            }
             textFormat()
         }
     } else {
