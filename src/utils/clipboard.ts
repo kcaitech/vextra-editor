@@ -863,9 +863,13 @@ function handle_text_html_string(context: Context, text_html: string, xy?: PageX
             modify_frame_by_xy(context.workspace.center_on_page, source);
         }
 
+        const page = context.selection.selectedPage;
+        if (!page) {
+            return;
+        }
         const medias = data?.media;
 
-        const shapes = import_shape_from_clipboard(context.data, source, medias);
+        const shapes = import_shape_from_clipboard(context.data, page.data, source, medias);
 
         if (!shapes.length) {
             throw new Error('invalid source: !shapes.length');
@@ -873,10 +877,6 @@ function handle_text_html_string(context: Context, text_html: string, xy?: PageX
 
         after_import(context, medias);
 
-        const page = context.selection.selectedPage;
-        if (!page) {
-            return;
-        }
 
         const editor = context.editor4Page(page);
 
@@ -932,20 +932,20 @@ function replace_action(context: Context, text_html: any, src: ShapeView[]) {
         throw new Error('no shapes');
     }
 
+    const page = context.selection.selectedPage;
+
+    if (!page) {
+        return;
+    }
     const source = JSON.parse(text_html.split(identity)[1]);
 
-    const shapes = import_shape_from_clipboard(context.data, source.shapes, source.media);
+    const shapes = import_shape_from_clipboard(context.data, page.data, source.shapes, source.media);
     if (!shapes.length) {
         throw new Error('invalid source');
     }
 
     after_import(context, source.media);
 
-    const page = context.selection.selectedPage;
-
-    if (!page) {
-        return;
-    }
 
     const editor = context.editor4Page(page);
     const r = editor.replace(context.data, shapes, src.map((s) => adapt2Shape(s)));
