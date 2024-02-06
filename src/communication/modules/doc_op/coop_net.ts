@@ -65,6 +65,7 @@ export class CoopNet implements ICoopNet {
         let cmds: Cmd[] | undefined
         if (Array.isArray(cmdsData)) {
             cmds = parseCmds(JSON.stringify(cmdsData.map(item => {
+                item.cmd.id = item.cmd_id
                 item.cmd.version = this.radixRevert.from(item.id)
                 item.cmd.previousVersion = this.radixRevert.from(item.previous_id)
                 return item.cmd
